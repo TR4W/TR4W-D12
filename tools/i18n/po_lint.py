@@ -87,7 +87,7 @@ CONTROL_DEFECT = "CONTROL CHARS differ"
 FORMAT_DEFECT = "FORMAT SPECIFIERS differ"
 
 
-def draft_defects(source, target):
+def draft_defects(source, target, accelerators=False):
    """Why this translation fails the two GATING checks, or [] if it passes.
 
    THE ONE RULE, asked from two places: check() below, and mt_seed before it
@@ -96,12 +96,67 @@ def draft_defects(source, target):
    flattened into 19 catalogues -- LibreTranslate under format=html treats a
    newline as whitespace -- and only this script noticed. A copy of these two
    comparisons inside mt_seed would be the same drift waiting to happen again.
+
+   accelerators=True adds accelerator_defects() -- what mt_seed asks of a
+   CAPTION draft (the tr4w_ catalogues). Not the help catalogue: there an '&'
+   is part of a command name ('AUTO S&P ENABLE'), not a keyboard shortcut.
    """
    out = []
    if controls(source) != controls(target):
       out.append(CONTROL_DEFECT)
    if specifiers(source) != specifiers(target):
       out.append(FORMAT_DEFECT)
+   if accelerators:
+      out.extend(accelerator_defects(source, target))
+   return out
+
+
+# A lone '&' -- an accelerator marker -- and not half of a literal '&&'.
+LONE_AMP = re.compile(r"(?<!&)&(?!&)")
+
+ACCEL_TWO = "TWO ACCELERATORS in one translation"
+ACCEL_LITERAL = "the literal && was broken up"
+ACCEL_SPACED = "an & followed by a space, or by nothing"
+ACCEL_ADDED = "an & the English does not have"
+ACCEL_QUOTE = "a quote or bracket where the & was"
+
+# What the engine put where an accelerator had been, measured 2026-11-02 on
+# the local LibreTranslate: '" Copy' (es), '>' and '> Ricerca' (it), '# I am
+# in %s' (it). The English never has one of these unless it says so itself.
+_QUOTE_OR_BRACKET = set('"<>[]{}#«»“”„')
+
+
+def lone_ampersands(text):
+   return len(LONE_AMP.findall(text))
+
+
+def accelerator_defects(source, target):
+   """What is wrong with the accelerators of this translation, or [].
+
+   THE RULE A TRANSLATOR IS GIVEN (TRANSLATOR_GUIDE section 5): one '&' in
+   the English means one '&' or none in the translation, directly before a
+   letter; none means none; a literal '&&' stays doubled; and the '&' is never
+   replaced by a quote or a bracket. A MISSING accelerator is not a defect
+   here -- an operator can still click the control, while a stray '&' or
+   quote is painted into the caption.
+   """
+   out = []
+   src_lone, tgt_lone = lone_ampersands(source), lone_ampersands(target)
+   if tgt_lone > 1 and src_lone < 2:
+      out.append(ACCEL_TWO)
+   # BROKEN, not merely absent: a translation may say 'and' in words instead
+   # ('Buscar y atacar'). What it may not do is leave half of the pair -- a
+   # lone '&' where the English had '&&' is painted, or takes a letter.
+   if target.count("&&") < source.count("&&") and tgt_lone > src_lone:
+      out.append(ACCEL_LITERAL)
+   if re.search(r"(?<!&)&(?!&)(?:\s|$)", target):
+      out.append(ACCEL_SPACED)
+   if src_lone == 0 and tgt_lone > 0:
+      out.append(ACCEL_ADDED)
+   if src_lone == 1:
+      added = {ch for ch in target if ch in _QUOTE_OR_BRACKET} - set(source)
+      if added:
+         out.append(ACCEL_QUOTE)
    return out
 
 
@@ -346,7 +401,24 @@ def check(path, fix):
       if (pofile.unescape_entities(e.target) != e.target and
             pofile.unescape_entities(e.source) == e.source):
          entities.append(e)
-      if (sa is not None) and (ta is None):
+      # THE TWO SHAPES THE LETTER CHECKS BELOW CANNOT SEE (2026-11-02).
+      # accel() reads the FIRST accelerator only, so a second one passed --
+      # 'Press &E ... S&P' gives the control two. And it discards '&&' before
+      # it looks, so a literal '&&' broken into '& &' or '& ' ('Search &&
+      # pounce mode' -> 'Mode de recherche & & ponce', da el fr pt sv) was
+      # neither a dropped nor an added accelerator.
+      # One report per entry: '& &' is both, and 'Search&Pounce' is also "an
+      # & was added" -- each is ONE mistake, and the broken literal is the
+      # accurate name for it.
+      ad = accelerator_defects(e.source, e.target)
+      if ACCEL_LITERAL in ad:
+         accel_bad.append((e, "the literal && was broken up -- it paints a stray &"))
+      elif ACCEL_TWO in ad:
+         accel_bad.append((e, "two & in one translation -- the control gets two accelerators"))
+
+      if ACCEL_LITERAL in ad:
+         pass
+      elif (sa is not None) and (ta is None):
          accel_bad.append((e, "the & was dropped, so the control has no accelerator"))
       elif (sa is None) and (ta is not None):
          accel_bad.append((e, "an & was added where the English has none"))
@@ -394,8 +466,9 @@ def check(path, fix):
           % (name, e.target))
 
    for e in not_language:
-      say("  %s: NOT LANGUAGE -- %r is a key name, a number or punctuation, "
-          "and is not offered for translation (pofile.is_translatable); "
+      say("  %s: NOT LANGUAGE -- %r is a key name, a number, punctuation or a "
+          "named abbreviation, and is not offered for translation "
+          "(pofile.is_translatable); "
           "po_merge --apply removes it while its msgstr is empty"
           % (name, e.source))
 

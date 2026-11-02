@@ -39,12 +39,25 @@ class Predicate(unittest.TestCase):
    ]
 
    LANGUAGE = [
-      "F1 help", "Band 8", "OK", "No", "8 hours",
+      "F1 help", "Band 8", "No", "8 hours",
       "F25",                               # not a key: past F24
       "&Yes", "Dah 73% of normal duration",
       u"Нет",               # Cyrillic 'Net'
       u"取消",                     # CJK
+      # Real words beside the named abbreviations, and sentences that
+      # contain one: the list matches the WHOLE msgid only.
+      "Band", "Mode", "Port", "Port:", "Zone", "CONTEST", "SPLIT", "INSERT",
+      "QTH:", "CW speed", "Ok", "DX spot", "Load CTY.DAT",
+      # Units and country names stay translatable on purpose (NY4I,
+      # 2026-11-02): Russian writes 'мс', and UK and CIS are translated.
+      "m", "s", " ms", "Hz", "UK", "CIS",
    ]
+
+   # THE NAMED LIST, pinned as NY4I approved it on 2026-11-02. Adding a name
+   # is a decision: make it here and in pofile.INVARIANT_NAMES together.
+   NAMED = ["OK", "QTH", "DX", "CW", "PTT", "RIT", "XIT", "WPM", "SCP",
+            "CTY.DAT", "TR4W", "MMTTY", "LPT", "SH/50", "X-QSO", "IOTA",
+            "IOTA:", "INH", "S&P"]
 
    def test_not_language(self):
       for text in self.NOT_LANGUAGE:
@@ -55,6 +68,23 @@ class Predicate(unittest.TestCase):
       for text in self.LANGUAGE:
          self.assertTrue(pofile.is_translatable(text),
                          "%r is language, but was refused" % text)
+
+   def test_the_named_list_is_exactly_what_was_approved(self):
+      self.assertEqual(sorted(pofile.INVARIANT_NAMES), sorted(self.NAMED))
+
+   def test_every_named_abbreviation_is_not_language(self):
+      for text in self.NAMED + ["&OK", " OK ", "&TR4W", "MM&TTY"]:
+         self.assertFalse(pofile.is_translatable(text),
+                          "%r is a named abbreviation, but was offered" % text)
+
+
+def kept_for_review(e):
+   """A REVIEWED translation that differs from the English is never removed
+   by a tool, even of a msgid that is not language: mn and ro wrote their own
+   SCP, Polish 'SH / 50'. po_merge keeps such an entry and prints it; NY4I
+   decides (2026-11-02). Anything else not language fails the test below."""
+   return ((not e.fuzzy) and e.target.strip()
+           and e.target.strip() != e.source.strip())
 
 
 class RealCatalogues(unittest.TestCase):
@@ -67,7 +97,8 @@ class RealCatalogues(unittest.TestCase):
       found = []
       for path in CATALOGUES:
          for e in pofile.read_po(path):
-            if not e.obsolete and not pofile.is_translatable(e.source):
+            if (not e.obsolete and not pofile.is_translatable(e.source)
+                  and not kept_for_review(e)):
                found.append("%s: %r" % (os.path.basename(path), e.source))
       self.assertEqual(found, [])
 

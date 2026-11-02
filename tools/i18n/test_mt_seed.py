@@ -68,12 +68,28 @@ FIXTURE = (
    '#, fuzzy\r\n'
    'msgid "Open the log"\r\n'
    'msgstr "Das Log oeffnen"\r\n'
+   '\r\n'
+   '#: uappstrings.scopy\r\n'
+   '#, fuzzy\r\n'
+   'msgid "&Copy"\r\n'
+   'msgstr ""\r\n'
+   '\r\n'
+   '#: uappstrings.ssearchpounce\r\n'
+   '#, fuzzy\r\n'
+   'msgid "Search && pounce mode"\r\n'
+   'msgstr ""\r\n'
 )
 
 
 def fake_translate(url, texts, target, source="en", batch=1):
-   """LibreTranslate under format=html: whitespace runs collapse to a space."""
-   return ["[%s] %s" % (target, re.sub(r"\s+", " ", t).strip()) for t in texts]
+   """LibreTranslate under format=html: whitespace runs collapse to a space,
+   and an escaped ampersand is damaged the way the real models damaged it on
+   2026-11-02 ('&amp;Copy' -> '" Copy')."""
+   out = []
+   for t in texts:
+      t = t.replace("&amp;", '" ')
+      out.append("%s: %s" % (target, re.sub(r"\s+", " ", t).strip()))
+   return out
 
 
 class SeedFixture(unittest.TestCase):
@@ -110,7 +126,48 @@ class SeedFixture(unittest.TestCase):
    def test_a_sound_draft_is_still_seeded(self):
       self.run_seed()
       self.assertEqual(self.entries()["uappstrings.splain"].target,
-                       "[de] Hello world")
+                       "de: Hello world")
+
+   # -- accelerators (2026-11-02) --------------------------------------------
+
+   def test_the_accelerator_never_reaches_the_engine_and_comes_back(self):
+      # The fake damages any escaped '&' it is sent, as the real models did,
+      # so a correct draft proves the '&' was taken out before sending.
+      self.run_seed()
+      self.assertEqual(self.entries()["uappstrings.scopy"].target, "de: &Copy")
+
+   def test_a_literal_double_ampersand_survives(self):
+      self.run_seed()
+      self.assertEqual(self.entries()["uappstrings.ssearchpounce"].target,
+                       "de: Search && pounce mode")
+
+   def test_the_help_catalogue_sends_its_ampersands_as_text(self):
+      # captions=False: in help text an '&' is part of a command name
+      # ('AUTO S&P ENABLE'), so it is NOT taken out.
+      sent = []
+
+      def recording(url, texts, target, source="en", batch=1):
+         sent.extend(texts)
+         return list(texts)
+      mt_seed.translate = recording
+      out = io.StringIO()
+      with contextlib.redirect_stdout(out):
+         mt_seed.seed(self.path, "http://unused", "de", "GER", False,
+                      only={"uappstrings.scopy"}, captions=False)
+      self.assertEqual(sent, ["&amp;Copy"])
+
+   def test_a_caption_is_sent_without_its_accelerator(self):
+      sent = []
+
+      def recording(url, texts, target, source="en", batch=1):
+         sent.extend(texts)
+         return list(texts)
+      mt_seed.translate = recording
+      out = io.StringIO()
+      with contextlib.redirect_stdout(out):
+         mt_seed.seed(self.path, "http://unused", "de", "GER", False,
+                      only={"uappstrings.scopy", "uappstrings.ssearchpounce"})
+      self.assertEqual(sent, ["Copy", 'Search <nm id="0"></nm> pounce mode'])
 
    # -- defect 1: a draft po_lint rejects ------------------------------------
 
@@ -158,7 +215,7 @@ class SeedFixture(unittest.TestCase):
    def test_only_seeds_the_named_entry(self):
       self.run_seed(only={"uappstrings.splain"})
       self.assertEqual(self.entries()["uappstrings.splain"].target,
-                       "[de] Hello world")
+                       "de: Hello world")
 
    def test_only_leaves_every_other_empty_entry_empty(self):
       # Named in a different case and with ':' -- the identifier as LazUtils
@@ -276,6 +333,128 @@ class DraftDefects(unittest.TestCase):
       self.assertTrue(po_lint.draft_defects("%d of %s", "%s of %d"))
       self.assertTrue(po_lint.draft_defects("%-8s", "%s"))
       self.assertEqual(po_lint.draft_defects("%d of %s", "%d von %s"), [])
+
+   def test_accelerator_rule_is_only_asked_for_captions(self):
+      self.assertEqual(po_lint.draft_defects("&Copy", '" Copy'), [])
+      self.assertTrue(po_lint.draft_defects("&Copy", '" Copy', accelerators=True))
+
+
+class Accelerators(unittest.TestCase):
+   """Taken out before the engine, put back after it (2026-11-02)."""
+
+   def test_split(self):
+      cases = {
+         "&Copy": ("Copy", "C"),
+         "Paddle swa&p": ("Paddle swap", "p"),
+         "Search && pounce mode": ("Search && pounce mode", None),
+         "Search && &pounce": ("Search && pounce", "p"),
+         "& x": ("& x", None),                     # not before a letter
+         "Press &E to program S&P": ("Press &E to program S&P", None),  # two
+         "Plain": ("Plain", None),
+      }
+      for text, want in cases.items():
+         self.assertEqual(mt_seed.split_accelerator(text), want, text)
+
+   def test_place_before_the_same_letter_at_a_word_start(self):
+      P = mt_seed.place_accelerator
+      self.assertEqual(P("Copiar", "C", "es"), "&Copiar")
+      # No word starts with an 'a', so the first 'a' takes it.
+      self.assertEqual(P("Seleziona tutto", "a", "it"), "Selezion&a tutto")
+      self.assertEqual(P("Esegui i controlli", "R", "it"), "Esegui i cont&rolli")
+      self.assertEqual(P("Kör kontroller", "k", "sv"), "&Kör kontroller")
+
+   def test_no_such_letter_means_no_accelerator(self):
+      self.assertEqual(mt_seed.place_accelerator("Kopiera", "C", "sv"), "Kopiera")
+      self.assertEqual(mt_seed.place_accelerator("Поиск", "S", "ru"), "Поиск")
+
+   def test_never_inside_a_specifier_or_a_literal(self):
+      P = mt_seed.place_accelerator
+      self.assertEqual(P("in %s", "s", "it"), "in %s")
+      self.assertEqual(P("Sono in %s", "s", "it"), "&Sono in %s")
+      self.assertEqual(P("A && B", "a", "en"), "&A && B")
+
+   def test_cjk_puts_the_letter_after_the_word(self):
+      P = mt_seed.place_accelerator
+      self.assertEqual(P("コピー", "C", "ja"), "コピー(&C)")
+      self.assertEqual(P("保存...", "s", "ja"), "保存(&S)...")
+      self.assertEqual(P("复制", "c", "zh-Hans"), "复制(&C)")
+      self.assertEqual(P("닫기:", "c", "ko"), "닫기(&C):")
+
+   def test_none_is_left_alone(self):
+      self.assertEqual(mt_seed.place_accelerator("Copiar", None, "es"), "Copiar")
+
+   def test_a_literal_double_ampersand_round_trips_as_an_element(self):
+      payload, specs, names = mt_seed.protect("Search && pounce %s", literal_amp=True)
+      self.assertEqual(payload, 'Search <nm id="0"></nm> pounce <ph id="0"></ph>')
+      text, problem = mt_seed.unprotect(payload.replace("Search", "Suche"), specs, names)
+      self.assertIsNone(problem)
+      self.assertEqual(text, "Suche && pounce %s")
+
+
+class AcceleratorDefects(unittest.TestCase):
+   """po_lint.accelerator_defects -- the rule TRANSLATOR_GUIDE section 5 gives."""
+
+   def defects(self, source, target):
+      return po_lint.accelerator_defects(source, target)
+
+   def test_sound_translations_pass(self):
+      for source, target in (("&Copy", "&Kopieren"), ("&Copy", "Kopiera"),
+                             ("Copy", "Kopiera"), ("&Copy", "コピー(&C)"),
+                             ("Search && pounce", "Buscar && atacar"),
+                             ("Search && pounce", "Buscar y atacar"),
+                             ("Paddle swa&p", "Inversione pa&ddle")):
+         self.assertEqual(self.defects(source, target), [], (source, target))
+
+   def test_what_the_engine_did(self):
+      cases = (
+         ("&Copy", '" Copy', po_lint.ACCEL_QUOTE),
+         ("&Copy", ">", po_lint.ACCEL_QUOTE),
+         ("&I am in %s", "# I am in %s", po_lint.ACCEL_QUOTE),
+         ("&Save", "& Gem", po_lint.ACCEL_SPACED),
+         ("Select &all", "Vælg & alle", po_lint.ACCEL_SPACED),
+         ("&Copy", "&Co&pia", po_lint.ACCEL_TWO),
+         ("Press &E to program", "Pulse &E en S&P", po_lint.ACCEL_TWO),
+         ("Search && pounce mode", "Mode de recherche & & ponce", po_lint.ACCEL_LITERAL),
+         ("Search && pounce mode", "Søg i & pounce tilstand", po_lint.ACCEL_LITERAL),
+         ("List of commands", "&Lista comenzilor", po_lint.ACCEL_ADDED),
+      )
+      for source, target, want in cases:
+         self.assertIn(want, self.defects(source, target), (source, target))
+
+
+class LintReportsTheBlindSpots(unittest.TestCase):
+   """po_lint's ACCELERATOR check: two '&' in one translation, and a literal
+   '&&' broken up. Before 2026-11-02 both passed."""
+
+   CATALOGUE = (
+      'msgid ""\r\n'
+      'msgstr ""\r\n'
+      '"Content-Type: text/plain; charset=UTF-8\\n"\r\n'
+      '\r\n'
+      '#: uappstrings.spresse\r\n'
+      'msgid "Press &E to program"\r\n'
+      'msgstr "Pulse &E en S&P"\r\n'
+      '\r\n'
+      '#: uappstrings.ssearch\r\n'
+      '#, fuzzy\r\n'
+      'msgid "Search && pounce mode"\r\n'
+      'msgstr "Mode de recherche & & ponce"\r\n'
+   )
+
+   def test_both_are_reported(self):
+      d = tempfile.mkdtemp(prefix="test_po_lint_")
+      try:
+         path = os.path.join(d, "tr4w_xx.po")
+         with io.open(path, "w", encoding="utf-8", newline="") as fh:
+            fh.write(self.CATALOGUE)
+         out = io.StringIO()
+         with contextlib.redirect_stdout(out):
+            bad = po_lint.check(path, False)
+         self.assertIn("two & in one translation", out.getvalue())
+         self.assertIn("literal && was broken up", out.getvalue())
+         self.assertGreaterEqual(bad, 2)
+      finally:
+         shutil.rmtree(d, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -185,8 +185,9 @@ msgfmt --check-format --check-domain -o NUL i18n/tr4w_es.po   # validate
 "translation" was 1,274 copies of its own msgid and one real entry (the language's own name, now
 in `uEmbeddedTranslations`). New English reaches the catalogues through
 `po_merge.py --pot`, which also applies the one rule `msgmerge` does not know:
-`pofile.is_translatable` -- a function-key name (`F1`), a bare number (`8`) or bare punctuation
-(`...`) is not language and never becomes an entry.
+`pofile.is_translatable` -- a function-key name (`F1`), a bare number (`8`), bare punctuation
+(`...`) or one of the named abbreviations in `pofile.INVARIANT_NAMES` (`OK`, `QTH`,
+`CTY.DAT` ...) is not language and never becomes an entry.
 
 ## Two traps, both verified against Qt 6.10.1
 

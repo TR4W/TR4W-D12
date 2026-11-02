@@ -99,10 +99,17 @@ DEFAULT_VERIFY = 25
 # seeded 0 of 14; Brazilian Portuguese 0 of 106.
 #
 # THE COST of format=html is that the payload is markup, so the source is
-# HTML-escaped going out and unescaped coming back. Measured on the 20
-# catalogue strings containing & or < : 13/20 keep them under html, 13/20
-# under text. IDENTICAL. The menu-accelerator '&' that MT eats is a
-# pre-existing quality issue on entries a human reviews anyway.
+# HTML-escaped going out and unescaped coming back.
+#
+# AND THAT ESCAPING IS WHAT DAMAGED THE ACCELERATORS (measured 2026-11-02,
+# the local engine). '&Copy' went out as '&amp;Copy', and the models read the
+# entity as a word or as markup: '" Copy' (es), '>' (it), 'och kopia' (sv --
+# 'och' is 'and'), '& Gem' (da). Sent as 'Copy', the same models return
+# 'Copiado', 'Copia', 'Kopiera', 'Kopiér'. So a CAPTION's accelerator is taken
+# out before the text goes and put back on the way in (split_accelerator,
+# place_accelerator), and a literal '&&' travels as an element like a command
+# name (protect). Captions only: in the help catalogue an '&' is part of a
+# command name.
 TOKEN_RE = re.compile(r'<ph id="(\d+)"\s*></ph>')
 
 # CONFIG COMMAND NAMES STAY ENGLISH -- IN THE HELP CATALOGUE THEY ARE MASKED.
@@ -237,10 +244,21 @@ _CONTROL_NAME = re.compile(
 
 
 def is_translatable(source):
-   """False for text that is not language: a URL, a key name, a bare number."""
-   s = source.strip()
-   if not s:
+   """Should a MACHINE be asked to translate this?
+
+   pofile.is_translatable FIRST -- the one rule for what is language at all
+   (function keys, numbers, punctuation, and the named abbreviations such as
+   OK, QTH, CTY.DAT, S&P). It used to be restated here and in po_backfill,
+   and the copies disagreed (2026-11-02).
+
+   What follows is the SEEDER's own refusal, not a second definition of
+   language: an entry that legitimately belongs in the catalogue may still be
+   something a machine should not touch -- a URL, a designer placeholder that
+   is a control name, or text with no two consecutive letters ('m', 's').
+   Those stay for a human to decide."""
+   if not pofile.is_translatable(source):
       return False
+   s = source.strip()
    if _NOT_LANGUAGE.match(s):
       return False
    if not re.search(r"[A-Za-z]{2}", s):
@@ -250,9 +268,70 @@ def is_translatable(source):
    return True
 
 
-def protect(text, names_rx=None):
+# ACCELERATORS: TAKEN OUT BEFORE THE ENGINE, PUT BACK AFTER IT (2026-11-02).
+#
+# Why, measured: see the TOKEN_RE note above -- the escaped '&' came back as a
+# quote, a bracket or the word for 'and'. Putting it back is a guess about
+# which letter, and a safe one: the English letter if the translation has it,
+# preferring the start of a word; otherwise NO accelerator. A caption missing
+# its accelerator still works when clicked; one with a stray '&' or quote in
+# it is wrong on screen. Which letter is free on THAT form is the reviewer's
+# call either way -- every draft stays fuzzy.
+#
+# Japanese, Korean and Chinese put the letter after the word in brackets,
+# '复制(&C)', which is the convention of Windows and of the LCL's own
+# catalogues in those languages.
+SUFFIX_ACCELERATOR_LANGS = ("ja", "ko", "zh")
+
+
+def split_accelerator(text):
+   """(text without its accelerator, the accelerator letter), or (text, None)
+   when there is not exactly one lone '&' directly before a letter. A literal
+   '&&' is not an accelerator and stays."""
+   lone = list(po_lint.LONE_AMP.finditer(text))
+   if len(lone) != 1:
+      return text, None
+   i = lone[0].start()
+   letter = text[i + 1:i + 2]
+   if not letter.isalpha():
+      return text, None
+   return text[:i] + text[i + 1:], letter
+
+
+def place_accelerator(text, letter, target):
+   """Put an accelerator for `letter` back into a translation. `target` is the
+   engine's language code. Returns the text unchanged when letter is None or
+   the translation has no such letter."""
+   if letter is None:
+      return text
+   if target.split("-")[0].split("_")[0].lower() in SUFFIX_ACCELERATOR_LANGS:
+      # Before a trailing ellipsis or colon: '保存(&S)...', not '保存...(&S)'.
+      m = re.search(r"\s*(?:\.\.\.|…|:|：)?\s*$", text)
+      cut = m.start()
+      return text[:cut] + "(&%s)" % letter.upper() + text[cut:]
+   # Never inside a %-specifier ('%s' holds an s) or a literal '&&'.
+   blocked = set()
+   for m in pc.PLACEHOLDER_RE.finditer(text):
+      blocked.update(range(m.start(), m.end()))
+   for m in re.finditer(r"&&", text):
+      blocked.update(range(m.start(), m.end() + 1))
+   hits = [i for i, ch in enumerate(text)
+           if ch.lower() == letter.lower() and i not in blocked]
+   if not hits:
+      return text
+   word_start = [i for i in hits if i == 0 or not text[i - 1].isalnum()]
+   i = (word_start or hits)[0]
+   return text[:i] + "&" + text[i:]
+
+
+def protect(text, names_rx=None, literal_amp=False):
    """English -> HTML payload with each %-specifier as a <ph> element and,
    when names_rx is given, each command name as an <nm> element.
+
+   literal_amp: also send each literal '&&' as an <nm> element (captions).
+   Escaped, it went out as '&amp;&amp;' and came back as '& &' (da el fr pt
+   sv, 2026-11-02); as an element it survived in all twelve languages tried.
+   It is restored like a name -- exactly once, in any order.
 
    Returns (payload, specifiers, names) -- the originals, by id.
 
@@ -265,11 +344,14 @@ def protect(text, names_rx=None):
    names = []
    escaped = html.escape(text, quote=False)
 
+   def name_sub(m):
+      names.append(html.unescape(m.group(0)))
+      return '<nm id="%d"></nm>' % (len(names) - 1)
+
    if names_rx is not None:
-      def name_sub(m):
-         names.append(html.unescape(m.group(0)))
-         return '<nm id="%d"></nm>' % (len(names) - 1)
       escaped = names_rx.sub(name_sub, escaped)
+   if literal_amp:
+      escaped = re.sub(r"&amp;&amp;", name_sub, escaped)
 
    def sub(m):
       originals.append(m.group(0))
@@ -391,11 +473,15 @@ SALVAGE_MARK = "RECOVERED from a bit-corrupted lang file"
 
 
 def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
-         reseed=False, verify=DEFAULT_VERIFY, only=None, names_rx=None):
+         reseed=False, verify=DEFAULT_VERIFY, only=None, names_rx=None,
+         captions=True):
    """only: a set of identifiers (pofile.claimed_identifiers form). When
    given, nothing outside it is seeded -- or wiped by --reseed.
    names_rx: command_name_pattern(), to keep command names English (the
-   help catalogue); None sends the text as it is."""
+   help catalogue); None sends the text as it is.
+   captions: the text is UI captions (the tr4w_ catalogues), so an '&' is an
+   accelerator -- taken out before the engine and put back after it, and a
+   draft must pass po_lint's accelerator rule. False for the help catalogue."""
    entries = pofile.read_po(po_path)
    if only is not None:
       only = {i.lower().replace(':', '.') for i in only}
@@ -497,7 +583,7 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
                # caption with no accelerator.
                remaining.append(e)
                continue
-            if po_lint.draft_defects(e.source, hit):
+            if po_lint.draft_defects(e.source, hit, accelerators=captions):
                # The same gate the machine's drafts face, below.
                remaining.append(e)
                continue
@@ -555,10 +641,11 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
    # specifiers in each.
    segments, index, masks = [], [], []
    for e in todo:
-      parts = e.source.split("\r")
-      index.append((e, len(parts)))
+      text, letter = split_accelerator(e.source) if captions else (e.source, None)
+      parts = text.split("\r")
+      index.append((e, len(parts), letter))
       for part in parts:
-         masked, originals, names = protect(part, names_rx)
+         masked, originals, names = protect(part, names_rx, literal_amp=captions)
          segments.append(masked)
          masks.append((originals, names))
 
@@ -596,7 +683,7 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
 
    seeded, dropped = 0, []
    pos = 0
-   for e, count in index:
+   for e, count, letter in index:
       bad = [problems[j] for j in range(pos, pos + count) if j in problems]
       chunk = "\r".join(restored[pos:pos + count])
       pos += count
@@ -615,13 +702,16 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       # The engine emits HTML entities -- the French model renders the space
       # before a colon as &#160; -- and TR4W paints them verbatim.
       text = pofile.unescape_entities(text)
+      # The accelerator goes back LAST, into finished text, so it cannot land
+      # inside an entity or a specifier.
+      text = place_accelerator(text, letter, target)
       # AND NOTHING po_lint WOULD REJECT (#92). Asked of the FINAL text, after
       # the entities are resolved, because that is what gets written. The
       # format=html channel that keeps specifiers safe also makes a newline
       # plain whitespace, so a multi-line message comes back as one line --
       # which the specifier test above cannot see. Dropped, not written: an
       # empty entry is a visible to-do, a flattened one ships.
-      defects = po_lint.draft_defects(e.source, text)
+      defects = po_lint.draft_defects(e.source, text, accelerators=captions)
       if defects:
          dropped.append((entry_label(e), "; ".join(defects)
                          + " -- po_lint would reject it"))
@@ -791,7 +881,8 @@ def main(argv=None):
                args.dry_run, args.batch, args.reseed, args.verify,
                only=set(args.only) if args.only else None,
                names_rx=(command_name_pattern(paths["root"])
-                         if args.catalog == "help" else None))
+                         if args.catalog == "help" else None),
+               captions=(args.catalog == "tr4w"))
 
 
 if __name__ == "__main__":

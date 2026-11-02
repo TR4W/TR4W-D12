@@ -692,7 +692,7 @@ msgstr "폴더 \"%s\" 이미 존재합니다.\r읽기 ?"
 #, fuzzy
 msgctxt "TC_IAMIN"
 msgid "&I am in %s"
-msgstr "%s에서"
+msgstr "나는 %s(&I)"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_croat
@@ -2489,7 +2489,7 @@ msgstr "C&T 간격"
 #, fuzzy
 msgctxt "TC_SIDETONE"
 msgid "&Sidetone"
-msgstr "·Sidetone"
+msgstr "사이드톤(&S)"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_paddleswap
@@ -3548,6 +3548,7 @@ msgstr "CT1BOH 정보"
 msgid "Dupe sheet"
 msgstr "Dupe 시트"
 
+# mt-seed: skip -- 2026-11-02, the engine answers with unrelated text, retranslate
 #. Section: UEDITMESSAGE
 #. Section: FD Additions NY4I
 #: tfrmeditmessage.btneditwav.caption
@@ -3560,7 +3561,7 @@ msgstr "Dupe 시트"
 #, fuzzy
 msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
-msgstr "·Edit"
+msgstr ""
 
 #. Section: UEDITMESSAGE
 #: tfrmeditmessage.caption
@@ -3592,10 +3593,11 @@ msgctxt "RC_MESSAGE"
 msgid "Message"
 msgstr "이름 *"
 
+# mt-seed: skip -- 2026-11-02, the engine answers with unrelated text, retranslate
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "다운로드"
+msgstr ""
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
@@ -3607,10 +3609,11 @@ msgstr "저장(&S)"
 msgid "Edit QSO"
 msgstr "QSO 소개"
 
+# mt-seed: skip -- 2026-11-02, the engine answers with unrelated text, retranslate
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr "관련 기사"
+msgstr ""
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
@@ -3641,11 +3644,6 @@ msgstr "이름 문장"
 #, fuzzy
 msgid "Prefix Mult"
 msgstr "연락처"
-
-#: tfrmeditqso.chkxqso.caption
-#, fuzzy
-msgid "X-QSO"
-msgstr "사이트맵"
 
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
@@ -3885,14 +3883,6 @@ msgstr "스낵 바"
 msgid "lblPrompt"
 msgstr "프로젝트"
 
-#: tfrminputquery.caption
-#: ttr4wmainform.caption
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "tfrminputquery.caption"
-msgid "TR4W"
-msgstr "사이트맵"
-
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
@@ -4034,22 +4024,10 @@ msgstr "동기화"
 msgid "Differences in the log"
 msgstr "로그의 차이"
 
-#: tfrmlpt.caption
-#, fuzzy
-msgid "LPT"
-msgstr "사이트맵"
-
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
 msgstr "슈퍼 체크 부분"
-
-#: tfrmmmtty.caption
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tfrmmmtty.caption"
-msgid "MMTTY"
-msgstr "MMTTY의 특징"
 
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
@@ -4191,11 +4169,6 @@ msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr "라디오"
 
-#: tfrmradiopanel.lblrit.caption
-#, fuzzy
-msgid "RIT"
-msgstr "사이트맵"
-
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
@@ -4210,11 +4183,6 @@ msgstr "사이트맵"
 #, fuzzy
 msgid "VFO B"
 msgstr "VFO의 B"
-
-#: tfrmradiopanel.lblxit.caption
-#, fuzzy
-msgid "XIT"
-msgstr "사이트맵"
 
 #: tfrmremmults.caption
 #, fuzzy
@@ -4318,11 +4286,6 @@ msgstr "뚱 베어"
 #, fuzzy
 msgid "Send"
 msgstr "이름 *"
-
-#: tfrmtelnet.btnshow50.caption
-#, fuzzy
-msgid "SH/50"
-msgstr "사이트맵"
 
 #: tfrmtelnet.caption
 #, fuzzy
@@ -5291,11 +5254,6 @@ msgstr "포트는 오늘 설정할 수 없습니다. 당신이해야 할 경우,
 msgid "Character speed:"
 msgstr "특성 속도:"
 
-#: tprefsform.lblfarnsworthunits.caption
-#, fuzzy
-msgid "WPM"
-msgstr "사이트맵"
-
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
@@ -5466,11 +5424,6 @@ msgstr "FOC 번호:"
 msgid "Grid square:"
 msgstr "격자 사각:"
 
-#: tprefsform.lblmyiota.caption
-#, fuzzy
-msgid "IOTA:"
-msgstr "현재 위치:"
-
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
@@ -5626,11 +5579,6 @@ msgstr "발송하기 전에 PTT 후에 지연"
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
 msgstr "x 1.7 ms (0개 비활성화)"
-
-#: tprefsform.lblpttgroup.caption
-#, fuzzy
-msgid "PTT"
-msgstr "사이트맵"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
@@ -6136,11 +6084,6 @@ msgstr ""
 "\n"
 " %s이유: %str4w.log는 전체 세부 사항을 기록합니다."
 
-#: uappstrings.sctydownloadfailedtitle
-#, fuzzy
-msgid "CTY.DAT"
-msgstr "사이트맵"
-
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
 msgid "the download was refused before it began (bad URL)."
@@ -6440,6 +6383,7 @@ msgctxt "HELP_WORD"
 msgid "Help"
 msgstr "도움말(H)"
 
+# mt-seed: skip -- 2026-11-02, the engine answers with unrelated text, retranslate
 #. Section: UEDITMESSAGE
 #: utr4wstrings:exit_word
 #: tr4w/src/lang/tr4w_consts_eng.pas:531
@@ -6450,7 +6394,7 @@ msgstr "도움말(H)"
 #, fuzzy
 msgctxt "EXIT_WORD"
 msgid "E&xit"
-msgstr "사이트맵"
+msgstr ""
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_listofmess
@@ -6805,15 +6749,6 @@ msgstr "언어 선택"
 msgctxt "RC_DUPESHEET"
 msgid "Dupesheet"
 msgstr "연락처"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trmaster
-#: tr4w/src/lang/tr4w_consts_eng.pas:623
-#: utr4wstrings.rc_trmaster
-#, fuzzy
-msgctxt "RC_TRMASTER"
-msgid "SCP"
-msgstr "사이트맵"
 
 #. Section: UEDITMESSAGE
 #. 4.72.3
@@ -8117,6 +8052,7 @@ msgctxt "TC_THERENOLOGFILEYETS"
 msgid "There is no log file yet at %s."
 msgstr "아직 로그 파일이 없습니다. %s."
 
+# mt-seed: skip -- 2026-11-02, the engine answers with unrelated text, retranslate
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_openineditor
 #: tr4w/src/lang/tr4w_consts_eng.pas:896
@@ -8124,7 +8060,7 @@ msgstr "아직 로그 파일이 없습니다. %s."
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr "본문 바로가기"
+msgstr ""
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -8191,28 +8127,6 @@ msgctxt "TC_S"
 msgid "s"
 msgstr "₢ 킹"
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#: tfrmnewcontest.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr "확인(O)"
-
 #: tfrmabout.lblurl.caption
 #, fuzzy
 msgid "http://www.tr4w.net"
@@ -8239,16 +8153,6 @@ msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr "취소"
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr "DX 시리즈"
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr "사이트맵"
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -8261,11 +8165,6 @@ msgstr "이 프로파일을 저장하고 활성화"
 #, fuzzy
 msgid "Contest"
 msgstr "대회"
-
-#: ulclformhelpers.tc_prefs_cw
-#, fuzzy
-msgid "CW"
-msgstr "사이트맵"
 
 #: ulclformhelpers.tc_radioedit_transport
 #, fuzzy
@@ -9820,11 +9719,6 @@ msgstr ""
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
-
-#: uappstrings.stxinhibitedindicator
-#, fuzzy
-msgid "INH"
 msgstr ""
 
 #: uappstrings.stxinhibitedstatus

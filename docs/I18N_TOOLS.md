@@ -54,6 +54,23 @@ LibreTranslate does to a multi-line message: it flattens the line breaks
 (`SImportMyFactsQuestion`, 2026-10-19, all 19 languages, issue #92). A dropped entry
 stays empty, and an empty entry is a visible to-do.
 
+**Accelerators never reach the engine** (2026-11-02). Sent as `&amp;Copy`, the
+models returned `" Copy` (es), `>` (it), `och kopia` (sv) and `& Gem` (da). In the
+`tr4w_` catalogues `mt_seed` now takes the one `&` out before sending, and puts it
+back before the same letter if the translation has it -- at a word start if it can,
+never inside a `%s` -- or leaves the draft with **no** accelerator if it has not
+(a caption without one still works; one with a stray `&` does not). Japanese, Korean
+and Chinese get `(&X)` after the word. A literal `&&` travels as an `<nm>` element
+and comes back doubled. Every draft must also pass `po_lint.accelerator_defects()`:
+one `&` or none, no space after it, no `&` the English lacks, no broken `&&`, no
+quote or bracket where the `&` was. Not with `--catalog help`: there an `&` is part
+of a command name (`AUTO S&P ENABLE`). Pinned by `test_mt_seed.py`.
+
+**It does not catch an unrelated answer.** The Korean model answers short captions
+with website boilerplate (`오시는 길` "directions" for `E&xit`, `사이트맵` "sitemap"),
+and no rule can tell that from a translation. Read what a seed of `ko`/`ja` wrote,
+and clear and mark the junk with the marker below.
+
 **To keep an entry out for good**, put a translator comment on it:
 
 ```
@@ -134,6 +151,29 @@ embedded catalogues, which is the copy that gates a build (2026-10-16).
 It also fails an entry whose English is **not language** -- `F1`, `8`, `...` -- because
 nothing should have offered it to a translator. `pofile.is_translatable` is the rule;
 `po_merge --apply` removes such an entry while its msgstr is empty (2026-10-21).
+
+**`pofile.is_translatable` is the ONE rule, and every tool asks it** -- `po_merge`,
+`pas2po`, `po_backfill`, `po_lint` and `mt_seed`. Besides those shapes it holds a
+**named list**, `pofile.INVARIANT_NAMES` (2026-11-02, NY4I): `OK QTH DX CW PTT RIT XIT
+WPM SCP CTY.DAT TR4W MMTTY LPT SH/50 X-QSO IOTA IOTA: INH S&P`, matched against the
+WHOLE msgid as written, one `&` ignored. Named, never a shape: `CONTEST` and `SPLIT`
+are words. `m`, `s`, `ms`, `Hz`, `UK` and `CIS` are deliberately absent -- units and
+country names that languages write their own way. Add a name there and in
+`test_is_translatable.py` together. `po_backfill` used to keep its own copy
+(`INVARIANT_WORDS`): `66ef7f8f` removed `OK`/`QTH`/`DX`, and the `.lfm` harvest added
+their caption entries back the next day (`f8a1f2e8`), because it never saw that list.
+`mt_seed` refuses a little more on top (a URL, a
+control-name placeholder, text without two consecutive letters) -- that is a
+decision about MACHINE drafts, not about what belongs in a catalogue.
+
+A **reviewed** translation of a named msgid that differs from the English is never
+removed by a tool; it waits for NY4I. `po_lint --all` prints each one as NOT LANGUAGE,
+and `test_is_translatable` allows exactly that and nothing else.
+
+**The accelerator check** also catches what it used to miss: two `&` in one
+translation (`Press &E ... S&P` gives the control two), and a literal `&&` broken
+into `& &` or a lone `&` (`Mode de recherche & & ponce`). Rewording the `&&` away
+(`Buscar y atacar`) is not a defect.
 
 **There is no English catalogue to lint** (2026-10-21): English is the msgid, and
 `tr4w_en.po` was deleted. No catalogue is exempt from any check any more.

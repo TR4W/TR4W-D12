@@ -408,6 +408,35 @@ def claimed_identifiers(entry):
 _FUNCTION_KEY = re.compile(r"F(?:[1-9]|1[0-9]|2[0-4])")
 _DIGITS = re.compile(r"[0-9]+")
 
+# ABBREVIATIONS AND NAMES THAT STAY AS THEY ARE IN EVERY LANGUAGE (NY4I,
+# 2026-11-02; the first five since 2026-08-27).
+#
+# NAMED ONE BY ONE, NOT MATCHED BY SHAPE. 'Short and upper case' would also
+# take CONTEST, SPLIT and INSERT, which are words with real translations. A
+# name is matched against the WHOLE msgid as written -- case included, one
+# '&' ignored -- so 'Band', 'Mode', 'Port' and 'Zone' stay translatable, and
+# so does any sentence containing one of these.
+#
+# DELIBERATELY ABSENT: m, s, ms and Hz (units -- Russian and Ukrainian write
+# м, с, мс, Гц), and UK and CIS (country names, which languages translate).
+#
+# WHY HERE. This list used to be po_backfill's alone (INVARIANT_WORDS), so
+# when commit 66ef7f8f removed OK, QTH and DX, the .lfm harvest -- which asks
+# THIS function -- added their caption entries back the next day (f8a1f2e8),
+# and the engine then wrote 'お問い合わせ' for QTH and '사이트맵' for PTT.
+# One list, asked by every tool.
+INVARIANT_NAMES = frozenset({
+   "OK", "QTH", "DX", "CW", "PTT", "RIT", "XIT", "WPM", "SCP", "CTY.DAT",
+   "TR4W", "MMTTY", "LPT", "SH/50", "X-QSO", "IOTA", "IOTA:", "INH", "S&P",
+})
+
+
+def is_invariant_name(msgid):
+   """Is this msgid, whole, one of INVARIANT_NAMES -- as written, or with one
+   '&' (an accelerator) taken out?"""
+   s = msgid.strip()
+   return (s in INVARIANT_NAMES) or (s.replace("&", "", 1) in INVARIANT_NAMES)
+
 
 def is_translatable(msgid):
    """Is this English text LANGUAGE -- something a translator can translate?
@@ -419,7 +448,8 @@ def is_translatable(msgid):
    NOT language, so never offered for translation:
      * a function-key name, F1 to F24, optionally carrying one '&';
      * only ASCII digits ('8', '10');
-     * only punctuation and whitespace ('-', '+', '--', '...', ' ').
+     * only punctuation and whitespace ('-', '+', '--', '...', ' ');
+     * one of INVARIANT_NAMES, whole ('OK', 'QTH', 'CTY.DAT', 'S&P').
 
    WHY. The .lfm harvest takes every Caption, and a designed form has captions
    that are labels for keys and numbers, not words: the function-key panel's
@@ -432,7 +462,7 @@ def is_translatable(msgid):
    entry keeps the value the .lfm streamed, which IS this text: the LCL's
    TPOTranslator only replaces a property it finds an entry for.
 
-   Anything with a letter in it is language, even with digits beside it --
+   Anything else with a letter in it is language, even with digits beside it --
    'F1 help', 'Band 8' and '8 hours' are sentences a translator may reorder.
    A letter is str.isalpha, so Cyrillic, Greek and CJK count."""
    s = msgid.strip()
@@ -443,6 +473,8 @@ def is_translatable(msgid):
    if _DIGITS.fullmatch(s):
       return False
    if not any(ch.isalnum() for ch in s):
+      return False
+   if is_invariant_name(s):
       return False
    return True
 

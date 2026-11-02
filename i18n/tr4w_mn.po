@@ -3298,11 +3298,6 @@ msgstr ""
 msgid "Prefix Mult"
 msgstr ""
 
-#: tfrmeditqso.chkxqso.caption
-#, fuzzy
-msgid "X-QSO"
-msgstr ""
-
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
 msgid "Zone Mult"
@@ -3534,14 +3529,6 @@ msgstr ""
 msgid "lblPrompt"
 msgstr ""
 
-#: tfrminputquery.caption
-#: ttr4wmainform.caption
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "tfrminputquery.caption"
-msgid "TR4W"
-msgstr ""
-
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
@@ -3683,21 +3670,9 @@ msgstr "&Синхрончлох"
 msgid "Differences in the log"
 msgstr ""
 
-#: tfrmlpt.caption
-#, fuzzy
-msgid "LPT"
-msgstr ""
-
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
-msgstr ""
-
-#: tfrmmmtty.caption
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tfrmmmtty.caption"
-msgid "MMTTY"
 msgstr ""
 
 #. Section: UEDITMESSAGE
@@ -3832,11 +3807,6 @@ msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr ""
 
-#: tfrmradiopanel.lblrit.caption
-#, fuzzy
-msgid "RIT"
-msgstr ""
-
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
@@ -3850,11 +3820,6 @@ msgstr ""
 #: tfrmradiopanel.lblvfobcaption.caption
 #, fuzzy
 msgid "VFO B"
-msgstr ""
-
-#: tfrmradiopanel.lblxit.caption
-#, fuzzy
-msgid "XIT"
 msgstr ""
 
 #: tfrmremmults.caption
@@ -3952,11 +3917,6 @@ msgstr "Зогсоох"
 #: tfrmtelnet.btnsend.caption
 #, fuzzy
 msgid "Send"
-msgstr ""
-
-#: tfrmtelnet.btnshow50.caption
-#, fuzzy
-msgid "SH/50"
 msgstr ""
 
 #: tfrmtelnet.caption
@@ -4925,11 +4885,6 @@ msgstr ""
 msgid "Character speed:"
 msgstr ""
 
-#: tprefsform.lblfarnsworthunits.caption
-#, fuzzy
-msgid "WPM"
-msgstr ""
-
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
@@ -5100,11 +5055,6 @@ msgstr ""
 msgid "Grid square:"
 msgstr ""
 
-#: tprefsform.lblmyiota.caption
-#, fuzzy
-msgid "IOTA:"
-msgstr ""
-
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
@@ -5257,11 +5207,6 @@ msgstr ""
 #: tprefsform.lblpttdelayunits.caption
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
-msgstr ""
-
-#: tprefsform.lblpttgroup.caption
-#, fuzzy
-msgid "PTT"
 msgstr ""
 
 #: tprefsform.lblradiotcpheading.caption
@@ -5762,11 +5707,6 @@ msgid ""
 "Reason: %s\n"
 "\n"
 "tr4w.log records the full detail."
-msgstr ""
-
-#: uappstrings.sctydownloadfailedtitle
-#, fuzzy
-msgid "CTY.DAT"
 msgstr ""
 
 #: uappstrings.sdownloadcouldnotstart
@@ -7681,28 +7621,6 @@ msgctxt "TC_S"
 msgid "s"
 msgstr "s"
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#: tfrmnewcontest.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr ""
-
 #: tfrmabout.lblurl.caption
 #, fuzzy
 msgid "http://www.tr4w.net"
@@ -7729,16 +7647,6 @@ msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr ""
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr ""
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -7749,11 +7657,6 @@ msgstr ""
 #: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
-msgstr ""
-
-#: ulclformhelpers.tc_prefs_cw
-#, fuzzy
-msgid "CW"
 msgstr ""
 
 #: ulclformhelpers.tc_radioedit_transport
@@ -9242,11 +9145,6 @@ msgstr ""
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
-
-#: uappstrings.stxinhibitedindicator
-#, fuzzy
-msgid "INH"
 msgstr ""
 
 #: uappstrings.stxinhibitedstatus

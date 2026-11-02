@@ -46,15 +46,12 @@ import pasconsts as pc
 import pofile
 import pas2po
 
-# A function-key name, bare punctuation, or a bare number. See the use site
-# for why this is not mt_seed.is_translatable.
-INVARIANT = re.compile(r'F[0-9]{1,2}|[-+.]{1,3}|[0-9]+')
-
-# Named one by one, not matched by shape. These are ham and geographic tokens
-# that stay as they are in every language (NY4I, 2026-08-27). A rule like
-# 'all upper case and short' would also catch real captions, and the cost of
-# guessing wrong is a string nobody can ever translate.
-INVARIANT_WORDS = {'ok', 'qth', 'dx', 'uk', 'cis'}
+# WHAT IS NOT LANGUAGE is pofile.is_translatable's to say -- function keys,
+# numbers, punctuation and the named abbreviations (OK, QTH, DX ...). This
+# file used to keep its own shape rule and word list (INVARIANT and
+# INVARIANT_WORDS), and po_merge, which asks pofile, re-added what this one
+# refused. UK and CIS left the list on 2026-11-02 (NY4I): they are country
+# names, and languages translate them.
 
 # A bare URL is never translated, and one sitting in a catalogue is a row a
 # translator has to decide to skip.
@@ -113,18 +110,15 @@ def main():
          if not d.name or d.name.lower() in have:
             continue
          # INVARIANT TOKENS NEVER ENTER A CATALOGUE. 'F1' is 'F1' in every
-         # language, and so are '+', '...' and a bare number -- but a
+         # language, and so are '+', '...', a bare number and 'QTH' -- but a
          # translator opening the file sees them as 20 more rows of work
          # (NY4I, 2026-08-27).
          #
-         # DELIBERATELY NARROWER THAN mt_seed.is_translatable, which was the
-         # first thing tried. That predicate answers 'should a MACHINE
-         # translate this', which is not the same question: it also rejects
-         # 'S&P', 'm' and 's', which are real captions a human may well want
-         # to translate. Whether those get translated is a decision, not a
-         # pattern match.
-         if (INVARIANT.fullmatch(d.value.strip())
-             or d.value.strip().lower() in INVARIANT_WORDS
+         # pofile.is_translatable, NOT mt_seed.is_translatable. The seeder's
+         # predicate answers 'should a MACHINE translate this', which is not
+         # the same question: it also refuses 'm' and 's', which are real
+         # captions a human may well want to translate.
+         if (not pofile.is_translatable(d.value)
              or URL.match(d.value.strip())):
             continue
          t = table.get(d.name)

@@ -3206,13 +3206,6 @@ msgid "Function keys"
 msgstr "函数键"
 
 #. Section: UEDITMESSAGE
-#: tr4w/src/lang/tr4w_consts_eng.pas:621
-#: utr4wstrings.rc_trmaster
-#, fuzzy
-msgid "SCP"
-msgstr "南太常委会"
-
-#. Section: UEDITMESSAGE
 #. 4.72.3
 #: tr4w/src/lang/tr4w_consts_eng.pas:622
 #: utr4wstrings.rc_remmults
@@ -4536,23 +4529,6 @@ msgstr "发送日志到 %s"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "您想要上传您的 Cabrillo 文件到 SuperChecklPartial 吗 ?"
 
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmnewcontest.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr "还好"
-
 #: tfrmabout.caption
 #, fuzzy
 msgid "About TR4W"
@@ -4695,16 +4671,6 @@ msgstr "发送名称"
 msgid "Prefix Mult"
 msgstr "前缀穆特"
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
-#: tfrmeditqso.chkxqso.caption
-#, fuzzy
-msgid "X-QSO"
-msgstr "X-QSO 数据"
-
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
 msgid "Zone Mult"
@@ -4745,11 +4711,6 @@ msgstr "计算机标识"
 #, fuzzy
 msgid "Domestic"
 msgstr "国内"
-
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr "DX 主题"
 
 #: tfrmeditqso.lblfrequency.caption
 #, fuzzy
@@ -4795,11 +4756,6 @@ msgstr "前缀"
 #, fuzzy
 msgid "QSO points"
 msgstr "QSO 点"
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr "卡塔尔"
 
 #: tfrmeditqso.lblradio.caption
 #, fuzzy
@@ -4877,14 +4833,6 @@ msgstr "chkDontAsk 数据"
 #, fuzzy
 msgid "lblPrompt"
 msgstr "lbl 程序化"
-
-#: tfrminputquery.caption
-#: ttr4wmainform.caption
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "tfrminputquery.caption"
-msgid "TR4W"
-msgstr "TR4W 战车"
 
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
@@ -5005,22 +4953,10 @@ msgstr "退出"
 msgid "Differences in the log"
 msgstr "日志的差异"
 
-#: tfrmlpt.caption
-#, fuzzy
-msgid "LPT"
-msgstr "LPT 语言"
-
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
 msgstr "超级检查部分"
-
-#: tfrmmmtty.caption
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tfrmmmtty.caption"
-msgid "MMTTY"
-msgstr "门蒂"
 
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
@@ -5124,11 +5060,6 @@ msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr "无线电"
 
-#: tfrmradiopanel.lblrit.caption
-#, fuzzy
-msgid "RIT"
-msgstr "里特尔"
-
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
@@ -5143,11 +5074,6 @@ msgstr "瓦努阿图A"
 #, fuzzy
 msgid "VFO B"
 msgstr "B. 观察员组织"
-
-#: tfrmradiopanel.lblxit.caption
-#, fuzzy
-msgid "XIT"
-msgstr "习 式"
 
 #: tfrmremmults.caption
 #, fuzzy
@@ -5190,11 +5116,6 @@ msgstr "别动"
 #, fuzzy
 msgid "Send"
 msgstr "发送"
-
-#: tfrmtelnet.btnshow50.caption
-#, fuzzy
-msgid "SH/50"
-msgstr "SH/50 (英语)"
 
 #: tfrmtelnet.caption
 #, fuzzy
@@ -6139,11 +6060,6 @@ msgstr "港口今天无法配置. 如果你想要的话,就这么说吧,它就�
 msgid "Character speed:"
 msgstr "字符速度 :"
 
-#: tprefsform.lblfarnsworthunits.caption
-#, fuzzy
-msgid "WPM"
-msgstr "妇女"
-
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
@@ -6314,11 +6230,6 @@ msgstr "FOC 编号 :"
 msgid "Grid square:"
 msgstr "网格平方 :"
 
-#: tprefsform.lblmyiota.caption
-#, fuzzy
-msgid "IOTA:"
-msgstr "奥塔:"
-
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
@@ -6472,11 +6383,6 @@ msgstr "发送后 PTT 延迟"
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
 msgstr "x 1.7 ms( 0 个禁用)"
-
-#: tprefsform.lblpttgroup.caption
-#, fuzzy
-msgid "PTT"
-msgstr "密码"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
@@ -6941,11 +6847,6 @@ msgstr ""
 "无法下载 CCY. DAT 到 :\n"
 "\n"
 " %s原因: %str4w.log记录了全部细节."
-
-#: uappstrings.sctydownloadfailedtitle
-#, fuzzy
-msgid "CTY.DAT"
-msgstr "CTY. 达特"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
@@ -8657,11 +8558,6 @@ msgstr ""
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
-
-#: uappstrings.stxinhibitedindicator
-#, fuzzy
-msgid "INH"
 msgstr ""
 
 #: uappstrings.stxinhibitedstatus

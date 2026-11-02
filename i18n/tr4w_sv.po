@@ -555,7 +555,7 @@ msgstr "Mappar \"%s\" finns redan.\rÖverskrivning?"
 #: utr4wstrings.tc_iamin
 #, fuzzy
 msgid "&I am in %s"
-msgstr "Och jag är i %s"
+msgstr "Jag är &i %s"
 
 #. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:104
@@ -1970,7 +1970,7 @@ msgstr "&Winkeyer möjliggör"
 #: utr4wstrings.tc_autospace
 #, fuzzy
 msgid "&Autospace"
-msgstr "och Autospace"
+msgstr "&Autospace"
 
 #. Section: UWINKEY
 #: tr4w/src/lang/tr4w_consts_eng.pas:381
@@ -1984,7 +1984,7 @@ msgstr "C&T-spacing"
 #: utr4wstrings.tc_sidetone
 #, fuzzy
 msgid "&Sidetone"
-msgstr "och Sidetone"
+msgstr "&Sidetone"
 
 #. Section: UWINKEY
 #: tr4w/src/lang/tr4w_consts_eng.pas:383
@@ -1998,7 +1998,7 @@ msgstr "Paddle swa&p"
 #: utr4wstrings.tc_ignorespeedpot
 #, fuzzy
 msgid "&Ignore speed pot"
-msgstr "och Ignore speed pot"
+msgstr "&Ignorera speed pot"
 
 #. Section: UWINKEY
 #: tr4w/src/lang/tr4w_consts_eng.pas:385
@@ -2864,7 +2864,7 @@ msgstr "Dupe Sheet"
 #, fuzzy
 msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
-msgstr "och redit"
+msgstr "&Edit"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditmessage.caption
@@ -2899,12 +2899,12 @@ msgstr "Meddelande"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "och Play"
+msgstr "S&pela"
 
 #: tfrmeditqso.btnsave.caption
 #, fuzzy
 msgid "&Save"
-msgstr "och spara"
+msgstr "&Spara"
 
 #: tfrmeditqso.caption
 #, fuzzy
@@ -2914,7 +2914,7 @@ msgstr "Redigera QSO"
 #: tfrmeditqso.chkdeleted.caption
 #, fuzzy
 msgid "&Deleted"
-msgstr "och Deleted"
+msgstr "Ra&derad"
 
 #: tfrmeditqso.chkdomesticmult.caption
 #, fuzzy
@@ -2945,11 +2945,6 @@ msgstr "Namn Sent"
 #, fuzzy
 msgid "Prefix Mult"
 msgstr "Prefix Mult"
-
-#: tfrmeditqso.chkxqso.caption
-#, fuzzy
-msgid "X-QSO"
-msgstr "X-QSO"
 
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
@@ -3165,7 +3160,7 @@ msgstr "Sista status:"
 #: tfrminiretire.btnno.caption
 #, fuzzy
 msgid "&No"
-msgstr "och No"
+msgstr "I&ngen"
 
 #: tfrminiretire.btnyes.caption
 #, fuzzy
@@ -3188,14 +3183,6 @@ msgstr "chkDontAsk"
 #, fuzzy
 msgid "lblPrompt"
 msgstr "lblPrompt"
-
-#: tfrminputquery.caption
-#: ttr4wmainform.caption
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "tfrminputquery.caption"
-msgid "TR4W"
-msgstr "TR4W"
 
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
@@ -3338,22 +3325,10 @@ msgstr "Synkronisera"
 msgid "Differences in the log"
 msgstr "Skillnader i loggen"
 
-#: tfrmlpt.caption
-#, fuzzy
-msgid "LPT"
-msgstr "LPT"
-
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
 msgstr "Super check partiell"
-
-#: tfrmmmtty.caption
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tfrmmmtty.caption"
-msgid "MMTTY"
-msgstr "MMTTY"
 
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
@@ -3495,11 +3470,6 @@ msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr "Radioradio"
 
-#: tfrmradiopanel.lblrit.caption
-#, fuzzy
-msgid "RIT"
-msgstr "RIT"
-
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
@@ -3514,11 +3484,6 @@ msgstr "VFO A"
 #, fuzzy
 msgid "VFO B"
 msgstr "VFO B"
-
-#: tfrmradiopanel.lblxit.caption
-#, fuzzy
-msgid "XIT"
-msgstr "XIT"
 
 #: tfrmremmults.caption
 #, fuzzy
@@ -3622,11 +3587,6 @@ msgstr "Frysning"
 #, fuzzy
 msgid "Send"
 msgstr "Skicka"
-
-#: tfrmtelnet.btnshow50.caption
-#, fuzzy
-msgid "SH/50"
-msgstr "SH/50"
 
 #: tfrmtelnet.caption
 #, fuzzy
@@ -4594,11 +4554,6 @@ msgstr "Hamnen är inte konfigurerbar idag. Om du vill att det ska vara, säg s�
 msgid "Character speed:"
 msgstr "Karaktärshastighet:"
 
-#: tprefsform.lblfarnsworthunits.caption
-#, fuzzy
-msgid "WPM"
-msgstr "WPM"
-
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
@@ -4769,11 +4724,6 @@ msgstr "FOC-nummer:"
 msgid "Grid square:"
 msgstr "Grid Square:"
 
-#: tprefsform.lblmyiota.caption
-#, fuzzy
-msgid "IOTA:"
-msgstr "IOTA:"
-
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
@@ -4929,11 +4879,6 @@ msgstr "Fördröjning efter PTT innan du skickar"
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
 msgstr "x 1,7 ms (0 inaktiveringar)"
-
-#: tprefsform.lblpttgroup.caption
-#, fuzzy
-msgid "PTT"
-msgstr "PTT"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
@@ -5442,11 +5387,6 @@ msgstr ""
 "Förnuft: %s\n"
 "\n"
 "tr4w.log registrerar hela detaljen."
-
-#: uappstrings.sctydownloadfailedtitle
-#, fuzzy
-msgid "CTY.DAT"
-msgstr "CTY.DAT"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
@@ -6103,15 +6043,6 @@ msgid "Dupesheet"
 msgstr "Dupesheet"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trmaster
-#: tr4w/src/lang/tr4w_consts_eng.pas:623
-#: utr4wstrings.rc_trmaster
-#, fuzzy
-msgctxt "RC_TRMASTER"
-msgid "SCP"
-msgstr "SCP"
-
-#. Section: UEDITMESSAGE
 #. 4.72.3
 #: utr4wstrings:rc_remmults
 #: tr4w/src/lang/tr4w_consts_eng.pas:624
@@ -6543,7 +6474,7 @@ msgstr "CQ-läge"
 #, fuzzy
 msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
-msgstr "Sök & & Pounce läge"
+msgstr "Sök efter Sök && Pounce mode"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_rescore
@@ -6633,7 +6564,7 @@ msgstr "Raderad"
 #, fuzzy
 msgctxt "RC_SEARCH"
 msgid "&Search"
-msgstr "och sök"
+msgstr "&Sök efter Sök"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_contestnameic
@@ -7418,7 +7349,7 @@ msgstr "Det finns ingen loggfil ännu på %s."
 #, fuzzy
 msgctxt "TC_EDITOR_OPENINEDITOR"
 msgid "Open in text &editor"
-msgstr "Öppna i text och redaktör"
+msgstr "Öppna i t&extredigerare"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_explore
@@ -7436,7 +7367,7 @@ msgstr "Utforska"
 #, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr "och kopia"
+msgstr "Kopiera"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall
@@ -7481,28 +7412,6 @@ msgstr ""
 msgid "s"
 msgstr ""
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#: tfrmnewcontest.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmabout.lblurl.caption
 #, fuzzy
 msgid "http://www.tr4w.net"
@@ -7529,16 +7438,6 @@ msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr "Avbokning"
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr "DX"
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr "QTH"
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -7550,11 +7449,6 @@ msgstr "Spara och aktivera denna profil"
 #, fuzzy
 msgid "Contest"
 msgstr "Tävling"
-
-#: ulclformhelpers.tc_prefs_cw
-#, fuzzy
-msgid "CW"
-msgstr "CW"
 
 #: ulclformhelpers.tc_radioedit_transport
 #, fuzzy
@@ -7737,7 +7631,7 @@ msgstr "Synkronisera logg"
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr "och Get Server Log"
+msgstr "Få server lo&gga"
 
 #: utr4wstrings.rc_recvrecords
 #: tfrmserverlog.lblrecordscaption.caption
@@ -8897,7 +8791,7 @@ msgstr "Allt allt %d check(s) passerade."
 #: uappstrings.sverifyclose
 #, fuzzy
 msgid "&Close"
-msgstr "och nära"
+msgstr "Nära"
 
 #: uappstrings.sverifycolumnresult
 #, fuzzy
@@ -8917,7 +8811,7 @@ msgstr "Passerad"
 #: uappstrings.sverifyrun
 #, fuzzy
 msgid "&Run checks"
-msgstr "och kör checkar"
+msgstr "Kö&r kontroller"
 
 #: uappstrings.sverifyrunning
 #, fuzzy
@@ -9108,11 +9002,6 @@ msgstr ""
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
-
-#: uappstrings.stxinhibitedindicator
-#, fuzzy
-msgid "INH"
 msgstr ""
 
 #: uappstrings.stxinhibitedstatus

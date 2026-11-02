@@ -2729,12 +2729,6 @@ msgstr "chkDontAsk"
 msgid "lblPrompt"
 msgstr "lblPrompt"
 
-#: tfrminputquery.caption ttr4wmainform.caption
-#: uappstrings.salreadyrunningtitle
-msgctxt "tfrminputquery.caption"
-msgid "TR4W"
-msgstr "TR4W"
-
 #: tfrminputquery.lblprompt.caption
 msgid "Enter value:"
 msgstr "Wprowadź wartość:"
@@ -2842,18 +2836,9 @@ msgstr "&Synchronizuj"
 msgid "Differences in the log"
 msgstr "Różnice w dzienniku"
 
-#: tfrmlpt.caption
-msgid "LPT"
-msgstr "LPT"
-
 #: tfrmmaster.caption
 msgid "Super check partial"
 msgstr "Super sprawdzenie częściowe"
-
-#: tfrmmmtty.caption tprefsform.lblmmttyheading.caption
-msgctxt "tfrmmmtty.caption"
-msgid "MMTTY"
-msgstr "MMTTY"
 
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption utr4wstrings:rc_mp3rec
@@ -2960,10 +2945,6 @@ msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr "Radio"
 
-#: tfrmradiopanel.lblrit.caption
-msgid "RIT"
-msgstr "RIT"
-
 #: tfrmradiopanel.lblsplit.caption
 msgid "SPLIT"
 msgstr "SPLIT"
@@ -2975,10 +2956,6 @@ msgstr "VFO A"
 #: tfrmradiopanel.lblvfobcaption.caption
 msgid "VFO B"
 msgstr "VFO B"
-
-#: tfrmradiopanel.lblxit.caption
-msgid "XIT"
-msgstr "XIT"
 
 #: tfrmremmults.caption
 msgid "Remaining mults"
@@ -3914,11 +3891,6 @@ msgstr "Port nie jest dziś konfigurowalny. Jeśli chcesz, żeby tak było, powi
 msgid "Character speed:"
 msgstr "Prędkość znaków:"
 
-#: tprefsform.lblfarnsworthunits.caption
-#, fuzzy
-msgid "WPM"
-msgstr "WPM"
-
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
@@ -4085,11 +4057,6 @@ msgstr "Numer FOC:"
 msgid "Grid square:"
 msgstr "Kwadrat siatki:"
 
-#: tprefsform.lblmyiota.caption
-#, fuzzy
-msgid "IOTA:"
-msgstr "IOTA:"
-
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
@@ -4242,11 +4209,6 @@ msgstr "Opóźnienie po PTT przed wysłaniem"
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
 msgstr "x 1,7 ms (0 wyłączników)"
-
-#: tprefsform.lblpttgroup.caption
-#, fuzzy
-msgid "PTT"
-msgstr "PTT"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
@@ -4723,11 +4685,6 @@ msgstr ""
 "Uzasadnienie: %s\n"
 "\n"
 "Tr4w.log zapisuje cały szczegół."
-
-#: uappstrings.sctydownloadfailedtitle
-#, fuzzy
-msgid "CTY.DAT"
-msgstr "CTY.DAT"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
@@ -5270,13 +5227,6 @@ msgstr "Bandmapa"
 msgctxt "RC_DUPESHEET"
 msgid "Dupesheet"
 msgstr "Wykaz zrobionych stacji"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trmaster tr4w/src/lang/tr4w_consts_eng.pas:623
-#, fuzzy
-msgctxt "RC_TRMASTER"
-msgid "SCP"
-msgstr "SCP"
 
 # 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Pozostaj¦ce mno¬niki"
 #. Section: UEDITMESSAGE
@@ -6369,16 +6319,6 @@ msgctxt "TC_S"
 msgid "s"
 msgstr "s"
 
-#: tfrmeditqso.chksap.caption
-msgid "S&P"
-msgstr ""
-
-#: tfrmabout.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmabout.lblurl.caption
 msgid "http://www.tr4w.net"
 msgstr ""
@@ -6388,12 +6328,6 @@ msgstr ""
 msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
-
-#: tfrmaltd.btnok.caption
-#, fuzzy
-msgctxt "tfrmaltd.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 # 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Sprawdzenie powtşrek QSO na nieaktywnym radiu' -> 'Sprawdzanie duplikatów na nieaktywnym radiu', s.8 'Duplikatem jest QSO'; the reviewed twin (the old text is also codepage-damaged). Previous text: "Sprawdzenie powtşrek QSO na nieaktywnym radiu"
 #: tfrmaltd.caption
@@ -6406,12 +6340,6 @@ msgstr "Sprawdzanie duplikatów na nieaktywnym radiu"
 msgctxt "tfrmautocq.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
-
-#: tfrmautocq.btnok.caption
-#, fuzzy
-msgctxt "tfrmautocq.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tfrmautocq.caption
 #, fuzzy
@@ -6447,12 +6375,6 @@ msgctxt "tfrmbandplan.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: tfrmbandplan.btnok.caption
-#, fuzzy
-msgctxt "tfrmbandplan.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmbandplan.caption
 #, fuzzy
 msgid "Band plan"
@@ -6474,12 +6396,6 @@ msgstr "Edit"
 msgctxt "tfrmeditmessage.btnlist.caption"
 msgid "List of commands"
 msgstr "&List of commands"
-
-#: tfrmeditmessage.btnok.caption
-#, fuzzy
-msgctxt "tfrmeditmessage.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tfrmeditmessage.caption
 #, fuzzy
@@ -6521,11 +6437,6 @@ msgstr "Znak wywoławczy"
 msgid "Date"
 msgstr "Data"
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr "DX"
-
 #: tfrmeditqso.lblmode.caption
 #, fuzzy
 msgid "Mode"
@@ -6543,11 +6454,6 @@ msgstr "Imię i nazwisko"
 msgid "Operator"
 msgstr "Operator"
 
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr "QTH"
-
 #: tfrmfunctionkeys.caption
 #, fuzzy
 msgid "Function keys"
@@ -6558,12 +6464,6 @@ msgstr "Klawisze funkcyjne"
 msgctxt "tfrminputquery.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
-
-#: tfrminputquery.btnok.caption
-#, fuzzy
-msgctxt "tfrminputquery.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 # 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Sieö wewnútrzna"
 #: tfrmintercom.caption
@@ -6605,23 +6505,11 @@ msgctxt "tfrmlpt.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: tfrmlpt.btnok.caption
-#, fuzzy
-msgctxt "tfrmlpt.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmmessageslist.btncancel.caption
 #, fuzzy
 msgctxt "tfrmmessageslist.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
-
-#: tfrmmessageslist.btnok.caption
-#, fuzzy
-msgctxt "tfrmmessageslist.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tfrmmessageslist.caption
 #, fuzzy
@@ -6692,12 +6580,6 @@ msgctxt "tfrmsendspot.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: tfrmsendspot.btnok.caption
-#, fuzzy
-msgctxt "tfrmsendspot.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 # 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "WyÜlij spot"
 #: tfrmsendspot.caption
 #, fuzzy
@@ -6738,12 +6620,6 @@ msgctxt "tfrmudpdestinationedit.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: tfrmudpdestinationedit.btnok.caption
-#, fuzzy
-msgctxt "tfrmudpdestinationedit.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmudpdestinationedit.lblport.caption
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.lblport.caption"
@@ -6755,12 +6631,6 @@ msgstr "Port"
 msgctxt "tfrmwinmanager.btncancel.caption"
 msgid "Cancel"
 msgstr "Anuluj"
-
-#: tfrmwinmanager.btnok.caption
-#, fuzzy
-msgctxt "tfrmwinmanager.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 #: tprefsform.btnaddcluster.caption
 #, fuzzy
@@ -6906,12 +6776,6 @@ msgctxt "tprefsform.lblmainwindowheading.caption"
 msgid "Main window"
 msgstr "Główne okno"
 
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tprefsform.lblmmttyheading.caption"
-msgid "MMTTY"
-msgstr "MMTTY"
-
 #: tprefsform.lblnetaddress.caption
 #, fuzzy
 msgctxt "tprefsform.lblnetaddress.caption"
@@ -7027,18 +6891,6 @@ msgctxt "tradioeditform.tabnetwork.caption"
 msgid "Network"
 msgstr "Sieć"
 
-#: ttr4wmainform.caption
-#, fuzzy
-msgctxt "ttr4wmainform.caption"
-msgid "TR4W"
-msgstr "TR4W"
-
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "uappstrings.salreadyrunningtitle"
-msgid "TR4W"
-msgstr "TR4W"
-
 #: uappstrings.siniretiretitle
 #, fuzzy
 msgctxt "uappstrings.siniretiretitle"
@@ -7093,11 +6945,6 @@ msgstr "Klaster DX"
 #, fuzzy
 msgid "Contest"
 msgstr "Zawody"
-
-#: ulclformhelpers.tc_prefs_cw
-#, fuzzy
-msgid "CW"
-msgstr "CW"
 
 #: ulclformhelpers.tc_prefs_cwoutput1
 #, fuzzy
@@ -7620,12 +7467,6 @@ msgstr "Anuluj"
 msgctxt "tfrmnewcontest.btnlatest.caption"
 msgid "Last Contest"
 msgstr "Ostatnie zawody"
-
-#: tfrmnewcontest.btnok.caption
-#, fuzzy
-msgctxt "tfrmnewcontest.btnok.caption"
-msgid "OK"
-msgstr "OK"
 
 # 2026-10-16: machine error: Polish contest terminology is 'zawody' (plural-only) -- G0DVJ's reviewed entries use it, and the PZK's SP DX Contest 2023 rules use zawody 11 times, konkurs never; wording matches the reviewed TC_OPENCONFIGURATIONFILE. Was: "Otwórz plik konfiguracyjny lub rozpocznij nowy konkurs"
 #: tfrmnewcontest.caption
@@ -8659,11 +8500,6 @@ msgstr "Częstotliwość nadawcza"
 #, fuzzy
 msgid "TR Log format"
 msgstr "Format logu wg TR"
-
-#: utr4wstrings.rc_trmaster
-#, fuzzy
-msgid "SCP"
-msgstr "SCP"
 
 # 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Przegl¦daj / Edytujlog"
 #: utr4wstrings.rc_vieweditlog
@@ -11089,7 +10925,7 @@ msgstr "Synchronizuj dziennik"
 #, fuzzy
 msgctxt "utr4wstrings.rc_getservlog"
 msgid "&Get server log"
-msgstr "& Pobierz dziennik serwera"
+msgstr "&Pobierz dziennik serwera"
 
 #: utr4wstrings.rc_recvrecords
 #, fuzzy
@@ -11125,7 +10961,7 @@ msgstr "Pokaż zawartość dziennika serwera"
 #, fuzzy
 msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
-msgstr "& Utwórz i użyj nowego dziennika"
+msgstr "&Utwórz i użyj nowego dziennika"
 
 #: uappstrings.sexchangenoprecedence
 #, fuzzy
@@ -11406,7 +11242,7 @@ msgstr "Przeszedł"
 #: uappstrings.sverifyrun
 #, fuzzy
 msgid "&Run checks"
-msgstr "& Uruchom kontrole"
+msgstr "&Uruchom kontrole"
 
 #: uappstrings.sverifyrunning
 #, fuzzy
@@ -12903,11 +12739,6 @@ msgstr ""
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
-
-#: uappstrings.stxinhibitedindicator
-#, fuzzy
-msgid "INH"
 msgstr ""
 
 #: uappstrings.stxinhibitedstatus

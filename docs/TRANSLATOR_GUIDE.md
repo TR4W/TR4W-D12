@@ -113,9 +113,13 @@ a missing placeholder can crash the program, not merely misprint.
 Poedit these appear as actual new lines in the text box. Keep them where they are —
 deleting one runs two sentences together, adding one splits a sentence in half.
 
-**`&` before a letter**, as in `&File`. That marks the keyboard shortcut. Keep one `&`
-somewhere sensible in your translation, ideally before a letter that is not already
-used elsewhere in the same menu.
+**`&` before a letter**, as in `&File`, marks the keyboard shortcut. If the English has
+exactly one `&`, your translation must have exactly one `&`, directly before a letter of
+your word (no space after it), ideally a letter not already used on the same menu or
+form. If the English has no `&`, do not add one. `&&` is a literal ampersand
+(`Search && pounce`) and must stay doubled. Never replace the `&` with a quote, a
+bracket or the word for 'and'. In Japanese, Korean and Chinese, put the letter after
+the word: `复制(&C)`.
 
 ## 6. Things not worth translating
 

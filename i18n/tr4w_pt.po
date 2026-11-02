@@ -3666,11 +3666,6 @@ msgstr "Nome Enviado"
 msgid "Prefix Mult"
 msgstr "Prefixo Mult"
 
-#: tfrmeditqso.chkxqso.caption
-#, fuzzy
-msgid "X-QSO"
-msgstr "X- QSO"
-
 #: tfrmeditqso.chkzonemult.caption
 #, fuzzy
 msgid "Zone Mult"
@@ -3910,14 +3905,6 @@ msgstr "chkDontAsk"
 msgid "lblPrompt"
 msgstr "lblPrompt"
 
-#: tfrminputquery.caption
-#: ttr4wmainform.caption
-#: uappstrings.salreadyrunningtitle
-#, fuzzy
-msgctxt "tfrminputquery.caption"
-msgid "TR4W"
-msgstr "TR4W"
-
 #: tfrminputquery.lblprompt.caption
 #, fuzzy
 msgid "Enter value:"
@@ -4059,22 +4046,10 @@ msgstr "Sincronizar"
 msgid "Differences in the log"
 msgstr "Diferenças no registo"
 
-#: tfrmlpt.caption
-#, fuzzy
-msgid "LPT"
-msgstr "LPT"
-
 #: tfrmmaster.caption
 #, fuzzy
 msgid "Super check partial"
 msgstr "Super verificação parcial"
-
-#: tfrmmmtty.caption
-#: tprefsform.lblmmttyheading.caption
-#, fuzzy
-msgctxt "tfrmmmtty.caption"
-msgid "MMTTY"
-msgstr "MMTTY"
 
 #. Section: UEDITMESSAGE
 #: tfrmmp3recorder.caption
@@ -4216,11 +4191,6 @@ msgctxt "tfrmradiopanel.caption"
 msgid "Radio"
 msgstr "Rádio"
 
-#: tfrmradiopanel.lblrit.caption
-#, fuzzy
-msgid "RIT"
-msgstr "RIT"
-
 #: tfrmradiopanel.lblsplit.caption
 #, fuzzy
 msgid "SPLIT"
@@ -4235,11 +4205,6 @@ msgstr "VFO A"
 #, fuzzy
 msgid "VFO B"
 msgstr "VFO B"
-
-#: tfrmradiopanel.lblxit.caption
-#, fuzzy
-msgid "XIT"
-msgstr "XIT"
 
 # 2026-10-19: term from the EU DX Contest rules, European Portuguese edition (EUDXCC, https://www.eudx-contest.com/regras/): 'Outras muletas' -> 'Multiplicadores restantes', s.5 'Multiplicadores' (muletas = crutches). Previous text: "Outras muletas"
 #: tfrmremmults.caption
@@ -4345,11 +4310,6 @@ msgstr "Parado"
 #, fuzzy
 msgid "Send"
 msgstr "Enviar"
-
-#: tfrmtelnet.btnshow50.caption
-#, fuzzy
-msgid "SH/50"
-msgstr "SH/50"
 
 #: tfrmtelnet.caption
 #, fuzzy
@@ -5329,11 +5289,6 @@ msgstr "A porta não é configurável hoje. Se você quer que seja, diga e se to
 msgid "Character speed:"
 msgstr "Velocidade do carácter:"
 
-#: tprefsform.lblfarnsworthunits.caption
-#, fuzzy
-msgid "WPM"
-msgstr "WPM"
-
 #: tprefsform.lblfontsize.caption
 #, fuzzy
 msgid "Size:"
@@ -5505,11 +5460,6 @@ msgstr "Número FOC:"
 msgid "Grid square:"
 msgstr "Quadrado da grade:"
 
-#: tprefsform.lblmyiota.caption
-#, fuzzy
-msgid "IOTA:"
-msgstr "IOTA:"
-
 #: tprefsform.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone:"
@@ -5665,11 +5615,6 @@ msgstr "Atraso após o PTT antes do envio"
 #, fuzzy
 msgid "x 1.7 ms  (0 disables)"
 msgstr "x 1,7 ms (0 desactiva)"
-
-#: tprefsform.lblpttgroup.caption
-#, fuzzy
-msgid "PTT"
-msgstr "PTT"
 
 #: tprefsform.lblradiotcpheading.caption
 #, fuzzy
@@ -6178,11 +6123,6 @@ msgstr ""
 "Razão: %s\n"
 "\n"
 "tr4w.log registra o detalhe completo."
-
-#: uappstrings.sctydownloadfailedtitle
-#, fuzzy
-msgid "CTY.DAT"
-msgstr "CTY.DAT"
 
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
@@ -6861,15 +6801,6 @@ msgid "Dupesheet"
 msgstr "Dupesheet"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trmaster
-#: tr4w/src/lang/tr4w_consts_eng.pas:623
-#: utr4wstrings.rc_trmaster
-#, fuzzy
-msgctxt "RC_TRMASTER"
-msgid "SCP"
-msgstr "SCP"
-
-#. Section: UEDITMESSAGE
 #. 4.72.3
 #: utr4wstrings:rc_remmults
 #: tr4w/src/lang/tr4w_consts_eng.pas:624
@@ -7303,7 +7234,7 @@ msgstr "Modo CQ"
 #, fuzzy
 msgctxt "RC_SEARCHPOUNCE"
 msgid "Search && pounce mode"
-msgstr "Modo & & de ataque"
+msgstr "Procurar && modo de salto"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_rescore
@@ -8251,28 +8182,6 @@ msgctxt "TC_S"
 msgid "s"
 msgstr "s"
 
-#: tfrmeditqso.chksap.caption
-#, fuzzy
-msgid "S&P"
-msgstr ""
-
-#: tfrmabout.btnok.caption
-#: tfrmaltd.btnok.caption
-#: tfrmautocq.btnok.caption
-#: tfrmbandplan.btnok.caption
-#: tfrmeditmessage.btnok.caption
-#: tfrminputquery.btnok.caption
-#: tfrmlpt.btnok.caption
-#: tfrmmessageslist.btnok.caption
-#: tfrmsendspot.btnok.caption
-#: tfrmudpdestinationedit.btnok.caption
-#: tfrmwinmanager.btnok.caption
-#: tfrmnewcontest.btnok.caption
-#, fuzzy
-msgctxt "tfrmabout.btnok.caption"
-msgid "OK"
-msgstr "OK"
-
 #: tfrmabout.lblurl.caption
 #, fuzzy
 msgid "http://www.tr4w.net"
@@ -8299,16 +8208,6 @@ msgctxt "tfrmaltd.btncancel.caption"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: tfrmeditqso.lbldx.caption
-#, fuzzy
-msgid "DX"
-msgstr "DX"
-
-#: tfrmeditqso.lblqth.caption
-#, fuzzy
-msgid "QTH"
-msgstr "QTH"
-
 #: ulclformhelpers.tc_prefs_activate
 #, fuzzy
 msgid "Save and activate this profile"
@@ -8320,11 +8219,6 @@ msgstr "Gravar e activar este perfil"
 #, fuzzy
 msgid "Contest"
 msgstr "Concurso"
-
-#: ulclformhelpers.tc_prefs_cw
-#, fuzzy
-msgid "CW"
-msgstr "CW"
 
 #: ulclformhelpers.tc_radioedit_transport
 #, fuzzy
@@ -9891,11 +9785,6 @@ msgstr ""
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
-
-#: uappstrings.stxinhibitedindicator
-#, fuzzy
-msgid "INH"
 msgstr ""
 
 #: uappstrings.stxinhibitedstatus

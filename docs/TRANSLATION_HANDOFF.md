@@ -103,6 +103,9 @@ What it catches that neither Poedit nor the compiler will:
 - **a dropped or added line break** inside a message
 - **an entry left empty but no longer marked "Needs work"** — Poedit does this
   routinely, and it makes the entry invisible to the seeder afterwards
+- **a broken accelerator** — two `&` in one caption, an `&&` split into `& &`, an `&`
+  added where the English has none. The rule the translator was given is
+  `TRANSLATOR_GUIDE.md` section 5
 - **a translator credit that is still `N4AF`** — `TC_TRANSLATION_AUTHOR` is what the
   About box credits. Put the translator's name and callsign there (no email), and
   `(SK)` after a silent key's callsign
