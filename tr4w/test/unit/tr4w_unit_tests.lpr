@@ -158,6 +158,8 @@ uses
    uTR4WConfigFile      in '..\..\src\uTR4WConfigFile.pas',
    uUILanguage          in '..\..\src\uUILanguage.pas',
    uTestUILanguage      in 'uTestUILanguage.pas',
+   uCommandHelp         in '..\..\src\uCommandHelp.pas',
+   uTestCommandHelp     in 'uTestCommandHelp.pas',
    uUDPBroadcastConfig  in '..\..\src\uUDPBroadcastConfig.pas',
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
    uQsoDispatcher       in '..\..\src\uQsoDispatcher.pas',
@@ -1089,6 +1091,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
    RegisterSuite(TCrashContextTests.Create('CrashContext'));

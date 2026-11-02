@@ -57,6 +57,18 @@ peer's message, and the frozen list is what makes that visible.
 Paste the actual list from the failure **after** checking your new name reads
 like something an operator would type. Do not regenerate it blindly.
 
+### And its help text, which is the tooltip (2026-11-02)
+
+Every control Preferences binds shows the setting's help on hover, looked up
+by the PRIMARY command name in `help_<code>.po` (`src/uCommandHelp.pas`).
+**A new setting has none, so `uTestCommandHelp.TestEveryRegisteredSettingHasHelp`
+fails** until you either write a `[YOUR COMMAND]` section with `DESCRIPTION=`
+in `tr4w/target/commands_help_eng.ini` and regenerate the catalogues
+(`python tools/i18n/ini2po.py` -- it rewrites every `i18n/help_*.po`, so read
+its `emit()` first), or add the name to `KNOWN_HELP_GAPS` in that test. The
+list is exact in both directions, so it also fails the day a gap gets help.
+`docs/HELP_TEXT_GAPS.md` (`ini2po.py --todo --write-doc`) is the work-list.
+
 ---
 
 ## When you ALSO need one of the optional four

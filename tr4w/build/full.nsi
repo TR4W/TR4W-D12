@@ -198,14 +198,12 @@ File ..\target\commands_help_eng.ini
 ; demand rather than at start-up, and a wording fix should not need a rebuild.
 ; That split is NY4I's (2026-08-26).
 ;
-; NOTHING READS THESE YET. uOption.pas -- the Ctrl-J dialog that displayed
-; per-command help from commands_help_<LANG>.ini -- was deleted in 4321ce1d, and
-; Preferences has no help pane. The catalogues are installed so the pane can be
-; built without waiting on a release, and so a translator's work has somewhere
-; to land. Delete this block and the SetOutPath below to stop shipping them.
+; READ SINCE 2026-11-02: src\uCommandHelp.pas loads $INSTDIR\help\help_<code>.po
+; over help_en.po and Preferences shows each bound setting's text as its
+; tooltip. help_en.po MUST ship -- it is every language's fallback.
 ;
-; The .ini above is the same story one step further back: it is still installed,
-; still unread, and retires when the pane arrives reading these instead.
+; The .ini above is still installed and still unread by the program; it is
+; ini2po.py's authoring source. Retiring it from the payload is a separate call.
 SetOutPath "$INSTDIR\help"
    File ..\..\i18n\help_cs.po
    File ..\..\i18n\help_de.po

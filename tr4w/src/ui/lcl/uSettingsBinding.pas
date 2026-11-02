@@ -60,6 +60,7 @@ uses
    Generics.Collections,
    Controls,
    StdCtrls,
+   uCommandHelp,         // TCommandHelp -- the hover text of a bound control
    uSettingsRegistry;
 
 type
@@ -110,8 +111,18 @@ type
    TSettingBindings = class(TObject)
    private
       FItems: TObjectList<TSettingBinding>;
+      FHelp: TCommandHelp;
+
+      (* THE HOVER TEXT, set here because every bound control passes through
+        Bind -- the designed panels' hand-written lines and the generated
+        rows alike -- so this is the one place a tooltip can be given to all
+        of them. The setting's config command names its help; a control with
+        no help text keeps whatever Hint it had. *)
+      procedure ApplyHelp(const aControl: TControl; const aKey: string);
    public
-      constructor Create;
+      (* aHelp is NOT owned and may be nil (no tooltips). The form that owns
+        the bindings owns the help too, and outlives both. *)
+      constructor Create(const aHelp: TCommandHelp = nil);
       destructor Destroy; override;
 
       procedure Bind(const aControl: TCheckBox; const aKey: string); overload;
@@ -133,10 +144,42 @@ type
       function Item(const aIndex: integer): TSettingBinding;
    end;
 
+(* A CONTROL'S TOOLTIP FROM ITS CONFIG COMMAND'S HELP.
+
+  Hint and ShowHint from aHelp.Describe(aCommand), formatted by
+  FormatHelpHint; a nil help, a nil control or a command with no help leaves
+  the control as it was. Public for the hand-wired Preferences controls, which
+  have a command name but no binding -- TSettingBindings uses it for the rest,
+  so there is one rule for both. *)
+procedure ApplyCommandHelpHint(const aControl: TControl;
+                               const aHelp: TCommandHelp;
+                               const aCommand: string);
+
 implementation
 
 uses
    MainUnit;   // logger
+
+procedure ApplyCommandHelpHint(const aControl: TControl;
+                               const aHelp: TCommandHelp;
+                               const aCommand: string);
+var
+   text: string;
+begin
+   if (aHelp = nil) or (aControl = nil) or (Trim(aCommand) = '') then
+      begin
+      Exit;
+      end;
+   text := aHelp.Describe(aCommand);
+   if text = '' then
+      begin
+      Exit;
+      end;
+   (* UTF8Encode: the LCL's Hint is a UTF-8 AnsiString, and this unit's
+     strings are UTF-16. *)
+   aControl.Hint     := UTF8Encode(FormatHelpHint(text));
+   aControl.ShowHint := True;
+end;
 
 { --------------------------------------------------------- TSettingBinding - }
 
@@ -349,10 +392,30 @@ end;
 
 { -------------------------------------------------------- TSettingBindings - }
 
-constructor TSettingBindings.Create;
+constructor TSettingBindings.Create(const aHelp: TCommandHelp);
 begin
    inherited Create;
    FItems := TObjectList<TSettingBinding>.Create(True);
+   FHelp  := aHelp;
+end;
+
+procedure TSettingBindings.ApplyHelp(const aControl: TControl; const aKey: string);
+var
+   s: TSettingBase;
+begin
+   if FHelp = nil then
+      begin
+      Exit;
+      end;
+   s := FindSetting(aKey);
+   if s = nil then
+      begin
+      Exit;   // Load reports an unknown key; nothing to describe here
+      end;
+   (* The name the setting is REGISTERED under -- usually the primary name,
+     but QUICK QSL CW MESSAGE1 / QUICK QSL MESSAGE 1 register under second
+     names, and those sections are what they show. No alias resolution. *)
+   ApplyCommandHelpHint(aControl, FHelp, s.LegacyCommand);
 end;
 
 destructor TSettingBindings.Destroy;
@@ -368,6 +431,7 @@ begin
    b := TSettingBinding.Create(aKey);
    b.FCheck := aControl;
    FItems.Add(b);
+   ApplyHelp(aControl, aKey);
 end;
 
 procedure TSettingBindings.Bind(const aControl: TEdit; const aKey: string);
@@ -377,6 +441,7 @@ begin
    b := TSettingBinding.Create(aKey);
    b.FEdit := aControl;
    FItems.Add(b);
+   ApplyHelp(aControl, aKey);
 end;
 
 procedure TSettingBindings.Bind(const aControl: TComboBox; const aKey: string);
@@ -386,6 +451,7 @@ begin
    b := TSettingBinding.Create(aKey);
    b.FCombo := aControl;
    FItems.Add(b);
+   ApplyHelp(aControl, aKey);
 end;
 
 procedure TSettingBindings.LoadAll;

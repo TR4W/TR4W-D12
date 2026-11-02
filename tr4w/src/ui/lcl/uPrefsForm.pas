@@ -91,6 +91,7 @@ uses
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding,          // TSettingBindings -- a field on the form below
+   uCommandHelp,              // TCommandHelp -- the bound controls' tooltips
   uTR4WStrings,
   utils_text;
 
@@ -746,6 +747,11 @@ type
         bound needs no load/save code of its own. }
       FBindings: TSettingBindings;
 
+      { THE HELP TEXT THE BOUND CONTROLS SHOW ON HOVER -- help\help_<code>.po
+        for the UI language in force, over English.  Loaded once per form:
+        BuildBindings runs again, the catalogues do not change. }
+      FCommandHelp: TCommandHelp;
+
       { WHAT EACH COMMAND READ WHEN THE PAGE LOADED (name=value).  A command
         absent from here was never loaded through CommandText, and ApplyIfChanged
         then writes it unconditionally -- the old behaviour. }
@@ -1239,6 +1245,7 @@ uses
    uSettingsRegistry,     // the settings themselves
    uSettingsLegacy,       // ActiveStoreProvider -- graduated settings write to OUR store
    uAppPaths,             // DataFilePath -- shipped read-only data
+   uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
    uSettingsDeclarations, // DeclareAllSettings
    ComPortEnumerator,   // the real serial ports, same source as the radio editor
    uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
@@ -1622,6 +1629,7 @@ begin
    uSettingsLegacy.ActiveStoreProvider := nil;
 
    FreeAndNil(FBindings);
+   FreeAndNil(FCommandHelp);   // after the bindings, which point at it
    FreeAndNil(FLoaded);
    FreeAndNil(FColorElements);
    FreeAndNil(FPalette);
@@ -3804,6 +3812,11 @@ begin
       Exit;
       end;
 
+   (* THE SAME TOOLTIP A BOUND CONTROL GETS. This list is the one place that
+     pairs a hand-wired control with its command name (Lint-SearchIndex
+     keeps it complete), so it is where those controls get their help. *)
+   ApplyCommandHelpHint(aControl, FCommandHelp, aCommand);
+
    panel := SectionPanelFor(aControl);
    if panel = nil then
       begin
@@ -5352,8 +5365,16 @@ begin
    // is only that they were written before this existed.
    DeclareAllSettings;
 
+   if FCommandHelp = nil then
+      begin
+      FCommandHelp := TCommandHelp.Create(DataFilePath('help'), ActiveUILanguage);
+      logger.Info('[Prefs] Setting tooltips: "%s" over English "%s" (UI language "%s")',
+                  [FCommandHelp.LanguageFile, FCommandHelp.EnglishFile,
+                   ActiveUILanguage]);
+      end;
+
    FreeAndNil(FBindings);
-   FBindings := TSettingBindings.Create;
+   FBindings := TSettingBindings.Create(FCommandHelp);
 
    // Operating - CW
    FBindings.Bind(chkSayHiEnable,       'operating.cw.sayHi');

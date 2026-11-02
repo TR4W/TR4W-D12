@@ -25,6 +25,25 @@ because NY4I tried to add one and could not tell where it went — **most of the
 fifteen lists a command name can appear in exist to REMOVE a command or to IMPORT
 an old file.**
 
+## A bound control's tooltip is its command's help (2026-11-02)
+
+`TSettingBindings.Bind` (`ui/lcl/uSettingsBinding.pas` -- NOT
+`uSettingsModelBinding`, which only registers) sets `Hint`/`ShowHint` from
+`uCommandHelp.TCommandHelp.Describe(setting.LegacyCommand)`: `help\help_<code>.po`
+for `ActiveUILanguage`, over `help\help_en.po`, keyed by msgctxt
+`TC_HELP_<slug>` (`CommandHelpKey` = `ini2po.key_for`). The form owns the
+`TCommandHelp`; the bindings do not. **The name the setting is REGISTERED under,
+no alias resolution** -- usually the primary name (two QUICK QSL registrations
+use second names), and a second name's old help can describe what the name
+used to mean (`BACKUP LOG FILE NAME`). Hand-wired controls get the same hint
+from `AddHandWiredToSearchIndex` via `uSettingsBinding.ApplyCommandHelpHint`. The
+program does NOT read `commands_help_*.ini`; that is `ini2po.py`'s input.
+`uTestCommandHelp.KNOWN_HELP_GAPS` must list every registered command with no
+English help, exactly -- so a new setting fails there until it has help or is
+listed. `ini2po.py --todo --write-doc` writes `docs/HELP_TEXT_GAPS.md` from
+`settings_inventory.collect()` (no CFGCA). A dev tree has no `target\help\`, so
+a dev run shows no tooltips.
+
 ## `CFGCA` IS GONE — do not reason from it
 
 Deleted 2026-09-14 with `CFGRecord`, `CommandsArraySize` and all four positional
