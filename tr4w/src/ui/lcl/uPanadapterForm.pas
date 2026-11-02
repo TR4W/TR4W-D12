@@ -816,26 +816,19 @@ begin
    ARangeDb := FScaleDb;
 end;
 
+(* Which bins column AX covers is uSpectrumTypes.SpectrumColumnBins, the one
+   definition click-to-tune also reads; this only takes their maximum, so a
+   narrow signal is never lost between columns. *)
 function TfrmPanadapter.PeakForPixel(AX: Integer; ABinsPerPixel: Double): Single;
 var
    first, last, i: Integer;
 begin
-   first := Trunc(AX * ABinsPerPixel);
-   last := Trunc((AX + 1) * ABinsPerPixel) - 1;
+   Result := 0;
+   SpectrumColumnBins(AX, Length(FRenderBins), ABinsPerPixel, first, last);
 
-   if last < first then
+   if first < 0 then
       begin
-      last := first;
-      end;
-
-   if first > High(FRenderBins) then
-      begin
-      first := High(FRenderBins);
-      end;
-
-   if last > High(FRenderBins) then
-      begin
-      last := High(FRenderBins);
+      Exit;
       end;
 
    Result := FRenderBins[first];
@@ -1095,7 +1088,7 @@ begin
    if (w > 0) and (wfH > 0) and (Length(FRenderBins) > 0) then
       begin
       EnsureWaterfall(w, wfH);
-      PushWaterfallRow(Length(FRenderBins) / w);
+      PushWaterfallRow(SpectrumBinsPerPixel(Length(FRenderBins), w));
       end;
 
    pbSpectrum.Invalidate;
@@ -1479,7 +1472,7 @@ begin
 
    while f <= endHz do
       begin
-      x := Round(((f - startHz) / frame.SpanHz) * AWidth);
+      x := SpectrumHzToPixel(frame, f, AWidth);
 
       { THE GRID LINE FIRST, then the tick.  It runs UP through the trace from
         the scale, so a peak can be read against a frequency without counting
@@ -1515,21 +1508,12 @@ begin
       end;
 end;
 
-// The inverse of FreqAtPixel.  Both go through the same frame, so a marker
-// drawn at a frequency and a click read back from that pixel agree.
+(* Where a marker, a spot tick or a passband edge goes.  The arithmetic is
+   uSpectrumTypes.SpectrumHzToPixel, shared with the axis ticks; it is NOT yet
+   the exact inverse of FreqAtPixel or of the trace -- see the note there. *)
 function TfrmPanadapter.PixelForFreq(AHz: Int64; AWidth: Integer): Integer;
-var
-   frame: TSpectrumFrame;
 begin
-   Result := -1;
-   frame := RenderFrame;
-
-   if (frame.SpanHz <= 0) or (AWidth <= 0) then
-      begin
-      Exit;
-      end;
-
-   Result := Round(((AHz - SpectrumStartHz(frame)) / frame.SpanHz) * AWidth);
+   Result := SpectrumHzToPixel(RenderFrame, AHz, AWidth);
 end;
 
 { Where a VFO is actually LISTENING, or 0 if that is not known.
@@ -1760,10 +1744,17 @@ begin
    Result.BinCount := Length(FRenderBins);
 end;
 
+(* Through the bin, not straight from the pixel: the trace is drawn per bin,
+   so this is the frequency of the data under the cursor -- the FIRST bin of
+   the column, while the trace shows the column's maximum.
+
+   The bins-per-pixel is the trace's own Double (SpectrumBinsPerPixel).  It
+   used to be computed inline here, which on i386 stays in x87 extended
+   precision and truncated to a different bin than the trace in some columns;
+   sharing the Double makes the click land on the trace's first bin always. *)
 function TfrmPanadapter.FreqAtPixel(AX: Integer): Int64;
 var
    frame: TSpectrumFrame;
-   bin: Integer;
    w: Integer;
 begin
    Result := 0;
@@ -1775,21 +1766,7 @@ begin
       Exit;
       end;
 
-   // Through the bin, not straight from the pixel: the trace is drawn per bin,
-   // so this is the frequency of the data actually under the cursor.
-   bin := Trunc(AX * (frame.BinCount / w));
-
-   if bin < 0 then
-      begin
-      bin := 0;
-      end;
-
-   if bin > frame.BinCount - 1 then
-      begin
-      bin := frame.BinCount - 1;
-      end;
-
-   Result := SpectrumBinHz(frame, bin);
+   Result := SpectrumColumnHz(frame, AX, SpectrumBinsPerPixel(frame.BinCount, w));
 end;
 
 procedure TfrmPanadapter.UpdateLabels;
@@ -1915,7 +1892,7 @@ begin
    DrawVfoPassband(cv, nrVFOB, VFOB_PASSBAND, w, specH);
 
    cv.Pen.Color := TRACE_COLOR;
-   binsPerPixel := Length(FRenderBins) / w;
+   binsPerPixel := SpectrumBinsPerPixel(Length(FRenderBins), w);
 
    for x := 0 to w - 1 do
       begin

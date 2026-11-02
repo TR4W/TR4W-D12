@@ -86,6 +86,49 @@ function SpectrumBinHz(const AFrame: TSpectrumFrame; ABin: Integer): Int64;
 // wrong answer, which is worse than a refusal.
 function SpectrumHzToBin(const AFrame: TSpectrumFrame; AHz: Int64): Integer;
 
+(* THE HORIZONTAL MAPPING -- pixel columns, bins and Hz -- in one place.
+
+   The panadapter's trace, its waterfall, its axis, its VFO markers, its spot
+   ticks and click-to-tune all place things across the same AWidth columns.
+   They used to do it with four inline formulas in the form; these are those
+   formulas, moved here unchanged so they can be tested without a window.
+
+   THEY ARE NOT ONE DEFINITION YET, and the tests in uTestSpectrumMapping say
+   by how much.  The trace takes, for column x, the bins
+   [Trunc(x * bpp), Trunc((x + 1) * bpp) - 1] (one bin when that is empty);
+   click-to-tune reports the CENTRE OF THE FIRST of those bins, while the trace
+   and the readout show their MAXIMUM; a marker rounds its Hz to the nearest
+   column edge, which is not always the column the trace draws that bin in.
+   Changing any of that changes pixels, so it is a decision, not a refactor.
+
+   ABinsPerPixel is a Double ON PURPOSE.  The trace computes it once as
+   BinCount / Width into a Double, and Trunc of x times that Double is what it
+   draws.  Integer arithmetic would differ wherever the Double undershoots an
+   integer -- which is also why, for some widths, the top bin falls in no
+   column at all.  Callers get the value from SpectrumBinsPerPixel so that
+   every one of them truncates the same Double. *)
+
+(* BinCount / Width as the trace has always computed it; 0 for no width. *)
+function SpectrumBinsPerPixel(ABinCount, AWidth: Integer): Double;
+
+(* The bins the trace draws in column AX: AFirst..ALast, both inside
+   0..ABinCount - 1.  Wider than the data, one bin repeats across several
+   columns.  Both are -1 when there are no bins. *)
+procedure SpectrumColumnBins(AX, ABinCount: Integer; ABinsPerPixel: Double;
+                             out AFirst, ALast: Integer);
+
+(* Click-to-tune: the centre of the FIRST bin of column AX.  0 when the frame
+   has no bins. *)
+function SpectrumColumnHz(const AFrame: TSpectrumFrame; AX: Integer;
+                          ABinsPerPixel: Double): Int64;
+
+(* Markers, spots and axis ticks: AHz rounded to the nearest column edge.
+   NOT clamped -- a passband edge off either side still has to be placed so
+   the visible part is drawn -- so a caller drawing a point checks
+   0 <= x < AWidth itself.  -1 when the span or the width is not positive. *)
+function SpectrumHzToPixel(const AFrame: TSpectrumFrame; AHz: Int64;
+                           AWidth: Integer): Integer;
+
 { The DIAL frequency to set so that a signal displayed at ARfHz is actually
   heard -- the click-to-tune correction.
 
@@ -150,6 +193,96 @@ begin
       end;
 
    Result := Integer((offset * AFrame.BinCount) div AFrame.SpanHz);
+end;
+
+function SpectrumBinsPerPixel(ABinCount, AWidth: Integer): Double;
+begin
+   Result := 0;
+
+   if AWidth <= 0 then
+      begin
+      Exit;
+      end;
+
+   Result := ABinCount / AWidth;
+end;
+
+procedure SpectrumColumnBins(AX, ABinCount: Integer; ABinsPerPixel: Double;
+                             out AFirst, ALast: Integer);
+var
+   top: Integer;
+begin
+   AFirst := -1;
+   ALast := -1;
+
+   if ABinCount <= 0 then
+      begin
+      Exit;
+      end;
+
+   top := ABinCount - 1;
+
+   (* The trace's own expressions, in the trace's own order.  Do not turn
+      them into integer division: see the note on ABinsPerPixel. *)
+   AFirst := Trunc(AX * ABinsPerPixel);
+   ALast := Trunc((AX + 1) * ABinsPerPixel) - 1;
+
+   if ALast < AFirst then
+      begin
+      ALast := AFirst;
+      end;
+
+   if AFirst > top then
+      begin
+      AFirst := top;
+      end;
+
+   if ALast > top then
+      begin
+      ALast := top;
+      end;
+
+   (* Only a column left of the window gets here -- the trace never asks for
+      one, click-to-tune used to clamp it to bin 0, and this keeps that. *)
+   if AFirst < 0 then
+      begin
+      AFirst := 0;
+      end;
+
+   if ALast < AFirst then
+      begin
+      ALast := AFirst;
+      end;
+end;
+
+function SpectrumColumnHz(const AFrame: TSpectrumFrame; AX: Integer;
+                          ABinsPerPixel: Double): Int64;
+var
+   first, last: Integer;
+begin
+   Result := 0;
+   SpectrumColumnBins(AX, AFrame.BinCount, ABinsPerPixel, first, last);
+
+   if first < 0 then
+      begin
+      Exit;
+      end;
+
+   Result := SpectrumBinHz(AFrame, first);
+end;
+
+function SpectrumHzToPixel(const AFrame: TSpectrumFrame; AHz: Int64;
+                           AWidth: Integer): Integer;
+begin
+   Result := -1;
+
+   if (AFrame.SpanHz <= 0) or (AWidth <= 0) then
+      begin
+      Exit;
+      end;
+
+   (* Round is the RTL's banker's rounding, exactly as the form had it. *)
+   Result := Round(((AHz - SpectrumStartHz(AFrame)) / AFrame.SpanHz) * AWidth);
 end;
 
 function SpectrumDialFrequency(ARfHz: Int64; APitchHz: Integer;
