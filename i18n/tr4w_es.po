@@ -1,14 +1,17 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TR4W\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2026-11-02 20:27+0000\n"
+"Last-Translator: Weblate Admin <weblate.admin@bettersoftwaresolutions.com>\n"
+"Language-Team: Spanish <http://weblate.bettersoftwaresolutions.com/projects/"
+"tr4w/client/es/>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: es\n"
 "X-Source-Language: en\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 #. Section: General
 #: utr4wstrings:tc_translation_language tr4w/src/lang/tr4w_consts_eng.pas:7
@@ -41,26 +44,23 @@ msgstr "Advertencia: Fuera del rango de frecuencia permitido de WAG"
 #. Section: General
 #: utr4wstrings:tc_freq tr4w/src/lang/tr4w_consts_eng.pas:11
 #: utr4wstrings.tc_freq
-#, fuzzy
 msgctxt "TC_FREQ"
 msgid "Freq"
-msgstr "Freq"
+msgstr "frec."
 
 #. Section: General
 #: utr4wstrings:tc_points tr4w/src/lang/tr4w_consts_eng.pas:12
 #: utr4wstrings.tc_points
-#, fuzzy
 msgctxt "TC_POINTS"
 msgid "Pts"
-msgstr "Pts"
+msgstr "puntos"
 
 #. Section: General
 #: utr4wstrings:tc_op tr4w/src/lang/tr4w_consts_eng.pas:13
 #: utr4wstrings.tc_op
-#, fuzzy
 msgctxt "TC_OP"
 msgid "Op"
-msgstr "Op"
+msgstr "oper"
 
 #. Section: General
 #: utr4wstrings:tc_invalid tr4w/src/lang/tr4w_consts_eng.pas:14
@@ -116,7 +116,6 @@ msgstr "%s es de una version diferente.\rTR4W esperaba version %s.\rEl fichero q
 #: tprefsform.lblradio1.caption
 #: ulclformhelpers.tc_prefs_radio1
 #: utr4wstrings.tc_radio1
-#, fuzzy
 msgctxt "TC_RADIO1"
 msgid "Radio 1"
 msgstr "Radio 1"
@@ -127,7 +126,6 @@ msgstr "Radio 1"
 #: tprefsform.lblradio2.caption
 #: ulclformhelpers.tc_prefs_radio2
 #: utr4wstrings.tc_radio2
-#, fuzzy
 msgctxt "TC_RADIO2"
 msgid "Radio 2"
 msgstr "Radio 2"
@@ -143,15 +141,13 @@ msgstr "Desactive el modo \"CI-V Transceive\" en su equipo ICOM. Consulte el man
 #. Section: General
 #: utr4wstrings:tc_serial_format_label tr4w/src/lang/tr4w_consts_eng.pas:30
 #: utr4wstrings.tc_serial_format_label
-#, fuzzy
 msgctxt "TC_SERIAL_FORMAT_LABEL"
 msgid "DATA/PARITY/STOP"
-msgstr "DATA/PARITY/STOP"
+msgstr "Datos/Paridad/Stop"
 
 #. Section: General
 #: utr4wstrings:tc_hamlib_id_label tr4w/src/lang/tr4w_consts_eng.pas:31
 #: utr4wstrings.tc_hamlib_id_label
-#, fuzzy
 msgctxt "TC_HAMLIB_ID_LABEL"
 msgid "HAMLIB ID"
 msgstr "HAMLIB ID"
@@ -236,7 +232,7 @@ msgstr "¡¡%s es un duplicado!!"
 #: utr4wstrings.tc_errorinlogfile
 msgctxt "TC_ERRORINLOGFILE"
 msgid "Error in log file!"
-msgstr "Error en  fichero log!"
+msgstr "Error en fichero log!"
 
 #. Section: MAIN
 #: utr4wstrings:tc_hasimpropersyntax tr4w/src/lang/tr4w_consts_eng.pas:45
@@ -412,7 +408,6 @@ msgstr "frecuencia transmision (kiloHertz): "
 #. Section: MAIN
 #: utr4wstrings:tc_sprintqsyrule tr4w/src/lang/tr4w_consts_eng.pas:73
 #: utr4wstrings.tc_sprintqsyrule
-#, fuzzy
 msgctxt "TC_SPRINTQSYRULE"
 msgid "SPRINT QSY RULE!!!"
 msgstr "SPRINT QSY RULE!!!"
@@ -421,18 +416,16 @@ msgstr "SPRINT QSY RULE!!!"
 #: utr4wstrings:tc_paddle tr4w/src/lang/tr4w_consts_eng.pas:74
 #: tprefsform.lblpaddlegroup.caption
 #: utr4wstrings.tc_paddle
-#, fuzzy
 msgctxt "TC_PADDLE"
 msgid "Paddle"
-msgstr "Paddle"
+msgstr "Llave"
 
 #. Section: MAIN
 #: utr4wstrings:tc_footsw tr4w/src/lang/tr4w_consts_eng.pas:75
 #: utr4wstrings.tc_footsw
-#, fuzzy
 msgctxt "TC_FOOTSW"
 msgid "Footsw."
-msgstr "Footsw."
+msgstr "Pedal para el control del PTT"
 
 #. Section: MAIN
 #: utr4wstrings:tc_sun tr4w/src/lang/tr4w_consts_eng.pas:79
@@ -7141,19 +7134,17 @@ msgstr "Explorar"
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_copy tr4w/src/lang/tr4w_consts_eng.pas:898
 #: utr4wstrings.tc_editor_copy
-#, fuzzy
 msgctxt "TC_EDITOR_COPY"
 msgid "&Copy"
-msgstr "&Copiado"
+msgstr "&Copiar"
 
 #. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_selectall tr4w/src/lang/tr4w_consts_eng.pas:899
 #: utr4wstrings.tc_editor_selectall
-#, fuzzy
 msgctxt "TC_EDITOR_SELECTALL"
 msgid "Select &all"
-msgstr "Seleccione todo"
+msgstr "&Seleccion todos"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_editor_sendlogto tr4w/src/lang/tr4w_consts_eng.pas:900
@@ -7843,7 +7834,6 @@ msgstr "Qtc Qrs"
 msgid "Quick QSL CW Message 1"
 msgstr "Quick QSL CW Mensaje 1"
 
-#: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
 #~ msgid "Quick QSL CW Message1"
 #~ msgstr "Mensaje rápido de QSL CW1"
@@ -7858,7 +7848,6 @@ msgstr "Llave QSL rápida 1"
 msgid "Quick QSL Key 2"
 msgstr "Quick QSL Key 2"
 
-#: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
 #~ msgid "Quick QSL Message 1"
 #~ msgstr "Mensaje rápido 1"
@@ -8972,4 +8961,3 @@ msgstr ""
 msgctxt "tprefsform.lblscorerestart.caption"
 msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr "Posting on o off, la dirección, el nombre de usuario y la contraseña tienen efecto cuando se inicia el TR4W siguiente. La información de contacto se aplica cuando se guarda."
-
