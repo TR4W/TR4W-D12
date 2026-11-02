@@ -2329,13 +2329,13 @@ msgstr ""
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
 msgstr ""
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
 msgstr ""
 
 #. Config command: QUICK QSL KEY   (default: \)
@@ -2347,7 +2347,7 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
 msgstr ""
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
@@ -2365,7 +2365,7 @@ msgstr ""
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
 msgstr ""
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)

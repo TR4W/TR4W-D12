@@ -2329,14 +2329,14 @@ msgstr "이름 * TRUE, 당신이 BANDMAP 항목을 클릭 할 때, 그것은 비
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
-msgstr "짧은 CW 승인 메시지 대신 사용 QSL MESSAGE 때의 AUTO QSL INTERVAL 활동 또는 때 QUICK QSL KEY pressed입니다. Alt+P를 통해 프로그램."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
+msgstr "짧은 CW 인정 메시지 1, 전체 대신 전송 QSL MESSAGE 현재 위치 QUICK QSL KEY 1 입력 대신 눌러 (키가 보내는 전화에 QUICK QSL SSB MESSAGE), 풀 QSL 메시지 사이 AUTO QSL INTERVAL 활동하고, 통화가 데크를 기다리고있을 때. Alt+P를 통해 프로그램."
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
-msgstr "짧은 CW 승인 메시지 (Message 1). Alt+P를 통해 프로그램."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
+msgstr "짧은 CW 승인 메시지 1. 이것은 다른 이름입니다 QUICK QSL CW MESSAGE, 둘 다 동일한 메시지를 놓습니다. Alt+P를 통해 프로그램."
 
 #. Config command: QUICK QSL KEY   (default: \)
 #, fuzzy
@@ -2347,8 +2347,8 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
-msgstr "이것은 사본입니다 QUICK QSL MESSAGE 1 아래. 이 설정은 후자의 설정과 같은 효과가 있습니다."
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
+msgstr "더 이상 사용되지 않습니다. 오래된 구성 파일은 여전히 포함 할 수있다; 그것은 허용되고 무시됩니다. 설치하기 QUICK QSL CW MESSAGE 대신."
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
 #, fuzzy
@@ -2365,8 +2365,8 @@ msgstr "짧은 CW 승인 메시지 2, 전송 될 때 QUICK QSL KEY 2 pressed입�
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
-msgstr "짧은 SSB 음성 인식 메시지. Alt+P를 통해 프로그램. ## R"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
+msgstr "짧은 SSB 음성 인식 메시지. Alt+P를 통해 프로그램."
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)
 #, fuzzy

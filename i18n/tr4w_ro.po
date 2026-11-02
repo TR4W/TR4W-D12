@@ -8432,13 +8432,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Mesaj rapid QSL CW"
+msgid "Quick QSL CW Message 1"
+msgstr "Mesaj rapid QSL CW 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Mesaj rapid QSL CW1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Mesaj rapid QSL CW1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8452,8 +8452,8 @@ msgstr "Cheie rapidă QSL 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Mesaj QSL rapid 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Mesaj QSL rapid 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

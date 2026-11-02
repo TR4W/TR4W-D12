@@ -261,9 +261,8 @@ def write_gaps_doc(root, commands, by_lang, eng_desc, recoverable, blank,
      "object answers to, by its primary name, as `tools/settings_inventory.py` "
      "derives it from `uSettingsModel.pas` (the parse behind "
      "`tr4w/docs/SETTINGS_INVENTORY.md`). Help is looked up by the name a "
-     "control is registered under, with no alias resolution; that is the "
-     "primary name except for the two QUICK QSL registrations that use a "
-     "second name, so a second name's section in D is otherwise unused. "
+     "control is registered under, with no alias resolution; that is always "
+     "the primary name, so a second name's section in D is not shown. "
      "`uTestCommandHelp.KNOWN_HELP_GAPS` pins the subset Preferences "
      "registers.\n")
    w("| | |")

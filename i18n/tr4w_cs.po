@@ -8392,13 +8392,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Rychlá zpráva QSL CW"
+msgid "Quick QSL CW Message 1"
+msgstr "Rychlá zpráva QSL CW 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Rychlá zpráva QSL CW 1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Rychlá zpráva QSL CW 1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8412,8 +8412,8 @@ msgstr "Rychlý QSL klíč 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Rychlá QSL zpráva 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Rychlá QSL zpráva 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

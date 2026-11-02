@@ -8302,13 +8302,13 @@ msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
+msgid "Quick QSL CW Message 1"
 msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr ""
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8322,8 +8322,8 @@ msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr ""
+#~ msgid "Quick QSL Message 1"
+#~ msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

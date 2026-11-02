@@ -2329,14 +2329,14 @@ msgstr "若为 TRUE,当点击 BANDMAP 条目时,它将在不活跃的电台上�
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
-msgstr "使用短 CW 识别消息而不是完整 QSL MESSAGE 当 AUTO QSL INTERVAL 活动或当 QUICK QSL KEY 已按下。 通过Alt+P编程."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
+msgstr "简短的 CW 识别信息 1, 而不是完整发送 QSL MESSAGE 何时 QUICK QSL KEY 1 而不是按 Enter(在按键发送的电话上) QUICK QSL SSB MESSAGE),在完整的 QSL 信件之间,同时 AUTO QSL INTERVAL 当一个电话在甲板上等待的时候。 通过Alt+P编程."
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
-msgstr "备用短短 CW 识别消息( Message 1). 通过Alt+P编程."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
+msgstr "短篇CW识别信息 1. 这是另一个名字 QUICK QSL CW MESSAGE,两者都设置相同的信息。 通过Alt+P编程."
 
 #. Config command: QUICK QSL KEY   (default: \)
 #, fuzzy
@@ -2347,8 +2347,8 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
-msgstr "这是一本 QUICK QSL MESSAGE 1 见下文。 设置此选项与设置后者具有同等效果 。"
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
+msgstr "不再使用。 一个旧的配置文件可能仍然包含它;它被接受和忽略. 设定 QUICK QSL CW MESSAGE 换了"
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
 #, fuzzy
@@ -2365,8 +2365,8 @@ msgstr "简短的 CW 确认信息 2, 当 QUICK QSL KEY 2 已按下。 通过Alt+
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
-msgstr "SSB语音识别短消息. 通过 Alt+P. 编程"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
+msgstr "SSB语音识别短消息. 通过Alt+P编程."
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)
 #, fuzzy

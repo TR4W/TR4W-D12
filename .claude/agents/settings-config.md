@@ -33,9 +33,13 @@ an old file.**
 for `ActiveUILanguage`, over `help\help_en.po`, keyed by msgctxt
 `TC_HELP_<slug>` (`CommandHelpKey` = `ini2po.key_for`). The form owns the
 `TCommandHelp`; the bindings do not. **The name the setting is REGISTERED under,
-no alias resolution** -- usually the primary name (two QUICK QSL registrations
-use second names), and a second name's old help can describe what the name
-used to mean (`BACKUP LOG FILE NAME`). Hand-wired controls get the same hint
+no alias resolution** -- always the primary name, and a second name's old help
+can describe what the name used to mean (`BACKUP LOG FILE NAME`). **Register
+the PRIMARY name only, once per property** (2026-11-02): QUICK QSL CW MESSAGE
+had three registrations over `Messages.QuickQslCw1` (two by second names), so
+Preferences showed three rows for one value. They went; the parser still resolves every name.
+`uTestAllSettings.Test_NoTwoSettingsShareAProperty` fails a second
+registration of any property. Hand-wired controls get the same hint
 from `AddHandWiredToSearchIndex` via `uSettingsBinding.ApplyCommandHelpHint`. The
 program does NOT read `commands_help_*.ini`; that is `ini2po.py`'s input.
 `uTestCommandHelp.KNOWN_HELP_GAPS` must list every registered command with no

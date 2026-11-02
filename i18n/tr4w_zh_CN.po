@@ -7708,13 +7708,13 @@ msgstr "Qtc 质子"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "快速 QSL CW 信件"
+msgid "Quick QSL CW Message 1"
+msgstr "快速 QSL CW 信件 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "快速 QSL CW 信件1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "快速 QSL CW 信件1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -7728,8 +7728,8 @@ msgstr "快速 QSL 键 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "快速 QSL 信件 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "快速 QSL 信件 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

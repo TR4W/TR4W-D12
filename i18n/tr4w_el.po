@@ -8154,13 +8154,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Γρήγορο μήνυμα CW QSL"
+msgid "Quick QSL CW Message 1"
+msgstr "Γρήγορο μήνυμα CW QSL 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Γρήγορο μήνυμα CW QSL1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Γρήγορο μήνυμα CW QSL1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8174,8 +8174,8 @@ msgstr "Γρήγορο πλήκτρο QSL 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Γρήγορο μήνυμα QSL 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Γρήγορο μήνυμα QSL 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

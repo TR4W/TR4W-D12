@@ -8938,13 +8938,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Message rapide QSL CW"
+msgid "Quick QSL CW Message 1"
+msgstr "Message rapide QSL CW 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Message rapide QSL CW1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Message rapide QSL CW1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8958,8 +8958,8 @@ msgstr "Clé rapide QSL 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Message QSL rapide 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Message QSL rapide 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

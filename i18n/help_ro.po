@@ -2063,14 +2063,14 @@ msgstr "Dacă este adevărat, atunci când faceți clic pe intrarea BANDMAP, ace
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
-msgstr "Mesaj de confirmare CW scurt utilizat în loc de MESAJ QSL complet atunci când AUTO QSL INTERVAL este activ sau atunci când QSL QSL KEY este apăsat. Programat prin Alt+P."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
+msgstr "Mesaj de confirmare scurt CW 1, trimis în loc de plin QSL MESSAGE când QUICK QSL KEY 1 este apăsat în loc de Enter (pe telefon care tasta trimite QUICK QSL SSB MESSAGE), între mesajele complete QSL în timp ce AUTO QSL INTERVAL este activ şi când un apel aşteaptă pe punte. Programat prin Alt+P."
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
-msgstr "Mesaj de confirmare CW scurt alternativ (Mesaj 1). Programat prin Alt+P."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
+msgstr "Mesaj de confirmare CW scurt 1. Acesta este un alt nume pentru QUICK QSL CW MESSAGEŞi amândoi am setat acelaşi mesaj. Programat prin Alt+P."
 
 #. Config command: QUICK QSL KEY   (default: \)
 #, fuzzy
@@ -2081,8 +2081,8 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
-msgstr "Aceasta este o copie a rapid QSL MESAJ 1 de mai jos. Stabilirea acestui efect are același efect ca stabilirea acestuia din urmă."
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
+msgstr "Nu mai sunt folosite. Un fișier de configurare vechi poate conține încă; este acceptat și ignorat. Stabilește QUICK QSL CW MESSAGE În schimb."
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
 #, fuzzy
@@ -2099,8 +2099,8 @@ msgstr "Scurt mesaj de confirmare CW 2, trimis când QSL QEY 2 este apăsat. Pro
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
-msgstr "Mesaj de confirmare vocală SSB scurt. Programat prin Alt+P. ### R"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
+msgstr "Mesaj de confirmare vocală SSB scurt. Programat prin Alt+P."
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)
 #, fuzzy

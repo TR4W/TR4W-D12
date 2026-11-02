@@ -412,9 +412,9 @@ begin
       begin
       Exit;   // Load reports an unknown key; nothing to describe here
       end;
-   (* The name the setting is REGISTERED under -- usually the primary name,
-     but QUICK QSL CW MESSAGE1 / QUICK QSL MESSAGE 1 register under second
-     names, and those sections are what they show. No alias resolution. *)
+   (* The name the setting is REGISTERED under, which is its primary name --
+     no registration uses a second name since 2026-11-02 (the two QUICK QSL
+     rows that did were removed). No alias resolution. *)
    ApplyCommandHelpHint(aControl, FHelp, s.LegacyCommand);
 end;
 

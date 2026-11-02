@@ -599,30 +599,31 @@ begin
                           RS_CONTEST_QTCMINUTES);
    RegisterModelSetting( 'contest.qtcQrs',              'QTC QRS',
                           RS_CONTEST_QTCQRS);
-   { THE QUICK-QSL MESSAGES MOVED TO Settings.Messages, so these are
+   (* THE QUICK-QSL MESSAGES MOVED TO Settings.Messages, so these are
      RegisterModelSetting -- the legacy registrar reads four of its own
      attributes out of the CFGCA row and raises at startup when the row is
      gone.
 
-     THE FIRST THREE ARE ONE SETTING. QUICK QSL CW MESSAGE, QUICK QSL CW
-     MESSAGE1 and QUICK QSL MESSAGE 1 were three rows over a single global,
-     and all three keys are kept rather than a spelling chosen, because a
-     panel or a saved preference may name any of them. They now agree with
-     each other, which as separate stored values they did not.
+     QUICK QSL CW MESSAGE IS ONE ROW FOR THREE NAMES. QUICK QSL CW MESSAGE1
+     and QUICK QSL MESSAGE 1 are second names of the same property
+     (Messages.QuickQslCw1, see the AlsoKnownAs lines in uSettingsModel), and
+     a .cfg, the legacy bucket or a peer may still use either: the settings
+     object resolves all three. Preferences registers the primary name ONLY
+     (NY4I, 2026-11-02, "rename the row"). Until then it registered all three,
+     so one property showed as three rows that looked like three settings.
+     A registration key is not what persists the value (TModelSetting
+     writes through the property, by command), so dropping two keys loses
+     nothing. uTestAllSettings.Test_NoTwoSettingsShareAProperty keeps it so.
 
      THEY ARE CONTEST-SCOPED, so Preferences edits the running value and the
      settings FILE does not hold it -- see TMessageSettings. That is the same
-     arrangement the three band enables already have. }
+     arrangement the three band enables already have. *)
    RegisterModelSetting( 'contest.quickQslCwMessage',   'QUICK QSL CW MESSAGE',
                           RS_CONTEST_QUICKQSLCWMESSAGE);
-   RegisterModelSetting( 'contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
-                          RS_CONTEST_QUICKQSLCWMESSAGE1);
    RegisterModelSetting('contest.quickQslKey1',        'QUICK QSL KEY 1',
                           RS_CONTEST_QUICKQSLKEY1);
    RegisterModelSetting('contest.quickQslKey2',        'QUICK QSL KEY 2',
                           RS_CONTEST_QUICKQSLKEY2);
-   RegisterModelSetting( 'contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
-                          RS_CONTEST_QUICKQSLMESSAGE1);
    RegisterModelSetting( 'contest.quickQslMessage2',    'QUICK QSL MESSAGE 2',
                           RS_CONTEST_QUICKQSLMESSAGE2);
    RegisterModelSetting( 'contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',

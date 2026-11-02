@@ -8153,13 +8153,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Hurtig QSL CW meddelelse"
+msgid "Quick QSL CW Message 1"
+msgstr "Hurtig QSL CW meddelelse 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Quick QSL CW Message1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Quick QSL CW Message1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8173,8 +8173,8 @@ msgstr "Hurtig QSL- nøgle 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Hurtig QSL- meddelelse 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Hurtig QSL- meddelelse 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

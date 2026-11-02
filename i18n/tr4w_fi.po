@@ -8164,13 +8164,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Nopea QSL CW -viesti"
+msgid "Quick QSL CW Message 1"
+msgstr "Nopea QSL CW Viesti 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Nopea QSL CW-viesti1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Nopea QSL CW-viesti1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8184,8 +8184,8 @@ msgstr "Nopea QSL avain 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Nopea QSL- viesti 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Nopea QSL- viesti 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

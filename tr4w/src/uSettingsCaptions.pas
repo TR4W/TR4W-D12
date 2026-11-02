@@ -179,11 +179,9 @@ resourcestring
    RS_CONTEST_QTCEXTRASPACE                   = 'Qtc Extra Space';
    RS_CONTEST_QTCMINUTES                      = 'Qtc Minutes';
    RS_CONTEST_QTCQRS                          = 'Qtc Qrs';
-   RS_CONTEST_QUICKQSLCWMESSAGE               = 'Quick QSL CW Message';
-   RS_CONTEST_QUICKQSLCWMESSAGE1              = 'Quick QSL CW Message1';
+   RS_CONTEST_QUICKQSLCWMESSAGE               = 'Quick QSL CW Message 1';
    RS_CONTEST_QUICKQSLKEY1                    = 'Quick QSL Key 1';
    RS_CONTEST_QUICKQSLKEY2                    = 'Quick QSL Key 2';
-   RS_CONTEST_QUICKQSLMESSAGE1                = 'Quick QSL Message 1';
    RS_CONTEST_QUICKQSLMESSAGE2                = 'Quick QSL Message 2';
    RS_CONTEST_QUICKQSLSSBMESSAGE              = 'Quick QSL SSB Message';
    RS_CONTEST_R150SMODE                       = 'R150S Mode';

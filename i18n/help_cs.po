@@ -2052,14 +2052,14 @@ msgstr "Pokud TRUE, když kliknete na položku BANDMAP, bude QSY na neaktivní r
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
-msgstr "Krátká zpráva o potvrzení CW použitá místo plné zprávy QSL, když je aktivní AUTO QSL INTERVAL nebo když je stisknut QUICK QSL KEY. Naprogramováno přes Alt + P."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
+msgstr "Krátká zpráva o uznání CW 1, odeslaná místo plné QSL MESSAGE kdy QUICK QSL KEY 1 je stisknut místo Enter (na telefonu, že klíč odešle QUICK QSL SSB MESSAGE), mezi plnou QSL zpráv, zatímco AUTO QSL INTERVAL je aktivní, a když hovor čeká na palubě. Naprogramováno přes Alt + P."
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
-msgstr "Alternativní krátká zpráva o uznání CW (zpráva 1). Naprogramováno přes Alt + P."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
+msgstr "Krátká zpráva o uznání CW 1. To je jiný název pro QUICK QSL CW MESSAGEa oba nastavili stejnou zprávu. Naprogramováno přes Alt + P."
 
 #. Config command: QUICK QSL KEY   (default: \)
 #, fuzzy
@@ -2070,8 +2070,8 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
-msgstr "Toto je kopie QUICK QSL MESSAGE 1 níže. Nastavení tohoto má stejný účinek jako nastavení druhého."
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
+msgstr "Už se nepoužívá. Starý konfigurační soubor jej může stále obsahovat; je přijat a ignorován. Nastavení QUICK QSL CW MESSAGE místo toho."
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
 #, fuzzy
@@ -2088,8 +2088,8 @@ msgstr "Krátká zpráva o potvrzení CW 2, odeslaná při stisknutí QUICK QSL 
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
-msgstr "Krátká SSB hlasová zpráva. Naprogramováno přes Alt + P. # # # R"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
+msgstr "Krátká SSB hlasová zpráva. Naprogramováno přes Alt + P."
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)
 #, fuzzy

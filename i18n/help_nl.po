@@ -2330,14 +2330,14 @@ msgstr "Als WAAR, wanneer u klikt op BANDMAP ingang, zal het QSY op de inactieve
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
-msgstr "Korte CW bevestigingsbericht gebruikt in plaats van de volledige QSL BERICHT wanneer de AUTO QSL INTERVAL actief is of wanneer de Quick QSL KEY wordt ingedrukt. Geprogrammeerd via Alt+P."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
+msgstr "Korte CW bevestigingsbericht 1, verzonden in plaats van de volledige QSL MESSAGE wanneer QUICK QSL KEY 1 wordt ingedrukt in plaats van Enter (op de telefoon die de sleutel stuurt QUICK QSL SSB MESSAGE), tussen de volledige QSL berichten terwijl AUTO QSL INTERVAL is actief, en wanneer een oproep is wachten op het dek. Geprogrammeerd via Alt+P."
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
-msgstr "Alternatief kort CW bevestigingsbericht (bericht 1). Geprogrammeerd via Alt+P."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
+msgstr "Korte CW bevestigingsbericht 1. Dit is een andere naam voor QUICK QSL CW MESSAGE, en allebei hetzelfde bericht. Geprogrammeerd via Alt+P."
 
 #. Config command: QUICK QSL KEY   (default: \)
 #, fuzzy
@@ -2348,8 +2348,8 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
-msgstr "Dit is een kopie van Quick QSL BERICHT 1 hieronder. Het instellen van dit heeft hetzelfde effect als het instellen van de laatste."
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
+msgstr "Niet meer gebruikt. Een oud configuratiebestand kan het nog steeds bevatten; het wordt geaccepteerd en genegeerd. Instellen QUICK QSL CW MESSAGE In plaats daarvan."
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
 #, fuzzy
@@ -2366,8 +2366,8 @@ msgstr "Korte CW bevestiging bericht 2, verzonden wanneer Quick QSL sleutel 2 wo
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
-msgstr "Korte SSB-stembevestigingsbericht. Geprogrammeerd via Alt+P. ### R"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
+msgstr "Korte SSB-stembevestigingsbericht. Geprogrammeerd via Alt+P."
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)
 #, fuzzy

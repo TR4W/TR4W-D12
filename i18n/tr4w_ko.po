@@ -8866,13 +8866,13 @@ msgstr "프로젝트"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "빠른 QSL CW 메시지"
+msgid "Quick QSL CW Message 1"
+msgstr "빠른 QSL CW 메시지 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "빠른 QSL CW 메시지1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "빠른 QSL CW 메시지1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8886,8 +8886,8 @@ msgstr "빠른 QSL 열쇠 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "빠른 QSL 메시지 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "빠른 QSL 메시지 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

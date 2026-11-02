@@ -3696,7 +3696,6 @@ type
       FContest: TContestSettings;
       FMessages: TMessageTemplateSettings;
       procedure BuildCommandMap;
-      function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
         file. A method rather than a plain procedure because it has to
         reach IsContestScoped through the property it is asked about. *)
@@ -3731,6 +3730,12 @@ type
    public
       constructor Create;
       destructor Destroy; override;
+
+      (* The property path a command name reaches ('QUICK QSL MESSAGE 1' ->
+        'Messages.QuickQslCw1'), every alias resolved, or '' for a name the
+        settings object does not own. Public since 2026-11-02 so a test can
+        prove no two Preferences registrations reach one property. *)
+      function PathForCommand(const aCommand: string): string;
 
       (* The whole object as one JSON object, and back.  Same shape as every
         other store in settings\tr4w.json -- each serialises ITS OWN SECTION

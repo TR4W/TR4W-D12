@@ -8915,13 +8915,13 @@ msgstr "QtcのQrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "クイックQSL CWメッセージ"
+msgid "Quick QSL CW Message 1"
+msgstr "クイックQSL CWメッセージ1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "クイックQSL CWメッセージ1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "クイックQSL CWメッセージ1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -8935,8 +8935,8 @@ msgstr "クイックQSLキー2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "クイックQSLメッセージ1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "クイックQSLメッセージ1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

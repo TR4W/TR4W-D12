@@ -30,6 +30,12 @@ RegisterModelSetting('bandmap.spotAgeLimit', 'SPOT AGE LIMIT',
                      RS_BANDMAP_SPOTAGELIMIT);
 ```
 
+**One registration per property, under its PRIMARY name.** A second name
+(`AlsoKnownAs`) is resolved by the settings object whatever Preferences holds,
+so registering it as well only adds a second row for the same value — QUICK
+QSL CW MESSAGE had three until 2026-11-02, three rows for one value.
+`uTestAllSettings.Test_NoTwoSettingsShareAProperty` fails it.
+
 That is it. The command NAME is **derived from the property path** —
 `BandMap.SpotAgeLimit` gives `BAND MAP SPOT AGE LIMIT` — so you do not write it
 twice, and `CheckCommand` resolves it for a config file, the multi-op peer sync

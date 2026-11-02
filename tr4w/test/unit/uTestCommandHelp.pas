@@ -89,11 +89,30 @@ begin
              '"Language: en\n"' + LineEnding + LineEnding;
 end;
 
+(* AN EMPTY directory, every time. The directory outlives the run, so a file
+  one test writes late (TestRegionFallsToLanguage's help_pt_BR.po) was still
+  there for its own early check on the NEXT run, and that test passed once per
+  machine and failed ever after (measured 2026-11-02). *)
 function TempHelpDir(const aName: string): string;
+var
+   found: TSearchRec;
 begin
    Result := IncludeTrailingPathDelimiter(GetTempDir(False)) +
              'tr4w_help_test_' + aName + PathDelim;
    ForceDirectories(Result);
+   if FindFirst(Result + '*', faAnyFile, found) = 0 then
+      begin
+      try
+         repeat
+            if (found.Attr and faDirectory) = 0 then
+               begin
+               DeleteFile(Result + found.Name);
+               end;
+         until FindNext(found) <> 0;
+      finally
+         FindClose(found);
+      end;
+      end;
 end;
 
 (* UTF-8 bytes, as the catalogues are on disk. *)

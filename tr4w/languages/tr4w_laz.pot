@@ -3467,11 +3467,7 @@ msgid "Qtc Qrs"
 msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
-msgid "Quick QSL CW Message"
-msgstr ""
-
-#: usettingscaptions.rs_contest_quickqslcwmessage1
-msgid "Quick QSL CW Message1"
+msgid "Quick QSL CW Message 1"
 msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslkey1
@@ -3480,10 +3476,6 @@ msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslkey2
 msgid "Quick QSL Key 2"
-msgstr ""
-
-#: usettingscaptions.rs_contest_quickqslmessage1
-msgid "Quick QSL Message 1"
 msgstr ""
 
 #: usettingscaptions.rs_contest_quickqslmessage2

@@ -2329,14 +2329,14 @@ msgstr "Jos TRUE, Kun klikkaat BANDMAP merkintä, se QSY inaktiivisessa radiossa
 #. Config command: QUICK QSL CW MESSAGE
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE"
-msgid "Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P."
-msgstr "Lyhyt CW-vastausviesti käytetty sijasta koko QSL MESSAGE kun AUTO QSL INTERVAL on aktiivinen tai QUICK QSL KEY on painettu. Ohjelmoitu Alt+P:n kautta."
+msgid "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P."
+msgstr "Lyhyt CW-vastaanottoviesti 1, lähetetty täydellisen QSL MESSAGE kun QUICK QSL KEY 1 painetaan sijaan Enter (puhelimessa, että avain lähettää QUICK QSL SSB MESSAGE), QSL-viestien välillä AUTO QSL INTERVAL on aktiivinen, ja kun puhelu odottaa kannella. Ohjelmoitu Alt+P:n kautta."
 
 #. Config command: QUICK QSL CW MESSAGE1
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_CW_MESSAGE1"
-msgid "Alternate short CW acknowledgement message (Message 1). Programmed via Alt+P."
-msgstr "Vaihtoehtoinen lyhyt CW-vastausviesti (viesti 1). Ohjelmoitu Alt+P:n kautta."
+msgid "Short CW acknowledgement message 1. This is another name for QUICK QSL CW MESSAGE, and both set the same message. Programmed via Alt+P."
+msgstr "Lyhyt CW-vahvistusviesti 1. Tämä on toinen nimi QUICK QSL CW MESSAGE, ja molemmat asettavat saman viestin. Ohjelmoitu Alt+P:n kautta."
 
 #. Config command: QUICK QSL KEY   (default: \)
 #, fuzzy
@@ -2347,8 +2347,8 @@ msgstr ""
 #. Config command: QUICK QSL MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_MESSAGE"
-msgid "This is a copy of QUICK QSL MESSAGE 1 below. Setting this has the same effect as setting the latter."
-msgstr "Tämä on kopio QUICK QSL MESSAGE 1 alla. Tällä asetuksella on sama vaikutus kuin viimeksi mainitulla."
+msgid "No longer used. An old configuration file may still contain it; it is accepted and ignored. Set QUICK QSL CW MESSAGE instead."
+msgstr "Ei enää käytössä. Vanha asetustiedosto voi silti sisältää sen; se hyväksytään ja jätetään huomiotta. Aseta QUICK QSL CW MESSAGE Sen sijaan."
 
 #. Config command: QUICK QSL MESSAGE 1   (default: Blank)
 #, fuzzy
@@ -2365,8 +2365,8 @@ msgstr "Lyhyt CW-vastausviesti 2, joka lähetetään kun QUICK QSL KEY 2 on pain
 #. Config command: QUICK QSL SSB MESSAGE   (default: Blank)
 #, fuzzy
 msgctxt "TC_HELP_QUICK_QSL_SSB_MESSAGE"
-msgid "Short SSB voice acknowledgement message. Programmed via Alt+P. ### R"
-msgstr "Lyhyt SB-äänitunnistusviesti. Ohjelmoitu Alt+P:n kautta ### R"
+msgid "Short SSB voice acknowledgement message. Programmed via Alt+P."
+msgstr "Lyhyt SB-äänitunnistusviesti. Ohjelmoitu Alt+P:n kautta."
 
 #. Config command: RADIO ONE COMMAND PAUSE   (default: 0)
 #, fuzzy

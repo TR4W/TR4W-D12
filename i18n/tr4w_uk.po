@@ -7936,13 +7936,13 @@ msgstr "Qtc Qrs"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage
 #, fuzzy
-msgid "Quick QSL CW Message"
-msgstr "Швидкий QSL CW повідомлення"
+msgid "Quick QSL CW Message 1"
+msgstr "Швидкий QSL CW повідомлення 1"
 
 #: usettingscaptions.rs_contest_quickqslcwmessage1
 #, fuzzy
-msgid "Quick QSL CW Message1"
-msgstr "Швидкий QSL CW повідомлення1"
+#~ msgid "Quick QSL CW Message1"
+#~ msgstr "Швидкий QSL CW повідомлення1"
 
 #: usettingscaptions.rs_contest_quickqslkey1
 #, fuzzy
@@ -7956,8 +7956,8 @@ msgstr "Швидкий ключ QSL 2"
 
 #: usettingscaptions.rs_contest_quickqslmessage1
 #, fuzzy
-msgid "Quick QSL Message 1"
-msgstr "Швидкий QSL повідомлення 1"
+#~ msgid "Quick QSL Message 1"
+#~ msgstr "Швидкий QSL повідомлення 1"
 
 #: usettingscaptions.rs_contest_quickqslmessage2
 #, fuzzy

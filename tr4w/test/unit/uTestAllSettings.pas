@@ -46,6 +46,7 @@ type
       procedure Test_EverySettingRendersItsValue;
       procedure Test_AnAllowListContainsTheCurrentValue;
       procedure Test_KeysAreUniqueAndWellFormed;
+      procedure Test_NoTwoSettingsShareAProperty;
       procedure Test_EverySettingHasACaption;
       procedure Test_ReadOnlyAndSideEffectsAreVisible;
       procedure Test_ValuesSurviveATextRoundTrip;
@@ -58,6 +59,8 @@ implementation
 
 uses
    SysUtils,
+   Classes,
+   uSettingsModel,     // Settings.PathForCommand
    uSettingsRegistry,
    uSettingsLegacy,
    uRadioConfigStore,
@@ -318,6 +321,75 @@ begin
             end;
          end;
       end;
+end;
+
+procedure TAllSettingsTests.Test_NoTwoSettingsShareAProperty;
+var
+   all:     TArray<TSettingBase>;
+   paths:   TStringList;
+   keys:    TStringList;
+   i:       integer;
+   at:      integer;
+   path:    string;
+   checked: integer;
+begin
+   (* ONE PROPERTY, ONE ROW. A setting is a published property, and a command
+     name is only a way to reach it: QUICK QSL CW MESSAGE, QUICK QSL CW
+     MESSAGE1 and QUICK QSL MESSAGE 1 all resolve to Messages.QuickQslCw1.
+     Until 2026-11-02 Preferences registered all three, so the one value
+     showed as three rows that looked like three settings. Registering a
+     second name is never needed: the settings object resolves every alias
+     whatever the registry holds.
+
+     So: resolve each registered command to its property path, and refuse two
+     registrations reaching the same one. A setting whose command the settings
+     object does not own answers '' and is not a property of it; it is
+     skipped. The path comes back exactly as the alias table spells it, so the
+     comparison is exact. *)
+   BeginTest('no two registered settings reach the same property');
+   Declared;
+   all := AllSettings;
+   checked := 0;
+
+   paths := TStringList.Create;
+   keys := TStringList.Create;
+   try
+      paths.CaseSensitive := True;
+      for i := 0 to High(all) do
+         begin
+         if all[i].LegacyCommand = '' then
+            begin
+            Continue;
+            end;
+         path := Settings.PathForCommand(all[i].LegacyCommand);
+         if path = '' then
+            begin
+            Continue;
+            end;
+         Inc(checked);
+
+         at := paths.IndexOf(path);
+         if at >= 0 then
+            begin
+            Check(False,
+                  all[i].Key + ' (' + all[i].LegacyCommand + ') and '
+                  + keys[at] + ' both reach ' + path
+                  + ' -- register the primary name only');
+            Continue;
+            end;
+         paths.Add(path);
+         keys.Add(all[i].Key);
+         end;
+      Check(True, IntToStr(paths.Count) + ' properties, one registration each');
+   finally
+      keys.Free;
+      paths.Free;
+   end;
+
+   (* A floor, so the loop cannot pass by resolving nothing. *)
+   CheckTrue(checked > 200,
+             IntToStr(checked) + ' settings resolved to a property; '
+             + 'expected the full set');
 end;
 
 procedure TAllSettingsTests.Test_EverySettingHasACaption;
@@ -601,6 +673,7 @@ begin
    Test_EverySettingRendersItsValue;
    Test_AnAllowListContainsTheCurrentValue;
    Test_KeysAreUniqueAndWellFormed;
+   Test_NoTwoSettingsShareAProperty;
    Test_EverySettingHasACaption;
    Test_ReadOnlyAndSideEffectsAreVisible;
    Test_ValuesSurviveATextRoundTrip;
