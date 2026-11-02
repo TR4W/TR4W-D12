@@ -4707,10 +4707,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Hauptfenster"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "Die Schriftart gilt für das Hauptwettbewerbsfenster. Alle vier wirken, wenn TR4W das nächste Mal startet."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "Die Schriftart gilt für das Hauptwettbewerbsfenster. Alle drei wirken, wenn TR4W das nächste Mal startet."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -4979,10 +4980,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Größe:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "Die drei HamLib-Einstellungen treten in Kraft, wenn TR4W das nächste Mal startet. Sie sind sehr ausführlich und sind für die Diagnose eines Funkproblems - lassen Sie sie sonst aus."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "Der HamLib-Trace-Level tritt beim nächsten Start von TR4W in Kraft; die anderen beiden gelten beim Speichern. Sie sind sehr ausführlich und sind für die Diagnose eines Funkproblems - lassen Sie sie sonst aus."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -5050,12 +5052,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Hafen:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Diese treten in Kraft, wenn TR4W das nächste Mal startet."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Der Loggertyp, die Adresse und der Port werden wirksam, wenn TR4W das nächste Mal startet."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5555,10 +5557,11 @@ msgstr "Multicast Gruppe:"
 msgid "Broadcast port:"
 msgstr "Rundfunkport:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Diese treten in Kraft, wenn TR4W das nächste Mal startet. Lassen Sie die Multicast-Gruppe leer, es sei denn, WSJT-X ist für die Verwendung einer konfiguriert."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "WSJT-X einschalten, Funksteuerung und Broadcast-Port werden beim nächsten Start von TR4W wirksam; Highlights und die Multicast-Gruppe gelten beim Speichern. Lassen Sie die Multicast-Gruppe leer, es sei denn, WSJT-X ist für die Verwendung einer konfiguriert."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -9620,4 +9623,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Das Ein- oder Ausschalten, die Adresse, der Benutzername und das Passwort werden wirksam, wenn TR4W das nächste Mal startet. Kontaktinformationen gelten, wenn Sie speichern."
 

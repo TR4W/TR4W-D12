@@ -4334,10 +4334,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Pääikkuna"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "Kirjasin koskee pääkilpailun ikkunaa. Kaikki neljä tulevat voimaan, kun TR4W alkaa."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "Kirjasin koskee pääkilpailun ikkunaa. Kaikki kolme tulevat voimaan, kun TR4W alkaa."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Nämä olivat asetusvalikossa. Tuo ikkuna katoaa, kun ROW COUNT ja WINDOW KOKO liittyvät heihin täällä."
 #: tprefsform.lblappearmenunote.caption
@@ -4605,10 +4606,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Koko:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "HamLib-asetukset tulevat voimaan, kun TR4W alkaa. Ne ovat hyvin verbose ja ovat diagnosoida radio-ongelma - jätä ne pois muuten."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "HamLib-jälkitaso vaikuttaa, kun TR4W alkaa seuraavaksi; muut kaksi koskevat tallennusta. Ne ovat hyvin verbose ja ovat diagnosoida radio-ongelma - jätä ne pois muuten."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -4676,12 +4678,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Portti:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Nämä tulevat voimaan, kun TR4W alkaa."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Kirjautumistyyppi, osoite ja portti tulevat voimaan TR4W:n käynnistyessä."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5180,10 +5182,11 @@ msgstr "Monilähetysryhmä:"
 msgid "Broadcast port:"
 msgstr "Lähetysportti:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Nämä tulevat voimaan, kun TR4W alkaa. Jätä monicast-ryhmä tyhjäksi, ellei WSJT-X ole määritetty käyttämään yhtä."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "WSJT-X:n kytkeminen päälle, radio-ohjaus ja lähetysportti tulevat voimaan TR4W:n käynnistyessä. Jätä monicast-ryhmä tyhjäksi, ellei WSJT-X ole määritetty käyttämään yhtä."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -9317,4 +9320,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Postitus tai pois, osoite, käyttäjätunnus ja salasana tulevat voimaan, kun TR4W seuraavan kerran alkaa. Yhteystiedot koskevat kun tallennat."
 

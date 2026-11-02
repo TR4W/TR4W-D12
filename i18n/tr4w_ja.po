@@ -5055,10 +5055,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "メインウィンドウ"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "フォントはメインコンテストウィンドウに適用されます。 TR4Wが始まると、4つすべて効果を発揮します."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "フォントはメインコンテストウィンドウに適用されます。 TR4Wが始まると3つすべて効果を発揮します。"
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -5326,10 +5327,11 @@ msgstr "ツイート"
 msgid "Size:"
 msgstr "サイズ:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "TR4Wが始まると3つのHamLibの設定が有効になります。 彼らは非常に動詞であり、ラジオの問題の診断のために - それ以外の場合は、それらをオフに残します."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "次回TR4Wが始まるとHamLibのトレースレベルが効果を発揮します。他の2つは保存時に適用されます。 彼らは非常に動詞であり、ラジオの問題の診断のために - それ以外の場合は、それらをオフに残します。"
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -5398,12 +5400,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "港:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "TR4W が始まると効果を発揮します."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "TR4Wが始まるとロガータイプ、アドレス、ポートが有効になります。"
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5910,10 +5912,11 @@ msgstr "マルチキャストグループ:"
 msgid "Broadcast port:"
 msgstr "放送港:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "TR4W が始まると効果を発揮します。 WSJT-X が 1 つを使用するように構成されていない限り、マルチキャストグループ空白のままにします."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "WSJT-X をオンにします。, ラジオ制御と放送ポートは、TR4W が次の開始時に効果をとります。; ハイライトとマルチキャスト グループを保存したときに適用します。. WSJT-X が 1 つを使用するように構成されていない限り、マルチキャストグループ空白のままにします。"
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -10074,4 +10077,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "TR4W の起動時にアドレス、ユーザー名、パスワードが有効になります。 保存時に連絡先情報が適用されます。"
 

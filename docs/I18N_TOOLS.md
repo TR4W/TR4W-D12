@@ -78,6 +78,26 @@ Seed everything that is empty:
 python tools\i18n\mt_seed.py --lang ALL
 ```
 
+**After a change, seed only what the change touched** (2026-11-01). Every catalogue
+carries about 50 empty entries left empty on purpose or by an earlier refusal (840
+in `sr` and `mn`, which the engine does not offer), and a plain run fills all of
+them. `--only` names an entry by its identifier (msgctxt or `#:`), is repeatable,
+and keeps every other gate:
+
+```powershell
+python tools\i18n\mt_seed.py --lang GER --only tprefsform.lblappearhint.caption --dry-run
+```
+
+**A REWORDED caption needs more than `po_merge`.** `po_merge` skips an entry whose
+identifier is already claimed and never updates its msgid, and LazUtils matches on
+the identifier, so the old wording's translation keeps shipping under the new
+English. Rewrite the msgid by script through `pofile` (precedents: `74a50e27`,
+and the five Preferences restart notes on 2026-11-01): refuse a reviewed entry
+or one carrying a `# ` comment unless you have read it, clear a plain machine
+draft, then `mt_seed --only`. If two keys shared one entry and their English
+now differs, take the second identifier off its `#:` lines first so `po_merge`
+adds it.
+
 ---
 
 ## Check a catalogue

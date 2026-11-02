@@ -3647,10 +3647,11 @@ msgid "Main window"
 msgstr "Główne okno"
 
 # 2026-10-16: machine error: Polish contest terminology is 'zawody' (plural-only) -- G0DVJ's reviewed entries use it, and the PZK's SP DX Contest 2023 rules use zawody 11 times, konkurs never. Was: "Czcionka dotyczy głównego okna konkursu. Wszystkie cztery stają się skuteczne, gdy TR4W rozpocznie się następny."
+# 2026-11-01: English reworded ("All four" -> "All three"); "cztery" -> "trzy" only, the zawody correction above kept. Still fuzzy. Was: "... Wszystkie cztery ..."
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "Czcionka dotyczy głównego okna zawodów. Wszystkie cztery stają się skuteczne, gdy TR4W rozpocznie się następny."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "Czcionka dotyczy głównego okna zawodów. Wszystkie trzy stają się skuteczne, gdy TR4W rozpocznie się następny."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Były w pozycji Wygląd menu Ustawienia. To okno zniknie, gdy tylko RWA COUNT i WINDOW SIZE dołączą do nich."
 #: tprefsform.lblappearmenunote.caption
@@ -3920,10 +3921,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Rozmiar:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "Trzy ustawienia HamLib stają się skuteczne po rozpoczęciu TR4W. Są bardzo werbalne i są do diagnozowania problemu radiowego - zostaw je w przeciwnym razie."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "Poziom śladowy HamLib zaczyna obowiązywać po rozpoczęciu TR4W; pozostałe dwa mają zastosowanie podczas zapisywania. Są bardzo werbalne i są do diagnozowania problemu radiowego - zostaw je w przeciwnym razie."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -3988,11 +3990,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Port:"
 
-#: tprefsform.lblloggerrestart.caption tprefsform.lblscorerestart.caption
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
+#: tprefsform.lblloggerrestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Są one skuteczne, gdy TR4W rozpocznie się następny."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Typ logera, adres i port stają się skuteczne, gdy TR4W rozpocznie się następny."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -4488,10 +4491,11 @@ msgstr "Grupa wielonarodowa:"
 msgid "Broadcast port:"
 msgstr "Port nadawczy:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Są one skuteczne, gdy TR4W rozpocznie się następny. Pozostawić grupę multicast puste, chyba że WSJT- X jest skonfigurowany do użycia jednego."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "Włączenie WSJT- X, sterowanie radiowe i port transmisyjny stają się skuteczne, gdy TR4W rozpocznie się następny; podkreślenia i grupa multicast mają zastosowanie podczas zapisywania. Pozostawić grupę multicast puste, chyba że WSJT- X jest skonfigurowany do użycia jednego."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -6958,11 +6962,12 @@ msgctxt "tprefsform.lblrotatorport.caption"
 msgid "Port:"
 msgstr "Port:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblscorerestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Są one skuteczne, gdy TR4W rozpocznie się następny."
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Wpisywanie lub wyłączanie, adres, nazwa użytkownika i hasło stają się skuteczne po rozpoczęciu TR4W następnym. Dane kontaktowe mają zastosowanie przy zapisywaniu."
 
 #: tprefsform.lblstationheading.caption
 #, fuzzy

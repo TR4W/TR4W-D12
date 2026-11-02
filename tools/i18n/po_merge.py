@@ -130,29 +130,9 @@ def is_third_party(entry, ours):
    return False
 
 
-def claimed_identifiers(entry):
-   """EVERY identifier an entry answers for: its msgctxt, and each token on
-   each `#:` line that is an identifier rather than a `path:line` reference.
-
-   ALL OF THEM, NOT THE FIRST (2026-10-18). This used to be the msgctxt alone
-   when there was one, else the first `#:` line taken whole. But an entry
-   routinely names two identifiers -- `#: tfrminiretire.caption
-   uappstrings.siniretiretitle` on one line, or `uappstrings.salreadyrunningtitle`
-   on a second `#:` line under a form caption's msgctxt -- because the same
-   English is a caption and a resourcestring. Measured on the first merge of a
-   uAppStrings template: 2 of the 38 'new' strings were already claimed that
-   way in all 22 catalogues, and the merge added a twin of each. LazUtils loads
-   every `#:` identifier (translations.pas), and Make-LanguageRes ships one
-   entry per identifier, so the twin added nothing but debt."""
-   ids = set()
-   if entry.key:
-      ids.add(entry.key.lower())
-   for r in (entry.refs or []):
-      for tok in r.split():
-         # a rekey/Lazarus identifier, not a source reference ending in a line number
-         if not tok.rsplit(':', 1)[-1].isdigit():
-            ids.add(tok.lower().replace(':', '.'))
-   return ids
+# The identity rule is pofile.claimed_identifiers -- shared with mt_seed --only,
+# so the two tools cannot disagree about which entry a key names.
+claimed_identifiers = pofile.claimed_identifiers
 
 
 def is_known(entry, seen_ids, seen_sources):

@@ -95,11 +95,11 @@ class SeedFixture(unittest.TestCase):
        pofile.lcl_catalogue) = self.saved
       shutil.rmtree(self.dir, ignore_errors=True)
 
-   def run_seed(self, reseed=False):
+   def run_seed(self, reseed=False, only=None):
       out = io.StringIO()
       with contextlib.redirect_stdout(out):
          mt_seed.seed(self.path, "http://unused", "de", "GER", False,
-                      reseed=reseed)
+                      reseed=reseed, only=only)
       return out.getvalue()
 
    def entries(self):
@@ -152,6 +152,28 @@ class SeedFixture(unittest.TestCase):
       self.run_seed()
       e = self.entries()["uappstrings.scleared"]
       self.assertTrue(mt_seed.marked_skip(e), e.comments)
+
+   # -- --only: a change seeds what it touched, nothing else (2026-11-01) ----
+
+   def test_only_seeds_the_named_entry(self):
+      self.run_seed(only={"uappstrings.splain"})
+      self.assertEqual(self.entries()["uappstrings.splain"].target,
+                       "[de] Hello world")
+
+   def test_only_leaves_every_other_empty_entry_empty(self):
+      # Named in a different case and with ':' -- the identifier as LazUtils
+      # normalises it, not as typed.
+      self.run_seed(only={"UAPPSTRINGS:SMULTILINE"})
+      self.assertEqual(self.entries()["uappstrings.splain"].target, "")
+
+   def test_only_still_applies_the_skip_marker(self):
+      self.run_seed(only={"uappstrings.scleared"})
+      self.assertEqual(self.entries()["uappstrings.scleared"].target, "")
+
+   def test_reseed_with_only_does_not_wipe_other_drafts(self):
+      self.run_seed(reseed=True, only={"uappstrings.splain"})
+      self.assertEqual(self.entries()["uappstrings.skeptdraft"].target,
+                       "Das Log oeffnen")
 
 
 class Marker(unittest.TestCase):

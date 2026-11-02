@@ -5026,9 +5026,10 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "메인 창"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
 msgstr "글꼴은 메인 대회 창에 적용됩니다. 다음 TR4W가 시작됩니다."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "이 설정 메뉴의 외관 항목에 있었다. 그 창은 ROW COUNT와 WINDOW 크기가 여기에 가입하면됩니다."
@@ -5297,10 +5298,11 @@ msgstr "사이트맵"
 msgid "Size:"
 msgstr "크기:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "3 HamLib 설정은 TR4W가 시작될 때 효과가 발생합니다. 그들은 매우 동서이며 라디오 문제를 진단하기위한 것입니다 - 그렇지 않으면 떠나."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "HamLib 추적 레벨은 TR4W가 다음 시작될 때 효과가 발생합니다. 다른 두 가지는 저장할 때 적용됩니다. 그들은 매우 동서이며 라디오 문제를 진단하기위한 것입니다 - 그렇지 않으면 떠나."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -5368,12 +5370,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "항구:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "다음 TR4W가 시작될 때 이러한 효과."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Logger 유형, 주소 및 포트는 TR4W가 다음 시작될 때 효력을 가지고 갑니다."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5872,10 +5874,11 @@ msgstr "Multicast 그룹:"
 msgid "Broadcast port:"
 msgstr "방송 항구:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "다음 TR4W가 시작될 때 이러한 효과. WSJT-X를 사용하지 않는 한 멀티캐스트 그룹 공백을 남겨주세요."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "WSJT-X를 켜고, 라디오 제어 및 방송 포트는 TR4W가 시작될 때 효력을 가지고 갑니다; 하이라이트와 멀티캐스트 그룹은 당신이 저장할 때 적용합니다. WSJT-X를 사용하지 않는 한 멀티캐스트 그룹 공백을 남겨주세요."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -10015,4 +10018,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "에 게시하거나 해제, 주소, 사용자 이름 및 암호는 TR4W 다음 시작 때 효력을 가지고. 연락처는 저장할 때 적용됩니다."
 

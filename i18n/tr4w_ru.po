@@ -4707,9 +4707,10 @@ msgid "Main window"
 msgstr "Главное окно"
 
 # 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'конкурс' -> 'контест', s.2 'Контест проводится' (12 times; 'конкурс' only once, in the title line) and the reviewed ' - ... начать новый контест'. Previous text: "Шрифт распространяется на главное окно конкурса. Все они вступают в силу при следующем запуске TR4W."
+# 2026-11-01: English reworded ("All four" -> "All three"); this text says "Все они" (all of them), which is still true, so it was kept. Still fuzzy.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
 msgstr "Шрифт распространяется на главное окно контеста. Все они вступают в силу при следующем запуске TR4W."
 
 #: tprefsform.lblappearmenunote.caption
@@ -4987,10 +4988,11 @@ msgstr "ПММ"
 msgid "Size:"
 msgstr "Размер:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "Три настройки HamLib вступают в силу при следующем запуске TR4W. Они очень многословны и предназначены для диагностики радиопроблемы — оставьте их в покое."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "Уровень трассировки HamLib вступает в силу при следующем запуске TR4W; два других применяются при сохранении. Они очень многословны и предназначены для диагностики радиопроблемы — оставьте их в покое."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -5058,12 +5060,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Порт:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Они вступают в силу при следующем запуске TR4W."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Тип регистратора, адрес и порт вступают в силу при следующем запуске TR4W."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5568,10 +5570,11 @@ msgstr "Многопрофильная группа:"
 msgid "Broadcast port:"
 msgstr "Трансляционный порт:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Они вступают в силу при следующем запуске TR4W. Оставьте группу мультикастов пустой, если WSJT-X не настроен на ее использование."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "Включение WSJT-X, радиоуправление и порт вещания вступают в силу при следующем запуске TR4W; основные моменты и многоадресная группа применяются при сохранении. Оставьте группу мультикастов пустой, если WSJT-X не настроен на ее использование."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -9650,4 +9653,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Включение или выключение адреса, имени пользователя и пароля вступают в силу при следующем запуске TR4W. Контактная информация применяется при сохранении."
 

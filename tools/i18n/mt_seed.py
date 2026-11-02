@@ -324,8 +324,12 @@ SALVAGE_MARK = "RECOVERED from a bit-corrupted lang file"
 
 
 def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
-         reseed=False, verify=DEFAULT_VERIFY):
+         reseed=False, verify=DEFAULT_VERIFY, only=None):
+   """only: a set of identifiers (pofile.claimed_identifiers form). When
+   given, nothing outside it is seeded -- or wiped by --reseed."""
    entries = pofile.read_po(po_path)
+   if only is not None:
+      only = {i.lower().replace(':', '.') for i in only}
 
    if reseed:
       # Discard previous MACHINE output so it can be regenerated. Only fuzzy
@@ -335,6 +339,8 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       kept_salvage = 0
       for e in entries:
          if e.fuzzy and e.target.strip() and not e.obsolete:
+            if only is not None and only.isdisjoint(pofile.claimed_identifiers(e)):
+               continue
             if marked_skip(e):
                # Somebody put this text here by hand and said "machine, keep
                # out". Wiping it would leave an entry nothing refills.
@@ -369,6 +375,13 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
    empty = [e for e in entries
             if not e.target.strip() and not e.obsolete
             and e.key not in SKIP_KEYS]
+   # --only: SEED WHAT THIS CHANGE TOUCHED, NOT EVERY EMPTY ENTRY (2026-11-01).
+   # Each catalogue carries ~50 empty entries left empty on purpose or by an
+   # earlier refusal (840 in sr and mn, which the engine does not offer), and
+   # a plain run fills all of them. Every gate below still applies.
+   if only is not None:
+      empty = [e for e in empty
+               if not only.isdisjoint(pofile.claimed_identifiers(e))]
    marked = [e for e in empty if marked_skip(e)]
    candidates = [e for e in empty if not marked_skip(e)]
    if marked:
@@ -649,6 +662,10 @@ def main(argv=None):
    ap.add_argument("--reseed", action="store_true",
                    help="discard previous machine output and regenerate it. "
                         "Reviewed (non-fuzzy) entries are never touched.")
+   ap.add_argument("--only", action="append", metavar="IDENTIFIER",
+                   help="seed only the entry naming this identifier (msgctxt "
+                        "or a #: identifier, e.g. tprefsform.lblappearhint.caption). "
+                        "Repeatable. Without it every empty entry is seeded.")
    args = ap.parse_args(argv)
 
    paths = pc.repo_paths()
@@ -702,7 +719,8 @@ def main(argv=None):
    # require one to be up just to resolve a code.
    target = code if args.dry_run else engine_target(args.url, code)
    return seed(po_path, args.url, target, lang,
-               args.dry_run, args.batch, args.reseed, args.verify)
+               args.dry_run, args.batch, args.reseed, args.verify,
+               only=set(args.only) if args.only else None)
 
 
 if __name__ == "__main__":

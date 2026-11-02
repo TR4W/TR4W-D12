@@ -4415,10 +4415,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Ventana principal"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "La fuente se aplica a la ventana principal del concurso. Los cuatro entran en vigor cuando el TR4W comienza."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "La fuente se aplica a la ventana principal del concurso. Los tres tienen efecto cuando el TR4W comienza."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -4690,10 +4691,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Tamaño:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "Los tres ajustes de HamLib surtan efecto cuando el TR4W siguiente comienza. Son muy verbosas y son para diagnosticar un problema de radio - dejarlos fuera de lo contrario."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "El nivel de traza de HamLib tiene efecto cuando comienza el TR4W siguiente; los otros dos se aplican cuando se ahorra. Son muy verbosas y son para diagnosticar un problema de radio - dejarlos fuera de lo contrario."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -4762,12 +4764,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Puerto:"
 
-#: tprefsform.lblloggerrestart.caption tprefsform.lblscorerestart.caption
-#: tprefsform.lblscorerestart.caption
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
+#: tprefsform.lblloggerrestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Estos toman efecto cuando el próximo TR4W comienza."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "El tipo de logger, dirección y puerto tienen efecto cuando el TR4W siguiente comienza."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5266,10 +5268,11 @@ msgstr "Grupo multicast:"
 msgid "Broadcast port:"
 msgstr "Puerto de transmisión:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Estos toman efecto cuando el próximo TR4W comienza. Deje el grupo multicast en blanco a menos que WSJT-X esté configurado para usar uno."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "Al activar WSJT-X, el control de radio y el puerto de transmisión tienen efecto cuando se inicia el TR4W siguiente; se aplican puntos destacados y el grupo multicast cuando se guarda. Deje el grupo multicast en blanco a menos que WSJT-X esté configurado para usar uno."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -9093,4 +9096,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Posting on o off, la dirección, el nombre de usuario y la contraseña tienen efecto cuando se inicia el TR4W siguiente. La información de contacto se aplica cuando se guarda."
 

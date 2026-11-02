@@ -4326,10 +4326,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Hovedvindue"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "Skrifttypen gælder for hovedkonkurrencens vindue. Alle fire får virkning, når TR4W starter næste gang."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "Skrifttypen gælder for hovedkonkurrencens vindue. Alle tre får virkning, når TR4W starter næste gang."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -4596,10 +4597,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Størrelse:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "De tre HamLib indstillinger træder i kraft, når TR4W næste starter. De er meget verbose og er til diagnosticering af et radioproblem - lad dem være slukket ellers."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "HamLib sporniveauet træder i kraft, når TR4W næste gang starter; de to andre gælder, når du gemmer. De er meget verbose og er til diagnosticering af et radioproblem - lad dem være slukket ellers."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -4667,12 +4669,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Port:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Disse får virkning, når TR4W næste starter."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Logger type, adresse og port træder i kraft, når TR4W starter næste gang."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5171,10 +5173,11 @@ msgstr "Multicastgruppe:"
 msgid "Broadcast port:"
 msgstr "Broadcast port:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Disse får virkning, når TR4W næste starter. Lad multicastgruppen være tom, medmindre WSJT- X er konfigureret til at bruge en."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "Tænder WSJT-X på, radio kontrol og broadcast port får virkning, når TR4W næste starter; højdepunkter og multicast gruppe gælder, når du gemmer. Lad multicastgruppen være tom, medmindre WSJT- X er konfigureret til at bruge en."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -9304,4 +9307,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Starter på eller fra, adressen, brugernavn og adgangskode træder i kraft, når TR4W næste starter. Kontaktoplysninger gælder, når du gemmer."
 

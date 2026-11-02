@@ -5033,10 +5033,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Hoofdvenster"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "Het lettertype is van toepassing op het hoofdvenster. Alle vier worden van kracht wanneer TR4W de volgende start."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "Het lettertype is van toepassing op het hoofdvenster. Alle drie worden van kracht wanneer TR4W de volgende start."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze stonden in het menu Instellingen. Dat raam gaat weg zodra ROW COUNT en WINDOW SITE zich hier bij hen voegen."
 #: tprefsform.lblappearmenunote.caption
@@ -5304,10 +5305,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Grootte:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "De drie HamLib-instellingen worden van kracht wanneer TR4W de volgende start. Ze zijn zeer verbose en zijn voor het diagnosticeren van een radioprobleem - laat ze anders uit."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "Het HamLib-spoorniveau treedt in werking wanneer TR4W volgende begint; de andere twee gelden wanneer u opslaat. Ze zijn zeer verbose en zijn voor het diagnosticeren van een radioprobleem - laat ze anders uit."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -5375,12 +5377,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Poort:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Deze worden van kracht wanneer TR4W de volgende start."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "Het loggertype, adres en poort worden van kracht wanneer TR4W volgende start."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5879,10 +5881,11 @@ msgstr "Multicast-groep:"
 msgid "Broadcast port:"
 msgstr "Omroeppoort:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Deze worden van kracht wanneer TR4W de volgende start. Laat de multicast groep leeg tenzij WSJT-X is ingesteld om er één te gebruiken."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "Het inschakelen van WSJT-X, radio control en de broadcast port worden van kracht wanneer TR4W volgende start; hoogtepunten en de multicast groep gelden wanneer u opslaat. Laat de multicast groep leeg tenzij WSJT-X is ingesteld om er één te gebruiken."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -10038,4 +10041,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Het posten in of uit, het adres, gebruikersnaam en wachtwoord van kracht worden wanneer TR4W volgende begint. Contactinformatie is van toepassing wanneer u opslaat."
 

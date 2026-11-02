@@ -5871,10 +5871,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "主窗口"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "字体适用于主竞赛窗口. 四者在TR4W下一个开始时生效."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "字体适用于主竞赛窗口. 三者在TR4W下一个开始时生效."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "这些是设置菜单的外观项目 。 一旦WINDOW SIZE和他们一起进来 窗户就会消失."
 #: tprefsform.lblappearmenunote.caption
@@ -6140,10 +6141,11 @@ msgstr "妇女"
 msgid "Size:"
 msgstr "大小 :"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "三个HamLib设置在TR4W下次开始时生效. 他们非常动词化 用来诊断无线电问题 让他们离开."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "HamLib痕量级在TR4W下次开始时生效;另外两种在保存时适用. 他们非常动词化 用来诊断无线电问题 让他们离开"
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -6211,12 +6213,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "端口 :"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "这些在TR4W下次开始时生效."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "日志类型,地址和端口在TR4W下次开始时生效."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -6703,10 +6705,11 @@ msgstr "多播组 :"
 msgid "Broadcast port:"
 msgstr "广播端口 :"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "这些在TR4W下次开始时生效. 除非WSJT-X配置为使用,否则多播组保留空白."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "将WSJT-X打开,无线电控制和广播端口在TR4W下一个开始时生效;亮点和多播组在保存时适用. 除非WSJT-X配置为使用,否则多播组保留空白."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -8860,4 +8863,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "发送或关闭,地址、用户名和密码在TR4W下次启动时生效。 当您保存时, 联系人信息适用 。"
 

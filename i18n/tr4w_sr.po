@@ -4644,9 +4644,10 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr ""
 
+# 2026-11-01: English reworded by the Preferences restart audit; msgid updated (the entry was empty, so there was no draft to clear).
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
@@ -4914,9 +4915,10 @@ msgstr ""
 msgid "Size:"
 msgstr ""
 
+# 2026-11-01: English reworded by the Preferences restart audit; msgid updated (the entry was empty, so there was no draft to clear).
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
 msgstr ""
 
 #: tprefsform.lblhamscoreurl.caption
@@ -4985,11 +4987,11 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr ""
 
+# 2026-11-01: English reworded by the Preferences restart audit; msgid updated (the entry was empty, so there was no draft to clear).
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
+msgid "The logger type, address and port take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblloggerstatus.caption
@@ -5486,9 +5488,10 @@ msgstr ""
 msgid "Broadcast port:"
 msgstr ""
 
+# 2026-11-01: English reworded by the Preferences restart audit; msgid updated (the entry was empty, so there was no draft to clear).
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
 msgstr ""
 
 #: tprefsform.lblwsjtxtcihint.caption
@@ -9411,5 +9414,11 @@ msgstr ""
 #: uappstrings.shamscoreresyncdeletefirst
 #, fuzzy
 msgid "Delete and re-send"
+msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr ""
 

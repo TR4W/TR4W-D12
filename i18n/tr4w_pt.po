@@ -5060,10 +5060,11 @@ msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr "Janela principal"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 #, fuzzy
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr "A fonte aplica- se à janela principal do concurso. Todos os quatro têm efeito quando o TR4W começar."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgstr "A fonte aplica- se à janela principal do concurso. Todos os três fazem efeito quando TR4W começa a seguir."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Estes estavam no item Aparência do menu Configurações. Essa janela desaparece uma vez que o ROW COUND e o tamanho da janela se juntam a eles aqui."
 #: tprefsform.lblappearmenunote.caption
@@ -5335,10 +5336,11 @@ msgstr "WPM"
 msgid "Size:"
 msgstr "Tamanho:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
 #, fuzzy
-msgid "The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
-msgstr "As três configurações do HamLib entram em vigor quando o TR4W começa em seguida. Eles são muito verbose e são para diagnosticar um problema de rádio - deixá-los fora do contrário."
+msgid "The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise."
+msgstr "O nível de traço HamLib começa quando TR4W começa; os outros dois aplicam-se quando você salva. Eles são muito verbose e são para diagnosticar um problema de rádio - deixá-los fora do contrário."
 
 #: tprefsform.lblhamscoreurl.caption
 #, fuzzy
@@ -5406,12 +5408,12 @@ msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
 msgstr "Porto:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
-#: tprefsform.lblscorerestart.caption
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
-msgid "These take effect when TR4W next starts."
-msgstr "Estes fazem efeito quando TR4W começa a seguir."
+msgid "The logger type, address and port take effect when TR4W next starts."
+msgstr "O tipo de registrador, endereço e porta fazem efeito quando TR4W começa em seguida."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -5911,10 +5913,11 @@ msgstr "Grupo multicast:"
 msgid "Broadcast port:"
 msgstr "Porta de transmissão:"
 
+# 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
 #, fuzzy
-msgid "These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one."
-msgstr "Estes fazem efeito quando TR4W começa a seguir. Deixe o grupo multicast em branco a menos que o WSJT-X esteja configurado para usar um."
+msgid "Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one."
+msgstr "Ligando o WSJT-X, o controle de rádio e a porta de transmissão entram em vigor quando o TR4W começa; destaques e o grupo multicast se aplicam quando você salva. Deixe o grupo multicast em branco a menos que o WSJT-X esteja configurado para usar um."
 
 #: tprefsform.lblwsjtxtcihint.caption
 #, fuzzy
@@ -10087,4 +10090,10 @@ msgstr ""
 #, fuzzy
 msgid "Delete and re-send"
 msgstr ""
+
+#: tprefsform.lblscorerestart.caption
+#, fuzzy
+msgctxt "tprefsform.lblscorerestart.caption"
+msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
+msgstr "Postando on ou off, o endereço, nome de usuário e senha fazem efeito quando TR4W começa em seguida. As informações de contato se aplicam quando você salva."
 
