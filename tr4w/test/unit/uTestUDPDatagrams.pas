@@ -114,6 +114,15 @@ begin
    SetLength(gSent, 0);
 end;
 
+(* The score tables every score test starts from.  One routine, so the
+   whole-table clears exist once (Count-LiveMove). *)
+procedure ClearScoreTotals;
+begin
+   FillChar(QSOTotals, SizeOf(QSOTotals), 0);
+   FillChar(QSOPointTotals, SizeOf(QSOPointTotals), 0);
+   FillChar(mo.MTotals, SizeOf(mo.MTotals), 0);
+end;
+
 (* The text between <aTag> and </aTag>, or '' when the tag is not there. *)
 function TagValue(const aXml: string; const aTag: string): string;
 var
@@ -390,9 +399,7 @@ end;
 procedure SetScoreGlobals;
 begin
    Contest := ContestHandleOf(CQWWCW);
-   FillChar(QSOTotals, SizeOf(QSOTotals), 0);
-   FillChar(QSOPointTotals, SizeOf(QSOPointTotals), 0);
-   FillChar(mo.MTotals, SizeOf(mo.MTotals), 0);
+   ClearScoreTotals;
    QSOTotals[Band20, CW] := 5;
    QSOTotals[AllBands, CW] := 5;
    (* Q109: the ALL row is sent now, so the all-modes cells are set as the
@@ -560,9 +567,7 @@ begin
    BeginTest('2026-11-02: a grid contest posts one gridsquare row per band and one total');
    ConfigureAllStreams(True);
    Contest := ContestHandleOf(RTC);
-   FillChar(QSOTotals, SizeOf(QSOTotals), 0);
-   FillChar(QSOPointTotals, SizeOf(QSOPointTotals), 0);
-   FillChar(mo.MTotals, SizeOf(mo.MTotals), 0);
+   ClearScoreTotals;
    QSOTotals[Band20, CW]   := 8;
    QSOTotals[Band20, Both] := 8;
    QSOPointTotals[Band20, Both]   := 11;
