@@ -98,6 +98,15 @@ draft, then `mt_seed --only`. If two keys shared one entry and their English
 now differs, take the second identifier off its `#:` lines first so `po_merge`
 adds it.
 
+**The help catalogues do this for you.** `python tools\i18n\ini2po.py` merges the
+English ini into every `i18n\help_*.po`: a reworded msgid keeps a human
+translation (fuzzy, `#|` previous msgid, dated `# ` note) and clears a machine
+draft, and the run prints the `mt_seed --catalog help --only ...` line per
+language for what it cleared or added empty. Run those, then `po_lint --all`.
+`--catalog help` keeps command names and `TRUE`/`FALSE` English (masked as
+`<nm>` elements; a draft that loses one is dropped). A new language:
+`ini2po.py --new-lang JPN`, then `mt_seed.py --lang JPN --catalog help`.
+
 ---
 
 ## Check a catalogue
@@ -291,7 +300,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |
 | `po_rekey.py` | adds the run-time identifier beside the `msgctxt` key |
 | `po_prune.py` | marks entries obsolete when their key leaves the source. **Do not run it on the real catalogues (issue #144):** it knows only `TC_`/`RC_` keys, so it would obsolete 2,168 live `.lfm`/resourcestring entries, and `po_merge --apply` then deletes every `#~` block |
-| `ini2po.py` | help INIs ⟷ `.po` |
+| `ini2po.py` | help INIs → `help_*.po`: reads the inis, never writes them, and MERGES into every existing help catalogue (the `.po` is the master; `test_ini2po.py`). `--new-lang` creates one |
+| `test_ini2po.py` | pins that merge: nothing lost, fuzzy never cleared, reworded English handled |
 | `po_defuzz.py` | a copy with the "Needs work" flags removed, for testing only |
 | `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
 | `pofile.py`, `pasconsts.py` | shared readers — not run directly. `pofile` rewrites losslessly |

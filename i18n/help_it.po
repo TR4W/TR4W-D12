@@ -859,6 +859,13 @@ msgstr "Valori: Integer nella gamma 2 a 4. Questi comandi sono sinonimi. Quando 
 #. Config command: MULTI INFO MESSAGE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MULTI_INFO_MESSAGE"
+msgid "A short message (15 characters maximum) broadcast to the other computers on a multi-operator network. NOT CURRENTLY FUNCTIONAL: the routines that build and send it (CreateAndSendCQMultiInfoMessage and CreateAndSendSAPMultiInfoMessage) have commented-out bodies, and every call site is commented out as well, so setting this has no effect."
+msgstr "Un breve messaggio (15 caratteri massimo) trasmesso agli altri computer su una rete multi-operatore. NON CURRENTLY FUNCTIONAL: le routine che lo costruiscono e lo inviano (CreateAndSendCQMultiInfoMessage e CreateAndSendSAPMultiInfoMessage) hanno commentato-out corpi, e ogni sito di chiamata è commentato, così la definizione di questo non ha effetto."
+
+# 2026-11-02: new entry; text carried from TC_HELP_MULTI_INFO_MESSAGE, whose old English was exactly this (ini2po)
+#. Config command: MULTI MULTS ONLY   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_MULTI_MULTS_ONLY"
 msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
 msgstr "Se si utilizza una rete di computer per un'operazione multi, questo comando determinerà se tutti i QSO sono passati intorno alla rete, o solo quelli che sono nuovi moltiplicatori."
 
@@ -2053,20 +2060,26 @@ msgstr "Questo parametro dice a TR4W come gestire i moltiplicatori di zona. È n
 #. Config command: BACKCOPY ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_BACKCOPY_ENABLE"
-msgid "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
-msgstr "DEPRECATED - Utilizzare il nome FILE di BACKUP LOG e [BACKUP LOG FREQUENCY]"
+msgid "DEPRECATED - Use [BACKUP DESTINATION] and [BACKUP LOG FREQUENCY]"
+msgstr "DEPRECATED - Usa [BACKUP DESTINATION] e [BACKUP LOG FREQUENCY]"
+
+#. Config command: BACKUP DESTINATION
+#, fuzzy
+msgctxt "TC_HELP_BACKUP_DESTINATION"
+msgid "A folder the log's backup is also copied to, such as a NAS share or a Dropbox folder. Every backup is first written to the backup folder under TR4W's settings; when this names a folder, each one is then copied there in the background. Empty means local backups only."
+msgstr "Una cartella a cui viene copiato il backup del registro, come una condivisione NAS o una cartella Dropbox. Ogni backup è scritto per la prima volta nella cartella di backup sotto le impostazioni di TR4W; quando questo nomina una cartella, ognuno viene poi copiato lì in background. Vuoto significa solo backup locali."
 
 #. Config command: BACKUP LOG FILE NAME
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FILE_NAME"
-msgid "File to backup the TR4W log file. Optimally, this would be a directory like a Dropbox or NAS share."
-msgstr "File per eseguire il backup del file di registro TR4W. In modo ottimale, questa sarebbe una directory come una condivisione Dropbox o NAS."
+msgid "The former name of [BACKUP DESTINATION]. A value given here is taken as the folder the named file is in; a file name with no folder means local backups only."
+msgstr "L'ex nome di [BACKUP DESTINATION]. Un valore dato qui viene preso come la cartella in cui si trova il file chiamato; un nome di file senza cartella significa solo backup locali."
 
 #. Config command: BACKUP LOG FREQUENCY   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FREQUENCY"
-msgid "Backups up the TR4W log to the above location every number of contacts."
-msgstr "Esegue il backup del registro TR4W nella posizione sopra ogni numero di contatti."
+msgid "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]. 0 means never."
+msgstr "Restituisce il registro TR4W ogni molti contatti, alla cartella di backup e poi a [BACKUP DESTINATION]0 significa mai."
 
 #. Config command: BAND MAP DISPLAY GHZ   (default: FALSE)
 #, fuzzy

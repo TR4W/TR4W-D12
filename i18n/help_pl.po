@@ -2059,19 +2059,25 @@ msgstr ""
 #. Config command: BACKCOPY ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_BACKCOPY_ENABLE"
-msgid "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
+msgid "DEPRECATED - Use [BACKUP DESTINATION] and [BACKUP LOG FREQUENCY]"
+msgstr ""
+
+#. Config command: BACKUP DESTINATION
+#, fuzzy
+msgctxt "TC_HELP_BACKUP_DESTINATION"
+msgid "A folder the log's backup is also copied to, such as a NAS share or a Dropbox folder. Every backup is first written to the backup folder under TR4W's settings; when this names a folder, each one is then copied there in the background. Empty means local backups only."
 msgstr ""
 
 #. Config command: BACKUP LOG FILE NAME
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FILE_NAME"
-msgid "File to backup the TR4W log file. Optimally, this would be a directory like a Dropbox or NAS share."
+msgid "The former name of [BACKUP DESTINATION]. A value given here is taken as the folder the named file is in; a file name with no folder means local backups only."
 msgstr ""
 
 #. Config command: BACKUP LOG FREQUENCY   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FREQUENCY"
-msgid "Backups up the TR4W log to the above location every number of contacts."
+msgid "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]. 0 means never."
 msgstr ""
 
 #. Config command: BAND MAP DISPLAY GHZ   (default: FALSE)

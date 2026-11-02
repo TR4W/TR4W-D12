@@ -182,6 +182,28 @@ begin
    Result := IncludeTrailingPathDelimiter(aHelpDir) + 'help_' + aCode + '.po';
 end;
 
+(* 'pt_br' -> 'pt_BR', 'zh_cn' -> 'zh_CN': the spelling the catalogue FILE
+  carries (i18n/help_pt_BR.po, the gettext ll_RR convention, the same as
+  tr4w_pt_BR.po). The language code arrives lower-cased, and on a
+  case-sensitive file system (Linux) help_pt_br.po does not find
+  help_pt_BR.po -- Brazilian Portuguese got European Portuguese and Chinese
+  got English. A code with no region is returned as it is. *)
+function CatalogueSpelling(const aCode: string): string;
+var
+   separator: integer;
+begin
+   separator := Pos('_', aCode);
+   if separator = 0 then
+      begin
+      Result := aCode;
+      end
+   else
+      begin
+      Result := Copy(aCode, 1, separator) +
+                UpperCase(Copy(aCode, separator + 1, MaxInt));
+      end;
+end;
+
 function HelpCatalogueFile(const aHelpDir, aLanguageCode: string): string;
 var
    code: string;
@@ -190,6 +212,14 @@ begin
    code := LowerCase(Trim(aLanguageCode));
    if code <> '' then
       begin
+      (* The catalogue's own spelling first, so on Linux the file is found
+        and on Windows the path names it as it is on disk; then the code
+        as given, for a catalogue saved in lower case. *)
+      Result := CatalogueFileName(aHelpDir, CatalogueSpelling(code));
+      if FileExists(Result) then
+         begin
+         Exit;
+         end;
       Result := CatalogueFileName(aHelpDir, code);
       if FileExists(Result) then
          begin

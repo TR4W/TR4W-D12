@@ -736,10 +736,20 @@ msgctxt "TC_HELP_MULT_REPORT_MINIMUM_BANDS"
 msgid "Values: Integer in range 2 to 4. These commands are synonymous. When executing the ctrl-O command, you will be shown DX multipliers that you have worked on a certain number, but not all, bands. This parameter sets the minimum number of bands on which the country must have been worked in order to appear on this report."
 msgstr "Valori: Numar întreg de la 2 la 4. Aceste comenzi sunt sinonime. La tastarea comenzii CTRL/O vor fi afisate multiplicatoarele DX lucrate pe un anumit numar de benzi, dar nu pe toate !. Acest parametru stabileste numarul minim de benzi în care trebuie lucrata o anumita entitate ca ea sa apara în raport."
 
+# 2026-11-02: the English was reworded (ini2po); this translates the previous English, shown on the #| line
 #. Config command: MULTI INFO MESSAGE   (default: NONE)
+#, fuzzy
+#| msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
 msgctxt "TC_HELP_MULTI_INFO_MESSAGE"
-msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
+msgid "A short message (15 characters maximum) broadcast to the other computers on a multi-operator network. NOT CURRENTLY FUNCTIONAL: the routines that build and send it (CreateAndSendCQMultiInfoMessage and CreateAndSendSAPMultiInfoMessage) have commented-out bodies, and every call site is commented out as well, so setting this has no effect."
 msgstr "Daca se lucreaza în retea de calculatoare într-un concurs MULTI, acesta comanda va stabili daca toate QSO-urile sunt transmise în retea sau numai acelea care reprezinta multiplicatoare noi."
+
+# 2026-11-02: new entry; text from the language's commands_help ini, not yet read against this English (ini2po)
+#. Config command: MULTI MULTS ONLY   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_MULTI_MULTS_ONLY"
+msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
+msgstr "Daca se lucreaza în retea de calculatoare într-n concurs MULTI, acesta comanda va stabili daca toate QSO-urile sunt transmise în retea sau numai acelea care reprezinta multiplicatoare noi."
 
 #. Config command: MULTIPLE BANDS   (default: TRUE)
 msgctxt "TC_HELP_MULTIPLE_BANDS"
@@ -1783,20 +1793,26 @@ msgstr "Deternima modul de tratare de catre TR4W a multiplicatorului ZONE. În m
 #. Config command: BACKCOPY ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_BACKCOPY_ENABLE"
-msgid "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
-msgstr "DEPRECAT - Utilizați numele de registru de rezervă și [BACKUP LOG FREQUENCY]"
+msgid "DEPRECATED - Use [BACKUP DESTINATION] and [BACKUP LOG FREQUENCY]"
+msgstr "DEPRECAT - Utilizare [BACKUP DESTINATION] şi [BACKUP LOG FREQUENCY]"
+
+#. Config command: BACKUP DESTINATION
+#, fuzzy
+msgctxt "TC_HELP_BACKUP_DESTINATION"
+msgid "A folder the log's backup is also copied to, such as a NAS share or a Dropbox folder. Every backup is first written to the backup folder under TR4W's settings; when this names a folder, each one is then copied there in the background. Empty means local backups only."
+msgstr "Un folder de rezervă jurnalul este, de asemenea, copiat la, cum ar fi o acțiune NAS sau un dosar Dropbox. Fiecare copie de rezervă este mai întâi scrisă în dosarul de rezervă sub setările TR4W; atunci când acest nume un dosar, fiecare este apoi copiat acolo în fundal. Gol înseamnă doar întăriri locale."
 
 #. Config command: BACKUP LOG FILE NAME
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FILE_NAME"
-msgid "File to backup the TR4W log file. Optimally, this would be a directory like a Dropbox or NAS share."
-msgstr "Fișier de rezervă fișierul jurnal TR4W. Optim, acest lucru ar fi un director ca o Dropbox sau cota NAS."
+msgid "The former name of [BACKUP DESTINATION]. A value given here is taken as the folder the named file is in; a file name with no folder means local backups only."
+msgstr "Fostul nume al [BACKUP DESTINATION]. O valoare dată aici este luată ca dosarul în fișierul numit este în; un nume de fișier fără dosar înseamnă doar backup-uri locale."
 
 #. Config command: BACKUP LOG FREQUENCY   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FREQUENCY"
-msgid "Backups up the TR4W log to the above location every number of contacts."
-msgstr "Backups up the TR4W log to the above location every number of contacts."
+msgid "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]. 0 means never."
+msgstr "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]0 înseamnă niciodată."
 
 #. Config command: BAND MAP DISPLAY GHZ   (default: FALSE)
 #, fuzzy
@@ -2317,11 +2333,6 @@ msgstr "Dacă TRUE, caseta YCCC SO2R este suportată pentru comutarea fluxurilor
 #~ msgctxt "TC_HELP_FREQUENCY_MEMORY"
 #~ msgid "Valoare: Frecventa (kHz). La pornirea TR4W programul va comuta la o banda/mod, are si o frecventa la care se va acorda prin definitie ( default ). Comanda se utilizeaza pentru schimbarea valorii initiale, cate o data pentru fiecare banda unde se doreste schimbarea. Daca se specifica o frecventa care poate fi interpretata ca fiind de CW dar pe care se doreste a fi folosita pentru SSB, se scrie în fata SSB, ca de exemplu FRECVENCY MEMORY = SSB 7050. De retinut ca aceste valori initiale vor fi aduse la zi fata de frecventele actuale folosite pentru schimbari viitoare de banda/mod daca ai setat TRUE la FREQUENCY MEMORY ENABLE."
 #~ msgstr "Valoare: Frecventa (kHz). La pornirea TR4W programul va comuta la o banda/mod, are si o frecventa la care se va acorda prin definitie ( default ). Comanda se utilizeaza pentru schimbarea valorii initiale, cate o data pentru fiecare banda unde se doreste schimbarea. Daca se specifica o frecventa care poate fi interpretata ca fiind de CW dar pe care se doreste a fi folosita pentru SSB, se scrie în fata SSB, ca de exemplu FRECVENCY MEMORY = SSB 7050. De retinut ca aceste valori initiale vor fi aduse la zi fata de frecventele actuale folosite pentru schimbari viitoare de banda/mod daca ai setat TRUE la FREQUENCY MEMORY ENABLE."
-
-#. Section MULTI MULTS ONLY is not in the English file; retained so nothing is lost.
-#~ msgctxt "TC_HELP_MULTI_MULTS_ONLY"
-#~ msgid "Daca se lucreaza în retea de calculatoare într-n concurs MULTI, acesta comanda va stabili daca toate QSO-urile sunt transmise în retea sau numai acelea care reprezinta multiplicatoare noi."
-#~ msgstr "Daca se lucreaza în retea de calculatoare într-n concurs MULTI, acesta comanda va stabili daca toate QSO-urile sunt transmise în retea sau numai acelea care reprezinta multiplicatoare noi."
 
 #. Section TAIL END KEY is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_TAIL_END_KEY"

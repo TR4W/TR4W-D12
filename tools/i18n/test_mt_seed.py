@@ -176,6 +176,72 @@ class SeedFixture(unittest.TestCase):
                        "Das Log oeffnen")
 
 
+class CommandNames(unittest.TestCase):
+   """--catalog help: command names and TRUE/FALSE stay English (2026-11-02).
+
+   The engine is not contacted: each test plays the engine's part on the
+   payload protect() built, then hands the result to unprotect()."""
+
+   RX = re.compile(r"(?<![A-Za-z0-9])(?:AUTO S&amp;P ENABLE|BACKUP DESTINATION"
+                   r"|TRUE|FALSE)(?![A-Za-z0-9])")
+
+   def round_trip(self, english, engine):
+      payload, specs, names = mt_seed.protect(english, self.RX)
+      return mt_seed.unprotect(engine(payload), specs, names)
+
+   def test_a_name_survives(self):
+      text, problem = self.round_trip(
+         "Use BACKUP DESTINATION.", lambda p: p.replace("Use", "Nutze"))
+      self.assertIsNone(problem)
+      self.assertEqual(text, "Nutze BACKUP DESTINATION.")
+
+   def test_a_name_with_an_ampersand_survives_the_escaping(self):
+      payload, _, names = mt_seed.protect("If AUTO S&P ENABLE is TRUE.", self.RX)
+      self.assertEqual(names, ["AUTO S&P ENABLE", "TRUE"])
+      self.assertNotIn("S&amp;P", payload)
+      text, problem = mt_seed.unprotect(payload.replace("If", "Wenn"), [], names)
+      self.assertIsNone(problem)
+      self.assertEqual(text, "Wenn AUTO S&P ENABLE is TRUE.")
+
+   def test_names_the_engine_reorders_are_restored(self):
+      def swap(p):
+         a, b = '<nm id="0"></nm>', '<nm id="1"></nm>'
+         return p.replace(a, "\0").replace(b, a).replace("\0", b)
+      text, problem = self.round_trip("Set TRUE or FALSE.", swap)
+      self.assertIsNone(problem)
+      self.assertEqual(text, "Set FALSE or TRUE.")
+
+   def test_a_dropped_name_drops_the_draft(self):
+      _, problem = self.round_trip("Set TRUE or FALSE.",
+                                   lambda p: p.replace('<nm id="1"></nm>', "FALSCH"))
+      self.assertIsNotNone(problem)
+
+   def test_a_doubled_name_drops_the_draft(self):
+      _, problem = self.round_trip("Set TRUE.",
+                                   lambda p: p + ' <nm id="0"></nm>')
+      self.assertIsNotNone(problem)
+
+   def test_a_word_inside_another_word_is_not_a_name(self):
+      _, _, names = mt_seed.protect("UNTRUE and TRUEISH are not TRUE.", self.RX)
+      self.assertEqual(names, ["TRUE"])
+
+   def test_without_a_pattern_nothing_is_masked(self):
+      payload, _, names = mt_seed.protect("Set TRUE.")
+      self.assertEqual((payload, names), ("Set TRUE.", []))
+
+   def test_the_real_vocabulary_is_built(self):
+      root = os.path.dirname(os.path.dirname(HERE))
+      rx = mt_seed.command_name_pattern(root)
+      self.assertTrue(rx.search(mt_seed.html.escape("If AUTO S&P ENABLE is set",
+                                                    quote=False)))
+      self.assertTrue(rx.search("BACKUP DESTINATION"))
+      # A bracketed reference is masked with its brackets, so the engine
+      # cannot mangle them.
+      payload, _, names = mt_seed.protect("Use [BACKUP DESTINATION] now.", rx)
+      self.assertEqual(names, ["[BACKUP DESTINATION]"])
+      self.assertEqual(payload, 'Use <nm id="0"></nm> now.')
+
+
 class Marker(unittest.TestCase):
 
    def entry(self, *comments):

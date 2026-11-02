@@ -204,17 +204,15 @@ File ..\target\commands_help_eng.ini
 ;
 ; The .ini above is still installed and still unread by the program; it is
 ; ini2po.py's authoring source. Retiring it from the payload is a separate call.
+;
+; EVERY CATALOGUE, BY WILDCARD (2026-11-02). This was a hand-kept list of ten,
+; and it had already missed help_pl.po: a catalogue that exists and is not
+; listed simply never reaches an operator, with no warning. The wildcard takes
+; whatever i18n\ holds -- the Unix stage (build-unix.sh, stage_package) does the
+; same -- and makensis fails the build if it matches nothing. A name is kept
+; as it is on disk (help_pt_BR.po); uCommandHelp asks for that spelling.
 SetOutPath "$INSTDIR\help"
-   File ..\..\i18n\help_cs.po
-   File ..\..\i18n\help_de.po
-   File ..\..\i18n\help_en.po
-   File ..\..\i18n\help_es.po
-   File ..\..\i18n\help_fr.po
-   File ..\..\i18n\help_it.po
-   File ..\..\i18n\help_nl.po
-   File ..\..\i18n\help_ro.po
-   File ..\..\i18n\help_ru.po
-   File ..\..\i18n\help_uk.po
+   File ..\..\i18n\help_*.po
 SetOutPath "$INSTDIR"
 
 

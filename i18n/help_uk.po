@@ -736,10 +736,20 @@ msgctxt "TC_HELP_MULT_REPORT_MINIMUM_BANDS"
 msgid "Values: Integer in range 2 to 4. These commands are synonymous. When executing the ctrl-O command, you will be shown DX multipliers that you have worked on a certain number, but not all, bands. This parameter sets the minimum number of bands on which the country must have been worked in order to appear on this report."
 msgstr "При натисканні клавіш Control-O будуть показані DX множники, з якими ви працювали, але не на всіх діапазонах. Цей параметр визначає мінімальну кількість діапазонів для того, щоб країна була включена до списку країн, який буде виведений за Ctrl-O."
 
+# 2026-11-02: the English was reworded (ini2po); this translates the previous English, shown on the #| line
 #. Config command: MULTI INFO MESSAGE   (default: NONE)
+#, fuzzy
+#| msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
 msgctxt "TC_HELP_MULTI_INFO_MESSAGE"
-msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
+msgid "A short message (15 characters maximum) broadcast to the other computers on a multi-operator network. NOT CURRENTLY FUNCTIONAL: the routines that build and send it (CreateAndSendCQMultiInfoMessage and CreateAndSendSAPMultiInfoMessage) have commented-out bodies, and every call site is commented out as well, so setting this has no effect."
 msgstr "Команда визначає рядок, який передаватиметься на інші комп'ютери мережі. Майте на увазі, що якщо змінити значення з меню Ctrl-J під час змагань, виправлене повідомлення буде негайно передано по мережі."
+
+# 2026-11-02: new entry; text from the language's commands_help ini, not yet read against this English (ini2po)
+#. Config command: MULTI MULTS ONLY   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_MULTI_MULTS_ONLY"
+msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
+msgstr "Якщо ви використовуєте комп'ютерну мережу для роботи multi-multi, цей перемикач визначить, чи всі QSO передавати по мережі, або тільки ті, які є новими множниками."
 
 #. Config command: MULTIPLE BANDS   (default: TRUE)
 msgctxt "TC_HELP_MULTIPLE_BANDS"
@@ -1756,20 +1766,26 @@ msgstr "Команда повідомляє програмі, як обробл�
 #. Config command: BACKCOPY ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_BACKCOPY_ENABLE"
-msgid "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
-msgstr "DEPRECATED - Використовуйте LOG FILE NAME та [BACKUP LOG FREQUENCY]"
+msgid "DEPRECATED - Use [BACKUP DESTINATION] and [BACKUP LOG FREQUENCY]"
+msgstr "DEPRECATED - Використання [BACKUP DESTINATION] і [BACKUP LOG FREQUENCY]"
+
+#. Config command: BACKUP DESTINATION
+#, fuzzy
+msgctxt "TC_HELP_BACKUP_DESTINATION"
+msgid "A folder the log's backup is also copied to, such as a NAS share or a Dropbox folder. Every backup is first written to the backup folder under TR4W's settings; when this names a folder, each one is then copied there in the background. Empty means local backups only."
+msgstr "У папці резервна копія журналу також копіюється, наприклад, частка NAS або папка Dropbox. Кожна резервна копія спочатку написана до папки резервного копіювання під налаштуваннями TR4W; коли ці імена папка, кожен потім копіюється там на фоні. Empty означає локальні резервні копії тільки."
 
 #. Config command: BACKUP LOG FILE NAME
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FILE_NAME"
-msgid "File to backup the TR4W log file. Optimally, this would be a directory like a Dropbox or NAS share."
-msgstr "Файл для резервного копіювання файлу журналу TR4W. Оптимально це буде каталогом, як розділ Dropbox або NAS."
+msgid "The former name of [BACKUP DESTINATION]. A value given here is taken as the folder the named file is in; a file name with no folder means local backups only."
+msgstr "Колишня назва [BACKUP DESTINATION]. Значення, зазначене тут, приймається в папці названий файл; ім'я файлу з папкою не означає локальні резервні копії тільки."
 
 #. Config command: BACKUP LOG FREQUENCY   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FREQUENCY"
-msgid "Backups up the TR4W log to the above location every number of contacts."
-msgstr "Резервне копіювання журналу TR4W до вищерозташування кожного номеру контактів."
+msgid "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]. 0 means never."
+msgstr "Звертаємо вашу увагу на те, що це багато контактів, до папки резервної копії, а потім до [BACKUP DESTINATION]. 0 означає ніколи."
 
 #. Config command: BAND MAP DISPLAY GHZ   (default: FALSE)
 #, fuzzy
@@ -2285,11 +2301,6 @@ msgstr "Якщо TRUE, коробка YCCC SO2R підтримується дл�
 #~ msgctxt "TC_HELP_FREQUENCY_MEMORY"
 #~ msgid "Values: Частота (кГц). Коли TR4W вперше перемикається на діапазон/режим, вона має частоту, на яку вона перейде за замовчуванням. Використовуйте цю команду, якщо потрібно змінити значення за замовчуванням. Використовуйте цю команду один раз для кожного діапазону, який потрібно змінити. Якщо ви вказуєте частоту, яка може бути оброблена як частота CW, але яку ви хочете використовувати як частоту SSB, поставте перед нею SSB (наприклад: FREQUENCY MEMORY = SSB 7050). Зверніть увагу, що ці значення за замовчуванням будуть оновлені фактичними частотами, які використовуються для пізніших змін діапазону/режиму, якщо ви встановите FREQUENCY MEMORY ENABLE на TRUE."
 #~ msgstr "Values: Частота (кГц). Коли TR4W вперше перемикається на діапазон/режим, вона має частоту, на яку вона перейде за замовчуванням. Використовуйте цю команду, якщо потрібно змінити значення за замовчуванням. Використовуйте цю команду один раз для кожного діапазону, який потрібно змінити. Якщо ви вказуєте частоту, яка може бути оброблена як частота CW, але яку ви хочете використовувати як частоту SSB, поставте перед нею SSB (наприклад: FREQUENCY MEMORY = SSB 7050). Зверніть увагу, що ці значення за замовчуванням будуть оновлені фактичними частотами, які використовуються для пізніших змін діапазону/режиму, якщо ви встановите FREQUENCY MEMORY ENABLE на TRUE."
-
-#. Section MULTI MULTS ONLY is not in the English file; retained so nothing is lost.
-#~ msgctxt "TC_HELP_MULTI_MULTS_ONLY"
-#~ msgid "Якщо ви використовуєте комп'ютерну мережу для роботи multi-multi, цей перемикач визначить, чи всі QSO передавати по мережі, або тільки ті, які є новими множниками."
-#~ msgstr "Якщо ви використовуєте комп'ютерну мережу для роботи multi-multi, цей перемикач визначить, чи всі QSO передавати по мережі, або тільки ті, які є новими множниками."
 
 #. Section RADIO ONE STARTUP COMAND is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_RADIO_ONE_STARTUP_COMAND"

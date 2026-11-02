@@ -731,8 +731,18 @@ msgctxt "TC_HELP_MULT_REPORT_MINIMUM_BANDS"
 msgid "Values: Integer in range 2 to 4. These commands are synonymous. When executing the ctrl-O command, you will be shown DX multipliers that you have worked on a certain number, but not all, bands. This parameter sets the minimum number of bands on which the country must have been worked in order to appear on this report."
 msgstr "Valores: entero en el rango de 2 a 4. Estos comandos son sinónimos. Al ejecutar el comando ctrl-O, se le mostrarán los multiplicadores DX que ha trabajado en un cierto número, pero no en todas, las bandas. Este parámetro establece el número mínimo de bandas en las que el país debe haber sido trabajado para aparecer en este informe."
 
+# 2026-11-02: the English was reworded (ini2po); this translates the previous English, shown on the #| line
 #. Config command: MULTI INFO MESSAGE   (default: NONE)
+#, fuzzy
+#| msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
 msgctxt "TC_HELP_MULTI_INFO_MESSAGE"
+msgid "A short message (15 characters maximum) broadcast to the other computers on a multi-operator network. NOT CURRENTLY FUNCTIONAL: the routines that build and send it (CreateAndSendCQMultiInfoMessage and CreateAndSendSAPMultiInfoMessage) have commented-out bodies, and every call site is commented out as well, so setting this has no effect."
+msgstr "Si está utilizando una red de ordenadores para una operación multi, este comando determinará si todos los QSOs se distribuyen por la red, o solo aquellos que son nuevos multiplicadores."
+
+# 2026-11-02: new entry; text from the language's commands_help ini, not yet read against this English (ini2po)
+#. Config command: MULTI MULTS ONLY   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_MULTI_MULTS_ONLY"
 msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
 msgstr "Si está utilizando una red de ordenadores para una operación multi, este comando determinará si todos los QSOs se distribuyen por la red, o solo aquellos que son nuevos multiplicadores."
 
@@ -1757,20 +1767,26 @@ msgstr "Este parámetro le indica a TR4W cómo gestionar los multiplicadores de 
 #. Config command: BACKCOPY ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_BACKCOPY_ENABLE"
-msgid "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
-msgstr "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
+msgid "DEPRECATED - Use [BACKUP DESTINATION] and [BACKUP LOG FREQUENCY]"
+msgstr "DEPRECATED - Use [BACKUP DESTINATION] y [BACKUP LOG FREQUENCY]"
+
+#. Config command: BACKUP DESTINATION
+#, fuzzy
+msgctxt "TC_HELP_BACKUP_DESTINATION"
+msgid "A folder the log's backup is also copied to, such as a NAS share or a Dropbox folder. Every backup is first written to the backup folder under TR4W's settings; when this names a folder, each one is then copied there in the background. Empty means local backups only."
+msgstr "Una carpeta a la que se copia la copia de seguridad del registro, como una cuota del NAS o una carpeta de Dropbox. Cada copia de seguridad se escribe primero en la carpeta de copia de seguridad bajo la configuración de TR4W; cuando esto nombre una carpeta, cada uno es copiado allí en el fondo. Empty solo significa respaldos locales."
 
 #. Config command: BACKUP LOG FILE NAME
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FILE_NAME"
-msgid "File to backup the TR4W log file. Optimally, this would be a directory like a Dropbox or NAS share."
-msgstr "File to backup the TR4W log file. Optimally, esto sería un directorio como una cuota de Dropbox o NAS."
+msgid "The former name of [BACKUP DESTINATION]. A value given here is taken as the folder the named file is in; a file name with no folder means local backups only."
+msgstr "El nombre anterior [BACKUP DESTINATION]. Un valor dado aquí se toma como la carpeta en la que se encuentra el archivo llamado; un nombre de archivo sin carpeta significa sólo copias de seguridad locales."
 
 #. Config command: BACKUP LOG FREQUENCY   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FREQUENCY"
-msgid "Backups up the TR4W log to the above location every number of contacts."
-msgstr "Respalda el registro TR4W a la ubicación anterior cada número de contactos."
+msgid "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]. 0 means never."
+msgstr "Respalda el registro de TR4W cada estos muchos contactos, a la carpeta de copia de seguridad y luego a [BACKUP DESTINATION]0 significa que nunca."
 
 #. Config command: BAND MAP DISPLAY GHZ   (default: FALSE)
 #, fuzzy
@@ -2321,11 +2337,6 @@ msgstr "Si TRUE, la caja YCCC SO2R es compatible para cambiar las secuencias de 
 #~ msgctxt "TC_HELP_HAMLIB_RIGCTLD_RUN_AT_STARTUP"
 #~ msgid "Indica a TR4W que lance el proceso rigctld cuando TR4W se inicia y que lo cierre cuando TR4W se cierra. En algunos casos, puede que se desee utilizar un rigctld iniciado previamente. Esto debería ser siempre TRUE salvo que tenga un caso muy específico y sepa bien lo que está haciendo."
 #~ msgstr "Indica a TR4W que lance el proceso rigctld cuando TR4W se inicia y que lo cierre cuando TR4W se cierra. En algunos casos, puede que se desee utilizar un rigctld iniciado previamente. Esto debería ser siempre TRUE salvo que tenga un caso muy específico y sepa bien lo que está haciendo."
-
-#. Section MULTI MULTS ONLY is not in the English file; retained so nothing is lost.
-#~ msgctxt "TC_HELP_MULTI_MULTS_ONLY"
-#~ msgid "Si está utilizando una red de ordenadores para una operación multi, este comando determinará si todos los QSOs se distribuyen por la red, o solo aquellos que son nuevos multiplicadores."
-#~ msgstr "Si está utilizando una red de ordenadores para una operación multi, este comando determinará si todos los QSOs se distribuyen por la red, o solo aquellos que son nuevos multiplicadores."
 
 #. Section RADIO ONE SCORE is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_RADIO_ONE_SCORE"

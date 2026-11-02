@@ -12,7 +12,7 @@ Counts are against the **live** command set: every command the settings object a
 | commands with **no help section** | 14 |
 | commands whose section exists but `DESCRIPTION=` is **empty** | 17 |
 | English sections for a name that is **not a live primary name** | 153 |
-| entries where `i18n/help_en.po` **lags** the ini | 6 |
+| entries where `i18n/help_en.po` **lags** the ini | 0 |
 
 ## A. Section missing, but another language has text (3)
 
@@ -243,13 +243,7 @@ Informational -- **no action taken here.** These sections exist in the English f
 - `STEREO CONTROL PORT`
 - `USE CONTROL PORT`
 
-## E. `i18n/help_en.po` lags the ini (6)
+## E. `i18n/help_en.po` lags the ini (0)
 
-What the program loads, against what this document measures. Closing these is a run of `python tools/i18n/ini2po.py`, which **rewrites every `i18n/help_*.po`** -- see `emit()` for what it keeps; a translation held only in a `.po` is at risk. Not run by this report.
+What the program loads, against what this document measures. Closing these is a run of `python tools/i18n/ini2po.py`, which **merges** the English into every `i18n/help_*.po` -- the `.po` is the master, nothing is lost and no fuzzy flag is cleared (see `_merge`) -- and then the `mt_seed --only` lines it prints. Not run by this report.
 
-- `BACKCOPY ENABLE` -- the English changed in the ini since help_en.po was built
-- `BACKUP DESTINATION` -- in the ini, not in help_en.po
-- `BACKUP LOG FILE NAME` -- the English changed in the ini since help_en.po was built
-- `BACKUP LOG FREQUENCY` -- the English changed in the ini since help_en.po was built
-- `MULTI INFO MESSAGE` -- the English changed in the ini since help_en.po was built
-- `MULTI MULTS ONLY` -- in the ini, not in help_en.po

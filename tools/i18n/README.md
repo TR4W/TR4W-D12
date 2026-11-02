@@ -121,11 +121,14 @@ translator catalogue with no engine involved.
 ## The second catalogue: config-command help
 
 `tr4w/target/commands_help_<lang>.ini` holds the help text for the settings
-dialog — one INI section per config command, read at run time by
-`uOption.pas:842`.
+— one INI section per config command. It is the authoring source and is never
+written; the program reads `help/help_<code>.po` (`src/uCommandHelp.pas`, the
+Preferences tooltips). ~~read at run time by `uOption.pas:842`~~ -- that dialog
+was deleted in `4321ce1d`, so the `uOption` notes below are history.
 
 ```bash
-python tools/i18n/ini2po.py            # -> i18n/help_<code>.po (7 languages)
+python tools/i18n/ini2po.py            # MERGE into every i18n/help_<code>.po (the .po is the master)
+python tools/i18n/ini2po.py --new-lang JPN   # a new help_ja.po, every entry fuzzy and empty
 python tools/i18n/ini2po.py --check    # drift report, writes nothing
 python tools/i18n/ini2po.py --todo     # commands whose ENGLISH help is missing
 ```

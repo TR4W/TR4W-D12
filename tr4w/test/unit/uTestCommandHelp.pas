@@ -49,14 +49,12 @@ const
      command. This is a measurement, not a decision: writing the text is
      NY4I's (docs/HELP_TEXT_GAPS.md is the work-list). Exact in both
      directions -- remove a name the day its help lands. *)
-   KNOWN_HELP_GAPS: array[0..27] of string = (
-      (* No section in help_en.po. MULTI MULTS ONLY has one in
-        commands_help_eng.ini: help_en.po lags the ini until ini2po runs. *)
+   KNOWN_HELP_GAPS: array[0..26] of string = (
+      (* No section in help_en.po. *)
       'ALERT COLOR',
       'CALL WINDOW SHOW ALL SPOTS',
       'COUNTRY INFORMATION FILE',
       'DISPLAY LANGUAGE',
-      'MULTI MULTS ONLY',
       'NETWORK AUTO CONNECT',
       'NETWORK SHARE SPOTS',
       'OPERATING STANDARD EDIT KEYS',
@@ -326,6 +324,15 @@ begin
                'pt_br has no catalogue of its own, so Portuguese');
    CheckEquals(dir + 'help_en.po', HelpCatalogueFile(dir, 'zh_cn'),
                'zh_cn has neither, so English');
+   (* The file is spelled help_pt_BR.po and the code arrives as pt_br. On
+     Linux the lower-case name finds nothing; the path returned must be the
+     catalogue's own spelling (Windows' FileExists ignores case, so the
+     returned string is what this can check). *)
+   WriteUtf8File(dir + 'help_pt_BR.po', EnglishHeader);
+   CheckEquals(dir + 'help_pt_BR.po', HelpCatalogueFile(dir, 'pt_br'),
+               'pt_br finds help_pt_BR.po by its own spelling');
+   CheckEquals(dir + 'help_pt_BR.po', HelpCatalogueFile(dir, 'PT_BR'),
+               'whatever case the code arrives in');
 end;
 
 procedure TCommandHelpTests.TestNoFilesAtAll;

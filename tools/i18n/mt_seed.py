@@ -104,6 +104,52 @@ DEFAULT_VERIFY = 25
 # under text. IDENTICAL. The menu-accelerator '&' that MT eats is a
 # pre-existing quality issue on entries a human reviews anyway.
 TOKEN_RE = re.compile(r'<ph id="(\d+)"\s*></ph>')
+
+# CONFIG COMMAND NAMES STAY ENGLISH -- IN THE HELP CATALOGUE THEY ARE MASKED.
+#
+# NY4I, 2026-10-19: "command names always stay English, even in reviewed
+# text." An operator types `AUTO S&P ENABLE = TRUE` into a .cfg; a help text
+# that says `ACTIVATION AUTO S&P = VRAI` is a broken instruction. Measured
+# 2026-11-02 on help_nl.po: 155 machine drafts name a command or TRUE/FALSE,
+# and 78 of them lost at least one name to the engine.
+#
+# So with --catalog help every command name -- every section of
+# commands_help_eng.ini, which is the vocabulary the help text is written
+# about -- and TRUE/FALSE is sent as an empty <nm> element, the same channel
+# that keeps the %-specifiers safe. Measured 2026-11-02 on the local engine:
+# the elements survive in ja, ko, de, zh-Hans, pt-BR and fi.
+#
+# A DIFFERENT TAG FROM <ph>, because the rules differ. A specifier is
+# positional (wsprintf has no %1$s), so <ph> ids must come back ascending; a
+# name is not, and Japanese and Korean legitimately move it. A name must come
+# back EXACTLY ONCE, in any order, or the draft is dropped -- an empty entry
+# falls back to English, a draft missing a name ships a broken instruction.
+#
+# HELP ONLY. In the tr4w_ catalogues some text only LOOKS like a command --
+# the band-map menu captions that read BAND MAP ALL BANDS, the Edit QSO RADIO
+# ONE label -- and translators may translate those (the 2026-10-19 decision).
+NAME_TOKEN_RE = re.compile(r'<nm id="(\d+)"\s*></nm>')
+NAME_LITERALS = ("TRUE", "FALSE")
+
+
+def command_name_pattern(root):
+   """A regex for every config command name, as it appears in HTML-ESCAPED
+   text (protect() escapes before it masks, so 'S&P' is 'S&amp;P' by then).
+   Upper case only, longest first, on word boundaries."""
+   import ini2po
+   path = os.path.join(root, "tr4w", "target", "commands_help_eng.ini")
+   names = {s for s, _, _ in ini2po.read_ini(path, pc.SOURCE_LANG) if s.strip()}
+   names |= set(NAME_LITERALS)
+   escaped = sorted({html.escape(n, quote=False) for n in names},
+                    key=len, reverse=True)
+   alternatives = "|".join(re.escape(n) for n in escaped)
+   # '[BACKUP DESTINATION]' is masked WITH its brackets: left outside, the
+   # engine mangled them around the element ('[]BACKUP DESTINATION)', de,
+   # 2026-11-02).
+   return re.compile(r"(?<![A-Za-z0-9])(?:\[(?:%s)\]|(?:%s))(?![A-Za-z0-9])"
+                     % (alternatives, alternatives))
+
+
 LANGUAGE_KEY = "TC_TRANSLATION_LANGUAGE"
 SKIP_KEYS = {"TC_TRANSLATION_AUTHOR", "TC_TRANSLATOR_EMAIL"}
 
@@ -204,39 +250,60 @@ def is_translatable(source):
    return True
 
 
-def protect(text):
-   """English -> HTML payload with each %-specifier as a <ph> element.
+def protect(text, names_rx=None):
+   """English -> HTML payload with each %-specifier as a <ph> element and,
+   when names_rx is given, each command name as an <nm> element.
+
+   Returns (payload, specifiers, names) -- the originals, by id.
 
    ESCAPED FIRST, THEN TAGGED. The other order escapes the tags we just
    inserted, and the engine receives literal text reading "&lt;ph id=..." --
-   which it translates like any other words.
+   which it translates like any other words. Names are masked before the
+   specifiers; no command name contains a '%'.
    """
    originals = []
+   names = []
    escaped = html.escape(text, quote=False)
+
+   if names_rx is not None:
+      def name_sub(m):
+         names.append(html.unescape(m.group(0)))
+         return '<nm id="%d"></nm>' % (len(names) - 1)
+      escaped = names_rx.sub(name_sub, escaped)
 
    def sub(m):
       originals.append(m.group(0))
       return '<ph id="%d"></ph>' % (len(originals) - 1)
 
-   return pc.PLACEHOLDER_RE.sub(sub, escaped), originals
+   return pc.PLACEHOLDER_RE.sub(sub, escaped), originals, names
 
 
-def unprotect(text, originals):
-   """Restore specifiers. Returns (text, problem); problem is None if sound.
+def unprotect(text, originals, names=()):
+   """Restore specifiers and names. Returns (text, problem); problem is None
+   if sound.
 
    wsprintf maps arguments BY POSITION and has no %1$s syntax, so a translation
    that reorders the tokens would pair the wrong argument with the wrong slot.
    Japanese does exactly that -- it is SOV and genuinely wants a different
    order -- so insist the tokens come back complete AND ascending.
+
+   A name may move, so its tokens must come back exactly once each, in any
+   order.
    """
    found = [int(n) for n in TOKEN_RE.findall(text)]
    if found != list(range(len(originals))):
       return text, "tokens %s, expected %s" % (found,
                                                list(range(len(originals))))
+   found_names = sorted(int(n) for n in NAME_TOKEN_RE.findall(text))
+   if found_names != list(range(len(names))):
+      return text, "command names %s, expected each of %s once" % (
+         found_names, list(range(len(names))))
    restored = TOKEN_RE.sub(lambda m: originals[int(m.group(1))], text)
    # Unescaped AFTER the originals go back: a %-specifier contains no entity,
    # so restoring first cannot be undone here.
-   return html.unescape(restored), None
+   restored = html.unescape(restored)
+   # Names go back after the unescape, as the raw text they were ('S&P').
+   return NAME_TOKEN_RE.sub(lambda m: names[int(m.group(1))], restored), None
 
 
 def mirror_edge_space(src, text):
@@ -324,9 +391,11 @@ SALVAGE_MARK = "RECOVERED from a bit-corrupted lang file"
 
 
 def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
-         reseed=False, verify=DEFAULT_VERIFY, only=None):
+         reseed=False, verify=DEFAULT_VERIFY, only=None, names_rx=None):
    """only: a set of identifiers (pofile.claimed_identifiers form). When
-   given, nothing outside it is seeded -- or wiped by --reseed."""
+   given, nothing outside it is seeded -- or wiped by --reseed.
+   names_rx: command_name_pattern(), to keep command names English (the
+   help catalogue); None sends the text as it is."""
    entries = pofile.read_po(po_path)
    if only is not None:
       only = {i.lower().replace(':', '.') for i in only}
@@ -489,9 +558,9 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
       parts = e.source.split("\r")
       index.append((e, len(parts)))
       for part in parts:
-         masked, originals = protect(part)
+         masked, originals, names = protect(part, names_rx)
          segments.append(masked)
-         masks.append(originals)
+         masks.append((originals, names))
 
    done = translate(url, segments, target, batch=batch)
 
@@ -520,7 +589,7 @@ def seed(po_path, url, target, lang, dry_run, batch=DEFAULT_BATCH,
 
    restored, problems = [], {}
    for i, text in enumerate(done):
-      text, problem = unprotect(text, masks[i])
+      text, problem = unprotect(text, *masks[i])
       restored.append(text)
       if problem:
          problems[i] = problem
@@ -720,7 +789,9 @@ def main(argv=None):
    target = code if args.dry_run else engine_target(args.url, code)
    return seed(po_path, args.url, target, lang,
                args.dry_run, args.batch, args.reseed, args.verify,
-               only=set(args.only) if args.only else None)
+               only=set(args.only) if args.only else None,
+               names_rx=(command_name_pattern(paths["root"])
+                         if args.catalog == "help" else None))
 
 
 if __name__ == "__main__":

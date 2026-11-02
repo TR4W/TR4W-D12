@@ -741,10 +741,20 @@ msgctxt "TC_HELP_MULT_REPORT_MINIMUM_BANDS"
 msgid "Values: Integer in range 2 to 4. These commands are synonymous. When executing the ctrl-O command, you will be shown DX multipliers that you have worked on a certain number, but not all, bands. This parameter sets the minimum number of bands on which the country must have been worked in order to appear on this report."
 msgstr "hodnota: celé číslo, 2 až 4. Volba má význam zejména u závodů, kde jsou násobičem země DXCC. Příkazem lze nastavit, na kolika pásmech budou sledovány chybějící a dosažené násobiče (volba  CTRL-O)."
 
+# 2026-11-02: the English was reworded (ini2po); this translates the previous English, shown on the #| line
 #. Config command: MULTI INFO MESSAGE   (default: NONE)
+#, fuzzy
+#| msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
 msgctxt "TC_HELP_MULTI_INFO_MESSAGE"
-msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
+msgid "A short message (15 characters maximum) broadcast to the other computers on a multi-operator network. NOT CURRENTLY FUNCTIONAL: the routines that build and send it (CreateAndSendCQMultiInfoMessage and CreateAndSendSAPMultiInfoMessage) have commented-out bodies, and every call site is commented out as well, so setting this has no effect."
 msgstr "hodnota: volný text. Příkaz určuje řádek, jehož obsah se bude předávat v síti TR4W ostatním klientům. Je důležité, že každá změna nastavení v menu po příkazu CTRL-J během závodu bude neprodleně předána všem klientům sítě."
+
+# 2026-11-02: new entry; text from the language's commands_help ini, not yet read against this English (ini2po)
+#. Config command: MULTI MULTS ONLY   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_MULTI_MULTS_ONLY"
+msgid "If you are using a computer network for a multi operation, this command will determine whether all QSOs are passed around the network, or only those that are new multipliers."
+msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak jsou v síti při režimu MULTI-MULTI předávána pouze QSO, která představují násobič. Při volbě FALSE jsou předávána všechna QSO."
 
 #. Config command: MULTIPLE BANDS   (default: TRUE)
 msgctxt "TC_HELP_MULTIPLE_BANDS"
@@ -1772,20 +1782,26 @@ msgstr "hodnota: výběr z daných hodnot. Příkaz určuje, jak mají být zpra
 #. Config command: BACKCOPY ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_BACKCOPY_ENABLE"
-msgid "DEPRECATED - Use BACKUP LOG FILE NAME and [BACKUP LOG FREQUENCY]"
-msgstr "VYJÁDŘENO - Použijte BACkup LOG FILE NAME a [BACkup LOG FREQUENCY]"
+msgid "DEPRECATED - Use [BACKUP DESTINATION] and [BACKUP LOG FREQUENCY]"
+msgstr "ZÁKLADNÍ - POUŽITÍ [BACKUP DESTINATION] a [BACKUP LOG FREQUENCY]"
+
+#. Config command: BACKUP DESTINATION
+#, fuzzy
+msgctxt "TC_HELP_BACKUP_DESTINATION"
+msgid "A folder the log's backup is also copied to, such as a NAS share or a Dropbox folder. Every backup is first written to the backup folder under TR4W's settings; when this names a folder, each one is then copied there in the background. Empty means local backups only."
+msgstr "Složka, do které je zálohována záloha záznamu, je také zkopírována, jako je podíl NAS nebo složka Dropbox. Každá záloha je nejprve zapsána do zálohovací složky pod nastavením TR4W; když tato složka pojmenuje, každá z nich je pak zkopírována v pozadí. Prázdná znamená pouze místní zálohy."
 
 #. Config command: BACKUP LOG FILE NAME
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FILE_NAME"
-msgid "File to backup the TR4W log file. Optimally, this would be a directory like a Dropbox or NAS share."
-msgstr "Soubor pro zálohování souboru záznamu TR4W. Optimálně by to byl adresář jako Dropbox nebo podíl na NAS."
+msgid "The former name of [BACKUP DESTINATION]. A value given here is taken as the folder the named file is in; a file name with no folder means local backups only."
+msgstr "Bývalý název [BACKUP DESTINATION]. Zde uvedená hodnota se bere jako složka, ve které je pojmenovaný soubor; název souboru bez složky znamená pouze lokální zálohy."
 
 #. Config command: BACKUP LOG FREQUENCY   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BACKUP_LOG_FREQUENCY"
-msgid "Backups up the TR4W log to the above location every number of contacts."
-msgstr "Zálohování protokolu TR4W na výše uvedené místo každý počet kontaktů."
+msgid "Backs up the TR4W log every this many contacts, to the backup folder and then to [BACKUP DESTINATION]. 0 means never."
+msgstr "Zabalí záznam TR4W každého tohoto množství kontaktů do záložního adresáře a pak [BACKUP DESTINATION]Nula znamená nikdy."
 
 #. Config command: BAND MAP DISPLAY GHZ   (default: FALSE)
 #, fuzzy
@@ -2546,11 +2562,6 @@ msgstr "Pokud TRUE, YCCC SO2R box je podporován pro přepínání rádiových z
 #~ msgctxt "TC_HELP_MULT_WINDOW_COLOR"
 #~ msgid "hodnota: text, výběr ze zobrazené předvolby. Příkaz určuje barvu písma v okně násobičů"
 #~ msgstr "hodnota: text, výběr ze zobrazené předvolby. Příkaz určuje barvu písma v okně násobičů"
-
-#. Section MULTI MULTS ONLY is not in the English file; retained so nothing is lost.
-#~ msgctxt "TC_HELP_MULTI_MULTS_ONLY"
-#~ msgid "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak jsou v síti při režimu MULTI-MULTI předávána pouze QSO, která představují násobič. Při volbě FALSE jsou předávána všechna QSO."
-#~ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak jsou v síti při režimu MULTI-MULTI předávána pouze QSO, která představují násobič. Při volbě FALSE jsou předávána všechna QSO."
 
 #. Section MULTIPLIER INFORMATION WINDOW BACKGROUND is not in the English file; retained so nothing is lost.
 #~ msgctxt "TC_HELP_MULTIPLIER_INFORMATION_WINDOW_BACKGROUND"

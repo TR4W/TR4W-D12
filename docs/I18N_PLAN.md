@@ -402,7 +402,7 @@ attempt failed with the catalogue in `target/` while the dev binary ran from `bu
 | 8 | `.lfm` captions → `.po` | **done** — 561 harvested, merged into all 16; captions added after the last IDE save are not (issue #145) |
 | 8a | retiring a removed string safely | open — issue #144 |
 | 8b | the Weblate review pass | planned, after the contest factory is complete (NY4I, 2026-10-22) |
-| 9 | help `.po` + a help pane on settings leaves | **tooltips done 2026-11-02** — `src/uCommandHelp.pas` reads `help\help_<code>.po` over `help_en.po` and `TSettingBindings.Bind` sets each bound control's hint. No pane. Open: `help_en.po` lags the ini (6 entries; `docs/HELP_TEXT_GAPS.md` section E), and the INI housekeeping (section D) is NY4I's |
+| 9 | help `.po` + a help pane on settings leaves | **tooltips done 2026-11-02** — `src/uCommandHelp.pas` reads `help\help_<code>.po` over `help_en.po` and `TSettingBindings.Bind` sets each bound control's hint. No pane. The lag is closed (2026-11-02: `ini2po.py` now merges rather than rebuilds), all 22 languages have a help catalogue (`mn`, `sr` empty -- no engine), and the installer takes `help_*.po` by wildcard. Open: the INI housekeeping (`docs/HELP_TEXT_GAPS.md` section D) is NY4I's, and the pre-2026-11-02 machine drafts still carry translated command names |
 | 10 | a lint so new English cannot get in | open |
 | 11 | catalogue validation | **done** — `tools/i18n/po_lint.py`, found 9 defects in the inherited translations |
 | 12 | translator handoff documented | **done** — `TRANSLATOR_GUIDE.md`, `TRANSLATION_HANDOFF.md` |
