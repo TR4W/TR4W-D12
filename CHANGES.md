@@ -76,6 +76,13 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
   `TContestBase.ScorePostingMultiplierType`, the hook the UDP score builder already used.
   The base now returns `gridsquare` for `rmDomestic` when `HasGridSquareMultiplier` (RTC, the
   ARRL VHF contests), so the UDP builder's labels change for those contests too.
+- **The UDP score uses the same rows** (Q109 revisited, 2026-11-02, `logsubs2.BuildScoreUDPXml`):
+  its own mode loop is gone. It calls `uGetScores.GatherBreakdownTotals` (the one copy of the
+  global-to-totals gather, now public) and `BuildBreakdownXml`, which takes optional per-row
+  prefix and suffix so the UDP layout (a tab-indented row per line) is kept. The per-real-mode
+  rows, the band `ALL`-plus-mode duplicates and the total per mode are gone from the UDP stream;
+  WRTC keeps its HQ and country rows on every band row and the total; a kind the log has none of
+  is no longer posted as zero. `uTestUDPDatagrams` edited deliberately, plus a grid-contest test.
 - **Points were never posted, and the worker read live state**: `BuildDynamicResultsXml` ran on
   the HamScore worker and read `QSOPointTotals` (filled only by `PostUnit.CalculateTotals`, which
   re-reads the log and which the UDP path alone called), `mo.MTotals` and the score from a second

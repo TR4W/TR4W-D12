@@ -1937,11 +1937,16 @@ One deliberate change is listed last.
   three windows do not open, and Super Check Partial shows nothing -- now from
   `PermittedOperatingAids`. The **WAE** runnings still offer the QTC menu; every
   other contest greys it.
-- **Score posting XML** (UDP score broadcast, Q109, `a5afe844`): every
-  contest posts `state`, `country`, `zone`, `prefix` `<mult>` rows per band
-  and mode, **plus the ALL rows**, and the total row is per mode -- CW 5 on
-  20 m and PH 3 on 15 m reads CW 5 / PH 3 / ALL 8. **WRTC now posts its HQ and
-  country multipliers** (it posted none before -- Q55).
+- **Score posting XML** (UDP score broadcast, Q109, `a5afe844`; **rows
+  changed 2026-11-02**): the local UDP `dynamicresults` carries the same rows as
+  the HamScore post -- ONE row per band in the all-modes column (`mode="ALL"`)
+  for the QSOs, the points and each multiplier, then ONE `total`/`ALL`
+  summary; no per-mode rows and no total per mode (CW 5 on 20 m and PH 3 on
+  15 m reads 20 ALL 5 / 15 ALL 3 / total ALL 8). A multiplier is typed by the
+  contest: `state`, `country`, `zone`, `prefix`, and `gridsquare` for a grid
+  contest (RTC, the VHF contests). **WRTC posts its HQ and country multipliers**
+  on every band row and the total (Q55). Check with a real N1MM-format score
+  listener, if you have one, that it reads the all-modes rows.
 - **THE ONE DELIBERATE CHANGE -- design 7.11, MY STATE IS NEVER WRITTEN BY A
   CONTEST.** As a **K or DL station**, open **Canada Day** (or Canada Winter,
   Russian DX, RU3AX) or the **Cup RF**: the CW messages, the `&` macro, the

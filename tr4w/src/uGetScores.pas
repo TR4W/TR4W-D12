@@ -46,6 +46,7 @@ uses
   uCTYDAT,              // Issue #930 -- ctyGetCountryID / ctyGetCQZone / ctyGetITUZone (native Pascal, no cty.dll)
   Tree
   ,
+  uScoreBreakdown,      // TBreakdownTotals -- GatherBreakdownTotals fills one
   uTR4WStrings;
 function CreateConnectionAndSendReportToGetScores(aParameter: Pointer): DWORD; stdcall;
 procedure RunPOSTGetScoresThread;
@@ -59,6 +60,14 @@ procedure ShowGetScoresStatus(Status: string);
 // XML container (no <?xml> prolog, no `xml=` form-encoding prefix), so
 // the RTC uploader can wrap it in a multi-container POST.
 function BuildDynamicResultsXml: AnsiString;
+
+(* THE TOTALS THE SCORE <breakdown> IS BUILT FROM, copied out of the globals
+   CalculateTotals fills (QSOTotals, QSOPointTotals, mo.MTotals) -- every slot,
+   the Both column included. Both score messages call this -- the HamScore post
+   and the local UDP score -- and then uScoreBreakdown.BuildBreakdownXml, so
+   there is one gather and one set of rows. Main thread only: it reads the
+   live globals. *)
+procedure GatherBreakdownTotals(var aTotals: TBreakdownTotals);
 //procedure SendOnLineResultsToRDXC2010Site;
 
 var
@@ -92,7 +101,6 @@ uses
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
   uSettingsModel,    // Settings.My.ResolvedItuZone
   uContestRegistry,  // ContestIdentity -- the contest's ADIF id
-  uScoreBreakdown,   // BuildBreakdownXml -- the <breakdown> rows
   FCONTEST;          // SentMyState -- the state sent, design 7.11 (M9a)
 
 procedure RunPOSTGetScoresThread;
@@ -277,11 +285,28 @@ var
       end;
    end;
 
-function BuildDynamicResultsXml: AnsiString;
+procedure GatherBreakdownTotals(var aTotals: TBreakdownTotals);
 var
   TempBand:     BandType;
   TempMode:     ModeType;
   m:            RemainingMultiplierType;
+begin
+  for TempBand := Band160 to AllBands do
+     begin
+     for TempMode := CW to Both do
+        begin
+        aTotals.QSOs[TempBand, TempMode]   := QSOTotals[TempBand, TempMode];
+        aTotals.Points[TempBand, TempMode] := QSOPointTotals[TempBand, TempMode];
+        for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
+           begin
+           aTotals.Mults[TempBand, TempMode, m] := mo.MTotals[TempBand, TempMode, m];
+           end;
+        end;
+     end;
+end;
+
+function BuildDynamicResultsXml: AnsiString;
+var
   totals:       TBreakdownTotals;
   sContest:     string;
   ts:           string;
@@ -431,21 +456,8 @@ begin
     total/ALL summary, each multiplier labelled by the contest -- DXLog's
     shape. This used to write every (band, mode) combination the multiplier
     sheet keeps, so the scorer saw each count four times (RTC, 2026-11-01).
-    Every slot is copied out of the globals here, the Both column included
-    (the builder reads that one), because the row builder takes the totals as
-    a parameter. *)
-  for TempBand := Band160 to AllBands do
-     begin
-     for TempMode := CW to Both do
-        begin
-        totals.QSOs[TempBand, TempMode]   := QSOTotals[TempBand, TempMode];
-        totals.Points[TempBand, TempMode] := QSOPointTotals[TempBand, TempMode];
-        for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-           begin
-           totals.Mults[TempBand, TempMode, m] := mo.MTotals[TempBand, TempMode, m];
-           end;
-        end;
-     end;
+    The local UDP score message builds the same rows from the same gather. *)
+  GatherBreakdownTotals(totals);
 
   Result := Result + AnsiString('<breakdown>') +
             BuildBreakdownXml(totals, ContestIdentity(Contest));

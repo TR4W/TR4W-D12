@@ -44,6 +44,7 @@ type
       procedure Test_ScoreIsADynamicResults;
       procedure Test_ScoreTotalRowWithTwoModesIsPerMode;
       procedure Test_WRTCScoreIsSentWithItsMultipliers;
+      procedure Test_AGridContestScoreIsLabelledGridsquare;
       procedure Test_AStreamNobodyListensToSendsNothing;
       procedure Test_TheMasterSwitchSilencesEveryMessage;
       procedure Test_ScoreEntryPointSendsNothingWhenOff;
@@ -404,6 +405,13 @@ begin
    mo.MTotals[Band20, Both, rmDX]       := 3;
    mo.MTotals[AllBands, Both, rmDomestic] := 2;
    mo.MTotals[AllBands, Both, rmDX]       := 3;
+   (* 2026-11-02: the rows are one per band in the all-modes column, read from
+     the Both slot (uScoreBreakdown), so the zone and prefix counts live there
+     too, as the loader leaves them: a multiplier adds to its mode AND Both. *)
+   mo.MTotals[Band20, Both, rmZone]       := 4;
+   mo.MTotals[Band20, Both, rmPrefix]     := 1;
+   mo.MTotals[AllBands, Both, rmZone]     := 4;
+   mo.MTotals[AllBands, Both, rmPrefix]   := 1;
    mo.MTotals[Band20, CW, rmDomestic] := 2;
    mo.MTotals[Band20, CW, rmDX]       := 3;
    mo.MTotals[Band20, CW, rmZone]     := 4;
@@ -446,15 +454,20 @@ begin
    CheckEquals('4321', TagValue(xml, 'score'), 'score is the total passed in');
    CheckTrue(TagValue(xml, 'timestamp') <> '', 'timestamp is present');
 
-   // The breakdown, per band and mode, then the TOTAL row.
-   Has(xml, '<qso band="20" mode="CW">5</qso>');
-   Has(xml, '<mult band="20" mode="CW" type="state">2</mult>');
-   Has(xml, '<mult band="20" mode="CW" type="country">3</mult>');
-   Has(xml, '<mult band="20" mode="CW" type="zone">4</mult>');
-   Has(xml, '<mult band="20" mode="CW" type="prefix">1</mult>');
-   Has(xml, '<qso band="total" mode="CW">5</qso>');
-   Has(xml, '<mult band="total" mode="CW" type="state">2</mult>');
-   Has(xml, '<mult band="total" mode="CW" type="prefix">1</mult>');
+   (* The breakdown, EDITED DELIBERATELY 2026-11-02 (Q109 revisited): one row
+     per band in the all-modes column and ONE total/ALL summary -- uScoreBreakdown's
+     rows, the same as the HamScore post, DXLog's shape. The real-mode rows
+     (band 20 mode CW) and a total per mode (band total mode CW) that stood
+     here are gone: a scorer that sums every row that is not a total counted
+     each figure two to four times (RTC, 2026-11-01). CQ-WW-CW's multiplier
+     labels are the base's, so a state-less contest still says state. *)
+   Has(xml, '<qso band="20" mode="ALL">5</qso>');
+   Has(xml, '<mult band="20" mode="ALL" type="state">2</mult>');
+   Has(xml, '<mult band="20" mode="ALL" type="country">3</mult>');
+   Has(xml, '<mult band="20" mode="ALL" type="zone">4</mult>');
+   Has(xml, '<mult band="20" mode="ALL" type="prefix">1</mult>');
+   CheckEquals(0, Pos('mode="CW">', xml), 'no real-mode row');
+   CheckEquals(0, Pos('mode="CW" type=', xml), 'no real-mode multiplier row');
 
    pBreak    := Pos('<breakdown>', xml);
    pBreakEnd := Pos('</breakdown>', xml);
@@ -464,11 +477,12 @@ begin
              (pBreakEnd < pScore),
              'the rows sit inside <breakdown>, which comes before <score>');
    (* Q109 (deliberate edit, 2026-10-16): this used to pin 'no <point> rows'
-     (D7-identical -- the mode loop stopped at Phone).  The ALL row of the
-     sample at the head of BuildScoreUDPXml is sent now, with values. *)
+     (D7-identical -- the mode loop stopped at Phone).  The ALL rows are sent,
+     with values, and since 2026-11-02 they are the only rows. *)
    Has(xml, '<qso band="total" mode="ALL">5</qso>');
    Has(xml, '<mult band="total" mode="ALL" type="state">2</mult>');
    Has(xml, '<mult band="total" mode="ALL" type="country">3</mult>');
+   Has(xml, '<mult band="total" mode="ALL" type="prefix">1</mult>');
    Has(xml, '<point band="20" mode="ALL">10</point>');
    Has(xml, '<point band="total" mode="ALL">10</point>');
 end;
@@ -479,9 +493,12 @@ var
 begin
    (* Q109 (deliberate edit, 2026-10-16).  This was the KNOWN-DEFECT test: the
      "total" row took its count from one running sum reused for every mode, so
-     CW 5 on 20 m plus Phone 3 on 15 m read 8 and 13.  The correct values are
-     the per-mode totals, 5 and 3, and the ALL total is 8. *)
-   BeginTest('Q109: each total row is its own mode''s bands summed');
+     CW 5 on 20 m plus Phone 3 on 15 m read 8 and 13.  EDITED AGAIN 2026-11-02:
+     there is no total per mode any more -- the rows are one per band in the
+     all-modes column and one total/ALL, the sum of the bands (8) -- so the
+     test now pins that the CW and phone rows are GONE and the total is the
+     bands' sum, never inflated. *)
+   BeginTest('Q109: two modes post one row per band and a total that is the bands'' sum');
    ConfigureAllStreams(True);
    SetScoreGlobals;
    QSOTotals[Band15, Phone]   := 3;
@@ -492,12 +509,12 @@ begin
    ResetCapture;
    PostScoreToUDP(1);
    xml := string(gSent[0].Payload);
-   Has(xml, '<qso band="15" mode="PH">3</qso>');
-   Has(xml, '<qso band="total" mode="CW">5</qso>');
-   Has(xml, '<qso band="total" mode="PH">3</qso>');
+   Has(xml, '<qso band="20" mode="ALL">5</qso>');
+   Has(xml, '<qso band="15" mode="ALL">3</qso>');
    Has(xml, '<qso band="total" mode="ALL">8</qso>');
-   CheckEquals(0, Pos('mode="CW">8<', xml), 'the CW total is not inflated');
-   CheckEquals(0, Pos('mode="PH">13<', xml), 'the PH total is not inflated');
+   CheckEquals(0, Pos('mode="CW">', xml), 'no CW row');
+   CheckEquals(0, Pos('mode="PH">', xml), 'no phone row');
+   CheckEquals(0, Pos('band="total" mode="ALL">13<', xml), 'the total is not inflated');
 end;
 
 procedure TUDPDatagramTests.Test_WRTCScoreIsSentWithItsMultipliers;
@@ -529,6 +546,44 @@ begin
    CheckEquals(0, Pos('type="zone"', xml), 'WRTC posts no zone multiplier');
    CheckEquals(0, Pos('type="prefix"', xml), 'WRTC posts no prefix multiplier');
    CheckEquals(0, Pos('mode="CW" type=', xml), 'and no multiplier on a single-mode row');
+end;
+
+procedure TUDPDatagramTests.Test_AGridContestScoreIsLabelledGridsquare;
+var
+   xml: string;
+begin
+   (* RTC, 2026-11-01: eight QSOs on 20 m CW, eight grids.  The scorer read 16
+     multipliers because each count was posted four times and typed state.  The
+     local score message carries the same rows as the HamScore post: one row
+     per band in the all-modes column, one summary, and the contest's own
+     label for a grid multiplier. *)
+   BeginTest('2026-11-02: a grid contest posts one gridsquare row per band and one total');
+   ConfigureAllStreams(True);
+   Contest := ContestHandleOf(RTC);
+   FillChar(QSOTotals, SizeOf(QSOTotals), 0);
+   FillChar(QSOPointTotals, SizeOf(QSOPointTotals), 0);
+   FillChar(mo.MTotals, SizeOf(mo.MTotals), 0);
+   QSOTotals[Band20, CW]   := 8;
+   QSOTotals[Band20, Both] := 8;
+   QSOPointTotals[Band20, Both]   := 11;
+   QSOPointTotals[AllBands, Both] := 11;
+   mo.MTotals[Band20, CW, rmDomestic]     := 8;
+   mo.MTotals[Band20, Both, rmDomestic]   := 8;
+   mo.MTotals[AllBands, Both, rmDomestic] := 8;
+   ResetCapture;
+   PostScoreToUDP(88);
+   xml := string(gSent[0].Payload);
+   Has(xml, '<qso band="20" mode="ALL">8</qso>');
+   Has(xml, '<point band="20" mode="ALL">11</point>');
+   Has(xml, '<mult band="20" mode="ALL" type="gridsquare">8</mult>');
+   Has(xml, '<qso band="total" mode="ALL">8</qso>');
+   Has(xml, '<point band="total" mode="ALL">11</point>');
+   Has(xml, '<mult band="total" mode="ALL" type="gridsquare">8</mult>');
+   CheckEquals(0, Pos('type="state"', xml), 'a grid is not a state');
+   (* NOT Pos('mode="CW"'): the class element's own category mode may say CW. *)
+   CheckEquals(0, Pos('mode="CW">', xml), 'no real-mode row');
+   CheckEquals(0, Pos('mode="CW" type=', xml), 'no real-mode multiplier row');
+   CheckEquals(0, Pos('type="country"', xml), 'RTC has no country multiplier to post');
 end;
 
 procedure TUDPDatagramTests.Test_AStreamNobodyListensToSendsNothing;
@@ -617,6 +672,7 @@ begin
       Test_ScoreIsADynamicResults;
       Test_ScoreTotalRowWithTwoModesIsPerMode;
       Test_WRTCScoreIsSentWithItsMultipliers;
+      Test_AGridContestScoreIsLabelledGridsquare;
       Test_AStreamNobodyListensToSendsNothing;
       Test_TheMasterSwitchSilencesEveryMessage;
       Test_ScoreEntryPointSendsNothingWhenOff;

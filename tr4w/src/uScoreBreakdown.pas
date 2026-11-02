@@ -55,9 +55,15 @@ type
       Mults: TMultTotals;
    end;
 
-(* The rows, with no <breakdown> wrapper. *)
+(* The rows, with no <breakdown> wrapper. aRowPrefix and aRowSuffix go before
+   and after EVERY row: the HamScore post is one run of text (both empty), and
+   the local UDP score message puts each row on its own indented line (LOGSUBS2
+   passes its tabs and line break), so the two share the rows and not the
+   layout. *)
 function BuildBreakdownXml(const aTotals: TBreakdownTotals;
-                           aContest: TContestBase): AnsiString;
+                           aContest: TContestBase;
+                           const aRowPrefix: string = '';
+                           const aRowSuffix: string = ''): AnsiString;
 
 const
    (* WHEN THE POSTED SCORE IS REBUILT (uHamScore).  Rebuilding reads the whole
@@ -89,7 +95,9 @@ uses
    SysUtils;
 
 function BuildBreakdownXml(const aTotals: TBreakdownTotals;
-                           aContest: TContestBase): AnsiString;
+                           aContest: TContestBase;
+                           const aRowPrefix: string = '';
+                           const aRowSuffix: string = ''): AnsiString;
 var
    band: BandType;
    kind: RemainingMultiplierType;
@@ -97,6 +105,12 @@ var
    qsoTotal: integer;
    multType: string;
    rows: string;
+
+   function Row(const aXml: string): string;
+   begin
+      Result := aRowPrefix + aXml + aRowSuffix;
+   end;
+
 begin
    rows := '';
    qsoTotal := 0;
@@ -115,11 +129,11 @@ begin
          begin
          Continue;
          end;
-      rows := rows + '<qso band="' + BandStringsArrayWithOutSpaces[band] +
-              '" mode="ALL">' + IntToStr(count) + '</qso>';
+      rows := rows + Row('<qso band="' + BandStringsArrayWithOutSpaces[band] +
+              '" mode="ALL">' + IntToStr(count) + '</qso>');
       qsoTotal := qsoTotal + count;
-      rows := rows + '<point band="' + BandStringsArrayWithOutSpaces[band] +
-              '" mode="ALL">' + IntToStr(aTotals.Points[band, Both]) + '</point>';
+      rows := rows + Row('<point band="' + BandStringsArrayWithOutSpaces[band] +
+              '" mode="ALL">' + IntToStr(aTotals.Points[band, Both]) + '</point>');
       for kind := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
          begin
          multType := aContest.ScorePostingMultiplierType(kind, True);
@@ -127,27 +141,27 @@ begin
             no country, zone or prefix multiplier to report as zero. *)
          if (multType <> '') and (aTotals.Mults[AllBands, Both, kind] <> 0) then
             begin
-            rows := rows + '<mult band="' + BandStringsArrayWithOutSpaces[band] +
+            rows := rows + Row('<mult band="' + BandStringsArrayWithOutSpaces[band] +
                     '" mode="ALL" type="' + multType + '">' +
-                    IntToStr(aTotals.Mults[band, Both, kind]) + '</mult>';
+                    IntToStr(aTotals.Mults[band, Both, kind]) + '</mult>');
             end;
          end;
       end;
 
    (* THE SUMMARY, ONCE: total/ALL for the QSOs, the points and each type. The
       QSOs are the bands' sum -- QSOTotals[AllBands] counts deleted QSOs too. *)
-   rows := rows + '<qso band="total" mode="ALL">' + IntToStr(qsoTotal) + '</qso>';
+   rows := rows + Row('<qso band="total" mode="ALL">' + IntToStr(qsoTotal) + '</qso>');
    if qsoTotal <> 0 then
       begin
-      rows := rows + '<point band="total" mode="ALL">' +
-              IntToStr(aTotals.Points[AllBands, Both]) + '</point>';
+      rows := rows + Row('<point band="total" mode="ALL">' +
+              IntToStr(aTotals.Points[AllBands, Both]) + '</point>');
       for kind := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
          begin
          multType := aContest.ScorePostingMultiplierType(kind, True);
          if (multType <> '') and (aTotals.Mults[AllBands, Both, kind] <> 0) then
             begin
-            rows := rows + '<mult band="total" mode="ALL" type="' + multType + '">' +
-                    IntToStr(aTotals.Mults[AllBands, Both, kind]) + '</mult>';
+            rows := rows + Row('<mult band="total" mode="ALL" type="' + multType + '">' +
+                    IntToStr(aTotals.Mults[AllBands, Both, kind]) + '</mult>');
             end;
          end;
       end;

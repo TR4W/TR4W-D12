@@ -266,6 +266,10 @@ uses
      ContestUsesDomesticFile -- the grid-square rover and QSO-party mobile
      rules ask the contest (M11 S6). *)
   uContestBase,
+  (* GatherBreakdownTotals and BuildBreakdownXml -- the score message's rows,
+     shared with the HamScore post. *)
+  uGetScores,
+  uScoreBreakdown,
   uContestFactory;
 procedure ProcessCallWindowCommand(Command: Str80);
 { This procedure gets called if a command in the call window was typed in
@@ -2721,26 +2725,9 @@ end;
 function BuildScoreUDPXml(aTotalScore: longint): AnsiString;
 var
     sBuf: AnsiString;
-
-    TempBand                              : BandType;
-    TempMode                              : ModeType;
-    m                                     : RemainingMultiplierType;
-    (* A STRING, not a PAnsiChar: it holds a band name from a table that is a
-      string array now, and it is only ever concatenated into XML below. *)
-    BandPchar                             : string;
-    nQSOs                                 : integer;
-    (* Q109: THE PER-MODE SUM OF THE BANDS, one slot per mode (the ALL slot sums
-      the ALL rows).  There used to be ONE running sum, reused for every mode,
-      so the total row of the second mode worked read the first mode's bands too. *)
-    nModeTotal                            : array[ModeType] of integer;
+    (* THE ROWS ARE uScoreBreakdown'S -- see the note above the breakdown. *)
+    totals                                : TBreakdownTotals;
     sContestName                         : string;
-    (* The contest's type= label for one multiplier kind -- M9a. *)
-    multType                              : string;
-const
-  (* ~~GetScoresMults~~ AND ~~GetScoresMultsWRTC~~ ARE GONE -- M9a, 2026-10-02.
-    The type= labels are the contest's: TContestBase.ScorePostingMultiplierType
-    (the base's are GetScoresMults' four; WRTC's class holds its own two). *)
-  GetScoresModesArray                   : array[ModeType] of string = ('CW', 'DIG', 'PH', 'ALL', '', '');
 begin
 // Score formatted for WRTC Score Computer
 {
@@ -2770,10 +2757,6 @@ begin
 You cannot use QSOTotals[TempBand, TempMode] for an accurate score for the total QSOs. QSOTotals[TempBand, TempMode] is not decremented for ALL as that is the log's total QSO count including deleted contacts.
 QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum those values to calculate the total
 }
-   for TempMode := Low(ModeType) to High(ModeType) do
-      begin
-      nModeTotal[TempMode] := 0;
-      end;
    (* The contest's ADIF id, asked of the contest -- M1. *)
    sContestName := ContestIdentity(Contest).ADIFContestId;
    sBuf := '<?xml version="1.0"?>' + sLineBreak +
@@ -2788,53 +2771,21 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
                '" transmitter="' + tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter] +
                '" assisted="' + tCategoryAssistedSA[Settings.Contest.CategoryAssisted] + '"></class>' + sLineBreak +
           #9 + '<breakdown>' + sLineBreak;
-   for TempBand := Band160 to AllBands do
-      begin
-      (* Q109: CW THROUGH Both, so the ALL row is sent.  The loop stopped at
-        Phone ("{Both do} // Was Phone for a test do") in D7 as well, and the
-        ALL rows in the sample above were never written. *)
-      for TempMode := CW to Both do
-         begin
-         BandPchar := BandStringsArrayWithOutSpaces[TempBand];
-         if TempBand = AllBands then
-            begin
-            BandPchar := 'total';
-            (* The total is THIS MODE's bands summed -- QSOTotals[AllBands, m]
-              is not used, see the NOTE above. *)
-            nQSOs := nModeTotal[TempMode];
-            end
-         else
-            begin
-            nQSOs := QSOTotals[TempBand, TempMode];
-            nModeTotal[TempMode] := nModeTotal[TempMode] + nQSOs;
-            end;
-         if nQSOs = 0 then Continue;
-         sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
-                            '" mode="' + GetScoresModesArray[TempMode] +
-                            '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
-         (* ONE <mult> PER KIND THE CONTEST LABELS, IN KIND ORDER -- M9a. This
-           was `if Contest <> WRTC` with two loops; the contest says which kinds
-           it posts on this row, and under what label ('' posts none). *)
-         for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
-            begin
-            multType := ContestIdentity(Contest).ScorePostingMultiplierType(
-                           m, GetScoresModesArray[TempMode] = 'ALL');
-            if multType = '' then
-               begin
-               Continue;
-               end;
-            sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                      '" type="' + multType + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
-                                      '</mult>' + sLineBreak;
-            end;
-         if GetScoresModesArray[TempMode] = 'ALL' then
-            begin
-            sBuf := sBuf + #9#9 + '<point band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] + '">' +
-                         IntToStr(QSOPointTotals[TempBand, TempMode]) + '</point>' + sLineBreak;
-            end;
-         end;
-         // After mode loop...
-      end;
+   (* THE ROWS ARE uScoreBreakdown'S, THE SAME FUNCTION THE HAMSCORE POST USES
+     (2026-11-02, Q109 revisited). This builder wrote every (band, mode)
+     combination -- the real-mode rows, a band's ALL row, a total per mode --
+     so a scorer that sums the rows that are not totals counted each figure
+     two to four times (RTC, 2026-11-01: 16 multipliers for 8). It is now one
+     row per band in the all-modes column and ONE total/ALL summary, DXLog's
+     shape, each multiplier labelled by the contest
+     (TContestBase.ScorePostingMultiplierType: gridsquare for a grid contest,
+     WRTC's HQ and country on every band row and the total). Q109's rulings
+     stand: the ALL column is sent, a total is its own sum of the bands, WRTC's
+     score is not suppressed. Only the layout stays this builder's: each row
+     on its own indented line. *)
+   GatherBreakdownTotals(totals);
+   sBuf := sBuf + BuildBreakdownXml(totals, ContestIdentity(Contest),
+                                    #9#9, sLineBreak);
    sBuf := sBuf + #9 + '</breakdown>' + sLineBreak +
                   #9 + '<score>' + IntToStr(aTotalScore) + '</score>' + sLineBreak +
                   #9 + '<timestamp>' + SystemTimeToString(UTC) + '</timestamp>' + sLineBreak +

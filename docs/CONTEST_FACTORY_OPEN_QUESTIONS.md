@@ -1122,6 +1122,17 @@ closes it; anything else reopens it.
      mult, point -- per band and `total`), each `total` row is its own mode's
      bands summed (`nModeTotal`), WRTC's HQ/country rows follow from the ALL row,
      and nothing suppresses the UDP score. Tests: `uTestUDPDatagrams`.
+     **ROW SET ALIGNED WITH THE SCORER'S SPEC AND DXLog, 2026-11-02 (NY4I,
+     "Option B"):** the all-modes column stays, but the per-real-mode rows and
+     the total per mode are gone. RTC 2026 showed what they cost: the online
+     scorer summed every non-total row and read 16 multipliers for 8, because
+     each count was posted four times. The UDP score is now built by the same
+     function as the HamScore post (`uScoreBreakdown.BuildBreakdownXml`) --
+     one row per band, `mode="ALL"`, and one `total`/`ALL` summary, with the
+     contest's multiplier label (`gridsquare` for a grid contest). WRTC still
+     gets its HQ and country rows (on each band row and the total) and its UDP
+     score is still not suppressed. The pinned `uTestUDPDatagrams` tests were
+     edited deliberately.
 
 - **Q108** (NY4I, 2026-10-16) A new contest should not touch `VC.pas`:
   *"I prefer we have a registry similar to when we Add a new radio so the
