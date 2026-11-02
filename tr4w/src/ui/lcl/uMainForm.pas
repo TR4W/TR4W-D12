@@ -487,12 +487,87 @@ procedure ShowTR4WMainForm;
   mac-ci cannot be captured over ssh -- screencapture is refused without
   Screen Recording permission -- so an operator has to look.
 
-  WINDOWS AND LINUX ARE UNTOUCHED, and not merely because the call would be
-  harmless there: the entire body is inside {$IFDEF DARWIN}. Windows has no
-  global menu bar and gtk2's is per-window, so neither platform has the defect,
-  and raising the main window over the restored tool windows at start-up would
-  be a behaviour change on both. *)
+  THE START-UP PROMOTION IS macOS ONLY, inside {$IFDEF DARWIN}. Windows has no
+  global menu bar and gtk2's is per-window, so neither platform has that
+  defect, and raising the main window over the restored tool windows AT
+  START-UP would be a behaviour change on both.
+
+  THE REST OF THE BODY RUNS ON EVERY PLATFORM (2026-11-01): it arms the raise
+  on activation -- see TR4WWindowsShouldRaise below -- which acts only when
+  the operator later switches INTO TR4W from another program, never at
+  start-up. Armed here because this is the one start-up call that runs after
+  every window exists and before Application.Run, and only in the real
+  program: a unit test that streams the form never reaches it, so no test is
+  left holding an application handler. *)
 procedure ScheduleMainWindowActivation;
+
+(* COMING BACK TO TR4W FROM ANOTHER PROGRAM PUTS EVERY TR4W WINDOW IN FRONT,
+  AND THE MAIN WINDOW ON TOP OF THEM (NY4I, bench, 2026-11-01).
+
+  WHY IT DID NOT, read from the LCL source rather than guessed:
+
+    * THE MAIN FORM IS UNOWNED. ShowInTaskBar = stAlways, and
+      TWin32WSCustomForm.CreateHandle (win32wsforms.pp) only nominates an owner
+      for stDefault and stNever, so its owner is 0.
+    * EVERY TOOL WINDOW IS OWNED BY THE HIDDEN APPLICATION WINDOW. They are
+      stDefault, MainFormOnTaskBar is False, so the same routine gives them
+      Win32WidgetSet.AppHandle. LeaveFormUnowned (issue #1) removes the owner
+      FORM; this owner is the widgetset's and remains.
+    * Windows raises an owned window together with its owner's other owned
+      windows, so clicking any tool window brings all of them forward as one
+      group. The main window is not in that group and keeps its old place,
+      behind whichever tool window covered it.
+    * Nothing in the LCL corrects that: the WM_ACTIVATEAPP arm calls
+      RestorePopups only when MainFormOnTaskBar is set (win32callback.inc), and
+      no form here is fsStayOnTop.
+
+  THE FIX IS THE LCL'S OWN ACTIVATE EVENT. Application.OnActivate fires once
+  per switch INTO the program -- TApplication.Activate returns at once while
+  AppActive is set -- so a click from one TR4W window to another never
+  reaches it. The handler queues the raise, so it runs after the windowing
+  system's own raise and the click have been processed (the LCL already
+  delivers the activation through QueueAsyncCall; this queues once more).
+
+  THE RAISE: every TR4W window that is showing, bottom first in the LCL's own
+  activation order (Screen.CustomFormsZOrdered, lower index on top), then the
+  main window last. BringToFront is SetForegroundWindow, which puts each one
+  above EVERY window on the desktop, so other programs' windows end up behind
+  all of TR4W's, and the tool windows keep their order among themselves.
+  Raising the main window last activates it, and its OnActivate
+  (MainFormActivate) puts the caret back in the call or exchange field.
+
+  NOTHING RUNS WHILE A MODAL IS UP -- the modal is the window that must be in
+  front, and TCustomForm.SetZOrder would refuse the raise anyway
+  (customform.inc). Nothing runs if the operator switched away again before
+  the queued call ran, or if the main window is hidden or minimised.
+
+  THE COST, for the bench: a tool window the operator clicked to come back
+  loses the keyboard to the entry field, and the main window covers it where
+  the two overlap. That is the behaviour NY4I asked for. *)
+function TR4WWindowsShouldRaise(const aAppActive, aMainShowing,
+                                aMainMinimized, aModalUp,
+                                aTerminated: boolean): boolean;
+
+(* AN ACTIVATION THAT ARRIVES THIS SOON AFTER A RAISE IS ITS ECHO, NOT THE
+  OPERATOR, and is ignored -- so the raise can never feed itself.
+
+  Windows and Cocoa report activation for the APPLICATION (WM_ACTIVATEAPP on
+  the hidden window; applicationDidBecomeActive), and raising TR4W's own
+  windows produces neither. gtk2 DERIVES it from per-window focus: a focus-out
+  with no focus-in within 50 ms deactivates the application
+  (TGtk2WidgetSet.StartFocusTimer) and the next focus-in activates it again.
+  A window manager slow to hand focus between the windows being raised would
+  therefore re-arm the raise, and each raise would re-arm the next. aLastRaise
+  = 0 means no raise has run yet. *)
+function IsActivationEcho(const aNowMs, aLastRaiseMs: QWord): boolean;
+
+const
+   ACTIVATION_ECHO_MS = 1000;
+
+(* WHICH WINDOWS GO UP WITH THE MAIN ONE: a showing, top-level, non-minimised
+  form that is not the main window and not a hint. *)
+function RaisedWithTheMainWindow(const aIsMain, aShowing, aMinimized,
+                                 aHasParent, aIsHint: boolean): boolean;
 
 { THE POSSIBLE-CALL LIST.  Phase 3b.
 
@@ -4048,8 +4123,146 @@ begin
 end;
 {$ENDIF}
 
+
+{ ---------------------------------------------------------------------------
+  THE RAISE ON ACTIVATION.  Every platform -- see TR4WWindowsShouldRaise in
+  the interface for why it exists and what it does.
+  --------------------------------------------------------------------------- }
+type
+   (* A CLASS for the same reason as TStartupActivator: AddOnActivateHandler
+     wants a TNotifyEvent and QueueAsyncCall a TDataEvent. Not a method on
+     TTR4WMainForm, whose class the designed-form lints read.
+
+     ON macOS BOTH HANDLERS RUN on the first activation after a start-up spent
+     in another program: TStartupActivator promotes the main window once, and
+     this raises everything with it. Both end in TR4WMainForm.BringToFront, so
+     they agree; neither depends on the other running first. *)
+   TActivationRaiser = class(TObject)
+   private
+      FPending:     boolean;
+      FLastRaiseMs: QWord;
+   public
+      procedure ApplicationActivated(Sender: TObject);
+      procedure RaiseFromQueue(Data: PtrInt);
+   end;
+
+var
+   (* Freed in finalization through FreeDeferralTarget, after the handler is
+     removed, so neither the activate list nor the async queue can call into a
+     freed object at shutdown. *)
+   GActivationRaiser: TActivationRaiser = nil;
+
+function TR4WWindowsShouldRaise(const aAppActive, aMainShowing,
+                                aMainMinimized, aModalUp,
+                                aTerminated: boolean): boolean;
+begin
+   Result := aAppActive          and
+             aMainShowing        and
+             (not aMainMinimized) and
+             (not aModalUp)      and
+             (not aTerminated);
+end;
+
+function IsActivationEcho(const aNowMs, aLastRaiseMs: QWord): boolean;
+begin
+   Result := (aLastRaiseMs <> 0)      and
+             (aNowMs >= aLastRaiseMs) and
+             (aNowMs - aLastRaiseMs < ACTIVATION_ECHO_MS);
+end;
+
+function RaisedWithTheMainWindow(const aIsMain, aShowing, aMinimized,
+                                 aHasParent, aIsHint: boolean): boolean;
+begin
+   Result := (not aIsMain)    and
+             aShowing         and
+             (not aMinimized) and
+             (not aHasParent) and
+             (not aIsHint);
+end;
+
+procedure TActivationRaiser.ApplicationActivated(Sender: TObject);
+begin
+   (* ONE QUEUED RAISE AT A TIME. QueueAsyncCall RAISES on a shut-down queue
+     rather than returning False -- the trap Queue() above documents. *)
+   if FPending or (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+
+   // SysUtils', named: Windows is first in this unit's uses clause.
+   if IsActivationEcho(SysUtils.GetTickCount64, FLastRaiseMs) then
+      begin
+      Exit;
+      end;
+
+   FPending := True;
+   Application.QueueAsyncCall(RaiseFromQueue, 0);
+end;
+
+procedure TActivationRaiser.RaiseFromQueue(Data: PtrInt);
+var
+   toRaise: array of TCustomForm;
+   f:       TCustomForm;
+   i:       integer;
+   n:       integer;
+begin
+   FPending := False;
+
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   if not TR4WWindowsShouldRaise(Application.Active,
+                                 TR4WMainForm.Showing,
+                                 TR4WMainForm.WindowState = wsMinimized,
+                                 Screen.GetCurrentModalForm <> nil,
+                                 Application.Terminated) then
+      begin
+      Exit;
+      end;
+
+   (* A SNAPSHOT FIRST: BringToFront reorders Screen.CustomFormsZOrdered
+     (MoveFormToZFront), so raising while walking it would visit forms twice
+     or not at all. Collected bottom first, so the window that was on top is
+     raised last and stays on top of the tool windows. *)
+   n := 0;
+   SetLength(toRaise, Screen.CustomFormCount);
+   for i := Screen.CustomFormCount - 1 downto 0 do
+      begin
+      f := Screen.CustomFormsZOrdered[i];
+      if RaisedWithTheMainWindow(f = TR4WMainForm,
+                                 f.Showing,
+                                 f.WindowState = wsMinimized,
+                                 f.Parent <> nil,
+                                 f is THintWindow) then
+         begin
+         toRaise[n] := f;
+         Inc(n);
+         end;
+      end;
+
+   for i := 0 to n - 1 do
+      begin
+      toRaise[i].BringToFront;
+      end;
+
+   (* LAST, so it is above all of them. Its activation runs MainFormActivate,
+     which puts the caret in the call or exchange field. *)
+   TR4WMainForm.BringToFront;
+
+   // Stamped AFTER the raise, so its own focus traffic falls inside the echo.
+   FLastRaiseMs := SysUtils.GetTickCount64;
+end;
+
 procedure ScheduleMainWindowActivation;
 begin
+   if (GActivationRaiser = nil) and (Application <> nil) then
+      begin
+      GActivationRaiser := TActivationRaiser.Create;
+      Application.AddOnActivateHandler(GActivationRaiser.ApplicationActivated);
+      end;
+
 {$IFDEF DARWIN}
    if GStartupActivator = nil then
       begin
@@ -4657,5 +4870,11 @@ finalization
    // The two deferral targets -- created on the first off-main-thread write.
    FreeDeferralTarget(TObject(GNoticeArmer));
    FreeDeferralTarget(TObject(GDeferrer));
+   // The activation raiser -- its handler goes before the object does.
+   if (GActivationRaiser <> nil) and (Application <> nil) then
+      begin
+      Application.RemoveOnActivateHandler(GActivationRaiser.ApplicationActivated);
+      end;
+   FreeDeferralTarget(TObject(GActivationRaiser));
 
 end.

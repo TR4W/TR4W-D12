@@ -274,6 +274,22 @@ decided whether stations could talk. Now it connects nothing and stops nothing:
   not by the window. The top-level popup is never greyed, because it holds the
   way to get started.
 
+## Window z-order: who owns whom (2026-11-01)
+
+- The main form is `ShowInTaskBar = stAlways`, so on Windows it is UNOWNED.
+  Every tool window (`LeaveFormUnowned`, issue #1) still has the LCL's hidden
+  `AppHandle` as its Win32 owner (stDefault, `MainFormOnTaskBar` False), and
+  Windows raises the tool windows as ONE GROUP when any of them is clicked.
+  The main window is outside that group, which left it behind them on a
+  switch back from another program (NY4I, bench).
+- The fix is `uMainForm.TActivationRaiser`: `Application.OnActivate` (once per
+  switch INTO TR4W) queues `BringToFront` on every showing tool window, bottom
+  first in `Screen.CustomFormsZOrdered`, then the main window last. It skips
+  while a modal is up, and `IsActivationEcho` stops it re-arming itself on
+  gtk2, which derives app activation from per-window focus. Armed from
+  `ScheduleMainWindowActivation`. Do not "fix" this by owning tool windows by
+  the main form again -- that is issue #1.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

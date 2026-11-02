@@ -312,9 +312,15 @@ procedure CentreOverMainWindow(const aForm: TCustomForm);
   ShowInTaskBar needs no setting. gtk2 is different: there stDefault gives
   every form a taskbar entry already, owned or not.
 
-  THE COST, to be judged on the bench: ownership was added to Preferences
-  (2026-08-23) and Log Search because switching to another program and back
-  raised only the main window. Unowned, the windows are back in that state.
+  SWITCHING BACK FROM ANOTHER PROGRAM (2026-11-01). The LCL still gives every
+  such form the hidden Application window as its Win32 owner, so Windows
+  raises the tool windows as ONE GROUP when any of them is clicked -- and the
+  main window, which is unowned (stAlways), is not in that group and was left
+  behind them (NY4I, bench). uMainForm.TActivationRaiser now answers
+  Application.OnActivate by raising every TR4W window, the main one last. (The
+  old note here said the reverse -- that coming back raised only the main
+  window -- which is why ownership had been added to Preferences and Log
+  Search in 2026-08.)
 
   MODALS MUST NOT CALL THIS. They keep OwnFormByMainWindow, through
   ShowModalOverWin32Parent. *)
