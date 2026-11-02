@@ -441,6 +441,13 @@ type
         HasRecorded. }
       FSlot: array[1..2] of TRadioDefinition;
       FRecorded: array[1..2] of boolean;
+      { THE PROFILE-LEVEL HALF OF A SLOT: how CW reaches it and whether its
+        speed follows the keyer.  Not on the radio definition (the profile's
+        copy is the one the applier renders and the operator edits), so the
+        definition comparison above cannot see a change to either. }
+      FSpeedSync: array[1..2] of boolean;
+      FCWOutput: array[1..2] of string;
+      FProfileRecorded: array[1..2] of boolean;
    public
       destructor Destroy; override;
 
@@ -458,6 +465,24 @@ type
         the operator will expect to see honoured. }
       function SlotChanged(const aSlot: integer;
                            const aRadio: TRadioDefinition): boolean;
+
+      { What the profile put on the air for this slot: its CW output and its
+        speed-sync flag.  Written by the applier beside RecordSlot. }
+      procedure RecordProfileSlot(const aSlot: integer;
+                                  const aSpeedSync: boolean;
+                                  const aCWOutput: string);
+
+      { True if the profile's CW output for the slot differs from what was
+        applied.  A change here needs the keyer rebuilt, which only a full
+        profile re-apply does.  False when nothing was recorded. }
+      function CWOutputChanged(const aSlot: integer;
+                               const aCWOutput: string): boolean;
+
+      { True if the profile's speed-sync flag differs from what was applied.
+        A single flag on the running radio: it can be set live, with no
+        teardown.  False when nothing was recorded. }
+      function SpeedSyncChanged(const aSlot: integer;
+                                const aSpeedSync: boolean): boolean;
    end;
 
    { The library itself: radios, profiles, and which profile is active. }
@@ -1174,7 +1199,37 @@ begin
       begin
       FreeAndNil(FSlot[slot]);
       FRecorded[slot] := False;
+      FProfileRecorded[slot] := False;
+      FSpeedSync[slot] := False;
+      FCWOutput[slot] := '';
       end;
+end;
+
+procedure TAppliedRadioSnapshot.RecordProfileSlot(const aSlot: integer;
+                                                  const aSpeedSync: boolean;
+                                                  const aCWOutput: string);
+begin
+   if (aSlot < 1) or (aSlot > 2) then
+      begin
+      Exit;
+      end;
+   FSpeedSync[aSlot] := aSpeedSync;
+   FCWOutput[aSlot] := aCWOutput;
+   FProfileRecorded[aSlot] := True;
+end;
+
+function TAppliedRadioSnapshot.CWOutputChanged(const aSlot: integer;
+                                               const aCWOutput: string): boolean;
+begin
+   Result := (aSlot >= 1) and (aSlot <= 2) and FProfileRecorded[aSlot] and
+             (FCWOutput[aSlot] <> aCWOutput);
+end;
+
+function TAppliedRadioSnapshot.SpeedSyncChanged(const aSlot: integer;
+                                                const aSpeedSync: boolean): boolean;
+begin
+   Result := (aSlot >= 1) and (aSlot <= 2) and FProfileRecorded[aSlot] and
+             (FSpeedSync[aSlot] <> aSpeedSync);
 end;
 
 procedure TAppliedRadioSnapshot.RecordSlot(const aSlot: integer;
@@ -2593,6 +2648,13 @@ begin
    Result.AddPair('defaultActiveSlot', TJSONNumber.Create(aProfile.DefaultActiveSlot));
    Result.AddPair('cwOutput1',         aProfile.CWOutput1);
    Result.AddPair('cwOutput2',         aProfile.CWOutput2);
+   (* THE THREE THE JSON PATH DROPPED.  Only the retired ini wrote them, so a
+     CW Speed Sync ticked in Preferences was gone at the next start (RTC,
+     2026-11-01).  Read back in LoadFromJSON, which seeds them from the radio
+     when the key is absent. *)
+   Result.AddPair('speedSync1',        TJSONBool.Create(aProfile.SpeedSync1));
+   Result.AddPair('speedSync2',        TJSONBool.Create(aProfile.SpeedSync2));
+   Result.AddPair('so2rEnabled',       TJSONBool.Create(aProfile.SO2REnabled));
 end;
 
 { command -> section, built ONCE.
@@ -3389,6 +3451,37 @@ begin
          profile.DefaultActiveSlot := JSONInt(obj, 'defaultActiveSlot', 1);
          profile.CWOutput1         := JSONStr(obj, 'cwOutput1',         '');
          profile.CWOutput2         := JSONStr(obj, 'cwOutput2',         '');
+
+         (* A FILE WRITTEN BEFORE THESE KEYS EXISTED has none, and False would
+           silently turn off a sync the radio definition still says is on.  Seed
+           from the slot's radio exactly as SeedFromLegacyIni does; a key that
+           IS present is the operator's word. *)
+         radioDef := FindRadioById(profile.Radio1Id);
+         if obj.GetValue('speedSync1') <> nil then
+            begin
+            profile.SpeedSync1 := JSONBool(obj, 'speedSync1', False);
+            end
+         else if radioDef <> nil then
+            begin
+            profile.SpeedSync1 := radioDef.CWSpeedSync;
+            end;
+         radioDef := FindRadioById(profile.Radio2Id);
+         if obj.GetValue('speedSync2') <> nil then
+            begin
+            profile.SpeedSync2 := JSONBool(obj, 'speedSync2', False);
+            end
+         else if radioDef <> nil then
+            begin
+            profile.SpeedSync2 := radioDef.CWSpeedSync;
+            end;
+         if obj.GetValue('so2rEnabled') <> nil then
+            begin
+            profile.SO2REnabled := JSONBool(obj, 'so2rEnabled', False);
+            end
+         else
+            begin
+            profile.SO2REnabled := (profile.Radio1Name <> '') and (profile.Radio2Name <> '');
+            end;
 
          if not AddProfile(profile, err) then
             begin

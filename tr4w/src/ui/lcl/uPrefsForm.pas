@@ -7699,6 +7699,14 @@ begin
                ShowMessage(err);
                end;
             end;
+         end
+      else
+         begin
+         (* CW SPEED SYNC IS ONE FLAG ON THE LIVE RADIO, not a reason to
+           restart it.  It reached the radio only through Activate Profile,
+           so a ticked box looked saved and did nothing until then (RTC,
+           2026-11-01). *)
+         ApplyActiveSpeedSync(FStore);
          end;
 
       Exit;

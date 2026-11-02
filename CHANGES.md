@@ -41,6 +41,25 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### CW Speed Sync and SO2R Enabled were never saved to tr4w.json - NY4I
+
+#### Profile persistence and apply (`uRadioConfigStore`, `uRadioConfigApply`, `ui/lcl/uPrefsForm`) — RTC 2026
+
+- **`ProfileToJSON` / `LoadFromJSON`**: write and read `speedSync1`, `speedSync2` and
+  `so2rEnabled`. Only the retired ini path stored them, so a tick in Preferences was lost
+  at the next start. A file without the keys is seeded from the slot radio's `cwSpeedSync`
+  (SO2R from two configured slots), as `SeedFromLegacyIni` does; a key that is present wins.
+  Those were the only three `TStationProfile` fields the JSON path dropped.
+- **`TAppliedRadioSnapshot`** records each slot's profile speed sync and CW output
+  (`RecordProfileSlot`, written beside `RecordSlot` in `ApplyRadioToSlot`) and answers
+  `SpeedSyncChanged` / `CWOutputChanged`.
+- **`ActiveRadioSettingsChanged`** now also reports a changed CW output (a full `ApplyProfile`:
+  the keyer is rebuilt). **`ApplyActiveSpeedSync`** (new) puts a changed speed-sync flag on the
+  running radio through `ApplyJSONOwnedRadioKey` with no teardown; `uPrefsForm.ApplyNow` calls
+  it when no full re-apply was due.
+- The radio definition still has its own `cwSpeedSync` (`TRadioDefinition.CWSpeedSync`); the
+  profile's copy is the one rendered and edited. Retiring the definition's field is left open.
+
 ### Online scoring: the dynamicresults breakdown counted each multiplier four times - NY4I
 
 #### Breakdown rows (`uScoreBreakdown`, `uGetScores`) — RTC 2026

@@ -212,6 +212,12 @@ function AppliedRadios: TAppliedRadioSnapshot;
 function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
                                     out aWhich: string): boolean;
 
+{ Put the ACTIVE profile's CW Speed Sync flags on the running radios when they
+  differ from what was applied.  One flag per slot on the live radio: no radio
+  is stopped or reopened, which is why Save can do it for a tick box without
+  the restart a full ApplyProfile costs.  Returns True if any slot changed. }
+function ApplyActiveSpeedSync(const aStore: TRadioConfigStore): boolean;
+
 { One config parameter arriving from a MULTI-OP PEER.  Returns True if it was
   accepted, so the caller can tell the operator; False means CFGCA refused it.
 
@@ -2057,6 +2063,20 @@ begin
      nothing could answer when an edited password sat in the library while the
      radio went on offering the one it was given at startup. *)
    AppliedRadios.RecordSlot(aSlot, aRadio);
+   (* THE PROFILE'S HALF OF THE SLOT, recorded in the same place for the same
+     reason: speed sync and CW output live on the profile, so the radio
+     comparison above cannot see them change. *)
+   if aProfile <> nil then
+      begin
+      if aSlot = 2 then
+         begin
+         AppliedRadios.RecordProfileSlot(aSlot, aProfile.SpeedSync2, aProfile.CWOutput2);
+         end
+      else
+         begin
+         AppliedRadios.RecordProfileSlot(aSlot, aProfile.SpeedSync1, aProfile.CWOutput1);
+         end;
+      end;
 
    if aRadio <> nil then
       begin
@@ -2959,6 +2979,82 @@ begin
             aWhich := Format('radio %d', [slot]);
             end;
          Exit;
+         end;
+      (* HOW CW REACHES THE SLOT is the profile's, not the radio's: changing it
+        rebuilds the keyer, which only a full re-apply does. *)
+      if (slot = 1) and AppliedRadios.CWOutputChanged(slot, profile.CWOutput1) then
+         begin
+         Result := True;
+         aWhich := Format('radio %d CW output', [slot]);
+         Exit;
+         end;
+      if (slot = 2) and AppliedRadios.CWOutputChanged(slot, profile.CWOutput2) then
+         begin
+         Result := True;
+         aWhich := Format('radio %d CW output', [slot]);
+         Exit;
+         end;
+      end;
+end;
+
+function ApplyActiveSpeedSync(const aStore: TRadioConfigStore): boolean;
+var
+   profile: TStationProfile;
+   slot: integer;
+   wanted: boolean;
+   value: string;
+begin
+   Result := False;
+   if aStore = nil then
+      begin
+      Exit;
+      end;
+   profile := aStore.ActiveProfile;
+   if profile = nil then
+      begin
+      Exit;
+      end;
+
+   for slot := 1 to 2 do
+      begin
+      if slot = 2 then
+         begin
+         wanted := profile.SpeedSync2;
+         end
+      else
+         begin
+         wanted := profile.SpeedSync1;
+         end;
+      if not AppliedRadios.SpeedSyncChanged(slot, wanted) then
+         begin
+         Continue;
+         end;
+
+      (* THE SAME KEY, THROUGH THE SAME APPLIER the full re-apply uses
+        (ApplyRadioToSlot renders 'CW SPEED SYNC' and lands here), so there
+        is one place that sets rig^.CWSpeedSync.  It is one flag on the
+        running radio: nothing is stopped or reopened. *)
+      if wanted then
+         begin
+         value := 'TRUE';
+         end
+      else
+         begin
+         value := 'FALSE';
+         end;
+      if ApplyJSONOwnedRadioKey(slot, 'CW SPEED SYNC', value, False) then
+         begin
+         if slot = 1 then
+            begin
+            AppliedRadios.RecordProfileSlot(slot, wanted, profile.CWOutput1);
+            end
+         else
+            begin
+            AppliedRadios.RecordProfileSlot(slot, wanted, profile.CWOutput2);
+            end;
+         logger.Info('[ApplyActiveSpeedSync] radio %d CW speed sync is now %s',
+                     [slot, value]);
+         Result := True;
          end;
       end;
 end;

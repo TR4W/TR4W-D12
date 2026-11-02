@@ -89,6 +89,13 @@ user-facing — no file paths or source-level jargon.
   the window's font, sized so the longest connection message fits its panel. It
   was clipped on Linux. On Windows the text is a little smaller, in Arial
   instead of Segoe UI.
+- CW Speed Sync and SO2R Enabled are now remembered when you restart. They were
+  lost at every start, so the tick box looked saved and the radio went back to
+  not syncing its CW speed. An existing configuration keeps the sync its radios
+  already had.
+- Saving the radio settings now applies a changed CW Speed Sync to the running
+  radio at once, without restarting it. Before, it took effect only after
+  Activate Profile.
 
 ---
 

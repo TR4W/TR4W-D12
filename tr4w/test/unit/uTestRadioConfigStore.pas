@@ -121,6 +121,9 @@ type
       procedure Test_JSONMissingFileIsReportedNotRaised;
       procedure Test_JSONFileRoundTripsThroughDisk;
       procedure Test_JSONFileHasNoBOM;
+      procedure Test_JSONRoundTripsProfileSpeedSyncAndSO2R;
+      procedure Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios;
+      procedure Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange;
    public
       (* A FRESH, EMPTY VAULT FOR EVERY TEST. The framework calls this from
         BeginTest, so each test starts with nothing stored and no dependence
@@ -2668,6 +2671,148 @@ begin
    InstallTestKeychain;
 end;
 
+(* CW SPEED SYNC AND SO2R ENABLED SURVIVE A RESTART -- RTC, 2026-11-01.
+   ProfileToJSON wrote neither and LoadFromJSON read neither, so a box ticked in
+   Preferences was gone at the next start; only the retired ini carried them.
+   The values below differ from the radio definition's (its CWSpeedSync is
+   True) so a load that fell back to the radio would fail. *)
+procedure TRadioConfigStoreTests.Test_JSONRoundTripsProfileSpeedSyncAndSO2R;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   prof: TStationProfile;
+   loaded: TStationProfile;
+   err: string;
+begin
+   BeginTest('Test_JSONRoundTripsProfileSpeedSyncAndSO2R');
+   store := TRadioConfigStore.Create;
+   try
+      CheckTrue(store.AddRadio(MakeFullyPopulatedRadio('A'), err), 'radio A: ' + err);
+      CheckTrue(store.AddRadio(MakeFullyPopulatedRadio('B'), err), 'radio B: ' + err);
+
+      prof := TStationProfile.Create;
+      prof.Name        := 'Mixed';
+      store.SetProfileRadioByName(prof, 1, 'A');
+      store.SetProfileRadioByName(prof, 2, 'B');
+      prof.SpeedSync1  := False;
+      prof.SpeedSync2  := True;
+      prof.SO2REnabled := True;
+      CheckTrue(store.AddProfile(prof, err), 'profile Mixed: ' + err);
+
+      prof := TStationProfile.Create;
+      prof.Name        := 'Flipped';
+      store.SetProfileRadioByName(prof, 1, 'A');
+      store.SetProfileRadioByName(prof, 2, 'B');
+      prof.SpeedSync1  := True;
+      prof.SpeedSync2  := False;
+      prof.SO2REnabled := False;
+      CheckTrue(store.AddProfile(prof, err), 'profile Flipped: ' + err);
+
+      root := store.SaveToJSON;
+   finally
+      store.Free;
+   end;
+
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         loaded := store.FindProfile('Mixed');
+         CheckTrue(loaded <> nil, 'Mixed came back');
+         CheckFalse(loaded.SpeedSync1,  'Mixed: slot 1 off, though its radio says on');
+         CheckTrue(loaded.SpeedSync2,   'Mixed: slot 2 on');
+         CheckTrue(loaded.SO2REnabled,  'Mixed: SO2R on');
+
+         loaded := store.FindProfile('Flipped');
+         CheckTrue(loaded <> nil, 'Flipped came back');
+         CheckTrue(loaded.SpeedSync1,   'Flipped: slot 1 on');
+         CheckFalse(loaded.SpeedSync2,  'Flipped: slot 2 off, though its radio says on');
+         CheckFalse(loaded.SO2REnabled, 'Flipped: SO2R off, though two radios are set');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+(* A tr4w.json written before the keys existed has none.  False would silently
+   turn off a sync the radio definition still says is on, so a missing key is
+   seeded from the slot's radio and, for SO2R, from two configured slots -- the
+   rule the ini seeding uses.  A key that IS there is the operator's word. *)
+procedure TRadioConfigStoreTests.Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   loaded: TStationProfile;
+begin
+   BeginTest('Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios');
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"radios":[{"name":"K3","registryId":"K3","cwSpeedSync":true},' +
+      '           {"name":"IC-7100","registryId":"IC7100"}],' +
+      ' "profiles":[{"name":"Old","radio1":"K3","radio2":"IC-7100"},' +
+      '             {"name":"Chosen","radio1":"K3","radio2":"IC-7100",' +
+      '              "speedSync1":false,"speedSync2":true,"so2rEnabled":false}],' +
+      ' "general":{"activeProfile":"Old"}}'));
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+
+         loaded := store.FindProfile('Old');
+         CheckTrue(loaded <> nil, 'Old is there');
+         CheckTrue(loaded.SpeedSync1,  'seeded on from K3');
+         CheckFalse(loaded.SpeedSync2, 'seeded off from the IC-7100');
+         CheckTrue(loaded.SO2REnabled, 'two radios configured means SO2R');
+
+         loaded := store.FindProfile('Chosen');
+         CheckTrue(loaded <> nil, 'Chosen is there');
+         CheckFalse(loaded.SpeedSync1,  'the file says off, whatever K3 says');
+         CheckTrue(loaded.SpeedSync2,   'the file says on, whatever the IC-7100 says');
+         CheckFalse(loaded.SO2REnabled, 'the file says SO2R off');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+(* SAVE MUST REACH THE RUNNING RADIO WHEN THE PROFILE'S CW SETTINGS CHANGE.
+   Speed sync and CW output are the profile's, so the radio-definition
+   comparison cannot see either move.  The snapshot records them at render
+   time; nothing recorded means nothing can have changed. *)
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange;
+var
+   snap: TAppliedRadioSnapshot;
+begin
+   BeginTest('Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange');
+   snap := TAppliedRadioSnapshot.Create;
+   try
+      CheckFalse(snap.SpeedSyncChanged(1, True),     'nothing applied: no sync change');
+      CheckFalse(snap.CWOutputChanged(1, 'NONE'),    'nothing applied: no output change');
+
+      snap.RecordProfileSlot(1, False, 'CAT');
+      CheckTrue(snap.SpeedSyncChanged(1, True),      'sync ticked after the apply');
+      CheckFalse(snap.SpeedSyncChanged(1, False),    'sync unchanged');
+      CheckTrue(snap.CWOutputChanged(1, 'NONE'),     'output changed');
+      CheckFalse(snap.CWOutputChanged(1, 'CAT'),     'output unchanged');
+
+      CheckFalse(snap.SpeedSyncChanged(2, True),     'slot 2 was never applied');
+      CheckFalse(snap.CWOutputChanged(2, 'NONE'),    'slot 2 was never applied');
+
+      snap.RecordProfileSlot(2, True, 'SERIAL 4');
+      CheckFalse(snap.SpeedSyncChanged(2, True),     'slot 2 recorded on, still on');
+      CheckTrue(snap.SpeedSyncChanged(2, False),     'slot 2 unticked');
+
+      snap.Clear;
+      CheckFalse(snap.SpeedSyncChanged(1, True),     'cleared: nothing to change from');
+      CheckFalse(snap.CWOutputChanged(1, 'NONE'),    'cleared: nothing to change from');
+   finally
+      snap.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -2732,6 +2877,9 @@ begin
    Test_JSONMissingFileIsReportedNotRaised;
    Test_JSONFileRoundTripsThroughDisk;
    Test_JSONFileHasNoBOM;
+   Test_JSONRoundTripsProfileSpeedSyncAndSO2R;
+   Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios;
+   Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange;
    Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
 
    Test_AppliedSnapshotSeesAChangedPassword;
