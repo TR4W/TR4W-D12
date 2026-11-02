@@ -1492,7 +1492,10 @@ Read the specific doc before acting in its area — these are current and this f
 ## Runtime Dependencies
 
 **Required in `target/`:** `CTY.DAT` (essential), `TRMASTER.DTA` (SCP, optional but recommended),
-`dom/` (~126 domestic contest configs), `commands_help_*.ini`.
+`dom/` (~126 domestic contest configs), and `help/help_<code>.po` (the Preferences tooltips, read by
+`uCommandHelp`; English is the fallback). **`commands_help_*.ini` is NOT read at run time** -- NY4I,
+2026-11-02: the ini files are historical reference, used only to seed the `help_*.po` catalogues, and
+`tools/i18n/ini2po.py` must never modify them.
 
 **BUT `CTY.DAT` AND `TRMASTER.DTA` NOW HAVE TWO LOCATIONS WITH A PRECEDENCE BETWEEN THEM**
 (2026-09-24). A file TR4W **downloads** -- Alt-O for the country file, the Help menu for
