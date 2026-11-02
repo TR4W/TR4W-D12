@@ -619,7 +619,11 @@ Two of those are useful corroboration rather than inputs:
 
 **Decisions (NY4I, 2026-08-25):** TR4W keeps **its own palette** — a large
 monitor and the rig's small screen suit different schemes, and the window stays
-decoupled from CAT. The window renders the **full 192 kHz** the stream carries.
+decoupled from CAT. ~~The window renders the **full 192 kHz** the stream carries.~~
+**Reversed for the K4 on 2026-11-03 (NY4I approved crop-to-`#SPN`)**: the main
+pan is drawn at the radio's own span, centred, because the full frame carries
+about 40 bins of padding at each end that drew as a flat line at the bottom of
+the plot. See 10.4. The window itself did not change.
 ~~And the `#` commands are **not parsed** for now~~ -- **superseded 2026-11-02**:
 they are parsed and stored, not drawn (10.3). The stream still provides
 centre, span and noise floor, so nothing was blocked; the parse is groundwork
@@ -688,6 +692,106 @@ setting* and the mini-pan's *stream* were never the same number.
 **And the rig CLAMPS and tells you.** Asking `#SPN500000` returns `#SPN368000`
 — a request outside range is not an error, it is a different answer, so read
 the reply rather than assuming the request took.
+
+"Draw from the frame" still holds, with one change since 2026-11-03: for the
+K4's main pan, the frame the window gets is the one the RADIO has cut to
+`#SPN` (10.4). The window still draws exactly what it is handed.
+
+### 10.4 The K4 main pan is cropped to `#SPN` by the radio (2026-11-03)
+
+**Why.** A K4 frame is 2048 bins at a fixed frame width the radio chooses to
+cover `#SPN`. Measured in the 2026-11-02 span sweep (`k4pan-tiers.bin`,
+`#SPN` set to 5k, 10k, 20k, 40k, 80k, 150k, 190k, 250k and 368k):
+
+| `#SPN` | frame width |
+|---|---|
+| 5000, 10000 | 24 kHz |
+| 20000 | 48 kHz |
+| 40000, 80000 | 96 kHz |
+| 150000 | 192 kHz |
+| 190000, 250000, 368000 | 384 kHz |
+
+Every frame wider than 24 kHz carries a **fixed number of pad bins** at each
+end: a plateau of about 40 at the frame floor (−150, −160, −168 or −174 dB,
+depending on the pan and the width), then 2-3 bins of roll-off. The median is
+43 on the left and 42 on the right. The worst seen is 49 on the left and 46 on
+the right, both at 384 kHz; at 48, 96 and 192 kHz it is 42 and 41. The
+2026-08-25 capture (`k4pan-sample.bin`, 192 kHz) agrees: bins 0..38 and
+2010..2047 are at least 8 dB below the frame median on all 20 A/B frames.
+Drawn in full, that pad was a flat line at the bottom of the plot at both
+edges, and the axis showed a span wider than the operator had set. QK4 draws
+only the `#SPN` window, centred. NY4I approved doing the same (option ii,
+2026-11-03).
+
+**Where the code lives. In the radio, not in the window.** `TK4Radio.HandleSpectrumFrame` (spectrum
+thread) passes every frame except source `A` through unchanged. For source `A`
+it calls `uSpectrumTypes.SpectrumCropCentred(frame, FSpectrumSpanHz,
+K4_EDGE_GUARD_BINS, FCropBins, cropped)` and publishes the result. The window,
+the axis, click-to-tune and the waterfall are unchanged and draw what they
+receive. `DecodeK4Frame` still decodes the wire exactly as sent.
+
+- **Only pan A.** `#SPN` is the main pan's span. `#SPN$` (the sub's) is not
+  tracked, so B is never cropped with A's number. Y and Z pass through.
+- **Unknown `#SPN` (0), or `#SPN` not narrower than the frame:** the frame
+  passes through whole.
+- **Exact, not approximate.** Bin i of the crop has the same `SpectrumBinHz`
+  as bin (i + first) of the original, to the Hz. That requires a kept count n
+  with n × SpanHz divisible by 2 × 2048. n is the multiple of that step
+  NEAREST 2048 × `#SPN` / frame width: 8 bins at 192 kHz, 4 at 384 kHz, 64 at
+  24 kHz, which is **750 Hz at every K4 width**. So the drawn span is within
+  375 Hz of `#SPN` (5000 draws 5250, 20000 draws 20250, 250000 draws 249750).
+  The new SpanHz is exactly n × width / 2048, and CentreHz is unchanged.
+- **`K4_EDGE_GUARD_BINS = 49`** (the worst pad observed). n never exceeds
+  2048 − 2 × 49. This matters only at the top of a width. A plain crop to
+  `#SPN 368000` keeps 1964 bins and leaves up to 7 pad bins visible. Guarded,
+  it keeps 1948 bins, and **the 368 kHz maximum draws 365.25 kHz**. Every other
+  measured span crops far inside the guard, so the guard does nothing there
+  and needs no special case.
+- **Frames at the old width.** The radio changes frame width 1-3 frames after
+  it reports a new `#SPN`. A frame at the old width is cropped against its
+  OWN SpanHz, so it stays self-consistent. Going UP, the new span is wider
+  than the old frame, which passes through whole for those 1-3 frames, pad
+  included. **Caveat, measured in the same sweep:** after `#SPN 5000`, sweep
+  frames 192 and 195 have a 24000 header but 48 kHz bins. They keep the
+  42/42 pad, and the carrier sits at bin 1018-1020 as in the 48 kHz frames,
+  not at 1014-1015 as in the 24 kHz frames that follow. So the header can
+  change about two frames BEFORE the content. Such a frame is drawn
+  mislabelled, cropped or not. That predates the crop, and the crop does not
+  fix it. One of those frames is in `k4pan-tiers-sample.bin`.
+- **Threads and memory.** `FSpectrumSpanHz` is written on the reading thread
+  and read once per frame on the spectrum thread with no lock. It is an
+  aligned Integer, so the read is atomic. `FCropBins` is touched only on the
+  spectrum thread and is resized only when n changes. The published frame's
+  `Bins` IS that buffer, which the `TSpectrumFrameProc` contract allows: the
+  subscriber copies what it keeps. `TfrmPanadapter.AcceptFrame` does `Move`
+  the bins into `FShareBins` under its lock.
+
+**The Span label.** `ShowSpan` prefers `FRadio.SpectrumSpanHz` (`#SPN`), on
+purpose: it names the number the +/- buttons step. The axis now shows the
+cropped span. The two agree to within 375 Hz, except at the guard-capped
+maximum (label 368, axis about 365). This was **left as it is**. Labelling
+the drawn span instead would make the buttons look broken near the top: 366,
+367 and 368 kHz all draw 365.25 kHz, so pressing a button would often leave
+the label unchanged. A label that moves with every press is the lesser
+mismatch.
+
+**Open: the waterfall mixes spans.** History rows carry no span or centre.
+`EnsureWaterfall` clears them only when the bitmap changes size. Before this
+change, a `#SPN` change that crossed a width already drew rows of the old
+span under the new axis as if they lined up. Now every 1 kHz press changes
+the drawn span, so it happens more often. Proposed fix, not built: clear the
+history in `HandleRefreshTimer` when `FRenderSpanHz` changes. Do not clear on
+a centre change; following the VFO is the existing behaviour.
+
+Pinned by `uTestK4SpectrumCrop`:
+- arithmetic, continuity, pass-through and buffer reuse;
+- the radio: A only, unknown `#SPN`, frames at the old width;
+- both captures: the pad is where it was measured, and no crop the K4 can be
+  asked for keeps any of a frame's own edge pad;
+- that the guard is needed at 368 kHz.
+
+The 14-frame `k4pan-tiers-sample.bin` is cut from the sweep by
+`tools/k4pan_tier_fixture.py`.
 
 ## 12. Handoff: what lands on `fpc`, not here
 

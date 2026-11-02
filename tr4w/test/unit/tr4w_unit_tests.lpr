@@ -889,7 +889,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestTXInhibitAlert  in 'uTestTXInhibitAlert.pas',
    uK4DisplayReport     in '..\..\src\radioFactory\uK4DisplayReport.pas',
    uTestK4DisplayReport in 'uTestK4DisplayReport.pas',
-   uTestSpectrumRadioState in 'uTestSpectrumRadioState.pas';
+   uTestSpectrumRadioState in 'uTestSpectrumRadioState.pas',
+   uTestK4SpectrumCrop  in 'uTestK4SpectrumCrop.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting
@@ -1133,6 +1134,7 @@ begin
    RegisterSuite(TTXInhibitAlertTests.Create('TXInhibitAlert'));
    RegisterSuite(TK4DisplayReportTests.Create('K4DisplayReport'));
    RegisterSuite(TSpectrumRadioStateTests.Create('SpectrumRadioState'));
+   RegisterSuite(TK4SpectrumCropTests.Create('K4SpectrumCrop'));
    RegisterSuite(TCWByCATTimerTests.Create('CWByCATTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));

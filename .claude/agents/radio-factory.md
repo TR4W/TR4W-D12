@@ -233,6 +233,18 @@ reader), and asks `K4_DISPLAY_QUERIES` on its own line beside `#SPN;`.
 Whether the K4 pushes `#SCL`/`#WFH`/`#WBS`/`#AVG` is unverified
 (`docs/BENCH_QUEUE.md`). Details: `docs/PANADAPTER_LCL_DESIGN.md` section 10.3.
 
+**THE K4 MAIN PAN IS CROPPED TO `#SPN` BY THE RADIO (2026-11-03, NY4I).**
+`TK4Radio.HandleSpectrumFrame` passes B, Y and Z through. It crops A with the
+pure `uSpectrumTypes.SpectrumCropCentred`, which is exact (bin Hz unchanged
+to the Hz), keeps a count in steps of 750 Hz nearest `#SPN`, and never keeps
+more than 2048 - 2 x `K4_EDGE_GUARD_BINS` (49, the worst pad measured). The
+result goes into a radio-owned buffer that is reused frame after frame. The
+window does not crop. `DecodeK4Frame` stays a faithful wire decode. Unknown
+`#SPN`, or one not narrower than the frame, passes through. The K4 serves
+fixed frame widths (24/48/96/192/384 kHz) with a fixed ~40+3 bin pad per
+edge. Pinned by `uTestK4SpectrumCrop` against two real captures. Details:
+`docs/PANADAPTER_LCL_DESIGN.md` section 10.4.
+
 **TX INHIBITED IS A RADIO CONDITION CARRIED IN THE STATUS (issue #97, phase 1,
 2026-10-26).** A radio that can say "I will not radiate when keyed" declares
 `rcReportsTXInhibit`; its parser calls the base's protected

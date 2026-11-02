@@ -30,6 +30,36 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-03 -- THE K4 MAIN PAN IS DRAWN AT #SPN, NOT AT THE FRAME WIDTH
+
+The K4 radio object now cuts pan A down to the radio's own `#SPN`, centred,
+before the panadapter sees it. The frames' ~40 pad bins per edge used to show
+as a flat line at the bottom of the plot at both ends
+(`docs/PANADAPTER_LCL_DESIGN.md` section 10.4). The arithmetic and both
+captures are pinned by `uTestK4SpectrumCrop`. What no test can see is the
+screen. Use a network K4 with the panadapter open, and set each span at the
+rig or with the +/- buttons.
+
+- [ ] **No flat line at either edge** at #SPN 5, 20, 40, 80, 150, 190 and 250
+      kHz, **and at the 368 kHz maximum**. The trace should run edge to edge as
+      ordinary noise.
+- [ ] **At 368 kHz the axis spans about 365 kHz** (the edge guard) while the
+      `Span` label still says 368. Is that acceptable, or should the label say
+      what is drawn? Labelling the drawn span makes +/- look dead near the top
+      (366, 367 and 368 all draw 365.25).
+- [ ] **The axis, the label and a click agree.** At 20 kHz and at 150 kHz,
+      click a carrier near each edge and one in the middle. The radio should
+      tune onto it, and the axis frequency under the cursor should match the
+      VFO. Elsewhere the label and the axis width should agree to within 375 Hz
+      (e.g. 5 kHz draws 5.25).
+- [ ] **The waterfall across a span change.** Step the span several times.
+      Old rows are NOT cleared when the span changes, so for a while rows
+      drawn at the old span sit under the new axis. Is that visible enough to
+      fix? (Proposed: clear the history when the drawn span changes.) Also
+      watch the 1-3 frames at the old width that the K4 sends just after a
+      change upward: they pass through whole, pad included, for one or two
+      rows.
+
 ## Added 2026-11-02 -- PREFERENCES CONTROLS SHOW THEIR COMMAND HELP ON HOVER
 
 Every control bound through `TSettingBindings.Bind`, and every hand-wired one

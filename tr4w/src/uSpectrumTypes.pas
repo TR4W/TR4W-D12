@@ -64,7 +64,9 @@ type
 
      The frame is passed by const and the subscriber must not retain a
      reference to Bins beyond the call: the producer is free to reuse or free
-     it as soon as this returns.  Copy what you intend to keep. }
+     it as soon as this returns.  Copy what you intend to keep.  A producer
+     DOES reuse it: a K4 main-pan frame is cropped into one buffer the radio
+     owns and overwrites on the next frame (SpectrumCropCentred). }
    TSpectrumFrameProc = procedure(const AFrame: TSpectrumFrame) of object;
 
    (* HOW A SOURCE WANTS TO BE DRAWN, STATED BY THE RADIO THAT PRODUCES IT.
@@ -209,6 +211,53 @@ function SpectrumBinHz(const AFrame: TSpectrumFrame; ABin: Integer): Int64;
 // treat an off-screen click as bin 0.  A clamped result would be a plausible
 // wrong answer, which is worse than a refusal.
 function SpectrumHzToBin(const AFrame: TSpectrumFrame; AHz: Int64): Integer;
+
+const
+   (* The fewest bins SpectrumCropCentred will keep, so an absurd requested
+      span (1 Hz) still draws a trace rather than one or two columns. *)
+   SPECTRUM_CROP_MIN_BINS = 64;
+
+(* KEEP THE CENTRED PART OF A FRAME THAT SPANS AWantSpanHz -- for a producer
+   whose frames are WIDER than the span its radio says it is showing.
+
+   Vendor-neutral on purpose: which source is cropped, to which span, and how
+   many edge bins are never worth drawing are the PRODUCER's decisions and
+   arrive as arguments.  The K4 is the caller today (TK4Radio.HandleSpectrumFrame;
+   docs/PANADAPTER_LCL_DESIGN.md section 10.4).
+
+   ACropped is ALWAYS assigned.  The result says whether it differs from
+   AFrame: False means ACropped = AFrame, unchanged, and that is the answer
+   when AWantSpanHz is unknown (<= 0), when it is not narrower than the frame,
+   when the frame has no bins, or when no exact crop exists (below).
+
+   EXACT, NOT APPROXIMATE.  Bin i of ACropped has the same SpectrumBinHz as
+   bin (i + first) of AFrame, to the Hz, so the trace, the axis and
+   click-to-tune of the cropped frame put every signal where the uncropped
+   frame did.  The frame carries whole Hz, so that needs a kept count n with
+   n * SpanHz divisible by 2 * BinCount -- then the new SpanHz is a whole,
+   even number, its half lands on a bin edge of the original, and CentreHz
+   stays as it is because the crop is centred.  n is therefore the multiple
+   of that step NEAREST the requested width.  For the K4 the step is 750 Hz at
+   every frame width it serves (8 bins at 192 kHz, 4 at 384 kHz), so the
+   drawn span is within 375 Hz of the requested one unless the edge guard
+   below caps it.  An odd BinCount, or a
+   span with no such step inside the frame, gets no crop.
+
+   AEdgeGuardBins is the most bins either end can hold that are not signal
+   (padding, filter roll-off): n never exceeds BinCount - 2 * AEdgeGuardBins,
+   whatever span is asked for.  0 means no guard.
+
+   ABUFFER IS THE CALLER'S AND IS REUSED.  ACropped.Bins IS ABuffer, resized
+   only when the kept count changes, so a stream of frames at one span
+   allocates nothing here.  That is sound under the TSpectrumFrameProc rule
+   above -- a subscriber copies what it keeps and never holds Bins past the
+   call -- and it means ONE buffer per producer thread: two threads must not
+   share an ABuffer. *)
+function SpectrumCropCentred(const AFrame: TSpectrumFrame;
+                             AWantSpanHz: Int64;
+                             AEdgeGuardBins: Integer;
+                             var ABuffer: TSpectrumBins;
+                             out ACropped: TSpectrumFrame): Boolean;
 
 (* THE HORIZONTAL MAPPING -- pixel columns, bins and Hz -- in one place.
 
@@ -401,6 +450,110 @@ begin
       end;
 
    Result := Integer((offset * AFrame.BinCount) div AFrame.SpanHz);
+end;
+
+function GreatestCommonDivisor(A, B: Int64): Int64;
+var
+   t: Int64;
+begin
+   while B <> 0 do
+      begin
+      t := A mod B;
+      A := B;
+      B := t;
+      end;
+
+   Result := A;
+end;
+
+function SpectrumCropCentred(const AFrame: TSpectrumFrame;
+                             AWantSpanHz: Int64;
+                             AEdgeGuardBins: Integer;
+                             var ABuffer: TSpectrumBins;
+                             out ACropped: TSpectrumFrame): Boolean;
+var
+   binCount: Int64;
+   spanHz: Int64;
+   step: Int64;
+   kept: Int64;
+   maxKept: Int64;
+   first: Integer;
+   i: Integer;
+begin
+   ACropped := AFrame;
+   Result := False;
+
+   binCount := AFrame.BinCount;
+   spanHz := AFrame.SpanHz;
+
+   if (AWantSpanHz <= 0)                  or
+      (spanHz <= 0)                       or
+      (AWantSpanHz >= spanHz)             or
+      (binCount <= 0)                     or
+      Odd(binCount)                       or
+      (Length(AFrame.Bins) < binCount)    then
+      begin
+      Exit;
+      end;
+
+   if AEdgeGuardBins < 0 then
+      begin
+      AEdgeGuardBins := 0;
+      end;
+
+   (* The step: the smallest kept count whose span is a whole, even number of
+      Hz -- see the interface.  Even as well, so (binCount - kept) is even and
+      the crop sits exactly in the middle. *)
+   step := (2 * binCount) div GreatestCommonDivisor(spanHz, 2 * binCount);
+
+   if Odd(step) then
+      begin
+      step := step * 2;
+      end;
+
+   (* The guard caps the kept count, rounded DOWN to a step, so rounding can
+      never put a guarded bin back. *)
+   maxKept := ((binCount - (2 * AEdgeGuardBins)) div step) * step;
+
+   (* The multiple of step nearest binCount * want / span: round(x / y) is
+      (2x + y) div 2y for positive x and y. *)
+   kept := (((2 * binCount * AWantSpanHz) + (spanHz * step))
+            div (2 * spanHz * step)) * step;
+
+   if kept < SPECTRUM_CROP_MIN_BINS then
+      begin
+      kept := ((SPECTRUM_CROP_MIN_BINS + step - 1) div step) * step;
+      end;
+
+   if kept > maxKept then
+      begin
+      kept := maxKept;
+      end;
+
+   if (kept <= 0) or (kept >= binCount) then
+      begin
+      Exit;
+      end;
+
+   first := Integer((binCount - kept) div 2);
+
+   if Length(ABuffer) <> kept then
+      begin
+      SetLength(ABuffer, kept);
+      end;
+
+   (* Element by element, not Move (docs/POINTER_AUDIT.md P15): at most 2048
+      Singles a frame, and Copy would allocate the array this buffer exists to
+      avoid allocating. *)
+   for i := 0 to Integer(kept) - 1 do
+      begin
+      ABuffer[i] := AFrame.Bins[first + i];
+      end;
+
+   ACropped.SpanHz := (kept * spanHz) div binCount;    // exact: see the step
+   ACropped.BinCount := Integer(kept);
+   ACropped.Bins := ABuffer;
+   Result := True;
 end;
 
 function SpectrumBinsPerPixel(ABinCount, AWidth: Integer): Double;

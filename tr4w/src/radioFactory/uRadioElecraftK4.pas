@@ -25,6 +25,17 @@ uses
      uK4DisplayReport,   // the radio's own display settings (#REF, #SCL, #AR ...)
      SyncObjs;           // FDisplayStateLock
 
+const
+   (* The most edge bins of one K4 panadapter frame that are padding or
+     roll-off rather than signal: 49, the worst left edge in the 2026-11-02
+     span sweep (384 kHz frames; 41-46 at the other widths;
+     test/unit/fixtures/k4pan-tiers-sample.bin holds the worst frames).  The
+     main pan is never drawn with more than 2048 - 2 * 49 bins.  It matters only
+     near the top of a frame width: at #SPN 368000 a plain crop to the span
+     keeps 1964 of 2048 bins and up to 7 of them are pad.  At every other
+     measured span the crop is far narrower and this does nothing.  The
+     radio's number, not the window's -- see TK4Radio.HandleSpectrumFrame. *)
+   K4_EDGE_GUARD_BINS = 49;
 
 Type TK4Radio = class(TElecraftRadio)
    private
@@ -56,14 +67,15 @@ Type TK4Radio = class(TElecraftRadio)
 
       procedure ResetDisplayState;
       procedure RecordDisplayReport(const sMessage: string);
+   protected
+      procedure SelectOperatingVFO(rxVFOIsB: boolean); override;
 
       // Handed to the thread as its callback so the Assigned check on
       // OnSpectrumFrame happens per frame -- a window that unsubscribes stops
       // being called immediately, rather than the thread holding a handler it
-      // captured at construction.  RAISED ON THE SPECTRUM THREAD.
+      // captured at construction.  RAISED ON THE SPECTRUM THREAD.  Protected
+      // so a test can hand it decoded frames without a socket.
       procedure HandleSpectrumFrame(const AFrame: TSpectrumFrame);
-   protected
-      procedure SelectOperatingVFO(rxVFOIsB: boolean); override;
    private
       //procedure ProcessMessage(sMessage: string);
       procedure Initialize;
@@ -96,6 +108,11 @@ Type TK4Radio = class(TElecraftRadio)
    private
       { What the radio last said #SPN is.  0 until it has answered. }
       FSpectrumSpanHz: Integer;
+
+      (* The main pan's bins after the crop to #SPN -- see HandleSpectrumFrame.
+        Owned here, touched ONLY on the spectrum thread, reused frame after
+        frame (uSpectrumTypes.SpectrumCropCentred). *)
+      FCropBins: TSpectrumBins;
    public
       function SpectrumStreaming: Boolean; override;
       function SpectrumLinkUp: Boolean; override;
@@ -228,11 +245,44 @@ begin
    Result := Supports(rcSpectrum) and (Self.serialPort = NoPort);
 end;
 
+(* THE MAIN PAN IS DRAWN AT THE RADIO'S OWN SPAN, NOT AT THE FRAME'S.
+
+  The K4 serves its pans at a few fixed frame widths and picks the one that
+  covers #SPN (measured 2026-11-02: #SPN 5k/10k -> 24 kHz frames, 20k -> 48k,
+  40k/80k -> 96k, 150k -> 192k, 190k..368k -> 384k), and each frame carries
+  about 40 bins of padding plus 2-3 of roll-off at both ends.  Drawing all
+  2048 bins showed that padding as a flat line at the bottom of the plot and a
+  span wider than the operator set.  QK4 draws only the #SPN window, centred,
+  and so does this, since NY4I approved it on 2026-11-03
+  (docs/PANADAPTER_LCL_DESIGN.md section 10.4).
+
+  ONLY PAN A.  #SPN is the MAIN pan's span (#SPN$ is the sub's and is not
+  tracked), so applying it to B would crop the sub pan to the wrong width;
+  B, Y and Z pass through as decoded.  Unknown #SPN (0, before the radio has
+  answered) passes through too.
+
+  FSpectrumSpanHz is written on the reading thread and read here on the
+  spectrum thread with no lock.  It is an aligned Integer, so the read is
+  atomic; it is read ONCE per frame so the frame is cropped to one value.  A
+  frame that arrives at the old width just after a #SPN change (the radio
+  switches 1-3 frames late) is cropped against ITS OWN SpanHz, so it is still
+  self-consistent -- or passes through when the new span is wider than it. *)
 procedure TK4Radio.HandleSpectrumFrame(const AFrame: TSpectrumFrame);
+var
+   wantSpanHz: Integer;
+   cropped: TSpectrumFrame;
 begin
-   // Straight through to the base, which does the Assigned check.  The
-   // indirection exists so that check happens per frame -- see the field.
-   PublishSpectrumFrame(AFrame);
+   // The base does the Assigned check.  The indirection exists so that check
+   // happens per frame -- see the declaration.
+   if AFrame.SourceId <> PrimarySpectrumSourceId then
+      begin
+      PublishSpectrumFrame(AFrame);
+      Exit;
+      end;
+
+   wantSpanHz := FSpectrumSpanHz;
+   SpectrumCropCentred(AFrame, wantSpanHz, K4_EDGE_GUARD_BINS, FCropBins, cropped);
+   PublishSpectrumFrame(cropped);
 end;
 
 procedure TK4Radio.StartSpectrum;
