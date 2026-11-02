@@ -893,6 +893,20 @@ Type TFactoryRadioBase = class(TObject)
         guess that happens to match one vendor. }
       function PrimarySpectrumSourceId: string; virtual;
 
+      (* How the panadapter should draw ASourceId: default scale and its range,
+         the margin below the reference, the waterfall's share of the height,
+         and whether the levels are real dB.  See uSpectrumTypes.
+
+         A FACT ABOUT THE RADIO, so the radio states it and the window reads
+         it.  These were constants in uPanadapterForm, every one a K4 number,
+         and the window cannot ask which radio it has.
+
+         Base: SpectrumDisplayDefaultsNone -- all zero, NOT valid.  A radio
+         with no spectrum has nothing to state, and a plausible default here
+         would hide a driver that declares rcSpectrum and forgets to override
+         (uTestSpectrumDisplayDefaults walks the registry for exactly that). *)
+      function SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults; virtual;
+
       // Has StartSpectrum taken effect -- is a reader alive and trying?
       function SpectrumStreaming: Boolean; virtual;
 
@@ -2988,6 +3002,14 @@ begin
    { Empty, not 'A'.  A radio with no spectrum has no source, and guessing one
      vendor's spelling would make a mismatch look like a working default. }
    Result := '';
+end;
+
+function TFactoryRadioBase.SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults;
+begin
+   (* Nothing stated -- see the declaration.  Deliberately NOT the K4's numbers:
+      a base class that applied one radio's display to every radio is the shape
+      this factory exists to avoid. *)
+   Result := SpectrumDisplayDefaultsNone;
 end;
 
 function TFactoryRadioBase.SpectrumStreaming: Boolean;

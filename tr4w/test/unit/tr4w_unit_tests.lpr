@@ -124,6 +124,7 @@ uses
    uK4SpectrumThread    in '..\..\src\radioFactory\uK4SpectrumThread.pas',
    uTestK4Spectrum      in 'uTestK4Spectrum.pas',
    uTestSpectrumMapping in 'uTestSpectrumMapping.pas',
+   uTestSpectrumDisplayDefaults in 'uTestSpectrumDisplayDefaults.pas',
    uTestRadioSocketNoRead in 'uTestRadioSocketNoRead.pas',
    uTestClusterSocketNoRead in 'uTestClusterSocketNoRead.pas',
    uTestExternalLoggerSocket in 'uTestExternalLoggerSocket.pas',
@@ -1003,6 +1004,7 @@ begin
    RegisterSuite(TLogSCPTests.Create('LogSCP'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TSpectrumMappingTests.Create('SpectrumMapping'));
+   RegisterSuite(TSpectrumDisplayDefaultsTests.Create('SpectrumDisplayDefaults'));
    RegisterSuite(TRadioSocketNoReadTests.Create('RadioSocketNoRead'));
    RegisterSuite(TClusterSocketNoReadTests.Create('ClusterSocketNoRead'));
    RegisterSuite(TExternalLoggerSocketTests.Create('ExternalLoggerSocket'));

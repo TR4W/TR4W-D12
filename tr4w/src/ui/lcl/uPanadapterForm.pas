@@ -45,6 +45,14 @@ unit uPanadapterForm;
   ---------------------------------------------------------------------------
   SCALING -- THE RADIO'S OWN MODEL
   ---------------------------------------------------------------------------
+  THE NUMBERS BELOW ARE THE RADIO'S, NOT THIS WINDOW'S (2026-11-02).  The
+  default scale, its range, the margin under the reference and the waterfall's
+  share of the height come from TFactoryRadioBase.SpectrumDisplayDefaults for
+  the attached source; this window holds none of them.  The K4 states the
+  values described here, and the Icom family states the same ones because that
+  is how this window had always drawn an Icom.  What follows is the K4 reasoning
+  behind them.
+
   The K4 scales its display with a REFERENCE LEVEL and a SCALE (a dB range):
   QK4's renderer is literally `minDb = refLevel; maxDb = refLevel + scale`
   (qk4/src/dsp/panadapter_rhi.cpp:1895), and the radio reports #REF -126 with
@@ -58,7 +66,7 @@ unit uPanadapterForm;
 
   A SMALL MARGIN BELOW THE REFERENCE, deliberately.  Exactly [ref, ref+scale]
   clips every noise excursion below the floor into a solid bar along the
-  bottom; the bins run to -160 while the floor is -125.  REF_MARGIN_DB keeps
+  bottom; the bins run to -160 while the floor is -125.  The margin keeps
   that texture visible without changing the 80 dB range.
 
   Scale is adjustable over the K4's own 10..150 range for the same reason the
@@ -163,6 +171,12 @@ type
       // ---- display settings ------------------------------------------------
       FPalette: Integer;
       FScaleDb: Integer;
+      (* What the attached radio said about drawing its source -- scale range,
+         margin, waterfall share.  FHaveDisplay is False until a radio with a
+         valid record has been attached; nothing is drawn before that, because
+         FHaveRender needs a frame and a frame needs an attached radio. *)
+      FDisplay: TSpectrumDisplayDefaults;
+      FHaveDisplay: Boolean;
       FPaused: Boolean;
       FLUT: array[0..255] of LongWord;
 
@@ -228,6 +242,8 @@ type
       procedure DrawSpots(ACanvas: TCanvas; AWidth, ASpecH: Integer);
 
       procedure BuildPalette;
+      procedure ApplyDisplayDefaults(const ADefaults: TSpectrumDisplayDefaults);
+      procedure ShowScaleCaption;
       function PeakForPixel(AX: Integer; ABinsPerPixel: Double): Single;
       procedure DisplayRange(out AMinDb, ARangeDb: Single);
       function WaterfallColor(ARelDb: Single): LongWord;
@@ -439,17 +455,9 @@ type
    PLongWordArray = ^TLongWordArray;
 
 const
-   // The K4's own default scale (#SCL) and its adjustable range.
-   DEFAULT_SCALE_DB = 80;
-   MIN_SCALE_DB = 10;
-   MAX_SCALE_DB = 150;
-
-   // How far BELOW the reference the display starts -- see the unit header.
-   REF_MARGIN_DB = 10.0;
-
-   // The radio reports #WFH 50, i.e. it splits its own display in half.
-   WATERFALL_FRACTION = 0.5;
-
+   (* NO SCALE, MARGIN OR WATERFALL SHARE HERE.  They were K4 constants applied
+      to every radio; the radio states them now (SpectrumDisplayDefaults) and
+      FDisplay holds what the attached source said. *)
    TRACE_COLOR = TColor($00FF9040);      // TColor is $00BBGGRR: a light blue
    CENTRE_COLOR = TColor($00606060);
    GRID_COLOR = TColor($00303030);
@@ -516,7 +524,12 @@ begin
    FShareDirty := False;
    FWantSource := 'A';
    FPalette := PALETTE_HEATMAP;
-   FScaleDb := DEFAULT_SCALE_DB;
+   (* The .lfm's slider values are a DESIGNER PLACEHOLDER.  The radio's own
+      range and default replace them when it is attached (ApplyDisplayDefaults),
+      which happens before the window is first shown. *)
+   FScaleDb := trkScale.Position;
+   FDisplay := SpectrumDisplayDefaultsNone;
+   FHaveDisplay := False;
    FPaused := False;
    FWfW := 0;
    FWfH := 0;
@@ -530,10 +543,16 @@ begin
    FMsInPaint := 0;
 
    cboPalette.ItemIndex := FPalette;
-   trkScale.Position := FScaleDb;
-   lblScale.Caption := IntToStr(FScaleDb) + ' dB';
+   ShowScaleCaption;
 
    BuildPalette;
+end;
+
+(* The scale label, written in ONE place: creation, the slider and a radio's
+   defaults all set it. *)
+procedure TfrmPanadapter.ShowScaleCaption;
+begin
+   lblScale.Caption := IntToStr(FScaleDb) + ' dB';
 end;
 
 procedure TfrmPanadapter.HandleDestroy(Sender: TObject);
@@ -569,6 +588,8 @@ begin
 end;
 
 procedure TfrmPanadapter.AttachRadio(ARadio: TFactoryRadioBase; const ASourceId: string);
+var
+   display: TSpectrumDisplayDefaults;
 begin
    if ARadio = nil then
       begin
@@ -579,6 +600,32 @@ begin
       begin
       DetachRadio;
       end;
+
+   (* THE RADIO SAYS HOW ITS SOURCE IS DRAWN.  A record that cannot be drawn
+      with -- a driver that declared rcSpectrum and stated nothing -- is
+      REFUSED and reported, rather than drawn with numbers borrowed from some
+      other radio.  uTestSpectrumDisplayDefaults keeps every registered radio
+      out of this branch. *)
+   display := ARadio.SpectrumDisplayDefaults(ASourceId);
+
+   if not SpectrumDisplayDefaultsValid(display) then
+      begin
+      FHaveRender := False;
+      tmrRefresh.Enabled := False;
+      lblStatus.Caption := 'Radio states no display scale';
+      lblStatus.Font.Color := clRed;
+
+      if Assigned(panLogger) then
+         begin
+         panLogger.Error('[Panadapter %d] not attached: the radio states no ' +
+                         'valid display defaults for source "%s"',
+                         [FSlot, ASourceId]);
+         end;
+
+      Exit;
+      end;
+
+   ApplyDisplayDefaults(display);
 
    FLock.Acquire;
 
@@ -807,12 +854,53 @@ end;
 // cannot drift apart.
 // ---------------------------------------------------------------------------
 
+(* Take on what the attached radio says about drawing its source.
+
+   THE SLIDER IS RESET ONLY WHEN THE SCALE RANGE CHANGES, and that is what keeps
+   the operator's scale.  This runs on every attach -- every reshow and every
+   profile change -- and the slider used to be set once, at creation.  So it is
+   reset on the first attach and when the radio's default, min or max differ
+   from the ones in force (SpectrumScaleRangeDiffers), never merely because a
+   new radio was attached: a K4 and an Icom state the same scale and differ
+   only in LevelsCalibrated, and switching between them keeps the slider.
+
+   SetParams, not three assignments: it applies position, min and max in one
+   go, so no intermediate Min > Max is ever clamped, and it raises no OnChange
+   -- which is why FScaleDb and the caption are synced here by hand. *)
+procedure TfrmPanadapter.ApplyDisplayDefaults(const ADefaults: TSpectrumDisplayDefaults);
+var
+   rangeChanged, marginChanged: Boolean;
+begin
+   rangeChanged := (not FHaveDisplay) or
+                   SpectrumScaleRangeDiffers(FDisplay, ADefaults);
+   marginChanged := (not FHaveDisplay) or
+                    (FDisplay.RefMarginDb <> ADefaults.RefMarginDb);
+
+   FDisplay := ADefaults;
+   FHaveDisplay := True;
+
+   if rangeChanged then
+      begin
+      trkScale.SetParams(FDisplay.DefaultScaleDb, FDisplay.MinScaleDb,
+                         FDisplay.MaxScaleDb);
+      FScaleDb := trkScale.Position;
+      ShowScaleCaption;
+      end;
+
+   (* The stored history is relative to the margin and coloured by the scale --
+      re-colour it when either moved, as a slider change does. *)
+   if rangeChanged or marginChanged then
+      begin
+      RenderWaterfall;
+      end;
+end;
+
 procedure TfrmPanadapter.DisplayRange(out AMinDb, ARangeDb: Single);
 begin
-   // The K4's model: reference at the bottom, scale upward.  The reference is
-   // the frame's own noise floor (AutoRef makes #REF equal it), less a margin
-   // so noise texture below the floor stays visible.
-   AMinDb := FRenderNoiseDb - REF_MARGIN_DB;
+   // Reference at the bottom, scale upward.  The reference is the frame's own
+   // noise floor (on a K4, AutoRef makes #REF equal it), less the radio's
+   // stated margin so noise texture below the floor stays visible.
+   AMinDb := FRenderNoiseDb - FDisplay.RefMarginDb;
    ARangeDb := FScaleDb;
 end;
 
@@ -896,7 +984,7 @@ begin
    // bottom of the scale is the margin below zero and no absolute reference is
    // involved -- which is what stops old rows re-colouring when the radio's
    // noise floor moves.
-   n := (ARelDb + REF_MARGIN_DB) / FScaleDb;
+   n := (ARelDb + FDisplay.RefMarginDb) / FScaleDb;
 
    if n < 0 then
       begin
@@ -1114,7 +1202,7 @@ begin
       plotH := 0;
       end;
 
-   AWfH := Round(plotH * WATERFALL_FRACTION);
+   AWfH := Round(plotH * FDisplay.WaterfallFraction);
    ASpecH := plotH - AWfH;
 
    { THE SCALE SITS BETWEEN THE TWO, which is where the K4 puts it (NY4I,
@@ -2079,17 +2167,25 @@ procedure TfrmPanadapter.HandleScaleChange(Sender: TObject);
 begin
    FScaleDb := trkScale.Position;
 
-   if FScaleDb < MIN_SCALE_DB then
+   (* The slider's own Min and Max are the radio's range once one is attached;
+      this clamp is the belt to that brace, and it never lets the scale reach
+      zero -- WaterfallColor divides by it. *)
+   if FHaveDisplay and (FScaleDb < FDisplay.MinScaleDb) then
       begin
-      FScaleDb := MIN_SCALE_DB;
+      FScaleDb := FDisplay.MinScaleDb;
       end;
 
-   if FScaleDb > MAX_SCALE_DB then
+   if FHaveDisplay and (FScaleDb > FDisplay.MaxScaleDb) then
       begin
-      FScaleDb := MAX_SCALE_DB;
+      FScaleDb := FDisplay.MaxScaleDb;
       end;
 
-   lblScale.Caption := IntToStr(FScaleDb) + ' dB';
+   if FScaleDb < 1 then
+      begin
+      FScaleDb := 1;
+      end;
+
+   ShowScaleCaption;
 
    // Same reason as the palette: the waterfall is stored as dB, so a scale
    // change re-renders the history at the new range instead of leaving rows

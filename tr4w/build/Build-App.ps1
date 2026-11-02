@@ -431,7 +431,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1215 -> 1211, 2026-10-28: issue 148 -- the Indy Host assignments carry explicit
 # AnsiString casts, and the resolver's exception text is cast where it is raised;
 # measured by the full build of that work (1219 before the casts).
-$NARROW_CEILING = 1206
+# 1206 -> 1205, 2026-11-02: the panadapter's scale caption is written by one
+# helper (ShowScaleCaption) instead of two copies, while the spectrum display
+# defaults moved onto the radio; measured by the full build of that work.
+$NARROW_CEILING = 1205
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

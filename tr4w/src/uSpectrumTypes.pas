@@ -67,6 +67,66 @@ type
      it as soon as this returns.  Copy what you intend to keep. }
    TSpectrumFrameProc = procedure(const AFrame: TSpectrumFrame) of object;
 
+   (* HOW A SOURCE WANTS TO BE DRAWN, STATED BY THE RADIO THAT PRODUCES IT.
+
+      The panadapter window used to hold these as constants, every one of them
+      a K4 number (#SCL 80 over 10..150, #WFH 50) applied to every radio.  The
+      radio owns them now and the window reads them; the window never asks
+      which radio it has (NY4I: the spectrum is shared by the K4, the Icoms and
+      later the Flex, and a radio's numbers belong to the radio).
+
+      DefaultScaleDb  the dB range from the reference to the top of the trace
+                      when the window first shows this source;
+      MinScaleDb,     the range the operator's scale slider may move over;
+      MaxScaleDb
+      RefMarginDb     how far BELOW the reference the display starts, so noise
+                      excursions under the floor keep their texture rather
+                      than clipping into a solid bar;
+      WaterfallFraction  the share of the plot height the waterfall takes;
+      LevelsCalibrated   True when Bins are real dB (the K4), False when they
+                      are the radio's own units mapped onto a dB-like scale
+                      (an Icom's 0..160 or 0..200 levels).  NOTHING READS IT
+                      YET; it is stated so a dB scale label can one day say
+                      "relative" for an uncalibrated source instead of
+                      printing numbers that look like dBm.
+
+      ALL ZERO MEANS "THIS RADIO STATED NOTHING", and it is not a usable
+      record -- a zero scale divides by zero.  SpectrumDisplayDefaultsValid is
+      the test, and uTestSpectrumDisplayDefaults walks the whole registry so a
+      radio that declares rcSpectrum and forgets to state these fails by name
+      (CLAUDE.md note 9: a silently-defaulted field reads as a legal zero). *)
+   TSpectrumDisplayDefaults = record
+      DefaultScaleDb: Integer;
+      MinScaleDb: Integer;
+      MaxScaleDb: Integer;
+      RefMarginDb: Single;
+      WaterfallFraction: Single;
+      LevelsCalibrated: Boolean;
+   end;
+
+(* The neutral answer: all zero, and not valid.  What a radio with no spectrum
+   returns. *)
+function SpectrumDisplayDefaultsNone: TSpectrumDisplayDefaults;
+
+function MakeSpectrumDisplayDefaults(ADefaultScaleDb, AMinScaleDb,
+                                     AMaxScaleDb: Integer;
+                                     ARefMarginDb, AWaterfallFraction: Single;
+                                     ALevelsCalibrated: Boolean): TSpectrumDisplayDefaults;
+
+(* 0 < min < default < max, margin >= 0, 0 < fraction < 1.  A record that fails
+   this cannot be drawn with. *)
+function SpectrumDisplayDefaultsValid(const ADefaults: TSpectrumDisplayDefaults): Boolean;
+
+(* Every field, LevelsCalibrated included. *)
+function SameSpectrumDisplayDefaults(const A, B: TSpectrumDisplayDefaults): Boolean;
+
+(* Do the two disagree about the SCALE -- default, min or max?  This, and only
+   this, is what makes the window reset the operator's slider when a new source
+   is attached.  Not SameSpectrumDisplayDefaults: a K4 (calibrated) and an Icom
+   (not) state the same scale, and switching profile between them must keep
+   the operator's choice, as it always has. *)
+function SpectrumScaleRangeDiffers(const A, B: TSpectrumDisplayDefaults): Boolean;
+
 // Bin i covers [Start + i*Span/N, Start + (i+1)*Span/N).  StartHz and EndHz
 // are the frame's extent; SpectrumBinHz returns the CENTRE of a bin.
 //
@@ -147,6 +207,56 @@ function SpectrumDialFrequency(ARfHz: Int64; APitchHz: Integer;
                                ACwNormal, ACwReverse: Boolean): Int64;
 
 implementation
+
+function SpectrumDisplayDefaultsNone: TSpectrumDisplayDefaults;
+begin
+   Result.DefaultScaleDb := 0;
+   Result.MinScaleDb := 0;
+   Result.MaxScaleDb := 0;
+   Result.RefMarginDb := 0;
+   Result.WaterfallFraction := 0;
+   Result.LevelsCalibrated := False;
+end;
+
+function MakeSpectrumDisplayDefaults(ADefaultScaleDb, AMinScaleDb,
+                                     AMaxScaleDb: Integer;
+                                     ARefMarginDb, AWaterfallFraction: Single;
+                                     ALevelsCalibrated: Boolean): TSpectrumDisplayDefaults;
+begin
+   Result.DefaultScaleDb := ADefaultScaleDb;
+   Result.MinScaleDb := AMinScaleDb;
+   Result.MaxScaleDb := AMaxScaleDb;
+   Result.RefMarginDb := ARefMarginDb;
+   Result.WaterfallFraction := AWaterfallFraction;
+   Result.LevelsCalibrated := ALevelsCalibrated;
+end;
+
+function SpectrumDisplayDefaultsValid(const ADefaults: TSpectrumDisplayDefaults): Boolean;
+begin
+   Result := (ADefaults.MinScaleDb > 0)                          and
+             (ADefaults.MinScaleDb < ADefaults.DefaultScaleDb)   and
+             (ADefaults.DefaultScaleDb < ADefaults.MaxScaleDb)   and
+             (ADefaults.RefMarginDb >= 0)                        and
+             (ADefaults.WaterfallFraction > 0)                   and
+             (ADefaults.WaterfallFraction < 1);
+end;
+
+function SameSpectrumDisplayDefaults(const A, B: TSpectrumDisplayDefaults): Boolean;
+begin
+   Result := (A.DefaultScaleDb = B.DefaultScaleDb)         and
+             (A.MinScaleDb = B.MinScaleDb)                 and
+             (A.MaxScaleDb = B.MaxScaleDb)                 and
+             (A.RefMarginDb = B.RefMarginDb)               and
+             (A.WaterfallFraction = B.WaterfallFraction)   and
+             (A.LevelsCalibrated = B.LevelsCalibrated);
+end;
+
+function SpectrumScaleRangeDiffers(const A, B: TSpectrumDisplayDefaults): Boolean;
+begin
+   Result := (A.DefaultScaleDb <> B.DefaultScaleDb)   or
+             (A.MinScaleDb <> B.MinScaleDb)           or
+             (A.MaxScaleDb <> B.MaxScaleDb);
+end;
 
 function SpectrumStartHz(const AFrame: TSpectrumFrame): Int64;
 begin

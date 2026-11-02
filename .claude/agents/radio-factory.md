@@ -202,6 +202,20 @@ can play a link-up on a real IC-9700 whose `SendToRadio` is a list. Inside an
 Icom, `RadioAddress` is the CI-V byte and hides the base's host --
 write `TFactoryRadioBase(Self).radioAddress`.
 
+**THE PANADAPTER'S DISPLAY NUMBERS BELONG TO THE RADIO (2026-11-02).** Default
+scale, slider range, margin under the reference, waterfall share and whether the
+levels are real dB are a `TSpectrumDisplayDefaults` (`uSpectrumTypes`) from the
+virtual `SpectrumDisplayDefaults(sourceId)`. Base answers the neutral, INVALID
+all-zero record; `TK4Radio` and `TIcomRadio` (gated on `rcSpectrum`) state
+80 / 10..150 / 10 dB / 0.5 -- the constants `uPanadapterForm` used to hold, the
+Icom's a deliberate copy. **A new spectrum driver must override it**:
+`uTestSpectrumDisplayDefaults` walks the registry and fails by name on an
+`rcSpectrum` radio with an invalid record, on a non-spectrum radio stating one,
+and on any `rcSpectrum` radio not equal to the pre-move constants (update that
+pin deliberately when a radio's display is tuned). The window refuses an invalid
+record with an ERROR rather than borrowing numbers. Details:
+`docs/PANADAPTER_LCL_DESIGN.md` section 10.1a.
+
 **TX INHIBITED IS A RADIO CONDITION CARRIED IN THE STATUS (issue #97, phase 1,
 2026-10-26).** A radio that can say "I will not radiate when keyed" declares
 `rcReportsTXInhibit`; its parser calls the base's protected

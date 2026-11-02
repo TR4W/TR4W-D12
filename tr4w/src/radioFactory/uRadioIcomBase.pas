@@ -333,6 +333,7 @@ type
     function SpectrumSpanHz: Integer; override;
     procedure StepSpectrumSpan(const aDirection: Integer); override;
     function PrimarySpectrumSourceId: string; override;
+    function SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults; override;
     function SpectrumStreaming: Boolean; override;
     function SpectrumLinkUp: Boolean; override;
 
@@ -3442,6 +3443,46 @@ begin
    // string equality and a mismatch produces a window that draws nothing with
    // nothing logged anywhere.
    Result := IcomScopeSourceId(ScopeIdToFollow);
+end;
+
+(* THE ICOM FAMILY'S DISPLAY DEFAULTS -- THE WINDOW'S BEHAVIOUR BEFORE THE MOVE,
+   NOT A MEASUREMENT.
+
+   Until 2026-11-02 uPanadapterForm drew every radio with the K4's numbers, so
+   an Icom scope has always been shown at an 80 dB scale over 10..150, a 10 dB
+   margin under the measured floor and a half-height waterfall.  These
+   reproduce that exactly, so moving them changes no pixel; they are a COPY of
+   the K4's values, owned here so that tuning the Icom display later is an edit
+   to this family and not to the K4.
+
+   What they mean on an Icom: uIcomScope maps a level to -80 + level * 0.5 dB
+   (HamLib's published range), so a 160-level radio spans 80 dB and a 200-level
+   one 100 dB -- the default scale shows roughly the whole of the former.  The
+   levels are the radio's own units, hence LevelsCalibrated = False.
+
+   Gated on rcSpectrum, as PrimarySpectrumSourceId is: an IC-7600 has no scope
+   and states nothing. *)
+const
+   ICOM_DEFAULT_SCALE_DB = 80;
+   ICOM_MIN_SCALE_DB = 10;
+   ICOM_MAX_SCALE_DB = 150;
+   ICOM_REF_MARGIN_DB = 10.0;
+   ICOM_WATERFALL_FRACTION = 0.5;
+
+function TIcomRadio.SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults;
+begin
+   if not Supports(rcSpectrum) then
+      begin
+      Result := SpectrumDisplayDefaultsNone;
+      Exit;
+      end;
+
+   Result := MakeSpectrumDisplayDefaults(ICOM_DEFAULT_SCALE_DB,
+                                         ICOM_MIN_SCALE_DB,
+                                         ICOM_MAX_SCALE_DB,
+                                         ICOM_REF_MARGIN_DB,
+                                         ICOM_WATERFALL_FRACTION,
+                                         False);
 end;
 
 function TIcomRadio.SpectrumAvailable: Boolean;

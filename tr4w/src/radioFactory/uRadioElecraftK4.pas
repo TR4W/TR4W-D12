@@ -78,6 +78,7 @@ Type TK4Radio = class(TElecraftRadio)
       function SpectrumSpanHz: Integer; override;
       procedure StepSpectrumSpan(const aDirection: Integer); override;
       function PrimarySpectrumSourceId: string; override;
+      function SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults; override;
    private
       { What the radio last said #SPN is.  0 until it has answered. }
       FSpectrumSpanHz: Integer;
@@ -331,6 +332,49 @@ begin
      This value used to live in uRadioPanelForm as K4_MAIN_PAN_SOURCE, where it
      was handed to every radio regardless of make. }
    Result := 'A';
+end;
+
+(* THE K4'S OWN DISPLAY MODEL.  These were constants in uPanadapterForm until
+   2026-11-02 and are moved here unchanged:
+
+     80 dB, 10..150   the radio's default #SCL and the range it accepts, so the
+                      vertical scaling matches what the operator sees on the rig
+                      (QK4 renders minDb = refLevel, maxDb = refLevel + scale);
+     10 dB margin     below the reference.  The reference is the packet's noise
+                      floor (AutoRef makes #REF track it), and exactly
+                      [ref, ref + scale] clips every excursion below the floor
+                      -- the bins run to -160 with the floor near -125;
+     0.5              the radio reports #WFH 50: half trace, half waterfall;
+     calibrated       the K4 sends real dB (int16 / 10).
+
+   THE SAME FOR EVERY SOURCE, as the window has always drawn them.  The Y
+   mini-pan's levels sit near 0 dB rather than -125, but the window scales
+   relative to each frame's own floor, so one record serves A, B and Y.
+   Whether the mini-pan wants a narrower default is a question for NY4I, not a
+   change made in passing. *)
+const
+   K4_DEFAULT_SCALE_DB = 80;
+   K4_MIN_SCALE_DB = 10;
+   K4_MAX_SCALE_DB = 150;
+   K4_REF_MARGIN_DB = 10.0;
+   K4_WATERFALL_FRACTION = 0.5;
+
+function TK4Radio.SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults;
+begin
+   (* Capability first, so removing rcSpectrum from the constructor withdraws
+      this in the same edit -- the reasoning SpectrumAvailable gives. *)
+   if not Supports(rcSpectrum) then
+      begin
+      Result := SpectrumDisplayDefaultsNone;
+      Exit;
+      end;
+
+   Result := MakeSpectrumDisplayDefaults(K4_DEFAULT_SCALE_DB,
+                                         K4_MIN_SCALE_DB,
+                                         K4_MAX_SCALE_DB,
+                                         K4_REF_MARGIN_DB,
+                                         K4_WATERFALL_FRACTION,
+                                         True);
 end;
 
 procedure TK4Radio.StopSpectrum;

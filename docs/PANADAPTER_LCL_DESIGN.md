@@ -540,6 +540,38 @@ dB as the range. That is a step-5 decision, not a change to make blind.
 **`#WFH50`** says the radio splits its own display half spectrum, half
 waterfall; QK4 uses 0.35 for the spectrum. Both are useful defaults for step 5.
 
+### 10.1a The RADIO states the display numbers, not the window (2026-11-02)
+
+The default scale (80 dB), its slider range (10..150), the margin under the
+reference (10 dB) and the waterfall's share of the height (0.5) were constants
+in `uPanadapterForm` -- K4 numbers applied to every radio. They are now a
+`TSpectrumDisplayDefaults` record (`uSpectrumTypes`, no LCL) returned by the
+virtual `TFactoryRadioBase.SpectrumDisplayDefaults(sourceId)`:
+
+- **base**: `SpectrumDisplayDefaultsNone` -- all zero and NOT valid, so a driver
+  that declares `rcSpectrum` and forgets to state its numbers is caught;
+- **`TK4Radio`**: the old constants, `LevelsCalibrated = True`, one record for
+  pans A, B and Y;
+- **`TIcomRadio`** (gated on `rcSpectrum`): the SAME numbers, because that is how
+  the window had always drawn an Icom, `LevelsCalibrated = False`. They are a copy
+  owned by the Icom family, so tuning the Icom display later is an Icom edit.
+
+The window reads the record in `AttachRadio`. The slider is reset to the radio's
+default and range only on the first attach or when the SCALE RANGE (default,
+min, max) differs from the one in force (`SpectrumScaleRangeDiffers`) -- attach
+runs on every reshow and profile change, and a K4 and an Icom state the same
+scale while differing in `LevelsCalibrated`, so switching between them keeps
+the operator's slider exactly as before.
+An invalid record is refused with an ERROR and a red status, never drawn with
+borrowed numbers. `LevelsCalibrated` has no reader yet -- it is there for a dB
+label that can say "relative" on an uncalibrated source.
+
+Pinned by `uTestSpectrumDisplayDefaults`, which walks the registry: every
+`rcSpectrum` radio states a valid record AND exactly the pre-move constants (the
+no-pixel-change proof; a deliberate change updates that pin), every other radio
+states the neutral one. The five palettes stayed in the window: they are TR4W's
+own, only their COUNT echoes `#WFC`.
+
 ### 10.2 Two things that do NOT line up — do not build on either
 
 **`#MP` reads 0 (mini-pan Main off) while pan `Y` is streaming.** TR4QT asserts
