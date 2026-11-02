@@ -524,10 +524,12 @@ begin
    FShareDirty := False;
    FWantSource := 'A';
    FPalette := PALETTE_HEATMAP;
-   (* The .lfm's slider values are a DESIGNER PLACEHOLDER.  The radio's own
-      range and default replace them when it is attached (ApplyDisplayDefaults),
-      which happens before the window is first shown. *)
-   FScaleDb := trkScale.Position;
+   (* NO SCALE UNTIL A RADIO STATES ONE.  The designed slider carries no range
+      (the LCL defaults) and is DISABLED, so it cannot step from an invented
+      value; ApplyDisplayDefaults gives it the radio's range and default and
+      enables it.  Nothing draws before then -- FHaveRender needs a frame, and
+      a frame needs an attached radio. *)
+   FScaleDb := 0;
    FDisplay := SpectrumDisplayDefaultsNone;
    FHaveDisplay := False;
    FPaused := False;
@@ -549,10 +551,19 @@ begin
 end;
 
 (* The scale label, written in ONE place: creation, the slider and a radio's
-   defaults all set it. *)
+   defaults all set it.  '--' until a radio has stated a scale. *)
 procedure TfrmPanadapter.ShowScaleCaption;
+var
+   scaleText: string;
 begin
-   lblScale.Caption := IntToStr(FScaleDb) + ' dB';
+   scaleText := '--';
+
+   if FHaveDisplay then
+      begin
+      scaleText := IntToStr(FScaleDb);
+      end;
+
+   lblScale.Caption := scaleText + ' dB';
 end;
 
 procedure TfrmPanadapter.HandleDestroy(Sender: TObject);
@@ -612,6 +623,7 @@ begin
       begin
       FHaveRender := False;
       tmrRefresh.Enabled := False;
+      trkScale.Enabled := False;   // no radio scale to step from
       lblStatus.Caption := 'Radio states no display scale';
       lblStatus.Font.Color := clRed;
 
@@ -871,8 +883,7 @@ procedure TfrmPanadapter.ApplyDisplayDefaults(const ADefaults: TSpectrumDisplayD
 var
    rangeChanged, marginChanged: Boolean;
 begin
-   rangeChanged := (not FHaveDisplay) or
-                   SpectrumScaleRangeDiffers(FDisplay, ADefaults);
+   rangeChanged := SpectrumScaleNeedsReset(FHaveDisplay, FDisplay, ADefaults);
    marginChanged := (not FHaveDisplay) or
                     (FDisplay.RefMarginDb <> ADefaults.RefMarginDb);
 
@@ -884,8 +895,13 @@ begin
       trkScale.SetParams(FDisplay.DefaultScaleDb, FDisplay.MinScaleDb,
                          FDisplay.MaxScaleDb);
       FScaleDb := trkScale.Position;
-      ShowScaleCaption;
       end;
+
+   (* A radio has now stated a scale, so the slider has something real to step
+      from.  The caption is written unconditionally: before the first attach it
+      read '--'. *)
+   trkScale.Enabled := True;
+   ShowScaleCaption;
 
    (* The stored history is relative to the margin and coloured by the scale --
       re-colour it when either moved, as a slider change does. *)
@@ -2165,6 +2181,13 @@ end;
 
 procedure TfrmPanadapter.HandleScaleChange(Sender: TObject);
 begin
+   (* The slider is disabled until a radio states a scale; this guard is the
+      belt to that brace, so no position can become FScaleDb before then. *)
+   if not FHaveDisplay then
+      begin
+      Exit;
+      end;
+
    FScaleDb := trkScale.Position;
 
    (* The slider's own Min and Max are the radio's range once one is attached;

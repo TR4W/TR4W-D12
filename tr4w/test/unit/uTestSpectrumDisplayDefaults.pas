@@ -36,6 +36,8 @@ type
       procedure Test_K4_SameRecordForEverySource;
       procedure Test_IC9700_StatesTheOldConstantsUncalibrated;
       procedure Test_K4AndIcom_ShareOneScaleRange;
+      procedure Test_ScaleNeedsReset_FirstAttachAndRangeChangeOnly;
+      procedure Test_Form_SliderIsTheRadiosAcrossAttaches;
       procedure Test_EverySpectrumRadio_StatesAValidRecord;
       procedure Test_EverySpectrumRadio_StatesTheOldConstants;
    public
@@ -45,7 +47,8 @@ type
 implementation
 
 uses
-   SysUtils, uSpectrumTypes, uFactoryRadioBase, uRadioRegistry, VC;
+   SysUtils, uSpectrumTypes, uFactoryRadioBase, uRadioRegistry, VC,
+   uPanadapterForm;
 
 const
    (* The window's constants as they stood before the move. *)
@@ -249,6 +252,105 @@ begin
    end;
 end;
 
+procedure TSpectrumDisplayDefaultsTests.Test_ScaleNeedsReset_FirstAttachAndRangeChangeOnly;
+var
+   k4Rec, icomRec, wider: TSpectrumDisplayDefaults;
+begin
+   BeginTest('Slider reset: on the first attach and on a range change, never otherwise');
+   k4Rec := MakeSpectrumDisplayDefaults(80, 10, 150, 10.0, 0.5, True);
+   icomRec := MakeSpectrumDisplayDefaults(80, 10, 150, 10.0, 0.5, False);
+   wider := MakeSpectrumDisplayDefaults(80, 10, 160, 10.0, 0.5, False);
+
+   (* The designed form carries no scale, so the first attach always resets --
+      even when the "applied" record happens to equal the incoming one. *)
+   CheckTrue(SpectrumScaleNeedsReset(False, SpectrumDisplayDefaultsNone, k4Rec),
+             'first attach resets');
+   CheckTrue(SpectrumScaleNeedsReset(False, k4Rec, k4Rec),
+             'first attach resets even against an equal record');
+   CheckFalse(SpectrumScaleNeedsReset(True, k4Rec, k4Rec), 'same radio again keeps it');
+   CheckFalse(SpectrumScaleNeedsReset(True, k4Rec, icomRec),
+              'K4 to Icom keeps it -- only LevelsCalibrated differs');
+   CheckTrue(SpectrumScaleNeedsReset(True, icomRec, wider), 'a new range resets');
+end;
+
+(* THE REAL FORM, through the public seam.  Neither radio is connected: the K4
+   has no address and the Icom is not on a network, so StartSpectrum does
+   nothing and no socket is opened. *)
+procedure TSpectrumDisplayDefaultsTests.Test_Form_SliderIsTheRadiosAcrossAttaches;
+var
+   form: TfrmPanadapter;
+   radioK4, radioIcom, radioNone: TFactoryRadioBase;
+   ids: TArray<string>;
+   id: string;
+begin
+   BeginTest('Panadapter form: the slider is disabled until a radio states a scale, then is the radio''s');
+   radioK4 := uRadioRegistry.CreateInstance(K4);
+   radioIcom := uRadioRegistry.CreateInstance(IC9700);
+   radioNone := nil;
+   ids := uRadioRegistry.RegisteredIds;
+
+   for id in ids do
+      begin
+      radioNone := uRadioRegistry.CreateInstanceId(id);
+
+      if (radioNone <> nil) and (not radioNone.Supports(rcSpectrum)) then
+         begin
+         Break;
+         end;
+
+      FreeAndNil(radioNone);
+      end;
+
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      CheckTrue((radioK4 <> nil) and (radioIcom <> nil) and (radioNone <> nil),
+                'the registry built a K4, an IC-9700 and a radio with no spectrum');
+
+      if (radioK4 = nil) or (radioIcom = nil) or (radioNone = nil) then
+         begin
+         Exit;
+         end;
+
+      (* Before any attach: no range of its own, disabled, no number shown. *)
+      CheckFalse(form.trkScale.Enabled, 'slider disabled before any attach');
+      CheckEquals('-- dB', form.lblScale.Caption, 'caption before any attach');
+
+      (* Refused attach: still disabled. *)
+      form.AttachRadio(radioNone, '');
+      CheckFalse(form.trkScale.Enabled, 'slider disabled after a refused attach');
+      CheckEquals('-- dB', form.lblScale.Caption, 'caption after a refused attach');
+
+      (* First real attach: the radio's range and default, enabled, and the
+         caption in step -- the .lfm no longer matches, so this moves. *)
+      form.AttachRadio(radioK4, radioK4.PrimarySpectrumSourceId);
+      CheckTrue(form.trkScale.Enabled, 'slider enabled after the K4 attaches');
+      CheckEquals(10, form.trkScale.Min, 'slider min is the K4''s');
+      CheckEquals(150, form.trkScale.Max, 'slider max is the K4''s');
+      CheckEquals(80, form.trkScale.Position, 'slider at the K4''s default');
+      CheckEquals('80 dB', form.lblScale.Caption, 'caption follows the first attach');
+
+      (* The operator moves it; switching to an Icom with the same range keeps it. *)
+      form.trkScale.Position := 60;
+      CheckEquals('60 dB', form.lblScale.Caption, 'caption follows the operator');
+      form.DetachRadio;
+      form.AttachRadio(radioIcom, radioIcom.PrimarySpectrumSourceId);
+      CheckEquals(60, form.trkScale.Position, 'K4 to Icom keeps the operator''s scale');
+      CheckEquals('60 dB', form.lblScale.Caption, 'caption kept across the switch');
+      CheckTrue(form.trkScale.Enabled, 'slider still enabled on the Icom');
+
+      (* Refused after a good one: disabled again. *)
+      form.AttachRadio(radioNone, '');
+      CheckFalse(form.trkScale.Enabled, 'slider disabled after a later refused attach');
+   finally
+      (* The form first: its destructor detaches whatever it still holds. *)
+      form.Free;
+      radioK4.Free;
+      radioIcom.Free;
+      radioNone.Free;
+   end;
+end;
+
 procedure TSpectrumDisplayDefaultsTests.Test_EverySpectrumRadio_StatesAValidRecord;
 var
    ids: TArray<string>;
@@ -353,6 +455,8 @@ begin
    Test_K4_SameRecordForEverySource;
    Test_IC9700_StatesTheOldConstantsUncalibrated;
    Test_K4AndIcom_ShareOneScaleRange;
+   Test_ScaleNeedsReset_FirstAttachAndRangeChangeOnly;
+   Test_Form_SliderIsTheRadiosAcrossAttaches;
    Test_EverySpectrumRadio_StatesAValidRecord;
    Test_EverySpectrumRadio_StatesTheOldConstants;
 end;

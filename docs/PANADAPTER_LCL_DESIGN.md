@@ -562,6 +562,13 @@ min, max) differs from the one in force (`SpectrumScaleRangeDiffers`) -- attach
 runs on every reshow and profile change, and a K4 and an Icom state the same
 scale while differing in `LevelsCalibrated`, so switching between them keeps
 the operator's slider exactly as before.
+
+**The designed form carries no scale** (NY4I, 2026-11-02): the `.lfm` slider has
+the LCL's default range, no position, `Enabled = False`, and the label reads
+`-- dB`. The first attach therefore always sets the radio's range and default
+and enables the slider (`SpectrumScaleNeedsReset`, pure and unit tested); a
+refused attach disables it again, so it never steps from an invented value.
+The Y mini-pan stays on the K4's shared record (NY4I, same day).
 An invalid record is refused with an ERROR and a red status, never drawn with
 borrowed numbers. `LevelsCalibrated` has no reader yet -- it is there for a dB
 label that can say "relative" on an uncalibrated source.

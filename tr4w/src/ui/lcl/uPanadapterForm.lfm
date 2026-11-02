@@ -86,7 +86,7 @@ object frmPanadapter: TfrmPanadapter
       Top = 7
       Width = 60
       AutoSize = False
-      Caption = '80 dB'
+      Caption = '-- dB'
       Font.Color = clSilver
       ParentColor = False
       ParentFont = False
@@ -96,9 +96,7 @@ object frmPanadapter: TfrmPanadapter
       Height = 24
       Top = 2
       Width = 140
-      Max = 150
-      Min = 10
-      Position = 80
+      Enabled = False
       ShowSelRange = False
       TickStyle = tsNone
       OnChange = HandleScaleChange

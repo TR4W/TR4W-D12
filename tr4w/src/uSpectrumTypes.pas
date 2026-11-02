@@ -127,6 +127,14 @@ function SameSpectrumDisplayDefaults(const A, B: TSpectrumDisplayDefaults): Bool
    the operator's choice, as it always has. *)
 function SpectrumScaleRangeDiffers(const A, B: TSpectrumDisplayDefaults): Boolean;
 
+(* THE WINDOW'S DECISION, as a pure function: must attaching AIncoming put the
+   scale slider at the radio's default and range?  Yes on the first attach
+   (AHaveApplied False) -- the designed form carries no scale of its own, so
+   there is nothing to keep -- and whenever the scale range differs from the
+   one in force.  No otherwise: the operator's position stands. *)
+function SpectrumScaleNeedsReset(AHaveApplied: Boolean;
+                                 const AApplied, AIncoming: TSpectrumDisplayDefaults): Boolean;
+
 // Bin i covers [Start + i*Span/N, Start + (i+1)*Span/N).  StartHz and EndHz
 // are the frame's extent; SpectrumBinHz returns the CENTRE of a bin.
 //
@@ -256,6 +264,13 @@ begin
    Result := (A.DefaultScaleDb <> B.DefaultScaleDb)   or
              (A.MinScaleDb <> B.MinScaleDb)           or
              (A.MaxScaleDb <> B.MaxScaleDb);
+end;
+
+function SpectrumScaleNeedsReset(AHaveApplied: Boolean;
+                                 const AApplied, AIncoming: TSpectrumDisplayDefaults): Boolean;
+begin
+   Result := (not AHaveApplied) or
+             SpectrumScaleRangeDiffers(AApplied, AIncoming);
 end;
 
 function SpectrumStartHz(const AFrame: TSpectrumFrame): Int64;
