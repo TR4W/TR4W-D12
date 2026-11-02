@@ -87,7 +87,7 @@ object frmServerLog: TfrmServerLog
     Width = 300
     Caption = 'Send QSOs to the server'
     Enabled = False
-    TabOrder = 3
+    TabOrder = 2
     OnClick = btnSendMissingClick
   end
   object chkShowContent: TCheckBox
@@ -99,7 +99,7 @@ object frmServerLog: TfrmServerLog
     Caption = 'Show server log content'
     Checked = True
     State = cbChecked
-    TabOrder = 2
+    TabOrder = 3
     OnChange = chkShowContentChange
   end
   object btnClose: TButton
@@ -110,7 +110,7 @@ object frmServerLog: TfrmServerLog
     Anchors = [akTop, akRight]
     Cancel = True
     Caption = 'Close'
-    TabOrder = 4
+    TabOrder = 5
     OnClick = btnCloseClick
   end
   object pnlLog: TPanel
@@ -120,6 +120,6 @@ object frmServerLog: TfrmServerLog
     Width = 980
     Anchors = [akTop, akLeft, akRight, akBottom]
     BevelOuter = bvNone
-    TabOrder = 5
+    TabOrder = 4
   end
 end

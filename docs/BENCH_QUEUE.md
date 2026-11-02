@@ -30,6 +30,67 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-02 -- PREFERENCES CONTROLS SHOW THEIR COMMAND HELP ON HOVER
+
+Every control bound through `TSettingBindings.Bind`, and every hand-wired one
+listed in `AddHandWiredToSearchIndex`, now has a tooltip: the
+setting's help text from `help\help_<code>.po` for the UI language, over
+`help\help_en.po` (`src/uCommandHelp.pas`). Wrapped at 70 columns, capped at
+600 characters with ` ...`. The catalogues are only in an INSTALLED tree (or a
+tarball/.app) -- a developer run from `tr4w/target` has no `help\` folder and
+shows no tooltips; the log line `[Prefs] Setting tooltips: ...` names the
+files it loaded (`""` = none). To try it from a dev tree, copy
+`i18n/help_*.po` into `tr4w/target/help/` by hand and do not commit them.
+
+- [ ] Hover CW Tone and Say Hi Enable (bound) and Band Map Decay Time
+      (hand-wired) on an installed build: each shows its description, wrapped,
+      and the hint goes away normally.
+- [ ] A long one (Always Call Blind CQ, bound) is cut with ` ...` and stays on
+      screen.
+- [ ] A bound control with no help (No Border, Show Gridlines on Appearance)
+      shows no tooltip, not an empty box.
+- [ ] `--lang es`: the same controls show the Spanish text; `--lang ja` falls
+      back to English.
+- [ ] macOS and Linux: the `.app` / tarball finds `help/` (Contents/Resources,
+      beside the binary) -- read the log line.
+
+## Added 2026-11-02 -- TAB MOVES IN READING ORDER ON EVERY PREFERENCES PAGE (NY4I)
+
+Tab on almost every Preferences page followed the order the controls were
+CREATED, not where they sit (Network went Server, This station, a checkbox,
+Port). Only `TabOrder` values in `uPrefsForm.lfm` changed: down the page in
+rows, left to right in a row. The Station page goes down the Station column,
+then the Contest column. At the window level the order is search box, tree,
+page, then OK / Cancel / Apply. `Lint-TabOrder` now fails a form whose order
+disagrees (`tools/lfm_taborder.py`; columns and the ratchet for forms not yet
+reviewed are in `tr4w/build/lint-taborder.txt`).
+
+- [ ] **Windows.** Open each leaf page, click its first field and Tab to the
+      end. Expect: the caret moves down the page in reading order, and stops
+      only on what can be edited. Pages: Station, Radios, Rotators, DX
+      Cluster, Operating, Band Map, Bands, CW, Online Scoring, Two Radio
+      Mode, SCP, UDP Broadcast, Network, Appearance, Logging, Backup, Audio,
+      CW Settings, Paddle and PTT, TCI Server, WSJT-X, External Logger,
+      MMTTY.
+- [ ] **Station** reads down the left column (Call ... Postal code), then the
+      right one (Check ... Park). NY4I to judge whether that is right, or
+      whether it should go row by row.
+- [ ] From the search box: Tab goes to the tree, then into the page, then
+      OK, Cancel, Apply. Shift-Tab reverses it.
+- [ ] **Appearance**: the generated "Layout" block below the designed
+      controls comes after Show gridlines. **External Logger**: the WRL setup
+      button (created at run time) comes last.
+- [ ] **Linux (gtk2)**: the same walk on two pages. gtk2 takes the order
+      from the same `TabOrder`, but it has not been seen there.
+- [ ] **The other forms** (same fix, `.lfm` only): Tab through the UDP
+      destination editor (Address, Port, streams, Test, OK, Cancel), Server
+      log (Close last), the Radio editor (all four tabs, OK before Cancel),
+      the radio panel, and **Edit QSO** (field columns row by row, My Station,
+      then the multiplier and flag checkboxes, then Save and Cancel -- NY4I
+      accepted this order 2026-11-02).
+
+---
+
 ## Added 2026-11-01 -- COMING BACK TO TR4W PUTS THE MAIN WINDOW ON TOP (NY4I, bench)
 
 Clicking any TR4W window from another program used to bring the tool windows

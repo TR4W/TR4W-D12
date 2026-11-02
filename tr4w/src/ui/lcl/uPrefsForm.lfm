@@ -39,7 +39,7 @@ object PrefsForm: TPrefsForm
     RowSelect = True
     ScrollBars = ssAutoVertical
     ShowLines = False
-    TabOrder = 5
+    TabOrder = 1
     Options = [tvoHotTrack, tvoKeepCollapsedNodes, tvoReadOnly, tvoRowSelect, tvoShowButtons, tvoShowRoot, tvoToolTips, tvoNoDoubleClickExpand, tvoThemedDraw]
     OnChange = tvNavChange
     OnExpanded = tvNavExpanded
@@ -56,7 +56,7 @@ object PrefsForm: TPrefsForm
     Color = clWindow
     ParentBackground = False
     ParentColor = False
-    TabOrder = 1
+    TabOrder = 2
     object lblPlaceholder: TLabel
       Left = 12
       Height = 60
@@ -162,7 +162,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Send CW'
-        TabOrder = 6
+        TabOrder = 5
       end
       object chkCWSpeedFromDatabase: TCheckBox
         Left = 12
@@ -171,7 +171,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Match the speed a station was worked at before'
-        TabOrder = 8
+        TabOrder = 6
       end
       object lblCWSpeedIncrement: TLabel
         Left = 12
@@ -188,7 +188,7 @@ object PrefsForm: TPrefsForm
         Width = 80
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 11
+        TabOrder = 7
       end
       object lblCWSpeedIncrementUnits: TLabel
         Left = 290
@@ -214,7 +214,7 @@ object PrefsForm: TPrefsForm
         Top = 380
         Width = 80
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 8
       end
       object lblCWToneUnits: TLabel
         Left = 290
@@ -232,7 +232,7 @@ object PrefsForm: TPrefsForm
         Top = 416
         Width = 460
         Caption = 'Any CW message may chain into the next'
-        TabOrder = 7
+        TabOrder = 9
       end
       object chkTuneWithDits: TCheckBox
         Left = 12
@@ -240,7 +240,7 @@ object PrefsForm: TPrefsForm
         Top = 442
         Width = 460
         Caption = 'Tune with dits rather than a solid carrier'
-        TabOrder = 9
+        TabOrder = 10
       end
       object chkSendFourLetterCall: TCheckBox
         Left = 12
@@ -248,7 +248,7 @@ object PrefsForm: TPrefsForm
         Top = 468
         Width = 460
         Caption = 'Always send all four letters of a four-letter call'
-        TabOrder = 10
+        TabOrder = 11
       end
       object chkIncludeFKeyNumber: TCheckBox
         Left = 12
@@ -335,7 +335,7 @@ object PrefsForm: TPrefsForm
         ClientHeight = 260
         ClientWidth = 540
         ParentBackground = False
-        TabOrder = 6
+        TabOrder = 5
         object cbxProfile: TComboBox
           Left = 12
           Height = 22
@@ -511,7 +511,7 @@ object PrefsForm: TPrefsForm
         Width = 300
         AutoSize = False
         Caption = 'Connect radios at startup'
-        TabOrder = 5
+        TabOrder = 6
         OnChange = chkAutoConnectChange
       end
     end
@@ -612,7 +612,7 @@ object PrefsForm: TPrefsForm
         Width = 240
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 6
+        TabOrder = 5
         OnChange = cbxRotatorTypeChange
       end
       object lblRotatorPort: TLabel
@@ -630,7 +630,7 @@ object PrefsForm: TPrefsForm
         Width = 160
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 9
+        TabOrder = 6
         OnChange = cbxRotatorPortChange
       end
       object lblRotatorBaud: TLabel
@@ -647,7 +647,7 @@ object PrefsForm: TPrefsForm
         Top = 272
         Width = 90
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 7
         OnChange = edtRotatorBaudChange
       end
       object lblRotatorBaudHint: TLabel
@@ -674,7 +674,7 @@ object PrefsForm: TPrefsForm
         Top = 304
         Width = 200
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 8
         OnChange = edtRotatorIPChange
       end
       object lblRotatorUDP: TLabel
@@ -691,7 +691,7 @@ object PrefsForm: TPrefsForm
         Top = 336
         Width = 90
         AutoSize = False
-        TabOrder = 8
+        TabOrder = 9
         OnChange = edtRotatorUDPChange
       end
       object lblRotatorBands: TLabel
@@ -807,7 +807,7 @@ object PrefsForm: TPrefsForm
         Top = 162
         Width = 100
         Caption = 'Test'
-        TabOrder = 6
+        TabOrder = 5
         OnClick = btnUDPTestClick
       end
       object chkUDPAllQSOs: TCheckBox
@@ -817,7 +817,7 @@ object PrefsForm: TPrefsForm
         Width = 420
         AutoSize = False
         Caption = 'Also broadcast edited and previously logged QSOs'
-        TabOrder = 5
+        TabOrder = 6
         OnChange = chkUDPAllQSOsChange
       end
       object lblUDPHint: TLabel
@@ -908,7 +908,7 @@ object PrefsForm: TPrefsForm
         Width = 420
         AutoSize = False
         Caption = 'HamLib - debug logging'
-        TabOrder = 4
+        TabOrder = 3
       end
       object chkHamLibTrace: TCheckBox
         Left = 24
@@ -917,7 +917,7 @@ object PrefsForm: TPrefsForm
         Width = 420
         AutoSize = False
         Caption = 'HamLib - internal trace to hamlib_trace.log'
-        TabOrder = 6
+        TabOrder = 4
       end
       object chkHamLibAsyncOnly: TCheckBox
         Left = 24
@@ -926,7 +926,7 @@ object PrefsForm: TPrefsForm
         Width = 420
         AutoSize = False
         Caption = 'HamLib - async callbacks only, no heartbeat (testing)'
-        TabOrder = 8
+        TabOrder = 5
       end
       object lblHamLibRestart: TLabel
         Left = 24
@@ -943,7 +943,7 @@ object PrefsForm: TPrefsForm
         Top = 296
         Width = 130
         Caption = 'Open log file'
-        TabOrder = 3
+        TabOrder = 6
         OnClick = btnOpenLogFileClick
       end
       object lblLogFilePath: TLabel
@@ -969,7 +969,7 @@ object PrefsForm: TPrefsForm
         Top = 372
         Width = 540
         Caption = 'Warn when the log file grows unexpectedly'
-        TabOrder = 5
+        TabOrder = 7
       end
       object chkUnknownCountryFile: TCheckBox
         Left = 12
@@ -977,7 +977,7 @@ object PrefsForm: TPrefsForm
         Top = 398
         Width = 540
         Caption = 'Record callsigns with no country match'
-        TabOrder = 7
+        TabOrder = 8
       end
       object chkUpdateRestartFile: TCheckBox
         Left = 12
@@ -1043,7 +1043,7 @@ object PrefsForm: TPrefsForm
         Top = 100
         Width = 90
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 1
       end
       object chkTCIBindAll: TCheckBox
         Left = 12
@@ -1052,7 +1052,7 @@ object PrefsForm: TPrefsForm
         Width = 480
         AutoSize = False
         Caption = 'Also listen on the network (other computers can connect)'
-        TabOrder = 1
+        TabOrder = 2
       end
       object lblTCIBindAllWarning: TLabel
         Left = 30
@@ -1077,7 +1077,7 @@ object PrefsForm: TPrefsForm
         Top = 220
         Width = 70
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 3
       end
       object lblTCIMaxTxUnits: TLabel
         Left = 298
@@ -1200,7 +1200,7 @@ object PrefsForm: TPrefsForm
         Width = 200
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 5
+        TabOrder = 3
       end
       object lblMyZone: TLabel
         Left = 12
@@ -1216,7 +1216,7 @@ object PrefsForm: TPrefsForm
         Top = 154
         Width = 200
         AutoSize = False
-        TabOrder = 8
+        TabOrder = 4
       end
       object lblMyITUZone: TLabel
         Left = 12
@@ -1232,7 +1232,7 @@ object PrefsForm: TPrefsForm
         Top = 184
         Width = 200
         AutoSize = False
-        TabOrder = 11
+        TabOrder = 5
       end
       object lblMyState: TLabel
         Left = 12
@@ -1248,7 +1248,7 @@ object PrefsForm: TPrefsForm
         Top = 214
         Width = 200
         AutoSize = False
-        TabOrder = 14
+        TabOrder = 6
       end
       object lblMySection: TLabel
         Left = 12
@@ -1264,7 +1264,7 @@ object PrefsForm: TPrefsForm
         Top = 244
         Width = 200
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 7
       end
       object lblMyCountry: TLabel
         Left = 12
@@ -1280,7 +1280,7 @@ object PrefsForm: TPrefsForm
         Top = 274
         Width = 200
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 8
       end
       object lblMyPostalCode: TLabel
         Left = 12
@@ -1296,7 +1296,7 @@ object PrefsForm: TPrefsForm
         Top = 304
         Width = 200
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 9
       end
       object lblContestHeading: TLabel
         Left = 380
@@ -1323,7 +1323,7 @@ object PrefsForm: TPrefsForm
         Top = 34
         Width = 150
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 10
       end
       object lblMyPrec: TLabel
         Left = 380
@@ -1339,7 +1339,7 @@ object PrefsForm: TPrefsForm
         Top = 64
         Width = 150
         AutoSize = False
-        TabOrder = 9
+        TabOrder = 11
       end
       object lblMyFDClass: TLabel
         Left = 380
@@ -1355,7 +1355,7 @@ object PrefsForm: TPrefsForm
         Top = 94
         Width = 150
         AutoSize = False
-        TabOrder = 10
+        TabOrder = 12
       end
       object lblMyFOCNumber: TLabel
         Left = 380
@@ -1371,7 +1371,7 @@ object PrefsForm: TPrefsForm
         Top = 124
         Width = 150
         AutoSize = False
-        TabOrder = 12
+        TabOrder = 13
       end
       object lblMyIOTA: TLabel
         Left = 380
@@ -1387,7 +1387,7 @@ object PrefsForm: TPrefsForm
         Top = 154
         Width = 150
         AutoSize = False
-        TabOrder = 13
+        TabOrder = 14
       end
       object lblMyPark: TLabel
         Left = 380
@@ -1467,7 +1467,7 @@ object PrefsForm: TPrefsForm
         Width = 420
         AutoSize = False
         Caption = 'Send callsign highlighting to WSJT-X'
-        TabOrder = 3
+        TabOrder = 2
       end
       object lblWSJTXPort: TLabel
         Left = 12
@@ -1483,7 +1483,7 @@ object PrefsForm: TPrefsForm
         Top = 116
         Width = 90
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 3
       end
       object lblWSJTXMulticast: TLabel
         Left = 12
@@ -1562,7 +1562,7 @@ object PrefsForm: TPrefsForm
         Width = 200
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 1
+        TabOrder = 0
       end
       object chkLoggerEnabled: TCheckBox
         Left = 12
@@ -1571,7 +1571,7 @@ object PrefsForm: TPrefsForm
         Width = 420
         AutoSize = False
         Caption = 'Send QSOs to it as they are logged'
-        TabOrder = 3
+        TabOrder = 1
       end
       object lblLoggerAddress: TLabel
         Left = 12
@@ -1587,7 +1587,7 @@ object PrefsForm: TPrefsForm
         Top = 98
         Width = 200
         AutoSize = False
-        TabOrder = 0
+        TabOrder = 2
       end
       object lblLoggerPort: TLabel
         Left = 12
@@ -1603,7 +1603,7 @@ object PrefsForm: TPrefsForm
         Top = 130
         Width = 90
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 3
       end
       object lblLoggerRestart: TLabel
         Left = 12
@@ -2104,7 +2104,7 @@ object PrefsForm: TPrefsForm
             Top = 126
             Width = 70
             Caption = 'Browse...'
-            TabOrder = 5
+            TabOrder = 4
             OnClick = btnBrowseDVKPathClick
           end
           object lblDVKRecorder: TLabel
@@ -2120,7 +2120,7 @@ object PrefsForm: TPrefsForm
             Height = 25
             Top = 158
             Width = 316
-            TabOrder = 4
+            TabOrder = 5
           end
           object btnBrowseDVKRecorder: TButton
             Left = 544
@@ -2345,7 +2345,7 @@ object PrefsForm: TPrefsForm
         Top = 178
         Width = 240
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 4
         OnChange = edtClusterNameChange
       end
       object lblClusterServer: TLabel
@@ -2363,7 +2363,7 @@ object PrefsForm: TPrefsForm
         Width = 300
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 9
+        TabOrder = 5
         OnChange = cbxClusterServerChange
         OnEnter = cbxClusterServerEnter
       end
@@ -2392,7 +2392,7 @@ object PrefsForm: TPrefsForm
         Top = 282
         Width = 160
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 6
         OnChange = edtClusterLoginChange
       end
       object lblClusterLoginHint: TLabel
@@ -2421,7 +2421,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         EchoMode = emPassword
         PasswordChar = '*'
-        TabOrder = 5
+        TabOrder = 7
         OnChange = edtClusterPasswordChange
       end
       object lblClusterCommand: TLabel
@@ -2438,7 +2438,7 @@ object PrefsForm: TPrefsForm
         Top = 346
         Width = 420
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 8
         OnChange = edtClusterCommandChange
       end
       object lblClusterCommandHint: TLabel
@@ -2469,7 +2469,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Connect at startup'
-        TabOrder = 8
+        TabOrder = 9
       end
       object lblClusterNote: TLabel
         Left = 12
@@ -2548,7 +2548,7 @@ object PrefsForm: TPrefsForm
         Top = 60
         Width = 80
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 1
       end
       object lblBandMapGuardUnits: TLabel
         Left = 248
@@ -2574,7 +2574,7 @@ object PrefsForm: TPrefsForm
         Top = 90
         Width = 80
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 2
       end
       object lblBandMapLimitUnits: TLabel
         Left = 248
@@ -2593,7 +2593,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Show duplicates'
-        TabOrder = 10
+        TabOrder = 3
       end
       object chkBandMapMultsOnly: TCheckBox
         Left = 12
@@ -2602,7 +2602,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Multipliers only'
-        TabOrder = 12
+        TabOrder = 4
       end
       object chkBandMapAllBands: TCheckBox
         Left = 12
@@ -2611,7 +2611,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'All bands'
-        TabOrder = 1
+        TabOrder = 5
       end
       object chkBandMapAllModes: TCheckBox
         Left = 12
@@ -2620,7 +2620,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'All modes'
-        TabOrder = 2
+        TabOrder = 6
       end
       object chkBandMapCQ: TCheckBox
         Left = 12
@@ -2629,7 +2629,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Show CQ spots'
-        TabOrder = 4
+        TabOrder = 7
       end
       object chkBandMapCallWindow: TCheckBox
         Left = 12
@@ -2638,7 +2638,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Show the call window entry'
-        TabOrder = 5
+        TabOrder = 8
       end
       object chkBandMapSO2R: TCheckBox
         Left = 12
@@ -2647,7 +2647,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'SO2R display'
-        TabOrder = 6
+        TabOrder = 9
       end
       object chkBandMapGHz: TCheckBox
         Left = 12
@@ -2656,7 +2656,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Show GHz'
-        TabOrder = 8
+        TabOrder = 10
       end
       object lblBandMapNote: TLabel
         Left = 12
@@ -2675,7 +2675,7 @@ object PrefsForm: TPrefsForm
         Top = 410
         Width = 540
         Caption = 'Show every spot in the call window'
-        TabOrder = 9
+        TabOrder = 11
       end
       object chkSwapPacketSpotRadios: TCheckBox
         Left = 12
@@ -2683,7 +2683,7 @@ object PrefsForm: TPrefsForm
         Top = 436
         Width = 540
         Caption = 'Send spots to the other radio'
-        TabOrder = 11
+        TabOrder = 12
       end
     end
     object laySCP: TPanel
@@ -2726,7 +2726,7 @@ object PrefsForm: TPrefsForm
         Width = 60
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 1
+        TabOrder = 0
       end
       object lblSCPMinLettersUnits: TLabel
         Left = 270
@@ -2752,7 +2752,7 @@ object PrefsForm: TPrefsForm
         Top = 72
         Width = 300
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 1
       end
       object lblSCPHint: TLabel
         Left = 12
@@ -2792,7 +2792,7 @@ object PrefsForm: TPrefsForm
         Top = 250
         Width = 540
         Caption = 'Offer possible calls'
-        TabOrder = 0
+        TabOrder = 2
       end
       object chkPartialCall: TCheckBox
         Left = 12
@@ -2800,7 +2800,7 @@ object PrefsForm: TPrefsForm
         Top = 276
         Width = 540
         Caption = 'Match on a partial callsign'
-        TabOrder = 2
+        TabOrder = 3
       end
       object chkWildcardPartials: TCheckBox
         Left = 12
@@ -2808,7 +2808,7 @@ object PrefsForm: TPrefsForm
         Top = 302
         Width = 540
         Caption = 'Allow wildcards in a partial'
-        TabOrder = 3
+        TabOrder = 4
       end
       object chkNameFlag: TCheckBox
         Left = 12
@@ -2816,7 +2816,7 @@ object PrefsForm: TPrefsForm
         Top = 328
         Width = 540
         Caption = 'Flag a station whose name is already known'
-        TabOrder = 4
+        TabOrder = 5
       end
     end
     object layNetwork: TPanel
@@ -2874,7 +2874,7 @@ object PrefsForm: TPrefsForm
         Top = 70
         Width = 90
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 1
       end
       object lblNetPassword: TLabel
         Left = 12
@@ -2892,7 +2892,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         EchoMode = emPassword
         PasswordChar = '*'
-        TabOrder = 6
+        TabOrder = 2
       end
       object lblNetComputerID: TLabel
         Left = 12
@@ -2908,7 +2908,7 @@ object PrefsForm: TPrefsForm
         Top = 134
         Width = 60
         AutoSize = False
-        TabOrder = 1
+        TabOrder = 3
       end
       object lblNetComputerIDHint: TLabel
         Left = 230
@@ -2927,7 +2927,7 @@ object PrefsForm: TPrefsForm
         Width = 500
         AutoSize = False
         Caption = 'Synchronize the log when connecting'
-        TabOrder = 2
+        TabOrder = 4
       end
       object chkMultiMultsOnly: TCheckBox
         Left = 12
@@ -2935,7 +2935,7 @@ object PrefsForm: TPrefsForm
         Top = 196
         Width = 520
         Caption = 'Pass only new multipliers around the network'
-        TabOrder = 4
+        TabOrder = 5
       end
       object chkIntercomFile: TCheckBox
         Left = 12
@@ -2943,7 +2943,7 @@ object PrefsForm: TPrefsForm
         Top = 222
         Width = 520
         Caption = 'Log network messages to INTERCOM.TXT'
-        TabOrder = 5
+        TabOrder = 6
       end
       object chkNetAutoConnect: TCheckBox
         Left = 12
@@ -2951,7 +2951,7 @@ object PrefsForm: TPrefsForm
         Top = 248
         Width = 520
         Caption = 'Connect to the multi-op server when TR4W starts'
-        TabOrder = 8
+        TabOrder = 7
       end
       object chkNetShareSpots: TCheckBox
         Left = 12
@@ -2959,7 +2959,7 @@ object PrefsForm: TPrefsForm
         Top = 274
         Width = 520
         Caption = 'Share DX spots around the network'
-        TabOrder = 9
+        TabOrder = 8
       end
       object lblNetHint: TLabel
         Left = 12
@@ -3028,7 +3028,7 @@ object PrefsForm: TPrefsForm
         Top = 70
         Width = 60
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 1
       end
       object chkBoldFont: TCheckBox
         Left = 12
@@ -3037,7 +3037,7 @@ object PrefsForm: TPrefsForm
         Width = 400
         AutoSize = False
         Caption = 'Bold'
-        TabOrder = 4
+        TabOrder = 2
       end
       object lblAppearHint: TLabel
         Left = 12
@@ -3078,7 +3078,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         ItemHeight = 0
         Style = csDropDownList
-        TabOrder = 8
+        TabOrder = 3
       end
       object lblLanguageHint: TLabel
         Left = 412
@@ -3107,7 +3107,7 @@ object PrefsForm: TPrefsForm
         Top = 320
         Width = 540
         Caption = 'Main window has no border'
-        TabOrder = 1
+        TabOrder = 4
       end
       object chkNoCaption: TCheckBox
         Left = 12
@@ -3115,7 +3115,7 @@ object PrefsForm: TPrefsForm
         Top = 346
         Width = 540
         Caption = 'Main window has no title bar'
-        TabOrder = 3
+        TabOrder = 5
       end
       object chkNoColumnHeader: TCheckBox
         Left = 12
@@ -3123,7 +3123,7 @@ object PrefsForm: TPrefsForm
         Top = 372
         Width = 540
         Caption = 'Hide the log column headings'
-        TabOrder = 5
+        TabOrder = 6
       end
       object chkShowGridlines: TCheckBox
         Left = 12
@@ -3184,7 +3184,7 @@ object PrefsForm: TPrefsForm
         Top = 38
         Width = 60
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 0
       end
       object lblBackupEveryUnits: TLabel
         Left = 270
@@ -3210,7 +3210,7 @@ object PrefsForm: TPrefsForm
         Top = 72
         Width = 340
         AutoSize = False
-        TabOrder = 0
+        TabOrder = 1
       end
       object btnBrowseBackup: TButton
         Left = 548
@@ -3218,7 +3218,7 @@ object PrefsForm: TPrefsForm
         Top = 71
         Width = 95
         Caption = 'Browse...'
-        TabOrder = 1
+        TabOrder = 2
         OnClick = btnBrowseBackupClick
       end
       object lblBackupHint: TLabel
@@ -3467,7 +3467,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Number keypad sends CW memories'
-        TabOrder = 4
+        TabOrder = 2
       end
       object lblLeadingZeros: TLabel
         Left = 12
@@ -3484,7 +3484,7 @@ object PrefsForm: TPrefsForm
         Width = 80
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 7
+        TabOrder = 3
       end
       object lblLeadingZeroChar: TLabel
         Left = 12
@@ -3500,7 +3500,7 @@ object PrefsForm: TPrefsForm
         Top = 166
         Width = 60
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 4
       end
       object lblLeadingZeroHint: TLabel
         Left = 12
@@ -3547,7 +3547,7 @@ object PrefsForm: TPrefsForm
         Width = 80
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 3
+        TabOrder = 5
       end
       object lblWeight: TLabel
         Left = 12
@@ -3563,7 +3563,7 @@ object PrefsForm: TPrefsForm
         Top = 368
         Width = 80
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 6
       end
       object chkFarnsworth: TCheckBox
         Left = 12
@@ -3572,7 +3572,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Farnsworth spacing'
-        TabOrder = 6
+        TabOrder = 7
       end
       object lblFarnsworthSpeed: TLabel
         Left = 12
@@ -3642,7 +3642,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'WARC (30, 17, 12 m)'
-        TabOrder = 2
+        TabOrder = 1
       end
       object chkVHFBands: TCheckBox
         Left = 12
@@ -3651,7 +3651,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'VHF and up (6 m and above)'
-        TabOrder = 1
+        TabOrder = 2
       end
       object lblBandsHint: TLabel
         Left = 12
@@ -3715,7 +3715,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Alt-D remembers what you typed'
-        TabOrder = 2
+        TabOrder = 1
       end
       object chkAltDCQ: TCheckBox
         Left = 12
@@ -3724,7 +3724,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Alt-D can start a CQ on the second radio'
-        TabOrder = 4
+        TabOrder = 2
       end
       object chkAlwaysBlindCQ: TCheckBox
         Left = 12
@@ -3733,7 +3733,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Always call a blind CQ'
-        TabOrder = 1
+        TabOrder = 3
       end
       object chkSkipActiveBand: TCheckBox
         Left = 12
@@ -3742,7 +3742,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Skip the band the other radio is on'
-        TabOrder = 3
+        TabOrder = 4
       end
       object chkInBandLockout: TCheckBox
         Left = 12
@@ -3802,7 +3802,7 @@ object PrefsForm: TPrefsForm
     Caption = 'Save and close'
     Constraints.MinWidth = 85
     Default = True
-    TabOrder = 2
+    TabOrder = 3
     OnClick = btnOKClick
   end
   object btnCancel: TButton
@@ -3818,7 +3818,7 @@ object PrefsForm: TPrefsForm
     Cancel = True
     Caption = 'Cancel'
     Constraints.MinWidth = 85
-    TabOrder = 3
+    TabOrder = 4
     OnClick = btnCancelClick
   end
   object btnApply: TButton
@@ -3833,7 +3833,7 @@ object PrefsForm: TPrefsForm
     BorderSpacing.Right = 15
     Caption = 'Save'
     Constraints.MinWidth = 85
-    TabOrder = 4
+    TabOrder = 5
     OnClick = btnApplyClick
   end
 end

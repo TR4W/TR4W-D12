@@ -1,0 +1,41 @@
+# Lint-TabOrder configuration -- read by tools/lfm_taborder.py.
+#
+#   columns <form>.lfm:<parent> <x>[,<x>...]
+#      The parent reads down one column, then the next.  A control belongs to
+#      the column its Left falls in; each column is then read in rows.  The
+#      parent is STILL judged -- this says how it reads, it excuses nothing.
+#
+#   allow <form>.lfm:<parent>
+#      The ratchet.  A parent whose TabOrder is known to disagree with its
+#      reading order and has not been fixed yet.  An entry that now agrees, or
+#      names no parent, FAILS the lint: delete it when the form is fixed.
+
+# Preferences: the search box and navigation tree are a sidebar column beside
+# the page area and the OK/Cancel/Apply row.
+columns uPrefsForm.lfm:PrefsForm 175
+# Station page: two headed columns side by side, "Station" at x=12 and
+# "Contest" at x=380.
+columns uPrefsForm.lfm:layStation 380
+
+# Edit QSO: the two field columns (x=90 and x=338) are read row by row, as
+# the designer numbered them, then My Station below them; the flag checkboxes
+# and Save/Cancel stand in their own right-hand column at x=480.
+columns uEditQSOForm.lfm:frmEditQSO 480
+# Server Log: Close stands alone at the right edge, apart from the action
+# buttons, so it comes after them and after the log.
+columns uServerLogForm.lfm:frmServerLog 900
+# Radio editor, Serial tab: the line settings (port, baud, data, parity, stop)
+# are one column; RTS and DTR are a separate column with their own labels at
+# x=285.
+columns uRadioEditForm.lfm:tabSerial 285
+# UDP destination: the streams are a 2 x 3 checkbox grid read down each
+# column (Contact, Radio, Score, then Rotor, Lookup, App info).
+columns uUDPDestinationEditForm.lfm:grpStreams 204
+
+# THE RATCHET.  Delete an entry when its parent is fixed or declared.
+#
+# The main window: its children are display panels (status cells, the totals
+# grid, the needs strips), not Tab stops.  Focus there is set by code -- the
+# call and exchange fields are moved between programmatically -- so reading
+# order is not the rule that applies.
+allow uMainForm.lfm:TR4WMainForm

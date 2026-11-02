@@ -52,7 +52,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     Caption = 'Send this destination'
     ClientHeight = 140
     ClientWidth = 396
-    TabOrder = 3
+    TabOrder = 2
     object chkStreamContact: TCheckBox
       Left = 16
       Height = 22
@@ -114,7 +114,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     Top = 238
     Width = 95
     Caption = 'Test'
-    TabOrder = 5
+    TabOrder = 3
     OnClick = btnTestClick
   end
   object lblTestResult: TLabel
@@ -132,7 +132,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     Width = 90
     Caption = 'OK'
     Default = True
-    TabOrder = 2
+    TabOrder = 4
     OnClick = btnOKClick
   end
   object btnCancel: TButton
@@ -142,7 +142,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     Width = 90
     Cancel = True
     Caption = 'Cancel'
-    TabOrder = 4
+    TabOrder = 5
     OnClick = btnCancelClick
   end
 end

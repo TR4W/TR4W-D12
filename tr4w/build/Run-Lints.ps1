@@ -149,6 +149,10 @@ $lints = @(
    @{ Name = 'Lint-FormOverlap';     Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormEvents';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormDefaults';    Arg = $src;     NeedsFpc = $false }
+   # TAB MOVES IN READING ORDER (2026-11-02). Every Preferences page tabbed in
+   # the order its controls were CREATED, not where they sit. Columns are
+   # declared and unreviewed forms ratcheted in build\lint-taborder.txt.
+   @{ Name = 'Lint-TabOrder';        Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-CaptionFit';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-ConfigOwnership'; Arg = $src;     NeedsFpc = $false }
    # Lint-EditQSOTemplate stood here. It pinned the Edit QSO form against dialog

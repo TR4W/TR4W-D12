@@ -152,7 +152,16 @@ notes at the top of the `src/ui/lcl/` unit you are touching.
 
 `Lint-DesignedForms`, `Lint-FormDefaults`, `Lint-FormEvents`, `Lint-FormFields`,
 `Lint-FormOverlap`, `Lint-FormTags`, `Lint-LFMProperties`, `Lint-LFMLoad`,
-`Lint-MainElements`, `Lint-MenuDispatch`, `Lint-BindKeys`, `Lint-Win32Dialogs`.
+`Lint-MainElements`, `Lint-MenuDispatch`, `Lint-BindKeys`, `Lint-Win32Dialogs`,
+`Lint-TabOrder`.
+
+**`Lint-TabOrder` (2026-11-02): Tab moves in reading order.** An `.lfm`'s
+`TabOrder` is the order controls were CREATED, so moving one in the designer
+leaves Tab jumping; every Preferences page shipped that way. The rule is rows
+(tops within 8 px) top to bottom, left to right. A form that reads in columns
+DECLARES them in `build/lint-taborder.txt` and stays judged; only the main
+window is allow-listed (its focus is set by code). Fix a form with
+`python tools/lfm_taborder.py fix --config tr4w/build/lint-taborder.txt <form>.lfm`.
 
 `Lint-LFMProperties` compiles a real FPC helper that links the LCL and asks the
 same RTTI the streaming loader uses — "does this class publish this property, and

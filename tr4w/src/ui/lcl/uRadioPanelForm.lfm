@@ -20,7 +20,7 @@ object frmRadioPanel: TfrmRadioPanel
     Width = 45
     BevelOuter = bvLowered
     Caption = 'VFO A'
-    TabOrder = 1
+    TabOrder = 0
   end
   object lblVFOBCaption: TPanel
     Left = 5
@@ -29,7 +29,7 @@ object frmRadioPanel: TfrmRadioPanel
     Width = 45
     BevelOuter = bvLowered
     Caption = 'VFO B'
-    TabOrder = 2
+    TabOrder = 3
   end
   object lblVFOA: TPanel
     Left = 50
@@ -40,7 +40,7 @@ object frmRadioPanel: TfrmRadioPanel
     Font.Height = -16
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 3
+    TabOrder = 1
   end
   object lblVFOB: TPanel
     Left = 50
@@ -59,7 +59,7 @@ object frmRadioPanel: TfrmRadioPanel
     Top = 5
     Width = 40
     BevelOuter = bvLowered
-    TabOrder = 5
+    TabOrder = 2
   end
   object lblModeB: TPanel
     Left = 150
@@ -67,7 +67,7 @@ object frmRadioPanel: TfrmRadioPanel
     Top = 30
     Width = 40
     BevelOuter = bvLowered
-    TabOrder = 6
+    TabOrder = 5
   end
   object lblRITFreq: TPanel
     Left = 5
@@ -75,7 +75,7 @@ object frmRadioPanel: TfrmRadioPanel
     Top = 55
     Width = 45
     BevelOuter = bvLowered
-    TabOrder = 7
+    TabOrder = 6
   end
   object lblRIT: TPanel
     Left = 50
@@ -84,7 +84,7 @@ object frmRadioPanel: TfrmRadioPanel
     Width = 45
     BevelOuter = bvLowered
     Caption = 'RIT'
-    TabOrder = 8
+    TabOrder = 7
   end
   object lblXIT: TPanel
     Left = 95
@@ -93,7 +93,7 @@ object frmRadioPanel: TfrmRadioPanel
     Width = 45
     BevelOuter = bvLowered
     Caption = 'XIT'
-    TabOrder = 9
+    TabOrder = 8
   end
   object lblSplit: TPanel
     Left = 140
@@ -102,7 +102,7 @@ object frmRadioPanel: TfrmRadioPanel
     Width = 50
     BevelOuter = bvLowered
     Caption = 'SPLIT'
-    TabOrder = 10
+    TabOrder = 9
   end
   object btnSpectrum: TButton
     Left = 5
@@ -110,7 +110,7 @@ object frmRadioPanel: TfrmRadioPanel
     Top = 78
     Width = 80
     Caption = 'Spectrum'
-    TabOrder = 0
+    TabOrder = 10
     Visible = False
     OnClick = SpectrumClick
   end

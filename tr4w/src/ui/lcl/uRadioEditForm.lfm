@@ -90,7 +90,7 @@ object RadioEditForm: TRadioEditForm
         Top = 42
         Width = 120
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 1
       end
       object lblDataBits: TLabel
         Left = 10
@@ -108,7 +108,7 @@ object RadioEditForm: TRadioEditForm
         BevelOuter = bvNone
         ClientHeight = 19
         ClientWidth = 125
-        TabOrder = 5
+        TabOrder = 2
         object optData7: TRadioButton
           Left = 0
           Height = 19
@@ -143,7 +143,7 @@ object RadioEditForm: TRadioEditForm
         Width = 100
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 1
+        TabOrder = 5
       end
       object lblCatDTR: TLabel
         Left = 285
@@ -160,7 +160,7 @@ object RadioEditForm: TRadioEditForm
         Width = 100
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 3
+        TabOrder = 6
       end
       object lblParity: TLabel
         Left = 10
@@ -178,7 +178,7 @@ object RadioEditForm: TRadioEditForm
         BevelOuter = bvNone
         ClientHeight = 19
         ClientWidth = 220
-        TabOrder = 4
+        TabOrder = 3
         object optParityNone: TRadioButton
           Left = 0
           Height = 19
@@ -223,7 +223,7 @@ object RadioEditForm: TRadioEditForm
         BevelOuter = bvNone
         ClientHeight = 19
         ClientWidth = 125
-        TabOrder = 6
+        TabOrder = 4
         object optStop1: TRadioButton
           Left = 0
           Height = 19
@@ -288,7 +288,7 @@ object RadioEditForm: TRadioEditForm
         Width = 320
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 4
+        TabOrder = 5
         OnChange = HandleFoundSelect
       end
       object lblTCPPort: TLabel
@@ -339,7 +339,7 @@ object RadioEditForm: TRadioEditForm
         AutoSize = False
         EchoMode = emPassword
         PasswordChar = '*'
-        TabOrder = 5
+        TabOrder = 4
       end
     end
     object tabAdvanced: TTabSheet
@@ -376,7 +376,7 @@ object RadioEditForm: TRadioEditForm
         Top = 42
         Width = 70
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 1
       end
       object lblDataMode: TLabel
         Left = 240
@@ -392,7 +392,7 @@ object RadioEditForm: TRadioEditForm
         Top = 42
         Width = 70
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 2
       end
       object lblAutoInfo: TLabel
         Left = 240
@@ -408,7 +408,7 @@ object RadioEditForm: TRadioEditForm
         Top = 136
         Width = 70
         AutoSize = False
-        TabOrder = 1
+        TabOrder = 8
       end
       object lblHamLibID: TLabel
         Left = 10
@@ -424,7 +424,7 @@ object RadioEditForm: TRadioEditForm
         Top = 72
         Width = 70
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 3
       end
       object chkUseHamLib: TCheckBox
         Left = 240
@@ -433,7 +433,7 @@ object RadioEditForm: TRadioEditForm
         Width = 220
         AutoSize = False
         Caption = 'Drive through HamLib'
-        TabOrder = 7
+        TabOrder = 4
       end
       object chkWideCW: TCheckBox
         Left = 10
@@ -442,7 +442,7 @@ object RadioEditForm: TRadioEditForm
         Width = 200
         AutoSize = False
         Caption = 'Wide CW filter'
-        TabOrder = 9
+        TabOrder = 5
       end
       object chkFT1000MPReverse: TCheckBox
         Left = 240
@@ -451,7 +451,7 @@ object RadioEditForm: TRadioEditForm
         Width = 230
         AutoSize = False
         Caption = 'FT-1000MP CW reverse'
-        TabOrder = 4
+        TabOrder = 6
       end
       object lblFreqOffset: TLabel
         Left = 10
@@ -466,7 +466,7 @@ object RadioEditForm: TRadioEditForm
         Height = 22
         Top = 166
         Width = 130
-        TabOrder = 6
+        TabOrder = 9
         TextHint = '0 = none, e.g. 116000000'
       end
       object chkPolling: TCheckBox
@@ -476,7 +476,7 @@ object RadioEditForm: TRadioEditForm
         Width = 220
         AutoSize = False
         Caption = 'Poll this radio'
-        TabOrder = 8
+        TabOrder = 7
       end
     end
   end
@@ -495,7 +495,7 @@ object RadioEditForm: TRadioEditForm
     Width = 200
     AutoSize = False
     ItemHeight = 0
-    TabOrder = 5
+    TabOrder = 3
   end
   object lblCIV: TLabel
     Left = 12
@@ -511,7 +511,7 @@ object RadioEditForm: TRadioEditForm
     Top = 338
     Width = 80
     AutoSize = False
-    TabOrder = 7
+    TabOrder = 4
   end
   object lblKeyerRTS: TLabel
     Left = 12
@@ -528,7 +528,7 @@ object RadioEditForm: TRadioEditForm
     Width = 200
     AutoSize = False
     ItemHeight = 0
-    TabOrder = 3
+    TabOrder = 5
   end
   object lblKeyerStopBits: TLabel
     Left = 360
@@ -545,7 +545,7 @@ object RadioEditForm: TRadioEditForm
     Width = 70
     AutoSize = False
     ItemHeight = 0
-    TabOrder = 4
+    TabOrder = 6
   end
   object lblKeyerDTR: TLabel
     Left = 12
@@ -562,7 +562,7 @@ object RadioEditForm: TRadioEditForm
     Width = 200
     AutoSize = False
     ItemHeight = 0
-    TabOrder = 6
+    TabOrder = 7
   end
   object btnOK: TButton
     Left = 320
@@ -572,7 +572,7 @@ object RadioEditForm: TRadioEditForm
     Anchors = [akRight, akBottom]
     Caption = 'Save and close'
     Default = True
-    TabOrder = 9
+    TabOrder = 8
     OnClick = HandleOK
   end
   object btnCancel: TButton
@@ -583,7 +583,7 @@ object RadioEditForm: TRadioEditForm
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'
-    TabOrder = 8
+    TabOrder = 9
     OnClick = HandleCancel
   end
 end
