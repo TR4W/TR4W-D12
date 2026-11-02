@@ -2238,9 +2238,10 @@ begin
      end;
 
   // The TCI server.  Created unconditionally and STARTED only if enabled --
-  // uWSJTX reads its enable flag in the constructor, which is why toggling
-  // that one needs a program restart.  A live object with Start/Stop is what
-  // makes the Preferences check box able to take effect without one.
+  // the WSJT-X server above is created only when its enable flag is already
+  // on, which is why turning that one ON needs a program restart.  A live
+  // object with Start/Stop is what makes the Preferences check box able to
+  // take effect without one.
   TCIServer := TTCIServer.Create;
   logger.debug('[tr4w] SpotCollectorEnabled = %s',
                [BooleanToStr(Settings.SpotCollector.Enabled)]);
@@ -2995,8 +2996,10 @@ begin
     streaming, which start-up cannot promise.  See uRadioPanelForm. }
   StartPanadapterRestore;
 
-  (* THE MAIN WINDOW TAKES THE KEYBOARD BACK -- macOS only, and it has to be
-    HERE, after everything above has shown its windows.
+  (* THE MAIN WINDOW TAKES THE KEYBOARD BACK, and it has to be HERE, after
+    everything above has shown its windows. The start-up promotion is macOS
+    only; the same call also arms, on every platform, the raise that puts the
+    main window above the tool windows when the operator switches back to TR4W.
 
     On Cocoa the global menu bar is put up by whichever form's window becomes
     key, so the last window restored above -- a tool window, with no menu --

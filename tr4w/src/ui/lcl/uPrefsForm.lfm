@@ -934,7 +934,7 @@ object PrefsForm: TPrefsForm
         Top = 244
         Width = 620
         AutoSize = False
-        Caption = 'The three HamLib settings take effect when TR4W next starts.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise.'
+        Caption = 'The HamLib trace level takes effect when TR4W next starts; the other two apply when you save.  They are very verbose and are for diagnosing a radio problem - leave them off otherwise.'
         WordWrap = True
       end
       object btnOpenLogFile: TButton
@@ -1507,7 +1507,7 @@ object PrefsForm: TPrefsForm
         Top = 184
         Width = 620
         AutoSize = False
-        Caption = 'These take effect when TR4W next starts.  Leave the multicast group blank unless WSJT-X is configured to use one.'
+        Caption = 'Turning WSJT-X on, radio control and the broadcast port take effect when TR4W next starts; highlights and the multicast group apply when you save.  Leave the multicast group blank unless WSJT-X is configured to use one.'
         WordWrap = True
       end
       object lblWSJTXTCIHint: TLabel
@@ -1611,7 +1611,7 @@ object PrefsForm: TPrefsForm
         Top = 166
         Width = 620
         AutoSize = False
-        Caption = 'These take effect when TR4W next starts.'
+        Caption = 'The logger type, address and port take effect when TR4W next starts.'
         WordWrap = True
       end
       object lblLoggerStatus: TLabel
@@ -2972,43 +2972,6 @@ object PrefsForm: TPrefsForm
         ParentFont = False
         WordWrap = True
       end
-      object lblRadioTCPHeading: TLabel
-        Left = 12
-        Height = 17
-        Top = 346
-        Width = 400
-        AutoSize = False
-        Caption = 'Radio sharing'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object lblRadioTCPPort: TLabel
-        Left = 12
-        Height = 17
-        Top = 380
-        Width = 140
-        AutoSize = False
-        Caption = 'TCP port:'
-      end
-      object edtRadioTCPPort: TEdit
-        Left = 160
-        Height = 22
-        Top = 376
-        Width = 90
-        AutoSize = False
-        TabOrder = 7
-      end
-      object lblRadioTCPHint: TLabel
-        Left = 12
-        Height = 51
-        Top = 408
-        Width = 620
-        AutoSize = False
-        Caption = 'Lets another position read this station''s radio.  Takes effect when TR4W next starts.'
-        Font.Color = clGrayText
-        ParentFont = False
-        WordWrap = True
-      end
     end
     object layAppearance: TPanel
       Tag = 7
@@ -3076,22 +3039,13 @@ object PrefsForm: TPrefsForm
         Caption = 'Bold'
         TabOrder = 4
       end
-      object chkDupeSheetColor: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 134
-        Width = 400
-        AutoSize = False
-        Caption = 'Color the dupe sheet columns'
-        TabOrder = 6
-      end
       object lblAppearHint: TLabel
         Left = 12
         Height = 34
         Top = 168
         Width = 620
         AutoSize = False
-        Caption = 'The font applies to the main contest window.  All four take effect when TR4W next starts.'
+        Caption = 'The font applies to the main contest window.  All three take effect when TR4W next starts.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
@@ -3389,7 +3343,7 @@ object PrefsForm: TPrefsForm
         Top = 248
         Width = 620
         AutoSize = False
-        Caption = 'These take effect when TR4W next starts.'
+        Caption = 'Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save.'
         WordWrap = True
       end
       object lblScoreBoardHeading: TLabel

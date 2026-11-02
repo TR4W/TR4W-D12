@@ -11,7 +11,7 @@ git history for the 5.x release (`RELEASE_ROADMAP_5X.md`). Nothing was ticked: n
 item has citable confirmation from NY4I. Four were found stale and are marked `[-]`
 (withdrawn, with the reason on the line); delete them when you next edit this file.
 The list of what NY4I still has to check, by release gate, is
-`BENCH_CHECKLIST_NY4I.md`. Plain-bullet sections with no checkbox were not counted.
+`BENCH_CHECKLIST_NY4I.md`. Plain-bullet items were converted to `- [ ]` checkboxes afterwards (2026-11-01), so every item can be ticked.
 
 **"Does it open" is meant to be covered by a gate.** `Invoke-MenuSmoke.ps1`
 drives the converted dialogs and is meant to fail when one does not produce a
@@ -27,6 +27,38 @@ swallowed menu, invisible entry fields, a double caret, a window collapsed to
 named `K3S`, Escape not closing a dialog, a settings field accepting letters, and
 a message key written with four bytes of garbage on the end. The gates are good
 at what they cover; this is the list of what they cannot see.
+
+---
+
+## Added 2026-11-01 -- COMING BACK TO TR4W PUTS THE MAIN WINDOW ON TOP (NY4I, bench)
+
+Clicking any TR4W window from another program used to bring the tool windows
+forward as one group and leave the main window behind the tool window that
+partly covered it. Cause: the main window is unowned (`stAlways`), and every
+tool window is owned by the LCL's hidden application window, so Windows raises
+the tool windows together and the main window keeps its old place. Now
+`Application.OnActivate` (once per switch INTO TR4W, never between TR4W's own
+windows) queues a raise: every showing tool window, bottom first in the LCL's
+activation order, then the main window last (`uMainForm.TActivationRaiser`).
+Every platform, not only Windows.
+
+- [ ] **Windows.** Open three tool windows, one partly covering the main
+      window. Click another program, then click the CORNER of that tool
+      window. Expect: every TR4W window in front of the other program, the
+      main window above all the tool windows, the caret in the call field.
+- [ ] Same, but come back by clicking the MAIN window, and by Alt-Tab. Expect
+      the same: no tool window is left behind the other program.
+- [ ] **Click to type in a tool window from another program** (Telnet's command
+      field, say). The main window comes up over it and takes the caret; a
+      second click on the tool window brings it forward again. NY4I to judge
+      whether that cost is acceptable.
+- [ ] **A modal up** (Preferences, Edit QSO): switch away and back. The modal
+      is in front and nothing else moves.
+- [ ] **No flicker worth mentioning**: each tool window is raised in turn,
+      so their title bars may flash active for an instant.
+- [ ] **Linux (gtk2)** and **macOS**: the same first check. gtk2 gives each
+      form its own taskbar entry and the window manager may raise them
+      differently; this is a behaviour change there and has not been seen.
 
 ---
 
@@ -994,15 +1026,15 @@ Unit-tested and matrix-classified only; the corpus has no log of either
 contest, and the matrix's call roster has no WAE-only, UA2, FJL, RI1AN or
 /MM station, so nothing has scored one of these end to end.
 
-- **RDXC, as a DL station:** log IT9xxx (a new multiplier, 3 points),
+- [ ] **RDXC, as a DL station:** log IT9xxx (a new multiplier, 3 points),
   4U1VIC (multiplier, 3), RI1ANx (10 points, Antarctica multiplier, exchange
   AN accepted), RI1FJx (10, FJL multiplier, FJ), UA2Fxx (10) and DL1xxx/MM
   (5 points, no multiplier). The CTY country list is now CQ's -- check the
   country display for IT9/TA1/JW/4U1V calls and that MY COUNTRY is right.
-- **RDXC, as a UA3 station:** UA2Fxx and RI1ANx score 2; a call-window
+- [ ] **RDXC, as a UA3 station:** UA2Fxx and RI1ANx score 2; a call-window
   pre-fill of RI1ANx is AN and of RI1FJx is FJ; DO/HE/LU/ZP are accepted as
   oblasts (also now in the five other contests that share russian.dom).
-- **RADIO-YOC:** MY STATE = the age; the CQ/S&P exchange sends it with the
+- [ ] **RADIO-YOC:** MY STATE = the age; the CQ/S&P exchange sends it with the
   serial (check the function-key messages -- the class states none); typing
   `15001` logs age 15 serial 1; a station worked at 07:10 is a new QSO at
   07:40 on the same band (the call window still shows DUPE -- information,
@@ -1049,21 +1081,21 @@ end of HamScore. Design 8.2v "S1 as built". Run in a CQ WW SSB log:
 
 No window is shown by any test; all of this is compiled and unit-tested only.
 
-- **Last Contest button** shows the contest's display name and year on its
+- [ ] **Last Contest button** shows the contest's display name and year on its
   second line and the call / file name on the third; hovering shows the full
   path. Check it at 100% and 150% scaling, with a long name (e.g. the
   IN7QPNE composite) -- the year must survive any shortening.
-- **The existing-log list is a grid** (Contest, Year, Call, File), newest
+- [ ] **The existing-log list is a grid** (Contest, Year, Call, File), newest
   year first, undescribable files (old `.cfg`, damaged `.db`) last by file
   name. Check: layout at 100%/150%; header and row height and the sideways
   scroll bar on Windows, GTK and Cocoa; the full-path hint; a double-click on
   a HEADER opens nothing, on a row opens that log.
-- **Enter on a log row opens it and does NOT also create a new contest**
+- [ ] **Enter on a log row opens it and does NOT also create a new contest**
   (the OK default button). With no logs listed, Enter still presses OK. Key
   routing differs by widget set -- check Windows, GTK and Cocoa.
-- **Fill time on a real contest directory, cold disk** -- 100 warm logs take
+- [ ] **Fill time on a real contest directory, cold disk** -- 100 warm logs take
   ~160 ms; antivirus scanning each `.db` may be slower.
-- **The peek never touches a log:** opening the dialog while the same log is
+- [ ] **The peek never touches a log:** opening the dialog while the same log is
   open in another TR4W leaves that log working, and no `-wal`/`-shm` files
   appear beside a closed log.
 
@@ -1460,25 +1492,25 @@ Unit tests feed the real receive arms but cannot log a QSO or show a panel.
 Every item below passed every automated oracle; each is "same as before",
 not "right". Check on a real run:
 
-- **DX vs domestic in a domestic contest** (pointer audit P5): the domestic
+- [ ] **DX vs domestic in a domestic contest** (pointer audit P5): the domestic
   country list is a class now (`TDomesticCountryList`). Log a few in-country
   and DX contacts in a contest that uses it (e.g. a state QSO party from out
   of state, ARRL DX from W) and confirm each is DX or domestic as before.
-- **County files** (`TDomQTHTable`, the logdom rewrite): a QSO party's county
+- [ ] **County files** (`TDomQTHTable`, the logdom rewrite): a QSO party's county
   abbreviations still resolve, including an INCLUDE FILE (New York in-state:
   a Canadian province counts).
-- **Nebraska QSO Party** (new): out of state, only NE counties score; in
+- [ ] **Nebraska QSO Party** (new): out of state, only NE counties score; in
   state, counties + states + provinces + countries, NE itself not a state;
   KA0BOJ bonus 100.
-- **Out-of-area QSOs score 0** (Q107): as an out-of-state entrant, import an
+- [ ] **Out-of-area QSOs score 0** (Q107): as an out-of-state entrant, import an
   ADIF holding a contact with another out-of-state station; it should log
   but score 0 -- and Rescore from the menu keeps it 0.
-- **Polish UI** shows "Polski", the About box credits SP2EWQ, M0GIM and
+- [ ] **Polish UI** shows "Polski", the About box credits SP2EWQ, M0GIM and
   G0DVJ; a machine-translated language credits LibreTranslate.
-- **N1MM listener** receives `<mycall>` again (UDP contact broadcast).
-- **The installer** (`dom\*.dom` wildcard): an installed copy has all 124
+- [ ] **N1MM listener** receives `<mycall>` again (UDP contact broadcast).
+- [ ] **The installer** (`dom\*.dom` wildcard): an installed copy has all 124
   files in `dom\`, including `prov12.dom`.
-- **Every worker thread has a new signature** (pointer audit P1, defect D2).
+- [ ] **Every worker thread has a new signature** (pointer audit P1, defect D2).
   `tCreateThread` is typed now, and eleven thread bodies changed from
   parameterless procedures to `function(aParameter: Pointer): DWORD;
   stdcall`. Before, each of them, ON EXIT, wrote nil into its own SEH chain
@@ -1504,12 +1536,12 @@ not "right". Check on a real run:
     CONNECT (`RunSyncThread`).
   - **Post / Get Scores** upload (`CreateConnectionAndSendReportToGetScores`).
   - **The NTP check at startup** (`NTPStartupCheck`).
-- **The CW-memory command table** (pointer audit P1): its handler column is a
+- [ ] **The CW-memory command table** (pointer audit P1): its handler column is a
   typed procedure now and every row names its routine bare. No row changed
   its target, and the compiler checked all 81; still, run two or three
   memory commands (e.g. `SWAPRADIOS`, `BANDUP`, `CQMODE` in a function-key
   message) and confirm each does what it did.
-- **MMTTY RTTY text** (pointer audit P2, defect D3): with MMTTY running,
+- [ ] **MMTTY RTTY text** (pointer audit P2, defect D3): with MMTTY running,
   received characters appear in the RTTY window in Lucida Console, in
   colour, and the callsign grab still works. Three `SendMessage` addresses
   are `LPARAM` instead of `integer` -- identical on i386; on x86_64 the
@@ -1689,21 +1721,21 @@ tests pin the routing and each party's points; **no real IN7QPNE session has
 been logged with it**, and the contest matrix record changes by design. To
 exercise, log a short session from an IN7QPNE `.cfg`:
 
-- **Outside all four areas** (`MY STATE` e.g. KS): an Indiana county scores
+- [ ] **Outside all four areas** (`MY STATE` e.g. KS): an Indiana county scores
   2 on any mode; a 7QP county 3 CW / 2 phone; a New England county 2 CW /
   1 phone; a Delaware county 20 CW / 10 phone, and **0 on 30, 17 or 12 m**.
   A station sending a state or DX is refused with "Out of state: work IN,
   7th area, NE or DE stations only" (only if the exchange lets you type one).
-- **Inside one** (`MY STATE` a county, e.g. `INADA` or `KDE`): a station in
+- [ ] **Inside one** (`MY STATE` a county, e.g. `INADA` or `KDE`): a station in
   another party scores by THAT party's rules (a DE entrant working an
   Arizona county: 7QP's 3 on CW); a state, province or DX station scores by
   your own party's (a DE entrant: 2 CW, 1 phone).
-- **Multipliers**: a Delaware county worked on 30 m earns none; an Indiana
+- [ ] **Multipliers**: a Delaware county worked on 30 m earns none; an Indiana
   entrant's DX contact -- see Q84.
-- **The score shown** is points x multipliers over the whole log: no
+- [ ] **The score shown** is points x multipliers over the whole log: no
   sponsor's score (Q77). Check it is not mistaken for one party's.
-- **Cabrillo**: `CONTEST: IN7QPNE-QSO-PARTY`, one file for all four sponsors.
-- **No score posting**: Post Scores is greyed; with `HAMSCORE ENABLE` on, the
+- [ ] **Cabrillo**: `CONTEST: IN7QPNE-QSO-PARTY`, one file for all four sponsors.
+- [ ] **No score posting**: Post Scores is greyed; with `HAMSCORE ENABLE` on, the
   HamScore window's status reads "Score posting is not permitted for this
   contest" and nothing is sent. (WRTC now behaves the same -- Q83.)
 
@@ -1717,15 +1749,15 @@ automated types a Delaware exchange or loads its `.dom` files**, and the
 contest matrix shows it unfrozen. To exercise, create it from the New Contest
 dialog (the template `.cfg` was deleted 2026-10-15):
 
-- **In-state** (`MY STATE` a county: NDE, KDE or SDE): states, provinces and
+- [ ] **In-state** (`MY STATE` a county: NDE, KDE or SDE): states, provinces and
   DX countries are multipliers **per band**; working another DE county counts
   the ONE multiplier "Delaware". Points CW 2, digital 2, phone 1.
-- **Out-of-state** (`MY STATE` e.g. PA): NDE, KDE and SDE are the only
+- [ ] **Out-of-state** (`MY STATE` e.g. PA): NDE, KDE and SDE are the only
   multipliers, per band; a non-DE station is refused with "Out of state: work
   DE stations only". Points CW 20, digital 20, phone 10.
-- **Bands**: a QSO on 30, 17 or 12 m is logged and scores 0; 6 m and 2 m score.
-- **Score**: CATEGORY-POWER LOW doubles, QRP triples, and 50 is added.
-- **Cabrillo**: `CONTEST: DE-QSO-PARTY`, an FT8 QSO's mode is `RY`, and the
+- [ ] **Bands**: a QSO on 30, 17 or 12 m is logged and scores 0; 6 m and 2 m score.
+- [ ] **Score**: CATEGORY-POWER LOW doubles, QRP triples, and 50 is added.
+- [ ] **Cabrillo**: `CONTEST: DE-QSO-PARTY`, an FT8 QSO's mode is `RY`, and the
   file is refused until the summary window has a LOCATION.
 
 ---
@@ -1820,7 +1852,7 @@ list the drop-down is built from and the power decision; **nothing sees the
 windows**. The first two groups are DELIBERATE changes; the rest should look
 exactly as before.
 
-- **The New Contest drop-down** (`uNewContestForm.FillContests`,
+- [ ] **The New Contest drop-down** (`uNewContestForm.FillContests`,
   `uContestChoices`):
   - it lists **display names**, sorted by them -- *"ARRL Inter. DX Contest,
     CW"*, *"CQ Worldwide DX Contest, SSB"*, *"General QSO/DX Logging"* -- and
@@ -1841,7 +1873,7 @@ exactly as before.
     Contest"*) -- is it readable in the closed combo and the open list, or
     clipped? Widen the dialog: the combo is right-anchored and should grow;
   - the prompts per contest (M9a's list below) are unchanged.
-- **CATEGORY-POWER is one value** (`uCabrilloSummaryForm.CommitCategoryPower`,
+- [ ] **CATEGORY-POWER is one value** (`uCabrilloSummaryForm.CommitCategoryPower`,
   design 7.6):
   - open a contest with a few QSOs, power HIGH. Start the **Cabrillo** export
     (its station-information window opens), choose **QRP**, OK: a Cabrillo
@@ -1866,17 +1898,17 @@ exactly as before.
     `arrl_digi` and `winter_fd` sets did write HIGH, from the header store's
     copy; the corpus compares only QSO lines and CLAIMED-SCORE, so it cannot
     see this).
-- **Call entry, General QSO** (`ShowsContestStatus`): in a General QSO log,
+- [ ] **Call entry, General QSO** (`ShowsContestStatus`): in a General QSO log,
   typing a call shows **no** multiplier/QSO status, station information or
   possible calls, as before; in any contest they show as before.
-- **Band up/down, General QSO** (`BandStepIncludesWARC`): steps onto 30, 17 and
+- [ ] **Band up/down, General QSO** (`BandStepIncludesWARC`): steps onto 30, 17 and
   12 m (with WARC enabled); a contest skips them, as before.
-- **The summary sheet's ten-date warning** (`MaximumContestDates`): a contest
+- [ ] **The summary sheet's ten-date warning** (`MaximumContestDates`): a contest
   log spanning more than ten dates warns; General QSO never does -- as before.
-- **The FOC Marathon log** (`PowerFieldIsFOCNumber`): the member number shows
+- [ ] **The FOC Marathon log** (`PowerFieldIsFOCNumber`): the member number shows
   under **FOC#**, and there is no PWR column; any contest with a power exchange
   shows PWR as before.
-- **WAG** (`CallEntryFrequencyWarning`): with the radio at 3.675 MHz, typing a
+- [ ] **WAG** (`CallEntryFrequencyWarning`): with the radio at 3.675 MHz, typing a
   call shows *"Warning: Out of WAG allowed frequency range"*; at 7.080 MHz
   exactly it does **not** (between two windows, as before); in any other
   contest no warning.
@@ -1890,7 +1922,7 @@ as it did before** -- the change is where the answer comes from, not the answer.
 below but the golden corpus's Cabrillo header** (Winter Field Day, General QSO).
 One deliberate change is listed last.
 
-- **The New Contest dialog** (`uNewContest` renders
+- [ ] **The New Contest dialog** (`uNewContest` renders
   `TContestBase.DescribeNewContestPrompts`; its two 240-line `case`s are gone).
   Choose, and check the rows, their labels, the comment and the "I am in" box:
   - a state QSO party (Florida): one MY STATE row, comment *"Enter your county
@@ -1911,33 +1943,33 @@ One deliberate change is listed last.
     **UA4W Championship** (MY QTH, the RDA/grid comment);
   - **IN7QPNE** (its composite class since 2026-10-14; the base's prompt): the county-or-state comment naming *IN7QPNE*.
     OK must still enable only when every offered row is filled.
-- **The totals window** (`uTotal` reads `TotalsDisplay`): **IARU** labels the
+- [ ] **The totals window** (`uTotal` reads `TotalsDisplay`): **IARU** labels the
   domestic row *HQ Mults* (by mode: *CW HQ* / *Ph HQ*); **Russian DX** and
   **RU3AX** *Oblasts*; **OZCHR teams** (QSO by mode, CW and phone both worked)
   shows *CW: nn%* / *PH: nn%* in place of the per-mode QSO rows. Every other
   contest *Dom Mults*, *CW Dom*, *Ph Dom* as before.
-- **The summary sheet** (PostUnit reads `SummarySheet`): **Winter Field Day**'s
+- [ ] **The summary sheet** (PostUnit reads `SummarySheet`): **Winter Field Day**'s
   multiplier columns show 1 per band/mode row and the row count on the total
   line; **ARRL Field Day**'s claimed score is the QSO point total, one column
   further in; every other contest states `Claimed Score = <score>`.
-- **The hour-by-hour report** (`ReportsRunningScore`): no SCORE column for the
+- [ ] **The hour-by-hour report** (`ReportsRunningScore`): no SCORE column for the
   Cup RF CW/SSB, Ural Cup, Ukraine Championship, RF Championship CW/SSB and
   RU3AX; every other contest keeps it.
-- **The Cabrillo header**: ARRL 10 and Winter Field Day still refuse to start
+- [ ] **The Cabrillo header**: ARRL 10 and Winter Field Day still refuse to start
   without a LOCATION (`TC_LOCATIONFIELDEMPTY`); Winter Field Day's
   `ARRL-SECTION:` and `X-EXCHANGE:` lines still precede `LOCATION:`; General
   QSO's `CONTEST:` is the title, else the contest name.
-- **HamScore / the UDP contact broadcast / the log's `exchange_sent`**
+- [ ] **HamScore / the UDP contact broadcast / the log's `exchange_sent`**
   (`uExchangeBuilder` asks `CanonicalReceived/SentExchange`): with HamScore on,
   log one QSO each in **CQ WW** (`599 5`), **ARRL DX** from a W and from a DX
   station (`599 CT` / `599 100`), **NAQP** (`JOE CT`), **CW Open** (`123 JOE`),
   **RTC** (`123 EM17` received, `7 EM17` sent -- no RST either way) and **Field
   Day** (`2A CT`); every other contest sends the exchange as typed.
-- **WRTC**: the master-file, Telnet and post-scores menu rows are greyed, the
+- [ ] **WRTC**: the master-file, Telnet and post-scores menu rows are greyed, the
   three windows do not open, and Super Check Partial shows nothing -- now from
   `PermittedOperatingAids`. The **WAE** runnings still offer the QTC menu; every
   other contest greys it.
-- **Score posting XML** (UDP score broadcast, Q109, `a5afe844`; **rows
+- [ ] **Score posting XML** (UDP score broadcast, Q109, `a5afe844`; **rows
   changed 2026-11-02**): the local UDP `dynamicresults` carries the same rows as
   the HamScore post -- ONE row per band in the all-modes column (`mode="ALL"`)
   for the QSOs, the points and each multiplier, then ONE `total`/`ALL`
@@ -1947,7 +1979,7 @@ One deliberate change is listed last.
   contest (RTC, the VHF contests). **WRTC posts its HQ and country multipliers**
   on every band row and the total (Q55). Check with a real N1MM-format score
   listener, if you have one, that it reads the all-modes rows.
-- **THE ONE DELIBERATE CHANGE -- design 7.11, MY STATE IS NEVER WRITTEN BY A
+- [ ] **THE ONE DELIBERATE CHANGE -- design 7.11, MY STATE IS NEVER WRITTEN BY A
   CONTEST.** As a **K or DL station**, open **Canada Day** (or Canada Winter,
   Russian DX, RU3AX) or the **Cup RF**: the CW messages, the `&` macro, the
   Cabrillo and ADIF sent columns and HamScore send what they always did (no
@@ -1972,21 +2004,21 @@ unit tests pin the logic; **nothing sees the windows**. Open an Idaho log
 (160/80/40/20/15/10 m only) and work one station on 20 m CW, then the same
 station on 30 m CW:
 
-- **Dupes**: the 30 m QSO is **not** shown or logged as a dupe, and a second
+- [ ] **Dupes**: the 30 m QSO is **not** shown or logged as a dupe, and a second
   30 m QSO with it is not either. A 20 m repeat still is.
-- **Displays that read the dupe sheet** -- a deliberate consequence, Q51:
+- [ ] **Displays that read the dupe sheet** -- a deliberate consequence, Q51:
   the 30 m dupe sheet does not list the station, and the Stations window
   shows no `+` for an off-band band it shows (6 m and up, in its VHF view).
   The possible-calls strip does not mark it a dupe on 30 m.
-- **Need-multiplier hints** on 30 m: typing a DX call that is a needed
+- [ ] **Need-multiplier hints** on 30 m: typing a DX call that is a needed
   country on 20 m shows **no** "new multiplier" indicator, the mult-needs
   strip shows no off-band band as needed, and the band map does not flag a
   30 m spot as a multiplier.
-- **A defect that went with it**: in Idaho (multipliers not counted per
+- [ ] **A defect that went with it**: in Idaho (multipliers not counted per
   band) typing a county the log does not have now shows it **needed** while
   on an Idaho band -- before M8 the county strip said "not needed" for every
   county, always.
-- **Everything else is as before** -- the score, the multiplier counts and
+- [ ] **Everything else is as before** -- the score, the multiplier counts and
   the Cabrillo `CLAIMED-SCORE` (the golden corpus and the contest matrix
   hold those).
 
@@ -2003,29 +2035,29 @@ and none sees a bonus pay**: the matrix's synthetic QSOs trigger none of them,
 so `uTestContestTotals` is their only proof. To exercise, watching the main
 window's score after each QSO and the `CLAIMED-SCORE` of an exported Cabrillo:
 
-- **North Carolina, the Rarest-of-NC sweep (NEW)**: log stations in four of
+- [ ] **North Carolina, the Rarest-of-NC sweep (NEW)**: log stations in four of
   CAB, GRM, VAN, MAC, DAV, CUR, PAM, ALL, PER, CAS -- no bonus; the fifth adds
   **500 once**, after the multiplication (the score is points x mults + 500).
   A sixth county adds nothing more.
-- **Salmon Run, W7DX (NEW)**: CATEGORY-MODE MIXED -- a W7DX CW contact adds
+- [ ] **Salmon Run, W7DX (NEW)**: CATEGORY-MODE MIXED -- a W7DX CW contact adds
   500, a W7DX phone contact another 500, a second CW band nothing. Set
   CATEGORY-MODE CW and the phone contact stops paying (the score drops 500).
   **An operator who never chose a CATEGORY-MODE is a CW entry** -- that is the
   setting's default and what the Cabrillo header says.
-- **Idaho, the dormant county (NEW; one table per contest YEAR since Q35,
+- [ ] **Idaho, the dormant county (NEW; one table per contest YEAR since Q35,
   `b6e7d19b`)**: the year comes from the LOG -- today its QSO dates -- and
   only 2026 has a table. In a log dated 2026, an in-state station with MY
   STATE `BUT` (Butte) -- nine valid QSOs, no bonus; the tenth adds **1000**.
   `ADM` pays 500; `ADA` and `WAS` are not in the 2026 table and pay nothing.
   A dupe or a 30 m QSO is not a valid QSO. A log dated another year pays no
   county bonus, and `tr4w.log` carries one error naming the year.
-- **The moved formulas -- spot-check one each against a hand calculation**:
+- [ ] **The moved formulas -- spot-check one each against a hand calculation**:
   WAE (weighted multipliers, QTCs as points), Winter Field Day (band-modes x
   points x 2 for LOW / 5 for QRP), RF Cup / ALRS / RF Championship / Ukraine
   Championship / OZHCR (points PLUS 100 / 300 / 50 / 10 / 1000 per
   multiplier), Ural Cup (prefixes are 10 points each, after the
   multiplication).
-- **A score-posting client** (HamScore / getscores.org) posts the score the
+- [ ] **A score-posting client** (HamScore / getscores.org) posts the score the
   main window shows -- off the main thread it now reads the last score the
   window computed.
 
@@ -2039,26 +2071,26 @@ through `ParametersOkay` for every contest and proved nothing else moved; **no
 gate types into the real window**, so nothing has seen a refusal's message on
 screen or a valid exchange log from the entry fields. To exercise:
 
-- **Sweepstakes, no precedence** (NY4I, design 7.10): type `123 99 CT` and
+- [ ] **Sweepstakes, no precedence** (NY4I, design 7.10): type `123 99 CT` and
   Enter -- NOT logged, and the notice line says `Missing precedence (Q A B U M S)`.
   It used to refuse silently. `123 A 99 CT` logs as before.
-- **A QSO party, out-of-state station** (NY4I, design 7.10) -- Florida, MY
+- [ ] **A QSO party, out-of-state station** (NY4I, design 7.10) -- Florida, MY
   STATE `KS`: a DX station `DL1ABC` with `599 DL` is NOT logged and the notice
   says `Out of state: work FL stations only`; a Florida county logs. With MY
   STATE a Florida county (in state), the DX station logs.
-- **NC QSO Party**: out of state, `599 GA` from `K4ABC` is now refused (an
+- [ ] **NC QSO Party**: out of state, `599 GA` from `K4ABC` is now refused (an
   improper domestic QTH -- `nc_cty.dom` is the hundred counties); a county logs.
   A VE station with MY STATE `ON` is now OUT of state for NC. In state, states,
   provinces, DC and DX are still accepted.
-- **Field Day DX**: log `DL1ABC` with `1D` (or `1D DX`), export ADIF -- the
+- [ ] **Field Day DX**: log `DL1ABC` with `1D` (or `1D DX`), export ADIF -- the
   record carries `CLASS 1D`, `SRX_STRING 1D DX`, and no `ARRL_SECT`. Import that
   file back: the QSO's QTH is DX and it is NOT a section.
-- **Unchanged, but moved -- spot-check one each**: RAC Canada Day `VE0ABC 599 123`
+- [ ] **Unchanged, but moved -- spot-check one each**: RAC Canada Day `VE0ABC 599 123`
   logs a serial; PCC `599 GR` a QTH and `599 123` a serial; IARU `ARRL` alone
   logs with the station's zone filled; UK/EI `G3ABC` with only `123` is refused
   `Invalid Entry`; SAC with `UA3ABC` in the call window clears the entry; LABRE
   `PY2ABC 599 SP` logs SP as the state.
-- **CQ WW RTTY `599 14` from a DX station** now answers the same every time --
+- [ ] **CQ WW RTTY `599 14` from a DX station** now answers the same every time --
   REFUSED, by the shape's own later test of a first word over two characters.
   The fields it left behind used to differ run to run (an uninitialised word
   handed to `ValidRST`, also in D7). Whether `RST zone` should log at all for
@@ -2075,10 +2107,10 @@ doubled daytime QSOs. Both now read `ContestExchange.tSysTime`, and live entry
 that, a fresh record scored as hour 00, inside both windows. Unit tests pin
 the rules; nothing automated drives live entry. To exercise:
 
-- Log a Croatian QSO by day and one at night (or with the clock set): day
+- [ ] Log a Croatian QSO by day and one at night (or with the clock set): day
   points by day, doubled at night.
-- Rescore the log at the other time of day: points do NOT change.
-- Same for UK/EI from a G station.
+- [ ] Rescore the log at the other time of day: points do NOT change.
+- [ ] Same for UK/EI from a G station.
 
 ---
 
@@ -2090,16 +2122,16 @@ template `Idaho QSO Party.cfg` no longer borrowed `CONTEST = NEQP` (and was dele
 the class; **nothing automated types an Idaho exchange**, and the multiplier
 lists come from `.dom` files no gate loads. To exercise:
 
-- **In-state** (`MY STATE` an Idaho county, e.g. ADA): states, Canadian
+- [ ] **In-state** (`MY STATE` an Idaho county, e.g. ADA): states, Canadian
   provinces and DX countries are multipliers, and every Idaho county counts as
   the ONE multiplier "Idaho". Before this change in-state got the 44 counties
   and no states or provinces at all -- `IDAHO.DOM` wrote `INCLUDE S50.DOM`
   without the word `FILE`, which `logdom` silently skips.
-- **Out-of-state**: each of the 44 counties is its own multiplier; nothing else.
-- **Points**: CW 2, phone 1, digital 2, FM 1 -- the old `.cfg` scored CW 4 and
+- [ ] **Out-of-state**: each of the 44 counties is its own multiplier; nothing else.
+- [ ] **Points**: CW 2, phone 1, digital 2, FM 1 -- the old `.cfg` scored CW 4 and
   phone 2 through the rotated spelling table.
-- **County line**: a third county in one exchange is refused; two are accepted.
-- **Export**: Cabrillo `CONTEST: ID-QSO-PARTY`, ADIF `CONTEST_ID` `ID-QSO-PARTY`.
+- [ ] **County line**: a third county in one exchange is refused; two are accepted.
+- [ ] **Export**: Cabrillo `CONTEST: ID-QSO-PARTY`, ADIF `CONTEST_ID` `ID-QSO-PARTY`.
 
 ---
 
@@ -2193,7 +2225,7 @@ is what this queue is for.
 
 ### The ruling recorded
 
-- **`PADDLE MONITOR TONE` -- RULED 2026-10-18 (NY4I): *"Keep it."*** The
+- [ ] **`PADDLE MONITOR TONE` -- RULED 2026-10-18 (NY4I): *"Keep it."*** The
   setting stays. Its check is bench item 4 above: the WinKeyer / YCCC paddle
   sidetone, now that the LPT paddle is gone.
 
@@ -2263,10 +2295,10 @@ log out and in), or the port will list and refuse to open.
 `969d8a2d`. The AppImage mounted itself read-only and the contest log was being
 created beside the binary, so QSOs were NOT BEING SAVED.
 
-- Create a contest on the Debian box. Its `.db` should be in `~/tr4w`, not
+- [ ] Create a contest on the Debian box. Its `.db` should be in `~/tr4w`, not
   under `/tmp/.mount_...` (a new contest writes no `.cfg`).
-- Log a QSO, restart, and confirm it is still there.
-- "Download latest cty.dat" should succeed rather than failing with
+- [ ] Log a QSO, restart, and confirm it is still there.
+- [ ] "Download latest cty.dat" should succeed rather than failing with
   *"Read-only file system"*.
 
 **Existing contests are unaffected** -- they keep pointing wherever their `.cfg`
@@ -2279,9 +2311,9 @@ port work moved what the store holds from `SERIAL n` to the device name
 (`269b99ea`), and a careless step there leaves a Windows station whose radio
 silently stops opening.
 
-- One serial rig, from an EXISTING configuration, so the `SERIAL n` a saved
+- [ ] One serial rig, from an EXISTING configuration, so the `SERIAL n` a saved
   station already holds is exercised on the upgrade path.
-- Then change the port in Preferences, restart, and confirm it sticks.
+- [ ] Then change the port in Preferences, restart, and confirm it sticks.
 
 ---
 
@@ -2295,7 +2327,7 @@ the second group were on screen.
 
 ### Already confirmed by NY4I, not waiting
 
-- The form is correct again after the border-style fix (title bar, menu,
+- [ ] The form is correct again after the border-style fix (title bar, menu,
   close-quits, and the un-compressed bottom).
 
 ### KNOWN BAD, and NY4I is deciding how it should behave
@@ -2368,9 +2400,9 @@ the second group were on screen.
 
 ### Confirmed by NY4I during the session, not waiting
 
-- Logging works again after the CONTEST fix. The title bar shows the contest.
-- The main editable log renders again after the column-width unit bug.
-- Log Edit columns are measured and distributed, and the grid no longer
+- [ ] Logging works again after the CONTEST fix. The title bar shows the contest.
+- [ ] The main editable log renders again after the column-width unit bug.
+- [ ] Log Edit columns are measured and distributed, and the grid no longer
   visibly redraws -- the third attempt was the right one (a row cache; the
   cost was two database reads per row per paint, not the column arithmetic).
 
@@ -2496,12 +2528,12 @@ which is not the part in doubt.
 like, taken from what the Win32 code did. Three items in it are DECISIONS rather
 than checks and are marked as such:
 
-* the per-line resend buttons (Alt+1..Alt+0) **now work**; in the Win32 version
+- [ ] the per-line resend buttons (Alt+1..Alt+0) **now work**; in the Win32 version
   they never did, because they were created with the wrong control id. Wiring
   them was a judgement call and is one line to undo;
-* the receive window's **OK button is gone** -- it did nothing, and its handler
+- [ ] the receive window's **OK button is gone** -- it did nothing, and its handler
   still carries an N4AF 04.32.3 note beside the commented-out save;
-* the Cabrillo **transmitter id** diverges from the specification in two ways
+- [ ] the Cabrillo **transmitter id** diverges from the specification in two ways
   and has NOT been touched. See Part 4 of the handoff.
 
 Nothing here blocks anything else. It is on this list so it does not quietly
@@ -2526,10 +2558,10 @@ carried a `TS530` the enum never had, so from that point on it was off by one:
 **Existing configs will behave differently after upgrading**, and for these four
 that means correctly rather than as before. Two things follow:
 
-* somebody with a TS-440/450/480 should confirm on hardware that the *correct*
+- [ ] somebody with a TS-440/450/480 should confirm on hardware that the *correct*
   driver actually works -- they have been running the neighbouring one, possibly
   for years, and nobody has exercised the right one;
-* `TS530` was never a real TR4W model. Anyone whose config says that was getting
+- [ ] `TS530` was never a real TR4W model. Anyone whose config says that was getting
   a TS-480 driver by accident and will now get no radio at all. If that spelling
   should keep working it needs a deliberate `MarkConfigToken` alias -- ask before
   adding one, because preserving it means preserving a bug.
@@ -4763,7 +4795,7 @@ ANSWERS; they cannot press a key.
 
 ## Decisions owed from NY4I -- contest factory
 
-- **Eleven flagged parties have no established county limit** and are left
+- [ ] **Eleven flagged parties have no established county limit** and are left
   unlimited (today's behaviour). 7QP is known to be 4 on NY4I's geometric
   argument -- four counties is the most that can meet at a point with
   right-angle borders. 7QP has a class now (`uContestSevenQP`), and it states
@@ -4773,11 +4805,11 @@ ANSWERS; they cannot press a key.
 
 ## Known and accepted — no action, listed so they are not re-reported
 
-- **CW-by-CAT keys one character per `KY` command** when typing into the
+- [ ] **CW-by-CAT keys one character per `KY` command** when typing into the
   send-from-keyboard box (Ctrl+A) or during autosend. Staccato, inherent, and
   better than D7 (which sent nothing until Enter). Full explanation and three
   untried directions in `CW_Keyer_Factory_Plan.md`.
-- **Preferences collapses the Hardware branch** after visiting another section.
+- [ ] **Preferences collapses the Hardware branch** after visiting another section.
   That is the one-branch-at-a-time rule working. The pane arithmetic behind it
   was recounted 2026-08-18 and two branches now overflow; NY4I is rearranging the
   sections first, then it gets revisited.
@@ -4986,3 +5018,10 @@ service `TR4W/v1`, account the setting's path UPPER-CASED, label
   unlock. Cancel: tr4w.log has `[Keychain] ... is locked` and
   `macOS keychain status -128` (or -25308); nothing is stored.
 - [ ] **Clear removes it** from Keychain Access.
+
+## Restart audit fixes (2026-11-01)
+
+- [ ] **WSJT-X BROADCAST PORT.** Set it to something other than 2237 (say 2345), restart, enable WSJT-X, point WSJT-X at that port: decodes arrive. Default 2237 still works.
+- [ ] **BAND MAP SIZE / ITEM HEIGHT / ITEM WIDTH apply on Save, no restart.** With the band map open, change each in Preferences and Save: the spot text size (Size 0..8 = 10+n pixel cells, main-window face and bold) and the row/column geometry change at once. Check the text still fits the default row height at Size 8 (raise ITEM HEIGHT if not).
+- [ ] **Preferences > Appearance** no longer has "Color the dupe sheet columns" (retired; nothing read it); an old config line naming it is ignored quietly.
+- [ ] **Restart notes read true.** HamLib, WSJT-X, External Logger, Online scoring and Appearance pages: the sentence under each names only what really waits for a restart.

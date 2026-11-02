@@ -735,9 +735,11 @@ begin
   // rsTrue causes TIdSocketHandle.Bind to call SetSockOpt(SO_REUSEADDR, True),
   // allowing JT-Alert (and other tools) to bind the same port simultaneously.
   udpServ.ReuseSocket := rsTrue;
+  (* The port is the WSJT-X BROADCAST PORT setting (default 2237). It was
+     hard-coded, so the setting saved and nothing read it. *)
   if FUDPPort = 0 then
      begin
-     FUDPPort := 2237;
+     FUDPPort := Settings.Wsjtx.BroadcastPort;
      end;
 
   if FTCPPort = 0 then

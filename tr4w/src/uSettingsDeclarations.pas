@@ -817,19 +817,21 @@ begin
    // --- Band Map (5) ---------------------------------
    (* BAND MAP CUTOFF FREQUENCY accumulates the same way.
      TryApplyCommandAction. *)
-   (* MOVED TO uSettingsModel 2026-09-11, and they keep crJ:1's meaning --
-     NeedsRestart -- explicitly, because for these three it is true: the band
-     map grid's geometry is computed once in LayOutGrid.
+   (* MOVED TO uSettingsModel 2026-09-11. They were flagged NeedsRestart on
+     the belief that the grid geometry is computed once; it is not --
+     LayOutGrid runs on every RebuildSnapshot, which the BandMap group's
+     effect (BandMapRefresh) triggers -- so the flag is gone and the three
+     apply on Save.
 
      Their ranges moved with them, from crMin/crMax into SUBRANGE TYPES on the
      properties, so TrySetByCommand still refuses 51 for an item height
      without being told which setting that is. *)
    RegisterModelSetting('bandmap.ctrlj.bandMapItemHeight',   'BAND MAP ITEM HEIGHT',
-                        RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT, True);
+                        RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT);
    RegisterModelSetting('bandmap.ctrlj.bandMapItemWidth',    'BAND MAP ITEM WIDTH',
-                        RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH, True);
+                        RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH);
    RegisterModelSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
-                        RS_BANDMAP_CTRLJ_BANDMAPSIZE, True);
+                        RS_BANDMAP_CTRLJ_BANDMAPSIZE);
    RegisterModelSetting( 'bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
                           RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE);
 

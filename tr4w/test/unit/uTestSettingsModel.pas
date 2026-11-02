@@ -374,10 +374,14 @@ begin
       (* AND THE GROUPING IS CONSTRAINED BY THESE NAMES, which is the thing to
         know before adding a setting.  The property PATH derives the command,
         so SpotCollector.Enabled is not a free choice of grouping -- it is what
-        yields the name an existing config file already uses.  Radio.TcpServerPort
-        likewise, and note it is the server TR4W RUNS, not a radio port. *)
+        yields the name an existing config file already uses.
+
+        RADIO TCP SERVER PORT is NOT owned any more (2026-11-01): the
+        Radio.TcpServerPort property went, because nothing read it, and the
+        name is retired instead. *)
       CheckTrue(s.OwnsCommand('SPOT COLLECTOR ENABLED'), 'the DXLab bridge');
-      CheckTrue(s.OwnsCommand('RADIO TCP SERVER PORT'),  'the radio TCP server');
+      CheckFalse(s.OwnsCommand('RADIO TCP SERVER PORT'), 'the radio TCP server is retired');
+      CheckTrue(CommandIsRetired('RADIO TCP SERVER PORT'), 'and its name is withdrawn');
       CheckTrue(s.OwnsCommand('YCCC SO2R ENABLE'), 'the YCCC SO2R+ box');
       CheckTrue(s.OwnsCommand('MMTTY ENGINE'),     'the RTTY engine path');
 
@@ -415,7 +419,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(298, names.Count,
+         CheckEquals(297, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -441,8 +445,10 @@ begin
                      + ' connect to the multi-op server at startup (new, no'
                      + ' CFGCA row), 2026-10-27; 295 with NETWORK SHARE'
                      + ' SPOTS, whether DX spots are shared around the'
-                     + ' multi-op network (new, no CFGCA row), 2026-10-29; '
-                     + '298 with WRL API KEY, ACCOUNT ID and LOGBOOK ID');
+                     + ' multi-op network (new, no CFGCA row), 2026-10-29;'
+                     + ' 298 with WRL API KEY, ACCOUNT ID and LOGBOOK ID;'
+                     + ' 297 since RADIO TCP SERVER PORT was retired --'
+                     + ' nothing read it -- 2026-11-01');
       finally
          names.Free;
       end;
@@ -726,6 +732,10 @@ begin
    CheckTrue(CommandIsRetired('MULTI PORT'), 'MULTI PORT');
    CheckTrue(CommandIsRetired('MOUSE ENABLE'), 'MOUSE ENABLE');
    CheckTrue(CommandIsRetired('DUPE SHEET ENABLE'), 'DUPE SHEET ENABLE');
+   (* Withdrawn 2026-11-01 (NY4I). D7 gave it a real crAddress, so the
+     crAddress-nil test below does not describe it: it is retired because
+     nothing read the value, there or here. *)
+   CheckTrue(CommandIsRetired('RADIO TCP SERVER PORT'), 'RADIO TCP SERVER PORT');
 
    (* NOT K1EA NETWORK ENABLE, and the first draft of this test asserted that
      it was -- which is the distinction worth keeping.
@@ -778,8 +788,9 @@ begin
      `crAddress: nil` means it was already obsolete there. Of the 93, 49 were
      nil, 41 had a real target, and 3 had no row at all. *)
    (* 95 SINCE M10 S2 (2026-10-14): the seven contest-rule settings joined
-     the list. *)
-   CheckTrue(RetiredCommandCount >= 95, 'the retired list has not shrunk');
+     the list. 97 since 2026-11-01: COLUMN DUPESHEET COLOR and RADIO TCP
+     SERVER PORT. *)
+   CheckTrue(RetiredCommandCount >= 97, 'the retired list has not shrunk');
 end;
 
 (* ---------------------------------------------------------------------
@@ -866,6 +877,8 @@ begin
                  'nor the same name in another case');
       CheckTrue(RetiredCommandFirstSighting('DX MULTIPLIER'),
                 'another withdrawn name has its own first sighting');
+      CheckTrue(RetiredCommandFirstSighting('COLUMN DUPESHEET COLOR'),
+                'COLUMN DUPESHEET COLOR is withdrawn: nothing read it');
       CheckFalse(RetiredCommandFirstSighting('QSO POINTS DOMESTIC CW'),
                  'a live setting is never a sighting');
       CheckFalse(RetiredCommandFirstSighting(''),
@@ -1157,8 +1170,8 @@ begin
 
      uPrefsForm has seven HAND-WIRED controls that reach their setting by
      command NAME rather than through the settings registry -- external
-     logger address, enabled and port; MMTTY engine; radio TCP server port;
-     spot collector enabled; YCCC SO2R enable.  They READ with
+     logger address, enabled and port; MMTTY engine; radio TCP server port
+     (retired 2026-11-01); spot collector enabled; YCCC SO2R enable.  They READ with
      CFGCommandValueAsString and WRITE with SetCFGCommandValue.
 
      Every one of those settings had moved to uSettingsModel.  CheckCommand
@@ -1708,7 +1721,6 @@ const
       + '"QUICK QSL SSB MESSAGE",'
       + '"QZB RANDOM OFFSET ENABLE",'
       + '"R150S MODE",'
-      + '"RADIO TCP SERVER PORT",'
       + '"RADIUS OF EARTH",'
       + '"RANDOM CQ MODE",'
       + '"RATE DISPLAY",'

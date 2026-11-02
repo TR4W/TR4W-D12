@@ -277,6 +277,13 @@ begin
      arrive -- TR4WSettings.FromJSON clamps every bounded property to its own
      range, once, for all of them. *)
 
+   (* BAND MAP SIZE is the spot text size. The Win32 list box drew in a font
+     built at 12 + BAND MAP SIZE - 2; that font was deleted in the LCL
+     conversion and the setting stopped doing anything. The main window's
+     face and weight, at the old height, restore it. *)
+   ApplyMainFontTo(grdSpots.Font);
+   grdSpots.Font.Height := 10 + Settings.BandMap.Size;
+
    grdSpots.DefaultRowHeight := Settings.BandMap.ItemHeight;
    grdSpots.DefaultColWidth  := Settings.BandMap.ItemWidth;
 

@@ -1178,17 +1178,13 @@ type
       property Enabled: boolean read FEnabled write FEnabled;
    end;
 
-   (* THE TCP SERVER TR4W RUNS FOR RADIO CLIENTS -- not a radio's own port.
-     Radio.TcpServerPort derives 'RADIO TCP SERVER PORT', which is the command
-     an existing config file uses. *)
-   TRadioServerSettings = class(TSettingsGroup)
-   private
-      FTcpServerPort: integer;
-   public
-      constructor Create;
-   published
-      property TcpServerPort: integer read FTcpServerPort write FTcpServerPort;
-   end;
+   (* RADIO TCP SERVER PORT WAS HERE, as Radio.TcpServerPort, until
+     2026-11-01 (NY4I). It named a TCP server TR4W would run for radio
+     clients, and nothing read it -- not in this tree, and not in D7, where it
+     was a CFGCA row and a typed constant with no reader. A radio's OWN network
+     port is per radio, TRadioDefinition.TCPPort in uRadioConfigStore. The name
+     is in uCFG.RETIRED_COMMANDS; an old settings file's Radio member is
+     ignored by the de-streamer and dropped by the next save. *)
 
    (* THE YCCC SO2R+ BOX.  Yccc.So2rEnable derives 'YCCC SO2R ENABLE'. *)
    TYcccSettings = class(TSettingsGroup)
@@ -3651,7 +3647,6 @@ type
       FOnChanged: TSettingChanged;
       FExternalLogger: TExternalLoggerSettings;
       FSpotCollector: TSpotCollectorSettings;
-      FRadio: TRadioServerSettings;
       FYccc: TYcccSettings;
       FMmtty: TMmttySettings;
       FBandMap: TBandMapSettings;
@@ -3952,7 +3947,6 @@ type
    published
       property ExternalLogger: TExternalLoggerSettings read FExternalLogger;
       property SpotCollector: TSpotCollectorSettings read FSpotCollector;
-      property Radio: TRadioServerSettings read FRadio;
       property Yccc: TYcccSettings read FYccc;
       property Mmtty: TMmttySettings read FMmtty;
       property BandMap: TBandMapSettings read FBandMap;
@@ -4769,13 +4763,6 @@ begin
 end;
 
 { TR4WSettings }
-
-constructor TRadioServerSettings.Create;
-begin
-   inherited Create;
-   // The value logstuff.pas's typed constant carried.
-   FTcpServerPort := 52002;
-end;
 
 procedure TScpSettings.SetCountryString(const aValue: string);
 var
@@ -5710,7 +5697,6 @@ begin
    inherited Create;
    FExternalLogger := TExternalLoggerSettings.Create;
    FSpotCollector  := TSpotCollectorSettings.Create;
-   FRadio          := TRadioServerSettings.Create;
    FYccc           := TYcccSettings.Create;
    FMmtty          := TMmttySettings.Create;
    FBandMap        := TBandMapSettings.Create;
@@ -5835,7 +5821,6 @@ begin
    FBandMap.Free;
    FMmtty.Free;
    FYccc.Free;
-   FRadio.Free;
    FSpotCollector.Free;
    FExternalLogger.Free;
    inherited Destroy;

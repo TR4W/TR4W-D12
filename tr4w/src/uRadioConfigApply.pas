@@ -398,7 +398,7 @@ const
      RECEIVED, INITIAL EXCHANGE and the four multipliers, now in
      uCFG.RETIRED_COMMANDS. Seeding a retired name would put a value into the
      bucket that nothing applies. *)
-   MIGRATED_COMMANDS: array[0..241] of string =
+   MIGRATED_COMMANDS: array[0..240] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
@@ -472,7 +472,6 @@ const
       'FONT SIZE',
       'MAIN FONT',
       'MMTTY ENGINE',
-      'RADIO TCP SERVER PORT',
       'SCP COUNTRY STRING',
       'SCP MINIMUM LETTERS',
       'SERVER ADDRESS',

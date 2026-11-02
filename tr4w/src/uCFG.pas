@@ -831,11 +831,15 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..94] of string = (
+   RETIRED_COMMANDS: array[0..96] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
       'CALL WINDOW POSITION',
+      (* Retired 2026-11-01: the D7 CFGCA row was already commented out, no
+        setting owned it and nothing read the flag. The Preferences check box
+        saved a value that went nowhere. *)
+      'COLUMN DUPESHEET COLOR',
       'COLUMN DUPESHEET ENABLE',
       'CURTIS KEYER MODE',
       'CUSTOM CARET',
@@ -902,6 +906,11 @@ const
       'RADIO ONE ID CHARACTER',
       'RADIO ONE TRACKING ENABLE',
       'RADIO ONE UPDATE SECONDS',
+      (* Retired 2026-11-01 (NY4I): a TCP server TR4W would run for radio
+        clients. Nothing read it, here or in D7, where the CFGCA row and the
+        typed constant had no reader. A radio's own network port is per radio,
+        in the radio library. *)
+      'RADIO TCP SERVER PORT',
       'RADIO TWO COMMAND PAUSE',
       'RADIO TWO ICOM NETWORK PASSWORD',
       'RADIO TWO ICOM NETWORK USERNAME',

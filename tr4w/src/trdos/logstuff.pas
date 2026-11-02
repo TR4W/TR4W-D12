@@ -376,7 +376,6 @@ var
   CallsignIsTypedByOperator: boolean;
 
   CallsignICameBackTo: CallString;
-  ColumnDupeSheetColor: boolean;
   ColumnDupeSheetEnable: boolean = False;
   ControlBreakStatus: boolean;
 
@@ -485,8 +484,10 @@ var
 
 
   QuickQSL: QuickQSLKeyType; { to indicate a quick QSL is desired }
-  (* RadioServerTCPPort MOVED, 2026-09-10 -- Settings.Radio.TcpServerPort in
-    uSettingsModel.  Its default moved into that class's constructor. *)
+  (* RadioServerTCPPort is GONE (2026-11-01): it moved to the settings
+    object in September, nothing ever read it, and RADIO TCP SERVER PORT is
+    now a retired name in uCFG.RETIRED_COMMANDS.  A radio's own network port
+    lives in its radio definition (uRadioConfigStore). *)
   // Commander Interface (inbound for WSJT-X)
 
   RadioSetFreq: LONGINT;

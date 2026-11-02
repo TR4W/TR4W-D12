@@ -49,6 +49,8 @@ type
       procedure Test_TheCommandPathClearsTheComputerId;
       procedure Test_AFileWithTheOldMp3SectionStillLoads;
       procedure Test_TheMp3CommandsAreRetired;
+      procedure Test_AFileWithTheOldRadioSectionStillLoads;
+      procedure Test_TheRadioTcpServerPortIsRetired;
       procedure Test_BuildingTheSettingsObjectDoesNotLeak;
    public
       procedure RunAllTests; override;
@@ -434,6 +436,56 @@ begin
 end;
 
 (* ---------------------------------------------------------------------
+  RADIO TCP SERVER PORT IS RETIRED (2026-11-01, NY4I).
+
+  Settings.Radio.TcpServerPort named a TCP server TR4W would run for radio
+  clients, and nothing read it -- here or in D7. The whole Radio group went
+  with it, so a file written before today carries a "Radio" object that no
+  property owns. Same shape as the Mp3 pair above.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsFreshInstallTests.Test_AFileWithTheOldRadioSectionStillLoads;
+var
+   s: TR4WSettings;
+   obj: TJSONObject;
+   written: TJSONObject;
+begin
+   BeginTest('a tr4w.json that still carries "Radio" loads, and is not re-written with it');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      obj := ParseObject('{"Radio":{"TcpServerPort":52002},"Computer":{"Id":"H"}}');
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(s.Computer.Id = 'H', 'the rest of the section loaded');
+
+      written := s.ToJSON;
+      try
+         CheckTrue(written.FindPath('Radio') = nil, 'the retired group is not written');
+      finally
+         written.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsFreshInstallTests.Test_TheRadioTcpServerPortIsRetired;
+begin
+   BeginTest('RADIO TCP SERVER PORT is withdrawn: accepted, and owned by nothing');
+   CheckTrue(CommandIsRetired('RADIO TCP SERVER PORT'), 'RADIO TCP SERVER PORT');
+   CheckFalse(Settings.OwnsCommand('RADIO TCP SERVER PORT'), 'no property answers to it');
+   (* ACCEPTED, so an old .cfg or a peer naming it does not raise LogCfg's
+     modal "invalid statement in config file". *)
+   CheckTrue(CheckCommand('RADIO TCP SERVER PORT', '52002', False),
+             'an old line is accepted');
+end;
+
+(* ---------------------------------------------------------------------
   THE SETTINGS OBJECT FREES WHAT IT BUILDS.
   --------------------------------------------------------------------- *)
 
@@ -478,6 +530,8 @@ begin
    Test_TheCommandPathClearsTheComputerId;
    Test_AFileWithTheOldMp3SectionStillLoads;
    Test_TheMp3CommandsAreRetired;
+   Test_AFileWithTheOldRadioSectionStillLoads;
+   Test_TheRadioTcpServerPortIsRetired;
    Test_BuildingTheSettingsObjectDoesNotLeak;
 end;
 

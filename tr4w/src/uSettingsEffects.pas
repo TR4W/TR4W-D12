@@ -214,7 +214,7 @@ const
 
      EXACT PATHS AND NOT THE GROUP, because the group's five settings do
      three different things and two of them do nothing at all: the
-     broadcast port is read when the server starts, and matching the
+     broadcast port is read when the server is created, and matching the
      prefix would restart the listener every time one was assigned --
      which a settings LOAD does, five times in a row.
 

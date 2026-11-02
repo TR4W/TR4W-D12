@@ -66,6 +66,7 @@ type
       procedure Test_TheKindsShareOneQueueInArrivalOrder;
       procedure Test_AQueuedMessageIsDroppedOnceTheServerIsFreed;
       procedure Test_StopLogsAQueuedQSOInsteadOfDroppingIt;
+      procedure Test_TheServerListensOnTheBroadcastPortSetting;
    public
       procedure RunAllTests; override;
    end;
@@ -74,6 +75,7 @@ implementation
 
 uses
    SysUtils, Classes, Forms,
+   uSettingsModel,   (* Settings.Wsjtx.BroadcastPort *)
    uCrashLog,   (* InstallCrashLog -- records the MAIN THREAD, without which
                   OnMainThread is False everywhere *)
    uWSJTX;
@@ -363,6 +365,30 @@ begin
    Test_TheKindsShareOneQueueInArrivalOrder;
    Test_AQueuedMessageIsDroppedOnceTheServerIsFreed;
    Test_StopLogsAQueuedQSOInsteadOfDroppingIt;
+   Test_TheServerListensOnTheBroadcastPortSetting;
+end;
+
+(* WSJT-X BROADCAST PORT was saved and never read: the server always bound
+  2237 whatever the operator had set. *)
+procedure TWSJTXThreadingTests.Test_TheServerListensOnTheBroadcastPortSetting;
+var
+   server: TWSJTXServer;
+   saved: integer;
+begin
+   BeginTest('the server is created on the WSJT-X BROADCAST PORT setting');
+   InstallCrashLog;
+   saved := Settings.Wsjtx.BroadcastPort;
+   try
+      Settings.Wsjtx.BroadcastPort := 2345;
+      server := TWSJTXServer.Create;
+      try
+         CheckEquals(2345, server.UDPPort, 'the configured port, not 2237');
+      finally
+         server.Free;
+      end;
+   finally
+      Settings.Wsjtx.BroadcastPort := saved;
+   end;
 end;
 
 end.

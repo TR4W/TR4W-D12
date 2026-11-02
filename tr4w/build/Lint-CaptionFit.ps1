@@ -79,7 +79,7 @@
 [CmdletBinding()]
 param(
    [string] $SourceDir,
-   [int]    $Ceiling = 159,
+   [int]    $Ceiling = 156,
    [switch] $SelfTest
 )
 

@@ -381,9 +381,6 @@ type
       lblNetComputerID: TLabel;
       lblNetComputerIDHint: TLabel;
       lblNetHint: TLabel;
-      lblRadioTCPHeading: TLabel;
-      lblRadioTCPPort: TLabel;
-      lblRadioTCPHint: TLabel;
       lblAppearHeading: TLabel;
       lblMainFont: TLabel;
       lblFontSize: TLabel;
@@ -400,14 +397,12 @@ type
       edtNetPort: TEdit;
       edtNetPassword: TEdit;
       edtNetComputerID: TEdit;
-      edtRadioTCPPort: TEdit;
       edtMainFont: TEdit;
       edtFontSize: TEdit;
       edtBackupEvery: TEdit;
       edtBackupFile: TEdit;
       chkNetAutoSync: TCheckBox;
       chkBoldFont: TCheckBox;
-      chkDupeSheetColor: TCheckBox;
       btnBrowseBackup: TButton;
 
       // --- Operating leaves, CW sending, and the DX cluster additions ---------
@@ -3895,7 +3890,6 @@ begin
 
    // --- layAppearance ---
    AddHandWiredToSearchIndex(aN, 'BOLD FONT',                         chkBoldFont);
-   AddHandWiredToSearchIndex(aN, 'COLUMN DUPESHEET COLOR',            chkDupeSheetColor);
    AddHandWiredToSearchIndex(aN, 'FONT SIZE',                         edtFontSize);
    AddHandWiredToSearchIndex(aN, 'MAIN FONT',                         edtMainFont);
 
@@ -3932,7 +3926,6 @@ begin
    AddHandWiredToSearchIndex(aN, 'COMPUTER ID',                       edtNetComputerID);
    AddHandWiredToSearchIndex(aN, 'SERVER PASSWORD',                   edtNetPassword);
    AddHandWiredToSearchIndex(aN, 'SERVER PORT',                       edtNetPort);
-   AddHandWiredToSearchIndex(aN, 'RADIO TCP SERVER PORT',             edtRadioTCPPort);
 
    // --- laySCP ---
    AddHandWiredToSearchIndex(aN, 'SCP MINIMUM LETTERS',               cbxSCPMinLetters);
@@ -6514,13 +6507,10 @@ begin
    edtNetComputerID.Text := FStore.CommandValue('COMPUTER ID',
                                CFGCommandValueAsString('COMPUTER ID'));
    chkNetAutoSync.Checked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
-   edtRadioTCPPort.Text  := FStore.CommandValue('RADIO TCP SERVER PORT',
-                               CFGCommandValueAsString('RADIO TCP SERVER PORT'));
 
    edtMainFont.Text := CommandText('MAIN FONT');
    edtFontSize.Text := CommandText('FONT SIZE');
    chkBoldFont.Checked       := CommandBool('BOLD FONT');
-   chkDupeSheetColor.Checked := CommandBool('COLUMN DUPESHEET COLOR');
 
    edtBackupEvery.Text := FStore.CommandValue('BACKUP LOG FREQUENCY',
                              CFGCommandValueAsString('BACKUP LOG FREQUENCY'));
@@ -6548,12 +6538,10 @@ begin
    ApplyIfChanged('SERVER PASSWORD', edtNetPassword.Text);
    ApplyIfChanged('COMPUTER ID',     Trim(edtNetComputerID.Text));
    SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.Checked);
-   ApplyIfChanged('RADIO TCP SERVER PORT', Trim(edtRadioTCPPort.Text));
 
    ApplyIfChanged('MAIN FONT', Trim(edtMainFont.Text));
    ApplyIfChanged('FONT SIZE', Trim(edtFontSize.Text));
    SetCommandBool('BOLD FONT',              chkBoldFont.Checked);
-   SetCommandBool('COLUMN DUPESHEET COLOR', chkDupeSheetColor.Checked);
 
    ApplyIfChanged('BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
    (* A CHANGED FOLDER IS PROBED AT ONCE, off this thread: the property's

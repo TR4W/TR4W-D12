@@ -57,9 +57,9 @@ unit uSettingsModelBinding;
                     assigning a global that nothing re-read -- a setter
                     applies the value and raises its side effect on the spot.
                     It is not universal, though, and pretending otherwise
-                    would be a lie the UI repeats to the operator: the band
-                    map's item geometry is computed once in LayOutGrid, so
-                    BAND MAP ITEM HEIGHT really does wait for a restart.
+                    would be a lie the UI repeats to the operator: a setting
+                    read once while an object is built (the language, the
+                    sockets) really does wait for a restart.
 
     ReadOnly        FALSE, AND THE CALLER SETS IT OTHERWISE.  crJ 2 and 3
                     marked rows that were displayed but not editable, and
@@ -149,8 +149,8 @@ begin
    (* USUALLY False -- a setter applies the value and raises its side effect
      on the spot, and needing a restart was a property of assigning a global
      that nothing re-read.  It is a parameter because that is not universal:
-     the band map's item geometry is computed once when the grid is laid out,
-     so changing it really does wait for a restart. *)
+     a setting read once while an object is built (the language, the
+     multi-operator and logging sockets) really does wait for a restart. *)
    NeedsRestart   := aNeedsRestart;
    ReadOnly       := False;
    HasSideEffects := True;

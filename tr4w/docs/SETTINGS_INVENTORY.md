@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (284)
+## Settings that have moved (286)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -135,8 +135,11 @@ comes last, a word run together.
 | `ESCAPE EXITS SEARCH AND POUNCE` |  | global | `Settings.Cq.EscapeExitsSearchAndPounce` | boolean |  |
 | `EXCHANGE MEMORY ENABLE` |  | **CONTEST** | `Settings.Contest.ExchangeMemoryEnable` | boolean |  |
 | `EXTERNAL LOGGER` |  | global | `Settings.ExternalLogger.LoggerType` | string |  |
+| `EXTERNAL LOGGER ACCOUNT ID` |  | global | `Settings.ExternalLogger.AccountId` | string |  |
 | `EXTERNAL LOGGER ADDRESS` |  | global | `Settings.ExternalLogger.Address` | string |  |
+| `EXTERNAL LOGGER API KEY` |  | global | `Settings.ExternalLogger.ApiKey` | TSecretText |  |
 | `EXTERNAL LOGGER ENABLED` |  | global | `Settings.ExternalLogger.Enabled` | boolean |  |
+| `EXTERNAL LOGGER LOGBOOK ID` |  | global | `Settings.ExternalLogger.LogbookId` | string |  |
 | `EXTERNAL LOGGER PORT` |  | global | `Settings.ExternalLogger.Port` | integer |  |
 | `FARNSWORTH ENABLE` |  | global | `Settings.Cw.FarnsworthEnable` | boolean |  |
 | `FARNSWORTH SPEED` |  | global | `Settings.Cw.FarnsworthSpeed` | TCwFarnsworthSpeed |  |
@@ -254,7 +257,6 @@ comes last, a word run together.
 | `QUICK QSL SSB MESSAGE` |  | **CONTEST** | `Settings.Messages.QuickQslSsb` | string |  |
 | `QZB RANDOM OFFSET ENABLE` |  | global | `Settings.Qzb.RandomOffsetEnable` | boolean |  |
 | `R150S MODE` |  | **CONTEST** | `Settings.Contest.R150SMode` | boolean |  |
-| `RADIO TCP SERVER PORT` |  | global | `Settings.Radio.TcpServerPort` | integer |  |
 | `RADIUS OF EARTH` |  | global | `Settings.GridMap.RadiusOfEarth` | double |  |
 | `RANDOM CQ MODE` |  | global | `Settings.Cq.RandomMode` | boolean |  |
 | `RATE DISPLAY` |  | global | `Settings.MainWindow.RateDisplay` | RateDisplayType |  |
@@ -349,7 +351,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-295 command names.
+297 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 
