@@ -3696,6 +3696,7 @@ msgid "Chapter"
 msgstr "Hoofdstuk"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Controleren"
@@ -4304,11 +4305,13 @@ msgid "Commands"
 msgstr "Commando's"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Verbinden"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Verbinding verbreken"
@@ -8271,6 +8274,7 @@ msgstr "Dit profiel opslaan en activeren"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Wedstrijd"
@@ -8310,10 +8314,13 @@ msgstr "Een bestaande configuratie openen"
 msgid "Start a new contest"
 msgstr "Een nieuwe wedstrijd starten"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output left the English; this catalogue's 'Contest' is 'Wedstrijd'. Machine output was: "CONTEST"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "CONTEST"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "CONTEST"
+msgstr "WEDSTRIJD"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -9621,11 +9628,6 @@ msgstr "Alles %d check(s) geslaagd."
 msgid "&Close"
 msgstr "&Sluiten"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Controleren"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9707,12 +9709,6 @@ msgstr "Standaard"
 msgid "Ignored, not a known QTH:"
 msgstr "Onbekend, geen bekend QTH:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output left the English; this catalogue's 'Contest' is 'Wedstrijd'. Machine output was: "CONTEST"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "WEDSTRIJD"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9771,11 +9767,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Roepnaam"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Wedstrijd"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9876,16 +9867,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

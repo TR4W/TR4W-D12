@@ -2190,6 +2190,7 @@ msgstr "Dom Mults"
 #. Section: UTOTAL
 #: tr4w/src/lang/tr4w_consts_eng.pas:414
 #: utr4wstrings.tc_qsos
+#: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
 msgstr "QSOs"
@@ -3017,10 +3018,12 @@ msgstr "Indicativo"
 msgid "Chapter"
 msgstr "Capítulo"
 
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmeditqso.lblcheck.caption said: "Cheque"
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
-msgstr "Cheque"
+msgstr "Verificar"
 
 #: tfrmeditqso.lblclass.caption
 #, fuzzy
@@ -3629,11 +3632,13 @@ msgid "Commands"
 msgstr "Comandos"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Conectar"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Desconectar"
@@ -7593,6 +7598,7 @@ msgstr "Salve e ative esse perfil"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Concurso"
@@ -7633,7 +7639,9 @@ msgid "Start a new contest"
 msgstr "Comece um novo concurso"
 
 # 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'CONTESTE' -> 'CONCURSO', p.2 'um concurso de radioamadorismo' (the bulletin also says 'conteste' twice, p.2 and p.13). Previous text: "CONTESTE"
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say CONTESTE (a form of 'to dispute'); this catalogue's 'Contest' is 'Concurso'. Machine output was: "CONTESTE"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "CONCURSO"
@@ -8954,11 +8962,6 @@ msgstr "Todos %d O cheque passou."
 msgid "&Close"
 msgstr "Fechar"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Verificar"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9040,12 +9043,6 @@ msgstr "Padrão"
 msgid "Ignored, not a known QTH:"
 msgstr "Ignorado, não um QTH conhecido:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say CONTESTE (a form of 'to dispute'); this catalogue's 'Contest' is 'Concurso'. Machine output was: "CONTESTE"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "CONCURSO"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9106,11 +9103,6 @@ msgstr "%0:s %1:d"
 msgid "Call"
 msgstr "Indicativo"
 
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Concurso"
-
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
 msgid "File"
@@ -9124,11 +9116,6 @@ msgstr "Ano"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
-
-#: uappstrings.snewcontestfilesqsos
-#, fuzzy
-msgid "QSOs"
 msgstr ""
 
 #: uappstrings.sbackupdestinationreachable
@@ -9210,16 +9197,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

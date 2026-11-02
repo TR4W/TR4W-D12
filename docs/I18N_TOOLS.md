@@ -182,6 +182,18 @@ writes unchanged entries from their own text, and
 write back byte-identical. Check `git diff --numstat i18n` after an `--apply`:
 an add-only merge is additions and no deletions.
 
+**A merge can still add a DUPLICATE (issue 153, 2026-11-02).** `po_merge` knows
+an entry by its identifiers, so a new resourcestring whose English is already a
+form caption (`uappstrings.snetmenuconnect` beside
+`tfrmtelnet.btnconnect.caption`, both `Connect`, both with no `msgctxt`) is added
+as a second entry with the same `(msgctxt, msgid)`. msgfmt rejects that, and
+Weblate shows the first copy but saves into the second. Appending a uAppStrings
+entry by hand does the same. After either, run
+`python tools\i18n\po_dedupe.py` (dry run, then `--apply`): it folds each pair
+into one entry carrying every `#:` identifier, keeps the copy with text, then
+the reviewed one, then the `uappstrings.` one, and quotes any text it drops in
+a dated `# ` comment. `test_po_dedupe.py` fails while any catalogue holds one.
+
 ---
 
 ## Put translations into the program
@@ -299,6 +311,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `po2pas.py` | `.po` → language tables; refuses anything still "Needs work" |
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |
 | `po_rekey.py` | adds the run-time identifier beside the `msgctxt` key |
+| `po_dedupe.py` | folds entries sharing `(msgctxt, msgid)` into one, keeping every identifier; never touches an entry with its own `msgctxt` |
+| `test_po_dedupe.py` | pins its tie-break and that no catalogue, help catalogue or `tr4w_laz.pot` holds a duplicate |
 | `po_prune.py` | marks entries obsolete when their key leaves the source. **Do not run it on the real catalogues (issue #144):** it knows only `TC_`/`RC_` keys, so it would obsolete 2,168 live `.lfm`/resourcestring entries, and `po_merge --apply` then deletes every `#~` block |
 | `ini2po.py` | help INIs → `help_*.po`: reads the inis, never writes them, and MERGES into every existing help catalogue (the `.po` is the master; `test_ini2po.py`). `--new-lang` creates one |
 | `test_ini2po.py` | pins that merge: nothing lost, fuzzy never cleared, reworded English handled |

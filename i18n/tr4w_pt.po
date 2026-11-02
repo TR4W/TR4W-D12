@@ -3714,6 +3714,7 @@ msgid "Chapter"
 msgstr "Capítulo"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Verificar"
@@ -4324,11 +4325,13 @@ msgid "Commands"
 msgstr "Comandos"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Ligar"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Desligar"
@@ -8313,6 +8316,7 @@ msgstr "Gravar e activar este perfil"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Concurso"
@@ -8352,10 +8356,13 @@ msgstr "Abrir uma configuração existente"
 msgid "Start a new contest"
 msgstr "Iniciar um novo concurso"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say CONTESTE (a form of 'to dispute'); this catalogue's 'Contest' is 'Concurso'. Machine output was: "CONTESTE"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "CONTESTE"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "CONTESTE"
+msgstr "CONCURSO"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -9670,11 +9677,6 @@ msgstr "Tudo %d verificação( s) aprovada( s)."
 msgid "&Close"
 msgstr "&Fechar"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Verificar"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9756,12 +9758,6 @@ msgstr "Padrão"
 msgid "Ignored, not a known QTH:"
 msgstr "Ignorado, nenhum QTH conhecido:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say CONTESTE (a form of 'to dispute'); this catalogue's 'Contest' is 'Concurso'. Machine output was: "CONTESTE"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "CONCURSO"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9820,11 +9816,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Indicativo"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Concurso"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9925,16 +9916,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

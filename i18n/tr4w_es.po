@@ -3076,6 +3076,7 @@ msgid "Chapter"
 msgstr "Capítulo"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Check"
@@ -3671,10 +3672,12 @@ msgid "Commands"
 msgstr "Comandos"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 msgid "Connect"
 msgstr "Conectar"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Desconectar"
@@ -7317,6 +7320,7 @@ msgstr "Guardar y activar este perfil"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Concurso"
@@ -7357,7 +7361,9 @@ msgid "Start a new contest"
 msgstr "Iniciar un nuevo concurso"
 
 # 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Spanish edition Boletim_CQWS_2026_espanhol.pdf: 'CONTEST' -> 'CONCURSO', p.2 'un concurso de radioaficionados'. Previous text: "CONTEST"
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output left the English; this catalogue's 'Contest' is 'Concurso'. Machine output was: "CONTEST"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "CONCURSO"
@@ -8676,11 +8682,6 @@ msgstr "Todos %d cheque(s) aprobado."
 msgid "&Close"
 msgstr "&Cerrar"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Check"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -8762,12 +8763,6 @@ msgstr "Estándar"
 msgid "Ignored, not a known QTH:"
 msgstr "Ignorado, no conocido QTH:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output left the English; this catalogue's 'Contest' is 'Concurso'. Machine output was: "CONTEST"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "CONCURSO"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -8826,11 +8821,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Indicativo"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Concurso"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -8931,16 +8921,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr "Conectar"
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

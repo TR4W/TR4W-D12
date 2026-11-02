@@ -3692,6 +3692,7 @@ msgid "Chapter"
 msgstr "Capitolo"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Check"
@@ -4301,11 +4302,13 @@ msgid "Commands"
 msgstr "Comandi"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Collegamento"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Scollegamento"
@@ -8290,6 +8293,7 @@ msgstr "Salvare e attivare questo profilo"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Concorso"
@@ -8330,10 +8334,13 @@ msgid "Start a new contest"
 msgstr "Avviare un nuovo concorso"
 
 # 2026-10-19: term from the EU DX Contest rules, Italian edition (EUDXCC, https://www.eudx-contest.com/regolamento/): 'CONTROLLO' -> 'CONTEST', s.2 'il contest si svolge' (controllo = check). Previous text: "CONTROLLO"
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say CONTROLLO (control), a mistranslation; this catalogue's 'Contest' is 'Concorso'. Machine output was: "CONTROLLO"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "CONTEST"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "CONTEST"
+msgstr "CONCORSO"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -9656,11 +9663,6 @@ msgstr "Tutti %d check(s) superato."
 msgid "&Close"
 msgstr "&Chiudi"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Check"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9742,12 +9744,6 @@ msgstr "Standard"
 msgid "Ignored, not a known QTH:"
 msgstr "Ignorato, non un noto QTH:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say CONTROLLO (control), a mistranslation; this catalogue's 'Contest' is 'Concorso'. Machine output was: "CONTROLLO"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "CONCORSO"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9806,11 +9802,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Nominativo"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Concorso"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9911,16 +9902,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

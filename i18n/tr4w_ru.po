@@ -3368,6 +3368,7 @@ msgid "Chapter"
 msgstr "Глава"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Проверить"
@@ -3962,11 +3963,13 @@ msgid "Commands"
 msgstr "Команды"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Соединение"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Отключение"
@@ -7839,6 +7842,7 @@ msgstr "Сохраните и активируйте этот профиль"
 # 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Конкурс' -> 'Контест', s.2 'Контест проводится' and the reviewed 'новый контест'. Previous text: "Конкурс"
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Контест"
@@ -7880,7 +7884,9 @@ msgstr "Откройте существующую конфигурацию"
 msgid "Start a new contest"
 msgstr "Начать новый контест"
 
+# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption. Machine output was: "Контест"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "КОНТЕСТ"
@@ -9226,11 +9232,6 @@ msgstr "Все %d Проверка(ы) прошла."
 msgid "&Close"
 msgstr "&Закрыть"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Проверить"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9314,12 +9315,6 @@ msgstr "Стандарт"
 msgid "Ignored, not a known QTH:"
 msgstr "Игнорированный, не известный QTH:"
 
-# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption. Machine output was: "Контест"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "КОНТЕСТ"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9383,11 +9378,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Позывной"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Контест"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9488,16 +9478,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

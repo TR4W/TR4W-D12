@@ -3341,6 +3341,7 @@ msgid "Chapter"
 msgstr "Kapitola"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Kontrola"
@@ -3930,11 +3931,13 @@ msgid "Commands"
 msgstr "Příkazy"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Spojit"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Odpojit"
@@ -7777,6 +7780,7 @@ msgstr "Uložit a aktivovat tento profil"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Soutěž"
@@ -7816,7 +7820,9 @@ msgstr "Otevřít existující konfiguraci"
 msgid "Start a new contest"
 msgstr "Zahájit novou soutěž"
 
+# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "KONTEST"
@@ -9127,11 +9133,6 @@ msgstr "Všechny %d kontrola prošla."
 msgid "&Close"
 msgstr "&Zavřít"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Kontrola"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9213,12 +9214,6 @@ msgstr "Standardní"
 msgid "Ignored, not a known QTH:"
 msgstr "Ignorovaný, žádný známý QTH:"
 
-# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "KONTEST"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9277,11 +9272,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Značka"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Soutěž"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9382,16 +9372,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

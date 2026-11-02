@@ -3064,6 +3064,7 @@ msgid "Chapter"
 msgstr "Головна"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Зареєструватися"
@@ -3656,11 +3657,13 @@ msgid "Commands"
 msgstr "Команди"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Зв'язатися"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Відключення"
@@ -7323,11 +7326,13 @@ msgstr "ЗАМОВИТИ"
 msgid "Save and activate this profile"
 msgstr "Заощаджуйте та активуйте цей профіль"
 
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for ulclformhelpers.tc_prefs_contest usettingscaptions.rs_contest_contest said: "Конкурси"
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
-msgstr "Конкурси"
+msgstr "Конкурс"
 
 #: ulclformhelpers.tc_prefs_cw
 #, fuzzy
@@ -7364,10 +7369,13 @@ msgstr "Відкрийте існуючу конфігурацію"
 msgid "Start a new contest"
 msgstr "Почати новий конкурс"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say КОНТАКТИ (contacts), a mistranslation; this catalogue's 'Contest' is 'Конкурси' (plural). Machine output was: "КОНТАКТИ"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "КОНТАКТИ"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "КОНТАКТИ"
+msgstr "КОНКУРС"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -8667,11 +8675,6 @@ msgstr "Всі %d перевірте(и) пропущено."
 msgid "&Close"
 msgstr "&Закрити"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Зареєструватися"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -8753,12 +8756,6 @@ msgstr "Стандарти"
 msgid "Ignored, not a known QTH:"
 msgstr "Невідомий QTH:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say КОНТАКТИ (contacts), a mistranslation; this catalogue's 'Contest' is 'Конкурси' (plural). Machine output was: "КОНТАКТИ"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "КОНКУРС"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -8817,11 +8814,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "Позивний"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Конкурс"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -8922,16 +8914,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

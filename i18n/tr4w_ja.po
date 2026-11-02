@@ -3710,6 +3710,7 @@ msgid "Chapter"
 msgstr "トピックス"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "チェックイン"
@@ -4321,11 +4322,13 @@ msgid "Commands"
 msgstr "コマンド"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "ログイン"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "接続解除"
@@ -8297,6 +8300,7 @@ msgstr "このプロファイルを保存して有効化"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "コンテスト"
@@ -8336,7 +8340,9 @@ msgstr "既存の設定を開く"
 msgid "Start a new contest"
 msgstr "新たなコンテストを始める"
 
+# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "コンテスト"
@@ -9656,11 +9662,6 @@ msgstr "すべて %d チェックイン"
 msgid "&Close"
 msgstr "閉じる(&C)"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "チェックイン"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9742,12 +9743,6 @@ msgstr "スタンダード"
 msgid "Ignored, not a known QTH:"
 msgstr "知られた QTH ではなく無視される:"
 
-# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "コンテスト"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9807,11 +9802,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "コールサイン"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "コンテスト"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9912,16 +9902,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

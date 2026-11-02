@@ -2168,6 +2168,7 @@ msgstr "Dom Mults"
 #. Section: UTOTAL
 #: tr4w/src/lang/tr4w_consts_eng.pas:414
 #: utr4wstrings.tc_qsos
+#: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
 msgstr "QSO"
@@ -2989,6 +2990,7 @@ msgid "Chapter"
 msgstr "Kapitel"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Tjek"
@@ -3597,11 +3599,13 @@ msgid "Commands"
 msgstr "Kommandoer"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Forbind"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Afbryd forbindelse"
@@ -7536,11 +7540,13 @@ msgstr "QTH"
 msgid "Save and activate this profile"
 msgstr "Gem og aktivér denne profil"
 
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for ulclformhelpers.tc_prefs_contest usettingscaptions.rs_contest_contest said: "Kontrol"
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
-msgstr "Kontrol"
+msgstr "Konkurrence"
 
 #: ulclformhelpers.tc_prefs_cw
 #, fuzzy
@@ -7577,7 +7583,9 @@ msgstr "Åbn en eksisterende konfiguration"
 msgid "Start a new contest"
 msgstr "Start en ny konkurrence"
 
+# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "KONTEST"
@@ -8887,11 +8895,6 @@ msgstr "Alle %d kontrol (er) bestået."
 msgid "&Close"
 msgstr "& Luk"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Tjek"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -8973,12 +8976,6 @@ msgstr "Standard"
 msgid "Ignored, not a known QTH:"
 msgstr "Ignoreret, ikke kendt QTH:"
 
-# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption.
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "KONTEST"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9038,11 +9035,6 @@ msgstr "%0:s %1:d"
 msgid "Call"
 msgstr "Kaldesignal"
 
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Konkurrence"
-
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
 msgid "File"
@@ -9056,11 +9048,6 @@ msgstr "År"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
-
-#: uappstrings.snewcontestfilesqsos
-#, fuzzy
-msgid "QSOs"
 msgstr ""
 
 #: uappstrings.sbackupdestinationreachable
@@ -9142,16 +9129,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

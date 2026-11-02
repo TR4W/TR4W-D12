@@ -3343,6 +3343,7 @@ msgid "Chapter"
 msgstr ""
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr ""
@@ -3932,11 +3933,13 @@ msgid "Commands"
 msgstr "Командууд"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Холбогдох"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Салгах"
@@ -7743,6 +7746,7 @@ msgstr ""
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr ""
@@ -7783,6 +7787,7 @@ msgid "Start a new contest"
 msgstr ""
 
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr ""
@@ -9029,11 +9034,6 @@ msgstr ""
 msgid "&Close"
 msgstr ""
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr ""
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9109,11 +9109,6 @@ msgstr ""
 msgid "Ignored, not a known QTH:"
 msgstr ""
 
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr ""
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9171,11 +9166,6 @@ msgstr ""
 #: uappstrings.snewcontestfilescall
 #, fuzzy
 msgid "Call"
-msgstr ""
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
 msgstr ""
 
 #: uappstrings.snewcontestfilesfile
@@ -9277,16 +9267,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

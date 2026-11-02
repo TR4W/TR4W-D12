@@ -2174,6 +2174,7 @@ msgstr "Dom Mults"
 #. Section: UTOTAL
 #: tr4w/src/lang/tr4w_consts_eng.pas:414
 #: utr4wstrings.tc_qsos
+#: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
 msgstr "QSO"
@@ -2997,6 +2998,7 @@ msgid "Chapter"
 msgstr "Luku"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Tarkista"
@@ -3605,11 +3607,13 @@ msgid "Commands"
 msgstr "Komennot"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Yhdistä"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Katkaise yhteys"
@@ -7549,6 +7553,7 @@ msgstr "Tallenna ja aktivoi tämä profiili"
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Kilpailu"
@@ -7588,10 +7593,13 @@ msgstr "Avaa olemassa oleva asetus"
 msgid "Start a new contest"
 msgstr "Aloita uusi kilpailu"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say TAUSTA (background), a mistranslation; this catalogue's 'Contest' is 'Kilpailu'. Machine output was: "TAUSTA"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "TAUSTA"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "TAUSTA"
+msgstr "KILPAILU"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -8899,11 +8907,6 @@ msgstr "Kaikki %d Tarkistus [s] hyväksytty."
 msgid "&Close"
 msgstr "&Sulje"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Tarkista"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -8985,12 +8988,6 @@ msgstr "Standardi"
 msgid "Ignored, not a known QTH:"
 msgstr "Tuntematon QTH:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say TAUSTA (background), a mistranslation; this catalogue's 'Contest' is 'Kilpailu'. Machine output was: "TAUSTA"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "KILPAILU"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9051,11 +9048,6 @@ msgstr "%0:s %1:d"
 msgid "Call"
 msgstr "Kutsumerkki"
 
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Kilpailu"
-
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
 msgid "File"
@@ -9069,11 +9061,6 @@ msgstr "Vuosi"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
-
-#: uappstrings.snewcontestfilesqsos
-#, fuzzy
-msgid "QSOs"
 msgstr ""
 
 #: uappstrings.sbackupdestinationreachable
@@ -9155,16 +9142,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

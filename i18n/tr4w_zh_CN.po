@@ -2207,6 +2207,7 @@ msgstr "多姆马特"
 #. Section: UTOTAL
 #: tr4w/src/lang/tr4w_consts_eng.pas:418
 #: utr4wstrings.tc_qsos
+#: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
 msgstr "快速行动组织"
@@ -2969,6 +2970,7 @@ msgstr "QSY 非活动电台"
 #. RECOVERED from a bit-corrupted lang file -- a suggestion, not a translation. VERIFY EVERY CHARACTER before clearing 'needs work'; wrong hanzi look exactly like right ones.
 #: tr4w/src/lang/tr4w_consts_eng.pas:578
 #: utr4wstrings.rc_file
+#: uappstrings.snewcontestfilesfile
 #, fuzzy
 msgid "File"
 msgstr "文件"
@@ -4724,6 +4726,7 @@ msgid "Chapter"
 msgstr "章 次 页 次"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "检查"
@@ -5056,10 +5059,13 @@ msgstr "打开已有配置"
 msgid "Start a new contest"
 msgstr "开始新比赛"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 内容 (content), a mistranslation; this catalogue's 'Contest' is 竞技 (athletics) -- 竞赛 is contest. Machine output was: "内容"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "内容"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "内容"
+msgstr "竞赛"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -5164,11 +5170,13 @@ msgid "Clear"
 msgstr "清除"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "连接"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "断开连接"
@@ -7511,10 +7519,12 @@ msgstr "类别国"
 msgid "Category-Transmitter"
 msgstr "类别传送器"
 
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for usettingscaptions.rs_contest_contest said: "竞技"
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
-msgstr "竞技"
+msgstr "比赛"
 
 #: usettingscaptions.rs_contest_contestname
 #, fuzzy
@@ -8443,11 +8453,6 @@ msgstr "全体 %d 检查通过。"
 msgid "&Close"
 msgstr "关闭( C)"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "检查"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -8529,12 +8534,6 @@ msgstr "标准"
 msgid "Ignored, not a known QTH:"
 msgstr "被忽略, 不是已知的 QTH :"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 内容 (content), a mistranslation; this catalogue's 'Contest' is 竞技 (athletics) -- 竞赛 is contest. Machine output was: "内容"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "竞赛"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -8594,16 +8593,6 @@ msgstr "%0:s %1:d"
 msgid "Call"
 msgstr "呼号"
 
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "比赛"
-
-#: uappstrings.snewcontestfilesfile
-#, fuzzy
-msgid "File"
-msgstr "文件"
-
 #: uappstrings.snewcontestfilesyear
 #, fuzzy
 msgid "Year"
@@ -8612,11 +8601,6 @@ msgstr "年份"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
-
-#: uappstrings.snewcontestfilesqsos
-#, fuzzy
-msgid "QSOs"
 msgstr ""
 
 #: uappstrings.sbackupdestinationreachable
@@ -8698,16 +8682,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

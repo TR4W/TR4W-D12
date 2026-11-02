@@ -2174,6 +2174,7 @@ msgstr "Ντομ Μουλτς"
 #. Section: UTOTAL
 #: tr4w/src/lang/tr4w_consts_eng.pas:414
 #: utr4wstrings.tc_qsos
+#: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
 msgstr "QSOs"
@@ -2997,6 +2998,7 @@ msgid "Chapter"
 msgstr "Κεφάλαιο"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "Έλεγχος"
@@ -3605,11 +3607,13 @@ msgid "Commands"
 msgstr "Εντολές"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "Σύνδεση"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "Αποσύνδεση"
@@ -7551,6 +7555,7 @@ msgstr "Αποθήκευση και ενεργοποίηση αυτού του �
 
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Διαγωνισμός"
@@ -7590,10 +7595,13 @@ msgstr "Άνοιγμα μιας υπάρχουσας ρύθμισης"
 msgid "Start a new contest"
 msgstr "Έναρξη νέου διαγωνισμού"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say ΣΥΜΠΕΡΑΣΜΑ (conclusion), a mistranslation; this catalogue's 'Contest' is 'Διαγωνισμός'. Machine output was: "ΣΥΜΠΕΡΑΣΜΑ"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "ΣΥΜΠΕΡΑΣΜΑ"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "ΣΥΜΠΕΡΑΣΜΑ"
+msgstr "ΔΙΑΓΩΝΙΣΜΟΣ"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -8901,11 +8909,6 @@ msgstr "Όλα %d ο (οι) έλεγχος(-εις) πέρασε."
 msgid "&Close"
 msgstr "& Κλείσιμο"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Έλεγχος"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -8987,12 +8990,6 @@ msgstr "Πρότυπο"
 msgid "Ignored, not a known QTH:"
 msgstr "Αγνοείται, όχι γνωστό QTH:"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say ΣΥΜΠΕΡΑΣΜΑ (conclusion), a mistranslation; this catalogue's 'Contest' is 'Διαγωνισμός'. Machine output was: "ΣΥΜΠΕΡΑΣΜΑ"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "ΔΙΑΓΩΝΙΣΜΟΣ"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9052,11 +9049,6 @@ msgstr "%0:s %1:d"
 msgid "Call"
 msgstr "Διακριτικό"
 
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Διαγωνισμός"
-
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
 msgid "File"
@@ -9070,11 +9062,6 @@ msgstr "Έτος"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
-
-#: uappstrings.snewcontestfilesqsos
-#, fuzzy
-msgid "QSOs"
 msgstr ""
 
 #: uappstrings.sbackupdestinationreachable
@@ -9156,16 +9143,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect

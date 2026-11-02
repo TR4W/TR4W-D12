@@ -2580,6 +2580,7 @@ msgid "Chapter"
 msgstr "Rozdział"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 msgid "Check"
 msgstr "Sprawdź"
 
@@ -3040,10 +3041,12 @@ msgid "Commands"
 msgstr "Polecenia"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 msgid "Connect"
 msgstr "Połącz"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 msgid "Disconnect"
 msgstr "Rozłącz"
 
@@ -7083,7 +7086,10 @@ msgid "DX Cluster"
 msgstr "Klaster DX"
 
 # 2026-10-16: machine error: Polish contest terminology is 'zawody' (plural-only) -- G0DVJ's reviewed entries use it, and the PZK's SP DX Contest 2023 rules use zawody 11 times, konkurs never. Was: "Konkurs"
+# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Konkurs' -> 'Zawody', s.1-2 'zawody'. Previous text: "Konkurs"
 #: ulclformhelpers.tc_prefs_contest
+#: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
 msgstr "Zawody"
@@ -7644,7 +7650,9 @@ msgid "Start a new contest"
 msgstr "Rozpocznij nowe zawody"
 
 # 2026-10-16: machine error: 'postepowanie' means proceedings/procedure; machine error: Polish contest terminology is 'zawody' (plural-only) -- G0DVJ's reviewed entries use it, and the PZK's SP DX Contest 2023 rules use zawody 11 times, konkurs never. Was: "POSTĘPOWANIE"
+# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption; Polish contest terminology is 'zawody' (see that entry's note). Machine output was: "POSTĘPOWANIE"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
 msgstr "ZAWODY"
@@ -8137,6 +8145,7 @@ msgid "First callsign worked in each zone"
 msgstr "Pierwsza zrobiona stacja z każdej strefy"
 
 #: utr4wstrings.rc_file
+#: uappstrings.snewcontestfilesfile
 #, fuzzy
 msgid "File"
 msgstr "Plik"
@@ -10387,10 +10396,12 @@ msgstr "Opcja PTT VIA COMMANDS (CTRL- J) musi być prawdziwa dla zastosowania WS
 msgid " QSO needs for %s :"
 msgstr " QSO potrzebne dla %s :"
 
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for utr4wstrings.tc_qsos said: "QSOS"
 #: utr4wstrings.tc_qsos
+#: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
-msgstr "QSOS"
+msgstr "QSOs"
 
 #: utr4wstrings.tc_qso_imported
 #, fuzzy
@@ -11377,11 +11388,6 @@ msgstr "Wszystkie %d sprawdzanie (-a) zdarzało się."
 msgid "&Close"
 msgstr "Z&amknij"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "Sprawdź"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -11769,12 +11775,6 @@ msgstr "Kategoria - Moc"
 #, fuzzy
 msgid "Category-Transmitter"
 msgstr "Nadajnik kategorii"
-
-# 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Konkurs' -> 'Zawody', s.1-2 'zawody'. Previous text: "Konkurs"
-#: usettingscaptions.rs_contest_contest
-#, fuzzy
-msgid "Contest"
-msgstr "Zawody"
 
 # 2026-10-19: term from the EU DX Contest rules, Polish edition translated by SP7IVO (EUDXCC, https://www.eudx-contest.com/regulamin/): 'Nazwa konkursu' -> 'Nazwa zawodów', s.1-2 'zawody'. Previous text: "Nazwa konkursu"
 #: usettingscaptions.rs_contest_contestname
@@ -12775,12 +12775,6 @@ msgstr "Nieznane QTH:"
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "Nie zdefiniowano jeszcze klastrów DX - kliknij Konfiguracja, aby dodać jeden."
 
-# 2026-10-19: carried from tfrmnewcontest.lblcontest.caption; Polish contest terminology is 'zawody' (see that entry's note). Machine output was: "POSTĘPOWANIE"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "ZAWODY"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -12845,16 +12839,6 @@ msgstr "%0:s %1:d"
 msgid "Call"
 msgstr "Znak wywoławczy"
 
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "Zawody"
-
-#: uappstrings.snewcontestfilesfile
-#, fuzzy
-msgid "File"
-msgstr "Plik"
-
 #: uappstrings.snewcontestfilesyear
 #, fuzzy
 msgid "Year"
@@ -12864,11 +12848,6 @@ msgstr "Rok"
 #, fuzzy
 msgid "Last QSO"
 msgstr ""
-
-#: uappstrings.snewcontestfilesqsos
-#, fuzzy
-msgid "QSOs"
-msgstr "QSOs"
 
 #: uappstrings.sbackupdestinationreachable
 #, fuzzy
@@ -12950,16 +12929,6 @@ msgstr ""
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
 msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr "Połącz"
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
-msgstr "Rozłącz"
 
 #: uappstrings.snetmenureconnect
 #, fuzzy

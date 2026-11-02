@@ -240,7 +240,7 @@ class CatalogueTools(unittest.TestCase):
                             previous=['#| msgid "Cancel it"'])
       loser = pofile.Entry("", "Cancel", "", True, refs=["tfrmx.btncancel.caption"],
                            comments=["# a note on the form copy"])
-      merged, collapsed, removed = po_dedupe.dedupe([winner, loser])
+      merged, collapsed, removed, _ = po_dedupe.dedupe([winner, loser])
       self.assertEqual((collapsed, removed, len(merged)), (1, 1, 1))
       m = merged[0]
       self.assertEqual(m.target, "Anuluj")

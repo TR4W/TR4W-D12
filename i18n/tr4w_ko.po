@@ -3689,6 +3689,7 @@ msgid "Chapter"
 msgstr "이름 *"
 
 #: tfrmeditqso.lblcheck.caption
+#: uappstrings.sverifycolumncheck
 #, fuzzy
 msgid "Check"
 msgstr "기타"
@@ -4297,11 +4298,13 @@ msgid "Commands"
 msgstr "이름 *"
 
 #: tfrmtelnet.btnconnect.caption
+#: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
 msgstr "연결하기"
 
 #: tfrmtelnet.btndisconnect.caption
+#: uappstrings.snetmenudisconnect
 #, fuzzy
 msgid "Disconnect"
 msgstr "연결하기"
@@ -8251,11 +8254,13 @@ msgstr "사이트맵"
 msgid "Save and activate this profile"
 msgstr "이 프로파일을 저장하고 활성화"
 
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for ulclformhelpers.tc_prefs_contest usettingscaptions.rs_contest_contest said: "회사연혁"
 #: ulclformhelpers.tc_prefs_contest
 #: usettingscaptions.rs_contest_contest
+#: uappstrings.snewcontestfilescontest
 #, fuzzy
 msgid "Contest"
-msgstr "회사연혁"
+msgstr "대회"
 
 #: ulclformhelpers.tc_prefs_cw
 #, fuzzy
@@ -8292,10 +8297,13 @@ msgstr "기존 설정 열기"
 msgid "Start a new contest"
 msgstr "새로운 대회 시작"
 
+# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 공지사항 (notice), and this catalogue's 'Contest' says 회사연혁 (company history) -- both mistranslations; 콘테스트 is the loanword. Machine output was: "공지사항"
+# 2026-11-02: po_dedupe merged a duplicate (msgctxt, msgid) entry (issue 153); the copy for tfrmnewcontest.lblcontest.caption said: "공지사항"
 #: tfrmnewcontest.lblcontest.caption
+#: uappstrings.snewcontestcontestlabel
 #, fuzzy
 msgid "CONTEST"
-msgstr "공지사항"
+msgstr "콘테스트"
 
 #: tfrmnewcontest.lblmycall.caption
 #, fuzzy
@@ -9597,11 +9605,6 @@ msgstr "모든 것 %d 체크 (s)는 통과했습니다."
 msgid "&Close"
 msgstr "닫기(&C)"
 
-#: uappstrings.sverifycolumncheck
-#, fuzzy
-msgid "Check"
-msgstr "기타"
-
 #: uappstrings.sverifycolumnresult
 #, fuzzy
 msgid "Result"
@@ -9683,12 +9686,6 @@ msgstr "제품 정보"
 msgid "Ignored, not a known QTH:"
 msgstr "알려진 QTH가 아닌 무시 :"
 
-# 2026-10-19: tfrmnewcontest.lblcontest.caption and machine output say 공지사항 (notice), and this catalogue's 'Contest' says 회사연혁 (company history) -- both mistranslations; 콘테스트 is the loanword. Machine output was: "공지사항"
-#: uappstrings.snewcontestcontestlabel
-#, fuzzy
-msgid "CONTEST"
-msgstr "콘테스트"
-
 #: uappstrings.snewcontestsearchhint
 #, fuzzy
 msgid "Search: type part of a name, e.g. QSO"
@@ -9748,11 +9745,6 @@ msgstr "%0:s %1:d"
 #, fuzzy
 msgid "Call"
 msgstr "콜사인"
-
-#: uappstrings.snewcontestfilescontest
-#, fuzzy
-msgid "Contest"
-msgstr "대회"
 
 #: uappstrings.snewcontestfilesfile
 #, fuzzy
@@ -9853,16 +9845,6 @@ msgstr ""
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
-
-#: uappstrings.snetmenuconnect
-#, fuzzy
-msgid "Connect"
-msgstr ""
-
-#: uappstrings.snetmenudisconnect
-#, fuzzy
-msgid "Disconnect"
 msgstr ""
 
 #: uappstrings.snetmenureconnect
