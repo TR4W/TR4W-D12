@@ -569,7 +569,6 @@ begin
 
         end;
 
-     Multiplier[Ord(Multiplier[0]) + 1] := #0;
      MultIndex := mo.DomList.AddString(Multiplier, NoBand, NoMode, True);
 
      FileString^ := PostcedingString(FileString^, '=');

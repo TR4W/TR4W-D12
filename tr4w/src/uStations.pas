@@ -257,7 +257,6 @@ begin
      Exit;
      end;
 
-  Call[length(Call) + 1] := #0;
   if i = -1 then
      begin
      ItemIndex := FindStationInCallsignColumn(Call);

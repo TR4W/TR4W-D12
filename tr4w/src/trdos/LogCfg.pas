@@ -605,7 +605,6 @@ begin
             //        WriteLn;
             //        WriteLn('INVALID STATEMENT IN ', FileName, '!!  Line ', LineNumber);
             //        WriteLn(FileString);
-      FileString[length(FileString) + 1] := #0;
       // Issue #997: asm wsprintf-push -> TF.Format. Args pushed cdecl-reverse;
       // format is %s(FileName) / %u(LineNumber) / %s(FileString).
       showwarning(SysUtils.Format(AnsiString(LclText(TC_INVALIDSTATEMENTIN)), [FileName, LineNumber, FileString]));
@@ -621,7 +620,6 @@ begin
   
   else
      begin
-     FileName[Ord(FileName[0]) + 1] := #0;
      // Issue #997: asm wsprintf-push -> TF.Format.
      showwarning(SysUtils.Format(AnsiString(LclText(TC_UNABLETOFIND)), [FileName]));
      Exit;

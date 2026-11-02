@@ -7314,7 +7314,6 @@ begin
   if Settings.CallWindow.CallsignUpdateEnable then
      begin // This looks like the secxond line should be under IF but it was not.
      RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
-     RData.Callsign[Ord(RData.Callsign[0]) + 1] := #0;
      end;
 
   RST := GetSentRSTFromExchangeString(ExchangeString);
@@ -9857,7 +9856,6 @@ procedure PutCallToCallWindow(Call: CallString);
 begin
   logger.debug('[PutCallToCallWindow] Putting %s into main call window',
     [Call]);
-  Call[Ord(Call[0]) + 1] := #0;
   if call = Settings.My.Call then
      begin
      logger.debug('[PutCallToCallWindow] Exiting early because call (%s) = Settings.My.Call (%s)', [call, Settings.My.Call]);

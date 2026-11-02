@@ -93,7 +93,6 @@ begin
      end;
   TempString[0] := AnsiChar(l);
   s := TempString;
-  s[l + 1] := #0;
 end;
 
 procedure ShowEditMessage(const aMessage: lParam);

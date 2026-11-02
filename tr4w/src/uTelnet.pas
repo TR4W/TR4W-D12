@@ -1966,7 +1966,6 @@ begin
     //    if OpMode = SearchAndPounceOpMode then
     if Settings.Operating.AskForFrequencies then
        begin
-       Call[length(Call) + 1] := #0;
        // Issue #997: asm wsprintf -> Format
        TempFrequency := QuickEditFreq(
           SysUtils.Format(TC_FREQUENCYFORCALLINKHZ, [string(Call)]), 10);
