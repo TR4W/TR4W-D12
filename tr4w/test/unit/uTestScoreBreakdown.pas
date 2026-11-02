@@ -45,6 +45,7 @@ type
       procedure Test_AnEmptyLogPostsTheQSOSummaryAlone;
       procedure Test_TheScoreIsRebuiltOnAChangeAtMostEveryMinInterval;
       procedure Test_TheScoreIsRebuiltOnTheHeartbeatWithNoChange;
+      procedure Test_TheQthGridIsTheStationsSixCharactersWhenItIsTheSameSquare;
    end;
 
 implementation
@@ -224,6 +225,22 @@ begin
    CheckTrue(ScoreRebuildDue(False, High(Int64)), 'never built is long ago');
 end;
 
+(* RTC 2026-11-01: MY GRID EL88pa saved, the contest's four-character EL88
+   resolved, grid4 posted. The station's six characters win when they are the
+   contest's square. *)
+procedure TScoreBreakdownTests.Test_TheQthGridIsTheStationsSixCharactersWhenItIsTheSameSquare;
+begin
+   BeginTest('Test_TheQthGridIsTheStationsSixCharactersWhenItIsTheSameSquare');
+   CheckEquals('EL88pa', QthGrid('EL88pa', 'EL88'), 'the RTC case');
+   CheckEquals('EL88pa', QthGrid('EL88pa', 'el88'), 'case does not matter');
+   CheckEquals('EL88pa', QthGrid('EL88pa', ''), 'the contest stated none');
+   CheckEquals('EL88', QthGrid('EL88', 'EL88'), 'a four-character station grid');
+   CheckEquals('EL88', QthGrid('', 'EL88'), 'no station grid');
+   CheckEquals('FN20', QthGrid('EL88pa', 'FN20'), 'a different square is not the station');
+   CheckEquals('', QthGrid('', ''), 'neither');
+   CheckEquals('EL88pa', QthGrid('  EL88pa ', ' EL88 '), 'blanks are trimmed');
+end;
+
 procedure TScoreBreakdownTests.RunAllTests;
 begin
    Test_RTCOneBandCWLogIsOneAllModesBandRowAndOneSummary;
@@ -234,6 +251,7 @@ begin
    Test_AnEmptyLogPostsTheQSOSummaryAlone;
    Test_TheScoreIsRebuiltOnAChangeAtMostEveryMinInterval;
    Test_TheScoreIsRebuiltOnTheHeartbeatWithNoChange;
+   Test_TheQthGridIsTheStationsSixCharactersWhenItIsTheSameSquare;
 end;
 
 end.

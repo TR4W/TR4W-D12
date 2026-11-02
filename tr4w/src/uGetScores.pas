@@ -385,7 +385,7 @@ begin
   // (uNewContest.pas:419), so 4 chars is the common case; a 6-char value
   // appears when the user manually set MY GRID in tr4w.ini or used a
   // contest dialog that prompts for the full grid.
-  sGrid4 := Trim(Settings.My.ResolvedGrid);
+  sGrid4 := QthGrid(Settings.My.Grid, Settings.My.ResolvedGrid);
 
   qth := '';
   if sDXCC <> '' then

@@ -74,6 +74,15 @@ const
    last rebuild; aChanged says a QSO was logged, edited or deleted since. *)
 function ScoreRebuildDue(aChanged: boolean; aElapsedMs: Int64): boolean;
 
+(* THE GRID THE <qth> BLOCK REPORTS.  The contest's grid is what the exchange
+   sends -- RTC asks for four characters -- and it overrides the station's for
+   that contest, so ResolvedGrid is four characters even when the operator's
+   own MY GRID is six (RTC 2026-11-01: EL88pa saved, grid4 EL88 posted).  The
+   scoreboard places the STATION, so the longer station grid is used when it
+   is the same square as the contest's; a station grid in a different square
+   is stale or mistyped and does not override. *)
+function QthGrid(const aStation, aContest: string): string;
+
 implementation
 
 uses
@@ -151,6 +160,24 @@ function ScoreRebuildDue(aChanged: boolean; aElapsedMs: Int64): boolean;
 begin
    Result := (aChanged and (aElapsedMs >= SCORE_REBUILD_MIN_MS)) or
              (aElapsedMs >= SCORE_REBUILD_HEARTBEAT_MS);
+end;
+
+function QthGrid(const aStation, aContest: string): string;
+var
+   station: string;
+   contest: string;
+begin
+   station := Trim(aStation);
+   contest := Trim(aContest);
+   Result := contest;
+   if Length(station) < 6 then
+      begin
+      Exit;
+      end;
+   if (contest = '') or SameText(Copy(station, 1, 4), Copy(contest, 1, 4)) then
+      begin
+      Result := station;
+      end;
 end;
 
 end.
