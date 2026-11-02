@@ -907,6 +907,20 @@ Type TFactoryRadioBase = class(TObject)
          (uTestSpectrumDisplayDefaults walks the registry for exactly that). *)
       function SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults; virtual;
 
+      (* What the radio last REPORTED its own display to be for ASourceId --
+         reference, scale, AutoRef, waterfall share, averaging, colour range --
+         as the operator changes them at the rig.  See TSpectrumRadioState.
+
+         RETURNED BY VALUE, a snapshot: a driver that overrides this writes
+         the state on its reading thread and must copy it out under its own
+         lock (TK4Radio does).
+
+         Base: SpectrumRadioStateUnknown -- nothing known.  The honest answer
+         for every radio that does not report these, which today is every
+         radio but the K4; the Icoms and the Flex inherit it unchanged.
+         NOTHING ABOVE THE FACTORY READS IT YET. *)
+      function SpectrumRadioState(const ASourceId: string): TSpectrumRadioState; virtual;
+
       // Has StartSpectrum taken effect -- is a reader alive and trying?
       function SpectrumStreaming: Boolean; virtual;
 
@@ -3010,6 +3024,13 @@ begin
       a base class that applied one radio's display to every radio is the shape
       this factory exists to avoid. *)
    Result := SpectrumDisplayDefaultsNone;
+end;
+
+function TFactoryRadioBase.SpectrumRadioState(const ASourceId: string): TSpectrumRadioState;
+begin
+   (* Nothing reported -- see the declaration.  Deliberately not a guess at
+      any radio's settings. *)
+   Result := SpectrumRadioStateUnknown;
 end;
 
 function TFactoryRadioBase.SpectrumStreaming: Boolean;

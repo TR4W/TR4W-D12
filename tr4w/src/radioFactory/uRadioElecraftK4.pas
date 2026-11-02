@@ -21,7 +21,9 @@ interface
 uses
    uRadioElecraftBase, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming,
      uElecraftIF,   // shared IF decode -- the K3 uses the same one
-     uSpectrumTypes, uK4SpectrumThread;   // the panadapter stream on CAT port + 1
+     uSpectrumTypes, uK4SpectrumThread,   // the panadapter stream on CAT port + 1
+     uK4DisplayReport,   // the radio's own display settings (#REF, #SCL, #AR ...)
+     SyncObjs;           // FDisplayStateLock
 
 
 Type TK4Radio = class(TElecraftRadio)
@@ -40,9 +42,20 @@ Type TK4Radio = class(TElecraftRadio)
       // When TS; (TX test mode) was last asked -- see AskTXTestIfDue.
       FTXTestAskedTick: QWord;
 
+      (* THE RADIO'S OWN DISPLAY SETTINGS, as it last reported them -- see
+        uK4DisplayReport.  WRITTEN on the reading thread (ProcessMessage) and
+        READ from any thread (SpectrumRadioState), so guarded by its own lock,
+        not SocketLock -- the TX-inhibit pair's pattern.  Cleared at every
+        Connect.  Nothing above the factory reads it yet. *)
+      FDisplayState: TK4DisplayState;
+      FDisplayStateLock: TCriticalSection;
+
       // Ask TS; if K4_TX_TEST_POLL_MS has passed since it was last asked.
       procedure AskTXTestIfDue;
       procedure AskTXTest;
+
+      procedure ResetDisplayState;
+      procedure RecordDisplayReport(const sMessage: string);
 
       // Handed to the thread as its callback so the Assigned check on
       // OnSpectrumFrame happens per frame -- a window that unsubscribes stops
@@ -79,6 +92,7 @@ Type TK4Radio = class(TElecraftRadio)
       procedure StepSpectrumSpan(const aDirection: Integer); override;
       function PrimarySpectrumSourceId: string; override;
       function SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults; override;
+      function SpectrumRadioState(const ASourceId: string): TSpectrumRadioState; override;
    private
       { What the radio last said #SPN is.  0 until it has answered. }
       FSpectrumSpanHz: Integer;
@@ -158,6 +172,10 @@ implementation
 Constructor TK4Radio.Create;
 begin
    inherited Create(ProcessMessage);
+
+   // Before any link exists, so before any reading thread could write it.
+   FDisplayStateLock := TCriticalSection.Create;
+   FDisplayState := K4DisplayStateUnknown;
 
    // Generic logger until rigLabel is set by LOGRADIO after creation
 
@@ -405,11 +423,86 @@ begin
    // so it has to be stopped while the object is still whole.
    StopSpectrum;
    inherited Destroy;
+
+   (* AFTER inherited: the base's BeforeDestruction has stopped the reading
+     thread, the only writer, long before this -- but freeing what a thread
+     uses only once everything that could run it has gone is the rule
+     (radio-factory notes, issue #105), and it costs nothing here. *)
+   FreeAndNil(FDisplayStateLock);
+end;
+
+(* A new link knows nothing about the radio's display until the radio says so.
+  Called at the TOP of Connect, before the base connects: the reading thread
+  starts inside the base Connect and may deliver a report before it returns,
+  and clearing after that would throw the report away. *)
+procedure TK4Radio.ResetDisplayState;
+begin
+   FDisplayStateLock.Enter;
+   try
+      ResetK4DisplayState(FDisplayState);
+   finally
+      FDisplayStateLock.Leave;
+   end;
+end;
+
+(* ON THE READING THREAD.  The parser is pure and cheap, so it runs under the
+  lock; a message that is not a display report changes nothing. *)
+procedure TK4Radio.RecordDisplayReport(const sMessage: string);
+var
+   accepted: Boolean;
+begin
+   FDisplayStateLock.Enter;
+   try
+      accepted := ParseK4DisplayReport(sMessage, FDisplayState);
+   finally
+      FDisplayStateLock.Leave;
+   end;
+
+   if accepted then
+      begin
+      logger.Trace('[K4] display report recorded: %s', [sMessage]);
+      end;
+end;
+
+(* Pan A is the main receiver and pan B the sub, which is how the K4 names its
+  sources (PrimarySpectrumSourceId).  Anything else -- the Y and Z mini-pans
+  included -- is a source this radio reports nothing about: whether the
+  receiver's settings govern a mini-pan is unknown, so it is not claimed. *)
+function TK4Radio.SpectrumRadioState(const ASourceId: string): TSpectrumRadioState;
+begin
+   Result := SpectrumRadioStateUnknown;
+
+   (* Capability first, as SpectrumDisplayDefaults: removing rcSpectrum from
+      the constructor withdraws this in the same edit. *)
+   if not Supports(rcSpectrum) then
+      begin
+      Exit;
+      end;
+
+   FDisplayStateLock.Enter;
+   try
+      if ASourceId = 'A' then
+         begin
+         Result := FDisplayState.Main;
+         end
+      else if ASourceId = 'B' then
+         begin
+         Result := FDisplayState.Sub;
+         end;
+   finally
+      FDisplayStateLock.Leave;
+   end;
 end;
 
 function TK4Radio.Connect: integer;
 begin
    Self.readTerminator := ';';
+
+   (* UNCONDITIONALLY AND FIRST -- see ResetDisplayState.  What the last link
+     reported is not a fact about this one: the operator may have changed
+     every display setting while it was down. *)
+   ResetDisplayState;
+
    Result := Inherited Connect;
    if Self.IsConnected then
       begin
@@ -471,6 +564,17 @@ begin
       if SpectrumAvailable then
          begin
          Self.SendToRadio('#SPN;');
+
+         (* AND THE DISPLAY SETTINGS, for the same reason: the radio pushes
+           them on a change but nothing says it volunteers them at connect.
+           QUERIES ONLY -- the K4's read form is the command with no value
+           (QK4 k4_cat_commands.json, getFormat).  NEVER a value here, and
+           NEVER a #REF set: a client #REF while AutoRef is on is accepted
+           silently and FREEZES the radio's own tracking (QK4 quirks section
+           13); likewise '#AR0;'/'#AR1;'/'#AR9;' are SETS, so it is '#AR;'.
+           A line of its own, not appended to '#SPN;'.  Main receiver only:
+           #REF$; is not asked (the sub's REF arrives when AutoRef pushes it). *)
+         Self.SendToRadio(K4_DISPLAY_QUERIES);
          end;
 
       (* ASK WHETHER TX TEST MODE IS ON, ON EVERY LINK-UP (issue #97), for the
@@ -876,6 +980,11 @@ begin
          FSpectrumSpanHz := StrToIntDef(Copy(sMessage, 5, MaxInt), FSpectrumSpanHz);
          logger.Trace('[K4] radio reports spectrum span %d Hz', [FSpectrumSpanHz]);
          end;
+
+      (* #REF, #SCL, #AR, #WFH, #WBS, #AVG, #FPS and the external-monitor
+        forms: the radio's own display settings.  Recorded, not acted on --
+        nothing reads them yet.  #SPN stays above, untouched. *)
+      RecordDisplayReport(sMessage);
       end;
 
    sCommand := AnsiLeftStr(sMessage,2);

@@ -5086,3 +5086,24 @@ service `TR4W/v1`, account the setting's path UPPER-CASED, label
 - [ ] **BAND MAP SIZE / ITEM HEIGHT / ITEM WIDTH apply on Save, no restart.** With the band map open, change each in Preferences and Save: the spot text size (Size 0..8 = 10+n pixel cells, main-window face and bold) and the row/column geometry change at once. Check the text still fits the default row height at Size 8 (raise ITEM HEIGHT if not).
 - [ ] **Preferences > Appearance** no longer has "Color the dupe sheet columns" (retired; nothing read it); an old config line naming it is ignored quietly.
 - [ ] **Restart notes read true.** HamLib, WSJT-X, External Logger, Online scoring and Appearance pages: the sentence under each names only what really waits for a restart.
+
+## Added 2026-11-02 -- THE K4'S OWN DISPLAY SETTINGS ARE PARSED (stages 1-2, nothing drawn yet)
+
+TR4W now decodes `#REF`, `#REF$`, `#SCL`, `#WFH`, `#HWFH`, `#WBS`, `#HWBS`, `#AVG`, `#FPS` and `#AR` from the K4 and stores them on the radio (`uK4DisplayReport`, `TK4Radio.SpectrumRadioState`). The panadapter does NOT use them yet. At every network link-up it asks `#REF;#SCL;#AR;#WFH;#WBS;#AVG;` (reads only). Before stage 3 makes the window follow the rig, these questions need a real K4. Network K4, TR4W connected, `DEBUG LOG LEVEL = TRACE` in Preferences (every inbound message is logged as `[ProcessMessage] Received from radio: (...)`, and an accepted one also as `[K4] display report recorded: ...`).
+
+- [ ] **The link-up answers.** Right after connect, tr4w.log shows one `#REF<v>`, `#SCL<v>`, `#AR<8 chars>`, `#WFH<v>`, `#WBS<v>` and `#AVG<v>` reply, each followed by `display report recorded`. Note whether values carry leading zeros (`#AVG02` or `#AVG2`, `#WFH050` or `#WFH50`) -- the parser accepts both because nobody knows which.
+- [ ] **AutoRef survives the bare `#REF;` read.** With AutoRef ON, connect TR4W, then watch for 30 s or more: `#REF` pushes keep arriving and keep moving as the noise changes. A client `#REF<value>` is known to freeze AutoRef silently (QK4 quirks section 13); a bare read should not, but nobody has shown it. If REF stops moving after TR4W connects, that is a defect -- report it at once.
+- [ ] **Front-panel capture, in this order, noting the clock time of each step** (so the log lines can be matched to the action):
+  1. change SCALE a few steps;
+  2. AutoRef OFF, then change REF a few steps;
+  3. AutoRef ON, then OFF, then ON;
+  4. change the AutoRef OFFSET (menu, -8..+8);
+  5. change the waterfall height;
+  6. change the waterfall colours (WTR CLRS);
+  7. change averaging;
+  8. change FPS.
+  For each, record whether the radio PUSHES a `#` report unprompted. The quirks doc says `#AR` is pushed on every change and `#REF`/`#HREF` are pushed under AutoRef; **whether `#SCL`, `#WFH`, `#WBS` and `#AVG` are pushed is unknown** and decides whether stage 3 can rely on pushes or must ask. Also note any `#` report the parser does not know (it is logged and ignored).
+- [ ] **The `#AR` debounce field.** Read the two digits after the averaging in each `#AR` line (`#AR12dd+oom`). QK4's command table says 4..9; captures have shown `01` and `06`. Record the values seen, and whether a menu changes them.
+- [ ] **The sub receiver.** With SUB RX on, does `#REF$` arrive at link-up without being asked (TR4W does not ask `#REF$;`), or only under AutoRef? If only then, stage 3 needs `#REF$;` in the link-up queries.
+- [ ] **The same, from outside TR4W.** With TR4W disconnected: `python tools/k4catwatch.py --host <ip> --ai 5 --query --seconds 60`, repeat the front-panel steps above inside the 60 s, and keep the output. `--query` now also asks `#WBS`, `#HWBS` and `#HREF`; it sends only bare reads.
+- [ ] **Does `#AVG` average the STREAM, or only the radio's screen?** With the panadapter open on a quiet band, set averaging to 1 at the rig and watch the trace's noise jitter in TR4W for 20 s, then set it to 20 and watch again (a screenshot of each helps). If TR4W's trace smooths when the rig's does, the stream is already averaged and TR4W must not average again on top; if it does not change, `#AVG` is the radio's screen only and following it would mean TR4W doing its own averaging.

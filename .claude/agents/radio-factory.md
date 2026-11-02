@@ -216,6 +216,23 @@ pin deliberately when a radio's display is tuned). The window refuses an invalid
 record with an ERROR rather than borrowing numbers. Details:
 `docs/PANADAPTER_LCL_DESIGN.md` section 10.1a.
 
+**WHAT THE RADIO SAYS ITS DISPLAY IS SET TO IS RADIO STATE TOO (2026-11-02,
+stages 1-2; NOTHING DRAWS FROM IT YET).** Distinct from the defaults above: a
+`TSpectrumRadioState` (`uSpectrumTypes`) of LIVE values -- REF, scale, AutoRef
+and offset, waterfall share, averaging, colour range -- each with its own `Has`
+flag, plus a `Generation` that moves on every accepted report (repeats too) and
+every reset, never back to 0. "Nothing known" is `SpectrumRadioStateKnowsNothing`
+(the flags), NOT record equality. Virtual `SpectrumRadioState(sourceId)`; base
+answers unknown, the Icoms/Flex inherit it. `TK4Radio` decodes the `#` reports
+with the pure leaf `uK4DisplayReport` (on the reading thread, under its own
+`FDisplayStateLock`, returned by value; `A` = main/`#REF`, `B` = sub/`#REF$`,
+others unknown), resets at the TOP of `Connect` (before the base starts the
+reader), and asks `K4_DISPLAY_QUERIES` on its own line beside `#SPN;`.
+**Reads only: never send a `#REF` value (it freezes AutoRef) or `#AR0;`/`#AR1;`/
+`#AR9;` (sets)** -- pinned by `Test_DisplayStateAskedOnConnect_ReadsOnly`.
+Whether the K4 pushes `#SCL`/`#WFH`/`#WBS`/`#AVG` is unverified
+(`docs/BENCH_QUEUE.md`). Details: `docs/PANADAPTER_LCL_DESIGN.md` section 10.3.
+
 **TX INHIBITED IS A RADIO CONDITION CARRIED IN THE STATUS (issue #97, phase 1,
 2026-10-26).** A radio that can say "I will not radiate when keyed" declares
 `rcReportsTXInhibit`; its parser calls the base's protected

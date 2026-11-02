@@ -497,6 +497,12 @@ the frame happens to be drawing. The title of this section still holds for the
 other 24: the waterfall colours, reference level and dB scale remain TR4W's,
 deliberately.
 
+**UPDATED 2026-11-02: the display reports are PARSED AND STORED, still NOT
+DRAWN** (stages 1-2 of the K4 display-state work; see 10.3). `#REF`, `#REF$`,
+`#SCL`, `#WFH`, `#HWFH`, `#WBS`, `#HWBS`, `#AVG`, `#FPS` and `#AR` are decoded
+by `uK4DisplayReport` and held on the radio (`SpectrumRadioState`). Nothing the
+panadapter draws has changed.
+
 **QK4 is the better reference here, and by a distance.** NY4I pointed at
 `c:\projects\qk4\src\models\radiostate\spectrumdisplaystate.cpp`, which parses
 **25** of these commands with a documented range apiece, and
@@ -506,13 +512,14 @@ deliberately.
 
 | command | value | meaning | QK4 range |
 |---|---|---|---|
-| `#REF` / `#REF$` | `-126` / `-125` | reference level, Main / Sub | −200..50 |
+| `#REF` / `#REF$` | `-126` / `-125` | reference level, Main / Sub | −200..60 (Programmer's Reference D12, per QK4 at `485a7c15`; was recorded here as −200..50) |
 | `#SCL` | `80` | **dB scale (display range)** | 10..150 |
 | `#SPN` / `#SPN$` | `100000` | display span, Hz | 1..999999 |
 | `#WFC` | `1` | **waterfall colour scheme** | **0..4** |
 | `#WFH` / `#HWFH` | `50` / `50` | waterfall height, % | 0..100 |
 | `#AVG` | `2` | averaging | 1..20 |
-| `#FPS` | `12` | frames per second | 12..30 |
+| `#WBS` / `#HWBS` | not captured | waterfall colour range, LCD / external | 5..30 |
+| `#FPS` | `12` | frames per second | 1..30 (was recorded as 12..30) |
 | `#MP` / `#MP$` | `0` / `-1` | mini-pan enable, Main / Sub | bool |
 | `#DPM` / `#HDPM` | `0` / `0` | dual-pan mode, LCD / external | 0..2 |
 | `#DSM` / `#HDSM` | `1` / `1` | display mode, LCD / external | 0..1 |
@@ -588,12 +595,13 @@ Mini-Pan B streaming"*, so `#MP` does appear to gate streaming — and it reads 
 here while the data flows. Either `#MP` governs the radio's own screen rather
 than the network stream, or `Y` is not the mini-pan. **Unresolved.**
 
-**QK4's `#AR` handler would ignore this radio.** It requires at least 12
-characters and reads the last as `'A'` or `'M'`
-(`spectrumdisplaystate.cpp:281`); the K4 answered `#AR1206+041`, which is 11
-characters and ends in `'1'`. So either the pushed form differs from the query
-response, or QK4's handler is wrong. A working reference implementation is
-still only evidence, not authority — the same lesson `tools/radiosim` taught.
+~~**QK4's `#AR` handler would ignore this radio.**~~ **Resolved upstream.**
+QK4's handler did expect 12 characters ending `'A'`/`'M'`, against an invented
+format; QK4 `485a7c15` (`docs/k4-protocol-quirks.md` section 13, measured on a
+K4D 2026-10-19) fixed it to the radio's real form `#ARaadd±oom`, 11
+characters, last character `1` (auto) or `0` (manual) -- exactly what this
+radio answered (`#AR1206+041`). `uK4DisplayReport` reads that form. The
+lesson stands: a working reference implementation is evidence, not authority.
 
 **`#SPN` (100 kHz) versus the stream's 192 kHz remains open.** QK4 does not
 settle it: it feeds the packet's `sampleRate` into `updateSpectrum()` *and*
@@ -612,10 +620,52 @@ Two of those are useful corroboration rather than inputs:
 **Decisions (NY4I, 2026-08-25):** TR4W keeps **its own palette** — a large
 monitor and the rig's small screen suit different schemes, and the window stays
 decoupled from CAT. The window renders the **full 192 kHz** the stream carries.
-And the `#` commands are **not parsed** for now; the stream already provides
-centre, span and noise floor, so nothing is blocked. Revisit after the
-waterfall and the ref controls exist, when we will know what is actually
-missing rather than guessing.
+~~And the `#` commands are **not parsed** for now~~ -- **superseded 2026-11-02**:
+they are parsed and stored, not drawn (10.3). The stream still provides
+centre, span and noise floor, so nothing was blocked; the parse is groundwork
+for the window following the radio's front panel.
+
+### 10.3 Stages 1-2: the radio's display reports, parsed and owned by the radio (2026-11-02)
+
+NY4I approved a staged design: the panadapter will later follow REF, SCALE,
+waterfall height, averaging and the rest as the operator changes them at the
+K4. **Stages 1 and 2 add parsing and radio-owned state ONLY** -- no change to
+what the window draws, no command that changes the radio, nothing on the Icom
+path.
+
+- **Stage 1 -- `uK4DisplayReport`** (radio factory, pure, no LCL, the
+  `uElecraftIF` pattern). `ParseK4DisplayReport(msg, var state)` decodes
+  `#REF<v>` (main) and `#REF$<v>` (sub), −200..60; `#SCL` 10..150 (one value
+  for both receivers); `#WFH`/`#HWFH` 0..100 %; `#WBS`/`#HWBS` 5..30; `#AVG`
+  1..20; `#FPS` 1..30; and `#ARaadd±oom` (averaging 01..20, debounce, signed
+  offset −8..+8 dB, `1`/`0`). Leading zeros are accepted and not required --
+  which the radio sends is not known. A malformed or out-of-range value
+  returns False and changes NOTHING. `#SPN` stays where it was;
+  `#HREF`/`#HREF$` are deliberately not read (they are pushed beside `#REF`
+  under AutoRef and must not be mistaken for it).
+- **Stage 2 -- `TSpectrumRadioState`** (`uSpectrumTypes`, vendor-neutral): a
+  `Has` flag per value, plus a `Generation` that moves on EVERY accepted report
+  (a repeat included) and on every reset, never back to 0. The virtual
+  `TFactoryRadioBase.SpectrumRadioState(sourceId)` answers "nothing known"; the
+  Icoms and the Flex inherit it. `TK4Radio` records reports on the reading
+  thread under its own `FDisplayStateLock` and returns them by value: source
+  `A` = main, `B` = sub, anything else (the `Y`/`Z` mini-pans) unknown. Cleared
+  at the top of every `Connect`; at link-up it asks
+  `#REF;#SCL;#AR;#WFH;#WBS;#AVG;` on a line of its own beside `#SPN;` --
+  **reads only**, and pinned so: a client `#REF` value freezes AutoRef, and
+  `#AR0;` resets it.
+
+**Open, and in `docs/BENCH_QUEUE.md`:** whether the radio PUSHES `#SCL`,
+`#WFH`, `#WBS` and `#AVG` on a front-panel change (the quirks doc confirms it
+for `#AR` and, under AutoRef, `#REF`); whether a bare `#REF;` read is as
+harmless to AutoRef as it should be; the range of the `#AR` debounce field
+(QK4's command table says 4..9, the radio has sent `01` and `06`); and
+whether the sub receiver's REF should be asked too (`#REF$;` is not asked
+today).
+
+Pinned by `uTestK4DisplayReport` (the parser), `uTestSpectrumRadioState` (the
+radio and a registry walk) and
+`uTestRadioSocketNoRead.Test_DisplayStateAskedOnConnect_ReadsOnly`.
 
 **~~One genuinely open discrepancy.~~ RESOLVED 2026-08-26.** `#SPN` reported
 **100 kHz** while the stream reported **192 kHz**, measured within seconds of

@@ -104,6 +104,62 @@ type
       LevelsCalibrated: Boolean;
    end;
 
+   (* WHAT THE RADIO SAYS ITS OWN DISPLAY IS SET TO, RIGHT NOW, FOR ONE SOURCE.
+
+      Distinct from TSpectrumDisplayDefaults above.  Those are fixed numbers
+      the radio states about itself ("draw me at 80 dB unless told otherwise");
+      these are LIVE values the radio reports as the operator turns its knobs
+      (reference level, scale, AutoRef, waterfall share, averaging, waterfall
+      colour range).  Today only the K4 reports them (uK4DisplayReport), and
+      NOTHING ABOVE THE FACTORY READS THEM YET -- stage 1-2 of the K4
+      display-state work is parsing and radio-owned state only.
+
+      EVERY VALUE HAS ITS OWN Has FLAG, because "the radio has not said" is not
+      a legal zero: a REF of 0 dB and a waterfall share of 0 percent are both
+      real settings.  A field whose flag is False means nothing.
+
+      Generation moves on EVERY accepted report for this source, including one
+      that repeats the value already held, and on every reset (a new link).  It
+      never goes back to 0 once moved and never repeats, so a reader that keeps
+      the last Generation it applied can tell "the radio said something" from
+      "nothing new" without comparing every field.  It is not a count: it
+      wraps from High(Integer) to 1.
+
+      NO MANAGED FIELDS, ON PURPOSE.  The record is returned by value from
+      under a lock and may be block-copied; a string here would be copied
+      without its reference count.
+
+      Units are the radio's and are stated per field.  Vendor-neutral by the
+      rule of this unit: nothing here names a command. *)
+   TSpectrumRadioState = record
+      HasRef: Boolean;
+      RefDb: Integer;                 // bottom of the display window, dB
+      HasScale: Boolean;
+      ScaleDb: Integer;               // height of the display window, dB
+      HasAutoRef: Boolean;
+      AutoRef: Boolean;               // the radio tracks the reference itself
+      AutoRefOffsetDb: Integer;       // its offset, dB; valid with HasAutoRef
+      HasWaterfallFraction: Boolean;
+      WaterfallPercent: Integer;      // waterfall share of the display, 0..100
+      HasAvg: Boolean;
+      AvgFrames: Integer;             // spectrum averaging, frames
+      HasColourRange: Boolean;
+      ColourRange: Integer;           // waterfall colour range, radio's units
+      Generation: Integer;            // see above; 0 = never reported or reset
+   end;
+
+(* Nothing known, Generation 0.  What a radio that reports nothing returns. *)
+function SpectrumRadioStateUnknown: TSpectrumRadioState;
+
+(* True when no Has flag is set.  THIS, not equality with
+   SpectrumRadioStateUnknown, is "the radio has told us nothing": a reset
+   clears the flags but moves Generation on. *)
+function SpectrumRadioStateKnowsNothing(const AState: TSpectrumRadioState): Boolean;
+
+(* Generation + 1, wrapping from High(Integer) to 1 -- never back to 0, and
+   never an overflow under range or overflow checking. *)
+function NextSpectrumRadioStateGeneration(AGeneration: Integer): Integer;
+
 (* The neutral answer: all zero, and not valid.  What a radio with no spectrum
    returns. *)
 function SpectrumDisplayDefaultsNone: TSpectrumDisplayDefaults;
@@ -215,6 +271,33 @@ function SpectrumDialFrequency(ARfHz: Int64; APitchHz: Integer;
                                ACwNormal, ACwReverse: Boolean): Int64;
 
 implementation
+
+function SpectrumRadioStateUnknown: TSpectrumRadioState;
+begin
+   Result := Default(TSpectrumRadioState);
+end;
+
+function SpectrumRadioStateKnowsNothing(const AState: TSpectrumRadioState): Boolean;
+begin
+   Result := (not AState.HasRef)                 and
+             (not AState.HasScale)               and
+             (not AState.HasAutoRef)             and
+             (not AState.HasWaterfallFraction)   and
+             (not AState.HasAvg)                 and
+             (not AState.HasColourRange);
+end;
+
+function NextSpectrumRadioStateGeneration(AGeneration: Integer): Integer;
+begin
+   if (AGeneration < 0) or (AGeneration = High(Integer)) then
+      begin
+      Result := 1;
+      end
+   else
+      begin
+      Result := AGeneration + 1;
+      end;
+end;
 
 function SpectrumDisplayDefaultsNone: TSpectrumDisplayDefaults;
 begin

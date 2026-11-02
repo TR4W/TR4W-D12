@@ -48,16 +48,24 @@ DEFAULT_CAT_PORT = 9200
 # specification: the radio answers an unknown command with '?', and that answer
 # is itself a result worth having.
 #
-# QK4's stated ranges, for comparison against what the radio actually says:
-#   #REF/#REF$ -200..50   #SPN/#SPN$ 1..999999   #SCL 10..150   #FPS 12..30
+# QK4's stated ranges (as of QK4 485a7c15), for comparison against what the
+# radio actually says:
+#   #REF/#REF$ -200..60   #SPN/#SPN$ 1..999999   #SCL 10..150   #FPS 1..30
 #   #WFC 0..4             #WFH/#HWFH 0..100      #AVG 1..20     #PKM 0/1
+#   #WBS/#HWBS 5..30      #HREF/#HREF$ -200..60 (external monitor's REF)
 #   #DPM/#HDPM 0..2       #DSM/#HDSM 0/1         #FXT 0/1       #FXA 0..4
 #   #FRZ 0/1              #VFA/#VFB 0..3         #NB 0..2       #NBL 0..14
-#   #MP/#MP$ bool         #AR  last char A or M
+#   #MP/#MP$ bool
+#   #AR  '#ARaadd+oom': averaging, debounce, signed offset, then 1 (auto) or
+#        0 (manual) -- e.g. '#AR1201+041'.  NOT 'A'/'M', which was an invented
+#        format (QK4 docs/k4-protocol-quirks.md section 13).
+#
+# Every entry is sent BARE -- the GET form.  Never add a value here: '#REF-110;'
+# freezes AutoRef and '#AR0;' resets it.
 DISPLAY_QUERIES = [
-   "#REF", "#REF$", "#SPN", "#SPN$", "#SCL",
+   "#REF", "#REF$", "#HREF", "#SPN", "#SPN$", "#SCL",
    "#MP", "#MP$", "#DPM", "#HDPM", "#DSM", "#HDSM",
-   "#FPS", "#WFC", "#WFH", "#HWFH", "#AVG", "#PKM",
+   "#FPS", "#WFC", "#WFH", "#HWFH", "#WBS", "#HWBS", "#AVG", "#PKM",
    "#FXT", "#FXA", "#FRZ", "#VFA", "#VFB", "#AR",
    "#NB", "#NBL",
 ]

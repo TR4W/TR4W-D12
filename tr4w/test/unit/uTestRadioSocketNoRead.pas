@@ -55,6 +55,11 @@ unit uTestRadioSocketNoRead;
     TS reply cut in two by the network and mixed with other replies still
     raises and clears the condition.  The parsing without a socket is pinned
     in uTestTXInhibit.
+
+  K4 DISPLAY STATE (stages 1-2, 2026-11-02) on the same fixture:
+  - Test_DisplayStateAskedOnConnect_ReadsOnly: K4_DISPLAY_QUERIES is asked on
+    a line of its own at every link-up, and NO '#' command sent across both
+    link-ups carries a value.  The parsing is pinned in uTestK4DisplayReport.
 *)
 
 interface
@@ -62,7 +67,8 @@ interface
 uses
    SysUtils, Classes, SyncObjs, IdTCPServer, IdContext, IdGlobal, IdIOHandler,
    Log4D, uTestLogCapture,
-   uTR4WTestFramework, uFactoryRadioBase, uRadioElecraftK4;
+   uTR4WTestFramework, uFactoryRadioBase, uRadioElecraftK4,
+   uK4DisplayReport;   // K4_DISPLAY_QUERIES
 
 type
    (* A real TK4Radio, so SetFrequency and SendToRadio are the shipped code.
@@ -109,6 +115,7 @@ type
       procedure Test_StopAndUnkey_NotConnected_LogNoError;
       procedure Test_TXTestAskedOnConnect_AndOnReconnect;
       procedure Test_TXTestSplitAcrossReads_IsParsed;
+      procedure Test_DisplayStateAskedOnConnect_ReadsOnly;
    public
       procedure RunAllTests; override;
    end;
@@ -714,6 +721,97 @@ begin
    end;
 end;
 
+(* ---- K4 display state: what the radio's display is set to ----------------- *)
+
+(* The display settings are ASKED at every link-up, on a line of their own
+  beside #SPN;, and the line is READS ONLY.  A value on any of them would be a
+  set: a client #REF freezes AutoRef (QK4 quirks section 13) and '#AR0;' resets
+  it.  So besides "it was asked, each time", this asserts that NO line the
+  radio heard across both link-ups carries a #REF, #REF$ or #AR value. *)
+procedure TRadioSocketNoReadTests.Test_DisplayStateAskedOnConnect_ReadsOnly;
+var
+   probe: TSocketNoReadProbe;
+   port: Word;
+   i, j, k: Integer;
+   line, sets: string;
+   parts: TStringList;
+begin
+   BeginTest('K4: the display settings are asked at every link-up, and only asked');
+
+   probe := TSocketNoReadProbe.Create;
+   parts := TStringList.Create;
+   try
+      port := StartServer;
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(probe.IsConnected, 'precondition: the CAT link came up');
+
+      CheckTrue(WaitForReceived(K4_DISPLAY_QUERIES, 3000),
+                'the display queries never reached the radio');
+      Sleep(200);    // room for a duplicate to arrive, if there were one
+      CheckEquals(1, CountReceived(K4_DISPLAY_QUERIES), 'asked exactly once per link-up');
+      CheckEquals(1, CountReceived(SPAN_QUERY),
+                  'and #SPN; is still a line of its own, asked once');
+
+      probe.ConnectThroughRadio('127.0.0.1', port);
+      CheckTrue(probe.IsConnected, 'precondition: the second link came up');
+      CheckTrue(WaitForCount(K4_DISPLAY_QUERIES, 2, 3000),
+                'a reconnect did not ask again -- the operator may have changed the ' +
+                'display while the link was down');
+
+      (* Every command on every line, split on ';'. *)
+      sets := '';
+      parts.Delimiter := ';';
+      parts.StrictDelimiter := True;
+      FLock.Enter;
+      try
+         for i := 0 to FReceived.Count - 1 do
+            begin
+            parts.DelimitedText := FReceived[i];
+
+            for j := 0 to parts.Count - 1 do
+               begin
+               line := parts[j];
+
+               (* A '#' command is a READ only when nothing follows its head
+                 -- '#', letters, an optional '$'.  Every '#' TR4W sends at
+                 connect is a read (#SPN; included), so there is no exception
+                 list: anything after the head is a value, and a value sets. *)
+               if (Length(line) > 0) and (line[1] = '#') then
+                  begin
+                  k := 2;
+
+                  while (k <= Length(line)) and
+                        (((line[k] >= 'A') and (line[k] <= 'Z')) or
+                         ((line[k] >= 'a') and (line[k] <= 'z'))) do
+                     begin
+                     Inc(k);
+                     end;
+
+                  if (k <= Length(line)) and (line[k] = '$') then
+                     begin
+                     Inc(k);
+                     end;
+
+                  if k <= Length(line) then
+                     begin
+                     sets := sets + '[' + line + '] ';
+                     end;
+                  end;
+               end;
+            end;
+      finally
+         FLock.Leave;
+      end;
+
+      CheckEquals('', sets, 'TR4W sent a ''#'' command with a value at connect -- that SETS the ' +
+                  'radio (a #REF value freezes AutoRef, #AR0 resets it)');
+   finally
+      parts.Free;
+      ReleaseProbe(probe);
+      StopServer;
+   end;
+end;
+
 (* Through the REAL reading thread: the TS reply is cut in two by the network,
   and each half arrives beside other replies.  The thread joins it on the ';'
   terminator before the driver ever sees it, which is the whole claim. *)
@@ -830,6 +928,7 @@ begin
       Test_StopAndUnkey_NotConnected_LogNoError;
       Test_TXTestAskedOnConnect_AndOnReconnect;
       Test_TXTestSplitAcrossReads_IsParsed;
+      Test_DisplayStateAskedOnConnect_ReadsOnly;
    finally
       StopServer;
       FReceived.Free;
