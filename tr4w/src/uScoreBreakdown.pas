@@ -27,8 +27,13 @@ unit uScoreBreakdown;
    QSOs on 20 m CW, eight grids, and the post carried each multiplier count four
    times -- 20/CW, 20/ALL, total/CW, total/ALL. The scorer reported 16 raw
    multipliers, which is 20/CW plus 20/ALL: it sums every row that is not a
-   total, so a row the spec does not describe is double-counted. This unit
-   emits the real (band, mode) rows and ONE total/ALL row, and nothing else.
+   total, so a second row for the same band is double-counted.
+
+   THE SHAPE IS DXLog's (2.6.38, same contest, accepted by the scorer): ONE row
+   per band, mode="ALL", for the QSOs, the points and each multiplier; after
+   them the band="total" mode="ALL" summary. No per-mode rows. A multiplier
+   counted by band (RTC) is one on 20 m however many modes it was worked in,
+   and only the Both slot knows that; per-mode rows would add to two.
 
    THE LABEL OF A MULTIPLIER IS THE CONTEST'S, asked through
    TContestBase.ScorePostingMultiplierType -- the one hook the UDP score
@@ -74,15 +79,10 @@ implementation
 uses
    SysUtils;
 
-const
-   (* The spec's mode names: CW, DIGI, PH, and ALL for the summary. *)
-   BREAKDOWN_MODE: array[ModeType] of string = ('CW', 'DIGI', 'PH', 'ALL', '', '');
-
 function BuildBreakdownXml(const aTotals: TBreakdownTotals;
                            aContest: TContestBase): AnsiString;
 var
    band: BandType;
-   mode: ModeType;
    kind: RemainingMultiplierType;
    count: integer;
    qsoTotal: integer;
@@ -92,56 +92,54 @@ begin
    rows := '';
    qsoTotal := 0;
 
-   for band := Band160 to AllBands do
+   (* ONE ROW PER BAND, IN THE ALL-MODES COLUMN -- DXLog's shape, which the
+      real scorer accepts for RTC. The Both slot is the band's count: a
+      multiplier counted by band is ONE on 20 m however many modes it was
+      worked in, and only the Both slot knows that (the CW and phone slots of
+      a band would add to two). A band with no QSOs posts nothing. A band
+      with QSOs posts its multiplier and point rows even at zero, as DXLog
+      does. *)
+   for band := Band160 to Pred(AllBands) do
       begin
-      if band = AllBands then
+      count := aTotals.QSOs[band, Both];
+      if count = 0 then
          begin
          Continue;
          end;
-      for mode := CW to Phone do
+      rows := rows + '<qso band="' + BandStringsArrayWithOutSpaces[band] +
+              '" mode="ALL">' + IntToStr(count) + '</qso>';
+      qsoTotal := qsoTotal + count;
+      rows := rows + '<point band="' + BandStringsArrayWithOutSpaces[band] +
+              '" mode="ALL">' + IntToStr(aTotals.Points[band, Both]) + '</point>';
+      for kind := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
          begin
-         count := aTotals.QSOs[band, mode];
-         if count <> 0 then
+         multType := aContest.ScorePostingMultiplierType(kind, True);
+         (* A kind the log has no multiplier of at all is not posted: RTC has
+            no country, zone or prefix multiplier to report as zero. *)
+         if (multType <> '') and (aTotals.Mults[AllBands, Both, kind] <> 0) then
             begin
-            rows := rows + '<qso band="' + BandStringsArrayWithOutSpaces[band] +
-                    '" mode="' + BREAKDOWN_MODE[mode] + '">' + IntToStr(count) + '</qso>';
-            qsoTotal := qsoTotal + count;
-            end;
-         for kind := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
-            begin
-            multType := aContest.ScorePostingMultiplierType(kind, False);
-            count := aTotals.Mults[band, mode, kind];
-            if (multType <> '') and (count <> 0) then
-               begin
-               rows := rows + '<mult band="' + BandStringsArrayWithOutSpaces[band] +
-                       '" mode="' + BREAKDOWN_MODE[mode] + '" type="' + multType +
-                       '">' + IntToStr(count) + '</mult>';
-               end;
-            end;
-         count := aTotals.Points[band, mode];
-         if count <> 0 then
-            begin
-            rows := rows + '<point band="' + BandStringsArrayWithOutSpaces[band] +
-                    '" mode="' + BREAKDOWN_MODE[mode] + '">' + IntToStr(count) + '</point>';
+            rows := rows + '<mult band="' + BandStringsArrayWithOutSpaces[band] +
+                    '" mode="ALL" type="' + multType + '">' +
+                    IntToStr(aTotals.Mults[band, Both, kind]) + '</mult>';
             end;
          end;
       end;
 
-   (* THE SUMMARY, ONCE: total/ALL for the QSOs, the points and each type. *)
+   (* THE SUMMARY, ONCE: total/ALL for the QSOs, the points and each type. The
+      QSOs are the bands' sum -- QSOTotals[AllBands] counts deleted QSOs too. *)
    rows := rows + '<qso band="total" mode="ALL">' + IntToStr(qsoTotal) + '</qso>';
-   count := aTotals.Points[AllBands, Both];
-   if count <> 0 then
+   if qsoTotal <> 0 then
       begin
-      rows := rows + '<point band="total" mode="ALL">' + IntToStr(count) + '</point>';
-      end;
-   for kind := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
-      begin
-      multType := aContest.ScorePostingMultiplierType(kind, True);
-      count := aTotals.Mults[AllBands, Both, kind];
-      if (multType <> '') and (count <> 0) then
+      rows := rows + '<point band="total" mode="ALL">' +
+              IntToStr(aTotals.Points[AllBands, Both]) + '</point>';
+      for kind := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
          begin
-         rows := rows + '<mult band="total" mode="ALL" type="' + multType + '">' +
-                 IntToStr(count) + '</mult>';
+         multType := aContest.ScorePostingMultiplierType(kind, True);
+         if (multType <> '') and (aTotals.Mults[AllBands, Both, kind] <> 0) then
+            begin
+            rows := rows + '<mult band="total" mode="ALL" type="' + multType + '">' +
+                    IntToStr(aTotals.Mults[AllBands, Both, kind]) + '</mult>';
+            end;
          end;
       end;
 

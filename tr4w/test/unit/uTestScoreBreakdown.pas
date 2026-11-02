@@ -21,9 +21,11 @@ unit uTestScoreBreakdown;
 
    RTC 2026, NY4I, 2026-11-01: eight QSOs on 20 m CW and eight grids, and the
    post carried the multiplier count under four rows -- 20/CW, 20/ALL,
-   total/CW, total/ALL. The scorer reported 16 raw multipliers. These pin the
-   row set the spec describes: the real (band, mode) rows and ONE total/ALL
-   row, each multiplier labelled by the contest, a grid as gridsquare. *)
+   total/CW, total/ALL. The scorer reported 16 raw multipliers. These pin
+   DXLog's shape, which the scorer accepts: one mode="ALL" row per band for
+   the QSOs, the points and each multiplier, then ONE total/ALL summary; no
+   per-mode rows; each multiplier labelled by the contest, a grid as
+   gridsquare. *)
 
 interface
 
@@ -35,10 +37,11 @@ type
    public
       procedure RunAllTests; override;
    private
-      procedure Test_RTCOneBandCWLogIsTheRealRowsAndOneSummary;
-      procedure Test_NoRowIsAnAllModeBandRowOrAModeTotal;
-      procedure Test_TwoModesGiveOneRowEachAndOneSummary;
-      procedure Test_WRTCPostsItsMultipliersOnTheSummaryOnly;
+      procedure Test_RTCOneBandCWLogIsOneAllModesBandRowAndOneSummary;
+      procedure Test_NoRowNamesAModeOrAModeTotal;
+      procedure Test_TwoBandsGiveOneRowEachAndOneSummary;
+      procedure Test_AGridWorkedInTwoModesOnABandCountsOnce;
+      procedure Test_WRTCPostsItsMultipliersOnEveryAllModesRow;
       procedure Test_AnEmptyLogPostsTheQSOSummaryAlone;
       procedure Test_TheScoreIsRebuiltOnAChangeAtMostEveryMinInterval;
       procedure Test_TheScoreIsRebuiltOnTheHeartbeatWithNoChange;
@@ -95,65 +98,99 @@ begin
       end;
 end;
 
-procedure TScoreBreakdownTests.Test_RTCOneBandCWLogIsTheRealRowsAndOneSummary;
+procedure TScoreBreakdownTests.Test_RTCOneBandCWLogIsOneAllModesBandRowAndOneSummary;
 const
    EXPECTED =
-      '<qso band="20" mode="CW">8</qso>' +
-      '<mult band="20" mode="CW" type="gridsquare">8</mult>' +
-      '<point band="20" mode="CW">11</point>' +
+      '<qso band="20" mode="ALL">8</qso>' +
+      '<point band="20" mode="ALL">11</point>' +
+      '<mult band="20" mode="ALL" type="gridsquare">8</mult>' +
       '<qso band="total" mode="ALL">8</qso>' +
       '<point band="total" mode="ALL">11</point>' +
       '<mult band="total" mode="ALL" type="gridsquare">8</mult>';
 begin
-   BeginTest('Test_RTCOneBandCWLogIsTheRealRowsAndOneSummary');
+   BeginTest('Test_RTCOneBandCWLogIsOneAllModesBandRowAndOneSummary');
    CheckEquals(EXPECTED, BreakdownFor(RTC, RTCLogTotals),
-               'the RTC log: one CW row of each kind and one summary');
+               'the RTC log: one all-modes row of each kind for 20 m and one summary');
 end;
 
-procedure TScoreBreakdownTests.Test_NoRowIsAnAllModeBandRowOrAModeTotal;
+procedure TScoreBreakdownTests.Test_NoRowNamesAModeOrAModeTotal;
 var
    xml: string;
 begin
-   BeginTest('Test_NoRowIsAnAllModeBandRowOrAModeTotal');
+   BeginTest('Test_NoRowNamesAModeOrAModeTotal');
    xml := BreakdownFor(RTC, RTCLogTotals);
-   CheckEquals(0, Pos('band="20" mode="ALL"', xml),
-               'no band row in the all-modes column -- the scorer summed it as a second 8');
+   CheckEquals(0, Pos('mode="CW"', xml),
+               'no per-mode row -- the scorer summed it beside the band row');
    CheckEquals(0, Pos('band="total" mode="CW"', xml),
-               'no total for one mode -- the scorer summed it as a third 8');
+               'no total for one mode -- the scorer summed it as another 8');
    CheckEquals(0, Pos('type="state"', xml), 'a grid is not a state');
    CheckEquals(2 * Length('type="gridsquare"'),
                Length(xml) - Length(StringReplace(xml, 'type="gridsquare"', '', [rfReplaceAll])),
-               'two multiplier rows only: the CW band row and the summary');
+               'two multiplier rows only: the 20 m row and the summary');
 end;
 
-procedure TScoreBreakdownTests.Test_TwoModesGiveOneRowEachAndOneSummary;
+procedure TScoreBreakdownTests.Test_TwoBandsGiveOneRowEachAndOneSummary;
 var
    totals: TBreakdownTotals;
    xml: string;
 begin
-   BeginTest('Test_TwoModesGiveOneRowEachAndOneSummary');
+   BeginTest('Test_TwoBandsGiveOneRowEachAndOneSummary');
    totals := Default(TBreakdownTotals);
    AddWork(totals, Band20, CW, 3, 6, rmDomestic);
    AddWork(totals, Band40, Phone, 2, 4, rmDomestic);
    xml := BreakdownFor(RTC, totals);
-   CheckTrue(Pos('<qso band="20" mode="CW">3</qso>', xml) > 0, '20 CW qsos: ' + xml);
-   CheckTrue(Pos('<qso band="40" mode="PH">2</qso>', xml) > 0, '40 PH qsos: ' + xml);
+   CheckTrue(Pos('<qso band="20" mode="ALL">3</qso>', xml) > 0, '20 m qsos: ' + xml);
+   CheckTrue(Pos('<qso band="40" mode="ALL">2</qso>', xml) > 0, '40 m qsos: ' + xml);
+   CheckEquals(0, Pos('band="80"', xml), 'a band with no QSOs posts nothing');
    CheckTrue(Pos('<qso band="total" mode="ALL">5</qso>', xml) > 0, 'the qsos summed once: ' + xml);
    CheckTrue(Pos('<mult band="total" mode="ALL" type="gridsquare">5</mult>', xml) > 0,
              'the multipliers from the all-bands, all-modes slot: ' + xml);
 end;
 
-procedure TScoreBreakdownTests.Test_WRTCPostsItsMultipliersOnTheSummaryOnly;
+(* THE REASON FOR THE SHAPE: a grid worked on 20 m CW and again on 20 m phone
+   is one multiplier on 20 m (RTC counts by band, not by mode). The CW slot and
+   the phone slot each say 1, the Both slot says 1; adding the first two gives
+   the wrong 2. The row must be the Both slot's. *)
+procedure TScoreBreakdownTests.Test_AGridWorkedInTwoModesOnABandCountsOnce;
 var
    totals: TBreakdownTotals;
    xml: string;
 begin
-   BeginTest('Test_WRTCPostsItsMultipliersOnTheSummaryOnly');
+   BeginTest('Test_AGridWorkedInTwoModesOnABandCountsOnce');
+   totals := Default(TBreakdownTotals);
+   AddWork(totals, Band20, CW, 1, 1, rmDomestic);
+   (* The phone QSO is a second QSO in the same grid: a new multiplier in the
+      phone column, none on the band or in total. *)
+   totals.QSOs[Band20, Phone] := 1;
+   totals.QSOs[Band20, Both] := 2;
+   totals.QSOs[AllBands, Phone] := 1;
+   totals.QSOs[AllBands, Both] := 2;
+   totals.Points[Band20, Phone] := 1;
+   totals.Points[Band20, Both] := 2;
+   totals.Points[AllBands, Phone] := 1;
+   totals.Points[AllBands, Both] := 2;
+   totals.Mults[Band20, Phone, rmDomestic] := 1;
+   xml := BreakdownFor(RTC, totals);
+   CheckTrue(Pos('<mult band="20" mode="ALL" type="gridsquare">1</mult>', xml) > 0,
+             'one multiplier on 20 m: ' + xml);
+   CheckEquals(0, Pos('mode="CW"', xml), 'no CW row: ' + xml);
+   CheckEquals(0, Pos('mode="PH"', xml), 'no phone row: ' + xml);
+   CheckEquals(Length('<mult band="20"'),
+               Length(xml) - Length(StringReplace(xml, '<mult band="20"', '', [rfReplaceAll])),
+               'exactly one multiplier row for 20 m');
+end;
+
+procedure TScoreBreakdownTests.Test_WRTCPostsItsMultipliersOnEveryAllModesRow;
+var
+   totals: TBreakdownTotals;
+   xml: string;
+begin
+   BeginTest('Test_WRTCPostsItsMultipliersOnEveryAllModesRow');
    totals := Default(TBreakdownTotals);
    AddWork(totals, Band20, CW, 4, 8, rmDomestic);
    xml := BreakdownFor(WRTC, totals);
-   CheckEquals(0, Pos('<mult band="20"', xml),
-               'WRTC posts no multiplier on a band row (its class says so)');
+   CheckTrue(Pos('<mult band="20" mode="ALL" type="HQ">4</mult>', xml) > 0,
+             'HQ on the band row, the all-modes row WRTC labels: ' + xml);
    CheckTrue(Pos('<mult band="total" mode="ALL" type="HQ">4</mult>', xml) > 0,
              'HQ on the summary: ' + xml);
 end;
@@ -189,10 +226,11 @@ end;
 
 procedure TScoreBreakdownTests.RunAllTests;
 begin
-   Test_RTCOneBandCWLogIsTheRealRowsAndOneSummary;
-   Test_NoRowIsAnAllModeBandRowOrAModeTotal;
-   Test_TwoModesGiveOneRowEachAndOneSummary;
-   Test_WRTCPostsItsMultipliersOnTheSummaryOnly;
+   Test_RTCOneBandCWLogIsOneAllModesBandRowAndOneSummary;
+   Test_NoRowNamesAModeOrAModeTotal;
+   Test_TwoBandsGiveOneRowEachAndOneSummary;
+   Test_AGridWorkedInTwoModesOnABandCountsOnce;
+   Test_WRTCPostsItsMultipliersOnEveryAllModesRow;
    Test_AnEmptyLogPostsTheQSOSummaryAlone;
    Test_TheScoreIsRebuiltOnAChangeAtMostEveryMinInterval;
    Test_TheScoreIsRebuiltOnTheHeartbeatWithNoChange;

@@ -47,8 +47,11 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 
 - **One row set**: `BuildDynamicResultsXml` wrote every (band, mode) slot the multiplier sheet
   keeps, so 8 grids on 20 m CW were posted as 20/CW, 20/ALL, total/CW and total/ALL; the scorer
-  reported 16 raw multipliers (20/CW + 20/ALL). `uScoreBreakdown.BuildBreakdownXml` emits the
-  real band/mode rows and one `total`/`ALL` summary (qso once, point once, each mult type once).
+  reported 16 raw multipliers (20/CW + 20/ALL). `uScoreBreakdown.BuildBreakdownXml` now emits
+  DXLog's shape, which the scorer accepts for the same contest: one `mode="ALL"` row per band
+  worked (qso, point and each mult type, read from the `Both` slot so a grid worked on 20 m CW and
+  20 m phone is one on 20 m), then one `total`/`ALL` summary. No per-mode rows. A band with no
+  QSOs posts nothing (DXLog also posts zero bands; the spec does not require them).
   The totals are a parameter, so `uTestScoreBreakdown` drives it without a session.
 - **Labels from the contest**: the private `RTCMultStr` table is gone; the `type=` label is
   `TContestBase.ScorePostingMultiplierType`, the hook the UDP score builder already used.

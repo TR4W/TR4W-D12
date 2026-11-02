@@ -427,12 +427,13 @@ begin
      Result := Result + AnsiString('<qth>' + qth + '</qth>');
      end;
 
-  (* THE ROWS ARE uScoreBreakdown'S: the real (band, mode) rows and one
-    total/ALL summary, each multiplier labelled by the contest. This used to
-    write every (band, mode) combination the multiplier sheet keeps, so the
-    scorer saw each count four times (RTC, 2026-11-01). The totals are
-    copied out of the globals here because the row builder takes them as a
-    parameter. *)
+  (* THE ROWS ARE uScoreBreakdown'S: one all-modes row per band and one
+    total/ALL summary, each multiplier labelled by the contest -- DXLog's
+    shape. This used to write every (band, mode) combination the multiplier
+    sheet keeps, so the scorer saw each count four times (RTC, 2026-11-01).
+    Every slot is copied out of the globals here, the Both column included
+    (the builder reads that one), because the row builder takes the totals as
+    a parameter. *)
   for TempBand := Band160 to AllBands do
      begin
      for TempMode := CW to Both do

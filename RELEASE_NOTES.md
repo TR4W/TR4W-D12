@@ -48,8 +48,8 @@ user-facing — no file paths or source-level jargon.
 
 - The score posted to online scoring no longer counts each multiplier more
   than once. A one-band CW log of eight grids was reported to the scorer as
-  sixteen multipliers; it now sends one row for each band and mode you
-  worked and a single summary row.
+  sixteen multipliers; it now sends one row for each band you worked, all
+  modes together, and a single summary row, the same shape DXLog sends.
 - Grid-square multipliers (RTC and the VHF contests) are now labelled as grid
   squares in the posted score, not as states.
 
