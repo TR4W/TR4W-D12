@@ -166,6 +166,7 @@ function QthGrid(const aStation, aContest: string): string;
 var
    station: string;
    contest: string;
+   i: integer;
 begin
    station := Trim(aStation);
    contest := Trim(aContest);
@@ -174,10 +175,25 @@ begin
       begin
       Exit;
       end;
-   if (contest = '') or SameText(Copy(station, 1, 4), Copy(contest, 1, 4)) then
+   if contest = '' then
       begin
       Result := station;
+      Exit;
       end;
+   (* Compared character by character: SysUtils.SameText takes AnsiStrings in
+      FPC 3.2.2, and two narrowing conversions are a build-gate failure. *)
+   if Length(contest) < 4 then
+      begin
+      Exit;
+      end;
+   for i := 1 to 4 do
+      begin
+      if UpCase(station[i]) <> UpCase(contest[i]) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := station;
 end;
 
 end.
