@@ -1531,6 +1531,9 @@ begin
    CrashLogger.Info(CRASH_SETUP_TAG + ' TR4W %s built %s %s',
                [TR4W_CURRENTVERSION_NUMBER, {$I %DATE%}, {$I %TIME%}]);
 
+   // Which file is running, so a log can be tied to a copy of the exe.
+   CrashLogger.Info(CRASH_SETUP_TAG + ' executable: %s', [ExpandFileName(ParamStr(0))]);
+
    (* WHICH .dbg THIS BUILD WANTS, before saying whether one is present.
      See MainImageDebugLink for why this is a CRC32 and not a CodeView GUID,
      and for what it answers that the probe below does not. *)
