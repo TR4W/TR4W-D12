@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TR4W\n"
-"PO-Revision-Date: 2026-11-02 20:27+0000\n"
+"PO-Revision-Date: 2026-11-03 06:12+0000\n"
 "Last-Translator: Weblate Admin <weblate.admin@bettersoftwaresolutions.com>\n"
 "Language-Team: Spanish <http://weblate.bettersoftwaresolutions.com/projects/"
 "tr4w/client/es/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 #: utr4wstrings.tc_translation_language
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr "Español"
+msgstr "Espanol"
 
 #. Section: General
 #: utr4wstrings:tc_translation_author tr4w/src/lang/tr4w_consts_eng.pas:8
@@ -108,7 +108,10 @@ msgstr "frecuencia para %s en kHz"
 #: utr4wstrings:tc_difversion tr4w/src/lang/tr4w_consts_eng.pas:20
 msgctxt "TC_DIFVERSION"
 msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr "%s es de una version diferente.\rTR4W esperaba version %s.\rEl fichero que intenta leer es de la version %s."
+msgstr ""
+"%s es de una version diferente.\n"
+"TR4W esperaba version %s.\n"
+"El fichero que intenta leer es de la version %s."
 
 #. Section: General
 #: utr4wstrings:tc_radio1 tr4w/src/lang/tr4w_consts_eng.pas:26
@@ -653,7 +656,7 @@ msgstr "Entre su referencia IOTA Introduce tu Designador de Referencia IOTA (CON
 #: utr4wstrings.tc_enteryourparkreferencedesignator
 msgctxt "TC_ENTERYOURPARKREFERENCEDESIGNATOR"
 msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
-msgstr "Entre su referencia POTA (e.j. K-1234):"
+msgstr "Entre su referencia POTA (e.j. K-1234)"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourcityidentifier
@@ -690,7 +693,9 @@ msgstr "Entre su zona:"
 #: tr4w/src/lang/tr4w_consts_eng.pas:122
 msgctxt "TC_ENTERYOURGEOGRAPHICALCOORDINATES"
 msgid "Enter your geographical coordinates\r(e.g. 55N37O for Moscow):"
-msgstr "Entre sus coodenadas geograficas\r(e.j. 55N37O para Moscu):"
+msgstr ""
+"Entre sus coodenadas geograficas\n"
+"(e.j. 55N37O para Moscu):"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_entersumofyourageandamount
@@ -757,13 +762,17 @@ msgstr "Entre su nombre y QTH (estado US, provincia canadiense o pais DX):"
 #: tr4w/src/lang/tr4w_consts_eng.pas:131
 msgctxt "TC_ENTERYOURPRECEDENCECHECKSECTION"
 msgid "Enter your precedence, your check\r(last two digits of year licensed) and ARRL section:"
-msgstr "Introduzca su precedence, su check\r(últimos dos dígitos del año de licencia) y su sección ARRL:"
+msgstr ""
+"Introduzca su precedence, su check\n"
+"(últimos dos dígitos del año de licencia) y su sección ARRL:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourqthandthename tr4w/src/lang/tr4w_consts_eng.pas:132
 msgctxt "TC_ENTERYOURQTHANDTHENAME"
 msgid "Enter your QTH that you want to send\rand the name you want to use:"
-msgstr "Entre su QTH que quiere enviar\ry el nombre que quiere usar:"
+msgstr ""
+"Entre su QTH que quiere enviar\n"
+"y el nombre que quiere usar:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enterfirsttwodigitsofyourqth
@@ -809,7 +818,7 @@ msgstr "Entre su square ID:"
 #: utr4wstrings.tc_enteryourmembershipnumber
 msgctxt "TC_ENTERYOURMEMBERSHIPNUMBER"
 msgid "Enter your membership number:"
-msgstr "Entre su membership number:"
+msgstr "Entre tu número de membresía:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourcontinent tr4w/src/lang/tr4w_consts_eng.pas:139
@@ -863,7 +872,7 @@ msgstr "Introduzca su edad (y el indicativo y la edad del Silent Key):"
 #: utr4wstrings.tc_department
 msgctxt "TC_DEPARTMENT"
 msgid "Enter your department:"
-msgstr "Entre su department:"
+msgstr "Entre su departamento:"
 
 # 2026-10-19 NY4I approved; was: "Entre su RDA ID (for UA1A stations) or cuatro digit locator:"; evidence CQWS bulletin
 #. Section: NEW CONTEST
@@ -911,7 +920,6 @@ msgstr "Nueva Inglaterra"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_california tr4w/src/lang/tr4w_consts_eng.pas:152
 #: utr4wstrings.tc_california
-#, fuzzy
 msgctxt "TC_CALIFORNIA"
 msgid "California"
 msgstr "California"
@@ -919,7 +927,6 @@ msgstr "California"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_florida tr4w/src/lang/tr4w_consts_eng.pas:153
 #: utr4wstrings.tc_florida
-#, fuzzy
 msgctxt "TC_FLORIDA"
 msgid "Florida"
 msgstr "Florida"
@@ -927,7 +934,6 @@ msgstr "Florida"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_michigan tr4w/src/lang/tr4w_consts_eng.pas:154
 #: utr4wstrings.tc_michigan
-#, fuzzy
 msgctxt "TC_MICHIGAN"
 msgid "Michigan"
 msgstr "Michigan"
@@ -935,7 +941,6 @@ msgstr "Michigan"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_minnesota tr4w/src/lang/tr4w_consts_eng.pas:155
 #: utr4wstrings.tc_minnesota
-#, fuzzy
 msgctxt "TC_MINNESOTA"
 msgid "Minnesota"
 msgstr "Minnesota"
@@ -943,7 +948,6 @@ msgstr "Minnesota"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_ohio tr4w/src/lang/tr4w_consts_eng.pas:156
 #: utr4wstrings.tc_ohio
-#, fuzzy
 msgctxt "TC_OHIO"
 msgid "Ohio"
 msgstr "Ohio"
@@ -951,7 +955,6 @@ msgstr "Ohio"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_washington tr4w/src/lang/tr4w_consts_eng.pas:157
 #: utr4wstrings.tc_washington
-#, fuzzy
 msgctxt "TC_WASHINGTON"
 msgid "Washington"
 msgstr "Washington"
@@ -959,7 +962,6 @@ msgstr "Washington"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_wisconsin tr4w/src/lang/tr4w_consts_eng.pas:158
 #: utr4wstrings.tc_wisconsin
-#, fuzzy
 msgctxt "TC_WISCONSIN"
 msgid "Wisconsin"
 msgstr "Wisconsin"
@@ -967,7 +969,6 @@ msgstr "Wisconsin"
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_texas tr4w/src/lang/tr4w_consts_eng.pas:159
 #: utr4wstrings.tc_texas
-#, fuzzy
 msgctxt "TC_TEXAS"
 msgid "Texas"
 msgstr "Texas"
@@ -1389,7 +1390,6 @@ msgstr "Entre %s :"
 #. Section: LOGWIND
 #: utr4wstrings:tc_pts tr4w/src/lang/tr4w_consts_eng.pas:237
 #: utr4wstrings.tc_pts
-#, fuzzy
 msgctxt "TC_PTS"
 msgid "%d Pts"
 msgstr "%d Pts"
@@ -3436,7 +3436,6 @@ msgid "Pan A"
 msgstr "Pan A"
 
 #: tfrmpanadapter.lblspan.caption
-#, fuzzy
 msgid "Span --"
 msgstr "Span.."
 
@@ -3471,7 +3470,7 @@ msgstr "Puntuaciones"
 #: utr4wstrings.rc_press_c
 msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
-msgstr "Pulse  &C  para programar la tecla funcion CQ."
+msgstr "Pulse &C para programar la tecla funcion CQ."
 
 #. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
@@ -3491,7 +3490,7 @@ msgstr "Pulse  &E  para programar la tecla intercambio/buscar y trabajar S&P."
 #: utr4wstrings.rc_press_o
 msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
-msgstr "Pulse  &O  para programar otra tecla de no funcion."
+msgstr "Pulse &O para programar otra tecla de no funcion."
 
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.caption utr4wstrings:rc_memprogfunc
@@ -7138,9 +7137,8 @@ msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "¿Quieres subir tu archivo Cabrillo a SuperCheckPartial?"
 
 #: tfrmabout.lblurl.caption
-#, fuzzy
 msgid "http://www.tr4w.net"
-msgstr ""
+msgstr "https://www.tr4w.net"
 
 #: tfrmaltd.btncancel.caption
 #: tfrmautocq.btncancel.caption
