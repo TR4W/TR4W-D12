@@ -30,6 +30,12 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-03 -- WINDOW TITLES CARRY NO "&"
+
+Menu-row text is reused as a window title (`uCaptionText.DisplayedText` strips the markers). Only a screen can judge it.
+
+- [ ] Open Windows > Beacons, Send spot, QTC, Radio 1 and Radio 2 (and a panadapter from the radio panel) in English and in `--lang sr` (Serbian carries `&` markers in its captions). No title shows a literal `&`, and `&&` shows as a single `&`.
+
 ## Added 2026-11-03 -- THE PANADAPTER FOLLOWS THE K4'S WATERFALL HEIGHT, COLOUR RANGE AND COLOUR MODE
 
 The K4 radio object now reports to the panadapter what its LCD says about the

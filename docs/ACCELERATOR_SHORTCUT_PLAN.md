@@ -1,5 +1,15 @@
 # Accelerators: moving dispatch off the global key hook
 
+**Mnemonics were tried and dropped (NY4I, 2026-11-03).** This document is about
+`ShortCut` keystrokes (`Alt+B`). The other LCL meaning of "accelerator", the `&`
+mnemonic that underlines a letter in an open menu, was built for the main menu
+(unique letters per submenu, the English letter preferred in a translation) and
+then removed: on Windows the underlines are hidden until Alt is pressed and they
+come and go, so the operator saw nothing reliable, and NY4I does not need them.
+The history is commits `eacfc53c`, `d8f23e32` and `d7bca335` and the removal that
+followed. A `&` already in a translated caption is left as written; do not add a
+tool that assigns, repairs or lints them.
+
 **Status: PLANNED, not started. Written 2026-09-15**, when NY4I asked for the
 work he had deferred on 2026-09-07 *"close to last of the hwnd references"*.
 
