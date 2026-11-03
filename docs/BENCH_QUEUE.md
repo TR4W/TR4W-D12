@@ -5137,3 +5137,17 @@ TR4W now decodes `#REF`, `#REF$`, `#SCL`, `#WFH`, `#HWFH`, `#WBS`, `#HWBS`, `#AV
 - [ ] **The sub receiver.** With SUB RX on, does `#REF$` arrive at link-up without being asked (TR4W does not ask `#REF$;`), or only under AutoRef? If only then, stage 3 needs `#REF$;` in the link-up queries.
 - [ ] **The same, from outside TR4W.** With TR4W disconnected: `python tools/k4catwatch.py --host <ip> --ai 5 --query --seconds 60`, repeat the front-panel steps above inside the 60 s, and keep the output. `--query` now also asks `#WBS`, `#HWBS` and `#HREF`; it sends only bare reads.
 - [ ] **Does `#AVG` average the STREAM, or only the radio's screen?** With the panadapter open on a quiet band, set averaging to 1 at the rig and watch the trace's noise jitter in TR4W for 20 s, then set it to 20 and watch again (a screenshot of each helps). If TR4W's trace smooths when the rig's does, the stream is already averaged and TR4W must not average again on top; if it does not change, `#AVG` is the radio's screen only and following it would mean TR4W doing its own averaging.
+
+## 2026-11-03: line breaks in the New Contest comment label
+
+The `\r` escape in eleven TC_ messages was shipping as the letter "r" (LazUtils does not decode it). The build now rewrites it to `\n` in the shipped copy. Only a screen can judge it.
+
+Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-i386-win32\tr4w_fpc.exe uitest.cfg --lang de`. Open New Contest and select each contest. The comment label above the field should sit on two lines (the old build ran the halves together with an "r").
+
+1. NA Sprint CW: "Gib dein QTH ein, das du senden willst" / "und den Namen:" (old: "...willstrund den Namen:").
+2. ARRL Sweepstakes: two lines, no stray "r" before "(die".
+3. RAEM: "Gib deine geografischen Koordinaten ein" / "(z. B. 55N37O fuer Moskau):".
+4. New England QP with the "I am in" box ticked: "...New England Staat ein" / "(ME, NH, VT, MA, CT, RI):".
+5. Optional: `--lang ru` for steps 1 and 2. Russian sweepstakes is one of four reviewed translations written on one line, so it shows one line with no stray "r".
+
+Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_FOLDERALREADYEXISTSOVERWRITE and TC_INVALIDSTATEMENTIN (no reliable trigger found).

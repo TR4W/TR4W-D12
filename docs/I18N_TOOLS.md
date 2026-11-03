@@ -139,6 +139,12 @@ python tools\i18n\po_lint.py i18n\tr4w_pl.po --fix    # only repairs the harmles
 Catches a changed `%s`, a dropped line break, and entries left empty but no longer
 flagged. Non-zero exit means a real defect.
 
+**A line break is compared as a break, not as its bytes** (2026-11-03): CR, LF, CRLF
+and LFCR each count as one, so a translation writing `\n` where the English has `\r`
+passes, while one that drops or adds a break still fails. That matches what ships --
+see the `\r` note under [Put translations into the program](#put-translations-into-the-program).
+`tools\i18n\test_po_lint.py` pins it.
+
 It also fails a catalogue whose `TC_TRANSLATION_AUTHOR` is the English msgid (`N4AF`),
 **fuzzy or not**, because fuzzy entries ship. That entry is the About box's
 "<language> translation by <author>" credit: name and callsign of the translator
@@ -260,6 +266,22 @@ Unreviewed ("Needs work") entries ARE embedded since 2026-09-21, with their
 `#,` flag stripped in the shipped copy only; the `.po` keeps its marker.
 `Make-LanguageRes.ps1 -ReviewedOnly` is an experiment, not a setting: the next
 build puts the default back (the stamp's `mode` line no longer matches).
+
+**The shipped copy says `\n` where the `.po` says `\r`** (2026-11-03). LazUtils'
+`.po` reader decodes only `\t \n \" \\` (`lazutf8.pas:1044`); any other escape loses
+its backslash and keeps its LETTER, so the eleven `TC_` strings that break with
+`#13` showed `willstrund` for `willst\rund`, in every language, English fallbacks
+included. `Make-LanguageRes.ps1` rewrites `\r` and `\r\n` as `\n` while trimming
+(escapes are read left to right, so `\\r` -- a backslash and an r -- is left
+alone), and **fails** if a `\r` escape survives into the output. **Leave the `\r`
+in the `.po` files**; it is the reader's limit, not a catalogue defect. LazUtils
+turns `\n` into the platform line ending, so on Windows a translated message
+breaks with CRLF where the English uses a bare CR. The unit test
+`uTestUILanguage.Test_ALineBreakSurvivesTheEmbeddedCatalogue` checks every
+embedded language; four reviewed translations written on one line (es
+`TC_THEREWERECALLS`, ro `TC_DIFVERSION`, ru and uk
+`TC_ENTERYOURPRECEDENCECHECKSECTION`) are exempted by name until a native reader
+restores the break, and an exemption that no longer applies fails.
 
 Check it worked:
 

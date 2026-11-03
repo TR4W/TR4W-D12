@@ -47,6 +47,7 @@ type
       procedure Test_EachLanguageIsShownInItsOwnName;
       procedure Test_NoCatalogueCreditsTheEnglishAuthor;
       procedure Test_EveryIdentifierReachesTheEmbeddedCatalogue;
+      procedure Test_ALineBreakSurvivesTheEmbeddedCatalogue;
    public
       procedure RunAllTests; override;
    end;
@@ -55,7 +56,8 @@ implementation
 
 uses
    SysUtils, Classes, DateUtils, uJSON, uSettingsModel, uSettingsRegistry,
-   uSettingsDeclarations, uTR4WConfigFile, uUILanguage, uEmbeddedTranslations;
+   uSettingsDeclarations, uTR4WConfigFile, uUILanguage, uEmbeddedTranslations,
+   uTR4WStrings;
 
 (* A stub catalogue list: German and English only. *)
 function OnlyGermanAndEnglish(const aCode: string): boolean;
@@ -628,6 +630,213 @@ begin
              'de: and the resourcestring key of the same entry');
 end;
 
+(* ---------------------------------------------------------------------
+  A LINE BREAK SURVIVES THE EMBEDDED CATALOGUE.
+
+  Eleven TC_ strings break their line with #13, which pas2po wrote into
+  the catalogues as the C escape \r. LazUtils' .po reader does not know
+  that escape: UTF8CStringToUTF8String (lazutf8.pas:1044) decodes only
+  \t \n \" and \\, and for anything else DROPS THE BACKSLASH AND KEEPS THE
+  LETTER. So "willst\rund" reached the screen as "willstrund", in every
+  language, msgid included -- and an entry with an empty msgstr falls back
+  to that damaged msgid (TPOFile.Translate), so the English broke too.
+
+  Make-LanguageRes now rewrites \r (and \r\n) as \n in the SHIPPED copy;
+  the .po files keep their \r. This test reads the embedded copies, so it
+  checks what ships.
+
+  The set is the eleven TC_ strings, named, plus every other resourcestring
+  this binary links whose compiled English holds a #13, enumerated from the
+  RTL's own resource string tables -- the sLineBreak strings of uAppStrings
+  among them, whose catalogue escape is \n and always worked.
+
+  Two assertions per (language, identifier):
+
+    * THE LOST-ESCAPE PATTERN, asked of the msgid. LazUtils decodes the
+      msgid and the msgstr with the same routine, so a msgid that matches
+      the compiled English -- every break where the English has one --
+      proves the escapes were decoded. A lost one leaves the letter r where
+      the English has a break.
+    * A NON-EMPTY TRANSLATION HOLDS A LINE BREAK. #10 or #13: on Windows
+      LazUtils turns \n into CRLF, elsewhere into LF.
+
+  Line endings are compared as breaks, not bytes: CR, LF, CRLF and LFCR
+  each count as one, as po_lint counts them.
+  --------------------------------------------------------------------- *)
+
+(* SetResourceStrings' iterator. Value is the DEFAULT value -- the compiled
+  English -- and returning '' leaves the current value as it is, so the walk
+  changes nothing. *)
+function CollectBrokenLines(Name, Value: AnsiString; Hash: Longint;
+                            arg: pointer): AnsiString;
+begin
+   Result := '';
+   if Pos(#13, Value) > 0 then
+      begin
+      TStringList(arg).Values[LowerCase(string(Name))] := UTF8Decode(Value);
+      end;
+end;
+
+(* Every CR, LF, CRLF or LFCR becomes one #10, read left to right. *)
+function NormalisedBreaks(const s: string): string;
+var
+   i: integer;
+begin
+   Result := '';
+   i := 1;
+   while i <= Length(s) do
+      begin
+      if (s[i] = #13) or (s[i] = #10) then
+         begin
+         if (i < Length(s))                   and
+            ((s[i + 1] = #13) or (s[i + 1] = #10)) and
+            (s[i + 1] <> s[i]) then
+            begin
+            Inc(i);
+            end;
+         Result := Result + #10;
+         end
+      else
+         begin
+         Result := Result + s[i];
+         end;
+      Inc(i);
+      end;
+end;
+
+procedure TUILanguageTests.Test_ALineBreakSurvivesTheEmbeddedCatalogue;
+const
+   (* REVIEWED TRANSLATIONS WRITTEN ON ONE LINE (measured 2026-11-03). The
+     translator dropped the break; that is a reading for a native speaker,
+     not a defect of the generator, and the .po is not edited here. po_lint
+     reports each as CONTROL CHARS differ. AN EXEMPTION THAT NO LONGER
+     APPLIES FAILS: if the translation gains a break, delete its row. *)
+   ONE_LINE: array[0..3] of string = (
+      'es utr4wstrings.tc_therewerecalls',
+      'ro utr4wstrings.tc_difversion',
+      'ru utr4wstrings.tc_enteryourprecedencechecksection',
+      'uk utr4wstrings.tc_enteryourprecedencechecksection');
+var
+   wanted, codes, exempt, seen: TStringList;
+   english, compiled, translation, ident, pair, why: string;
+   c, i, found, translated, named: integer;
+   hasBreak: boolean;
+begin
+   BeginTest('a #13 line break reaches the screen in every embedded language');
+   wanted := TStringList.Create;
+   codes := TStringList.Create;
+   exempt := TStringList.Create;
+   seen := TStringList.Create;
+   try
+      (* THE ELEVEN TC_ STRINGS ARE NAMED, NOT ONLY ENUMERATED. The RTL's
+        table holds only the resourcestrings this binary LINKS -- smart
+        linking drops the rest -- and six of the eleven are referenced by
+        nothing the test binary uses (measured 2026-11-03: the walk found
+        five). Naming them here links them, so all eleven are checked. *)
+      wanted.Values['utr4wstrings.tc_difversion']                       := TC_DIFVERSION;
+      wanted.Values['utr4wstrings.tc_folderalreadyexistsoverwrite']     := TC_FOLDERALREADYEXISTSOVERWRITE;
+      wanted.Values['utr4wstrings.tc_newenglandstateabreviation']       := TC_NEWENGLANDSTATEABREVIATION;
+      wanted.Values['utr4wstrings.tc_enteryourgeographicalcoordinates'] := TC_ENTERYOURGEOGRAPHICALCOORDINATES;
+      wanted.Values['utr4wstrings.tc_enteryourprecedencechecksection']  := TC_ENTERYOURPRECEDENCECHECKSECTION;
+      wanted.Values['utr4wstrings.tc_enteryourqthandthename']           := TC_ENTERYOURQTHANDTHENAME;
+      wanted.Values['utr4wstrings.tc_therewerecalls']                   := TC_THEREWERECALLS;
+      wanted.Values['utr4wstrings.tc_invalidstatementin']               := TC_INVALIDSTATEMENTIN;
+      wanted.Values['utr4wstrings.tc_unabletofindctydat']               := TC_UNABLETOFINDCTYDAT;
+      wanted.Values['utr4wstrings.tc_invalidstatementinconfigfile']     := TC_INVALIDSTATEMENTINCONFIGFILE;
+      wanted.Values['utr4wstrings.tc_alreadyexistsokaytodelete']        := TC_ALREADYEXISTSOKAYTODELETE;
+      named := wanted.Count;
+      (* And everything else this binary links whose English holds a #13 --
+        the sLineBreak strings of uAppStrings among them. The walk passes
+        the DEFAULT value, so it also replaces the named values above with
+        the compiled English, should any test have loaded a catalogue. *)
+      SetResourceStrings(CollectBrokenLines, wanted);
+      for i := 0 to named - 1 do
+         begin
+         CheckTrue(Pos(#13, wanted.ValueFromIndex[i]) > 0,
+                   wanted.Names[i] + ' breaks its line with #13 in the compiled English');
+         end;
+      for i := Low(ONE_LINE) to High(ONE_LINE) do
+         begin
+         exempt.Add(ONE_LINE[i]);
+         end;
+      codes.Delimiter := ' ';
+      codes.StrictDelimiter := True;
+      codes.DelimitedText := AvailableLanguages;
+      found := 0;
+      translated := 0;
+      for c := 0 to codes.Count - 1 do
+         begin
+         if (codes[c] = '') or (codes[c] = COMPILED_IN_LANGUAGE) then
+            begin
+            Continue;
+            end;
+         for i := 0 to wanted.Count - 1 do
+            begin
+            ident := wanted.Names[i];
+            compiled := wanted.ValueFromIndex[i];
+            if not EmbeddedCatalogueEntry(codes[c], ident, english, translation) then
+               begin
+               Continue;   (* an LCL string, or one this catalogue lacks *)
+               end;
+            Inc(found);
+            pair := codes[c] + ' ' + ident;
+
+            why := '';
+            if NormalisedBreaks(english) <> NormalisedBreaks(compiled) then
+               begin
+               if NormalisedBreaks(english) =
+                  StringReplace(NormalisedBreaks(compiled), #10, 'r', [rfReplaceAll]) then
+                  begin
+                  why := 'the \r escape was LOST -- LazUtils kept the letter r ' +
+                         '(lazutf8.pas:1044); Make-LanguageRes must rewrite it as \n';
+                  end
+               else
+                  begin
+                  why := 'the embedded msgid is not the compiled English';
+                  end;
+               end;
+            CheckTrue(why = '', pair + ': ' + why + ' -- msgid "' + english + '"');
+
+            if translation = '' then
+               begin
+               Continue;
+               end;
+            Inc(translated);
+            hasBreak := (Pos(#10, translation) > 0) or (Pos(#13, translation) > 0);
+            if exempt.IndexOf(pair) >= 0 then
+               begin
+               seen.Add(pair);
+               CheckFalse(hasBreak, pair + ' now carries a line break: remove ' +
+                          'its ONE_LINE exemption');
+               end
+            else
+               begin
+               CheckTrue(hasBreak, pair + ' has no line break in "' + translation + '"');
+               end;
+            end;
+         end;
+
+      (* NOT ALLOWED TO PASS BY CHECKING NOTHING: eleven TC_ strings carry
+        #13 and 21 catalogues translate them. *)
+      CheckTrue(wanted.Count > named,
+                Format('the resource string walk added %d strings to the %d named',
+                       [wanted.Count - named, named]));
+      CheckTrue(found >= 100, Format('%d embedded entries were checked', [found]));
+      CheckTrue(translated >= 100, Format('%d translations were checked', [translated]));
+      for i := 0 to exempt.Count - 1 do
+         begin
+         CheckTrue(seen.IndexOf(exempt[i]) >= 0,
+                   exempt[i] + ' no longer ships a one-line translation to ' +
+                   'exempt: remove its ONE_LINE row');
+         end;
+   finally
+      seen.Free;
+      exempt.Free;
+      codes.Free;
+      wanted.Free;
+   end;
+end;
+
 procedure TUILanguageTests.RunAllTests;
 begin
    Randomize;
@@ -650,6 +859,7 @@ begin
    Test_EachLanguageIsShownInItsOwnName;
    Test_NoCatalogueCreditsTheEnglishAuthor;
    Test_EveryIdentifierReachesTheEmbeddedCatalogue;
+   Test_ALineBreakSurvivesTheEmbeddedCatalogue;
 end;
 
 end.

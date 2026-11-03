@@ -75,8 +75,23 @@ def say(text):
    sys.stdout.write(text.encode(enc, "replace").decode(enc, "replace") + "\n")
 
 
+# One line break, however it is spelled. Matched left to right, so CRLF and
+# LFCR are each ONE break and "\r\r" is two.
+_LINE_BREAK = re.compile(r"\r\n|\n\r|\r|\n")
+
+
 def controls(text):
-   return [c for c in text if ord(c) < 32]
+   """The control characters of text, with every line break as one token.
+
+   A LINE BREAK IS COMPARED AS A BREAK, NOT AS ITS BYTES (2026-11-03). The
+   TC_ strings break with #13, so pas2po wrote \\r, while a machine draft or
+   a Weblate edit writes \\n -- and the shipped copy turns every \\r into \\n
+   anyway, because LazUtils cannot read \\r (lazutf8.pas:1044; see
+   Make-LanguageRes.ps1). Comparing the bytes reported CR-versus-LF as a
+   defect when the operator sees the same break. The NUMBER of breaks must
+   still match, and every other control character is compared as itself.
+   """
+   return [c for c in _LINE_BREAK.sub("\n", text) if ord(c) < 32]
 
 
 def specifiers(text):

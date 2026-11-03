@@ -53,6 +53,21 @@
    A fuzzy entry with an EMPTY translation is still dropped either way: it
    carries no text, and shipping it would only add bytes.
 
+   THE \r ESCAPE IS REWRITTEN AS \n IN THE SHIPPED COPY (2026-11-03). Eleven
+   TC_ strings break their line with #13, which pas2po wrote as the C escape
+   \r. LazUtils cannot read it: UTF8CStringToUTF8String (lazutf8.pas:1044)
+   decodes only \t \n \" and \\, and for any other escape DROPS THE BACKSLASH
+   AND KEEPS THE LETTER. So "willst\rund" showed as "willstrund" in every
+   language, the msgid included -- and an entry with an empty msgstr falls back
+   to that msgid, so the English broke as well.
+
+   \n is the escape LazUtils does decode (to the platform's LineEnding), so
+   ConvertTo-LazUtilsEscapes rewrites \r and \r\n as \n, scanning escapes left
+   to right so that an escaped backslash followed by r (\\r) is left alone.
+   The .po files keep their \r -- this is the reader's limit, not a catalogue
+   defect -- and generation FAILS if any \r escape survives into the output.
+   Pinned by uTestUILanguage.Test_ALineBreakSurvivesTheEmbeddedCatalogue.
+
 .NOTES
    RUN BY THE BUILD (2026-10-16). Build-App.ps1 and Build-Tests.ps1 call
    Sync-Tr4wLanguageRes (LanguageResStamp.ps1), which regenerates the .res when
@@ -113,6 +128,40 @@ function Get-CandidateRank
    if ($Candidate.HasText)     { $rank += 2 }
    if (-not $Candidate.Fuzzy)  { $rank += 1 }
    return $rank
+   }
+
+# One escape sequence of a quoted .po string, read left to right: \r\n, then
+# \r, then any other backslash pair. Ordered so the longest match wins and an
+# escaped backslash (\\) is consumed whole -- "\\r" is a backslash and an r.
+$script:PoEscape = [regex] '\\r\\n|\\r|\\.'
+
+function ConvertTo-LazUtilsEscapes
+   {
+   <# Rewrite every \r and \r\n escape in a .po line as \n; every other escape
+      is returned unchanged. LazUtils keeps the LETTER of an escape it does not
+      know (lazutf8.pas:1044), so \r reached the screen as "r". See the \r note
+      in the file header. #>
+   param([string] $Line)
+   return $script:PoEscape.Replace($Line, {
+         param($m)
+         if (($m.Value -eq '\r\n') -or ($m.Value -eq '\r'))
+            {
+            return '\n'
+            }
+         return $m.Value
+         })
+   }
+
+function Test-HasCrEscape
+   {
+   <# Does this line still hold a \r escape -- read the same way, so an
+      escaped backslash followed by r is not mistaken for one? #>
+   param([string] $Line)
+   foreach ($m in $script:PoEscape.Matches($Line))
+      {
+      if ($m.Value.StartsWith('\r')) { return $true }
+      }
+   return $false
    }
 
 function Write-TrimmedCatalogue
@@ -236,7 +285,8 @@ function Write-TrimmedCatalogue
          continue
          }
       if ($line.StartsWith('#')) { continue }
-      $block.Add($line)
+      # \r -> \n: the one line break escape LazUtils decodes (lazutf8.pas:1044).
+      $block.Add((ConvertTo-LazUtilsEscapes $line))
       }
    Flush
 
@@ -248,6 +298,16 @@ function Write-TrimmedCatalogue
       $out.AddRange([string[]] $s.Body)
       $out.Add('')
       if ($s.Fuzzy) { $fuzzyKept++ } else { $kept++ }
+      }
+
+   # FAIL RATHER THAN SHIP A \r. It would reach the screen as the letter r,
+   # silently, in a build that is otherwise green.
+   foreach ($o in $out)
+      {
+      if (Test-HasCrEscape $o)
+         {
+         throw "Make-LanguageRes: a \r escape survived into the shipped copy of $Source -- LazUtils would show it as the letter r (lazutf8.pas:1044): $o"
+         }
       }
 
    [IO.File]::WriteAllLines($Dest, $out, (New-Object Text.UTF8Encoding($false)))
