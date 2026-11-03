@@ -2361,14 +2361,6 @@ msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "Перший рядок у файлі конфігурації має бути MY CALL!!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: utr4wstrings:tc_ms tr4w/src/lang/tr4w_consts_eng.pas:457
-#: utr4wstrings.tc_ms
-msgctxt "TC_MS"
-msgid " ms"
-msgstr " мс"
-
 #. Section: ULOGSEARCH
 #: utr4wstrings:tc_entriesperms tr4w/src/lang/tr4w_consts_eng.pas:460
 #: utr4wstrings.tc_entriesperms
@@ -2389,20 +2381,6 @@ msgstr "Розмір, байт"
 msgctxt "TC_RECORDS"
 msgid "Records"
 msgstr "Записів"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_modified tr4w/src/lang/tr4w_consts_eng.pas:465
-#: utr4wstrings.tc_modified
-msgctxt "TC_MODIFIED"
-msgid "Modified"
-msgstr "Змінено"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_timediff tr4w/src/lang/tr4w_consts_eng.pas:466
-#: utr4wstrings.tc_timediff
-msgctxt "TC_TIMEDIFF"
-msgid "Time diff."
-msgstr "Бр. різниця"
 
 #. Section: POSTUNIT
 #: utr4wstrings:tc_morethan50differenthoursinthislog
@@ -7180,22 +7158,6 @@ msgstr "Перейти до вмісту %s"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Ви хочете завантажити файл Cabrillo для SuperChecklP Combat?"
-
-#. Section: General
-#. minute
-#: utr4wstrings:tc_m tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-msgctxt "TC_M"
-msgid "m"
-msgstr "м"
-
-#. Section: General
-#. second
-#: utr4wstrings:tc_s tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-msgctxt "TC_S"
-msgid "s"
-msgstr "с"
 
 #: tfrmabout.lblurl.caption
 msgid "http://www.tr4w.net"

@@ -283,7 +283,7 @@ implementation
 uses
   // FIRST, so every unit below still wins any name it shares (this tree
   // resolves a name to the LAST unit declaring it).
-  uAppStrings,        // SEditQSODelivery* -- the delivery line
+  uAppStrings,        // SEditQSODelivery*, SEditQSOMy* -- the our-station group
   DateUtils,          // UnixToDateTime -- the delivery line's time
   uEditQSO,           // the load and save halves, which stayed put
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- every caller is still Win32
@@ -694,8 +694,8 @@ begin
 end;
 
 // ------------------------------------------------------------------- the form
-// THE CAPTIONS OF THE OUR-STATION GROUP COME FROM uTR4WStrings, so they are
-// translated; the .lfm text is a designer placeholder (uServerLogForm's
+// THE CAPTIONS OF THE OUR-STATION GROUP COME FROM uAppStrings, so they are
+// translatable; the .lfm text is a designer placeholder (uServerLogForm's
 // pattern). The group's own caption is set with the values, in
 // EditQSOShowMyFacts, because it says where they came from.
 procedure AssignMyStationCaptions(aForm: TfrmEditQSO);

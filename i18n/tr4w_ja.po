@@ -2916,16 +2916,6 @@ msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "設定ファイルの最初のコマンドは、MY CALL ステートメントでなければなりません!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: utr4wstrings:tc_ms
-#: tr4w/src/lang/tr4w_consts_eng.pas:457
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgctxt "TC_MS"
-msgid " ms"
-msgstr " ミリ秒"
-
 #. Section: ULOGSEARCH
 #: utr4wstrings:tc_entriesperms
 #: tr4w/src/lang/tr4w_consts_eng.pas:460
@@ -2952,24 +2942,6 @@ msgstr "サイズ、バイト"
 msgctxt "TC_RECORDS"
 msgid "Records"
 msgstr "レコード"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_modified
-#: tr4w/src/lang/tr4w_consts_eng.pas:465
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgctxt "TC_MODIFIED"
-msgid "Modified"
-msgstr "更新履歴"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_timediff
-#: tr4w/src/lang/tr4w_consts_eng.pas:466
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgctxt "TC_TIMEDIFF"
-msgid "Time diff."
-msgstr "時間差分."
 
 # 2026-10-19: term from the EU DX Contest rules, Japanese edition (EUDXCC, https://www.eudx-contest.com/rules-3/): 'サーボ' -> 'サーバーログ', s.12 'ログ' (サーボ = servo). Previous text: "サーボ"
 #. Section: ULOGCOMPARE
@@ -8147,26 +8119,6 @@ msgstr "ログを%sに送る"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "CabrilloファイルをSuperChecklPartialにアップロードしたいですか?"
-
-#. Section: General
-#. minute
-#: utr4wstrings:tc_m
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-#, fuzzy
-msgctxt "TC_M"
-msgid "m"
-msgstr "m 点"
-
-#. Section: General
-#. second
-#: utr4wstrings:tc_s
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-#, fuzzy
-msgctxt "TC_S"
-msgid "s"
-msgstr "ツイート"
 
 #: tfrmabout.lblurl.caption
 #, fuzzy

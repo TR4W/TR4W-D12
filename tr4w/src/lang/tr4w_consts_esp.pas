@@ -20,8 +20,6 @@
   TC_OP                                 = 'Op';
   TC_NAME                               = 'Name';
 
-  TC_M                                  = 'm'; //minuto
-  TC_S                                  = 's'; //segundo
 
   TC_RADIO1                             = 'Radio 1';
   TC_RADIO2                             = 'Radio 2';
@@ -483,7 +481,6 @@
   TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'The first command in config file must be the MY CALL statement!!';
 
   {USYNTIME}
-  TC_MS                                 = ' ms'; //milisegundos
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = '%u entradas por %u ms';
@@ -491,8 +488,6 @@
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Tamaño, bytes';
   TC_RECORDS                            = 'Registros';
-  TC_MODIFIED                           = 'Modificado';
-  TC_TIMEDIFF                           = 'Dif. tiempo';
 
   {POSTUNIT}
   TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Mas de 50 horas diferenes en este log!!';

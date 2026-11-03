@@ -33,8 +33,6 @@ const
   TC_DIFVERSION                         = '%s od druge verzije programa.'#13'TR4W ocekuje verziju %s.'#13'fajl, koji pokusavate da ucitate je verzija %s.';
 //  TC_FILE                               = 'File';
 
-  TC_M                                  = 'm'; //minute
-  TC_S                                  = 's'; //second
 
   TC_RADIO1                             = 'Stanica 1';
   TC_RADIO2                             = 'Stanica 2';
@@ -458,7 +456,6 @@ const
   TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'Prva linija u konfiguracionom fajlu mora biti MY CALL !!';
   
   {USYNTIME}
-  TC_MS                                 = ' ms'; //milliseconds
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = '%u unosa na %u ms';
@@ -466,8 +463,6 @@ const
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Velicina, bajta';
   TC_RECORDS                            = 'Zapisi';
-  TC_MODIFIED                           = 'Modifikovan';
-  TC_TIMEDIFF                           = 'Razlika vremena.';
 
   {POSTUNIT}
   TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Vise od 50 razlicitih sati u ovom dnevniku!!';

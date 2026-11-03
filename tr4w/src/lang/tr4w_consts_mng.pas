@@ -31,8 +31,6 @@ const
   TC_POINTS                             = 'Оноо';
   TC_OP                                 = 'Oператор';
   TC_NAME                               = 'Нэр';
-  TC_M                                  = 'm'; 
-  TC_S                                  = 's'; 
   TC_RADIO1                             = '1-р трансивер';
   TC_RADIO2                             = '2-р трансивер';
   TC_DISBALE_CIV                        = 'ICOM-ын Ci-V (CAT)-г салгах';
@@ -376,14 +374,11 @@ const
   TC_TOOMANYTOTALSCOREMESSAGES          = 'TOTAL SCORE MESSAGEs хэтэрхий их байна!!';
   TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'Тохируулгын файлын эхэнд MY CALL байх ёстой!!';
   {USYNTIME}
-  TC_MS                                 = ' ms'; //milliseconds
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = '%u бvрт орох %u ms';
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Хэмжээ, bytes';
   TC_RECORDS                            = 'Бичлэгvvд';
-  TC_MODIFIED                           = 'Оорчилсон';
-  TC_TIMEDIFF                           = 'Цагийн зорvv';
   {POSTUNIT}
   TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Энэ лог-д 50 илvv торлийн цаг байна шvv!!';
   TC_TOOMANYCONTESTDATES                = 'Хэтэрхий олон огогдол байна!!';

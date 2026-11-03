@@ -741,6 +741,22 @@ resourcestring
       #10#10 + 'If this was a QSO, it is still in the entry window: log it ' +
       'again. If this keeps happening, run Tools > Run Verification Checks.';
 
+   (* EDIT QSO -- OUR STATION AS RECORDED FOR THE QSO (log schema 3). The
+     group caption says where the values came from; the rest label the
+     fields. Moved here from uTR4WStrings, which pas2res regenerates and
+     would have deleted them from (issue 158). *)
+   SEditQSOMyStation            = 'Our station for this QSO';
+   SEditQSOMyStationNotRecorded = 'Our station for this QSO (not recorded)';
+   SEditQSOMyStationAssumed     = 'Our station for this QSO (assumed: a network QSO)';
+   SEditQSOMyCall               = 'Call';
+   SEditQSOMyGrid               = 'Grid';
+   SEditQSOMyState              = 'State';
+   SEditQSOMyCounty             = 'County';
+   SEditQSOMySection            = 'Section';
+   SEditQSOMyPark               = 'Park';
+   SEditQSOMyCQZone             = 'CQ zone';
+   SEditQSOMyITUZone            = 'ITU zone';
+
 implementation
 
 end.

@@ -128,22 +128,6 @@ msgid "%s is from a different program version.\rTR4W is expecting version %s.\rT
 msgstr "%s来自不同的程序版本.\rTR4W正在等待版本%s.\r您想要读取的文件 %s ."
 
 #. Section: General
-#. minute
-#: tr4w/src/lang/tr4w_consts_eng.pas:27
-#: utr4wstrings.tc_m
-#, fuzzy
-msgid "m"
-msgstr ""
-
-#. Section: General
-#. second
-#: tr4w/src/lang/tr4w_consts_eng.pas:28
-#: utr4wstrings.tc_s
-#, fuzzy
-msgid "s"
-msgstr ""
-
-#. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:30
 #: tprefsform.lblradio1.caption
 #: ulclformhelpers.tc_prefs_radio1
@@ -2349,14 +2333,6 @@ msgstr "TOTAL SCORE MESSAGE 过多!!"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "配置文件中的第一条命令必须是 MY CALL 语句!!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: tr4w/src/lang/tr4w_consts_eng.pas:458
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgid " ms"
-msgstr " 分钟"
-
 #. Section: ULOGSEARCH
 #: tr4w/src/lang/tr4w_consts_eng.pas:461
 #: utr4wstrings.tc_entriesperms
@@ -2377,20 +2353,6 @@ msgstr "大小, 字节"
 #, fuzzy
 msgid "Records"
 msgstr "记录"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:466
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgid "Modified"
-msgstr "已修改"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:467
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgid "Time diff."
-msgstr "时帝弗."
 
 #. Section: POSTUNIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:470

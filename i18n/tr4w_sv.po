@@ -2314,14 +2314,6 @@ msgstr "För många TOTAL SCORE MESSAGEs!!"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "Det första kommandot i config-fil måste vara MY CALL-uttalandet!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: tr4w/src/lang/tr4w_consts_eng.pas:454
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgid " ms"
-msgstr " ms"
-
 #. Section: ULOGSEARCH
 #: tr4w/src/lang/tr4w_consts_eng.pas:457
 #: utr4wstrings.tc_entriesperms
@@ -2342,20 +2334,6 @@ msgstr "Storlek, byte"
 #, fuzzy
 msgid "Records"
 msgstr "Records"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:462
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgid "Modified"
-msgstr "Modifierad"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:463
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgid "Time diff."
-msgstr "Time diff."
 
 #. Section: POSTUNIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:466
@@ -7395,22 +7373,6 @@ msgstr "Skicka logga till %s"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Vill du ladda upp din Cabrillo-fil till SuperChecklPartial?"
-
-#. Section: General
-#. minute
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-#, fuzzy
-msgid "m"
-msgstr ""
-
-#. Section: General
-#. second
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-#, fuzzy
-msgid "s"
-msgstr ""
 
 #: tfrmabout.lblurl.caption
 #, fuzzy

@@ -2898,15 +2898,6 @@ msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "Il primo comando in file di configurazione deve essere l'affermazione MY CALL!!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: utr4wstrings:tc_ms
-#: tr4w/src/lang/tr4w_consts_eng.pas:457
-#: utr4wstrings.tc_ms
-msgctxt "TC_MS"
-msgid " ms"
-msgstr " m"
-
 #. Section: ULOGSEARCH
 #: utr4wstrings:tc_entriesperms
 #: tr4w/src/lang/tr4w_consts_eng.pas:460
@@ -2933,24 +2924,6 @@ msgstr "Dimensioni, byte"
 msgctxt "TC_RECORDS"
 msgid "Records"
 msgstr "Records"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_modified
-#: tr4w/src/lang/tr4w_consts_eng.pas:465
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgctxt "TC_MODIFIED"
-msgid "Modified"
-msgstr "Modificato"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_timediff
-#: tr4w/src/lang/tr4w_consts_eng.pas:466
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgctxt "TC_TIMEDIFF"
-msgid "Time diff."
-msgstr "Tempo scaduto."
 
 #. Section: ULOGCOMPARE
 #: utr4wstrings:tc_serverlog
@@ -8138,26 +8111,6 @@ msgstr "Invia il log a %s"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Elimina Invia Vuoi caricare il tuo file Cabrillo su SuperChecklPartial?"
-
-#. Section: General
-#. minute
-#: utr4wstrings:tc_m
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-#, fuzzy
-msgctxt "TC_M"
-msgid "m"
-msgstr "m"
-
-#. Section: General
-#. second
-#: utr4wstrings:tc_s
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-#, fuzzy
-msgctxt "TC_S"
-msgid "s"
-msgstr "#"
 
 #: tfrmabout.lblurl.caption
 #, fuzzy

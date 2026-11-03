@@ -30,8 +30,6 @@ const
   
 //TC_FILE                             = 'Файл'; 
 
-  TC_M                                  = 'м'; //minute
-  TC_S                                  = 'с'; //second
 
   TC_RADIO1                             = 'Радіо 1';
   TC_RADIO2                             = 'Радіо 2';
@@ -523,7 +521,6 @@ TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Fr
   TC_TIMEON                             = 'Час в ефірі';
 
   {USYNTIME}
-  TC_MS                                 = ' мс'; //milliseconds
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = 'Знайдено %u записів за %u мс';
@@ -531,8 +528,6 @@ TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Fr
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Розмір, байт';
   TC_RECORDS                            = 'Записів';
-  TC_MODIFIED                           = 'Змінено';
-  TC_TIMEDIFF                           = 'Бр. різниця';
 
   {ULOGCOMPARE}
   TC_SERVERLOG                          = 'СЕРВЕРНИЙ ЛОГ';

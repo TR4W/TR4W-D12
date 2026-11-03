@@ -37,7 +37,7 @@ resourcestring
    TC_TRANSLATION_AUTHOR                 = 'N4AF';
    TC_TRANSLATOR_EMAIL                   = 'ny4i@ny4i.com';
    TC_TRANSLATION_CREDIT                 = '%s translation by %s';
-   TC_TRANSLATION_CORRECTIONS            = 'Corrections are appreciated.';
+   TC_TRANSLATION_CORRECTIONS            = 'Corrections are appreciated.';   //About box, under a machine translation's credit
    TC_WAGWarn                            = 'Warning: Out of WAG allowed frequency range';
    TC_FREQ                               = 'Freq';
    TC_POINTS                             = 'Pts';
@@ -49,8 +49,6 @@ resourcestring
    TC_2RADIO_WARN                        = 'ERROR: 2 Radios on single band';
    TC_FREQUENCYFORCALLINKHZ              = 'frequency for %s in kHz';
    TC_DIFVERSION                         = '%s is from a different program version.'#13'TR4W is expecting version %s.'#13'The file you are trying to read version %s.';
-   TC_M                                  = 'm';   //minute
-   TC_S                                  = 's';   //second
    TC_RADIO1                             = 'Radio 1';
    TC_RADIO2                             = 'Radio 2';
    TC_DISBALE_CIV                        = 'Disable "CI-V Transceive" mode in your ICOM rig. Refer to instruction manual of your radio.';
@@ -441,17 +439,12 @@ resourcestring
    TC_TOOMANYTOTALSCOREMESSAGES          = 'Too many TOTAL SCORE MESSAGEs!!';
    TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'The first command in config file must be the MY CALL statement!!';
 
-   // USYNTIME
-   TC_MS                                 = ' ms';   //milliseconds
-
    // ULOGSEARCH
    TC_ENTRIESPERMS                       = '%u entries per %u ms';
 
    // ULOGCOMPARE
    TC_SIZEBYTES                          = 'Size, bytes';
    TC_RECORDS                            = 'Records';
-   TC_MODIFIED                           = 'Modified';
-   TC_TIMEDIFF                           = 'Time diff.';
 
    // POSTUNIT
    TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'More than 50 different hours in this log!!';
@@ -779,19 +772,6 @@ resourcestring
    CLOSE_WORD = 'Close';
    HELP_WORD  = 'Help';
    EXIT_WORD  = 'E&xit';
-
-   // EDIT QSO -- OUR STATION AS RECORDED FOR THE QSO (log schema 3)
-   SEditQSOMyStation            = 'Our station for this QSO';
-   SEditQSOMyStationNotRecorded = 'Our station for this QSO (not recorded)';
-   SEditQSOMyStationAssumed     = 'Our station for this QSO (assumed: a network QSO)';
-   SEditQSOMyCall               = 'Call';
-   SEditQSOMyGrid               = 'Grid';
-   SEditQSOMyState              = 'State';
-   SEditQSOMyCounty             = 'County';
-   SEditQSOMySection            = 'Section';
-   SEditQSOMyPark               = 'Park';
-   SEditQSOMyCQZone             = 'CQ zone';
-   SEditQSOMyITUZone            = 'ITU zone';
 
 implementation
 

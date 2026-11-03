@@ -2022,13 +2022,6 @@ msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "Pierwszym poleceniem w pliku konfiguracyjnym musi być MY CALL deklaracja!!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: utr4wstrings:tc_ms tr4w/src/lang/tr4w_consts_eng.pas:457
-msgctxt "TC_MS"
-msgid " ms"
-msgstr " ms"
-
 #. Section: ULOGSEARCH
 #: utr4wstrings:tc_entriesperms tr4w/src/lang/tr4w_consts_eng.pas:460
 msgctxt "TC_ENTRIESPERMS"
@@ -2046,18 +2039,6 @@ msgstr "Wielkość, bajty"
 msgctxt "TC_RECORDS"
 msgid "Records"
 msgstr "Nagrania"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_modified tr4w/src/lang/tr4w_consts_eng.pas:465
-msgctxt "TC_MODIFIED"
-msgid "Modified"
-msgstr "Modyfikowane"
-
-#. Section: ULOGCOMPARE
-#: utr4wstrings:tc_timediff tr4w/src/lang/tr4w_consts_eng.pas:466
-msgctxt "TC_TIMEDIFF"
-msgid "Time diff."
-msgstr "Różnica czasu."
 
 #. Section: POSTUNIT
 #: utr4wstrings:tc_morethan50differenthoursinthislog
@@ -6295,22 +6276,6 @@ msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Chcesz przesłać plik Cabrillo do SuperChecklPartial?"
 
-#. Section: General
-#. minute
-#: utr4wstrings:tc_m tr4w/src/lang/tr4w_consts_eng.pas:23
-#, fuzzy
-msgctxt "TC_M"
-msgid "m"
-msgstr "m"
-
-#. Section: General
-#. second
-#: utr4wstrings:tc_s tr4w/src/lang/tr4w_consts_eng.pas:24
-#, fuzzy
-msgctxt "TC_S"
-msgid "s"
-msgstr "s"
-
 #: tfrmabout.lblurl.caption
 msgid "http://www.tr4w.net"
 msgstr ""
@@ -9856,10 +9821,6 @@ msgstr "Logowanie nie działa, więc nie ma pliku do otwarcia."
 msgid "Login call does not look like a callsign"
 msgstr "Zaloguj się nie wygląda jak znak wywoławczy"
 
-#: utr4wstrings.tc_m
-msgid "m"
-msgstr ""
-
 #: utr4wstrings.tc_maximumnumberofremindersexceeded
 #, fuzzy
 msgid "Maximum number of reminders exceeded!!"
@@ -9906,11 +9867,6 @@ msgctxt "utr4wstrings.tc_mixw_disconnected"
 msgid "Disconnected"
 msgstr "Rozłączony"
 
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgid "Modified"
-msgstr "Modyfikowane"
-
 #: utr4wstrings.tc_mon
 #, fuzzy
 msgid "Mon"
@@ -9920,11 +9876,6 @@ msgstr "Pon"
 #, fuzzy
 msgid "More than 50 different hours in this log!!"
 msgstr "Więcej niż 50 różnych godzin w tym logu!!"
-
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgid " ms"
-msgstr " ms"
 
 #: utr4wstrings.tc_multneedsfor
 #, fuzzy
@@ -10377,10 +10328,6 @@ msgstr "Kolejny przypadek TR4W jest już uruchomiony"
 msgid "Russia"
 msgstr "Rosja"
 
-#: utr4wstrings.tc_s
-msgid "s"
-msgstr ""
-
 #: utr4wstrings.tc_salutation_and_name_if_known
 #, fuzzy
 msgid "Salutation and name if known"
@@ -10646,11 +10593,6 @@ msgstr "Ten plik nie istnieje. Utworzyć pusty plik do edycji?"
 #, fuzzy
 msgid "Thu"
 msgstr "Czw"
-
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgid "Time diff."
-msgstr "Różnica czasu"
 
 #: utr4wstrings.tc_timeon
 #, fuzzy

@@ -2318,14 +2318,6 @@ msgstr "Liian monta TOTAL SCORE MESSAGE -riviä!!"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "Asetustiedoston ensimmäisen komennon on oltava MY CALL -lause!!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: tr4w/src/lang/tr4w_consts_eng.pas:454
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgid " ms"
-msgstr " ms"
-
 #. Section: ULOGSEARCH
 #: tr4w/src/lang/tr4w_consts_eng.pas:457
 #: utr4wstrings.tc_entriesperms
@@ -2346,20 +2338,6 @@ msgstr "Koko, tavua"
 #, fuzzy
 msgid "Records"
 msgstr "Tiedot"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:462
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgid "Modified"
-msgstr "  muokattu "
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:463
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgid "Time diff."
-msgstr "Aikaero."
 
 #. Section: POSTUNIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:466
@@ -7402,22 +7380,6 @@ msgstr "Lähetä loki %s"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Haluatko ladata Cabrillo-tiedostosi SuperChecklPartialiin?"
-
-#. Section: General
-#. minute
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-#, fuzzy
-msgid "m"
-msgstr ""
-
-#. Section: General
-#. second
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-#, fuzzy
-msgid "s"
-msgstr ""
 
 #: tfrmabout.lblurl.caption
 #, fuzzy

@@ -21,8 +21,6 @@
   TC_DIFVERSION                         = '%s is from a different program version.'#13'TR4W is expecting version %s.'#13'The file you are trying to read version %s.';
   TC_FILE                               = 'File';
 
-  TC_M                                  = 'm'; //minute
-  TC_S                                  = 's'; //second
 
   TC_RADIO1                             = 'Radio 1';
   TC_RADIO2                             = 'Radio 2';
@@ -440,7 +438,6 @@
   TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'The first command in config file must be the MY CALL statement!!';
 
   {USYNTIME}
-  TC_MS                                 = ' ms'; //milliseconds
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = '%u entries per %u ms';
@@ -448,8 +445,6 @@
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Size, bytes';
   TC_RECORDS                            = 'Records';
-  TC_MODIFIED                           = 'Modified';
-  TC_TIMEDIFF                           = 'Time diff.';
 
   {POSTUNIT}
   TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'More than 50 different hours in this log!!';

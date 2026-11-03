@@ -5908,10 +5908,6 @@ msgstr ""
 msgid "Login call does not look like a callsign"
 msgstr ""
 
-#: utr4wstrings.tc_m
-msgid "m"
-msgstr ""
-
 #: utr4wstrings.tc_maximumnumberofremindersexceeded
 msgid "Maximum number of reminders exceeded!!"
 msgstr ""
@@ -5951,20 +5947,12 @@ msgctxt "utr4wstrings.tc_mixw_disconnected"
 msgid "Disconnected"
 msgstr ""
 
-#: utr4wstrings.tc_modified
-msgid "Modified"
-msgstr ""
-
 #: utr4wstrings.tc_mon
 msgid "Mon"
 msgstr ""
 
 #: utr4wstrings.tc_morethan50differenthoursinthislog
 msgid "More than 50 different hours in this log!!"
-msgstr ""
-
-#: utr4wstrings.tc_ms
-msgid " ms"
 msgstr ""
 
 #: utr4wstrings.tc_multneedsfor
@@ -6341,10 +6329,6 @@ msgstr ""
 msgid "Russia"
 msgstr ""
 
-#: utr4wstrings.tc_s
-msgid "s"
-msgstr ""
-
 #: utr4wstrings.tc_salutation_and_name_if_known
 msgid "Salutation and name if known"
 msgstr ""
@@ -6567,10 +6551,6 @@ msgstr ""
 
 #: utr4wstrings.tc_thu
 msgid "Thu"
-msgstr ""
-
-#: utr4wstrings.tc_timediff
-msgid "Time diff."
 msgstr ""
 
 #: utr4wstrings.tc_timeon

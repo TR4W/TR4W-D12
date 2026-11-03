@@ -2334,14 +2334,6 @@ msgstr "Muitas TOTAL SCORE MESSAGE!!"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "O primeiro comando no arquivo de configuração deve ser a declaração MY CALL!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: tr4w/src/lang/tr4w_consts_eng.pas:454
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgid " ms"
-msgstr " ms"
-
 #. Section: ULOGSEARCH
 #: tr4w/src/lang/tr4w_consts_eng.pas:457
 #: utr4wstrings.tc_entriesperms
@@ -2362,20 +2354,6 @@ msgstr "Tamanho, bytes"
 #, fuzzy
 msgid "Records"
 msgstr "Registros"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:462
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgid "Modified"
-msgstr "Modificado"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:463
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgid "Time diff."
-msgstr "Difere o tempo."
 
 # 2026-10-19: term from the CQWS 2026 bulletin (Escoteiros do Brasil), Portuguese original Boletim_CQWS_2026_portugues.pdf: 'neste tronco' -> 'neste log', p.4, p.12 'log' (tronco = tree trunk). Previous text: "Mais de 50 horas diferentes neste tronco!"
 #. Section: POSTUNIT
@@ -7447,22 +7425,6 @@ msgstr "Envie o registro para %s"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Quer enviar seu arquivo para o SuperChecklPartial?"
-
-#. Section: General
-#. minute
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-#, fuzzy
-msgid "m"
-msgstr ""
-
-#. Section: General
-#. second
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-#, fuzzy
-msgid "s"
-msgstr ""
 
 #: tfrmabout.lblurl.caption
 #, fuzzy

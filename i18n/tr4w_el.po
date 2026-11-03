@@ -2318,14 +2318,6 @@ msgstr "Πάρα πολλά TOTAL SCORE MESSAGE!!"
 msgid "The first command in config file must be the MY CALL statement!!"
 msgstr "Η πρώτη εντολή στο αρχείο ρυθμίσεων πρέπει να είναι η δήλωση MY CALL!!"
 
-#. Section: USYNTIME
-#. milliseconds
-#: tr4w/src/lang/tr4w_consts_eng.pas:454
-#: utr4wstrings.tc_ms
-#, fuzzy
-msgid " ms"
-msgstr " ms"
-
 #. Section: ULOGSEARCH
 #: tr4w/src/lang/tr4w_consts_eng.pas:457
 #: utr4wstrings.tc_entriesperms
@@ -2346,20 +2338,6 @@ msgstr "Μέγεθος, ψηφιολέξεις"
 #, fuzzy
 msgid "Records"
 msgstr "Αρχεία"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:462
-#: utr4wstrings.tc_modified
-#, fuzzy
-msgid "Modified"
-msgstr "Τροποποιήθηκε"
-
-#. Section: ULOGCOMPARE
-#: tr4w/src/lang/tr4w_consts_eng.pas:463
-#: utr4wstrings.tc_timediff
-#, fuzzy
-msgid "Time diff."
-msgstr "Χρονική διαφορά."
 
 #. Section: POSTUNIT
 #: tr4w/src/lang/tr4w_consts_eng.pas:466
@@ -7404,22 +7382,6 @@ msgstr "Αποστολή καταγραφής στο %s"
 msgctxt "TC_UPLOADCABRILLOTOSCP"
 msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Θέλετε να ανεβάσετε το αρχείο Cabrillo σας στο SuperChecklPartial?"
-
-#. Section: General
-#. minute
-#: tr4w/src/lang/tr4w_consts_eng.pas:23
-#: utr4wstrings.tc_m
-#, fuzzy
-msgid "m"
-msgstr ""
-
-#. Section: General
-#. second
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#: utr4wstrings.tc_s
-#, fuzzy
-msgid "s"
-msgstr ""
 
 #: tfrmabout.lblurl.caption
 #, fuzzy

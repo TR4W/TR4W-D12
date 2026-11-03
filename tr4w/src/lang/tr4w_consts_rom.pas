@@ -34,8 +34,6 @@
   TC_FREQUENCYFORCALLINKHZ              = 'frecventa ptr %s in KHz';
   TC_DIFVERSION                         = '%s este de la o alta versiune';
   TC_FILE                               = 'Fisier';
-  TC_M                                  = 'm'; //minute
-  TC_S                                  = 's'; //secunde
 
   TC_RADIO1                             = 'Statia 1';
   TC_RADIO2                             = 'Statia 2';
@@ -455,7 +453,6 @@
   TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'Prima linie in fisierul de configurare trebuie sa fie MY CALL!!';
 
   {USYNTIME}
-  TC_MS                                 = ' ms'; //millisecunde
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = '%u accesari in %u ms';
@@ -463,8 +460,6 @@
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Marime, bytes';
   TC_RECORDS                            = 'Inregistrare';
-  TC_MODIFIED                           = 'Modificat';
-  TC_TIMEDIFF                           = 'Diferenta timp.';
 
   {POSTUNIT}
   TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Mai mult de 50 timpi diferiti in acest log!!';

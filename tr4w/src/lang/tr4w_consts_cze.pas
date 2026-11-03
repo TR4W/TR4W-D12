@@ -28,8 +28,6 @@ const
 
 
 
-  TC_M                                  = 'm'; //minuta
-  TC_S                                  = 's'; //sekunda
 
   TC_RADIO1                             = 'RIG 1';
   TC_RADIO2                             = 'RIG 2';
@@ -455,7 +453,6 @@ const
   TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'První údaj v konfiguračním souboru musí být zadání vlastní značky (MY CALL)!';
 
   {USYNTIME}
-  TC_MS                                 = ' ms'; //milisekund
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = '%u vstupů za %u ms';
@@ -463,8 +460,6 @@ const
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Velikost, bytů';
   TC_RECORDS                            = 'Zápisy';
-  TC_MODIFIED                           = 'Upraveno';
-  TC_TIMEDIFF                           = 'Časový rozdíl';
 
   {POSTUNIT}
   TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Více než 50 různých hodinových údajů v tomto deníku!';

@@ -29,8 +29,6 @@ const
   TC_DIFVERSION                         = '%s из другой версии программы.'#13'TR4W ожидает версию %s.'#13'Файл, который вы пытаетесь открыть имеет версию %s.';
   TC_FILE                               = 'Файл';
 
-  TC_M                                  = 'м'; //minute
-  TC_S                                  = 'с'; //second
 
   TC_RADIO1                             = 'Радио 1';
   TC_RADIO2                             = 'Радио 2';
@@ -521,7 +519,6 @@ const
   TC_TIMEON                             = 'Время в эфире';
 
   {USYNTIME}
-  TC_MS                                 = ' мс'; //milliseconds
 
   {ULOGSEARCH}
   TC_ENTRIESPERMS                       = 'Найдено %u записи(ей) за %u мс';
@@ -529,8 +526,6 @@ const
   {ULOGCOMPARE}
   TC_SIZEBYTES                          = 'Размер, байт';
   TC_RECORDS                            = 'Записей';
-  TC_MODIFIED                           = 'Изменен';
-  TC_TIMEDIFF                           = 'Вр. разница';
 
   {ULOGCOMPARE}
   TC_SERVERLOG                          = 'СЕРВЕРНЫЙ ЛОГ';
