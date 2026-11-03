@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TR4W\n"
-"PO-Revision-Date: 2026-11-03 06:12+0000\n"
+"PO-Revision-Date: 2026-11-03 07:27+0000\n"
 "Last-Translator: Weblate Admin <weblate.admin@bettersoftwaresolutions.com>\n"
 "Language-Team: Spanish <http://weblate.bettersoftwaresolutions.com/projects/"
 "tr4w/client/es/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 #: utr4wstrings.tc_translation_language
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr "Espanol"
+msgstr "Español"
 
 #. Section: General
 #: utr4wstrings:tc_translation_author tr4w/src/lang/tr4w_consts_eng.pas:8
