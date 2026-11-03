@@ -434,7 +434,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1206 -> 1205, 2026-11-02: the panadapter's scale caption is written by one
 # helper (ShowScaleCaption) instead of two copies, while the spectrum display
 # defaults moved onto the radio; measured by the full build of that work.
-$NARROW_CEILING = 1205
+# 1205 -> 1201, 2026-11-03: mnemonic stage 2 (uMnemonicsLCL; window titles
+# without their '&'; the radio-slot title built once, by RadioWindowTitle);
+# measured by the full build of that work.
+$NARROW_CEILING = 1201
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

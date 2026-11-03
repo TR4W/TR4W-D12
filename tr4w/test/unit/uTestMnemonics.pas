@@ -37,6 +37,8 @@ type
       procedure TestIsCJKCaption;
       procedure TestShortLetterArrayLeavesTheRestAlone;
       procedure TestEmptyInput;
+      procedure TestDisplayedText;
+      procedure TestMarkupFollowsTheCapability;
    public
       procedure RunAllTests; override;
    end;
@@ -44,7 +46,7 @@ type
 implementation
 
 uses
-   SysUtils, uMnemonics;
+   SysUtils, uMnemonics, uMnemonicsLCL;
 
 type
    TFields = array of string;
@@ -320,6 +322,37 @@ begin
    CheckEquals(0, Length(r), 'no captions, no results');
 end;
 
+(* uMnemonicsLCL.DisplayedText: the text a caption PAINTS. '&&' is the case the
+   hand-written stripper it replaced in uQTCSendForm got wrong -- it removed
+   both ampersands, so a literal one measured as nothing. *)
+procedure TMnemonicTests.TestDisplayedText;
+begin
+   BeginTest('TestDisplayedText');
+   CheckEquals('File', string(DisplayedText('&File')), 'a lone marker is removed');
+   CheckEquals('Exit', string(DisplayedText('E&xit')), 'wherever it is');
+   CheckEquals('Q&A', string(DisplayedText('Q&&A')), '&& paints one &');
+   CheckEquals('A&B', string(DisplayedText('A&&&B')), 'the pair, then a marker');
+   CheckEquals('&', string(DisplayedText('&&')), '&& alone');
+   CheckEquals('Save', string(DisplayedText('Save&')), 'a trailing lone & paints nothing');
+   CheckEquals('NEXT [return]', string(DisplayedText('N&EXT [return]')),
+               'a QTC button caption measures as before');
+   CheckEquals('Beacons monitor', string(DisplayedText('Beacons monitor')),
+               'a caption with no markup is unchanged');
+   CheckEquals('', string(DisplayedText('')), 'empty');
+end;
+
+(* uMnemonicsLCL.MnemonicMarkupFor: both outcomes, on any platform. The live
+   capability is deliberately not pinned -- that would be an {$IFDEF} on the
+   platform, moved into the suite. *)
+procedure TMnemonicTests.TestMarkupFollowsTheCapability;
+begin
+   BeginTest('TestMarkupFollowsTheCapability');
+   CheckTrue(MnemonicMarkupFor(True) = mmAssign,
+             'a widget set that honours & gets mnemonics');
+   CheckTrue(MnemonicMarkupFor(False) = mmLeaveAlone,
+             'one that does not (Cocoa) gets none written');
+end;
+
 procedure TMnemonicTests.RunAllTests;
 begin
    TestVectorFileLoads;
@@ -329,6 +362,8 @@ begin
    TestIsCJKCaption;
    TestShortLetterArrayLeavesTheRestAlone;
    TestEmptyInput;
+   TestDisplayedText;
+   TestMarkupFollowsTheCapability;
 end;
 
 end.

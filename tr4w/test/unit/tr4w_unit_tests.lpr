@@ -640,6 +640,7 @@ uses
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
    uMnemonics           in '..\..\src\uMnemonics.pas',
+   uMnemonicsLCL        in '..\..\src\ui\lcl\uMnemonicsLCL.pas',
    uTestMnemonics       in 'uTestMnemonics.pas',
    uTestSpotStore       in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',

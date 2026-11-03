@@ -179,7 +179,7 @@ end;
 function OpenPanadapterForSlot(const aSlot: integer): boolean;
 var
    rig: RadioPtr;
-   caption, rigName: string;
+   caption: string;
 begin
    Result := False;
 
@@ -203,26 +203,12 @@ begin
       Exit;
       end;
 
-   { THE SAME NAME THE PANEL ITSELF CARRIES -- "Radio 1 K4D-278" -- so the
-     panadapter title reads "Panadapter - Radio 1 K4D-278".  Built the same way
-     as the panel's caption (MainUnit, OpenTR4WWindow): the localized label,
-     plus the rig name ONLY when it differs, because RadioName is initialised to
-     that same label and would otherwise read "Radio 1 Radio 1" on a station
-     with no radio configured. }
-   if aSlot = 2 then
-      begin
-      caption := TC_RADIO2;
-      end
-   else
-      begin
-      caption := TC_RADIO1;
-      end;
-
-   rigName := Trim(string(rig^.RadioName));
-   if (rigName <> '') and (not SameText(rigName, caption)) then
-      begin
-      caption := caption + ' ' + rigName;
-      end;
+   (* THE SAME NAME THE PANEL ITSELF CARRIES -- "Radio 1 K4D-278" -- so the
+     panadapter title reads "Panadapter - Radio 1 K4D-278". Not built the same
+     way any more but BY the same routine (MainUnit.RadioWindowTitle): this was
+     a copy of the panel's, and the mnemonic fix of 2026-11-03 would have had
+     to land in both. *)
+   caption := RadioWindowTitle(aSlot);
 
    { ONE PANADAPTER PER RADIO -- this panel's own slot.  Two K4s on an SO2R
      station get two windows; before 2026-08-26 the second STOLE the first,

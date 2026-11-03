@@ -104,7 +104,8 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
-  VC,           // UTC, RC_BEACONSM, CW
+  uMnemonicsLCL,     (* DisplayedText -- the title is a menu row's string *)
+  VC,          // UTC, RC_BEACONSM, CW
   LogRadio,     // SetRadioFreq, RadioOne
   uBeacons,     // BEACONS, BeaconsNames, FreqArray -- the data stayed put
   MainUnit,     // logger
@@ -200,7 +201,9 @@ var
   btn: TSpeedButton;
 begin
 
-   Caption := RC_BEACONSM;
+   (* RC_BEACONSM is also this window's MENU ROW, so it may carry mnemonic
+      markup; a title shows it without (DisplayedText). *)
+   Caption := DisplayedText(TCaption(RC_BEACONSM));
 
    // The button captions come from FreqArray, so that table stays the single
    // statement of which frequency each button means -- the .lfm carries the

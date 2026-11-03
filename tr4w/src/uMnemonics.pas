@@ -7,8 +7,10 @@ unit uMnemonics;
    group -- the controls of one form, or the items of one menu -- with the
    English accelerator letter of each and the letters already spoken for, and
    returns the captions with their '&' markers repaired so that no two items
-   claim one letter. Wiring it to a form, and macOS (which has no Alt
-   mnemonics), are stage 2.
+   claim one letter. Whether a widget set honours mnemonics at all (macOS
+   does not), and the text a caption displays, are stage 2 and live in
+   src/ui/lcl/uMnemonicsLCL.pas, because both need the LCL. Wiring this to a
+   menu or a form is stage 3.
 
    WHY IT IS NEEDED. A translation keeps its English accelerator only when the
    translated word happens to contain the same letter, and two translated

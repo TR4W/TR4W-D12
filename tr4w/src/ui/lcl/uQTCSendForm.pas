@@ -117,6 +117,7 @@ uses
    uQTCS,                 { the send state and the send routines }
    LogWind,               { QuickDisplay }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
+   uMnemonicsLCL,         (* DisplayedText -- a caption as it is painted *)
    MainUnit,              { ProcessMenu, YesOrNo, logger }
    Log4D;
 
@@ -193,16 +194,18 @@ var
    x  : integer;
    btn: TButton;
 
-   { THE WIDTH THIS CAPTION NEEDS, in the font the button will draw it in.
+   (* THE WIDTH THIS CAPTION NEEDS, in the font the button will draw it in.
 
-     The '&' is an accelerator marker and is never painted, so measuring it
-     would buy every button a few pixels of nothing. }
+     Measured as DISPLAYED (uMnemonicsLCL.DisplayedText): a lone '&' is a
+     mnemonic marker and is never painted, and '&&' paints ONE '&'. This was a
+     StringReplace of every '&', which measured a literal ampersand -- the
+     operator's QRV message can hold one -- as nothing at all. *)
    function CaptionWidth(const aCaption: AnsiString): integer;
    begin
       Canvas.Font := Font;
-      { AnsiString throughout -- Canvas.TextWidth takes the LCL's own string
-        type, and casting to this unit's UnicodeString would narrow at the call. }
-      Result := Canvas.TextWidth(StringReplace(aCaption, '&', '', [rfReplaceAll]));
+      (* AnsiString throughout -- Canvas.TextWidth takes the LCL's own string
+         type, and casting to this unit's UnicodeString would narrow at the call. *)
+      Result := Canvas.TextWidth(DisplayedText(aCaption));
    end;
 
 begin

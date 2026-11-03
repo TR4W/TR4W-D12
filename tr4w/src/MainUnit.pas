@@ -569,6 +569,11 @@ procedure RepeatLastCWMessage;
   in the CAT dialog. Safe when a panel is closed. }
 procedure RefreshRadioWindowCaptions;
 
+(* THE NAME A RADIO SLOT'S WINDOWS CARRY -- "Radio 1 K4D-278" -- for the radio
+   panel and its panadapter alike (aSlot 2 is Radio 2, anything else Radio 1).
+   One routine, because the two windows built it in two copies. *)
+function RadioWindowTitle(const aSlot: integer): string;
+
 (* SET A MENU ITEM'S ENABLED / CHECKED / CAPTION BY COMMAND ID, or do nothing
   if the menu has no such row.
 
@@ -707,6 +712,7 @@ uses
   uAppPaths,   // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
+   uMnemonicsLCL,      (* DisplayedText -- a window title is a menu row without its '&' *)
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
@@ -6464,6 +6470,46 @@ begin
 end;
 {------------------------------------------------------------------------------}
 
+(* THE TITLE OF A RADIO SLOT'S WINDOWS: the localized label, plus the rig name
+  when it differs. The radio panel and its panadapter both ask this; they used
+  to build it in two copies.
+
+  THE GUARD ON rigName IS NOT PADDING. RadioName is INITIALISED to
+  TC_RADIO1/TC_RADIO2 (logradio.pas) and only replaced when a definition is
+  applied, so appending it unconditionally reads "Radio 1 Radio 1" on a station
+  with no radio configured -- the state this panel is most often opened in while
+  one is being set up. An emptied slot lands there too, and correctly reads just
+  "Radio 2".
+
+  THE LABEL IS A MENU ROW'S STRING, so it is shown without its mnemonic markup
+  (DisplayedText) -- but compared WITH it, because RadioName is initialised to
+  the same raw string. The rig name is the operator's own text and is shown as
+  typed. UnicodeSameText, not SameText: SysUtils' plain name takes the 8-bit
+  string and would narrow a Cyrillic rig name before comparing it. *)
+function RadioWindowTitle(const aSlot: integer): string;
+var
+   radioLabel, rigName: string;
+   Radio: RadioPtr;
+begin
+   if aSlot = 2 then
+      begin
+      radioLabel := TC_RADIO2;
+      Radio := @Radio2;
+      end
+   else
+      begin
+      radioLabel := TC_RADIO1;
+      Radio := @Radio1;
+      end;
+
+   Result := string(DisplayedText(TCaption(radioLabel)));
+   rigName := Trim(string(Radio.RadioName));
+   if (rigName <> '') and (not UnicodeSameText(rigName, radioLabel)) then
+      begin
+      Result := Result + ' ' + rigName;
+      end;
+end;
+
 { Re-title a radio panel from the radio currently in that slot.
 
   CALLED WHENEVER THE SLOT CHANGES, not only when the window opens. The caption
@@ -6475,18 +6521,9 @@ end;
   (NY4I, 2026-08-31).
 
   DOES NOTHING IF THE WINDOW IS NOT OPEN: there is no caption to set, and the
-  open path calls this itself.
-
-  THE GUARD ON rigName IS NOT PADDING. RadioName is INITIALISED to
-  TC_RADIO1/TC_RADIO2 (logradio.pas) and only replaced when a definition is
-  applied, so appending it unconditionally reads "Radio 1 Radio 1" on a station
-  with no radio configured -- the state this panel is most often opened in while
-  one is being set up. An emptied slot lands there too, and correctly reads just
-  "Radio 2". }
+  open path calls this itself. The title itself is RadioWindowTitle's. }
 procedure RefreshRadioWindowCaption(const ID: WindowsType);
 var
-   radioCaption, rigName: string;
-   Radio: RadioPtr;
    lclForm: TCustomForm;
 begin
    if not (ID in [tw_RADIOINTERFACEWINDOW1_INDEX, tw_RADIOINTERFACEWINDOW2_INDEX]) then
@@ -6504,23 +6541,6 @@ begin
       Exit;
       end;
 
-   if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
-      begin
-      radioCaption := TC_RADIO1;
-      Radio := @Radio1;
-      end
-   else
-      begin
-      radioCaption := TC_RADIO2;
-      Radio := @Radio2;
-      end;
-
-   rigName := Trim(string(Radio.RadioName));
-   if (rigName <> '') and (not SameText(rigName, radioCaption)) then
-      begin
-      radioCaption := radioCaption + ' ' + rigName;
-      end;
-
    (* THE PANEL IS AN LCL FORM; its title is a property. LclFormFor answers for
      both radio slots, and the guard above has already established the window
      exists.
@@ -6533,7 +6553,14 @@ begin
    lclForm := LclFormFor(ID);
    if lclForm <> nil then
       begin
-      lclForm.Caption := TCaption(radioCaption);
+      if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
+         begin
+         lclForm.Caption := TCaption(RadioWindowTitle(2));
+         end
+      else
+         begin
+         lclForm.Caption := TCaption(RadioWindowTitle(1));
+         end;
       end;
 end;
 
@@ -6891,9 +6918,13 @@ begin
   // SetWindowTextW(h, menuText) that stood here could only ever have been
   // handed a null handle -- doing nothing, silently, on top of an Error that
   // arm already logs.
+  (* WITHOUT ITS MNEMONIC (2026-11-03). A menu row's caption is markup -- '&'
+     marks the Alt+letter, '&&' is a literal ampersand -- and a title bar
+     paints every character it is given, so 'E&xit' would be titled with its
+     ampersand. DisplayedText is the LCL's own reading of that markup. *)
   if lclForm <> nil then
      begin
-     lclForm.Caption := TCaption(menuTitle);
+     lclForm.Caption := DisplayedText(TCaption(menuTitle));
      end;
   {
   Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
