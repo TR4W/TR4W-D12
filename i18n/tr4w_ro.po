@@ -6384,14 +6384,6 @@ msgid "Dupesheet"
 msgstr "Fisier ptr duble"
 
 #. Section: UEDITMESSAGE
-#: utr4wstrings:rc_trmaster
-#: tr4w/src/lang/tr4w_consts_eng.pas:623
-#: utr4wstrings.rc_trmaster
-msgctxt "RC_TRMASTER"
-msgid "SCP"
-msgstr "Baza de date-SCP"
-
-#. Section: UEDITMESSAGE
 #. 4.72.3
 #: utr4wstrings:rc_remmults
 #: tr4w/src/lang/tr4w_consts_eng.pas:624

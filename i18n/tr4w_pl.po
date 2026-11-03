@@ -2544,10 +2544,6 @@ msgstr "Nazwa wysłana"
 msgid "Prefix Mult"
 msgstr "Prefix mnożnik"
 
-#: tfrmeditqso.chkxqso.caption
-msgid "X-QSO"
-msgstr "X- QSO"
-
 #: tfrmeditqso.chkzonemult.caption
 msgid "Zone Mult"
 msgstr "Mnożnik obszaru"
@@ -3034,10 +3030,6 @@ msgstr "zastopuj "
 #: tfrmtelnet.btnsend.caption
 msgid "Send"
 msgstr "Wyślij"
-
-#: tfrmtelnet.btnshow50.caption
-msgid "SH/50"
-msgstr "SH / 50"
 
 #: tfrmtelnet.caption
 msgid "Telnet"
