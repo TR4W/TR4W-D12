@@ -112,9 +112,10 @@ type
       the radio states about itself ("draw me at 80 dB unless told otherwise");
       these are LIVE values the radio reports as the operator turns its knobs
       (reference level, scale, AutoRef, waterfall share, averaging, waterfall
-      colour range).  Today only the K4 reports them (uK4DisplayReport), and
-      NOTHING ABOVE THE FACTORY READS THEM YET -- stage 1-2 of the K4
-      display-state work is parsing and radio-owned state only.
+      colour range, waterfall colour mode).  Today only the K4 reports them
+      (uK4DisplayReport).  THE WINDOW DOES NOT READ THIS RECORD: it is in the
+      radio's own units, so the radio translates it into a
+      TSpectrumLiveDisplay (below) and the window reads that.
 
       EVERY VALUE HAS ITS OWN Has FLAG, because "the radio has not said" is not
       a legal zero: a REF of 0 dB and a waterfall share of 0 percent are both
@@ -147,11 +148,65 @@ type
       AvgFrames: Integer;             // spectrum averaging, frames
       HasColourRange: Boolean;
       ColourRange: Integer;           // waterfall colour range, radio's units
+      HasColourMode: Boolean;
+      ColourMode: Integer;            // waterfall colour scheme, radio's units
       Generation: Integer;            // see above; 0 = never reported or reset
+   end;
+
+   (* A WATERFALL COLOUR SCHEME, NAMED BY ITS TONE.  Vendor-neutral: a radio
+      maps its own scheme numbers onto these, and the window maps these onto
+      the palettes it draws.  Neither side knows the other's numbering. *)
+   TSpectrumPaletteTone = (sptGray, sptColour, sptTeal, sptBlue, sptSepia);
+
+   (* WHAT THE RADIO'S OWN DISPLAY SAYS THE WINDOW SHOULD LOOK LIKE, RIGHT NOW,
+      in units the window understands.  The radio derives it from its
+      TSpectrumRadioState; the window reads it on its refresh timer and falls
+      back to TSpectrumDisplayDefaults for every value whose flag is False.
+
+      WaterfallShare        the waterfall's share of the plot height, 0..1
+                            INCLUSIVE: 0 is trace only, 1 is waterfall only.
+                            (TSpectrumDisplayDefaults.WaterfallFraction must
+                            lie strictly inside; a live value may not.)
+      ColourFloorOfScale    where the bottom of the waterfall palette sits,
+                            BELOW the reference, as a fraction of the scale:
+                            the floor is ColourFloorOfScale x scale dB under
+                            the reference, and the palette spans one scale
+                            above that.  > 0.
+      Palette               the colour scheme.
+
+      No Generation: the window applies a value only when it differs from the
+      one it last applied, because a radio under AutoRef reports its reference
+      several times a second and each report would otherwise re-colour the
+      whole history. *)
+   TSpectrumLiveDisplay = record
+      HasWaterfallShare: Boolean;
+      WaterfallShare: Single;
+      HasColourFloor: Boolean;
+      ColourFloorOfScale: Single;
+      HasPalette: Boolean;
+      Palette: TSpectrumPaletteTone;
    end;
 
 (* Nothing known, Generation 0.  What a radio that reports nothing returns. *)
 function SpectrumRadioStateUnknown: TSpectrumRadioState;
+
+(* Nothing known: every flag False.  What a radio with no live display says. *)
+function SpectrumLiveDisplayUnknown: TSpectrumLiveDisplay;
+function SpectrumLiveDisplayKnowsNothing(const ALive: TSpectrumLiveDisplay): Boolean;
+
+(* THE WINDOW'S TWO RESOLUTIONS, as pure functions so a test can hold them to
+   "unknown means exactly today's numbers".
+
+   SpectrumWaterfallShare: the live share when known, else the defaults'.
+   SpectrumWaterfallColourMarginDb: how far below each row's reference the
+   palette starts -- ColourFloorOfScale x AScaleDb when known, else the
+   defaults' RefMarginDb.  The TRACE never uses this: its margin stays
+   RefMarginDb whatever the radio says about waterfall colours. *)
+function SpectrumWaterfallShare(const ADefaults: TSpectrumDisplayDefaults;
+                                const ALive: TSpectrumLiveDisplay): Single;
+function SpectrumWaterfallColourMarginDb(const ADefaults: TSpectrumDisplayDefaults;
+                                         const ALive: TSpectrumLiveDisplay;
+                                         AScaleDb: Integer): Single;
 
 (* True when no Has flag is set.  THIS, not equality with
    SpectrumRadioStateUnknown, is "the radio has told us nothing": a reset
@@ -333,7 +388,55 @@ begin
              (not AState.HasAutoRef)             and
              (not AState.HasWaterfallFraction)   and
              (not AState.HasAvg)                 and
-             (not AState.HasColourRange);
+             (not AState.HasColourRange)         and
+             (not AState.HasColourMode);
+end;
+
+function SpectrumLiveDisplayUnknown: TSpectrumLiveDisplay;
+begin
+   Result := Default(TSpectrumLiveDisplay);
+end;
+
+function SpectrumLiveDisplayKnowsNothing(const ALive: TSpectrumLiveDisplay): Boolean;
+begin
+   Result := (not ALive.HasWaterfallShare)   and
+             (not ALive.HasColourFloor)      and
+             (not ALive.HasPalette);
+end;
+
+function SpectrumWaterfallShare(const ADefaults: TSpectrumDisplayDefaults;
+                                const ALive: TSpectrumLiveDisplay): Single;
+begin
+   Result := ADefaults.WaterfallFraction;
+
+   if ALive.HasWaterfallShare then
+      begin
+      Result := ALive.WaterfallShare;
+      end;
+
+   (* A radio's driver bounds its own value; this keeps a wrong one from
+      producing a negative surface. *)
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+
+   if Result > 1 then
+      begin
+      Result := 1;
+      end;
+end;
+
+function SpectrumWaterfallColourMarginDb(const ADefaults: TSpectrumDisplayDefaults;
+                                         const ALive: TSpectrumLiveDisplay;
+                                         AScaleDb: Integer): Single;
+begin
+   Result := ADefaults.RefMarginDb;
+
+   if ALive.HasColourFloor and (ALive.ColourFloorOfScale > 0) and (AScaleDb > 0) then
+      begin
+      Result := ALive.ColourFloorOfScale * AScaleDb;
+      end;
 end;
 
 function NextSpectrumRadioStateGeneration(AGeneration: Integer): Integer;

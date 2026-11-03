@@ -102,8 +102,13 @@ unit uPanadapterForm;
   this was when it was measured" is stable over time AND still re-renderable.
 
   THE PALETTES ARE THE K4'S FIVE.  #WFC is 0..4 on the radio, which is where
-  TR4QT's five come from too.  TR4W picks its own (NY4I, 2026-08-25) rather
-  than following #WFC, but there being exactly five is not a coincidence.
+  TR4QT's five come from too.  ~~TR4W picks its own (NY4I, 2026-08-25) rather
+  than following #WFC~~ -- REVERSED 2026-11-03 (NY4I): the window follows the
+  radio's LCD waterfall height, colour range and colour scheme, through the
+  radio's SpectrumLiveDisplay (ApplyLiveDisplay).  The operator's combo still
+  works; it stands until the radio next reports a DIFFERENT scheme.  A radio
+  that reports none -- every radio but the K4, and a K4 that has not answered
+  -- draws exactly as before.
 }
 
 interface
@@ -177,6 +182,21 @@ type
          FHaveRender needs a frame and a frame needs an attached radio. *)
       FDisplay: TSpectrumDisplayDefaults;
       FHaveDisplay: Boolean;
+      (* WHAT THE RADIO'S OWN DISPLAY SAYS, AS LAST APPLIED, and the two numbers
+         resolved from it and FDisplay.  Read from the radio on every refresh
+         tick (ApplyLiveDisplay) and applied only where a value CHANGED -- a K4
+         under AutoRef reports its reference several times a second, and
+         re-applying on every report would re-colour the whole history each
+         time and overwrite the operator's palette choice.  Reset to "nothing
+         known" on every attach, so a first report equal to the default still
+         applies.
+           FWfShare        the waterfall's share of the plot, 0..1 inclusive
+           FColourMarginDb how far below each row's reference the palette
+                           starts.  The WATERFALL's only: the trace keeps
+                           FDisplay.RefMarginDb. *)
+      FLive: TSpectrumLiveDisplay;
+      FWfShare: Single;
+      FColourMarginDb: Single;
       FPaused: Boolean;
       FLUT: array[0..255] of LongWord;
 
@@ -242,7 +262,11 @@ type
       procedure DrawSpots(ACanvas: TCanvas; AWidth, ASpecH: Integer);
 
       procedure BuildPalette;
+      procedure SelectPalette(AIndex: Integer);
       procedure ApplyDisplayDefaults(const ADefaults: TSpectrumDisplayDefaults);
+      procedure ApplyLiveDisplay(const ALive: TSpectrumLiveDisplay);
+      procedure DrawTrace(ACanvas: TCanvas; AWidth, ASpecH: Integer;
+                          AMinDb, ARangeDb: Single; ABinsPerPixel: Double);
       procedure ShowScaleCaption;
       function PeakForPixel(AX: Integer; ABinsPerPixel: Double): Single;
       procedure DisplayRange(out AMinDb, ARangeDb: Single);
@@ -288,6 +312,24 @@ type
       property MsInRows: Int64 read FMsInRows;
       property MsInPaint: Int64 read FMsInPaint;
    end;
+
+const
+   (* The window's five palettes, by their index in cboPalette's designed
+      Items.  NOT the K4's #WFC order, and not reordered to it: the combo's
+      index is what bench_panadapter drives, and the radio's numbering is the
+      radio's.  A radio's scheme arrives as a neutral TSpectrumPaletteTone and
+      PanadapterPaletteForTone names the palette for it. *)
+   PALETTE_HEATMAP = 0;
+   PALETTE_GRAYSCALE = 1;
+   PALETTE_SEPIA = 2;
+   PALETTE_BLUEGREEN = 3;
+   PALETTE_FIREICE = 4;
+
+(* The palette this window draws for a radio's colour scheme.  sptBlue maps to
+   Fire-Ice PROVISIONALLY: it is the only blue-led palette here, but its top
+   runs white to red, which a "blue tone" does not -- see
+   docs/PANADAPTER_LCL_DESIGN.md section 10.5. *)
+function PanadapterPaletteForTone(ATone: TSpectrumPaletteTone): Integer;
 
 { ONE PANADAPTER PER RADIO.  Slot 1 is Radio 1, slot 2 is Radio 2 -- the same
   shape the dupe sheets and the radio panels already use, and for the same
@@ -502,12 +544,6 @@ const
    SPOT_ROW_HEIGHT = 14;
    SPOT_TOP = 18;
 
-   PALETTE_HEATMAP = 0;
-   PALETTE_GRAYSCALE = 1;
-   PALETTE_SEPIA = 2;
-   PALETTE_BLUEGREEN = 3;
-   PALETTE_FIREICE = 4;
-
    // The uninitialised waterfall reads far below any real reference, so it
    // clamps to LUT index 0 -- black in every palette -- rather than needing a
    // separate "no data here" test in the render loop.
@@ -532,6 +568,9 @@ begin
    FScaleDb := 0;
    FDisplay := SpectrumDisplayDefaultsNone;
    FHaveDisplay := False;
+   FLive := SpectrumLiveDisplayUnknown;
+   FWfShare := 0;          // ApplyDisplayDefaults gives the radio's
+   FColourMarginDb := 0;   // likewise; nothing draws before it runs
    FPaused := False;
    FWfW := 0;
    FWfH := 0;
@@ -723,6 +762,52 @@ end;
 // Palette
 // ---------------------------------------------------------------------------
 
+function PanadapterPaletteForTone(ATone: TSpectrumPaletteTone): Integer;
+begin
+   case ATone of
+      sptGray:
+         begin
+         Result := PALETTE_GRAYSCALE;
+         end;
+      sptTeal:
+         begin
+         Result := PALETTE_BLUEGREEN;
+         end;
+      sptBlue:
+         begin
+         Result := PALETTE_FIREICE;     // provisional -- see the declaration
+         end;
+      sptSepia:
+         begin
+         Result := PALETTE_SEPIA;
+         end;
+      else
+         begin
+         Result := PALETTE_HEATMAP;     // sptColour
+         end;
+   end;
+end;
+
+(* The one place the palette changes: the operator's combo and the radio's
+   report both come here.  The combo is set to match, never relied on to
+   raise OnChange.  The caller re-renders. *)
+procedure TfrmPanadapter.SelectPalette(AIndex: Integer);
+begin
+   if (AIndex < 0) or (AIndex >= cboPalette.Items.Count) then
+      begin
+      Exit;
+      end;
+
+   FPalette := AIndex;
+
+   if cboPalette.ItemIndex <> AIndex then
+      begin
+      cboPalette.ItemIndex := AIndex;
+      end;
+
+   BuildPalette;
+end;
+
 procedure TfrmPanadapter.BuildPalette;
 var
    i: Integer;
@@ -884,11 +969,20 @@ var
    rangeChanged, marginChanged: Boolean;
 begin
    rangeChanged := SpectrumScaleNeedsReset(FHaveDisplay, FDisplay, ADefaults);
+   (* The waterfall's margin, not the trace's: what the history is coloured
+      with until the new radio says otherwise. *)
    marginChanged := (not FHaveDisplay) or
-                    (FDisplay.RefMarginDb <> ADefaults.RefMarginDb);
+                    (FColourMarginDb <> ADefaults.RefMarginDb);
 
    FDisplay := ADefaults;
    FHaveDisplay := True;
+
+   (* A NEW ATTACH KNOWS NOTHING OF THE RADIO'S LIVE DISPLAY.  Back to the
+      defaults, and FLive forgotten, so the first refresh tick applies every
+      value the radio has reported -- including one equal to a default. *)
+   FLive := SpectrumLiveDisplayUnknown;
+   FWfShare := SpectrumWaterfallShare(FDisplay, FLive);
+   FColourMarginDb := FDisplay.RefMarginDb;
 
    if rangeChanged then
       begin
@@ -908,6 +1002,84 @@ begin
    if rangeChanged or marginChanged then
       begin
       RenderWaterfall;
+      end;
+end;
+
+(* FOLLOW THE RADIO'S OWN DISPLAY.  MAIN THREAD, from the refresh timer.
+
+   Each value is applied only when it differs from the one in force, so the
+   steady stream of reports that change nothing here costs one comparison.
+   An unknown value -- a radio that reports none, a K4 that has not answered,
+   a K4 whose link has just been reset -- resolves to FDisplay's, exactly what
+   the window drew before it followed anything.  The palette is the exception:
+   unknown leaves it where it is, so the operator's choice is not undone by a
+   reconnect.
+
+   WHAT HAPPENS TO THE HISTORY.  A colour floor or palette change re-colours
+   every stored row from its dB (RenderWaterfall), as the scale slider does:
+   no row is lost and there is no seam.  A share change resizes the waterfall
+   bitmap; EnsureWaterfall keeps the newest rows that still fit when the width
+   is unchanged. *)
+procedure TfrmPanadapter.ApplyLiveDisplay(const ALive: TSpectrumLiveDisplay);
+var
+   share, margin: Single;
+   relayout, recolour: Boolean;
+   w, specH, axisTop, wfTop, wfH: Integer;
+begin
+   if not FHaveDisplay then
+      begin
+      Exit;
+      end;
+
+   relayout := False;
+   recolour := False;
+
+   share := SpectrumWaterfallShare(FDisplay, ALive);
+
+   if share <> FWfShare then
+      begin
+      FWfShare := share;
+      relayout := True;
+      end;
+
+   margin := SpectrumWaterfallColourMarginDb(FDisplay, ALive, FScaleDb);
+
+   if margin <> FColourMarginDb then
+      begin
+      FColourMarginDb := margin;
+      recolour := True;
+      end;
+
+   if ALive.HasPalette and
+      ((not FLive.HasPalette) or (FLive.Palette <> ALive.Palette)) then
+      begin
+      SelectPalette(PanadapterPaletteForTone(ALive.Palette));
+      recolour := True;
+      end;
+
+   FLive := ALive;
+
+   if relayout then
+      begin
+      w := pbSpectrum.Width;
+      PlotLayout(specH, axisTop, wfTop, wfH);
+
+      (* A share of 0 leaves the bitmap as it was -- nothing draws it -- so a
+         share restored later keeps what it can of the old rows. *)
+      if (w > 0) and (wfH > 0) then
+         begin
+         EnsureWaterfall(w, wfH);
+         end;
+      end;
+
+   if recolour then
+      begin
+      RenderWaterfall;
+      end;
+
+   if relayout or recolour then
+      begin
+      pbSpectrum.Invalidate;
       end;
 end;
 
@@ -953,6 +1125,8 @@ end;
 procedure TfrmPanadapter.EnsureWaterfall(AWidth, AHeight: Integer);
 var
    i: Integer;
+   keepRows: Integer;
+   kept: array of Single;
 begin
    if (AWidth <= 0) or (AHeight <= 0) then
       begin
@@ -964,8 +1138,27 @@ begin
       Exit;
       end;
 
-   // A resize discards the history.  Rescaling old rows horizontally would be
-   // inventing data that was never measured at that resolution.
+   // A WIDTH change discards the history.  Rescaling old rows horizontally
+   // would be inventing data that was never measured at that resolution.
+   //
+   // A HEIGHT change alone keeps the newest rows that still fit (row 0 is the
+   // newest, so they are the first keepRows rows), because nothing about them
+   // was measured at a height.  That is what lets the radio's waterfall share
+   // move (#WFH on a K4) without blanking the history -- and a window dragged
+   // taller or shorter keeps it too, which it used not to.
+   keepRows := 0;
+
+   if (FWaterfall <> nil) and (FWfW = AWidth) and (Length(FWfDb) = FWfW * FWfH) then
+      begin
+      keepRows := Min(FWfH, AHeight);
+      SetLength(kept, keepRows * FWfW);
+
+      for i := 0 to High(kept) do
+         begin
+         kept[i] := FWfDb[i];
+         end;
+      end;
+
    FreeAndNil(FWaterfall);
    FWaterfall := TBitmap.Create;
    FWaterfall.PixelFormat := pf32bit;
@@ -988,6 +1181,18 @@ begin
       end;
 
    FWfDirty := True;
+
+   if keepRows > 0 then
+      begin
+      for i := 0 to High(kept) do
+         begin
+         FWfDb[i] := kept[i];
+         end;
+
+      (* The bitmap is new and black; colour the kept rows into it now, since
+         the paint path only blits. *)
+      RenderWaterfall;
+      end;
 end;
 
 // The one place a stored dB value becomes a colour, so the incremental row and
@@ -999,8 +1204,9 @@ begin
    // The history is dB ABOVE ITS OWN REFERENCE (see PushWaterfallRow), so the
    // bottom of the scale is the margin below zero and no absolute reference is
    // involved -- which is what stops old rows re-colouring when the radio's
-   // noise floor moves.
-   n := (ARelDb + FDisplay.RefMarginDb) / FScaleDb;
+   // noise floor moves.  The margin is the WATERFALL's (FColourMarginDb: the
+   // radio's colour range when it states one, else RefMarginDb).
+   n := (ARelDb + FColourMarginDb) / FScaleDb;
 
    if n < 0 then
       begin
@@ -1138,12 +1344,15 @@ end;
 procedure TfrmPanadapter.HandleRefreshTimer(Sender: TObject);
 var
    fresh: Boolean;
+   source: string;
    w, specH, wfH, wfTop, axisTop: Integer;
 begin
    fresh := False;
    FLock.Acquire;
 
    try
+      source := FWantSource;   // a shared-slot field: read under the lock
+
       if FShareDirty then
          begin
          FShareDirty := False;
@@ -1170,6 +1379,14 @@ begin
    // Labels track the link even when no frame arrived -- that is how a radio
    // that has gone away becomes visible rather than the display just freezing.
    UpdateLabels;
+
+   (* And the radio's own display, whether or not a frame arrived: a knob
+      turned on the rig is followed even while the stream is quiet.  A brief
+      lock inside the radio; nothing here changes unless a value did. *)
+   if FRadio <> nil then
+      begin
+      ApplyLiveDisplay(FRadio.SpectrumLiveDisplay(source));
+      end;
 
    if not fresh then
       begin
@@ -1218,7 +1435,16 @@ begin
       plotH := 0;
       end;
 
-   AWfH := Round(plotH * FDisplay.WaterfallFraction);
+   (* FWfShare is 0..1 INCLUSIVE -- the radio may ask for trace only or
+      waterfall only -- so either half may be 0 here, and every caller guards
+      its own half on a positive height. *)
+   AWfH := Round(plotH * FWfShare);
+
+   if AWfH > plotH then
+      begin
+      AWfH := plotH;
+      end;
+
    ASpecH := plotH - AWfH;
 
    { THE SCALE SITS BETWEEN THE TWO, which is where the K4 puts it (NY4I,
@@ -1909,12 +2135,70 @@ begin
    // The frequency axis is DRAWN, not laid out in labels -- see DrawAxis.
 end;
 
+(* The spectrum half: the noise-floor line, the pan centre, the passbands, the
+   trace and the spots.  ASpecH > 0 -- the caller does not ask otherwise. *)
+procedure TfrmPanadapter.DrawTrace(ACanvas: TCanvas; AWidth, ASpecH: Integer;
+                                   AMinDb, ARangeDb: Single; ABinsPerPixel: Double);
+var
+   x, y, centreX: Integer;
+   peak: Single;
+begin
+   // The one dB value on screen the radio itself reported, so it is worth
+   // being able to see.
+   y := ASpecH - Round(((FRenderNoiseDb - AMinDb) / ARangeDb) * ASpecH);
+
+   if (y >= 0) and (y < ASpecH) then
+      begin
+      ACanvas.Pen.Color := GRID_COLOR;
+      ACanvas.Line(0, y, AWidth, y);
+      end;
+
+   // Pan centre.  Dim, because with both VFO markers drawn it is the least
+   // interesting vertical line on the display -- but still worth having, since
+   // in fixed-tune mode the centre is NOT where either VFO is.
+   centreX := AWidth div 2;
+   ACanvas.Pen.Color := CENTRE_COLOR;
+   ACanvas.Line(centreX, 0, centreX, ASpecH);
+
+   // Passbands go down BEFORE the trace, so the trace draws over them.
+   DrawVfoPassband(ACanvas, nrVFOA, VFOA_PASSBAND, AWidth, ASpecH);
+   DrawVfoPassband(ACanvas, nrVFOB, VFOB_PASSBAND, AWidth, ASpecH);
+
+   ACanvas.Pen.Color := TRACE_COLOR;
+
+   for x := 0 to AWidth - 1 do
+      begin
+      peak := PeakForPixel(x, ABinsPerPixel);
+      y := ASpecH - Round(((peak - AMinDb) / ARangeDb) * ASpecH);
+
+      if y < 0 then
+         begin
+         y := 0;
+         end;
+
+      if y > ASpecH - 1 then
+         begin
+         y := ASpecH - 1;
+         end;
+
+      if x = 0 then
+         begin
+         ACanvas.MoveTo(x, y);
+         end
+      else
+         begin
+         ACanvas.LineTo(x, y);
+         end;
+      end;
+
+   DrawSpots(ACanvas, AWidth, ASpecH);
+end;
+
 procedure TfrmPanadapter.HandleSpectrumPaint(Sender: TObject);
 var
    cv: TCanvas;
    w, h, specH, wfH: Integer;
-   x, y, centreX, axisTop, wfTop: Integer;
-   peak: Single;
+   axisTop, wfTop: Integer;
    minDb, rangeDb: Single;
    binsPerPixel: Double;
    readout: string;
@@ -1968,62 +2252,15 @@ begin
       cv.Draw(0, wfTop, FWaterfall);
       end;
 
-   if specH <= 0 then
-      begin
-      Exit;
-      end;
-
-   // ---- spectrum trace --------------------------------------------------
-   // The one dB value on screen the radio itself reported, so it is worth
-   // being able to see.
-   y := specH - Round(((FRenderNoiseDb - minDb) / rangeDb) * specH);
-
-   if (y >= 0) and (y < specH) then
-      begin
-      cv.Pen.Color := GRID_COLOR;
-      cv.Line(0, y, w, y);
-      end;
-
-   // Pan centre.  Dim, because with both VFO markers drawn it is the least
-   // interesting vertical line on the display -- but still worth having, since
-   // in fixed-tune mode the centre is NOT where either VFO is.
-   centreX := w div 2;
-   cv.Pen.Color := CENTRE_COLOR;
-   cv.Line(centreX, 0, centreX, specH);
-
-   // Passbands go down BEFORE the trace, so the trace draws over them.
-   DrawVfoPassband(cv, nrVFOA, VFOA_PASSBAND, w, specH);
-   DrawVfoPassband(cv, nrVFOB, VFOB_PASSBAND, w, specH);
-
-   cv.Pen.Color := TRACE_COLOR;
    binsPerPixel := SpectrumBinsPerPixel(Length(FRenderBins), w);
 
-   for x := 0 to w - 1 do
+   (* THE TRACE ONLY WHEN IT HAS ROOM.  At a 100 percent waterfall (the radio
+      may ask for one) there is no trace, but the VFO markers and the cursor
+      below still cross the waterfall -- they used to be skipped with it. *)
+   if specH > 0 then
       begin
-      peak := PeakForPixel(x, binsPerPixel);
-      y := specH - Round(((peak - minDb) / rangeDb) * specH);
-
-      if y < 0 then
-         begin
-         y := 0;
-         end;
-
-      if y > specH - 1 then
-         begin
-         y := specH - 1;
-         end;
-
-      if x = 0 then
-         begin
-         cv.MoveTo(x, y);
-         end
-      else
-         begin
-         cv.LineTo(x, y);
-         end;
+      DrawTrace(cv, w, specH, minDb, rangeDb, binsPerPixel);
       end;
-
-   DrawSpots(cv, w, specH);
 
    // ---- VFO markers, OVER the trace -------------------------------------
    { THE FULL PICTURE, not just to the scale.  A VFO marker that stopped at the
@@ -2074,8 +2311,7 @@ begin
       Exit;
       end;
 
-   FPalette := cboPalette.ItemIndex;
-   BuildPalette;
+   SelectPalette(cboPalette.ItemIndex);
 
    // The history is dB, not pixels, so the whole waterfall re-colours -- no
    // seam between the old palette and the new.  Re-rendered HERE rather than
@@ -2209,6 +2445,10 @@ begin
       end;
 
    ShowScaleCaption;
+
+   (* A radio's colour floor is a fraction of the scale, so it moves with it;
+      unknown, it is RefMarginDb whatever the scale. *)
+   FColourMarginDb := SpectrumWaterfallColourMarginDb(FDisplay, FLive, FScaleDb);
 
    // Same reason as the palette: the waterfall is stored as dB, so a scale
    // change re-renders the history at the new range instead of leaving rows

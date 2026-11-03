@@ -22,7 +22,11 @@ unit uTestK4DisplayReport;
     state byte-for-byte as it was;
   - the AutoRef debounce field is kept but not range-checked, because the
     radio's own captures contradict the documented range;
-  - a reset clears every flag and moves every Generation on.
+  - a reset clears every flag and moves every Generation on;
+  - #WFC (the LCD colour scheme, plain '#WFC' as the radio answers) reaches
+    both receivers, and '#HWFC' (the external monitor's) is not decoded;
+  - K4LiveDisplay turns #WFH, #WBS and #WFC -- and nothing else -- into what
+    the window follows, and claims nothing it was not told.
 *)
 
 interface
@@ -45,6 +49,10 @@ type
       procedure Test_TrailingTerminator_Tolerated;
       procedure Test_Reset_ClearsFlagsAndMovesGeneration;
       procedure Test_Generation_WrapsToOneNeverZero;
+      procedure Test_ColourMode_ReachesBothReceivers;
+      procedure Test_ExternalColourMode_IsNotDecoded;
+      procedure Test_LiveDisplay_TranslatesTheLCDValues;
+      procedure Test_LiveDisplay_UnknownOrIllegal_ClaimsNothing;
    public
       procedure RunAllTests; override;
    end;
@@ -273,7 +281,7 @@ end;
 
 procedure TK4DisplayReportTests.Test_Rejected_LeavesTheStateAlone;
 const
-   JUNK: array[0..47] of string = (
+   JUNK: array[0..53] of string = (
       '', '#', ';', '#;', 'FA00014025000', 'TS1',
       '#REF', '#REF-', '#REF+', '#REF-+1', '#REFabc', '#REF1 2', '#REF 12',
       '#REF$', '#REF$x', '#REF$-', '#REF-12345', '#REF$12$',
@@ -283,7 +291,8 @@ const
       '#AR', '#AR1201+04', '#AR1201+0411', '#AR1201*041', '#AR1201+042',
       '#AR1201+04A', '#ARx201+041', '#AR12a1+041', '#AR1201+x41',
       '#SPN100000', '#SPN$100000', '#HREF-131', '#HREF$-131', '#MP1',
-      '#AR/');
+      '#AR/',
+      '#WFC', '#WFC-1', '#WFC$1', '#WFCx', '#HWFC1', '#HWFC');
 var
    s, before: TK4DisplayState;
    i: Integer;
@@ -318,16 +327,18 @@ end;
 procedure TK4DisplayReportTests.Test_RangeEdges;
 const
    (* Each pair: the legal edge, then one step outside it. *)
-   GOOD: array[0..15] of string = (
+   GOOD: array[0..17] of string = (
       '#REF-200', '#REF60', '#REF$-200', '#REF$60',
       '#SCL10', '#SCL150', '#WFH0', '#WFH100',
       '#WBS5', '#WBS30', '#AVG1', '#AVG20',
-      '#FPS1', '#FPS30', '#AR0101+081', '#AR2001-081');
-   BAD: array[0..15] of string = (
+      '#FPS1', '#FPS30', '#AR0101+081', '#AR2001-081',
+      '#WFC0', '#WFC4');
+   BAD: array[0..17] of string = (
       '#REF-201', '#REF61', '#REF$-201', '#REF$61',
       '#SCL9', '#SCL151', '#HWFH101', '#WFH101',
       '#WBS4', '#WBS31', '#AVG0', '#AVG21',
-      '#FPS0', '#FPS31', '#AR0001+041', '#AR2101+041');
+      '#FPS0', '#FPS31', '#AR0001+041', '#AR2101+041',
+      '#WFC5', '#WFC10');
    (* The offset edge, separately: one past +8 and one past -8. *)
    BAD_OFFSET: array[0..1] of string = ('#AR1201+091', '#AR1201-091');
 var
@@ -403,6 +414,7 @@ begin
    CheckTrue(ParseK4DisplayReport('#FPS12', s), '#FPS');
    CheckTrue(ParseK4DisplayReport('#HWFH50', s), '#HWFH');
    CheckTrue(ParseK4DisplayReport('#HWBS12', s), '#HWBS');
+   CheckTrue(ParseK4DisplayReport('#WFC2', s), '#WFC');
    mainGen := s.Main.Generation;
    subGen := s.Sub.Generation;
    gen := s.Generation;
@@ -435,6 +447,151 @@ begin
    CheckEquals(0, SpectrumRadioStateUnknown.Generation, 'and has Generation 0');
 end;
 
+(* #WFC: the LCD waterfall colour scheme, 0..4, one value for both receivers.
+   Plain '#WFC', not the manual's '#WFC$' -- NY4I measured that the radio
+   answers '#WFC'. *)
+procedure TK4DisplayReportTests.Test_ColourMode_ReachesBothReceivers;
+var
+   s: TK4DisplayState;
+   mainGen, subGen: Integer;
+begin
+   BeginTest('K4 display: #WFC is the colour scheme, 0..4, for both receivers, leading zeros allowed');
+   s := Fresh;
+
+   CheckTrue(ParseK4DisplayReport('#WFC1', s), '#WFC1 accepted');
+   CheckTrue(s.Main.HasColourMode and s.Sub.HasColourMode, 'known on both receivers');
+   CheckEquals(1, s.Main.ColourMode, 'main colour mode');
+   CheckEquals(1, s.Sub.ColourMode, 'sub colour mode');
+   CheckEquals(1, s.Main.Generation, 'main Generation moved');
+   CheckEquals(1, s.Sub.Generation, 'sub Generation moved');
+   CheckFalse(SpectrumRadioStateKnowsNothing(s.Main),
+              'a record holding only a colour mode is NOT "nothing known"');
+
+   mainGen := s.Main.Generation;
+   subGen := s.Sub.Generation;
+   CheckTrue(ParseK4DisplayReport('#WFC1', s), 'the same value again');
+   CheckEquals(mainGen + 1, s.Main.Generation, 'a repeat still moves main');
+   CheckEquals(subGen + 1, s.Sub.Generation, 'and sub');
+
+   CheckTrue(ParseK4DisplayReport('#WFC0', s), '#WFC0 -- gray, and a real setting');
+   CheckEquals(0, s.Main.ColourMode, '#WFC0 is 0');
+   CheckTrue(s.Main.HasColourMode, 'zero is known, not unknown');
+
+   CheckTrue(ParseK4DisplayReport('#WFC04', s), '#WFC04');
+   CheckEquals(4, s.Main.ColourMode, '#WFC04 is 4');
+   CheckTrue(ParseK4DisplayReport('#WFC003', s), '#WFC003');
+   CheckEquals(3, s.Sub.ColourMode, '#WFC003 is 3');
+
+   CheckTrue(ParseK4DisplayReport('#WFC2;', s), 'a trailing ";" is tolerated');
+   CheckEquals(2, s.Main.ColourMode, '#WFC2; is 2');
+end;
+
+(* '#HWFC' is the external monitor's scheme.  The window follows the LCD only,
+   so it is not kept -- and above all it must not be read as '#WFC'. *)
+procedure TK4DisplayReportTests.Test_ExternalColourMode_IsNotDecoded;
+var
+   s, before: TK4DisplayState;
+begin
+   BeginTest('K4 display: #HWFC (external monitor) is not decoded and never moves #WFC');
+   s := Fresh;
+   CheckTrue(ParseK4DisplayReport('#WFC1', s), 'precondition: an LCD colour mode');
+   before := s;
+
+   CheckFalse(ParseK4DisplayReport('#HWFC3', s), '#HWFC3 is refused');
+   CheckFalse(ParseK4DisplayReport('#HWFC0;', s), '#HWFC0; is refused');
+   CheckTrue(SameBytes(before, s), 'and changes nothing at all');
+   CheckEquals(1, s.Main.ColourMode, 'the LCD value stands');
+
+   (* Nor do the other external-monitor forms reach a receiver. *)
+   CheckTrue(ParseK4DisplayReport('#HWFH090', s), '#HWFH090');
+   CheckTrue(ParseK4DisplayReport('#HWBS30', s), '#HWBS30');
+   CheckFalse(s.Main.HasWaterfallFraction or s.Main.HasColourRange,
+              '#HWFH and #HWBS are not the LCD''s #WFH and #WBS');
+end;
+
+function Near(A, B: Single): Boolean;
+begin
+   Result := Abs(A - B) < 1.0e-5;
+end;
+
+procedure TK4DisplayReportTests.Test_LiveDisplay_TranslatesTheLCDValues;
+const
+   TONES: array[0..4] of TSpectrumPaletteTone = (sptGray, sptColour, sptTeal,
+                                                 sptBlue, sptSepia);
+var
+   s: TK4DisplayState;
+   live: TSpectrumLiveDisplay;
+   i: Integer;
+   wrong: string;
+begin
+   BeginTest('K4 live display: #WFH is the share, #WBS/40 the colour floor, #WFC the tone');
+   s := Fresh;
+
+   CheckTrue(ParseK4DisplayReport('#WFH050', s), '#WFH050');
+   live := K4LiveDisplay(s.Main);
+   CheckTrue(live.HasWaterfallShare, 'share known');
+   CheckTrue(Near(live.WaterfallShare, 0.5), '#WFH50 is half');
+   CheckFalse(live.HasColourFloor or live.HasPalette, 'nothing else claimed');
+
+   CheckTrue(ParseK4DisplayReport('#WFH000', s), '#WFH000');
+   CheckTrue(Near(K4LiveDisplay(s.Main).WaterfallShare, 0.0), '0 percent is trace only');
+   CheckTrue(ParseK4DisplayReport('#WFH100', s), '#WFH100');
+   CheckTrue(Near(K4LiveDisplay(s.Sub).WaterfallShare, 1.0), '100 percent is waterfall only');
+
+   (* QK4's photographic fit, floor = scale x #WBS / 40. *)
+   CheckTrue(ParseK4DisplayReport('#WBS5', s), '#WBS5');
+   CheckTrue(Near(K4LiveDisplay(s.Main).ColourFloorOfScale, 0.125), '#WBS5 is 5/40');
+   CheckTrue(ParseK4DisplayReport('#WBS14', s), '#WBS14');
+   CheckTrue(Near(K4LiveDisplay(s.Main).ColourFloorOfScale, 0.35), '#WBS14 is 14/40');
+   CheckTrue(ParseK4DisplayReport('#WBS30', s), '#WBS30');
+   CheckTrue(Near(K4LiveDisplay(s.Main).ColourFloorOfScale, 0.75), '#WBS30 is 30/40');
+
+   wrong := '';
+
+   for i := 0 to 4 do
+      begin
+      CheckTrue(ParseK4DisplayReport('#WFC' + IntToStr(i), s), '#WFC' + IntToStr(i));
+      live := K4LiveDisplay(s.Main);
+
+      if (not live.HasPalette) or (live.Palette <> TONES[i]) then
+         begin
+         wrong := wrong + '#WFC' + IntToStr(i) + '; ';
+         end;
+      end;
+
+   CheckEquals('', wrong, '#WFC 0 gray, 1 colour, 2 teal, 3 blue, 4 sepia');
+end;
+
+procedure TK4DisplayReportTests.Test_LiveDisplay_UnknownOrIllegal_ClaimsNothing;
+var
+   st: TSpectrumRadioState;
+begin
+   BeginTest('K4 live display: nothing known, or a value outside the radio''s range, claims nothing');
+   CheckTrue(SpectrumLiveDisplayKnowsNothing(K4LiveDisplay(SpectrumRadioStateUnknown)),
+             'a receiver that has heard nothing gives the window nothing to follow');
+
+   (* The parser never stores these; the translation must not trust that. *)
+   st := SpectrumRadioStateUnknown;
+   st.HasWaterfallFraction := True;
+   st.WaterfallPercent := 101;
+   st.HasColourRange := True;
+   st.ColourRange := 4;
+   st.HasColourMode := True;
+   st.ColourMode := 5;
+   CheckTrue(SpectrumLiveDisplayKnowsNothing(K4LiveDisplay(st)),
+             'out-of-range share, colour range and mode are not claimed');
+
+   (* A REF, scale, AutoRef or averaging report is not a waterfall setting. *)
+   st := SpectrumRadioStateUnknown;
+   st.HasRef := True;
+   st.HasScale := True;
+   st.ScaleDb := 80;
+   st.HasAvg := True;
+   st.AvgFrames := 4;
+   CheckTrue(SpectrumLiveDisplayKnowsNothing(K4LiveDisplay(st)),
+             'REF, scale and averaging give the window nothing to follow');
+end;
+
 procedure TK4DisplayReportTests.RunAllTests;
 begin
    Test_RealCaptures_LandInTheRightFields;
@@ -449,6 +606,10 @@ begin
    Test_TrailingTerminator_Tolerated;
    Test_Reset_ClearsFlagsAndMovesGeneration;
    Test_Generation_WrapsToOneNeverZero;
+   Test_ColourMode_ReachesBothReceivers;
+   Test_ExternalColourMode_IsNotDecoded;
+   Test_LiveDisplay_TranslatesTheLCDValues;
+   Test_LiveDisplay_UnknownOrIllegal_ClaimsNothing;
 end;
 
 end.

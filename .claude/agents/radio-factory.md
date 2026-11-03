@@ -217,9 +217,9 @@ record with an ERROR rather than borrowing numbers. Details:
 `docs/PANADAPTER_LCL_DESIGN.md` section 10.1a.
 
 **WHAT THE RADIO SAYS ITS DISPLAY IS SET TO IS RADIO STATE TOO (2026-11-02,
-stages 1-2; NOTHING DRAWS FROM IT YET).** Distinct from the defaults above: a
+stages 1-2).** Distinct from the defaults above: a
 `TSpectrumRadioState` (`uSpectrumTypes`) of LIVE values -- REF, scale, AutoRef
-and offset, waterfall share, averaging, colour range -- each with its own `Has`
+and offset, waterfall share, averaging, colour range, colour mode -- each with its own `Has`
 flag, plus a `Generation` that moves on every accepted report (repeats too) and
 every reset, never back to 0. "Nothing known" is `SpectrumRadioStateKnowsNothing`
 (the flags), NOT record equality. Virtual `SpectrumRadioState(sourceId)`; base
@@ -230,8 +230,23 @@ others unknown), resets at the TOP of `Connect` (before the base starts the
 reader), and asks `K4_DISPLAY_QUERIES` on its own line beside `#SPN;`.
 **Reads only: never send a `#REF` value (it freezes AutoRef) or `#AR0;`/`#AR1;`/
 `#AR9;` (sets)** -- pinned by `Test_DisplayStateAskedOnConnect_ReadsOnly`.
-Whether the K4 pushes `#SCL`/`#WFH`/`#WBS`/`#AVG` is unverified
+Whether the K4 pushes `#SCL`/`#WFH`/`#WBS`/`#WFC`/`#AVG` is unverified
 (`docs/BENCH_QUEUE.md`). Details: `docs/PANADAPTER_LCL_DESIGN.md` section 10.3.
+
+**THE WINDOW FOLLOWS THE K4'S LCD WATERFALL (2026-11-03, NY4I) -- through a
+SECOND, NEUTRAL virtual, never `SpectrumRadioState` itself** (radio units).
+`SpectrumLiveDisplay(sourceId)` returns a `TSpectrumLiveDisplay`: waterfall
+share 0..1 inclusive, colour floor as a fraction of the scale, a
+`TSpectrumPaletteTone`, each with a `Has` flag. Base: unknown. `TK4Radio`
+translates with the pure `uK4DisplayReport.K4LiveDisplay` from `#WFH`, `#WBS`
+(floor = WBS/40, QK4's UNVERIFIED photographic fit -- `K4_COLOUR_FLOOR_DIVISOR`)
+and `#WFC` (parsed as plain `#WFC`, NOT the manual's `#WFC$`, which the radio
+does not answer). **LCD only**: `#HWFH`/`#HWBS` reach no window and `#HWFC` is
+not decoded. The window (`ApplyLiveDisplay`) applies a value only when it
+CHANGES -- never on `Generation`, which AutoRef's `#REF` pushes move several
+times a second. Unknown = the defaults exactly. `SpectrumDisplayDefaults` is
+unchanged. A registry walk pins that every fresh radio claims nothing.
+Details: `docs/PANADAPTER_LCL_DESIGN.md` section 10.5.
 
 **THE K4 MAIN PAN IS CROPPED TO `#SPN` BY THE RADIO (2026-11-03, NY4I).**
 `TK4Radio.HandleSpectrumFrame` passes B, Y and Z through. It crops A with the

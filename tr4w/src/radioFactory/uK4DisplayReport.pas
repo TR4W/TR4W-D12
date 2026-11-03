@@ -23,9 +23,10 @@ unit uK4DisplayReport;
   WHY THIS UNIT EXISTS.  The K4 publishes its panadapter settings on the CAT
   port as '#' commands -- reference level, scale, AutoRef, waterfall height,
   waterfall colour range, averaging, frame rate -- and pushes them when the
-  operator turns a knob on the front panel.  TR4W will later follow them
-  (docs/PANADAPTER_LCL_DESIGN.md section 10).  This is stage 1 of that work:
-  the decode, and nothing else.  Nothing here sends, draws or decides.
+  operator turns a knob on the front panel.  TR4W's panadapter follows the LCD
+  waterfall ones -- height, colour range, colour scheme -- through
+  K4LiveDisplay (docs/PANADAPTER_LCL_DESIGN.md section 10.5).  Nothing here
+  sends or draws.
 
   WHAT THIS UNIT IS.  A PURE function over a string, on the pattern of
   uElecraftIF: no logger, no radio object, no I/O, no LCL.  TK4Radio calls it
@@ -49,6 +50,11 @@ unit uK4DisplayReport;
     #HWFH<v>    the same for the external monitor
     #WBS<v>     waterfall colour range ("WTR CLRS"), LCD, 5..30
     #HWBS<v>    the same for the external monitor
+    #WFC<v>     waterfall colour scheme, LCD, 0..4: 0 gray, 1 color, 2 teal
+                tone, 3 blue tone, 4 sepia tone.  The manual writes the LCD
+                form '#WFC$', but the radio answers and pushes plain '#WFC'
+                (NY4I, measured on a K4, 2026-11-03: '#WFC$;' returns '#WFC'),
+                so '#WFC' is what is parsed and asked.
     #AVG<v>     spectrum averaging, frames, 1..20
     #FPS<v>     panadapter frame rate, 1..30
     #ARaadd+oom AutoRef, exactly eight characters after '#AR':
@@ -67,10 +73,18 @@ unit uK4DisplayReport;
                   passing;
     #HREF / #HREF$  the external monitor's reference.  It is pushed beside
                   #REF while AutoRef tracks, and must not be mistaken for it;
+    #HWFC         the external monitor's colour scheme.  TR4W's window follows
+                  the LCD (NY4I, 2026-11-03), so it is not kept at all -- and
+                  it cannot be read as '#WFC', whose second character differs;
     everything else.
 
+  WHAT THE WINDOW FOLLOWS.  K4LiveDisplay translates a receiver's record into
+  the neutral TSpectrumLiveDisplay the panadapter reads: #WFH, #WBS and #WFC
+  ONLY -- the LCD values.  The external monitor's #HWFH and #HWBS are kept on
+  TK4DisplayState as facts and reach no window.
+
   SCOPE.  #REF belongs to the main receiver and #REF$ to the sub; the global
-  reports (#SCL, #WFH, #WBS, #AVG, #AR) are stored in BOTH receiver records,
+  reports (#SCL, #WFH, #WBS, #WFC, #AVG, #AR) are stored in BOTH receiver records,
   because the radio states one value that governs both.  The external-monitor
   values and the frame rate are K4 facts with no neutral home, and live on
   TK4DisplayState beside the two receivers.
@@ -96,6 +110,8 @@ const
    K4_WATERFALL_MAX_PERCENT = 100;
    K4_COLOUR_RANGE_MIN = 5;
    K4_COLOUR_RANGE_MAX = 30;
+   K4_COLOUR_MODE_MIN = 0;
+   K4_COLOUR_MODE_MAX = 4;
    K4_AVG_MIN_FRAMES = 1;
    K4_AVG_MAX_FRAMES = 20;
    K4_FPS_MIN = 1;
@@ -110,7 +126,19 @@ const
       (QK4 resources/k4_cat_commands.json, getFormat).  It must never carry a
       value -- a client #REF freezes AutoRef, and '#AR0;' resets it.  Pinned
       by uTestRadioSocketNoRead. *)
-   K4_DISPLAY_QUERIES = '#REF;#SCL;#AR;#WFH;#WBS;#AVG;';
+   K4_DISPLAY_QUERIES = '#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;';
+
+   (* THE WATERFALL COLOUR FLOOR, AS A FRACTION OF THE SCALE PER #WBS STEP.
+      The palette's bottom sits SCALE x #WBS / K4_COLOUR_FLOOR_DIVISOR dB below
+      the reference and spans SCALE dB from there.  This is QK4's mapping
+      (src/dsp/waterfallgeometry, colorWindowFor, at 485a7c15) and QK4 says
+      plainly what it is: a PHOTOGRAPHIC FIT to one K4D (2026-10-30, WWV,
+      AutoRef, #WBS 14, SCALE 25/50/80), with the #WBS term UNVERIFIED --
+      every photo was at 14.  The K4 manual says only that a higher WTR CLRS
+      "will use brighter colors", which a lower floor gives.  Correct it here
+      and nowhere else.  At #WBS 5 and an 80 dB scale it gives exactly 10 dB,
+      the margin the window has always used. *)
+   K4_COLOUR_FLOOR_DIVISOR = 40.0;
 
 type
    (* Everything the K4 has reported about its display, per receiver plus the
@@ -143,6 +171,13 @@ procedure ResetK4DisplayState(var AState: TK4DisplayState);
    record it touched moved on, even when the value equals the one held.
    False otherwise, and AState is untouched. *)
 function ParseK4DisplayReport(const AMsg: string; var AState: TK4DisplayState): Boolean;
+
+(* WHAT THE WINDOW SHOULD FOLLOW, from one receiver's record: #WFH as a share,
+   #WBS as a colour floor (K4_COLOUR_FLOOR_DIVISOR), #WFC as a palette tone.
+   A value the record does not know -- or one outside the radio's range, which
+   the parser never stores -- is not claimed, so the window keeps its
+   defaults for it.  Pure. *)
+function K4LiveDisplay(const AState: TSpectrumRadioState): TSpectrumLiveDisplay;
 
 implementation
 
@@ -425,6 +460,17 @@ begin
       AState.ExtColourRange := value;
       Result := True;
       end
+   else if PrefixedValue(msg, '#WFC', False, K4_COLOUR_MODE_MIN,
+                         K4_COLOUR_MODE_MAX, value) then
+      begin
+      AState.Main.HasColourMode := True;
+      AState.Main.ColourMode := value;
+      AState.Sub.HasColourMode := True;
+      AState.Sub.ColourMode := value;
+      Touch(AState.Main);
+      Touch(AState.Sub);
+      Result := True;
+      end
    else if PrefixedValue(msg, '#AVG', False, K4_AVG_MIN_FRAMES, K4_AVG_MAX_FRAMES, value) then
       begin
       AState.Main.HasAvg := True;
@@ -461,6 +507,61 @@ begin
    if Result then
       begin
       AState.Generation := NextSpectrumRadioStateGeneration(AState.Generation);
+      end;
+end;
+
+function K4LiveDisplay(const AState: TSpectrumRadioState): TSpectrumLiveDisplay;
+begin
+   Result := SpectrumLiveDisplayUnknown;
+
+   if AState.HasWaterfallFraction                                and
+      (AState.WaterfallPercent >= K4_WATERFALL_MIN_PERCENT)      and
+      (AState.WaterfallPercent <= K4_WATERFALL_MAX_PERCENT) then
+      begin
+      Result.HasWaterfallShare := True;
+      Result.WaterfallShare := AState.WaterfallPercent / 100.0;
+      end;
+
+   if AState.HasColourRange                           and
+      (AState.ColourRange >= K4_COLOUR_RANGE_MIN)     and
+      (AState.ColourRange <= K4_COLOUR_RANGE_MAX) then
+      begin
+      Result.HasColourFloor := True;
+      Result.ColourFloorOfScale := AState.ColourRange / K4_COLOUR_FLOOR_DIVISOR;
+      end;
+
+   (* Spelled out rather than cast: the K4's numbering is the K4's, and the
+      neutral enum is free to be reordered without silently re-mapping it. *)
+   if AState.HasColourMode then
+      begin
+      Result.HasPalette := True;
+
+      case AState.ColourMode of
+         0:
+            begin
+            Result.Palette := sptGray;
+            end;
+         1:
+            begin
+            Result.Palette := sptColour;
+            end;
+         2:
+            begin
+            Result.Palette := sptTeal;
+            end;
+         3:
+            begin
+            Result.Palette := sptBlue;
+            end;
+         4:
+            begin
+            Result.Palette := sptSepia;
+            end;
+         else
+            begin
+            Result.HasPalette := False;
+            end;
+      end;
       end;
 end;
 

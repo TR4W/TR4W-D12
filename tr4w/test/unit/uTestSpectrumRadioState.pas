@@ -9,7 +9,8 @@ unit uTestSpectrumRadioState;
   said its reference, scale, AutoRef, waterfall share, averaging and colour
   range are.  The base answers "nothing known"; the K4 records its '#' reports
   on the reading thread and returns them by value from under its own lock.
-  Nothing above the factory reads it yet -- these tests are its only reader.
+  The window does not read it: it reads SpectrumLiveDisplay, the radio's
+  translation of it into neutral units, which is pinned here too.
 
   What is pinned, without a transport (the connect-time questions need a
   socket and live in uTestRadioSocketNoRead, beside #SPN; and TS;):
@@ -40,6 +41,9 @@ type
       procedure Test_K4WithoutSpectrum_AnswersNothing;
       procedure Test_IC9700_InheritsTheBaseAnswer;
       procedure Test_EveryRegisteredRadio_FreshKnowsNothing;
+      procedure Test_K4_LiveDisplay_FollowsTheLCDOnly;
+      procedure Test_UnknownLive_ResolvesToTodaysDefaults;
+      procedure Test_PaletteForTone;
    public
       procedure RunAllTests; override;
    end;
@@ -47,7 +51,8 @@ type
 implementation
 
 uses
-   SysUtils, uSpectrumTypes, uFactoryRadioBase, uRadioRegistry, uRadioElecraftK4, VC;
+   SysUtils, uSpectrumTypes, uFactoryRadioBase, uRadioRegistry, uRadioElecraftK4, VC,
+   uPanadapterForm;   // PanadapterPaletteForTone and the palette indices
 
 type
    (* A K4 that does not declare rcSpectrum.  Its parser still runs, so this
@@ -71,13 +76,14 @@ end;
 
 function Describe(const AState: TSpectrumRadioState): string;
 begin
-   Result := Format('ref %s/%d scale %s/%d autoref %s/%s wf %s/%d avg %s/%d clr %s/%d gen %d',
+   Result := Format('ref %s/%d scale %s/%d autoref %s/%s wf %s/%d avg %s/%d clr %s/%d mode %s/%d gen %d',
                     [BoolToStr(AState.HasRef, True), AState.RefDb,
                      BoolToStr(AState.HasScale, True), AState.ScaleDb,
                      BoolToStr(AState.HasAutoRef, True), BoolToStr(AState.AutoRef, True),
                      BoolToStr(AState.HasWaterfallFraction, True), AState.WaterfallPercent,
                      BoolToStr(AState.HasAvg, True), AState.AvgFrames,
                      BoolToStr(AState.HasColourRange, True), AState.ColourRange,
+                     BoolToStr(AState.HasColourMode, True), AState.ColourMode,
                      AState.Generation]);
 end;
 
@@ -293,6 +299,14 @@ var
          bad := bad + uRadioRegistry.DisplayNameId(id) + ' source [' + ASource + '] ' +
                 Describe(st) + '; ';
          end;
+
+      (* And nothing for the window to follow, so every radio draws with its
+         defaults until it reports otherwise. *)
+      if not SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay(ASource)) then
+         begin
+         bad := bad + uRadioRegistry.DisplayNameId(id) + ' source [' + ASource +
+                '] claims a live display; ';
+         end;
    end;
 
 begin
@@ -324,6 +338,130 @@ begin
    CheckEquals('', bad, 'radios that claim display state before hearing anything');
 end;
 
+function Near(A, B: Single): Boolean;
+begin
+   Result := Abs(A - B) < 1.0e-5;
+end;
+
+(* NY4I, 2026-11-03: the window follows the LCD's #WFH, #WBS and #WFC, never
+   the external monitor's #HWFH, #HWBS or #HWFC. *)
+procedure TSpectrumRadioStateTests.Test_K4_LiveDisplay_FollowsTheLCDOnly;
+var
+   r: TFactoryRadioBase;
+   a, b: TSpectrumLiveDisplay;
+begin
+   BeginTest('K4 live display: follows the LCD''s #WFH/#WBS/#WFC on pans A and B, never the external monitor''s');
+   r := NewK4;
+   CheckTrue(r <> nil, 'the registry built no K4');
+
+   if r = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      r.ProcessMsg('#HWFH070');
+      r.ProcessMsg('#HWBS20');
+      r.ProcessMsg('#HWFC3');
+      CheckTrue(SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay('A')),
+                'the external monitor''s settings give pan A nothing to follow');
+      CheckTrue(SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay('B')),
+                'nor pan B');
+
+      r.ProcessMsg('#WFH030');
+      r.ProcessMsg('#WBS14');
+      r.ProcessMsg('#WFC2');
+      a := r.SpectrumLiveDisplay('A');
+      b := r.SpectrumLiveDisplay('B');
+
+      CheckTrue(a.HasWaterfallShare and Near(a.WaterfallShare, 0.3), 'pan A share is #WFH 30');
+      CheckTrue(a.HasColourFloor and Near(a.ColourFloorOfScale, 0.35), 'pan A colour floor is #WBS 14 / 40');
+      CheckTrue(a.HasPalette and (a.Palette = sptTeal), 'pan A palette is #WFC 2, teal');
+      CheckTrue(b.HasWaterfallShare and Near(b.WaterfallShare, 0.3), 'pan B follows the same LCD values');
+      CheckTrue(b.HasPalette and (b.Palette = sptTeal), 'pan B palette');
+
+      CheckTrue(SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay('Y')),
+                'the Y mini-pan keeps the defaults');
+
+      (* A new link forgets them, so the window falls back to its defaults. *)
+      r.Connect;
+      CheckTrue(SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay('A')),
+                'a reconnect leaves nothing to follow until the radio answers');
+   finally
+      r.Free;
+   end;
+end;
+
+(* "Not yet known" must draw EXACTLY as the window always has: the K4's own
+   0.5 share and 10 dB margin.  And the mapping's one anchor: #WBS 5 at the
+   80 dB default scale is that same 10 dB. *)
+procedure TSpectrumRadioStateTests.Test_UnknownLive_ResolvesToTodaysDefaults;
+var
+   r: TFactoryRadioBase;
+   d: TSpectrumDisplayDefaults;
+   live: TSpectrumLiveDisplay;
+begin
+   BeginTest('Live display: unknown resolves to the radio''s defaults exactly; known resolves to the radio');
+   r := NewK4;
+   CheckTrue(r <> nil, 'the registry built no K4');
+
+   if r = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      d := r.SpectrumDisplayDefaults('A');
+      live := SpectrumLiveDisplayUnknown;
+
+      CheckTrue(SpectrumWaterfallShare(d, live) = d.WaterfallFraction,
+                'unknown share is the defaults'' fraction, to the bit');
+      CheckTrue(SpectrumWaterfallColourMarginDb(d, live, 80) = d.RefMarginDb,
+                'unknown colour margin is RefMarginDb');
+      CheckTrue(SpectrumWaterfallColourMarginDb(d, live, 150) = d.RefMarginDb,
+                'whatever the scale');
+
+      r.ProcessMsg('#WBS5');
+      live := r.SpectrumLiveDisplay('A');
+      CheckTrue(Near(SpectrumWaterfallColourMarginDb(d, live, 80), 10.0),
+                '#WBS 5 at 80 dB is 10 dB -- today''s margin');
+      r.ProcessMsg('#WBS14');
+      live := r.SpectrumLiveDisplay('A');
+      CheckTrue(Near(SpectrumWaterfallColourMarginDb(d, live, 80), 28.0),
+                '#WBS 14 at 80 dB is 28 dB');
+      CheckTrue(Near(SpectrumWaterfallColourMarginDb(d, live, 40), 14.0),
+                'and it moves with the scale: 14 dB at 40 dB');
+
+      r.ProcessMsg('#WFH000');
+      CheckTrue(SpectrumWaterfallShare(d, r.SpectrumLiveDisplay('A')) = 0,
+                '#WFH 0: trace only');
+      r.ProcessMsg('#WFH100');
+      CheckTrue(SpectrumWaterfallShare(d, r.SpectrumLiveDisplay('A')) = 1,
+                '#WFH 100: waterfall only');
+
+      (* A share out of 0..1 from a wrong driver is held to it. *)
+      live := SpectrumLiveDisplayUnknown;
+      live.HasWaterfallShare := True;
+      live.WaterfallShare := 1.5;
+      CheckTrue(SpectrumWaterfallShare(d, live) = 1, 'a share above 1 is held to 1');
+      live.WaterfallShare := -0.5;
+      CheckTrue(SpectrumWaterfallShare(d, live) = 0, 'a share below 0 is held to 0');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_PaletteForTone;
+begin
+   BeginTest('Panadapter: each colour tone names the matching palette');
+   CheckEquals(PALETTE_GRAYSCALE, PanadapterPaletteForTone(sptGray), 'gray');
+   CheckEquals(PALETTE_HEATMAP, PanadapterPaletteForTone(sptColour), 'colour');
+   CheckEquals(PALETTE_BLUEGREEN, PanadapterPaletteForTone(sptTeal), 'teal');
+   CheckEquals(PALETTE_FIREICE, PanadapterPaletteForTone(sptBlue),
+               'blue -- PROVISIONAL, see docs/PANADAPTER_LCL_DESIGN.md 10.5');
+   CheckEquals(PALETTE_SEPIA, PanadapterPaletteForTone(sptSepia), 'sepia');
+end;
+
 procedure TSpectrumRadioStateTests.RunAllTests;
 begin
    Test_K4_NoReports_KnowsNothing;
@@ -333,6 +471,9 @@ begin
    Test_K4WithoutSpectrum_AnswersNothing;
    Test_IC9700_InheritsTheBaseAnswer;
    Test_EveryRegisteredRadio_FreshKnowsNothing;
+   Test_K4_LiveDisplay_FollowsTheLCDOnly;
+   Test_UnknownLive_ResolvesToTodaysDefaults;
+   Test_PaletteForTone;
 end;
 
 end.

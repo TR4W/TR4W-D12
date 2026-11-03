@@ -64,6 +64,51 @@ use the arrows. Then press the **bare** letter, without Alt.
 - [ ] **macOS.** No underlines anywhere, and every caption appears in full.
       Cocoa does not honour `&`, so TR4W writes none there.
 
+## Added 2026-11-03 -- THE PANADAPTER FOLLOWS THE K4'S WATERFALL HEIGHT, COLOUR RANGE AND COLOUR MODE
+
+The K4 radio object now reports to the panadapter what its LCD says about the
+waterfall: `#WFH` (height), `#WBS` (colour range, WTR CLRS) and `#WFC` (colour
+mode). The window follows them live
+(`docs/PANADAPTER_LCL_DESIGN.md` section 10.5). It follows the **LCD values
+only**. The external monitor's `#HWFH`, `#HWBS` and `#HWFC` must not move it.
+The parse, the translation and the "unknown means today's look" rule are
+pinned by `uTestK4DisplayReport` and `uTestSpectrumRadioState`. What no test
+can see is whether the radio PUSHES these on a front-panel change, and what the
+screen looks like. Use a network K4 with the panadapter open (pan A, then
+pan B), and keep `tr4w.log` at TRACE.
+
+- [ ] **Waterfall height.** Change it on the front panel (e.g. 50, 30, 70, then
+      0 and 100). EXPECT the window's split to follow within a tick. At 0 the
+      window shows the trace only. At 100 it shows the waterfall only, with the
+      VFO markers and the cursor still drawn over it. The log should show
+      `[K4] display report recorded: #WFH...`. If no line appears, the K4 does
+      not push `#WFH`, and the window only learns it at the next connect.
+- [ ] **The history survives a height change.** EXPECT the newest rows to stay
+      when the split moves (they used to be cleared). The oldest rows are lost
+      when it shrinks.
+- [ ] **Colour range (WTR CLRS).** First set TR4W's scale slider to the rig's
+      SCALE: the floor is TR4W's own slider value x WBS / 40, and TR4W does not
+      follow `#SCL`. Then step WTR CLRS from 5 to 30. EXPECT the whole
+      waterfall, history included, to get brighter as the number rises. With
+      the slider at 80 dB, 5 should look exactly as TR4W always has. **Compare
+      against the rig's own screen at 5, 14 and 30.** The mapping is QK4's
+      photographic fit and is unverified away from 14. Say whether it looks
+      right.
+- [ ] **Colour mode.** Step it through gray, color, teal, blue and sepia. EXPECT
+      the combo and the waterfall to follow: Grayscale, Heat Map, Blue-Green,
+      Fire-Ice, Sepia. **Blue to Fire-Ice is provisional**: Fire-Ice runs blue,
+      then white, then red, so it is not a "blue tone". Say whether it should be
+      replaced with a real blue-tone palette.
+- [ ] **The operator's choice still works.** Pick a palette in the combo. EXPECT
+      it to stay until the colour mode is changed at the rig. A reconnect alone
+      should not undo it.
+- [ ] **The external monitor does not move it.** Change the EXTERNAL monitor's
+      waterfall height, colour range and colour mode. EXPECT no change in the
+      window.
+- [ ] **Does the K4 answer `#WFC;` at connect?** The connect line is now
+      `#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;`. EXPECT `#WFC<n>` in the log within a
+      second of connecting.
+
 ## Added 2026-11-03 -- THE K4 MAIN PAN IS DRAWN AT #SPN, NOT AT THE FRAME WIDTH
 
 The K4 radio object now cuts pan A down to the radio's own `#SPN`, centred,

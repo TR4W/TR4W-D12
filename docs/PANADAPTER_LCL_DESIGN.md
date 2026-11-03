@@ -503,6 +503,10 @@ DRAWN** (stages 1-2 of the K4 display-state work; see 10.3). `#REF`, `#REF$`,
 by `uK4DisplayReport` and held on the radio (`SpectrumRadioState`). Nothing the
 panadapter draws has changed.
 
+**UPDATED 2026-11-03: the window FOLLOWS `#WFH`, `#WBS` and `#WFC`** (the LCD
+waterfall height, colour range and colour mode), and nothing else. See 10.5.
+`#WFC` is now parsed and asked.
+
 **QK4 is the better reference here, and by a distance.** NY4I pointed at
 `c:\projects\qk4\src\models\radiostate\spectrumdisplaystate.cpp`, which parses
 **25** of these commands with a documented range apiece, and
@@ -584,7 +588,8 @@ Pinned by `uTestSpectrumDisplayDefaults`, which walks the registry: every
 `rcSpectrum` radio states a valid record AND exactly the pre-move constants (the
 no-pixel-change proof; a deliberate change updates that pin), every other radio
 states the neutral one. The five palettes stayed in the window: they are TR4W's
-own, only their COUNT echoes `#WFC`.
+own, only their COUNT echoes `#WFC`. (Since 2026-11-03 the radio's `#WFC`
+selects one of them by tone -- 10.5.)
 
 ### 10.2 Two things that do NOT line up — do not build on either
 
@@ -617,9 +622,10 @@ Two of those are useful corroboration rather than inputs:
   measured at the same moment) because AutoRef is on. **So the reference level
   is already in the stream**, which is why §2.3's scaling needs no CAT link.
 
-**Decisions (NY4I, 2026-08-25):** TR4W keeps **its own palette** — a large
+**Decisions (NY4I, 2026-08-25):** ~~TR4W keeps **its own palette** — a large
 monitor and the rig's small screen suit different schemes, and the window stays
-decoupled from CAT. ~~The window renders the **full 192 kHz** the stream carries.~~
+decoupled from CAT.~~ **Reversed 2026-11-03 (NY4I): the window follows the
+K4's `#WFC`, `#WFH` and `#WBS` -- see 10.5.** ~~The window renders the **full 192 kHz** the stream carries.~~
 **Reversed for the K4 on 2026-11-03 (NY4I approved crop-to-`#SPN`)**: the main
 pan is drawn at the radio's own span, centred, because the full frame carries
 about 40 bins of padding at each end that drew as a flat line at the bottom of
@@ -655,7 +661,8 @@ path.
   thread under its own `FDisplayStateLock` and returns them by value: source
   `A` = main, `B` = sub, anything else (the `Y`/`Z` mini-pans) unknown. Cleared
   at the top of every `Connect`; at link-up it asks
-  `#REF;#SCL;#AR;#WFH;#WBS;#AVG;` on a line of its own beside `#SPN;` --
+  `#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;` (`#WFC` since 2026-11-03, 10.5) on a
+  line of its own beside `#SPN;` --
   **reads only**, and pinned so: a client `#REF` value freezes AutoRef, and
   `#AR0;` resets it.
 
@@ -792,6 +799,111 @@ Pinned by `uTestK4SpectrumCrop`:
 
 The 14-frame `k4pan-tiers-sample.bin` is cut from the sweep by
 `tools/k4pan_tier_fixture.py`.
+
+### 10.5 The window follows the K4's LCD waterfall: height, colour range, colour mode (2026-11-03)
+
+NY4I saw a K4's waterfall height change on the rig and not in TR4W. **This is
+the first time the window reads the radio's display state.** Before this,
+nothing above the factory read `SpectrumRadioState`. That includes `#SCL` and
+`#REF`: the window scales from its own slider and each frame's noise floor, and
+it still does. The window now follows **`#WFH`, `#WBS` and `#WFC` from the LCD
+ONLY** (NY4I). The external monitor's `#HWFH`, `#HWBS` and `#HWFC` reach no
+window, and `#HWFC` is not decoded at all.
+
+**`#WFC`, plain.** The manual writes the LCD form as `#WFC$`. NY4I confirmed on
+the radio that it answers `#WFC`, so `uK4DisplayReport` parses `#WFC` (0..4,
+both receivers, like `#WFH`/`#WBS`), and `K4_DISPLAY_QUERIES` is now
+`#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;`. The queries are still reads only.
+
+**The seam.** `TSpectrumRadioState` is in the radio's own units (percent,
+5..30, 0..4), so the window does not read it. A new virtual,
+`TFactoryRadioBase.SpectrumLiveDisplay(sourceId)`, returns a vendor-neutral
+`TSpectrumLiveDisplay` (`uSpectrumTypes`):
+- **`WaterfallShare`**: 0..1 **inclusive**. 0 is trace only and 1 is
+  waterfall only. `TSpectrumDisplayDefaults.WaterfallFraction` must lie
+  strictly inside that range; a live value may not.
+- **`ColourFloorOfScale`**: the palette's bottom sits this fraction of the
+  scale below each row's reference.
+- **`Palette`**: a `TSpectrumPaletteTone`, one of gray, colour, teal, blue or
+  sepia.
+
+Each value has its own `Has` flag. The base returns nothing. `TK4Radio` runs
+its receiver record through the pure function `uK4DisplayReport.K4LiveDisplay`,
+so pan A uses main, pan B uses sub, and the Y mini-pan gets nothing and keeps
+the defaults. `SpectrumDisplayDefaults` and its pin are **unchanged**.
+
+**The colour-range mapping is QK4's, and it is a fit, not a fact.** QK4 at
+`485a7c15` (`src/dsp/waterfallgeometry`, `colorWindowFor`, and its README)
+uses this:
+
+    floor = REF - SCALE x WBS / 40, span = SCALE
+
+That was fitted to photos of one K4D (2026-10-30, WWV, AutoRef, `#WBS` 14,
+SCALE 25/50/80). QK4 states that the `#WBS` term is unverified, because every
+photo was taken at 14. The manual says only that a higher WTR CLRS uses
+brighter colours. TR4W's waterfall already colours each row against its own
+noise floor, which is REF under AutoRef, over one scale. So the K4 states
+`ColourFloorOfScale = WBS / 40` (`K4_COLOUR_FLOOR_DIVISOR`), and the window's
+waterfall margin becomes that fraction times its own scale. **The trace is
+untouched**: it keeps `RefMarginDb`. One anchor makes this easy to check: at
+`#WBS` 5 and the 80 dB default scale, the floor is exactly 10 dB, the margin
+the window has always used. At 14 it is 28 dB, which is markedly brighter.
+
+**The scale in that formula is TR4W's slider, not the rig's `#SCL`.** The
+window still does not follow `#SCL`. So a rig at SCALE 50 and TR4W at 80
+colour differently at the same `#WBS`. "Unchanged at 5" holds only with the
+slider at 80. Following `#SCL` is a separate decision.
+
+**This recolours differently from QK4.** QK4 stores each row's palette position
+as it was when captured, so a `#WBS` change recolours only new rows. TR4W keeps
+dB and recolours the whole history, as its scale slider always has. The
+difference is deliberate.
+
+**Palettes, mapped by name, not reordered.** The rig's 0..4 is gray, color,
+teal, blue, sepia. The window's combo is Heat Map, Grayscale, Sepia,
+Blue-Green, Fire-Ice, and that order is kept: the combo index is what
+`bench_panadapter` drives, and the radio's numbering belongs to the radio.
+`PanadapterPaletteForTone` maps gray to Grayscale, colour to Heat Map, teal to
+Blue-Green and sepia to Sepia. It maps **blue to Fire-Ice PROVISIONALLY**.
+Fire-Ice is the only blue-led palette, but its top runs from white to red,
+which a blue tone does not. Whether to add a real blue-tone palette is for
+NY4I (`docs/BENCH_QUEUE.md`). The 2026-08-25 decision that "TR4W keeps its
+own palette" (10.2) is **reversed**.
+
+**How it reaches the window.** The window does this on every refresh tick
+(50 ms), frame or no frame:
+- `ApplyLiveDisplay` asks the radio, which takes a brief lock inside the K4.
+- It applies a value **only when it differs from the one last applied**. A
+  K4 under AutoRef pushes `#REF` several times a second, and each push moves
+  `Generation`. Gating on `Generation` would re-colour the whole history on
+  every push, and would undo the operator's combo choice every second.
+- An unknown value resolves to the defaults exactly: 0.5 and `RefMarginDb`.
+  That covers a radio that reports nothing, a K4 that has not answered, and
+  the reset at each reconnect. The pure resolvers are
+  `SpectrumWaterfallShare` and `SpectrumWaterfallColourMarginDb`.
+- The palette is the exception: unknown leaves it alone. The operator's combo
+  choice stands until the radio reports a **different** scheme.
+- Attach forgets what was last applied, so a first report equal to a default
+  still applies.
+
+**What happens to the history:**
+- **Colour range or colour mode**: `RenderWaterfall` re-colours every stored
+  row from its dB, as the scale slider and the palette combo already do. No
+  row is lost and there is no seam.
+- **Height**: `EnsureWaterfall` now **keeps the newest rows that fit** when only
+  the height changes. Before, every resize cleared the history. A shrink
+  drops the oldest rows. A width change still clears, because rows cannot be
+  rescaled horizontally. This also means a window dragged taller or shorter
+  keeps its history now. At 0 % the bitmap is left alone, since nothing
+  draws it. At 100 % the trace is skipped but the VFO markers and the cursor
+  still cross the waterfall; before, they were skipped with the trace. Issue
+  #159 (history across a span change) is untouched.
+
+Pinned by `uTestK4DisplayReport` (the `#WFC` parse, `#HWFC` refused, the
+translation), `uTestSpectrumRadioState` (LCD only, unknown resolves to the
+defaults, the anchors above, the tone mapping, and a registry walk in which
+every fresh radio claims no live display) and
+`uTestRadioSocketNoRead.Test_DisplayStateAskedOnConnect_ReadsOnly`.
 
 ## 12. Handoff: what lands on `fpc`, not here
 

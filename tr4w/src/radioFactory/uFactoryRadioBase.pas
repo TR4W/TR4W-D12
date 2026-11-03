@@ -918,8 +918,19 @@ Type TFactoryRadioBase = class(TObject)
          Base: SpectrumRadioStateUnknown -- nothing known.  The honest answer
          for every radio that does not report these, which today is every
          radio but the K4; the Icoms and the Flex inherit it unchanged.
-         NOTHING ABOVE THE FACTORY READS IT YET. *)
+         It is in the radio's own units, so the window does not read it: it
+         reads SpectrumLiveDisplay below. *)
       function SpectrumRadioState(const ASourceId: string): TSpectrumRadioState; virtual;
+
+      (* What the radio's own display says the WINDOW should follow for
+         ASourceId -- waterfall share, waterfall colour floor, colour scheme --
+         translated by the radio into neutral units.  See TSpectrumLiveDisplay.
+         The window reads it on its refresh timer, from the main thread, so an
+         override copies out from under its own lock (TK4Radio does).
+
+         Base: SpectrumLiveDisplayUnknown -- nothing to follow, so the window
+         draws with SpectrumDisplayDefaults alone, exactly as before. *)
+      function SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay; virtual;
 
       // Has StartSpectrum taken effect -- is a reader alive and trying?
       function SpectrumStreaming: Boolean; virtual;
@@ -3031,6 +3042,12 @@ begin
    (* Nothing reported -- see the declaration.  Deliberately not a guess at
       any radio's settings. *)
    Result := SpectrumRadioStateUnknown;
+end;
+
+function TFactoryRadioBase.SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay;
+begin
+   (* Nothing to follow -- see the declaration. *)
+   Result := SpectrumLiveDisplayUnknown;
 end;
 
 function TFactoryRadioBase.SpectrumStreaming: Boolean;

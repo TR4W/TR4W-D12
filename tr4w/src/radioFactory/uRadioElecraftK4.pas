@@ -57,7 +57,8 @@ Type TK4Radio = class(TElecraftRadio)
         uK4DisplayReport.  WRITTEN on the reading thread (ProcessMessage) and
         READ from any thread (SpectrumRadioState), so guarded by its own lock,
         not SocketLock -- the TX-inhibit pair's pattern.  Cleared at every
-        Connect.  Nothing above the factory reads it yet. *)
+        Connect.  The panadapter reads it, translated, through
+        SpectrumLiveDisplay. *)
       FDisplayState: TK4DisplayState;
       FDisplayStateLock: TCriticalSection;
 
@@ -105,6 +106,7 @@ Type TK4Radio = class(TElecraftRadio)
       function PrimarySpectrumSourceId: string; override;
       function SpectrumDisplayDefaults(const ASourceId: string): TSpectrumDisplayDefaults; override;
       function SpectrumRadioState(const ASourceId: string): TSpectrumRadioState; override;
+      function SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay; override;
    private
       { What the radio last said #SPN is.  0 until it has answered. }
       FSpectrumSpanHz: Integer;
@@ -415,6 +417,12 @@ end;
      0.5              the radio reports #WFH 50: half trace, half waterfall;
      calibrated       the K4 sends real dB (int16 / 10).
 
+   THESE ARE THE DEFAULTS, NOT THE LIVE VALUES.  Once the radio has reported
+   #WFH, #WBS or #WFC, SpectrumLiveDisplay (below) states what the window
+   follows instead -- the waterfall share, its colour floor and its scheme --
+   and these numbers stand only for what the radio has not said.  They are
+   unchanged, and pinned so (uTestSpectrumDisplayDefaults).
+
    THE SAME FOR EVERY SOURCE, as the window has always drawn them.  The Y
    mini-pan's levels sit near 0 dB rather than -125, but the window scales
    relative to each frame's own floor, so one record serves A, B and Y.
@@ -542,6 +550,14 @@ begin
    finally
       FDisplayStateLock.Leave;
    end;
+end;
+
+(* The LCD's #WFH, #WBS and #WFC, translated (uK4DisplayReport.K4LiveDisplay).
+  SpectrumRadioState already takes the lock, gates on rcSpectrum and answers
+  nothing for the Y and Z mini-pans -- so the mini-pan keeps the defaults. *)
+function TK4Radio.SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay;
+begin
+   Result := K4LiveDisplay(SpectrumRadioState(ASourceId));
 end;
 
 function TK4Radio.Connect: integer;
@@ -1031,9 +1047,10 @@ begin
          logger.Trace('[K4] radio reports spectrum span %d Hz', [FSpectrumSpanHz]);
          end;
 
-      (* #REF, #SCL, #AR, #WFH, #WBS, #AVG, #FPS and the external-monitor
-        forms: the radio's own display settings.  Recorded, not acted on --
-        nothing reads them yet.  #SPN stays above, untouched. *)
+      (* #REF, #SCL, #AR, #WFH, #WBS, #WFC, #AVG, #FPS and the
+        external-monitor forms: the radio's own display settings.  Recorded
+        here; the panadapter follows #WFH, #WBS and #WFC through
+        SpectrumLiveDisplay.  #SPN stays above, untouched. *)
       RecordDisplayReport(sMessage);
       end;
 
