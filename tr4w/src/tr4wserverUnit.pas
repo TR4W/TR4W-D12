@@ -163,7 +163,6 @@ type
     dmPass,
     dmStationStatus,
     dmDXSpot,
-    dmTimeSyn,
     dmParam,
     dmIntercom,
     dmEditQSO,
@@ -202,7 +201,6 @@ var
 //  SerialsNumber                         : array[1..MAXSERIALNUMBER] of TSerialNumberType;
 
   MSWSOCKLoaded                         : boolean = False;
-  sAllowTimeSynchronizing               : boolean = True;
   SerialNumberLockoutEnable             : boolean = False;
 //  tGetLogTimeout                        : integer = 50;
   lpdwBytesReceived                     : DWORD;
@@ -699,8 +697,12 @@ begin
 
           NET_TIMESYN_ID:
             begin
-              if sAllowTimeSynchronizing then SendMessageToClients(aSocket, SizeOf(TNetTimeSync), False, dmTimeSyn);
-              Bufindex := Bufindex + SizeOf(TNetTimeSync);
+              (* REMOVED 2026-11-03: a station may not set another's clock. An
+                older station still sends this packet; it is SKIPPED by its
+                frame size, NOT relayed, and not the "not one the server
+                handles" warning below. *)
+              logger.Debug('[Net] time-sync packet from an older station skipped, not relayed');
+              Bufindex := Bufindex + NET_TIMESYN_SIZE;
             end;
 
           NET_PARAMETER_ID:

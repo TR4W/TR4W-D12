@@ -4742,10 +4742,6 @@ msgctxt "utr4wstrings.rc_telnet"
 msgid "DX Cluster"
 msgstr ""
 
-#: utr4wstrings.rc_timesyn
-msgid "Synchronize time on &all computers"
-msgstr ""
-
 #: utr4wstrings.rc_toggleinsert
 msgid "Toggle insert mode"
 msgstr ""
@@ -5036,10 +5032,6 @@ msgstr ""
 
 #: utr4wstrings.tc_command
 msgid "Command"
-msgstr ""
-
-#: utr4wstrings.tc_computerclockissynchronized
-msgid "Computer clock is synchronized."
 msgstr ""
 
 #: utr4wstrings.tc_configuration_file
@@ -6353,10 +6345,6 @@ msgstr ""
 
 #: utr4wstrings.tc_sendingssbwavfilename
 msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
-msgstr ""
-
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-msgid "Do you really want to send time to computers on the network?"
 msgstr ""
 
 #: utr4wstrings.tc_send_callassetbymycallcommand

@@ -106,8 +106,8 @@ const
 
 (* SYSTEMTIME OFF WINDOWS, WITH WIN32'S EXACT LAYOUT -- AND THAT IS THE POINT.
 
-  This is not a convenience alias. TNetTimeSync is a PACKED RECORD SENT BETWEEN
-  MULTI-OP STATIONS and tsTime is a field of the log record, so this layout is
+  This is not a convenience alias. SYSTEMTIME is a field of records SENT BETWEEN
+  MULTI-OP STATIONS (the server's log record carries one), so this layout is
   on the wire and on disk in every .TRW an operator owns.
 
   NOT FPC's SysUtils.TSystemTime, which is NOT layout-compatible: it orders its
@@ -568,7 +568,16 @@ const
   NET_THIS_QTC_WAS__SEND_ID             = 1056;
 
   NET_TAKESERVERQSO_ID                  = 1060;
+  (* NET_TIMESYN_ID: REMOVED 2026-11-03; KEPT SO AN OLDER STATION'S PACKET IS
+    SKIPPED, NOT PARSED FOR EVER. "Synchronize time on all computers" let one
+    station set every other station's system clock, which is a permissions
+    question (NY4I). Nothing builds this packet, nothing relays it and nothing
+    acts on it any more. The id and the 20-byte frame stay because every 5.x
+    build released before this one still has the menu row, speaks protocol 2
+    and is admitted: uNetFraming must know the size or the receiver cannot
+    find the end of the message. *)
   NET_TIMESYN_ID                        = 1070;
+  NET_TIMESYN_SIZE                      = 20;
   NET_PARAMETER_ID                      = 1080;
   NET_STATIONSTATUS_ID                  = 1090;
 //  NET_MULTSFREQUENCIES_ID               = 1100;
@@ -2468,17 +2477,6 @@ type
   TNetSynQSOInformationPtr = ^TNetSynQSOInformation;
 
 type
-  TNetTimeSync = packed record
-    tsID: Word;
-    tsTime: SYSTEMTIME;
-    tsReserved1: Byte;
-    tsReserved2: Byte;
-  end;
-
-type
-  TNetTimeSyncPtr = ^TNetTimeSync;
-
-type
   TParameterToNetwork = packed record
     pnID: Word;
     pnCommand: ShortString;
@@ -2914,7 +2912,6 @@ const
   menu_alt_ssbcwmode                    = 10323;
   menu_alt_deleteqso                    = 10324;
   menu_alt_init_qso                     = 10325;
-  menu_alt_setnettime                   = 10326;
 
   menu_alt_increment_time_1             = 10327;
   menu_alt_increment_time_2             = 10328;

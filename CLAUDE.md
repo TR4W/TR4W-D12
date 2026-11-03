@@ -1234,7 +1234,7 @@ ready: gate post-connect sends on link *stability*, not presence.
 ### 6. Multi-user networking
 
 **TR4WServer** (`tr4w/tr4wserver/`, its own `.lpr`) is the TCP/IP server for multi-op stations:
-centralised log, multipliers, dupe checking, serial-number lockout, time sync. Binary packet
+centralised log, multipliers, dupe checking, serial-number lockout. (Time sync -- one station setting the others' clocks -- was REMOVED 2026-11-03: a permissions question. Its message id 1070 is still framed and skipped for older stations.) Binary packet
 protocol with CRC32 (`src/utils/networkmessageutils.pas`). Client side: `src/uNetClient.pas`,
 `src/uNet.pas`, `src/trdos/lognet.pas`, `src/uGetServerLog.pas`.
 

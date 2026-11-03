@@ -268,9 +268,10 @@ the **D7** `tr4w.exe` and one on the **D12** build, both joined to the same
   a dupe seen on one station but not the other, or divergent mult counts.
 - **G3 — DX spots across versions.** A spot originated on D7 reaches the D12 band
   map correctly, and vice-versa.
-- **G4 — Time sync.** Confirm time synchronization across the two versions keeps
-  clocks aligned (serial-number lockout / time-sync packets are part of the wire
-  protocol).
+- **G4 — Time sync (REMOVED 2026-11-03).** The feature is gone: a station may not
+  set another's clock. Confirm a D12 station on a network with an older 5.x
+  station that still sends the packet neither hangs nor logs repeated errors
+  (BENCH_QUEUE.md).
 - **G5 — Serial-number lockout.** With lockout enabled on the server, confirm the
   D7 and D12 stations don't hand out duplicate serials.
 - **G6 — Mixed-version stress.** Run a realistic burst (both stations logging

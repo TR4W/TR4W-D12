@@ -70,7 +70,6 @@ const
 
   TC_REALLYWANTTOCLEARTHELOG            = 'Siguran si da hoces da obrises dnevnik?';
   TC_MESSAGETOSENDVIANETWORK            = ' i posalji poruku preko mreze';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Hoces li izvrsiti sinhronizaciju vremena na svim racunarima u mrezi?';
   TC_RULESONSM3CER                      = 'Pravila %s takmicenja na WA7BNM takmicarskom kalendaru';
   TC_RULESONQRZRU                       = 'Pravila za %s takmicenje na sajtu QRZ.RU';
   TC_NOTE                               = 'oznaka';
@@ -206,7 +205,6 @@ const
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Konekcija na TR4WSERVER %s:%d izgubljena.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Vreme na racunaru sinhronizovano.';
   TC_CONNECTINGTO                       = 'Konektujem se na ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Konekcija na TR4WSERVER nije uspela. Proveri ispravnost LOZINKE SERVERA!!';
   TC_CONNECTEDTO                        = 'Konektovan na ';
@@ -560,7 +558,6 @@ const
   RC_SYNCLOCK                           = 'Sinhronizuj vreme';
   RC_LOCALTIME                          = 'Lokalno vreme';
 
-  RC_TIMESYN                            = 'Sinhronizacija vremena na &svim racunarima';
   RC_SEND                               = '&Posalji';
   RC_POSTNOW                            = 'Posalji sada';
   RC_GOTOGS                             = 'Prikazi rezultate';

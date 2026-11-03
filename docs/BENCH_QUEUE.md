@@ -253,10 +253,25 @@ item 1:
   `unknown or zero-size message ID` line in the server log, no
   `Disconnecting client` after the spot, and `tr4w.log` at A with no
   reconnect following it. 20 spots in a minute must not flap the link.
-- [ ] **Intercom, time sync, spot form.** Net > Send message from A (EXPECT it
-  at B), the time-sync menu row if the server allows it (EXPECT B's clock
-  set only if it permits, and the link stays up), and the Send Spot form
-  with no cluster connected at A (EXPECT B's cluster command gets the text).
+- [ ] **Intercom and spot form.** Net > Send message from A (EXPECT it
+  at B), and the Send Spot form with no cluster connected at A (EXPECT B's
+  cluster command gets the text). (The time-sync menu row that used to be here
+  was REMOVED 2026-11-03; see the next item.)
+- [ ] **AN OLDER STATION'S TIME SYNC IS SKIPPED (2026-11-03, needs an OLDER
+  5.x build with the menu row as station A).** "Synchronize time on all
+  computers" was removed -- a station may not set another's clock (NY4I). Every
+  5.x build released before that still has the row, speaks protocol 2 and is
+  admitted, so it can still send message id 1070. With the NEW build as B and
+  the new tr4wserver (and, separately, TR4WServerPy, which relays 1070 blindly
+  and is not changed here): on A choose Net > Synchronize time on all computers.
+  EXPECT on B: still responsive, the link stays up, B's clock UNCHANGED, and at
+  most ONE `[Net] time-sync packet from an older station ignored` Debug line
+  per link in `tr4w.log` (no Warn or Error, no `Unrecognised message id`).
+  EXPECT on the new server: one `[Net] time-sync packet from an older station
+  skipped, not relayed` Debug line per packet, no `not one the server handles`
+  warning, and A and B both still connected. The unit test
+  (`uTestNetClientPackets`) and `tools/netprobe --case time` cover the parsing;
+  only a real older build covers the rest.
 - [ ] **Nothing refused.** `tr4w.log` at either station has no
   `REFUSED to send a malformed packet` line. If one appears it names the id
   and size of a record that would have broken the link; capture it.

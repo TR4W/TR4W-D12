@@ -331,13 +331,6 @@ msgid "message to send via network"
 msgstr "besked der skal sendes via netværk"
 
 #. Section: MAIN
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgid "Do you really want to send time to computers on the network?"
-msgstr "Vil du virkelig sende tid til computere på netværket?"
-
-#. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
@@ -1195,13 +1188,6 @@ msgstr "Du bliver set af en anden station."
 #, fuzzy
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Forbindelse til TR4WSERVER %s: %d tabt."
-
-#. Section: UNET
-#: tr4w/src/lang/tr4w_consts_eng.pas:203
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgid "Computer clock is synchronized."
-msgstr "Computeruret er synkroniseret."
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:204
@@ -5766,15 +5752,6 @@ msgstr "Calculator"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Nulstil radioporte"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "Synkroniser tid på &alle computere"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable

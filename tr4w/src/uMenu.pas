@@ -215,7 +215,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27}
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27} - 1 {Synchronize time on all computers removed, 2026-11-03 -- a station may not set another's clock}
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
@@ -481,7 +481,6 @@ var
     (mrText: ''; mrId: menu_net_reconnect),
     (mrText: ''; mrId: menu_net_showwindow),
     (mrText: ''; mrId: 0),
-    (mrText: ''; mrId: menu_alt_setnettime),
     (mrText: ''; mrId: menu_send_message),
     (mrText: ''; mrId: menu_getserverlog),
     (mrText: ''; mrId: 0),
@@ -756,7 +755,6 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuReconnect;
    Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuShowWindow;
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
-   Inc(i); T_MENU_ARRAY[i].mrText := RC_TIMESYN;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_SENDMESSAGE;
    Inc(i); T_MENU_ARRAY[i].mrText := SNetMenuServerLog;
    Inc(i); T_MENU_ARRAY[i].mrText := '-';

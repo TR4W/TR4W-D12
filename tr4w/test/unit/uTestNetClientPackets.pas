@@ -61,7 +61,7 @@ type
       procedure Test_ADxSpotLeavesWithItsIdAndItsSize;
       procedure Test_SharingOffPostsNoSpot;
       procedure Test_SharingOffIgnoresSpotsFromTheNetwork;
-      procedure Test_ATimeSyncLeavesWithItsIdAndItsSize;
+      procedure Test_AnOlderStationsTimeSyncIsSkippedNotActedOn;
       procedure Test_AnIntercomLineLeavesWithItsIdAndItsSize;
       procedure Test_ASpotViaNetworkLeavesWithItsIdAndItsSize;
       procedure Test_StationStatusAndParameterLeaveWithTheirIds;
@@ -409,20 +409,65 @@ begin
    end;
 end;
 
-procedure TNetClientPacketTests.Test_ATimeSyncLeavesWithItsIdAndItsSize;
+(* "SYNCHRONIZE TIME ON ALL COMPUTERS" WAS REMOVED (2026-11-03) -- a station may
+  not set another's clock. An OLDER station still sends the packet, so a
+  time-sync message followed at once by a DX spot must be consumed whole (its 20
+  bytes skipped, the stream still on a boundary), the spot must still be handled,
+  and nothing may be posted back. Whether the clock is untouched is not
+  observable here; nothing in uNet calls a clock setter any more (source read
+  in Test_EverySenderGoesThroughItsHelper). *)
+procedure TNetClientPacketTests.Test_AnOlderStationsTimeSyncIsSkippedNotActedOn;
 var
    link: TCaptureLink;
-   bytes: TBytes;
+   savedShare, savedSo2r, savedIe: boolean;
+   syn: PWord;
+   spot: TNetDXSpotPtr;
+   desync: boolean;
+   i: integer;
 begin
-   BeginTest('a time sync leaves with NET_TIMESYN_ID and its size');
+   BeginTest('an older station''s time sync is skipped by its size and not acted on');
+   savedShare := Settings.Network.ShareSpots;
+   savedSo2r := Settings.BandMap.So2rDisplay;
+   savedIe := Settings.Operating.IeSwitch;
    OpenLink(link);
    try
-      SendTimeSyncToNet;
-      CheckTrue(WaitPackets(link, 1), 'the time sync was written');
-      bytes := link.Packet(0);
-      CheckEquals(NET_TIMESYN_ID, IdOf(bytes), 'the first Word is the time-sync id');
-      CheckEquals(NetMessageSize(NET_TIMESYN_ID), Length(bytes), 'and it is 20 bytes');
+      Settings.BandMap.So2rDisplay := False;
+      Settings.Operating.IeSwitch := False;
+      Settings.Network.ShareSpots := True;
+      SpotsList.Clear;
+
+      for i := 1 to NET_TIMESYN_SIZE do
+         begin
+         NetBuffer[i] := #0;
+         end;
+      syn := PWord(@NetBuffer[1]);
+      syn^ := NET_TIMESYN_ID;
+      NetBuffer[3] := #$EA;     (* wYear 2026, little-endian *)
+      NetBuffer[4] := #$07;
+      spot := TNetDXSpotPtr(@NetBuffer[1 + NET_TIMESYN_SIZE]);
+      spot^ := Default(TNetDXSpot);
+      spot^.dsID := NET_NETWORKDXSPOT_ID;
+      spot^.dsSpot.FFrequency := 14267000;
+      spot^.dsSpot.FCall := 'VE7OMT';
+      spot^.dsSpot.FBand := Band20;
+      spot^.dsSpot.FMode := CW;
+      spot^.dsSpot.FSysTime := Now;
+
+      CheckEquals(NET_TIMESYN_SIZE + SizeOf(TNetDXSpot),
+                  ConsumeNetBuffer(NET_TIMESYN_SIZE + SizeOf(TNetDXSpot), desync),
+                  'the time sync and the spot behind it were consumed whole');
+      CheckFalse(desync, 'the stream stayed on a message boundary');
+      CheckEquals(1, SpotsList.Count, 'the spot behind the time sync was handled');
+
+      SendIntercomToNet('marker');
+      CheckTrue(WaitPackets(link, 1), 'the marker was written');
+      CheckEquals(NET_INTERCOMMESSAGE_ID, IdOf(link.Packet(0)), 'and is the first thing posted');
+      CheckEquals(1, link.Count, 'the time sync was not answered or relayed');
    finally
+      Settings.Network.ShareSpots := savedShare;
+      Settings.BandMap.So2rDisplay := savedSo2r;
+      Settings.Operating.IeSwitch := savedIe;
+      SpotsList.Clear;
       CloseLink(link);
    end;
 end;
@@ -546,7 +591,7 @@ begin
 
       (* FIFO: when this good packet is the only one written, none of the refused
         ones was ever posted. *)
-      SendTimeSyncToNet;
+      SendIntercomToNet('good');
       CheckTrue(WaitPackets(link, 1), 'the good packet was written');
       Sleep(50);
       CheckEquals(1, link.Count, 'and it is the only packet that reached the writer');
@@ -678,15 +723,14 @@ begin
    form := Slurp('ui' + PathDelim + 'lcl' + PathDelim + 'uSendSpotForm.pas');
 
    CheckTrue(Pos('SendDXSpotToNet(Spot)', spots) > 0, 'uSpots sends through its helper');
-   CheckTrue(Pos('SendTimeSyncToNet;', mainText) > 0, 'the time-sync arm');
+   CheckEquals(0, Pos('SendTimeSyncToNet', net + mainText), 'no time-sync sender is left');
+   CheckEquals(0, Pos('SetSystemTime', net), 'and uNet cannot set the machine clock');
    CheckTrue(Pos('SendIntercomToNet(', mainText) > 0, 'the send-message arm');
    CheckTrue(Pos('SendIntercomToNet(scFileName)', command) > 0, 'the SENDMESSAGE command');
    CheckTrue(Pos('SendSpotViaNetworkToNet(spot)', form) > 0, 'the spot form');
 
    CheckEquals(0, Pos('SendToNet(NetDXSpot', spots + mainText + command + form),
                'no caller sends the old DX spot global');
-   CheckEquals(0, Pos('SendToNet(NetTimeSync', spots + mainText + command + form),
-               'nor the time-sync global');
    CheckEquals(0, Pos('SendToNet(NetIntercomMessage', spots + mainText + command + form),
                'nor the intercom global');
    CheckEquals(0, Pos('SendToNet(SendSpotViaNetwork', spots + mainText + command + form),
@@ -695,9 +739,6 @@ begin
    CheckTrue(Pos('dsID := NET_NETWORKDXSPOT_ID',
                  BodyOf(net, 'procedure SendDXSpotToNet(const aSpot: TSpotRecord);' +
                              LineEnding + 'var')) > 0, 'the DX spot id is set');
-   CheckTrue(Pos('tsID := NET_TIMESYN_ID',
-                 BodyOf(net, 'procedure SendTimeSyncToNet;' + LineEnding + 'var')) > 0,
-             'the time-sync id is set');
    CheckTrue(Pos('imID := NET_INTERCOMMESSAGE_ID',
                  BodyOf(net, 'procedure SendIntercomToNet(const aText: string);' +
                              LineEnding + 'var')) > 0, 'the intercom id is set');
@@ -813,7 +854,7 @@ begin
    Test_ADxSpotLeavesWithItsIdAndItsSize;
    Test_SharingOffPostsNoSpot;
    Test_SharingOffIgnoresSpotsFromTheNetwork;
-   Test_ATimeSyncLeavesWithItsIdAndItsSize;
+   Test_AnOlderStationsTimeSyncIsSkippedNotActedOn;
    Test_AnIntercomLineLeavesWithItsIdAndItsSize;
    Test_ASpotViaNetworkLeavesWithItsIdAndItsSize;
    Test_StationStatusAndParameterLeaveWithTheirIds;

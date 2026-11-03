@@ -1,5 +1,11 @@
 # TR4W Multi-User Networking Analysis & V2 Protocol Design
 
+> **Note, 2026-11-03 (TR4W-D12):** the time-synchronization feature described below
+> (`NET_TIMESYN_ID`, `SendTimeSyn`, `sAllowTimeSynchronizing`, the client's
+> `SetSystemTime`) was REMOVED from TR4W-D12 -- a station may not set another's clock.
+> The id 1070 and its 20-byte frame are kept so an older station's packet is skipped, not
+> relayed and not acted on. The body below is TR4QT's and is not edited.
+
 **Document Purpose:** Comprehensive analysis of TR4W's multi-user networking system and design specification for a modernized V2 protocol for TR4QT.
 
 **Date:** December 2025

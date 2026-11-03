@@ -85,7 +85,6 @@ produced by Borland Resource Workshop
 #define menu_cat_radio_two	10106
 #define menu_getserverlog	10510
 #define menu_fast_rescore	10509
-#define menu_alt_setnettime	10326
 #define menu_ctrl_PlaceHolder	10415
 #define menu_pingserver	10563
 #define menu_soundrecorder	10562
@@ -443,7 +442,6 @@ T MENU
 
  POPUP RC_NET, GRAYED
  {
-  MENUITEM RC_TIMESYN RC_TIMESYN_HK, menu_alt_setnettime
   MENUITEM RC_SENDMESSAGE RC_SENDMESSAGE_HK, menu_send_message
   MENUITEM RC_SYNLOG RC_SYNLOG_HK, menu_getserverlog
   MENUITEM SEPARATOR
@@ -675,7 +673,6 @@ LANGUAGE LANG_NEUTRAL , SUBLANG_NEUTRAL
  CONTROL RC_LOCALTIME, 104, "STATIC", SS_RIGHT | WS_CHILD | WS_VISIBLE, 5, 10, 125, 11
  CONTROL "", 119, "STATIC", SS_CENTER | SS_SUNKEN | WS_CHILD | WS_VISIBLE, 135, 10, 125, 11
  CONTROL "", 124, "static", SS_LEFT | SS_SUNKEN | WS_CHILD | WS_VISIBLE, 0, 135, 265, 10
- CONTROL RC_TIMESYN, 203, "button", BS_PUSHBUTTON | BS_CENTER | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 135, 100, 60, 30
 }
 
 
@@ -1198,7 +1195,6 @@ T ACCELERATORS
  "W", menu_alt_init_qso, VIRTKEY, ALT
  VK_INSERT, menu_ctrl_PlaceHolder, VIRTKEY, CONTROL
  "H", menu_contents, VIRTKEY, ALT
- "T", menu_alt_setnettime, VIRTKEY, ALT, CONTROL
  "S", menu_getserverlog, VIRTKEY, ALT, CONTROL
  "6", menu_windows_radiointerface2, VIRTKEY, CONTROL, SHIFT
  "7", menu_windows_intercom, VIRTKEY, CONTROL, SHIFT

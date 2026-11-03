@@ -413,15 +413,6 @@ msgid "message to send via network"
 msgstr "네트워크를 통해 보내는 메시지"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sendtimetocomputersonthenetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
-msgid "Do you really want to send time to computers on the network?"
-msgstr "네트워크에서 컴퓨터로 시간을 보낼 수 있습니까?"
-
-#. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer
 #: tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
@@ -1497,15 +1488,6 @@ msgstr "다른 역에 의해 자리 잡고 있습니다."
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "TR4WSERVER %s:%d로 연결."
-
-#. Section: UNET
-#: utr4wstrings:tc_computerclockissynchronized
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
-msgid "Computer clock is synchronized."
-msgstr "컴퓨터 시계는 동기화됩니다."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectingto
@@ -6470,15 +6452,6 @@ msgstr "계산기"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "라디오 포트 재설정"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "&all 컴퓨터에서 시간을 동기화"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable

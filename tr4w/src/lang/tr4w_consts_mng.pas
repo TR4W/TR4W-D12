@@ -64,7 +64,6 @@ const
   TC_CLEAR_MULTSHEET_NET                = '"CLEARMULTSHEET" сvлжээний бvх vржvvлэгчийн логийг арилгана';
   TC_REALLYWANTTOCLEARTHELOG            = 'Та vнэхээр энэ логоо УСТГАХ гэж vv!!!';
   TC_MESSAGETOSENDVIANETWORK            = 'Мессэжийг сvлжээгээр явуулах уу';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Та сvлжээ руу хугацаагаа явуулахыг хvсч байна уу?';
   TC_RULESONSM3CER                      = 'WA7BNM тэмцээний хуанли дээрх %s тэмцээний заавар';
   TC_RULESONQRZRU                       = '%s тэмцээний зааврыг QRZ.RU дээрээс харна уу';
   TC_NOTE                               = 'Тэмдэглэл';
@@ -187,7 +186,6 @@ const
   TC_GAGARIN                            = 'special two char ID';
   {UNET}
   TC_CONNECTIONTOTR4WSERVERLOST         = 'TR4WSERVER %s:%d -ийн холболт тасарлаа.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Компьютерийн цагийг тохируулав';
   TC_CONNECTINGTO                       = 'Холбогдож байна';
   TC_CONNECTTOTR4WSERVERFAILED          = 'TR4WSERVER сервер лvv холбогдсонгvй. SERVER PASSWORDаа шалгана уу!!';
   TC_CONNECTEDTO                        = 'Холбогдлоо';
@@ -586,7 +584,6 @@ const
   RC_LC                                 = 'LC-г тооцоолох';
   RC_RESET_RADIO_PORTS                  = 'Reset Radio Ports';
   RC_NET                                = 'Сvлжээ';
-  RC_TIMESYN                            = 'Цаг тохируулж байна';
   RC_SENDMESSAGE                        = 'Мессэж явуулах';
   RC_SYNLOG                             = 'Логийг харьцуулах ба тохируулах';
   RC_CLEARALLLOGS                       = 'Сvлжээний бvх логийг арилгах';

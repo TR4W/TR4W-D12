@@ -58,7 +58,6 @@
 
   TC_REALLYWANTTOCLEARTHELOG            = 'Willst du wirklich das aktuelle Log bereinigen?';
   TC_MESSAGETOSENDVIANETWORK            = 'Message zum Versand im Netzwerk';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Willst du wirklich allen Computern im Netzwerk die Uhrzeit senden?';
   TC_RULESONSM3CER                      = 'Regeln fuer %s Contest auf WA7BNM Contest Calendar';
   TC_RULESONQRZRU                       = 'Regeln fuer %s Contest auf QRZ.RU';
   TC_NOTE                               = 'beachten';
@@ -195,7 +194,6 @@
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Verbindung zum TR4WSERVER %s:%d verloren.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Computeruhr ist synchronisiert.';
   TC_CONNECTINGTO                       = 'Verbinde mit ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Verbindung zum TR4WSERVER fehlgeschlagen. Check SERVER PASSWORD!!';
   TC_CONNECTEDTO                        = 'Verbunden mit ';
@@ -554,7 +552,6 @@
   RC_SERVERANSWER                       = 'Server Antwort';
   RC_SYNCLOCK                           = '&Synchronisiere Uhr';
   RC_LOCALTIME                          = 'Ortszeit';
-  RC_TIMESYN                            = 'Synchronisiere Zeit auf &allen Computern';
   RC_SEND                               = '&Sende';
   RC_POSTNOW                            = 'Verschicke jetzt';
   RC_GOTOGS                             = 'Zeige Punkte';

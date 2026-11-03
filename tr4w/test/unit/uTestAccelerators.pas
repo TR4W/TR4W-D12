@@ -245,7 +245,9 @@ begin
      contactinfo UDP broadcasts. }
    (* 91 -> 90 on 2026-09-13: Ctrl+Alt+L opened the LPT dialog, which went
      with the parallel port. *)
-   CheckEquals(90, installed, 'installed bindings (the table read out of the binary)');
+   (* 90 -> 89 on 2026-11-03: Ctrl+Alt+T sent the time to every station, a feature
+     removed because a station may not set another's clock. *)
+   CheckEquals(89, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

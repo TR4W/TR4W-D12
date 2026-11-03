@@ -334,13 +334,6 @@ msgid "message to send via network"
 msgstr "μήνυμα για αποστολή μέσω δικτύου"
 
 #. Section: MAIN
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgid "Do you really want to send time to computers on the network?"
-msgstr "Θέλεις πραγματικά να στείλεις χρόνο σε υπολογιστές στο δίκτυο?"
-
-#. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
@@ -1199,13 +1192,6 @@ msgstr "Σε εντόπισε άλλος σταθμός."
 #, fuzzy
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Η σύνδεση με το TR4WSERVER %s: %d χάθηκε."
-
-#. Section: UNET
-#: tr4w/src/lang/tr4w_consts_eng.pas:203
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgid "Computer clock is synchronized."
-msgstr "Το ρολόι του υπολογιστή είναι συγχρονισμένο."
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:204
@@ -5776,15 +5762,6 @@ msgstr "Υπολογισμός"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Επαναφορά θυρών ραδιοφώνου"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "Συγχρονισμός χρόνου σε όλους τους υπολογιστές"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable

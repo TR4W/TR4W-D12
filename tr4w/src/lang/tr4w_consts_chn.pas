@@ -57,7 +57,6 @@
 
   TC_REALLYWANTTOCLEARTHELOG            = 'Do you really want to clear the current log?';
   TC_MESSAGETOSENDVIANETWORK            = 'message to send via network';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Do you really want to send time to computers on the network?';
   TC_RULESONSM3CER                      = 'Rules for %s contest on WA7BNM Contest Calendar';
   TC_RULESONQRZRU                       = 'Rules for %s contest on QRZ.RU';
   TC_NOTE                               = 'note';
@@ -186,7 +185,6 @@
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Connection to TR4WSERVER %s:%d lost.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Computer clock is synchronized.';
   TC_CONNECTINGTO                       = 'Connecting to ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!';
   TC_CONNECTEDTO                        = 'Connected to ';
@@ -659,7 +657,6 @@
   RC_LC                                 = 'LC';
   RC_RESET_RADIO_PORTS                  = 'Reset Radio Ports';
   RC_NET                                = 'ч-—чђ№';
-  RC_TIMESYN                            = 'х–ћцнец…јц№…шобчо„ц№¶ц„¶щ„+&a';
   RC_SENDMESSAGE                        = 'хѕ—щјЅц¶»цЅп';
   RC_SYNLOG                             = 'цп‘ш-√х“ћх–ћцнец„ехђ„';
   RC_CLEARALLLOGS                       = 'цђ≈щўдч-—чђ№фђ ц…јц№…ц„ехђ„';

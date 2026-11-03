@@ -65,7 +65,6 @@ const
 
   TC_REALLYWANTTOCLEARTHELOG            = 'Opravdu chceš smazat aktuální deník?';
   TC_MESSAGETOSENDVIANETWORK            = 'Zpráva pro síť';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Opravdu chceš poslat časový údaj všem počítačům v síti?';
   TC_RULESONSM3CER                      = 'Pravidla závodu %s na "WA7BNM Contest Calendar"';
   TC_RULESONQRZRU                       = 'Podmínky závodu %s viz QRZ.RU';
   TC_NOTE                               = 'poznámka';
@@ -202,7 +201,6 @@ const
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Připojení k serveru TR4W %s:%d bylo přerušeno.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Hodiny PC jsou synchronizovány.';
   TC_CONNECTINGTO                       = 'Připojuje se k ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Připojení k serveru TR4W neúspěšné. Ověř heslo!';
   TC_CONNECTEDTO                        = 'Připojen k ';
@@ -555,7 +553,6 @@ const
   RC_SERVERANSWER                       = 'Odpověď serveru';
   RC_SYNCLOCK                           = 'Synchronizuj hodiny';
   RC_LOCALTIME                          = 'Místní čas';
-  RC_TIMESYN                            = 'Synchronizace času';
   RC_SEND                               = '&Vyslat';
   RC_POSTNOW                            = 'Pošli teď';
   RC_GOTOGS                             = 'Ukaž skóre';

@@ -418,15 +418,6 @@ msgid "message to send via network"
 msgstr "ネットワーク経由で送信するメッセージ"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sendtimetocomputersonthenetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
-msgid "Do you really want to send time to computers on the network?"
-msgstr "ネットワーク上でコンピュータに時間を送信したいですか?"
-
-#. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer
 #: tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
@@ -1507,15 +1498,6 @@ msgstr "他局にスポットされました."
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "TR4WSERVER%s:%dに失われた接続."
-
-#. Section: UNET
-#: utr4wstrings:tc_computerclockissynchronized
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
-msgid "Computer clock is synchronized."
-msgstr "コンピュータクロックは同期されます."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectingto
@@ -6505,15 +6487,6 @@ msgstr "電卓"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "リセットラジオポート"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "&allコンピュータの同期時間"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable

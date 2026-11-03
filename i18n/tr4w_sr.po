@@ -378,14 +378,6 @@ msgid "message to send via network"
 msgstr " i posalji poruku preko mreze"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sendtimetocomputersonthenetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
-msgid "Do you really want to send time to computers on the network?"
-msgstr "Hoces li izvrsiti sinhronizaciju vremena na svim racunarima u mrezi?"
-
-#. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer
 #: tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
@@ -1347,14 +1339,6 @@ msgstr "Spotovala te je druga stanica."
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Konekcija na TR4WSERVER %s:%d izgubljena."
-
-#. Section: UNET
-#: utr4wstrings:tc_computerclockissynchronized
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-#: utr4wstrings.tc_computerclockissynchronized
-msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
-msgid "Computer clock is synchronized."
-msgstr "Vreme na racunaru sinhronizovano."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectingto
@@ -6037,14 +6021,6 @@ msgstr "Digitron"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Resetuj radio portove"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "Sinhronizacija vremena na &svim racunarima"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable

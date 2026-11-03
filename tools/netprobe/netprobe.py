@@ -664,21 +664,26 @@ def case_serial(ctx):
 
 
 def case_time(ctx):
+   """"Synchronize time on all computers" was REMOVED (2026-11-03): a station
+   may not set another's clock. An OLDER station still sends the packet, so the
+   server must SKIP its 20 bytes and NOT relay it. The intercom line sent in
+   the SAME write proves the skip landed on a message boundary."""
    r = ctx.report
    a = ctx.probe('A', 1)
    b = ctx.probe('B', 2)
    a.settle(0.5)
    b.settle(0.5)
-   a.send(build_timesync())
-   got = b.take(NET_TIMESYN_ID, ctx.args.timeout)
-   relayed = got is not None
-   expect = ctx.args.expect_time
-   if expect == 'any':
-      r.add('time', 'TIMESYN relayed to B', 'INFO', 'relayed' if relayed else 'not relayed')
-   else:
-      r.add('time', 'TIMESYN %s as the server is configured' % expect,
-            'PASS' if relayed == (expect == 'relay') else 'FAIL',
-            'relayed' if relayed else 'not relayed')
+   a.send(build_timesync() + build_intercom(1, 'after the time sync'))
+   behind = b.take(NET_INTERCOMMESSAGE_ID, ctx.args.timeout)
+   r.add('time', 'the message behind a TIMESYN is relayed to B',
+         'PASS' if behind is not None else 'FAIL',
+         'got it' if behind is not None else 'nothing: the framing did not skip 20 bytes')
+   relayed = b.take(NET_TIMESYN_ID, 0.5) is not None
+   r.add('time', 'TIMESYN is not relayed to B', 'FAIL' if relayed else 'PASS',
+         'relayed' if relayed else 'not relayed')
+   a.take(NET_INTERCOMMESSAGE_ID, 0.5)      # the echo of A's own line, if any
+   r.add('time', 'A is still connected after sending it',
+         'PASS' if a.alive(ctx.args.timeout) else 'FAIL', '')
 
 
 def hello_of(station):
@@ -1294,8 +1299,6 @@ def parse_args(argv):
                   help='QSOs in the second, large round of the restock case (0 skips it)')
    p.add_argument('--contest', default='ARRL-DX-CW',
                   help='the contest id the probes announce in their HELLO')
-   p.add_argument('--expect-time', choices=('relay', 'none', 'any'), default='any',
-                  help='whether the server is configured to relay TIMESYN')
    return p.parse_args(argv)
 
 

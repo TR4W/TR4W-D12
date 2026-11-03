@@ -379,7 +379,7 @@ macOS builds do not need to be touched.
 
 **MULTI-OP PHASE 1: ONE BENCH SESSION, IN THIS ORDER (2026-10-27)**
 
-- [ ] `88` (hw) Intercom, time sync, spot form. Net > Send message from A (EXPECT it at B), the time-sync menu row if the server allows it (EXPECT B's cl... -- needs: Needs a second station B receiving the intercom, time sync and spot form.
+- [ ] `88` (hw) Intercom and spot form. Net > Send message from A (EXPECT it at B), and the Send Spot form with no cluster connected at A (EXPECT B's cluster command gets the text). (The time-sync row was removed 2026-11-03; an older station's time sync being skipped is its own item in BENCH_QUEUE.) -- needs: Needs a second station B receiving the intercom and spot form.
 - [ ] `92` (you) Nothing refused. tr4w.log at either station has no REFUSED to send a malformed packet line. If one appears it names the id and size of a...
 
 **Added 2026-10-29 -- SHARE DX SPOTS AROUND THE NETWORK (NETWORK SHARE SPOTS)**

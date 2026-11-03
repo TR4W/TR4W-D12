@@ -285,13 +285,6 @@ msgid "message to send via network"
 msgstr "wiadomość do wysłania przez sieć"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sendtimetocomputersonthenetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
-msgid "Do you really want to send time to computers on the network?"
-msgstr "Czy naprawdę chcesz ustawić czas na komputerach w sieci?"
-
-#. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer tr4w/src/lang/tr4w_consts_eng.pas:64
 msgctxt "TC_RULESONSM3CER"
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
@@ -1040,13 +1033,6 @@ msgstr "Jesteś spostrzeżony przez inną stację."
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Połączenie z TR4WSERVER %s:%d zostało utracone."
-
-#. Section: UNET
-#: utr4wstrings:tc_computerclockissynchronized
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
-msgid "Computer clock is synchronized."
-msgstr "Zegar systemowy został zsynchronizowany."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectingto tr4w/src/lang/tr4w_consts_eng.pas:208
@@ -5020,14 +5006,6 @@ msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Resetuj porty radia"
 
-#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn tr4w/src/lang/tr4w_consts_eng.pas:571
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "Synchronizowanie czasu"
-
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable tr4w/src/lang/tr4w_consts_eng.pas:575
 msgctxt "RC_MP3_RECENABLE"
@@ -8400,11 +8378,6 @@ msgctxt "utr4wstrings.rc_telnet"
 msgid "DX Cluster"
 msgstr "Klaster DX"
 
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgid "Synchronize time on &all computers"
-msgstr "Synchronizowanie czasu"
-
 # 2026-10-19 codepage damage reversed from D7 tr4w_pol.RES (NY4I approved); was: "Prze¦¦czenie funkcji wstaw"
 #: utr4wstrings.rc_toggleinsert
 #, fuzzy
@@ -8747,11 +8720,6 @@ msgstr "\"CLEARMULTSHEET\" czyści wykaz mnożników w sieci"
 #, fuzzy
 msgid "Command"
 msgstr "Polecenie"
-
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgid "Computer clock is synchronized."
-msgstr "Zegar systemowy został zsynchronizowany."
 
 #: utr4wstrings.tc_configuration_file
 #, fuzzy
@@ -10351,11 +10319,6 @@ msgstr "Wybierz spot. Return, lewa lub prawa strzałka do wyboru. Escape do wyj�
 #, fuzzy
 msgid "Sending SSB .wav filename. Use ENTER to play, Escape/F10 to exit."
 msgstr "Nadawanie SSB pliku .wav. użyj ENTER do odtwarzania, Escape/F10 do anulowania."
-
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgid "Do you really want to send time to computers on the network?"
-msgstr "Czy naprawdę chcesz ustawić czas na komputerach w sieci?"
 
 #: utr4wstrings.tc_send_callassetbymycallcommand
 #, fuzzy

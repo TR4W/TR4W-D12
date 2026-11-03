@@ -334,14 +334,6 @@ msgid "message to send via network"
 msgstr "mensaje a enviar via red"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sendtimetocomputersonthenetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
-msgid "Do you really want to send time to computers on the network?"
-msgstr "¿Quiere enviar hora a los demas PCs de la red?"
-
-#. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
 msgctxt "TC_RULESONSM3CER"
@@ -1222,14 +1214,6 @@ msgstr "Has sido anunciado por otra estacion."
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Conexion a TR4WSERVER %s:%d perdida."
-
-#. Section: UNET
-#: utr4wstrings:tc_computerclockissynchronized
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-#: utr4wstrings.tc_computerclockissynchronized
-msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
-msgid "Computer clock is synchronized."
-msgstr "Reloj del PC esta sincronizado."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectingto tr4w/src/lang/tr4w_consts_eng.pas:208
@@ -5817,15 +5801,6 @@ msgstr "Calculadora"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Restablecer puertos de radio"
-
-#. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "Sincronizacion tiempo"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable tr4w/src/lang/tr4w_consts_eng.pas:575

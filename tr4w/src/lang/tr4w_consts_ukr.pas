@@ -61,7 +61,6 @@ const
   TC_ENTERYOURFOCNUMBER                 = 'Введіть ваш членський номер FOC';
   TC_REALLYWANTTOCLEARTHELOG            = 'Ви впевнені, що хочете очистити поточний лог?';
   TC_MESSAGETOSENDVIANETWORK            = 'повідомлення для надсилання по мережі';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Ви дійсно хочете надіслати час через мережу?'; 
   TC_RULESONSM3CER                      = 'Положення %s на сайті WA7BNM Contest Calendar';
   TC_RULESONQRZRU                       = 'Положення %s на сайті QRZ.RU';
   TC_NOTE                               = 'Замітка';
@@ -204,7 +203,6 @@ TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Fr
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'З`єднання з TR4WSERVER %s:%d втрачено.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Комп`ютерний час синхронізовано.';
   TC_CONNECTINGTO                       = 'З`єднання з';
   TC_CONNECTTOTR4WSERVERFAILED          = 'З`єднання з TR4WSERVER не вдалося. Перевірте значення команди SERVER PASSWORD!!';
   TC_CONNECTEDTO                        = 'З`єднано з';
@@ -672,7 +670,6 @@ TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Fr
   RC_CALCULATOR                         = 'Калькулятор';
   RC_LC                                 = 'Розрахунок LC-контуру';
   RC_NET                                = 'Мережа';
-  RC_TIMESYN                            = 'Сінхр. час на всіх комп`ютерах'; 
   RC_SENDMESSAGE                        = 'Надіслати повідомлення';
   RC_SYNLOG                             = 'Порівняти та синхронізувати логи';
   RC_CLEARALLLOGS                       = 'Очистити всі логи в мережі';

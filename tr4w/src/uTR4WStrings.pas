@@ -81,7 +81,6 @@ resourcestring
    TC_CLEAR_MULTSHEET_NET                = '"CLEARMULTSHEET" to clear all multsheets in network';
    TC_REALLYWANTTOCLEARTHELOG            = 'Do you really want to clear the current log?';
    TC_MESSAGETOSENDVIANETWORK            = 'message to send via network';
-   TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Do you really want to send time to computers on the network?';
    TC_RULESONSM3CER                      = 'Rules for %s contest at WA7BNM Contest Calendar';
    TC_RULESONQRZRU                       = 'Rules for %s contest at QRZ.RU';
    TC_NOTE                               = 'note';
@@ -212,7 +211,6 @@ resourcestring
 
    // UNET
    TC_CONNECTIONTOTR4WSERVERLOST         = 'Connection to TR4WSERVER %s:%d lost.';
-   TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Computer clock is synchronized.';
    TC_CONNECTINGTO                       = 'Connecting to ';
    TC_CONNECTTOTR4WSERVERFAILED          = 'Connect to TR4WSERVER failed. Check SERVER PASSWORD value!!';
    TC_CONNECTEDTO                        = 'Connected to ';
@@ -617,7 +615,6 @@ resourcestring
    RC_RECCONTROL        = 'Recording control';
    RC_CALCULATOR        = 'Calculator';
    RC_RESET_RADIO_PORTS = 'Reset Radio Ports';
-   RC_TIMESYN           = 'Synchronize time on &all computers';
    RC_POSTNOW           = 'Post now';
    RC_GOTOGS            = 'Show scores';
    RC_MP3_RECENABLE     = 'Enable';

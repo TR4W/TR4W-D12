@@ -60,7 +60,6 @@ const
   TC_ENTERYOURFOCNUMBER                 = 'Введите ваш членский номер FOC ';
   TC_REALLYWANTTOCLEARTHELOG            = 'Вы уверены, что хотите очистить текущий лог?';
   TC_MESSAGETOSENDVIANETWORK            = 'сообщение для отправки по сети';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Вы на действительно хотите послать время по сети?';
   TC_RULESONSM3CER                      = 'Положение %s на сайте WA7BNM Contest Calendar';
   TC_RULESONQRZRU                       = 'Положение %s на сайте QRZ.RU';
   TC_NOTE                               = 'Заметка';
@@ -203,7 +202,6 @@ const
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Соединение с TR4WSERVER %s:%d потеряно.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Компьютерное время синхронизировано.';
   TC_CONNECTINGTO                       = 'Соединение с ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Соединение с TR4WSERVER не удалось. Проверьте значение команды SERVER PASSWORD!!';
   TC_CONNECTEDTO                        = 'Соединено с ';
@@ -670,7 +668,6 @@ const
   RC_LC                                 = 'Расчет LC-контура';
   RC_RESET_RADIO_PORTS                  = 'Сбросить порты трансиверов';
   RC_NET                                = 'Сеть';
-  RC_TIMESYN                            = 'Синхр. время на всех компьютерах';
   RC_SENDMESSAGE                        = 'Послать сообщение';
   RC_SYNLOG                             = 'Сравнить и синхронизировать логи';
   RC_CLEARALLLOGS                       = 'Очистить все логи в сети';

@@ -335,8 +335,8 @@ end;
 
 procedure TTestNetLink.Test_TheNetMenuFollowsEveryState;
 const
-   SENDING_ROWS: array[0..5] of word = (
-      menu_alt_setnettime, menu_send_message, menu_getserverlog,
+   SENDING_ROWS: array[0..4] of word = (
+      menu_send_message, menu_getserverlog,
       menu_clearserverlog, menu_clear_dupesheet_in_network,
       menu_clear_multsheet_in_network);
 var
@@ -363,9 +363,9 @@ begin
    CheckEquals(SNetMenuShowWindow, string(showItem.Caption), 'and Show Network window');
 
    (* THEY LEAD THE NET MENU, in the same popup as the rows that need a link. *)
-   CheckTrue(connectItem.Parent = BuiltNetMenuItem(menu_alt_setnettime).Parent,
-             'the link commands are in the same popup as the clock and message rows');
-   CheckTrue(connectItem.MenuIndex < BuiltNetMenuItem(menu_alt_setnettime).MenuIndex,
+   CheckTrue(connectItem.Parent = BuiltNetMenuItem(menu_send_message).Parent,
+             'the link commands are in the same popup as the message and server-log rows');
+   CheckTrue(connectItem.MenuIndex < BuiltNetMenuItem(menu_send_message).MenuIndex,
              'and come first');
    CheckTrue(connectItem.Parent.Enabled,
              'the Net popup itself is never greyed: it holds the way to connect');

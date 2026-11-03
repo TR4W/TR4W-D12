@@ -75,7 +75,7 @@ begin
    CheckWire('TNetDXSpot (1030)',               106, SizeOf(TNetDXSpot));
    CheckWire('TNetQSOInformation (1040/50/55)', 384, SizeOf(TNetQSOInformation));
    CheckWire('TNetSynQSOInformation (1060)',    382, SizeOf(TNetSynQSOInformation));
-   CheckWire('TNetTimeSync (1070)',             20,  SizeOf(TNetTimeSync));
+   CheckWire('NET_TIMESYN_SIZE (1070, removed)', 20, NET_TIMESYN_SIZE);
    CheckWire('TParameterToNetwork (1080)',      514, SizeOf(TParameterToNetwork));
    CheckWire('TStationState (1090)',            46,  SizeOf(TStationState));
    CheckWire('TClientStatus (1110)',            3,   SizeOf(TClientStatus));

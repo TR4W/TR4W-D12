@@ -99,7 +99,7 @@ type
   end;
 
 const
-  ACCELERATORS: array[0..93] of TAcceleratorRow = (
+  ACCELERATORS: array[0..92] of TAcceleratorRow = (
     (acId: 10002; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: true),   // menu_exit
     (acId: 10003; acCtrl: true ; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Ctrl+Alt+B'; acInstall: true),   // menu_cabrillo
     (acId: 10100; acCtrl: true ; acAlt: false; acShift: false; acKey: $4A; acDisplay: 'Ctrl+J'; acInstall: true),   // menu_options
@@ -140,7 +140,6 @@ const
     (acId: 10323; acCtrl: false; acAlt: true ; acShift: false; acKey: $4D; acDisplay: 'Alt+M'; acInstall: true),   // menu_alt_ssbcwmode
     (acId: 10324; acCtrl: false; acAlt: true ; acShift: false; acKey: $59; acDisplay: 'Alt+Y'; acInstall: true),   // menu_alt_deleteqso
     (acId: 10325; acCtrl: false; acAlt: true ; acShift: false; acKey: $57; acDisplay: 'Alt+W'; acInstall: true),   // menu_alt_init_qso
-    (acId: 10326; acCtrl: true ; acAlt: true ; acShift: false; acKey: $54; acDisplay: 'Ctrl+Alt+T'; acInstall: true),   // menu_alt_setnettime
     (acId: 10327; acCtrl: false; acAlt: true ; acShift: false; acKey: $31; acDisplay: 'Alt+1'; acInstall: true),   // menu_alt_increment_time_1
     (acId: 10328; acCtrl: false; acAlt: true ; acShift: false; acKey: $32; acDisplay: 'Alt+2'; acInstall: true),   // menu_alt_increment_time_2
     (acId: 10329; acCtrl: false; acAlt: true ; acShift: false; acKey: $33; acDisplay: 'Alt+3'; acInstall: true),   // menu_alt_increment_time_3

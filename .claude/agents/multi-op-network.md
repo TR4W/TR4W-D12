@@ -1,6 +1,6 @@
 ---
 name: multi-op-network
-description: Multi-operator networking — TR4WServer, the client link, the binary packet protocol with CRC32, log synchronisation, serial-number lockout and time sync. Use for anything about multi-op, networked stations, the server, packet framing, or a station catching up from the server's log.
+description: Multi-operator networking — TR4WServer, the client link, the binary packet protocol with CRC32, log synchronisation and serial-number lockout. Use for anything about multi-op, networked stations, the server, packet framing, or a station catching up from the server's log.
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: sonnet
 ---
@@ -234,7 +234,7 @@ the tree.)
 ## Outbound writes never run on the caller's thread (2026-10-24)
 
 `TNetClient.Send` used to call Indy's `IOHandler.Write` on the caller's thread --
-the main thread for every QSO, status, time sync, intercom line, spot and
+the main thread for every QSO, status, intercom line, spot and
 serial-number request -- and Indy has no write timeout, so a server that stopped
 reading froze logging. It is now `uNetSendQueue.TNetSendQueue`: `Send` copies the
 complete packet bytes on the caller's thread (so a packet holds the state of the
@@ -604,7 +604,7 @@ a packed V1 record and that parameter is where its layout becomes the
 encoding (P14, skipped for V1).
 
 **Every packet the client sends is judged at `SendToNet`, and each record's id is set by
-its sender (2026-10-27).** From 2026-08-25 the DX spot, time sync, intercom line and
+its sender (2026-10-27).** From 2026-08-25 the DX spot, time sync (since removed), intercom line and
 spot-via-network left with a leading id of ZERO: four global records had their id
 initialisers commented out when the Network window (whose WM_INITDIALOG set them) became
 a form. The server cannot frame past an unknown id and drops the connection, so the link
@@ -613,8 +613,8 @@ own packets, `uTestNetWireSizes` checks TYPES, and no test had ever read a byte 
 CLIENT wrote. **THE LESSON: every record the client sends must be captured from the
 client's own send path -- types and probes cannot see a missing id.**
 `uTestNetClientPackets` does that (real uNet, `TNetClient.CreateWithWriter`, a stub that
-keeps the bytes). The fix is two layers: (1) `uNet.SendDXSpotToNet`, `SendTimeSyncToNet`,
-`SendIntercomToNet`, `SendSpotViaNetworkToNet` each build a LOCAL record and set its id on
+keeps the bytes). The fix is two layers: (1) `uNet.SendDXSpotToNet`,
+`SendIntercomToNet`, `SendSpotViaNetworkToNet` (and `SendTimeSyncToNet`, removed) each build a LOCAL record and set its id on
 every send (as `SendParameterToNetwork`, `SendStationStatus`, `SendMessageStatus` and
 `SendRecordToServer` always did) -- the four globals are gone, so a new caller cannot
 forget; (2) `SendToNet` refuses a packet whose first Word is not an id
@@ -673,6 +673,40 @@ hand it to the first OTHER station whose status says it has a cluster. Neither
 server was changed (both relay 1030 blindly to every other station). Tests:
 `uTestNetClientPackets` (`Test_SharingOffPostsNoSpot`,
 `Test_SharingOffIgnoresSpotsFromTheNetwork`), `uTestSettingsModel`.
+
+## Time sync is REMOVED, and its message id is KEPT (2026-11-03)
+
+NY4I: "Synchronize time on all computers" (Net menu, Ctrl+Alt+T) let one station
+set every other station's SYSTEM CLOCK. That is a permissions question, so the
+feature is gone: the menu row and `menu_alt_setnettime` (10326) and its
+accelerator, `SendTimeSyncToNet`, the client's receive body and its
+`SetSystemTime` call (so `uNet` no longer `uses Windows`), the server's relay and
+its `ALLOW TIME SYNCHRONIZING` ini key (`sAllowTimeSynchronizing`, `dmTimeSyn`),
+the `TNetTimeSync` record, `RC_TIMESYN`, `TC_SENDTIMETOCOMPUTERSONTHENETWORK` and
+`TC_COMPUTERCLOCKISSYNCHRONIZED` (lang tables, `uTR4WStrings`, the `.pot`, all
+catalogues).
+
+**`NET_TIMESYN_ID` (1070) AND ITS 20-BYTE FRAME (`NET_TIMESYN_SIZE`, VC) STAY, as
+a recognised no-op.** Evidence: the HELLO handshake refuses only stations whose
+`NET_PROTOCOL_VERSION` differs, and every 5.x build released before this change
+speaks protocol 2, is admitted, still has the menu row and still sends 1070. The
+framing has no length prefix, so a station or server that does not know the id
+cannot find the end of the message: the client's `ConsumeNetBuffer` would
+`Desync` and the server would DROP the connection (unknown id). Hence
+`uNetFraming.NetMessageSize(NET_TIMESYN_ID)` = 20, an explicit client arm (one
+Debug line per link, `GTimeSyncNoted`, never touches a clock), and an explicit
+server arm (skips 20 bytes, does NOT relay, Debug line -- the generic `else` arm
+would Warn "not one the server handles" per packet). Nothing builds the packet
+any more. The out-of-tree TR4WServerPy still relays 1070 blindly, so a new client
+can still receive one through it; it is skipped the same way.
+The alternative, bumping `NET_PROTOCOL_VERSION` to drop the id, would refuse every
+deployed 5.x station and was not taken; it is NY4I's call if the id is ever to go.
+Pins: `uTestNetClientPackets` (`Test_AnOlderStationsTimeSyncIsSkippedNotActedOn`: a
+1070 followed by a spot in one buffer, consumed whole, spot handled, nothing
+posted; a source read that no clock setter is in `uNet`), `uTestNetFraming` and
+`uTestNetWireSizes` (the 20-byte frame), `tools/netprobe --case time` (skipped,
+not relayed, the line behind it relayed, A still connected). Bench: BENCH_QUEUE,
+"AN OLDER STATION'S TIME SYNC IS SKIPPED".
 
 ## Coordinate with
 

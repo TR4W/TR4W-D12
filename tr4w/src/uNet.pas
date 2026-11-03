@@ -57,28 +57,6 @@ uses
   LogWind,
   PostUnit,
   uGradient,
-  (* WINDOWS, GATED, FOR ONE CALL.
-
-    SetSystemTime SETS THE MACHINE CLOCK from a peer's time-sync packet. Not
-                  a missing API -- Unix has settimeofday -- but it needs ROOT,
-                  and a contest logger asking for root so another station can
-                  move the clock is a POLICY question. NY4I's. The call is
-                  gated with an {$ELSE} that reports the packet was ignored,
-                  so a station that declines simply keeps its own time.
-
-    THE IMPORT WAS LEFT UNGATED WHEN THE CALL WAS GATED, EARLIER TODAY, and
-    the cross compiler is what found it -- `uses Windows` fails on Linux
-    whether or not anything inside the unit still needs it. Gating a call
-    without gating the import it exists for is a half-measure that looks
-    finished in a `Windows.` scan.
-
-    tNet_Event WAS the other user and is a SyncObjs.TEvent now; see its
-    declaration for why it was separable and the three CW/DVP events are not.
-    WinSock2 and Messages went with the move to Indy's TNetClient
-    (2026-08-25) -- the WSAAsyncSelect window message went with them. *)
-{$IFDEF WINDOWS}
-  Windows,
-{$ENDIF}
   Tree
 
   ,
@@ -191,12 +169,10 @@ procedure SendParameterToNetwork(const aCommand, aValue: string);
   there still judges them.
 
     SendDXSpotToNet            a spot, to the other positions (uSpots)
-    SendTimeSyncToNet          this station's UTC, for the others to set their clocks
     SendIntercomToNet          one line of text to the other positions
     SendSpotViaNetworkToNet    "send this spot text to your cluster" -- the
                                spot form's path when no cluster is connected here *)
 procedure SendDXSpotToNet(const aSpot: TSpotRecord);
-procedure SendTimeSyncToNet;
 procedure SendIntercomToNet(const aText: string);
 procedure SendSpotViaNetworkToNet(const aSpotText: string);
 
@@ -525,7 +501,7 @@ var
   MyStationState                        : TStationState        ;// = (ssID: NET_STATIONSTATUS_ID);
   NetSynQSOInformation                  : TNetSynQSOInformation;// = (qsID: NET_TAKESERVERQSO_ID);//262
   NetQSOInfoToSend                      : TNetQSOInformation   ;// = (qiID: NET_QSOINFO_ID);//264
-  (* NetDXSpot, NetTimeSync, NetIntercomMessage and SendSpotViaNetwork are no
+  (* NetDXSpot, NetIntercomMessage and SendSpotViaNetwork are no
     longer global (2026-10-27). Their id initialisers were commented out when
     the Network window stopped assigning them, and nothing else did, so every
     one of those packets left with id 0 and the server dropped the link. Each
@@ -655,6 +631,10 @@ var
     is off: the Debug line is written once per link. Main thread (the drain);
     reset when a link comes up. *)
   GSpotShareNoted:   boolean = False;
+  (* An older station's time-sync packet was skipped on this link: the Debug line
+    is written once per link. Main thread (the drain); reset when a link comes
+    up. *)
+  GTimeSyncNoted:    boolean = False;
 
 const
   (* An older server drops the link within a read or two of the HELLO; an
@@ -786,7 +766,6 @@ var
   NetQSOInfoPtr                         : NetQSOInformationPtr;
   ServerMessagePtr                      : TServerMessagePtr;
   NetDXSpotPtr                          : TNetDXSpotPtr;
-  NetTimeSyncPtr                        : TNetTimeSyncPtr;
   ParameterToNetworkPtr                 : TParameterToNetworkPtr;
   IntercomMessagePtr                    : TIntercomMessagePtr;
 
@@ -909,46 +888,16 @@ var
 
           NET_TIMESYN_ID:
             begin
-
-              NetTimeSyncPtr := @NetBuffer[Bufindex];
-              if NetTimeSyncPtr.tsTime.wYear > 2007 then
-                if NetTimeSyncPtr.tsTime.wMonth <= 12 then
-                  if NetTimeSyncPtr.tsTime.wDay <= 31 then
-                    if NetTimeSyncPtr.tsTime.wHour <= 23 then
-                       begin
-
-                       (* SETTING THE MACHINE CLOCK IS A POLICY QUESTION OFF
-                         WINDOWS, NOT A MISSING API.
-
-                         Unix has settimeofday/clock_settime, so this could
-                         be written -- but it needs ROOT, and a contest
-                         logger asking for root so a peer station can move
-                         the system clock is a decision about what TR4W
-                         should be allowed to do, not a translation. It is
-                         NY4I's call, and until it is made the honest
-                         behaviour is to say the packet arrived and was not
-                         acted on, rather than to fail silently or to
-                         pretend the clock was set.
-
-                         The multi-op protocol is unaffected either way: the
-                         sender broadcasts, and a station that declines to
-                         move its clock simply keeps its own time. *)
-{$IFDEF WINDOWS}
-                       if Windows.SetSystemTime(NetTimeSyncPtr.tsTime) then
-                          begin
-                          QuickDisplay(TC_COMPUTERCLOCKISSYNCHRONIZED)
-                          end
-                       else
-                          begin
-                          ShowSysErrorMessage('SET SYSTEM TIME');
-                          end;
-{$ELSE}
-                       logger.Info('[Net] time-sync packet ignored: setting ' +
-                                   'the system clock is not implemented on ' +
-                                   'this platform (it needs root, and whether ' +
-                                   'TR4W should do it at all is undecided)');
-{$ENDIF}
-                       end;
+              (* REMOVED 2026-11-03. "Synchronize time on all computers" let a
+                station set the others' system clocks, a permissions question
+                (NY4I). An older station can still send this packet: it is
+                consumed by its frame size (the common advance below) and NOT
+                acted on -- no clock is touched. One Debug line per link. *)
+              if not GTimeSyncNoted then
+                 begin
+                 GTimeSyncNoted := True;
+                 logger.Debug('[Net] time-sync packet from an older station ignored');
+                 end;
             end;
 
           NET_NETWORKDXSPOT_ID:
@@ -1510,6 +1459,7 @@ begin
    ForgetPeerContestNotices;
    GSendRefusals.Forget;
    GSpotShareNoted := False;
+   GTimeSyncNoted := False;
    FServerHelloSeen := False;
    (* AND NOTHING HAS BEEN CAUGHT UP YET: the QSOs logged while the last link
      was down go once the server's HELLO has come on THIS one. These are the
@@ -2307,8 +2257,8 @@ end;
 procedure ApplyNetworkMenuStateFor(const aState: TNetLinkState);
 const
    (* THE ROWS THAT SEND SOMETHING TO THE OTHER STATIONS. *)
-   NEEDS_A_LIVE_LINK: array[0..5] of word = (
-      menu_alt_setnettime, menu_send_message, menu_getserverlog,
+   NEEDS_A_LIVE_LINK: array[0..4] of word = (
+      menu_send_message, menu_getserverlog,
       menu_clearserverlog, menu_clear_dupesheet_in_network,
       menu_clear_multsheet_in_network);
 var
@@ -2518,24 +2468,6 @@ begin
    packet := Default(TNetDXSpot);
    packet.dsID := NET_NETWORKDXSPOT_ID;
    packet.dsSpot := aSpot;
-   SendToNet(packet, SizeOf(packet));
-end;
-
-procedure SendTimeSyncToNet;
-var
-   packet: TNetTimeSync;
-begin
-   if not NetIsConnected then
-      begin
-      Exit;
-      end;
-
-   packet := Default(TNetTimeSync);
-   packet.tsID := NET_TIMESYN_ID;
-   (* WHAT GOES ON THE WIRE IS UNCHANGED: tsTime is the raw bytes of a packed
-     record, UTC, and the receiving arm range-checks it before it sets a clock.
-     See TF.FillSystemTimeUTC. *)
-   TF.FillSystemTimeUTC(packet.tsTime);
    SendToNet(packet, SizeOf(packet));
 end;
 

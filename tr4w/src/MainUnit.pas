@@ -5223,23 +5223,6 @@ begin
     menu_alt_settime:
       TimeApplet(0);
 
-    menu_alt_setnettime:
-      if YesOrNo(TC_SENDTIMETOCOMPUTERSONTHENETWORK) = IDYES then
-         begin
-         (* TF.FillSystemTimeUTC, not Windows.GetSystemTime. Same UTC, same
-           SYSTEMTIME -- VC declares that record on every platform now -- and TF
-           already had this routine for its own GetTime and GetDate, so this is
-           an existing helper gaining a caller rather than a new one.
-
-           WHAT GOES ON THE WIRE IS UNCHANGED, which matters more than usual
-           here: tsTime is sent as the raw bytes of a packed record to every
-           other station in the multi-op, and the receiving end (uNet,
-           NET_TIMESYN_ID) range-checks the fields before it sets the clock. A
-           different layout, or a local-time value, would be a silent
-           cross-version protocol break rather than a visible failure. *)
-         SendTimeSyncToNet;
-         end;
-
     menu_alt_flushlogtodisk:
       begin
         // MoveEditableLogIntoLogFile;

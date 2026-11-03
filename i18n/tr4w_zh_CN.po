@@ -347,13 +347,6 @@ msgid "message to send via network"
 msgstr "要通过网络发送的消息"
 
 #. Section: MAIN
-#: tr4w/src/lang/tr4w_consts_eng.pas:67
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgid "Do you really want to send time to computers on the network?"
-msgstr "您真的想要给网络上的计算机发送时间吗 ?"
-
-#. Section: MAIN
 #: tr4w/src/lang/tr4w_consts_eng.pas:68
 #: utr4wstrings.tc_rulesonsm3cer
 #, fuzzy
@@ -1220,13 +1213,6 @@ msgstr "你被发现在另一个站."
 #, fuzzy
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "连接到 TR4WSERVER %s :%d 丢失 ."
-
-#. Section: UNET
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgid "Computer clock is synchronized."
-msgstr "计算机时钟同步."
 
 #. Section: UNET
 #: tr4w/src/lang/tr4w_consts_eng.pas:208
@@ -2860,13 +2846,6 @@ msgstr "计算器"
 #, fuzzy
 msgid "Reset Radio Ports"
 msgstr "重置无线电端口"
-
-#. Section: UEDITMESSAGE
-#: tr4w/src/lang/tr4w_consts_eng.pas:569
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgid "Synchronize time on &all computers"
-msgstr "在全部计算机上同步时间( A)"
 
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:571

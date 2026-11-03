@@ -189,7 +189,7 @@ begin
       NET_OFFLINEQSO_ID:       Result := SizeOf(TNetQSOInformation);
 
       NET_TAKESERVERQSO_ID:    Result := SizeOf(TNetSynQSOInformation);
-      NET_TIMESYN_ID:          Result := SizeOf(TNetTimeSync);
+      NET_TIMESYN_ID:          Result := NET_TIMESYN_SIZE;   // removed feature, frame kept (VC)
       NET_PARAMETER_ID:        Result := SizeOf(TParameterToNetwork);
       NET_STATIONSTATUS_ID:    Result := SizeOf(TStationState);
       NET_CLIENTSTATUS_ID:     Result := SizeOf(TClientStatus);

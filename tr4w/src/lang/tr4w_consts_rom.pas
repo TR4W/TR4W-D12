@@ -71,7 +71,6 @@
 
   TC_REALLYWANTTOCLEARTHELOG            = 'Esti sigur ca doresti sa stergi logul actual?';
   TC_MESSAGETOSENDVIANETWORK            = 'Mesaj de trimis in retea';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Doresti sa transmiti ora la calculatoarele din retea?';
   TC_RULESONSM3CER                      = 'Rules for %s contest from WA7BNM Contest Calendar';
   TC_RULESONQRZRU                       = 'Regulamentul concursului %s este si la -QRZ.RU-';
   TC_NOTE                               = 'Nota';
@@ -203,7 +202,6 @@
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Conectarea catre TR4WSERVER %s:%d esuata.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Ceasul calculatorului este sincronizat.';
   TC_CONNECTINGTO                       = 'Conectez pe ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Conectarea spre TR4WSERVER esuata. Verifica valoarea la SERVER PASSWORD!!';
   TC_CONNECTEDTO                        = 'Conectat la ';
@@ -674,7 +672,6 @@
   RC_CALCULATOR                         = 'Calculator';
   RC_LC                                 = 'LC';
   RC_NET                                = 'Retea';
-  RC_TIMESYN                            = 'Sincronizeaza timpul la toate calculatoarele';
   RC_SENDMESSAGE                        = 'Trimite mesaj';
   RC_SYNLOG                             = 'Compara si sincronizeaza logurile';
   RC_CLEARALLLOGS                       = 'Sterge toate logurile din retea';

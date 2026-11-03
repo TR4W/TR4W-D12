@@ -56,7 +56,6 @@ const
 
   TC_REALLYWANTTOCLEARTHELOG            = 'Czy naprawdê chcesz usun¹æ dane z obecnego logu?';
   TC_MESSAGETOSENDVIANETWORK            = 'wiadomoœæ do wys³ania w sieci';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Czy naprawdê chcesz ustawiæ czas na komputerach w sieci?';
   TC_RULESONSM3CER                      = 'Rules for %s contest on WA7BNM Contest Calendar';
   TC_RULESONQRZRU                       = 'Regulamin dla %s contest na QRZ.RU';
   TC_NOTE                               = 'Uwaga';
@@ -183,7 +182,6 @@ const
   {UNET}
 
   TC_CONNECTIONTOTR4WSERVERLOST         = 'Po³¹czenie z TR4WSERVER %s:%d zosta³o utracone.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Zegar systemowy zosta³ zsynchronizowany.';
   TC_CONNECTINGTO                       = '£¹czê z ';
   TC_CONNECTTOTR4WSERVERFAILED          = 'Pó³aczenie z TR4WSERVER nie zosta³o nawi¹zane. SprawdŸ has³o dostêpowe do serwera!';
   TC_CONNECTEDTO                        = 'Po³¹czony z ';
@@ -657,7 +655,6 @@ const
   RC_LC                                 = 'LC';
   RC_RESET_RADIO_PORTS                  = 'Resetuj porty radia';
   RC_NET                                = 'Sieö';
-  RC_TIMESYN                            = 'Synchronizowanie czasu';
   RC_SENDMESSAGE                        = 'WyÜlij wiadomoÜö';
   RC_SYNLOG                             = 'Porºwnaj i synchronizuj log';
   RC_CLEARALLLOGS                       = 'WyczyÜö wszystkie logi w sieci';

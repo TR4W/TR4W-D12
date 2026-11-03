@@ -415,15 +415,6 @@ msgid "message to send via network"
 msgstr "messaggio per inviare via rete"
 
 #. Section: MAIN
-#: utr4wstrings:tc_sendtimetocomputersonthenetwork
-#: tr4w/src/lang/tr4w_consts_eng.pas:63
-#: utr4wstrings.tc_sendtimetocomputersonthenetwork
-#, fuzzy
-msgctxt "TC_SENDTIMETOCOMPUTERSONTHENETWORK"
-msgid "Do you really want to send time to computers on the network?"
-msgstr "Vuoi davvero inviare il tempo ai computer in rete?"
-
-#. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer
 #: tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
@@ -1491,15 +1482,6 @@ msgstr "Sei spottato da un'altra stazione."
 msgctxt "TC_CONNECTIONTOTR4WSERVERLOST"
 msgid "Connection to TR4WSERVER %s:%d lost."
 msgstr "Collegamento a TR4WSERVER %s:%d perso."
-
-#. Section: UNET
-#: utr4wstrings:tc_computerclockissynchronized
-#: tr4w/src/lang/tr4w_consts_eng.pas:207
-#: utr4wstrings.tc_computerclockissynchronized
-#, fuzzy
-msgctxt "TC_COMPUTERCLOCKISSYNCHRONIZED"
-msgid "Computer clock is synchronized."
-msgstr "L'orologio del computer è sincronizzato."
 
 #. Section: UNET
 #: utr4wstrings:tc_connectingto
@@ -6488,15 +6470,6 @@ msgstr "Calcolatore"
 msgctxt "RC_RESET_RADIO_PORTS"
 msgid "Reset Radio Ports"
 msgstr "Reset Radio Ports"
-
-#. Section: UEDITMESSAGE
-#: utr4wstrings:rc_timesyn
-#: tr4w/src/lang/tr4w_consts_eng.pas:571
-#: utr4wstrings.rc_timesyn
-#, fuzzy
-msgctxt "RC_TIMESYN"
-msgid "Synchronize time on &all computers"
-msgstr "Sincronizzare il tempo su &tutti i computer"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_mp3_recenable

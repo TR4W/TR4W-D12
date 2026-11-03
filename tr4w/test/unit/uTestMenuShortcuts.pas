@@ -131,9 +131,13 @@ begin
      are acInstall:false and belonged to NEITHER side, being bound by the entry
      field's own key handler until that arm was deleted in the same change.
 
+     82 ON 2026-11-03, when Ctrl+Alt+T went with the removed "Synchronize time
+     on all computers" row (a station may not set another's clock): a menu-owned
+     row, so the menu side loses one and the hook's 11 is unchanged.
+
      The numbers are pinned because a row changing sides is a decision about
      who answers a keystroke, and it must never happen as a side effect. *)
-   CheckEquals(83, menuOwned, 'rows a menu item owns');
+   CheckEquals(82, menuOwned, 'rows a menu item owns');
    CheckEquals(11, hookInstalled, 'rows the input hook still installs');
 end;
 

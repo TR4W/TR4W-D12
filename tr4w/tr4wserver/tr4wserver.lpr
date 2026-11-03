@@ -148,7 +148,6 @@ begin
              tr4wserverUnit.ServerBindAddress. *)
            ServerBindAddress := Trim(ini.ReadString(_TR4WSERVER,
                                                     'BIND ADDRESS', ''));
-           sAllowTimeSynchronizing := ini.ReadInteger(_TR4WSERVER, 'ALLOW TIME SYNCHRONIZING', 1) = 1;
            SerialNumberLockoutEnable := ini.ReadInteger(_TR4WSERVER, 'SERIAL NUMBER LOCKOUT', 0) = 1;
            SetSerialLockout(SerialNumberLockoutEnable);
 
