@@ -712,7 +712,7 @@ uses
   uAppPaths,   // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
-   uMnemonicsLCL,      (* DisplayedText -- a window title is a menu row without its '&' *)
+   uCaptionText,      (* DisplayedText -- a window title is a menu row without its '&' *)
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
     cycle. It never raises and never blocks logging: see uLogStore. }
@@ -6481,7 +6481,7 @@ end;
   one is being set up. An emptied slot lands there too, and correctly reads just
   "Radio 2".
 
-  THE LABEL IS A MENU ROW'S STRING, so it is shown without its mnemonic markup
+  THE LABEL IS A MENU ROW'S STRING, so it is shown without its '&' markup
   (DisplayedText) -- but compared WITH it, because RadioName is initialised to
   the same raw string. The rig name is the operator's own text and is shown as
   typed. UnicodeSameText, not SameText: SysUtils' plain name takes the 8-bit
@@ -6611,8 +6611,6 @@ begin
    if item <> nil then
       begin
       item.Caption := TCaption(aText);
-      (* The new caption has no mnemonic; its siblings keep theirs. *)
-      ApplyMenuMnemonics(item.Parent);
       end;
 end;
 
@@ -6920,8 +6918,8 @@ begin
   // SetWindowTextW(h, menuText) that stood here could only ever have been
   // handed a null handle -- doing nothing, silently, on top of an Error that
   // arm already logs.
-  (* WITHOUT ITS MNEMONIC (2026-11-03). A menu row's caption is markup -- '&'
-     marks the Alt+letter, '&&' is a literal ampersand -- and a title bar
+  (* WITHOUT ITS '&' (2026-11-03). A menu row's caption is markup -- '&'
+     marks an underlined letter, '&&' is a literal ampersand -- and a title bar
      paints every character it is given, so 'E&xit' would be titled with its
      ampersand. DisplayedText is the LCL's own reading of that markup. *)
   if lclForm <> nil then

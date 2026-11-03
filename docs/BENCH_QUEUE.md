@@ -30,40 +30,6 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
-## Added 2026-11-03 -- EVERY MAIN-MENU SUBMENU HAS ITS OWN UNDERLINED LETTERS (mnemonics stage 3)
-
-Each submenu's items now get a mnemonic, unique within that submenu
-(`uMenu.ApplyMenuMnemonics`, from `uMnemonics.AssignGroupMnemonics`). The
-menu bar's own items get none, on purpose: Alt+F, Alt+E, Alt+S and the rest
-are TR4W's own keystrokes (`uAccelerators`). `uTestMenuShortcuts` checks that
-the built menu has no duplicate letter in any submenu, and it names the
-fourteen items that have none. What it cannot see is the screen, or whether a
-typed letter reaches the item. To open a submenu, click it, or press F10 and
-use the arrows. Then press the **bare** letter, without Alt.
-
-- [ ] **Windows.** Open every submenu, nested ones included (File > Export,
-      File > Reports, and so on). Each item shows one underlined letter. No two
-      items in one submenu share a letter. Pressing that letter runs the item.
-      Windows may hide the underlines until Alt or F10 is pressed. That is the
-      system's own setting, not a defect.
-- [ ] **Items with no letter, as designed.** `+1` to `+10` contain no letter.
-      In the Alt- submenu, Band Down, Initial exchange, Toggle sidetone and
-      Toggle autosend find no free letter. Is that acceptable, or should the
-      Alt- submenu be split, or the `+N` rows take their digit?
-- [ ] **Linux gtk2 (AppImage).** The same checks. gtk2 underlines the letter
-      in the label. Confirm that the bare letter selects the item in an open
-      submenu.
-- [ ] **Window titles carry no `&`.** Open Beacons monitor, Send spot and a
-      radio window from their menu rows. The titles read as words with no `&`.
-- [ ] **The three re-captioned rows.** The two contest-calendar rows (Tools)
-      and, for an ERMAK station, the Cabrillo row, are re-captioned after the
-      build. Each still has a letter, and its siblings keep the letters they had.
-- [ ] **A translation (Spanish or German).** Letters are still unique per
-      submenu. Where the translated word contains the English item's letter,
-      it keeps that letter.
-- [ ] **macOS.** No underlines anywhere, and every caption appears in full.
-      Cocoa does not honour `&`, so TR4W writes none there.
-
 ## Added 2026-11-03 -- THE PANADAPTER FOLLOWS THE K4'S WATERFALL HEIGHT, COLOUR RANGE AND COLOUR MODE
 
 The K4 radio object now reports to the panadapter what its LCD says about the

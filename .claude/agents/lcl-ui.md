@@ -299,6 +299,11 @@ decided whether stations could talk. Now it connects nothing and stops nothing:
   `ScheduleMainWindowActivation`. Do not "fix" this by owning tool windows by
   the main form again -- that is issue #1.
 
+**Mnemonics were tried and dropped by NY4I 2026-11-03**: accelerators are
+ShortCut keystrokes only (`uAccelerators`, `TMenuItem.ShortCut`). A caption put
+where `&` is not markup (a window title from a menu row) goes through
+`uCaptionText.DisplayedText`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

@@ -639,9 +639,8 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
-   uMnemonics           in '..\..\src\uMnemonics.pas',
-   uMnemonicsLCL        in '..\..\src\ui\lcl\uMnemonicsLCL.pas',
-   uTestMnemonics       in 'uTestMnemonics.pas',
+   uCaptionText         in '..\..\src\ui\lcl\uCaptionText.pas',
+   uTestCaptionText     in 'uTestCaptionText.pas',
    uTestSpotStore       in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',
    uTestCrashContext    in 'uTestCrashContext.pas',
@@ -1102,7 +1101,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
-   RegisterSuite(TMnemonicTests.Create('Mnemonics'));
+   RegisterSuite(TCaptionTextTests.Create('CaptionText'));
    RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));

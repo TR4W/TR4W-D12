@@ -164,6 +164,9 @@ The catalogue name is **pinned to `tr4w.po`**. Defaulted it is the *executable's
 this program ships as `tr4w.exe` but builds as `tr4w_fpc.exe` — the developer binary would
 silently find nothing and look like a translation bug.
 
+**Keyboard mnemonics** (TR4W assigning `&` letters to captions) were tried and dropped by NY4I
+on 2026-11-03; TR4W's keyboard commands are ShortCut keystrokes (`uAccelerators`) only.
+
 ---
 
 ## Where the strings are

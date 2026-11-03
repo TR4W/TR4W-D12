@@ -117,7 +117,7 @@ uses
    uQTCS,                 { the send state and the send routines }
    LogWind,               { QuickDisplay }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
-   uMnemonicsLCL,         (* DisplayedText -- a caption as it is painted *)
+   uCaptionText,         (* DisplayedText -- a caption as it is painted *)
    MainUnit,              { ProcessMenu, YesOrNo, logger }
    Log4D;
 
@@ -196,8 +196,8 @@ var
 
    (* THE WIDTH THIS CAPTION NEEDS, in the font the button will draw it in.
 
-     Measured as DISPLAYED (uMnemonicsLCL.DisplayedText): a lone '&' is a
-     mnemonic marker and is never painted, and '&&' paints ONE '&'. This was a
+     Measured as DISPLAYED (uCaptionText.DisplayedText): a lone '&' is a
+     hotkey marker and is never painted, and '&&' paints ONE '&'. This was a
      StringReplace of every '&', which measured a literal ampersand -- the
      operator's QRV message can hold one -- as nothing at all. *)
    function CaptionWidth(const aCaption: AnsiString): integer;

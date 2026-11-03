@@ -434,8 +434,8 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1206 -> 1205, 2026-11-02: the panadapter's scale caption is written by one
 # helper (ShowScaleCaption) instead of two copies, while the spectrum display
 # defaults moved onto the radio; measured by the full build of that work.
-# 1205 -> 1201, 2026-11-03: mnemonic stage 2 (uMnemonicsLCL; window titles
-# without their '&'; the radio-slot title built once, by RadioWindowTitle);
+# 1205 -> 1201, 2026-11-03: window titles without their '&' (DisplayedText,
+# now uCaptionText) and the radio-slot title built once (RadioWindowTitle);
 # measured by the full build of that work.
 $NARROW_CEILING = 1201
 

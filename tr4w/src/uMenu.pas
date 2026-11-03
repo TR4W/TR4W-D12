@@ -59,30 +59,6 @@ type
 { Fill the menu captions from the resourcestrings. See the implementation. }
 procedure InitializeMenuText;
 
-(* KEEP THE ENGLISH CAPTIONS, for the mnemonics. Call it ONCE, BEFORE the
-  translation is loaded: it runs InitializeMenuText while the resourcestrings
-  still hold their compiled-in English and copies what that wrote. The
-  translated captions are filled by the InitializeMenuText that follows the
-  load, as before.
-
-  WHY AT ALL. A translated submenu should keep the letter its English item has
-  wherever the translated word allows it, and after the load the English is
-  gone: TranslateResourceStrings overwrites each resourcestring in place.
-  Without a capture (the unit tests, which load no translation) the captions
-  themselves are the English, which is what they are. *)
-procedure CaptureEnglishMenuText;
-
-(* KEYBOARD MNEMONICS FOR EVERY SUBMENU AT OR BELOW aGroup -- stage 3 of the
-  mnemonic plan (uMnemonics, uMnemonicsLCL). Each submenu's items are ONE
-  group: every item gets an Alt+letter, unique within its submenu, through
-  uMnemonics.AssignGroupMnemonics. The menu bar's own top level is never a
-  group. Does nothing on a widget set that does not honour '&' (Cocoa).
-
-  BuildTR4WMainMenu calls it once per top-level popup; a caller that
-  re-captions an item afterwards calls it with that item's Parent, and only
-  the re-captioned item changes -- its siblings keep the letters they have. *)
-procedure ApplyMenuMnemonics(const aGroup: TMenuItem);
-
 (* THE MAIN MENU AS AN LCL TMainMenu, from the same T_MENU_ARRAY.
 
   Every item gets Tag = its command id and OnClick = aOnClick, so one handler
@@ -590,9 +566,7 @@ var
 implementation
 
 uses
-  uAppStrings,     // SNetMenuConnect... -- new UI text does not go in uTR4WStrings
-  uMnemonics,      // AssignGroupMnemonics -- the rule
-  uMnemonicsLCL;   // MnemonicMarkupFor, WidgetSetHonoursMnemonics -- the gate
+  uAppStrings;     // SNetMenuConnect... -- new UI text does not go in uTR4WStrings
 
 procedure InitializeMenuText;
 { Menu captions, assigned at RUN time so a translated resourcestring reaches
@@ -829,127 +803,9 @@ type
       Item: TMenuItem;
    end;
 
-   (* AN ITEM AND ITS ENGLISH CAPTION. Keyed by ITEM, not by id: a submenu
-     header has no command id. The item pointers have GMenuIndex's lifetime --
-     both are emptied and refilled by every build. *)
-   TMenuEnglishEntry = record
-      Item:    TMenuItem;
-      English: string;
-   end;
-
 var
    GMenuIndex: array of TMenuIdEntry;
    GMainMenu:  TMainMenu = nil;
-   GMenuEnglish:     array of TMenuEnglishEntry;
-   GEnglishMenuText: array of string;   (* by T_MENU_ARRAY row; empty = none captured *)
-
-procedure CaptureEnglishMenuText;
-var
-   i: integer;
-begin
-   InitializeMenuText;
-   GEnglishMenuText := nil;
-   SetLength(GEnglishMenuText, T_MENU_ARRAY_SIZE + 1);
-   for i := 0 to T_MENU_ARRAY_SIZE do
-      begin
-      GEnglishMenuText[i] := T_MENU_ARRAY[i].mrText;
-      end;
-end;
-
-(* The English of row aRow: the capture when there is one, else the row's own
-  caption -- which IS the English when no translation was loaded. *)
-function EnglishOfRow(const aRow: integer): string;
-begin
-   Result := T_MENU_ARRAY[aRow].mrText;
-   if aRow <= High(GEnglishMenuText) then
-      begin
-      Result := GEnglishMenuText[aRow];
-      end;
-end;
-
-procedure RememberEnglish(const aItem: TMenuItem; const aEnglish: string);
-begin
-   SetLength(GMenuEnglish, Length(GMenuEnglish) + 1);
-   GMenuEnglish[High(GMenuEnglish)].Item    := aItem;
-   GMenuEnglish[High(GMenuEnglish)].English := aEnglish;
-end;
-
-(* The English caption recorded for aItem, or its own caption when none was. *)
-function EnglishOfItem(const aItem: TMenuItem): string;
-var
-   i: integer;
-begin
-   Result := string(aItem.Caption);
-   for i := 0 to High(GMenuEnglish) do
-      begin
-      if GMenuEnglish[i].Item = aItem then
-         begin
-         Result := GMenuEnglish[i].English;
-         Exit;
-         end;
-      end;
-end;
-
-(* One submenu, then every submenu inside it.
-
-  NO RESERVED LETTERS, and that is measured rather than assumed. uAccelerators
-  binds Alt+A..Alt+Z (all but H, O and U) as ShortCuts and hook keys -- but a
-  submenu's mnemonic is a BARE letter typed while that submenu is open, and
-  the open menu's own loop answers it: on Win32 the LCL's WM_MENUCHAR handler,
-  win32wsmenus.FindMenuItemAccelerator, matches the typed character against
-  each visible item with IsAccel. No Alt+letter binding is consulted there, so
-  none of them competes; reserving them would leave three letters per
-  submenu. The clash those bindings DO cause is on the menu bar's top level --
-  Alt+F, Alt+E and Alt+S could not open File, Edit and Settings -- which is
-  why the top level is left out. *)
-procedure ApplyGroup(const aGroup: TMenuItem);
-var
-   k: integer;
-   captions, english: array of string;
-   assigned: TMnemonicCaptions;
-begin
-   captions := nil;
-   english := nil;
-   SetLength(captions, aGroup.Count);
-   SetLength(english, aGroup.Count);
-   for k := 0 to aGroup.Count - 1 do
-      begin
-      captions[k] := string(aGroup.Items[k].Caption);
-      english[k]  := EnglishOfItem(aGroup.Items[k]);
-      end;
-
-   assigned := AssignGroupMnemonics(captions, english, '');
-
-   for k := 0 to aGroup.Count - 1 do
-      begin
-      if assigned[k] <> captions[k] then
-         begin
-         aGroup.Items[k].Caption := TCaption(assigned[k]);
-         end;
-      if aGroup.Items[k].Count > 0 then
-         begin
-         ApplyGroup(aGroup.Items[k]);
-         end;
-      end;
-end;
-
-procedure ApplyMenuMnemonics(const aGroup: TMenuItem);
-begin
-   if aGroup = nil then
-      begin
-      Exit;
-      end;
-   (* The menu bar itself is not a group -- see ApplyGroup. *)
-   if (GMainMenu <> nil) and (aGroup = GMainMenu.Items) then
-      begin
-      Exit;
-      end;
-   if MnemonicMarkupFor(WidgetSetHonoursMnemonics) <> mmAssign then
-      begin
-      Exit;
-      end;
-   ApplyGroup(aGroup);
-end;
 
 function MenuItemById(const aId: word): TMenuItem;
 var
@@ -1280,7 +1136,6 @@ begin
    Result     := TMainMenu.Create(aOwner);
    GMainMenu  := Result;
    GMenuIndex := nil;
-   GMenuEnglish := nil;
 
    latest := Result.Items;
    curr   := Result.Items;
@@ -1298,7 +1153,6 @@ begin
          { TCaption: the LCL keeps captions as UTF-8 AnsiString, so the
            conversion is written down rather than left implicit. }
          item.Caption := TCaption(row.mrText);
-         RememberEnglish(item, EnglishOfRow(i));
          Result.Items.Add(item);
          latest := item;
          curr   := item;
@@ -1310,7 +1164,6 @@ begin
          begin
          item := TMenuItem.Create(aOwner);
          item.Caption := TCaption(row.mrText);
-         RememberEnglish(item, EnglishOfRow(i));
          latest.Add(item);
          curr := item;
          Continue;
@@ -1363,7 +1216,6 @@ begin
          item.Caption  := TCaption(row.mrText);
          item.Tag     := row.mrId;
          item.OnClick := aOnClick;
-         RememberEnglish(item, EnglishOfRow(i));
 
          SetLength(GMenuIndex, Length(GMenuIndex) + 1);
          GMenuIndex[High(GMenuIndex)].Id   := row.mrId;
@@ -1371,13 +1223,6 @@ begin
          end;
 
       curr.Add(item);
-      end;
-
-   (* THE MNEMONICS, once the whole menu exists: a group's letters depend on
-     every item in it. One call per top-level popup; the bar is not a group. *)
-   for i := 0 to Result.Items.Count - 1 do
-      begin
-      ApplyMenuMnemonics(Result.Items[i]);
       end;
 end;
 

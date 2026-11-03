@@ -56,11 +56,10 @@ type
 implementation
 
 uses
-   SysUtils, Classes, Menus, ComCtrls, Forms, Controls,
+   SysUtils, Classes, Menus, ComCtrls, Forms,
    VC, TF, uTR4WStrings,
    uNetHello, uNetLink, uNet, uMenu, uAppStrings, uSettingsModel, uComputerID,
-   uNetworkForm,
-   uMnemonicsLCL;   (* DisplayedText -- a built caption carries its mnemonic *)
+   uNetworkForm;
 
 (* Text into a fixed character field, NUL padded - the way a station status
   carries a name or a call. An open array carries its own bounds. *)
@@ -360,11 +359,8 @@ begin
       Exit;
       end;
 
-   (* As painted: the caption carries its mnemonic marker (uMenu, stage 3). *)
-   CheckEquals(string(DisplayedText(TCaption(SNetMenuConnect))),
-               string(DisplayedText(connectItem.Caption)), 'Connect is captioned');
-   CheckEquals(string(DisplayedText(TCaption(SNetMenuShowWindow))),
-               string(DisplayedText(showItem.Caption)), 'and Show Network window');
+   CheckEquals(SNetMenuConnect, string(connectItem.Caption), 'Connect is captioned');
+   CheckEquals(SNetMenuShowWindow, string(showItem.Caption), 'and Show Network window');
 
    (* THEY LEAD THE NET MENU, in the same popup as the rows that need a link. *)
    CheckTrue(connectItem.Parent = BuiltNetMenuItem(menu_alt_setnettime).Parent,

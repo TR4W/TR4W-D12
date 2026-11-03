@@ -74,7 +74,7 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
-  uMnemonicsLCL,     (* DisplayedText -- the title is a menu row's string *)
+  uCaptionText,     (* DisplayedText -- the title is a menu row's string *)
   VC,           // RC_* captions, tContestNameInComment
   PostUnit,     // Contest -- the active contest
   uContestRegistry, // ContestId -- the contest's name, for the comment
@@ -97,7 +97,7 @@ var
   lastCall: CallString;
 begin
 
-   (* RC_SENDSPOT is also this window's MENU ROW, so it may carry mnemonic
+   (* RC_SENDSPOT is also this window's MENU ROW, so it may carry '&'
       markup; a title shows it without (DisplayedText). *)
    Caption               := DisplayedText(TCaption(RC_SENDSPOT));
    lblCallsign.Caption   := string(RC_CALLSIGN);

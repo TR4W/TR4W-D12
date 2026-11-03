@@ -104,7 +104,7 @@ implementation
 
 uses
   uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
-  uMnemonicsLCL,     (* DisplayedText -- the title is a menu row's string *)
+  uCaptionText,     (* DisplayedText -- the title is a menu row's string *)
   VC,          // UTC, RC_BEACONSM, CW
   LogRadio,     // SetRadioFreq, RadioOne
   uBeacons,     // BEACONS, BeaconsNames, FreqArray -- the data stayed put
@@ -201,7 +201,7 @@ var
   btn: TSpeedButton;
 begin
 
-   (* RC_BEACONSM is also this window's MENU ROW, so it may carry mnemonic
+   (* RC_BEACONSM is also this window's MENU ROW, so it may carry '&'
       markup; a title shows it without (DisplayedText). *)
    Caption := DisplayedText(TCaption(RC_BEACONSM));
 

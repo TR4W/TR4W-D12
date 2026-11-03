@@ -206,7 +206,7 @@ begin
    (* THE SAME NAME THE PANEL ITSELF CARRIES -- "Radio 1 K4D-278" -- so the
      panadapter title reads "Panadapter - Radio 1 K4D-278". Not built the same
      way any more but BY the same routine (MainUnit.RadioWindowTitle): this was
-     a copy of the panel's, and the mnemonic fix of 2026-11-03 would have had
+     a copy of the panel's, and the '&'-stripping fix of 2026-11-03 would have had
      to land in both. *)
    caption := RadioWindowTitle(aSlot);
 
