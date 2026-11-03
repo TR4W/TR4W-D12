@@ -34,7 +34,7 @@ program bench_panadapter;
   runs use.
 
   source    A or B (main pans) or Y (the 3 kHz mini-pan).
-  palette   0..4 = Heat Map, Grayscale, Sepia, Blue-Green, Fire-Ice.  Applied
+  palette   0..5 = Heat Map, Grayscale, Sepia, Blue-Green, Fire-Ice, Blue.  Applied
             half way through a timed run, to prove the history re-colours.
   cursor-x  pixel column to park the readout on before the snapshot.
   cat-mode  1 = open the CAT link and TEST CLICK-TO-TUNE (moves the VFO and

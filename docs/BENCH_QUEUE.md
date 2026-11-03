@@ -53,8 +53,8 @@ pan B), and keep `tr4w.log` at TRACE.
       when the split moves (they used to be cleared). The oldest rows are lost
       when it shrinks.
 - [ ] **Colour range (WTR CLRS).** First set TR4W's scale slider to the rig's
-      SCALE: the floor is TR4W's own slider value x WBS / 40, and TR4W does not
-      follow `#SCL`. Then step WTR CLRS from 5 to 30. EXPECT the whole
+      SCALE: the floor is REF - TR4W's own slider value x WBS / 40, and TR4W
+      does not follow `#SCL` yet. Then step WTR CLRS from 5 to 30. EXPECT the whole
       waterfall, history included, to get brighter as the number rises. With
       the slider at 80 dB, 5 should look exactly as TR4W always has. **Compare
       against the rig's own screen at 5, 14 and 30.** The mapping is QK4's
@@ -62,12 +62,42 @@ pan B), and keep `tr4w.log` at TRACE.
       right.
 - [ ] **Colour mode.** Step it through gray, color, teal, blue and sepia. EXPECT
       the combo and the waterfall to follow: Grayscale, Heat Map, Blue-Green,
-      Fire-Ice, Sepia. **Blue to Fire-Ice is provisional**: Fire-Ice runs blue,
-      then white, then red, so it is not a "blue tone". Say whether it should be
-      replaced with a real blue-tone palette.
+      **Blue**, Sepia. Fire-Ice is never selected by the rig (it is the
+      operator's only).
+- [ ] **The Blue palette against the K4's own blue tone** (added later
+      2026-11-03). Blue is a NEW palette and **TR4W's own design**: QK4 draws
+      one colour table whatever `#WFC` says, so there was nothing to copy. It is
+      Sepia's tone curve moved to blue: black, then dark blue, rising to a pale
+      blue-white. Put the rig on WTR BLUE and compare the two screens side by
+      side, noise and strong signals both. Say what differs (the dark run, the
+      hue, the top end).
 - [ ] **The operator's choice still works.** Pick a palette in the combo. EXPECT
       it to stay until the colour mode is changed at the rig. A reconnect alone
       should not undo it.
+- [ ] **REF is followed, AutoRef ON.** (Added later 2026-11-03.) With AutoRef
+      on, the trace's bottom edge is now the rig's `#REF` exactly, with no 10 dB
+      margin, as QK4 and the rig draw it. EXPECT the noise to sit on the bottom
+      edge as on the LCD, and to stay put while AutoRef steps (a few `#REF`
+      lines a second in the log at TRACE). EXPECT the waterfall NOT to flash or
+      re-colour its history on a REF step: a new REF reaches new rows only.
+      **Say whether losing the 10 dB margin under the floor looks worse** -- the
+      margin used to keep the noise texture visible below the floor.
+- [ ] **REF is followed, AutoRef OFF.** Turn AutoRef off and turn the REF knob
+      (pan A, then pan B). EXPECT the trace to move up and down with REF, and
+      the dB labels to follow. Pan B: TR4W does not ASK `#REF$;` at connect, so
+      with AutoRef off pan B keeps the noise-floor scaling until the sub's REF
+      is changed at the rig. Say whether pan B needs it asked.
+- [ ] **SCALE is NOT followed yet.** Change SCALE at the rig. EXPECT no change
+      in TR4W's trace height; the slider still decides. That is deliberate,
+      waiting on NY4I's decision about the slider (design doc 10.6).
+- [ ] **A reconnect keeps the picture.** Set a split, WTR CLRS and colour mode
+      that are NOT the defaults (e.g. 30 %, 20, sepia). Then **power-cycle the
+      K4**, and separately **pull the network cable** and put it back. EXPECT
+      the window to keep that split, colour range and palette throughout, never
+      snapping to 0.5 / 10 dB / Heat Map, and to take any value changed while
+      the link was down as soon as the radio answers. A PROFILE switch or Reset
+      Radio Ports builds a new radio object and DOES start from the defaults
+      until the radio answers: say whether that brief reset is acceptable.
 - [ ] **The external monitor does not move it.** Change the EXTERNAL monitor's
       waterfall height, colour range and colour mode. EXPECT no change in the
       window.

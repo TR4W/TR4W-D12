@@ -22,11 +22,13 @@ unit uTestK4DisplayReport;
     state byte-for-byte as it was;
   - the AutoRef debounce field is kept but not range-checked, because the
     radio's own captures contradict the documented range;
-  - a reset clears every flag and moves every Generation on;
   - #WFC (the LCD colour scheme, plain '#WFC' as the radio answers) reaches
     both receivers, and '#HWFC' (the external monitor's) is not decoded;
-  - K4LiveDisplay turns #WFH, #WBS and #WFC -- and nothing else -- into what
-    the window follows, and claims nothing it was not told.
+  - K4LiveDisplay turns #WFH, #WBS, #WFC, the receiver's #REF and the shared
+    #SCL -- and nothing else -- into what the window follows, and claims
+    nothing it was not told.
+  (There is no reset to pin: the state is held across a reconnect, NY4I
+  2026-11-03, and uTestSpectrumRadioState pins that on the radio.)
 *)
 
 interface
@@ -47,12 +49,12 @@ type
       procedure Test_Rejected_LeavesTheStateAlone;
       procedure Test_RangeEdges;
       procedure Test_TrailingTerminator_Tolerated;
-      procedure Test_Reset_ClearsFlagsAndMovesGeneration;
       procedure Test_Generation_WrapsToOneNeverZero;
       procedure Test_ColourMode_ReachesBothReceivers;
       procedure Test_ExternalColourMode_IsNotDecoded;
       procedure Test_LiveDisplay_TranslatesTheLCDValues;
       procedure Test_LiveDisplay_UnknownOrIllegal_ClaimsNothing;
+      procedure Test_LiveDisplay_CarriesRefPerReceiverAndSharedScale;
    public
       procedure RunAllTests; override;
    end;
@@ -397,45 +399,6 @@ begin
    CheckFalse(ParseK4DisplayReport('#SCL80;;', s), 'but not two');
 end;
 
-procedure TK4DisplayReportTests.Test_Reset_ClearsFlagsAndMovesGeneration;
-var
-   s: TK4DisplayState;
-   mainGen, subGen, gen: Integer;
-begin
-   BeginTest('K4 display: a reset clears every flag and moves every Generation on');
-   s := Fresh;
-   CheckTrue(ParseK4DisplayReport('#REF-126', s), '#REF');
-   CheckTrue(ParseK4DisplayReport('#REF$-125', s), '#REF$');
-   CheckTrue(ParseK4DisplayReport('#SCL80', s), '#SCL');
-   CheckTrue(ParseK4DisplayReport('#WFH50', s), '#WFH');
-   CheckTrue(ParseK4DisplayReport('#WBS12', s), '#WBS');
-   CheckTrue(ParseK4DisplayReport('#AVG2', s), '#AVG');
-   CheckTrue(ParseK4DisplayReport('#AR1201+041', s), '#AR');
-   CheckTrue(ParseK4DisplayReport('#FPS12', s), '#FPS');
-   CheckTrue(ParseK4DisplayReport('#HWFH50', s), '#HWFH');
-   CheckTrue(ParseK4DisplayReport('#HWBS12', s), '#HWBS');
-   CheckTrue(ParseK4DisplayReport('#WFC2', s), '#WFC');
-   mainGen := s.Main.Generation;
-   subGen := s.Sub.Generation;
-   gen := s.Generation;
-
-   ResetK4DisplayState(s);
-
-   CheckTrue(SpectrumRadioStateKnowsNothing(s.Main), 'main knows nothing after a reset');
-   CheckTrue(SpectrumRadioStateKnowsNothing(s.Sub), 'sub knows nothing after a reset');
-   CheckFalse(s.HasFps or s.HasExtWaterfall or s.HasExtColourRange or s.HasAutoRefTiming,
-              'nor do the K4-only fields');
-   CheckEquals(mainGen + 1, s.Main.Generation, 'main Generation moved on, not back to 0');
-   CheckEquals(subGen + 1, s.Sub.Generation, 'sub Generation moved on');
-   CheckEquals(gen + 1, s.Generation, 'the K4 Generation moved on');
-
-   (* A fresh state reset is still "nothing known", and moves off 0. *)
-   s := Fresh;
-   ResetK4DisplayState(s);
-   CheckTrue(SpectrumRadioStateKnowsNothing(s.Main), 'a fresh reset knows nothing');
-   CheckEquals(1, s.Main.Generation, 'and its Generation is 1');
-end;
-
 procedure TK4DisplayReportTests.Test_Generation_WrapsToOneNeverZero;
 begin
    BeginTest('Generation: +1, and from High(Integer) it wraps to 1, never 0');
@@ -581,15 +544,59 @@ begin
    CheckTrue(SpectrumLiveDisplayKnowsNothing(K4LiveDisplay(st)),
              'out-of-range share, colour range and mode are not claimed');
 
-   (* A REF, scale, AutoRef or averaging report is not a waterfall setting. *)
+   (* AutoRef and averaging are not something the window draws with. *)
    st := SpectrumRadioStateUnknown;
-   st.HasRef := True;
-   st.HasScale := True;
-   st.ScaleDb := 80;
+   st.HasAutoRef := True;
+   st.AutoRef := True;
    st.HasAvg := True;
    st.AvgFrames := 4;
    CheckTrue(SpectrumLiveDisplayKnowsNothing(K4LiveDisplay(st)),
-             'REF, scale and averaging give the window nothing to follow');
+             'AutoRef and averaging give the window nothing to follow');
+
+   (* A REF or scale outside the radio's range is not claimed either. *)
+   st := SpectrumRadioStateUnknown;
+   st.HasRef := True;
+   st.RefDb := K4_REF_MAX_DB + 1;
+   st.HasScale := True;
+   st.ScaleDb := K4_SCALE_MIN_DB - 1;
+   CheckTrue(SpectrumLiveDisplayKnowsNothing(K4LiveDisplay(st)),
+             'out-of-range REF and scale are not claimed');
+end;
+
+(* THE VERTICAL SCALING: QK4 draws [REF, REF + SCALE], REF per receiver and
+   SCALE shared.  K4LiveDisplay must carry both, from the right receiver. *)
+procedure TK4DisplayReportTests.Test_LiveDisplay_CarriesRefPerReceiverAndSharedScale;
+var
+   s: TK4DisplayState;
+   a, b: TSpectrumLiveDisplay;
+begin
+   BeginTest('K4 live display: #REF reaches the main pan, #REF$ the sub, #SCL both');
+   s := Fresh;
+
+   CheckTrue(ParseK4DisplayReport('#REF-126', s), '#REF-126');
+   a := K4LiveDisplay(s.Main);
+   b := K4LiveDisplay(s.Sub);
+   CheckTrue(a.HasRef and Near(a.RefDb, -126), 'main REF is -126');
+   CheckFalse(b.HasRef, 'the sub has not reported a REF');
+   CheckFalse(a.HasScale, 'no scale yet');
+   CheckFalse(a.HasWaterfallShare or a.HasColourFloor or a.HasPalette,
+              'a REF report claims nothing about the waterfall');
+
+   CheckTrue(ParseK4DisplayReport('#REF$-110', s), '#REF$-110');
+   CheckTrue(ParseK4DisplayReport('#SCL050', s), '#SCL050');
+   a := K4LiveDisplay(s.Main);
+   b := K4LiveDisplay(s.Sub);
+   CheckTrue(Near(a.RefDb, -126), 'main REF unchanged by the sub''s');
+   CheckTrue(b.HasRef and Near(b.RefDb, -110), 'sub REF is -110');
+   CheckTrue(a.HasScale and (a.ScaleDb = 50), 'main scale is #SCL 50');
+   CheckTrue(b.HasScale and (b.ScaleDb = 50), 'sub scale is the same #SCL');
+
+   (* The range edges pass. *)
+   CheckTrue(ParseK4DisplayReport('#REF-200', s), '#REF-200');
+   CheckTrue(ParseK4DisplayReport('#SCL150', s), '#SCL150');
+   a := K4LiveDisplay(s.Main);
+   CheckTrue(a.HasRef and Near(a.RefDb, -200), 'REF -200 is carried');
+   CheckTrue(a.HasScale and (a.ScaleDb = 150), 'scale 150 is carried');
 end;
 
 procedure TK4DisplayReportTests.RunAllTests;
@@ -604,12 +611,12 @@ begin
    Test_Rejected_LeavesTheStateAlone;
    Test_RangeEdges;
    Test_TrailingTerminator_Tolerated;
-   Test_Reset_ClearsFlagsAndMovesGeneration;
    Test_Generation_WrapsToOneNeverZero;
    Test_ColourMode_ReachesBothReceivers;
    Test_ExternalColourMode_IsNotDecoded;
    Test_LiveDisplay_TranslatesTheLCDValues;
    Test_LiveDisplay_UnknownOrIllegal_ClaimsNothing;
+   Test_LiveDisplay_CarriesRefPerReceiverAndSharedScale;
 end;
 
 end.

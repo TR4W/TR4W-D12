@@ -56,9 +56,11 @@ Type TK4Radio = class(TElecraftRadio)
       (* THE RADIO'S OWN DISPLAY SETTINGS, as it last reported them -- see
         uK4DisplayReport.  WRITTEN on the reading thread (ProcessMessage) and
         READ from any thread (SpectrumRadioState), so guarded by its own lock,
-        not SocketLock -- the TX-inhibit pair's pattern.  Cleared at every
-        Connect.  The panadapter reads it, translated, through
-        SpectrumLiveDisplay. *)
+        not SocketLock -- the TX-inhibit pair's pattern.  HELD ACROSS A
+        RECONNECT, never cleared (NY4I, 2026-11-03): a value stands until the
+        radio reports a new one, and the connect-time queries ask for one.
+        Only a new TK4Radio -- a different radio -- starts from nothing.  The
+        panadapter reads it, translated, through SpectrumLiveDisplay. *)
       FDisplayState: TK4DisplayState;
       FDisplayStateLock: TCriticalSection;
 
@@ -66,7 +68,6 @@ Type TK4Radio = class(TElecraftRadio)
       procedure AskTXTestIfDue;
       procedure AskTXTest;
 
-      procedure ResetDisplayState;
       procedure RecordDisplayReport(const sMessage: string);
    protected
       procedure SelectOperatingVFO(rxVFOIsB: boolean); override;
@@ -418,10 +419,14 @@ end;
      calibrated       the K4 sends real dB (int16 / 10).
 
    THESE ARE THE DEFAULTS, NOT THE LIVE VALUES.  Once the radio has reported
-   #WFH, #WBS or #WFC, SpectrumLiveDisplay (below) states what the window
-   follows instead -- the waterfall share, its colour floor and its scheme --
-   and these numbers stand only for what the radio has not said.  They are
-   unchanged, and pinned so (uTestSpectrumDisplayDefaults).
+   #WFH, #WBS, #WFC or #REF, SpectrumLiveDisplay (below) states what the
+   window follows instead -- the waterfall share, its colour floor, its scheme
+   and the reference -- and these numbers stand only for what the radio has
+   not said.  With #REF known the trace's bottom IS the reference, as in QK4,
+   so the 10 dB margin applies only before the radio has answered.  #SCL is
+   carried too, but the window does not draw with it yet (the scale slider's
+   fate is NY4I's decision).  They are unchanged, and pinned so
+   (uTestSpectrumDisplayDefaults).
 
    THE SAME FOR EVERY SOURCE, as the window has always drawn them.  The Y
    mini-pan's levels sit near 0 dB rather than -125, but the window scales
@@ -489,20 +494,6 @@ begin
    FreeAndNil(FDisplayStateLock);
 end;
 
-(* A new link knows nothing about the radio's display until the radio says so.
-  Called at the TOP of Connect, before the base connects: the reading thread
-  starts inside the base Connect and may deliver a report before it returns,
-  and clearing after that would throw the report away. *)
-procedure TK4Radio.ResetDisplayState;
-begin
-   FDisplayStateLock.Enter;
-   try
-      ResetK4DisplayState(FDisplayState);
-   finally
-      FDisplayStateLock.Leave;
-   end;
-end;
-
 (* ON THE READING THREAD.  The parser is pure and cheap, so it runs under the
   lock; a message that is not a display report changes nothing. *)
 procedure TK4Radio.RecordDisplayReport(const sMessage: string);
@@ -552,7 +543,8 @@ begin
    end;
 end;
 
-(* The LCD's #WFH, #WBS and #WFC, translated (uK4DisplayReport.K4LiveDisplay).
+(* The LCD's #WFH, #WBS and #WFC, the receiver's #REF and the shared #SCL,
+  translated (uK4DisplayReport.K4LiveDisplay).
   SpectrumRadioState already takes the lock, gates on rcSpectrum and answers
   nothing for the Y and Z mini-pans -- so the mini-pan keeps the defaults. *)
 function TK4Radio.SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay;
@@ -564,11 +556,13 @@ function TK4Radio.Connect: integer;
 begin
    Self.readTerminator := ';';
 
-   (* UNCONDITIONALLY AND FIRST -- see ResetDisplayState.  What the last link
-     reported is not a fact about this one: the operator may have changed
-     every display setting while it was down. *)
-   ResetDisplayState;
-
+   (* THE DISPLAY STATE IS NOT CLEARED HERE, ON PURPOSE (NY4I, 2026-11-03).
+     It used to be, and a K4 that dropped its link snapped the panadapter
+     back to the 0.5 split, the 10 dB margin and the default palette until
+     the radio answered.  What the last link reported stands until this one
+     reports something new -- the display queries below ask for exactly that
+     -- and a value the operator changed while the link was down is replaced
+     the moment the radio says so. *)
    Result := Inherited Connect;
    if Self.IsConnected then
       begin

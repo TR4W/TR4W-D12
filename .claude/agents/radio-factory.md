@@ -220,14 +220,18 @@ record with an ERROR rather than borrowing numbers. Details:
 stages 1-2).** Distinct from the defaults above: a
 `TSpectrumRadioState` (`uSpectrumTypes`) of LIVE values -- REF, scale, AutoRef
 and offset, waterfall share, averaging, colour range, colour mode -- each with its own `Has`
-flag, plus a `Generation` that moves on every accepted report (repeats too) and
-every reset, never back to 0. "Nothing known" is `SpectrumRadioStateKnowsNothing`
+flag, plus a `Generation` that moves on every accepted report (repeats too),
+never back to 0 (there is no reset any more -- see below). "Nothing known" is `SpectrumRadioStateKnowsNothing`
 (the flags), NOT record equality. Virtual `SpectrumRadioState(sourceId)`; base
 answers unknown, the Icoms/Flex inherit it. `TK4Radio` decodes the `#` reports
 with the pure leaf `uK4DisplayReport` (on the reading thread, under its own
 `FDisplayStateLock`, returned by value; `A` = main/`#REF`, `B` = sub/`#REF$`,
-others unknown), resets at the TOP of `Connect` (before the base starts the
-reader), and asks `K4_DISPLAY_QUERIES` on its own line beside `#SPN;`.
+others unknown), ~~resets at the TOP of `Connect`~~ **HOLDS IT ACROSS A
+RECONNECT (NY4I, later 2026-11-03): `Connect` clears nothing and
+`ResetK4DisplayState` is deleted** -- a value stands until the radio reports a
+new one; only a NEW `TK4Radio` (a different radio, a profile change, Reset
+Radio Ports) starts from nothing. It asks `K4_DISPLAY_QUERIES` on its own line
+beside `#SPN;`.
 **Reads only: never send a `#REF` value (it freezes AutoRef) or `#AR0;`/`#AR1;`/
 `#AR9;` (sets)** -- pinned by `Test_DisplayStateAskedOnConnect_ReadsOnly`.
 Whether the K4 pushes `#SCL`/`#WFH`/`#WBS`/`#WFC`/`#AVG` is unverified
@@ -247,6 +251,21 @@ CHANGES -- never on `Generation`, which AutoRef's `#REF` pushes move several
 times a second. Unknown = the defaults exactly. `SpectrumDisplayDefaults` is
 unchanged. A registry walk pins that every fresh radio claims nothing.
 Details: `docs/PANADAPTER_LCL_DESIGN.md` section 10.5.
+
+**AND THE REFERENCE, AND A REAL BLUE (later 2026-11-03).** `TSpectrumLiveDisplay`
+also carries `RefDb` and `ScaleDb`, each with a `Has` flag that
+`SpectrumLiveDisplayKnowsNothing` counts: `#REF` for pan A, `#REF$` for B, the
+one `#SCL` for both, Y nothing. The window's policy is two pure functions in
+`uSpectrumTypes`: `SpectrumTraceFloorDb` (REF exactly, no margin -- QK4's
+`minDb = refLevel` -- else noise floor less `RefMarginDb`) and
+`SpectrumReferenceDb` (what a waterfall row is stored against). **REF is never a
+re-colour trigger**: a row keeps the reference it was captured with, so AutoRef's
+pushes reach new rows only (QK4 `da384ee`, same reason). **`#SCL` is carried and
+NOT drawn**: QK4's scale control WRITES `#SCL` to the rig, so following it decides
+what TR4W's slider is -- an open fork for NY4I, design doc 10.6. **QK4 has ONE
+waterfall colour table** whatever `#WFC` says, so TR4W's `Blue` palette (index 5,
+appended) is TR4W's own design; Fire-Ice is the operator's only. Details:
+`docs/PANADAPTER_LCL_DESIGN.md` section 10.6.
 
 **THE K4 MAIN PAN IS CROPPED TO `#SPN` BY THE RADIO (2026-11-03, NY4I).**
 `TK4Radio.HandleSpectrumFrame` passes B, Y and Z through. It crops A with the

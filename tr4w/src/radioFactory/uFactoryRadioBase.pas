@@ -923,8 +923,9 @@ Type TFactoryRadioBase = class(TObject)
       function SpectrumRadioState(const ASourceId: string): TSpectrumRadioState; virtual;
 
       (* What the radio's own display says the WINDOW should follow for
-         ASourceId -- waterfall share, waterfall colour floor, colour scheme --
-         translated by the radio into neutral units.  See TSpectrumLiveDisplay.
+         ASourceId -- waterfall share, waterfall colour floor, colour scheme,
+         reference level and scale -- translated by the radio into neutral
+         units.  See TSpectrumLiveDisplay.
          The window reads it on its refresh timer, from the main thread, so an
          override copies out from under its own lock (TK4Radio does).
 

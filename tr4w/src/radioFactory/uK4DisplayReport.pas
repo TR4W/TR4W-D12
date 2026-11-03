@@ -80,8 +80,14 @@ unit uK4DisplayReport;
 
   WHAT THE WINDOW FOLLOWS.  K4LiveDisplay translates a receiver's record into
   the neutral TSpectrumLiveDisplay the panadapter reads: #WFH, #WBS and #WFC
-  ONLY -- the LCD values.  The external monitor's #HWFH and #HWBS are kept on
+  -- the LCD values -- and that receiver's #REF (#REF$ for the sub) and the
+  shared #SCL.  The external monitor's #HWFH and #HWBS are kept on
   TK4DisplayState as facts and reach no window.
+
+  HELD, NOT RESET, ACROSS A RECONNECT (NY4I, 2026-11-03).  There is no reset:
+  a value stands until the radio reports a new one, so a K4 that drops its
+  link keeps its picture.  A different radio is a different TK4Radio, which
+  starts from K4DisplayStateUnknown.
 
   SCOPE.  #REF belongs to the main receiver and #REF$ to the sub; the global
   reports (#SCL, #WFH, #WBS, #WFC, #AVG, #AR) are stored in BOTH receiver records,
@@ -162,10 +168,6 @@ type
 (* Nothing known, every Generation 0. *)
 function K4DisplayStateUnknown: TK4DisplayState;
 
-(* A new link: every flag cleared, every Generation moved on (never back to 0),
-   so a reader that applied the old session's values sees that they are gone. *)
-procedure ResetK4DisplayState(var AState: TK4DisplayState);
-
 (* Decode one message into AState.  True when it was one of the reports above
    and its value was legal; AState is then updated and the Generation of every
    record it touched moved on, even when the value equals the one held.
@@ -173,7 +175,8 @@ procedure ResetK4DisplayState(var AState: TK4DisplayState);
 function ParseK4DisplayReport(const AMsg: string; var AState: TK4DisplayState): Boolean;
 
 (* WHAT THE WINDOW SHOULD FOLLOW, from one receiver's record: #WFH as a share,
-   #WBS as a colour floor (K4_COLOUR_FLOOR_DIVISOR), #WFC as a palette tone.
+   #WBS as a colour floor (K4_COLOUR_FLOOR_DIVISOR), #WFC as a palette tone,
+   the receiver's #REF as the reference and #SCL as the scale.
    A value the record does not know -- or one outside the radio's range, which
    the parser never stores -- is not claimed, so the window keeps its
    defaults for it.  Pure. *)
@@ -190,35 +193,6 @@ const
 function K4DisplayStateUnknown: TK4DisplayState;
 begin
    Result := Default(TK4DisplayState);
-end;
-
-procedure ResetRadioState(var AState: TSpectrumRadioState);
-var
-   generation: Integer;
-begin
-   generation := NextSpectrumRadioStateGeneration(AState.Generation);
-   AState := SpectrumRadioStateUnknown;
-   AState.Generation := generation;
-end;
-
-procedure ResetK4DisplayState(var AState: TK4DisplayState);
-var
-   generation: Integer;
-begin
-   ResetRadioState(AState.Main);
-   ResetRadioState(AState.Sub);
-
-   generation := NextSpectrumRadioStateGeneration(AState.Generation);
-   AState.HasFps := False;
-   AState.Fps := 0;
-   AState.HasExtWaterfall := False;
-   AState.ExtWaterfallPercent := 0;
-   AState.HasExtColourRange := False;
-   AState.ExtColourRange := 0;
-   AState.HasAutoRefTiming := False;
-   AState.AutoRefAveraging := 0;
-   AState.AutoRefDebounce := 0;
-   AState.Generation := generation;
 end;
 
 function IsDigit(c: Char): Boolean;
@@ -528,6 +502,25 @@ begin
       begin
       Result.HasColourFloor := True;
       Result.ColourFloorOfScale := AState.ColourRange / K4_COLOUR_FLOOR_DIVISOR;
+      end;
+
+   (* The K4's frames carry real dB (int16 / 10) and the packet's own noise
+      floor read within 0.5 dB of #REF under AutoRef (docs/PANADAPTER_LCL_
+      DESIGN.md 10.2), so #REF is on the frame's scale and passes as it is. *)
+   if AState.HasRef                         and
+      (AState.RefDb >= K4_REF_MIN_DB)       and
+      (AState.RefDb <= K4_REF_MAX_DB) then
+      begin
+      Result.HasRef := True;
+      Result.RefDb := AState.RefDb;
+      end;
+
+   if AState.HasScale                          and
+      (AState.ScaleDb >= K4_SCALE_MIN_DB)      and
+      (AState.ScaleDb <= K4_SCALE_MAX_DB) then
+      begin
+      Result.HasScale := True;
+      Result.ScaleDb := AState.ScaleDb;
       end;
 
    (* Spelled out rather than cast: the K4's numbering is the K4's, and the

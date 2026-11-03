@@ -19,11 +19,17 @@ unit uTestSpectrumRadioState;
     (#REF$), and nothing is claimed for the Y mini-pan;
   - a first report equal to the default still counts as known, and every
     report -- a repeat included -- moves Generation;
-  - a new link (Connect) forgets the last session;
+  - a new link (Connect) HOLDS the last session's values until the radio
+    reports new ones (NY4I, 2026-11-03), and a fresh report replaces them;
   - a K4 that does not declare rcSpectrum answers nothing whatever it hears;
   - over the WHOLE REGISTRY, a freshly built radio knows nothing, and the
     Icoms -- which have spectrum but report no such settings -- inherit the
-    base's answer.
+    base's answer;
+  - the window: the palette table (pure), the vertical reference (pure), and
+    on a real TfrmPanadapter -- a first report equal to the default palette
+    still takes effect, a reconnect keeps the picture and a fresh report
+    replaces it, and a radio switch inherits no radio-chosen palette while
+    the operator's own choice stands.
 *)
 
 interface
@@ -37,13 +43,18 @@ type
       procedure Test_K4_NoReports_KnowsNothing;
       procedure Test_K4_MainAndSubAreSeparate;
       procedure Test_K4_FirstReportEqualToDefault_IsKnown;
-      procedure Test_K4_ReconnectForgetsTheLastSession;
+      procedure Test_K4_ReconnectHoldsTheLastSession;
       procedure Test_K4WithoutSpectrum_AnswersNothing;
       procedure Test_IC9700_InheritsTheBaseAnswer;
       procedure Test_EveryRegisteredRadio_FreshKnowsNothing;
       procedure Test_K4_LiveDisplay_FollowsTheLCDOnly;
       procedure Test_UnknownLive_ResolvesToTodaysDefaults;
       procedure Test_PaletteForTone;
+      procedure Test_PaletteTable_BlueTone;
+      procedure Test_VerticalReference_RadioOrNoiseFloor;
+      procedure Test_Window_FirstReportEqualToDefault_TakesEffect;
+      procedure Test_Window_ReconnectHolds_FreshReportReplaces;
+      procedure Test_Window_RadioSwitch_InheritsNoRadioPalette;
    public
       procedure RunAllTests; override;
    end;
@@ -201,12 +212,12 @@ begin
    end;
 end;
 
-procedure TSpectrumRadioStateTests.Test_K4_ReconnectForgetsTheLastSession;
+procedure TSpectrumRadioStateTests.Test_K4_ReconnectHoldsTheLastSession;
 var
    r: TFactoryRadioBase;
    before, after: TSpectrumRadioState;
 begin
-   BeginTest('K4: a new link forgets the last session''s display reports');
+   BeginTest('K4: a new link HOLDS the last session''s display reports until the radio says otherwise');
    r := NewK4;
    CheckTrue(r <> nil, 'the registry built no K4');
 
@@ -227,13 +238,16 @@ begin
       r.Connect;
 
       after := r.SpectrumRadioState('A');
-      CheckTrue(SpectrumRadioStateKnowsNothing(after),
-                'pan A knows nothing after a reconnect: ' + Describe(after));
-      CheckTrue(SpectrumRadioStateKnowsNothing(r.SpectrumRadioState('B')),
-                'nor does pan B');
-      CheckTrue(after.Generation <> before.Generation,
-                'Generation moved, so a reader that applied the old values sees they are gone');
-      CheckTrue(after.Generation <> 0, 'and did not go back to 0');
+      CheckTrue(after.HasRef and (after.RefDb = -126),
+                'pan A still holds its REF after a reconnect: ' + Describe(after));
+      CheckTrue(after.HasScale and (after.ScaleDb = 80), 'and its scale');
+      CheckTrue(r.SpectrumRadioState('B').HasRef, 'pan B holds its REF too');
+      CheckEquals(before.Generation, after.Generation,
+                  'a reconnect is not a report: Generation did not move');
+
+      (* The radio's next answer replaces the held value. *)
+      r.ProcessMsg('#REF-110');
+      CheckEquals(-110, r.SpectrumRadioState('A').RefDb, 'a fresh report replaces it');
    finally
       r.Free;
    end;
@@ -383,10 +397,12 @@ begin
       CheckTrue(SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay('Y')),
                 'the Y mini-pan keeps the defaults');
 
-      (* A new link forgets them, so the window falls back to its defaults. *)
+      (* A new link HOLDS them, so the window keeps its picture. *)
       r.Connect;
-      CheckTrue(SpectrumLiveDisplayKnowsNothing(r.SpectrumLiveDisplay('A')),
-                'a reconnect leaves nothing to follow until the radio answers');
+      a := r.SpectrumLiveDisplay('A');
+      CheckTrue(a.HasWaterfallShare and Near(a.WaterfallShare, 0.3),
+                'a reconnect keeps the share');
+      CheckTrue(a.HasPalette and (a.Palette = sptTeal), 'and the palette');
    finally
       r.Free;
    end;
@@ -457,9 +473,249 @@ begin
    CheckEquals(PALETTE_GRAYSCALE, PanadapterPaletteForTone(sptGray), 'gray');
    CheckEquals(PALETTE_HEATMAP, PanadapterPaletteForTone(sptColour), 'colour');
    CheckEquals(PALETTE_BLUEGREEN, PanadapterPaletteForTone(sptTeal), 'teal');
-   CheckEquals(PALETTE_FIREICE, PanadapterPaletteForTone(sptBlue),
-               'blue -- PROVISIONAL, see docs/PANADAPTER_LCL_DESIGN.md 10.5');
+   CheckEquals(PALETTE_BLUE, PanadapterPaletteForTone(sptBlue), 'blue');
    CheckEquals(PALETTE_SEPIA, PanadapterPaletteForTone(sptSepia), 'sepia');
+end;
+
+function LutRed(AColour: LongWord): Integer;
+begin
+   Result := (AColour shr 16) and $FF;
+end;
+
+function LutGreen(AColour: LongWord): Integer;
+begin
+   Result := (AColour shr 8) and $FF;
+end;
+
+function LutBlue(AColour: LongWord): Integer;
+begin
+   Result := AColour and $FF;
+end;
+
+(* The table is $00RRGGBB (the bitmap's layout), not a TColor. *)
+procedure TSpectrumRadioStateTests.Test_PaletteTable_BlueTone;
+var
+   p, i: Integer;
+   c, prev: LongWord;
+   tone: TSpectrumPaletteTone;
+   bad: string;
+begin
+   BeginTest('Palette table: every palette starts at black; Blue is blue-led and never darkens; no tone is Fire-Ice');
+   bad := '';
+
+   for p := 0 to PALETTE_COUNT - 1 do
+      begin
+      if PanadapterPaletteColour(p, 0) <> 0 then
+         begin
+         bad := bad + 'palette ' + IntToStr(p) + ' entry 0 is not black; ';
+         end;
+      end;
+
+   CheckEquals('', bad, 'the noise floor must not flood the waterfall');
+
+   prev := PanadapterPaletteColour(PALETTE_BLUE, 0);
+
+   for i := 1 to 255 do
+      begin
+      c := PanadapterPaletteColour(PALETTE_BLUE, i);
+
+      if (LutBlue(c) < LutGreen(c)) or (LutBlue(c) < LutRed(c)) then
+         begin
+         bad := bad + 'entry ' + IntToStr(i) + ' is not blue-led; ';
+         end;
+
+      if (LutRed(c) < LutRed(prev)) or (LutGreen(c) < LutGreen(prev)) or (LutBlue(c) < LutBlue(prev)) then
+         begin
+         bad := bad + 'entry ' + IntToStr(i) + ' is darker than the one below; ';
+         end;
+
+      prev := c;
+      end;
+
+   CheckEquals('', bad, 'the Blue tone');
+
+   c := PanadapterPaletteColour(PALETTE_BLUE, 255);
+   CheckEquals(150, LutRed(c), 'top of Blue: red 150');
+   CheckEquals(250, LutGreen(c), 'top of Blue: green 250');
+   CheckEquals(255, LutBlue(c), 'top of Blue: blue 255 -- a pale blue-white');
+
+   (* A dark run, as every palette here has: a quarter of the way up is still
+      dark, so the noise floor is not already bright. *)
+   c := PanadapterPaletteColour(PALETTE_BLUE, 64);
+   CheckTrue(LutBlue(c) <= 80, 'a quarter of the way up is still dark blue');
+
+   (* Fire-Ice is the operator's own; the radio never selects it. *)
+   for tone := Low(TSpectrumPaletteTone) to High(TSpectrumPaletteTone) do
+      begin
+      if PanadapterPaletteForTone(tone) = PALETTE_FIREICE then
+         begin
+         bad := bad + 'tone ' + IntToStr(Ord(tone)) + ' maps to Fire-Ice; ';
+         end;
+      end;
+
+   CheckEquals('', bad, 'no radio tone selects Fire-Ice');
+end;
+
+(* QK4: minDb = REF, maxDb = REF + SCALE, no margin.  Unknown: the window's
+   own model, exactly. *)
+procedure TSpectrumRadioStateTests.Test_VerticalReference_RadioOrNoiseFloor;
+var
+   d: TSpectrumDisplayDefaults;
+   live: TSpectrumLiveDisplay;
+begin
+   BeginTest('Vertical reference: the radio''s REF when stated, else the frame''s noise floor');
+   d := MakeSpectrumDisplayDefaults(80, 10, 150, 10.0, 0.5, True);
+   live := SpectrumLiveDisplayUnknown;
+
+   CheckTrue(SpectrumReferenceDb(live, -125.5) = -125.5,
+             'unknown: a row is stored against the frame''s noise floor');
+   CheckTrue(SpectrumTraceFloorDb(d, live, -125.5) = -135.5,
+             'unknown: the trace starts RefMarginDb below the noise floor, as always');
+
+   live.HasRef := True;
+   live.RefDb := -110;
+   CheckTrue(SpectrumReferenceDb(live, -125.5) = -110, 'known: a row is stored against REF');
+   CheckTrue(SpectrumTraceFloorDb(d, live, -125.5) = -110,
+             'known: the trace starts AT REF, no margin (QK4)');
+   CheckFalse(SpectrumLiveDisplayKnowsNothing(live), 'a REF is something known');
+
+   live := SpectrumLiveDisplayUnknown;
+   live.HasScale := True;
+   live.ScaleDb := 50;
+   CheckFalse(SpectrumLiveDisplayKnowsNothing(live), 'so is a scale');
+end;
+
+(* Attach a radio to a real, unshown panadapter.  The refresh tick is called
+   directly: it is the path that applies the radio's live display. *)
+procedure Tick(AForm: TfrmPanadapter);
+begin
+   AForm.HandleRefreshTimer(nil);
+end;
+
+procedure OperatorPicks(AForm: TfrmPanadapter; APalette: Integer);
+begin
+   AForm.cboPalette.ItemIndex := APalette;
+   AForm.HandlePaletteChange(nil);
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_FirstReportEqualToDefault_TakesEffect;
+var
+   form: TfrmPanadapter;
+   r: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: the first #WFC, even one naming the default palette, replaces the operator''s pick');
+   r := NewK4;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      CheckEquals(PALETTE_COUNT, form.cboPalette.Items.Count, 'the combo holds every palette');
+      CheckEquals('Blue', form.cboPalette.Items[PALETTE_BLUE], 'Blue is appended last');
+
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      OperatorPicks(form, PALETTE_GRAYSCALE);
+      Tick(form);
+      CheckEquals(PALETTE_GRAYSCALE, form.cboPalette.ItemIndex,
+                  'nothing reported: the operator''s pick stands');
+
+      (* #WFC1 is colour, which is the window's own default palette. *)
+      r.ProcessMsg('#WFC1');
+      Tick(form);
+      CheckEquals(PALETTE_HEATMAP, form.cboPalette.ItemIndex,
+                  'the first report applies, though it equals the default');
+
+      r.ProcessMsg('#WFC3');
+      Tick(form);
+      CheckEquals(PALETTE_BLUE, form.cboPalette.ItemIndex, '#WFC3 is the Blue palette');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_ReconnectHolds_FreshReportReplaces;
+var
+   form: TfrmPanadapter;
+   r: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: a K4 reconnect keeps the picture; the radio''s next report replaces it');
+   r := NewK4;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      r.ProcessMsg('#WFC0');
+      Tick(form);
+      CheckEquals(PALETTE_GRAYSCALE, form.cboPalette.ItemIndex, 'precondition: gray');
+
+      (* No address: the attempt goes nowhere, but it is a new link. *)
+      r.Connect;
+      Tick(form);
+      CheckEquals(PALETTE_GRAYSCALE, form.cboPalette.ItemIndex,
+                  'after the reconnect the window still draws gray');
+
+      (* Close and reopen: the radio holds, so a re-attach gets it back. *)
+      form.DetachRadio;
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      Tick(form);
+      CheckEquals(PALETTE_GRAYSCALE, form.cboPalette.ItemIndex,
+                  'and after a re-attach to the same radio');
+
+      r.ProcessMsg('#WFC4');
+      Tick(form);
+      CheckEquals(PALETTE_SEPIA, form.cboPalette.ItemIndex, 'a fresh report replaces it');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_RadioSwitch_InheritsNoRadioPalette;
+var
+   form: TfrmPanadapter;
+   first, second, icom: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: a radio switch inherits no radio-chosen palette; the operator''s choice stands');
+   first := NewK4;
+   second := NewK4;
+   icom := uRadioRegistry.CreateInstance(IC9700);
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      CheckTrue(icom <> nil, 'the registry built no IC-9700');
+
+      if icom = nil then
+         begin
+         Exit;
+         end;
+
+      form.AttachRadio(first, first.PrimarySpectrumSourceId);
+      first.ProcessMsg('#WFC4');
+      Tick(form);
+      CheckEquals(PALETTE_SEPIA, form.cboPalette.ItemIndex, 'precondition: the first K4 chose sepia');
+
+      (* A different K4 -- a profile switch builds a new object -- that has
+         reported nothing. *)
+      form.DetachRadio;
+      form.AttachRadio(second, second.PrimarySpectrumSourceId);
+      CheckEquals(PALETTE_DEFAULT, form.cboPalette.ItemIndex,
+                  'the first radio''s sepia is not inherited');
+      Tick(form);
+      CheckEquals(PALETTE_DEFAULT, form.cboPalette.ItemIndex,
+                  'and the new radio, knowing nothing, leaves the default');
+
+      (* The operator's own choice is not a radio's, and survives a switch. *)
+      OperatorPicks(form, PALETTE_FIREICE);
+      form.DetachRadio;
+      form.AttachRadio(icom, icom.PrimarySpectrumSourceId);
+      Tick(form);
+      CheckEquals(PALETTE_FIREICE, form.cboPalette.ItemIndex,
+                  'the operator''s Fire-Ice stands across a switch');
+   finally
+      form.Free;
+      first.Free;
+      second.Free;
+      icom.Free;
+   end;
 end;
 
 procedure TSpectrumRadioStateTests.RunAllTests;
@@ -467,13 +723,18 @@ begin
    Test_K4_NoReports_KnowsNothing;
    Test_K4_MainAndSubAreSeparate;
    Test_K4_FirstReportEqualToDefault_IsKnown;
-   Test_K4_ReconnectForgetsTheLastSession;
+   Test_K4_ReconnectHoldsTheLastSession;
    Test_K4WithoutSpectrum_AnswersNothing;
    Test_IC9700_InheritsTheBaseAnswer;
    Test_EveryRegisteredRadio_FreshKnowsNothing;
    Test_K4_LiveDisplay_FollowsTheLCDOnly;
    Test_UnknownLive_ResolvesToTodaysDefaults;
    Test_PaletteForTone;
+   Test_PaletteTable_BlueTone;
+   Test_VerticalReference_RadioOrNoiseFloor;
+   Test_Window_FirstReportEqualToDefault_TakesEffect;
+   Test_Window_ReconnectHolds_FreshReportReplaces;
+   Test_Window_RadioSwitch_InheritsNoRadioPalette;
 end;
 
 end.

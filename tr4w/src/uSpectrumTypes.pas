@@ -122,7 +122,9 @@ type
       real settings.  A field whose flag is False means nothing.
 
       Generation moves on EVERY accepted report for this source, including one
-      that repeats the value already held, and on every reset (a new link).  It
+      that repeats the value already held.  A new link does NOT reset it, or
+      anything else here: a K4 holds its last report across a reconnect
+      (NY4I, 2026-11-03).  It
       never goes back to 0 once moved and never repeats, so a reader that keeps
       the last Generation it applied can tell "the radio said something" from
       "nothing new" without comparing every field.  It is not a count: it
@@ -150,7 +152,7 @@ type
       ColourRange: Integer;           // waterfall colour range, radio's units
       HasColourMode: Boolean;
       ColourMode: Integer;            // waterfall colour scheme, radio's units
-      Generation: Integer;            // see above; 0 = never reported or reset
+      Generation: Integer;            // see above; 0 = never reported
    end;
 
    (* A WATERFALL COLOUR SCHEME, NAMED BY ITS TONE.  Vendor-neutral: a radio
@@ -173,11 +175,22 @@ type
                             the reference, and the palette spans one scale
                             above that.  > 0.
       Palette               the colour scheme.
+      RefDb                 the radio's reference level for this source, dB on
+                            the frame's own scale: the BOTTOM of the radio's
+                            display window.  A radio under automatic reference
+                            reports it several times a second.
+      ScaleDb               the radio's display range, dB, from the reference
+                            upward.  CARRIED, NOT YET DRAWN: whether the
+                            window's scale slider yields to it is NY4I's
+                            decision (docs/PANADAPTER_LCL_DESIGN.md 10.5).
 
       No Generation: the window applies a value only when it differs from the
       one it last applied, because a radio under AutoRef reports its reference
       several times a second and each report would otherwise re-colour the
-      whole history. *)
+      whole history.  The reference is never a re-colour trigger at all: each
+      waterfall row is stored relative to the reference in force when it was
+      captured (SpectrumReferenceDb), so a new reference reaches new rows
+      only. *)
    TSpectrumLiveDisplay = record
       HasWaterfallShare: Boolean;
       WaterfallShare: Single;
@@ -185,6 +198,10 @@ type
       ColourFloorOfScale: Single;
       HasPalette: Boolean;
       Palette: TSpectrumPaletteTone;
+      HasRef: Boolean;
+      RefDb: Single;
+      HasScale: Boolean;
+      ScaleDb: Integer;
    end;
 
 (* Nothing known, Generation 0.  What a radio that reports nothing returns. *)
@@ -208,9 +225,23 @@ function SpectrumWaterfallColourMarginDb(const ADefaults: TSpectrumDisplayDefaul
                                          const ALive: TSpectrumLiveDisplay;
                                          AScaleDb: Integer): Single;
 
+(* THE VERTICAL REFERENCE, as pure functions -- the window's two uses of it.
+
+   SpectrumReferenceDb: what a waterfall row is stored relative to -- the
+   radio's reference when it states one, else the frame's own noise floor.
+   SpectrumTraceFloorDb: the bottom of the trace -- the radio's reference
+   EXACTLY when it states one (QK4: minDb = refLevel, maxDb = refLevel +
+   scale), else the noise floor less the defaults' RefMarginDb, which is what
+   the window has always drawn. *)
+function SpectrumReferenceDb(const ALive: TSpectrumLiveDisplay;
+                             AFrameNoiseDb: Single): Single;
+function SpectrumTraceFloorDb(const ADefaults: TSpectrumDisplayDefaults;
+                              const ALive: TSpectrumLiveDisplay;
+                              AFrameNoiseDb: Single): Single;
+
 (* True when no Has flag is set.  THIS, not equality with
-   SpectrumRadioStateUnknown, is "the radio has told us nothing": a reset
-   clears the flags but moves Generation on. *)
+   SpectrumRadioStateUnknown, is "the radio has told us nothing": the flags
+   are the facts, and Generation is only a change counter. *)
 function SpectrumRadioStateKnowsNothing(const AState: TSpectrumRadioState): Boolean;
 
 (* Generation + 1, wrapping from High(Integer) to 1 -- never back to 0, and
@@ -401,7 +432,32 @@ function SpectrumLiveDisplayKnowsNothing(const ALive: TSpectrumLiveDisplay): Boo
 begin
    Result := (not ALive.HasWaterfallShare)   and
              (not ALive.HasColourFloor)      and
-             (not ALive.HasPalette);
+             (not ALive.HasPalette)          and
+             (not ALive.HasRef)              and
+             (not ALive.HasScale);
+end;
+
+function SpectrumReferenceDb(const ALive: TSpectrumLiveDisplay;
+                             AFrameNoiseDb: Single): Single;
+begin
+   Result := AFrameNoiseDb;
+
+   if ALive.HasRef then
+      begin
+      Result := ALive.RefDb;
+      end;
+end;
+
+function SpectrumTraceFloorDb(const ADefaults: TSpectrumDisplayDefaults;
+                              const ALive: TSpectrumLiveDisplay;
+                              AFrameNoiseDb: Single): Single;
+begin
+   Result := AFrameNoiseDb - ADefaults.RefMarginDb;
+
+   if ALive.HasRef then
+      begin
+      Result := ALive.RefDb;
+      end;
 end;
 
 function SpectrumWaterfallShare(const ADefaults: TSpectrumDisplayDefaults;

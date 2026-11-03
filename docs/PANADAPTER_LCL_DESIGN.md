@@ -507,6 +507,12 @@ panadapter draws has changed.
 waterfall height, colour range and colour mode), and nothing else. See 10.5.
 `#WFC` is now parsed and asked.
 
+**UPDATED LATER 2026-11-03: the window also follows `#REF`** (the trace's
+bottom is the rig's reference, and each new waterfall row is stored against
+it), **the K4's blue tone has a palette of its own**, and **a reconnect keeps
+the picture** -- the radio holds what it last reported. `#SCL` is carried but
+NOT drawn: the scale slider's fate is NY4I's decision. See 10.6.
+
 **QK4 is the better reference here, and by a distance.** NY4I pointed at
 `c:\projects\qk4\src\models\radiostate\spectrumdisplaystate.cpp`, which parses
 **25** of these commands with a documented range apiece, and
@@ -655,12 +661,15 @@ path.
   under AutoRef and must not be mistaken for it).
 - **Stage 2 -- `TSpectrumRadioState`** (`uSpectrumTypes`, vendor-neutral): a
   `Has` flag per value, plus a `Generation` that moves on EVERY accepted report
-  (a repeat included) and on every reset, never back to 0. The virtual
+  (a repeat included), ~~and on every reset~~ (no reset since 2026-11-03,
+  10.6), never back to 0. The virtual
   `TFactoryRadioBase.SpectrumRadioState(sourceId)` answers "nothing known"; the
   Icoms and the Flex inherit it. `TK4Radio` records reports on the reading
   thread under its own `FDisplayStateLock` and returns them by value: source
-  `A` = main, `B` = sub, anything else (the `Y`/`Z` mini-pans) unknown. Cleared
-  at the top of every `Connect`; at link-up it asks
+  `A` = main, `B` = sub, anything else (the `Y`/`Z` mini-pans) unknown.
+  ~~Cleared at the top of every `Connect`~~ -- **held across a reconnect since
+  2026-11-03** (NY4I; 10.6), so a value stands until the radio reports a new
+  one. At link-up it asks
   `#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;` (`#WFC` since 2026-11-03, 10.5) on a
   line of its own beside `#SPN;` --
   **reads only**, and pinned so: a client `#REF` value freezes AutoRef, and
@@ -804,10 +813,11 @@ The 14-frame `k4pan-tiers-sample.bin` is cut from the sweep by
 
 NY4I saw a K4's waterfall height change on the rig and not in TR4W. **This is
 the first time the window reads the radio's display state.** Before this,
-nothing above the factory read `SpectrumRadioState`. That includes `#SCL` and
+nothing above the factory read `SpectrumRadioState`. ~~That includes `#SCL` and
 `#REF`: the window scales from its own slider and each frame's noise floor, and
-it still does. The window now follows **`#WFH`, `#WBS` and `#WFC` from the LCD
-ONLY** (NY4I). The external monitor's `#HWFH`, `#HWBS` and `#HWFC` reach no
+it still does.~~ **`#REF` is followed since later the same day (10.6); `#SCL` is
+carried and not drawn.** The window follows **`#WFH`, `#WBS` and `#WFC` from the
+LCD ONLY** (NY4I). The external monitor's `#HWFH`, `#HWBS` and `#HWFC` reach no
 window, and `#HWFC` is not decoded at all.
 
 **`#WFC`, plain.** The manual writes the LCD form as `#WFC$`. NY4I confirmed on
@@ -852,7 +862,9 @@ the window has always used. At 14 it is 28 dB, which is markedly brighter.
 **The scale in that formula is TR4W's slider, not the rig's `#SCL`.** The
 window still does not follow `#SCL`. So a rig at SCALE 50 and TR4W at 80
 colour differently at the same `#WBS`. "Unchanged at 5" holds only with the
-slider at 80. Following `#SCL` is a separate decision.
+slider at 80. Following `#SCL` is a separate decision, and it is the open fork
+in 10.6: QK4's colour window uses the RIG's scale, and making TR4W's do the
+same decides what the slider is for. The REF in it IS the rig's now (10.6).
 
 **This recolours differently from QK4.** QK4 stores each row's palette position
 as it was when captured, so a `#WBS` change recolours only new rows. TR4W keeps
@@ -864,11 +876,10 @@ teal, blue, sepia. The window's combo is Heat Map, Grayscale, Sepia,
 Blue-Green, Fire-Ice, and that order is kept: the combo index is what
 `bench_panadapter` drives, and the radio's numbering belongs to the radio.
 `PanadapterPaletteForTone` maps gray to Grayscale, colour to Heat Map, teal to
-Blue-Green and sepia to Sepia. It maps **blue to Fire-Ice PROVISIONALLY**.
-Fire-Ice is the only blue-led palette, but its top runs from white to red,
-which a blue tone does not. Whether to add a real blue-tone palette is for
-NY4I (`docs/BENCH_QUEUE.md`). The 2026-08-25 decision that "TR4W keeps its
-own palette" (10.2) is **reversed**.
+Blue-Green and sepia to Sepia. ~~It maps **blue to Fire-Ice PROVISIONALLY**.~~
+**Blue now maps to a sixth palette, Blue** (NY4I, later 2026-11-03; 10.6), and
+Fire-Ice stays as the operator's own choice that no radio tone selects. The
+2026-08-25 decision that "TR4W keeps its own palette" (10.2) is **reversed**.
 
 **How it reaches the window.** The window does this on every refresh tick
 (50 ms), frame or no frame:
@@ -878,13 +889,15 @@ own palette" (10.2) is **reversed**.
   `Generation`. Gating on `Generation` would re-colour the whole history on
   every push, and would undo the operator's combo choice every second.
 - An unknown value resolves to the defaults exactly: 0.5 and `RefMarginDb`.
-  That covers a radio that reports nothing, a K4 that has not answered, and
-  the reset at each reconnect. The pure resolvers are
+  That covers a radio that reports nothing and a K4 that has not answered
+  since it was built. ~~and the reset at each reconnect~~ -- there is no reset
+  any more: a reconnecting K4 holds its values (10.6). The pure resolvers are
   `SpectrumWaterfallShare` and `SpectrumWaterfallColourMarginDb`.
 - The palette is the exception: unknown leaves it alone. The operator's combo
   choice stands until the radio reports a **different** scheme.
 - Attach forgets what was last applied, so a first report equal to a default
-  still applies.
+  still applies. A palette the RADIO chose is also dropped back to the
+  default on attach (10.6), so a new radio never inherits it.
 
 **What happens to the history:**
 - **Colour range or colour mode**: `RenderWaterfall` re-colours every stored
@@ -904,6 +917,131 @@ translation), `uTestSpectrumRadioState` (LCD only, unknown resolves to the
 defaults, the anchors above, the tone mapping, and a registry walk in which
 every fresh radio claims no live display) and
 `uTestRadioSocketNoRead.Test_DisplayStateAskedOnConnect_ReadsOnly`.
+
+### 10.6 Blue tone, `#REF` followed, and the picture held across a reconnect (later 2026-11-03)
+
+NY4I decided the three items 10.5 left open and said to **do what QK4 does**.
+QK4 was read at `origin/development` `485a7c1` (2026-11-01); its checked-out
+branch at the time did not contain the waterfall commits.
+
+**1. The blue tone. QK4 HAS NO PALETTE TO COPY.** It draws ONE colour table
+for every `#WFC` value (`src/dsp/rhi_utils.h`, `generateWaterfallColorLUT`,
+used by both `panadapter_rhi.cpp` and `minipan_rhi.cpp`), and `#WFC` only
+labels a popup button (`displaypopupwidget.cpp`: `"WTR GRAY" .. "WTR SEPIA"`).
+So TR4W's sixth palette, **Blue** (`PALETTE_BLUE` = 5, appended so the combo's
+0..4 and `bench_panadapter` keep their meaning), is **TR4W's own design**:
+Sepia's tone curve with the hue moved to blue -- `b = 300t, g = 220t^2 + 30t,
+r = 150t^3`, clamped. It starts at black like every palette here, blue leads
+at every entry, no channel ever falls, and it ends at a pale blue-white
+(150, 250, 255). `sptBlue` maps to it; no tone maps to Fire-Ice. The table is
+now a pure function, `uPanadapterForm.PanadapterPaletteColour(palette,
+index)`, so `uTestSpectrumRadioState.Test_PaletteTable_BlueTone` pins it
+without a form. Whether it looks like the rig's own blue is a bench question.
+
+**QK4's one table against TR4W's Heat Map -- reported, not changed.** QK4's
+is black up to 0.10, then dark blue (b 0..51) to 0.25, royal blue (b 153) at
+0.40, blue-cyan (g 128, b 255) at 0.55, green at 0.70, yellow at 0.85, red at
+1.0. TR4W's Heat Map has no black run (b 0..40 to 0.25), reaches b 160 with
+g 30 at 0.40 and full cyan (g 255, b 255) at 0.55, then the same green,
+yellow and red. QK4's is the table its colour window was fitted against
+(photos of a K4D, 2026-10-30), and TR4W now uses the same window formula, so
+NY4I may want QK4's table for "colour". Gray, teal and sepia have no QK4
+counterpart at all. None was repainted.
+
+**2. `#REF` is followed; `#SCL` is carried and waiting on a decision.**
+`TSpectrumLiveDisplay` gains `HasRef`/`RefDb` and `HasScale`/`ScaleDb`, both
+counted by `SpectrumLiveDisplayKnowsNothing`. `K4LiveDisplay` fills them per
+receiver: `#REF` for pan A, `#REF$` for pan B, the one `#SCL` for both. The Y
+mini-pan still gets nothing (its levels sit near 0 dB in this stream, so the
+main receiver's REF would be wrong for it). The policy is two pure functions
+in `uSpectrumTypes`:
+- `SpectrumTraceFloorDb` -- the trace's bottom is REF **exactly** when the
+  radio states one (QK4 `updateDbRangeFromRefAndScale`: `minDb = refLevel`,
+  `maxDb = refLevel + scale`), else the noise floor less `RefMarginDb`, as
+  before. **Under AutoRef that drops the 10 dB margin**: the noise sits on the
+  bottom edge, as on the rig and in QK4.
+- `SpectrumReferenceDb` -- what a waterfall row is stored against: REF when
+  stated, else the frame's noise floor. The colour window then IS QK4's
+  `colorWindowFor`, `REF - SCALE x WBS / 40` over one SCALE.
+
+**A REF change re-colours NO history, and that is QK4's behaviour for the same
+reason.** Each row keeps the reference it was captured with, so a new REF
+reaches new rows only. QK4 `da384ee` made the same choice after its bench
+(2026-10-30) found that a live re-colour flashed the whole waterfall on every
+~1 dB AutoRef step. REF is therefore not a trigger in `ApplyLiveDisplay` at
+all; the trace reads it on the next paint. **A colour-range or scale change
+still re-colours the whole history** in TR4W, where QK4 recolours only new
+rows (`capturedByteFor`) -- the deliberate difference 10.5 records.
+
+TR4W's bins are on `#REF`'s scale as far as is measured: this stream carries
+real dB (int16 / 10) and its own noise floor read -125.5 against `#REF -126`
+(10.2). QK4's byte stream needed a measured 162 dB offset; TR4W's does not.
+
+**THE FORK -- what the slider is when the rig states a scale.** QK4's scale
+control (Shift + wheel) **sends `#SCL<n>;` to the radio**
+(`SpectrumController::adjustScaleFromWheel`, 5 dB a step) and draws only the
+rig's scale; there is no client-side scale. TR4W's slider is local and the K4
+display path has been reads-only. So "follow `#SCL`" decides the slider:
+- **(a) QK4 parity.** The slider writes `#SCL`; the rig's report drives the
+  trace and the colour window. The first CAT WRITE on this path, and it moves
+  the rig's own screen.
+- **(b) No write.** The rig's `#SCL` sets the slider whenever it CHANGES; the
+  operator's slider stands until the rig reports a different scale -- the rule
+  the palette already follows. TR4W can then differ from the rig until the next
+  knob turn.
+- **(c) Disabled.** While the rig states a scale the slider is greyed out and
+  follows it.
+- **(d) An offset.** The drawn scale is the rig's `#SCL` plus the slider's
+  delta from its default, so the operator can widen or narrow TR4W's picture
+  relative to the rig's while still following every change made at the rig.
+  The slider would then need to show a signed delta, not a dB range.
+**Nothing is built for any of them yet.** The trace height and the colour
+window still use the slider, so 10.5's "the scale in that formula is the
+slider" still holds. Recommended: (b), because it changes nothing the operator
+did not touch and adds no write; (a) if NY4I wants TR4W to drive the rig's
+display.
+
+**`#REF$` is not asked at connect** (unchanged): QK4 learns the sub's REF from
+the radio's `RDY` state dump, which TR4W does not send. Under AutoRef the K4
+pushes it; with AutoRef off pan B keeps the noise-floor scaling until the sub's
+REF is changed at the rig. Adding `#REF$;` to `K4_DISPLAY_QUERIES` would be a
+read and is allowed; it is left for the bench.
+
+**3. A reconnect keeps the picture (NY4I).** `TK4Radio.Connect` no longer
+clears the display state, and `ResetK4DisplayState` is deleted -- nothing
+called it any more. A value stands until the radio reports a new one, and the
+connect-time queries ask for one. The window was never told about a reconnect
+-- nothing on the link-down path detaches or re-attaches it (the only
+re-opener, `uPanadapterRestore`, runs once from start-up and opens each slot at
+most once) -- so holding the state in the radio is the whole fix.
+
+**Where TR4W departs from QK4, deliberately:** a reconnect holds (QK4 resets
+REF, SCALE and the colour range); a SCALE or `#WBS` change re-colours the
+whole history (QK4: new rows only); and with `#WBS` unknown the waterfall keeps
+`RefMarginDb` = 10 dB, where QK4's `colorWindowFor` assumes `#WBS` 14 (28 dB
+at SCALE 80). **QK4 does the opposite**: its
+`PanadapterRhiWidget::clear()` puts REF, SCALE and the colour range back to
+its defaults at the end of a session ("show the default, not the last
+radio's") and keeps only the split. TR4W follows NY4I's decision, not QK4's.
+
+**A different radio never inherits.** A radio switch is a different
+`TK4Radio` -- a profile change and Reset Radio Ports both rebuild -- which
+starts from `K4DisplayStateUnknown`. In the window, attach still forgets what
+was last applied, which costs a held picture nothing: re-attaching the SAME
+radio gets its values back on the first refresh tick, before the first frame
+is drawn. A palette the radio chose (`FPaletteFromRadio`) goes back to the
+default on attach; one the operator chose stays. **Known gap, reported not
+fixed:** a profile change or Reset Radio Ports on the same K4 builds a new
+object, so the window shows the defaults until the rebuilt radio answers its
+connect queries (how long that looks is a bench question).
+
+Pinned by `uTestK4DisplayReport.Test_LiveDisplay_CarriesRefPerReceiverAndSharedScale`
+and, in `uTestSpectrumRadioState`: `Test_K4_ReconnectHoldsTheLastSession`,
+`Test_PaletteTable_BlueTone`, `Test_VerticalReference_RadioOrNoiseFloor`,
+`Test_Window_FirstReportEqualToDefault_TakesEffect`,
+`Test_Window_ReconnectHolds_FreshReportReplaces` and
+`Test_Window_RadioSwitch_InheritsNoRadioPalette` (the last three on a real,
+unshown `TfrmPanadapter`).
 
 ## 12. Handoff: what lands on `fpc`, not here
 

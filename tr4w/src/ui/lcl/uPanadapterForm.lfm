@@ -66,6 +66,7 @@ object frmPanadapter: TfrmPanadapter
         'Sepia'
         'Blue-Green'
         'Fire-Ice'
+        'Blue'
       )
       Style = csDropDownList
       TabOrder = 0

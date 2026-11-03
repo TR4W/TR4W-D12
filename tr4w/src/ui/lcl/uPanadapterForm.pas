@@ -108,7 +108,14 @@ unit uPanadapterForm;
   radio's SpectrumLiveDisplay (ApplyLiveDisplay).  The operator's combo still
   works; it stands until the radio next reports a DIFFERENT scheme.  A radio
   that reports none -- every radio but the K4, and a K4 that has not answered
-  -- draws exactly as before.
+  -- draws exactly as before.  A SIXTH palette, Blue, is the K4's blue tone as
+  TR4W draws it (appended, so the combo's 0..4 are unchanged); Fire-Ice is the
+  operator's alone and no radio tone selects it.
+
+  AND THE RADIO'S REFERENCE (2026-11-03).  When the radio states one (#REF on
+  a K4, held across a reconnect), the trace's bottom IS it, with no margin,
+  and each new waterfall row is stored relative to it -- see DisplayRange and
+  PushWaterfallRow.  The scale is still the slider's.
 }
 
 interface
@@ -197,6 +204,11 @@ type
       FLive: TSpectrumLiveDisplay;
       FWfShare: Single;
       FColourMarginDb: Single;
+      (* True while the palette in force is one the RADIO chose, False once
+         the operator picks one.  An attach goes back to PALETTE_DEFAULT only
+         in the first case, so a new radio never inherits the old radio's
+         scheme while the operator's own choice still stands. *)
+      FPaletteFromRadio: Boolean;
       FPaused: Boolean;
       FLUT: array[0..255] of LongWord;
 
@@ -323,13 +335,23 @@ const
    PALETTE_GRAYSCALE = 1;
    PALETTE_SEPIA = 2;
    PALETTE_BLUEGREEN = 3;
-   PALETTE_FIREICE = 4;
+   PALETTE_FIREICE = 4;      // the operator's only: no radio tone selects it
+   PALETTE_BLUE = 5;         // appended, so 0..4 keep their meaning
+   PALETTE_COUNT = 6;
 
-(* The palette this window draws for a radio's colour scheme.  sptBlue maps to
-   Fire-Ice PROVISIONALLY: it is the only blue-led palette here, but its top
-   runs white to red, which a "blue tone" does not -- see
-   docs/PANADAPTER_LCL_DESIGN.md section 10.5. *)
+   (* What a window shows before anything chooses, and what it goes back to
+      when the radio that chose its palette is replaced by another. *)
+   PALETTE_DEFAULT = PALETTE_HEATMAP;
+
+(* The palette this window draws for a radio's colour scheme: gray to
+   Grayscale, colour to Heat Map, teal to Blue-Green, blue to Blue, sepia to
+   Sepia.  Fire-Ice is never the answer. *)
 function PanadapterPaletteForTone(ATone: TSpectrumPaletteTone): Integer;
+
+(* Entry AIndex (0..255) of palette APalette, as the bitmap stores it:
+   $00RRGGBB, NOT a TColor.  Pure, so the table can be tested without a form.
+   An unknown palette is the Heat Map, as the combo's first entry. *)
+function PanadapterPaletteColour(APalette, AIndex: Integer): LongWord;
 
 { ONE PANADAPTER PER RADIO.  Slot 1 is Radio 1, slot 2 is Radio 2 -- the same
   shape the dupe sheets and the radio panels already use, and for the same
@@ -559,7 +581,8 @@ begin
    FHaveRender := False;
    FShareDirty := False;
    FWantSource := 'A';
-   FPalette := PALETTE_HEATMAP;
+   FPalette := PALETTE_DEFAULT;
+   FPaletteFromRadio := False;
    (* NO SCALE UNTIL A RADIO STATES ONE.  The designed slider carries no range
       (the LCL defaults) and is DISABLED, so it cannot step from an invented
       value; ApplyDisplayDefaults gives it the radio's range and default and
@@ -775,7 +798,7 @@ begin
          end;
       sptBlue:
          begin
-         Result := PALETTE_FIREICE;     // provisional -- see the declaration
+         Result := PALETTE_BLUE;
          end;
       sptSepia:
          begin
@@ -808,141 +831,172 @@ begin
    BuildPalette;
 end;
 
-procedure TfrmPanadapter.BuildPalette;
+function Clamp255(v: Integer): Integer;
+begin
+   if v < 0 then
+      begin
+      Result := 0;
+      end
+   else if v > 255 then
+      begin
+      Result := 255;
+      end
+   else
+      begin
+      Result := v;
+      end;
+end;
+
+function PanadapterPaletteColour(APalette, AIndex: Integer): LongWord;
 var
-   i: Integer;
    t, u: Single;
    r, g, b: Integer;
+begin
+   if AIndex < 0 then
+      begin
+      AIndex := 0;
+      end;
 
-   function Clamp255(v: Integer): Integer;
-   begin
-      if v < 0 then
+   if AIndex > 255 then
+      begin
+      AIndex := 255;
+      end;
+
+   t := AIndex / 255.0;
+   r := 0;
+   g := 0;
+   b := 0;
+
+   case APalette of
+      PALETTE_GRAYSCALE:
          begin
-         Result := 0;
-         end
-      else if v > 255 then
+         r := Round(255 * t);
+         g := r;
+         b := r;
+         end;
+
+      PALETTE_SEPIA:
          begin
-         Result := 255;
-         end
+         r := Clamp255(Round(300 * t));
+         g := Clamp255(Round(220 * t * t + 30 * t));
+         b := Clamp255(Round(150 * t * t * t));
+         end;
+
+      PALETTE_BLUE:
+         begin
+         (* THE K4'S "BLUE TONE", AS TR4W DRAWS IT -- TR4W's own design, not a
+            copy.  QK4 has no palette to copy: it draws ONE colour table
+            (src/dsp/rhi_utils.h, generateWaterfallColorLUT) whatever #WFC
+            says, and uses #WFC only to label a button ("WTR BLUE").  So this
+            is Sepia's tone curve with the hue moved from warm to blue: the
+            same dark run, the same rise, blue the leading channel throughout
+            (300t >= 220t^2 + 30t >= 150t^3 on 0..1), from black to a pale
+            blue-white.  Whether it matches the rig's own blue is a bench
+            question (docs/BENCH_QUEUE.md). *)
+         r := Clamp255(Round(150 * t * t * t));
+         g := Clamp255(Round(220 * t * t + 30 * t));
+         b := Clamp255(Round(300 * t));
+         end;
+
+      PALETTE_BLUEGREEN:
+         begin
+         r := 0;
+         g := Round(255 * t);
+         b := Clamp255(Round(210 * (1 - t) * t * 4));
+         end;
+
+      PALETTE_FIREICE:
+         begin
+         // BLACK first, then blue -> white -> red.  The obvious spelling of
+         // "ice to fire" starts at full blue, and that is wrong for a
+         // waterfall: almost every pixel is noise floor, so a bright colour
+         // at t=0 floods the display and buries the signals it exists to
+         // show.  Proven on the bench -- the first version rendered a solid
+         // blue-white sheet.  EVERY palette here starts at black.
+         // The dark run reaches 0.45 for the same reason the heat map's does:
+         // at an 80 dB scale the noise floor lands around t = 0.1..0.3, so a
+         // palette that is already saturated there has nothing left to show a
+         // weak signal with.  Measured, not guessed -- the first version
+         // saturated by 0.33 and the noise came out solid blue.
+         if t < 0.45 then
+            begin
+            u := t / 0.45;                // black -> blue
+            b := Round(255 * u);
+            end
+         else if t < 0.75 then
+            begin
+            u := (t - 0.45) / 0.30;       // blue -> white
+            r := Round(255 * u);
+            g := Round(255 * u);
+            b := 255;
+            end
+         else
+            begin
+            u := (t - 0.75) / 0.25;       // white -> red
+            r := 255;
+            g := Round(255 * (1 - u));
+            b := Round(255 * (1 - u));
+            end;
+         end;
+
       else
          begin
-         Result := v;
+         // Heat map: black -> blue -> cyan -> green -> yellow -> red.
+         // The stops are TR4QT's, which are in turn modelled on the K4's.
+         if t < 0.25 then
+            begin
+            u := t / 0.25;
+            b := Round(40 * u);
+            end
+         else if t < 0.4 then
+            begin
+            u := (t - 0.25) / 0.15;
+            g := Round(30 * u);
+            b := 40 + Round(120 * u);
+            end
+         else if t < 0.55 then
+            begin
+            u := (t - 0.4) / 0.15;
+            g := 30 + Round(225 * u);
+            b := 160 + Round(95 * u);
+            end
+         else if t < 0.7 then
+            begin
+            u := (t - 0.55) / 0.15;
+            g := 255;
+            b := Round(255 * (1 - u));
+            end
+         else if t < 0.85 then
+            begin
+            u := (t - 0.7) / 0.15;
+            r := Round(255 * u);
+            g := 255;
+            end
+         else
+            begin
+            u := (t - 0.85) / 0.15;
+            r := 255;
+            g := Round(255 * (1 - u));
+            end;
          end;
    end;
 
+   // 32-bit LCL bitmaps on Windows are BGRA in memory, so the little-endian
+   // LongWord is $00RRGGBB -- NOT a TColor, which is $00BBGGRR.  Writing a
+   // TColor straight in swaps red and blue, which is obvious the moment you
+   // look at a heat map, and is why the bench writes a PNG.
+   Result := (LongWord(Clamp255(r)) shl 16) or
+             (LongWord(Clamp255(g)) shl 8) or
+              LongWord(Clamp255(b));
+end;
+
+procedure TfrmPanadapter.BuildPalette;
+var
+   i: Integer;
 begin
    for i := 0 to 255 do
       begin
-      t := i / 255.0;
-      r := 0;
-      g := 0;
-      b := 0;
-
-      case FPalette of
-         PALETTE_GRAYSCALE:
-            begin
-            r := Round(255 * t);
-            g := r;
-            b := r;
-            end;
-
-         PALETTE_SEPIA:
-            begin
-            r := Clamp255(Round(300 * t));
-            g := Clamp255(Round(220 * t * t + 30 * t));
-            b := Clamp255(Round(150 * t * t * t));
-            end;
-
-         PALETTE_BLUEGREEN:
-            begin
-            r := 0;
-            g := Round(255 * t);
-            b := Clamp255(Round(210 * (1 - t) * t * 4));
-            end;
-
-         PALETTE_FIREICE:
-            begin
-            // BLACK first, then blue -> white -> red.  The obvious spelling of
-            // "ice to fire" starts at full blue, and that is wrong for a
-            // waterfall: almost every pixel is noise floor, so a bright colour
-            // at t=0 floods the display and buries the signals it exists to
-            // show.  Proven on the bench -- the first version rendered a solid
-            // blue-white sheet.  EVERY palette here starts at black.
-            // The dark run reaches 0.45 for the same reason the heat map's does:
-            // at an 80 dB scale the noise floor lands around t = 0.1..0.3, so a
-            // palette that is already saturated there has nothing left to show a
-            // weak signal with.  Measured, not guessed -- the first version
-            // saturated by 0.33 and the noise came out solid blue.
-            if t < 0.45 then
-               begin
-               u := t / 0.45;                // black -> blue
-               b := Round(255 * u);
-               end
-            else if t < 0.75 then
-               begin
-               u := (t - 0.45) / 0.30;       // blue -> white
-               r := Round(255 * u);
-               g := Round(255 * u);
-               b := 255;
-               end
-            else
-               begin
-               u := (t - 0.75) / 0.25;       // white -> red
-               r := 255;
-               g := Round(255 * (1 - u));
-               b := Round(255 * (1 - u));
-               end;
-            end;
-
-         else
-            begin
-            // Heat map: black -> blue -> cyan -> green -> yellow -> red.
-            // The stops are TR4QT's, which are in turn modelled on the K4's.
-            if t < 0.25 then
-               begin
-               u := t / 0.25;
-               b := Round(40 * u);
-               end
-            else if t < 0.4 then
-               begin
-               u := (t - 0.25) / 0.15;
-               g := Round(30 * u);
-               b := 40 + Round(120 * u);
-               end
-            else if t < 0.55 then
-               begin
-               u := (t - 0.4) / 0.15;
-               g := 30 + Round(225 * u);
-               b := 160 + Round(95 * u);
-               end
-            else if t < 0.7 then
-               begin
-               u := (t - 0.55) / 0.15;
-               g := 255;
-               b := Round(255 * (1 - u));
-               end
-            else if t < 0.85 then
-               begin
-               u := (t - 0.7) / 0.15;
-               r := Round(255 * u);
-               g := 255;
-               end
-            else
-               begin
-               u := (t - 0.85) / 0.15;
-               r := 255;
-               g := Round(255 * (1 - u));
-               end;
-            end;
-      end;
-
-      // 32-bit LCL bitmaps on Windows are BGRA in memory, so the little-endian
-      // LongWord is $00RRGGBB -- NOT a TColor, which is $00BBGGRR.  Writing a
-      // TColor straight in swaps red and blue, which is obvious the moment you
-      // look at a heat map, and is why the bench writes a PNG.
-      FLUT[i] := (LongWord(Clamp255(r)) shl 16) or
-                 (LongWord(Clamp255(g)) shl 8) or
-                  LongWord(Clamp255(b));
+      FLUT[i] := PanadapterPaletteColour(FPalette, i);
       end;
 end;
 
@@ -979,10 +1033,29 @@ begin
 
    (* A NEW ATTACH KNOWS NOTHING OF THE RADIO'S LIVE DISPLAY.  Back to the
       defaults, and FLive forgotten, so the first refresh tick applies every
-      value the radio has reported -- including one equal to a default. *)
+      value the radio has reported -- including one equal to a default.
+
+      THIS IS WHAT KEEPS A RADIO SWITCH CLEAN, and it costs a held picture
+      nothing: the values are HELD BY THE RADIO (a K4 keeps them across a
+      reconnect), so re-attaching the same radio gets them back on the first
+      tick, before the first frame is drawn (FHaveRender is cleared by the
+      caller).  A different radio is a different object that has reported
+      nothing, so it draws with its own defaults.  A palette the old radio
+      chose goes too; one the operator chose stays. *)
    FLive := SpectrumLiveDisplayUnknown;
    FWfShare := SpectrumWaterfallShare(FDisplay, FLive);
    FColourMarginDb := FDisplay.RefMarginDb;
+
+   if FPaletteFromRadio then
+      begin
+      FPaletteFromRadio := False;
+
+      if FPalette <> PALETTE_DEFAULT then
+         begin
+         SelectPalette(PALETTE_DEFAULT);
+         marginChanged := True;   // re-colour the history in the new palette
+         end;
+      end;
 
    if rangeChanged then
       begin
@@ -1009,11 +1082,12 @@ end;
 
    Each value is applied only when it differs from the one in force, so the
    steady stream of reports that change nothing here costs one comparison.
-   An unknown value -- a radio that reports none, a K4 that has not answered,
-   a K4 whose link has just been reset -- resolves to FDisplay's, exactly what
-   the window drew before it followed anything.  The palette is the exception:
-   unknown leaves it where it is, so the operator's choice is not undone by a
-   reconnect.
+   An unknown value -- a radio that reports none, a K4 that has not answered
+   since it was built -- resolves to FDisplay's, exactly what the window drew
+   before it followed anything.  A K4 that RECONNECTS is not unknown: it holds
+   what it last reported until it reports again, so the picture holds too.
+   The palette is the exception: unknown leaves it where it is, so the
+   operator's choice is not undone.
 
    WHAT HAPPENS TO THE HISTORY.  A colour floor or palette change re-colours
    every stored row from its dB (RenderWaterfall), as the scale slider does:
@@ -1054,8 +1128,17 @@ begin
       ((not FLive.HasPalette) or (FLive.Palette <> ALive.Palette)) then
       begin
       SelectPalette(PanadapterPaletteForTone(ALive.Palette));
+      FPaletteFromRadio := True;
       recolour := True;
       end;
+
+   (* THE REFERENCE IS NOT A TRIGGER.  A K4 under AutoRef pushes #REF several
+      times a second.  It reaches the trace through DisplayRange on the next
+      paint, and the waterfall through the NEXT row only (PushWaterfallRow
+      stores each row relative to the reference in force when it was
+      captured), so a REF step re-colours no history -- QK4 da384ee, whose
+      bench (2026-10-30) found a live re-colour flashed the whole waterfall on
+      every ~1 dB AutoRef step.  Nothing to compare, nothing to re-render. *)
 
    FLive := ALive;
 
@@ -1085,10 +1168,13 @@ end;
 
 procedure TfrmPanadapter.DisplayRange(out AMinDb, ARangeDb: Single);
 begin
-   // Reference at the bottom, scale upward.  The reference is the frame's own
-   // noise floor (on a K4, AutoRef makes #REF equal it), less the radio's
-   // stated margin so noise texture below the floor stays visible.
-   AMinDb := FRenderNoiseDb - FDisplay.RefMarginDb;
+   (* Reference at the bottom, scale upward.  The radio's own reference when it
+      states one -- exactly, with no margin, as QK4 and the K4's own screen
+      draw it -- else the frame's noise floor less the radio's stated margin,
+      so noise texture below the floor stays visible (SpectrumTraceFloorDb).
+      The scale is still the slider's: following the radio's #SCL waits on
+      NY4I's decision about the slider. *)
+   AMinDb := SpectrumTraceFloorDb(FDisplay, FLive, FRenderNoiseDb);
    ARangeDb := FScaleDb;
 end;
 
@@ -1223,6 +1309,7 @@ end;
 
 procedure TfrmPanadapter.PushWaterfallRow(ABinsPerPixel: Double);
 var
+   reference: Single;
    x, y: Integer;
    bytesPerLine: Integer;
    row: PLongWordArray;
@@ -1266,9 +1353,15 @@ begin
    // "How far above the floor this was, when it was measured" is both stable
    // over time and still fully re-renderable when the palette or scale changes,
    // which is the property the dB history exists for.
+   //
+   // THE REFERENCE IS THE RADIO'S WHEN IT STATES ONE (SpectrumReferenceDb):
+   // the colour window is then REF - scale x colour floor over one scale,
+   // QK4's colorWindowFor, and a later REF reaches only the rows after it.
+   reference := SpectrumReferenceDb(FLive, FRenderNoiseDb);
+
    for x := 0 to FWfW - 1 do
       begin
-      FWfDb[x] := PeakForPixel(x, ABinsPerPixel) - FRenderNoiseDb;
+      FWfDb[x] := PeakForPixel(x, ABinsPerPixel) - reference;
       end;
 
    if FWaterfall = nil then
@@ -2306,6 +2399,10 @@ end;
 
 procedure TfrmPanadapter.HandlePaletteChange(Sender: TObject);
 begin
+   (* The operator chose: this palette is theirs, not the radio's, and a later
+      attach keeps it (ApplyDisplayDefaults). *)
+   FPaletteFromRadio := False;
+
    if cboPalette.ItemIndex < 0 then
       begin
       Exit;
