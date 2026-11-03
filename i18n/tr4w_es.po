@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: TR4W\n"
-"PO-Revision-Date: 2026-11-03 06:00+0000\n"
+"PO-Revision-Date: 2026-11-03 06:12+0000\n"
 "Last-Translator: Weblate Admin <weblate.admin@bettersoftwaresolutions.com>\n"
 "Language-Team: Spanish <http://weblate.bettersoftwaresolutions.com/projects/"
 "tr4w/client/es/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 #: utr4wstrings.tc_translation_language
 msgctxt "TC_TRANSLATION_LANGUAGE"
 msgid "ENGLISH"
-msgstr "Ingles"
+msgstr "Espanol"
 
 #. Section: General
 #: utr4wstrings:tc_translation_author tr4w/src/lang/tr4w_consts_eng.pas:8
@@ -656,7 +656,7 @@ msgstr "Entre su referencia IOTA Introduce tu Designador de Referencia IOTA (CON
 #: utr4wstrings.tc_enteryourparkreferencedesignator
 msgctxt "TC_ENTERYOURPARKREFERENCEDESIGNATOR"
 msgid "Enter your POTA Park Reference Designator (WITH DASH e.g. K-1234)"
-msgstr "Entre su referencia POTA (e.j. K-1234):"
+msgstr "Entre su referencia POTA (e.j. K-1234)"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourcityidentifier
@@ -872,7 +872,7 @@ msgstr "Introduzca su edad (y el indicativo y la edad del Silent Key):"
 #: utr4wstrings.tc_department
 msgctxt "TC_DEPARTMENT"
 msgid "Enter your department:"
-msgstr "Entre su departamento::"
+msgstr "Entre su departamento:"
 
 # 2026-10-19 NY4I approved; was: "Entre su RDA ID (for UA1A stations) or cuatro digit locator:"; evidence CQWS bulletin
 #. Section: NEW CONTEST
@@ -3470,7 +3470,7 @@ msgstr "Puntuaciones"
 #: utr4wstrings.rc_press_c
 msgctxt "RC_PRESS_C"
 msgid "Press &C to program a CQ function key."
-msgstr "Pulse  &C  para programar la tecla funcion CQ."
+msgstr "Pulse &C para programar la tecla funcion CQ."
 
 #. ACCELERATOR: this translation marks a keyboard shortcut (&) that the English does not have. Remove it unless this control really should have one -- two controls claiming the same letter makes one of them unreachable. Then clear "Needs work".
 #. Section: UEDITMESSAGE
@@ -3490,7 +3490,7 @@ msgstr "Pulse  &E  para programar la tecla intercambio/buscar y trabajar S&P."
 #: utr4wstrings.rc_press_o
 msgctxt "RC_PRESS_O"
 msgid "Press &O to program the other non function key messages."
-msgstr "Pulse  &O  para programar otra tecla de no funcion."
+msgstr "Pulse &O para programar otra tecla de no funcion."
 
 #. Section: UEDITMESSAGE
 #: tfrmprogrammessage.caption utr4wstrings:rc_memprogfunc
