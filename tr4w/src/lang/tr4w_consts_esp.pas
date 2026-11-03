@@ -11,7 +11,6 @@
   TC_CALLSIGN                           = 'Indicativo';
   TC_CHECKCALLSIGN                      = 'Comprueba indicativo';
   TC_FREQUENCYFORCALLINKHZ              = 'frecuencia para %s en kHz';
-  TC_DIFVERSION                         = '%s es de una version diferente.'#13'TR4W esperaba version %s.'#13'El fichero que intenta leer es de la version %s.';
   TC_FILE                               = 'File';
   TC_BAND                               = 'Band';
   TC_FREQ                               = 'Freq';

@@ -22,7 +22,6 @@
   TC_CHECKCALLSIGN                      = 'Check callsign';
   TC_2RADIO_WARN                        = 'ERROR: 2 Radios on single band';
   TC_FREQUENCYFORCALLINKHZ              = 'frequency for %s in kHz';
-  TC_DIFVERSION                         = '%s is from a different program version.'#13'TR4W is expecting version %s.'#13'The file you are trying to read version %s.';
 //  TC_FILE                               = 'File';
 
 

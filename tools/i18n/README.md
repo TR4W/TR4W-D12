@@ -199,7 +199,7 @@ separators rather than corrupt the file. Do not remove that guard. The real fix 
 six button labels into one constant.
 
 **2. A literal CR would be silently normalised to LF** by any conforming XML parser, which would
-corrupt the `#13` in strings like `TC_DIFVERSION`. CR is therefore also written as `<byte
+corrupt the `#13` in strings like `TC_THEREWERECALLS`. CR is therefore also written as `<byte
 value="x0d"/>`. Those *do* survive `lconvert`.
 
 ## Escape hatch

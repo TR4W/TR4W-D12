@@ -5217,14 +5217,6 @@ msgstr ""
 msgid "Enter your department:"
 msgstr ""
 
-#: utr4wstrings.tc_difversion
-#, object-pascal-format
-msgid ""
-"%s is from a different program version.\n"
-"TR4W is expecting version %s.\n"
-"The file you are trying to read version %s."
-msgstr ""
-
 #: utr4wstrings.tc_digqsos
 msgid "DIG QSOs"
 msgstr ""

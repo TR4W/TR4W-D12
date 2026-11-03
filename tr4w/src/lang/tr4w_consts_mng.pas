@@ -23,7 +23,6 @@ const
   TC_CALLSIGN                           = 'Дуудлага';
   TC_CHECKCALLSIGN                      = 'Дуудлагаа шалга';
   TC_FREQUENCYFORCALLINKHZ              = 'Давтамж КГц-ээр %s';
-  TC_DIFVERSION                         = '%s бол програмын оор хувилбар байна.'#13'TR4W бол %s -ийн шинэ хувилбар.'#13'%s -г энэ файл уншихыг оролдож байна.';
   TC_FILE                               = 'Файл';
   TC_BAND                               = 'Долгион';
   TC_FREQ                               = 'Давтамж';

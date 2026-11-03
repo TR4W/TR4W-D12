@@ -633,7 +633,7 @@ end;
 (* ---------------------------------------------------------------------
   A LINE BREAK SURVIVES THE EMBEDDED CATALOGUE.
 
-  Eleven TC_ strings break their line with #13, which pas2po wrote into
+  Ten TC_ strings break their line with #13, which pas2po wrote into
   the catalogues as the C escape \r. LazUtils' .po reader does not know
   that escape: UTF8CStringToUTF8String (lazutf8.pas:1044) decodes only
   \t \n \" and \\, and for anything else DROPS THE BACKSLASH AND KEEPS THE
@@ -645,7 +645,7 @@ end;
   the .po files keep their \r. This test reads the embedded copies, so it
   checks what ships.
 
-  The set is the eleven TC_ strings, named, plus every other resourcestring
+  The set is the ten TC_ strings, named, plus every other resourcestring
   this binary links whose compiled English holds a #13, enumerated from the
   RTL's own resource string tables -- the sLineBreak strings of uAppStrings
   among them, whose catalogue escape is \n and always worked.
@@ -711,9 +711,8 @@ const
      not a defect of the generator, and the .po is not edited here. po_lint
      reports each as CONTROL CHARS differ. AN EXEMPTION THAT NO LONGER
      APPLIES FAILS: if the translation gains a break, delete its row. *)
-   ONE_LINE: array[0..3] of string = (
+   ONE_LINE: array[0..2] of string = (
       'es utr4wstrings.tc_therewerecalls',
-      'ro utr4wstrings.tc_difversion',
       'ru utr4wstrings.tc_enteryourprecedencechecksection',
       'uk utr4wstrings.tc_enteryourprecedencechecksection');
 var
@@ -728,12 +727,13 @@ begin
    exempt := TStringList.Create;
    seen := TStringList.Create;
    try
-      (* THE ELEVEN TC_ STRINGS ARE NAMED, NOT ONLY ENUMERATED. The RTL's
+      (* THE TEN TC_ STRINGS ARE NAMED, NOT ONLY ENUMERATED. The RTL's
         table holds only the resourcestrings this binary LINKS -- smart
-        linking drops the rest -- and six of the eleven are referenced by
+        linking drops the rest -- and five of the ten are referenced by
         nothing the test binary uses (measured 2026-11-03: the walk found
-        five). Naming them here links them, so all eleven are checked. *)
-      wanted.Values['utr4wstrings.tc_difversion']                       := TC_DIFVERSION;
+        five of the then eleven; the eleventh, TC_DIFVERSION, was dead and
+        was deleted, so it was not one the walk found). Naming them here
+        links them, so all ten are checked. *)
       wanted.Values['utr4wstrings.tc_folderalreadyexistsoverwrite']     := TC_FOLDERALREADYEXISTSOVERWRITE;
       wanted.Values['utr4wstrings.tc_newenglandstateabreviation']       := TC_NEWENGLANDSTATEABREVIATION;
       wanted.Values['utr4wstrings.tc_enteryourgeographicalcoordinates'] := TC_ENTERYOURGEOGRAPHICALCOORDINATES;
@@ -816,7 +816,7 @@ begin
             end;
          end;
 
-      (* NOT ALLOWED TO PASS BY CHECKING NOTHING: eleven TC_ strings carry
+      (* NOT ALLOWED TO PASS BY CHECKING NOTHING: ten TC_ strings carry
         #13 and 21 catalogues translate them. *)
       CheckTrue(wanted.Count > named,
                 Format('the resource string walk added %d strings to the %d named',

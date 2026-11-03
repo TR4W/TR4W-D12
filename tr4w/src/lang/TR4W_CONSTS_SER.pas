@@ -30,7 +30,6 @@ const
   TC_CHECKCALLSIGN                      = 'Proveri pozivni znak';
 
   TC_FREQUENCYFORCALLINKHZ              = 'frekvencija za %s u kHz';
-  TC_DIFVERSION                         = '%s od druge verzije programa.'#13'TR4W ocekuje verziju %s.'#13'fajl, koji pokusavate da ucitate je verzija %s.';
 //  TC_FILE                               = 'File';
 
 

@@ -48,7 +48,6 @@ resourcestring
    TC_CHECKCALLSIGN                      = 'Check callsign';
    TC_2RADIO_WARN                        = 'ERROR: 2 Radios on single band';
    TC_FREQUENCYFORCALLINKHZ              = 'frequency for %s in kHz';
-   TC_DIFVERSION                         = '%s is from a different program version.'#13'TR4W is expecting version %s.'#13'The file you are trying to read version %s.';
    TC_RADIO1                             = 'Radio 1';
    TC_RADIO2                             = 'Radio 2';
    TC_DISBALE_CIV                        = 'Disable "CI-V Transceive" mode in your ICOM rig. Refer to instruction manual of your radio.';

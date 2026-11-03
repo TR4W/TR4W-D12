@@ -23,7 +23,6 @@ const
   TC_OP                                 = 'Op';
   TC_CHECKCALLSIGN                      = 'Kontroluj značku';
   TC_FREQUENCYFORCALLINKHZ              = 'Kmitočet pro %s v kHz';
-  TC_DIFVERSION                         = '%s pochází z jiné programové verze.'#13'TR4W očekává programovou verzi %s.'#13'Pokoušíš se číst soubor ve verzi %s.';
   TC_WagWarn = 'Pozor: Mimo povolený rozsah frekvencí WAG';
 
 

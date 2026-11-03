@@ -104,12 +104,6 @@ msgid "frequency for %s in kHz"
 msgstr "частоту в кГц для %s"
 
 #. Section: General
-#: utr4wstrings:tc_difversion tr4w/src/lang/tr4w_consts_eng.pas:20
-msgctxt "TC_DIFVERSION"
-msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr "%s з другої версії программы.\rTR4W ожидает версию %s.\rФайл, який ви намагаєтесь відкрити має версію %s."
-
-#. Section: General
 #: utr4wstrings:tc_radio1 tr4w/src/lang/tr4w_consts_eng.pas:26
 #: tprefsform.lblradio1.caption ulclformhelpers.tc_prefs_radio1
 #: tprefsform.lblradio1.caption
@@ -7255,17 +7249,6 @@ msgstr ""
 #, fuzzy
 msgid "CIS"
 msgstr "УКРАЇНСЬКА"
-
-#: utr4wstrings.tc_difversion
-#, fuzzy
-msgid ""
-"%s is from a different program version.\n"
-"TR4W is expecting version %s.\n"
-"The file you are trying to read version %s."
-msgstr ""
-"%s від іншої версії програми.\n"
-"TR4W очікується версія %s.\n"
-"Файл, який ви намагаєтеся читати версію %s."
 
 #: utr4wstrings.tc_enteryourgeographicalcoordinates
 #, fuzzy

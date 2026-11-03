@@ -129,14 +129,6 @@ msgid "frequency for %s in kHz"
 msgstr "%s kHz의 주파수"
 
 #. Section: General
-#: utr4wstrings:tc_difversion
-#: tr4w/src/lang/tr4w_consts_eng.pas:20
-#, fuzzy
-msgctxt "TC_DIFVERSION"
-msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr "%s는 다른 프로그램 버전에서 입니다.\rTR4W는 %s.\r버전을 읽으려고하는 파일 %s."
-
-#. Section: General
 #: utr4wstrings:tc_radio1
 #: tr4w/src/lang/tr4w_consts_eng.pas:26
 #: tprefsform.lblradio1.caption
@@ -8176,17 +8168,6 @@ msgstr ""
 #, fuzzy
 msgid "CIS"
 msgstr "사이트맵"
-
-#: utr4wstrings.tc_difversion
-#, fuzzy
-msgid ""
-"%s is from a different program version.\n"
-"TR4W is expecting version %s.\n"
-"The file you are trying to read version %s."
-msgstr ""
-"%s은 다른 프로그램 버전에서 있습니다.\n"
-"TR4W는 버전 %s을 기대하고 있습니다.\n"
-"버전을 읽으려고하는 파일 %s."
 
 #: utr4wstrings.tc_enteryourgeographicalcoordinates
 #, fuzzy

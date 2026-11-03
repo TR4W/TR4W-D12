@@ -92,12 +92,6 @@ msgid "frequency for %s in kHz"
 msgstr "częstotliwość %s w kHz"
 
 #. Section: General
-#: utr4wstrings:tc_difversion tr4w/src/lang/tr4w_consts_eng.pas:20
-msgctxt "TC_DIFVERSION"
-msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr "%s pochodzi z innej wersji programu.\rTR4W oczekuje wersji %s.\rPlik, który próbujesz czytać to wersja %s."
-
-#. Section: General
 #: utr4wstrings:tc_radio1 tr4w/src/lang/tr4w_consts_eng.pas:26
 #: tprefsform.lblradio1.caption ulclformhelpers.tc_prefs_radio1
 msgctxt "TC_RADIO1"
@@ -8969,17 +8963,6 @@ msgstr "tryb debug stworzony prefixes.txt"
 #, fuzzy
 msgid "Enter your department:"
 msgstr "Wprowadź swój dział:"
-
-#: utr4wstrings.tc_difversion
-#, fuzzy
-msgid ""
-"%s is from a different program version.\n"
-"TR4W is expecting version %s.\n"
-"The file you are trying to read version %s."
-msgstr ""
-"%s pochodzi z innej wersji programu.\n"
-"TR4W oczekuje wersji %s.\n"
-"Plik, który próbujesz odczytać %s."
 
 #: utr4wstrings.tc_digqsos
 #, fuzzy

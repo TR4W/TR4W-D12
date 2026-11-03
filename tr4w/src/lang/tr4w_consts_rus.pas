@@ -26,7 +26,6 @@ const
   TC_YUGOSLAVIA                         = 'Югославия';
   TC_CHECKCALLSIGN                      = 'Проверить позывной';
   TC_FREQUENCYFORCALLINKHZ              = 'частоту в кГц для %s';
-  TC_DIFVERSION                         = '%s из другой версии программы.'#13'TR4W ожидает версию %s.'#13'Файл, который вы пытаетесь открыть имеет версию %s.';
   TC_FILE                               = 'Файл';
 
 

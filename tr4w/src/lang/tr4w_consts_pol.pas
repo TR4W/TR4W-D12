@@ -11,7 +11,6 @@ const
   TC_CALLSIGN                           = 'Znak wywo³awczy';
   TC_CHECKCALLSIGN                      = 'SprawdŸ znak';
   TC_FREQUENCYFORCALLINKHZ              = 'Czêstotliwoœæ %s w kHz';
-  TC_DIFVERSION                         = '%s pochodzi z innej wersji programu.'#13'TR4W oczekuje wersji %s.'#13'Plik, który próbujesz czytaæ to wersja %s.';
   TC_FILE                               = 'Plik';
   TC_BAND                               = 'Band';
   TC_FREQ                               = 'Freq';

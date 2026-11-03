@@ -32,7 +32,6 @@
   TC_CHECKCALLSIGN                      = 'Verifica indicativ';
 
   TC_FREQUENCYFORCALLINKHZ              = 'frecventa ptr %s in KHz';
-  TC_DIFVERSION                         = '%s este de la o alta versiune';
   TC_FILE                               = 'Fisier';
 
   TC_RADIO1                             = 'Statia 1';

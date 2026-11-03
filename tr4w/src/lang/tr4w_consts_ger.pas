@@ -18,7 +18,6 @@
   TC_CHECKCALLSIGN                      = 'Rufzeichen pruefen';
   TC_2RADIO_WARN                        = 'ERROR: 2 Radios auf dem selben Band';
   TC_FREQUENCYFORCALLINKHZ              = 'Frequenz fuer %s in kHz';
-  TC_DIFVERSION                         = '%s ist aus einer anderen Programmversion.'#13'TR4W erwartet Version %s.'#13'Deine Datei ist die Version %s.';
 //  TC_FILE                               = 'File';
 
 

@@ -130,14 +130,6 @@ msgid "frequency for %s in kHz"
 msgstr "frequência para %s em kHz"
 
 #. Section: General
-#: utr4wstrings:tc_difversion
-#: tr4w/src/lang/tr4w_consts_eng.pas:20
-#, fuzzy
-msgctxt "TC_DIFVERSION"
-msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr "%s é de uma versão diferente do programa.\rTR4W está esperando a versão %s.\rO arquivo que você está tentando ler a versão %s."
-
-#. Section: General
 #: utr4wstrings:tc_radio1
 #: tr4w/src/lang/tr4w_consts_eng.pas:26
 #: tprefsform.lblradio1.caption
@@ -8230,17 +8222,6 @@ msgstr ""
 #, fuzzy
 msgid "CIS"
 msgstr "CEI"
-
-#: utr4wstrings.tc_difversion
-#, fuzzy
-msgid ""
-"%s is from a different program version.\n"
-"TR4W is expecting version %s.\n"
-"The file you are trying to read version %s."
-msgstr ""
-"%s é de uma versão diferente do programa.\n"
-"TR4W está esperando a versão %s.\n"
-"O arquivo que você está tentando ler a versão %s."
 
 #: utr4wstrings.tc_enteryourgeographicalcoordinates
 #, fuzzy

@@ -269,7 +269,7 @@ build puts the default back (the stamp's `mode` line no longer matches).
 
 **The shipped copy says `\n` where the `.po` says `\r`** (2026-11-03). LazUtils'
 `.po` reader decodes only `\t \n \" \\` (`lazutf8.pas:1044`); any other escape loses
-its backslash and keeps its LETTER, so the eleven `TC_` strings that break with
+its backslash and keeps its LETTER, so the ten `TC_` strings that break with
 `#13` showed `willstrund` for `willst\rund`, in every language, English fallbacks
 included. `Make-LanguageRes.ps1` rewrites `\r` and `\r\n` as `\n` while trimming
 (escapes are read left to right, so `\\r` -- a backslash and an r -- is left
@@ -278,8 +278,8 @@ in the `.po` files**; it is the reader's limit, not a catalogue defect. LazUtils
 turns `\n` into the platform line ending, so on Windows a translated message
 breaks with CRLF where the English uses a bare CR. The unit test
 `uTestUILanguage.Test_ALineBreakSurvivesTheEmbeddedCatalogue` checks every
-embedded language; four reviewed translations written on one line (es
-`TC_THEREWERECALLS`, ro `TC_DIFVERSION`, ru and uk
+embedded language; three reviewed translations written on one line (es
+`TC_THEREWERECALLS`, ru and uk
 `TC_ENTERYOURPRECEDENCECHECKSECTION`) are exempted by name until a native reader
 restores the break, and an exemption that no longer applies fails.
 

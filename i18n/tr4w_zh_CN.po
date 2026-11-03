@@ -121,13 +121,6 @@ msgid "frequency for %s in kHz"
 msgstr "kHz %s 频率"
 
 #. Section: General
-#: tr4w/src/lang/tr4w_consts_eng.pas:24
-#, fuzzy
-msgctxt "TC_DIFVERSION"
-msgid "%s is from a different program version.\rTR4W is expecting version %s.\rThe file you are trying to read version %s."
-msgstr "%s来自不同的程序版本.\rTR4W正在等待版本%s.\r您想要读取的文件 %s ."
-
-#. Section: General
 #: tr4w/src/lang/tr4w_consts_eng.pas:30
 #: tprefsform.lblradio1.caption
 #: ulclformhelpers.tc_prefs_radio1
@@ -7004,17 +6997,6 @@ msgstr ""
 "%s 已经存在 。\n"
 "\n"
 "可以删除吗?"
-
-#: utr4wstrings.tc_difversion
-#, fuzzy
-msgid ""
-"%s is from a different program version.\n"
-"TR4W is expecting version %s.\n"
-"The file you are trying to read version %s."
-msgstr ""
-"%s来自不同的程序版本。\n"
-"TR4W正在等待版本%s.\n"
-"您想要读取的文件 %s ."
 
 #: utr4wstrings.tc_enteryourgeographicalcoordinates
 #, fuzzy
