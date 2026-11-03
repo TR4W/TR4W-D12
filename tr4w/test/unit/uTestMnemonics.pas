@@ -38,6 +38,7 @@ type
       procedure TestShortLetterArrayLeavesTheRestAlone;
       procedure TestEmptyInput;
       procedure TestDisplayedText;
+      procedure TestGroupMnemonics;
       procedure TestMarkupFollowsTheCapability;
    public
       procedure RunAllTests; override;
@@ -46,7 +47,7 @@ type
 implementation
 
 uses
-   SysUtils, uMnemonics, uMnemonicsLCL;
+   SysUtils, Controls, uMnemonics, uMnemonicsLCL;   (* Controls: TCaption *)
 
 type
    TFields = array of string;
@@ -322,6 +323,16 @@ begin
    CheckEquals(0, Length(r), 'no captions, no results');
 end;
 
+(* A caption from this tree's UTF-16 string, converted at RUN time. A literal
+   cast -- TCaption(<a CJK constant>) -- is folded by the compiler, which
+   converts it to the source's 8-bit code page and gives '??'; the program's
+   captions come from resourcestrings at run time, where the conversion is
+   UTF-8. *)
+function AsCaption(const s: string): TCaption;
+begin
+   Result := TCaption(s);
+end;
+
 (* uMnemonicsLCL.DisplayedText: the text a caption PAINTS. '&&' is the case the
    hand-written stripper it replaced in uQTCSendForm got wrong -- it removed
    both ampersands, so a literal one measured as nothing. *)
@@ -339,6 +350,65 @@ begin
    CheckEquals('Beacons monitor', string(DisplayedText('Beacons monitor')),
                'a caption with no markup is unchanged');
    CheckEquals('', string(DisplayedText('')), 'empty');
+   (* THE CJK SUFFIX GOES WHOLE (stage 3): '(&S)' is markup, so a title built
+      from '<save>(&S)...' reads '<save>...', not '<save>(S)...'. *)
+   CheckEquals(#$4FDD#$5B58 + '...',
+               string(DisplayedText(AsCaption(#$4FDD#$5B58 + '(&S)...'))),
+               'a CJK (&X) group is dropped, the ellipsis stays');
+   CheckEquals(#$4FDD#$5B58,
+               string(DisplayedText(AsCaption(#$4FDD#$5B58 + #$FF08 + '&S' + #$FF09))),
+               'fullwidth parentheses too');
+   CheckEquals('Text', string(DisplayedText('Text (&B)')),
+               'with the space before it');
+   CheckEquals('Q (&X)', string(DisplayedText('Q (&&X)')),
+               '(&&X) is literal text and stays');
+end;
+
+(* uMnemonics.AssignGroupMnemonics: one submenu, every item managed. *)
+procedure TMnemonicTests.TestGroupMnemonics;
+var
+   r, again: TMnemonicCaptions;
+   none: array of string;
+   i: integer;
+begin
+   BeginTest('TestGroupMnemonics');
+   none := nil;
+
+   (* An English build: no English array, so the captions are the English.
+      A separator and an empty caption take part in nothing. *)
+   r := AssignGroupMnemonics(['File', 'Edit', '-', 'Exit', ''], none, '');
+   CheckEquals('&File', r[0], 'every item is managed, not only marked ones');
+   CheckEquals('&Edit', r[1], 'the next free word start');
+   CheckEquals('-', r[2], 'a separator is unchanged');
+   CheckEquals('E&xit', r[3], 'E is taken, so the first free letter');
+   CheckEquals('', r[4], 'an empty caption is unchanged');
+   again := AssignGroupMnemonics(r, none, '');
+   for i := 0 to High(r) do
+      begin
+      CheckEquals(r[i], again[i], 'second run, item ' + Num(i));
+      end;
+
+   (* A marker the English already carries is kept. *)
+   r := AssignGroupMnemonics(['E&xit', 'Edit'], none, '');
+   CheckEquals('E&xit', r[0], 'the English marker stands');
+   CheckEquals('&Edit', r[1], 'and E is still free');
+
+   (* A translation keeps the letter its English item got. *)
+   r := AssignGroupMnemonics(['Speichern', 'Einstellungen'], ['Save', 'Settings'], '');
+   CheckEquals('&Speichern', r[0], 'S, as Save has');
+   CheckEquals('&Einstellungen', r[1], 'E, as S&ettings has');
+   again := AssignGroupMnemonics(r, ['Save', 'Settings'], '');
+   CheckEquals(r[0], again[0], 'translated, second run, item 0');
+   CheckEquals(r[1], again[1], 'translated, second run, item 1');
+
+   (* An English item that got no letter still gets one in translation. *)
+   r := AssignGroupMnemonics(['Ab', 'Ac'], ['A', 'A'], '');
+   CheckEquals('&Ab', r[0], 'the first takes A');
+   CheckEquals('A&c', r[1], 'the second English had none; the translation has one');
+
+   (* A CJK translation takes the English letter as a suffix. *)
+   r := AssignGroupMnemonics([#$4FDD#$5B58 + '...'], ['Save...'], '');
+   CheckEquals(#$4FDD#$5B58 + '(&S)...', r[0], 'CJK keeps the English S');
 end;
 
 (* uMnemonicsLCL.MnemonicMarkupFor: both outcomes, on any platform. The live
@@ -363,6 +433,7 @@ begin
    TestShortLetterArrayLeavesTheRestAlone;
    TestEmptyInput;
    TestDisplayedText;
+   TestGroupMnemonics;
    TestMarkupFollowsTheCapability;
 end;
 

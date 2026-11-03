@@ -24,6 +24,9 @@ unit uMnemonics;
      on screen, so its letter is TAKEN for everyone else.
    - The main menu bar's top level is out of scope: its letters reach this
      function as aReserved, like any other letter already in use.
+   - MENUS ARE THE EXCEPTION (stage 3, 2026-11-03): every item of a submenu
+     gets a mnemonic, through AssignGroupMnemonics, because almost no English
+     menu caption carries an '&' at all.
 
    THE PARSE IS IsAccel's (lcl/forms.pp), not po_lint's. The accelerator is the
    character after the FIRST lone '&'; '&&' is a literal ampersand and is
@@ -111,6 +114,35 @@ function IsCJKCaption(const aCaption: string): boolean;
 function AssignMnemonics(const aCaptions: array of string;
                          const aEnglishLetters: array of string;
                          const aReserved: string): TMnemonicCaptions;
+
+const
+   (* An English letter that MANAGES an item without preferring a letter: a
+      space is not a mnemonic character, so rule 4 falls through to "any
+      letter at a word start" inline and to "the first free A..Z" as a
+      suffix. '' would leave the item alone instead. *)
+   MNEMONIC_NO_PREFERENCE = ' ';
+
+(* STAGE 3: ONE MENU GROUP -- the items of one submenu -- where EVERY item
+   gets a mnemonic, not only those whose English carries an '&'.
+
+   aEnglish[i] is the untranslated caption of aCaptions[i]; an index past the
+   end of aEnglish counts as the caption itself (an English build). An empty
+   caption and a separator ('-', the LCL's TMenuItem.IsLine) are returned
+   unchanged and take part in nothing.
+
+   TWO PASSES, so a translation keeps the English letter where it can. The
+   English captions are assigned first, every item managed with no
+   preference; the letter each one ends up with is then the English letter
+   of its translated caption (MNEMONIC_NO_PREFERENCE when it got none). In an
+   English build the two passes see the same text and give the same answer.
+   Running the result through again changes nothing. *)
+function AssignGroupMnemonics(const aCaptions: array of string;
+                              const aEnglish: array of string;
+                              const aReserved: string): TMnemonicCaptions;
+
+(* Every '(&X)' group removed whole, with the whitespace before it -- the CJK
+   suffix form. '(&&X)' is literal text and stays. *)
+function RemoveSuffixGroups(const aCaption: string): string;
 
 implementation
 
@@ -480,22 +512,25 @@ begin
 end;
 
 (* The suffix letter: the English letter upper-cased if free, else the first
-   free A..Z. #0 when none is free. *)
-function PickSuffix(aEnglish: WideChar; const aTaken: string): WideChar;
+   free A..Z. False, with aLetter undefined, when none is free. *)
+function PickSuffix(aEnglish: WideChar; const aTaken: string; out aLetter: WideChar): Boolean;
 var
    c: WideChar;
 begin
-   Result := #0;
+   Result := False;
+   aLetter := ' ';
    if IsMnemonicChar(aEnglish) and (Ord(aEnglish) < 128) and not IsTaken(aTaken, aEnglish) then
       begin
-      Result := UpperOf(aEnglish);
+      aLetter := UpperOf(aEnglish);
+      Result := True;
       Exit;
       end;
    for c := 'A' to 'Z' do
       begin
       if not IsTaken(aTaken, c) then
          begin
-         Result := c;
+         aLetter := c;
+         Result := True;
          Exit;
          end;
       end;
@@ -583,8 +618,7 @@ begin
       if IsCJKCaption(aCaptions[i]) then
          begin
          text := RemoveMarkersExcept(RemoveSuffixGroups(aCaptions[i]), 0);
-         letter := PickSuffix(english[i], taken);
-         if letter <> #0 then
+         if PickSuffix(english[i], taken, letter) then
             begin
             Take(taken, letter);
             cut := SuffixCut(text);
@@ -603,6 +637,76 @@ begin
             end;
          Result[i] := text;
          end;
+      end;
+end;
+
+function TakesPartInAGroup(const aCaption: string): boolean;
+begin
+   Result := (aCaption <> '') and (aCaption <> '-');
+end;
+
+function AssignGroupMnemonics(const aCaptions: array of string;
+                              const aEnglish: array of string;
+                              const aReserved: string): TMnemonicCaptions;
+var
+   n, m, i: integer;
+   members: array of integer;
+   english, translated, anyLetter, letters: array of string;
+   englishResult, translatedResult: TMnemonicCaptions;
+   letter: string;
+begin
+   n := Length(aCaptions);
+   Result := nil;
+   SetLength(Result, n);
+   members := nil;
+   for i := 0 to n - 1 do
+      begin
+      Result[i] := aCaptions[i];
+      if TakesPartInAGroup(aCaptions[i]) then
+         begin
+         SetLength(members, Length(members) + 1);
+         members[High(members)] := i;
+         end;
+      end;
+
+   m := Length(members);
+   english := nil;
+   translated := nil;
+   anyLetter := nil;
+   letters := nil;
+   SetLength(english, m);
+   SetLength(translated, m);
+   SetLength(anyLetter, m);
+   SetLength(letters, m);
+   for i := 0 to m - 1 do
+      begin
+      translated[i] := aCaptions[members[i]];
+      english[i] := translated[i];
+      if members[i] <= High(aEnglish) then
+         begin
+         english[i] := aEnglish[members[i]];
+         end;
+      anyLetter[i] := MNEMONIC_NO_PREFERENCE;
+      end;
+
+   (* Pass 1: the English, every item managed with no preference. *)
+   englishResult := AssignMnemonics(english, anyLetter, aReserved);
+
+   (* Pass 2: the translation, preferring the letter its English got. *)
+   for i := 0 to m - 1 do
+      begin
+      letter := AcceleratorLetter(englishResult[i]);
+      if letter = '' then
+         begin
+         letter := MNEMONIC_NO_PREFERENCE;
+         end;
+      letters[i] := letter;
+      end;
+   translatedResult := AssignMnemonics(translated, letters, aReserved);
+
+   for i := 0 to m - 1 do
+      begin
+      Result[members[i]] := translatedResult[i];
       end;
 end;
 

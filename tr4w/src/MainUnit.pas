@@ -6611,6 +6611,8 @@ begin
    if item <> nil then
       begin
       item.Caption := TCaption(aText);
+      (* The new caption has no mnemonic; its siblings keep theirs. *)
+      ApplyMenuMnemonics(item.Parent);
       end;
 end;
 

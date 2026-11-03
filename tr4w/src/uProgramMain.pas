@@ -1646,6 +1646,10 @@ begin
     It reports what it did in every case, including the absent one: English is
     the compiled-in default, so a missing or misnamed catalogue is otherwise
     indistinguishable from a working English build. }
+  (* THE ENGLISH MENU CAPTIONS, while the resourcestrings still hold them: the
+    load below overwrites them in place, and a translated submenu keeps its
+    English item's mnemonic letter where it can (uMenu.ApplyMenuMnemonics). *)
+  uMenu.CaptureEnglishMenuText;
   loadedLang := LoadEmbeddedTranslation(StartupUILanguage(TR4WConfigFileName));
   if loadedLang = '' then
      begin

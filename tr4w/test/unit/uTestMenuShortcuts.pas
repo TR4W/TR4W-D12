@@ -29,10 +29,15 @@ unit uTestMenuShortcuts;
 interface
 
 uses
-   SysUtils, Classes, Menus, LCLType, uTR4WTestFramework, uAccelerators, uMenu;
+   SysUtils, Classes, Menus, LCLType, uTR4WTestFramework, uAccelerators, uMenu,
+   uMnemonics,      (* AcceleratorLetter *)
+   uMnemonicsLCL;   (* DisplayedText, WidgetSetHonoursMnemonics *)
 
 type
    TMenuShortcutTests = class(TTestCase)
+   private
+      FUnmarked: string;
+      procedure CheckGroupMnemonics(const aGroup: TMenuItem);
    protected
       procedure Test_TheSplitIsWhatItSaysItIs;
       procedure Test_MenuOwnedRowsQualify;
@@ -44,6 +49,7 @@ type
       procedure Test_TheNamedDisplayOnlyRowsAreBound;
       procedure Test_TheCaptionIsJustTheCaption;
       procedure Test_MenuCommandExistsFindsAndMisses;
+      procedure Test_EverySubmenuHasUniqueMnemonics;
    public
       procedure RunAllTests; override;
    end;
@@ -458,6 +464,13 @@ begin
    Result := MenuItemById(aId);
 end;
 
+(* THE TEXT AN ITEM PAINTS. Its caption carries a mnemonic marker since stage
+  3, and what these tests assert is the words, not where the underline went. *)
+function Shown(const aItem: TMenuItem): string;
+begin
+   Result := string(DisplayedText(aItem.Caption));
+end;
+
 procedure TMenuShortcutTests.Test_TheCaptionIsJustTheCaption;
 var
    item: TMenuItem;
@@ -478,17 +491,17 @@ begin
      "Escape". *)
    item := BuiltMenuItem(10502);
    CheckTrue(item <> nil, 'Escape has a menu item');
-   CheckEquals('Escape', item.Caption, 'Escape reads as itself');
+   CheckEquals('Escape', Shown(item), 'Escape reads as itself');
 
    { '&&' in the resourcestring is a literal ampersand to the widget set. }
    item := BuiltMenuItem(10506);
    CheckTrue(item <> nil, 'Search & pounce has a menu item');
-   CheckEquals('Search && pounce mode', item.Caption,
+   CheckEquals('Search & pounce mode', Shown(item),
                'no (Tab) on the end of it');
 
    item := BuiltMenuItem(10507);
    CheckTrue(item <> nil, 'Send spot has a menu item');
-   CheckEquals('Send spot', item.Caption, 'no (`) on the end of it');
+   CheckEquals('Send spot', Shown(item), 'no (`) on the end of it');
 
    { And all three still carry no shortcut, which is what makes the caption the
      only thing they could have advertised with. }
@@ -513,12 +526,86 @@ begin
 
    (* THE FOUR THAT JOINED THE COLUMN SHOW THEIR KEY THERE AND NOT IN THE TEXT.
      "CW Speed Up (PgUp)" is what this would have read a day ago. *)
-   CheckEquals('CW Speed Up', BuiltMenuItem(10503).Caption,
+   CheckEquals('CW Speed Up', Shown(BuiltMenuItem(10503)),
                'CW Speed Up has its key in the column');
-   CheckEquals('CW Speed Down', BuiltMenuItem(10504).Caption,
+   CheckEquals('CW Speed Down', Shown(BuiltMenuItem(10504)),
                'CW Speed Down likewise');
-   CheckEquals('Focus in main window', BuiltMenuItem(10500).Caption,
+   CheckEquals('Focus in main window', Shown(BuiltMenuItem(10500)),
                'Focus in main window likewise');
+end;
+
+(* MNEMONICS, STAGE 3: IN EVERY SUBMENU OF THE BUILT MENU, NO TWO ITEMS SHARE
+  AN ALT+LETTER, and the few that have none are named below.
+  Asked of the menu the builder produced, not of the rule, because the
+  grouping -- one submenu, nested submenus their own group, the bar none -- is
+  the builder's. The bar's own items carry no marker at all: Alt+F, Alt+E and
+  Alt+S are uAccelerators keystrokes, and a marker there would compete. *)
+procedure TMenuShortcutTests.CheckGroupMnemonics(const aGroup: TMenuItem);
+var
+   k: integer;
+   letter, seen, name: string;
+begin
+   seen := '';
+   name := string(DisplayedText(aGroup.Caption));
+   for k := 0 to aGroup.Count - 1 do
+      begin
+      if aGroup.Items[k].IsLine or (aGroup.Items[k].Caption = '') then
+         begin
+         Continue;
+         end;
+      letter := UnicodeUpperCase(AcceleratorLetter(string(aGroup.Items[k].Caption)));
+      if letter = '' then
+         begin
+         FUnmarked := FUnmarked + name + '/' + string(aGroup.Items[k].Caption) + ';';
+         end
+      else
+         begin
+         CheckTrue(Pos(letter, seen) = 0,
+                   name + ': ' + letter + ' is used once, "' +
+                   string(aGroup.Items[k].Caption) + '"');
+         seen := seen + letter;
+         end;
+      if aGroup.Items[k].Count > 0 then
+         begin
+         CheckGroupMnemonics(aGroup.Items[k]);
+         end;
+      end;
+end;
+
+procedure TMenuShortcutTests.Test_EverySubmenuHasUniqueMnemonics;
+var
+   bar: TMenuItem;
+   i: integer;
+begin
+   BeginTest('Test_EverySubmenuHasUniqueMnemonics');
+   BuiltMenuItem(10502);
+   FUnmarked := '';
+   if not WidgetSetHonoursMnemonics then
+      begin
+      (* Cocoa: nothing is written, which TestMarkupFollowsTheCapability pins. *)
+      Exit;
+      end;
+   bar := TopLevelMenuItem(0).Parent;
+   for i := 0 to bar.Count - 1 do
+      begin
+      CheckEquals('', AcceleratorLetter(string(bar.Items[i].Caption)),
+                  'the bar is not a group: ' + string(bar.Items[i].Caption));
+      CheckGroupMnemonics(bar.Items[i]);
+      end;
+
+   (* THE ITEMS THAT GET NO MNEMONIC, PINNED BY NAME, so a row that loses one
+     shows up here rather than silently. Two reasons, both measured:
+       - '+1'..'+10' contain no letter, and a digit is a candidate only when
+         it IS the English letter, which no English caption names;
+       - the Alt- submenu has more items than its captions have free letters,
+         so the last four in index order find none. *)
+   CheckEquals('Increment time/+1;Increment time/+2;Increment time/+3;' +
+               'Increment time/+4;Increment time/+5;Increment time/+6;' +
+               'Increment time/+7;Increment time/+8;Increment time/+9;' +
+               'Increment time/+10;' +
+               'Alt-/Band Down;Alt-/Initial exchange;Alt-/Toggle sidetone;' +
+               'Alt-/Toggle autosend;',
+               FUnmarked, 'the items with no mnemonic');
 end;
 
 procedure TMenuShortcutTests.Test_MenuCommandExistsFindsAndMisses;
@@ -548,6 +635,7 @@ begin
    Test_TheNamedDisplayOnlyRowsAreBound;
    Test_TheCaptionIsJustTheCaption;
    Test_MenuCommandExistsFindsAndMisses;
+   Test_EverySubmenuHasUniqueMnemonics;
 end;
 
 initialization

@@ -12,7 +12,8 @@ unit uMnemonicsLCL;
       for the places that put a caption somewhere '&' is not markup -- a window
       title, and a measurement of what a button will paint.
 
-   Nothing here is wired to a menu or a form yet: that is stage 3. ("Mnemonic"
+   Stage 3 wires the main menu's submenus (uMenu.ApplyMenuMnemonics); forms
+   are not wired yet. ("Mnemonic"
    and not "accelerator" on purpose -- in this tree an accelerator is a
    ShortCut.)
 
@@ -81,7 +82,8 @@ implementation
 
 uses
    InterfaceBase,   (* WidgetSet, lcAccelleratorKeys, LCL_CAPABILITY_NO *)
-   Menus;           (* StripHotkey *)
+   Menus,           (* StripHotkey *)
+   uMnemonics;      (* RemoveSuffixGroups -- the CJK '(&X)' form *)
 
 function MnemonicMarkupFor(const aWidgetSetHonoursMnemonics: boolean): TMnemonicMarkup;
 begin
@@ -100,9 +102,16 @@ begin
    Result := WidgetSet.GetLCLCapability(lcAccelleratorKeys) <> LCL_CAPABILITY_NO;
 end;
 
+(* THE '(&X)' GROUP GOES FIRST, WHOLE (2026-11-03). A CJK caption carries its
+   mnemonic as a suffix -- '<save>(&S)...' -- and StripHotkey alone would title
+   that window '<save>(S)...'. The group is markup, not text, so a title shows
+   '<save>...'. uMnemonics.RemoveSuffixGroups is the same reading the
+   assignment uses; it runs BEFORE StripHotkey because once the '&' is gone the
+   group no longer looks like one. It works on this tree's UTF-16 string, so
+   the caption goes there and back by explicit conversion. *)
 function DisplayedText(const aCaption: TCaption): TCaption;
 begin
-   Result := StripHotkey(aCaption);
+   Result := StripHotkey(TCaption(RemoveSuffixGroups(string(aCaption))));
 end;
 
 end.
