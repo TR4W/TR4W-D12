@@ -524,6 +524,14 @@ resourcestring
      mal-sent check". %s is the number as typed. *)
    SExchangeCheckNotTwoDigits = 'Check must be two digits (%s)';
 
+   (* A SWEEPSTAKES EXCHANGE WITH NO CHECK, OR NO SECTION -- issue #174, NY4I's
+     bench of 2026-11-04: 'A99 32' (no section) and 'A99CT' (no check) were
+     refused with no message at all. Shown only when the entry was already
+     refused and no reason above applies; a section that is present but not
+     in the contest's file is a different refusal and is not this one. *)
+   SExchangeNoCheck = 'Missing check (two digits)';
+   SExchangeNoSection = 'Missing section';
+
    (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
      NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
      VE station in the NC QSO party", "we should refuse to log it and show an

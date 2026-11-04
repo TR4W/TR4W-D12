@@ -51,6 +51,13 @@ a space."* Unit tests drive `ParametersOkay`; nothing has looked at the window.
   `Ambiguous exchange - enter 99A or 32A to resolve`. With the number BEFORE
   the check and section it logs in the base order: `32 A 99CT` is serial 32,
   check 99, and `42 M W1AW 31CT` is serial 42, check 31 (as before `fce7be16`).
+- [ ] **A missing section or check says so** (NY4I's bench: these were refused
+  with no message). Type `A99 32`: it does not log, and the notice reads
+  `Missing section`. With CALLSIGN UPDATE ENABLE = FALSE type `A99CT`, and
+  with either setting `123 A CT`: neither logs, and the notice reads
+  `Missing check (two digits)`. `A99CT 5` still reads
+  `Check must be two digits (5)`. A missing serial (`M 31 CT`) is still
+  refused with no message (not changed).
 
 ## Added 2026-11-04 -- OLD TR4W/TR4W ISSUES CLOSED AS FIXED, NEEDING A REAL RUN (NY4I)
 

@@ -510,7 +510,43 @@ begin
       GShapeResult := False;
       ok := Parse(c, True, '123 A CT', exch, msg);
       CheckFalse(ok, string(ContestTypeSA[c]) + ': refused for its missing check');
-      CheckEquals('', msg, string(ContestTypeSA[c]) + ': a precedence was there -- not that reason');
+      CheckEquals(SExchangeNoCheck, msg, string(ContestTypeSA[c]) + ': a precedence was there -- the check was not');
+
+      (* ISSUE #174, NY4I's bench of 2026-11-04: these were refused with no
+         message at all. *)
+      ResetStub;
+      GShapeResult := False;
+      ok := Parse(c, True, 'A99 32', exch, msg);
+      CheckFalse(ok, string(ContestTypeSA[c]) + ' A99 32: refused');
+      CheckEquals('Missing section', msg, string(ContestTypeSA[c]) + ' A99 32: says the section is missing');
+
+      ResetStub;
+      GShapeResult := False;
+      ok := Parse(c, True, 'A99CT', exch, msg);
+      CheckFalse(ok, string(ContestTypeSA[c]) + ' A99CT: refused');
+      CheckEquals('Missing check (two digits)', msg, string(ContestTypeSA[c]) + ' A99CT: says the check is missing');
+
+      (* A MAL-SENT CHECK STILL WINS over "missing check". *)
+      ResetStub;
+      GShapeResult := False;
+      ok := Parse(c, True, 'A99CT 5', exch, msg);
+      CheckFalse(ok, string(ContestTypeSA[c]) + ' A99CT 5: refused');
+      CheckEquals('Check must be two digits (5)', msg, string(ContestTypeSA[c]) + ' A99CT 5: the bad check');
+
+      (* NO PRECEDENCE STILL WINS over everything after it. *)
+      ResetStub;
+      GShapeResult := False;
+      ok := Parse(c, True, '99 32', exch, msg);
+      CheckFalse(ok, string(ContestTypeSA[c]) + ' 99 32: refused');
+      CheckEquals(SExchangeNoPrecedence, msg, string(ContestTypeSA[c]) + ' 99 32: no precedence first');
+
+      (* A SECTION THAT IS PRESENT BUT UNKNOWN is not "missing": the class
+         adds nothing (the refusal it had is the domestic-QTH lookup's). *)
+      ResetStub;
+      GShapeResult := False;
+      ok := Parse(c, True, 'A99 32 XYZ', exch, msg);
+      CheckFalse(ok, string(ContestTypeSA[c]) + ' A99 32 XYZ: refused');
+      CheckEquals('', msg, string(ContestTypeSA[c]) + ' A99 32 XYZ: not a missing section');
 
       ResetStub;
       GShapeResult := True;

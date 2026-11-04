@@ -118,8 +118,10 @@ uses
    carries a precedence and the only one either running parses. The
    precedence is looked for with uExchangeTokens.ScanSweepstakesExchange --
    the same word reading the shape parser applies -- so this says "no
-   precedence" exactly when the parser found none. An exchange refused for another reason (no check, a bad
-   section) keeps whatever the parser said.
+   precedence" exactly when the parser found none. Then, in order: a
+   mal-sent check, no check, no section (issue #174, 2026-11-04). An exchange
+   refused for another reason (an unknown section, no serial) keeps whatever
+   the parser said.
 
    ONE REFUSAL COMES FIRST, WHATEVER THE PARSE SAID: an ambiguous serial
    (2026-11-04, below). *)
@@ -173,6 +175,18 @@ begin
          two digits"). Only when no two-digit check was found: the engine
          refuses for the check exactly then. *)
       aErrorMessage := UnicodeFormat(SExchangeCheckNotTwoDigits, [string(fields.BadCheck)]);
+      end
+   else if fields.Check = '' then
+      begin
+      (* NO CHECK AT ALL -- 'A99CT', '123 A CT' (issue #174, 2026-11-04
+         bench: refused with no message). *)
+      aErrorMessage := SExchangeNoCheck;
+      end
+   else if fields.Section = '' then
+      begin
+      (* NO SECTION -- 'A99 32'. A section that is present but unknown is
+         not empty here, so it keeps the refusal it had. *)
+      aErrorMessage := SExchangeNoSection;
       end;
 end;
 

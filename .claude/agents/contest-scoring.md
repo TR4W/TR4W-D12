@@ -183,7 +183,10 @@ of 25 token sets through `ParametersOkay`, update on and off, against an
 independent two-stage model (set `TR4W_SS_ORDERING_REPORT` to a path to dump
 every reading). A check joined to its section (`31CT`) is unchanged as a word. An unknown section
 through this parser is refused with NO message (pre-existing, not this
-change). `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
+change), and so is a missing serial (`M 31 CT`); a refused entry with NO
+check says `SExchangeNoCheck` (`A99CT`, `123 A CT`) and with no section
+`SExchangeNoSection` (`A99 32`) -- after the no-precedence and bad-check
+reasons, in the class (#174 bench, 2026-11-04). `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
 Locust, Minnesota) tries `QTH NAME` only when the name-first reading found no
 QTH, the entry is exactly two words, and the first word is a QTH -- `DE CA` is
 still Del in California. NA Sprint's `FL TOM 4` was already right: QTH,

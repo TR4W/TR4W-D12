@@ -353,9 +353,12 @@ begin
          CheckRefused('123 A99CT', 'Check must be two digits (123)');
          CheckRefused('A99CT 5', 'Check must be two digits (5)');
          CheckRefused('U80WCF 123', 'Check must be two digits (123)');
-         (* ALONE: serial 99 and no check -- refused silently, as a missing
-            check always has been ('123 A CT'). *)
-         CheckRefused('A99CT', '');
+         (* ALONE: serial 99 and no check -- refused, and since issue #174's
+            bench (2026-11-04) it says so ('123 A CT' the same). *)
+         CheckRefused('A99CT', 'Missing check (two digits)');
+         CheckRefused('123 A CT', 'Missing check (two digits)');
+         (* NO SECTION -- issue #174: 'A99 32' was refused with no message. *)
+         CheckRefused('A99 32', 'Missing section');
          (* WITH THE CALL TYPED LAST, the call is read as the section. *)
          CheckRefused('A99CT 32 W1AW', '');
          (* A PRECEDENCE, A CHECK AND A99CT: the engine stops at the first
@@ -708,6 +711,14 @@ begin
          begin
          message := UnicodeFormat(SExchangeCheckNotTwoDigits, [badCheck]);
          end
+      else if check = '' then
+         begin
+         message := SExchangeNoCheck;
+         end
+      else if section = '' then
+         begin
+         message := SExchangeNoSection;
+         end
       else
          begin
          message := '';
@@ -799,13 +810,16 @@ begin
    Pin('W1AW', '80 WCF U12', False, 'OK call=W1AW n=12 p=U c=80 s=WCF');
    Pin('K1ABC', 'U12 W1AW 80 CT', True, 'OK call=W1AW n=12 p=U c=80 s=CT');
    Pin('W1AW', 'U12 80 CT W1AW', False, 'NO call=W1AW msg=');
+   (* Issue #174, 2026-11-04 bench: a missing section or check says so. *)
+   Pin('W1AW', 'A99 32', True, 'NO call=W1AW msg=Missing section');
+   Pin('W1AW', '123 A CT', False, 'NO call=W1AW msg=Missing check (two digits)');
 end;
 
 (* EVERY ORDERING OF EVERY TOKEN SET, both runnings, CALLSIGN UPDATE on and
    off, against the model. The first 20 disagreements are reported. *)
 procedure TExchangeWordOrderTests.Test_SweepstakesEveryOrdering;
 const
-   TOKEN_SETS: array[0..24] of string = (
+   TOKEN_SETS: array[0..26] of string = (
       '43 M W1AW 31 CT',
       '43M W1AW 31 CT',
       'M43 W1AW 31 CT',
@@ -830,7 +844,10 @@ const
       '43M 31SB W1AW',
       'U12 80 ORG',
       '12 A 31MI',
-      '43M 31 CT A9XYZ');
+      '43M 31 CT A9XYZ',
+      (* Issue #174: no section, no check. *)
+      'A99 32',
+      '123 A CT');
 var
    setIndex, i, disagreements, orderings, contestIndex: integer;
    words: TWordList;
