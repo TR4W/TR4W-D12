@@ -33,7 +33,7 @@ unit uPlatformProcess;
                      command line: a path with a space in it is the normal case
                      on Windows, and quoting it by hand is how that breaks.
 
-  RunWindowsUtility -- a WINDOWS PROGRAM, named as such: calc.exe, SNDVOL32,
+  RunWindowsUtility -- a WINDOWS PROGRAM, named as such: calc.exe,
                      cmd.exe, rundll32, explorer, w32tm, MMTTY. These do not
                      exist elsewhere and translating them would be pretending
                      otherwise. This is the ONLY WinExec left in TR4W, and it
@@ -180,6 +180,20 @@ function OpenTextFileInEditor(const aPath: string): boolean;
   be started -- so the CALLER CAN SAY SO. That is the whole point of the
   change. *)
 function RevealInFileManager(const aPath: string): boolean;
+
+(* OPEN THE OPERATING SYSTEM'S OWN SOUND SETTINGS -- issue 171.
+
+  The Tools menu's "DVK volume control" and "Recording control" ran SNDVOL32.EXE,
+  which Windows no longer ships. Windows 10 and 11 keep input and output
+  devices, levels and the default device on one Settings page, so both menu
+  items open the same one: the URI ms-settings:sound, handed to the LCL's own
+  launcher (LCLIntf.OpenURL is ShellExecute on Windows) rather than to a
+  hand-built command line.
+
+  WINDOWS ONLY, BY INTENT. The mixer on Linux and macOS is a different program
+  on every desktop, so there is no one thing to open; the caller hides the menu
+  items there and this returns False with a log line if it is reached anyway. *)
+function OpenSoundSettings: boolean;
 
 implementation
 
@@ -616,6 +630,20 @@ begin
    Result := False;
    Log.Warn(Format('[RunWindowsUtility] "%s" is a Windows-only utility and was not started',
                    [aCommandLine]));
+{$ENDIF}
+end;
+
+function OpenSoundSettings: boolean;
+begin
+{$IFDEF WINDOWS}
+   Result := OpenURL('ms-settings:sound');
+   if not Result then
+      begin
+      Log.Error('[Process] the Windows sound settings (ms-settings:sound) would not open');
+      end;
+{$ELSE}
+   Result := False;
+   Log.Warn('[Process] OpenSoundSettings is Windows-only; nothing was started');
 {$ENDIF}
 end;
 

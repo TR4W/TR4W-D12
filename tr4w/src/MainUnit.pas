@@ -4671,6 +4671,19 @@ begin
         MenuItemById(menu_repeat_pota_parks).Visible := False;
         end;
      end;
+{$IFNDEF WINDOWS}
+  (* The sound-settings rows open a Windows Settings page (issue 171); the
+    mixer elsewhere is a different program on every desktop.  Hidden rather
+    than greyed, as the park rows above. *)
+  if MenuItemById(menu_volume_control) <> nil then
+     begin
+     MenuItemById(menu_volume_control).Visible := False;
+     end;
+  if MenuItemById(menu_recording_control) <> nil then
+     begin
+     MenuItemById(menu_recording_control).Visible := False;
+     end;
+{$ENDIF}
   (* THE CONTEST SAYS WHETHER IT OFFERS THE ERMAK SPECIFICATION (M10 S6); this
      read ContestsBooleanArray's ERMAK_BIT, which the class's flag set states. *)
   ErmakSpecification := ContestIdentity(Contest).ErmakSpecification and
@@ -5667,8 +5680,9 @@ begin
         FrmSetFocus;
       end;
 
-    menu_volume_control: RunWindowsUtility('SNDVOL32.EXE');
-    menu_recording_control: RunWindowsUtility('SNDVOL32.EXE -r');
+    (* SNDVOL32.EXE is no longer shipped (issue 171).  Windows keeps playback
+      and recording on one Settings page, so both items open it. *)
+    menu_volume_control, menu_recording_control: OpenSoundSettings;
     // menu_soundrecorder: WinExec('SNDREC32.EXE', SW_SHOWNORMAL);
 
     // TYPED, not `integer(@Proc)` through an lParam.  The window took an
