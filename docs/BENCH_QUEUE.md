@@ -5261,3 +5261,5 @@ Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-i386
 5. Optional: `--lang ru` for steps 1 and 2. Russian sweepstakes is one of four reviewed translations written on one line, so it shows one line with no stray "r".
 
 Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_FOLDERALREADYEXISTSOVERWRITE and TC_INVALIDSTATEMENTIN (no reliable trigger found).
+
+**Periodic HamScore score tick (2026-11-04):** `HamScoreScoreTick` calls `CalculateTotals`, which walks the WHOLE log on the main thread (every 5 s after a change, 30 s heartbeat). Not measured. Needs a latency measurement on a large contest log (tens of thousands of QSOs); watch for operator-visible stalls on Enter. Also confirm that with the log source unreadable the last posted score is kept and one warning is logged.

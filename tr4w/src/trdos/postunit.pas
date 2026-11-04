@@ -1240,9 +1240,14 @@ function CalculateTotals: boolean;
      Exit;
      end;
 
-  LogSourceRewind;
-  TallySummaryTotals( @LogSourceNext );
-  LogSourceClose;
+  (* CLOSED WHATEVER HAPPENS: an exception out of the tally must not leave
+     the sequential read open (peer review R3, 2026-11-04). *)
+  try
+    LogSourceRewind;
+    TallySummaryTotals( @LogSourceNext );
+  finally
+    LogSourceClose;
+  end;
   CalculateTotals := true;
   end;
 

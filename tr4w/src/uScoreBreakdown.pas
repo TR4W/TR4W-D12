@@ -80,6 +80,24 @@ const
    last rebuild; aChanged says a QSO was logged, edited or deleted since. *)
 function ScoreRebuildDue(aChanged: boolean; aElapsedMs: Int64): boolean;
 
+type
+   (* The two steps of a score rebuild, as seams: PostUnit.CalculateTotals and
+      uGetScores.BuildDynamicResultsXml in the program, stand-ins in a test. *)
+   TScoreTotalsReader = function: boolean;
+   TScoreXmlBuilder = function: AnsiString;
+
+(* ONE REBUILD OF THE POSTED SCORE (peer review R2, 2026-11-04). The XML is
+   built only from a SUCCESSFUL read of the log: CalculateTotals returns False,
+   without raising, after zeroing the totals when the log source will not open,
+   and a score built from those would post an empty contest. On False aXml is
+   left as it was and the result is False, so the caller keeps its dirty flag.
+   A successful read of an empty log is a real zero score and does replace
+   aXml. aFailing is the caller's streak flag and aWarn is True on the FIRST
+   failure of a streak only, so a log that stays unreadable warns once. *)
+function RebuildScoreXml(aReader: TScoreTotalsReader; aBuilder: TScoreXmlBuilder;
+                         var aXml: AnsiString; var aFailing: boolean;
+                         out aWarn: boolean): boolean;
+
 (* THE GRID THE <qth> BLOCK REPORTS.  The contest's grid is what the exchange
    sends -- RTC asks for four characters -- and it overrides the station's for
    that contest, so ResolvedGrid is four characters even when the operator's
@@ -174,6 +192,22 @@ function ScoreRebuildDue(aChanged: boolean; aElapsedMs: Int64): boolean;
 begin
    Result := (aChanged and (aElapsedMs >= SCORE_REBUILD_MIN_MS)) or
              (aElapsedMs >= SCORE_REBUILD_HEARTBEAT_MS);
+end;
+
+function RebuildScoreXml(aReader: TScoreTotalsReader; aBuilder: TScoreXmlBuilder;
+                         var aXml: AnsiString; var aFailing: boolean;
+                         out aWarn: boolean): boolean;
+begin
+   aWarn := False;
+   Result := aReader();
+   if not Result then
+      begin
+      aWarn := not aFailing;
+      aFailing := True;
+      Exit;
+      end;
+   aFailing := False;
+   aXml := aBuilder();
 end;
 
 function QthGrid(const aStation, aContest: string): string;

@@ -29,6 +29,7 @@ type
       procedure TestClearingFields;
       procedure TestSecretType;
       procedure TestWorkerEditDuringHTTP;
+      procedure TestNoticeForgetOwner;
       procedure TestFullContactAndCaptureCost;
       procedure TestMinimalPatch;
       procedure TestLastSent;
@@ -44,7 +45,7 @@ uses
    (* FIRST, so every unit below still wins a name it shares.
       DateUtils: DateTimeToUnix. uLogSchema: the v5 index DDL.
       uEditQSOForm: EditQSODeliveryText, the Edit QSO delivery line. *)
-   DateUtils, uLogSchema, uEditQSOForm,
+   Classes, DateUtils, uLogSchema, uEditQSOForm,
    fpjson, uJSON, uWRLContact, uWRLExternalLogger, uLogRepository,
    uSettingsModel, VC, LogDupe, SyncObjs, uWRLWorker, uQsoMyFacts,
    uContestRegistry, Tree;
@@ -64,6 +65,99 @@ type
    protected
       function NewClient: TWRLClient; override;
    end;
+
+   (* PEER REVIEW R1: a worker that exposes Notice, never started, so the test
+      owns every thread involved. *)
+   TNoticeProbeWorker = class(TWRLWorker)
+   public
+      procedure Post(const aText: string);
+   end;
+
+   (* The owner's callback: signals that it is running, then stays inside until
+      released, like QueueDeliveryNotice caught mid-call on the worker. *)
+   TNoticeProbe = class
+   public
+      Entered, Release: TEvent;
+      Calls: integer;
+      Returned: boolean;
+      constructor Create;
+      destructor Destroy; override;
+      procedure Callback;
+   end;
+
+   TProbeAction = (paPost, paForget);
+
+   TProbeThread = class(TThread)
+   private
+      FWorker: TNoticeProbeWorker;
+      FAction: TProbeAction;
+   public
+      Done: TEvent;
+      ReturnedWhenFinished: boolean;
+      Probe: TNoticeProbe;
+      constructor Create(aWorker: TNoticeProbeWorker; aProbe: TNoticeProbe;
+                         aAction: TProbeAction);
+      destructor Destroy; override;
+      procedure Execute; override;
+   end;
+
+procedure TNoticeProbeWorker.Post(const aText: string);
+begin
+   Notice(aText);
+end;
+
+constructor TNoticeProbe.Create;
+begin
+   inherited Create;
+   Entered := TEvent.Create(nil, True, False, '');
+   Release := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TNoticeProbe.Destroy;
+begin
+   Release.SetEvent;
+   Entered.Free;
+   Release.Free;
+   inherited Destroy;
+end;
+
+procedure TNoticeProbe.Callback;
+begin
+   Inc(Calls);
+   Entered.SetEvent;
+   Release.WaitFor(5000);
+   Returned := True;
+end;
+
+constructor TProbeThread.Create(aWorker: TNoticeProbeWorker; aProbe: TNoticeProbe;
+                                aAction: TProbeAction);
+begin
+   FWorker := aWorker;
+   FAction := aAction;
+   Probe := aProbe;
+   Done := TEvent.Create(nil, True, False, '');
+   inherited Create(False);
+end;
+
+destructor TProbeThread.Destroy;
+begin
+   inherited Destroy;
+   Done.Free;
+end;
+
+procedure TProbeThread.Execute;
+begin
+   if FAction = paPost then
+      begin
+      FWorker.Post('FIRST');
+      end
+   else
+      begin
+      FWorker.ForgetOwner;
+      ReturnedWhenFinished := Probe.Returned;
+      end;
+   Done.SetEvent;
+end;
 
 var
    StubStatus: integer;
@@ -549,6 +643,43 @@ begin
    end;
 end;
 
+procedure TWRLDeliveryTests.TestNoticeForgetOwner;
+var
+   worker: TNoticeProbeWorker;
+   probe: TNoticeProbe;
+   poster, forgetter: TProbeThread;
+begin
+   BeginTest('ForgetOwner waits for a notice callback in flight, and none fires after it returns');
+   worker := TNoticeProbeWorker.Create('', 'account', 'test-secret');
+   probe := TNoticeProbe.Create;
+   poster := nil;
+   forgetter := nil;
+   try
+      worker.OnNotice := probe.Callback;
+      poster := TProbeThread.Create(worker, probe, paPost);
+      CheckTrue(probe.Entered.WaitFor(5000) = wrSignaled, 'the callback is in flight');
+      forgetter := TProbeThread.Create(worker, probe, paForget);
+      CheckTrue(forgetter.Done.WaitFor(300) = wrTimeout,
+         'ForgetOwner is held back by the call in flight');
+      probe.Release.SetEvent;
+      CheckTrue(forgetter.Done.WaitFor(5000) = wrSignaled, 'ForgetOwner returns once it finished');
+      CheckTrue(forgetter.ReturnedWhenFinished,
+         'the callback had returned before ForgetOwner did');
+      CheckTrue(poster.Done.WaitFor(5000) = wrSignaled, 'the notice post completed');
+      (* The stalled worker keeps running after the owner let go: a further
+         notice is recorded for nobody and calls nothing. *)
+      CheckEquals('FIRST', worker.TakeNotice, 'the notice was recorded');
+      worker.Post('AFTER');
+      CheckEquals(1, probe.Calls, 'no callback after ForgetOwner returned');
+   finally
+      probe.Release.SetEvent;
+      forgetter.Free;
+      poster.Free;
+      probe.Free;
+      worker.Free;
+   end;
+end;
+
 procedure TWRLDeliveryTests.TestFullContactAndCaptureCost;
 var
    repository: TLogRepository;
@@ -879,6 +1010,7 @@ begin
    TestClearingFields;
    TestSecretType;
    TestWorkerEditDuringHTTP;
+   TestNoticeForgetOwner;
    TestFullContactAndCaptureCost;
    TestMinimalPatch;
    TestLastSent;

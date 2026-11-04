@@ -282,6 +282,8 @@ var
   (* MAIN THREAD ONLY -- HamScoreScoreTick and the Prepare hooks. *)
   ScoreChanged: Boolean = True;     { true at start-up: build the first one on the first tick }
   ScoreBuiltAtMs: QWord = 0;
+  ScoreXmlCache: AnsiString = '';       { the last good dynamicresults }
+  ScoreReadFailing: Boolean = False;    { inside a streak of failed log reads }
 
 function GetModuleLogger: TLogLogger;
 begin
@@ -1069,6 +1071,7 @@ end;
 procedure HamScoreScoreTick;
 var
   nowMs: QWord;
+  warn: Boolean;
 begin
   if Uploader = nil then Exit;
   nowMs := GetTickCount64;
@@ -1077,9 +1080,24 @@ begin
   ScoreBuiltAtMs := nowMs;
   try
     (* Re-reads the log -- the call the UDP score path makes, from the main
-      thread, and the one thing that fills QSOPointTotals. *)
-    CalculateTotals;
-    Uploader.SetScoreXml(uGetScores.BuildDynamicResultsXml);
+      thread, and the one thing that fills QSOPointTotals. A read that FAILS
+      (CalculateTotals returns False, no exception) publishes nothing: the
+      last XML stays and ScoreChanged is set again, so a later tick retries
+      (still no sooner than ScoreRebuildDue allows). Peer review R2. *)
+    if RebuildScoreXml(@CalculateTotals, @uGetScores.BuildDynamicResultsXml,
+                       ScoreXmlCache, ScoreReadFailing, warn) then
+       begin
+       Uploader.SetScoreXml(ScoreXmlCache);
+       end
+    else
+       begin
+       ScoreChanged := True;
+       if warn then
+          begin
+          GetModuleLogger.Warn('[HamScore] the log could not be read for the score; ' +
+            'keeping the last dynamicresults and retrying');
+          end;
+       end;
   except
     on E: Exception do
        begin

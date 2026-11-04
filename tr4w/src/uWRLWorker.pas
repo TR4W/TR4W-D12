@@ -1,6 +1,15 @@
 unit uWRLWorker;
 {$I tr4w.inc}
 
+(* RULE FOR ANY WORKER THAT NOTIFIES ITS OWNER BY CALLBACK (peer review R1,
+   2026-11-04; integrations agent): dispatch the callback WHILE HOLDING the
+   lock ForgetOwner takes. A stalled worker is not joined at close, so it
+   outlives its owner; a callback copied out and called after the lock is
+   released can be in flight when ForgetOwner returns, and nothing can revoke
+   it. The callback only queues work, never waits on the main thread. The owner
+   calls RemoveAsyncCalls only AFTER ForgetOwner has returned. Pinned by
+   TWRLDeliveryTests.TestNoticeForgetOwner. *)
+
 interface
 
 uses
@@ -36,7 +45,6 @@ type
       FNotice: string;
       FOnNotice: TThreadMethod;
       FWatch: TLogConnectionWatch;
-      procedure Notice(const aText: string);
       (* AFTER A FAILURE INSIDE A TRANSACTION: roll it back, and say whether
         to try the unit of work again -- True for a busy failure within
         WRL_WORKER_BUSY_ATTEMPTS (after a 50 ms pause), False otherwise, when
@@ -44,6 +52,9 @@ type
       function RetryAfterBusy(aDatabase: TLogDatabase; E: Exception;
                               var aAttempts: integer): boolean;
    protected
+      (* Records the worker's latest notice and tells the owner, under
+        FNoticeLock. Protected so a test can drive it without a database. *)
+      procedure Notice(const aText: string);
       procedure Execute; override;
       function NewClient: TWRLClient; virtual;
    public
@@ -132,23 +143,31 @@ end;
 procedure TWRLWorker.Notice(const aText: string);
 var
    notifyOwner: boolean;
-   callback: TThreadMethod;
 begin
-   (* The callback is copied under the lock: ForgetOwner clears it from the
-     main thread, and a method pointer is two words, so an unlocked read
-     could see half of each. *)
+   (* THE CALLBACK RUNS UNDER THE LOCK (2026-11-04, peer review R1). Copied
+     out and called after Leave, a call could already be in flight when
+     ForgetOwner returned, and the owner's RemoveAsyncCalls could not revoke
+     it. Holding FNoticeLock across the call makes ForgetOwner wait for a call
+     in progress, and no call starts after it returns. The method pointer is
+     two words, so it is also never read half-written.
+
+     THE INVARIANT THAT MAKES THAT SAFE: the callback must return promptly and
+     must NOT wait on the main thread (ForgetOwner may be holding the main
+     thread at this very lock: a wait there is a deadlock) and must not call
+     TakeNotice (it would eat the notice just recorded).
+     TWRLExternalLogger.QueueDeliveryNotice only queues an async call, which
+     is neither. *)
    FNoticeLock.Enter;
    try
       notifyOwner := FNotice = '';
       FNotice := aText;
-      callback := FOnNotice;
+      if notifyOwner and Assigned(FOnNotice) then
+         begin
+         FOnNotice;
+         end;
    finally
       FNoticeLock.Leave;
    end;
-   if notifyOwner and Assigned(callback) then
-      begin
-      callback;
-      end;
 end;
 
 procedure TWRLWorker.ForgetOwner;

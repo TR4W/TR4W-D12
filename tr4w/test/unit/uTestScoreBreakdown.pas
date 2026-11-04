@@ -46,6 +46,8 @@ type
       procedure Test_TheScoreIsRebuiltOnAChangeAtMostEveryMinInterval;
       procedure Test_TheScoreIsRebuiltOnTheHeartbeatWithNoChange;
       procedure Test_TheQthGridIsTheStationsSixCharactersWhenItIsTheSameSquare;
+      procedure Test_AFailedLogReadKeepsTheLastScore;
+      procedure Test_AnEmptyLogReadSuccessfullyPublishesZeros;
    end;
 
 implementation
@@ -241,8 +243,84 @@ begin
    CheckEquals('EL88pa', QthGrid('  EL88pa ', ' EL88 '), 'blanks are trimmed');
 end;
 
+var
+   StubReadOk: boolean;
+   StubXml: AnsiString;
+   StubReads: integer;
+
+function StubReader: boolean;
+begin
+   Inc(StubReads);
+   Result := StubReadOk;
+end;
+
+function StubBuilder: AnsiString;
+begin
+   Result := StubXml;
+end;
+
+(* PEER REVIEW R2.  CalculateTotals returns False, without raising, when the
+   log source will not open, after zeroing the totals.  The tick used to build
+   and post from those zeros.  A failed read keeps the cached XML; a restored
+   one replaces it; a successful read of an empty log is a real zero. *)
+procedure TScoreBreakdownTests.Test_AFailedLogReadKeepsTheLastScore;
+var
+   cache: AnsiString;
+   failing, warn, done: boolean;
+begin
+   BeginTest('Test_AFailedLogReadKeepsTheLastScore');
+   cache := '';
+   failing := False;
+   StubReads := 0;
+   StubReadOk := True;
+   StubXml := '<qso>5</qso>';
+   done := RebuildScoreXml(@StubReader, @StubBuilder, cache, failing, warn);
+   CheckTrue(done, 'a good read is published');
+   CheckEquals('<qso>5</qso>', cache, 'the first score');
+   CheckFalse(warn, 'no warning on success');
+
+   StubReadOk := False;
+   StubXml := '<qso>0</qso>';
+   done := RebuildScoreXml(@StubReader, @StubBuilder, cache, failing, warn);
+   CheckFalse(done, 'a failed read is not a rebuild (the caller keeps its dirty flag)');
+   CheckEquals('<qso>5</qso>', cache, 'the cached score is untouched');
+   CheckTrue(warn, 'the first failure warns');
+   done := RebuildScoreXml(@StubReader, @StubBuilder, cache, failing, warn);
+   CheckFalse(done, 'still failing');
+   CheckFalse(warn, 'one warning per streak, not one per tick');
+   CheckEquals('<qso>5</qso>', cache, 'still the cached score');
+
+   StubReadOk := True;
+   StubXml := '<qso>6</qso>';
+   done := RebuildScoreXml(@StubReader, @StubBuilder, cache, failing, warn);
+   CheckTrue(done, 'the restored source publishes');
+   CheckEquals('<qso>6</qso>', cache, 'and replaces the cache');
+   CheckFalse(failing, 'the streak ended');
+
+   StubReadOk := False;
+   done := RebuildScoreXml(@StubReader, @StubBuilder, cache, failing, warn);
+   CheckTrue(warn, 'a new streak warns again');
+end;
+
+procedure TScoreBreakdownTests.Test_AnEmptyLogReadSuccessfullyPublishesZeros;
+var
+   cache: AnsiString;
+   failing, warn, done: boolean;
+begin
+   BeginTest('Test_AnEmptyLogReadSuccessfullyPublishesZeros');
+   cache := '<qso>9</qso>';
+   failing := False;
+   StubReadOk := True;
+   StubXml := '<qso band="total" mode="ALL">0</qso>';
+   done := RebuildScoreXml(@StubReader, @StubBuilder, cache, failing, warn);
+   CheckTrue(done, 'an empty log that was READ is a real score');
+   CheckEquals('<qso band="total" mode="ALL">0</qso>', cache, 'zero totals are published');
+end;
+
 procedure TScoreBreakdownTests.RunAllTests;
 begin
+   Test_AFailedLogReadKeepsTheLastScore;
+   Test_AnEmptyLogReadSuccessfullyPublishesZeros;
    Test_RTCOneBandCWLogIsOneAllModesBandRowAndOneSummary;
    Test_NoRowNamesAModeOrAModeTotal;
    Test_TwoBandsGiveOneRowEachAndOneSummary;

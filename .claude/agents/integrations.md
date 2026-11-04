@@ -224,6 +224,21 @@ the `case`.** That is the standing instruction, not a suggestion.
 Note `TReadingThread` here owns its own `radioWasDisconnected` flag and holds no
 radio reference — do not reach for a radio from inside it.
 
+**A worker that notifies its owner by callback dispatches it UNDER the lock that
+`ForgetOwner`/detach takes (WRL, peer review R1, 2026-11-04).** A stalled worker is not
+joined at close, so it outlives its owner; copying the callback and calling it after
+releasing the lock leaves a call in flight that detach cannot revoke. The callback only
+queues work (`Application.QueueAsyncCall`), never waits on the main thread (detach may be
+holding the main thread at that very lock) and never re-enters `TakeNotice`.
+`RemoveAsyncCalls` runs only AFTER detach has returned. Pinned by
+`TWRLDeliveryTests.TestNoticeForgetOwner`; rule also at the head of `uWRLWorker.pas`.
+
+**The HamScore score tick publishes only from a successful read (R2, 2026-11-04).**
+`CalculateTotals` returns False WITHOUT raising when the log source will not open, after
+zeroing the totals; building XML from them posts a zero score. `uScoreBreakdown.RebuildScoreXml`
+(seams for the read and the build) decides; a failed read keeps the last XML, leaves the dirty flag set, and warns once per
+streak. A successful read of an empty log still publishes zeros.
+
 ## Mode names on the wire (2026-10-23)
 
 **Never send `VC.ExtendedModeStringArray` to another program** -- `DATA`,

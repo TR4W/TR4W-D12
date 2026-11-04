@@ -310,8 +310,11 @@ end;
 
 procedure TWRLExternalLogger.QueueDeliveryNotice;
 begin
-   (* Called on the worker. The callback only queues a main-thread notice.
-      LogClosed joins the worker before removing this owner's queued calls. *)
+   (* Called on the worker, under the worker's notice lock, so it must stay
+      this small: it only queues a main-thread notice and never waits on the
+      main thread. LogClosed frees the live worker (a join), and for a stalled
+      one calls ForgetOwner, which waits out a call in flight; only then does
+      it remove this owner's queued calls. *)
    Application.QueueAsyncCall(ShowDeliveryNotice, 0);
 end;
 
