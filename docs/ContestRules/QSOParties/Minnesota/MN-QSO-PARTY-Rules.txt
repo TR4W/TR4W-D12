@@ -1,0 +1,231 @@
+Minnesota QSO Party Rules
+
+Source: https://www.w0aa.org/wp-content/docs/mnqp/MNQP_2027_Contest_Rules_A.pdf (the rules PDF cited on TR4W/TR4W#1082 by the MNQP chair, Bill AC0W); text by pdftotext -layout
+Fetched: 2026-11-04
+WA7BNM ID: 238 (https://www.contestcalendar.com/contestdetails.php?ref=238)
+Cabrillo Name: MN-QSO-PARTY
+ADIF Name: MN-QSO-PARTY
+The document is dated "June 8, 2026" on every page and governs from the February 6, 2027 contest
+("NEW 2027" marks each change). It states no Cabrillo CONTEST: value; MN-QSO-PARTY is TR4W's.
+The PDF is beside this file: MNQP_2027_Contest_Rules_A.pdf.
+
+==============================================================================
+                                                                                                                                                                Page 1 of 4
+
+                              Minnesota QSO Party Rules
+
+Date & Time:
+Contest runs on the first Saturday of February from 1400 through 2359 UTC (8 AM through 5:59 PM
+CST).
+
+Objective:
+
+MN stations work everyone; all other W/VE & DX work MN stations. Work stations once per band &
+mode. MN mobiles and rovers may be worked once per band & mode from each county, & MN mobiles
+and rovers may work stations once per band & mode from each county.
+
+Bands:
+
+HF: 160m - 10m (excluding WARC bands).
+
+Suggested Frequencies:
+
+CW: 1.850, 3.550, 7.050, 14.050, 21.050, 28.050.
+SSB: 1.870, 3.850, 7.250, 14.270, 21.350, 28.450.
+CW QSOs in the SSB Portion of the HF Bands is not allowed.
+
+Modes:
+
+Phone (SSB, DSB, FM, AM all count as Phone)
+CW - only
+A station may be worked once on CW and once on Phone on each band.
+
+Spotting Networks:
+
+Use of spotting networks is permissible in all categories. Self-spotting is allowed.
+
+Exchange:
+
+MN Stations: First name & county (three letter designator).
+W/VE Stations: First name and state / province (two letter abbreviation).
+DX Stations: First name only. Section should be logged as DX.
+MN ARES Stations: MN ARES groups using ARES as their name compete for a certificate. The top
+score ARES station will earn the certificate.
+Use only one name throughout the contest. Multioperator stations shall use the same name on all
+transmitters during the contest.
+** NOTE ** MN Mobile and Rover stations should sign their call sign with the county three-letter
+designator, in addition to the exchange. For example, WØAA/DAK for Dakota County.
+
+June 8, 2026  MNQP Rules
+
+                       Page 2 of 4
+
+MN Fixed stations should not sign their call sign with the three-letter county designator to avoid being
+confused as a mobile or rover station. Fixed stations with callsign from another district should sign /Ø to
+help identify they are part of the QSO Party.
+
+Multipliers:
+
+NEW 2027 - Multipliers may be worked once on each mode. In state county multipliers no longer count
+for MN stations while QSO's still count.
+
+Multipliers for Minnesota Stations: 50 states (includes Minnesota), 1 District of Columbia, 10 Canadian
+provinces, 3 Canadian Territories, and 1 DX; 65 per mode; 130 maximum.
+
+Minnesota stations may work DXCC countries for points and receive 1 multiplier for working a DX station.
+
+Multipliers for W/VE and DX (outside Minnesota): MN counties: 87 per mode; 174 maximum.
+
+Multipliers count by mode - once for CW and once for SSB.
+
+Scoring:
+
+New 2027
+Phone QSO's equal 2 points each.
+CW QSO's equal 3 QSO points each.
+The final score is QSO points total times multiplier total.
+
+Operating Classes-W/VE:
+
+     · Single Op Mixed Low Power (100watts or less)
+     · Single Op Mixed High Power (1500 watts or less)
+     · Single Op Mixed QRP (5 watts or less)
+     · Single Op Phone (1500 watts or less)
+     · Single Op CW (1500 watts or less)
+     · Multi-Op (One or Two Transmitters - Multiple Operators) (1500 watts or less)
+
+All classes (except Phone & CW Only) are mixed modes only. All classes are restricted to 160 through 10
+meters (exclusive of WARC Bands).
+
+Operating Classes-DX:
+
+     · Unlimited
+
+Operating Classes-MN:
+
+Output power for all Minnesota operating classes is limited to a maximum of 100 watts except
+QRP (5 watts).
+
+     · Single Operator Mixed (100 watts or less)
+     · Single Operator Mixed QRP (5 watts or less)
+     · Single Operator Phone (100 watts or less)
+
+June 8, 2026           MNQP Rules
+
+                                                                                                                                                                Page 3 of 4
+
+     · Single Operator CW (100 watts or less)
+     · Multi-Operator (One or Two Transmitters - Multiple Operators) (100 watts or less)
+     · Mobile - Single Transmitter (No Limit on the Number of Operators) (100 watts or less)
+     · Rover - Single Transmitter (No Limit on the Number of Operators) (100 watts or less)
+
+All classes (except Phone & CW Only) are mixed modes only. All classes are restricted to 160 through 10
+meters (exclusive of WARC Bands).
+
+Operating in two or more classes requires separate unique callsign to be used for each class.
+
+Any station submitting a log whose operating method does not meet one of the above categories will be
+reclassified as a check log.
+
+Mobiles & Rovers Stations:
+
+Mobile and Rover categories are stations that operate from two or more counties with the same call sign.
+
+Mobile or rover stations that change geographic area (counties for Minnesota stations) are considered to
+be a new station and may be contacted again for QSO points and multiplier credit.
+
+Mobile entries are strongly encouraged to have a separate driver and operator. Drivers and operators in
+the same vehicle may not work each other.
+
+Mobile stations, including antennas, must be self-contained in or on a vehicle and capable of operating
+while moving. Mobile stations may operate in only one county at a time, county line operation not
+permitted.
+
+Rover stations must operate stationary from at least two different physical locations that are separated by
+at least 2 miles. In addition, Rovers may operate while mobile. The intent of the Rover Category is for
+stations to operate primarily stationary and to use mobile operation while moving between stationary
+positions.
+
+NEW 2027
+Rovers may operate simultaneously from up to 2 counties. To count for both counties, operation must be
+within 500 feet of the county line. Common sense and safety should be considered when making county
+changes and selection a location to operator from.
+
+Any station claiming Single or Multi-operator category that operates from more than one county with one
+call will be reclassified into a Mobile or Rover Category.
+
+Logs:
+
+Logs must be submitted within 7 days of contest completion. Upload electronic logs at
+
+mnqp.contesting.com/mnqpsubmitlog.php (link available on MNQP website) according to the following
+
+guidelines:
+
+     · Cabrillo format is required (CALL.LOG or CALL.CBR extensions, i.e. ACØW.LOG), see example
+          below.
+
+     · Separate summary sheet not required with Cabrillo submitted logs (standard for major contests).
+     · Confirmation e-mails will be sent; however, you should check the logs received page to verify
+
+          your log has been received mnqp.contesting.com/mnqplogsrcvd.php
+
+June 8, 2026  MNQP Rules
+
+                                                           Page 4 of 4
+
+Electronic logs are preferred. Change your paper log to electronic with this on-line log converter:
+www.b4h.net/cabforms/mnqp_cab3.php If you can't convert a paper log to electronic, paper logs may be
+sent to MNQP, 4745-170th Lane NE, Ham Lake, MN 55304-5233 postmarked no later than 7 days after
+the contest. Log and scoring summary sheets are available on the Internet at WWW.WØAA.ORG/MNQP
+under the Resources link. Paper logs generated by a logging program will require submission of
+electronic file to be considered for awards.
+
+Cabrillo format template:
+
+                           ----------info sent-------------- ----------info rcvd-------
+
+QSO: freq mo date          time call  ex1   ex2 call  ex1  ex2 t
+
+QSO: ***** ** yyyy-mm-dd nnnn ********** aaaaaaaaaa aaa ********** aaaaaaaaaa aaa n
+
+QSO: 14042 CW 2010-02-06 1200 AC0W    BILL  MOW N2CU  TOM  NY
+
+o ex1: Name
+o ex2: MN - 3 letter county abbrev., W/VE - 2 letter state/province, DX for non-W/VE
+
+Prizes and Awards:
+
+1st place in each MN & W/VE class receives plaque or certificate depending on the number of entries.
+The top ten single operate W/VE entries outside Minnesota and top six Minnesota single operator entries
+will receive a special gift of Premium Wild Rice from the State of Minnesota. First place single operator
+winners in each State/Province will receive a certificate. Certificates will also be sent to Minnesota
+stations that set a new scoring record for the county they operate in. The top score in each DXCC country
+will receive a certificate. The Contest Committee reserves the right to limit prize distribution based on the
+level of financial support received by sponsors. Certificates will be emailed unless a paper certificate is
+requested.
+
+See MNQP Award Policy on the MNQP website, https://www.w0aa.org/mnqp , for full details.
+
+Minnesota Three Letter County Designators:
+
+The 87 counties of Minnesota are each assigned a 3-letter designator. A list of these counties is available
+at WWW.WØAA.ORG/MNQP under the resources link. These should be used if designing a template for
+
+your contest software of choice. The following programs support the Minnesota QSO Party: N1MM
+Logger Plus, N3FJP, WriteLog, TR4W Logger, CQ/X de NO5W, GenLog, and SkookumLogger (MAC
+Computers).
+
+Real Time Contesting (RTC):
+
+MNQP and Online Scoreboard join forces to advance their project Real Time Contesting to bring real time
+scoring to Radiosporting. Read about their project at https://blog.contestonlinescore.com/real-time-
+contesting-rtc-is-our-new-project/ . Instructions to set up your logger to participate are on the site. Go to
+https://hamscore.com/scoreboard/ to monitor your progress and score during the contest. See the Final
+results and awards will be determined by MNQP's log checking software published later.
+
+See MNQP Award Policy on the MNQP website, https://www.w0aa.org/mnqp , for awards available for
+RTC participation.
+
+June 8, 2026                                               MNQP Rules
+

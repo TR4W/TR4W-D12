@@ -1,6 +1,14 @@
-87 Minnesota Counties + 49 states + DC + 13 Canadian mults
+Entries for the Minnesota QSO Party used by in-state stations (rules dated June 8, 2026, for 2027 on)
+"50 states (includes Minnesota), 1 District of Columbia, 10 Canadian provinces, 3 Canadian Territories"
+The 87 counties all count as Mn (minnesota_cty.dom maps each one), and Mn is listed below them
+so the multiplier keeps the name Minnesota. 50 + DC + 13 + DX is 65 multipliers, "65 per mode".
+"1 DX": TContestMinnesotaQP writes DX as a DX station's multiplier (the name-and-QTH parser
+never looks a DX call up here); the DX line lists it, spelt as the class spells it.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
 
 INCLUDE FILE MINNESOTA_CTY.DOM
+Mn = MN,^Minnesota
+DX = DX,^DX
 Ak = AK, ALK, KL7,^Alaska
 Al = AL,^Alabama
 Ar = AR,^Arkansas

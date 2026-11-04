@@ -99,7 +99,7 @@ const
       that already had them and the CQ WW three; the modes by the CQ WW three
       alone. Generated once from the frozen contest matrix's ids; edited by
       hand from then on, only ever DOWN. *)
-   BANDS_NOT_YET_STATED: array[0..165] of string = (
+   BANDS_NOT_YET_STATED: array[0..164] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB', 'ALRS-UA1DZ-CUP',
       'AP-SPRINT', 'ARCI', 'ARI-DX', 'ARIZONA QSO PARTY',
       'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-DIGI', 'ARRL-DX-CW',
@@ -120,7 +120,7 @@ const
       'JIDX-SSB', 'KCJ', 'KIDS DAY', 'KING-OF-SPAIN-CW',
       'KING-OF-SPAIN-SSB', 'KVP', 'LABRE', 'LOCUST QSO PARTY',
       'LZ DX', 'MAKROTHEN-RTTY', 'MARCONI MEMORIAL', 'MICHIGAN QSO PARTY',
-      'MINI40', 'MINI80', 'MINITEST', 'MINNESOTA QSO PARTY',
+      'MINI40', 'MINI80', 'MINITEST',
       'MONGOLIAN DX', 'MST', 'MWC',
       'NA-SPRINT-CW', 'NA-SPRINT-RTTY', 'NAQP-CW', 'NAQP-RTTY',
       'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NRAU-BALTIC-CW',
@@ -146,7 +146,7 @@ const
       'YUDX'
       );
 
-   MODES_NOT_YET_STATED: array[0..175] of string = (
+   MODES_NOT_YET_STATED: array[0..174] of string = (
       '7QP', 'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
       'ALRS-UA1DZ-CUP', 'AP-SPRINT', 'ARCI', 'ARI-DX',
       'ARIZONA QSO PARTY', 'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
@@ -169,7 +169,7 @@ const
       'JIDX-SSB', 'KCJ', 'KIDS DAY', 'KING-OF-SPAIN-CW',
       'KING-OF-SPAIN-SSB', 'KVP', 'LABRE', 'LOCUST QSO PARTY',
       'LZ DX', 'MAKROTHEN-RTTY', 'MARCONI MEMORIAL', 'MICHIGAN QSO PARTY',
-      'MINI40', 'MINI80', 'MINITEST', 'MINNESOTA QSO PARTY',
+      'MINI40', 'MINI80', 'MINITEST',
       'MONGOLIAN DX', 'MST', 'MWC',
       'NA-SPRINT-CW', 'NA-SPRINT-RTTY', 'NAQP-CW', 'NAQP-RTTY',
       'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NEWEQP', 'NRAU-BALTIC-CW', 'NRAU-BALTIC-SSB', 'NY-QSO-PARTY',

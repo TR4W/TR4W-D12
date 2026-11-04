@@ -885,7 +885,9 @@ begin
    (* TwoPointsPerQSO: RXData.QSOPoints := 2, whatever the mode. *)
    CheckPoints(INQSOPARTY, 'Indiana', 2, 2, 2);
    CheckPoints(COLORADOQSOPARTY, 'Colorado', 2, 2, 2);
-   CheckPoints(MINNQSOPARTY, 'Minnesota', 2, 2, 2);
+   (* MINNESOTA LEFT THIS LIST AT #193 (2026-11-04): its sponsor's 2027
+      points are CW 3, Phone 2, and digital is no mode of the contest.
+      Pinned in uTestContestMinnesotaQP. *)
 
    (* OnePhoneTwoCW: if Mode = CW then 2 else 1 -- digital takes the 1. *)
    CheckPoints(OHIOQSOPARTY, 'Ohio', 2, 1, 1);
@@ -1007,10 +1009,12 @@ begin
          end;
       end;
 
-   (* THE EIGHT WITH NO ESTABLISHED NUMBER -- all of them, not a sample, since
+   (* THE ONES WITH NO ESTABLISHED NUMBER -- all of them, not a sample, since
       each one is an independent opportunity to have invented a limit. *)
    CheckUnlimited(COLORADOQSOPARTY, 'Colorado');
-   CheckUnlimited(MINNQSOPARTY, 'Minnesota');
+   (* MINNESOTA LEFT THIS LIST AT #193: "Rovers may operate simultaneously
+      from up to 2 counties" (2027) -- two, pinned in
+      uTestContestMinnesotaQP. *)
    CheckUnlimited(MOQSOPARTY, 'Missouri');
    CheckUnlimited(OHIOQSOPARTY, 'Ohio');
    (* WISCONSIN LEFT THIS LIST AT #88 round 2: "Mobiles or portables may not

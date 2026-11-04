@@ -777,6 +777,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Oklahoma QSO Party, a new contest registered by its id
       (2026-10-26, #126). *)
    uTestContestOklahomaQP in 'uTestContestOklahomaQP.pas',
+   (* The Minnesota QSO Party's 2027 rules (2026-11-04, #193). *)
+   uTestContestMinnesotaQP in 'uTestContestMinnesotaQP.pas',
    (* The New Mexico QSO Party, a new contest registered by its id
       (2026-10-26, #125). *)
    uTestContestNewMexicoQP in 'uTestContestNewMexicoQP.pas',
@@ -971,6 +973,7 @@ begin
    RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
    RegisterSuite(TContestNorthDakotaQPTests.Create('ContestNorthDakotaQP'));
    RegisterSuite(TContestOklahomaQPTests.Create('ContestOklahomaQP'));
+   RegisterSuite(TContestMinnesotaQPTests.Create('ContestMinnesotaQP'));
    RegisterSuite(TContestNewMexicoQPTests.Create('ContestNewMexicoQP'));
    RegisterSuite(TContestOntarioQPTests.Create('ContestOntarioQP'));
    RegisterSuite(TContestQuebecQPTests.Create('ContestQuebecQP'));
