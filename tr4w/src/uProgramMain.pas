@@ -1462,6 +1462,19 @@ begin
    TLogLogger.GetLogger('TR4WDebugLog.Keychain').Level := Log4D.Warn;
    SetKeychainNotice(KeychainNoticeToLog);
 
+   (* THE CONTEST MATRIX RUNS WITH AN EMPTY VAULT (issue 195, 2026-11-04).
+     TR4WSettings.UnprotectSecretsAfterLoad asks the active vault for every
+     credential-typed setting the settings file leaves empty, and the matrix's
+     fixture leaves them all empty -- so on a machine that had stored a WRL
+     key and a HamScore password, both came back from the real Credential
+     Manager and CaptureChangedSettings recorded them in every record. A
+     record must be identical on any machine and must never hold a secret;
+     the in-memory vault starts empty and the real one is never read. *)
+   if SameText(AnsiString(ParamStr(2)), AnsiString('/MATRIX')) then
+      begin
+      InstallTestKeychain;
+      end;
+
    (* A LOG FILE TR4W CANNOT OPEN IS NOT A REASON TO STOP.  The appender used to
      raise here, before the crash handler above existed, so the process ended
      with an exit code and nothing on screen or on disk said why -- seen once

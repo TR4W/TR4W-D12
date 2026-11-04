@@ -66,6 +66,10 @@
 #   * The program runs from tr4w/target, so dom/ and cty.dat are the tracked
 #     ones.  COMMONMESSAGES.INI is NOT tracked and would change the recorded CW
 #     memories, so its presence there refuses the run.
+#   * THE SECRET VAULT IS EMPTY: the program installs an in-memory vault for
+#     /MATRIX (uProgramMain), so no credential from the machine's own store
+#     reaches a record, and matrix_check_no_credentials fails the run if a
+#     setting named KEY, PASSWORD, SECRET or TOKEN appears in one (issue 195).
 #   * Times are fixed in the QSO table; the one clock-derived setting (CONTEST
 #     TITLE) is left out; machine paths are replaced in the program.
 #   * THE CALL-HISTORY FILE IS THE MATRIX'S OWN (M11 S0c): MATRIX-TRMASTER.DTA,
@@ -329,7 +333,51 @@ matrix_run(){
       return 1
    fi
 
+   if ! matrix_check_no_credentials "$out"; then
+      return 1
+   fi
+
    MATRIX_CAPTURED=$n
+   return 0
+}
+
+# matrix_check_no_credentials <dir> -- NO RECORD MAY HOLD A CREDENTIAL (issue
+# 195). A record is committed to a public repository when it is frozen, and a
+# credential-backed setting reaches it when the program reads the machine's own
+# vault (the run installs an empty one precisely so that cannot happen). This
+# is the check that FAILS if it ever does again, for any reason.
+#
+# Looks at the KEY of every setting.* line -- the text before '=' -- for the
+# whole word KEY, PASSWORD, SECRET or TOKEN, so KEYER and KEYBOARD do not match.
+# Prints file names and setting names only, NEVER a value, and returns 1 when
+# any is found or when no record carries a setting line at all (a pattern that
+# matches nothing in a directory that holds no settings is a guard that has
+# failed open).
+matrix_check_no_credentials(){
+   local dir="$1" f hits bad=0 seen=0
+   for f in "$dir"/*.matrix; do
+      [ -f "$f" ] || continue
+      if grep -q -E '^setting\.' "$f"; then
+         seen=$((seen+1))
+      fi
+      hits=$(grep -o -E '^setting\.[^=]*=' "$f" \
+             | grep -i -E '[^A-Za-z](KEY|PASSWORD|SECRET|TOKEN)([^A-Za-z]|=$)' \
+             | sed 's/=$//' | sort -u | tr -d '\r')
+      if [ -n "$hits" ]; then
+         echo "contest-matrix: FAIL -- $(basename "$f") records a credential-named setting:" >&2
+         echo "$hits" | sed 's/^/                /' >&2
+         bad=1
+      fi
+   done
+   if [ "$seen" -eq 0 ]; then
+      echo "contest-matrix: FAIL -- no record carries a setting.* line, so the credential" >&2
+      echo "                check could not have seen anything (it would pass blind)." >&2
+      return 1
+   fi
+   if [ "$bad" -ne 0 ]; then
+      echo "                A record must never carry a credential; do NOT freeze these." >&2
+      return 1
+   fi
    return 0
 }
 
