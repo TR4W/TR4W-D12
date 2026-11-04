@@ -94,7 +94,10 @@ not actually commented out, and lists every marked line so the pile gets swept.
   caught. Its finalization now frees them through `FreeDeferralTarget`, which first
   calls `Application.RemoveAsyncCalls`: `TApplication.Destroy` drains the async
   queue AFTER unit finalization, so a call still queued against a freed object
-  would run on freed memory at shutdown.
+  would run on freed memory at shutdown. **They are created in the unit's
+  initialization since issue #132** (2026-11-04): created lazily, two worker
+  threads arriving together could each make one and leak the other. A nil
+  target now means "after finalization", and the callers return.
 
 ## A window that shows something per contest asks the contest
 
@@ -224,7 +227,12 @@ tests: run the worker path, assert the count did not move.
 the form itself, and the #108 test passed against the defect until it moved.
 A worker that changes state the UI shows publishes the state and requests a
 `uMainThreadWork` job (`mtCodeSpeedDisplay`, `mtCWByCATMessageEnded`,
-`mtBandMapCallOnFrequency`, `mtTuneDupeCheck`, and the older ones); a job
+`mtBandMapCallOnFrequency`, `mtTuneDupeCheck`, the keying threads'
+`mtCWMessageEnded` / `mtCWAutoCallTerminate` / `mtWinKeyerSendEnded` /
+`mtDVPMessageEnded` from issue #132, and the older ones); **`uAppTimers`
+reports a timer started or stopped off the main thread** too (#132: a TTimer
+enabled from a thread is that thread's `SetTimer` on Windows and never fires
+there). A job
 takes no argument, so a value it needs is published first with
 `InterlockedExchange`. **`ShowQuickCommandNotice` from a worker hands the whole
 notice over** (caption and 30 s wipe, latest text wins, held in

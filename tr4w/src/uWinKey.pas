@@ -336,7 +336,8 @@ uses
   uMainForm,   { the main window's elements are LCL controls }
   uKeyerState, { the keyer's state. This unit runs on read threads and must not
                  name a control -- see wkDispayState and wkOpen }
-  uMainThreadWork, (* mtCodeSpeedDisplay -- the speed pot's readout, issue #108 *)
+  uMainThreadWork, (* mtCodeSpeedDisplay -- the speed pot's readout, issue #108;
+                      mtWinKeyerSendEnded -- the end of a message, issue #132 *)
   SysUtils,
   uNet,
   LogDupe,
@@ -777,6 +778,22 @@ begin
   Result := Length(got);
 end;
 
+(* mtWinKeyerSendEnded -- ON THE MAIN THREAD (issue #132).  What the reader ran
+  when the busy bit dropped, in its order: auto call terminate's return to CQ,
+  or else the auto-CQ re-arm; then the return to the inactive radio. *)
+procedure RunWinKeyerSendEnded;
+begin
+  if AutoCallTerminateIsDue then
+     begin
+     ReturnInCQOpMode;
+     end
+  else
+     begin
+     tStartAutoCQ;
+     end;
+  BackToInactiveRadioAfterQSO;
+end;
+
 function wkReadThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   1, 2;
@@ -849,11 +866,19 @@ begin
 //              wkHostBufferIndex := 0;
 //              wkHostBufferSendIndex := 0;
 //              wkWaitingBytesInHost := 0;
-              if not tStartAutoCallTerminate(wkThreadID) then
-                 begin
-                 tStartAutoCQ;
-                 end;
-             BackToInactiveRadioAfterQSO;
+              (* THE STATE IS SET HERE; WHAT FOLLOWS THE MESSAGE RUNS ON THE
+                MAIN THREAD (issue #132).  Auto call terminate's return to CQ
+                (or else the auto-CQ re-arm, an LCL TTimer) and the return to
+                the inactive radio ran on this reader, which has no message
+                loop.  mtWinKeyerSendEnded runs them in the same order, and
+                asks AutoCallTerminateIsDue there -- nothing on this thread
+                depends on the answer.  Coalesced: this block runs for EVERY
+                status byte with the busy bit clear, as it always has, and
+                two that arrive within one turn of the main loop are one pass
+                -- BackToInactiveRadioAfterQSO is a no-op the second time, and
+                the auto-CQ interval starts from the later byte either way,
+                give or take that turn. *)
+              RequestMainThreadJob(mtWinKeyerSendEnded);
             end;
           end
           else
@@ -1296,6 +1321,10 @@ procedure wkSwapTune;
 begin
   wkSendTwoBytes(wkCMD_KEYIMMEDIATE, Byte(not wkBUSY));
 end;
+
+initialization
+  (* Issue #132 -- what the reader used to do to the UI itself. *)
+  RegisterMainThreadJob(mtWinKeyerSendEnded, @RunWinKeyerSendEnded);
 
 end.
 

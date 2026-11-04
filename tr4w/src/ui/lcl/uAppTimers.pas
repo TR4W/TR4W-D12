@@ -63,7 +63,8 @@ implementation
 uses
    SysUtils,
    Classes,      (* TObject, TNotifyEvent *)
-   ExtCtrls;     (* TTimer *)
+   ExtCtrls,     (* TTimer *)
+   uCrashLog;    (* OnMainThread / ReportOffMainThread -- issue #132 *)
 
 type
    (* TTimer.OnTimer is a TNotifyEvent, so something has to own a method. One
@@ -122,11 +123,29 @@ begin
    Result := GTimers[aTimer];
 end;
 
+(* A TIMER IS THE MAIN THREAD'S, AND A WORKER THAT TOUCHES ONE IS REPORTED
+  (issue #132).  Enabling a TTimer is SetTimer(0, 0, ...) on Windows -- owned by
+  the CALLING thread, so armed from a keying thread it ticks into a message
+  queue nobody reads and never fires -- and on every widget set it mutates the
+  widget set's timer list unlocked.  The atQuickDisplayClear wipe was lost
+  this way (see the header).  REPORTED, NOT REFUSED: ReportOffMainThread logs
+  at Error and never raises, so the caller is named in tr4w.log and the
+  behaviour is what it was.  A worker requests a uMainThreadWork job instead. *)
+procedure ReportTimerOffMainThread(const aSite: string; const aCaller: CodePointer);
+begin
+   if not OnMainThread then
+      begin
+      ReportOffMainThread(aSite, aCaller);
+      end;
+end;
+
 procedure StartAppTimer(const aTimer: TAppTimer; const aIntervalMs: integer;
                         const aProc: TAppTimerProc);
 var
    t: TTimer;
 begin
+   ReportTimerOffMainThread('app timer start', get_caller_addr(get_frame));
+
    if (aIntervalMs <= 0) or (not Assigned(aProc)) then
       begin
       Exit;
@@ -145,6 +164,8 @@ end;
 
 procedure StopAppTimer(const aTimer: TAppTimer);
 begin
+   ReportTimerOffMainThread('app timer stop', get_caller_addr(get_frame));
+
    if GTimers[aTimer] <> nil then
       begin
       GTimers[aTimer].Enabled := False;

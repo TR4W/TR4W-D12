@@ -2333,9 +2333,12 @@ begin
          Exit;      (* shutting down: nothing will draw it *)
          end;
 
+      (* CREATED IN THIS UNIT'S INITIALIZATION, not here (issue #132): two
+        worker threads creating it lazily at once could each make one, and
+        one would leak with its text.  nil only after finalization. *)
       if GNoticeArmer = nil then
          begin
-         GNoticeArmer := TNoticeArmer.Create;
+         Exit;
          end;
 
       if GNoticeArmer.Hold(aText) then
@@ -2509,9 +2512,11 @@ var
 
 procedure Queue(const aAction: TDeferredAction);
 begin
+   (* Created in this unit's initialization (issue #132) -- lazily, two
+     threads could each create one.  nil only after finalization. *)
    if GDeferrer = nil then
       begin
-      GDeferrer := TEntryDeferrer.Create;
+      Exit;
       end;
 
    // Application can be gone on the way out, and QueueAsyncCall RAISES on a
@@ -2600,7 +2605,7 @@ begin
 
    if GDeferrer = nil then
       begin
-      GDeferrer := TEntryDeferrer.Create;
+      Exit;      (* created in initialization; nil only after finalization *)
       end;
 
    New(work);
@@ -2633,7 +2638,7 @@ begin
 
    if GDeferrer = nil then
       begin
-      GDeferrer := TEntryDeferrer.Create;
+      Exit;      (* created in initialization; nil only after finalization *)
       end;
 
    New(work);
@@ -4815,7 +4820,8 @@ begin
       end;
 end;
 
-(* FREE ONE OF THE LAZY DEFERRAL TARGETS (GNoticeArmer, GDeferrer) AT UNIT
+(* FREE ONE OF THE DEFERRAL TARGETS (GNoticeArmer, GDeferrer -- created in the
+   initialization since issue #132; they were lazy) AT UNIT
    FINALIZATION -- found 2026-10-22 as two unfreed 4-byte blocks in the checked
    unit run, the first time a test (the URC DX one) reached an off-main-thread
    element write.
@@ -4863,11 +4869,18 @@ initialization
 
    InitCriticalSection(GPendingLock);
 
+   (* THE TWO DEFERRAL TARGETS, CREATED HERE, ON THE MAIN THREAD (issue #132).
+     They were created on the first off-main-thread write, with no lock: two
+     worker threads arriving together could each create one, and the loser
+     leaked -- and GNoticeArmer's held text and queued flag with it. *)
+   GNoticeArmer := TNoticeArmer.Create;
+   GDeferrer := TEntryDeferrer.Create;
+
 finalization
    DoneCriticalSection(GPendingLock);
    // The overflow de-duplication list -- created on first use, so usually nil.
    FreeAndNil(GOverflowReported);
-   // The two deferral targets -- created on the first off-main-thread write.
+   // The two deferral targets -- created in the initialization above.
    FreeDeferralTarget(TObject(GNoticeArmer));
    FreeDeferralTarget(TObject(GDeferrer));
    // The activation raiser -- its handler goes before the object does.

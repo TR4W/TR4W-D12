@@ -162,7 +162,30 @@ type
       (* ISSUE #108: THE INACTIVE RADIO WAS TUNED with TUNE ALT-D enabled --
         the Alt-D dupe check against the band map, latest frequency only.
         uRadioPolling owns it. *)
-      mtTuneDupeCheck
+      mtTuneDupeCheck,
+
+      (* ISSUE #132: THE CPU KEYER'S AUTO CALL TERMINATE.  The CW thread has
+        sent the call in auto-send and decided the exchange is due;
+        ReturnInCQOpMode drives the call window and appends the exchange, so
+        it runs here while the CW thread keeps PTT up and waits for it
+        (LOGK1EA.CWAutoCallTerminatePending).  LOGK1EA owns it. *)
+      mtCWAutoCallTerminate,
+
+      (* ISSUE #132: A CPU-KEYED MESSAGE ENDED.  The auto-CQ re-arm (an LCL
+        TTimer) and the return to the inactive radio, in the order the CW
+        thread ran them.  LOGK1EA owns it. *)
+      mtCWMessageEnded,
+
+      (* ISSUE #132: THE WINKEYER STOPPED KEYING, as its reader saw the busy
+        bit drop.  Auto call terminate or the auto-CQ re-arm, then the return
+        to the inactive radio, in the order the reader ran them.  uWinKey owns
+        it. *)
+      mtWinKeyerSendEnded,
+
+      (* ISSUE #132: A DVK MESSAGE ENDED.  The auto-CQ re-arm, the code speed
+        panel (it shows DVK ON / OFF) and the return to the inactive radio, in
+        the order the playback thread ran them.  LOGDVP owns it. *)
+      mtDVPMessageEnded
    );
 
    TMainThreadProc = procedure;
@@ -195,7 +218,7 @@ type
 
 var
    { One bit per job.  LongInt because that is what the Interlocked family
-     takes. }
+     takes -- so TMainThreadJob may hold at most 32 members. }
    gPending: LongInt = 0;
    gProcs: array[TMainThreadJob] of TMainThreadProc;
    gRunner: TJobRunner = nil;

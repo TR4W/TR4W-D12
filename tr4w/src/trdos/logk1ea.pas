@@ -40,8 +40,9 @@ uses
        timeBeginPeriod / timeSetEvent   the CW element clock -- there is no
                                         counterpart, and the {$ELSE} says so
        WaitForSingleObject              on the event that clock signals
-       AttachThreadInput x2             per-thread input queues, a Win32
-                                        concept with nothing to map to
+       AttachThreadInput x1             per-thread input queues, a Win32
+                                        concept with nothing to map to (the
+                                        CW thread's went with issue #132)
      Messages declared nothing. *)
   Windows,
 {$ENDIF}
@@ -456,6 +457,8 @@ function DisplayByte(b: Byte): string;
 procedure tFootSwitchProcedure;
 function tGetPortType(port: PortType): PortInterface;
 //procedure testF(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD) stdcall;
+(* MAIN THREAD ONLY (issue #132): it swaps radios, sets the op mode and may
+  send a CQ.  The keying threads request a job that runs it. *)
 procedure BackToInactiveRadioAfterQSO;
 (* tSetPriorityClass IS DELETED (2026-09-08). Its ENTIRE BODY was commented
   out -- Windows.SetPriorityClass behind an `if tHighCWPerformance` that was
@@ -463,8 +466,22 @@ procedure BackToInactiveRadioAfterQSO;
   as well. A no-op whose only live content was a DWORD parameter. *)
 
 procedure TurnOnActivePort;
+(* MAIN THREAD ONLY (issue #132): it arms an LCL TTimer.  A keying thread
+  requests its own uMainThreadWork job, which runs this. *)
 procedure tStartAutoCQ;
-function tStartAutoCallTerminate(idAttach: TThreadID): boolean;
+
+(* IS AUTO CALL TERMINATE DUE -- the call has gone out in auto-send and the
+  exchange has not.  A QUESTION ONLY, safe on any thread; it was
+  tStartAutoCallTerminate, which also ran ReturnInCQOpMode on the asking
+  thread (issue #132).  The action is the main thread's: the CW thread
+  requests mtCWAutoCallTerminate, the WinKeyer's job asks this itself. *)
+function AutoCallTerminateIsDue: boolean;
+
+(* TRUE WHILE THE CW THREAD'S AUTO CALL TERMINATE IS WAITING FOR THE MAIN
+  THREAD -- the CW thread keeps PTT up until it is answered.  Gives up, and
+  says so in the log, only if the job has not even STARTED within
+  CW_AUTO_CALL_TERMINATE_WAIT_MS; a running one is always waited for. *)
+function CWAutoCallTerminatePending: boolean;
 
 var
   DoingPaddle                           : boolean;
@@ -480,6 +497,7 @@ uses
    uSettingsModel,     // Settings -- the settings that have left CFGCA
    uPortAddress,   // SerialDeviceName -- the one port-name rule
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
+   uMainThreadWork, (* mtCWAutoCallTerminate / mtCWMessageEnded -- issue #132 *)
   (* FIRST IN THE CLAUSE, deliberately. Every other unit here then takes
     precedence over it, so adding SysUtils to a unit this old cannot quietly
     re-point an existing unqualified call at a different routine. What this
@@ -1945,6 +1963,9 @@ begin
 {$IFEND}
 end;
 
+(* Below, with the flag it sets -- see "THE CW THREAD'S AUTO CALL TERMINATE". *)
+procedure RequestCWAutoCallTerminate; forward;
+
 function CWThreadProc(aParameter: Pointer): DWORD; stdcall;
 label
   SendNext, ExitAndPTTof;
@@ -1981,15 +2002,25 @@ begin
 
      end;
 
+  (* AUTO CALL TERMINATE: DECIDED HERE, DONE ON THE MAIN THREAD (issue #132).
+    ReturnInCQOpMode ran on this thread and drove the call window from it.
+    Now the main thread runs it, and this thread stays alive -- PTT up, the
+    ring watched -- until it has: CWAutoCallTerminatePending keeps the loop
+    below going.  That matters because ReturnInCQOpMode clears tAutoSendMode
+    BEFORE it appends the exchange, so without the wait this thread could
+    see an empty ring and no auto-send in between, drop PTT and exit with
+    the exchange still to come.  The exchange is keyed by this same thread,
+    as before, once the ring has it. *)
   if b = False then
-    if tStartAutoCallTerminate(CWThreadID) then
+    if AutoCallTerminateIsDue then
        begin
        b := True;
+       RequestCWAutoCallTerminate;
        goto SendNext;
        end;
 //  if tAutoSendMode then goto SendNext;
 
-  if tAutoSendMode or tWaitForNextChar then
+  if tAutoSendMode or tWaitForNextChar or CWAutoCallTerminatePending then
      begin
      Sleep(10);
      goto SendNext;
@@ -2008,7 +2039,10 @@ begin
 
 //  ExitFromCWThread := False;
    SetSpeed(DisplayedCodeSpeed);   // 4.50.1
-  tStartAutoCQ;  // It appears we go here everytime we finish a CW buffer no matter if we just CQ'ed or not ny4i  4.44.5
+  (* tStartAutoCQ stood here ("It appears we go here everytime we finish a CW
+    buffer no matter if we just CQ'ed or not" -- ny4i 4.44.5).  It arms an LCL
+    TTimer, so it runs in mtCWMessageEnded now, requested as this thread's
+    LAST statement (issue #132) -- still before BackToInactiveRadioAfterQSO. *)
 {$IF OZCR2008}
   CWMessageToNetwork := '';
 {$IFEND}
@@ -2062,29 +2096,114 @@ begin
 
   ClearThread(CWThreadID);
 
-  BackToInactiveRadioAfterQSO;
+  (* THE MESSAGE IS OVER; THE MAIN THREAD DOES WHAT FOLLOWS IT (issue #132).
+    tStartAutoCQ and BackToInactiveRadioAfterQSO ran here: the first arms an
+    LCL TTimer -- on Windows a SetTimer owned by this thread, which has no
+    message loop and is about to exit, so the auto-CQ repeat it armed could
+    not fire -- and the second swaps radios, sets the op mode and may send a
+    CQ.  mtCWMessageEnded runs both, in that order.
+
+    REQUESTED LAST, AFTER ClearThread, AND THAT IS LOAD-BEARING.  A CQ that
+    BackToInactiveRadioAfterQSO sends goes through TCWKeyerCPU.SendString,
+    which starts a CW thread only if none is running; requested any earlier,
+    the job could put the CQ into a ring this exiting thread then drops. *)
+  RequestMainThreadJob(mtCWMessageEnded);
 
 end;
 
-function tStartAutoCallTerminate(idAttach: TThreadID): boolean;
+function AutoCallTerminateIsDue: boolean;
 begin
-  Result := False;
-  if Settings.Cq.AutoCallTerminate = True then
-    if ExchangeHasBeenSent = False then
-      if tAutoSendMode then
-        if ControlAMode = False then
-           begin
-           (* WINDOWS-ONLY, AND THERE IS NOTHING FOR AN {$ELSE} TO DO.
-             AttachThreadInput joins two threads' input queues so keyboard
-             state and focus are shared -- a Win32 concept, on a widget set
-             that does not have per-thread input queues at all. Off Windows
-             the auto-send return simply happens without it. *)
-{$IFDEF WINDOWS}
-           AttachThreadInput(idAttach, MainThreadID, True);
-{$ENDIF}
-           ReturnInCQOpMode;
-           Result := True;
-           end;
+  (* The four conditions tStartAutoCallTerminate tested, unchanged.  Its
+    AttachThreadInput went with the action: it joined the asking thread's
+    input queue to the main thread's so ReturnInCQOpMode's focus calls would
+    work from a worker -- and the WinKeyer reader's join was never undone.
+    On the main thread there is nothing to join. *)
+  Result := (Settings.Cq.AutoCallTerminate = True) and
+            (ExchangeHasBeenSent = False)          and
+            tAutoSendMode                          and
+            (ControlAMode = False);
+end;
+
+(* THE CW THREAD'S AUTO CALL TERMINATE, HANDED TO THE MAIN THREAD (issue #132).
+
+  ONE CW THREAD AT A TIME, so one state and one deadline.  THREE STATES:
+  NONE, ASKED (set before the job is requested) and RUNNING (set by the job on
+  entry); the job puts it back to NONE after ReturnInCQOpMode returns, so
+  "none" means the exchange is already in the ring (or was not due).
+
+  THE DEADLINE APPLIES TO ASKED ONLY.  It exists for a job that never runs --
+  the program shutting down, the async queue already gone -- because
+  RequestMainThreadJob reports that only to the log, and an unbounded wait
+  would hold PTT for ever.  A RUNNING job always finishes, and giving up on
+  one is the race the wait exists to close: the keep-alive test reaches this
+  only once tAutoSendMode is False, which ReturnInCQOpMode does BEFORE it
+  appends the exchange -- so after a main-thread stall longer than the
+  deadline, a deadline on RUNNING would let this thread drop PTT in exactly
+  that gap. *)
+const
+  CW_AUTO_CALL_TERMINATE_WAIT_MS = 2000;
+  CW_ACT_NONE    = 0;
+  CW_ACT_ASKED   = 1;
+  CW_ACT_RUNNING = 2;
+
+var
+  gCWAutoCallTerminatePending: LongInt = CW_ACT_NONE;
+  gCWAutoCallTerminateAsked: QWord = 0;
+
+procedure RequestCWAutoCallTerminate;
+begin
+  gCWAutoCallTerminateAsked := GetTickCount64;
+  InterlockedExchange(gCWAutoCallTerminatePending, CW_ACT_ASKED);
+  RequestMainThreadJob(mtCWAutoCallTerminate);
+end;
+
+function CWAutoCallTerminatePending: boolean;
+var
+  state: LongInt;
+begin
+  state := InterlockedCompareExchange(gCWAutoCallTerminatePending, 0, 0);
+  Result := state <> CW_ACT_NONE;
+  if state <> CW_ACT_ASKED then
+     begin
+     Exit;      (* none, or running: the job will finish *)
+     end;
+
+  if GetTickCount64 - gCWAutoCallTerminateAsked >= CW_AUTO_CALL_TERMINATE_WAIT_MS then
+     begin
+     (* Stop waiting, and say so -- but only if the job has STILL not
+       started; one that started in the meantime is waited for.  If it runs
+       later it still returns to CQ, and that path starts its own CW thread. *)
+     if InterlockedCompareExchange(gCWAutoCallTerminatePending, CW_ACT_NONE,
+                                   CW_ACT_ASKED) <> CW_ACT_ASKED then
+        begin
+        Exit;    (* it started: Result is True, keep waiting *)
+        end;
+     logger.Error('[CWThreadProc] auto call terminate: the main thread did not '
+                  + 'answer within %d ms; the CW thread stops waiting for it',
+                  [CW_AUTO_CALL_TERMINATE_WAIT_MS]);
+     Result := False;
+     end;
+end;
+
+(* mtCWAutoCallTerminate -- on the main thread. *)
+procedure RunCWAutoCallTerminate;
+begin
+  (* RUNNING first: from here the CW thread waits with no deadline. *)
+  InterlockedExchange(gCWAutoCallTerminatePending, CW_ACT_RUNNING);
+  try
+     ReturnInCQOpMode;
+  finally
+     (* AFTER, never before: the CW thread waits on this, and the exchange
+       ReturnInCQOpMode appends is what it is waiting for. *)
+     InterlockedExchange(gCWAutoCallTerminatePending, CW_ACT_NONE);
+  end;
+end;
+
+(* mtCWMessageEnded -- on the main thread.  The CW thread's order. *)
+procedure RunCWMessageEnded;
+begin
+  tStartAutoCQ;
+  BackToInactiveRadioAfterQSO;
 end;
 
 procedure tStartAutoCQ;
@@ -2500,8 +2619,11 @@ begin
     QSONormal, FootSwitchControlEnter:
       begin
 {$IFDEF WINDOWS}
-        { See the note on the other AttachThreadInput, in
-          tStartAutoCallTerminate. }
+        (* AttachThreadInput joins this thread's input queue to the main
+          thread's -- a Win32 concept with nothing off Windows to map to.
+          tFootSwitchProcedure has no caller (the foot switch read went with
+          the parallel port), so this is not reached; the CW thread's copy
+          went with issue #132. *)
         AttachThreadInput(tPaddleThreadID, MainThreadID, True);
 {$ENDIF}
         if FootSwitchMode = QSONormal then
@@ -2552,5 +2674,10 @@ begin
 //      SendCrypticMessage(ControlA + GetCQMemoryString(InActiveRadioPtr^.ModeMemory, AltF3));
 
 end;
+
+initialization
+  (* Issue #132 -- what the CW thread used to do to the UI itself. *)
+  RegisterMainThreadJob(mtCWAutoCallTerminate, @RunCWAutoCallTerminate);
+  RegisterMainThreadJob(mtCWMessageEnded, @RunCWMessageEnded);
 
 end.

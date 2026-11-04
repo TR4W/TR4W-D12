@@ -30,6 +30,41 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-04 -- THE KEYING THREADS HAND THE END OF A MESSAGE TO THE MAIN THREAD (issue #132)
+
+The CW thread, the WinKeyer reader and the DVK playback thread no longer arm the
+auto-CQ timer, swap radios, return to CQ or draw the speed panel themselves; each
+asks the main thread, in its old order. The unit tests run the shipped CW thread
+and DVK body to their end; nothing here has keyed a rig. **Expect one visible
+change:** on Windows a timer armed from those threads could never fire, so the
+auto-CQ repeat after a CPU-keyed or WinKeyer-keyed CQ may now work where the
+previous 5.x build stopped after one CQ. If it repeated before, say so -- that
+would mean something else was re-arming it.
+
+- [ ] **CPU keyer (DTR/RTS), AUTO-CQ.** Start auto-CQ on F1. EXPECT the CQ to
+  repeat after AUTO-CQ DELAY TIME, every time, with PTT dropping between CQs as
+  before, and the element timing unchanged by ear.
+- [ ] **CPU keyer, AUTO CALL TERMINATE.** AUTO CALL TERMINATE on, auto-send on,
+  CQ mode: type a call so auto-send keys it. EXPECT the exchange to follow the
+  call WITHOUT PTT dropping in between, the cursor to land in the exchange
+  window as before, and no gap you can hear beyond the usual one. Then press
+  Esc the instant the call finishes: EXPECT sending to stop. (The exchange is
+  now appended by the main thread a moment later, so an Esc caught in that
+  moment is handled before the exchange exists -- say if the exchange still
+  goes out.)
+- [ ] **WinKeyer, AUTO-CQ and AUTO CALL TERMINATE.** The same two checks with a
+  WinKeyer. EXPECT the same.
+- [ ] **SO2R TR3 (either keyer).** A QSO that ends with the radios swapped back
+  (`BackToInactiveRadioAfterQSO`): EXPECT the swap back and, with ALT-D CQ
+  enabled, the CQ on the other radio, exactly as before.
+- [ ] **DVK.** Phone, DVK enabled, AUTO-CQ on, a .WAV in F1. EXPECT the message
+  to play, PTT to drop when it ends, the speed panel to read `DVK OFF` after
+  playback, and the CQ to repeat after the delay.
+- [ ] **Nothing in the log.** After the session, search `tr4w.log` for
+  `NOT the main thread`. `app timer start` / `app timer stop` lines are NEW
+  reports (uAppTimers checks now) and each names a caller still to move --
+  report them.
+
 ## Added 2026-11-03 -- WINDOW TITLES CARRY NO "&"
 
 Menu-row text is reused as a window title (`uCaptionText.DisplayedText` strips the markers). Only a screen can judge it.
@@ -933,8 +968,8 @@ of message and the band map's call-on-frequency have not been run.
   EXPECT the Alt-D dupe check as before.
 - [ ] **Nothing in the log.** After the session, search `tr4w.log` for
   `NOT the main thread`. Any line is now an ERROR and names the caller; report
-  it (the CW thread and the WinKeyer reader are known still to do some -- see
-  `.claude/agents/cw-keying.md`).
+  it (the CW thread, the WinKeyer reader and DVK playback were moved by issue
+  #132 -- see that section above).
 
 ## Added 2026-10-26 -- THE CABRILLO IS NAMED AFTER THE LOG (NY4I)
 

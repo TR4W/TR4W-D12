@@ -82,6 +82,9 @@ type
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
       procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
       procedure Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
+      procedure Test_TheCWThreadLeavesTheAutoCQRepeatToTheMainThread;
+      procedure Test_TheDVKPlaybackEndIsDrawnOnTheMainThread;
+      procedure Test_NoKeyingThreadBodyNamesTheUIWork;
       procedure HandleRadioMessage(sMessage: string);
    public
       procedure RunAllTests; override;
@@ -112,7 +115,11 @@ uses
    uTXInhibitView,     (* ReviewTXInhibit, ResetTXInhibitAlerts -- issue #97 *)
    uTestLogCapture,    (* TCaptureAppender *)
    uTestTXInhibitAlert, (* SetSettledTXState *)
-   uFactoryRadioBase;  (* TFactoryRadioBase -- the speed-reporting probe, #108 *)
+   uFactoryRadioBase,  (* TFactoryRadioBase -- the speed-reporting probe, #108 *)
+   LogK1EA,           (* CWBufferStart/End, tWaitForNextChar, DVPOn -- issue #132 *)
+   LOGDVP,             (* tDVPPlayThreadproc, DVPMessagesArray -- issue #132 *)
+   uAppTimers,         (* AppTimerRunning(atAutoCQ) -- issue #132 *)
+   uCWKeyerBase;       (* KeyerCPU -- the CW thread's real starter, issue #132 *)
 
 (* ISSUE #108: A RADIO THAT IS UP AND REPORTS A KEYER SPEED, AND NOTHING ELSE.
 
@@ -172,6 +179,129 @@ end;
 procedure TNoticeWriterThread.Execute;
 begin
    ShowQuickCommandNotice(FText);
+end;
+
+(* ISSUE #132: RUNS THE SHIPPED DVK PLAYBACK THREAD BODY, ONCE, ON A WORKER.
+  LogSend starts it with tCreateThread; what is under test is the body, and a
+  TThread gives the test a Finished to wait on. *)
+type
+   TDVPPlaybackThread = class(TThread)
+   protected
+      procedure Execute; override;
+   public
+      constructor Create;
+   end;
+
+constructor TDVPPlaybackThread.Create;
+begin
+   FreeOnTerminate := False;
+   inherited Create(False);
+end;
+
+procedure TDVPPlaybackThread.Execute;
+begin
+   tDVPPlayThreadproc(nil);
+end;
+
+(* PASCAL SOURCE WITH ITS COMMENTS AND STRING LITERALS BLANKED, for the source
+  guard below: a comment that explains what MOVED OUT of a thread names the
+  routine, and must not read as a call.  Brace, paren-star and line comments;
+  a quote toggles a literal, which also gets '' right. *)
+function CodeOnly(const aSource: string): string;
+var
+   i, n: integer;
+   inBrace, inParen, inLine, inString: boolean;
+   c: Char;
+begin
+   Result := '';
+   n := Length(aSource);
+   inBrace := False;
+   inParen := False;
+   inLine := False;
+   inString := False;
+   i := 1;
+   while i <= n do
+      begin
+      c := aSource[i];
+      if inBrace then
+         begin
+         inBrace := c <> '}';
+         end
+      else if inParen then
+         begin
+         if (c = '*') and (i < n) and (aSource[i + 1] = ')') then
+            begin
+            inParen := False;
+            Inc(i);
+            end;
+         end
+      else if inLine then
+         begin
+         if (c = #10) or (c = #13) then
+            begin
+            inLine := False;
+            Result := Result + c;
+            end;
+         end
+      else if inString then
+         begin
+         inString := c <> '''';
+         end
+      else if c = '{' then
+         begin
+         inBrace := True;
+         end
+      else if (c = '(') and (i < n) and (aSource[i + 1] = '*') then
+         begin
+         inParen := True;
+         Inc(i);
+         end
+      else if (c = '/') and (i < n) and (aSource[i + 1] = '/') then
+         begin
+         inLine := True;
+         end
+      else if c = '''' then
+         begin
+         inString := True;
+         end
+      else
+         begin
+         Result := Result + c;
+         end;
+      Inc(i);
+      end;
+end;
+
+(* THE BODY OF ONE ROUTINE IN A SOURCE FILE, comments stripped: from aHeader
+  (which must be unique) to the first column-zero "end;". '' if absent. *)
+function RoutineBody(const aRelativePath, aHeader: string): string;
+var
+   lines: TStringList;
+   text: string;
+   p, q: integer;
+begin
+   Result := '';
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(ExpandFileName(ExtractFilePath(ParamStr(0)) +
+                         '..' + PathDelim + '..' + PathDelim + 'src' + PathDelim +
+                         aRelativePath)));
+      text := lines.Text;
+   finally
+      lines.Free;
+   end;
+   p := Pos(aHeader, text);
+   if p = 0 then
+      begin
+      Exit;
+      end;
+   text := Copy(text, p, Length(text));
+   q := Pos(LineEnding + 'end;', text);
+   if q = 0 then
+      begin
+      Exit;
+      end;
+   Result := CodeOnly(Copy(text, 1, q));
 end;
 
 (* A WORKER THREAD THAT WRITES ONE STATUS AND EXITS.
@@ -1481,6 +1611,256 @@ begin
    Drain;
 end;
 
+(* ISSUE #132: THE CW THREAD ARMS NO TIMER -- THE MAIN THREAD DOES.
+
+  The SHIPPED CW thread, started by the CPU keyer's own SendString with an
+  empty message: it finds an empty ring and runs straight to its end, where it
+  used to call tStartAutoCQ itself.  That enabled an LCL TTimer from the CW
+  thread -- on Windows a SetTimer owned by a thread with no message loop that
+  is about to exit, so the auto-CQ repeat could not fire.
+
+  Two halves, and the first is the one that fails on the old code: with the
+  thread finished and the main thread NOT YET DRAINED, the auto-CQ timer must
+  not be running and nothing may have been reported; after the drain it must
+  be running.  PTT is disabled, the radio is in TR0 (no swap) and the delay is
+  the longest the setting allows, so nothing keys and the repeat cannot fire
+  inside the test. *)
+procedure TStatusAndNoticeTests.Test_TheCWThreadLeavesTheAutoCQRepeatToTheMainThread;
+const
+   BUDGET_MS = 3000;
+var
+   savedAutoCQ: boolean;
+   savedAutoSend: boolean;
+   savedWaitForNext: boolean;
+   savedPTT: boolean;
+   savedDelay: TAutoCqDelay;
+   savedTwoRadio: TRMode;
+   savedSync: boolean;
+   savedSpeed: integer;
+   reportsBefore: LongInt;
+   started: QWord;
+begin
+   BeginTest('Test_TheCWThreadLeavesTheAutoCQRepeatToTheMainThread');
+   EnsureMainForm;
+   CheckTrue(ActiveRadioPtr <> nil, 'there is an active radio');
+   CheckTrue(KeyerCPU <> nil, 'the CPU keyer exists');
+   CheckFalse(KeyerCPU.StillBeingSent, 'no CW thread is running before the test');
+   StopAppTimer(atAutoCQ);
+   Drain;
+
+   savedAutoCQ := tAutoCQMode;
+   savedAutoSend := tAutoSendMode;
+   savedWaitForNext := tWaitForNextChar;
+   savedPTT := Settings.Ptt.Enable;
+   savedDelay := Settings.Cq.AutoDelay;
+   savedTwoRadio := ActiveRadioPtr^.tTwoRadioMode;
+   savedSync := ActiveRadioPtr^.CWSpeedSync;
+   savedSpeed := CodeSpeed;
+   try
+      Settings.Ptt.Enable := False;
+      Settings.Cq.AutoDelay := High(TAutoCqDelay);
+      tAutoCQMode := True;
+      tAutoSendMode := False;
+      tWaitForNextChar := False;
+      ActiveRadioPtr^.tTwoRadioMode := TR0;
+      ActiveRadioPtr^.CWSpeedSync := False;
+      CWBufferStart := CWBufferEnd;
+
+      reportsBefore := OffMainThreadReportCount;
+      KeyerCPU.SendString('', 0);
+
+      started := GetTickCount64;
+      while KeyerCPU.StillBeingSent and (GetTickCount64 - started < BUDGET_MS) do
+         begin
+         Sleep(1);
+         end;
+      CheckFalse(KeyerCPU.StillBeingSent, 'the CW thread ran to its end');
+      (* ClearThread is near the end, not at it: give the last statements
+        time to run before judging what they did. *)
+      Sleep(100);
+
+      CheckFalse(AppTimerRunning(atAutoCQ),
+                 'the CW thread armed the auto-CQ timer itself: it must ask the ' +
+                 'main thread (mtCWMessageEnded, issue #132)');
+      CheckEquals(reportsBefore, OffMainThreadReportCount,
+                  'the CW thread touched a control or a timer off the main thread');
+
+      started := GetTickCount64;
+      repeat
+         Drain;
+         Sleep(1);
+      until AppTimerRunning(atAutoCQ) or (GetTickCount64 - started >= BUDGET_MS);
+      CheckTrue(AppTimerRunning(atAutoCQ),
+                'and the main thread armed it, as the message ended');
+   finally
+      StopAppTimer(atAutoCQ);
+      tAutoCQMode := savedAutoCQ;
+      tAutoSendMode := savedAutoSend;
+      tWaitForNextChar := savedWaitForNext;
+      Settings.Ptt.Enable := savedPTT;
+      Settings.Cq.AutoDelay := savedDelay;
+      ActiveRadioPtr^.tTwoRadioMode := savedTwoRadio;
+      ActiveRadioPtr^.CWSpeedSync := savedSync;
+      CodeSpeed := savedSpeed;
+      Drain;
+   end;
+end;
+
+(* ISSUE #132: A DVK MESSAGE'S END IS DRAWN ON THE MAIN THREAD.
+
+  The SHIPPED playback thread body over a one-slot message that plays nothing
+  (no .WAV, recorded signs off), so it runs straight to its end.  That end used
+  to call tStartAutoCQ, DisplayCodeSpeed (the 'DVK ON / OFF' panel) and
+  BackToInactiveRadioAfterQSO from the playback thread.  The panel gets a real
+  window first, so the old write really went through the widget set and
+  TElementPanel reported it.  WINDOWS ONLY: off Windows the playback thread is
+  a stub that returns at once, and voice keying says so on screen. *)
+procedure TStatusAndNoticeTests.Test_TheDVKPlaybackEndIsDrawnOnTheMainThread;
+{$IFDEF WINDOWS}
+const
+   BUDGET_MS = 3000;
+var
+   player: TDVPPlaybackThread;
+   savedAutoCQ: boolean;
+   savedPTT: boolean;
+   savedDelay: TAutoCqDelay;
+   savedTwoRadio: TRMode;
+   savedMode: ModeType;
+   savedDvk: boolean;
+   savedSigns: boolean;
+   savedDVPOn: boolean;
+   reportsBefore: LongInt;
+   started: QWord;
+   done: boolean;
+{$ENDIF}
+begin
+   BeginTest('Test_TheDVKPlaybackEndIsDrawnOnTheMainThread');
+{$IFDEF WINDOWS}
+   EnsureMainForm;
+   CheckTrue(ActiveRadioPtr <> nil, 'there is an active radio');
+   MainElement(mweCodeSpeed).HandleNeeded;
+   StopAppTimer(atAutoCQ);
+   Drain;
+
+   savedAutoCQ := tAutoCQMode;
+   savedPTT := Settings.Ptt.Enable;
+   savedDelay := Settings.Cq.AutoDelay;
+   savedTwoRadio := ActiveRadioPtr^.tTwoRadioMode;
+   savedMode := ActiveMode;
+   savedDvk := Settings.Dvk.Enable;
+   savedSigns := Settings.Dvk.UseRecordedSigns;
+   savedDVPOn := DVPOn;
+   try
+      Settings.Ptt.Enable := False;
+      Settings.Cq.AutoDelay := High(TAutoCqDelay);
+      Settings.Dvk.UseRecordedSigns := False;
+      tAutoCQMode := True;
+      ActiveRadioPtr^.tTwoRadioMode := TR0;
+      ActiveMode := Phone;
+      Settings.Dvk.Enable := True;
+      DVPOn := True;
+      DVPMessagesArray[1] := 'X';      (* plays nothing: no .WAV, no signs *)
+      DVPMessagesArrayIndex := 2;      (* one slot *)
+      SetElementText(mweCodeSpeed, '');
+      Drain;
+
+      reportsBefore := OffMainThreadReportCount;
+      player := TDVPPlaybackThread.Create;
+      try
+         (* DRAINED WHILE IT RUNS: the old body's cross-thread caption write
+           waited for the main thread, and a plain WaitFor would deadlock
+           against it rather than fail. *)
+         started := GetTickCount64;
+         repeat
+            Drain;
+            Sleep(1);
+            done := player.Finished;
+         until done or (GetTickCount64 - started >= BUDGET_MS);
+         CheckTrue(done, 'the playback thread ran to its end');
+         player.WaitFor;
+      finally
+         player.Free;
+      end;
+
+      started := GetTickCount64;
+      repeat
+         Drain;
+         Sleep(1);
+      until ((string(MainElement(mweCodeSpeed).Caption) = 'DVK OFF') and
+             AppTimerRunning(atAutoCQ)) or
+            (GetTickCount64 - started >= BUDGET_MS);
+
+      CheckEquals(reportsBefore, OffMainThreadReportCount,
+                  'the playback thread touched a control or a timer off the main ' +
+                  'thread: it must ask the main thread (mtDVPMessageEnded, issue #132)');
+      CheckEquals('DVK OFF', string(MainElement(mweCodeSpeed).Caption),
+                  'the panel says the DVK is off, drawn after DVPOn was cleared');
+      CheckTrue(AppTimerRunning(atAutoCQ), 'and the auto-CQ repeat is armed');
+   finally
+      StopAppTimer(atAutoCQ);
+      DVPMessagesArrayIndex := 1;
+      DVPMessagesArray[1] := '';
+      tAutoCQMode := savedAutoCQ;
+      Settings.Ptt.Enable := savedPTT;
+      Settings.Cq.AutoDelay := savedDelay;
+      Settings.Dvk.UseRecordedSigns := savedSigns;
+      ActiveRadioPtr^.tTwoRadioMode := savedTwoRadio;
+      ActiveMode := savedMode;
+      Settings.Dvk.Enable := savedDvk;
+      DVPOn := savedDVPOn;
+      SetElementText(mweCodeSpeed, '');
+      Drain;
+   end;
+{$ELSE}
+   CheckTrue(True, 'no DVK playback thread off Windows');
+{$ENDIF}
+end;
+
+(* ISSUE #132: NO KEYING THREAD BODY NAMES THE UI WORK IT HANDS OVER.
+
+  A SOURCE GUARD, for the half no test can drive: the WinKeyer reader needs a
+  keyer on a serial port, and the CW thread's auto call terminate needs the
+  whole entry window.  Comments are stripped first -- each body says in a
+  comment what moved out of it.  The behavioural tests above cover the CW
+  thread's end and the DVK's end. *)
+procedure TStatusAndNoticeTests.Test_NoKeyingThreadBodyNamesTheUIWork;
+const
+   UI_WORK: array[0..5] of string = (
+      'RETURNINCQOPMODE', 'BACKTOINACTIVERADIOAFTERQSO', 'TSTARTAUTOCQ',
+      'DISPLAYCODESPEED', 'STARTAPPTIMER', 'ATTACHTHREADINPUT');
+
+   procedure CheckBody(const aWhat, aBody: string);
+   var
+      i: integer;
+   begin
+      CheckTrue(aBody <> '', aWhat + ' is where the guard expects it');
+      for i := Low(UI_WORK) to High(UI_WORK) do
+         begin
+         CheckEquals(0, Pos(UI_WORK[i], UpperCase(aBody)),
+                     aWhat + ' calls ' + UI_WORK[i] + ' on its own thread');
+         end;
+   end;
+
+begin
+   BeginTest('Test_NoKeyingThreadBodyNamesTheUIWork');
+   CheckBody('CWThreadProc',
+             RoutineBody('trdos' + PathDelim + 'logk1ea.pas',
+                         'function CWThreadProc(aParameter: Pointer): DWORD; stdcall;' +
+                         LineEnding + 'label'));
+   CheckBody('AutoCallTerminateIsDue',
+             RoutineBody('trdos' + PathDelim + 'logk1ea.pas',
+                         'function AutoCallTerminateIsDue: boolean;' +
+                         LineEnding + 'begin'));
+   CheckBody('wkReadThreadProc',
+             RoutineBody('uWinKey.pas',
+                         'function wkReadThreadProc(aParameter: Pointer): DWORD; stdcall;' +
+                         LineEnding + 'label'));
+   CheckBody('tDVPPlayThreadproc',
+             RoutineBody('trdos' + PathDelim + 'logdvp.pas',
+                         'function tDVPPlayThreadproc(aParameter: Pointer): DWORD; stdcall;' +
+                         LineEnding + 'label'));
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -1505,6 +1885,9 @@ begin
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
    Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
+   Test_TheCWThreadLeavesTheAutoCQRepeatToTheMainThread;
+   Test_TheDVKPlaybackEndIsDrawnOnTheMainThread;
+   Test_NoKeyingThreadBodyNamesTheUIWork;
    ReleaseMainForm;
 end;
 

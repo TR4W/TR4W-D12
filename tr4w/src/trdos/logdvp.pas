@@ -138,8 +138,24 @@ uses
    uConfigValues,
    uSettingsModel,   // Settings.Dvk
    uTXInhibitView,   // NoteTransmitStarting -- issue #97, trigger 1
+   uMainThreadWork,  // mtDVPMessageEnded -- issue #132
   MainUnit,
   LogStuff;
+
+(* mtDVPMessageEnded -- ON THE MAIN THREAD (issue #132).  What the playback
+  thread ran when a message ended, in its order.  DisplayCodeSpeed is run HERE
+  rather than by requesting mtCodeSpeedDisplay: it stores the code speed in
+  ActiveRadioPtr's SpeedMemory, and the swap that follows changes
+  ActiveRadioPtr.
+
+  OUTSIDE THE WINDOWS GATE, with its registration, so both arms compile it;
+  only the Windows playback thread requests it. *)
+procedure RunDVPMessageEnded;
+begin
+  tStartAutoCQ;
+  DisplayCodeSpeed;
+  BackToInactiveRadioAfterQSO;
+end;
 
 {$IFDEF WINDOWS}
 
@@ -567,14 +583,20 @@ begin
   DVPMessagesArrayIndex := 1;
   PTTOff;
 
-  tStartAutoCQ;
+  (* tStartAutoCQ stood here, and DisplayCodeSpeed and
+    BackToInactiveRadioAfterQSO below -- an LCL TTimer, the code speed panel
+    and a radio swap, all run from this thread (issue #132).  mtDVPMessageEnded
+    runs the three, in this order, on the main thread. *)
 
   tExitFromDVPThread := False;
   DVPOn := False;
   ClearThread(DVPThreadID);
-  DisplayCodeSpeed;
   FillChar(DVPMessagesArray, SizeOf(DVPMessagesArray), 0);
-  BackToInactiveRadioAfterQSO;
+
+  (* REQUESTED LAST, AND THAT IS LOAD-BEARING.  The panel reads DVPOn, so it
+    must be drawn after DVPOn is cleared; and a message the radio swap queues
+    must not be wiped by the FillChar above. *)
+  RequestMainThreadJob(mtDVPMessageEnded);
 end;
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
@@ -901,5 +923,9 @@ begin
 end;
 
 {$ENDIF}
+
+initialization
+  (* Issue #132 -- what the playback thread used to do to the UI itself. *)
+  RegisterMainThreadJob(mtDVPMessageEnded, @RunDVPMessageEnded);
 
 end.

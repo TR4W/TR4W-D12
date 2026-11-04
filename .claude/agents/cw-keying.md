@@ -195,12 +195,51 @@ the poller used. `tStartAutoCQ` enables an LCL TTimer, which from the poller
 was a Win32 timer owned by a thread with no message loop.
 `TEventHandlers.OnTimerTick` initialises `callInactive` now (it was read
 uninitialised when the tick found nothing sending).
-**NOT FIXED, and they are this area's:** `CWThreadProc` (`tStartAutoCQ`,
-`BackToInactiveRadioAfterQSO`, `tStartAutoCallTerminate` ->
-`ReturnInCQOpMode`), the WinKeyer reader (`tStartAutoCallTerminate`,
-`tStartAutoCQ`, `BackToInactiveRadioAfterQSO`) and `logdvp` still run that UI
-work on their own threads. The off-thread report (an Error since #108) names
-each one in `tr4w.log`.
+
+**The keying threads do none of that UI work either (issue #132,
+2026-11-04).** Each sets state and requests ITS OWN job, which runs the moved
+statements in that thread's original order -- the orders differ, and they
+matter: `SwapRadios` (inside `BackToInactiveRadioAfterQSO`) calls
+`TryKillAutoCQ`, so auto-CQ-then-swap is not swap-then-auto-CQ. Do not merge
+them into `mtCWByCATMessageEnded`.
+
+| thread | job | runs, in order |
+|---|---|---|
+| `CWThreadProc` end | `mtCWMessageEnded` (LOGK1EA) | `tStartAutoCQ`, `BackToInactiveRadioAfterQSO` |
+| `CWThreadProc`, auto call terminate | `mtCWAutoCallTerminate` (LOGK1EA) | `ReturnInCQOpMode` |
+| `wkReadThreadProc`, busy bit drops | `mtWinKeyerSendEnded` (uWinKey) | `AutoCallTerminateIsDue` ? `ReturnInCQOpMode` : `tStartAutoCQ`; then `BackToInactiveRadioAfterQSO` |
+| `tDVPPlayThreadproc` end | `mtDVPMessageEnded` (LOGDVP) | `tStartAutoCQ`, `DisplayCodeSpeed`, `BackToInactiveRadioAfterQSO` |
+
+- **Each end job is requested as the thread's LAST statement**, after
+  `ClearThread` (and LOGDVP's `FillChar`). A CQ that the swap sends must find
+  no thread running, or it lands in a ring the exiting thread drops.
+- **`tStartAutoCallTerminate` is now `AutoCallTerminateIsDue`, a predicate
+  only.** The CW thread asks it, requests `mtCWAutoCallTerminate`, and stays
+  alive with PTT up while `CWAutoCallTerminatePending` (the keep-alive loop's
+  third term): `ReturnInCQOpMode` clears `tAutoSendMode` BEFORE it appends
+  the exchange, so without the wait the thread could exit between the two.
+  The flag has three states (none / asked / running): the job sets running on
+  entry and none after `ReturnInCQOpMode` returns. **The 2 s deadline covers
+  "asked, not yet started" ONLY** (then it logs an Error and stops waiting,
+  so a job that never runs cannot hold PTT). A deadline on a running job
+  would reopen the very gap: the keep-alive reaches the flag only once
+  `tAutoSendMode` is False, i.e. inside `ReturnInCQOpMode`.
+  The call-to-exchange gap is now one main-loop turn plus up to 10 ms.
+- **DVP draws `DisplayCodeSpeed` inside its own job, not via
+  `mtCodeSpeedDisplay`**: it stores `ActiveRadioPtr.SpeedMemory`, and the swap
+  after it changes `ActiveRadioPtr`.
+- Both `AttachThreadInput` calls those paths made are gone (the WinKeyer
+  reader's was never undone). The paddle/foot-switch thread's remains, in
+  `tFootSwitchProcedure`, which has no caller.
+- **`uAppTimers` reports a timer started or stopped off the main thread**
+  (`ReportOffMainThread`, never raises). On Windows a TTimer enabled from a
+  thread is a `SetTimer` owned by that thread, so **the auto-CQ repeat armed by
+  the CW thread or the WinKeyer reader could not fire** -- moving it to the
+  main thread may make auto-CQ repeat where the previous 5.x build did not.
+- Pinned by `uTestStatusAndNotice`: the shipped CW thread and DVK playback body
+  run to their end with no off-thread report and the timer armed only after the
+  drain; a comment-stripped source guard covers the WinKeyer reader and the
+  auto call terminate. All fail on the pre-#132 code. Bench: `docs/BENCH_QUEUE.md`.
 
 ## Open, and decided
 
