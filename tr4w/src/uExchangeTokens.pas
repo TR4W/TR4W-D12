@@ -142,9 +142,13 @@ procedure ScanSweepstakesExchange(const aText: string; out aFields: TSweepstakes
       only be the serial, so the lone two-digit word is the check);
     - and EITHER exactly TWO bare two-digit numbers ('43 M W1AW 31 CT'),
       OR bare two-digit numbers and two-digit-then-section words ('99CT')
-      come to exactly two ('A 99CT 32', '42 M W1AW 31CT'; NY4I: "a 99ct 32
-      would be ambiguous"). The two clauses together keep '43 M 22 31CT'
-      ambiguous (two bare) and '43 M 31 CT 22' positional (three bare).
+      come to exactly two, a check-then-section word counting ONLY when a
+      bare two-digit number is typed AFTER it ('A 99CT 32'; NY4I: "a 99ct
+      32 would be ambiguous"). Typed before it, the number reads in the
+      base order -- serial, precedence, call, check, section -- so
+      '42 M W1AW 31CT' and '32 A 99CT' are not ambiguous (NY4I's bench).
+      '43 M 22 31CT' stays ambiguous by the first clause (two bare), and
+      '43 M 31 CT 22' positional (three bare).
   The numbers named are the digits alone ('99', not '99CT').
 
   aFirst and aSecond are the two numbers IN THE ORDER TYPED; aPrecedence is
@@ -636,7 +640,16 @@ begin
             end;
          swCheckThenSection:
             begin
-            AddCandidate(Copy(string(Entries[Entry]), 1, 2));
+            (* ONLY WITH A BARE TWO-DIGIT NUMBER TYPED AFTER IT -- met
+               already, since the walk is backwards. In the base order
+               (serial, precedence, call, check, section) the check and
+               section come last, so '43 M W1AW 31CT' is serial 43, check
+               31; a number after the section breaks that order, and
+               'A 99CT 32' cannot be told (NY4I, 2026-11-04). *)
+            if bareCount > 0 then
+               begin
+               AddCandidate(Copy(string(Entries[Entry]), 1, 2));
+               end;
             end;
          swBareOtherDigits:
             begin

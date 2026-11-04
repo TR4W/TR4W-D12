@@ -567,11 +567,14 @@ begin
       (* Two letters: the one the scan keeps, the later typed. *)
       CheckRefused('M 43 A 31 CT', 'Ambiguous exchange - enter 43A or 31A to resolve');
       (* A check joined to its section counts as one of the two numbers
-         (NY4I: "a 99ct 32 would be ambiguous"). '43 M W1AW 31CT' was
-         accepted until this ruling. *)
+         only when a bare two-digit number is typed AFTER it (NY4I: "a 99ct
+         32 would be ambiguous"; and, at the bench, '42 M W1AW 31CT' is
+         serial 42, check 31 -- the base order). *)
       CheckRefused('A 99CT 32', 'Ambiguous exchange - enter 99A or 32A to resolve');
-      CheckRefused('32 A 99CT', 'Ambiguous exchange - enter 32A or 99A to resolve');
-      CheckRefused('43 M W1AW 31CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
+      CheckAccepted('32 A 99CT');
+      CheckAccepted('A 32 99CT');
+      CheckAccepted('43 M W1AW 31CT');
+      CheckAccepted('42 M W1AW 31CT');
 
       (* WHAT RESOLVES IT. *)
       CheckAccepted('43M W1AW 31 CT');
@@ -900,6 +903,15 @@ begin
    ScanSweepstakesExchange('42 M W1AW 31CT', f);
    CheckEquals('42|M|31|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), '31CT: the check and the section');
+   ScanSweepstakesExchange('32 A 99CT', f);
+   CheckEquals('32|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), '32 A 99CT: serial 32, check 99');
+   ScanSweepstakesExchange('A 32 99CT', f);
+   CheckEquals('32|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A 32 99CT: serial 32, check 99');
+   ScanSweepstakesExchange('43 M 43MI', f);
+   CheckEquals('43|M|43|MI', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), '43 M 43MI: serial 43, check 43, Michigan');
 
    (* WHAT READING EACH WORD TOOK (2026-11-04) -- the ambiguity test counts
       these, so every edge of the grammar is pinned here. *)
@@ -938,14 +950,18 @@ begin
    CheckNotAmbiguous('31 W1AW CT M 232', 'a three-digit serial');
    CheckNotAmbiguous('12 W1AW CT M 4', 'a one-digit serial');
    (* A CHECK JOINED TO ITS SECTION COUNTS AS A TWO-DIGIT NUMBER beside a
-      standalone precedence (NY4I: "a 99ct 32 would be ambiguous"). FLIPPED:
-      '43 M W1AW 31CT' was not ambiguous. *)
+      standalone precedence ONLY WITH A BARE TWO-DIGIT NUMBER TYPED AFTER IT
+      (NY4I: "a 99ct 32 would be ambiguous"). Typed before it, the base
+      order reads it: serial, precedence, call, check, section. FLIPPED BACK
+      at NY4I's bench: the four below the first were ambiguous for one
+      commit. *)
    CheckAmbiguous('A 99CT 32', '99', '32', 'A');
-   CheckAmbiguous('A 32 99CT', '32', '99', 'A');
-   CheckAmbiguous('32 A 99CT', '32', '99', 'A');
-   CheckAmbiguous('43 M W1AW 31CT', '43', '31', 'M');
-   CheckAmbiguous('42 M W1AW 31CT', '42', '31', 'M');
-   CheckAmbiguous('43 M 43MI', '43', '43', 'M');
+   CheckNotAmbiguous('A 32 99CT', 'the number before the check and section');
+   CheckNotAmbiguous('32 A 99CT', 'the number before the check and section');
+   CheckNotAmbiguous('43 M W1AW 31CT', 'the base order');
+   CheckNotAmbiguous('42 M W1AW 31CT', 'the base order');
+   CheckNotAmbiguous('43 M 43MI', 'the base order; MI is Michigan');
+   CheckAmbiguous('43 M 31CT 22', '43', '22', 'M');
    (* TWO BARE WORDS STILL DECIDE IT when a third number is joined to a
       section: the two bare ones are named, as before. *)
    CheckAmbiguous('43 M 22 31CT', '43', '22', 'M');

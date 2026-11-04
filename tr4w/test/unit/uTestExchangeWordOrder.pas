@@ -285,14 +285,18 @@ begin
       CheckTaken('31 W1AW CT M 430', 430, 'M', 31, 'CT');
       CheckTaken('31 W1AW CT M 232', 232, 'M', 31, 'CT');
       CheckTaken('12 W1AW CT M 4', 4, 'M', 12, 'CT');
-      (* A CHECK JOINED TO THE SECTION DOES NOT RESOLVE IT -- NY4I,
-         2026-11-04: "a 99ct 32 would be ambiguous". FLIPPED: the two below
-         logged serial 43/42, check 31, until this ruling. *)
-      CheckRefused('43 M W1AW 31CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
-      CheckRefused('42 M W1AW 31CT', 'Ambiguous exchange - enter 42M or 31M to resolve');
+      (* A CHECK JOINED TO THE SECTION WITH A NUMBER TYPED AFTER IT IS
+         AMBIGUOUS -- NY4I, 2026-11-04: "a 99ct 32 would be ambiguous". *)
       CheckRefused('A 99CT 32', 'Ambiguous exchange - enter 99A or 32A to resolve');
-      CheckRefused('A 32 99CT', 'Ambiguous exchange - enter 32A or 99A to resolve');
-      CheckRefused('32 A 99CT', 'Ambiguous exchange - enter 32A or 99A to resolve');
+      CheckRefused('43 M 22 31CT', 'Ambiguous exchange - enter 43M or 22M to resolve');
+      (* BUT A NUMBER TYPED BEFORE THE CHECK AND SECTION READS IN THE BASE
+         ORDER -- serial, precedence, call, check, section (NY4I's bench,
+         2026-11-04: these must log as they did before clause (b)). *)
+      CheckTaken('43 M W1AW 31CT', 43, 'M', 31, 'CT');
+      CheckTaken('42 M W1AW 31CT', 42, 'M', 31, 'CT');
+      CheckTaken('32 A 99CT', 32, 'A', 99, 'CT');
+      CheckTaken('A 32 99CT', 32, 'A', 99, 'CT');
+      CheckTaken('43 M 43MI', 43, 'M', 43, 'MI');
 
       (* A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE PRECEDENCE AND THE
          SERIAL -- NY4I, 2026-11-04: "a check would NEVER be entered with

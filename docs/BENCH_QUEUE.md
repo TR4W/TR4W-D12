@@ -47,8 +47,9 @@ a space."* Unit tests drive `ParametersOkay`; nothing has looked at the window.
   confirm; `A99CT 32 W1AW` (call typed last) logs serial 99, check 32 either
   way.
 - [ ] Type `A 99CT 32`. It does not log; the notice reads
-  `Ambiguous exchange - enter 99A or 32A to resolve`. `43 M W1AW 31CT` is
-  refused the same way now (`43M or 31M`); it used to log serial 43, check 31.
+  `Ambiguous exchange - enter 99A or 32A to resolve`. With the number BEFORE
+  the check and section it logs in the base order: `32 A 99CT` is serial 32,
+  check 99, and `42 M W1AW 31CT` is serial 42, check 31 (as before `fce7be16`).
 
 ## Added 2026-11-04 -- OLD TR4W/TR4W ISSUES CLOSED AS FIXED, NEEDING A REAL RUN (NY4I)
 

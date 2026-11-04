@@ -187,8 +187,11 @@ domestic QTH and the domestic multiplier (pinned). **AN AMBIGUOUS SS SERIAL
 IS REFUSED (NY4I, 2026-11-04):** a standalone precedence word, no word
 joining digits to a precedence (`43M`, `U123`, `A99`, `A99CT`), no bare
 1/3/4-digit number, and EITHER exactly two bare two-digit numbers OR bare
-two-digit numbers plus check-then-section words (`99CT`, `31CT`) coming to
-exactly two (`A 99CT 32`, `42 M W1AW 31CT`) -> `TContestARRLSSBase`
+two-digit numbers plus check-then-section words (`99CT`) coming to exactly
+two, where a check-then-section word counts ONLY with a bare two-digit
+number typed AFTER it (`A 99CT 32` ambiguous; `42 M W1AW 31CT` and
+`32 A 99CT` read in the base order serial-prec-call-check-section, NY4I's
+bench) -> `TContestARRLSSBase`
 refuses with `SExchangeAmbiguousSerial` ("enter 43M or 31M"), so
 `43 M W1AW 31 CT` no longer logs by position. The test is
 `uExchangeTokens.SweepstakesSerialIsAmbiguous`, which COUNTS the reading
