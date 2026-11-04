@@ -29,7 +29,12 @@ unit uTestSpectrumRadioState;
     on a real TfrmPanadapter -- a first report equal to the default palette
     still takes effect, a reconnect keeps the picture and a fresh report
     replaces it, and a radio switch inherits no radio-chosen palette while
-    the operator's own choice stands.
+    the operator's own choice stands;
+  - the SCALE (NY4I, option (b)): the slider policy (pure), the K4 refusing
+    an out-of-range #SCL, and on a real TfrmPanadapter -- a changed #SCL moves
+    the slider, the operator's drag stands through a repeat, a first report
+    equal to the default applies, a reconnect holds, a radio switch inherits
+    nothing, the window clamps, and the Y mini-pan is the operator's alone.
 *)
 
 interface
@@ -55,6 +60,14 @@ type
       procedure Test_Window_FirstReportEqualToDefault_TakesEffect;
       procedure Test_Window_ReconnectHolds_FreshReportReplaces;
       procedure Test_Window_RadioSwitch_InheritsNoRadioPalette;
+      procedure Test_ScalePolicy_Pure;
+      procedure Test_K4_OutOfRangeScale_IsNotClaimed;
+      procedure Test_Window_RadioScale_AppliedOnChange_OperatorStands;
+      procedure Test_Window_RadioScale_FirstReportEqualToDefault_TakesEffect;
+      procedure Test_Window_RadioScale_ReconnectHolds_SwitchInheritsNothing;
+      procedure Test_Window_RadioScale_ClampedAtTheSlider;
+      procedure Test_Window_RadioScale_YMiniPanUntouched;
+      procedure CheckScaleShown(AForm: TObject; AScaleDb: Integer; const AWhat: string);
    public
       procedure RunAllTests; override;
    end;
@@ -78,6 +91,24 @@ constructor TK4WithoutSpectrum.Create;
 begin
    inherited Create;
    FCapabilities.Flags := FCapabilities.Flags - [rcSpectrum];
+end;
+
+type
+   (* A K4 whose live display claims whatever scale the test sets, legal or
+      not.  A real K4 cannot hand the window an out-of-range #SCL --
+      uK4DisplayReport refuses it -- so this is the only way to reach the
+      window's own clamp. *)
+   TK4WithStatedScale = class(TK4Radio)
+   public
+      StatedScaleDb: Integer;
+      function SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay; override;
+   end;
+
+function TK4WithStatedScale.SpectrumLiveDisplay(const ASourceId: string): TSpectrumLiveDisplay;
+begin
+   Result := SpectrumLiveDisplayUnknown;
+   Result.HasScale := True;
+   Result.ScaleDb := StatedScaleDb;
 end;
 
 function NewK4: TFactoryRadioBase;
@@ -718,6 +749,262 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+   THE SCALE SLIDER FOLLOWS THE RADIO'S #SCL WHEN IT CHANGES (NY4I, option (b),
+   2026-11-03).  No write: nothing on these paths sends, and
+   uTestRadioSocketNoRead pins what the K4 asks at connect -- reads only.
+   --------------------------------------------------------------------------- *)
+
+function LiveWithScale(AScaleDb: Integer): TSpectrumLiveDisplay;
+begin
+   Result := SpectrumLiveDisplayUnknown;
+   Result.HasScale := True;
+   Result.ScaleDb := AScaleDb;
+end;
+
+(* The operator's drag: Position raises OnChange, as the widget does. *)
+procedure OperatorDragsScale(AForm: TfrmPanadapter; AScaleDb: Integer);
+begin
+   AForm.trkScale.Position := AScaleDb;
+end;
+
+(* AForm is a TfrmPanadapter; TObject in the declaration only because the
+   interface section does not use uPanadapterForm. *)
+procedure TSpectrumRadioStateTests.CheckScaleShown(AForm: TObject; AScaleDb: Integer;
+                                                   const AWhat: string);
+var
+   form: TfrmPanadapter;
+begin
+   form := AForm as TfrmPanadapter;
+   CheckEquals(AScaleDb, form.trkScale.Position, AWhat + ' (slider)');
+   CheckEquals(IntToStr(AScaleDb) + ' dB', form.lblScale.Caption, AWhat + ' (caption)');
+end;
+
+procedure TSpectrumRadioStateTests.Test_ScalePolicy_Pure;
+var
+   d: TSpectrumDisplayDefaults;
+   none: TSpectrumLiveDisplay;
+begin
+   BeginTest('Scale policy: the radio''s scale applies when it CHANGES, clamped; otherwise the slider stands');
+   d := MakeSpectrumDisplayDefaults(80, 10, 150, 10.0, 0.5, True);
+   none := SpectrumLiveDisplayUnknown;
+
+   CheckEquals(10, SpectrumClampScaleDb(d, 5), 'below the range: the minimum');
+   CheckEquals(150, SpectrumClampScaleDb(d, 200), 'above the range: the maximum');
+   CheckEquals(40, SpectrumClampScaleDb(d, 40), 'inside: unchanged');
+   CheckEquals(1, SpectrumClampScaleDb(SpectrumDisplayDefaultsNone, 0),
+               'never below 1, whatever the defaults -- the waterfall divides by it');
+
+   CheckFalse(SpectrumRadioScaleChanged(none, none), 'no report: nothing to apply');
+   CheckTrue(SpectrumRadioScaleChanged(none, LiveWithScale(80)),
+             'a first report applies, even one equal to the default');
+   CheckFalse(SpectrumRadioScaleChanged(LiveWithScale(40), LiveWithScale(40)),
+              'a repeat is not a change');
+   CheckTrue(SpectrumRadioScaleChanged(LiveWithScale(40), LiveWithScale(50)),
+             'a different value is');
+   CheckFalse(SpectrumRadioScaleChanged(LiveWithScale(40), none),
+              'a radio that stops saying leaves the slider where it is');
+
+   CheckEquals(60, SpectrumScaleAfterReport(d, LiveWithScale(40), LiveWithScale(40), 60),
+               'the operator''s 60 stands while the radio repeats 40');
+   CheckEquals(50, SpectrumScaleAfterReport(d, LiveWithScale(40), LiveWithScale(50), 60),
+               'the radio''s new 50 replaces it');
+   CheckEquals(150, SpectrumScaleAfterReport(d, none, LiveWithScale(200), 60),
+               'a changed value out of range is clamped');
+   CheckEquals(60, SpectrumScaleAfterReport(d, none, none, 60), 'unknown: the slider stands');
+end;
+
+procedure TSpectrumRadioStateTests.Test_K4_OutOfRangeScale_IsNotClaimed;
+var
+   r: TFactoryRadioBase;
+begin
+   BeginTest('K4: an #SCL outside 10..150 never reaches the window');
+   r := NewK4;
+   CheckTrue(r <> nil, 'the registry built no K4');
+
+   if r = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      r.ProcessMsg('#SCL200');
+      CheckFalse(r.SpectrumLiveDisplay('A').HasScale, '#SCL200 is refused');
+      r.ProcessMsg('#SCL005');
+      CheckFalse(r.SpectrumLiveDisplay('A').HasScale, '#SCL005 is refused');
+      r.ProcessMsg('#SCL150');
+      CheckTrue(r.SpectrumLiveDisplay('A').HasScale and (r.SpectrumLiveDisplay('A').ScaleDb = 150),
+                '#SCL150, the top of the range, is accepted');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_RadioScale_AppliedOnChange_OperatorStands;
+var
+   form: TfrmPanadapter;
+   r: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: a changed #SCL moves the slider; the operator''s drag stands until the radio says something different');
+   r := NewK4;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      CheckEquals(10, form.trkScale.Min, 'the slider holds the K4''s whole range: min');
+      CheckEquals(150, form.trkScale.Max, 'and max');
+      Tick(form);
+      CheckScaleShown(form, 80, 'nothing reported: the default');
+
+      r.ProcessMsg('#SCL040');
+      Tick(form);
+      CheckScaleShown(form, 40, 'the radio''s #SCL 40 moves the slider');
+
+      OperatorDragsScale(form, 60);
+      CheckScaleShown(form, 60, 'the operator drags to 60');
+      Tick(form);
+      CheckScaleShown(form, 60, 'the next tick keeps the operator''s 60');
+
+      r.ProcessMsg('#SCL040');   // the radio repeats itself
+      Tick(form);
+      CheckScaleShown(form, 60, 'a repeated #SCL 40 does not undo the drag');
+
+      r.ProcessMsg('#SCL050');
+      Tick(form);
+      CheckScaleShown(form, 50, 'a DIFFERENT #SCL replaces the operator''s value');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_RadioScale_FirstReportEqualToDefault_TakesEffect;
+var
+   form: TfrmPanadapter;
+   r: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: a first #SCL equal to the slider''s default still takes effect after an attach');
+   r := NewK4;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      OperatorDragsScale(form, 60);
+      Tick(form);
+      CheckScaleShown(form, 60, 'nothing reported: the operator''s 60 stands');
+
+      r.ProcessMsg('#SCL080');
+      Tick(form);
+      CheckScaleShown(form, 80, '#SCL 80 -- the default -- is a report, and it applies');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_RadioScale_ReconnectHolds_SwitchInheritsNothing;
+var
+   form: TfrmPanadapter;
+   first, second, icom: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: a reconnect holds the radio''s scale; a radio switch inherits none; the operator''s stands');
+   first := NewK4;
+   second := NewK4;
+   icom := uRadioRegistry.CreateInstance(IC9700);
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      CheckTrue(icom <> nil, 'the registry built no IC-9700');
+
+      if icom = nil then
+         begin
+         Exit;
+         end;
+
+      form.AttachRadio(first, first.PrimarySpectrumSourceId);
+      first.ProcessMsg('#SCL040');
+      Tick(form);
+      CheckScaleShown(form, 40, 'precondition: the radio set 40');
+
+      first.Connect;   // no address: goes nowhere, but a new link
+      Tick(form);
+      CheckScaleShown(form, 40, 'a reconnect holds it');
+
+      form.DetachRadio;
+      form.AttachRadio(first, first.PrimarySpectrumSourceId);
+      Tick(form);
+      CheckScaleShown(form, 40, 'a re-attach to the same radio gets it back');
+
+      (* A different K4, which has reported nothing. *)
+      form.DetachRadio;
+      form.AttachRadio(second, second.PrimarySpectrumSourceId);
+      CheckScaleShown(form, 80, 'the first radio''s 40 is not inherited');
+      Tick(form);
+      CheckScaleShown(form, 80, 'and the new radio, knowing nothing, leaves the default');
+
+      (* The operator's own scale is not a radio's, and survives a switch to a
+         radio with the same range. *)
+      OperatorDragsScale(form, 60);
+      form.DetachRadio;
+      form.AttachRadio(icom, icom.PrimarySpectrumSourceId);
+      Tick(form);
+      CheckScaleShown(form, 60, 'the operator''s 60 stands across a switch to an Icom');
+   finally
+      form.Free;
+      first.Free;
+      second.Free;
+      icom.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_RadioScale_ClampedAtTheSlider;
+var
+   form: TfrmPanadapter;
+   r: TK4WithStatedScale;
+begin
+   BeginTest('Panadapter: a radio scale outside the slider''s range is held to it');
+   r := TK4WithStatedScale.Create;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      r.StatedScaleDb := 200;
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      Tick(form);
+      CheckScaleShown(form, 150, '200 is held to the top, 150');
+
+      r.StatedScaleDb := 5;
+      Tick(form);
+      CheckScaleShown(form, 10, '5 is held to the bottom, 10');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
+procedure TSpectrumRadioStateTests.Test_Window_RadioScale_YMiniPanUntouched;
+var
+   form: TfrmPanadapter;
+   r: TFactoryRadioBase;
+begin
+   BeginTest('Panadapter: the Y mini-pan has no radio scale; the slider is the operator''s alone');
+   r := NewK4;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      form.AttachRadio(r, 'Y');
+      r.ProcessMsg('#SCL040');
+      Tick(form);
+      CheckScaleShown(form, 80, '#SCL reaches pans A and B, not Y');
+
+      OperatorDragsScale(form, 60);
+      Tick(form);
+      CheckScaleShown(form, 60, 'the operator''s drag works as always');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
 procedure TSpectrumRadioStateTests.RunAllTests;
 begin
    Test_K4_NoReports_KnowsNothing;
@@ -735,6 +1022,13 @@ begin
    Test_Window_FirstReportEqualToDefault_TakesEffect;
    Test_Window_ReconnectHolds_FreshReportReplaces;
    Test_Window_RadioSwitch_InheritsNoRadioPalette;
+   Test_ScalePolicy_Pure;
+   Test_K4_OutOfRangeScale_IsNotClaimed;
+   Test_Window_RadioScale_AppliedOnChange_OperatorStands;
+   Test_Window_RadioScale_FirstReportEqualToDefault_TakesEffect;
+   Test_Window_RadioScale_ReconnectHolds_SwitchInheritsNothing;
+   Test_Window_RadioScale_ClampedAtTheSlider;
+   Test_Window_RadioScale_YMiniPanUntouched;
 end;
 
 end.

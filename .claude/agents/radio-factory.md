@@ -260,9 +260,17 @@ one `#SCL` for both, Y nothing. The window's policy is two pure functions in
 `minDb = refLevel` -- else noise floor less `RefMarginDb`) and
 `SpectrumReferenceDb` (what a waterfall row is stored against). **REF is never a
 re-colour trigger**: a row keeps the reference it was captured with, so AutoRef's
-pushes reach new rows only (QK4 `da384ee`, same reason). **`#SCL` is carried and
-NOT drawn**: QK4's scale control WRITES `#SCL` to the rig, so following it decides
-what TR4W's slider is -- an open fork for NY4I, design doc 10.6. **QK4 has ONE
+pushes reach new rows only (QK4 `da384ee`, same reason). ~~**`#SCL` is carried and
+NOT drawn**~~ **A CHANGED `#SCL` MOVES TR4W'S SCALE SLIDER, AND TR4W NEVER WRITES
+IT** (NY4I's option (b), still later 2026-11-03). The palette's rule: apply only
+on a change (`uSpectrumTypes.SpectrumRadioScaleChanged` /
+`SpectrumScaleAfterReport` / `SpectrumClampScaleDb`, pure), the operator's drag
+stands until the rig reports a DIFFERENT value, `FScaleFromRadio` (twin of
+`FPaletteFromRadio`) sends a radio switch back to the default. Set with
+`SetParams`, never `Position` -- `OnChange` is the operator's path. The K4's
+10..150 is written once, in `uK4DisplayReport` (`K4_SCALE_MIN_DB`/`MAX_DB`);
+`uRadioElecraftK4`'s pair now names those. QK4's control WRITES `#SCL` --
+option (a), not taken. Design doc 10.6. **QK4 has ONE
 waterfall colour table** whatever `#WFC` says, so TR4W's `Blue` palette (index 5,
 appended) is TR4W's own design; Fire-Ice is the operator's only. Details:
 `docs/PANADAPTER_LCL_DESIGN.md` section 10.6.

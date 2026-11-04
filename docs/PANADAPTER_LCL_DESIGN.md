@@ -510,8 +510,10 @@ waterfall height, colour range and colour mode), and nothing else. See 10.5.
 **UPDATED LATER 2026-11-03: the window also follows `#REF`** (the trace's
 bottom is the rig's reference, and each new waterfall row is stored against
 it), **the K4's blue tone has a palette of its own**, and **a reconnect keeps
-the picture** -- the radio holds what it last reported. `#SCL` is carried but
-NOT drawn: the scale slider's fate is NY4I's decision. See 10.6.
+the picture** -- the radio holds what it last reported. ~~`#SCL` is carried but
+NOT drawn: the scale slider's fate is NY4I's decision.~~ **`#SCL` moves the
+scale slider when it changes (NY4I chose option (b), still later 2026-11-03);
+TR4W never writes it.** See 10.6.
 
 **QK4 is the better reference here, and by a distance.** NY4I pointed at
 `c:\projects\qk4\src\models\radiostate\spectrumdisplaystate.cpp`, which parses
@@ -578,7 +580,9 @@ default and range only on the first attach or when the SCALE RANGE (default,
 min, max) differs from the one in force (`SpectrumScaleRangeDiffers`) -- attach
 runs on every reshow and profile change, and a K4 and an Icom state the same
 scale while differing in `LevelsCalibrated`, so switching between them keeps
-the operator's slider exactly as before.
+the operator's slider exactly as before. **Since 2026-11-03 there is a second
+trigger**: a slider the RADIO's `#SCL` put where it is (`FScaleFromRadio`) is
+also reset on attach, so a new radio never inherits the old one's scale (10.6).
 
 **The designed form carries no scale** (NY4I, 2026-11-02): the `.lfm` slider has
 the LCL's default range, no position, `Enabled = False`, and the label reads
@@ -637,7 +641,8 @@ pan is drawn at the radio's own span, centred, because the full frame carries
 about 40 bins of padding at each end that drew as a flat line at the bottom of
 the plot. See 10.4. The window itself did not change.
 ~~And the `#` commands are **not parsed** for now~~ -- **superseded 2026-11-02**:
-they are parsed and stored, not drawn (10.3). The stream still provides
+they are parsed and stored, not drawn (10.3) -- and since 2026-11-03 the
+window follows several of them (10.5, 10.6). The stream still provides
 centre, span and noise floor, so nothing was blocked; the parse is groundwork
 for the window following the radio's front panel.
 
@@ -815,8 +820,8 @@ NY4I saw a K4's waterfall height change on the rig and not in TR4W. **This is
 the first time the window reads the radio's display state.** Before this,
 nothing above the factory read `SpectrumRadioState`. ~~That includes `#SCL` and
 `#REF`: the window scales from its own slider and each frame's noise floor, and
-it still does.~~ **`#REF` is followed since later the same day (10.6); `#SCL` is
-carried and not drawn.** The window follows **`#WFH`, `#WBS` and `#WFC` from the
+it still does.~~ **`#REF` is followed since later the same day (10.6); `#SCL`
+moves the scale slider when it changes (10.6, option (b)).** The window follows **`#WFH`, `#WBS` and `#WFC` from the
 LCD ONLY** (NY4I). The external monitor's `#HWFH`, `#HWBS` and `#HWFC` reach no
 window, and `#HWFC` is not decoded at all.
 
@@ -859,12 +864,12 @@ untouched**: it keeps `RefMarginDb`. One anchor makes this easy to check: at
 `#WBS` 5 and the 80 dB default scale, the floor is exactly 10 dB, the margin
 the window has always used. At 14 it is 28 dB, which is markedly brighter.
 
-**The scale in that formula is TR4W's slider, not the rig's `#SCL`.** The
-window still does not follow `#SCL`. So a rig at SCALE 50 and TR4W at 80
-colour differently at the same `#WBS`. "Unchanged at 5" holds only with the
-slider at 80. Following `#SCL` is a separate decision, and it is the open fork
-in 10.6: QK4's colour window uses the RIG's scale, and making TR4W's do the
-same decides what the slider is for. The REF in it IS the rig's now (10.6).
+**The scale in that formula is TR4W's slider** -- ~~not the rig's `#SCL`; the
+window still does not follow `#SCL`~~ **which the rig's `#SCL` now moves
+whenever it changes (10.6, option (b))**. So a rig at SCALE 50 colours as QK4
+does once the K4 has reported 50; it differs only after the operator drags
+TR4W's slider, until the rig's next different `#SCL`. "Unchanged at 5" holds
+only with the slider at 80. The REF in it IS the rig's now (10.6).
 
 **This recolours differently from QK4.** QK4 stores each row's palette position
 as it was when captured, so a `#WBS` change recolours only new rows. TR4W keeps
@@ -948,7 +953,8 @@ yellow and red. QK4's is the table its colour window was fitted against
 NY4I may want QK4's table for "colour". Gray, teal and sepia have no QK4
 counterpart at all. None was repainted.
 
-**2. `#REF` is followed; `#SCL` is carried and waiting on a decision.**
+**2. `#REF` is followed; ~~`#SCL` is carried and waiting on a decision~~
+`#SCL` moves the slider (option (b), below).**
 `TSpectrumLiveDisplay` gains `HasRef`/`RefDb` and `HasScale`/`ScaleDb`, both
 counted by `SpectrumLiveDisplayKnowsNothing`. `K4LiveDisplay` fills them per
 receiver: `#REF` for pan A, `#REF$` for pan B, the one `#SCL` for both. The Y
@@ -977,7 +983,63 @@ TR4W's bins are on `#REF`'s scale as far as is measured: this stream carries
 real dB (int16 / 10) and its own noise floor read -125.5 against `#REF -126`
 (10.2). QK4's byte stream needed a measured 162 dB offset; TR4W's does not.
 
-**THE FORK -- what the slider is when the rig states a scale.** QK4's scale
+**DECIDED: OPTION (b) -- NO WRITE; the rig's `#SCL` moves the slider when it
+CHANGES** (NY4I, still later 2026-11-03). The fork as it was put is kept below
+for the reasoning.
+
+What is built:
+- **One scale, the slider's.** The trace's height (`DisplayRange`) and the
+  waterfall's colour window (`REF - SCALE x WBS / 40`, over one SCALE) both
+  draw with it, whoever set it.
+- **The rule is the palette's, as three pure functions in `uSpectrumTypes`**,
+  unit tested: `SpectrumRadioScaleChanged` (the radio reported a scale that
+  differs from the one last applied; a first report after an attach counts,
+  even one equal to the 80 dB default; a repeat does not),
+  `SpectrumClampScaleDb` (the radio's `MinScaleDb..MaxScaleDb`, never below 1
+  -- now also the operator's clamp, which `HandleScaleChange` used to write out
+  by hand) and `SpectrumScaleAfterReport` (the two composed).
+- **`ApplyLiveDisplay` applies it FIRST**, because the colour margin is a
+  fraction of the scale, and sets the slider with `TTrackBar.SetParams`, which
+  raises no `OnChange`. `Position` would: `OnChange` is the OPERATOR's path,
+  and taking the radio's move for the operator's would be the feedback loop.
+  `HandleScaleChange` also ignores a position equal to the scale in force, so a
+  widget set that echoes the move back finds nothing changed.
+- **`FScaleFromRadio`**, the twin of `FPaletteFromRadio`: True while the
+  slider sits where the radio put it, cleared by the operator's drag. An
+  attach puts the slider back to the default only in the first case, so a
+  radio switch inherits nothing -- the K4 and Icom ranges are equal, so
+  `SpectrumScaleNeedsReset` alone would have kept the old radio's scale. A
+  re-attach to the SAME radio gets its held `#SCL` back on the first tick
+  (`FLive` is forgotten on attach), before anything is drawn. An operator's
+  drag survives a switch, as before. Like the palette, a re-attach re-applies
+  the radio's held value over an operator's drag.
+- **The slider can hold every `#SCL` the parser accepts.** The `.lfm` gives
+  `trkScale` no range; `ApplyDisplayDefaults` gives it the radio's, which for a
+  K4 is 10..150 -- `K4_MIN_SCALE_DB`/`K4_MAX_SCALE_DB` in `uRadioElecraftK4` are
+  now `uK4DisplayReport`'s `K4_SCALE_MIN_DB`/`K4_SCALE_MAX_DB`, rather than a
+  second copy of the same two numbers. `K4LiveDisplay` already refuses an
+  `#SCL` outside 10..150, so the window's clamp is a belt to that brace.
+- **A scale change re-colours the whole history**, as the operator's slider
+  always has. Because it applies only on a CHANGE, a K4 that pushes the same
+  `#SCL` repeatedly costs one comparison per tick and no re-render, so there
+  is no flash of the kind `#REF` would have caused (QK4 `da384ee`); one
+  re-render per knob step at the rig is what the operator's own slider does.
+- **The Y mini-pan and every non-K4 radio report no scale**: the slider is
+  the operator's alone there, unchanged.
+- **Nothing is written to the radio**: no send on either path, and
+  `uTestRadioSocketNoRead` (unedited) still pins that the connect-time display
+  questions are reads.
+
+Pinned by `uTestSpectrumRadioState`: `Test_ScalePolicy_Pure`,
+`Test_K4_OutOfRangeScale_IsNotClaimed`, and five `Test_Window_RadioScale_*`
+tests on a real unshown `TfrmPanadapter` -- applied on change and the
+operator's drag standing through a repeat; a first report equal to the
+default; reconnect, re-attach and radio switch; the window's clamp (through a
+test K4 that states 5 and 200); and the Y mini-pan. **Whether the K4 PUSHES
+`#SCL` when its knob is turned is still unverified** (`docs/BENCH_QUEUE.md`);
+if it does not, the slider follows the rig only at connect.
+
+**THE FORK, as it was put -- what the slider is when the rig states a scale.** QK4's scale
 control (Shift + wheel) **sends `#SCL<n>;` to the radio**
 (`SpectrumController::adjustScaleFromWheel`, 5 dB a step) and draws only the
 rig's scale; there is no client-side scale. TR4W's slider is local and the K4
@@ -995,10 +1057,9 @@ display path has been reads-only. So "follow `#SCL`" decides the slider:
   delta from its default, so the operator can widen or narrow TR4W's picture
   relative to the rig's while still following every change made at the rig.
   The slider would then need to show a signed delta, not a dB range.
-**Nothing is built for any of them yet.** The trace height and the colour
-window still use the slider, so 10.5's "the scale in that formula is the
-slider" still holds. Recommended: (b), because it changes nothing the operator
-did not touch and adds no write; (a) if NY4I wants TR4W to drive the rig's
+~~**Nothing is built for any of them yet.**~~ (b) is built, above. It was
+recommended because it changes nothing the operator did not touch and adds no
+write; (a) remains the road if NY4I later wants TR4W to drive the rig's
 display.
 
 **`#REF$` is not asked at connect** (unchanged): QK4 learns the sub's REF from

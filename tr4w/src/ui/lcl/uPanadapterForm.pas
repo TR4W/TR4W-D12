@@ -115,7 +115,14 @@ unit uPanadapterForm;
   AND THE RADIO'S REFERENCE (2026-11-03).  When the radio states one (#REF on
   a K4, held across a reconnect), the trace's bottom IS it, with no margin,
   and each new waterfall row is stored relative to it -- see DisplayRange and
-  PushWaterfallRow.  The scale is still the slider's.
+  PushWaterfallRow.
+
+  AND THE RADIO'S SCALE (NY4I, option (b), 2026-11-03).  There is one scale,
+  the slider's, and both the trace and the waterfall draw with it.  When the
+  radio's reported scale (#SCL on a K4, pans A and B) CHANGES, the slider is
+  moved to it; the operator's own drag stands until the radio reports a
+  DIFFERENT value -- the palette's rule exactly.  TR4W never writes the scale
+  to the radio.
 }
 
 interface
@@ -209,6 +216,13 @@ type
          in the first case, so a new radio never inherits the old radio's
          scheme while the operator's own choice still stands. *)
       FPaletteFromRadio: Boolean;
+      (* The same for the SCALE: True while the slider sits where the RADIO's
+         reported scale put it, False once the operator drags it (and at
+         creation).  An attach puts the slider back to the radio's default in
+         the first case only, so a new radio never inherits the old radio's
+         scale.  It records where the value came from; it is not set by the
+         operator's path and it gates nothing else. *)
+      FScaleFromRadio: Boolean;
       FPaused: Boolean;
       FLUT: array[0..255] of LongWord;
 
@@ -583,6 +597,7 @@ begin
    FWantSource := 'A';
    FPalette := PALETTE_DEFAULT;
    FPaletteFromRadio := False;
+   FScaleFromRadio := False;
    (* NO SCALE UNTIL A RADIO STATES ONE.  The designed slider carries no range
       (the LCL defaults) and is DISABLED, so it cannot step from an invented
       value; ApplyDisplayDefaults gives it the radio's range and default and
@@ -1057,6 +1072,16 @@ begin
          end;
       end;
 
+   (* A SCALE THE OLD RADIO SET GOES TOO, exactly as its palette does; one the
+      operator set stays (unless the range itself differs, above).  The same
+      radio re-attached gets its held #SCL back on the first tick, before
+      anything is drawn, because FLive was forgotten. *)
+   if FScaleFromRadio then
+      begin
+      FScaleFromRadio := False;
+      rangeChanged := True;
+      end;
+
    if rangeChanged then
       begin
       trkScale.SetParams(FDisplay.DefaultScaleDb, FDisplay.MinScaleDb,
@@ -1089,7 +1114,7 @@ end;
    The palette is the exception: unknown leaves it where it is, so the
    operator's choice is not undone.
 
-   WHAT HAPPENS TO THE HISTORY.  A colour floor or palette change re-colours
+   WHAT HAPPENS TO THE HISTORY.  A scale, colour floor or palette change re-colours
    every stored row from its dB (RenderWaterfall), as the scale slider does:
    no row is lost and there is no seam.  A share change resizes the waterfall
    bitmap; EnsureWaterfall keeps the newest rows that still fit when the width
@@ -1098,7 +1123,7 @@ procedure TfrmPanadapter.ApplyLiveDisplay(const ALive: TSpectrumLiveDisplay);
 var
    share, margin: Single;
    relayout, recolour: Boolean;
-   w, specH, axisTop, wfTop, wfH: Integer;
+   scale, w, specH, axisTop, wfTop, wfH: Integer;
 begin
    if not FHaveDisplay then
       begin
@@ -1107,6 +1132,32 @@ begin
 
    relayout := False;
    recolour := False;
+
+   (* THE RADIO'S SCALE MOVES THE SLIDER WHEN IT CHANGES, and only then (NY4I,
+      option (b)): an operator's drag stands until the radio reports a
+      DIFFERENT value, and a repeat costs one comparison.  FIRST, because the
+      colour margin below is a fraction of the scale.
+
+      SetParams, not Position: Position raises OnChange, which is the
+      OPERATOR's path (HandleScaleChange) and would record this as the
+      operator's choice.  SetParams raises none, so FScaleDb and the caption
+      are synced here by hand, as ApplyDisplayDefaults does.  Nothing is sent
+      to the radio, on this path or the operator's. *)
+   if SpectrumRadioScaleChanged(FLive, ALive) then
+      begin
+      scale := SpectrumScaleAfterReport(FDisplay, FLive, ALive, FScaleDb);
+      FScaleFromRadio := True;
+
+      if scale <> FScaleDb then
+         begin
+         (* FScaleDb before the slider, so a widget set that echoes the move
+            back as a change finds nothing changed (HandleScaleChange). *)
+         FScaleDb := scale;
+         trkScale.SetParams(scale, trkScale.Min, trkScale.Max);
+         ShowScaleCaption;
+         recolour := True;   // the history is coloured by the scale
+         end;
+      end;
 
    share := SpectrumWaterfallShare(FDisplay, ALive);
 
@@ -1172,8 +1223,9 @@ begin
       states one -- exactly, with no margin, as QK4 and the K4's own screen
       draw it -- else the frame's noise floor less the radio's stated margin,
       so noise texture below the floor stays visible (SpectrumTraceFloorDb).
-      The scale is still the slider's: following the radio's #SCL waits on
-      NY4I's decision about the slider. *)
+      The scale is the slider's, which the radio's #SCL moves when it changes
+      (ApplyLiveDisplay) -- so the trace and the waterfall draw with one
+      scale whoever set it. *)
    AMinDb := SpectrumTraceFloorDb(FDisplay, FLive, FRenderNoiseDb);
    ARangeDb := FScaleDb;
 end;
@@ -2521,25 +2573,23 @@ begin
       Exit;
       end;
 
-   FScaleDb := trkScale.Position;
+   (* A POSITION EQUAL TO THE SCALE IN FORCE IS NOT A CHANGE.  That covers a
+      widget set echoing the radio's own move of the slider (ApplyLiveDisplay
+      sets FScaleDb first), which must not be taken for the operator's. *)
+   if trkScale.Position = FScaleDb then
+      begin
+      Exit;
+      end;
+
+   (* The operator moved it: the scale is theirs now, and it stands until the
+      radio reports a DIFFERENT one.  Nothing is sent to the radio. *)
+   FScaleFromRadio := False;
 
    (* The slider's own Min and Max are the radio's range once one is attached;
-      this clamp is the belt to that brace, and it never lets the scale reach
-      zero -- WaterfallColor divides by it. *)
-   if FHaveDisplay and (FScaleDb < FDisplay.MinScaleDb) then
-      begin
-      FScaleDb := FDisplay.MinScaleDb;
-      end;
-
-   if FHaveDisplay and (FScaleDb > FDisplay.MaxScaleDb) then
-      begin
-      FScaleDb := FDisplay.MaxScaleDb;
-      end;
-
-   if FScaleDb < 1 then
-      begin
-      FScaleDb := 1;
-      end;
+      the clamp is the belt to that brace, and it never lets the scale reach
+      zero -- WaterfallColor divides by it.  The same clamp as the radio's
+      reports (SpectrumClampScaleDb). *)
+   FScaleDb := SpectrumClampScaleDb(FDisplay, trkScale.Position);
 
    ShowScaleCaption;
 

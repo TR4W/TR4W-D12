@@ -180,9 +180,13 @@ type
                             display window.  A radio under automatic reference
                             reports it several times a second.
       ScaleDb               the radio's display range, dB, from the reference
-                            upward.  CARRIED, NOT YET DRAWN: whether the
-                            window's scale slider yields to it is NY4I's
-                            decision (docs/PANADAPTER_LCL_DESIGN.md 10.5).
+                            upward.  It MOVES THE WINDOW'S SCALE SLIDER when
+                            it changes, and only then; the operator's own
+                            slider stands until the radio reports a different
+                            value (NY4I, option (b), 2026-11-03 --
+                            SpectrumScaleAfterReport, and
+                            docs/PANADAPTER_LCL_DESIGN.md 10.6).  Nothing is
+                            ever written back to the radio.
 
       No Generation: the window applies a value only when it differs from the
       one it last applied, because a radio under AutoRef reports its reference
@@ -224,6 +228,29 @@ function SpectrumWaterfallShare(const ADefaults: TSpectrumDisplayDefaults;
 function SpectrumWaterfallColourMarginDb(const ADefaults: TSpectrumDisplayDefaults;
                                          const ALive: TSpectrumLiveDisplay;
                                          AScaleDb: Integer): Single;
+
+(* THE SCALE, as pure functions -- the window's slider policy (NY4I, option
+   (b), 2026-11-03).  There is ONE scale in force, the slider's; the radio's
+   reported scale moves it, the operator's drag moves it, and the trace and the
+   waterfall both draw with it.
+
+   SpectrumClampScaleDb: AScaleDb held to the defaults' MinScaleDb..MaxScaleDb
+   and never below 1 (the waterfall divides by it).  The one clamp, for the
+   operator's slider and the radio's report alike.
+   SpectrumRadioScaleChanged: did the radio report a scale that differs from
+   the one last applied?  A first report after an attach (AApplied knows no
+   scale) counts, even one equal to the default; a repeat does not, so a
+   radio that pushes the same value over and over neither re-colours the
+   history nor undoes the operator's drag.
+   SpectrumScaleAfterReport: the scale to draw with after a report -- the
+   radio's, clamped, when it changed; otherwise ACurrentScaleDb, which is the
+   operator's (or an earlier report's) and stands. *)
+function SpectrumClampScaleDb(const ADefaults: TSpectrumDisplayDefaults;
+                              AScaleDb: Integer): Integer;
+function SpectrumRadioScaleChanged(const AApplied, AIncoming: TSpectrumLiveDisplay): Boolean;
+function SpectrumScaleAfterReport(const ADefaults: TSpectrumDisplayDefaults;
+                                  const AApplied, AIncoming: TSpectrumLiveDisplay;
+                                  ACurrentScaleDb: Integer): Integer;
 
 (* THE VERTICAL REFERENCE, as pure functions -- the window's two uses of it.
 
@@ -492,6 +519,45 @@ begin
    if ALive.HasColourFloor and (ALive.ColourFloorOfScale > 0) and (AScaleDb > 0) then
       begin
       Result := ALive.ColourFloorOfScale * AScaleDb;
+      end;
+end;
+
+function SpectrumClampScaleDb(const ADefaults: TSpectrumDisplayDefaults;
+                              AScaleDb: Integer): Integer;
+begin
+   Result := AScaleDb;
+
+   if Result < ADefaults.MinScaleDb then
+      begin
+      Result := ADefaults.MinScaleDb;
+      end;
+
+   if Result > ADefaults.MaxScaleDb then
+      begin
+      Result := ADefaults.MaxScaleDb;
+      end;
+
+   if Result < 1 then
+      begin
+      Result := 1;
+      end;
+end;
+
+function SpectrumRadioScaleChanged(const AApplied, AIncoming: TSpectrumLiveDisplay): Boolean;
+begin
+   Result := AIncoming.HasScale and
+             ((not AApplied.HasScale) or (AApplied.ScaleDb <> AIncoming.ScaleDb));
+end;
+
+function SpectrumScaleAfterReport(const ADefaults: TSpectrumDisplayDefaults;
+                                  const AApplied, AIncoming: TSpectrumLiveDisplay;
+                                  ACurrentScaleDb: Integer): Integer;
+begin
+   Result := ACurrentScaleDb;
+
+   if SpectrumRadioScaleChanged(AApplied, AIncoming) then
+      begin
+      Result := SpectrumClampScaleDb(ADefaults, AIncoming.ScaleDb);
       end;
 end;
 

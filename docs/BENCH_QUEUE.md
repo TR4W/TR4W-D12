@@ -58,9 +58,10 @@ pan B), and keep `tr4w.log` at TRACE.
 - [ ] **The history survives a height change.** EXPECT the newest rows to stay
       when the split moves (they used to be cleared). The oldest rows are lost
       when it shrinks.
-- [ ] **Colour range (WTR CLRS).** First set TR4W's scale slider to the rig's
-      SCALE: the floor is REF - TR4W's own slider value x WBS / 40, and TR4W
-      does not follow `#SCL` yet. Then step WTR CLRS from 5 to 30. EXPECT the whole
+- [ ] **Colour range (WTR CLRS).** The floor is REF - TR4W's slider value x
+      WBS / 40, and the slider now follows the rig's SCALE when it changes, so
+      do not drag TR4W's slider during this check (if you have, turn SCALE at
+      the rig once to bring it back). Then step WTR CLRS from 5 to 30. EXPECT the whole
       waterfall, history included, to get brighter as the number rises. With
       the slider at 80 dB, 5 should look exactly as TR4W always has. **Compare
       against the rig's own screen at 5, 14 and 30.** The mapping is QK4's
@@ -93,9 +94,22 @@ pan B), and keep `tr4w.log` at TRACE.
       the dB labels to follow. Pan B: TR4W does not ASK `#REF$;` at connect, so
       with AutoRef off pan B keeps the noise-floor scaling until the sub's REF
       is changed at the rig. Say whether pan B needs it asked.
-- [ ] **SCALE is NOT followed yet.** Change SCALE at the rig. EXPECT no change
-      in TR4W's trace height; the slider still decides. That is deliberate,
-      waiting on NY4I's decision about the slider (design doc 10.6).
+- [ ] ~~**SCALE is NOT followed yet.**~~ **SCALE IS FOLLOWED, NEVER WRITTEN**
+      (NY4I's option (b), later 2026-11-03; design doc 10.6). Change SCALE on
+      the K4's front panel (e.g. 80, 50, 25, 120). EXPECT TR4W's scale slider
+      and its caption to jump to the rig's value within a tick, and the trace
+      height and the waterfall colours (history included) to follow, on pan A
+      and pan B. The log should show `[K4] display report recorded: #SCL...`;
+      if no line appears, the K4 does not push `#SCL` and TR4W learns it only
+      at the next connect -- record which.
+- [ ] **TR4W's slider sends nothing.** Drag TR4W's scale slider. EXPECT the
+      picture to change, **nothing to be sent to the K4** (no `#SCL` in the
+      log's outbound lines at TRACE) and **the K4's own SCALE not to change**.
+      EXPECT TR4W to keep the dragged value until SCALE is changed at the rig
+      again -- and a reconnect alone not to undo it. Also EXPECT no waterfall
+      flash while the rig sits on one SCALE.
+- [ ] **The Y mini-pan's slider is TR4W's alone.** With the Y source shown,
+      change SCALE at the rig. EXPECT no change in TR4W.
 - [ ] **A reconnect keeps the picture.** Set a split, WTR CLRS and colour mode
       that are NOT the defaults (e.g. 30 %, 20, sepia). Then **power-cycle the
       K4**, and separately **pull the network cable** and put it back. EXPECT

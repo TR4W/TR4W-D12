@@ -423,9 +423,11 @@ end;
    window follows instead -- the waterfall share, its colour floor, its scheme
    and the reference -- and these numbers stand only for what the radio has
    not said.  With #REF known the trace's bottom IS the reference, as in QK4,
-   so the 10 dB margin applies only before the radio has answered.  #SCL is
-   carried too, but the window does not draw with it yet (the scale slider's
-   fate is NY4I's decision).  They are unchanged, and pinned so
+   so the 10 dB margin applies only before the radio has answered.  A CHANGED
+   #SCL moves the window's scale slider (NY4I, option (b), 2026-11-03), so 80
+   is only the slider's start; TR4W never writes #SCL.  The range is
+   uK4DisplayReport's, the one place the K4's 10..150 is written, so the slider
+   can hold every #SCL the parser accepts.  They are unchanged, and pinned so
    (uTestSpectrumDisplayDefaults).
 
    THE SAME FOR EVERY SOURCE, as the window has always drawn them.  The Y
@@ -435,8 +437,8 @@ end;
    change made in passing. *)
 const
    K4_DEFAULT_SCALE_DB = 80;
-   K4_MIN_SCALE_DB = 10;
-   K4_MAX_SCALE_DB = 150;
+   K4_MIN_SCALE_DB = K4_SCALE_MIN_DB;   // 10 -- uK4DisplayReport
+   K4_MAX_SCALE_DB = K4_SCALE_MAX_DB;   // 150
    K4_REF_MARGIN_DB = 10.0;
    K4_WATERFALL_FRACTION = 0.5;
 
