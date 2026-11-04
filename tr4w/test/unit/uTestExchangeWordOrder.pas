@@ -56,6 +56,8 @@ type
    private
       procedure Test_SweepstakesPrecedenceBeforeTheSerial;
       procedure Test_SweepstakesAmbiguousSerialIsRefused;
+      procedure Test_SweepstakesReferenceModelIsAnchored;
+      procedure Test_SweepstakesEveryOrdering;
       procedure Test_SprintStateBeforeTheName;
       procedure Test_NAQPStateAndNameInEitherOrder;
    end;
@@ -220,10 +222,10 @@ begin
       CheckTaken('123 U 80 WCF', 123, 'U', 80, 'WCF');
       CheckTaken('123U 80WCF', 123, 'U', 80, 'WCF');
 
-      (* 'U80WCF 123' IS REFUSED THROUGH LIVE ENTRY, before and after
-         #174, though the word reader takes 'A99CT 123'
-         (uTestContestParse.Test_SweepstakesWordReading). Pinned so the
-         mismatch is seen; the word goes in the callsign. *)
+      (* 'U80WCF 123' IS REFUSED THROUGH LIVE ENTRY: the call correction
+         would take U80WCF as the call, and since 2026-11-04 the operator is
+         asked instead (Test_SweepstakesAmbiguousSerialIsRefused pins the
+         message). The word is still what the call field holds. *)
       accepted := Enter('W1AW', 'U80WCF 123', rx);
       CheckFalse(accepted, 'U80WCF 123: refused through live entry');
       CheckEquals('U80WCF', string(rx.Callsign), 'U80WCF 123: the packed word is read as a callsign');
@@ -311,52 +313,662 @@ begin
       CheckTaken('43M W1AW 31 CT', 43, 'M', 31, 'CT');
       CheckTaken('U123 W1AW 31 CT', 123, 'U', 31, 'CT');
 
-      (* A PRECEDENCE, DIGITS AND A SECTION IN ONE WORD -- NY4I,
-         2026-11-04: "a99ct 32 would be precedence of a, serial number 99,
-         section of ct and check of 32", and in 'a99ct 123' "123 cannot be a
-         check", so there the 99 is the check.
+      (* A PRECEDENCE, DIGITS AND A SECTION IN ONE WORD IS ALWAYS THE
+         PRECEDENCE, THE SERIAL AND THE SECTION -- NY4I, 2026-11-04: "the
+         rule was a number next to a prec. was the serial, so a99ct would
+         always be serial number 99, so the lone 5 would have to be a
+         mal-sent check"; "check will always be two digits".
 
-         MEASURED: WITH CALLSIGN UPDATE ENABLE ON (the default), LIVE ENTRY
-         NEVER REACHES THE GRAMMAR FOR THESE. GetCorrectedCallFromExchangeString
-         finds 'A99CT' LooksLikeACallSign, makes it the QSO's call and strips
-         it from the exchange, so what is parsed is '123' alone -- refused for
-         the missing precedence. That is NY4I's bench symptom, and it is the
-         same with the D7 word reading restored. Pinned, so a change to the
-         call extraction is seen here. *)
-      accepted := Enter('W1AW', 'A99CT 123', rx);
-      CheckFalse(accepted, 'A99CT 123, callsign update on: refused');
-      CheckEquals('A99CT', string(rx.Callsign), 'A99CT 123, callsign update on: the word is taken as the call');
-      CheckEquals(SExchangeNoPrecedence, string(ExchangeErrorMessage),
-                  'A99CT 123, callsign update on: what is left has no precedence');
-      (* The extraction takes the LAST word that looks like a call, and only
-         that one: with the call typed after it, A99CT is left to the
-         grammar. *)
+         WITH CALLSIGN UPDATE ENABLE ON (the default) the call correction
+         runs FIRST and would take 'A99CT' as the QSO's call; the entry is
+         refused and the operator asked instead ("we can ask"). *)
+      CheckRefused('A99CT 123', 'Ambiguous entry - A99CT may be a callsign or an exchange. ' +
+                   'For the exchange, enter 99A CT; for the call, type it in the call window');
+      CheckRefused('A99CT 32', 'Ambiguous entry - A99CT may be a callsign or an exchange. ' +
+                   'For the exchange, enter 99A CT; for the call, type it in the call window');
+      CheckRefused('U80WCF 123', 'Ambiguous entry - U80WCF may be a callsign or an exchange. ' +
+                   'For the exchange, enter 80U WCF; for the call, type it in the call window');
+      (* THE ASKED-FOR SPELLING RESOLVES AS THE GRAMMAR READ THE WORD. *)
+      CheckTaken('99A CT 32', 99, 'A', 32, 'CT');
+      CheckEquals('W1AW', string(rx.Callsign), '99A CT 32: the call is the call window''s');
+      (* A REAL CALL IS STILL TAKEN: the correction takes the LAST word that
+         looks like a call, and only that one. *)
       CheckTaken('A99CT 32 W1AW', 99, 'A', 32, 'CT');
-      CheckEquals('W1AW', string(rx.Callsign), 'A99CT 32 W1AW, callsign update on: the typed call');
+      CheckEquals('W1AW', string(rx.Callsign), 'A99CT 32 W1AW: the typed call');
+      (* THE SHAPE ALONE DOES NOT ASK: XYZ is no section, so A9XYZ is a call
+         (A9 is Bahrain) and is taken as one, as before. *)
+      accepted := Enter('W1AW', '43M 31 CT A9XYZ', rx);
+      CheckEquals('A9XYZ', string(rx.Callsign), 'A9XYZ: taken as the call');
+      CheckTrue(accepted, '43M 31 CT A9XYZ: logged against the corrected call');
 
       (* WITH IT OFF, the grammar reads them as ruled. *)
       savedCallsignUpdate := Settings.CallWindow.CallsignUpdateEnable;
       Settings.CallWindow.CallsignUpdateEnable := False;
       try
-         CheckTaken('A99CT 123', 123, 'A', 99, 'CT');
-         CheckEquals('W1AW', string(rx.Callsign), 'A99CT 123: the call is the call window''s');
-         CheckTaken('123 A99CT', 123, 'A', 99, 'CT');
          CheckTaken('A99CT 32', 99, 'A', 32, 'CT');
+         CheckEquals('W1AW', string(rx.Callsign), 'A99CT 32: the call is the call window''s');
          CheckTaken('32 A99CT', 99, 'A', 32, 'CT');
-         (* ALONE: serial 99 and no check -- refused, and not for the
-            precedence. *)
+         (* A NUMBER THAT IS NOT TWO DIGITS IS A MAL-SENT CHECK, said so. *)
+         CheckRefused('A99CT 123', 'Check must be two digits (123)');
+         CheckRefused('123 A99CT', 'Check must be two digits (123)');
+         CheckRefused('A99CT 5', 'Check must be two digits (5)');
+         CheckRefused('U80WCF 123', 'Check must be two digits (123)');
+         (* ALONE: serial 99 and no check -- refused silently, as a missing
+            check always has been ('123 A CT'). *)
          CheckRefused('A99CT', '');
          (* WITH THE CALL TYPED LAST, the call is read as the section. *)
          CheckRefused('A99CT 32 W1AW', '');
          (* A PRECEDENCE, A CHECK AND A99CT: the engine stops at the first
-            complete reading, last first -- A99CT gives check 99 (123 must be
-            the serial), then the bare 99 fills the serial. As D7 read it. *)
+            complete reading, last first -- A99CT gives serial 99, the bare
+            99 the check; 123 is never reached. *)
          CheckTaken('123 A 99 A99CT', 99, 'A', 99, 'CT');
       finally
          Settings.CallWindow.CallsignUpdateEnable := savedCallsignUpdate;
       end;
    finally
       RestoreSession;
+   end;
+end;
+
+(* ---------------------------------------------------------------------------
+   SWEEPSTAKES IN EVERY ORDER -- NY4I, 2026-11-04: "our test cases need to
+   generate every possible scenario (positionally that is)", and "since the
+   callsign update is grabbed before the contest class we need a good test
+   case that combines callsign update too".
+
+   A REFERENCE MODEL, WRITTEN FROM THE RULINGS, NOT FROM THE PARSER. It calls
+   no uExchangeTokens or LOGSTUFF routine. Two stages, as the program runs:
+
+   1. CALLSIGN UPDATE ON: the call correction scans the words LAST FIRST and
+      takes the first that looks like a call -- letters and digits, at least
+      two letter/digit changes, ending in a letter, not starting with two
+      digits (read from LOGSTUFF.LooksLikeACallSign). If that word is also an
+      exchange word -- a precedence, digits, then a SECTION -- the entry is
+      refused and the operator asked ("we can ask"). Otherwise the word is
+      the QSO's call and leaves the exchange.
+
+   2. THE GRAMMAR on what is left:
+      - a number touching a precedence ('43M', 'M43', 'U12', 'A99CT') is the
+        serial ("a number next to a prec. was the serial");
+      - a check is exactly two digits ("check will always be two digits");
+        a lone number that is not two digits, beside a joined serial, is a
+        mal-sent check, said so;
+      - a bare one-, three- or four-digit number is the serial (it cannot be
+        a check);
+      - with a STANDALONE precedence, two bare two-digit numbers -- or one,
+        with a check+section word typed BEFORE it -- are ambiguous, and the
+        numbers are named in typed order (the base order, serial precedence
+        call check section, reads a number typed before a check+section
+        word as the serial);
+      - otherwise the one bare two-digit number is the serial beside a
+        check+section word, the check beside any other serial.
+
+   ONE RULE HERE HAS NO RULING YET, and is written as the parser behaves so
+   the run can be green; it is the order-dependent case reported to NY4I:
+      - of the words that can be a section (a section, a check+section
+        word's letters, a joined word's letters, a callsign left in the
+        exchange), the LATER TYPED is the section -- so with CALLSIGN UPDATE
+        off a call typed after the section becomes the section, and the
+        entry is refused with no message.
+   --------------------------------------------------------------------------- *)
+
+const
+   MODEL_SECTIONS: array[0..5] of string = ('CT', 'WCF', 'AB', 'SB', 'MI', 'ORG');
+   MODEL_PRECEDENCES = 'ABQUMS';
+
+function ModelIsDigits(const s: string): boolean;
+var
+   i: integer;
+begin
+   Result := s <> '';
+   for i := 1 to Length(s) do
+      begin
+      if not ((s[i] >= '0') and (s[i] <= '9')) then
+         begin
+         Result := False;
+         end;
+      end;
+end;
+
+function ModelIsLetters(const s: string): boolean;
+var
+   i: integer;
+begin
+   Result := s <> '';
+   for i := 1 to Length(s) do
+      begin
+      if not ((s[i] >= 'A') and (s[i] <= 'Z')) then
+         begin
+         Result := False;
+         end;
+      end;
+end;
+
+function ModelIsPrecedence(const s: string): boolean;
+begin
+   Result := (Length(s) = 1) and (Pos(s, MODEL_PRECEDENCES) > 0);
+end;
+
+function ModelIsSection(const s: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(MODEL_SECTIONS) to High(MODEL_SECTIONS) do
+      begin
+      if MODEL_SECTIONS[i] = s then
+         begin
+         Result := True;
+         end;
+      end;
+end;
+
+function ModelLooksLikeCall(const w: string): boolean;
+var
+   i, changes: integer;
+   isDigit, wasDigit: boolean;
+begin
+   Result := False;
+   if (Length(w) < 2) or not (ModelIsLetters(Copy(w, Length(w), 1))) then
+      begin
+      Exit;
+      end;
+   if ModelIsDigits(Copy(w, 1, 2)) then
+      begin
+      Exit;
+      end;
+   changes := 0;
+   wasDigit := ModelIsDigits(Copy(w, 1, 1));
+   for i := 1 to Length(w) do
+      begin
+      if not (ModelIsDigits(Copy(w, i, 1)) or ModelIsLetters(Copy(w, i, 1))) then
+         begin
+         Exit;
+         end;
+      isDigit := ModelIsDigits(Copy(w, i, 1));
+      if (i > 1) and (isDigit <> wasDigit) then
+         begin
+         inc(changes);
+         end;
+      wasDigit := isDigit;
+      end;
+   Result := changes >= 2;
+end;
+
+(* A NUMBER JOINED TO A PRECEDENCE: '43M', 'M43' / 'U123', 'A99CT'. *)
+function ModelJoined(const w: string; out aSerial, aSection: string; out aPrec: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   aSerial := '';
+   aSection := '';
+   aPrec := '';
+   if (Length(w) >= 2) and ModelIsPrecedence(Copy(w, Length(w), 1)) and
+      ModelIsDigits(Copy(w, 1, Length(w) - 1)) and (Length(w) - 1 <= 4) then
+      begin
+      aSerial := Copy(w, 1, Length(w) - 1);
+      aPrec := Copy(w, Length(w), 1);
+      Result := True;
+      Exit;
+      end;
+   if (Length(w) >= 2) and ModelIsPrecedence(Copy(w, 1, 1)) and ModelIsDigits(Copy(w, 2, 1)) then
+      begin
+      i := 2;
+      while (i <= Length(w)) and ModelIsDigits(Copy(w, i, 1)) do
+         begin
+         inc(i);
+         end;
+      aSerial := Copy(w, 2, i - 2);
+      aSection := Copy(w, i, Length(w) - i + 1);
+      aPrec := Copy(w, 1, 1);
+      Result := (Length(aSerial) <= 4) and ((aSection = '') or ModelIsLetters(aSection));
+      end;
+end;
+
+(* A CHECK JOINED TO ITS SECTION: '31CT'. *)
+function ModelCheckSection(const w: string; out aCheck, aSection: string): boolean;
+begin
+   aCheck := Copy(w, 1, 2);
+   aSection := Copy(w, 3, Length(w) - 2);
+   Result := (Length(w) > 2) and ModelIsDigits(aCheck) and
+             not ModelIsDigits(Copy(w, 3, 1)) and ModelIsLetters(aSection);
+end;
+
+(* WHAT THE REFERENCE MODEL SAYS AN ENTRY DOES, as one comparable line. *)
+function ModelReading(const aWindowCall: string; const aWords: array of string;
+                      aCallsignUpdate: boolean): string;
+var
+   words: array of string;
+   count, i, taken: integer;
+   call, serial, prec, check, section, badCheck, message: string;
+   js, jsec, jp, cc, csec: string;
+   bare2, bareOther, checkSections: array of integer;   (* word positions *)
+   hasJoined, ambiguous: boolean;
+   candidate1, candidate2: string;
+   sectionAt: integer;
+begin
+   (* STAGE 1: THE CALL CORRECTION. *)
+   SetLength(words, Length(aWords));
+   for i := 0 to High(aWords) do
+      begin
+      words[i] := aWords[i];
+      end;
+   count := Length(words);
+   call := aWindowCall;
+   if aCallsignUpdate then
+      begin
+      taken := -1;
+      for i := count - 1 downto 0 do
+         begin
+         if (taken < 0) and ModelLooksLikeCall(words[i]) then
+            begin
+            taken := i;
+            end;
+         end;
+      if taken >= 0 then
+         begin
+         call := words[taken];
+         if ModelJoined(words[taken], js, jsec, jp) and (jsec <> '') and ModelIsSection(jsec) then
+            begin
+            Result := 'NO call=' + call + ' msg=' +
+                      UnicodeFormat(SExchangeCallOrExchange, [words[taken], js + jp + ' ' + jsec]);
+            Exit;
+            end;
+         for i := taken to count - 2 do
+            begin
+            words[i] := words[i + 1];
+            end;
+         dec(count);
+         end;
+      end;
+
+   (* STAGE 2: THE GRAMMAR. *)
+   serial := '';
+   prec := '';
+   check := '';
+   section := '';
+   badCheck := '';
+   hasJoined := False;
+   sectionAt := -1;
+   SetLength(bare2, 0);
+   SetLength(bareOther, 0);
+   SetLength(checkSections, 0);
+   for i := 0 to count - 1 do
+      begin
+      if ModelIsPrecedence(words[i]) then
+         begin
+         prec := words[i];
+         end
+      else if ModelJoined(words[i], js, jsec, jp) then
+         begin
+         hasJoined := True;
+         serial := js;
+         prec := jp;
+         if jsec <> '' then
+            begin
+            section := jsec;
+            sectionAt := i;
+            end;
+         end
+      else if ModelIsDigits(words[i]) then
+         begin
+         if Length(words[i]) = 2 then
+            begin
+            SetLength(bare2, Length(bare2) + 1);
+            bare2[High(bare2)] := i;
+            end
+         else if Length(words[i]) <= 4 then
+            begin
+            SetLength(bareOther, Length(bareOther) + 1);
+            bareOther[High(bareOther)] := i;
+            end;
+         end
+      else if ModelCheckSection(words[i], cc, csec) then
+         begin
+         SetLength(checkSections, Length(checkSections) + 1);
+         checkSections[High(checkSections)] := i;
+         check := cc;
+         section := csec;
+         sectionAt := i;
+         end
+      else
+         begin
+         (* A section, or a call left in the exchange: the later typed is
+            the section (the rule owed a ruling, above). *)
+         section := words[i];
+         sectionAt := i;
+         end;
+      end;
+
+   (* THE AMBIGUITY: a standalone precedence, no joined number, no bare
+      number that is not two digits. *)
+   ambiguous := False;
+   candidate1 := '';
+   candidate2 := '';
+   if (not hasJoined) and (Length(bareOther) = 0) and (prec <> '') then
+      begin
+      if Length(bare2) = 2 then
+         begin
+         ambiguous := True;
+         candidate1 := words[bare2[0]];
+         candidate2 := words[bare2[1]];
+         end
+      else if (Length(bare2) = 1) and (Length(checkSections) = 1) and
+              (checkSections[0] < bare2[0]) then
+         begin
+         ambiguous := True;
+         candidate1 := Copy(words[checkSections[0]], 1, 2);
+         candidate2 := words[bare2[0]];
+         end;
+      end;
+   if ambiguous then
+      begin
+      Result := 'NO call=' + call + ' msg=' +
+                UnicodeFormat(SExchangeAmbiguousSerial, [candidate1 + prec, candidate2 + prec]);
+      Exit;
+      end;
+
+   (* THE SERIAL AND THE CHECK. *)
+   if not hasJoined then
+      begin
+      if Length(bareOther) > 0 then
+         begin
+         serial := words[bareOther[0]];
+         end
+      else if Length(bare2) = 1 then
+         begin
+         serial := words[bare2[0]];
+         end;
+      end
+   else if Length(bareOther) > 0 then
+      begin
+      badCheck := words[bareOther[0]];
+      end;
+   if (check = '') and (Length(bare2) = 1) and (serial <> words[bare2[0]]) then
+      begin
+      check := words[bare2[0]];
+      end;
+   if check <> '' then
+      begin
+      badCheck := '';
+      end;
+
+   if (serial <> '') and (prec <> '') and (check <> '') and ModelIsSection(section) then
+      begin
+      Result := 'OK call=' + call + ' n=' + serial + ' p=' + prec + ' c=' + check + ' s=' + section;
+      end
+   else
+      begin
+      if prec = '' then
+         begin
+         message := SExchangeNoPrecedence;
+         end
+      else if badCheck <> '' then
+         begin
+         message := UnicodeFormat(SExchangeCheckNotTwoDigits, [badCheck]);
+         end
+      else
+         begin
+         message := '';
+         end;
+      Result := 'NO call=' + call + ' msg=' + message;
+      end;
+end;
+
+function TwoDigits(aValue: integer): string;
+begin
+   Result := IntToStr(aValue);
+   if Length(Result) < 2 then
+      begin
+      Result := '0' + Result;
+      end;
+end;
+
+(* WHAT THE PROGRAM DOES WITH IT, through the real entry path. *)
+function ProgramReading(const aWindowCall: string; const aEntry: string): string;
+var
+   rx: ContestExchange;
+begin
+   if Enter(aWindowCall, aEntry, rx) then
+      begin
+      Result := 'OK call=' + string(rx.Callsign) + ' n=' + IntToStr(rx.NumberReceived) +
+                ' p=' + string(rx.Precedence) + ' c=' + TwoDigits(Integer(rx.Check)) +
+                ' s=' + string(rx.QTHString);
+      end
+   else
+      begin
+      Result := 'NO call=' + string(rx.Callsign) + ' msg=' + string(ExchangeErrorMessage);
+      end;
+end;
+
+type
+   TWordList = array of string;
+
+(* The words of a test entry: single blanks between them, as written. *)
+function SplitWords(const aText: string): TWordList;
+var
+   rest: string;
+   at: integer;
+begin
+   SetLength(Result, 0);
+   rest := aText;
+   while rest <> '' do
+      begin
+      at := Pos(' ', rest);
+      SetLength(Result, Length(Result) + 1);
+      if at = 0 then
+         begin
+         Result[High(Result)] := rest;
+         rest := '';
+         end
+      else
+         begin
+         Result[High(Result)] := Copy(rest, 1, at - 1);
+         Delete(rest, 1, at);
+         end;
+      end;
+end;
+
+(* THE MODEL, ANCHORED: hand-written readings from the rulings, so a model
+   that drifts from NY4I's words fails here before the sweep trusts it. *)
+procedure TExchangeWordOrderTests.Test_SweepstakesReferenceModelIsAnchored;
+
+   procedure Pin(const aWindow, aEntry: string; aUpdate: boolean; const aExpected: string);
+   begin
+      CheckEquals(aExpected, ModelReading(aWindow, SplitWords(aEntry), aUpdate),
+                  'model: ' + aEntry);
+   end;
+
+const
+   ASK = 'Ambiguous entry - A99CT may be a callsign or an exchange. For the exchange, ' +
+         'enter 99A CT; for the call, type it in the call window';
+begin
+   BeginTest('Test_SweepstakesReferenceModelIsAnchored');
+   Pin('W1AW', '43 M W1AW 31 CT', True, 'NO call=W1AW msg=Ambiguous exchange - enter 43M or 31M to resolve');
+   Pin('W1AW', '43M W1AW 31 CT', True, 'OK call=W1AW n=43 p=M c=31 s=CT');
+   Pin('W1AW', '42 M W1AW 31CT', True, 'OK call=W1AW n=42 p=M c=31 s=CT');
+   Pin('W1AW', 'A 99CT 32', False, 'NO call=W1AW msg=Ambiguous exchange - enter 99A or 32A to resolve');
+   Pin('W1AW', '32 A 99CT', False, 'OK call=W1AW n=32 p=A c=99 s=CT');
+   Pin('W1AW', 'A99CT 32', False, 'OK call=W1AW n=99 p=A c=32 s=CT');
+   Pin('W1AW', 'A99CT 32', True, 'NO call=A99CT msg=' + ASK);
+   Pin('W1AW', 'A99CT 123', False, 'NO call=W1AW msg=Check must be two digits (123)');
+   Pin('W1AW', 'A99CT 5', False, 'NO call=W1AW msg=Check must be two digits (5)');
+   Pin('W1AW', '31 W1AW CT M 232', True, 'OK call=W1AW n=232 p=M c=31 s=CT');
+   Pin('W1AW', '12 W1AW CT M 4', True, 'OK call=W1AW n=4 p=M c=12 s=CT');
+   Pin('W1AW', '80 WCF U12', False, 'OK call=W1AW n=12 p=U c=80 s=WCF');
+   Pin('K1ABC', 'U12 W1AW 80 CT', True, 'OK call=W1AW n=12 p=U c=80 s=CT');
+   Pin('W1AW', 'U12 80 CT W1AW', False, 'NO call=W1AW msg=');
+end;
+
+(* EVERY ORDERING OF EVERY TOKEN SET, both runnings, CALLSIGN UPDATE on and
+   off, against the model. The first 20 disagreements are reported. *)
+procedure TExchangeWordOrderTests.Test_SweepstakesEveryOrdering;
+const
+   TOKEN_SETS: array[0..24] of string = (
+      '43 M W1AW 31 CT',
+      '43M W1AW 31 CT',
+      'M43 W1AW 31 CT',
+      '43M W1AW 31CT',
+      '43 M W1AW 31CT',
+      'A99CT W1AW 32',
+      'A99CT 32',
+      'A99CT 123',
+      'A99CT 5',
+      'A99 W1AW 31 CT',
+      'A 99CT 32',
+      '123 A W1AW 99 CT',
+      'U12 W1AW 80 CT',
+      '80 WCF U12',
+      '232 M 31 CT W1AW',
+      '4 M 12 CT',
+      '43 M 22 31CT',
+      '43 M 43MI',
+      'U80WCF 123',
+      'U80WCF 32 W1AW',
+      '43M W1AW 31 AB',
+      '43M 31SB W1AW',
+      'U12 80 ORG',
+      '12 A 31MI',
+      '43M 31 CT A9XYZ');
+var
+   setIndex, i, disagreements, orderings, contestIndex: integer;
+   words: TWordList;
+   orders: TStringList;
+   used: array of boolean;
+   chosen: array of string;
+   entry, expected, actual, window: string;
+   hasCall, update: boolean;
+   updateIndex: integer;
+   savedCallsignUpdate: boolean;
+   contests: array[0..1] of ContestType;
+   report: TStringList;
+   reportPath: string;
+
+   procedure Permute(aDepth: integer);
+   var
+      k: integer;
+      line: string;
+   begin
+      if aDepth = Length(words) then
+         begin
+         line := chosen[0];
+         for k := 1 to High(chosen) do
+            begin
+            line := line + ' ' + chosen[k];
+            end;
+         orders.Add(line);
+         Exit;
+         end;
+      for k := 0 to High(words) do
+         begin
+         if not used[k] then
+            begin
+            used[k] := True;
+            chosen[aDepth] := words[k];
+            Permute(aDepth + 1);
+            used[k] := False;
+            end;
+         end;
+   end;
+
+   procedure RunOne(const aWindow: string);
+   begin
+      expected := ModelReading(aWindow, SplitWords(entry), update);
+      actual := ProgramReading(aWindow, entry);
+      if report <> nil then
+         begin
+         report.Add(string(ContestTypeSA[contests[contestIndex]]) + ' update=' +
+                    BoolToStr(update, True) + ' window=' + aWindow + ' [' + entry + '] ' + actual);
+         end;
+      if expected <> actual then
+         begin
+         inc(disagreements);
+         if disagreements <= 20 then
+            begin
+            CheckEquals(expected, actual, string(ContestTypeSA[contests[contestIndex]]) +
+                        ' update=' + BoolToStr(update, True) + ' window=' + aWindow +
+                        ' [' + entry + ']');
+            end;
+         end;
+   end;
+
+begin
+   BeginTest('Test_SweepstakesEveryOrdering');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   contests[0] := ARRLSSCW;
+   contests[1] := ARRLSSSSB;
+   disagreements := 0;
+   orderings := 0;
+   (* A DIAGNOSTIC: every reading, for a report, when asked for. *)
+   report := nil;
+   reportPath := GetEnvironmentVariable('TR4W_SS_ORDERING_REPORT');
+   if reportPath <> '' then
+      begin
+      report := TStringList.Create;
+      end;
+   orders := TStringList.Create;
+   try
+      orders.Sorted := True;
+      orders.Duplicates := dupIgnore;
+      for contestIndex := 0 to 1 do
+         begin
+         SetUpSession(contests[contestIndex], DomesticCountriesARRLSections, 'arrlsect.dom');
+         savedCallsignUpdate := Settings.CallWindow.CallsignUpdateEnable;
+         try
+            for setIndex := Low(TOKEN_SETS) to High(TOKEN_SETS) do
+               begin
+               words := SplitWords(TOKEN_SETS[setIndex]);
+               SetLength(used, Length(words));
+               SetLength(chosen, Length(words));
+               for i := 0 to High(used) do
+                  begin
+                  used[i] := False;
+                  end;
+               orders.Clear;
+               Permute(0);
+               hasCall := False;
+               for i := 0 to High(words) do
+                  begin
+                  if ModelLooksLikeCall(words[i]) then
+                     begin
+                     hasCall := True;
+                     end;
+                  end;
+               for i := 0 to orders.Count - 1 do
+                  begin
+                  entry := orders[i];
+                  inc(orderings);
+                  for updateIndex := 0 to 1 do
+                     begin
+                     update := updateIndex = 0;
+                     if update or hasCall then
+                        begin
+                        Settings.CallWindow.CallsignUpdateEnable := update;
+                        (* (1) the same call in the window, (2) another. *)
+                        RunOne('W1AW');
+                        if Pos('W1AW', entry) > 0 then
+                           begin
+                           RunOne('K1ABC');
+                           end;
+                        end;
+                     end;
+                  end;
+               end;
+         finally
+            Settings.CallWindow.CallsignUpdateEnable := savedCallsignUpdate;
+            RestoreSession;
+         end;
+         end;
+      CheckEquals(0, disagreements, IntToStr(disagreements) + ' disagreement(s) over ' +
+                  IntToStr(orderings) + ' ordering(s)');
+      if report <> nil then
+         begin
+         report.SaveToFile(reportPath);
+         end;
+   finally
+      orders.Free;
+      report.Free;
    end;
 end;
 
@@ -481,6 +1093,8 @@ procedure TExchangeWordOrderTests.RunAllTests;
 begin
    Test_SweepstakesPrecedenceBeforeTheSerial;
    Test_SweepstakesAmbiguousSerialIsRefused;
+   Test_SweepstakesReferenceModelIsAnchored;
+   Test_SweepstakesEveryOrdering;
    Test_SprintStateBeforeTheName;
    Test_NAQPStateAndNameInEitherOrder;
 end;

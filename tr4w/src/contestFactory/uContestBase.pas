@@ -2608,6 +2608,17 @@ type
          General QSO and POTA. *)
       function AcceptsBlankExchange: boolean; virtual;
 
+      (* MUST THE ENTRY BE REFUSED RATHER THAN TAKE aWord AS THE CALL? --
+         MainUnit.ParametersOkay, under CALLSIGN UPDATE ENABLE, asks this of
+         the word LOGSTUFF.GetCorrectedCallFromExchangeString would make the
+         QSO's call, BEFORE it is taken. True refuses the entry with
+         aMessage. aIsDomesticQTH is the engine's domestic table. Base: never (False, ''). Sweepstakes
+         asks when the word is also its exchange (NY4I, 2026-11-04: "if
+         ambiguous since a99ct is an edge case, we can ask"). *)
+      function RefusesCallFromExchangeWord(const aWord: string;
+                                           aIsDomesticQTH: TDomesticQTHTest;
+                                           out aMessage: string): boolean; virtual;
+
       (* DOES THE ZONE EXCHANGE CARRY THE STATE SENT? -- FCONTEST's zone
          messages append the state this contest sends (SentMyState, when
          there is one) after the zone. It asked for the
@@ -3726,6 +3737,13 @@ function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;
 function ContestLogsSeveralQTHsFromOneEntry(aContest: TContestBase): boolean;
 function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
 
+(* aContest's TContestBase.RefusesCallFromExchangeWord; nil refuses
+   nothing. *)
+function ContestRefusesCallFromExchangeWord(aContest: TContestBase;
+                                            const aWord: string;
+                                            aIsDomesticQTH: TDomesticQTHTest;
+                                            out aMessage: string): boolean;
+
 (* aContest's TContestBase.DupeKeyQualifier for aQso, and its
    DupeKeyIncludesReceivedQTH; nil (the classless DUMMYCONTEST) answers ''
    and False -- the call alone. *)
@@ -4486,6 +4504,22 @@ begin
    else
       begin
       Result := aContest.LogsSeveralQTHsFromOneEntry;
+      end;
+end;
+
+function ContestRefusesCallFromExchangeWord(aContest: TContestBase;
+                                            const aWord: string;
+                                            aIsDomesticQTH: TDomesticQTHTest;
+                                            out aMessage: string): boolean;
+begin
+   aMessage := '';
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.RefusesCallFromExchangeWord(aWord, aIsDomesticQTH, aMessage);
       end;
 end;
 
@@ -5388,6 +5422,15 @@ end;
 function TContestBase.AcceptsBlankExchange: boolean;
 begin
    (* An exchange is required -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.RefusesCallFromExchangeWord(const aWord: string;
+                                                  aIsDomesticQTH: TDomesticQTHTest;
+                                                  out aMessage: string): boolean;
+begin
+   (* The call is taken as it always was -- see the declaration. *)
+   aMessage := '';
    Result := False;
 end;
 

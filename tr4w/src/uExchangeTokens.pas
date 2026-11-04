@@ -60,12 +60,17 @@ type
       Check: string[2];
       Section: Str10;
       Prec: AnsiChar;
-      (* THE ENTRY HOLDS A WORD THAT CAN ONLY BE THE SERIAL ('123', 'U12',
-        '43M') -- set BEFORE the fold by MarkSweepstakesSerialElsewhere,
-        because a precedence-digits-section word ('A99CT') reads its digits
-        as the serial unless another word must be the serial, and the fold
-        meets the words last first. NY4I, 2026-11-04. *)
-      SerialElsewhere: boolean;
+      (* NUMBER CAME FROM A BARE NUMBER WORD ('123'), so a word joining
+        digits to a precedence displaces it: that word is ALWAYS the serial
+        (NY4I, 2026-11-04: "the rule was a number next to a prec. was the
+        serial"). The fold meets the words last first, so 'A99CT 123' meets
+        123 before A99CT. *)
+      NumberFromBareWord: boolean;
+      (* A NUMBER THAT CAN ONLY BE THE CHECK AND IS NOT TWO DIGITS -- 123
+        in 'A99CT 123', 5 in 'A99CT 5' ("the lone 5 would have to be a
+        mal-sent check"; "check will always be two digits"). The first one
+        met; empty when there is none. *)
+      BadCheck: Str20;
    end;
 
    (* WHICH READING ONE WORD OF A SWEEPSTAKES EXCHANGE TOOK -- the branch of
@@ -121,10 +126,6 @@ function IsSingleNonNumericToken(const aText: string): boolean;
   took; a caller that only folds ignores it. *)
 function ProcessSweepstakesEntry(InputString: Str80; var aFields: TSweepstakesFields): TSweepstakesWordKind;
 
-(* SETS aFields.SerialElsewhere from the words of aText -- the one pre-pass
-  the fold needs, called by ScanSweepstakesExchange and by LOGSTUFF's parse
-  before their loops. *)
-procedure MarkSweepstakesSerialElsewhere(const aText: string; var aFields: TSweepstakesFields);
 
 (* EVERY WORD OF A SWEEPSTAKES EXCHANGE, last first, as the engine's parse
   folds them -- what the exchange SUPPLIED, before any field is validated. *)
@@ -157,6 +158,17 @@ procedure ScanSweepstakesExchange(const aText: string; out aFields: TSweepstakes
 function SweepstakesSerialIsAmbiguous(const aText: string;
                                       out aFirst, aSecond: string;
                                       out aPrecedence: AnsiChar): boolean;
+
+(* IS aWord A SWEEPSTAKES EXCHANGE WORD -- a precedence, digits and letters
+  ('A99CT', 'U12WCF', the swPrecedenceSerialSection shape)? The call-window
+  correction would take such a word as the QSO's call (NY4I, 2026-11-04:
+  "we can ask"). aSection is its letters, for the caller to ask whether
+  they ARE a section ('A9XYZ' has the shape and is a call). aSpelling is
+  the same exchange written so the call correction cannot take it and the
+  grammar reads it the same way: '99A CT'. Both empty when the result is
+  False. *)
+function SweepstakesWordReadsAsExchange(const aWord: string;
+                                        out aSection, aSpelling: string): boolean;
 
 implementation
 
@@ -253,9 +265,49 @@ begin
    Result := (not StringHas(string(s), ' ')) and (not StringIsAllNumbers(string(s)));
 end;
 
+(* A NUMBER THAT CAN ONLY BE THE CHECK: two digits fill an empty check;
+   any other count is a mal-sent check (BadCheck), the first one kept. *)
+procedure NoteCheckCandidate(var aFields: TSweepstakesFields; const aDigits: Str20);
+begin
+   if (aDigits = '') or (aFields.Check <> '') then
+      begin
+      Exit;
+      end;
+   if Length(aDigits) = 2 then
+      begin
+      aFields.Check := aDigits;
+      end
+   else if aFields.BadCheck = '' then
+      begin
+      aFields.BadCheck := aDigits;
+      end;
+end;
+
+(* A NUMBER JOINED TO A PRECEDENCE IS THE SERIAL. It takes an empty serial,
+   or displaces one a bare number took (which can then only be the check).
+   A serial another joined word already gave stands: the later typed wins,
+   as everywhere in this fold. *)
+procedure TakeJoinedSerial(var aFields: TSweepstakesFields; const aDigits: Str20);
+var
+   displaced: Str20;
+begin
+   if aFields.Number = '' then
+      begin
+      aFields.Number := aDigits;
+      aFields.NumberFromBareWord := False;
+      end
+   else if aFields.NumberFromBareWord then
+      begin
+      displaced := aFields.Number;
+      aFields.Number := aDigits;
+      aFields.NumberFromBareWord := False;
+      NoteCheckCandidate(aFields, displaced);
+      end;
+end;
+
 function ProcessSweepstakesEntry(InputString: Str80; var aFields: TSweepstakesFields): TSweepstakesWordKind;
 var
-   NumberStr, TempString: Str20;
+   NumberStr, TempString, CheckStr: Str20;
    PrecedenceLetter: AnsiChar;
 begin
    Result := swIgnored;
@@ -296,11 +348,18 @@ begin
          else if aFields.Number = '' then
             begin
             aFields.Number := NumberStr;
+            aFields.NumberFromBareWord := True;
             end;
          end
       else if aFields.Number = '' then
          begin
          aFields.Number := NumberStr;
+         aFields.NumberFromBareWord := True;
+         end
+      else if not aFields.NumberFromBareWord then
+         begin
+         (* The serial is a joined word's, so this can only be the check. *)
+         NoteCheckCandidate(aFields, NumberStr);
          end;
 
       Exit;
@@ -318,10 +377,7 @@ begin
          else
             begin
             Result := swSerialThenPrecedence;
-            end;
-         if aFields.Number = '' then
-            begin
-            aFields.Number := NumberStr;
+            TakeJoinedSerial(aFields, NumberStr);
             end;
          if aFields.Prec = Chr(0) then
             begin
@@ -351,10 +407,7 @@ begin
       StringIsAllNumbers(Copy(string(TempString), 2, Length(TempString) - 1)) then
       begin
       Result := swPrecedenceThenSerial;
-      if aFields.Number = '' then
-         begin
-         aFields.Number := Copy(TempString, 2, Length(TempString) - 1);
-         end;
+      TakeJoinedSerial(aFields, Copy(TempString, 2, Length(TempString) - 1));
       if aFields.Prec = Chr(0) then
          begin
          aFields.Prec := TempString[1];
@@ -364,71 +417,48 @@ begin
 
    (* A PRECEDENCE, DIGITS AND A SECTION IN ONE WORD -- 'A99CT', 'U12WCF'.
 
-     THE DIGITS ARE THE SERIAL (NY4I, 2026-11-04: "a serial number and a
-     precedence without a space was valid, so a99ct 32 would be precedence
-     of a, serial number 99, section of ct and check of 32") -- UNLESS
-     another word can only be the serial ("a99ct 123" is check 99, serial
-     123: "123 cannot be a check"), when they are the check. That needs the
-     whole entry, so the pre-pass has set aFields.SerialElsewhere. A serial
-     already taken counts the same way. Digits that are not two cannot be a
-     check, and are dropped there.
+     THE DIGITS ARE THE SERIAL, ALWAYS (NY4I, 2026-11-04: "a number next to
+     a prec. was the serial, so a99ct would always be serial number 99, so
+     the lone 5 would have to be a mal-sent check"). A bare number that took
+     the serial first is displaced into the check -- or, not being two
+     digits, into BadCheck (TakeJoinedSerial).
 
-     DIGITS AHEAD OF THE LETTER ('123A99CT') are the serial, and the two
-     after it the check, as D7 read them. *)
+     DIGITS AHEAD OF THE LETTER ('123A99CT') ARE THE SERIAL and the two
+     after it the check, as D7 read them; both numbers touch the letter, so
+     the rule cannot choose between them (reported to NY4I). The check is
+     always two digits: D7 took any two characters, so '123A9CT' gave '9C'. *)
    if (Length(TempString) > 1) and
       (TempString[1] in SweepstakesPrecedences) and
       StringIsAllNumbers(Copy(string(TempString), 2, 1)) then
       begin
+      PrecedenceLetter := TempString[1];
+      Delete(TempString, 1, 1);
+      CheckStr := '';
+      while StringIsAllNumbers(Copy(string(TempString), 1, 1)) do
+         begin
+         CheckStr := CheckStr + Copy(TempString, 1, 1);
+         Delete(TempString, 1, 1);
+         end;
+
       if NumberStr <> '' then
          begin
          Result := swSerialPrecedenceCheckSection;
-         if aFields.Number = '' then
-            begin
-            aFields.Number := NumberStr;
-            end;
-         if aFields.Prec = Chr(0) then
-            begin
-            aFields.Prec := TempString[1];
-            end;
-         if aFields.Check = '' then
-            begin
-            aFields.Check := Copy(TempString, 2, 2);
-            end;
-         Delete(TempString, 1, 3);
-         if aFields.Section = '' then
-            begin
-            aFields.Section := TempString;
-            end;
-         Exit;
-         end;
-
-      PrecedenceLetter := TempString[1];
-      Delete(TempString, 1, 1);
-      while StringIsAllNumbers(Copy(string(TempString), 1, 1)) do
-         begin
-         NumberStr := NumberStr + Copy(TempString, 1, 1);
-         Delete(TempString, 1, 1);
-         end;
-      if Length(NumberStr) > 4 then
-         begin
-         Exit;
-         end;
-
-      Result := swPrecedenceSerialSection;
-      if aFields.Prec = Chr(0) then
-         begin
-         aFields.Prec := PrecedenceLetter;
-         end;
-      if aFields.SerialElsewhere or (aFields.Number <> '') then
-         begin
-         if (Length(NumberStr) = 2) and (aFields.Check = '') then
-            begin
-            aFields.Check := NumberStr;
-            end;
+         TakeJoinedSerial(aFields, NumberStr);
+         NoteCheckCandidate(aFields, CheckStr);
          end
       else
          begin
-         aFields.Number := NumberStr;
+         if Length(CheckStr) > 4 then
+            begin
+            Exit;
+            end;
+         Result := swPrecedenceSerialSection;
+         TakeJoinedSerial(aFields, CheckStr);
+         end;
+
+      if aFields.Prec = Chr(0) then
+         begin
+         aFields.Prec := PrecedenceLetter;
          end;
       if aFields.Section = '' then
          begin
@@ -538,32 +568,6 @@ begin
       end;
 end;
 
-(* THE WORDS THAT CAN ONLY BE THE SERIAL -- a bare number that is not two
-   digits, a precedence joined to bare digits either way round, and the
-   serial ahead of a precedence-check-section word. 'A99CT' itself is not
-   one: its digits are the serial only when nothing else is. *)
-procedure MarkSweepstakesSerialElsewhere(const aText: string; var aFields: TSweepstakesFields);
-var
-   Entries: TSweepstakesWords;
-   NumberEntries: integer;
-   Entry: integer;
-   scratch: TSweepstakesFields;
-begin
-   aFields.SerialElsewhere := False;
-   CutSweepstakesWords(aText, Entries, NumberEntries);
-   for Entry := 0 to NumberEntries - 1 do
-      begin
-      scratch := Default(TSweepstakesFields);
-      if ProcessSweepstakesEntry(Entries[Entry], scratch) in
-         [swBareOtherDigits, swSerialThenPrecedence, swPrecedenceThenSerial,
-          swSerialPrecedenceCheckSection] then
-         begin
-         aFields.SerialElsewhere := True;
-         Exit;
-         end;
-      end;
-end;
-
 procedure ScanSweepstakesExchange(const aText: string; out aFields: TSweepstakesFields);
 var
    Entries: TSweepstakesWords;
@@ -571,7 +575,6 @@ var
    Entry: integer;
 begin
    aFields := Default(TSweepstakesFields);
-   MarkSweepstakesSerialElsewhere(aText, aFields);
    CutSweepstakesWords(aText, Entries, NumberEntries);
 
    for Entry := NumberEntries - 1 downto 0 do
@@ -613,7 +616,6 @@ begin
    aPrecedence := Chr(0);
 
    fields := Default(TSweepstakesFields);
-   MarkSweepstakesSerialElsewhere(aText, fields);
    CutSweepstakesWords(aText, Entries, NumberEntries);
 
    aloneCount := 0;
@@ -687,6 +689,26 @@ begin
          end;
       aPrecedence := fields.Prec;
       end;
+end;
+
+(* THE WORD IS READ ALONE: its kind and its parts do not depend on the other
+   words, and its digits are always the serial. *)
+function SweepstakesWordReadsAsExchange(const aWord: string;
+                                        out aSection, aSpelling: string): boolean;
+var
+   wordFields: TSweepstakesFields;
+begin
+   aSection := '';
+   aSpelling := '';
+   wordFields := Default(TSweepstakesFields);
+   Result := ProcessSweepstakesEntry(Str80(aWord), wordFields) = swPrecedenceSerialSection;
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   aSection := string(wordFields.Section);
+   aSpelling := string(wordFields.Number) + string(wordFields.Prec) + ' ' + aSection;
 end;
 
 end.

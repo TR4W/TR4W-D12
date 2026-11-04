@@ -575,7 +575,11 @@ the target shape, the M-step migration order and the open questions.
   `StripsRoverCountyFromCall` (MainUnit's two rover routines),
   `LogsSeveralQTHsFromOneEntry` (`ReturnInSAPOpMode`; 21),
   `AcceptsBlankExchange` (`ParametersOkay`, `LOGSTUFF.ProcessExchange`;
-  BWQP, General QSO, POTA) and `SendsStateAfterZone` (FCONTEST's zone
+  BWQP, General QSO, POTA), `RefusesCallFromExchangeWord` (2026-11-04;
+  `ParametersOkay` asks it of the word the call-window correction would take
+  as the call, before it is taken, and a True refuses the entry with the
+  contest's message; only Sweepstakes overrides it, for `A99CT`) and
+  `SendsStateAfterZone` (FCONTEST's zone
   messages; CQ WW RTTY). The park lookup asks the existing
   `OffersParkTools`; FISTS overrides `CombineWithMultipliers`. STATED PER
   CLASS, and where the entrant decides the shape, through the station test

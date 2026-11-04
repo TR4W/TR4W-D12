@@ -7289,6 +7289,7 @@ function ParametersOkay(Call: CallString;
 
 var
   RST: Word;
+  callRefusal: string;
   //s1, s2, s3, s4: str20;
 begin
   logger.debug('>>>Entering ParametersOkay');
@@ -7342,6 +7343,18 @@ begin
   if Settings.CallWindow.CallsignUpdateEnable then
      begin // This looks like the secxond line should be under IF but it was not.
      RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
+     (* A WORD THE CONTEST READS AS ITS EXCHANGE IS NOT TAKEN AS THE CALL
+        SILENTLY -- the entry is refused and the operator asked (NY4I,
+        2026-11-04, Sweepstakes' 'A99CT': "we can ask"). The contest
+        decides (TContestBase.RefusesCallFromExchangeWord; base: never). *)
+     if (RData.Callsign <> '') and
+        ContestRefusesCallFromExchangeWord(ActiveContest(Contest), string(RData.Callsign),
+                                           @DomesticTableKnowsQTH, callRefusal) then
+        begin
+        ExchangeErrorMessage := callRefusal;
+        QuickDisplayError(ExchangeErrorMessage);
+        Exit;
+        end;
      end;
 
   RST := GetSentRSTFromExchangeString(ExchangeString);

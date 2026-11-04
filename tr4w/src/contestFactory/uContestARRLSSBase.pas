@@ -81,6 +81,12 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+
+      (* AN EXCHANGE WORD THE CALL CORRECTION WOULD TAKE -- see
+         TContestBase.RefusesCallFromExchangeWord. *)
+      function RefusesCallFromExchangeWord(const aWord: string;
+                                           aIsDomesticQTH: TDomesticQTHTest;
+                                           out aMessage: string): boolean; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -160,6 +166,33 @@ begin
    if fields.Prec = Chr(0) then
       begin
       aErrorMessage := SExchangeNoPrecedence;
+      end
+   else if fields.BadCheck <> '' then
+      begin
+      (* A MAL-SENT CHECK SAYS SO (NY4I, 2026-11-04: "check will always be
+         two digits"). Only when no two-digit check was found: the engine
+         refuses for the check exactly then. *)
+      aErrorMessage := UnicodeFormat(SExchangeCheckNotTwoDigits, [string(fields.BadCheck)]);
+      end;
+end;
+
+(* A99CT IS AN EXCHANGE WORD AND MAY BE A CALL -- ask, do not choose (NY4I,
+   2026-11-04: "if ambiguous since a99ct is an edge case, we can ask"). Only
+   the shape precedence-digits-letters, and only when the letters ARE a
+   section of this contest's file: 'A9XYZ' has the shape and stays a call. *)
+function TContestARRLSSBase.RefusesCallFromExchangeWord(const aWord: string;
+                                                        aIsDomesticQTH: TDomesticQTHTest;
+                                                        out aMessage: string): boolean;
+var
+   section, spelling: string;
+begin
+   aMessage := '';
+   Result := SweepstakesWordReadsAsExchange(aWord, section, spelling) and
+             Assigned(aIsDomesticQTH) and
+             aIsDomesticQTH(section);
+   if Result then
+      begin
+      aMessage := UnicodeFormat(SExchangeCallOrExchange, [aWord, spelling]);
       end;
 end;
 

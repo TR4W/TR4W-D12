@@ -829,15 +829,31 @@ begin
       after the bench): the digits are the serial, unless another word can
       only be the serial -- then they are the check. Restored to what it read
       before the ruling's first round ("123 cannot be a check"). *)
+   (* FLIPPED AGAIN 2026-11-04 -- NY4I: "the rule was a number next to a
+      prec. was the serial, so a99ct would always be serial number 99, so
+      the lone 5 would have to be a mal-sent check", and "check will always
+      be two digits". The bare number that is not two digits is a bad
+      check, never the serial. *)
    ScanSweepstakesExchange('A99CT 123', f);
-   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
-               string(f.Check) + '|' + string(f.Section), 'A99CT 123: check 99, serial 123');
+   CheckEquals('99|A||CT|123', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section) + '|' + string(f.BadCheck),
+               'A99CT 123: serial 99, 123 a mal-sent check');
    ScanSweepstakesExchange('123 A99CT', f);
-   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
-               string(f.Check) + '|' + string(f.Section), '123 A99CT: the serial typed first');
+   CheckEquals('99|A||CT|123', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section) + '|' + string(f.BadCheck),
+               '123 A99CT: the same, typed the other way');
    ScanSweepstakesExchange('A99CT 5', f);
-   CheckEquals('5|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
-               string(f.Check) + '|' + string(f.Section), 'A99CT 5: a one-digit number is the serial too');
+   CheckEquals('99|A||CT|5', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section) + '|' + string(f.BadCheck),
+               'A99CT 5: "the lone 5 would have to be a mal-sent check"');
+   ScanSweepstakesExchange('123A9CT', f);
+   CheckEquals('123|A||CT|9', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section) + '|' + string(f.BadCheck),
+               '123A9CT: one digit is no check (D7 read check 9C)');
+   ScanSweepstakesExchange('43M 123 CT', f);
+   CheckEquals('43|M||CT|123', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section) + '|' + string(f.BadCheck),
+               '43M 123 CT: 43 touches the precedence, so 123 is a mal-sent check');
    (* "a99ct 32 would be precedence of a, serial number 99, section of ct
       and check of 32" -- either side. *)
    ScanSweepstakesExchange('A99CT 32', f);

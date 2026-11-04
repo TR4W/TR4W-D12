@@ -793,6 +793,7 @@ read live against `Station` (`LOGEDIT.DoingDXMults` and its siblings).
 | `MayBeACallsign`, `InitialExchangeFromCall` | every word may be a call; none | the PCC's `N/X`; Russian DX's oblast |
 | `ValidateClass`, `ValidateDXQTH` | accept anything; accept nothing | helpers `ValidateCountAndLetterClass`, `ValidateDXQTHAllowing` |
 | `AcceptsBlankExchange`, `LogsSeveralQTHsFromOneEntry`, `SendsStateAfterZone`, `PerQSOExchangeLeadsWithSerial`, `ExchangeTextMayHoldGridSquare` | False | engine questions once asked of the exchange kind |
+| `RefusesCallFromExchangeWord(word, domesticTest, out message)` | False | asked by `ParametersOkay`, under CALLSIGN UPDATE, of the word the call-window correction would take as the call, BEFORE it is taken; True refuses the entry with `message`. Sweepstakes asks when the word is also its exchange (`A99CT`) |
 
 ### Export and import
 

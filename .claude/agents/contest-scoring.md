@@ -164,25 +164,29 @@ precedence joined to digits, EITHER ORDER, as precedence + SERIAL: `U123`,
 `U12`, `A99`, `M43`, `43M` -- NY4I: *"a check would NEVER be entered with the
 precedence next to it without a space. The only thing we accept without a
 space is the <serial><precedence>."* So `80 WCF U12` reads serial 12, check
-80. **`A99CT` (precedence + digits + section) reads its digits as the
-SERIAL unless another word can only be the serial** (NY4I: *"a99ct 32 would
-be precedence of a, serial number 99, section of ct and check of 32"*;
-`A99CT 123` is check 99, serial 123). That needs the whole entry, so the
-fold has ONE pre-pass, `MarkSweepstakesSerialElsewhere` (sets
-`TSweepstakesFields.SerialElsewhere`), called by `ScanSweepstakesExchange`
-AND by LOGSTUFF's SS parse -- keep both. `123A99CT` is still D7's serial,
-check, section. **LIVE ENTRY DOES NOT REACH THE GRAMMAR FOR `A99CT 123`
-WHILE `CALLSIGN UPDATE ENABLE` IS ON (the default):**
-`GetCorrectedCallFromExchangeString` takes the LAST word that
-`LooksLikeACallSign`, and `A99CT` does, so it becomes the QSO's call
-(measured, pinned in `uTestExchangeWordOrder`; same for `U80WCF 123`). A
-check joined to its section (`31CT`) is unchanged as a word. An unknown section
+80. **A NUMBER TOUCHING A PRECEDENCE IS ALWAYS THE SERIAL, NO EXCEPTION**
+(NY4I: *"a99ct would always be serial number 99, so the lone 5 would have to
+be a mal-sent check"*; *"check will always be two digits"*). `A99CT 123` is
+serial 99 and a bad check, refused `Check must be two digits (123)`
+(`SExchangeCheckNotTwoDigits`, from `TSweepstakesFields.BadCheck`). The fold
+meets words last first, so a joined word DISPLACES a serial a bare number took
+(`NumberFromBareWord`, `TakeJoinedSerial`) -- no pre-pass; the
+`SerialElsewhere` one of a few hours was deleted. `123A99CT` keeps D7's serial
+123 / check 99 (both touch the letter: flagged to NY4I). **THE CALL CORRECTION
+RUNS BEFORE THE CLASS:** `MainUnit.ParametersOkay` (CALLSIGN UPDATE ENABLE on)
+takes the LAST word that `LooksLikeACallSign`; if the contest's
+`RefusesCallFromExchangeWord` says it is its exchange (SS: precedence +
+digits + a SECTION of the dom file -- `A99CT`, `U80WCF`; not `A9XYZ`), the
+entry is refused with `SExchangeCallOrExchange` ("enter 99A CT").
+`uTestExchangeWordOrder.Test_SweepstakesEveryOrdering` drives every ordering
+of 25 token sets through `ParametersOkay`, update on and off, against an
+independent two-stage model (set `TR4W_SS_ORDERING_REPORT` to a path to dump
+every reading). A check joined to its section (`31CT`) is unchanged as a word. An unknown section
 through this parser is refused with NO message (pre-existing, not this
 change). `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
 Locust, Minnesota) tries `QTH NAME` only when the name-first reading found no
 QTH, the entry is exactly two words, and the first word is a QTH -- `DE CA` is
-still Del in California. Live entry refuses `U80WCF 123` and puts `U80WCF` in
-the CALLSIGN (measured, pinned). NA Sprint's `FL TOM 4` was already right: QTH,
+still Del in California. NA Sprint's `FL TOM 4` was already right: QTH,
 domestic QTH and the domestic multiplier (pinned). **AN AMBIGUOUS SS SERIAL
 IS REFUSED (NY4I, 2026-11-04):** a standalone precedence word, no word
 joining digits to a precedence (`43M`, `U123`, `A99`, `A99CT`), no bare

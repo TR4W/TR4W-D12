@@ -512,6 +512,18 @@ resourcestring
      the two typed numbers joined to the precedence, in the order typed. *)
    SExchangeAmbiguousSerial = 'Ambiguous exchange - enter %s or %s to resolve';
 
+   (* A SWEEPSTAKES WORD THE CALL CORRECTION WOULD TAKE AS THE CALL -- NY4I,
+     2026-11-04: "if ambiguous since a99ct is an edge case, we can ask".
+     The first %s is the word as typed ('A99CT'), the second the same
+     exchange spelled so it cannot be read as a call ('99A CT'). *)
+   SExchangeCallOrExchange =
+      'Ambiguous entry - %s may be a callsign or an exchange. For the exchange, enter %s; for the call, type it in the call window';
+
+   (* A SWEEPSTAKES CHECK THAT IS NOT TWO DIGITS -- NY4I, 2026-11-04: "check
+     will always be two digits"; in 'A99CT 5' "the lone 5 would have to be a
+     mal-sent check". %s is the number as typed. *)
+   SExchangeCheckNotTwoDigits = 'Check must be two digits (%s)';
+
    (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
      NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
      VE station in the NC QSO party", "we should refuse to log it and show an

@@ -37,15 +37,16 @@ a space."* Unit tests drive `ParametersOkay`; nothing has looked at the window.
 
 - [ ] ARRL SS (CW or SSB), call `W1AW`: type `U12 W1AW 80 CT`. It logs serial
   12, precedence U, check 80, section CT (it used to read check 12).
-- [ ] **`A99CT` (precedence, digits, section in one word), revised the same
-  day:** the digits are the serial unless another word can only be the
-  serial. With **CALLSIGN UPDATE ENABLE = FALSE**: `A99CT 32` logs serial 99,
-  check 32, A, CT; `A99CT 123` logs serial 123, check 99, A, CT.
-  **With it TRUE (the default) `A99CT 123` still does not log** ("Missing
-  precedence"): the call window's correction takes `A99CT` as a callsign
-  first. That is measured and pinned and is a decision owed, not a defect to
-  confirm; `A99CT 32 W1AW` (call typed last) logs serial 99, check 32 either
-  way.
+- [ ] **`A99CT` is always precedence A, serial 99, section CT** (NY4I: "a
+  number next to a prec. was the serial"). With **CALLSIGN UPDATE ENABLE =
+  TRUE** (the default) type `A99CT 32`: it does not log, and the notice reads
+  `Ambiguous entry - A99CT may be a callsign or an exchange. For the
+  exchange, enter 99A CT; for the call, type it in the call window`. Then
+  type `99A CT 32`: it logs serial 99, check 32. `A99CT 32 W1AW` (the call
+  typed last) logs serial 99, check 32 with no question.
+- [ ] With **CALLSIGN UPDATE ENABLE = FALSE**: `A99CT 32` logs serial 99,
+  check 32; `A99CT 123` does not log and the notice reads
+  `Check must be two digits (123)`.
 - [ ] Type `A 99CT 32`. It does not log; the notice reads
   `Ambiguous exchange - enter 99A or 32A to resolve`. With the number BEFORE
   the check and section it logs in the base order: `32 A 99CT` is serial 32,
