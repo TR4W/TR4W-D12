@@ -33,10 +33,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   trim that keeps a lone blank. They decide which word a contest is handed,
   and a "tidier" version would hand some contests a different word.
   ONE DELIBERATE DEPARTURE, marked where it stands: ProcessSweepstakesEntry
-  reads 'U123' as precedence and serial (issue #174, 2026-11-04). It also
-  REPORTS which reading each word took (TSweepstakesWordKind), so
-  SweepstakesSerialIsAmbiguous counts what the parser saw rather than
-  re-deriving it -- the fold itself is unchanged.
+  reads a precedence joined to digits ('U123', 'U12', 'A99') as precedence
+  and SERIAL, and no longer reads 'A99CT' as precedence, check and section
+  (issue #174 and NY4I's ruling, 2026-11-04). It also REPORTS which reading
+  each word took (TSweepstakesWordKind), so SweepstakesSerialIsAmbiguous
+  counts what the parser saw rather than re-deriving it.
 
   NOTHING HERE NAMES A CONTEST OR READS A SETTING. A rule -- which word is a
   serial, which is a county, what a refusal says -- is the contest's, on its
@@ -73,9 +74,10 @@ type
        swBareOtherDigits         '4', '430', '1234' -- only ever a serial
        swPrecedenceAlone         'M'
        swSerialThenPrecedence    '43M', 'M' after digits
-       swPrecedenceThenSerial    'U123', 'A5', 'Q1234'
-       swPrecedenceThenCheck     'A99', 'A99CT', 'M43', '123A99CT'
-       swCheckOrSection          '31CT', '43MI', 'CT', 'W1AW', 'AB' *)
+       swPrecedenceThenSerial    'U123', 'U12', 'A5', 'Q1234'
+       swCheckOrSection          '31CT', '43MI', 'CT', 'W1AW', 'AB', and
+                                 'A99CT' (no precedence word since
+                                 2026-11-04 -- see ProcessSweepstakesEntry) *)
    TSweepstakesWordKind = (
       swIgnored,
       swBareTwoDigits,
@@ -83,7 +85,6 @@ type
       swPrecedenceAlone,
       swSerialThenPrecedence,
       swPrecedenceThenSerial,
-      swPrecedenceThenCheck,
       swCheckOrSection);
 
 const
@@ -118,7 +119,8 @@ procedure ScanSweepstakesExchange(const aText: string; out aFields: TSweepstakes
 
   True exactly when ALL of these hold, over the words the engine reads:
     - a precedence stands as a word of its own ('M', never '43M');
-    - no word joins digits to a precedence ('43M', 'U123', 'A99', 'A99CT');
+    - no word joins digits to a precedence ('43M', 'U123', 'A99') -- such
+      a word is always the serial and its precedence;
     - no bare number of one, three or four digits ('4', '430', '1234' can
       only be the serial, so the lone two-digit word is the check);
     - exactly TWO bare two-digit numbers.
@@ -309,15 +311,19 @@ begin
      NY4I: "As long as we do not have a space between the precedence and
      number, we can figure this out to not be the check."
 
-     ONLY ONE, THREE OR FOUR DIGITS. Two digits after the letter stay the
-     precedence and the CHECK below, as they always were: 'A99' is
-     'A99CT' without its section, and a two-digit serial cannot be told from
-     a check. Every word this branch takes was misread before (U123 gave
-     check 12, section 3). The one entry that was taken and now reads
-     differently holds TWO serials ('123 U5 80 WCF'): it took 123 and now
-     takes 5, the later-typed one, as this parser does everywhere else. *)
+     ONE TO FOUR DIGITS AFTER THE LETTER, TWO INCLUDED -- NY4I, 2026-11-04:
+     "a check would NEVER be entered with the precedence next to it without
+     a space. The only thing we accept without a space is the
+     <serial><precedence>." So 'U12', 'A99' and 'M43' are a precedence and a
+     SERIAL. The D7 branch that read a precedence followed by a digit as the
+     precedence and the CHECK, with the rest as the section ('A99CT'), is
+     DELETED: such a word now falls to the section reading below, and is
+     refused there like any other word that is no section. The one entry
+     that was taken and now reads differently holds TWO serials
+     ('123 U5 80 WCF'): it took 123 and now takes 5, the later-typed one, as
+     this parser does everywhere else. *)
    if (NumberStr = '') and
-      (Length(TempString) in [2, 4, 5]) and
+      (Length(TempString) in [2..5]) and
       (TempString[1] in SweepstakesPrecedences) and
       StringIsAllNumbers(Copy(string(TempString), 2, Length(TempString) - 1)) then
       begin
@@ -331,37 +337,6 @@ begin
          aFields.Prec := TempString[1];
          end;
       Exit;
-      end;
-
-   (* More than one character left. A real precedence may be followed only by
-     a number; otherwise the letter is part of a section (AB, AL). *)
-   if Length(TempString) > 0 then
-      begin
-      if TempString[1] in SweepstakesPrecedences then
-         begin
-         if StringIsAllNumbers(Copy(string(TempString), 2, 1)) then
-            begin
-            Result := swPrecedenceThenCheck;
-            if aFields.Number = '' then
-               begin
-               aFields.Number := NumberStr;
-               end;
-            if aFields.Prec = Chr(0) then
-               begin
-               aFields.Prec := TempString[1];
-               end;
-            if aFields.Check = '' then
-               begin
-               aFields.Check := Copy(TempString, 2, 2);
-               end;
-            Delete(TempString, 1, 3);
-            if aFields.Section = '' then
-               begin
-               aFields.Section := TempString;
-               end;
-            Exit;
-            end;
-         end;
       end;
 
    (* A check and a section, or maybe just a section. *)
@@ -526,8 +501,7 @@ begin
             inc(aloneCount);
             end;
          swSerialThenPrecedence,
-         swPrecedenceThenSerial,
-         swPrecedenceThenCheck:
+         swPrecedenceThenSerial:
             begin
             inc(joinedCount);
             end;

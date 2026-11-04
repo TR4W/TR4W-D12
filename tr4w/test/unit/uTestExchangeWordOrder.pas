@@ -80,6 +80,8 @@ uses
    uTestContestObjects,
    (* A shipped .dom through the real loader, its INCLUDEs followed. *)
    uTestShippedDom,
+   (* SExchangeNoPrecedence -- the Sweepstakes refusal's text. *)
+   uAppStrings,
    LogDupe,
    LogDom,
    LogEdit,
@@ -284,6 +286,30 @@ begin
       CheckTaken('12 W1AW CT M 4', 4, 'M', 12, 'CT');
       (* RESOLVED BY THE CHECK JOINED TO THE SECTION. *)
       CheckTaken('43 M W1AW 31CT', 43, 'M', 31, 'CT');
+      CheckTaken('42 M W1AW 31CT', 42, 'M', 31, 'CT');
+
+      (* A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE PRECEDENCE AND THE
+         SERIAL -- NY4I, 2026-11-04: "a check would NEVER be entered with
+         the precedence next to it without a space. The only thing we accept
+         without a space is the <serial><precedence>." Two digits included;
+         they were the precedence and the CHECK until this ruling. *)
+      CheckTaken('80 WCF U12', 12, 'U', 80, 'WCF');
+      CheckTaken('U12 W1AW 80 CT', 12, 'U', 80, 'CT');
+      CheckTaken('A99 W1AW 31 CT', 99, 'A', 31, 'CT');
+      CheckTaken('M43 W1AW 31 CT', 43, 'M', 31, 'CT');
+      (* Unchanged by the ruling. *)
+      CheckTaken('43M W1AW 31 CT', 43, 'M', 31, 'CT');
+      CheckTaken('U123 W1AW 31 CT', 123, 'U', 31, 'CT');
+
+      (* 'A99CT' IS NO PRECEDENCE WORD ANY MORE: it reads as a section.
+         Alone beside a serial, the precedence is missing; with a precedence
+         and a check of its own, the section is refused. *)
+      accepted := Enter('W1AW', 'A99CT 123', rx);
+      CheckFalse(accepted, 'A99CT 123: refused');
+      CheckEquals(SExchangeNoPrecedence, string(ExchangeErrorMessage), 'A99CT 123: for its missing precedence');
+      accepted := Enter('W1AW', '123 A 99 A99CT', rx);
+      CheckFalse(accepted, '123 A 99 A99CT: refused');
+      CheckEquals('', string(ExchangeErrorMessage), '123 A 99 A99CT: the message');
    finally
       RestoreSession;
    end;

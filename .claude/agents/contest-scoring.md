@@ -159,15 +159,20 @@ freeze) first. **A unit test can drive the REAL parsers too:**
 with a shipped `.dom` loaded -- `uTestExchangeParse` is a STUB of the parsers
 and cannot see a defect inside one.
 
-**WORD ORDER (2026-11-04, issues #174/#169/#170).** Sweepstakes reads `U123`
-(a precedence letter plus 1, 3 or 4 digits, one word) as precedence + serial;
-`A99` (two digits) stays precedence + CHECK, so `80 WCF U12` still reads serial
-80, check 12. `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
+**WORD ORDER (2026-11-04, issues #174/#169/#170).** Sweepstakes reads a
+precedence joined to digits, EITHER ORDER, as precedence + SERIAL: `U123`,
+`U12`, `A99`, `M43`, `43M` -- NY4I: *"a check would NEVER be entered with the
+precedence next to it without a space. The only thing we accept without a
+space is the <serial><precedence>."* So `80 WCF U12` reads serial 12, check
+80. The D7 branch that read `A99CT` as precedence + check + section is
+DELETED; `A99CT` is a section word now (`A99CT 123` -> missing precedence).
+A check joined to its section (`31CT`) is unchanged. An unknown section
+through this parser is refused with NO message (pre-existing, not this
+change). `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
 Locust, Minnesota) tries `QTH NAME` only when the name-first reading found no
 QTH, the entry is exactly two words, and the first word is a QTH -- `DE CA` is
 still Del in California. Live entry refuses `U80WCF 123` and puts `U80WCF` in
-the CALLSIGN (measured, pinned) although the word reader takes `A99CT 123` --
-a pre-existing mismatch, open. NA Sprint's `FL TOM 4` was already right: QTH,
+the CALLSIGN (measured, pinned). NA Sprint's `FL TOM 4` was already right: QTH,
 domestic QTH and the domestic multiplier (pinned). **AN AMBIGUOUS SS SERIAL
 IS REFUSED (NY4I, 2026-11-04):** a standalone precedence word, no word
 joining digits to a precedence (`43M`, `U123`, `A99`), no bare 1/3/4-digit

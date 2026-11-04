@@ -30,6 +30,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-04 -- SWEEPSTAKES: A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE SERIAL (NY4I)
+
+NY4I: *"a check would NEVER be entered with the precedence next to it without
+a space."* Unit tests drive `ParametersOkay`; nothing has looked at the window.
+
+- [ ] ARRL SS (CW or SSB), call `W1AW`: type `U12 W1AW 80 CT`. It logs serial
+  12, precedence U, check 80, section CT (it used to read check 12).
+- [ ] Type `A99CT 123`. It does not log, and the notice reads
+  `Missing precedence (Q A B U M S)` -- `A99CT` is no longer read as
+  precedence, check and section.
+
 ## Added 2026-11-04 -- THE KEYING THREADS HAND THE END OF A MESSAGE TO THE MAIN THREAD (issue #132)
 
 The CW thread, the WinKeyer reader and the DVK playback thread no longer arm the

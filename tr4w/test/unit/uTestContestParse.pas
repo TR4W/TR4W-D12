@@ -815,9 +815,14 @@ begin
    ScanSweepstakesExchange('123A 99CT', f);
    CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), 'packed');
+   (* FLIPPED 2026-11-04 (NY4I: "a check would NEVER be entered with the
+      precedence next to it without a space"): 'A99CT' is no longer a
+      precedence, check and section in one word. It is read as the section,
+      the precedence is missing, and the exchange is refused. *)
    ScanSweepstakesExchange('A99CT 123', f);
-   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
-               string(f.Check) + '|' + string(f.Section), 'precedence, check and section in one word');
+   CheckEquals('123||A99CT', string(f.Number) + '|' + string(f.Check) + '|' +
+               string(f.Section), 'A99CT: the section, and no check');
+   CheckTrue(f.Prec = Chr(0), 'A99CT: no precedence');
    ScanSweepstakesExchange('123 99 CT', f);
    CheckTrue(f.Prec = Chr(0), 'no precedence');
    ScanSweepstakesExchange('123 AB', f);
@@ -825,8 +830,9 @@ begin
    CheckEquals('AB', string(f.Section), 'read as the section');
 
    (* THE PRECEDENCE BEFORE THE SERIAL, IN ONE WORD (issue #174, TR4W#460:
-      "80 WCF U123"). A letter followed by one, three or four digits and
-      nothing else is the precedence and the serial. *)
+      "80 WCF U123"). A letter followed by one to four digits and nothing
+      else is the precedence and the serial -- two digits included since
+      NY4I's ruling of 2026-11-04, below. *)
    ScanSweepstakesExchange('80 WCF U123', f);
    CheckEquals('123|U|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), 'U123: precedence, then the serial');
@@ -843,15 +849,32 @@ begin
    ScanSweepstakesExchange('80 WCF 123U', f);
    CheckEquals('123|U|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), '123U: the serial, then the precedence');
-   (* TWO DIGITS AFTER THE LETTER STAY THE PRECEDENCE AND THE CHECK, as
-      before: 'A99' is the same shape as 'A99CT' without its section, and
-      a two-digit serial cannot be told from a check. *)
+   (* TWO DIGITS AFTER THE LETTER ARE THE SERIAL TOO -- FLIPPED 2026-11-04
+      (NY4I: "The only thing we accept without a space is the
+      <serial><precedence>."). They were the precedence and the CHECK. *)
+   ScanSweepstakesExchange('80 WCF U12', f);
+   CheckEquals('12|U|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'U12: precedence, then a two-digit serial');
+   ScanSweepstakesExchange('80 CT A99', f);
+   CheckEquals('99|A|80|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99: precedence, then the serial');
+   ScanSweepstakesExchange('M43 80 CT', f);
+   CheckEquals('43|M|80|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'M43 typed first');
+   (* WAS '123|A|99|CT' (A99 the precedence and check, 123 the serial):
+      A99 is the later-typed serial now, and nothing supplies a check. *)
    ScanSweepstakesExchange('123 A99 CT', f);
-   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
-               string(f.Check) + '|' + string(f.Section), 'A99: precedence and check, unchanged');
+   CheckEquals('99|A||CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99 beside 123: the later serial, no check');
+   (* WAS '|A|99|CT'. *)
    ScanSweepstakesExchange('A99CT', f);
-   CheckEquals('|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
-               string(f.Check) + '|' + string(f.Section), 'A99CT alone: no serial, unchanged');
+   CheckEquals('||A99CT', string(f.Number) + '|' + string(f.Check) + '|' +
+               string(f.Section), 'A99CT alone: only a section');
+   CheckTrue(f.Prec = Chr(0), 'A99CT alone: no precedence');
+   (* A CHECK JOINED TO ITS SECTION, unchanged. *)
+   ScanSweepstakesExchange('42 M W1AW 31CT', f);
+   CheckEquals('42|M|31|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), '31CT: the check and the section');
 
    (* WHAT READING EACH WORD TOOK (2026-11-04) -- the ambiguity test counts
       these, so every edge of the grammar is pinned here. *)
@@ -864,9 +887,12 @@ begin
    CheckKind('43M', swSerialThenPrecedence);
    CheckKind('U123', swPrecedenceThenSerial);
    CheckKind('A5', swPrecedenceThenSerial);
-   CheckKind('A99', swPrecedenceThenCheck);
-   CheckKind('A99CT', swPrecedenceThenCheck);
-   CheckKind('M43', swPrecedenceThenCheck);
+   (* The three below were swPrecedenceThenCheck until NY4I's ruling of
+      2026-11-04, which deleted that reading. *)
+   CheckKind('U12', swPrecedenceThenSerial);
+   CheckKind('A99', swPrecedenceThenSerial);
+   CheckKind('M43', swPrecedenceThenSerial);
+   CheckKind('A99CT', swCheckOrSection);
    CheckKind('31CT', swCheckOrSection);
    CheckKind('43MI', swCheckOrSection);
    CheckKind('AB', swCheckOrSection);
@@ -885,7 +911,8 @@ begin
    CheckNotAmbiguous('31 W1AW CT M 232', 'a three-digit serial');
    CheckNotAmbiguous('12 W1AW CT M 4', 'a one-digit serial');
    CheckNotAmbiguous('43 M W1AW 31CT', 'the check joined to the section');
-   CheckNotAmbiguous('43 A99 31 CT', 'the precedence joined to a check');
+   CheckNotAmbiguous('43 A99 31 CT', 'the precedence joined to a serial');
+   CheckNotAmbiguous('U12 W1AW 80 CT', 'a two-digit serial joined to its precedence');
    CheckNotAmbiguous('43 M 43MI', 'one two-digit word; MI is Michigan');
    CheckNotAmbiguous('43 SB 31 CT', 'SB is a section, not a precedence');
    CheckNotAmbiguous('43 31 CT', 'no precedence -- that refusal is another');
