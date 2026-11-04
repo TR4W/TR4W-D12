@@ -55,6 +55,7 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_SweepstakesPrecedenceBeforeTheSerial;
+      procedure Test_SweepstakesAmbiguousSerialIsRefused;
       procedure Test_SprintStateBeforeTheName;
       procedure Test_NAQPStateAndNameInEitherOrder;
    end;
@@ -235,6 +236,59 @@ begin
    end;
 end;
 
+(* A TWO-DIGIT SERIAL BESIDE A TWO-DIGIT CHECK, WITH THE PRECEDENCE A WORD OF
+   ITS OWN -- NY4I, 2026-11-04 (#174 follow-up): "in our free-form parsing,
+   you cannot tell. I would enter that as 43M W1AW 31 CT". Refused through
+   live entry, with the numbers as typed in the message; every way of
+   telling the two apart is still taken, and reads as it did. *)
+procedure TExchangeWordOrderTests.Test_SweepstakesAmbiguousSerialIsRefused;
+var
+   rx: ContestExchange;
+   accepted: boolean;
+
+   procedure CheckTaken(const aExch: string; aNumber: integer; aPrec: AnsiChar;
+                        aCheck: integer; const aSection: string);
+   begin
+      accepted := Enter('W1AW', aExch, rx);
+      CheckTrue(accepted, aExch + ' is taken: ' + string(ExchangeErrorMessage));
+      CheckEquals(aNumber, Integer(rx.NumberReceived), aExch + ': the serial');
+      CheckEquals(string(aPrec), string(rx.Precedence), aExch + ': the precedence');
+      CheckEquals(aCheck, Integer(rx.Check), aExch + ': the check');
+      CheckEquals(aSection, string(rx.QTHString), aExch + ': the section');
+   end;
+
+   procedure CheckRefused(const aExch: string; const aMessage: string);
+   begin
+      accepted := Enter('W1AW', aExch, rx);
+      CheckFalse(accepted, aExch + ': refused');
+      CheckEquals(aMessage, string(ExchangeErrorMessage), aExch + ': the message');
+   end;
+
+begin
+   BeginTest('Test_SweepstakesAmbiguousSerialIsRefused');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      (* AMBIGUOUS: NY4I's example, and the same words in other orders. *)
+      CheckRefused('43 M W1AW 31 CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
+      CheckRefused('31 W1AW CT M 43', 'Ambiguous exchange - enter 31M or 43M to resolve');
+      CheckRefused('M 43 W1AW 31 CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
+
+      (* RESOLVED BY JOINING THE SERIAL AND THE PRECEDENCE. *)
+      CheckTaken('43M W1AW 31 CT', 43, 'M', 31, 'CT');
+      CheckTaken('U123 W1AW 31 CT', 123, 'U', 31, 'CT');
+      (* RESOLVED BY A SERIAL THAT IS NOT TWO DIGITS: it can only be the
+         serial, so the lone two-digit word is the check. *)
+      CheckTaken('31 W1AW CT M 430', 430, 'M', 31, 'CT');
+      CheckTaken('31 W1AW CT M 232', 232, 'M', 31, 'CT');
+      CheckTaken('12 W1AW CT M 4', 4, 'M', 12, 'CT');
+      (* RESOLVED BY THE CHECK JOINED TO THE SECTION. *)
+      CheckTaken('43 M W1AW 31CT', 43, 'M', 31, 'CT');
+   finally
+      RestoreSession;
+   end;
+end;
+
 (* ---------------------------------------------------------------------------
    #170 -- NA SPRINT
    --------------------------------------------------------------------------- *)
@@ -355,6 +409,7 @@ end;
 procedure TExchangeWordOrderTests.RunAllTests;
 begin
    Test_SweepstakesPrecedenceBeforeTheSerial;
+   Test_SweepstakesAmbiguousSerialIsRefused;
    Test_SprintStateBeforeTheName;
    Test_NAQPStateAndNameInEitherOrder;
 end;

@@ -30,6 +30,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-04 -- SWEEPSTAKES REFUSES AN AMBIGUOUS SERIAL (issue #174 follow-up, NY4I)
+
+Two two-digit numbers and a precedence on its own cannot be told apart, so the
+QSO is refused with a notice built from the numbers typed. Unit tests drive
+`ParametersOkay`; nothing has looked at the window.
+
+- [ ] ARRL SS (CW or SSB), call `W1AW`: type `43 M W1AW 31 CT` and press Enter.
+  The QSO does **not** log, and the notice line reads
+  `Ambiguous exchange - enter 43M or 31M to resolve`.
+- [ ] Same call: type `43M W1AW 31 CT`. It logs with serial 43, precedence M,
+  check 31, section CT.
+- [ ] Optional: `31 W1AW CT M 232` logs serial 232, check 31 (a three-digit
+  number is only ever the serial).
+
 ## Added 2026-11-04 -- THE KEYING THREADS HAND THE END OF A MESSAGE TO THE MAIN THREAD (issue #132)
 
 The CW thread, the WinKeyer reader and the DVK playback thread no longer arm the

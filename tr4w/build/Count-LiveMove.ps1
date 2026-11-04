@@ -79,7 +79,9 @@ param(
 # as TBytes; the Move of file bytes into a UnicodeString went.
 # 442 -> 441, 2026-10-27: Phase 1, C6 -- the sync window's FillChar of the
 # server-log totals went with the replace.
-$MOVE_CEILING = 437
+# 437 -> 435, 2026-11-04: uExchangeTokens.ScanSweepstakesExchange clears its
+# fields and words with Default() (the ambiguous-serial refusal's word cutter).
+$MOVE_CEILING = 435
 # Floors for -Gate: the tree has ~800 Pascal files and several hundred live
 # calls, so fewer than these means the reader failed, not that the tree is clean.
 $FILE_FLOOR  = 300

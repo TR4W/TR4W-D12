@@ -504,6 +504,14 @@ resourcestring
      is a few words, and it names the letters that are legal. *)
    SExchangeNoPrecedence = 'Missing precedence (Q A B U M S)';
 
+   (* SWEEPSTAKES WITH A SERIAL THAT CANNOT BE TOLD FROM THE CHECK -- NY4I,
+     2026-11-04: "If the exchange is ambiguous, it is ok to tell the user and
+     ask them to put serial number and precedence together. Give an example
+     such as 'Ambiguous exchange - Enter 43M or 30M to resolve...' using the
+     actual ambiguous information to build the message." Each %s is one of
+     the two typed numbers joined to the precedence, in the order typed. *)
+   SExchangeAmbiguousSerial = 'Ambiguous exchange - enter %s or %s to resolve';
+
    (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
      NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
      VE station in the NC QSO party", "we should refuse to log it and show an

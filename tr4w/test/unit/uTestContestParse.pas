@@ -69,6 +69,7 @@ type
       procedure Test_UKEIStationMustSendTwoWords;
       procedure Test_SACAbandonsARussianLiveEntry;
       procedure Test_SweepstakesNamesAMissingPrecedence;
+      procedure Test_SweepstakesRefusesAnAmbiguousSerial;
       procedure Test_OutOfStateWorksOnlyTheHostState;
       procedure Test_EveryStatePartyRefusesAnOutOfStateContact;
       procedure Test_RussianDXInitialExchangeIsTheOblast;
@@ -519,6 +520,65 @@ begin
       end;
 end;
 
+(* A SERIAL THAT CANNOT BE TOLD FROM THE CHECK IS REFUSED, AND SAYS HOW TO
+   RESOLVE IT -- NY4I, 2026-11-04 (issue #174 follow-up): "If the exchange is
+   ambiguous, it is ok to tell the user and ask them to put serial number and
+   precedence together."
+
+   THE STUB ACCEPTS every one of these (GShapeResult True), so a refusal here
+   is the CLASS's rule, made over a parse the engine would have taken. The
+   message names both numbers in the order they were typed, each joined to
+   the precedence. *)
+procedure TContestParseTests.Test_SweepstakesRefusesAnAmbiguousSerial;
+var
+   exch: ContestExchange;
+   msg: string;
+   ok: boolean;
+   c: ContestType;
+
+   procedure CheckRefused(const aText: string; const aMessage: string);
+   begin
+      ResetStub;
+      GShapeResult := True;
+      exch := NewExch('W1AW', 'K');
+      ok := Parse(c, True, aText, exch, msg);
+      CheckFalse(ok, string(ContestTypeSA[c]) + ' ' + aText + ': refused');
+      CheckEquals(aMessage, msg, string(ContestTypeSA[c]) + ' ' + aText + ': and says how to resolve it');
+   end;
+
+   procedure CheckAccepted(const aText: string);
+   begin
+      ResetStub;
+      GShapeResult := True;
+      exch := NewExch('W1AW', 'K');
+      ok := Parse(c, True, aText, exch, msg);
+      CheckTrue(ok, string(ContestTypeSA[c]) + ' ' + aText + ': not ambiguous -- accepted');
+      CheckEquals('', msg, string(ContestTypeSA[c]) + ' ' + aText + ': with nothing to say');
+   end;
+
+begin
+   BeginTest('Test_SweepstakesRefusesAnAmbiguousSerial');
+   for c in [ARRLSSCW, ARRLSSSSB] do
+      begin
+      (* THE TYPICAL ORDER, with blanks -- ambiguous by NY4I's ruling. *)
+      CheckRefused('43 M W1AW 31 CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
+      CheckRefused('31 W1AW CT M 43', 'Ambiguous exchange - enter 31M or 43M to resolve');
+      CheckRefused('M 43 W1AW 31 CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
+      (* Two letters: the one the scan keeps, the later typed. *)
+      CheckRefused('M 43 A 31 CT', 'Ambiguous exchange - enter 43A or 31A to resolve');
+
+      (* WHAT RESOLVES IT. *)
+      CheckAccepted('43M W1AW 31 CT');
+      CheckAccepted('U123 W1AW 31 CT');
+      CheckAccepted('31 W1AW CT M 430');
+      CheckAccepted('31 W1AW CT M 232');
+      CheckAccepted('12 W1AW CT M 4');
+      CheckAccepted('43 M W1AW 31CT');
+      CheckAccepted('43 A99 CT');
+      CheckAccepted('123 A 99 CT');
+      end;
+end;
+
 (* NY4I, 2026-10-02 (design 7.10): an out-of-state station works only the
    host state; an in-state station works everyone. *)
 procedure TContestParseTests.Test_OutOfStateWorksOnlyTheHostState;
@@ -716,6 +776,37 @@ end;
 procedure TContestParseTests.Test_SweepstakesWordReading;
 var
    f: TSweepstakesFields;
+
+   procedure CheckKind(const aWord: string; aKind: TSweepstakesWordKind);
+   var
+      scratch: TSweepstakesFields;
+   begin
+      scratch := Default(TSweepstakesFields);
+      CheckTrue(ProcessSweepstakesEntry(Str80(aWord), scratch) = aKind,
+                aWord + ': read as ' + IntToStr(Ord(aKind)));
+   end;
+
+   procedure CheckAmbiguous(const aText: string; const aFirst, aSecond: string;
+                            aPrec: AnsiChar);
+   var
+      first, second: string;
+      prec: AnsiChar;
+   begin
+      CheckTrue(SweepstakesSerialIsAmbiguous(aText, first, second, prec), aText + ': ambiguous');
+      CheckEquals(aFirst + '|' + aSecond + '|' + string(aPrec),
+                  first + '|' + second + '|' + string(prec), aText + ': the numbers as typed');
+   end;
+
+   procedure CheckNotAmbiguous(const aText: string; const aWhy: string);
+   var
+      first, second: string;
+      prec: AnsiChar;
+   begin
+      CheckFalse(SweepstakesSerialIsAmbiguous(aText, first, second, prec), aText + ': ' + aWhy);
+      CheckEquals('||', first + '|' + second + '|', aText + ': nothing returned');
+      CheckTrue(prec = Chr(0), aText + ': no precedence returned');
+   end;
+
 begin
    BeginTest('Test_SweepstakesWordReading');
    ScanSweepstakesExchange('123 A 99 CT', f);
@@ -761,6 +852,45 @@ begin
    ScanSweepstakesExchange('A99CT', f);
    CheckEquals('|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), 'A99CT alone: no serial, unchanged');
+
+   (* WHAT READING EACH WORD TOOK (2026-11-04) -- the ambiguity test counts
+      these, so every edge of the grammar is pinned here. *)
+   CheckKind('43', swBareTwoDigits);
+   CheckKind('4', swBareOtherDigits);
+   CheckKind('430', swBareOtherDigits);
+   CheckKind('1234', swBareOtherDigits);
+   CheckKind('12345', swIgnored);
+   CheckKind('M', swPrecedenceAlone);
+   CheckKind('43M', swSerialThenPrecedence);
+   CheckKind('U123', swPrecedenceThenSerial);
+   CheckKind('A5', swPrecedenceThenSerial);
+   CheckKind('A99', swPrecedenceThenCheck);
+   CheckKind('A99CT', swPrecedenceThenCheck);
+   CheckKind('M43', swPrecedenceThenCheck);
+   CheckKind('31CT', swCheckOrSection);
+   CheckKind('43MI', swCheckOrSection);
+   CheckKind('AB', swCheckOrSection);
+   CheckKind('SB', swCheckOrSection);
+   CheckKind('W1AW', swCheckOrSection);
+   CheckKind('m', swCheckOrSection);
+
+   (* THE AMBIGUITY TEST ITSELF. *)
+   CheckAmbiguous('43 M W1AW 31 CT', '43', '31', 'M');
+   CheckAmbiguous('31 W1AW CT M 43', '31', '43', 'M');
+   CheckAmbiguous('43 M 31 AB', '43', '31', 'M');
+   CheckAmbiguous('43 M 31 123456 CT', '43', '31', 'M');
+   CheckNotAmbiguous('43M W1AW 31 CT', 'serial joined to the precedence');
+   CheckNotAmbiguous('U123 W1AW 31 CT', 'precedence joined to the serial');
+   CheckNotAmbiguous('31 W1AW CT M 430', 'a three-digit serial');
+   CheckNotAmbiguous('31 W1AW CT M 232', 'a three-digit serial');
+   CheckNotAmbiguous('12 W1AW CT M 4', 'a one-digit serial');
+   CheckNotAmbiguous('43 M W1AW 31CT', 'the check joined to the section');
+   CheckNotAmbiguous('43 A99 31 CT', 'the precedence joined to a check');
+   CheckNotAmbiguous('43 M 43MI', 'one two-digit word; MI is Michigan');
+   CheckNotAmbiguous('43 SB 31 CT', 'SB is a section, not a precedence');
+   CheckNotAmbiguous('43 31 CT', 'no precedence -- that refusal is another');
+   CheckNotAmbiguous('43 M 31 CT 22', 'three two-digit words');
+   CheckNotAmbiguous('43 m 31 CT', 'a lower-case letter is no precedence');
 end;
 
 procedure TContestParseTests.Test_IsSingleNonNumericToken;
@@ -938,6 +1068,7 @@ begin
    Test_UKEIStationMustSendTwoWords;
    Test_SACAbandonsARussianLiveEntry;
    Test_SweepstakesNamesAMissingPrecedence;
+   Test_SweepstakesRefusesAnAmbiguousSerial;
    Test_OutOfStateWorksOnlyTheHostState;
    Test_EveryStatePartyRefusesAnOutOfStateContact;
    Test_RussianDXInitialExchangeIsTheOblast;

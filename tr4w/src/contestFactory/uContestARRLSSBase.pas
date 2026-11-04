@@ -113,15 +113,39 @@ uses
    precedence is looked for with uExchangeTokens.ScanSweepstakesExchange --
    the same word reading the shape parser applies -- so this says "no
    precedence" exactly when the parser found none. An exchange refused for another reason (no check, a bad
-   section) keeps whatever the parser said. *)
+   section) keeps whatever the parser said.
+
+   ONE REFUSAL COMES FIRST, WHATEVER THE PARSE SAID: an ambiguous serial
+   (2026-11-04, below). *)
 function TContestARRLSSBase.ParseReceivedExchange(const aText: string;
                                                   const aSession: TReceivedExchangeSession;
                                                   var aExch: ContestExchange;
                                                   out aErrorMessage: string): boolean;
 var
    fields: TSweepstakesFields;
+   firstNumber, secondNumber: string;
+   precedence: AnsiChar;
 begin
    Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+
+   (* AN AMBIGUOUS SERIAL IS REFUSED EVEN WHEN THE PARSE TOOK IT -- NY4I,
+      2026-11-04 (#174 follow-up). '43 M W1AW 31 CT' parses (by position:
+      serial 43, check 31) and must not: "in our free-form parsing, you
+      cannot tell". The rule is uExchangeTokens.SweepstakesSerialIsAmbiguous.
+
+      AFTER the parse, not instead of it, on purpose: aExch is filled exactly
+      as before, so a caller that logs without asking the result
+      (ParametersOkay under QSL MODE = QSL AND LOG) records what it always
+      did. Only the answer changes. *)
+   if SweepstakesSerialIsAmbiguous(aText, firstNumber, secondNumber, precedence) then
+      begin
+      Result := False;
+      aErrorMessage := UnicodeFormat(SExchangeAmbiguousSerial,
+                                     [firstNumber + string(precedence),
+                                      secondNumber + string(precedence)]);
+      Exit;
+      end;
+
    if Result then
       begin
       Exit;

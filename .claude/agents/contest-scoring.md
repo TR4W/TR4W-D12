@@ -168,7 +168,17 @@ QTH, the entry is exactly two words, and the first word is a QTH -- `DE CA` is
 still Del in California. Live entry refuses `U80WCF 123` and puts `U80WCF` in
 the CALLSIGN (measured, pinned) although the word reader takes `A99CT 123` --
 a pre-existing mismatch, open. NA Sprint's `FL TOM 4` was already right: QTH,
-domestic QTH and the domestic multiplier (pinned).
+domestic QTH and the domestic multiplier (pinned). **AN AMBIGUOUS SS SERIAL
+IS REFUSED (NY4I, 2026-11-04):** a standalone precedence word, no word
+joining digits to a precedence (`43M`, `U123`, `A99`), no bare 1/3/4-digit
+number, and exactly two bare two-digit numbers -> `TContestARRLSSBase`
+refuses with `SExchangeAmbiguousSerial` ("enter 43M or 31M"), so
+`43 M W1AW 31 CT` no longer logs by position. The test is
+`uExchangeTokens.SweepstakesSerialIsAmbiguous`, which COUNTS the reading
+each word took (`ProcessSweepstakesEntry` returns a `TSweepstakesWordKind`)
+-- do not write a second SS word grammar beside it. It runs AFTER the
+inherited parse so `aExch` is filled as before (QSL MODE = QSL AND LOG logs
+whatever the parse wrote, ignoring the answer).
 
 **The rescore re-derives a record's country ONLY for a contest with a prefix,
 zone or DX multiplier** (`MainUnit.RecomputeQSOScoring`). Taking a multiplier away
