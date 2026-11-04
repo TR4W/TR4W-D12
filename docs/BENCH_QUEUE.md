@@ -50,6 +50,33 @@ a space."* Unit tests drive `ParametersOkay`; nothing has looked at the window.
   `Ambiguous exchange - enter 99A or 32A to resolve`. `43 M W1AW 31CT` is
   refused the same way now (`43M or 31M`); it used to log serial 43, check 31.
 
+## Added 2026-11-04 -- OLD TR4W/TR4W ISSUES CLOSED AS FIXED, NEEDING A REAL RUN (NY4I)
+
+Nine issues from the Delphi 7 repository were closed as fixed in this tree on
+the strength of the code. Each is only proven by a run on the real thing. If
+one fails, open a TR4W-D12 issue; the old number is given for the history.
+
+- [ ] **Old #144, FTDX5000:** click a band-map spot that carries no split
+  frequency. The radio must come out of split (and not go into split by itself).
+- [ ] **Old #315, IC-9100:** switch the radio to a data mode (USB-D). TR4W shows
+  the data mode, and a mode change from TR4W sets it.
+- [ ] **Old #623, Ten-Tec Omni VI (model 564):** connect and read frequency and
+  mode; change band from TR4W.
+- [ ] **Old #703, Elecraft K4 over the network:** with the K4 in split, click a
+  band-map spot that has no split. The K4 leaves split.
+- [ ] **Old #680, radio setup:** with CW keying on a COM port also used by the
+  radio, press Apply in Preferences twice. No "port already open" error, and
+  the radio and keyer come back.
+- [ ] **Old #602, scoreboard:** post a score with an overlay category chosen
+  (for example Classic). The scoreboard accepts it and shows the overlay.
+- [ ] **Old #730, ContestOnlineScore:** post a score in a contest with several
+  modes. The band rows show every QSO of the band, not half.
+- [ ] **Old #788, band map:** delete a spot, then press the next-band-map key.
+  The deleted spot is not offered.
+- [ ] **Old #434, WW Digi:** log grids in several fields (for example DM, FN,
+  JO). Each new two-letter field counts as a multiplier; check against the WW
+  Digi rules that the field, not the 4-character locator, is the multiplier.
+
 ## Added 2026-11-04 -- THE KEYING THREADS HAND THE END OF A MESSAGE TO THE MAIN THREAD (issue #132)
 
 The CW thread, the WinKeyer reader and the DVK playback thread no longer arm the
