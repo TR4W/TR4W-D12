@@ -703,7 +703,8 @@ enumerations = {
 		'JT9' : [ 'JT9-1', 'JT9-2', 'JT9-5', 'JT9-10', 'JT9-30', 'JT9A', 'JT9B', 'JT9C', 'JT9D', 'JT9E', 'JT9E FAST', 'JT9F', 'JT9F FAST', 'JT9G', 'JT9G FAST', 'JT9H', 'JT9H FAST' ],
 		'JT44' : [],
 		'JT65' : [ 'JT65A', 'JT65B', 'JT65B2', 'JT65C', 'JT65C2' ],
-		'MFSK' : [ 'FSQCALL', 'FT4', 'JS8', 'MFSK4', 'MFSK8', 'MFSK11', 'MFSK16', 'MFSK22', 'MFSK31', 'MFSK32', 'MFSK64', 'MFSK128', 'FST4', 'Q65' ],
+		# TR4W LOCAL PATCH (see VENDORED.md): FST4W, an MFSK submode in ADIF 3.1.6
+		'MFSK' : [ 'FSQCALL', 'FT4', 'JS8', 'MFSK4', 'MFSK8', 'MFSK11', 'MFSK16', 'MFSK22', 'MFSK31', 'MFSK32', 'MFSK64', 'MFSK128', 'FST4', 'FST4W', 'Q65' ],
 		'MSK144' : [],
 		'MT63' : [],
 		'OLIVIA' : [ 'OLIVIA 4/125', 'OLIVIA 4/250', 'OLIVIA 8/250', 'OLIVIA 8/500', 'OLIVIA 16/500', 'OLIVIA 16/1000', 'OLIVIA 32/1000' ],

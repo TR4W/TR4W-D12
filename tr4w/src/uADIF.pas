@@ -933,7 +933,7 @@ begin
    Result.msmExtendedMode := eNoMode;
    case AnsiIndexText(AnsiUpperCase(sSubMode),
                       ['FT4', 'JS8', 'USB', 'LSB', 'PSK31',
-                       'PSK63', 'C4FM', 'DSTAR']) of
+                       'PSK63', 'C4FM', 'DSTAR', 'FST4', 'FST4W']) of
       0:                              // FT4
          begin
          Result.msmMode := Digital;
@@ -973,6 +973,16 @@ begin
          begin
          Result.msmMode := Phone;
          Result.msmExtendedMode := eDStar;
+         end;
+      8:                              // FST4 (an MFSK submode, ADIF 3.1.1)
+         begin
+         Result.msmMode := Digital;
+         Result.msmExtendedMode := eFST4;
+         end;
+      9:                              // FST4W (an MFSK submode; WSPR-style beacon)
+         begin
+         Result.msmMode := Digital;
+         Result.msmExtendedMode := eFST4W;
          end;
    else
       Result.msmMode := NoMode;
@@ -1023,7 +1033,9 @@ const
        (Mode: 'DIGITALVOICE'; SubMode: 'C4FM'),    // eC4FM
        (Mode: 'DIGITALVOICE'; SubMode: 'DSTAR'),   // eDStar
        (Mode: 'PSK';          SubMode: ''),        // ePSK_R
-       (Mode: 'FM';           SubMode: ''));       // eWFM
+       (Mode: 'FM';           SubMode: ''),        // eWFM
+       (Mode: 'MFSK';         SubMode: 'FST4'),    // eFST4
+       (Mode: 'MFSK';         SubMode: 'FST4W'));  // eFST4W
 
 function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
 begin

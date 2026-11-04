@@ -804,6 +804,15 @@ begin
    m := GetADIFSubMode('FT4');
    CheckEquals(Integer(Digital), Integer(m.msmMode),         'FT4.Mode');
    CheckEquals(Integer(eFT4),    Integer(m.msmExtendedMode), 'FT4.ExtMode');
+
+   (* WSJT-X logs FST4 as MODE MFSK, SUBMODE FST4. *)
+   m := GetADIFSubMode('FST4');
+   CheckEquals(Integer(Digital), Integer(m.msmMode),         'FST4.Mode');
+   CheckEquals(Integer(eFST4),   Integer(m.msmExtendedMode), 'FST4.ExtMode');
+
+   m := GetADIFSubMode('fst4w');
+   CheckEquals(Integer(Digital), Integer(m.msmMode),         'FST4W.Mode');
+   CheckEquals(Integer(eFST4W),  Integer(m.msmExtendedMode), 'FST4W.ExtMode');
 end;
 
 procedure TADIFHelperTests.Test_GetADIFSubMode_UnknownSubMode;
@@ -832,6 +841,7 @@ const
      MODE:SUBMODE pairs. *)
    ADIFSubModeEnumeration =
       ',SSB:USB,SSB:LSB,PSK:PSK31,PSK:PSK63,MFSK:FT4,MFSK:JS8,' +
+      'MFSK:FST4,MFSK:FST4W,' +
       'DIGITALVOICE:C4FM,DIGITALVOICE:DSTAR,';
 
 procedure TADIFHelperTests.Test_ExtMode_ExportsAnADIFMode_Exhaustive;
@@ -887,6 +897,9 @@ begin
    Pair(ePSK_R,  'PSK',  '');
    Pair(eJS8,    'MFSK', 'JS8');
    Pair(eFT4,    'MFSK', 'FT4');
+   // ADIF 3.1.6 Submode enumeration: FST4 and FST4W are submodes of MFSK.
+   Pair(eFST4,   'MFSK', 'FST4');
+   Pair(eFST4W,  'MFSK', 'FST4W');
    Pair(eMFSK,   'MFSK', '');
    Pair(eFT8,    'FT8',  '');
    Pair(eJT65,   'JT65', '');

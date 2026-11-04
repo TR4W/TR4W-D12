@@ -64,7 +64,9 @@ const
       (* eC4FM    *) 'C4FM',
       (* eDStar   *) 'DSTAR',
       (* ePSK_R   *) 'PSK',
-      (* eWFM     *) 'FM'
+      (* eWFM     *) 'FM',
+      (* eFST4    *) 'FST4',
+      (* eFST4W   *) 'FST4W'
       );
 
 function N1MMSidebandForFreq(aFreqHz: LongInt): string;

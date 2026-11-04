@@ -45,6 +45,7 @@ changed ("modernised") -- the version is otherwise upstream's byte for byte.
 | `POTA_REF : S` | `qsoTags` | TR4W writes it for POTA | 3.1.4 |
 | `verifyGrid` accepts a 2-character locator | `adifparse.py` | upstream rejects any grid under 4 characters; ADIF 3.1.6's GridSquare is "a 2-character, 4-character, 6-character, or 8-character Maidenhead locator", so a field (two letters A-R) is valid. Found by the contest matrix, 2026-10-23 | GridSquare data type, 3.1.6 |
 | `ARRL_SECT` and `MY_ARRL_SECT` value lists | `enumerations` | upstream's 2022 list is stale: it lacks GH (Golden Horseshoe), NB, NS, TER (all added 2023-01-01), PE (2020-04-01), and the ONE/ONN/ONS split that came with 3.1.x. Replaced by the 90 codes of the ADIF 3.1.6 Section enumeration, III.B.2, **deleted codes included** (GTA, MAR, NT, NWT, ON are marked deleted but are still enumerated) | the Section enumeration is 3.1.6's; the codes were added 2012 to 2023 |
+| `FST4W` submode of `MFSK` | `enumerations` (submodes) | TR4W exports WSJT-X FST4W as MFSK/FST4W; ADIF 3.1.6 lists it (upstream lists FST4 only) | 3.1.6 Submode enumeration |
 
 Checked and NOT patched:
 
