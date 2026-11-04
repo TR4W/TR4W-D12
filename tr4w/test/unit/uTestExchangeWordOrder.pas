@@ -247,6 +247,7 @@ procedure TExchangeWordOrderTests.Test_SweepstakesAmbiguousSerialIsRefused;
 var
    rx: ContestExchange;
    accepted: boolean;
+   savedCallsignUpdate: boolean;
 
    procedure CheckTaken(const aExch: string; aNumber: integer; aPrec: AnsiChar;
                         aCheck: integer; const aSection: string);
@@ -284,9 +285,14 @@ begin
       CheckTaken('31 W1AW CT M 430', 430, 'M', 31, 'CT');
       CheckTaken('31 W1AW CT M 232', 232, 'M', 31, 'CT');
       CheckTaken('12 W1AW CT M 4', 4, 'M', 12, 'CT');
-      (* RESOLVED BY THE CHECK JOINED TO THE SECTION. *)
-      CheckTaken('43 M W1AW 31CT', 43, 'M', 31, 'CT');
-      CheckTaken('42 M W1AW 31CT', 42, 'M', 31, 'CT');
+      (* A CHECK JOINED TO THE SECTION DOES NOT RESOLVE IT -- NY4I,
+         2026-11-04: "a 99ct 32 would be ambiguous". FLIPPED: the two below
+         logged serial 43/42, check 31, until this ruling. *)
+      CheckRefused('43 M W1AW 31CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
+      CheckRefused('42 M W1AW 31CT', 'Ambiguous exchange - enter 42M or 31M to resolve');
+      CheckRefused('A 99CT 32', 'Ambiguous exchange - enter 99A or 32A to resolve');
+      CheckRefused('A 32 99CT', 'Ambiguous exchange - enter 32A or 99A to resolve');
+      CheckRefused('32 A 99CT', 'Ambiguous exchange - enter 32A or 99A to resolve');
 
       (* A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE PRECEDENCE AND THE
          SERIAL -- NY4I, 2026-11-04: "a check would NEVER be entered with
@@ -301,15 +307,50 @@ begin
       CheckTaken('43M W1AW 31 CT', 43, 'M', 31, 'CT');
       CheckTaken('U123 W1AW 31 CT', 123, 'U', 31, 'CT');
 
-      (* 'A99CT' IS NO PRECEDENCE WORD ANY MORE: it reads as a section.
-         Alone beside a serial, the precedence is missing; with a precedence
-         and a check of its own, the section is refused. *)
+      (* A PRECEDENCE, DIGITS AND A SECTION IN ONE WORD -- NY4I,
+         2026-11-04: "a99ct 32 would be precedence of a, serial number 99,
+         section of ct and check of 32", and in 'a99ct 123' "123 cannot be a
+         check", so there the 99 is the check.
+
+         MEASURED: WITH CALLSIGN UPDATE ENABLE ON (the default), LIVE ENTRY
+         NEVER REACHES THE GRAMMAR FOR THESE. GetCorrectedCallFromExchangeString
+         finds 'A99CT' LooksLikeACallSign, makes it the QSO's call and strips
+         it from the exchange, so what is parsed is '123' alone -- refused for
+         the missing precedence. That is NY4I's bench symptom, and it is the
+         same with the D7 word reading restored. Pinned, so a change to the
+         call extraction is seen here. *)
       accepted := Enter('W1AW', 'A99CT 123', rx);
-      CheckFalse(accepted, 'A99CT 123: refused');
-      CheckEquals(SExchangeNoPrecedence, string(ExchangeErrorMessage), 'A99CT 123: for its missing precedence');
-      accepted := Enter('W1AW', '123 A 99 A99CT', rx);
-      CheckFalse(accepted, '123 A 99 A99CT: refused');
-      CheckEquals('', string(ExchangeErrorMessage), '123 A 99 A99CT: the message');
+      CheckFalse(accepted, 'A99CT 123, callsign update on: refused');
+      CheckEquals('A99CT', string(rx.Callsign), 'A99CT 123, callsign update on: the word is taken as the call');
+      CheckEquals(SExchangeNoPrecedence, string(ExchangeErrorMessage),
+                  'A99CT 123, callsign update on: what is left has no precedence');
+      (* The extraction takes the LAST word that looks like a call, and only
+         that one: with the call typed after it, A99CT is left to the
+         grammar. *)
+      CheckTaken('A99CT 32 W1AW', 99, 'A', 32, 'CT');
+      CheckEquals('W1AW', string(rx.Callsign), 'A99CT 32 W1AW, callsign update on: the typed call');
+
+      (* WITH IT OFF, the grammar reads them as ruled. *)
+      savedCallsignUpdate := Settings.CallWindow.CallsignUpdateEnable;
+      Settings.CallWindow.CallsignUpdateEnable := False;
+      try
+         CheckTaken('A99CT 123', 123, 'A', 99, 'CT');
+         CheckEquals('W1AW', string(rx.Callsign), 'A99CT 123: the call is the call window''s');
+         CheckTaken('123 A99CT', 123, 'A', 99, 'CT');
+         CheckTaken('A99CT 32', 99, 'A', 32, 'CT');
+         CheckTaken('32 A99CT', 99, 'A', 32, 'CT');
+         (* ALONE: serial 99 and no check -- refused, and not for the
+            precedence. *)
+         CheckRefused('A99CT', '');
+         (* WITH THE CALL TYPED LAST, the call is read as the section. *)
+         CheckRefused('A99CT 32 W1AW', '');
+         (* A PRECEDENCE, A CHECK AND A99CT: the engine stops at the first
+            complete reading, last first -- A99CT gives check 99 (123 must be
+            the serial), then the bare 99 fills the serial. As D7 read it. *)
+         CheckTaken('123 A 99 A99CT', 99, 'A', 99, 'CT');
+      finally
+         Settings.CallWindow.CallsignUpdateEnable := savedCallsignUpdate;
+      end;
    finally
       RestoreSession;
    end;

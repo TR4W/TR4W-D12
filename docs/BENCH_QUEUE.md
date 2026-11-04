@@ -37,9 +37,18 @@ a space."* Unit tests drive `ParametersOkay`; nothing has looked at the window.
 
 - [ ] ARRL SS (CW or SSB), call `W1AW`: type `U12 W1AW 80 CT`. It logs serial
   12, precedence U, check 80, section CT (it used to read check 12).
-- [ ] Type `A99CT 123`. It does not log, and the notice reads
-  `Missing precedence (Q A B U M S)` -- `A99CT` is no longer read as
-  precedence, check and section.
+- [ ] **`A99CT` (precedence, digits, section in one word), revised the same
+  day:** the digits are the serial unless another word can only be the
+  serial. With **CALLSIGN UPDATE ENABLE = FALSE**: `A99CT 32` logs serial 99,
+  check 32, A, CT; `A99CT 123` logs serial 123, check 99, A, CT.
+  **With it TRUE (the default) `A99CT 123` still does not log** ("Missing
+  precedence"): the call window's correction takes `A99CT` as a callsign
+  first. That is measured and pinned and is a decision owed, not a defect to
+  confirm; `A99CT 32 W1AW` (call typed last) logs serial 99, check 32 either
+  way.
+- [ ] Type `A 99CT 32`. It does not log; the notice reads
+  `Ambiguous exchange - enter 99A or 32A to resolve`. `43 M W1AW 31CT` is
+  refused the same way now (`43M or 31M`); it used to log serial 43, check 31.
 
 ## Added 2026-11-04 -- THE KEYING THREADS HAND THE END OF A MESSAGE TO THE MAIN THREAD (issue #132)
 

@@ -3314,6 +3314,11 @@ begin
      Exit;
      end;
 
+  (* THE ONE WHOLE-ENTRY QUESTION THE WORD FOLD NEEDS -- does another word
+    have to be the serial, so that A99CT's digits are the check? NY4I,
+    2026-11-04; the rule is uExchangeTokens.ProcessSweepstakesEntry's. *)
+  MarkSweepstakesSerialElsewhere(string(Exchange), SSEx);
+
   NumberEntries := 0;
 
   while (Exchange <> '') and (NumberEntries <= 10) do

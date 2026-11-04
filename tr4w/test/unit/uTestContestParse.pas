@@ -566,6 +566,12 @@ begin
       CheckRefused('M 43 W1AW 31 CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
       (* Two letters: the one the scan keeps, the later typed. *)
       CheckRefused('M 43 A 31 CT', 'Ambiguous exchange - enter 43A or 31A to resolve');
+      (* A check joined to its section counts as one of the two numbers
+         (NY4I: "a 99ct 32 would be ambiguous"). '43 M W1AW 31CT' was
+         accepted until this ruling. *)
+      CheckRefused('A 99CT 32', 'Ambiguous exchange - enter 99A or 32A to resolve');
+      CheckRefused('32 A 99CT', 'Ambiguous exchange - enter 32A or 99A to resolve');
+      CheckRefused('43 M W1AW 31CT', 'Ambiguous exchange - enter 43M or 31M to resolve');
 
       (* WHAT RESOLVES IT. *)
       CheckAccepted('43M W1AW 31 CT');
@@ -573,7 +579,8 @@ begin
       CheckAccepted('31 W1AW CT M 430');
       CheckAccepted('31 W1AW CT M 232');
       CheckAccepted('12 W1AW CT M 4');
-      CheckAccepted('43 M W1AW 31CT');
+      CheckAccepted('A99CT 32');
+      CheckAccepted('A99CT 123');
       CheckAccepted('43 A99 CT');
       CheckAccepted('123 A 99 CT');
       end;
@@ -815,14 +822,30 @@ begin
    ScanSweepstakesExchange('123A 99CT', f);
    CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), 'packed');
-   (* FLIPPED 2026-11-04 (NY4I: "a check would NEVER be entered with the
-      precedence next to it without a space"): 'A99CT' is no longer a
-      precedence, check and section in one word. It is read as the section,
-      the precedence is missing, and the exchange is refused. *)
+   (* A PRECEDENCE, DIGITS AND A SECTION IN ONE WORD (NY4I, 2026-11-04,
+      after the bench): the digits are the serial, unless another word can
+      only be the serial -- then they are the check. Restored to what it read
+      before the ruling's first round ("123 cannot be a check"). *)
    ScanSweepstakesExchange('A99CT 123', f);
-   CheckEquals('123||A99CT', string(f.Number) + '|' + string(f.Check) + '|' +
-               string(f.Section), 'A99CT: the section, and no check');
-   CheckTrue(f.Prec = Chr(0), 'A99CT: no precedence');
+   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99CT 123: check 99, serial 123');
+   ScanSweepstakesExchange('123 A99CT', f);
+   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), '123 A99CT: the serial typed first');
+   ScanSweepstakesExchange('A99CT 5', f);
+   CheckEquals('5|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99CT 5: a one-digit number is the serial too');
+   (* "a99ct 32 would be precedence of a, serial number 99, section of ct
+      and check of 32" -- either side. *)
+   ScanSweepstakesExchange('A99CT 32', f);
+   CheckEquals('99|A|32|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99CT 32: serial 99, check 32');
+   ScanSweepstakesExchange('32 A99CT', f);
+   CheckEquals('99|A|32|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), '32 A99CT: serial 99, check 32');
+   ScanSweepstakesExchange('32 U12WCF', f);
+   CheckEquals('12|U|32|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'U12WCF: a longer section');
    ScanSweepstakesExchange('123 99 CT', f);
    CheckTrue(f.Prec = Chr(0), 'no precedence');
    ScanSweepstakesExchange('123 AB', f);
@@ -861,17 +884,19 @@ begin
    ScanSweepstakesExchange('M43 80 CT', f);
    CheckEquals('43|M|80|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), 'M43 typed first');
-   (* WAS '123|A|99|CT' (A99 the precedence and check, 123 the serial):
-      A99 is the later-typed serial now, and nothing supplies a check. *)
+   (* A99 with NOTHING after is the serial whatever else is typed: beside
+      123 it is the later-typed serial, and nothing supplies a check. *)
    ScanSweepstakesExchange('123 A99 CT', f);
    CheckEquals('99|A||CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), 'A99 beside 123: the later serial, no check');
-   (* WAS '|A|99|CT'. *)
+   (* A99CT ALONE: serial 99 and no check, so it is refused for the check.
+      It was '|A|99|CT' (no serial) before NY4I's rulings, and a section
+      with no precedence in their first round. *)
    ScanSweepstakesExchange('A99CT', f);
-   CheckEquals('||A99CT', string(f.Number) + '|' + string(f.Check) + '|' +
-               string(f.Section), 'A99CT alone: only a section');
-   CheckTrue(f.Prec = Chr(0), 'A99CT alone: no precedence');
-   (* A CHECK JOINED TO ITS SECTION, unchanged. *)
+   CheckEquals('99|A||CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99CT alone: the serial, no check');
+   (* A CHECK JOINED TO ITS SECTION: the word reading is unchanged. (The
+      entry itself is ambiguous now -- see the ambiguity pins below.) *)
    ScanSweepstakesExchange('42 M W1AW 31CT', f);
    CheckEquals('42|M|31|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
                string(f.Check) + '|' + string(f.Section), '31CT: the check and the section');
@@ -887,18 +912,20 @@ begin
    CheckKind('43M', swSerialThenPrecedence);
    CheckKind('U123', swPrecedenceThenSerial);
    CheckKind('A5', swPrecedenceThenSerial);
-   (* The three below were swPrecedenceThenCheck until NY4I's ruling of
-      2026-11-04, which deleted that reading. *)
    CheckKind('U12', swPrecedenceThenSerial);
    CheckKind('A99', swPrecedenceThenSerial);
    CheckKind('M43', swPrecedenceThenSerial);
-   CheckKind('A99CT', swCheckOrSection);
-   CheckKind('31CT', swCheckOrSection);
-   CheckKind('43MI', swCheckOrSection);
-   CheckKind('AB', swCheckOrSection);
-   CheckKind('SB', swCheckOrSection);
-   CheckKind('W1AW', swCheckOrSection);
-   CheckKind('m', swCheckOrSection);
+   CheckKind('A99CT', swPrecedenceSerialSection);
+   CheckKind('U12WCF', swPrecedenceSerialSection);
+   CheckKind('123A99CT', swSerialPrecedenceCheckSection);
+   CheckKind('31CT', swCheckThenSection);
+   CheckKind('99CT', swCheckThenSection);
+   CheckKind('43MI', swCheckThenSection);
+   CheckKind('4CT', swSection);
+   CheckKind('AB', swSection);
+   CheckKind('SB', swSection);
+   CheckKind('W1AW', swSection);
+   CheckKind('m', swSection);
 
    (* THE AMBIGUITY TEST ITSELF. *)
    CheckAmbiguous('43 M W1AW 31 CT', '43', '31', 'M');
@@ -910,10 +937,23 @@ begin
    CheckNotAmbiguous('31 W1AW CT M 430', 'a three-digit serial');
    CheckNotAmbiguous('31 W1AW CT M 232', 'a three-digit serial');
    CheckNotAmbiguous('12 W1AW CT M 4', 'a one-digit serial');
-   CheckNotAmbiguous('43 M W1AW 31CT', 'the check joined to the section');
+   (* A CHECK JOINED TO ITS SECTION COUNTS AS A TWO-DIGIT NUMBER beside a
+      standalone precedence (NY4I: "a 99ct 32 would be ambiguous"). FLIPPED:
+      '43 M W1AW 31CT' was not ambiguous. *)
+   CheckAmbiguous('A 99CT 32', '99', '32', 'A');
+   CheckAmbiguous('A 32 99CT', '32', '99', 'A');
+   CheckAmbiguous('32 A 99CT', '32', '99', 'A');
+   CheckAmbiguous('43 M W1AW 31CT', '43', '31', 'M');
+   CheckAmbiguous('42 M W1AW 31CT', '42', '31', 'M');
+   CheckAmbiguous('43 M 43MI', '43', '43', 'M');
+   (* TWO BARE WORDS STILL DECIDE IT when a third number is joined to a
+      section: the two bare ones are named, as before. *)
+   CheckAmbiguous('43 M 22 31CT', '43', '22', 'M');
+   CheckNotAmbiguous('A99CT 32', 'serial 99 joined to its precedence');
+   CheckNotAmbiguous('32 A99CT', 'serial 99 joined to its precedence');
+   CheckNotAmbiguous('A99CT 123', 'a three-digit serial');
    CheckNotAmbiguous('43 A99 31 CT', 'the precedence joined to a serial');
    CheckNotAmbiguous('U12 W1AW 80 CT', 'a two-digit serial joined to its precedence');
-   CheckNotAmbiguous('43 M 43MI', 'one two-digit word; MI is Michigan');
    CheckNotAmbiguous('43 SB 31 CT', 'SB is a section, not a precedence');
    CheckNotAmbiguous('43 31 CT', 'no precedence -- that refusal is another');
    CheckNotAmbiguous('43 M 31 CT 22', 'three two-digit words');

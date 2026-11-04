@@ -164,9 +164,19 @@ precedence joined to digits, EITHER ORDER, as precedence + SERIAL: `U123`,
 `U12`, `A99`, `M43`, `43M` -- NY4I: *"a check would NEVER be entered with the
 precedence next to it without a space. The only thing we accept without a
 space is the <serial><precedence>."* So `80 WCF U12` reads serial 12, check
-80. The D7 branch that read `A99CT` as precedence + check + section is
-DELETED; `A99CT` is a section word now (`A99CT 123` -> missing precedence).
-A check joined to its section (`31CT`) is unchanged. An unknown section
+80. **`A99CT` (precedence + digits + section) reads its digits as the
+SERIAL unless another word can only be the serial** (NY4I: *"a99ct 32 would
+be precedence of a, serial number 99, section of ct and check of 32"*;
+`A99CT 123` is check 99, serial 123). That needs the whole entry, so the
+fold has ONE pre-pass, `MarkSweepstakesSerialElsewhere` (sets
+`TSweepstakesFields.SerialElsewhere`), called by `ScanSweepstakesExchange`
+AND by LOGSTUFF's SS parse -- keep both. `123A99CT` is still D7's serial,
+check, section. **LIVE ENTRY DOES NOT REACH THE GRAMMAR FOR `A99CT 123`
+WHILE `CALLSIGN UPDATE ENABLE` IS ON (the default):**
+`GetCorrectedCallFromExchangeString` takes the LAST word that
+`LooksLikeACallSign`, and `A99CT` does, so it becomes the QSO's call
+(measured, pinned in `uTestExchangeWordOrder`; same for `U80WCF 123`). A
+check joined to its section (`31CT`) is unchanged as a word. An unknown section
 through this parser is refused with NO message (pre-existing, not this
 change). `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
 Locust, Minnesota) tries `QTH NAME` only when the name-first reading found no
@@ -175,8 +185,10 @@ still Del in California. Live entry refuses `U80WCF 123` and puts `U80WCF` in
 the CALLSIGN (measured, pinned). NA Sprint's `FL TOM 4` was already right: QTH,
 domestic QTH and the domestic multiplier (pinned). **AN AMBIGUOUS SS SERIAL
 IS REFUSED (NY4I, 2026-11-04):** a standalone precedence word, no word
-joining digits to a precedence (`43M`, `U123`, `A99`), no bare 1/3/4-digit
-number, and exactly two bare two-digit numbers -> `TContestARRLSSBase`
+joining digits to a precedence (`43M`, `U123`, `A99`, `A99CT`), no bare
+1/3/4-digit number, and EITHER exactly two bare two-digit numbers OR bare
+two-digit numbers plus check-then-section words (`99CT`, `31CT`) coming to
+exactly two (`A 99CT 32`, `42 M W1AW 31CT`) -> `TContestARRLSSBase`
 refuses with `SExchangeAmbiguousSerial` ("enter 43M or 31M"), so
 `43 M W1AW 31 CT` no longer logs by position. The test is
 `uExchangeTokens.SweepstakesSerialIsAmbiguous`, which COUNTS the reading
