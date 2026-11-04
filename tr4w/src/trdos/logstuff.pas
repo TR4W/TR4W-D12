@@ -1939,6 +1939,27 @@ begin
      begin
      logger.debug('Calling FoundDomesticQTH from ProcessNameAndDomesticOrDXQTHExchange');
      ProcessNameAndDomesticOrDXQTHExchange := FoundDomesticQTH(RXData);
+
+     (* THE STATE FIRST -- 'FL TOM' as well as 'TOM FL' (issue #169,
+       TR4W#416, 2026-11-04). The name-first reading stays the rule: only
+       when it found no QTH, the entry was two words and nothing more, and
+       the FIRST word is a QTH and the second is letters only (a name, never
+       a serial or a class -- the contest matrix caught 'CT 123' being
+       taken as the name 123), are the two read the other way round. So a
+       name that is also a QTH ("Del in DE") reads as it always did wherever
+       both readings are a QTH ('DE CA' is Del in California), and an entry
+       that was taken before is read exactly as before. A refusal is the
+       name-first reading's, unchanged: the swap is tried only when it
+       succeeds. *)
+     if (not Result) and
+        IsAlpha(SecondString) and
+        (ThirdString = '') and
+        DomesticTableKnowsQTH(string(FirstString)) then
+        begin
+        RXData.Name := SecondString;
+        RXData.QTHString := FirstString;
+        ProcessNameAndDomesticOrDXQTHExchange := FoundDomesticQTH(RXData);
+        end;
      end;
   if Result = False then
      begin

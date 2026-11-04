@@ -732,6 +732,35 @@ begin
    ScanSweepstakesExchange('123 AB', f);
    CheckTrue(f.Prec = Chr(0), 'AB is a section (Alberta), not a precedence');
    CheckEquals('AB', string(f.Section), 'read as the section');
+
+   (* THE PRECEDENCE BEFORE THE SERIAL, IN ONE WORD (issue #174, TR4W#460:
+      "80 WCF U123"). A letter followed by one, three or four digits and
+      nothing else is the precedence and the serial. *)
+   ScanSweepstakesExchange('80 WCF U123', f);
+   CheckEquals('123|U|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'U123: precedence, then the serial');
+   ScanSweepstakesExchange('U123 80 WCF', f);
+   CheckEquals('123|U|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'U123 typed first');
+   ScanSweepstakesExchange('80 WCF A5', f);
+   CheckEquals('5|A|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A5: a one-digit serial');
+   ScanSweepstakesExchange('80 WCF Q1234', f);
+   CheckEquals('1234|Q|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'Q1234: a four-digit serial');
+   (* THE ORDER THE OPERATOR HAS ALWAYS TYPED, kept. *)
+   ScanSweepstakesExchange('80 WCF 123U', f);
+   CheckEquals('123|U|80|WCF', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), '123U: the serial, then the precedence');
+   (* TWO DIGITS AFTER THE LETTER STAY THE PRECEDENCE AND THE CHECK, as
+      before: 'A99' is the same shape as 'A99CT' without its section, and
+      a two-digit serial cannot be told from a check. *)
+   ScanSweepstakesExchange('123 A99 CT', f);
+   CheckEquals('123|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99: precedence and check, unchanged');
+   ScanSweepstakesExchange('A99CT', f);
+   CheckEquals('|A|99|CT', string(f.Number) + '|' + string(f.Prec) + '|' +
+               string(f.Check) + '|' + string(f.Section), 'A99CT alone: no serial, unchanged');
 end;
 
 procedure TContestParseTests.Test_IsSingleNonNumericToken;

@@ -32,6 +32,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   quirks included -- a ten-character field that truncates, a leading-blank
   trim that keeps a lone blank. They decide which word a contest is handed,
   and a "tidier" version would hand some contests a different word.
+  ONE DELIBERATE DEPARTURE, marked where it stands: ProcessSweepstakesEntry
+  reads 'U123' as precedence and serial (issue #174, 2026-11-04).
 
   NOTHING HERE NAMES A CONTEST OR READS A SETTING. A rule -- which word is a
   serial, which is a county, what a refusal says -- is the contest's, on its
@@ -232,6 +234,34 @@ begin
             end;
          Exit;
          end;
+      end;
+
+   (* THE PRECEDENCE BEFORE THE SERIAL, IN ONE WORD -- 'U123' as well as
+     '123U' (issue #174, TR4W#460, 2026-11-04; NOT in the LOGSTUFF original).
+     NY4I: "As long as we do not have a space between the precedence and
+     number, we can figure this out to not be the check."
+
+     ONLY ONE, THREE OR FOUR DIGITS. Two digits after the letter stay the
+     precedence and the CHECK below, as they always were: 'A99' is
+     'A99CT' without its section, and a two-digit serial cannot be told from
+     a check. Every word this branch takes was misread before (U123 gave
+     check 12, section 3). The one entry that was taken and now reads
+     differently holds TWO serials ('123 U5 80 WCF'): it took 123 and now
+     takes 5, the later-typed one, as this parser does everywhere else. *)
+   if (NumberStr = '') and
+      (Length(TempString) in [2, 4, 5]) and
+      (TempString[1] in SweepstakesPrecedences) and
+      StringIsAllNumbers(Copy(string(TempString), 2, Length(TempString) - 1)) then
+      begin
+      if aFields.Number = '' then
+         begin
+         aFields.Number := Copy(TempString, 2, Length(TempString) - 1);
+         end;
+      if aFields.Prec = Chr(0) then
+         begin
+         aFields.Prec := TempString[1];
+         end;
+      Exit;
       end;
 
    (* More than one character left. A real precedence may be followed only by

@@ -154,7 +154,21 @@ back to a pre-exchange site. `QualifiedDupes` is one flat dictionary keyed call 
 entry already refused it: a domestic call goes to `FoundDomesticQTH`, and
 `arrlsect.dom` has no `DX`. Run the typed text through the matrix's parse section
 (a temporary row in `uContestMatrix.MATRIX_PARSE_CASES`, removed before the
-freeze) first.
+freeze) first. **A unit test can drive the REAL parsers too:**
+`uTestExchangeWordOrder` / `uTestFieldDaySectionRefusal` call `ParametersOkay`
+with a shipped `.dom` loaded -- `uTestExchangeParse` is a STUB of the parsers
+and cannot see a defect inside one.
+
+**WORD ORDER (2026-11-04, issues #174/#169/#170).** Sweepstakes reads `U123`
+(a precedence letter plus 1, 3 or 4 digits, one word) as precedence + serial;
+`A99` (two digits) stays precedence + CHECK, so `80 WCF U12` still reads serial
+80, check 12. `ParseNameAndDomesticOrDXQTH` (NAQP x3, CWOps, SST, Colorado,
+Locust, Minnesota) tries `QTH NAME` only when the name-first reading found no
+QTH, the entry is exactly two words, and the first word is a QTH -- `DE CA` is
+still Del in California. Live entry refuses `U80WCF 123` and puts `U80WCF` in
+the CALLSIGN (measured, pinned) although the word reader takes `A99CT 123` --
+a pre-existing mismatch, open. NA Sprint's `FL TOM 4` was already right: QTH,
+domestic QTH and the domestic multiplier (pinned).
 
 **The rescore re-derives a record's country ONLY for a contest with a prefix,
 zone or DX multiplier** (`MainUnit.RecomputeQSOScoring`). Taking a multiplier away
