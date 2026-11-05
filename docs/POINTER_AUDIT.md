@@ -110,10 +110,11 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
-> **P9 IS UNDER WAY (2026-11-05), one window per commit.** 5.4 (Alt-P) and
-> 5.2 (Search Log) are done: see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05)
-> and [part 2](#p9-part-2-52----the-search-log-filter-rows-2026-11-05). `src`
-> total 2,156 -> 2,149 -> **2,128**. 5.1 and 5.3 are open.
+> **P9 IS UNDER WAY (2026-11-05), one window per commit.** 5.4 (Alt-P), 5.2
+> (Search Log) and 5.3 (DX cluster console) are done: see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05),
+> [part 2](#p9-part-2-52----the-search-log-filter-rows-2026-11-05) and
+> [part 3](#p9-part-3-53----the-dx-cluster-console-lines-kind-2026-11-05). `src`
+> total 2,156 -> 2,149 -> 2,128 -> **2,123**. 5.1 is open.
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
@@ -538,7 +539,7 @@ audit's list finds them.
 |---|---|---|---|---|
 | 5.1 | `ui/lcl/uFlowGrid.pas:165, 205` (`TagAt`, `AddObject(aCall, TObject(aTag))`), callers in `uCallsigns`, `uMaster`, `logedit` | **the worked example in `WIN32_ARTIFACT_SWEEP.md` -- still present** | `TRemainingMult` and friends in `Objects[]` with `OwnsObjects` | **none** (UI) -- BENCH the dupe sheet, SCP/master and remaining-mults windows |
 | 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built -- **DONE 2026-11-05 (P9 part 2)**: `FBandRows` / `FModeRows` | UT `uTestLogSearchFilters` (written first); BENCH the log search window |
-| 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` | UT `uTestTelnetTrace` (the ring, not the colours) -- BENCH the colours |
+| 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` -- **DONE 2026-11-05 (P9 part 3)** as neither: `Objects[]` holds one of seven form-owned `TConsoleLineKind` objects | UT `uTestTelnetConsoleKinds` (written first), `uTestTelnetTrace` (the ring) -- BENCH the colours |
 | 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns -- **DONE 2026-11-05 (P9 part 1)**: `TAltPItem.Key`, made through `OnCreateItemClass` | UT `uTestAltPRows` (written first); BENCH Alt-P |
 | 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowLogCompare(aInfo: PLogFileInformation)` -- **DONE (P2)**. `ShowEditMessage(const aRow: integer)` -- **DONE 2026-11-05** (both units; `uEditMessage` no longer names `LCLType`) | COMPILER; BENCH Alt-P -> Edit Message |
 | 5.6 | `uMainWindowProc.pas:605` `ApplyLoadedParks(LPARAM(aParks))`, `uPOTAParks.pas:582` | a `TStringList` passed as `LPARAM` between two units of ours | `ApplyLoadedParks(aParks: TStringList)` -- **DONE 2026-11-05**; `uPOTAParks` no longer names `LCLType` | UT `uTestContestPOTA.Test_ApplyLoadedParksTakesTheParsedList` (written first, against the `LPARAM`); COMPILER; BENCH the startup load and the download |
@@ -1505,6 +1506,43 @@ not a value.
 ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
 lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
 identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
+
+### P9 part 3 (5.3) -- the DX cluster console line's kind, 2026-11-05
+
+**Test first.** `test/unit/uTestTelnetConsoleKinds.pas` (4 tests) streams
+`TfrmTelnet`, gives its console a handle (every console routine is a silent
+no-op without one, `ConsoleUsable`, so each test first asserts the TEXT came
+back) and drives `TelnetConsoleAdd`, `TelnetConsoleClear`, `TelnetConsoleLine`
+and `TelnetConsoleKind`, the seam `uTelnet` uses. Every kind round-trips; a
+trim past the limit keeps each surviving line's kind; Clear then refill
+carries the new kinds; a missing row reads `tstTR4W`. Green on the old
+`TObject(PtrUInt(Ord(aKind)))` (unit 424,373 / 0) and unchanged after.
+
+**The conversion.** `TConsoleLineKind`, a class with a read-only `Kind`. The
+form makes ONE per kind (`FLineKinds`, seven objects, in `HandleCreate`) and
+`TelnetConsoleAdd` puts the right one in `Objects[]`: no object per line,
+nothing for the trim or Clear to free, and no array beside the list box to
+keep in step with its three mutation sites. `KindOfRow` is the one reader
+(`is`-checked; anything else reads `tstTR4W`). The objects are freed in the
+form's destructor AFTER `inherited Destroy`, because the list box -- a child
+-- points at them until then.
+
+**Not changed, and larger than P9:** the console is still an owner-drawn
+`TListBox` (`lbOwnerDrawFixed`, `lbOwnerDrawVariable` on macOS) with its own
+`ConsoleDrawItem`. The native shape the rule table names -- the control's own
+drawing plus a colour hook -- would be a `TStringGrid` with `OnPrepareCanvas`
+or similar, and that conversion meets the row-height and Cocoa handle history
+`ApplyRowHeight` records. It is a window conversion, not a pointer item.
+
+**Counters.** `src` total 2,128 -> 2,123: `C3-typed-ptr-type` -3,
+`C5-tobject-cast` -1, `C5-objects` -1.
+
+**Oracles.** Unit 424,373 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
+ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
+lints (one run failed Lint-LineEndings on an unrelated new file written LF
+during the run; fixed, and the rerun passed all 54), `Count-LiveMove` 430.
+Corpus 16 / 0 / 10, exit 0. Contest matrix 194 identical, 0 differing, no
+re-freeze. BENCH: `BENCH_QUEUE.md`.
 
 ---
 

@@ -646,6 +646,7 @@ uses
    uTestCaptionText     in 'uTestCaptionText.pas',
    uTestSpotStore       in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',
+   uTestTelnetConsoleKinds in 'uTestTelnetConsoleKinds.pas',
    uTestCrashContext    in 'uTestCrashContext.pas',
    uTestKeychain     in 'uTestKeychain.pas',
    uTestWindowSnap      in 'uTestWindowSnap.pas',
@@ -1126,6 +1127,7 @@ begin
    RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
+   RegisterSuite(TTelnetConsoleKindTests.Create('TelnetConsoleKinds'));
    RegisterSuite(TCrashContextTests.Create('CrashContext'));
    RegisterSuite(THPTimerTests.Create('HPTimer'));
    RegisterSuite(TLogNoteTests.Create('LogNote'));

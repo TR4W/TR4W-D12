@@ -30,6 +30,25 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- A DX CLUSTER CONSOLE LINE CARRIES ITS KIND AS AN OBJECT (pointer audit P9, 5.3)
+
+Each line of the DX cluster console knew its kind (sent, received, dupe, mult,
+error, alert -- what colours it) through `Items.Objects[]` as `Ord(kind)`. It
+points at one of seven `TConsoleLineKind` objects the form owns now.
+`uTestTelnetConsoleKinds` pins the kinds through adds, the scrollback trim and
+Clear on a streamed form; what it cannot see is the paint.
+
+- [ ] **DX cluster window, connected, a few minutes of traffic.** EXPECT the
+  colours as before (`TelnetStringColor`): a command you send in blue,
+  received lines and status lines black, a spot for a dupe light grey, a spot
+  for a new multiplier red, errors red, an alert black on a yellow band.
+- [ ] **Scrollback trim.** Set `TELNET CONSOLE LINES` to its minimum, 1000, and
+  let it run past that (SH/DX 50 a few times, or a busy evening). EXPECT: the oldest lines leave from the top and every line
+  that stays keeps its colour -- an alert keeps its yellow band after the lines above it
+  are trimmed. Then Clear, and new lines take their own colours.
+- [ ] **Close TR4W with the cluster window open and full.** EXPECT: no access
+  violation and no crash record in `tr4w.log` at exit.
+
 ## Added 2026-11-05 -- THE SEARCH LOG FILTERS KNOW THEIR ROWS BY A TYPED ARRAY (pointer audit P9, 5.2)
 
 Which band or mode a row of the Search Log's Band and Mode drop-downs means rode

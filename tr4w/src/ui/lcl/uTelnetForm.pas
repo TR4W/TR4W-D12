@@ -58,6 +58,24 @@ uses
    uTelnet;   { TelnetStringType -- see the unit header }
 
 type
+   (* WHAT KIND OF LINE A CONSOLE ROW IS -- sent, received, a dupe, a mult, an
+     error, an alert -- which is what colours it.
+
+     The kind rode in Items.Objects[] as TObject(PtrUInt(Ord(kind))), an
+     integer dressed as an object (pointer audit P9, item 5.3). Objects[] now
+     holds a real object of this class. There are only seven kinds and a kind
+     never changes, so the form makes ONE of each (FLineKinds) and every line
+     of that kind points at it: no object per line, nothing to free when a
+     line is trimmed or cleared, and nothing beside the list box to keep in
+     step with it. *)
+   TConsoleLineKind = class
+   private
+      FKind: TelnetStringType;
+   public
+      constructor Create(const aKind: TelnetStringType);
+      property Kind: TelnetStringType read FKind;
+   end;
+
    TfrmTelnet = class(TForm)
       pnlToolbar: TPanel;
       btnConnect: TBitBtn;
@@ -110,10 +128,20 @@ type
         on the widget sets that ask per row. See ApplyRowHeight. }
       FRowHeight: integer;
 
+      (* One per kind, made in HandleCreate and freed in Destroy AFTER the
+        list box that points at them -- see TConsoleLineKind. *)
+      FLineKinds: array[TelnetStringType] of TConsoleLineKind;
+
+      (* The kind of console row aIndex, or tstTR4W for a row that is not
+        there or carries no kind. The one reader of Objects[]. *)
+      function  KindOfRow(const aIndex: integer): TelnetStringType;
+
       procedure ApplyMinimumSize;
       procedure ApplyRowHeight(const aHeight: integer);
       procedure ConsoleMeasureItem(Control: TWinControl; Index: Integer;
                                    var AHeight: Integer);
+   public
+      destructor Destroy; override;
    end;
 
 { The toolbar command ids.  DELIBERATELY the same numbers the Win32 toolbar
@@ -290,6 +318,44 @@ begin
    Result := (TR4WTelnetForm <> nil) and TR4WTelnetForm.HandleAllocated;
 end;
 
+constructor TConsoleLineKind.Create(const aKind: TelnetStringType);
+begin
+   inherited Create;
+   FKind := aKind;
+end;
+
+(* THE KINDS ARE FREED LAST. The console's rows point at them, so they must
+  outlive the list box -- and the list box is a child of this form, destroyed
+  inside inherited Destroy. Freeing them in an OnDestroy handler would leave
+  every row pointing at freed objects for the rest of the teardown; after
+  inherited, nothing that could read them is left. *)
+destructor TfrmTelnet.Destroy;
+var
+   kind: TelnetStringType;
+begin
+   inherited Destroy;
+   for kind := Low(TelnetStringType) to High(TelnetStringType) do
+      begin
+      FreeAndNil(FLineKinds[kind]);
+      end;
+end;
+
+function TfrmTelnet.KindOfRow(const aIndex: integer): TelnetStringType;
+var
+   item: TObject;
+begin
+   Result := tstTR4W;
+   if (aIndex < 0) or (aIndex >= lstConsole.Items.Count) then
+      begin
+      Exit;
+      end;
+   item := lstConsole.Items.Objects[aIndex];
+   if item is TConsoleLineKind then
+      begin
+      Result := TConsoleLineKind(item).Kind;
+      end;
+end;
+
 procedure CreateTR4WTelnetWindow;
 begin
    if TR4WTelnetForm = nil then
@@ -336,7 +402,15 @@ procedure TfrmTelnet.HandleCreate(Sender: TObject);
       end;
    end;
 
+var
+   kind: TelnetStringType;
 begin
+   (* Before any line can arrive: TelnetConsoleAdd hands these to Objects[]. *)
+   for kind := Low(TelnetStringType) to High(TelnetStringType) do
+      begin
+      FLineKinds[kind] := TConsoleLineKind.Create(kind);
+      end;
+
    { The .lfm's design value, until the first rescale measures one. }
    FRowHeight := lstConsole.ItemHeight;
    lstConsole.OnMeasureItem := ConsoleMeasureItem;
@@ -793,7 +867,7 @@ begin
       end;
 
    cv := lstConsole.Canvas;
-   kind := TelnetStringType(PtrUInt(lstConsole.Items.Objects[Index]));
+   kind := KindOfRow(Index);
 
    if kind = tstAlert then
       begin
@@ -1018,11 +1092,11 @@ begin
       Exit;
       end;
 
-   { The kind travels in Objects[], which is where the Win32 version put it too
-     -- LB_SETITEMDATA is the same slot by another name.  No 1023-character cap
-     any more: that existed because the owner-draw handler read the item back
-     into a fixed stack buffer, and it does not do that now. }
-   TR4WTelnetForm.lstConsole.Items.AddObject(aText, TObject(PtrUInt(Ord(aKind))));
+   (* The kind travels WITH the line, as the form's object for that kind --
+     see TConsoleLineKind.  No 1023-character cap any more: that existed
+     because the owner-draw handler read the item back into a fixed stack
+     buffer, and it does not do that now. *)
+   TR4WTelnetForm.lstConsole.Items.AddObject(aText, TR4WTelnetForm.FLineKinds[aKind]);
 
    GConsoleLimit := aLimit;
    TelnetConsoleTrim(aLimit);
@@ -1064,12 +1138,11 @@ end;
 function TelnetConsoleKind(const aIndex: integer): TelnetStringType;
 begin
    Result := tstTR4W;
-   if (not ConsoleUsable) or (aIndex < 0) or
-      (aIndex >= TR4WTelnetForm.lstConsole.Items.Count) then
+   if not ConsoleUsable then
       begin
       Exit;
       end;
-   Result := TelnetStringType(PtrUInt(TR4WTelnetForm.lstConsole.Items.Objects[aIndex]));
+   Result := TR4WTelnetForm.KindOfRow(aIndex);
 end;
 
 function TelnetConsoleSelected: integer;
