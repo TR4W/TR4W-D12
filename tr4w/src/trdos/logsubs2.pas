@@ -1724,7 +1724,7 @@ begin
      perfTimeStart := Now;
      PostLoggedQso(RXData,
                    UDPBroadcaster.Enabled(usContact),
-                   Settings.ExternalLogger.Enabled);
+                   Assigned(externalLogger));
      perfTimeStop := Now;
      logger.Debug('Milliseconds to build and post the QSO to the dispatcher = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
      end
@@ -3145,7 +3145,7 @@ begin
 
       if aExternal and Assigned(externalLogger) then
          begin
-         msg.ExtOp := externalLogger.PrepareOp(aKind, RXData, msg.ExtCommand1, msg.ExtCommand2);
+         externalLogger.PrepareMessage(msg, RXData);
          end;
 
       if HamScoreUploaderRunning then

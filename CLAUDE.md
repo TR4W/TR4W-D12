@@ -734,28 +734,22 @@ read it before touching any of this.** The rules worth knowing from here:
 
 ### 7. External logger integration
 
-`src/uExternalLoggerFactory.pas` creates loggers; `uExternalLoggerBase.pas` (`TExternalLoggerBase`) is
-the abstract base; `uExternalLogger.pas` carries the implementation. There is no multi-logger
-manager (`uExternalLoggerManager.pas` and `uRadioManager.pas` were never linked and were deleted
-2026-10-16). Each logger runs its own reading/sender thread pair.
+The architecture and setup contract are documented in **[docs/EXTERNAL_LOGGERS_DESIGN.md](docs/EXTERNAL_LOGGERS_DESIGN.md)**.
 
-**A QSO LEAVES THE PROGRAM THROUGH ONE THREAD (2026-10-24).** The main thread builds an immutable
-message (`logsubs2.PostQsoEvent`) and posts it to `uQsoDispatcher`; its thread delivers to UDP, the
-external logger and HamScore, in that order (`uQsoSinks`). The UDP broadcaster's `SendNow` blocks and
-is for that thread only -- two QSOs froze the operator 2.7 s each in CQ WW SSB when a host-name UDP
-destination was resolved inline. The builders read live state on the main thread; the dispatcher never
-does. See the integrations agent for the details.
+Named definitions and an ordered active list live in the existing settings JSON.
+`TExternalLoggerFactory.CreateLogger(definition, computerId)` constructs through
+`uExternalLoggerRegistry`; DXKeeper, WRL and Club Log register their constructors.
+The process-wide `externalLogger: TExternalLoggerService` is a composite
+(`uExternalLoggers`), not one selected provider. ACLog/HRD remain unimplemented.
 
-| Type                        | Status                                                  |
-| --------------------------- | ------------------------------------------------------- |
-| `lt_DXKeeper`               | Complete                                                |
-| `lt_ACLog`                  | **Incomplete** — the factory logs a warning on creation |
-| `lt_HRD` (Ham Radio Deluxe) | **Incomplete** — same                                   |
-
-Note this is the **older factory shape**: a `case` in one class function
-(`TExternalLoggerFactory.CreateLogger`) raising `EExternalLoggerFactoryException`, not the radio
-factory's self-registration registry. If it grows, move it toward the registry pattern rather than
-extending the `case`.
+The main thread builds immutable contact values and the existing QSO dispatcher
+hands them to independent destination queues. WRL and Club Log share durable
+capture/lifecycle and worker code; HTTP never spans a database transaction.
+New contacts, changes and deletes are required for every implemented provider.
+Club Log replacements delete the last confirmed remote identity before creating
+the edited contact; uncertain creates/replacements are not blindly replayed.
+Configuration changes apply after Save and restart, so queued work cannot be
+retargeted underneath a running worker.
 
 ### 8. Digital mode integration
 

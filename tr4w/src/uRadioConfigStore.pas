@@ -87,13 +87,13 @@ unit uRadioConfigStore;
 interface
 
 uses
-   SysUtils,
+   SysUtils, uDefinitionId,
    StrUtils,      // StartsText, for the section-name prefixes
    Classes,
    uFileText,            // whole-file UTF-8 read/write -- see the BOM note in that unit
    IniFiles,
    uJSON,          // the format of record for settings\tr4w.json
-   Generics.Collections;
+   Generics.Collections, uExternalLoggerConfig, uKeychainJSON;
 
 const
    // "Let the radio decide."  Distinct from 0, which is the operator saying
@@ -488,6 +488,7 @@ type
    { The library itself: radios, profiles, and which profile is active. }
    TRadioConfigStore = class(TObject)
    private
+      FExternalLoggers: TExternalLoggerConfig;
       FRadios: TObjectList<TRadioDefinition>;
       FRotators: TObjectList<TRotatorDefinition>;
       FBandPlan: TObjectList<TBandPlanEntry>;
@@ -620,6 +621,8 @@ type
    public
       constructor Create;
       destructor Destroy; override;
+
+      property ExternalLoggers: TExternalLoggerConfig read FExternalLoggers;
 
       procedure Clear;
 
@@ -976,27 +979,10 @@ end;
   round trip through JSON and be legible in a file an operator may read, and it
   never has to be parsed back. Cheap, and unique without a central counter --
   two stores merged by hand cannot collide. }
-function NewRadioId: string;
-var
-   g: TGUID;
-begin
-   if CreateGUID(g) = 0 then
-      begin
-      Result := Copy(GUIDToString(g), 2, 36);
-      end
-   else
-      begin
-      { CreateGUID does not fail in practice; if it ever did, a name-shaped
-        fallback is still better than an empty key, which would make every
-        radio look like the same one. }
-      Result := 'radio-' + FormatDateTime('yyyymmddhhnnsszzz', Now);
-      end;
-end;
-
 constructor TRadioDefinition.Create;
 begin
    inherited Create;
-   Id                := NewRadioId;
+   Id                := NewDefinitionId;
    // Defaults chosen to mean "nothing configured": a zero baud rate or CI-V
    // address is not a real setting, so the apply layer can leave the model's
    // own default in place rather than write a wrong number.
@@ -1524,7 +1510,7 @@ constructor TRotatorDefinition.Create;
 begin
    inherited Create;
    { Born with one, so no creation site has to remember. }
-   Id := NewRadioId;
+   Id := NewDefinitionId;
 end;
 
 function TRadioConfigStore.IndexOfActiveRotator: integer;
@@ -1677,6 +1663,7 @@ end;
 constructor TRadioConfigStore.Create;
 begin
    inherited Create;
+   FExternalLoggers := TExternalLoggerConfig.Create;
    // Owning lists: the store is the lifetime owner of every definition and
    // profile it holds, which is why AddRadio documents that it takes the
    // object over.
@@ -1760,6 +1747,7 @@ end;
 
 destructor TRadioConfigStore.Destroy;
 begin
+   FExternalLoggers.Free;
    ClearHeaders;
    FreeAndNil(FHeaders);
    FreeAndNil(FCommands);
@@ -1775,6 +1763,7 @@ end;
 
 procedure TRadioConfigStore.Clear;
 begin
+   FExternalLoggers.Clear;
    FRadios.Clear;
    FBandPlan.Clear;
    FColors.Clear;
@@ -2546,48 +2535,6 @@ end;
   StoreSecret keeps the entry and answers True, and the reference is written
   so the next session can still find it. See uKeychain.StoreSecret.
 *)
-procedure AddProtectedPassword(const aTarget: TJSONObject;
-                               const aMember, aSecretName, aPlain: string);
-begin
-   if StoreSecret(aSecretName, aPlain) then
-      begin
-      aTarget.AddPair(aMember + KEYCHAIN_REF_SUFFIX, aSecretName);
-      end;
-end;
-
-(*
-  AND READ EITHER SHAPE.
-
-  A PLAINTEXT MEMBER WINS, because its presence means the file predates the
-  vault and the password in it is the operator's real one. The next save
-  moves it and stops writing it, which is the whole of the upgrade path.
-
-  A REFUSAL LEAVES IT EMPTY, deliberately: an empty password asks the
-  operator for it again, where a half-read one would be sent to a radio.
-*)
-function ReadProtectedPassword(const aObj: TJSONObject;
-                               const aMember: string): string;
-var
-   reference: string;
-begin
-   Result := JSONStr(aObj, aMember, '');
-   if Result <> '' then
-      begin
-      Exit;
-      end;
-
-   reference := JSONStr(aObj, aMember + KEYCHAIN_REF_SUFFIX, '');
-   if reference = '' then
-      begin
-      Exit;
-      end;
-
-   if not FetchSecret(reference, Result) then
-      begin
-      Result := '';
-      end;
-end;
-
 function RadioToJSON(const aRadio: TRadioDefinition): TJSONObject;
 begin
    Result := TJSONObject.Create;
@@ -2811,6 +2758,7 @@ var
 begin
    Result := TJSONObject.Create;
    Result.AddPair(JSONKEY_VERSION, TJSONNumber.Create(JSON_SCHEMA_VERSION));
+   FExternalLoggers.SaveJSON(Result);
 
    // "general" keeps what is genuinely general: which profile is active, and
    // whether to connect the radios at startup.  Both are single station-wide
@@ -3100,6 +3048,7 @@ begin
       Exit;
       end;
 
+   FExternalLoggers.LoadJSON(aRoot);
    general := nil;
    v := aRoot.GetValue(JSONKEY_GENERAL);
    if (v <> nil) and (v is TJSONObject) then
@@ -3295,7 +3244,7 @@ begin
          rotDef.Id          := JSONStr(obj, 'id',           '');
          if rotDef.Id = '' then
             begin
-            rotDef.Id := NewRadioId;   { the same minter; a GUID is a GUID }
+            rotDef.Id := NewDefinitionId;   { the same minter; a GUID is a GUID }
             end;
          rotDef.Name        := JSONStr(obj, JSONKEY_NAME,  '');
          rotDef.RotatorId   := JSONStr(obj, 'rotatorId',   '');
@@ -3357,7 +3306,7 @@ begin
             { A store written before radios had ids.  Mint one now; the profile
               reader below resolves its by NAME in the same pass, so the two
               halves of the migration cannot disagree. }
-            radioDef.Id := NewRadioId;
+            radioDef.Id := NewDefinitionId;
             end;
          radioDef.Name              := JSONStr(obj,  JSONKEY_NAME,      '');
          radioDef.RegistryId        := JSONStr(obj,  'registryId',      '');

@@ -4,20 +4,14 @@ unit uWRLClient;
 interface
 
 uses
-   SysUtils, uHTTPDownload, uExternalDelivery;
+   SysUtils, uHTTPDownload, uExternalDelivery, uExternalDeliveryClient;
 
 type
-   TWRLResult = record
-      Outcome: TDeliveryOutcome;
-      Status: integer;
-      Deleted: boolean;
-      RemoteId, ErrorCode, RequestId, DataJSON, NextCursor: string;
-      RetrySeconds: Int64;
-   end;
+   TWRLResult = TExternalDeliveryResult;
 
    (* Synchronous, worker-owned client. Owns no database, UI or live settings.
       Only the factory test seam replaces transport; production uses shared TLS. *)
-   TWRLClient = class
+   TWRLClient = class(TExternalDeliveryClient)
    private
       FApiKey: string;
       function Request(const aMethod, aPath, aBody: string): TWRLResult;
@@ -28,7 +22,7 @@ type
       function Identity: TWRLResult;
       function Logbooks(const aCursor: string = ''): TWRLResult;
       function CreateLogbook(const aName: string): TWRLResult;
-      function Deliver(const aJob: TDeliveryJob): TWRLResult;
+      function Deliver(const aJob: TDeliveryJob): TWRLResult; override;
    end;
 
 implementation

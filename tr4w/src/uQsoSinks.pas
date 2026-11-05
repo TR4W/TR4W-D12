@@ -119,13 +119,13 @@ function TExternalLoggerQsoSink.Wants(const aMessage: TQsoMessage): boolean;
 begin
    // externalLogger is created once at startup and freed in tr4w_ShutDown,
    // after the dispatcher has been stopped.
-   Result := (aMessage.ExtOp <> xoNone) and Assigned(externalLogger);
+   Result := ((aMessage.ExtOp <> xoNone) or (Length(aMessage.ExtDeliveries) > 0))
+      and Assigned(externalLogger);
 end;
 
 procedure TExternalLoggerQsoSink.Deliver(const aMessage: TQsoMessage);
 begin
-   externalLogger.SubmitOp(aMessage.ExtOp, aMessage.ExtCommand1,
-                           aMessage.ExtCommand2, aMessage.Description);
+   externalLogger.SubmitMessage(aMessage);
 end;
 
 { THamScoreQsoSink }

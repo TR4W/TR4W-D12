@@ -605,6 +605,7 @@ uses
    uTestTLSRefusal in 'uTestTLSRefusal.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
+   uTestExternalLoggers in 'uTestExternalLoggers.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -1088,6 +1089,7 @@ begin
    RegisterSuite(TSettingsPrecedenceTests.Create('SettingsPrecedence'));
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
+   RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
