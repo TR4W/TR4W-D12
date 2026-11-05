@@ -4,9 +4,16 @@ Implemented in worktree `codex/external-loggers-191`, based on `aedfe202afe1f873
 
 ## Configuration and operator setup
 
-Open Preferences > External Software > External Logger. The read-only overview lists configured loggers in active delivery order, then inactive definitions, with order/name/provider and whether they send new QSOs. These are configured values, not a live connection-health indicator. Choose Configure external loggers. Add a named definition, select its provider, fill the provider's fields and mark it Active. Up/Down establishes the active delivery order. Save Preferences and restart to apply. Multiple instances of a provider are allowed. Restart is explicit: the running services keep immutable snapshots so an in-flight operation cannot be redirected by an edit in the dialog.
+Open Preferences > External Software > External Logger. **The grid is the editor** (issue 220; there is no separate list dialog). It lists configured loggers in active delivery order, then inactive definitions, with Order (the delivery position; a dash means the logger is not active, so Order and Send new QSOs are one fact), Logger, Provider and Send new QSOs. These are configured values, not a live connection-health indicator.
 
-The editor uses a private copy. Save to Preferences returns its changes to the outer Preferences working copy; the outer Save or Save and close persists them. Cancel discards that dialog's edits without touching the vault. Preferences Save uses the existing single JSON writer. An empty active list deliberately disables delivery. Deactivation pauses durable delivery and stops acquiring new contacts, but subsequent edits/deletes to existing bindings are still captured for later delivery. Removing a definition explicitly leaves its queued rows in the contest log; they are not redirected to another definition. Keep a settings backup if the definition might need to be restored.
+- **Add...** opens the one-definition editor with a provider choice; OK appends the definition (inactive until the operator ticks Active or switches Send new QSOs on).
+- **Right-click a row** (or double-click it): Edit..., Send new QSOs (checked item; double-clicking that cell also toggles it), Move up, Move down, Remove. Switching Send new QSOs ON runs the same checks as the editor's OK (required fields, unique names, the shared-destination question) and is refused if they fail.
+- **Drag the Order cell** to reorder (`goRowMoving`; the LCL starts a row drag only from a fixed column, which is why Order is the fixed column). Move up/down use the grid's own `MoveColRow`, so they take the drag's path. Either way the new order is written back: `Definitions` follow the grid, and `ActiveIds` becomes the active rows in grid order, which is the delivery order. A row dropped across the active/inactive line snaps back to its group.
+- **Remove** asks for confirmation and drops the definition from both lists. It leaves the vault and any queued deliveries alone (below).
+
+Save Preferences and restart to apply (applying live is issue 218). Multiple instances of a provider are allowed. Restart is explicit: the running services keep immutable snapshots so an in-flight operation cannot be redirected by an edit in the grid.
+
+The grid edits the Preferences working copy directly, so Cancel (which reloads it) discards every grid edit; the outer Save or Save and close persists them. The per-definition editor uses a private copy; its Save to Preferences returns that one definition to the working copy, and its Cancel discards the dialog's edits without touching the vault. Preferences Save uses the existing single JSON writer. An empty active list deliberately disables delivery. Deactivation pauses durable delivery and stops acquiring new contacts, but subsequent edits/deletes to existing bindings are still captured for later delivery. Removing a definition explicitly leaves its queued rows in the contest log; they are not redirected to another definition. Keep a settings backup if the definition might need to be restored.
 
 | Provider | Settings | Delivery behavior |
 | --- | --- | --- |
@@ -35,7 +42,8 @@ Club Log uses a personal token created under Settings > API. Only the token and 
 | `uClubLogExternalLogger` / `uClubLogClient` | Club Log ADIF adaptation and real-time create/replace/delete protocol. |
 | `uDefinitionId` | Shared ID minting for radios, keyers and loggers; GUID failure refuses creation rather than risking a timestamp collision. |
 | `uKeychainJSON` | Existing radio/cluster vault serialization helpers lifted for reuse by logger definitions. |
-| `uExternalLoggersForm` | Native designed LCL editor, registered provider fields, active order and per-definition durable status. |
+| `uExternalLoggersForm` | Native designed LCL editor for ONE definition (Add and Edit), registered provider fields and per-definition durable status; also the shared acceptance checks (`ExternalLoggerConfigAcceptable`). |
+| `uExternalLoggerGrid` | The Preferences grid as the editor: rows, popup, drag reorder, Send new QSOs, Remove. The order logic itself is in `TExternalLoggerConfig` (`DisplayOrder`, `ApplyOrder`, `SetActive`, `RemoveDefinition`), pinned in `uTestExternalLoggerGrid`. |
 
 DXKeeper, WRL and Club Log register constructor functions from their implementation units. Adding Club Log required no provider branch in the QSO logging path or dispatcher. Future providers register their constructor and editor-field metadata through the same registry. ACLog and HRD placeholders are not registered as working providers.
 

@@ -1,38 +1,48 @@
 unit uExternalLoggersForm;
+(* The editor for ONE external logger definition. The list, its order, the
+   Send new QSOs flag and removal live in the Preferences grid
+   (uExternalLoggerGrid, issue 220); this form is opened from there for Add
+   and Edit. It works on a private copy of the whole configuration so the
+   validation (unique names, shared destinations) sees the other loggers, and
+   hands the copy back only on OK. *)
 {$I ..\..\tr4w.inc}
 interface
 uses Classes, SysUtils, Forms, Controls, StdCtrls, Dialogs, uExternalLoggerConfig;
 type
    TExternalLoggersForm = class(TForm)
    published
-      lstLoggers: TListBox;
       edtName, edtAddress, edtPort, edtURL, edtAccount, edtLogbook: TEdit;
       edtApiKey, edtPassword: TEdit;
       cbProvider: TComboBox;
       chkActive: TCheckBox;
-      btnAdd, btnRemove, btnUp, btnDown, btnWRL, btnOK, btnCancel: TButton;
+      btnWRL, btnOK, btnCancel: TButton;
       lblName, lblProvider, lblAddress, lblPort, lblURL, lblAccount: TLabel;
-      lblLogbook, lblApiKey, lblPassword, lblNote, lblOrder: TLabel;
+      lblLogbook, lblApiKey, lblPassword, lblNote: TLabel;
       lblStatus: TLabel;
-      procedure SelectLogger(Sender: TObject);
-      procedure AddLogger(Sender: TObject);
-      procedure RemoveLogger(Sender: TObject);
-      procedure MoveLogger(Sender: TObject);
       procedure ProviderChanged(Sender: TObject);
       procedure ConfigureWRLClick(Sender: TObject);
       procedure Accept(Sender: TObject);
    private
       FConfig: TExternalLoggerConfig;
-      FIndex: integer;
+      FDefinition: TExternalLoggerDefinition;
       FLoading: boolean;
       procedure Capture;
-      procedure RefreshList;
       procedure ShowDefinition;
    public
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
    end;
-function EditExternalLoggers(const aConfig: TExternalLoggerConfig): boolean;
+
+(* Add (aId = '') or edit one definition of aConfig. True when the operator
+   accepted; aConfig then holds the change. *)
+function EditExternalLoggerDefinition(const aConfig: TExternalLoggerConfig;
+   const aId: string): boolean;
+
+(* The checks the editor's OK button makes, shared with the grid's Send new
+   QSOs toggle so neither can switch on a logger the other would refuse. They
+   speak to the operator; False means a message was shown. *)
+function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): boolean;
+
 implementation
 uses uExternalLoggerRegistry, uWRLSetupForm, uLCLTranslate, uPasswordReveal,
    uExternalDelivery, uLogStore;
@@ -43,7 +53,6 @@ var
 begin
    inherited Create(aOwner);
    FConfig := TExternalLoggerConfig.Create;
-   FIndex := -1;
    for i := 0 to ExternalLoggerProviderCount - 1 do
       begin
       cbProvider.Items.Add(AnsiString(ExternalLoggerRegistration(i).Id));
@@ -58,93 +67,48 @@ begin
    inherited Destroy;
 end;
 procedure TExternalLoggersForm.Capture;
-var
-   definition: TExternalLoggerDefinition;
-   index: integer;
 begin
-   if (FIndex < 0) or (FIndex >= FConfig.Definitions.Count) then
+   if FDefinition = nil then
       begin
       Exit;
       end;
-   definition := FConfig.Definitions[FIndex];
-   definition.Name := Trim(UTF8Decode(edtName.Text));
-   definition.ProviderId := UTF8Decode(cbProvider.Text);
-   definition.Address := Trim(UTF8Decode(edtAddress.Text));
-   definition.Port := StrToIntDef(edtPort.Text, 0);
-   definition.URL := Trim(UTF8Decode(edtURL.Text));
-   definition.Account := Trim(UTF8Decode(edtAccount.Text));
-   definition.Logbook := Trim(UTF8Decode(edtLogbook.Text));
-   if definition.ApiKey <> UTF8Decode(edtApiKey.Text) then
+   FDefinition.Name := Trim(UTF8Decode(edtName.Text));
+   FDefinition.ProviderId := UTF8Decode(cbProvider.Text);
+   FDefinition.Address := Trim(UTF8Decode(edtAddress.Text));
+   FDefinition.Port := StrToIntDef(edtPort.Text, 0);
+   FDefinition.URL := Trim(UTF8Decode(edtURL.Text));
+   FDefinition.Account := Trim(UTF8Decode(edtAccount.Text));
+   FDefinition.Logbook := Trim(UTF8Decode(edtLogbook.Text));
+   if FDefinition.ApiKey <> UTF8Decode(edtApiKey.Text) then
       begin
-      definition.LegacySecretPending := False;
+      FDefinition.LegacySecretPending := False;
       end;
-   definition.ApiKey := UTF8Decode(edtApiKey.Text);
-   definition.Password := UTF8Decode(edtPassword.Text);
-   index := FConfig.ActiveIds.IndexOf(AnsiString(definition.Id));
-   if index >= 0 then
-      begin
-      FConfig.ActiveIds.Delete(index);
-      end;
-   if chkActive.Checked then
-      begin
-      FConfig.ActiveIds.Add(AnsiString(definition.Id));
-      end;
-end;
-procedure TExternalLoggersForm.RefreshList;
-var
-   definition: TExternalLoggerDefinition;
-   prefix: string;
-begin
-   lstLoggers.Items.Clear;
-   for definition in FConfig.Definitions do
-      begin
-      prefix := '';
-      if FConfig.ActiveIds.IndexOf(AnsiString(definition.Id)) >= 0 then
-         begin
-         prefix := '* ';
-         end;
-      lstLoggers.Items.Add(UTF8Encode(prefix + definition.Name));
-      end;
-   lstLoggers.ItemIndex := FIndex;
+   FDefinition.ApiKey := UTF8Decode(edtApiKey.Text);
+   FDefinition.Password := UTF8Decode(edtPassword.Text);
+   FConfig.SetActive(FDefinition.Id, chkActive.Checked);
 end;
 procedure TExternalLoggersForm.ShowDefinition;
 var
-   definition: TExternalLoggerDefinition;
    counts: TDeliveryCounts;
 begin
    FLoading := True;
    try
-      edtName.Enabled := FIndex >= 0;
-      cbProvider.Enabled := FIndex >= 0;
-      chkActive.Enabled := FIndex >= 0;
-      btnRemove.Enabled := FIndex >= 0;
-      btnUp.Enabled := FIndex > 0;
-      btnDown.Enabled := (FIndex >= 0) and (FIndex < FConfig.Definitions.Count - 1);
-      if (FIndex < 0) or (FIndex >= FConfig.Definitions.Count) then
-         begin
-         edtName.Clear;
-         cbProvider.ItemIndex := -1;
-         ProviderChanged(nil);
-         lblStatus.Caption := '';
-         Exit;
-         end;
-      definition := FConfig.Definitions[FIndex];
-      edtName.Text := UTF8Encode(definition.Name);
-      cbProvider.ItemIndex := cbProvider.Items.IndexOf(AnsiString(definition.ProviderId));
-      edtAddress.Text := UTF8Encode(definition.Address);
-      edtPort.Text := AnsiString(IntToStr(definition.Port));
-      edtURL.Text := UTF8Encode(definition.URL);
-      edtAccount.Text := UTF8Encode(definition.Account);
-      edtLogbook.Text := UTF8Encode(definition.Logbook);
-      edtApiKey.Text := UTF8Encode(definition.ApiKey);
-      edtPassword.Text := UTF8Encode(definition.Password);
-      chkActive.Checked := FConfig.ActiveIds.IndexOf(AnsiString(definition.Id)) >= 0;
+      edtName.Text := UTF8Encode(FDefinition.Name);
+      cbProvider.ItemIndex := cbProvider.Items.IndexOf(AnsiString(FDefinition.ProviderId));
+      edtAddress.Text := UTF8Encode(FDefinition.Address);
+      edtPort.Text := AnsiString(IntToStr(FDefinition.Port));
+      edtURL.Text := UTF8Encode(FDefinition.URL);
+      edtAccount.Text := UTF8Encode(FDefinition.Account);
+      edtLogbook.Text := UTF8Encode(FDefinition.Logbook);
+      edtApiKey.Text := UTF8Encode(FDefinition.ApiKey);
+      edtPassword.Text := UTF8Encode(FDefinition.Password);
+      chkActive.Checked := FConfig.ActivePosition(FDefinition.Id) > 0;
       ProviderChanged(nil);
       lblStatus.Caption := 'No contest log is open.';
       if LogStoreRepository <> nil then
          begin
          try
-            counts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, definition.DeliveryId);
+            counts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, FDefinition.DeliveryId);
             lblStatus.Caption := Format('Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d',
                [counts.Pending, counts.InFlight, counts.Synced, counts.Uncertain, counts.Failed]);
          except
@@ -158,74 +122,6 @@ begin
       FLoading := False;
    end;
 end;
-procedure TExternalLoggersForm.SelectLogger(Sender: TObject);
-var
-   selected: integer;
-begin
-   selected := lstLoggers.ItemIndex;
-   Capture;
-   FIndex := selected;
-   RefreshList;
-   ShowDefinition;
-end;
-procedure TExternalLoggersForm.AddLogger(Sender: TObject);
-var
-   definition: TExternalLoggerDefinition;
-begin
-   Capture;
-   definition := TExternalLoggerDefinition.Create;
-   definition.Name := 'Logger ' + string(IntToStr(FConfig.Definitions.Count + 1));
-   definition.ProviderId := 'DXKEEPER';
-   definition.Address := '127.0.0.1';
-   definition.Port := 52001;
-   FConfig.Definitions.Add(definition);
-   FIndex := FConfig.Definitions.Count - 1;
-   RefreshList;
-   ShowDefinition;
-end;
-procedure TExternalLoggersForm.RemoveLogger(Sender: TObject);
-var
-   active: integer;
-begin
-   if FIndex < 0 then
-      begin
-      Exit;
-      end;
-   if MessageDlg('Remove logger definition? Pending deliveries stay in the contest log ' +
-      'and will not be redirected to another definition.', mtConfirmation,
-      [mbYes, mbNo], 0) <> mrYes then
-      begin
-      Exit;
-      end;
-   active := FConfig.ActiveIds.IndexOf(AnsiString(FConfig.Definitions[FIndex].Id));
-   if active >= 0 then
-      begin
-      FConfig.ActiveIds.Delete(active);
-      end;
-   FConfig.Definitions.Delete(FIndex);
-   FIndex := FConfig.Definitions.Count - 1;
-   RefreshList;
-   ShowDefinition;
-end;
-procedure TExternalLoggersForm.MoveLogger(Sender: TObject);
-var
-   target: integer;
-begin
-   Capture;
-   target := FIndex - 1;
-   if Sender = btnDown then
-      begin
-      target := FIndex + 1;
-      end;
-   if (FIndex < 0) or (target < 0) or (target >= FConfig.Definitions.Count) then
-      begin
-      Exit;
-      end;
-   FConfig.Definitions.Exchange(FIndex, target);
-   FIndex := target;
-   RefreshList;
-   ShowDefinition;
-end;
 procedure TExternalLoggersForm.ProviderChanged(Sender: TObject);
 var
    registration: TExternalLoggerRegistration;
@@ -237,10 +133,10 @@ begin
       edtAccount.Clear;
       edtLogbook.Clear;
       edtURL.Clear;
-      if FIndex >= 0 then
+      if FDefinition <> nil then
          begin
-         FConfig.Definitions[FIndex].LegacySecretPending := False;
-         FConfig.Definitions[FIndex].LegacyWRL := False;
+         FDefinition.LegacySecretPending := False;
+         FDefinition.LegacyWRL := False;
          end;
       end;
    FindExternalLoggerRegistration(UTF8Decode(cbProvider.Text), registration);
@@ -289,49 +185,43 @@ begin
       edtLogbook.Text := UTF8Encode(book);
       end;
 end;
-procedure TExternalLoggersForm.Accept(Sender: TObject);
+
+function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): boolean;
 var
-   active: TStringList;
-   definition: TExternalLoggerDefinition;
+   definition, earlier: TExternalLoggerDefinition;
    error: string;
    i, j: integer;
 begin
-   Capture;
-   active := TStringList.Create;
-   try
-      for definition in FConfig.Definitions do
+   Result := False;
+   for i := 0 to aConfig.ActiveIds.Count - 1 do
+      begin
+      definition := aConfig.Find(string(aConfig.ActiveIds[i]));
+      if definition <> nil then
          begin
-         if FConfig.ActiveIds.IndexOf(AnsiString(definition.Id)) >= 0 then
+         error := ExternalLoggerDefinitionError(definition);
+         if error <> '' then
             begin
-            error := ExternalLoggerDefinitionError(definition);
-            if error <> '' then
-               begin
-               ShowMessage(UTF8Encode(definition.Name + ': ' + error));
-               Exit;
-               end;
-            active.Add(AnsiString(definition.Id));
+            ShowMessage(UTF8Encode(definition.Name + ': ' + error));
+            Exit;
             end;
          end;
-      FConfig.ActiveIds.Assign(active);
-   finally
-      active.Free;
-   end;
-   if not FConfig.Validate(error) then
+      end;
+   if not aConfig.Validate(error) then
       begin
       ShowMessage(UTF8Encode(error));
       Exit;
       end;
-   for i := 0 to FConfig.ActiveIds.Count - 1 do
+   for i := 0 to aConfig.ActiveIds.Count - 1 do
       begin
-      definition := FConfig.Find(string(FConfig.ActiveIds[i]));
+      definition := aConfig.Find(string(aConfig.ActiveIds[i]));
       for j := 0 to i - 1 do
          begin
-         if (definition.ProviderId = FConfig.Find(string(FConfig.ActiveIds[j])).ProviderId) and
-            (definition.DestinationFingerprint =
-               FConfig.Find(string(FConfig.ActiveIds[j])).DestinationFingerprint) then
+         earlier := aConfig.Find(string(aConfig.ActiveIds[j]));
+         if (definition.ProviderId = earlier.ProviderId) and
+            (definition.DestinationFingerprint = earlier.DestinationFingerprint) then
             begin
             if QuestionDlg('TR4W', UTF8Encode('The active loggers "' + definition.Name +
-               '" and "' + FConfig.Find(string(FConfig.ActiveIds[j])).Name +
+               '" and "' + earlier.Name +
                '" point to the same destination. Send each contact twice?'),
                mtWarning, [mrYes, mrNo, 'IsDefault'], 0) <> mrYes then
                begin
@@ -340,33 +230,54 @@ begin
             end;
          end;
       end;
+   Result := True;
+end;
+
+procedure TExternalLoggersForm.Accept(Sender: TObject);
+begin
+   Capture;
+   if not ExternalLoggerConfigAcceptable(FConfig) then
+      begin
+      Exit;
+      end;
    FConfig.Present := True;
    ModalResult := mrOK;
 end;
-function EditExternalLoggers(const aConfig: TExternalLoggerConfig): boolean;
+
+function EditExternalLoggerDefinition(const aConfig: TExternalLoggerConfig;
+   const aId: string): boolean;
 var
    dialog: TExternalLoggersForm;
-   i, index: integer;
+   definition: TExternalLoggerDefinition;
 begin
+   Result := False;
    if aConfig.Error <> '' then
       begin
       ShowMessage(UTF8Encode('External logger settings could not be read: ' + aConfig.Error));
-      Result := False;
       Exit;
       end;
    dialog := TExternalLoggersForm.Create(nil);
    try
       dialog.FConfig.Assign(aConfig);
-      for i := 0 to dialog.FConfig.ActiveIds.Count - 1 do
+      if aId = '' then
          begin
-         index := dialog.FConfig.Definitions.IndexOf(
-            dialog.FConfig.Find(string(dialog.FConfig.ActiveIds[i])));
-         if index >= 0 then
-            begin
-            dialog.FConfig.Definitions.Exchange(i, index);
-            end;
+         (* A new definition starts inactive: the operator chooses to send. *)
+         definition := TExternalLoggerDefinition.Create;
+         definition.Name := dialog.FConfig.NewDefinitionName;
+         definition.ProviderId := 'DXKEEPER';
+         definition.Address := '127.0.0.1';
+         definition.Port := 52001;
+         dialog.FConfig.Definitions.Add(definition);
+         end
+      else
+         begin
+         definition := dialog.FConfig.Find(aId);
          end;
-      dialog.RefreshList;
+      if definition = nil then
+         begin
+         Exit;
+         end;
+      dialog.FDefinition := definition;
       dialog.ShowDefinition;
       Result := dialog.ShowModal = mrOK;
       if Result then

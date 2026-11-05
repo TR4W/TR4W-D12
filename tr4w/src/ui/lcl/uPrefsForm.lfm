@@ -1570,24 +1570,24 @@ object PrefsForm: TPrefsForm
         Width = 650
         Height = 220
         Anchors = [akTop, akLeft, akRight]
-        ColCount = 4
+        ColCount = 5
         RowCount = 2
-        FixedCols = 0
+        FixedCols = 1
         FixedRows = 1
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goRowMoving]
         TabOrder = 1
         Visible = False
       end
-      object btnManageExternalLoggers: TButton
+      object btnAddExternalLogger: TButton
         Left = 12
         Top = 340
-        Width = 360
+        Width = 110
         Height = 34
         AutoSize = True
-        Constraints.MinWidth = 360
-        Caption = 'Configure external loggers...'
+        Constraints.MinWidth = 110
+        Caption = 'Add...'
         TabOrder = 5
-        OnClick = ManageExternalLoggersClick
+        OnClick = AddExternalLoggerClick
       end
       object chkLoggerEnabled: TCheckBox
         Left = 12

@@ -242,7 +242,6 @@ begin
    BeginTest('native logger editor streams its fields and protects both credentials');
    form := TExternalLoggersForm.Create(nil);
    try
-      CheckTrue(form.lstLoggers <> nil);
       CheckTrue(form.cbProvider.Items.IndexOf('CLUBLOG') >= 0);
       CheckTrue(form.edtPassword.PasswordChar <> #0);
       CheckTrue(form.edtApiKey.PasswordChar <> #0);

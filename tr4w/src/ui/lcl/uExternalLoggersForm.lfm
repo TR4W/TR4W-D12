@@ -1,263 +1,203 @@
 object ExternalLoggersForm: TExternalLoggersForm
   Left = 200
   Top = 150
-  Width = 860
-  Height = 650
-  Caption = 'External loggers'
+  Width = 710
+  Height = 600
+  Caption = 'External logger'
   Position = poScreenCenter
   BorderStyle = bsDialog
-  ClientWidth = 860
-  ClientHeight = 650
-  object lblOrder: TLabel
-    Left = 16
-    Top = 12
-    Width = 260
-    Height = 36
-    Caption = 'Active loggers (*) send in the listed order.'
-    WordWrap = True
-  end
-  object lstLoggers: TListBox
-    Left = 16
-    Top = 54
-    Width = 260
-    Height = 378
-    TabOrder = 0
-    OnClick = SelectLogger
-  end
+  ClientWidth = 710
+  ClientHeight = 600
   object lblName: TLabel
-    Left = 300
+    Left = 16
     Top = 24
     Width = 190
     Height = 24
     Caption = 'Name'
   end
   object edtName: TEdit
-    Left = 500
+    Left = 216
     Top = 20
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 5
+    TabOrder = 0
   end
   object lblProvider: TLabel
-    Left = 300
+    Left = 16
     Top = 66
     Width = 190
     Height = 24
     Caption = 'Provider'
   end
   object cbProvider: TComboBox
-    Left = 500
+    Left = 216
     Top = 62
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 6
+    TabOrder = 1
     Style = csDropDownList
     OnChange = ProviderChanged
   end
   object lblAddress: TLabel
-    Left = 300
+    Left = 16
     Top = 108
     Width = 190
     Height = 24
     Caption = 'Host / IP address'
   end
   object edtAddress: TEdit
-    Left = 500
+    Left = 216
     Top = 104
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 7
+    TabOrder = 2
   end
   object lblPort: TLabel
-    Left = 300
+    Left = 16
     Top = 150
     Width = 190
     Height = 24
     Caption = 'Port'
   end
   object edtPort: TEdit
-    Left = 500
+    Left = 216
     Top = 146
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 8
+    TabOrder = 3
   end
   object lblURL: TLabel
-    Left = 300
+    Left = 16
     Top = 192
     Width = 190
     Height = 24
     Caption = 'Instance URL'
   end
   object edtURL: TEdit
-    Left = 500
+    Left = 216
     Top = 188
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 9
+    TabOrder = 4
   end
   object lblAccount: TLabel
-    Left = 300
+    Left = 16
     Top = 234
     Width = 190
     Height = 24
     Caption = 'Email / account ID'
   end
   object edtAccount: TEdit
-    Left = 500
+    Left = 216
     Top = 230
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 10
+    TabOrder = 5
   end
   object lblLogbook: TLabel
-    Left = 300
+    Left = 16
     Top = 276
     Width = 190
     Height = 24
     Caption = 'Callsign / logbook ID'
   end
   object edtLogbook: TEdit
-    Left = 500
+    Left = 216
     Top = 272
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 11
+    TabOrder = 6
   end
   object lblApiKey: TLabel
-    Left = 300
+    Left = 16
     Top = 318
     Width = 190
     Height = 24
     Caption = 'Developer / API key'
   end
   object edtApiKey: TEdit
-    Left = 500
+    Left = 216
     Top = 314
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 12
+    TabOrder = 7
     PasswordChar = '*'
   end
   object lblPassword: TLabel
-    Left = 300
+    Left = 16
     Top = 360
     Width = 190
     Height = 24
     Caption = 'Application password'
   end
   object edtPassword: TEdit
-    Left = 500
+    Left = 216
     Top = 356
-    Width = 330
+    Width = 470
     Height = 28
-    TabOrder = 13
+    TabOrder = 8
     PasswordChar = '*'
   end
   object chkActive: TCheckBox
-    Left = 300
+    Left = 16
     Top = 405
     Width = 300
     Height = 28
     AutoSize = True
     Caption = 'Active (send newly logged QSOs)'
-    TabOrder = 14
-  end
-  object btnAdd: TButton
-    Left = 16
-    Top = 444
-    Width = 110
-    Height = 32
-    AutoSize = True
-    Constraints.MinWidth = 110
-    Caption = 'Add'
-    TabOrder = 1
-    OnClick = AddLogger
-  end
-  object btnRemove: TButton
-    Left = 140
-    Top = 444
-    Width = 110
-    Height = 32
-    AutoSize = True
-    Constraints.MinWidth = 110
-    Caption = 'Remove'
-    TabOrder = 2
-    OnClick = RemoveLogger
-  end
-  object btnUp: TButton
-    Left = 16
-    Top = 486
-    Width = 110
-    Height = 32
-    AutoSize = True
-    Constraints.MinWidth = 110
-    Caption = 'Up'
-    TabOrder = 3
-    OnClick = MoveLogger
-  end
-  object btnDown: TButton
-    Left = 140
-    Top = 486
-    Width = 110
-    Height = 32
-    AutoSize = True
-    Constraints.MinWidth = 110
-    Caption = 'Down'
-    TabOrder = 4
-    OnClick = MoveLogger
+    TabOrder = 9
   end
   object btnWRL: TButton
-    Left = 500
+    Left = 216
     Top = 445
     Width = 110
     Height = 32
     AutoSize = True
     Constraints.MinWidth = 110
     Caption = 'WRL setup...'
-    TabOrder = 15
+    TabOrder = 10
     OnClick = ConfigureWRLClick
   end
+  object lblNote: TLabel
+    Left = 16
+    Top = 485
+    Width = 670
+    Height = 40
+    AutoSize = False
+    Caption = 'Save to Preferences returns this logger to the Preferences window. Click Save there to store it, then restart TR4W to apply. Each logger sends independently.'
+    WordWrap = True
+  end
+  object lblStatus: TLabel
+    Left = 16
+    Top = 534
+    Width = 670
+    Height = 20
+    AutoSize = False
+    WordWrap = True
+    Caption = ''
+  end
   object btnOK: TButton
-    Left = 550
-    Top = 604
+    Left = 396
+    Top = 560
     Width = 174
     Height = 32
     AutoSize = True
     Constraints.MinWidth = 110
     Caption = 'Save to Preferences'
-    TabOrder = 16
+    TabOrder = 11
     OnClick = Accept
     Default = True
   end
   object btnCancel: TButton
-    Left = 730
-    Top = 604
+    Left = 580
+    Top = 560
     Width = 110
     Height = 32
     AutoSize = True
     Constraints.MinWidth = 110
     Caption = 'Cancel'
-    TabOrder = 17
+    TabOrder = 12
     Cancel = True
     ModalResult = 2
-  end
-  object lblNote: TLabel
-    Left = 300
-    Top = 485
-    Width = 530
-    Height = 60
-    AutoSize = False
-    Caption = 'Save to Preferences returns these changes to the Preferences window. Click Save there to store them, then restart TR4W to apply. Each logger sends independently.'
-    WordWrap = True
-  end
-  object lblStatus: TLabel
-    Left = 300
-    Top = 554
-    Width = 530
-    Height = 20
-    AutoSize = False
-    WordWrap = True
-    Caption = ''
   end
 end

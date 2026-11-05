@@ -32,9 +32,6 @@ columns uRadioEditForm.lfm:tabSerial 285
 # column (Contact, Radio, Score, then Rotor, Lookup, App info).
 columns uUDPDestinationEditForm.lfm:grpStreams 204
 
-# External logger library: definitions/actions at the left, then properties.
-columns uExternalLoggersForm.lfm:ExternalLoggersForm 300
-
 # THE RATCHET.  Delete an entry when its parent is fixed or declared.
 #
 # The main window: its children are display panels (status cells, the totals

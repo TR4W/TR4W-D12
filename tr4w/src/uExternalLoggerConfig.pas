@@ -37,6 +37,25 @@ type
       procedure Clear;
       procedure Assign(const aOther: TExternalLoggerConfig);
       function Find(const aId: string): TExternalLoggerDefinition;
+      function IndexOfId(const aId: string): integer;
+      (* ActivePosition is the delivery position, 1 = first; 0 = not active.
+         "Send new QSOs" and "Order" are this one fact, not two. *)
+      function ActivePosition(const aId: string): integer;
+      (* Activating appends to the delivery order; an already-active
+         definition keeps its place. *)
+      procedure SetActive(const aId: string; aActive: boolean);
+      (* The order a view shows: active in delivery order, then the rest in
+         definition order. *)
+      procedure DisplayOrder(const aIds: TStrings);
+      (* aIds is the order a view now shows. Definitions follow it, and
+         ActiveIds becomes the active subset in that order. Ids the view does
+         not name keep their relative order after the named ones. Returns
+         whether anything changed. *)
+      function ApplyOrder(const aIds: TStrings): boolean;
+      (* Removal leaves the vault and any queued deliveries alone; queued rows
+         stay in the contest log and are not redirected (design doc). *)
+      procedure RemoveDefinition(const aId: string);
+      function NewDefinitionName: string;
       function Validate(out aError: string): boolean;
       procedure LoadJSON(const aRoot: TJSONObject);
       procedure SaveJSON(const aRoot: TJSONObject);
@@ -186,6 +205,148 @@ begin
          Exit;
          end;
       end;
+end;
+
+function TExternalLoggerConfig.IndexOfId(const aId: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to FDefinitions.Count - 1 do
+      begin
+      if FDefinitions[i].Id = aId then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function TExternalLoggerConfig.ActivePosition(const aId: string): integer;
+begin
+   Result := FActive.IndexOf(AnsiString(aId)) + 1;
+end;
+
+procedure TExternalLoggerConfig.SetActive(const aId: string; aActive: boolean);
+var
+   index: integer;
+begin
+   index := FActive.IndexOf(AnsiString(aId));
+   if aActive and (index < 0) and (Find(aId) <> nil) then
+      begin
+      FActive.Add(AnsiString(aId));
+      end
+   else if (not aActive) and (index >= 0) then
+      begin
+      FActive.Delete(index);
+      end;
+end;
+
+procedure TExternalLoggerConfig.DisplayOrder(const aIds: TStrings);
+var
+   id: AnsiString;
+   definition: TExternalLoggerDefinition;
+begin
+   aIds.Clear;
+   for id in FActive do
+      begin
+      if Find(string(id)) <> nil then
+         begin
+         aIds.Add(id);
+         end;
+      end;
+   for definition in FDefinitions do
+      begin
+      if FActive.IndexOf(AnsiString(definition.Id)) < 0 then
+         begin
+         aIds.Add(AnsiString(definition.Id));
+         end;
+      end;
+end;
+
+function TExternalLoggerConfig.ApplyOrder(const aIds: TStrings): boolean;
+var
+   target, newActive: TStringList;
+   i, at: integer;
+begin
+   Result := False;
+   target := TStringList.Create;
+   newActive := TStringList.Create;
+   try
+      target.CaseSensitive := True;
+      for i := 0 to aIds.Count - 1 do
+         begin
+         if (IndexOfId(string(aIds[i])) >= 0) and (target.IndexOf(aIds[i]) < 0) then
+            begin
+            target.Add(aIds[i]);
+            end;
+         end;
+      for i := 0 to FDefinitions.Count - 1 do
+         begin
+         if target.IndexOf(AnsiString(FDefinitions[i].Id)) < 0 then
+            begin
+            target.Add(AnsiString(FDefinitions[i].Id));
+            end;
+         end;
+      (* Exchange, never Move: Definitions owns its objects, and a remove and
+         insert would free them. *)
+      for i := 0 to target.Count - 1 do
+         begin
+         at := IndexOfId(string(target[i]));
+         if at <> i then
+            begin
+            FDefinitions.Exchange(i, at);
+            Result := True;
+            end;
+         end;
+      for i := 0 to target.Count - 1 do
+         begin
+         if FActive.IndexOf(target[i]) >= 0 then
+            begin
+            newActive.Add(target[i]);
+            end;
+         end;
+      if newActive.Text <> FActive.Text then
+         begin
+         FActive.Assign(newActive);
+         Result := True;
+         end;
+   finally
+      newActive.Free;
+      target.Free;
+   end;
+end;
+
+procedure TExternalLoggerConfig.RemoveDefinition(const aId: string);
+var
+   index: integer;
+begin
+   SetActive(aId, False);
+   index := IndexOfId(aId);
+   if index >= 0 then
+      begin
+      FDefinitions.Delete(index);
+      end;
+end;
+
+function TExternalLoggerConfig.NewDefinitionName: string;
+var
+   n, i: integer;
+   taken: boolean;
+begin
+   n := FDefinitions.Count + 1;
+   repeat
+      Result := 'Logger ' + string(IntToStr(n));
+      taken := False;
+      for i := 0 to FDefinitions.Count - 1 do
+         begin
+         if UnicodeSameText(FDefinitions[i].Name, Result) then
+            begin
+            taken := True;
+            end;
+         end;
+      Inc(n);
+   until not taken;
 end;
 
 procedure TExternalLoggerConfig.Assign(const aOther: TExternalLoggerConfig);

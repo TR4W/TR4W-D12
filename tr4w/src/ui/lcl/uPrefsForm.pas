@@ -89,6 +89,7 @@ uses
    uRadioEditForm,   // the Radio editor, its own unit since it is next to be designed
    uKeyerEditForm,   // the CW keying-device editor
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
+   uExternalLoggerGrid,       // the External Logger page's grid editor (issue 220)
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding,          // TSettingBindings -- a field on the form below
    uCommandHelp,              // TCommandHelp -- the bound controls' tooltips
@@ -284,7 +285,7 @@ type
       // its own -- see its panel -- and is present because operators look for it.
       layWSJTX: TPanel;
       layExternalLogger: TPanel;
-      btnManageExternalLoggers: TButton;
+      btnAddExternalLogger: TButton;
       grdExternalLoggers: TStringGrid;
       layDXLab: TPanel;
       layMMTTY: TPanel;
@@ -578,7 +579,7 @@ type
       chkUDPAllQSOs: TCheckBox;
       lblUDPHint: TLabel;
 
-      procedure ManageExternalLoggersClick(Sender: TObject);
+      procedure AddExternalLoggerClick(Sender: TObject);
       procedure tvNavChange(Sender: TObject);
       procedure tvNavExpanded(Sender: TObject; Node: TTreeNode);
       // CLICKING AN ALREADY-SELECTED PARENT TOGGLES IT.  Without this a branch
@@ -859,6 +860,7 @@ type
       navExternalSoftware: TTreeNode;
       navWSJTX: TTreeNode;
       navExternalLogger: TTreeNode;
+      FLoggerGrid: TExternalLoggerGrid;
       navDXLab: TTreeNode;
       navMMTTY: TTreeNode;
       navAdvanced: TTreeNode;
@@ -942,7 +944,9 @@ type
       procedure SaveRemainingPanels;
       procedure LoadClusterPanels;
       procedure SaveClusterPanels;
-      procedure RefreshExternalLoggerSummary;
+      procedure ExternalLoggersChanged(Sender: TObject);
+      procedure ShowExternalLoggerGrid;
+      procedure EnsureLoggerGrid;
       procedure LoadExternalSoftwarePanels;
       procedure SaveExternalSoftwarePanels;
       function  CommandBool(const aCommand: string): boolean;
@@ -1262,7 +1266,7 @@ uses
                         // in with it; an LCL form calls the LCL form.
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
-   uExternalLoggerConfig, uExternalLoggersForm, uPasswordReveal, uWRLSetupForm, uExternalDelivery, uLogStore,
+   uExternalLoggerConfig, uPasswordReveal, uWRLSetupForm, uExternalDelivery, uLogStore,
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
@@ -3823,7 +3827,7 @@ begin
        (aControl = edtLoggerAddress) or (aControl = edtLoggerPort)) then
       begin
       // Migrated settings are edited through the definition library.
-      target := btnManageExternalLoggers;
+      target := btnAddExternalLogger;
       end;
 
    (* THE SAME TOOLTIP A BOUND CONTROL GETS. This list is the one place that
@@ -6681,60 +6685,43 @@ begin
    SetCommandBool('BAND MAP DISPLAY GHZ',        chkBandMapGHz.Checked);
 end;
 
-procedure TPrefsForm.RefreshExternalLoggerSummary;
-var
-   definition: TExternalLoggerDefinition;
-   id: AnsiString;
-   row: integer;
-   procedure AddDefinition(aDefinition: TExternalLoggerDefinition; aOrder: integer);
-   begin
-      grdExternalLoggers.Cells[0, row] := '-';
-      grdExternalLoggers.Cells[3, row] := 'No';
-      if aOrder > 0 then
-         begin
-         grdExternalLoggers.Cells[0, row] := AnsiString(IntToStr(aOrder));
-         grdExternalLoggers.Cells[3, row] := 'Yes';
-         end;
-      grdExternalLoggers.Cells[1, row] := UTF8Encode(aDefinition.Name);
-      grdExternalLoggers.Cells[2, row] := UTF8Encode(aDefinition.ProviderId);
-      Inc(row);
-   end;
+procedure TPrefsForm.ExternalLoggersChanged(Sender: TObject);
 begin
-   row := FStore.ExternalLoggers.Definitions.Count + 1;
-   if row < 2 then
+   Dirty := True;
+   lblLoggerStatus.Caption := UTF8Encode(SLoggerGridChanged);
+end;
+
+procedure TPrefsForm.ShowExternalLoggerGrid;
+begin
+   (* The definition library replaces the single-logger controls. *)
+   cbxLoggerType.Visible := False;
+   lblLoggerType.Visible := False;
+   chkLoggerEnabled.Visible := False;
+   edtLoggerAddress.Visible := False;
+   lblLoggerAddress.Visible := False;
+   edtLoggerPort.Visible := False;
+   lblLoggerPort.Visible := False;
+   FWRLSetupButton.Visible := False;
+   lblLoggerRestart.Visible := False;
+   grdExternalLoggers.Visible := True;
+   btnAddExternalLogger.Top := 280;
+   lblLoggerStatus.Top := 330;
+   lblLoggerStatus.Caption := UTF8Encode(SLoggerGridHint);
+   EnsureLoggerGrid;
+   FLoggerGrid.Refresh;
+end;
+
+procedure TPrefsForm.EnsureLoggerGrid;
+begin
+   if FLoggerGrid = nil then
       begin
-      row := 2;
+      FLoggerGrid := TExternalLoggerGrid.Create(Self, grdExternalLoggers);
+      FLoggerGrid.OnChanged := ExternalLoggersChanged;
+      btnAddExternalLogger.Caption := UTF8Encode(SLoggerGridAdd);
       end;
-   grdExternalLoggers.RowCount := row;
-   grdExternalLoggers.Rows[1].Clear;
-   grdExternalLoggers.Cells[0, 0] := 'Order';
-   grdExternalLoggers.Cells[1, 0] := 'Logger';
-   grdExternalLoggers.Cells[2, 0] := 'Provider';
-   grdExternalLoggers.Cells[3, 0] := 'Send new QSOs';
-   grdExternalLoggers.ColWidths[0] := 60;
-   grdExternalLoggers.ColWidths[1] := 235;
-   grdExternalLoggers.ColWidths[2] := 145;
-   grdExternalLoggers.ColWidths[3] := 180;
-   row := 1;
-   for id in FStore.ExternalLoggers.ActiveIds do
-      begin
-      definition := FStore.ExternalLoggers.Find(string(id));
-      if definition <> nil then
-         begin
-         AddDefinition(definition, row);
-         end;
-      end;
-   for definition in FStore.ExternalLoggers.Definitions do
-      begin
-      if FStore.ExternalLoggers.ActiveIds.IndexOf(AnsiString(definition.Id)) < 0 then
-         begin
-         AddDefinition(definition, 0);
-         end;
-      end;
-   if row = 1 then
-      begin
-      grdExternalLoggers.Cells[1, 1] := 'No loggers configured';
-      end;
+   (* FStore is long-lived, but bind on every use so the grid can never edit a
+      configuration that was replaced under it. *)
+   FLoggerGrid.Bind(FStore.ExternalLoggers);
 end;
 
 procedure TPrefsForm.LoadExternalSoftwarePanels;
@@ -6818,20 +6805,7 @@ begin
 
    if FStore.ExternalLoggers.Present then
       begin
-      cbxLoggerType.Visible := False;
-      lblLoggerType.Visible := False;
-      chkLoggerEnabled.Visible := False;
-      edtLoggerAddress.Visible := False;
-      lblLoggerAddress.Visible := False;
-      edtLoggerPort.Visible := False;
-      lblLoggerPort.Visible := False;
-      FWRLSetupButton.Visible := False;
-      lblLoggerRestart.Visible := False;
-      grdExternalLoggers.Visible := True;
-      btnManageExternalLoggers.Top := 280;
-      lblLoggerStatus.Top := 330;
-      lblLoggerStatus.Caption := 'Configured settings are shown above. Save Preferences, then restart TR4W to apply changes.';
-      RefreshExternalLoggerSummary;
+      ShowExternalLoggerGrid;
       end;
 
    edtMMTTYEngine.Text   := FStore.CommandValue('MMTTY ENGINE',
@@ -6897,13 +6871,13 @@ begin
    ApplyIfChanged('MMTTY ENGINE', Trim(edtMMTTYEngine.Text));
 end;
 
-procedure TPrefsForm.ManageExternalLoggersClick(Sender: TObject);
+procedure TPrefsForm.AddExternalLoggerClick(Sender: TObject);
 begin
-   if EditExternalLoggers(FStore.ExternalLoggers) then
+   EnsureLoggerGrid;
+   if FLoggerGrid.AddLogger and FStore.ExternalLoggers.Present then
       begin
-      Dirty := True;
-      RefreshExternalLoggerSummary;
-      lblLoggerStatus.Caption := 'Logger definitions changed. Save Preferences, then restart TR4W to apply them.';
+      ShowExternalLoggerGrid;
+      lblLoggerStatus.Caption := UTF8Encode(SLoggerGridChanged);
       end;
 end;
 

@@ -184,6 +184,23 @@ naming the sink; the broadcaster also names address:port) or raises is contained
 
 Each logger runs its own `TReadingThread` / `TSenderThread` pair.
 
+**The Preferences External Logger page edits DEFINITIONS in its grid (issue 220,
+2026-11-05; `docs/EXTERNAL_LOGGERS_DESIGN.md` is authoritative).** `uExternalLoggerGrid`
+is the view over the Preferences working copy of `TExternalLoggerConfig`; the order
+rules live in the config class, not the grid. Facts that are easy to get wrong:
+**Order and Send new QSOs are one fact** (membership of `ActiveIds`; a dash is an
+inactive logger, not a bug). **`ActiveIds` order IS the delivery order**, so every
+reorder path (drag, Move up/down) must end in `ApplyOrder`. **The LCL starts a row drag
+only from a FIXED column** (`gzFixedRows` in `grids.pas`), so Order is the fixed column;
+a drag fires `OnColRowMoved` after the cells have moved, and the grid then re-maps its
+own selected row, so a `Row :=` assigned inside the handler is applied twice (the
+selection is put right in a queued call). The hidden Id column carries identity because
+a dragged row carries its cells. `Definitions` is an owning `TObjectList`: reorder with
+`Exchange`, never `Move`. Removal leaves the vault and queued deliveries alone (design
+doc). The single-definition editor is `uExternalLoggersForm`; the shared OK checks are
+`ExternalLoggerConfigAcceptable`. The real drag, the popup and the modal editor are
+bench-only (BENCH_QUEUE).
+
 **Only the reading thread may call Indy's `Connected`** (2026-10-25, after the
 network-radio hang a4866344): it does a select plus a BLOCKING recv, so from any other
 thread it can hang for ever or steal the reader's bytes. A bare `Disconnect` is

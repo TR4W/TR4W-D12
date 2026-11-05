@@ -49,6 +49,23 @@ resourcestring
    SWRLStatusUnavailable = 'WRL delivery status is unavailable for the current log.';
    SWRLDeliveryIssue = 'World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records.';
 
+   // PREFERENCES > EXTERNAL LOGGER -- the grid is the editor (issue 220).
+   SLoggerGridOrder       = 'Order';
+   SLoggerGridLogger      = 'Logger';
+   SLoggerGridProvider    = 'Provider';
+   SLoggerGridSend        = 'Send new QSOs';
+   SLoggerGridYes         = 'Yes';
+   SLoggerGridNo          = 'No';
+   SLoggerGridNone        = 'No loggers configured';
+   SLoggerGridAdd         = 'Add...';
+   SLoggerGridEdit        = 'Edit...';
+   SLoggerGridMoveUp      = 'Move up';
+   SLoggerGridMoveDown    = 'Move down';
+   SLoggerGridRemove      = 'Remove...';
+   SLoggerGridRemoveAsk   = 'Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition.';
+   SLoggerGridHint        = 'Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences, then restart TR4W to apply changes.';
+   SLoggerGridChanged     = 'Logger definitions changed. Save Preferences, then restart TR4W to apply them.';
+
    // EDIT QSO -- the read-only external-logger delivery line under "Our
    // station for this QSO". Line: logger, state, then the sent clause.
    // Example: "External logger WRL: up to date. Last sent 2026-10-31 14:05 UTC"
