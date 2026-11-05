@@ -2365,6 +2365,18 @@ type
          rule of the contest's own. *)
       function IsValidDomesticMultiplier(const aMultiplier: string): boolean; virtual;
 
+      (* IS A REMEMBERED HINT THE DOMESTIC FILE DOES NOT MAP STILL THE
+         MULTIPLIER? -- issue 209 option 1, NY4I 2026-11-05. For a contest
+         that UsesDomesticFile, LOGDUPE.DomesticMultiplierOfRememberedExchange
+         maps the remembered exchange through the file; when nothing in it
+         maps (a zone, a name, a class sent with no QTH), the "Mult needs
+         for" header names the CALL instead of the bare field. THE BASE
+         ANSWERS FALSE. True only where the received field IS the
+         multiplier and the file does not list it: YOTA's age
+         (CalculateQSOPoints writes it to DomMultQTH; YOTA.dom's lines carry
+         no '=', so its table maps nothing). *)
+      function UnmappedHintIsTheMultiplier: boolean; virtual;
+
       (* IS THE DOMESTIC MULTIPLIER THE FOUR-CHARACTER GRID SQUARE, A ROVER
          BEING WORKED AGAIN IN EVERY SQUARE? -- M11 S6 part 1. Four engine
          sites asked `ContestSession.DomesticMult = GridSquares`: a rover is
@@ -3735,6 +3747,11 @@ function ContestDomesticMultiplierHint(aContest: TContestBase; const aText: Str1
    non-empty. *)
 function ContestIsValidDomesticMultiplier(aContest: TContestBase; const aMultiplier: string): boolean;
 
+(* IS aContest'S UNMAPPED REMEMBERED HINT ITS MULTIPLIER -- see
+   TContestBase.UnmappedHintIsTheMultiplier (issue 209). nil answers
+   False. *)
+function ContestUnmappedHintIsTheMultiplier(aContest: TContestBase): boolean;
+
 (* THE FOUR YES/NO DOMESTIC ANSWERS OF aContest -- see TContestBase.
    HasGridSquareMultiplier, HasGridFieldMultiplier,
    DomesticQTHReplacesDXMultiplier and DomesticQTHIsNeverAGrid. nil answers
@@ -4447,6 +4464,18 @@ begin
    else
       begin
       Result := aContest.IsValidDomesticMultiplier(aMultiplier);
+      end;
+end;
+
+function ContestUnmappedHintIsTheMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.UnmappedHintIsTheMultiplier;
       end;
 end;
 
@@ -5343,6 +5372,12 @@ function TContestBase.DomesticMultiplierHint(const aText: Str14): string;
 begin
    (* The text itself -- see the declaration. *)
    Result := string(aText);
+end;
+
+function TContestBase.UnmappedHintIsTheMultiplier: boolean;
+begin
+   (* See the declaration. *)
+   Result := False;
 end;
 
 function TContestBase.IsValidDomesticMultiplier(const aMultiplier: string): boolean;

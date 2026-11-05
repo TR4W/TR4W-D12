@@ -364,8 +364,11 @@ function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
   typed exchanges and the .dom files' aliases at every station, 58 contests
   showed a header that was not the multiplier; this rule fixed 851 rows,
   moved none that were right, and met no row where two words of a hint
-  mapped. A text that names no QTH the file knows (RF Championship's '87',
-  YOTA's age, which IS its multiplier) is left to the hint.
+  mapped. A text that names no QTH the file knows was left to the hint until
+  issue 209 option 1 (2026-11-05): it is now EMPTIED, so the header names the
+  call -- it was a bare field ('5 ' a zone, 'TOM ' a name, '2A ' a class:
+  29 contests measured) -- unless the contest's UnmappedHintIsTheMultiplier
+  says the field is its multiplier (YOTA's age).
 
   ONE ROUTINE FOR BOTH READERS: the "Mult needs for" header (LOGSTUFF.
   DomStringParse) and the cluster spot's section hint (LOGEDIT.
@@ -580,6 +583,14 @@ begin
      Exit;
      end;
   Result := LastWordDomesticKey(aHint, aKey);
+  (* NOTHING MAPS -- issue 209 option 1, NY4I 2026-11-05: the hint is a bare
+    field (a zone, a name, a class sent with no QTH), not a multiplier, so
+    it is emptied and the header names the call (ShowNeedsForCall), unless
+    the contest says its unmapped hint IS the multiplier (YOTA's age). *)
+  if (not Result) and (not ContestUnmappedHintIsTheMultiplier(contestRules)) then
+     begin
+     aHint := '';
+     end;
 end;
 
 function DomesticTableKnowsQTH(const aQTH: string): boolean;

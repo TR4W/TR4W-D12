@@ -1341,6 +1341,8 @@ var
    savedMultByMode:   boolean;
    savedNumberMults:  Byte;
    savedList:         TCallsignsList;
+   savedTable:        TDomQTHTable;
+   savedMults:        TMultsObject;
    header:            string;
 begin
    BeginTest('Test_TheSweepstakesMultHeaderNamesTheSection');
@@ -1354,9 +1356,17 @@ begin
    savedNumberMults := NumberDifferentMults;
    savedList        := CallsignsList;
    CallsignsList    := TCallsignsList.Create;
+   savedTable       := DomQTHTable;
+   savedMults       := mo;
+   (* THE SESSION'S SECTION TABLE, as a real SS log loads it: since issue
+      209 option 1 a remembered text the table maps nothing in names the
+      call, so the test must have the table the header maps through. *)
+   DomQTHTable      := TDomQTHTable.Create;
+   mo               := TMultsObject.Create;
    try
       Contest := ContestHandleOf(ARRLSSSSB);
       ReleaseActiveContest;
+      LoadShippedDomFollowingIncludes(DomQTHTable, 'arrlsect.dom', True, 0);
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := False;
       NumberDifferentMults := 1;
@@ -1378,7 +1388,10 @@ begin
       CheckTrue(Pos('IN', header) > 0, 'the typed call''s header names the section: ' + header);
       CheckTrue(Pos('32', header) = 0, 'the typed call''s header holds no check: ' + header);
    finally
-      mo.ClearAllMults;
+      mo.Free;
+      mo := savedMults;
+      DomQTHTable.Free;
+      DomQTHTable := savedTable;
       CallsignsList.Free;
       CallsignsList := savedList;
       NumberDifferentMults := savedNumberMults;
@@ -1831,6 +1844,30 @@ var
       TRUMPS THE CALL'S; with several, the MOST RECENTLY LOGGED one; with
       none, the call's. The call-window MULT flag (DetermineIfNewMult) asks
       the same lookup. *)
+   (* aCall remembered as aRemembered in aContest: the header names aHeaderKey
+      (upper case), or the call when aHeaderKey is ''. *)
+   procedure BareFieldPin(aContest: TContestHandle; const aDomFile: string;
+                          const aCall: string; const aRemembered: string;
+                          const aHeaderKey: string);
+   var
+      shown: string;
+      what: string;
+   begin
+      OpenNeedsSession(aContest, aDomFile, DomesticCountriesKVEKH6KL);
+      what := ContestId(aContest) + ' ' + aCall + ' remembered "' + aRemembered + '"';
+      shown := HeaderFor(aCall, aRemembered);
+      if aHeaderKey = '' then
+         begin
+         CheckTrue(Pos(aCall, shown) > 0, what + ': the header names the call: ' + shown);
+         CheckEquals('', DomStringParse(Str14(aRemembered)), what + ': no hint');
+         end
+      else
+         begin
+         CheckTrue(Pos(' ' + aHeaderKey, UpperCase(shown)) > 0, what + ': the header names ' + aHeaderKey + ': ' + shown);
+         CheckTrue(Pos(aCall, shown) = 0, what + ': not the call: ' + shown);
+         end;
+   end;
+
    procedure PriorZonePin;
    var
       qso: ContestExchange;
@@ -2015,6 +2052,19 @@ begin
       IARUZonePin(ContestHandleOf(WRTC), 'WRTC');
 
       PriorZonePin;
+
+      (* ISSUE 209 OPTION 1 (NY4I 2026-11-05): A REMEMBERED TEXT THE DOMESTIC
+         FILE MAPS NOTHING IN IS A BARE FIELD, NOT A MULTIPLIER -- the header
+         names the call. Measured before: 30 domestic-file contests showed
+         the field ('6 ' a zone, 'TOM ' a name). YOTA's age IS its
+         multiplier (UnmappedHintIsTheMultiplier) and still heads the strip;
+         a key that is not its own alias still maps (michigan_cty.dom
+         'Presq = PRES'). *)
+      BareFieldPin(ContestHandleOf(CQWWRTTY), 's48p14dc.dom', 'XE1ABC', '6 ', '');
+      BareFieldPin(ContestHandleOf(CQ160CW), 's48p14dc.dom', 'XE1ABC', '6 ', '');
+      BareFieldPin(ContestHandleOf(NAQSOCW), 'naqp.dom', 'N6ABC', 'TOM ', '');
+      BareFieldPin(ContestHandleOf(YOTA), 'YOTA.dom', 'DL1ABC', '9', '9');
+      BareFieldPin(ContestHandleOf(MICHQSOPARTY), 'michigan_cty.dom', 'W8ABC', 'PRES', 'PRESQ');
    finally
       RestoreNeedsSession;
       end;

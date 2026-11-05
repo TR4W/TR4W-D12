@@ -777,10 +777,15 @@ recently LOGGED QSO with that call, written by `LOGEDIT.AddQSOToDupeSheets`
 (live, loader and rescore, each in log order; only QSOs on the current dupe
 sheet; cleared by `ClearDupes`) -- before `ctyGetCQZone`/`ctyGetITUZone`. The
 strip, the call-window MULT flag and the spot hint all reach it through
-`GetMultArray`; do not read the CTY zone beside it. **Not built:** the bare-field header
-in 30 other domestic-file contests (an "unmapped means empty" rule reaches 30
-on a no-QTH text and all 97 on an unknown QTH, and would break YOTA, whose
-`YOTA.dom` lines have no `=`, so its table maps nothing).
+`GetMultArray`; do not read the CTY zone beside it. **A REMEMBERED TEXT THE
+DOMESTIC FILE MAPS NOTHING IN IS EMPTIED (#209 option 1, NY4I 2026-11-05):**
+`DomesticMultiplierOfRememberedExchange` blanks the hint, so the header names
+the call, unless `TContestBase.UnmappedHintIsTheMultiplier` (base False) says
+the field IS the multiplier -- YOTA alone (its age; `YOTA.dom`'s lines have no
+`=`, so its table maps nothing). SRR-JR is NOT included: its multiplier is the
+oblast (`russian.dom`), its scoring never counts the age. Measured: 29 contests'
+headers move from a bare field to the call. A header test needs the session's
+table loaded -- the SS header test had none and passed only on the old rule.
 **`mo.dom` is deleted (#208)**: no contest, `.dom` INCLUDE or D7 row named it.
 **A `.dom` line `QTH > MULT = aliases` gives DomesticQTH `QTH` and multiplier
 `MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a

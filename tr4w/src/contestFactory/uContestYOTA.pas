@@ -100,6 +100,9 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+      (* THE AGE IS THE MULTIPLIER though YOTA.dom does not map it -- see
+         TContestBase.UnmappedHintIsTheMultiplier (issue 209). *)
+      function UnmappedHintIsTheMultiplier: boolean; override;
    end;
 
 implementation
@@ -275,6 +278,13 @@ end;
    `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
 function TContestYOTA.UsesDomesticFile: boolean;
 begin
+   Result := True;
+end;
+
+function TContestYOTA.UnmappedHintIsTheMultiplier: boolean;
+begin
+   (* CalculateQSOPoints writes the received age to DomMultQTH; the
+      remembered age is that multiplier. *)
    Result := True;
 end;
 

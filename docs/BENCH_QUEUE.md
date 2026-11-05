@@ -83,13 +83,14 @@ letter is needed. Measured before: the strip was empty for every MWC call.
 - [ ] Worth a look, NOT changed: in IARU HF the ARRL header's 40 m cell still
   showed needed after ARRL was logged on 40 m in the unit probe (WRTC showed it
   worked); it did before this change too.
-- [ ] NOT CHANGED, awaiting a ruling on issue 209: a zone or other field
-  remembered with no QTH still heads the strip in 30 domestic-file contests
-  (CQ 160, CQ WW RTTY, Croatian, NAQP's `TOM`, Field Day's `2A` ...). YOTA's
-  age header (`9`) is right: the age is YOTA's multiplier.
-- [ ] NOT CHANGED (issue 213): a prior contact does not change the zone CQ WW's
-  strip uses -- K1ABC logged as zone 4, retyped on another band: the strip
-  follows the call's zone 5.
+- [ ] A FIELD THAT IS NOT A MULTIPLIER NO LONGER HEADS THE STRIP (option 1,
+  NY4I): in a domestic-file contest, a station logged with no QTH heads with
+  its CALL, not its zone, name or class. CQ WW RTTY / CQ 160: a DX station
+  that sent only zone 6 -- `Mult needs for XE1ABC :` (was `6`). NAQP: a
+  station logged with a name and no state -- the call (was `TOM`). Field Day
+  with no section -- the call (was `2A`). 29 contests measured.
+- [ ] YOTA unchanged: a station of age 9 still heads `Mult needs for 9 :`.
+- [ ] Michigan QP out of state: a county typed `PRES` still heads `PRESQ`.
 - [ ] Not changed: typing a lone `W` into the MWC exchange window shows
   nothing (`logsubs2`'s two-character gate before the typed lookup).
 
