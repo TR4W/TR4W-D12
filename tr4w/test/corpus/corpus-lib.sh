@@ -193,3 +193,17 @@ corpus_cleanup_on_exit(){
    trap 'exit 130' INT
    trap 'exit 143' TERM
 }
+
+# corpus_settings_win
+# The corpus's OWN settings fixture as a short Windows path, for --settings.
+#
+# A SCRIPT THAT RUNS THE APP WITHOUT --settings READS THE DEVELOPER'S
+# tr4w.json, so the result depends on whoever ran it.  Found 2026-11-04:
+# test-contest-factory.sh went red on every set because NY4I had changed his
+# own grid to six characters (GRID-LOCATOR: EL88pa against the frozen EL88).
+# NY4I: "that is not optimal to let my changing state mess up a test."
+# export-d12-corpus.sh has always passed the fixture; this is the same one,
+# for the scripts that rescore.
+corpus_settings_win(){
+   cygpath -d "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/settings/tr4w.json"
+}

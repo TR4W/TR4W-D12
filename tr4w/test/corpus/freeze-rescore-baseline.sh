@@ -111,9 +111,9 @@ for d in "$CORPUS"/*/; do
    # country list is EMPTY, so every callsign will be treated as DX" and scores
    # a contest that has no domestic countries.  Freezing THAT would bake the
    # crippled answer into the gate permanently.
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE /NOFACTORY >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE /NOFACTORY --settings "$(corpus_settings_win)" >/dev/null 2>&1
    rm -f "$WORK.adi" "$WORK.log"
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$(corpus_settings_win)" >/dev/null 2>&1
 
    cbr="$WORK.log"; [ -f "$cbr" ] || cbr=""
    if [ ! -f "$WORK.adi" ] || [ -z "$cbr" ]; then

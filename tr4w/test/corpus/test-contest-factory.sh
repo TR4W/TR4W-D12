@@ -106,9 +106,9 @@ for d in "$CORPUS"/*/; do
    #
    # The golden corpus is NOT affected and is right to name the .db: /EXPORT
    # reads stored values and never rescores.
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$(corpus_settings_win)" >/dev/null 2>&1
    rm -f "$WORK.adi" "$WORK.log"
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$(corpus_settings_win)" >/dev/null 2>&1
 
    cbr="$WORK.log"; [ -f "$cbr" ] || cbr=""
    ok=1; detail=""
