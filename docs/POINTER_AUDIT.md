@@ -114,7 +114,9 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > (Search Log) and 5.3 (DX cluster console) are done: see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05),
 > [part 2](#p9-part-2-52----the-search-log-filter-rows-2026-11-05) and
 > [part 3](#p9-part-3-53----the-dx-cluster-console-lines-kind-2026-11-05). `src`
-> total 2,156 -> 2,149 -> 2,128 -> **2,123**. 5.1 is open.
+> total 2,156 -> 2,149 -> 2,128 -> **2,123**. 5.1 is three windows and three
+> commits: the dupe sheet is done ([part 4](#p9-part-4-51a----the-dupe-sheets-typed-cell-2026-11-05),
+> `src` 2,124, a transitional +1); the SCP and remaining-mults windows are open.
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
@@ -1543,6 +1545,39 @@ lints (one run failed Lint-LineEndings on an unrelated new file written LF
 during the run; fixed, and the rerun passed all 54), `Count-LiveMove` 430.
 Corpus 16 / 0 / 10, exit 0. Contest matrix 194 identical, 0 differing, no
 re-freeze. BENCH: `BENCH_QUEUE.md`.
+
+### P9 part 4 (5.1a) -- the dupe sheet's typed cell, 2026-11-05
+
+**5.1 IS THREE WINDOWS, so it is three commits**: the dupe sheet, the SCP
+window, the remaining-multiplier windows. `TFlowGrid` is shared by all three,
+so while they move it carries both shapes: the PtrInt pair (`AddItem`,
+`TagAt`) and a typed one (`AddCell`, `CellAt`, `OwnsCells`). A window that has
+moved sets `OwnsCells` and never touches the PtrInt pair, whose integer is not
+an object. When the third window moves, the PtrInt pair and `OwnsCells` go.
+`AddEntry` is the one place either Add writes the list (a second
+`AddObject` was a second narrowing conversion and broke the ceiling on the
+first gate run).
+
+**Test first.** `test/unit/uTestFlowGridCells.pas` (3 dupe-sheet tests)
+streams `TfrmDupeSheet` and drives the pair the form now exposes -- `AddCall`,
+which `uCallsigns.DisplayDupeSheet` calls, and `DistrictAt`, which the paint
+handler calls. Both were added on the old `Ord(digit)` storage and the test
+ran green there (unit 424,392 / 0), then the storage changed under them.
+
+**The conversion.** `TDupeSheetCell` (read-only `District: AnsiChar`); the
+grid owns the cells. **The ownership is proven, not assumed**: with
+`OwnsCells := True` commented out, the `-Checked` run reported **74 unfreed
+blocks against the ceiling of 57** -- the 17 cells the tests make -- and
+failed; restored, 57.
+
+**Counters.** `src` total 2,123 -> **2,124**: `C5-objects` +1 (`CellAt`
+reading `Objects[]`). A transitional rise: the PtrInt pair still stands
+beside the typed one, and its sites go in part 6.
+
+**Oracles.** Unit 424,392 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
+ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
+lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
 
 ---
 

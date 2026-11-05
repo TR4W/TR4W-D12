@@ -54,6 +54,17 @@ uses
    Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uFlowGrid;
 
 type
+   (* WHAT A DUPE-SHEET CELL KNOWS BEYOND ITS CALL: the district digit that
+     colours it. It rode in the grid's Objects[] as Ord(digit) (pointer audit
+     P9, item 5.1); it is a cell the grid owns now. *)
+   TDupeSheetCell = class
+   private
+      FDistrict: AnsiChar;
+   public
+      constructor Create(const aDistrict: AnsiChar);
+      property District: AnsiChar read FDistrict;
+   end;
+
    TfrmDupeSheet = class(TForm)
       grdDupes: TDrawGrid;
       procedure HandleCreate(Sender: TObject);
@@ -68,10 +79,19 @@ type
       FIndex: WindowsType;
    public
       { The model and the down-then-across arithmetic, shared with the SCP
-        window -- see uFlowGrid.  The tag on each entry is the district digit
-        as an ORDINAL ('0'..'9' -> 48..57), because that is what indexes
-        VDColorsArray. }
+        window -- see uFlowGrid.  Filled through AddCall and read through
+        DistrictAt, never by asking the grid for its raw cells. }
       Calls: TFlowGrid;
+
+      (* ONE CELL: a call and its district digit ('0'..'9'), which is what
+        picks its colour from VDColorsArray. Between Calls.BeginRebuild and
+        Calls.EndRebuild. *)
+      procedure AddCall(const aCall: string; const aDistrict: AnsiChar);
+
+      (* The district digit of cell aIndex, or #0 for a cell past the end --
+        the paint handler asks for every cell and the last column is rarely
+        full. *)
+      function  DistrictAt(const aIndex: integer): AnsiChar;
    end;
 
 { What WM_INITDIALOG did, as a seam.  uCallsigns owns the contents and assigns
@@ -134,11 +154,35 @@ begin
    // LimitToVisible stays FALSE: a dupe sheet scrolls.  The SCP window sets it,
    // because that one shows what fits and drops the rest.
    Calls := TFlowGrid.Create(grdDupes, CELL_WIDTH, CELL_HEIGHT);
+   Calls.OwnsCells := True;      // every cell is a TDupeSheetCell -- see AddCall
 end;
 
 procedure TfrmDupeSheet.HandleDestroy(Sender: TObject);
 begin
    FreeAndNil(Calls);
+end;
+
+constructor TDupeSheetCell.Create(const aDistrict: AnsiChar);
+begin
+   inherited Create;
+   FDistrict := aDistrict;
+end;
+
+procedure TfrmDupeSheet.AddCall(const aCall: string; const aDistrict: AnsiChar);
+begin
+   Calls.AddCell(aCall, TDupeSheetCell.Create(aDistrict));
+end;
+
+function TfrmDupeSheet.DistrictAt(const aIndex: integer): AnsiChar;
+var
+   cell: TObject;
+begin
+   Result := #0;
+   cell := Calls.CellAt(aIndex);
+   if cell is TDupeSheetCell then
+      begin
+      Result := TDupeSheetCell(cell).District;
+      end;
 end;
 
 procedure TfrmDupeSheet.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -219,7 +263,7 @@ begin
       Exit;
       end;
 
-   district := byte(Calls.TagAt(idx));
+   district := Ord(DistrictAt(idx));
    if (district < Low(VDColorsArray)) or (district > High(VDColorsArray)) then
       begin
       district := Ord('0');

@@ -30,6 +30,23 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- A DUPE SHEET CELL CARRIES ITS DISTRICT AS A TYPED CELL (pointer audit P9, 5.1a)
+
+Each dupe-sheet cell knew its call district (the digit that picks its colour)
+through the flow grid's `Objects[]` as `Ord(digit)`. It is a `TDupeSheetCell` the
+grid owns now. `uTestFlowGridCells` pins the round trip and, under `-Checked`, that
+a rebuild frees the cells it replaces; what it cannot see is the paint.
+
+- [ ] **Dupe sheet 1 and 2, in a log with contacts in several call districts.**
+  Open the dupe sheet (both radios if SO2R). EXPECT: each call's cell is filled
+  with its district's colour, as before -- W1, K3, N6 and VE3 calls in their own
+  colours. Change band, then mode. EXPECT: the sheet redraws with that band and
+  mode's calls, colours still right. Log a new contact. EXPECT: it appears in its
+  district's colour.
+- [ ] **Leave the dupe sheet open through a session of band changes, then exit
+  TR4W with it open.** EXPECT: no access violation and no crash record in
+  `tr4w.log` at exit.
+
 ## Added 2026-11-05 -- A DX CLUSTER CONSOLE LINE CARRIES ITS KIND AS AN OBJECT (pointer audit P9, 5.3)
 
 Each line of the DX cluster console knew its kind (sent, received, dupe, mult,

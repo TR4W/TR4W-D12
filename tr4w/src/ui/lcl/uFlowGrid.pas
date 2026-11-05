@@ -74,6 +74,9 @@ type
       FCellWidth: integer;
       FCellHeight: integer;
       FLimitToVisible: boolean;
+      function  GetOwnsCells: boolean;
+      procedure SetOwnsCells(const aValue: boolean);
+      function  AddEntry(const aText: string; const aObject: TObject): boolean;
    public
       constructor Create(const aGrid: TDrawGrid;
                          const aCellWidth, aCellHeight: integer);
@@ -101,6 +104,23 @@ type
       function  Count: integer;
       function  TextAt(const aIndex: integer): string;
       function  TagAt(const aIndex: integer): PtrInt;
+
+      (* A TYPED CELL (pointer audit P9, item 5.1). Each window declares its
+        own cell class -- the dupe sheet a district, SCP a dupe flag, the
+        remaining-mults windows a (kind, index) pair -- and the grid OWNS
+        what it is given: a rebuild, and the grid's own destruction, free
+        every cell. AddCell takes the cell whether or not it is added, and
+        frees one it refuses (LimitToVisible full). CellAt answers nil for a
+        cell past the end.
+
+        TRANSITIONAL, while the three windows move one commit at a time: a
+        window that uses these sets OwnsCells first, and must not mix them
+        with AddItem/TagAt, whose PtrInt is not an object. When the last
+        window has moved, the PtrInt pair and OwnsCells go and the grid
+        always owns its cells. *)
+      function  AddCell(const aText: string; const aCell: TObject): boolean;
+      function  CellAt(const aIndex: integer): TObject;
+      property  OwnsCells: boolean read GetOwnsCells write SetOwnsCells;
 
       { How many cells the window currently shows.  This is what the SCP window
         used to keep in MaxItemsInMasterListBox and recompute in its WM_SIZE
@@ -166,6 +186,49 @@ begin
       end;
 end;
 
+function TFlowGrid.GetOwnsCells: boolean;
+begin
+   Result := FCalls.OwnsObjects;
+end;
+
+procedure TFlowGrid.SetOwnsCells(const aValue: boolean);
+begin
+   FCalls.OwnsObjects := aValue;
+end;
+
+function TFlowGrid.CellAt(const aIndex: integer): TObject;
+begin
+   Result := nil;
+   if (aIndex >= 0) and (aIndex < FCalls.Count) then
+      begin
+      Result := FCalls.Objects[aIndex];
+      end;
+end;
+
+(* The one place an entry joins the model, whichever of the two Add calls
+  asked: the capacity rule and the list write, once. *)
+function TFlowGrid.AddEntry(const aText: string; const aObject: TObject): boolean;
+begin
+   Result := False;
+   if FLimitToVisible and (FCalls.Count >= Capacity) then
+      begin
+      Exit;
+      end;
+   FCalls.AddObject(aText, aObject);
+   Result := True;
+end;
+
+function TFlowGrid.AddCell(const aText: string; const aCell: TObject): boolean;
+begin
+   Result := AddEntry(aText, aCell);
+   if not Result then
+      begin
+      (* Refused, and the cell was handed over: free it here, so a caller
+        never has to know which way it went. *)
+      aCell.Free;
+      end;
+end;
+
 function TFlowGrid.Capacity: integer;
 var
    across, down: integer;
@@ -197,13 +260,7 @@ end;
 
 function TFlowGrid.AddItem(const aCall: string; const aTag: PtrInt): boolean;
 begin
-   Result := False;
-   if FLimitToVisible and (FCalls.Count >= Capacity) then
-      begin
-      Exit;
-      end;
-   FCalls.AddObject(aCall, TObject(aTag));
-   Result := True;
+   Result := AddEntry(aCall, TObject(aTag));
 end;
 
 procedure TFlowGrid.EndRebuild;

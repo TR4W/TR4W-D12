@@ -84,6 +84,7 @@ uses
    uTestComboTags       in 'uTestComboTags.pas',
    uTestAltPRows        in 'uTestAltPRows.pas',
    uTestLogSearchFilters in 'uTestLogSearchFilters.pas',
+   uTestFlowGridCells   in 'uTestFlowGridCells.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
@@ -943,6 +944,7 @@ begin
    RegisterSuite(TComboTagTests.Create('ComboTags'));
    RegisterSuite(TAltPRowTests.Create('AltPRows'));
    RegisterSuite(TLogSearchFilterTests.Create('LogSearchFilters'));
+   RegisterSuite(TFlowGridCellTests.Create('FlowGridCells'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TStringCompareTests.Create('StringCompare'));
    RegisterSuite(TShortStringConversionTests.Create('ShortStringConversion'));

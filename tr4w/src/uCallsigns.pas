@@ -776,7 +776,7 @@ begin
                  begin
                  if entry.Call[i] = TempChar then
                     begin
-                    frm.Calls.AddItem(string(entry.Call), Ord(TempChar));
+                    frm.AddCall(string(entry.Call), TempChar);
                     end;
                  Break;
                  end;
