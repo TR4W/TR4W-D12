@@ -329,9 +329,10 @@ timer thread, a reader thread answering a login), and read by
 Evicting the oldest entry `Dispose`d a record that the reader might still be copying
 from, and shifted the list while the reader was indexing it.
 `uTestIcomTxHistory.Test_ReaderAndWriterThreads` crashed the old internals with
-`EListError: List index (500) out of bounds`. That would never happen on the bench:
-the 2026-09-24 IC-7760 capture recorded **zero** retransmit requests in 663 s, and the
-reader only runs when the radio asks for a resend. See P13 part 4.
+`EListError: List index (500) out of bounds`. It was never SEEN on the bench, which
+is not evidence that it cannot happen: the 2026-09-24 IC-7760 capture recorded
+**zero** retransmit requests in 663 s, and the reader only runs when the radio asks
+for a resend -- so a lossy link is where it would appear. See P13 part 4.
 
 ### Known and already documented -- listed so nobody re-reports them
 
