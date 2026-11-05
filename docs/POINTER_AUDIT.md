@@ -99,7 +99,7 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > +12, `C5-tobject-cast` +4, `C5-objects` +4. The 2026-11-05 run also has a
 > `server` column (`C3-addr-of` 3) that the original table did not.
 >
-> **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, the commit after `83c81159`)** --
+> **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
 > `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
 > P11, P13, and the four old-style objects above.
@@ -1197,7 +1197,10 @@ converted here.
 reports, 57 unfreed blocks (the ceiling). The app built with 0 errors.
 Narrowing is 1201 and range warnings 3, both exactly at their ceilings.
 54 lints pass, `Count-LiveMove` 435 (the ceiling). `tr4wserver` builds.
-Corpus 16 / 0 / 10, exit 0. **No window and no Telnet, Intercom or Stations
+Corpus 16 / 0 / 10, exit 0. Contest matrix 194 identical, 0 differing,
+**without re-freeze** (its ADIF check: 24 compliance errors, all pinned) --
+the matrix is the main oracle for the `.dom` and `.cfg` loaders, and it says
+"same", not "right". Landed as `c7befe92`. **No window and no Telnet, Intercom or Stations
 file has an automated oracle**, so each is in `BENCH_QUEUE.md`.
 
 ---
