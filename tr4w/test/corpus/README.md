@@ -69,14 +69,16 @@ compares. It moves no golden comparison: `golden_diff.py` ignores the Cabrillo
 header, and the ADIF does not carry the station grid. Measured with the grid
 added: still 16 passed / 0 failed / 10 known, and the ADIF round trip still exits 0.
 
-**Do NOT add `State`, `Zone` or `Name` there.** Each one changes an exported
-exchange away from the D7 reference:
+**Do NOT add `State`, `Zone` or `Name` there.** Each one changes what the
+factory gate's rescore exports, and the first two move it away from the D7
+reference. Each field was measured alone through the factory pass
+(2026-11-05):
 
-| field | effect, measured 2026-11-05 |
+| field | effect |
 |---|---|
-| `State: FL` | IARU sends `59 FL` instead of D7's `59 8`; General QSO appends `FL` |
+| `State: FL` | IARU sends `59 FL` instead of D7's `59 8` (score unchanged); General QSO sends `59 FL` |
 | `Zone: 5` | IARU scores W1AW (ITU zone 8) as 3 points instead of 1: 16 instead of D7's 12 |
-| `Name: TOM` | General QSO sends `59 TOM`, which would retire its known-divergence row |
+| `Name: TOM` | General QSO sends `59 TOM`, D7's own exchange. The golden corpus records that set as a known divergence for the missing name; how that row would react was not checked |
 
 The frozen `rescored.*` baselines were once taken from the developer's own
 `My` block, and that is exactly what turned the factory gate red. See
