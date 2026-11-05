@@ -20,11 +20,15 @@
 #   not move it.  That misreading was made and corrected on 2026-09-29.
 #
 #   AND COMPARING A RESCORE TO THE D7 REFERENCES IS TOO BLUNT TO BE A GATE.
-#   Logs legitimately move when rescored, before any factory work: our CTY.DAT
-#   is not the one D7 used, so country, zone and therefore points differ.
-#   Measured 2026-09-29 while freezing the baseline: iaru_hf alone moves on the
-#   TOTAL, 12 -> 16, and seven sets move in their records.  That is worth
-#   investigating on its own and is useless as a pass/fail for this.
+#   Logs can legitimately move when rescored: our CTY.DAT is not the one D7
+#   used, so country, zone and therefore points can differ.
+#
+#   CORRECTED 2026-11-05 (issue 206): this said iaru_hf moved on the TOTAL,
+#   12 -> 16, because of CTY.DAT.  It did not.  The 2026-09-29 freeze ran
+#   without --settings, so it read the developer's own MY ZONE = 5 (his CQ
+#   zone).  TContestIARU compares that with the received ITU zone, so W1AW
+#   (ITU 8) scored 3 points instead of 1.  Under the corpus fixture the
+#   rescore claims 12, which is D7's figure.  See REFREEZE_NOTES.md.
 #
 # ---------------------------------------------------------------------------
 # WHY THE LEGACY SIDE IS FROZEN RATHER THAN RUN

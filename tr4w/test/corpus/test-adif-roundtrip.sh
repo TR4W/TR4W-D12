@@ -83,6 +83,7 @@ cd "$TARGET" || exit 1
 if ! tr4w_refuse_if_running "test-adif-roundtrip"; then
    exit 1
 fi
+corpus_fixture_guard_start
 cp "$EXE_SRC" "$EXE" || exit 1
 corpus_cleanup_on_exit
 SETTINGS_WIN="$(cygpath -d "$SETTINGS")"
@@ -330,6 +331,8 @@ rm -f "$WORK".* "$WORK-my.adi" "$EXE"
 
 echo
 echo "=== $pass passed, $fail failed, $known known-divergence, $skip skipped ==="
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 
 # THE ADIF EACH TRIP EXPORTED, AGAINST AN INDEPENDENT VALIDATOR (2026-10-23).
 # A full run only: a single-set run has not exported the others.

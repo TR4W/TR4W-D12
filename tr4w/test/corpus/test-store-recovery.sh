@@ -48,6 +48,10 @@ fi
 
 cd "$TARGET" || exit 1
 . "$REPO_ROOT/tr4w/test/corpus/corpus-lib.sh"
+tr4w_refuse_if_running "test-store-recovery" || exit 1
+# THE CORPUS'S OWN SETTINGS, NOT THE DEVELOPER'S (issue 206, 2026-11-05).
+corpus_fixture_guard_start
+SETTINGS_WIN="$(corpus_settings_win)"
 cp "$EXE_SRC" "$EXE" || exit 1
 corpus_cleanup_on_exit
 rm -f "$WORK".*
@@ -57,14 +61,14 @@ cp "$BINLOG" "$WORK.TRW" || exit 1
 rows() { python -c "import sqlite3,sys;print(sqlite3.connect(sys.argv[1]).execute('SELECT COUNT(*) FROM qso').fetchone()[0])" "$WORK.db" 2>/dev/null || echo 0; }
 qsos() { grep -ci '<eor>' "$WORK.adi" 2>/dev/null || echo 0; }
 
-MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
 before_rows=$(rows); before_qsos=$(qsos)
 
 # The loss.  Not a truncation -- the file simply is not there, which is what an
 # operator sees after a bad copy, a wrong folder, or a restore that missed it.
 rm -f "$WORK.adi" "$WORK.log" "$WORK.TRW"
 
-MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
 after_rows=$(rows); after_qsos=$(qsos)
 
 echo "  with the binary log:   $before_rows row(s), $before_qsos QSO(s) exported"
@@ -72,6 +76,9 @@ echo "  after losing it:       $after_rows row(s), $after_qsos QSO(s) exported"
 
 orphan=$(ls -1 "$WORK".db.orphaned-* 2>/dev/null | head -1)
 rm -f "$WORK".* "$WORK".db.orphaned-* "$EXE"
+
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 
 if [ "$before_rows" -lt 1 ]; then
    echo "test-store-recovery: FAIL -- the fixture produced no rows to begin with; the test proves nothing"

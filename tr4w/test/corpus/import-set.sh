@@ -49,7 +49,10 @@ cp "$cfg" "$dest/log.cfg"
 EXE_SRC="build-out/app-i386-win32/tr4w_fpc.exe"
 [ -f "$EXE_SRC" ] || EXE_SRC="tr4w/target/tr4w.exe"
 [ -f "$EXE_SRC" ] || { echo "ERROR: no built app -- build first, the fixture is made by it" >&2; exit 1; }
-SETTINGS_WIN=$(cygpath -d "$PWD/tr4w/test/corpus/settings/tr4w.json")
+. tr4w/test/corpus/corpus-lib.sh
+tr4w_refuse_if_running "import-set" || exit 1
+corpus_fixture_guard_start
+SETTINGS_WIN=$(corpus_settings_win)
 
 work="build-out/corpus-import/$slug"
 rm -rf "$work"; mkdir -p "$work"
@@ -61,6 +64,8 @@ exe_leaf=$(basename "$EXE_SRC")
 ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 120 "./$exe_leaf" "$cfg_win" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 ) || true
 made=$(ls "$work"/*.db 2>/dev/null | head -1 || true)
 [ -n "$made" ] || { echo "ERROR: the export produced no log database in $work" >&2; exit 1; }
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 rm -f "$work"/*.db-wal "$work"/*.db-shm
 cp "$made" "$dest/log.db"
 [ -n "$adi" ] && cp "$adi" "$dest/ref.adi"

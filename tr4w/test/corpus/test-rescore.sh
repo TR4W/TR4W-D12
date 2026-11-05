@@ -38,6 +38,12 @@ fi
 
 cd "$TARGET" || exit 1
 . "$REPO_ROOT/tr4w/test/corpus/corpus-lib.sh"
+tr4w_refuse_if_running "test-rescore" || exit 1
+# THE CORPUS'S OWN SETTINGS, NOT THE DEVELOPER'S (issue 206, 2026-11-05): a
+# rescore reads the station's MY ZONE and friends, so without --settings the
+# result depended on whoever ran it.
+corpus_fixture_guard_start
+SETTINGS_WIN="$(corpus_settings_win)"
 cp "$EXE_SRC" "$EXE" || exit 1
 corpus_cleanup_on_exit
 
@@ -93,10 +99,10 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    # comes from that read, so a rescore would treat every callsign as DX.  See
    # the longer note in test-contest-factory.sh.
    ids_before=$(idcount)
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$SETTINGS_WIN" >/dev/null 2>&1
    first=$(digest)
    ids_after=$(idcount)
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$SETTINGS_WIN" >/dev/null 2>&1
    second=$(digest)
 
    if [ "$ids_before" != "$ids_after" ]; then
@@ -124,6 +130,8 @@ done
 
 rm -f "$WORK".* "$EXE"
 
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 if [ $fail -ne 0 ]; then
    echo "=== test-rescore: $fail log(s) changed on a SECOND rescore, or had exchange ids MINTED by the first ==="
    exit 1

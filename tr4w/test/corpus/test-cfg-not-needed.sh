@@ -70,6 +70,10 @@ fi
 
 cd "$TARGET" || exit 1
 . "$REPO_ROOT/tr4w/test/corpus/corpus-lib.sh"
+tr4w_refuse_if_running "test-cfg-not-needed" || exit 1
+# THE CORPUS'S OWN SETTINGS, NOT THE DEVELOPER'S (issue 206, 2026-11-05).
+corpus_fixture_guard_start
+SETTINGS_WIN="$(corpus_settings_win)"
 cp "$EXE_SRC" "$EXE" || exit 1
 corpus_cleanup_on_exit
 
@@ -89,14 +93,14 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    # corpus fixture is the log itself since 2026-09-24 -- see corpus-lib.sh --
    # so the log is simply copied.  The QUESTION is unchanged: does emptying
    # the .cfg change the exported bytes?)
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
    with=$(mktemp -d); cp "$WORK.adi" "$WORK.log" "$with/" 2>/dev/null
    produced=$(ls "$with" 2>/dev/null)
 
    # Without it.  The file stays -- it names the contest -- but says nothing.
    : > "$WORK.CFG"
    rm -f "$WORK.adi" "$WORK.log"
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
 
    ok=1; detail=""
    if [ -z "$produced" ]; then
@@ -121,5 +125,7 @@ done
 rm -f "$WORK".* "$EXE"
 
 echo "=== with a .cfg vs an EMPTY .cfg: $pass identical, $fail differing ==="
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 [ $fail -eq 0 ] || exit 1
 exit 0

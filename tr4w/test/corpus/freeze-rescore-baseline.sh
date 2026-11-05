@@ -1,7 +1,9 @@
 #!/bin/bash
 #
-# FREEZE THE LEGACY RESCORE OUTPUT, so the contest factory keeps a scoring gate
-# after the legacy `case` and /NOFACTORY are gone.
+# FREEZE THE RESCORE OUTPUT, so the contest factory keeps a scoring gate after
+# the legacy `case` and /NOFACTORY are gone.  It froze the LEGACY pass once, on
+# 2026-09-29; since then it can only freeze the factory's -- see "REGENERATING
+# ONE, LATER" below.
 #
 # ---------------------------------------------------------------------------
 # WHY THIS EXISTS
@@ -42,20 +44,29 @@
 # a real contest submission does.
 #
 # ---------------------------------------------------------------------------
-# REGENERATING ONE, LATER
+# REGENERATING ONE, LATER -- WHICH IS ALL THIS SCRIPT CAN DO NOW
 # ---------------------------------------------------------------------------
-# After /NOFACTORY is deleted this script cannot reproduce a legacy pass, so a
-# regenerated baseline is FACTORY output -- which makes that set's gate a
-# tautology until someone confirms the new bytes are right.  So regeneration is
-# a deliberate act with a reason attached, not a way to clear a red run:
+# /NOFACTORY WAS DELETED on 2026-09-29 (20943bc1), the day the first baselines
+# were frozen, and the app no longer knows the switch.  This script therefore
+# freezes FACTORY output: a re-frozen set's gate is a tautology until someone
+# confirms the new bytes are right.  So regeneration is a deliberate act with a
+# reason attached, not a way to clear a red run:
 #
 #     a set goes red  ->  find out WHY.  A rule genuinely changed (a sponsor
 #                         changed it, or a defect was fixed) is the only good
 #                         reason to re-freeze, and the commit message says
 #                         which, with the score before and after.
 #
-# A red set that is re-frozen without that is a scoring regression being
-# written into the oracle, and nothing downstream would ever notice.
+# THE REASON IS WRITTEN DOWN PER SET, in REFREEZE_NOTES.md beside this script,
+# in the same commit as the new bytes.  A red set that is re-frozen without
+# one is a scoring regression being written into the oracle, and nothing
+# downstream would ever notice.
+#
+# THE RUN USES THE CORPUS'S OWN SETTINGS FIXTURE (--settings), exactly as
+# test-contest-factory.sh does.  The first baselines were frozen without it,
+# from the developer's own tr4w.json, and that is what issue 206 was: the
+# developer's MY ZONE, MY STATE, MY NAME and grid had been frozen into the
+# gate.
 #
 # Usage:  bash tr4w/test/corpus/freeze-rescore-baseline.sh [slug ...]
 #         (no arguments freezes every set that has a log.db)
@@ -69,6 +80,10 @@ EXE="freeze-run.exe"
 WORK="freezetest"
 
 . "$CORPUS/corpus-lib.sh"
+corpus_fixture_guard_start
+if ! tr4w_refuse_if_running "freeze-rescore-baseline"; then
+   exit 1
+fi
 
 if [ ! -f "$EXE_SRC" ]; then
    echo "freeze-rescore-baseline: no app at $EXE_SRC -- build first" >&2
@@ -111,7 +126,10 @@ for d in "$CORPUS"/*/; do
    # country list is EMPTY, so every callsign will be treated as DX" and scores
    # a contest that has no domestic countries.  Freezing THAT would bake the
    # crippled answer into the gate permanently.
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE /NOFACTORY --settings "$(corpus_settings_win)" >/dev/null 2>&1
+   #
+   # The same two commands as test-contest-factory.sh, so a fresh freeze and
+   # the gate cannot disagree about how the log was produced.
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$(corpus_settings_win)" >/dev/null 2>&1
    rm -f "$WORK.adi" "$WORK.log"
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$(corpus_settings_win)" >/dev/null 2>&1
 
@@ -133,6 +151,8 @@ done
 rm -f "$WORK".* "$EXE"
 
 echo "=== froze $froze set(s), skipped $skipped ==="
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 if [ -n "$failed" ]; then
    echo "    failed:$failed"
    exit 1
