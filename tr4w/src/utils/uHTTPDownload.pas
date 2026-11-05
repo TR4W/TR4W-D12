@@ -313,9 +313,12 @@ begin
    encoded := UTF8Decode(EncodeURLElement(UTF8Encode(aSecret)));
    if encoded <> aSecret then
       begin
-      Result := StringReplace(Result, encoded, MaskSecret(aSecret), [rfReplaceAll]);
+      (* UnicodeStringReplace: FPC 3.2.2's SysUtils.StringReplace takes
+         AnsiString, which narrowed all three arguments and would have left a
+         secret holding a non-ANSI character unmasked. *)
+      Result := UnicodeStringReplace(Result, encoded, MaskSecret(aSecret), [rfReplaceAll]);
       end;
-   Result := StringReplace(Result, aSecret, MaskSecret(aSecret), [rfReplaceAll]);
+   Result := UnicodeStringReplace(Result, aSecret, MaskSecret(aSecret), [rfReplaceAll]);
 end;
 
 (* Scrub both credentials out of one piece of text. *)
