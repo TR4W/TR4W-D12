@@ -53,8 +53,9 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > (`ShowEditMessage(const aMessage: lParam)` carries a row number), **5.6**
 > (`ApplyLoadedParks(LPARAM(aParks))`), and **the four other old-style
 > objects** -- `DupeAndMultSheet` (`logdupe`, 6.2), `PacketObject` (`logpack`,
-> 6.6), `EditableLog` (`logedit`, 6.3) and `CallDatabase` (`logscp`, 6.4).
-> `C6-object-type` reads exactly six in `src`: those four, `K1EAKeyer` and
+> 6.6 -- **converted since, see the end of this document**), `EditableLog`
+> (`logedit`, 6.3) and `CallDatabase` (`logscp`, 6.4).
+> `C6-object-type` read exactly six in `src` then: those four, `K1EAKeyer` and
 > `RadioObject`.
 >
 > **THE TOTALS ABOVE (2,701, 2,622) ARE NOT COMPARABLE WITH TODAY'S.** The
@@ -562,7 +563,7 @@ audit's list finds them.
 | 6.3 | `EditableLog` (`VisibleLog`, 101 mentions) | `trdos/logedit.pas:70` | no | a class | MATRIX, UT `uTestLogRepository`; screen BENCH |
 | 6.4 | `CallDatabase` (`CD`), `CellBufferObject` | `trdos/logscp.pas:94, 131` | no | classes, with 2.2 -- **`CellBufferObject` is `TSCPCellBuffer`, a class, since P7 (2026-10-17); `CallDatabase` stays an old-style object** | MATRIX (TRMASTER initial exchange) |
 | 6.5 | `K1EAKeyer` (`CPUKeyer`) | `trdos/logk1ea.pas:159` | no | a class, with 2.1 | BENCH |
-| 6.6 | `PacketObject` (`Packet`) | `trdos/logpack.pas:71` | no | a class -- **check first whether TNC packet is still a feature** | none |
+| 6.6 | `PacketObject` (`Packet`) | `trdos/logpack.pas:71` | no | a class -- **DONE 2026-11-05 (Issue 89)**: NY4I ruled TNC packet over a serial port is still a supported option, so it was converted, not deleted. See "6.6 PacketObject" below | UT `uTestLogPack` (written first); BENCH the serial path |
 | 6.7 | `MultsObject` (`mo`) | `uMults.pas:50` | no, but holds two `TSortedStringList` that DO | **DONE (P8 part A)**: `TMultsObject`, a class owning its lists | UT `uTestMults`, MATRIX, CORPUS |
 | 6.8 | `TSortedStringList` | `uSortedStringList.pas:63` | **yes** | **DONE (P8 part A)**: a class over `TObjectList<TSortedStringItem>` | as 6.7 |
 | 6.9 | `TCallsignsList` | `uCallsigns.pas:76` | **yes** | **DONE (P8 part A)**: a class over `TObjectList<TCallsignEntry>`; UT `uTestCallsignsList` | UT `uTestStringCompare`, `uTestOffBandCredit`; Alt-D screen BENCH |
@@ -1655,6 +1656,43 @@ pointer item:
 - `uDupeSheetForm`'s radio holds its form through
   `RadioObject.tDupeSheetForm`, and `uCallsigns.DisplayDupeSheet` still takes
   a `RadioPtr`; both follow P11.
+
+---
+
+### 6.6 PacketObject -- an old-style object to a class, 2026-11-05 (Issue 89)
+
+**The decision, with evidence, and a reversal.** Reading the code, `PacketObject`
+looked dead: `CheckPacket` has an empty body, `CheckPacketBuffer` and
+`CheckPacketMessage` are comments, so `AnalyzePacketString` and
+`ProcessPacketSpot` are never reached; `PacketWindow` (logsubs2) had no caller;
+nothing ever assigns `PacketSerialPort`. The D7 tree agrees for the menu (the
+Ctrl+B / Ctrl+U rows are commented out in `uMenu`), and D7's telnet path
+(`t_.pas`) fed `Packet.ProcessPacketSpot` directly, which this port replaced with
+`uSpots`. **NY4I then ruled that TNC packet over a serial port is still a
+supported option, so nothing was deleted**; the deletion was written, gated and
+backed out.
+
+**Test first.** `test/unit/uTestLogPack.pas` (12 tests): `Init`, the Control-U
+spot memory (a ring of eleven cells -- front push, SH/DX back push, wrap, the
+start-meets-end drop), `DeletePacketSpot` at the start and in the middle, and
+the display line buffer (complete lines, an incomplete tail kept, bells and
+leading breaks dropped, the thirteen-cell ring wrap). It runs on the global
+`Packet`, so it reads the same against an object and a class. Green on the OLD
+object first (unit 424,627 / 0); the one literal that failed on the first run
+was my arithmetic for the ring (it holds twelve lines), corrected from the code
+and not from the output.
+
+**The conversion.** `PacketObject = class`; `Packet` is created in the unit's
+`initialization` and freed in `finalization`. No `with`, `@Packet`, `SizeOf` or
+`FillChar` touches it anywhere (measured over `src`, `test`, `tr4wserver` and
+`tr4w.lpr`). Fields zero on `Create` exactly as the global was zero-filled.
+
+**Not changed.** The serial transport (`SetUpPacketPortAndBuffer`,
+`SendPacketMessage`, the `CheckPacketBuffer` reader) is commented-out code in
+this tree and was left byte-for-byte as it was; `LookForQSXFrequency`
+(`Settings.Qsx.Enable`) is still called by `FoundDXSpot`.
+
+**Counters.** `C6-object-type` in `src` 6 -> 5.
 
 ---
 

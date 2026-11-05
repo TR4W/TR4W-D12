@@ -68,7 +68,7 @@ type
     Time: string[5];
   end;
 
-  PacketObject = object
+  PacketObject = class
 
     PacketBandSpots: boolean;
     PacketBaudRate: integer;
@@ -1261,8 +1261,16 @@ begin
 //  CPUKeyer.AddSerialPortString(Packet.PacketSerialPort, Message);
 end;
 
-begin
-//  PacketWindowUp := False;
-//  Packet.Init;
+(* PacketObject WAS AN OLD-STYLE object HELD BY VALUE; it is a class now
+  (Issue 89, audit 6.6). The global was zero-filled by the loader and the
+  class zero-fills its fields on Create, so the starting state is the same.
+  Created here, freed in finalization, so nothing leaks under heaptrc. *)
+initialization
+   Packet := PacketObject.Create;
+
+finalization
+   Packet.Free;
+   Packet := nil;
+
 end.
 

@@ -721,6 +721,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
    (* P7: the Super Check Partial cell buffer, over the matrix's TRMASTER fixture. *)
    uTestLogSCP          in 'uTestLogSCP.pas',
+   (* Issue 89 / audit 6.6: the TNC packet object's spot memory and display
+      line buffer, pinned before the object became a class. *)
+   uTestLogPack         in 'uTestLogPack.pas',
    (* M11 S6 part 1: every contest's domestic QTH rule that is not the
       domestic file, its hint and its four yes/no answers, at stations the
       matrix does not run, frozen against the old GetDomQTH, DomStringParse
@@ -1032,6 +1035,7 @@ begin
    RegisterSuite(TCRC16Tests.Create('CRC16'));
    RegisterSuite(TWinKeyWireTests.Create('WinKeyWire'));
    RegisterSuite(TLogSCPTests.Create('LogSCP'));
+   RegisterSuite(TLogPackTests.Create('LogPack'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TSpectrumMappingTests.Create('SpectrumMapping'));
    RegisterSuite(TSpectrumDisplayDefaultsTests.Create('SpectrumDisplayDefaults'));

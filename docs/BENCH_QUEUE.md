@@ -30,6 +30,12 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- THE TNC PACKET OBJECT IS A CLASS (pointer audit 6.6, Issue 89)
+
+`logpack.PacketObject` was an old-style `object` and is a `class` now, created and freed by the unit. The ring and line-buffer logic is unit-tested (`uTestLogPack`); a serial port is not.
+
+**Bench: TNC packet over a serial port still connects, receives spots, sends commands.** Needs a TNC (or a null-modem loop with a spot generator). IMPORTANT, read before benching: in this tree the serial calls inside `PacketObject` (`SetUpPacketPortAndBuffer`, `SendPacketMessage`, the `CheckPacketBuffer` reader) are commented out and `CheckPacket` is empty, so this tree may never have driven a TNC; D7 fed telnet spots to `Packet.ProcessPacketSpot` directly. If the bench shows no TNC traffic at all, that is the existing state, not this change; compare against a build from the commit before it.
+
 ## Added 2026-11-05 -- A REMAINING MULTIPLIER IS A TYPE, NOT TWO PACKED HALVES (pointer audit P9, 5.1c)
 
 Each cell of the remaining-multiplier windows (the generic one and the DX,
