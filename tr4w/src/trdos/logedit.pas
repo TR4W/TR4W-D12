@@ -67,7 +67,7 @@ const
   MULT_ZONE = 4;
   MULT_DOM = 8;
 type
-  EditableLog = object
+  EditableLog = class
     //    LogEntries: LogEntryArray;
 
     function CallIsADupe(var Call: CallString; Band: BandType; Mode: ModeType):
@@ -3284,5 +3284,16 @@ begin
              ContestHasPrefixMultiplier(contestRules)   or
              ContestHasZoneMultiplier(contestRules);
 end;
+
+(* EditableLog WAS AN OLD-STYLE object HELD BY VALUE; it is a class now
+  (Issue 89, audit 6.3). It has no data fields of its own -- its 28 methods
+  read the log source and the contest -- so nothing it held was lost. Created
+  here and freed in finalization. *)
+initialization
+   VisibleLog := EditableLog.Create;
+
+finalization
+   VisibleLog.Free;
+   VisibleLog := nil;
 
 end.

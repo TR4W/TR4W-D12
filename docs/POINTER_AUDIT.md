@@ -560,7 +560,7 @@ audit's list finds them.
 |---|---|---|---|---|---|
 | 6.1 | `RadioObject` + `RadioPtr` (`ActiveRadioPtr` 159, `RadioPtr` 115, `InactiveRadioPtr` 89 mentions) | `trdos/logradio.pas:168, 439` | no | a class (`RadioPtr` uses become plain references; `@Radio1` becomes `Radio1`). **The largest single item in this audit** | UT `uTestRadioStatus`, `uTestCWKeyer`, `uTestStatusAndNotice`, `uTestTCIServer`; BENCH one rig per verified protocol family |
 | 6.2 | `DupeAndMultSheet` (`Sheet`) | `trdos/logdupe.pas:165` | no | a class -- **DONE 2026-11-05 (Issue 89)**: created in `logstuff`'s `initialization` | MATRIX, CORPUS, FACTORY |
-| 6.3 | `EditableLog` (`VisibleLog`, 101 mentions) | `trdos/logedit.pas:70` | no | a class | MATRIX, UT `uTestLogRepository`; screen BENCH |
+| 6.3 | `EditableLog` (`VisibleLog`, 101 mentions) | `trdos/logedit.pas:70` | no | a class -- **DONE 2026-11-05 (Issue 89)**: created in `logedit`'s `initialization` | MATRIX, UT `uTestLogRepository`; screen BENCH |
 | 6.4 | `CallDatabase` (`CD`), `CellBufferObject` | `trdos/logscp.pas:94, 131` | no | classes, with 2.2 -- **`CellBufferObject` is `TSCPCellBuffer`, a class, since P7 (2026-10-17); `CallDatabase` is a class since 2026-11-05 (Issue 89)** | MATRIX (TRMASTER initial exchange) |
 | 6.5 | `K1EAKeyer` (`CPUKeyer`) | `trdos/logk1ea.pas:159` | no | a class, with 2.1 | BENCH |
 | 6.6 | `PacketObject` (`Packet`) | `trdos/logpack.pas:71` | no | a class -- **DONE 2026-11-05 (Issue 89)**: NY4I ruled TNC packet over a serial port is still a supported option, so it was converted, not deleted. See "6.6 PacketObject" below | UT `uTestLogPack` (written first); BENCH the serial path |
@@ -1658,6 +1658,18 @@ pointer item:
   a `RadioPtr`; both follow P11.
 
 ---
+
+### 6.3 EditableLog -- an old-style object to a class, 2026-11-05 (Issue 89)
+
+`VisibleLog` is created in a new `initialization` at the end of `logedit` and
+freed in `finalization`. Measured first: one global (149 mentions in `src`,
+`test`, `tr4wserver`), no `with`, no copy, no `@VisibleLog`, no `Default()`,
+no virtuals, no `Self`, and **no data fields at all** -- 28 methods that read
+the log source and the contest. Its four `FillChar`s zero locals and a
+`Result` string, never the instance. Oracles: the contest unit tests
+(`VisibleLog.QSOIsADupe`), `uTestLogRepository`, the corpus and the matrix.
+BENCH: nothing new; the editable-log grid is unchanged. `C6-object-type` src
+3 -> 2 (`K1EAKeyer`, `RadioObject` remain).
 
 ### 6.2 DupeAndMultSheet -- an old-style object to a class, 2026-11-05 (Issue 89)
 
