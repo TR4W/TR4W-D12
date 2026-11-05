@@ -30,6 +30,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- PREFERENCES > EXTERNAL LOGGER GRID EDITING (issue 220)
+
+The External Logger grid is the editor now; the separate "Configure external loggers..." dialog is gone. The order/toggle/remove logic is unit-tested (`uTestExternalLoggerGrid`, the drag driven through the grid's own `MoveColRow`); what no test can do is a mouse and a popup.
+
+- [ ] **Add each provider.** Press Add..., choose DXKeeper, then World Radio League, then Club Log, fill the fields, "Save to Preferences". Each appears as a new row (inactive: Order "-", Send new QSOs "No"). The WRL setup button and the Club Log field captions still work in the one-definition editor.
+- [ ] **Right-click edit / toggle.** Right-click a row (not the one already selected): the row under the pointer becomes selected and the menu offers Edit..., Send new QSOs (a tick when on), Move up, Move down, Remove.... Edit changes the name and the row follows. Send new QSOs ON gives it the next Order number; OFF moves the row below the active ones and its Order becomes "-". Double-click the Send new QSOs cell toggles; double-click elsewhere opens Edit. Switching ON a logger whose required field is blank is refused with the message.
+- [ ] **Drag to reorder.** Press on the ORDER cell (the grey left column) of an active row, drag it above/below another active row, release. Order numbers renumber, the moved row stays selected. Drop an inactive row among the active ones: it springs back to the inactive group and nothing else changes. Pressing on the Logger/Provider cells must NOT drag (that is expected; it only selects).
+- [ ] **Move up / Move down** in the popup do the same as the drag and are disabled at the edge of the group.
+- [ ] **Remove.** Remove... asks; Yes drops the row, No keeps it. The wording says pending deliveries stay in the contest log and are not redirected.
+- [ ] **Cancel discards.** Make several grid edits, press Cancel in Preferences: reopen and the grid is as it was. The page still says to Save and restart.
+- [ ] **Save, restart, order kept, delivery order honoured.** Make two loggers active, reverse them by dragging, Save, restart TR4W, reopen: same order. Log one QSO with a contest open and check the order the two destinations were handed it (tr4w.log; both loggers' first line for that QSO).
+- [ ] **First definition on a clean station.** On a settings file with no external-logger section, Add... on the legacy page creates the first definition and the page switches to the grid.
+- [ ] **Layout.** The grid, Add... button and the hint line below do not overlap at 100% and 150% scaling. The Order column is visibly a fixed (header-coloured) column.
+
 ## Added 2026-11-05 -- THE TNC PACKET OBJECT IS A CLASS (pointer audit 6.6, Issue 89)
 
 `logpack.PacketObject` was an old-style `object` and is a `class` now, created and freed by the unit. The ring and line-buffer logic is unit-tested (`uTestLogPack`); a serial port is not.
@@ -299,33 +313,6 @@ letter is needed. Measured before: the strip was empty for every MWC call.
 - [ ] Not changed: typing a lone `W` into the MWC exchange window shows
   nothing (`logsubs2`'s two-character gate before the typed lookup).
 
-## Added 2026-11-05 -- A SPOT'S SECTION FROM ITS COMMENT (issue 83)
-
-Setting **CLUSTER SPOT COMMENT MULTIPLIER** (Preferences, DX cluster; default
-OFF). Unit tests drive the tokenizer on real corpus lines and the multiplier
-through the real sheet; nobody has watched a band map colour a spot.
-
-- [ ] ARRL SS (CW or SSB) or any ARRL-section contest, setting ON, a section
-  you have NOT worked: a spot whose comment ends in that section (the local
-  cluster's `CW 13 dB 30 WPM CQ  NFL`) is coloured as a needed multiplier on
-  the band map and the call window. Work NFL on that band: the spot stops
-  being coloured (without a restart or a re-spot).
-- [ ] The same spot with the setting OFF (the default): colours exactly as
-  before. Turning the setting on or off needs no restart; spots already on the
-  map are re-asked at the next log change.
-- [ ] **Our own knowledge wins:** a station already in your log (or in the
-  call-history file) with section `UT`, spotted with `NFL` in the comment: the
-  spot follows UT, not NFL.
-- [ ] **A beacon is ignored:** `CW 24 dB 22 WPM NCDXF B  SCV` is not coloured
-  by SCV.
-- [ ] `POTA KFF-2726 NC +NC` follows NC; `NFL OR` follows NFL (the first);
-  `or in` (lower case) follows nothing; a state QSO party (`.dom` with
-  counties/states) follows a state word in the comment but never `DX`.
-- [ ] A grid contest (VHF) or a DX-prefix contest: nothing changes with the
-  setting on.
-- [ ] Look for a WRONG colour on spots whose comment holds a word that is also
-  a section (`DE`, `OR`, `IN`, `ME`, `OK`, `HI`) -- that is why it is OFF.
-
 ## Added 2026-11-04 -- SWEEPSTAKES: "MULT NEEDS FOR" NAMES THE SECTION, NOT THE CHECK (NY4I, bench)
 
 The header read `Mult needs for 18 UT :` after W7ST (33M 18 UT) was logged. The
@@ -365,8 +352,6 @@ looked at the window.
   needs strip shows it WORKED afterwards (it showed it needed before).
 - [ ] ARRL SS: type a call whose remembered exchange is a check alone (`18`):
   the header names the CALL, not the previous call's section.
-- [ ] Spots (CLUSTER SPOT COMMENT MULTIPLIER on): a NAQP station already in the
-  log as `TOM CA` is coloured by CA.
 
 ## Added 2026-11-04 -- SWEEPSTAKES: A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE SERIAL (NY4I)
 
@@ -5692,3 +5677,49 @@ Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-i386
 Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_FOLDERALREADYEXISTSOVERWRITE and TC_INVALIDSTATEMENTIN (no reliable trigger found).
 
 **Periodic HamScore score tick (2026-11-04):** `HamScoreScoreTick` calls `CalculateTotals`, which walks the WHOLE log on the main thread (every 5 s after a change, 30 s heartbeat). Not measured. Needs a latency measurement on a large contest log (tens of thousands of QSOs); watch for operator-visible stalls on Enter. Also confirm that with the log source unreadable the last posted score is kept and one warning is logged.
+
+## Added 2026-11-05 -- STARTUP WINDOW FLASHING (issue 219)
+
+Two changes; neither can be judged without a screen. (1) The tool-window restore no longer hands the keyboard back to the main window after EACH window (`OpenTR4WWindow(i, False)`); it does so once, at the end. Each window still activates as it is shown: the LCL has no way to show a form without activating it. (2) The "raise every window when you switch back to TR4W" handler (b8f4125c) is armed only AFTER the restore, so it can no longer raise everything a second time at start-up.
+
+Set `DEBUG LOG LEVEL = TRACE` (the per-window `[Startup] restored ...` lines are Trace; the new raiser lines are Debug). "The previous build" means v5.0.36 from the release page or a build of `b4b92ef4`: `build-out\app-i386-win32\tr4w_fpc.exe` is already this build. Use the same contest and the same `settings\tr4w.pos` with many tool windows left open (band map, function keys, master, radio 1, telnet, the remaining-mults windows, HamScore, a panadapter).
+
+- [ ] **Compare with the previous build.** Start the previous build (or v5.0.36) three times, then this build three times. Watch for these and note them for each start:
+  - title bars switching between active and inactive colour, back and forth;
+  - windows popping up, and then popping up AGAIN after they are all on screen (a second wave is the raiser);
+  - the taskbar buttons blinking or highlighting in turn.
+  Expected: about half the title-bar switching while the windows open (one per window, not two), and no second wave. The windows still appear one after another.
+- [ ] **The caret ends in the call window**, and the main window is in front of the tool windows when start-up finishes.
+- [ ] **In `tr4w.log` after start-up**, find `[Windows] activation raise armed, after the tool-window restore`. It should come after the last `[Startup] restored ...` (or `restoring the ... window took`) line. A `[Windows] activation raise:` line during start-up means the raiser still fired then; send that log.
+- [ ] **The raiser still works later.** Click another program, then click a TR4W tool window. Every TR4W window should come forward with the main window on top, and the log should show `[Windows] activation raise: ... raised N tool window(s)`.
+- [ ] **Opening a window from the Windows menu** still returns the caret to the call window (that path keeps the hand-back).
+
+## Added 2026-11-05 -- FILE > OPEN LOG... (issue 218 S0)
+
+File > Open Log... (the first item on the File menu, no keystroke) switches to another contest by RESTARTING: TR4W exits the way File > Exit does (radios unkeyed and shut down, restart file saved, score to UDP, backup copier stopped, network left, log closed) and starts a new instance on the chosen `.db`. The new instance is given `--wait-for-instance=<pid>` and retries the single-instance lock for up to 10 s while the old one finishes. Nothing is reset in place; that is S1-S6. Use `build-out\app-i386-win32\tr4w_fpc.exe` with two contests' `.db` files in the contest folder, radios connected, `DEBUG LOG LEVEL = DEBUG`.
+
+- [ ] **The picker opens in the contest folder** (where New Contest lists files: beside the binary on Windows), titled "Open a contest log", showing `*.db` by default, with "All files" as the second filter.
+- [ ] **Cancel does nothing.** TR4W keeps running on the same contest; `tr4w.log` has `[OpenLog] the picker was cancelled`.
+- [ ] **The same file does nothing.** Pick the `.db` that is open: the notice line says "That log is already open." and TR4W keeps running.
+- [ ] **Not a TR4W log is refused before anything closes.** With "All files", pick a `.txt` or another program's `.db`: the notice line says "Not a TR4W contest log, so it was not opened: ..." and TR4W keeps running. A `.cfg` is refused the same way, by design (an import is New Contest's job).
+- [ ] **Another contest closes cleanly and comes back on it.** Pick the other `.db`. TR4W closes (no exit question) and reopens on that contest within a few seconds, with its own QSOs, score and title. In `tr4w-early.log` beside the binary: `startup: started by File > Open Log -- waiting up to 10000 ms for instance <pid> to exit`, then `startup: instance <pid> has exited (waited N ms)`. There should NOT be an "already running" dialog. `tr4w.log` shows the old session's `[ExitProgram] Step SaveRestartFile` and `[OpenLog] starting ... on <file>` before `Program shutdown`.
+- [ ] **The previous contest's restart file was saved.** Open the first contest again with File > Open Log: its QSO count, mult totals and serial number continue where they were.
+- [ ] **The radios reconnect** in the new instance (both slots, serial and network), and nothing stays keyed across the switch. A network radio (K4, IC-9700 LAN) must accept the new session without a power cycle.
+- [ ] **The DX cluster, WSJT-X and TCI reconnect** in the new instance: the cluster logs in with your call without "already connected", and WSJT-X / a TCI client find their ports free. (The child is started with no inherited handles, so it holds none of the old instance's sockets.)
+- [ ] **Refused while transmitting.** Key the radio (PTT, a voice message, or WSJT-X TX) and choose File > Open Log: the notice says "Open Log was not done: a radio is transmitting...", no picker. With a long CW message playing: "...a CW message is still being sent...". Also try keying WSJT-X while the picker is open and then choose a file: it should still refuse.
+- [ ] **Started with `--settings` or `--lang`**, the new instance uses the same settings file and language (both are carried forward).
+- [ ] **Multi-op (if a server is up).** The old instance leaves the network normally and the new one reconnects and catches up as at an ordinary start. Not refused on purpose in S0.
+- [ ] **Linux / macOS:** there is no single-instance lock off Windows, so the new instance does not wait. Check it starts and opens the log (the old one has closed the log before starting it). On Linux run it FROM THE APPIMAGE: the relaunch starts the `.AppImage` file (`$APPIMAGE`), not the binary inside the old instance's mount, which goes away when the old instance exits. macOS relaunches the binary inside the bundle and is untested.
+
+## Added 2026-11-05 -- NEW CONTEST: QSO PARTY IN-STATE COUNTY (issue 217)
+
+New Contest, for a US QSO party, now shows an "I am in <area>" box above the party's row. Ticked: the row reads MY COUNTY and is a drop-down of the party's county codes (Texas shows "ANDE - Anderson"; Florida shows the bare code). Unticked: the row reads MY STATE and takes a US state, a Canadian province or DX. Anything else is refused, with the reason shown in the notice line and OK greyed. The value saved is MY STATE either way, with the same text as before (ALC chosen = ALC typed). The unit tests drive this on a form that is never shown; only a screen can judge the layout. Use `build-out\app-i386-win32\tr4w_fpc.exe` from a full `.\build\Build-App.ps1`. That build reports BUILD FAILED on the narrowing ceiling (1207 vs 1201; HEAD `fc20d3c9` measures the same without this change), but it links the exe first. Check the exe's timestamp is from that run.
+
+- [ ] **Florida QSO Party, in Florida.** Choose it. The box reads "I am in FL", unticked, and the row reads MY STATE. Tick it: the row becomes a list labelled MY COUNTY, the notice reads "You are in FL: choose your county from the list.", and OK stays grey until a county is chosen. OK must enable THE MOMENT a county is clicked in the list (the unit test raises the list's OnChange itself; whether a real click raises it is only visible here). Choose ALC, create the contest, and in the new log check that MY STATE is ALC and the session is "(in state)" (title bar or `tr4w.log` `[FCONTEST]`). A QSO's sent exchange is your county.
+- [ ] **Florida, out of state.** Leave the box unticked and type GA: OK enables. Type XX: the notice says it is not a state, province or DX, and OK greys. Type ALC or FL: the notice says to tick the box. Type DX and ON: both accepted.
+- [ ] **Another party with named counties (Texas QSO Party).** Tick the box: the list shows "CODE - Name". Choose one: the saved MY STATE is the code alone (ANDE, not "ANDE - Anderson").
+- [ ] **A party that asks for a name too (Colorado or Minnesota).** Type MY NAME, then tick and untick the box. The name must still be there, and only the state/county row changes.
+- [ ] **The 7QP.** The box reads "I am in 7th area" and the list is the 7th-area county codes (AZAPH ...). Typing AZ (or any of the eight 7th-area states) while unticked is refused with "tick the box"; CA is accepted.
+- [ ] **Unchanged parties.** British Columbia, Ontario, Quebec and IN7QPNE show NO box: the same free-entry row and notice as before.
+- [ ] **Layout.** The MY COUNTY drop-down sits exactly where the box does, the same width, and the label is not clipped. The drop-down list scrolls for Texas (254 entries). Check the box caption and notices in a second language (`--lang de`): the new strings are untranslated until the resourcestring harvest, so English is expected there today.
+- [ ] **Linux (gtk2).** The same, once: the drop-down list is a real list (no typing into it).

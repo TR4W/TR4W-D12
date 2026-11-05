@@ -791,6 +791,14 @@ table loaded -- the SS header test had none and passed only on the old rule.
 `MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a
 probe that takes the left side as the key miscounts every such line.
 
+**Corpus baselines (#206, 2026-11-05).** A re-freeze of `rescored.*` needs a WRITTEN reason per set in
+`tr4w/test/corpus/REFREEZE_NOTES.md`; an unexplained difference is a possible scoring regression and stays
+red. **Headless runs (`/RESCORE`, `/EXPORT`) read only the `settings` section of the settings file, never
+the legacy `commands` bucket**, so station facts in a fixture (grid, state, zone, name) must sit in
+`settings` -- and each one changes an export (State -> IARU `59 FL`, Zone -> IARU points, Name -> General
+`59 TOM`), so the fixture states only the grid. The 12-vs-16 IARU claimed score was a stated MY ZONE (a CQ
+zone) compared against ITU zones, not CTY.DAT.
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·
