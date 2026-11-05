@@ -72,12 +72,14 @@ type
     Hz:       Integer;  // RIT/XIT offset in Hz
     SplitOn:  Boolean;
   end;
-  PHLCommand = ^THLCommand;
+  (* The urgent queue holds the commands BY VALUE, oldest first (pointer
+    audit 2.8, 2026-11-05) -- it was a TList of New'd records. *)
+  THLCommands = array of THLCommand;
 
 type
   THamLibDirect = class(TFactoryRadioBase)
   private
-    FRig: PRIG;  // HamLib rig handle
+    FRig: PRIG;  // HamLib rig handle -- the C library's own pointer, kept: it is the boundary
     FModelID: Integer;
     FBaudRate: Integer;
     FSerialPortName: string;
@@ -107,7 +109,7 @@ type
     FSplitUnavailable: Boolean;
 
     // Send queue — protects FUrgentQueue for cross-thread access
-    FUrgentQueue: TList;
+    FUrgentQueue: THLCommands;
     FCritSect: TRTLCriticalSection;
 
     // Mode conversion helpers
@@ -393,7 +395,7 @@ begin
   FTransceiveEnabled := False;
   FUseMainSubVFO := False;
   FHasTargetableVFO := False;
-  FUrgentQueue := TList.Create;
+  FUrgentQueue := nil;
   { The RTL's names for the same operations on the same TRTLCriticalSection,
     on every platform -- Windows' spellings came from the Windows unit. }
   InitCriticalSection(FCritSect);
@@ -411,7 +413,6 @@ begin
   // the critical section.  The poller that also drains it has been stopped by
   // every caller that frees a radio (ShutDownRadioInterface, ExitProgram).
   DrainUrgentQueue;
-  FUrgentQueue.Free;
   DoneCriticalSection(FCritSect);
 
   inherited Destroy;
@@ -754,14 +755,11 @@ end;
 // Send queue — EnqueueUrgent, ExecuteCommand, DrainUrgentQueue
 
 procedure THamLibDirect.EnqueueUrgent(const cmd: THLCommand);
-var
-  item: PHLCommand;
 begin
-  New(item);
-  item^ := cmd;
   EnterCriticalSection(FCritSect);
   try
-     FUrgentQueue.Add(item);
+     SetLength(FUrgentQueue, Length(FUrgentQueue) + 1);
+     FUrgentQueue[High(FUrgentQueue)] := cmd;
   finally
      LeaveCriticalSection(FCritSect);
   end;
@@ -856,35 +854,28 @@ end;
 
 procedure THamLibDirect.DrainUrgentQueue;
 var
-  snapshot: TList;
+  snapshot: THLCommands;
   i: Integer;
-  item: PHLCommand;
 begin
   // Snapshot the queue under the lock, then execute outside it.
   // This minimises lock hold time and prevents a deadlock if ExecuteCommand
   // ever enqueues a follow-up command.
-  snapshot := TList.Create;
+  //
+  // Taking the array and leaving nil behind makes the snapshot its only
+  // owner, so the next EnqueueUrgent starts a fresh array rather than
+  // writing into this one.
+  EnterCriticalSection(FCritSect);
   try
-     EnterCriticalSection(FCritSect);
-     try
-        for i := 0 to FUrgentQueue.Count - 1 do
-           begin
-           snapshot.Add(FUrgentQueue[i]);
-           end;
-        FUrgentQueue.Clear;
-     finally
-        LeaveCriticalSection(FCritSect);
-     end;
-
-     for i := 0 to snapshot.Count - 1 do
-        begin
-        item := PHLCommand(snapshot[i]);
-        ExecuteCommand(item^);
-        Dispose(item);
-        end;
+     snapshot := FUrgentQueue;
+     FUrgentQueue := nil;
   finally
-     snapshot.Free;
+     LeaveCriticalSection(FCritSect);
   end;
+
+  for i := 0 to High(snapshot) do
+     begin
+     ExecuteCommand(snapshot[i]);
+     end;
 end;
 
 // Mode conversion helpers

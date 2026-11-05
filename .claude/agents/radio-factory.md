@@ -81,6 +81,16 @@ Disconnection sets the `radioWasDisconnected` flag rather than tearing the objec
 down. Note `TReadingThread` owns its own copy of that flag and holds **no radio
 reference** — per-radio reset work belongs in `Connect`.
 
+**THE ICOM LAN TRANSPORT IS WRITTEN AND READ ON SEVERAL THREADS AT ONCE** (D8,
+2026-11-05). Its TX history (`TIcomTxHistory`, a ring with its own leaf lock) had
+no lock at all: the senders (CI-V queue, timer thread, a reader answering a login)
+evicted entries that the Indy listener was reading for a retransmit, and
+`uTestIcomTxHistory` crashed the old code. Before adding state to that class, ask
+which threads touch it. Still open: `SendTrackedPacket` increments `FSendSeq`
+with no lock, from more than one thread. Separately, `uRadioPolling` drains HamLib's
+queue through `ro is THamLibDirect` -- the poller asking a radio's class, which
+should become a virtual.
+
 **NEVER CALL INDY'S `Connected` FROM OUTSIDE THE READING THREAD.** It is not a
 flag read: `TIdIOHandlerStack.Connected` calls `ReadFromSource(False, 0, False)`,
 which is a zero-timeout select followed by a **blocking `recv`**, and it appends the

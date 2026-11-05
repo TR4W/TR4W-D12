@@ -30,6 +30,18 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- THE HAMLIB COMMAND QUEUE HOLDS VALUES (pointer audit P13, 2.8)
+
+`THamLibDirect`'s urgent queue (frequency, mode, PTT, RIT/XIT, split, posted from
+the main thread and run on the polling thread) was a `TList` of `New`'d records
+and is a dynamic array of the record now. No test reaches it: every setter returns
+at once without a live rig. HamLib as a family is unproven on the bench.
+
+- [ ] **Any HamLib-driven radio (HAMLIB ANY, or FLRig), connected.** Click a band-map
+  spot, change mode, key and unkey, toggle split, set RIT. EXPECT: each reaches the
+  radio once, in the order made, and no access violation when TR4W exits or the
+  radio is rebuilt (Reset Radio Ports) straight after a burst of changes.
+
 ## Added 2026-11-05 -- THE ICOM LAN TX HISTORY IS A LOCKED RING (pointer audit P13, 2.8)
 
 The packets an Icom LAN link keeps for the radio's retransmit requests were a

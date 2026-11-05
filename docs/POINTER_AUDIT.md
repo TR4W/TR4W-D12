@@ -67,17 +67,17 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > 2026-10-16 inventory (at `28599599`, BEFORE P4 -- so the change is every
 > packet since PLUS every line of new code, not the packets alone):
 >
-> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) | after P13 2.7 and 2.8 Icom (2026-11-05) |
+> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) | after P13 2.7 and 2.8 (2026-11-05) |
 > |---|---:|---:|---:|---:|
-> | C1-ptrtype-decl | 91 | 63 | 60 | 56 |
+> | C1-ptrtype-decl | 91 | 63 | 60 | 55 |
 > | C1-link-field | 12 | 4 | 4 | 4 |
 > | C2-heap | 9 | 4 | 4 | 4 |
-> | C2-new-dispose | 79 | 40 | 30 | 21 |
+> | C2-new-dispose | 79 | 40 | 30 | 19 |
 > | C3-pointer-cast | 7 | 6 | 6 | 6 |
 > | C3-int-of-ptr | 11 | 8 | 8 | 8 |
 > | C3-typed-ptr-type | 181 | 177 | 177 | 177 |
 > | C3-addr-of | 387 | 323 | 322 | 322 |
-> | C3-deref | 1,127 | 644 | 521 | 503 |
+> | C3-deref | 1,127 | 644 | 521 | 501 |
 > | C3-inc-dec-ptr | 41 | 33 | 33 | 33 |
 > | C3-untyped-param | 35 | 20 | 20 | 20 |
 > | C3-memcmp | 2 | 2 | 2 | 2 |
@@ -91,7 +91,7 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > | C6-ptr-named | 562 | 574 | 572 | 572 |
 > | C7-proc-type | 96 | 125 | 125 | 125 |
 > | C7-pointer-word | 70 | 111 | 111 | 111 |
-> | **src total** | **2,909** | **2,338** | **2,192** | **2,161** |
+> | **src total** | **2,909** | **2,338** | **2,192** | **2,156** |
 >
 > **Six rows ROSE**, and they are stated, not explained: `C7-pointer-word`
 > +41 (P1 accounts for +20 -- the RTL thread parameter, see P1 and P2; the
@@ -102,16 +102,18 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > **P13 IS DONE FOR 2.4 AND 2.5 (2026-11-05)** -- `postunit`'s two report arrays and the
 > WAE QTC table are module arrays, not `New`/`Dispose` blocks; see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05)
 > and [P13 part 2](#p13-part-2----the-qtc-per-station-table-2026-11-05). **Item 2.7 is done too**
-([P13 part 3](#p13-part-3----network-radio-discovery-2026-11-05)): `src` 2,192 -> **2,171**. **The Icom half of 2.8 is done**
-([P13 part 4](#p13-part-4----the-icom-lan-tx-history-2026-11-05)), and it was a live
-race, not only a pointer: `src` -> **2,161**. The HamLib half of 2.8 is open.
+> ([P13 part 3](#p13-part-3----network-radio-discovery-2026-11-05)): `src` 2,192 -> **2,171**. **The Icom half of 2.8 is done**
+> ([P13 part 4](#p13-part-4----the-icom-lan-tx-history-2026-11-05)), and it was a live
+> race, not only a pointer: `src` -> **2,161**. **The HamLib half is done too**
+> ([P13 part 5](#p13-part-5----the-hamlib-urgent-queue-2026-11-05)): `src` -> **2,156**.
+> **P13 IS COMPLETE.**
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
 > `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
-> P11, P13 (2.4, 2.5, 2.7 and the Icom half of 2.8 are since done -- see above; the HamLib half of 2.8 is not), and the four old-style objects above.
+> P11 (P13 is since done in full -- see above), and the four old-style objects above.
 >
 > **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
 > 2026-11-05 reconciliation said the file did not exist; it is tracked at
@@ -472,7 +474,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 | 2.5 | **DONE 2026-11-05 (P13 part 2)** -- was `trdos/logstuff.pas:1068`, `trdos/LogCfg.pas:347` | `QTCDataArray` | live (WAE) | a dynamic array owned by the contest | low | **none** for QTC windows; `docs/QTC_BENCH_HANDOFF.md` is the bench script -- the counters are pinned by `uTestQTCCounts` now |
 | 2.6 | `uSettingsModel.pas:5727, 5832, 7058, 7166` `FreeMem(props)` | frees `GetPropList`'s result | live | **keep** -- `TypInfo.GetPropList` allocates and the caller frees; that is the RTL's contract. Add the comment | none | UT `uTestSettingsModel`, `uTestAllSettings` |
 | 2.7 | **DONE 2026-11-05 (P13 part 3)** -- was `uCAT.pas:107, 128, 153` `Dispose(P...DiscoveredRadio(list[i]))`; `uK4Discovery.pas:227`, `radioFactory/uFlexDiscovery.pas:281`, `uIcomNetworkDiscovery.pas:151` `New(Radio)` | discovery results as `^record` in a `TList` | live | ~~`specialize TObjectList<TDiscoveredX>` with `OwnsObjects`~~ a dynamic array of the record -- see P13 part 3 for why not the object list | low | UT `uTestFlexDiscovery`; K4 and Icom discovery: **none** -> BENCH |
-| 2.8 | **Icom DONE 2026-11-05 (P13 part 4)** -- was `uIcomNetworkTransport.pas:2611/2621/2653` (`PSeqBufEntry`), now `TIcomTxHistory`, a locked ring, pinned by `uTestIcomTxHistory`; **the old one was a live cross-thread race (D8)**. `radioFactory/uRadioHamLibDirect.pas:762/885` (`PHLCommand`) | per-radio queues of `^record` | live | `specialize TQueue<T>` / `TList<T>` of records | medium (Icom LAN is unproven on the bench) | UT `uTestIcomTeardown` (Icom, partial), `uTestHamLibIDs` (ids only); BENCH |
+| 2.8 | **Icom DONE 2026-11-05 (P13 part 4)** -- was `uIcomNetworkTransport.pas:2611/2621/2653` (`PSeqBufEntry`), now `TIcomTxHistory`, a locked ring, pinned by `uTestIcomTxHistory`; **the old one was a live cross-thread race (D8)**. **HamLib DONE 2026-11-05 (P13 part 5)** -- was `radioFactory/uRadioHamLibDirect.pas:762/885` (`PHLCommand`), now a dynamic array of `THLCommand` under the existing lock | per-radio queues of `^record` | live | `specialize TQueue<T>` / `TList<T>` of records | medium (Icom LAN is unproven on the bench) | UT `uTestIcomTeardown` (Icom, partial), `uTestHamLibIDs` (ids only); BENCH |
 | 2.9 | `uMainThread.pas:126/140` (`PPendingCall`), `ui/lcl/uMainForm.pas:2294/2327/2354` (`PElementWork`), `uGetServerLog.pas:206/230` (`PSyncProgress`), `TF.pas:437/473/943/1005` (warning text, worker start) | cross-thread handoff through `Application.QueueAsyncCall`'s single `PtrInt` | live | **keep, it is the LCL's API**: `QueueAsyncCall` carries one `PtrInt`. `uMainThread.pas:82` already says so. The agent memory `fpc-queue-purges-its-own-callback` is why `TThread.Queue` is not the substitute | none | UT `uTestStatusAndNotice`, `uTestWSJTXThreading` |
 
 ### Category 3 -- pointer arithmetic, casts, untyped buffers
@@ -1399,6 +1401,46 @@ soak.
 corruption reports, 57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range
 warnings 3, both at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest
 matrix 194 identical, 0 differing, no re-freeze.
+
+---
+
+### P13 part 5 -- the HamLib urgent queue, 2026-11-05
+
+**The conversion.** `THamLibDirect.FUrgentQueue` was a `TList` of `New`'d
+`THLCommand` records. The main thread queued them in `EnqueueUrgent`, under
+`FCritSect`. The polling thread copied them into a second `TList` in
+`DrainUrgentQueue`, then ran and `Dispose`d each one. The queue is now
+`THLCommands = array of THLCommand`, holding the commands by value, oldest first:
+- `EnqueueUrgent` appends under the lock.
+- `DrainUrgentQueue` takes the whole array under the lock and leaves nil behind.
+  That makes the snapshot the array's only owner, and the next enqueue starts a
+  fresh one. It then runs each command outside the lock, as it did before, so a
+  command that queues a follow-up still cannot deadlock.
+- `PHLCommand`, the `New`, the `Dispose`, the snapshot `TList` and the queue's `Free`
+  are gone. `THLCommand` holds no managed field.
+- `Destroy` keeps its order: `CloseRig`, drain, `DoneCriticalSection`.
+
+`FRig: PRIG` stays: it is HamLib's own C pointer, the genuine boundary, and now
+says so.
+
+**What is NOT covered.** Nothing reaches the queue without a live rig: every public
+setter returns at once while `FRig = nil`. The registry destructor walk
+(`uTestRadioDestructors`) still builds and frees a HamLib radio under `-Checked`,
+so the empty-queue drain at `Destroy` is exercised; a queue with commands in it
+is not. HamLib itself is unproven on the bench. `BENCH_QUEUE.md` carries it.
+
+**Seen and NOT changed.** `uRadioPolling` drains the queue through
+`if ro is THamLibDirect then THamLibDirect(ro).DrainUrgentQueue` -- the poller
+asking which class a radio is. That is the shape the radio-factory rules forbid,
+and the fix is a virtual on the base, not a pointer change. Reported, not fixed here.
+
+**Counters.** `src` total 2,161 -> 2,156: `C2-new-dispose` -2, `C3-deref` -2,
+`C1-ptrtype-decl` -1. `Count-LiveMove` 430, unchanged.
+
+**Oracles.** Unit 424,217 / 0, plain and `-Checked` (heaptrc 0 corruption reports,
+57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both
+at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze.
 
 ---
 
