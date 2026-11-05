@@ -69,6 +69,11 @@ procedure QueueNewContestCommand(const aCommand, aValue: string);
 (* Whether the dialog created a contest this run -- anything queued at all. *)
 function HasNewContestChoices: boolean;
 
+(* THE VALUE QUEUED FOR aCommand -- the last one queued, matched in any case;
+  '' when it was not queued. Read only: what the dialog will apply, for a
+  test to check (issue 217) and nothing to change. *)
+function QueuedNewContestValue(const aCommand: string): string;
+
 (* THE APPLICATION. Call it after the station settings are loaded and the
   token effects are subscribed, and before the log is opened. Returns how many
   commands were accepted; nothing queued returns 0 having done nothing.
@@ -130,6 +135,21 @@ end;
 function HasNewContestChoices: boolean;
 begin
    Result := (Commands.Count > 0) or (gMainCallsign <> '');
+end;
+
+function QueuedNewContestValue(const aCommand: string): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to Commands.Count - 1 do
+      begin
+      (* Widened to compare, never narrowed: the list holds the RTL string. *)
+      if UnicodeSameText(string(Commands.Names[i]), Trim(aCommand)) then
+         begin
+         Result := string(Commands.ValueFromIndex[i]);
+         end;
+      end;
 end;
 
 (* Applies one setting AS THE CONTEST'S.

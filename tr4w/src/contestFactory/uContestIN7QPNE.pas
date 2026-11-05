@@ -257,6 +257,8 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPT, IN ITS OWN WORDS -- Q87. See the
          implementation. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* NO IN/OUT BOX -- issue 217; see the body. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; override;
       (* AN IN-AREA STATION IS SENT TO ITS OWN PARTY -- Q104. See the
          implementation. *)
       function NewContestValueRefusal(aField: TNewContestField;
@@ -646,6 +648,15 @@ end;
 procedure TContestIN7QPNE.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(SNewContestIN7QPNECountyOrState, ncfMyState);
+end;
+
+(* NO IN/OUT BOX -- issue 217. A station inside any of the four parties is
+   refused here and sent to its own party (NewContestValueRefusal, Q104), so
+   this contest has no "inside" to offer a county list for. *)
+function TContestIN7QPNE.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   Result := inherited DescribeNewContestHostArea(aArea);
+   Result := False;
 end;
 
 function IN7QPNEPartyOfEntrantState(const aMyState: string;

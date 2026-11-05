@@ -42,7 +42,8 @@ uses
   ,
   uTR4WStrings,
   utils_text,
-  LCLStrConsts;
+  LCLStrConsts,
+  uNewContestForm;     // TfrmNewContest -- the designed form this unit drives
 (* ~~InitialCommands~~ IS GONE -- M9a, 2026-10-02. The fields the dialog may
   ask for are uContestBase.TNewContestField now, because a contest names them
   (TContestBase.DescribeNewContestPrompts) and a contest class may not reach
@@ -71,6 +72,24 @@ procedure DisplayInitialCommand(Command: TNewContestField);
 // the call site.
 procedure ShowNewContest;
 
+(* THE DIALOG'S RULES ON A FORM THE CALLER MADE -- what ShowNewContest does
+  around ShowModal, split out so a test can drive the real rules on a form
+  it never shows (issue 217). Attach makes aForm the dialog and hangs this
+  unit's handlers on it; Detach takes them down and forgets the contest's
+  state, and does not free the form.
+
+  aDomDir is the folder a contest's county file is read from: '' is the
+  shipped dom folder (uAppPaths.ShippedDomFilePath), which is what the
+  program passes and what set-up's in-state test reads. A test names the
+  tree's target\dom, which is not DataDir off Windows. *)
+procedure AttachNewContestForm(aForm: TfrmNewContest; const aDomDir: string = '');
+procedure DetachNewContestForm;
+
+(* QUEUES WHAT THE CONTEST'S ROWS HOLD -- SaveNewContest's row loop: every
+  row the contest asked for, and every CATEGORY row, as the command it
+  stands for and the value it holds. *)
+procedure QueueNewContestRows;
+
 implementation
 uses
    (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
@@ -79,8 +98,7 @@ uses
   uAppPaths,   // ContestDir -- where an operator's contest files live
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
-  uNewContestForm,     // the designed form this unit now drives
-  uLatestContest,      (* TLatestContest -- the last contest, as its log describes it *)
+  uLatestContest,     (* TLatestContest -- the last contest, as its log describes it *)
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG,
@@ -93,7 +111,10 @@ uses
   (* The log file name and its rule -- one artifact, one directory. *)
   uLogNaming,                // SetCFGCommandValue -- the one route to a [COMMANDS] value
   (* ContestIdentity -- the chosen contest, asked what to prompt for (M9a). *)
-  uContestRegistry;
+  uContestRegistry,
+  uAppStrings,         // SNewContestHostArea* -- issue 217
+  uDomFileKeys,        // DOM_EXTENSION -- the county file's name, as set-up builds it
+  uNewContestHostArea; // THostAreaPlaces, HostAreaOutsideRefusal -- issue 217
 
 const
 
@@ -141,6 +162,17 @@ var
   NewContestPromptComment               : string;
 //  NewContestAllowReturn                 : boolean;
   SelectedContest                       : TContestHandle;
+  (* THE CHOSEN CONTEST'S "I AM IN <AREA>" BOX -- issue 217. Active only
+    while the contest says its station's QTH depends on it
+    (TContestBase.DescribeNewContestHostArea), its row was asked for and its
+    county file gave places; otherwise the row stays free entry exactly as
+    before. The places are owned here and freed by ForgetHostArea. *)
+  HostAreaActive                        : boolean = False;
+  HostArea                              : TNewContestHostArea;
+  HostAreaRow                           : integer = 0;
+  HostAreaPlaces                        : THostAreaPlaces = nil;
+  (* Where the county file is read from -- see AttachNewContestForm. *)
+  NewContestDomDir                      : string = '';
 
 (* sfFLAG IS DELETED (2026-09-08), AND WITH IT AN EMPTY `const` BLOCK. It was DDL_ARCHIVE or DDL_READWRITE or
     DDL_DIRECTORY -- the flag set for a Win32 DlgDirList -- and NOTHING
@@ -218,9 +250,119 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+  THE HOST-AREA BOX -- issue 217 (NY4I, 2026-11-05).
+
+  The contest says whether its station's QTH depends on being in the host
+  area; this unit only renders the answer. The box is the designed "I am in"
+  check box, and it governs ONE row -- the one the contest's prompts already
+  asked for -- so every other row (Colorado's MY NAME, the categories) keeps
+  what was typed in it. Ticked, that row is a list of the county file's
+  keys; unticked, free entry for a state, a province or DX. The command it
+  queues is the same either way: the row's field, MY STATE.
+  --------------------------------------------------------------------------- *)
+
+procedure ForgetHostArea;
+begin
+   HostAreaActive := False;
+   HostAreaRow := 0;
+   FreeAndNil(HostAreaPlaces);
+end;
+
+(* The row the contest asked aField in, or 0 when it asked none. *)
+function RowOfField(aField: TNewContestField): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := 1 to NewContestDisplayedCommands do
+      begin
+      if (i <= CSAS) and (NewContestRowFields[i] = aField) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+(* The governed row as the box says: its label, list or box, and notice. *)
+procedure ShowHostAreaMode;
+var
+   notice: string;
+begin
+   if frmNewContest.IAmIn then
+      begin
+      frmNewContest.ShowRowPick(HostAreaRow, SNewContestHostAreaCountyLabel,
+                                HostAreaPlaces.Displays, HostAreaPlaces.Keys);
+      notice := Format(SNewContestHostAreaInsideNotice, [HostArea.Area]);
+      end
+   else
+      begin
+      frmNewContest.ShowRowEntry(HostAreaRow, SNewContestHostAreaStateLabel);
+      notice := Format(SNewContestHostAreaOutsideNotice, [HostArea.Area]);
+      end;
+   frmNewContest.SetComment(notice);
+   NewContestPromptComment := notice;
+end;
+
+(* After the contest's prompts are up: offer the box, if the contest does. *)
+procedure SetUpHostArea;
+var
+   path: string;
+begin
+   ForgetHostArea;
+   if not ContestIdentity(SelectedContest).DescribeNewContestHostArea(HostArea) then
+      begin
+      Exit;
+      end;
+
+   HostAreaRow := RowOfField(HostArea.Field);
+   if HostAreaRow = 0 then
+      begin
+      Exit;
+      end;
+
+   (* THE IN-STATE TEST'S OWN FILE, BY THE SAME PATH -- FCONTEST.
+     FoundMyStateInDomFile -- so nothing listed can be judged out of state. *)
+   if NewContestDomDir = '' then
+      begin
+      path := ShippedDomFilePath(HostArea.PlacesFile + string(DOM_EXTENSION));
+      end
+   else
+      begin
+      path := ExistingDataFile(IncludeTrailingPathDelimiter(NewContestDomDir) +
+                               HostArea.PlacesFile + string(DOM_EXTENSION));
+      end;
+   HostAreaPlaces := THostAreaPlaces.Create;
+   HostAreaPlaces.LoadFromFile(path);
+   if HostAreaPlaces.Count = 0 then
+      begin
+      (* No list to offer: the row stays free entry, as it always was. *)
+      logger.Warn('[NewContest] %s offers an in-area choice but %s gives no ' +
+                  'places, so its row stays free entry.',
+                  [ContestId(SelectedContest), path]);
+      ForgetHostArea;
+      Exit;
+      end;
+
+   HostAreaActive := True;
+   frmNewContest.ShowIAmIn(Format(TC_IAMIN, [HostArea.Area]));
+   ShowHostAreaMode;
+end;
+
 (* The 'I am in <state>' box was ticked or cleared. *)
 procedure ApplyIAmIn;
 begin
+   (* THE HOST-AREA BOX CHANGES ITS ONE ROW, nothing else -- issue 217. The
+     rest of this procedure is the other contests' box, unchanged: it clears
+     every row and shows what ticking asks for. *)
+   if HostAreaActive then
+      begin
+      ShowHostAreaMode;
+      BeginNewContest;
+      Exit;
+      end;
+
    ClearFields;
    frmNewContest.SetComment('');
    NewContestPromptComment := '';
@@ -244,6 +386,7 @@ begin
    (* THE LINE'S IDENTITY, not its caption read back through
      GetContestFromString -- the caption is the display name since M9b. *)
    SelectedContest := frmNewContest.SelectedContest;
+   ForgetHostArea;
    ClearFields;
    frmNewContest.SetComment('');
    NewContestPromptComment := '';
@@ -259,6 +402,7 @@ begin
         British Columbia, which this named out of the head, says otherwise in
         its own class. *)
       ShowContestPrompts(False);
+      SetUpHostArea;
       end;
 
    BeginNewContest;
@@ -316,6 +460,18 @@ begin
     prompt's comment while it stands and OK stays disabled; the prompt comes
     back when the value is changed to one the contest accepts. *)
   refusal := '';
+
+  (* AN OUTSIDE ENTRY THE BOX DOES NOT TAKE -- issue 217. Inside, the row is
+    a list of the area's places, so only "nothing chosen" is left, and that
+    is the empty-row rule above. *)
+  if HostAreaActive and
+     (not frmNewContest.RowIsPick(HostAreaRow)) then
+     begin
+     refusal := HostAreaOutsideRefusal(HostAreaPlaces, HostArea.Area,
+                                       HostArea.HostState,
+                                       frmNewContest.RowText(HostAreaRow));
+     end;
+
   if frmNewContest.ContestChosen then
      begin
      for i := 1 to NewContestDisplayedCommands do
@@ -345,8 +501,6 @@ end;
   it runs at startup now rather than here -- see that unit for why. *)
 
 procedure SaveNewContest;
-var
-  i                                     : Cardinal;
 begin
   begin
       {callsign}
@@ -430,23 +584,7 @@ begin
     marked as the CONTEST'S when it is applied. *)
   QueueNewContestCommand('MY CALL', frmNewContest.MyCall);
 
-  { The row's LABEL is the command name and its field is the value, which is
-    why the label is read back rather than held in a parallel array. A row the
-    contest never asked for is empty and is skipped. }
-  (* A CATEGORY ROW IS QUEUED EVEN WHEN BLANK. Its blank item is a choice --
-    "no category", the *UNSET member (NY4I, 2026-10-29) -- and skipping it
-    would leave the setting's default in force instead. The six are the rows
-    InitialCommandsSA2 names; the per-contest rows are not, and a blank one
-    is still one the contest never asked for. *)
-  for i := 1 to CSAS do
-     begin
-     if (Trim(frmNewContest.RowText(i)) = '') and
-        (InitialCommandsSA2[i] = '') then
-        begin
-        Continue;
-        end;
-     QueueNewContestCommand(frmNewContest.RowCaption(i), frmNewContest.RowText(i));
-     end;
+  QueueNewContestRows;
 
   { CONTEST LAST, AND THAT IS NOT COSMETIC. It was the last line the .cfg
     carried, so it was applied last, and its effect (FoundContest) builds the
@@ -474,6 +612,45 @@ begin
      { The modal form closes itself -- ShowNewContest reads Choice. }
      end;
 
+end;
+
+(* THE COMMAND A ROW STANDS FOR. A row the contest asked for is its field's
+  command, recorded when the row was handed out (DisplayInitialCommand); a
+  CATEGORY row is its permanent label. Until issue 217 the label was read
+  back for both, which was the same text -- but the host-area box labels the
+  MY STATE row "MY COUNTY" for a station inside the area, and the command
+  must not follow the label. *)
+function RowCommand(aRow: integer): string;
+begin
+   if (aRow <= NewContestDisplayedCommands) and (aRow <= CSAS) then
+      begin
+      Result := InitialCommandsSA[NewContestRowFields[aRow]];
+      end
+   else
+      begin
+      Result := frmNewContest.RowCaption(aRow);
+      end;
+end;
+
+procedure QueueNewContestRows;
+var
+   i: integer;
+begin
+   { A row the contest never asked for is empty and is skipped. }
+   (* A CATEGORY ROW IS QUEUED EVEN WHEN BLANK. Its blank item is a choice --
+     "no category", the *UNSET member (NY4I, 2026-10-29) -- and skipping it
+     would leave the setting's default in force instead. The six are the rows
+     InitialCommandsSA2 names; the per-contest rows are not, and a blank one
+     is still one the contest never asked for. *)
+   for i := 1 to CSAS do
+      begin
+      if (Trim(frmNewContest.RowText(i)) = '') and
+         (InitialCommandsSA2[i] = '') then
+         begin
+         Continue;
+         end;
+      QueueNewContestCommand(RowCommand(i), frmNewContest.RowText(i));
+      end;
 end;
 
 { The formatting is Format, not TF.Format through a shared PAnsiChar buffer:
@@ -645,14 +822,35 @@ begin
    SetCharBuffer(TR4W_CFG_FILENAME, frmNewContest.SelectedFile);
 end;
 
-procedure ShowNewContest;
+procedure AttachNewContestForm(aForm: TfrmNewContest; const aDomDir: string = '');
 begin
-   frmNewContest := TfrmNewContest.Create(nil);
-   try
-      OnContestChanged := ApplyContestChoice;
-      OnIAmInChanged   := ApplyIAmIn;
-      OnFieldsChanged  := FieldsChanged;
+   NewContestDomDir := aDomDir;
+   frmNewContest    := aForm;
+   SelectedContest  := NoContest;
+   ForgetHostArea;
+   NewContestDisplayedCommands := 0;
+   NewContestPromptComment := '';
+   OnContestChanged := ApplyContestChoice;
+   OnIAmInChanged   := ApplyIAmIn;
+   OnFieldsChanged  := FieldsChanged;
+end;
 
+procedure DetachNewContestForm;
+begin
+   OnContestChanged := nil;
+   OnIAmInChanged   := nil;
+   OnFieldsChanged  := nil;
+   ForgetHostArea;
+   NewContestDomDir := '';
+   frmNewContest    := nil;
+end;
+
+procedure ShowNewContest;
+var
+   form: TfrmNewContest;
+begin
+   AttachNewContestForm(TfrmNewContest.Create(nil));
+   try
       PrepareForm;
 
       if frmNewContest.ShowModal = mrOk then
@@ -673,10 +871,11 @@ begin
          TR4W_CFG_FILENAME[0] := '_';
          end;
    finally
-      OnContestChanged := nil;
-      OnIAmInChanged   := nil;
-      OnFieldsChanged  := nil;
-      FreeAndNil(frmNewContest);
+      (* Handlers down BEFORE the form goes, as they always were, so nothing
+        the form raises while it is destroyed reaches this unit. *)
+      form := frmNewContest;
+      DetachNewContestForm;
+      form.Free;
    end;
 end;
 end.

@@ -1267,6 +1267,36 @@ type
       function Inside(aIndex: integer): TNewContestPrompt;
    end;
 
+   (* WHERE THE STATION IS DECIDES WHAT IT ENTERS -- issue 217 (NY4I,
+      2026-11-05: the Florida QSO Party asked a Florida station for its
+      county under a MY STATE label, and took anything typed).
+
+      A QSO party's own QTH is ONE field holding one of two things: the
+      station's COUNTY when it is inside the host area, its state, province
+      or DX when it is outside. Set-up tells them apart by asking whether
+      the value is a KEY of the party's county file (FCONTEST.
+      FoundMyStateInDomFile). This is what the New Contest dialog needs to
+      ask the same question first: an "I am in <Area>" box, and inside it a
+      drop-down of exactly those keys, so nothing it offers can set the
+      station up out of state.
+
+      Field         the row it governs -- the field the prompts already ask
+                    for (MY STATE), so what is queued does not change.
+      Area          the words of the box, "I am in <Area>" (QSOPartyArea).
+      HostState     the host's own two-letter state, which a station outside
+                    the area cannot be from; '' for a multi-state area.
+      PlacesFile    the .dom, without its extension, whose KEYS are the
+                    in-area QTHs -- the in-state test's own file.
+
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER -- pure data one getter
+      answers, as TTotalsDisplay is. *)
+   TNewContestHostArea = record
+      Field: TNewContestField;
+      Area: string;
+      HostState: string;
+      PlacesFile: string;
+   end;
+
    (* WHAT THE TOTALS WINDOW SHOWS DIFFERENTLY FOR THIS CONTEST -- M9a
       (uTotal.UpdateTotals2). A RECORD BECAUSE IT IS AN INTERFACE PARAMETER --
       the answer of one getter, pure data -- as TScoreTotals is.
@@ -3139,6 +3169,21 @@ type
          of ContestIdentity, like the prompts: a value, no station. *)
       function NewContestValueRefusal(aField: TNewContestField;
                                       const aValue: string): string; virtual;
+
+      (* DOES THE STATION'S OWN QTH DEPEND ON BEING IN THE HOST AREA? --
+         issue 217. True, with the answer in aArea, makes the New Contest
+         dialog offer "I am in <Area>" and, ticked, a drop-down of the
+         area's places in place of free entry; see TNewContestHostArea.
+
+         THE BASE ANSWERS FOR EVERY US QSO PARTY (IsUSQSOParty), the
+         contests whose set-up runs the in-state test -- the same set the
+         base's DescribeNewContestPrompts asks "county if in, else state,
+         province or DX". A party whose outside rule is NOT that sentence
+         states False until its rule is settled: British Columbia (state or
+         province, no DX), Ontario and Quebec (empty for DX) and IN7QPNE
+         (which refuses an in-area station). Asked of ContestIdentity: no
+         station. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; virtual;
 
       (* THE CABRILLO CONTEST: NAME, given the session's contest title and
          name. The base is CabrilloName; General QSO, a log rather than a
@@ -6089,6 +6134,23 @@ begin
       aPrompts.AskFieldWithComment(Format(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX,
                                           [area, area]),
                                    ncfMyState);
+      end;
+end;
+
+function TContestBase.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   (* The same trait as the head above, and the same field: the dialog's
+      box governs the row that head asks for. See the declaration. *)
+   aArea.Field := ncfMyState;
+   aArea.Area := '';
+   aArea.HostState := '';
+   aArea.PlacesFile := '';
+   Result := IsUSQSOParty;
+   if Result then
+      begin
+      aArea.Area := QSOPartyArea;
+      aArea.HostState := HostState;
+      aArea.PlacesFile := DomesticFileName;
       end;
 end;
 

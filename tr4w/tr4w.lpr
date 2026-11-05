@@ -119,6 +119,7 @@ uses
   uTextFitAudit in 'src\ui\lcl\uTextFitAudit.pas',
   uNewContest in 'src\uNewContest.pas',
   uNewContestCommands in 'src\uNewContestCommands.pas',
+  uNewContestHostArea in 'src\uNewContestHostArea.pas',
   uContestChoices in 'src\uContestChoices.pas',
   uLatestContest in 'src\uLatestContest.pas',
   uCategoryPowerChange in 'src\uCategoryPowerChange.pas',

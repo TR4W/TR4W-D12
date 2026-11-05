@@ -655,6 +655,7 @@ uses
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
    uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
+   uNewContestHostArea  in '..\..\src\uNewContestHostArea.pas',
    uDomInclude          in '..\..\src\uDomInclude.pas',
    uContestNames        in '..\..\src\uContestNames.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
@@ -695,6 +696,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestScoringMyFacts  in 'uTestScoringMyFacts.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
+   uTestNewContestHostArea in 'uTestNewContestHostArea.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
    (* M9b: the New Contest drop-down's list, and a CATEGORY-POWER change. *)
@@ -1155,6 +1157,7 @@ begin
    RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));
    RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
+   RegisterSuite(TNewContestHostAreaTests.Create('NewContestHostArea'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
    RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));

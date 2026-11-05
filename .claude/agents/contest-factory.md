@@ -1047,6 +1047,13 @@ the target shape, the M-step migration order and the open questions.
   `NewContestValueRefusal(field, value)` (Q104, 2026-10-17: '' accepts, any
   other answer is the message `uNewContest.BeginNewContest` shows while OK stays
   disabled; the base accepts everything, IN7QPNE refuses an in-area MY STATE);
+  `DescribeNewContestHostArea(out TNewContestHostArea)` (issue 217,
+  2026-11-05: the box "I am in <area>"; ticked, the MY STATE row becomes a
+  MY COUNTY drop-down of the county file's KEYS -- set-up's in-state test's
+  own -- else free entry taking a state, a province or DX, `uNewContestHostArea`;
+  the queued command stays MY STATE, the row's FIELD, never its label;
+  the base answers for every `IsUSQSOParty`, BC/ON/QC/IN7QPNE state False
+  with their reason; `uTestNewContestHostArea` walks the registry);
   `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
   `ReportsRunningScore` (hour totals); `CabrilloContestName`,
   `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` (keyed on the

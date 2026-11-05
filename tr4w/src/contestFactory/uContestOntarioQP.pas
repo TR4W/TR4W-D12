@@ -264,6 +264,8 @@ type
 
       (* ITS OWN NEW CONTEST PROMPT -- the header. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* NO IN/OUT BOX YET -- issue 217; see the body. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; override;
    end;
 
 implementation
@@ -549,6 +551,17 @@ end;
 procedure TContestOntarioQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(SNewContestOntarioQPCountyOrLocation, ncfMyState);
+end;
+
+(* FREE ENTRY STAYS -- issue 217. Ontario's DX station leaves the field
+   EMPTY (its country prefix is sent), so the box's outside rule -- "a
+   state, a province or DX" -- is not this party's, and the dialog's
+   every-row-filled gate would refuse that empty field anyway (reported with
+   issue 217, not changed here). *)
+function TContestOntarioQP.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   Result := inherited DescribeNewContestHostArea(aArea);
+   Result := False;
 end;
 
 initialization

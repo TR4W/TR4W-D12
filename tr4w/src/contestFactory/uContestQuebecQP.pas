@@ -255,6 +255,8 @@ type
 
       (* ITS OWN NEW CONTEST PROMPT -- the header. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* NO IN/OUT BOX YET -- issue 217; see the body. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; override;
    end;
 
 implementation
@@ -497,6 +499,14 @@ end;
 procedure TContestQuebecQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(SNewContestQuebecQPRegionOrLocation, ncfMyState);
+end;
+
+(* FREE ENTRY STAYS -- issue 217, for Ontario's reason: Quebec's DX station
+   leaves the field EMPTY (DX is sent), which is not the box's outside rule. *)
+function TContestQuebecQP.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   Result := inherited DescribeNewContestHostArea(aArea);
+   Result := False;
 end;
 
 initialization

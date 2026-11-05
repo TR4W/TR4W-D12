@@ -589,6 +589,28 @@ resourcestring
       'Quebec. Enter your state or Canadian province if outside Quebec; leave ' +
       'it empty if you are DX (DX is sent):';
 
+   (* A QSO PARTY'S "I AM IN <AREA>" CHOICE -- issue 217 (NY4I, 2026-11-05:
+     the Florida QSO Party's notice asked a Florida station for its county
+     under a MY STATE label). The box is TC_IAMIN; these are the row's two
+     labels and the notice for each side of it. %s is the party's area as
+     the contest names it (FL, 7th area). The labels are the words an
+     operator reads -- the command queued is MY STATE on both sides. *)
+   SNewContestHostAreaCountyLabel = 'MY COUNTY';
+   SNewContestHostAreaStateLabel = 'MY STATE';
+   SNewContestHostAreaInsideNotice =
+      'You are in %s: choose your county from the list.';
+   SNewContestHostAreaOutsideNotice =
+      'You are outside %0:s: enter your US state or Canadian province ' +
+      '(two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s.';
+   (* An outside entry that names a place inside the area -- one of its
+     counties, or the host state itself. %0:s is the entry, %1:s the area. *)
+   SNewContestHostAreaEntryIsInside =
+      '%0:s is inside %1:s: tick the box and choose your county from the list.';
+   (* An outside entry that is no state, province or DX. %s is the entry. *)
+   SNewContestHostAreaEntryNotAState =
+      '%s is not a US state, a Canadian province or DX. Enter the two-letter ' +
+      'code, e.g. GA or ON, or DX.';
+
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,

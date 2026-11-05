@@ -227,6 +227,8 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* NO IN/OUT BOX YET -- issue 217; see the body. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
       (* NO ADIF CNTY -- ADIF defines no Canadian secondary subdivision (Q89).
@@ -464,6 +466,17 @@ end;
 procedure TContestBritishColumbiaQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURISTRICTIFINVE7, ncfMyState);
+end;
+
+(* FREE ENTRY STAYS -- issue 217. The box offers "a state, a province or DX"
+   to a station outside the area, and this party's prompt asks for a state
+   or province only: whether a DX station may enter, and what it then sends,
+   is the sponsor's rule and is not settled here. The district list exists
+   (ve7_cty.dom); stating True is all it takes once that is answered. *)
+function TContestBritishColumbiaQP.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   Result := inherited DescribeNewContestHostArea(aArea);
+   Result := False;
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --

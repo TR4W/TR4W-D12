@@ -275,6 +275,24 @@ state:**
   `docs/I18N_TOOLS.md`'s "Only new RESOURCESTRINGS?" recipe; **never run
   `pas2po`** to pick it up (CLAUDE.md, "A converted window loses its
   translations"). Say in your hand-back that the harvest is not done.
+- **A party's New Contest row offers "I am in <area>" and a county list
+  unless the class says otherwise** (issue 217, 2026-11-05).
+  `TContestBase.DescribeNewContestHostArea` answers for every US QSO party
+  (`IsUSQSOParty`): the row its prompt asks for (`ncfMyState`), its
+  `QSOPartyArea`, its `HostState` and its county file (`DomesticFileName`).
+  The dialog shows the box. Ticked, the row reads MY COUNTY and is a
+  drop-down of that file's KEYS, the same keys set-up's in-state test reads
+  (`FCONTEST.FoundMyStateInDomFile`). Unticked, it reads MY STATE and takes a
+  US state, a Canadian province or `DX` (`uNewContestHostArea`). The command
+  queued is MY STATE either way, with the same text typing gave (the key
+  upper-cased), so nothing downstream moves. A NEW single-state party
+  inherits it, with nothing to state. **State False with the reason** when
+  your outside rule is not "state, province or DX", or your contest has no
+  inside. British Columbia (no DX in its prompt), Ontario and Quebec (a DX
+  entrant leaves the row empty) and IN7QPNE (an in-area entrant is refused)
+  do. `uTestNewContestHostArea` walks the registry: every contest that offers
+  the box lists only keys set-up judges in state, on a row its own prompts
+  ask for, and every US party that offers none is one of those four.
 
 **A helper two parties share goes on the party base, PROTECTED, and only a
 class that calls it uses it** -- not a virtual the base wires in, because
@@ -838,7 +856,8 @@ contest's own test (a legacy contest's in `uTestContestTotals`).
 ### Display and reports
 
 Answered as data the UI renders; a class never touches a form.
-`DescribeNewContestPrompts`, `NewContestValueRefusal`, `GetTotalsDisplay`,
+`DescribeNewContestPrompts`, `NewContestValueRefusal`,
+`DescribeNewContestHostArea` (a party's in/out box, above), `GetTotalsDisplay`,
 `GetSummarySheet`, `GetReportsRunningScore`, `CanonicalReceivedExchange` /
 `CanonicalSentExchange`, `ScorePostingMultiplierType`,
 `GetPermittedOperatingAids`, `GetOffersQTCs`, `GetOffersParkTools`,

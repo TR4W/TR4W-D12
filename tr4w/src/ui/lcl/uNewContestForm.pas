@@ -57,7 +57,15 @@ type
      Caption: TLabel;
      Field:   TEdit;        // rows 1..3
      Choice:  TComboBox;    // rows 4..9
+     (* ROWS 1..3: A LIST IN PLACE OF THE BOX -- issue 217. Hidden until a
+        contest offers its places for the row (ShowRowPick); then it is
+        shown and Field is hidden, never both. *)
+     Pick:    TComboBox;
   end;
+
+  (* THE VALUE BEHIND EACH ITEM OF A ROW'S PICK LIST, index for index -- what
+     RowText answers, which is not the item's text when that is 'KEY - Name'. *)
+  TNewContestRowValues = array of string;
 
   { THE FORM IS PRESENTATION ONLY. uNewContest owns the contest knowledge and
     hangs these off the form's events, so the ~260 lines of
@@ -117,6 +125,11 @@ type
     procedure FieldChanged(Sender: TObject);
   private
     FRows: array[1..9] of TNewContestRow;
+    (* WHICH ROWS SHOW THEIR PICK LIST, and the value of each item -- issue
+       217. Typed fields the view owns: the row's identity is never read
+       back from the control's text. *)
+    FPicking: array[1..9] of boolean;
+    FPickValues: array[1..9] of TNewContestRowValues;
     (* EVERY CONTEST THE DIALOG OFFERS, in order, with its caption -- built
        once (FillContests) and owned here. The search narrows what is SHOWN;
        it never rebuilds this. *)
@@ -222,6 +235,20 @@ type
     procedure ClearRows;
     procedure EnableRow(aRow: integer; const aCaption: string);
     procedure ShowIAmIn(const aText: string);
+    (* ROW aRow AS A LIST -- issue 217: labelled aCaption, showing aDisplays,
+       answering aValues[i] for item i (RowText), nothing chosen. *)
+    procedure ShowRowPick(aRow: integer; const aCaption: string;
+                          aDisplays, aValues: TStrings);
+    (* ROW aRow AS FREE ENTRY again, empty, labelled aCaption. *)
+    procedure ShowRowEntry(aRow: integer; const aCaption: string);
+    (* Chooses the item of row aRow's list whose value is aValue, as the
+       operator choosing it does; False when the list has no such value. *)
+    function  PickRowValue(aRow: integer; const aValue: string): boolean;
+    (* Whether row aRow is showing its list. *)
+    function  RowIsPick(aRow: integer): boolean;
+    (* Types aText into free row aRow, as the operator does -- its OnChange
+       runs. Nothing for a row showing its list, or a CATEGORY row. *)
+    procedure SetRowText(aRow: integer; const aText: string);
     function  RowText(aRow: integer): string;
     property  Rows: integer read GetRowCount;
   end;
@@ -359,6 +386,22 @@ begin
             Width    := ROW_FIELD_WIDTH;
             Anchors  := [akTop, akLeft, akRight];
             CharCase := ecUpperCase;
+            Visible  := False;
+            OnChange := FieldChanged;
+            end;
+
+         (* THE SAME PLACE AS THE BOX, hidden: a row is one or the other
+            (issue 217). A drop-down LIST, so nothing can be typed that the
+            contest did not offer. *)
+         FRows[i].Pick := TComboBox.Create(Self);
+         with FRows[i].Pick do
+            begin
+            Parent   := pnlDetails;
+            Left     := ROW_FIELD_LEFT;
+            Top      := ROW_TOP + (i - 1) * ROW_HEIGHT;
+            Width    := ROW_FIELD_WIDTH;
+            Anchors  := [akTop, akLeft, akRight];
+            Style    := csDropDownList;
             Visible  := False;
             OnChange := FieldChanged;
             end;
@@ -1509,6 +1552,13 @@ begin
          FRows[i].Field.Text      := '';
          FRows[i].Field.Visible   := False;
          end;
+      if Assigned(FRows[i].Pick) then
+         begin
+         FRows[i].Pick.Items.Clear;
+         FRows[i].Pick.Visible := False;
+         end;
+      FPicking[i] := False;
+      FPickValues[i] := nil;
       FRows[i].Caption.Caption := '';
       FRows[i].Caption.Visible := False;
       end;
@@ -1526,7 +1576,8 @@ begin
    if Assigned(FRows[aRow].Field) then
       begin
       FRows[aRow].Field.Visible := True;
-      if FRows[aRow].Field.CanFocus then
+      (* Showing first -- see ShowRowPick. *)
+      if Showing and FRows[aRow].Field.CanFocus then
          begin
          FRows[aRow].Field.SetFocus;
          end;
@@ -1538,7 +1589,17 @@ begin
    Result := '';
    if (aRow >= Low(FRows)) and (aRow <= High(FRows)) then
       begin
-      if Assigned(FRows[aRow].Field) then
+      (* A ROW SHOWING ITS LIST ANSWERS THE CHOSEN ITEM'S VALUE, never the
+         item's text -- that may be 'KEY - Name'. Nothing chosen is ''. *)
+      if FPicking[aRow] then
+         begin
+         if (FRows[aRow].Pick.ItemIndex >= 0) and
+            (FRows[aRow].Pick.ItemIndex <= High(FPickValues[aRow])) then
+            begin
+            Result := FPickValues[aRow][FRows[aRow].Pick.ItemIndex];
+            end;
+         end
+      else if Assigned(FRows[aRow].Field) then
          begin
          Result := FRows[aRow].Field.Text;
          end
@@ -1553,6 +1614,101 @@ procedure TfrmNewContest.ShowIAmIn(const aText: string);
 begin
    chkIAmIn.Caption := aText;
    chkIAmIn.Visible := aText <> '';
+end;
+
+(* A FREE ROW AS A LIST, OR BACK AS A BOX -- issue 217. Only rows 1..3 have
+   both; a CATEGORY row is always its own list and is left alone. Each
+   switch starts empty, so a county chosen inside is never sent as an
+   outside entry, nor an outside entry as a county. *)
+function TfrmNewContest.RowIsPick(aRow: integer): boolean;
+begin
+   Result := (aRow >= Low(FRows)) and (aRow <= High(FRows)) and FPicking[aRow];
+end;
+
+procedure TfrmNewContest.ShowRowPick(aRow: integer; const aCaption: string;
+                                     aDisplays, aValues: TStrings);
+var
+   i: integer;
+begin
+   if (aRow < Low(FRows)) or (aRow >= FIRST_CHOICE_ROW) then
+      begin
+      Exit;
+      end;
+
+   SetLength(FPickValues[aRow], aValues.Count);
+   for i := 0 to aValues.Count - 1 do
+      begin
+      FPickValues[aRow][i] := aValues[i];
+      end;
+   FPicking[aRow] := True;
+
+   FRows[aRow].Field.Text := '';
+   FRows[aRow].Field.Visible := False;
+   FRows[aRow].Pick.Items.Assign(aDisplays);
+   FRows[aRow].Pick.ItemIndex := -1;
+   FRows[aRow].Pick.Visible := True;
+   (* UTF8Encode: the LCL's strings are UTF-8, and the label is translated. *)
+   FRows[aRow].Caption.Caption := UTF8Encode(aCaption);
+   FRows[aRow].Caption.Visible := True;
+   (* SHOWING FIRST: a form that is not on screen cannot take focus, and
+      the LCL raises rather than ignoring it. *)
+   if Showing and FRows[aRow].Pick.CanFocus then
+      begin
+      FRows[aRow].Pick.SetFocus;
+      end;
+end;
+
+procedure TfrmNewContest.ShowRowEntry(aRow: integer; const aCaption: string);
+begin
+   if (aRow < Low(FRows)) or (aRow >= FIRST_CHOICE_ROW) then
+      begin
+      Exit;
+      end;
+
+   FPicking[aRow] := False;
+   FPickValues[aRow] := nil;
+   FRows[aRow].Pick.Items.Clear;
+   FRows[aRow].Pick.Visible := False;
+   FRows[aRow].Field.Text := '';
+   FRows[aRow].Field.Visible := True;
+   FRows[aRow].Caption.Caption := UTF8Encode(aCaption);
+   FRows[aRow].Caption.Visible := True;
+   if Showing and FRows[aRow].Field.CanFocus then
+      begin
+      FRows[aRow].Field.SetFocus;
+      end;
+end;
+
+procedure TfrmNewContest.SetRowText(aRow: integer; const aText: string);
+begin
+   if (aRow < Low(FRows)) or (aRow >= FIRST_CHOICE_ROW) or FPicking[aRow] then
+      begin
+      Exit;
+      end;
+   FRows[aRow].Field.Text := UTF8Encode(aText);
+   FieldChanged(FRows[aRow].Field);
+end;
+
+function TfrmNewContest.PickRowValue(aRow: integer; const aValue: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   if not RowIsPick(aRow) then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to High(FPickValues[aRow]) do
+      begin
+      if FPickValues[aRow][i] = aValue then
+         begin
+         FRows[aRow].Pick.ItemIndex := i;
+         FieldChanged(FRows[aRow].Pick);
+         Result := True;
+         Exit;
+         end;
+      end;
 end;
 
 (* A DOUBLE-CLICK ON A LOG'S ROW OPENS IT.
