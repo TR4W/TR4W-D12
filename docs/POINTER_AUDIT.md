@@ -45,6 +45,65 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > in `logradio.pas`), P13 (`postunit`'s `New`/`Dispose` temporaries and the
 > `^record` queues are still there) and P16 (`TF.pas` still holds an
 > `EnumLines` callback) -- no commit was found for any of them.
+>
+> **RE-CHECKED 2026-11-05 at `b363e7de`.** D1-D7 are all fixed (D1 P3
+> `34c75865`; D2 and D3 P1+P2 `bdef46e3`; D4 P6 `23b1de5d`; D5 and D6 P4
+> `d329efe9`; D7 P10 `bd396f4a`), each confirmed in the tree, not only in
+> `git log`. **Also still open**, beside the list above: **5.5**
+> (`ShowEditMessage(const aMessage: lParam)` carries a row number), **5.6**
+> (`ApplyLoadedParks(LPARAM(aParks))`), and **the four other old-style
+> objects** -- `DupeAndMultSheet` (`logdupe`, 6.2), `PacketObject` (`logpack`,
+> 6.6), `EditableLog` (`logedit`, 6.3) and `CallDatabase` (`logscp`, 6.4).
+> `C6-object-type` reads exactly six in `src`: those four, `K1EAKeyer` and
+> `RadioObject`.
+>
+> **THE TOTALS ABOVE (2,701, 2,622) ARE NOT COMPARABLE WITH TODAY'S.** The
+> scope moved under them: the counter scans 953 files today against 817 on
+> 2026-10-16, because the tree grew (new contest classes, new tests), and the
+> `test` column grew with the test suite (`C3-addr-of` 101 -> 250), so neither
+> the test column nor the tree total measures pointer work. The `src` column
+> is the one to watch. Re-baseline, `pwsh -NoProfile -File
+> tr4w/build/Count-LivePointers.ps1`, `src` column only, against the original
+> 2026-10-16 inventory (at `28599599`, BEFORE P4 -- so the change is every
+> packet since PLUS every line of new code, not the packets alone):
+>
+> | rule | 2026-10-16 | 2026-11-05 |
+> |---|---:|---:|
+> | C1-ptrtype-decl | 91 | 63 |
+> | C1-link-field | 12 | 4 |
+> | C2-heap | 9 | 4 |
+> | C2-new-dispose | 79 | 40 |
+> | C3-pointer-cast | 7 | 6 |
+> | C3-int-of-ptr | 11 | 8 |
+> | C3-typed-ptr-type | 181 | 177 |
+> | C3-addr-of | 387 | 323 |
+> | C3-deref | 1,127 | 644 |
+> | C3-inc-dec-ptr | 41 | 33 |
+> | C3-untyped-param | 35 | 20 |
+> | C3-memcmp | 2 | 2 |
+> | C3-s1 | 21 | 15 |
+> | C5-tobject-cast | 7 | 11 |
+> | C5-objects | 33 | 37 |
+> | C5-tag | 70 | 80 |
+> | C5-lparam | 40 | 40 |
+> | C5-data | 16 | 15 |
+> | C6-object-type | 12 | 6 |
+> | C6-ptr-named | 562 | 574 |
+> | C7-proc-type | 96 | 125 |
+> | C7-pointer-word | 70 | 111 |
+> | **src total** | **2,909** | **2,338** |
+>
+> **Six rows ROSE**, and they are stated, not explained: `C7-pointer-word`
+> +41 (P1 accounts for +20 -- the RTL thread parameter, see P1 and P2; the
+> rest is not attributed), `C7-proc-type` +29, `C5-tag` +10, `C6-ptr-named`
+> +12, `C5-tobject-cast` +4, `C5-objects` +4. The 2026-11-05 run also has a
+> `server` column (`C3-addr-of` 3) that the original table did not.
+>
+> **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
+> 2026-11-05 reconciliation said the file did not exist; it is tracked at
+> `tr4w/src/uIcomNetworkDiscovery.pas` and line 151 is the `New(Radio)`).
+> Every category-4 unit path was re-checked and exists; the category-4 COUNTS
+> were not re-measured.
 
 NY4I, 2026-10-16, after `logdom.pas` turned out to hold a DOS-era hand-built
 linked list whose dispose loop read through nil:
@@ -283,6 +342,9 @@ classes add more (`uContestALRSUA1DZCup.pas` 5). The rule in
 `64_BIT_TASKLIST.md` is `:= Default(T)`, and nothing enforces it. That
 counter had no ceiling; packet P15 (2026-10-17) added `$MOVE_CEILING` to
 `Count-LiveMove.ps1` and runs it as `Count-LiveMove -Gate` from `Run-Lints.ps1`.
+**The figures in this document are dated readings. For the current count, read
+the `$MOVE_CEILING =` line in `tr4w/build/Count-LiveMove.ps1`** -- it ratchets
+down, so any number written here goes stale with the next lowering.
 
 ### The new counter: `Measure-Pointers.ps1` -- committed as `Count-LivePointers.ps1` (P0)
 
@@ -512,7 +574,7 @@ Owners follow CLAUDE.md's routing table.
 | **P12** | Untyped byte buffers -> open arrays -- **DONE 2026-10-18 for the byte-holding callers (`252885aa`, committed 2026-10-19); the record senders and `utils_file` LEFT, see [P12](#p12----untyped-byte-buffers-to-open-arrays-2026-10-18)**. Pins written first and green against the old code: `uTestCRC16` (new), `uTestWinKeyWire` (new), and additions to `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestUtilsText`. Move-family 453 -> 444 (ceiling lowered) | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
 | **P13** | Heap temporaries and queues | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
 | **P14** | Wire overlays | 3.2, 6.13 | correct today, high blast radius, and possibly superseded | **TEST FIRST**: a decode pin per message type (bytes in, fields out) against the current overlay; then two-station BENCH | **SKIPPED -- NY4I, 2026-10-16 (`6b7e2c1b`): "skip P14, the new protocol replaces it."** The V1 wire overlays are left as they are and retire with the protocol | multi-op-network |
-| **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | **DONE 2026-10-17 (`6e20d349`):** a `$MOVE_CEILING` in `Count-LiveMove.ps1`, ratcheting down, wired into `Run-Lints.ps1` as `Count-LiveMove -Gate` (fixture first, fails closed under file and count floors) | none | build-release |
+| **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | **DONE 2026-10-17 (`6e20d349`):** a `$MOVE_CEILING` in `Count-LiveMove.ps1` (read that line for the current figure), ratcheting down, wired into `Run-Lints.ps1` as `Count-LiveMove -Gate` (fixture first, fails closed under file and count floors) | none | build-release |
 | **P16** | Remaining `src` `...EnumLines` callback | 7.4 | touches six loaders; do after P3 and P5, which own two of them | MATRIX, CORPUS, UT `uTestDomQTHTableReload` | P3, P5 | contest-scoring, settings-config |
 
 **Packets with NO automated oracle today** -- each needs its test written first
@@ -1050,7 +1112,8 @@ Move-family **453 -> 444** (`uSHA256` -3, `uWinKey` -1, `uTestNetFraming` -5)
 and the ceiling is lowered to 444; pointer-rule hits **2,472 -> 2,430**
 tree-wide by the port (untyped parameters in the touched files 26 -> 6).
 **Re-run both counters from a checkout outside `.claude\worktrees\` before
-quoting these as theirs.**
+quoting these as theirs.** The 444 is a reading on that day; the live ceiling
+is the `$MOVE_CEILING =` line in `tr4w/build/Count-LiveMove.ps1`.
 
 **Speed** (i386, best of five, `GetTickCount64`): CRC-32 of a 64-byte packet
 x 2,000,000 125 -> 141 ms and of 64 KB x 3,000 312 -> 328 ms (one tick each,
