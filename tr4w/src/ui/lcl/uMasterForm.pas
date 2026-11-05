@@ -103,8 +103,7 @@ const
 procedure TfrmMaster.HandleCreate(Sender: TObject);
 begin
    Calls := TFlowGrid.Create(grdMaster, CELL_WIDTH, CELL_HEIGHT);
-   Calls.LimitToVisible := True;
-   Calls.OwnsCells := True;      // every cell is a TMasterCell -- see AddCall
+   Calls.LimitToVisible := True;   // and it owns its TMasterCell cells
 end;
 
 procedure TfrmMaster.HandleDestroy(Sender: TObject);

@@ -51,6 +51,22 @@ uses
   uTR4WStrings;
 
 type
+   (* A REMAINING MULTIPLIER, AS A TYPE: the pair (kind, index into that
+     kind's table) is its identity. It existed nowhere as a type and lived
+     only as two 16-bit halves of the grid's Objects[] slot, packed in
+     logedit and unpacked here and in uRemMults with LoWord/HiWord --
+     WIN32_ARTIFACT_SWEEP.md's worked example (pointer audit P9, item 5.1).
+     A cell the grid owns now. *)
+   TRemainingMult = class
+   private
+      FKind: RemainingMultiplierType;
+      FIndex: integer;
+   public
+      constructor Create(const aKind: RemainingMultiplierType; const aIndex: integer);
+      property Kind: RemainingMultiplierType read FKind;
+      property Index: integer read FIndex;
+   end;
+
    TfrmRemMults = class(TForm)
       grdMults: TDrawGrid;
       procedure HandleCreate(Sender: TObject);
@@ -65,6 +81,18 @@ type
       FIndex: WindowsType;
    public
       Mults: TFlowGrid;
+
+      (* ONE CELL: a multiplier, which IS the pair (kind, index into that
+        kind's table). Its text is resolved at paint time (RemMultsResolve),
+        because it changes as the contest runs. Between Mults.BeginRebuild
+        and Mults.EndRebuild. *)
+      procedure AddMult(const aKind: RemainingMultiplierType; const aIndex: integer);
+
+      (* The multiplier in cell aCellIndex; False for a cell past the end --
+        the paint handler asks for every cell and the last column is rarely
+        full. *)
+      function  MultAt(const aCellIndex: integer; out aKind: RemainingMultiplierType;
+                       out aIndex: integer): boolean;
    end;
 
 var
@@ -74,8 +102,9 @@ var
 
    { Resolves one cell to its text and to whether it has been worked.  The form
      can answer neither -- both need the multiplier tables -- so uRemMults
-     supplies this at initialization.  aTag is the packed (type, index) pair. }
-   RemMultsResolve: procedure(const aTag: PtrInt; out aText: string;
+     supplies this at initialization. }
+   RemMultsResolve: procedure(const aKind: RemainingMultiplierType;
+                              const aIndex: integer; out aText: string;
                               out aWorked: boolean) = nil;
 
 procedure CreateTR4WRemMultsWindow(const aIndex: WindowsType);
@@ -94,7 +123,6 @@ uses
    LogEdit,           { CleanSweep }
    uSettingsModel,    (* Settings.RemainingMults.DisplayMode, and HiLight --
                         the type moved here with the setting *)
-   uGradient,         { GradientRect -- the faded-multiplier fill }
    uLCLFormHelpers;   // LeaveFormUnowned
 
 const
@@ -135,12 +163,44 @@ end;
 
 procedure TfrmRemMults.HandleCreate(Sender: TObject);
 begin
-   Mults := TFlowGrid.Create(grdMults, BASECOLUMNWIDTH, CELL_HEIGHT);
+   Mults := TFlowGrid.Create(grdMults, BASECOLUMNWIDTH, CELL_HEIGHT);   // owns its TRemainingMult cells
 end;
 
 procedure TfrmRemMults.HandleDestroy(Sender: TObject);
 begin
    FreeAndNil(Mults);
+end;
+
+constructor TRemainingMult.Create(const aKind: RemainingMultiplierType;
+                                  const aIndex: integer);
+begin
+   inherited Create;
+   FKind := aKind;
+   FIndex := aIndex;
+end;
+
+(* No text: the cell's text is resolved at paint time -- see RemMultsResolve. *)
+procedure TfrmRemMults.AddMult(const aKind: RemainingMultiplierType;
+                               const aIndex: integer);
+begin
+   Mults.AddCell('', TRemainingMult.Create(aKind, aIndex));
+end;
+
+function TfrmRemMults.MultAt(const aCellIndex: integer;
+                             out aKind: RemainingMultiplierType;
+                             out aIndex: integer): boolean;
+var
+   cell: TObject;
+begin
+   aKind := rmNoRemMultDisplay;
+   aIndex := 0;
+   cell := Mults.CellAt(aCellIndex);
+   Result := cell is TRemainingMult;
+   if Result then
+      begin
+      aKind := TRemainingMult(cell).Kind;
+      aIndex := TRemainingMult(cell).Index;
+      end;
 end;
 
 procedure TfrmRemMults.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -207,6 +267,7 @@ procedure TfrmRemMults.MultsDrawCell(Sender: TObject; aCol, aRow: integer;
                                      aRect: TRect; aState: TGridDrawState);
 var
    idx: integer;
+   multIndex: integer;
    cellText: string;
    worked: boolean;
    rmt: RemainingMultiplierType;
@@ -232,8 +293,12 @@ begin
       begin
       Exit;
       end;
+   if not MultAt(idx, rmt, multIndex) then
+      begin
+      Exit;
+      end;
 
-   RemMultsResolve(Mults.TagAt(idx), cellText, worked);
+   RemMultsResolve(rmt, multIndex, cellText, worked);
    if cellText = '' then
       begin
       Exit;
@@ -241,12 +306,13 @@ begin
 
    if (Settings.RemainingMults.DisplayMode = HiLight) and worked then
       begin
-      // TCanvas.Handle IS the HDC uGradient wants, so this is the same call the
-      // WM_DRAWITEM arm made: same two stops, same direction.
-      rmt := RemainingMultiplierType(LoWord(Mults.TagAt(idx)));
-      GradientRect(grdMults.Canvas.Handle, aRect,
-                   tr4wColorsArray[tr4wColors(Ord(rmt))],
-                   tr4wColorsArray[trWhite], gdHorizontal);
+      // THE LCL'S OWN GRADIENT, as the band map's mult flag uses: the same
+      // two stops and the same left-to-right direction the WM_DRAWITEM arm
+      // asked uGradient.GradientRect for, without handing it the canvas's
+      // HDC (TCanvas.Handle) to do it.
+      grdMults.Canvas.GradientFill(aRect,
+                                   tr4wColorsArray[tr4wColors(Ord(rmt))],
+                                   tr4wColorsArray[trWhite], gdHorizontal);
       grdMults.Canvas.Font.Color := tr4wColorsArray[trWhite];
       end;
 

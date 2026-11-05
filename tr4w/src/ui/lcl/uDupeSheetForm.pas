@@ -153,8 +153,7 @@ procedure TfrmDupeSheet.HandleCreate(Sender: TObject);
 begin
    // LimitToVisible stays FALSE: a dupe sheet scrolls.  The SCP window sets it,
    // because that one shows what fits and drops the rest.
-   Calls := TFlowGrid.Create(grdDupes, CELL_WIDTH, CELL_HEIGHT);
-   Calls.OwnsCells := True;      // every cell is a TDupeSheetCell -- see AddCall
+   Calls := TFlowGrid.Create(grdDupes, CELL_WIDTH, CELL_HEIGHT);   // owns its TDupeSheetCell cells
 end;
 
 procedure TfrmDupeSheet.HandleDestroy(Sender: TObject);

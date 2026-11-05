@@ -30,8 +30,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                      per-window tLB_SETCOLUMNWIDTH calls are the grid's cell
                      width; SetRemMultsColumnWidth still decides it.
     WM_DRAWITEM   -> TfrmRemMults.MultsDrawCell, which asks ResolveMult below
-                     for the text and the worked flag.  The unpacking of
-                     MakeLong(Ord(rmt), i) stays with the packing.
+                     for the text and the worked flag, handing it the
+                     multiplier's (kind, index) pair.
     WM_SIZE       -> Align = alClient plus TFlowGrid.LayOut.
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE -> DefTR4WProc.  Not reproduced, as
                      with every converted window before it.
@@ -48,7 +48,6 @@ unit uRemMults;
 interface
 
 uses
-  LCLType,      { LoWord / HiWord -- unpacking what MakeLong packed }
   TF,
   VC,
   uCTYDAT,
@@ -74,14 +73,14 @@ uses
 var
   RemMultsBuf                           : array[0..7] of AnsiChar;
 
-{ ONE CELL, RESOLVED AT PAINT TIME.
+(* ONE CELL, RESOLVED AT PAINT TIME.
 
-  aTag is MakeLong(Ord(rmt), index) -- exactly what ShowRemMultsInWindow packed
-  into LB_ADDSTRING's lParam, unpacked exactly as WM_DRAWITEM unpacked it.
-
-  THE OLD HANDLER READ THE PACKED VALUE TWICE, once for each half, sending
-  LB_GETITEMDATA both times.  One argument now, split once. }
-procedure ResolveMult(const aTag: PtrInt; out aText: string; out aWorked: boolean);
+  A multiplier is the pair (kind, index into that kind's table), and it
+  arrives as the pair. It used to arrive as MakeLong(Ord(rmt), index), what
+  the Win32 list box's one lParam per item forced, and was unpacked here with
+  LoWord/HiWord (pointer audit P9, item 5.1). *)
+procedure ResolveMult(const aKind: RemainingMultiplierType; const aIndex: integer;
+                      out aText: string; out aWorked: boolean);
 var
   rmt      : RemainingMultiplierType;
   Index    : integer;
@@ -90,8 +89,8 @@ begin
   aText := '';
   aWorked := False;
 
-  rmt := RemainingMultiplierType(LoWord(aTag));
-  Index := HiWord(aTag);
+  rmt := aKind;
+  Index := aIndex;
 
   case rmt of
 

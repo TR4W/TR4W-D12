@@ -26,7 +26,7 @@ unit uTestFlowGridCells;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework;
+   SysUtils, VC, uTR4WTestFramework;
 
 type
    TFlowGridCellTests = class(TTestCase)
@@ -36,6 +36,9 @@ type
       procedure Test_DupeSheet_ACellPastTheEndHasNoDistrict;
       procedure Test_SCP_EveryCallKeepsItsDupeFlag;
       procedure Test_SCP_ACallPastCapacityIsRefused;
+      procedure Test_RemMults_EveryCellKeepsItsKindAndIndex;
+      procedure Test_RemMults_ARebuildReplacesTheCells;
+      procedure Test_RemMults_ACellPastTheEndIsNotAMultiplier;
    public
       procedure RunAllTests; override;
    end;
@@ -45,7 +48,8 @@ implementation
 uses
    Forms,             (* Application *)
    uDupeSheetForm,
-   uMasterForm;
+   uMasterForm,
+   uRemMultsForm;
 
 procedure InitWidgetSet;
 begin
@@ -215,8 +219,99 @@ begin
    end;
 end;
 
+(* ----------------------------------------------------------------------- *)
+(* The remaining-multiplier windows: a multiplier's KIND and its INDEX.    *)
+(* ----------------------------------------------------------------------- *)
+
+const
+   (* Every kind appears, two cells share an index under different kinds, and
+     the indices reach past 255 (a DXCC entity) and past 1,000 (a prefix
+     list). *)
+   RM_KINDS: array[0..5] of RemainingMultiplierType =
+      (rmDX, rmDX, rmZone, rmDomestic, rmPrefix, rmZone);
+   RM_INDEXES: array[0..5] of integer = (0, 338, 40, 12, 1234, 0);
+
+procedure FillRemMults(const aForm: TfrmRemMults);
+var
+   i: integer;
+begin
+   aForm.Mults.BeginRebuild;
+   for i := Low(RM_KINDS) to High(RM_KINDS) do
+      begin
+      aForm.AddMult(RM_KINDS[i], RM_INDEXES[i]);
+      end;
+   aForm.Mults.EndRebuild;
+end;
+
+procedure TFlowGridCellTests.Test_RemMults_EveryCellKeepsItsKindAndIndex;
+var
+   f: TfrmRemMults;
+   i, index: integer;
+   kind: RemainingMultiplierType;
+begin
+   BeginTest('Remaining mults: every cell comes back with the kind and index it was added with');
+   InitWidgetSet;
+   f := TfrmRemMults.Create(nil);
+   try
+      FillRemMults(f);
+      CheckEquals(Length(RM_KINDS), f.Mults.Count, 'cell count');
+      for i := Low(RM_KINDS) to High(RM_KINDS) do
+         begin
+         CheckTrue(f.MultAt(i, kind, index), 'cell ' + IntToStr(i) + ' found');
+         CheckEquals(Ord(RM_KINDS[i]), Ord(kind), 'kind of cell ' + IntToStr(i));
+         CheckEquals(RM_INDEXES[i], index, 'index of cell ' + IntToStr(i));
+         end;
+   finally
+      f.Free;
+   end;
+end;
+
+procedure TFlowGridCellTests.Test_RemMults_ARebuildReplacesTheCells;
+var
+   f: TfrmRemMults;
+   index: integer;
+   kind: RemainingMultiplierType;
+begin
+   BeginTest('Remaining mults: a rebuild (a band change) replaces every cell');
+   InitWidgetSet;
+   f := TfrmRemMults.Create(nil);
+   try
+      FillRemMults(f);
+      f.Mults.BeginRebuild;
+      f.AddMult(rmPrefix, 7);
+      f.Mults.EndRebuild;
+      CheckEquals(1, f.Mults.Count, 'cell count after rebuild');
+      CheckTrue(f.MultAt(0, kind, index), 'cell 0 found');
+      CheckEquals(Ord(rmPrefix), Ord(kind), 'kind after rebuild');
+      CheckEquals(7, index, 'index after rebuild');
+   finally
+      f.Free;
+   end;
+end;
+
+procedure TFlowGridCellTests.Test_RemMults_ACellPastTheEndIsNotAMultiplier;
+var
+   f: TfrmRemMults;
+   index: integer;
+   kind: RemainingMultiplierType;
+begin
+   BeginTest('Remaining mults: a cell past the end is not a multiplier');
+   InitWidgetSet;
+   f := TfrmRemMults.Create(nil);
+   try
+      FillRemMults(f);
+      CheckFalse(f.MultAt(Length(RM_KINDS), kind, index), 'one past the end');
+      CheckFalse(f.MultAt(-1, kind, index), 'index -1');
+   finally
+      f.Free;
+   end;
+end;
+
 procedure TFlowGridCellTests.RunAllTests;
 begin
+   Test_RemMults_EveryCellKeepsItsKindAndIndex;
+   Test_RemMults_ARebuildReplacesTheCells;
+   Test_RemMults_ACellPastTheEndIsNotAMultiplier;
    Test_DupeSheet_EveryCallKeepsItsDistrict;
    Test_DupeSheet_ARebuildReplacesTheCells;
    Test_DupeSheet_ACellPastTheEndHasNoDistrict;

@@ -110,19 +110,22 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
-> **P9 IS UNDER WAY (2026-11-05), one window per commit.** 5.4 (Alt-P), 5.2
-> (Search Log) and 5.3 (DX cluster console) are done: see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05),
-> [part 2](#p9-part-2-52----the-search-log-filter-rows-2026-11-05) and
-> [part 3](#p9-part-3-53----the-dx-cluster-console-lines-kind-2026-11-05). `src`
-> total 2,156 -> 2,149 -> 2,128 -> **2,123**. 5.1 is three windows and three
-> commits: the dupe sheet is done ([part 4](#p9-part-4-51a----the-dupe-sheets-typed-cell-2026-11-05),
-> `src` 2,124, a transitional +1) and so is the SCP window ([part 5](#p9-part-5-51b----the-scp-windows-typed-cell-2026-11-05),
-> `src` 2,123); the remaining-mults windows are open.
+> **P9 IS DONE (2026-11-05), one window per commit** -- 5.4 (Alt-P,
+> [part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05)), 5.2 (Search Log,
+> [part 2](#p9-part-2-52----the-search-log-filter-rows-2026-11-05)), 5.3 (DX
+> cluster console, [part 3](#p9-part-3-53----the-dx-cluster-console-lines-kind-2026-11-05))
+> and 5.1, three windows in three commits (dupe sheet [part 4](#p9-part-4-51a----the-dupe-sheets-typed-cell-2026-11-05),
+> SCP [part 5](#p9-part-5-51b----the-scp-windows-typed-cell-2026-11-05),
+> remaining mults [part 6](#p9-part-6-51c----the-remaining-multiplier-as-a-type-2026-11-05)).
+> `src` total 2,156 -> 2,149 -> 2,128 -> 2,123 -> 2,124 -> 2,123 -> **2,112**.
+> Every window is BENCH only. What P9 found and did not do is listed at the
+> end of part 6.
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
-> `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
-> P11 (P13 is since done in full -- see above), and the four old-style objects above.
+> `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, ~~P9 (5.1-5.4)~~
+> (since done -- see above), P11 (P13 is since done in full -- see above), and the
+> four old-style objects above.
 >
 > **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
 > 2026-11-05 reconciliation said the file did not exist; it is tracked at
@@ -540,7 +543,7 @@ audit's list finds them.
 
 | # | where | what | native replacement | oracle |
 |---|---|---|---|---|
-| 5.1 | `ui/lcl/uFlowGrid.pas:165, 205` (`TagAt`, `AddObject(aCall, TObject(aTag))`), callers in `uCallsigns`, `uMaster`, `logedit` | **the worked example in `WIN32_ARTIFACT_SWEEP.md` -- still present** | `TRemainingMult` and friends in `Objects[]` with `OwnsObjects` | **none** (UI) -- BENCH the dupe sheet, SCP/master and remaining-mults windows |
+| 5.1 | `ui/lcl/uFlowGrid.pas:165, 205` (`TagAt`, `AddObject(aCall, TObject(aTag))`), callers in `uCallsigns`, `uMaster`, `logedit` | the worked example in `WIN32_ARTIFACT_SWEEP.md` | `TRemainingMult` and friends in `Objects[]` with `OwnsObjects` -- **DONE 2026-11-05 (P9 parts 4-6)**: `TDupeSheetCell`, `TMasterCell`, `TRemainingMult`; `AddItem`/`TagAt` deleted | UT `uTestFlowGridCells` (written first, per window); BENCH the dupe sheet, SCP/master and remaining-mults windows |
 | 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built -- **DONE 2026-11-05 (P9 part 2)**: `FBandRows` / `FModeRows` | UT `uTestLogSearchFilters` (written first); BENCH the log search window |
 | 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` -- **DONE 2026-11-05 (P9 part 3)** as neither: `Objects[]` holds one of seven form-owned `TConsoleLineKind` objects | UT `uTestTelnetConsoleKinds` (written first), `uTestTelnetTrace` (the ring) -- BENCH the colours |
 | 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns -- **DONE 2026-11-05 (P9 part 1)**: `TAltPItem.Key`, made through `OnCreateItemClass` | UT `uTestAltPRows` (written first); BENCH Alt-P |
@@ -608,7 +611,7 @@ Owners follow CLAUDE.md's routing table.
 | **P6** | CPU keyer buffer -- **DONE 2026-10-17 for 2.1** (`23b1de5d`), see below; **6.5 still open** | 2.1, 6.5 | D4 nil write + leak | **TEST FIRST**: a UT that feeds `K1EAKeyer.AddCharacterToCWBuffer` (incl. `' '` first) and reads the element ring; then BENCH DTR/RTS keying -- the UT is `uTestCPUKeyerRing`, the bench entry is in `BENCH_QUEUE.md` (2026-10-17) | write the UT | cw-keying |
 | **P7** | SCP cell buffer -- **DONE 2026-10-17** (`24f336c2`): `TSCPCellBuffer` (a class over one dynamic array, kept between loads), `GetNextEntryAddress` deleted; `uTestLogSCP` written FIRST and green against the pointer buffer, unchanged after (both memory modes: the running program's 160,000 and the unit's 3 x 260,000). Lookup loop (50,000 `GeneratePossibleCallList`): 438-485 ms before, 469-515 ms after -- no difference above noise; the cost is the index and parse work, not the allocation. `logscp` pointer-rule hits **127 -> 97**, measured with `Count-LivePointers.ps1 -Detail` on both trees (the agent's ad-hoc estimate, 103 -> 79, under-counted) | 2.2, 6.4, 7.5 | two allocators for one pointer; live on every partial-call lookup | MATRIX covers the TRMASTER initial-exchange path only. **TEST FIRST**: a UT over the shipped-format fixture (`contest-matrix/MATRIX-TRMASTER.DTA`) asserting partial-call results for a handful of keys | write the UT | file-formats |
 | **P8** | Old-style lists with a VMT -- **part A DONE 2026-10-17** (`433c047f`, committed 2026-10-18; 2.3, 6.7, 6.8, 6.9; see below); part B (`TDXSpotsList`, 6.10) **DONE 2026-10-17** (`3cecfedc`) | 2.3, 6.7, 6.8, 6.9, 6.10 | objects with a VMT are where `SizeOf` and `FillChar` go wrong (CLAUDE.md, the `0xC0000005` story) | `uSortedStringList`/`MultsObject`: UT `uTestMults` + MATRIX + CORPUS. `TCallsignsList`, `TDXSpotsList`: **TEST FIRST** (partials list; spot store add/age/remove). **Part B (`TDXSpotsList`) DONE 2026-10-17**: `uTestSpotStore` (20 tests, 75 checks) written and green against the old object, then the object became a `class` over `TList<TSpotRecord>` with the same test unchanged; it did not explain the `ERangeError` (that routine, `Display`, no longer exists), and it found that the radio polling thread reads the store, so its two scans now take the lock | write the two UTs | contest-scoring, dx-cluster |
-| **P9** | Identity in `Objects[]` / `Data` / `lParam` | 5.1, 5.2, 5.3, 5.4, 5.6 | the `WIN32_ARTIFACT_SWEEP` pattern; display-only, so low crash risk but invisible breakage | **no automated oracle** -- each conversion writes its typed-payload test with the change (the sweep doc's own rule) AND a BENCH entry per window | none | lcl-ui |
+| **P9** | Identity in `Objects[]` / `Data` / `lParam` -- **DONE 2026-11-05**, see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05) to [part 6](#p9-part-6-51c----the-remaining-multiplier-as-a-type-2026-11-05) (5.6 went with P16) | 5.1, 5.2, 5.3, 5.4, 5.6 | the `WIN32_ARTIFACT_SWEEP` pattern; display-only, so low crash risk but invisible breakage | **no automated oracle** -- each conversion writes its typed-payload test with the change (the sweep doc's own rule) AND a BENCH entry per window | none | lcl-ui |
 | **P10** | Small puns and terminators -- **DONE 2026-10-19** (`bd396f4a`), see below | 3.3, 3.4, 3.6, 6.14 | low risk, easy to pin | **TEST FIRST** for 3.3 (short-call pins in `uTestDXSpotParse`); `uTestCTYDAT` for 6.14; 3.4 and 3.6 BENCH | write the 3.3 pins | dx-cluster, cw-keying, multi-op-network, file-formats |
 | **P11** | `RadioObject` -> class | 6.1, 7.6 | the largest item (363 pointer mentions) and the widest blast radius; every radio | UT `uTestRadioStatus` / `uTestCWKeyer` / `uTestStatusAndNotice` / `uTestTCIServer`, then BENCH one rig per verified family (`RADIO_BENCH_STATUS.md`) | P1 done (`BeginPolling` takes `RadioPtr`) | radio-factory, cw-keying |
 | **P12** | Untyped byte buffers -> open arrays -- **DONE 2026-10-18 for the byte-holding callers (`252885aa`, committed 2026-10-19); the record senders and `utils_file` LEFT, see [P12](#p12----untyped-byte-buffers-to-open-arrays-2026-10-18)**. Pins written first and green against the old code: `uTestCRC16` (new), `uTestWinKeyWire` (new), and additions to `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestUtilsText`. Move-family 453 -> 444 (ceiling lowered) | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
@@ -619,7 +622,7 @@ Owners follow CLAUDE.md's routing table.
 
 **Packets with NO automated oracle today** -- each needs its test written first
 or a bench entry: ~~**P6** (CPU keyer)~~ (has `uTestCPUKeyerRing` now), ~~**P7** (SCP partials)~~ (`uTestLogSCP`), ~~**P8** (call and
-spot lists)~~ (`uTestSpotStore`, `uTestCallsignsList`, `uTestSortedStringList`), **P9** (every window), **P10** (3.4, 3.6), **P11** (keying and
+spot lists)~~ (`uTestSpotStore`, `uTestCallsignsList`, `uTestSortedStringList`), **P9** (every window -- each now has a typed-payload unit test; the paint is still BENCH), **P10** (3.4, 3.6), **P11** (keying and
 polling), **P13** (reports, K4/Icom discovery), **P14** (every network message).
 
 ### P4 -- what was deleted, 2026-10-16
@@ -1600,6 +1603,58 @@ cells and frees one it refuses, which the refusal test reaches under
 ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
 lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
 identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
+
+### P9 part 6 (5.1c) -- the remaining multiplier as a type, 2026-11-05
+
+**Test first.** Three tests join `uTestFlowGridCells`: every cell keeps its
+kind and index (all four kinds, two cells sharing an index under different
+kinds, indices past 255 and past 1,000), a rebuild replaces the cells, and a
+cell past the end is not a multiplier. They drive `TfrmRemMults.AddMult`
+(which `logedit`'s `ShowRemMultsInWindow` calls) and `MultAt` (which the paint
+handler calls). Both were added on the old packing -- `AddMult` did
+`(Word(index) shl 16) or Word(Ord(kind))`, `MultAt` did `LoWord`/`HiWord` --
+and the suite was green there (unit 424,583 / 0). In the same step
+`RemMultsResolve` became `(aKind, aIndex, ...)` so the packing lived in the
+form alone; then it went.
+
+**The conversion.** `TRemainingMult` (read-only `Kind`, `Index`) in
+`uRemMultsForm` -- the type `WIN32_ARTIFACT_SWEEP.md` proposed, which existed
+nowhere before. `uRemMults.ResolveMult` takes the pair and no longer names
+`LCLType` (it did for `LoWord`/`HiWord` alone; nothing else in the unit
+resolves through it). **And the transitional shape is gone**: `TFlowGrid` has
+`AddCell` / `CellAt` only, its list is `OwnsObjects` from construction,
+`AddItem`, `TagAt`, `OwnsCells` and `AddEntry` are deleted, and the dupe-sheet
+and SCP forms no longer set ownership themselves.
+
+**Changed beside it, in the same paint handler, because a handle is evaluated
+on sight:** the faded fill of a worked multiplier was
+`uGradient.GradientRect(grdMults.Canvas.Handle, ...)` -- the canvas's HDC
+handed to a Win32-shaped helper. It is `grdMults.Canvas.GradientFill(aRect,
+<kind colour>, white, gdHorizontal)` now, the LCL's own, as `uBandMapForm`'s
+mult flag already is; `uGradient` is out of the unit's uses. Same two stops,
+same left-to-right direction. Not provable by a gate: BENCH.
+
+**Counters.** `src` total 2,123 -> **2,112**: `C3-typed-ptr-type` -9,
+`C5-tobject-cast` -1, `C5-objects` -1. What 5.1 leaves in `uFlowGrid` is two
+`C5-objects` hits on real objects in an owning list -- the 5.8 shape.
+
+**Oracles.** Unit 424,583 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
+ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
+lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
+
+**P9 IS DONE for 5.1-5.4.** Found on the way and NOT done, each larger than a
+pointer item:
+- The flow grids are still owner-drawn `TDrawGrid`s (`OnDrawCell` in each
+  form) with a forced `Invalidate` in `TFlowGrid.EndRebuild`. The native
+  shape is a `TStringGrid` holding the text in `Cells` with an
+  `OnPrepareCanvas` colour hook, as `lstPossibleCall` became; the remaining
+  mults' text is resolved at paint time, which that conversion has to
+  decide about.
+- The DX cluster console is still an owner-drawn `TListBox` (part 3).
+- `uDupeSheetForm`'s radio holds its form through
+  `RadioObject.tDupeSheetForm`, and `uCallsigns.DisplayDupeSheet` still takes
+  a `RadioPtr`; both follow P11.
 
 ---
 

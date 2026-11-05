@@ -37,8 +37,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   files.
 
   AND THE TEXT IS OPTIONAL, which is what the third caller needed.  Remaining
-  mults store only the TAG -- a packed (multiplier type, index) pair -- and
-  resolve the text in their own OnDrawCell from mo.PrfList, mo.DomList or
+  mults store only the CELL -- a (multiplier type, index) pair, TRemainingMult
+  -- and resolve the text in their own OnDrawCell from mo.PrfList, mo.DomList or
   CTY.ctyTable, because those answers change as the contest runs and a copy
   taken at rebuild time would go stale between rebuilds.  That was the Win32
   behaviour too: LB_ADDSTRING's lParam carried the pair, never a string.
@@ -66,26 +66,33 @@ type
    TFlowGrid = class
    private
       FGrid: TDrawGrid;
-      { The callsign, with a per-window meaning in Objects[] -- the district
-        digit for the dupe sheet, "is a dupe" for SCP.  One PtrInt is enough for
-        both, and naming it TAG rather than either keeps this unit honest about
-        not knowing which window it is serving. }
+      (* Each cell's text, with the window's own typed cell in Objects[] --
+        see AddCell. OwnsObjects is set, so the list frees the cells. *)
       FCalls: TStringList;
       FCellWidth: integer;
       FCellHeight: integer;
       FLimitToVisible: boolean;
-      function  GetOwnsCells: boolean;
-      procedure SetOwnsCells(const aValue: boolean);
-      function  AddEntry(const aText: string; const aObject: TObject): boolean;
    public
       constructor Create(const aGrid: TDrawGrid;
                          const aCellWidth, aCellHeight: integer);
       destructor Destroy; override;
 
+      (* Empties the model, freeing every cell. *)
       procedure BeginRebuild;
-      { False means the cell budget is full and the call was NOT added.  Only
-        possible when LimitToVisible is set. }
-      function  AddItem(const aCall: string; const aTag: PtrInt): boolean;
+
+      (* A TYPED CELL (pointer audit P9, item 5.1). Each window declares its
+        own cell class -- the dupe sheet a district (TDupeSheetCell), SCP a
+        dupe flag (TMasterCell), the remaining-mults windows a (kind, index)
+        pair (TRemainingMult) -- and this unit knows none of them. The grid
+        OWNS what it is given: a rebuild and the grid's own destruction free
+        every cell, and AddCell frees a cell it refuses.
+
+        This replaced one PtrInt per cell in Objects[] that meant a different
+        thing in each window (WIN32_ARTIFACT_SWEEP.md's worked example).
+
+        False means the cell budget is full and the cell was NOT added (and is
+        already freed). Only possible when LimitToVisible is set. *)
+      function  AddCell(const aText: string; const aCell: TObject): boolean;
       procedure EndRebuild;
 
       { Recompute rows and columns for the current client size.  Safe to call
@@ -103,31 +110,17 @@ type
 
       function  Count: integer;
       function  TextAt(const aIndex: integer): string;
-      function  TagAt(const aIndex: integer): PtrInt;
 
-      (* A TYPED CELL (pointer audit P9, item 5.1). Each window declares its
-        own cell class -- the dupe sheet a district, SCP a dupe flag, the
-        remaining-mults windows a (kind, index) pair -- and the grid OWNS
-        what it is given: a rebuild, and the grid's own destruction, free
-        every cell. AddCell takes the cell whether or not it is added, and
-        frees one it refuses (LimitToVisible full). CellAt answers nil for a
-        cell past the end.
-
-        TRANSITIONAL, while the three windows move one commit at a time: a
-        window that uses these sets OwnsCells first, and must not mix them
-        with AddItem/TagAt, whose PtrInt is not an object. When the last
-        window has moved, the PtrInt pair and OwnsCells go and the grid
-        always owns its cells. *)
-      function  AddCell(const aText: string; const aCell: TObject): boolean;
+      (* The cell AddCell was given, or nil for a cell past the end. The
+        window that made it asks `is` before it reads it. *)
       function  CellAt(const aIndex: integer): TObject;
-      property  OwnsCells: boolean read GetOwnsCells write SetOwnsCells;
 
       { How many cells the window currently shows.  This is what the SCP window
         used to keep in MaxItemsInMasterListBox and recompute in its WM_SIZE
         handler from a GetWindowRect. }
       function  Capacity: integer;
 
-      { When True, AddItem stops at Capacity.  SCP wants this -- it is showing
+      { When True, AddCell stops at Capacity.  SCP wants this -- it is showing
         as many partial matches as fit and the rest are not interesting.  The
         dupe sheet does not: it scrolls. }
       property  LimitToVisible: boolean read FLimitToVisible write FLimitToVisible;
@@ -141,6 +134,7 @@ begin
    inherited Create;
    FGrid := aGrid;
    FCalls := TStringList.Create;
+   FCalls.OwnsObjects := True;      // the cells -- see AddCell
 
    // Floored rather than trusted: a zero divides below, and these come from
    // constants today but are exactly the shape of thing that becomes an
@@ -177,25 +171,6 @@ begin
       end;
 end;
 
-function TFlowGrid.TagAt(const aIndex: integer): PtrInt;
-begin
-   Result := 0;
-   if (aIndex >= 0) and (aIndex < FCalls.Count) then
-      begin
-      Result := PtrInt(FCalls.Objects[aIndex]);
-      end;
-end;
-
-function TFlowGrid.GetOwnsCells: boolean;
-begin
-   Result := FCalls.OwnsObjects;
-end;
-
-procedure TFlowGrid.SetOwnsCells(const aValue: boolean);
-begin
-   FCalls.OwnsObjects := aValue;
-end;
-
 function TFlowGrid.CellAt(const aIndex: integer): TObject;
 begin
    Result := nil;
@@ -205,28 +180,18 @@ begin
       end;
 end;
 
-(* The one place an entry joins the model, whichever of the two Add calls
-  asked: the capacity rule and the list write, once. *)
-function TFlowGrid.AddEntry(const aText: string; const aObject: TObject): boolean;
+function TFlowGrid.AddCell(const aText: string; const aCell: TObject): boolean;
 begin
    Result := False;
    if FLimitToVisible and (FCalls.Count >= Capacity) then
       begin
-      Exit;
-      end;
-   FCalls.AddObject(aText, aObject);
-   Result := True;
-end;
-
-function TFlowGrid.AddCell(const aText: string; const aCell: TObject): boolean;
-begin
-   Result := AddEntry(aText, aCell);
-   if not Result then
-      begin
       (* Refused, and the cell was handed over: free it here, so a caller
         never has to know which way it went. *)
       aCell.Free;
+      Exit;
       end;
+   FCalls.AddObject(aText, aCell);
+   Result := True;
 end;
 
 function TFlowGrid.Capacity: integer;
@@ -256,11 +221,6 @@ end;
 procedure TFlowGrid.BeginRebuild;
 begin
    FCalls.Clear;
-end;
-
-function TFlowGrid.AddItem(const aCall: string; const aTag: PtrInt): boolean;
-begin
-   Result := AddEntry(aCall, TObject(aTag));
 end;
 
 procedure TFlowGrid.EndRebuild;

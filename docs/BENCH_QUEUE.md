@@ -30,6 +30,33 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- A REMAINING MULTIPLIER IS A TYPE, NOT TWO PACKED HALVES (pointer audit P9, 5.1c)
+
+Each cell of the remaining-multiplier windows (the generic one and the DX,
+domestic, zone and prefix ones) was a (kind, index) pair packed into two 16-bit
+halves of one integer in the flow grid's `Objects[]`, and unpacked with
+`LoWord`/`HiWord` -- `WIN32_ARTIFACT_SWEEP.md`'s worked example. It is a
+`TRemainingMult` the grid owns now. **Also changed in the same paint handler**: the
+faded fill of a worked multiplier is `TCanvas.GradientFill` (as the band map's mult
+flag already is) instead of `uGradient.GradientRect` on the canvas's HDC -- same two
+colours, same left-to-right direction. `uTestFlowGridCells` pins the kind and index
+of every cell; the text, the worked test and the colours are BENCH only.
+
+- [ ] **A contest with DX and zone multipliers (CQ WW), a few multipliers worked.**
+  Open Remaining Mults (DX) and (Zone). EXPECT: every country prefix and every
+  zone number shows, as before. With `REMAINING MULT DISPLAY MODE = HILIGHT`, the
+  worked ones are faded from their colour to white with white text, left to
+  right, and the unworked ones plain black. With `ERASE`, worked ones are gone.
+- [ ] **A domestic-multiplier contest (a state QSO party).** Open Remaining Mults
+  (Domestic), with `SHOW DOMESTIC MULTIPLIER NAME` both off and on. EXPECT: the
+  abbreviations, then the names. Work one; EXPECT it to fade or vanish on the
+  next refresh. Change band; EXPECT the window to follow the band.
+- [ ] **A prefix-multiplier contest (WPX).** Open Remaining Mults (Prefix), work a
+  new prefix, change band. EXPECT the same prefixes, in the same colours, as a
+  build before this change shows for the same log.
+- [ ] **Clean sweep.** Where practical (a small domestic list), work them all.
+  EXPECT the congratulations text at the top left, as before.
+
 ## Added 2026-11-05 -- AN SCP CELL CARRIES ITS DUPE FLAG AS A TYPED CELL (pointer audit P9, 5.1b)
 
 Each cell of the Super Check Partial window knew whether its call is a dupe

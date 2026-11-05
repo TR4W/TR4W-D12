@@ -1610,26 +1610,10 @@ var
 
   procedure Add(const aIndex: integer);
   begin
-    (* THE PACKING WRITTEN OUT, because MakeLong is Windows-unit only --
-      LCLType does not declare it, and this was never a Windows concept
-      anyway: it is two 16-bit halves in one integer. Win32 MAKELONG(a, b)
-      puts a in the LOW word and b in the HIGH word, which is the order
-      uRemMultsForm reads back with LoWord(Mults.TagAt(idx)).
-
-      DONE IN PtrInt, AND THAT IS THE 64-BIT-SAFE PART (NY4I asked, 2026-09-08:
-      "if you are doing bit manipulation is this going to be an issue when we
-      switch to 64 bit shortly?"). AddItem and TagAt take PtrInt, which is 64
-      bits on x64 while LongInt stays 32 on every target -- so packing into a
-      LongInt first and letting the call widen it would SIGN-EXTEND whenever
-      bit 31 was set, filling the top 32 bits with ones. Word() casts keep
-      each half unsigned and the shift happens at the destination width, so
-      the value is identical on both and no sign extension is possible.
-
-      (aIndex is a multiplier-list index and never approaches 32768 today, so
-      this is insurance rather than a live bug -- and MakeLong had exactly the
-      same exposure, since it also returned 32 bits into a PtrInt.) *)
-    frm.Mults.AddItem('',
-       (PtrInt(Word(aIndex)) shl 16) or PtrInt(Word(Ord(rmt))));
+    (* The pair, as the pair: the window's cell is (kind, index) -- see
+      TfrmRemMults.AddMult. It used to be packed into two 16-bit halves of
+      one PtrInt here (pointer audit P9, item 5.1). *)
+    frm.AddMult(rmt, aIndex);
   end;
 
 begin

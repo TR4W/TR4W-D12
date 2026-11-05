@@ -26,7 +26,17 @@ diff nobody can review, and it was NY4I who separated them.
 
 ## The worked example, in full — because it is the pattern, not an incident
 
-`logedit.pas` builds the remaining-multipliers window like this:
+> **DONE 2026-11-05 (pointer audit P9, item 5.1), as this section proposes.**
+> `TFlowGrid` owns a typed cell per entry (`AddCell`, `CellAt`, `OwnsObjects`), the
+> remaining-mults cell is `TRemainingMult` (kind, index) in `uRemMultsForm`, the
+> dupe sheet's is `TDupeSheetCell` and the SCP window's `TMasterCell`. `AddItem`,
+> `TagAt`, the packing in `logedit` and the `LoWord`/`HiWord` are gone; the code
+> below is the shape that was, kept because the reasoning is the pattern. The
+> one difference from the proposal: each form reads its cell with an `is` check
+> rather than a bare cast, so a cell of the wrong class reads as "no value"
+> rather than as garbage. See `POINTER_AUDIT.md`, P9 parts 4-6.
+
+`logedit.pas` built the remaining-multipliers window like this:
 
 ```pascal
 frm.Mults.AddItem('', (PtrInt(Word(aIndex)) shl 16) or PtrInt(Word(Ord(rmt))));
@@ -210,7 +220,7 @@ list as a start rather than an inventory.
 
 | artifact | where | what it should be |
 |---|---|---|
-| Integer smuggled through `TObject` | `uFlowGrid.AddItem` / `TagAt`, 3 callers | a typed payload, per the worked example above |
+| Integer smuggled through `TObject` | ~~`uFlowGrid.AddItem` / `TagAt`, 3 callers~~ | **DONE 2026-11-05** (pointer audit P9, 5.1): `AddCell` / `CellAt` over an owning list, with `TDupeSheetCell`, `TMasterCell` and `TRemainingMult` |
 | `ExitProcess` instead of `Halt` | `MainUnit`, the shutdown path | **A DECISION, NOT A SWAP:** `Halt` runs finalization sections and `ExitProcess` does not, so something may be relying on them not running. Establish that first |
 | The MMTTY output pane is a RICHED32 control | `uMMTTYForm` | **Our display choice, NOT MMTTY's protocol** — MMTTY posts `TXM_CHAR` to the main window and TR4W writes the character itself. Any control with per-character colour would do, and swapping one in removes RICHED32.DLL, `RichEditOperation`, `TCharFormatA` and `MMTTYRichEdit` together. Base LCL has no rich text control, so it needs a package or a custom-drawn pane |
 | `Config.CWTone` used as a CW-ENABLED FLAG | `logddx`, `MainUnit`, threaded through `AddStringToBuffer(Msg, Tone)` into the keyer factory | It is no longer a tone — the sidetone was deleted 2026-09-08 — so it is a dead parameter across the keyer API plus a flag wearing a frequency's name. Separate the two |
