@@ -12,9 +12,9 @@ unit uK4Discovery;
     3. Collect replies for TimeoutMs, de-duped by IP.
 
   Usage:
-    var Radios: TList;
+    var Radios: TK4DiscoveredRadios;
     Radios := TK4Discovery.DiscoverRadios(5000);
-    // each item is a PK4DiscoveredRadio; the caller frees the items + the list.
+    // a dynamic array of values: nothing to free.
 
   ParseResponse is exposed as a class function so the (Indy-free) reply parsing
   can be unit-tested without a live radio.
@@ -40,13 +40,17 @@ type
     IPAddress    : string;    // the radio's IP, from the reply
     SerialNumber : string;    // radio serial, e.g. '278'
   end;
-  PK4DiscoveredRadio = ^TK4DiscoveredRadio;
+  (* THE RESULT IS A DYNAMIC ARRAY OF VALUES, NOT A TList OF New'd RECORDS
+     (pointer audit 2.7, 2026-11-05): the caller freed every item by hand
+     through a typed cast, and nothing tied the cast to the type that was
+     allocated.  A value array owns its strings and frees itself. *)
+  TK4DiscoveredRadios = array of TK4DiscoveredRadio;
 
   TK4Discovery = class(TObject)
   public
-    // Broadcasts 'findk4' and collects K4 replies for TimeoutMs.  Returns a
-    // TList of PK4DiscoveredRadio (caller owns the list and the items).
-    class function DiscoverRadios(TimeoutMs: Integer = K4_DISCOVERY_TIMEOUT_MS): TList;
+    // Broadcasts 'findk4' and collects K4 replies for TimeoutMs, one entry
+    // per IP address.
+    class function DiscoverRadios(TimeoutMs: Integer = K4_DISCOVERY_TIMEOUT_MS): TK4DiscoveredRadios;
 
     // Parses one reply ('k4:0:192.168.1.100:278').  Returns False unless it
     // starts with 'k4' AND has exactly four ':'-separated fields with a
@@ -124,7 +128,7 @@ begin
   Result := prefix + '-SN' + sn + '.local';
 end;
 
-class function TK4Discovery.DiscoverRadios(TimeoutMs: Integer): TList;
+class function TK4Discovery.DiscoverRadios(TimeoutMs: Integer): TK4DiscoveredRadios;
 var
   clients: TList;
   client: TIdUDPClient;
@@ -140,13 +144,13 @@ var
   StartTime: QWord;
   Reply: string;
   Parsed: TK4DiscoveredRadio;
-  Radio: PK4DiscoveredRadio;
   localIPs: TStrings;
   ip: string;
   i, c: Integer;
   isDuplicate: Boolean;
 begin
-  Result := TList.Create;
+  (* A managed function result is NOT empty on entry in FPC. *)
+  Result := nil;
 
   // Stimulus is the literal ASCII 'findk4'.
   SetLength(SendBytes, Length(K4_DISCOVERY_STIMULUS));
@@ -215,18 +219,19 @@ begin
                if ParseResponse(Reply, Parsed) then
                   begin
                   isDuplicate := False;
-                  for i := 0 to Result.Count - 1 do
-                     if PK4DiscoveredRadio(Result[i])^.IPAddress = Parsed.IPAddress then
+                  for i := 0 to High(Result) do
+                     begin
+                     if Result[i].IPAddress = Parsed.IPAddress then
                         begin
                         isDuplicate := True;
                         Break;
                         end;
+                     end;
 
                   if not isDuplicate then
                      begin
-                     New(Radio);
-                     Radio^ := Parsed;
-                     Result.Add(Radio);
+                     SetLength(Result, Length(Result) + 1);
+                     Result[High(Result)] := Parsed;
                      logger.Info('[K4Discovery] Found %s serial %s at %s',
                                  [Parsed.RigType, Parsed.SerialNumber, Parsed.IPAddress]);
                      end;
@@ -246,7 +251,7 @@ begin
        end;
 
     logger.Info('[K4Discovery] Discovery complete: %d interface(s) probed, %d radio(s) found',
-                [clients.Count, Result.Count]);
+                [clients.Count, Length(Result)]);
   finally
     for c := 0 to clients.Count - 1 do
        begin

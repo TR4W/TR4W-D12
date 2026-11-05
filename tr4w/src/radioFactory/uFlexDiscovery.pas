@@ -86,13 +86,14 @@ type
     Serial    : string;   // serial=
     Status    : string;   // status=  e.g. 'Available', 'In_Use'
   end;
-  PFlexDiscoveredRadio = ^TFlexDiscoveredRadio;
+  (* A dynamic array of values, not a TList of New'd records (pointer audit
+     2.7, 2026-11-05) -- the caller has nothing to free. *)
+  TFlexDiscoveredRadios = array of TFlexDiscoveredRadio;
 
   TFlexDiscovery = class(TObject)
   public
-    // Listens on UDP 4992 for TimeoutMs and returns a TList of
-    // PFlexDiscoveredRadio (caller owns the list and the items).
-    class function DiscoverRadios(TimeoutMs: Integer = FLEX_DISCOVERY_TIMEOUT_MS): TList;
+    // Listens on UDP 4992 for TimeoutMs and returns one entry per IP address.
+    class function DiscoverRadios(TimeoutMs: Integer = FLEX_DISCOVERY_TIMEOUT_MS): TFlexDiscoveredRadios;
 
     // Validates and parses one datagram.  False unless the Class ID OUI is
     // FlexRadio's 00:1C:2D AND the payload yields a non-empty ip=.
@@ -205,7 +206,7 @@ begin
   Result := Radio.IPAddress <> '';
 end;
 
-class function TFlexDiscovery.DiscoverRadios(TimeoutMs: Integer): TList;
+class function TFlexDiscovery.DiscoverRadios(TimeoutMs: Integer): TFlexDiscoveredRadios;
 var
   client: TIdUDPClient;
   RecvBuf: TIdBytes;
@@ -218,12 +219,12 @@ var
     never needed to carry. }
   StartTime: QWord;
   Parsed: TFlexDiscoveredRadio;
-  Radio: PFlexDiscoveredRadio;
   i: Integer;
   isDuplicate: Boolean;
   raw: array of Byte;
 begin
-  Result := TList.Create;
+  (* A managed function result is NOT empty on entry in FPC. *)
+  Result := nil;
 
   TIdStack.IncUsage;
   client := TIdUDPClient.Create(nil);
@@ -267,9 +268,9 @@ begin
              if ParsePacket(raw, RecvLen, Parsed) then
                 begin
                 isDuplicate := False;
-                for i := 0 to Result.Count - 1 do
+                for i := 0 to High(Result) do
                    begin
-                   if PFlexDiscoveredRadio(Result[i])^.IPAddress = Parsed.IPAddress then
+                   if Result[i].IPAddress = Parsed.IPAddress then
                       begin
                       isDuplicate := True;
                       Break;
@@ -278,9 +279,8 @@ begin
 
                 if not isDuplicate then
                    begin
-                   New(Radio);
-                   Radio^ := Parsed;
-                   Result.Add(Radio);
+                   SetLength(Result, Length(Result) + 1);
+                   Result[High(Result)] := Parsed;
                    logger.Info('[FlexDiscovery] Found %s (%s) serial %s at %s:%d status=%s',
                                [Parsed.Model, Parsed.Nickname, Parsed.Serial,
                                 Parsed.IPAddress, Parsed.Port, Parsed.Status]);
@@ -300,7 +300,7 @@ begin
        end;
        end;
 
-    logger.Info('[FlexDiscovery] Discovery complete: %d radio(s) found', [Result.Count]);
+    logger.Info('[FlexDiscovery] Discovery complete: %d radio(s) found', [Length(Result)]);
   finally
     try
        client.Active := False;

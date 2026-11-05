@@ -67,31 +67,31 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > 2026-10-16 inventory (at `28599599`, BEFORE P4 -- so the change is every
 > packet since PLUS every line of new code, not the packets alone):
 >
-> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) |
-> |---|---:|---:|---:|
-> | C1-ptrtype-decl | 91 | 63 | 60 |
-> | C1-link-field | 12 | 4 | 4 |
-> | C2-heap | 9 | 4 | 4 |
-> | C2-new-dispose | 79 | 40 | 30 |
-> | C3-pointer-cast | 7 | 6 | 6 |
-> | C3-int-of-ptr | 11 | 8 | 8 |
-> | C3-typed-ptr-type | 181 | 177 | 177 |
-> | C3-addr-of | 387 | 323 | 322 |
-> | C3-deref | 1,127 | 644 | 521 |
-> | C3-inc-dec-ptr | 41 | 33 | 33 |
-> | C3-untyped-param | 35 | 20 | 20 |
-> | C3-memcmp | 2 | 2 | 2 |
-> | C3-s1 | 21 | 15 | 15 |
-> | C5-tobject-cast | 7 | 11 | 11 |
-> | C5-objects | 33 | 37 | 37 |
-> | C5-tag | 70 | 80 | 80 |
-> | C5-lparam | 40 | 40 | 33 |
-> | C5-data | 16 | 15 | 15 |
-> | C6-object-type | 12 | 6 | 6 |
-> | C6-ptr-named | 562 | 574 | 572 |
-> | C7-proc-type | 96 | 125 | 125 |
-> | C7-pointer-word | 70 | 111 | 111 |
-> | **src total** | **2,909** | **2,338** | **2,192** |
+> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) | after P13 2.7 (2026-11-05) |
+> |---|---:|---:|---:|---:|
+> | C1-ptrtype-decl | 91 | 63 | 60 | 57 |
+> | C1-link-field | 12 | 4 | 4 | 4 |
+> | C2-heap | 9 | 4 | 4 | 4 |
+> | C2-new-dispose | 79 | 40 | 30 | 24 |
+> | C3-pointer-cast | 7 | 6 | 6 | 6 |
+> | C3-int-of-ptr | 11 | 8 | 8 | 8 |
+> | C3-typed-ptr-type | 181 | 177 | 177 | 177 |
+> | C3-addr-of | 387 | 323 | 322 | 322 |
+> | C3-deref | 1,127 | 644 | 521 | 509 |
+> | C3-inc-dec-ptr | 41 | 33 | 33 | 33 |
+> | C3-untyped-param | 35 | 20 | 20 | 20 |
+> | C3-memcmp | 2 | 2 | 2 | 2 |
+> | C3-s1 | 21 | 15 | 15 | 15 |
+> | C5-tobject-cast | 7 | 11 | 11 | 11 |
+> | C5-objects | 33 | 37 | 37 | 37 |
+> | C5-tag | 70 | 80 | 80 | 80 |
+> | C5-lparam | 40 | 40 | 33 | 33 |
+> | C5-data | 16 | 15 | 15 | 15 |
+> | C6-object-type | 12 | 6 | 6 | 6 |
+> | C6-ptr-named | 562 | 574 | 572 | 572 |
+> | C7-proc-type | 96 | 125 | 125 | 125 |
+> | C7-pointer-word | 70 | 111 | 111 | 111 |
+> | **src total** | **2,909** | **2,338** | **2,192** | **2,171** |
 >
 > **Six rows ROSE**, and they are stated, not explained: `C7-pointer-word`
 > +41 (P1 accounts for +20 -- the RTL thread parameter, see P1 and P2; the
@@ -101,14 +101,15 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 >
 > **P13 IS DONE FOR 2.4 AND 2.5 (2026-11-05)** -- `postunit`'s two report arrays and the
 > WAE QTC table are module arrays, not `New`/`Dispose` blocks; see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05)
-> and [P13 part 2](#p13-part-2----the-qtc-per-station-table-2026-11-05). Items 2.7 and 2.8 of the packet are still open.
+> and [P13 part 2](#p13-part-2----the-qtc-per-station-table-2026-11-05). **Item 2.7 is done too**
+([P13 part 3](#p13-part-3----network-radio-discovery-2026-11-05)): `src` 2,192 -> **2,171**. Item 2.8 is open.
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
 > `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
-> P11, P13 (2.4 and 2.5 are since done -- see above; 2.7 and 2.8 are not), and the four old-style objects above.
+> P11, P13 (2.4, 2.5 and 2.7 are since done -- see above; 2.8 is not), and the four old-style objects above.
 >
 > **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
 > 2026-11-05 reconciliation said the file did not exist; it is tracked at
@@ -454,7 +455,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 | 2.4 | **DONE 2026-11-05 (P13 part 1)** -- was `trdos/postunit.pas:1346/1351` (`ScoreByHour`), `:2027/2034` (`QSOsByCountryByBand`), `:3340/3345`, `:3440/3447` (`tGenerateSummaryPortionOfCabrilloFile`) | temporary report arrays, `New` ... `Dispose` with **no `try/finally`** | live | a local dynamic array or class instance | low | the Cabrillo summary: CORPUS. The two reports: **none** -- `uTestPostUnitReports` pins all four report texts now |
 | 2.5 | **DONE 2026-11-05 (P13 part 2)** -- was `trdos/logstuff.pas:1068`, `trdos/LogCfg.pas:347` | `QTCDataArray` | live (WAE) | a dynamic array owned by the contest | low | **none** for QTC windows; `docs/QTC_BENCH_HANDOFF.md` is the bench script -- the counters are pinned by `uTestQTCCounts` now |
 | 2.6 | `uSettingsModel.pas:5727, 5832, 7058, 7166` `FreeMem(props)` | frees `GetPropList`'s result | live | **keep** -- `TypInfo.GetPropList` allocates and the caller frees; that is the RTL's contract. Add the comment | none | UT `uTestSettingsModel`, `uTestAllSettings` |
-| 2.7 | `uCAT.pas:107, 128, 153` `Dispose(P...DiscoveredRadio(list[i]))`; `uK4Discovery.pas:227`, `radioFactory/uFlexDiscovery.pas:281`, `uIcomNetworkDiscovery.pas:151` `New(Radio)` | discovery results as `^record` in a `TList` | live | `specialize TObjectList<TDiscoveredX>` with `OwnsObjects` | low | UT `uTestFlexDiscovery`; K4 and Icom discovery: **none** -> BENCH |
+| 2.7 | **DONE 2026-11-05 (P13 part 3)** -- was `uCAT.pas:107, 128, 153` `Dispose(P...DiscoveredRadio(list[i]))`; `uK4Discovery.pas:227`, `radioFactory/uFlexDiscovery.pas:281`, `uIcomNetworkDiscovery.pas:151` `New(Radio)` | discovery results as `^record` in a `TList` | live | ~~`specialize TObjectList<TDiscoveredX>` with `OwnsObjects`~~ a dynamic array of the record -- see P13 part 3 for why not the object list | low | UT `uTestFlexDiscovery`; K4 and Icom discovery: **none** -> BENCH |
 | 2.8 | `uIcomNetworkTransport.pas:2611/2621/2653` (`PSeqBufEntry`), `radioFactory/uRadioHamLibDirect.pas:762/885` (`PHLCommand`) | per-radio queues of `^record` | live | `specialize TQueue<T>` / `TList<T>` of records | medium (Icom LAN is unproven on the bench) | UT `uTestIcomTeardown` (Icom, partial), `uTestHamLibIDs` (ids only); BENCH |
 | 2.9 | `uMainThread.pas:126/140` (`PPendingCall`), `ui/lcl/uMainForm.pas:2294/2327/2354` (`PElementWork`), `uGetServerLog.pas:206/230` (`PSyncProgress`), `TF.pas:437/473/943/1005` (warning text, worker start) | cross-thread handoff through `Application.QueueAsyncCall`'s single `PtrInt` | live | **keep, it is the LCL's API**: `QueueAsyncCall` carries one `PtrInt`. `uMainThread.pas:82` already says so. The agent memory `fpc-queue-purges-its-own-callback` is why `TThread.Queue` is not the substitute | none | UT `uTestStatusAndNotice`, `uTestWSJTXThreading` |
 
@@ -1287,6 +1288,43 @@ effect as the `FillChar` it replaces.
 **Counters.** `src` total 2,210 -> 2,192: `C3-deref` -13, `C2-new-dispose` -2,
 `C6-ptr-named` -2, `C1-ptrtype-decl` -1. `Count-LiveMove` 432 -> 430; the
 ceiling is lowered to 430 in the same commit.
+
+**Oracles.** Unit 424,191 / 0, plain and `-Checked` (heaptrc 0 corruption reports,
+57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both
+at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze.
+
+---
+
+### P13 part 3 -- network radio discovery, 2026-11-05
+
+**The conversion.** `TK4Discovery`, `TFlexDiscovery` and `TIcomNetworkDiscovery`
+each returned a `TList` of `New`'d records, and `uCAT.DiscoverNetworkRadios`, the one
+caller, freed them in a `finally` by casting every item back to the type it hoped
+had been allocated. Each now returns a dynamic array of its own record
+(`TK4DiscoveredRadios`, `TFlexDiscoveredRadios`, `TDiscoveredRadios`); the three
+pointer types, the three `New` calls, the three `Dispose` loops and the
+`try/finally` around them are gone. Each `DiscoverRadios` sets `Result := nil`
+first, because a managed function result is not empty on entry in FPC.
+
+**Why not the row's `TObjectList` of classes.** The records are plain values that
+the parsers (`TK4Discovery.ParseResponse`, `TFlexDiscovery.ParsePacket`) fill
+through a `var` parameter, and the only consumer copies out one string. A value array
+has no owner and nothing to free, which is the point of the item; a class per
+radio would add a constructor, an owner and a `Free` to three parsers and to
+`uTestFlexDiscovery`, whose reuse and leak pins are written about ONE reused record.
+That is a deviation from "prefer a class to a record", stated here for NY4I to rule
+on rather than taken silently.
+
+**What is NOT covered.** The collecting loops need a socket and a radio on the
+subnet. `uTestFlexDiscovery` pins the Flex parser, which is unchanged; the K4
+parser has no test (unchanged too). `BENCH_QUEUE.md` carries the radio editor's
+Discover button for all three. The three de-duplication loops (by IP) are still
+three copies over three record types; folding them is a generic or a shared base
+type, and was left out of a pointer packet.
+
+**Counters.** `src` total 2,192 -> 2,171: `C3-deref` -12, `C2-new-dispose` -6,
+`C1-ptrtype-decl` -3. `Count-LiveMove` 430, unchanged.
 
 **Oracles.** Unit 424,191 / 0, plain and `-Checked` (heaptrc 0 corruption reports,
 57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both

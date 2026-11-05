@@ -375,7 +375,9 @@ type
     CivAddress: Byte;
     RemoteId:   LongWord;
   end;
-  PDiscoveredRadio = ^TDiscoveredRadio;
+  (* A dynamic array of values, not a TList of New'd records (pointer audit
+     2.7, 2026-11-05) -- the caller has nothing to free. *)
+  TDiscoveredRadios = array of TDiscoveredRadio;
 
   // TX sequence buffer entry — stores sent packets for radio's retransmit requests
   TSeqBufEntry = record

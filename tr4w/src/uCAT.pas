@@ -89,25 +89,22 @@ uses
 
 
 procedure DiscoverNetworkRadios(rt: InterfacedRadioType; Found: TStringList);
+(* Each discovery returns a dynamic array of its own record (pointer audit
+  2.7, 2026-11-05): there is nothing to free, so the try/finally and the
+  Dispose loops that matched a cast to an allocation are gone. *)
 var
-  list : TList;
-  i    : Integer;
+  k4Radios   : TK4DiscoveredRadios;
+  flexRadios : TFlexDiscoveredRadios;
+  icomRadios : TDiscoveredRadios;
+  i          : Integer;
 begin
   if rt = K4 then
      begin
-     list := TK4Discovery.DiscoverRadios(3000);
-     try
-        for i := 0 to list.Count - 1 do
-           begin
-           Found.Add(PK4DiscoveredRadio(list[i])^.IPAddress);
-           end;
-     finally
-        for i := 0 to list.Count - 1 do
-           begin
-           Dispose(PK4DiscoveredRadio(list[i]));
-           end;
-        list.Free;
-     end;
+     k4Radios := TK4Discovery.DiscoverRadios(3000);
+     for i := 0 to High(k4Radios) do
+        begin
+        Found.Add(k4Radios[i].IPAddress);
+        end;
      end
   else if rt = FLEX then
      begin
@@ -116,19 +113,11 @@ begin
      // the sense that FLEX is rt:rtKenwood and would otherwise match nothing:
      // before this branch existed the search fell through and always reported
      // "no Flex radios found".
-     list := TFlexDiscovery.DiscoverRadios(FLEX_DISCOVERY_TIMEOUT_MS);
-     try
-        for i := 0 to list.Count - 1 do
-           begin
-           Found.Add(PFlexDiscoveredRadio(list[i])^.IPAddress);
-           end;
-     finally
-        for i := 0 to list.Count - 1 do
-           begin
-           Dispose(PFlexDiscoveredRadio(list[i]));
-           end;
-        list.Free;
-     end;
+     flexRadios := TFlexDiscovery.DiscoverRadios(FLEX_DISCOVERY_TIMEOUT_MS);
+     for i := 0 to High(flexRadios) do
+        begin
+        Found.Add(flexRadios[i].IPAddress);
+        end;
      end
   // Was `RadioParametersArray[rt].rt = rtICOM`.  This branch picks a DISCOVERY
   // MECHANISM, and it sits beside explicit K4 and FLEX branches doing the same,
@@ -141,19 +130,11 @@ begin
   // and has no network discovery to run, so it never reached here meaningfully.
   else if SameText(uRadioRegistry.ManufacturerOf(rt), 'Icom') then
      begin
-     list := TIcomNetworkDiscovery.DiscoverRadios(3000);
-     try
-        for i := 0 to list.Count - 1 do
-           begin
-           Found.Add(PDiscoveredRadio(list[i])^.IPAddress);
-           end;
-     finally
-        for i := 0 to list.Count - 1 do
-           begin
-           Dispose(PDiscoveredRadio(list[i]));
-           end;
-        list.Free;
-     end;
+     icomRadios := TIcomNetworkDiscovery.DiscoverRadios(3000);
+     for i := 0 to High(icomRadios) do
+        begin
+        Found.Add(icomRadios[i].IPAddress);
+        end;
      end;
 end;
 

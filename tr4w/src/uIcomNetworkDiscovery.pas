@@ -24,9 +24,9 @@ unit uIcomNetworkDiscovery;
   and collects "I Am Here" responses from Icom radios.
 
   Usage:
-    var Radios: TList;
+    var Radios: TDiscoveredRadios;
     Radios := TIcomNetworkDiscovery.DiscoverRadios(3000);
-    // each item is a PDiscoveredRadio; the caller frees the items + the list.
+    // a dynamic array of values: nothing to free.
 }
 
 interface
@@ -40,7 +40,7 @@ uses
 type
   TIcomNetworkDiscovery = class(TObject)
   public
-    class function DiscoverRadios(TimeoutMs: Integer = 3000): TList;
+    class function DiscoverRadios(TimeoutMs: Integer = 3000): TDiscoveredRadios;
   end;
 
 implementation
@@ -51,7 +51,7 @@ uses
 var
   logger: TLogLogger;
 
-class function TIcomNetworkDiscovery.DiscoverRadios(TimeoutMs: Integer): TList;
+class function TIcomNetworkDiscovery.DiscoverRadios(TimeoutMs: Integer): TDiscoveredRadios;
 var
   clients: TList;
   client: TIdUDPClient;
@@ -67,13 +67,14 @@ var
     never needed to carry. }
   StartTime: QWord;
   ResponsePkt: TControlPacket;
-  Radio: PDiscoveredRadio;
+  Radio: TDiscoveredRadio;
   localIPs: TStrings;
   ip: string;
   i, c: Integer;
   isDuplicate: Boolean;
 begin
-  Result := TList.Create;
+  (* A managed function result is NOT empty on entry in FPC. *)
+  Result := nil;
 
   // Build the "Are You There" control packet once.
   FillChar(Pkt, SizeOf(Pkt), 0);
@@ -137,9 +138,9 @@ begin
                if ResponsePkt.PktType = ICOM_PKT_I_AM_HERE then
                   begin
                   isDuplicate := False;
-                  for i := 0 to Result.Count - 1 do
+                  for i := 0 to High(Result) do
                      begin
-                     if PDiscoveredRadio(Result[i])^.IPAddress = PeerIP then
+                     if Result[i].IPAddress = PeerIP then
                         begin
                         isDuplicate := True;
                         Break;
@@ -148,12 +149,12 @@ begin
 
                   if not isDuplicate then
                      begin
-                     New(Radio);
-                     Radio^.IPAddress := PeerIP;
-                     Radio^.RadioName := '';   // not carried in "I Am Here"
-                     Radio^.CivAddress := 0;
-                     Radio^.RemoteId := ResponsePkt.SentID;
-                     Result.Add(Radio);
+                     Radio.IPAddress := PeerIP;
+                     Radio.RadioName := '';   // not carried in "I Am Here"
+                     Radio.CivAddress := 0;
+                     Radio.RemoteId := ResponsePkt.SentID;
+                     SetLength(Result, Length(Result) + 1);
+                     Result[High(Result)] := Radio;
                      logger.Info('[IcomDiscovery] Found radio at %s, remoteId=$%.8x',
                                  [PeerIP, ResponsePkt.SentID]);
                      end;
@@ -169,7 +170,7 @@ begin
        end;
 
     logger.Info('[IcomDiscovery] Discovery complete: %d interface(s) probed, %d radio(s) found',
-                [clients.Count, Result.Count]);
+                [clients.Count, Length(Result)]);
   finally
     for c := 0 to clients.Count - 1 do
        begin

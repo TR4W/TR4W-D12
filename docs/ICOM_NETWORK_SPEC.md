@@ -295,10 +295,11 @@ TDiscoveredRadio = record
   CivAddress: Byte;
   RemoteId: LongWord;
 end;
+TDiscoveredRadios = array of TDiscoveredRadio;   // values; the caller frees nothing
 
 TIcomNetworkDiscovery = class(TObject)
 public
-  class function DiscoverRadios(TimeoutMs: Integer = 3000): TList; // Returns list of TDiscoveredRadio
+  class function DiscoverRadios(TimeoutMs: Integer = 3000): TDiscoveredRadios;  // one per IP
 end;
 ```
 

@@ -30,6 +30,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- NETWORK RADIO DISCOVERY RETURNS A VALUE ARRAY (pointer audit P13, 2.7)
+
+The K4, Flex and Icom discoveries returned a `TList` of `New`'d records that
+`uCAT.DiscoverNetworkRadios` freed one cast at a time; each now returns a dynamic
+array of its record and the caller frees nothing. Unit-pinned: the Flex datagram
+parser (`uTestFlexDiscovery`, unchanged). Not driven by any test: the collecting
+loops, which need a socket and a radio on the subnet.
+
+- [ ] **The radio editor's Discover button, for a K4, a Flex and an Icom LAN radio**
+  (each powered on, on the same subnet). EXPECT: each radio's IP address is offered
+  once, as before; with two radios of a kind, both; with the radio off, nothing
+  found and no access violation. `tr4w.log` (DEBUG) says
+  `[RadioEdit] Discovery worker finished -- N address(es)` with the right N.
+
 ## Added 2026-11-05 -- THE WAE QTC COUNTS LIVE IN A PLAIN ARRAY (pointer audit P13 part 2, 2.5)
 
 Unit-pinned: the per-station counting, lookup, decrement and the 500-station edge
