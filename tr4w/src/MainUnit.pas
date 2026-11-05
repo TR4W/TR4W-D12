@@ -590,7 +590,11 @@ procedure SetMenuCaption(const aId: word; const aText: string);
 { The item's caption, or '' when the menu has no such row. }
 function MenuCaption(const aId: word): string;
 
-procedure OpenTR4WWindow(ID: WindowsType);
+(* aTakeFocusBack: hand the keyboard back to the main window once the tool
+  window is shown -- what every menu and keyboard path wants. The start-up
+  restore passes False and focuses the call window ONCE when the last window
+  is up (issue 219: one focus hand-back per window was half the flashing). *)
+procedure OpenTR4WWindow(ID: WindowsType; aTakeFocusBack: boolean = True);
 procedure OpenOtherWindows;
 procedure CloseTR4WWindow(ID: WindowsType);
 
@@ -4784,7 +4788,9 @@ begin
        // spectrum) is exactly the kind that can block, so the loop is asked to
        // account for itself.
        startedAt := Now;
-       OpenTR4WWindow(i);
+       // False: no focus hand-back per window -- FocusEntry below does it
+       // once, after the last one (issue 219).
+       OpenTR4WWindow(i, False);
        tookMs := MilliSecondsBetween(Now, startedAt);
        if tookMs >= SLOW_WINDOW_OPEN_MS then
           begin
@@ -4813,6 +4819,15 @@ begin
   // START-UP IS THE ONE PLACE THAT IS NOT TRUE: the operator just launched
   // the program, and the window they launched belongs in front.
   FocusEntry(TR4WCallEdit, True);
+
+  (* AND ONLY NOW IS THE RAISE ON ACTIVATION ARMED (issue 219). Armed before
+    this restore ran, an application activation from start-up -- which the LCL
+    delivers through QueueAsyncCall, so it can run after the restore -- raised
+    every window a second time. Arming stamps the raise as just done, because
+    FocusEntry above IS a raise, so an activation still queued from start-up
+    is an echo and is swallowed. A real switch back to TR4W later is not
+    affected. *)
+  ArmActivationRaiser;
 end;
 
 { THE MAIN WINDOW FIRST, THE TOOL WINDOWS AFTER THE LOOP IS RUNNING.
@@ -6654,7 +6669,7 @@ begin
    end;
 end;
 
-procedure OpenTR4WWindow(ID: WindowsType);
+procedure OpenTR4WWindow(ID: WindowsType; aTakeFocusBack: boolean = True);
 const
   NORESIZEEDWINDOW = SWP_SHOWWINDOW or SWP_NOSIZE;
   wi: array[WindowsType] of WindowsType = (
@@ -7080,7 +7095,16 @@ begin
      lclForm.Visible := True;
      end;
 
-  FrmSetFocus;
+  (* THE KEYBOARD GOES BACK TO THE MAIN WINDOW -- unless the caller is opening
+    several windows and will do that once at the end (RestoreToolWindows).
+    Handing it back per window cost a second activation for every restored
+    window (issue 219). Showing the form above still activates it: the LCL has
+    no show-without-activating for a form (TWin32WSCustomForm.ShowHide is
+    ShowWindow with SW_SHOWNORMAL), so that half is the widget set's. *)
+  if aTakeFocusBack then
+     begin
+     FrmSetFocus;
+     end;
 end;
 
 procedure CheckNumber;

@@ -303,9 +303,19 @@ decided whether stations could talk. Now it connects nothing and stops nothing:
   switch INTO TR4W) queues `BringToFront` on every showing tool window, bottom
   first in `Screen.CustomFormsZOrdered`, then the main window last. It skips
   while a modal is up, and `IsActivationEcho` stops it re-arming itself on
-  gtk2, which derives app activation from per-window focus. Armed from
-  `ScheduleMainWindowActivation`. Do not "fix" this by owning tool windows by
-  the main form again -- that is issue #1.
+  gtk2, which derives app activation from per-window focus. **Armed by
+  `ArmActivationRaiser` at the END of `MainUnit.RestoreToolWindows`**, stamped
+  as a raise (issue #219): armed before the queued restore, a start-up
+  activation -- which the LCL delivers through `QueueAsyncCall` -- raised every
+  window a second time. `RaiseFromQueue` logs at Debug what it raised, or which
+  guard declined. Do not "fix" this by owning tool windows by the main form
+  again -- that is issue #1.
+- **The restore opens windows with `OpenTR4WWindow(i, False)`**: no focus
+  hand-back per window, one `FocusEntry` at the end (#219). Showing a form
+  still activates it on Win32 -- the LCL has no show-without-activating for a
+  form (`TWin32WSCustomForm.ShowHide` is `SW_SHOWNORMAL`), and
+  `ShowWithoutTakingFocus` is `Show` plus a `BringToFront` back, two
+  activations, not zero.
 
 **Mnemonics were tried and dropped by NY4I 2026-11-03**: accelerators are
 ShortCut keystrokes only (`uAccelerators`, `TMenuItem.ShortCut`). A caption put

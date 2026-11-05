@@ -46,12 +46,92 @@ type
       procedure Test_NotOnTheWayOut;
       procedure Test_WhichWindowsGoUpWithTheMainOne;
       procedure Test_ARaiseCannotFeedItself;
+      procedure Test_ArmingCountsAsARaise;
+      procedure Test_OnlyTheFinishedRestoreArmsTheRaise;
    end;
 
 implementation
 
 uses
-   uMainForm;
+   SysUtils,
+   uMainForm,
+   uTestAutomaticXQSO;   (* SourceText -- a file under tr4w/src, as text *)
+
+(* ISSUE 219. Arming is done by the tool-window restore, which has just
+  raised the main window, so arming counts as a raise: an application
+  activation still queued from start-up is an echo and raises nothing. *)
+procedure TActivationRaiseTests.Test_ArmingCountsAsARaise;
+var
+   before: QWord;
+   armedAt: QWord;
+begin
+   BeginTest('Test_ArmingCountsAsARaise');
+   CheckTrue(ActivationRaiserLastRaiseMs = 0,
+             'nothing in the test binary has armed the raise');
+
+   before := SysUtils.GetTickCount64;
+   ArmActivationRaiser;
+   try
+      armedAt := ActivationRaiserLastRaiseMs;
+      CheckTrue(armedAt >= before, 'arming stamps the raise as just done');
+      CheckTrue(IsActivationEcho(armedAt, armedAt),
+                'so an activation queued from start-up is an echo');
+
+      ArmActivationRaiser;
+      CheckTrue(ActivationRaiserLastRaiseMs = armedAt, 'a second arm does nothing');
+   finally
+      DisarmActivationRaiser;
+   end;
+   CheckTrue(ActivationRaiserLastRaiseMs = 0, 'disarmed');
+end;
+
+(* THE ORDER, read from the source because no headless test can run start-up:
+  the restore opens its windows without handing focus back, focuses the call
+  window once, and arms the raise after that -- and nothing earlier in
+  start-up arms it. *)
+procedure TActivationRaiseTests.Test_OnlyTheFinishedRestoreArmsTheRaise;
+var
+   mainText: string;
+   formText: string;
+   startupText: string;
+   focusAt: integer;
+   armAt: integer;
+   addAt: integer;
+   schedAt: integer;
+begin
+   BeginTest('Test_OnlyTheFinishedRestoreArmsTheRaise');
+
+   mainText := SourceText('MainUnit.pas');
+   CheckTrue(Pos('OpenTR4WWindow(i, False);', mainText) > 0,
+             'the restore opens each window without handing focus back');
+
+   focusAt := Pos('FocusEntry(TR4WCallEdit, True);', mainText);
+   armAt := Pos('ArmActivationRaiser;', mainText);
+   CheckTrue(focusAt > 0, 'the restore focuses the call window once');
+   CheckTrue(armAt > focusAt, 'and arms the raise after that');
+
+   startupText := SourceText('uProgramMain.pas');
+   CheckEquals(0, Pos('ArmActivationRaiser', startupText),
+               'start-up does not arm it before the restore');
+
+   (* ONE place adds the handler, and it is ArmActivationRaiser's body --
+     ScheduleMainWindowActivation, which runs before the restore, no longer
+     does. *)
+   formText := SourceText('ui' + PathDelim + 'lcl' + PathDelim + 'uMainForm.pas');
+   addAt := Pos('AddOnActivateHandler(GActivationRaiser', formText);
+   CheckTrue(addAt > 0, 'the handler is added somewhere');
+   CheckEquals(0, Pos('AddOnActivateHandler(GActivationRaiser',
+                      Copy(formText, addAt + 1, MaxInt)),
+               'in exactly one place');
+   (* The BODIES, so the interface declarations are skipped: a body's header
+     is followed by begin. *)
+   armAt := Pos(#10 + 'procedure ArmActivationRaiser;' + LineEnding + 'begin', formText);
+   schedAt := Pos(#10 + 'procedure ScheduleMainWindowActivation;' + LineEnding +
+                  'begin', formText);
+   CheckTrue((armAt > 0) and (schedAt > armAt), 'both bodies are found, in that order');
+   CheckTrue((addAt > armAt) and (addAt < schedAt),
+             'inside ArmActivationRaiser, not ScheduleMainWindowActivation');
+end;
 
 procedure TActivationRaiseTests.Test_RaisesWhenActiveAndNothingBlocks;
 begin
@@ -137,6 +217,8 @@ begin
    Test_NotForAHiddenOrMinimisedMainWindow;
    Test_NotOnTheWayOut;
    Test_WhichWindowsGoUpWithTheMainOne;
+   Test_ArmingCountsAsARaise;
+   Test_OnlyTheFinishedRestoreArmsTheRaise;
 end;
 
 end.

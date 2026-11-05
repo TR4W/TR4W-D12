@@ -3011,8 +3011,10 @@ begin
 
   (* THE MAIN WINDOW TAKES THE KEYBOARD BACK, and it has to be HERE, after
     everything above has shown its windows. The start-up promotion is macOS
-    only; the same call also arms, on every platform, the raise that puts the
-    main window above the tool windows when the operator switches back to TR4W.
+    only. The raise that puts the main window above the tool windows when the
+    operator switches back to TR4W is NOT armed here any more: the tool windows
+    are restored later, from the loop, and MainUnit.RestoreToolWindows arms it
+    when it has finished (issue 219).
 
     On Cocoa the global menu bar is put up by whichever form's window becomes
     key, so the last window restored above -- a tool window, with no menu --

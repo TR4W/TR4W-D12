@@ -492,14 +492,31 @@ procedure ShowTR4WMainForm;
   defect, and raising the main window over the restored tool windows AT
   START-UP would be a behaviour change on both.
 
-  THE REST OF THE BODY RUNS ON EVERY PLATFORM (2026-11-01): it arms the raise
-  on activation -- see TR4WWindowsShouldRaise below -- which acts only when
-  the operator later switches INTO TR4W from another program, never at
-  start-up. Armed here because this is the one start-up call that runs after
-  every window exists and before Application.Run, and only in the real
-  program: a unit test that streams the form never reaches it, so no test is
-  left holding an application handler. *)
+  THE RAISE ON ACTIVATION IS NO LONGER ARMED HERE (issue 219, 2026-11-05).
+  It was, from 2026-11-01, and this call runs BEFORE the tool windows are
+  restored -- that restore is queued and runs inside Application.Run -- so an
+  activation from start-up could raise every window a second time while the
+  operator watched. ArmActivationRaiser below is called by the restore, last. *)
 procedure ScheduleMainWindowActivation;
+
+(* ARM THE RAISE ON ACTIVATION -- see TR4WWindowsShouldRaise below. Called
+  ONCE, by MainUnit.RestoreToolWindows after it has shown every tool window
+  and focused the call window; a second call does nothing. The raise is
+  stamped as just done, because the restore ended with one: an activation
+  still queued from start-up (the LCL delivers WM_ACTIVATEAPP through
+  QueueAsyncCall) falls inside the echo window and is not a second raise.
+  Only the real program restores windows, so a unit test that streams the
+  form is never left holding an application handler. *)
+procedure ArmActivationRaiser;
+
+(* The tick (GetTickCount64) of the last raise, which arming counts as one;
+  0 while the raiser is not armed. For tests, which pin that arming makes a
+  start-up activation an echo. *)
+function ActivationRaiserLastRaiseMs: QWord;
+
+(* Remove the handler, then free the raiser. Finalization, and a test that
+  armed one. *)
+procedure DisarmActivationRaiser;
 
 (* COMING BACK TO TR4W FROM ANOTHER PROGRAM PUTS EVERY TR4W WINDOW IN FRONT,
   AND THE MAIN WINDOW ON TOP OF THEM (NY4I, bench, 2026-11-01).
@@ -4210,6 +4227,7 @@ var
    f:       TCustomForm;
    i:       integer;
    n:       integer;
+   sinceMs: QWord;
 begin
    FPending := False;
 
@@ -4224,6 +4242,18 @@ begin
                                  Screen.GetCurrentModalForm <> nil,
                                  Application.Terminated) then
       begin
+      (* WHICH GUARD SAID NO -- so the bench can tell "the raise declined"
+        from "no activation arrived" (issue 219). *)
+      if (logger <> nil) and logger.IsDebugEnabled then
+         begin
+         logger.Debug('[Windows] activation raise declined: appActive=%s ' +
+                      'mainShowing=%s mainMinimized=%s modalUp=%s terminated=%s',
+                      [BoolToStr(Application.Active, True),
+                       BoolToStr(TR4WMainForm.Showing, True),
+                       BoolToStr(TR4WMainForm.WindowState = wsMinimized, True),
+                       BoolToStr(Screen.GetCurrentModalForm <> nil, True),
+                       BoolToStr(Application.Terminated, True)]);
+         end;
       Exit;
       end;
 
@@ -4256,18 +4286,63 @@ begin
      which puts the caret in the call or exchange field. *)
    TR4WMainForm.BringToFront;
 
+   (* WHY IT FIRED AND HOW MUCH IT DID (issue 219). Every raise is one
+     BringToFront -- one activation -- per window, so the count is the number
+     of title bars the operator saw change. The gap since the last raise (or
+     since arming, which counts as one) separates a real switch back to TR4W
+     from start-up traffic. Taken before the stamp below. *)
+   if (logger <> nil) and logger.IsDebugEnabled then
+      begin
+      sinceMs := SysUtils.GetTickCount64 - FLastRaiseMs;
+      logger.Debug('[Windows] activation raise: TR4W became the active ' +
+                   'application; raised %d tool window(s) and the main window, ' +
+                   '%d ms after the previous raise', [n, Int64(sinceMs)]);
+      end;
+
    // Stamped AFTER the raise, so its own focus traffic falls inside the echo.
    FLastRaiseMs := SysUtils.GetTickCount64;
 end;
 
-procedure ScheduleMainWindowActivation;
+procedure ArmActivationRaiser;
 begin
-   if (GActivationRaiser = nil) and (Application <> nil) then
+   if (GActivationRaiser <> nil) or (Application = nil) then
       begin
-      GActivationRaiser := TActivationRaiser.Create;
-      Application.AddOnActivateHandler(GActivationRaiser.ApplicationActivated);
+      Exit;
       end;
 
+   GActivationRaiser := TActivationRaiser.Create;
+   (* THE RESTORE THAT CALLS THIS JUST RAISED THE MAIN WINDOW, so it counts as
+     the last raise: a start-up activation still in the async queue is its
+     echo. *)
+   GActivationRaiser.FLastRaiseMs := SysUtils.GetTickCount64;
+   Application.AddOnActivateHandler(GActivationRaiser.ApplicationActivated);
+
+   if logger <> nil then
+      begin
+      logger.Debug('[Windows] activation raise armed, after the tool-window restore');
+      end;
+end;
+
+function ActivationRaiserLastRaiseMs: QWord;
+begin
+   Result := 0;
+   if GActivationRaiser <> nil then
+      begin
+      Result := GActivationRaiser.FLastRaiseMs;
+      end;
+end;
+
+procedure DisarmActivationRaiser;
+begin
+   if (GActivationRaiser <> nil) and (Application <> nil) then
+      begin
+      Application.RemoveOnActivateHandler(GActivationRaiser.ApplicationActivated);
+      end;
+   FreeDeferralTarget(TObject(GActivationRaiser));
+end;
+
+procedure ScheduleMainWindowActivation;
+begin
 {$IFDEF DARWIN}
    if GStartupActivator = nil then
       begin
@@ -4884,10 +4959,6 @@ finalization
    FreeDeferralTarget(TObject(GNoticeArmer));
    FreeDeferralTarget(TObject(GDeferrer));
    // The activation raiser -- its handler goes before the object does.
-   if (GActivationRaiser <> nil) and (Application <> nil) then
-      begin
-      Application.RemoveOnActivateHandler(GActivationRaiser.ApplicationActivated);
-      end;
-   FreeDeferralTarget(TObject(GActivationRaiser));
+   DisarmActivationRaiser;
 
 end.
