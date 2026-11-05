@@ -30,6 +30,21 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-04 -- SWEEPSTAKES: "MULT NEEDS FOR" NAMES THE SECTION, NOT THE CHECK (NY4I, bench)
+
+The header read `Mult needs for 18 UT :` after W7ST (33M 18 UT) was logged. The
+QSO and the Mults window were right; the header showed the remembered exchange
+(check + section) whole. Unit tests drive the header panel; nobody has looked
+at the window.
+
+- [ ] ARRL SS (CW or SSB): log `W7ST` with `33M 18 UT`. Afterwards the header
+  reads `Mult needs for UT :`, never `18 UT`.
+- [ ] Type a call you have already worked (a station logged with check 32,
+  section IN): the header reads `Mult needs for IN :`, not `32 IN`.
+- [ ] A section whose file spelling differs from what you typed (`WF`, filed
+  as `WcF`): the header shows what you typed (`WF`), and its needs strip may
+  show it as needed. Not changed by this fix -- issue 207.
+
 ## Added 2026-11-04 -- SWEEPSTAKES: A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE SERIAL (NY4I)
 
 NY4I: *"a check would NEVER be entered with the precedence next to it without

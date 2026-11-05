@@ -709,6 +709,24 @@ counts it at start-up; at 0 the Mult strip is never written). Pinned by
 `uTestStatusAndNotice.Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips`.
 `LOGSTUFF.ShowQSOStatusCall` is dead (cleared in `LogContact`, read nowhere).
 
+**THE "MULT NEEDS FOR" HEADER IS THE CONTEST'S HINT OF THE REMEMBERED
+EXCHANGE, NOT THE QSO'S `DomMultQTH`** (NY4I bench, ARRL SS, 2026-11-04).
+`ShowNeedsForCall` reads `CallsignsList.GetIniitialExchange(call)` -- built by
+`LOGDUPE.GetInitialExchangeStringFromContestExchange` for the PREFILL, so it
+joins every field the field list marks (SS: `18 UT`) -- and shows
+`DomStringParse` of it = the class's `DomesticMultiplierHint`, whose base
+answers the text WHOLE. The header read `18 UT` while the QSO's
+`DomesticQTH`/`DomMultQTH` and the sheet were `Ut`/`UT` (arrlsect.dom: `Ut =
+UT`). `LogContact`'s own `ShowDomesticMultiplierStatus(RXData.DomMultQTH)` is
+gated on MULT BY BAND / BY MODE and does not run for SS. Fixed for SS only:
+`TContestARRLSSBase.DomesticMultiplierHint` answers `ScanSweepstakesExchange`'s
+section. **Do not "fix" the prefill text** -- check + section is right there.
+Other contests whose remembered text carries a field before the QTH (NAQP's
+`TOM CA`, by reading) and the alias-vs-multiplier gap (`WF` filed as `WcF`)
+are issue 207. Pinned by
+`uTestStatusAndNotice.Test_TheSweepstakesMultHeaderNamesTheSection` and
+`uTestExchangeWordOrder.Test_SweepstakesMultiplierHintIsTheSection`.
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

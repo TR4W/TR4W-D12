@@ -79,6 +79,7 @@ type
       procedure Test_NoStatusOverrunsItsPanel;
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+      procedure Test_TheSweepstakesMultHeaderNamesTheSection;
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
       procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
       procedure Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
@@ -1315,6 +1316,69 @@ begin
       end;
 end;
 
+(* THE SWEEPSTAKES "MULT NEEDS FOR" HEADER NAMES THE SECTION -- NY4I bench,
+  ARRL SS SSB, 2026-11-04. After W7ST (33M 18 UT) was logged it read
+  "Mult needs for 18 UT :". LogContact remembers the exchange as check +
+  section and its post-log step (RefreshNeedsAfterLoggedQSO -> ShowNeedsForCall)
+  showed that text whole; the contest's DomesticMultiplierHint now answers the
+  section. The same header is shown when a worked call is typed again
+  (ShowStationInformation -> ShowNeedsForCall), which is where "32 IN" came
+  from. Section multipliers count once per contest: not by band, not by mode. *)
+procedure TStatusAndNoticeTests.Test_TheSweepstakesMultHeaderNamesTheSection;
+var
+   savedContest:      TContestHandle;
+   savedMultByBand:   boolean;
+   savedMultByMode:   boolean;
+   savedNumberMults:  Byte;
+   savedList:         TCallsignsList;
+   header:            string;
+begin
+   BeginTest('Test_TheSweepstakesMultHeaderNamesTheSection');
+
+   EnsureMainForm;
+   BindMainGrids;
+
+   savedContest     := Contest;
+   savedMultByBand  := Settings.Mult.ByBand;
+   savedMultByMode  := Settings.Mult.ByMode;
+   savedNumberMults := NumberDifferentMults;
+   savedList        := CallsignsList;
+   CallsignsList    := TCallsignsList.Create;
+   try
+      Contest := ContestHandleOf(ARRLSSSSB);
+      ReleaseActiveContest;
+      Settings.Mult.ByBand := False;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      mo.ClearAllMults;
+
+      (* WHAT LogContact REMEMBERS FOR W7ST, and its post-log step. *)
+      CallsignsList.AddIniitialExchange('W7ST', '18 UT');
+      TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+      RefreshNeedsAfterLoggedQSO('W7ST', True, False);
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('UT', header) > 0, 'the header names the section: ' + header);
+      CheckTrue(Pos('18', header) = 0, 'the header holds no check: ' + header);
+
+      (* A WORKED CALL TYPED AGAIN -- the "32 IN" NY4I saw first. *)
+      CallsignsList.AddIniitialExchange('W9XX', '32 IN');
+      TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+      ShowNeedsForCall('W9XX');
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('IN', header) > 0, 'the typed call''s header names the section: ' + header);
+      CheckTrue(Pos('32', header) = 0, 'the typed call''s header holds no check: ' + header);
+   finally
+      mo.ClearAllMults;
+      CallsignsList.Free;
+      CallsignsList := savedList;
+      NumberDifferentMults := savedNumberMults;
+      Settings.Mult.ByMode := savedMultByMode;
+      Settings.Mult.ByBand := savedMultByBand;
+      Contest := savedContest;
+      ReleaseActiveContest;
+      end;
+end;
+
 (* ISSUE #97 ON THE STREAMED MAIN WINDOW: the PTT indicator and radio 1's status
   panel for a key-up on a radio in TX test mode, driven exactly as the program
   drives them -- the settled status, then the review the polling thread asks
@@ -1882,6 +1946,7 @@ begin
    Test_NoStatusOverrunsItsPanel;
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+   Test_TheSweepstakesMultHeaderNamesTheSection;
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
    Test_ANoticeFromAWorkerThreadIsHandedOverWhole;

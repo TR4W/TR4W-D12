@@ -60,6 +60,7 @@ type
       procedure Test_SweepstakesEveryOrdering;
       procedure Test_SprintStateBeforeTheName;
       procedure Test_NAQPStateAndNameInEitherOrder;
+      procedure Test_SweepstakesMultiplierHintIsTheSection;
    end;
 
 implementation
@@ -1106,8 +1107,86 @@ begin
    end;
 end;
 
+(* THE MULTIPLIER IS THE SECTION, NEVER THE CHECK -- NY4I bench, ARRL SS SSB,
+   2026-11-04. After W7ST (33M 18 UT) was logged the "Mult needs for" header
+   read '18 UT'. The QSO itself was right: this pins that the parse and the
+   sheet hold the section alone, that the remembered exchange the header is
+   built from is check + section (as it should be, for the prefill), and that
+   the contest's hint answers the section from it. *)
+procedure TExchangeWordOrderTests.Test_SweepstakesMultiplierHintIsTheSection;
+var
+   rx: ContestExchange;
+   accepted: boolean;
+   savedFields: ExchangeInformationRecord;
+   remembered: string;
+
+   procedure CheckHint(const aText: string; const aExpected: string);
+   var
+      hint: string;
+      i: integer;
+   begin
+      hint := ContestDomesticMultiplierHint(ActiveContest(Contest), Str14(aText));
+      CheckEquals(aExpected, hint, 'the hint for ' + aText);
+      for i := 1 to Length(hint) do
+         begin
+         CheckFalse(hint[i] in ['0'..'9'], 'the hint for ' + aText + ' holds no digit of the check');
+         end;
+   end;
+
+begin
+   BeginTest('Test_SweepstakesMultiplierHintIsTheSection');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   savedFields := ExchangeInformation;
+   try
+      (* THE ENTRY AS NY4I TYPED IT, through live entry. *)
+      accepted := Enter('W7ST', '33M 18 UT', rx);
+      CheckTrue(accepted, '33M 18 UT is taken: ' + string(ExchangeErrorMessage));
+      CheckEquals(18, Integer(rx.Check), 'the check');
+      CheckEquals('UT', string(rx.QTHString), 'the section');
+      (* arrlsect.dom spells it 'Ut = UT': the left side is the multiplier. *)
+      CheckEquals('UT', UpperCase(string(rx.DomesticQTH)), 'the domestic QTH is the section alone');
+      CheckEquals('UT', UpperCase(string(rx.DomMultQTH)), 'the domestic multiplier is the section alone');
+
+      (* THE SHEET'S FILL leaves it so -- what the Mults window counts. *)
+      mo.ClearAllMults;
+      Sheet.SetMultFlags(rx);
+      CheckEquals('UT', UpperCase(string(rx.DomMultQTH)), 'after SetMultFlags, still the section alone');
+      mo.ClearAllMults;
+
+      (* THE REMEMBERED EXCHANGE is check + section, as uProgramMain's field
+         list makes it -- the prefill when W7ST is worked again. *)
+      ExchangeInformation := ContestReceivedExchangeFields(ActiveContest(Contest));
+      remembered := GetInitialExchangeStringFromContestExchange(rx);
+      CheckEquals('18 UT', remembered, 'the remembered exchange');
+
+      (* WHAT THE HEADER IS HANDED: the section. *)
+      CheckEquals('UT', DomStringParse(Str14(remembered)), 'DomStringParse of the remembered exchange');
+      CheckHint('18 UT', 'UT');
+      (* A check of 07 is remembered as '7' (IntToStr). *)
+      CheckHint('7 UT', 'UT');
+      CheckHint('59 WCF', 'WCF');
+      (* NO SECTION, NO HINT -- ShowNeedsForCall then shows no header. *)
+      CheckHint('18', '');
+      CheckHint('', '');
+      (* A WORD NO SECTION FILE HAS: the hint reads the SHAPE, as every hint
+         does; the check still never reaches it. *)
+      CheckHint('18 ZZ', 'ZZ');
+
+      (* BOTH RUNNINGS: the rule is the family's. *)
+      Contest := ContestHandleOf(ARRLSSSSB);
+      ReleaseActiveContest;
+      CheckHint('18 UT', 'UT');
+      CheckHint('32 IN', 'IN');
+   finally
+      ExchangeInformation := savedFields;
+      RestoreSession;
+   end;
+end;
+
 procedure TExchangeWordOrderTests.RunAllTests;
 begin
+   Test_SweepstakesMultiplierHintIsTheSection;
    Test_SweepstakesPrecedenceBeforeTheSerial;
    Test_SweepstakesAmbiguousSerialIsRefused;
    Test_SweepstakesReferenceModelIsAnchored;

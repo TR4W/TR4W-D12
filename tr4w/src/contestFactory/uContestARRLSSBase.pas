@@ -98,6 +98,17 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+
+      (* THE NEED-MULTIPLIER HINT IS THE SECTION, AND ONLY THE SECTION --
+         see TContestBase.DomesticMultiplierHint. The text it is handed is
+         the exchange the log remembers for a call, which for Sweepstakes is
+         the CHECK and the section ('18 UT', LOGDUPE's
+         GetInitialExchangeStringFromContestExchange) -- the right text to
+         prefill when the station is worked again, and the wrong one to name
+         a multiplier: the base answered it whole, so the "Mult needs for"
+         header read '18 UT' after every logged QSO (NY4I bench, 2026-11-04).
+         The section is the multiplier; the check never is. *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
    end;
 
 implementation
@@ -408,6 +419,19 @@ end;
 function TContestARRLSSBase.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+(* THE SECTION AS THE ENGINE'S OWN WORD READING FINDS IT -- ScanSweepstakesExchange,
+   the scan the parse and the refusals use, so there is no second Sweepstakes
+   word grammar here. A text with no section (a lone '18') hints nothing, as a
+   DOK text with no letter does (WAG); ShowNeedsForCall shows no header for an
+   empty hint. Like every hint, this reads the SHAPE and not the domestic file. *)
+function TContestARRLSSBase.DomesticMultiplierHint(const aText: Str14): string;
+var
+   fields: TSweepstakesFields;
+begin
+   ScanSweepstakesExchange(string(aText), fields);
+   Result := string(fields.Section);
 end;
 
 end.
