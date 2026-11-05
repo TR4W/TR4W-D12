@@ -83,6 +83,35 @@ const
   WAIT_TIMEOUT_RESULT = $00000102;
 
 type
+  (* THE TX HISTORY ONE SOCKET KEEPS FOR THE RADIO'S RETRANSMIT REQUESTS: the
+    last ICOM_BUFSIZE tracked packets, by sequence number.
+
+    A RING OF RECORDS UNDER ITS OWN LOCK (pointer audit 2.8, 2026-11-05).  It
+    was a TList of New'd records with no lock, written by whichever thread
+    sends a tracked packet (the CI-V send queue, the timer thread, a reader
+    thread answering a login) and read by the Indy listener thread answering
+    a retransmit request -- so an eviction could Dispose the entry a reader
+    was copying from.  uTestIcomTxHistory's threaded test crashed the old
+    internals with "List index (500) out of bounds".
+
+    The lock is a LEAF: nothing is called while it is held, so it cannot be
+    part of a lock-order cycle with FSendLock or FLifecycleLock.  Find hands
+    back a copy of the AnsiString, taken under the lock. *)
+  TIcomTxHistory = class(TObject)
+  private
+    FLock: TCriticalSection;
+    FEntries: array[0..ICOM_BUFSIZE - 1] of TSeqBufEntry;
+    FFirst: Integer;   // slot of the oldest entry
+    FCount: Integer;   // entries in use, 0..ICOM_BUFSIZE
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Add(Seq: Word; const Data: AnsiString);
+    function Find(Seq: Word): AnsiString;
+    procedure Clear;
+    function Count: Integer;
+  end;
+
   TIcomNetworkTransport = class(TObject)
   private
     // State
@@ -204,8 +233,8 @@ type
     FAuthFailed: Boolean;            // True if auth was rejected (bad credentials)
 
     // TX buffer: stores sent packets for responding to radio's retransmit requests
-    FControlTxBuf: TList;            // List of PSeqBufEntry (control socket)
-    FCivTxBuf: TList;                // List of PSeqBufEntry (CI-V socket)
+    FControlTxBuf: TIcomTxHistory;   // control socket
+    FCivTxBuf: TIcomTxHistory;       // CI-V socket
 
     // Thread safety
     FSendLock: TCriticalSection;
@@ -300,9 +329,6 @@ type
       TargetAddr: string; TargetPort: Word; var SeqCounter: Word);
 
     // Internal - buffer management
-    procedure AddToTxBuffer(BufList: TList; Seq: Word; const Data: AnsiString);
-    function FindInTxBuffer(BufList: TList; Seq: Word): AnsiString;
-    procedure ClearTxBuffer(BufList: TList);
     procedure ClearAllBuffers;
 
     // Internal - retransmit (respond to radio's requests)
@@ -652,8 +678,8 @@ begin
   FLifecycleLock := TCriticalSection.Create;
 
   // Create TX buffer lists
-  FControlTxBuf := TList.Create;
-  FCivTxBuf := TList.Create;
+  FControlTxBuf := TIcomTxHistory.Create;
+  FCivTxBuf := TIcomTxHistory.Create;
 
   (* LAST, because it starts running immediately and its first act is to take
     FTimerLock.  It lives for the object, not for a session: the deadlines are
@@ -2555,7 +2581,7 @@ procedure TIcomNetworkTransport.SendTrackedPacket(Socket: TIdUDPServer;
   var SeqCounter: Word);
 var
   Packet: AnsiString;
-  TxBuf: TList;
+  TxBuf: TIcomTxHistory;
 begin
   Packet := Data;
 
@@ -2579,10 +2605,10 @@ begin
   // seq=0 resets the buffer (sequence wrap or initial connect)
   if SeqCounter = 0 then
      begin
-     ClearTxBuffer(TxBuf);
+     TxBuf.Clear;
      end;
 
-  AddToTxBuffer(TxBuf, SeqCounter, Packet);
+  TxBuf.Add(SeqCounter, Packet);
 
   // Send
   FSendLock.Enter;
@@ -2610,61 +2636,107 @@ end;
 // TX Buffer Management
 // ============================================================================
 
-procedure TIcomNetworkTransport.AddToTxBuffer(BufList: TList; Seq: Word; const Data: AnsiString);
-var
-  Entry: PSeqBufEntry;
+constructor TIcomTxHistory.Create;
 begin
-  New(Entry);
-  Entry^.Seq := Seq;
-  Entry^.Data := Data;
-  Entry^.SendTime := TickCount32;
-  Entry^.RetransmitCount := 0;
-  BufList.Add(Entry);
-
-  // Evict oldest if over BUFSIZE
-  while BufList.Count > ICOM_BUFSIZE do
-     begin
-     Dispose(PSeqBufEntry(BufList[0]));
-     BufList.Delete(0);
-     end;
+  inherited Create;
+  FLock := TCriticalSection.Create;
+  FFirst := 0;
+  FCount := 0;
 end;
 
-function TIcomNetworkTransport.FindInTxBuffer(BufList: TList; Seq: Word): AnsiString;
+destructor TIcomTxHistory.Destroy;
+begin
+  (* The ring's AnsiStrings are released with the instance's managed fields. *)
+  FreeAndNil(FLock);
+  inherited Destroy;
+end;
+
+procedure TIcomTxHistory.Add(Seq: Word; const Data: AnsiString);
 var
-  I: Integer;
-  Entry: PSeqBufEntry;
+  slot: Integer;
+begin
+  FLock.Enter;
+  try
+     if FCount < ICOM_BUFSIZE then
+        begin
+        slot := (FFirst + FCount) mod ICOM_BUFSIZE;
+        Inc(FCount);
+        end
+     else
+        begin
+        // Full: the newest packet takes the oldest one's slot.
+        slot := FFirst;
+        FFirst := (FFirst + 1) mod ICOM_BUFSIZE;
+        end;
+     FEntries[slot].Seq := Seq;
+     FEntries[slot].Data := Data;
+     FEntries[slot].SendTime := TickCount32;
+     FEntries[slot].RetransmitCount := 0;
+  finally
+     FLock.Leave;
+  end;
+end;
+
+function TIcomTxHistory.Find(Seq: Word): AnsiString;
+var
+  i, slot: Integer;
 begin
   Result := '';
-  for I := BufList.Count - 1 downto 0 do
-     begin
-     Entry := PSeqBufEntry(BufList[I]);
-     if Entry^.Seq = Seq then
+  FLock.Enter;
+  try
+     // Newest first: a wrapped sequence counter can store a seq twice.
+     for i := FCount - 1 downto 0 do
         begin
-        Result := Entry^.Data;
-        Exit;
+        slot := (FFirst + i) mod ICOM_BUFSIZE;
+        if FEntries[slot].Seq = Seq then
+           begin
+           Result := FEntries[slot].Data;
+           Break;
+           end;
         end;
-     end;
+  finally
+     FLock.Leave;
+  end;
 end;
 
-procedure TIcomNetworkTransport.ClearTxBuffer(BufList: TList);
+procedure TIcomTxHistory.Clear;
 var
-  I: Integer;
+  i: Integer;
 begin
-  if BufList = nil then
-     begin
-     Exit;
-     end;
-  for I := BufList.Count - 1 downto 0 do
-     begin
-     Dispose(PSeqBufEntry(BufList[I]));
-     end;
-  BufList.Clear;
+  FLock.Enter;
+  try
+     // Release the packets now rather than when their slots are reused.
+     for i := 0 to FCount - 1 do
+        begin
+        FEntries[(FFirst + i) mod ICOM_BUFSIZE] := Default(TSeqBufEntry);
+        end;
+     FFirst := 0;
+     FCount := 0;
+  finally
+     FLock.Leave;
+  end;
+end;
+
+function TIcomTxHistory.Count: Integer;
+begin
+  FLock.Enter;
+  try
+     Result := FCount;
+  finally
+     FLock.Leave;
+  end;
 end;
 
 procedure TIcomNetworkTransport.ClearAllBuffers;
 begin
-  ClearTxBuffer(FControlTxBuf);
-  ClearTxBuffer(FCivTxBuf);
+  if FControlTxBuf <> nil then
+     begin
+     FControlTxBuf.Clear;
+     end;
+  if FCivTxBuf <> nil then
+     begin
+     FCivTxBuf.Clear;
+     end;
 end;
 
 // ============================================================================
@@ -2675,7 +2747,7 @@ procedure TIcomNetworkTransport.HandleRetransmitRequest(
   const Data: array of Byte; DataLen: Integer; FromCivSocket: Boolean);
 var
   Pkt: TControlPacket;
-  TxBuf: TList;
+  TxBuf: TIcomTxHistory;
   StoredPkt: AnsiString;
   Socket: TIdUDPServer;
   TargetAddr: string;
@@ -2706,7 +2778,7 @@ begin
   if DataLen = ICOM_CONTROL_PKT_SIZE then
      begin
      // Single retransmit request — Pkt.Seq is the seq they want
-     StoredPkt := FindInTxBuffer(TxBuf, Pkt.Seq);
+     StoredPkt := TxBuf.Find(Pkt.Seq);
      if Length(StoredPkt) > 0 then
         begin
         FSendLock.Enter;
@@ -2729,7 +2801,7 @@ begin
      while Offset + 1 < DataLen do
         begin
         ReqSeq := Word(Data[Offset]) or (Word(Data[Offset + 1]) shl 8);
-        StoredPkt := FindInTxBuffer(TxBuf, ReqSeq);
+        StoredPkt := TxBuf.Find(ReqSeq);
         if Length(StoredPkt) > 0 then
            begin
            FSendLock.Enter;

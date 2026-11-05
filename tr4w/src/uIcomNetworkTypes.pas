@@ -110,7 +110,7 @@ const
 
     RETRANSMIT SUPPORT IS NOT REMOVED BY THIS.  The REACTIVE half is live and
     always has been: the radio asks with PktType=$0001 and
-    HandleRetransmitRequest answers out of the TX history AddToTxBuffer keeps.
+    HandleRetransmitRequest answers out of the TX history (TIcomTxHistory).
     What these two constants implied, and what has never existed here, is the
     PROACTIVE half -- noticing a gap in the radio's own sequence numbers and
     asking IT to resend.
@@ -386,7 +386,8 @@ type
     SendTime:         LongWord;     // GetTickCount when sent
     RetransmitCount:  Byte;
   end;
-  PSeqBufEntry = ^TSeqBufEntry;
+  (* One slot of uIcomNetworkTransport.TIcomTxHistory's ring -- held by value,
+    never New'd (pointer audit 2.8, 2026-11-05). *)
 
 // Byte-order helpers
 function SwapWord(Value: Word): Word;

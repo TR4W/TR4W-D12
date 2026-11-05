@@ -67,17 +67,17 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > 2026-10-16 inventory (at `28599599`, BEFORE P4 -- so the change is every
 > packet since PLUS every line of new code, not the packets alone):
 >
-> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) | after P13 2.7 (2026-11-05) |
+> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) | after P13 2.7 and 2.8 Icom (2026-11-05) |
 > |---|---:|---:|---:|---:|
-> | C1-ptrtype-decl | 91 | 63 | 60 | 57 |
+> | C1-ptrtype-decl | 91 | 63 | 60 | 56 |
 > | C1-link-field | 12 | 4 | 4 | 4 |
 > | C2-heap | 9 | 4 | 4 | 4 |
-> | C2-new-dispose | 79 | 40 | 30 | 24 |
+> | C2-new-dispose | 79 | 40 | 30 | 21 |
 > | C3-pointer-cast | 7 | 6 | 6 | 6 |
 > | C3-int-of-ptr | 11 | 8 | 8 | 8 |
 > | C3-typed-ptr-type | 181 | 177 | 177 | 177 |
 > | C3-addr-of | 387 | 323 | 322 | 322 |
-> | C3-deref | 1,127 | 644 | 521 | 509 |
+> | C3-deref | 1,127 | 644 | 521 | 503 |
 > | C3-inc-dec-ptr | 41 | 33 | 33 | 33 |
 > | C3-untyped-param | 35 | 20 | 20 | 20 |
 > | C3-memcmp | 2 | 2 | 2 | 2 |
@@ -91,7 +91,7 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > | C6-ptr-named | 562 | 574 | 572 | 572 |
 > | C7-proc-type | 96 | 125 | 125 | 125 |
 > | C7-pointer-word | 70 | 111 | 111 | 111 |
-> | **src total** | **2,909** | **2,338** | **2,192** | **2,171** |
+> | **src total** | **2,909** | **2,338** | **2,192** | **2,161** |
 >
 > **Six rows ROSE**, and they are stated, not explained: `C7-pointer-word`
 > +41 (P1 accounts for +20 -- the RTL thread parameter, see P1 and P2; the
@@ -102,14 +102,16 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > **P13 IS DONE FOR 2.4 AND 2.5 (2026-11-05)** -- `postunit`'s two report arrays and the
 > WAE QTC table are module arrays, not `New`/`Dispose` blocks; see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05)
 > and [P13 part 2](#p13-part-2----the-qtc-per-station-table-2026-11-05). **Item 2.7 is done too**
-([P13 part 3](#p13-part-3----network-radio-discovery-2026-11-05)): `src` 2,192 -> **2,171**. Item 2.8 is open.
+([P13 part 3](#p13-part-3----network-radio-discovery-2026-11-05)): `src` 2,192 -> **2,171**. **The Icom half of 2.8 is done**
+([P13 part 4](#p13-part-4----the-icom-lan-tx-history-2026-11-05)), and it was a live
+race, not only a pointer: `src` -> **2,161**. The HamLib half of 2.8 is open.
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
 > `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
-> P11, P13 (2.4, 2.5 and 2.7 are since done -- see above; 2.8 is not), and the four old-style objects above.
+> P11, P13 (2.4, 2.5, 2.7 and the Icom half of 2.8 are since done -- see above; the HamLib half of 2.8 is not), and the four old-style objects above.
 >
 > **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
 > 2026-11-05 reconciliation said the file did not exist; it is tracked at
@@ -315,6 +317,20 @@ allocation, so no fault, but the answer depends on what was there before.
 Replace with `Copy(Call, 1, 4) = ...` after pinning the current answers in
 `uTestDXSpotParse` (packet P12).
 
+### D8. The Icom LAN TX history was read and evicted on two threads with no lock -- FIXED (P13 part 4)
+
+**Found 2026-11-05 while converting item 2.8.** `TIcomNetworkTransport`'s two TX
+histories (`FControlTxBuf`, `FCivTxBuf`) were `TList`s of `New`'d records. They were
+written by `SendTrackedPacket` on whichever thread sent (the CI-V send queue, the
+timer thread, a reader thread answering a login), and read by
+`HandleRetransmitRequest` on the Indy listener thread. Neither side took a lock.
+Evicting the oldest entry `Dispose`d a record that the reader might still be copying
+from, and shifted the list while the reader was indexing it.
+`uTestIcomTxHistory.Test_ReaderAndWriterThreads` crashed the old internals with
+`EListError: List index (500) out of bounds`. That would never happen on the bench:
+the 2026-09-24 IC-7760 capture recorded **zero** retransmit requests in 663 s, and the
+reader only runs when the radio asks for a resend. See P13 part 4.
+
 ### Known and already documented -- listed so nobody re-reports them
 
 * `QTCDataArray` has two allocation sites: `LogCfg.pas:347` (`New`, not
@@ -456,7 +472,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 | 2.5 | **DONE 2026-11-05 (P13 part 2)** -- was `trdos/logstuff.pas:1068`, `trdos/LogCfg.pas:347` | `QTCDataArray` | live (WAE) | a dynamic array owned by the contest | low | **none** for QTC windows; `docs/QTC_BENCH_HANDOFF.md` is the bench script -- the counters are pinned by `uTestQTCCounts` now |
 | 2.6 | `uSettingsModel.pas:5727, 5832, 7058, 7166` `FreeMem(props)` | frees `GetPropList`'s result | live | **keep** -- `TypInfo.GetPropList` allocates and the caller frees; that is the RTL's contract. Add the comment | none | UT `uTestSettingsModel`, `uTestAllSettings` |
 | 2.7 | **DONE 2026-11-05 (P13 part 3)** -- was `uCAT.pas:107, 128, 153` `Dispose(P...DiscoveredRadio(list[i]))`; `uK4Discovery.pas:227`, `radioFactory/uFlexDiscovery.pas:281`, `uIcomNetworkDiscovery.pas:151` `New(Radio)` | discovery results as `^record` in a `TList` | live | ~~`specialize TObjectList<TDiscoveredX>` with `OwnsObjects`~~ a dynamic array of the record -- see P13 part 3 for why not the object list | low | UT `uTestFlexDiscovery`; K4 and Icom discovery: **none** -> BENCH |
-| 2.8 | `uIcomNetworkTransport.pas:2611/2621/2653` (`PSeqBufEntry`), `radioFactory/uRadioHamLibDirect.pas:762/885` (`PHLCommand`) | per-radio queues of `^record` | live | `specialize TQueue<T>` / `TList<T>` of records | medium (Icom LAN is unproven on the bench) | UT `uTestIcomTeardown` (Icom, partial), `uTestHamLibIDs` (ids only); BENCH |
+| 2.8 | **Icom DONE 2026-11-05 (P13 part 4)** -- was `uIcomNetworkTransport.pas:2611/2621/2653` (`PSeqBufEntry`), now `TIcomTxHistory`, a locked ring, pinned by `uTestIcomTxHistory`; **the old one was a live cross-thread race (D8)**. `radioFactory/uRadioHamLibDirect.pas:762/885` (`PHLCommand`) | per-radio queues of `^record` | live | `specialize TQueue<T>` / `TList<T>` of records | medium (Icom LAN is unproven on the bench) | UT `uTestIcomTeardown` (Icom, partial), `uTestHamLibIDs` (ids only); BENCH |
 | 2.9 | `uMainThread.pas:126/140` (`PPendingCall`), `ui/lcl/uMainForm.pas:2294/2327/2354` (`PElementWork`), `uGetServerLog.pas:206/230` (`PSyncProgress`), `TF.pas:437/473/943/1005` (warning text, worker start) | cross-thread handoff through `Application.QueueAsyncCall`'s single `PtrInt` | live | **keep, it is the LCL's API**: `QueueAsyncCall` carries one `PtrInt`. `uMainThread.pas:82` already says so. The agent memory `fpc-queue-purges-its-own-callback` is why `TThread.Queue` is not the substitute | none | UT `uTestStatusAndNotice`, `uTestWSJTXThreading` |
 
 ### Category 3 -- pointer arithmetic, casts, untyped buffers
@@ -1330,6 +1346,59 @@ type, and was left out of a pointer packet.
 57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both
 at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
 identical, 0 differing, no re-freeze.
+
+---
+
+### P13 part 4 -- the Icom LAN TX history, 2026-11-05
+
+**Test first.** Step one moved the three private routines
+(`AddToTxBuffer`, `FindInTxBuffer`, `ClearTxBuffer`) unchanged, pointer code and
+all, into a class, `TIcomTxHistory`, so that a test could reach them.
+`test/unit/uTestIcomTxHistory.pas` pins six things:
+- an unknown seq answers empty;
+- a stored packet round-trips byte-exact, `#0` and `$FF` included;
+- a seq stored twice answers the newer packet (the counter wraps at $FFFF);
+- past `ICOM_BUFSIZE` the oldest packets go and the rest stay;
+- `Clear`, including twice, and use after it;
+- one reader thread beside one writer thread, 200,000 adds with periodic clears,
+  where every answer must be empty or exactly the packet stored under that seq.
+
+On the pointer code the first five passed. The sixth CRASHED the run with
+`EListError: List index (500) out of bounds` -- that is D8.
+
+**The conversion.** `TIcomTxHistory` is now a fixed ring,
+`array[0..ICOM_BUFSIZE - 1] of TSeqBufEntry`, with a first-slot index, a count and
+its own `TCriticalSection`.
+- When the ring is full, the newest packet overwrites the oldest one's slot. The
+  old code shifted 500 pointers on every add; this does not.
+- `Find` walks newest-first and copies the AnsiString out while it holds the lock.
+- `Clear` resets each used slot to `Default(TSeqBufEntry)`, so the packets are
+  released at once.
+- The lock is a leaf: nothing is called while it is held, so it cannot join a
+  lock-order cycle with `FSendLock` or `FLifecycleLock`.
+
+`PSeqBufEntry` is deleted. The transport's two `TList` fields are
+`TIcomTxHistory` now, and `ClearAllBuffers` calls `Clear` on each. All six tests
+pass on the ring, plain and `-Checked`.
+
+**Seen and NOT changed.** `SendTrackedPacket` reads and increments the caller's
+sequence counter (`FSendSeq`, `FCivSeq`) outside any lock, and `FSendSeq` is used
+by sends from more than one thread: the timer thread's idle packet and token renew,
+and a reader thread's token ack. Two such sends at the same moment could get the
+same sequence number. That is a protocol-sequencing question, not a pointer, and
+the history now answers either packet consistently. It is reported, not fixed here.
+
+**What is NOT covered.** Whether a real radio's resend request is answered correctly.
+The IC-7760 capture holds no request at all. `BENCH_QUEUE.md` carries a lossy-link
+soak.
+
+**Counters.** `src` total 2,171 -> 2,161: `C3-deref` -6, `C2-new-dispose` -3,
+`C1-ptrtype-decl` -1. `Count-LiveMove` 430, unchanged.
+
+**Oracles.** Unit 424,217 / 0 (26 new checks), plain and `-Checked` (heaptrc 0
+corruption reports, 57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range
+warnings 3, both at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest
+matrix 194 identical, 0 differing, no re-freeze.
 
 ---
 

@@ -609,6 +609,7 @@ uses
    uIcomNetworkTypes    in '..\..\src\uIcomNetworkTypes.pas',
    uIcomNetworkTransport in '..\..\src\uIcomNetworkTransport.pas',
    uTestIcomTeardown    in 'uTestIcomTeardown.pas',
+   uTestIcomTxHistory   in 'uTestIcomTxHistory.pas',
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
    uNetHello in '..\..\src\uNetHello.pas',

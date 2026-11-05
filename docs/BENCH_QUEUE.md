@@ -30,6 +30,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- THE ICOM LAN TX HISTORY IS A LOCKED RING (pointer audit P13, 2.8)
+
+The packets an Icom LAN link keeps for the radio's retransmit requests were a
+`TList` of `New`'d records with no lock, written by the sending threads and read by
+the socket listener; a threaded unit test crashed it. It is a fixed ring under its
+own lock now (`TIcomTxHistory`, pinned by `uTestIcomTxHistory`). What no test
+reaches is a real radio asking for a resend: the 2026-09-24 IC-7760 capture
+records how rarely that happens.
+
+- [ ] **An Icom LAN session (IC-7760 or IC-9700) on a lossy link, then a long
+  soak.** Run the radio over Wi-Fi or a busy switch for an hour while tuning and
+  keying. EXPECT: no access violation and no hang; with DEBUG logging,
+  `Retransmitted seq N (single request)` / `(multi request)` lines whenever the
+  radio asks, and the link stays up. A clean soak with no retransmit lines at all
+  is also a pass for "nothing broke", but says nothing about the resend path.
+
 ## Added 2026-11-05 -- NETWORK RADIO DISCOVERY RETURNS A VALUE ARRAY (pointer audit P13, 2.7)
 
 The K4, Flex and Icom discoveries returned a `TList` of `New`'d records that
