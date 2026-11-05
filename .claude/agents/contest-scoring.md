@@ -766,11 +766,16 @@ and `GetMultArray` asks the class for the key. MWC answered '' until then, so
 its strip was empty for every call; it now answers its scoring letter (seven
 classes answer it: Russian DX, RF Championship x2, Ural Cup, RDA, YO DX, MWC).
 LogContact's `RXData.DomesticQTH <> ''` gate and `logsubs2`'s
-`length(WindowString) < 2` were NOT changed. **Measured, not built (rulings
-owed on #209):** a prior contact does NOT trump the call's zone in CQ WW's strip
-(`GetMultArray` reads `ctyGetCQZone(call)`); a zone remembered with no QTH shows
-`Mult needs for 8 :` in IARU HF / CQ 160 / CQ WW RTTY (the remembered text is
-`8 ` with a trailing blank, so the old guard never hid it).
+`length(WindowString) < 2` were NOT changed. **IARU HF and WRTC take any
+received text as their HQ multiplier**, so a remembered zone alone (`8 ` -- the
+builder appends `' ' + QTH` even when the QTH is empty) hinted as an HQ; their
+`DomesticMultiplierHint` answers '' for it now (`uDomesticKey.IsZoneNumberOnly`;
+NY4I: the ITU zone comes from the call, as in CQ WW), so the header names the
+call. **Not built:** a prior contact trumping the call's zone (#213, ruled, not
+scheduled -- `GetMultArray` reads `ctyGetCQZone(call)`); the bare-field header
+in 30 other domestic-file contests (an "unmapped means empty" rule reaches 30
+on a no-QTH text and all 97 on an unknown QTH, and would break YOTA, whose
+`YOTA.dom` lines have no `=`, so its table maps nothing).
 **`mo.dom` is deleted (#208)**: no contest, `.dom` INCLUDE or D7 row named it.
 **A `.dom` line `QTH > MULT = aliases` gives DomesticQTH `QTH` and multiplier
 `MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a

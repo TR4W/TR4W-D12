@@ -148,6 +148,12 @@ type
                                          var aFound: boolean): TDomesticQTHAnswer; override;
       (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
       function DomesticQTHReplacesDXMultiplier: boolean; override;
+      (* THE NEED-MULTIPLIER HINT -- see TContestBase.DomesticMultiplierHint.
+         A remembered zone with no HQ is NOT an HQ (issue 209, NY4I
+         2026-11-05): the hint is empty, so the needs strip shows the CALL's
+         status, its ITU zone from CTY.DAT -- as CQ WW takes its zone from
+         the call. The text otherwise, as the base. *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
@@ -159,6 +165,8 @@ implementation
 uses
    uCabrilloExchange,
    uExchangeFields,
+   (* IsZoneNumberOnly -- the hint's zone-only test, issue 209. *)
+   uDomesticKey,
    SysUtils, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
@@ -465,6 +473,19 @@ end;
 function TContestIARU.DomesticQTHReplacesDXMultiplier: boolean;
 begin
    Result := True;
+end;
+
+function TContestIARU.DomesticMultiplierHint(const aText: Str14): string;
+begin
+   (* See the declaration. *)
+   if IsZoneNumberOnly(aText) then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := inherited DomesticMultiplierHint(aText);
+      end;
 end;
 
 initialization

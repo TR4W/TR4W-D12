@@ -57,14 +57,21 @@ letter is needed. Measured before: the strip was empty for every MWC call.
   (`M`): the header names `M`.
 - [ ] A grid contest through WSJT-X (WW Digi): a decoded station with a grid
   shows its field as before (`FN`); one with no grid shows no header.
-- [ ] NOT CHANGED, measured, awaiting a ruling on issue 209: a zone remembered
-  with no QTH gives `Mult needs for 8 :` in IARU HF, CQ 160 and CQ WW RTTY. The
-  remembered text is `8 ` with a trailing blank, so the old two-character guard
-  never hid it, and it is not a domestic multiplier there. YOTA's age header
-  (`9`) is right: the age is YOTA's multiplier.
-- [ ] NOT CHANGED, awaiting a ruling: a prior contact does not change the zone
-  CQ WW's strip uses -- K1ABC logged as zone 4, retyped on another band: the
-  strip follows the call's zone 5.
+- [ ] IARU HF and WRTC (NY4I: the ITU zone comes from the call, as in CQ WW):
+  log K1ABC sending zone 8 and no HQ on 40 m. Afterwards, and when the call is
+  retyped, the header reads `Mult needs for K1ABC :` (it read `8`) and the
+  40 m cell is empty (zone 8 worked); it showed every band needed. An HQ
+  station (`ARRL`) or a state (`CT`) still heads with its HQ or state.
+- [ ] Worth a look, NOT changed: in IARU HF the ARRL header's 40 m cell still
+  showed needed after ARRL was logged on 40 m in the unit probe (WRTC showed it
+  worked); it did before this change too.
+- [ ] NOT CHANGED, awaiting a ruling on issue 209: a zone or other field
+  remembered with no QTH still heads the strip in 30 domestic-file contests
+  (CQ 160, CQ WW RTTY, Croatian, NAQP's `TOM`, Field Day's `2A` ...). YOTA's
+  age header (`9`) is right: the age is YOTA's multiplier.
+- [ ] NOT CHANGED (issue 213): a prior contact does not change the zone CQ WW's
+  strip uses -- K1ABC logged as zone 4, retyped on another band: the strip
+  follows the call's zone 5.
 - [ ] Not changed: typing a lone `W` into the MWC exchange window shows
   nothing (`logsubs2`'s two-character gate before the typed lookup).
 

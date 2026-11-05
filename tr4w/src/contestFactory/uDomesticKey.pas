@@ -72,6 +72,14 @@ function GridSquareKey(const aText: ShortString; out aKey: ShortString): boolean
    two-letter field ('FN20' gives 'FN'). *)
 function GridFieldKey(const aText: ShortString; out aKey: ShortString): boolean;
 
+(* A ZONE NUMBER AND NOTHING ELSE -- one or more digits, blanks around them
+   allowed ('8 ', '28'). The remembered exchange of a station that sent its
+   zone and no HQ or state is that (LOGDUPE's builder appends ' ' + an empty
+   QTH), and a contest whose domestic multiplier is any text received
+   (IARU HF, WRTC) must not read it as one -- issue 209, NY4I 2026-11-05:
+   the zone comes from the call there, as in CQ WW. *)
+function IsZoneNumberOnly(const aText: ShortString): boolean;
+
 implementation
 
 (* A field letter, A..R, and a square digit -- the arms' own two tests. *)
@@ -162,6 +170,27 @@ begin
       aKey := Copy(aText, 1, 2);
       Result := True;
       end;
+end;
+
+function IsZoneNumberOnly(const aText: ShortString): boolean;
+var
+   i: integer;
+   digits: integer;
+begin
+   Result := False;
+   digits := 0;
+   for i := 1 to Length(aText) do
+      begin
+      if IsSquareDigit(aText[i]) then
+         begin
+         Inc(digits);
+         end
+      else if aText[i] <> ' ' then
+         begin
+         Exit;
+         end;
+      end;
+   Result := digits > 0;
 end;
 
 end.

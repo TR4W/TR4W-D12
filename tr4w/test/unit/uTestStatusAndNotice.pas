@@ -1782,6 +1782,49 @@ var
       CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC ' + aCall + ': after the QSO, ' + aKey + ' is worked: the cell is empty');
    end;
 
+   (* One zone-only station and one HQ station in aContest, through the
+      logging tail and a retype -- see the caller. *)
+   procedure IARUZonePin(aContest: TContestHandle; const aName: string);
+   var
+      qso: ContestExchange;
+      multNeed40: TElementPanel;
+      shown: string;
+   begin
+      multNeed40 := TR4WMainForm.FindComponent('pnlMultNeedR1_40') as TElementPanel;
+      OpenNeedsSession(aContest, 'iaruhq.dom', DomesticCountriesKVEKH6KL);
+      Settings.Mult.ByBand := True;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band20;
+      ActiveMode := CW;
+      ClearContestExchange(qso);
+      qso.ceRecordKind := rkQSO;
+      qso.Callsign := 'K1ABC';
+      qso.Band := Band40;
+      qso.Mode := CW;
+      qso.Zone := 8;
+      ctyLocateCall(qso.Callsign, qso.QTH);
+      SetDXQTHAndPrefix(qso);
+      ActiveContest(Contest).ScoreQSO(qso);
+      CallsignsList.AddIniitialExchange('K1ABC', GetInitialExchangeStringFromContestExchange(qso));
+      CheckEquals('8 ', CallsignsList.GetIniitialExchange('K1ABC'), aName + ': the log remembers the zone alone');
+      Sheet.SetMultFlags(qso);
+      Sheet.AddQSOToSheets(@qso, True);
+      AddQSOToDupeSheets(qso, False);
+      RefreshNeedsAfterLoggedQSO('K1ABC', True, False);
+      shown := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('K1ABC', shown) > 0, aName + ' K1ABC logged: the header names the call: ' + shown);
+      ShowNeedsForCall('K1ABC');
+      shown := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('K1ABC', shown) > 0, aName + ' K1ABC retyped: the header names the call: ' + shown);
+      CheckEquals('', Trim(string(multNeed40.Caption)), aName + ' K1ABC retyped: zone 8 is worked on 40 m');
+
+      CallsignsList.AddIniitialExchange('W1AW', 'ARRL');
+      ShowNeedsForCall('W1AW');
+      shown := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos(' ARRL', shown) > 0, aName + ' W1AW: an HQ header is unchanged: ' + shown);
+   end;
+
 begin
    BeginTest('Test_TheMultHeaderPinsOfIssue207');
    EnsureMainForm;
@@ -1901,6 +1944,15 @@ begin
                 'WW Digi: FN is');
       CheckEquals('', HeaderNaming('F'), 'WW Digi: no header for F');
       CheckTrue(Pos('FN', HeaderNaming('FN')) > 0, 'WW Digi: the header names FN');
+
+      (* IARU HF AND WRTC: A ZONE ALONE IS NOT AN HQ (issue 209, NY4I
+         2026-11-05) -- the zone comes from the call, as in CQ WW. K1ABC sent
+         zone 8 and no HQ on 40 m; the log remembers '8 '. Measured before:
+         the header read "8" and every band showed needed. Now the header
+         names the call and the strip follows its ITU zone: worked on 40,
+         needed on 20. An HQ station's header is unchanged. *)
+      IARUZonePin(ContestHandleOf(IARU), 'IARU HF');
+      IARUZonePin(ContestHandleOf(WRTC), 'WRTC');
    finally
       RestoreNeedsSession;
       end;

@@ -91,6 +91,7 @@ type
       procedure Test_EveryContestGivesItsPinnedHint;
       procedure Test_EveryContestStatesItsPinnedDomesticAnswers;
       procedure Test_ADOKTextWithNoLetterHintsNothing;
+      procedure Test_AZoneAloneIsNoHQHint;
       procedure Test_EveryContestStatesItsPinnedDomesticFileAnswer;
       procedure Test_ADomesticFileContestStatesNoShape;
       procedure Test_EveryContestHasItsPinnedDomesticMultiplier;
@@ -104,6 +105,8 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
+   (* IsZoneNumberOnly -- issue 209. *)
+   uDomesticKey,
    uTestContestObjects,
    uTestContestKindPin,
    (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
@@ -904,6 +907,7 @@ begin
    Test_EveryContestGivesItsPinnedHint;
    Test_EveryContestStatesItsPinnedDomesticAnswers;
    Test_ADOKTextWithNoLetterHintsNothing;
+   Test_AZoneAloneIsNoHQHint;
    Test_EveryContestStatesItsPinnedDomesticFileAnswer;
    Test_ADomesticFileContestStatesNoShape;
    Test_EveryContestHasItsPinnedDomesticMultiplier;
@@ -1007,6 +1011,42 @@ begin
                      Who(DOK_CONTESTS[i], NON_DL_STATIONS[j]) + ' hinting ' + TEXTS[ptDigits]);
          end;
       end;
+end;
+
+(* A REMEMBERED ZONE ALONE IS NOT AN HQ -- issue 209, NY4I 2026-11-05: "for
+   iaru, just as we find the zone from the callsign in cq ww, we should be
+   able to get the itu zone for the call in IARU (or WRTC)". IARU HF and
+   WRTC take ANY received text as their HQ multiplier, so the zone a station
+   sent with no HQ ('8 ', as the log remembers it) hinted as an HQ and the
+   header read "Mult needs for 8". Their hint is '' there now, and the needs
+   strip shows the call's status. An HQ or a state is hinted as before. *)
+procedure TDomesticMultiplierTests.Test_AZoneAloneIsNoHQHint;
+const
+   CONTESTS: array[0..1] of ContestType = (IARU, WRTC);
+var
+   i: integer;
+begin
+   BeginTest('Test_AZoneAloneIsNoHQHint');
+   CheckTrue(IsZoneNumberOnly('8 '), 'the shape: 8 and a blank');
+   CheckTrue(IsZoneNumberOnly('28'), 'the shape: 28');
+   CheckFalse(IsZoneNumberOnly(''), 'the shape: nothing is not a zone');
+   CheckFalse(IsZoneNumberOnly('  '), 'the shape: blanks are not a zone');
+   CheckFalse(IsZoneNumberOnly('8A'), 'the shape: 8A is not');
+   CheckFalse(IsZoneNumberOnly('ARRL'), 'the shape: ARRL is not');
+   for i := Low(CONTESTS) to High(CONTESTS) do
+      begin
+      CheckEquals('', ProgramHint(CONTESTS[i], PinStation(psUS, CONTESTS[i]), '8 '),
+                  Who(CONTESTS[i], psUS) + ' hinting a zone alone');
+      CheckEquals('', ProgramHint(CONTESTS[i], PinStation(psDX, CONTESTS[i]), '28 '),
+                  Who(CONTESTS[i], psDX) + ' hinting a DX zone alone');
+      CheckEquals('ARRL', ProgramHint(CONTESTS[i], PinStation(psUS, CONTESTS[i]), 'ARRL'),
+                  Who(CONTESTS[i], psUS) + ' hinting an HQ');
+      CheckEquals('CT', ProgramHint(CONTESTS[i], PinStation(psUS, CONTESTS[i]), 'CT'),
+                  Who(CONTESTS[i], psUS) + ' hinting a state');
+      end;
+   (* The control: CQ WW RTTY, not ruled, still hints the text. *)
+   CheckEquals('8 ', ProgramHint(CQWWRTTY, PinStation(psUS, CQWWRTTY), '8 '),
+               'CQ WW RTTY hinting a zone alone: unchanged');
 end;
 
 end.
