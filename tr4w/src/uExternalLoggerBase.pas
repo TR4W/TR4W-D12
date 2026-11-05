@@ -598,7 +598,16 @@ begin
                   end;
                on E: Exception do
                   begin
-                  logger.Debug('[TExternalLoggerBase.TReadingThread] Exception during read: %s - %s', [E.ClassName, E.Message]);
+                  // Terminated is set by the owner BEFORE it closes the link, so a
+                  // read that fails while Terminated is our own close, not a fault.
+                  if Terminated then
+                     begin
+                     logger.Debug('[TExternalLoggerBase.TReadingThread] link closed during read (expected on disconnect)');
+                     end
+                  else
+                     begin
+                     logger.Debug('[TExternalLoggerBase.TReadingThread] link lost while reading: %s - %s', [E.ClassName, E.Message]);
+                     end;
                   wasConnected := False;
                   end;
             end;

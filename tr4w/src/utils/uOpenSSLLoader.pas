@@ -75,29 +75,50 @@ interface
 (* True when TLS is usable.  Safe to call repeatedly -- the work happens once
   and the answer is remembered, including a negative one. *)
 function EnsureOpenSSL: boolean;
+(* On Windows a negative answer is retried after a minimum interval
+  (OPENSSL_RETRY_MS); the unix arms remember it. *)
 
 (* What EnsureOpenSSL did, or could not do -- for the log and for the
   "Reason:" slot in the download failure dialog.  '' before the first call. *)
 function OpenSSLDiagnostic: string;
 
+(* TEST SEAM: a non-empty reason makes EnsureOpenSSL answer False with that
+  diagnostic, whatever the machine has; '' puts it back. Production never
+  calls it. *)
+procedure SetOpenSSLForcedUnavailable(const aReason: string);
+
 implementation
 
 uses
-   SysUtils,
+   SysUtils, SyncObjs,
 {$IFDEF UNIX}
    BaseUnix,
 {$ENDIF}
    openssl,
    uAppPaths;
 
+const
+   OPENSSL_RETRY_MS = 30000;   (* Windows: minimum gap between load retries *)
+
 var
+   (* EnsureOpenSSL is called from delivery-worker threads as well as the main
+     thread, and InitSSLInterface is not re-entrant, so every global below is
+     read and written under GLock. *)
+   GLock:       TCriticalSection;
    GTried:      boolean = False;
    GUsable:     boolean = False;
    GDiagnostic: string  = '';
+   GLastAttempt: QWord  = 0;
+   GForcedUnavailable: string = '';
 
 function OpenSSLDiagnostic: string;
 begin
-   Result := GDiagnostic;
+   GLock.Enter;
+   try
+      Result := GDiagnostic;
+   finally
+      GLock.Leave;
+   end;
 end;
 
 {$IFDEF UNIX}
@@ -345,7 +366,8 @@ begin
 end;
 {$ENDIF}
 
-function EnsureOpenSSL: boolean;
+(* The real work, called with GLock held by EnsureOpenSSL. *)
+function LoadOpenSSL: boolean;
 {$IFDEF LINUX}
 var
    sslPath:    string;
@@ -360,12 +382,8 @@ var
    i:          integer;
 {$ENDIF}
 begin
-   if GTried then
-      begin
-      Result := GUsable;
-      Exit;
-      end;
-   GTried := True;
+   GTried       := True;
+   GLastAttempt := GetTickCount64;
 
    (* FIRST, JUST ASK.  On Windows, on macOS, on a Linux box that has the -dev
      symlink, and on any future FPC whose version list has caught up, this
@@ -510,5 +528,58 @@ begin
 {$ENDIF}
 {$ENDIF}
 end;
+
+function EnsureOpenSSL: boolean;
+begin
+   GLock.Enter;
+   try
+      if GForcedUnavailable <> '' then
+         begin
+         GDiagnostic := GForcedUnavailable;
+         Result      := False;
+         Exit;
+         end;
+
+      if GTried then
+         begin
+         Result := GUsable;
+         (* WINDOWS ONLY: A FAILURE IS NOT FOREVER. The two DLLs sit beside the
+           exe, so a failure there can be an antivirus lock or a half-finished
+           update that a few seconds fixes, and remembering it for the life of
+           the process left a delivery worker failing until the program was
+           restarted. The unix arms search the machine, which does not change
+           mid-session, so they keep the answer. The interval bounds the cost:
+           a failing machine retries the load at most once per interval. *)
+{$IFDEF WINDOWS}
+         if (not GUsable) and
+            (GetTickCount64 - GLastAttempt >= OPENSSL_RETRY_MS) then
+            begin
+            Result := LoadOpenSSL;
+            end;
+{$ENDIF}
+         Exit;
+         end;
+
+      Result := LoadOpenSSL;
+   finally
+      GLock.Leave;
+   end;
+end;
+
+procedure SetOpenSSLForcedUnavailable(const aReason: string);
+begin
+   GLock.Enter;
+   try
+      GForcedUnavailable := aReason;
+   finally
+      GLock.Leave;
+   end;
+end;
+
+initialization
+   GLock := TCriticalSection.Create;
+
+finalization
+   FreeAndNil(GLock);
 
 end.

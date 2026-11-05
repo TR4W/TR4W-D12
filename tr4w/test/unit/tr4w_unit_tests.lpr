@@ -603,6 +603,7 @@ uses
    uSettingsConvert in '..\..\src\uSettingsConvert.pas',
    uTestSettingsPrecedence in 'uTestSettingsPrecedence.pas',
    uTestTLSRefusal in 'uTestTLSRefusal.pas',
+   uTestHttpSecrets in 'uTestHttpSecrets.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
    uTestExternalLoggers in 'uTestExternalLoggers.pas',
@@ -1090,6 +1091,7 @@ begin
    RegisterSuite(TSettingsConvertTests.Create('SettingsConvert'));
    RegisterSuite(TSettingsPrecedenceTests.Create('SettingsPrecedence'));
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
+   RegisterSuite(THttpSecretsTests.Create('HttpSecrets'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));

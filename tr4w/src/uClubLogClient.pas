@@ -80,6 +80,19 @@ begin
       request.MaxResponseBytes := 4096;
       request.Send;
       Result.Status := request.StatusCode;
+      if request.TlsUnavailable then
+         begin
+         (* HTTPS WAS ASKED FOR AND TLS COULD NOT START: NO BYTE WAS SENT, so
+           this is not "uncertain / requires review". It is a setup problem
+           (missing OpenSSL library) that a retry can cure -- on Windows the
+           loader tries again after a pause. The diagnostic text is in the log,
+           written once by uHTTPDownload. *)
+         Result.Outcome := doRetry;
+         Result.Pause := False;
+         Result.ErrorCode := 'CLUBLOG_TLS_UNAVAILABLE';
+         Result.RetrySeconds := 300;
+         Exit;
+         end;
       if Result.Status = 429 then
          begin
          Result.Outcome := doRetry;

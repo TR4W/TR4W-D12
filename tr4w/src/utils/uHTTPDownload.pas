@@ -16,7 +16,7 @@ unit uHTTPDownload;
 interface
 
 uses
-   Classes;
+   Classes, SysUtils;
 
 (* THE STREAM THAT CARRIES A REQUEST BODY: the body's UTF-8 bytes, untouched.
 
@@ -40,6 +40,31 @@ function CreateWireBodyStream(const aBody: string): TRawByteStringStream;
   real fetch of the exact string it is given and does not trim, so a URL with a
   leading space is refused there rather than quietly repaired. *)
 function IsPlainHttpUrl(const aUrl: string): boolean;
+
+(* A SECRET AS IT MAY APPEAR IN A LOG: its first two characters, then its
+  length -- 'ab...(36 chars)'. A secret under six characters shows only the
+  length ('(3 chars)'), because two characters of a short one is a large part of
+  it. An empty secret is '(empty)'. The length is enough to tell a stale or
+  blank value from a real one, which is what a support reader wants. *)
+function MaskSecret(const aSecret: string): string;
+
+(* EVERY OCCURRENCE OF THE SECRET IN aText, AND OF ITS URL-ENCODED FORM,
+  replaced by MaskSecret(aSecret). For text a server or a library wrote -- an
+  exception message can echo what we sent -- before it reaches a log or a
+  reason shown to the operator. An empty secret leaves the text alone. *)
+function ScrubSecret(const aText, aSecret: string): string;
+
+(* THE ONE LOG LINE FOR A TRANSPORT FAILURE: method, URL, exception class and
+  message, with both secrets scrubbed out of ALL of it. A URL can carry a key in
+  a query string and a server's error text can echo one back, so neither is
+  trusted. aSecret2 is for a second credential (a form password); '' for none. *)
+function RequestFailureLine(const aMethod, aURL: string; aE: Exception;
+                            const aSecret1, aSecret2: string): string;
+
+(* THE TRACE LINE FOR ONE REQUEST: 'POST https://host/path Authorization:
+  Bearer ab...(36 chars)'. The URL is shown (NY4I, 2026-11-05); the token is
+  masked and also scrubbed out of the URL. *)
+function RequestTraceLine(const aMethod, aURL, aBearer, aPassword: string): string;
 
 function DownloadFileToPath(const AURL, ATargetFile: string;
                             const AAllowInsecure: boolean = False): boolean; overload;
@@ -150,6 +175,9 @@ type
       StatusCode:     integer;
       ResponseStatusText: string; (* some APIs report their result in the HTTP reason phrase *)
       FailReason:     string;   (* '' when Send returned True *)
+      TlsUnavailable: boolean;  (* https was asked for and TLS could not start:
+                                   NO BYTE WAS SENT, so the caller may classify
+                                   the failure as a retryable setup problem *)
       RetryAfter:     string;
       RequestId:      string;
 
@@ -167,7 +195,7 @@ type
 implementation
 
 uses
-   SysUtils,
+   SyncObjs,
    fphttpclient,     (* FPC's own client -- see the note on the transport *)
    opensslsockets,    (* registers the TLS handler fphttpclient asks for *)
    uOpenSSLLoader,
@@ -227,6 +255,10 @@ var
    // no business pulling MainUnit in, and a standalone exe that links it does
    // not assign that global.
    logger: TLogLogger;
+   // The last TLS-unavailable diagnostic written, so a retrying worker logs
+   // it once. Cleared by CheckScheme when TLS works again.
+   GTlsLogLock:   TCriticalSection;
+   GLastTlsLogged: string = '';
 
 (* HTTP IS BYTES; THIS PROGRAM'S `string` IS UTF-16. Every crossing between
   them is spelled out here rather than left to an implicit conversion, which
@@ -253,6 +285,61 @@ begin
    Result := TRawByteStringStream.Create(ToWire(aBody));
 end;
 
+function MaskSecret(const aSecret: string): string;
+begin
+   if aSecret = '' then
+      begin
+      Result := '(empty)';
+      end
+   else if Length(aSecret) < 6 then
+      begin
+      Result := '(' + IntToStr(Length(aSecret)) + ' chars)';
+      end
+   else
+      begin
+      Result := Copy(aSecret, 1, 2) + '...(' + IntToStr(Length(aSecret)) + ' chars)';
+      end;
+end;
+
+function ScrubSecret(const aText, aSecret: string): string;
+var
+   encoded: string;
+begin
+   Result := aText;
+   if aSecret = '' then
+      begin
+      Exit;
+      end;
+   encoded := UTF8Decode(EncodeURLElement(UTF8Encode(aSecret)));
+   if encoded <> aSecret then
+      begin
+      Result := StringReplace(Result, encoded, MaskSecret(aSecret), [rfReplaceAll]);
+      end;
+   Result := StringReplace(Result, aSecret, MaskSecret(aSecret), [rfReplaceAll]);
+end;
+
+(* Scrub both credentials out of one piece of text. *)
+function ScrubBoth(const aText, aSecret1, aSecret2: string): string;
+begin
+   Result := ScrubSecret(ScrubSecret(aText, aSecret1), aSecret2);
+end;
+
+function RequestTraceLine(const aMethod, aURL, aBearer, aPassword: string): string;
+begin
+   Result := aMethod + ' ' + ScrubBoth(aURL, aBearer, aPassword);
+   if aBearer <> '' then
+      begin
+      Result := Result + ' Authorization: Bearer ' + MaskSecret(aBearer);
+      end;
+end;
+
+function RequestFailureLine(const aMethod, aURL: string; aE: Exception;
+                            const aSecret1, aSecret2: string): string;
+begin
+   Result := ScrubBoth(aMethod + ' ' + aURL + ' failed: ' + aE.ClassName + ': '
+                       + aE.Message, aSecret1, aSecret2);
+end;
+
 
 function IsPlainHttpUrl(const aUrl: string): boolean;
 begin
@@ -264,8 +351,16 @@ end;
 function CheckScheme(const AURL: string;
                      const AAllowInsecure: boolean;
                      out AUseTLS: boolean;
-                     out AFailReason: string): boolean;
+                     out AFailReason: string;
+                     const ASecret: string = '';
+                     const ASecret2: string = ''): boolean;
+var
+   shownUrl: string;
+   diagnostic: string;
 begin
+   (* A credential-bearing request names its secret so that nothing logged
+     here can carry it, even if a caller ever put it in the URL. *)
+   shownUrl := ScrubBoth(AURL, ASecret, ASecret2);
    Result      := False;
    AUseTLS     := False;
    AFailReason := '';
@@ -279,23 +374,47 @@ begin
       if not AAllowInsecure then
          begin
          logger.Error('[Download] refusing plaintext %s -- the caller must pass '
-                      + 'AAllowInsecure to accept an http:// URL', [AURL]);
+                      + 'AAllowInsecure to accept an http:// URL', [shownUrl]);
          AFailReason := SDownloadCouldNotStart;
          Exit;
          end;
-      logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [AURL]);
+      logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [shownUrl]);
       end
    else
       begin
-      logger.Error('[Download] %s has no http:// or https:// scheme', [AURL]);
+      logger.Error('[Download] %s has no http:// or https:// scheme', [shownUrl]);
       AFailReason := SDownloadCouldNotStart;
       Exit;
       end;
 
-   if AUseTLS and (not EnsureOpenSSL) then
+   if AUseTLS and EnsureOpenSSL then
       begin
-      logger.Error('[Download] TLS unavailable for %s -- %s',
-                   [AURL, OpenSSLDiagnostic]);
+      (* TLS works, so the next failure is a new episode and is logged. *)
+      GTlsLogLock.Enter;
+      try
+         GLastTlsLogged := '';
+      finally
+         GTlsLogLock.Leave;
+      end;
+      end
+   else if AUseTLS then
+      begin
+      (* ONCE PER FAILURE KIND, NOT PER REQUEST: a delivery worker retries, and
+        the same diagnostic every few seconds buries the log. The diagnostic
+        text is the kind; a different one is logged again. The latch is under
+        a lock because workers and the main thread all arrive here. *)
+      diagnostic := OpenSSLDiagnostic;
+      GTlsLogLock.Enter;
+      try
+         if diagnostic <> GLastTlsLogged then
+            begin
+            GLastTlsLogged := diagnostic;
+            logger.Error('[Download] TLS unavailable for %s -- %s',
+                         [shownUrl, diagnostic]);
+            end;
+      finally
+         GTlsLogLock.Leave;
+      end;
       AFailReason := SDownloadNoSSLLibrary;
       Exit;
       end;
@@ -346,15 +465,19 @@ end;
   password -- and also gates CTY downloads, version checks and score posts.
 
   FAIL CLOSED. The only way to send unverified now is to ask for it. *)
-function ApplyTLSVerification(aHTTP: TFPHTTPClient; const aURL: string;
-                              out aFailReason: string): boolean;
+function ApplyTLSVerification(aHTTP: TFPHTTPClient; const aRawURL: string;
+                              out aFailReason: string;
+                              const aSecret: string = '';
+                              const aSecret2: string = ''): boolean;
 var
    why:     string;
    setting: TSettingBase;
    wanted:  boolean;
+   aURL:    string;
 begin
    Result      := True;
    aFailReason := '';
+   aURL        := ScrubBoth(aRawURL, aSecret, aSecret2);   (* the name every log line below uses *)
    wanted  := True;
    setting := FindSetting('network.verifyServerCertificates');
    if setting <> nil then
@@ -616,10 +739,17 @@ begin
       Exit;
       end;
 
-   if not CheckScheme(URL, AllowInsecure, useTLS, FailReason) then
+   TlsUnavailable := False;
+   if not CheckScheme(URL, AllowInsecure, useTLS, FailReason, BearerToken, Password) then
       begin
+      (* CheckScheme leaves useTLS True only when the scheme was https and the
+        refusal was EnsureOpenSSL: that is the proven nothing-was-sent case. *)
+      TlsUnavailable := useTLS;
       Exit;
       end;
+
+   (* ONE TRACE LINE PER REQUEST. The token is masked, never written. *)
+   logger.Trace('[Download] %s', [RequestTraceLine(Method, URL, BearerToken, Password)]);
 
    http := TFPHTTPClient.Create(nil);
    try
@@ -627,7 +757,7 @@ begin
       http.AllowRedirect := FollowRedirects;
       if useTLS then
          begin
-         if not ApplyTLSVerification(http, URL, FailReason) then
+         if not ApplyTLSVerification(http, URL, FailReason, BearerToken, Password) then
             begin
             Exit;
             end;
@@ -677,16 +807,20 @@ begin
                  anyway (0 when the server never answered), so a caller can
                  tell "the server said no" from "the server was not there". *)
                StatusCode := http.ResponseStatusCode;
+               (* THE URL AND THE LIBRARY'S MESSAGE ARE LOGGED FOR EVERY
+                 REQUEST, credentialed or not (NY4I, 2026-11-05: log the URL,
+                 mask the bearer token). What makes that safe is the scrub: a
+                 server's error text can echo what we sent. *)
+               logger.Error('[Download] %s',
+                            [RequestFailureLine(Method, URL, E, BearerToken, Password)]);
                if (BearerToken <> '') or Sensitive then
                   begin
-                  (* Never include server-controlled exception text or a URL in
-                     diagnostics for a credential-bearing request. *)
+                  (* The operator-facing reason stays generic for a credentialed
+                     request: it is shown in dialogs and stored with the QSO. *)
                   FailReason := 'Authenticated HTTP request failed (' + E.ClassName + ')';
                   end
                else
                   begin
-                  logger.Error('[Download] %s %s failed: %s: %s',
-                               [Method, URL, E.ClassName, E.Message]);
                   FailReason := DescribeFailure(E);
                   end;
                end;
@@ -716,5 +850,9 @@ end;
 
 initialization
    logger := TLogLogger.GetLogger('TR4WDebugLog.Download');
+   GTlsLogLock := TCriticalSection.Create;
+
+finalization
+   FreeAndNil(GTlsLogLock);
 
 end.

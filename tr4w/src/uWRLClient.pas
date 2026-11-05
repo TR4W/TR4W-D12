@@ -71,6 +71,15 @@ begin
       sent := request.Send;
       Result.Status := request.StatusCode;
       Result.RequestId := request.RequestId;
+      if request.TlsUnavailable then
+         begin
+         (* Nothing was sent: not "uncertain", even for a POST. A retry cures
+           it once the OpenSSL library is available. *)
+         Result.Outcome := doRetry;
+         Result.ErrorCode := 'WRL_TLS_UNAVAILABLE';
+         Result.RetrySeconds := 300;
+         Exit;
+         end;
       if (Pos(FApiKey, Result.RequestId) > 0) or (Length(Result.RequestId) > 200) then
          begin
          Result.RequestId := '';
