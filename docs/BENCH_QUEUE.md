@@ -30,6 +30,33 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- THE LINE-FILE CALLBACK, THE EDIT-MESSAGE ROW AND THE PARK LIST ARE TYPED (pointer audit P16, 5.5, 5.6)
+
+Unit-pinned: what `TF.EnumerateLinesInFile` hands its loaders (line breaks,
+blank lines, the 255-byte cut, high bytes, in-place edits) and the HELLO.DAT
+reader (`uTestEnumerateLines`); the park list handed over by the startup load
+(`uTestContestPOTA`). `.dom` and `.cfg` loading are under the matrix and the
+corpus. The compiler type-checks every change here, and nothing is expected to
+differ on screen. These are the loaders and windows with no test:
+
+- [ ] **DX cluster alert list and cluster commands** (`uTelnet`). With
+  `DXCLUSTER_ALERT_LIST.TXT` and `CLUSTER_COMMANDS.TXT` beside the program,
+  open the Telnet window. EXPECT: the command popup lists every
+  non-`;` line of `CLUSTER_COMMANDS.TXT`, upper-cased as before, and a spot of a
+  call on the alert list alerts as before.
+- [ ] **Intercom** (`uIntercom`). With an `INTERCOM.TXT`, open the Intercom
+  window. EXPECT: its lines are listed as written (case kept).
+- [ ] **Stations** (`uStations`). With a `STATIONS.TXT`, open the Stations
+  window. EXPECT: every non-`;` line is a column call, upper-cased.
+- [ ] **Alt-P -> Edit Message** (5.5). Select a function-key memory in Alt-P
+  and press Enter (or double-click). EXPECT: the editor opens on THAT row's
+  key name and text, for a row near the top and one near the bottom of the
+  list. OK saves it to that key.
+- [ ] **POTA park list** (5.6). In a POTA log, start TR4W with a downloaded
+  `pota_parks.csv`. EXPECT: park names resolve as before (the startup load's
+  list is the one in use). Then Help -> download the park list: it loads and
+  reports the count as before.
+
 ## Added 2026-11-05 -- A PRIOR CONTACT'S ZONE TRUMPS THE CALL'S (issue 213, NY4I bench)
 
 The zone the "Mult needs for" strip, the call-window MULT flag and the spot

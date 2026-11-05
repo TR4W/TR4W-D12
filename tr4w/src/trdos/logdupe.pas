@@ -390,7 +390,7 @@ procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
 //function GetPartialCall(CallAddress: integer): CallString;
 
 procedure LoadInitialExchangeFile;
-procedure EnumInitialEx(FileString: PShortString);
+procedure EnumInitialEx(var FileString: ShortString);
 
 function PointsToBigCall(Entry: FourBytes): boolean;
 
@@ -1019,21 +1019,21 @@ begin
 
 end;
 
-procedure EnumInitialEx(FileString: PShortString);
+procedure EnumInitialEx(var FileString: ShortString);
 
 var
   InitialExchangeString                 : ShortString;
   Call                                  : Str80;
 begin
-  if FileString^[1] = ';' then Exit;
+  if FileString[1] = ';' then Exit;
 
-  Call := RemoveFirstString(FileString^);
-  if FileString^ <> '' then
+  Call := RemoveFirstString(FileString);
+  if FileString <> '' then
      begin
      InitialExchangeString := '';
-     while FileString^ <> '' do
+     while FileString <> '' do
         begin
-        InitialExchangeString := InitialExchangeString + RemoveFirstString(FileString^) + ' ';
+        InitialExchangeString := InitialExchangeString + RemoveFirstString(FileString) + ' ';
         end;
 
      GetRidOfPostcedingSpaces(InitialExchangeString);

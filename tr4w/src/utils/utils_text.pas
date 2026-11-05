@@ -93,7 +93,7 @@ function AnsiStringFromBytes(const aRaw: array of Byte; aStart, aLength: integer
 (* A LINE OF A FILE'S BYTES INTO A SHORTSTRING, BOUNDED.
 
   For readers that still hand a line on as a ShortString --
-  TF.EnumerateLinesInFile's callbacks take a PShortString. Copies at most
+  TF.EnumerateLinesInFile's callbacks take a var ShortString. Copies at most
   255 bytes of aRaw starting at aStart, reads nothing outside aRaw, and sets
   EVERY byte after the text to zero, so a callback that reads the text as a
   C string still finds its terminator even when the previous line was

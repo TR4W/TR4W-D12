@@ -66,6 +66,10 @@ type
       procedure Test_OnlyPOTAOffersTheParkTools;
       procedure Test_LooksLikeAState;
       procedure Test_LooksLikeGridSquare;
+      (* Pointer audit 5.6 (2026-11-05): the startup load's parsed list is
+        handed over as a TStringList, where it was an LPARAM. Written against
+        the LPARAM shape first. *)
+      procedure Test_ApplyLoadedParksTakesTheParsedList;
    end;
 
 implementation
@@ -531,6 +535,34 @@ begin
    CheckFalse(ContestIdentity(CQWPXCW).ExchangeTextMayHoldGridSquare, 'an RST-and-serial contest''s may not');
 end;
 
+(* THE HAND-OVER FROM THE ASYNCHRONOUS LOAD. The parse thread builds a list
+   and the main thread hands it to ApplyLoadedParks, which takes ownership --
+   the unit frees it on the next load or at finalization, so this test frees
+   nothing it applied. A nil list changes nothing. The fixture is put back
+   at the end for any test that runs after. *)
+procedure TContestPOTATests.Test_ApplyLoadedParksTakesTheParsedList;
+var
+   parsed: TStringList;
+   dxcc: integer;
+   locations: string;
+begin
+   BeginTest('Test_ApplyLoadedParksTakesTheParsedList');
+   parsed := TStringList.Create;
+   parsed.Add('US-9999=A Handed-Over Park'#9'291'#9'US-GA');
+   ApplyLoadedParks(parsed);
+   CheckTrue(POTAParksLoaded, 'the handed-over list is the loaded list');
+   CheckEquals('A Handed-Over Park', GetPOTAParkName('us-9999'), 'and answers the lookup');
+   CheckTrue(GetPOTAParkEntity('US-9999', dxcc, locations), 'with its entity');
+   CheckEquals(291, dxcc, 'the entity is the row''s');
+   CheckEquals('US-GA', locations, 'and so is the place');
+   CheckEquals('', GetPOTAParkName('US-0663'), 'the list it replaced is gone');
+
+   ApplyLoadedParks(nil);
+   CheckEquals('A Handed-Over Park', GetPOTAParkName('US-9999'), 'a nil hand-over leaves the list alone');
+
+   LoadParkFixture;
+end;
+
 procedure TContestPOTATests.RunAllTests;
 begin
    Test_POTAIsAClassOnTheBase;
@@ -544,6 +576,7 @@ begin
    Test_OnlyPOTAOffersTheParkTools;
    Test_LooksLikeAState;
    Test_LooksLikeGridSquare;
+   Test_ApplyLoadedParksTakesTheParsedList;
 end;
 
 end.

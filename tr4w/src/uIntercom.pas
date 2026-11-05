@@ -49,7 +49,7 @@ uses
   The body never wanted a pointer: its only use was AnsiString(mes). *)
 procedure AddMessageToIntercomWindow(const mes: AnsiString; Sender: AnsiChar);
 procedure FlashIntercomListBox;
-procedure EnumINTERCOMTXT(FileString: PShortString);
+procedure EnumINTERCOMTXT(var FileString: ShortString);
 
 { THE BACKLOG FROM INTERCOM.TXT.
 
@@ -194,11 +194,11 @@ begin
   EnumerateLinesInFile('INTERCOM.TXT', EnumINTERCOMTXT, false);
 end;
 
-procedure EnumINTERCOMTXT(FileString: PShortString);
+procedure EnumINTERCOMTXT(var FileString: ShortString);
 begin
   if TR4WIntercomForm <> nil then
      begin
-     TR4WIntercomForm.lstMessages.Items.Add(string(FileString^));
+     TR4WIntercomForm.lstMessages.Items.Add(string(FileString));
      end;
 end;
 

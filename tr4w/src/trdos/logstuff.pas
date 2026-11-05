@@ -607,7 +607,7 @@ function KeyRecentlyPressed(Key: Char; MaxElaspedSec100: LONGINT): boolean;
 procedure KeyStamp(Key: Char);
 
 procedure LoadSpecialHelloFile;
-procedure EnumHelloDAT(FileString: PShortString);
+procedure EnumHelloDAT(var FileString: ShortString);
 
 function LogFileLooksOkay: boolean;
 procedure LogStringToRXData(LogString: Str80; var RXData: ContestExchange);
@@ -1351,15 +1351,15 @@ begin
      end;
 end;
 
-procedure EnumHelloDAT(FileString: PShortString);
+procedure EnumHelloDAT(var FileString: ShortString);
 var
   Greeting, ID: Str20;
 begin
-  GetRidOfPrecedingSpaces(FileString^);
-  ID := RemoveFirstString(FileString^);
-  GetRidOfPrecedingSpaces(FileString^);
-  GetRidOfPostcedingSpaces(FileString^);
-  Greeting := FileString^;
+  GetRidOfPrecedingSpaces(FileString);
+  ID := RemoveFirstString(FileString);
+  GetRidOfPrecedingSpaces(FileString);
+  GetRidOfPostcedingSpaces(FileString);
+  Greeting := FileString;
 
   if FirstHelloRecord = nil then
      begin

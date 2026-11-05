@@ -43,7 +43,7 @@ function FindStationInCallsignColumn(Call: CallString): integer;
 procedure UpdateAllStationsList;
 procedure UpdateCallsignAfterEditing(Before, After: CallString);
 procedure SetStationsCallsignMask;
-procedure EnumSTATIONSTXT(FileString: PShortString);
+procedure EnumSTATIONSTXT(var FileString: ShortString);
 procedure BuildStationsColumns;
 procedure ClearStationsColumn;
 procedure StationsWindowShown;
@@ -368,11 +368,11 @@ end;
   Found while moving the rows out of the control, 2026-08-24.  Not reproducible
   here -- no STATIONS.TXT exists in target\ -- which is consistent with the
   feature being rarely used rather than with it working. }
-procedure EnumSTATIONSTXT(FileString: PShortString);
+procedure EnumSTATIONSTXT(var FileString: ShortString);
 begin
-  if FileString^[1] <> ';' then
+  if FileString[1] <> ';' then
      begin
-     AddCallsignToStationColumn(FileString^);
+     AddCallsignToStationColumn(FileString);
      end;
 end;
 

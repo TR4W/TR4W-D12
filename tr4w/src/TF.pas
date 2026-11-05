@@ -97,7 +97,17 @@ c80: array[0..3] of Byte;
     fn: array[0..170] of AnsiChar;
   }end;
 
-  TEnumLinesFunc = procedure(Line: PShortString);
+  (* ONE LINE OF A FILE, HANDED OVER AS THE ShortString ITSELF (pointer audit
+    P16, 2026-11-05). It was `procedure(Line: PShortString)` -- a pointer to
+    the engine's buffer, dereferenced in every callback. A `var` parameter is
+    the same buffer with the compiler checking it: four of the eight (the
+    initial-exchange, HELLO.DAT, .cfg and .dom loaders) edit their line in
+    place (RemoveFirstString, GetRidOf...Spaces), and the
+    engine refills the whole buffer for the next line, so an edit never
+    reaches it (uTestEnumerateLines). Not `const string` yet: this unit's
+    string is UnicodeString, and passing .dom and .cfg bytes through it would
+    convert every non-ASCII byte by code page and back. *)
+  TEnumLinesFunc = procedure(var aLine: ShortString);
 
 const
   LB_STYLE_1                            = LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_NOINTEGRALHEIGHT or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_HSCROLL or WS_TABSTOP;
@@ -1083,7 +1093,7 @@ var
         begin
         strU(TempString);
         end;
-     Func(@TempString);
+     Func(TempString);
   end;
 
 begin

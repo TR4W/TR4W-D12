@@ -99,9 +99,8 @@ procedure AppendTelnetPopupMenu(const MenuText: string);
 { Rebuild the cluster drop-down after the library has been edited, KEEPING the
   operator's current choice. Called by Preferences when it saves. }
 procedure TelnetRefreshClusterList;
-procedure EmunTRCLUSTERDAT(FileString: PShortString);
-procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
-procedure EnumCLUSTERCOMMANDSTXT(FileString: PShortString);
+procedure EmunDXCLUSTERALERTLISTTXT(var FileString: ShortString);
+procedure EnumCLUSTERCOMMANDSTXT(var FileString: ShortString);
 
 const
   MAXITEMSINTELNETPOPUPMENU = 70;
@@ -2162,12 +2161,7 @@ begin
   Inc(ItemsInTelnetPopupMenu);
 end;
 
-procedure EmunTRCLUSTERDAT(FileString: PShortString);
-begin
-  TelnetAddHostItem(string(FileString^));
-end;
-
-procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
+procedure EmunDXCLUSTERALERTLISTTXT(var FileString: ShortString);
 begin
   if TelnetCallsignAlertList = nil then
      begin
@@ -2186,19 +2180,19 @@ begin
      TelnetCallsignAlertList.Clear;
      end;
 
-  TelnetCallsignAlertList.Add(AnsiString(FileString^));
+  TelnetCallsignAlertList.Add(AnsiString(FileString));
   telnet_callsign_alert_list_loaded := True;
 end;
 
-procedure EnumCLUSTERCOMMANDSTXT(FileString: PShortString);
+procedure EnumCLUSTERCOMMANDSTXT(var FileString: ShortString);
 begin
-  if FileString^[1] = ';' then
+  if FileString[1] = ';' then
      begin
      Exit;
      end;
   (* THE LINE, BOUNDED BY ITS LENGTH. @FileString^[1] handed on the address
     of the text, to be read as far as the next NUL. *)
-  AppendTelnetPopupMenu(string(FileString^));
+  AppendTelnetPopupMenu(string(FileString));
 end;
 
 initialization

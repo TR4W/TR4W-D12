@@ -99,6 +99,11 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > +12, `C5-tobject-cast` +4, `C5-objects` +4. The 2026-11-05 run also has a
 > `server` column (`C3-addr-of` 3) that the original table did not.
 >
+> **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, the commit after `83c81159`)** --
+> see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
+> `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
+> P11, P13, and the four old-style objects above.
+>
 > **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
 > 2026-11-05 reconciliation said the file did not exist; it is tracked at
 > `tr4w/src/uIcomNetworkDiscovery.pas` and line 151 is the `New(Radio)`).
@@ -504,8 +509,8 @@ audit's list finds them.
 | 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built | **none** -- BENCH the log search window |
 | 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` | UT `uTestTelnetTrace` (the ring, not the colours) -- BENCH the colours |
 | 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns | **none** -- BENCH Alt-P |
-| 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowLogCompare(aInfo: PLogFileInformation)` -- **DONE (P2)**. `ShowEditMessage(aRow: integer)` -- still open: it carries a row number, not a pointer, so it truncates nothing | COMPILER |
-| 5.6 | `uMainWindowProc.pas:605` `ApplyLoadedParks(LPARAM(aParks))`, `uPOTAParks.pas:582` | a `TStringList` passed as `LPARAM` between two units of ours | `ApplyLoadedParks(aParks: TStringList)` | UT `uTestContestPOTA` (contest, not the download); COMPILER |
+| 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowLogCompare(aInfo: PLogFileInformation)` -- **DONE (P2)**. `ShowEditMessage(const aRow: integer)` -- **DONE 2026-11-05** (both units; `uEditMessage` no longer names `LCLType`) | COMPILER; BENCH Alt-P -> Edit Message |
+| 5.6 | `uMainWindowProc.pas:605` `ApplyLoadedParks(LPARAM(aParks))`, `uPOTAParks.pas:582` | a `TStringList` passed as `LPARAM` between two units of ours | `ApplyLoadedParks(aParks: TStringList)` -- **DONE 2026-11-05**; `uPOTAParks` no longer names `LCLType` | UT `uTestContestPOTA.Test_ApplyLoadedParksTakesTheParsedList` (written first, against the `LPARAM`); COMPILER; BENCH the startup load and the download |
 | 5.7 | `.Tag` (70): 44 in `ui/lcl/uPrefsForm.pas` | Preferences navigation dispatches by `Tag` | **a recorded decision** (agent memory `prefs-designed-form-and-nav-tags`; `uPrefsForm.pas:1519` explains why) -- not a target | -- |
 | 5.8 | `Objects[]` holding real objects: `uCabrilloHeader`, `uGridLookup`, `uRadioConfigStore`, `uWinManagerForm` | genuine object ownership through `TStringList.Objects` | **already native** -- listed so nobody "fixes" them | -- |
 | 5.9 | MMTTY RichEdit subclassing (`uMMTTY.pas:174, 398-410`, `OldMMTTYRichEditProc: Pointer`) | Win32 window-procedure replacement | the `WIN32_ARTIFACT_SWEEP` RICHED32 row | BENCH |
@@ -540,7 +545,7 @@ not work. The items are the **untyped** ones:
 | 7.1 | `TF.pas:213` `TTR4WThreadStart = Pointer`; 15 live `tCreateThread` call sites | **D2** -- ten wrong signatures nothing checks | **DONE (P1)**: `TTR4WThreadStart` is the procedural type; every target has its shape | COMPILER + `Lint-TypedCodePointers`, then BENCH: CPU keyer, WinKeyer open, DVP, multi-op connect and sync, NTP, Get Scores |
 | 7.2 | `uProcessCommand.pas:66` `caAddress: Pointer`, cast at `:270` to `procedure` | the CW-memory command table | **DONE (P1)**: `caAddress: TCommandHandler`; all 81 rows were already parameterless procedures | COMPILER + `Lint-TypedCodePointers` |
 | 7.3 | `uCFG.pas:1294` `Proc: Pointer` | declared, **never used** (`TAdditionalProc` beside it is the typed form) | **DELETED (P4)** -- and so were `TAdditionalProc` and the label `AdditionalProc`, which were unused too | COMPILER |
-| 7.4 | `TF.pas:100` `TEnumLinesFunc = procedure(Line: PShortString)`; 10 callers of `EnumerateLinesInFile` | a callback that receives a POINTER to a ShortString and edits it in place | `procedure(var Line: ShortString)` now, `const Line: string` once the callbacks stop editing it | the callbacks load `.dom`, dupe, CFG, intercom, telnet and stations files: MATRIX, CORPUS, UT `uTestDomQTHTableReload` |
+| 7.4 | `TF.pas:100` `TEnumLinesFunc = procedure(Line: PShortString)`; 10 callers of `EnumerateLinesInFile` | a callback that receives a POINTER to a ShortString and edits it in place | `procedure(var Line: ShortString)` now, `const Line: string` once the callbacks stop editing it -- **DONE 2026-11-05 (P16) as `procedure(var aLine: ShortString)`**; 9 call sites, 8 callbacks (a ninth, `uTelnet.EmunTRCLUSTERDAT`, had no caller and is deleted) | UT `uTestEnumerateLines` (written first), MATRIX, CORPUS, UT `uTestDomQTHTableReload`; BENCH the Telnet, Intercom and Stations files |
 | 7.5 | `trdos/logscp.pas:116, 550` `GetNextEntryAddress(var EntryAddress: Pointer)` | hands out a pointer into the cell buffer | an index into the buffer | MATRIX -- **DELETED 2026-10-17 (P7): it had no caller anywhere in the tree** |
 | 7.6 | `uRadioPolling.pas:95, 113` `TRadioStatusTraceProc`/`TRadioStatusPublishedProc = procedure(rig: RadioPtr ...)` | typed, but on `RadioPtr` | follows 6.1 | UT `uTestRadioStatus` |
 | 7.7 | `uIcomNetworkTransport.pas:1017-1051` `FreeObjectThread(Obj: Pointer)` + `BeginThread(..., Pointer(Socket), ...)` | an object freed on a thread passed as `Pointer` | **keep**: `BeginThread`'s parameter is `Pointer` by RTL contract; add the comment | UT `uTestIcomTeardown` |
@@ -575,7 +580,7 @@ Owners follow CLAUDE.md's routing table.
 | **P13** | Heap temporaries and queues | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
 | **P14** | Wire overlays | 3.2, 6.13 | correct today, high blast radius, and possibly superseded | **TEST FIRST**: a decode pin per message type (bytes in, fields out) against the current overlay; then two-station BENCH | **SKIPPED -- NY4I, 2026-10-16 (`6b7e2c1b`): "skip P14, the new protocol replaces it."** The V1 wire overlays are left as they are and retire with the protocol | multi-op-network |
 | **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | **DONE 2026-10-17 (`6e20d349`):** a `$MOVE_CEILING` in `Count-LiveMove.ps1` (read that line for the current figure), ratcheting down, wired into `Run-Lints.ps1` as `Count-LiveMove -Gate` (fixture first, fails closed under file and count floors) | none | build-release |
-| **P16** | Remaining `src` `...EnumLines` callback | 7.4 | touches six loaders; do after P3 and P5, which own two of them | MATRIX, CORPUS, UT `uTestDomQTHTableReload` | P3, P5 | contest-scoring, settings-config |
+| **P16** | Remaining `src` `...EnumLines` callback -- **DONE 2026-11-05**, see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05) | 7.4 | touches six loaders; do after P3 and P5, which own two of them | MATRIX, CORPUS, UT `uTestDomQTHTableReload` | P3, P5 | contest-scoring, settings-config |
 
 **Packets with NO automated oracle today** -- each needs its test written first
 or a bench entry: ~~**P6** (CPU keyer)~~ (has `uTestCPUKeyerRing` now), ~~**P7** (SCP partials)~~ (`uTestLogSCP`), ~~**P8** (call and
@@ -1122,6 +1127,78 @@ buffer x 200,000 1,453 -> 1,265 ms; SHA-256 of 20 MB 125 -> 156 ms (the
 `BytesOf` copy and an indexed copy where `Move` was -- 1.5 ms a megabyte, on
 a hash taken once per SCP upload). A checksum over every result was identical
 before and after.
+
+### P16, 5.5 and 5.6 -- the line callback, a row number and a park list, 2026-11-05
+
+**Test first.** `test/unit/uTestEnumerateLines.pas` (8 tests, 47 checks) and
+`uTestContestPOTA.Test_ApplyLoadedParksTakesTheParsedList` (8 checks) were
+written against the OLD shapes and run green there (424,158 / 0). The type
+then changed. In the tests, only the collector's parameter line and the two
+`ApplyLoadedParks` calls changed. The suite again gave 424,158 / 0, with no
+assertion changed.
+
+**P16 (7.4).** `TF.TEnumLinesFunc` is `procedure(var aLine: ShortString)`,
+where it was `procedure(Line: PShortString)`, and the engine calls
+`Func(TempString)`. The doc's count was wrong. There are **9 call sites**
+and **8 callbacks**, in `logdupe`, `logstuff` (HELLO.DAT), `LogCfg`, `logdom`,
+`uIntercom`, `uStations` and `uTelnet` (x2). A ninth callback,
+`uTelnet.EmunTRCLUSTERDAT`, had no caller anywhere and is deleted. Every call
+site already passed its callback bare, so the compiler checked each one;
+P1's `@Routine` trap does not apply. The change in every callback is
+mechanical: `FileString^` becomes `FileString`. The four `@FileString^`
+occurrences that remain are history inside comments.
+
+**Why `var ShortString` and not `const string`.**
+- Four of the eight callbacks -- the initial-exchange, HELLO.DAT, `.cfg` and
+  `.dom` loaders -- edit their line in place, through `RemoveFirstString` and
+  `GetRidOf...Spaces`, which take an `OpenString`.
+- This unit's `string` is UnicodeString. A `string` parameter would convert
+  every byte of a `.dom` or `.cfg` line through a code page and back, and
+  would add narrowing conversions to a ratcheted count.
+- The 255-byte cut stays where it was: in the engine, before the callback.
+
+What the engine promises its loaders is now pinned: CR, LF and CRLF breaks, a
+run of breaks counting as one, blank lines skipped, the last line without a
+break, the cut at 255 with the next line whole, high bytes unchanged, upper
+case only when asked, an in-place edit never reaching the next line, and a
+missing or empty file answering False. The HELLO.DAT reader had no test. It is
+now driven through the same engine on a file of its own, and the test frees
+the records it built. `LoadSpecialHelloFile`'s bare-name path lookup is the
+one part not exercised.
+
+**5.5.** `ShowEditMessage(const aRow: integer)` in `uEditMessage` and
+`uEditMessageForm`. `uEditMessage` named `LCLType` for `lParam` alone and no
+longer names it. `uEditMessageForm` keeps its `LCLType`, because removing it
+would change what a bare `THandle` in that unit binds to (its
+`btnEditWavClick` note).
+
+**5.6.** `ApplyLoadedParks(aParks: TStringList)`, called with the event's list.
+`uPOTAParks` named `LCLType` for `LPARAM` alone and no longer names it. Its
+comments about posted messages were already stale (the handover has been an
+event since the thread rewrite) and now describe the events. P9 stays open
+for 5.1-5.4.
+
+**`Count-LivePointers.ps1`**, at `83c81159` and after, `src` column:
+
+| rule | before | after |
+|---|---:|---:|
+| C3-addr-of | 323 | 322 |
+| C3-deref | 644 | 603 |
+| C5-lparam | 40 | 33 |
+| every other `src` rule | unchanged | unchanged |
+| **src total** | **2,338** | **2,289** |
+
+The `test` column rose by 14 (`C3-deref` +10, `C6-ptr-named` +2,
+`C1-link-field` +1, `C2-new-dispose` +1). All 14 are the HELLO.DAT test
+walking and freeing `HelloRecPtr` records. That list is item 1.3 and is not
+converted here.
+
+**Oracles.** Unit 424,158 / 0, plain and `-Checked`. heaptrc: 0 corruption
+reports, 57 unfreed blocks (the ceiling). The app built with 0 errors.
+Narrowing is 1201 and range warnings 3, both exactly at their ceilings.
+54 lints pass, `Count-LiveMove` 435 (the ceiling). `tr4wserver` builds.
+Corpus 16 / 0 / 10, exit 0. **No window and no Telnet, Intercom or Stations
+file has an automated oracle**, so each is in `BENCH_QUEUE.md`.
 
 ---
 

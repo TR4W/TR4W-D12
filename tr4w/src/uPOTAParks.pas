@@ -38,19 +38,15 @@ unit uPOTAParks;
 interface
 
 uses
-   LCLType, Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
+   Classes, SysUtils, IdHTTP, IdSSLOpenSSL;
 
 const
    POTA_PARKS_URL        = 'https://pota.app/all_parks_ext.csv';
    POTA_PARKS_FILENAME   = 'pota_parks.csv';
 
-   // Posted to ACallback when async download completes.
-   // aData = 1 (ok), 0 (failed).
-   // Main thread should call LoadPOTAParks then QuickDisplay the result.
-
-   // Posted to ACallback when async startup load completes.
-   // lParam = TStringList pointer (already parsed; main thread owns it after this).
-   // Main thread must call ApplyLoadedParks(lParam) from the handler.
+   // The download and the startup load report back through the two events
+   // declared below (TPOTADownloadDoneEvent, TPOTAParksParsedEvent), raised
+   // on the main thread -- not by a posted message any more.
 
 (* THE PARKS CSV TO READ: the copy TR4W downloaded if there is one, the copy
   that shipped otherwise.  Nothing ships one today -- full.nsi installs no
@@ -105,8 +101,8 @@ procedure EnsurePOTAParksLoaded;
 function NormalizePOTAPark(const AToken: string; const AMyPark: string): string;
 
 // Start an asynchronous download of the parks CSV from pota.app.
-// Saves to ATargetFile. On completion posts WM_POTA_DOWNLOAD_DONE to ACallback.
-// The main thread should handle that message by calling LoadPOTAParks.
+// Saves to ATargetFile. On completion raises aOnDone on the main thread, whose
+// handler calls LoadPOTAParks.
 type
    (* Both raised ON THE MAIN THREAD -- see the note in the implementation. *)
    TPOTADownloadDoneEvent = procedure(Sender: TObject;
@@ -121,13 +117,15 @@ procedure DownloadPOTAParksAsync(const ATargetFile: string;
 
 // Start an asynchronous load of an already-downloaded parks CSV.
 // Does all parsing off the UI thread. On completion it calls aOnParsed on the
-// main thread with the parsed TStringList pointer.
-// That handler MUST call ApplyLoadedParks with the pointer it was given.
+// main thread with the parsed TStringList.
+// That handler MUST call ApplyLoadedParks with the list it was given.
 procedure LoadPOTAParksAsync(const aOnParsed: TPOTAParksParsedEvent);
 
 // Apply a pre-parsed parks list delivered by the callback above.
-// Must be called on the main thread. Takes ownership of the TStringList.
-procedure ApplyLoadedParks(ALParam: LPARAM);
+// Must be called on the main thread. Takes ownership of aParks; nil changes
+// nothing. It was an LPARAM carrying the list's address between two units of
+// ours (pointer audit 5.6, 2026-11-05).
+procedure ApplyLoadedParks(aParks: TStringList);
 
 // ---------------------------------------------------------------------------
 // Multi-park (2fer/Nfer) pending queue.
@@ -685,17 +683,14 @@ begin
    Thread.Resume;
 end;
 
-procedure ApplyLoadedParks(ALParam: LPARAM);
-var
-   NewParks: TStringList;
+procedure ApplyLoadedParks(aParks: TStringList);
 begin
-   NewParks := TStringList(ALParam);
-   if not Assigned(NewParks) then
+   if not Assigned(aParks) then
       begin
       Exit;
       end;
    FParks.Free;
-   FParks := NewParks;
+   FParks := aParks;
 end;
 
 // ---------------------------------------------------------------------------

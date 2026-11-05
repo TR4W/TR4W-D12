@@ -29,7 +29,6 @@ uses
   TF,
   VC,
   utils_file,
-  LCLType,
   Tree,
   LogWind
 
@@ -59,7 +58,9 @@ procedure DeleteEscapeChars(var s: ShortString);
 // no longer knows this is a Win32 modal dialog, only that the window opens.
 //
 // Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
-procedure ShowEditMessage(const aMessage: lParam);
+// aRow is the Alt-P list row: an integer, where it was a Win32 lParam
+// (pointer audit 5.5, 2026-11-05).
+procedure ShowEditMessage(const aRow: integer);
 
 implementation
 
@@ -95,9 +96,9 @@ begin
   s := TempString;
 end;
 
-procedure ShowEditMessage(const aMessage: lParam);
+procedure ShowEditMessage(const aRow: integer);
 begin
-   uEditMessageForm.ShowEditMessage(aMessage);
+   uEditMessageForm.ShowEditMessage(aRow);
 end;
 
 end.

@@ -107,7 +107,7 @@ type
     function ReadDomQTHFile(const FileName: string; IncludedFile: boolean): boolean;
   end;
 
-procedure EnumDOMFILE(FileString: PShortString);
+procedure EnumDOMFILE(var FileString: ShortString);
 
 (* IS THIS .dom LINE AN INCLUDE THE READER WILL NOT FOLLOW? -- #88 round 3
   (2026-10-26). The reader follows exactly `INCLUDE FILE <name>` (upper
@@ -486,7 +486,7 @@ begin
      end;
 end;
 
-procedure EnumDOMFILE(FileString: PShortString);
+procedure EnumDOMFILE(var FileString: ShortString);
 const incfile                           = 'INCLUDE FILE';
 label
   AlreadyInList;
@@ -496,29 +496,29 @@ var
   DomName                               : Str40;
   MultIndex                             : integer;
 begin
-  GetRidOfPrecedingSpaces(FileString^);
+  GetRidOfPrecedingSpaces(FileString);
 
-  if Copy(FileString^, 1, length(incfile)) = incfile then
+  if Copy(FileString, 1, length(incfile)) = incfile then
      begin
-     TempString := Copy(FileString^, length(incfile) + 2, 200);
+     TempString := Copy(FileString, length(incfile) + 2, 200);
      (* THE TAIL IS ALREADY IN TempString, on the line above. The sprintf
        re-read it from the ShortString's CHARACTERS -- @FileString^[n] -- and a
        ShortString has no terminator, so that read ran on until it met a zero
        byte belonging to something else. *)
-     FollowDomInclude(string(FileString^), string(TempString));
+     FollowDomInclude(string(FileString), string(TempString));
      end
-  else if DomLineIsAnUnfollowedInclude(string(FileString^)) then
+  else if DomLineIsAnUnfollowedInclude(string(FileString)) then
      begin
      (* REPORTED, NOT FOLLOWED: only `INCLUDE FILE <name>` is an include,
        and guessing at another spelling would make the file's meaning
        depend on this reader's leniency. See DomLineIsAnUnfollowedInclude. *)
-     domLogger.Warn('[LogDom] ' + GLoadFileName + ': "' + string(FileString^) +
+     domLogger.Warn('[LogDom] ' + GLoadFileName + ': "' + string(FileString) +
                     '" is not followed -- only INCLUDE FILE <name> includes a file');
      end;
 //todo process ;
-  if StringHas(FileString^, '=') then
+  if StringHas(FileString, '=') then
      begin
-     TempString := PrecedingString(FileString^, '=');
+     TempString := PrecedingString(FileString, '=');
 
      GetRidOfPrecedingSpaces(TempString);
      GetRidOfPostcedingSpaces(TempString);
@@ -571,17 +571,17 @@ begin
 
      MultIndex := mo.DomList.AddString(Multiplier, NoBand, NoMode, True);
 
-     FileString^ := PostcedingString(FileString^, '=');
+     FileString := PostcedingString(FileString, '=');
 
-     while FileString^ <> '' do
+     while FileString <> '' do
         begin
-        if StringHas(FileString^, ',') then
+        if StringHas(FileString, ',') then
            begin
-           DomName := PrecedingString(FileString^, ',')
+           DomName := PrecedingString(FileString, ',')
            end
         else
            begin
-           DomName := FileString^;
+           DomName := FileString;
            end;
 
         DomQTHString := UpperCase(DomName);
@@ -606,13 +606,13 @@ begin
    //          RemainingDomMults^[NumberRemainingMults - 1].Name := Copy(DomName, 2, 32);
            end;
 
-        if StringHas(FileString^, ',') then
+        if StringHas(FileString, ',') then
            begin
-           FileString^ := PostcedingString(FileString^, ',')
+           FileString := PostcedingString(FileString, ',')
            end
         else
            begin
-           FileString^ := '';
+           FileString := '';
            end;
         end;
      end;

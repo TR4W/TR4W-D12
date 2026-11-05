@@ -853,6 +853,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* A .dom loaded into a table that already holds one (LOGDOM's emptying
       loop read through nil at the end of every list, D7 included). *)
    uTestDomQTHTableReload in 'uTestDomQTHTableReload.pas',
+   (* TF.EnumerateLinesInFile's promises to its nine loaders, and the
+      HELLO.DAT reader that had no test (pointer audit P16, 2026-11-05). *)
+   uTestEnumerateLines in 'uTestEnumerateLines.pas',
    (* Shipped .dom files against their sponsor's list: LABRE's 28 codes and
       HQ, EUDX's regions only (UDC cross-walk leads, 2026-10-19). *)
    uTestShippedDomLists in 'uTestShippedDomLists.pas',
@@ -1012,6 +1015,7 @@ begin
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TGridExchangeTests.Create('GridExchange'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
+   RegisterSuite(TEnumerateLinesTests.Create('EnumerateLines'));
    RegisterSuite(TShippedDomListsTests.Create('ShippedDomLists'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));

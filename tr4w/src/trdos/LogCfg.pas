@@ -94,7 +94,7 @@ function ConfigurationOkay: boolean;
 procedure ReadInConfigFile(ConfigFileName: TCFGType);
 procedure TryRunPaddleAndFootSwitchThread;
 procedure tSetupExchangeNumbers;
-procedure EnmuCFGFile(FileString: PShortString);
+procedure EnmuCFGFile(var FileString: ShortString);
 procedure SetUpGlobalsAndInitialize;
 
 var
@@ -951,7 +951,7 @@ begin
      end;
 end;
 
-procedure EnmuCFGFile(FileString: PShortString);
+procedure EnmuCFGFile(var FileString: ShortString);
 var
   ID                                    : ShortString;
   CMD                                   : ShortString;
@@ -961,14 +961,14 @@ var
   // comment/section marker are ignored:  ;  and  #  are comments,  [  is a
   // section header,  _  is an internal marker.  Kept in sync with the same test
   // in RestoreCFGPasswordCase so both passes treat comments identically.
-  if FileString^[1] in [';', '#', '[', '_'] then Exit;
+  if FileString[1] in [';', '#', '[', '_'] then Exit;
 
-  GetRidOfPrecedingSpaces(FileString^);
-  GetRidOfPostcedingSpaces(FileString^);
+  GetRidOfPrecedingSpaces(FileString);
+  GetRidOfPostcedingSpaces(FileString);
 
 
-  ID := PrecedingString(FileString^, '=');
-  CMD := PostcedingString(FileString^, '=');
+  ID := PrecedingString(FileString, '=');
+  CMD := PostcedingString(FileString, '=');
 
   if ID = '' then Exit;
 
@@ -1125,16 +1125,16 @@ var
           fail this way at all, and there is nothing here a format string
           was buying.
 
-          AND FileString IS A PShortString HERE -- the routine's PARAMETER,
-          not the ShortString of the same name declared further up this
-          unit. My first attempt replaced @FileString^[1] with FileString
-          and changed nothing, because that is still a pointer. Two
-          variables one name apart, and only the dereference tells them
-          apart. *)
+          AND FileString IS THE routine's PARAMETER here, not the
+          ShortString of the same name declared further up this unit. It
+          was a PShortString then, so a first attempt that replaced
+          @FileString^[1] with FileString changed nothing -- that was still
+          a pointer. Since pointer audit P16 (2026-11-05) the parameter is a
+          `var ShortString` and there is no dereference to forget. *)
         showwarning(AnsiString(CFGFileName(CurrentConfigFile)) + ':' + #13
                     + 'Invalid statement in config file.' + #13 + #13
                     + 'Line ' + AnsiString(IntToStr(LineNumberInConfigFile))
-                    + #13 + FileString^);
+                    + #13 + FileString);
  //    halt;
         end;
      end;

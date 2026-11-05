@@ -104,8 +104,9 @@ type
 // caller (uAltP passes its own window and the selected message).
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
-// that the window opens.
-procedure ShowEditMessage(const aMessage: lParam);
+// that the window opens. aRow is the Alt-P list row (FRow) -- an integer, not
+// the Win32 dialog's lParam it once rode in (pointer audit 5.5, 2026-11-05).
+procedure ShowEditMessage(const aRow: integer);
 
 (* WHAT OK DOES, WITHOUT THE FORM -- R2, 2026-10-23. aKeyName is the Alt-P
   row's name ('CQ CW MEMORY F3', or a message template such as 'CQ
@@ -132,8 +133,10 @@ implementation
 uses
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
   (* Windows is gone (2026-09-08): lParam on ShowEditMessage's signature was
-    the only type wanted and LCLType -- already in this clause -- declares it;
-    the CloseHandle was on a FILE handle. *)
+    the only type wanted from it, and the CloseHandle was on a FILE handle.
+    The lParam went too (pointer audit 5.5, 2026-11-05): the parameter is the
+    row number it always carried. LCLType stays in the interface clause; see
+    btnEditWavClick on what its THandle does to a bare THandle here. *)
   VC,             // RC_*, TC_*, MesWindow / OtherMsgWin, TR4W_CFG_FILENAME
   TF,             // Format, YesOrNo
   uCFG,           // CheckCommand -- the named message templates
@@ -506,7 +509,7 @@ begin
    Close;
 end;
 
-procedure ShowEditMessage(const aMessage: lParam);
+procedure ShowEditMessage(const aRow: integer);
 begin
    // The try/except is permanent and deliberate: under FPC an exception that
    // escapes into the main loop is a bare RTE with no class, and it takes the
@@ -517,7 +520,7 @@ begin
          frmEditMessage := TfrmEditMessage.Create(Application);
          end;
 
-      frmEditMessage.FRow := aMessage;
+      frmEditMessage.FRow := aRow;
 
       // The parent is uAltP's window, which is still a raw Win32 dialog, so it
       // needs the explicit disable -- LCL ShowModal only disables LCL forms.

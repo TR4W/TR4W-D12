@@ -602,7 +602,7 @@ end;
 procedure TTR4WBackgroundEvents.PotaParksParsed(Sender: TObject;
                                                 aParks: TStringList);
 begin
-   ApplyLoadedParks(LPARAM(aParks));
+   ApplyLoadedParks(aParks);
 end;
 
 (* 
