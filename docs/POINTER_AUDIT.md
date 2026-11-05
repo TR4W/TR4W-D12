@@ -559,7 +559,7 @@ audit's list finds them.
 | # | type | where | VMT? | native replacement | oracle |
 |---|---|---|---|---|---|
 | 6.1 | `RadioObject` + `RadioPtr` (`ActiveRadioPtr` 159, `RadioPtr` 115, `InactiveRadioPtr` 89 mentions) | `trdos/logradio.pas:168, 439` | no | a class (`RadioPtr` uses become plain references; `@Radio1` becomes `Radio1`). **The largest single item in this audit** | UT `uTestRadioStatus`, `uTestCWKeyer`, `uTestStatusAndNotice`, `uTestTCIServer`; BENCH one rig per verified protocol family |
-| 6.2 | `DupeAndMultSheet` (`Sheet`) | `trdos/logdupe.pas:165` | no | a class | MATRIX, CORPUS, FACTORY |
+| 6.2 | `DupeAndMultSheet` (`Sheet`) | `trdos/logdupe.pas:165` | no | a class -- **DONE 2026-11-05 (Issue 89)**: created in `logstuff`'s `initialization` | MATRIX, CORPUS, FACTORY |
 | 6.3 | `EditableLog` (`VisibleLog`, 101 mentions) | `trdos/logedit.pas:70` | no | a class | MATRIX, UT `uTestLogRepository`; screen BENCH |
 | 6.4 | `CallDatabase` (`CD`), `CellBufferObject` | `trdos/logscp.pas:94, 131` | no | classes, with 2.2 -- **`CellBufferObject` is `TSCPCellBuffer`, a class, since P7 (2026-10-17); `CallDatabase` is a class since 2026-11-05 (Issue 89)** | MATRIX (TRMASTER initial exchange) |
 | 6.5 | `K1EAKeyer` (`CPUKeyer`) | `trdos/logk1ea.pas:159` | no | a class, with 2.1 | BENCH |
@@ -1658,6 +1658,20 @@ pointer item:
   a `RadioPtr`; both follow P11.
 
 ---
+
+### 6.2 DupeAndMultSheet -- an old-style object to a class, 2026-11-05 (Issue 89)
+
+`Sheet` (declared in `logstuff`, type in `logdupe`) is created in `logstuff`'s
+`initialization` and freed in its `finalization`. Measured first: one global,
+no `with Sheet`, no copy, no `@Sheet`, no `Default()`, no virtuals; the type has
+ONE field, `DupeSheetEnable`, written once (`cfgdef`) and read nowhere; the
+sheet's data lives in unit globals, which is why the `FillChar`s in `logdupe`
+zero those, not the object. Oracles (no new test was possible without
+duplicating them): every contest unit test that calls `Sheet.SetMultFlags` /
+`AddQSOToSheets` (unit 424,627 / 0, plain and `-Checked`), the corpus
+(16 / 0 / 10) and the contest matrix (194 identical). `uTestAutomaticXQSO`
+reads the source text `Sheet.SetMultFlags(RXData);`, unchanged. `C6-object-type`
+src 4 -> 3.
 
 ### 6.4 CallDatabase -- an old-style object to a class, 2026-11-05 (Issue 89)
 

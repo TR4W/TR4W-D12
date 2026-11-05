@@ -7577,12 +7577,17 @@ initialization
   (* `initialization`, not the old-style `begin`, since M11 S9d: the
     engine's parsers need a finalization to be freed in, and a unit with a
     bare `begin` block cannot have one. The two mean the same. *)
+  (* Sheet WAS AN OLD-STYLE object HELD BY VALUE; it is a class now (Issue 89,
+    audit 6.2). Its one field was zero-filled by the loader and is zeroed by
+    Create; cfgdef assigns it before anything reads it. *)
+  Sheet := DupeAndMultSheet.Create;
   CD.CellBuffer.MaximumMemoryToUse := 40000 * ua4wliscpconst {*4 - ua4wli};
   StuffInit;
   EngineExchangeParsers := TEngineExchangeParsers.Create;
 
 finalization
   FreeAndNil(EngineExchangeParsers);
+  FreeAndNil(Sheet);
 
 end.
 

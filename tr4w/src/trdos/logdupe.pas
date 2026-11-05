@@ -155,7 +155,7 @@ type
 
   //  CallDistrictTotalArray = array[1..11] of integer;
 
-  DupeAndMultSheet = object
+  DupeAndMultSheet = class
     DupeSheetEnable: boolean;
     //    DupeSheet: DupeList;
 //    MultSheet: MultList;
