@@ -90,6 +90,10 @@ type
    TBandSet = set of BandType;
    TModeSet = set of ModeType;
 
+   (* What each row of the Band and Mode lists means -- see FBandRows. *)
+   TBandRows = array of BandType;
+   TModeRows = array of ModeType;
+
    TfrmLogSearch = class(TForm)
       lblCall: TLabel;
       edtCall: TEdit;
@@ -125,19 +129,37 @@ type
       (* Restored ONCE, before the first Show -- see ShowLogSearchForm. *)
       FBoundsRestored: boolean;
 
+      (* WHAT EACH ROW OF THE BAND AND MODE LISTS MEANS, by row: entry i is
+        the value cboBand.Items[i] / cboMode.Items[i] shows, and entry 0 is
+        the "All" row (AllBands / Both). Built in the same pass as the items,
+        by RebuildFilterLists, and the only writer of either list is that
+        pass -- the combos are csDropDownList and not Sorted, so a row cannot
+        move behind it.
+
+        This replaced TObject(Ord(value) + 1) in Items.Objects[], an integer
+        dressed as an object with a +1 so nil could mean "All" (pointer audit
+        P9, item 5.2). The same shape as TfrmNewContest.FShown. *)
+      FBandRows: TBandRows;
+      FModeRows: TModeRows;
+
       procedure GridFetchRows(Sender: TObject; const aFirstIndex: Int64;
                               var aRows: array of TLogGridRow);
       procedure GridDblClick(Sender: TObject);
       procedure RunSearch;
       procedure ApplyMinimumWidth;
 
-      (* The three filter lists, rebuilt from the records the OTHER filters
+      procedure FillCombo(const aCombo: TComboBox; const aItems: TStrings;
+                          const aAnyCaption: string; const aKeepText: string);
+   public
+      (* PUBLIC FOR uTestLogSearchFilters, which pins that each row of a
+        filter list selects the band or mode it shows. Nothing outside this
+        unit calls them in the program.
+
+        The three filter lists, rebuilt from the records the OTHER filters
         admit -- see the body of RebuildFilterLists. *)
       procedure RebuildFilterLists(const aBands: TBandSet;
                                    const aModes: TModeSet;
                                    const aOperators: TStrings);
-      procedure FillCombo(const aCombo: TComboBox; const aItems: TStrings;
-                          const aAnyCaption: string; const aKeepText: string);
       function  SelectedBand: BandType;
       function  SelectedMode: ModeType;
    end;
@@ -388,23 +410,23 @@ begin
              (Pos(aOperator, AnsiString(aQso.ceOperator)) > 0);
 end;
 
+(* The value the chosen row shows -- see FBandRows. No row, or a row the
+  arrays do not reach, is "do not filter". *)
 function TfrmLogSearch.SelectedBand: BandType;
 begin
    Result := AllBands;
-   if (cboBand.ItemIndex >= 0) and
-      (cboBand.Items.Objects[cboBand.ItemIndex] <> nil) then
+   if (cboBand.ItemIndex >= 0) and (cboBand.ItemIndex < Length(FBandRows)) then
       begin
-      Result := BandType(PtrInt(cboBand.Items.Objects[cboBand.ItemIndex]) - 1);
+      Result := FBandRows[cboBand.ItemIndex];
       end;
 end;
 
 function TfrmLogSearch.SelectedMode: ModeType;
 begin
    Result := Both;
-   if (cboMode.ItemIndex >= 0) and
-      (cboMode.Items.Objects[cboMode.ItemIndex] <> nil) then
+   if (cboMode.ItemIndex >= 0) and (cboMode.ItemIndex < Length(FModeRows)) then
       begin
-      Result := ModeType(PtrInt(cboMode.Items.Objects[cboMode.ItemIndex]) - 1);
+      Result := FModeRows[cboMode.ItemIndex];
       end;
 end;
 
@@ -415,8 +437,9 @@ end;
   restored by text; if it is no longer offered, the list falls back to its
   "any" row, which is the honest outcome of a filter that now matches nothing.
 
-  The value rides in Objects as Ord + 1, because nil is how "this is the any
-  row" is told apart from ordinal zero. *)
+  CAPTIONS ONLY. Row 0 is the "any" row and row i + 1 is aItems[i]; what each
+  row MEANS is the caller's array, built in the same order (FBandRows,
+  FModeRows). *)
 procedure TfrmLogSearch.FillCombo(const aCombo: TComboBox; const aItems: TStrings;
                                   const aAnyCaption: string; const aKeepText: string);
 var
@@ -425,10 +448,10 @@ begin
    aCombo.Items.BeginUpdate;
    try
       aCombo.Items.Clear;
-      aCombo.Items.AddObject(aAnyCaption, nil);
+      aCombo.Items.Add(aAnyCaption);
       for i := 0 to aItems.Count - 1 do
          begin
-         aCombo.Items.AddObject(aItems[i], aItems.Objects[i]);
+         aCombo.Items.Add(aItems[i]);
          end;
    finally
       aCombo.Items.EndUpdate;
@@ -465,13 +488,36 @@ procedure TfrmLogSearch.RebuildFilterLists(const aBands: TBandSet;
                                            const aOperators: TStrings);
 var
    bands, modes: TStringList;
+   bandRows: TBandRows;
+   modeRows: TModeRows;
    bt: BandType;
    mt: ModeType;
    i:  integer;
+
+   (* ONE ROW, CAPTION AND MEANING TOGETHER, so the two cannot be added
+     apart. Row 0 of each array is the "All" row FillCombo puts first. *)
+   procedure AddBand(const aBand: BandType);
+   begin
+      bands.Add(string(AnsiString(BandStringsArray[aBand])));
+      SetLength(bandRows, Length(bandRows) + 1);
+      bandRows[High(bandRows)] := aBand;
+   end;
+
+   procedure AddMode(const aMode: ModeType);
+   begin
+      modes.Add(string(AnsiString(ModeStringArray[aMode])));
+      SetLength(modeRows, Length(modeRows) + 1);
+      modeRows[High(modeRows)] := aMode;
+   end;
+
 begin
    FFillingLists := True;
    bands := TStringList.Create;
    modes := TStringList.Create;
+   SetLength(bandRows, 1);
+   bandRows[0] := AllBands;
+   SetLength(modeRows, 1);
+   modeRows[0] := Both;
    try
       if aBands <> [] then
          begin
@@ -479,8 +525,7 @@ begin
             begin
             if (bt in aBands) and (bt <> AllBands) and (bt <> NoBand) then
                begin
-               bands.AddObject(string(AnsiString(BandStringsArray[bt])),
-                               TObject(PtrInt(Ord(bt)) + 1));
+               AddBand(bt);
                end;
             end;
          end
@@ -496,8 +541,7 @@ begin
                begin
                Continue;
                end;
-            bands.AddObject(string(AnsiString(BandStringsArray[bt])),
-                            TObject(PtrInt(Ord(bt)) + 1));
+            AddBand(bt);
             end;
          end;
 
@@ -507,8 +551,7 @@ begin
             begin
             if (mt in aModes) and (mt <> Both) then
                begin
-               modes.AddObject(string(AnsiString(ModeStringArray[mt])),
-                               TObject(PtrInt(Ord(mt)) + 1));
+               AddMode(mt);
                end;
             end;
          end
@@ -518,11 +561,15 @@ begin
             begin
             if mt <> Both then
                begin
-               modes.AddObject(string(AnsiString(ModeStringArray[mt])),
-                               TObject(PtrInt(Ord(mt)) + 1));
+               AddMode(mt);
                end;
             end;
          end;
+
+      (* Replaced together with the rows, inside the FFillingLists guard, so
+        no OnChange reads one without the other. *)
+      FBandRows := bandRows;
+      FModeRows := modeRows;
 
       (* ALL, NOT BTH. NY4I: "the mode of BTH should be All like Band." The
         constant behind it is Both and the table spells it BTH; that spelling

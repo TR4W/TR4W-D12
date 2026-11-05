@@ -110,9 +110,10 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
-> **P9 IS UNDER WAY (2026-11-05), one window per commit.** 5.4 (Alt-P) is done:
-> see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05). `src` total
-> 2,156 -> **2,149**. 5.1, 5.2 and 5.3 are open.
+> **P9 IS UNDER WAY (2026-11-05), one window per commit.** 5.4 (Alt-P) and
+> 5.2 (Search Log) are done: see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05)
+> and [part 2](#p9-part-2-52----the-search-log-filter-rows-2026-11-05). `src`
+> total 2,156 -> 2,149 -> **2,128**. 5.1 and 5.3 are open.
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
@@ -536,7 +537,7 @@ audit's list finds them.
 | # | where | what | native replacement | oracle |
 |---|---|---|---|---|
 | 5.1 | `ui/lcl/uFlowGrid.pas:165, 205` (`TagAt`, `AddObject(aCall, TObject(aTag))`), callers in `uCallsigns`, `uMaster`, `logedit` | **the worked example in `WIN32_ARTIFACT_SWEEP.md` -- still present** | `TRemainingMult` and friends in `Objects[]` with `OwnsObjects` | **none** (UI) -- BENCH the dupe sheet, SCP/master and remaining-mults windows |
-| 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built | **none** -- BENCH the log search window |
+| 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built -- **DONE 2026-11-05 (P9 part 2)**: `FBandRows` / `FModeRows` | UT `uTestLogSearchFilters` (written first); BENCH the log search window |
 | 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` | UT `uTestTelnetTrace` (the ring, not the colours) -- BENCH the colours |
 | 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns -- **DONE 2026-11-05 (P9 part 1)**: `TAltPItem.Key`, made through `OnCreateItemClass` | UT `uTestAltPRows` (written first); BENCH Alt-P |
 | 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowLogCompare(aInfo: PLogFileInformation)` -- **DONE (P2)**. `ShowEditMessage(const aRow: integer)` -- **DONE 2026-11-05** (both units; `uEditMessage` no longer names `LCLType`) | COMPILER; BENCH Alt-P -> Edit Message |
@@ -1475,6 +1476,35 @@ event, and "no key" then means "nothing editable", not the wrong memory.
 ceiling). App 0 errors; narrowing 1201 and range warnings 3, both at their
 ceilings. 54 lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest
 matrix 194 identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
+
+### P9 part 2 (5.2) -- the Search Log filter rows, 2026-11-05
+
+**Test first.** `test/unit/uTestLogSearchFilters.pas` (6 tests) streams
+`TfrmLogSearch` (its `FormCreate` builds the grid and the lists), rebuilds the
+Band and Mode lists from chosen sets and asserts that every row selects the
+value whose spelling it shows, that row 0 is `AllBands` / `Both`, that a choice
+survives a rebuild that moves it down a row, and that one no longer offered
+falls back to All. `RebuildFilterLists`, `SelectedBand` and `SelectedMode`
+moved from `private` to `public` for it -- nothing else calls them. Green on
+the old `TObject(Ord(x) + 1)` (unit 424,315 / 0) and unchanged after.
+
+**The conversion.** `FBandRows: TBandRows` and `FModeRows: TModeRows`, typed
+arrays the form owns, entry i being what row i shows and entry 0 the All row.
+`RebuildFilterLists` adds caption and meaning in one nested call (`AddBand`,
+`AddMode`) so the two cannot be added apart, and replaces both arrays inside
+the existing `FFillingLists` guard. `FillCombo` takes captions only. Both
+combos are `csDropDownList` and not `Sorted`, which the parallel array needs;
+the shape is `TfrmNewContest.FShown`'s. A reverse lookup by caption was
+rejected: `BandStringsArray` carries leading spaces and `All` is a caption,
+not a value.
+
+**Counters.** `src` total 2,149 -> 2,128: `C5-objects` -11, `C3-typed-ptr-type`
+-6, `C5-tobject-cast` -4.
+
+**Oracles.** Unit 424,315 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
+ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
+lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
 
 ---
 

@@ -30,6 +30,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- THE SEARCH LOG FILTERS KNOW THEIR ROWS BY A TYPED ARRAY (pointer audit P9, 5.2)
+
+Which band or mode a row of the Search Log's Band and Mode drop-downs means rode
+in `Items.Objects[]` as `Ord(value) + 1`. It is a typed array the form builds in
+the same pass as the rows now (`FBandRows`, `FModeRows`). `uTestLogSearchFilters`
+pins the mapping on a streamed form; what it cannot see is the window in use.
+
+- [ ] **Search Log, in a log with QSOs on at least three bands and two modes.**
+  Open Search (with an empty call box), pick each band in turn. EXPECT: the grid
+  shows only that band's QSOs, and the Band column agrees with the drop-down.
+  Do the same for Mode. Then type a partial call (e.g. `N6`) with 20 m chosen.
+  EXPECT: 20 m stays chosen while the list of bands narrows to those the matches
+  contain. Still on 20 m, change the call to one never worked on 20 m. EXPECT:
+  Band falls back to All. Pick All on both. EXPECT: every QSO the call
+  matches.
+
 ## Added 2026-11-05 -- AN ALT-P ROW CARRIES ITS KEY AS A TYPED FIELD (pointer audit P9, 5.4)
 
 Each row of the Alt-P list knew its function key through `TListItem.Data`, as
