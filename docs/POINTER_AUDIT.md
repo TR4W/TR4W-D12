@@ -110,6 +110,10 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
 > -> **2,192** after part 2 (-18).
 >
+> **P9 IS UNDER WAY (2026-11-05), one window per commit.** 5.4 (Alt-P) is done:
+> see [P9 part 1](#p9-part-1-54----the-alt-p-rows-key-2026-11-05). `src` total
+> 2,156 -> **2,149**. 5.1, 5.2 and 5.3 are open.
+>
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
 > `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
@@ -493,7 +497,7 @@ The `Move`/`FillChar` half of this category is triaged in full in
 | 3.6 | `uProcessCommand.pas:261` `scFileName[length(scFileName) + 1] := #0` | hand-written C terminator on a ShortString | **DONE (P10): deleted** | delete -- its last C-string consumer, `FileExists(@scFileName[1])` at `:416`, is inside a `{ }` comment (the comment-aware reader does not see it; a plain `rg` does), and every live use passes the ShortString itself | low | **none** |
 | 3.7 | `ui/lcl/uLogGrid.pas:1045, 1054, 1093` `@FCache[i mod CACHE_ROWS]` | a pointer into an array of records, returned to callers | live | return the index, or make the cache entry a class | low -- dangles only if `FCache` is resized while a caller holds one; check before converting | UT `uTestLogRepository` (data), screen is BENCH |
 | 3.8 | `MainUnit.pas:8986` `CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange))` | byte compare of two records | live | **keep for now**: it is a deliberate "did anything change" that includes padding; the same rule as `RadioStatusRecord`'s `BYTES` flag | -- | CORPUS / rescore baseline |
-| 3.9 | `ui/lcl/uAltPForm.pas:189` `row.Data := Pointer(PtrInt(aKey + 1))` | integer in a `TListItem.Data` | live | see 5.4 | -- | -- |
+| 3.9 | `ui/lcl/uAltPForm.pas:189` `row.Data := Pointer(PtrInt(aKey + 1))` | integer in a `TListItem.Data` | **gone (P9 part 1)** | see 5.4 | -- | -- |
 
 ### Category 4 -- PChar, PAnsiChar, PWideChar
 
@@ -534,7 +538,7 @@ audit's list finds them.
 | 5.1 | `ui/lcl/uFlowGrid.pas:165, 205` (`TagAt`, `AddObject(aCall, TObject(aTag))`), callers in `uCallsigns`, `uMaster`, `logedit` | **the worked example in `WIN32_ARTIFACT_SWEEP.md` -- still present** | `TRemainingMult` and friends in `Objects[]` with `OwnsObjects` | **none** (UI) -- BENCH the dupe sheet, SCP/master and remaining-mults windows |
 | 5.2 | `ui/lcl/uLogSearchForm.pas:395-522` | band and mode stored as `TObject(PtrInt(Ord(x)) + 1)` in combo items, `+1` so 0 can mean "any" | a typed array parallel to the items, or `ItemIndex - 1` against the list the form built | **none** -- BENCH the log search window |
 | 5.3 | `ui/lcl/uTelnetForm.pas:796, 1025, 1072` | each console line's `TelnetStringType` as `TObject(PtrUInt(Ord(aKind)))` | the `TStringGrid`/model shape the band map already uses; or a parallel `array of TelnetStringType` | UT `uTestTelnetTrace` (the ring, not the colours) -- BENCH the colours |
-| 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns | **none** -- BENCH Alt-P |
+| 5.4 | `ui/lcl/uAltPForm.pas:189, 253, 270` | a function-key number in `TListItem.Data`, `+1` | a typed field the view owns -- **DONE 2026-11-05 (P9 part 1)**: `TAltPItem.Key`, made through `OnCreateItemClass` | UT `uTestAltPRows` (written first); BENCH Alt-P |
 | 5.5 | `uEditMessage.ShowEditMessage(const aMessage: lParam)` (`uEditMessage.pas:99`, `ui/lcl/uEditMessageForm.pas:456`), `ShowLogCompare(const aInitParam: lParam)` (`uLogCompare.pas:73`, `ui/lcl/uLogCompareForm.pas:225`) | a dialog's Win32 `lParam` kept as the parameter type after the dialog became an LCL form; one of them carries a pointer (D3) | `ShowLogCompare(aInfo: PLogFileInformation)` -- **DONE (P2)**. `ShowEditMessage(const aRow: integer)` -- **DONE 2026-11-05** (both units; `uEditMessage` no longer names `LCLType`) | COMPILER; BENCH Alt-P -> Edit Message |
 | 5.6 | `uMainWindowProc.pas:605` `ApplyLoadedParks(LPARAM(aParks))`, `uPOTAParks.pas:582` | a `TStringList` passed as `LPARAM` between two units of ours | `ApplyLoadedParks(aParks: TStringList)` -- **DONE 2026-11-05**; `uPOTAParks` no longer names `LCLType` | UT `uTestContestPOTA.Test_ApplyLoadedParksTakesTheParsedList` (written first, against the `LPARAM`); COMPILER; BENCH the startup load and the download |
 | 5.7 | `.Tag` (70): 44 in `ui/lcl/uPrefsForm.pas` | Preferences navigation dispatches by `Tag` | **a recorded decision** (agent memory `prefs-designed-form-and-nav-tags`; `uPrefsForm.pas:1519` explains why) -- not a target | -- |
@@ -1442,6 +1446,35 @@ and the fix is a virtual on the base, not a pointer change. Reported, not fixed 
 57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both
 at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
 identical, 0 differing, no re-freeze.
+
+### P9 part 1 (5.4) -- the Alt-P row's key, 2026-11-05
+
+**Test first.** `test/unit/uTestAltPRows.pas` (7 tests) streams `TfrmAltP`,
+never shows it, and drives only the public seam `uAltP` uses: `AltPAddRow`,
+`AltPSelect`, `AltPSelectByKey`, `AltPSelectedKey`, `AltPRowText`. The keys are
+-1, 0, 11 and 35, added out of numeric order so a key equal to its row number
+fails. It was green against the old `Data := Pointer(aKey + 1)` (unit
+424,267 / 0) and unchanged after.
+
+**Measured on the way:** a `TListView` with no window handle drops the FIRST
+selection made on it (`ItemIndex` reads -1, every later one holds). The test
+asks for a handle (`HandleNeeded`, after `Application.Initialize`) rather than
+pin that. The cause inside the LCL was not traced.
+
+**The conversion.** `TAltPItem = class(TListItem)` with `Key: integer`. The
+list view makes its own items, and `OnCreateItemClass` (wired in the `.lfm`,
+`MessagesCreateItemClass`) is the LCL's way to choose their class, so the key
+is a typed field with no `+1` and no pointer. `KeyOfRow` answers -1 for a row
+that is not a `TAltPItem` -- only possible if the `.lfm` stops wiring the
+event, and "no key" then means "nothing editable", not the wrong memory.
+
+**Counters.** `src` total 2,156 -> 2,149: `C5-data` -3, `C3-typed-ptr-type`
+-3, `C3-pointer-cast` -1.
+
+**Oracles.** Unit 424,267 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
+ceiling). App 0 errors; narrowing 1201 and range warnings 3, both at their
+ceilings. 54 lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest
+matrix 194 identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
 
 ---
 

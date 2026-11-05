@@ -82,6 +82,7 @@ uses
    uRadioBand           in '..\..\src\radioFactory\uRadioBand.pas',
    uTestRadioBand       in 'uTestRadioBand.pas',
    uTestComboTags       in 'uTestComboTags.pas',
+   uTestAltPRows        in 'uTestAltPRows.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
@@ -938,6 +939,7 @@ begin
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TComboTagTests.Create('ComboTags'));
+   RegisterSuite(TAltPRowTests.Create('AltPRows'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TStringCompareTests.Create('StringCompare'));
    RegisterSuite(TShortStringConversionTests.Create('ShortStringConversion'));

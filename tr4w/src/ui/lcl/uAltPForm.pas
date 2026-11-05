@@ -49,6 +49,19 @@ uses
    uTR4WStrings;
 
 type
+   (* ONE ROW OF THE LIST, AND IT KNOWS WHICH KEY IT IS.
+
+     The key ordinal (see AltPAddRow) used to ride in TListItem.Data as
+     Pointer(aKey + 1) -- an integer dressed as a pointer, with a +1 so that
+     -1 could be told apart from nil. The list view makes its own items, and
+     OnCreateItemClass is how the LCL lets a view choose their class, so the
+     key is a typed field on the item and needs no encoding at all (pointer
+     audit P9, item 5.4). *)
+   TAltPItem = class(TListItem)
+   public
+      Key: integer;
+   end;
+
    TfrmAltP = class(TForm)
       rgBank: TRadioGroup;
       lvMessages: TListView;
@@ -57,6 +70,8 @@ type
       procedure HandleShow(Sender: TObject);
       procedure HandleKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
       procedure MessagesDblClick(Sender: TObject);
+      procedure MessagesCreateItemClass(Sender: TCustomListView;
+                                        var ItemClass: TListItemClass);
       procedure EditClick(Sender: TObject);
       procedure CloseClick(Sender: TObject);
       procedure BankClick(Sender: TObject);
@@ -171,6 +186,18 @@ begin
       end;
 end;
 
+(* The key a row carries, or -1 for a row that is not a TAltPItem -- which
+  only happens if the .lfm stops wiring OnCreateItemClass. Answering "no key"
+  then is the safe failure: nothing is editable, rather than the wrong memory. *)
+function KeyOfRow(const aRow: TListItem): integer;
+begin
+   Result := -1;
+   if aRow is TAltPItem then
+      begin
+      Result := TAltPItem(aRow).Key;
+      end;
+end;
+
 procedure AltPAddRow(const aCommand, aMessage, aCaption: AnsiString;
                      const aKey: integer);
 var
@@ -184,9 +211,11 @@ begin
    row := TR4WAltPForm.lvMessages.Items.Add;
    row.Caption := aCommand;
 
-   { The key travels WITH the row.  Data is a Pointer, so the ordinal is
-     carried as one; +1 keeps -1 distinguishable from nil. }
-   row.Data := Pointer(PtrInt(aKey + 1));
+   (* The key travels WITH the row, on the row -- see TAltPItem. *)
+   if row is TAltPItem then
+      begin
+      TAltPItem(row).Key := aKey;
+      end;
 
    { SubItems are positional and BOTH must be added even when empty, or the
      Caption column lands in the Message column for that row.  The Win32 code
@@ -250,7 +279,7 @@ begin
       Exit;
       end;
 
-   Result := PtrInt(lv.Items[lv.ItemIndex].Data) - 1;
+   Result := KeyOfRow(lv.Items[lv.ItemIndex]);
 end;
 
 function AltPSelectByKey(const aKey: integer): boolean;
@@ -267,7 +296,7 @@ begin
    lv := TR4WAltPForm.lvMessages;
    for i := 0 to lv.Items.Count - 1 do
       begin
-      if (PtrInt(lv.Items[i].Data) - 1) = aKey then
+      if KeyOfRow(lv.Items[i]) = aKey then
          begin
          lv.ItemIndex := i;
          lv.Items[i].MakeVisible(False);
@@ -425,6 +454,14 @@ begin
       begin
       AltPFormOnEdit;
       end;
+end;
+
+(* Every row this list makes is a TAltPItem, so the key has somewhere typed
+  to live. Wired in the .lfm, so it is in place before the first Items.Add. *)
+procedure TfrmAltP.MessagesCreateItemClass(Sender: TCustomListView;
+                                           var ItemClass: TListItemClass);
+begin
+   ItemClass := TAltPItem;
 end;
 
 procedure TfrmAltP.EditClick(Sender: TObject);

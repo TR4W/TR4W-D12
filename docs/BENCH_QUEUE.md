@@ -30,6 +30,25 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- AN ALT-P ROW CARRIES ITS KEY AS A TYPED FIELD (pointer audit P9, 5.4)
+
+Each row of the Alt-P list knew its function key through `TListItem.Data`, as
+`Pointer(key + 1)`. The list now makes its own rows as `TAltPItem` (the LCL's
+`OnCreateItemClass`, wired in the `.lfm`) with a `Key` field. `uTestAltPRows` pins
+the round trip on a streamed, never-shown form; what it cannot see is the window
+the operator opens.
+
+- [ ] **Alt-P, CQ messages, CW.** Select the Standard bank, double-click F3, change
+  the text, save. Switch to the Control bank, double-click CONTROL-F3, change it,
+  save. EXPECT: each edit lands on the key double-clicked (F3 and CONTROL-F3 are
+  different memories). Close Alt-P and reopen it: it shows the Control bank
+  again with CONTROL-F3 selected. Switch to the Standard bank: F1 is selected
+  (the last key edited is not in that bank).
+- [ ] **Alt-P, Exchange messages.** Double-click F1, then F2. EXPECT: neither
+  opens the editor (they are derived from MY CALL and S&P EXCHANGE). Then switch
+  to the Control bank and double-click CONTROL-F1. EXPECT: the editor opens --
+  CONTROL-F1 is an ordinary memory.
+
 ## Added 2026-11-05 -- THE HAMLIB COMMAND QUEUE HOLDS VALUES (pointer audit P13, 2.8)
 
 `THamLibDirect`'s urgent queue (frequency, mode, PTT, RIT/XIT, split, posted from

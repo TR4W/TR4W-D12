@@ -46,6 +46,7 @@ object frmAltP: TfrmAltP
     RowSelect = True
     TabOrder = 1
     ViewStyle = vsReport
+    OnCreateItemClass = MessagesCreateItemClass
     OnDblClick = MessagesDblClick
   end
   object btnEdit: TBitBtn
