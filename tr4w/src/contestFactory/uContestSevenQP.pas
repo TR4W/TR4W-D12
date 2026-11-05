@@ -199,6 +199,10 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* THE NEW CONTEST BOX'S AREA IS EIGHT STATES -- issue 217; see the
+         body and TContestBase.DescribeNewContestHostArea. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; override;
    end;
 
 implementation
@@ -489,8 +493,8 @@ end;
 
 (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
    2026-10-14. Yes for an entrant inside the 7th area; none outside. This is
-   the station test the session's DX kind was chosen by (the trait, then
-   DescribeSession) until that kind was deleted; DXMultiplierKey and the
+   the station test the session's DX kind was chosen by (the trait,
+   then DescribeSession) until that kind was deleted; DXMultiplierKey and the
    country list ask the same predicate, so the answers cannot disagree. *)
 function TContestSevenQP.HasDXMultiplier: boolean;
 begin
@@ -575,6 +579,16 @@ end;
 function TContestSevenQP.ADIFWorkedStationState(const aQso: ContestExchange): string;
 begin
    Result := ADIFStateOfPartyQSO(ADIFCountyState(aQso), aQso);
+end;
+
+(* THE BASE'S BOX, WITH THE AREA'S EIGHT STATES -- issue 217. The 7QP has
+   no single HostState, so without this an Arizona station that left the
+   box unticked and typed AZ would be accepted, and set-up (AZ is no key of
+   seven_cty) would put it outside the 7th area without a word. *)
+function TContestSevenQP.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   Result := inherited DescribeNewContestHostArea(aArea);
+   aArea.HostStates := Trim(SEVENQP_COUNTY_STATES);
 end;
 
 initialization

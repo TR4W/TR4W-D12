@@ -1686,7 +1686,11 @@ begin
       Exit;
       end;
    FRows[aRow].Field.Text := UTF8Encode(aText);
-   FieldChanged(FRows[aRow].Field);
+   (* Through the box's OWN event -- see PickRowValue. *)
+   if Assigned(FRows[aRow].Field.OnChange) then
+      begin
+      FRows[aRow].Field.OnChange(FRows[aRow].Field);
+      end;
 end;
 
 function TfrmNewContest.PickRowValue(aRow: integer; const aValue: string): boolean;
@@ -1704,7 +1708,12 @@ begin
       if FPickValues[aRow][i] = aValue then
          begin
          FRows[aRow].Pick.ItemIndex := i;
-         FieldChanged(FRows[aRow].Pick);
+         (* Through the list's OWN event, as a click raises it, so a list
+            that lost its OnChange wiring fails here too. *)
+         if Assigned(FRows[aRow].Pick.OnChange) then
+            begin
+            FRows[aRow].Pick.OnChange(FRows[aRow].Pick);
+            end;
          Result := True;
          Exit;
          end;

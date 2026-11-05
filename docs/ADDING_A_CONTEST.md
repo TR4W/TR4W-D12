@@ -279,11 +279,13 @@ state:**
   unless the class says otherwise** (issue 217, 2026-11-05).
   `TContestBase.DescribeNewContestHostArea` answers for every US QSO party
   (`IsUSQSOParty`): the row its prompt asks for (`ncfMyState`), its
-  `QSOPartyArea`, its `HostState` and its county file (`DomesticFileName`).
+  `QSOPartyArea`, the area's states (`HostStates`, the base's `HostState`;
+  the 7QP states its eight) and its county file (`DomesticFileName`).
   The dialog shows the box. Ticked, the row reads MY COUNTY and is a
   drop-down of that file's KEYS, the same keys set-up's in-state test reads
   (`FCONTEST.FoundMyStateInDomFile`). Unticked, it reads MY STATE and takes a
-  US state, a Canadian province or `DX` (`uNewContestHostArea`). The command
+  US state, a Canadian province or `DX`, never one of the area's own states
+  or county keys (`uNewContestHostArea`). The command
   queued is MY STATE either way, with the same text typing gave (the key
   upper-cased), so nothing downstream moves. A NEW single-state party
   inherits it, with nothing to state. **State False with the reason** when

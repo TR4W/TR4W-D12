@@ -203,8 +203,25 @@ begin
       CheckEquals(Format(SNewContestHostAreaEntryIsInside, ['FL', 'FL']),
                   HostAreaOutsideRefusal(places, 'FL', 'FL', 'fl'),
                   'so does the host state itself');
-      CheckEquals('', HostAreaOutsideRefusal(places, '7th area', '', 'AZ'),
-                  'a multi-state area names no host state to refuse');
+      CheckEquals(Format(SNewContestHostAreaEntryNotAState, ['F']),
+                  HostAreaOutsideRefusal(places, 'FL', 'FL', 'F'),
+                  'a whole state, not a letter of one');
+   finally
+      places.Free;
+   end;
+
+   (* A MULTI-STATE AREA refuses each of its states: AZ typed outside would
+     be judged out of the 7th area, AZ being no key of seven_cty. *)
+   places := LoadedPlaces('seven_cty' + string(DOM_EXTENSION));
+   try
+      CheckEquals(Format(SNewContestHostAreaEntryIsInside, ['AZ', '7th area']),
+                  HostAreaOutsideRefusal(places, '7th area', 'AZ ID MT NV OR UT WA WY', 'az'),
+                  'AZ is inside the 7th area');
+      CheckEquals(Format(SNewContestHostAreaEntryIsInside, ['WY', '7th area']),
+                  HostAreaOutsideRefusal(places, '7th area', 'AZ ID MT NV OR UT WA WY', 'WY'),
+                  'so is the last of the eight');
+      CheckEquals('', HostAreaOutsideRefusal(places, '7th area', 'AZ ID MT NV OR UT WA WY', 'CA'),
+                  'California is outside it');
    finally
       places.Free;
    end;
@@ -292,6 +309,9 @@ begin
       CheckTrue(area.Field = ncfMyState, ContestWho(contests[i]) +
                 ': the box governs MY STATE, the field set-up reads');
       CheckTrue(area.Area <> '', ContestWho(contests[i]) + ': the box names its area');
+      CheckTrue(area.HostStates <> '', ContestWho(contests[i]) +
+                ': the box names the area''s states, so none is taken as an ' +
+                'outside entry');
       CheckEquals(contests[i].DomesticFileName, area.PlacesFile,
                   ContestWho(contests[i]) + ': the places are the in-state test''s file');
       ReadPrompts(contests[i], area.Field, asked, boxed);
@@ -324,10 +344,11 @@ begin
    CheckTrue(ContestIdentity(ContestHandleOf(FLORIDAQSOPARTY)).DescribeNewContestHostArea(area),
              'the Florida QSO Party offers it (the report)');
    CheckEquals('FL', area.Area, 'Florida''s box says FL');
-   CheckEquals('FL', area.HostState, 'and refuses FL as an outside entry');
+   CheckEquals('FL', area.HostStates, 'and refuses FL as an outside entry');
    CheckTrue(ContestIdentity(ContestHandleOf(SEVENQP)).DescribeNewContestHostArea(area),
              'the 7QP, a multi-state party off the party base, offers it');
-   CheckEquals('', area.HostState, 'the 7QP names no single host state');
+   CheckEquals('AZ ID MT NV OR UT WA WY', area.HostStates,
+               'the 7QP refuses each of its eight states outside');
 end;
 
 (* A fresh, never-shown dialog with uNewContest's rules attached. *)

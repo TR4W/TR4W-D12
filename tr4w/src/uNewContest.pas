@@ -468,7 +468,7 @@ begin
      (not frmNewContest.RowIsPick(HostAreaRow)) then
      begin
      refusal := HostAreaOutsideRefusal(HostAreaPlaces, HostArea.Area,
-                                       HostArea.HostState,
+                                       HostArea.HostStates,
                                        frmNewContest.RowText(HostAreaRow));
      end;
 

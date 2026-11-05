@@ -75,11 +75,12 @@ function HostAreaStationIsInside(const aPlaces: THostAreaPlaces;
 
   Accepted: a US state or Canadian province (uPOTAReference.LooksLikeAState,
   the list Tree always had), or DX; in any case. Refused, saying so: a key of
-  the area's places, and aHostState itself -- either would describe a
-  station INSIDE the area, which the box is for. Refused: anything else. An
-  empty value is accepted here: an empty row is the dialog's own rule. *)
+  the area's places, and any of aHostStates (blank-separated, 'FL' or the
+  7QP's eight) -- either would describe a station INSIDE the area, which the
+  box is for. Refused: anything else. An empty value is accepted here: an
+  empty row is the dialog's own rule. *)
 function HostAreaOutsideRefusal(const aPlaces: THostAreaPlaces;
-                                const aArea, aHostState, aValue: string): string;
+                                const aArea, aHostStates, aValue: string): string;
 
 implementation
 
@@ -243,7 +244,7 @@ begin
 end;
 
 function HostAreaOutsideRefusal(const aPlaces: THostAreaPlaces;
-                                const aArea, aHostState, aValue: string): string;
+                                const aArea, aHostStates, aValue: string): string;
 var
    entry: string;
 begin
@@ -254,8 +255,9 @@ begin
       Exit;
       end;
 
+   (* A whole word of the list: 'FL' is in 'FL', 'F' is not. *)
    if HostAreaStationIsInside(aPlaces, entry) or
-      ((aHostState <> '') and (entry = UpperCase(Trim(aHostState)))) then
+      (Pos(' ' + entry + ' ', ' ' + UpperCase(aHostStates) + ' ') > 0) then
       begin
       Result := Format(SNewContestHostAreaEntryIsInside, [entry, aArea]);
       Exit;

@@ -1283,8 +1283,10 @@ type
       Field         the row it governs -- the field the prompts already ask
                     for (MY STATE), so what is queued does not change.
       Area          the words of the box, "I am in <Area>" (QSOPartyArea).
-      HostState     the host's own two-letter state, which a station outside
-                    the area cannot be from; '' for a multi-state area.
+      HostStates    the two-letter states the area IS, blank-separated -- a
+                    station outside the area cannot be from one: 'FL', or
+                    the 7QP's eight. Typed outside, one would set the
+                    station up out of the area it is in.
       PlacesFile    the .dom, without its extension, whose KEYS are the
                     in-area QTHs -- the in-state test's own file.
 
@@ -1293,7 +1295,7 @@ type
    TNewContestHostArea = record
       Field: TNewContestField;
       Area: string;
-      HostState: string;
+      HostStates: string;
       PlacesFile: string;
    end;
 
@@ -6143,13 +6145,15 @@ begin
       box governs the row that head asks for. See the declaration. *)
    aArea.Field := ncfMyState;
    aArea.Area := '';
-   aArea.HostState := '';
+   aArea.HostStates := '';
    aArea.PlacesFile := '';
    Result := IsUSQSOParty;
    if Result then
       begin
+      (* A single-state party's area is its HostState; a multi-state party
+         (the 7QP) has none and states its own list. *)
       aArea.Area := QSOPartyArea;
-      aArea.HostState := HostState;
+      aArea.HostStates := HostState;
       aArea.PlacesFile := DomesticFileName;
       end;
 end;
