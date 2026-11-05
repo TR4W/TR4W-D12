@@ -41,6 +41,17 @@ uses
    Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uFlowGrid;
 
 type
+   (* WHAT AN SCP CELL KNOWS BEYOND ITS CALL: whether the call is already a
+     dupe. It rode in the grid's Objects[] as Ord(aIsDupe) (pointer audit P9,
+     item 5.1); it is a cell the grid owns now. *)
+   TMasterCell = class
+   private
+      FIsDupe: boolean;
+   public
+      constructor Create(const aIsDupe: boolean);
+      property IsDupe: boolean read FIsDupe;
+   end;
+
    TfrmMaster = class(TForm)
       grdMaster: TDrawGrid;
       procedure HandleCreate(Sender: TObject);
@@ -53,6 +64,15 @@ type
                                aRect: TRect; aState: TGridDrawState);
    public
       Calls: TFlowGrid;
+
+      (* ONE CELL: a partial-match call and whether it is already a dupe,
+        which is what gradients it. Between Calls.BeginRebuild and
+        Calls.EndRebuild. False when the window is full -- it shows what
+        fits (LimitToVisible) and the call was not added. *)
+      function  AddCall(const aCall: string; const aIsDupe: boolean): boolean;
+
+      (* Whether cell aIndex is a dupe; False for a cell past the end. *)
+      function  IsDupeAt(const aIndex: integer): boolean;
    end;
 
 { What WM_INITDIALOG did beyond building controls.  uMaster assigns it. }
@@ -84,11 +104,36 @@ procedure TfrmMaster.HandleCreate(Sender: TObject);
 begin
    Calls := TFlowGrid.Create(grdMaster, CELL_WIDTH, CELL_HEIGHT);
    Calls.LimitToVisible := True;
+   Calls.OwnsCells := True;      // every cell is a TMasterCell -- see AddCall
 end;
 
 procedure TfrmMaster.HandleDestroy(Sender: TObject);
 begin
    FreeAndNil(Calls);
+end;
+
+constructor TMasterCell.Create(const aIsDupe: boolean);
+begin
+   inherited Create;
+   FIsDupe := aIsDupe;
+end;
+
+(* The grid takes the cell either way, and frees one it refuses. *)
+function TfrmMaster.AddCall(const aCall: string; const aIsDupe: boolean): boolean;
+begin
+   Result := Calls.AddCell(aCall, TMasterCell.Create(aIsDupe));
+end;
+
+function TfrmMaster.IsDupeAt(const aIndex: integer): boolean;
+var
+   cell: TObject;
+begin
+   Result := False;
+   cell := Calls.CellAt(aIndex);
+   if cell is TMasterCell then
+      begin
+      Result := TMasterCell(cell).IsDupe;
+      end;
 end;
 
 procedure TfrmMaster.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -153,7 +198,7 @@ begin
       Exit;
       end;
 
-   if Calls.TagAt(idx) <> 0 then
+   if IsDupeAt(idx) then
       begin
       // GradientFill rather than the uGradient helper: that one takes an HDC
       // and this is a TCanvas.  Same two stops, same direction.

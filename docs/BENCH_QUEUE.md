@@ -30,6 +30,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- AN SCP CELL CARRIES ITS DUPE FLAG AS A TYPED CELL (pointer audit P9, 5.1b)
+
+Each cell of the Super Check Partial window knew whether its call is a dupe
+through the flow grid's `Objects[]` as `Ord(isDupe)`. It is a `TMasterCell` the grid
+owns now. `uTestFlowGridCells` pins the flag, the "show only what fits" refusal and
+(under `-Checked`) that a refused cell is freed; what it cannot see is the paint.
+
+- [ ] **SCP window open, a contest with some QSOs logged.** Type a partial call
+  that matches both worked and unworked calls (e.g. `K1`). EXPECT: the worked ones
+  in the dupe colour with white text, the rest plain, as before. Keep typing and
+  deleting letters. EXPECT: the window refills on each keystroke with the right
+  calls coloured.
+- [ ] **A partial that matches more calls than fit (e.g. `W`), then shrink the
+  window.** EXPECT: it shows as many as fit and no more, no error, and growing
+  the window then typing again shows more.
+
 ## Added 2026-11-05 -- A DUPE SHEET CELL CARRIES ITS DISTRICT AS A TYPED CELL (pointer audit P9, 5.1a)
 
 Each dupe-sheet cell knew its call district (the digit that picks its colour)

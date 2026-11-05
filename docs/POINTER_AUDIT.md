@@ -116,7 +116,8 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > [part 3](#p9-part-3-53----the-dx-cluster-console-lines-kind-2026-11-05). `src`
 > total 2,156 -> 2,149 -> 2,128 -> **2,123**. 5.1 is three windows and three
 > commits: the dupe sheet is done ([part 4](#p9-part-4-51a----the-dupe-sheets-typed-cell-2026-11-05),
-> `src` 2,124, a transitional +1); the SCP and remaining-mults windows are open.
+> `src` 2,124, a transitional +1) and so is the SCP window ([part 5](#p9-part-5-51b----the-scp-windows-typed-cell-2026-11-05),
+> `src` 2,123); the remaining-mults windows are open.
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
@@ -1575,6 +1576,27 @@ reading `Objects[]`). A transitional rise: the PtrInt pair still stands
 beside the typed one, and its sites go in part 6.
 
 **Oracles.** Unit 424,392 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
+ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
+lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.
+
+### P9 part 5 (5.1b) -- the SCP window's typed cell, 2026-11-05
+
+**Test first.** Two tests join `uTestFlowGridCells`: every call keeps its
+dupe flag, and -- because this window shows only what fits
+(`LimitToVisible`) -- a call past `Capacity` is refused while every cell
+already there keeps its call and flag. They drive `TfrmMaster.AddCall`
+(which `uMaster.MasterAddCall` calls) and `IsDupeAt` (which the paint handler
+calls), added on the old `Ord(aIsDupe)` storage and green there (unit
+424,558 / 0).
+
+**The conversion.** `TMasterCell` (read-only `IsDupe`); the grid owns the
+cells and frees one it refuses, which the refusal test reaches under
+`-Checked` (57 unfreed, the ceiling).
+
+**Counters.** `src` total 2,124 -> 2,123: `C3-typed-ptr-type` -1.
+
+**Oracles.** Unit 424,558 / 0, plain and `-Checked` (heaptrc 57 unfreed = the
 ceiling). App 0 errors; narrowing 1201 and range 3, both at their ceilings. 54
 lints, `Count-LiveMove` 430. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
 identical, 0 differing, no re-freeze. BENCH: `BENCH_QUEUE.md`.

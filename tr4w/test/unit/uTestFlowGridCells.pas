@@ -34,6 +34,8 @@ type
       procedure Test_DupeSheet_EveryCallKeepsItsDistrict;
       procedure Test_DupeSheet_ARebuildReplacesTheCells;
       procedure Test_DupeSheet_ACellPastTheEndHasNoDistrict;
+      procedure Test_SCP_EveryCallKeepsItsDupeFlag;
+      procedure Test_SCP_ACallPastCapacityIsRefused;
    public
       procedure RunAllTests; override;
    end;
@@ -42,7 +44,8 @@ implementation
 
 uses
    Forms,             (* Application *)
-   uDupeSheetForm;
+   uDupeSheetForm,
+   uMasterForm;
 
 procedure InitWidgetSet;
 begin
@@ -141,11 +144,84 @@ begin
    end;
 end;
 
+(* ----------------------------------------------------------------------- *)
+(* The Super Check Partial window: a call and whether it is a dupe.       *)
+(* ----------------------------------------------------------------------- *)
+
+const
+   SCP_CALLS: array[0..4] of string = ('K1AR', 'K1ZZ', 'K1TO', 'K1EA', 'K1DG');
+   SCP_DUPES: array[0..4] of boolean = (True, False, False, True, False);
+
+procedure TFlowGridCellTests.Test_SCP_EveryCallKeepsItsDupeFlag;
+var
+   f: TfrmMaster;
+   i: integer;
+begin
+   BeginTest('SCP window: every call comes back with the dupe flag it was added with');
+   InitWidgetSet;
+   f := TfrmMaster.Create(nil);
+   try
+      f.Calls.BeginRebuild;
+      for i := Low(SCP_CALLS) to High(SCP_CALLS) do
+         begin
+         CheckTrue(f.AddCall(SCP_CALLS[i], SCP_DUPES[i]), 'added ' + SCP_CALLS[i]);
+         end;
+      f.Calls.EndRebuild;
+
+      CheckEquals(Length(SCP_CALLS), f.Calls.Count, 'cell count');
+      for i := Low(SCP_CALLS) to High(SCP_CALLS) do
+         begin
+         CheckEquals(SCP_CALLS[i], f.Calls.TextAt(i), 'call ' + IntToStr(i));
+         CheckTrue(SCP_DUPES[i] = f.IsDupeAt(i), 'dupe flag of ' + SCP_CALLS[i]);
+         end;
+      CheckFalse(f.IsDupeAt(Length(SCP_CALLS)), 'a cell past the end is not a dupe');
+      CheckFalse(f.IsDupeAt(-1), 'index -1 is not a dupe');
+   finally
+      f.Free;
+   end;
+end;
+
+(* THE SCP WINDOW SHOWS ONLY WHAT FITS (LimitToVisible). A call it refuses must
+  leave the cells already there as they were -- and, under -Checked, must not
+  leak the cell the grid was handed. *)
+procedure TFlowGridCellTests.Test_SCP_ACallPastCapacityIsRefused;
+var
+   f: TfrmMaster;
+   i, cap: integer;
+begin
+   BeginTest('SCP window: a call past what fits is refused and the rest are kept');
+   InitWidgetSet;
+   f := TfrmMaster.Create(nil);
+   try
+      cap := f.Calls.Capacity;
+      CheckTrue(cap > 0, 'the designed window shows no cells');
+      f.Calls.BeginRebuild;
+      for i := 0 to cap - 1 do
+         begin
+         CheckTrue(f.AddCall('W' + IntToStr(i), Odd(i)), 'cell ' + IntToStr(i) + ' fits');
+         end;
+      CheckFalse(f.AddCall('OVERFLOW', True), 'a call past capacity was added');
+      CheckFalse(f.AddCall('OVERFLOW2', False), 'a second call past capacity was added');
+      f.Calls.EndRebuild;
+
+      CheckEquals(cap, f.Calls.Count, 'cell count');
+      for i := 0 to cap - 1 do
+         begin
+         CheckEquals('W' + IntToStr(i), f.Calls.TextAt(i), 'call ' + IntToStr(i));
+         CheckTrue(Odd(i) = f.IsDupeAt(i), 'dupe flag ' + IntToStr(i));
+         end;
+   finally
+      f.Free;
+   end;
+end;
+
 procedure TFlowGridCellTests.RunAllTests;
 begin
    Test_DupeSheet_EveryCallKeepsItsDistrict;
    Test_DupeSheet_ARebuildReplacesTheCells;
    Test_DupeSheet_ACellPastTheEndHasNoDistrict;
+   Test_SCP_EveryCallKeepsItsDupeFlag;
+   Test_SCP_ACallPastCapacityIsRefused;
 end;
 
 end.
