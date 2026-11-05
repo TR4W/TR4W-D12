@@ -1,0 +1,46 @@
+                 ZONES WORKED - WITH CALL OF FIRST STATION WORKED
+
+                                CQ WORLDWIDE SSB
+
+Zone   160         80          40          20          15          10
+---- --------    --------    --------    --------    --------    --------
+1                                                                KL5DX      
+2                                                                           
+3                                                                           
+4                                        XL3T                               
+5                                        TO2M                    K1KP       
+6                                                                XE1CKJ     
+7                                        TI1T        5K0UA       TI7W       
+8                                        VP2MPN      VP2MPN      J62K       
+9                                        PJ4K        PJ4K        PJ4K       
+10                                                                          
+11                                       PP4T                               
+12                                                   XQ1KZ       CE2WK      
+13                                       LU3BMS                  LT6T       
+14                           ED5R        GM0V        TO4K        EI7M       
+15                           II2S        IP4X        IB4X        OK7O       
+16                           RU1A                    RU1A                   
+17                                                                          
+18                                                                          
+19                                                                          
+20                                       JY4CI                   LZ9W       
+21                                       7Z7A                               
+22                                                                          
+23                                                                          
+24                                                                          
+25                                                               JS6TSE     
+26                                                                          
+27                                                                          
+28                                                                          
+29                                                                          
+30                                                                          
+31                                                                          
+32                                                                          
+33                                       ED8W        CR3A        EF8R       
+34                                                                          
+35                                                               D4C        
+36                                                                          
+37                                                                          
+38                                                                          
+39                                                                          
+40                                       TF3SG                              

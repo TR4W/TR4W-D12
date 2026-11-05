@@ -83,7 +83,6 @@ type
 type
   CountryMultiplierArray = array [ Band160 .. Band10, 0 .. MaxCountries - 1 ]
      of MultCountryTotalRecordType;
-  CountryMultiplierArrayPointer = ^CountryMultiplierArray;
 
 type
 
@@ -108,7 +107,6 @@ type
   end;
 
   LogHourTotalArray        = array [ 0 .. 49 ] of HourTotalsRecord;
-  LogHourTotalArrayPointer = ^LogHourTotalArray;
 
   (* WHERE THE SUMMARY SHEET'S RECORDS COME FROM: the next record into aQso,
      False at the end -- uLogSource.LogSourceNext's shape, which is what
@@ -218,7 +216,7 @@ var
   PreviewFileNameAddress: string;
   PreviewFileIsCabrillo: boolean;
 
-  CountryMultTotals: CountryMultiplierArrayPointer;
+  CountryMultTotals: CountryMultiplierArray;  (* the reports' tally -- a module array, zeroed by each report's Generate; was a New/Dispose heap block *)
   TotalLogQSOs: Cardinal;
   ReportsFilename: ShortString;
 
@@ -241,7 +239,7 @@ var
   }
   // Header                                : Str80;
 
-  LogHourTotals: LogHourTotalArrayPointer;
+  LogHourTotals: LogHourTotalArray;  (* Score by hour's tally -- zeroed by GenerateAllTotalsPerHour; was a New/Dispose heap block *)
 
   // NumberDates       : integer;
   NumberLogHours: integer;
@@ -1300,12 +1298,10 @@ procedure ScoreByHour;
      Exit;
      end;
   MakeReportFileName( 'HourTotals.txt' );
-  New( LogHourTotals );
   if GenerateAllTotalsPerHour then
      begin
      PrintHourTotals;
      end;
-  Dispose( LogHourTotals );
 
   end;
 
@@ -1321,7 +1317,7 @@ function GenerateAllTotalsPerHour: boolean;
     TempMults: integer;
   begin
   Result := False;
-  FillChar(LogHourTotals^, SizeOf( LogHourTotalArray ), 0);
+  LogHourTotals := Default( LogHourTotalArray );
 
   { Initialize the time on band status }
 
@@ -1369,27 +1365,27 @@ function GenerateAllTotalsPerHour: boolean;
               inc( CurrentHourIndex );
               end;
 
-           LogHourTotals^[ CurrentHourIndex ].HourName :=
+           LogHourTotals[ CurrentHourIndex ].HourName :=
               IntToStr( TempRXData.tSysTime.qtHour );
            LastHourProcessed := TempRXData.tSysTime.qtHour;
            end;
 
         inc( TotalLogQSOs );
 
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ TempRXData.Band,
+        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ TempRXData.Band,
            TempRXData.Mode ] );
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ AllBands,
+        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ AllBands,
            TempRXData.Mode ] );
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ TempRXData.Band, Both ] );
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ AllBands, Both ] );
+        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ TempRXData.Band, Both ] );
+        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ AllBands, Both ] );
 
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
+        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
            TempRXData.Mode ], TempRXData.QSOPoints );
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ AllBands,
+        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ AllBands,
            TempRXData.Mode ], TempRXData.QSOPoints );
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
+        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
            Both ], TempRXData.QSOPoints );
-        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ AllBands, Both ],
+        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ AllBands, Both ],
            TempRXData.QSOPoints );
 
         TempMults := 0;
@@ -1413,13 +1409,13 @@ function GenerateAllTotalsPerHour: boolean;
         if TempMults <> 0 then
           // if (TempRXData.DXMult or TempRXData.DomesticMult or TempRXData.ZoneMult or TempRXData.PrefixMult) then
            begin
-           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ TempRXData.Band,
+           inc( LogHourTotals[ CurrentHourIndex ].Mults[ TempRXData.Band,
               TempRXData.Mode ], TempMults );
-           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ AllBands,
+           inc( LogHourTotals[ CurrentHourIndex ].Mults[ AllBands,
               TempRXData.Mode ], TempMults );
-           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ TempRXData.Band, Both ],
+           inc( LogHourTotals[ CurrentHourIndex ].Mults[ TempRXData.Band, Both ],
               TempMults );
-           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ AllBands, Both ],
+           inc( LogHourTotals[ CurrentHourIndex ].Mults[ AllBands, Both ],
               TempMults );
            end;
 
@@ -1508,7 +1504,7 @@ procedure PrintHourTotals;
      Day2MultTotals[ Band ] := 0;
      end;
 
-  while LogHourTotals^[ HourIndex ].HourName <> '' do
+  while LogHourTotals[ HourIndex ].HourName <> '' do
      begin
      inc( LastHourPrinted );
 
@@ -1518,7 +1514,7 @@ procedure PrintHourTotals;
         LastHourPrinted := 0;
         end;
 
-     Val( LogHourTotals^[ HourIndex ].HourName, ThisHour, Result );
+     Val( LogHourTotals[ HourIndex ].HourName, ThisHour, Result );
 
      if HourIndex = 0 then
         begin
@@ -1561,11 +1557,11 @@ procedure PrintHourTotals;
            end;
         end;
 
-     TotalContacts := TotalContacts + LogHourTotals^[ HourIndex ].QSOs
+     TotalContacts := TotalContacts + LogHourTotals[ HourIndex ].QSOs
         [ AllBands, Both ];
-     totalMults := totalMults + LogHourTotals^[ HourIndex ].Mults
+     totalMults := totalMults + LogHourTotals[ HourIndex ].Mults
         [ AllBands, Both ];
-     TotalQSOPoints := TotalQSOPoints + LogHourTotals^[ HourIndex ].QSOPoints
+     TotalQSOPoints := TotalQSOPoints + LogHourTotals[ HourIndex ].QSOPoints
         [ AllBands, Both ];
 
      if DoingDay1 then
@@ -1573,24 +1569,24 @@ procedure PrintHourTotals;
 
         for TempBand := Band160 to Band10 do
            begin
-           Day1QSOTotals[ TempBand ] := Day1QSOTotals[ TempBand ] + LogHourTotals^
+           Day1QSOTotals[ TempBand ] := Day1QSOTotals[ TempBand ] + LogHourTotals
               [ HourIndex ].QSOs[ TempBand, Both ];
            Day1MultTotals[ TempBand ] := Day1MultTotals[ TempBand ] +
-              LogHourTotals^[ HourIndex ].Mults[ TempBand, Both ];
+              LogHourTotals[ HourIndex ].Mults[ TempBand, Both ];
            end;
         end
      else
         begin
         for TempBand := Band160 to Band10 do
            begin
-           Day2QSOTotals[ TempBand ] := Day2QSOTotals[ TempBand ] + LogHourTotals^
+           Day2QSOTotals[ TempBand ] := Day2QSOTotals[ TempBand ] + LogHourTotals
               [ HourIndex ].QSOs[ TempBand, Both ];
            Day2MultTotals[ TempBand ] := Day2MultTotals[ TempBand ] +
-              LogHourTotals^[ HourIndex ].Mults[ TempBand, Both ];
+              LogHourTotals[ HourIndex ].Mults[ TempBand, Both ];
            end;
         end;
 
-     with LogHourTotals^[ HourIndex ] do
+     with LogHourTotals[ HourIndex ] do
         begin
         Write( FileWrite, ThisHour:2 );
 
@@ -1639,7 +1635,7 @@ procedure PrintHourTotals;
            end;
         end;
 
-     Val( LogHourTotals^[ HourIndex ].HourName, LastHourPrinted, Result );
+     Val( LogHourTotals[ HourIndex ].HourName, LastHourPrinted, Result );
      inc( HourIndex );
      end;
 
@@ -1745,8 +1741,8 @@ procedure FinishOutLastHour;
         begin
         for Minute := LastMinute + 1 to 59 do
            begin
-           inc( LogHourTotals^[ LastHourIndex ].Minutes[ LastBand, Both ] );
-           inc( LogHourTotals^[ LastHourIndex ].Minutes[ AllBands, Both ] );
+           inc( LogHourTotals[ LastHourIndex ].Minutes[ LastBand, Both ] );
+           inc( LogHourTotals[ LastHourIndex ].Minutes[ AllBands, Both ] );
            end;
         end;
 
@@ -1774,24 +1770,24 @@ procedure CheckTimeOnByBand( LastHour: integer );
 
      for Band := Band160 to BandLight do
         begin
-        HourTotal := HourTotal + LogHourTotals^[ HourIndex ].Minutes
+        HourTotal := HourTotal + LogHourTotals[ HourIndex ].Minutes
            [ Band, Both ];
 
-        if LogHourTotals^[ HourIndex ].Minutes[ Band, Both ] > BiggestBandTotal
+        if LogHourTotals[ HourIndex ].Minutes[ Band, Both ] > BiggestBandTotal
         then
            begin
-           BiggestBandTotal := LogHourTotals^[ HourIndex ].Minutes[ Band, Both ];
+           BiggestBandTotal := LogHourTotals[ HourIndex ].Minutes[ Band, Both ];
            BiggestBand      := Band;
            end;
         end;
 
-     Correction := LogHourTotals^[ HourIndex ].Minutes[ AllBands, Both ] -
+     Correction := LogHourTotals[ HourIndex ].Minutes[ AllBands, Both ] -
         HourTotal;
 
      if Correction <> 0 then
         begin
-        LogHourTotals^[ HourIndex ].Minutes[ BiggestBand, Both ] :=
-           LogHourTotals^[ HourIndex ].Minutes[ BiggestBand, Both ] + Correction;
+        LogHourTotals[ HourIndex ].Minutes[ BiggestBand, Both ] :=
+           LogHourTotals[ HourIndex ].Minutes[ BiggestBand, Both ] + Correction;
         end;
 
      end;
@@ -1981,14 +1977,12 @@ procedure QSOsByCountryByBand;
   // WriteLnCenter('SHOW TOTAL QSOs BY COUNTRY BY BAND');
   // WriteLn('This report will show the number of QSOs made in each country by band');
 
-  New( CountryMultTotals );
   // GenerateCountryMultiplierTotals;
   // if not CheckLog then exit;
   if GenerateCountryMultiplierTotals then
      begin
      PrintQSOsByCountry;
      end;
-  Dispose( CountryMultTotals );
   // windows.FreeResource()
 
   end;
@@ -2003,7 +1997,7 @@ function GenerateCountryMultiplierTotals: boolean;
     1;
   begin
   GenerateCountryMultiplierTotals := False;
-  FillChar(CountryMultTotals^, SizeOf( CountryMultiplierArray ), 0);
+  CountryMultTotals := Default( CountryMultiplierArray );
   if not LogSourceOpen then
      begin
      Exit;
@@ -2019,16 +2013,16 @@ function GenerateCountryMultiplierTotals: boolean;
         if TempRXData.QTH.Country <= MaxCountries - 1 then
           if TempRXData.QTH.Country > 0 then
              begin
-             if CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
+             if CountryMultTotals[ TempRXData.Band, TempRXData.QTH.Country ]
                 .TotalQSOs = 0 then
                 begin
-                CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
+                CountryMultTotals[ TempRXData.Band, TempRXData.QTH.Country ]
                    .FirstCall := TempRXData.Callsign;
                 end;
 
              if TempRXData.QTH.Country <> MAXWORD { >= 0 } then
                 begin
-                inc( CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
+                inc( CountryMultTotals[ TempRXData.Band, TempRXData.QTH.Country ]
                    .TotalQSOs );
                 end;
              end;
@@ -2071,12 +2065,12 @@ procedure PrintQSOsByCountry;
   while CountryIndex < CTY.ctyNumberCountries do
      begin
 
-     if ( CountryMultTotals^[ Band160, CountryIndex ].TotalQSOs > 0 ) or
-        ( CountryMultTotals^[ Band80, CountryIndex ].TotalQSOs > 0 ) or
-        ( CountryMultTotals^[ Band40, CountryIndex ].TotalQSOs > 0 ) or
-        ( CountryMultTotals^[ Band20, CountryIndex ].TotalQSOs > 0 ) or
-        ( CountryMultTotals^[ Band15, CountryIndex ].TotalQSOs > 0 ) or
-        ( CountryMultTotals^[ Band10, CountryIndex ].TotalQSOs > 0 ) then
+     if ( CountryMultTotals[ Band160, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals[ Band80, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals[ Band40, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals[ Band20, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals[ Band15, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals[ Band10, CountryIndex ].TotalQSOs > 0 ) then
 
         begin
         inc( Count );
@@ -2095,16 +2089,16 @@ procedure PrintQSOsByCountry;
 
         for TempBand := Band160 to Band10 do
            begin
-           if CountryMultTotals^[ TempBand, CountryIndex ].TotalQSOs > 0 then
+           if CountryMultTotals[ TempBand, CountryIndex ].TotalQSOs > 0 then
               begin
-              Write( FileWrite, CountryMultTotals^[ TempBand, CountryIndex ]
+              Write( FileWrite, CountryMultTotals[ TempBand, CountryIndex ]
                  .TotalQSOs:5 )
               end
            else
               begin
               Write( FileWrite, '    -' );
               end;
-           TotalCountryQSOs := TotalCountryQSOs + CountryMultTotals^
+           TotalCountryQSOs := TotalCountryQSOs + CountryMultTotals
               [ TempBand, CountryIndex ].TotalQSOs;
            end;
 
@@ -3431,12 +3425,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
     procedure tFirstCallInEachCountry;
       begin
-      New( CountryMultTotals );
       if GenerateCountryMultiplierTotals then
          begin
          PrintFirstCountryMultiplierCallsigns;
          end;
-      Dispose( CountryMultTotals );
       end;
 
     procedure PrintFirstCountryMultiplierCallsigns;
@@ -3457,12 +3449,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       while CountryIndex < CTY.ctyNumberCountries do
          begin
 
-         if ( CountryMultTotals^[ Band160, CountryIndex ].TotalQSOs > 0 ) or
-            ( CountryMultTotals^[ Band80, CountryIndex ].TotalQSOs > 0 ) or
-            ( CountryMultTotals^[ Band40, CountryIndex ].TotalQSOs > 0 ) or
-            ( CountryMultTotals^[ Band20, CountryIndex ].TotalQSOs > 0 ) or
-            ( CountryMultTotals^[ Band15, CountryIndex ].TotalQSOs > 0 ) or
-            ( CountryMultTotals^[ Band10, CountryIndex ].TotalQSOs > 0 ) then
+         if ( CountryMultTotals[ Band160, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals[ Band80, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals[ Band40, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals[ Band20, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals[ Band15, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals[ Band10, CountryIndex ].TotalQSOs > 0 ) then
 
             begin
 
@@ -3511,12 +3503,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          WriteLn( FileWrite,
             sysutils.Format( '%-6s %-11s %-11s %-11s %-11s %-11s %-11s',
             [ Prefix,
-            CountryMultTotals^[ Band160, CountryIndex ].FirstCall,
-            CountryMultTotals^[ Band80,  CountryIndex ].FirstCall,
-            CountryMultTotals^[ Band40,  CountryIndex ].FirstCall,
-            CountryMultTotals^[ Band20,  CountryIndex ].FirstCall,
-            CountryMultTotals^[ Band15,  CountryIndex ].FirstCall,
-            CountryMultTotals^[ Band10,  CountryIndex ].FirstCall ] ) );
+            CountryMultTotals[ Band160, CountryIndex ].FirstCall,
+            CountryMultTotals[ Band80,  CountryIndex ].FirstCall,
+            CountryMultTotals[ Band40,  CountryIndex ].FirstCall,
+            CountryMultTotals[ Band20,  CountryIndex ].FirstCall,
+            CountryMultTotals[ Band15,  CountryIndex ].FirstCall,
+            CountryMultTotals[ Band10,  CountryIndex ].FirstCall ] ) );
             inc( Lines );
             end;
 
@@ -3531,14 +3523,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
     procedure tFirstCallInEachZone;
       begin
-      New( CountryMultTotals );
       MakeReportFileName( 'FirstCallInEachZone.txt' );
       if GenerateZoneMultiplierTotals then
          begin
          PrintFirstZoneMultiplierCallsigns;
          end;
 
-      Dispose( CountryMultTotals );
 
       end;
 
@@ -3553,7 +3543,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         1;
       begin
       GenerateZoneMultiplierTotals := False;
-      FillChar(CountryMultTotals^, SizeOf( CountryMultiplierArray ), 0);
+      CountryMultTotals := Default( CountryMultiplierArray );
       if not LogSourceOpen then
          begin
          Exit;
@@ -3569,15 +3559,15 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             if ( TempRXData.Zone > 0 ) and ( TempRXData.Zone <= 100 ) then
                begin
                if TempRXData.ZoneMult then
-                 if CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ]
+                 if CountryMultTotals[ TempRXData.Band, TempRXData.Zone ]
                     .TotalQSOs = 0 then
                     begin
-                    CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ].FirstCall
+                    CountryMultTotals[ TempRXData.Band, TempRXData.Zone ].FirstCall
                        := TempRXData.Callsign;
                     end;
 
                // if TempRXData.QTH.Country >= 0 then
-               inc( CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ]
+               inc( CountryMultTotals[ TempRXData.Band, TempRXData.Zone ]
                   .TotalQSOs );
                end;
             end;
@@ -3614,7 +3604,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       for Band        := Band160 to Band10 do
          begin
          for ZoneIndex := 41 to 100 do
-           if CountryMultTotals^[ Band, ZoneIndex ].TotalQSOs > 0 then
+           if CountryMultTotals[ Band, ZoneIndex ].TotalQSOs > 0 then
               begin
               MaxNumberOfZones := ZoneIndex;
               end;
@@ -3654,12 +3644,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          TempString := sysutils.Format
             ( '%-4u %-11s %-11s %-11s %-11s %-11s %-11s',
             [ ZoneIndex,
-            CountryMultTotals^[ Band160, ZoneIndex ].FirstCall,
-            CountryMultTotals^[ Band80,  ZoneIndex ].FirstCall,
-            CountryMultTotals^[ Band40,  ZoneIndex ].FirstCall,
-            CountryMultTotals^[ Band20,  ZoneIndex ].FirstCall,
-            CountryMultTotals^[ Band15,  ZoneIndex ].FirstCall,
-            CountryMultTotals^[ Band10,  ZoneIndex ].FirstCall ] );
+            CountryMultTotals[ Band160, ZoneIndex ].FirstCall,
+            CountryMultTotals[ Band80,  ZoneIndex ].FirstCall,
+            CountryMultTotals[ Band40,  ZoneIndex ].FirstCall,
+            CountryMultTotals[ Band20,  ZoneIndex ].FirstCall,
+            CountryMultTotals[ Band15,  ZoneIndex ].FirstCall,
+            CountryMultTotals[ Band10,  ZoneIndex ].FirstCall ] );
          WriteLn( FileWrite, TempString );
          inc( Lines );
          end;

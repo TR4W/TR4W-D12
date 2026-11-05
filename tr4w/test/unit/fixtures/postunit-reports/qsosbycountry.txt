@@ -1,0 +1,57 @@
+
+                                CQ WORLDWIDE SSB
+                            QSOs MADE IN EACH COUNTRY
+
+
+     Country               Prefix   160   80   40   20   15   10  Total  Percent
+     -------               ------  ---- ---- ---- ---- ---- ----  -----  -------
+   1 Barbados                8P       -    -    -    1    -    -      1    0.99
+   2 Croatia                 9A       -    -    1    -    -    -      1    0.99
+   3 Trinidad & Tobago       9Y       -    -    -    -    -    1      1    0.99
+   4 Chile                   CE       -    -    -    -    1    1      2    1.98
+   5 Portugal                CT       -    -    -    1    -    1      2    1.98
+   6 Madeira Islands         CT3      -    -    -    2    1    -      3    2.97
+   7 Azores                  CU       -    -    -    1    -    -      1    0.99
+   8 Cabo Verde              D4       -    -    -    -    -    1      1    0.99
+   9 Fed. Rep. of Germany    DL       -    -    2    -    -    3      5    4.95
+  10 Spain                   EA       -    -    1    3    1    2      7    6.93
+  11 Canary Islands          EA8      -    -    -    2    -    1      3    2.97
+  12 Ireland                 EI       -    -    -    -    -    1      1    0.99
+  13 France                  F        -    -    -    3    1    1      5    4.95
+  14 French Guiana           FY       -    -    -    -    -    1      1    0.99
+  15 England                 G        -    -    -    -    -    3      3    2.97
+  16 Northern Ireland        GI       -    -    -    -    -    1      1    0.99
+  17 Scotland                GM       -    -    -    1    -    2      3    2.97
+  18 San Andres & Providencia HK0/a    -    -    -    -    1    1      2    1.98
+  19 Saudi Arabia            HZ       -    -    -    1    -    -      1    0.99
+  20 Italy                   I        -    -    3    2    1    2      8    7.92
+  21 St. Lucia               J6       -    -    -    -    -    1      1    0.99
+  22 Japan                   JA       -    -    -    -    -    1      1    0.99
+  23 Jordan                  JY       -    -    -    1    -    -      1    0.99
+  24 United States           K        -    -    -    -    -    1      1    0.99
+  25 Alaska                  KL       -    -    -    -    -    1      1    0.99
+  26 US Virgin Islands       KP2      -    -    -    -    -    1      1    0.99
+  27 Puerto Rico             KP4      -    -    -    2    -    -      2    1.98
+  28 Argentina               LU       -    -    -    1    -    1      2    1.98
+  29 Bulgaria                LZ       -    -    -    -    -    1      1    0.99
+  30 Czech Republic          OK       -    -    -    -    -    1      1    0.99
+  31 Slovak Republic         OM       -    -    1    -    -    -      1    0.99
+  32 Belgium                 ON       -    -    -    -    -    1      1    0.99
+  33 Faroe Islands           OY       -    -    -    -    -    1      1    0.99
+  34 Aruba                   P4       -    -    -    -    -    1      1    0.99
+  35 Netherlands             PA       -    -    -    -    1    1      2    1.98
+  36 Bonaire                 PJ4      -    -    -    1    1    1      3    2.97
+  37 Saba & St. Eustatius    PJ5      -    -    -    1    -    -      1    0.99
+  38 Brazil                  PY       -    -    -    4    -    -      4    3.96
+  39 Suriname                PZ       -    -    -    -    -    1      1    0.99
+  40 Sweden                  SM       -    -    -    1    -    -      1    0.99
+  41 Poland                  SP       -    -    1    -    -    -      1    0.99
+  42 Iceland                 TF       -    -    -    1    -    -      1    0.99
+  43 Costa Rica              TI       -    -    -    1    -    2      3    2.97
+  44 European Russia         UA       -    -    2    -    1    -      3    2.97
+  45 Antigua & Barbuda       V2       -    -    -    1    -    1      2    1.98
+  46 St. Kitts & Nevis       V4       -    -    -    -    -    1      1    0.99
+  47 Canada                  VE       -    -    -    4    -    -      4    3.96
+  48 Montserrat              VP2M     -    -    -    1    1    1      3    2.97
+  49 British Virgin Islands  VP2V     -    -    -    -    -    1      1    0.99
+  50 Mexico                  XE       -    -    -    -    -    1      1    0.99

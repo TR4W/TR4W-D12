@@ -1,0 +1,57 @@
+               COUNTRIES WORKED - WITH CALL OF FIRST STATION WORKED
+
+                                CQ WORLDWIDE SSB
+
+Prefix   160         80          40          20          15          10
+------ --------    --------    --------    --------    --------    --------
+8P                                         8P5A                               
+9A                             9A7A                                           
+9Y                                                                 9Z4BM      
+CE                                                     XQ1KZ       CE2WK      
+CT                                         CR6K                    CR6P       
+CT3                                        CQ9A        CR3A                   
+CU                                         CR2M                               
+D4                                                                 D4C        
+DL                             DL2CC                               DR1A       
+EA                             ED5R        EB5A        EA3AR       ED3X       
+EA8                                        ED8W                    EF8R       
+EI                                                                 EI7M       
+F                                          TO2M        TO4K        F5RAG      
+FY                                                                 FY5KE      
+G                                                                  M6C        
+GI                                                                 MI1M       
+GM                                         GM0V                    GM2T       
+HK0/a                                                  5K0UA       5K0UA      
+HZ                                         7Z7A                               
+I                              II2S        IP4X        IB4X        IO6T       
+J6                                                                 J62K       
+JA                                                                 JS6TSE     
+JY                                         JY4CI                              
+K                                                                  K1KP       
+KL                                                                 KL5DX      
+KP2                                                                KP2B       
+KP4                                        NP4VM                              
+LU                                         LU3BMS                  LT6T       
+LZ                                                                 LZ9W       
+OK                                                                 OK7O       
+OM                             OM7M                                           
+ON                                                                 OT8M       
+OY                                                                 OY1R       
+P4                                                                 P49Y       
+PA                                                     PA1T        PI4COM     
+PJ4                                        PJ4K        PJ4K        PJ4K       
+PJ5                                        PJ6Y                               
+PY                                         PP4T                               
+PZ                                                                 PZ5DX      
+SM                                         SJ2W                               
+SP                             SP8R                                           
+TF                                         TF3SG                              
+TI                                         TI1T                    TI7W       
+UA                             RU1A                    RU1A                   
+V2                                         V26B                    V26B       
+V4                                                                 V47T       
+VE                                         VA1EET                             
+VP2M                                       VP2MPN      VP2MPN      VP2MPN     
+VP2V                                                               VP2VRX     
+XE                                                                 XE1CKJ     
+ 

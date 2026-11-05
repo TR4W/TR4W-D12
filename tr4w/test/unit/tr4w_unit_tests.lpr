@@ -681,6 +681,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestBackupCopier    in 'uTestBackupCopier.pas',
    uQsoMyFacts          in '..\..\src\domain\uQsoMyFacts.pas',
    uTestLogMyFacts      in 'uTestLogMyFacts.pas',
+   uTestPostUnitReports in 'uTestPostUnitReports.pas',
    uTestScoringMyFacts  in 'uTestScoringMyFacts.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
@@ -1144,6 +1145,7 @@ begin
    RegisterSuite(TLogImportTests.Create('LogImport'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
+   RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));
    RegisterSuite(TScoringMyFactsTests.Create('ScoringMyFacts'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
