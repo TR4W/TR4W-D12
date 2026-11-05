@@ -304,6 +304,7 @@ function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcast
 implementation
 
 uses
+   Log4D,                // the one line a suppressed batch save reports
    TypInfo,              // GetEnumValue -- StartupLogLevel reads a streamed enum name
    uAppPaths;            // SettingsFileOverride -- the --settings switch, parsed once
 
@@ -403,6 +404,21 @@ var
    dir: string;
    i: integer;
 begin
+   (* A BATCH RUN NEVER WRITES SETTINGS (2026-11-05). Startup logs
+     "settings are READ-ONLY for this run" for /EXPORT, and this is the ONE
+     writer, so this is where the promise is kept. Merging the external
+     logger definitions (StartExternalLoggerFromSettings seeds them on a file
+     that predates them) rewrote the corpus's TRACKED fixture, passed through
+     --settings, in 1406 lines -- a fixture the program only reads must stay
+     byte-identical. The in-memory store the caller holds is unchanged, so
+     the run itself behaves as if the save had happened. *)
+   if tSilentExport then
+      begin
+      TLogLogger.GetLogger('uTR4WConfigFile').Info(
+         '[Config] batch /EXPORT: not writing ' + aFileName);
+      Exit;
+      end;
+
    dir := ExtractFilePath(aFileName);
    if (dir <> '') and (not DirectoryExists(dir)) then
       begin

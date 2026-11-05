@@ -61,6 +61,7 @@ EXE="factory-run.exe"
 WORK="factorytest"
 
 . "$CORPUS/corpus-lib.sh"
+corpus_fixture_guard_start
 
 if [ ! -f "$EXE_SRC" ]; then
    echo "test-contest-factory: no app at $EXE_SRC -- build first" >&2
@@ -153,6 +154,8 @@ done
 rm -f "$WORK".* "$EXE"
 
 echo "=== factory vs frozen legacy: $pass identical, $fail differing ==="
+# The app only READS the settings fixture; a run that rewrote it fails.
+corpus_fixture_guard_check || exit 1
 if [ $fail -ne 0 ]; then
    echo "    differing:$failed"
    exit 1

@@ -44,7 +44,8 @@ interface
 
 uses
    SysUtils, Classes, uJSON, uFileText,
-   uTR4WTestFramework, uRadioConfigStore, uKeyerConfigStore, uTR4WConfigFile;
+   uTR4WTestFramework, uRadioConfigStore, uKeyerConfigStore, uTR4WConfigFile,
+   VC;                   // tSilentExport
 
 type
    TTR4WConfigFileTests = class(TTestCase)
@@ -60,6 +61,7 @@ type
       procedure Test_MissingFileIsReported;
       procedure Test_MalformedFileIsReportedNotSilentlyEmpty;
       procedure Test_SaveCreatesTheDirectory;
+      procedure Test_ABatchRunNeverWritesSettings;
       procedure Test_EveryHeaderSectionSurvivesARoundTrip;
       procedure Test_HeaderSectionsAreIndependent;
       procedure Test_ClearEmptiesTheHeaders;
@@ -270,6 +272,33 @@ begin
    end;
 end;
 
+(* A headless /EXPORT promises "settings are READ-ONLY for this run", and
+  SaveConfig is the one writer. The corpus passes its TRACKED fixture through
+  --settings; a save from a batch run rewrote it in 1406 lines (2026-11-05). *)
+procedure TTR4WConfigFileTests.Test_ABatchRunNeverWritesSettings;
+var
+   radios: TRadioConfigStore;
+   fn: string;
+   saved: boolean;
+begin
+   BeginTest('Test_ABatchRunNeverWritesSettings');
+   radios := TRadioConfigStore.Create;
+   saved := tSilentExport;
+   try
+      fn := TempFileName;
+      FTempFiles.Add(fn);
+      tSilentExport := True;
+      SaveConfig(fn, radios, nil);
+      CheckFalse(FileTextExists(fn), 'a batch run wrote no settings file');
+      tSilentExport := False;
+      SaveConfig(fn, radios, nil);
+      CheckTrue(FileTextExists(fn), 'an interactive run still saves');
+   finally
+      tSilentExport := saved;
+      radios.Free;
+   end;
+end;
+
 // EXHAUSTIVE over HEADER_SECTIONS, not over the two names known today.  A new
 // header section added to that table without a save/load path would otherwise
 // read back empty -- and an empty header is a LEGAL value, so the export would
@@ -369,6 +398,7 @@ begin
    Test_MissingFileIsReported;
    Test_MalformedFileIsReportedNotSilentlyEmpty;
    Test_SaveCreatesTheDirectory;
+   Test_ABatchRunNeverWritesSettings;
    Test_EveryHeaderSectionSurvivesARoundTrip;
    Test_HeaderSectionsAreIndependent;
    Test_ClearEmptiesTheHeaders;

@@ -34,6 +34,7 @@
 set -u
 here="tr4w/test/corpus"
 . "$here/corpus-lib.sh"
+corpus_fixture_guard_start
 if ! tr4w_refuse_if_running "corpus"; then
    exit 1
 fi
@@ -238,6 +239,10 @@ for m in "$here"/*/manifest.json; do
    n=$((n+1))
 done
 echo "exported $n set(s)"; echo
+
+# The app only READS the settings fixture; a run that rewrote it fails here,
+# naming the file (see corpus_fixture_guard_start in corpus-lib.sh).
+corpus_fixture_guard_check || exit 1
 
 if [ -z "$ONLY" ]; then
    GOLDEN_STRICT=1 bash "$here/pull-d12-candidates.sh"

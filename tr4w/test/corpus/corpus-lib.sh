@@ -207,3 +207,35 @@ corpus_cleanup_on_exit(){
 corpus_settings_win(){
    cygpath -d "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/settings/tr4w.json"
 }
+
+# corpus_fixture_guard_start / corpus_fixture_guard_check
+# THE FIXTURE IS READ BY THE APP AND MUST COME BACK BYTE-IDENTICAL.
+#
+# Found 2026-11-05: the external-logger merge made a headless /EXPORT save the
+# settings file, and the TRACKED fixture was rewritten in 1406 lines by every
+# corpus run. Nothing failed, so it would have been committed by accident, or
+# worse, the next run would have read the rewritten file. A run that changes
+# its own input is not the same oracle the second time.
+#
+# A checksum before and after rather than `git diff`: it names the run that
+# did it, and it does not fail on an edit the developer has not yet committed.
+# Start is called before the first app run; check after the last, and it
+# FAILS (returns 1) naming the file. It does not restore the file.
+corpus_fixture_guard_start(){
+   CORPUS_FIXTURE_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/settings/tr4w.json"
+   CORPUS_FIXTURE_SUM_BEFORE=$(sha256sum "$CORPUS_FIXTURE_FILE" | cut -d' ' -f1)
+}
+corpus_fixture_guard_check(){
+   local after
+   after=$(sha256sum "$CORPUS_FIXTURE_FILE" 2>/dev/null | cut -d' ' -f1)
+   if [ -z "$CORPUS_FIXTURE_SUM_BEFORE" ] || [ "$after" != "$CORPUS_FIXTURE_SUM_BEFORE" ]; then
+      echo
+      echo "=== FIXTURE DIRTIED: the run changed $CORPUS_FIXTURE_FILE ==="
+      echo "    The app was started with --settings on this file and must only"
+      echo "    READ it. Something saved settings in a headless run (look for"
+      echo "    SaveConfig / a store save not guarded by tSilentExport)."
+      echo "    Restore it with: git checkout -- tr4w/test/corpus/settings/"
+      return 1
+   fi
+   return 0
+}
