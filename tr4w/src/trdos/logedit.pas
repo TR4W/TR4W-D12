@@ -2173,9 +2173,17 @@ begin
      begin
      Exit;
      end;
+  (* A BEACON HAS NO SECTION OF OURS -- NY4I, 2026-11-05 -- and that includes
+    one the call history or the log holds an entry for (W6WX is both the
+    NCDXF beacon on 14100 and a contest station). Asked before anything. *)
+  if SpotCommentIsABeacon(Comment) then
+     begin
+     Exit;
+     end;
   (* A DX STATION IN A CONTEST WITH DOMESTIC COUNTRIES (ARRL 10 and 160, Field
-    Day) sends no section, and a word of its comment is not one. An empty list
-    is a contest that names none -- the state QSO parties -- and asks nothing. *)
+    Day, the QSO parties' own lists -- ContestSetUpStatesDomesticCountries)
+    sends no section, and a word of its comment is not one. An EMPTY list is a
+    contest that states none (a DX contest) and is not asked about. *)
   if (DomesticCountries.Count > 0) and (not DomesticCountryCall(Call)) then
      begin
      Exit;

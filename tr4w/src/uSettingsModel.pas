@@ -943,12 +943,12 @@ type
    (*
      THE DX CLUSTER, as this station connects to it.
 
-     TWO SETTINGS, AND THE THIRD IS DELIBERATELY ABSENT. CONNECTION COMMAND
-     is not here: the cluster LIBRARY owns it -- one cluster, one connect
-     command, written by the cluster editor and applied by
-     ApplyActiveCluster -- so moving it is a merge of two models rather than
-     a migration of one. These two have no such second owner; nothing but
-     the config array ever wrote them.
+     CONNECTION COMMAND IS DELIBERATELY ABSENT. It is not here: the cluster
+     LIBRARY owns it -- one cluster, one connect command, written by the
+     cluster editor and applied by ApplyActiveCluster -- so moving it is a
+     merge of two models rather than a migration of one. The first two
+     settings below have no such second owner; nothing but the config array
+     ever wrote them. SpotCommentMultiplier is new (issue 83).
    *)
    TClusterSettings = class(TSettingsGroup)
    private
@@ -1010,7 +1010,7 @@ type
      THE TELNET CLUSTER HOST. One setting, and TELNET SERVER derives exactly
      from Telnet.Server.
 
-     NOT TClusterSettings, which holds the two policy flags. This is the
+     NOT TClusterSettings, which holds the policy flags. This is the
      host itself, and it is the one piece of cluster configuration the
      cluster library will eventually claim -- keeping it in its own group
      makes that a move of one property rather than an unpicking.

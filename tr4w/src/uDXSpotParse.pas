@@ -199,6 +199,12 @@ type
   dB 25 WPM CQ         NFL 0132Z` the section ends on the last column. *)
 function SpotNotesText(const Spot: TSpotRecord): AnsiString;
 
+(* IS THIS COMMENT A BEACON'S -- a word `NCDXF`, `BEACON` or `BCN`, in any
+  case. SpotCommentCandidates gives a beacon none; this is the test on its
+  own, for a caller that must refuse a beacon BEFORE it consults anything else
+  about the call (the call history can hold the beacon's call: W6WX). *)
+function SpotCommentIsABeacon(const Comment: AnsiString): boolean;
+
 (* THE WORDS OF A SPOT COMMENT THAT MAY NAME A SECTION OR STATE, in the order
   they are to be tried -- the tokenizer behind the cluster-comment multiplier
   hint (issue 83). It knows no contest: whether a word IS a section is the
@@ -1282,6 +1288,33 @@ begin
    Result := hasLetter;
 end;
 
+function SpotCommentIsABeacon(const Comment: AnsiString): boolean;
+var
+   i: integer;
+   start: integer;
+begin
+   Result := False;
+   i := 1;
+   while i <= Length(Comment) do
+      begin
+      if Comment[i] in [' ', #9, #0] then
+         begin
+         Inc(i);
+         Continue;
+         end;
+      start := i;
+      while (i <= Length(Comment)) and (not (Comment[i] in [' ', #9, #0])) do
+         begin
+         Inc(i);
+         end;
+      if WordIsOneOf(UpperCase(Copy(Comment, start, i - start)), SPOT_BEACON_WORDS) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 function SpotCommentCandidates(const Comment: AnsiString;
                                out Candidates: TSpotCommentCandidates): integer;
 var
@@ -1321,6 +1354,11 @@ begin
    SetLength(plain, 0);
    SetLength(extension, 0);
    Result := 0;
+   (* A beacon names no section of ours. *)
+   if SpotCommentIsABeacon(Comment) then
+      begin
+      Exit;
+      end;
 
    i := 1;
    while i <= Length(Comment) do
@@ -1336,11 +1374,6 @@ begin
          Inc(i);
          end;
       token := Copy(Comment, start, i - start);
-      if WordIsOneOf(UpperCase(token), SPOT_BEACON_WORDS) then
-         begin
-         (* A beacon names no section of ours. *)
-         Exit;
-         end;
       Take(token);
       end;
 

@@ -68,6 +68,7 @@ type
       procedure Test_Mult_SpotRoutineAndTheSetting;
       procedure Test_Mult_CallHistoryOverridesADifferingComment;
       procedure Test_Key_DomesticKeyOfQTHIsTheListsSpelling;
+      procedure Test_Cost_HintForAWholeBandMapIsCheap;
    end;
 
 implementation
@@ -395,6 +396,13 @@ begin
       CheckEquals('', SpotSectionHint('W4EDE', 'CW 10 dB 21 WPM CQ           <AC0C-1-#>'), 'no section');
       CheckEquals('', SpotSectionHint('W4EDE', 'or in'), 'prose in lower case');
       CheckEquals('', SpotSectionHint('W6WX', 'CW 24 dB 22 WPM NCDXF B  SCV'), 'a beacon, whose section is its own');
+      (* A BEACON'S CALL THE PROGRAM KNOWS IS STILL A BEACON: W6WX is the NCDXF
+         beacon on 14100 and a contest station, so it can be in the history. *)
+      CallsignsList.AddIniitialExchange('W6WX', '18 SCV');
+      CheckEquals('', SpotSectionHint('W6WX', 'CW 24 dB 22 WPM NCDXF B  SCV'), 'a beacon with call history');
+      CheckEquals('SCV', UpperCase(SpotSectionHint('W6WX', 'CW 24 dB 22 WPM CQ')), 'the same call, not a beacon');
+      CheckTrue(SpotCommentIsABeacon('beacon'), 'the beacon test on its own');
+      CheckFalse(SpotCommentIsABeacon('CW 24 dB 22 WPM CQ SCV'), 'and not a beacon');
       CheckEquals('', SpotSectionHint('W4EDE', 'CW 9 DB 21 WPM CQ       NY-NLI'), 'NY-NLI is one unknown word');
       CheckEquals('', SpotSectionHint('W4EDE', ''), 'no comment');
       (* A DX STATION SENDS NO SECTION, whatever its comment says. *)
@@ -536,6 +544,40 @@ begin
    end;
 end;
 
+procedure TSpotCommentMultiplierTests.Test_Cost_HintForAWholeBandMapIsCheap;
+var
+   i: integer;
+   started: QWord;
+   elapsed: QWord;
+   spot: TSpotRecord;
+begin
+   BeginTest('Test_Cost_HintForAWholeBandMapIsCheap');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      Settings.Cluster.SpotCommentMultiplier := True;
+      CheckTrue(ParseDXSpotLine('DX de AC0C-1-#:   7037.0  K1DW        CW 21 dB 14 WPM CQ         NTX 0127Z', spot),
+                'the spot decodes');
+      spot.FBand := Band40;
+      spot.FMode := CW;
+      (* UpdateSpotsMultiplierStatus asks this of every spot on the band map on
+         every log change, on the main thread. 500 spots is a crowded map, so
+         5000 asks is ten refreshes of one. *)
+      started := GetTickCount64;
+      for i := 1 to 5000 do
+         begin
+         VisibleLog.DetermineIfNewSpotMult(spot);
+         end;
+      elapsed := GetTickCount64 - started;
+      (* A BOUND, NOT A BENCHMARK: it fails only if the cost goes out of order.
+         MEASURED 2026-11-05, i386, unit-test build: 31 ms for the 5000 -- about
+         6 microseconds a spot, so a 500-spot map is ~3 ms per log change. *)
+      CheckTrue(elapsed < 2000, '5000 hints took ' + IntToStr(elapsed) + ' ms');
+   finally
+      RestoreSession;
+   end;
+end;
+
 procedure TSpotCommentMultiplierTests.Test_Key_DomesticKeyOfQTHIsTheListsSpelling;
 var
    key: string;
@@ -578,6 +620,7 @@ begin
    Test_Mult_WorkedSectionIsNotNeededAndUnworkedIs;
    Test_Mult_SpotRoutineAndTheSetting;
    Test_Mult_CallHistoryOverridesADifferingComment;
+   Test_Cost_HintForAWholeBandMapIsCheap;
 end;
 
 end.

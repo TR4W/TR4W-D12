@@ -96,7 +96,10 @@ You own how spots reach TR4W and how they are shown.
 - **A SPOT'S SECTION FROM ITS COMMENT** (issue 83, 2026-11-05; setting `CLUSTER SPOT
   COMMENT MULTIPLIER`, default OFF). ONE routine, `EditableLog.DetermineIfNewSpotMult`,
   serves the live spot (`ProcessDX`) and the re-ask after a log change
-  (`UpdateSpotsMultiplierStatus`); never call `DetermineIfNewMult` for a spot again.
+  (`UpdateSpotsMultiplierStatus`); a spot DECODED FROM A CLUSTER LINE asks it, not
+  `DetermineIfNewMult`. (Two sites still ask the call-only form on purpose: the
+  locally added spot at `uTelnet` ~1993, which has no comment, and the legacy TNC
+  `PacketObject.ProcessPacketSpot` in `logpack`.)
   The pure tokenizer is `uDXSpotParse.SpotCommentCandidates` (plain upper-case words
   in order, then `+` words; a beacon, `<spotter>`, numbers and `CW DB WPM CQ DX` are
   never candidates); the contest-facing step is `LogEdit.SpotSectionHint`, gated on
