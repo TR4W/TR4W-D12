@@ -106,7 +106,7 @@ begin
    Application.OnException := GReporter.HandleException;
 
    TLogLogger.GetLogger('TR4WDebugLog.CrashLog').Info(
-      CRASH_SETUP_TAG + ' LCL exception handler installed');
+      CRASH_SETUP_TAG + ' crash reporting ready (LCL hook installed)');
 end;
 
 finalization

@@ -1626,7 +1626,7 @@ begin
    // uCrashLogLCL, on the line after this one. The old message claimed both
    // hooks unconditionally, which in a console program would have been a
    // written record of a handler that was never installed.
-   CrashLogger.Info(CRASH_SETUP_TAG + ' unhandled-exception logging installed (RTL)');
+   CrashLogger.Info(CRASH_SETUP_TAG + ' crash reporting ready (RTL hook installed)');
    ReportSymbolState;
 end;
 

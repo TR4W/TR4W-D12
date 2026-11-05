@@ -3502,7 +3502,17 @@ begin
                   end;
                on E: Exception do
                   begin
-                  logger.Debug('[TFactoryRadioBase.TReadingThread] Exception during read: %s - %s', [E.ClassName, E.Message]);
+                  // Terminated is the "we asked it to stop" flag: every owner calls
+                  // rt.Terminate BEFORE closing the link, so a read that fails
+                  // while Terminated is our own close, not a fault.
+                  if Terminated then
+                     begin
+                     logger.Debug('[TFactoryRadioBase.TReadingThread] link closed during read (expected on disconnect)');
+                     end
+                  else
+                     begin
+                     logger.Debug('[TFactoryRadioBase.TReadingThread] link lost while reading: %s - %s', [E.ClassName, E.Message]);
+                     end;
                   wasConnected := False;
                   Self.radioWasDisconnected := True;
                   FDisconnecting^ := True;  // Set disconnecting flag
