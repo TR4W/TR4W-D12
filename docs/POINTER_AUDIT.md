@@ -561,7 +561,7 @@ audit's list finds them.
 | 6.1 | `RadioObject` + `RadioPtr` (`ActiveRadioPtr` 159, `RadioPtr` 115, `InactiveRadioPtr` 89 mentions) | `trdos/logradio.pas:168, 439` | no | a class (`RadioPtr` uses become plain references; `@Radio1` becomes `Radio1`). **The largest single item in this audit** | UT `uTestRadioStatus`, `uTestCWKeyer`, `uTestStatusAndNotice`, `uTestTCIServer`; BENCH one rig per verified protocol family |
 | 6.2 | `DupeAndMultSheet` (`Sheet`) | `trdos/logdupe.pas:165` | no | a class | MATRIX, CORPUS, FACTORY |
 | 6.3 | `EditableLog` (`VisibleLog`, 101 mentions) | `trdos/logedit.pas:70` | no | a class | MATRIX, UT `uTestLogRepository`; screen BENCH |
-| 6.4 | `CallDatabase` (`CD`), `CellBufferObject` | `trdos/logscp.pas:94, 131` | no | classes, with 2.2 -- **`CellBufferObject` is `TSCPCellBuffer`, a class, since P7 (2026-10-17); `CallDatabase` stays an old-style object** | MATRIX (TRMASTER initial exchange) |
+| 6.4 | `CallDatabase` (`CD`), `CellBufferObject` | `trdos/logscp.pas:94, 131` | no | classes, with 2.2 -- **`CellBufferObject` is `TSCPCellBuffer`, a class, since P7 (2026-10-17); `CallDatabase` is a class since 2026-11-05 (Issue 89)** | MATRIX (TRMASTER initial exchange) |
 | 6.5 | `K1EAKeyer` (`CPUKeyer`) | `trdos/logk1ea.pas:159` | no | a class, with 2.1 | BENCH |
 | 6.6 | `PacketObject` (`Packet`) | `trdos/logpack.pas:71` | no | a class -- **DONE 2026-11-05 (Issue 89)**: NY4I ruled TNC packet over a serial port is still a supported option, so it was converted, not deleted. See "6.6 PacketObject" below | UT `uTestLogPack` (written first); BENCH the serial path |
 | 6.7 | `MultsObject` (`mo`) | `uMults.pas:50` | no, but holds two `TSortedStringList` that DO | **DONE (P8 part A)**: `TMultsObject`, a class owning its lists | UT `uTestMults`, MATRIX, CORPUS |
@@ -1658,6 +1658,18 @@ pointer item:
   a `RadioPtr`; both follow P11.
 
 ---
+
+### 6.4 CallDatabase -- an old-style object to a class, 2026-11-05 (Issue 89)
+
+`CD`, the one global `CallDatabase`, is created first in `logscp`'s
+`initialization` (its lines below already wrote fields) and freed in
+`finalization`. Measured before converting: one global instance, no pointer to
+it, no `with CD`, no whole-instance copy, no virtuals, no `Self`; the only
+`FillChar` in the unit zeroes a local record (`ClearDataEntry`), not the
+object. The oracle already existed: `uTestLogSCP` (both memory modes) drives
+`CD` and was green before and after (unit 424,627 / 0). Gates as for 6.6;
+`C6-object-type` src 5 -> 4. BENCH: the SCP window and the name lookup are
+covered by the matrix and `uTestLogSCP`; nothing here needs hardware.
 
 ### 6.6 PacketObject -- an old-style object to a class, 2026-11-05 (Issue 89)
 

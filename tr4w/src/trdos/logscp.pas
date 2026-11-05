@@ -107,7 +107,7 @@ type
 
   BytesWrittenArrayPtr = ^SCPIndexArrayType;
 
-  CallDatabase = object
+  CallDatabase = class
     ActiveASCIIFileName: Str80; { For ASCII file }
     ActiveFilename: FileNameType {str80}; { Database filename }
 
@@ -3108,6 +3108,9 @@ end;
 
 initialization
 
+  (* CD WAS AN OLD-STYLE object HELD BY VALUE; it is a class now (Issue 89,
+    audit 6.4). Created first, because the lines below write its fields. *)
+  CD := CallDatabase.Create;
   CD.CellBuffer := TSCPCellBuffer.Create;
   CD.CellBuffer.MaximumMemoryToUse := 3 * BufferArraySize;
 
@@ -3145,6 +3148,7 @@ initialization
 finalization
 
   FreeAndNil(CD.CellBuffer);
+  FreeAndNil(CD);
 
 end.
 
