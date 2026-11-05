@@ -67,6 +67,7 @@ var
 implementation
 
 Uses
+   uExternalLoggerRegistry, uExternalLoggerConfig, uExternalLoggerService,
    uADIF,            // ResolveADIFModeSubmode
    uSettingsModel,   // Settings.My.Call
    MainUnit,
@@ -567,4 +568,17 @@ begin
    result := '<' + sFieldName + ':' + IntToStr(DigitsIn(nValue)) + '>' + IntToStr(nValue) + ' ';
 end;
 
+function CreateDXKeeper(const aDefinition: TExternalLoggerDefinition;
+   aComputerId: AnsiChar): TExternalLoggerService;
+var
+   service: TExternalLogger;
+begin
+   service := TExternalLogger.Create(lt_DXKeeper);
+   service.loggerAddress := aDefinition.Address;
+   service.loggerPort := aDefinition.Port;
+   service.loggerID := aDefinition.Name;
+   Result := service;
+end;
+initialization
+   RegisterExternalLogger('DXKEEPER', 'DXKeeper', CreateDXKeeper, [lcfAddress, lcfPort]);
 end.

@@ -68,7 +68,7 @@ interface
 
 uses
   uConfigValues,
-   SysUtils,
+   SysUtils, uDefinitionId,
    Classes,
    uJSON,
    Generics.Collections;
@@ -246,24 +246,10 @@ end;
 
 { A NEW KEYER ID -- a GUID in the registry spelling, braces stripped. Same
   shape and the same reasoning as NewRadioId. }
-function NewKeyerId: string;
-var
-   g: TGUID;
-begin
-   if CreateGUID(g) = 0 then
-      begin
-      Result := Copy(GUIDToString(g), 2, 36);
-      end
-   else
-      begin
-      Result := 'keyer-' + FormatDateTime('yyyymmddhhnnsszzz', Now);
-      end;
-end;
-
 constructor TKeyerDefinition.Create;
 begin
    inherited Create;
-   Id   := NewKeyerId;
+   Id   := NewDefinitionId;
    Kind := kkWinKeyer;
    Port := PORT_NONE;
    // Zeroes elsewhere mean "leave it to the device default", the same
@@ -629,7 +615,7 @@ begin
    if aKeyer.Id = '' then
       begin
       { A store written before keyers had ids. }
-      aKeyer.Id := NewKeyerId;
+      aKeyer.Id := NewDefinitionId;
       end;
    aKeyer.Name := Str('name', '');
    if StrToKeyerKind(Str('kind', ''), kind) then

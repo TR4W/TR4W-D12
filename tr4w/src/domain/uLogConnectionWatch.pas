@@ -145,7 +145,7 @@ procedure UnregisterLogConnectionWatch(aWatch: TLogConnectionWatch);
 
 (* ONE WATCHDOG PASS, on the main thread, at aNow (GetTickCount64; a test
   passes its own). Returns a line per intervention made. *)
-function RunLogWatchdog(aNow: Int64): TLogWatchEvents;
+function RunLogWatchdog(aNow: Int64; aOnly: TLogConnectionWatch = nil): TLogWatchEvents;
 
 (* Interventions this session, every watch counted. *)
 function LogWatchInterventionCount: Int64;
@@ -390,7 +390,7 @@ begin
    aEvents[n] := aText;
 end;
 
-function RunLogWatchdog(aNow: Int64): TLogWatchEvents;
+function RunLogWatchdog(aNow: Int64; aOnly: TLogConnectionWatch = nil): TLogWatchEvents;
 var
    watches: TLogConnectionWatches;
    w: TLogConnectionWatch;
@@ -402,6 +402,10 @@ begin
    for i := 0 to High(watches) do
       begin
       w := watches[i];
+      if (aOnly <> nil) and (w <> aOnly) then
+         begin
+         Continue;
+         end;
       began := w.BeganAt;
       open := w.OpenForMs(aNow);
       if (began = 0) or (open < LOG_WATCH_THRESHOLD_MS) then

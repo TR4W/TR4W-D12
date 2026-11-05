@@ -14,7 +14,8 @@ unit uExternalLoggerFactory;
 interface
 
 uses
-   uExternalLoggerBase, uExternalLoggerService, uExternalLogger, SysUtils;
+   uExternalLoggerBase, uExternalLoggerService, uExternalLogger,
+   uExternalLoggerConfig, SysUtils;
 
 type
    TExternalLoggerFactory = class
@@ -24,7 +25,9 @@ type
       class function CreateLogger(loggerType: ExternalLoggerType;
                                    address: string;
                                    port: integer;
-                                   msgCallback: TProcessMsgRef): TExternalLoggerService;
+                                   msgCallback: TProcessMsgRef): TExternalLoggerService; overload;
+      class function CreateLogger(const aDefinition: TExternalLoggerDefinition;
+         aComputerId: AnsiChar): TExternalLoggerService; overload;
       class function GetSupportedLoggers: string;
       class function IsLoggerSupported(loggerType: ExternalLoggerType): boolean;
       (* THE CONFIG-FILE TOKEN FOR A TYPE, AND BACK.
@@ -59,73 +62,38 @@ procedure StartExternalLoggerFromSettings;
 implementation
 
 uses
-   Log4D, uWRLExternalLogger, uLogStore,
+   Log4D, uWRLExternalLogger, uClubLogExternalLogger, uLogStore,
+   uExternalLoggerRegistry, uExternalLoggers, uExternalLoggerMigration,
+   uRadioConfigStore, uTR4WConfigFile,
    MainUnit,          (* externalLogger -- the process-wide instance *)
    uSettingsModel;    (* Settings.ExternalLogger, and the vocabulary *)
 
 var
    logger: TLogLogger;
 
+class function TExternalLoggerFactory.CreateLogger(
+   const aDefinition: TExternalLoggerDefinition;
+   aComputerId: AnsiChar): TExternalLoggerService;
+begin
+   Result := CreateExternalLogger(aDefinition, aComputerId);
+end;
+
 class function TExternalLoggerFactory.CreateLogger(loggerType: ExternalLoggerType;
                                                     address: string;
                                                     port: integer;
                                                     msgCallback: TProcessMsgRef): TExternalLoggerService;
 var
-   extLogger: TExternalLogger;
+   definition: TExternalLoggerDefinition;
 begin
-   Result := nil;
-
-   logger.Info('[ExternalLoggerFactory] Creating logger: Type=%s, Address=%s, Port=%d',
-               [LoggerTypeToString(loggerType), address, port]);
-
-   case loggerType of
-      lt_WRL:
-         begin
-         Result := TWRLExternalLogger.Create(Settings.ExternalLogger.AccountId,
-            Settings.ExternalLogger.LogbookId, Settings.ExternalLogger.ApiKey,
-            Settings.Computer.Id, Settings.ExternalLogger.Enabled);
-         end;
-      lt_NoExternalLogger:
-         begin
-         raise EExternalLoggerFactoryException.Create('Cannot create logger of type NoExternalLogger');
-         end;
-
-      lt_DXKeeper:
-         begin
-         extLogger := TExternalLogger.Create(loggerType);
-         extLogger.loggerAddress := address;
-         extLogger.loggerPort := port;
-         extLogger.loggerID := 'DXKeeper';
-         Result := extLogger;
-         logger.Info('[ExternalLoggerFactory] Created DXKeeper logger instance');
-         end;
-
-      lt_ACLog:
-         begin
-         extLogger := TExternalLogger.Create(loggerType);
-         extLogger.loggerAddress := address;
-         extLogger.loggerPort := port;
-         extLogger.loggerID := 'ACLog';
-         Result := extLogger;
-         logger.Info('[ExternalLoggerFactory] Created ACLog logger instance');
-         logger.Warn('[ExternalLoggerFactory] ACLog implementation is incomplete');
-         end;
-
-      lt_HRD:
-         begin
-         extLogger := TExternalLogger.Create(loggerType);
-         extLogger.loggerAddress := address;
-         extLogger.loggerPort := port;
-         extLogger.loggerID := 'HRD';
-         Result := extLogger;
-         logger.Info('[ExternalLoggerFactory] Created HRD logger instance');
-         logger.Warn('[ExternalLoggerFactory] HRD implementation is incomplete');
-         end;
-
-      else
-         begin
-         raise EExternalLoggerFactoryException.CreateFmt('Unknown logger type: %d', [Ord(loggerType)]);
-         end;
+   definition := TExternalLoggerDefinition.Create;
+   try
+      definition.ProviderId := LoggerTypeToToken(loggerType);
+      definition.Name := LoggerTypeToString(loggerType);
+      definition.Address := address;
+      definition.Port := port;
+      Result := CreateExternalLogger(definition, Settings.Computer.Id);
+   finally
+      definition.Free;
    end;
 end;
 
@@ -167,39 +135,85 @@ begin
 end;
 
 class function TExternalLoggerFactory.GetSupportedLoggers: string;
+var
+   i: integer;
 begin
-   Result := 'Supported external loggers:'#13#10 +
-             '  - DXKeeper (implemented)'#13#10 +
-             '  - ACLog (planned)'#13#10 +
-             '  - Ham Radio Deluxe / HRD (planned)'#13#10 +
-             '  - World Radio League (WRL)';
+   Result := 'Supported external loggers:';
+   for i := 0 to ExternalLoggerProviderCount - 1 do
+      begin
+      Result := Result + #13#10 + '  - ' + ExternalLoggerRegistration(i).DisplayName;
+      end;
 end;
 
 class function TExternalLoggerFactory.IsLoggerSupported(loggerType: ExternalLoggerType): boolean;
+var
+   registration: TExternalLoggerRegistration;
 begin
-   // Currently only DXKeeper is fully implemented
-   Result := loggerType in [lt_DXKeeper, lt_WRL];
+   Result := FindExternalLoggerRegistration(LoggerTypeToToken(loggerType), registration);
 end;
 
 procedure StartExternalLoggerFromSettings;
 var
-   chosen: ExternalLoggerType;
+   store: TRadioConfigStore;
+   definition: TExternalLoggerDefinition;
+   manager: TExternalLoggers;
+   id: AnsiString;
+   error: string;
+   procedure AddDefinition(aDefinition: TExternalLoggerDefinition; aActive: boolean);
+   begin
+      try
+         manager.Add(aDefinition.DeliveryId,
+            TExternalLoggerFactory.CreateLogger(aDefinition, Settings.Computer.Id), aActive);
+      except
+         on E: Exception do
+            begin
+            logger.Error('External logger %s could not start (%s)',
+               [aDefinition.Name, E.ClassName]);
+            end;
+      end;
+   end;
+
 begin
-   chosen := TExternalLoggerFactory.TokenToLoggerType(
-                Settings.ExternalLogger.LoggerType);
-   if chosen = lt_NoExternalLogger then
+   if externalLogger <> nil then
       begin
       Exit;
       end;
-
-   externalLogger := TExternalLoggerFactory.CreateLogger(chosen,
-      Settings.ExternalLogger.Address, Settings.ExternalLogger.Port, nil);
-   (* ~~LogStoreStartExternalDelivery~~ stood here until 2026-10-31, and this
-     runs BEFORE the main window loads the log: the WRL worker opened its own
-     connection and wrote while the main thread was still reading the log in
-     and writing its session state, and the main thread's write failed
-     (tr4w.log, 10:39:27). The delivery now starts in uProgramMain once the
-     log is loaded, after every headless exit. *)
+   store := TRadioConfigStore.Create;
+   manager := TExternalLoggers.Create;
+   try
+      if FileExists(TR4WConfigFileName) and
+         not store.LoadFromFile(TR4WConfigFileName, error) then
+         begin
+         logger.Error('External logger settings could not be loaded; delivery is disabled');
+         Exit;
+         end;
+      if store.ExternalLoggers.Error <> '' then
+         begin
+         logger.Error('External logger settings are invalid; delivery is disabled');
+         Exit;
+         end;
+      if SeedExternalLoggers(store.ExternalLoggers, Settings.ExternalLogger) then
+         begin
+         SaveConfig(TR4WConfigFileName, store, nil);
+         end;
+      for id in store.ExternalLoggers.ActiveIds do
+         begin
+         definition := store.ExternalLoggers.Find(string(id));
+         AddDefinition(definition, True);
+         end;
+      for definition in store.ExternalLoggers.Definitions do
+         begin
+         if store.ExternalLoggers.ActiveIds.IndexOf(AnsiString(definition.Id)) < 0 then
+            begin
+            AddDefinition(definition, False);
+            end;
+         end;
+      externalLogger := manager;
+      manager := nil;
+   finally
+      manager.Free;
+      store.Free;
+   end;
 end;
 
 (* The vocabulary the settings model offers and refuses by -- the subsystem's

@@ -92,6 +92,13 @@ type
    // What the external logger is told to do; the commands are already built.
    TQsoExternalOp = (xoNone, xoSingle, xoReplace);
 
+   TQsoExternalDelivery = record
+      TargetId: string;
+      Op: TQsoExternalOp;
+      Command1, Command2: string;
+   end;
+   TQsoExternalDeliveries = array of TQsoExternalDelivery;
+
    // What HamScore is told; the body is already rendered.
    TQsoHamScoreOp = (hoNone, hoInfo, hoDelete);
 
@@ -116,6 +123,7 @@ type
       ExtOp: TQsoExternalOp;
       ExtCommand1: string;
       ExtCommand2: string;
+      ExtDeliveries: TQsoExternalDeliveries;
 
       // HamScore.
       HamOp: TQsoHamScoreOp;

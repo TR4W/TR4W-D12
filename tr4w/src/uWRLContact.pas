@@ -20,18 +20,8 @@ var
    mode, station: string;
 
    function Value(const aName: string): string;
-   var
-      i: integer;
    begin
-      Result := '';
-      for i := 0 to High(fields) do
-         begin
-         if fields[i].Name = aName then
-            begin
-            Result := fields[i].Value;
-            Exit;
-            end;
-         end;
+      Result := ADIFFieldValue(fields, aName);
    end;
 
    procedure TextField(const aADIFName, aJSONName: string; aRequired: boolean = False);

@@ -6,7 +6,7 @@ interface
 uses
    IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
    Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs,
-   uHostResolve, uExternalLoggerService;
+   uHostResolve, uExternalLoggerService, uLogDatabase;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 
@@ -130,6 +130,7 @@ Type
       function ConnectGuarded(aRaiseOnFailure: boolean): integer;
       procedure ReconnectFromReader;
       procedure InitOutboundQueue;
+      procedure EnsureSender;
       procedure ProcessOp(op: TExternalLogOp);
       function DequeueOp: TExternalLogOp;
       function DeliverWithRetry(const cmd: string): boolean;
@@ -170,6 +171,8 @@ Type
         no ShutdownDrain, so QSOs still queued at exit were never flushed or
         even reported. *)
       Destructor Destroy; override;
+      procedure RequestStop; override;
+      function StopFinished: boolean; override;
 
       // Issue #957 -- enqueue from the main thread (cheap; returns immediately).
       procedure QueueSingleCommand(const cmd, description: string);
@@ -694,7 +697,20 @@ begin
    FOpQueue := TList.Create;
    FQueueLock := SyncObjs.TCriticalSection.Create;
    FQueueEvent := SyncObjs.TEvent.Create(nil, False, False, '');   // auto-reset, initially clear
-   FSenderThread := TSenderThread.Create(Self);           // starts immediately
+   FSenderThread := nil;   // created only when a command is enqueued
+end;
+
+procedure TExternalLoggerBase.EnsureSender;
+begin
+   (* Caller holds FQueueLock. Disabled definitions own no background thread. *)
+   if (FSenderThread <> nil) and FSenderThread.Finished then
+      begin
+      FreeAndNil(FSenderThread);
+      end;
+   if FSenderThread = nil then
+      begin
+      FSenderThread := TSenderThread.Create(Self);
+      end;
 end;
 
 procedure TExternalLoggerBase.QueueSingleCommand(const cmd, description: string);
@@ -712,6 +728,7 @@ begin
    FQueueLock.Enter;
    try
       FOpQueue.Add(op);
+      EnsureSender;
    finally
       FQueueLock.Leave;
    end;
@@ -735,6 +752,7 @@ begin
    FQueueLock.Enter;
    try
       FOpQueue.Add(op);
+      EnsureSender;
    finally
       FQueueLock.Leave;
    end;
@@ -854,6 +872,20 @@ begin
    end;
 end;
 
+procedure TExternalLoggerBase.RequestStop;
+begin
+   if FSenderThread <> nil then
+      begin
+      FSenderThread.Terminate;
+      FQueueEvent.SetEvent;
+      end;
+end;
+
+function TExternalLoggerBase.StopFinished: boolean;
+begin
+   Result := (FSenderThread = nil) or FSenderThread.Finished;
+end;
+
 procedure TExternalLoggerBase.ShutdownDrain(timeoutMs: integer);
 var
    deadline: QWord;
@@ -864,6 +896,10 @@ begin
       Exit;   // idempotent
       end;
    FShuttingDown := True;
+   if (FSenderThread <> nil) and FSenderThread.Finished then
+      begin
+      timeoutMs := 0;
+      end;
 
    FQueueLock.Enter;
    try

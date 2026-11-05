@@ -130,6 +130,8 @@ type
 // when the end of `s` is reached without a terminator OR when a malformed
 // tag is encountered.  Even on False, `fields` contains the fields that
 // were successfully parsed before the error/end.
+function ADIFFieldValue(const aFields: TADIFFieldList; const aName: string): string;
+
 function ParseADIFFieldsList(const s: string;
                              out fields: TADIFFieldList): Boolean;
 
@@ -622,6 +624,21 @@ end;
 // ---------------------------------------------------------------------------
 // Lexer
 // ---------------------------------------------------------------------------
+
+function ADIFFieldValue(const aFields: TADIFFieldList; const aName: string): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to High(aFields) do
+      begin
+      if aFields[i].Name = aName then
+         begin
+         Result := aFields[i].Value;
+         Exit;
+         end;
+      end;
+end;
 
 function ParseADIFFieldsList(const s: string;
                              out fields: TADIFFieldList): Boolean;

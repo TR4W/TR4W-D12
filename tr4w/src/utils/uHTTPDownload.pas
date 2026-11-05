@@ -137,6 +137,7 @@ type
       Username:       string;   (* basic auth is sent when this is not '' *)
       Password:       string;
       BearerToken:    string;
+      Sensitive:      boolean;  (* form credentials also require redacted transport errors *)
       FollowRedirects: boolean;
       MaxResponseBytes: Int64;  (* 0 = unlimited, retained for existing POST callers *)
       AcceptEncoding: string;
@@ -147,6 +148,7 @@ type
       (* the answer *)
       Response:       string;
       StatusCode:     integer;
+      ResponseStatusText: string; (* some APIs report their result in the HTTP reason phrase *)
       FailReason:     string;   (* '' when Send returned True *)
       RetryAfter:     string;
       RequestId:      string;
@@ -600,6 +602,7 @@ var
 begin
    Result     := False;
    Response   := '';
+   ResponseStatusText := '';
    FailReason := '';
    StatusCode := 0;
    RetryAfter := '';
@@ -662,6 +665,7 @@ begin
               holds 400 and Response holds the server's own explanation. *)
             Response   := FromWire(bodyOut.DataString);
             StatusCode := http.ResponseStatusCode;
+            ResponseStatusText := FromWire(http.ResponseStatusText);
             RetryAfter := FromWire(http.GetHeader(http.ResponseHeaders, 'Retry-After'));
             RequestId := FromWire(http.GetHeader(http.ResponseHeaders, 'X-Request-Id'));
             Result     := True;
@@ -673,7 +677,7 @@ begin
                  anyway (0 when the server never answered), so a caller can
                  tell "the server said no" from "the server was not there". *)
                StatusCode := http.ResponseStatusCode;
-               if BearerToken <> '' then
+               if (BearerToken <> '') or Sensitive then
                   begin
                   (* Never include server-controlled exception text or a URL in
                      diagnostics for a credential-bearing request. *)

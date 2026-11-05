@@ -35,6 +35,7 @@ type
 (* An on-demand, read-only snapshot. Never commits a caller's live connection
    or leaves a WAL reader pinned while Preferences is open. *)
 function ExternalDeliveryCounts(const aFileName, aLogger: string): TDeliveryCounts;
+function ExternalDeliveryGapKey(const aLogger: string): string;
 
 (* The delivery of qso row aRowId -- TExternalDelivery.StatusOfQso, through its
   own short-lived read-only connection for the same reason as the counts: the
@@ -67,7 +68,9 @@ type
       procedure Complete(const aJob: TDeliveryJob; aOutcome: TDeliveryOutcome;
                          const aRemoteId, aErrorCode, aRequestId: string;
                          aNextAttempt: Int64);
-      procedure RecoverInterrupted(const aLogger, aAccount: string);
+      procedure RecoverInterrupted(const aLogger, aAccount: string;
+         aUnsafeUpdates: boolean = False);
+      procedure MigrateLogger(const aOldLogger, aNewLogger, aAccount, aLogbook: string);
       function NextAttempt(const aLogger, aAccount: string): Int64;
       (* The delivery of the qso row aRowId, joined through qso.guid (the
          contact key). The key allows more than one destination row per
@@ -79,6 +82,36 @@ type
    end;
 
 implementation
+
+function ExternalDeliveryGapKey(const aLogger: string): string;
+begin
+   if aLogger = 'WRL' then
+      begin
+      Result := 'external_delivery_gap';
+      end
+   else
+      begin
+      Result := 'external_delivery_gap/' + aLogger;
+      end;
+end;
+
+procedure TExternalDelivery.MigrateLogger(const aOldLogger, aNewLogger,
+   aAccount, aLogbook: string);
+var
+   q: TSQLQuery;
+begin
+   q := Query('UPDATE external_delivery SET logger = :newlogger ' +
+      'WHERE logger = :oldlogger AND account = :account AND logbook = :logbook');
+   try
+      q.ParamByName('newlogger').AsUTF8String := UTF8Encode(aNewLogger);
+      q.ParamByName('oldlogger').AsUTF8String := UTF8Encode(aOldLogger);
+      q.ParamByName('account').AsUTF8String := UTF8Encode(aAccount);
+      q.ParamByName('logbook').AsUTF8String := UTF8Encode(aLogbook);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
 
 const
    KEY_WHERE = 'logger = :logger AND account = :account ' +
@@ -319,19 +352,21 @@ begin
    end;
 end;
 
-procedure TExternalDelivery.RecoverInterrupted(const aLogger, aAccount: string);
+procedure TExternalDelivery.RecoverInterrupted(const aLogger, aAccount: string;
+   aUnsafeUpdates: boolean = False);
 var
    q: TSQLQuery;
 begin
    (* Run once on opening the delivery service, never while a worker is active.
       A lost POST answer cannot be safely replayed without WRL's help. *)
    q := Query('UPDATE external_delivery SET state = CASE ' +
-      'WHEN remote_id = '''' AND flight_deleted = 0 THEN ''uncertain'' ' +
+      'WHEN (remote_id = '''' OR :unsafe <> 0) AND flight_deleted = 0 THEN ''uncertain'' ' +
       'ELSE ''pending'' END WHERE logger = :logger AND account = :account ' +
       'AND state = ''inflight''');
    try
       q.ParamByName('logger').AsUTF8String := UTF8Encode(aLogger);
       q.ParamByName('account').AsUTF8String := UTF8Encode(aAccount);
+      q.ParamByName('unsafe').AsInteger := Ord(aUnsafeUpdates);
       q.ExecSQL;
    finally
       q.Free;
