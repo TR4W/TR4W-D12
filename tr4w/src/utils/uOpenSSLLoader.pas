@@ -72,11 +72,10 @@ unit uOpenSSLLoader;
 
 interface
 
-(* True when TLS is usable.  Safe to call repeatedly -- the work happens once
-  and the answer is remembered, including a negative one. *)
+(* True when TLS is usable.  Safe to call repeatedly and from any thread.  A
+  positive answer is remembered.  A negative one is remembered on Linux and
+  macOS, and on Windows is retried after OPENSSL_RETRY_MS (30 s). *)
 function EnsureOpenSSL: boolean;
-(* On Windows a negative answer is retried after a minimum interval
-  (OPENSSL_RETRY_MS); the unix arms remember it. *)
 
 (* What EnsureOpenSSL did, or could not do -- for the log and for the
   "Reason:" slot in the download failure dialog.  '' before the first call. *)

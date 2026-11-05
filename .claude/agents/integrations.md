@@ -262,6 +262,25 @@ tree, and defining it would not have helped — the var block was commented out 
 `tw_MixWWINDOW_INDEX` was never declared. `SendMessageToMixW` compiled to an empty
 procedure and its six live callers did nothing.
 
+## What the HTTP layer logs, and TLS that cannot start (NY4I, 2026-11-05)
+
+**The URL is logged; the secret never is.** `uHTTPDownload` writes method, URL, exception class
+and message for every failed request, credentialed or not, and one TRACE line per request
+(`POST <url> Authorization: Bearer ab...(36 chars)`). The older rule -- log nothing about the URL
+or exception of an authenticated request -- is gone. What replaced it is `ScrubSecret`: the
+bearer token and the form password (raw and URL-encoded) are scrubbed out of ALL of it, because
+a server's error text can echo what we sent. `MaskSecret` is the one mask. A new log line in that
+layer for a credentialed request goes through them; `uTestHttpSecrets` captures the Log4D output
+and fails if the fake token appears.
+
+**TLS that cannot start is a proven pre-request failure.** `THttpRequest.TlsUnavailable` is set
+when https was asked for and `EnsureOpenSSL` said no: no byte was sent. Club Log and WRL map it
+to `doRetry` (`CLUBLOG_TLS_UNAVAILABLE` / `WRL_TLS_UNAVAILABLE`, 300 s), NOT `doUncertain`.
+The diagnostic goes to the log once per distinct text. `EnsureOpenSSL` is locked (workers call
+it) and on Windows retries a failed load after 30 s; Linux/macOS keep the first answer. The test
+seam is `SetOpenSSLForcedUnavailable`. A missing CA bundle (`ApplyTLSVerification`) is also a
+nothing-sent failure and is NOT yet classified this way.
+
 ## SuperCheckPartial upload (2026-10-25)
 
 `uSuperCheckPartialFileUpload`. **The signature is over BYTES:** `SCPSignature(secret,

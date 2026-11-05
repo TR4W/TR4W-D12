@@ -411,6 +411,12 @@ begin
             GLastTlsLogged := diagnostic;
             logger.Error('[Download] TLS unavailable for %s -- %s',
                          [shownUrl, diagnostic]);
+            end
+         else
+            begin
+            (* The diagnostic was already reported; keep the URL of this
+              request findable without repeating the sentence. *)
+            logger.Debug('[Download] TLS still unavailable for %s', [shownUrl]);
             end;
       finally
          GTlsLogLock.Leave;

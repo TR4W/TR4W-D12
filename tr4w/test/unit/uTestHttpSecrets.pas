@@ -33,6 +33,7 @@ type
       procedure Test_SendNeverLogsTheTokenOnATransportFailure;
       procedure Test_TlsUnavailableNeverLogsTheTokenAndLogsOnce;
       procedure Test_TlsUnavailableIsARetryNotUncertain;
+      procedure Test_WrlTlsUnavailableIsARetryNotUncertain;
    public
       procedure RunAllTests; override;
    end;
@@ -40,7 +41,7 @@ type
 implementation
 
 uses
-   fphttpclient, uHTTPDownload, uOpenSSLLoader, uExternalDelivery, uExternalDeliveryClient, uClubLogClient;
+   fphttpclient, uHTTPDownload, uOpenSSLLoader, uExternalDelivery, uExternalDeliveryClient, uClubLogClient, uWRLClient;
 
 const
    (* Long enough for the mask to show two characters, and distinctive enough
@@ -249,6 +250,29 @@ begin
    CheckTrue(answer.RetrySeconds > 0, 'and a retry delay');
 end;
 
+procedure THttpSecretsTests.Test_WrlTlsUnavailableIsARetryNotUncertain;
+var
+   client: TWRLClient;
+   job:    TDeliveryJob;
+   answer: TExternalDeliveryResult;
+begin
+   BeginTest('WRL: a POST with TLS unavailable is a retry, not uncertain');
+   SetOpenSSLForcedUnavailable('test-only: forced unavailable for WRL classification');
+   client := TWRLClient.Create(TOKEN);
+   try
+      job := Default(TDeliveryJob);
+      job.Key.Logbook := 'logbook-1';
+      job.Payload := '{"callsign":"W1AW"}';
+      answer := client.Deliver(job);
+   finally
+      client.Free;
+      SetOpenSSLForcedUnavailable('');
+   end;
+   CheckTrue(answer.Outcome = doRetry, 'a POST is retried: nothing was sent');
+   CheckEquals('WRL_TLS_UNAVAILABLE', answer.ErrorCode, 'with its own error code');
+   CheckEquals(0, answer.Status, 'no HTTP status');
+end;
+
 procedure THttpSecretsTests.RunAllTests;
 begin
    GCaptured := TStringList.Create;
@@ -260,6 +284,7 @@ begin
       Test_SendNeverLogsTheTokenOnATransportFailure;
       Test_TlsUnavailableNeverLogsTheTokenAndLogsOnce;
       Test_TlsUnavailableIsARetryNotUncertain;
+      Test_WrlTlsUnavailableIsARetryNotUncertain;
    finally
       FreeAndNil(GCaptured);
    end;
