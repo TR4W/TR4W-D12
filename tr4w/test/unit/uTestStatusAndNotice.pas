@@ -1841,10 +1841,15 @@ begin
       CheckTrue((Pos(' CA', header) > 0) and (Pos('DE', header) = 0), 'NAQP DE CA: the header names CA: ' + header);
 
       (* ISSUE 209: A ONE-CHARACTER KEY IS A MULTIPLIER. MWC's multiplier is
-         the call's last character (TContestMWC.CalculateQSOPoints), shown by
-         LogContact's MULT BY BAND call with the QSO's DomMultQTH -- W for
-         OK1W, C for OK2C. The header names it and the strip goes from
-         needed to worked on 20 m. The two-character guard hid both. *)
+         the call's last character (TContestMWC.CalculateQSOPoints) -- W for
+         OK1W, C for OK2C. ShowDomesticMultiplierStatus, handed it, names it
+         and the strip goes from needed to worked on 20 m; the two-character
+         guard refused both. THIS PINS THE ROUTINE, NOT A LIVE PATH: no
+         caller hands MWC's key over today -- LogContact's MULT BY BAND call
+         tests RXData.DomesticQTH, which an RST + number entry leaves empty,
+         and MWC remembers no exchange text (still open on issue 209). The
+         live one-character path is the remembered QTH (SP DX, King of
+         Spain), which the walk above drives through ShowNeedsForCall. *)
       OpenNeedsSession(ContestHandleOf(MWC), 'mwc.dom', ['MWC']);
       Settings.Mult.ByBand := True;
       Settings.Mult.ByMode := False;

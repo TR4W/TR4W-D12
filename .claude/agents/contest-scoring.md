@@ -756,10 +756,13 @@ the spot pin is `uTestSpotCommentMultiplier.Test_Hint_OurOwnKnowledgeOverrulesTh
 `TContestBase.IsValidDomesticMultiplier` (base: non-empty; two characters or
 more where `HasGridSquareMultiplier`/`HasGridFieldMultiplier` -- the old
 answer for WSJT-X's `AnsiLeftStr(grid, 2)`). D7's `length < 2` (Gavin 2016,
-`6961582d`, no reason; the WLI code had none) hid MWC's `W`/`C`, SP DX's and
-King of Spain's one-letter provinces. No class overrides it; do not bring a
-length test back. `logsubs2`'s `length(WindowString) < 2` before the typed
-lookup is a separate gate (it also gates the call status), left open on #209.
+`6961582d`, no reason; the WLI code had none) hid SP DX's and King of Spain's
+one-letter provinces. No class overrides it; do not bring a length test back.
+**MWC's `W`/`C` still reach the header on NO live path** (open on #209):
+LogContact's MULT BY BAND call is gated on `RXData.DomesticQTH <> ''` while it
+passes `DomMultQTH`, and an RST + number entry leaves `DomesticQTH` empty; MWC
+remembers no exchange text. `logsubs2`'s `length(WindowString) < 2` before the
+typed lookup is a third gate (it also gates the call status), also open.
 **`mo.dom` is deleted (#208)**: no contest, `.dom` INCLUDE or D7 row named it.
 **A `.dom` line `QTH > MULT = aliases` gives DomesticQTH `QTH` and multiplier
 `MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a

@@ -35,21 +35,29 @@ at what they cover; this is the list of what they cannot see.
 The header and needs strip refused any multiplier shorter than two characters
 (D7, 2016, no reason given). The contest now says what is a multiplier
 (`TContestBase.IsValidDomesticMultiplier`): anything non-empty, two characters
-or more for a grid contest. Unit tests drive the header panel and the 20 m strip
-cell for MWC; nobody has looked at the window.
+or more for a grid contest. Unit tests drive the header panel through the
+remembered-exchange path for every one-letter key (SP DX, King of Spain, MWC's
+file) and the routine itself for MWC; nobody has looked at the window.
 
-- [ ] MWC (OK1WC Memorial), MULT BY BAND on: log `OK1W` on 80 m. The header
-  reads `Mult needs for W :` (it showed nothing before), and the 80 m cell
-  goes empty. Log `OK2C`: the header reads `C`.
+**MWC IS NOT EXPECTED TO SHOW ITS LETTER YET** (corrected 2026-11-05, after the
+first version of this entry said it would): LogContact's MULT BY BAND call tests
+`RXData.DomesticQTH`, which an RST + number entry leaves empty, and MWC
+remembers no exchange text. Open on issue 209.
+
 - [ ] SP DX, out of Poland: log an SP station sending a one-letter province
   (`B`): the header names `B`; retype the call later, still `B`.
 - [ ] King of Spain (CW or SSB): an EA station sending a one-letter province
   (`M`): the header names `M`.
 - [ ] A grid contest through WSJT-X (WW Digi): a decoded station with a grid
   shows its field as before (`FN`); one with no grid shows no header.
-- [ ] Not changed, and expected: typing a lone `W` into the MWC exchange
-  window shows nothing (`logsubs2`'s own two-character gate before the
-  lookup, which also gates the callsign status -- left on issue 209).
+- [ ] Look for a header that is NOT a multiplier: a one-digit zone or age
+  remembered with no QTH (IARU HF, CQ 160, CQ WW RTTY, YOTA ...) may now read
+  `Mult needs for 8 :` where the two-character guard hid it. Two-digit zones
+  could already do this before (issue 207's "the hint unchanged where nothing
+  maps"); report what you see on issue 209.
+- [ ] Not changed, and expected: MWC shows no `W` header (above); typing a lone
+  `W` into the MWC exchange window shows nothing either (`logsubs2`'s own
+  two-character gate before the lookup, which also gates the callsign status).
 
 ## Added 2026-11-05 -- A SPOT'S SECTION FROM ITS COMMENT (issue 83)
 

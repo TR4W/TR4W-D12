@@ -1029,8 +1029,9 @@ begin
   (* THE CONTEST SAYS WHETHER IT IS A MULTIPLIER (issue 209, NY4I
     2026-11-05) -- not an absolute length. `length(DomesticQTH) < 2` stood
     here from D7 (Gavin, 2016, 6961582d, no reason given; the WLI code it
-    replaced had no length test) and hid every one-character key: MWC's W
-    and C never showed. An empty text is still refused, by every contest. *)
+    replaced had no length test) and hid every one-character key, such as
+    SP DX's one-letter provinces. An empty text is still refused, by every
+    contest. *)
   if not ContestIsValidDomesticMultiplier(ActiveContest(Contest), string(DomesticQTH)) then
      begin
      logger.warn('ShowDomesticMultiplierStatus: "%s" is not a domestic multiplier of this contest   Exiting...',[DomesticQTH]);

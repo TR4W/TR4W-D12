@@ -2352,7 +2352,9 @@ type
 
          It replaced `length(DomesticQTH) < 2`, which Gavin added in 2016
          (D7 6961582d) with no stated reason, and which hid every
-         one-character key -- MWC's W and C (mwc.dom).
+         one-character key -- SP DX's and King of Spain's one-letter
+         provinces (spdx.dom, ea.dom) and MWC's letters (mwc.dom; no caller
+         hands MWC's key over yet -- issue 209).
 
          THE BASE: non-empty, and for a contest whose domestic multiplier is
          a grid (HasGridSquareMultiplier or HasGridFieldMultiplier) at least
