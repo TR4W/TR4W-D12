@@ -527,7 +527,10 @@ the target shape, the M-step migration order and the open questions.
   function: `DomesticMultiplierFromQTH(aText, var aMultiplier, var aQTH,
   var aFound): TDomesticQTHAnswer` (base `dqaLookUpDomesticFile`, writing
   nothing -- every domestic-FILE contest states nothing), the hint's
-  `DomesticMultiplierHint(aText): string` (base: the text), and four
+  `DomesticMultiplierHint(aText): string` (base: the text; and since issue
+  209 `IsValidDomesticMultiplier(aText)`, whether the "Mult needs for"
+  header may show it -- base non-empty, two or more characters for a grid
+  contest, composed from the two grid answers; no override), and four
   yes/no answers, base False: `HasGridSquareMultiplier` (the six VHF
   contests), `HasGridFieldMultiplier` (five), `DomesticQTHReplacesDXMultiplier`
   (the eleven WYSIWYG contests at the stations that run it) and

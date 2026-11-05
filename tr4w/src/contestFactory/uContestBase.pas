@@ -2343,6 +2343,26 @@ type
          for every other session. *)
       function DomesticMultiplierHint(const aText: Str14): string; virtual;
 
+      (* IS aMultiplier A DOMESTIC MULTIPLIER THE "MULT NEEDS FOR" HEADER AND
+         STRIP MAY SHOW? -- issue 209, NY4I 2026-11-05: "rather than checking
+         an absolute length, the gate should be if the contest class tells us
+         it is an invalid multiplier." LOGEDIT.ShowDomesticMultiplierStatus
+         asks it of every text it is handed (the remembered exchange's key,
+         a typed QTH's multiplier, a logged QSO's DomMultQTH, a WSJT-X grid).
+
+         It replaced `length(DomesticQTH) < 2`, which Gavin added in 2016
+         (D7 6961582d) with no stated reason, and which hid every
+         one-character key -- MWC's W and C (mwc.dom).
+
+         THE BASE: non-empty, and for a contest whose domestic multiplier is
+         a grid (HasGridSquareMultiplier or HasGridFieldMultiplier) at least
+         two characters -- a grid field is two letters, and WSJT-X hands the
+         first two of whatever grid it decoded. That is exactly what the old
+         guard answered for a grid contest, composed from the class's own
+         answers, so no grid class restates it. Override only for a real
+         rule of the contest's own. *)
+      function IsValidDomesticMultiplier(const aMultiplier: string): boolean; virtual;
+
       (* IS THE DOMESTIC MULTIPLIER THE FOUR-CHARACTER GRID SQUARE, A ROVER
          BEING WORKED AGAIN IN EVERY SQUARE? -- M11 S6 part 1. Four engine
          sites asked `ContestSession.DomesticMult = GridSquares`: a rover is
@@ -3708,6 +3728,11 @@ function ContestDomesticMultiplierFromQTH(aContest: TContestBase;
    TContestBase.DomesticMultiplierHint. nil answers the text itself. *)
 function ContestDomesticMultiplierHint(aContest: TContestBase; const aText: Str14): string;
 
+(* MAY THE MULT-NEEDS HEADER SHOW aMultiplier IN aContest -- see
+   TContestBase.IsValidDomesticMultiplier (issue 209). nil answers
+   non-empty. *)
+function ContestIsValidDomesticMultiplier(aContest: TContestBase; const aMultiplier: string): boolean;
+
 (* THE FOUR YES/NO DOMESTIC ANSWERS OF aContest -- see TContestBase.
    HasGridSquareMultiplier, HasGridFieldMultiplier,
    DomesticQTHReplacesDXMultiplier and DomesticQTHIsNeverAGrid. nil answers
@@ -4408,6 +4433,18 @@ begin
    else
       begin
       Result := aContest.DomesticMultiplierHint(aText);
+      end;
+end;
+
+function ContestIsValidDomesticMultiplier(aContest: TContestBase; const aMultiplier: string): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := aMultiplier <> '';
+      end
+   else
+      begin
+      Result := aContest.IsValidDomesticMultiplier(aMultiplier);
       end;
 end;
 
@@ -5304,6 +5341,23 @@ function TContestBase.DomesticMultiplierHint(const aText: Str14): string;
 begin
    (* The text itself -- see the declaration. *)
    Result := string(aText);
+end;
+
+function TContestBase.IsValidDomesticMultiplier(const aMultiplier: string): boolean;
+begin
+   (* See the declaration: non-empty; two characters or more for a grid. *)
+   if aMultiplier = '' then
+      begin
+      Result := False;
+      end
+   else if HasGridSquareMultiplier or HasGridFieldMultiplier then
+      begin
+      Result := Length(aMultiplier) >= 2;
+      end
+   else
+      begin
+      Result := True;
+      end;
 end;
 
 function TContestBase.HasGridSquareMultiplier: boolean;

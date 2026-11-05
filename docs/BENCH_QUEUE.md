@@ -30,6 +30,27 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- A ONE-CHARACTER MULTIPLIER SHOWS IN "MULT NEEDS FOR" (issue 209)
+
+The header and needs strip refused any multiplier shorter than two characters
+(D7, 2016, no reason given). The contest now says what is a multiplier
+(`TContestBase.IsValidDomesticMultiplier`): anything non-empty, two characters
+or more for a grid contest. Unit tests drive the header panel and the 20 m strip
+cell for MWC; nobody has looked at the window.
+
+- [ ] MWC (OK1WC Memorial), MULT BY BAND on: log `OK1W` on 80 m. The header
+  reads `Mult needs for W :` (it showed nothing before), and the 80 m cell
+  goes empty. Log `OK2C`: the header reads `C`.
+- [ ] SP DX, out of Poland: log an SP station sending a one-letter province
+  (`B`): the header names `B`; retype the call later, still `B`.
+- [ ] King of Spain (CW or SSB): an EA station sending a one-letter province
+  (`M`): the header names `M`.
+- [ ] A grid contest through WSJT-X (WW Digi): a decoded station with a grid
+  shows its field as before (`FN`); one with no grid shows no header.
+- [ ] Not changed, and expected: typing a lone `W` into the MWC exchange
+  window shows nothing (`logsubs2`'s own two-character gate before the
+  lookup, which also gates the callsign status -- left on issue 209).
+
 ## Added 2026-11-05 -- A SPOT'S SECTION FROM ITS COMMENT (issue 83)
 
 Setting **CLUSTER SPOT COMMENT MULTIPLIER** (Preferences, DX cluster; default

@@ -743,13 +743,24 @@ THE LIST SPELLS IT (`Ut`, `WcF`) -- the strip's lookup; the header upper-cases
 it for display in `ShowDomesticMultiplierStatus` (that also upper-cases
 LogContact's MULT-BY-BAND call). An empty hint now shows the CALL's status
 (`ShowMultiplierStatus`), not the last header. Not fixed: aliases over ten
-characters or with a blank (#208), one-character keys (#209), ALL JA's NUL
+characters or with a blank (#208), ALL JA's NUL
 precedence in the prefill (#210), RF Championship / Minnesota DX remembering no
 QTH (#211). Standing test: `uTestStatusAndNotice.
 Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest` (every registered
 domestic-file contest, every alias of its top file, a QSO with every non-QTH
 field filled, the header and the lookup) and `Test_TheMultHeaderPinsOfIssue207`;
 the spot pin is `uTestSpotCommentMultiplier.Test_Hint_OurOwnKnowledgeOverrulesTheComment`.
+**THE HEADER'S GATE IS THE CONTEST'S, NOT A LENGTH (issue 209, NY4I
+2026-11-05):** `ShowDomesticMultiplierStatus` asks
+`ContestIsValidDomesticMultiplier(ActiveContest(Contest), text)` =
+`TContestBase.IsValidDomesticMultiplier` (base: non-empty; two characters or
+more where `HasGridSquareMultiplier`/`HasGridFieldMultiplier` -- the old
+answer for WSJT-X's `AnsiLeftStr(grid, 2)`). D7's `length < 2` (Gavin 2016,
+`6961582d`, no reason; the WLI code had none) hid MWC's `W`/`C`, SP DX's and
+King of Spain's one-letter provinces. No class overrides it; do not bring a
+length test back. `logsubs2`'s `length(WindowString) < 2` before the typed
+lookup is a separate gate (it also gates the call status), left open on #209.
+**`mo.dom` is deleted (#208)**: no contest, `.dom` INCLUDE or D7 row named it.
 **A `.dom` line `QTH > MULT = aliases` gives DomesticQTH `QTH` and multiplier
 `MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a
 probe that takes the left side as the key miscounts every such line.

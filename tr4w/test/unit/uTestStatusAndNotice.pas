@@ -1594,10 +1594,11 @@ end;
 
    Not asked, and counted so a reader sees them: an alias longer than ten
    characters or holding a blank (cut to a Str10, never found -- issue 208),
-   a one-character key (ShowDomesticMultiplierStatus shows nothing under two
-   -- issue 209), an alias the table does not give a multiplier, and a QSO
+   an alias the table does not give a multiplier, and a QSO
    whose remembered text does not hold the QTH at all (RF Championship
-   remembers no QTH; issue 211). *)
+   remembers no QTH; issue 211). A ONE-CHARACTER KEY IS ASKED like any
+   other since issue 209 (the header's two-character guard is gone), and
+   counted. *)
 procedure TStatusAndNoticeTests.Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
 var
    handles: TContestHandleList;
@@ -1618,7 +1619,7 @@ var
    failures: integer;
    report: string;
    skippedLong: integer;
-   skippedShortKey: integer;
+   askedOneCharacter: integer;
    skippedUnknown: integer;
    skippedNotRemembered: integer;
 begin
@@ -1631,7 +1632,7 @@ begin
    failures := 0;
    report := '';
    skippedLong := 0;
-   skippedShortKey := 0;
+   askedOneCharacter := 0;
    skippedUnknown := 0;
    skippedNotRemembered := 0;
    handles := KnownContests;
@@ -1689,11 +1690,6 @@ begin
                   Inc(skippedUnknown);
                   Continue;
                   end;
-               if Length(rx.DomMultQTH) < 2 then
-                  begin
-                  Inc(skippedShortKey);
-                  Continue;
-                  end;
                remembered := GetInitialExchangeStringFromContestExchange(rx);
                if Pos(alias, remembered) = 0 then
                   begin
@@ -1701,10 +1697,20 @@ begin
                   Continue;
                   end;
                Inc(asked);
+               if Length(rx.DomMultQTH) = 1 then
+                  begin
+                  Inc(askedOneCharacter);
+                  end;
                expected := HeaderNaming(string(rx.DomMultQTH));
                header := HeaderFor('W1AW', remembered);
                lookup := DomStringParse(Str14(remembered));
-               if (header <> expected) or (lookup <> string(rx.DomMultQTH)) then
+               (* NOT ONLY header = expected: both are '' when the gate
+                  refuses the key, which is how issue 209 hid. The header
+                  must be there and name the key upper-cased. *)
+               if (header <> expected) or
+                  (expected = '') or
+                  (Pos(UpperCase(string(rx.DomMultQTH)), UpperCase(header)) = 0) or
+                  (lookup <> string(rx.DomMultQTH)) then
                   begin
                   Inc(failures);
                   if failures <= 12 then
@@ -1731,8 +1737,9 @@ begin
       Floors, so a walk that stops finding them fails. *)
    CheckTrue(contests >= 90, 'domestic-file contests walked: ' + IntToStr(contests));
    CheckTrue(asked >= 12000, 'aliases asked: ' + IntToStr(asked));
-   logger.info('[issue 207] %d contests, %d aliases asked; not asked: %d long or blank, %d one-character keys, %d unknown, %d not in the remembered text',
-               [contests, asked, skippedLong, skippedShortKey, skippedUnknown, skippedNotRemembered]);
+   CheckTrue(askedOneCharacter > 0, 'one-character keys asked (issue 209): ' + IntToStr(askedOneCharacter));
+   logger.info('[issue 207] %d contests, %d aliases asked (%d of them one-character keys); not asked: %d long or blank, %d unknown, %d not in the remembered text',
+               [contests, asked, askedOneCharacter, skippedLong, skippedUnknown, skippedNotRemembered]);
 end;
 
 (* THE PINS NAMED ON ISSUE 207, through the header and the strip. *)
@@ -1749,6 +1756,30 @@ var
       Sheet.SetMultFlags(aRX);
       Sheet.AddQSOToSheets(@aRX, False);
       AddQSOToDupeSheets(aRX, False);
+   end;
+
+   (* One MWC QSO from aCall, scored by the class: its multiplier is aKey,
+      the header names it before and after, and the 20 m cell goes from
+      needed to worked. *)
+   procedure MWCPin(const aCall: string; const aKey: string);
+   var
+      qso: ContestExchange;
+      shown: string;
+   begin
+      ClearContestExchange(qso);
+      qso.ceRecordKind := rkQSO;
+      qso.Callsign := CallString(aCall);
+      qso.Band := Band20;
+      qso.Mode := CW;
+      ActiveContest(Contest).ScoreQSO(qso);
+      CheckEquals(aKey, string(qso.DomMultQTH), 'MWC ' + aCall + ': the multiplier is the last character');
+      shown := HeaderNaming(string(qso.DomMultQTH));
+      CheckTrue(Pos(' ' + aKey, shown) > 0, 'MWC ' + aCall + ': the header names ' + aKey + ': ' + shown);
+      CheckEquals('20', Trim(string(multNeed20.Caption)), 'MWC ' + aCall + ': before the QSO, ' + aKey + ' is needed on 20 m');
+      LogIt(qso);
+      shown := HeaderNaming(string(qso.DomMultQTH));
+      CheckTrue(Pos(' ' + aKey, shown) > 0, 'MWC ' + aCall + ': after the QSO the header still names ' + aKey);
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC ' + aCall + ': after the QSO, ' + aKey + ' is worked: the cell is empty');
    end;
 
 begin
@@ -1808,6 +1839,35 @@ begin
       CheckTrue(Pos('TOM', header) = 0, 'no name in the header: ' + header);
       header := HeaderFor('N6DEL', 'DE CA');
       CheckTrue((Pos(' CA', header) > 0) and (Pos('DE', header) = 0), 'NAQP DE CA: the header names CA: ' + header);
+
+      (* ISSUE 209: A ONE-CHARACTER KEY IS A MULTIPLIER. MWC's multiplier is
+         the call's last character (TContestMWC.CalculateQSOPoints), shown by
+         LogContact's MULT BY BAND call with the QSO's DomMultQTH -- W for
+         OK1W, C for OK2C. The header names it and the strip goes from
+         needed to worked on 20 m. The two-character guard hid both. *)
+      OpenNeedsSession(ContestHandleOf(MWC), 'mwc.dom', ['MWC']);
+      Settings.Mult.ByBand := True;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band20;
+      ActiveMode := CW;
+      CheckTrue(ContestIsValidDomesticMultiplier(ActiveContest(Contest), 'W'),
+                'MWC: W is a multiplier');
+      CheckFalse(ContestIsValidDomesticMultiplier(ActiveContest(Contest), ''),
+                 'MWC: an empty text is not');
+      MWCPin('OK1W', 'W');
+      MWCPin('OK2C', 'C');
+
+      (* A GRID CONTEST KEEPS THE OLD ANSWER: WSJT-X hands the first two
+         characters of whatever grid it decoded, and one is not a grid
+         field. *)
+      OpenNeedsSession(ContestHandleOf(WWDIGI), '', []);
+      CheckFalse(ContestIsValidDomesticMultiplier(ActiveContest(Contest), 'F'),
+                 'WW Digi: one character is not a grid field');
+      CheckTrue(ContestIsValidDomesticMultiplier(ActiveContest(Contest), 'FN'),
+                'WW Digi: FN is');
+      CheckEquals('', HeaderNaming('F'), 'WW Digi: no header for F');
+      CheckTrue(Pos('FN', HeaderNaming('FN')) > 0, 'WW Digi: the header names FN');
    finally
       RestoreNeedsSession;
       end;
