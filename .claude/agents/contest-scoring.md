@@ -727,6 +727,33 @@ are issue 207. Pinned by
 `uTestStatusAndNotice.Test_TheSweepstakesMultHeaderNamesTheSection` and
 `uTestExchangeWordOrder.Test_SweepstakesMultiplierHintIsTheSection`.
 
+**ISSUE 207 (2026-11-05): FOR A `UsesDomesticFile` CONTEST THE HINT IS MAPPED
+TO THE MULTIPLIER KEY** -- `LOGDUPE.DomesticMultiplierOfRememberedExchange`:
+the whole hint through the table (`DomesticKeyOfQTH`), else the LAST word that
+maps (the QTH follows every other field the remembered text can lead with, so
+NAQP `DE CA` is CA), else the hint unchanged (YOTA's age IS its multiplier).
+A contest with no domestic file keeps its own hint. Measured first, through a
+temporary matrix section, never frozen: 58 contests had a header that was not
+the multiplier; the rule fixed 851 rows, broke none, met no two-word tie. ONE
+routine for the header (`LOGSTUFF.DomStringParse`) AND the spot section hint
+(`LOGEDIT.DomesticKeyKnownForCall`, issue 83): **never map the key a second
+time** -- a key is not always its own alias (michigan_cty.dom `Presq = PRES`,
+georgia_cty.dom `Ga`, iaruhq.dom `sara`). `DomStringParse` answers the key AS
+THE LIST SPELLS IT (`Ut`, `WcF`) -- the strip's lookup; the header upper-cases
+it for display in `ShowDomesticMultiplierStatus` (that also upper-cases
+LogContact's MULT-BY-BAND call). An empty hint now shows the CALL's status
+(`ShowMultiplierStatus`), not the last header. Not fixed: aliases over ten
+characters or with a blank (#208), one-character keys (#209), ALL JA's NUL
+precedence in the prefill (#210), RF Championship / Minnesota DX remembering no
+QTH (#211). Standing test: `uTestStatusAndNotice.
+Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest` (every registered
+domestic-file contest, every alias of its top file, a QSO with every non-QTH
+field filled, the header and the lookup) and `Test_TheMultHeaderPinsOfIssue207`;
+the spot pin is `uTestSpotCommentMultiplier.Test_Hint_OurOwnKnowledgeOverrulesTheComment`.
+**A `.dom` line `QTH > MULT = aliases` gives DomesticQTH `QTH` and multiplier
+`MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a
+probe that takes the left side as the key miscounts every such line.
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

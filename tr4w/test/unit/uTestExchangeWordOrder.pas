@@ -1160,8 +1160,9 @@ begin
       remembered := GetInitialExchangeStringFromContestExchange(rx);
       CheckEquals('18 UT', remembered, 'the remembered exchange');
 
-      (* WHAT THE HEADER IS HANDED: the section. *)
-      CheckEquals('UT', DomStringParse(Str14(remembered)), 'DomStringParse of the remembered exchange');
+      (* WHAT THE HEADER IS HANDED: the section's MULTIPLIER KEY, as the
+         list spells it (issue 207) -- the header upper-cases it to show. *)
+      CheckEquals('Ut', DomStringParse(Str14(remembered)), 'DomStringParse of the remembered exchange');
       CheckHint('18 UT', 'UT');
       (* A check of 07 is remembered as '7' (IntToStr). *)
       CheckHint('7 UT', 'UT');

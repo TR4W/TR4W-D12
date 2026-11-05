@@ -7206,10 +7206,27 @@ function DomStringParse(InputString: Str14): string;
   local is transcribed into the two DOK classes, not fixed (F6).
 
   ONE ActiveContest per hint: its one caller (LOGEDIT's station
-  information) asks once per call shown, and holds no contest object. *)
+  information) asks once per call shown, and holds no contest object.
+
+  THE MULTIPLIER KEY, NOT THE REMEMBERED TEXT -- issue 207, 2026-11-05. For a
+  contest that looks its QTH up in its domestic file, the answer is the key
+  LOGDUPE.DomesticMultiplierOfRememberedExchange maps the hint to, spelled as
+  the multiplier list holds it ('Ut', 'WcF') -- the spelling the "needs" strip
+  looks up. Where nothing maps, and for every contest with no domestic file,
+  it is the hint, as before. Upper-casing for the header is display only and
+  is ShowDomesticMultiplierStatus's. *)
+var
+  hint: string;
+  key: string;
 begin
-  strU(InputString);
-  Result := ContestDomesticMultiplierHint(ActiveContest(Contest), InputString);
+  if DomesticMultiplierOfRememberedExchange(InputString, hint, key) then
+     begin
+     Result := key;
+     end
+  else
+     begin
+     Result := hint;
+     end;
 end;
 
 function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):

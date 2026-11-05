@@ -1031,7 +1031,11 @@ begin
      logger.warn('ShowDomesticMultiplierStatus called with DomesticQTH length < 2 %s   Exiting...',[DomesticQTH]);
      Exit;
      end;
-  DomesticQTHtemp := DomesticQTH;
+  (* THE HEADER SHOWS THE MULTIPLIER UPPER-CASED (issue 207): 'UT', 'WCF',
+    'VE3' for the keys the list spells 'Ut', 'WcF', 'vE3' -- what an
+    operator types and reads. DISPLAY ONLY: SetMultStatus below is handed
+    DomesticQTH exactly as it came, the key as the multiplier list spells it. *)
+  DomesticQTHtemp := UpperCase(string(DomesticQTH));
 
   logger.debug('[ShowDomesticMultiplierStatus] MultNeedsHeader field set to %s',[DomesticQTHtemp]);
   TR4WMainForm.pnlMultNeedsHeader.Caption :=
@@ -2146,7 +2150,7 @@ end;
 function DomesticKeyKnownForCall(const Call: CallString): string;
 var
   history: string;
-  text: string;
+  hint: string;
   key: string;
 begin
   Result := '';
@@ -2155,8 +2159,10 @@ begin
      begin
      Exit;
      end;
-  text := DomStringParse(Str14(history));
-  if (text <> '') and DomesticKeyOfQTH(text, key) and (key <> '') then
+  (* THE HEADER'S OWN ROUTINE (issue 207): the key it gives is final. It is
+    NOT mapped again -- a key is not always one of its own aliases
+    (michigan_cty.dom's 'Presq = PRES'), and a second lookup lost it. *)
+  if DomesticMultiplierOfRememberedExchange(Str14(history), hint, key) then
      begin
      Result := key;
      end;
@@ -2230,6 +2236,13 @@ begin
            if ParsedTempExchange <> '' then
               begin
               VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
+              end
+           else
+              begin
+              (* NO MULTIPLIER IN THE REMEMBERED TEXT (issue 207): the call's
+                own status, as for a call with no remembered text -- not the
+                previous call's header left on screen (Sweepstakes '18'). *)
+              VisibleLog.ShowMultiplierStatus(Call);
               end;
            end
         else

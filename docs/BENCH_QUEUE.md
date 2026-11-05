@@ -68,9 +68,36 @@ at the window.
   reads `Mult needs for UT :`, never `18 UT`.
 - [ ] Type a call you have already worked (a station logged with check 32,
   section IN): the header reads `Mult needs for IN :`, not `32 IN`.
-- [ ] A section whose file spelling differs from what you typed (`WF`, filed
+- [ ] ~~A section whose file spelling differs from what you typed (`WF`, filed
   as `WcF`): the header shows what you typed (`WF`), and its needs strip may
-  show it as needed. Not changed by this fix -- issue 207.
+  show it as needed. Not changed by this fix -- issue 207.~~ Changed by issue
+  207 (2026-11-05) -- see the next entry.
+
+## Added 2026-11-05 -- "MULT NEEDS FOR" NAMES THE MULTIPLIER IN EVERY DOMESTIC-FILE CONTEST (issue 207)
+
+The header was the remembered exchange whole (`TOM CA`, `2A CT`, `123 CT`) or
+the alias as typed (`WF`, `VE7`, `KALA`), and the needs strip looked that text
+up, never found, so every band read needed. It now shows the MULTIPLIER, upper
+case (`CA`, `CT`, `WCF`, `BC`, `KZOO`). Measured on 58 contests through the
+matrix; unit tests drive the header panel and the strip cells. Nobody has
+looked at the window.
+
+- [ ] NAQP (any mode): log a station with `TOM CA`. Afterwards the header reads
+  `Mult needs for CA :`, never `TOM CA`; the strip cell for the band you
+  worked goes empty.
+- [ ] NAQP: type the same call again later: the header still reads `CA`.
+  A name that is also a state (`DE CA`, Del in California): the header reads
+  `CA`.
+- [ ] A state QSO party, out of state (e.g. Michigan): log a county typed as an
+  alias (`KALA`, filed as `Kzoo`): the header reads `KZOO`, and the cell for
+  that band goes empty. Retype the call: still `KZOO`.
+- [ ] Field Day: log `2A CT`: the header reads `CT`, not `2A CT`.
+- [ ] ARRL SS: log a station with section `WF`: the header reads `WCF`, and the
+  needs strip shows it WORKED afterwards (it showed it needed before).
+- [ ] ARRL SS: type a call whose remembered exchange is a check alone (`18`):
+  the header names the CALL, not the previous call's section.
+- [ ] Spots (CLUSTER SPOT COMMENT MULTIPLIER on): a NAQP station already in the
+  log as `TOM CA` is coloured by CA.
 
 ## Added 2026-11-04 -- SWEEPSTAKES: A PRECEDENCE JOINED TO DIGITS IS ALWAYS THE SERIAL (NY4I)
 

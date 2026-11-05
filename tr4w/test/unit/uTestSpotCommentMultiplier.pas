@@ -445,6 +445,30 @@ begin
       (* A REMEMBERED EXCHANGE THAT NAMES NO SECTION IS NO ANSWER. *)
       CallsignsList.AddIniitialExchange('K1DW', '18');
       CheckEquals('NTX', UpperCase(SpotSectionHint('K1DW', 'CQ NTX')), 'a lone check falls through to the comment');
+      (* AN ALIAS IS ITS MULTIPLIER (issue 207): WF is filed as WcF. *)
+      CallsignsList.AddIniitialExchange('W1WF', '59 WF');
+      CheckEquals('WcF', SpotSectionHint('W1WF', ''), 'the remembered alias gives the key as the list spells it');
+   finally
+      RestoreSession;
+   end;
+
+   (* A KEY THAT IS NOT ONE OF ITS OWN ALIASES (issue 207): michigan_cty.dom
+      has 'Presq = PRES'. The remembered text maps to the key ONCE; mapping the
+      key again (as the spot path did before the header and the spot hint
+      shared one routine) would find nothing for 'Presq'. *)
+   SetUpSession(MICHQSOPARTY, DomesticCountriesKVEKH6KL, 'michigan_cty.dom');
+   try
+      CallsignsList.AddIniitialExchange('K8PRE', 'PRES');
+      CheckEquals('Presq', SpotSectionHint('K8PRE', ''), 'a key that does not map back to itself');
+   finally
+      RestoreSession;
+   end;
+
+   (* A NAME BEFORE THE QTH (issue 207): NAQP remembers name + state. *)
+   SetUpSession(NAQSOCW, DomesticCountriesKVEKH6KL, 'naqp.dom');
+   try
+      CallsignsList.AddIniitialExchange('N6ABC', 'TOM CA');
+      CheckEquals('CA', UpperCase(SpotSectionHint('N6ABC', 'CQ OR')), 'the state the log remembers, not the name');
    finally
       RestoreSession;
    end;

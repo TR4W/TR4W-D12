@@ -334,6 +334,48 @@ function DomesticTableKnowsQTH(const aQTH: string): boolean;
   tests aKey <> '' as well. aKey is empty when the answer is False. *)
 function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
 
+(* THE MULTIPLIER A REMEMBERED EXCHANGE NAMES -- issue 207, 2026-11-05.
+
+  aText is the exchange the log REMEMBERS for a call (CallsignsList's initial
+  exchange, built by GetInitialExchangeStringFromContestExchange for the
+  PREFILL), so it joins every field the contest's field list marks: NAQP's
+  'TOM CA', Field Day's '2A CT', a Sprint's '123 CT', ARCI's 'CT 599'. And it
+  holds the QTH as TYPED, an alias -- 'WF' where arrlsect.dom files the
+  multiplier as 'WcF = WC, WF, WCF'.
+
+  aHint is the active contest's DomesticMultiplierHint of the text, upper-cased
+  first -- the shape the contest reads (the Sweepstakes section, a DOK, a
+  grid); the base answers the text whole.
+
+  FOR A CONTEST THAT LOOKS ITS QTH UP IN ITS DOMESTIC FILE (UsesDomesticFile)
+  the hint is then mapped through the loaded table to the MULTIPLIER KEY, as
+  the multiplier list spells it ('Ut', 'WcF', 'vE3'):
+    1. the whole hint, when the table knows it (DomesticKeyOfQTH -- a county
+       line 'ANT/ARM' is its first county, as the QSO's DomMultQTH is);
+    2. else the LAST word of the hint the table knows. The QTH follows every
+       other field the remembered text can lead with, so a NAQP name that is
+       also a state ('DE CA', Del in California) gives CA; a field after the
+       QTH (ARCI's power or number) is not a key of any file measured.
+  True, with aKey set, when either step found a key; False with aKey = ''
+  otherwise -- and always False for a contest with no domestic file, whose
+  hint is its own answer.
+
+  MEASURED BEFORE IT WAS BUILT (issue 207): over the contest matrix's 66
+  typed exchanges and the .dom files' aliases at every station, 58 contests
+  showed a header that was not the multiplier; this rule fixed 851 rows,
+  moved none that were right, and met no row where two words of a hint
+  mapped. A text that names no QTH the file knows (RF Championship's '87',
+  YOTA's age, which IS its multiplier) is left to the hint.
+
+  ONE ROUTINE FOR BOTH READERS: the "Mult needs for" header (LOGSTUFF.
+  DomStringParse) and the cluster spot's section hint (LOGEDIT.
+  DomesticKeyKnownForCall, issue 83). The key is never mapped a second time:
+  a multiplier key is not always one of its own aliases (michigan_cty.dom's
+  'Presq = PRES'), so mapping it again would lose it. *)
+function DomesticMultiplierOfRememberedExchange(aText: Str14;
+                                               out aHint: string;
+                                               out aKey: string): boolean;
+
 (* THE QSO'S DX QTH -- the engine's head, then the contest's own rule
   (TContestBase.DXMultiplierKey, M11 S4). aContest is ActiveContest(Contest),
   fetched ONCE by the caller and shared with whatever else it asks of the
@@ -477,6 +519,67 @@ begin
      begin
      aKey := string(scratch.DomMultQTH);
      end;
+end;
+
+(* The last space-separated word of aText the table maps to a key -- see
+  DomesticMultiplierOfRememberedExchange. Read from the end, so the first
+  word found is the answer. *)
+function LastWordDomesticKey(const aText: string; out aKey: string): boolean;
+var
+  wordEnd: integer;
+  wordStart: integer;
+begin
+  Result := False;
+  aKey := '';
+  wordEnd := Length(aText);
+  while wordEnd >= 1 do
+     begin
+     while (wordEnd >= 1) and (aText[wordEnd] = ' ') do
+        begin
+        Dec(wordEnd);
+        end;
+     wordStart := wordEnd;
+     while (wordStart >= 1) and (aText[wordStart] <> ' ') do
+        begin
+        Dec(wordStart);
+        end;
+     if wordEnd > wordStart then
+        begin
+        if DomesticKeyOfQTH(Copy(aText, wordStart + 1, wordEnd - wordStart), aKey) and
+           (aKey <> '') then
+           begin
+           Result := True;
+           Exit;
+           end;
+        end;
+     wordEnd := wordStart;
+     end;
+  aKey := '';
+end;
+
+function DomesticMultiplierOfRememberedExchange(aText: Str14;
+                                               out aHint: string;
+                                               out aKey: string): boolean;
+var
+  contestRules: TContestBase;
+begin
+  Result := False;
+  aKey := '';
+  strU(aText);
+  (* ONE ActiveContest for the hint and the file question; each table
+    lookup below (GetDomQTH) makes its own, as every lookup does. *)
+  contestRules := ActiveContest(Contest);
+  aHint := ContestDomesticMultiplierHint(contestRules, aText);
+  if (aHint = '') or (not ContestUsesDomesticFile(contestRules)) then
+     begin
+     Exit;
+     end;
+  if DomesticKeyOfQTH(aHint, aKey) and (aKey <> '') then
+     begin
+     Result := True;
+     Exit;
+     end;
+  Result := LastWordDomesticKey(aHint, aKey);
 end;
 
 function DomesticTableKnowsQTH(const aQTH: string): boolean;

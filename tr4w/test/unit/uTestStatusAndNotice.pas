@@ -80,6 +80,8 @@ type
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
       procedure Test_TheSweepstakesMultHeaderNamesTheSection;
+      procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
+      procedure Test_TheMultHeaderPinsOfIssue207;
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
       procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
       procedure Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
@@ -117,6 +119,14 @@ uses
    uTestLogCapture,    (* TCaptureAppender *)
    uTestTXInhibitAlert, (* SetSettledTXState *)
    uFactoryRadioBase,  (* TFactoryRadioBase -- the speed-reporting probe, #108 *)
+   LogDom,             (* DomQTHTable -- issue 207's domestic table *)
+   ZoneCont,           (* DomesticCountries -- issue 207 *)
+   uContestBase,       (* ContestUsesDomesticFile, TSessionDefaults -- issue 207 *)
+   uContestSession,    (* ContestSession -- the exchange kind the remembered text reads *)
+   uAppPaths,          (* ExistingDataFile -- issue 207 *)
+   uTestContestObjects, (* ShippedDomDir -- issue 207 *)
+   uTestShippedDom,    (* LoadShippedDomFollowingIncludes -- issue 207 *)
+   uTestContestKindPin, (* MatrixStation, SessionContestName -- issue 207 *)
    LogK1EA,           (* CWBufferStart/End, tWaitForNextChar, DVPOn -- issue #132 *)
    LOGDVP,             (* tDVPPlayThreadproc, DVPMessagesArray -- issue #132 *)
    uAppTimers,         (* AppTimerRunning(atAutoCQ) -- issue #132 *)
@@ -1379,6 +1389,430 @@ begin
       end;
 end;
 
+(* ---------------------------------------------------------------------------
+   ISSUE 207 -- THE "MULT NEEDS FOR" HEADER NAMES THE MULTIPLIER.
+
+   The header is built from the exchange the log REMEMBERS for a call (the
+   prefill text: name + QTH, class + section, serial + state, an alias as
+   typed), so until 2026-11-05 it read 'TOM CA', '2A CT', 'WF' and the needs
+   strip looked that text up on the multiplier sheet -- never found, every band
+   needed. LOGDUPE.DomesticMultiplierOfRememberedExchange maps it to the
+   multiplier key; the header shows the key upper-cased.
+
+   ONE SESSION AT A TIME, as FoundContest would leave it for what these read:
+   the contest, a fresh domestic table AND multiplier list (the loader writes
+   every multiplier into mo.DomList, so a shared one would carry the last
+   contest's keys), the exchange kind its US station runs, its field list,
+   a US station's country, an empty call history.
+   --------------------------------------------------------------------------- *)
+
+var
+   gNeedsSavedContest: TContestHandle;
+   gNeedsSavedTable: TDomQTHTable;
+   gNeedsSavedList: TCallsignsList;
+   gNeedsSavedQualified: TQualifiedDupeSheet;
+   gNeedsSavedMults: TMultsObject;
+   gNeedsSavedFields: ExchangeInformationRecord;
+   gNeedsSavedExchange: ExchangeType;
+   gNeedsSavedInitial: InitialExchangeType;
+   gNeedsSavedCountry: string;
+   gNeedsSavedFilename: string;
+   gNeedsSavedCountries: TStringList;
+   gNeedsSavedNumberMults: Byte;
+   gNeedsSavedByBand: boolean;
+   gNeedsSavedByMode: boolean;
+   gNeedsSavedDomByBand: TAdditionalMultByBand;
+   gNeedsSavedBand: BandType;
+   gNeedsSavedMode: ModeType;
+
+procedure SaveNeedsSession;
+var
+   i: integer;
+begin
+   gNeedsSavedContest := Contest;
+   gNeedsSavedTable := DomQTHTable;
+   gNeedsSavedList := CallsignsList;
+   gNeedsSavedQualified := QualifiedDupes;
+   gNeedsSavedMults := mo;
+   gNeedsSavedFields := ExchangeInformation;
+   gNeedsSavedExchange := ContestSession.Exchange;
+   gNeedsSavedInitial := ContestSession.InitialExchange;
+   gNeedsSavedCountry := Settings.My.Country;
+   gNeedsSavedFilename := Settings.Contest.DomesticFilename;
+   gNeedsSavedNumberMults := NumberDifferentMults;
+   gNeedsSavedByBand := Settings.Mult.ByBand;
+   gNeedsSavedByMode := Settings.Mult.ByMode;
+   gNeedsSavedDomByBand := DomesticMultByBand;
+   gNeedsSavedBand := ActiveBand;
+   gNeedsSavedMode := ActiveMode;
+   gNeedsSavedCountries := TStringList.Create;
+   for i := 0 to DomesticCountries.Count - 1 do
+      begin
+      gNeedsSavedCountries.Add(DomesticCountries.IDs[i]);
+      end;
+   DomQTHTable := nil;
+   mo := nil;
+   CallsignsList := nil;
+   QualifiedDupes := nil;
+   Settings.My.DeriveCountry('K');
+end;
+
+(* aContest's session, its file aDomFile ('' for none) loaded into a fresh
+   table and list. Frees the previous session's objects. *)
+procedure OpenNeedsSession(aContest: TContestHandle; const aDomFile: string;
+                           const aCountries: array of string);
+var
+   i: integer;
+   stated: TSessionDefaults;
+   kind: ExchangeType;
+begin
+   DomQTHTable.Free;
+   mo.Free;
+   CallsignsList.Free;
+   QualifiedDupes.Free;
+   DomQTHTable := TDomQTHTable.Create;
+   mo := TMultsObject.Create;
+   CallsignsList := TCallsignsList.Create;
+   QualifiedDupes := TQualifiedDupeSheet.Create;
+
+   DomesticCountries.Clear;
+   for i := Low(aCountries) to High(aCountries) do
+      begin
+      DomesticCountries.Add(CallString(aCountries[i]));
+      end;
+
+   Contest := aContest;
+   ReleaseActiveContest;
+   if aDomFile <> '' then
+      begin
+      LoadShippedDomFollowingIncludes(DomQTHTable, aDomFile, True, 0);
+      end;
+   Settings.Contest.DomesticFilename := aDomFile;
+
+   (* THE EXCHANGE KIND, as ApplyContestTraits + ApplySessionDefaults resolve
+      it for a US station -- the remembered text's builder reads it. *)
+   kind := ContestIdentity(aContest).ExchangeKind;
+   stated := TSessionDefaults.Create;
+   try
+      ContestIdentity(aContest).DescribeSession(
+         MatrixStation('K0AAA', 'K', NorthAmerica, 'KS', 'KS', 'EM17', False,
+                       SessionContestName(aContest, False)), stated);
+      if stated.IsStated(svExchange) then
+         begin
+         kind := stated.Exchange;
+         end;
+   finally
+      stated.Free;
+      end;
+   ContestSession.WriteExchange(kind);
+   ExchangeInformation := ContestReceivedExchangeFields(ActiveContest(Contest));
+end;
+
+procedure RestoreNeedsSession;
+var
+   i: integer;
+begin
+   DomQTHTable.Free;
+   mo.Free;
+   CallsignsList.Free;
+   QualifiedDupes.Free;
+   DomQTHTable := gNeedsSavedTable;
+   mo := gNeedsSavedMults;
+   CallsignsList := gNeedsSavedList;
+   QualifiedDupes := gNeedsSavedQualified;
+   DomesticCountries.Clear;
+   for i := 0 to gNeedsSavedCountries.Count - 1 do
+      begin
+      DomesticCountries.Add(CallString(gNeedsSavedCountries[i]));
+      end;
+   gNeedsSavedCountries.Free;
+   ExchangeInformation := gNeedsSavedFields;
+   ContestSession.WriteExchange(gNeedsSavedExchange);
+   ContestSession.WriteInitialExchange(gNeedsSavedInitial);
+   Settings.My.DeriveCountry(gNeedsSavedCountry);
+   Settings.Contest.DomesticFilename := gNeedsSavedFilename;
+   NumberDifferentMults := gNeedsSavedNumberMults;
+   Settings.Mult.ByBand := gNeedsSavedByBand;
+   Settings.Mult.ByMode := gNeedsSavedByMode;
+   DomesticMultByBand := gNeedsSavedDomByBand;
+   ActiveBand := gNeedsSavedBand;
+   ActiveMode := gNeedsSavedMode;
+   Contest := gNeedsSavedContest;
+   ReleaseActiveContest;
+end;
+
+(* A QSO from W1AW with every field a field list can mark filled with a value
+   that is NOT a QTH -- the name, class, age, check, zone, chapter, power and
+   precedence the remembered text can join to the QTH -- and aQTH as typed.
+   The domestic multiplier is what the loaded table gives aQTH. *)
+procedure NeedsQSO(const aQTH: string; out aRX: ContestExchange);
+begin
+   ClearContestExchange(aRX);
+   aRX.ceRecordKind := rkQSO;
+   aRX.Callsign := 'W1AW';
+   aRX.Band := Band20;
+   aRX.Mode := CW;
+   aRX.Name := 'TOM';
+   aRX.ceClass := '2A';
+   aRX.Age := 45;
+   aRX.Check := 18;
+   aRX.Zone := 5;
+   aRX.Chapter := 'TAC';
+   aRX.Power := 'KW';
+   aRX.Precedence := 'A';
+   (* ASCII aliases from a .dom file, at most ten characters (the caller
+      skips longer ones), so the narrowing is bounded. *)
+   aRX.QTHString := ShortString(aQTH);
+   FoundDomesticQTH(aRX);
+end;
+
+(* The header ShowNeedsForCall leaves for aCall, whose remembered exchange is
+   aRemembered. *)
+function HeaderFor(const aCall: string; const aRemembered: string): string;
+begin
+   CallsignsList.AddIniitialExchange(aCall, aRemembered);
+   TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+   ShowNeedsForCall(CallString(aCall));
+   Result := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+end;
+
+(* The header ShowDomesticMultiplierStatus writes for aKey -- the expected
+   caption, in whatever language the catalogue holds. *)
+function HeaderNaming(const aKey: string): string;
+begin
+   TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+   VisibleLog.ShowDomesticMultiplierStatus(Str10(aKey));
+   Result := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+end;
+
+(* THE TABLE OF ISSUE 207, KEPT: every registered contest that looks its QTH
+   up in its domestic file, every alias of its file (the top file; its
+   INCLUDEs are other contests' top files), a QSO carrying it, the remembered
+   text the log builds, and the header. The header must name the QSO's
+   multiplier, upper-cased, and the text the strip looks up must be the key
+   exactly as the list spells it.
+
+   Not asked, and counted so a reader sees them: an alias longer than ten
+   characters or holding a blank (cut to a Str10, never found -- issue 208),
+   a one-character key (ShowDomesticMultiplierStatus shows nothing under two
+   -- issue 209), an alias the table does not give a multiplier, and a QSO
+   whose remembered text does not hold the QTH at all (RF Championship
+   remembers no QTH; issue 211). *)
+procedure TStatusAndNoticeTests.Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
+var
+   handles: TContestHandleList;
+   h: integer;
+   fileName: string;
+   path: string;
+   lines: TStringList;
+   items: TStringList;
+   i, j, p: integer;
+   alias: string;
+   rx: ContestExchange;
+   remembered: string;
+   header: string;
+   expected: string;
+   lookup: string;
+   contests: integer;
+   asked: integer;
+   failures: integer;
+   report: string;
+   skippedLong: integer;
+   skippedShortKey: integer;
+   skippedUnknown: integer;
+   skippedNotRemembered: integer;
+begin
+   BeginTest('Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest');
+   EnsureMainForm;
+   BindMainGrids;
+
+   contests := 0;
+   asked := 0;
+   failures := 0;
+   report := '';
+   skippedLong := 0;
+   skippedShortKey := 0;
+   skippedUnknown := 0;
+   skippedNotRemembered := 0;
+   handles := KnownContests;
+   SaveNeedsSession;
+   lines := TStringList.Create;
+   items := TStringList.Create;
+   try
+      items.Delimiter := ',';
+      items.StrictDelimiter := True;
+      for h := Low(handles) to High(handles) do
+         begin
+         fileName := ContestIdentity(handles[h]).DomesticFileName;
+         if fileName = '' then
+            begin
+            Continue;
+            end;
+         fileName := fileName + '.dom';
+         path := ExistingDataFile(ShippedDomDir + fileName);
+         if not FileExists(path) then
+            begin
+            Continue;
+            end;
+         OpenNeedsSession(handles[h], fileName, DomesticCountriesKVEKH6KL);
+         if not ContestUsesDomesticFile(ActiveContest(Contest)) then
+            begin
+            Continue;
+            end;
+         Inc(contests);
+         NumberDifferentMults := 0;
+
+         lines.LoadFromFile(AnsiString(path));
+         for i := 0 to lines.Count - 1 do
+            begin
+            p := Pos('=', string(lines[i]));
+            if (p = 0) or (Pos('INCLUDE', UpperCase(string(lines[i]))) = 1) then
+               begin
+               Continue;
+               end;
+            items.DelimitedText := AnsiString(Copy(string(lines[i]), p + 1, MaxInt));
+            for j := 0 to items.Count - 1 do
+               begin
+               alias := UpperCase(Trim(string(items[j])));
+               if (alias = '') or (alias[1] = '^') then
+                  begin
+                  Continue;
+                  end;
+               if (Length(alias) > 10) or (Pos(' ', alias) > 0) then
+                  begin
+                  Inc(skippedLong);
+                  Continue;
+                  end;
+               NeedsQSO(alias, rx);
+               if rx.DomMultQTH = '' then
+                  begin
+                  Inc(skippedUnknown);
+                  Continue;
+                  end;
+               if Length(rx.DomMultQTH) < 2 then
+                  begin
+                  Inc(skippedShortKey);
+                  Continue;
+                  end;
+               remembered := GetInitialExchangeStringFromContestExchange(rx);
+               if Pos(alias, remembered) = 0 then
+                  begin
+                  Inc(skippedNotRemembered);
+                  Continue;
+                  end;
+               Inc(asked);
+               expected := HeaderNaming(string(rx.DomMultQTH));
+               header := HeaderFor('W1AW', remembered);
+               lookup := DomStringParse(Str14(remembered));
+               if (header <> expected) or (lookup <> string(rx.DomMultQTH)) then
+                  begin
+                  Inc(failures);
+                  if failures <= 12 then
+                     begin
+                     report := report + sLineBreak + '   ' + ContestId(handles[h]) +
+                               ' ' + alias + ': remembered "' + remembered +
+                               '" header "' + Trim(header) + '" looked up "' + lookup +
+                               '", multiplier "' + string(rx.DomMultQTH) + '"';
+                     end;
+                  end;
+               end;
+            end;
+         end;
+   finally
+      items.Free;
+      lines.Free;
+      RestoreNeedsSession;
+      end;
+
+   CheckEquals(0, failures, 'headers that do not name the multiplier:' + report);
+   (* THE WALK REACHED THE CONTESTS IT IS ABOUT -- 102 contest-station pairs
+      used a file in the issue 207 measurement; this walk, at the US
+      station, reached 98 contests and asked 12956 aliases on 2026-11-05.
+      Floors, so a walk that stops finding them fails. *)
+   CheckTrue(contests >= 90, 'domestic-file contests walked: ' + IntToStr(contests));
+   CheckTrue(asked >= 12000, 'aliases asked: ' + IntToStr(asked));
+   logger.info('[issue 207] %d contests, %d aliases asked; not asked: %d long or blank, %d one-character keys, %d unknown, %d not in the remembered text',
+               [contests, asked, skippedLong, skippedShortKey, skippedUnknown, skippedNotRemembered]);
+end;
+
+(* THE PINS NAMED ON ISSUE 207, through the header and the strip. *)
+procedure TStatusAndNoticeTests.Test_TheMultHeaderPinsOfIssue207;
+var
+   rx: ContestExchange;
+   header: string;
+   multNeed20: TElementPanel;
+
+   procedure LogIt(var aRX: ContestExchange);
+   begin
+      ctyLocateCall(aRX.Callsign, aRX.QTH);
+      SetDXQTHAndPrefix(aRX);
+      Sheet.SetMultFlags(aRX);
+      Sheet.AddQSOToSheets(@aRX, False);
+      AddQSOToDupeSheets(aRX, False);
+   end;
+
+begin
+   BeginTest('Test_TheMultHeaderPinsOfIssue207');
+   EnsureMainForm;
+   BindMainGrids;
+   multNeed20 := TR4WMainForm.FindComponent('pnlMultNeedR1_20') as TElementPanel;
+   CheckTrue(multNeed20 <> nil, 'uMainForm.lfm has the 20 m mult need cell of row 1');
+   CheckTrue(ctyLoadInCountryFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                                  PathDelim + 'target' + PathDelim + 'cty.dat', False, False, True),
+             'cty.dat loads');
+
+   SaveNeedsSession;
+   try
+      (* SWEEPSTAKES 'WF': arrlsect.dom files it as 'WcF = WC, WF, WCF'. The
+         header shows WCF; the strip looks up WcF, so it goes worked. *)
+      OpenNeedsSession(ContestHandleOf(ARRLSSSSB), 'arrlsect.dom', DomesticCountriesARRLSections);
+      Settings.Mult.ByBand := False;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band20;
+      ActiveMode := Phone;
+      NeedsQSO('WF', rx);
+      rx.Mode := Phone;
+      rx.Check := 59;
+      CheckEquals('WCF', UpperCase(string(rx.DomMultQTH)), 'WF is the WcF multiplier');
+      CheckEquals('59 WF', GetInitialExchangeStringFromContestExchange(rx), 'the remembered text holds the alias as typed');
+      CheckEquals('WcF', DomStringParse('59 WF'), 'the strip looks up the key as the list spells it');
+      header := HeaderFor('W1AW', '59 WF');
+      CheckEquals(HeaderNaming('WcF'), header, 'before the QSO: the header names WCF');
+      CheckTrue(Pos('WCF', header) > 0, 'upper-cased: ' + header);
+      CheckEquals('20', Trim(string(multNeed20.Caption)), 'before the QSO, WcF is needed on 20 m');
+      LogIt(rx);
+      TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+      RefreshNeedsAfterLoggedQSO('W1AW', True, False);
+      CheckTrue(Pos('WCF', string(TR4WMainForm.pnlMultNeedsHeader.Caption)) > 0,
+                'after the QSO the header still names WCF');
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'after the QSO, WcF is worked: the cell is empty');
+
+      (* NO MULTIPLIER IN THE REMEMBERED TEXT: the call's own status, not the
+         previous header left on screen. *)
+      TR4WMainForm.pnlMultNeedsHeader.Caption := 'Mult needs for STALE :';
+      CallsignsList.AddIniitialExchange('W7ST', '18');
+      ShowNeedsForCall('W7ST');
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('W7ST', header) > 0, 'SS 18: the header names the call: ' + header);
+      CheckTrue(Pos('STALE', header) = 0, 'SS 18: the previous header is gone: ' + header);
+
+      (* NAQP: the name before the state. 'DE CA' is Del in California -- the
+         whole text maps to nothing, and the LAST word the file knows is the
+         QTH, so CA (DE is a state too). *)
+      OpenNeedsSession(ContestHandleOf(NAQSOCW), 'naqp.dom', DomesticCountriesKVEKH6KL);
+      CheckEquals('CA', UpperCase(DomStringParse('TOM CA')), 'NAQP TOM CA: the multiplier');
+      CheckEquals('CA', UpperCase(DomStringParse('DE CA')), 'NAQP DE CA: the last word that maps');
+      header := HeaderFor('N6ABC', 'TOM CA');
+      CheckEquals(HeaderNaming(DomStringParse('TOM CA')), header, 'NAQP TOM CA: the header');
+      CheckTrue(Pos('TOM', header) = 0, 'no name in the header: ' + header);
+      header := HeaderFor('N6DEL', 'DE CA');
+      CheckTrue((Pos(' CA', header) > 0) and (Pos('DE', header) = 0), 'NAQP DE CA: the header names CA: ' + header);
+   finally
+      RestoreNeedsSession;
+      end;
+end;
+
 (* ISSUE #97 ON THE STREAMED MAIN WINDOW: the PTT indicator and radio 1's status
   panel for a key-up on a radio in TX test mode, driven exactly as the program
   drives them -- the settled status, then the review the polling thread asks
@@ -1947,6 +2381,8 @@ begin
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
    Test_TheSweepstakesMultHeaderNamesTheSection;
+   Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
+   Test_TheMultHeaderPinsOfIssue207;
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
    Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
