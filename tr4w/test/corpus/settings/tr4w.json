@@ -4,6 +4,9 @@
          "Address": "127.0.0.1",
          "Enabled": false,
          "Port": 52001
+      },
+      "My": {
+         "Grid": "EL88"
       }
    },
    "version": 1,

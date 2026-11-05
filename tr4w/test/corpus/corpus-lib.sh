@@ -204,6 +204,10 @@ corpus_cleanup_on_exit(){
 # NY4I: "that is not optimal to let my changing state mess up a test."
 # export-d12-corpus.sh has always passed the fixture; this is the same one,
 # for the scripts that rescore.
+#
+# ONLY ITS `settings` SECTION IS READ under /EXPORT and /RESCORE (the legacy
+# `commands` bucket is not imported), and settings.My holds Grid alone -- see
+# README.md "The settings fixture" for why State, Zone and Name stay out.
 corpus_settings_win(){
    cygpath -d "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/settings/tr4w.json"
 }

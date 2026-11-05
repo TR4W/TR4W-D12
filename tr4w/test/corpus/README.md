@@ -50,6 +50,38 @@ Every `ref.*` MUST come from **one current D7 build (v4.149.x)** — the importe
 on anything else. (An earlier attempt used a version patchwork spanning v4.127.5..v4.149;
 the old ones predated the 4.147 ADIF fixes and would have enshrined since-fixed bugs.)
 
+## The settings fixture (`settings/tr4w.json`)
+
+Every script that runs the app passes `--settings settings/tr4w.json`
+(`corpus_settings_win` in `corpus-lib.sh`), so a result never depends on the
+developer's own `tr4w.json`. The app only READS it; `corpus_fixture_guard_*`
+fails a run that changes it.
+
+**Startup reads the `settings` section; the legacy `commands` bucket is not
+imported under `/EXPORT` or `/RESCORE`** (`uProgramMain`: "an export must be
+configured the way the LOG is, not the way the station is today"). So the
+`MY ...` rows under `commands` are inert, and only what is in `settings` reaches
+the run.
+
+`settings.My` holds **`Grid: EL88` and nothing else** (2026-11-05, issue 206).
+That gives the Cabrillo header a `GRID-LOCATOR` line, which the factory gate
+compares. It moves no golden comparison: `golden_diff.py` ignores the Cabrillo
+header, and the ADIF does not carry the station grid. Measured with the grid
+added: still 16 passed / 0 failed / 10 known, and the ADIF round trip still exits 0.
+
+**Do NOT add `State`, `Zone` or `Name` there.** Each one changes an exported
+exchange away from the D7 reference:
+
+| field | effect, measured 2026-11-05 |
+|---|---|
+| `State: FL` | IARU sends `59 FL` instead of D7's `59 8`; General QSO appends `FL` |
+| `Zone: 5` | IARU scores W1AW (ITU zone 8) as 3 points instead of 1: 16 instead of D7's 12 |
+| `Name: TOM` | General QSO sends `59 TOM`, which would retire its known-divergence row |
+
+The frozen `rescored.*` baselines were once taken from the developer's own
+`My` block, and that is exactly what turned the factory gate red. See
+`REFREEZE_NOTES.md`.
+
 ## Adding a set
 
 You export from a single current D7 build, then:
