@@ -758,11 +758,19 @@ more where `HasGridSquareMultiplier`/`HasGridFieldMultiplier` -- the old
 answer for WSJT-X's `AnsiLeftStr(grid, 2)`). D7's `length < 2` (Gavin 2016,
 `6961582d`, no reason; the WLI code had none) hid SP DX's and King of Spain's
 one-letter provinces. No class overrides it; do not bring a length test back.
-**MWC's `W`/`C` still reach the header on NO live path** (open on #209):
-LogContact's MULT BY BAND call is gated on `RXData.DomesticQTH <> ''` while it
-passes `DomMultQTH`, and an RST + number entry leaves `DomesticQTH` empty; MWC
-remembers no exchange text. `logsubs2`'s `length(WindowString) < 2` before the
-typed lookup is a third gate (it also gates the call status), also open.
+**A MULTIPLIER COMPUTED FROM THE CALL REACHES THE STRIP THROUGH THE CLASS'S
+`DomesticMultiplierFromCall`, NOT THE HEADER GATE** (NY4I 2026-11-05, measured
+the same day): a contest that remembers no exchange text (RST + number) gets
+`ShowMultiplierStatus(call)` -- the header NAMES THE CALL, as CQ WW's does --
+and `GetMultArray` asks the class for the key. MWC answered '' until then, so
+its strip was empty for every call; it now answers its scoring letter (seven
+classes answer it: Russian DX, RF Championship x2, Ural Cup, RDA, YO DX, MWC).
+LogContact's `RXData.DomesticQTH <> ''` gate and `logsubs2`'s
+`length(WindowString) < 2` were NOT changed. **Measured, not built (rulings
+owed on #209):** a prior contact does NOT trump the call's zone in CQ WW's strip
+(`GetMultArray` reads `ctyGetCQZone(call)`); a zone remembered with no QTH shows
+`Mult needs for 8 :` in IARU HF / CQ 160 / CQ WW RTTY (the remembered text is
+`8 ` with a trailing blank, so the old guard never hid it).
 **`mo.dom` is deleted (#208)**: no contest, `.dom` INCLUDE or D7 row named it.
 **A `.dom` line `QTH > MULT = aliases` gives DomesticQTH `QTH` and multiplier
 `MULT`** (florida.dom `Alc > Fl = ALC`: each county counts as Florida) -- a

@@ -1844,12 +1844,7 @@ begin
          the call's last character (TContestMWC.CalculateQSOPoints) -- W for
          OK1W, C for OK2C. ShowDomesticMultiplierStatus, handed it, names it
          and the strip goes from needed to worked on 20 m; the two-character
-         guard refused both. THIS PINS THE ROUTINE, NOT A LIVE PATH: no
-         caller hands MWC's key over today -- LogContact's MULT BY BAND call
-         tests RXData.DomesticQTH, which an RST + number entry leaves empty,
-         and MWC remembers no exchange text (still open on issue 209). The
-         live one-character path is the remembered QTH (SP DX, King of
-         Spain), which the walk above drives through ShowNeedsForCall. *)
+         guard refused both. This pins the routine; the live path follows. *)
       OpenNeedsSession(ContestHandleOf(MWC), 'mwc.dom', ['MWC']);
       Settings.Mult.ByBand := True;
       Settings.Mult.ByMode := False;
@@ -1862,6 +1857,39 @@ begin
                  'MWC: an empty text is not');
       MWCPin('OK1W', 'W');
       MWCPin('OK2C', 'C');
+
+      (* MWC ON THE LIVE PATH (issue 209, NY4I 2026-11-05: a multiplier
+         computed from the call is what the header and strip use, as CQ WW's
+         zone is). MWC remembers no exchange text, so ShowNeedsForCall shows
+         the CALL's status -- the header names the call, as for CQ WW -- and
+         the strip asks the class's DomesticMultiplierFromCall for the
+         letter. Measured before the class answered it: the strip was empty
+         for every call, fresh, after the QSO and retyped. *)
+      OpenNeedsSession(ContestHandleOf(MWC), 'mwc.dom', ['MWC']);
+      Settings.Mult.ByBand := True;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band20;
+      ActiveMode := CW;
+      ShowNeedsForCall('OK1W');
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('OK1W', header) > 0, 'MWC OK1W typed: the header names the call: ' + header);
+      CheckEquals('20', Trim(string(multNeed20.Caption)), 'MWC OK1W typed: W is needed on 20 m');
+      ClearContestExchange(rx);
+      rx.ceRecordKind := rkQSO;
+      rx.Callsign := 'OK1W';
+      rx.Band := Band20;
+      rx.Mode := CW;
+      ActiveContest(Contest).ScoreQSO(rx);
+      LogIt(rx);
+      RefreshNeedsAfterLoggedQSO('OK1W', True, False);
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC OK1W logged: W is worked on 20 m');
+      ShowNeedsForCall('OK5W');
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC OK5W typed: its W is worked on 20 m');
+      ShowNeedsForCall('OK1Z');
+      CheckEquals('20', Trim(string(multNeed20.Caption)), 'MWC OK1Z typed: Z is still needed on 20 m');
+      ShowNeedsForCall('OK1W');
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC OK1W retyped: still worked');
 
       (* A GRID CONTEST KEEPS THE OLD ANSWER: WSJT-X hands the first two
          characters of whatever grid it decoded, and one is not a grid

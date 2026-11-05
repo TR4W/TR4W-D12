@@ -405,12 +405,24 @@ begin
    finally
       c.Free;
       end;
+
+   (* MWC (issue 209): the letter its scoring counts, from the call alone --
+      no service asked. *)
+   c := Make(MWC);
+   try
+      CheckEquals('W', c.DomesticMultiplierFromCall('OK1W', none), 'MWC: the last character');
+      CheckEquals('C', c.DomesticMultiplierFromCall('OK2C', none), 'MWC: C');
+      CheckEquals('W', c.DomesticMultiplierFromCall('OK1W/P', none), 'MWC: the character before a slash and a letter');
+      CheckEquals('', c.DomesticMultiplierFromCall('', none), 'MWC: nor for no call');
+   finally
+      c.Free;
+      end;
 end;
 
 procedure TContestMultipliersTests.Test_EveryOtherContestImpliesNoMultiplierFromACall;
 const
-   STATED: array[0..5] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
-                                         CUPURAL, RDA, YODX);
+   STATED: array[0..6] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
+                                         CUPURAL, RDA, YODX, MWC);
 var
    identities: TContestIdentityList;
    k: integer;

@@ -95,6 +95,16 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      (* THE MULTIPLIER THE CALL IMPLIES, for the need-multiplier hint
+         (LOGEDIT.GetMultArray) -- issue 209, 2026-11-05. The same character
+         CalculateQSOPoints scores, so the "Mult needs for" strip of a typed
+         or retyped call shows whether its letter is needed. Until this, MWC
+         answered the base's '' and the strip never showed the letter for any
+         call (measured: fresh, after the QSO and on retype). The header
+         names the call, as for every contest whose multiplier comes from
+         the call (CQ WW, RDA, YO DX ...). *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -167,6 +177,14 @@ procedure TContestMWC.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 1;
    aQso.DomMultQTH := MWCMultiplierFromCall(aQso.Callsign);
+end;
+
+function TContestMWC.DomesticMultiplierFromCall(const aCall: string;
+                                               const aLookups: TMultiplierHintLookups): string;
+begin
+   (* See the declaration. A call longer than a CallString cannot be an
+      entry's call; the cut is the one ScoreQSO's record makes. *)
+   Result := string(MWCMultiplierFromCall(CallString(aCall)));
 end;
 
 function TContestMWC.GetDisplayName: string;

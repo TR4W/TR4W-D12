@@ -39,25 +39,34 @@ or more for a grid contest. Unit tests drive the header panel through the
 remembered-exchange path for every one-letter key (SP DX, King of Spain, MWC's
 file) and the routine itself for MWC; nobody has looked at the window.
 
-**MWC IS NOT EXPECTED TO SHOW ITS LETTER YET** (corrected 2026-11-05, after the
-first version of this entry said it would): LogContact's MULT BY BAND call tests
-`RXData.DomesticQTH`, which an RST + number entry leaves empty, and MWC
-remembers no exchange text. Open on issue 209.
+**MWC (a second change, the same day, after NY4I's ruling that a multiplier
+computed from the call is what the header and strip use, as CQ WW's zone
+is):** MWC now answers `DomesticMultiplierFromCall` with the letter it scores.
+The header names the CALL, as CQ WW's does; the strip shows whether the call's
+letter is needed. Measured before: the strip was empty for every MWC call.
 
+- [ ] MWC (OK1WC Memorial), MULT BY BAND on, 80 m: type `OK1W` -- the header
+  reads `Mult needs for OK1W :` and the 80 m cell shows (W needed). Log it:
+  the cell empties. Type `OK5W`: empty (W worked). Type `OK1Z`: shown (Z
+  needed). Retype `OK1W`: empty.
+- [ ] MWC: a spot or WSJT-X decode of a call with an unworked letter is
+  coloured as a new multiplier, a worked letter is not (it never was before).
 - [ ] SP DX, out of Poland: log an SP station sending a one-letter province
   (`B`): the header names `B`; retype the call later, still `B`.
 - [ ] King of Spain (CW or SSB): an EA station sending a one-letter province
   (`M`): the header names `M`.
 - [ ] A grid contest through WSJT-X (WW Digi): a decoded station with a grid
   shows its field as before (`FN`); one with no grid shows no header.
-- [ ] Look for a header that is NOT a multiplier: a one-digit zone or age
-  remembered with no QTH (IARU HF, CQ 160, CQ WW RTTY, YOTA ...) may now read
-  `Mult needs for 8 :` where the two-character guard hid it. Two-digit zones
-  could already do this before (issue 207's "the hint unchanged where nothing
-  maps"); report what you see on issue 209.
-- [ ] Not changed, and expected: MWC shows no `W` header (above); typing a lone
-  `W` into the MWC exchange window shows nothing either (`logsubs2`'s own
-  two-character gate before the lookup, which also gates the callsign status).
+- [ ] NOT CHANGED, measured, awaiting a ruling on issue 209: a zone remembered
+  with no QTH gives `Mult needs for 8 :` in IARU HF, CQ 160 and CQ WW RTTY. The
+  remembered text is `8 ` with a trailing blank, so the old two-character guard
+  never hid it, and it is not a domestic multiplier there. YOTA's age header
+  (`9`) is right: the age is YOTA's multiplier.
+- [ ] NOT CHANGED, awaiting a ruling: a prior contact does not change the zone
+  CQ WW's strip uses -- K1ABC logged as zone 4, retyped on another band: the
+  strip follows the call's zone 5.
+- [ ] Not changed: typing a lone `W` into the MWC exchange window shows
+  nothing (`logsubs2`'s two-character gate before the typed lookup).
 
 ## Added 2026-11-05 -- A SPOT'S SECTION FROM ITS COMMENT (issue 83)
 
