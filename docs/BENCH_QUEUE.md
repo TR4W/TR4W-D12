@@ -30,6 +30,24 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- A PRIOR CONTACT'S ZONE TRUMPS THE CALL'S (issue 213, NY4I bench)
+
+The zone the "Mult needs for" strip, the call-window MULT flag and the spot
+hint use for a call is now the zone it was most recently LOGGED with; the
+call's CTY.DAT zone only when it has none. Every CQ/ITU zone-multiplier contest
+(about 15: CQ WW CW/SSB/RTTY, IARU HF, JIDX x2, Croatian, LZ DX, CW Open ...).
+A unit test reproduces NY4I's bench case and passes; nobody has looked at the
+window.
+
+- [ ] IARU HF: log W1AW on 160 m CW with zone 7 (CTY.DAT says 8). Retype W1AW
+  on 80 m: the 160 cell of "Mult needs for W1AW" is EMPTY (zone 7 worked on
+  160); it showed 160 needed before. The yellow MULT flag agrees.
+- [ ] Same log: a call never worked (W2XYZ, zone 8): 160 shows needed.
+- [ ] Log W1AW again on 40 m with zone 6, retype: the strip follows zone 6 (the
+  most recently logged), so 160 shows needed.
+- [ ] A cluster spot of W1AW on 160 is not coloured as a new multiplier.
+- [ ] Reopen the log: the same answers (the loader feeds the same store).
+
 ## Added 2026-11-05 -- A ONE-CHARACTER MULTIPLIER SHOWS IN "MULT NEEDS FOR" (issue 209)
 
 The header and needs strip refused any multiplier shorter than two characters

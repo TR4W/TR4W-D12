@@ -1825,6 +1825,66 @@ var
       CheckTrue(Pos(' ARRL', shown) > 0, aName + ' W1AW: an HQ header is unchanged: ' + shown);
    end;
 
+   (* ISSUE 213, NY4I's bench (IARU HF, 2026-11-05): W1AW logged on 160 m CW
+      with zone 7 -- CTY.DAT says ITU 8 -- and retyped on 80 m. The strip
+      showed 160 needed, following the call's zone. A PRIOR CONTACT'S ZONE
+      TRUMPS THE CALL'S; with several, the MOST RECENTLY LOGGED one; with
+      none, the call's. The call-window MULT flag (DetermineIfNewMult) asks
+      the same lookup. *)
+   procedure PriorZonePin;
+   var
+      qso: ContestExchange;
+      multNeed160: TElementPanel;
+
+      procedure LogZone(const aCall: string; aBand: BandType; aZone: integer);
+      begin
+         ClearContestExchange(qso);
+         qso.ceRecordKind := rkQSO;
+         qso.Callsign := CallString(aCall);
+         qso.Band := aBand;
+         qso.Mode := CW;
+         qso.Zone := aZone;
+         ctyLocateCall(qso.Callsign, qso.QTH);
+         SetDXQTHAndPrefix(qso);
+         ActiveContest(Contest).ScoreQSO(qso);
+         CallsignsList.AddIniitialExchange(aCall, GetInitialExchangeStringFromContestExchange(qso));
+         Sheet.SetMultFlags(qso);
+         Sheet.AddQSOToSheets(@qso, True);
+         AddQSOToDupeSheets(qso, False);
+      end;
+
+   begin
+      multNeed160 := TR4WMainForm.FindComponent('pnlMultNeedR1_160') as TElementPanel;
+      OpenNeedsSession(ContestHandleOf(IARU), 'iaruhq.dom', DomesticCountriesKVEKH6KL);
+      Settings.Mult.ByBand := True;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band80;
+      ActiveMode := CW;
+      CheckEquals(8, integer(ctyGetITUZone('W1AW')), 'the control: CTY.DAT gives W1AW ITU zone 8');
+
+      LogZone('W1AW', Band160, 7);
+      ShowNeedsForCall('W1AW');
+      CheckEquals('', Trim(string(multNeed160.Caption)),
+                  'IARU W1AW logged zone 7 on 160, retyped on 80: 160 is worked (zone 7)');
+      CheckFalse(VisibleLog.DetermineIfNewMult('W1AW', Band160, CW),
+                 'IARU W1AW: no new multiplier on 160 -- the MULT flag agrees with the strip');
+
+      (* No prior contact: the call's zone, 8, not worked on 160. *)
+      ShowNeedsForCall('W2XYZ');
+      CheckEquals('160', Trim(string(multNeed160.Caption)),
+                  'IARU W2XYZ, never worked: its CTY zone 8 is needed on 160');
+      CheckTrue(VisibleLog.DetermineIfNewMult('W2XYZ', Band160, CW),
+                'IARU W2XYZ: a new multiplier on 160');
+
+      (* Several prior contacts: the most recently logged zone. W1AW again,
+         on 40 m with zone 6: zone 6 is not worked on 160. *)
+      LogZone('W1AW', Band40, 6);
+      ShowNeedsForCall('W1AW');
+      CheckEquals('160', Trim(string(multNeed160.Caption)),
+                  'IARU W1AW last logged zone 6: zone 6 is needed on 160');
+   end;
+
 begin
    BeginTest('Test_TheMultHeaderPinsOfIssue207');
    EnsureMainForm;
@@ -1953,6 +2013,8 @@ begin
          needed on 20. An HQ station's header is unchanged. *)
       IARUZonePin(ContestHandleOf(IARU), 'IARU HF');
       IARUZonePin(ContestHandleOf(WRTC), 'WRTC');
+
+      PriorZonePin;
    finally
       RestoreNeedsSession;
       end;

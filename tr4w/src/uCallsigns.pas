@@ -61,6 +61,10 @@ type
     Call: CallString;
     QSOs: Byte;
     InExchange: String[14];
+    (* THE ZONE OF THE MOST RECENTLY LOGGED QSO WITH THIS CALL, 0 for none --
+      issue 213. Written by LOGEDIT.AddQSOToDupeSheets (live, loader,
+      rescore, each in log order), cleared with the dupe bits. *)
+    LoggedZone: Byte;
   end;
 
   (* THE WORKED-CALLS LIST -- a CLASS over a TObjectList since 2026-10-17
@@ -105,6 +109,11 @@ type
     function AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
     function GetIniitialExchange(const Call: string): string;
     function GetIniitialExchangeByIndex(Index: integer): string;
+    (* A PRIOR CONTACT'S ZONE -- issue 213: the zone the call was most
+      recently logged with, 0 when it has none. Remembered only for a call
+      already in the list (AddCallsign put it there). *)
+    procedure SetLoggedZone(const Call: string; aZone: Byte);
+    function GetLoggedZone(const Call: string): Byte;
     function CallsignIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 //    procedure Clear;
 //    procedure Delete(Index: integer);
@@ -240,6 +249,27 @@ begin
   else
      begin
      Result := '';
+     end;
+end;
+
+procedure TCallsignsList.SetLoggedZone(const Call: string; aZone: Byte);
+var
+  Index                                 : integer;
+begin
+  if FindCallsign(Call, Index) then
+     begin
+     FItems[Index].LoggedZone := aZone;
+     end;
+end;
+
+function TCallsignsList.GetLoggedZone(const Call: string): Byte;
+var
+  Index                                 : integer;
+begin
+  Result := 0;
+  if FindCallsign(Call, Index) then
+     begin
+     Result := FItems[Index].LoggedZone;
      end;
 end;
 
@@ -846,6 +876,7 @@ begin
         entry.Dupes[m] := 0;
         end;
      entry.QSOs := 0;
+     entry.LoggedZone := 0;
      end;
 end;
 

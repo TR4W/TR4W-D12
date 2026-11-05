@@ -771,8 +771,13 @@ received text as their HQ multiplier**, so a remembered zone alone (`8 ` -- the
 builder appends `' ' + QTH` even when the QTH is empty) hinted as an HQ; their
 `DomesticMultiplierHint` answers '' for it now (`uDomesticKey.IsZoneNumberOnly`;
 NY4I: the ITU zone comes from the call, as in CQ WW), so the header names the
-call. **Not built:** a prior contact trumping the call's zone (#213, ruled, not
-scheduled -- `GetMultArray` reads `ctyGetCQZone(call)`); the bare-field header
+call. **A PRIOR CONTACT'S ZONE TRUMPS THE CALL'S (#213, built 2026-11-05):**
+`GetMultArray` asks `CallsignsList.GetLoggedZone(call)` -- the zone of the most
+recently LOGGED QSO with that call, written by `LOGEDIT.AddQSOToDupeSheets`
+(live, loader and rescore, each in log order; only QSOs on the current dupe
+sheet; cleared by `ClearDupes`) -- before `ctyGetCQZone`/`ctyGetITUZone`. The
+strip, the call-window MULT flag and the spot hint all reach it through
+`GetMultArray`; do not read the CTY zone beside it. **Not built:** the bare-field header
 in 30 other domestic-file contests (an "unmapped means empty" rule reaches 30
 on a no-QTH text and all 97 on an unknown QTH, and would break YOTA, whose
 `YOTA.dom` lines have no `=`, so its table maps nothing).

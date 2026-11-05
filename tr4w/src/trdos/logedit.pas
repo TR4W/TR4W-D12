@@ -610,6 +610,14 @@ begin
      begin
      Exit;
      end;
+  (* THE PRIOR CONTACT'S ZONE -- issue 213. The three callers add QSOs in log
+    order, so the entry ends holding the most recently logged zone; a QSO
+    with no zone (0, or 255 for none) leaves an earlier one standing.
+    GetMultArray asks it before the call's CTY.DAT zone. *)
+  if (aRX.Zone > 0) and (aRX.Zone <= ZoneMultArraySize) then
+     begin
+     CallsignsList.SetLoggedZone(string(aRX.Callsign), aRX.Zone);
+     end;
   qualifier := ContestDupeKeyQualifier(ContestIdentity(Contest), aRX);
   if qualifier <> '' then
      begin
@@ -1180,13 +1188,22 @@ begin
      if zoneList in [zmzCQZones, zmzITUZones] then
         begin
 
-        if zoneList = zmzCQZones then
+        (* A PRIOR CONTACT'S ZONE TRUMPS THE CALL'S -- issue 213, NY4I
+          2026-11-05 (bench: IARU HF, W1AW logged in zone 7, CTY.DAT's 8).
+          The most recently logged one; the call's CTY.DAT zone when the
+          call has none. One place: the needs strip, the call-window MULT
+          flag and the spot hint (DetermineIfNewMult) all come here. *)
+        Zone := CallsignsList.GetLoggedZone(string(Call));
+        if Zone = 0 then
            begin
-           Zone := ctyGetCQZone(Call)
-           end
-        else
-           begin
-           Zone := ctyGetITUZone(Call);
+           if zoneList = zmzCQZones then
+              begin
+              Zone := ctyGetCQZone(Call)
+              end
+           else
+              begin
+              Zone := ctyGetITUZone(Call);
+              end;
            end;
 
         TempCardinal := $FFFFFFFF xor
