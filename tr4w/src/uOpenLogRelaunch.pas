@@ -105,6 +105,17 @@ function BuildRelaunchArguments(const aParentArgs: array of string;
 function WaitForInstanceRequested(const aArgs: array of string;
                                   out aParentPid: cardinal): boolean;
 
+(* WHAT TO START. aRunningBinary is ParamStr(0); aAppImage is the APPIMAGE
+  environment variable, which the AppImage runtime sets to the .AppImage file.
+
+  INSIDE AN APPIMAGE ParamStr(0) IS A PATH UNDER A TEMPORARY MOUNT that the
+  runtime tears down when the process that mounted it exits -- the parent. A
+  child started from there would lose its own executable and every shipped
+  data file the moment the old instance finished exiting. So the .AppImage
+  itself is started, which mounts afresh. Anywhere else APPIMAGE is unset and
+  the running binary is the answer. *)
+function RelaunchExecutable(const aRunningBinary, aAppImage: string): string;
+
 (* ParamStr(1)..ParamStr(ParamCount), for the two routines above. *)
 function CommandLineArguments: TRelaunchArgs;
 
@@ -274,6 +285,18 @@ begin
                                aParentPid);
          Exit;
          end;
+      end;
+end;
+
+function RelaunchExecutable(const aRunningBinary, aAppImage: string): string;
+begin
+   if aAppImage <> '' then
+      begin
+      Result := aAppImage;
+      end
+   else
+      begin
+      Result := aRunningBinary;
       end;
 end;
 

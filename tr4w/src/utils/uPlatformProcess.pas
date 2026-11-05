@@ -115,6 +115,20 @@ function RunConsoleProgramAndWait(const aExecutable: string;
                                   const aArgs: array of string;
                                   out aExitStatus: integer): boolean;
 
+(* START A PROGRAM THAT MUST OUTLIVE THIS ONE AND HOLD NOTHING OF IT -- TR4W
+  starting its own next instance (File > Open Log, issue 218).
+
+  RunProgram, except the child INHERITS NO HANDLES. TProcess inherits them by
+  default (fcl-process processbody.inc: FInheritHandles := True), and on
+  Windows a Winsock socket is inheritable by default -- so a child started on
+  the way out would keep a copy of every socket still open: the DX cluster
+  session, a listening TCI or WSJT-X port, the UDP socket left open when the
+  QSO dispatcher is stuck. The old process exiting would then close nothing,
+  and the new one would find its own ports taken and its cluster call still
+  logged in. Off Windows the flag does nothing harmful. *)
+function RunProgramIndependent(const aExecutable: string;
+                               const aArgs: array of string): boolean;
+
 (* HAND A FILE TO THE DESKTOP'S OWN HANDLER -- the Unix counterpart of asking
   Windows which program is registered for an extension.
 
@@ -457,7 +471,8 @@ function Launch(const aExecutable: string;
                 aArgs: TStrings;
                 aShow: TShowWindowOptions;
                 aOptions: TProcessOptions;
-                out aExitStatus: integer): boolean;
+                out aExitStatus: integer;
+                aInheritHandles: boolean = True): boolean;
 var
    p: TProcess;
    i: integer;
@@ -498,6 +513,9 @@ begin
            the one case where waiting is the whole point -- see its note. *)
          p.Options    := aOptions;
          p.ShowWindow := aShow;
+         (* True, TProcess's own default, for every caller but one -- see
+           RunProgramIndependent. *)
+         p.InheritHandles := aInheritHandles;
          p.Execute;
          if poWaitOnExit in aOptions then
             begin
@@ -546,6 +564,20 @@ begin
    args := ArgsToList(aArgs);
    try
       Result := Launch(aExecutable, args, swoShowNormal, [], ignoredStatus);
+   finally
+      args.Free;
+   end;
+end;
+
+function RunProgramIndependent(const aExecutable: string;
+                               const aArgs: array of string): boolean;
+var
+   args: TStringList;
+   ignoredStatus: integer;
+begin
+   args := ArgsToList(aArgs);
+   try
+      Result := Launch(aExecutable, args, swoShowNormal, [], ignoredStatus, False);
    finally
       args.Free;
    end;

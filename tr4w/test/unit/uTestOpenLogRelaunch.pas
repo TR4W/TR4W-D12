@@ -25,6 +25,7 @@ type
       procedure TestArgumentsDropWhatDoesNotCarry;
       procedure TestWaitSwitchParse;
       procedure TestTheChildReadsWhatTheParentWrote;
+      procedure TestExecutable;
       procedure TestRequestIsOneShot;
    public
       procedure RunAllTests; override;
@@ -164,6 +165,17 @@ begin
    CheckEquals(31337, integer(pid), 'the pid survives it');
 end;
 
+procedure TOpenLogRelaunchTests.TestExecutable;
+begin
+   BeginTest('TestExecutable');
+   CheckEquals('C:\TR4W\tr4w.exe', RelaunchExecutable('C:\TR4W\tr4w.exe', ''),
+               'no AppImage: the running binary');
+   CheckEquals('/home/op/TR4W.AppImage',
+               RelaunchExecutable('/tmp/.mount_TR4WxYz/usr/bin/tr4w',
+                                  '/home/op/TR4W.AppImage'),
+               'inside an AppImage: the .AppImage, not the mount that goes away');
+end;
+
 procedure TOpenLogRelaunchTests.TestRequestIsOneShot;
 var
    exe:  string;
@@ -188,6 +200,7 @@ begin
    TestArgumentsDropWhatDoesNotCarry;
    TestWaitSwitchParse;
    TestTheChildReadsWhatTheParentWrote;
+   TestExecutable;
    TestRequestIsOneShot;
 end;
 

@@ -4018,7 +4018,9 @@ begin
       end;
 
    logger.Info('[OpenLog] starting %s on %s', [exe, args[0]]);
-   if not RunProgram(exe, args) then
+   (* RunProgramIndependent, not RunProgram: the child must inherit none of
+     this process's sockets -- see that routine. *)
+   if not RunProgramIndependent(exe, args) then
       begin
       logger.Error('[OpenLog] the new instance did not start; TR4W exits ' +
                    'without it. Start TR4W by hand on %s', [args[0]]);
@@ -5199,7 +5201,8 @@ begin
       end;
 
    logger.Info('[OpenLog] closing %s and starting again on %s', [current, chosen]);
-   RequestRelaunch(ParamStr(0),
+   RequestRelaunch(RelaunchExecutable(ParamStr(0),
+                                      string(SysUtils.GetEnvironmentVariable('APPIMAGE'))),
                    BuildRelaunchArguments(CommandLineArguments, chosen,
                                           cardinal(System.GetProcessID)));
    ExitProgram(False);
