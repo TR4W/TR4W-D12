@@ -4777,57 +4777,62 @@ var
   startedAt: TDateTime;
   tookMs: Int64;
 begin
-  for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
-    if tr4w_WindowsArray[i].WndVisible then
-       begin
-       // TIME EACH ONE.  This whole loop logs nothing of its own, so a slow
-       // start-up shows up in the log as a silent gap of seconds between the
-       // band map and whatever runs next -- and "which window" then cannot be
-       // answered without a rebuild.  A restored window that connects to
-       // something (Telnet, a radio panel asking a rig whether it has a
-       // spectrum) is exactly the kind that can block, so the loop is asked to
-       // account for itself.
-       startedAt := Now;
-       // False: no focus hand-back per window -- FocusEntry below does it
-       // once, after the last one (issue 219).
-       OpenTR4WWindow(i, False);
-       tookMs := MilliSecondsBetween(Now, startedAt);
-       if tookMs >= SLOW_WINDOW_OPEN_MS then
+  try
+     for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
+       if tr4w_WindowsArray[i].WndVisible then
           begin
-          logger.Info('[Startup] restoring the %s window took %d ms', [WindowNames[i], tookMs]);
-          end
-       else if logger.IsTraceEnabled then
-          begin
-          logger.Trace('[Startup] restored %s in %d ms', [WindowNames[i], tookMs]);
+          // TIME EACH ONE.  This whole loop logs nothing of its own, so a slow
+          // start-up shows up in the log as a silent gap of seconds between the
+          // band map and whatever runs next -- and "which window" then cannot be
+          // answered without a rebuild.  A restored window that connects to
+          // something (Telnet, a radio panel asking a rig whether it has a
+          // spectrum) is exactly the kind that can block, so the loop is asked to
+          // account for itself.
+          startedAt := Now;
+          // False: no focus hand-back per window -- FocusEntry below does it
+          // once, after the last one (issue 219).
+          OpenTR4WWindow(i, False);
+          tookMs := MilliSecondsBetween(Now, startedAt);
+          if tookMs >= SLOW_WINDOW_OPEN_MS then
+             begin
+             logger.Info('[Startup] restoring the %s window took %d ms', [WindowNames[i], tookMs]);
+             end
+          else if logger.IsTraceEnabled then
+             begin
+             logger.Trace('[Startup] restored %s in %d ms', [WindowNames[i], tookMs]);
+             end;
           end;
-       end;
 
-  // THE OPERATOR TYPES IN THE CALL WINDOW, not in whatever opened last.  A
-  // restored tool window is Shown, and showing a window can take the focus --
-  // harmless when this ran before the message loop, but this now runs after
-  // tCallWindowSetFocus has already put the caret where it belongs.
-  //
-  // AND BRING THE MAIN WINDOW FORWARD WHILE DOING IT, which plain
-  // tCallWindowSetFocus does not.  Showing a tool window can take the
-  // FOREGROUND, not just the focus; setting focus into a form that is not
-  // frontmost records the intent -- ActiveControl -- and shows no caret, so
-  // the operator starts typing with nowhere visible to type (NY4I,
-  // 2026-08-28: 'after startup I do not know where the cursor is').
-  //
-  // FocusEntry keeps BringToFront opt-in because a caller that pulled TR4W
-  // to the foreground mid-contest would be a new and unwelcome behaviour.
-  // START-UP IS THE ONE PLACE THAT IS NOT TRUE: the operator just launched
-  // the program, and the window they launched belongs in front.
-  FocusEntry(TR4WCallEdit, True);
+     // THE OPERATOR TYPES IN THE CALL WINDOW, not in whatever opened last.  A
+     // restored tool window is Shown, and showing a window can take the focus --
+     // harmless when this ran before the message loop, but this now runs after
+     // tCallWindowSetFocus has already put the caret where it belongs.
+     //
+     // AND BRING THE MAIN WINDOW FORWARD WHILE DOING IT, which plain
+     // tCallWindowSetFocus does not.  Showing a tool window can take the
+     // FOREGROUND, not just the focus; setting focus into a form that is not
+     // frontmost records the intent -- ActiveControl -- and shows no caret, so
+     // the operator starts typing with nowhere visible to type (NY4I,
+     // 2026-08-28: 'after startup I do not know where the cursor is').
+     //
+     // FocusEntry keeps BringToFront opt-in because a caller that pulled TR4W
+     // to the foreground mid-contest would be a new and unwelcome behaviour.
+     // START-UP IS THE ONE PLACE THAT IS NOT TRUE: the operator just launched
+     // the program, and the window they launched belongs in front.
+     FocusEntry(TR4WCallEdit, True);
+  finally
+     (* AND ONLY NOW IS THE RAISE ON ACTIVATION ARMED (issue 219). Armed before
+       this restore ran, an application activation from start-up -- which the
+       LCL delivers through QueueAsyncCall, so it can run after the restore --
+       raised every window a second time. Arming stamps the raise as just done,
+       because FocusEntry above IS a raise, so an activation still queued from
+       start-up is an echo and is swallowed. A real switch back to TR4W later is
+       not affected.
 
-  (* AND ONLY NOW IS THE RAISE ON ACTIVATION ARMED (issue 219). Armed before
-    this restore ran, an application activation from start-up -- which the LCL
-    delivers through QueueAsyncCall, so it can run after the restore -- raised
-    every window a second time. Arming stamps the raise as just done, because
-    FocusEntry above IS a raise, so an activation still queued from start-up
-    is an echo and is swallowed. A real switch back to TR4W later is not
-    affected. *)
-  ArmActivationRaiser;
+       IN A finally: a window that raises while it opens must not leave the
+       raise unarmed for the whole session. *)
+     ArmActivationRaiser;
+  end;
 end;
 
 { THE MAIN WINDOW FIRST, THE TOOL WINDOWS AFTER THE LOOP IS RUNNING.
