@@ -375,7 +375,6 @@ begin
   // against a recording stub instead of a network trace.
   UDPBroadcaster.SetTransport(SendUDPPayload);
   ConfigureUDPBroadcastFromLibrary;
-  if Settings.Qtc.Enable then New(QTCDataArray); //LoadQTCDataFile;
 
 //  if TempDomesticQTHDataFileName <> nil then
 //    TF.Format(DomQTHDataFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME, TempDomesticQTHDataFileName);

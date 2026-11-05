@@ -204,7 +204,6 @@ type
   end;
 
   QTCDataArrayType = array[0..500 - 1] of QTCDataType;
-  QTCDataArrayPtr = ^QTCDataArrayType;
 
   WindowType = (NoWindow,
     AlarmWindow,
@@ -660,7 +659,7 @@ var
   //  PrefixInfoFileName               : String='';
 
 
-  QTCDataArray                          : QTCDataArrayPtr;
+  QTCDataArray                          : QTCDataArrayType;  (* per-station QTC counts; rows below NumberQTCStations are live *)
 
   RadioOnTheMove                        : array[RadioType] of boolean; {KK1L: 6.73 slowly changing over to arrayed radio varibles}
   RadioMovingInBandMode                 : array[RadioType] of boolean; {KK1L: 6.73}
@@ -2377,12 +2376,11 @@ begin
   if (NumberQTCStations = 0) or (Count = 0) then Exit;
 
   for Station := 0 to NumberQTCStations - 1 do
-//    if BigCompressedCallsAreEqual(QTCDataArray^[Station].Call, CompressedCall) then
-    if QTCDataArray^[Station].Call = Call then
+    if QTCDataArray[Station].Call = Call then
        begin
-       while (QTCDataArray^[Station].NumberQTCs > 0) and (Count > 0) do
+       while (QTCDataArray[Station].NumberQTCs > 0) and (Count > 0) do
           begin
-          dec(QTCDataArray^[Station].NumberQTCs);
+          dec(QTCDataArray[Station].NumberQTCs);
           dec(Count);
           end;
        end;

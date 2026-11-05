@@ -224,12 +224,13 @@ value it collects (`Radio1IDs`) is **read by nothing** — the transmitter-id
 column in the Cabrillo QSO line is derived from something else entirely. See the
 note at that site in `trdos/postunit.pas`, and Part 4.
 
-**The QTC-per-station table now allocates itself.** Saving a book used to be able
+**The QTC-per-station table is a plain array.** Saving a book used to be able
 to fault with an access violation, because the table counting QTCs per station
 was allocated only if `QTC ENABLE` was true at config-load time, while the QTC
-menu is enabled by the **contest** alone. Both gates still exist and still
-disagree; the crash does not. If you see a `[QTC]` warning in the log about more
-than 500 stations, that is a new bound check and not a fault.
+menu is enabled by the **contest** alone. The table is no longer allocated at
+all (pointer audit 2.5, 2026-11-05): it exists, zeroed, whenever the program
+does, so the two gates cannot disagree about it. If you see a `[QTC]` warning in
+the log about more than 500 stations, that is a bound check and not a fault.
 
 ---
 

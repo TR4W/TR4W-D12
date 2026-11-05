@@ -50,6 +50,9 @@ type
       FSavedLogName: string;
       FSavedLogPath: string;
       FSavedSilent: boolean;
+      FSavedContestName: string;
+      FSavedContestTitle: string;
+      FSavedCall: string;
       procedure StartLog;
       procedure StopLog;
       function ReportText(const aFileName: string): RawByteString;
@@ -138,6 +141,9 @@ begin
    FSavedLogName := CharBufferText(TR4W_LOG_FILENAME);
    FSavedLogPath := CharBufferText(TR4W_LOG_PATH_NAME);
    FSavedSilent := tSilentExport;
+   FSavedContestName := Settings.Contest.Name;
+   FSavedContestTitle := Settings.Contest.Title;
+   FSavedCall := Settings.My.Call;
    GSavedContest := Contest;
    SetCharBuffer(TR4W_LOG_FILENAME, trw);
    (* The reports are written under the log's path. *)
@@ -162,6 +168,9 @@ begin
    SetCharBuffer(TR4W_LOG_FILENAME, FSavedLogName);
    SetCharBuffer(TR4W_LOG_PATH_NAME, FSavedLogPath);
    tSilentExport := FSavedSilent;
+   Settings.Contest.Name := FSavedContestName;
+   Settings.Contest.Title := FSavedContestTitle;
+   Settings.My.Call := FSavedCall;
    Contest := GSavedContest;
    ReleaseActiveContest;
    if FDir <> '' then

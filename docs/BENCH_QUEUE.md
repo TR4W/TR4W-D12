@@ -30,6 +30,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- THE WAE QTC COUNTS LIVE IN A PLAIN ARRAY (pointer audit P13 part 2, 2.5)
+
+Unit-pinned: the per-station counting, lookup, decrement and the 500-station edge
+(`uTestQTCCounts`). Not driven by any test: the two QTC windows and the reset of the
+counts on a new log. The table used to be a heap pointer and is now a zeroed static
+array, so nothing is expected to differ; the item below is the QTC windows' normal
+run, which `QTC_BENCH_HANDOFF.md` scripts in full.
+
+- [ ] **WAE QTC send and receive, and the per-station count** (WAE contest, with
+  `QTC ENABLE` both on and off). Send a QTC book to a station and receive one. EXPECT:
+  no access violation; the QTC count shown for the station rises by the book's size,
+  answering No at the confirm steps it back, and a second station's count is its own.
+  With `QTC ENABLE` on, start a new log or reset the dupe sheet: the counts return to
+  zero. (With it off the dupe-sheet reset leaves the counts alone, as it always did --
+  the reset is inside that setting's test -- so do not expect zero there.)
+
 ## Added 2026-11-05 -- THE LINE-FILE CALLBACK, THE EDIT-MESSAGE ROW AND THE PARK LIST ARE TYPED (pointer audit P16, 5.5, 5.6)
 
 Unit-pinned: what `TF.EnumerateLinesInFile` hands its loaders (line breaks,

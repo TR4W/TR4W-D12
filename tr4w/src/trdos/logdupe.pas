@@ -981,10 +981,7 @@ begin
 
   if Settings.Qtc.Enable then
      begin
-     if QTCDataArray <> nil then
-        begin
-        FillChar(QTCDataArray^, SizeOf(QTCDataArrayType), 0);
-        end;
+     QTCDataArray := Default(QTCDataArrayType);
      NumberQTCBooksSent := 0;
      NumberQTCStations := 0;
      TotalNumberQTCsProcessed := 0;

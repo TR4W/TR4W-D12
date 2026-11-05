@@ -67,31 +67,31 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > 2026-10-16 inventory (at `28599599`, BEFORE P4 -- so the change is every
 > packet since PLUS every line of new code, not the packets alone):
 >
-> | rule | 2026-10-16 | 2026-11-05 |
-> |---|---:|---:|
-> | C1-ptrtype-decl | 91 | 63 |
-> | C1-link-field | 12 | 4 |
-> | C2-heap | 9 | 4 |
-> | C2-new-dispose | 79 | 40 |
-> | C3-pointer-cast | 7 | 6 |
-> | C3-int-of-ptr | 11 | 8 |
-> | C3-typed-ptr-type | 181 | 177 |
-> | C3-addr-of | 387 | 323 |
-> | C3-deref | 1,127 | 644 |
-> | C3-inc-dec-ptr | 41 | 33 |
-> | C3-untyped-param | 35 | 20 |
-> | C3-memcmp | 2 | 2 |
-> | C3-s1 | 21 | 15 |
-> | C5-tobject-cast | 7 | 11 |
-> | C5-objects | 33 | 37 |
-> | C5-tag | 70 | 80 |
-> | C5-lparam | 40 | 40 |
-> | C5-data | 16 | 15 |
-> | C6-object-type | 12 | 6 |
-> | C6-ptr-named | 562 | 574 |
-> | C7-proc-type | 96 | 125 |
-> | C7-pointer-word | 70 | 111 |
-> | **src total** | **2,909** | **2,338** |
+> | rule | 2026-10-16 | 2026-11-05 | after P16 and P13 2.4/2.5 (2026-11-05) |
+> |---|---:|---:|---:|
+> | C1-ptrtype-decl | 91 | 63 | 60 |
+> | C1-link-field | 12 | 4 | 4 |
+> | C2-heap | 9 | 4 | 4 |
+> | C2-new-dispose | 79 | 40 | 30 |
+> | C3-pointer-cast | 7 | 6 | 6 |
+> | C3-int-of-ptr | 11 | 8 | 8 |
+> | C3-typed-ptr-type | 181 | 177 | 177 |
+> | C3-addr-of | 387 | 323 | 322 |
+> | C3-deref | 1,127 | 644 | 521 |
+> | C3-inc-dec-ptr | 41 | 33 | 33 |
+> | C3-untyped-param | 35 | 20 | 20 |
+> | C3-memcmp | 2 | 2 | 2 |
+> | C3-s1 | 21 | 15 | 15 |
+> | C5-tobject-cast | 7 | 11 | 11 |
+> | C5-objects | 33 | 37 | 37 |
+> | C5-tag | 70 | 80 | 80 |
+> | C5-lparam | 40 | 40 | 33 |
+> | C5-data | 16 | 15 | 15 |
+> | C6-object-type | 12 | 6 | 6 |
+> | C6-ptr-named | 562 | 574 | 572 |
+> | C7-proc-type | 96 | 125 | 125 |
+> | C7-pointer-word | 70 | 111 | 111 |
+> | **src total** | **2,909** | **2,338** | **2,192** |
 >
 > **Six rows ROSE**, and they are stated, not explained: `C7-pointer-word`
 > +41 (P1 accounts for +20 -- the RTL thread parameter, see P1 and P2; the
@@ -99,14 +99,16 @@ dirty). NOTHING WAS CHANGED: this is an inventory and a schedule.**
 > +12, `C5-tobject-cast` +4, `C5-objects` +4. The 2026-11-05 run also has a
 > `server` column (`C3-addr-of` 3) that the original table did not.
 >
-> **P13 PART 1 (2.4) IS DONE (2026-11-05)** -- `postunit`'s two report arrays are
-> module arrays, not `New`/`Dispose` blocks; see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05).
-> `src` total 2,289 -> **2,210** (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`).
+> **P13 IS DONE FOR 2.4 AND 2.5 (2026-11-05)** -- `postunit`'s two report arrays and the
+> WAE QTC table are module arrays, not `New`/`Dispose` blocks; see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05)
+> and [P13 part 2](#p13-part-2----the-qtc-per-station-table-2026-11-05). Items 2.7 and 2.8 of the packet are still open.
+> `src` total 2,289 -> **2,210** after part 1 (-79: 69 `C3-deref`, 8 `C2-new-dispose`, 2 `C1-ptrtype-decl`),
+> -> **2,192** after part 2 (-18).
 >
 > **P16, 5.5 AND 5.6 ARE DONE (2026-11-05, `c7befe92`)** --
 > see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05).
 > `src` total 2,338 -> **2,289**. Still open after it: P6 item 6.5, P9 (5.1-5.4),
-> P11, P13 (part 1, item 2.4, is since done -- see above), and the four old-style objects above.
+> P11, P13 (2.4 and 2.5 are since done -- see above; 2.7 and 2.8 are not), and the four old-style objects above.
 >
 > **The category-2.7 path `uIcomNetworkDiscovery.pas:151` is right** (a
 > 2026-11-05 reconciliation said the file did not exist; it is tracked at
@@ -450,7 +452,7 @@ nothing automated; needs a [`BENCH_QUEUE.md`](BENCH_QUEUE.md) entry.
 | 2.2 | `trdos/logscp.pas:305-400` `CellBufferObject.Initialize`/`GoAway`: `New(Buffer1..3)` in POST mode, `GetMem(Buffer1, NumberBytes)` otherwise; `New/Dispose(CallsAlreadySaved)` `:1170/1273`, `:2382/2469`; `New/Dispose(SCPIndexArray)` `:1949/2975` | the TRMASTER cell buffer | live (SCP, initial-exchange lookup) | `TBytes` / dynamic arrays sized by `SetLength`; one allocation strategy instead of two | medium -- **two allocators for one pointer**, chosen by `MaximumMemoryToUse`; `GoAway` must pick the matching free | MATRIX (opens `MATRIX-TRMASTER.DTA`, emits `initialexchange.trmaster.*`); **partial-call SCP itself has no UT** -- **`TSCPCellBuffer` + `uTestLogSCP` DONE 2026-10-17 (P7): the cell buffer is one dynamic array; `New/Dispose(CallsAlreadySaved)` and `SCPIndexArray` are left, in dead or index-table code** |
 | 2.3 | `uCallsigns.pas:426`, `uSortedStringList.pas:261` `ReallocMem(FList, ...)` | hand-rolled growable arrays inside old-style objects | live (`CallsignsList` partials; `mo.PrfList`/`DomList` multipliers) | **DONE (P8 part A)**: classes over `TObjectList` of class items -- see the P8 section | medium | `uSortedStringList`: UT `uTestMults`, `uTestHostAreaRule`, `uTestOffBandCredit`, MATRIX, CORPUS. `uCallsigns`: UT `uTestStringCompare`, `uTestOffBandCredit` (partial) |
 | 2.4 | **DONE 2026-11-05 (P13 part 1)** -- was `trdos/postunit.pas:1346/1351` (`ScoreByHour`), `:2027/2034` (`QSOsByCountryByBand`), `:3340/3345`, `:3440/3447` (`tGenerateSummaryPortionOfCabrilloFile`) | temporary report arrays, `New` ... `Dispose` with **no `try/finally`** | live | a local dynamic array or class instance | low | the Cabrillo summary: CORPUS. The two reports: **none** -- `uTestPostUnitReports` pins all four report texts now |
-| 2.5 | `trdos/logstuff.pas:1068`, `trdos/LogCfg.pas:347` | `QTCDataArray` | live (WAE) | a dynamic array owned by the contest | low | **none** for QTC; `docs/QTC_BENCH_HANDOFF.md` is the bench script |
+| 2.5 | **DONE 2026-11-05 (P13 part 2)** -- was `trdos/logstuff.pas:1068`, `trdos/LogCfg.pas:347` | `QTCDataArray` | live (WAE) | a dynamic array owned by the contest | low | **none** for QTC windows; `docs/QTC_BENCH_HANDOFF.md` is the bench script -- the counters are pinned by `uTestQTCCounts` now |
 | 2.6 | `uSettingsModel.pas:5727, 5832, 7058, 7166` `FreeMem(props)` | frees `GetPropList`'s result | live | **keep** -- `TypInfo.GetPropList` allocates and the caller frees; that is the RTL's contract. Add the comment | none | UT `uTestSettingsModel`, `uTestAllSettings` |
 | 2.7 | `uCAT.pas:107, 128, 153` `Dispose(P...DiscoveredRadio(list[i]))`; `uK4Discovery.pas:227`, `radioFactory/uFlexDiscovery.pas:281`, `uIcomNetworkDiscovery.pas:151` `New(Radio)` | discovery results as `^record` in a `TList` | live | `specialize TObjectList<TDiscoveredX>` with `OwnsObjects` | low | UT `uTestFlexDiscovery`; K4 and Icom discovery: **none** -> BENCH |
 | 2.8 | `uIcomNetworkTransport.pas:2611/2621/2653` (`PSeqBufEntry`), `radioFactory/uRadioHamLibDirect.pas:762/885` (`PHLCommand`) | per-radio queues of `^record` | live | `specialize TQueue<T>` / `TList<T>` of records | medium (Icom LAN is unproven on the bench) | UT `uTestIcomTeardown` (Icom, partial), `uTestHamLibIDs` (ids only); BENCH |
@@ -581,7 +583,7 @@ Owners follow CLAUDE.md's routing table.
 | **P10** | Small puns and terminators -- **DONE 2026-10-19** (`bd396f4a`), see below | 3.3, 3.4, 3.6, 6.14 | low risk, easy to pin | **TEST FIRST** for 3.3 (short-call pins in `uTestDXSpotParse`); `uTestCTYDAT` for 6.14; 3.4 and 3.6 BENCH | write the 3.3 pins | dx-cluster, cw-keying, multi-op-network, file-formats |
 | **P11** | `RadioObject` -> class | 6.1, 7.6 | the largest item (363 pointer mentions) and the widest blast radius; every radio | UT `uTestRadioStatus` / `uTestCWKeyer` / `uTestStatusAndNotice` / `uTestTCIServer`, then BENCH one rig per verified family (`RADIO_BENCH_STATUS.md`) | P1 done (`BeginPolling` takes `RadioPtr`) | radio-factory, cw-keying |
 | **P12** | Untyped byte buffers -> open arrays -- **DONE 2026-10-18 for the byte-holding callers (`252885aa`, committed 2026-10-19); the record senders and `utils_file` LEFT, see [P12](#p12----untyped-byte-buffers-to-open-arrays-2026-10-18)**. Pins written first and green against the old code: `uTestCRC16` (new), `uTestWinKeyWire` (new), and additions to `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestUtilsText`. Move-family 453 -> 444 (ceiling lowered) | 3.5 | correct today; this is the "byte I/O stays byte I/O, the pointer goes" rule | UT `uTestCRC32`, `uTestSHA256`, `uTestNetFraming`, `uTestWebSocketFraming`, `uTestIcomCIV`; WinKeyer + server BENCH | none | serial-port-io, multi-op-network, tci-interface, cw-keying |
-| **P13** | Heap temporaries and queues -- **part 1 (2.4) DONE 2026-11-05**, see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05) | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
+| **P13** | Heap temporaries and queues -- **2.4 and 2.5 DONE 2026-11-05**, see [P13 part 1](#p13-part-1----postunits-report-arrays-2026-11-05) and [part 2](#p13-part-2----the-qtc-per-station-table-2026-11-05); 2.7 and 2.8 open | 2.4, 2.5, 2.7, 2.8 | leaks on exception, `^record` in `TList` | CORPUS (Cabrillo summary); UT `uTestFlexDiscovery`, `uTestIcomTeardown`; the two post-contest reports and K4/Icom discovery are BENCH; QTC per `QTC_BENCH_HANDOFF.md` | none | file-formats, radio-factory, contest-scoring |
 | **P14** | Wire overlays | 3.2, 6.13 | correct today, high blast radius, and possibly superseded | **TEST FIRST**: a decode pin per message type (bytes in, fields out) against the current overlay; then two-station BENCH | **SKIPPED -- NY4I, 2026-10-16 (`6b7e2c1b`): "skip P14, the new protocol replaces it."** The V1 wire overlays are left as they are and retire with the protocol | multi-op-network |
 | **P15** | Ratchet the Move counter | -- | 387 -> 464 in four weeks, all new `FillChar` | **DONE 2026-10-17 (`6e20d349`):** a `$MOVE_CEILING` in `Count-LiveMove.ps1` (read that line for the current figure), ratcheting down, wired into `Run-Lints.ps1` as `Count-LiveMove -Gate` (fixture first, fails closed under file and count floors) | none | build-release |
 | **P16** | Remaining `src` `...EnumLines` callback -- **DONE 2026-11-05**, see [P16, 5.5 and 5.6](#p16-55-and-56----the-line-callback-a-row-number-and-a-park-list-2026-11-05) | 7.4 | touches six loaders; do after P3 and P5, which own two of them | MATRIX, CORPUS, UT `uTestDomQTHTableReload` | P3, P5 | contest-scoring, settings-config |
@@ -1247,6 +1249,46 @@ first, before and after.
 `Default`); the ceiling is lowered to 432 in the same commit.
 
 **Oracles.** Unit 424,172 / 0, plain and `-Checked` (heaptrc 0 corruption reports,
+57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both
+at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
+identical, 0 differing, no re-freeze.
+
+---
+
+### P13 part 2 -- the QTC-per-station table, 2026-11-05
+
+**Test first.** `test/unit/uTestQTCCounts.pas` (4 tests, 19 checks) drives the
+routines the WAE windows and the log loop call -- `IncrementQTCCount`,
+`NumberQTCsThisStation`, `DecrementQTCCount` -- for per-station counting, lookup,
+decrement down to zero touching only that station, the 500-station edge (the 501st
+is counted as processed but not kept, and a station on the books still counts),
+and a counter reset forgetting the stations. It passed on the pointer code
+(424,191 / 0) before the change and again after. It reaches the table only through
+those routines and resets the two counters it is read through.
+
+**The conversion.** `QTCDataArray` was `^QTCDataArrayType`, made by `New` in
+`LogCfg` (when `QTC ENABLE` was on, not zeroed, no nil check) and by
+`logstuff.EnsureQTCDataArray` (on demand, zeroed). The 2026-09-01 access
+violation that routine was written for came from those two gates disagreeing.
+It is `QTCDataArray: QTCDataArrayType` now -- 500 rows of a short call and a
+byte, about 7 KB -- a static array that exists, zeroed, whenever the program does.
+`EnsureQTCDataArray`, its three calls, the `LogCfg` allocation, the
+`QTCDataArrayPtr` type and the nil test in `logdupe` are deleted; the dupe-sheet
+reset zeroes the table with `Default`. The "a new table holds no stations" line
+in `EnsureQTCDataArray` is not needed: `NumberQTCStations` starts at 0 and the
+reset sets it with the zeroing. The history comment in `logstuff` is shortened
+to say what is true now.
+
+**What is NOT covered.** The two windows (`uQTCS`, `uQTCR`) and the reset on a
+new contest/log are not driven by any test; `QTC_BENCH_HANDOFF.md` is the script
+and `BENCH_QUEUE.md` carries the item. The reset's `Default` zeroing is the same
+effect as the `FillChar` it replaces.
+
+**Counters.** `src` total 2,210 -> 2,192: `C3-deref` -13, `C2-new-dispose` -2,
+`C6-ptr-named` -2, `C1-ptrtype-decl` -1. `Count-LiveMove` 432 -> 430; the
+ceiling is lowered to 430 in the same commit.
+
+**Oracles.** Unit 424,191 / 0, plain and `-Checked` (heaptrc 0 corruption reports,
 57 unfreed = the ceiling). App 0 errors; narrowing 1201 and range warnings 3, both
 at their ceilings. 54 lints. Corpus 16 / 0 / 10, exit 0. Contest matrix 194
 identical, 0 differing, no re-freeze.
