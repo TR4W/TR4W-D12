@@ -8,19 +8,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 > summarizes a design, the document listed under [Documentation map](#documentation-map) is
 > authoritative.
 
-## ~~MANDATORY: Git command form~~ — RESCINDED 2026-09-07
-
-`git -C /c/tr4w-d12 <subcommand>` is **no longer required**, and the PreToolUse hook that enforced
-it (`.claude/hooks/enforce-git-c.py`) is deleted.
-
-**Why it existed, and why it stopped mattering:** a `cd` to the already-current directory triggered
-a permission prompt on every shell block, back when NY4I approved commands one at a time. That is no
-longer how this session runs, so the rule was costing rewrites and buying nothing (NY4I,
-2026-09-07).
-
-`git -C` remains a perfectly good habit — it is explicit about which tree it acts on, which genuinely
-matters in a multi-repo workspace — but it is a preference now, not a rule, and nothing enforces it.
-
 ## MANDATORY: Project guardrails live in the repo
 
 `.claude/settings.json` and `.claude/hooks/` are **tracked**. They carry the hooks every clone needs:
@@ -29,31 +16,20 @@ Bash command that would wait on standard input — a heredoc, or a `cat` with no
 background shell running `cat > /dev/null; python - <<'EOF'` waited for **1 day 0 h 21 m** and
 held up the agent that owned it; a background shell has no timeout, so the only control is to
 refuse the shape. NY4I: *"That should never be allowed to happen."* Write files with the Write
-tool and pass scripts as files. (The `git -C` rule is **gone as of
-2026-09-07** — see the section above. The Pascal glob rule
-is **gone as of 2026-09-07** -- it blocked `--include=*.pas` because 25 units had
-UPPERCASE extensions, and those are renamed. Its successor
-`build/Lint-UnitFileNames.ps1` fails the build instead of warning a shell.)
+tool and pass scripts as files.
 
 **`.claude/settings.local.json` is gitignored and is yours alone** — permission allow-lists, machine
 paths, anything you would not ask another developer to adopt. It wins over `settings.json` where they
 overlap. `CLAUDE.local.md` is ignored for the same reason: personal notes, not project instruction.
 
-This split was made on 2026-08-29 and it fixed a real gap. `.claude/` had been ignored wholesale, so
-every hook above existed on exactly one machine, and this file had been claiming since August that
-`.claude/settings.json` enforced a rule, from a file that was not in the repository. A control that
-is real on one clone and absent on the next is worse than no control, because it is believed.
+Hooks that exist on one clone only are worse than none, because they are believed
+(`.claude/` was ignored wholesale until 2026-08-29, so every hook above existed on one machine).
 
 **Hook commands must use `$CLAUDE_PROJECT_DIR`, never an absolute path.** The clones are not in the
 same place — `C:\tr4w-d12` here, `C:\projects\TR4W-D12` elsewhere — and a hardcoded path is a hook
 that silently does not run.
 
 ## MANDATORY: Never force-push `main`
-
-> **The branch was `fpc` until 2026-08-29.** That name marked an open question — whether FreePascal
-> was the toolchain — and the question closed months ago, so the marker had outlived its purpose
-> (NY4I). Renamed, not rebuilt: `master` was `fpc`'s own ancestor (merge-base `457bc14d`), nothing
-> had diverged, and a rename preserves every SHA. `fpc` no longer exists on the remote.
 
 `main` is shared across at least three clones. **Never rewrite its history** — no `push --force`, no
 `--force-with-lease`, no delete-and-recreate. A rewrite invalidates every other clone, and this is
@@ -85,10 +61,6 @@ Forensics and the reset recipe for a stale clone: **`git-history-recovery` skill
 **TR4W/TR4W-D12 IS PUBLIC.** A `Claude-Session: https://claude.ai/code/session_…` trailer is a link
 to a private transcript. Do not put one in a commit message or a PR body. `Co-Authored-By` is fine.
 
-This rule is new on 2026-08-29 and **it is the whole fix.** Until today CLAUDE.md said nothing about
-it — zero mentions — so the trailer was not being added against a rule, it was being added in the
-absence of one. Agents follow this file; that is what it is for.
-
 If one still reaches the remote, the fix is **forward-only**: stop emitting it, and leave the
 published commit alone. Removing it means rewriting published history, which is the thing that cost
 a day. Rotate the session if the link matters.
@@ -118,58 +90,17 @@ Linux:
 > way the program did it before is immaterial and any references to handles
 > require immediate evaluation."*
 
-**"IT IS NOT THE LCL WAY" IS A COMPLETE REASON ON ITS OWN.** It needs no second
-justification, and NY4I said so explicitly when one was offered: testability is
-*also* a reason, and citing it must never imply that the native-way argument was
-insufficient without it.
-
-**"THE WAY THE PROGRAM DID IT BEFORE IS IMMATERIAL."** Faithfulness to the Win32
-original is not a defence. It was the right instinct during the conversion, when
-the goal was to change no behaviour, and it is finished: the shapes it preserved
-are now defects that arrive one bench session at a time.
-
 ### What this means in practice
 
-| if you find | write instead |
-|---|---|
-| an owner-draw handler | the control's own drawing, plus the LCL's colour hook (`OnPrepareCanvas`) |
-| a control holding empty items, with the data in a global | the data IN the control -- `Cells`, `Items`, `Caption` |
-| a shadow counter beside a control | ask the control |
-| a forced `Invalidate` after a data change | put the data in the control; it invalidates itself |
-| `Objects[]` or a pointer carrying an identity | a typed field the view owns |
-| a `Handle`, an `HWND`, or a `SendMessage` | the property or method the LCL provides |
-| a procedure variable passed a `TCanvas` between units | the event the control already raises |
-
-**A HANDLE IS THE LOUDEST SIGNAL AND GETS EVALUATED ON SIGHT.** Not "left for
-the sweep" -- looked at when you are already in the file. Some are legitimate:
-a real Win32 API boundary behind `{$IFDEF WINDOWS}`, or byte-exact serial I/O.
-Those keep their handle and gain a comment saying why. Everything else goes.
-
-### Why the rule pays, in one worked example
-
-`lstPossibleCall`, the strip of partial-call candidates, was a faithful
-translation of an owner-drawn `LBS_OWNERDRAWFIXED` listbox: N EMPTY STRINGS in
-the control, the callsigns in a global, and a paint handler in *another unit*
-indexing that global by item position. Every defect it produced followed from
-the control holding no data:
-
-| | |
-|---|---|
-| the control could not tell its content changed | forced `Invalidate` -- NY4I, 2026-08-24 |
-| its item count could not be trusted | a shadow counter |
-| every pixel was ours | `DefaultDrawing := False` |
-| hiding it dropped its window handle | accessors gating on `HandleAllocated` stopped working, and the feature broke outright |
-
-It is a `TStringGrid` now. `Cells[i, 0]` holds the callsign, `ColCount` is the
-count, `OnPrepareCanvas` sets the colours, and roughly fifty lines of canvas
-work in `MainUnit` are deleted. **None of those four failures can recur**,
-because each of them required a control that did not hold its own data.
-
-**AND IT BECAME TESTABLE**, which the old one was not: a strip holding N empty
-strings has nothing an assertion can read. That is a consequence of doing it
-natively, not a precondition for bothering.
-
-## MANDATORY: Involve the specialist whose area you are touching
+| if you find                                              | write instead                                                             |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| an owner-draw handler                                    | the control's own drawing, plus the LCL's colour hook (`OnPrepareCanvas`) |
+| a control holding empty items, with the data in a global | the data IN the control -- `Cells` , `Items` , `Caption`                  |
+| a shadow counter beside a control                        | ask the control                                                           |
+| a forced `Invalidate` after a data change                | put the data in the control; it invalidates itself                        |
+| `Objects[]` or a pointer carrying an identity            | a typed field the view owns                                               |
+| a `Handle` , an `HWND` , or a `SendMessage`              | the property or method the LCL provides                                   |
+| a procedure variable passed a `TCanvas` between units    | the event the control already raises                                      |
 
 NY4I, 2026-09-18:
 
@@ -181,23 +112,23 @@ subsystem specialists, each scoped to a real seam in this tree. Before working a
 issue or a feature, identify which areas it touches and involve those agents —
 **plural is the normal case**, because almost nothing here lives in one subsystem.
 
-| agent | area |
-|---|---|
-| `radio-factory` | `src/radioFactory/`, the registry, capabilities, polling, SO2R |
-| `cw-keying` | the keyer factory, `LogCW`, framing, prosigns, element timing |
-| `tci-interface` | TCI protocol, `TTCIRadio`, the TCI server, WebSocket transport |
-| `serial-port-io` | port enumeration and identity, the serial transport, `SERIAL n` |
-| `contest-factory` | `src/contestFactory/` — the contest classes and registry |
-| `contest-scoring` | the TRDOS engine: exchange parsing, mults, dupes, points |
-| `file-formats` | ADIF, Cabrillo, CTY.DAT, TRMASTER, binary-log import |
-| `log-database` | the SQLite contest log, schema, repository, integrity |
-| `dx-cluster` | Telnet, spot parsing, the spot store, ageing, the band map |
-| `multi-op-network` | `tr4wserver`, the client link, the packet protocol |
-| `integrations` | WSJT-X, MMTTY, the external logger factory |
-| `settings-config` | `uSettingsModel`, the JSON stores, the command vocabulary |
-| `lcl-ui` | `src/ui/lcl/`, `MainUnit`, display, colours, Win32-artifact removal |
-| `i18n` | resourcestrings, the `.po` catalogues, caption visibility |
-| `build-release` | the build scripts, lints, CI runners, installer, releases |
+| agent              | area                                                                  |
+| ------------------ | --------------------------------------------------------------------- |
+| `radio-factory`    | `src/radioFactory/` , the registry, capabilities, polling, SO2R       |
+| `cw-keying`        | the keyer factory, `LogCW` , framing, prosigns, element timing        |
+| `tci-interface`    | TCI protocol, `TTCIRadio` , the TCI server, WebSocket transport       |
+| `serial-port-io`   | port enumeration and identity, the serial transport, `SERIAL n`       |
+| `contest-factory`  | `src/contestFactory/` — the contest classes and registry              |
+| `contest-scoring`  | the TRDOS engine: exchange parsing, mults, dupes, points              |
+| `file-formats`     | ADIF, Cabrillo, CTY.DAT, TRMASTER, binary-log import                  |
+| `log-database`     | the SQLite contest log, schema, repository, integrity                 |
+| `dx-cluster`       | Telnet, spot parsing, the spot store, ageing, the band map            |
+| `multi-op-network` | `tr4wserver` , the client link, the packet protocol                   |
+| `integrations`     | WSJT-X, MMTTY, the external logger factory                            |
+| `settings-config`  | `uSettingsModel` , the JSON stores, the command vocabulary            |
+| `lcl-ui`           | `src/ui/lcl/` , `MainUnit` , display, colours, Win32-artifact removal |
+| `i18n`             | resourcestrings, the `.po` catalogues, caption visibility             |
+| `build-release`    | the build scripts, lints, CI runners, installer, releases             |
 
 **Why it pays here specifically.** Each definition carries the traps of its area
 that no compiler and no lint can catch — the ones this file records at length: a
@@ -216,205 +147,44 @@ is.
 
 ## MANDATORY: Development Philosophy
 
-This is a port. We want to do this once. Refactoring is not as important a factor as getting the
-object model correct. For example, the radio factory should be a classic factory pattern with proper
-inheritance.
-
 ## Overview
 
-TR4W is a free amateur radio contest logging application for Windows, written in Object Pascal.
-It supports 120+ contests with multi-user networking, extensive radio control, and digital mode
-integration. A large tree — `tr4w/src`, with `src/trdos`, `src/radioFactory`, `src/utils` and
-`src/lang` beneath it. **Unit and line counts are not stated here on purpose**: they drift, and a
+TR4W is a free amateur radio contest logging application, written in Object Pascal (FreePascal +
+the Lazarus LCL). **Unit and line counts are not stated here on purpose**: they drift, and a
 stale count is believed. Measure.
 
-**Repository:** `TR4W/TR4W-D12`, and **`d12` is the only remote.** ~~Note `origin` is a *different*
-repo — `TR4W/TR4W`, the Delphi 7 heritage — so `git push origin ...` pushes to the wrong project.~~
-**That warning is retired: there is no `origin` remote** (checked 2026-08-29). The D7 relationship is
-severed. The D7 *tree* on disk at `C:\TR4W` is unaffected and is still the authority on old
-behaviour — see note 7 below.
+**Repository:** `TR4W/TR4W-D12`, and **`d12` is the only remote** (there is no `origin`). The D7
+*tree* on disk at `C:\TR4W` is still the authority on old behaviour -- see note 7 below.
 
-**Branch:** **`main`** — the active line and the default. ~~`fpc`~~ was renamed to it on 2026-08-29;
-`delphi12` is its predecessor and is fully contained in it.
-~~`master` means the D7 heritage on both remotes.~~ **Also wrong:** `d12/master` is `457bc14d`
-(2026-07-03, *"Pre-migration…"*) and is **`main`'s own ancestor** — the point this line branched
-from, inside this repository. It is not D7 heritage and pushing to it would not reach another
-project. It is simply stale.
-**Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
-2026-08-13 once FPC passed the unit tests, the golden corpus and shipped the
-installer. ~~`tr4w/FullBuild-D12-deprecated.ps1` still exists~~ — **it was DELETED on 2026-08-31
-with every other Delphi file** (see [the Delphi section](#delphi-12---gone-and-there-is-nothing-left-to-run));
-it had not worked since the FMX twins went on 2026-08-17, so a Delphi build can only be reproduced
-by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
-**Version:** `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) is the single source of truth —
+**Branch:** **`main`**. `d12/master` is `457bc14d` (2026-07-03) and is `main`'s own ancestor, simply
+stale; it is not D7 heritage and pushing to it would not reach another project.
+
+**Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** Delphi was left behind on 2026-08-13 and
+every Delphi file was deleted 2026-08-31;
+a Delphi build can only be reproduced by checking out a commit before 2026-08-17.
+
+**Version:** `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) is the single source of truth --
 `FullBuild.ps1` derives the installer version from it and then checks the linked binary reports it.
-**No version number is written here**: this line said `5.0.2` from 2026-08-30 until 2026-09-28,
-by which time the tree was twenty-one releases past it and the same file was citing `5.0.13`
-eight paragraphs later. Releases are published to the **GitHub release page** (first one
-2026-08-30); `gh release list` is the answer to "what is out there".
+**No version number is written here**: this file once said `5.0.2` for four weeks while the tree
+moved twenty-one releases on. Releases are published to the **GitHub release page**;
+`gh release list` is the answer to "what is out there".
 **Website:** https://tr4w.net — **serves D7 (4.x) ONLY.** 5.x is not distributed there yet, so
 "published" above means the GitHub release page and nothing more. An operator who downloads TR4W
 from the website today gets 4.x, and that is deliberate until the bench block below closes.
 
-## Where the FPC migration stands
-
-**Definition of done (NY4I):** clone from GitHub onto any PC with FPC and Lazarus installed, run
-`FullBuild.ps1`, get the setup `.exe`. **That passes**, and is re-verifiable with
-`tr4w/build/Test-FreshClone.ps1`. ~~Out of scope, unchanged: 64-bit, SQLite, the contest
-factory.~~ **SQLITE IS NO LONGER OUT OF SCOPE — IT IS THE LOG** (started 2026-09-01; the binary
-`.TRW` write path is gone and the file is import-only). Read
-[`docs/SQLITE_MIGRATION_TASKS.md`](docs/SQLITE_MIGRATION_TASKS.md) before touching log storage.
-**THE CONTEST FACTORY IS ALSO NO LONGER OUT OF SCOPE** — `tr4w/src/contestFactory/` exists and is
-compiled into `tr4w.lpr`. Read [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md), and its
-B4 before believing a green run: the golden corpus is blind to scoring, and
-`tr4w/test/corpus/test-contest-factory.sh` (13 logs) and the contest matrix
-(`tr4w/test/contest-matrix/run-contest-matrix.sh`, every contest the registry knows) are what is not. **Count the units with
-`ls tr4w/src/contestFactory` rather than writing a number here.**
-~~Still out of scope: 64-bit.~~ **64-BIT IS NO LONGER OUT OF SCOPE, AND THE
-APP COMPILES AND LINKS FOR x86_64-win64** (2026-09-14):
-
-```powershell
-.\build\Build-App.ps1 -Cpu x86_64 -Os win64
-```
-
-gives `errors+fatals: 0` and a `tr4w_fpc.exe` with PE machine `0x8664` — at **the same**
-narrowing and range-warning ceilings as i386, which is the load-bearing part. ~~(1365) and (6)~~
-**the numbers are not written here**: they are `$NARROW_CEILING` and `$WARN_CEILING` in
-`build/Build-App.ps1`, they ratchet **down**, and both figures quoted here had already been
-lowered past by 2026-09-28. Read the two `$...CEILING =` lines; the script also prints the
-current count against the ceiling on every build.
-
-**IT DOES NOT RUN, AND NOBODY HAS TRIED.** The build stops at the DLL stage
-needing an x86_64 `libeay32.dll` and `ssleay32.dll`; SQLite and the whole
-HamLib set are staged in `tr4w/redist/x86_64-win64/`. Compiling is not
-running — the same caution `README.md` applies to the Linux and macOS builds
-applies here, and more so.
-
-**The toolchain was never the blocker**, which is worth knowing before anyone
-schedules provisioning work: `ppcx64` and an x86_64-win64 LCL were already
-installed twice on this machine. What was broken was that
-`build/Find-Toolchain.ps1` chose FPC and Lazarus **independently** and could
-pair one install's compiler with another's LCL — the mismatched-RTL failure
-that reports `Can't find unit LCLIntf` for a unit that is plainly there. **That
-is the same failure the macOS box is stuck on.** It now proves the pairing by
-compiling a two-line probe.
-
-Read [`docs/64_BIT_TASKLIST.md`](docs/64_BIT_TASKLIST.md) before picking any of
-this up, and **do not quote a PChar count from it** — measure.
-
-**AND THE BUILD IS NO LONGER WINDOWS-ONLY.** Three platforms build from this tree — Windows i386,
-Linux x86_64 (app + server + tarball) and macOS aarch64 (app + server + `.app` bundle). See
-[Building off Windows](#building-off-windows).
-
-Done: the build system, the lints, the unit tests, the golden corpus, the LCL port of every
-designed form, `tr4wserver` (**the 2026-08-23 regression is fixed** — see
-[Multi-user networking](#6-multi-user-networking)), the NSIS installer, and `release.yml`.
-**No count is written here on purpose** — measure with `tr4w/build/Build-Tests.ps1 -Run`.
-
-**~~Next in line: attaching a `win-ci` runner.~~ DONE, and PROVEN END TO END on 2026-08-30.**
-`windows11-ci-d12` (`[self-hosted, win-ci]`) built, scanned and published **v5.0.2** from a
-`v5.0.2` tag push in **5½ minutes** — build 3:00, VirusTotal 2:01, release 0:32, against a
-30-minute budget. So the definition of done above is no longer only *re-verifiable* on this
-machine; it has been demonstrated on a different one, from a clean checkout, by something that is
-not a developer.
-
-**That is a BUILD-AND-PUBLISH pipeline, not a distribution channel.** The installer reaches the
-GitHub release page; it does not reach tr4w.net, which still serves 4.x. Do not read a green
-pipeline as "5.x is shipping to operators".
-
-**The largest open block is live/bench verification, and nothing in it is provable by code
-review.** That is what CI cannot buy: the runner proves the tree BUILDS, not that a radio keys or
-a spot decodes. Bench findings still arrive only from a session with real hardware — four defects
-on 2026-08-29/30 came that way and none would have failed a build.
-
-**The FMX twins are gone (2026-08-17)** — deleted at the start of the Win32-to-LCL migration
-rather than after bench-exercising the LCL forms, because FPC cannot compile FMX at all: they
-were units no build compiled, and they had already drifted.
-~~See the plan at `~/.claude/plans/this-project-has-windows-binary-hammock.md`, Phase 0.~~
-**That pointer is dead — the whole `~/.claude/plans/` directory does not exist** (checked
-2026-09-28), so the two sentences above are now the only record of why, which is why they say it
-rather than defer. The deletion itself is in git history; `docs/migration_interim_artifacts/`
-holds the FMX reasoning that survived.
-
-~~Per-area D12 status lives in `docs/D12_MIGRATION_ROADMAP.md`~~ — that roadmap is **superseded** and
-is now `docs/migration_interim_artifacts/D12_MIGRATION_ROADMAP.md`; read it for *why* things are
-shaped as they are, not for status. **The live task list is
-[`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md).**
-
-The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
-Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT, Yaesu binary (FT-1000MP,
-2026-08-09 — first proof of that family). **Icom LAN: the link is proven on TWO models only** —
-IC-7760 and IC-9700, a 7 h 52 m soak under FPC on 2026-09-27; CW, PTT and split over LAN, and every
-other LAN Icom, are not. **Unproven: Yaesu ASCII, HamLib.** Track that in
-[`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md). **Those results were obtained under
-Delphi**; the Elecraft K4 (network), K3S (serial) and **Yaesu FT-1000MP (binary, 2026-08-31)** have since been re-confirmed against the FPC
-binary, the rest have not.
-
-**One English build.** ~~ENG + 8 (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP)~~ — the compile-time language
-matrix is no longer built by anything. Translation moves to `resourcestring`, arriving from a
-separate worktree. ~~POL and CHN were already decided-out.~~ **That restriction was rescinded
-on 2026-08-28 (NY4I) now that catalogues, not compile-time tables, carry the translations.**
-Polish already had a catalogue. Chinese did not, and the reason is worth knowing before anyone
-"fixes" it: `tr4w/src/lang/tr4w_consts_chn.pas` holds a real translation by Li Jia Wei BA4WI
-whose bytes are damaged at the BIT level -- it decodes as neither UTF-8 nor GBK nor Big5, so
-`pas2po` flags it `lossy` and refuses to harvest it. `tools/i18n/salvage_lossy.py` recovers the
-110 literals that come back as well-formed UTF-8 and writes them into `i18n/tr4w_zh_CN.po` as
-**fuzzy suggestions**, because the inversion guesses wrong often enough to matter and a wrong
-hanzi looks exactly like a right one. 144 strings are unrecoverable and need his original file.
-**Never bulk-defuzz that catalogue** -- the flag is the record that a string is unreviewed, and
-the translators' tools depend on it.
-
-~~fuzzy is the only thing keeping unverified text out of a build~~ -- **not since 2026-09-21.**
-NY4I: *"We want to show the non-reviewed as well for testing."* `Make-LanguageRes.ps1` now embeds
-fuzzy entries with the `#,` line stripped, which clears both gates (its own, and LazUtils'
-`translations.pas:1223`), so 22,493 unreviewed strings ship -- the Chinese salvage among them.
-`-ReviewedOnly` puts both gates back when review finishes. **The `.po` files keep their markers**;
-what changed is the BUILD, not the catalogues.
-
-**THE BUILD REGENERATES `tr4w/res/tr4w_languages.res` (2026-10-16).** Until then nothing ran
-`Make-LanguageRes.ps1` and two catalogue commits never reached a binary. `Build-App.ps1` and
-`Build-Tests.ps1` compare sha256 hashes of the `.po` files and the generator with
-`res/tr4w_languages.res.inputs` (content, not mtime) and rebuild on a mismatch; commit the `.res`
-and `.inputs` together. Linux and macOS run `build/check-language-res.sh` and FAIL a stale pair.
-`-ReviewedOnly` is an experiment: the next build restores the default.
-
 ## Build System
 
-**The toolchain is FreePascal 3.2.2 + the Lazarus LCL.** Delphi 12 is behind us (2026-08-13): the
-FPC build passes the unit tests and the golden corpus, runs the LCL UI, and is what
-`FullBuild.ps1` ships. ~~The Delphi script is kept as `FullBuild-D12-deprecated.ps1` for reference~~
-— **it is gone (2026-08-31), along with every other Delphi project file.** There is no second
-packaging path to confuse it with.
-
-### Everything at once
-
-```powershell
-.\FullBuild.ps1                    # lints + unit tests + app + tr4wserver
-.\FullBuild.ps1 -SkipServer        # skips tr4wserver; it is then NOT in the build,
-                                   # so do not ship one. ~~"the only guard on the
-                                   # console/LCL boundary"~~ -- that guard is GONE,
-                                   # see Multi-user networking
-.\FullBuild.ps1 -BuildInstaller    # + the NSIS installer
-```
-
-`tr4w/FullBuild.ps1` is the **single packaging path**: lints, then unit tests, then the app — in that
-order, so a failing test stops the build *before* it produces a binary anyone could ship. It derives
-the version from `src/Version.pas` and **fails** (rather than defaulting to 0.0.0) if it cannot parse
-it, then checks the linked `tr4w.exe` actually reports that version. `full.nsi` refuses to build
-without `/DTR4WVERSION`.
-
-**One build, English only.** The nine per-language variants are gone; I18N is moving to
-`resourcestring` + one binary (NY4I, 2026-08-13), and that work arrives from a separate worktree.
-Don't reintroduce a language loop.
+`tr4w/FullBuild.ps1` is the **single packaging path** (`-SkipServer` leaves `tr4wserver` out of the
+build, so do not ship one; `-BuildInstaller` adds the NSIS installer): lints, then unit tests, then
+the app -- in that order, so a failing test stops the build *before* it produces a binary anyone
+could ship. It derives the version from `src/Version.pas` and **fails** (rather than defaulting to
+0.0.0) if it cannot parse it, then checks the linked `tr4w.exe` actually reports that version.
+`full.nsi` refuses to build without `/DTR4WVERSION`.
 
 ### Iterating
 
-```powershell
-.\build\Build-App.ps1                 # full rebuild (-B), the safe default
-.\build\Build-App.ps1 -Incremental    # seconds instead of minutes
-.\build\Build-Tests.ps1 -Run          # the unit-test binary, then run it
-.\build\Build-Server.ps1              # tr4wserver
-```
+`.\build\Build-App.ps1` (full rebuild, the safe default; `-Incremental` for seconds instead of
+minutes), `.\build\Build-Tests.ps1 -Run`, `.\build\Build-Server.ps1`.
 
 - **`-Incremental` for chasing one defect; a full build before believing any result.** FPC's mtime
   rule cannot see a changed compiler switch, `.inc`, or define flip. A designed form is *two* files
@@ -425,15 +195,12 @@ Don't reintroduce a language loop.
   `ParamStr(0)`, not the working directory.
 
 **No hardcoded toolchain.** `build/Find-Toolchain.ps1` discovers FPC and Lazarus (honouring
-`FPC_HOME` / `LAZARUS_DIR`), and checks what actually matters: a compiler that can *target*
-i386-win32 — `fpc.exe` is only a driver, the backend is `ppc386`/`ppcross386` — an i386 RTL, and LCL
-units for i386. It lists every location it tried when it fails.
+`FPC_HOME` / `LAZARUS_DIR`); `fpc.exe` is only a driver, the backend is `ppc386`/`ppcross386`.
 
 **The unit search paths are defined once**, in `build/Get-SearchPaths.ps1`, for three targets that
-genuinely differ (App / Tests / Server). They previously existed in three copies and had already
-drifted. ~~`Server` deliberately gets no LCL: `tr4wserver` is a console program.~~ **That is no
-longer true — `Get-SearchPaths.ps1` gives the server the LCL paths, because `uServerForm` lives
-there.** Its own header says so (*"Server -- the SAME as App for the LCL, since 2026-09-06"*).
+genuinely differ (App / Tests / Server). The server gets the LCL paths too, because `uServerForm`
+lives there.
+
 
 **SO THERE IS NO GUARD ON THE CONSOLE/LCL BOUNDARY, AND NOTHING REPLACED IT** (stated plainly
 2026-09-28). The `Forms`-in-a-console-program story under
@@ -479,10 +246,9 @@ sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
   **signed and notarized since 5.0.13** (2026-09-20) — `tr4wserver`, the app binary and the
   bundle are signed inside-out with the hardened runtime, the bundle and the `.dmg` are each
   notarized and stapled, and NY4I confirmed a downloaded `.dmg` opens with no Gatekeeper
-  warning. ~~Gatekeeper's message for an unsigned bundle says *damaged*~~ — that, and the
-  `xattr -dr com.apple.quarantine` workaround, are history; do not tell an operator to strip
-  quarantine from a notarized build.
-- ~~**NOBODY HAS RUN THE GUI ON EITHER.**~~ **LINUX IS RUN, AS OF 2026-09-20.** NY4I ran the
+  warning. Do not tell an operator to strip quarantine (`xattr -dr com.apple.quarantine`) from a
+  notarized build.
+- **LINUX IS RUN, AS OF 2026-09-20.** NY4I ran the
   **AppImage on Linux Mint 22.3** — a machine that did not build it — reached the UI, and
   **connected to an Elecraft K4 over Ethernet**. That is the first functional proof off
   Windows: the gtk2 UI works from the bundle, and a network radio links. **macOS remains
@@ -497,57 +263,10 @@ sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
 - **The lints and the Edit-QSO round-trip are PowerShell and do not run there.** They are reported
   as not-run, never as passed.
 
-### ~~`Lint-LinuxCompile`~~ — RETIRED 2026-09-11, and cross-compiling is not how this is checked
-
-NY4I, **2026-09-11**: *"we do not cross-compile. we use ssh linux-build-ci and mac-ci to build on a
-native system."*
-
-> **The host is `linux-ci-build`** — the quote transposes it, and `linux-build-ci` resolves to
-> nothing (measured 2026-09-28). `mac-ci` is correct as written. Neither is `linux-ci`, which is a
-> **runner label** in `release.yml`, not a host. The quote is left as he said it; this note is the
-> correction.
-
-**THE FIRST HALF STILL HOLDS; THE SECOND IS SUPERSEDED (2026-09-28).** We still do not
-cross-compile to check. But the checking no longer happens over ssh — those machines are CI runners
-now, so `gh workflow run release.yml` builds all three platforms on them and creates no
-release. NY4I: *"that was before self-hosted running system and github ci builds were used."*
-
-> **The three builds are NOT parallel with each other, and that has a consequence worth knowing.**
-> `build-linux` and `build-macos` both declare `needs: build`, so they run **after** the Windows
-> job and in parallel only with each other. **If the Windows build fails, neither Unix build runs
-> at all** — so a dispatch run that goes red on Windows has told you nothing about Linux or macOS,
-> rather than telling you they are fine.
-
-See
-[Lints gate the build](#lints-gate-the-build--from-one-place) for the recipe. The quote is kept
-rather than deleted because it was right when he said it, and because the reason it was right — a
-Windows-hosted cross-compile is the weaker check — is the part that did not change.
-
-**A Windows-hosted cross-compile was always the weaker check**, and this file already recorded why:
-it inherits case-insensitive unit lookup from its host, which is how `uCTYDAT.PAS` passed the lint
-and still broke on a real Unix box — see [Naming](#naming). A check whose failure mode is a quieter
-pass is worth less than no check, because it is believed.
-
-So the lint is **deleted**, along with the hand-maintained list of pinned units it carried and the
-`--all` mode of `tools/compile-native.sh` that read that list out of it. **Nothing is lost.**
-`./tools/compile-native.sh --tree` compiles `MainUnit` and its ENTIRE dependency graph in one walk —
-every unit the program actually links, ordered by the compiler rather than by a list somebody has
-to remember to update. `--all` now says so and points at `--tree` rather than failing obscurely.
-
-`tools/Compile-Linux.ps1` is **kept** and still cross-compiles one unit from Windows. It is a quick
-local convenience now, not a gate, and it carries the same caveat: a green answer from it is weaker
-than a native one.
-
-**`spike/` is gone** (2026-08-13). It answered "can FPC do this", the answer was yes, and its probes
-are in git history. UI harnesses live in `tr4w/test/ui/`.
-
 ### Lints gate the build — from one place
 
-`tr4w/build/Run-Lints.ps1` runs them all — **and there are far more than the "ten" this line used
-to claim; read the array in that script for the current set.** The list previously lived **only**
-in `tr4w.dproj`'s
-PreBuildEvent, so it gated msbuild and nothing else; an FPC build saw none of them. Add a lint by
-editing that one array.
+`tr4w/build/Run-Lints.ps1` runs them all -- read the array in that script for the current set, and
+add a lint by editing that one array.
 
 **A WINDOWS GATE IS A GUESS UNTIL A COMPILER DISAGREES**, and the compiler that
 settles it is a NATIVE one. **RUN THE WORKFLOW -- DO NOT SSH IN TO BUILD.**
@@ -558,13 +277,9 @@ gh run list --workflow release.yml --limit 1
 gh run watch <run-id>
 ```
 
-NY4I, 2026-09-28: *"that was before self-hosted running system and github ci
-builds were used. audit any info about building and ensure all agents are aware
-of ci GH process."* ~~*"we use ssh linux-build-ci and mac-ci to build on a native
-system"*~~ (2026-09-11) was right when he said it and is **superseded**: the same
-machines are now CI runners, so the workflow reaches them in parallel, in the
-environment a release actually uses, and a hand-build over ssh is slower and
-proves less.
+NY4I, 2026-09-28: *"audit any info about building and ensure all agents are aware of ci GH
+process."* The workflow reaches the machines in parallel, in the environment a release actually
+uses; a hand-build over ssh is slower and proves less.
 
 **A `workflow_dispatch` run DELIBERATELY CREATES NO RELEASE** -- the release
 job's `if:` requires `github.event_name == 'push'`, and `release.yml` says so in
@@ -581,55 +296,26 @@ needs a machine rather than a build. That is not the routine check, and the
 distinction is sharp: the Icom band work and the keychain investigation both
 required a real session and neither was a build.
 
-**Those two spellings are the working ones** (both resolve, verified 2026-09-28).
-`linux-build-ci` and `linux-ci` do not -- the first is a transposition, the second
-a runner label. See the note under [the retired lint](#lint-linuxcompile--retired-2026-09-11-and-cross-compiling-is-not-how-this-is-checked).
-
 **AND NOTHING BUILDS ON AN ORDINARY PUSH TO `main`.** `release.yml` triggers on a
 `v[0-9]*.*.*` tag and on `workflow_dispatch`, nothing else; `version-guard.yml`
 runs on every push and PR and **builds nothing** -- its one job parses
 `Version.pas`. So a dispatch is not a convenience over CI, it IS the CI build for
 work that is not being tagged.
 
-`tools/Compile-Linux.ps1 <unit>.pas` still cross-compiles one unit for
-x86_64-linux from Windows and is useful for a quick local answer, but it is no
-longer a gate and never proved as much as it appeared to -- see the retirement
-note above. ~~`build/Lint-LinuxCompile.ps1`~~ is **deleted**.
-
-The cross compiler did earn its keep once, which is why it is kept as a tool:
-it found that the vendored `tr4wserial.pas` merge had given `SerBreak` the
-Windows default (`mSec = 250`) in an interface whose Unix body declares `0`,
-which no Windows build could ever see.
-
 `Lint-LFMProperties` is the odd one out: it compiles a small FPC helper (`build/lintlfm/`) that links
 the LCL and asks the same RTTI the streaming loader uses, because "does this class publish this
 property, and is this a legal value" cannot be answered by grepping a `published` block. It fails
 closed if FPC or the LCL is missing.
 
-### ~~Delphi 12~~ - GONE, and there is nothing left to run
-
-**Every Delphi project file was deleted on 2026-08-31** (NY4I: *"all the d12 specific
-files can be removed. D12 is never coming back here"*): `tr4w.dproj`, both
-`tr4wserver.dproj`/`.dof`, the unit-test and status-trace `.dproj`,
-`FullBuild-D12-deprecated.ps1`, the stray `.cfp`/`.gex`/`.obj`/`.dof`, and the D7
-leftovers `tr4w.cfg` and `BatchCompile.cmd`. The msbuild recipe that stood here is
-in git history if it is ever wanted; it had not worked since the FMX twins were
-deleted in August, so it was a recipe that could not be run.
-
-**`tr4w.lpr` is the program source** (renamed 2026-08-29, `adaa30dd`). **No `.dpr`
-remains anywhere in this tree** - every program file is a `.lpr`, and that is the
-claim worth holding; ~~all twelve~~ the COUNT is not, and had grown well past twelve
-by 2026-09-28. `find tr4w -iname '*.lpr'` answers it.
-
 **What was deliberately NOT deleted, because the names invite it:**
 
-| kept | why |
-|---|---|
-| the ~200 `.dpk`/`.dproj`/`.bdsproj` under `tr4w/include/` | the **vendored Indy 10.6.3.3** tree, kept on purpose |
-| the ~90 `.obj` files under `tr4w/include/` | **linked by the build**: `{$LINK pcre\pcre_compile.obj}` in `pcre.pas`. Deleting them breaks compilation |
-| `tr4w/test/corpus/export-d12-corpus.sh` | the **live golden-corpus oracle**. "d12" is its name, not its toolchain |
-| `tr4w/tr4w.res` | linked by `{$R *.res}`; Lazarus writes it from the `.lpi` |
-| `docs/D12_*.md`, `tr4w/docs/D12_*.md` | historical reasoning, still linked from the [Documentation map](#documentation-map) |
+| kept                                                       | why                                                                                                       |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| the ~200 `.dpk` /`.dproj`/`.bdsproj` under `tr4w/include/` | the **vendored Indy 10.6.3.3** tree, kept on purpose                                                      |
+| the ~90 `.obj` files under `tr4w/include/`                 | **linked by the build**: `{$LINK pcre\pcre_compile.obj}` in `pcre.pas` . Deleting them breaks compilation |
+| `tr4w/test/corpus/export-d12-corpus.sh`                    | the **live golden-corpus oracle**. "d12" is its name, not its toolchain                                   |
+| `tr4w/tr4w.res`                                            | linked by `{$R *.res}` ; Lazarus writes it from the `.lpi`                                                |
+| `docs/D12_*.md` , `tr4w/docs/D12_*.md`                     | historical reasoning, still linked from the [Documentation map](#documentation-map)                       |
 
 ### Lazarus
 
@@ -639,14 +325,10 @@ its own x86_64 one.
 
 ### Language variants — being replaced, don't extend
 
-`FullBuild.ps1` builds **ENG only** and passes `-dLANG_ENG -dVERSIONINFO_RES`. The compile-time
-language mechanism still exists in the source (`{$IFDEF LANG_RUS} LANG = 'RUS';{$ENDIF}` in `VC.pas`,
-per-language `src/lang/tr4w_consts_<LANG>.pas` and `res/tr4w_<lang>.res`), but **nothing builds those
-variants any more** and no new work should assume they will.
-
-The replacement is `resourcestring` + one binary per platform (NY4I, 2026-08-13), arriving from a
-separate worktree once the FPC migration is done and English builds clean. Resource DLLs are out —
-they have no FMX/macOS/Linux equivalent.
+`FullBuild.ps1` builds **ENG only** (`-dLANG_ENG -dVERSIONINFO_RES`). The compile-time mechanism
+(`{$IFDEF LANG_RUS}` in `VC.pas`, `src/lang/tr4w_consts_<LANG>.pas`, `res/tr4w_<lang>.res`) is still
+in the source, but nothing builds those variants. The replacement is `resourcestring` + `.po`
+catalogues + one binary per platform; resource DLLs are out (no macOS/Linux equivalent).
 
 Until that lands, the old constraint still governs the files that are still there: **`src/lang/*.pas`
 are UTF-8 *with a BOM*** and must stay that way — a no-BOM file is decoded with the build machine's
@@ -663,24 +345,14 @@ Three layers, all real and all expected to be green before a commit.
 (`uTR4WTestFramework.pas`, no external deps). **Zero failures is the baseline**; the count is not
 stated here because it grows every commit. Take it from the newest commit message.
 
-```powershell
-.\tr4w\build\Build-Tests.ps1 -Run
-```
+Run with `.\tr4w\build\Build-Tests.ps1 -Run`. `FullBuild.ps1` runs them too, **before** it builds
+the app. The exe must land in `tr4w/test/unit/` (several suites resolve data from `ParamStr(0)`).
 
-`FullBuild.ps1` runs them too, **before** it builds the app, so a failing test stops the build before
-it produces a shippable binary. **The exe must land in `tr4w/test/unit/`** — several suites resolve
-their data from `ParamStr(0)`, not the working directory.
-
-Covers ADIF, Cabrillo, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance,
-text/file/math utils, DX-spot parsing, CW framing/keyer, and the radio factory (Icom CI-V, Kenwood,
-Yaesu ASCII/binary, Elecraft IF, Flex, HamLib IDs, registry taxonomy, capability pinning).
-~~It links only leaf `src` units, so the TRDOS contest engine is not unit-covered~~ — **stale
-by 2026-10-15 (M11 F35):** the test `.lpr` uses `MainUnit`, and the contest pins link
-`FCONTEST`, `LOGSTUFF`, `PostUnit` and `LogEdit` (count the test units naming them with
-`rg -l -i -w`, not from here). Every contest's parse dispatch, export columns, field list and
-exchange rules are pinned per contest and station. What is still NOT unit-covered is the
-engine run end to end — `ProcessExchange`, scoring and dupe over a booted session — which is
-the contest matrix's and the corpus's job.
+The test `.lpr` uses `MainUnit`, and the contest pins link `FCONTEST`, `LOGSTUFF`, `PostUnit` and
+`LogEdit`: every contest's parse dispatch, export columns, field list and exchange rules are pinned
+per contest and station. What is NOT unit-covered is the engine run end to end --
+`ProcessExchange`, scoring and dupe over a booted session -- which is the contest matrix's and the
+corpus's job.
 
 **1b. Checked unit tests: `-gt` + heaptrc** (2026-10-14). The same suite, compiled so undefined
 behaviour is wrong *every* run instead of right by luck:
@@ -719,20 +391,13 @@ comparisons).
 
 - **BINARY-LOG IMPORT IS COVERED BY A UNIT TEST NOW, AND ONLY THERE.** NY4I, same day: *"Yes I
   agree it's remnant allow us to validate .Trw conversion but that becomes a unit test and not the
-  corpus."* `uTestLogBinaryFile`, `uTestLogImport` and `uTestLogRepository` read the six D7 logs in
-  `tr4w/test/unit/fixtures/binarylog/` — six rather than one because each carries an assertion no
-  other log can (a one-record log, two county-line PAIRS, records `GoodLookingQSO` rejects, a DX
-  zone contest, a serial-number contest, Field Day's class exchange). The other seven are in git
-  history.
-
-- The migration was gated set by set: each `.db` had to reproduce that set's existing `ref.adi` /
-  `ref.cbr` before its `.trw` was deleted. All thirteen did, with the result below unchanged.
+corpus."* `uTestLogBinaryFile`, `uTestLogImport` and `uTestLogRepository` read the D7 logs in
+  `tr4w/test/unit/fixtures/binarylog/`, each of which carries an assertion no other log can.
 
 - **GREEN = `0 failed` and every known-divergence is a recorded pin** (`known-divergences.txt`,
   or a per-artifact `<set>/known.<kind>.diff` that excuses EXACTLY its lines -- a stale pin
-  fails), **and every export run exits 0.** ~~`24 passed, 0 failed, 2 known-divergence`~~ stood
-  here and went stale when the Q54 and Q76/Q89 rulings were pinned (22/0/4 on 2026-10-16); the
-  numbers move with each ruling, so take the current line from the newest commit message.
+  fails), **and every export run exits 0.** The pass counts move with each ruling: take the
+  current line from the newest commit message.
 - **THE EXIT CODE IS PART OF THE RESULT, since 2026-09-06.** The corpus used to discard it, and
   for at least two days all THIRTEEN `/EXPORT` runs were dying with an `EAccessViolation` while it
   reported `24 passed, 0 failed` — the artifacts are written before the exit, so the byte
@@ -757,23 +422,20 @@ vendored because the gate must run on a clean clone with no network; it is Pytho
 leave its indentation alone and record any patch in `VENDORED.md`. `uTestADIF` also pins every tag
 TR4W writes against ADIF 3.1.6's field list (`ADIF_SPEC_VERSION` in `uADIF`).
 
-**3. Integration / bench** — `tr4w/test/integration/` drives real serial radios (or `tools/radiosim`)
-via `run-bench.ps1`. `tr4w/test/bench/` holds the **measuring instruments** — programs that ask a
-real radio a question and print what it says: `bench_icombands` (which bands does it have; read-only),
-`bench_icomscope` and `bench_k4spectrum` (scope geometry). Build them with
-`tr4w/build/Build-Bench.ps1` (no `-Program` builds every `bench_*.lpr`, floor 5). **`FullBuild.ps1`
-BUILDS them all after the unit tests** (skipped by `-SkipTests`; build only, never run) --
-`bench_callsign` failed to link for weeks before that because nothing compiled it. The Windows CI
-job builds them too, because it runs `FullBuild.ps1` (`release.yml`); `build-unix.sh` has no bench
-stage, so no Unix build does. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
-`ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF export against it.
+**3. Integration / bench** -- `tr4w/test/integration/` drives real serial radios (or
+`tools/radiosim`) via `run-bench.ps1`. `tr4w/test/bench/` holds the **measuring instruments**
+(`bench_*.lpr`, built by `tr4w/build/Build-Bench.ps1`): programs that ask a real radio a question
+and print what it says. **`FullBuild.ps1` BUILDS them all after the unit tests** (build only, never
+run; `bench_callsign` failed to link for weeks before that because nothing compiled it);
+`build-unix.sh` has no bench stage. `tr4w/test/logdump/` and
+`tr4w/test/python/verify_adif_export.py` cross-check ADIF export against the canonical
+`ContestExchange`.
 
 **Lint scripts** in `tr4w/build/`. `Lint-PCharAnsi.ps1`, `Lint-RadioRegistry.ps1` and
 `Lint-PollRadioState.ps1` are in `Run-Lints.ps1` and GATE THE BUILD. `Lint-PascalBeginEnd.ps1` and
 `Lint-ChangedPascal.ps1` are NOT — the first runs as the `PostToolUse` hook
 `.claude/hooks/pascal-lint-hook.ps1`, which warns after the edit and never blocks; the second is
-run by hand. This sentence used to list all five as though they gated the build (corrected
-2026-08-31), which is why the style itself is now written down under
+run by hand. The style itself is written down under
 [Code style](#code-style--pascal-and-python) rather than left to a linter.
 
 Scoring, multiplier and exchange-parsing changes still deserve real-contest testing — the corpus is a
@@ -791,9 +453,8 @@ strong net, not a proof.
    (`src/uCWKeyer*.pas`) are genuine OOP subsystems: proper base classes, virtuals, capability sets,
    and self-registration. Both were built with the **strangler pattern** — thin adapters over the
    existing globals first, prove the seam on hardware, then delete the legacy path.
-4. **The contest factory** — `tr4w/src/contestFactory/`, built to the same model
-   (`uContestBase`, `uContestRegistry`, `uContestFactory`, one unit per contest). ~~"the next
-   subsystem … should be built"~~: it IS built, and it is mid-flight, so read
+4. **The contest factory** -- `tr4w/src/contestFactory/`, built to the same model
+   (`uContestBase`, `uContestRegistry`, `uContestFactory`, one unit per contest). Read
    [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md) before adding to it.
 5. **The contest log is SQLite** — `src/domain/uLogDatabase.pas`, `uLogSchema.pas`,
    `src/uLogRepository.pas`, `src/uLogSource.pas` (**no source selection: it reads the
@@ -804,82 +465,10 @@ strong net, not a proof.
 ### Framework
 
 **THE UI IS LCL FORMS, and every tool window is a designed form.** The program runs
-`Application.Run`; the hand-rolled `GetMessage` / `TranslateMessage` / `DispatchMessage`
-loop is gone. Hosting VCL forms alongside a Win32 loop was tried once (branch
-`Add-VCL-to-Program`, technique in
-[`docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`](docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md));
-VCL is an abandoned path. State is held in **global variables** and Pascal **records**, with
-manual resource management.
-
-### DO NOT WRITE A COUNT OR A LIST OF SURVIVORS HERE. MEASURE IT.
-
-A list of "what is still Win32" decays every time someone finishes a conversion. This file once
-named eight live hand-built dialogs; by the next week all eight were converted, and an agent
-repeated the list to NY4I as fact (*"stale info in CLAUDE.md wastes my time"*). The same happened
-three more times in four days, and once the REASON was wrong too: a **stale reason is worse than a
-stale count**, because a count invites re-measurement and a reason invites agreement. So ask the tree:
-
-```powershell
-.\build\Lint-Win32Dialogs.ps1 -Group ui         # the count, per creation kind
-.\build\Lint-Win32Dialogs.ps1 -Group platform   # the non-UI Win32 call sites
-```
-
-```bash
-# what still BUILDS a Win32 dialog or control (comments excluded by eye)
-grep -rn "CreateModalDialog\|DialogBoxParam\|DialogBoxIndirect\|CreateWindowEx" tr4w/src --include='*.[pP][aA][sS]'
-```
-
-**WHEN YOU DELETE OR CONVERT SOMETHING, FIX THIS FILE IN THE SAME COMMIT.** A map that describes a
-road removed last month is worse than no map. What remains on the Win32 count is either a REPORTED
-fallback kept until a log line proves it dead (`OpenTR4WWindow`, `MoveWindowTo`,
-`ShowModalOverWin32Parent`) or genuine platform code.
-
-### Retiring a line: delete it, or mark it `//AGENT_DEPRECATED`
-
-**Deleting is the default.** Where the old code genuinely helps diagnose the new (the Win32 call
-beside the property that replaced it), comment it and mark it:
-
-```pascal
-//Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band]); //AGENT_DEPRECATED
-```
-
-`Lint-Win32Dialogs` counts CODE ONLY (`build/PascalSource.psm1` strips comments and strings), so a
-ratchet that falls because work was HIDDEN looks identical to one that falls because work was
-DONE. `Lint-AgentDeprecated` closes that gap: a marker on live code fails the build, and every
-marked line is listed on each run. The marker is a staging post to deletion, not a destination.
-
-**Do not search `tr4w/src` alone for whether something still exists.** Five gitignored trees hold
-stale copies: `tr4w/src/backup/`, `tr4w/src/ui/lcl/backup/`, `tr4w/backup/` (the Lazarus IDE saves
-the previous revision there), `tr4w/src/graphify-out/` (a cache) and `.claude/worktrees/` (whole
-extra checkouts). The lints exclude them; a hand-run `grep` does not. `git ls-files` says whether a
-hit is tracked.
-
-### Converting a window
-
-- **The seam is `OpenTR4WWindow`** (`MainUnit.pas`): an arm returning the form's `Handle` and
-  setting `lclForm`, with that window's `WndProcAdr` line deleted.
-- **Position through `lclForm.BoundsRect`, never `SetWindowPos`.** The LCL holds its own bounds
-  and pushes the designed ones back when the form shows.
-- **A control id can be written from any unit holding the window handle** (`SetDlgItemInt`), so a
-  field that looks dead in one unit may be written in another. A worker thread that used to poke
-  dialog items must marshal to the main thread (`uGetServerLog.ReportSyncProgress` does).
-- Read [`docs/BANDMAP_LCL_DESIGN.md`](docs/BANDMAP_LCL_DESIGN.md) and the notes at the top of any
-  `src/ui/lcl/` unit first: several record traps no compiler catches (colour used as state, a
-  `TLabel` having no window handle, a `TPanel` caption not wrapping).
-- **A converted window loses its translations silently.** The Win32 code assigned captions from
-  `TC_`/`RC_` constants, which the `.po` catalogues translate; a designed form carries its caption
-  in the `.lfm`, and every conversion up to 2026-08-29 re-typed the English there and left the
-  constant behind (Telnet: `.lfm` says `'Connect'` while `TC_TELNET_CONNECT` has a native
-  Spanish `'Conectar'`, now unreachable). Measured 2026-08-26: 469 `.lfm` captions ship as English
-  and only 45 of 545 are assigned at run time. Nothing warns. **`uServerLogForm` is the pattern:**
-  its `.lfm` text is a designer placeholder and `HandleShow` assigns every caption from the
-  constant. `RC_` names become translatable only by being NAMED from Pascal, because the
-  generator emits every `RC_` a source file references. Run `pas2res`, then `po_merge`.
-- **NEVER run `pas2po` to pick up new strings.** It rebuilds a catalogue from the `TC_`/`RC_`
-  tables alone and drops every `.lfm` and resourcestring key the Lazarus harvest contributed
-  (2026-08-29: 2,203 translations destroyed across ten catalogues, clean exit). `po_merge --pot`
-  is the additive, safe tool; `pas2po` is only for creating a *new* language.
-- A `PWideChar(<resourcestring>)` is a POINTER CAST, not a conversion, and shows "????????".
+`Application.Run`; the hand-rolled message loop is gone. VCL is an abandoned path (the coexistence
+technique is in
+[`docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`](docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md)).
+State is held in **global variables** and Pascal **records**, with manual resource management.
 
 ### Key entry points
 
@@ -887,18 +476,14 @@ hit is tracked.
 WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then `Application.Run`.
 Grep for the step you need; the order above is what matters, not the offsets.
 
-**It moved out of the program file on 2026-08-25 and that was the point of the exercise.** A program file is
-invisible to a search of `src/`, so the most order-sensitive code in the program lived in the one
-file nobody greps — and "where does X happen at startup" had the answer "in no unit at all". The
-`.lpr` is now the uses clause, the resource directives, and `begin RunTR4W; end.` — and **nothing
-else**, which is the claim that matters; its line count grows with every unit added and is not
-written here.
+**Startup lives in a unit, not the program file**: a program file is invisible to a search of
+`src/`. The `.lpr` is the uses clause, the resource directives, and `begin RunTR4W; end.` -- and
+**nothing else**.
 
-**The uses clause stays in the `.lpr`**, so "which units are compiled" and "who references this" are
-still `.lpr` questions — that is what the `enforce-pascal-glob` hook is warning about, and it is
-still right. `uProgramMain`'s own uses clause is a copy of it in the same order: this program relies
-on use-order for name resolution (`SysUtils.SysErrorMessage` vs `TF`'s), so do not tidy it as a side
-effect of something else.
+**The uses clause stays in the `.lpr`**, so "which units are compiled" and "who references this"
+are still `.lpr` questions. `uProgramMain`'s own uses clause is a copy of it in the same order:
+this program relies on use-order for name resolution (`SysUtils.SysErrorMessage` vs `TF`'s), so do
+not tidy it as a side effect of something else.
 
 Two facts about that sequence that grep will not tell you: **headless `/EXPORT` mode boots the
 contest, writes the files and `Halt(0)`s before any GUI or network init**, and config load
@@ -910,113 +495,28 @@ the process-wide globals `wsjtx: TWSJTXServer`, `externalLogger: TExternalLogger
 written here drifted by 110 between August and 2026-09-28). **Any standalone EXE that links app
 units must assign `logger`** or it will AV on the first log call.
 
-**UI support:** `uWinManager.pas` (window manager), `uDialogs.pas` (dialog utilities),
-`uBandmap.pas`, `uCAT.pas` (the radio config dialog).
-
 ## Core Subsystems
 
-### 1. TRDOS subsystem (`src/trdos/`)
 
-Stable, proven contest logic. **Avoid modifying unless necessary** — prefer new units in `src/`.
-
-**The no-LCL half of that boundary was RESCINDED on 2026-08-23 (NY4I).** Until then no unit under
-`src/trdos/` referenced the widget set at all, and the rule was read as forbidding it — which would
-have meant building a forwarding facade just so `LOGWIND` could clear a text box. TRDOS units may now
-use the LCL directly, and `LOGWIND`/`LOGEDIT` are the first that do. The rest of the rule stands:
-this is proven contest logic, so new *behaviour* still belongs in `src/`.
-
-The Lines column is gone (2026-08-31): `wc -l` answers it, and six of eight figures had drifted.
-The Role column is what this table is for.
-
-| File | Role |
-|------|------|
-| `logstuff.pas` | Contest logging, exchange parsing, QSO validation -- the biggest unit here |
-| `tree.pas` | Utility library |
-| `logwind.pas` | Window management and display |
-| `postunit.pas` | Post-contest processing, Cabrillo export |
-| `logscp.pas` | Super Check Partial |
-| `logradio.pas` | **Legacy** radio control — see the radio section below |
-| `logsubs2.pas` | Core logging subroutines |
-| `LogCW.pas` | CW message memories/function keys; the **facade** over the keyer factory |
-| `logdupe.pas` | Duplicate checking |
-| `fcontest.pas` | Contest type definitions and defaults |
-| `cfgdef.pas` | Configuration parameter defaults |
-
-Contest-specific modules: `logwae.pas` (WAE), `logdom.pas` (domestic/QSO parties), `logk1ea.pas`
-(also the CPU keyer), `loggrid.pas`, `logedit.pas`.
-
-(Files like `LOGRADIO.$$$`, `LOGSUBS2~.PAS`, `postunit.pas.bak` are editor debris, not units.)
-
-### 2. Type system (`src/VC.pas`, `src/TF.pas`)
+### Type system (`src/VC.pas`, `src/TF.pas`)
 
 **`VC.pas` is the source of truth** for types: 120+ `ContestType` values, band and mode enums, the
 ~60-element `TMainWindowElement`, colour schemes, and the compile-time switches — `tDebugMode`, and
-the `LANG_xxx` block, which you find by grepping `_LANG_SET` (it is the define every `LANG_xxx` arm
-sets, and it moved 140 lines from the position this file used to name).  ~~`MMTTYMODE`~~ was
-deleted 2026-08-18.
+the `LANG_xxx` block, which you find by grepping `_LANG_SET`.
 
 **`TF.pas`** holds UI helpers, dialog utilities, and format/conversion functions. Note: TF's
 hand-rolled `IntToStr`/`StrToInt`-style shims are legacy weight — prefer the RTL and delete the shim
 when you touch a call site (`TF.StrToInt` is lenient and silently returns 0; the faithful replacement
 is `StrToIntDef(s, 0)`).
 
-### 3. Configuration (`src/uCFG.pas`, `src/trdos/CFGCMD.pas`)
+### Configuration (`src/uCFG.pas`, `src/trdos/CFGCMD.pas`)
 
-Loaded from the contest `.cfg` and the common messages. ~~`settings/tr4w.ini`~~ is
-**not a startup source since 2026-09-19** -- it is `tr4wconvert`'s input. The parser handles
-`MY CALL = N6TR`-style commands via `CFGRecord` structures (command text → variable address → type →
-range). Supports network synchronisation for multi-station setups.
+Settings live in `settings/tr4w.json`, owned by `uSettingsModel` (below). `settings/tr4w.ini` is
+**not a startup source since 2026-09-19** -- it is `tr4wconvert`'s input. NY4I: *"We switched to
+all json a while ago. Except for the contest.cfg file we should not be writing ini files."*
 
-**THE DESTINATION IS JSON, NOT `TIniFile`** — this said "slated for a rewrite onto Delphi's native
-`TIniFile`" until 2026-08-21, which had been wrong for months. NY4I: *"We switched to all json a
-while ago. Except for the contest.cfg file we should not be writing ini files."*
-
-### THE `crS` STATUSES ARE OVER. DO NOT REASON FROM THEM.
-
-NY4I, 2026-09-11: *"csOwned, csjson, csnew were all migratory steps. Those
-concepts have no meaning any longer."*
-
-**A long table of `csOwned` / `csJSON` / `csOld` counts stood here and is
-deleted.** It had been rewritten twice in September to fix its numbers while
-keeping a model that was already wrong, which is the failure mode this file
-records elsewhere: *a stale REASON is worse than a stale count, because a count
-invites a re-measurement and a reason invites agreement.*
-
-**`csRem` IS GONE ENTIRELY** (2026-09-11). Every one of its rows was deleted.
-A withdrawn command is a NAME in `uCFG.RETIRED_COMMANDS` now -- accepted,
-logged once per name per session, and ignored -- rather than a twenty-field
-`CFGRecord` whose every field `CheckCommand` skipped. (**"Once" was not true
-until M10 S2, 2026-10-14**: the code logged every occurrence. It is a latch in
-`uCFG` now, `RetiredCommandFirstSighting`. That stage also retired the seven
-contest-rule settings -- `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL
-EXCHANGE` and the four multipliers -- onto this list; the contest's class
-decides them.) The name list exists for one reason worth
-knowing: `src/trdos/LogCfg.pas` shows a **modal** *"invalid statement in config
-file"* (`TC_INVALIDSTATEMENTINCONFIGFILE`) for a line `CheckCommand` refuses,
-so an old `tr4w.ini` naming a
-withdrawn feature would otherwise tell an operator their working configuration
-is invalid, once per stale line.
-
-**A commented-out row and a `csRem` row were never the same set**, and a test
-now pins that in both directions -- `K1EA NETWORK ENABLE` is commented out, so
-it has *always* produced that dialog, and listing it would be a behaviour
-change rather than a tidy-up.
 
 ### Where a setting actually lives
-
-**MEASURE IT. Neither command takes a minute:**
-
-**AND THE ANSWER IS NOW ALWAYS THE SETTINGS OBJECT. `CFGCA` IS GONE --
-2026-09-14**, along with `CFGRecord`, `CommandsArraySize` and all four
-positional side tables. It held 415 rows when the elimination started.
-
-```bash
-grep -c "crCommand:" tr4w/src/uCFG.pas          # 0, and Lint-ConfigArrays keeps it there
-```
-
-```powershell
-.\tr4w\build\Build-Tests.ps1 -Run               # the settings tests pin the rest
-```
 
 The **stores** -- radios, keyers, profiles, window layout, UDP -- are all JSON
 in `settings/tr4w.json` and have been since August. **`tr4w.ini` STORES
@@ -1046,28 +546,7 @@ and it is neither a table of pointers nor a registry of closures:
 published property Port: integer read FPort write FPort;
 ```
 
-**Everything `CFGCA` carried per row is a restatement of something the compiler
-already knows**, and each field has a destination rather than a replacement:
 
-| the row's field | where it went |
-|---|---|
-| `crCommand` | **derived from the property path** -- `BandMap.AllBands` gives `BAND MAP ALL BANDS` |
-| `crAddress`, `crType` | the property itself |
-| `crMin` / `crMax` | a **subrange type** -- `TBandMapItemHeight = 12..50` -- read back out of RTTI, so nothing lists which settings are bounded |
-| `crP` (a redraw index) | **the property's setter**, plus `uSettingsEffects` |
-| `crJ` (restart / read-only) | a parameter on `RegisterModelSetting` |
-| `crS` | nothing. See above |
-
-**`crP` IS THE ONE WORTH UNDERSTANDING**, because it is why the setters exist.
-NY4I, 2026-09-11: *"a property setter can do the side effect, which is better
-than a hook index."* A `crP` is a hand-typed index into `CommandsProcArray`, so
-a wrong one compiles -- that has happened here, `EXTERNAL LOGGER ENABLED`
-carried `crA: 23`, the WSJT-X hook. And it **only fired when `CheckCommand`
-applied a row**, so a config file repainted the band map and a menu toggle did
-not, which is why `uBandMapForm` grew a `ToggleAndRepaint` helper hand-writing
-the repaint the table would have done. Two spellings of one rule, free to
-disagree. A setter cannot point at the wrong handler, and runs however the
-value was set.
 
 **`CheckCommand` RESOLVES NAMES THE SETTINGS OBJECT OWNS, AND THAT IS THE ONLY
 WAY A SETTING IS RESOLVED.** It used to be one of two, and that was the whole
@@ -1078,30 +557,23 @@ window colours), `TryApplyCommandAction` for the four commands that DO something
 rather than set something, and two lists that accept-and-ignore -- a withdrawn
 name (`RETIRED_COMMANDS`) and a name a store owns (`OWNED_BY_A_STORE`).
 
-**`RegisterLegacySetting` IS GONE WITH THE LAST ROW**, and the split above is
-why that was a deletion rather than an unpicking: it took four of its own
-attributes out of the row (`crJ`/`crP`/`crA`/`crNetwork`), so it could never
-have registered a migrated setting. Preferences goes through
-`uSettingsModelBinding`. `uSettingsLegacy` still exists and is **not legacy**:
-`TStoredSetting` writes `settings/tr4w.json` through the radio configuration
-store, which is where the radio, keyer, cluster and profile libraries live.
+**`RegisterLegacySetting` is gone with the last row.** Preferences goes through
+`uSettingsModelBinding`. `uSettingsLegacy` still exists and is **not legacy**: `TStoredSetting`
+writes `settings/tr4w.json` through the radio configuration store, which is where the radio,
+keyer, cluster and profile libraries live.
 
 **`Lint-ConfigArrays.ps1` IS INVERTED, NOT RETIRED.** Every ceiling is 0 and
 zero is the pass; **any** occurrence fails, anywhere in the tree. The shape it
 forbids is a const table holding the ADDRESS of a global so something can write
 through it.
 
-**The contest `.cfg` is deliberately exempt**: it is going to an SQLite3 contest file, not to JSON
-(NY4I, 2026-08-21). `tr4wserver.ini` belongs to a different program and is out of scope.
-
-~~`CommandsArray` *is* the ini parser, so every key is an editable "command"~~ — **that
-described the array, and the array is gone.** A setting is a published property: its bounds are its
-type, its side effect is its setter, and whether it is read-only is stated at registration. The
-reasoning behind the move, and where each of the row's twenty fields went, is in
+A setting is a published property: its bounds are its type, its side effect is its setter, and
+whether it is read-only is stated at registration. The reasoning behind the move, and where each of
+the row's twenty fields went, is in
 [`docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md`](docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md);
 the per-unit ini-to-JSON detail is in
 [`docs/migration_interim_artifacts/CFG_MIGRATION_PLAN.md`](docs/migration_interim_artifacts/CFG_MIGRATION_PLAN.md).
-Both are archived — the array is gone.
+Both are archived.
 
 ### 4. Contest flow
 
@@ -1120,9 +592,7 @@ Both are archived — the array is gone.
 **All radios go through the factory.** `src/radioFactory/` holds one unit per family base and one per
 model. Registrations are `RegisterRadio` (enum-keyed), covering every selectable
 `InterfacedRadioType` except `NoInterfacedRadio`, plus `RegisterRadioById` for a **string-id**
-radio that has no enum member. ~~one `RegisterRadioById` (TCI)~~ — **there is more than one, and
-writing the number here is what made that wrong** (corrected 2026-09-28; TCI was joined by an
-Icom). Ask instead:
+radio that has no enum member (there is more than one; do not write the number). Ask instead:
 
 ```bash
 grep -rn "RegisterRadioById(" tr4w/src/radioFactory/*.pas    # the call sites, not the declaration
@@ -1131,22 +601,15 @@ grep -rn "RegisterRadioById(" tr4w/src/radioFactory/*.pas    # the call sites, n
 A string-id radio is the case that silently breaks model-keyed code — see the CW-by-CAT repoint
 below, where the old model-keyed capability gate could not see TCI at all.
 
-**The count is not written here** — it said "100" while `Lint-RadioRegistry` reported 101, which is
-the same drift the [Win32 section](#do-not-write-a-count-or-a-list-of-survivors-here-measure-it)
-records. `.\build\Run-Lints.ps1` prints it on every build; that number is the true one.
+**The count is not written here**; `.\build\Run-Lints.ps1` prints the true one on every build.
 
 - **Base class:** `src/radioFactory/uFactoryRadioBase.pas` (`TFactoryRadioBase`).
-  `uNetRadioBase.pas` is gone; `uRadioFactory.pas` moved into `src/radioFactory/`.
 - **Registry:** `uRadioRegistry.pas` is the single source of truth; each unit self-registers from its
   `initialization` section. It owns the per-model data that used to live in parallel arrays — CI-V
   address, HamLib `rig_model`, startup command, network metadata.
-- **Families:** Icom (CI-V, `uRadioIcomBase` + legacy/modern/read-limited tiers), Kenwood (serial +
-  LAN), Yaesu (ASCII, ASCII-legacy, binary), Elecraft (K2/K3/K4/KX3), Ten-Tec, FlexRadio (CAT and
-  the 4992 Ethernet API), HamLib, TCI.
 - **Capabilities are owned by the radio object** — a `TRadioCapabilities` set plus a
   `DefineCapabilities` virtual (an Icom-family virtual; **every other** driver sets
-  `FCapabilities.Flags` in its constructor — that split is the fact, the ~~68~~ was a count and
-  was stale). Not a global table.
+  `FCapabilities.Flags` in its constructor). Not a global table.
 
 **Two hard rules:**
 
@@ -1161,45 +624,34 @@ records. `.\build\Run-Lints.ps1` prints it on every build; that number is the tr
 2026-08-02 by adding TCI (a WebSocket radio) with no change to any shared file. Read
 [`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md).
 
-**Legacy radio code: DELETED, not deprecated.** Track E completed 2026-08-02 (`1c820091`).
+**Legacy radio code: DELETED, not deprecated** (Track E, 2026-08-02, `1c820091`). The
+`case rig^.RadioModel of` dispatch and every per-model poller in `uRadioPolling.pas`, and every
+model dispatch and Icom quirk typeset in `logradio.pas`, are gone -- reachability was *computed* by
+a call-graph walk, not assumed. **LOGRADIO now holds no per-model radio knowledge.**
 
-- `uRadioPolling.pas` went **4,621 → 1,336 lines** (`a84266bd`): the `case rig^.RadioModel of`
-  dispatch and all 37 per-model pollers are gone. Its public surface dropped from 50 exported
-  routines to 14. Reachability was *computed* by a call-graph walk, not assumed.
-- `logradio.pas` went **4,416 → 3,165 lines** with 11 model dispatches → 0. All seven Icom quirk
-  typesets (`IcomRadiosThatSupportRIT`, VFOB, PSKMode, SplitSetOnly, ModeSetNoFilter,
-  TXStatusUnreadable, 6to60WPMKeyer) and the last three `RadioSupports*` typesets are deleted;
-  ~~`RadioParametersArray` is unreferenced.~~ **Both enum-indexed radio tables are DELETED
-  (2026-08-28) — `RadioParametersArray` and `InterfacedRadioTypeSA`.** "Unreferenced" was true of
-  the running program and missed the point: they were `array[InterfacedRadioType]`, so the
-  *compiler* demanded a row for every radio anyone added, and the unit tests then compared the new
-  radio against a row someone had just invented for it. That is a second definition of what a radio
-  is, and it had already drifted — the name table was missing `TS140` and carried a `TS530` the enum
-  never had, so **a config saying `TS440` selected the TS-140 driver** and `TS140` could not be
-  selected at all. Four Kenwoods, silently, for years.
+Both enum-indexed radio tables, `RadioParametersArray` and `InterfacedRadioTypeSA`, were deleted
+2026-08-28. "Unreferenced" was true of the running program and missed the point: they were
+`array[InterfacedRadioType]`, so the *compiler* demanded a row for every radio anyone added, and the
+unit tests then compared the new radio against a row someone had just invented for it. That is a
+second definition of what a radio is, and it had already drifted -- the name table was missing
+`TS140` and carried a `TS530` the enum never had, so **a config saying `TS440` selected the TS-140
+driver** and `TS140` could not be selected at all. Four Kenwoods, silently, for years.
 
-  The factory owns per-model data now; `uRadioRegistry.RadioTypeToken` derives the config-file
-  spelling from the enum itself, so that drift is unrepresentable rather than merely fixed.
-  **`Lint-NoRadioTables` fails the build if a hand-typed table indexed by a radio enum comes back.**
-  **LOGRADIO now holds no per-model radio knowledge.**
+The factory owns per-model data now; `uRadioRegistry.RadioTypeToken` derives the config-file
+spelling from the enum itself, so that drift is unrepresentable rather than merely fixed.
+**`Lint-NoRadioTables` fails the build if a hand-typed table indexed by a radio enum comes back.**
 - The `is TIcomRadio` / `is TKenwoodLAN` credential casts became virtuals on `TFactoryRadioBase`
   (`ApplyNetworkCredentials`, `ApplyDataModeID` — named for the *concept*, not the vendor).
 
 Read the D7 tree as the authority on what the old program did — never mirror a fix back into it.
 
-**`src/uCAT.pas` — the DIALOG IS DEAD, the HELPERS ARE NOT.** This said `CATDlgProc` was "the
-live radio configuration dialog … actively maintained" until 2026-08-31, and that is wrong:
-**`CATDlgProc` has no caller.** Every `tDialogBox`/`DialogBoxParam` in `MainUnit` is commented out
-and the proc now appears only in comments — `uMenu.pas` calls it "the legacy per-slot dialog". Its
-~20 Win32 dialog-item calls are unreachable code.
+**`src/uCAT.pas`** is not a dialog (`CATDlgProc` has no caller). It is the machinery the Preferences
+form uses: port enumeration, the filtered/greyed COM drop-down (item data, never index arithmetic),
+string-id factory radios in the type combo, and `CloseCATAndKeyerForThisRadio`. Do not delete the
+unit, and do not change radio configuration in `CATDlgProc`.
 
-What IS still live in that unit is the surrounding machinery the Preferences form uses: port
-enumeration, the filtered/greyed COM drop-down (item data, never index arithmetic), string-id
-factory radios in the type combo, and `CloseCATAndKeyerForThisRadio`. Do not delete the unit; do not
-treat `CATDlgProc` as the place to change radio configuration.
-
-~~`RestartPollingThread`~~ **DOES NOT EXIST AND APPARENTLY NEVER DID** (checked 2026-09-24: no such
-identifier anywhere in `tr4w/src`, under that name or as `RestartPolling`/`StartPollingThread`).
+**There is no `RestartPollingThread`** (checked 2026-09-24; no such identifier, or
+`RestartPolling`/`StartPollingThread`, anywhere in `tr4w/src`).
 **The polling thread is not restarted; the RADIO IS REBUILT, and the thread comes with it.**
 `RadioObject.CheckAndInitializePorts_ForThisRadio` (`src/trdos/logradio.pas`) calls
 `SetUpRadioInterface`, which calls `ShutDownRadioInterface` first — stop the poller, wait for it,
@@ -1251,10 +703,8 @@ read it before touching any of this.** The rules worth knowing from here:
   (`uNetSendQueue`: one FIFO writer thread). Parsing runs on the main thread via
   `Application.QueueAsyncCall`; an unrecognised message id must NOT be kept in the buffer, or the
   same bytes re-parse forever and the link wedges silently.
-- **`tr4wserver` is an LCL program, not a console program** (since 2026-09-06; `Get-SearchPaths.ps1`
-  gives its target the LCL paths). **So nothing guards a unit growing a `Forms` dependency** --
-  that guard, the old LCL-free search path, is gone and nothing replaced it. `-SkipServer`'s only
-  cost is that the server is not in the build. It builds as a normal `FullBuild.ps1` step.
+- **`tr4wserver` is an LCL program, not a console program** (since 2026-09-06). Nothing guards a
+  unit growing a `Forms` dependency -- see Build System.
 
 #### Crash reporting (`uCrashLog`)
 
@@ -1285,10 +735,9 @@ read it before touching any of this.** The rules worth knowing from here:
 ### 7. External logger integration
 
 `src/uExternalLoggerFactory.pas` creates loggers; `uExternalLoggerBase.pas` (`TExternalLoggerBase`) is
-the abstract base; `uExternalLogger.pas` carries the implementation. ~~`uExternalLoggerManager.pas`~~
-**was never linked and is DELETED (2026-10-16)** -- its only mention was a commented-out `uses`
-line, so it described a multi-logger manager the program has never had. `uRadioManager.pas` went
-with it for the same reason. Each logger runs its own reading/sender thread pair.
+the abstract base; `uExternalLogger.pas` carries the implementation. There is no multi-logger
+manager (`uExternalLoggerManager.pas` and `uRadioManager.pas` were never linked and were deleted
+2026-10-16). Each logger runs its own reading/sender thread pair.
 
 **A QSO LEAVES THE PROGRAM THROUGH ONE THREAD (2026-10-24).** The main thread builds an immutable
 message (`logsubs2.PostQsoEvent`) and posts it to `uQsoDispatcher`; its thread delivers to UDP, the
@@ -1297,11 +746,11 @@ is for that thread only -- two QSOs froze the operator 2.7 s each in CQ WW SSB w
 destination was resolved inline. The builders read live state on the main thread; the dispatcher never
 does. See the integrations agent for the details.
 
-| Type | Status |
-|---|---|
-| `lt_DXKeeper` | Complete |
-| `lt_ACLog` | **Incomplete** — the factory logs a warning on creation |
-| `lt_HRD` (Ham Radio Deluxe) | **Incomplete** — same |
+| Type                        | Status                                                  |
+| --------------------------- | ------------------------------------------------------- |
+| `lt_DXKeeper`               | Complete                                                |
+| `lt_ACLog`                  | **Incomplete** — the factory logs a warning on creation |
+| `lt_HRD` (Ham Radio Deluxe) | **Incomplete** — same                                   |
 
 Note this is the **older factory shape**: a `case` in one class function
 (`TExternalLoggerFactory.CreateLogger`) raising `EExternalLoggerFactoryException`, not the radio
@@ -1312,18 +761,8 @@ extending the `case`.
 
 - **WSJT-X** (`uWSJTX.pas`) — UDP; sends colorization hints, receives decodes/QSOs.
   Enabled with `WSJT-X ENABLE = TRUE`.
-- **MMTTY** (`uMMTTY.pas`) — RTTY engine.  ~~Gated on `MMTTYMODE` in `VC.pas`~~ — that
-  compile-time switch was deleted 2026-08-18 (NY4I: "the boolean controls it now").  It
-  had been `= True` for the life of this tree, so all 20 of its `{$IF}` blocks always
-  compiled; one `{$IF NOT MMTTYMODE}` block and one `{$ELSE}` arm never did.
-- ~~**MixW** (`uMixW.pas`)~~ **DELETED 2026-09-05** (NY4I: *"you can remove all traces
-  of mixw. I confused it with a different program"*). It was never working code: the
-  whole unit body sat inside `{$IFDEF MIXWMODE}`, a define that existed **nowhere** in
-  the tree, and defining it would not have helped -- the var block holding `MixW`,
-  `MixWLoaded` and `MixWConnectionStatusWnd` was commented out, so was the `p` that
-  `DisplayMixWConnection` assigns, and `tw_MixWWINDOW_INDEX` was never declared in
-  `VC.pas` at all. `SendMessageToMixW` therefore compiled to an empty procedure, and
-  its six live callers did nothing.
+- **MMTTY** (`uMMTTY.pas`) -- RTTY engine. (The `MMTTYMODE` compile-time switch was deleted
+  2026-08-18; NY4I: "the boolean controls it now".)
 
 ### 9. DX tools
 
@@ -1356,27 +795,24 @@ records the commits).
 TR4W has four mutually exclusive ways to key CW. Each is now a `TCWKeyer` strategy adapter, and
 **no consumer outside the factory branches on keyer type any more**:
 
-| Adapter | Unit | Device |
-|---|---|---|
-| `TCWKeyerCAT` | `src/uCWKeyerCAT.pas` | CW-by-CAT over the radio link |
-| `TCWKeyerWinKey` | `src/uCWKeyerWinKey.pas` | WinKeyer (own thread, `uWinKey.pas`) |
-| `TCWKeyerYCCC` | `src/uCWKeyerYCCC.pas` | YCCC SO2R+ box |
-| `TCWKeyerCPU` | `src/uCWKeyerCPU.pas` | DTR/RTS keying (`LOGK1EA`) — ~~LPT~~, removed 2026-09-13 |
+| Adapter          | Unit                     | Device                                                   |
+| ---------------- | ------------------------ | -------------------------------------------------------- |
+| `TCWKeyerCAT`    | `src/uCWKeyerCAT.pas`    | CW-by-CAT over the radio link                            |
+| `TCWKeyerWinKey` | `src/uCWKeyerWinKey.pas` | WinKeyer (own thread, `uWinKey.pas` )                    |
+| `TCWKeyerYCCC`   | `src/uCWKeyerYCCC.pas`   | YCCC SO2R+ box                                           |
+| `TCWKeyerCPU`    | `src/uCWKeyerCPU.pas`    | DTR/RTS keying (`LOGK1EA`) — ~~LPT~~, removed 2026-09-13 |
 
 Base and selection live in `src/uCWKeyerBase.pas`; `src/trdos/LogCW.pas` is the facade. Per-keyer
 capabilities (`ckTune`, `ckDeleteLastChar`, `ckMessageChaining`) let the UI grey what the chosen
 interface cannot do. `logdvp.pas` handles voice.
 
-**The CAT repoint (done 2026-08-03) ran in three steps and is worth understanding:**
-
-1. `edc9cbf2` — the send moved out of `RadioObject.SendCW` into `uCWKeyerCAT.CWByCATSend`, and
-   **`RadioObject.SendCW` was deleted**. `CWByCATSend` takes the radio *explicitly* rather than
-   assuming `ActiveRadioPtr`, because SO2R (`KeyersSwapped`) and the interlock nominate a radio.
-2. `a9e77155` — the capability gates repointed to `RadioObject.HasCapability`. The old model-keyed
-   form could not see a string-id radio, so TCI silently got no CW at all.
-3. `4a7f9833` + `55f4f5ed` — the *data* moved onto the radio. The frame rule and prosign dialect are
-   `TRadioCapabilities.CWFrame` / `.CWProsignDialect`, and the `KY <text>;` command lives on a real
-   base class:
+**The CAT repoint (done 2026-08-03) in three steps:** the send moved out of
+`RadioObject.SendCW` (deleted) into `uCWKeyerCAT.CWByCATSend`, which takes the radio *explicitly*
+rather than assuming `ActiveRadioPtr`, because SO2R (`KeyersSwapped`) and the interlock nominate a
+radio; the capability gates repointed to `RadioObject.HasCapability` (the old model-keyed form
+could not see a string-id radio, so TCI silently got no CW at all); and the *data* moved onto the
+radio -- the frame rule and prosign dialect are `TRadioCapabilities.CWFrame` / `.CWProsignDialect`,
+and the `KY <text>;` command lives on a real base class:
 
 ```
 TFactoryRadioBase
@@ -1427,68 +863,15 @@ the `MainUnit` global `logger` or it will AV.
 
 ## Documentation map
 
-Read the specific doc before acting in its area — these are current and this file is only a summary.
+The full topic-to-document table is **[`docs/DOCUMENTATION_MAP.md`](docs/DOCUMENTATION_MAP.md)**.
+Read the specific doc before acting in its area; this file is only a summary. The ones needed most:
 
-| Topic | Document |
-|-------|----------|
-| Build & test recipe | `tr4w/docs/BUILD.md` |
-| **Setting up a build environment** | **`tr4w/docs/BUILD.md`** — one installer; verified from scratch 2026-08-14 |
-| CI runner setup | `docs/CI_RUNNER_SETUP.md` |
-| Adding a radio | `docs/ADDING_A_RADIO.md` |
-| ~~Radio factory design~~ | ~~`docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md`~~ — **both SUPERSEDED and archived**: they describe an enum-keyed simple factory, and the tree shipped a self-registration registry. Read `docs/ADDING_A_RADIO.md` and `uRadioRegistry.pas` |
-| Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
-| **What is waiting for a real run -- a LIVING list, and it is not a log** | **[`docs/BENCH_QUEUE.md`](docs/BENCH_QUEUE.md)** -- an item goes in when a change lands that no automated gate can check, and comes OUT when NY4I confirms it. Add to it when you finish work only hardware can judge; it was absent from this map until 2026-09-28, which is the failure mode a living list cannot survive |
-| **The god classes, measured -- GENERATED, never hand-edited** | **[`docs/ARCHITECTURE_METRICS.md`](docs/ARCHITECTURE_METRICS.md)** -- `python tools/architecture-metrics.py` prints it; `--record` appends a dated row to the history. NY4I: *"A script that generates the numbers is always preferable"*, which is the same rule this file applies to its own counts |
-| **Band plan: frequency memories and band-map cutoffs (DESIGN, nothing built)** | **[`docs/BAND_PLAN_SETTINGS_DESIGN.md`](docs/BAND_PLAN_SETTINGS_DESIGN.md)** -- the two rows that are unsafe to render as ordinary settings, and why |
-| Legacy removal plan | **archived** — `docs/migration_interim_artifacts/LEGACY_DEPENDENCY_AUDIT.md`, `.../PHASE_INVENTORIES.md`. The legacy radio path was deleted 2026-08-02 and live `asm` is zero |
-| CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
-| **Adding a contest -- the procedure (Part A) and the reference (Part B)** | **`docs/ADDING_A_CONTEST.md`** -- Part A is the checklist; read **B4** before believing a green run: the golden corpus is BLIND to scoring, and for a NEW contest only its unit tests say it is right |
-| **What a contest OWNS -- the factory's target shape (DESIGN; NY4I's ruling 2026-10-01)** | **`docs/CONTEST_OWNERSHIP_DESIGN.md`** -- a contest class owns its rules outright through `TContestBase` virtuals (scoring, parsing, ADIF import interpretation, ADIF/Cabrillo export, setup, total score); NO shared strategies and NO registries; family bases only for one family under one rule; a look-alike contest starts as a COPY it owns. Holds the migration order M0-M10, the checkable definition of "a contest has moved", the rotated `QSOPointMethodArray` finding (moot: that table went at M10 S2, and the point method itself as a concept at M10 S4) and open questions Q1-Q13 |
-| **M10, the contest-factory endpoint -- the STAGED plan (S0-S9)** | **`docs/CONTEST_FACTORY_M10_PLAN.md`** -- measured at `de62e724` with `tools/contest-factory-m10/`; re-measure before acting on a number. Deleting the legacy scoring case changes no registered contest (checked two ways, design §8.2s); the six multiplier/exchange KIND enums outlive M10 and go at M11 |
-| ~~Point methods as factory strategies~~ **SUPERSEDED 2026-10-01** | `docs/QSO_POINT_METHOD_DESIGN.md` -- the strategy/registry design NY4I's ownership ruling replaced. Kept for its measurements only; its two live findings are restated in `CONTEST_OWNERSHIP_DESIGN.md` section 7. Do not build from it |
-| **Every contest rule still OUTSIDE the factory -- GENERATED** | **`docs/CONTEST_RULES_OUTSIDE_FACTORY.md`** -- `python tools/contest-rules-inventory/generate.py` regenerates it; only the marked hand-maintained blocks are prose. `Lint-ContestNameTests` gates the same ground |
-| **A contest's `.dom` multipliers against DXLog.net -- and a starter `.dom` for a NEW QSO party** | **`python tools/dom-crosscheck/crosscheck_dom_dxlog.py`** (`--new-party <DXLog file>`); one dated reading is `docs/DOM_CROSSCHECK_FINDINGS.md`. A difference is a lead to check with the sponsor, not a verdict. Reads TR4W's side from the frozen contest matrix, so re-freeze before trusting a difference |
-| **THE ROADMAP — the single phased task list for the modernization** | **[`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md)** — replaces eleven tracking documents. Carries the measured baseline WITH the command for each number, the four-week phases, the bench block, and the decisions owed from NY4I |
-| Finished and superseded migration notes | [`docs/migration_interim_artifacts/`](docs/migration_interim_artifacts/) — read for *why*, never for *status* |
-| **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
-| **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
-| **I18N: resourcestrings, .po and where every string lives** | **`docs/I18N_PLAN.md`** |
-| **Which `.lfm` captions actually reach the screen** | **`docs/migration_interim_artifacts/CAPTION_REVIEW.md`** (archived — the measurement was consumed by the `.lfm` harvest) — every design-time caption in `src/ui/lcl`, marked `wired` (assigned at run time, so the `.lfm` text is a placeholder) or `SHIPS` (the English in the `.lfm` is what an operator sees). This is the measurement behind "469 captions ship as English" |
-| **Adding a language (recipe; step 6 was closed, see its status block)** | **`docs/ADDING_A_LANGUAGE.md`** |
-| **Running the i18n scripts** | **`docs/I18N_TOOLS.md`** |
-| **Sending a language to a translator / taking it back** | **`docs/TRANSLATION_HANDOFF.md`** |
-| **What the translator receives** | `docs/TRANSLATOR_GUIDE.md` |
-| **Panadapter / spectrum seam** | **`docs/PANADAPTER_LCL_DESIGN.md`** |
-| **Timing: the wall clock AND high-precision intervals (CW keying)** | **`docs/PLATFORM_CLOCK_ABSTRACTION.md`** -- part 2 measures what `winmm` is actually used for (13 sites, not 189), assesses EpikTimer, and holds the per-platform HPTimer reference including Apple Silicon |
-| **ACCELERATORS: how a keystroke reaches an action -- read before adding or moving a key** | **[`docs/ACCELERATOR_SHORTCUT_PLAN.md`](docs/ACCELERATOR_SHORTCUT_PLAN.md)** -- 74 rows are `TMenuItem.ShortCut` (the widget set answers them and draws the right-aligned `Alt+B` text); 20 stay in the global key hook `uAppInputHooks.KeyDownBefore` for reasons listed there. `src/uAccelerators.pas` is the table and its header explains the moves; `docs/MENU_ACTIONLIST_PLAN.md` is the menu side. **The `&` underlined mnemonics (Alt+letter inside an open menu) were tried and DROPPED by NY4I on 2026-11-03** -- Windows hides the underlines until Alt is pressed and they come and go. Do not rebuild them: `Alt+K`-style ShortCut keystrokes are the whole accelerator story. Existing `&` markers in translations are left as written, and `uCaptionText.DisplayedText` strips them wherever a caption is reused as text (window titles, measuring) |
-| **Colour roles / theming (read before restyling ANY window)** | **`docs/COLOR_ROLES_DESIGN.md`** -- the palette names COLOURS, not roles, which is what blocks theming; and the radio panel's cyan IS its active-radio indicator, so removing it deletes a state signal |
-| **Restyling the converted grids (PARKED until conversions finish)** | **`docs/GRID_RESTYLE_PLAN.md`** |
-| **Display state as a model (DONE 2026-08-30; `src/domain/` + `uStateBridge`)** | **`docs/migration_interim_artifacts/DISPLAY_STATE_MODEL_PLAN.md`** (archived — the work is complete) |
-| **The contest log in SQLite (STARTED 2026-09-01) -- schema, and why it is flat** | **`docs/SQLITE_LOG_SCHEMA_PLAN.md`** |
-| **A port's identity: the enumerator, the naming, and dropping SERIAL n** | **[`docs/PORT_IDENTITY_PLAN.md`](docs/PORT_IDENTITY_PLAN.md)** -- all three planned together; two are done. Holds the measurement that makes it tractable: of everything still asking PortType, 43 sites ask only WHAT KIND and just 4 ask WHICH PORT |
-| **64-BIT: the task list, checked off against the tree** | **[`docs/64_BIT_TASKLIST.md`](docs/64_BIT_TASKLIST.md)** -- the codex worktree's plan re-measured on `main` with the comment-aware stripper. **Do not quote its PChar figure, or the one this row used to carry** -- run `tr4w/build/Count-LivePChar.ps1`, which is the comment-aware count and has fallen by an order of magnitude since. Live `asm` is ZERO (section 4 is done, and `Count-LiveAsm.ps1` is its equivalent); the InpOut x64 row is MOOT because the parallel port is gone; pointer truncation is a handful of sites in two units. Carries NY4I's added rule: byte I/O stays byte I/O, but `Move`/`FillChar`/`ZeroMemory` is not how to express it |
-| **ADDING a setting -- and the twelve lists that are NOT where it goes** | **[`docs/ADDING_A_SETTING.md`](docs/ADDING_A_SETTING.md)** -- two places: a published property and one `RegisterModelSetting` line. Written because NY4I tried to add one and could not tell where it went; most of the fifteen lists a command name can appear in exist to REMOVE a command or to IMPORT an old file. Holds NY4I's test for "is it really retired" (look it up in the D7 `CFGCA`: `crAddress: nil` means obsolete) |
-| **EVERY setting, its aliases, and whether it belongs to the STATION or to the CONTEST** | **[`tr4w/docs/SETTINGS_INVENTORY.md`](tr4w/docs/SETTINGS_INVENTORY.md)** -- generated from `uSettingsModel.pas` and `uCFG.pas`, and validated against the frozen command vocabulary, so if the generator and the program ever disagree the GENERATOR is wrong. Regenerate with `tools/settings_inventory.py` then `tools/settings_inventory_doc.py`. **KEEP THE NOTES COLUMN** -- the rest of the table reproduces, NY4I's notes do not |
-| **Eliminating the CFG array -- DONE 2026-09-14, archived** | **[`docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md`](docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md)** -- `CFGCA` went 415 rows to ZERO and `Lint-ConfigArrays` fails the build on any occurrence. **Only its top banner was ever current**; the body is stale by design. To ADD a setting, read `docs/ADDING_A_SETTING.md` |
-| **The log migration IN ORDER -- read before picking up any of it** | **`docs/SQLITE_MIGRATION_TASKS.md`** -- six phases with exit criteria, and the measurement that settles whether the contest factory has to come first (the storage seam is 13 sites, not 430) |
-| ~~D12 migration roadmap~~ | ~~`docs/migration_interim_artifacts/D12_MIGRATION_ROADMAP.md`, `.../D12_RELEASE_READINESS.md`~~ — superseded and archived, read for *why* not *status* |
-| String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
-| VCL coexistence / FMX | **archived** — `docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`, `.../FMX Migration Discussion.md`, `.../FMX_WIN32_COEXISTENCE.md`. VCL is an abandoned toolchain path and FMX was deleted 2026-08-17 |
-| **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
-| **Win32 ARTIFACTS -- the shapes that compile everywhere and are still wrong** | **`docs/WIN32_ARTIFACT_SWEEP.md`** -- the successor to the portability sweep, and a different question: not "does it compile off Windows" but "is this how FPC/LCL would have written it". Worked example: a multiplier's identity exists only as bits in a grid row's `Objects` pointer |
-| Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
-| **Asking an Icom which bands it has (raw IC-9700 capture)** | **`docs/ICOM_BAND_ENUMERATION.md`** -- `$1E` enumerates, `$02` only bounds the CURRENT band. Band stepping and band up/down both read the result, so no driver names a band |
-| ~~LPT keying: the inpout32/x64 driver~~ | ~~`docs/inpOut32-64_Info.md`~~ — **HISTORICAL as of 2026-09-13.** The parallel port is gone from the program (NY4I: *"you can remove all references to them in the code"*), and with it `uIO.pas`, the `inpout32` bindings, `Parallel1..Parallel3` and the LPT dialog. The doc is kept for the driver's own notes; nothing in the tree loads it any more |
-| **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
-| Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |
-| **Multi-user networking: the protocol, and where its analysis is wrong** | **`docs/TR4W_NETWORKING_ANALYSIS.md`** — TR4QT's analysis, copied whole. **Read the provenance block at the top before believing any V1 claim**: three were checked against this tree and do not hold, and the V2 design in it is TR4QT's, not a plan for this repo |
-| TCI server | `docs/TCI_SERVER_DESIGN.md` — and `docs/TCIServPlanning.txt`, its **superseded** precursor, kept for the reasoning only |
-| **Driving TR4W over WebSocket (DESIGN, nothing built)** | **`docs/CONTROL_CHANNEL_DESIGN.md`** — why the UI harness is nailed to Win32, why AutoIt is not the way out (its ControlID *is* `GetDlgCtrlID`), and the `input.*` / `command.*` split that keeps a test hook from becoming a weak public API |
-| Release process | `docs/RELEASE_WORKFLOW.md` (sections 5-8; 1-4 superseded by BUILD.md), `docs/FORK_PROCESS.md` |
-| **THE INSTALLER -- what it may decide, and what it must NOT** | **[`docs/INSTALLER_DESIGN.md`](docs/INSTALLER_DESIGN.md)** -- DESIGN ONLY. The installer owns the MACHINE and the PAYLOAD; the setup wizard owns the STATION, and the installer **must not write `tr4w.json` or ask for a callsign** -- doing so breaks the wizard's own first-run gate, which asks whether `MyCall` is empty. Carries the measured numbers the decisions rest on: symbols are **55% of the Windows install**, a macOS `.dSYM` is 63 MB, and `installKBytes` is computed by `pkgbuild` so no size is hand-maintained. Argues language and data-file downloads INTO the wizard and says why. `## Prior art` is deliberately OPEN for NY4I's survey |
-| **The first-run setup wizard (the STATION half of the above)** | **[`docs/SETUP_WIZARD_DESIGN.md`](docs/SETUP_WIZARD_DESIGN.md)** -- DESIGN ONLY, and the page shape is SETTLED: reopen it with NY4I, not in a document edit. Its section 3.1 rule -- **the wizard must not redeclare a field** -- is the one the installer document applies a layer out. Reviewed against an external critique that is **deliberately NOT in this repository** (it carries pre-signed URLs and this repo is public); its rejected points are recorded **in section 12 with the evidence**, which is what you read -- do not hunt for the critique file |
-| **WAE QTC windows: the bench script nobody has run** | **`docs/QTC_BENCH_HANDOFF.md`** — for N4AF. Both QTC windows converted with no harness and no operator who can judge them; three items in it are decisions, not checks |
-| Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |
+- Build environment: `tr4w/docs/BUILD.md`
+- What is waiting for a real run (a LIVING list): [`docs/BENCH_QUEUE.md`](docs/BENCH_QUEUE.md) -- add to it
+  when you finish work only hardware can judge; NY4I removes items when he confirms them
+- Adding a contest: [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md); a radio: `docs/ADDING_A_RADIO.md`;
+  a setting: [`docs/ADDING_A_SETTING.md`](docs/ADDING_A_SETTING.md)
+- The live task list: [`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md)
 
 ## Runtime Dependencies
 
@@ -1527,24 +910,16 @@ unchanged: those are the shipped tier.
 **DLLs:** `libhamlib-4.dll` (+ `libgcc_s_dw2-1.dll`, `libusb-1.0.dll`, `libwinpthread-1.dll`),
 `libeay32.dll` / `ssleay32.dll` (OpenSSL), **`sqlite3.dll` (THE CONTEST LOG — the installer ships
 it; FPC binds SQLite dynamically, so a missing DLL is a run-time failure, not a link error)**, and
-`rigctld.exe`. ~~`inpout32.dll` (LPT keying)~~ — **NOT A DEPENDENCY AT ALL SINCE 2026-09-13**: the
-parallel port was removed from the program, so nothing loads that DLL. It was never bundled (its
-kernel port-I/O driver needs elevation) and is now not looked for either.
+`rigctld.exe`. (`inpout32.dll` is not a dependency: the parallel port was removed 2026-09-13.)
 See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 
 **Created at runtime:** `settings/tr4w.json` (the legacy `settings/tr4w.ini` is neither created
 nor read — it is `tr4wconvert`'s input, see
-[Configuration](#3-configuration-srcucfgpas-srctrdoscfgcmdpas)), `settings/tr4w.pos`, contest
+[Configuration](#configuration-srcucfgpas-srctrdoscfgcmdpas)), `settings/tr4w.pos`, contest
 `.cfg`, and **the SQLite contest log**. Those paths are relative to the running binary, which in
-this tree means `tr4w/target/`. ~~binary `.dat` logs~~ — the binary log is **import-only** now.
+this tree means `tr4w/target/`.
 
 ## Common Development Tasks
-
-### Add a radio
-Read [`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md). In short: one new unit in
-`src/radioFactory/` inheriting the right family base, one `RegisterRadio` in its `initialization`,
-capability flags set in the constructor, added to `tr4w.lpr` and the unit-test `.lpr`. **Never** add
-a model check to a base class. **Never** add it to `logradio.pas`.
 
 ### Add a contest
 Follow **Part A of [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md)** top to bottom:
@@ -1576,22 +951,15 @@ export — and run the corpus, the factory check and the contest matrix.
 `TMainWindowElement` in `VC.pas` → `CreateMainWindow()` in `MainUnit.pas` → display routines in
 `logwind.pas` → colours in `VC.pas` (`tr4wColors`).
 
-### Debug
-`DEBUG LOG LEVEL = DEBUG` — set it in Preferences, which writes `settings/tr4w.json`; the
-ini is not read. Output to `tr4w.log`.
-Build with `/p:Config=Debug` (the default recipe above).
+`DEBUG LOG LEVEL = DEBUG` -- set it in Preferences, which writes `settings/tr4w.json`. Output to
+`tr4w.log`.
 
 ## Important Conventions
 
 ### Code style — Pascal and Python
 
-**STATED HERE, NOT ONLY ENFORCED.** This was for a long time only in NY4I's
-personal `~/.claude/CLAUDE.md`, which no contributor and no agent on another
-machine can see. `.claude/hooks/pascal-lint-hook.ps1` does NOT make up for that:
-it is a `PostToolUse` hook, so the edit has already happened by the time it
-speaks; it is warn-only by its own header ("it never blocks the tool"); and it
-inspects `.pas`/`.dpr` only. A rule that exists solely as a linter is one an
-agent has to discover by being told off, after writing the wrong thing.
+**Stated here, not only enforced:** `.claude/hooks/pascal-lint-hook.ps1` is a warn-only
+`PostToolUse` hook that inspects `.pas`/`.dpr` only, so it speaks after the wrong edit is written.
 
 **Three spaces per indent level, in every language. Spaces, never tabs.**
 
@@ -1672,11 +1040,6 @@ where the encoding one gets answered.
 A flags or capability set passed by value is likewise a convenience, not a
 contract.
 
-The worked example of getting this wrong is in
-[`docs/WIN32_ARTIFACT_SWEEP.md`](docs/WIN32_ARTIFACT_SWEEP.md): a multiplier's
-identity packed into an integer and cast to `TObject`, because the Win32
-control it came from had one `lParam` per item.
-
 **EVERY BLOCK COMMENT USES `(* *)`. NEVER `{ }`.** Not only commented-out code --
 **every one**, including the ordinary explanatory comment above a routine.
 
@@ -1700,27 +1063,12 @@ survives and the unit compiles. Three such sites were the lint's first report
 and all three were working code, which is why the rule is "closes on the same
 line" rather than "appears at all".
 
-**WIDENED 2026-09-01, and the reason it had to be is worth keeping.** This rule
-previously read *"comment a block of CODE out with `(* *)`"* and extended only to
-the explanatory comment above such a block. That scope was too narrow, because
-the MECHANISM it describes is a property of every brace comment and not of that
-one use. Three failures in a single day, all ordinary documentation:
-
-| what was quoted | where |
-|---|---|
-| `{ today }` in a table of two API shapes | a unit header |
-| `{$MODE DELPHI}`, while explaining a Delphi-mode trap | a design note |
-| a `}` in an ASCII diagram of grouped rows | a test's header |
-
-Each cost a build. NY4I: *"Please make sure you use `(*` and `*)` around all your
-block comments to avoid this problem."*
-
-The wider rule costs almost nothing, and the narrower one required every author
-to notice that a rule about commenting out code was really a rule about braces.
-
-It gets worse as the cross-platform work lands (NY4I, 2026-08-31): every
-`{$IFDEF WINDOWS}` / `{$IFDEF DARWIN}` pair adds another closing brace a brace
-comment cannot survive.
+**WIDENED 2026-09-01** from "comment a block of CODE out with `(* *)`", because the mechanism is a
+property of every brace comment. Three failures in one day, all ordinary documentation, each cost a
+build: `{ today }` in a table of two API shapes, `{$MODE DELPHI}` quoted in a design note, and a `}`
+in an ASCII diagram. NY4I: *"Please make sure you use `(*` and `*)` around all your block comments
+to avoid this problem."* Every `{$IFDEF WINDOWS}` / `{$IFDEF DARWIN}` pair adds another closing
+brace a brace comment cannot survive.
 
 ### THE ONE THING THAT CLOSES A `(* *)` COMMENT: SQL `COUNT(*)`
 
@@ -1740,10 +1088,6 @@ qso` became `SELECT a row count FROM qso`. That compiles, and it is a broken
 query inside a green build. The comment and the statement are the same
 characters and only the context differs, so change them by hand and read the
 diff before committing.
-
-The rule applies to the EXPLANATORY comment above a commented-out block too. That
-one was written as a brace comment while quoting brace characters in its own prose,
-which closed it on the spot — 2026-08-31, commenting out ERMAK.
 
 Python (`tools/`, `.claude/hooks/`) takes the same three-space indent — which is
 NOT PEP 8, so an agent will default to four and nothing in this tree will catch
@@ -1780,11 +1124,11 @@ the reasoning rather than the mechanics.
   ones are live, how many call sites a routine has -- and the failure is quiet rather than empty:
   you get a plausible number that is wrong. Measured in one session, 2026-09-29, three causes:
 
-  | the wrong answer | why |
-  |---|---|
-  | a contest scoring arm reported MISSING | the arm spells it `VAQSOPOINTMETHOD`, the search did not |
-  | 188 `case` arms counted where 91 exist | the regex matched the arms of NESTED cases too |
-  | a second arm reported MISSING | its label is `RadioVHFFDQSOPointMethod {, Championship...}:` -- a BRACE COMMENT SITS BETWEEN THE NAME AND THE COLON |
+| the wrong answer                       | why                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| a contest scoring arm reported MISSING | the arm spells it `VAQSOPOINTMETHOD` , the search did not                                                           |
+| 188 `case` arms counted where 91 exist | the regex matched the arms of NESTED cases too                                                                      |
+| a second arm reported MISSING          | its label is `RadioVHFFDQSOPointMethod {, Championship...}:` -- a BRACE COMMENT SITS BETWEEN THE NAME AND THE COLON |
 
   The first was nearly reported to NY4I as a port regression, with the D7 arm quoted as proof of
   what had been lost. Nothing had been lost.
@@ -1802,7 +1146,7 @@ the reasoning rather than the mechanics.
 ### File encodings and line endings
 Two silent-corruption traps live here, and neither produces a compiler diagnostic.
 
-- **`src/lang/*.pas` are UTF-8 *with a BOM*** — see [Language variants](#language-variants).
+- **`src/lang/*.pas` are UTF-8 *with a BOM*** -- see [Language variants](#language-variants--being-replaced-dont-extend).
 - **Source files must be CRLF.** Governed by `.gitattributes` and enforced by
   `tr4w/build/Lint-LineEndings.ps1`, which gates the build. This is not cosmetic: the RAD Studio
   form designer **inserts code by byte offset**, so against an LF file a new event handler is
@@ -1842,12 +1186,12 @@ Two silent-corruption traps live here, and neither produces a compiler diagnosti
 blindly today -- `ShortString` is still the TRDOS core's currency and `PAnsiChar` is still correct
 at a real C boundary. For new code:
 
-| instead of | write |
-|---|---|
+| instead of                            | write                                                                             |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
 | `procedure F(var buf; size: integer)` | `procedure F(var buf: array of AnsiChar)` -- an open array carries its own bounds |
-| `PAnsiChar(@buf)` and pointer walking | index the open array; `Low`/`High` are real |
-| `Move(src[1], dst[1], n)` | plain assignment. `aRec.Name := someAnsiString` converts and truncates correctly |
-| `AnsiString(aFixedCharArray)` | a NUL-aware helper. The cast takes the padding too |
+| `PAnsiChar(@buf)` and pointer walking | index the open array; `Low` /`High` are real                                      |
+| `Move(src[1], dst[1], n)`             | plain assignment. `aRec.Name := someAnsiString` converts and truncates correctly  |
+| `AnsiString(aFixedCharArray)`         | a NUL-aware helper. The cast takes the padding too                                |
 
 **THE `ShortString()` CAST IS A CONVERSION** (an earlier version of this file said it was a pointer
 reinterpretation; that was false and led to a bogus defect report). Measured on FPC 3.2.2 /
@@ -1877,11 +1221,14 @@ macOS or Linux, and `Windows.ReadFile` has no counterpart at all. **Reach for th
 first; if you cannot, the reason goes in the code beside the call.** "It was quicker" is not one.
 Worked examples, each of which started as a raw call and did not need to be:
 
-| reached for | what was already there |
-|---|---|
-| `sqlite3_exec` for pragmas | `TSQLite3Connection.execsql` -- native `string`, transaction-free, owns the error text. `TSQLConnection.ExecuteDirect` is the WRONG method (`sqldb.pp:1492` starts a transaction unconditionally); `execsql` is `protected`, so a descendant reaches it |
-| `Windows.ReadFile` for the binary log | `TFileStream` |
-| a hardcoded `'sqlite3.dll'` | FPC's own `{$IFDEF WINDOWS}` / `'libsqlite3.' + SharedSuffix` (`sqlite3.inc:28-30`) |
+| reached for                      | what was already there                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| ` sqlite3_ex                     | `TSQLite3Connection.execsql` -- native `string` , transaction-free, owns the error text. `TSQLConnection.ExecuteDirect` is the WRONG  |
+|                                  | method                                                                                                                                |
+| ec` for pragmas                  | (`sqldb.pp:1492` starts a transaction unconditionally); `execsql` is `protected` , so a descendant reaches it                         |
+| `Windows.Re adFile` for the      | `TFileStream`                                                                                                                         |
+| binary log                       |                                                                                                                                       |
+| a hardcoded `'sqlite3.d ll'`     | FPC's own `{$IFDEF WINDOWS}` / `'libsqlite3.' + SharedSuffix` (`sqlite3.inc:28-30`)                                                   |
 
 **Before reaching for a C call, check whether the wrapper already has a method that does it.**
 
@@ -1906,9 +1253,8 @@ badly, so count properly or do not quote a number**):
   and **every HamLib-backed radio is non-functional there**.
 - `user32`, `comdlg32` (the LCL has dialogs for all of it), `setupapi`, `hid`, `kernel32`,
   `comctl32`, `ws2_32`, `shlwapi`, `msvcrt`: Win32 API, where the port replaces the FUNCTION.
-- **Gone:** the parallel port and `InpOut32` (2026-09-13; a YCCC SO2R box covers radio switching over
-  OTRSP, but BAND DECODER OUTPUT lapses until OTRSP AUX is wired), and the plug-in subsystem with
-  `tr4wSortLog.dll` (2026-09-16; sorting is `ORDER BY`). No binding in the tree needs elevation.
+- The parallel port and `InpOut32` are gone (2026-09-13); BAND DECODER OUTPUT lapses until OTRSP AUX
+  is wired on a YCCC box.
 
 **The generalisation, when the sweep happens:** one unit that owns the NAME of every shipped
 library -- HamLib, SQLite, OpenSSL -- per platform, the way FPC's own `sqlite3.inc` does.
@@ -1942,8 +1288,7 @@ comment saying why, or a habit to remove. The five log units (`uLogSchema`, `uLo
 ### Threading
 Radio threads (one per radio), external logger threads (`TReadingThread` / `TSenderThread`), WinKey
 thread, network threads, CW/DVP playback. The event objects (`tCW_Event`, `tCWPaddle_Event`,
-`tDVP_Event`, `tNet_Event`) are created in `src/uProgramMain.pas` — plain `CreateEvent` calls now, not
-the inline assembly this used to describe.
+`tDVP_Event`, `tNet_Event`) are created in `src/uProgramMain.pas`.
 
 Threads hand results back through `TProcessMsgRef` callbacks — synchronize before touching UI state.
 Radio disconnection is handled via the `radioWasDisconnected` flag rather than by tearing the object
@@ -1957,8 +1302,7 @@ immutable snapshot published by the driver at a coherent batch boundary, is the 
 ### Error handling
 Log4D throughout. Custom exceptions: `ERadioFactoryException`
 (`src/radioFactory/uRadioFactory.pas`), `EExternalLoggerFactoryException`
-(`src/uExternalLoggerFactory.pas`) — both declared near the top of their unit's `type` block, and
-both line numbers written here had drifted by 2026-09-28, so grep the name.
+(`src/uExternalLoggerFactory.pas`) -- grep the name for the line.
 User-facing failures go through `ShowMessage`/`MessageBox`.
 Prefer a *reported* error over a silent fallback — several defects on this branch were silent
 downgrades (a string-id radio skipped in total silence, a WinKeyer that failed to open dropping to
@@ -1967,8 +1311,7 @@ DTR/RTS keying).
 ### Known compile snags
 - `Undeclared identifier: 'EIdConnClosedGracefully'` / `'EIdSocketError'` → add `IdException, IdStack`
   to the uses clause.
-- Missing Indy units → the vendored search path is in `build/Get-SearchPaths.ps1`. ~~`DCC_UnitSearchPath` in `tr4w.dproj`~~ is gone with the Delphi project files, not in any
-  batch file.
+- Missing Indy units -> the vendored search path is in `build/Get-SearchPaths.ps1`.
 - **Vendored Indy 10.6.3.3 is kept deliberately.** D12 ships Indy as DCUs only
   (`Studio\23.0\source\Indy` holds just the IPPeer abstraction), so swapping is plausibly a
   *downgrade* and would lose source-level debuggability of the SSL path. Decided 2026-08-04 — don't
@@ -1981,7 +1324,7 @@ DTR/RTS keying).
 
 1. **Respect the TRDOS boundary — but it no longer excludes the LCL** (rescinded 2026-08-23, NY4I).
    `src/trdos/` is proven contest logic and new behaviour still belongs in `src/`; a TRDOS unit
-   reaching a converted control through the LCL seam is now ordinary. See [TRDOS subsystem](#1-trdos-subsystem-srctrdos).
+   reaching a converted control through the LCL seam is now ordinary.
 2. **The two factories are the exception to "no OOP here."** `src/radioFactory/` and the CW keyer
    are real inheritance with real invariants — hold them to that standard. Everywhere else, expect
    procedural Pascal.
