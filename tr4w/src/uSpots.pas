@@ -669,8 +669,7 @@ begin
         // log); only the write-back is locked, so the poller never sees a
         // half-written record.  Only the main thread changes the list, so
         // entry i is still the one that was read.
-        Spot.FMult := VisibleLog.DetermineIfNewMult(Spot.FCall, Spot.FBand,
-          Spot.FMode);
+        Spot.FMult := VisibleLog.DetermineIfNewSpotMult(Spot);
         FCriticalSection.Enter;
         try
            FList[i] := Spot;

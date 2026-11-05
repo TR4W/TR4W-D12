@@ -831,6 +831,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* An exchange's words in another order: Sweepstakes U123, Sprint and
       NAQP state first (issues #174, #170, #169; 2026-11-04). *)
    uTestExchangeWordOrder in 'uTestExchangeWordOrder.pas',
+   (* A spot's section from its comment (issue 83, 2026-11-05). *)
+   uTestSpotCommentMultiplier in 'uTestSpotCommentMultiplier.pas',
    uTestContestNames    in 'uTestContestNames.pas',
    (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
@@ -1000,6 +1002,7 @@ begin
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TExchangeWordOrderTests.Create('ExchangeWordOrder'));
+   RegisterSuite(TSpotCommentMultiplierTests.Create('SpotCommentMultiplier'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

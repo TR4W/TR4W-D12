@@ -954,6 +954,7 @@ type
    private
       FConnectionAtStartup: boolean;
       FBroadcastAllPacketData: boolean;
+      FSpotCommentMultiplier: boolean;
    public
       constructor Create;
    published
@@ -969,6 +970,17 @@ type
         in this build. Carried, not withdrawn, for the reason above. *)
       property BroadcastAllPacketData: boolean
          read FBroadcastAllPacketData write FBroadcastAllPacketData;
+      (* New 2026-11-05 (issue 83) -- take a spot's SECTION or STATE from its
+        comment (`CW 13 dB 30 WPM CQ NFL`, `POTA KFF-2726 NC +NC`) when the
+        band map and the call window colour it as a needed multiplier. Only a
+        contest that looks its domestic QTH up in its .dom file is asked
+        (TContestBase.UsesDomesticFile); the comment's word counts only if
+        THAT file knows it, upper case, first one wins, and what the log or
+        the call history already says about the station overrules it. OFF by
+        default: a word of prose that is also a section (`OR`, `IN`) cannot be
+        told from one. See LogEdit.SpotSectionHint. *)
+      property SpotCommentMultiplier: boolean
+         read FSpotCommentMultiplier write FSpotCommentMultiplier;
    end;
 
    (*
@@ -4997,6 +5009,7 @@ begin
    (* TRUE, because cfgdef assigned it at every startup -- see the note
      there. The record initialiser said False and never won. *)
    FBroadcastAllPacketData := True;
+   FSpotCommentMultiplier  := False;
 end;
 
 constructor TOperatingSettings.Create;

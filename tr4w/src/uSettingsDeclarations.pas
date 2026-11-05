@@ -909,6 +909,8 @@ begin
      builds a page for. *)
    RegisterModelSetting( 'cluster.ctrlj.consoleLines',          'TELNET CONSOLE LINES',
                           RS_CLUSTER_CTRLJ_CONSOLELINES);
+   RegisterModelSetting( 'cluster.ctrlj.spotCommentMultiplier', 'CLUSTER SPOT COMMENT MULTIPLIER',
+                          RS_CLUSTER_CTRLJ_SPOTCOMMENTMULTIPLIER);
    // Two rows a case-SENSITIVE type scan missed on 2026-08-16: their crType is
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the
    // scan did, and reported Ctrl-J empty while they were still in it.

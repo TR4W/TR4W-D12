@@ -112,8 +112,18 @@ type
       Mode: ModeType;
       var MultString: integer);
 
+    (* SectionHint is the domestic multiplier KEY to use in place of the
+       contest's own answer for the call (GetMultArray's TempMult); '' leaves
+       it as it was. *)
     function DetermineIfNewMult(Call: CallString; Band: BandType; Mode:
-      ModeType): boolean;
+      ModeType; const SectionHint: string = ''): boolean;
+
+    (* A CLUSTER SPOT'S MULTIPLIER STATUS -- the ONE routine the live spot
+       (uTelnet.ProcessDX) and the re-ask after a log change
+       (TDXSpotsList.UpdateSpotsMultiplierStatus) both call, so the two cannot
+       disagree. With CLUSTER SPOT COMMENT MULTIPLIER off it is
+       DetermineIfNewMult on the call, band and mode alone. *)
+    function DetermineIfNewSpotMult(const Spot: TSpotRecord): boolean;
 
     procedure DisplayGridMap(Band: BandType; Mode: ModeType);
 
@@ -197,6 +207,30 @@ procedure ShowStationInformation(const Call: CallString);
   a QSO has changed those sheets (issue #100). It has no "already shown"
   latch: every call recomputes. *)
 procedure ShowNeedsForCall(const Call: CallString);
+
+(* THE MULTIPLIER KEY OF THE SECTION OR STATE THE PROGRAM ALREADY KNOWS FOR A
+  CALL, '' when it knows none: the initial exchange the call history file or a
+  QSO already in the log holds for the station (CallsignsList), read as the
+  contest reads a remembered exchange (DomStringParse) and resolved through
+  the contest's domestic file to the key the multiplier list holds. ONE
+  lookup, for the cluster spot's hint (SpotSectionHint) -- and issue 70, the
+  same question for a mult that is not a section (EUHFC's YEAR), reads the
+  same remembered exchange. A text the file does not know is no answer. *)
+function DomesticKeyKnownForCall(const Call: CallString): string;
+
+(* THE SECTION OR STATE A CLUSTER SPOT IS THOUGHT TO BE IN -- issue 83. The
+  multiplier key to hand DetermineIfNewMult, or '' for "no opinion" (today's
+  behaviour). Asked only of a contest that looks its domestic QTH up in its
+  domestic file (TContestBase.UsesDomesticFile -- the class's own statement),
+  and of a station in the contest's domestic countries when it names any.
+
+  PRECEDENCE: (a) what the program knows of the call (DomesticKeyKnownForCall),
+  even where the comment disagrees; else (b) the first UPPER CASE word of the
+  comment that the domestic file knows; else (c) a `+` word the same way. A
+  beacon, a spotter and the words every skimmer comment carries are never a
+  candidate -- see uDXSpotParse.SpotCommentCandidates. *)
+function SpotSectionHint(const Call: CallString; const Comment: AnsiString): string;
+
 function TotalContacts: integer;
 function NextSerialToSend: integer;  { Issue #954: next serial to send = highest sent + 1 }
 procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);  { Issue #954 }
@@ -246,6 +280,7 @@ uses
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
    uSettingsModel,   // Settings.PossibleCall.Enable
+   uDXSpotParse,     // SpotCommentCandidates, SpotNotesText -- the spot hint (issue 83)
 
   //OZCHR,
   uNet,
@@ -798,7 +833,7 @@ begin
 end;
 
 function EditableLog.DetermineIfNewMult(Call: CallString; Band: BandType; Mode:
-  ModeType): boolean;
+  ModeType; const SectionHint: string = ''): boolean;
 
 { This procedure will try and determine the multiplier for the call passed
   to it.  If something can be figured out, and it appears to be a new
@@ -840,8 +875,21 @@ begin
      Exit;
      end;
 
-  OutputValue := GetMultArray(Call, TempMode, '');
+  OutputValue := GetMultArray(Call, TempMode, Str10(SectionHint));
   Result := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
+end;
+
+function EditableLog.DetermineIfNewSpotMult(const Spot: TSpotRecord): boolean;
+begin
+  if Settings.Cluster.SpotCommentMultiplier then
+     begin
+     Result := DetermineIfNewMult(Spot.FCall, Spot.FBand, Spot.FMode,
+                                  SpotSectionHint(Spot.FCall, SpotNotesText(Spot)));
+     end
+  else
+     begin
+     Result := DetermineIfNewMult(Spot.FCall, Spot.FBand, Spot.FMode);
+     end;
 end;
 
 procedure EditableLog.CreateModeSpecificDomesticMultiplierInfo(DomQTH: Str20;
@@ -2093,6 +2141,59 @@ begin
     end; { of case }
 
   until False;
+end;
+
+function DomesticKeyKnownForCall(const Call: CallString): string;
+var
+  history: string;
+  text: string;
+  key: string;
+begin
+  Result := '';
+  history := CallsignsList.GetIniitialExchange(string(Call));
+  if history = '' then
+     begin
+     Exit;
+     end;
+  text := DomStringParse(Str14(history));
+  if (text <> '') and DomesticKeyOfQTH(text, key) and (key <> '') then
+     begin
+     Result := key;
+     end;
+end;
+
+function SpotSectionHint(const Call: CallString; const Comment: AnsiString): string;
+var
+  candidates: TSpotCommentCandidates;
+  key: string;
+  i: integer;
+begin
+  Result := '';
+  if not ContestUsesDomesticFile(ActiveContest(Contest)) then
+     begin
+     Exit;
+     end;
+  (* A DX STATION IN A CONTEST WITH DOMESTIC COUNTRIES (ARRL 10 and 160, Field
+    Day) sends no section, and a word of its comment is not one. An empty list
+    is a contest that names none -- the state QSO parties -- and asks nothing. *)
+  if (DomesticCountries.Count > 0) and (not DomesticCountryCall(Call)) then
+     begin
+     Exit;
+     end;
+  Result := DomesticKeyKnownForCall(Call);
+  if Result <> '' then
+     begin
+     Exit;
+     end;
+  SpotCommentCandidates(Comment, candidates);
+  for i := Low(candidates) to High(candidates) do
+     begin
+     if DomesticKeyOfQTH(string(candidates[i]), key) and (key <> '') then
+        begin
+        Result := key;
+        Exit;
+        end;
+     end;
 end;
 
 procedure ShowNeedsForCall(const Call: CallString);

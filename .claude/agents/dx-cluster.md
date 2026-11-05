@@ -93,6 +93,26 @@ You own how spots reach TR4W and how they are shown.
   has a `StartReader` virtual seam so `uTestClusterSocketNoRead` can run with
   no reading thread and watch the InputBuffer stay empty.
 
+- **A SPOT'S SECTION FROM ITS COMMENT** (issue 83, 2026-11-05; setting `CLUSTER SPOT
+  COMMENT MULTIPLIER`, default OFF). ONE routine, `EditableLog.DetermineIfNewSpotMult`,
+  serves the live spot (`ProcessDX`) and the re-ask after a log change
+  (`UpdateSpotsMultiplierStatus`); never call `DetermineIfNewMult` for a spot again.
+  The pure tokenizer is `uDXSpotParse.SpotCommentCandidates` (plain upper-case words
+  in order, then `+` words; a beacon, `<spotter>`, numbers and `CW DB WPM CQ DX` are
+  never candidates); the contest-facing step is `LogEdit.SpotSectionHint`, gated on
+  `TContestBase.UsesDomesticFile` and the domestic countries, with our own call
+  history (`DomesticKeyKnownForCall` -- the lookup issue 70 will share) beating the
+  comment. **The hint must be the multiplier KEY the list holds** --
+  `LogDupe.DomesticKeyOfQTH` returns it (arrlsect.dom `Ut = UT` is `Ut`); a key spelt
+  as typed misses the list and answers "needed on every band", which a test of an
+  UNWORKED section cannot see. **Only 30 comment columns survive** in `FNotes`, and
+  on a long-spotter line (`Offset` > 0) `ParseDXSpotLine` drops the FIRST comment
+  column (the comment stays on column 39; its window moves) -- unfixed, pinned by
+  `Test_Tokens_ParsedFromRealClusterLines`. The `sh/dx` layout (no `DX de`, a date, a
+  trailing `<spotter>`) is never a spot: `ProcessTelnetLine` only hands ProcessDX a
+  line that begins `DX de `. The corpus also holds `NY-NLI`, `FL-NFL` and
+  `+-FL-NFL` words, which are single unknown words, not sections.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`

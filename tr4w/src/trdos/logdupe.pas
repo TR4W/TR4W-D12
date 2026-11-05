@@ -321,6 +321,19 @@ function FoundDomesticQTH(var RXData: ContestExchange): boolean;
   2026-10-16 when it gained its second caller. *)
 function DomesticTableKnowsQTH(const aQTH: string): boolean;
 
+(* THE MULTIPLIER KEY THE LOADED DOMESTIC QTH TABLE GIVES THIS QTH -- the
+  spelling the multiplier list holds it under (arrlsect.dom's `Ut = UT` is
+  'Ut'), which is not the text that was asked: a token asked as 'UT' comes
+  back 'Ut', and a multiplier list asked with 'UT' would miss it and answer
+  "needed on every band". FoundDomesticQTH itself, on a scratch exchange, so
+  no QSO is touched. DomesticTableKnowsQTH is this, without the key.
+
+  The answer is TRUE when the table knows the text, and aKey can still be
+  EMPTY then -- 'XXX' is accepted with no key, and a contest with no domestic
+  multiplier answers True for anything. A caller that wants a multiplier
+  tests aKey <> '' as well. aKey is empty when the answer is False. *)
+function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
+
 (* THE QSO'S DX QTH -- the engine's head, then the contest's own rule
   (TContestBase.DXMultiplierKey, M11 S4). aContest is ActiveContest(Contest),
   fetched ONCE by the caller and shared with whatever else it asks of the
@@ -444,10 +457,11 @@ begin
 
 (* FoundDomesticQTH itself, on a scratch exchange, so the answer is the
   table's own and no QSO is touched. See the declaration. *)
-function DomesticTableKnowsQTH(const aQTH: string): boolean;
+function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
 var
   scratch: ContestExchange;
 begin
+  aKey := '';
   (* No QTH is no domestic QTH -- answered here so FoundDomesticQTH does not
     log its blank-QTH error for a question nobody typed. *)
   if aQTH = '' then
@@ -459,6 +473,17 @@ begin
   (* The cast is a received QTH returning to the width it was typed in. *)
   scratch.QTHString := ShortString(aQTH);
   Result := FoundDomesticQTH(scratch);
+  if Result then
+     begin
+     aKey := string(scratch.DomMultQTH);
+     end;
+end;
+
+function DomesticTableKnowsQTH(const aQTH: string): boolean;
+var
+  key: string;
+begin
+  Result := DomesticKeyOfQTH(aQTH, key);
 end;
 
 function GetInitialExchangeIndex(InitialExchange: CallString): integer;

@@ -30,6 +30,33 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- A SPOT'S SECTION FROM ITS COMMENT (issue 83)
+
+Setting **CLUSTER SPOT COMMENT MULTIPLIER** (Preferences, DX cluster; default
+OFF). Unit tests drive the tokenizer on real corpus lines and the multiplier
+through the real sheet; nobody has watched a band map colour a spot.
+
+- [ ] ARRL SS (CW or SSB) or any ARRL-section contest, setting ON, a section
+  you have NOT worked: a spot whose comment ends in that section (the local
+  cluster's `CW 13 dB 30 WPM CQ  NFL`) is coloured as a needed multiplier on
+  the band map and the call window. Work NFL on that band: the spot stops
+  being coloured (without a restart or a re-spot).
+- [ ] The same spot with the setting OFF (the default): colours exactly as
+  before. Turning the setting on or off needs no restart; spots already on the
+  map are re-asked at the next log change.
+- [ ] **Our own knowledge wins:** a station already in your log (or in the
+  call-history file) with section `UT`, spotted with `NFL` in the comment: the
+  spot follows UT, not NFL.
+- [ ] **A beacon is ignored:** `CW 24 dB 22 WPM NCDXF B  SCV` is not coloured
+  by SCV.
+- [ ] `POTA KFF-2726 NC +NC` follows NC; `NFL OR` follows NFL (the first);
+  `or in` (lower case) follows nothing; a state QSO party (`.dom` with
+  counties/states) follows a state word in the comment but never `DX`.
+- [ ] A grid contest (VHF) or a DX-prefix contest: nothing changes with the
+  setting on.
+- [ ] Look for a WRONG colour on spots whose comment holds a word that is also
+  a section (`DE`, `OR`, `IN`, `ME`, `OK`, `HI`) -- that is why it is OFF.
+
 ## Added 2026-11-04 -- SWEEPSTAKES: "MULT NEEDS FOR" NAMES THE SECTION, NOT THE CHECK (NY4I, bench)
 
 The header read `Mult needs for 18 UT :` after W7ST (33M 18 UT) was logged. The

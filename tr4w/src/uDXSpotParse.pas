@@ -184,6 +184,52 @@ function ParseSplitHint(const Comment: AnsiString; BaseFrequencyHz: integer;
 function SpotCallIsCQMarker(const ACall: CallString): boolean;
 function SpotCallIsNewMarker(const ACall: CallString): boolean;
 
+type
+   TSpotCommentCandidates = array of AnsiString;
+
+(* THE SPOT'S COMMENT AS TEXT, up to its first NUL. FNotes is a fixed array
+  padded with NULs, and a cast of such an array to a string takes the padding
+  too.
+
+  ONLY 30 COLUMNS OF A CLUSTER LINE'S COMMENT SURVIVE IN FNotes (the comment
+  field of a "DX de" line, columns 39..68 -- ParseDXSpotLine), and the record
+  holds value types only (it is wiped with FillChar), so there is no longer
+  comment to keep. A section the cluster appends after the 30th column is
+  not seen. On the live line `DX de AC0C-1-#:   3552.0  WA4BAM       CW 24
+  dB 25 WPM CQ         NFL 0132Z` the section ends on the last column. *)
+function SpotNotesText(const Spot: TSpotRecord): AnsiString;
+
+(* THE WORDS OF A SPOT COMMENT THAT MAY NAME A SECTION OR STATE, in the order
+  they are to be tried -- the tokenizer behind the cluster-comment multiplier
+  hint (issue 83). It knows no contest: whether a word IS a section is the
+  contest's domestic file's answer, asked by the caller, one candidate at a
+  time, FIRST one wins.
+
+  THE RULES (NY4I, 2026-11-05):
+    * the comment is split on blanks; a word is whole or it is not a
+      candidate -- `NY-NLI`, `FL-NFL` and `(TX)` are single words no domestic
+      file knows, never cut up. A word holding `/` is dropped: the domestic
+      lookup reads only what PRECEDES a slash, so `NC/UT` would come back
+      as NC;
+    * UPPER CASE ONLY: a word with a lower-case letter is prose (`or`, `in`,
+      `me`, `dB`) and never a candidate; a word with no letter is not one
+      either (`25`, `+`);
+    * a word holding `<` or `>` is the spotter (`<AC0C-1-#>`, `<NC-#>`);
+    * `CW`, `DB`, `WPM`, `CQ` and `DX` are dropped: every skimmer comment is
+      `CW 24 dB 25 WPM CQ`, and two shipped domestic files know `CW` (rsgb)
+      or `DB` (romania, bucuresti) and several know `DX`, which would colour
+      every spot -- DX is not a section anyway;
+    * A BEACON (`NCDXF`, `BEACON` or `BCN`, any case) HAS NO CANDIDATES: the
+      section the cluster lists for a beacon is the beacon's own;
+    * THE PLAIN WORDS COME FIRST, IN ORDER, THEN THE `+` WORDS: the AR-Cluster
+      SET DX EXTENSION SECTION form `+NC` is the cluster database's guess and
+      sits after anything a person typed, so it is tried only when no plain
+      word qualified. Exactly one leading `+` is removed.
+
+  Returns the number of candidates; Candidates is empty when there are none. *)
+function SpotCommentCandidates(const Comment: AnsiString;
+                               out Candidates: TSpotCommentCandidates): integer;
+
 implementation
 
 uses
@@ -1175,6 +1221,139 @@ begin
              (ACall[2] = 'E')     and
              (ACall[3] = 'W')     and
              (ACall[4] = ' ');
+end;
+
+function SpotNotesText(const Spot: TSpotRecord): AnsiString;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(Spot.FNotes) to High(Spot.FNotes) do
+      begin
+      if Spot.FNotes[i] = #0 then
+         begin
+         Break;
+         end;
+      Result := Result + Spot.FNotes[i];
+      end;
+end;
+
+const
+   (* THE WORDS EVERY SKIMMER COMMENT CARRIES, and DX -- see
+     SpotCommentCandidates. *)
+   SPOT_TEMPLATE_WORDS: array[0..4] of AnsiString = ('CW', 'DB', 'WPM', 'CQ', 'DX');
+   SPOT_BEACON_WORDS: array[0..2] of AnsiString = ('NCDXF', 'BEACON', 'BCN');
+
+function WordIsOneOf(const aWord: AnsiString; const aList: array of AnsiString): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(aList) to High(aList) do
+      begin
+      if aWord = aList[i] then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* A WORD THAT COULD NAME A SECTION: at least one letter, no lower-case letter,
+  none of the characters that mark a spotter or a slash call. *)
+function WordCouldBeASection(const aWord: AnsiString): boolean;
+var
+   i: integer;
+   hasLetter: boolean;
+begin
+   Result := False;
+   hasLetter := False;
+   for i := 1 to Length(aWord) do
+      begin
+      if aWord[i] in ['a'..'z', '<', '>', '/'] then
+         begin
+         Exit;
+         end;
+      if aWord[i] in ['A'..'Z'] then
+         begin
+         hasLetter := True;
+         end;
+      end;
+   Result := hasLetter;
+end;
+
+function SpotCommentCandidates(const Comment: AnsiString;
+                               out Candidates: TSpotCommentCandidates): integer;
+var
+   plain: TSpotCommentCandidates;
+   extension: TSpotCommentCandidates;
+   i: integer;
+   start: integer;
+   token: AnsiString;
+   bare: AnsiString;
+
+   procedure Take(const aWord: AnsiString);
+   begin
+      if aWord[1] = '+' then
+         begin
+         (* Exactly one: `++NC` is not the extension form. *)
+         bare := Copy(aWord, 2, Length(aWord) - 1);
+         if (bare <> '') and WordCouldBeASection(bare) and
+            (not WordIsOneOf(bare, SPOT_TEMPLATE_WORDS)) then
+            begin
+            SetLength(extension, Length(extension) + 1);
+            extension[High(extension)] := bare;
+            end;
+         end
+      else
+         begin
+         if WordCouldBeASection(aWord) and
+            (not WordIsOneOf(aWord, SPOT_TEMPLATE_WORDS)) then
+            begin
+            SetLength(plain, Length(plain) + 1);
+            plain[High(plain)] := aWord;
+            end;
+         end;
+   end;
+
+begin
+   SetLength(Candidates, 0);
+   SetLength(plain, 0);
+   SetLength(extension, 0);
+   Result := 0;
+
+   i := 1;
+   while i <= Length(Comment) do
+      begin
+      if Comment[i] in [' ', #9, #0] then
+         begin
+         Inc(i);
+         Continue;
+         end;
+      start := i;
+      while (i <= Length(Comment)) and (not (Comment[i] in [' ', #9, #0])) do
+         begin
+         Inc(i);
+         end;
+      token := Copy(Comment, start, i - start);
+      if WordIsOneOf(UpperCase(token), SPOT_BEACON_WORDS) then
+         begin
+         (* A beacon names no section of ours. *)
+         Exit;
+         end;
+      Take(token);
+      end;
+
+   SetLength(Candidates, Length(plain) + Length(extension));
+   for i := 0 to High(plain) do
+      begin
+      Candidates[i] := plain[i];
+      end;
+   for i := 0 to High(extension) do
+      begin
+      Candidates[Length(plain) + i] := extension[i];
+      end;
+   Result := Length(Candidates);
 end;
 
 end.

@@ -1862,8 +1862,10 @@ begin
 
   if not TempSpot.FDupe then
      begin
-     TempSpot.FMult := VisibleLog.DetermineIfNewMult(TempSpot.FCall,
-       TempSpot.FBand, TempSpot.FMode);
+     (* THE SAME ROUTINE AS THE RE-ASK AFTER A LOG CHANGE
+       (TDXSpotsList.UpdateSpotsMultiplierStatus): it reads the spot's
+       comment when CLUSTER SPOT COMMENT MULTIPLIER is on (issue 83). *)
+     TempSpot.FMult := VisibleLog.DetermineIfNewSpotMult(TempSpot);
      //    TempSpot.FMult := MultString <> 0;
      if TempSpot.FMult then
         begin

@@ -419,7 +419,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(297, names.Count,
+         CheckEquals(298, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -448,7 +448,9 @@ begin
                      + ' multi-op network (new, no CFGCA row), 2026-10-29;'
                      + ' 298 with WRL API KEY, ACCOUNT ID and LOGBOOK ID;'
                      + ' 297 since RADIO TCP SERVER PORT was retired --'
-                     + ' nothing read it -- 2026-11-01');
+                     + ' nothing read it -- 2026-11-01; 298 with CLUSTER'
+                     + ' SPOT COMMENT MULTIPLIER (new, no CFGCA row,'
+                     + ' issue 83), 2026-11-05');
       finally
          names.Free;
       end;
@@ -1552,6 +1554,7 @@ const
       + 'CATEGORY-POWER,'
       + 'CATEGORY-TRANSMITTER,'
       + '"CHECK LOG FILE SIZE",'
+      + '"CLUSTER SPOT COMMENT MULTIPLIER",'
       + '"CODE SPEED",'
       + '"COLUMN AUTOSIZE",'
       + '"COMPLETE CALLSIGN MASK",'
