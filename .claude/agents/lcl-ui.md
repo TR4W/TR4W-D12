@@ -322,6 +322,21 @@ ShortCut keystrokes only (`uAccelerators`, `TMenuItem.ShortCut`). A caption put
 where `&` is not markup (a window title from a menu row) goes through
 `uCaptionText.DisplayedText`.
 
+## File > Open Log is a restart, not an in-place switch (issue 218 S0, 2026-11-05)
+
+`MainUnit.OpenAnotherLog` refuses while either radio is keyed or CW is being
+sent (`uOpenLogRelaunch.OpenLogRefusal`), picks a `.db` with
+`uDialogs.OpenFileDlg` (the string overload, starting in `ContestDir`), accepts
+only `cfkTR4WDatabase`, records a one-shot `RequestRelaunch` and calls
+`ExitProgram(False)`. `tr4w_ShutDown` starts the child in
+`StartRequestedRelaunch`, AFTER `LogStoreClose` and BEFORE the logger is freed.
+The child carries `--wait-for-instance=<pid>` (one argument, so
+`FirstNonSwitchArgument` never takes the pid for the contest) and
+`uProgramMain.WaitForRelaunchingInstance` retries the mutex for 10 s, closing
+its own handle before each retry. **Do not "simplify" this into reopening the
+contest in place**: the survey on issue 218 lists the state that leaks; that is
+S1-S6, and needs NY4I's go-ahead.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

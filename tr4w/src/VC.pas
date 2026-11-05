@@ -2846,6 +2846,7 @@ const
   menu_3830scores                       = 10021;
   menu_edit_cabrillo_summary            = 10022;  // Issue #914
   menu_run_verification_checks          = 10023;  // Tools -> Run Verification Checks
+  menu_open_log                         = 10024;  // File -> Open Log..., issue 218
   menu_options                          = 10100;
   menu_messages                         = 10101;
   menu_other_messages                   = 10102;

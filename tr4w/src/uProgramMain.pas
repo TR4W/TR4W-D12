@@ -478,7 +478,8 @@ uses
   uStrSearch,
   NetworkMessageUtils,
   uTR4WStrings,
-   uContestFileKind;   (* what kind of file did the operator pick as a contest *)
+   uContestFileKind,   (* what kind of file did the operator pick as a contest *)
+   uOpenLogRelaunch;   (* File > Open Log's relaunch: the child waits for the lock *)
   (* ~~uContestSession~~ was here for ContestSession.Exchange, which the
      settings-gap check handed in; it asks the contest what its exchange
      carries since M11 S9d, so nothing here reads the session. *)
@@ -1108,6 +1109,66 @@ begin
    {$ENDIF}
 end;
 
+{$IFDEF WINDOWS}
+(* WAIT FOR THE INSTANCE THAT STARTED THIS ONE TO RELEASE THE MUTEX (issue 218).
+
+  File > Open Log starts the new instance as the old one's LAST step, with the
+  mutex still held, because releasing it any earlier would leave a moment in
+  which a second copy could start on the same log. The kernel releases a named
+  mutex when the last handle to it closes, and the parent's goes with its
+  process -- so retrying CreateMutexA is waiting for the parent to be gone.
+
+  OUR OWN HANDLE IS CLOSED BEFORE EVERY RETRY. Kept open, it would keep the
+  named mutex alive by itself and every retry would report ERROR_ALREADY_EXISTS
+  for ever, even with the parent long gone.
+
+  BOUNDED by RELAUNCH_WAIT_MS. Past it aStillRunning stays True and startup
+  takes the ordinary duplicate-instance path -- the operator is told TR4W is
+  already running, which is then the truth: the old instance did not exit.
+
+  WIN32, AND THAT IS THE EXISTING BOUNDARY rather than a new one: this is the
+  same mutex the single-instance check below already creates, behind the same
+  {$IFDEF WINDOWS}. Off Windows there is no lock and nothing to wait for.
+
+  EarlyTrace, not logger: the logger has no appender yet. *)
+function WaitForRelaunchingInstance(aMutex: THandle; const aName: AnsiString;
+                                    aParentPid: cardinal;
+                                    out aStillRunning: boolean): THandle;
+var
+   waited: integer;
+begin
+   EarlyTrace(SysUtils.Format('startup: started by File > Open Log -- waiting up to ' +
+                              '%d ms for instance %d to exit',
+                              [RELAUNCH_WAIT_MS, aParentPid]));
+   Result        := aMutex;
+   aStillRunning := True;
+   waited        := 0;
+   while aStillRunning and (waited < RELAUNCH_WAIT_MS) do
+      begin
+      CloseHandle(Result);
+      Sleep(RELAUNCH_RETRY_MS);
+      Inc(waited, RELAUNCH_RETRY_MS);
+      Result := CreateMutexA(nil, False, PAnsiChar(aName));
+      if Result = 0 then
+         begin
+         Exit;
+         end;
+      aStillRunning := GetLastOSError = ERROR_ALREADY_EXISTS;
+      end;
+
+   if aStillRunning then
+      begin
+      EarlyTrace(SysUtils.Format('startup: instance %d still holds the mutex after %d ms',
+                                 [aParentPid, waited]));
+      end
+   else
+      begin
+      EarlyTrace(SysUtils.Format('startup: instance %d has exited (waited %d ms)',
+                                 [aParentPid, waited]));
+      end;
+end;
+{$ENDIF}
+
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
 // ("Label not defined"), and it has presumably said so for years into a .dpr
@@ -1120,7 +1181,10 @@ var
   (* Held while CreateMutexA reads it. PAnsiChar of a temporary is a
     dangling pointer. *)
   tMutexName                            : AnsiString;
-  TempString                            : ShortString;
+  // The instance File > Open Log says to wait for (issue 218).
+  tParentPid                            : cardinal;
+  tAlreadyRunning                       : boolean;
+  TempString                          : ShortString;
   // The radio library's complaint, if it has one -- see the call site.
   tRadioLibraryError                    : string;
   // How many settings still had a second home in the legacy commands bucket.
@@ -1287,7 +1351,25 @@ begin
       EarlyTrace('startup: CreateMutex FAILED -- exiting');
       Exit;
       end;
-   if GetLastOSError = ERROR_ALREADY_EXISTS then
+   (* READ ONCE, straight after the call: anything in between -- EarlyTrace
+     writes a file -- may change the thread's last error. *)
+   tAlreadyRunning := GetLastOSError = ERROR_ALREADY_EXISTS;
+
+   (* STARTED BY FILE > OPEN LOG (issue 218): the instance that started this
+     one is still finishing its exit and holds the mutex until its process is
+     gone. Wait for it, bounded -- see uOpenLogRelaunch. *)
+   if tAlreadyRunning and
+      WaitForInstanceRequested(CommandLineArguments, tParentPid) then
+      begin
+      tMutex := WaitForRelaunchingInstance(tMutex, tMutexName, tParentPid,
+                                           tAlreadyRunning);
+      if tMutex = 0 then
+         begin
+         EarlyTrace('startup: CreateMutex FAILED while waiting -- exiting');
+         Exit;
+         end;
+      end;
+   if tAlreadyRunning then
       begin
       // A HEADLESS RUN NEVER OPENS A DIALOG.  It fails fast and loudly with a
       // distinct exit code instead, so the corpus reports a failure rather than

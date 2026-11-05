@@ -65,7 +65,15 @@ uses
    passed (HIDEREADONLY, ENABLESIZING) are already TOpenDialog's behaviour. *)
 function OpenFileDlg(const aTitle, aFilter: string;
                      var aFileName: FileNameType;
-                     const aMustExist: boolean): boolean;
+                     const aMustExist: boolean): boolean; overload;
+
+(* THE SAME DIALOG, ANSWERING IN A string, and starting in aInitialDir ('' is
+  the dialog's own choice). The form for new callers -- File > Open Log
+  (issue 218) is the first -- and the one the buffer form above is written
+  on, so there is one dialog and not two. *)
+function OpenFileDlg(const aTitle, aFilter, aInitialDir: string;
+                     out aFileName: string;
+                     const aMustExist: boolean): boolean; overload;
 
 implementation
 
@@ -81,9 +89,26 @@ function OpenFileDlg(const aTitle, aFilter: string;
                      var aFileName: FileNameType;
                      const aMustExist: boolean): boolean;
 var
+   chosen: string;
+begin
+   Result := OpenFileDlg(aTitle, aFilter, '', chosen, aMustExist);
+   if Result then
+      begin
+      { Cleared first: the caller reads this as ASCIIZ, and a shorter path over
+        a longer one would otherwise leave the old tail behind the terminator. }
+      FillChar(aFileName, SizeOf(aFileName), 0);
+      SetCharBuffer(aFileName, chosen);
+      end;
+end;
+
+function OpenFileDlg(const aTitle, aFilter, aInitialDir: string;
+                     out aFileName: string;
+                     const aMustExist: boolean): boolean;
+var
    dlg: TOpenDialog;
 begin
-   Result := False;
+   Result    := False;
+   aFileName := '';
 
    dlg := TOpenDialog.Create(Application);
    try
@@ -100,17 +125,18 @@ begin
          begin
          dlg.Options := dlg.Options + [ofFileMustExist];
          end;
+      if aInitialDir <> '' then
+         begin
+         dlg.InitialDir := AnsiString(aInitialDir);
+         end;
 
       if not dlg.Execute then
          begin
          Exit;
          end;
 
-      { Cleared first: the caller reads this as ASCIIZ, and a shorter path over
-        a longer one would otherwise leave the old tail behind the terminator. }
-      FillChar(aFileName, SizeOf(aFileName), 0);
-      SetCharBuffer(aFileName, dlg.FileName);
-      Result := True;
+      aFileName := string(dlg.FileName);
+      Result    := True;
    finally
       dlg.Free;
    end;

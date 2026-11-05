@@ -670,6 +670,8 @@ uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
    uTestLogNote         in 'uTestLogNote.pas',
    uTestLogNaming       in 'uTestLogNaming.pas',
 uTestContestFileKind       in 'uTestContestFileKind.pas',
+   uOpenLogRelaunch     in '..\..\src\uOpenLogRelaunch.pas',
+   uTestOpenLogRelaunch in 'uTestOpenLogRelaunch.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
    uTestLogImport       in 'uTestLogImport.pas',
    (* uLogStore itself, through its entry points -- a write never assumes the
@@ -1132,6 +1134,7 @@ begin
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
    RegisterSuite(TCaptionTextTests.Create('CaptionText'));
+   RegisterSuite(TOpenLogRelaunchTests.Create('OpenLogRelaunch'));
    RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));

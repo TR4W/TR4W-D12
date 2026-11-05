@@ -726,6 +726,8 @@ uses
   uLogEditForm,       // View / Edit Log -- an LCL virtual list now; also
                       // SaveLogEditLayout, see SaveTR4WPOSFILE
   uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
+  uOpenLogRelaunch,   (* File > Open Log: the refusal, the child's arguments, the
+                        one-shot relaunch tr4w_ShutDown starts (issue 218) *)
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -3992,6 +3994,37 @@ begin
   BeSilent := PreviousBeSilent;
 end;
 
+(* START THE INSTANCE FILE > OPEN LOG ASKED FOR, if it asked (issue 218).
+
+  CALLED FROM tr4w_ShutDown AFTER LogStoreClose AND BEFORE THE LOGGER GOES:
+  everything ExitProgram does has been done and the log is closed, and
+  RunProgram reports a failed start through the logger, which must still
+  exist (see the HamScore note in tr4w_ShutDown for what logging through a
+  freed one does). The child still has to wait for this process to release
+  the single-instance mutex, which only its exit does -- that is what
+  --wait-for-instance= tells it; see uOpenLogRelaunch.
+
+  A FAILED START IS LOGGED AND THE EXIT GOES ON. This process is past the
+  point of no return -- the radios are shut down and the log is closed -- and
+  coming back to life would be a contest session with neither. *)
+procedure StartRequestedRelaunch;
+var
+   exe:  string;
+   args: TRelaunchArgs;
+begin
+   if not TakeRelaunchRequest(exe, args) then
+      begin
+      Exit;
+      end;
+
+   logger.Info('[OpenLog] starting %s on %s', [exe, args[0]]);
+   if not RunProgram(exe, args) then
+      begin
+      logger.Error('[OpenLog] the new instance did not start; TR4W exits ' +
+                   'without it. Start TR4W by hand on %s', [args[0]]);
+      end;
+end;
+
 procedure tr4w_ShutDown;
 begin
   { PTTOff; // 4.113.1
@@ -4097,6 +4130,8 @@ begin
     logger goes, because its last word is a log line. *)
   BackupCopyStop;
   LogStoreClose;
+
+  StartRequestedRelaunch;
 
   if Assigned(logger) then
      begin
@@ -5068,6 +5103,108 @@ begin
   tr4w_WindowsArray[aID].WndVisible := True;
 end;
 
+(* MAY FILE > OPEN LOG GO AHEAD NOW? False, with the reason on the notice line,
+  while anything is on the air: exiting unkeys the radios and stops the keyer,
+  so the switch would cut an over short.
+
+  "Transmitting" is asked of BOTH radios as well as the PTT box's own source
+  (RadioState.PTTOn, the active radio) -- SO2R can have the other radio keyed,
+  and a TX that WSJT-X or a TCI client started reaches tPTTStatus through the
+  poll the same way. *)
+function OpenLogMayProceed: boolean;
+var
+   transmitting: boolean;
+begin
+   transmitting := ((RadioState <> nil) and RadioState.PTTOn) or
+                   (Radio1.tPTTStatus = PTT_ON)               or
+                   (Radio2.tPTTStatus = PTT_ON);
+   case OpenLogRefusal(transmitting, CWStillBeingSent) of
+      olrTransmitting:
+         begin
+         logger.Info('[OpenLog] refused: a radio is transmitting');
+         QuickDisplayError(SOpenLogRefusedKeyed);
+         Result := False;
+         end;
+      olrSendingCW:
+         begin
+         logger.Info('[OpenLog] refused: a CW message is being sent');
+         QuickDisplayError(SOpenLogRefusedSendingCW);
+         Result := False;
+         end;
+   else
+      begin
+      Result := True;
+      end;
+   end;
+end;
+
+(* FILE > OPEN LOG... (issue 218, stage S0).
+
+  THE SWITCH IS A RESTART, ON PURPOSE. TR4W closes through ExitProgram -- the
+  same path File > Exit takes, so the restart file, the score to UDP, the
+  backup stop, the network departure and LogStoreClose all run -- and
+  tr4w_ShutDown starts a new instance on the chosen log as its last step. The
+  survey on issue 218 found that opening a second contest in place carries
+  the first one's state into it; S1-S6 fix that, and until then a fresh
+  process is the only way a contest starts clean.
+
+  ASKED TWICE: before the picker, so the operator is not shown a dialog whose
+  answer would be refused, and after it, because the picker is modal and a
+  radio can be keyed (by WSJT-X, say) while it is open.
+
+  ONLY A TR4W DATABASE IS ACCEPTED. The program would be closed before the new
+  one found out the file was wrong, and startup's answer to a foreign
+  database or an unrecognised file is a message and a halt -- leaving the
+  operator with no TR4W at all. A .cfg import is not offered here either: it
+  is the New Contest path, and a text file chosen by mistake would be parsed
+  as one. *)
+procedure OpenAnotherLog;
+var
+   chosen:  string;
+   current: string;
+begin
+   if not OpenLogMayProceed then
+      begin
+      Exit;
+      end;
+
+   (* '*' and not '*.*': it is every file on gtk2 and Cocoa as well. Both cases
+     of the extension, because a gtk2 filter is case-sensitive (issue #141). *)
+   if not OpenFileDlg(SOpenLogDialogTitle,
+                      SOpenLogFilterLogs + '|*.db;*.DB|' + SOpenLogFilterAll + '|*',
+                      ContestDir, chosen, True) then
+      begin
+      logger.Info('[OpenLog] the picker was cancelled');
+      Exit;
+      end;
+
+   current := LogStoreFileName;
+   if IsSameLogFile(chosen, current) then
+      begin
+      logger.Info('[OpenLog] %s is the log already open -- nothing to do', [chosen]);
+      QuickDisplay(SOpenLogAlreadyOpen);
+      Exit;
+      end;
+
+   if ClassifyContestFile(chosen) <> cfkTR4WDatabase then
+      begin
+      logger.Info('[OpenLog] %s is not a TR4W contest log -- not switching', [chosen]);
+      QuickDisplayError(UnicodeFormat(SOpenLogNotAContestLog, [chosen]));
+      Exit;
+      end;
+
+   if not OpenLogMayProceed then
+      begin
+      Exit;
+      end;
+
+   logger.Info('[OpenLog] closing %s and starting again on %s', [current, chosen]);
+   RequestRelaunch(ParamStr(0),
+                   BuildRelaunchArguments(CommandLineArguments, chosen,
+                                          cardinal(System.GetProcessID)));
+   ExitProgram(False);
+end;
+
 procedure ProcessMenu(menuID: integer);
 var
   LowordWparam: integer;
@@ -5754,6 +5891,10 @@ begin
       ShowPathInFileManager(CharBufferText(TR4W_LOG_PATH_NAME));
 
     menu_exit: ExitProgram(True);
+
+    (* Another contest log: closes this one through ExitProgram and starts
+      again on the chosen file (issue 218). *)
+    menu_open_log: OpenAnotherLog;
 
     menu_clear_log:
       if YesOrNo(TC_REALLYWANTTOCLEARTHELOG) = IDYES then

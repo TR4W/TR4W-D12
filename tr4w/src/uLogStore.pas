@@ -248,6 +248,12 @@ function LogStoreClearAllQSOs: boolean;
 (* Closes it, if it was ever opened.  Safe to call when it was not. *)
 procedure LogStoreClose;
 
+(* THE DATABASE FILE THIS SESSION LOGS TO -- the same name the store opens.
+  Public since File > Open Log (issue 218) asks whether the operator chose the
+  log that is already open; a session started from a .cfg has a different
+  name in TR4W_CFG_FILENAME, so that is not the question to ask. *)
+function LogStoreFileName: string;
+
 (* False after a failure has switched it off, or before anything opened it. *)
 (* THE ONE CONNECTION TO THE LOG DATABASE.
 

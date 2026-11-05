@@ -785,6 +785,22 @@ resourcestring
    SEditQSOMyCQZone             = 'CQ zone';
    SEditQSOMyITUZone            = 'ITU zone';
 
+   (* FILE > OPEN LOG... (issue 218, S0). TR4W closes the open contest the way
+     File > Exit does and starts again on the chosen log. The two filter
+     descriptions are separate strings so a translator never edits the
+     '|description|mask' syntax around them. *)
+   SMenuOpenLog              = 'Open Log...';
+   SOpenLogDialogTitle       = 'Open a contest log';
+   SOpenLogFilterLogs        = 'TR4W contest logs (*.db)';
+   SOpenLogFilterAll         = 'All files';
+   SOpenLogRefusedKeyed      = 'Open Log was not done: a radio is transmitting. ' +
+                               'Unkey it, then choose File > Open Log again.';
+   SOpenLogRefusedSendingCW  = 'Open Log was not done: a CW message is still being ' +
+                               'sent. Let it finish, then choose File > Open Log again.';
+   SOpenLogAlreadyOpen       = 'That log is already open.';
+   (* %s is the file the operator chose. *)
+   SOpenLogNotAContestLog    = 'Not a TR4W contest log, so it was not opened: %s';
+
 implementation
 
 end.
