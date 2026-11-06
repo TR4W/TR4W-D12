@@ -103,6 +103,13 @@ function CurrentQSOPointOverrides: TQSOPointOverrides;
   set-up reads the same snapshot its scoring does. *)
 function CurrentStation: TStationContext;
 
+(* MY ITU ZONE AS THIS SESSION HAS IT -- issue 222: the stated MY ITU ZONE,
+  else the ITU zone CTY.DAT gives MY CALL, else 0 (unknown). The ONE answer
+  behind TStationContext.MyITUZone (scoring), uLogStore.LogStoreCurrentMyFacts
+  (what a QSO records as my_itu_zone) and PostUnit.ZoneSentForThisContest (the
+  ITU zone an export sends) -- three copies of this rule until then. *)
+function SessionMyITUZone: integer;
+
 implementation
 
 uses
@@ -171,6 +178,16 @@ begin
    else
       begin
       Result := ctyGetCQZone(Settings.My.Call);
+      end;
+end;
+
+function SessionMyITUZone: integer;
+begin
+   (* See the declaration. 0 in the setting is "use CTY.DAT". *)
+   Result := Settings.My.ResolvedItuZone;
+   if Result <= 0 then
+      begin
+      Result := ctyGetITUZone(Settings.My.Call);
       end;
 end;
 
@@ -267,6 +284,8 @@ begin
    (* MY CQ ZONE and the sheet's new-multiplier answer, as services
       (2026-10-14) -- see TStationContext. *)
    Result.MyCQZone := @EngineMyCQZone;
+   (* MY ITU ZONE, as a service (issue 222) -- see TStationContext. *)
+   Result.MyITUZone := @SessionMyITUZone;
    Result.IsNewMultiplierAnywhere := @EngineIsNewMultiplierAnywhere;
    (* THE DOMESTIC TABLE, as a service (Q107) -- see TStationContext.
       IsDomesticQTH. *)

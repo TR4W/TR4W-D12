@@ -174,6 +174,25 @@ type
       contest, on one branch. The UA4W Championship is its first reader. *)
    TMyCQZoneQuery = function: integer;
 
+   (* MY ITU ZONE, RESOLVED -- a SERVICE, issue 222 (2026-11-05).
+
+      THE STATED MY ITU ZONE IF THERE IS ONE, ELSE THE ITU ZONE CTY.DAT GIVES
+      MY CALL; 0 when neither can answer. The ONE engine answer
+      (uContestFactory.SessionMyITUZone) that three readers share: what a QSO
+      logged now RECORDS as my_itu_zone (uLogStore.LogStoreCurrentMyFacts),
+      the ITU zone an export SENDS (PostUnit.ZoneSentForThisContest), and what
+      an ITU-zone rule SCORES a QSO that recorded no station by
+      (TContestBase.ScoringMyITUZone).
+
+      NOT MyZone. A STATED MY ZONE is a CQ zone, and MyZone carries it as
+      stated, in every zone mode -- an IARU entrant who typed MY ZONE 5
+      scored W1AW (ITU 8, his own ITU zone) 3 points instead of 1.
+
+      A SERVICE, NOT A VALUE, for MyCQZone's reason: the station context is
+      rebuilt on every ActiveContest request, and the CTY lookup is needed by
+      one rule, on one branch. *)
+   TMyITUZoneQuery = function: integer;
+
    (* Does the session's domestic QTH table know this QTH? The table the
       engine loaded for this contest and this station -- for a state QSO
       party's out-of-state station, the host's county file. Handed to a
@@ -380,6 +399,12 @@ type
          zero value (nil) is "no service", which a rule answers as zone 0 --
          what CTY.DAT gives a call it cannot place. *)
       MyCQZone: TMyCQZoneQuery;
+
+      (* MY ITU ZONE, RESOLVED -- a SERVICE, issue 222. See TMyITUZoneQuery.
+         The zero value (nil) is "no service": 0, unknown. A rule reads it
+         through TContestBase.ScoringMyITUZone, which prefers the QSO's own
+         recorded zone. *)
+      MyITUZone: TMyITUZoneQuery;
 
       (* IS THIS QSO A NEW MULTIPLIER ON THE SHEET? -- a READ-ONLY SERVICE,
          design 7.13 (2026-10-14). See TNewMultiplierQuery. The zero value
@@ -2006,6 +2031,31 @@ type
          its scoring to another contest object (the IN/7QP/NE party), which
          must hand the same QSO's station on. *)
       property ScoringMyFacts: TQsoMyFacts read FScoringMyFacts;
+
+      (* MY ITU ZONE FOR THE QSO BEING SCORED -- issue 222 (NY4I, 2026-11-05:
+         a QSO is scored and exported from its own recorded fields; live
+         station state is immaterial).
+
+            a captured QSO     its recorded my_itu_zone (ScoringMyFacts);
+                               0 is UNKNOWN and is never filled from today's
+                               settings (uQsoMyFacts)
+            a QSO never captured -- a row from before log schema 3, or the
+                               QSO being logged NOW, which live entry scores
+                               before the row is written --
+                               the session's, Station.MyITUZone: the same
+                               engine answer the capture will record, so a
+                               later rescore of that row scores it the same
+
+         The value the export prints for the QSO in both cases
+         (uContestBase.MyStationExchangeOfQSO over
+         PostUnit.ZoneSentForThisContest), with one difference kept on
+         purpose: for an uncaptured QSO whose ITU zone NOTHING can resolve
+         (no MY ITU ZONE, a call CTY.DAT cannot place), the export falls back
+         to the MY ZONE text, while this answers 0 -- what the capture records
+         for that QSO, so the live score and a rescore cannot disagree. 0 is
+         unknown; a rule must not treat it as a zone. NEVER Station.MyZone:
+         see TMyITUZoneQuery. *)
+      function ScoringMyITUZone: integer;
 
       (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
 
@@ -4865,6 +4915,28 @@ begin
       FStation.MyGrid := sessionGrid;
       FScoringMyFacts := sessionFacts;
    end;
+end;
+
+function TContestBase.ScoringMyITUZone: integer;
+begin
+   (* See the declaration. *)
+   if FScoringMyFacts.Source <> mfsNotCaptured then
+      begin
+      Result := FScoringMyFacts.ITUZone;
+      end
+   else if Assigned(FStation.MyITUZone) then
+      begin
+      Result := FStation.MyITUZone();
+      end
+   else
+      begin
+      Result := 0;
+      end;
+
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
 end;
 
 (* THE STEPS THEMSELVES, against whatever FStation holds now. *)

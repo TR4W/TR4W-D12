@@ -30,6 +30,13 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- IARU: THE SAME-ZONE POINT IS THE QSO'S OWN ITU ZONE (issue 222)
+
+Scoring asks the QSO's recorded my_itu_zone, or for the QSO being typed now the session's ITU zone (stated MY ITU ZONE, else CTY.DAT's for MY CALL), and never the stated MY ZONE. Unit-tested (`uTestIARUScoring`) and checked headless (the iaru_hf fixture with `Zone: 5` rescores to 12). What no gate drives is typed live entry.
+
+- [ ] **Typed, with a CQ zone stated.** In an IARU HF log from a K/W4 station, state MY ZONE 5 (leave MY ITU ZONE unset). Log W1AW with exchange `8`: the QSO scores 1 point (log window and Edit QSO). Log F4HQ `27`: 5 points. Log a VE3 `4`: 3 points. Log W1AW `ARRL`: 1 point.
+- [ ] **Rescore agrees.** Run the rescore (or reopen the log): every point above is unchanged, and the total matches the claimed score in the Cabrillo.
+
 ## Added 2026-11-05 -- PREFERENCES > EXTERNAL LOGGER GRID EDITING (issue 220)
 
 The External Logger grid is the editor now; the separate "Configure external loggers..." dialog is gone. The order/toggle/remove logic is unit-tested (`uTestExternalLoggerGrid`, the drag driven through the grid's own `MoveColRow`); what no test can do is a mouse and a popup.

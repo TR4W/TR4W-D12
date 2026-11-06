@@ -30,20 +30,30 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   difference. MyZone is one global holding the CQ zone, and every arm that sends
   or scores "my zone" used it -- so an IARU entrant sent the wrong number on
   every QSO until PostUnit.ZoneSentForThisContest was written. The SCORING side
-  compares MyZone with the received zone, and the same confusion is latent here:
-  if MyZone holds a CQ zone, the "same zone" case matches the wrong stations.
-  That is a live question for the bench, not something this move changes -- the
-  comparison is reproduced exactly as it was.
+  compared Station.MyZone with the received zone until issue 222 (2026-11-05),
+  and a STATED MY ZONE is a CQ zone: an entrant who typed MY ZONE 5 scored
+  W1AW (ITU 8, his own ITU zone) 3 points, not 1 -- the iaru_hf corpus log's
+  16-versus-12 claimed score. NY4I's ruling: a QSO is scored and exported from
+  its own recorded fields, live station state is immaterial. So the same-zone
+  test reads TContestBase.ScoringMyITUZone -- the QSO's recorded my_itu_zone,
+  or for a QSO that recorded no station the session's ITU zone (the value the
+  capture records and the export prints). An unknown zone (0) earns no
+  same-zone point.
+
+  THE CONTINENT ARM STILL READS Station.MyContinent, the live station -- the
+  recorded my_continent is not overlaid by ScoreQSO for any contest. It is
+  derived from MY CALL, so it moves only when the call does; open, reported
+  with issue 222.
 
   A SOCIETY STATION IS RECOGNISED BY HAVING A DomesticQTH, which is how the
   exchange parser records an HQ or official's abbreviation rather than a zone
   number. Those are worth one point wherever they are.
 
-  THE ZONE CONVERSION IS THE STATION SNAPSHOT'S, not a Val() here. The legacy arm
-  does `Val(MyZone, MyZoneValue, Result)` per QSO and ignores the error code, so
-  an unset or non-numeric MyZone becomes zone 0 and silently matches any station
-  whose zone failed to parse the same way. TStationContext converts once and
-  says whether it worked, so "no zone set" can be told from "zone 0". *)
+  NO ZONE IS NOT ZONE 0. The legacy arm did `Val(MyZone, MyZoneValue, Result)`
+  per QSO and ignored the error code, so an unset MyZone became zone 0 and
+  silently matched any station whose zone failed to parse the same way. The
+  ITU zone is an integer with 0 meaning unknown, and the test requires a
+  known one. *)
 unit uContestIARU;
 
 {$I tr4w.inc}
@@ -197,6 +207,8 @@ begin
 end;
 
 procedure TContestIARU.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   myITUZone: integer;
 begin
    if aQso.DomesticQTH <> '' then
       begin
@@ -205,7 +217,10 @@ begin
       Exit;
       end;
 
-   if aQso.Zone = Station.MyZone then
+   (* MY ITU ZONE FOR THIS QSO, never the stated MY ZONE -- issue 222, see
+      the header. 0 is unknown and matches nothing. *)
+   myITUZone := ScoringMyITUZone;
+   if (myITUZone > 0) and (aQso.Zone = myITUZone) then
       begin
       aQso.QSOPoints := 1;
       end

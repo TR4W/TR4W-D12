@@ -1118,6 +1118,12 @@ the target shape, the M-step migration order and the open questions.
   "MY CQ ZONE" and was wrong for those contests. **A rule that needs the CQ
   zone asks the SERVICE `MyCQZone()`** -- the stated zone, else MY CALL's CQ
   zone; UA4W is its reader (Q69 asks whether MY ZONE should always be CQ).
+  **A STATED MY ZONE IS CARRIED AS STATED (a CQ zone), so a rule that needs
+  MY ITU ZONE asks `TContestBase.ScoringMyITUZone`** (issue #222,
+  2026-11-05): the QSO's recorded `my_itu_zone` when the row captured its
+  station, else the SERVICE `MyITUZone()` (`uContestFactory.SessionMyITUZone`
+  -- the one answer the capture and the export's zone also use); 0 is unknown.
+  IARU is its reader; BSCI and OZCR-Z still compare `MyZone` (open).
   **A rule may ASK the multiplier sheet read-only: `IsNewMultiplierAnywhere(aQso,
   nmkDomestic | nmkDX)`** (design 7.13) -- the sheet's all-band, both-mode row;
   RSGB 1.8 is its reader (7 for a new multiplier). Never a write, never the

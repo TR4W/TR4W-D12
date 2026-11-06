@@ -213,6 +213,24 @@ zone or DX multiplier** (`MainUnit.RecomputeQSOScoring`). Taking a multiplier aw
 the record's stored one stands, and anything exported from it (WFD's `DXCC` tag)
 follows the stored value.
 
+**A STATED `MY ZONE` IS A CQ ZONE, AND `Station.MyZone` CARRIES IT AS STATED IN
+EVERY ZONE MODE (issue #222, 2026-11-05).** Only an UNSTATED zone is derived in
+the contest's zone mode, so an ITU-zone rule that compares `Station.MyZone`
+works at every matrix station (none states a zone) and is wrong for an operator
+who typed `MY ZONE = 5`: IARU scored W1AW (ITU 8, his own ITU zone) 3, not 1.
+A rule that needs MY ITU ZONE asks `TContestBase.ScoringMyITUZone` -- the QSO's
+recorded `my_itu_zone` (`ScoringMyFacts`) when the row captured its station,
+else `Station.MyITUZone`, the session service. ONE engine answer,
+`uContestFactory.SessionMyITUZone` (stated MY ITU ZONE, else CTY.DAT's for MY
+CALL, else 0), feeds that service, the `my_itu_zone` capture
+(`LogStoreCurrentMyFacts`) and `PostUnit.ZoneSentForThisContest` -- so a QSO
+scored live (entry scores before the row is written, with no facts) and the same
+row rescored later cannot disagree. 0 is unknown and matches no zone. **Still
+reading `Station.MyZone` for an ITU same-zone test: `TContestBSCI` and
+`TContestOZCRZ`** (both `zmzITUZones`, OZCR-Z copied from IARU) -- open. Every
+continent/country arm reads the live `Station.MyContinent`/`MyCountry`;
+`ScoreQSO` overlays only the grid from the record.
+
 ## `FoundContest` READS STATION STATE, so what it reads must already be set
 
 **`MY COUNTRY` IS DERIVED — do not "add" a derivation.** `FoundContest` calls

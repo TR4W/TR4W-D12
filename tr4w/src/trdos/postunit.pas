@@ -522,19 +522,16 @@ makes the fix work for the ordinary operator who never heard of the setting
 the CQ zone, if neither is available, which is exactly today's behaviour. *)
 function ZoneSentForThisContest(aContest: TContestBase): string;
    var
-      ituFromCty: Byte;
+      ituZone: integer;
    begin
    if ContestZoneMultiplierZones(aContest) = zmzITUZones then
       begin
-      if Settings.My.ResolvedItuZone > 0 then
+      (* The first two steps above are uContestFactory.SessionMyITUZone, the
+        one answer scoring and the my_itu_zone capture share (issue 222). *)
+      ituZone := SessionMyITUZone;
+      if ituZone > 0 then
          begin
-         Result := IntToStr( Settings.My.ResolvedItuZone );
-         Exit;
-         end;
-      ituFromCty := ctyGetITUZone( string( Settings.My.Call ) );
-      if ituFromCty > 0 then
-         begin
-         Result := IntToStr( ituFromCty );
+         Result := IntToStr( ituZone );
          Exit;
          end;
       end;

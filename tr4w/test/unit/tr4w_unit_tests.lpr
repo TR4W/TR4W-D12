@@ -726,6 +726,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       numbering, at stations the matrix does not run (a JA entrant), frozen
       against the old session-kind readers before the rule moved. *)
    uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
+   (* Issue 222: IARU's same-zone point is the QSO's own ITU zone. *)
+   uTestIARUScoring     in 'uTestIARUScoring.pas',
    (* P7: the Super Check Partial cell buffer, over the matrix's TRMASTER fixture. *)
    uTestLogSCP          in 'uTestLogSCP.pas',
    (* Issue 89 / audit 6.6: the TNC packet object's spot memory and display
@@ -984,6 +986,7 @@ begin
    RegisterSuite(TPrefixMultiplierKeyTests.Create('PrefixMultiplierKey'));
    RegisterSuite(TDXMultiplierKeyTests.Create('DXMultiplierKey'));
    RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
+   RegisterSuite(TIARUScoringTests.Create('IARUScoring'));
    RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));

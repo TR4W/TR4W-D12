@@ -607,7 +607,8 @@ uses
       CurrentStation -- the station context scoring is handed, so the my_*
       values a QSO records are the ones scoring saw at that moment (country,
       continent, MY CQ ZONE); TStationContext is uContestBase's.
-      ctyGetITUZone -- MY ITU ZONE when the operator stated none. *)
+      SessionMyITUZone -- MY ITU ZONE as scoring and the export have it
+      (issue 222); uCTYDAT left with the copy of that rule that stood here. *)
    SysUtils, Classes,
    (* THE LOCKED-LOG DIALOG (2026-10-31): QuestionDlg and mtWarning, the
      modal results, its captions, the watchdog's registry, and the schema
@@ -616,7 +617,7 @@ uses
    Forms, Controls, Dialogs, uAppStrings, uLogConnectionWatch, uLogSchema,
    DateUtils, (* LocalTimeToUniversal -- the UTC stamp in a pre-clear backup's name *)
    Contnrs,   (* TObjectList -- the edited memories RestoreEditedMessageMemories reads *)
-   uContestBase, uContestFactory, uCTYDAT,
+   uContestBase, uContestFactory,
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
    MainUnit, uLogDatabase, uLogImport,
@@ -2334,13 +2335,9 @@ begin
       Result.Continent := AnsiString(ContinentTypeSA[station.MyContinent]);
       end;
    Result.CQZone := station.MyCQZone();
-   (* 0 is "use CTY.DAT" in the setting, so CTY.DAT's answer for our call is
-     the zone in effect. 0 from there too is unknown, and is stored as NULL. *)
-   Result.ITUZone := Settings.My.ResolvedItuZone;
-   if Result.ITUZone = 0 then
-      begin
-      Result.ITUZone := uCTYDAT.ctyGetITUZone(Settings.My.Call);
-      end;
+   (* The session's ITU zone -- the ONE answer scoring and the export share
+     (issue 222). 0 is unknown, and is stored as NULL. *)
+   Result.ITUZone := uContestFactory.SessionMyITUZone;
 end;
 
 (* The capture for a QSO being logged now: this station's values, and whether
