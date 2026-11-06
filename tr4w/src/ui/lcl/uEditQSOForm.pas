@@ -132,7 +132,32 @@ type
     procedure CallsignChanged(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+  public
+    (* LAY THE FIELDS OUT FROM WHAT THE TEXT AND THE CONTROLS MEASURE -- see
+       "THE LAYOUT IS MEASURED" in the implementation. Idempotent: every
+       position is computed from scratch, so calling it on every show (the
+       form is hidden and reused) moves nothing that already fits. Public for
+       the layout test, which calls it on a form shown off screen. *)
+    procedure FitLayout;
+    (* The form's height follows its last visible control: the our-station
+       group, or the delivery line under it when that is shown. *)
+    procedure FitHeightToContent;
+    (* THE BAND AND MODE LISTS, REPLACED -- never appended to (issue 237). The
+       load calls this on every open, through EditQSOFillBandAndModeLists. *)
+    procedure FillBandAndModeLists;
   end;
+
+const
+  (* THE ROOM A DROP-DOWN'S OWN CHROME TAKES BESIDE ITS TEXT, at 96 dpi: the
+     frame, the text inset and the arrow (Windows) or the bezel and the
+     up/down arrows (a cocoa NSPopUpButton). A STATED ALLOWANCE, NOT A
+     MEASUREMENT: the LCL cannot report it -- Win32 gives a combo no preferred
+     width at all, and cocoa's fittingSize is computed from the title showing
+     at that moment. 40 is generous on Windows (a 17 px button and a 3 px
+     frame each side) and is the number to correct if the Mac bench shows the
+     text still under the arrows. The layout test asserts against this
+     same constant. *)
+  EDITQSO_COMBO_CHROME_96 = 40;
 
 type
   // One row per control in dialog 46. The Id is the Win32 control id the save
@@ -230,6 +255,7 @@ function  EditQSOGetItemIndex(const aId: integer): integer;
 procedure EditQSOSetItemIndex(const aId: integer; const aIndex: integer);
 procedure EditQSOAddItem(const aId: integer; const aText: string);
 procedure EditQSOClearItems(const aId: integer);
+procedure EditQSOFillBandAndModeLists;
 function  EditQSOGetDateTime: TDateTime;
 procedure EditQSOSetDateTime(const aValue: TDateTime);
 procedure EditQSOSetFocusTo(const aId: integer);
@@ -284,9 +310,10 @@ uses
   // FIRST, so every unit below still wins any name it shares (this tree
   // resolves a name to the LAST unit declaring it).
   uAppStrings,        // SEditQSODelivery*, SEditQSOMy* -- the our-station group
-  DateUtils,          // UnixToDateTime -- the delivery line's time
+  Math,               // Max -- the measured layout
+  DateUtils,         // UnixToDateTime -- the delivery line's time
   uEditQSO,           // the load and save halves, which stayed put
-  uLCLFormHelpers,    // ShowModalOverWin32Parent -- every caller is still Win32
+  uLCLFormHelpers,    // ShowModalOverWin32Parent; TextWidthInFont, WidestText
   MainUnit,           // logger
   uSettingsModel,     // Settings.Log.ConfirmEditChanges
   uDialogs,           // YesOrNo
@@ -501,6 +528,50 @@ begin
       end;
 end;
 
+(* ISSUE 237: THE LISTS WERE APPENDED TO ON EVERY OPEN. The form is hidden on
+  close and reused, and the load added every band and every mode each time
+  without clearing, so the second open listed each band twice -- and Save
+  reads BandType(ItemIndex), so a band picked from the second copy was a
+  value past the end of the enum, on its way into the contest log.
+
+  The data is now replaced in the control, so the item index IS the enum
+  ordinal on every open. One BeginUpdate per list: Items proxies the widget. *)
+procedure TfrmEditQSO.FillBandAndModeLists;
+var
+  bt: BandType;
+  m: ExtendedModeType;
+begin
+   cboBand.Items.BeginUpdate;
+   try
+      cboBand.Items.Clear;
+      for bt := Low(BandType) to High(BandType) do
+         begin
+         cboBand.Items.Add(UTF8Encode(BandStringsArrayWithOutSpaces[bt]));
+         end;
+   finally
+      cboBand.Items.EndUpdate;
+   end;
+
+   cboMode.Items.BeginUpdate;
+   try
+      cboMode.Items.Clear;
+      for m := Low(ExtendedModeType) to High(ExtendedModeType) do
+         begin
+         cboMode.Items.Add(UTF8Encode(ExtendedModeStringArray[m]));
+         end;
+   finally
+      cboMode.Items.EndUpdate;
+   end;
+end;
+
+procedure EditQSOFillBandAndModeLists;
+begin
+   if frmEditQSO <> nil then
+      begin
+      frmEditQSO.FillBandAndModeLists;
+      end;
+end;
+
 function EditQSOGetDateTime: TDateTime;
 begin
    Result := 0;
@@ -668,8 +739,6 @@ begin
 end;
 
 procedure EditQSOShowDelivery(const aStatus: TDeliveryStatus);
-var
-  bottom: integer;
 begin
    if frmEditQSO = nil then
       begin
@@ -679,18 +748,354 @@ begin
    // SET EVERY TIME, shown or hidden: the form is hidden on close and reused,
    // so a line left from the previous QSO would otherwise describe this one.
    frmEditQSO.lblDelivery.Visible := aStatus.Logger <> '';
-   bottom := frmEditQSO.grpMyStation.Top + frmEditQSO.grpMyStation.Height;
    if frmEditQSO.lblDelivery.Visible then
       begin
       // UTF8Encode: the LCL's caption is a UTF-8 AnsiString, and an implicit
       // UTF-16 to Ansi conversion is a narrowing the build counts.
       frmEditQSO.lblDelivery.Caption := UTF8Encode(EditQSODeliveryText(aStatus));
-      bottom := frmEditQSO.lblDelivery.Top + frmEditQSO.lblDelivery.Height;
+      end;
+
+   frmEditQSO.FitHeightToContent;
+end;
+
+// ------------------------------------------------------- the measured layout
+(* THE LAYOUT IS MEASURED, NOT TYPED (NY4I, macOS, 2026-11-06).
+
+  The .lfm positions came out of the Win32 dialog template, for MS Sans Serif
+  8 at 96 dpi, and they are still there: the .lfm is the designer's picture
+  and the field ids the save path speaks. What they cannot be is the layout on
+  a platform whose fonts and native chrome are wider. On cocoa NY4I saw three
+  defects, and each was one property:
+
+    * BAND AND MODE SHOWED "10" AND "C". The combos inherit TCustomComboBox's
+      AutoSize = True. Win32 reports no preferred width for a combo, so the
+      designed 135 survived there; cocoa's read-only path reports the
+      NSPopUpButton's fittingSize -- which the LCL's own comment says is
+      wrong -- clamped to CocoaConfigComboBox.readOnly.minWidth, 38 px. A
+      typed Width cannot fix that, because AutoSize overwrites it:
+      Constraints.MinWidth is what holds.
+    * THE DATE RAN INTO "ZONE". TDateTimePicker is AutoSize too, and its
+      preferred width is its own text plus its arrow button in the running
+      font -- honest, and wider than 135 on cocoa, while lblZone sat at a
+      fixed 240. The picker is not fought: its own width is measured, and the
+      next column starts after it.
+    * LABELS WERE CLIPPED: AutoSize = False at fixed widths of 75, 90 and 52.
+
+  SO THE FIELDS ARE A GRID, and every column is as wide as the widest thing in
+  it: a label's caption measured in its own font (TextWidthInFont), a
+  drop-down's longest item plus EDITQSO_COMBO_CHROME_96, and whatever any other
+  control's widget set says it prefers (GetPreferredSize -- the picker, the
+  check boxes, the buttons). The designed widths are FLOORS, so on Windows at
+  100% the window looks as it did unless something no longer fits. Rows are as
+  tall as their tallest control, never less than the designed pitch.
+
+  Every 96-dpi number is scaled through Scale96ToForm. The window may grow; it
+  keeps its centre, so a first open is still centred over the main window and
+  a window the operator moved stays where they put it. *)
+
+type
+  TFieldGrid = class
+  private
+    FColumns: integer;
+    FCells: array of TControl;
+    function RowCount: integer;
+    function Cell(const aRow, aCol: integer): TControl;
+  public
+    ColLeft, ColWidth, RowTop, RowHeight: array of integer;
+    constructor Create(const aColumns: integer);
+    (* One row, left to right; nil is an empty cell. *)
+    procedure AddRow(const aRow: array of TControl);
+    (* Column widths and lefts. aGaps[i] is the space before column i. *)
+    procedure Measure(const aLeft: integer; const aFloors, aGaps: array of integer;
+                      const aLabelPad, aComboChrome: integer);
+    (* Row tops and heights, then every cell placed in its cell. *)
+    procedure Place(const aTop, aMinPitch, aRowGap, aMinRowHeight: integer);
+    function Right: integer;
+    function Bottom: integer;
+  end;
+
+(* What the widget set says a control would like to be, without constraints.
+   0 means "no opinion" -- an edit, or a Win32 combo. *)
+procedure PreferredOf(const aControl: TControl; out aWidth, aHeight: integer);
+begin
+   aWidth := 0;
+   aHeight := 0;
+   aControl.GetPreferredSize(aWidth, aHeight, True, True);
+   if aWidth < 0 then
+      begin
+      aWidth := 0;
+      end;
+   if aHeight < 0 then
+      begin
+      aHeight := 0;
+      end;
+end;
+
+function FieldNeedWidth(const aControl: TControl;
+                        const aLabelPad, aComboChrome: integer): integer;
+var
+  h: integer;
+begin
+   if aControl is TLabel then
+      begin
+      Result := TextWidthInFont(TLabel(aControl).Font, TLabel(aControl).Caption) +
+                aLabelPad;
+      Exit;
+      end;
+
+   PreferredOf(aControl, Result, h);
+   if aControl is TComboBox then
+      begin
+      Result := Max(Result, WidestText(TComboBox(aControl).Font,
+                                       TComboBox(aControl).Items) + aComboChrome);
+      end;
+end;
+
+constructor TFieldGrid.Create(const aColumns: integer);
+begin
+   inherited Create;
+   FColumns := aColumns;
+end;
+
+function TFieldGrid.RowCount: integer;
+begin
+   Result := Length(FCells) div FColumns;
+end;
+
+function TFieldGrid.Cell(const aRow, aCol: integer): TControl;
+begin
+   Result := FCells[aRow * FColumns + aCol];
+end;
+
+procedure TFieldGrid.AddRow(const aRow: array of TControl);
+var
+  base, i: integer;
+begin
+   base := Length(FCells);
+   SetLength(FCells, base + FColumns);
+   for i := 0 to FColumns - 1 do
+      begin
+      if i <= High(aRow) then
+         begin
+         FCells[base + i] := aRow[i];
+         end
+      else
+         begin
+         FCells[base + i] := nil;
+         end;
+      end;
+end;
+
+procedure TFieldGrid.Measure(const aLeft: integer; const aFloors, aGaps: array of integer;
+                             const aLabelPad, aComboChrome: integer);
+var
+  r, c, w: integer;
+begin
+   SetLength(ColLeft, FColumns);
+   SetLength(ColWidth, FColumns);
+
+   for c := 0 to FColumns - 1 do
+      begin
+      w := aFloors[c];
+      for r := 0 to RowCount - 1 do
+         begin
+         if Cell(r, c) <> nil then
+            begin
+            w := Max(w, FieldNeedWidth(Cell(r, c), aLabelPad, aComboChrome));
+            end;
+         end;
+      ColWidth[c] := w;
+
+      if c = 0 then
+         begin
+         ColLeft[c] := aLeft;
+         end
+      else
+         begin
+         ColLeft[c] := ColLeft[c - 1] + ColWidth[c - 1] + aGaps[c];
+         end;
+      end;
+end;
+
+procedure TFieldGrid.Place(const aTop, aMinPitch, aRowGap, aMinRowHeight: integer);
+var
+  r, c, top, content, pw, ph, h: integer;
+  ctl: TControl;
+begin
+   SetLength(RowTop, RowCount);
+   SetLength(RowHeight, RowCount);
+   top := aTop;
+
+   for r := 0 to RowCount - 1 do
+      begin
+      (* The row is as tall as its tallest control. A label is not counted: it
+         takes the row's height, and its Layout = tlCenter centres the text. *)
+      content := aMinRowHeight;
+      for c := 0 to FColumns - 1 do
+         begin
+         ctl := Cell(r, c);
+         if (ctl <> nil) and not (ctl is TLabel) then
+            begin
+            PreferredOf(ctl, pw, ph);
+            content := Max(content, Max(ctl.Height, ph));
+            end;
+         end;
+      RowTop[r] := top;
+      RowHeight[r] := content;
+
+      for c := 0 to FColumns - 1 do
+         begin
+         ctl := Cell(r, c);
+         if ctl = nil then
+            begin
+            Continue;
+            end;
+
+         if ctl is TLabel then
+            begin
+            ctl.SetBounds(ColLeft[c], top, ColWidth[c], content);
+            end
+         else
+            begin
+            (* MinWidth AS WELL AS Width: an AutoSize control's widget set
+               would otherwise put its own preferred width back -- which is
+               the cocoa drop-down defect. Its height stays the widget set's;
+               it is centred in the row. *)
+            PreferredOf(ctl, pw, ph);
+            h := Max(ctl.Height, ph);
+            ctl.Constraints.MinWidth := ColWidth[c];
+            ctl.SetBounds(ColLeft[c], top + (content - h) div 2, ColWidth[c], h);
+            end;
+         end;
+
+      top := top + Max(aMinPitch, content + aRowGap);
+      end;
+end;
+
+function TFieldGrid.Right: integer;
+begin
+   Result := ColLeft[FColumns - 1] + ColWidth[FColumns - 1];
+end;
+
+function TFieldGrid.Bottom: integer;
+begin
+   Result := RowTop[RowCount - 1] + RowHeight[RowCount - 1];
+end;
+
+procedure TfrmEditQSO.FitHeightToContent;
+var
+  bottom: integer;
+begin
+   bottom := grpMyStation.Top + grpMyStation.Height;
+   if lblDelivery.Visible then
+      begin
+      bottom := lblDelivery.Top + lblDelivery.Height;
       end;
 
    // The designed margin below the group (498 - 490), kept under whichever
    // control is last, so a QSO without a delivery row gets no empty band.
-   frmEditQSO.ClientHeight := bottom + 8;
+   ClientHeight := bottom + Scale96ToForm(8);
+end;
+
+procedure TfrmEditQSO.FitLayout;
+
+   function Px(const a96: integer): integer;
+   begin
+      Result := Scale96ToForm(a96);
+   end;
+
+var
+  fields, mine: TFieldGrid;
+  oldW, oldH, centreX, centreY, groupNeed, frameW, frameH: integer;
+  widths: string;
+begin
+   oldW := Width;
+   oldH := Height;
+   centreX := Left + oldW div 2;
+   centreY := Top + oldH div 2;
+
+   fields := TFieldGrid.Create(5);
+   mine := TFieldGrid.Create(8);
+   try
+      (* label, field, label, field, indicator -- the designed rows, in order.
+         The first row's middle is the country name, which spans both. *)
+      fields.AddRow([lblCallsign,   edtCallsign,       nil,            nil,              lblRadio]);
+      fields.AddRow([lblBand,       cboBand,           lblDX,          edtDXQTH,         chkDXMult]);
+      fields.AddRow([lblMode,       cboMode,           lblDomestic,    edtDomMultQTH,    chkDomesticMult]);
+      fields.AddRow([lblFrequency,  edtFrequency,      lblPrefix,      edtPrefix,        chkPrefixMult]);
+      fields.AddRow([lblDate,       dtpDateTime,       lblZone,        edtZone,          chkZoneMult]);
+      fields.AddRow([nil,           nil,               lblName,        edtName,          chkNameSent]);
+      fields.AddRow([lblComputerID, edtComputerID,     lblQTH,         edtQTHString,     chkInhibitMults]);
+      fields.AddRow([lblQSOPoints,  edtQSOPoints,      lblPostalCode,  edtPostalCode,    chkDupe]);
+      fields.AddRow([lblAge,        edtAge,            lblPower,       edtPower,         chkDeleted]);
+      fields.AddRow([lblChapter,    edtChapter,        lblPrecedence,  edtPrecedence,    chkSAP]);
+      fields.AddRow([lblCheck,      edtCheck,          lblPrefecture,  edtPrefecture,    chkXQSO]);
+      fields.AddRow([lblClass,      edtClass,          lblTenTen,      edtTenTen,        nil]);
+      fields.AddRow([lblNumberSent, edtNumberSent,     lblRSTSent,     edtRSTSent,       nil]);
+      fields.AddRow([lblNumberRcvd, edtNumberReceived, lblRSTReceived, edtRSTReceived,   nil]);
+      fields.AddRow([lblOperator,   edtOperator,       nil,            nil,              btnSave]);
+      fields.AddRow([nil,           nil,               nil,            nil,              btnCancel]);
+
+      (* The floors and gaps are the designed ones (.lfm): labels at 8 and 240,
+         fields at 90 and 338, 135 wide, indicators at 480. *)
+      fields.Measure(Px(8), [Px(75), Px(135), Px(90), Px(135), Px(90)],
+                     [0, Px(7), Px(15), Px(8), Px(7)],
+                     Px(2), Px(EDITQSO_COMBO_CHROME_96));
+      fields.Place(Px(16), Px(24), Px(3), Px(17));
+
+      lblCountryName.SetBounds(fields.ColLeft[2], fields.RowTop[0],
+                               fields.ColLeft[3] + fields.ColWidth[3] - fields.ColLeft[2],
+                               fields.RowHeight[0]);
+
+      mine.AddRow([lblMyCall,    edtMyCall,    lblMyGrid, edtMyGrid,
+                   lblMyState,   edtMyState,   lblMyCounty, edtMyCounty]);
+      mine.AddRow([lblMySection, edtMySection, lblMyPark, edtMyPark,
+                   lblMyCQZone,  edtMyCQZone,  lblMyITUZone, edtMyITUZone]);
+      mine.Measure(Px(6), [Px(52), Px(76), Px(52), Px(76), Px(52), Px(76), Px(52), Px(76)],
+                   [0, Px(2), Px(10), Px(2), Px(10), Px(2), Px(10), Px(2)],
+                   Px(2), Px(EDITQSO_COMBO_CHROME_96));
+      mine.Place(Px(4), Px(28), Px(4), Px(17));
+
+      (* The group's frame, read from the group as it is now: the caption band
+         and borders differ by widget set. *)
+      frameW := grpMyStation.Width - grpMyStation.ClientWidth;
+      frameH := grpMyStation.Height - grpMyStation.ClientHeight;
+      groupNeed := Max(mine.Right + Px(6),
+                       TextWidthInFont(grpMyStation.Font, grpMyStation.Caption) + Px(16)) +
+                   frameW;
+
+      ClientWidth := Max(fields.Right + Px(11), Px(8) + groupNeed + Px(8));
+
+      grpMyStation.SetBounds(Px(8), fields.Bottom + Px(8), ClientWidth - Px(16),
+                             mine.Bottom + Px(9) + frameH);
+      lblDelivery.SetBounds(Px(8), grpMyStation.Top + grpMyStation.Height + Px(4),
+                            ClientWidth - Px(16), Px(17));
+      FitHeightToContent;
+
+      widths := UnicodeFormat('%d/%d/%d/%d/%d', [fields.ColWidth[0], fields.ColWidth[1],
+                                          fields.ColWidth[2], fields.ColWidth[3],
+                                          fields.ColWidth[4]]);
+   finally
+      mine.Free;
+      fields.Free;
+   end;
+
+   (* KEEP THE CENTRE. A first open was centred over the main window before
+      OnShow (ShowModalOverWin32Parent), and a later one is where the operator
+      left it; growing about the centre keeps both true. Unchanged size, no
+      move -- which is what makes this safe to run on every show. *)
+   if (Width <> oldW) or (Height <> oldH) then
+      begin
+      SetBounds(centreX - Width div 2, centreY - Height div 2, Width, Height);
+      end;
+
+   (* REPORTED, the NewContest "grew" diagnostic: which column set the width
+      is what a bench screenshot cannot say. *)
+   if (logger <> nil) and logger.IsDebugEnabled then
+      begin
+      logger.Debug('[EditQSO] layout: columns %s, form %dx%d (was %dx%d)',
+                   [widths, Width, Height, oldW, oldH]);
+      end;
 end;
 
 // ------------------------------------------------------------------- the form
@@ -723,6 +1128,10 @@ begin
       Close;
       Exit;
       end;
+
+   (* AFTER the load, which fills the drop-downs, the radio label and the
+      our-station caption the columns are measured from. *)
+   FitLayout;
 
    // Save starts DISABLED and every field's OnChange turns it on, exactly as
    // the WM_COMMAND EN_CHANGE / CBN_SELCHANGE / BN_CLICKED arm did.

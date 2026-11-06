@@ -200,7 +200,6 @@ type
     procedure ReassertLatestCaption;
     function  WrappedTextHeight(const aText: TCaption; const aWidth: integer): integer;
     function  WidestLine(const aText: TCaption): integer;
-    function  WidestText(aFont: TFont; aTexts: TStrings): integer;
     function  GetRowCount: integer;
     procedure ShowMatchingContests;
     procedure NotifyContestIfChanged;
@@ -295,6 +294,9 @@ implementation
 {$R *.lfm}
 
 uses
+  (* FIRST, so every unit below still wins any name it shares (this tree
+     resolves a name to the LAST unit declaring it). *)
+  uLCLFormHelpers,  (* WidestText -- the measurement the list and grid use *)
   SysUtils,
   Math,             (* Max -- how AlignControls combines facing spacings *)
   Types,            (* TPoint -- the grid cell under the mouse *)
@@ -1113,33 +1115,9 @@ begin
    end;
 end;
 
-(* THE WIDEST OF SEVERAL STRINGS, IN PIXELS, IN aFont -- the measurement
-  WidestLine always made, lifted out when the contest list (Q52) became its
-  second caller. *)
-function TfrmNewContest.WidestText(aFont: TFont; aTexts: TStrings): integer;
-var
-   probe: TBitmap;
-   i, w:  integer;
-begin
-   Result := 0;
-
-   probe := TBitmap.Create;
-   try
-      probe.SetSize(1, 1);
-      probe.Canvas.Font := aFont;
-
-      for i := 0 to aTexts.Count - 1 do
-         begin
-         w := probe.Canvas.TextWidth(aTexts[i]);
-         if w > Result then
-            begin
-            Result := w;
-            end;
-         end;
-   finally
-      probe.Free;
-   end;
-end;
+(* WidestText -- the widest of several strings in a font -- lived here until
+  the Edit QSO layout became its third caller (2026-11-06); it is
+  uLCLFormHelpers.WidestText now, one copy for every form. *)
 
 { THE FORM MAY NOT SHRINK PAST ITS LAST CATEGORY ROW.
 

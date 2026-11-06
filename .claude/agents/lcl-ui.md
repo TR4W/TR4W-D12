@@ -367,6 +367,28 @@ measures; copy it for any run-time layout. Row constants such as the editor's
 `EDIT_LEFT` / `ROW_HEIGHT` are 96-dpi pixels, not scaled (`Scale96ToForm` is the LCL's
 answer); unmeasured at 150%.
 
+## Fixed 96-dpi widths do not fit cocoa: lay out from measurement (Edit QSO, 2026-11-06)
+
+- **A read-only (`csDropDownList`) `TComboBox` is AutoSize by default.** On cocoa its
+  preferred width is the NSPopUpButton's `fittingSize`, clamped to
+  `CocoaConfigComboBox.readOnly.minWidth` (38 px). AutoSize therefore SHRINKS it below its
+  text: Edit QSO's Band and Mode showed `10` and `C` under their own arrows. Win32
+  reports no preferred width, so Windows never shows it. A typed `Width` is overwritten;
+  hold the width with `Constraints.MinWidth` (longest item + a stated chrome allowance).
+- **`TDateTimePicker` is AutoSize too.** Its width is its own text plus its button in the
+  running font, so on a wider font it grows into whatever sits at a fixed x beside it.
+  Measure it and place the next column after it; do not fight it.
+- **The pattern is `uEditQSOForm.FitLayout`.** Each column is as wide as its widest
+  label (`uLCLFormHelpers.TextWidthInFont` / `WidestText`), drop-down or preferred size,
+  with the designed width as a floor. Rows are as tall as their tallest control. It runs
+  on every show and is idempotent, and the window grows about its centre.
+  `uTestEditQSOLayout` checks it off screen at the default font and at 14 pt for
+  overlap, clipping and held widths. It is Windows-measured; the Mac judgement is on
+  `BENCH_QUEUE.md`.
+- **A reused (`caHide`) form that fills a list on show must REPLACE it** (issue 237).
+  Edit QSO appended every band and mode on each open, and Save reads
+  `BandType(ItemIndex)`. Clear, or `Items.Assign`, in the routine that fills it.
+
 ## A dragged column width is kept per user -- the main log per contest (issue 234, 2026-11-06)
 
 The `columns` section of `settings\tr4w.json` (`uColumnWidthStore`): grid name -> column

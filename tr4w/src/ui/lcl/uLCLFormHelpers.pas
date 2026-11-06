@@ -46,6 +46,7 @@ uses
    StdCtrls,
    ComCtrls,   // TTreeView / TTreeNode -- see TNavNode below
    Forms,      // TCustomForm -- see ShowModalOverWin32Parent
+   Graphics,   // TFont -- TextWidthInFont, WidestText, EffectiveFontHeight
    LCLType,    // HWND
    Dialogs,    // InputQuery -- see AskForText
    Grids,      // TCustomDrawGrid -- the column-width helpers (issue 234)
@@ -619,6 +620,20 @@ procedure ApplyLayoutScale(const aForm: TForm; const aLayout: TDesignLayout;
 
 function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 
+(* HOW WIDE A TEXT IS, IN PIXELS, IN aFont -- and the widest of several.
+
+  LIFTED FROM uNewContestForm (2026-11-06), where WidestText measured the
+  contest list and the file grid, when the Edit QSO layout became a third
+  caller; GridColumnFloor below was a second, inline copy of the same
+  measurement and is repointed too.
+
+  A TBitmap canvas, not a control's: it needs no window handle and no parent,
+  so it answers before a form is shown, and nothing the form last painted with
+  can leak into it. The text is measured as written -- an accelerator '&'
+  counts as a glyph, which over-estimates by one character and never under. *)
+function TextWidthInFont(const aFont: TFont; const aText: TCaption): integer;
+function WidestText(const aFont: TFont; const aTexts: TStrings): integer;
+
 implementation
 
 uses
@@ -626,7 +641,6 @@ uses
    Types,      // TRect
    uWindowLayoutStore,  // the bounds, keyed by name
    uTR4WConfigFile,     // TR4WConfigFileName, Load/SaveWindowLayout
-   Graphics,   // TFont -- EffectiveFontHeight
    SysUtils,
    StrUtils,
    MainUnit,   // logger -- SyncedTags reports a desynced tag list
@@ -1298,6 +1312,45 @@ begin
    Result := TryStrToInt('$' + t, aValue) and (aValue >= 0) and (aValue <= 255);
 end;
 
+function TextWidthInFont(const aFont: TFont; const aText: TCaption): integer;
+var
+   probe: TBitmap;
+begin
+   probe := TBitmap.Create;
+   try
+      probe.SetSize(1, 1);
+      probe.Canvas.Font := aFont;
+      Result := probe.Canvas.TextWidth(aText);
+   finally
+      probe.Free;
+   end;
+end;
+
+function WidestText(const aFont: TFont; const aTexts: TStrings): integer;
+var
+   probe: TBitmap;
+   i, w:  integer;
+begin
+   Result := 0;
+
+   probe := TBitmap.Create;
+   try
+      probe.SetSize(1, 1);
+      probe.Canvas.Font := aFont;
+
+      for i := 0 to aTexts.Count - 1 do
+         begin
+         w := probe.Canvas.TextWidth(aTexts[i]);
+         if w > Result then
+            begin
+            Result := w;
+            end;
+         end;
+   finally
+      probe.Free;
+   end;
+end;
+
 { =========================================================== TRadioEditForm = }
 
 
@@ -1876,20 +1929,13 @@ end;
 function GridColumnFloor(const aGrid: TCustomDrawGrid; const aCol: integer): integer;
 var
    text: TCaption;
-   bmp: TBitmap;
    header, minimum: integer;
 begin
    header := 0;
    text := GridHeaderText(aGrid, aCol);
    if text <> '' then
       begin
-      bmp := TBitmap.Create;
-      try
-         bmp.Canvas.Font.Assign(aGrid.Font);
-         header := bmp.Canvas.TextWidth(text) + COLUMN_HEADER_PAD;
-      finally
-         bmp.Free;
-      end;
+      header := TextWidthInFont(aGrid.Font, text) + COLUMN_HEADER_PAD;
       end;
 
    minimum := COLUMN_FLOOR;

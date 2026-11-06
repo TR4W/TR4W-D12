@@ -183,8 +183,6 @@ function LoadQSOIntoEditForm: boolean;
 var
   IndexInMap: integer;
   lpNumberOfBytesRead: Cardinal;
-  bt: BandType;
-  extMode: ExtendedModeType;
   qsoWhen: TDateTime;
   delivery: TDeliveryStatus;
 begin
@@ -235,10 +233,9 @@ begin
 
    EditQSOSetText(FLD_CALLSIGN, string(EditableQSORXData.Callsign));
 
-   for bt := Band160 to NoBand do
-      begin
-      EditQSOAddItem(FLD_BAND, string(BandStringsArrayWithOutSpaces[bt]));
-      end;
+   (* REPLACED, NOT APPENDED (issue 237): the form is reused, and these lists
+      used to grow by a full copy on every open. *)
+   EditQSOFillBandAndModeLists;
 
    if not SO2R_Swap then
       begin
@@ -247,11 +244,6 @@ begin
    else
       begin
       EditQSOSetItemIndex(FLD_BAND, Ord(inAct_Band));
-      end;
-
-   for extMode := Low(ExtendedModeType) to High(ExtendedModeType) do
-      begin
-      EditQSOAddItem(FLD_MODE, string(ExtendedModeStringArray[extMode]));
       end;
 
    // A record written before extended modes existed carries eNoMode; widen it

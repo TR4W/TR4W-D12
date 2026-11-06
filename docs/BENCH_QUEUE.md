@@ -30,6 +30,28 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-06 -- EDIT QSO LAYS ITSELF OUT FROM MEASURED WIDTHS (NY4I, macOS screenshot)
+
+On the Mac, Band and Mode showed only `10` and `C`, with the up/down arrows over the text. The Date control's drop-down button covered the Zone label, so it read `ne`. `Frequency, Hz`, `Number Sent` and `Number Rcvd` were clipped.
+
+The window now lays its fields out in `TfrmEditQSO.FitLayout`, which runs on every open:
+- Each label column is as wide as its widest caption.
+- Each field column is as wide as its widest need. For a drop-down that is its longest item plus a stated chrome allowance (`EDITQSO_COMBO_CHROME_96` = 40 px at 96 dpi), held as a `MinWidth`. For the date picker it is the picker's own measured width.
+- The check-box column is as wide as its widest check box or button.
+- Rows are as tall as their tallest control.
+- The window may grow, and it keeps its centre.
+
+`uTestEditQSOLayout` shows the real form off screen and checks it, **on Windows only**, at the default font and at 14 pt. It checks for overlap, for clipping and for the drop-down widths, and that a second layout moves nothing. **It cannot see cocoa.** Win32 reports no preferred width for a drop-down, so the test proves the width is set and held, not that an NSPopUpButton draws its text clear of its arrows. The 40 px allowance is a guess until the Mac answers. With `DEBUG LOG LEVEL = DEBUG` each open logs `[EditQSO] layout: columns a/b/c/d/e, form WxH (was WxH)`.
+
+On the Mac, open Edit QSO from the log, once at the default window text size and once at a larger one. Not verified: whether macOS's own text-size setting reaches an LCL window at all. If it does not, say so; that is itself a finding.
+- [ ] **Band and Mode**: the whole value is readable (`160`, `CW`, `DATA-FM`, `D-STAR`) and the arrows sit to the right of the text, not over it. Open each list; every item reads in full.
+- [ ] **Date**: the date and time read in full. The drop-down button sits inside the field column and clear of the Zone label.
+- [ ] **Labels**: `Frequency, Hz`, `Number Sent`, `Number Rcvd`, `RST received`, `Ten Ten Number`, `Computer ID`, and the our-station `CQ zone` / `ITU zone` / `Section` all read in full.
+- [ ] **Check boxes**: `Domestic Mult`, `Inhibit Mults` and the others read in full in the right-hand column.
+- [ ] **Save and Cancel** are visible and fully inside the window. So are the our-station group and, on a QSO with an external-logger row, the delivery line.
+- [ ] **Position**: the first open is centred over the main window. Move it, close it, and reopen it in the same session: it is where you left it and has not jumped. Edit QSO saves no position across a restart, and it never did.
+- [ ] **Windows at 150%**: the same look, nothing clipped or overlapping. Only a font change was simulated on Windows, never a real DPI change.
+
 ## Added 2026-11-06 -- PREFERENCES: "MORE SETTINGS" IS GONE; EVERY SETTING HAS A TASK PAGE (issue 235)
 
 Every setting that was on **More settings** is now on a task page, and so is the band plan's Edit... button. More settings itself is removed. The Operating page's one CW-only box, AUTO CALL TERMINATE, moved with the CW settings. Stored keys and command names did not change, so an existing `settings\tr4w.json` loads unchanged. A placement table in `uPrefsForm` decides where each control goes. `uTestPrefsPlacement` builds the real window against an empty settings folder and checks three things: every one of those settings has exactly one control, no page carries the old tag, and the band plan button is on the Bands page. What no test sees is geometry, scaling, and whether a search lands on the control. Each time Preferences builds its pages, it logs an Error for a setting with no control or with two: `[Prefs] "<key>" has N editor(s) in Preferences; it must have exactly one`.

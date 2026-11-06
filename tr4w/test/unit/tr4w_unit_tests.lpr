@@ -617,6 +617,7 @@ uses
    uTestColumnWidthStore in 'uTestColumnWidthStore.pas',
    uTestExternalLoggerFields in 'uTestExternalLoggerFields.pas',
    uTestPasswordRevealLayout in 'uTestPasswordRevealLayout.pas',
+   uTestEditQSOLayout in 'uTestEditQSOLayout.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -1117,6 +1118,7 @@ begin
    RegisterSuite(TColumnWidthStoreTests.Create('ColumnWidthStore'));
    RegisterSuite(TExternalLoggerFieldsTests.Create('ExternalLoggerFields'));
    RegisterSuite(TPasswordRevealLayoutTests.Create('PasswordRevealLayout'));
+   RegisterSuite(TEditQSOLayoutTests.Create('EditQSOLayout'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
