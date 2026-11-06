@@ -11,12 +11,20 @@ unit uHTTPDownload;
 
   It knows no URLs.  Callers name the FILE they want; the unit that owns that
   file owns its address.
+
+  TWO LAYERS SINCE ISSUE 224 (docs/HTTP_TRANSPORT_DESIGN.md).  This unit is the
+  SHARED layer: the three verbs, THttpRequest, the scheme and bearer policy, the
+  verify-or-not policy, the secrets rule and ALL logging of anything derived
+  from a request.  The wire -- the client, TLS, the trust decision -- is a
+  TRANSPORT (uHttpTransport is the contract, uHttpTransportGeneric the FPC +
+  OpenSSL implementation that used to be written out here).  A transport
+  returns what happened as data; this unit scrubs and logs it.
 }
 
 interface
 
 uses
-   Classes, SysUtils;
+   Classes, SysUtils, uHttpTransport;
 
 (* THE STREAM THAT CARRIES A REQUEST BODY: the body's UTF-8 bytes, untouched.
 
@@ -152,6 +160,11 @@ type
 
      USE: set what you need, call Send, read Response / StatusCode /
      FailReason. Send never raises. *)
+   private
+      function GetTlsUnavailable: boolean;
+      procedure SetTlsUnavailable(aValue: boolean);
+      function GetTrustBundleMissing: boolean;
+      procedure SetTrustBundleMissing(aValue: boolean);
    public
       (* the request *)
       URL:            string;
@@ -175,19 +188,29 @@ type
       StatusCode:     integer;
       ResponseStatusText: string; (* some APIs report their result in the HTTP reason phrase *)
       FailReason:     string;   (* '' when Send returned True *)
-      TlsUnavailable: boolean;  (* https was asked for and TLS could not start:
-                                   NO BYTE WAS SENT, so the caller may classify
-                                   the failure as a retryable setup problem *)
-      TrustBundleMissing: boolean; (* https was asked for, checking is on, and the
-                                   CA bundle (cacert.pem) is missing or cannot
-                                   be read: NO BYTE WAS SENT. Same class as
-                                   TlsUnavailable, a different cause and a
-                                   different message (issue 221) *)
+      (* WHAT HAPPENED, as the transport and the shared layer know it. hfNone
+        after an answer. NothingSent below is the claim a caller may act on:
+        it is True ONLY for a failure that proves no byte was sent. Writable
+        so a test double can stand in for any outcome; Send resets it. *)
+      Failure:        THttpFailure;
       RetryAfter:     string;
       RequestId:      string;
 
+      (* The two proof flags every caller used before issue 224. They are now
+        views of Failure: reading is Failure = hfTlsUnavailable /
+        hfTrustUnavailable, writing sets Failure. New code asks NothingSent. *)
+      property TlsUnavailable: boolean read GetTlsUnavailable write SetTlsUnavailable;
+      (* https was asked for, checking is on, and the CA bundle (cacert.pem) is
+        missing or cannot be read (issue 221). *)
+      property TrustBundleMissing: boolean read GetTrustBundleMissing write SetTrustBundleMissing;
+
       constructor Create(const aURL: string);
       function Send: boolean; virtual;
+      (* NO REQUEST BYTE LEFT THE MACHINE, PROVED. A caller may then retry or
+        fail the work without fearing a double delivery. False means "may have
+        been sent", which is also what a request that was never made reads as
+        before Send runs. *)
+      function NothingSent: boolean;
    end;
 
    (* Existing POST callers keep their API and defaults. REST callers use the
@@ -201,59 +224,13 @@ implementation
 
 uses
    SyncObjs,
-   fphttpclient,     (* FPC's own client -- see the note on the transport *)
-   opensslsockets,    (* registers the TLS handler fphttpclient asks for *)
-   uOpenSSLLoader,
-   uTLSTrust,
+   fphttpclient,     (* EncodeURLElement ONLY -- a pure string function; the
+                        client itself lives in uHttpTransportGeneric *)
+   uHttpTransportGeneric,  (* linked here so the registry is never empty in any
+                        program that can make a request, probes included *)
    uSettingsRegistry,
    uAppStrings,
    Log4D;
-
-type
-   TBoundedHttpResponse = class(TRawByteStringStream)
-   public
-      Limit: Int64;
-      function Write(const Buffer; Count: LongInt): LongInt; override;
-   end;
-
-function TBoundedHttpResponse.Write(const Buffer; Count: LongInt): LongInt;
-begin
-   if (Limit > 0) and (Int64(Count) > Limit - Position) then
-      begin
-      raise EStreamError.Create('HTTP response exceeds the configured size limit');
-      end;
-   Result := inherited Write(Buffer, Count);
-end;
-
-(*
-  THE TRANSPORT IS FPC'S CLIENT, NOT INDY, AND ONLY HERE.
-
-  This unit used TIdHTTP with TIdSSLIOHandlerSocketOpenSSL. On Linux that could
-  not fetch anything over TLS, and the reason is not fixable from here: Indy
-  10.6.3.3 FINDS OpenSSL 3 and then refuses it --
-
-      Unsupported SSL Library version: 300000D0
-
-  -- which is a hard version gate, measured on the runner with and without the
-  library name made resolvable, identical both ways. Lifting it means Indy
-  PR #529: unmerged, and it replaces the whole 22,000-line headers unit.
-
-  Measured on the same box, same URL, same minute:
-
-      Indy, OpenSSL 3                      FAIL, could not load SSL library
-      Indy, name made resolvable           FAIL, same version gate
-      fphttpclient + opensslsockets        OK, 105,954 bytes
-
-  ONE IMPLEMENTATION, NOT A PER-PLATFORM SPLIT. Windows was never broken, but
-  it takes this path too: FPC's loader looks for ssleay32.dll and libeay32.dll,
-  which is exactly the pair the installer already ships, verified 2026-09-09 by
-  fetching the same file with the bundled DLLs untouched. A conditional here
-  would mean a bug found on one platform staying hidden on the other.
-
-  INDY IS NOT BEING REPLACED. It keeps the DX cluster, the multi-op link and
-  every socket it already owns. HTTPS request/response is the only thing that
-  moved, because it is the only thing that was broken.
-*)
 
 var
    // Own logger rather than MainUnit's global, following uRegex: this unit has
@@ -261,33 +238,13 @@ var
    // not assign that global.
    logger: TLogLogger;
    // The last TLS-unavailable diagnostic written, so a retrying worker logs
-   // it once. Cleared by CheckScheme when TLS works again.
+   // it once. Cleared when TLS works again.
    GTlsLogLock:   TCriticalSection;
    GLastTlsLogged: string = '';
    // The same latch for the "REFUSING ... cannot be verified" line, so a worker
    // retrying every 300 s does not write the Error each time. Cleared when
    // verification can be set up again. Under GTlsLogLock.
    GLastRefusalLogged: string = '';
-
-(* HTTP IS BYTES; THIS PROGRAM'S `string` IS UTF-16. Every crossing between
-  them is spelled out here rather than left to an implicit conversion, which
-  the compiler rightly warns about: an implicit narrowing drops anything
-  outside the ANSI codepage silently, and a callsign database or a score
-  comment is exactly the kind of payload that carries one.
-
-  UTF-8 IS THE ANSWER FOR BOTH DIRECTIONS. It is what every server in this
-  program's world speaks, it is lossless, and for the ASCII that URLs and
-  header names actually contain it is byte-identical to the naive cast -- so
-  nothing changes in the common case and the uncommon case stops being wrong. *)
-function ToWire(const aText: string): RawByteString;
-begin
-   Result := UTF8Encode(aText);
-end;
-
-function FromWire(const aBytes: RawByteString): string;
-begin
-   Result := UTF8Decode(aBytes);
-end;
 
 function CreateWireBodyStream(const aBody: string): TRawByteStringStream;
 begin
@@ -345,11 +302,19 @@ begin
       end;
 end;
 
+(* The failure line from text rather than an exception: a transport hands back
+  the class name and message as data (design 3.1). *)
+function FailureLineFromDetail(const aMethod, aURL, aDetail: string;
+                               const aSecret1, aSecret2: string): string;
+begin
+   Result := ScrubBoth(aMethod + ' ' + aURL + ' failed: ' + aDetail, aSecret1, aSecret2);
+end;
+
 function RequestFailureLine(const aMethod, aURL: string; aE: Exception;
                             const aSecret1, aSecret2: string): string;
 begin
-   Result := ScrubBoth(aMethod + ' ' + aURL + ' failed: ' + aE.ClassName + ': '
-                       + aE.Message, aSecret1, aSecret2);
+   Result := FailureLineFromDetail(aMethod, aURL, aE.ClassName + ': ' + aE.Message,
+                                   aSecret1, aSecret2);
 end;
 
 
@@ -359,16 +324,18 @@ begin
 end;
 
 (* ONE PLACE THAT DECIDES WHETHER A URL MAY BE FETCHED, shared by all three
-  verbs.  Returns True and sets AUseTLS when the request may proceed. *)
+  verbs.  Returns True and sets AUseTLS when the request may proceed.  It is
+  the SCHEME RULE and nothing more: whether TLS can START is the transport's
+  question, asked when the request is made.  A refusal sets AFailure. *)
 function CheckScheme(const AURL: string;
                      const AAllowInsecure: boolean;
                      out AUseTLS: boolean;
                      out AFailReason: string;
+                     out AFailure: THttpFailure;
                      const ASecret: string = '';
                      const ASecret2: string = ''): boolean;
 var
    shownUrl: string;
-   diagnostic: string;
 begin
    (* A credential-bearing request names its secret so that nothing logged
      here can carry it, even if a caller ever put it in the URL. *)
@@ -376,6 +343,7 @@ begin
    Result      := False;
    AUseTLS     := False;
    AFailReason := '';
+   AFailure    := hfNone;
 
    if SameText(Copy(AURL, 1, 8), 'https://') then
       begin
@@ -388,6 +356,7 @@ begin
          logger.Error('[Download] refusing plaintext %s -- the caller must pass '
                       + 'AAllowInsecure to accept an http:// URL', [shownUrl]);
          AFailReason := SDownloadCouldNotStart;
+         AFailure    := hfPlaintextNotAllowed;
          Exit;
          end;
       logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [shownUrl]);
@@ -396,107 +365,37 @@ begin
       begin
       logger.Error('[Download] %s has no http:// or https:// scheme', [shownUrl]);
       AFailReason := SDownloadCouldNotStart;
-      Exit;
-      end;
-
-   if AUseTLS and EnsureOpenSSL then
-      begin
-      (* TLS works, so the next failure is a new episode and is logged. *)
-      GTlsLogLock.Enter;
-      try
-         GLastTlsLogged := '';
-      finally
-         GTlsLogLock.Leave;
-      end;
-      end
-   else if AUseTLS then
-      begin
-      (* ONCE PER FAILURE KIND, NOT PER REQUEST: a delivery worker retries, and
-        the same diagnostic every few seconds buries the log. The diagnostic
-        text is the kind; a different one is logged again. The latch is under
-        a lock because workers and the main thread all arrive here. *)
-      diagnostic := OpenSSLDiagnostic;
-      GTlsLogLock.Enter;
-      try
-         if diagnostic <> GLastTlsLogged then
-            begin
-            GLastTlsLogged := diagnostic;
-            logger.Error('[Download] TLS unavailable for %s -- %s',
-                         [shownUrl, diagnostic]);
-            end
-         else
-            begin
-            (* The diagnostic was already reported; keep the URL of this
-              request findable without repeating the sentence. *)
-            logger.Debug('[Download] TLS still unavailable for %s', [shownUrl]);
-            end;
-      finally
-         GTlsLogLock.Leave;
-      end;
-      AFailReason := SDownloadNoSSLLibrary;
+      AFailure    := hfBadScheme;
       Exit;
       end;
 
    Result := True;
 end;
 
-(* VERIFY THE SERVER, IN ONE PLACE FOR ALL THREE VERBS.
+(* IS SERVER CERTIFICATE CHECKING WANTED? THE POLICY, in the shared layer; the
+  transport applies it (VerifyServer).
 
   Until 2026-09-09 this program verified NOTHING: Indy's default VerifyMode is
   an empty set, which is SSL_VERIFY_NONE, and FPC's VerifyPeerCert defaults to
   False. Every HTTPS connection accepted whatever certificate was presented --
   including the HamScore upload, which sends the operator's password.
 
-  Both checks live in uTLSTrust: the chain against the shipped root bundle,
-  and the host name against the certificate. See that unit for why the second
-  one is not optional.
-
-  A FAILURE TO SET IT UP NOW REFUSES THE REQUEST. This paragraph used to say
-  the opposite -- reported-and-connect, on the argument that refusing would
-  turn a packaging mistake into a dead CTY download and would be a regression
-  against every release so far, which connected unverified without comment.
-  That argument weighs a packaging mistake against a silent trust downgrade
-  and gets the answer backwards: the operator who is hurt by refusing sees a
-  message naming the missing file, and the operator who is hurt by connecting
-  sees nothing at all. "Refuse-by-default once the bundle has been shipping
-  for a while" was a schedule with no date on it.
-
-  The operator can turn checking off entirely -- see
-  network.verifyServerCertificates in uSettingsDeclarations for why that
-  escape hatch exists. *)
-(* CAN THIS REQUEST BE MADE SAFELY? False means DO NOT MAKE IT.
-
-  IT USED TO BE A PROCEDURE AND IT FAILED OPEN. When UseVerifiedTLS could not
-  be configured it logged an error and RETURNED, and the caller went on to
-  make the request anyway -- unverified. Found in review by Codex, 2026-09-11.
-
-  THE CASE THAT MATTERS IS NOT THE OPT-OUT. An operator who turns verification
-  off has made a choice and still gets it. This fired when they had
-  verification ON and something was missing: no CA bundle, an unreadable
-  bundle, or an OpenSSL symbol that would not load. They asked for verified
-  TLS, the program could not provide it, and it connected anyway and said so
-  only in the log.
-
-  THAT IS WORSE THAN THE OLD UNVERIFIED-EVERYWHERE STATE, which is the whole
-  point of the finding: adding a verification setting makes fail-open read as
-  a secure default. It carries credentials -- HamScore posts a username and
-  password -- and also gates CTY downloads, version checks and score posts.
-
-  FAIL CLOSED. The only way to send unverified now is to ask for it. *)
-function ApplyTLSVerification(aHTTP: TFPHTTPClient; const aRawURL: string;
-                              out aFailReason: string;
-                              const aSecret: string = '';
-                              const aSecret2: string = ''): boolean;
+  A FAILURE TO SET IT UP REFUSES THE REQUEST (the transport reports it as
+  hfTrustUnavailable or hfVerificationUnavailable; RunTransport logs it). It
+  used to be a procedure that logged and RETURNED, and the caller went on to
+  make the request unverified -- found in review by Codex, 2026-09-11. The case
+  that matters is not the opt-out: an operator who turns checking off has made
+  a choice and still gets it. It is verification ON with something missing.
+  They asked for verified TLS, the program could not provide it, and it
+  connected anyway and said so only in the log. That is worse than the old
+  unverified-everywhere state, because a verification setting makes fail-open
+  read as a secure default. FAIL CLOSED: the only way to send unverified is to
+  ask for it (network.verifyServerCertificates, see uSettingsDeclarations). *)
+function VerifyWanted(const aShownUrl: string): boolean;
 var
-   why:     string;
    setting: TSettingBase;
-   wanted:  boolean;
-   aURL:    string;
 begin
-   Result      := True;
-   aFailReason := '';
-   aURL        := ScrubBoth(aRawURL, aSecret, aSecret2);   (* the name every log line below uses *)
-   wanted  := True;
+   Result  := True;
    setting := FindSetting('network.verifyServerCertificates');
    if setting <> nil then
       begin
@@ -504,90 +403,178 @@ begin
         first attempt wrapped it in string(), which converted UTF-16 back
         DOWN at the call and turned a safe widening into a narrowing the
         build counts. The compiler was right and I was tidying. *)
-      wanted := (UpperCase(setting.AsText) = 'TRUE') or (setting.AsText = '1');
+      Result := (UpperCase(setting.AsText) = 'TRUE') or (setting.AsText = '1');
       end;
 
-   if not wanted then
+   if not Result then
       begin
       logger.Warn('[Download] server certificate checking is OFF by setting -- '
-                  + '%s is not being verified', [aURL]);
-      Exit;
+                  + '%s is not being verified', [aShownUrl]);
       end;
+end;
 
-   if not UseVerifiedTLS(aHTTP, why) then
-      begin
-      (* THE OPERATOR ASKED FOR VERIFICATION AND WE CANNOT PROVIDE IT, so the
-        request does not happen. The reason NAMES THE HOST and the exact setup
-        failure, because "could not verify" without either is not actionable
-        -- the fix is usually a missing CA bundle and the operator needs to be
-        told that, not told to check a setting they already set correctly. *)
-      GTlsLogLock.Enter;
-      try
-         if why <> GLastRefusalLogged then
-            begin
-            GLastRefusalLogged := why;
-            logger.Error('[Download] REFUSING %s -- server certificates cannot be '
-                         + 'verified (%s). Turn off Preferences > Network > verify '
-                         + 'server certificates to proceed unverified.',
-                         [aURL, why]);
-            end
-         else
-            begin
-            logger.Debug('[Download] still REFUSING %s -- same reason as logged', [aURL]);
-            end;
-      finally
-         GTlsLogLock.Leave;
-      end;
-      aFailReason := SysUtils.Format(SDownloadCannotVerify, [why]);
-      Result      := False;
-      end
-   else
-      begin
-      GTlsLogLock.Enter;
-      try
+(* Log a TLS setup refusal ONCE per distinct reason, not once per request: a
+  delivery worker retries, and the same diagnostic every few seconds buries the
+  log. The text is the kind; a different one is logged again. The latches are
+  under a lock because workers and the main thread all arrive here. *)
+procedure LogTlsUnavailable(const aShownUrl, aDiagnostic: string);
+begin
+   GTlsLogLock.Enter;
+   try
+      if aDiagnostic <> GLastTlsLogged then
+         begin
+         GLastTlsLogged := aDiagnostic;
+         logger.Error('[Download] TLS unavailable for %s -- %s',
+                      [aShownUrl, aDiagnostic]);
+         end
+      else
+         begin
+         (* The diagnostic was already reported; keep the URL of this request
+           findable without repeating the sentence. *)
+         logger.Debug('[Download] TLS still unavailable for %s', [aShownUrl]);
+         end;
+   finally
+      GTlsLogLock.Leave;
+   end;
+end;
+
+procedure LogVerificationRefused(const aShownUrl, aWhy: string);
+begin
+   (* THE OPERATOR ASKED FOR VERIFICATION AND WE CANNOT PROVIDE IT, so the
+     request does not happen. The reason NAMES THE HOST and the exact setup
+     failure, because "could not verify" without either is not actionable
+     -- the fix is usually a missing CA bundle and the operator needs to be
+     told that, not told to check a setting they already set correctly. *)
+   GTlsLogLock.Enter;
+   try
+      if aWhy <> GLastRefusalLogged then
+         begin
+         GLastRefusalLogged := aWhy;
+         logger.Error('[Download] REFUSING %s -- server certificates cannot be '
+                      + 'verified (%s). Turn off Preferences > Network > verify '
+                      + 'server certificates to proceed unverified.',
+                      [aShownUrl, aWhy]);
+         end
+      else
+         begin
+         logger.Debug('[Download] still REFUSING %s -- same reason as logged', [aShownUrl]);
+         end;
+   finally
+      GTlsLogLock.Leave;
+   end;
+end;
+
+procedure ClearTlsLatches(aClearTls, aClearRefusal: boolean);
+begin
+   GTlsLogLock.Enter;
+   try
+      if aClearTls then
+         begin
+         (* TLS works, so the next failure is a new episode and is logged. *)
+         GLastTlsLogged := '';
+         end;
+      if aClearRefusal then
+         begin
          GLastRefusalLogged := '';
-      finally
-         GTlsLogLock.Leave;
-      end;
-      end;
+         end;
+   finally
+      GTlsLogLock.Leave;
+   end;
 end;
 
-(* The timeouts, in one place rather than five. Generous rather than tight:
-  these are small documents, and the hazard being guarded is a connection that
-  is accepted and then black-holed, not a slow one. *)
-procedure ApplyDefaults(aHTTP: TFPHTTPClient;
-                        const aUserAgent: string;
-                        const aConnectMs: integer;
-                        const aIOMs: integer);
-begin
-   aHTTP.AllowRedirect := True;
-   aHTTP.AddHeader('User-Agent', ToWire(aUserAgent));
-   aHTTP.ConnectTimeout := aConnectMs;
-   aHTTP.IOTimeout      := aIOMs;
-end;
+(* THE ONE PLACE A REQUEST GOES TO THE TRANSPORT, for all three verbs.
 
-function DescribeFailure(aE: Exception): string;
+  Decides whether checking is wanted, hands the exchange over, and turns the
+  transport's answer into what the verbs need: True when it ANSWERED; else
+  aFailure, an operator-facing aFailReason, and aRefusalLogged = True when the
+  failure was a setup refusal that has already been logged here (the verb then
+  writes no line of its own). Any other failure is the verb's to log, because
+  each verb's line has its own shape. *)
+function RunTransport(aWire: THttpWireRequest; aSink: TStream;
+                      aResult: THttpWireResult;
+                      const aSecret1, aSecret2: string;
+                      out aFailure: THttpFailure;
+                      out aFailReason: string;
+                      out aRefusalLogged: boolean): boolean;
+var
+   transport: TPlatformHttpTransport;
+   shownUrl:  string;
+   useTLS:    boolean;
 begin
-   (* The one failure an operator can act on keeps its own sentence; everything
-     else reports the library's own diagnostic. *)
-   if (aE is EInOutError) and (Pos('OpenSSL', aE.Message) > 0) then
+   aFailReason    := '';
+   aRefusalLogged := False;
+   shownUrl       := ScrubBoth(aWire.URL, aSecret1, aSecret2);
+   useTLS         := IsHttpsUrl(aWire.URL);
+
+   aWire.VerifyServer := True;
+   if useTLS then
       begin
-      Result := SDownloadNoSSLLibrary;
+      aWire.VerifyServer := VerifyWanted(shownUrl);
+      end;
+
+   transport := ActiveHttpTransport;
+   if transport = nil then
+      begin
+      aResult.Clear;
+      aResult.Failure      := hfOther;
+      aResult.ErrorMessage := 'no HTTP transport is available';
       end
    else
       begin
-      Result := aE.Message;
+      transport.Execute(aWire, aSink, aResult);
       end;
+
+   aFailure := aResult.Failure;
+   Result   := aFailure = hfNone;
+
+   if useTLS then
+      begin
+      ClearTlsLatches(aFailure <> hfTlsUnavailable,
+                      aWire.VerifyServer and
+                      (not (aFailure in [hfTlsUnavailable, hfTrustUnavailable,
+                                         hfVerificationUnavailable])));
+      end;
+
+   case aFailure of
+      hfNone:
+         begin
+         end;
+      hfTlsUnavailable:
+         begin
+         LogTlsUnavailable(shownUrl, ScrubBoth(aResult.ErrorMessage, aSecret1, aSecret2));
+         aFailReason    := SDownloadNoSSLLibrary;
+         aRefusalLogged := True;
+         end;
+      hfTrustUnavailable, hfVerificationUnavailable:
+         begin
+         LogVerificationRefused(shownUrl, ScrubBoth(aResult.ErrorMessage, aSecret1, aSecret2));
+         aFailReason    := SysUtils.Format(SDownloadCannotVerify,
+                                           [ScrubBoth(aResult.ErrorMessage, aSecret1, aSecret2)]);
+         aRefusalLogged := True;
+         end;
+      hfTlsLibraryFault:
+         begin
+         (* The one failure an operator can act on keeps its own sentence. It
+           is the residue of a TLS failure that only shows itself once bytes
+           are moving. *)
+         aFailReason := SDownloadNoSSLLibrary;
+         end;
+   else
+      aFailReason := aResult.ErrorMessage;
+   end;
 end;
 
 function DownloadFileToPath(const AURL, ATargetFile: string;
                             out AFailReason: string;
                             const AAllowInsecure: boolean = False): boolean;
 var
-   http:    TFPHTTPClient;
+   wire:    THttpWireRequest;
+   res:     THttpWireResult;
    fs:      TFileStream;
    tmpFile: string;
    useTLS:  boolean;
+   failure: THttpFailure;
+   refusalLogged: boolean;
 begin
    Result      := False;
    AFailReason := '';
@@ -599,33 +586,20 @@ begin
      THIS USED TO BE WRITTEN OUT HERE, and when the GET and POST verbs arrived
      I copied it rather than calling it -- which is the mistake this file's own
      header warns about, made while adding the routine that fixes it. One
-     scheme rule, one place, three verbs.
-
-     CheckScheme also loads TLS, because "may this request be made" and "can it
-     be made" are the same question at the same moment: EnsureOpenSSL knows
-     WHICH library it found or could not find, and that sentence is what the
-     operator needs. The failure this replaces said the OpenSSL libraries could
-     not be loaded and then advised checking for two Windows DLLs, on Linux
-     (NY4I, 2026-09-09). *)
-   if not CheckScheme(AURL, AAllowInsecure, useTLS, AFailReason) then
+     scheme rule, one place, three verbs. *)
+   if not CheckScheme(AURL, AAllowInsecure, useTLS, AFailReason, failure) then
       begin
       Exit;
       end;
 
-   http := TFPHTTPClient.Create(nil);
+   wire := THttpWireRequest.Create;
+   res  := THttpWireResult.Create;
    try
-      http.AllowRedirect := True;
-      http.AddHeader('User-Agent', 'TR4W');
-      if useTLS then
-         begin
-         (* REFUSE RATHER THAN SEND UNVERIFIED -- same shape as CheckScheme
-           above: the answer to "may this request be made" decides whether it
-           is made at all. *)
-         if not ApplyTLSVerification(http, AURL, AFailReason) then
-            begin
-            Exit;
-            end;
-         end;
+      wire.Method          := 'GET';
+      wire.URL             := AURL;
+      wire.UserAgent       := 'TR4W';
+      wire.FollowRedirects := True;
+      wire.AcceptAnyStatus := False;
 
       // TIMEOUTS ARE NOT OPTIONAL.  Indy's default is to wait forever, which
       // was merely untidy while every caller was a background thread -- a stuck
@@ -636,58 +610,55 @@ begin
       // the operator nothing and offering no way to cancel.
       //
       // Generous rather than tight: the files fetched here are a few MB.
-      (* FPC names these the same and measures them the same way; its default
-        is likewise no limit. *)
-      http.ConnectTimeout := 15000;   // ms
-      http.IOTimeout      := 30000;   // ms
+      wire.ConnectMs := 15000;   // ms
+      wire.IOMs      := 30000;   // ms
 
       try
          fs := TFileStream.Create(tmpFile, fmCreate);
-         try
-            http.Get(ToWire(AURL), fs);
-         finally
-            fs.Free;
-         end;
-         // Atomic replace: only remove the live file once .tmp is fully written
-         SysUtils.DeleteFile(ATargetFile);
-         Result := RenameFile(tmpFile, ATargetFile);
-         if not Result then
-            begin
-            logger.Error('[Download] %s fetched but could not be renamed to %s',
-                         [tmpFile, ATargetFile]);
-            AFailReason := SDownloadRenameFailed;
-            end;
       except
          on E: Exception do
             begin
-            // The path matters as much as the message: "download failed" alone
-            // does not tell the operator whether the network or the folder is
-            // the problem, and an unwritable install directory looks identical
-            // to an unreachable host from the outside.
             logger.Error('[Download] %s -> %s failed: %s: %s',
                          [AURL, ATargetFile, E.ClassName, E.Message]);
-
-            (* THE ONE FAILURE AN OPERATOR CAN ACT ON keeps its own sentence.
-              It is now caught BEFORE the request, by EnsureOpenSSL above, so
-              this arm is the residue: a TLS failure that only shows itself
-              once bytes are moving. EInOutError is what FPC raises when the
-              library will not initialise. Everything else reports E.Message,
-              which is the library's own diagnostic. *)
-            if (E is EInOutError) and (Pos('OpenSSL', E.Message) > 0) then
-               begin
-               AFailReason := SDownloadNoSSLLibrary;
-               end
-            else
-               begin
-               AFailReason := E.Message;
-               end;
-            SysUtils.DeleteFile(tmpFile);
+            AFailReason := E.Message;
+            Exit;
             end;
       end;
+      try
+         Result := RunTransport(wire, fs, res, '', '', failure, AFailReason,
+                                refusalLogged);
+      finally
+         fs.Free;
+      end;
+
+      if not Result then
+         begin
+         (* The path matters as much as the message: "download failed" alone
+           does not tell the operator whether the network or the folder is the
+           problem, and an unwritable install directory looks identical to an
+           unreachable host from the outside. A setup refusal was logged by
+           RunTransport. *)
+         if not refusalLogged then
+            begin
+            logger.Error('[Download] %s -> %s failed: %s',
+                         [AURL, ATargetFile, res.Detail]);
+            end;
+         SysUtils.DeleteFile(tmpFile);
+         Exit;
+         end;
+
+      // Atomic replace: only remove the live file once .tmp is fully written
+      SysUtils.DeleteFile(ATargetFile);
+      Result := RenameFile(tmpFile, ATargetFile);
+      if not Result then
+         begin
+         logger.Error('[Download] %s fetched but could not be renamed to %s',
+                      [tmpFile, ATargetFile]);
+         AFailReason := SDownloadRenameFailed;
+         end;
    finally
-      (* One object now: FPC's client owns its own socket handler, so there is
-        no separately-created IOHandler to outlive it. *)
-      http.Free;
+      res.Free;
+      wire.Free;
    end;
 end;
 
@@ -698,41 +669,84 @@ function HttpGetText(const AURL: string;
                      const AConnectMs: integer = 15000;
                      const AIOMs: integer = 30000): boolean;
 var
-   http:   TFPHTTPClient;
-   useTLS: boolean;
+   wire:    THttpWireRequest;
+   res:     THttpWireResult;
+   useTLS:  boolean;
+   failure: THttpFailure;
+   refusalLogged: boolean;
 begin
    Result := False;
    AText  := '';
 
-   if not CheckScheme(AURL, False, useTLS, AFailReason) then
+   if not CheckScheme(AURL, False, useTLS, AFailReason, failure) then
       begin
       Exit;
       end;
 
-   http := TFPHTTPClient.Create(nil);
+   wire := THttpWireRequest.Create;
+   res  := THttpWireResult.Create;
    try
-      ApplyDefaults(http, AUserAgent, AConnectMs, AIOMs);
-      if useTLS then
+      wire.Method          := 'GET';
+      wire.URL             := AURL;
+      wire.UserAgent       := AUserAgent;
+      wire.FollowRedirects := True;
+      wire.AcceptAnyStatus := False;
+      wire.ConnectMs       := AConnectMs;
+      wire.IOMs            := AIOMs;
+
+      Result := RunTransport(wire, nil, res, '', '', failure, AFailReason,
+                             refusalLogged);
+      if Result then
          begin
-         if not ApplyTLSVerification(http, AURL, AFailReason) then
-            begin
-            Exit;
-            end;
+         AText := FromWire(res.Body);
+         end
+      else if not refusalLogged then
+         begin
+         logger.Error('[Download] GET %s failed: %s', [AURL, res.Detail]);
          end;
-      try
-         AText  := FromWire(http.Get(ToWire(AURL)));
-         Result := True;
-      except
-         on E: Exception do
-            begin
-            logger.Error('[Download] GET %s failed: %s: %s',
-                         [AURL, E.ClassName, E.Message]);
-            AFailReason := DescribeFailure(E);
-            end;
-      end;
    finally
-      http.Free;
+      res.Free;
+      wire.Free;
    end;
+end;
+
+function THttpRequest.GetTlsUnavailable: boolean;
+begin
+   Result := Failure = hfTlsUnavailable;
+end;
+
+procedure THttpRequest.SetTlsUnavailable(aValue: boolean);
+begin
+   if aValue then
+      begin
+      Failure := hfTlsUnavailable;
+      end
+   else if Failure = hfTlsUnavailable then
+      begin
+      Failure := hfNone;
+      end;
+end;
+
+function THttpRequest.GetTrustBundleMissing: boolean;
+begin
+   Result := Failure = hfTrustUnavailable;
+end;
+
+procedure THttpRequest.SetTrustBundleMissing(aValue: boolean);
+begin
+   if aValue then
+      begin
+      Failure := hfTrustUnavailable;
+      end
+   else if Failure = hfTrustUnavailable then
+      begin
+      Failure := hfNone;
+      end;
+end;
+
+function THttpRequest.NothingSent: boolean;
+begin
+   Result := uHttpTransport.NothingSent(Failure);
 end;
 
 constructor THttpRequest.Create(const aURL: string);
@@ -747,6 +761,7 @@ begin
    ConnectMs   := 15000;
    IOMs        := 30000;
    StatusCode  := 0;
+   Failure     := hfNone;
 end;
 
 constructor THttpPost.Create(const aURL: string);
@@ -758,10 +773,10 @@ end;
 
 function THttpRequest.Send: boolean;
 var
-   http:    TFPHTTPClient;
+   wire:    THttpWireRequest;
+   res:     THttpWireResult;
    useTLS:  boolean;
-   bodyIn:  TRawByteStringStream;
-   bodyOut: TBoundedHttpResponse;
+   refusalLogged: boolean;
 begin
    Result     := False;
    Response   := '';
@@ -770,115 +785,82 @@ begin
    StatusCode := 0;
    RetryAfter := '';
    RequestId := '';
-   TlsUnavailable     := False;
-   TrustBundleMissing := False;
+   Failure    := hfNone;
 
    if (BearerToken <> '') and
       ((Pos('https://', LowerCase(URL)) <> 1) or FollowRedirects or
        (Pos(#13, BearerToken) > 0) or (Pos(#10, BearerToken) > 0)) then
       begin
       FailReason := 'Bearer authentication requires HTTPS without redirects and a valid token';
+      Failure    := hfAuthPolicy;
       Exit;
       end;
 
-   if not CheckScheme(URL, AllowInsecure, useTLS, FailReason, BearerToken, Password) then
+   if not CheckScheme(URL, AllowInsecure, useTLS, FailReason, Failure,
+                      BearerToken, Password) then
       begin
-      (* CheckScheme leaves useTLS True only when the scheme was https and the
-        refusal was EnsureOpenSSL: that is the proven nothing-was-sent case. *)
-      TlsUnavailable := useTLS;
       Exit;
       end;
 
    (* ONE TRACE LINE PER REQUEST. The token is masked, never written. *)
    logger.Trace('[Download] %s', [RequestTraceLine(Method, URL, BearerToken, Password)]);
 
-   http := TFPHTTPClient.Create(nil);
+   wire := THttpWireRequest.Create;
+   res  := THttpWireResult.Create;
    try
-      ApplyDefaults(http, UserAgent, ConnectMs, IOMs);
-      http.AllowRedirect := FollowRedirects;
-      if useTLS then
+      wire.Method           := Method;
+      wire.URL              := URL;
+      wire.UserAgent        := UserAgent;
+      wire.ContentType      := ContentType;
+      wire.AcceptEncoding   := AcceptEncoding;
+      wire.Username         := Username;
+      wire.Password         := Password;
+      wire.BearerToken      := BearerToken;
+      wire.Body             := ToWire(Body);
+      wire.HasBody          := True;
+      wire.FollowRedirects  := FollowRedirects;
+      wire.AcceptAnyStatus  := True;
+      wire.ConnectMs        := ConnectMs;
+      wire.IOMs             := IOMs;
+      wire.MaxResponseBytes := MaxResponseBytes;
+
+      if RunTransport(wire, nil, res, BearerToken, Password, Failure,
+                      FailReason, refusalLogged) then
          begin
-         if not ApplyTLSVerification(http, URL, FailReason, BearerToken, Password) then
+         (* Post allows EVERY status code (AcceptAnyStatus), so a 400 does not
+           fail: Send returns True, StatusCode holds 400 and Response holds the
+           server's own explanation. *)
+         Response   := FromWire(res.Body);
+         StatusCode := res.StatusCode;
+         ResponseStatusText := res.StatusText;
+         RetryAfter := res.RetryAfter;
+         RequestId  := res.RequestId;
+         Result     := True;
+         end
+      else if not refusalLogged then
+         begin
+         (* TRANSPORT FAILURES ONLY (no route, TLS, timeout): a non-2xx answer
+           is not one. The status is recorded anyway (0 when the server never
+           answered), so a caller can tell "the server said no" from "the
+           server was not there". *)
+         StatusCode := res.StatusCode;
+         (* THE URL AND THE LIBRARY'S MESSAGE ARE LOGGED FOR EVERY REQUEST,
+           credentialed or not (NY4I, 2026-11-05: log the URL, mask the bearer
+           token). What makes that safe is the scrub: a server's error text can
+           echo what we sent. *)
+         logger.Error('[Download] %s',
+                      [FailureLineFromDetail(Method, URL, res.Detail,
+                                             BearerToken, Password)]);
+         if (BearerToken <> '') or Sensitive then
             begin
-            (* OpenSSL loaded (CheckScheme proved it), so the refusal is the
-              bundle or an OpenSSL too old to check a host name. Only the
-              first is a bundle problem. *)
-            TrustBundleMissing := not TrustBundleUsable;
-            Exit;
+            (* The operator-facing reason stays generic for a credentialed
+              request: it is shown in dialogs and stored with the QSO. *)
+            FailReason := 'Authenticated HTTP request failed (' + res.ErrorClass + ')';
             end;
          end;
-
-      if ContentType <> '' then
-         begin
-         http.AddHeader('Content-Type', ToWire(ContentType));
-         end;
-      if BearerToken <> '' then
-         begin
-         http.AddHeader('Authorization', ToWire('Bearer ' + BearerToken));
-         end;
-      if AcceptEncoding <> '' then
-         begin
-         http.AddHeader('Accept-Encoding', ToWire(AcceptEncoding));
-         end;
-      if Username <> '' then
-         begin
-         (* FPC sends basic auth from these two, the same as Indy's
-           Request.BasicAuthentication did. *)
-         http.UserName := ToWire(Username);
-         http.Password := ToWire(Password);
-         end;
-
-      bodyIn  := CreateWireBodyStream(Body);
-      bodyOut := TBoundedHttpResponse.Create('');
-      bodyOut.Limit := MaxResponseBytes;
-      try
-         try
-            http.RequestBody := bodyIn;
-            http.HTTPMethod(ToWire(Method), ToWire(URL), bodyOut, []);
-            (* Post allows EVERY status code (HTTPMethod's allowed list is
-              empty), so a 400 does not raise: Send returns True, StatusCode
-              holds 400 and Response holds the server's own explanation. *)
-            Response   := FromWire(bodyOut.DataString);
-            StatusCode := http.ResponseStatusCode;
-            ResponseStatusText := FromWire(http.ResponseStatusText);
-            RetryAfter := FromWire(http.GetHeader(http.ResponseHeaders, 'Retry-After'));
-            RequestId := FromWire(http.GetHeader(http.ResponseHeaders, 'X-Request-Id'));
-            Result     := True;
-         except
-            on E: Exception do
-               begin
-               (* TRANSPORT FAILURES ONLY (no route, TLS, timeout): a non-2xx
-                 answer does not raise, see above. The status is recorded
-                 anyway (0 when the server never answered), so a caller can
-                 tell "the server said no" from "the server was not there". *)
-               StatusCode := http.ResponseStatusCode;
-               (* THE URL AND THE LIBRARY'S MESSAGE ARE LOGGED FOR EVERY
-                 REQUEST, credentialed or not (NY4I, 2026-11-05: log the URL,
-                 mask the bearer token). What makes that safe is the scrub: a
-                 server's error text can echo what we sent. *)
-               logger.Error('[Download] %s',
-                            [RequestFailureLine(Method, URL, E, BearerToken, Password)]);
-               if (BearerToken <> '') or Sensitive then
-                  begin
-                  (* The operator-facing reason stays generic for a credentialed
-                     request: it is shown in dialogs and stored with the QSO. *)
-                  FailReason := 'Authenticated HTTP request failed (' + E.ClassName + ')';
-                  end
-               else
-                  begin
-                  FailReason := DescribeFailure(E);
-                  end;
-               end;
-         end;
-      finally
-         (* Clear the reference before the stream dies: the client does not own
-           what it was handed. *)
-         http.RequestBody := nil;
-         bodyOut.Free;
-         bodyIn.Free;
-      end;
    finally
-      http.Free;
+      res.Free;
+      wire.Free;
    end;
 end;
 

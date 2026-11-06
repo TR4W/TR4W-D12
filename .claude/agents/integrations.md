@@ -316,6 +316,33 @@ one notice per owner: `FReported`). Nothing visible is touched from the worker. 
 trust-store fallback and a platform transport. The other HTTP callers (version check, CTY, POTA,
 HamScore, SCP) only read `FailReason` and are unchanged.
 
+**THE WIRE IS A TRANSPORT BEHIND `uHTTPDownload` (issue 224, S1a, 2026-11-05;
+`docs/HTTP_TRANSPORT_DESIGN.md` is authoritative).** `uHTTPDownload` is the SHARED layer: verbs,
+`THttpRequest`, scheme and bearer policy, the verify-or-not policy, ALL logging and scrubbing.
+`uHttpTransport` is the contract (failure kinds, wire request/result, `NothingSent`, the
+registry); `uHttpTransportGeneric` is the FPC `TFPHTTPClient` + OpenSSL + `uTLSTrust` path that
+used to be written out in `uHTTPDownload`. Rules that are easy to break:
+
+* **A transport never logs a URL, a header, a body or an exception message.** It returns them in
+  the result; `uHTTPDownload.RunTransport` scrubs and logs (the once-per-reason latches live
+  there). `Test_TransportErrorTextCannotReachALogOrTheOperator` pins it with a fake whose error
+  text echoes the token.
+* **`NothingSent(kind)` is the ONE place that says a failure proves no byte left.** The generic
+  transport can prove only `hfTlsUnavailable`, `hfTrustUnavailable` and
+  `hfVerificationUnavailable` (all before the connection); anything raised once the client is
+  moving is `hfOther` / `hfTlsLibraryFault` / `hfResponseTooLarge`, "may have been sent". Do not
+  promote an exception to a nothing-sent kind because it looks like a refusal.
+* **Selection is once, logged, and there is NO per-request fallback** (non-idempotent POSTs).
+  Tests that must not depend on a platform transport name `TGenericHttpTransport` or install a
+  `TFakeHttpTransport` with `SetHttpTransportForTest`; `uTestTLSRefusal` and `uTestHttpSecrets`
+  run against the registry's generic default.
+* `THttpRequest.TlsUnavailable` / `TrustBundleMissing` are properties over `Failure`, readable
+  and writable (stubs assign them). `AcceptAnyStatus` and `HasBody` on the wire request exist to
+  keep the Get verbs (`[200]` only, no body) and `Send` (any status, always a body stream, so
+  `Content-Length: 0`) byte-identical to what they were.
+* The Get verbs FOLLOW redirects (pinned by `Test_AGetStillFollowsARedirect`); S1c decides the
+  https-to-http hop. No Windows or macOS transport exists (S2+ wait for NY4I's section-8 answers).
+
 ## SuperCheckPartial upload (2026-10-25)
 
 `uSuperCheckPartialFileUpload`. **The signature is over BYTES:** `SCPSignature(secret,

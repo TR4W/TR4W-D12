@@ -1,6 +1,10 @@
 # HTTP/HTTPS: a platform transport behind `uHTTPDownload` (issue 224)
 
-**Status: DESIGN ONLY. Nothing here is built.** Written 2026-11-05 against `4dc105b9`
+**Status (2026-11-05): S0 and S1a are BUILT; S1b is built in the next commit; S1c and
+everything from S2 on is DESIGN ONLY** and waits for NY4I's answers to section 8. S1a is
+`uHttpTransport` (the contract and the registry), `uHttpTransportGeneric` (the FPC + OpenSSL
+path moved out of `uHTTPDownload`, behaviour unchanged) and the tests `uTestHttpTransport` and
+`uTestFakeTransport`; the stage table says what moved. Written against `4dc105b9`
 (the #221 stopgap, which is stage S0 below). Issue 224 is the request; issue 221 is the
 failure that prompted it. NY4I's rulings of 2026-11-05: open to a platform helper unit
 with IFDEFs for HTTP/HTTPS if it makes a better operator experience, and **accepted the
@@ -566,7 +570,7 @@ the agents CLAUDE.md requires to be involved.
 | stage | what | behaviour change | gates | specialists |
 |---|---|---|---|---|
 | **S0 (done)** | #221 stopgap: look beside the exe, `TrustBundleMissing`, one notice, retry not uncertain. Commit `4dc105b9`. | yes, as designed | done | integrations, build-release |
-| **S1a** | Create `uHttpTransport` (types, registry, `NothingSent`) and `uHttpTransportGeneric` (move `TFPHTTPClient`, `ApplyTLSVerification`, `TBoundedHttpResponse`, the OpenSSL/trust calls). `uHTTPDownload` keeps the verbs, `THttpRequest`, `CheckScheme` (scheme and policy only), the secrets functions, and delegates `Send`. Add the fake transport and the contract suite (generic only). `TlsUnavailable` / `TrustBundleMissing` become derived. | **none intended** | `Build-Tests.ps1 -Run` and `-Checked`; `Run-Lints.ps1`; `gh workflow run release.yml` (the unit list changes, so all three platforms must compile). The golden corpus and the contest matrix are not needed: no engine code is touched. Hand-run `tls-verify-probe` once. | integrations, build-release (the `.lpr` list), settings-config only if a setting is added here (it is not) |
+| **S1a (done)** | Create `uHttpTransport` (types, registry, `NothingSent`) and `uHttpTransportGeneric` (move `TFPHTTPClient`, `ApplyTLSVerification`, `TBoundedHttpResponse`, the OpenSSL/trust calls). `uHTTPDownload` keeps the verbs, `THttpRequest`, `CheckScheme` (scheme and policy only), the secrets functions, and delegates `Send`. Add the fake transport and the contract suite (generic only). `TlsUnavailable` / `TrustBundleMissing` become derived. | **none intended** | `Build-Tests.ps1 -Run` and `-Checked`; `Run-Lints.ps1`; `gh workflow run release.yml` (the unit list changes, so all three platforms must compile). The golden corpus and the contest matrix are not needed: no engine code is touched. Hand-run `tls-verify-probe` once. | integrations, build-release (the `.lpr` list), settings-config only if a setting is added here (it is not) |
 | **S1b** | Club Log and WRL classify by `NothingSent`; the three paths of section 2.3 become retry / failed instead of uncertain; new pin tests. | **yes, small and deliberate** | unit tests; the updated pins; review by integrations | integrations |
 | **S1c** | Decide the https-to-http redirect (open question 5) and, if forbidden, enforce it in the generic transport through `OnRedirect`. | yes, if forbidden | unit tests with the loopback redirect | integrations |
 | **S2** | `uHttpTransportWinHttp` (Windows only), selected by the new setting, **default `generic`**. Contract suite runs against it. Bench list above. | none while default is generic | unit tests, `-Checked`, lints, `release.yml`, then the Windows bench | integrations, build-release, settings-config, lcl-ui (Preferences row), i18n (resourcestrings for the setting) |
@@ -574,6 +578,40 @@ the agents CLAUDE.md requires to be involved.
 | **S3** | `uHttpTransportNSURLSession` (macOS), same setting and rules. First a spike that proves the delegate / event bridge and the block question. | none while default is generic | `release.yml` (macOS job), then a Mac bench; gated on the GUI having been run on a Mac | integrations, build-release (signing), lcl-ui |
 | **S4** | Linux: system CA tiers in `TrustBundlePath`. No new transport unless the bench shows a reason. | yes (more places trusted) | Linux CI, then the Mint bench | integrations, build-release |
 | **S5** | Retire what a platform no longer needs. See below. | yes | per item | build-release, integrations |
+
+**S1a, as built (2026-11-05) -- where it differs from the sketch in 3.2, and what it found.**
+
+* `uHttpTransport` holds the types, `NothingSent`, the registry (`RegisterHttpTransport`,
+  `ActiveHttpTransport`, locked, decided at first use, logged once as `[HTTP] transport: <id>`),
+  `ToWire`/`FromWire` and `IsHttpsUrl`. `uHttpTransportGeneric` holds `TFPHTTPClient`, the OpenSSL
+  and trust calls and `TBoundedHttpResponse`, and registers itself (not preferred). `uHTTPDownload`
+  links the generic unit itself, so no program that can make a request has an empty registry; an
+  empty one fails the request closed with a reason (pinned). No setting yet: that is S2.
+* The wire types gained what the old verbs needed to stay byte-identical: `HasBody` (a `Send`
+  always attached a body stream, so a bodiless WRL GET carried `Content-Length: 0`; the Get verbs
+  attach none) and `AcceptAnyStatus` (`Send` allowed every status; the Get verbs allowed `[200]`).
+  The result carries `ErrorClass` and `ErrorMessage` separately because the credentialed
+  `FailReason` names the class and the log line wants both.
+* Two failure kinds the sketch lacked: **`hfTlsLibraryFault`** (OpenSSL failed once bytes were
+  moving; not provable, `NothingSent` False -- the old `EInOutError` arm) and
+  **`hfVerificationUnavailable`** (checking was asked for, the bundle is fine, but verification
+  cannot be set up: an OpenSSL with no `X509_check_host`; this is section 2.3's third path, and it
+  is deliberately NOT `hfTlsUnavailable`, which would flip the old flag).
+* The transport logs nothing. Its TLS-setup refusals come back as data and `uHTTPDownload.
+  RunTransport` writes the same Error lines with the same once-per-reason latches as before.
+  `THttpRequest.TlsUnavailable` and `TrustBundleMissing` are properties over one `Failure` field,
+  readable AND writable (the existing test stubs assign them).
+* **Found: a redirected Get is followed.** I expected FPC to raise on a 302 before following it
+  because the allowed list is `[200]`. It does not; it follows and checks the final status. So
+  `HttpGetText` and `DownloadFileToPath` do follow redirects, to any scheme, as 2.4 inferred.
+  `Test_AGetStillFollowsARedirect` pins it, and is the test S1c changes.
+* **Small observable differences, all log or file level:** the `.tmp` file is now created before
+  the transport runs and deleted when the request is refused (it used to be created only after
+  the refusal checks); the Trace line for a request that is then refused for TLS is written (it
+  used to come after that check). `FailReason` texts are unchanged.
+* `uProgramMain`'s uses clause names only `uHTTPDownload` (not the OpenSSL or trust units), so it
+  needs no new entry. `tr4w.lpi`'s unit list is not maintained for new units (`uWRLClient` is not
+  in it either); only `tr4w.lpr` and the test `.lpr` were extended.
 
 **S2: a setting, or automatic with a fallback? Argued.**
 

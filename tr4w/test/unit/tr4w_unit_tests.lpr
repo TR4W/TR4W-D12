@@ -604,6 +604,8 @@ uses
    uTestSettingsPrecedence in 'uTestSettingsPrecedence.pas',
    uTestTLSRefusal in 'uTestTLSRefusal.pas',
    uTestHttpSecrets in 'uTestHttpSecrets.pas',
+   uTestFakeTransport in 'uTestFakeTransport.pas',
+   uTestHttpTransport in 'uTestHttpTransport.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
    uTestExternalLoggers in 'uTestExternalLoggers.pas',
@@ -660,6 +662,8 @@ uses
    uDomInclude          in '..\..\src\uDomInclude.pas',
    uContestNames        in '..\..\src\uContestNames.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
+   uHttpTransport       in '..\..\src\utils\uHttpTransport.pas',
+   uHttpTransportGeneric in '..\..\src\utils\uHttpTransportGeneric.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
@@ -1098,6 +1102,7 @@ begin
    RegisterSuite(TSettingsPrecedenceTests.Create('SettingsPrecedence'));
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
    RegisterSuite(THttpSecretsTests.Create('HttpSecrets'));
+   RegisterSuite(THttpTransportTests.Create('HttpTransport'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));

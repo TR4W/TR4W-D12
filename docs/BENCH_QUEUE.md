@@ -30,6 +30,13 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-05 -- HTTP TRANSPORT SEAM, NOTHING SHOULD LOOK DIFFERENT (issue 224, S1a)
+
+The FPC + OpenSSL client moved out of `uHTTPDownload` into `uHttpTransportGeneric` with no intended change. The unit suite (425,000+ checks, including a loopback contract suite) is green; what it cannot do is talk to a real server over TLS.
+
+- [ ] **A real Club Log (or WRL) send, and a real download.** With the real DLLs and `cacert.pem` beside the program, log a QSO to a throwaway Club Log account and see it confirmed; Alt-O (CTY) and Help > version check complete. `tr4w.log` shows one `[HTTP] transport: generic` line at the first request.
+- [ ] **`test\integration\tls-verify-probe` still rejects the four bad certificates** (expired, wrong host, self-signed, untrusted root) and accepts a good host. It goes to badssl.com, so it is hand-run only.
+
 ## Added 2026-11-05 -- IARU: THE SAME-ZONE POINT IS THE QSO'S OWN ITU ZONE (issue 222)
 
 Scoring asks the QSO's recorded my_itu_zone, or for the QSO being typed now the session's ITU zone (stated MY ITU ZONE, else CTY.DAT's for MY CALL), and never the stated MY ZONE. Unit-tested (`uTestIARUScoring`) and checked headless (the iaru_hf fixture with `Zone: 5` rescores to 12). What no gate drives is typed live entry.
