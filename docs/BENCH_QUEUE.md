@@ -151,13 +151,29 @@ the same pass as the rows now (`FBandRows`, `FModeRows`). `uTestLogSearchFilters
 pins the mapping on a streamed form; what it cannot see is the window in use.
 
 - [ ] **Search Log, in a log with QSOs on at least three bands and two modes.**
-  Open Search (with an empty call box), pick each band in turn. EXPECT: the grid
+  Clear the main call entry, then open Search. EXPECT (issue 230): the Band
+  drop-down lists exactly the bands the LOG holds -- not the contest's bands --
+  Mode exactly the log's modes (never `NON`), and Operator the log's operators;
+  `tr4w.log` has `[LogSearch] the log holds N band(s), M mode(s) ...`. An empty
+  box searches nothing, so the grid stays empty. Now type a partial call that
+  was worked on several bands and pick each band in turn. EXPECT: the grid
   shows only that band's QSOs, and the Band column agrees with the drop-down.
   Do the same for Mode. Then type a partial call (e.g. `N6`) with 20 m chosen.
   EXPECT: 20 m stays chosen while the list of bands narrows to those the matches
   contain. Still on 20 m, change the call to one never worked on 20 m. EXPECT:
   Band falls back to All. Pick All on both. EXPECT: every QSO the call
   matches.
+- [ ] **Log a QSO on a new band with Search open and its box empty.** EXPECT:
+  the new band appears in the Band drop-down (the log is read again after a
+  QSO, once, not on every keystroke).
+- [ ] **The Callsign box's placeholder (issue 230).** Type `SEARCH` (or `CQ`, or
+  a frequency such as `14025`) into the main call entry and open Search.
+  EXPECT: the Callsign box is EMPTY and shows the grey hint `Call or part of
+  one`; `tr4w.log` reads `seeded with "" (call entry "SEARCH", ...)`. The box
+  is focused at once, so note whether the hint stays visible while the caret
+  is in the empty box (the Win32 cue banner may hide on focus -- that is the
+  LCL's behaviour, report it either way). Type a letter: the hint goes. Close
+  it, put `N6` in the call entry, reopen. EXPECT: the box opens holding `N6`.
 
 ## Added 2026-11-05 -- AN ALT-P ROW CARRIES ITS KEY AS A TYPED FIELD (pointer audit P9, 5.4)
 

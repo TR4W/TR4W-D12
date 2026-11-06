@@ -848,6 +848,13 @@ resourcestring
    (* %s is the file the operator chose. *)
    SOpenLogNotAContestLog    = 'Not a TR4W contest log, so it was not opened: %s';
 
+   (* THE SEARCH LOG WINDOW (issue 230). The first is the greyed hint inside
+     the empty Callsign box -- shown only while the box is empty, never
+     searched for; the box searches for the typed text anywhere in a call.
+     The second is its status line when the log cannot be opened. *)
+   SLogSearchCallHint      = 'Call or part of one';
+   SLogSearchLogUnreadable = 'The log could not be read';
+
 implementation
 
 end.

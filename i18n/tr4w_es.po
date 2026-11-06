@@ -8873,3 +8873,14 @@ msgstr ""
 msgctxt "tprefsform.lblscorerestart.caption"
 msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr "Posting on o off, la dirección, el nombre de usuario y la contraseña tienen efecto cuando se inicia el TR4W siguiente. La información de contacto se aplica cuando se guarda."
+
+#: uappstrings.slogsearchcallhint
+#, fuzzy
+msgid "Call or part of one"
+msgstr ""
+
+#: uappstrings.slogsearchlogunreadable
+#, fuzzy
+msgid "The log could not be read"
+msgstr ""
+

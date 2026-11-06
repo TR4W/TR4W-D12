@@ -9861,3 +9861,13 @@ msgctxt "tprefsform.lblscorerestart.caption"
 msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr "TR4W の起動時にアドレス、ユーザー名、パスワードが有効になります。 保存時に連絡先情報が適用されます。"
 
+#: uappstrings.slogsearchcallhint
+#, fuzzy
+msgid "Call or part of one"
+msgstr ""
+
+#: uappstrings.slogsearchlogunreadable
+#, fuzzy
+msgid "The log could not be read"
+msgstr ""
+

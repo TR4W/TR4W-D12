@@ -9115,3 +9115,13 @@ msgctxt "tprefsform.lblscorerestart.caption"
 msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr "Αναρτώντας ή απενεργοποιώντας, η διεύθυνση, το όνομα χρήστη και ο κωδικός πρόσβασης ενεργοποιούνται κατά την επόμενη εκκίνηση του TR4W. Πληροφορίες επικοινωνίας ισχύουν όταν αποθηκεύετε."
 
+#: uappstrings.slogsearchcallhint
+#, fuzzy
+msgid "Call or part of one"
+msgstr ""
+
+#: uappstrings.slogsearchlogunreadable
+#, fuzzy
+msgid "The log could not be read"
+msgstr ""
+

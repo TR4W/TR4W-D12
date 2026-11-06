@@ -9807,3 +9807,13 @@ msgctxt "tprefsform.lblscorerestart.caption"
 msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr "에 게시하거나 해제, 주소, 사용자 이름 및 암호는 TR4W 다음 시작 때 효력을 가지고. 연락처는 저장할 때 적용됩니다."
 
+#: uappstrings.slogsearchcallhint
+#, fuzzy
+msgid "Call or part of one"
+msgstr ""
+
+#: uappstrings.slogsearchlogunreadable
+#, fuzzy
+msgid "The log could not be read"
+msgstr ""
+

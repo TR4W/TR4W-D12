@@ -12795,3 +12795,13 @@ msgstr ""
 msgid "Delete and re-send"
 msgstr ""
 
+#: uappstrings.slogsearchcallhint
+#, fuzzy
+msgid "Call or part of one"
+msgstr ""
+
+#: uappstrings.slogsearchlogunreadable
+#, fuzzy
+msgid "The log could not be read"
+msgstr ""
+

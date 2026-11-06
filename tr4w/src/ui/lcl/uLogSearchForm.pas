@@ -94,6 +94,34 @@ type
    TBandRows = array of BandType;
    TModeRows = array of ModeType;
 
+   (* THE BANDS, MODES AND OPERATORS A SET OF LOG ROWS HOLDS -- what the
+     three drop-downs offer.
+
+     ONE COLLECTOR FOR BOTH PATHS (issue 230). A typed search admits a row
+     to each list separately (each list ignores its own filter -- see
+     RebuildFilterLists); the empty-box read of the whole log admits every
+     contact to all three. Both go through Admit, so the two cannot come to
+     disagree about what a row contributes.
+
+     A BLANK OPERATOR IS NOT AN OPERATOR. A single-op log has ceOperator
+     empty on every row, and listing that gave the Operator drop-down one
+     empty row that filtered on nothing. *)
+   TLogSearchFacets = class
+   private
+      FBands:     TBandSet;
+      FModes:     TModeSet;
+      FOperators: TStringList;
+   public
+      constructor Create;
+      destructor Destroy; override;
+      procedure Clear;
+      procedure Admit(const aQso: ContestExchange;
+                      const aToBands, aToModes, aToOperators: boolean);
+      property Bands: TBandSet read FBands;
+      property Modes: TModeSet read FModes;
+      property Operators: TStringList read FOperators;
+   end;
+
    TfrmLogSearch = class(TForm)
       lblCall: TLabel;
       edtCall: TEdit;
@@ -142,10 +170,18 @@ type
       FBandRows: TBandRows;
       FModeRows: TModeRows;
 
+      (* WHAT THE WHOLE LOG HOLDS, for the lists while nothing is searched for
+        (issue 230). Read by ReadLogFacets once per open, and again only
+        after FLogFacetsRead is cleared -- by FormShow, by a QSO logged while
+        the window is open (LogSearchRefreshIfOpen) and by an edit from the
+        results (GridDblClick). Never per keystroke: emptying the box reads
+        the cache, which is why the empty-box early exit can stay. *)
+      FLogFacets:     TLogSearchFacets;
+      FLogFacetsRead: boolean;
+
       procedure GridFetchRows(Sender: TObject; const aFirstIndex: Int64;
                               var aRows: array of TLogGridRow);
       procedure GridDblClick(Sender: TObject);
-      procedure RunSearch;
       procedure ApplyMinimumWidth;
 
       procedure FillCombo(const aCombo: TComboBox; const aItems: TStrings;
@@ -162,7 +198,37 @@ type
                                    const aOperators: TStrings);
       function  SelectedBand: BandType;
       function  SelectedMode: ModeType;
+
+      (* Also public for uTestLogSearchFilters (issue 230): the search as the
+        timer runs it, and the one read of the whole log that the empty-box
+        lists are built from. ReadLogFacets is False when the log cannot be
+        read; the lists then fall back as RebuildFilterLists describes. *)
+      procedure RunSearch;
+      function  ReadLogFacets: boolean;
+
+      (* THE LOG HAS CHANGED, OR THE WINDOW IS OPENING: the next empty-box
+        search reads the log again. The one way FLogFacetsRead is cleared. *)
+      procedure InvalidateLogFacets;
+
+      destructor Destroy; override;
    end;
+
+(* COULD THIS BE A CALLSIGN, OR PART OF ONE? (issue 230)
+
+  The Search window is seeded from the main window's call entry, and that box
+  holds whatever was typed into it -- on 2026-11-05 it held the word SEARCH,
+  typed and keyed as CW, and the Search window opened with SEARCH in its
+  Callsign box. A callsign has a letter AND a digit and nothing but letters,
+  digits and '/'; a partial worth searching for (N6, NY4) has both too. So
+  a word (SEARCH, CQ, TEST) and a frequency typed to QSY (14025) are not
+  seeds. The cost is a digitless partial (DL) -- typed into the Search box,
+  it still searches. *)
+function CouldBePartOfACall(const aText: string): boolean;
+
+(* THE CALLSIGN BOX'S SEED: the first of the call entry and the call last
+  escaped out of it that could be part of a call, else empty -- and an empty
+  box shows its placeholder (TextHint), not a word. *)
+function SearchSeedFor(const aCallWindow, aEscaped: string): string;
 
 (* THE LOG HAS GAINED A QSO -- RUN THE SEARCH AGAIN.
 
@@ -206,6 +272,8 @@ implementation
 
 uses
    uEditQSO,
+   uAppStrings,       (* SLogSearchCallHint, SLogSearchLogUnreadable *)
+   uCallSignRoutines, (* ValidCallCharacter *)
    uContestRegistry,  (* LoggedQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
    uMainForm;   (* was TR4WMainForm, the owner -- unused since issue #1; drop it after a build proves name resolution does not depend on it *)
@@ -249,6 +317,14 @@ begin
       TryRestoreFormBounds(frmLogSearch, LAYOUT_NAME);
       end;
 
+   (* ALREADY OPEN, the window gets no OnShow, so FormShow's read of the log
+     would not happen. Asking for Search again is still "show me the log as
+     it is" (issue 230): the same refresh a logged QSO gets. *)
+   if frmLogSearch.Visible then
+      begin
+      LogSearchRefreshIfOpen;
+      end;
+
    frmLogSearch.Show;
    frmLogSearch.BringToFront;
 end;
@@ -259,6 +335,11 @@ begin
       begin
       Exit;
       end;
+
+   (* THE LOG HAS CHANGED, so what it holds is read again -- once, by the
+     search this schedules, and only if that search has an empty box. A QSO
+     on a band the log had not held before then appears in the Band list. *)
+   frmLogSearch.InvalidateLogFacets;
 
    (* THROUGH THE DEBOUNCE, not straight into RunSearch. A run of QSOs logged
      quickly -- a pile-up, or the pending-county drain that logs several from
@@ -280,9 +361,6 @@ begin
 end;
 
 procedure TfrmLogSearch.FormCreate(Sender: TObject);
-var
-   bt: BandType;
-   mt: ModeType;
 begin
    (* IN CODE, because TLogGrid is not a registered design-time component and a
      .lfm naming a class the loader cannot resolve fails at the first bad
@@ -305,6 +383,14 @@ begin
    FGrid.DefaultRowHeight := ws + 2;
    FGrid.BuildColumns;
 
+   FLogFacets := TLogSearchFacets.Create;
+
+   (* A PLACEHOLDER, NOT TEXT (issue 230). The LCL shows TextHint only while
+     the box is empty, and it is never part of Text, so it cannot be searched
+     for. Assigned here rather than in the .lfm so the translated string is
+     the one shown -- see uServerLogForm. *)
+   edtCall.TextHint := SLogSearchCallHint;
+
    (* THE LISTS ARE BUILT FROM THE LOG, not from the enums -- see
      RebuildFilterLists. Filled here with the contest's own bands so the window
      is usable before anything has been searched for. *)
@@ -312,25 +398,27 @@ begin
 end;
 
 procedure TfrmLogSearch.FormShow(Sender: TObject);
+var
+   callWindow, escaped: string;
 begin
    (* SEEDED FROM THE ENTRY FIELD. The Win32 version did the same, falling back
-     to the call an operator had just escaped out of. *)
-   if CallWindowString <> '' then
-      begin
-      edtCall.Text := string(AnsiString(CallWindowString));
-      end
-   else
-      begin
-      edtCall.Text := string(AnsiString(EscapeDeletedCallEntry));
-      end;
+     to the call an operator had just escaped out of -- but only with what
+     could be a call: the entry holds whatever was typed (issue 230). *)
+   callWindow := string(AnsiString(CallWindowString));
+   escaped    := string(AnsiString(EscapeDeletedCallEntry));
+   edtCall.Text := SearchSeedFor(callWindow, escaped);
+
+   (* EVERY OPEN READS THE LOG AGAIN for the empty-box lists. *)
+   InvalidateLogFacets;
 
    ApplyMinimumWidth;
 
    if logger <> nil then
       begin
-      logger.Info('[LogSearch] window opened at (%d,%d) %dx%d, seeded with "%s", ' +
-                  'min width %d',
-                  [Left, Top, Width, Height, edtCall.Text, Constraints.MinWidth]);
+      logger.Info('[LogSearch] window opened at (%d,%d) %dx%d, seeded with "%s" ' +
+                  '(call entry "%s", last escaped "%s"), min width %d',
+                  [Left, Top, Width, Height, edtCall.Text, callWindow, escaped,
+                   Constraints.MinWidth]);
       end;
 
    RunSearch;
@@ -410,6 +498,182 @@ begin
              (Pos(aOperator, AnsiString(aQso.ceOperator)) > 0);
 end;
 
+function CouldBePartOfACall(const aText: string): boolean;
+var
+   s: string;
+   i: integer;
+   hasLetter, hasDigit: boolean;
+begin
+   Result := False;
+   s := UpperCase(Trim(aText));
+   if s = '' then
+      begin
+      Exit;
+      end;
+
+   hasLetter := False;
+   hasDigit  := False;
+   for i := 1 to Length(s) do
+      begin
+      if not ValidCallCharacter(s[i]) then
+         begin
+         Exit;
+         end;
+      if s[i] in ['A'..'Z'] then
+         begin
+         hasLetter := True;
+         end;
+      if s[i] in ['0'..'9'] then
+         begin
+         hasDigit := True;
+         end;
+      end;
+
+   Result := hasLetter and hasDigit;
+end;
+
+function SearchSeedFor(const aCallWindow, aEscaped: string): string;
+begin
+   Result := '';
+   if CouldBePartOfACall(aCallWindow) then
+      begin
+      Result := Trim(aCallWindow);
+      end
+   else if CouldBePartOfACall(aEscaped) then
+      begin
+      Result := Trim(aEscaped);
+      end;
+end;
+
+constructor TLogSearchFacets.Create;
+begin
+   inherited Create;
+   FOperators := TStringList.Create;
+   FOperators.Sorted := True;
+   FOperators.Duplicates := dupIgnore;
+end;
+
+destructor TLogSearchFacets.Destroy;
+begin
+   FOperators.Free;
+   inherited Destroy;
+end;
+
+procedure TLogSearchFacets.Clear;
+begin
+   FBands := [];
+   FModes := [];
+   FOperators.Clear;
+end;
+
+(* ONLY A LOGGED CONTACT CONTRIBUTES -- the rule LoggedContact states, here as
+  well as in RunSearch, so no caller can feed a note or a deleted-record kind
+  into a list. *)
+procedure TLogSearchFacets.Admit(const aQso: ContestExchange;
+                                 const aToBands, aToModes, aToOperators: boolean);
+var
+   op: string;
+begin
+   if not LoggedContact(aQso) then
+      begin
+      Exit;
+      end;
+
+   if aToBands then
+      begin
+      Include(FBands, aQso.Band);
+      end;
+   if aToModes then
+      begin
+      Include(FModes, aQso.Mode);
+      end;
+   if aToOperators then
+      begin
+      op := Trim(string(AnsiString(aQso.ceOperator)));
+      if op <> '' then
+         begin
+         FOperators.Add(op);
+         end;
+      end;
+end;
+
+procedure TfrmLogSearch.InvalidateLogFacets;
+begin
+   FLogFacetsRead := False;
+end;
+
+destructor TfrmLogSearch.Destroy;
+begin
+   FLogFacets.Free;
+   FLogFacets := nil;
+   inherited Destroy;
+end;
+
+(* THE ONE READ OF THE WHOLE LOG -- see FLogFacets. A log that cannot be read
+  leaves the facets empty, and an empty log gives the same; with nothing in
+  them the lists fall back to the contest's bands and every mode, as before. The
+  cache is marked read either way, so a log that will not open is not tried
+  again on every keystroke that empties the box. *)
+function TfrmLogSearch.ReadLogFacets: boolean;
+var
+   qso: ContestExchange;
+   rows: Int64;
+   started: QWord;
+   bt: BandType;
+   mt: ModeType;
+   nBands, nModes: integer;
+begin
+   FLogFacets.Clear;
+   FLogFacetsRead := True;
+   Result := False;
+
+   if not LogSourceIsOpen then
+      begin
+      if not LogSourceOpen then
+         begin
+         if logger <> nil then
+            begin
+            logger.Warn('[LogSearch] the log could not be read for the filter lists');
+            end;
+         Exit;
+         end;
+      end;
+
+   started := GetTickCount64;
+   rows := 0;
+   LogSourceRewind;
+   while LogSourceNext(qso) do
+      begin
+      Inc(rows);
+      FLogFacets.Admit(qso, True, True, True);
+      end;
+   Result := True;
+
+   if logger <> nil then
+      begin
+      nBands := 0;
+      for bt := Low(BandType) to High(BandType) do
+         begin
+         if bt in FLogFacets.Bands then
+            begin
+            Inc(nBands);
+            end;
+         end;
+      nModes := 0;
+      for mt := Low(ModeType) to High(ModeType) do
+         begin
+         if mt in FLogFacets.Modes then
+            begin
+            Inc(nModes);
+            end;
+         end;
+      logger.Info('[LogSearch] the log holds %d band(s), %d mode(s), %d operator(s) ' +
+                  'in %d record(s), read in %d ms',
+                  [nBands, nModes, FLogFacets.Operators.Count, rows,
+                   GetTickCount64 - started]);
+      end;
+end;
+
 (* The value the chosen row shows -- see FBandRows. No row, or a row the
   arrays do not reach, is "do not filter". *)
 function TfrmLogSearch.SelectedBand: BandType;
@@ -478,11 +742,19 @@ end;
   back to 15m without clearing the filter first. Excluding a list's own filter
   keeps every band the rest of the search can still reach.
 
-  WITH NOTHING SEARCHED FOR THERE ARE NO ROWS TO ASK, so the band list falls
-  back to the bands this contest actually uses -- WARC BANDS ENABLE and VHF
-  BANDS ENABLE, from BandChangeArray, rather than every band the enum can
-  name. NY4I asked for that too, and it is why the list offered 10G and 24G to
-  a station that had worked 20m and 15m. *)
+  WITH NOTHING SEARCHED FOR, THE ROWS ARE THE WHOLE LOG (issue 230): RunSearch
+  passes what ReadLogFacets found, so an empty box lists the bands, modes and
+  operators the log holds.
+
+  AN EMPTY SET IS THE FALLBACK -- an empty log, a log that cannot be read, or
+  a typed search that matched nothing. The band list then falls back to the
+  bands this contest actually uses -- WARC BANDS ENABLE and VHF BANDS ENABLE,
+  from BandChangeArray, rather than every band the enum can name. NY4I asked
+  for that too, and it is why the list offered 10G and 24G to a station that
+  had worked 20m and 15m. The mode list falls back to every mode: no contest
+  states which modes it enables (RunsInMode is an ADIF identity question and
+  answers True for every mode in the base), so there is nothing narrower to
+  ask. *)
 procedure TfrmLogSearch.RebuildFilterLists(const aBands: TBandSet;
                                            const aModes: TModeSet;
                                            const aOperators: TStrings);
@@ -545,11 +817,15 @@ begin
             end;
          end;
 
+      (* NEITHER BRANCH OFFERS Both OR NoMode, as the band branches offer
+        neither AllBands nor NoBand. NoMode is not a mode: the fallback used
+        to list it as a NON row that filtered on nothing an operator logs
+        (issue 230). *)
       if aModes <> [] then
          begin
          for mt := CW to FM do
             begin
-            if (mt in aModes) and (mt <> Both) then
+            if (mt in aModes) and (mt <> Both) and (mt <> NoMode) then
                begin
                AddMode(mt);
                end;
@@ -559,7 +835,7 @@ begin
          begin
          for mt := CW to FM do
             begin
-            if mt <> Both then
+            if (mt <> Both) and (mt <> NoMode) then
                begin
                AddMode(mt);
                end;
@@ -642,9 +918,7 @@ var
    recIndex: Int64;
    found:    integer;
    started:  QWord;
-   bands:    TBandSet;
-   modes:    TModeSet;
-   ops:      TStringList;
+   facets:   TLogSearchFacets;
    passCall, passOper, passBand, passMode: boolean;
 begin
    call := AnsiString(UpperCase(Trim(edtCall.Text)));
@@ -657,22 +931,30 @@ begin
    FTruncated := False;
    FGrid.RecordCount := 0;
 
-   bands := [];
-   modes := [];
-   ops   := TStringList.Create;
+   facets := TLogSearchFacets.Create;
    try
-      ops.Sorted := True;
-      ops.Duplicates := dupIgnore;
-
       (* NOTHING TO SEARCH FOR IS NOT A SEARCH FOR EVERYTHING. The Win32
         version exited on an empty callsign AND operator, and so does this --
         otherwise every keystroke that clears the box scans the whole log to
-        list it. *)
+        list it.
+
+        BUT THE LISTS STILL SAY WHAT THE LOG HOLDS (issue 230). They used to
+        be rebuilt from nothing here, so the Band list was the contest's
+        bands rather than the log's, and picking one could not be judged
+        against the log. They come from the one read of the whole log,
+        cached in FLogFacets, which no keystroke repeats. *)
       if (call = '') and (oper = '') then
          begin
          FGrid.MatchText   := '';
          lblStatus.Caption := '';
-         RebuildFilterLists([], [], ops);
+         if not FLogFacetsRead then
+            begin
+            if not ReadLogFacets then
+               begin
+               lblStatus.Caption := SLogSearchLogUnreadable;
+               end;
+            end;
+         RebuildFilterLists(FLogFacets.Bands, FLogFacets.Modes, FLogFacets.Operators);
          Exit;
          end;
 
@@ -680,7 +962,7 @@ begin
          begin
          if not LogSourceOpen then
             begin
-            lblStatus.Caption := 'the log could not be read';
+            lblStatus.Caption := SLogSearchLogUnreadable;
             Exit;
             end;
          end;
@@ -705,18 +987,10 @@ begin
          passMode := (mode = Both) or (qso.Mode = mode);
 
          (* EACH LIST IGNORES ITS OWN FILTER -- see RebuildFilterLists. *)
-         if passCall and passOper and passMode then
-            begin
-            Include(bands, qso.Band);
-            end;
-         if passCall and passOper and passBand then
-            begin
-            Include(modes, qso.Mode);
-            end;
-         if passCall and passBand and passMode then
-            begin
-            ops.Add(string(AnsiString(qso.ceOperator)));
-            end;
+         facets.Admit(qso,
+                      passCall and passOper and passMode,
+                      passCall and passOper and passBand,
+                      passCall and passBand and passMode);
 
          if not (passCall and passOper and passBand and passMode) then
             begin
@@ -742,7 +1016,7 @@ begin
       FGrid.Reload;
       FGrid.RecordCount := found;
 
-      RebuildFilterLists(bands, modes, ops);
+      RebuildFilterLists(facets.Bands, facets.Modes, facets.Operators);
       ApplyMinimumWidth;
 
       if logger <> nil then
@@ -765,7 +1039,7 @@ begin
                                      [found, GetTickCount64 - started]);
          end;
    finally
-      ops.Free;
+      facets.Free;
    end;
 end;
 
@@ -815,7 +1089,10 @@ begin
       OpenEditQSOWindow;
    finally
       (* RE-RUN, because the edit may have changed whether the record still
-        matches. The Win32 version did this by posting its own Search button. *)
+        matches. The Win32 version did this by posting its own Search button.
+        An edit can move a QSO to another band or mode, so what the log holds
+        is read again the next time the box is empty. *)
+      InvalidateLogFacets;
       RunSearch;
    end;
 end;

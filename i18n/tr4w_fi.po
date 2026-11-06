@@ -9114,3 +9114,13 @@ msgctxt "tprefsform.lblscorerestart.caption"
 msgid "Posting on or off, the address, username and password take effect when TR4W next starts.  Contact information applies when you save."
 msgstr "Postitus tai pois, osoite, käyttäjätunnus ja salasana tulevat voimaan, kun TR4W seuraavan kerran alkaa. Yhteystiedot koskevat kun tallennat."
 
+#: uappstrings.slogsearchcallhint
+#, fuzzy
+msgid "Call or part of one"
+msgstr ""
+
+#: uappstrings.slogsearchlogunreadable
+#, fuzzy
+msgid "The log could not be read"
+msgstr ""
+
