@@ -10,6 +10,11 @@ type
       RemoteId, ErrorCode, RequestId, DataJSON, NextCursor: string;
       RetrySeconds: Int64;
       Pause: boolean;
+      (* Operator-facing text the worker hands to its owner, which shows it on
+        the main thread. '' = nothing to say. Set by a client only for a
+        condition the operator can cure (issue 221: the CA bundle is missing),
+        and only the first time, so it is not shown on every retry. *)
+      OperatorNotice: string;
    end;
 
    TExternalDeliveryClient = class

@@ -178,6 +178,11 @@ type
       TlsUnavailable: boolean;  (* https was asked for and TLS could not start:
                                    NO BYTE WAS SENT, so the caller may classify
                                    the failure as a retryable setup problem *)
+      TrustBundleMissing: boolean; (* https was asked for, checking is on, and the
+                                   CA bundle (cacert.pem) is missing or cannot
+                                   be read: NO BYTE WAS SENT. Same class as
+                                   TlsUnavailable, a different cause and a
+                                   different message (issue 221) *)
       RetryAfter:     string;
       RequestId:      string;
 
@@ -259,6 +264,10 @@ var
    // it once. Cleared by CheckScheme when TLS works again.
    GTlsLogLock:   TCriticalSection;
    GLastTlsLogged: string = '';
+   // The same latch for the "REFUSING ... cannot be verified" line, so a worker
+   // retrying every 300 s does not write the Error each time. Cleared when
+   // verification can be set up again. Under GTlsLogLock.
+   GLastRefusalLogged: string = '';
 
 (* HTTP IS BYTES; THIS PROGRAM'S `string` IS UTF-16. Every crossing between
   them is spelled out here rather than left to an implicit conversion, which
@@ -512,12 +521,34 @@ begin
         failure, because "could not verify" without either is not actionable
         -- the fix is usually a missing CA bundle and the operator needs to be
         told that, not told to check a setting they already set correctly. *)
-      logger.Error('[Download] REFUSING %s -- server certificates cannot be '
-                   + 'verified (%s). Turn off Preferences > Network > verify '
-                   + 'server certificates to proceed unverified.',
-                   [aURL, why]);
+      GTlsLogLock.Enter;
+      try
+         if why <> GLastRefusalLogged then
+            begin
+            GLastRefusalLogged := why;
+            logger.Error('[Download] REFUSING %s -- server certificates cannot be '
+                         + 'verified (%s). Turn off Preferences > Network > verify '
+                         + 'server certificates to proceed unverified.',
+                         [aURL, why]);
+            end
+         else
+            begin
+            logger.Debug('[Download] still REFUSING %s -- same reason as logged', [aURL]);
+            end;
+      finally
+         GTlsLogLock.Leave;
+      end;
       aFailReason := SysUtils.Format(SDownloadCannotVerify, [why]);
       Result      := False;
+      end
+   else
+      begin
+      GTlsLogLock.Enter;
+      try
+         GLastRefusalLogged := '';
+      finally
+         GTlsLogLock.Leave;
+      end;
       end;
 end;
 
@@ -739,6 +770,8 @@ begin
    StatusCode := 0;
    RetryAfter := '';
    RequestId := '';
+   TlsUnavailable     := False;
+   TrustBundleMissing := False;
 
    if (BearerToken <> '') and
       ((Pos('https://', LowerCase(URL)) <> 1) or FollowRedirects or
@@ -748,7 +781,6 @@ begin
       Exit;
       end;
 
-   TlsUnavailable := False;
    if not CheckScheme(URL, AllowInsecure, useTLS, FailReason, BearerToken, Password) then
       begin
       (* CheckScheme leaves useTLS True only when the scheme was https and the
@@ -768,6 +800,10 @@ begin
          begin
          if not ApplyTLSVerification(http, URL, FailReason, BearerToken, Password) then
             begin
+            (* OpenSSL loaded (CheckScheme proved it), so the refusal is the
+              bundle or an OpenSSL too old to check a host name. Only the
+              first is a bundle problem. *)
+            TrustBundleMissing := not TrustBundleUsable;
             Exit;
             end;
          end;

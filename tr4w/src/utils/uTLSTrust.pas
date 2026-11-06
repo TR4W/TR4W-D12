@@ -121,8 +121,34 @@ uses
    fphttpclient;
 
 (* Where the bundle is, whether or not it exists. Named so a failure message
-  can show the path the operator should look at. *)
+  can show the path the operator should look at.
+
+  THE SEARCH ORDER (issue 221): the data directory first -- DataFilePath, the
+  working directory on Windows -- then the folder the program itself is in
+  (BesideProgramFilePath). The first USABLE file wins, so a bundle beside the
+  program is found when the program is started from somewhere else. When
+  neither exists the data-directory path is returned, so a message names
+  something. Which place answered is logged once, and again if it changes. *)
 function TrustBundlePath: string;
+
+(* Is there a bundle that can be opened for reading? False means a verified
+  request cannot be made and NOTHING WOULD BE SENT. *)
+function TrustBundleUsable: boolean;
+
+(* The places looked, for a message: "C:\a\cacert.pem; C:\b\cacert.pem". *)
+function TrustBundleSearchPlaces: string;
+
+(* The operator notice for a missing bundle, ONCE per service per session:
+  the text the first time, '' afterwards. The first call also writes the log
+  line. Safe from any thread. It builds text and touches nothing visible: the
+  caller hands it to the main thread. *)
+function TrustBundleAlertText(const aService: string): string;
+
+(* TEST SEAMS. Both folders replace the two real ones (an empty folder means
+  "none"); two empty strings restore the real lookup. The second clears the
+  once-only latches. *)
+procedure SetTrustBundleFolders(const aDataDir, aProgramDir: string);
+procedure ResetTrustBundleLatches;
 
 (* Attach chain and hostname verification to aClient.
 
@@ -147,7 +173,10 @@ uses
    openssl,
    fpopenssl,
    dynlibs,
+   SyncObjs,
+   Log4D,
    uAppPaths,
+   uAppStrings,
    uOpenSSLLoader;
 
 const
@@ -179,10 +208,210 @@ var
    GPeerCertLoaded: boolean = False;
    GLastFailure:    string = '';
 
-function TrustBundlePath: string;
+   (* Everything below is read by delivery workers as well as the main thread. *)
+   GLock:           TCriticalSection = nil;
+   GFoldersSet:     boolean = False;
+   GDataDirSeam:    string = '';
+   GProgramDirSeam: string = '';
+   GBundleLogged:   string = '';
+   GAlerted:        array of string;
+   (* Own logger rather than a unit's global, as uHTTPDownload does; the same
+     name so one appender sees both. *)
+   GLog:            TLogLogger = nil;
+
+(* Can the file be opened for reading? FileExists alone says nothing about a
+  file the account may not read, and a handshake would then fail AFTER the
+  connection was made. *)
+function BundleUsable(const aPath: string): boolean;
+var
+   handle: THandle;
 begin
-   (* Case-tolerantly, like every other shipped file -- see uAppPaths. *)
-   Result := ExistingDataFile(DataFilePath(BUNDLE_NAME));
+   Result := False;
+   if (aPath = '') or (not FileExists(aPath)) then
+      begin
+      Exit;
+      end;
+   (* FileOpen answers with an invalid handle rather than raising. *)
+   handle := FileOpen(aPath, fmOpenRead or fmShareDenyNone);
+   if handle <> feInvalidHandle then
+      begin
+      FileClose(handle);
+      Result := True;
+      end;
+end;
+
+(* The two places, in search order. A place that is not there is ''; the
+  program folder is '' when it is the data folder. *)
+procedure BundleCandidates(out aData, aProgram: string);
+var
+   seamed:   boolean;
+   dataDir:  string;
+   progDir:  string;
+begin
+   GLock.Enter;
+   try
+      seamed  := GFoldersSet;
+      dataDir := GDataDirSeam;
+      progDir := GProgramDirSeam;
+   finally
+      GLock.Leave;
+   end;
+
+   if seamed then
+      begin
+      aData    := '';
+      aProgram := '';
+      if dataDir <> '' then
+         begin
+         aData := IncludeTrailingPathDelimiter(dataDir) + BUNDLE_NAME;
+         end;
+      if progDir <> '' then
+         begin
+         aProgram := IncludeTrailingPathDelimiter(progDir) + BUNDLE_NAME;
+         end;
+      end
+   else
+      begin
+      (* Case-tolerantly, like every other shipped file -- see uAppPaths. *)
+      aData    := ExistingDataFile(DataFilePath(BUNDLE_NAME));
+      aProgram := ExistingDataFile(BesideProgramFilePath(BUNDLE_NAME));
+      end;
+
+   if (aProgram <> '') and (aProgram = aData) then
+      begin
+      aProgram := '';
+      end;
+end;
+
+function TrustBundlePath: string;
+var
+   dataCandidate:    string;
+   programCandidate: string;
+   tier:             string;
+begin
+   BundleCandidates(dataCandidate, programCandidate);
+
+   tier := '';
+   if BundleUsable(dataCandidate) then
+      begin
+      Result := dataCandidate;
+      tier   := 'data directory';
+      end
+   else if BundleUsable(programCandidate) then
+      begin
+      Result := programCandidate;
+      tier   := 'beside the program';
+      end
+   else if dataCandidate <> '' then
+      begin
+      Result := dataCandidate;
+      end
+   else
+      begin
+      Result := programCandidate;
+      end;
+
+   (* WHICH PLACE ANSWERED, once. Workers ask for the path on every connection,
+     so the latch is the answer itself: it logs again only when the answer
+     changes, and a bundle that goes missing and returns is logged again. *)
+   GLock.Enter;
+   try
+      if tier = '' then
+         begin
+         GBundleLogged := '';
+         end
+      else if Result <> GBundleLogged then
+         begin
+         GBundleLogged := Result;
+         GLog.Info('[TLS] CA bundle: %s (%s)', [Result, tier]);
+         end;
+   finally
+      GLock.Leave;
+   end;
+end;
+
+function TrustBundleUsable: boolean;
+begin
+   Result := BundleUsable(TrustBundlePath);
+end;
+
+function TrustBundleSearchPlaces: string;
+var
+   dataCandidate:    string;
+   programCandidate: string;
+begin
+   BundleCandidates(dataCandidate, programCandidate);
+   Result := dataCandidate;
+   if programCandidate <> '' then
+      begin
+      if Result <> '' then
+         begin
+         Result := Result + '; ';
+         end;
+      Result := Result + programCandidate;
+      end;
+end;
+
+function TrustBundleAlertText(const aService: string): string;
+var
+   places: string;
+   first:  boolean;
+   i:      integer;
+begin
+   Result := '';
+   places := TrustBundleSearchPlaces;
+
+   (* One entry per SERVICE: the reason is always "the bundle is missing" here. *)
+   GLock.Enter;
+   try
+      first := True;
+      for i := 0 to High(GAlerted) do
+         begin
+         if GAlerted[i] = aService then
+            begin
+            first := False;
+            end;
+         end;
+      if first then
+         begin
+         SetLength(GAlerted, Length(GAlerted) + 1);
+         GAlerted[High(GAlerted)] := aService;
+         end;
+   finally
+      GLock.Leave;
+   end;
+
+   if first then
+      begin
+      Result := UnicodeFormat(SCaBundleMissingNotice, [places, aService]);
+      (* The path and the service name are the only inserts: there is no
+        credential anywhere near this text. *)
+      GLog.Warn('[TLS] %s', [Result]);
+      end;
+end;
+
+procedure SetTrustBundleFolders(const aDataDir, aProgramDir: string);
+begin
+   GLock.Enter;
+   try
+      GFoldersSet     := (aDataDir <> '') or (aProgramDir <> '');
+      GDataDirSeam    := aDataDir;
+      GProgramDirSeam := aProgramDir;
+      GBundleLogged   := '';
+   finally
+      GLock.Leave;
+   end;
+end;
+
+procedure ResetTrustBundleLatches;
+begin
+   GLock.Enter;
+   try
+      SetLength(GAlerted, 0);
+      GBundleLogged := '';
+   finally
+      GLock.Leave;
+   end;
 end;
 
 function LastTLSFailure: string;
@@ -426,10 +655,13 @@ begin
       end;
 
    bundle := TrustBundlePath;
-   if not FileExists(bundle) then
+   if not BundleUsable(bundle) then
       begin
-      aReason := string(Format('the trusted-root bundle "%s" is missing, so server '
-                        + 'certificates cannot be checked', [bundle]));
+      (* Missing or unreadable: either way no handshake can be checked, and
+        uHTTPDownload reads this as "nothing was sent" (TrustBundleMissing). *)
+      aReason := UnicodeFormat('the trusted-root bundle is missing or cannot be '
+                        + 'read (looked in: %s), so server certificates cannot '
+                        + 'be checked', [TrustBundleSearchPlaces]);
       Exit;
       end;
 
@@ -453,9 +685,12 @@ begin
 end;
 
 initialization
+   GLock    := TCriticalSection.Create;
+   GLog     := TLogLogger.GetLogger('TR4WDebugLog.Download');
 
 finalization
    GHooks.Free;
    GHooks := nil;
+   FreeAndNil(GLock);
 
 end.

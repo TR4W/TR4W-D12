@@ -34,6 +34,11 @@ type
       procedure Test_TlsUnavailableNeverLogsTheTokenAndLogsOnce;
       procedure Test_TlsUnavailableIsARetryNotUncertain;
       procedure Test_WrlTlsUnavailableIsARetryNotUncertain;
+      procedure Test_BundleLookupOrder;
+      procedure Test_NoBundleSetsTheFlagLogsOnceAndKeepsTheTokenOut;
+      procedure Test_ClubLogMissingBundleIsARetryAndAlertsOnce;
+      procedure Test_WrlMissingBundleIsARetryAndAlertsOnce;
+      procedure Test_AlertIsOncePerService;
    public
       procedure RunAllTests; override;
    end;
@@ -41,7 +46,8 @@ type
 implementation
 
 uses
-   fphttpclient, uHTTPDownload, uOpenSSLLoader, uExternalDelivery, uExternalDeliveryClient, uClubLogClient, uWRLClient;
+   fphttpclient, uHTTPDownload, uOpenSSLLoader, uExternalDelivery, uExternalDeliveryClient, uClubLogClient, uWRLClient,
+   uTLSTrust, uSettingsRegistry, uSettingsDeclarations;
 
 const
    (* Long enough for the mask to show two characters, and distinctive enough
@@ -54,6 +60,69 @@ type
       procedure DoAppend(const aMessage: string); override;
    end;
 
+   (* A request that behaves as the real one does when cacert.pem is missing:
+     refused, nothing sent, no status. Deterministic whatever this machine has
+     installed. *)
+   TNoBundleRequest = class(THttpRequest)
+   public
+      function Send: boolean; override;
+   end;
+
+   TClubNoBundle = class(TClubLogClient)
+   protected
+      function NewRequest: THttpRequest; override;
+   end;
+
+   TWrlNoBundle = class(TWRLClient)
+   protected
+      function NewRequest(const aURL: string): THttpRequest; override;
+   end;
+
+function TNoBundleRequest.Send: boolean;
+begin
+   Result := False;
+   StatusCode := 0;
+   FailReason := 'stub: no bundle';
+   TrustBundleMissing := True;
+end;
+
+function TClubNoBundle.NewRequest: THttpRequest;
+begin
+   Result := TNoBundleRequest.Create('https://clublog.org/api/v1/qso');
+end;
+
+function TWrlNoBundle.NewRequest(const aURL: string): THttpRequest;
+begin
+   Result := TNoBundleRequest.Create(aURL);
+end;
+
+(* A fresh empty folder under the temp directory, with a trailing separator. *)
+function MakeTempFolder: string;
+begin
+   Result := IncludeTrailingPathDelimiter(GetTempDir(False)) + 'tr4w-cabundle-'
+             + IntToStr(Random(100000000)) + PathDelim;
+   ForceDirectories(Result);
+end;
+
+procedure PutBundle(const aFolder: string);
+var
+   f: TStringList;
+begin
+   f := TStringList.Create;
+   try
+      f.Add('not a real bundle');
+      f.SaveToFile(aFolder + 'cacert.pem');
+   finally
+      f.Free;
+   end;
+end;
+
+procedure RemoveTempFolder(const aFolder: string);
+begin
+   SysUtils.DeleteFile(aFolder + 'cacert.pem');
+   RemoveDir(aFolder);
+end;
+
 var
    GCaptured: TStringList = nil;
 
@@ -62,6 +131,20 @@ begin
    if (GCaptured <> nil) and (Trim(aMessage) <> '') then
       begin
       GCaptured.Add(aMessage);
+      end;
+end;
+
+function CountLinesWith(const aMark: string): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := 0 to GCaptured.Count - 1 do
+      begin
+      if Pos(aMark, GCaptured[i]) > 0 then
+         begin
+         Inc(Result);
+         end;
       end;
 end;
 
@@ -273,6 +356,197 @@ begin
    CheckEquals(0, answer.Status, 'no HTTP status');
 end;
 
+procedure THttpSecretsTests.Test_BundleLookupOrder;
+var
+   dataDir, progDir, missingDir: string;
+begin
+   BeginTest('cacert.pem: data directory first, the program folder as a fallback, else none');
+   dataDir    := MakeTempFolder;
+   progDir    := MakeTempFolder;
+   missingDir := MakeTempFolder;
+   try
+      SetTrustBundleFolders(dataDir, progDir);
+
+      CheckFalse(TrustBundleUsable, 'neither folder has the file');
+      CheckEquals(dataDir + 'cacert.pem', TrustBundlePath,
+                  'and the path named is the data directory''s');
+      CheckTrue(Pos(dataDir + 'cacert.pem', TrustBundleSearchPlaces) > 0, 'the places list the data folder');
+      CheckTrue(Pos(progDir + 'cacert.pem', TrustBundleSearchPlaces) > 0, 'and the program folder');
+
+      PutBundle(progDir);
+      CheckTrue(TrustBundleUsable, 'only beside the program: usable');
+      CheckEquals(progDir + 'cacert.pem', TrustBundlePath, 'and that is the one used');
+
+      PutBundle(dataDir);
+      CheckEquals(dataDir + 'cacert.pem', TrustBundlePath, 'both: the data directory wins');
+
+      SysUtils.DeleteFile(dataDir + 'cacert.pem');
+      CheckEquals(progDir + 'cacert.pem', TrustBundlePath, 'removed again: back to the program folder');
+
+      (* The same folder twice is one place, not two. *)
+      SetTrustBundleFolders(progDir, progDir);
+      CheckEquals(progDir + 'cacert.pem', TrustBundleSearchPlaces, 'a repeated folder is listed once');
+
+      SetTrustBundleFolders(missingDir, '');
+      CheckFalse(TrustBundleUsable, 'a single empty folder: none');
+   finally
+      SetTrustBundleFolders('', '');
+      RemoveTempFolder(dataDir);
+      RemoveTempFolder(progDir);
+      RemoveTempFolder(missingDir);
+   end;
+end;
+
+procedure THttpSecretsTests.Test_NoBundleSetsTheFlagLogsOnceAndKeepsTheTokenOut;
+var
+   lg:       TLogLogger;
+   keep:     ILogAppender;
+   oldLevel: TLogLevel;
+   request:  THttpRequest;
+   setting:  TSettingBase;
+   emptyA, emptyB: string;
+   i:        integer;
+   joined:   string;
+begin
+   BeginTest('no bundle: Send sets TrustBundleMissing, nothing is sent, one Error line, no token');
+   DeclareAllSettings;
+   setting := FindSetting('network.verifyServerCertificates');
+   if setting is TBoolSetting then
+      begin
+      TBoolSetting(setting).SetValue(True);
+      end;
+   emptyA := MakeTempFolder;
+   emptyB := MakeTempFolder;
+   SetTrustBundleFolders(emptyA, emptyB);
+   StartCapture(lg, keep, oldLevel);
+   try
+      for i := 1 to 3 do
+         begin
+         request := THttpRequest.Create('https://tr4w-http-secrets.invalid/p?k=' + TOKEN);
+         try
+            request.BearerToken := TOKEN;
+            CheckFalse(request.Send, 'the request is refused');
+            if EnsureOpenSSL then
+               begin
+               CheckTrue(request.TrustBundleMissing, 'and flagged as a missing bundle');
+               CheckFalse(request.TlsUnavailable, 'which is not TLS unavailable');
+               end
+            else
+               begin
+               (* This machine cannot load OpenSSL at all, which is the other
+                 nothing-sent case; the bundle is never reached. *)
+               CheckTrue(request.TlsUnavailable, 'no OpenSSL here: TLS unavailable instead');
+               end;
+            CheckEquals(0, request.StatusCode, 'no answer');
+            CheckEquals(0, Pos(TOKEN, request.FailReason), 'no token in the reason');
+         finally
+            request.Free;
+         end;
+         end;
+   finally
+      StopCapture(lg, keep, oldLevel);
+      SetTrustBundleFolders('', '');
+      RemoveTempFolder(emptyA);
+      RemoveTempFolder(emptyB);
+   end;
+   joined := GCaptured.Text;
+   CheckEquals(0, Pos(TOKEN, joined), 'the token is in none of the lines: ' + joined);
+   if EnsureOpenSSL then
+      begin
+      CheckEquals(1, CountLinesWith('[Download] REFUSING'),
+                  'three refused requests, one Error line');
+      end;
+end;
+
+procedure THttpSecretsTests.Test_ClubLogMissingBundleIsARetryAndAlertsOnce;
+var
+   client: TClubNoBundle;
+   job:    TDeliveryJob;
+   first, second: TExternalDeliveryResult;
+begin
+   BeginTest('Club Log: a missing bundle is a retry with its own code, and the operator hears once');
+   ResetTrustBundleLatches;
+   client := TClubNoBundle.Create('W1AW', TOKEN);
+   try
+      job := Default(TDeliveryJob);
+      job.Payload := '<CALL:4>W1AW<EOR>';
+      first  := client.Deliver(job);
+      second := client.Deliver(job);
+   finally
+      client.Free;
+   end;
+   CheckTrue(first.Outcome = doRetry, 'outcome is retry, not uncertain or failed');
+   CheckFalse(first.Pause, 'the worker is not paused for review');
+   CheckEquals('CLUBLOG_CA_BUNDLE_MISSING', first.ErrorCode, 'with its own error code');
+   CheckEquals(0, first.Status, 'no HTTP status: nothing was sent');
+   CheckEquals(300, first.RetrySeconds, 'and the same 300 s as TLS unavailable');
+   CheckTrue(Pos('cacert.pem', first.OperatorNotice) > 0, 'the first answer carries the notice');
+   CheckTrue(Pos('Club Log', first.OperatorNotice) > 0, 'naming the service');
+   CheckEquals(0, Pos(TOKEN, first.OperatorNotice), 'and no token');
+   CheckEquals('', second.OperatorNotice, 'the second answer carries none');
+   CheckEquals('CLUBLOG_CA_BUNDLE_MISSING', second.ErrorCode, 'though it is classified the same');
+   ResetTrustBundleLatches;
+end;
+
+procedure THttpSecretsTests.Test_WrlMissingBundleIsARetryAndAlertsOnce;
+var
+   client: TWrlNoBundle;
+   job:    TDeliveryJob;
+   first, second: TExternalDeliveryResult;
+begin
+   BeginTest('WRL: a POST with a missing bundle is a retry, and the operator hears once');
+   ResetTrustBundleLatches;
+   client := TWrlNoBundle.Create(TOKEN);
+   try
+      job := Default(TDeliveryJob);
+      job.Key.Logbook := 'logbook-1';
+      job.Payload := '{"callsign":"W1AW"}';
+      first  := client.Deliver(job);
+      second := client.Deliver(job);
+   finally
+      client.Free;
+   end;
+   CheckTrue(first.Outcome = doRetry, 'a POST is retried: nothing was sent');
+   CheckEquals('WRL_CA_BUNDLE_MISSING', first.ErrorCode, 'with its own error code');
+   CheckEquals(0, first.Status, 'no HTTP status');
+   CheckEquals(300, first.RetrySeconds, 'and 300 s');
+   CheckTrue(Pos('World Radio League', first.OperatorNotice) > 0, 'the first answer names the service');
+   CheckEquals(0, Pos(TOKEN, first.OperatorNotice), 'and no token');
+   CheckEquals('', second.OperatorNotice, 'the second answer carries none');
+   ResetTrustBundleLatches;
+end;
+
+procedure THttpSecretsTests.Test_AlertIsOncePerService;
+var
+   lg:       TLogLogger;
+   keep:     ILogAppender;
+   oldLevel: TLogLevel;
+   dataDir, progDir, text: string;
+begin
+   BeginTest('the alert text names the places looked and the service, once each, and is logged once');
+   dataDir := MakeTempFolder;
+   progDir := MakeTempFolder;
+   SetTrustBundleFolders(dataDir, progDir);
+   ResetTrustBundleLatches;
+   StartCapture(lg, keep, oldLevel);
+   try
+      text := TrustBundleAlertText('Club Log');
+      CheckTrue(Pos(dataDir + 'cacert.pem', text) > 0, 'the data location is named');
+      CheckTrue(Pos(progDir + 'cacert.pem', text) > 0, 'and the program location');
+      CheckTrue(Pos('uploads to Club Log are paused', text) > 0, 'and what is paused');
+      CheckEquals('', TrustBundleAlertText('Club Log'), 'the same service again: nothing');
+      CheckEquals('', TrustBundleAlertText('Club Log'), 'and again');
+      CheckTrue(TrustBundleAlertText('World Radio League') <> '', 'another service is told');
+   finally
+      StopCapture(lg, keep, oldLevel);
+      ResetTrustBundleLatches;
+      SetTrustBundleFolders('', '');
+      RemoveTempFolder(dataDir);
+      RemoveTempFolder(progDir);
+   end;
+   CheckEquals(2, CountLinesWith('cacert.pem was not found'), 'two services, two log lines, no repeats');
+end;
+
 procedure THttpSecretsTests.RunAllTests;
 begin
    GCaptured := TStringList.Create;
@@ -285,6 +559,11 @@ begin
       Test_TlsUnavailableNeverLogsTheTokenAndLogsOnce;
       Test_TlsUnavailableIsARetryNotUncertain;
       Test_WrlTlsUnavailableIsARetryNotUncertain;
+      Test_BundleLookupOrder;
+      Test_NoBundleSetsTheFlagLogsOnceAndKeepsTheTokenOut;
+      Test_ClubLogMissingBundleIsARetryAndAlertsOnce;
+      Test_WrlMissingBundleIsARetryAndAlertsOnce;
+      Test_AlertIsOncePerService;
    finally
       FreeAndNil(GCaptured);
    end;

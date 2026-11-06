@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-   fpjson, uJSON, fphttpclient;
+   fpjson, uJSON, fphttpclient, uTLSTrust;
 
 const
    WRL_BASE = 'https://api.worldradioleague.com/v1';
@@ -78,6 +78,16 @@ begin
          Result.Outcome := doRetry;
          Result.ErrorCode := 'WRL_TLS_UNAVAILABLE';
          Result.RetrySeconds := 300;
+         Exit;
+         end;
+      if request.TrustBundleMissing then
+         begin
+         (* Nothing was sent: cacert.pem is missing or unreadable. Retried, and
+           the operator is told once. *)
+         Result.Outcome := doRetry;
+         Result.ErrorCode := 'WRL_CA_BUNDLE_MISSING';
+         Result.RetrySeconds := 300;
+         Result.OperatorNotice := TrustBundleAlertText('World Radio League');
          Exit;
          end;
       if (Pos(FApiKey, Result.RequestId) > 0) or (Length(Result.RequestId) > 200) then

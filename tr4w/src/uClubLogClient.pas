@@ -15,7 +15,7 @@ type
       function Deliver(const aJob: TDeliveryJob): TExternalDeliveryResult; override;
    end;
 implementation
-uses SysUtils, fpjson, uJSON;
+uses SysUtils, fpjson, uJSON, uTLSTrust;
 const
    // Local delivery marker, never a Club Log qsoid or part of an API path.
    CLUBLOG_TEST_DELIVERY = 'clublog:test-mode';
@@ -91,6 +91,18 @@ begin
          Result.Pause := False;
          Result.ErrorCode := 'CLUBLOG_TLS_UNAVAILABLE';
          Result.RetrySeconds := 300;
+         Exit;
+         end;
+      if request.TrustBundleMissing then
+         begin
+         (* ALSO NOTHING SENT: cacert.pem is missing or unreadable, so the
+           request was refused before it was made. A retry cures it the moment
+           the file appears. The operator is told once (uTLSTrust latches). *)
+         Result.Outcome := doRetry;
+         Result.Pause := False;
+         Result.ErrorCode := 'CLUBLOG_CA_BUNDLE_MISSING';
+         Result.RetrySeconds := 300;
+         Result.OperatorNotice := TrustBundleAlertText('Club Log');
          Exit;
          end;
       if Result.Status = 429 then

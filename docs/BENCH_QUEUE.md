@@ -5730,3 +5730,13 @@ New Contest, for a US QSO party, now shows an "I am in <area>" box above the par
 - [ ] **Unchanged parties.** British Columbia, Ontario, Quebec and IN7QPNE show NO box: the same free-entry row and notice as before.
 - [ ] **Layout.** The MY COUNTY drop-down sits exactly where the box does, the same width, and the label is not clipped. The drop-down list scrolls for Texas (254 entries). Check the box caption and notices in a second language (`--lang de`): the new strings are untranslated until the resourcestring harvest, so English is expected there today.
 - [ ] **Linux (gtk2).** The same, once: the drop-down list is a real list (no typing into it).
+
+## Added 2026-11-05 -- CA BUNDLE MISSING (issue 221)
+
+`cacert.pem` is now looked for in the data directory (the working directory on Windows) and then in the folder the program is in. If it is in neither, Club Log and World Radio League uploads are held back (nothing is sent), retried every 5 minutes, and the operator gets ONE notice per service. The unit tests drive the lookup order, the classification and the once-only text; only a screen can judge the notice. Use `build-out\app-i386-win32\tr4w_fpc.exe` (it has the OpenSSL DLLs and no `cacert.pem`), a Club Log or WRL logger enabled with a valid key, and `DEBUG LOG LEVEL = DEBUG`.
+
+- [ ] **Started from the build-out folder with no `cacert.pem` anywhere.** Log a QSO. A warning box appears within a few seconds: "<service>: The certificate file cacert.pem was not found (looked in: <two paths>); uploads to <service> are paused until it is available." It must name BOTH places and appear once, not on every retry or every QSO.
+- [ ] **`tr4w.log`** has one `[TLS] The certificate file cacert.pem was not found ...` line and one `[Download] REFUSING ...` Error line per service/episode, not one per retry; no key or token anywhere. The delivery shows `CLUBLOG_CA_BUNDLE_MISSING` / `WRL_CA_BUNDLE_MISSING` and the QSO stays pending (not failed, not "needs review").
+- [ ] **Copy `target\cacert.pem` beside `tr4w_fpc.exe`** (leave the working directory elsewhere). Within about 5 minutes the pending QSOs upload, and `tr4w.log` shows `[TLS] CA bundle: <path> (beside the program)`. Start from `target\` instead: the line says `(data directory)`.
+- [ ] **A second service** (enable both Club Log and WRL with no bundle): each gets its own notice, once.
+- [ ] **Linux AppImage / macOS bundle:** with the bundle present the log names the tier that answered; macOS reports the bundle's Resources folder as the data directory.

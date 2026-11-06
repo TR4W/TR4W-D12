@@ -295,8 +295,26 @@ when https was asked for and `EnsureOpenSSL` said no: no byte was sent. Club Log
 to `doRetry` (`CLUBLOG_TLS_UNAVAILABLE` / `WRL_TLS_UNAVAILABLE`, 300 s), NOT `doUncertain`.
 The diagnostic goes to the log once per distinct text. `EnsureOpenSSL` is locked (workers call
 it) and on Windows retries a failed load after 30 s; Linux/macOS keep the first answer. The test
-seam is `SetOpenSSLForcedUnavailable`. A missing CA bundle (`ApplyTLSVerification`) is also a
-nothing-sent failure and is NOT yet classified this way.
+seam is `SetOpenSSLForcedUnavailable`.
+
+**A missing or unreadable CA bundle is the same class (issue 221, 2026-11-05).**
+`THttpRequest.TrustBundleMissing` is set when `ApplyTLSVerification` refused and
+`uTLSTrust.TrustBundleUsable` is False (`TlsUnavailable` stays False; `Send` resets both at its
+top). Club Log / WRL map it to `doRetry`, 300 s, `CLUBLOG_CA_BUNDLE_MISSING` /
+`WRL_CA_BUNDLE_MISSING`, status 0. **Search order** (`TrustBundlePath`, the one resolver for the
+existence check, the handshake's `CertCA.FileName` and the messages): the data directory
+(`DataFilePath`, the working directory on Windows), then `uAppPaths.BesideProgramFilePath` (the
+exe's folder; macOS Resources, which is the data directory already). First USABLE file wins
+(exists and opens); which place answered is logged once (`[TLS] CA bundle: <path> (<tier>)`). The
+"REFUSING" Error line is latched per distinct reason. **The operator is told once per service per
+session:** the client puts `uTLSTrust.TrustBundleAlertText(service)` (resourcestring
+`SCaBundleMissingNotice`; '' after the first) in `TExternalDeliveryResult.OperatorNotice`, the
+worker passes it to `Notice`, and the owner shows it on the main thread through its
+`QueueAsyncCall` + `showwarning` path (`TDurableExternalLogger.ShowDeliveryNotice`, which shows
+one notice per owner: `FReported`). Nothing visible is touched from the worker. Seams:
+`SetTrustBundleFolders`, `ResetTrustBundleLatches`. NOT done (issue 221 remainder / 224): an OS
+trust-store fallback and a platform transport. The other HTTP callers (version check, CTY, POTA,
+HamScore, SCP) only read `FailReason` and are unchanged.
 
 ## SuperCheckPartial upload (2026-10-25)
 

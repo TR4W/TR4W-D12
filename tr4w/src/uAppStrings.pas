@@ -223,6 +223,14 @@ resourcestring
       'proceed without checking.';
    SDownloadRenameFailed  = 'the file downloaded but could not be saved under its final name.';
 
+   { The operator notice for a missing CA bundle (issue 221). A background
+     upload cannot show a dialog of its own, so the delivery worker hands this
+     text to its owner, which shows it once. %0:s is the list of places looked,
+     %1:s the service whose uploads are paused. }
+   SCaBundleMissingNotice =
+      'The certificate file cacert.pem was not found (looked in: %0:s); ' +
+      'uploads to %1:s are paused until it is available.';
+
    (* Shown INSTEAD of an OS error code when the file is simply absent -- see
      TF.UnableToFindFileMessage for why an errno is the wrong thing to print
      in that case. *)

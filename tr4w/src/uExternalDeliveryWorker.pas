@@ -350,6 +350,11 @@ begin
                Break;
                end;
             answer := client.Deliver(job);
+            if answer.OperatorNotice <> '' then
+               begin
+               (* Queued to the main thread by the owner; never shown from here. *)
+               Notice(answer.OperatorNotice);
+               end;
             if (answer.Status = 401) or (answer.Status = 403) then
                begin
                (* Retain work for a replacement credential, but stop this

@@ -315,6 +315,20 @@ function SiblingProgramPath(const aName: string): string;
   A caller that finds it empty has learned something real. *)
 function PrivateLibraryDir: string;
 
+(* A SHIPPED FILE AS THE PROGRAM'S OWN FOLDER HOLDS IT, whatever the working
+  directory is.  On Windows DataFilePath follows the WORKING directory, and a
+  binary started from elsewhere (build-out\, a shortcut with another "Start in")
+  finds nothing there; this is the folder the executable is in.
+
+    Windows   beside the binary.
+    macOS     Contents/Resources (the same place DataFilePath answers).
+    Linux     beside the binary.
+
+  It does NOT check that the file exists.  A caller wanting a fallback asks
+  DataFilePath first and this second, and skips this one when it is the same
+  path. *)
+function BesideProgramFilePath(const aName: string): string;
+
 implementation
 
 uses SysUtils, StrUtils;
@@ -791,6 +805,15 @@ end;
 function ShippedDomFilePath(const aName: string): string;
 begin
    Result := ExistingDataFile(DataFilePath('dom' + PathDelim + aName));
+end;
+
+function BesideProgramFilePath(const aName: string): string;
+begin
+{$IFDEF DARWIN}
+   Result := BundleResources + aName;
+{$ELSE}
+   Result := ExtractFilePath(ParamStr(0)) + aName;
+{$ENDIF}
 end;
 
 end.
