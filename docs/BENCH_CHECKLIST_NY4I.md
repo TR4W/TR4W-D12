@@ -37,7 +37,7 @@ macOS builds do not need to be touched.
 
 **Added 2026-10-31 -- THE OS VAULT ON macOS AND LINUX (WRL key, HamScore and server passwords)**
 
-- [ ] `4933` (hw) Store, restart, read. Enter a WRL API key, save, quit. The startup line says libsecret1 (available). Restart: the WRL setup form shows th... -- needs: Linux Mint libsecret store/restart/read.
+- [ ] `4933` (hw) Store, restart, read. Enter a WRL API key, save, quit. The startup line says libsecret1 (available). Restart: the WRL logger editor shows th... -- needs: Linux Mint libsecret store/restart/read.
 - [ ] `4937` (hw) Change and clear. Change the key and restart: the new one is read. Clear it and save: the entry is gone from Seahorse. -- needs: Linux change and clear key in Seahorse.
 - [ ] `4939` (hw) A locked collection. Lock the Login keyring in Seahorse, then save a changed key. The desktop asks to unlock. Unlock: it stores. Dismiss:... -- needs: Linux locked keyring dismissed prompt; record exact log.
 - [ ] `4946` (hw) Autologin (keyring locked at start). With a key stored, log in through autologin so the Login keyring stays locked, and start TR4W. The s... -- needs: Linux autologin locked keyring; relies on 2026-11-01 uKeychain fix (commit 21ff8392).

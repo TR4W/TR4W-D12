@@ -68,12 +68,11 @@ type
       cbProvider: TComboBox;
       chkActive: TCheckBox;
       pnlFields: TPanel;
-      btnSetup, btnOK, btnCancel: TButton;
+      btnOK, btnCancel: TButton;
       lblName, lblProvider, lblNote: TLabel;
       lblFieldStatus, lblStatus: TLabel;
       tmrLoad: TTimer;
       procedure ProviderChanged(Sender: TObject);
-      procedure SetupClick(Sender: TObject);
       procedure Accept(Sender: TObject);
       procedure PollLoad(Sender: TObject);
       procedure EditorCloseQuery(Sender: TObject; var aCanClose: boolean);
@@ -96,7 +95,6 @@ type
       procedure SetChoiceSaved(const aRow: TFieldRow; const aValue, aName: string);
       procedure ShowChoice(const aRow: TFieldRow);
       procedure ReadRows(const aTarget: TExternalLoggerDefinition; aFinal: boolean);
-      procedure ApplyWorkToRows(const aWork: TExternalLoggerDefinition);
       procedure StartLoad(const aRow: TFieldRow);
       procedure ApplyLoad(const aTask: TChoiceTask);
       procedure StartAutoLoad;
@@ -360,6 +358,13 @@ begin
    Result.Panel.Caption := '';
    Result.Panel.Height := ROW_HEIGHT;
    Result.Panel.Top := aIndex * ROW_HEIGHT;
+   (* THE CONTROLS OF A ROW ARE ANCHORED LEFT AND TOP ONLY (issue 231). The
+      panel is created at its default 170 wide and Align stretches it to the
+      panel's width afterwards; a control anchored to the right moves by that
+      whole difference, which put the key's eye over its box and pushed the
+      Logbook drop-down's arrow and the Refresh button out of the row. The
+      dialog does not resize, so nothing here needs to stretch. *)
+   Result.Panel.Width := rowWidth;
    Result.Panel.Align := alTop;
    Result.CaptionLabel := TLabel.Create(Result.Panel);
    Result.CaptionLabel.Parent := Result.Panel;
@@ -376,14 +381,14 @@ begin
       Result.Combo.Left := EDIT_LEFT;
       Result.Combo.Top := 2;
       Result.Combo.Width := rowWidth - EDIT_LEFT - REFRESH_WIDTH - 10;
-      Result.Combo.Anchors := [akTop, akLeft, akRight];
+      Result.Combo.Anchors := [akTop, akLeft];
       Result.Combo.OnChange := RowChanged;
       Result.RefreshButton := TButton.Create(Result.Panel);
       Result.RefreshButton.Parent := Result.Panel;
       Result.RefreshButton.Left := rowWidth - REFRESH_WIDTH;
       Result.RefreshButton.Top := 2;
       Result.RefreshButton.Width := REFRESH_WIDTH;
-      Result.RefreshButton.Anchors := [akTop, akRight];
+      Result.RefreshButton.Anchors := [akTop, akLeft];
       Result.RefreshButton.Caption := UTF8Encode(SLoggerChoiceRefresh);
       Result.RefreshButton.OnClick := RefreshClick;
       SetChoiceSaved(Result, FDefinition.FieldText(aDescriptor.Key),
@@ -396,7 +401,7 @@ begin
       Result.Edit.Left := EDIT_LEFT;
       Result.Edit.Top := 2;
       Result.Edit.Width := rowWidth - EDIT_LEFT;
-      Result.Edit.Anchors := [akTop, akLeft, akRight];
+      Result.Edit.Anchors := [akTop, akLeft];
       Result.Edit.Text := UTF8Encode(FDefinition.FieldText(aDescriptor.Key));
       if aDescriptor.Kind = lfkSecret then
          begin
@@ -431,8 +436,6 @@ begin
          begin
          FRows.Add(BuildRow(FFields[i], i));
          end;
-      btnSetup.Visible := Assigned(FFields.Setup);
-      btnSetup.Caption := UTF8Encode(FFields.SetupCaption);
       lblFieldStatus.Caption := '';
    finally
       Dec(FBuilding);
@@ -783,55 +786,6 @@ begin
       fields := TLoggerFieldList.Create(True);
       end;
    RebuildRows(fields);
-end;
-
-(* Pushes what the provider's setup step returned into the rows. *)
-procedure TExternalLoggersForm.ApplyWorkToRows(const aWork: TExternalLoggerDefinition);
-var
-   row: TFieldRow;
-begin
-   Inc(FBuilding);
-   try
-      for row in FRows do
-         begin
-         if row.Descriptor.Kind = lfkChoice then
-            begin
-            SetChoiceSaved(row, aWork.FieldText(row.Descriptor.Key),
-               aWork.FieldText(row.Descriptor.DisplayKey));
-            row.DerivedAccount := aWork.Account;
-            row.Touched := True;
-            row.Cleared := False;
-            end
-         else
-            begin
-            row.Edit.Text := UTF8Encode(aWork.FieldText(row.Descriptor.Key));
-            end;
-         end;
-   finally
-      Dec(FBuilding);
-   end;
-end;
-
-procedure TExternalLoggersForm.SetupClick(Sender: TObject);
-var
-   work: TExternalLoggerDefinition;
-begin
-   if (FTask <> nil) or not Assigned(FFields.Setup) then
-      begin
-      Exit;
-      end;
-   work := TExternalLoggerDefinition.Create;
-   try
-      work.Assign(FDefinition);
-      ReadRows(work, False);
-      if FFields.Setup(work) then
-         begin
-         ApplyWorkToRows(work);
-         StartAutoLoad;
-         end;
-   finally
-      work.Free;
-   end;
 end;
 
 function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): boolean;

@@ -18,7 +18,7 @@ unit uTestExternalLoggerFields;
     per provider, an old WRL definition opening and saving byte-identical, a
     list load that fills NAMES and writes the derived account only when the
     operator picks, a failed load that keeps the saved choice, an edited key
-    that drops it, a provider change, and a provider's setup step.
+    that drops it, a provider change, and no provider setup step.
   - WRL's own loader against a scripted transport.
 
   NOT covered here, and bench-only (docs/BENCH_QUEUE.md): the real drop-down
@@ -45,7 +45,7 @@ type
       procedure Test_Editor_AFailedLoadKeepsTheSavedChoice;
       procedure Test_Editor_EditingTheKeyDropsTheChoice;
       procedure Test_Editor_ProviderChangeKeepsHostDropsCredentials;
-      procedure Test_Editor_SetupActionFeedsTheRows;
+      procedure Test_Editor_NoProviderHasASetupButton;
       procedure Test_WRL_LoaderReadsAccountAndSkipsLockedBooks;
    public
       procedure RunAllTests; override;
@@ -111,22 +111,11 @@ begin
    Result := '';
 end;
 
-function FakeSetup(const aWork: TExternalLoggerDefinition): boolean;
-begin
-   aWork.ApiKey := 'setup-key';
-   aWork.Account := 'setup-acct';
-   aWork.Logbook := 'setup-id';
-   aWork.LogbookName := 'Setup Name';
-   Result := True;
-end;
-
 function FakeFields: TLoggerFieldList;
 begin
    Result := TLoggerFieldList.Create(True);
    Result.AddSecret(LF_API_KEY, 'Key', False);
    Result.AddChoice(LF_LOGBOOK, LF_LOGBOOK_NAME, 'Book', FakeLoader);
-   Result.SetupCaption := 'Setup';
-   Result.Setup := FakeSetup;
 end;
 
 function FieldsOf(const aProvider: string): TLoggerFieldList;
@@ -205,7 +194,6 @@ begin
       CheckEquals('address,port', KeysOf(fields));
       CheckTrue(fields[0].Kind = lfkText, 'host is text');
       CheckTrue(fields[1].Kind = lfkPort, 'port is a port');
-      CheckFalse(Assigned(fields.Setup), 'no setup step');
    finally
       fields.Free;
    end;
@@ -414,7 +402,6 @@ begin
       CheckEquals('52001', UTF8Decode(form.FieldEdit(LF_PORT).Text));
       CheckTrue(form.FieldEdit(LF_API_KEY) = nil);
       CheckTrue(form.FieldCombo(LF_LOGBOOK) = nil);
-      CheckFalse(form.btnSetup.Visible, 'DXKeeper has no setup step');
 
       BeginTest('Editor: Club Log shows the callsign as text and the token masked');
       form.cbProvider.ItemIndex := form.cbProvider.Items.IndexOf('CLUBLOG');
@@ -611,31 +598,34 @@ begin
    end;
 end;
 
-procedure TExternalLoggerFieldsTests.Test_Editor_SetupActionFeedsTheRows;
+procedure TExternalLoggerFieldsTests.Test_Editor_NoProviderHasASetupButton;
 var
    form: TExternalLoggersForm;
    d: TExternalLoggerDefinition;
+   i: integer;
 begin
    InitWidgetSet;
-   BeginTest('Editor: a provider setup step is a generic button and its answer lands in the rows');
-   GLoadMode := 0;
+   BeginTest('Editor: no provider has a setup step, and a WRL key typed with no network still saves');
+   GLoadMode := 1;
    form := TExternalLoggersForm.Create(nil);
    try
       form.AutoLoadChoices := False;
+      for i := 0 to form.ControlCount - 1 do
+         begin
+         CheckTrue(form.Controls[i].Name <> 'btnSetup', 'the editor has no Setup button');
+         end;
       d := WRLDefinition(form.Config);
+      d.ApiKey := '';
+      d.Account := '';
+      d.Logbook := '';
       form.BeginEdit(d);
-      form.RebuildRows(FakeFields);
-      CheckTrue(form.btnSetup.Visible, 'a declared setup step shows its button');
-      CheckEquals('Setup', UTF8Decode(form.btnSetup.Caption));
-      form.btnSetup.Click;
-      CheckEquals('setup-key', UTF8Decode(form.FieldEdit(LF_API_KEY).Text));
-      CheckEquals('Setup Name', UTF8Decode(form.FieldCombo(LF_LOGBOOK).Items[0]));
+      form.FieldEdit(LF_API_KEY).Text := 'typed-key';
       form.Capture;
-      CheckEquals('setup-key', d.ApiKey);
-      CheckEquals('setup-id', d.Logbook);
-      CheckEquals('Setup Name', d.LogbookName);
-      CheckEquals('setup-acct', d.Account);
+      CheckEquals('typed-key', d.ApiKey, 'the key is saved without a lookup');
+      CheckEquals('', d.Logbook, 'and no logbook is invented');
+      CheckEquals('', d.Account);
    finally
+      GLoadMode := 0;
       form.Free;
    end;
 end;
@@ -687,7 +677,7 @@ begin
    Test_Editor_AFailedLoadKeepsTheSavedChoice;
    Test_Editor_EditingTheKeyDropsTheChoice;
    Test_Editor_ProviderChangeKeepsHostDropsCredentials;
-   Test_Editor_SetupActionFeedsTheRows;
+   Test_Editor_NoProviderHasASetupButton;
    Test_WRL_LoaderReadsAccountAndSkipsLockedBooks;
 end;
 

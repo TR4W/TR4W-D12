@@ -48,7 +48,7 @@ Scoring asks the QSO's recorded my_itu_zone, or for the QSO being typed now the 
 
 The External Logger grid is the editor now; the separate "Configure external loggers..." dialog is gone. The order/toggle/remove logic is unit-tested (`uTestExternalLoggerGrid`, the drag driven through the grid's own `MoveColRow`); what no test can do is a mouse and a popup.
 
-- [x] **Add each provider.** Press Add..., choose DXKeeper, then World Radio League, then Club Log, fill the fields, "Save to Preferences". Each appears as a new row (inactive: Order "-", Send new QSOs "No"). The WRL setup button and the Club Log field captions still work in the one-definition editor.
+- [x] **Add each provider.** Press Add..., choose DXKeeper, then World Radio League, then Club Log, fill the fields, "Save to Preferences". Each appears as a new row (inactive: Order "-", Send new QSOs "No"). The Club Log field captions work in the one-definition editor.
 - [x] **Right-click edit / toggle.** Right-click a row (not the one already selected): the row under the pointer becomes selected and the menu offers Edit..., Send new QSOs (a tick when on), Move up, Move down, Remove.... Edit changes the name and the row follows. Send new QSOs ON gives it the next Order number; OFF moves the row below the active ones and its Order becomes "-". Double-click the Send new QSOs cell toggles; double-click elsewhere opens Edit. Switching ON a logger whose required field is blank is refused with the message.
 - [x] **Drag to reorder.** Press on the ORDER cell (the grey left column) of an active row, drag it above/below another active row, release. Order numbers renumber, the moved row stays selected. Drop an inactive row among the active ones: it springs back to the inactive group and nothing else changes. Pressing on the Logger/Provider cells must NOT drag (that is expected; it only selects).
 - [x] **Move up / Move down** in the popup do the same as the drag and are disabled at the edge of the group.
@@ -58,6 +58,15 @@ The External Logger grid is the editor now; the separate "Configure external log
 - [ ] **First definition on a clean station.** On a settings file with no external-logger section, Add... on the legacy page creates the first definition and the page switches to the grid.
 - [ ] **Layout.** The grid, Add... button and the hint line below do not overlap at 100% and 150% scaling. The Order column is visibly a fixed (header-coloured) column.
 
+## Added 2026-11-06 -- NO WRL SETUP DIALOG, AND THE EYE SITS BESIDE ITS BOX (issue 231)
+
+TR4W no longer creates WRL logbooks (NY4I: use the WRL website or app), so the "Set up World Radio League..." button and its dialog are gone. The eye was a fragment in the editor because the editor's rows were anchored to the right edge of a panel that is stretched after they are built; `uTestPasswordRevealLayout` now SHOWS the editor (and the generic input prompt) off screen and measures the eye, the Logbook drop-down and Refresh. What it cannot see is the drawing and the real DPI.
+
+- [ ] **WRL editor.** Edit a WRL logger: an API key row with a visible eye, a "Logbook" row with a drop-down showing a NAME and its arrow, a Refresh button to the right of it inside the dialog, and no "Setup" or "Set up World Radio League..." button anywhere. Refresh loads the names; Save to Preferences works.
+- [ ] **The eye, everywhere.** Type something in the WRL key box and in the Club Log token box: the eye is a complete eye (lids and pupil, not a bracket), sits right of the box at the box's height, and clicking it shows and hides the text. Same in Preferences (cluster password, network password, HamScore password), the radio editor's password and the generic password prompt.
+- [ ] **150% scaling.** Open the External logger editor at 150%: the rows still fit inside the dialog (the row captions and heights are fixed pixel values and were not measured at 150%).
+- [ ] **Preferences > External logger, legacy single-logger page.** On a settings file with no external-logger section, the type list no longer offers WRL (it is chosen through Add...); a station whose stored type is already WRL still shows it.
+
 ## Added 2026-11-06 -- THE EXTERNAL LOGGER EDITOR SHOWS WHAT EACH PROVIDER NEEDS (issue 227)
 
 The one-definition editor builds its rows from the provider's own declaration (`uExternalLoggerRegistry`). The descriptors, the start-up check, the JSON and the editor's behaviour on a streamed form are unit-tested (`uTestExternalLoggerFields`); the real WRL drop-down, the look of the rows and the modal flow are not.
@@ -66,10 +75,9 @@ The one-definition editor builds its rows from the provider's own declaration (`
 - [ ] **An old WRL definition opens and keeps working.** A WRL logger saved BEFORE this change (no name stored): the drop-down opens on "Saved choice (refresh to see its name)". Press Save to Preferences without touching it, restart, log a QSO: it still goes to the same logbook (`[WRL]` lines in tr4w.log, same account and logbook). After the list loads the name appears; saving again keeps the same logbook.
 - [ ] **Offline.** Unplug the network and open a WRL logger: the saved logbook name is still in the drop-down, Refresh reports "The list could not be loaded: ... The saved choice is kept.", Save to Preferences still works.
 - [ ] **Pick another logbook, replace the key.** Choose a different logbook, Save, reopen: the new name shows. Type a different API key: the drop-down empties; Save is refused for an ACTIVE logger until a logbook is chosen again (Refresh first).
-- [ ] **The setup button.** "Set up World Radio League..." (shown only for WRL) still validates a key and creates a logbook; what it returns shows in the key box and the drop-down.
 - [ ] **Club Log.** The editor shows "Club Log callsign" (plain text) and "Club Log API token" (masked) and nothing else; Save/restart/log a QSO still reaches Club Log.
 - [ ] **DXKeeper.** The editor shows Host / IP address and Port only. Change provider DXKeeper -> Club Log -> DXKeeper: the host and port you typed are still there.
-- [ ] **Layout.** The rows, the Refresh button, the Setup button and the status lines do not overlap at 100% and 150% scaling.
+- [ ] **Layout.** The rows, the Refresh button and the status lines do not overlap at 100% and 150% scaling.
 
 ## Added 2026-11-05 -- THE TNC PACKET OBJECT IS A CLASS (pointer audit 6.6, Issue 89)
 
@@ -660,8 +668,7 @@ reviewed are in `tr4w/build/lint-taborder.txt`).
 - [ ] From the search box: Tab goes to the tree, then into the page, then
   OK, Cancel, Apply. Shift-Tab reverses it.
 - [ ] **Appearance**: the generated "Layout" block below the designed
-  controls comes after Show gridlines. **External Logger**: the WRL setup
-  button (created at run time) comes last.
+  controls comes after Show gridlines.
 - [ ] **Linux (gtk2)**: the same walk on two pages. gtk2 takes the order
   from the same `TabOrder`, but it has not been seen there.
 - [ ] **The other forms** (same fix, `.lfm` only): Tab through the UDP
@@ -5605,7 +5612,7 @@ from a stale sqldb read snapshot after the WRL worker committed
   `[LogWatchdog]` line at all. (A stalled worker cannot be provoked without a
   debugger; if one is ever seen, the lines go: asked to roll back, interrupted,
   stopping its owner, then "starting a new one" -- and logging carries on.)
-- [ ] **WRL setup form loads logbooks on open and drops them with the key.** Open it with a saved key: the Destination logbook list fills with no button press, the UI stays responsive, and the saved logbook is selected. Disconnect the network and open it: no dialog, empty list, blank status. Close it immediately after opening (Cancel while loading): it closes once the request ends, no crash. Edit one character of the key: the list empties and Use this logbook greys. Validate a wrong key: INVALID_KEY shows, the list stays empty, Use stays disabled.
+- [ ] **The WRL editor loads logbooks on open and drops them with the key.** (The separate WRL setup form is gone, issue 231; this is the editor's own behaviour.) Open a WRL logger with a saved key: the Logbook list fills with no button press, the UI stays responsive, and the saved logbook is selected. Disconnect the network and open it: the saved name stays, the status line reports the failure. Close it immediately after opening (Cancel while loading): it closes once the request ends, no crash. Edit one character of the key: the list empties. Type a wrong key and press Refresh: the failure code shows and the list stays empty.
 
 ## Added 2026-10-31 -- THE OS VAULT ON macOS AND LINUX (WRL key, HamScore and server passwords)
 
@@ -5619,7 +5626,7 @@ service `TR4W/v1`, account the setting's path UPPER-CASED, label
 **Mint (gtk2), GNOME Keyring or the desktop's own Secret Service**
 
 - [ ] **Store, restart, read.** Enter a WRL API key, save, quit. The startup
-  line says `libsecret1 (available)`. Restart: the WRL setup form shows the
+  line says `libsecret1 (available)`. Restart: the WRL logger editor shows the
   key without asking, and `settings/tr4w.json` has `ApiKeyRef` and no `ApiKey`.
   Seahorse ("Passwords and Keys") lists `TR4W/<path>` under Login.
 - [ ] **Change and clear.** Change the key and restart: the new one is read.

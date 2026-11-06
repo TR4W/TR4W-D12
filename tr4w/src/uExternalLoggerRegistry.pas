@@ -41,11 +41,6 @@ type
    TLoggerChoiceLoader = function(const aWork: TExternalLoggerDefinition;
       const aChoices: TLoggerChoices): string;
 
-   (* An optional modal step the provider offers beside its fields (WRL: validate
-      the key and create a logbook). Runs on the main thread and may change
-      aWork. True when the operator accepted. *)
-   TLoggerSetupAction = function(const aWork: TExternalLoggerDefinition): boolean;
-
    TLoggerFieldDescriptor = class
    public
       (* The LF_ key of the definition value this field edits. *)
@@ -60,8 +55,6 @@ type
 
    TLoggerFieldList = class(TObjectList<TLoggerFieldDescriptor>)
    public
-      SetupCaption: string;
-      Setup: TLoggerSetupAction;
       function AddText(const aKey, aCaption: string; aRequired: boolean): TLoggerFieldDescriptor;
       function AddPort(const aKey, aCaption: string): TLoggerFieldDescriptor;
       function AddSecret(const aKey, aCaption: string; aRequired: boolean): TLoggerFieldDescriptor;

@@ -227,15 +227,28 @@ reads the same list: required text, port range, and a choice needs its value AND
 must still start). A registration is a class owned by the registry. Facts that bite:
 **WRL's account id and logbook id are never fields.** The logbook is a CHOICE
 (`LF_LOGBOOK` with `LF_LOGBOOK_NAME` beside it); the loader (`LoadWRLLogbookChoices`,
-over `uWRLClient.WRLReadAccountId/WRLReadLogbooks`, shared with the setup dialog) runs
+over `uWRLClient.WRLReadAccountId/WRLReadLogbooks`) runs
 on a worker thread on a private copy of the definition and derives `Account` from the
 key's uid. **The editor writes that account only when the operator picks or the key
 changes** -- a hand-typed or migrated account is part of `DestinationFingerprint`, so
 refreshing a list must not move the queue. `LogbookName` is display only and OUT of the
-fingerprint (pinned with a literal `DeliveryId`). The WRL setup dialog is attached
-through `WRLSetupAction` (assigned in `uWRLSetupForm`'s initialization) so the
-non-UI provider unit never names an LCL form. A provider declaring more than
-`EXTERNAL_LOGGER_MAX_FIELDS` rows fails a test. Pinned in `uTestExternalLoggerFields`.
+fingerprint (pinned with a literal `DeliveryId`). **There is no WRL setup dialog and
+no provider setup action (issue 231, NY4I): TR4W does not create WRL logbooks**; the
+operator uses the WRL website or app, and the editor's own load/Refresh validates the
+key. Do not restore `uWRLSetupForm`, `WRLSetupAction` or `TWRLClient.CreateLogbook`.
+A provider declaring more than `EXTERNAL_LOGGER_MAX_FIELDS` rows fails a test. Pinned
+in `uTestExternalLoggerFields`.
+
+**THE EDITOR'S ROWS ARE ANCHORED LEFT AND TOP ONLY, AND THE EYE ANCHORS TO ITS EDIT
+(issue 231).** `BuildRow` creates each row panel at its default 170 wide and Align
+stretches it to 670; a control with `akRight` moved by the whole 500, so the key's eye
+sat over its box (measured gap -500) and the Logbook drop-down's arrow and Refresh were
+pushed out of the row. `uPasswordReveal` now anchors the button's sides to its EDIT
+(`AnchorSideLeft` at the edit's right, top and bottom to the edit's), not to the
+parent, so it follows whatever the edit does. A test that streams a form and never
+shows it cannot see this: `uTestPasswordRevealLayout` SHOWS the editor and the input
+prompt off screen and measures. The row captions and heights are 96-dpi pixels,
+unmeasured at 150%.
 
 **Only the reading thread may call Indy's `Connected`** (2026-10-25, after the
 network-radio hang a4866344): it does a select plus a BLOCKING recv, so from any other

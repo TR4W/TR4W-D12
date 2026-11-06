@@ -24,10 +24,6 @@ type
    transport. *)
 function LoadWRLLogbookChoices(const aWork: TExternalLoggerDefinition;
    const aChoices: TLoggerChoices): string;
-var
-   (* Attached by uWRLSetupForm. nil in a program without the LCL dialog,
-      in which case the editor simply shows no setup button. *)
-   WRLSetupAction: TLoggerSetupAction;
 implementation
 uses uExternalDelivery, uExternalLoggerService, uWRLWorker, uWRLContact, PostUnit,
    uWRLClient, uAppStrings;
@@ -118,13 +114,9 @@ begin
    aFields.AddSecret(LF_API_KEY, SLoggerFieldWRLKey, False);
    aFields.AddChoice(LF_LOGBOOK, LF_LOGBOOK_NAME, SLoggerFieldWRLLogbook,
       LoadWRLLogbookChoices);
-   (* The id of the account and of the logbook are never fields. The dialog
-      is the LCL layer's; it attaches itself to WRLSetupAction. *)
-   if Assigned(WRLSetupAction) then
-      begin
-      aFields.SetupCaption := SWRLSetup;
-      aFields.Setup := WRLSetupAction;
-      end;
+   (* The id of the account and of the logbook are never fields. TR4W does not
+      create logbooks: the operator makes one on the WRL website or app and
+      picks it here. *)
 end;
 initialization
    RegisterExternalLogger('WRL', 'World Radio League', CreateWRL, DeclareWRLFields);

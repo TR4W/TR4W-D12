@@ -1,6 +1,6 @@
 # The first-run setup wizard
 
-**Status (checked 2026-11-01):** DESIGN ONLY. The wizard is not built: no wizard unit exists under `tr4w/src` (`uWRLSetupForm` is the World Radio League settings form, not this). The only first-run code found is `src/ui/lcl/uFirstRunConvert.pas`, a one-time offer to convert a legacy `tr4w.ini`. Agreed with NY4I 2026-09-11; the
+**Status (checked 2026-11-01):** DESIGN ONLY. The wizard is not built: no wizard unit exists under `tr4w/src`. The only first-run code found is `src/ui/lcl/uFirstRunConvert.pas`, a one-time offer to convert a legacy `tr4w.ini`. Agreed with NY4I 2026-09-11; the
 page shape below is the part that was argued about and settled, so change it
 deliberately rather than in passing.
 

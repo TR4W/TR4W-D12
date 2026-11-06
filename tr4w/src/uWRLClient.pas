@@ -22,7 +22,6 @@ type
       constructor Create(const aApiKey: string);
       function Identity: TWRLResult;
       function Logbooks(const aCursor: string = ''): TWRLResult;
-      function CreateLogbook(const aName: string): TWRLResult;
       function Deliver(const aJob: TDeliveryJob): TWRLResult; override;
    end;
 
@@ -43,7 +42,7 @@ type
       May be nil. *)
    TWRLStopCheck = function: boolean of object;
 
-(* The two reads the WRL setup dialog and the external logger editor share.
+(* The two reads the external logger editor's WRL loader makes.
    Both are synchronous and belong on a worker thread; both return False with
    a code in aErrorCode ('' on success) and never raise. *)
 function WRLReadAccountId(aClient: TWRLClient; out aAccountId,
@@ -230,24 +229,6 @@ begin
       Result := Request('GET', '/logbooks?limit=100&cursor=' +
          UTF8Decode(EncodeURLElement(UTF8Encode(aCursor))), '');
       end;
-end;
-
-function TWRLClient.CreateLogbook(const aName: string): TWRLResult;
-var
-   body: TJSONObject;
-begin
-   body := TJSONObject.Create;
-   try
-      body.Add('name', UTF8Encode(aName));
-      Result := Request('POST', '/logbooks', UTF8Decode(body.AsJSON));
-      if (Result.Outcome = doConfirmed) and (Result.RemoteId = '') then
-         begin
-         Result.Outcome := doUncertain;
-         Result.ErrorCode := 'MISSING_LOGBOOK_ID';
-         end;
-   finally
-      body.Free;
-   end;
 end;
 
 function TWRLClient.Deliver(const aJob: TDeliveryJob): TWRLResult;

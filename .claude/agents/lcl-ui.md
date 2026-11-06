@@ -337,6 +337,23 @@ its own handle before each retry. **Do not "simplify" this into reopening the
 contest in place**: the survey on issue 218 lists the state that leaks; that is
 S1-S6, and needs NY4I's go-ahead.
 
+## Run-time children: anchors and a form that was never shown (issue 231, 2026-11-06)
+
+**A child created at run time and anchored `akRight` inside a panel that was created at
+its default width and THEN aligned (`Align := alTop`) moves by the whole difference**:
+the External logger editor's rows were built in 170-wide panels stretched to 670, so the
+key's eye sat 500 px over its box and the Logbook drop-down's arrow and Refresh button
+left the row. Anchor run-time children left/top only when the dialog does not resize, or
+anchor them to a sibling's side (`AnchorSideLeft.Control`), which does not depend on when
+the parent changes size. `uPasswordReveal` anchors the eye to its EDIT for that reason.
+
+**A test that streams a form and never shows it cannot see geometry.** Position, anchors
+and alignment are applied when the form is shown. `uTestPasswordRevealLayout` shows the
+form off screen (as `uTestNewContestForm` does), calls `Application.ProcessMessages` and
+measures; copy it for any run-time layout. Row constants such as the editor's
+`EDIT_LEFT` / `ROW_HEIGHT` are 96-dpi pixels, not scaled (`Scale96ToForm` is the LCL's
+answer); unmeasured at 150%.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

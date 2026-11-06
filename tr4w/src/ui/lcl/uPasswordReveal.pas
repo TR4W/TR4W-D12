@@ -91,7 +91,7 @@ unit uPasswordReveal;
 interface
 
 uses
-   StdCtrls;
+   Controls, StdCtrls;
 
 (*
   Attach a reveal toggle to a password edit.
@@ -120,13 +120,16 @@ procedure AttachPasswordReveal(const aEdit: TEdit);
 *)
 procedure SyncPasswordReveal(const aEdit: TEdit);
 
+(* The toggle attached to aEdit, or nil. For a test that measures where it
+   sits; nothing in the program needs it. *)
+function PasswordRevealControl(const aEdit: TEdit): TControl;
+
 implementation
 
 uses
    Classes,
    SysUtils,
    Types,
-   Controls,
    Graphics,
    Forms;
 
@@ -180,9 +183,24 @@ begin
      the edit occupied before, so no designed layout moves. *)
    aEdit.Width := aEdit.Width - size;
 
-   (* The edit's own anchors, so a form that stretches keeps the two
-     together instead of leaving the button behind. *)
-   Anchors := aEdit.Anchors;
+   (* ANCHORED TO THE EDIT, NOT TO THE PARENT (issue 231). The button was
+     given the edit's own anchors, which are anchors to the PARENT: when the
+     parent's width changed after the attach -- the External logger editor
+     builds its rows in a panel that is still its default 170 wide and is
+     stretched to 670 by Align -- the right anchor moved the button by the
+     same 500 pixels as the edit's, but from a width that had already been
+     narrowed, and the eye ended up over or beyond the box (measured: a gap
+     of -500 between the edit's right edge and the eye). Anchored to the
+     edit's own sides, the eye sits against its right edge and has its
+     height whatever the edit does afterwards: a later autosize of the edit,
+     a re-layout, a DPI change. Only the width is the button's own. *)
+   Anchors := [akLeft, akTop, akBottom];
+   AnchorSideLeft.Control := aEdit;
+   AnchorSideLeft.Side := asrRight;
+   AnchorSideTop.Control := aEdit;
+   AnchorSideTop.Side := asrTop;
+   AnchorSideBottom.Control := aEdit;
+   AnchorSideBottom.Side := asrBottom;
 
    TabStop := False;
    Cursor := crHandPoint;
@@ -454,6 +472,11 @@ begin
       end;
 
    TPasswordRevealButton.CreateFor(aEdit);
+end;
+
+function PasswordRevealControl(const aEdit: TEdit): TControl;
+begin
+   Result := RevealButtonFor(aEdit);
 end;
 
 procedure SyncPasswordReveal(const aEdit: TEdit);
