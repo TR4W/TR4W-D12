@@ -68,9 +68,9 @@ function OpenFileDlg(const aTitle, aFilter: string;
                      const aMustExist: boolean): boolean; overload;
 
 (* THE SAME DIALOG, ANSWERING IN A string, and starting in aInitialDir ('' is
-  the dialog's own choice). The form for new callers -- File > Open Log
-  (issue 218) is the first -- and the one the buffer form above is written
-  on, so there is one dialog and not two. *)
+  the dialog's own choice). The form for new callers, and the one the buffer
+  form above is written on, so there is one dialog and not two. (File > Open
+  Log used it until issue 228 gave it the New Contest dialog.) *)
 function OpenFileDlg(const aTitle, aFilter, aInitialDir: string;
                      out aFileName: string;
                      const aMustExist: boolean): boolean; overload;

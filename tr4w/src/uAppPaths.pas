@@ -145,6 +145,12 @@ function SettingsFileOverride: string;
 function DownloadedDataDir: string;
 function DownloadedDataFilePath(const aName: string): string;
 
+(* THE WRITABLE SETTINGS DIRECTORY AS THIS RUN SEES IT -- the base of the two
+  above and of BackupDir, and where File > Open Log leaves a new contest's
+  hand-off file for the instance it starts (issue 228): --settings moves it,
+  and the child is given the same --settings. *)
+function WritableSettingsDir: string;
+
 (* WHERE TR4W'S OWN BACKUPS OF A CONTEST LOG GO -- 'backup' under the
   writable settings directory, with a trailing separator, created on first
   use (issue #98, step 1, 2026-10-24).

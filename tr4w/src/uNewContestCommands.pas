@@ -82,6 +82,28 @@ function QueuedNewContestValue(const aCommand: string): string;
   program, a temporary file in the tests. *)
 function ApplyNewContestChoices(const aSettingsFile: string): integer;
 
+(* THE QUEUE, HANDED TO ANOTHER PROCESS -- File > Open Log's New Contest
+  (issue 228).
+
+  From the running program the dialog cannot create the contest: its values
+  are applied AFTER the station load and BEFORE the log is created (above),
+  and doing that inside a session already holding another contest is the
+  state leak issue 218 S1-S6 exist to fix. So the queue is written to aFile,
+  the program restarts, and the new instance loads it back into this queue
+  before startup reaches ApplyNewContestChoices -- the same place, the same
+  order, a clean process.
+
+  THE FORMAT IS THIS UNIT'S AND NOBODY ELSE'S: a header line, the station
+  callsign (its own line, so no command name can collide with it),
+  then the queued NAME=VALUE lines verbatim and in order.
+
+  Save answers False, having reported why, when the file cannot be written;
+  the caller then starts nothing. Load answers False for a file that is
+  missing, unreadable, or not in this format, and queues nothing; it does not
+  delete the file -- the caller does, once it has the answer. *)
+function SaveNewContestChoices(const aFile: string): boolean;
+function LoadNewContestChoices(const aFile: string): boolean;
+
 implementation
 
 uses
@@ -219,6 +241,88 @@ begin
       (* Applied once. A later call in the same run must not apply them again
         over whatever the log has since said. *)
       ClearNewContestChoices;
+   end;
+end;
+
+const
+   HANDOFF_HEADER = 'TR4W NEW CONTEST HAND-OFF 1';
+
+function SaveNewContestChoices(const aFile: string): boolean;
+var
+   lines: TStringList;
+begin
+   Result := False;
+   lines := TStringList.Create;
+   try
+      lines.Add(HANDOFF_HEADER);
+      (* AnsiString() STATED, exactly as QueueNewContestCommand states it for
+        the command lines below: the same program reads it back the same way. *)
+      lines.Add(AnsiString(gMainCallsign));
+      lines.AddStrings(Commands);
+      try
+         (* SaveToFile opens, writes and CLOSES the file before it returns, so
+           the child can never find it half written by a parent still running. *)
+         lines.SaveToFile(RawByteString(aFile));
+         Result := True;
+      except
+         on e: Exception do
+            begin
+            if logger <> nil then
+               begin
+               logger.Error('[NewContest] the new contest could not be written ' +
+                            'for the restart to %s: %s', [aFile, e.Message]);
+               end;
+            end;
+      end;
+   finally
+      lines.Free;
+   end;
+end;
+
+function LoadNewContestChoices(const aFile: string): boolean;
+var
+   lines: TStringList;
+   i: integer;
+begin
+   Result := False;
+   ClearNewContestChoices;
+   if not FileExists(aFile) then
+      begin
+      Exit;
+      end;
+
+   lines := TStringList.Create;
+   try
+      try
+         lines.LoadFromFile(RawByteString(aFile));
+      except
+         on e: Exception do
+            begin
+            if logger <> nil then
+               begin
+               logger.Error('[NewContest] the hand-off file %s could not be read: %s',
+                            [aFile, e.Message]);
+               end;
+            Exit;
+            end;
+      end;
+
+      if (lines.Count < 2) or (lines[0] <> HANDOFF_HEADER) then
+         begin
+         Exit;
+         end;
+
+      gMainCallsign := Trim(string(lines[1]));
+      for i := 2 to lines.Count - 1 do
+         begin
+         if lines[i] <> '' then
+            begin
+            Commands.Add(lines[i]);
+            end;
+         end;
+      Result := True;
+   finally
+      lines.Free;
    end;
 end;
 

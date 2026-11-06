@@ -46,6 +46,8 @@ type
    protected
       procedure Test_TheCaptionFunctionNamesTheBuild;
       procedure Test_TheShownFormNamesTheBuild;
+      (* Issue 228: File > Open Log shows this dialog in its own mode. *)
+      procedure Test_TheModeOnlyChangesTheTitle;
 
       (* Q103: the search rule, without a form. *)
       procedure Test_SearchMatchesAnywhereIgnoringCase;
@@ -745,6 +747,39 @@ begin
                'the title is the version followed by what the dialog is for');
    CheckTrue(Pos(TR4W_CURRENTVERSION, caption) = 1,
              'the title STARTS with the program name and version');
+end;
+
+(* A FORM NOBODY GAVE A MODE IS THE STARTUP DIALOG, titled exactly as before;
+  the switch mode keeps the version prefix and says something else. *)
+procedure TNewContestFormTests.Test_TheModeOnlyChangesTheTitle;
+var
+   frm: TfrmNewContest;
+begin
+   BeginTest('Test_TheModeOnlyChangesTheTitle');
+   CheckEquals(NewContestFormCaption, NewContestFormCaption(ncmStartup),
+               'the default is the startup title');
+   CheckEquals(TR4W_CURRENTVERSION + ' - ' + SOpenLogSwitchTitle,
+               NewContestFormCaption(ncmSwitchContest),
+               'the switch title is the version and what Open Log does');
+
+   if Application <> nil then
+      begin
+      Application.Initialize;
+      end;
+   frm := TfrmNewContest.Create(nil);
+   try
+      CheckTrue(frm.Mode = ncmStartup, 'a new form is in startup mode');
+      frm.OnShow(frm);
+      CheckEquals(NewContestFormCaption(ncmStartup), frm.Caption,
+                  'startup mode titles the startup dialog');
+      frm.Mode := ncmSwitchContest;
+      frm.OnShow(frm);
+      CheckEquals(NewContestFormCaption(ncmSwitchContest), frm.Caption,
+                  'switch mode titles the switch');
+      CheckTrue(frm.Choice = nccNone, 'the mode chooses nothing');
+   finally
+      frm.Free;
+   end;
 end;
 
 procedure TNewContestFormTests.Test_TheShownFormNamesTheBuild;
@@ -1638,6 +1673,7 @@ procedure TNewContestFormTests.RunAllTests;
 begin
    Test_TheCaptionFunctionNamesTheBuild;
    Test_TheShownFormNamesTheBuild;
+   Test_TheModeOnlyChangesTheTitle;
    Test_SearchMatchesAnywhereIgnoringCase;
    Test_AnEmptySearchKeepsTheWholeListInOrder;
    Test_QSOListsEveryQSOPartyAndNothingElse;

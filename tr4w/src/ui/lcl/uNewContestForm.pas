@@ -82,6 +82,13 @@ type
     result cannot carry that, so it is named instead of inferred. }
   TNewContestChoice = (nccNone, nccCreate, nccOpenSelected, nccLatest);
 
+  (* WHO IS ASKING (issue 228). ncmStartup is the first window an operator
+     meets, before any contest is open; ncmSwitchContest is File > Open Log
+     in a running program, which restarts on what is chosen. The FORM only
+     titles itself by it: what Cancel means is the caller's
+     (uNewContest.ShowNewContest ends the start-up; Open Log does nothing). *)
+  TNewContestDialogMode = (ncmStartup, ncmSwitchContest);
+
   TfrmNewContest = class(TForm)
     gbExisting: TGroupBox;
     gbNew: TGroupBox;
@@ -150,6 +157,7 @@ type
        raised in the middle describes a half-built list. *)
     FFilling: boolean;
     FChoice: TNewContestChoice;
+    FMode: TNewContestDialogMode;   (* ncmStartup unless the caller says *)
     (* THE FULL PATH OF EACH LOG IN grdFiles -- data row i (grid row
        FixedRows + i, under the header) is FFiles[i]. Filled in the same pass
        as the cells, so the two cannot disagree; a typed field the view owns,
@@ -226,6 +234,8 @@ type
     procedure SetMyCall(const aCall: string);
     procedure SetRowLabel(aRow: integer; const aCaption: string);
     property  Choice: TNewContestChoice read FChoice;
+    (* Set before ShowModal; HandleShow titles the window by it. *)
+    property  Mode: TNewContestDialogMode read FMode write FMode;
     procedure ResetIAmIn;
 
     { The presentation surface uNewContest drives. Each one is the LCL
@@ -266,8 +276,11 @@ var
    TC_OPENCONFIGURATIONFILE begins with ' - ' because it was written to FOLLOW
    the version (D7 did exactly this), so it must never be assigned bare -- that
    showed NY4I " - Open configuration file or start a new contest" with no way
-   to tell which build he was running. HandleShow is the only writer. *)
-function NewContestFormCaption: string;
+   to tell which build he was running. HandleShow is the only writer.
+
+   FROM FILE > OPEN LOG the title says the contest is being SWITCHED and that
+   TR4W restarts to do it (issue 228), after the same version prefix. *)
+function NewContestFormCaption(aMode: TNewContestDialogMode = ncmStartup): string;
 
 (* HOW MUCH A COLUMN OF THIS DIALOG MAY GROW: what it wants, but never past
    the room the screen's work area leaves, and never negative -- the dialog
@@ -308,9 +321,16 @@ begin
       end;
 end;
 
-function NewContestFormCaption: string;
+function NewContestFormCaption(aMode: TNewContestDialogMode = ncmStartup): string;
 begin
-   Result := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
+   if aMode = ncmSwitchContest then
+      begin
+      Result := TR4W_CURRENTVERSION + ' - ' + SOpenLogSwitchTitle;
+      end
+   else
+      begin
+      Result := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
+      end;
 end;
 
 const
@@ -447,7 +467,7 @@ begin
    // caption typed into a .lfm ships as English in every language -- 469 of
    // them do today (CLAUDE.md). The designer shows the English default; the
    // run time shows the operator's language.
-   Caption          := NewContestFormCaption;
+   Caption          := NewContestFormCaption(FMode);
    lblMyCall.Caption := RC_CALLSIGN;
    lblContest.Caption := SNewContestContestLabel;
    edtContestFilter.TextHint := SNewContestSearchHint;

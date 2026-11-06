@@ -728,6 +728,9 @@ uses
   uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
   uOpenLogRelaunch,   (* File > Open Log: the refusal, the child's arguments, the
                         one-shot relaunch tr4w_ShutDown starts (issue 218) *)
+  uNewContestForm,    (* TNewContestChoice, ncmSwitchContest -- Open Log's dialog (issue 228) *)
+  uNewContest,        (* RunNewContestDialog -- the startup dialog, reused (issue 228) *)
+  uNewContestCommands, (* Save/ClearNewContestChoices -- a new contest's hand-off *)
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -5150,62 +5153,108 @@ end;
   the first one's state into it; S1-S6 fix that, and until then a fresh
   process is the only way a contest starts clean.
 
-  ASKED TWICE: before the picker, so the operator is not shown a dialog whose
-  answer would be refused, and after it, because the picker is modal and a
-  radio can be keyed (by WSJT-X, say) while it is open.
+  THE CHOICE IS THE STARTUP DIALOG (issue 228, NY4I): the same New Contest
+  window -- the grid of logs, Browse, Last Contest, New Contest -- run by
+  uNewContest.RunNewContestDialog in ncmSwitchContest, which titles it as a
+  switch and touches no global. Cancel leaves the session exactly as it was.
+  What each answer does is uOpenLogRelaunch.PlanOpenLog, unit tested.
 
-  ONLY A TR4W DATABASE IS ACCEPTED. The program would be closed before the new
-  one found out the file was wrong, and startup's answer to a foreign
-  database or an unrecognised file is a message and a halt -- leaving the
-  operator with no TR4W at all. A .cfg import is not offered here either: it
-  is the New Contest path, and a text file chosen by mistake would be parsed
-  as one. *)
+  ASKED TWICE: before the dialog, so the operator does not fill in a dialog
+  whose answer would be refused, and after it, because the dialog is modal and
+  a radio can be keyed (by WSJT-X, say) while it is open.
+
+  A NEW CONTEST IS NOT CREATED HERE. Startup creates a new contest's log after
+  the station settings load (uProgramMain: ApplyNewContestChoices and after
+  it LogStoreApplyContestConfig); doing that in this process would build it with
+  the running contest's state, the leak issue 218 S1-S6 exist to fix. So the
+  dialog's queued choices are written to a hand-off file -- written and closed
+  before anything closes -- and the new instance loads them and creates the
+  log by the ordinary startup path.
+
+  A FILE STARTUP WOULD HALT ON IS REFUSED BEFORE ANYTHING CLOSES -- a foreign
+  database, an unrecognised or missing file: the program would be gone before
+  the new one found out, leaving the operator with no TR4W at all. A text .cfg
+  is accepted now, because this dialog lists one as the migration path. *)
 procedure OpenAnotherLog;
 var
    chosen:  string;
    current: string;
+   handOff: string;
+   choice:  TNewContestChoice;
+   args:    TRelaunchArgs;
+   pid:     cardinal;
+   isNew:   boolean;
 begin
    if not OpenLogMayProceed then
       begin
       Exit;
       end;
 
-   (* '*' and not '*.*': it is every file on gtk2 and Cocoa as well. Both cases
-     of the extension, because a gtk2 filter is case-sensitive (issue #141). *)
-   if not OpenFileDlg(SOpenLogDialogTitle,
-                      SOpenLogFilterLogs + '|*.db;*.DB|' + SOpenLogFilterAll + '|*',
-                      ContestDir, chosen, True) then
-      begin
-      logger.Info('[OpenLog] the picker was cancelled');
-      Exit;
-      end;
-
    current := LogStoreFileName;
-   if IsSameLogFile(chosen, current) then
+   choice  := RunNewContestDialog(ncmSwitchContest,
+                                  [current, CharBufferText(TR4W_CFG_FILENAME)],
+                                  chosen);
+   isNew   := choice = nccCreate;
+   pid     := cardinal(System.GetProcessID);
+   handOff := '';
+   if isNew then
       begin
-      logger.Info('[OpenLog] %s is the log already open -- nothing to do', [chosen]);
-      QuickDisplay(SOpenLogAlreadyOpen);
-      Exit;
+      handOff := NewContestHandOffFileName(WritableSettingsDir, pid);
       end;
 
-   if ClassifyContestFile(chosen) <> cfkTR4WDatabase then
-      begin
-      logger.Info('[OpenLog] %s is not a TR4W contest log -- not switching', [chosen]);
-      QuickDisplayError(UnicodeFormat(SOpenLogNotAContestLog, [chosen]));
-      Exit;
-      end;
+   case PlanOpenLog(chosen, isNew,
+                    IsSameLogFile(chosen, current) or
+                    IsSameLogFile(chosen, CharBufferText(TR4W_CFG_FILENAME)),
+                    ClassifyContestFile(chosen),
+                    CommandLineArguments, pid, handOff, args) of
+      olaNothing:
+         begin
+         logger.Info('[OpenLog] the dialog was cancelled');
+         end;
 
-   if not OpenLogMayProceed then
-      begin
-      Exit;
-      end;
+      olaAlreadyOpen:
+         begin
+         logger.Info('[OpenLog] %s is the contest already open -- nothing to do', [chosen]);
+         QuickDisplay(SOpenLogAlreadyOpen);
+         end;
 
-   logger.Info('[OpenLog] closing %s and starting again on %s', [current, chosen]);
-   RequestRelaunch(RelaunchExecutable(ParamStr(0),
-                                      string(SysUtils.GetEnvironmentVariable('APPIMAGE'))),
-                   BuildRelaunchArguments(CommandLineArguments, chosen,
-                                          cardinal(System.GetProcessID)));
-   ExitProgram(False);
+      olaNotAContestLog:
+         begin
+         logger.Info('[OpenLog] %s is not a contest TR4W can open -- not switching', [chosen]);
+         QuickDisplayError(UnicodeFormat(SOpenLogNotAContestLog, [chosen]));
+         end;
+
+      olaRelaunch, olaRelaunchNew:
+         begin
+         if not OpenLogMayProceed then
+            begin
+            ClearNewContestChoices;
+            Exit;
+            end;
+
+         if isNew then
+            begin
+            if not SaveNewContestChoices(handOff) then
+               begin
+               ClearNewContestChoices;
+               QuickDisplayError(SOpenLogHandOffFailed);
+               Exit;
+               end;
+            logger.Info('[OpenLog] the new contest is handed over in %s', [handOff]);
+            end;
+
+         logger.Info('[OpenLog] closing %s and starting again on %s', [current, chosen]);
+         RequestRelaunch(RelaunchExecutable(ParamStr(0),
+                                            string(SysUtils.GetEnvironmentVariable('APPIMAGE'))),
+                         args);
+         ExitProgram(False);
+         Exit;
+         end;
+   end;
+
+   (* Not relaunching: nothing the dialog queued may stay behind in this
+     process. *)
+   ClearNewContestChoices;
 end;
 
 procedure ProcessMenu(menuID: integer);

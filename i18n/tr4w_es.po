@@ -9004,3 +9004,38 @@ msgstr ""
 msgid "%s (%d uncertain, %d failed)"
 msgstr ""
 
+#: uappstrings.smenuopenlog
+#, fuzzy
+msgid "Open Log..."
+msgstr ""
+
+#: uappstrings.sopenlogswitchtitle
+#, fuzzy
+msgid "Switch to another contest (TR4W restarts on the one you choose)"
+msgstr ""
+
+#: uappstrings.sopenloghandofffailed
+#, fuzzy
+msgid "Open Log was not done: the new contest could not be saved for the restart. The reason is in tr4w.log."
+msgstr ""
+
+#: uappstrings.sopenlogrefusedkeyed
+#, fuzzy
+msgid "Open Log was not done: a radio is transmitting. Unkey it, then choose File > Open Log again."
+msgstr ""
+
+#: uappstrings.sopenlogrefusedsendingcw
+#, fuzzy
+msgid "Open Log was not done: a CW message is still being sent. Let it finish, then choose File > Open Log again."
+msgstr ""
+
+#: uappstrings.sopenlogalreadyopen
+#, fuzzy
+msgid "That log is already open."
+msgstr ""
+
+#: uappstrings.sopenlognotacontestlog
+#, fuzzy
+msgid "Not a TR4W contest log, so it was not opened: %s"
+msgstr ""
+

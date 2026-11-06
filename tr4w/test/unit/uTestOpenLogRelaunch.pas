@@ -27,6 +27,13 @@ type
       procedure TestTheChildReadsWhatTheParentWrote;
       procedure TestExecutable;
       procedure TestRequestIsOneShot;
+      (* Issue 228: the New Contest dialog in place of the picker. *)
+      procedure TestTheActionRulesInOrder;
+      procedure TestEachAnswerPlansItsRelaunch;
+      procedure TestCancelPlansNothing;
+      procedure TestTheHandOffSwitch;
+      procedure TestTheHandOffFileRoundTrips;
+      procedure TestABadHandOffFileQueuesNothing;
    public
       procedure RunAllTests; override;
    end;
@@ -35,6 +42,11 @@ implementation
 
 uses
    SysUtils,
+   Classes,
+   uContestFileKind,     (* TContestFileKind -- what PlanOpenLog is told *)
+   uNewContestForm,      (* TNewContestChoice -- the dialog's answer *)
+   uNewContest,          (* NewContestResultFile -- the answer as a file *)
+   uNewContestCommands,  (* the queue and its hand-off file *)
    uOpenLogRelaunch;
 
 function Joined(const aArgs: TRelaunchArgs): string;
@@ -191,6 +203,164 @@ begin
    CheckEquals('', exe, 'nothing to start the second time');
 end;
 
+(* THE ORDER IS THE RULE: Cancel before anything, the open contest before
+  "new" (a new contest named like the running one is the running one), and a
+  new contest before the file's kind (its log does not exist yet). *)
+procedure TOpenLogRelaunchTests.TestTheActionRulesInOrder;
+begin
+   BeginTest('TestTheActionRulesInOrder');
+   CheckTrue(OpenLogAction('', False, False, cfkTR4WDatabase) = olaNothing,
+             'nothing chosen is Cancel');
+   CheckTrue(OpenLogAction('', True, True, cfkMissing) = olaNothing,
+             'nothing chosen is Cancel whatever else is said');
+   CheckTrue(OpenLogAction('a.db', False, True, cfkTR4WDatabase) = olaAlreadyOpen,
+             'the open contest is already open');
+   CheckTrue(OpenLogAction('a.db', True, True, cfkMissing) = olaAlreadyOpen,
+             'a new contest whose log is the open one is already open');
+   CheckTrue(OpenLogAction('n.db', True, False, cfkMissing) = olaRelaunchNew,
+             'a new contest relaunches although its log does not exist yet');
+   CheckTrue(OpenLogAction('b.db', False, False, cfkTR4WDatabase) = olaRelaunch,
+             'another TR4W log relaunches');
+   CheckTrue(OpenLogAction('old.cfg', False, False, cfkTextConfig) = olaRelaunch,
+             'a text .cfg relaunches: the dialog lists one as the migration path');
+   CheckTrue(OpenLogAction('x.db', False, False, cfkForeignDatabase) = olaNotAContestLog,
+             'a foreign database is refused before anything closes');
+   CheckTrue(OpenLogAction('x.png', False, False, cfkUnrecognised) = olaNotAContestLog,
+             'an unrecognised file is refused');
+   CheckTrue(OpenLogAction('gone.db', False, False, cfkMissing) = olaNotAContestLog,
+             'an existing contest that is missing is refused');
+end;
+
+(* EACH OF THE DIALOG'S THREE ANSWERS, AS THE MENU ARM RUNS IT: the file
+  uNewContest says the answer means, then the plan for it. *)
+procedure TOpenLogRelaunchTests.TestEachAnswerPlansItsRelaunch;
+var
+   args:   TRelaunchArgs;
+   chosen: string;
+begin
+   BeginTest('TestEachAnswerPlansItsRelaunch');
+
+   chosen := NewContestResultFile(nccOpenSelected, 'C:\L\b.db', 'C:\L\last.db', 'C:\L\new.db');
+   CheckEquals('C:\L\b.db', chosen, 'an existing contest is the selected file');
+   CheckTrue(PlanOpenLog(chosen, False, False, cfkTR4WDatabase, ['--lang', 'de'],
+                         11, 'C:\S\h.txt', args) = olaRelaunch,
+             'an existing contest relaunches');
+   CheckEquals('C:\L\b.db|--lang|de|--wait-for-instance=11', Joined(args),
+               'an existing contest carries no hand-off, even when one is named');
+
+   chosen := NewContestResultFile(nccLatest, 'C:\L\b.db', 'C:\L\last.db', 'C:\L\new.db');
+   CheckEquals('C:\L\last.db', chosen, 'Last Contest is the last contest');
+   CheckTrue(PlanOpenLog(chosen, False, False, cfkTR4WDatabase, [], 11, '', args) =
+             olaRelaunch, 'Last Contest relaunches');
+   CheckEquals('C:\L\last.db|--wait-for-instance=11', Joined(args),
+               'Last Contest restarts on it');
+
+   chosen := NewContestResultFile(nccCreate, 'C:\L\b.db', 'C:\L\last.db', 'C:\L\new.db');
+   CheckEquals('C:\L\new.db', chosen, 'a new contest is its new log');
+   CheckTrue(PlanOpenLog(chosen, True, False, cfkMissing, ['--settings=s.json'],
+                         11, 'C:\S\h.txt', args) = olaRelaunchNew,
+             'a new contest relaunches with its choices');
+   CheckEquals('C:\L\new.db|--settings=s.json|--new-contest-from=C:\S\h.txt|' +
+               '--wait-for-instance=11', Joined(args),
+               'a new contest names its hand-off, with the settings carried');
+
+   CheckTrue(PlanOpenLog('C:\L\a.db', False, True, cfkTR4WDatabase, [], 11, '', args) =
+             olaAlreadyOpen, 'the open contest plans nothing');
+   CheckEquals(0, Length(args), 'and starts nothing');
+end;
+
+procedure TOpenLogRelaunchTests.TestCancelPlansNothing;
+var
+   args:      TRelaunchArgs;
+   chosenExe: string;
+begin
+   BeginTest('TestCancelPlansNothing');
+   CheckEquals('', NewContestResultFile(nccNone, 'C:\L\b.db', 'C:\L\last.db', 'C:\L\new.db'),
+               'Cancel means no file, whatever the form holds');
+   CheckTrue(PlanOpenLog('', False, False, cfkMissing, ['--lang', 'es'], 3, '', args) =
+             olaNothing, 'Cancel is nothing to do');
+   CheckEquals(0, Length(args), 'Cancel starts nothing');
+   CheckFalse(TakeRelaunchRequest(chosenExe, args), 'and requests no relaunch');
+end;
+
+procedure TOpenLogRelaunchTests.TestTheHandOffSwitch;
+var
+   handOff: string;
+begin
+   BeginTest('TestTheHandOffSwitch');
+   CheckTrue(NewContestHandOffRequested(
+                BuildRelaunchArguments([], 'n.db', 5, 'C:\My Settings\h 5.txt'), handOff),
+             'the child finds the hand-off the parent wrote');
+   CheckEquals('C:\My Settings\h 5.txt', handOff, 'a path with spaces survives');
+   CheckFalse(NewContestHandOffRequested(['n.db', '--wait-for-instance=5'], handOff),
+              'no hand-off switch, no hand-off');
+   CheckFalse(NewContestHandOffRequested(['--new-contest-from='], handOff),
+              'an empty value is no hand-off');
+   CheckEquals('n.db|--wait-for-instance=6',
+               Joined(BuildRelaunchArguments(['old.db', '--new-contest-from=C:\h.txt'],
+                                             'n.db', 6)),
+               'an inherited hand-off switch is dropped -- it was for one start');
+   CheckEquals(IncludeTrailingPathDelimiter('dir') + 'open-log-new-contest-77.txt',
+               NewContestHandOffFileName('dir', 77),
+               'the hand-off file is named for the parent');
+end;
+
+procedure TOpenLogRelaunchTests.TestTheHandOffFileRoundTrips;
+var
+   path: string;
+begin
+   BeginTest('TestTheHandOffFileRoundTrips');
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-handoff-test.txt';
+   ClearNewContestChoices;
+   SetNewContestMainCallsign('W4TA');
+   QueueNewContestCommand('MY CALL', 'W4TA');
+   QueueNewContestCommand('MY STATE', 'FL = x');
+   QueueNewContestCommand('CATEGORY-POWER', '');
+   QueueNewContestCommand('CONTEST', 'ARRL-FD');
+   try
+      CheckTrue(SaveNewContestChoices(path), 'the hand-off is written');
+      ClearNewContestChoices;
+      CheckFalse(HasNewContestChoices, 'the parent forgets it');
+
+      CheckTrue(LoadNewContestChoices(path), 'the child reads it');
+      CheckTrue(HasNewContestChoices, 'and it is queued');
+      CheckEquals('W4TA', QueuedNewContestValue('MY CALL'), 'MY CALL');
+      CheckEquals('FL = x', QueuedNewContestValue('MY STATE'),
+                  'a value holding "=" comes back whole');
+      CheckEquals('ARRL-FD', QueuedNewContestValue('CONTEST'), 'CONTEST');
+   finally
+      ClearNewContestChoices;
+      SysUtils.DeleteFile(path);
+   end;
+end;
+
+procedure TOpenLogRelaunchTests.TestABadHandOffFileQueuesNothing;
+var
+   path:  string;
+   lines: TStringList;
+begin
+   BeginTest('TestABadHandOffFileQueuesNothing');
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-handoff-bad.txt';
+   SysUtils.DeleteFile(path);
+   QueueNewContestCommand('CONTEST', 'LEFTOVER');
+   CheckFalse(LoadNewContestChoices(path), 'a missing file is not a hand-off');
+   CheckFalse(HasNewContestChoices, 'and leaves nothing queued');
+
+   lines := TStringList.Create;
+   try
+      lines.Add('CONTEST=CQ-WW-CW');
+      lines.SaveToFile(RawByteString(path));
+   finally
+      lines.Free;
+   end;
+   try
+      CheckFalse(LoadNewContestChoices(path), 'a file without the header is not ours');
+      CheckFalse(HasNewContestChoices, 'and queues nothing');
+   finally
+      SysUtils.DeleteFile(path);
+   end;
+end;
+
 procedure TOpenLogRelaunchTests.RunAllTests;
 begin
    TestRefusal;
@@ -202,6 +372,12 @@ begin
    TestTheChildReadsWhatTheParentWrote;
    TestExecutable;
    TestRequestIsOneShot;
+   TestTheActionRulesInOrder;
+   TestEachAnswerPlansItsRelaunch;
+   TestCancelPlansNothing;
+   TestTheHandOffSwitch;
+   TestTheHandOffFileRoundTrips;
+   TestABadHandOffFileQueuesNothing;
 end;
 
 end.

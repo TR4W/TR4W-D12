@@ -56,7 +56,11 @@ uses
   not be browsing. See TfrmNewContest.PopulateFiles. }
 procedure BeginNewContest;
 procedure ClearFields;
-procedure SaveNewContest;
+(* Queues what the form holds and answers the new contest's log file. It
+  writes no global: the startup caller puts the answer in TR4W_CFG_FILENAME,
+  and File > Open Log must not, because the running contest's writers read
+  that name (issue 228). *)
+function SaveNewContest: string;
 procedure DisplayCheckBox(Text: string);
 procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField);
 procedure DisplayInitialCommand(Command: TNewContestField);
@@ -71,6 +75,27 @@ procedure DisplayInitialCommand(Command: TNewContestField);
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
 procedure ShowNewContest;
+
+(* THE DIALOG, FOR ANY CALLER -- issue 228. Shows it modally in aMode and
+  answers what the operator chose, with the file in aFile ('' and nccNone
+  for Cancel). It writes NO global and ends nothing: ShowNewContest turns the
+  answer into startup's TR4W_CFG_FILENAME, and File > Open Log into a restart.
+
+  aOpenContest names the files the running contest was opened from (its log,
+  and the file it was started on); the Last Contest button is hidden when it
+  names one of them, because choosing it could only answer "already open".
+  At startup there is none. For nccCreate the choices are queued in
+  uNewContestCommands, exactly as at startup. *)
+function RunNewContestDialog(aMode: TNewContestDialogMode;
+                             const aOpenContest: array of string;
+                             out aFile: string): TNewContestChoice;
+
+(* THE FILE EACH ANSWER MEANS -- the one mapping both callers use: the
+  selected or browsed file, the last contest, the new contest's log; ''
+  for nccNone. *)
+function NewContestResultFile(aChoice: TNewContestChoice;
+                              const aSelectedFile, aLatestFile,
+                                    aCreatedFile: string): string;
 
 (* THE DIALOG'S RULES ON A FORM THE CALLER MADE -- what ShowNewContest does
   around ShowModal, split out so a test can drive the real rules on a form
@@ -114,7 +139,8 @@ uses
   uContestRegistry,
   uAppStrings,         // SNewContestHostArea* -- issue 217
   uDomFileKeys,        // DOM_EXTENSION -- the county file's name, as set-up builds it
-  uNewContestHostArea; // THostAreaPlaces, HostAreaOutsideRefusal -- issue 217
+  uNewContestHostArea, // THostAreaPlaces, HostAreaOutsideRefusal -- issue 217
+  uOpenLogRelaunch;    (* IsSameLogFile -- is the last contest the open one (issue 228) *)
 
 const
 
@@ -500,24 +526,21 @@ end;
 (* ApplyNewContestCommand MOVED to uNewContestCommands as its ApplyOne, and
   it runs at startup now rather than here -- see that unit for why. *)
 
-procedure SaveNewContest;
+function SaveNewContest: string;
 begin
   begin
-      {callsign}
-    { The .cfg is written as bytes, so the two working buffers stay ANSI; what
-      changed is where the text comes from -- the form, not a control id. }
-    SetCharBuffer(TempBuffer1, frmNewContest.MyCall);
     (* QUEUED, NOT ASSIGNED AND SAVED HERE. The settings object has not been
       loaded from settings\tr4w.json yet -- that happens after this dialog --
       so MainCallsign always read '' here, and SaveSettings wrote the
       constructor defaults over the operator's whole settings section. See
-      uNewContestCommands. *)
-    ClearNewContestChoices;
-    SetNewContestMainCallsign(CharBufferText(TempBuffer1));
-    DeleteSlashes(TempBuffer1);
+      uNewContestCommands.
 
-      {Contest Name}
-    SetCharBuffer(TempBuffer2, frmNewContest.ContestName);
+      THE TempBuffer1 / TempBuffer2 COPIES ARE GONE (issue 228): the
+      callsign was copied into TempBuffer1 and its slashes deleted, and the
+      contest name into TempBuffer2, and nothing read either afterwards --
+      the .cfg they were built for has not been written since 66ac1ebe. *)
+    ClearNewContestChoices;
+    SetNewContestMainCallsign(frmNewContest.MyCall);
 
     (* ONE FILE, IN ONE DIRECTORY -- no folder per contest.
 
@@ -552,18 +575,23 @@ begin
   (* BOTH ARGUMENTS WERE PAnsiChar OF A TEMPORARY -- PAnsiChar(AnsiString(x))
     takes the address of a value whose lifetime ends at the semicolon. Two of
     them on one call. *)
-  SetCharBuffer(TR4W_CFG_FILENAME,
-                ContestDir + ContestLogFileName(frmNewContest.ContestName,
-                                                Now,
-                                                frmNewContest.MyCall));
+  (* THE ANSWER, NOT TR4W_CFG_FILENAME (issue 228). The caller decides where
+    it goes: startup's global, or File > Open Log's restart. *)
+  Result := ContestDir + ContestLogFileName(frmNewContest.ContestName,
+                                            Now,
+                                            frmNewContest.MyCall);
 
-  if FileExists(TR4W_CFG_FILENAME) then
+  if FileExists(Result) then
      begin
      (* NO BUFFER AT ALL. The message was formatted into SYSERRORBUFFER and
        read straight back out of it one line later -- a global round trip for
-       a value that never left this if-statement. *)
+       a value that never left this if-statement.
+
+       "No" KEEPS WHAT IT ALWAYS DID: the existing file is the answer, with
+       only the callsign queued, so that log is opened rather than written
+       over. *)
      if YesOrNo(SysUtils.Format(TC_FOLDERALREADYEXISTSOVERWRITE,
-                                [CharBufferText(TR4W_CFG_FILENAME)])) = IDno then
+                                [Result])) = IDno then
         begin
         Exit;
         end;
@@ -686,8 +714,24 @@ begin
 end;
 
 
+(* Is aFile one of the files the running contest was opened from? *)
+function IsOneOf(const aFile: string; const aFiles: array of string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(aFiles) to High(aFiles) do
+      begin
+      if IsSameLogFile(aFile, aFiles[i]) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 { WHAT WM_INITDIALOG DID, minus creating thirty controls by hand. }
-procedure PrepareForm;
+procedure PrepareForm(const aOpenContest: array of string);
 var
    latest: string;
    (* Handed to the form, which owns it from then on. *)
@@ -756,6 +800,17 @@ begin
       latest := '';
       end;
 
+   (* THE LAST CONTEST IS THE ONE RUNNING, FROM FILE > OPEN LOG (issue 228).
+     It is recorded once, at startup (uProgramMain, SetLatestConfigFile), so
+     mid-session it names the contest already open, and the button could only
+     answer "already open". Hidden, and said in the log. *)
+   if (latest <> '') and IsOneOf(latest, aOpenContest) then
+      begin
+      logger.Info('[NewContest] the last contest is the one open, so its ' +
+                  'button is hidden: %s', [latest]);
+      latest := '';
+      end;
+
    if latest <> '' then
       begin
       (* NO AMPERSAND INSIDE PARENTHESES.  ON macOS IT COSTS THE WHOLE CAPTION.
@@ -808,18 +863,32 @@ begin
    BeginNewContest;   { OK starts disabled unless the form is already valid }
 end;
 
-{ The operator picked an existing .cfg from the list.
-
-  StartContestFromListbox read the file name back out of the static that
-  DlgDirListA wrote the current directory into, then expanded it with
-  GetFullPathNameA because the list could be showing any directory. With a flat
-  list of one directory there is nothing to expand: the name joins the path it
-  was listed from. }
-procedure OpenSelectedConfig;
+(* ~~OpenSelectedConfig~~ IS GONE (issue 228): it wrote SelectedFile -- a
+  FULL path already, the grid can be showing any directory -- into
+  TR4W_CFG_FILENAME. NewContestResultFile answers it now, and only the
+  startup caller writes the global. *)
+function NewContestResultFile(aChoice: TNewContestChoice;
+                              const aSelectedFile, aLatestFile,
+                                    aCreatedFile: string): string;
 begin
-   { A FULL path already -- the grid can be showing any directory, which is why
-     SelectedFile answers with the path and not just the name. }
-   SetCharBuffer(TR4W_CFG_FILENAME, frmNewContest.SelectedFile);
+   case aChoice of
+      nccOpenSelected:
+         begin
+         Result := aSelectedFile;
+         end;
+      nccLatest:
+         begin
+         Result := aLatestFile;
+         end;
+      nccCreate:
+         begin
+         Result := aCreatedFile;
+         end;
+   else
+      begin
+      Result := '';
+      end;
+   end;
 end;
 
 procedure AttachNewContestForm(aForm: TfrmNewContest; const aDomDir: string = '');
@@ -845,30 +914,31 @@ begin
    frmNewContest    := nil;
 end;
 
-procedure ShowNewContest;
+function RunNewContestDialog(aMode: TNewContestDialogMode;
+                             const aOpenContest: array of string;
+                             out aFile: string): TNewContestChoice;
 var
    form: TfrmNewContest;
+   created: string;
 begin
+   aFile  := '';
+   Result := nccNone;
    AttachNewContestForm(TfrmNewContest.Create(nil));
    try
-      PrepareForm;
+      frmNewContest.Mode := aMode;
+      PrepareForm(aOpenContest);
 
       if frmNewContest.ShowModal = mrOk then
          begin
-         case frmNewContest.Choice of
-            nccOpenSelected: OpenSelectedConfig;
-            (* From the store, not from a global copy of it.  StrPLCopy
-              terminates what it writes; Move copied a whole fixed array and
-              relied on the source already being terminated. *)
-            nccLatest:       SetCharBuffer(TR4W_CFG_FILENAME, GetLatestConfigFile);
-            nccCreate:       SaveNewContest;
-         end;
-         end
-      else
-         begin
-         { WM_CLOSE set this sentinel and uProgramMain tests it to mean
-           "the operator did not choose a contest" -- see the caller. }
-         TR4W_CFG_FILENAME[0] := '_';
+         Result  := frmNewContest.Choice;
+         created := '';
+         if Result = nccCreate then
+            begin
+            created := SaveNewContest;
+            end;
+         (* The last contest from the store, not from a global copy of it. *)
+         aFile := NewContestResultFile(Result, frmNewContest.SelectedFile,
+                                       GetLatestConfigFile, created);
          end;
    finally
       (* Handlers down BEFORE the form goes, as they always were, so nothing
@@ -877,6 +947,22 @@ begin
       DetachNewContestForm;
       form.Free;
    end;
+end;
+
+procedure ShowNewContest;
+var
+   chosen: string;
+begin
+   if RunNewContestDialog(ncmStartup, [], chosen) = nccNone then
+      begin
+      { WM_CLOSE set this sentinel and uProgramMain tests it to mean
+        "the operator did not choose a contest" -- see the caller. }
+      TR4W_CFG_FILENAME[0] := '_';
+      end
+   else
+      begin
+      SetCharBuffer(TR4W_CFG_FILENAME, chosen);
+      end;
 end;
 end.
 

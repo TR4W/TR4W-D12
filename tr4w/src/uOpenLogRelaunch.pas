@@ -14,8 +14,9 @@ unit uOpenLogRelaunch;
   THIS UNIT HOLDS EVERY PART OF THAT WHICH CAN BE WRONG WITHOUT A SCREEN, so the
   unit tests can pin it: what refuses the switch, whether the chosen file is the
   one already open, the child's command line, and the switch the child reads.
-  MainUnit owns the picker and the menu arm; uProgramMain owns the wait;
-  tr4w_ShutDown starts the child.
+  MainUnit owns the menu arm; uNewContest owns the dialog (the startup New
+  Contest dialog, issue 228 -- S0 had a plain file picker); uProgramMain owns
+  the wait and the hand-off load; tr4w_ShutDown starts the child.
 
   THE HAND-OFF. The program is single-instance on Windows (a named mutex, see
   uProgramMain.SingleInstanceMutexName), and the parent still holds that mutex
@@ -42,6 +43,9 @@ unit uOpenLogRelaunch;
 
 interface
 
+uses
+   uContestFileKind;   (* TContestFileKind -- what the chosen file is (no LCL) *)
+
 type
    (* WHY THE SWITCH IS REFUSED. orNone means it may go ahead. *)
    TOpenLogRefusal = (
@@ -52,10 +56,28 @@ type
 
    TRelaunchArgs = array of string;
 
+   (* WHAT FILE > OPEN LOG DOES WITH THE DIALOG'S ANSWER (issue 228). *)
+   TOpenLogAction = (
+      olaNothing,         (* the dialog was cancelled -- the session is untouched *)
+      olaAlreadyOpen,     (* the contest chosen is the one running -- say so *)
+      olaNotAContestLog,  (* the child would halt on it -- refuse before closing *)
+      olaRelaunch,        (* an existing contest: restart on it *)
+      olaRelaunchNew      (* a new contest: hand its choices over, restart on it *)
+   );
+
 const
    (* The child's "wait for the instance that started me" switch. The value is
       the parent's process id. *)
    WAIT_FOR_INSTANCE_SWITCH = '--wait-for-instance=';
+
+   (* THE NEW CONTEST'S HAND-OFF FILE (issue 228). The value is a file the
+     parent wrote and closed before it started the child: what the New
+     Contest dialog chose (uNewContestCommands.SaveNewContestChoices). The
+     child loads it into the same queue the dialog fills at startup, deletes
+     it, and startup applies it at the usual place -- so the new contest's
+     log is created by the ordinary startup path, in a process that holds no
+     other contest's state. One argument, for the reason given above. *)
+   NEW_CONTEST_HANDOFF_SWITCH = '--new-contest-from=';
 
    (* How long the child keeps trying the single-instance lock, and how often.
       Ten seconds covers a shutdown that waits out a network radio's
@@ -87,8 +109,12 @@ function IsSameLogFile(const aChosen, aCurrent: string): boolean;
                                       left with
      --wait-for-instance=<pid>        exactly once
 
+     --new-contest-from=<file>        only when aHandOffFile is not ''
+
   Everything else on the parent's line is DROPPED: the old contest file, any
-  headless switch, and a wait switch the parent itself was started with.
+  headless switch, and a wait or hand-off switch the parent itself was
+  started with -- a hand-off file is read once, by the child it was written
+  for.
 
   NO QUOTING. RunProgram hands each element to TProcess.Parameters, which
   quotes an element containing a space (fcl-process win/process.inc,
@@ -96,7 +122,53 @@ function IsSameLogFile(const aChosen, aCurrent: string): boolean;
   added here would arrive as part of the file name. *)
 function BuildRelaunchArguments(const aParentArgs: array of string;
                                 const aLogFile: string;
-                                aParentPid: cardinal): TRelaunchArgs;
+                                aParentPid: cardinal;
+                                const aHandOffFile: string = ''): TRelaunchArgs;
+
+(* WAS THIS RUN HANDED A NEW CONTEST? True, with the file, when one argument
+  is NEW_CONTEST_HANDOFF_SWITCH followed by a non-empty name. *)
+function NewContestHandOffRequested(const aArgs: array of string;
+                                    out aHandOffFile: string): boolean;
+
+(* THE HAND-OFF FILE'S NAME: in aDir (the writable settings directory, which
+  --settings moves and the child inherits), unique to the parent's process,
+  so two stations sharing a settings folder cannot read each other's. *)
+function NewContestHandOffFileName(const aDir: string; aParentPid: cardinal): string;
+
+(* WHAT TO DO WITH THE DIALOG'S ANSWER -- the rules, in order:
+
+     nothing chosen ('')             olaNothing      Cancel touches nothing
+     the contest already running     olaAlreadyOpen  no pointless restart
+     a new contest                   olaRelaunchNew  its file need not exist
+     a TR4W log or a text .cfg       olaRelaunch     what startup opens
+     anything else                   olaNotAContestLog
+
+  A TEXT .cfg IS ACCEPTED, unlike S0's picker: the dialog's own grid lists a
+  .cfg that has no .db beside it (the migration path) and its Browse filter
+  offers *.cfg, so refusing one would refuse a row the dialog offered.
+  Startup imports it exactly as it would have at the first launch. What is
+  refused is what the child's startup would HALT on (a foreign database, an
+  unrecognised file) or could not read (missing) -- leaving no TR4W at all.
+
+  aIsOpenContest is asked by the caller (IsSameLogFile against the open log
+  and the file it was opened from). *)
+function OpenLogAction(const aChosen: string;
+                       aIsNew: boolean;
+                       aIsOpenContest: boolean;
+                       aKind: TContestFileKind): TOpenLogAction;
+
+(* THE WHOLE PLAN FOR THE RELAUNCH: the action, and when it relaunches the
+  child's arguments (nil otherwise). A new contest's arguments carry
+  aHandOffFile; an existing one's never do. The caller writes the hand-off
+  file when the action is olaRelaunchNew, and starts nothing if that fails. *)
+function PlanOpenLog(const aChosen: string;
+                     aIsNew: boolean;
+                     aIsOpenContest: boolean;
+                     aKind: TContestFileKind;
+                     const aParentArgs: array of string;
+                     aParentPid: cardinal;
+                     const aHandOffFile: string;
+                     out aArgs: TRelaunchArgs): TOpenLogAction;
 
 (* WAS THIS RUN STARTED BY OPEN LOG? True, with the parent's pid, when one
   argument is WAIT_FOR_INSTANCE_SWITCH followed by a decimal number. A
@@ -192,7 +264,8 @@ end;
 
 function BuildRelaunchArguments(const aParentArgs: array of string;
                                 const aLogFile: string;
-                                aParentPid: cardinal): TRelaunchArgs;
+                                aParentPid: cardinal;
+                                const aHandOffFile: string = ''): TRelaunchArgs;
 var
    i:   integer;
    arg: string;
@@ -231,7 +304,87 @@ begin
       Inc(i);
       end;
 
+   if aHandOffFile <> '' then
+      begin
+      AppendArg(Result, NEW_CONTEST_HANDOFF_SWITCH + aHandOffFile);
+      end;
+
    AppendArg(Result, WAIT_FOR_INSTANCE_SWITCH + string(IntToStr(aParentPid)));
+end;
+
+function NewContestHandOffRequested(const aArgs: array of string;
+                                    out aHandOffFile: string): boolean;
+var
+   i: integer;
+begin
+   Result       := False;
+   aHandOffFile := '';
+   for i := Low(aArgs) to High(aArgs) do
+      begin
+      if UnicodeSameText(Copy(aArgs[i], 1, Length(NEW_CONTEST_HANDOFF_SWITCH)),
+                         NEW_CONTEST_HANDOFF_SWITCH) then
+         begin
+         aHandOffFile := Copy(aArgs[i], Length(NEW_CONTEST_HANDOFF_SWITCH) + 1, MaxInt);
+         Result       := aHandOffFile <> '';
+         Exit;
+         end;
+      end;
+end;
+
+function NewContestHandOffFileName(const aDir: string; aParentPid: cardinal): string;
+begin
+   Result := IncludeTrailingPathDelimiter(aDir) + 'open-log-new-contest-' +
+             string(IntToStr(aParentPid)) + '.txt';
+end;
+
+function OpenLogAction(const aChosen: string;
+                       aIsNew: boolean;
+                       aIsOpenContest: boolean;
+                       aKind: TContestFileKind): TOpenLogAction;
+begin
+   if aChosen = '' then
+      begin
+      Result := olaNothing;
+      end
+   else if aIsOpenContest then
+      begin
+      Result := olaAlreadyOpen;
+      end
+   else if aIsNew then
+      begin
+      Result := olaRelaunchNew;
+      end
+   else if aKind in [cfkTR4WDatabase, cfkTextConfig] then
+      begin
+      Result := olaRelaunch;
+      end
+   else
+      begin
+      Result := olaNotAContestLog;
+      end;
+end;
+
+function PlanOpenLog(const aChosen: string;
+                     aIsNew: boolean;
+                     aIsOpenContest: boolean;
+                     aKind: TContestFileKind;
+                     const aParentArgs: array of string;
+                     aParentPid: cardinal;
+                     const aHandOffFile: string;
+                     out aArgs: TRelaunchArgs): TOpenLogAction;
+begin
+   aArgs  := nil;
+   Result := OpenLogAction(aChosen, aIsNew, aIsOpenContest, aKind);
+   case Result of
+      olaRelaunch:
+         begin
+         aArgs := BuildRelaunchArguments(aParentArgs, aChosen, aParentPid);
+         end;
+      olaRelaunchNew:
+         begin
+         aArgs := BuildRelaunchArguments(aParentArgs, aChosen, aParentPid, aHandOffFile);
+         end;
+   end;
 end;
 
 (* A decimal cardinal, digits only. Written out rather than TryStrToDWord,

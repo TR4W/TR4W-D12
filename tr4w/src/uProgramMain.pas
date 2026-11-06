@@ -1169,6 +1169,37 @@ begin
 end;
 {$ENDIF}
 
+(* TRUE ONLY WHEN File > Open Log HANDED THIS RUN A NEW CONTEST AND IT COULD
+  NOT BE LOADED (issue 228). No hand-off switch answers False having done
+  nothing, which is every ordinary start and every headless run. A loaded
+  hand-off is queued (uNewContestCommands) and its file deleted; a failed one
+  is reported and its file left for diagnosis. *)
+function NewContestHandOffFailed: boolean;
+var
+   handOff: string;
+begin
+   Result := False;
+   if not NewContestHandOffRequested(CommandLineArguments, handOff) then
+      begin
+      Exit;
+      end;
+
+   if LoadNewContestChoices(handOff) then
+      begin
+      logger.Info('[OpenLog] the new contest handed over in %s is queued', [handOff]);
+      if not SysUtils.DeleteFile(handOff) then
+         begin
+         logger.Warn('[OpenLog] the hand-off file could not be deleted: %s', [handOff]);
+         end;
+      end
+   else
+      begin
+      logger.Error('[OpenLog] the new contest handed over in %s could not be read, ' +
+                   'so New Contest is shown instead', [handOff]);
+      Result := True;
+      end;
+end;
+
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
 // ("Label not defined"), and it has presumably said so for years into a .dpr
@@ -1831,6 +1862,20 @@ begin
     contest file was the only thing anyone passed, and stopped being right the
     moment --lang existed. }
   s := FirstNonSwitchArgument;
+
+  (* A NEW CONTEST HANDED OVER BY FILE > OPEN LOG (issue 228). The parent ran
+    the New Contest dialog, wrote what it queued to this file and restarted
+    on the new log's name. Loaded HERE into the same queue the dialog fills
+    a few lines below, so ApplyNewContestChoices applies it at its usual
+    place and the log is created exactly as at a first start. Deleted once
+    read: it is for this start only. A file that is missing or not ours
+    leaves nothing queued, so the operator is shown New Contest to fill in
+    again rather than started on a log with no contest in it. *)
+  if (s <> '') and NewContestHandOffFailed then
+     begin
+     s := '';
+     end;
+
   if s <> '' then
   begin
     // D12: ParamStr returns a wide UnicodeString.  The old

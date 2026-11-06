@@ -325,9 +325,22 @@ where `&` is not markup (a window title from a menu row) goes through
 ## File > Open Log is a restart, not an in-place switch (issue 218 S0, 2026-11-05)
 
 `MainUnit.OpenAnotherLog` refuses while either radio is keyed or CW is being
-sent (`uOpenLogRelaunch.OpenLogRefusal`), picks a `.db` with
-`uDialogs.OpenFileDlg` (the string overload, starting in `ContestDir`), accepts
-only `cfkTR4WDatabase`, records a one-shot `RequestRelaunch` and calls
+sent (`uOpenLogRelaunch.OpenLogRefusal`; asked before the dialog AND after it),
+then shows **the startup New Contest dialog** (issue 228):
+`uNewContest.RunNewContestDialog(ncmSwitchContest, ...)` -- the same form, a
+mode that only retitles it, and a runner that writes NO global (only
+`ShowNewContest`, the startup wrapper, writes `TR4W_CFG_FILENAME` or the `'_'`
+cancel sentinel; the running contest's writers read that name). Last Contest is
+hidden when it names the open contest -- it is recorded once, at startup, so
+mid-session it always does. `uOpenLogRelaunch.PlanOpenLog` decides: Cancel
+nothing, the open contest "already open", a `.db` or a text `.cfg` relaunch,
+anything startup would halt on refused before closing. **A New Contest is not
+created in the running process** (that would build it with the open contest's
+state): its queued choices are written to a hand-off file
+(`uNewContestCommands.SaveNewContestChoices`, in `WritableSettingsDir`), the
+child gets `--new-contest-from=<file>` and `uProgramMain.NewContestHandOffFailed`
+loads it into the queue startup applies, deleting the file; an unreadable one
+shows New Contest instead. Then a one-shot `RequestRelaunch` and
 `ExitProgram(False)`. `tr4w_ShutDown` starts the child in
 `StartRequestedRelaunch`, AFTER `LogStoreClose` and BEFORE the logger is freed.
 The child carries `--wait-for-instance=<pid>` (one argument, so
