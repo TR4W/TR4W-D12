@@ -413,6 +413,39 @@ token -> width at 96 dpi. **A token is never an index or a caption** --
   `TR4WConfigFileName` landed there (a `--settings` switch wins over the redirect), then
   flush -- `uTestColumnWidthStore.Test_Flush_AMarkReachesTheFileAndAFreshGridReadsIt`.
 
+## Preferences: where a setting's control goes (issue 235, 2026-11-06)
+
+**UI location is not stored identity.** A setting reaches Preferences in one of
+three ways:
+
+- a designed control bound in `BuildBindings`;
+- its key prefix, on a page generated from that prefix (`contest.`, `advanced.`,
+  `appearance.layout.`);
+- a line in `uPrefsForm.PrefsPlacements`: `Place(key, NAV_tag, group)`, in display
+  order.
+
+**More settings (tag 30) is removed and the tag is left unused.** There is no
+catch-all page now. Every former Ctrl-J key (`PREFS_HOLDING_PREFIXES`) MUST be
+placed, or it has no control at all.
+
+- **Move a control by placing it, never by renaming its key.** Renaming a key is
+  a settings migration.
+- `BuildPlacedSection` builds a generated leaf. `BuildPlacedBlock` builds a block
+  anchored under a designed panel's last control. A prefix page appends any rows
+  placed on it, and a group change starts a bold heading (`AddGroupHeading`).
+- The band plan's Edit... button is `AddBandPlanRow`, on the Bands block.
+- **Search needs no table of its own.** It takes a hit's section from the panel
+  the control was built on.
+- `CheckEveryInventoriedSettingHasOneEditor` logs an Error for a setting with zero
+  editors or with two. `uTestPrefsPlacement` builds the real form against a
+  redirected empty settings folder and asserts no such fault.
+- **A new destination needs two things:** its builder call in
+  `BuildGeneratedSections`, AND its tag in that test's page list.
+- **FREQUENCY POLL RATE's Hardware home is TEMPORARY.** It moves to the radio
+  definition in issue 235 step 3.
+- Nav captions added for this come from `uAppStrings`. The older ones are still
+  English literals in `BuildNavTree`, which no catalogue reaches.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

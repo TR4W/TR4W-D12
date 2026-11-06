@@ -758,6 +758,80 @@ resourcestring
    SHamScorePlainHttpNote =
       'Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it.';
 
+   (* ---------------------- Preferences, the pages that replace More settings - *)
+
+   (* NAVIGATION ENTRIES AND HEADINGS for the settings that left the More
+     settings holding page (issue 235).  Each nav entry's text is also the
+     heading of the page it opens, so one string serves both. *)
+   (* Operating > Messages: what is sent around your own call (DE ENABLE). *)
+   SPrefsNavMessages = 'Messages';
+   (* CW Settings > While operating: the page that was Operating > CW.  Under
+     CW Settings a child called "CW" would say nothing. *)
+   SPrefsNavCWWhileOperating = 'While operating';
+   (* CW Settings > Speed and characters: CODE SPEED, the cut numbers, the
+     question mark and slash characters, and automatic sending. *)
+   SPrefsNavCWSpeedAndCharacters = 'Speed and characters';
+   (* Contest > Printed log: LOG SUB TITLE and CONTACTS PER PAGE. *)
+   SPrefsNavPrintedLog = 'Printed log';
+   (* UNDER THE PRINTED LOG HEADING, AND IT MUST STAY TRUE: nothing in this
+     build reads either setting.  Do not reword it into a promise. *)
+   SPrefsPrintedLogNote =
+      'This version of TR4W does not print the log, so these two settings are kept but have no effect yet.';
+   (* A block heading on the Hardware page, over STEREO PIN HIGH -- the YCCC
+     SO2R box's stereo control, which the checkbox above it enables. *)
+   SPrefsYCCCBoxHeading = 'YCCC SO2R box';
+   (* A block heading on the Band Map page, over IE SWITCH: only spots that
+     match the initial exchange file and TRMASTER reach the band map. *)
+   SPrefsInitialExchangeFilterHeading = 'Initial exchange filter';
+   (* THE OPERATING PAGE'S INTRODUCTION.  It named CW among the pages below it;
+     CW moved under CW Settings, so the sentence says where it went. *)
+   SPrefsOperatingInfo =
+      'How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings.';
+
+   (* Issue 235, stage 2: the rest of More settings.  New navigation entries
+     (each is also its page's heading)... *)
+   SPrefsNavEntryAndDupeChecking = 'Entry and dupe checking';
+   SPrefsNavLogDisplay = 'Log display';
+   SPrefsNavFilesAndUpdates = 'Files and updates';
+   (* A child of Operating > Band Map: the band map window's size and split
+     handling, and the offset added when tuning to a spot. *)
+   SPrefsNavBandMapWindow = 'Window and tuning';
+   (* A child of DX Cluster. *)
+   SPrefsNavClusterSpots = 'Spots and console';
+   (* ...and the GROUP HEADINGS rows sit under on a page. *)
+   SPrefsGroupBandsAndFrequencies = 'Starting band and mode, and frequency memory';
+   SPrefsGroupDupeChecking = 'Dupe checking';
+   SPrefsGroupSearchAndPounce = 'Search and pounce';
+   SPrefsGroupTyping = 'Typing';
+   SPrefsGroupWhatIsLogged = 'What a QSO records';
+   SPrefsGroupHandLog = 'Entering a log by hand';
+   (* Two Radio Mode: TUNE ALT-D ENABLE, filled in while tuning the inactive
+     radio. *)
+   SPrefsGroupTuningOtherRadio = 'Tuning the other radio';
+   SPrefsGroupBandMapWindow = 'Band map window';
+   SPrefsGroupSpotTuning = 'Tuning to a spot';
+   (* MUST STAY TRUE until FREQUENCY POLL RATE moves to each radio's
+     definition: today it is one value for all of them. *)
+   SPrefsGroupRadioPolling = 'Radio polling - one rate for every radio';
+   (* MAIN CALLSIGN: the station's own call, remembered for New Contest; not
+     the call being operated, which a contest can override. *)
+   SPrefsGroupStationCallsign = 'Your own callsign, remembered for New Contest';
+   SPrefsGroupSuggestedCalls = 'Suggested-call keys';
+   SPrefsGroupNetworkStations = 'Stations and the Network window';
+   SPrefsGroupRateDisplay = 'Rate display';
+   SPrefsGroupLogWindow = 'Log window';
+   (* USER INFO SHOWN: the TRMASTER field shown just below the call window. *)
+   SPrefsGroupUserInfo = 'Information shown under the call window';
+   SPrefsGroupAlerts = 'Alerts';
+   SPrefsGroupVoiceKeyer = 'Voice keyer';
+   SPrefsGroupModes = 'Modes';
+   SPrefsGroupInitialExchange = 'Initial exchange';
+   SPrefsGroupMultiplierData = 'Multiplier data';
+   (* THE BAND PLAN ROW on the Bands page: a label and the button that opens
+     the band plan editor, which saves its own whole section. *)
+   SPrefsBandPlanRow = 'Band plan (cutoff frequencies and memories)';
+   SPrefsBandPlanEdit = 'Edit...';
+
    (* ------------------------------------------- HamScore resync (Tools) - *)
 
    (* THE TOOLS MENU ITEM AND THE STATUS WINDOW'S BUTTON for the same action.

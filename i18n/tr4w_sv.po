@@ -9270,3 +9270,183 @@ msgstr ""
 msgid "Not a TR4W contest log, so it was not opened: %s"
 msgstr ""
 
+#: uappstrings.sprefsnavmessages
+#, fuzzy
+msgid "Messages"
+msgstr ""
+
+#: uappstrings.sprefsnavcwwhileoperating
+#, fuzzy
+msgid "While operating"
+msgstr ""
+
+#: uappstrings.sprefsnavcwspeedandcharacters
+#, fuzzy
+msgid "Speed and characters"
+msgstr ""
+
+#: uappstrings.sprefsnavprintedlog
+#, fuzzy
+msgid "Printed log"
+msgstr ""
+
+#: uappstrings.sprefsprintedlognote
+#, fuzzy
+msgid "This version of TR4W does not print the log, so these two settings are kept but have no effect yet."
+msgstr ""
+
+#: uappstrings.sprefsycccboxheading
+#, fuzzy
+msgid "YCCC SO2R box"
+msgstr ""
+
+#: uappstrings.sprefsinitialexchangefilterheading
+#, fuzzy
+msgid "Initial exchange filter"
+msgstr ""
+
+#: uappstrings.sprefsoperatinginfo
+#, fuzzy
+msgid "How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings."
+msgstr ""
+
+#: uappstrings.sprefsnaventryanddupechecking
+#, fuzzy
+msgid "Entry and dupe checking"
+msgstr ""
+
+#: uappstrings.sprefsnavlogdisplay
+#, fuzzy
+msgid "Log display"
+msgstr ""
+
+#: uappstrings.sprefsnavfilesandupdates
+#, fuzzy
+msgid "Files and updates"
+msgstr ""
+
+#: uappstrings.sprefsnavbandmapwindow
+#, fuzzy
+msgid "Window and tuning"
+msgstr ""
+
+#: uappstrings.sprefsnavclusterspots
+#, fuzzy
+msgid "Spots and console"
+msgstr ""
+
+#: uappstrings.sprefsgroupbandsandfrequencies
+#, fuzzy
+msgid "Starting band and mode, and frequency memory"
+msgstr ""
+
+#: uappstrings.sprefsgroupdupechecking
+#, fuzzy
+msgid "Dupe checking"
+msgstr ""
+
+#: uappstrings.sprefsgroupsearchandpounce
+#, fuzzy
+msgid "Search and pounce"
+msgstr ""
+
+#: uappstrings.sprefsgrouptyping
+#, fuzzy
+msgid "Typing"
+msgstr ""
+
+#: uappstrings.sprefsgroupwhatislogged
+#, fuzzy
+msgid "What a QSO records"
+msgstr ""
+
+#: uappstrings.sprefsgrouphandlog
+#, fuzzy
+msgid "Entering a log by hand"
+msgstr ""
+
+#: uappstrings.sprefsgrouptuningotherradio
+#, fuzzy
+msgid "Tuning the other radio"
+msgstr ""
+
+#: uappstrings.sprefsgroupbandmapwindow
+#, fuzzy
+msgid "Band map window"
+msgstr ""
+
+#: uappstrings.sprefsgroupspottuning
+#, fuzzy
+msgid "Tuning to a spot"
+msgstr ""
+
+#: uappstrings.sprefsgroupradiopolling
+#, fuzzy
+msgid "Radio polling - one rate for every radio"
+msgstr ""
+
+#: uappstrings.sprefsgroupstationcallsign
+#, fuzzy
+msgid "Your own callsign, remembered for New Contest"
+msgstr ""
+
+#: uappstrings.sprefsgroupsuggestedcalls
+#, fuzzy
+msgid "Suggested-call keys"
+msgstr ""
+
+#: uappstrings.sprefsgroupnetworkstations
+#, fuzzy
+msgid "Stations and the Network window"
+msgstr ""
+
+#: uappstrings.sprefsgroupratedisplay
+#, fuzzy
+msgid "Rate display"
+msgstr ""
+
+#: uappstrings.sprefsgrouplogwindow
+#, fuzzy
+msgid "Log window"
+msgstr ""
+
+#: uappstrings.sprefsgroupuserinfo
+#, fuzzy
+msgid "Information shown under the call window"
+msgstr ""
+
+#: uappstrings.sprefsgroupalerts
+#, fuzzy
+msgid "Alerts"
+msgstr ""
+
+#: uappstrings.sprefsgroupvoicekeyer
+#, fuzzy
+msgid "Voice keyer"
+msgstr ""
+
+#: uappstrings.sprefsgroupmodes
+#, fuzzy
+msgid "Modes"
+msgstr ""
+
+#: uappstrings.sprefsgroupinitialexchange
+#, fuzzy
+msgid "Initial exchange"
+msgstr ""
+
+#: uappstrings.sprefsgroupmultiplierdata
+#, fuzzy
+msgid "Multiplier data"
+msgstr ""
+
+#: uappstrings.sprefsbandplanrow
+#, fuzzy
+msgid "Band plan (cutoff frequencies and memories)"
+msgstr ""
+
+#: uappstrings.sprefsbandplanedit
+#, fuzzy
+msgid "Edit..."
+msgstr ""
+

@@ -30,6 +30,19 @@ RegisterModelSetting('bandmap.spotAgeLimit', 'SPOT AGE LIMIT',
                      RS_BANDMAP_SPOTAGELIMIT);
 ```
 
+**Which Preferences page shows it** is decided by one of three things:
+
+- a designed control bound to its key (`FBindings.Bind` in `uPrefsForm.BuildBindings`);
+- its key prefix, for the pages generated from a prefix (`contest.` lands on
+  Contest, `advanced.` on Advanced, `appearance.layout.` on Appearance);
+- a line in `uPrefsForm.PrefsPlacements` that places the key on a page by name.
+
+**There is no catch-all page any more.** "More settings" was removed by issue 235,
+so a setting with none of the three does not appear in Preferences at all.
+The placement table exists so a control can move without its stored key moving.
+Never rename a key just to move its control: renaming one is a settings migration.
+`uTestPrefsPlacement` checks every placed key.
+
 **One registration per property, under its PRIMARY name.** A second name
 (`AlsoKnownAs`) is resolved by the settings object whatever Preferences holds,
 so registering it as well only adds a second row for the same value — QUICK

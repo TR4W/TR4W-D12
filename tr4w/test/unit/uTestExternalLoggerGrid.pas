@@ -16,8 +16,8 @@ unit uTestExternalLoggerGrid;
 
   NOT covered here, and bench-only (docs/BENCH_QUEUE.md): the real mouse drag
   from the Order cell, the right-click popup, and the modal editor.
-  TPrefsForm itself is not constructed by any test; the page is covered by the
-  form lints. The Colours grid, which fills its row the same way (issue 234),
+  This suite does not construct TPrefsForm (uTestPrefsPlacement builds it, for
+  the editor count only); the page is covered by the form lints. The Colours grid, which fills its row the same way (issue 234),
   is built here on a bare grid through uPrefsForm's own column and sizing
   routines.
 *)

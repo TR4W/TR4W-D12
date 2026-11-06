@@ -1944,7 +1944,7 @@ object PrefsForm: TPrefsForm
         Top = 34
         Width = 620
         AutoSize = False
-        Caption = 'How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below.'
+        Caption = 'How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
@@ -1957,61 +1957,53 @@ object PrefsForm: TPrefsForm
         Caption = 'Return to CQ mode after logging a QSO'
         TabOrder = 0
       end
-      object chkAutoCallTerminate: TCheckBox
+      object chkEscapeExitsSAP: TCheckBox
         Left = 12
         Height = 22
         Top = 114
         Width = 540
-        Caption = 'Stop sending when the call window changes'
-        TabOrder = 1
-      end
-      object chkEscapeExitsSAP: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 140
-        Width = 540
         Caption = 'Escape leaves search and pounce'
-        TabOrder = 2
+        TabOrder = 1
       end
       object chkLeaveCursorInCall: TCheckBox
         Left = 12
         Height = 22
-        Top = 166
+        Top = 140
         Width = 540
         Caption = 'Leave the cursor in the call window'
-        TabOrder = 3
+        TabOrder = 2
       end
       object chkLogWithSingleEnter: TCheckBox
         Left = 12
         Height = 22
-        Top = 192
+        Top = 166
         Width = 540
         Caption = 'Log with a single Enter'
-        TabOrder = 4
+        TabOrder = 3
       end
       object chkSpaceBarDupeCheck: TCheckBox
         Left = 12
         Height = 22
-        Top = 218
+        Top = 192
         Width = 540
         Caption = 'Space bar performs a dupe check'
-        TabOrder = 5
+        TabOrder = 4
       end
       object chkConfirmEditChanges: TCheckBox
         Left = 12
         Height = 22
-        Top = 244
+        Top = 218
         Width = 540
         Caption = 'Confirm before saving an edited QSO'
-        TabOrder = 6
+        TabOrder = 5
       end
       object chkAutoQSONumberDecrement: TCheckBox
         Left = 12
         Height = 22
-        Top = 270
+        Top = 244
         Width = 540
         Caption = 'Give the serial number back when a QSO is abandoned'
-        TabOrder = 7
+        TabOrder = 6
       end
     end
     object layAudio: TPanel

@@ -1,5 +1,33 @@
 # Retire the More settings placeholder
 
+> **STATUS, 2026-11-06: DONE (issue 235, stages 1 and 2, not yet committed at
+> the time of writing).** More settings and tag 30 are removed. Every setting
+> below is placed by `uPrefsForm.PrefsPlacements`, which is the authority on
+> where a setting is shown now; this document is the reasoning behind it, not
+> a current map. Where the implementation differs from the table below, the
+> reason is a comment on that line in `DeclarePrefsPlacements`. In short:
+>
+> - CW has ONE home (NY4I), so Operating > CW became CW Settings > While operating.
+> - The "Logging" destinations went elsewhere, because the Logging page is
+>   TR4W's diagnostic log: the time settings and LOG FREQUENCY ENABLE went to
+>   Entry and dupe checking, and DISTANCE MODE went to Log display.
+> - IE SWITCH went to Band Map (NY4I).
+> - STEREO PIN HIGH went to Hardware (NY4I).
+> - LOG SUB TITLE and CONTACTS PER PAGE went to Contest > Printed log (NY4I).
+> - TUNE ALT-D ENABLE went to Two Radio Mode, because its help text describes SO2R.
+> - QZB RANDOM OFFSET ENABLE went to Band Map > Window and tuning, with the four
+>   band map settings: it is a spot-tune offset, and the Band Map page is full.
+> - CALLSIGN UPDATE ENABLE and COMPLETE CALLSIGN MASK went to Entry, because both
+>   are about typing.
+> - SHOW TYPED CALLSIGN and ALLOW AUTO UPDATE went to Network, because their help
+>   names the network.
+> - MISSINGCALLSIGNS FILE ENABLE went to Audio (it is a DVK setting).
+> - The DX Cluster settings went to a DX Cluster > Spots and console leaf, because
+>   the designed page is full.
+> - FREQUENCY POLL RATE is on Hardware TEMPORARILY. It moves to each radio's
+>   definition in step 3.
+> - The band plan button is on Operating > Bands.
+
 Proposal and implementation handoff, November 6, 2026. Reviewed against main at commit 3c0cdede and the working-tree sources available during review. This is documentation only; no application code, settings data, tests, or navigation have been changed.
 
 ## Recommendation

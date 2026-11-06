@@ -95,6 +95,7 @@ uses
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding,          // TSettingBindings -- a field on the form below
    uCommandHelp,              // TCommandHelp -- the bound controls' tooltips
+   uSettingsRegistry,         (* TSettingBase -- the generated-row builders' parameter *)
   uTR4WStrings,
   utils_text;
 
@@ -152,9 +153,58 @@ type
 
    TNavItemVisit = procedure (item: TTreeNode) of object;
 
+   (* WHICH PAGE SHOWS A SETTING, when its key prefix is not the answer
+     (issue 235).
+
+     UI LOCATION IS NOT STORED IDENTITY.  A setting's key is where its value
+     lives in settings\tr4w.json, and renaming one to move a control would be a
+     settings migration.  So the key stays and this table says where the
+     control goes: setting key -> page Tag, in the order the rows are shown.
+
+     ONE TABLE, READ BY CONSTRUCTION, AND SEARCH NEEDS NO OTHER.  The prefix
+     builders skip every key placed here, the placed pages build exactly the
+     keys placed on them, and the search index takes a control's section from
+     the panel the control was built on (SectionPanelFor) -- so a search hit
+     and the page can never disagree, because there is nothing to disagree
+     with.
+
+     A class rather than a const table of records: Place refuses a key twice,
+     which a record table cannot do.  The three arrays are written together, by
+     Place alone, so they cannot fall out of step. *)
+   TPrefsPlacements = class
+   private
+      FKeys: array of string;
+      FPages: array of NativeInt;
+      FGroups: array of string;
+      FRefused: integer;
+      function IndexOf(const aKey: string): integer;
+   public
+      (* False, and logged at Error, for a key already placed or a page of
+        NAV_NONE: two homes for one setting would be two editors writing one
+        value. *)
+      function Place(const aKey: string; const aPageTag: NativeInt;
+                     const aGroup: string = ''): boolean;
+      (* The page a key is placed on, or NAV_NONE (0) when it is not placed. *)
+      function PageOf(const aKey: string): NativeInt;
+      function Count: integer;
+      function Key(const aIndex: integer): string;
+      function Page(const aIndex: integer): NativeInt;
+      (* The heading the row sits under on its page, '' for none.  Rows of one
+        group are placed together; a change of group starts a new heading. *)
+      function Group(const aIndex: integer): string;
+      (* How many Place calls were refused.  A refused placement leaves no trace
+        in the table, so this is the only way a test can see one. *)
+      property Refused: integer read FRefused;
+   end;
+
    TPrefsForm = class(TForm)
       edtSearch: TEdit;
       tvNav: TTreeView;
+      (* Named so the placed blocks (issue 235) can anchor under them. *)
+      layBands: TPanel;
+      lblBandsHint: TLabel;
+      layTwoRadio: TPanel;
+      lblTwoRadioHint: TLabel;
       layHardware: TPanel;
       lblHardwareHeading: TLabel;
       lblHardwareInfo: TLabel;
@@ -164,7 +214,6 @@ type
       lblOperatingHeading: TLabel;
       lblOperatingInfo: TLabel;
       chkAutoReturnToCQ: TCheckBox;
-      chkAutoCallTerminate: TCheckBox;
       chkEscapeExitsSAP: TCheckBox;
       chkLeaveCursorInCall: TCheckBox;
       chkLogWithSingleEnter: TCheckBox;
@@ -850,7 +899,14 @@ type
       navLogging: TTreeNode;
       navBackup: TTreeNode;
       navContest: TTreeNode;
-      navMore: TTreeNode;
+      navMessages: TTreeNode;       // issue 235's placed leaves
+      navEntry: TTreeNode;
+      navLogDisplay: TTreeNode;
+      navFiles: TTreeNode;
+      navBandMapWindow: TTreeNode;
+      navClusterSpots: TTreeNode;
+      navCWCharacters: TTreeNode;
+      navPrintedLog: TTreeNode;
       navCW: TTreeNode;
       navAudio: TTreeNode;
    navPaddlePTT: TTreeNode;
@@ -1040,8 +1096,24 @@ type
       procedure SaveColorRows;
       function  BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
                                       const aPrefixes: array of string): integer;
+      function  BuildPlacedSection(const aTag: NativeInt; const aHeading: string): integer;
+      function  NewGeneratedPage(const aTag: NativeInt; const aHeading: string): TScrollBox;
       function  AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
                                  var aY: integer): integer;
+      function  AddPlacedRows(const aParent: TWinControl; const aPageTag: NativeInt;
+                              var aY: integer): integer;
+      function  AddSettingRows(const aParent: TWinControl;
+                               const aSettings: array of TSettingBase;
+                               var aY: integer): integer;
+      function  BuildPlacedBlock(const aParent: TWinControl; const aBelow: TControl;
+                                 const aPageTag: NativeInt;
+                                 out aHost: TPanel): integer;
+      function  NewGeneratedBlock(const aParent: TWinControl; const aBelow: TControl;
+                                  const aHeading: string; out aY: integer): TPanel;
+      procedure CheckEveryInventoriedSettingHasOneEditor;
+      procedure AddGroupHeading(const aParent: TWinControl; const aCaption: string;
+                                var aY: integer);
+      procedure AddBandPlanRow(const aHost: TPanel);
       // The OnClick of the "Edit..." button a ctFreqList row gets instead of a
       // dead text box. One handler for both such rows, because there is one
       // editor and it edits the whole band plan -- there is nothing to branch
@@ -1113,9 +1185,21 @@ type
       procedure DiscardChanges;
       procedure EditorDone(const aAccepted: boolean);
       function ApplyNow(const aActivate: boolean): boolean;
+   private
+      (* Filled by CheckEveryInventoriedSettingHasOneEditor: each key with no
+        editor or with two, one per line; '' when none is faulty. *)
+      FEditorFaults: string;
+      FEditorsChecked: integer;
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
+      (* What the last page build found wrong (issue 235): every More settings
+        or placed setting that has no editor, or more than one.  Read by
+        uTestPrefsPlacement on a really built form. *)
+      property EditorFaults: string read FEditorFaults;
+      (* How many settings that check counted -- 0 means it never ran, which
+        would make an empty EditorFaults meaningless. *)
+      property EditorsChecked: integer read FEditorsChecked;
    end;
 
 const
@@ -1192,23 +1276,55 @@ const
    NAV_RADIOS            = 26;
    NAV_ROTATORS          = 27;
 
+   (* The page that was Operating > CW.  Since issue 235 it is a child of CW
+     Settings ("While operating"): NY4I, "I don't see a reason to have CW in
+     multiple places".  Same panel, same Tag; only its nav entry moved. *)
+   NAV_OPERATINGCW       = 23;
+
+   (* Named for the placement table, which puts rows on these designed pages.
+     The tree still sets them as literals in BuildNavTree. *)
+   NAV_BANDS             = 24;
+   NAV_TWORADIO          = 25;
+   NAV_AUDIO             = 29;
+
    // 28 and 29 are layPaddlePTT and layAudio, which carry literal Tags in the
-   // .lfm rather than these constants. 30 is the first free number.
+   // .lfm rather than these constants.
    //
-   // A HOLDING PAGE for the settings that left Ctrl-J and have no designed page
-   // yet. It is meant to shrink to nothing: each time a page is designed, its
-   // settings' key prefix changes and they move off here. Named on screen as
-   // what it is, so it does not read as a permanent home.
-   NAV_MORE              = 30;
+   (* 30 WAS "More settings", the holding page for the settings that left
+     Ctrl-J.  It emptied and was REMOVED by issue 235: every one of them has a
+     task page now, through TPrefsPlacements.  The number is left unused, so
+     an old reference to it opens nothing rather than the wrong page. *)
 
    // Colors. A page of its own under Appearance rather than a block on it:
    // fifty elements with two drop-downs each is a hundred controls, and the
    // designed panel has room for a small block and no more.
    NAV_COLORS            = 31;
 
+   (* GENERATED LEAVES that give a More settings row its task home (issue 235).
+     No designed panel: BuildGeneratedSections builds each page from the
+     placements that name its tag. *)
+   NAV_MESSAGES          = 32;   // Operating > Messages
+   NAV_CWCHARACTERS      = 33;   // CW Settings > Speed and characters
+   NAV_PRINTEDLOG        = 34;   // Contest > Printed log
+   NAV_ENTRY             = 35;   // Operating > Entry and dupe checking
+   NAV_LOGDISPLAY        = 36;   // Appearance > Log display
+   NAV_FILES             = 37;   // Files and updates
+   NAV_BANDMAPWINDOW     = 38;   // Operating > Band Map > Window and tuning
+   NAV_CLUSTERSPOTS      = 39;   // DX Cluster > Spots and console
+
+   (* THE INVENTORY THE OLD MORE SETTINGS PAGE WAS BUILT FROM.  No page is
+     built from these prefixes any more: every registered setting carrying one
+     MUST be placed by TPrefsPlacements, and a setting that is not has no
+     editor at all -- CheckEveryInventoriedSettingHasOneEditor logs it and
+     uTestPrefsPlacement fails.  'voice.ctrlj.' was never carried by any
+     setting (NY4I: no empty Voice page). *)
+   PREFS_HOLDING_PREFIXES: array[0..7] of string = (
+      'operating.ctrlj.', 'cw.ctrlj.', 'appearance.ctrlj.', 'hardware.ctrlj.',
+      'files.ctrlj.', 'bandmap.ctrlj.', 'network.ctrlj.', 'cluster.ctrlj.');
+
    (* THE COLOURS GRID'S COLUMNS, in the interface so the unit tests can build
-     the same grid on a bare TStringGrid (TPrefsForm itself is not constructed
-     by any test). *)
+     the same grid on a bare TStringGrid (the one test that constructs
+     TPrefsForm, uTestPrefsPlacement, only counts its editors). *)
    COLORS_COL_ELEMENT = 0;
    COLORS_COL_FG      = 1;
    COLORS_COL_BG      = 2;
@@ -1258,6 +1374,15 @@ function ShowPreferencesForCommand(const aCommand: string): boolean;
 // Open Preferences AT a section, by its nav tag (the NAV_* constants).
 function ShowPreferencesAtPage(const aTag: NativeInt): boolean;
 
+(* THE ONE PLACEMENT TABLE (see TPrefsPlacements).  Built on first use and
+  freed at finalization; Preferences and the tests read it on the main thread
+  only. *)
+function PrefsPlacements: TPrefsPlacements;
+
+(* True when aKey belongs to the inventory More settings was built from --
+  it starts with one of PREFS_HOLDING_PREFIXES. *)
+function IsHoldingPageKey(const aKey: string): boolean;
+
 implementation
 
 {$R *.lfm}
@@ -1284,8 +1409,7 @@ uses
    uFileText,          // FileTextExists -- System.IOUtils is Delphi-only
    LCLIntf,     // OpenDocument -- open the log in the operator's editor
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
-   uSettingsRegistry,     // the settings themselves
-   uSettingsLegacy,       // ActiveStoreProvider -- graduated settings write to OUR store
+   uSettingsLegacy,      // ActiveStoreProvider -- graduated settings write to OUR store
    uAppPaths,             // DataFilePath -- shipped read-only data
    uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
    uSettingsDeclarations, // DeclareAllSettings
@@ -1308,6 +1432,311 @@ uses
 
 var
    gPrefsForm: TPrefsForm = nil;
+   gPlacements: TPrefsPlacements = nil;
+
+const
+   (* THE GENERATED ROW GEOMETRY, 96-dpi pixels -- shared by every generated
+     page and block, and by the band plan's Edit... row. *)
+   GENERATED_ROW_H          = 30;
+   GENERATED_LABEL_W        = 300;
+   GENERATED_CTRL_X         = 330;
+   GENERATED_CTRL_W         = 280;
+   GENERATED_PAGE_FIRST_ROW = 64;    // below a generated page's two-line heading
+
+{ ------------------------------------------------------------ placements --- }
+
+function TPrefsPlacements.IndexOf(const aKey: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to High(FKeys) do
+      begin
+      if UnicodeSameText(FKeys[i], aKey) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function TPrefsPlacements.Place(const aKey: string; const aPageTag: NativeInt;
+                                const aGroup: string): boolean;
+var
+   n: integer;
+begin
+   (* REFUSED, AND SAID SO.  Not raised: this runs while Preferences is being
+     built, and a page that fails to open is worse than a row that stays where
+     it was.  uTestPrefsPlacement fails a refused placement. *)
+   Result := (aPageTag <> NAV_NONE) and (IndexOf(aKey) < 0);
+   if not Result then
+      begin
+      Inc(FRefused);
+      logger.Error('[Prefs] placement of "%s" on page %d refused: placed twice, or no page',
+                   [aKey, aPageTag]);
+      Exit;
+      end;
+
+   n := Length(FKeys);
+   SetLength(FKeys,   n + 1);
+   SetLength(FPages,  n + 1);
+   SetLength(FGroups, n + 1);
+   FKeys[n]   := aKey;
+   FPages[n]  := aPageTag;
+   FGroups[n] := aGroup;
+end;
+
+function TPrefsPlacements.PageOf(const aKey: string): NativeInt;
+var
+   i: integer;
+begin
+   Result := NAV_NONE;
+   i := IndexOf(aKey);
+   if i >= 0 then
+      begin
+      Result := FPages[i];
+      end;
+end;
+
+function TPrefsPlacements.Count: integer;
+begin
+   Result := Length(FKeys);
+end;
+
+function TPrefsPlacements.Key(const aIndex: integer): string;
+begin
+   Result := FKeys[aIndex];
+end;
+
+function TPrefsPlacements.Page(const aIndex: integer): NativeInt;
+begin
+   Result := FPages[aIndex];
+end;
+
+function TPrefsPlacements.Group(const aIndex: integer): string;
+begin
+   Result := FGroups[aIndex];
+end;
+
+(* THE PLACEMENTS, IN DISPLAY ORDER WITHIN EACH PAGE (issue 235).
+
+  Every setting that was on More settings is here, and More settings is gone:
+  a PREFS_HOLDING_PREFIXES setting left out of this list has no editor at all,
+  which uTestPrefsPlacement fails.  Each block cites why the setting is where it
+  is -- NY4I's answers on the issue (2026-11-06), the proposal's table
+  (docs/MORE_SETTINGS_REORGANIZATION_PROPOSAL.md), or, where the proposal's
+  page does not exist or the help text says otherwise, what the help says the
+  setting does.  A key not listed here goes where its key prefix puts it. *)
+procedure DeclarePrefsPlacements(const aTable: TPrefsPlacements);
+begin
+   (* ------------------------------------------------------------ Operating *)
+
+   (* Answer 2: DE ENABLE -- whether DE goes before your call in S&P -- is a
+     message setting, on a new Operating > Messages leaf. *)
+   aTable.Place('operating.ctrlj.deEnable',               NAV_MESSAGES);
+
+   (* Operating > Bands (proposal).  The band and mode TR4W starts on, and
+     the frequency memory; the band plan's Edit... button follows them --
+     see BuildGeneratedSections. *)
+   aTable.Place('operating.ctrlj.band',                   NAV_BANDS, SPrefsGroupBandsAndFrequencies);
+   aTable.Place('operating.ctrlj.mode',                   NAV_BANDS, SPrefsGroupBandsAndFrequencies);
+   aTable.Place('operating.ctrlj.frequencyMemoryEnable',  NAV_BANDS, SPrefsGroupBandsAndFrequencies);
+
+   (* Operating > Entry and dupe checking (proposal's new leaf).  The
+     proposal put the two time settings on "Logging > Time entry" and LOG
+     FREQUENCY ENABLE on "Logging"; the Logging page here is TR4W's OWN
+     diagnostic log, so they are entry settings and live with entry.  The
+     proposal put CALLSIGN UPDATE ENABLE on Files: its help says it parses
+     the Exchange window for a callsign, so it is typing.  COMPLETE CALLSIGN
+     MASK fills the call window from a function key (help), so it is typing
+     too, not log display. *)
+   aTable.Place('operating.ctrlj.autoDisplayDupeQso',     NAV_ENTRY, SPrefsGroupDupeChecking);
+   aTable.Place('operating.ctrlj.autoDupeEnableCq',       NAV_ENTRY, SPrefsGroupDupeChecking);
+   aTable.Place('operating.ctrlj.autoDupeEnableSAndP',    NAV_ENTRY, SPrefsGroupDupeChecking);
+   aTable.Place('operating.ctrlj.dupeSheetAutoReset',     NAV_ENTRY, SPrefsGroupDupeChecking);
+   aTable.Place('operating.ctrlj.autoSPEnable',           NAV_ENTRY, SPrefsGroupSearchAndPounce);
+   aTable.Place('operating.ctrlj.autoSPEnableSensitivity',NAV_ENTRY, SPrefsGroupSearchAndPounce);
+   aTable.Place('appearance.ctrlj.insertMode',            NAV_ENTRY, SPrefsGroupTyping);
+   aTable.Place('operating.ctrlj.shiftKeyEnable',         NAV_ENTRY, SPrefsGroupTyping);
+   aTable.Place('files.ctrlj.callsignUpdateEnable',       NAV_ENTRY, SPrefsGroupTyping);
+   aTable.Place('appearance.ctrlj.completeCallsignMask',  NAV_ENTRY, SPrefsGroupTyping);
+   aTable.Place('operating.ctrlj.logFrequencyEnable',     NAV_ENTRY, SPrefsGroupWhatIsLogged);
+   aTable.Place('operating.ctrlj.autoTimeIncrement',      NAV_ENTRY, SPrefsGroupHandLog);
+   aTable.Place('operating.ctrlj.incrementTimeEnable',    NAV_ENTRY, SPrefsGroupHandLog);
+
+   (* Operating > Two Radio Mode.  The proposal put TUNE ALT-D ENABLE on
+     Entry and dupe checking; its help says it fills calls from the band map
+     while you tune the INACTIVE radio, for Alt-D -- an SO2R behaviour, on the
+     page that already holds the other Alt-D settings. *)
+   aTable.Place('cw.ctrlj.tuneAltDEnable',                NAV_TWORADIO, SPrefsGroupTuningOtherRadio);
+
+   (* Answer 3: IE SWITCH limits the band map to spots matched to the initial
+     exchange file and TRMASTER, so it goes with the band map. *)
+   aTable.Place('operating.ctrlj.ieSwitch',               NAV_BANDMAP, SPrefsInitialExchangeFilterHeading);
+
+   (* Operating > Band Map > Window and tuning.  The proposal put the four
+     band map settings on the Band Map page, which has no room left; they
+     describe its WINDOW, so they get a child leaf.  QZB RANDOM OFFSET ENABLE
+     (proposal: Operating > CW) is the offset added when you tune to a CW
+     SPOT, so it goes with the band map's tuning, not with CW sending. *)
+   aTable.Place('bandmap.ctrlj.bandMapSize',              NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
+   aTable.Place('bandmap.ctrlj.bandMapItemHeight',        NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
+   aTable.Place('bandmap.ctrlj.bandMapItemWidth',         NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
+   aTable.Place('bandmap.ctrlj.bandMapSplitMode',         NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
+   aTable.Place('operating.ctrlj.qzbRandomOffsetEnable',  NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
+
+   (* ------------------------------------------------------ CW Settings *)
+
+   (* Answer 1: CW lives in ONE place, under CW Settings.  Speed, the cut
+     numbers, the two substitute characters, and the automatic sending. *)
+   aTable.Place('cw.ctrlj.codeSpeed',                     NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.autoSendCharacterCount',        NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.startSendingNowKey',            NAV_CWCHARACTERS);
+   (* AUTO CALL TERMINATE was a designed box on the Operating page.  It acts
+     only on CW, and only with the two settings above, so the rule "CW in one
+     place" brought it here; its box on Operating is gone. *)
+   aTable.Place('operating.autoCallTerminate',            NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.shortIntegers',                 NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.short0',                        NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.short1',                        NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.short2',                        NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.short9',                        NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.questionMarkChar',              NAV_CWCHARACTERS);
+   aTable.Place('cw.ctrlj.slashMarkChar',                 NAV_CWCHARACTERS);
+
+   (* ---------------------------------------------------------- Hardware *)
+
+   (* Answer 4: STEREO PIN HIGH is the YCCC box's stereo control -- hardware,
+     beside the box's own checkbox. *)
+   aTable.Place('hardware.ctrlj.stereoPinHigh',           NAV_HARDWARE, SPrefsYCCCBoxHeading);
+
+   (* TEMPORARY, MOVES TO THE RADIO DEFINITION (issue 235 step 3).  FREQUENCY
+     POLL RATE belongs on each radio (NY4I); until that data-model change it
+     is still ONE global value under the same key, and it sits here only so
+     More settings could be emptied.  Its group heading says it is one rate
+     for every radio, which is true today. *)
+   aTable.Place('operating.ctrlj.frequencyPollRate',      NAV_HARDWARE, SPrefsGroupRadioPolling);
+
+   (* ----------------------------------------------------------- Station *)
+
+   (* Station (proposal).  MAIN CALLSIGN is the station's own callsign,
+     remembered across contests for the New Contest dialog -- NOT the call
+     being operated, which a contest may override.  The group says so. *)
+   aTable.Place('operating.ctrlj.mainCallsign',           NAV_STATION, SPrefsGroupStationCallsign);
+
+   (* --------------------------------------------------------------- SCP *)
+
+   (* SCP > suggested-call controls (proposal). *)
+   aTable.Place('operating.ctrlj.possibleCallMode',       NAV_SCP, SPrefsGroupSuggestedCalls);
+   aTable.Place('operating.ctrlj.possibleCallAcceptKey',  NAV_SCP, SPrefsGroupSuggestedCalls);
+   aTable.Place('operating.ctrlj.possibleCallLeftKey',    NAV_SCP, SPrefsGroupSuggestedCalls);
+   aTable.Place('operating.ctrlj.possibleCallRightKey',   NAV_SCP, SPrefsGroupSuggestedCalls);
+
+   (* -------------------------------------------------------- DX Cluster *)
+
+   (* DX Cluster (proposal).  The designed page is full, so a child leaf.
+     ASK FOR FREQUENCIES (asked when spotting without a radio link) and QSX
+     ENABLE (split information decoded from spots) are about spots; the
+     other three are the cluster's own data and console. *)
+   aTable.Place('operating.ctrlj.askForFrequencies',      NAV_CLUSTERSPOTS);
+   aTable.Place('operating.ctrlj.qsxEnable',              NAV_CLUSTERSPOTS);
+   aTable.Place('cluster.ctrlj.spotCommentMultiplier',    NAV_CLUSTERSPOTS);
+   aTable.Place('cluster.ctrlj.broadcastAllPacketData',   NAV_CLUSTERSPOTS);
+   aTable.Place('cluster.ctrlj.consoleLines',             NAV_CLUSTERSPOTS);
+
+   (* ----------------------------------------------------------- Network *)
+
+   (* Network (proposal), with three the proposal put elsewhere because the
+     help text names the network: STATIONS CALLSIGNS MASK filters the
+     multi-op stations window, SHOW TYPED CALLSIGN shows your partly typed
+     call in the Network window (proposal: Log display), and ALLOW AUTO
+     UPDATE takes a correction from another station into this log
+     (proposal: Files and updates). *)
+   aTable.Place('network.ctrlj.computerName',             NAV_NETWORK, SPrefsGroupNetworkStations);
+   aTable.Place('network.ctrlj.netStatusUpdateInterval',  NAV_NETWORK, SPrefsGroupNetworkStations);
+   aTable.Place('operating.ctrlj.stationsCallsignsMask',  NAV_NETWORK, SPrefsGroupNetworkStations);
+   aTable.Place('appearance.ctrlj.showTypedCallsign',     NAV_NETWORK, SPrefsGroupNetworkStations);
+   aTable.Place('files.ctrlj.allowAutoUpdate',            NAV_NETWORK, SPrefsGroupNetworkStations);
+
+   (* -------------------------------------------------------- Appearance *)
+
+   (* Appearance > Log display (proposal's new leaf).  DISTANCE MODE is the
+     distance shown with the beam headings (help); the proposal's "Logging >
+     Distance display" would be TR4W's diagnostic log page here. *)
+   aTable.Place('appearance.ctrlj.rateDisplay',           NAV_LOGDISPLAY, SPrefsGroupRateDisplay);
+   aTable.Place('appearance.ctrlj.hourDisplay',           NAV_LOGDISPLAY, SPrefsGroupRateDisplay);
+   aTable.Place('appearance.ctrlj.showFrequencyInLog',    NAV_LOGDISPLAY, SPrefsGroupLogWindow);
+   aTable.Place('appearance.ctrlj.columnAutosize',        NAV_LOGDISPLAY, SPrefsGroupLogWindow);
+   aTable.Place('operating.ctrlj.distanceMode',           NAV_LOGDISPLAY, SPrefsGroupLogWindow);
+   aTable.Place('appearance.ctrlj.userInfoShown',         NAV_LOGDISPLAY, SPrefsGroupUserInfo);
+   aTable.Place('operating.ctrlj.customUserString',       NAV_LOGDISPLAY, SPrefsGroupUserInfo);
+
+   (* ------------------------------------------------------------- Audio *)
+
+   (* Audio > Alerts (proposal).  MISSINGCALLSIGNS FILE ENABLE has no help
+     text; the model says it is a DVK setting -- it lists the callsigns with
+     no recording under the DVK path -- so it sits with the voice keyer. *)
+   aTable.Place('operating.ctrlj.dupeCheckSound',         NAV_AUDIO, SPrefsGroupAlerts);
+   aTable.Place('operating.ctrlj.wakeUpTimeOut',          NAV_AUDIO, SPrefsGroupAlerts);
+   aTable.Place('appearance.ctrlj.beepEnable',            NAV_AUDIO, SPrefsGroupAlerts);
+   aTable.Place('files.ctrlj.missingcallsignsFileEnable', NAV_AUDIO, SPrefsGroupVoiceKeyer);
+
+   (* ---------------------------------------------------- Files and updates *)
+
+   (* Files and updates (proposal's new page) -- the country file and what is
+     done with calls it cannot place. *)
+   aTable.Place('files.ctrlj.countryInformationFile',     NAV_FILES);
+   aTable.Place('files.ctrlj.ctyUpdateCheckOnStartup',    NAV_FILES);
+   aTable.Place('files.ctrlj.unknownCountryFileName',     NAV_FILES);
+
+   (* ----------------------------------------------------------- Contest *)
+
+   (* Contest (proposal), after the contest's own settings.  DIGITAL MODE
+     ENABLE is contest-scoped and keeps that scope: only its control moved.
+     DOMESTIC FILENAME is shown READ-ONLY, as it always was -- the contest
+     sets it (AddSettingRows never binds a read-only setting). *)
+   aTable.Place('operating.ctrlj.digitalModeEnable',      NAV_CONTEST, SPrefsGroupModes);
+   aTable.Place('files.ctrlj.initialExchangeFilename',    NAV_CONTEST, SPrefsGroupInitialExchange);
+   aTable.Place('files.ctrlj.domesticFilename',           NAV_CONTEST, SPrefsGroupMultiplierData);
+
+   (* Answer 5: LOG SUB TITLE heads each PRINTED log page, and CONTACTS PER
+     PAGE says how many QSOs that page holds.  Neither has a reader in this
+     build; the page says so.  Scope is unchanged by the move: LOG SUB TITLE is
+     the station's, CONTACTS PER PAGE is set by the contest. *)
+   aTable.Place('operating.ctrlj.logSubTitle',            NAV_PRINTEDLOG);
+   aTable.Place('appearance.ctrlj.contactsPerPage',       NAV_PRINTEDLOG);
+
+   (* ---------------------------------------------------------- Advanced *)
+
+   (* Advanced (proposal): an internal constant of the distance calculation,
+     reachable but out of the way.  Its validation is unchanged. *)
+   aTable.Place('operating.ctrlj.radiusOfEarth',          NAV_ADVANCED);
+end;
+
+function PrefsPlacements: TPrefsPlacements;
+begin
+   if gPlacements = nil then
+      begin
+      gPlacements := TPrefsPlacements.Create;
+      DeclarePrefsPlacements(gPlacements);
+      end;
+   Result := gPlacements;
+end;
+
+function IsHoldingPageKey(const aKey: string): boolean;
+var
+   p: string;
+begin
+   Result := False;
+   for p in PREFS_HOLDING_PREFIXES do
+      begin
+      if UnicodeSameText(Copy(aKey, 1, Length(p)), p) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
 
 // WHERE THE FIRST-OPEN SECOND GOES.  NY4I reported a noticeable delay the first
 // time Preferences opens after startup and none on later opens -- which points
@@ -1504,6 +1933,9 @@ begin
      whichever catalogue key a language carries; the .lfm holds the same
      English for the designer. *)
    lblHamScoreHttpNote.Caption := SHamScorePlainHttpNote;
+   (* Same pattern: it names the pages below Operating, and CW left them
+     (issue 235). *)
+   lblOperatingInfo.Caption := SPrefsOperatingInfo;
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -2927,13 +3359,14 @@ end;
 // BuildNavTree so the nav items exist and before LoadStore so the bindings are
 // in place when values are read.
 //
-// The prefix IS the placement rule: a setting registered as `contest.foo` lands
-// on the Contest page and nowhere else. That is the whole of the layout policy,
-// which is what makes "we will organise these once the contest factory is done"
-// a rename rather than a redesign.
+(* PLACEMENT, in two rules and in this order: a setting TPrefsPlacements names
+  goes on that page; any other goes where its key prefix puts it (a setting
+  registered as `contest.foo` lands on the Contest page).  The table exists so a
+  control can move without its stored key moving (issue 235). *)
 procedure TPrefsForm.BuildGeneratedSections;
 var
    total, i: integer;
+   host: TPanel;
 begin
    // IDEMPOTENT, because BuildBindings runs again every time the form reloads --
    // Cancel is the obvious one. Without this the second pass tried to create
@@ -2968,22 +3401,44 @@ begin
    // second control to a key that already has one makes both write, with the
    // operator seeing whichever loaded last.
    //
-   // Only NAV_CONTEST and NAV_ADVANCED are panel-less today. The rest of the
-   // Ctrl-J tail therefore lands on "More settings" until each page is designed
-   // -- see the heading text, which says so on screen rather than in a comment
-   // nobody reads.
+   // NAV_CONTEST and NAV_ADVANCED are panel-less pages built by key prefix,
+   // with the settings TPrefsPlacements puts on them after the prefix rows.
    total := 0;
    total := total + BuildGeneratedSection(NAV_CONTEST, 'Contest settings',
                                           ['contest.']);
    total := total + BuildGeneratedSection(NAV_ADVANCED, 'Advanced',
                                           ['advanced.']);
-   total := total + BuildGeneratedSection(NAV_MORE,
-      'More settings' + #13#10 +
-      'Settings that left Ctrl-J and do not have a designed page yet. ' +
-      'They work here; they will move to the pages named below.',
-      ['operating.ctrlj.', 'cw.ctrlj.', 'appearance.ctrlj.', 'hardware.ctrlj.',
-       'files.ctrlj.', 'bandmap.ctrlj.', 'network.ctrlj.', 'voice.ctrlj.',
-       'cluster.ctrlj.']);
+
+   (* THE PLACED PAGES AND BLOCKS (issue 235).  A leaf with no designed panel
+     is a whole generated page; a designed page that has room takes a block
+     anchored under its last designed control.  Every page tag the placement
+     table names must have its builder here -- uTestPrefsPlacement lists them. *)
+   total := total + BuildPlacedSection(NAV_MESSAGES, SPrefsNavMessages);
+   total := total + BuildPlacedSection(NAV_ENTRY, SPrefsNavEntryAndDupeChecking);
+   total := total + BuildPlacedSection(NAV_CWCHARACTERS,
+                                       SPrefsNavCWSpeedAndCharacters);
+   total := total + BuildPlacedSection(NAV_PRINTEDLOG,
+                                       SPrefsNavPrintedLog + LineEnding +
+                                       SPrefsPrintedLogNote);
+   total := total + BuildPlacedSection(NAV_LOGDISPLAY, SPrefsNavLogDisplay);
+   total := total + BuildPlacedSection(NAV_FILES, SPrefsNavFilesAndUpdates);
+   total := total + BuildPlacedSection(NAV_BANDMAPWINDOW, SPrefsNavBandMapWindow);
+   total := total + BuildPlacedSection(NAV_CLUSTERSPOTS, SPrefsNavClusterSpots);
+
+   total := total + BuildPlacedBlock(layBandMap,  chkSwapPacketSpotRadios, NAV_BANDMAP,  host);
+   total := total + BuildPlacedBlock(layHardware, lblYCCCInfo,             NAV_HARDWARE, host);
+   total := total + BuildPlacedBlock(layStation,  lblStationHint,          NAV_STATION,  host);
+   total := total + BuildPlacedBlock(laySCP,      chkNameFlag,             NAV_SCP,      host);
+   total := total + BuildPlacedBlock(layNetwork,  lblNetHint,              NAV_NETWORK,  host);
+   total := total + BuildPlacedBlock(layAudio,    cardDVK,                 NAV_AUDIO,    host);
+   total := total + BuildPlacedBlock(layTwoRadio, lblTwoRadioHint,         NAV_TWORADIO, host);
+
+   (* THE BAND PLAN'S EDIT... BUTTON, under the band and mode rows on the
+     Bands page -- the page the proposal gave it.  It is the only route into
+     uBandPlanForm from Preferences, and it keeps the editor's own
+     whole-section save: the button is not bound to anything. *)
+   total := total + BuildPlacedBlock(layBands,    lblBandsHint,            NAV_BANDS,    host);
+   AddBandPlanRow(host);
 
    // Onto the DESIGNED Appearance panel, below its controls (they end at
    // y=452 of 572, so there is room for a small block and no more).
@@ -2991,7 +3446,64 @@ begin
 
    total := total + BuildColorsSection;
 
+   CheckEveryInventoriedSettingHasOneEditor;
+
    logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
+end;
+
+(* EXACTLY ONE EDITOR PER SETTING, asked of what was actually built.
+
+  The placement table can only promise one HOME; this counts the editors that
+  exist once every page is up -- a binding (designed or generated) or a
+  display-only row -- for every setting in the More settings inventory and every
+  placed one.  Zero is a setting the operator cannot reach; two is two controls
+  writing one value.  Logged at Error, never raised: Preferences still opens. *)
+procedure TPrefsForm.CheckEveryInventoriedSettingHasOneEditor;
+var
+   s: TSettingBase;
+   i, k, editors, checked, faults: integer;
+begin
+   checked := 0;
+   faults  := 0;
+   FEditorFaults := '';
+   for s in AllSettings do
+      begin
+      if (not IsHoldingPageKey(s.Key)) and
+         (PrefsPlacements.PageOf(s.Key) = NAV_NONE) then
+         begin
+         Continue;
+         end;
+
+      editors := 0;
+      for i := 0 to FBindings.Count - 1 do
+         begin
+         if (FBindings.Item(i) <> nil) and
+            UnicodeSameText(FBindings.Item(i).Key, s.Key) then
+            begin
+            Inc(editors);
+            end;
+         end;
+      for k := Low(FDisplayOnlyRows) to High(FDisplayOnlyRows) do
+         begin
+         if (s.LegacyCommand <> '') and
+            UnicodeSameText(FDisplayOnlyRows[k].Command, s.LegacyCommand) then
+            begin
+            Inc(editors);
+            end;
+         end;
+
+      Inc(checked);
+      if editors <> 1 then
+         begin
+         Inc(faults);
+         FEditorFaults := FEditorFaults + s.Key + ' (' + IntToStr(editors) + ')' + LineEnding;
+         logger.Error('[Prefs] "%s" has %d editor(s) in Preferences; it must have exactly one',
+                      [s.Key, editors]);
+         end;
+      end;
+
+   FEditorsChecked := checked;
+   logger.Debug('[Prefs] placement check: %d setting(s), %d fault(s)', [checked, faults]);
 end;
 
 procedure AddColorsGridColumns(const aGrid: TStringGrid);
@@ -3379,9 +3891,48 @@ function TPrefsForm.BuildGeneratedSection(const aTag: NativeInt; const aHeading:
                                           const aPrefixes: array of string): integer;
 var
    box: TScrollBox;
-   head: TLabel;
    p: string;
    y, n: integer;
+begin
+   box := NewGeneratedPage(aTag, aHeading);
+
+   y := GENERATED_PAGE_FIRST_ROW;
+   n := 0;
+   for p in aPrefixes do
+      begin
+      n := n + AddGeneratedRows(box, p, y);
+      end;
+
+   (* Then whatever TPrefsPlacements puts on this page -- the Contest page's
+     DIGITAL MODE ENABLE, for one (issue 235). *)
+   n := n + AddPlacedRows(box, aTag, y);
+
+   Result := n;
+   logger.Debug('[Prefs] generated page tag=%d -> %d setting(s)', [aTag, n]);
+end;
+
+(* A whole generated page holding the settings TPrefsPlacements puts on aTag,
+  in table order.  Issue 235's leaves are built this way. *)
+function TPrefsForm.BuildPlacedSection(const aTag: NativeInt;
+                                       const aHeading: string): integer;
+var
+   box: TScrollBox;
+   y: integer;
+begin
+   box := NewGeneratedPage(aTag, aHeading);
+   y := GENERATED_PAGE_FIRST_ROW;
+   Result := AddPlacedRows(box, aTag, y);
+   logger.Debug('[Prefs] placed page tag=%d -> %d setting(s)', [aTag, Result]);
+end;
+
+(* The empty scrolling page a generated section is built in: a child of
+  layContent carrying the section Tag, so tvNav finds it exactly as it finds a
+  designed panel, with a bold heading at the top. *)
+function TPrefsForm.NewGeneratedPage(const aTag: NativeInt;
+                                     const aHeading: string): TScrollBox;
+var
+   box: TScrollBox;
+   head: TLabel;
 begin
    box := TScrollBox.Create(Self);
    box.Parent      := layContent;
@@ -3400,15 +3951,7 @@ begin
    head.SetBounds(16, 12, 620, 40);
    head.Font.Style := [fsBold];
 
-   y := 64;
-   n := 0;
-   for p in aPrefixes do
-      begin
-      n := n + AddGeneratedRows(box, p, y);
-      end;
-
-   Result := n;
-   logger.Debug('[Prefs] generated page tag=%d -> %d setting(s)', [aTag, n]);
+   Result := box;
 end;
 
 // Append generated rows to an EXISTING DESIGNED PANEL, below whatever the
@@ -3419,9 +3962,9 @@ end;
 // its whole page to be regenerated -- ROW COUNT and WINDOW SIZE went onto the
 // designed Appearance panel this way (NY4I, 2026-08-16).
 //
-// The prefix is still the placement rule, so moving a setting here is a rename:
-// `appearance.ctrlj.rowCount` became `appearance.layout.rowCount` and that
-// alone took it off the holding page.
+// The prefix is the placement rule here: `appearance.ctrlj.rowCount` became
+// `appearance.layout.rowCount` and that alone took it off the holding page.
+// A setting whose key must NOT change goes through BuildPlacedBlock instead.
 //
 // aTop must clear the designed controls. There is no layout manager on these
 // panels -- everything is absolutely positioned -- so a block placed too high
@@ -3433,33 +3976,13 @@ procedure TPrefsForm.BuildGeneratedBlock(const aParent: TWinControl; const aTop:
                                          const aPrefixes: array of string);
 var
    host: TPanel;
-   head: TLabel;
    p: string;
    y, n: integer;
 begin
-   // A HOST PANEL rather than parenting straight onto the designed page, so the
-   // block is one thing to free when BuildBindings runs again. Parenting the
-   // rows directly would leave them scattered among the designer's controls
-   // with nothing to free them by.
-   host := TPanel.Create(Self);
-   host.Parent      := aParent;
-   host.BevelOuter  := bvNone;
-   host.Color       := clWindow;
-   host.ParentColor := False;
-   host.Caption     := '';
+   host := NewGeneratedBlock(aParent, nil, aHeading, y);
    host.SetBounds(0, aTop, aParent.Width, aParent.Height - aTop);
-   TrackGeneratedRoot(host);
 
-   y := 0;
    n := 0;
-
-   head := TLabel.Create(host);
-   head.Parent     := host;
-   head.Caption    := aHeading;
-   head.SetBounds(16, y, 500, 18);
-   head.Font.Style := [fsBold];
-   Inc(y, 26);
-
    for p in aPrefixes do
       begin
       n := n + AddGeneratedRows(host, p, y);
@@ -3467,6 +3990,72 @@ begin
 
    host.Visible := n > 0;   // no heading, and no empty host, over nothing
    logger.Debug('[Prefs] generated block on %s -> %d setting(s)', [aParent.Name, n]);
+end;
+
+(* A block on a DESIGNED panel holding the settings TPrefsPlacements puts on
+  aPageTag, in table order (issue 235).
+
+  ANCHORED UNDER aBelow, the panel's last designed control, rather than at a
+  literal top: the designed controls are scaled with the form and these rows are
+  not, so a literal that cleared them at 96 dpi would overlap them at 150%.  The
+  host is as tall as its rows -- the page below it is the designer's, not ours.
+  Its headings are the placements' groups.  aHost comes back so a caller can
+  add a row that is not a setting (AddBandPlanRow). *)
+function TPrefsForm.BuildPlacedBlock(const aParent: TWinControl; const aBelow: TControl;
+                                     const aPageTag: NativeInt;
+                                     out aHost: TPanel): integer;
+var
+   y: integer;
+begin
+   aHost  := NewGeneratedBlock(aParent, aBelow, '', y);
+   Result := AddPlacedRows(aHost, aPageTag, y);
+   aHost.Height  := y;
+   aHost.Visible := Result > 0;
+   logger.Debug('[Prefs] placed block on %s (page %d) -> %d setting(s)',
+                [aParent.Name, aPageTag, Result]);
+end;
+
+(* The host panel and heading of a block on a designed page; aHeading '' for no
+  heading.  aY comes back as the top of the first row.  With aBelow the host is anchored under it at the
+  panel's full width; without it the caller positions the host.
+
+  A HOST PANEL rather than parenting straight onto the designed page, so the
+  block is one thing to free when BuildBindings runs again. Parenting the rows
+  directly would leave them scattered among the designer's controls with nothing
+  to free them by. *)
+function TPrefsForm.NewGeneratedBlock(const aParent: TWinControl; const aBelow: TControl;
+                                      const aHeading: string; out aY: integer): TPanel;
+var
+   head: TLabel;
+begin
+   Result := TPanel.Create(Self);
+   Result.Parent      := aParent;
+   Result.BevelOuter  := bvNone;
+   Result.Color       := clWindow;
+   Result.ParentColor := False;
+   Result.Caption     := '';
+   TrackGeneratedRoot(Result);
+
+   if aBelow <> nil then
+      begin
+      Result.Left  := 0;
+      Result.Width := aParent.ClientWidth;
+      Result.AnchorSideTop.Control := aBelow;
+      Result.AnchorSideTop.Side    := asrBottom;
+      Result.BorderSpacing.Top     := 12;
+      Result.Anchors := [akLeft, akTop];
+      end;
+
+   aY := 0;
+   if aHeading <> '' then
+      begin
+      head := TLabel.Create(Result);
+      head.Parent     := Result;
+      head.Caption    := aHeading;
+      head.SetBounds(16, aY, 500, 18);
+      head.Font.Style := [fsBold];
+      Inc(aY, 26);
+      end;
 end;
 
 // Remember a generated container so the next BuildBindings can free it.
@@ -3510,19 +4099,159 @@ procedure TPrefsForm.GeneratedBandPlanClick(Sender: TObject);
 begin
    ShowBandPlan;
 end;
+
+(* Every registered setting whose key starts with aKeyPrefix, EXCEPT one that
+  TPrefsPlacements puts on another page -- its row is built there, and two rows
+  would be two editors for one value. *)
 function TPrefsForm.AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
                                      var aY: integer): integer;
+var
+   s: TSettingBase;
+   rows: array of TSettingBase;
+begin
+   rows := nil;
+   for s in AllSettings do
+      begin
+      if not UnicodeSameText(Copy(s.Key, 1, Length(aKeyPrefix)), aKeyPrefix) then
+         begin
+         Continue;
+         end;
+      if PrefsPlacements.PageOf(s.Key) <> NAV_NONE then
+         begin
+         Continue;
+         end;
+      SetLength(rows, Length(rows) + 1);
+      rows[High(rows)] := s;
+      end;
+
+   Result := AddSettingRows(aParent, rows, aY);
+end;
+
+(* THE WAY BACK INTO THE BAND PLAN EDITOR, and it is a BUTTON THIS PAGE OWNS
+  rather than a control synthesised from a row -- 2026-09-14.
+
+  BAND MAP CUTOFF FREQUENCY and FREQUENCY MEMORY are the two accumulating
+  band-plan commands: a config file names each of them once per band, so no
+  single edit box can represent one and neither is a setting at all any more
+  (uCFG.TryApplyCommandAction). While they were rows, Preferences rendered them
+  as ctFreqList and hung an Edit... button off one of them, which is how
+  uBandPlanForm kept a live caller after Ctrl-J stopped listing it.
+
+  THAT ROUTE DIED WITH THE ROWS, and a feature reachable only through a table
+  entry is a feature one deletion away from being unreachable -- finding F3 in
+  docs/BENCH_QUEUE.md is exactly that, once already. So the button is placed
+  explicitly, on the Bands page since issue 235 (it was on More settings).
+
+  NOT BOUND, for the reason it never was: the editor writes the whole [BAND
+  PLAN] section itself.  Appended to aHost, which grows by one row. *)
+procedure TPrefsForm.AddBandPlanRow(const aHost: TPanel);
+var
+   lbl: TLabel;
+   btn: TButton;
+   y: integer;
+begin
+   y := aHost.Height;
+
+   lbl := TLabel.Create(aHost);
+   lbl.Parent  := aHost;
+   lbl.Caption := SPrefsBandPlanRow;
+   lbl.SetBounds(16, y + 4, GENERATED_LABEL_W, 18);
+
+   btn := TButton.Create(aHost);
+   btn.Parent  := aHost;
+   btn.Name    := 'gen_bandPlanEdit';
+   btn.Caption := SPrefsBandPlanEdit;
+   btn.OnClick := GeneratedBandPlanClick;
+   btn.SetBounds(GENERATED_CTRL_X, y, 90, 24);
+   lbl.FocusControl := btn;
+
+   aHost.Height  := y + GENERATED_ROW_H;
+   aHost.Visible := True;
+end;
+
+(* The settings TPrefsPlacements puts on aPageTag, in the table's order, with a
+  bold heading wherever the placements' group changes to a non-empty one.  A
+  placed key the registry does not know is logged, not skipped in silence. *)
+function TPrefsForm.AddPlacedRows(const aParent: TWinControl; const aPageTag: NativeInt;
+                                  var aY: integer): integer;
+var
+   i: integer;
+   s: TSettingBase;
+   rows: array of TSettingBase;
+   group: string;
+   started: boolean;
+begin
+   Result  := 0;
+   rows    := nil;
+   group   := '';
+   started := False;
+   for i := 0 to PrefsPlacements.Count - 1 do
+      begin
+      if PrefsPlacements.Page(i) <> aPageTag then
+         begin
+         Continue;
+         end;
+      s := FindSetting(PrefsPlacements.Key(i));
+      if s = nil then
+         begin
+         logger.Error('[Prefs] placement names "%s", which is not a registered setting',
+                      [PrefsPlacements.Key(i)]);
+         Continue;
+         end;
+
+      (* A NEW GROUP: the rows so far go out under the old heading first. *)
+      if (not started) or (PrefsPlacements.Group(i) <> group) then
+         begin
+         Result := Result + AddSettingRows(aParent, rows, aY);
+         rows   := nil;
+         group  := PrefsPlacements.Group(i);
+         if group <> '' then
+            begin
+            AddGroupHeading(aParent, group, aY);
+            end;
+         started := True;
+         end;
+
+      SetLength(rows, Length(rows) + 1);
+      rows[High(rows)] := s;
+      end;
+
+   Result := Result + AddSettingRows(aParent, rows, aY);
+end;
+
+(* A bold group heading at aY, advancing it -- the same look as a block's
+  heading.  A gap above it unless it is the first thing in its parent. *)
+procedure TPrefsForm.AddGroupHeading(const aParent: TWinControl; const aCaption: string;
+                                     var aY: integer);
+var
+   head: TLabel;
+begin
+   if aY > 0 then
+      begin
+      Inc(aY, 6);
+      end;
+   head := TLabel.Create(aParent);
+   head.Parent     := aParent;
+   head.Caption    := aCaption;
+   head.SetBounds(16, aY, 600, 18);
+   head.Font.Style := [fsBold];
+   Inc(aY, 26);
+end;
+
+(* One label and one control per setting, advancing aY; returns the rows added. *)
+function TPrefsForm.AddSettingRows(const aParent: TWinControl;
+                                   const aSettings: array of TSettingBase;
+                                   var aY: integer): integer;
 const
-   ROW_H   = 30;
-   LABEL_W = 300;
-   CTRL_X  = 330;
-   CTRL_W  = 280;
+   ROW_H   = GENERATED_ROW_H;
+   LABEL_W = GENERATED_LABEL_W;
+   CTRL_X  = GENERATED_CTRL_X;
+   CTRL_W  = GENERATED_CTRL_W;
 var
    lbl: TLabel;
    chk: TCheckBox;
    cbo: TComboBox;
    edt: TEdit;
-   btn: TButton;
    ctl: TWinControl;
    s: TSettingBase;
    n, n2: integer;
@@ -3530,13 +4259,8 @@ var
 begin
    n := 0;
 
-   for s in AllSettings do
+   for s in aSettings do
       begin
-      if not SameText(Copy(s.Key, 1, Length(aKeyPrefix)), aKeyPrefix) then
-         begin
-         Continue;
-         end;
-
       // DISPLAY-ONLY, and it must not be BOUND -- disabling is not enough.
       //
       // A binding is saved by SaveAll whether or not its control is enabled, so
@@ -3659,42 +4383,6 @@ begin
          end;
 
       Inc(n);
-      Inc(aY, ROW_H);
-      end;
-
-   (* THE WAY BACK INTO THE BAND PLAN EDITOR, and it is a BUTTON THIS PAGE
-     OWNS rather than a control synthesised from a row -- 2026-09-14.
-
-     BAND MAP CUTOFF FREQUENCY and FREQUENCY MEMORY are the two accumulating
-     band-plan commands: a config file names each of them once per band, so
-     no single edit box can represent one and neither is a setting at all any
-     more (uCFG.TryApplyCommandAction). While they were rows, Preferences
-     rendered them as ctFreqList and hung an Edit... button off one of them,
-     which is how uBandPlanForm kept a live caller after Ctrl-J stopped
-     listing it.
-
-     THAT ROUTE DIED WITH THE ROWS, and a feature reachable only through a
-     table entry is a feature one deletion away from being unreachable --
-     finding F3 in docs/BENCH_QUEUE.md is exactly that, once already. So the
-     button is placed explicitly, on the page the band plan belongs to, and
-     it depends on nothing but this arm.
-
-     NOT BOUND, for the reason it never was: the editor writes the whole
-     [BAND PLAN] section itself. *)
-   if UnicodeSameText(aKeyPrefix, 'bandmap.ctrlj.') then
-      begin
-      lbl := TLabel.Create(aParent);
-      lbl.Parent  := aParent;
-      lbl.Caption := 'Band plan (cutoff frequencies and memories)';
-      lbl.SetBounds(16, aY + 4, LABEL_W, 18);
-
-      btn := TButton.Create(aParent);
-      btn.Parent  := aParent;
-      btn.Caption := 'Edit...';
-      btn.OnClick := GeneratedBandPlanClick;
-      btn.SetBounds(CTRL_X, aY, 90, 24);
-      lbl.FocusControl := btn;
-
       Inc(aY, ROW_H);
       end;
 
@@ -5163,14 +5851,21 @@ begin
       TNavNode(navRotators).Tag := 27;
       navCluster := tvNav.Items.Add(nil, 'DX Cluster');
       TNavNode(navCluster).Tag := 3;
+      navClusterSpots := tvNav.Items.AddChild(navCluster, SPrefsNavClusterSpots);
+      TNavNode(navClusterSpots).Tag := NAV_CLUSTERSPOTS;
       navOperating := tvNav.Items.Add(nil, 'Operating');
       TNavNode(navOperating).Tag := 21;
       navBandMap := tvNav.Items.AddChild(navOperating, 'Band Map');
       TNavNode(navBandMap).Tag := 20;
+      navBandMapWindow := tvNav.Items.AddChild(navBandMap, SPrefsNavBandMapWindow);
+      TNavNode(navBandMapWindow).Tag := NAV_BANDMAPWINDOW;
       navBands := tvNav.Items.AddChild(navOperating, 'Bands');
       TNavNode(navBands).Tag := 24;
-      navOperatingCW := tvNav.Items.AddChild(navOperating, 'CW');
-      TNavNode(navOperatingCW).Tag := 23;
+      // Issue 235: what is sent around your own call (DE ENABLE).
+      navEntry := tvNav.Items.AddChild(navOperating, SPrefsNavEntryAndDupeChecking);
+      TNavNode(navEntry).Tag := NAV_ENTRY;
+      navMessages := tvNav.Items.AddChild(navOperating, SPrefsNavMessages);
+      TNavNode(navMessages).Tag := NAV_MESSAGES;
       navOnlineScoring := tvNav.Items.AddChild(navOperating, 'Online Scoring');
       TNavNode(navOnlineScoring).Tag := 22;
       navTwoRadio := tvNav.Items.AddChild(navOperating, 'Two Radio Mode');
@@ -5188,22 +5883,34 @@ begin
       // on the designed panel.
       navColors := tvNav.Items.AddChild(navAppearance, 'Colors');
       TNavNode(navColors).Tag := NAV_COLORS;
+      navLogDisplay := tvNav.Items.AddChild(navAppearance, SPrefsNavLogDisplay);
+      TNavNode(navLogDisplay).Tag := NAV_LOGDISPLAY;
       navLogging := tvNav.Items.Add(nil, 'Logging');
       TNavNode(navLogging).Tag := 8;
       navBackup := tvNav.Items.Add(nil, 'Backup');
       TNavNode(navBackup).Tag := 9;
       navContest := tvNav.Items.Add(nil, 'Contest');
       TNavNode(navContest).Tag := 10;
-      // The holding page for settings that left Ctrl-J -- see NAV_MORE. Last in
-      // the list on purpose: it is the page that should shrink to nothing.
-      navMore := tvNav.Items.Add(nil, 'More settings');
-      TNavNode(navMore).Tag := NAV_MORE;
+      // Issue 235: LOG SUB TITLE and CONTACTS PER PAGE -- the printed log.
+      navPrintedLog := tvNav.Items.AddChild(navContest, SPrefsNavPrintedLog);
+      TNavNode(navPrintedLog).Tag := NAV_PRINTEDLOG;
+      (* Issue 235: the country file and what is done with calls it cannot
+        place.  Where "More settings" was, which emptied and went. *)
+      navFiles := tvNav.Items.Add(nil, SPrefsNavFilesAndUpdates);
+      TNavNode(navFiles).Tag := NAV_FILES;
       navAudio := tvNav.Items.Add(nil, 'Audio');
       TNavNode(navAudio).Tag := 29;
       navCW := tvNav.Items.Add(nil, 'CW Settings');
       TNavNode(navCW).Tag := 11;
       navPaddlePTT := tvNav.Items.AddChild(navCW, 'Paddle and PTT');
       TNavNode(navPaddlePTT).Tag := 28;
+      (* ONE HOME FOR CW (issue 235, NY4I: "I don't see a reason to have CW in
+        multiple places").  The page that was Operating > CW, moved here by its
+        nav entry alone -- its panel and Tag are unchanged. *)
+      navOperatingCW := tvNav.Items.AddChild(navCW, SPrefsNavCWWhileOperating);
+      TNavNode(navOperatingCW).Tag := NAV_OPERATINGCW;
+      navCWCharacters := tvNav.Items.AddChild(navCW, SPrefsNavCWSpeedAndCharacters);
+      TNavNode(navCWCharacters).Tag := NAV_CWCHARACTERS;
       navWebServer := tvNav.Items.Add(nil, 'Web Server');
       TNavNode(navWebServer).Tag := 12;
       navTCIServer := tvNav.Items.Add(nil, 'TCI Server');
@@ -5505,7 +6212,9 @@ begin
    // node with children and no page of its own, so clicking it showed
    // nothing; Hardware already works this way.
    FBindings.Bind(chkAutoReturnToCQ,     'operating.autoReturnToCQ');
-   FBindings.Bind(chkAutoCallTerminate,  'operating.autoCallTerminate');
+   (* AUTO CALL TERMINATE is no longer here: it is CW-only, so it went to CW
+     Settings > Speed and characters with the two auto-send settings it works
+     with (issue 235) -- see DeclarePrefsPlacements. *)
    FBindings.Bind(chkEscapeExitsSAP,     'operating.escapeExitsSAP');
    FBindings.Bind(chkLeaveCursorInCall,  'operating.leaveCursorInCall');
    FBindings.Bind(chkLogWithSingleEnter, 'operating.logWithSingleEnter');
@@ -8069,5 +8778,6 @@ initialization
 
 finalization
    FreeAndNil(gPrefsForm);
+   FreeAndNil(gPlacements);
 
 end.

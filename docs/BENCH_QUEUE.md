@@ -30,6 +30,43 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-06 -- PREFERENCES: "MORE SETTINGS" IS GONE; EVERY SETTING HAS A TASK PAGE (issue 235)
+
+Every setting that was on **More settings** is now on a task page, and so is the band plan's Edit... button. More settings itself is removed. The Operating page's one CW-only box, AUTO CALL TERMINATE, moved with the CW settings. Stored keys and command names did not change, so an existing `settings\tr4w.json` loads unchanged. A placement table in `uPrefsForm` decides where each control goes. `uTestPrefsPlacement` builds the real window against an empty settings folder and checks three things: every one of those settings has exactly one control, no page carries the old tag, and the band plan button is on the Bands page. What no test sees is geometry, scaling, and whether a search lands on the control. Each time Preferences builds its pages, it logs an Error for a setting with no control or with two: `[Prefs] "<key>" has N editor(s) in Preferences; it must have exactly one`.
+
+- [ ] **The tree.** There is no **More settings** entry; **Files and updates** is in its place.
+  - Operating has **Entry and dupe checking** and **Messages**, and no **CW**.
+  - Operating > Band Map has a child, **Window and tuning**.
+  - CW Settings has **Paddle and PTT**, **While operating** (the page that was Operating > CW) and **Speed and characters**.
+  - DX Cluster has **Spots and console**.
+  - Appearance has **Log display**.
+  - Contest has **Printed log**.
+- [ ] **New pages, one look each** (headings, no overlap, every row reachable by scrolling):
+  - **Entry and dupe checking**: Dupe checking / Search and pounce / Typing / What a QSO records / Entering a log by hand.
+  - **Messages**: De Enable.
+  - **Speed and characters**: the speed, cut-number, character and auto-send settings, including *Stop sending when the call window changes*.
+  - **Window and tuning**: the band map size and split settings, plus the QZB offset.
+  - **Spots and console**: Ask For Frequencies, QSX Enable, the spot-comment multiplier, packet broadcast, console lines.
+  - **Log display**: Rate display / Log window / Information shown under the call window.
+  - **Files and updates**: country file, CTY update check, unknown-country file name.
+  - **Printed log**: Log Sub Title and Contacts Per Page, under a note that the log is not printed and they have no effect yet.
+- [ ] **Blocks on designed pages.** Each sits below the page's last designed control, with nothing overlapping and nothing cut off at the bottom:
+  - Station: your own callsign for New Contest.
+  - SCP: the four suggested-call keys.
+  - Network: computer name, status interval, stations mask, show typed callsign, allow auto update.
+  - Audio: Alerts (dupe sound, wake-up time-out, beep) and Voice keyer (missing-callsigns file).
+  - Two Radio Mode: Tune Alt-D Enable.
+  - Band Map: Ie Switch.
+  - Hardware: YCCC box (Stereo Pin High), and **Radio polling - one rate for every radio** (Frequency Poll Rate). That one is TEMPORARY: it moves to each radio's definition in a later step.
+  - Bands: band, mode, frequency memory, and the **band plan Edit... button**, which opens the same editor with its own save.
+- [ ] **Contest page**: after the contest's own rows come *Digital Mode Enable*, *Initial Exchange Filename*, and *Domestic Filename*, which is greyed with "(set by the contest)" and cannot be edited.
+- [ ] **Advanced**: Radius Of Earth is at the end.
+- [ ] **The Operating page** has no *Stop sending when the call window changes* box; the boxes below it moved up with no gap, and Tab still moves down in order. Its introduction says CW is under CW Settings and fits in two lines.
+- [ ] **Search and deep link.** Search for a few old command names: `DE ENABLE`, `FREQUENCY POLL RATE`, `POSSIBLE CALL MODE`, `TELNET CONSOLE LINES`, `BAND MAP SIZE`, `DIGITAL MODE ENABLE`, `COUNTRY INFORMATION FILE`, `MAIN CALLSIGN`. Each hit names its NEW section and lands on its control.
+- [ ] **Save and Cancel.** Change one moved value on each of three pages and press Cancel: nothing changes on disk. Change them again and Save: `settings\tr4w.json` holds them under their OLD keys (`operating.ctrlj.*`, `cw.ctrlj.*`, ...).
+- [ ] **150% scaling.** The blocks still sit below their pages' last designed control. They are anchored to it, but their own rows are 96-dpi pixels, like every generated row.
+- [ ] **tr4w.log after opening Preferences** has no `editor(s) in Preferences` Error and no `placement ... refused` line.
+
 ## Added 2026-11-06 -- A DRAGGED GRID COLUMN IS REMEMBERED -- PER USER, AND THE MAIN LOG PER CONTEST (issue 234)
 
 Column widths an operator drags are kept in a new `columns` section of `settings\tr4w.json` (grid name -> column token -> width at 96 dpi), for the B4 list, View/Edit Log, Search, the Server log, the External logger grid and the Colours grid. **The main log is the exception (NY4I): its widths are kept per contest, in the contest database** -- `COLUMN WIDTH <token>` rows of its config table, the rows older builds wrote -- because the columns it shows depend on the contest. The store, the file section, the database round trip, the 96-dpi conversion, the clamp and a drag-then-restore on a fresh grid are unit-tested (`uTestColumnWidthStore`, `uTestExternalLoggerGrid`); what no test does is a real mouse, a real restart and a real translated header. A per-user drag is written when its window closes, at exit, and by the 5-second layout autosave; a main-log drag is written into the contest database when the log closes (exit, or File > Open Log), so a crash loses it, as it loses any contest setting changed in that session.
@@ -3582,6 +3619,11 @@ band-plan rows in **Preferences -> More settings** -- captioned *Band Map Cutoff
 Frequency* and *Frequency Memory*. Note it is NOT in Ctrl-J Settings, which is
 where it used to be and where it was looked for; finding F3 records why.
 Confirmed opening on the bench (NY4I).
+
+**MOVED 2026-11-06 (issue 235):** More settings is gone. The button is now on
+**Preferences -> Operating -> Bands**, below the band and mode rows, captioned
+*Band plan (cutoff frequencies and memories)*. It opens the same editor, which
+still saves its own whole section.
 
 Converted from 33 generated edit boxes to a single `TStringGrid`.
 

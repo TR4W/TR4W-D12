@@ -141,7 +141,7 @@ function Get-NavTagsFromUnit {
    }
 
    $lines = Get-Content -LiteralPath $Path
-   # Named constants first: `NAV_MORE = 30;` (const section, one per line).
+   # Named constants first: `NAV_COLORS = 31;` (const section, one per line).
    $consts = @{}
    for ($i = 0; $i -lt $lines.Count; $i++) {
       if ($lines[$i] -match '^\s*(NAV_[A-Za-z0-9_]+)\s*=\s*(-?\d+)\s*;') {

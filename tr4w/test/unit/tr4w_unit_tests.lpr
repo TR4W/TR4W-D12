@@ -272,6 +272,7 @@ uses
    uRadioElecraftBase in '..\..\src\radioFactory\uRadioElecraftBase.pas',
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
    uTestPrefsSearch in 'uTestPrefsSearch.pas',
+   uTestPrefsPlacement in 'uTestPrefsPlacement.pas',
    uAccelerators in '..\..\src\uAccelerators.pas',
    uTestAccelerators in 'uTestAccelerators.pas',
    uMenu in '..\..\src\uMenu.pas',
@@ -1148,6 +1149,7 @@ begin
    RegisterSuite(TTestNetLink.Create('NetLink'));
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));
    RegisterSuite(TPrefsSearchTests.Create('PrefsSearch'));
+   RegisterSuite(TPrefsPlacementTests.Create('PrefsPlacement'));
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
