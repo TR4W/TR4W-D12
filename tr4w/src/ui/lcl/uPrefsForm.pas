@@ -1027,6 +1027,8 @@ type
       procedure ColorGridPrepareCanvas(Sender: TObject; aCol, aRow: integer;
                                        aState: TGridDrawState);
       procedure SizeColorColumns;
+      procedure ColorGridHeaderSized(Sender: TObject; IsColumn: boolean;
+                                     Index: integer);
       { AnsiString EXPLICITLY, and the compiler is what says so: TSetEditEvent
         is declared in the LCL, which is compiled with 8-bit strings, while
         `string` in this unit is UnicodeString (tr4w.inc). A method assigned to
@@ -1203,6 +1205,37 @@ const
    // fifty elements with two drop-downs each is a hundred controls, and the
    // designed panel has room for a small block and no more.
    NAV_COLORS            = 31;
+
+   (* THE COLOURS GRID'S COLUMNS, in the interface so the unit tests can build
+     the same grid on a bare TStringGrid (TPrefsForm itself is not constructed
+     by any test). *)
+   COLORS_COL_ELEMENT = 0;
+   COLORS_COL_FG      = 1;
+   COLORS_COL_BG      = 2;
+   (* A LIVE PREVIEW, asked for by NY4I: "Is it possible to arrange this dialog
+     to show in the table a sample of the text and background?" Two colour NAMES
+     side by side do not answer "is that readable" -- LIGHT GRAY on WHITE reads
+     fine as words and is nearly invisible on screen. *)
+   COLORS_COL_SAMPLE  = 3;
+
+   (* THE NAME AND TOKENS the grid's dragged widths are kept under in the
+     'columns' section of settings\tr4w.json (issue 234). On disk, so never
+     renamed; neither an index nor a caption, so a translated header or a
+     reordered column cannot move a width onto the wrong column. Sample has
+     none: it is the FILL column, and AutoFillColumns owns its width, so a
+     saved one would fight the fill (a 'Sample' width an earlier build saved
+     is simply never read). *)
+   COLORS_GRID_COLUMNS_NAME = 'Colors';
+   COLORS_COLUMN_TOKENS: array[COLORS_COL_ELEMENT .. COLORS_COL_SAMPLE] of string =
+      ('Element', 'Text', 'Background', '');
+
+(* The Colours grid's four columns, their headers, and which ones edit. *)
+procedure AddColorsGridColumns(const aGrid: TStringGrid);
+
+(* Fit the Colours grid's columns to their content, lay the widths the operator
+  dragged over that, and let Sample take the rest of the row. Once the rows are
+  loaded; TPrefsForm.SizeColorColumns says why only once. *)
+procedure SizeColorsGridColumns(const aGrid: TStringGrid);
 
 
 // Opens Preferences, creating it on first use.  Called from the PREF
@@ -2961,17 +2994,54 @@ begin
    logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
 end;
 
-{ The colors grid's columns.  Shared by the builder and the editor callback,
-  which is why they are not local to either. }
+procedure AddColorsGridColumns(const aGrid: TStringGrid);
+begin
+   (* THE Columns COLLECTION DEFINES THE COLUMN COUNT. Never set ColCount beside
+     it: the first version set ColCount := 3 AND added three Columns, and the
+     grid ended up with the three configured columns plus three empty ones --
+     white space to the right of the values -- and a content width that no
+     longer matched what was drawn, so it never worked out that it needed to
+     scroll (NY4I, 2026-08-22). The collection is what lets Sample alone take
+     the slack (FillGridFromColumn) and lets a column say it does not edit.
+
+     The pick list still arrives through OnSelectEditor: one editor for the
+     whole grid rather than a control per cell. *)
+   aGrid.Columns.Clear;
+   aGrid.Columns.Add.Title.Caption := 'Element';
+   aGrid.Columns.Add.Title.Caption := 'Text';
+   aGrid.Columns.Add.Title.Caption := 'Background';
+   aGrid.Columns.Add.Title.Caption := 'Sample';
+   (* The element NAME is the row's identity; the sample is an OUTPUT, and
+     editing it would offer to change a picture. *)
+   aGrid.Columns[COLORS_COL_ELEMENT].ReadOnly := True;
+   aGrid.Columns[COLORS_COL_SAMPLE].ReadOnly := True;
+end;
+
+procedure SizeColorsGridColumns(const aGrid: TStringGrid);
 const
-   COLORS_COL_ELEMENT = 0;
-   COLORS_COL_FG      = 1;
-   COLORS_COL_BG      = 2;
-   { A LIVE PREVIEW, asked for by NY4I: "Is it possible to arrange this dialog
-     to show in the table a sample of the text and background?" Two colour NAMES
-     side by side do not answer "is that readable" -- LIGHT GRAY on WHITE reads
-     fine as words and is nearly invisible on screen. }
-   COLORS_COL_SAMPLE  = 3;
+   (* Breathing room either side of the text. AutoSize measures the glyphs; this
+     is the margin that stops a cell reading as though it were clipped. *)
+   COLOR_COL_PADDING = 14;
+var
+   c, sampleWidth: integer;
+begin
+   aGrid.AutoSizeColumns;
+   for c := 0 to aGrid.ColCount - 1 do
+      begin
+      aGrid.ColWidths[c] := aGrid.ColWidths[c] + COLOR_COL_PADDING;
+      end;
+
+   (* THEN THE WIDTHS THE OPERATOR DRAGGED LAST TIME, over the measured ones
+     (issue 234): measured is the default, dragged is the choice. *)
+   RestoreGridColumnWidths(aGrid, COLORS_GRID_COLUMNS_NAME, COLORS_COLUMN_TOKENS);
+
+   (* SAMPLE TAKES THE REST OF THE ROW, so the row ends at the grid's right edge
+     at any width (NY4I's bench, issue 234: a white band past Sample). Its
+     measured width is its floor, so the sample text is never cut off; below
+     that the row clips, because a filled grid shows no horizontal bar. *)
+   sampleWidth := aGrid.ColWidths[COLORS_COL_SAMPLE];
+   FillGridFromColumn(aGrid, COLORS_COL_SAMPLE, sampleWidth);
+end;
 
 function TPrefsForm.BuildColorsSection: integer;
 var
@@ -3031,40 +3101,28 @@ begin
    FColorGrid.Parent      := box;
    FColorGrid.Align       := alClient;
    FColorGrid.BorderSpacing.Around := 12;
-   // EXPLICIT.  Fifty rows will not fit whatever the page is sized to, so the
-   // vertical bar has to be there; ssAutoBoth also covers a window narrowed
-   // past the three columns.
-   FColorGrid.ScrollBars  := ssAutoBoth;
-   // NO Columns COLLECTION, and that is the fix rather than a simplification.
-   //
-   // The first version set ColCount := 3 AND added three Columns.  In the LCL
-   // the collection DEFINES the column count, so the grid ended up with the
-   // three configured columns plus three empty ones -- the white space to the
-   // right of the values -- and a content width that no longer matched what was
-   // drawn.  It never worked out that it needed to scroll, so fifty elements
-   // showed about twenty-two and the rest were unreachable (NY4I, 2026-08-22).
-   //
-   // uBandPlanForm's grid, which works, uses ColCount and no collection.  This
-   // one now does too, and the pick list arrives through OnSelectEditor -- the
-   // LCL's own way to give a column a drop-down without a Columns entry, and
-   // still ONE editor for the whole grid rather than a control per cell.
-   FColorGrid.ColCount    := 4;   { element, text, background, sample }
+   (* EXPLICIT. Fifty rows will not fit whatever the page is sized to, so the
+     vertical bar has to be there. Vertical only: the columns fill the grid
+     (SizeColorsGridColumns), and a filled grid never shows a horizontal bar. *)
+   FColorGrid.ScrollBars  := ssAutoVertical;
    FColorGrid.FixedRows   := 1;
    FColorGrid.FixedCols   := 0;
    FColorGrid.Options     := FColorGrid.Options + [goEditing, goVertLine, goHorzLine,
                                                    goColSizing, goSmoothScroll];
-   FColorGrid.Cells[COLORS_COL_ELEMENT, 0] := 'Element';
-   FColorGrid.Cells[COLORS_COL_FG,      0] := 'Text';
-   FColorGrid.Cells[COLORS_COL_BG,      0] := 'Background';
-   FColorGrid.Cells[COLORS_COL_SAMPLE,  0] := 'Sample';
-   { No fixed widths: SizeColorColumns measures the real content once the rows
-     are loaded. Four numbers guessed here cannot survive a font-size change. }
+   AddColorsGridColumns(FColorGrid);
+   (* No fixed widths: SizeColorColumns measures the real content once the rows
+     are loaded. Four numbers guessed here cannot survive a font-size change. *)
    FColorGrid.OnSelectEditor  := ColorGridSelectEditor;
    { The grid paints the sample cell; nothing here creates a control, which is
      the whole reason this page is a grid rather than 150 windows. }
    FColorGrid.OnPrepareCanvas := ColorGridPrepareCanvas;
    FColorGrid.OnSetEditText    := ColorGridSetEditText;
    FColorGrid.OnEditingDone    := ColorGridEditingDone;
+   FColorGrid.OnHeaderSized    := ColorGridHeaderSized;
+   (* A NEW GRID HAS NEVER BEEN SIZED. The flag outlived the grid it was set
+     for: this builder runs again on a reload and the old grid went with its
+     scroll box, so the new one kept the LCL's default widths. *)
+   FColorColumnsSized := False;
    FPreviewCol := -1;
    FPreviewRow := -1;
 
@@ -3099,15 +3157,8 @@ end;
 procedure TPrefsForm.ColorGridSelectEditor(Sender: TObject; aCol, aRow: integer;
                                            var Editor: TWinControl);
 begin
-   // COLUMN 0 IS THE ELEMENT NAME and is not editable.  Refusing an editor is
-   // how a grid says that per-column when there is no Columns collection to
-   // carry a ReadOnly flag.
-   if (aCol = COLORS_COL_ELEMENT) or (aCol = COLORS_COL_SAMPLE) then
-      begin
-      { The sample is an OUTPUT. Editing it would offer to change a picture. }
-      Editor := nil;
-      Exit;
-      end;
+   (* Only Text and Background reach here: Element and Sample are ReadOnly
+     columns (AddColorsGridColumns), and the grid asks for no editor there. *)
 
    // ONE editor, borrowed from the grid and refilled each time it is shown.
    // EditorByStyle is the LCL's own pick-list cell editor; nothing here creates
@@ -3269,25 +3320,31 @@ begin
 end;
 
 procedure TPrefsForm.SizeColorColumns;
-const
-   { Breathing room either side of the text. AutoSize measures the glyphs; this
-     is the margin that stops a cell reading as though it were clipped. }
-   COLOR_COL_PADDING = 14;
-var
-   c: integer;
 begin
    if FColorColumnsSized or (FColorGrid = nil) then
       begin
       Exit;
       end;
 
-   FColorGrid.AutoSizeColumns;
-   for c := 0 to FColorGrid.ColCount - 1 do
-      begin
-      FColorGrid.ColWidths[c] := FColorGrid.ColWidths[c] + COLOR_COL_PADDING;
-      end;
+   SizeColorsGridColumns(FColorGrid);
 
    FColorColumnsSized := True;
+end;
+
+(* A COLOURS COLUMN WAS DRAGGED: marked for the settings file, written when
+  this window closes, at exit or by the layout autosave (issue 234). Sample has
+  no token, so a drag of the fill column marks nothing. There is no zero-width
+  column after Sample for the LCL to widen instead (the External logger grid's
+  StartColSizing case), so no guard is needed here. *)
+procedure TPrefsForm.ColorGridHeaderSized(Sender: TObject; IsColumn: boolean;
+                                          Index: integer);
+begin
+   if not IsColumn then
+      begin
+      Exit;
+      end;
+
+   SaveGridColumnWidth(FColorGrid, COLORS_GRID_COLUMNS_NAME, COLORS_COLUMN_TOKENS, Index);
 end;
 
 procedure TPrefsForm.SaveColorRows;
@@ -6719,6 +6776,10 @@ begin
       FLoggerGrid.OnChanged := ExternalLoggersChanged;
       FLoggerGrid.OnQueryState := QueryLoggerState;
       btnAddExternalLogger.Caption := UTF8Encode(SLoggerGridAdd);
+      (* The widths dragged last time (issue 234). Once, at creation: the
+         grid lives as long as this form, so a later Refresh keeps whatever
+         the operator has dragged since. *)
+      FLoggerGrid.RestoreColumnWidths;
       end;
    (* FStore is long-lived, but bind on every use so the grid can never edit a
       configuration that was replaced under it. *)
@@ -7992,6 +8053,11 @@ begin
          DiscardChanges;
          end;
       end;
+
+   (* Any grid column dragged on these pages -- the external loggers, the
+     colours (issue 234). A width is a view preference, not a setting, so it
+     is kept whether the edits were saved or discarded. *)
+   FlushColumnWidths;
 
    // Hide, never free: freeing a form from inside its own event handler is the
    // classic way to crash on the way out, and reopening should be instant.

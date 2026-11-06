@@ -34,6 +34,7 @@ uses
    uAppStrings,       (* SNewContestShowInactive, SNewContestFiles* *)
    uLatestContest,    (* TLatestContest -- what each grid row must say *)
    uTestLatestContest, (* MakeTestContestLog, WriteDamagedTestLog, ScrubTestLog *)
+   uTestShowOffScreen, (* ShowOffScreen -- the layout test measures a shown form *)
    uNewContestForm;
 
 type
@@ -1596,11 +1597,7 @@ begin
          frm.ShowLatest('', nil);
          end;
 
-      frm.Position      := poDesigned;
-      frm.ShowInTaskBar := stNever;
-      frm.Left          := Screen.DesktopLeft - frm.Width - 200;
-      frm.Top           := Screen.DesktopTop;
-      frm.Show;
+      ShowOffScreen(frm);
       try
          inner := frm.gbExisting.ClientWidth - 2 * SIDE;
          where := ' (' + path + '; group client ' + IntToStr(frm.gbExisting.ClientWidth) +

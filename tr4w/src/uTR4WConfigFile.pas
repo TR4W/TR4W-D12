@@ -66,6 +66,7 @@ uses
    uKeyerConfigStore,
    uUDPBroadcastConfig,
    uWindowLayoutStore,
+   uColumnWidthStore,    (* the 'columns' section -- issue 234 *)
    uSettingsModel,
    utils_text;           // CharBufferText -- the ini name
 
@@ -80,6 +81,10 @@ const
    // Where each TR4W window was left. An object keyed by window name -- see
    // uWindowLayoutStore for why it is not the array of records it replaced.
    JSONKEY_WINDOWS = 'windows';
+
+   (* The column widths an operator dragged, per user: grid name -> column
+     token -> width at 96 dpi. See uColumnWidthStore (issue 234). *)
+   JSONKEY_COLUMNS = 'columns';
 
    (* THE SETTINGS OBJECT -- the destination CFGCA rows move to.
 
@@ -110,7 +115,8 @@ procedure SaveConfig(const aFileName: string;
                      const aRadios: TRadioConfigStore;
                      const aKeyers: TKeyerConfigStore;
                      const aUDP: TUDPBroadcastConfig = nil;
-                     const aWindows: TWindowLayoutStore = nil);
+                     const aWindows: TWindowLayoutStore = nil;
+                     const aColumns: TColumnWidthStore = nil);
 
 (* THE SETTINGS OBJECT ON ITS OWN.
 
@@ -241,6 +247,22 @@ procedure SaveWindowLayout(const aFileName: string;
 function LoadWindowLayout(const aFileName: string;
                           const aWindows: TWindowLayoutStore): boolean;
 
+(* THE COLUMN WIDTHS, the same pair as the window layout (issue 234).
+
+  SaveColumnWidths merges at the ENTRY level -- grid and token -- not at the
+  grid level: a contest that hides a log column must not drop the width a
+  different contest saved for it, and a grid or token this build does not know
+  is carried through. It goes through SaveConfig, so the one-writer rule holds
+  and a batch /EXPORT writes nothing.
+
+  LoadColumnWidths answers False (store empty) for an absent or unreadable
+  file, or one with no 'columns' section -- every file written before this
+  existed. *)
+procedure SaveColumnWidths(const aFileName: string;
+                           const aColumns: TColumnWidthStore);
+function LoadColumnWidths(const aFileName: string;
+                          const aColumns: TColumnWidthStore): boolean;
+
 // Reads every library from one file. Returns False with a reason when the file
 // is unreadable or is not a JSON object; a MISSING SECTION is not an error --
 // see the unit header.
@@ -249,7 +271,8 @@ function LoadConfig(const aFileName: string;
                     const aKeyers: TKeyerConfigStore;
                     out aError: string;
                     const aUDP: TUDPBroadcastConfig = nil;
-                    const aWindows: TWindowLayoutStore = nil): boolean;
+                    const aWindows: TWindowLayoutStore = nil;
+                    const aColumns: TColumnWidthStore = nil): boolean;
 
 // The UDP settings as they should stand at startup: from the JSON section when
 // it is there, otherwise SEEDED from whatever the operator's ini already holds.
@@ -398,7 +421,8 @@ procedure SaveConfig(const aFileName: string;
                      const aRadios: TRadioConfigStore;
                      const aKeyers: TKeyerConfigStore;
                      const aUDP: TUDPBroadcastConfig = nil;
-                     const aWindows: TWindowLayoutStore = nil);
+                     const aWindows: TWindowLayoutStore = nil;
+                     const aColumns: TColumnWidthStore = nil);
 var
    root, tenant: TJSONObject;
    dir: string;
@@ -474,6 +498,11 @@ begin
       if aWindows <> nil then
          begin
          JSONSetSection(root, JSONKEY_WINDOWS, aWindows.ToJSON);
+         end;
+
+      if aColumns <> nil then
+         begin
+         JSONSetSection(root, JSONKEY_COLUMNS, aColumns.ToJSON);
          end;
 
       // See the unit header: formatted, and no BOM.
@@ -801,12 +830,57 @@ begin
    end;
 end;
 
+procedure SaveColumnWidths(const aFileName: string;
+                           const aColumns: TColumnWidthStore);
+var
+   onDisk: TColumnWidthStore;
+begin
+   if aColumns = nil then
+      begin
+      Exit;
+      end;
+
+   (* What the file holds first, then the caller's entries over it, so every
+     other grid and every other token survives -- the same reason
+     SaveWindowLayout reads before it writes. *)
+   onDisk := TColumnWidthStore.Create;
+   try
+      LoadColumnWidths(aFileName, onDisk);
+      onDisk.MergeFrom(aColumns);
+      SaveConfig(aFileName, nil, nil, nil, nil, onDisk);
+   finally
+      onDisk.Free;
+   end;
+end;
+
+function LoadColumnWidths(const aFileName: string;
+                          const aColumns: TColumnWidthStore): boolean;
+var
+   radios: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   err: string;
+begin
+   (* Through LoadConfig, for the reason LoadWindowLayout gives: one place
+     knows how this file is read. *)
+   aColumns.Clear;
+   radios := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      Result := LoadConfig(aFileName, radios, keyers, err, nil, nil, aColumns) and
+                (aColumns.EntryCount > 0);
+   finally
+      keyers.Free;
+      radios.Free;
+   end;
+end;
+
 function LoadConfig(const aFileName: string;
                     const aRadios: TRadioConfigStore;
                     const aKeyers: TKeyerConfigStore;
                     out aError: string;
                     const aUDP: TUDPBroadcastConfig = nil;
-                    const aWindows: TWindowLayoutStore = nil): boolean;
+                    const aWindows: TWindowLayoutStore = nil;
+                    const aColumns: TColumnWidthStore = nil): boolean;
 var
    text: string;
    value: TJSONValue;
@@ -884,6 +958,18 @@ begin
             end;
          // Absent means a file written before the layout moved off tr4w.pos.
          // The store stays empty and the caller seeds from the old file.
+         end;
+
+      if aColumns <> nil then
+         begin
+         aColumns.Clear;
+         section := root.GetValue(JSONKEY_COLUMNS);
+         if section is TJSONObject then
+            begin
+            aColumns.FromJSON(TJSONObject(section));
+            end;
+         (* Absent means no width has ever been dragged, or a file older than
+           issue 234: every grid keeps its own default widths. *)
          end;
 
       Result := True;

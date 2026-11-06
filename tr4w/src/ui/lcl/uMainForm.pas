@@ -357,8 +357,6 @@ type
     procedure MainLogDblClick(Sender: TObject);
     procedure MainLogKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure MainLogEnter(Sender: TObject);
-    procedure MainLogHeaderSized(Sender: TObject; IsColumn: boolean;
-                                 Index: integer);
   end;
 
 (* THE OWNER-DRAW SEAM IS GONE (2026-09-10).
@@ -976,6 +974,12 @@ uses
    uTR4WStrings,       // TC_CONNECTINGTO and siblings -- what the strip must hold
    uPanelUpdate,       // StatusSubsystemName -- the name each status ends with
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
+
+const
+   (* The name the B4 list keeps its column widths under, in the 'columns'
+     section of settings\tr4w.json (issue 234). On disk, so never renamed.
+     The main log has none: its widths are the contest's (WidthsPerContest). *)
+   PREVIOUS_DUPES_COLUMNS_NAME = 'PreviousDupes';
 
 (* WHY THIS FORM'S MESSAGE HANDLERS ARE KEYED ON LM_, NOT WM_.
 
@@ -2997,7 +3001,13 @@ begin
    TR4WEditableLog.OnDblClick    := MainLogDblClick;
    TR4WEditableLog.OnKeyDown     := MainLogKeyDown;
    TR4WEditableLog.OnEnter       := MainLogEnter;
-   TR4WEditableLog.OnHeaderSized := MainLogHeaderSized;
+
+   (* ITS COLUMN WIDTHS ARE THE CONTEST'S, NOT THE USER'S (NY4I, 2026-11-06):
+     the columns it shows depend on the contest, so the widths live in the
+     contest database (uLogStore) and never in settings\tr4w.json. The one
+     log grid that does this; the grid records a drag itself
+     (TLogGrid.HeaderSized). *)
+   TR4WEditableLog.WidthsPerContest := True;
 
    (* FITTED TO THE CONTENTS AND STRETCHED TO THE WINDOW, like the two dialog
      grids -- NY4I, 2026-09-04.
@@ -3269,6 +3279,11 @@ begin
    TR4WPreviousDupes.Sizing := lgsFitAndFill;
    TR4WPreviousDupes.Visible    := False;
 
+   (* ITS OWN COLUMN WIDTHS, NOT THE LOG'S (issue 234). It shows the same
+     columns in the same place, but it is a separate grid an operator can drag
+     while it is up, and each grid keeps what was dragged on it. *)
+   TR4WPreviousDupes.LayoutName := PREVIOUS_DUPES_COLUMNS_NAME;
+
    ApplyMainFontTo(TR4WPreviousDupes.Font);
    TR4WPreviousDupes.DefaultRowHeight := ws + 2;
    TR4WPreviousDupes.Color      := tr4wColorsArray[TWindows[mweEditableLog].mweBackG];
@@ -3345,27 +3360,6 @@ begin
    ActiveMainWindow := awEditableLog;
 end;
 
-(* THE OPERATOR DRAGGED A COLUMN EDGE, so remember the width they chose.
-
-  No padding and no auto-fit: they picked this width explicitly. The
-  double-click-to-auto-fit arm that stood beside this is gone with the header
-  control -- TLogGrid distributes widths itself on every resize, which is the
-  behaviour that feature approximated. *)
-procedure TTR4WMainForm.MainLogHeaderSized(Sender: TObject; IsColumn: boolean;
-                                           Index: integer);
-begin
-   if not IsColumn then
-      begin
-      Exit;
-      end;
-
-   if TR4WEditableLog = nil then
-      begin
-      Exit;
-      end;
-
-   SaveColumnWidthToConfig(Index, TR4WEditableLog.ColWidths[Index]);
-end;
 
 procedure CreateTR4WEditableLog(const aLeft, aTop, aWidth, aHeight: integer);
 begin

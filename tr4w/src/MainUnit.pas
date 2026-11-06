@@ -516,7 +516,6 @@ procedure FlashCallWindow;
 procedure ProcessCommandLine;
 procedure PutCallToCallWindow(Call: CallString);
 procedure SetColumnsWidth;
-procedure SaveColumnWidthToConfig(ColIndex: Integer; NewWidth: Integer);
 procedure ExecuteConfigurationFile(const f: AnsiString);
 procedure CheckEditableWindowHeight;
 function CheckCommandInCallsignWindow: boolean;
@@ -725,7 +724,7 @@ uses
                         stopped before the log closes *)
   uLogEditForm,       // View / Edit Log -- an LCL virtual list now; also
                       // SaveLogEditLayout, see SaveTR4WPOSFILE
-  uContestFileKind,   // a .db is not an INI -- see SaveColumnWidthToConfig
+  uContestFileKind,   // ClassifyContestFile -- File > Open Log's plan
   uOpenLogRelaunch,   (* File > Open Log: the refusal, the child's arguments, the
                         one-shot relaunch tr4w_ShutDown starts (issue 218) *)
   uNewContestForm,    (* TNewContestChoice, ncmSwitchContest -- Open Log's dialog (issue 228) *)
@@ -796,6 +795,8 @@ uses
   uLogSearchForm,     // SaveLogSearchLayout -- not a tw_ window, see SaveTR4WPOSFILE
   uWindowLayoutStore, // the window layout, keyed by name
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
+  uLCLFormHelpers,   (* ColumnWidthsPending / FlushColumnWidths -- the grid
+                        column widths ride the layout autosave (issue 234) *)
   uWSJTXState,       // the state the WSJT-X indicator paints from
   uRadioState,       // TXInhibitAlert -- the PTT indicator's alert (issue #97)
   uTXInhibitAlert,   // PTTIndicatorRole -- what the PTT indicator means
@@ -2344,6 +2345,12 @@ begin
     not a tw_ window either, so the loop above cannot see it. *)
   SaveLogSearchLayout;
   SaveLogEditLayout;
+
+  (* AND THE COLUMN WIDTHS AN OPERATOR DRAGGED (issue 234), by the same
+    route: this is the exit save and the autosave's save, so a drag reaches
+    disk within five seconds and at exit, and a window's close writes it
+    sooner. Writes nothing when nothing was dragged. *)
+  FlushColumnWidths;
 end;
 
 // Issue #739: a saved window rectangle can land off-screen when the monitor it
@@ -2558,6 +2565,18 @@ begin
       if logger.IsTraceEnabled then
          begin
          logger.Trace('[Layout] a panadapter moved, resized or changed open state -- saving');
+         end;
+      end;
+
+   (* A DRAGGED COLUMN IS A CHANGE TOO (issue 234). Without this the tick only
+     saved when a window rectangle had moved, so a width dragged in a window
+     left where it was waited for the close or the exit. *)
+   if (not changed) and ColumnWidthsPending then
+      begin
+      changed := True;
+      if logger.IsTraceEnabled then
+         begin
+         logger.Trace('[Layout] a grid column width was dragged -- saving');
          end;
       end;
 
@@ -10203,102 +10222,6 @@ begin
        end;
 end;
 
-
-(* COLUMN WIDTHS ARE NOT WRITTEN INTO A LOG DATABASE.
-
-  THIS ROUTINE WRITES WITH WritePrivateProfileStringA INTO TR4W_CFG_FILENAME,
-  and that name is a .db now. Windows' profile API does not know that: it opens
-  the file, PARSES THE WHOLE THING as an INI, and rewrites it. Against a SQLite
-  database that is slow enough to look like a hang and has no business
-  happening at all.
-
-  MEASURED THREE TIMES, 2026-09-03: the last line in the log before the program
-  stopped responding was this routine's own debug line -- "column 1 is now 118
-  wide", then "column 13 is now 97 wide". Once while the Edit Log window was
-  open, once on shutdown, and NY4I had not touched a column divider on either
-  occasion.
-
-  THE DATABASE SURVIVED, which is luck rather than design: integrity_check
-  still reports ok, so the API evidently declined to write a file it could not
-  parse. It is not a guarantee, and it is not worth relying on.
-
-  BY CONTENT, NOT BY EXTENSION -- ClassifyContestFile, the same test the config
-  loader uses. A log an operator renamed to .cfg is still a database.
-
-  WHERE THIS SHOULD END UP: a column width is a UI preference and belongs in
-  settings\tr4w.json with the rest of the window layout, not in the contest
-  file at all. Recorded rather than done, because that is a settings migration
-  and this is a hang. *)
-procedure SaveColumnWidthToConfig(ColIndex: Integer; NewWidth: Integer);
-var
-   TempColumn: LogColumnsType;
-   KeyName: ShortString;
-   WidthStr: ShortString;
-   matched: boolean;
-begin
-   // ENTERED, and said so.  "The width did not stick" has THREE causes and the
-   // logging could only distinguish one of them:
-   //
-   //   1. the header notification never arrived  -> no line at all
-   //   2. it arrived but matched no column       -> the "no column at index" line
-   //   3. it matched and the write failed        -> the "could NOT be saved" line
-   //
-   // Without 1 and 2 spelled out, a silent log looked the same as a working one.
-   logger.Debug('[ColumnWidth] header reports column %d is now %d wide',
-                [ColIndex, NewWidth]);
-
-   (* See the note above this routine. *)
-   if ClassifyContestFile(CharBufferText(TR4W_CFG_FILENAME)) <> cfkTextConfig then
-      begin
-      logger.Debug('[ColumnWidth] not saved -- the contest file is not a text ' +
-                   '.cfg (%s)', [CharBufferText(TR4W_CFG_FILENAME)]);
-      Exit;
-      end;
-
-   matched := False;
-   for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
-      begin
-      if ColumnsArray[TempColumn].Enable and (ColumnsArray[TempColumn].pos = ColIndex) then
-         begin
-         if NewWidth > 0 then
-            begin
-            (* APPLIED HERE, PERSISTED BY THE LOG.
-
-              An INI write into TR4W_CFG_FILENAME stood here, and that name is
-              a .db -- so dragging a column divider asked Windows to parse a
-              SQLite database as an INI and rewrite it. Three of NY4I's freezes
-              ended on this routine's own log line.
-
-              THEN IT WENT THROUGH CheckCommand, WHICH WAS REDUNDANT: the line
-              above already assigns ColumnWidthOverride, and the 'COLUMN WIDTH
-              <token>' arm assigns THE SAME VARIABLE. So this formatted the
-              width into a ShortString, null-terminated it by hand, built a
-              command name, and re-parsed the lot to arrive where it already
-              was. The canonical-name plumbing existed only to feed that.
-
-              uLogStore.CaptureConfiguration writes the widths into the log's
-              config table at close, beside the function-key memories, and the
-              startup apply restores them -- so the width is still per contest,
-              in the contest's own file. *)
-            ColumnWidthOverride[TempColumn] := NewWidth;
-            logger.Debug('[ColumnWidth] %s = %d applied',
-                         [ColumnCanonicalName[TempColumn], NewWidth]);
-            end;
-         matched := True;
-         Exit;
-         end;
-      end;
-
-   if not matched then
-      begin
-      // The header gave an index that no ENABLED column claims.  ColumnsArray
-      // .pos is recomputed by SetColumnsWidth whenever the contest's exchange
-      // changes which columns exist, so an index can outlive the column it
-      // referred to.
-      logger.Warn('[ColumnWidth] no enabled column sits at index %d -- ' +
-                  'width %d was not saved', [ColIndex, NewWidth]);
-      end;
-end;
 
 procedure ExecuteConfigurationFile(const f: AnsiString);
 var

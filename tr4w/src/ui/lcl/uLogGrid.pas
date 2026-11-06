@@ -127,6 +127,16 @@ type
       FColumnOf:    array of LogColumnsType;
       FCache:       array of TLogGridCacheEntry;
 
+      (* THE WIDTHS THE OPERATOR CHOSE FOR THIS GRID, in this grid's pixels; 0
+        is "not chosen" (issue 234). Per instance and per column, so the main
+        log, the B4 list, View/Edit Log, Search and the server log each keep
+        their own. Filled from the 'columns' section of settings\tr4w.json
+        under LayoutName, and by a drag. *)
+      FUserWidth:   array[LogColumnsType] of integer;
+      FLayoutName:  string;
+      FSavedWidthsRead: boolean;
+      FWidthsPerContest: boolean;
+
       function  Fetch(const aIndex: Int64): PLogGridCacheEntry;
       procedure FillBatch(const aFirstIndex: Int64);
       procedure SizeColumnsAsDeclared;
@@ -139,7 +149,14 @@ type
                             aTextLeft: integer);
       function  GetSelectedRecord: Int64;
       procedure SetSelectedRecord(const aValue: Int64);
+      procedure SetLayoutName(const aValue: string);
+      procedure ReadSavedWidths;
+      function  UserWidth(const aColumn: LogColumnsType): integer;
+      function  HeaderTextWidth(const aColumn: LogColumnsType): integer;
    protected
+      (* A divider was dragged or double-clicked: the width is this grid's,
+        and is marked for the settings file -- see the body. *)
+      procedure HeaderSized(IsColumn: boolean; index: integer); override;
       (* Fills the strip below the last row. See the body. *)
       procedure Paint; override;
       (* Tells the widget set the horizontal bar is off, which the LCL
@@ -213,12 +230,33 @@ type
         change of TEXT colour alone would not. *)
       property MatchColor: TColor read FMatchColor write FMatchColor;
       property MatchTextColor: TColor read FMatchTextColor write FMatchTextColor;
+
+      (* THE NAME THIS GRID'S COLUMN WIDTHS ARE KEPT UNDER in the 'columns'
+        section of settings\tr4w.json (issue 234). '' keeps nothing: a drag
+        still holds for the session, but is not written. Set by the owner
+        before the grid is first sized. *)
+      property LayoutName: string read FLayoutName write SetLayoutName;
+
+      (* THE MAIN LOG'S RULE: ITS WIDTHS ARE THE OPEN CONTEST'S, NOT THE USER'S
+        (NY4I, 2026-11-06 -- the columns it shows depend on the contest).
+
+        True reads and writes uColumnWidthStore.ContestColumnWidths, which
+        uLogStore fills from the contest database at the open and writes back
+        at the close; the 'columns' section of settings\tr4w.json is neither
+        read nor written, and LayoutName is not used. Read at every sizing,
+        so a store filled after the grid first sized still reaches it. The
+        clamp, the 96-dpi conversion and the column token are the same as the
+        per-user path's. Only the main log sets it. *)
+      property WidthsPerContest: boolean read FWidthsPerContest write FWidthsPerContest;
    end;
 
 implementation
 
 uses
-   uSettingsModel;   (* Settings.Log.ColumnAutoSize -- was the global ColumnAutoSize *)
+   uSettingsModel,   (* Settings.Log.ColumnAutoSize -- was the global ColumnAutoSize *)
+   uColumnWidthStore, (* TColumnWidthStore, ClampRestoredWidth -- issue 234 *)
+   uLCLFormHelpers,  (* LoadSavedColumnWidths, NoteColumnWidth, the 96-dpi scaling *)
+   utils_text;       (* LclText -- a header's text, converted for the LCL once *)
 
 const
    (* A DIRECT-MAPPED CACHE, sized to comfortably exceed a screenful so that
@@ -522,8 +560,8 @@ end;
 
   THREE CASES, and they are the original's, in order:
 
-    1. The operator has dragged this column -- ColumnWidthOverride, in pixels.
-       Their width wins over everything.
+    1. The operator has dragged this column -- UserWidth, in pixels, never
+       narrower than its header. Their width wins over everything.
     2. ColumnAutoSize, for columns from logColNumberReceive rightwards: fit the
        header. LVSCW_AUTOSIZE_USEHEADER fits the wider of header and content,
        and a virtual grid has no content to measure, so it is the header text
@@ -558,6 +596,8 @@ begin
 
    FSizingNow := True;
    try
+      ReadSavedWidths;
+
       case FSizing of
          lgsFitAndFill:
             begin
@@ -589,8 +629,8 @@ end;
 
   THREE CASES, and they are the original's, in order:
 
-    1. The operator has dragged this column -- ColumnWidthOverride, in pixels.
-       Their width wins over everything.
+    1. The operator has dragged this column -- UserWidth, in pixels, never
+       narrower than its header. Their width wins over everything.
     2. ColumnAutoSize, for columns from logColNumberReceive rightwards: fit the
        header. LVSCW_AUTOSIZE_USEHEADER fits the wider of header and content,
        and a virtual grid has no content to measure, so it is the header text
@@ -609,9 +649,12 @@ begin
       begin
       c := FColumnOf[i];
 
-      if ColumnWidthOverride[c] > 0 then
+      if UserWidth(c) > 0 then
          begin
-         w := ColumnWidthOverride[c];
+         (* Never narrower than its own header -- see UserWidth. *)
+         w := ClampRestoredWidth(UserWidth(c),
+                                 HeaderTextWidth(c) + CELL_PAD * 2,
+                                 MIN_COLUMN_WIDTH);
          end
       else
          begin
@@ -619,7 +662,7 @@ begin
 
          if (c >= logColNumberReceive) and Settings.Log.ColumnAutoSize then
             begin
-            header := Canvas.TextWidth(ColumnsArray[c].Text) + CELL_PAD * 2;
+            header := HeaderTextWidth(c) + CELL_PAD * 2;
             if header > w then
                begin
                w := header;
@@ -687,10 +730,14 @@ begin
       (* A WIDTH THE OPERATOR DRAGGED IS NOT A SUGGESTION. It wins, and it is
         excluded from the surplus below -- otherwise the column they sized by
         hand would be stretched away from the width they chose the moment the
-        window got wider. *)
-      if ColumnWidthOverride[c] > 0 then
+        window got wider. ONE EXCEPTION: when every column has a chosen width,
+        the last one takes the surplus anyway, with its width as a floor --
+        see below the loop. *)
+      if UserWidth(c) > 0 then
          begin
-         want[i]  := ColumnWidthOverride[c];
+         want[i]  := ClampRestoredWidth(UserWidth(c),
+                                        HeaderTextWidth(c) + CELL_PAD * 2,
+                                        MIN_COLUMN_WIDTH);
          fixed[i] := True;
          Inc(total, want[i]);
          Continue;
@@ -698,7 +745,7 @@ begin
 
       (* The heading is a floor: a column narrower than its own name is
         unreadable however short its values are. *)
-      w := Canvas.TextWidth(ColumnsArray[c].Text);
+      w := HeaderTextWidth(c);
 
       for k := Low(FCache) to High(FCache) do
          begin
@@ -725,9 +772,16 @@ begin
       last := i;
       end;
 
-   (* Less the grid lines, and room for a vertical scrollbar so a full-width
-     fit does not provoke a horizontal one. *)
-   avail := ClientWidth - Length(FColumnOf) - 2;
+   (* THE WHOLE CLIENT WIDTH, AND NOTHING SUBTRACTED FROM IT.
+
+     This used to take off one pixel per column "for the grid lines" and two
+     more, and that left a band of empty grid at the right of every log grid
+     -- 16 px on the fourteen-column main log (NY4I, 2026-11-06), measured as
+     869 of 879 px in uTestColumnWidthStore. An LCL cell's width INCLUDES its
+     grid line, so the columns' sum is exactly what the grid draws; and the
+     vertical bar is permanent (ssVertical), so ClientWidth already excludes
+     it. *)
+   avail := ClientWidth;
    spare := avail - total;
 
    if (spare > 0) and (share > 0) then
@@ -754,6 +808,15 @@ begin
             Inc(given, k);
             end;
          end;
+      end
+   else if spare > 0 then
+      begin
+      (* EVERY COLUMN HAS A CHOSEN WIDTH, SO NONE IS FREE TO TAKE THE SURPLUS
+        -- and the grid ended at 480 of 879 px. The LAST visible column takes
+        it, the rule the External logger grid follows (its last column absorbs
+        the slack). Its chosen width is a floor: the window narrowing gives the
+        slack back, and never squeezes it below what the operator chose. *)
+      Inc(want[High(FColumnOf)], spare);
       end;
 
    for i := 0 to High(FColumnOf) do
@@ -799,7 +862,9 @@ begin
       Exit;
       end;
 
-   at := Pos(UpperCase(FMatchText), UpperCase(aText));
+   (* SysUtils', by name: utils_text (used for LclText) has an ASCII-only
+     UpperCase that would otherwise win, and a match must fold every letter. *)
+   at := Pos(SysUtils.UpperCase(FMatchText), SysUtils.UpperCase(aText));
    if at <= 0 then
       begin
       Exit;
@@ -855,7 +920,7 @@ begin
          end
       else
          begin
-         w := Canvas.TextWidth(ColumnsArray[c].Text);
+         w := HeaderTextWidth(c);
          for k := Low(FCache) to High(FCache) do
             begin
             if FCache[k].Row.Valid and
@@ -951,6 +1016,152 @@ begin
    SizeColumns;
 end;
 
+procedure TLogGrid.SetLayoutName(const aValue: string);
+begin
+   if FLayoutName = aValue then
+      begin
+      Exit;
+      end;
+
+   FLayoutName := aValue;
+   FSavedWidthsRead := False;
+end;
+
+(* THE SAVED WIDTHS, READ ONCE, AT THE FIRST SIZING THAT CAN USE THEM.
+
+  Lazily rather than in SetLayoutName, so the owner may name the grid before
+  it has a parent form -- the 96-dpi conversion needs one. Every column is
+  read, not only those this contest shows, so a contest that enables another
+  column later finds its width too.
+
+  A width dragged in THIS session is kept over the file's: a grid renamed or
+  re-read must not throw away what the operator has just done. *)
+procedure TLogGrid.ReadSavedWidths;
+var
+   store: TColumnWidthStore;
+   c: LogColumnsType;
+   width96: integer;
+begin
+   if FSavedWidthsRead or (FLayoutName = '') or FWidthsPerContest then
+      begin
+      Exit;
+      end;
+   FSavedWidthsRead := True;
+
+   store := TColumnWidthStore.Create;
+   try
+      LoadSavedColumnWidths(store);
+      for c := Low(LogColumnsType) to High(LogColumnsType) do
+         begin
+         width96 := 0;
+         if (FUserWidth[c] <= 0) and
+            store.TryGetWidth(FLayoutName, ColumnCanonicalName[c], width96) then
+            begin
+            FUserWidth[c] := ColumnWidthFrom96(Self, width96);
+            end;
+         end;
+   finally
+      store.Free;
+   end;
+end;
+
+(* A COLUMN'S HEADER TEXT, MEASURED IN THE CANVAS'S CURRENT FONT. One place,
+  so the conversion to the LCL's UTF-8 string is explicit and said once
+  (LclText) instead of an implicit narrowing at each of the six measurements.
+  The caller has assigned the font. *)
+function TLogGrid.HeaderTextWidth(const aColumn: LogColumnsType): integer;
+begin
+   Result := Canvas.TextWidth(LclText(ColumnsArray[aColumn].Text));
+end;
+
+(* THE WIDTH THE OPERATOR CHOSE FOR A COLUMN, in this grid's pixels, or 0 for
+  none. The caller clamps it to the header (ClampRestoredWidth).
+
+  A per-user grid: its own list, read once from the settings file
+  (ReadSavedWidths) and changed by a drag.
+
+  The main log (WidthsPerContest): the open contest's store, asked at every
+  sizing rather than copied once, because the store is filled when the
+  contest's configuration is applied, which need not be before this grid
+  first sizes itself; and emptied when the log closes. A drag writes the
+  store, so the store is the one answer. *)
+function TLogGrid.UserWidth(const aColumn: LogColumnsType): integer;
+var
+   width96: integer;
+begin
+   if not FWidthsPerContest then
+      begin
+      Result := FUserWidth[aColumn];
+      Exit;
+      end;
+
+   Result := 0;
+   width96 := 0;
+   if (ContestColumnWidths <> nil) and
+      ContestColumnWidths.TryGetWidth(CONTEST_LOG_COLUMNS_NAME,
+                                      ColumnCanonicalName[aColumn], width96) then
+      begin
+      Result := ColumnWidthFrom96(Self, width96);
+      end;
+end;
+
+(* A DIVIDER WAS DRAGGED, OR DOUBLE-CLICKED -- TCustomGrid calls this for both
+  (grids.pas, the column-sizing mouse-up and DblClick).
+
+  OVERRIDDEN RATHER THAN WIRED TO OnHeaderSized, so all five log grids keep
+  their widths without each owner remembering to: the main log, the B4 list,
+  View/Edit Log, Search and the server log. inherited still raises
+  OnHeaderSized for an owner that wants it.
+
+  THE WIDTH IS THIS GRID'S AT ONCE. A per-user grid only MARKS it for the
+  file -- written on the window's close, at exit, or by the 5-second layout
+  autosave (uLCLFormHelpers.FlushColumnWidths). The main log
+  (WidthsPerContest) puts it in the open contest's store instead, and the
+  log's close capture writes it into the contest database; it marks nothing,
+  so the settings file never hears of it. Neither depends on what kind of
+  file the contest is: the old write path returned early unless the contest
+  was a text .cfg, so for every .db contest a drag was never kept. *)
+procedure TLogGrid.HeaderSized(IsColumn: boolean; index: integer);
+var
+   c: LogColumnsType;
+begin
+   if IsColumn and (index >= 0) and (index <= High(FColumnOf)) then
+      begin
+      c := FColumnOf[index];
+      if FWidthsPerContest then
+         begin
+         if ContestColumnWidths <> nil then
+            begin
+            ContestColumnWidths.SetWidth(CONTEST_LOG_COLUMNS_NAME,
+                                         ColumnCanonicalName[c],
+                                         ColumnWidthTo96(Self, ColWidths[index]));
+            end;
+         end
+      else
+         begin
+         FUserWidth[c] := ColWidths[index];
+         if FLayoutName <> '' then
+            begin
+            NoteColumnWidth(FLayoutName, ColumnCanonicalName[c],
+                            ColumnWidthTo96(Self, ColWidths[index]));
+            end;
+         end;
+      end;
+
+   inherited HeaderSized(IsColumn, index);
+
+   (* AND THE GRID IS RE-FITTED AROUND IT, so the room a narrowing drag gives
+     up goes to the other columns at once instead of standing as a band at
+     the right until the window is next resized (839 of 879 px after a 30 px
+     drag, before this). AFTER the width is recorded and marked, so the re-fit
+     keeps the drag rather than the width it had, and the file gets the
+     dragged width, not a stretched one. *)
+   if IsColumn and (FSizing = lgsFitAndFill) then
+      begin
+      SizeColumns;
+      end;
+end;
+
 (* DOUBLE-CLICK ON A COLUMN DIVIDER FITS THE COLUMN TO WHAT IS IN IT.
 
   goDblClickAutoSize brings the LCL as far as calling this; the base does
@@ -989,7 +1200,7 @@ begin
    c := FColumnOf[aCol];
    Canvas.Font.Assign(Font);
 
-   widest := Canvas.TextWidth(ColumnsArray[c].Text);
+   widest := HeaderTextWidth(c);
 
    for i := Low(FCache) to High(FCache) do
       begin

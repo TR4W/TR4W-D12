@@ -46,7 +46,7 @@ uses
    Classes, SysUtils, Forms, Controls, ExtCtrls,
    uExternalLoggerConfig, uExternalLoggerRegistry, uExternalLoggersForm,
    uWRLExternalLogger, uClubLogExternalLogger, uPasswordReveal,
-   uInputQueryForm, uRadioEditForm, ComCtrls, VC;
+   uInputQueryForm, uRadioEditForm, ComCtrls, VC, uTestShowOffScreen;
 
 procedure InitWidgetSet;
 begin
@@ -54,16 +54,6 @@ begin
       begin
       Application.Initialize;
       end;
-end;
-
-procedure ShowOffScreen(const aForm: TCustomForm);
-begin
-   aForm.Position := poDesigned;
-   aForm.ShowInTaskBar := stNever;
-   aForm.Left := Screen.DesktopLeft - aForm.Width - 200;
-   aForm.Top := Screen.DesktopTop;
-   aForm.Show;
-   Application.ProcessMessages;
 end;
 
 function Bounds4(const aControl: TControl): string;

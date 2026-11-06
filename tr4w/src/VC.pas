@@ -3091,7 +3091,9 @@ var
   ws                                    : integer = 5;
   ws2                                   : integer;
 
-  ColumnWidthOverride                   : array[LogColumnsType] of Integer;
+  (* ColumnWidthOverride IS GONE (2026-11-06). The main log's widths are the
+    open contest's, at 96 dpi, in uColumnWidthStore.ContestColumnWidths; every
+    other log grid keeps its own per user. *)
 
 //  StaticWindowHeight                    : integer;
   //EditableLogWindowHeight               : integer;

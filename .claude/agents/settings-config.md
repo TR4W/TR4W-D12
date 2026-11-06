@@ -84,6 +84,19 @@ that in both directions.
 
 - **The stores are JSON** — radios, keyers, profiles, window layout, UDP — in
   `settings/tr4w.json`.
+- **Grid column widths are a store too, not a setting** (issue 234,
+  2026-11-06): the `columns` section, `uColumnWidthStore`, grid name -> column
+  token -> width at 96 dpi, PER USER (NY4I). Saved through
+  `uTR4WConfigFile.SaveColumnWidths` (entry-level merge through `SaveConfig`,
+  so unknown grids and tokens survive and `/EXPORT` writes nothing).
+  **EXCEPT THE MAIN LOG, WHICH IS PER CONTEST** (NY4I, 2026-11-06): its widths
+  are the `COLUMN WIDTH <token>` rows of the contest database's config table
+  (96 dpi), held in `uColumnWidthStore.ContestColumnWidths`, filled by the
+  `uCFG` arm (the open's replay or a `.cfg` import), written back by
+  `uLogStore.CaptureContestColumnWidths` at the close.
+  `ColumnWidthOverride` is gone. **A `COLUMN WIDTH` row is not a setting the
+  model owns**, so the replay routes it before its renderable guard -- that
+  guard refused every such row as "an action" until 2026-11-06.
 - **`tr4w.ini` STORES NOTHING, AND STARTUP DOES NOT READ IT** (2026-09-19).
   On NY4I's station it is 67 bytes of sentinel text. It is the **converter's
   input** -- plain `tr4wconvert`, which reads it BY DEFAULT -- and nothing else:

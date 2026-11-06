@@ -165,6 +165,9 @@ begin
    FGrid.Sizing := lgsFitAndFill;
    FGrid.OnFetchRows := @GridFetchRows;
    FGrid.OnDblClick := @GridDblClick;
+   (* Its column widths are kept per user under the window's own name, in the
+     'columns' section rather than 'windows' (issue 234). *)
+   FGrid.LayoutName := LAYOUT_NAME;
    FGrid.BuildColumns;
 end;
 
@@ -208,8 +211,9 @@ begin
       FOpen := False;
       end;
 
-   (* Where it was, so it comes back there. *)
+   (* Where it was, so it comes back there -- and any column dragged in it. *)
    SaveFormBounds(Self, LAYOUT_NAME, True);
+   FlushColumnWidths;
 
    CloseAction := caHide;
 end;

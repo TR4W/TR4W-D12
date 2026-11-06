@@ -49,6 +49,9 @@ const
    (* How often the State column is re-read. A few seconds: each read opens
       one read-only connection per row. *)
    LOGGER_STATE_REFRESH_MS = 5000;
+   (* The name this grid's column widths are kept under in the 'columns'
+      section of settings\tr4w.json (issue 234). On disk, so never renamed. *)
+   LOGGER_GRID_COLUMNS_NAME = 'ExternalLoggers';
 type
    (* The owner's window onto the running program: the snapshot of the service
       running aDeliveryId (False when there is none) and that destination's
@@ -84,6 +87,8 @@ type
       procedure GridKeyDown(aSender: TObject; var aKey: word; aShift: TShiftState);
       procedure GridDblClick(aSender: TObject);
       procedure RowMoved(aSender: TObject; aIsColumn: boolean; aFromIndex, aToIndex: integer);
+      procedure HeaderSized(aSender: TObject; aIsColumn: boolean; aIndex: integer);
+      procedure ApplyCaptions;
       procedure ReselectMoved(aData: PtrInt);
       procedure PopupOpening(aSender: TObject);
       procedure EditClick(aSender: TObject);
@@ -97,6 +102,10 @@ type
       procedure Bind(const aConfig: TExternalLoggerConfig);
       (* Rewrite every row from the model; aSelectId (if any) is selected. *)
       procedure Refresh(const aSelectId: string = '');
+      (* The widths an operator dragged last time, onto Logger, Provider and
+         Enabled (issue 234). Called by the owner once the grid is on its
+         form; the constructor does not read the settings file. *)
+      procedure RestoreColumnWidths;
       (* Rewrites only the State cells (text and ordinal) from the running
          service. Never touches the rows, the selection or the model. *)
       procedure RefreshStates;
@@ -115,7 +124,17 @@ type
 function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 
 implementation
-uses Dialogs, LCLType, uAppStrings, uExternalLoggersForm;
+uses Dialogs, LCLType, uAppStrings, uExternalLoggersForm,
+   uLCLFormHelpers;   (* Restore/SaveGridColumnWidth(s) -- issue 234; FillGridFromColumn *)
+
+const
+   (* THE COLUMNS WHOSE WIDTH IS KEPT, by a token that is neither an index nor
+      a caption (issue 234). Indexed by grid column. '' is not kept: Order is
+      not sizable (goFixedColSizing is off), Connection is the fill column --
+      AutoFillColumns owns its width, so a saved one would fight the fill --
+      and Id and the state ordinal are hidden at width 0. *)
+   LOGGER_COLUMN_TOKENS: array[LOGGER_COL_ORDER .. LOGGER_COL_STATEKIND] of string =
+      ('', 'Logger', 'Provider', 'Enabled', '', '', '');
 
 function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 begin
@@ -220,8 +239,13 @@ begin
    FDownRow := -1;
    FGrid.FixedCols := 1;
    FGrid.FixedRows := 1;
+   (* goColSizing: the operator drags a header divider, as in any LCL grid.
+      goFixedColSizing stays OFF, so the fixed Order column keeps its width.
+      Logger, Provider and Enabled keep a dragged width per user (issue 234):
+      HeaderSized marks it, the owner's close writes it, RestoreColumnWidths
+      reads it back. *)
    FGrid.Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine,
-      goRowSelect, goRowMoving];
+      goRowSelect, goRowMoving, goColSizing];
    (* The Order column is the FIXED one (a row drag starts there) and is not a
       TGridColumn; the six columns after it are, because a checkbox is a column
       property. *)
@@ -239,10 +263,17 @@ begin
    FGrid.ColWidths[LOGGER_COL_NAME] := 190;
    FGrid.ColWidths[LOGGER_COL_PROVIDER] := 110;
    FGrid.ColWidths[LOGGER_COL_ENABLED] := 70;
-   FGrid.ColWidths[LOGGER_COL_STATE] := 200;
    FGrid.ColWidths[LOGGER_COL_ID] := 0;
    FGrid.ColWidths[LOGGER_COL_STATEKIND] := 0;
+   (* THE COLUMNS FILL THE GRID (issue 226 follow-up): Connection takes the
+      slack and every other column, the two hidden ones above all, keeps its
+      width (FillGridFromColumn says why). The fixed Order column is not a
+      TGridColumn and keeps its width by being fixed. A MinSize of 150 leaves
+      the designed page (Connection 216 px, 199 with a vertical scrollbar)
+      inside it. *)
+   FillGridFromColumn(FGrid, LOGGER_COL_STATE, 150);
    FGrid.OnColRowMoved := RowMoved;
+   FGrid.OnHeaderSized := HeaderSized;
    FGrid.OnMouseDown := GridMouseDown;
    FGrid.OnMouseUp := GridMouseUp;
    FGrid.OnKeyDown := GridKeyDown;
@@ -373,17 +404,30 @@ begin
       end;
 end;
 
-procedure TExternalLoggerGrid.Refresh(const aSelectId: string);
-var
-   ids: TStringList;
-   definition: TExternalLoggerDefinition;
-   position, i, selectRow: integer;
+procedure TExternalLoggerGrid.ApplyCaptions;
 begin
    FGrid.Cells[LOGGER_COL_ORDER, 0] := UTF8Encode(SLoggerGridOrder);
    FGrid.Columns[LOGGER_COL_NAME - 1].Title.Caption := UTF8Encode(SLoggerGridLogger);
    FGrid.Columns[LOGGER_COL_PROVIDER - 1].Title.Caption := UTF8Encode(SLoggerGridProvider);
    FGrid.Columns[LOGGER_COL_ENABLED - 1].Title.Caption := UTF8Encode(SLoggerGridEnabled);
    FGrid.Columns[LOGGER_COL_STATE - 1].Title.Caption := UTF8Encode(SLoggerGridState);
+end;
+
+(* CAPTIONS FIRST, because a restored width is never narrower than its
+   header and the header must be the translated one to measure. *)
+procedure TExternalLoggerGrid.RestoreColumnWidths;
+begin
+   ApplyCaptions;
+   RestoreGridColumnWidths(FGrid, LOGGER_GRID_COLUMNS_NAME, LOGGER_COLUMN_TOKENS);
+end;
+
+procedure TExternalLoggerGrid.Refresh(const aSelectId: string);
+var
+   ids: TStringList;
+   definition: TExternalLoggerDefinition;
+   position, i, selectRow: integer;
+begin
+   ApplyCaptions;
    ids := TStringList.Create;
    try
       selectRow := FGrid.Row;
@@ -541,6 +585,31 @@ begin
    FMovedId := moved;
    Application.RemoveAsyncCalls(Self);
    Application.QueueAsyncCall(ReselectMoved, 0);
+end;
+
+(* A DRAG MUST NOT WIDEN A HIDDEN COLUMN. Dragging the Connection column's
+   right edge to the right, the LCL (TCustomGrid.StartColSizing) resizes the
+   LAST zero-width column after it that is still Visible -- and the Id and
+   state-ordinal columns are exactly that: width 0, Visible, because their
+   cells are the row's data. Being SizePriority 0, the column would keep the
+   new width under AutoFillColumns and show its cells. Visible := False is not the cure: it
+   removes the column, and its cells, from the grid.
+
+   A DRAG OF A KEPT COLUMN IS MARKED for the settings file (issue 234). Only
+   the three with a token; Connection's width is the fill's to decide. *)
+procedure TExternalLoggerGrid.HeaderSized(aSender: TObject; aIsColumn: boolean;
+   aIndex: integer);
+begin
+   if not aIsColumn then
+      begin
+      Exit;
+      end;
+   if aIndex >= LOGGER_COL_ID then
+      begin
+      FGrid.ColWidths[aIndex] := 0;
+      Exit;
+      end;
+   SaveGridColumnWidth(FGrid, LOGGER_GRID_COLUMNS_NAME, LOGGER_COLUMN_TOKENS, aIndex);
 end;
 
 procedure TExternalLoggerGrid.ReselectMoved(aData: PtrInt);

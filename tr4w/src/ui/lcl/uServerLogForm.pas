@@ -146,6 +146,11 @@ uses
   VC,                 // ContestExchange
   Log4D;
 
+const
+  (* The name the grid's column widths are kept under (issue 234). On disk, so
+    never renamed. *)
+  SERVER_LOG_COLUMNS_NAME = 'ServerLog';
+
 var
   frmServerLog: TfrmServerLog = nil;
 
@@ -215,6 +220,9 @@ begin
    // The download belongs to the window: it goes with it.
    ReleaseServerLogImage;
 
+   (* Any column dragged in it (issue 234). *)
+   FlushColumnWidths;
+
    Action := caHide;
 end;
 
@@ -241,6 +249,8 @@ begin
    FLog.Align       := alClient;
    FLog.Sizing      := lgsFitAndFill;
    FLog.OnFetchRows := LogFetchRows;
+   (* Its column widths, kept per user in the 'columns' section (issue 234). *)
+   FLog.LayoutName  := SERVER_LOG_COLUMNS_NAME;
    FLog.BuildColumns;
 end;
 

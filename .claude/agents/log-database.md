@@ -772,6 +772,29 @@ section 7.8.
 `/EXPORT` never captures, so the tracked fixtures keep their sentinels for
 good. The reader handles them; do not rewrite the fixtures to "clean" them.
 
+**The main log's column widths are `config` rows too, and NOT settings**
+(NY4I, 2026-11-06: per contest, because the main log's columns depend on the
+contest). `COLUMN WIDTH <token>` = a 96-dpi width, source `contest`, one row
+per column anyone dragged; the token is `ColumnCanonicalName`, and an unknown
+one is kept and written back. In memory they are
+`uColumnWidthStore.ContestColumnWidths`.
+- **Read:** the apply loop routes them to `CheckCommand` BEFORE the renderable
+  guard. The settings object owns no such name, so that guard refused every
+  one as "an action, not a setting" until 2026-11-06 -- `arrl_fd_2026_ny4i`
+  and `cqwpx_cw_2026_ny4i` hold such rows. The store is emptied after
+  `EnsureOpen` (after a new log's creation capture, so a `.cfg` import's
+  widths survive) and again at `LogStoreClose`.
+- **Write:** `CaptureContestColumnWidths`, inside the close capture -- not on
+  a timer, so a main-thread layout tick never competes with the QSO writer
+  for the lock. Replaced, never deleted. A crash loses that session's drags,
+  as it loses every other unrecorded setting.
+- **Units:** old rows are read as 96-dpi, unconverted. Measured: no DPI
+  awareness in `W11.manifest` or `tr4w.lpi`, so a Windows build's rows are
+  96-dpi already. Inferred: a gtk2/Cocoa build's rows (a text `.cfg`
+  contest captured into its `.db`) may be off by the scale factor until the
+  next drag. A too-small one (the September character counts) is floored at
+  its header by the grid.
+
 **Modelled, not called:** the statement tests model the store's apply as two
 steps, `KeepOnlyStatements` then `TrySetByCommand`. If you change the apply
 loop, keep it that pair. (They were written while `uLogStore` could not be

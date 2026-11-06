@@ -403,6 +403,19 @@ function LogStoreApplyContestConfigWith(aSetUpContest: TLogContestSetUp): intege
   Public so the tests can drive it with their own repository. *)
 procedure CaptureMessageMemories(aRepository: TLogRepository);
 
+(* THE MAIN LOG'S COLUMN WIDTHS, INTO THE CONTEST DATABASE (NY4I, 2026-11-06:
+  per contest, because the columns the main log shows depend on the contest).
+
+  One 'COLUMN WIDTH <token>' row per width uColumnWidthStore.ContestColumnWidths
+  holds -- read from these rows at the open, changed by a drag -- at 96 dpi,
+  source 'contest' (LoadContestConfig reads only those). EVERY width the store
+  holds, whether or not this contest shows the column, so a token this build
+  does not know survives. A row is replaced, never deleted: a column nobody
+  dragged has no row and keeps its default. Does not commit -- the close
+  capture is one transaction. Public so a test can drive it with its own
+  repository. *)
+procedure CaptureContestColumnWidths(aRepository: TLogRepository);
+
 (* THE MEMORIES THE OPERATOR EDITED, BACK INTO THE PROGRAM (Q113). Each row
   flagged edited is applied as the operator's edit is -- text, caption, and
   the Q9 latch -- so the contest's set-up leaves it alone from here on, and
@@ -658,6 +671,9 @@ uses
    (* RecalculateMyCountryContinentAndZoneNew -- run once the log has supplied
       the callsign; see the end of LogStoreApplyContestConfig. *)
    FContest,
+   (* ContestColumnWidths -- the main log's widths, this contest's
+     (CaptureContestColumnWidths, and the open's replay). *)
+   uColumnWidthStore,
    utils_text;   (* CharBufferText and LclText *)
 
 var
@@ -1394,6 +1410,34 @@ begin
    end;
 end;
 
+procedure CaptureContestColumnWidths(aRepository: TLogRepository);
+var
+   i: integer;
+   entry: TColumnWidthEntry;
+begin
+   if (aRepository = nil) or (ContestColumnWidths = nil) then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to ContestColumnWidths.EntryCount - 1 do
+      begin
+      entry := ContestColumnWidths.Entry(i);
+      if not UnicodeSameText(entry.Grid, CONTEST_LOG_COLUMNS_NAME) then
+         begin
+         Continue;
+         end;
+
+      (* SOURCE 'contest' because the open reads only contest-scoped rows: a
+        width recorded as 'station' would be written and never restored, which
+        is worse than not writing it -- it looks saved. *)
+      aRepository.SaveConfigValue(
+         AnsiString(COLUMN_WIDTH_COMMAND_PREFIX + entry.Token),
+         AnsiString(IntToStr(entry.Width96)),
+         AnsiString('contest'));
+      end;
+end;
+
 procedure CaptureConfiguration(const aWhy: string);
 var
    i: integer;
@@ -1401,7 +1445,6 @@ var
    src: AnsiString;
    value: AnsiString;
    renderable: boolean;
-   Column: LogColumnsType;
    saved: integer;
    (* The contest-scoped settings that have left the array -- see below. *)
    names: TStringList;
@@ -1545,58 +1588,8 @@ begin
      station's value as a record. *)
    saved := saved + CaptureStationFactRows(Settings, GRepository);
 
-   (* THE EDITABLE-LOG COLUMN WIDTHS.
-
-     These are not CommandsArray rows -- CheckCommand special-cases
-     'COLUMN WIDTH <token>' (uCFG.pas:1664) rather than holding one row per
-     column -- so the loop above cannot reach them and they need naming here,
-     exactly as the function-key memories do below.
-
-     THEY USED TO LIVE IN THE CONTEST .cfg, written by
-     MainUnit.SaveColumnWidthToConfig. That write is gone: TR4W_CFG_FILENAME is
-     a .db now, and asking the INI API to rewrite a SQLite file froze the
-     program. Capturing them keeps the behaviour an operator sees -- widths
-     survive a restart, and they are per contest, because they are in the
-     contest's own file.
-
-     SOURCE 'contest' BECAUSE THAT IS WHERE THEY CAME FROM, and because the
-     startup apply reads contest-scoped rows. A width recorded as 'station'
-     would be captured and never restored, which is worse than not capturing
-     it: it looks saved. *)
-   for Column := Low(LogColumnsType) to High(LogColumnsType) do
-      begin
-      if not ColumnsArray[Column].Enable then
-         begin
-         Continue;
-         end;
-
-      (* ONLY A WIDTH THE OPERATOR ACTUALLY SET, AND IN PIXELS.
-
-        THIS CAPTURED THE WRONG NUMBER AND BLANKED THE MAIN LOG. It wrote
-        ColumnsArray[].Width, which is a COUNT OF CHARACTERS -- 9, 3, 12 -- and
-        the value in a COLUMN WIDTH command is a PIXEL width: CheckCommand puts
-        it in ColumnWidthOverride and MainUnit.pas:9514 hands that straight to
-        ListView_SetColumnWidth. So every column came back a few pixels wide and
-        the editable log rendered as blank paper with a striped edge (NY4I,
-        2026-09-03, with a screenshot).
-
-        ColumnWidthOverride IS THE RIGHT SOURCE, and zero is the right reason to
-        skip: the override is only set when SaveColumnWidthToConfig runs, which
-        is only when a divider is dragged or double-clicked. That is also what
-        the old .cfg held -- a COLUMN WIDTH line existed for the columns an
-        operator had touched and for no others, so an untouched column keeps the
-        character-count default rather than being pinned to whatever pixel width
-        it happened to have. *)
-      if ColumnWidthOverride[Column] <= 0 then
-         begin
-         Continue;
-         end;
-
-      GRepository.SaveConfigValue(
-         AnsiString('COLUMN WIDTH ' + ColumnCanonicalName[Column]),
-         AnsiString(IntToStr(ColumnWidthOverride[Column])),
-         'contest');
-      end;
+   (* THE MAIN LOG'S COLUMN WIDTHS -- see CaptureContestColumnWidths. *)
+   CaptureContestColumnWidths(GRepository);
 
    (* THE FUNCTION-KEY MEMORIES, flagged where the operator edited them. *)
    CaptureMessageMemories(GRepository);
@@ -3210,6 +3203,7 @@ var
    valName: ShortString;
    idx: integer;
    valAsShort: ShortString;
+   columnToken: string;
 begin
    Result := 0;
    if GDisabled then
@@ -3222,6 +3216,14 @@ begin
          begin
          Exit;
          end;
+
+      (* THE MAIN LOG'S WIDTHS ARE THIS LOG'S AND NO OTHER'S. Emptied here so a
+        log opened after another in the same process (the tests do that; the
+        program relaunches for File > Open Log) starts from its own rows. AFTER
+        EnsureOpen, not before: a new log made from a .cfg has just captured
+        the .cfg's widths into itself there, and the rows below bring them
+        back. *)
+      ContestColumnWidths.Clear;
 
       rows := TStringList.Create;
       dropped := TStringList.Create;
@@ -3513,6 +3515,32 @@ begin
                Continue;
                end;
 
+            (* A MAIN-LOG COLUMN WIDTH IS NOT A SETTING, AND NOT AN ACTION.
+
+              IT WAS REFUSED AS AN ACTION by the guard below, on every open,
+              and that is why no width ever came back from a .db (tr4w.log,
+              2026-11-06: '"COLUMN WIDTH CALLSIGN" is an action, not a setting
+              -- ignored', for both corpus logs that hold such rows). That
+              guard asks the settings object whether it can render the
+              command, and the settings object owns no COLUMN WIDTH command --
+              it is a pattern family CheckCommand matches by prefix -- so the
+              answer was always no, and the row never reached the arm that
+              reads it.
+
+              ROUTED BEFORE THE GUARD, AND BEFORE THE NO-OP SKIP, which would
+              compare with a rendering that does not exist. CheckCommand's arm
+              puts it in ContestColumnWidths, where the main log grid reads it;
+              one parser for a row and for a .cfg line. NOT COUNTED in
+              Result, which startup reports as contest SETTINGS applied; the
+              widths get their own line below. *)
+            if IsColumnWidthCommand(cmd, columnToken) then
+               begin
+               cmdName := ShortString(AnsiString(cmd));
+               valAsShort := ShortString(AnsiString(val));
+               CheckCommand(cmdName, valAsShort, True);
+               Continue;
+               end;
+
             (* AN ACTION IS NOT A SETTING, AND APPLYING ONE HANGS THE PROGRAM.
 
               REMINDER is the case that found this. It is a COMMAND, not a
@@ -3719,6 +3747,14 @@ begin
          dropped.Free;
          rows.Free;
       end;
+
+      (* SAID, so a restored width is visible in tr4w.log rather than only by
+        its absence of a warning. *)
+      if (ContestColumnWidths.EntryCount > 0) and (logger <> nil) then
+         begin
+         logger.Info('[LogStore] %d main-log column width(s) restored from the log',
+                     [ContestColumnWidths.EntryCount]);
+         end;
 
       (* AND NOW THE CALLSIGN IS SETTLED, SO DERIVE FROM IT -- 2026-09-14.
 
@@ -3997,6 +4033,12 @@ begin
    CaptureConfigurationOnClose;
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
+
+   (* The closed log's main-log widths go with it -- see the open's replay. *)
+   if ContestColumnWidths <> nil then
+      begin
+      ContestColumnWidths.Clear;
+      end;
 end;
 
 (* A BACKSTOP FOR THE EXIT PATHS THAT ARE NOT tr4w_ShutDown.

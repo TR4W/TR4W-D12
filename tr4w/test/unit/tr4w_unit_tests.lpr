@@ -173,6 +173,7 @@ uses
    uTestNetSendQueue    in 'uTestNetSendQueue.pas',
    uTestQsoDispatcher   in 'uTestQsoDispatcher.pas',
    uWindowLayoutStore   in '..\..\src\uWindowLayoutStore.pas',
+   uColumnWidthStore    in '..\..\src\uColumnWidthStore.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestWebSocketFraming in 'uTestWebSocketFraming.pas',
    uTestWebSocketLoopback in 'uTestWebSocketLoopback.pas',
@@ -610,7 +611,9 @@ uses
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
    uTestExternalLoggers in 'uTestExternalLoggers.pas',
+   uTestShowOffScreen in 'uTestShowOffScreen.pas',
    uTestExternalLoggerGrid in 'uTestExternalLoggerGrid.pas',
+   uTestColumnWidthStore in 'uTestColumnWidthStore.pas',
    uTestExternalLoggerFields in 'uTestExternalLoggerFields.pas',
    uTestPasswordRevealLayout in 'uTestPasswordRevealLayout.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
@@ -1110,6 +1113,7 @@ begin
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));
+   RegisterSuite(TColumnWidthStoreTests.Create('ColumnWidthStore'));
    RegisterSuite(TExternalLoggerFieldsTests.Create('ExternalLoggerFields'));
    RegisterSuite(TPasswordRevealLayoutTests.Create('PasswordRevealLayout'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));

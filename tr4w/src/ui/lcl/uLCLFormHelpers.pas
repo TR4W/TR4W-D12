@@ -48,6 +48,8 @@ uses
    Forms,      // TCustomForm -- see ShowModalOverWin32Parent
    LCLType,    // HWND
    Dialogs,    // InputQuery -- see AskForText
+   Grids,      // TCustomDrawGrid -- the column-width helpers (issue 234)
+   uColumnWidthStore,   // TColumnWidthStore -- the same helpers
    ComPortEnumerator,   // TComPortEnumerator -- see FillSerialPortCombo
    uPortAddress,        // ComPortNumber -- the port-naming rules
   uTR4WStrings;
@@ -352,6 +354,77 @@ procedure SaveFormBounds(const aForm: TCustomForm; const aName: string;
                          const aVisible: boolean);
 function TryRestoreFormBounds(const aForm: TCustomForm;
                               const aName: string): boolean;
+
+(* THE COLUMN WIDTHS AN OPERATOR DRAGGED (issue 234), beside the bounds for
+  the same reason: one place that knows how a grid's layout is kept.
+
+  A grid is named by its owner (aName) and each column by a TOKEN (aTokens,
+  indexed by grid column; '' means "not kept" -- a fill column, a hidden
+  column). Never by index or caption -- see uColumnWidthStore.
+
+  THE CADENCE. A drag MARKS the width (SaveGridColumnWidth, or NoteColumnWidth
+  for a grid that keeps its own list); nothing is written then. The marks reach
+  settings\tr4w.json through FlushColumnWidths, which runs on a window's close,
+  at exit and on the 5-second layout autosave (MainUnit.SaveTR4WPOSFILE). A
+  restore reads the file AND the unwritten marks, so a window reopened inside
+  those five seconds still gets the width just dragged.
+
+  RESTORED WIDTHS ARE CLAMPED to the header text and to the column's minimum
+  (ClampRestoredWidth), and stored at 96 dpi through the LCL's ScaleFormTo96 /
+  Scale96ToForm. A token list shorter or longer than the grid is harmless:
+  only columns both have are touched.
+
+  Main thread only, like every control they touch. *)
+function RestoreGridColumnWidths(const aGrid: TCustomDrawGrid; const aName: string;
+                                 const aTokens: array of string): integer;
+procedure SaveGridColumnWidth(const aGrid: TCustomDrawGrid; const aName: string;
+                              const aTokens: array of string; const aCol: integer);
+
+(* The two halves above against a store the caller holds, with no file --
+  what the two above are built on, and what a test drives. *)
+function ApplyGridColumnWidths(const aGrid: TCustomDrawGrid; const aName: string;
+                               const aTokens: array of string;
+                               const aStore: TColumnWidthStore): integer;
+procedure CaptureGridColumnWidth(const aGrid: TCustomDrawGrid; const aName: string;
+                                 const aTokens: array of string; const aCol: integer;
+                                 const aStore: TColumnWidthStore);
+
+(* ONE COLUMN TAKES THE GRID'S SLACK, so the row always ends at the grid's
+  right edge (the External logger grid, issue 226; the Colours grid, issue 234).
+
+  The LCL's AutoFillColumns gives the client width left after the fixed-size
+  columns to every column whose SizePriority is not 0, in EQUAL shares --
+  priority is not a weight. So aFillCol (a GRID column index) gets priority 1
+  and every other column 0, a hidden zero-width one above all, or it would take
+  a share and show. Below aMinSize the fill column stops shrinking, and with
+  AutoFillColumns on the grid shows no horizontal scrollbar, so the row is
+  clipped instead. AutoFillColumns is set LAST, because turning it on runs the
+  fill.
+
+  NEEDS A Columns COLLECTION: without one the LCL treats every column as
+  priority 1. A fill column has no width of its own, so it carries no token in
+  the caller's RestoreGridColumnWidths / SaveGridColumnWidth list. *)
+procedure FillGridFromColumn(const aGrid: TCustomDrawGrid; const aFillCol: integer;
+                             const aMinSize: integer);
+
+(* For a grid that keeps its own width list (TLogGrid): mark one width, and
+  read every saved width -- the file overlaid by the unwritten marks -- into
+  aStore. *)
+procedure NoteColumnWidth(const aName, aToken: string; const aWidth96: integer);
+procedure LoadSavedColumnWidths(const aStore: TColumnWidthStore);
+
+(* A width between this control's pixels and 96 dpi, by the LCL's own scaling.
+  A control with no parent form is taken as 96 dpi (the LCL's scaling raises
+  there). *)
+function ColumnWidthTo96(const aControl: TControl; const aWidth: integer): integer;
+function ColumnWidthFrom96(const aControl: TControl; const aWidth96: integer): integer;
+
+(* Whether a drag has been marked and not yet written; and the write. *)
+function ColumnWidthsPending: boolean;
+procedure FlushColumnWidths;
+
+(* The unwritten marks themselves, for a test to read or clear. *)
+function PendingColumnWidths: TColumnWidthStore;
 
 function AskForText(const aCaption, aPrompt: string; var aValue: string): boolean;
 
@@ -1723,9 +1796,236 @@ begin
    end;
 end;
 
+const
+   (* Room either side of a header's text, so a clamped column does not sit
+     its caption hard against the divider. The LCL's own cell padding is
+     3 px a side; this is a little more, because the floor is a minimum to
+     READ the header, not to fit it exactly. *)
+   COLUMN_HEADER_PAD = 12;
+
+   (* No restored column narrower than this whatever the file says -- a
+     column this narrow cannot be seen to be dragged back. *)
+   COLUMN_FLOOR = 8;
+
+var
+   (* The widths dragged and not yet written. Created in initialization, so
+     there is no lazy creation to race; main thread only. *)
+   GPendingColumnWidths: TColumnWidthStore = nil;
+
+function ColumnWidthTo96(const aControl: TControl; const aWidth: integer): integer;
+begin
+   Result := aWidth;
+   if (aControl <> nil) and (GetParentDesignControl(aControl) <> nil) then
+      begin
+      Result := aControl.ScaleFormTo96(aWidth);
+      end;
+end;
+
+function ColumnWidthFrom96(const aControl: TControl; const aWidth96: integer): integer;
+begin
+   Result := aWidth96;
+   if (aControl <> nil) and (GetParentDesignControl(aControl) <> nil) then
+      begin
+      Result := aControl.Scale96ToForm(aWidth96);
+      end;
+end;
+
+(* The header's caption: a Columns title when the grid has a Columns
+  collection, otherwise the fixed row's cell of a string grid. '' when there
+  is neither, and the floor is then only the minimum. A TCaption -- the LCL's
+  own UTF-8 string -- because it only ever goes back to the LCL to be
+  measured, so it is never converted at all. *)
+function GridHeaderText(const aGrid: TCustomDrawGrid; const aCol: integer): TCaption;
+var
+   idx: integer;
+begin
+   Result := '';
+   if aGrid.Columns.Enabled and (aCol >= aGrid.FixedCols) then
+      begin
+      idx := aCol - aGrid.FixedCols;
+      if idx < aGrid.Columns.Count then
+         begin
+         Result := aGrid.Columns[idx].Title.Caption;
+         end;
+      Exit;
+      end;
+
+   if (aGrid is TCustomStringGrid) and (aGrid.FixedRows > 0) then
+      begin
+      Result := TCustomStringGrid(aGrid).Cells[aCol, 0];
+      end;
+end;
+
+(* The narrowest a restored column may be: its header, read, and its own
+  minimum. Measured on a scratch canvas in the grid's font, so it needs no
+  window handle -- a restore runs before the form is shown. *)
+function GridColumnFloor(const aGrid: TCustomDrawGrid; const aCol: integer): integer;
+var
+   text: TCaption;
+   bmp: TBitmap;
+   header, minimum: integer;
+begin
+   header := 0;
+   text := GridHeaderText(aGrid, aCol);
+   if text <> '' then
+      begin
+      bmp := TBitmap.Create;
+      try
+         bmp.Canvas.Font.Assign(aGrid.Font);
+         header := bmp.Canvas.TextWidth(text) + COLUMN_HEADER_PAD;
+      finally
+         bmp.Free;
+      end;
+      end;
+
+   minimum := COLUMN_FLOOR;
+   if aGrid.Columns.Enabled and (aCol >= aGrid.FixedCols) and
+      (aCol - aGrid.FixedCols < aGrid.Columns.Count) and
+      (aGrid.Columns[aCol - aGrid.FixedCols].MinSize > minimum) then
+      begin
+      minimum := aGrid.Columns[aCol - aGrid.FixedCols].MinSize;
+      end;
+
+   Result := ClampRestoredWidth(0, header, minimum);
+end;
+
+function ApplyGridColumnWidths(const aGrid: TCustomDrawGrid; const aName: string;
+                               const aTokens: array of string;
+                               const aStore: TColumnWidthStore): integer;
+var
+   col: integer;
+   width96: integer;
+begin
+   Result := 0;
+   if (aGrid = nil) or (aName = '') or (aStore = nil) then
+      begin
+      Exit;
+      end;
+
+   for col := 0 to aGrid.ColCount - 1 do
+      begin
+      if (col > High(aTokens)) or (aTokens[col] = '') then
+         begin
+         Continue;
+         end;
+
+      width96 := 0;
+      if not aStore.TryGetWidth(aName, aTokens[col], width96) then
+         begin
+         Continue;
+         end;
+
+      aGrid.ColWidths[col] := ClampRestoredWidth(ColumnWidthFrom96(aGrid, width96),
+                                                 GridColumnFloor(aGrid, col), 0);
+      Inc(Result);
+      end;
+end;
+
+procedure CaptureGridColumnWidth(const aGrid: TCustomDrawGrid; const aName: string;
+                                 const aTokens: array of string; const aCol: integer;
+                                 const aStore: TColumnWidthStore);
+begin
+   if (aGrid = nil) or (aName = '') or (aStore = nil) then
+      begin
+      Exit;
+      end;
+
+   if (aCol < 0) or (aCol >= aGrid.ColCount) or (aCol > High(aTokens)) or
+      (aTokens[aCol] = '') then
+      begin
+      Exit;
+      end;
+
+   aStore.SetWidth(aName, aTokens[aCol],
+                   ColumnWidthTo96(aGrid, aGrid.ColWidths[aCol]));
+end;
+
+procedure LoadSavedColumnWidths(const aStore: TColumnWidthStore);
+begin
+   if aStore = nil then
+      begin
+      Exit;
+      end;
+
+   LoadColumnWidths(TR4WConfigFileName, aStore);
+   aStore.MergeFrom(GPendingColumnWidths);
+end;
+
+function RestoreGridColumnWidths(const aGrid: TCustomDrawGrid; const aName: string;
+                                 const aTokens: array of string): integer;
+var
+   store: TColumnWidthStore;
+begin
+   store := TColumnWidthStore.Create;
+   try
+      LoadSavedColumnWidths(store);
+      Result := ApplyGridColumnWidths(aGrid, aName, aTokens, store);
+   finally
+      store.Free;
+   end;
+end;
+
+procedure SaveGridColumnWidth(const aGrid: TCustomDrawGrid; const aName: string;
+                              const aTokens: array of string; const aCol: integer);
+begin
+   CaptureGridColumnWidth(aGrid, aName, aTokens, aCol, GPendingColumnWidths);
+end;
+
+procedure FillGridFromColumn(const aGrid: TCustomDrawGrid; const aFillCol: integer;
+                             const aMinSize: integer);
+var
+   i, fillIndex: integer;
+begin
+   fillIndex := aFillCol - aGrid.FixedCols;
+   for i := 0 to aGrid.Columns.Count - 1 do
+      begin
+      aGrid.Columns[i].SizePriority := 0;
+      end;
+   aGrid.Columns[fillIndex].SizePriority := 1;
+   aGrid.Columns[fillIndex].MinSize := aMinSize;
+   aGrid.AutoFillColumns := True;
+end;
+
+procedure NoteColumnWidth(const aName, aToken: string; const aWidth96: integer);
+begin
+   if GPendingColumnWidths <> nil then
+      begin
+      GPendingColumnWidths.SetWidth(aName, aToken, aWidth96);
+      end;
+end;
+
+function ColumnWidthsPending: boolean;
+begin
+   Result := (GPendingColumnWidths <> nil) and
+             (GPendingColumnWidths.EntryCount > 0);
+end;
+
+procedure FlushColumnWidths;
+begin
+   if not ColumnWidthsPending then
+      begin
+      (* Nothing dragged is the normal case, and it must not rewrite the
+        file. *)
+      Exit;
+      end;
+
+   SaveColumnWidths(TR4WConfigFileName, GPendingColumnWidths);
+   GPendingColumnWidths.Clear;
+end;
+
+function PendingColumnWidths: TColumnWidthStore;
+begin
+   Result := GPendingColumnWidths;
+end;
+
 initialization
+   GPendingColumnWidths := TColumnWidthStore.Create;
 
 finalization
+   (* NOT flushed here: ExitProgram's SaveTR4WPOSFILE already wrote the
+     marks, and a write from finalization would run with the program half
+     torn down. *)
+   FreeAndNil(GPendingColumnWidths);
    FreeAndNil(gNavNodeFactory);
 
 end.

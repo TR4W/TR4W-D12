@@ -191,6 +191,7 @@ uses
   uQsoSinks,
   uBackupCopyService, (* BackupCopyStart -- the backup destination's copier *)
   uWindowLayoutStore,
+  uColumnWidthStore,
   uTR4WConfigFile,
   uSettingsModel,   // Settings -- where retired CFGCA rows now live
   uSettingsEffects, // InstallSettingsEffects -- the replacement for crP

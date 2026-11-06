@@ -381,6 +381,9 @@ begin
    FGrid.OnDblClick  := @GridDblClick;
    ApplyMainFontTo(FGrid.Font);
    FGrid.DefaultRowHeight := ws + 2;
+   (* Its column widths, kept per user under the window's name in the
+     'columns' section (issue 234). *)
+   FGrid.LayoutName := LAYOUT_NAME;
    FGrid.BuildColumns;
 
    FLogFacets := TLogSearchFacets.Create;
@@ -433,6 +436,9 @@ begin
      window should be saved (as all window positions should be saved) and
      restored upon reopening." *)
    SaveFormBounds(Self, LAYOUT_NAME, True);
+
+   (* And any column dragged in it (issue 234). *)
+   FlushColumnWidths;
 
    CloseAction := caHide;
 end;

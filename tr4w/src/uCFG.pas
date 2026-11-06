@@ -371,6 +371,7 @@ uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to
      uSettingsModel,       // Settings -- the commands that have left this array
      uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names
      uContestRegistry,     // KnownContests, ContestId -- CONTEST's vocabulary
+     uColumnWidthStore,    (* ContestColumnWidths -- where a COLUMN WIDTH line goes *)
      uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
@@ -1305,7 +1306,7 @@ var
    //  TempString                            : Str10;
    TempElement: TMainWindowElement;
    TempColumn: LogColumnsType;
-   ColumnToken: AnsiString;   // language-neutral column token from COLUMN WIDTH line
+   ColumnTokenText: string;   // the column token of a COLUMN WIDTH line
 begin
 {$IF MAKE_DEFAULT_VALUES = TRUE}
    Result := True;
@@ -1433,34 +1434,58 @@ begin
      Reading an old file is tr4wconvert's job, not TR4W's (NY4I, 2026-09-12:
      "we do not care about converting the old ini file in the program"). *)
 
-   if Pos('COLUMN WIDTH ', cmdText) = 1 then
+   (* A MAIN-LOG COLUMN WIDTH, from the contest database's config table (the
+     open's replay, uLogStore) or from a .cfg being imported. It goes into the
+     open contest's width store, at 96 dpi, under the column's canonical
+     token; the main log grid reads it there, and the close capture writes it
+     back into the database (NY4I, 2026-11-06: the main log's widths are per
+     contest).
+
+     THE NUMBER IS TAKEN AS 96-DPI, AND IS NOT CONVERTED. Measured: neither
+     W11.manifest nor tr4w.lpi declares DPI awareness, so on Windows the
+     system scales the window and an older build only ever saw 96-dpi pixels
+     -- its rows are already 96-dpi. Inferred, not measured: a Linux or macOS
+     build could also have written rows (a text .cfg contest's widths,
+     captured later into its .db) in that widget set's pixels; such a row is off by
+     the screen's scale factor, is never narrower than its header, and the
+     next drag rewrites it. The row does not say what screen it came from, so
+     no conversion could be right. A row too narrow to read -- the character
+     counts a September build wrote by mistake -- is widened to its header
+     when the grid applies it (ClampRestoredWidth).
+
+     Matched against the canonical (language-neutral) column name first, and
+     after it UpperCase(Text) so a .cfg written before the canonical table existed (an
+     old English build, whose Text happened to be the English word) still
+     loads. A TOKEN THAT NAMES NO COLUMN THIS BUILD HAS IS KEPT AS IT IS: a
+     newer build's column survives this build's capture. A value that is not
+     a positive whole number is refused by the store. *)
+   if IsColumnWidthCommand(cmdText, ColumnTokenText) then
       begin
-      // Match against the canonical (language-neutral) column name first.
-      // Fall back to UpperCase(Text) so CFGs written before the canonical
-      // table existed (i.e. old English builds where Text already happened
-      // to be an English word) continue to load. Without the canonical
-      // path, non-English builds reject COLUMN WIDTH lines because Text
-      // is translated at compile time -- e.g. RC_CALLSIGN resolves to
-      // 'Indicativo' under -DLANG_ESP and never matches 'CALLSIGN'.
-      // The token is extracted once to an AnsiString so the PChar cast
-      // is legal -- Delphi 7 cannot cast a ShortString directly to PChar.
-      ColumnToken := Copy(Command, 14, 255);
       for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
          begin
-         if (ColumnCanonicalName[TempColumn] = string(ColumnToken))
-         or (UpperCase(ColumnsArray[TempColumn].Text) = ColumnToken) then
+         if UnicodeSameText(ColumnCanonicalName[TempColumn], ColumnTokenText) or
+            UnicodeSameText(string(ColumnsArray[TempColumn].Text), ColumnTokenText) then
             begin
-            Val(CustomCMD, TempInteger, code);
-            if code = 0 then
-               begin
-               ColumnWidthOverride[TempColumn] := TempInteger;
-               logger.Debug('CheckCommand: COLUMN WIDTH %s = %d (col index %d)',
-                  [ColumnCanonicalName[TempColumn], TempInteger, Ord(TempColumn)]);
-               end;
-            Result := True;
-            Exit;
+            ColumnTokenText := ColumnCanonicalName[TempColumn];
+            Break;
             end;
          end;
+
+      Val(CustomCMD, TempInteger, code);
+      if (code = 0) and (TempInteger > 0) then
+         begin
+         ContestColumnWidths.SetWidth(CONTEST_LOG_COLUMNS_NAME, ColumnTokenText,
+                                      TempInteger);
+         logger.Debug('CheckCommand: COLUMN WIDTH %s = %d (96 dpi, the main log)',
+                      [ColumnTokenText, TempInteger]);
+         end
+      else
+         begin
+         logger.Warn('CheckCommand: COLUMN WIDTH %s = "%s" is not a width -- ignored',
+                     [ColumnTokenText, CustomCMD]);
+         end;
+      Result := True;
+      Exit;
       end;
 
    (* ALERT COLOR'S ARM IS GONE -- 2026-09-14, and it was the last one.

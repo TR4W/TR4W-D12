@@ -367,6 +367,47 @@ measures; copy it for any run-time layout. Row constants such as the editor's
 `EDIT_LEFT` / `ROW_HEIGHT` are 96-dpi pixels, not scaled (`Scale96ToForm` is the LCL's
 answer); unmeasured at 150%.
 
+## A dragged column width is kept per user -- the main log per contest (issue 234, 2026-11-06)
+
+The `columns` section of `settings\tr4w.json` (`uColumnWidthStore`): grid name -> column
+token -> width at 96 dpi. **A token is never an index or a caption** --
+`ColumnCanonicalName` for a log column, a fixed constant per column elsewhere
+(`LOGGER_COLUMN_TOKENS`, `COLORS_COLUMN_TOKENS`); `''` means "not kept".
+
+- **THE MAIN LOG IS PER CONTEST, NOT PER USER** (NY4I: its column set depends on the
+  contest). `TR4WEditableLog.WidthsPerContest := True` makes `TLogGrid` read and write
+  `uColumnWidthStore.ContestColumnWidths` (grid `CONTEST_LOG_COLUMNS_NAME`) instead of
+  `LayoutName` / the pending marks; it is asked at every sizing, not cached. `uLogStore`
+  fills it from the contest database's `COLUMN WIDTH <token>` rows at the open (through
+  `uCFG.CheckCommand`'s arm, routed BEFORE the replay's renderable guard, which had
+  refused every such row as "an action"), writes it back in the close capture
+  (`CaptureContestColumnWidths`) and empties it at `LogStoreClose`. Same clamp, same 96
+  dpi, same tokens -- only the backing store differs. **No other grid sets it**, and the
+  main log never touches the `columns` section. `ColumnWidthOverride` is gone.
+- **`TLogGrid` keeps its own.** Set `LayoutName` and the grid does the rest: it
+  overrides the protected `HeaderSized` (drag AND divider double-click), holds a
+  per-instance width list, reads the saved widths lazily at the first sizing with a
+  handle, and floors a user width at its header text on every sizing pass. Do not wire
+  `OnHeaderSized` to save a width again.
+  **A fit-and-fill log grid always fills its `ClientWidth`, whatever the overrides**
+  (2026-11-06): free columns share the surplus; when every column has a chosen width
+  the LAST one takes it, its width a floor; a drag re-fits at once. Nothing is
+  subtracted from `ClientWidth` (a cell includes its grid line; the bar is permanent).
+  Pinned by `uTestColumnWidthStore`'s `LogGridFill` tests.
+- **Any other `TCustomDrawGrid`**: `uLCLFormHelpers.RestoreGridColumnWidths` after the
+  grid's own sizing (and after its captions, which the clamp measures),
+  `SaveGridColumnWidth` from `OnHeaderSized`. A fill column (`AutoFillColumns`) and a
+  zero-width hidden column get no token.
+- **A save MARKS; `FlushColumnWidths` WRITES** -- in the window's close handler, and in
+  `SaveTR4WPOSFILE` (exit and the 5-second autosave, whose tick also fires on
+  `ColumnWidthsPending`). A restore reads the file overlaid by the unwritten marks.
+- **A test flushes only into a file it has redirected and checked.** Drive
+  `ApplyGridColumnWidths` / `CaptureGridColumnWidth` against your own store, or read
+  `PendingColumnWidths`, and clear the marks behind you (a later close would write them).
+  To test the flush itself, point `TR4W_INI_FILENAME` at a temp folder, ASSERT
+  `TR4WConfigFileName` landed there (a `--settings` switch wins over the redirect), then
+  flush -- `uTestColumnWidthStore.Test_Flush_AMarkReachesTheFileAndAFreshGridReadsIt`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

@@ -144,6 +144,35 @@ A group marked contest-scoped (`IsContestScoped`) is excluded from
 table by `uLogStore.CaptureConfiguration`. That is the whole mechanism: **you
 put the property in the right group and the routing follows.**
 
+**Where a window or a grid column was left is NOT a setting**, and does not
+belong in either row of that table as a property. It is view state, kept per
+user in its own sections of `settings/tr4w.json`, each a small RTL store
+written through `uTR4WConfigFile` (the one writer):
+
+| section | store | keyed by |
+|---|---|---|
+| `windows` | `uWindowLayoutStore` | window name -> rect + visible |
+| `columns` | `uColumnWidthStore` | grid name -> column token -> width at 96 dpi (issue 234) |
+
+A column token is language-neutral -- `ColumnCanonicalName` for a log column,
+a fixed constant for any other grid -- never an index or a caption. A grid
+keeps its widths through `uLCLFormHelpers.RestoreGridColumnWidths` /
+`SaveGridColumnWidth` (or, for `TLogGrid`, its `LayoutName`); the save marks,
+and `FlushColumnWidths` writes on the window's close, at exit and on the
+5-second layout autosave.
+
+**The main log grid is the one exception: its widths are PER CONTEST**
+(NY4I, 2026-11-06), because which columns it shows depends on the contest.
+They are `COLUMN WIDTH <token>` rows in the contest database's config table
+(96 dpi, source `contest`), held in memory as
+`uColumnWidthStore.ContestColumnWidths` -- the same class, a different
+backing store. `TLogGrid.WidthsPerContest` selects it; the open's replay
+(`uLogStore`, through `uCFG.CheckCommand`'s `COLUMN WIDTH` arm) fills it, the
+close capture (`uLogStore.CaptureContestColumnWidths`) writes it back, and it
+never reaches the `columns` section. A `COLUMN WIDTH` row is neither a setting
+nor an action: the settings object owns no such name, so it must be routed
+before the replay's "can this be rendered?" guard.
+
 **A contest-scoped value is captured ONLY WHILE THE OPERATOR HAS STATED IT**
 (2026-10-01, `docs/CONTEST_OWNERSHIP_DESIGN.md` §7.8).
 `TR4WSettings.CommandIsStated` is the was-set flag, and you add nothing for

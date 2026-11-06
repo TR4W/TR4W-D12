@@ -17,13 +17,15 @@ unit uTestExternalLoggerGrid;
   NOT covered here, and bench-only (docs/BENCH_QUEUE.md): the real mouse drag
   from the Order cell, the right-click popup, and the modal editor.
   TPrefsForm itself is not constructed by any test; the page is covered by the
-  form lints.
+  form lints. The Colours grid, which fills its row the same way (issue 234),
+  is built here on a bare grid through uPrefsForm's own column and sizing
+  routines.
 *)
 
 interface
 
 uses
-   uTR4WTestFramework, uExternalLoggerService, uExternalDelivery;
+   Forms, Grids, uTR4WTestFramework, uExternalLoggerService, uExternalDelivery;
 
 type
    TExternalLoggerGridTests = class(TTestCase)
@@ -50,6 +52,14 @@ type
       procedure Test_Grid_SpaceTogglesAndAnotherCellDoesNot;
       procedure Test_Grid_StateColumnShowsTextAndKindPerRow;
       procedure Test_Grid_StateColoursAreDistinct;
+      procedure CheckColumnsFill(const aForm: TForm; const aGrid: TStringGrid;
+         aFormWidth: integer; const aWhere: string);
+      procedure Test_Grid_ColumnsFillTheGridAtAnyWidth;
+      procedure Test_Grid_HeaderDragResizesAndHiddenColumnsStayHidden;
+      procedure Test_Grid_ADraggedWidthComesBackInAFreshGrid;
+      procedure CheckColoursFill(const aForm: TForm; const aGrid: TStringGrid;
+         aFormWidth: integer; const aWhere: string);
+      procedure Test_ColoursGrid_SampleFillsTheRowAndIsNotKept;
    public
       procedure RunAllTests; override;
    end;
@@ -57,8 +67,10 @@ type
 implementation
 
 uses
-   Classes, SysUtils, Controls, Forms, Grids, Types, fpjson, uExternalLoggerConfig,
-   uExternalLoggerGrid;
+   Classes, SysUtils, Controls, StdCtrls, Types, fpjson, uExternalLoggerConfig,
+   uExternalLoggerGrid, uTestShowOffScreen,
+   uPrefsForm,        (* the Colours grid's columns and sizing, on a bare grid -- issue 234 *)
+   uLCLFormHelpers;   (* PendingColumnWidths -- a drag marks one; cleared behind each test *)
 
 type
    TChangeCounter = class
@@ -864,6 +876,416 @@ begin
    end;
 end;
 
+(* ----------------------------------------------------------------------- *)
+(* Issue 226 follow-up: the columns fill the grid, on a SHOWN form          *)
+(* ----------------------------------------------------------------------- *)
+
+(* The sum of every column's width, hidden ones included (they must be 0). *)
+function SumOfColumnWidths(const aGrid: TStringGrid): integer;
+var
+   col: integer;
+begin
+   Result := 0;
+   for col := 0 to aGrid.ColCount - 1 do
+      begin
+      Result := Result + aGrid.ColWidths[col];
+      end;
+end;
+
+(* Resize the FORM (the grid follows its anchors, as on the Preferences
+   page), let the LCL lay it out, and check the columns fill the grid. *)
+procedure TExternalLoggerGridTests.CheckColumnsFill(const aForm: TForm;
+   const aGrid: TStringGrid; aFormWidth: integer; const aWhere: string);
+var
+   where: string;
+begin
+   aForm.ClientWidth := aFormWidth;
+   Application.ProcessMessages;
+   where := Format(' (%s: form %d, grid %d, client %d, columns %d, Connection %d)',
+      [aWhere, aForm.ClientWidth, aGrid.Width, aGrid.ClientWidth,
+      SumOfColumnWidths(aGrid), aGrid.ColWidths[LOGGER_COL_STATE]]);
+   WriteLn('  [LoggerGrid]', where);
+   CheckEquals(aGrid.ClientWidth, SumOfColumnWidths(aGrid),
+      'the columns fill the client width' + where);
+   CheckEquals(60, aGrid.ColWidths[LOGGER_COL_ORDER], 'Order keeps its width' + where);
+   CheckEquals(190, aGrid.ColWidths[LOGGER_COL_NAME], 'Logger keeps its width' + where);
+   CheckEquals(110, aGrid.ColWidths[LOGGER_COL_PROVIDER], 'Provider keeps its width' + where);
+   CheckEquals(70, aGrid.ColWidths[LOGGER_COL_ENABLED], 'Enabled keeps its width' + where);
+   CheckEquals(0, aGrid.ColWidths[LOGGER_COL_ID], 'the id stays hidden' + where);
+   CheckEquals(0, aGrid.ColWidths[LOGGER_COL_STATEKIND], 'the state ordinal stays hidden' + where);
+end;
+
+procedure TExternalLoggerGridTests.Test_Grid_ColumnsFillTheGridAtAnyWidth;
+const
+   GRID_LEFT = 12;
+   GRID_MARGIN = 12;
+var
+   form: TForm;
+   grid: TStringGrid;
+   view: TExternalLoggerGrid;
+   config: TExternalLoggerConfig;
+   definition: TExternalLoggerDefinition;
+   i, fewRowsClient: integer;
+begin
+   BeginTest('Grid: the columns fill the grid''s client width, at two widths and with a vertical scrollbar');
+   InitWidgetSet;
+   form := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   try
+      form.ClientWidth := 674;
+      form.ClientHeight := 300;
+      grid := TStringGrid.Create(form);
+      (* As uPrefsForm.lfm places grdExternalLoggers. *)
+      grid.SetBounds(GRID_LEFT, 44, form.ClientWidth - GRID_LEFT - GRID_MARGIN, 220);
+      grid.Anchors := [akTop, akLeft, akRight];
+      grid.Parent := form;
+      view := TExternalLoggerGrid.Create(form, grid);
+      FillConfig(config);
+      view.Bind(config);
+      view.Refresh;
+      ShowOffScreen(form);
+      CheckColumnsFill(form, grid, 674, 'designed width');
+      CheckColumnsFill(form, grid, 900, 'wider');
+      fewRowsClient := grid.ClientWidth;
+      (* Enough rows to overflow 220 px: the vertical scrollbar takes its
+         width out of the client area, and the fill must follow. *)
+      for i := 3 to 24 do
+         begin
+         definition := TExternalLoggerDefinition.Create;
+         definition.Id := 'x' + IntToStr(i);
+         definition.Name := 'Logger ' + IntToStr(i);
+         definition.ProviderId := 'DXKEEPER';
+         definition.Address := '127.0.0.1';
+         definition.Port := 52001 + i;
+         config.Definitions.Add(definition);
+         end;
+      view.Refresh;
+      Application.ProcessMessages;
+      CheckTrue(grid.RowCount * grid.DefaultRowHeight > grid.ClientHeight,
+         'the rows overflow the grid');
+      CheckColumnsFill(form, grid, 900, 'wider, rows overflow');
+      CheckTrue(grid.ClientWidth < fewRowsClient,
+         'the vertical scrollbar narrowed the client area (' +
+         IntToStr(fewRowsClient) + ' -> ' + IntToStr(grid.ClientWidth) + ')');
+      CheckColumnsFill(form, grid, 674, 'designed width, rows overflow');
+   finally
+      config.Free;
+      form.Free;
+   end;
+end;
+
+type
+   (* A TStringGrid that can be driven with the mouse calls the LCL itself makes
+      (MouseMove / MouseDown / MouseUp are protected), and that records which
+      column the LCL reported as sized. The view's OnHeaderSized still runs:
+      HeaderSized is what raises it. *)
+   TSizingProbeGrid = class(TStringGrid)
+   public
+      SizedCount, SizedIndex: integer;
+      procedure HeaderSized(IsColumn: Boolean; index: Integer); override;
+      procedure Drag(aFromX, aToX, aY: integer);
+   end;
+
+procedure TSizingProbeGrid.HeaderSized(IsColumn: Boolean; index: Integer);
+begin
+   if IsColumn then
+      begin
+      Inc(SizedCount);
+      SizedIndex := index;
+      end;
+   inherited HeaderSized(IsColumn, index);
+end;
+
+(* Hover (the LCL arms the sizing cursor), press, move, release. *)
+procedure TSizingProbeGrid.Drag(aFromX, aToX, aY: integer);
+begin
+   MouseMove([], aFromX, aY);
+   MouseDown(mbLeft, [ssLeft], aFromX, aY);
+   MouseMove([ssLeft], aToX, aY);
+   MouseUp(mbLeft, [], aToX, aY);
+end;
+
+(* goColSizing on a grid whose columns fill it: a dragged divider keeps its
+   width and the fill column absorbs the difference; the fixed Order column is
+   not sizable; and dragging the Connection column's right edge, which the LCL
+   hands to the last zero-width column after it, does not reveal a hidden
+   column. *)
+procedure TExternalLoggerGridTests.Test_Grid_HeaderDragResizesAndHiddenColumnsStayHidden;
+var
+   form: TForm;
+   grid: TSizingProbeGrid;
+   view: TExternalLoggerGrid;
+   config: TExternalLoggerConfig;
+   headerY, stateBefore, x, grown: integer;
+   where: string;
+begin
+   BeginTest('Grid: a header divider drags; Connection absorbs it; Order and the hidden columns do not size');
+   InitWidgetSet;
+   form := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   try
+      form.ClientWidth := 900;
+      form.ClientHeight := 300;
+      grid := TSizingProbeGrid.Create(form);
+      grid.SetBounds(12, 44, form.ClientWidth - 24, 220);
+      grid.Anchors := [akTop, akLeft, akRight];
+      grid.Parent := form;
+      view := TExternalLoggerGrid.Create(form, grid);
+      FillConfig(config);
+      view.Bind(config);
+      view.Refresh;
+      CheckTrue(goColSizing in grid.Options, 'header dividers drag, as in a stock LCL grid');
+      CheckFalse(goFixedColSizing in grid.Options, 'the fixed Order column is not sizable');
+      CheckTrue(Assigned(grid.OnHeaderSized), 'the view guards the hidden columns');
+      ShowOffScreen(form);
+      grid.SetFocus;
+      Application.ProcessMessages;
+      CheckTrue(grid.Focused, 'the grid took focus; TCustomGrid.MouseDown ignores a press without it');
+      headerY := grid.RowHeights[0] div 2;
+      stateBefore := grid.ColWidths[LOGGER_COL_STATE];
+
+      (* Logger's right divider, dragged 40 px to the right. *)
+      x := grid.ColWidths[LOGGER_COL_ORDER] + grid.ColWidths[LOGGER_COL_NAME] - 1;
+      grid.Drag(x, x + 40, headerY);
+      Application.ProcessMessages;
+      where := Format(' (focused %s, sized %d x%d, Logger %d, Connection %d -> %d, columns %d, client %d)',
+         [BoolToStr(grid.Focused, True), grid.SizedIndex, grid.SizedCount,
+         grid.ColWidths[LOGGER_COL_NAME], stateBefore, grid.ColWidths[LOGGER_COL_STATE],
+         SumOfColumnWidths(grid), grid.ClientWidth]);
+      WriteLn('  [LoggerGrid] Logger drag', where);
+      CheckEquals(1, grid.SizedCount, 'the LCL ran a column resize' + where);
+      CheckEquals(LOGGER_COL_NAME, grid.SizedIndex, 'it sized Logger' + where);
+      (* The LCL sizes to the pointer: the new right edge is where it let go. *)
+      grown := (x + 40) - grid.ColWidths[LOGGER_COL_ORDER] - 190;
+      CheckTrue(grown > 30, 'Logger grew by about the drag' + where);
+      CheckEquals(190 + grown, grid.ColWidths[LOGGER_COL_NAME], 'Logger ends at the pointer' + where);
+      CheckEquals(stateBefore - grown, grid.ColWidths[LOGGER_COL_STATE],
+         'Connection gave up exactly what Logger took' + where);
+      CheckEquals(grid.ClientWidth, SumOfColumnWidths(grid), 'still no gap' + where);
+      CheckEquals(0, grid.ColWidths[LOGGER_COL_ID], 'the id stays hidden' + where);
+      CheckEquals(0, grid.ColWidths[LOGGER_COL_STATEKIND], 'the ordinal stays hidden' + where);
+
+      (* The Order column's divider: nothing happens. *)
+      x := grid.ColWidths[LOGGER_COL_ORDER] + 1;
+      grid.Drag(x, x + 40, headerY);
+      Application.ProcessMessages;
+      CheckEquals(60, grid.ColWidths[LOGGER_COL_ORDER], 'Order keeps its width');
+      CheckEquals(1, grid.SizedCount, 'no resize was reported');
+
+      (* Connection's right edge, dragged to the right. *)
+      x := grid.ClientWidth - 2;
+      grid.Drag(x, x + 40, headerY);
+      Application.ProcessMessages;
+      where := Format(' (sized %d x%d, Id %d, ordinal %d, Connection %d, columns %d, client %d)',
+         [grid.SizedIndex, grid.SizedCount, grid.ColWidths[LOGGER_COL_ID],
+         grid.ColWidths[LOGGER_COL_STATEKIND], grid.ColWidths[LOGGER_COL_STATE],
+         SumOfColumnWidths(grid), grid.ClientWidth]);
+      WriteLn('  [LoggerGrid] Connection edge drag', where);
+      CheckEquals(2, grid.SizedCount, 'the LCL ran a column resize' + where);
+      CheckEquals(LOGGER_COL_STATEKIND, grid.SizedIndex,
+         'the LCL picked the hidden ordinal column (why the guard exists)' + where);
+      CheckEquals(0, grid.ColWidths[LOGGER_COL_ID], 'the id stays hidden' + where);
+      CheckEquals(0, grid.ColWidths[LOGGER_COL_STATEKIND], 'the ordinal is hidden again' + where);
+      CheckEquals(stateBefore - grown, grid.ColWidths[LOGGER_COL_STATE],
+         'Connection is unchanged' + where);
+      CheckEquals(grid.ClientWidth, SumOfColumnWidths(grid), 'still no gap' + where);
+   finally
+      (* The Logger drag marked a width (issue 234); nothing here may let it
+         reach the settings file. *)
+      PendingColumnWidths.Clear;
+      config.Free;
+      form.Free;
+   end;
+end;
+
+(* ISSUE 234: a dragged Logger width is marked under the grid's name and a
+   token, never Connection's or a hidden column's, and a FRESH grid -- the
+   Preferences window opened again -- comes back with it while the fill still
+   closes the row. Restored from the unwritten marks, so no file is read for
+   the width and none is written. *)
+procedure TExternalLoggerGridTests.Test_Grid_ADraggedWidthComesBackInAFreshGrid;
+var
+   form, form2: TForm;
+   grid: TSizingProbeGrid;
+   grid2: TStringGrid;
+   view, view2: TExternalLoggerGrid;
+   config: TExternalLoggerConfig;
+   headerY, x, dragged, w: integer;
+begin
+   BeginTest('Grid: a dragged Logger width is kept, and a fresh grid restores it with the fill intact');
+   InitWidgetSet;
+   PendingColumnWidths.Clear;
+   form := TForm.CreateNew(nil);
+   form2 := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   try
+      form.ClientWidth := 900;
+      form.ClientHeight := 300;
+      grid := TSizingProbeGrid.Create(form);
+      grid.SetBounds(12, 44, form.ClientWidth - 24, 220);
+      grid.Anchors := [akTop, akLeft, akRight];
+      grid.Parent := form;
+      view := TExternalLoggerGrid.Create(form, grid);
+      FillConfig(config);
+      view.Bind(config);
+      view.Refresh;
+      ShowOffScreen(form);
+      grid.SetFocus;
+      Application.ProcessMessages;
+      headerY := grid.RowHeights[0] div 2;
+
+      x := grid.ColWidths[LOGGER_COL_ORDER] + grid.ColWidths[LOGGER_COL_NAME] - 1;
+      grid.Drag(x, x + 40, headerY);
+      Application.ProcessMessages;
+      dragged := grid.ColWidths[LOGGER_COL_NAME];
+      CheckTrue(dragged > 220, 'Logger was dragged wider (' + IntToStr(dragged) + ')');
+
+      w := 0;
+      CheckTrue(PendingColumnWidths.TryGetWidth(LOGGER_GRID_COLUMNS_NAME, 'Logger', w),
+         'the drag was marked under the grid name and the Logger token');
+      CheckEquals(grid.ScaleFormTo96(dragged), w, 'at 96 dpi');
+      CheckEquals(1, PendingColumnWidths.EntryCount,
+         'and only Logger: Connection, which gave up the width, is the fill''s');
+
+      (* The window opened again: a new grid, the designed widths, then the
+         restore the owner calls. *)
+      form2.ClientWidth := 900;
+      form2.ClientHeight := 300;
+      grid2 := TStringGrid.Create(form2);
+      grid2.SetBounds(12, 44, form2.ClientWidth - 24, 220);
+      grid2.Anchors := [akTop, akLeft, akRight];
+      grid2.Parent := form2;
+      view2 := TExternalLoggerGrid.Create(form2, grid2);
+      view2.Bind(config);
+      view2.Refresh;
+      CheckEquals(190, grid2.ColWidths[LOGGER_COL_NAME], 'a new grid starts at the designed width');
+      view2.RestoreColumnWidths;
+      ShowOffScreen(form2);
+      CheckEquals(grid2.Scale96ToForm(grid.ScaleFormTo96(dragged)), grid2.ColWidths[LOGGER_COL_NAME],
+         'and comes back at the dragged one');
+      CheckEquals(110, grid2.ColWidths[LOGGER_COL_PROVIDER], 'Provider was not dragged, so is designed');
+      CheckEquals(0, grid2.ColWidths[LOGGER_COL_ID], 'the id stays hidden');
+      CheckEquals(0, grid2.ColWidths[LOGGER_COL_STATEKIND], 'the ordinal stays hidden');
+      CheckEquals(grid2.ClientWidth, SumOfColumnWidths(grid2), 'the fill still closes the row');
+   finally
+      PendingColumnWidths.Clear;
+      config.Free;
+      form2.Free;
+      form.Free;
+   end;
+end;
+
+(* The Colours grid (Preferences > Appearance > Colors) after a form resize:
+   the row ends at the grid's client edge, which already leaves out the
+   vertical scrollbar, and only Sample moved. *)
+procedure TExternalLoggerGridTests.CheckColoursFill(const aForm: TForm;
+   const aGrid: TStringGrid; aFormWidth: integer; const aWhere: string);
+var
+   where: string;
+begin
+   aForm.ClientWidth := aFormWidth;
+   Application.ProcessMessages;
+   where := Format(' (%s: form %d, grid %d, client %d, columns %d, Sample %d, min %d)',
+      [aWhere, aForm.ClientWidth, aGrid.Width, aGrid.ClientWidth,
+      SumOfColumnWidths(aGrid), aGrid.ColWidths[COLORS_COL_SAMPLE],
+      aGrid.Columns[COLORS_COL_SAMPLE].MinSize]);
+   WriteLn('  [ColoursGrid]', where);
+   CheckEquals(aGrid.ClientWidth, SumOfColumnWidths(aGrid),
+      'the Colours columns fill the client width' + where);
+   CheckTrue(aGrid.ColWidths[COLORS_COL_SAMPLE] >= aGrid.Columns[COLORS_COL_SAMPLE].MinSize,
+      'Sample is never narrower than its measured width' + where);
+end;
+
+(* ISSUE 234, NY4I's bench: the Colours grid's four columns stopped short of
+   its right edge, leaving a white band. Built as BuildColorsSection builds it
+   (aligned in a 12 px margin, fifty-odd rows, so the vertical bar shows),
+   sized as the page sizes it -- before the form is shown -- then measured at
+   the designed width and wider. Sample takes the slack and is never kept;
+   the three measured columns keep their widths and stay kept. *)
+procedure TExternalLoggerGridTests.Test_ColoursGrid_SampleFillsTheRowAndIsNotKept;
+const
+   ROWS = 52;
+var
+   form: TForm;
+   grid: TSizingProbeGrid;
+   row, elementWidth, textWidth, backWidth, sampleBefore, headerY, x, w: integer;
+   where: string;
+begin
+   BeginTest('Colours grid: Sample fills the row to the right edge at any width, and its width is not kept');
+   InitWidgetSet;
+   PendingColumnWidths.Clear;
+   form := TForm.CreateNew(nil);
+   try
+      form.ClientWidth := 674;
+      form.ClientHeight := 300;
+      grid := TSizingProbeGrid.Create(form);
+      grid.Parent := form;
+      grid.Align := alClient;
+      grid.BorderSpacing.Around := 12;
+      grid.ScrollBars := ssAutoVertical;
+      grid.FixedRows := 1;
+      grid.FixedCols := 0;
+      grid.Options := grid.Options + [goEditing, goVertLine, goHorzLine, goColSizing];
+      AddColorsGridColumns(grid);
+      CheckEquals(4, grid.ColCount, 'the Columns collection alone makes four columns');
+      CheckEquals('', COLORS_COLUMN_TOKENS[COLORS_COL_SAMPLE],
+         'Sample, the fill column, has no token');
+      grid.RowCount := ROWS;
+      for row := 1 to ROWS - 1 do
+         begin
+         grid.Cells[COLORS_COL_ELEMENT, row] := 'Element ' + IntToStr(row);
+         grid.Cells[COLORS_COL_FG, row] := 'LIGHT GRAY';
+         grid.Cells[COLORS_COL_BG, row] := 'WHITE';
+         grid.Cells[COLORS_COL_SAMPLE, row] := 'W1AW 599 14.025';
+         end;
+      SizeColorsGridColumns(grid);
+      elementWidth := grid.ColWidths[COLORS_COL_ELEMENT];
+      textWidth := grid.ColWidths[COLORS_COL_FG];
+      backWidth := grid.ColWidths[COLORS_COL_BG];
+      ShowOffScreen(form);
+      CheckTrue(grid.RowCount * grid.DefaultRowHeight > grid.ClientHeight,
+         'the rows overflow the grid, so the vertical scrollbar is up');
+      CheckColoursFill(form, grid, 674, 'designed width');
+      CheckColoursFill(form, grid, 900, 'wider');
+      CheckEquals(elementWidth, grid.ColWidths[COLORS_COL_ELEMENT], 'Element keeps its width');
+      CheckEquals(textWidth, grid.ColWidths[COLORS_COL_FG], 'Text keeps its width');
+      CheckEquals(backWidth, grid.ColWidths[COLORS_COL_BG], 'Background keeps its width');
+
+      (* A drag of Text's divider: Text keeps it and Sample gives it up. *)
+      grid.SetFocus;
+      Application.ProcessMessages;
+      headerY := grid.RowHeights[0] div 2;
+      sampleBefore := grid.ColWidths[COLORS_COL_SAMPLE];
+      x := elementWidth + textWidth - 1;
+      grid.Drag(x, x + 40, headerY);
+      Application.ProcessMessages;
+      where := Format(' (sized %d x%d, Text %d -> %d, Sample %d -> %d, columns %d, client %d)',
+         [grid.SizedIndex, grid.SizedCount, textWidth, grid.ColWidths[COLORS_COL_FG],
+         sampleBefore, grid.ColWidths[COLORS_COL_SAMPLE], SumOfColumnWidths(grid),
+         grid.ClientWidth]);
+      WriteLn('  [ColoursGrid] Text drag', where);
+      CheckEquals(COLORS_COL_FG, grid.SizedIndex, 'the LCL sized Text' + where);
+      CheckTrue(grid.ColWidths[COLORS_COL_FG] > textWidth + 30, 'Text grew by about the drag' + where);
+      CheckEquals(sampleBefore - (grid.ColWidths[COLORS_COL_FG] - textWidth),
+         grid.ColWidths[COLORS_COL_SAMPLE], 'Sample gave up exactly what Text took' + where);
+      CheckEquals(grid.ClientWidth, SumOfColumnWidths(grid), 'still no gap' + where);
+
+      (* What ColorGridHeaderSized does, for each kind of column. *)
+      SaveGridColumnWidth(grid, COLORS_GRID_COLUMNS_NAME, COLORS_COLUMN_TOKENS, COLORS_COL_SAMPLE);
+      CheckEquals(0, PendingColumnWidths.EntryCount, 'a Sample width is never marked');
+      SaveGridColumnWidth(grid, COLORS_GRID_COLUMNS_NAME, COLORS_COLUMN_TOKENS, COLORS_COL_FG);
+      w := 0;
+      CheckTrue(PendingColumnWidths.TryGetWidth(COLORS_GRID_COLUMNS_NAME, 'Text', w),
+         'a Text width is marked under the grid name and its token');
+      CheckEquals(grid.ScaleFormTo96(grid.ColWidths[COLORS_COL_FG]), w, 'at 96 dpi');
+      CheckEquals(1, PendingColumnWidths.EntryCount, 'and nothing else');
+   finally
+      (* Nothing here may reach the settings file. *)
+      PendingColumnWidths.Clear;
+      form.Free;
+   end;
+end;
+
 procedure TExternalLoggerGridTests.Test_Grid_StateColoursAreDistinct;
 var
    a, b: TExternalLoggerState;
@@ -887,6 +1309,10 @@ begin
    Test_Grid_SpaceTogglesAndAnotherCellDoesNot;
    Test_Grid_StateColumnShowsTextAndKindPerRow;
    Test_Grid_StateColoursAreDistinct;
+   Test_Grid_ColumnsFillTheGridAtAnyWidth;
+   Test_Grid_HeaderDragResizesAndHiddenColumnsStayHidden;
+   Test_Grid_ADraggedWidthComesBackInAFreshGrid;
+   Test_ColoursGrid_SampleFillsTheRowAndIsNotKept;
    Test_Model_DisplayOrderIsActiveFirst;
    Test_Model_SetActiveAppendsAndIsIdempotent;
    Test_Model_ApplyOrderWritesBackDeliveryOrder;
