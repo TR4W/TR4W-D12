@@ -398,6 +398,11 @@ token -> width at 96 dpi. **A token is never an index or a caption** --
   grid's own sizing (and after its captions, which the clamp measures),
   `SaveGridColumnWidth` from `OnHeaderSized`. A fill column (`AutoFillColumns`) and a
   zero-width hidden column get no token.
+- **A fill grid has a PERMANENT vertical bar; `FillGridFromColumn` sets `ssVertical`**
+  (2026-11-06, CI). The LCL fills against the current `ClientWidth` BEFORE it decides
+  the bar, and ignores the bar's own resize (`gfUpdatingScrollbar`), so an automatic
+  bar leaves the row one bar-width off -- passing on one machine, failing on the runner.
+  Never set an `ssAuto*` value after the fill.
 - **A save MARKS; `FlushColumnWidths` WRITES** -- in the window's close handler, and in
   `SaveTR4WPOSFILE` (exit and the 5-second autosave, whose tick also fires on
   `ColumnWidthsPending`). A restore reads the file overlaid by the unwritten marks.

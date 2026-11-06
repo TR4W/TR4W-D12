@@ -3101,10 +3101,11 @@ begin
    FColorGrid.Parent      := box;
    FColorGrid.Align       := alClient;
    FColorGrid.BorderSpacing.Around := 12;
-   (* EXPLICIT. Fifty rows will not fit whatever the page is sized to, so the
-     vertical bar has to be there. Vertical only: the columns fill the grid
-     (SizeColorsGridColumns), and a filled grid never shows a horizontal bar. *)
-   FColorGrid.ScrollBars  := ssAutoVertical;
+   (* NO ScrollBars HERE. The columns fill the grid (SizeColorsGridColumns),
+     and FillGridFromColumn gives a filled grid a PERMANENT vertical bar and no
+     horizontal one: an automatic bar made the fill one bar-width wrong
+     whenever the rows and the page height disagreed (FillGridFromColumn says
+     why). Fifty rows overflow any page anyway. *)
    FColorGrid.FixedRows   := 1;
    FColorGrid.FixedCols   := 0;
    FColorGrid.Options     := FColorGrid.Options + [goEditing, goVertLine, goHorzLine,

@@ -927,7 +927,7 @@ var
    definition: TExternalLoggerDefinition;
    i, fewRowsClient: integer;
 begin
-   BeginTest('Grid: the columns fill the grid''s client width, at two widths and with a vertical scrollbar');
+   BeginTest('Grid: the columns fill the grid''s client width at two widths, and the row count never moves the client width');
    InitWidgetSet;
    form := TForm.CreateNew(nil);
    config := TExternalLoggerConfig.Create;
@@ -940,6 +940,12 @@ begin
       grid.Anchors := [akTop, akLeft, akRight];
       grid.Parent := form;
       view := TExternalLoggerGrid.Create(form, grid);
+      (* THE INVARIANT BY CONSTRUCTION: an automatic bar shown or hidden after
+         the fill leaves the row one bar-width off (FillGridFromColumn), and
+         whether a later pass heals it is machine timing -- it failed on the
+         CI runner and passed here. *)
+      CheckTrue(grid.ScrollBars = ssVertical,
+         'the fill grid''s vertical bar is permanent, so ClientWidth cannot follow the row count');
       FillConfig(config);
       view.Bind(config);
       view.Refresh;
@@ -947,8 +953,8 @@ begin
       CheckColumnsFill(form, grid, 674, 'designed width');
       CheckColumnsFill(form, grid, 900, 'wider');
       fewRowsClient := grid.ClientWidth;
-      (* Enough rows to overflow 220 px: the vertical scrollbar takes its
-         width out of the client area, and the fill must follow. *)
+      (* Enough rows to overflow 220 px: the bar was already there, so the
+         client width stays and the fill with it. *)
       for i := 3 to 24 do
          begin
          definition := TExternalLoggerDefinition.Create;
@@ -964,10 +970,20 @@ begin
       CheckTrue(grid.RowCount * grid.DefaultRowHeight > grid.ClientHeight,
          'the rows overflow the grid');
       CheckColumnsFill(form, grid, 900, 'wider, rows overflow');
-      CheckTrue(grid.ClientWidth < fewRowsClient,
-         'the vertical scrollbar narrowed the client area (' +
+      CheckEquals(fewRowsClient, grid.ClientWidth,
+         'the overflowing rows did not move the client width (' +
          IntToStr(fewRowsClient) + ' -> ' + IntToStr(grid.ClientWidth) + ')');
       CheckColumnsFill(form, grid, 674, 'designed width, rows overflow');
+      (* And back: the extra loggers removed, the rows fit again. *)
+      FillConfig(config);
+      view.Refresh;
+      Application.ProcessMessages;
+      CheckTrue(grid.RowCount * grid.DefaultRowHeight < grid.ClientHeight,
+         'the rows fit the grid again');
+      CheckColumnsFill(form, grid, 674, 'designed width, rows fit again');
+      CheckColumnsFill(form, grid, 900, 'wider, rows fit again');
+      CheckEquals(fewRowsClient, grid.ClientWidth,
+         'fewer rows did not move the client width either');
    finally
       config.Free;
       form.Free;
@@ -1043,6 +1059,15 @@ begin
       CheckTrue(grid.Focused, 'the grid took focus; TCustomGrid.MouseDown ignores a press without it');
       headerY := grid.RowHeights[0] div 2;
       stateBefore := grid.ColWidths[LOGGER_COL_STATE];
+      (* THE PRECONDITION, named: every check below is relative to this fill,
+         so a fill that is already wrong must fail here rather than as
+         "Connection gave up exactly what Logger took". *)
+      where := Format(' (before the drag: Connection %d, columns %d, client %d)',
+         [stateBefore, SumOfColumnWidths(grid), grid.ClientWidth]);
+      WriteLn('  [LoggerGrid]', where);
+      CheckTrue(grid.ScrollBars = ssVertical, 'the vertical bar is permanent' + where);
+      CheckEquals(grid.ClientWidth, SumOfColumnWidths(grid),
+         'the columns fill the client width before any drag' + where);
 
       (* Logger's right divider, dragged 40 px to the right. *)
       x := grid.ColWidths[LOGGER_COL_ORDER] + grid.ColWidths[LOGGER_COL_NAME] - 1;
@@ -1166,7 +1191,10 @@ begin
       CheckEquals(110, grid2.ColWidths[LOGGER_COL_PROVIDER], 'Provider was not dragged, so is designed');
       CheckEquals(0, grid2.ColWidths[LOGGER_COL_ID], 'the id stays hidden');
       CheckEquals(0, grid2.ColWidths[LOGGER_COL_STATEKIND], 'the ordinal stays hidden');
-      CheckEquals(grid2.ClientWidth, SumOfColumnWidths(grid2), 'the fill still closes the row');
+      CheckEquals(grid2.ClientWidth, SumOfColumnWidths(grid2), 'the fill still closes the row' +
+         Format(' (fresh grid: Logger %d, Connection %d, columns %d, client %d)',
+         [grid2.ColWidths[LOGGER_COL_NAME], grid2.ColWidths[LOGGER_COL_STATE],
+         SumOfColumnWidths(grid2), grid2.ClientWidth]));
    finally
       PendingColumnWidths.Clear;
       config.Free;
@@ -1222,7 +1250,8 @@ begin
       grid.Parent := form;
       grid.Align := alClient;
       grid.BorderSpacing.Around := 12;
-      grid.ScrollBars := ssAutoVertical;
+      (* No ScrollBars: BuildColorsSection sets none, and the fill sets its
+         own (checked below). *)
       grid.FixedRows := 1;
       grid.FixedCols := 0;
       grid.Options := grid.Options + [goEditing, goVertLine, goHorzLine, goColSizing];
@@ -1239,6 +1268,8 @@ begin
          grid.Cells[COLORS_COL_SAMPLE, row] := 'W1AW 599 14.025';
          end;
       SizeColorsGridColumns(grid);
+      CheckTrue(grid.ScrollBars = ssVertical,
+         'the Colours grid''s vertical bar is permanent, so the fill never follows a bar shown late');
       elementWidth := grid.ColWidths[COLORS_COL_ELEMENT];
       textWidth := grid.ColWidths[COLORS_COL_FG];
       backWidth := grid.ColWidths[COLORS_COL_BG];

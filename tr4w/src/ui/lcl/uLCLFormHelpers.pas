@@ -403,7 +403,21 @@ procedure CaptureGridColumnWidth(const aGrid: TCustomDrawGrid; const aName: stri
 
   NEEDS A Columns COLLECTION: without one the LCL treats every column as
   priority 1. A fill column has no width of its own, so it carries no token in
-  the caller's RestoreGridColumnWidths / SaveGridColumnWidth list. *)
+  the caller's RestoreGridColumnWidths / SaveGridColumnWidth list.
+
+  IT ALSO SETS ScrollBars := ssVertical, A PERMANENT VERTICAL BAR, and a caller
+  must not set another value after it. An AUTOMATIC vertical bar cannot be
+  combined with AutoFillColumns (issue 234 CI follow-up): TCustomGrid.
+  UpdateCachedSizes runs the fill against the CURRENT ClientWidth, and only
+  after it does CalcScrollbarsRange decide whether the bar shows; showing or hiding it
+  changes ClientWidth by the bar's width, and TCustomGrid.WMSize ignores the
+  resize while gfUpdatingScrollbar is set (the LCL's issue #31715), so nothing
+  fills again. The row then ends one bar-width short of the edge, or one past
+  it, whenever the row count crosses what the grid's height holds -- and
+  whether a later layout pass happens to heal it is a matter of message timing,
+  which is why the unit tests passed on one machine and failed on the CI
+  runner. With the bar permanent, ClientWidth never depends on the row count.
+  TLogGrid made the same choice (uLogGrid, its constructor). *)
 procedure FillGridFromColumn(const aGrid: TCustomDrawGrid; const aFillCol: integer;
                              const aMinSize: integer);
 
@@ -1983,6 +1997,10 @@ begin
       end;
    aGrid.Columns[fillIndex].SizePriority := 1;
    aGrid.Columns[fillIndex].MinSize := aMinSize;
+   (* BEFORE AutoFillColumns (the interface comment says why the bar is
+      permanent): with a handle, this shows the bar first, so the fill that
+      turning AutoFillColumns on runs measures the width it will keep. *)
+   aGrid.ScrollBars := ssVertical;
    aGrid.AutoFillColumns := True;
 end;
 

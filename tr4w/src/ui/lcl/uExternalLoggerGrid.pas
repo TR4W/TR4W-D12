@@ -268,9 +268,11 @@ begin
    (* THE COLUMNS FILL THE GRID (issue 226 follow-up): Connection takes the
       slack and every other column, the two hidden ones above all, keeps its
       width (FillGridFromColumn says why). The fixed Order column is not a
-      TGridColumn and keeps its width by being fixed. A MinSize of 150 leaves
-      the designed page (Connection 216 px, 199 with a vertical scrollbar)
-      inside it. *)
+      TGridColumn and keeps its width by being fixed. The vertical scrollbar
+      is PERMANENT (FillGridFromColumn sets it and says why), so the client
+      width never changes with the number of loggers; a short list shows the
+      bar disabled. A MinSize of 150 leaves the designed page (Connection
+      199 px beside the bar) inside it. *)
    FillGridFromColumn(FGrid, LOGGER_COL_STATE, 150);
    FGrid.OnColRowMoved := RowMoved;
    FGrid.OnHeaderSized := HeaderSized;
