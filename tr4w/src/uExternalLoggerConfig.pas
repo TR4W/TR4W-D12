@@ -6,11 +6,25 @@ interface
 uses
    Classes, SysUtils, Generics.Collections, uJSON;
 
+const
+   LF_ADDRESS      = 'address';
+   LF_PORT         = 'port';
+   LF_URL          = 'url';
+   LF_ACCOUNT      = 'account';
+   LF_LOGBOOK      = 'logbook';
+   LF_LOGBOOK_NAME = 'logbookName';
+   LF_API_KEY      = 'apiKey';
+   LF_PASSWORD     = 'password';
+
 type
    TExternalLoggerDefinition = class
    public
       Id, Name, ProviderId: string;
       Address, URL, Account, Logbook: string;
+      (* The chosen logbook's NAME, for display only. Logbook holds the id.
+         It is NOT part of DestinationFingerprint: renaming a logbook on the
+         provider's side must not park the backlog. *)
+      LogbookName: string;
       ApiKey, Password: string;
       Port: integer;
       LegacyWRL: boolean;
@@ -20,6 +34,12 @@ type
       procedure Assign(const aOther: TExternalLoggerDefinition);
       function DeliveryId: string;
       function DestinationFingerprint: string;
+      (* The editor and the provider field descriptors address a setting by
+         key (the LF_ constants below). An unknown key reads '' and writes
+         nothing. A secret is read and written like any other value here;
+         the caller decides what to show. *)
+      function FieldText(const aKey: string): string;
+      procedure SetFieldText(const aKey, aValue: string);
       function ToJSON: TJSONObject;
       procedure LoadJSON(const aObject: TJSONObject);
    end;
@@ -94,6 +114,79 @@ begin
       #0 + string(IntToStr(Port)) + #0 + Account + #0 + Logbook)));
 end;
 
+function TExternalLoggerDefinition.FieldText(const aKey: string): string;
+begin
+   Result := '';
+   if aKey = LF_ADDRESS then
+      begin
+      Result := Address;
+      end
+   else if aKey = LF_PORT then
+      begin
+      Result := string(IntToStr(Port));
+      end
+   else if aKey = LF_URL then
+      begin
+      Result := URL;
+      end
+   else if aKey = LF_ACCOUNT then
+      begin
+      Result := Account;
+      end
+   else if aKey = LF_LOGBOOK then
+      begin
+      Result := Logbook;
+      end
+   else if aKey = LF_LOGBOOK_NAME then
+      begin
+      Result := LogbookName;
+      end
+   else if aKey = LF_API_KEY then
+      begin
+      Result := ApiKey;
+      end
+   else if aKey = LF_PASSWORD then
+      begin
+      Result := Password;
+      end;
+end;
+
+procedure TExternalLoggerDefinition.SetFieldText(const aKey, aValue: string);
+begin
+   if aKey = LF_ADDRESS then
+      begin
+      Address := aValue;
+      end
+   else if aKey = LF_PORT then
+      begin
+      Port := StrToIntDef(AnsiString(aValue), 0);
+      end
+   else if aKey = LF_URL then
+      begin
+      URL := aValue;
+      end
+   else if aKey = LF_ACCOUNT then
+      begin
+      Account := aValue;
+      end
+   else if aKey = LF_LOGBOOK then
+      begin
+      Logbook := aValue;
+      end
+   else if aKey = LF_LOGBOOK_NAME then
+      begin
+      LogbookName := aValue;
+      end
+   else if aKey = LF_API_KEY then
+      begin
+      ApiKey := aValue;
+      end
+   else if aKey = LF_PASSWORD then
+      begin
+      Password := aValue;
+      end;
+end;
+
 procedure TExternalLoggerDefinition.Assign(const aOther: TExternalLoggerDefinition);
 begin
    Id := aOther.Id;
@@ -104,6 +197,7 @@ begin
    URL := aOther.URL;
    Account := aOther.Account;
    Logbook := aOther.Logbook;
+   LogbookName := aOther.LogbookName;
    ApiKey := aOther.ApiKey;
    Password := aOther.Password;
    LegacyWRL := aOther.LegacyWRL;
@@ -123,6 +217,12 @@ begin
    Result.AddPair('url', URL);
    Result.AddPair('account', Account);
    Result.AddPair('logbook', Logbook);
+   if LogbookName <> '' then
+      begin
+      (* Written only when known, so a definition that never had a name
+         round-trips to the JSON it was loaded from. *)
+      Result.AddPair('logbookName', LogbookName);
+      end;
    Result.AddPair('legacyWRL', TJSONBool.Create(LegacyWRL));
    if (ApiKey <> '') or ApiKeyProtected then
       begin
@@ -154,6 +254,7 @@ begin
    URL := JSONGetStr(aObject, 'url', '');
    Account := JSONGetStr(aObject, 'account', '');
    Logbook := JSONGetStr(aObject, 'logbook', '');
+   LogbookName := JSONGetStr(aObject, 'logbookName', '');
    LegacyWRL := (aObject.GetValue('legacyWRL') <> nil) and
       aObject.GetValue('legacyWRL').AsBoolean;
    ApiKey := ReadProtectedPassword(aObject, 'apiKey', SecretName(Id, 'ApiKey'));

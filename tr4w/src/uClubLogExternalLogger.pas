@@ -22,7 +22,8 @@ type
       constructor Create(const aDefinition: TExternalLoggerDefinition; aComputerId: AnsiChar);
    end;
 implementation
-uses PostUnit, uClubLogClient, uExternalLoggerRegistry, uExternalLoggerService;
+uses PostUnit, uClubLogClient, uExternalLoggerRegistry, uExternalLoggerService,
+   uAppStrings;
 constructor TClubLogWorker.Create(const aFileName, aLoggerId, aCall,
    aApiKey: string);
 begin
@@ -55,7 +56,12 @@ function CreateClubLog(const aDefinition: TExternalLoggerDefinition;
 begin
    Result := TClubLogExternalLogger.Create(aDefinition, aComputerId);
 end;
+(* The destination callsign is stored in the definition's Logbook. *)
+procedure DeclareClubLogFields(const aFields: TLoggerFieldList);
+begin
+   aFields.AddText(LF_LOGBOOK, SLoggerFieldClubLogCall, True);
+   aFields.AddSecret(LF_API_KEY, SLoggerFieldClubLogToken, False);
+end;
 initialization
-   RegisterExternalLogger('CLUBLOG', 'Club Log', CreateClubLog,
-      [lcfLogbook, lcfApiKey]);
+   RegisterExternalLogger('CLUBLOG', 'Club Log', CreateClubLog, DeclareClubLogFields);
 end.

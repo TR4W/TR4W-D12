@@ -1,7 +1,8 @@
 unit uWRLExternalLogger;
 {$I tr4w.inc}
 interface
-uses uLogDatabase, VC, uDurableExternalLogger, uExternalDeliveryWorker, uQsoMyFacts;
+uses uLogDatabase, VC, uDurableExternalLogger, uExternalDeliveryWorker, uQsoMyFacts,
+   uExternalLoggerConfig, uExternalLoggerRegistry;
 type
    TWRLExternalLogger = class(TDurableExternalLogger)
    private
@@ -18,8 +19,18 @@ type
                          aComputerId: AnsiChar; aEnabled: boolean;
                          const aLoggerId: string = 'WRL');
    end;
+(* Reads the key's account and its logbooks. Worker-thread safe (see
+   TLoggerChoiceLoader); a public name so a test can run it against a fake
+   transport. *)
+function LoadWRLLogbookChoices(const aWork: TExternalLoggerDefinition;
+   const aChoices: TLoggerChoices): string;
+var
+   (* Attached by uWRLSetupForm. nil in a program without the LCL dialog,
+      in which case the editor simply shows no setup button. *)
+   WRLSetupAction: TLoggerSetupAction;
 implementation
-uses uExternalDelivery, uExternalLoggerRegistry, uExternalLoggerConfig, uExternalLoggerService, uWRLWorker, uWRLContact, PostUnit;
+uses uExternalDelivery, uExternalLoggerService, uWRLWorker, uWRLContact, PostUnit,
+   uWRLClient, uAppStrings;
 constructor TWRLExternalLogger.Create(const aAccount, aLogbook, aApiKey: string;
    aComputerId: AnsiChar; aEnabled: boolean; const aLoggerId: string);
 begin
@@ -69,7 +80,52 @@ begin
    service.ImportLegacyWRL := aDefinition.LegacyWRL;
    Result := service;
 end;
+function LoadWRLLogbookChoices(const aWork: TExternalLoggerDefinition;
+   const aChoices: TLoggerChoices): string;
+var
+   client: TWRLClient;
+   books: TWRLLogbookList;
+   account, code: string;
+   i: integer;
+begin
+   Result := '';
+   client := TWRLClient.Create(aWork.ApiKey);
+   books := TWRLLogbookList.Create(True);
+   try
+      if not WRLReadAccountId(client, account, code) then
+         begin
+         Result := code;
+         Exit;
+         end;
+      if not WRLReadLogbooks(client, books, code) then
+         begin
+         Result := code;
+         Exit;
+         end;
+      (* The account id is the key's own uid: derived here, never typed. *)
+      aWork.Account := account;
+      for i := 0 to books.Count - 1 do
+         begin
+         aChoices.Add(books[i].Id, books[i].Name);
+         end;
+   finally
+      books.Free;
+      client.Free;
+   end;
+end;
+procedure DeclareWRLFields(const aFields: TLoggerFieldList);
+begin
+   aFields.AddSecret(LF_API_KEY, SLoggerFieldWRLKey, False);
+   aFields.AddChoice(LF_LOGBOOK, LF_LOGBOOK_NAME, SLoggerFieldWRLLogbook,
+      LoadWRLLogbookChoices);
+   (* The id of the account and of the logbook are never fields. The dialog
+      is the LCL layer's; it attaches itself to WRLSetupAction. *)
+   if Assigned(WRLSetupAction) then
+      begin
+      aFields.SetupCaption := SWRLSetup;
+      aFields.Setup := WRLSetupAction;
+      end;
+end;
 initialization
-   RegisterExternalLogger('WRL', 'World Radio League', CreateWRL,
-      [lcfAccount, lcfLogbook, lcfApiKey]);
+   RegisterExternalLogger('WRL', 'World Radio League', CreateWRL, DeclareWRLFields);
 end.

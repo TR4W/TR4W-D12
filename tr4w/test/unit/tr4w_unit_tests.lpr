@@ -611,6 +611,7 @@ uses
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
    uTestExternalLoggers in 'uTestExternalLoggers.pas',
    uTestExternalLoggerGrid in 'uTestExternalLoggerGrid.pas',
+   uTestExternalLoggerFields in 'uTestExternalLoggerFields.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -1108,6 +1109,7 @@ begin
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));
+   RegisterSuite(TExternalLoggerFieldsTests.Create('ExternalLoggerFields'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));

@@ -68,7 +68,8 @@ implementation
 
 Uses
    uExternalLoggerRegistry, uExternalLoggerConfig, uExternalLoggerService,
-   uADIF,            // ResolveADIFModeSubmode
+   uAppStrings,
+   uADIF,          // ResolveADIFModeSubmode
    uSettingsModel,   // Settings.My.Call
    MainUnit,
    uContestRegistry; // ContestIdentity -- the contest's ADIF id
@@ -579,6 +580,11 @@ begin
    service.loggerID := aDefinition.Name;
    Result := service;
 end;
+procedure DeclareDXKeeperFields(const aFields: TLoggerFieldList);
+begin
+   aFields.AddText(LF_ADDRESS, SLoggerFieldHost, True);
+   aFields.AddPort(LF_PORT, SLoggerFieldPort);
+end;
 initialization
-   RegisterExternalLogger('DXKEEPER', 'DXKeeper', CreateDXKeeper, [lcfAddress, lcfPort]);
+   RegisterExternalLogger('DXKEEPER', 'DXKeeper', CreateDXKeeper, DeclareDXKeeperFields);
 end.

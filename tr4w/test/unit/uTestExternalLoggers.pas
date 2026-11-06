@@ -239,12 +239,12 @@ begin
       legacy.Free;
       config.Free;
    end;
-   BeginTest('native logger editor streams its fields and protects both credentials');
+   BeginTest('native logger editor streams its provider list; its rows are pinned in uTestExternalLoggerFields');
    form := TExternalLoggersForm.Create(nil);
    try
       CheckTrue(form.cbProvider.Items.IndexOf('CLUBLOG') >= 0);
-      CheckTrue(form.edtPassword.PasswordChar <> #0);
-      CheckTrue(form.edtApiKey.PasswordChar <> #0);
+      CheckTrue(form.cbProvider.Items.IndexOf('WRL') >= 0);
+      CheckTrue(form.cbProvider.Items.IndexOf('DXKEEPER') >= 0);
    finally
       form.Free;
    end;

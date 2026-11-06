@@ -9125,3 +9125,73 @@ msgstr ""
 msgid "The log could not be read"
 msgstr ""
 
+#: uappstrings.sloggerfieldhost
+#, fuzzy
+msgid "Host / IP address"
+msgstr ""
+
+#: uappstrings.sloggerfieldport
+#, fuzzy
+msgid "Port"
+msgstr ""
+
+#: uappstrings.sloggerfieldclublogcall
+#, fuzzy
+msgid "Club Log callsign"
+msgstr ""
+
+#: uappstrings.sloggerfieldclublogtoken
+#, fuzzy
+msgid "Club Log API token"
+msgstr ""
+
+#: uappstrings.sloggerfieldwrlkey
+#, fuzzy
+msgid "WRL API key"
+msgstr ""
+
+#: uappstrings.sloggerfieldwrllogbook
+#, fuzzy
+msgid "Logbook"
+msgstr ""
+
+#: uappstrings.sloggerfieldrequired
+#, fuzzy
+msgid "Enter %s"
+msgstr ""
+
+#: uappstrings.sloggerchoicerequired
+#, fuzzy
+msgid "Choose %s from the list"
+msgstr ""
+
+#: uappstrings.sloggerchoiceneedskey
+#, fuzzy
+msgid "Enter the API key and load the list before choosing %s"
+msgstr ""
+
+#: uappstrings.sloggerportrange
+#, fuzzy
+msgid "External logger port must be between 1 and 65535"
+msgstr ""
+
+#: uappstrings.sloggerchoicerefresh
+#, fuzzy
+msgid "Refresh"
+msgstr ""
+
+#: uappstrings.sloggerchoiceloading
+#, fuzzy
+msgid "Loading..."
+msgstr ""
+
+#: uappstrings.sloggerchoicefailed
+#, fuzzy
+msgid "The list could not be loaded: %s. The saved choice is kept."
+msgstr ""
+
+#: uappstrings.sloggerchoicesaved
+#, fuzzy
+msgid "Saved choice (refresh to see its name)"
+msgstr ""
+

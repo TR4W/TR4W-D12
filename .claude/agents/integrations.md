@@ -201,6 +201,26 @@ doc). The single-definition editor is `uExternalLoggersForm`; the shared OK chec
 `ExternalLoggerConfigAcceptable`. The real drag, the popup and the modal editor are
 bench-only (BENCH_QUEUE).
 
+**A PROVIDER DECLARES ITS EDITOR ROWS; THE EDITOR NAMES NO PROVIDER (issue 227,
+2026-11-06).** The `lcf*` flag set is gone. `RegisterExternalLogger(id, name, ctor,
+declarer)`: the declarer fills a `TLoggerFieldList` (`AddText/AddPort/AddSecret/
+AddChoice`), built afresh on every `CreateFields` because captions are resourcestrings
+(a copy made at registration is never translated). `ExternalLoggerDefinitionError`
+reads the same list: required text, port range, and a choice needs its value AND
+`Account`; a secret is never required (a locked vault leaves it empty and the logger
+must still start). A registration is a class owned by the registry. Facts that bite:
+**WRL's account id and logbook id are never fields.** The logbook is a CHOICE
+(`LF_LOGBOOK` with `LF_LOGBOOK_NAME` beside it); the loader (`LoadWRLLogbookChoices`,
+over `uWRLClient.WRLReadAccountId/WRLReadLogbooks`, shared with the setup dialog) runs
+on a worker thread on a private copy of the definition and derives `Account` from the
+key's uid. **The editor writes that account only when the operator picks or the key
+changes** -- a hand-typed or migrated account is part of `DestinationFingerprint`, so
+refreshing a list must not move the queue. `LogbookName` is display only and OUT of the
+fingerprint (pinned with a literal `DeliveryId`). The WRL setup dialog is attached
+through `WRLSetupAction` (assigned in `uWRLSetupForm`'s initialization) so the
+non-UI provider unit never names an LCL form. A provider declaring more than
+`EXTERNAL_LOGGER_MAX_FIELDS` rows fails a test. Pinned in `uTestExternalLoggerFields`.
+
 **Only the reading thread may call Indy's `Connected`** (2026-10-25, after the
 network-radio hang a4866344): it does a select plus a BLOCKING recv, so from any other
 thread it can hang for ever or steal the reader's bytes. A bare `Disconnect` is

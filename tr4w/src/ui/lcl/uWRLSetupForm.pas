@@ -4,27 +4,27 @@ unit uWRLSetupForm;
 interface
 
 function ConfigureWRL(var aApiKey, aAccountId, aLogbookId: string): boolean;
+(* The same dialog, also returning the chosen logbook's NAME. *)
+function ConfigureWRLLogbook(var aApiKey, aAccountId, aLogbookId,
+   aLogbookName: string): boolean;
 
 implementation
 
 uses
    SysUtils, Classes, SyncObjs, Forms, Controls, StdCtrls, ExtCtrls,
-   fpjson, uJSON, uWRLClient, uExternalDelivery, uAppStrings, uPasswordReveal;
+   uWRLClient, uExternalDelivery, uAppStrings, uPasswordReveal,
+   uExternalLoggerConfig, uWRLExternalLogger;
 
 type
-   TWRLBook = record
-      Id, Name: string;
-   end;
-   TWRLBooks = array of TWRLBook;
-
    TWRLSetupTask = class(TThread)
    private
       FKey, FNewName: string;
+      function StopRequested: boolean;
    protected
       procedure Execute; override;
    public
       Done: TEvent;
-      Books: TWRLBooks;
+      Books: TWRLLogbookList;
       AccountId, CreatedId, ErrorCode: string;
       Uncertain: boolean;
       constructor Create(const aKey, aNewName: string);
@@ -48,7 +48,7 @@ type
       procedure CanClose(Sender: TObject; var aCanClose: boolean);
    private
       FTask: TWRLSetupTask;
-      FAccountId, FChosenId: string;
+      FAccountId, FChosenId, FChosenName: string;
       FBookIds: array of string;
       FCancelRequested: boolean;
       FQuiet: boolean;
@@ -68,6 +68,7 @@ begin
    inherited Create(True);
    FKey := aKey;
    FNewName := aNewName;
+   Books := TWRLLogbookList.Create(True);
    Done := TEvent.Create(nil, True, False, '');
 end;
 
@@ -80,40 +81,26 @@ begin
       end;
    inherited Destroy;
    Done.Free;
+   Books.Free;
+end;
+
+function TWRLSetupTask.StopRequested: boolean;
+begin
+   Result := Terminated;
 end;
 
 procedure TWRLSetupTask.Execute;
 var
    client: TWRLClient;
    answer: TWRLResult;
-   data, item: TJSONData;
-   cursor: string;
-   i, n, pages: integer;
    creating: boolean;
 begin
    creating := False;
    client := TWRLClient.Create(FKey);
    try
       try
-         answer := client.Identity;
-         if answer.Outcome <> doConfirmed then
+         if not WRLReadAccountId(client, AccountId, ErrorCode) then
             begin
-            ErrorCode := answer.ErrorCode;
-            Exit;
-            end;
-         data := GetJSON(UTF8Encode(answer.DataJSON));
-         try
-            if data.JSONType <> jtObject then
-               begin
-               raise EConvertError.Create('Expected account identity');
-               end;
-            AccountId := TJSONObject(data).Get('uid', UnicodeString(''));
-         finally
-            data.Free;
-         end;
-         if AccountId = '' then
-            begin
-            ErrorCode := 'MISSING_ACCOUNT_ID';
             Exit;
             end;
          if Terminated then
@@ -133,52 +120,7 @@ begin
                end;
             CreatedId := answer.RemoteId;
             end;
-         cursor := '';
-         pages := 0;
-         repeat
-            if Terminated then
-               begin
-               Exit;
-               end;
-            answer := client.Logbooks(cursor);
-            if answer.Outcome <> doConfirmed then
-               begin
-               ErrorCode := answer.ErrorCode;
-               Exit;
-               end;
-            data := GetJSON(UTF8Encode(answer.DataJSON));
-            try
-               if data.JSONType <> jtArray then
-                  begin
-                  raise EConvertError.Create('Expected logbooks');
-                  end;
-               for i := 0 to data.Count - 1 do
-                  begin
-                  item := data.Items[i];
-                  if item.JSONType <> jtObject then
-                     begin
-                     raise EConvertError.Create('Expected logbook');
-                     end;
-                  if TJSONObject(item).Get('isLocked', False) then
-                     begin
-                     Continue;
-                     end;
-                  n := Length(Books);
-                  SetLength(Books, n + 1);
-                  Books[n].Id := TJSONObject(item).Get('id', UnicodeString(''));
-                  Books[n].Name := TJSONObject(item).Get('name', UnicodeString(''));
-                  end;
-            finally
-               data.Free;
-            end;
-            Inc(pages);
-            if ((answer.NextCursor = cursor) and (cursor <> '')) or (pages > 100) then
-               begin
-               ErrorCode := 'INVALID_PAGINATION';
-               Exit;
-               end;
-            cursor := answer.NextCursor;
-         until cursor = '';
+         WRLReadLogbooks(client, Books, ErrorCode, StopRequested);
       except
          on E: Exception do
             begin
@@ -283,6 +225,7 @@ begin
    if FBooks.ItemIndex >= 0 then
       begin
       FChosenId := FBookIds[FBooks.ItemIndex];
+      FChosenName := UTF8Decode(FBooks.Items[FBooks.ItemIndex]);
       ModalResult := mrOK;
       end;
 end;
@@ -317,9 +260,9 @@ begin
       begin
       FAccountId := FTask.AccountId;
       FBooks.Items.Clear;
-      SetLength(FBookIds, Length(FTask.Books));
+      SetLength(FBookIds, FTask.Books.Count);
       selected := -1;
-      for i := 0 to High(FTask.Books) do
+      for i := 0 to FTask.Books.Count - 1 do
          begin
          FBooks.Items.Add(UTF8Encode(FTask.Books[i].Name));
          FBookIds[i] := FTask.Books[i].Id;
@@ -353,7 +296,8 @@ begin
       end;
 end;
 
-function ConfigureWRL(var aApiKey, aAccountId, aLogbookId: string): boolean;
+function ConfigureWRLLogbook(var aApiKey, aAccountId, aLogbookId,
+   aLogbookName: string): boolean;
 var
    dialog: TWRLSetupForm;
 begin
@@ -368,10 +312,43 @@ begin
          aApiKey := Trim(UTF8Decode(dialog.FKey.Text));
          aAccountId := dialog.FAccountId;
          aLogbookId := dialog.FChosenId;
+         aLogbookName := dialog.FChosenName;
          end;
    finally
       dialog.Free;
    end;
 end;
+
+function ConfigureWRL(var aApiKey, aAccountId, aLogbookId: string): boolean;
+var
+   name: string;
+begin
+   (* The old Preferences page has no place for the name. *)
+   name := '';
+   Result := ConfigureWRLLogbook(aApiKey, aAccountId, aLogbookId, name);
+end;
+
+function WRLSetupForDefinition(const aWork: TExternalLoggerDefinition): boolean;
+var
+   key, account, book, name: string;
+begin
+   key := aWork.ApiKey;
+   account := aWork.Account;
+   book := aWork.Logbook;
+   name := aWork.LogbookName;
+   Result := ConfigureWRLLogbook(key, account, book, name);
+   if Result then
+      begin
+      aWork.ApiKey := key;
+      aWork.Account := account;
+      aWork.Logbook := book;
+      aWork.LogbookName := name;
+      end;
+end;
+
+initialization
+   (* The WRL provider is declared without any LCL dependency; the dialog is
+      attached here, by the unit that owns it. *)
+   WRLSetupAction := WRLSetupForDefinition;
 
 end.

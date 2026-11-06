@@ -4,7 +4,8 @@ unit uWRLClient;
 interface
 
 uses
-   SysUtils, uHTTPDownload, uExternalDelivery, uExternalDeliveryClient;
+   SysUtils, Generics.Collections, uHTTPDownload, uExternalDelivery,
+   uExternalDeliveryClient;
 
 type
    TWRLResult = TExternalDeliveryResult;
@@ -24,6 +25,32 @@ type
       function CreateLogbook(const aName: string): TWRLResult;
       function Deliver(const aJob: TDeliveryJob): TWRLResult; override;
    end;
+
+   (* One logbook the account may deliver to. The id is opaque and is never
+      shown to the operator; the name is what they choose by. *)
+   TWRLLogbook = class
+   public
+      Id, Name: string;
+      constructor Create(const aId, aName: string);
+   end;
+
+   TWRLLogbookList = class(TObjectList<TWRLLogbook>)
+   public
+      function IndexOfId(const aId: string): integer;
+   end;
+
+   (* Asked between requests so a caller on a worker thread can stop early.
+      May be nil. *)
+   TWRLStopCheck = function: boolean of object;
+
+(* The two reads the WRL setup dialog and the external logger editor share.
+   Both are synchronous and belong on a worker thread; both return False with
+   a code in aErrorCode ('' on success) and never raise. *)
+function WRLReadAccountId(aClient: TWRLClient; out aAccountId,
+   aErrorCode: string): boolean;
+(* Every page of GET /logbooks, locked logbooks skipped. aBooks is appended to. *)
+function WRLReadLogbooks(aClient: TWRLClient; const aBooks: TWRLLogbookList;
+   out aErrorCode: string; aStop: TWRLStopCheck = nil): boolean;
 
 implementation
 
@@ -356,6 +383,135 @@ begin
    finally
       previous.Free;
       data.Free;
+   end;
+end;
+
+constructor TWRLLogbook.Create(const aId, aName: string);
+begin
+   inherited Create;
+   Id := aId;
+   Name := aName;
+end;
+
+function TWRLLogbookList.IndexOfId(const aId: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to Count - 1 do
+      begin
+      if Items[i].Id = aId then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function WRLReadAccountId(aClient: TWRLClient; out aAccountId,
+   aErrorCode: string): boolean;
+var
+   answer: TWRLResult;
+   data: TJSONData;
+begin
+   Result := False;
+   aAccountId := '';
+   aErrorCode := '';
+   try
+      answer := aClient.Identity;
+      if answer.Outcome <> doConfirmed then
+         begin
+         aErrorCode := answer.ErrorCode;
+         Exit;
+         end;
+      data := GetJSON(UTF8Encode(answer.DataJSON));
+      try
+         if data.JSONType <> jtObject then
+            begin
+            raise EConvertError.Create('Expected account identity');
+            end;
+         aAccountId := TJSONObject(data).Get('uid', UnicodeString(''));
+      finally
+         data.Free;
+      end;
+      if aAccountId = '' then
+         begin
+         aErrorCode := 'MISSING_ACCOUNT_ID';
+         Exit;
+         end;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aAccountId := '';
+         aErrorCode := 'INVALID_RESPONSE';
+         end;
+   end;
+end;
+
+function WRLReadLogbooks(aClient: TWRLClient; const aBooks: TWRLLogbookList;
+   out aErrorCode: string; aStop: TWRLStopCheck): boolean;
+var
+   answer: TWRLResult;
+   data, item: TJSONData;
+   cursor: string;
+   i, pages: integer;
+begin
+   Result := False;
+   aErrorCode := '';
+   cursor := '';
+   pages := 0;
+   try
+      repeat
+         if Assigned(aStop) and aStop() then
+            begin
+            aErrorCode := 'CANCELLED';
+            Exit;
+            end;
+         answer := aClient.Logbooks(cursor);
+         if answer.Outcome <> doConfirmed then
+            begin
+            aErrorCode := answer.ErrorCode;
+            Exit;
+            end;
+         data := GetJSON(UTF8Encode(answer.DataJSON));
+         try
+            if data.JSONType <> jtArray then
+               begin
+               raise EConvertError.Create('Expected logbooks');
+               end;
+            for i := 0 to data.Count - 1 do
+               begin
+               item := data.Items[i];
+               if item.JSONType <> jtObject then
+                  begin
+                  raise EConvertError.Create('Expected logbook');
+                  end;
+               if TJSONObject(item).Get('isLocked', False) then
+                  begin
+                  Continue;
+                  end;
+               aBooks.Add(TWRLLogbook.Create(
+                  TJSONObject(item).Get('id', UnicodeString('')),
+                  TJSONObject(item).Get('name', UnicodeString(''))));
+               end;
+         finally
+            data.Free;
+         end;
+         Inc(pages);
+         if ((answer.NextCursor = cursor) and (cursor <> '')) or (pages > 100) then
+            begin
+            aErrorCode := 'INVALID_PAGINATION';
+            Exit;
+            end;
+         cursor := answer.NextCursor;
+      until cursor = '';
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aErrorCode := 'INVALID_RESPONSE';
+         end;
    end;
 end;
 

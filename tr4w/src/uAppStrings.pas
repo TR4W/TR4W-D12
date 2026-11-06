@@ -855,6 +855,28 @@ resourcestring
    SLogSearchCallHint      = 'Call or part of one';
    SLogSearchLogUnreadable = 'The log could not be read';
 
+   (* THE EXTERNAL LOGGER EDITOR BUILDS ITS ROWS FROM EACH PROVIDER'S OWN
+      DECLARATION (issue 227). Captions of the declared fields, then the
+      messages the editor and the start-up check share. *)
+   SLoggerFieldHost          = 'Host / IP address';
+   SLoggerFieldPort          = 'Port';
+   SLoggerFieldClubLogCall   = 'Club Log callsign';
+   SLoggerFieldClubLogToken  = 'Club Log API token';
+   SLoggerFieldWRLKey        = 'WRL API key';
+   SLoggerFieldWRLLogbook    = 'Logbook';
+   (* %s is a field caption. *)
+   SLoggerFieldRequired      = 'Enter %s';
+   SLoggerChoiceRequired     = 'Choose %s from the list';
+   SLoggerChoiceNeedsKey     = 'Enter the API key and load the list before choosing %s';
+   SLoggerPortRange          = 'External logger port must be between 1 and 65535';
+   SLoggerChoiceRefresh      = 'Refresh';
+   SLoggerChoiceLoading      = 'Loading...';
+   (* %s is a short error code from the provider. *)
+   SLoggerChoiceFailed       = 'The list could not be loaded: %s. The saved choice is kept.';
+   (* Shown for a saved choice whose name was never recorded (a definition
+      saved before the editor kept names). It still works. *)
+   SLoggerChoiceSaved        = 'Saved choice (refresh to see its name)';
+
 implementation
 
 end.

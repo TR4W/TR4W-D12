@@ -4,34 +4,129 @@ unit uExternalLoggersForm;
    (uExternalLoggerGrid, issue 220); this form is opened from there for Add
    and Edit. It works on a private copy of the whole configuration so the
    validation (unique names, shared destinations) sees the other loggers, and
-   hands the copy back only on OK. *)
+   hands the copy back only on OK.
+
+   THE ROWS BELONG TO THE PROVIDER (issue 227). This form does not know what a
+   provider needs: it asks the registry for the provider's field descriptors
+   (uExternalLoggerRegistry) and builds one row for each -- a text box, a
+   masked secret, or a drop-down for a choice. A choice shows NAMES; the id
+   behind a name, and anything the lookup derives (WRL's account id), is kept
+   internally and is never a field. The choices come from the provider's loader
+   on a worker thread, so the form never waits on a network. *)
 {$I ..\..\tr4w.inc}
 interface
-uses Classes, SysUtils, Forms, Controls, StdCtrls, Dialogs, uExternalLoggerConfig;
+uses Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs, SyncObjs,
+   Generics.Collections, uExternalLoggerConfig, uExternalLoggerRegistry;
 type
+   (* One declared field, as built on the form. *)
+   TFieldRow = class
+   public
+      Descriptor: TLoggerFieldDescriptor;
+      Panel: TPanel;
+      CaptionLabel: TLabel;
+      Edit: TEdit;
+      Combo: TComboBox;
+      RefreshButton: TButton;
+      (* A choice: the stored value and the true name behind each combo item.
+         A name is '' when it was never recorded; the item then shows a
+         placeholder. *)
+      Values, Names: TStringList;
+      (* The account the last successful lookup revealed. Written to the
+         definition only when the operator picks from the list. *)
+      DerivedAccount: string;
+      (* The operator picked from the list. *)
+      Touched: boolean;
+      (* The list no longer belongs to the credentials it was loaded with
+         (the key was edited): the stored choice is dropped on Save. *)
+      Cleared: boolean;
+      destructor Destroy; override;
+   end;
+
+   (* Loads one choice field's list off the main thread. It owns a private
+      copy of the definition and never touches the form. *)
+   TChoiceTask = class(TThread)
+   protected
+      procedure Execute; override;
+   public
+      Key: string;
+      Loader: TLoggerChoiceLoader;
+      Work: TExternalLoggerDefinition;
+      Choices: TLoggerChoices;
+      ErrorCode: string;
+      Done: TEvent;
+      (* The rows were rebuilt while this ran: its answer is for rows that
+         no longer exist. *)
+      Stale: boolean;
+      constructor Create(const aKey: string; aLoader: TLoggerChoiceLoader;
+         const aSource: TExternalLoggerDefinition);
+      destructor Destroy; override;
+   end;
+
    TExternalLoggersForm = class(TForm)
    published
-      edtName, edtAddress, edtPort, edtURL, edtAccount, edtLogbook: TEdit;
-      edtApiKey, edtPassword: TEdit;
+      edtName: TEdit;
       cbProvider: TComboBox;
       chkActive: TCheckBox;
-      btnWRL, btnOK, btnCancel: TButton;
-      lblName, lblProvider, lblAddress, lblPort, lblURL, lblAccount: TLabel;
-      lblLogbook, lblApiKey, lblPassword, lblNote: TLabel;
-      lblStatus: TLabel;
+      pnlFields: TPanel;
+      btnSetup, btnOK, btnCancel: TButton;
+      lblName, lblProvider, lblNote: TLabel;
+      lblFieldStatus, lblStatus: TLabel;
+      tmrLoad: TTimer;
       procedure ProviderChanged(Sender: TObject);
-      procedure ConfigureWRLClick(Sender: TObject);
+      procedure SetupClick(Sender: TObject);
       procedure Accept(Sender: TObject);
+      procedure PollLoad(Sender: TObject);
+      procedure EditorCloseQuery(Sender: TObject; var aCanClose: boolean);
    private
       FConfig: TExternalLoggerConfig;
       FDefinition: TExternalLoggerDefinition;
-      FLoading: boolean;
-      procedure Capture;
+      FFields: TLoggerFieldList;
+      FRows: TObjectList<TFieldRow>;
+      FTask: TChoiceTask;
+      FBuilding: integer;
+      FCloseRequested: boolean;
+      FAutoLoadChoices: boolean;
+      procedure ClearCredentials;
+      function BuildRow(const aDescriptor: TLoggerFieldDescriptor;
+         aIndex: integer): TFieldRow;
+      function RowOf(const aSender: TObject): TFieldRow;
+      function RowByKey(const aKey: string): TFieldRow;
+      procedure RowChanged(Sender: TObject);
+      procedure RefreshClick(Sender: TObject);
+      procedure SetChoiceSaved(const aRow: TFieldRow; const aValue, aName: string);
+      procedure ShowChoice(const aRow: TFieldRow);
+      procedure ReadRows(const aTarget: TExternalLoggerDefinition; aFinal: boolean);
+      procedure ApplyWorkToRows(const aWork: TExternalLoggerDefinition);
+      procedure StartLoad(const aRow: TFieldRow);
+      procedure ApplyLoad(const aTask: TChoiceTask);
+      procedure StartAutoLoad;
+      procedure SetBusy;
       procedure ShowDefinition;
    public
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
+      (* Shows aDefinition (which stays owned by Config) and builds its rows. *)
+      procedure BeginEdit(const aDefinition: TExternalLoggerDefinition);
+      (* Reads the rows and the plain controls back into the definition. *)
+      procedure Capture;
+      (* Replaces the rows with those of aFields, taking ownership of it. The
+         provider change uses it with the registry's list; a test uses it with
+         its own. *)
+      procedure RebuildRows(const aFields: TLoggerFieldList);
+      function RowCount: integer;
+      function FieldEdit(const aKey: string): TEdit;
+      function FieldCombo(const aKey: string): TComboBox;
+      function FieldRefreshButton(const aKey: string): TButton;
+      function LoadRunning: boolean;
+      property Config: TExternalLoggerConfig read FConfig;
+      (* Off, a choice list is only loaded by its Refresh button. *)
+      property AutoLoadChoices: boolean read FAutoLoadChoices write FAutoLoadChoices;
    end;
+
+const
+   (* The fields panel holds this many rows; a provider declaring more is a
+      defect found the first time its editor opens. *)
+   EXTERNAL_LOGGER_MAX_FIELDS = 4;
 
 (* Add (aId = '') or edit one definition of aConfig. True when the operator
    accepted; aConfig then holds the change. *)
@@ -44,28 +139,414 @@ function EditExternalLoggerDefinition(const aConfig: TExternalLoggerConfig;
 function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): boolean;
 
 implementation
-uses uExternalLoggerRegistry, uWRLSetupForm, uLCLTranslate, uPasswordReveal,
-   uExternalDelivery, uLogStore;
+uses uLCLTranslate, uPasswordReveal, uAppStrings, uExternalDelivery, uLogStore;
 {$R *.lfm}
+const
+   ROW_HEIGHT = 42;
+   LABEL_WIDTH = 190;
+   EDIT_LEFT = 200;
+   REFRESH_WIDTH = 90;
+
+destructor TFieldRow.Destroy;
+begin
+   Values.Free;
+   Names.Free;
+   Panel.Free;
+   inherited Destroy;
+end;
+
+constructor TChoiceTask.Create(const aKey: string; aLoader: TLoggerChoiceLoader;
+   const aSource: TExternalLoggerDefinition);
+begin
+   inherited Create(True);
+   Key := aKey;
+   Loader := aLoader;
+   Work := TExternalLoggerDefinition.Create;
+   Work.Assign(aSource);
+   Choices := TLoggerChoices.Create;
+   Done := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TChoiceTask.Destroy;
+begin
+   Terminate;
+   if not Suspended then
+      begin
+      WaitFor;
+      end;
+   inherited Destroy;
+   Done.Free;
+   Choices.Free;
+   Work.Free;
+end;
+
+procedure TChoiceTask.Execute;
+begin
+   try
+      try
+         ErrorCode := Loader(Work, Choices);
+      except
+         on E: Exception do
+            begin
+            (* The message may echo the request; only a fixed code leaves. *)
+            ErrorCode := 'INVALID_RESPONSE';
+            end;
+      end;
+   finally
+      Done.SetEvent;
+   end;
+end;
+
 constructor TExternalLoggersForm.Create(aOwner: TComponent);
 var
    i: integer;
 begin
    inherited Create(aOwner);
    FConfig := TExternalLoggerConfig.Create;
+   FRows := TObjectList<TFieldRow>.Create(True);
+   FFields := TLoggerFieldList.Create(True);
+   FAutoLoadChoices := True;
    for i := 0 to ExternalLoggerProviderCount - 1 do
       begin
       cbProvider.Items.Add(AnsiString(ExternalLoggerRegistration(i).Id));
       end;
-   AttachPasswordReveal(edtApiKey);
-   AttachPasswordReveal(edtPassword);
    TranslateForm(Self);
 end;
+
 destructor TExternalLoggersForm.Destroy;
 begin
+   tmrLoad.Enabled := False;
+   FTask.Free;
+   FTask := nil;
+   FRows.Free;
+   FFields.Free;
    FConfig.Free;
    inherited Destroy;
 end;
+
+function TExternalLoggersForm.RowCount: integer;
+begin
+   Result := FRows.Count;
+end;
+
+function TExternalLoggersForm.RowByKey(const aKey: string): TFieldRow;
+var
+   row: TFieldRow;
+begin
+   Result := nil;
+   for row in FRows do
+      begin
+      if row.Descriptor.Key = aKey then
+         begin
+         Result := row;
+         Exit;
+         end;
+      end;
+end;
+
+function TExternalLoggersForm.RowOf(const aSender: TObject): TFieldRow;
+var
+   row: TFieldRow;
+begin
+   Result := nil;
+   for row in FRows do
+      begin
+      if (row.Edit = aSender) or (row.Combo = aSender) or
+         (row.RefreshButton = aSender) then
+         begin
+         Result := row;
+         Exit;
+         end;
+      end;
+end;
+
+function TExternalLoggersForm.FieldEdit(const aKey: string): TEdit;
+var
+   row: TFieldRow;
+begin
+   Result := nil;
+   row := RowByKey(aKey);
+   if row <> nil then
+      begin
+      Result := row.Edit;
+      end;
+end;
+
+function TExternalLoggersForm.FieldCombo(const aKey: string): TComboBox;
+var
+   row: TFieldRow;
+begin
+   Result := nil;
+   row := RowByKey(aKey);
+   if row <> nil then
+      begin
+      Result := row.Combo;
+      end;
+end;
+
+function TExternalLoggersForm.FieldRefreshButton(const aKey: string): TButton;
+var
+   row: TFieldRow;
+begin
+   Result := nil;
+   row := RowByKey(aKey);
+   if row <> nil then
+      begin
+      Result := row.RefreshButton;
+      end;
+end;
+
+function TExternalLoggersForm.LoadRunning: boolean;
+begin
+   Result := FTask <> nil;
+end;
+
+(* A choice shows names. The item for a saved choice whose name was never
+   recorded shows a placeholder, and still carries its value. *)
+procedure TExternalLoggersForm.ShowChoice(const aRow: TFieldRow);
+var
+   i: integer;
+   text: string;
+begin
+   aRow.Combo.Items.Clear;
+   for i := 0 to aRow.Values.Count - 1 do
+      begin
+      text := string(aRow.Names[i]);
+      if text = '' then
+         begin
+         aRow.Combo.Items.Add(UTF8Encode(SLoggerChoiceSaved));
+         end
+      else
+         begin
+         aRow.Combo.Items.Add(UTF8Encode(text));
+         end;
+      end;
+end;
+
+procedure TExternalLoggersForm.SetChoiceSaved(const aRow: TFieldRow;
+   const aValue, aName: string);
+begin
+   aRow.Values.Clear;
+   aRow.Names.Clear;
+   if aValue <> '' then
+      begin
+      aRow.Values.Add(AnsiString(aValue));
+      aRow.Names.Add(AnsiString(aName));
+      end;
+   ShowChoice(aRow);
+   if aValue <> '' then
+      begin
+      aRow.Combo.ItemIndex := 0;
+      end
+   else
+      begin
+      aRow.Combo.ItemIndex := -1;
+      end;
+end;
+
+function TExternalLoggersForm.BuildRow(const aDescriptor: TLoggerFieldDescriptor;
+   aIndex: integer): TFieldRow;
+var
+   rowWidth: integer;
+begin
+   rowWidth := pnlFields.ClientWidth;
+   Result := TFieldRow.Create;
+   Result.Descriptor := aDescriptor;
+   Result.Values := TStringList.Create;
+   Result.Names := TStringList.Create;
+   Result.Panel := TPanel.Create(pnlFields);
+   Result.Panel.Parent := pnlFields;
+   Result.Panel.BevelOuter := bvNone;
+   Result.Panel.Caption := '';
+   Result.Panel.Height := ROW_HEIGHT;
+   Result.Panel.Top := aIndex * ROW_HEIGHT;
+   Result.Panel.Align := alTop;
+   Result.CaptionLabel := TLabel.Create(Result.Panel);
+   Result.CaptionLabel.Parent := Result.Panel;
+   Result.CaptionLabel.AutoSize := False;
+   Result.CaptionLabel.Left := 0;
+   Result.CaptionLabel.Top := 6;
+   Result.CaptionLabel.Width := LABEL_WIDTH;
+   Result.CaptionLabel.Caption := UTF8Encode(aDescriptor.Caption);
+   if aDescriptor.Kind = lfkChoice then
+      begin
+      Result.Combo := TComboBox.Create(Result.Panel);
+      Result.Combo.Parent := Result.Panel;
+      Result.Combo.Style := csDropDownList;
+      Result.Combo.Left := EDIT_LEFT;
+      Result.Combo.Top := 2;
+      Result.Combo.Width := rowWidth - EDIT_LEFT - REFRESH_WIDTH - 10;
+      Result.Combo.Anchors := [akTop, akLeft, akRight];
+      Result.Combo.OnChange := RowChanged;
+      Result.RefreshButton := TButton.Create(Result.Panel);
+      Result.RefreshButton.Parent := Result.Panel;
+      Result.RefreshButton.Left := rowWidth - REFRESH_WIDTH;
+      Result.RefreshButton.Top := 2;
+      Result.RefreshButton.Width := REFRESH_WIDTH;
+      Result.RefreshButton.Anchors := [akTop, akRight];
+      Result.RefreshButton.Caption := UTF8Encode(SLoggerChoiceRefresh);
+      Result.RefreshButton.OnClick := RefreshClick;
+      SetChoiceSaved(Result, FDefinition.FieldText(aDescriptor.Key),
+         FDefinition.FieldText(aDescriptor.DisplayKey));
+      end
+   else
+      begin
+      Result.Edit := TEdit.Create(Result.Panel);
+      Result.Edit.Parent := Result.Panel;
+      Result.Edit.Left := EDIT_LEFT;
+      Result.Edit.Top := 2;
+      Result.Edit.Width := rowWidth - EDIT_LEFT;
+      Result.Edit.Anchors := [akTop, akLeft, akRight];
+      Result.Edit.Text := UTF8Encode(FDefinition.FieldText(aDescriptor.Key));
+      if aDescriptor.Kind = lfkSecret then
+         begin
+         Result.Edit.PasswordChar := '*';
+         (* Before the reveal toggle: it chains the handler it finds. *)
+         Result.Edit.OnChange := RowChanged;
+         AttachPasswordReveal(Result.Edit);
+         end;
+      end;
+end;
+
+procedure TExternalLoggersForm.RebuildRows(const aFields: TLoggerFieldList);
+var
+   i: integer;
+begin
+   if aFields.Count > EXTERNAL_LOGGER_MAX_FIELDS then
+      begin
+      aFields.Free;
+      raise EInvalidOperation.Create('An external logger declares too many fields');
+      end;
+   Inc(FBuilding);
+   try
+      (* A list being loaded belongs to rows that are about to go. *)
+      if FTask <> nil then
+         begin
+         FTask.Stale := True;
+         end;
+      FRows.Clear;
+      FFields.Free;
+      FFields := aFields;
+      for i := 0 to FFields.Count - 1 do
+         begin
+         FRows.Add(BuildRow(FFields[i], i));
+         end;
+      btnSetup.Visible := Assigned(FFields.Setup);
+      btnSetup.Caption := UTF8Encode(FFields.SetupCaption);
+      lblFieldStatus.Caption := '';
+   finally
+      Dec(FBuilding);
+   end;
+   SetBusy;
+end;
+
+(* A secret edited by the operator invalidates every choice list: the list
+   belongs to the credentials it was loaded with, and so does the account
+   derived from it. *)
+procedure TExternalLoggersForm.RowChanged(Sender: TObject);
+var
+   row, other: TFieldRow;
+begin
+   if FBuilding > 0 then
+      begin
+      Exit;
+      end;
+   row := RowOf(Sender);
+   if row = nil then
+      begin
+      Exit;
+      end;
+   if row.Descriptor.Kind = lfkChoice then
+      begin
+      row.Touched := True;
+      Exit;
+      end;
+   if row.Descriptor.Kind = lfkSecret then
+      begin
+      for other in FRows do
+         begin
+         if other.Descriptor.Kind = lfkChoice then
+            begin
+            other.Values.Clear;
+            other.Names.Clear;
+            ShowChoice(other);
+            other.Combo.ItemIndex := -1;
+            other.DerivedAccount := '';
+            other.Touched := False;
+            other.Cleared := True;
+            end;
+         end;
+      end;
+end;
+
+procedure TExternalLoggersForm.RefreshClick(Sender: TObject);
+begin
+   StartLoad(RowOf(Sender));
+end;
+
+procedure TExternalLoggersForm.SetBusy;
+var
+   row: TFieldRow;
+begin
+   for row in FRows do
+      begin
+      if row.RefreshButton <> nil then
+         begin
+         row.RefreshButton.Enabled := FTask = nil;
+         end;
+      end;
+   tmrLoad.Enabled := FTask <> nil;
+end;
+
+(* Writes the rows into aTarget. aFinal is the operator accepting. Only that
+   case puts a derived account into the definition after a pick, and only that
+   case treats a replaced secret as the end of a legacy vault reference.
+   Opening, showing and saving without touching a row leaves every stored
+   value as it was. *)
+procedure TExternalLoggersForm.ReadRows(const aTarget: TExternalLoggerDefinition;
+   aFinal: boolean);
+var
+   row: TFieldRow;
+   text: string;
+   index: integer;
+begin
+   for row in FRows do
+      begin
+      if row.Descriptor.Kind = lfkChoice then
+         begin
+         index := row.Combo.ItemIndex;
+         if index >= 0 then
+            begin
+            aTarget.SetFieldText(row.Descriptor.Key, string(row.Values[index]));
+            aTarget.SetFieldText(row.Descriptor.DisplayKey, string(row.Names[index]));
+            if aFinal and row.Touched and (row.DerivedAccount <> '') then
+               begin
+               aTarget.Account := row.DerivedAccount;
+               end;
+            end
+         else if row.Cleared then
+            begin
+            aTarget.SetFieldText(row.Descriptor.Key, '');
+            aTarget.SetFieldText(row.Descriptor.DisplayKey, '');
+            aTarget.Account := '';
+            end;
+         end
+      else
+         begin
+         text := UTF8Decode(row.Edit.Text);
+         if row.Descriptor.Kind <> lfkSecret then
+            begin
+            text := Trim(text);
+            end
+         else if aFinal and (aTarget.FieldText(row.Descriptor.Key) <> text) then
+            begin
+            aTarget.LegacySecretPending := False;
+            end;
+         aTarget.SetFieldText(row.Descriptor.Key, text);
+         end;
+      end;
+end;
+
 procedure TExternalLoggersForm.Capture;
 begin
    if FDefinition = nil then
@@ -74,116 +555,283 @@ begin
       end;
    FDefinition.Name := Trim(UTF8Decode(edtName.Text));
    FDefinition.ProviderId := UTF8Decode(cbProvider.Text);
-   FDefinition.Address := Trim(UTF8Decode(edtAddress.Text));
-   FDefinition.Port := StrToIntDef(edtPort.Text, 0);
-   FDefinition.URL := Trim(UTF8Decode(edtURL.Text));
-   FDefinition.Account := Trim(UTF8Decode(edtAccount.Text));
-   FDefinition.Logbook := Trim(UTF8Decode(edtLogbook.Text));
-   if FDefinition.ApiKey <> UTF8Decode(edtApiKey.Text) then
-      begin
-      FDefinition.LegacySecretPending := False;
-      end;
-   FDefinition.ApiKey := UTF8Decode(edtApiKey.Text);
-   FDefinition.Password := UTF8Decode(edtPassword.Text);
+   ReadRows(FDefinition, True);
    FConfig.SetActive(FDefinition.Id, chkActive.Checked);
 end;
+
+procedure TExternalLoggersForm.StartLoad(const aRow: TFieldRow);
+var
+   work: TExternalLoggerDefinition;
+begin
+   if (aRow = nil) or (FTask <> nil) or
+      not Assigned(aRow.Descriptor.Loader) then
+      begin
+      Exit;
+      end;
+   (* The task copies the definition WITH the rows' present text, so a key
+      typed a moment ago is the one used. *)
+   work := TExternalLoggerDefinition.Create;
+   try
+      work.Assign(FDefinition);
+      ReadRows(work, False);
+      FTask := TChoiceTask.Create(aRow.Descriptor.Key, aRow.Descriptor.Loader, work);
+   finally
+      work.Free;
+   end;
+   lblFieldStatus.Caption := UTF8Encode(SLoggerChoiceLoading);
+   FTask.Start;
+   SetBusy;
+end;
+
+(* The saved entry stays selectable, whatever the answer was: without a
+   network it is the only entry, and a logbook the provider no longer lists
+   is not silently dropped from the definition. *)
+procedure TExternalLoggersForm.ApplyLoad(const aTask: TChoiceTask);
+var
+   row: TFieldRow;
+   i, index: integer;
+   current, currentName: string;
+begin
+   row := RowByKey(aTask.Key);
+   if row = nil then
+      begin
+      Exit;
+      end;
+   if aTask.ErrorCode <> '' then
+      begin
+      lblFieldStatus.Caption := UTF8Encode(
+         UnicodeFormat(SLoggerChoiceFailed, [aTask.ErrorCode]));
+      Exit;
+      end;
+   lblFieldStatus.Caption := '';
+   current := '';
+   currentName := '';
+   if row.Combo.ItemIndex >= 0 then
+      begin
+      current := string(row.Values[row.Combo.ItemIndex]);
+      currentName := string(row.Names[row.Combo.ItemIndex]);
+      end;
+   Inc(FBuilding);
+   try
+      row.Values.Clear;
+      row.Names.Clear;
+      if (current <> '') and (aTask.Choices.IndexOfValue(current) < 0) then
+         begin
+         row.Values.Add(AnsiString(current));
+         row.Names.Add(AnsiString(currentName));
+         end;
+      for i := 0 to aTask.Choices.Count - 1 do
+         begin
+         row.Values.Add(AnsiString(aTask.Choices.Value[i]));
+         row.Names.Add(AnsiString(aTask.Choices.Display[i]));
+         end;
+      ShowChoice(row);
+      index := -1;
+      if current <> '' then
+         begin
+         index := row.Values.IndexOf(AnsiString(current));
+         end;
+      row.Combo.ItemIndex := index;
+      row.DerivedAccount := aTask.Work.Account;
+      row.Cleared := False;
+   finally
+      Dec(FBuilding);
+   end;
+end;
+
+procedure TExternalLoggersForm.PollLoad(Sender: TObject);
+var
+   task: TChoiceTask;
+begin
+   if (FTask = nil) or (FTask.Done.WaitFor(0) <> wrSignaled) then
+      begin
+      Exit;
+      end;
+   task := FTask;
+   FTask := nil;
+   try
+      if not task.Stale then
+         begin
+         ApplyLoad(task);
+         end;
+   finally
+      task.Free;
+   end;
+   SetBusy;
+   if FCloseRequested then
+      begin
+      ModalResult := mrCancel;
+      end;
+end;
+
+procedure TExternalLoggersForm.EditorCloseQuery(Sender: TObject;
+   var aCanClose: boolean);
+begin
+   aCanClose := FTask = nil;
+   if FTask <> nil then
+      begin
+      FCloseRequested := True;
+      FTask.Terminate;
+      end;
+end;
+
+(* The list is loaded for a definition that already has credentials, so the
+   operator sees names at once instead of having to ask. *)
+procedure TExternalLoggersForm.StartAutoLoad;
+var
+   row, secret: TFieldRow;
+   hasSecret: boolean;
+begin
+   if not FAutoLoadChoices then
+      begin
+      Exit;
+      end;
+   hasSecret := False;
+   for secret in FRows do
+      begin
+      if (secret.Descriptor.Kind = lfkSecret) and (secret.Edit.Text <> '') then
+         begin
+         hasSecret := True;
+         end;
+      end;
+   if not hasSecret then
+      begin
+      Exit;
+      end;
+   for row in FRows do
+      begin
+      if row.Descriptor.Kind = lfkChoice then
+         begin
+         StartLoad(row);
+         Exit;
+         end;
+      end;
+end;
+
+procedure TExternalLoggersForm.ClearCredentials;
+begin
+   FDefinition.ApiKey := '';
+   FDefinition.Password := '';
+   FDefinition.URL := '';
+   FDefinition.Account := '';
+   FDefinition.Logbook := '';
+   FDefinition.LogbookName := '';
+   FDefinition.LegacySecretPending := False;
+   FDefinition.LegacyWRL := False;
+end;
+
+procedure TExternalLoggersForm.BeginEdit(const aDefinition: TExternalLoggerDefinition);
+begin
+   FDefinition := aDefinition;
+   ShowDefinition;
+end;
+
 procedure TExternalLoggersForm.ShowDefinition;
 var
    counts: TDeliveryCounts;
 begin
-   FLoading := True;
+   Inc(FBuilding);
    try
       edtName.Text := UTF8Encode(FDefinition.Name);
       cbProvider.ItemIndex := cbProvider.Items.IndexOf(AnsiString(FDefinition.ProviderId));
-      edtAddress.Text := UTF8Encode(FDefinition.Address);
-      edtPort.Text := AnsiString(IntToStr(FDefinition.Port));
-      edtURL.Text := UTF8Encode(FDefinition.URL);
-      edtAccount.Text := UTF8Encode(FDefinition.Account);
-      edtLogbook.Text := UTF8Encode(FDefinition.Logbook);
-      edtApiKey.Text := UTF8Encode(FDefinition.ApiKey);
-      edtPassword.Text := UTF8Encode(FDefinition.Password);
       chkActive.Checked := FConfig.ActivePosition(FDefinition.Id) > 0;
-      ProviderChanged(nil);
-      lblStatus.Caption := 'No contest log is open.';
-      if LogStoreRepository <> nil then
-         begin
-         try
-            counts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, FDefinition.DeliveryId);
-            lblStatus.Caption := Format('Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d',
-               [counts.Pending, counts.InFlight, counts.Synced, counts.Uncertain, counts.Failed]);
-         except
-            on E: Exception do
-               begin
-               lblStatus.Caption := 'Delivery status unavailable';
-               end;
-         end;
-         end;
    finally
-      FLoading := False;
+      Dec(FBuilding);
    end;
+   ProviderChanged(nil);
+   StartAutoLoad;
+   lblStatus.Caption := 'No contest log is open.';
+   if LogStoreRepository <> nil then
+      begin
+      try
+         counts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, FDefinition.DeliveryId);
+         lblStatus.Caption := Format('Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d',
+            [counts.Pending, counts.InFlight, counts.Synced, counts.Uncertain, counts.Failed]);
+      except
+         on E: Exception do
+            begin
+            lblStatus.Caption := 'Delivery status unavailable';
+            end;
+      end;
+      end;
 end;
+
+(* Sender is nil when the editor itself is showing a definition. A change by
+   the operator keeps the values the old provider's rows shared (host, port),
+   drops the credentials, and builds the new provider's rows. *)
 procedure TExternalLoggersForm.ProviderChanged(Sender: TObject);
 var
    registration: TExternalLoggerRegistration;
+   fields: TLoggerFieldList;
 begin
-   if (Sender <> nil) and not FLoading then
+   if FDefinition = nil then
       begin
-      edtApiKey.Clear;
-      edtPassword.Clear;
-      edtAccount.Clear;
-      edtLogbook.Clear;
-      edtURL.Clear;
-      if FDefinition <> nil then
-         begin
-         FDefinition.LegacySecretPending := False;
-         FDefinition.LegacyWRL := False;
-         end;
+      Exit;
       end;
-   FindExternalLoggerRegistration(UTF8Decode(cbProvider.Text), registration);
-   lblLogbook.Caption := 'Callsign / logbook ID';
-   lblApiKey.Caption := 'API token';
-   if UTF8Decode(cbProvider.Text) = 'CLUBLOG' then
+   if (Sender <> nil) and (FBuilding = 0) then
       begin
-      lblLogbook.Caption := 'Club Log callsign';
-      lblApiKey.Caption := 'Club Log API token';
+      ReadRows(FDefinition, False);
+      ClearCredentials;
+      FDefinition.ProviderId := UTF8Decode(cbProvider.Text);
       end;
-   edtAddress.Enabled := lcfAddress in registration.Fields;
-   edtPort.Enabled := lcfPort in registration.Fields;
-   edtURL.Enabled := lcfURL in registration.Fields;
-   edtAccount.Enabled := lcfAccount in registration.Fields;
-   edtLogbook.Enabled := lcfLogbook in registration.Fields;
-   edtApiKey.Enabled := lcfApiKey in registration.Fields;
-   edtPassword.Enabled := lcfPassword in registration.Fields;
-   btnWRL.Enabled := UTF8Decode(cbProvider.Text) = 'WRL';
-   edtAddress.Visible := edtAddress.Enabled;
-   lblAddress.Visible := edtAddress.Enabled;
-   edtPort.Visible := edtPort.Enabled;
-   lblPort.Visible := edtPort.Enabled;
-   edtURL.Visible := edtURL.Enabled;
-   lblURL.Visible := edtURL.Enabled;
-   edtAccount.Visible := edtAccount.Enabled;
-   lblAccount.Visible := edtAccount.Enabled;
-   edtLogbook.Visible := edtLogbook.Enabled;
-   lblLogbook.Visible := edtLogbook.Enabled;
-   edtApiKey.Visible := edtApiKey.Enabled;
-   lblApiKey.Visible := edtApiKey.Enabled;
-   edtPassword.Visible := edtPassword.Enabled;
-   lblPassword.Visible := edtPassword.Enabled;
-   btnWRL.Visible := btnWRL.Enabled;
+   if FindExternalLoggerRegistration(FDefinition.ProviderId, registration) then
+      begin
+      fields := registration.CreateFields;
+      end
+   else
+      begin
+      fields := TLoggerFieldList.Create(True);
+      end;
+   RebuildRows(fields);
 end;
-procedure TExternalLoggersForm.ConfigureWRLClick(Sender: TObject);
+
+(* Pushes what the provider's setup step returned into the rows. *)
+procedure TExternalLoggersForm.ApplyWorkToRows(const aWork: TExternalLoggerDefinition);
 var
-   key, account, book: string;
+   row: TFieldRow;
 begin
-   key := UTF8Decode(edtApiKey.Text);
-   account := UTF8Decode(edtAccount.Text);
-   book := UTF8Decode(edtLogbook.Text);
-   if ConfigureWRL(key, account, book) then
+   Inc(FBuilding);
+   try
+      for row in FRows do
+         begin
+         if row.Descriptor.Kind = lfkChoice then
+            begin
+            SetChoiceSaved(row, aWork.FieldText(row.Descriptor.Key),
+               aWork.FieldText(row.Descriptor.DisplayKey));
+            row.DerivedAccount := aWork.Account;
+            row.Touched := True;
+            row.Cleared := False;
+            end
+         else
+            begin
+            row.Edit.Text := UTF8Encode(aWork.FieldText(row.Descriptor.Key));
+            end;
+         end;
+   finally
+      Dec(FBuilding);
+   end;
+end;
+
+procedure TExternalLoggersForm.SetupClick(Sender: TObject);
+var
+   work: TExternalLoggerDefinition;
+begin
+   if (FTask <> nil) or not Assigned(FFields.Setup) then
       begin
-      edtApiKey.Text := UTF8Encode(key);
-      edtAccount.Text := UTF8Encode(account);
-      edtLogbook.Text := UTF8Encode(book);
+      Exit;
       end;
+   work := TExternalLoggerDefinition.Create;
+   try
+      work.Assign(FDefinition);
+      ReadRows(work, False);
+      if FFields.Setup(work) then
+         begin
+         ApplyWorkToRows(work);
+         StartAutoLoad;
+         end;
+   finally
+      work.Free;
+   end;
 end;
 
 function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): boolean;
@@ -235,6 +883,11 @@ end;
 
 procedure TExternalLoggersForm.Accept(Sender: TObject);
 begin
+   (* A list still arriving would decide the account after the fact. *)
+   if FTask <> nil then
+      begin
+      Exit;
+      end;
    Capture;
    if not ExternalLoggerConfigAcceptable(FConfig) then
       begin
@@ -277,8 +930,7 @@ begin
          begin
          Exit;
          end;
-      dialog.FDefinition := definition;
-      dialog.ShowDefinition;
+      dialog.BeginEdit(definition);
       Result := dialog.ShowModal = mrOK;
       if Result then
          begin

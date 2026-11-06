@@ -58,6 +58,19 @@ The External Logger grid is the editor now; the separate "Configure external log
 - [ ] **First definition on a clean station.** On a settings file with no external-logger section, Add... on the legacy page creates the first definition and the page switches to the grid.
 - [ ] **Layout.** The grid, Add... button and the hint line below do not overlap at 100% and 150% scaling. The Order column is visibly a fixed (header-coloured) column.
 
+## Added 2026-11-06 -- THE EXTERNAL LOGGER EDITOR SHOWS WHAT EACH PROVIDER NEEDS (issue 227)
+
+The one-definition editor builds its rows from the provider's own declaration (`uExternalLoggerRegistry`). The descriptors, the start-up check, the JSON and the editor's behaviour on a streamed form are unit-tested (`uTestExternalLoggerFields`); the real WRL drop-down, the look of the rows and the modal flow are not.
+
+- [ ] **WRL edit shows a key and a logbook NAME, no UUIDs.** Edit an existing WRL logger. There is an API key (masked, with the eye) and a "Logbook" drop-down showing a NAME. No "Email / account ID" box and no box holding an id appears anywhere. With a key present the drop-down fills by itself (the status line says Loading... then clears) without freezing the dialog.
+- [ ] **An old WRL definition opens and keeps working.** A WRL logger saved BEFORE this change (no name stored): the drop-down opens on "Saved choice (refresh to see its name)". Press Save to Preferences without touching it, restart, log a QSO: it still goes to the same logbook (`[WRL]` lines in tr4w.log, same account and logbook). After the list loads the name appears; saving again keeps the same logbook.
+- [ ] **Offline.** Unplug the network and open a WRL logger: the saved logbook name is still in the drop-down, Refresh reports "The list could not be loaded: ... The saved choice is kept.", Save to Preferences still works.
+- [ ] **Pick another logbook, replace the key.** Choose a different logbook, Save, reopen: the new name shows. Type a different API key: the drop-down empties; Save is refused for an ACTIVE logger until a logbook is chosen again (Refresh first).
+- [ ] **The setup button.** "Set up World Radio League..." (shown only for WRL) still validates a key and creates a logbook; what it returns shows in the key box and the drop-down.
+- [ ] **Club Log.** The editor shows "Club Log callsign" (plain text) and "Club Log API token" (masked) and nothing else; Save/restart/log a QSO still reaches Club Log.
+- [ ] **DXKeeper.** The editor shows Host / IP address and Port only. Change provider DXKeeper -> Club Log -> DXKeeper: the host and port you typed are still there.
+- [ ] **Layout.** The rows, the Refresh button, the Setup button and the status lines do not overlap at 100% and 150% scaling.
+
 ## Added 2026-11-05 -- THE TNC PACKET OBJECT IS A CLASS (pointer audit 6.6, Issue 89)
 
 `logpack.PacketObject` was an old-style `object` and is a `class` now, created and freed by the unit. The ring and line-buffer logic is unit-tested (`uTestLogPack`); a serial port is not.
