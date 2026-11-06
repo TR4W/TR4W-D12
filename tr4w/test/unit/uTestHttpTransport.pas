@@ -104,7 +104,7 @@ procedure StartCapture(out aLogger: TLogLogger; out aAppender: ILogAppender;
                        out aOldLevel: TLogLevel);
 begin
    GCaptured.Clear;
-   aLogger   := TLogLogger.GetLogger('TR4WDebugLog.Download');
+   aLogger   := TLogLogger.GetLogger('TR4WDebugLog.HTTP');
    aOldLevel := aLogger.Level;
    aLogger.Level := All;
    aAppender := TCaptureAppender.Create('unit-test http transport capture');

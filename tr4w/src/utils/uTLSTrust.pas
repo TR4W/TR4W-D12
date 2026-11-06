@@ -686,7 +686,7 @@ end;
 
 initialization
    GLock    := TCriticalSection.Create;
-   GLog     := TLogLogger.GetLogger('TR4WDebugLog.Download');
+   GLog     := TLogLogger.GetLogger('TR4WDebugLog.HTTP');
 
 finalization
    GHooks.Free;

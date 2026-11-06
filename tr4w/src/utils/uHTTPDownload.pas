@@ -912,7 +912,7 @@ begin
 end;
 
 initialization
-   logger := TLogLogger.GetLogger('TR4WDebugLog.Download');
+   logger := TLogLogger.GetLogger('TR4WDebugLog.HTTP');
    GTlsLogLock := TCriticalSection.Create;
 
 finalization
