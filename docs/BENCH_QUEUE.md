@@ -34,7 +34,7 @@ at what they cover; this is the list of what they cannot see.
 
 The FPC + OpenSSL client moved out of `uHTTPDownload` into `uHttpTransportGeneric` with no intended change. The unit suite (425,000+ checks, including a loopback contract suite) is green; what it cannot do is talk to a real server over TLS.
 
-- [ ] **A real Club Log (or WRL) send, and a real download.** With the real DLLs and `cacert.pem` beside the program, log a QSO to a throwaway Club Log account and see it confirmed; Alt-O (CTY) and Help > version check complete. `tr4w.log` shows one `[HTTP] transport: generic` line at the first request.
+- [ ] **A real Club Log (or WRL) send, and a real download.** With the real DLLs and `cacert.pem` beside the program, log a QSO to a throwaway Club Log account and see it confirmed; Alt-O (CTY) and Help > version check complete. `tr4w.log` shows one `[HTTP] transport: generic` line at the first request (it is an Info line: set `DEBUG LOG LEVEL` to INFO or lower to see it).
 - [ ] **`test\integration\tls-verify-probe` still rejects the four bad certificates** (expired, wrong host, self-signed, untrusted root) and accepts a good host. It goes to badssl.com, so it is hand-run only.
 
 ## Added 2026-11-05 -- IARU: THE SAME-ZONE POINT IS THE QSO'S OWN ITU ZONE (issue 222)

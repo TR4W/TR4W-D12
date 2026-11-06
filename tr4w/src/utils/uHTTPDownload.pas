@@ -560,7 +560,9 @@ begin
          aFailReason := SDownloadNoSSLLibrary;
          end;
    else
+      begin
       aFailReason := aResult.ErrorMessage;
+      end;
    end;
 end;
 
@@ -793,6 +795,11 @@ begin
       begin
       FailReason := 'Bearer authentication requires HTTPS without redirects and a valid token';
       Failure    := hfAuthPolicy;
+      (* Reported, not silent: the delivery worker stops on this, and the log is
+        where an operator finds out why. The token is scrubbed out of the URL. *)
+      logger.Error('[Download] refusing %s -- a bearer token needs https, no '
+                   + 'redirects and no line break in the token',
+                   [ScrubBoth(URL, BearerToken, Password)]);
       Exit;
       end;
 

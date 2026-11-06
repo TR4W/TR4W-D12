@@ -340,6 +340,15 @@ used to be written out in `uHTTPDownload`. Rules that are easy to break:
   and writable (stubs assign them). `AcceptAnyStatus` and `HasBody` on the wire request exist to
   keep the Get verbs (`[200]` only, no body) and `Send` (any status, always a body stream, so
   `Content-Length: 0`) byte-identical to what they were.
+* **Club Log and WRL classify by `NothingSent`, through ONE function:
+  `uExternalDeliveryClient.ApplyNothingSent`** (S1b). Do not read `TlsUnavailable` /
+  `TrustBundleMissing` in a client again. Table in the design doc (S1b as built): TLS, bundle and
+  verification-unavailable are retry 300 s (`*_TLS_UNAVAILABLE`, `*_CA_BUNDLE_MISSING`,
+  `*_VERIFICATION_UNAVAILABLE`); the bearer gate is a PAUSED retry (`*_AUTH_POLICY`); plaintext
+  or no scheme is a PAUSED failure (`*_URL_REFUSED`); any other proved kind is `*_NOT_SENT`.
+  **The CA-bundle `OperatorNotice` is raised for `hfTrustUnavailable` and no other kind**
+  (`uTestNothingSent` loops every kind). A failure that may have been sent keeps its old
+  answer (uncertain for a POST). Pinned in `uTestNothingSent`.
 * The Get verbs FOLLOW redirects (pinned by `Test_AGetStillFollowsARedirect`); S1c decides the
   https-to-http hop. No Windows or macOS transport exists (S2+ wait for NY4I's section-8 answers).
 

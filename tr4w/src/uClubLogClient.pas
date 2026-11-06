@@ -15,7 +15,7 @@ type
       function Deliver(const aJob: TDeliveryJob): TExternalDeliveryResult; override;
    end;
 implementation
-uses SysUtils, fpjson, uJSON, uTLSTrust;
+uses SysUtils, fpjson, uJSON;
 const
    // Local delivery marker, never a Club Log qsoid or part of an API path.
    CLUBLOG_TEST_DELIVERY = 'clublog:test-mode';
@@ -80,29 +80,14 @@ begin
       request.MaxResponseBytes := 4096;
       request.Send;
       Result.Status := request.StatusCode;
-      if request.TlsUnavailable then
+      if ApplyNothingSent(request, 'CLUBLOG_', 'Club Log', Result) then
          begin
-         (* HTTPS WAS ASKED FOR AND TLS COULD NOT START: NO BYTE WAS SENT, so
-           this is not "uncertain / requires review". It is a setup problem
-           (missing OpenSSL library) that a retry can cure -- on Windows the
-           loader tries again after a pause. The diagnostic text is in the log,
-           written once by uHTTPDownload. *)
-         Result.Outcome := doRetry;
-         Result.Pause := False;
-         Result.ErrorCode := 'CLUBLOG_TLS_UNAVAILABLE';
-         Result.RetrySeconds := 300;
-         Exit;
-         end;
-      if request.TrustBundleMissing then
-         begin
-         (* ALSO NOTHING SENT: cacert.pem is missing or unreadable, so the
-           request was refused before it was made. A retry cures it the moment
-           the file appears. The operator is told once (uTLSTrust latches). *)
-         Result.Outcome := doRetry;
-         Result.Pause := False;
-         Result.ErrorCode := 'CLUBLOG_CA_BUNDLE_MISSING';
-         Result.RetrySeconds := 300;
-         Result.OperatorNotice := TrustBundleAlertText('Club Log');
+         (* NO BYTE WAS SENT, PROVED (THttpRequest.NothingSent): TLS could not
+           start, the CA bundle is missing, verification could not be set up,
+           or the request was refused by policy before it was made. None of
+           those is "uncertain / requires review"; ApplyNothingSent says which
+           retry or failure each one is, and the diagnostic text was written
+           once by uHTTPDownload. *)
          Exit;
          end;
       if Result.Status = 429 then

@@ -606,6 +606,7 @@ uses
    uTestHttpSecrets in 'uTestHttpSecrets.pas',
    uTestFakeTransport in 'uTestFakeTransport.pas',
    uTestHttpTransport in 'uTestHttpTransport.pas',
+   uTestNothingSent in 'uTestNothingSent.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
    uTestExternalLoggers in 'uTestExternalLoggers.pas',
@@ -1103,6 +1104,7 @@ begin
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
    RegisterSuite(THttpSecretsTests.Create('HttpSecrets'));
    RegisterSuite(THttpTransportTests.Create('HttpTransport'));
+   RegisterSuite(TNothingSentTests.Create('NothingSent'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));

@@ -1,7 +1,7 @@
 # HTTP/HTTPS: a platform transport behind `uHTTPDownload` (issue 224)
 
-**Status (2026-11-05): S0 and S1a are BUILT; S1b is built in the next commit; S1c and
-everything from S2 on is DESIGN ONLY** and waits for NY4I's answers to section 8. S1a is
+**Status (2026-11-05): S0, S1a and S1b are BUILT; S1c and everything from S2 on is
+DESIGN ONLY** and waits for NY4I's answers to section 8. S1a is
 `uHttpTransport` (the contract and the registry), `uHttpTransportGeneric` (the FPC + OpenSSL
 path moved out of `uHTTPDownload`, behaviour unchanged) and the tests `uTestHttpTransport` and
 `uTestFakeTransport`; the stage table says what moved. Written against `4dc105b9`
@@ -571,7 +571,7 @@ the agents CLAUDE.md requires to be involved.
 |---|---|---|---|---|
 | **S0 (done)** | #221 stopgap: look beside the exe, `TrustBundleMissing`, one notice, retry not uncertain. Commit `4dc105b9`. | yes, as designed | done | integrations, build-release |
 | **S1a (done)** | Create `uHttpTransport` (types, registry, `NothingSent`) and `uHttpTransportGeneric` (move `TFPHTTPClient`, `ApplyTLSVerification`, `TBoundedHttpResponse`, the OpenSSL/trust calls). `uHTTPDownload` keeps the verbs, `THttpRequest`, `CheckScheme` (scheme and policy only), the secrets functions, and delegates `Send`. Add the fake transport and the contract suite (generic only). `TlsUnavailable` / `TrustBundleMissing` become derived. | **none intended** | `Build-Tests.ps1 -Run` and `-Checked`; `Run-Lints.ps1`; `gh workflow run release.yml` (the unit list changes, so all three platforms must compile). The golden corpus and the contest matrix are not needed: no engine code is touched. Hand-run `tls-verify-probe` once. | integrations, build-release (the `.lpr` list), settings-config only if a setting is added here (it is not) |
-| **S1b** | Club Log and WRL classify by `NothingSent`; the three paths of section 2.3 become retry / failed instead of uncertain; new pin tests. | **yes, small and deliberate** | unit tests; the updated pins; review by integrations | integrations |
+| **S1b (done)** | Club Log and WRL classify by `NothingSent`; the three paths of section 2.3 become retry / failed instead of uncertain; new pin tests. | **yes, small and deliberate** | unit tests; the updated pins; review by integrations | integrations |
 | **S1c** | Decide the https-to-http redirect (open question 5) and, if forbidden, enforce it in the generic transport through `OnRedirect`. | yes, if forbidden | unit tests with the loopback redirect | integrations |
 | **S2** | `uHttpTransportWinHttp` (Windows only), selected by the new setting, **default `generic`**. Contract suite runs against it. Bench list above. | none while default is generic | unit tests, `-Checked`, lints, `release.yml`, then the Windows bench | integrations, build-release, settings-config, lcl-ui (Preferences row), i18n (resourcestrings for the setting) |
 | **S2b** | After the bench: default becomes `auto` (platform if `Available`, else generic, decided once and logged). | the point of the work | one release on `auto` with the setting as the escape hatch | integrations, NY4I sign-off |
@@ -608,10 +608,34 @@ the agents CLAUDE.md requires to be involved.
 * **Small observable differences, all log or file level:** the `.tmp` file is now created before
   the transport runs and deleted when the request is refused (it used to be created only after
   the refusal checks); the Trace line for a request that is then refused for TLS is written (it
-  used to come after that check). `FailReason` texts are unchanged.
+  used to come after that check); with certificate checking turned OFF, the "checking is OFF"
+  Warn is written before a TLS-unavailable refusal and so appears even when TLS then fails.
+  `FailReason` texts are unchanged.
+* `test\integration\tls-verify-probe` was compiled and hand-run against the S1b tree (real
+  OpenSSL pair and `cacert.pem` beside it): the four bad certificates rejected, the two good
+  hosts accepted, 6 passed 0 failed. `tls-nobundle-probe` compiles (not run).
+* **For S2:** "only 200 is an answer" for the Get verbs is enforced by the TRANSPORT alone
+  (`AcceptAnyStatus = False`); the shared layer does not re-check the status. A transport that
+  returned a 404 as `hfNone` would make `DownloadFileToPath` write the 404 body over the target.
+  `Test_OnlyOkIsAnAnswerWhenNotAsked` must be in the contract run for every transport.
 * `uProgramMain`'s uses clause names only `uHTTPDownload` (not the OpenSSL or trust units), so it
   needs no new entry. `tr4w.lpi`'s unit list is not maintained for new units (`uWRLClient` is not
   in it either); only `tr4w.lpr` and the test `.lpr` were extended.
+
+**S1b, as built (2026-11-05).** Club Log and WRL no longer read the two flags; both call
+`ApplyNothingSent` (`uExternalDeliveryClient`, the one classifier, so the two services cannot
+drift), which asks `THttpRequest.NothingSent`. The flags stay as properties over `Failure`. The
+choice among "retry / failed" for each path, with the reason (pinned in `uTestNothingSent`):
+
+| kind | outcome | pause | code (`CLUBLOG_` / `WRL_` + ...) | why |
+|---|---|---|---|---|
+| `hfTlsUnavailable` | retry, 300 s | no | `TLS_UNAVAILABLE` | unchanged from S0 |
+| `hfTrustUnavailable` | retry, 300 s | no | `CA_BUNDLE_MISSING` | unchanged; **the only kind that raises the `OperatorNotice`** |
+| `hfVerificationUnavailable` (2.3 path 3) | retry, 300 s | no | `VERIFICATION_UNAVAILABLE` | an updated OpenSSL, or the operator's own setting (read on every request), cures it; no notice (the bundle is fine) |
+| `hfAuthPolicy` (2.3 path 1) | retry | **yes** | `AUTH_POLICY` | the credential class: the worker already turns a 401 into retry-and-stop "for a replacement credential". Nothing is lost. Now also logged (Error, URL scrubbed), where it was silent |
+| `hfPlaintextNotAllowed`, `hfBadScheme` (2.3 path 2) | **failed** | **yes** | `URL_REFUSED` | a malformed request; both clients hard-code https, so it is a defect, and failing each delivery in turn would burn the queue |
+| any other proved kind (`hfNameNotResolved`, `hfCannotConnect`, `hfConnectTimedOut`, `hfVerificationFailed`) | retry, 300 s | no | `NOT_SENT` | the generic transport reports none of these; a platform transport will |
+| everything else | unchanged: Club Log uncertain + pause; WRL POST uncertain, GET retry | | | "may have been sent" |
 
 **S2: a setting, or automatic with a fallback? Argued.**
 

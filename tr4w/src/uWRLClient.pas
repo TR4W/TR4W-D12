@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-   fpjson, uJSON, fphttpclient, uTLSTrust;
+   fpjson, uJSON, fphttpclient;
 
 const
    WRL_BASE = 'https://api.worldradioleague.com/v1';
@@ -71,23 +71,12 @@ begin
       sent := request.Send;
       Result.Status := request.StatusCode;
       Result.RequestId := request.RequestId;
-      if request.TlsUnavailable then
+      if ApplyNothingSent(request, 'WRL_', 'World Radio League', Result) then
          begin
-         (* Nothing was sent: not "uncertain", even for a POST. A retry cures
-           it once the OpenSSL library is available. *)
-         Result.Outcome := doRetry;
-         Result.ErrorCode := 'WRL_TLS_UNAVAILABLE';
-         Result.RetrySeconds := 300;
-         Exit;
-         end;
-      if request.TrustBundleMissing then
-         begin
-         (* Nothing was sent: cacert.pem is missing or unreadable. Retried, and
-           the operator is told once. *)
-         Result.Outcome := doRetry;
-         Result.ErrorCode := 'WRL_CA_BUNDLE_MISSING';
-         Result.RetrySeconds := 300;
-         Result.OperatorNotice := TrustBundleAlertText('World Radio League');
+         (* Nothing was sent, PROVED (THttpRequest.NothingSent): not
+           "uncertain", even for a POST. ApplyNothingSent says which retry or
+           failure it is, and raises the CA-bundle notice only for a missing
+           bundle. *)
          Exit;
          end;
       if (Pos(FApiKey, Result.RequestId) > 0) or (Length(Result.RequestId) > 200) then
