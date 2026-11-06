@@ -34,7 +34,7 @@ at what they cover; this is the list of what they cannot see.
 
 The FPC + OpenSSL client moved out of `uHTTPDownload` into `uHttpTransportGeneric` with no intended change. The unit suite (425,000+ checks, including a loopback contract suite) is green; what it cannot do is talk to a real server over TLS.
 
-- [ ] **A real Club Log (or WRL) send, and a real download.** With the real DLLs and `cacert.pem` beside the program, log a QSO to a throwaway Club Log account and see it confirmed; Alt-O (CTY) and Help > version check complete. `tr4w.log` shows one `[HTTP] transport: generic` line at the first request (it is an Info line: set `DEBUG LOG LEVEL` to INFO or lower to see it).
+- [x] **A real Club Log (or WRL) send, and a real download.** With the real DLLs and `cacert.pem` beside the program, log a QSO to a throwaway Club Log account and see it confirmed; Alt-O (CTY) and Help > version check complete. `tr4w.log` shows one `[HTTP] transport: generic` line at the first request (it is an Info line: set `DEBUG LOG LEVEL` to INFO or lower to see it).
 - [ ] **`test\integration\tls-verify-probe` still rejects the four bad certificates** (expired, wrong host, self-signed, untrusted root) and accepts a good host. It goes to badssl.com, so it is hand-run only.
 
 ## Added 2026-11-05 -- IARU: THE SAME-ZONE POINT IS THE QSO'S OWN ITU ZONE (issue 222)
@@ -48,12 +48,12 @@ Scoring asks the QSO's recorded my_itu_zone, or for the QSO being typed now the 
 
 The External Logger grid is the editor now; the separate "Configure external loggers..." dialog is gone. The order/toggle/remove logic is unit-tested (`uTestExternalLoggerGrid`, the drag driven through the grid's own `MoveColRow`); what no test can do is a mouse and a popup.
 
-- [ ] **Add each provider.** Press Add..., choose DXKeeper, then World Radio League, then Club Log, fill the fields, "Save to Preferences". Each appears as a new row (inactive: Order "-", Send new QSOs "No"). The WRL setup button and the Club Log field captions still work in the one-definition editor.
-- [ ] **Right-click edit / toggle.** Right-click a row (not the one already selected): the row under the pointer becomes selected and the menu offers Edit..., Send new QSOs (a tick when on), Move up, Move down, Remove.... Edit changes the name and the row follows. Send new QSOs ON gives it the next Order number; OFF moves the row below the active ones and its Order becomes "-". Double-click the Send new QSOs cell toggles; double-click elsewhere opens Edit. Switching ON a logger whose required field is blank is refused with the message.
-- [ ] **Drag to reorder.** Press on the ORDER cell (the grey left column) of an active row, drag it above/below another active row, release. Order numbers renumber, the moved row stays selected. Drop an inactive row among the active ones: it springs back to the inactive group and nothing else changes. Pressing on the Logger/Provider cells must NOT drag (that is expected; it only selects).
-- [ ] **Move up / Move down** in the popup do the same as the drag and are disabled at the edge of the group.
+- [x] **Add each provider.** Press Add..., choose DXKeeper, then World Radio League, then Club Log, fill the fields, "Save to Preferences". Each appears as a new row (inactive: Order "-", Send new QSOs "No"). The WRL setup button and the Club Log field captions still work in the one-definition editor.
+- [x] **Right-click edit / toggle.** Right-click a row (not the one already selected): the row under the pointer becomes selected and the menu offers Edit..., Send new QSOs (a tick when on), Move up, Move down, Remove.... Edit changes the name and the row follows. Send new QSOs ON gives it the next Order number; OFF moves the row below the active ones and its Order becomes "-". Double-click the Send new QSOs cell toggles; double-click elsewhere opens Edit. Switching ON a logger whose required field is blank is refused with the message.
+- [x] **Drag to reorder.** Press on the ORDER cell (the grey left column) of an active row, drag it above/below another active row, release. Order numbers renumber, the moved row stays selected. Drop an inactive row among the active ones: it springs back to the inactive group and nothing else changes. Pressing on the Logger/Provider cells must NOT drag (that is expected; it only selects).
+- [x] **Move up / Move down** in the popup do the same as the drag and are disabled at the edge of the group.
 - [ ] **Remove.** Remove... asks; Yes drops the row, No keeps it. The wording says pending deliveries stay in the contest log and are not redirected.
-- [ ] **Cancel discards.** Make several grid edits, press Cancel in Preferences: reopen and the grid is as it was. The page still says to Save and restart.
+- [x] **Cancel discards.** Make several grid edits, press Cancel in Preferences: reopen and the grid is as it was. The page still says to Save and restart.
 - [ ] **Save, restart, order kept, delivery order honoured.** Make two loggers active, reverse them by dragging, Save, restart TR4W, reopen: same order. Log one QSO with a contest open and check the order the two destinations were handed it (tr4w.log; both loggers' first line for that QSO).
 - [ ] **First definition on a clean station.** On a settings file with no external-logger section, Add... on the legacy page creates the first definition and the page switches to the grid.
 - [ ] **Layout.** The grid, Add... button and the hint line below do not overlap at 100% and 150% scaling. The Order column is visibly a fixed (header-coloured) column.
@@ -132,7 +132,7 @@ points at one of seven `TConsoleLineKind` objects the form owns now.
 `uTestTelnetConsoleKinds` pins the kinds through adds, the scrollback trim and
 Clear on a streamed form; what it cannot see is the paint.
 
-- [ ] **DX cluster window, connected, a few minutes of traffic.** EXPECT the
+- [x] **DX cluster window, connected, a few minutes of traffic.** EXPECT the
   colours as before (`TelnetStringColor`): a command you send in blue,
   received lines and status lines black, a spot for a dupe light grey, a spot
   for a new multiplier red, errors red, an alert black on a yellow band.
@@ -478,80 +478,80 @@ screen looks like. Use a network K4 with the panadapter open (pan A, then
 pan B), and keep `tr4w.log` at TRACE.
 
 - [ ] **Waterfall height.** Change it on the front panel (e.g. 50, 30, 70, then
-      0 and 100). EXPECT the window's split to follow within a tick. At 0 the
-      window shows the trace only. At 100 it shows the waterfall only, with the
-      VFO markers and the cursor still drawn over it. The log should show
-      `[K4] display report recorded: #WFH...`. If no line appears, the K4 does
-      not push `#WFH`, and the window only learns it at the next connect.
+  0 and 100). EXPECT the window's split to follow within a tick. At 0 the
+  window shows the trace only. At 100 it shows the waterfall only, with the
+  VFO markers and the cursor still drawn over it. The log should show
+  `[K4] display report recorded: #WFH...`. If no line appears, the K4 does
+  not push `#WFH`, and the window only learns it at the next connect.
 - [ ] **The history survives a height change.** EXPECT the newest rows to stay
-      when the split moves (they used to be cleared). The oldest rows are lost
-      when it shrinks.
+  when the split moves (they used to be cleared). The oldest rows are lost
+  when it shrinks.
 - [ ] **Colour range (WTR CLRS).** The floor is REF - TR4W's slider value x
-      WBS / 40, and the slider now follows the rig's SCALE when it changes, so
-      do not drag TR4W's slider during this check (if you have, turn SCALE at
-      the rig once to bring it back). Then step WTR CLRS from 5 to 30. EXPECT the whole
-      waterfall, history included, to get brighter as the number rises. With
-      the slider at 80 dB, 5 should look exactly as TR4W always has. **Compare
-      against the rig's own screen at 5, 14 and 30.** The mapping is QK4's
-      photographic fit and is unverified away from 14. Say whether it looks
-      right.
+  WBS / 40, and the slider now follows the rig's SCALE when it changes, so
+  do not drag TR4W's slider during this check (if you have, turn SCALE at
+  the rig once to bring it back). Then step WTR CLRS from 5 to 30. EXPECT the whole
+  waterfall, history included, to get brighter as the number rises. With
+  the slider at 80 dB, 5 should look exactly as TR4W always has. **Compare
+  against the rig's own screen at 5, 14 and 30.** The mapping is QK4's
+  photographic fit and is unverified away from 14. Say whether it looks
+  right.
 - [ ] **Colour mode.** Step it through gray, color, teal, blue and sepia. EXPECT
-      the combo and the waterfall to follow: Grayscale, Heat Map, Blue-Green,
-      **Blue**, Sepia. Fire-Ice is never selected by the rig (it is the
-      operator's only).
+  the combo and the waterfall to follow: Grayscale, Heat Map, Blue-Green,
+  **Blue**, Sepia. Fire-Ice is never selected by the rig (it is the
+  operator's only).
 - [ ] **The Blue palette against the K4's own blue tone** (added later
-      2026-11-03). Blue is a NEW palette and **TR4W's own design**: QK4 draws
-      one colour table whatever `#WFC` says, so there was nothing to copy. It is
-      Sepia's tone curve moved to blue: black, then dark blue, rising to a pale
-      blue-white. Put the rig on WTR BLUE and compare the two screens side by
-      side, noise and strong signals both. Say what differs (the dark run, the
-      hue, the top end).
+  2026-11-03). Blue is a NEW palette and **TR4W's own design**: QK4 draws
+  one colour table whatever `#WFC` says, so there was nothing to copy. It is
+  Sepia's tone curve moved to blue: black, then dark blue, rising to a pale
+  blue-white. Put the rig on WTR BLUE and compare the two screens side by
+  side, noise and strong signals both. Say what differs (the dark run, the
+  hue, the top end).
 - [ ] **The operator's choice still works.** Pick a palette in the combo. EXPECT
-      it to stay until the colour mode is changed at the rig. A reconnect alone
-      should not undo it.
+  it to stay until the colour mode is changed at the rig. A reconnect alone
+  should not undo it.
 - [ ] **REF is followed, AutoRef ON.** (Added later 2026-11-03.) With AutoRef
-      on, the trace's bottom edge is now the rig's `#REF` exactly, with no 10 dB
-      margin, as QK4 and the rig draw it. EXPECT the noise to sit on the bottom
-      edge as on the LCD, and to stay put while AutoRef steps (a few `#REF`
-      lines a second in the log at TRACE). EXPECT the waterfall NOT to flash or
-      re-colour its history on a REF step: a new REF reaches new rows only.
-      **Say whether losing the 10 dB margin under the floor looks worse** -- the
-      margin used to keep the noise texture visible below the floor.
+  on, the trace's bottom edge is now the rig's `#REF` exactly, with no 10 dB
+  margin, as QK4 and the rig draw it. EXPECT the noise to sit on the bottom
+  edge as on the LCD, and to stay put while AutoRef steps (a few `#REF`
+  lines a second in the log at TRACE). EXPECT the waterfall NOT to flash or
+  re-colour its history on a REF step: a new REF reaches new rows only.
+  **Say whether losing the 10 dB margin under the floor looks worse** -- the
+  margin used to keep the noise texture visible below the floor.
 - [ ] **REF is followed, AutoRef OFF.** Turn AutoRef off and turn the REF knob
-      (pan A, then pan B). EXPECT the trace to move up and down with REF, and
-      the dB labels to follow. Pan B: TR4W does not ASK `#REF$;` at connect, so
-      with AutoRef off pan B keeps the noise-floor scaling until the sub's REF
-      is changed at the rig. Say whether pan B needs it asked.
+  (pan A, then pan B). EXPECT the trace to move up and down with REF, and
+  the dB labels to follow. Pan B: TR4W does not ASK `#REF$;` at connect, so
+  with AutoRef off pan B keeps the noise-floor scaling until the sub's REF
+  is changed at the rig. Say whether pan B needs it asked.
 - [ ] ~~**SCALE is NOT followed yet.**~~ **SCALE IS FOLLOWED, NEVER WRITTEN**
-      (NY4I's option (b), later 2026-11-03; design doc 10.6). Change SCALE on
-      the K4's front panel (e.g. 80, 50, 25, 120). EXPECT TR4W's scale slider
-      and its caption to jump to the rig's value within a tick, and the trace
-      height and the waterfall colours (history included) to follow, on pan A
-      and pan B. The log should show `[K4] display report recorded: #SCL...`;
-      if no line appears, the K4 does not push `#SCL` and TR4W learns it only
-      at the next connect -- record which.
+  (NY4I's option (b), later 2026-11-03; design doc 10.6). Change SCALE on
+  the K4's front panel (e.g. 80, 50, 25, 120). EXPECT TR4W's scale slider
+  and its caption to jump to the rig's value within a tick, and the trace
+  height and the waterfall colours (history included) to follow, on pan A
+  and pan B. The log should show `[K4] display report recorded: #SCL...`;
+  if no line appears, the K4 does not push `#SCL` and TR4W learns it only
+  at the next connect -- record which.
 - [ ] **TR4W's slider sends nothing.** Drag TR4W's scale slider. EXPECT the
-      picture to change, **nothing to be sent to the K4** (no `#SCL` in the
-      log's outbound lines at TRACE) and **the K4's own SCALE not to change**.
-      EXPECT TR4W to keep the dragged value until SCALE is changed at the rig
-      again -- and a reconnect alone not to undo it. Also EXPECT no waterfall
-      flash while the rig sits on one SCALE.
+  picture to change, **nothing to be sent to the K4** (no `#SCL` in the
+  log's outbound lines at TRACE) and **the K4's own SCALE not to change**.
+  EXPECT TR4W to keep the dragged value until SCALE is changed at the rig
+  again -- and a reconnect alone not to undo it. Also EXPECT no waterfall
+  flash while the rig sits on one SCALE.
 - [ ] **The Y mini-pan's slider is TR4W's alone.** With the Y source shown,
-      change SCALE at the rig. EXPECT no change in TR4W.
+  change SCALE at the rig. EXPECT no change in TR4W.
 - [ ] **A reconnect keeps the picture.** Set a split, WTR CLRS and colour mode
-      that are NOT the defaults (e.g. 30 %, 20, sepia). Then **power-cycle the
-      K4**, and separately **pull the network cable** and put it back. EXPECT
-      the window to keep that split, colour range and palette throughout, never
-      snapping to 0.5 / 10 dB / Heat Map, and to take any value changed while
-      the link was down as soon as the radio answers. A PROFILE switch or Reset
-      Radio Ports builds a new radio object and DOES start from the defaults
-      until the radio answers: say whether that brief reset is acceptable.
+  that are NOT the defaults (e.g. 30 %, 20, sepia). Then **power-cycle the
+  K4**, and separately **pull the network cable** and put it back. EXPECT
+  the window to keep that split, colour range and palette throughout, never
+  snapping to 0.5 / 10 dB / Heat Map, and to take any value changed while
+  the link was down as soon as the radio answers. A PROFILE switch or Reset
+  Radio Ports builds a new radio object and DOES start from the defaults
+  until the radio answers: say whether that brief reset is acceptable.
 - [ ] **The external monitor does not move it.** Change the EXTERNAL monitor's
-      waterfall height, colour range and colour mode. EXPECT no change in the
-      window.
+  waterfall height, colour range and colour mode. EXPECT no change in the
+  window.
 - [ ] **Does the K4 answer `#WFC;` at connect?** The connect line is now
-      `#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;`. EXPECT `#WFC<n>` in the log within a
-      second of connecting.
+  `#REF;#SCL;#AR;#WFH;#WBS;#WFC;#AVG;`. EXPECT `#WFC<n>` in the log within a
+  second of connecting.
 
 ## Added 2026-11-03 -- THE K4 MAIN PAN IS DRAWN AT #SPN, NOT AT THE FRAME WIDTH
 
@@ -564,24 +564,24 @@ screen. Use a network K4 with the panadapter open, and set each span at the
 rig or with the +/- buttons.
 
 - [ ] **No flat line at either edge** at #SPN 5, 20, 40, 80, 150, 190 and 250
-      kHz, **and at the 368 kHz maximum**. The trace should run edge to edge as
-      ordinary noise.
+  kHz, **and at the 368 kHz maximum**. The trace should run edge to edge as
+  ordinary noise.
 - [ ] **At 368 kHz the axis spans about 365 kHz** (the edge guard) while the
-      `Span` label still says 368. Is that acceptable, or should the label say
-      what is drawn? Labelling the drawn span makes +/- look dead near the top
-      (366, 367 and 368 all draw 365.25).
+  `Span` label still says 368. Is that acceptable, or should the label say
+  what is drawn? Labelling the drawn span makes +/- look dead near the top
+  (366, 367 and 368 all draw 365.25).
 - [ ] **The axis, the label and a click agree.** At 20 kHz and at 150 kHz,
-      click a carrier near each edge and one in the middle. The radio should
-      tune onto it, and the axis frequency under the cursor should match the
-      VFO. Elsewhere the label and the axis width should agree to within 375 Hz
-      (e.g. 5 kHz draws 5.25).
+  click a carrier near each edge and one in the middle. The radio should
+  tune onto it, and the axis frequency under the cursor should match the
+  VFO. Elsewhere the label and the axis width should agree to within 375 Hz
+  (e.g. 5 kHz draws 5.25).
 - [ ] **The waterfall across a span change.** Step the span several times.
-      Old rows are NOT cleared when the span changes, so for a while rows
-      drawn at the old span sit under the new axis. Is that visible enough to
-      fix? (Proposed: clear the history when the drawn span changes.) Also
-      watch the 1-3 frames at the old width that the K4 sends just after a
-      change upward: they pass through whole, pad included, for one or two
-      rows.
+  Old rows are NOT cleared when the span changes, so for a while rows
+  drawn at the old span sit under the new axis. Is that visible enough to
+  fix? (Proposed: clear the history when the drawn span changes.) Also
+  watch the 1-3 frames at the old width that the K4 sends just after a
+  change upward: they pass through whole, pad included, for one or two
+  rows.
 
 ## Added 2026-11-02 -- PREFERENCES CONTROLS SHOW THEIR COMMAND HELP ON HOVER
 
@@ -596,16 +596,16 @@ files it loaded (`""` = none). To try it from a dev tree, copy
 `i18n/help_*.po` into `tr4w/target/help/` by hand and do not commit them.
 
 - [ ] Hover CW Tone and Say Hi Enable (bound) and Band Map Decay Time
-      (hand-wired) on an installed build: each shows its description, wrapped,
-      and the hint goes away normally.
+  (hand-wired) on an installed build: each shows its description, wrapped,
+  and the hint goes away normally.
 - [ ] A long one (Always Call Blind CQ, bound) is cut with ` ...` and stays on
-      screen.
+  screen.
 - [ ] A bound control with no help (No Border, Show Gridlines on Appearance)
-      shows no tooltip, not an empty box.
+  shows no tooltip, not an empty box.
 - [ ] `--lang es`: the same controls show the Spanish text; `--lang ja` falls
-      back to English.
+  back to English.
 - [ ] macOS and Linux: the `.app` / tarball finds `help/` (Contents/Resources,
-      beside the binary) -- read the log line.
+  beside the binary) -- read the log line.
 
 ## Added 2026-11-02 -- TAB MOVES IN READING ORDER ON EVERY PREFERENCES PAGE (NY4I)
 
@@ -619,28 +619,28 @@ disagrees (`tools/lfm_taborder.py`; columns and the ratchet for forms not yet
 reviewed are in `tr4w/build/lint-taborder.txt`).
 
 - [ ] **Windows.** Open each leaf page, click its first field and Tab to the
-      end. Expect: the caret moves down the page in reading order, and stops
-      only on what can be edited. Pages: Station, Radios, Rotators, DX
-      Cluster, Operating, Band Map, Bands, CW, Online Scoring, Two Radio
-      Mode, SCP, UDP Broadcast, Network, Appearance, Logging, Backup, Audio,
-      CW Settings, Paddle and PTT, TCI Server, WSJT-X, External Logger,
-      MMTTY.
+  end. Expect: the caret moves down the page in reading order, and stops
+  only on what can be edited. Pages: Station, Radios, Rotators, DX
+  Cluster, Operating, Band Map, Bands, CW, Online Scoring, Two Radio
+  Mode, SCP, UDP Broadcast, Network, Appearance, Logging, Backup, Audio,
+  CW Settings, Paddle and PTT, TCI Server, WSJT-X, External Logger,
+  MMTTY.
 - [ ] **Station** reads down the left column (Call ... Postal code), then the
-      right one (Check ... Park). NY4I to judge whether that is right, or
-      whether it should go row by row.
+  right one (Check ... Park). NY4I to judge whether that is right, or
+  whether it should go row by row.
 - [ ] From the search box: Tab goes to the tree, then into the page, then
-      OK, Cancel, Apply. Shift-Tab reverses it.
+  OK, Cancel, Apply. Shift-Tab reverses it.
 - [ ] **Appearance**: the generated "Layout" block below the designed
-      controls comes after Show gridlines. **External Logger**: the WRL setup
-      button (created at run time) comes last.
+  controls comes after Show gridlines. **External Logger**: the WRL setup
+  button (created at run time) comes last.
 - [ ] **Linux (gtk2)**: the same walk on two pages. gtk2 takes the order
-      from the same `TabOrder`, but it has not been seen there.
+  from the same `TabOrder`, but it has not been seen there.
 - [ ] **The other forms** (same fix, `.lfm` only): Tab through the UDP
-      destination editor (Address, Port, streams, Test, OK, Cancel), Server
-      log (Close last), the Radio editor (all four tabs, OK before Cancel),
-      the radio panel, and **Edit QSO** (field columns row by row, My Station,
-      then the multiplier and flag checkboxes, then Save and Cancel -- NY4I
-      accepted this order 2026-11-02).
+  destination editor (Address, Port, streams, Test, OK, Cancel), Server
+  log (Close last), the Radio editor (all four tabs, OK before Cancel),
+  the radio panel, and **Edit QSO** (field columns row by row, My Station,
+  then the multiplier and flag checkboxes, then Save and Cancel -- NY4I
+  accepted this order 2026-11-02).
 
 ---
 
@@ -657,22 +657,22 @@ activation order, then the main window last (`uMainForm.TActivationRaiser`).
 Every platform, not only Windows.
 
 - [ ] **Windows.** Open three tool windows, one partly covering the main
-      window. Click another program, then click the CORNER of that tool
-      window. Expect: every TR4W window in front of the other program, the
-      main window above all the tool windows, the caret in the call field.
+  window. Click another program, then click the CORNER of that tool
+  window. Expect: every TR4W window in front of the other program, the
+  main window above all the tool windows, the caret in the call field.
 - [ ] Same, but come back by clicking the MAIN window, and by Alt-Tab. Expect
-      the same: no tool window is left behind the other program.
+  the same: no tool window is left behind the other program.
 - [ ] **Click to type in a tool window from another program** (Telnet's command
-      field, say). The main window comes up over it and takes the caret; a
-      second click on the tool window brings it forward again. NY4I to judge
-      whether that cost is acceptable.
+  field, say). The main window comes up over it and takes the caret; a
+  second click on the tool window brings it forward again. NY4I to judge
+  whether that cost is acceptable.
 - [ ] **A modal up** (Preferences, Edit QSO): switch away and back. The modal
-      is in front and nothing else moves.
+  is in front and nothing else moves.
 - [ ] **No flicker worth mentioning**: each tool window is raised in turn,
-      so their title bars may flash active for an instant.
+  so their title bars may flash active for an instant.
 - [ ] **Linux (gtk2)** and **macOS**: the same first check. gtk2 gives each
-      form its own taskbar entry and the window manager may raise them
-      differently; this is a behaviour change there and has not been seen.
+  form its own taskbar entry and the window manager may raise them
+  differently; this is a behaviour change there and has not been seen.
 
 ---
 
@@ -765,23 +765,23 @@ rows), now ends in a BLANK item. Choosing it exports the bare tag, e.g.
 no gate can judge whether that is visible enough on each widget set.
 
 - [ ] Windows, Linux (gtk2) and macOS: open each drop-down. Is the blank item at
-      the END of the list visible and selectable (not a zero-height row)? If it
-      is not usable, the fallback is a visible `(none)` caption mapped back to
-      `''` -- say so, that is a small change plus a translatable string.
+  the END of the list visible and selectable (not a zero-height row)? If it
+  is not usable, the fallback is a visible `(none)` caption mapped back to
+  `''` -- say so, that is a small change plus a translatable string.
 - [ ] Edit Cabrillo Summary: choose blank for OVERLAY, TIME and STATION, close,
-      reopen. Each still shows blank (it used to keep the previous value).
+  reopen. Each still shows blank (it used to keep the previous value).
 - [ ] Same window: choose blank for POWER with QSOs logged. The log rescores
-      (blank power scores as HIGH in every power-multiplier contest), and the
-      notice names an empty power -- does it read acceptably?
+  (blank power scores as HIGH in every power-multiplier contest), and the
+  notice names an empty power -- does it read acceptably?
 - [ ] New Contest: choose blank for CATEGORY-POWER and CATEGORY-ASSISTED,
-      create the contest, export Cabrillo: `CATEGORY-POWER:` and
-      `CATEGORY-ASSISTED:` lines, no trailing space. Close and reopen the
-      contest, then export again: they are still blank.
+  create the contest, export Cabrillo: `CATEGORY-POWER:` and
+  `CATEGORY-ASSISTED:` lines, no trailing space. Close and reopen the
+  contest, then export again: they are still blank.
 - [ ] A contest whose header stated `CATEGORY-OVERLAY: CLASSIC` before this
-      build still writes it.
+  build still writes it.
 - [ ] Note: a station that never stored STATION, TIME, TRANSMITTER or OVERLAY
-      in the summary window now gets bare lines for them. Absent and "none"
-      are the same thing in the header store. Acceptable to sponsors' robots?
+  in the summary window now gets bare lines for them. Absent and "none"
+  are the same thing in the header store. Acceptable to sponsors' robots?
 
 ---
 
@@ -798,34 +798,34 @@ Needs two or three stations on one server (Windows, Mint).
 What the code gives, per station (post = own setting ON and own cluster
 connected; accept = own setting ON):
 
-| gateway (has the cluster) | peer (no cluster) | result |
-|---|---|---|
-| ON | ON | gateway posts, peer's band map gets the spots |
-| ON | OFF | gateway posts, peer drops them (one Debug line per link in tr4w.log) |
-| OFF | ON | gateway keeps its spots to itself, peer gets none |
-| OFF | OFF | both independent |
+| gateway (has the cluster) | peer (no cluster) | result                                                               |
+| ------------------------- | ----------------- | -------------------------------------------------------------------- |
+| ON                        | ON                | gateway posts, peer's band map gets the spots                        |
+| ON                        | OFF               | gateway posts, peer drops them (one Debug line per link in tr4w.log) |
+| OFF                       | ON                | gateway keeps its spots to itself, peer gets none                    |
+| OFF                       | OFF               | both independent                                                     |
 
 - [ ] Gateway ON, peer ON: a spot from the gateway's cluster appears in the
-      peer's band map within a second; the peer does not post it back (the
-      gateway's band map shows it once).
+  peer's band map within a second; the peer does not post it back (the
+  gateway's band map shows it once).
 - [ ] Turn the PEER's box off while connected, no restart: the next gateway
-      spot does not reach the peer's band map; `tr4w.log` at Debug has
-      `spot from the network ignored: sharing is off` once for the link. The link
-      stays up and QSOs still flow (the packet is consumed, not an error).
+  spot does not reach the peer's band map; `tr4w.log` at Debug has
+  `spot from the network ignored: sharing is off` once for the link. The link
+  stays up and QSOs still flow (the packet is consumed, not an error).
 - [ ] Turn it back on: the next spot arrives.
 - [ ] Gateway OFF, peer ON: spots from the gateway's cluster do not reach the
-      peer; the gateway's own band map still shows them.
+  peer; the gateway's own band map still shows them.
 - [ ] Both stations on their own cluster, both ON: each spot arrives twice at
-      each station (its own and the other's). Expected, not a bug: the spot store
-      merges by frequency, so the band map shows one row.
+  each station (its own and the other's). Expected, not a bug: the spot store
+  merges by frequency, so the band map shows one row.
 - [ ] The Preferences > Network page: the new checkbox sits under "Connect to
-      the multi-op server when TR4W starts", the grey hint and the "Radio
-      sharing" heading moved down, nothing overlaps or clips.
+  the multi-op server when TR4W starts", the grey hint and the "Radio
+  sharing" heading moved down, nothing overlaps or clips.
 - [ ] LEFT ALONE, decide: the spot form's "send this spot to a station with a
-      cluster" (spot-via-network) is not governed by the checkbox. It is an
-      explicit operator action; the server hands it to the FIRST other station
-      whose status says it has a cluster, and that station posts it to its own
-      cluster whatever its own checkbox says.
+  cluster" (spot-via-network) is not governed by the checkbox. It is an
+  explicit operator action; the server hands it to the FIRST other station
+  whose status says it has a cluster, and that station posts it to its own
+  cluster whatever its own checkbox says.
 
 ## Added 2026-10-28 -- A SERVER THAT LOST ITS LOG (the restock; Phase 1 gap found on the bench)
 
@@ -5362,30 +5362,26 @@ ANSWERS; they cannot press a key.
   sharing one serial number. **This is NEW behaviour** -- TR4W has never
   enforced a county limit; NY4I chose it ("knowing and setting a limit makes
   our edit checking of the exchange more robust").
-  
 
 - [ ] **Michigan QSO Party now refuses ANY county-line exchange.** `599 WAYN/OAK`
   must be refused; `599 WAYN` must log normally. Michigan's rules: "No
   station may claim simultaneous operation in more than one county, state,
   or province." Also new behaviour.
-  
 
 - [ ] **California QSO Party now refuses a FIVE-county exchange.** NY4I set the
   maximum at four -- "4 since that is the intersection of 4 counties with
   common 90 degree angle borders". `599 SLUI/MONT/ALAM/STAN` must log FOUR
   QSOs sharing one serial; a fifth county must be refused. Also new
   behaviour.
-  
 
 - [ ] **Indiana QSO Party now refuses a THREE-county exchange.** Maximum two,
   per NY4I. Two must still log two QSOs sharing one serial.
-  
+
   **California was this list's "unchanged" canary until 2026-09-29 and is
   no longer usable as one** -- it now has a limit of its own. Use a party
   that states NO maximum instead: Colorado, Minnesota, Missouri, Ohio,
   Wisconsin, Tennessee, Texas or Arizona. All eight inherit
   `CountyLineCountiesUnlimited`.
-  
 
 - [ ] **Every QSO party WITHOUT an established maximum must be UNCHANGED.**
   Spot-check one of the eight above with four counties; it must log four,
@@ -5393,14 +5389,12 @@ ANSWERS; they cannot press a key.
   -- which is the defect fixed on 2026-09-29, where a class of any kind
   made the base answer 0 from ContestsArray's boolean and refuse a second
   QTH.
-  
 
 - [ ] **A contest that is NOT a QSO party must not be asked at all.** Arktika
   Spring, ARRL Digital and ARRL Field Day each have a class now and none is
   a QSO party; a multi-QTH exchange in any of them must behave exactly as
   it did before they were moved. The unit tests assert they accept two;
   only the bench can say what the operator sees.
-  
 
 - [ ] **ADIF STATE is the WORKED station's, decided per QSO by the contest
   class** (Q76/Q89, `35986731`): a party county gives its state, a
@@ -5409,7 +5403,6 @@ ANSWERS; they cannot press a key.
   and its `<CNTY>`; an out-of-state W station that sent `PA` carries
   `<STATE:2>PA`; a DX QSO carries no STATE. **No corpus log covers
   NYQP.**
-  
 
 - [ ] **An edited memory survives a restart** (Q113, 5.0.29). Open a
   contest, edit a CQ memory, an EX memory and an Alt-key memory (Alt-P),
@@ -5670,7 +5663,7 @@ TR4W now decodes `#REF`, `#REF$`, `#SCL`, `#WFH`, `#HWFH`, `#WBS`, `#HWBS`, `#AV
   6. change the waterfall colours (WTR CLRS);
   7. change averaging;
   8. change FPS.
-  For each, record whether the radio PUSHES a `#` report unprompted. The quirks doc says `#AR` is pushed on every change and `#REF`/`#HREF` are pushed under AutoRef; **whether `#SCL`, `#WFH`, `#WBS` and `#AVG` are pushed is unknown** and decides whether stage 3 can rely on pushes or must ask. Also note any `#` report the parser does not know (it is logged and ignored).
+     For each, record whether the radio PUSHES a `#` report unprompted. The quirks doc says `#AR` is pushed on every change and `#REF`/`#HREF` are pushed under AutoRef; **whether `#SCL`, `#WFH`, `#WBS` and `#AVG` are pushed is unknown** and decides whether stage 3 can rely on pushes or must ask. Also note any `#` report the parser does not know (it is logged and ignored).
 - [ ] **The `#AR` debounce field.** Read the two digits after the averaging in each `#AR` line (`#AR12dd+oom`). QK4's command table says 4..9; captures have shown `01` and `06`. Record the values seen, and whether a menu changes them.
 - [ ] **The sub receiver.** With SUB RX on, does `#REF$` arrive at link-up without being asked (TR4W does not ask `#REF$;`), or only under AutoRef? If only then, stage 3 needs `#REF$;` in the link-up queries.
 - [ ] **The same, from outside TR4W.** With TR4W disconnected: `python tools/k4catwatch.py --host <ip> --ai 5 --query --seconds 60`, repeat the front-panel steps above inside the 60 s, and keep the output. `--query` now also asks `#WBS`, `#HWBS` and `#HREF`; it sends only bare reads.
@@ -5702,7 +5695,7 @@ Set `DEBUG LOG LEVEL = TRACE` (the per-window `[Startup] restored ...` lines are
   - title bars switching between active and inactive colour, back and forth;
   - windows popping up, and then popping up AGAIN after they are all on screen (a second wave is the raiser);
   - the taskbar buttons blinking or highlighting in turn.
-  Expected: about half the title-bar switching while the windows open (one per window, not two), and no second wave. The windows still appear one after another.
+    Expected: about half the title-bar switching while the windows open (one per window, not two), and no second wave. The windows still appear one after another.
 - [ ] **The caret ends in the call window**, and the main window is in front of the tool windows when start-up finishes.
 - [ ] **In `tr4w.log` after start-up**, find `[Windows] activation raise armed, after the tool-window restore`. It should come after the last `[Startup] restored ...` (or `restoring the ... window took`) line. A `[Windows] activation raise:` line during start-up means the raiser still fired then; send that log.
 - [ ] **The raiser still works later.** Click another program, then click a TR4W tool window. Every TR4W window should come forward with the main window on top, and the log should show `[Windows] activation raise: ... raised N tool window(s)`.
