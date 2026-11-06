@@ -643,11 +643,33 @@ if ($exeDir -ne $dllSource)
          $staged++
          }
       }
+
+   # cacert.pem is not a DLL, so the loop above never sees it, but HTTPS
+   # verification (Club Log, issue 221) reads it from beside the exe. It is
+   # sourced from the i386 target directory whatever the CPU: x86_64 redist
+   # holds DLLs only, and the file is the same for every bitness.
+   $cacertSrc = Join-Path (Join-Path $TR4W_DIR 'target') 'cacert.pem'
+   if (Test-Path $cacertSrc)
+      {
+      $cacert = Get-Item $cacertSrc
+      $dest   = Join-Path $exeDir 'cacert.pem'
+      $need   = -not (Test-Path $dest)
+      if (-not $need)
+         {
+         $d    = Get-Item $dest
+         $need = ($d.Length -ne $cacert.Length) -or ($d.LastWriteTimeUtc -lt $cacert.LastWriteTimeUtc)
+         }
+      if ($need)
+         {
+         Copy-Item -LiteralPath $cacert.FullName -Destination $dest -Force
+         $staged++
+         }
+      }
    }
 
 if ($staged -gt 0)
    {
-   Write-Host "  staged $staged runtime DLL(s) beside $([IO.Path]::GetFileName($exe))"
+   Write-Host "  staged $staged runtime file(s) beside $([IO.Path]::GetFileName($exe))"
    }
 
 Write-Host ''
