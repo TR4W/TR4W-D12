@@ -65,6 +65,19 @@ resourcestring
    SLoggerGridRemoveAsk   = 'Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition.';
    SLoggerGridHint        = 'Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences, then restart TR4W to apply changes.';
    SLoggerGridChanged     = 'Logger definitions changed. Save Preferences, then restart TR4W to apply them.';
+   (* THE ENABLED CHECKBOX AND THE CONNECTION STATE COLUMN (issue 226). The
+      state text names what the running delivery worker last did; the colour
+      only repeats it. %d is a count, %s a fixed delivery code. *)
+   SLoggerGridEnabled     = 'Enabled';
+   SLoggerGridState       = 'Connection';
+   SLoggerStateDisabled   = 'Disabled';
+   SLoggerStateRestart    = 'Restart TR4W to apply';
+   SLoggerStateIdle       = 'Idle';
+   SLoggerStateSending    = 'Sending (%d pending)';
+   SLoggerStateRetrying   = 'Retrying: %s';
+   SLoggerStatePaused     = 'Paused: %s';
+   SLoggerStateFailed     = 'Failed: %s';
+   SLoggerStateCounts     = '%s (%d uncertain, %d failed)';
 
    // EDIT QSO -- the read-only external-logger delivery line under "Our
    // station for this QSO". Line: logger, state, then the sent clause.

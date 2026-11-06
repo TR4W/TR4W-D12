@@ -196,7 +196,23 @@ a drag fires `OnColRowMoved` after the cells have moved, and the grid then re-ma
 own selected row, so a `Row :=` assigned inside the handler is applied twice (the
 selection is put right in a queued call). The hidden Id column carries identity because
 a dragged row carries its cells. `Definitions` is an owning `TObjectList`: reorder with
-`Exchange`, never `Move`. Removal leaves the vault and queued deliveries alone (design
+`Exchange`, never `Move`. **The Enabled column (issue 226, 2026-11-06) is that same
+flag as a real LCL checkbox column** (`cbsCheckboxColumn`, cells `'1'`/`'0'`, no
+`goEditing`): the click is the grid's own, on mouse RELEASE on the cell it was pressed on
+(toggling regroups rows), and Space; a refused activation must `Refresh` or the box stays
+ticked. It changes the Preferences working copy only -- **applying is restart**, because
+`TExternalLoggers` is immutable once started (`FActive`/`FCommandCount` are set in `Add`;
+live apply is issue 218). **The Connection column** is
+`DeriveExternalLoggerState(enabled, known, snapshot, counts)` in `uExternalLoggerService`:
+`StateSnapshot(deliveryId)` on the composite (keyed by DELIVERY id, so an edited
+destination reads "not running"), the worker's `FillSnapshot` (locked `FStatusLock` fields:
+busy, last outcome and code, halted -- never `TakeNotice`, which consumes the notice the
+owner shows), `TDurableExternalLogger.FillSnapshot` (capture paused, setup required,
+stalled), DXKeeper's queue depth. Main thread only. Old failed/uncertain rows are counts
+in the text, not a Failed row. A CA-bundle-missing delivery is a RETRY, not a pause
+(`ApplyNothingSent`); auth policy and URL refused halt the worker. The 5 s timer rewrites
+State cells only (hidden ordinal column feeds `OnPrepareCanvas`; the selected row keeps the
+theme colours). Removal leaves the vault and queued deliveries alone (design
 doc). The single-definition editor is `uExternalLoggersForm`; the shared OK checks are
 `ExternalLoggerConfigAcceptable`. The real drag, the popup and the modal editor are
 bench-only (BENCH_QUEUE).

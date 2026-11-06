@@ -161,6 +161,7 @@ var
    gate, enteredA, enteredB: TEvent;
    start, deadline: QWord;
    counts: TDeliveryCounts;
+   snapshot: TExternalLoggerSnapshot;
    serviceA, serviceB: TWRLExternalLogger;
    repository: TLogRepository;
    query: TSQLQuery;
@@ -277,6 +278,14 @@ begin
       manager.SubmitMessage(message);
       CheckEquals(1, first.Calls, 'failed preparation is not submitted');
       CheckEquals(2, second.Calls, 'failed preparation does not lose the next destination');
+      (* Issue 226: a snapshot by DELIVERY id; the started-active flag is the
+         composite's, the rest the service's. *)
+      CheckTrue(manager.StateSnapshot('first', snapshot), 'a running destination');
+      CheckTrue(snapshot.Active, 'started switched on');
+      CheckTrue(manager.StateSnapshot('inactive', snapshot));
+      CheckFalse(snapshot.Active, 'started switched off');
+      CheckFalse(manager.StateSnapshot('nobody', snapshot), 'not a running destination');
+      CheckFalse(snapshot.Active);
    finally
       message.Free;
       manager.Free;
@@ -587,6 +596,26 @@ begin
          CheckTrue(counts.Synced >= 2, 'healthy destination drains while first destination is blocked');
          counts := ExternalDeliveryCounts(path, 'blocked');
          CheckTrue(counts.InFlight = 1);
+         (* Issue 226: the worker says what it is doing, without a database. *)
+         snapshot := Default(TExternalLoggerSnapshot);
+         workerA.FillSnapshot(snapshot);
+         CheckTrue(snapshot.Busy, 'a request is out');
+         CheckFalse(snapshot.HasResult, 'nothing has settled yet');
+         CheckFalse(snapshot.Halted);
+         gate.SetEvent;
+         deadline := GetTickCount64 + 3000;
+         repeat
+            workerA.FillSnapshot(snapshot);
+            if snapshot.HasResult then
+               begin
+               Break;
+               end;
+            Sleep(10);
+         until GetTickCount64 >= deadline;
+         CheckTrue(snapshot.HasResult, 'the settled delivery is recorded');
+         CheckFalse(snapshot.Busy, 'the request is over');
+         CheckTrue(snapshot.LastOutcome = doConfirmed, 'confirmed');
+         CheckEquals('', snapshot.Code, 'a confirmed delivery has no code');
       finally
          delivery.Free;
       end;

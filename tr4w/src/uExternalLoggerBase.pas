@@ -173,6 +173,9 @@ Type
       Destructor Destroy; override;
       procedure RequestStop; override;
       function StopFinished: boolean; override;
+      (* Issue 226: all this transport can say is how much waits in its queue
+         and whether the sender thread is up; it keeps no last result. *)
+      procedure FillSnapshot(var aSnapshot: TExternalLoggerSnapshot); override;
 
       // Issue #957 -- enqueue from the main thread (cheap; returns immediately).
       procedure QueueSingleCommand(const cmd, description: string);
@@ -893,6 +896,18 @@ end;
 function TExternalLoggerBase.StopFinished: boolean;
 begin
    Result := (FSenderThread = nil) or FSenderThread.Finished;
+end;
+
+procedure TExternalLoggerBase.FillSnapshot(var aSnapshot: TExternalLoggerSnapshot);
+begin
+   (* FSenderThread is created and freed under FQueueLock (EnsureSender). *)
+   FQueueLock.Enter;
+   try
+      aSnapshot.QueueDepth := FOpQueue.Count;
+      aSnapshot.WorkerRunning := (FSenderThread <> nil) and not FSenderThread.Finished;
+   finally
+      FQueueLock.Leave;
+   end;
 end;
 
 procedure TExternalLoggerBase.ShutdownDrain(timeoutMs: integer);

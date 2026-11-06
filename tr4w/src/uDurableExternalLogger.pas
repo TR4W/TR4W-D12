@@ -50,6 +50,7 @@ type
       procedure LogClosed; override;
       procedure RequestStop; override;
       procedure SetActive(aActive: boolean); override;
+      procedure FillSnapshot(var aSnapshot: TExternalLoggerSnapshot); override;
       function QueuesCommands: boolean; override;
       function StopFinished: boolean; override;
       procedure DetachOwner; override;
@@ -386,6 +387,33 @@ end;
 procedure TDurableExternalLogger.SetActive(aActive: boolean);
 begin
    FEnabled := aActive;
+end;
+
+(* Main thread, so FPaused, FLocalNotice and the worker pointers cannot change
+   under it; the worker's own fields are read under its status lock. A worker
+   that has exited without halting (the log closed) is simply not running. *)
+procedure TDurableExternalLogger.FillSnapshot(var aSnapshot: TExternalLoggerSnapshot);
+begin
+   if FWorker <> nil then
+      begin
+      FWorker.FillSnapshot(aSnapshot);
+      aSnapshot.WorkerRunning := not FWorker.Finished;
+      end
+   else if FStalled <> nil then
+      begin
+      aSnapshot.Halted := True;
+      aSnapshot.Code := 'DELIVERY_STALLED';
+      end;
+   if FPaused then
+      begin
+      aSnapshot.Halted := True;
+      aSnapshot.Code := 'SYNCHRONIZATION_GAP';
+      end
+   else if FLocalNotice <> '' then
+      begin
+      aSnapshot.Halted := True;
+      aSnapshot.Code := FLocalNotice;
+      end;
 end;
 
 function TDurableExternalLogger.QueuesCommands: boolean;

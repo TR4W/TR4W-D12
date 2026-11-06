@@ -23,7 +23,7 @@ unit uTestExternalLoggerGrid;
 interface
 
 uses
-   uTR4WTestFramework;
+   uTR4WTestFramework, uExternalLoggerService, uExternalDelivery;
 
 type
    TExternalLoggerGridTests = class(TTestCase)
@@ -40,6 +40,16 @@ type
       procedure Test_Grid_MoveSelectedStaysInItsGroup;
       procedure Test_Grid_ToggleSendAndRemove;
       procedure Test_Grid_EditsOnACopyLeaveTheOriginal;
+      procedure CheckDerive(const aWhat: string; aExpected: TExternalLoggerState;
+         aEnabled, aKnown, aActive, aBusy, aHalted, aHasResult: boolean;
+         aOutcome: TDeliveryOutcome; const aCode: string; aQueue: integer;
+         aPending, aFailed: Int64);
+      procedure Test_State_DerivationTable;
+      procedure Test_Grid_BuildsTheColumns;
+      procedure Test_Grid_CheckboxClickTogglesTheDefinitionAndTheSavedList;
+      procedure Test_Grid_SpaceTogglesAndAnotherCellDoesNot;
+      procedure Test_Grid_StateColumnShowsTextAndKindPerRow;
+      procedure Test_Grid_StateColoursAreDistinct;
    public
       procedure RunAllTests; override;
    end;
@@ -47,7 +57,8 @@ type
 implementation
 
 uses
-   Classes, SysUtils, Forms, Grids, uExternalLoggerConfig, uExternalLoggerGrid;
+   Classes, SysUtils, Controls, Forms, Grids, Types, fpjson, uExternalLoggerConfig,
+   uExternalLoggerGrid;
 
 type
    TChangeCounter = class
@@ -55,6 +66,79 @@ type
       Count: integer;
       procedure Changed(aSender: TObject);
    end;
+
+   (* Stands in for the running program: what the service and the log would
+      say about each destination (by DELIVERY id). *)
+   TFakeStates = class
+   public
+      Ids: TStringList;
+      Snapshots: array of TExternalLoggerSnapshot;
+      Counts: array of TDeliveryCounts;
+      constructor Create;
+      destructor Destroy; override;
+      procedure Add(const aId: string; const aSnapshot: TExternalLoggerSnapshot;
+         const aCounts: TDeliveryCounts);
+      function Query(const aDeliveryId: string; out aSnapshot: TExternalLoggerSnapshot;
+         out aCounts: TDeliveryCounts): boolean;
+   end;
+
+constructor TFakeStates.Create;
+begin
+   inherited Create;
+   Ids := TStringList.Create;
+end;
+
+destructor TFakeStates.Destroy;
+begin
+   Ids.Free;
+   inherited Destroy;
+end;
+
+procedure TFakeStates.Add(const aId: string; const aSnapshot: TExternalLoggerSnapshot;
+   const aCounts: TDeliveryCounts);
+begin
+   Ids.Add(AnsiString(aId));
+   SetLength(Snapshots, Ids.Count);
+   SetLength(Counts, Ids.Count);
+   Snapshots[Ids.Count - 1] := aSnapshot;
+   Counts[Ids.Count - 1] := aCounts;
+end;
+
+function TFakeStates.Query(const aDeliveryId: string;
+   out aSnapshot: TExternalLoggerSnapshot; out aCounts: TDeliveryCounts): boolean;
+var
+   i: integer;
+begin
+   aSnapshot := Default(TExternalLoggerSnapshot);
+   aCounts := Default(TDeliveryCounts);
+   i := Ids.IndexOf(AnsiString(aDeliveryId));
+   Result := i >= 0;
+   if Result then
+      begin
+      aSnapshot := Snapshots[i];
+      aCounts := Counts[i];
+      end;
+end;
+
+(* The centre of a cell, where a click lands. *)
+function CellCentre(const aGrid: TStringGrid; aCol, aRow: integer): TPoint;
+var
+   r: TRect;
+begin
+   r := aGrid.CellRect(aCol, aRow);
+   Result.X := (r.Left + r.Right) div 2;
+   Result.Y := (r.Top + r.Bottom) div 2;
+end;
+
+(* A left click: press and release on one cell, through the grid's own events. *)
+procedure ClickCell(const aGrid: TStringGrid; aCol, aRow: integer);
+var
+   p: TPoint;
+begin
+   p := CellCentre(aGrid, aCol, aRow);
+   aGrid.OnMouseDown(aGrid, mbLeft, [ssLeft], p.X, p.Y);
+   aGrid.OnMouseUp(aGrid, mbLeft, [], p.X, p.Y);
+end;
 
 procedure TChangeCounter.Changed(aSender: TObject);
 begin
@@ -135,6 +219,18 @@ begin
    for row := aGrid.FixedRows to aGrid.RowCount - 1 do
       begin
       Result := Result + string(aGrid.Cells[LOGGER_COL_ORDER, row]);
+      end;
+end;
+
+(* One column's cells, top to bottom, run together. *)
+function GridCellsOf(const aGrid: TStringGrid; aCol: integer): string;
+var
+   row: integer;
+begin
+   Result := '';
+   for row := aGrid.FixedRows to aGrid.RowCount - 1 do
+      begin
+      Result := Result + string(aGrid.Cells[aCol, row]);
       end;
 end;
 
@@ -279,9 +375,9 @@ begin
       CheckEquals(4, grid.RowCount, 'header and three loggers');
       CheckEquals('abc', GridIds(grid));
       CheckEquals('12-', GridOrders(grid), 'a=1 b=2 c=inactive');
-      CheckEquals('Yes', string(grid.Cells[LOGGER_COL_SEND, 1]));
-      CheckEquals('Yes', string(grid.Cells[LOGGER_COL_SEND, 2]));
-      CheckEquals('No', string(grid.Cells[LOGGER_COL_SEND, 3]));
+      CheckEquals('1', string(grid.Cells[LOGGER_COL_ENABLED, 1]));
+      CheckEquals('1', string(grid.Cells[LOGGER_COL_ENABLED, 2]));
+      CheckEquals('0', string(grid.Cells[LOGGER_COL_ENABLED, 3]));
       CheckEquals('Logger C', string(grid.Cells[LOGGER_COL_NAME, 3]));
       CheckEquals('DXKEEPER', string(grid.Cells[LOGGER_COL_PROVIDER, 3]));
       CheckEquals(1, grid.FixedCols, 'the Order column is the fixed column a row drag starts from');
@@ -455,7 +551,7 @@ begin
       view.ToggleSendSelected;
       CheckEquals('abc', ActiveText(config), 'c was appended to the delivery order');
       CheckEquals('123', GridOrders(grid));
-      CheckEquals('Yes', string(grid.Cells[LOGGER_COL_SEND, 3]));
+      CheckEquals('1', string(grid.Cells[LOGGER_COL_ENABLED, 3]));
       grid.Row := 1;
       view.ToggleSendSelected;
       CheckEquals('bc', ActiveText(config), 'a left the delivery order');
@@ -506,8 +602,291 @@ begin
    end;
 end;
 
+(* ----------------------------------------------------------------------- *)
+(* Issue 226: the Enabled checkbox and the connection State                *)
+(* ----------------------------------------------------------------------- *)
+
+procedure TExternalLoggerGridTests.CheckDerive(const aWhat: string;
+   aExpected: TExternalLoggerState; aEnabled, aKnown, aActive, aBusy, aHalted,
+   aHasResult: boolean; aOutcome: TDeliveryOutcome; const aCode: string;
+   aQueue: integer; aPending, aFailed: Int64);
+var
+   snapshot: TExternalLoggerSnapshot;
+   counts: TDeliveryCounts;
+begin
+   snapshot := Default(TExternalLoggerSnapshot);
+   snapshot.Active := aActive;
+   snapshot.Busy := aBusy;
+   snapshot.Halted := aHalted;
+   snapshot.HasResult := aHasResult;
+   snapshot.LastOutcome := aOutcome;
+   snapshot.Code := aCode;
+   snapshot.QueueDepth := aQueue;
+   counts := Default(TDeliveryCounts);
+   counts.Pending := aPending;
+   counts.Failed := aFailed;
+   CheckEquals(Ord(aExpected),
+      Ord(DeriveExternalLoggerState(aEnabled, aKnown, snapshot, counts)), aWhat);
+end;
+
+procedure TExternalLoggerGridTests.Test_State_DerivationTable;
+begin
+   BeginTest('State: every input combination derives the state the operator should read');
+   (*                what                         expected          enab  known active busy  halted result outcome      code                 queue pend fail *)
+   CheckDerive('off, not running',               elsDisabled,      False, False, False, False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('on, not running (restart)',      elsRestartNeeded, True,  False, False, False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('switched off here, running on',  elsRestartNeeded, False, True,  True,  False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('switched on here, running off',  elsRestartNeeded, True,  True,  False, False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('off and running off',            elsDisabled,      False, True,  False, False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('on, nothing yet',                elsIdle,          True,  True,  True,  False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('a request is out',               elsSending,       True,  True,  True,  True,  False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('work waiting',                   elsSending,       True,  True,  True,  False, False, True,  doConfirmed, '',                    0, 3, 0);
+   CheckDerive('in-memory queue waiting',        elsSending,       True,  True,  True,  False, False, False, doConfirmed, '',                    2, 0, 0);
+   CheckDerive('last delivery confirmed',        elsIdle,          True,  True,  True,  False, False, True,  doConfirmed, '',                    0, 0, 0);
+   CheckDerive('last delivery to be retried',    elsRetrying,      True,  True,  True,  False, False, True,  doRetry,     'WRL_CA_BUNDLE_MISSING', 0, 1, 0);
+   CheckDerive('last delivery refused',          elsFailed,        True,  True,  True,  False, False, True,  doFailed,    'WRL_BAD_REQUEST',     0, 0, 1);
+   CheckDerive('last delivery uncertain',        elsIdle,          True,  True,  True,  False, False, True,  doUncertain, 'WRL_NO_ANSWER',       0, 0, 0);
+   CheckDerive('old failed rows alone',          elsIdle,          True,  True,  True,  False, False, False, doConfirmed, '',                    0, 0, 5);
+   CheckDerive('halted on credentials',          elsPaused,        True,  True,  True,  False, True,  True,  doRetry,     'WRL_AUTH_POLICY',     0, 1, 0);
+   CheckDerive('halted, setup required',         elsPaused,        True,  True,  True,  False, True,  False, doConfirmed, 'LOGGER_SETUP_REQUIRED', 0, 0, 0);
+   CheckDerive('the worker died',                elsFailed,        True,  True,  True,  False, True,  False, doConfirmed, 'DELIVERY_STOPPED',    0, 0, 0);
+   CheckDerive('halted beats a request in flight', elsPaused,      True,  True,  True,  True,  True,  False, doConfirmed, 'AUTHENTICATION_REQUIRED', 0, 0, 0);
+   CheckDerive('off beats a stale halt',         elsDisabled,      False, True,  False, False, True,  True,  doRetry,     'WRL_AUTH_POLICY',     0, 1, 0);
+end;
+
+procedure TExternalLoggerGridTests.Test_Grid_BuildsTheColumns;
+var
+   form: TForm;
+   grid: TStringGrid;
+   view: TExternalLoggerGrid;
+   config: TExternalLoggerConfig;
+begin
+   BeginTest('Grid: Enabled is a checkbox column, State is text, and two columns stay hidden');
+   InitWidgetSet;
+   form := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   try
+      grid := TStringGrid.Create(form);
+      grid.Parent := form;
+      (* What the Preferences LFM streams into the grid before the view builds
+         its columns (uPrefsForm.lfm: ColCount 5, FixedCols 1, RowCount 2). *)
+      grid.ColCount := 5;
+      grid.RowCount := 2;
+      grid.FixedCols := 1;
+      grid.FixedRows := 1;
+      view := TExternalLoggerGrid.Create(form, grid);
+      FillConfig(config);
+      view.Bind(config);
+      view.Refresh;
+      CheckEquals(7, grid.ColCount, 'Order, Logger, Provider, Enabled, State, Id, state ordinal');
+      CheckEquals(6, grid.Columns.Count, 'every column but the fixed Order column');
+      CheckTrue(grid.Columns[LOGGER_COL_ENABLED - 1].ButtonStyle = cbsCheckboxColumn,
+         'the LCL draws a real checkbox');
+      CheckTrue(grid.Columns[LOGGER_COL_ENABLED - 1].ValueChecked = '1');
+      CheckEquals('Enabled', string(grid.Columns[LOGGER_COL_ENABLED - 1].Title.Caption));
+      CheckEquals('Connection', string(grid.Columns[LOGGER_COL_STATE - 1].Title.Caption));
+      CheckEquals('Logger', string(grid.Columns[LOGGER_COL_NAME - 1].Title.Caption));
+      CheckEquals(0, grid.ColWidths[LOGGER_COL_ID], 'the id is hidden');
+      CheckEquals(0, grid.ColWidths[LOGGER_COL_STATEKIND], 'the state ordinal is hidden');
+      CheckTrue(grid.ColWidths[LOGGER_COL_STATE] > 100, 'the state text has room');
+      CheckEquals('110', GridCellsOf(grid, LOGGER_COL_ENABLED), 'a: on, b: on, c: off');
+      CheckFalse(goEditing in grid.Options, 'text cells are not editable; the click is ours');
+   finally
+      config.Free;
+      form.Free;
+   end;
+end;
+
+procedure TExternalLoggerGridTests.Test_Grid_CheckboxClickTogglesTheDefinitionAndTheSavedList;
+var
+   form: TForm;
+   grid: TStringGrid;
+   view: TExternalLoggerGrid;
+   config, reloaded: TExternalLoggerConfig;
+   counter: TChangeCounter;
+   saved: TJSONObject;
+begin
+   BeginTest('Grid: clicking the Enabled box flips the one flag, reports a change, and the saved list follows');
+   InitWidgetSet;
+   form := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   reloaded := TExternalLoggerConfig.Create;
+   counter := TChangeCounter.Create;
+   saved := TJSONObject.Create;
+   try
+      grid := TStringGrid.Create(form);
+      grid.Parent := form;
+      view := TExternalLoggerGrid.Create(form, grid);
+      view.OnChanged := counter.Changed;
+      FillConfig(config);
+      view.Bind(config);
+      view.Refresh;
+      ClickCell(grid, LOGGER_COL_ENABLED, 3);   (* c, off -> on *)
+      CheckEquals('abc', ActiveText(config), 'c joined the delivery order: the same flag as Order');
+      CheckEquals('111', GridCellsOf(grid, LOGGER_COL_ENABLED), 'the box follows the model');
+      CheckEquals('123', GridOrders(grid), 'and so does Order');
+      CheckEquals(1, counter.Count, 'one change reported (Dirty and the restart note)');
+      ClickCell(grid, LOGGER_COL_ENABLED, 1);   (* a, on -> off *)
+      CheckEquals('bc', ActiveText(config));
+      CheckEquals('bca', GridIds(grid), 'a dropped to the inactive group');
+      CheckEquals('110', GridCellsOf(grid, LOGGER_COL_ENABLED));
+      CheckEquals(2, counter.Count);
+      (* The Preferences Save writes the working copy; read back it says the same. *)
+      config.SaveJSON(saved);
+      reloaded.LoadJSON(saved);
+      CheckEquals('bc', ActiveText(reloaded), 'the persisted list');
+      CheckEquals(3, reloaded.Definitions.Count, 'a switched-off definition is kept');
+      (* A release on some other cell is not a click on the box. *)
+      grid.OnMouseDown(grid, mbLeft, [ssLeft], CellCentre(grid, LOGGER_COL_ENABLED, 1).X,
+         CellCentre(grid, LOGGER_COL_ENABLED, 1).Y);
+      grid.OnMouseUp(grid, mbLeft, [], CellCentre(grid, LOGGER_COL_NAME, 2).X,
+         CellCentre(grid, LOGGER_COL_NAME, 2).Y);
+      CheckEquals('bc', ActiveText(config), 'pressed on the box, released elsewhere');
+      ClickCell(grid, LOGGER_COL_NAME, 1);
+      CheckEquals('bc', ActiveText(config), 'a click on the name toggles nothing');
+      CheckEquals(2, counter.Count);
+   finally
+      saved.Free;
+      counter.Free;
+      reloaded.Free;
+      config.Free;
+      form.Free;
+   end;
+end;
+
+procedure TExternalLoggerGridTests.Test_Grid_SpaceTogglesAndAnotherCellDoesNot;
+var
+   form: TForm;
+   grid: TStringGrid;
+   view: TExternalLoggerGrid;
+   config: TExternalLoggerConfig;
+   key: word;
+begin
+   BeginTest('Grid: Space toggles the selected row; the placeholder row has nothing to toggle');
+   InitWidgetSet;
+   form := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   try
+      grid := TStringGrid.Create(form);
+      grid.Parent := form;
+      view := TExternalLoggerGrid.Create(form, grid);
+      FillConfig(config);
+      view.Bind(config);
+      view.Refresh;
+      grid.Row := 3;
+      key := 32;
+      grid.OnKeyDown(grid, key, []);
+      CheckEquals('abc', ActiveText(config), 'Space on c');
+      CheckEquals(0, key, 'the key was consumed');
+      key := 65;
+      grid.OnKeyDown(grid, key, []);
+      CheckEquals('abc', ActiveText(config), 'another key does nothing');
+      config.Clear;
+      config.Present := True;
+      view.Refresh;
+      key := 32;
+      grid.OnKeyDown(grid, key, []);
+      ClickCell(grid, LOGGER_COL_ENABLED, 1);
+      CheckEquals(0, config.Definitions.Count, 'the placeholder is not a logger');
+   finally
+      config.Free;
+      form.Free;
+   end;
+end;
+
+procedure TExternalLoggerGridTests.Test_Grid_StateColumnShowsTextAndKindPerRow;
+var
+   form: TForm;
+   grid: TStringGrid;
+   view: TExternalLoggerGrid;
+   config: TExternalLoggerConfig;
+   states: TFakeStates;
+   snapshot: TExternalLoggerSnapshot;
+   counts: TDeliveryCounts;
+begin
+   BeginTest('Grid: the State column says disabled, idle, paused with its reason, sending, and restart');
+   InitWidgetSet;
+   form := TForm.CreateNew(nil);
+   config := TExternalLoggerConfig.Create;
+   states := TFakeStates.Create;
+   try
+      grid := TStringGrid.Create(form);
+      grid.Parent := form;
+      view := TExternalLoggerGrid.Create(form, grid);
+      FillConfig(config);
+      view.Bind(config);
+      (* a: running, idle, two old failed rows.  b: running, halted on policy.
+         c: switched off and not running. *)
+      snapshot := Default(TExternalLoggerSnapshot);
+      snapshot.Active := True;
+      counts := Default(TDeliveryCounts);
+      counts.Failed := 2;
+      states.Add(config.Find('a').DeliveryId, snapshot, counts);
+      snapshot.Halted := True;
+      snapshot.Code := 'WRL_AUTH_POLICY';
+      counts := Default(TDeliveryCounts);
+      states.Add(config.Find('b').DeliveryId, snapshot, counts);
+      CheckFalse(Assigned(view.OnQueryState), 'no source yet');
+      view.OnQueryState := states.Query;
+      view.Refresh;
+      CheckEquals('Idle (0 uncertain, 2 failed)', string(grid.Cells[LOGGER_COL_STATE, 1]),
+         'old failures ride along as counts and do not turn the row red');
+      CheckEquals(IntToStr(Ord(elsIdle)), string(grid.Cells[LOGGER_COL_STATEKIND, 1]));
+      CheckEquals('Paused: WRL_AUTH_POLICY', string(grid.Cells[LOGGER_COL_STATE, 2]));
+      CheckEquals(IntToStr(Ord(elsPaused)), string(grid.Cells[LOGGER_COL_STATEKIND, 2]));
+      CheckEquals('Disabled', string(grid.Cells[LOGGER_COL_STATE, 3]), 'a switched-off row');
+      CheckEquals(IntToStr(Ord(elsDisabled)), string(grid.Cells[LOGGER_COL_STATEKIND, 3]));
+      (* The service reports work; only the State cells are rewritten. *)
+      states.Snapshots[0].Busy := True;
+      states.Counts[0].Pending := 3;
+      grid.Row := 2;
+      view.RefreshStates;
+      CheckEquals('Sending (3 pending) (0 uncertain, 2 failed)', string(grid.Cells[LOGGER_COL_STATE, 1]));
+      CheckEquals(2, grid.Row, 'a state refresh leaves the selection alone');
+      (* Switching c on here: the running service never heard of it. *)
+      grid.Row := 3;
+      view.ToggleSendSelected;
+      CheckEquals('Restart TR4W to apply', string(grid.Cells[LOGGER_COL_STATE, 3]));
+      CheckEquals(IntToStr(Ord(elsRestartNeeded)), string(grid.Cells[LOGGER_COL_STATEKIND, 3]));
+      (* Switching a off here: the service is still running it. *)
+      grid.Row := 1;
+      view.ToggleSendSelected;
+      CheckEquals('a', view.SelectedId);
+      CheckEquals('Restart TR4W to apply', string(grid.Cells[LOGGER_COL_STATE, grid.Row]));
+      view.OnQueryState := nil;
+      view.RefreshStates;
+      CheckEquals('Restart TR4W to apply', string(grid.Cells[LOGGER_COL_STATE, 1]),
+         'with no source every enabled row is "not running"');
+   finally
+      states.Free;
+      config.Free;
+      form.Free;
+   end;
+end;
+
+procedure TExternalLoggerGridTests.Test_Grid_StateColoursAreDistinct;
+var
+   a, b: TExternalLoggerState;
+begin
+   BeginTest('Grid: each state has its own colour, so colour can repeat what the text says');
+   for a := Low(TExternalLoggerState) to High(TExternalLoggerState) do
+      begin
+      for b := Succ(a) to High(TExternalLoggerState) do
+         begin
+         CheckTrue(ExternalLoggerStateColour(a) <> ExternalLoggerStateColour(b),
+            'states ' + IntToStr(Ord(a)) + ' and ' + IntToStr(Ord(b)));
+         end;
+      end;
+end;
+
 procedure TExternalLoggerGridTests.RunAllTests;
 begin
+   Test_State_DerivationTable;
+   Test_Grid_BuildsTheColumns;
+   Test_Grid_CheckboxClickTogglesTheDefinitionAndTheSavedList;
+   Test_Grid_SpaceTogglesAndAnotherCellDoesNot;
+   Test_Grid_StateColumnShowsTextAndKindPerRow;
+   Test_Grid_StateColoursAreDistinct;
    Test_Model_DisplayOrderIsActiveFirst;
    Test_Model_SetActiveAppendsAndIsIdempotent;
    Test_Model_ApplyOrderWritesBackDeliveryOrder;

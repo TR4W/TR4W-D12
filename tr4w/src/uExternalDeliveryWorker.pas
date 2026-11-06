@@ -13,7 +13,8 @@ unit uExternalDeliveryWorker;
 interface
 
 uses
-   Classes, SysUtils, SyncObjs, uExternalDeliveryClient, uLogConnectionWatch, uLogDatabase;
+   Classes, SysUtils, SyncObjs, uExternalDeliveryClient, uLogConnectionWatch, uLogDatabase,
+   uExternalDelivery, uExternalLoggerService;
 
 const
    (* THE WORKER'S BUSY WAIT: 1 s, half the main connection's
@@ -45,6 +46,17 @@ type
       FNotice: string;
       FOnNotice: TThreadMethod;
       FWatch: TLogConnectionWatch;
+      (* WHAT THE OWNER MAY ASK AT ANY TIME (issue 226): is a request out, how
+         the last delivery ended, and whether the worker has given up. Written
+         by this thread, read by the main thread through FillSnapshot, both
+         under FStatusLock. Never the notice (TakeNotice consumes that). *)
+      FStatusLock: TCriticalSection;
+      FBusy, FHalted, FHasResult: boolean;
+      FLastOutcome: TDeliveryOutcome;
+      FCode: string;
+      procedure SetBusy(aBusy: boolean);
+      procedure RecordResult(aOutcome: TDeliveryOutcome; const aCode: string);
+      procedure MarkHalted(const aCode: string);
       (* AFTER A FAILURE INSIDE A TRANSACTION: roll it back, and say whether
         to try the unit of work again -- True for a busy failure within
         DELIVERY_WORKER_BUSY_ATTEMPTS (after a 50 ms pause), False otherwise, when
@@ -63,6 +75,9 @@ type
       procedure Wake;
       procedure RequestStop;
       function TakeNotice: string;
+      (* Copies the status fields into aSnapshot (Busy, Halted, HasResult,
+         LastOutcome, Code). Any thread. *)
+      procedure FillSnapshot(var aSnapshot: TExternalLoggerSnapshot);
       (* For a worker its owner abandons without freeing (a stalled one left
         at close): nothing it does from now on calls back into the owner. *)
       procedure ForgetOwner;
@@ -75,7 +90,7 @@ type
 implementation
 
 uses
-   DateUtils, sqldb, uExternalDelivery, Log4D;
+   DateUtils, sqldb, Log4D;
 
 constructor TExternalDeliveryWorker.Create(const aFileName, aAccount, aLoggerId: string);
 begin
@@ -85,6 +100,7 @@ begin
    FLoggerId := aLoggerId;
    FWake := TEvent.Create(nil, False, False, '');
    FNoticeLock := TCriticalSection.Create;
+   FStatusLock := TCriticalSection.Create;
    (* Created and registered HERE, on the main thread, so the registry is
      only ever changed by the thread that runs the watchdog. *)
    FWatch := TLogConnectionWatch.Create(aLoggerId + ' delivery worker');
@@ -107,6 +123,7 @@ begin
    inherited Destroy;
    FWake.Free;
    FNoticeLock.Free;
+   FStatusLock.Free;
    (* After the thread has ended, so its connection is closed and detached;
      the watch unregisters itself. *)
    FWatch.Free;
@@ -167,6 +184,56 @@ begin
          end;
    finally
       FNoticeLock.Leave;
+   end;
+end;
+
+procedure TExternalDeliveryWorker.SetBusy(aBusy: boolean);
+begin
+   FStatusLock.Enter;
+   try
+      FBusy := aBusy;
+   finally
+      FStatusLock.Leave;
+   end;
+end;
+
+procedure TExternalDeliveryWorker.RecordResult(aOutcome: TDeliveryOutcome;
+   const aCode: string);
+begin
+   FStatusLock.Enter;
+   try
+      FBusy := False;
+      FHasResult := True;
+      FLastOutcome := aOutcome;
+      FCode := aCode;
+   finally
+      FStatusLock.Leave;
+   end;
+end;
+
+procedure TExternalDeliveryWorker.MarkHalted(const aCode: string);
+begin
+   FStatusLock.Enter;
+   try
+      FBusy := False;
+      FHalted := True;
+      FCode := aCode;
+   finally
+      FStatusLock.Leave;
+   end;
+end;
+
+procedure TExternalDeliveryWorker.FillSnapshot(var aSnapshot: TExternalLoggerSnapshot);
+begin
+   FStatusLock.Enter;
+   try
+      aSnapshot.Busy := FBusy;
+      aSnapshot.Halted := FHalted;
+      aSnapshot.HasResult := FHasResult;
+      aSnapshot.LastOutcome := FLastOutcome;
+      aSnapshot.Code := FCode;
+   finally
+      FStatusLock.Leave;
    end;
 end;
 
@@ -349,6 +416,7 @@ begin
                database.Transaction.Commit;
                Break;
                end;
+            SetBusy(True);
             answer := client.Deliver(job);
             if answer.OperatorNotice <> '' then
                begin
@@ -362,6 +430,7 @@ begin
                answer.Outcome := doRetry;
                answer.RetrySeconds := 60;
                end;
+            RecordResult(answer.Outcome, answer.ErrorCode);
             nowUTC := DateTimeToUnix(Now, False);
             nextSend := nowUTC + 1;  (* at most 60 writes/minute *)
             if answer.Status = 0 then
@@ -415,10 +484,12 @@ begin
                log.Error('[ExternalDelivery] Delivery paused: credentials or account access require attention');
                if answer.ErrorCode <> '' then
                   begin
+                  MarkHalted(answer.ErrorCode);
                   Notice(answer.ErrorCode);
                   end
                else
                   begin
+                  MarkHalted('AUTHENTICATION_REQUIRED');
                   Notice('AUTHENTICATION_REQUIRED');
                   end;
                Break;
@@ -430,7 +501,8 @@ begin
             (* Do not log exception text: SQL and HTTP exceptions can carry
                contact contents. In-flight creation remains uncertain on reopen. *)
             log.Error('[ExternalDelivery] Delivery stopped (%s); pending work remains in the log', [E.ClassName]);
-            Notice('DELIVERY_STOPPED');
+            MarkHalted(DELIVERY_STOPPED_CODE);
+            Notice(DELIVERY_STOPPED_CODE);
             end;
       end;
    finally

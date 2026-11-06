@@ -25,6 +25,11 @@ type
       procedure SubmitOp(const aOp: TQsoExternalOp;
          const aCommand1, aCommand2, aDescription: string); override;
       function LookupCallsign(ce: ContestExchange): integer; override;
+      (* Issue 226. Keyed by the DELIVERY id the service was Added under. The
+         list changes only in Add (start-up) and LogClosed, both main thread,
+         and so does this. *)
+      function StateSnapshot(const aDeliveryId: string;
+         out aSnapshot: TExternalLoggerSnapshot): boolean; override;
       procedure CaptureSavedQso(aDatabase: TLogDatabase; aRepository: TLogRepository;
          aRowId: Int64; aNew: boolean); override;
       procedure AfterLogCommit(aDatabase: TLogDatabase); override;
@@ -138,6 +143,25 @@ function TExternalLoggers.LookupCallsign(ce: ContestExchange): integer;
 begin
    Result := -1;
 end;
+function TExternalLoggers.StateSnapshot(const aDeliveryId: string;
+   out aSnapshot: TExternalLoggerSnapshot): boolean;
+var
+   i: integer;
+begin
+   aSnapshot := Default(TExternalLoggerSnapshot);
+   Result := False;
+   for i := 0 to FServices.Count - 1 do
+      begin
+      if FIds[i] = aDeliveryId then
+         begin
+         aSnapshot.Active := FActive[i];
+         FServices[i].FillSnapshot(aSnapshot);
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 procedure TExternalLoggers.CaptureSavedQso(aDatabase: TLogDatabase;
    aRepository: TLogRepository; aRowId: Int64; aNew: boolean);
 var

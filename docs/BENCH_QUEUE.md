@@ -5769,3 +5769,18 @@ New Contest, for a US QSO party, now shows an "I am in <area>" box above the par
 - [ ] **Copy `target\cacert.pem` beside `tr4w_fpc.exe`** (leave the working directory elsewhere). Within about 5 minutes the pending QSOs upload, and `tr4w.log` shows `[TLS] CA bundle: <path> (beside the program)`. Start from `target\` instead: the line says `(data directory)`.
 - [ ] **A second service** (enable both Club Log and WRL with no bundle): each gets its own notice, once.
 - [ ] **Linux AppImage / macOS bundle:** with the bundle present the log names the tier that answered; macOS reports the bundle's Resources folder as the data directory.
+
+## Added 2026-11-06 -- EXTERNAL LOGGER GRID: ENABLED CHECKBOX AND CONNECTION STATE (issue 226)
+
+Preferences > External Software > External Logger. The grid now has an Enabled checkbox column and a Connection column; Enabled is the same flag as Order (a dash = off) and the popup's Send new QSOs. A change applies after Save and restart; the Connection column is read from the running program and re-read every 5 seconds while the page shows. Colour repeats the text and is never the only signal; the selected row keeps the theme colours.
+
+- [ ] **Toggle a row off, then on.** Click the Enabled box of an active logger: the box clears, Order becomes a dash, the row drops to the inactive group, the status line says Save Preferences and restart, Preferences shows as changed. Click it again: it returns to the end of the active order. A double-click on the box toggles ONCE (not three times) and does not open the editor. Space on the selected row toggles it. Cancel discards the change; Save keeps it across a restart.
+- [ ] **Disabled.** A switched-off logger that was also off at start-up reads "Disabled" in grey.
+- [ ] **Restart needed.** Tick a logger that was off at start-up: "Restart TR4W to apply" in amber. Untick one that was on at start-up: the same text. After Save and a restart each reads Idle or Disabled.
+- [ ] **Idle.** With a log open and a working destination (Club Log, WRL or DXKeeper), the row reads "Idle" in green. A DXKeeper row has no last result, only a queue depth.
+- [ ] **Sending.** Stop DXKeeper (or take the network down for WRL/Club Log), log two or three QSOs: the row reads "Sending (n pending)" in blue (DXKeeper) or "Retrying: <code>" in amber (WRL/Club Log, with the destination's own error code); the count falls to Idle when it recovers.
+- [ ] **Paused with a notice.** Start with no `cacert.pem` (see the CA bundle item above): the row reads "Retrying: ..._CA_BUNDLE_MISSING" (a retry, not a pause). Give Club Log or WRL a refused credential (401/403) or an http:// URL: "Paused: <code>" in orange-brown; it stays paused until the log is reopened or TR4W restarts.
+- [ ] **Old failures.** A log with earlier failed or uncertain deliveries but a healthy destination reads "Idle (n uncertain, m failed)", not Failed.
+- [ ] **The click does not fight the drag.** Drag a row by its Order cell while the timer ticks (wait 5 s mid-drag); the row lands where dropped and the selection stays on it.
+- [ ] **No loggers configured.** With an empty library the placeholder row shows "No loggers configured" and the LCL draws an indeterminate (grey) checkbox in the Enabled cell. Cosmetic; clicking it does nothing. Say if it should go.
+- [ ] **Layout.** All five columns are readable at the page's width (the State text is not clipped for "Retrying: WRL_VERIFICATION_UNAVAILABLE"); the checkbox is centred; the hidden columns are not visible; Linux (gtk2) draws the same.

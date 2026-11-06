@@ -90,6 +90,8 @@ uses
    uKeyerEditForm,   // the CW keying-device editor
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
    uExternalLoggerGrid,       // the External Logger page's grid editor (issue 220)
+   uExternalLoggerService,    // TExternalLoggerSnapshot -- the grid's state query (226)
+   uExternalDelivery,         // TDeliveryCounts -- the same query
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding,          // TSettingBindings -- a field on the form below
    uCommandHelp,              // TCommandHelp -- the bound controls' tooltips
@@ -947,6 +949,8 @@ type
       procedure ExternalLoggersChanged(Sender: TObject);
       procedure ShowExternalLoggerGrid;
       procedure EnsureLoggerGrid;
+      function  QueryLoggerState(const aDeliveryId: string;
+         out aSnapshot: TExternalLoggerSnapshot; out aCounts: TDeliveryCounts): boolean;
       procedure LoadExternalSoftwarePanels;
       procedure SaveExternalSoftwarePanels;
       function  CommandBool(const aCommand: string): boolean;
@@ -1266,7 +1270,7 @@ uses
                         // in with it; an LCL form calls the LCL form.
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
-   uExternalLoggerConfig, uPasswordReveal, uWRLSetupForm, uExternalDelivery, uLogStore,
+   uExternalLoggerConfig, uPasswordReveal, uWRLSetupForm, uLogStore,
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
@@ -6717,11 +6721,37 @@ begin
       begin
       FLoggerGrid := TExternalLoggerGrid.Create(Self, grdExternalLoggers);
       FLoggerGrid.OnChanged := ExternalLoggersChanged;
+      FLoggerGrid.OnQueryState := QueryLoggerState;
       btnAddExternalLogger.Caption := UTF8Encode(SLoggerGridAdd);
       end;
    (* FStore is long-lived, but bind on every use so the grid can never edit a
       configuration that was replaced under it. *)
    FLoggerGrid.Bind(FStore.ExternalLoggers);
+end;
+
+(* The running program's answer for one destination (issue 226). The service
+   is the composite started at launch, so it knows nothing of an edit made in
+   this dialog: a destination it does not run is reported as unknown, which
+   the grid shows as "restart to apply". The counts are a status read, never a
+   reason to fail: with no log open, or on any error, they are zero. *)
+function TPrefsForm.QueryLoggerState(const aDeliveryId: string;
+   out aSnapshot: TExternalLoggerSnapshot; out aCounts: TDeliveryCounts): boolean;
+begin
+   aSnapshot := Default(TExternalLoggerSnapshot);
+   aCounts := Default(TDeliveryCounts);
+   Result := (externalLogger <> nil) and
+      externalLogger.StateSnapshot(aDeliveryId, aSnapshot);
+   if Result and (LogStoreRepository <> nil) then
+      begin
+      try
+         aCounts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, aDeliveryId);
+      except
+         on E: Exception do
+            begin
+            aCounts := Default(TDeliveryCounts);
+            end;
+      end;
+      end;
 end;
 
 procedure TPrefsForm.LoadExternalSoftwarePanels;

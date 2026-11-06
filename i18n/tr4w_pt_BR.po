@@ -9249,3 +9249,53 @@ msgstr ""
 msgid "Saved choice (refresh to see its name)"
 msgstr ""
 
+#: uappstrings.sloggergridenabled
+#, fuzzy
+msgid "Enabled"
+msgstr ""
+
+#: uappstrings.sloggergridstate
+#, fuzzy
+msgid "Connection"
+msgstr ""
+
+#: uappstrings.sloggerstatedisabled
+#, fuzzy
+msgid "Disabled"
+msgstr ""
+
+#: uappstrings.sloggerstaterestart
+#, fuzzy
+msgid "Restart TR4W to apply"
+msgstr ""
+
+#: uappstrings.sloggerstateidle
+#, fuzzy
+msgid "Idle"
+msgstr ""
+
+#: uappstrings.sloggerstatesending
+#, fuzzy
+msgid "Sending (%d pending)"
+msgstr ""
+
+#: uappstrings.sloggerstateretrying
+#, fuzzy
+msgid "Retrying: %s"
+msgstr ""
+
+#: uappstrings.sloggerstatepaused
+#, fuzzy
+msgid "Paused: %s"
+msgstr ""
+
+#: uappstrings.sloggerstatefailed
+#, fuzzy
+msgid "Failed: %s"
+msgstr ""
+
+#: uappstrings.sloggerstatecounts
+#, fuzzy
+msgid "%s (%d uncertain, %d failed)"
+msgstr ""
+
