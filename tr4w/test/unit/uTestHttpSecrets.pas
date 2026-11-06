@@ -28,6 +28,8 @@ type
    protected
       procedure Test_MaskSecret;
       procedure Test_ScrubSecret;
+      procedure Test_DebugLogsTheRequestWeSendWithoutSecrets;
+      procedure Test_NothingReceivedIsEverLogged;
       procedure Test_FailureLineScrubsAnEchoedToken;
       procedure Test_TraceLineMasksTheBearerToken;
       procedure Test_SendNeverLogsTheTokenOnATransportFailure;
@@ -47,12 +49,14 @@ implementation
 
 uses
    fphttpclient, uHTTPDownload, uOpenSSLLoader, uExternalDelivery, uExternalDeliveryClient, uClubLogClient, uWRLClient,
-   uTLSTrust, uSettingsRegistry, uSettingsDeclarations;
+   uTLSTrust, uSettingsRegistry, uSettingsDeclarations, uHttpTransport,
+   uTestFakeTransport;
 
 const
    (* Long enough for the mask to show two characters, and distinctive enough
      that its absence from a line means something. *)
    TOKEN = 'zq-FAKE-TOKEN-0123456789abcdef';
+   PASSWORD = 'pw-FAKE-PASSWORD-9876543210';
 
 type
    TCaptureAppender = class(TLogCustomAppender)
@@ -169,13 +173,128 @@ end;
 
 procedure THttpSecretsTests.Test_MaskSecret;
 begin
-   BeginTest('MaskSecret: two characters and a length, less for a short secret');
-   CheckEquals('ab...(36 chars)', MaskSecret('ab' + StringOfChar('x', 34)),
-               'a long secret shows its first two characters and its length');
-   CheckEquals('(3 chars)', MaskSecret('abc'), 'a short secret shows only its length');
-   CheckEquals('(5 chars)', MaskSecret('abcde'), 'five is still short');
-   CheckEquals('ab...(6 chars)', MaskSecret('abcdef'), 'six is the first long one');
+   BeginTest('MaskSecret: a fixed ********, no prefix and no length');
+   CheckEquals('********', MaskSecret('ab' + StringOfChar('x', 34)),
+               'a long secret shows nothing of itself');
+   CheckEquals('********', MaskSecret('abc'), 'a short secret is the same');
+   CheckEquals('********', MaskSecret('a'), 'one character too');
    CheckEquals('(empty)', MaskSecret(''), 'an empty secret says so');
+end;
+
+(* Turn certificate checking on, as an operator's default, so an https request
+  reaches the fake transport rather than being decided by this machine. *)
+procedure DeclareVerifyOn;
+var
+   setting: TSettingBase;
+begin
+   DeclareAllSettings;
+   setting := FindSetting('network.verifyServerCertificates');
+   if setting is TBoolSetting then
+      begin
+      TBoolSetting(setting).SetValue(True);
+      end;
+end;
+
+procedure THttpSecretsTests.Test_DebugLogsTheRequestWeSendWithoutSecrets;
+var
+   lg:       TLogLogger;
+   keep:     ILogAppender;
+   oldLevel: TLogLevel;
+   fake:     TFakeHttpTransport;
+   request:  THttpRequest;
+   joined:   string;
+begin
+   BeginTest('DEBUG logs method, URL, headers and body; no bearer token, no password');
+   DeclareVerifyOn;
+   fake := TFakeHttpTransport.Create;
+   SetHttpTransportForTest(fake);
+   StartCapture(lg, keep, oldLevel);
+   try
+      request := THttpRequest.Create('https://api.invalid/v1/contacts?k=' + TOKEN);
+      try
+         request.Method      := 'POST';
+         request.ContentType := 'application/json';
+         request.UserAgent   := 'TR4W-test';
+         request.BearerToken := TOKEN;
+         request.Username    := 'someone';
+         request.Password    := PASSWORD;
+         request.Body        := '{"callsign":"W1AW","key":"' + TOKEN + '","pw":"' + PASSWORD + '"}';
+         CheckTrue(request.Send, 'an answer: ' + request.FailReason);
+      finally
+         request.Free;
+      end;
+      (* And a failure whose error text echoes both secrets. *)
+      fake.ScriptFailure      := hfOther;
+      fake.ScriptErrorClass   := 'Exception';
+      fake.ScriptErrorMessage := 'bad ' + TOKEN + ' and ' + PASSWORD;
+      request := THttpRequest.Create('https://api.invalid/v1/contacts');
+      try
+         request.BearerToken := TOKEN;
+         request.Password    := PASSWORD;
+         CheckFalse(request.Send, 'the failure is reported');
+         CheckEquals(0, Pos(TOKEN, request.FailReason), 'no token in the reason');
+         CheckEquals(0, Pos(PASSWORD, request.FailReason), 'no password in the reason');
+      finally
+         request.Free;
+      end;
+   finally
+      StopCapture(lg, keep, oldLevel);
+      SetHttpTransportForTest(nil);
+      fake.Free;
+   end;
+   joined := GCaptured.Text;
+   CheckEquals(0, Pos(TOKEN, joined), 'the token is in none of the lines: ' + joined);
+   CheckEquals(0, Pos(PASSWORD, joined), 'the password is in none of the lines: ' + joined);
+   CheckTrue(Pos('[HTTP] request POST https://api.invalid/v1/contacts?k=********', joined) > 0,
+             'method and URL, scrubbed: ' + joined);
+   CheckTrue(Pos('Authorization: Bearer ********', joined) > 0, 'the bearer header, starred');
+   CheckTrue(Pos('User-Agent: TR4W-test', joined) > 0, 'User-Agent');
+   CheckTrue(Pos('Content-Type: application/json', joined) > 0, 'Content-Type');
+   CheckTrue(Pos('Authorization: Basic someone:********', joined) > 0, 'the basic header, starred');
+   CheckTrue(Pos('Body: {"callsign":"W1AW","key":"********","pw":"********"}', joined) > 0,
+             'the body, scrubbed');
+   CheckEquals(2, CountLinesWith('[HTTP] request'), 'two requests, one request line each');
+end;
+
+procedure THttpSecretsTests.Test_NothingReceivedIsEverLogged;
+var
+   lg:       TLogLogger;
+   keep:     ILogAppender;
+   oldLevel: TLogLevel;
+   fake:     TFakeHttpTransport;
+   request:  THttpRequest;
+   text, reason: string;
+   ok:       boolean;
+begin
+   BeginTest('a response body and headers never reach the logger, at any level');
+   DeclareVerifyOn;
+   fake := TFakeHttpTransport.Create;
+   fake.ScriptStatus     := 400;
+   fake.ScriptStatusText := 'STATUSTEXT-MARKER';
+   fake.ScriptRetryAfter := 'RETRYAFTER-MARKER';
+   fake.ScriptRequestId  := 'REQUESTID-MARKER';
+   fake.ScriptBody       := ToWire('RESPONSEBODY-MARKER');
+   SetHttpTransportForTest(fake);
+   StartCapture(lg, keep, oldLevel);
+   try
+      request := THttpRequest.Create('https://api.invalid/v1/x');
+      try
+         request.BearerToken := TOKEN;
+         CheckTrue(request.Send, 'a 400 is an answer');
+         CheckEquals('RESPONSEBODY-MARKER', request.Response, 'the caller still gets it');
+      finally
+         request.Free;
+      end;
+      ok := HttpGetText('https://api.invalid/v1/y', text, reason);
+      CheckTrue(ok, 'the GET verb answers too');
+      CheckEquals('RESPONSEBODY-MARKER', text, 'and returns the text');
+   finally
+      StopCapture(lg, keep, oldLevel);
+      SetHttpTransportForTest(nil);
+      fake.Free;
+   end;
+   CheckTrue(GCaptured.Count > 0, 'the requests themselves were logged');
+   CheckEquals(0, Pos('MARKER', GCaptured.Text), 'nothing received is logged: ' + GCaptured.Text);
 end;
 
 procedure THttpSecretsTests.Test_ScrubSecret;
@@ -403,18 +522,12 @@ var
    keep:     ILogAppender;
    oldLevel: TLogLevel;
    request:  THttpRequest;
-   setting:  TSettingBase;
    emptyA, emptyB: string;
    i:        integer;
    joined:   string;
 begin
    BeginTest('no bundle: Send sets TrustBundleMissing, nothing is sent, one Error line, no token');
-   DeclareAllSettings;
-   setting := FindSetting('network.verifyServerCertificates');
-   if setting is TBoolSetting then
-      begin
-      TBoolSetting(setting).SetValue(True);
-      end;
+   DeclareVerifyOn;
    emptyA := MakeTempFolder;
    emptyB := MakeTempFolder;
    SetTrustBundleFolders(emptyA, emptyB);
@@ -453,7 +566,7 @@ begin
    CheckEquals(0, Pos(TOKEN, joined), 'the token is in none of the lines: ' + joined);
    if EnsureOpenSSL then
       begin
-      CheckEquals(1, CountLinesWith('[Download] REFUSING'),
+      CheckEquals(1, CountLinesWith('[HTTP] REFUSING'),
                   'three refused requests, one Error line');
       end;
 end;
@@ -553,6 +666,8 @@ begin
    try
       Test_MaskSecret;
       Test_ScrubSecret;
+      Test_DebugLogsTheRequestWeSendWithoutSecrets;
+      Test_NothingReceivedIsEverLogged;
       Test_FailureLineScrubsAnEchoedToken;
       Test_TraceLineMasksTheBearerToken;
       Test_SendNeverLogsTheTokenOnATransportFailure;

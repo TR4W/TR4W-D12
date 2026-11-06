@@ -49,11 +49,9 @@ function CreateWireBodyStream(const aBody: string): TRawByteStringStream;
   leading space is refused there rather than quietly repaired. *)
 function IsPlainHttpUrl(const aUrl: string): boolean;
 
-(* A SECRET AS IT MAY APPEAR IN A LOG: its first two characters, then its
-  length -- 'ab...(36 chars)'. A secret under six characters shows only the
-  length ('(3 chars)'), because two characters of a short one is a large part of
-  it. An empty secret is '(empty)'. The length is enough to tell a stale or
-  blank value from a real one, which is what a support reader wants. *)
+(* A SECRET AS IT MAY APPEAR IN A LOG: always '********', whatever its length
+  and with no prefix (NY4I, 2026-11-05: not even the length is shown). An empty
+  secret is '(empty)', which still tells a blank value from a real one. *)
 function MaskSecret(const aSecret: string): string;
 
 (* EVERY OCCURRENCE OF THE SECRET IN aText, AND OF ITS URL-ENCODED FORM,
@@ -70,7 +68,7 @@ function RequestFailureLine(const aMethod, aURL: string; aE: Exception;
                             const aSecret1, aSecret2: string): string;
 
 (* THE TRACE LINE FOR ONE REQUEST: 'POST https://host/path Authorization:
-  Bearer ab...(36 chars)'. The URL is shown (NY4I, 2026-11-05); the token is
+  Bearer ********'. The URL is shown (NY4I, 2026-11-05); the token is
   masked and also scrubbed out of the URL. *)
 function RequestTraceLine(const aMethod, aURL, aBearer, aPassword: string): string;
 
@@ -257,13 +255,9 @@ begin
       begin
       Result := '(empty)';
       end
-   else if Length(aSecret) < 6 then
-      begin
-      Result := '(' + IntToStr(Length(aSecret)) + ' chars)';
-      end
    else
       begin
-      Result := Copy(aSecret, 1, 2) + '...(' + IntToStr(Length(aSecret)) + ' chars)';
+      Result := '********';
       end;
 end;
 
@@ -299,6 +293,40 @@ begin
    if aBearer <> '' then
       begin
       Result := Result + ' Authorization: Bearer ' + MaskSecret(aBearer);
+      end;
+end;
+
+(* THE WHOLE REQUEST WE SEND, as one DEBUG line: method, URL, the headers we set
+  and the body (NY4I, 2026-11-05: "good to see what we actually send to WRL").
+  Every credential is masked in all of it, the body included -- a form body can
+  carry the password. THIS LOGS WHAT WE SEND AND NOTHING WE RECEIVE: no response
+  body and no response header is logged anywhere, at any level (NY4I's ruling). *)
+function RequestDebugLine(aWire: THttpWireRequest;
+                          const aSecret1, aSecret2: string): string;
+begin
+   Result := RequestTraceLine(aWire.Method, aWire.URL, aWire.BearerToken,
+                              aWire.Password);
+   if aWire.UserAgent <> '' then
+      begin
+      Result := Result + ' User-Agent: ' + aWire.UserAgent;
+      end;
+   if aWire.ContentType <> '' then
+      begin
+      Result := Result + ' Content-Type: ' + aWire.ContentType;
+      end;
+   if aWire.AcceptEncoding <> '' then
+      begin
+      Result := Result + ' Accept-Encoding: ' + aWire.AcceptEncoding;
+      end;
+   if aWire.Username <> '' then
+      begin
+      Result := Result + ' Authorization: Basic ' +
+                ScrubBoth(aWire.Username, aSecret1, aSecret2) + ':' +
+                MaskSecret(aWire.Password);
+      end;
+   if aWire.HasBody then
+      begin
+      Result := Result + ' Body: ' + ScrubBoth(FromWire(aWire.Body), aSecret1, aSecret2);
       end;
 end;
 
@@ -353,17 +381,17 @@ begin
       begin
       if not AAllowInsecure then
          begin
-         logger.Error('[Download] refusing plaintext %s -- the caller must pass '
+         logger.Error('[HTTP] refusing plaintext %s -- the caller must pass '
                       + 'AAllowInsecure to accept an http:// URL', [shownUrl]);
          AFailReason := SDownloadCouldNotStart;
          AFailure    := hfPlaintextNotAllowed;
          Exit;
          end;
-      logger.Warn('[Download] %s is PLAINTEXT (caller allowed it)', [shownUrl]);
+      logger.Warn('[HTTP] %s is PLAINTEXT (caller allowed it)', [shownUrl]);
       end
    else
       begin
-      logger.Error('[Download] %s has no http:// or https:// scheme', [shownUrl]);
+      logger.Error('[HTTP] %s has no http:// or https:// scheme', [shownUrl]);
       AFailReason := SDownloadCouldNotStart;
       AFailure    := hfBadScheme;
       Exit;
@@ -408,7 +436,7 @@ begin
 
    if not Result then
       begin
-      logger.Warn('[Download] server certificate checking is OFF by setting -- '
+      logger.Warn('[HTTP] server certificate checking is OFF by setting -- '
                   + '%s is not being verified', [aShownUrl]);
       end;
 end;
@@ -424,14 +452,14 @@ begin
       if aDiagnostic <> GLastTlsLogged then
          begin
          GLastTlsLogged := aDiagnostic;
-         logger.Error('[Download] TLS unavailable for %s -- %s',
+         logger.Error('[HTTP] TLS unavailable for %s -- %s',
                       [aShownUrl, aDiagnostic]);
          end
       else
          begin
          (* The diagnostic was already reported; keep the URL of this request
            findable without repeating the sentence. *)
-         logger.Debug('[Download] TLS still unavailable for %s', [aShownUrl]);
+         logger.Debug('[HTTP] TLS still unavailable for %s', [aShownUrl]);
          end;
    finally
       GTlsLogLock.Leave;
@@ -450,14 +478,14 @@ begin
       if aWhy <> GLastRefusalLogged then
          begin
          GLastRefusalLogged := aWhy;
-         logger.Error('[Download] REFUSING %s -- server certificates cannot be '
+         logger.Error('[HTTP] REFUSING %s -- server certificates cannot be '
                       + 'verified (%s). Turn off Preferences > Network > verify '
                       + 'server certificates to proceed unverified.',
                       [aShownUrl, aWhy]);
          end
       else
          begin
-         logger.Debug('[Download] still REFUSING %s -- same reason as logged', [aShownUrl]);
+         logger.Debug('[HTTP] still REFUSING %s -- same reason as logged', [aShownUrl]);
          end;
    finally
       GTlsLogLock.Leave;
@@ -511,6 +539,10 @@ begin
       begin
       aWire.VerifyServer := VerifyWanted(shownUrl);
       end;
+
+   (* ONE REQUEST LOG FOR ALL THREE VERBS: the line is written here, the one
+     place every request passes, and nowhere else. *)
+   logger.Debug('[HTTP] request %s', [RequestDebugLine(aWire, aSecret1, aSecret2)]);
 
    transport := ActiveHttpTransport;
    if transport = nil then
@@ -620,7 +652,7 @@ begin
       except
          on E: Exception do
             begin
-            logger.Error('[Download] %s -> %s failed: %s: %s',
+            logger.Error('[HTTP] %s -> %s failed: %s: %s',
                          [AURL, ATargetFile, E.ClassName, E.Message]);
             AFailReason := E.Message;
             Exit;
@@ -642,7 +674,7 @@ begin
            RunTransport. *)
          if not refusalLogged then
             begin
-            logger.Error('[Download] %s -> %s failed: %s',
+            logger.Error('[HTTP] %s -> %s failed: %s',
                          [AURL, ATargetFile, res.Detail]);
             end;
          SysUtils.DeleteFile(tmpFile);
@@ -654,7 +686,7 @@ begin
       Result := RenameFile(tmpFile, ATargetFile);
       if not Result then
          begin
-         logger.Error('[Download] %s fetched but could not be renamed to %s',
+         logger.Error('[HTTP] %s fetched but could not be renamed to %s',
                       [tmpFile, ATargetFile]);
          AFailReason := SDownloadRenameFailed;
          end;
@@ -704,7 +736,7 @@ begin
          end
       else if not refusalLogged then
          begin
-         logger.Error('[Download] GET %s failed: %s', [AURL, res.Detail]);
+         logger.Error('[HTTP] GET %s failed: %s', [AURL, res.Detail]);
          end;
    finally
       res.Free;
@@ -797,7 +829,7 @@ begin
       Failure    := hfAuthPolicy;
       (* Reported, not silent: the delivery worker stops on this, and the log is
         where an operator finds out why. The token is scrubbed out of the URL. *)
-      logger.Error('[Download] refusing %s -- a bearer token needs https, no '
+      logger.Error('[HTTP] refusing %s -- a bearer token needs https, no '
                    + 'redirects and no line break in the token',
                    [ScrubBoth(URL, BearerToken, Password)]);
       Exit;
@@ -808,9 +840,6 @@ begin
       begin
       Exit;
       end;
-
-   (* ONE TRACE LINE PER REQUEST. The token is masked, never written. *)
-   logger.Trace('[Download] %s', [RequestTraceLine(Method, URL, BearerToken, Password)]);
 
    wire := THttpWireRequest.Create;
    res  := THttpWireResult.Create;
@@ -855,7 +884,7 @@ begin
            credentialed or not (NY4I, 2026-11-05: log the URL, mask the bearer
            token). What makes that safe is the scrub: a server's error text can
            echo what we sent. *)
-         logger.Error('[Download] %s',
+         logger.Error('[HTTP] %s',
                       [FailureLineFromDetail(Method, URL, res.Detail,
                                              BearerToken, Password)]);
          if (BearerToken <> '') or Sensitive then
