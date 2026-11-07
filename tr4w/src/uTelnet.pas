@@ -1991,6 +1991,24 @@ begin
      Exit;
      end;
 
+  (* A SPOT FOR THIS CALL IS ALREADY ON THIS FREQUENCY -- the operator clicked
+    it, so the radio sits on it. AddSpot REPLACES the entry on a frequency, and
+    ours has no comment, so it would take away the spot's section (and with it
+    its M on the band map) the moment the first Enter is pressed, and ESC would
+    not bring it back (NY4I, ARRL SS, 2026-11-07). The cluster's spot already
+    says everything ours would; leave it. A marker is not a call and is not
+    asked. *)
+  if (not SpotCallIsCQMarker(Call)) and (not SpotCallIsNewMarker(Call)) then
+     begin
+     TempSpot := Default(TSpotRecord);
+     TempSpot.FCall := Call;
+     TempSpot.FFrequency := TempFrequency;
+     if SpotsList.IndexOfSpot(TempSpot) >= 0 then
+        begin
+        Exit;
+        end;
+     end;
+
   FillChar(TempSpot, SizeOf(TempSpot), 0);
 
   if SpotCallIsCQMarker(Call) then

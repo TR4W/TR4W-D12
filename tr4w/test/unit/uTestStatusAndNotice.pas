@@ -85,6 +85,7 @@ type
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
       procedure Test_TheMultHeaderPinsOfIssue207;
       procedure Test_TheNeedsStripTakesASpotsSection;
+      procedure Test_TypingACallNeverChangesASpotsM;
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
       procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
       procedure Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
@@ -116,6 +117,8 @@ uses
    Tree,               (* PTTStatusString -- the indicator's ordinary text *)
    MainUnit,           (* logger, PTTIndicatorBack, RefreshMainWindowElementColors *)
    uSpots,             (* SpotsList -- the needs strip reads a spot's section *)
+   uTelnet,            (* tCreateAndAddNewSpot -- the first Enter's own spot *)
+   uWindowTable,       (* tr4w_WindowsArray -- the band map "exists" *)
    uDXSpotParse,       (* ParseDXSpotLine *)
    uAppStrings,        (* STXInhibitedStatus, STXInhibitedIndicator *)
    uRadioState,        (* RadioState.PTTOn -- what the bridge paints from *)
@@ -2410,6 +2413,121 @@ begin
       end;
 end;
 
+(* ISSUE 12, NY4I BENCH 2026-11-07: TYPING A CALL AND PRESSING THE FIRST ENTER
+  (ShowStationInformation -> ShowNeedsForCall) MUST NOT CHANGE ANY SPOT'S M.
+  The spot's state changes when a QSO is logged, nothing else. Asked at limit
+  1 and 2, the section never worked, worked once, and worked to the limit. *)
+procedure TStatusAndNoticeTests.Test_TypingACallNeverChangesASpotsM;
+var
+   savedSetting: boolean;
+   savedLimit: integer;
+   savedLatch: string;
+   savedFreq: LONGINT;
+   savedBmBand: BandType;
+   savedBmMode: ModeType;
+   limit: integer;
+   worked: integer;
+   before: TSpotRecord;
+   after: TSpotRecord;
+   rx: ContestExchange;
+   i: integer;
+begin
+   BeginTest('Test_TypingACallNeverChangesASpotsM');
+   EnsureMainForm;
+   BindMainGrids;
+   CheckTrue(ctyLoadInCountryFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                                  PathDelim + 'target' + PathDelim + 'cty.dat', False, False, True),
+             'cty.dat loads');
+   savedSetting := Settings.Cluster.SpotCommentMultiplier;
+   savedLimit := Settings.BandMap.WorkedMultLimit;
+   savedLatch := StationInformationCall;
+   savedFreq := Radio1.FilteredStatus.Freq;
+   savedBmBand := BandmapBand;
+   savedBmMode := BandmapMode;
+   SaveNeedsSession;
+   SpotsList.Clear;
+   try
+      for limit := 1 to 2 do
+         begin
+         for worked := 0 to 2 do
+            begin
+            OpenNeedsSession(ContestHandleOf(ARRLSSCW), 'arrlsect.dom', DomesticCountriesARRLSections);
+            SpotsList.Clear;
+            Settings.Mult.ByBand := False;
+            Settings.Mult.ByMode := False;
+            NumberDifferentMults := 1;
+            ActiveBand := Band20;
+            ActiveMode := CW;
+            Settings.Cluster.SpotCommentMultiplier := True;
+            Settings.BandMap.WorkedMultLimit := limit;
+            for i := 1 to worked do
+               begin
+               rx := Default(ContestExchange);
+               rx.ceRecordKind := rkQSO;
+               rx.Callsign := CallString('W7WYS' + Chr(Ord('A') + i));
+               rx.Band := Band40;
+               rx.Mode := CW;
+               rx.Zone := DUMMYZONE;
+               rx.QTHString := 'WWA';
+               FoundDomesticQTH(rx);
+               Sheet.SetMultFlags(rx);
+               Sheet.AddQSOToSheets(@rx, False);
+               end;
+            PutSpot('K7GT', 'WWA', Band20, Now);
+            SpotsList.UpdateSpotsMultiplierStatus;
+            before := SpotsList.Get(0);
+            (* THE PREMISE: the state the band map shows before any typing. *)
+            CheckTrue(before.FMult = (worked = 0),
+                      Format('limit %d, worked %d: red M before', [limit, worked]));
+            CheckTrue(before.FWorkedMult = ((worked >= 1) and (worked < limit)),
+                      Format('limit %d, worked %d: orange M before', [limit, worked]));
+
+            (* THE FIRST ENTER, as the log shows it: the call is shown. *)
+            StationInformationCall := '';
+            ShowStationInformation('K7GT');
+            SpotsList.UpdateSpotsMultiplierStatus;
+            after := SpotsList.Get(0);
+            CheckTrue(before.FMult = after.FMult,
+                      Format('limit %d, worked %d: FMult after the first Enter', [limit, worked]));
+            CheckTrue(before.FWorkedMult = after.FWorkedMult,
+                      Format('limit %d, worked %d: FWorkedMult after the first Enter', [limit, worked]));
+
+            (* AND WHAT THE FIRST ENTER ALSO DOES IN SEARCH-AND-POUNCE
+               (ReturnInSAPOpMode): a spot for the call at the radio's
+               frequency. The radio is ON the cluster spot's frequency (the
+               operator clicked it), so it replaced the cluster spot with one
+               that carried no comment -- and the section went with it. *)
+            tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndForm := TR4WMainForm;
+            Radio1.FilteredStatus.Freq := before.FFrequency;
+            BandmapBand := Band20;
+            BandmapMode := CW;
+            try
+               tCreateAndAddNewSpot('K7GT', False, @Radio1);
+            finally
+               tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndForm := nil;
+            end;
+            SpotsList.UpdateSpotsMultiplierStatus;
+            CheckEquals(1, SpotsList.Count,
+                        Format('limit %d, worked %d: still one spot', [limit, worked]));
+            after := SpotsList.Get(0);
+            CheckTrue(before.FMult = after.FMult,
+                      Format('limit %d, worked %d: FMult after the call''s own spot', [limit, worked]));
+            CheckTrue(before.FWorkedMult = after.FWorkedMult,
+                      Format('limit %d, worked %d: FWorkedMult after the call''s own spot', [limit, worked]));
+            end;
+         end;
+   finally
+      SpotsList.Clear;
+      Settings.Cluster.SpotCommentMultiplier := savedSetting;
+      Settings.BandMap.WorkedMultLimit := savedLimit;
+      StationInformationCall := savedLatch;
+      Radio1.FilteredStatus.Freq := savedFreq;
+      BandmapBand := savedBmBand;
+      BandmapMode := savedBmMode;
+      RestoreNeedsSession;
+      end;
+end;
+
 (* ISSUE #97 ON THE STREAMED MAIN WINDOW: the PTT indicator and radio 1's status
   panel for a key-up on a radio in TX test mode, driven exactly as the program
   drives them -- the settled status, then the review the polling thread asks
@@ -2983,6 +3101,7 @@ begin
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
    Test_TheMultHeaderPinsOfIssue207;
    Test_TheNeedsStripTakesASpotsSection;
+   Test_TypingACallNeverChangesASpotsM;
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
    Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
