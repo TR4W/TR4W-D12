@@ -44,8 +44,40 @@ type
      any other proved kind   doRetry, 300 s *)
 function ApplyNothingSent(aRequest: THttpRequest; const aCodePrefix, aService: string;
                           var aResult: TExternalDeliveryResult): boolean;
+(* HTTP 429, CLASSIFIED ONCE for the services that read Retry-After (Club Log,
+  Cloudlog/Wavelog). Returns True, with aResult filled, when the status is 429:
+  a retry, not paused, after the server's Retry-After seconds (60 when absent
+  or unusable, capped at a year), code aCodePrefix + 'RATE_LIMITED'. The
+  request WAS refused by the server before it did anything, so a retry is safe. *)
+function ApplyRateLimited(aRequest: THttpRequest; const aCodePrefix: string;
+                          var aResult: TExternalDeliveryResult): boolean;
 implementation
-uses uHttpTransport, uTLSTrust;
+uses SysUtils, uHttpTransport, uTLSTrust;
+
+function ApplyRateLimited(aRequest: THttpRequest; const aCodePrefix: string;
+                          var aResult: TExternalDeliveryResult): boolean;
+var
+   delay: Int64;
+begin
+   Result := aRequest.StatusCode = 429;
+   if not Result then
+      begin
+      Exit;
+      end;
+   aResult.Outcome := doRetry;
+   aResult.Pause := False;
+   aResult.ErrorCode := aCodePrefix + 'RATE_LIMITED';
+   delay := 60;
+   if not TryStrToInt64(UTF8Encode(aRequest.RetryAfter), delay) or (delay < 1) then
+      begin
+      delay := 60;
+      end;
+   if delay > 31536000 then
+      begin
+      delay := 31536000;
+      end;
+   aResult.RetrySeconds := delay;
+end;
 
 function ApplyNothingSent(aRequest: THttpRequest; const aCodePrefix, aService: string;
                           var aResult: TExternalDeliveryResult): boolean;

@@ -944,6 +944,11 @@ resourcestring
    SLoggerFieldClubLogToken  = 'Club Log API token';
    SLoggerFieldWRLKey        = 'WRL API key';
    SLoggerFieldWRLLogbook    = 'Logbook';
+   (* Cloudlog / Wavelog (issue 204). The address is the site as the browser
+      opens it, https only (add /index.php if the site needs it). *)
+   SLoggerFieldCloudlogUrl     = 'Cloudlog / Wavelog address (https://...)';
+   SLoggerFieldCloudlogKey     = 'Cloudlog / Wavelog API key';
+   SLoggerFieldCloudlogProfile = 'Station profile ID';
    (* %s is a field caption. *)
    SLoggerFieldRequired      = 'Enter %s';
    SLoggerChoiceRequired     = 'Choose %s from the list';

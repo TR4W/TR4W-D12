@@ -71,7 +71,7 @@ function ApplyExternalLoggerConfiguration(const aConfig: TExternalLoggerConfig):
 implementation
 
 uses
-   Log4D, uWRLExternalLogger, uClubLogExternalLogger, uLogStore,
+   Log4D, uWRLExternalLogger, uClubLogExternalLogger, uCloudlogExternalLogger, uLogStore,
    uExternalLoggerRegistry, uExternalLoggers, uExternalLoggerMigration,
    uRadioConfigStore, uTR4WConfigFile,
    MainUnit,          (* externalLogger -- the process-wide instance *)

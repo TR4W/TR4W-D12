@@ -30,6 +30,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-07 -- CLOUDLOG / WAVELOG EXTERNAL LOGGER (issue 204)
+
+New contacts go to a Cloudlog or Wavelog instance through `POST <address>/api/qso` (the key is in the JSON body). The unit tests (`uTestCloudlog`) run the real request path against a scripted transport; they cannot talk to a real server. Both programs' behaviour below was read from their source (Api.php, Logbook_model.php), never run. **Neither has an edit or delete call**, so editing or deleting a contact that was already delivered fails visibly instead (decision for NY4I, see `EXTERNAL_LOGGERS_DESIGN.md`).
+
+- [ ] **A real Wavelog and a real Cloudlog.** Preferences > External Software > External Logger > Add > Cloudlog / Wavelog. Address is the site as the browser opens it (add `/index.php` if the site needs it), the API key (a READ AND WRITE key), the Station profile ID (the number in the station locations list). Log a QSO: it appears in the site's log, the row reads Idle, no failure counts.
+- [ ] **The station callsign.** Cloudlog answers 401 (the worker halts, "Paused") when the ADIF's STATION_CALLSIGN does not match the station profile's callsign. TR4W only writes that tag when the operator differs from the station call. Log as a different operator and see what the server does.
+- [ ] **A duplicate.** Log the same call, band and mode in the same minute twice (dupe logging on). The second is refused by the server: the row shows "Failed: CLOUDLOG_IMPORT_REJECTED", the destination keeps sending the next QSO. Cloudlog reports it as a 201 with imported_count 0; Wavelog as a 400.
+- [ ] **A read-only key** (Wavelog): 403, Paused, the QSO stays queued, and fixing the key plus a restart sends it.
+- [ ] **A wrong station profile id**: 401, Paused.
+- [ ] **A self-hosted https site with a private certificate**: refused (certificates are checked; there is no per-destination "do not verify" yet, issue 224 question 13). An `http://` address is refused too (the key travels in the body; question 12). Confirm the Connection column says so rather than "Idle".
+- [ ] **Edit a QSO that was delivered**: the row shows "Failed: CLOUDLOG_EDIT_UNSUPPORTED" and nothing is changed or duplicated on the server. **Delete one**: "Failed: CLOUDLOG_DELETE_UNSUPPORTED", the server keeps it. Neither halts later QSOs.
+- [ ] **The log** (DEBUG LOG LEVEL = DEBUG): the `[HTTP] request POST` line shows `"key" : "********"` and the key appears nowhere in tr4w.log.
+- [ ] **Rate limit** (Wavelog): if the server answers 429 the row says Retrying, and the QSO is sent after the Retry-After seconds. Needs a server with the limit turned low.
+
+---
+
 ## Added 2026-11-07 -- A WORKED MULTIPLIER SHOWS AS A BACKUP, "B" IN ORANGE (issue 12)
 
 A cluster spot whose multiplier is already worked, but whose call is not a dupe, is now a third state: orange `B` on the band map, orange text in the Telnet window. New multiplier stays red `M`, a dupe stays yellow `D`. The unit tests pin the decision (Sweepstakes sections count once across bands; per-band contests count per band; a dupe is never a backup). They cannot see the screen. Preferences > Band Map > Window and tuning has the new colour row. For Sweepstakes the section reaches TR4W either from the call history or from the spot comment, so turn CLUSTER SPOT COMMENT MULTIPLIER on if the spots carry sections.

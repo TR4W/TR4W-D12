@@ -415,6 +415,36 @@ used to be written out in `uHTTPDownload`. Rules that are easy to break:
 * The Get verbs FOLLOW redirects (pinned by `Test_AGetStillFollowsARedirect`); S1c decides the
   https-to-http hop. No Windows or macOS transport exists (S2+ wait for NY4I's section-8 answers).
 
+## Cloudlog / Wavelog provider (issue 204, 2026-11-07)
+
+`uCloudlogClient` + `uCloudlogExternalLogger` (provider id `CLOUDLOG`, linked from
+`uExternalLoggerFactory`'s uses clause like Club Log, not from a `.lpr`). Fields: address
+(`LF_URL`), API key (secret), station profile id (`LF_LOGBOOK`); address and profile are in the
+fingerprint. Facts read from the Wavelog and Cloudlog sources (Api.php, Logbook_model.php), never
+run against a live server:
+
+* **THE KEY IS IN THE JSON BODY, NOT A HEADER.** `BearerToken` is the wrong field (it makes an
+  Authorization header and the bearer gate). The client sets `Password := key` with NO `Username`,
+  plus `Sensitive`: `uHTTPDownload` scrubs Password from every log line (the `[HTTP]` DEBUG line
+  carries the body) and the transport only sends basic auth when Username is set. Pinned in
+  `uTestCloudlog` through the real `Send`.
+* **A 201 does not prove an import.** Cloudlog answers 201 with `imported_count` 0 for a duplicate;
+  Wavelog answers 400 `abort`. The count (`imported_count`, or `adif_count` + `adif_errors`) is
+  checked against the ONE record sent; a refusal is `CLOUDLOG_IMPORT_REJECTED`, failed, NOT paused
+  (one contact). 401 and 403 halt the worker (the worker's own rule). 200 `status:failed` is a
+  malformed request: failed and paused. 429 is `ApplyRateLimited` (lifted from Club Log, now shared).
+* **NO EDIT, NO DELETE.** Both servers dedupe on call + minute + band + mode + station, so a re-POST
+  is refused or, with a changed key field, adds a second row. An edit or delete of a contact that
+  was delivered settles `doFailed` (`CLOUDLOG_EDIT_UNSUPPORTED` / `CLOUDLOG_DELETE_UNSUPPORTED`),
+  `Pause` False, `Status` 0, nothing sent. A contact never delivered is created (edit) or cancelled
+  locally (delete). **This breaks CLAUDE.md section 7's "changes and deletes are required for every
+  implemented provider"; it is NY4I's decision, not an agent's.** A confirmed create has no remote
+  id, so the local marker `cloudlog:created` stands in (the outbox refuses a confirmed create with
+  an empty one).
+* **TLS is the global setting only, https only.** No per-destination "do not verify" and no plain
+  http: HTTP_TRANSPORT_DESIGN questions 12 and 13 are NY4I's. Do not invent either here.
+* Response cap is 256 KB: the 201 echoes the whole ADIF back.
+
 ## SuperCheckPartial upload (2026-10-25)
 
 `uSuperCheckPartialFileUpload`. **The signature is over BYTES:** `SCPSignature(secret,

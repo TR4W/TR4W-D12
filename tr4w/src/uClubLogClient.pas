@@ -59,7 +59,6 @@ var
    request: THttpRequest;
    root, value: TJSONData;
    status, message: string;
-   delay: Int64;
    testMode: boolean;
 begin
    Result := Default(TExternalDeliveryResult);
@@ -90,21 +89,8 @@ begin
            once by uHTTPDownload. *)
          Exit;
          end;
-      if Result.Status = 429 then
+      if ApplyRateLimited(request, 'CLUBLOG_', Result) then
          begin
-         Result.Outcome := doRetry;
-         Result.Pause := False;
-         Result.ErrorCode := 'CLUBLOG_RATE_LIMITED';
-         delay := 60;
-         if not TryStrToInt64(UTF8Encode(request.RetryAfter), delay) or (delay < 1) then
-            begin
-            delay := 60;
-            end;
-         if delay > 31536000 then
-            begin
-            delay := 31536000;
-            end;
-         Result.RetrySeconds := delay;
          Exit;
          end;
       if (Result.Status = 401) or (Result.Status = 403) or

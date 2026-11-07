@@ -1,6 +1,6 @@
 # External logger definitions, factory and delivery
 
-Implemented in worktree `codex/external-loggers-191`, based on `aedfe202afe1f873aa800df58f1a6ba76235e8c2`. Design approved by NY4I on November 4, 2026. Issue [191](https://github.com/TR4W/TR4W-D12/issues/191) is the Club Log pilot. All implemented providers handle new contacts, changes and deletes.
+Implemented in worktree `codex/external-loggers-191`, based on `aedfe202afe1f873aa800df58f1a6ba76235e8c2`. Design approved by NY4I on November 4, 2026. Issue [191](https://github.com/TR4W/TR4W-D12/issues/191) is the Club Log pilot. All implemented providers handle new contacts, changes and deletes, except Cloudlog/Wavelog (issue 204), whose servers have no edit or delete call: there an edit or delete of a delivered contact fails visibly.
 
 ## Configuration and operator setup
 
@@ -20,6 +20,7 @@ The grid edits the Preferences working copy directly, so Cancel (which reloads i
 | DXKeeper | Host/IP and TCP port (normally 52001) | Existing per-command TCP protocol and sender queue. Edit remains ordered delete/re-log. TCP handoff is not a remote acknowledgement. Existing queue remains in memory. |
 | World Radio League | API key and a logbook chosen BY NAME from a drop-down (loaded from GET /logbooks off the main thread). The logbook id and the account id (the key's own uid) are stored in the definition but never shown; the logbook's name is stored beside the id (`logbookName`, display only, not part of the destination fingerprint). TR4W does not create logbooks (NY4I, issue 231): the operator makes one on the WRL website or app and picks it here; the key is validated by the editor's own load and Refresh. | Durable intent committed with the local QSO, API create/update/delete and revision tracking. |
 | Club Log | Personal API bearer token and destination callsign | JSON REST create; edit deletes the confirmed qsoid then creates the replacement; delete uses the confirmed qsoid. Accepted test-mode replies count as successful delivery. |
+| Cloudlog / Wavelog (issue 204) | Site address (https), API key, station profile id | **New contacts only.** JSON POST to `<address>/api/qso` with the key in the body; a created contact is confirmed only when the server's count says it took the one record sent. **Neither server has an edit or delete call, so an edit or delete of an already-delivered contact settles as a visible failure (`CLOUDLOG_EDIT_UNSUPPORTED` / `CLOUDLOG_DELETE_UNSUPPORTED`), nothing is sent, and the destination keeps running.** See "Cloudlog and Wavelog" below. |
 
 Passwords and API keys live in the existing platform keychain under definition IDs. JSON contains references, never newly written plaintext credentials. Names/order are not credential identity. An unreadable vault does not turn an empty field into an instruction to remove an existing reference. During migration, an unreadable legacy WRL key keeps a reference to its original vault name until the new reference can be stored.
 
@@ -40,6 +41,7 @@ Club Log uses a personal token created under Settings > API. Only the token and 
 | `uExternalDelivery` | Durable revisions, claims, settlement, recovery and scoped legacy-row adoption. |
 | `uWRLExternalLogger` / `uWRLWorker` / `uWRLClient` | WRL payload adaptation, protocol and legacy ownership migration. |
 | `uClubLogExternalLogger` / `uClubLogClient` | Club Log ADIF adaptation and real-time create/replace/delete protocol. |
+| `uCloudlogExternalLogger` / `uCloudlogClient` | Cloudlog and Wavelog: ADIF create only (no edit or delete exists on either server), count-checked, key in the body. |
 | `uDefinitionId` | Shared ID minting for radios, keyers and loggers; GUID failure refuses creation rather than risking a timestamp collision. |
 | `uKeychainJSON` | Existing radio/cluster vault serialization helpers lifted for reuse by logger definitions. |
 | `uExternalLoggersForm` | Native designed LCL editor for ONE definition (Add and Edit). Name, provider and Active are designed controls; the provider's rows are built at run time from its descriptors (one row per field: text, masked secret, or a name drop-down with a Refresh button), so the form names no provider. A choice list is loaded on its own thread (polled by a timer); with no network the saved name stays selectable, and an old definition with no stored name shows a placeholder and keeps working. The derived account is written only when the operator picks, or the key changes; editing a secret drops the stored choice. Also the shared acceptance checks (`ExternalLoggerConfigAcceptable`) and per-definition durable status. |
@@ -71,6 +73,29 @@ Each durable instance's namespace contains its stable ID plus a SHA-256 fingerpr
 
 WRL's migrated definition adopts only legacy rows matching its original account and logbook, including confirmed rows and remote IDs. Other accounts/logbooks are not adopted. Adoption is per contest file and does not resend a confirmed contact. Legacy commands/settings are migration input; after the new section exists, the definition library is authoritative and the old singleton does not override it.
 
+## Cloudlog and Wavelog (issue 204, 2026-11-07)
+
+One provider, `CLOUDLOG`, for both programs (`uCloudlogClient`, `uCloudlogExternalLogger`). They share one API: `POST <address>/api/qso`, JSON `{"key", "station_profile_id", "type":"adif", "string"}`. The key is in the BODY, not an Authorization header. An instance served through `index.php` enters its address as `https://host/index.php`. The facts below were read from the two programs' source (Api.php and Logbook_model.php on GitHub); no live server has been run, so the bench queue holds the live checks.
+
+**Answers and what TR4W does with each:**
+
+| Answer | Meaning | Outcome |
+| --- | --- | --- |
+| 201 `created`, Cloudlog `imported_count` 1, or Wavelog `adif_count` 1 and `adif_errors` 0 | the one record sent was taken | confirmed (local marker `cloudlog:created` as the remote id, because neither server returns one) |
+| 201 with `imported_count` 0 (Cloudlog duplicate), `adif_count` 0, or `adif_errors` above 0 | refused: a 201 does not prove an import | failed `CLOUDLOG_IMPORT_REJECTED`, destination keeps running |
+| 400 `abort` (Wavelog) | the import refused this contact (a duplicate, a validation error) | failed `CLOUDLOG_IMPORT_REJECTED`, keeps running |
+| 401 | bad key, a profile the key's owner does not own, or (Cloudlog) a STATION_CALLSIGN not matching the profile, or an empty call | the worker's rule: work kept, destination paused |
+| 403 | read-only key (Wavelog) | the same |
+| 200 `status:failed` | malformed JSON | failed `CLOUDLOG_REQUEST_REFUSED`, paused |
+| 429 | rate limit (Wavelog) | retry after Retry-After, 60 s if absent |
+| other 4xx, 3xx | wrong address or similar; redirects are not followed | failed `CLOUDLOG_HTTP_n` / `CLOUDLOG_REDIRECT`, paused |
+| 5xx, no or unreadable answer, a count that fits nothing | the import may have happened | uncertain, paused, never replayed blindly |
+| nothing sent (TLS or CA bundle unavailable, plain http, no scheme) | proved by `NothingSent` | the shared `ApplyNothingSent` table, `CLOUDLOG_*` codes |
+
+**EDIT AND DELETE: NOT SUPPORTED, AND THIS IS A DECISION FOR NY4I.** Neither server has an edit or delete endpoint, and a re-POST is not a substitute: both match call, minute, band, mode and station and refuse a match as a duplicate (Wavelog 400, Cloudlog `imported_count` 0), and an edit that changes one of those fields would add a SECOND row. So an edit or delete of a contact already delivered settles as a visible failure (`CLOUDLOG_EDIT_UNSUPPORTED`, `CLOUDLOG_DELETE_UNSUPPORTED`): nothing is sent, nothing is reported as synced, the row shows Failed with the code, and the destination keeps sending later contacts (the failures do not pause it). A contact never delivered is unaffected: an edit of one whose create was refused is simply sent, and a delete of one is cancelled locally. This departs from the rule above that every implemented provider handles changes and deletes. The alternatives are to send the edit as a new contact (risks a duplicate in the remote log) or to leave edits and deletes out of that destination's queue silently (the rule forbids it). The operator corrects the remote log by hand in Cloudlog or Wavelog.
+
+**TLS and the key.** Certificates are checked by the global setting, as for every other provider, and the address must be `https://`. There is no per-destination choice yet, so a self-signed site and a plain-http LAN site are refused with a visible code: those are questions 12 and 13 in `HTTP_TRANSPORT_DESIGN.md` and wait for NY4I. The key is sent as the request's Password with no Username, so `uHTTPDownload` masks it in every log line (the `[HTTP]` body line reads `"key" : "********"`) while no Authorization header is made. A key containing characters that JSON escapes (a slash, a quote) would not match its raw form in the logged body; Cloudlog and Wavelog keys are alphanumeric, and this is unverified for anything else.
+
 ## Changes, deletes and uncertainty
 
 A worker claims a revision, commits the claim, sends it, then settles that revision. A newer local revision remains pending after the older request completes. A delete before an unsent create is cancelled locally. An edit/delete arriving while a create is in flight is subsequently applied using the confirmed remote version.
@@ -89,7 +114,7 @@ Investigated all five currently open issues bearing the label; none were closed 
 | --- | --- | --- |
 | [191](https://github.com/TR4W/TR4W-D12/issues/191) | Club Log | Bearer-token JSON REST, returned qsoid, durable real-time create/change/delete. Original [TR4W/TR4W#772](https://github.com/TR4W/TR4W/issues/772) supplied an obsolete queue example; the existing dispatcher/outbox are reused. |
 | [203](https://github.com/TR4W/TR4W-D12/issues/203) | Log4OM | Configurable host/IP and UDP port. This repository asks only for TR4W-to-Log4OM, not inbound logging from the linked project's issue. |
-| [204](https://github.com/TR4W/TR4W-D12/issues/204) | Cloudlog/Wavelog | Instance URL, API credential and remote station profile; several instances may be active. |
+| [204](https://github.com/TR4W/TR4W-D12/issues/204) | Cloudlog/Wavelog | Instance URL, API credential and remote station profile; several instances may be active. **Built 2026-11-07, new contacts only**: the servers have no edit or delete call (see "Cloudlog and Wavelog"). |
 | [205](https://github.com/TR4W/TR4W-D12/issues/205) | MacLoggerDX | Verify the actual QSO-import mechanism. Emitting a compatible UDP announcement does not prove that MacLoggerDX will import it. A native macOS adapter remains an option. |
 | [33](https://github.com/TR4W/TR4W-D12/issues/33) | ACLog | Configurable host/IP/TCP port; replace the incomplete placeholder with a provider implementing create/change/delete. |
 
