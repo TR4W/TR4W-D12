@@ -162,6 +162,20 @@ begin
      //      Windows.SendMessage(TotWinheadHandles[Column], BM_SETCHECK, BST_CHECKED, 0);
    TotWinCurrrentColumn := Column;
      end;
+
+  (* A BAND THE CONTEST DOES NOT USE HAS NO HEADER AND NO NUMBERS -- its column
+     stays where it is, empty, so no band moves under another's header. Its
+     cells could only read 0 (QSOCountsTowardTotals counts no off-band QSO),
+     but the header still named 160 and 80 in the Florida QSO Party (NY4I,
+     2026-11-07). Real bands only: AllBands is a key, not a band, and a
+     contest's UsesBand answers False for it. *)
+  if (Band <> AllBands) and
+     (not ContestCreditsBand(ContestIdentity(Contest), Band)) then
+     begin
+     SetTotalsHeader(Column, '');
+     Exit;
+     end;
+
   SetTotalsHeader(Column, BandStringsArrayWithOutSpaces[Band]);
 
   Row := -1;

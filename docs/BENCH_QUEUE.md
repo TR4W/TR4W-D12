@@ -30,6 +30,14 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-07 -- THE NEEDS STRIPS AND THE TOTALS GRID SHOW ONLY THE CONTEST'S BANDS (NY4I, Florida QP)
+
+"QSO needs for <call>" listed 160 and 80 in the Florida QSO Party, whose class uses 40/20/15/10 only (the Mult strip already left them blank). The QSO strip's mask now goes through `CreditedBands`, as the Mult strip's does; the totals grid's 160 and 80 headers are blank for such a contest. Columns do not move: an unused band is an empty cell / unnamed column in its usual place. Pinned by `uTestStatusAndNotice` (`Test_TheQSONeedsStripOffersOnlyTheContestsBands`, `Test_TheTotalsHeadersNameOnlyTheContestsBands`) on the streamed form; nothing has looked at a running window.
+
+- [ ] **Florida QSO Party, a call typed.** Both QSO-needs rows (CW and SSB) show 40 20 15 10 and nothing under 160 or 80; the Mult-needs rows as before. The empty 160/80 cells are plain background, no stripes.
+- [ ] **The totals grid (top left) in Florida.** The 160 and 80 columns have no header and no numbers; 40-10 and All are named where they always were, and the active band's header is still highlighted.
+- [ ] **CQ WW (or any all-band contest).** All six bands still show in both strips and in the totals headers.
+
 ## Added 2026-11-07 -- CLOUDLOG / WAVELOG EXTERNAL LOGGER (issue 204)
 
 New contacts go to a Cloudlog or Wavelog instance through `POST <address>/api/qso` (the key is in the JSON body). The unit tests (`uTestCloudlog`) run the real request path against a scripted transport; they cannot talk to a real server. Both programs' behaviour below was read from their source (Api.php, Logbook_model.php), never run. **Neither has an edit or delete call**, so editing or deleting a contact that was already delivered fails visibly instead (decision for NY4I, see `EXTERNAL_LOGGERS_DESIGN.md`).

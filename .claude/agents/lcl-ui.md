@@ -192,6 +192,14 @@ WHEN they are rewritten is the engine (`LOGEDIT.ShowNeedsForCall`, asked by
 `LogContact` after a QSO). A stale strip is a missing call there, not a repaint
 problem -- do not add an `Invalidate` or a timer. A test can drive them on the
 streamed form: `uTestStatusAndNotice`'s `EnsureMainForm` + `BindMainGrids`.
+**They render the engine's band mask verbatim, and WHICH BANDS may appear is
+decided in LOGEDIT, through `uContestBase.CreditedBands`** -- both masks
+(`CreateModeSpecificQSOInfo`, `CreateModeSpecificMultiplierInfo`) go through it
+(2026-11-07: the QSO strip did not, and showed 160/80 in the Florida QP). Do
+not add a second band filter in `uMainGrids.SetNeedBands`. The totals grid
+(`uTotal.DisplayBandTotals`) blanks an uncredited band's header in its fixed
+column; it asks `ContestCreditsBand` for real bands only -- a contest's
+`UsesBand(AllBands)` answers False, so asking it for the All column blanks it.
 
 **The PTT box has ONE colour rule and ONE caption rule** (issue #97,
 2026-10-26). Colour: `MainUnit.PTTIndicatorBack`, from

@@ -1501,21 +1501,22 @@ begin
               else
                 OutputString := OutputString + BandStringsArray[Band] + ' ';
     }
+     (* Break, not Exit: the band filter below runs on every path. *)
      case Band of
-       AllBands: Exit;
+       AllBands: Break;
        Band160: Band := Band80;
        Band80: Band := Band40;
        Band40: Band := Band20;
        Band20: Band := Band15;
        Band15: Band := Band10;
-       Band10: Exit;
+       Band10: Break;
 
        Band6: Band := Band2;
        Band2: Band := Band222;
        Band222: Band := Band432;
        Band432: Band := Band902;
        Band902: Band := Band1296;
-       Band1296: Exit;
+       Band1296: Break;
        {
             Band1296: Band := Band2304;
             Band2304: Band := Band3456;
@@ -1527,6 +1528,17 @@ begin
       }
      end;
      end;
+
+  (* NO BAND THE CONTEST DOES NOT USE IS SHOWN NEEDING A QSO -- the QSO
+     strip's half of what CreateModeSpecificMultiplierInfo has done for the
+     Mult strip since M8. An off-band QSO is never put on the dupe sheet, so
+     CallIsADupe answers "not a dupe" on such a band FOREVER, and the strip
+     listed 160 and 80 for every call in the Florida QSO Party (NY4I,
+     2026-11-07). The same rule, asked the same way: CreditedBands, which
+     keeps the AllBands key. The strip renders this mask verbatim
+     (uMainGrids.SetNeedBands), so an uncredited band is an empty cell in its
+     own column. *)
+  OutputString := integer(CreditedBands(ContestIdentity(Contest), Cardinal(OutputString)));
 end;
 
 procedure EditableLog.ShowQSOStatus(Call: string);

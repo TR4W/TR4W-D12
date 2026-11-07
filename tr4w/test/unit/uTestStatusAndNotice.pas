@@ -79,6 +79,8 @@ type
       procedure Test_NoStatusOverrunsItsPanel;
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+      procedure Test_TheQSONeedsStripOffersOnlyTheContestsBands;
+      procedure Test_TheTotalsHeadersNameOnlyTheContestsBands;
       procedure Test_TheSweepstakesMultHeaderNamesTheSection;
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
       procedure Test_TheMultHeaderPinsOfIssue207;
@@ -130,7 +132,8 @@ uses
    LogK1EA,           (* CWBufferStart/End, tWaitForNextChar, DVPOn -- issue #132 *)
    LOGDVP,             (* tDVPPlayThreadproc, DVPMessagesArray -- issue #132 *)
    uAppTimers,         (* AppTimerRunning(atAutoCQ) -- issue #132 *)
-   uCWKeyerBase;       (* KeyerCPU -- the CW thread's real starter, issue #132 *)
+   uCWKeyerBase,       (* KeyerCPU -- the CW thread's real starter, issue #132 *)
+   uTotal;             (* UpdateTotals2, ClearTotals -- the totals headers *)
 
 (* ISSUE #108: A RADIO THAT IS UP AND REPORTS A KEYER SPEED, AND NOTHING ELSE.
 
@@ -1321,6 +1324,204 @@ begin
       Settings.Mult.ByBand := savedMultByBand;
       Settings.Qso.ByMode := savedQsoByMode;
       Settings.Qso.ByBand := savedQsoByBand;
+      Contest := savedContest;
+      ReleaseActiveContest;
+      end;
+end;
+
+(* THE QSO NEEDS STRIP OFFERS ONLY THE BANDS THE CONTEST USES -- NY4I, Florida
+  QSO Party 2026-11-07: "QSO needs for <call>" listed 160 and 80, which the
+  Florida class does not use, while the Mult strip correctly left them blank.
+  An off-band QSO never reaches the dupe sheet, so the dupe question alone
+  said "needed" there for every call; LOGEDIT's CreateModeSpecificQSOInfo now
+  clears those bands through CreditedBands, as the Mult strip's mask is.
+
+  ShowQSOStatus is asked directly -- the QSO strip's own writer -- so neither
+  ShowNeedsForCall's contest gate nor the domestic path is in the way. By
+  mode, so BOTH rows are judged. Three contests: Florida (40-10 only), CQ WW
+  (all six) and ARRL 160 (160 only). The hard-coded checks state the
+  expectation independently; the per-cell loop then holds every cell of both
+  rows to the class's own UsesBand. (The strip has no WARC cells -- it is
+  160..10 -- so a WARC contest has nothing more to show here.) *)
+procedure TStatusAndNoticeTests.Test_TheQSONeedsStripOffersOnlyTheContestsBands;
+var
+   savedContest:    TContestHandle;
+   savedQsoByBand:  boolean;
+   savedQsoByMode:  boolean;
+   savedActiveBand: BandType;
+   savedActiveMode: ModeType;
+   call:            CallString;
+
+   function Cell(const aRow: integer; const aBand: BandType): TElementPanel;
+   begin
+      Result := TR4WMainForm.FindComponent(
+                   Format('pnlQSONeedR%d_%s',
+                          [aRow, string(BandStringsArrayWithOutSpaces[aBand])]))
+                as TElementPanel;
+   end;
+
+   function Reads(const aRow: integer; const aBand: BandType): string;
+   begin
+      Result := Trim(string(Cell(aRow, aBand).Caption));
+   end;
+
+   (* Every cell of both rows against the class's UsesBand. *)
+   procedure CheckEveryCellFollowsTheClass(const aName: string);
+   var
+      row:  integer;
+      band: BandType;
+   begin
+      for row := 1 to 2 do
+         begin
+         for band := Band160 to Band10 do
+            begin
+            if ContestIdentity(Contest).UsesBand(band) then
+               begin
+               CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[band])),
+                           Reads(row, band),
+                           Format('%s row %d: a band the contest uses reads its name', [aName, row]));
+               end
+            else
+               begin
+               CheckEquals('', Reads(row, band),
+                           Format('%s row %d: a band the contest does not use is an empty cell', [aName, row]));
+               end;
+            end;
+         end;
+   end;
+
+var
+   row:  integer;
+   band: BandType;
+begin
+   BeginTest('Test_TheQSONeedsStripOffersOnlyTheContestsBands');
+
+   EnsureMainForm;
+   BindMainGrids;
+
+   for row := 1 to 2 do
+      begin
+      for band := Band160 to Band10 do
+         begin
+         if Cell(row, band) = nil then
+            begin
+            CheckTrue(False, 'uMainForm.lfm has every QSO-need cell of rows 1 and 2');
+            Exit;
+            end;
+         end;
+      end;
+
+   savedContest    := Contest;
+   savedQsoByBand  := Settings.Qso.ByBand;
+   savedQsoByMode  := Settings.Qso.ByMode;
+   savedActiveBand := ActiveBand;
+   savedActiveMode := ActiveMode;
+   try
+      (* QSOs per band and per mode; the operator on 20 m, so the strip walks
+        160..10 (from 6 m it walks the VHF bands instead). *)
+      Settings.Qso.ByBand := True;
+      Settings.Qso.ByMode := True;
+      ActiveBand := Band20;
+      ActiveMode := CW;
+      ClearAllDupeSheets;
+      call := 'W1AW';
+
+      (* FLORIDA: the defect. *)
+      Contest := ContestHandleOf(FLORIDAQSOPARTY);
+      VisibleLog.ShowQSOStatus(call);
+      CheckEquals('', Reads(1, Band160), 'Florida, CW row: 160 m is not offered');
+      CheckEquals('', Reads(1, Band80),  'Florida, CW row: 80 m is not offered');
+      CheckEquals('', Reads(2, Band160), 'Florida, SSB row: 160 m is not offered');
+      CheckEquals('', Reads(2, Band80),  'Florida, SSB row: 80 m is not offered');
+      CheckEquals('40', Reads(1, Band40), 'Florida, CW row: 40 m is needed');
+      CheckEquals('10', Reads(2, Band10), 'Florida, SSB row: 10 m is needed');
+      CheckEveryCellFollowsTheClass('Florida');
+
+      (* CQ WW: every one of the six. *)
+      Contest := ContestHandleOf(CQWWSSB);
+      VisibleLog.ShowQSOStatus(call);
+      CheckEquals('160', Reads(1, Band160), 'CQ WW: 160 m is offered');
+      CheckEquals('80',  Reads(2, Band80),  'CQ WW: 80 m is offered');
+      CheckEveryCellFollowsTheClass('CQ WW');
+
+      (* ARRL 160: the other way round -- 160 m and nothing else. *)
+      Contest := ContestHandleOf(ARRL160);
+      VisibleLog.ShowQSOStatus(call);
+      CheckEquals('160', Reads(1, Band160), 'ARRL 160: 160 m is offered');
+      CheckEquals('', Reads(1, Band40),     'ARRL 160: 40 m is not');
+      CheckEveryCellFollowsTheClass('ARRL 160');
+   finally
+      ClearAllDupeSheets;
+      ActiveMode := savedActiveMode;
+      ActiveBand := savedActiveBand;
+      Settings.Qso.ByMode := savedQsoByMode;
+      Settings.Qso.ByBand := savedQsoByBand;
+      Contest := savedContest;
+      ReleaseActiveContest;
+      end;
+end;
+
+(* THE TOTALS GRID NAMES ONLY THE BANDS THE CONTEST USES -- the same Florida
+  report. The band columns are at fixed positions, so a band the contest does
+  not use keeps its column with no header (its cells could only read 0: an
+  off-band QSO counts toward no total). The All column is a key, not a band,
+  and always keeps its header. *)
+procedure TStatusAndNoticeTests.Test_TheTotalsHeadersNameOnlyTheContestsBands;
+var
+   savedContest:    TContestHandle;
+   savedActiveBand: BandType;
+   savedActiveMode: ModeType;
+
+   function Head(const aColumn: integer): string;
+   var
+      c: TComponent;
+   begin
+      c := TR4WMainForm.FindComponent(Format('pnlTotalHead_%d', [aColumn]));
+      if c is TElementPanel then
+         begin
+         Result := Trim(string(TElementPanel(c).Caption));
+         end
+      else
+         begin
+         Result := '<missing>';
+         end;
+   end;
+
+begin
+   BeginTest('Test_TheTotalsHeadersNameOnlyTheContestsBands');
+
+   EnsureMainForm;
+   BindMainGrids;
+
+   savedContest    := Contest;
+   savedActiveBand := ActiveBand;
+   savedActiveMode := ActiveMode;
+   try
+      ActiveBand := Band20;
+      ActiveMode := CW;
+
+      (* Columns 1..6 are 160..10, column 7 is All. *)
+      Contest := ContestHandleOf(FLORIDAQSOPARTY);
+      UpdateTotals2;
+      CheckEquals('', Head(1), 'Florida: the 160 m column has no header');
+      CheckEquals('', Head(2), 'Florida: the 80 m column has no header');
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[Band40])), Head(3),
+                  'Florida: 40 m keeps its column and its header');
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[Band10])), Head(6),
+                  'Florida: 10 m keeps its column and its header');
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[AllBands])), Head(7),
+                  'Florida: the All column keeps its header');
+
+      Contest := ContestHandleOf(CQWWSSB);
+      UpdateTotals2;
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[Band160])), Head(1),
+                  'CQ WW: the 160 m column is named');
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[Band80])), Head(2),
+                  'CQ WW: the 80 m column is named');
+   finally
+      ClearTotals(0);
+      ActiveMode := savedActiveMode;
+      ActiveBand := savedActiveBand;
       Contest := savedContest;
       ReleaseActiveContest;
       end;
@@ -2637,6 +2838,8 @@ begin
    Test_NoStatusOverrunsItsPanel;
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
+   Test_TheQSONeedsStripOffersOnlyTheContestsBands;
+   Test_TheTotalsHeadersNameOnlyTheContestsBands;
    Test_TheSweepstakesMultHeaderNamesTheSection;
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
    Test_TheMultHeaderPinsOfIssue207;
