@@ -116,6 +116,14 @@ You own how spots reach TR4W and how they are shown.
   line that begins `DX de `. The corpus also holds `NY-NLI`, `FL-NFL` and
   `+-FL-NFL` words, which are single unknown words, not sections.
 
+- **THE "MULT NEEDS FOR" STRIP OF A TYPED CALL READS A SPOT TOO** (issue 12
+  follow-up, 2026-11-07). `LogEdit.ShowNeedsForCall`: remembered text first; if it
+  names no multiplier, `SpotHintForTypedCall` = `SpotsList.FindSpotByCall` (active
+  band, then newest `FSysTime`) through the SAME `SpotSectionHint` the band map
+  uses, gated on `Settings.Cluster.SpotCommentMultiplier`. Never a second
+  derivation of the hint; no per-contest code. Pin:
+  `Test_TheNeedsStripTakesASpotsSection` (`uTestStatusAndNotice`).
+
 - **A SPOT'S M IS A THREE-STATE BY WORKED COUNT** (issue 12, NY4I 2026-11-07;
   the orange `B` is gone): worked 0 times = `FMult`, red `M`; 1 up to N-1 =
   `FWorkedMult`, the same `M` in BAND MAP WORKED MULT COLOR (a backup wanted);

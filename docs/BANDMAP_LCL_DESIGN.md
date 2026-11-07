@@ -507,6 +507,15 @@ issue 12; N = 2 gives "orange after the first, gone after the second".
   (NY4I's W7WYS / K7OWY sequence at N = 1 and N = 2, per band vs across bands, a
   dupe and an X-QSO not counted, a delete rebuilding the count, the class's
   scope).
+- **THE "MULT NEEDS FOR <call>" STRIP AGREES WITH THE BAND MAP** (issue 12
+  follow-up, NY4I 2026-11-07). For a TYPED call, `ShowNeedsForCall` uses what the
+  program remembers (log, call history) first; only when that names no
+  multiplier does it ask `SpotHintForTypedCall` -- `SpotsList.FindSpotByCall`
+  (the spot on the active band, else the newest by arrival) fed to the same
+  `SpotSectionHint(Spot.FCall, SpotNotesText(Spot))` the band map uses, gated on
+  CLUSTER SPOT COMMENT MULTIPLIER exactly as `DetermineSpotMultStatus` is. Setting
+  off, no spot or no hint: unchanged. No per-contest code. Pinned by
+  `Test_TheNeedsStripTakesASpotsSection` in `uTestStatusAndNotice`.
 - **`MULTS ONLY` does not show an orange-M spot** (its filter is `FMult or FCQ`).
 - **Colour:** `BAND MAP WORKED MULT COLOR` (`Settings.BandMap.WorkedMultColor`), a
   `tr4wColorsSA` spelling, default `ORANGE` (`trOrange`, added to the END of the

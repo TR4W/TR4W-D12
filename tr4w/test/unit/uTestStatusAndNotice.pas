@@ -84,6 +84,7 @@ type
       procedure Test_TheSweepstakesMultHeaderNamesTheSection;
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
       procedure Test_TheMultHeaderPinsOfIssue207;
+      procedure Test_TheNeedsStripTakesASpotsSection;
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
       procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
       procedure Test_ANoticeFromAWorkerThreadIsHandedOverWhole;
@@ -114,6 +115,8 @@ uses
    Log4D,              (* TLogLevel, ILogAppender *)
    Tree,               (* PTTStatusString -- the indicator's ordinary text *)
    MainUnit,           (* logger, PTTIndicatorBack, RefreshMainWindowElementColors *)
+   uSpots,             (* SpotsList -- the needs strip reads a spot's section *)
+   uDXSpotParse,       (* ParseDXSpotLine *)
    uAppStrings,        (* STXInhibitedStatus, STXInhibitedIndicator *)
    uRadioState,        (* RadioState.PTTOn -- what the bridge paints from *)
    uStateBridge,       (* InstallStateBridge -- the PTT indicator's painter *)
@@ -2271,6 +2274,142 @@ begin
       end;
 end;
 
+(* ISSUE 12 FOLLOW-UP (NY4I): THE "MULT NEEDS FOR" STRIP OF A TYPED CALL USES THE
+  SECTION A CLUSTER SPOT FOR THAT CALL CARRIES, as the band map does, when the
+  program remembers none. Gated on CLUSTER SPOT COMMENT MULTIPLIER like the band
+  map; what the log or the call history remembers always wins; of several spots
+  the one on the active band, then the newest. No per-contest code: Sweepstakes
+  (a section), a Michigan QSO party (a county) and NAQP (a state) are all
+  asked the same way. *)
+function SpotLineFor(const aKHz: string; const aCall: string; const aSection: string): string;
+begin
+   (* The corpus layout: the frequency ends on column 24, the comment's last
+      three columns hold the section, right-aligned, then the time. *)
+   Result := 'DX de AC0C-1-#:' + StringOfChar(' ', 9 - Length(aKHz)) + aKHz + '  ' +
+             aCall + StringOfChar(' ', 12 - Length(aCall)) +
+             'CW 21 dB 14 WPM CQ ' + StringOfChar(' ', 11 - Length(aSection)) + aSection + ' 0127Z';
+end;
+
+(* Each band gets its own frequency, so two spots for one call are two spots. *)
+procedure PutSpot(const aCall: string; const aSection: string; aBand: BandType;
+                  aArrivedAt: TDateTime);
+var
+   spot: TSpotRecord;
+   khz: string;
+begin
+   case aBand of
+      Band20: khz := '14037.0';
+      Band15: khz := '21037.0';
+   else
+      khz := '7037.0';
+   end;
+   spot := Default(TSpotRecord);
+   ParseDXSpotLine(SpotLineFor(khz, aCall, aSection), spot);
+   spot.FBand := aBand;
+   spot.FMode := CW;
+   spot.FSysTime := aArrivedAt;
+   SpotsList.AddSpot(spot, False);
+end;
+
+procedure TStatusAndNoticeTests.Test_TheNeedsStripTakesASpotsSection;
+var
+   header: string;
+   savedSetting: boolean;
+
+   function StripFor(const aCall: string): string;
+   begin
+      TR4WMainForm.pnlMultNeedsHeader.Caption := 'Mult needs for STALE :';
+      ShowNeedsForCall(CallString(aCall));
+      Result := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+   end;
+
+begin
+   BeginTest('Test_TheNeedsStripTakesASpotsSection');
+   EnsureMainForm;
+   BindMainGrids;
+   CheckTrue(ctyLoadInCountryFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                                  PathDelim + 'target' + PathDelim + 'cty.dat', False, False, True),
+             'cty.dat loads');
+   savedSetting := Settings.Cluster.SpotCommentMultiplier;
+   SaveNeedsSession;
+   SpotsList.Clear;
+   try
+      OpenNeedsSession(ContestHandleOf(ARRLSSSSB), 'arrlsect.dom', DomesticCountriesARRLSections);
+      Settings.Mult.ByBand := False;
+      Settings.Mult.ByMode := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band40;
+      ActiveMode := CW;
+
+      (* NO SPOT: as before -- the call's own status. *)
+      Settings.Cluster.SpotCommentMultiplier := True;
+      header := StripFor('K1DW');
+      CheckTrue(Pos('K1DW', header) > 0, 'no spot: the header names the call: ' + header);
+      CheckTrue(Pos('NTX', header) = 0, 'no spot: no section: ' + header);
+
+      (* A SPOT WITH A SECTION, NOTHING REMEMBERED: the strip names it, as the
+         band map's M does. *)
+      PutSpot('K1DW', 'NTX', Band40, Now);
+      header := StripFor('K1DW');
+      CheckEquals(HeaderNaming(SpotSectionHint('K1DW', 'CQ NTX')), header,
+                  'a spot with NTX: the strip is the section''s header');
+      CheckTrue(Pos('NTX', header) > 0, 'the header names NTX: ' + header);
+
+      (* THE SETTING OFF REMOVES IT. *)
+      Settings.Cluster.SpotCommentMultiplier := False;
+      header := StripFor('K1DW');
+      CheckTrue(Pos('NTX', header) = 0, 'setting off: no section: ' + header);
+      CheckTrue(Pos('K1DW', header) > 0, 'setting off: the call: ' + header);
+      Settings.Cluster.SpotCommentMultiplier := True;
+
+      (* WHAT THE PROGRAM REMEMBERS WINS over the spot. *)
+      CallsignsList.AddIniitialExchange('K1DW', '18 WY');
+      header := StripFor('K1DW');
+      CheckTrue(Pos('WY', header) > 0, 'remembered WY wins: ' + header);
+      CheckTrue(Pos('NTX', header) = 0, 'and the spot''s NTX is not shown: ' + header);
+
+      (* A REMEMBERED TEXT WITH NO SECTION IN IT falls through to the spot. *)
+      CallsignsList.AddIniitialExchange('K1DW', '18');
+      header := StripFor('K1DW');
+      CheckTrue(Pos('NTX', header) > 0, 'a lone check: the spot answers: ' + header);
+
+      (* SEVERAL SPOTS: the active band first, then the newest. *)
+      SpotsList.Clear;
+      CallsignsList.AddIniitialExchange('K1DW', '');
+      PutSpot('K1DW', 'NLI', Band20, Now);
+      PutSpot('K1DW', 'NTX', Band40, Now - 0.01);
+      ActiveBand := Band40;
+      header := StripFor('K1DW');
+      CheckTrue(Pos('NTX', header) > 0, 'on 40 m the 40 m spot is preferred: ' + header);
+      ActiveBand := Band20;
+      header := StripFor('K1DW');
+      CheckTrue(Pos('NLI', header) > 0, 'on 20 m the 20 m spot is preferred: ' + header);
+      ActiveBand := Band15;
+      header := StripFor('K1DW');
+      CheckTrue(Pos('NLI', header) > 0, 'on 15 m neither is: the newest wins: ' + header);
+
+      (* A SECOND CONTEST, NOT SWEEPSTAKES: a Michigan QSO party county. *)
+      SpotsList.Clear;
+      OpenNeedsSession(ContestHandleOf(MICHQSOPARTY), 'michigan_cty.dom', DomesticCountriesKVEKH6KL);
+      ActiveBand := Band40;
+      CheckTrue(Pos('PRESQ', StripFor('W8ABC')) = 0, 'Michigan, no spot: no county');
+      PutSpot('W8ABC', 'PRES', Band40, Now);
+      header := StripFor('W8ABC');
+      CheckTrue(Pos('PRESQ', header) > 0, 'Michigan: the spot''s county heads the strip: ' + header);
+
+      (* A THIRD, A STATE: NAQP. *)
+      SpotsList.Clear;
+      OpenNeedsSession(ContestHandleOf(NAQSOCW), 'naqp.dom', DomesticCountriesKVEKH6KL);
+      PutSpot('N6ABC', 'CA', Band40, Now);
+      header := StripFor('N6ABC');
+      CheckTrue(Pos(' CA', header) > 0, 'NAQP: the spot''s state heads the strip: ' + header);
+   finally
+      SpotsList.Clear;
+      Settings.Cluster.SpotCommentMultiplier := savedSetting;
+      RestoreNeedsSession;
+      end;
+end;
+
 (* ISSUE #97 ON THE STREAMED MAIN WINDOW: the PTT indicator and radio 1's status
   panel for a key-up on a radio in TX test mode, driven exactly as the program
   drives them -- the settled status, then the review the polling thread asks
@@ -2843,6 +2982,7 @@ begin
    Test_TheSweepstakesMultHeaderNamesTheSection;
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
    Test_TheMultHeaderPinsOfIssue207;
+   Test_TheNeedsStripTakesASpotsSection;
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
    Test_ANoticeFromAWorkerThreadIsHandedOverWhole;

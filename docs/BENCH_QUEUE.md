@@ -30,6 +30,16 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-07 -- THE "MULT NEEDS FOR" STRIP TAKES A SPOT'S SECTION (issue 12 follow-up)
+
+For a typed call the program remembers nothing about, the strip now uses the section/state/county a cluster spot for that call carries in its comment -- the same answer the band map gives that spot. Needs CLUSTER SPOT COMMENT MULTIPLIER on.
+
+- [ ] **ARRL Sweepstakes.** With a spot on the band map for a call you have never worked, comment carrying a section (e.g. `CQ NTX`), type that call: the "Mult needs for" header names the section and the band cells show where it is needed, and it matches the spot's red `M`. Turn the setting off: the strip no longer names it (and the spot's `M` goes too).
+- [ ] **What the program remembers wins.** Type a call the call history/log holds with a different section than its spot comment: the strip shows the remembered section.
+- [ ] **A QSO party** (a county or state in the comment) behaves the same.
+
+---
+
 ## Added 2026-11-07 -- ALT-P AND STATIONS OPEN WITH THEIR ROW SELECTED, ON LINUX TOO
 
 On gtk2 a list-view selection written before the list has its window is lost when the window is made (measured on the Linux CI runner; Windows and macOS keep it). Every TR4W list-view selection now goes through `uLCLFormHelpers.SelectListViewRow`, which makes the window first and then writes the row into it. `uTestListViewSelection` shows both real forms off screen and asks the WIDGET which row is selected, with no Linux exception. It passes on Windows; the Linux CI run is its first real test. A screen is still needed to see the highlight.

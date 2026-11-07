@@ -342,6 +342,7 @@ uses
   uRemMults,
   uRemMultsForm,   { the five multiplier windows are forms -- wh[] conversion }
   uBandmap,
+  uSpots,           (* SpotsList.FindSpotByCall -- the strip reads a spot's comment *)
   (* THE FINAL SCORE -- M6: the totals and the contest that combines them
      (uContestBase, in the interface uses since M11 S4), and OnMainThread for
      the worker threads that read the score. *)
@@ -2377,11 +2378,33 @@ begin
      end;
 end;
 
+(* THE SECTION A CLUSTER SPOT FOR A TYPED CALL CARRIES (issue 12 follow-up,
+  NY4I): the same answer the band map gives that spot -- SpotSectionHint, which
+  itself lets the log and the call history beat the comment -- gated on the
+  same setting as DetermineSpotMultStatus, so the strip and the band map agree
+  and switching the setting off removes both. '' when there is no spot, no
+  hint or the setting is off. Main thread (the spot store's only writer). *)
+function SpotHintForTypedCall(const Call: CallString): string;
+var
+  Spot: TSpotRecord;
+begin
+  Result := '';
+  if not Settings.Cluster.SpotCommentMultiplier then
+     begin
+     Exit;
+     end;
+  if (SpotsList <> nil) and SpotsList.FindSpotByCall(Call, ActiveBand, Spot) then
+     begin
+     Result := SpotSectionHint(Spot.FCall, SpotNotesText(Spot));
+     end;
+end;
+
 procedure ShowNeedsForCall(const Call: CallString);
 var
   TempString: ShortString;
   TempExchange: Str14;
   ParsedTempExchange: Str14;
+  SpotHint: string;
 begin
   (* Gav 4.44.8: uses the initial exchange and the previous QSO's domestic
     QTH to show the domestic multiplier status -- not for General QSO, a log
@@ -2397,24 +2420,31 @@ begin
      if TempString <> '' then
         begin
         TempExchange := CallsignsList.GetIniitialExchange(TempString);
+        ParsedTempExchange := '';
         if TempExchange <> '' then
            begin
            ParsedTempExchange := DomStringParse(TempExchange);
-           if ParsedTempExchange <> '' then
-              begin
-              VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
-              end
-           else
-              begin
-              (* NO MULTIPLIER IN THE REMEMBERED TEXT (issue 207): the call's
-                own status, as for a call with no remembered text -- not the
-                previous call's header left on screen (Sweepstakes '18'). *)
-              VisibleLog.ShowMultiplierStatus(Call);
-              end;
+           end;
+        if ParsedTempExchange <> '' then
+           begin
+           (* WHAT THE PROGRAM REMEMBERS ALWAYS WINS over a spot. *)
+           VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
            end
         else
            begin
-           VisibleLog.ShowMultiplierStatus(Call);
+           (* NOTHING REMEMBERED, OR NO MULTIPLIER IN IT (issue 207): a
+             cluster spot's comment may still name the section, as it does on
+             the band map. Otherwise the call's own status -- not the
+             previous call's header left on screen (Sweepstakes '18'). *)
+           SpotHint := SpotHintForTypedCall(Call);
+           if SpotHint <> '' then
+              begin
+              VisibleLog.ShowDomesticMultiplierStatus(Str10(SpotHint));
+              end
+           else
+              begin
+              VisibleLog.ShowMultiplierStatus(Call);
+              end;
            end;
         VisibleLog.ShowQSOStatus(Call);
         end;

@@ -130,6 +130,13 @@ type
     procedure DisplayCallsignOnThisFreq(Freq: integer);
     procedure TuneDupeCheck(Freq: integer);
     function FindSpot(const Spot: TSpotRecord; var Index: integer): boolean;
+    (* THE SPOT FOR A TYPED CALL (issue 12 follow-up): the "Mult needs for"
+      strip asks what a spot for the call says about its section. Of several
+      spots for aCall the one on aBand is preferred, then the newest by
+      FSysTime (arrival, never the HHMM of the cluster line). Locked, as the
+      other scans a non-list thread may reach are. *)
+    function FindSpotByCall(const aCall: CallString; aBand: BandType;
+      out aSpot: TSpotRecord): boolean;
     property Count: integer read GetCount;
 
     // Ask for a repaint WITHOUT changing the list -- the VFO moved, or a filter
@@ -670,6 +677,41 @@ begin
         end;
      end;
   Index := l;
+end;
+
+function TDXSpotsList.FindSpotByCall(const aCall: CallString; aBand: BandType;
+  out aSpot: TSpotRecord): boolean;
+var
+  i: integer;
+  Candidate: TSpotRecord;
+  CandidateOnBand: boolean;
+  BestOnBand: boolean;
+begin
+  Result := False;
+  aSpot := Default(TSpotRecord);
+  BestOnBand := False;
+  FCriticalSection.Enter;
+  try
+     for i := 0 to FList.Count - 1 do
+        begin
+        Candidate := FList[i];
+        if Candidate.FCall = aCall then
+           begin
+           CandidateOnBand := Candidate.FBand = aBand;
+           if (not Result)                                              or
+              (CandidateOnBand and (not BestOnBand))                    or
+              ((CandidateOnBand = BestOnBand) and
+               (Candidate.FSysTime > aSpot.FSysTime))                   then
+              begin
+              aSpot := Candidate;
+              BestOnBand := CandidateOnBand;
+              Result := True;
+              end;
+           end;
+        end;
+  finally
+     FCriticalSection.Leave;
+  end;
 end;
 
 function TDXSpotsList.Get(Index: integer): TSpotRecord;
