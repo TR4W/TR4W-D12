@@ -110,6 +110,10 @@ type
     FPassword:     string;
     FCycleMs:      Integer;          // 120000 in production; injectable for tests
     FLogger:       TLogLogger;
+    (* WORKER THREAD ONLY. Set by PostToServer when the last post provably sent
+      nothing because no CA bundle was found (issue 221); DoCycle words its
+      status from it. *)
+    FLastPostNoBundle: Boolean;
 
     // Status snapshot for the Phase 4 UI window.  Updated from the worker
     // thread inside DoCycle; read by the dialog from the main thread.  All
@@ -260,6 +264,8 @@ uses
    (* oaScorePosting, the contest's permitted aids. FIRST, so every unit after
       it keeps the meaning it had for any name the two share. *)
    uContestBase,
+   uAppStrings,      // SHamScoreNoBundleStatus
+   uTLSTrust,        // TrustBundleAlertText, TrustBundleSearchPlaces
    uSettingsModel,   // Settings.My.Call
   StrUtils, IdAuthentication,
   LogWind,           // the contest globals this reports
@@ -714,6 +720,7 @@ var
 begin
   Result := 0;
   responseBody := '';
+  FLastPostNoBundle := False;
 
   // Username defaults to the callsign when HAMSCORE USERNAME is blank.
   if FUsername <> '' then
@@ -772,6 +779,15 @@ begin
          longer looks identical to an unreachable host in the log. *)
        FLogger.Warn('[HamScore] POST %s failed: %s (status %d)',
          [FURL, post.FailReason, post.StatusCode]);
+       (* NO CA BUNDLE: nothing was sent (THttpRequest.NothingSent), and the
+         QSOs are retained like any zero result. TrustBundleAlertText writes
+         the once-per-session log line and returns '' after the first; the
+         cycle status (the HamScore window) says it every cycle. *)
+       FLastPostNoBundle := post.TrustBundleMissing;
+       if FLastPostNoBundle then
+          begin
+          TrustBundleAlertText('HamScore');
+          end;
        Result := 0;
        end;
   finally
@@ -845,9 +861,19 @@ begin
     if httpCode = 0 then
        begin
        // Network error -- keep snapshot for next cycle.
-       FLogger.Info('[HamScore] Cycle: network error, %d QSO(s) retained for retry',
-         [snapshot.Count]);
-       SetCycleStatus(Format('Network error -- %d QSO(s) retained', [snapshot.Count]));
+       if FLastPostNoBundle then
+          begin
+          FLogger.Info('[HamScore] Cycle: certificate file missing, nothing sent, %d QSO(s) retained for retry',
+            [snapshot.Count]);
+          SetCycleStatus(UnicodeFormat(SHamScoreNoBundleStatus,
+            [TrustBundleSearchPlaces, snapshot.Count]));
+          end
+       else
+          begin
+          FLogger.Info('[HamScore] Cycle: network error, %d QSO(s) retained for retry',
+            [snapshot.Count]);
+          SetCycleStatus(Format('Network error -- %d QSO(s) retained', [snapshot.Count]));
+          end;
        RestorePending(snapshot);
        snapshot := nil;   // ownership transferred
        Exit;

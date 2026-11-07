@@ -10,6 +10,11 @@ failure that prompted it. NY4I's rulings of 2026-11-05: open to a platform helpe
 with IFDEFs for HTTP/HTTPS if it makes a better operator experience, and **accepted the
 staged plan: stopgap (done), this document, Windows first.**
 
+**Update 2026-11-06 (NY4I's approval condition on issue 224):** section 10 checks every other
+external logger and destination against this design (finding: the HTTP seam fits the HTTP
+destinations and nothing else, and no change to section 3 is needed); section 6 gained exit
+criteria per platform; section 8 gained questions 11 to 15.
+
 **Evidence key.** Every claim is marked **read** (a file and line I opened), **inference**
 (reasoned from something read, not run) or **unverified** (a belief from outside this
 tree, to be checked before anyone relies on it). Line numbers are at `4dc105b9` and drift;
@@ -672,6 +677,19 @@ shipped as the default for a release.
 * **Everywhere:** `uTLSTrust`'s text about "THE INTENDED macOS END STATE" is replaced by a
   pointer to this document when S3 lands.
 
+**Exit criteria per platform, and what the first real run must show (added 2026-11-06).** A stage
+is not finished when it compiles. Each row is what has to be true, and the last column is what
+the first run on that platform has to put in `tr4w.log` or on the screen before anyone calls it
+working.
+
+| stage | exit criteria | the first real run must show |
+|---|---|---|
+| S2 Windows | the 15-line contract suite green against `winhttp` over loopback; `-Checked` clean; lints; `release.yml` green on all three platforms; bench matrix of section 5 passed on one real Windows machine | `[HTTP] transport: winhttp`; **no** `[TLS] CA bundle` line and no OpenSSL load, with `cacert.pem` deliberately absent from beside the exe (this is the failure class of issue 221 gone); a Club Log test-mode create and a WRL create each settle as confirmed; a bad certificate refused with a nothing-sent code (`*_NOT_SENT`) and the request absent from the server log; a 2 s timeout against a black hole returning in about 2 s |
+| S2b `auto` default | one release on `auto` with no operator forced back to `generic` | the transport line names `winhttp` on every machine in the field logs NY4I sees; no new delivery stuck in uncertain that the generic path would have retried |
+| S3 macOS | the spike proves the delegate and event bridge (or the block question is answered the other way and the design is amended); contract suite green on a Mac; the bundle still notarizes; gated on the GUI having been run on a Mac at all | `[HTTP] transport: nsurlsession`; a GET from a worker thread completes while the main run loop is idle; the startup CTY fetch on the main thread does not deadlock; a bad certificate is refused as nothing-sent; the answer to plain `http://` under ATS (HamScore default) is recorded, whichever way it falls |
+| S4 Linux | the system CA tiers found on each distribution the AppImage targets; contract suite green; `release.yml` Linux job green | `[TLS] CA bundle: <path> (<tier>)` naming a system file on a machine whose `cacert.pem` is deliberately removed; the AppImage on the Mint machine completes a CTY download |
+| any logger added later (section 10) | the provider registers, declares its fields and passes its own client tests; if HTTP, it adds no new transport requirement or it amends this document first | a delivery from a real instance of the program it targets, confirmed in that program's own log |
+
 ## 7. The packaging finding: is `cacert.pem` beside every exe that runs?
 
 **No, not in `build-out\app-i386-win32`.** That folder holds `libeay32.dll`,
@@ -747,6 +765,24 @@ there being none beside the test exe.
 10. **Proxy support is a new feature of the platform transport.** Is it wanted, and should
     the generic transport grow it too (FPC's client has a `Proxy` property)? Recommend yes
     on the platform transports only, and say so in the setting's help.
+11. **Linux: stay on OpenSSL with system CA tiers (recommended), or move to libcurl?** One line
+    answers section 4.4: OpenSSL means no new library binding; libcurl means a new `external`
+    binding, another library to bundle in the AppImage, and the distribution's own TLS.
+12. **May a credential ever travel over plain `http://` to a destination the operator chose?**
+    Cloudlog and Wavelog on a LAN are often http (section 10.3). Recommend: allowed only as an
+    explicit per-definition choice with a visible warning, never for a bearer token, never by
+    default. HamScore already does this by default.
+13. **Should "verify certificates" become per destination?** Today it is one global setting.
+    A self-signed Cloudlog server needs it off for that destination only. Recommend: yes, a
+    per-definition choice on the HTTP providers, default on, with the global setting kept as the
+    master switch.
+14. **Once Windows and macOS ship the platform transport as default, drop `libeay32.dll` and
+    `ssleay32.dll` (1.0.2u, TLS 1.2 at most) from the installer?** This is question 3 asked for
+    the DLLs alone. Recommend: not until a release has run on `auto`, and only if the Windows
+    floor (question 4) is Windows 10 or later.
+15. **Proxy settings behaviour (question 10, restated as a default).** On the platform
+    transports: follow the operating system's proxy configuration and say nothing, with no
+    TR4W proxy setting. Recommend yes; add a TR4W proxy field only if an operator asks.
 
 ## 9. How to re-measure what this document states
 
@@ -758,3 +794,131 @@ there being none beside the test exe.
 | what `winhttp.pp` declares | `rg -n -i "^\s*function WinHttp" C:\Lazarus\fpc\3.2.2\source\packages\winunits-base\src\winhttp.pp` |
 | which `cacert.pem` a run used | the `[TLS] CA bundle: <path> (<tier>)` line in `tr4w.log` |
 | what is staged beside a built exe | list `build-out\app-<cpu>-<os>` and compare with `tr4w\target` |
+| what each logger does on the wire | `rg -n "DeliverCommand\|THttpRequest\|TExternalDeliveryClient" tr4w/src --glob "*.pas"` |
+| which loggers are registered | `rg -n "RegisterExternalLogger\(" tr4w/src --glob "*.pas"` |
+
+## 10. The other-logger check (NY4I's condition on issue 224)
+
+NY4I, issue 224: *"Add the other external loggers into this plan at least to ensure the design
+is tested against those as well. Otherwise, this is approved."* This section takes every
+destination TR4W sends a QSO, a score or a file to, whether or not it uses HTTP, and asks four
+things of each: what transport does it use, does the seam in section 3 cover it, what would it
+need that the seam does not offer, and does the design survive it unchanged. Evidence key as at
+the top: **read** is a file opened for this section (2026-11-06), **inference** is reasoned from
+that, **unverified** is a belief about a program outside this tree, to be checked before
+anything is built on it.
+
+### 10.1 What the registry and the delivery contract expect of a destination (all **read**)
+
+| expectation | where | what it means for a new destination |
+|---|---|---|
+| A provider registers an id, a display name, a constructor returning a `TExternalLoggerService`, and a declarer listing its editor rows (text, port, secret, choice) | `uExternalLoggerRegistry.RegisterExternalLogger` | The registry names no transport. A provider may be HTTP, TCP, UDP or a file. |
+| A durable provider derives from `TDurableExternalLogger` and supplies `BuildPayload` and `CreateWorker`; capture happens inside the QSO transaction and the worker claims, sends and settles in short transactions that never span the network | `uDurableExternalLogger.pas`, and `docs/EXTERNAL_LOGGERS_DESIGN.md` (queue and thread invariants) | Queue semantics, crash safety, per-destination namespace and the Connection column come free. Only the client is new. |
+| The client is a `TExternalDeliveryClient` whose `Deliver(job)` returns a `TExternalDeliveryResult`: outcome `doConfirmed`, `doRetry`, `doUncertain` or `doFailed`, an error code, a retry delay, a `Pause` flag and an `OperatorNotice` | `uExternalDeliveryClient.pas`, `TDeliveryOutcome` in `domain/uExternalDelivery.pas` | The client is the ONLY place a protocol appears. The worker is protocol-neutral. |
+| "Nothing was sent" is a claim the client proves, and `ApplyNothingSent` is the one classifier for HTTP clients | `uExternalDeliveryClient.ApplyNothingSent`, section 6 (S1b as built) | It takes a `THttpRequest`, so today it is HTTP-shaped. See 10.4. |
+| A non-idempotent write whose reply is lost is `doUncertain` and is not replayed blindly; Club Log replacement is delete-then-create and parks as uncertain if the create fails | `docs/EXTERNAL_LOGGERS_DESIGN.md`, "Changes, deletes and uncertainty" | A destination with no acknowledgement cannot ever be `doConfirmed` by the wire alone (DXKeeper, below). |
+| Credentials live in the OS vault under the definition id; a secret field is never required because a locked vault leaves it empty | registry rules, `uExternalLoggerConfig` | A new destination with a key or password declares an `AddSecret` row and reads it at construction; nothing HTTP-specific. |
+| Every implemented provider must support new, change and delete with its real protocol; an unsupported operation fails visibly | `docs/EXTERNAL_LOGGERS_DESIGN.md`, "Remaining External Logger issues" | A destination that cannot delete is not complete. |
+| The older non-durable shape: `TExternalLoggerBase` with a `TSenderThread` (3 attempts, linear back-off, in-memory FIFO, `ShutdownDrain` at exit) and a `TReadingThread` that exists only for the persistent socket | `uExternalLoggerBase.pas` | DXKeeper uses the sender thread only. The reading thread and the persistent socket serve ACLog and HRD, which are stubs. |
+
+### 10.2 The table
+
+"Seam" means the transport interface of section 3 (`THttpWireRequest` / `THttpWireResult` /
+`TPlatformHttpTransport`). "Classification" means `ApplyNothingSent` and the four outcomes.
+
+| destination | status in the tree | transport today | does the HTTP seam cover it | what it needs that the seam does not offer | design survives unchanged |
+|---|---|---|---|---|---|
+| Club Log | implemented, durable | HTTPS REST through `THttpRequest`, bearer token, redirects off, response capped at 4096 | yes, it is the reference client | nothing | yes |
+| WRL | implemented, durable | HTTPS REST through `THttpRequest`, bearer token, redirects off, default cap | yes | nothing | yes |
+| HamScore | implemented, NOT a delivery worker: its own 2-minute batch uploader (`uHamScore.pas`, `PostToServer`) | `THttpPost`, Basic auth, **plain `http://scoredistributor.net/` by default** with `AllowInsecure` | yes | on macOS, an ATS answer for plain http (section 4.3); nothing in the seam | yes. It keeps its QSOs on a refusal and does not use `ApplyNothingSent` (it reads the status and the trust latch directly). It could, and the three-line change is not part of this work. |
+| Contest score post | implemented, one-shot worker (`uGetScores.pas`) | `THttpPost`, form body, https default, operator may type `http://` | yes | the same ATS answer | yes |
+| Downloaders (CTY, TRMASTER, POTA parks, version check) and SCP upload | implemented, operator actions | `DownloadFileToPath`, `HttpGetText`, `THttpPost` | yes (section 2.2) | nothing; they only read `FailReason` | yes |
+| DXKeeper | implemented, Complete | **raw TCP**, one fresh `TIdTCPClient` per command (`TExternalLogger.DeliverCommand`: connect 2 s, write one line, read any reply up to 1 s, close), on the `TSenderThread`; host name goes through `uHostResolve` | **no, and it should not** | a TCP connect/write/read vocabulary: not-resolved, refused, connect timeout, write failed. No TLS, no headers, no status code, no redirects | yes, because it never used the seam. See 10.3 for the one shared piece. |
+| ACLog | **stub** (`LogQSOToACLog` logs "not yet implemented"; type `lt_ACLog` is not registered, issue 33 asks for TCP) | intended: TCP to a host and port (issue 33). The wire protocol is **unverified**: the tree does not say. My belief is that N3FJP's ACLog has a TCP API with a default port in the 1000s and XML-like commands; nothing here confirms it | no | whatever its command and reply set is; probably a per-command TCP exchange like DXKeeper, or a persistent socket (the base class assumes persistent) | yes. It is a TCP client behind the same registry. If it is durable it implements `TExternalDeliveryClient`, which is protocol-neutral. |
+| HRD (Ham Radio Deluxe) | **stub** (`LogQSOToHRD`, same text; `lt_HRD` not registered; no open issue) | intended: TCP (the base class's comments say "for future ACLog/HRD"). The wire protocol is **unverified**; HRD Logbook has more than one external interface and I have not read which one this tree intended | no | as ACLog | yes, same reasoning |
+| Log4OM | **planned** (issue 203, "TR4W to Log4OM direction only") | UDP to a host and port, per the issue | no | one datagram per message, no connection, so "sent" can never be proved delivered. Already handled by the UDP sink machinery and `LogCfg.SendUDPPayload` | yes. Not HTTP, not durable-with-acknowledgement. It is the dispatcher's UDP sink shape. |
+| Cloudlog and Wavelog | **planned** (issue 204, "instance URL, API credential and remote station profile; several instances may be active") | HTTP or HTTPS REST to an **operator-run server**. Endpoint and body shape **unverified** (my belief: a JSON POST carrying the key and an ADIF string) | **yes, and this is the case that tests the design** | see 10.3 | **yes, with five things the HTTP design must not rule out** (10.3) |
+| MacLoggerDX | **planned** (issue 205) | **not established.** The issue says to verify the real import mechanism, and warns that a compatible UDP announcement does not prove MacLoggerDX will import it; a macOS-native adapter is allowed | unknown | unknown: possibly UDP, possibly a local file or a macOS interprocess mechanism | the design is not affected: it is outside HTTP and may be outside the network |
+
+### 10.3 What the check found
+
+**1. The HTTP seam is the right abstraction for exactly the HTTP destinations and no others.**
+Club Log, WRL, HamScore, the score post, the downloaders, SCP and the planned Cloudlog/Wavelog
+are all `THttpRequest` callers, and the seam serves all of them with no change in section 3.
+DXKeeper, ACLog, HRD and Log4OM speak raw TCP or UDP. They have no TLS handshake to delegate,
+no status code and no trust store, so a "transport" under them would be a wrapper around a
+socket that adds nothing. **Do not force them behind `TPlatformHttpTransport`.** Their
+transport is already a platform-neutral one (Indy sockets, through `uHostResolve` and
+`uIndyLink`) and nothing in issue 224 improves it.
+
+**2. The piece they share is not the transport. It is the outcome vocabulary and the durable
+contract.**
+Both halves are already protocol-neutral: `TExternalDeliveryClient.Deliver` and
+`TDeliveryOutcome` do not mention HTTP, and the worker, the outbox, the Connection column and
+the retry timing are shared by whatever client a provider supplies. The one HTTP-shaped piece
+is `ApplyNothingSent`, which takes a `THttpRequest`. Three of the failure kinds it maps
+(`hfNameNotResolved`, `hfCannotConnect`, `hfConnectTimedOut`) are about connecting, not about
+HTTP, and are what a TCP client can also prove. **Smallest change, when and only when a second
+non-HTTP client is made durable:** split the `case` into a function over the failure kind
+(`ClassifyNothingSent(kind, prefix, service, var result)`) and let `ApplyNothingSent` call it
+with `aRequest.Failure`. That is a few lines, mechanical, and is not done now because no
+durable TCP client exists to prove its shape (a speculative shared type is the one thing this
+repository's rules warn against).
+
+**3. DXKeeper shows the real difference, and it is a finding to record, not a defect to fix
+here.**
+DXKeeper has no acknowledgement. `DeliverCommand` returns True the moment the line is written
+(`Result := True; // the command is on the wire = success`), and the reply is read best-effort
+and only logged. So for DXKeeper "sent" and "delivered" are the same thing by design
+(`docs/EXTERNAL_LOGGERS_DESIGN.md`: "TCP handoff is not a remote acknowledgement"), the queue is
+in memory, and there is no `doUncertain` path at all. Two consequences. (a) A TCP destination
+cannot use the Club Log shape (confirmed id, delete-then-create replacement, uncertain on a
+lost reply) unless its protocol offers an id and a reply; the registry does not require one.
+(b) The TCP equivalent of "nothing sent" is a failed connect, which the existing retry already
+treats as retry-with-back-off. **One narrow edge, from reading the code:** if `WriteLn` raises
+after some bytes left, `Result` is still False and the sender retries the command, which can
+duplicate it. That is not HTTP, not part of issue 224, and is recorded here only because the
+comparison surfaced it. Whether it matters depends on DXKeeper's single-command parsing,
+which I have not tested.
+
+**4. Cloudlog/Wavelog is the planned logger that tests the HTTP design, and five of its
+properties matter now.** The instance is run by the operator, often on a LAN or a home server.
+**All five are inference from how such installations are commonly set up, not from this tree;
+the first thing issue 204 must do is confirm them against a real instance.**
+
+| property | consequence for the design | what the design already says, and the gap |
+|---|---|---|
+| plain `http://` on a LAN is common | the bearer policy (`hfAuthPolicy`) refuses a bearer token over http. If Cloudlog sends its key in the BODY, the policy does not fire and the key travels in the clear | Club Log and WRL are https-only. **Gap:** a destination definition needs a per-destination "allow plain http" choice (the verbs already have `AllowInsecure`), and an open question for NY4I on whether secrets may ever travel in the clear on a private network (question 12). The transport interface is unchanged. |
+| self-signed or private-CA certificates | the global "verify certificates" setting is all-or-nothing today, and `cacert.pem` will never contain a home CA | A platform transport on Windows or macOS trusts what the OS trusts, so an operator who installed their CA in the system store is served for free (an advantage of section 4.2 and 4.3 the document should claim). **Gap:** an operator with a self-signed server and no CA to install needs a per-destination "do not verify" choice. `THttpWireRequest.VerifyServer` is already per request, so the INTERFACE needs nothing; the SETTING needs to move from global to per definition (question 13). |
+| redirects, especially http to https | a POST that is redirected may be re-sent as a GET, and a redirected write is a double-delivery risk | Club Log and WRL disable redirects. A Cloudlog client does the same and reports the 301 with its `Location` as a failure that names the cure ("use the https address"), which needs `Location` in `THttpWireResult` (**gap**, one more header like `RetryAfter`). Contract line 8 is unchanged. |
+| the host is a LAN name or an address | `.local` names, short names and private addresses | Resolved by the platform resolver in WinHTTP and NSURLSession (their reason to exist) and by the existing `uHostResolve` path for the generic one. On macOS, ATS treats local networking differently from the internet (**unverified**: `NSAllowsLocalNetworking`), so the Info.plist answer in question 8 should be chosen with this destination in mind. |
+| several instances at once | independent destination queues | The registry, definitions, per-definition namespace and one worker each already do this; Club Log and WRL are two such instances. The HTTP seam is stateless between requests, so there is no shared transport state to collide. |
+
+**5. Nothing found changes the interface of section 3 or the staged plan.** Two small ADDITIONS
+are flagged for the day issue 204 is built, both optional fields and neither a change to what a
+caller sees today: `Location` on the wire result, and a per-destination verify and plain-http
+choice that sets `VerifyServer` and `AllowInsecure` on the request. The contract suite of
+section 5 should include a case with a loopback server that returns a 301 and a case whose
+`VerifyServer` is False, which section 5 already lists for the generic transport, so the
+Cloudlog case adds no new test infrastructure.
+
+**6. Test it against them now, without building them.** The check NY4I asked for is run on
+paper in this section and in code by two things that can be done at S1 or S2 for free: (a) a
+second fake-transport scenario in `uTestFakeTransport` that scripts a Cloudlog-like exchange
+(a plain-http URL, a 301, a self-signed refusal reported as `hfVerificationFailed`), run
+through the existing `uWRLClient`-style classifier to prove the outcomes come out as retry,
+failed and retry; and (b) the contract suite parameterised so a TCP client could be added to
+the same `Deliver` tests (a loopback `TIdTCPServer` on 127.0.0.1 and a closed-port helper
+already exist in `uTestExternalLoggerSocket.pas`, **read**).
+
+### 10.4 What would change the design, and what would not
+
+| if this happens | does section 3 change | does something else |
+|---|---|---|
+| ACLog or HRD turn out to speak HTTP | no: they use the seam | register a provider |
+| ACLog or HRD turn out to speak a persistent TCP protocol with acknowledgements | no | the base class's reading thread and persistent socket (`ConnectGuarded`, `ReconnectFromReader`) are exactly for this and are pinned; a durable client may be built over them |
+| a durable TCP client is written | no | split `ApplyNothingSent` as in finding 2 |
+| Cloudlog/Wavelog needs per-destination verify or plain http | no, `VerifyServer` and `AllowInsecure` are already per request | the definition gains two fields, with the secrets rule applied (the settings-config agent) |
+| MacLoggerDX needs a macOS-native interface (AppleScript, a file drop, Apple events) | no | a platform provider unit with a `{$IFDEF DARWIN}` body, registered like the keychain backends |
+| Log4OM UDP | no | the existing UDP sink machinery |
+| a destination needs TLS client certificates, or a pinned certificate | **yes**: `THttpWireRequest` has nowhere to put either | decide when one exists; none of the current or planned destinations is known to |

@@ -303,9 +303,9 @@ begin
    if (FStalled <> nil) and FStalled.Finished then
       begin
       FreeAndNil(FStalled);
-      if FFileName <> '' then
+      if (FFileName <> '') and FEnabled then
          begin
-         TLogLogger.GetLogger(FLoggerId).Warn('[LogWatchdog] the stalled delivery worker has ' +
+         TLogLogger.GetLogger(FLoggerId).Warn('[LogWatchdog] the old delivery worker has ' +
             'exited; starting a new one');
          StartWorker;
          FWorker.Wake;
@@ -384,9 +384,29 @@ begin
       end;
 end;
 
+(* Main thread. Issue 233: this is also how Save switches a RUNNING logger.
+
+   ON only sets the flag: the worker starts on the next AfterLogCommit (Save
+   calls it, so the pending outbox resumes at once), and contacts logged while
+   it was off were never captured and stay unsent -- no backfill.
+
+   OFF asks the worker to stop and parks it in FStalled, the slot a worker
+   waits in until it has exited. It is NEVER waited for here (an HTTP request
+   may be out, and this is the operator's thread): the worker finishes and
+   settles the delivery it holds, then leaves; WatchdogTick frees it. Unsent
+   work stays in the outbox, untouched, for the next enable. Capture of an
+   EDIT or DELETE of an already-bound contact continues, as the design says. *)
 procedure TDurableExternalLogger.SetActive(aActive: boolean);
 begin
    FEnabled := aActive;
+   if (not aActive) and (FWorker <> nil) then
+      begin
+      FWorker.RequestStop;
+      (* FStalled is nil whenever FWorker is not: StartWorker runs only when
+         both are, and WorkerStalled moves one into the other. *)
+      FStalled := FWorker;
+      FWorker := nil;
+      end;
 end;
 
 (* Main thread, so FPaused, FLocalNotice and the worker pointers cannot change

@@ -59,6 +59,15 @@ type
 
 procedure StartExternalLoggerFromSettings;
 
+(* APPLY A SAVED CONFIGURATION TO THE RUNNING LOGGERS (issue 233), main thread,
+   called by Preferences after the file is written. Switches each running
+   destination on or off and sets the delivery order (TExternalLoggers.
+   ApplyConfiguration), then starts the delivery of any destination just
+   switched on so its pending outbox resumes now rather than at the next QSO.
+   Returns how many definitions still need a restart (new, or connection
+   settings changed); 0 when no service is running. *)
+function ApplyExternalLoggerConfiguration(const aConfig: TExternalLoggerConfig): integer;
+
 implementation
 
 uses
@@ -163,7 +172,8 @@ var
    begin
       try
          manager.Add(aDefinition.DeliveryId,
-            TExternalLoggerFactory.CreateLogger(aDefinition, Settings.Computer.Id), aActive);
+            TExternalLoggerFactory.CreateLogger(aDefinition, Settings.Computer.Id), aActive,
+            aDefinition.SettingsStamp);
       except
          on E: Exception do
             begin
@@ -214,6 +224,17 @@ begin
       manager.Free;
       store.Free;
    end;
+end;
+
+function ApplyExternalLoggerConfiguration(const aConfig: TExternalLoggerConfig): integer;
+begin
+   Result := 0;
+   if externalLogger = nil then
+      begin
+      Exit;
+      end;
+   Result := externalLogger.ApplyConfiguration(aConfig);
+   LogStoreStartExternalDelivery;
 end;
 
 (* The vocabulary the settings model offers and refuses by -- the subsystem's

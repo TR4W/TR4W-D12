@@ -4,7 +4,8 @@ unit uExternalLoggerService;
 interface
 
 uses
-   VC, uQsoDispatcher, uLogDatabase, uLogRepository, uExternalDelivery;
+   VC, uQsoDispatcher, uLogDatabase, uLogRepository, uExternalDelivery,
+   uExternalLoggerConfig;
 
 type
    (* WHAT A LOGGER IS DOING NOW (issue 226), as the Preferences grid shows it.
@@ -12,8 +13,9 @@ type
       running service plus the configured flag; nothing stores it. *)
    TExternalLoggerState = (
       elsDisabled,       (* switched off, and the running service agrees *)
-      elsRestartNeeded,  (* the configuration and the running service disagree *)
-      elsIdle,           (* on, nothing pending, nothing wrong *)
+      elsRestartNeeded,  (* the running service cannot take what is configured *)
+      elsApplyOnSave,    (* the flag was changed here; Save applies it live (233) *)
+      elsIdle,          (* on, nothing pending, nothing wrong *)
       elsSending,        (* a request is out, or work is waiting its turn *)
       elsRetrying,       (* the last attempt failed in a way that will be retried *)
       elsPaused,         (* stopped until the operator acts (credentials, URL...) *)
@@ -26,6 +28,9 @@ type
    TExternalLoggerSnapshot = record
       (* The running service was started switched on. *)
       Active: boolean;
+      (* The service was started with settings that differ from the ones last
+         applied (issue 233): its connection fields change only on restart. *)
+      Stale: boolean;
       (* The worker thread exists and has not exited. *)
       WorkerRunning: boolean;
       (* A request to the destination is out right now. *)
@@ -53,6 +58,11 @@ type
          service does not run it. Only the composite answers. Main thread. *)
       function StateSnapshot(const aDeliveryId: string;
          out aSnapshot: TExternalLoggerSnapshot): boolean; virtual;
+      (* Issue 233. Applies a SAVED configuration to the running service, on
+         the main thread: the Enabled flag and the delivery order only. Returns
+         the number of definitions that still need a restart (new, or with
+         changed connection settings). The base runs nothing and needs none. *)
+      function ApplyConfiguration(const aConfig: TExternalLoggerConfig): integer; virtual;
       procedure SetActive(aActive: boolean); virtual;
       function QueuesCommands: boolean; virtual;
       procedure PrepareMessage(const aMessage: TQsoMessage;
@@ -81,9 +91,10 @@ type
    has this destination, and aSnapshot is meaningful only then. aCounts are the
    durable queue counts (zero when the log is not open).
 
-   In order: a destination the service does not run, or one whose started
-   switch differs from the flag, needs a restart to mean what the flag says;
-   switched off is Disabled; a halted worker is Paused, unless it died
+   In order: a destination the service does not run (and the flag is on), or
+   one started with settings that differ from the saved ones, needs a restart;
+   one whose running switch differs from the flag was changed here and Save
+   applies it live (issue 233); switched off is Disabled; a halted worker is Paused, unless it died
    (DELIVERY_STOPPED), which is Failed; a request out is Sending; the last
    delivery refused is Failed, and one to be retried is Retrying; work waiting
    is Sending; otherwise Idle. Old failed or uncertain rows do NOT make a row
@@ -102,9 +113,9 @@ function DeriveExternalLoggerState(aConfigEnabled, aKnown: boolean;
    const aSnapshot: TExternalLoggerSnapshot;
    const aCounts: TDeliveryCounts): TExternalLoggerState;
 begin
-   if (not aKnown) or (aConfigEnabled <> aSnapshot.Active) then
+   if not aKnown then
       begin
-      if aConfigEnabled or (aKnown and aSnapshot.Active) then
+      if aConfigEnabled then
          begin
          Result := elsRestartNeeded;
          end
@@ -112,6 +123,20 @@ begin
          begin
          Result := elsDisabled;
          end;
+      Exit;
+      end;
+   (* Known, but its settings differ from the saved ones: only a restart helps,
+      whatever the flag says. (Switching it OFF is applied anyway, so a stale
+      service that is on here and off there reads as restart, not Disabled.) *)
+   if aSnapshot.Stale and (aConfigEnabled or aSnapshot.Active) then
+      begin
+      Result := elsRestartNeeded;
+      Exit;
+      end;
+   if aConfigEnabled <> aSnapshot.Active then
+      begin
+      (* Changed in the dialog and not saved yet; Save applies it. *)
+      Result := elsApplyOnSave;
       Exit;
       end;
    if not aConfigEnabled then
@@ -169,6 +194,12 @@ end;
 
 procedure TExternalLoggerService.SetActive(aActive: boolean);
 begin
+end;
+
+function TExternalLoggerService.ApplyConfiguration(
+   const aConfig: TExternalLoggerConfig): integer;
+begin
+   Result := 0;
 end;
 
 procedure TExternalLoggerService.RequestStop;

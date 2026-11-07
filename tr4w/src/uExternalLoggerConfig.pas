@@ -34,6 +34,14 @@ type
       procedure Assign(const aOther: TExternalLoggerDefinition);
       function DeliveryId: string;
       function DestinationFingerprint: string;
+      (* EVERYTHING A RUNNING SERVICE WAS BUILT FROM (issue 233): the provider
+         and every field the provider reads, secrets included, as a hash so
+         no secret is kept. Name and LogbookName are display only and are out.
+         DeliveryId is NOT this: it names the durable queue and must not move
+         when a key is replaced. The composite compares the stamp it was
+         started with to the saved definition's; a difference means the
+         running service holds old settings and only a restart changes that. *)
+      function SettingsStamp: string;
       (* The editor and the provider field descriptors address a setting by
          key (the LF_ constants below). An unknown key reads '' and writes
          nothing. A secret is read and written like any other value here;
@@ -112,6 +120,13 @@ function TExternalLoggerDefinition.DestinationFingerprint: string;
 begin
    Result := string(SHA256OfBytes(UTF8Encode(URL + #0 + LowerCase(Trim(Address)) +
       #0 + string(IntToStr(Port)) + #0 + Account + #0 + Logbook)));
+end;
+
+function TExternalLoggerDefinition.SettingsStamp: string;
+begin
+   Result := string(SHA256OfBytes(UTF8Encode(ProviderId + #0 + URL + #0 +
+      LowerCase(Trim(Address)) + #0 + string(IntToStr(Port)) + #0 + Account + #0 +
+      Logbook + #0 + ApiKey + #0 + Password)));
 end;
 
 function TExternalLoggerDefinition.FieldText(const aKey: string): string;

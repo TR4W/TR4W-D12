@@ -4,11 +4,13 @@ interface
 uses uTR4WTestFramework;
 type
    TExternalLoggersTests = class(TTestCase)
+   private
+      procedure LiveApplyTests;
    public
       procedure RunAllTests; override;
    end;
 implementation
-uses Classes, SysUtils, SyncObjs, sqldb, VC, uExternalDeliveryWorker,
+uses Classes, SysUtils, SyncObjs, sqldb, Forms, VC, uExternalDeliveryWorker,
    uExternalLoggerMigration, uSettingsModel, uExternalLoggersForm, uQsoMyFacts, uJSON, uKeychain, uExternalLoggerConfig,
    uExternalLoggers, uExternalLoggerService, uQsoDispatcher,
    uExternalLoggerFactory, uExternalLoggerRegistry, uClubLogClient,
@@ -20,6 +22,14 @@ type
       Calls: integer;
       Fail, PrepareFail: boolean;
       LastOp: TQsoExternalOp;
+      (* Issue 233. Tag names the service in SubmitLog; Gate, when set, holds
+         SubmitOp open (on the dispatcher thread) until the test releases it,
+         and Entered says it got there; SwitchedOn/SwitchedOff count the live
+         SetActive calls. *)
+      Tag: string;
+      Gate, Entered: TEvent;
+      SwitchedOn, SwitchedOff: integer;
+      procedure SetActive(aActive: boolean); override;
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
          out aCommand1, aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp;
@@ -55,6 +65,21 @@ type
 var
    Bodies, URLs, Replies, Methods, Tokens: TStringList;
    ReplyCode: integer;
+   (* 'tag:call' per SubmitOp, in arrival order; written on the dispatcher
+      thread in the race test, so locked. *)
+   SubmitLog: TStringList;
+   SubmitLock: TCriticalSection;
+procedure TRecordingService.SetActive(aActive: boolean);
+begin
+   if aActive then
+      begin
+      Inc(SwitchedOn);
+      end
+   else
+      begin
+      Inc(SwitchedOff);
+      end;
+end;
 function TCaptureService.BuildPayload(const aRecord: ContestExchange;
    const aFacts: TQsoMyFacts; const aSent: AnsiString): string;
 begin
@@ -104,8 +129,25 @@ end;
 procedure TRecordingService.SubmitOp(const aOp: TQsoExternalOp;
    const aCommand1, aCommand2, aDescription: string);
 begin
+   if Entered <> nil then
+      begin
+      Entered.SetEvent;
+      end;
+   if Gate <> nil then
+      begin
+      Gate.WaitFor(10000);
+      end;
    Inc(Calls);
    LastOp := aOp;
+   if SubmitLog <> nil then
+      begin
+      SubmitLock.Enter;
+      try
+         SubmitLog.Add(AnsiString(Tag + ':' + aCommand1));
+      finally
+         SubmitLock.Leave;
+      end;
+      end;
    if Fail then
       begin
       raise EInvalidOp.Create('fixture');
@@ -626,6 +668,386 @@ begin
       enteredA.Free;
       enteredB.Free;
       gate.Free;
+      database.Free;
+      DeleteFile(path);
+      DeleteFile(path + '-wal');
+      DeleteFile(path + '-shm');
+   end;
+   LiveApplyTests;
+end;
+
+(* ----------------------------------------------------------------------- *)
+(* Issue 233: Save applies Enabled and Order to the RUNNING composite       *)
+(* ----------------------------------------------------------------------- *)
+
+type
+   (* The dispatcher's external-logger sink in miniature: hands every message
+      to the composite on the dispatcher thread, as TExternalLoggerQsoSink. *)
+   TCompositeSink = class(TQsoSink)
+   private
+      FManager: TExternalLoggers;
+   public
+      constructor Create(aManager: TExternalLoggers);
+      function Name: string; override;
+      function Wants(const aMessage: TQsoMessage): boolean; override;
+      procedure Deliver(const aMessage: TQsoMessage); override;
+   end;
+   (* A durable service whose worker is the gated fixture, and whose watchdog
+      tick the test drives (the LCL timer needs a message loop). *)
+   TWorkerProbe = class(TCaptureService)
+   public
+      Started: integer;
+      WorkerEntered: TEvent;
+      function CreateWorker: TExternalDeliveryWorker; override;
+      procedure Tick;
+   end;
+
+constructor TCompositeSink.Create(aManager: TExternalLoggers);
+begin
+   inherited Create;
+   FManager := aManager;
+end;
+
+function TCompositeSink.Name: string;
+begin
+   Result := 'composite';
+end;
+
+function TCompositeSink.Wants(const aMessage: TQsoMessage): boolean;
+begin
+   Result := True;
+end;
+
+procedure TCompositeSink.Deliver(const aMessage: TQsoMessage);
+begin
+   FManager.SubmitMessage(aMessage);
+end;
+
+function TWorkerProbe.CreateWorker: TExternalDeliveryWorker;
+begin
+   Inc(Started);
+   Result := TGateWorker.Create(FFileName, FLoggerId, WorkerEntered, nil);
+end;
+
+procedure TWorkerProbe.Tick;
+begin
+   WatchdogTick(nil);
+end;
+
+function FixtureDefinition(const aConfig: TExternalLoggerConfig; const aId: string;
+   aActive: boolean): TExternalLoggerDefinition;
+begin
+   Result := TExternalLoggerDefinition.Create;
+   Result.Id := aId;
+   Result.Name := aId;
+   Result.ProviderId := 'FIX';
+   Result.Address := 'host-' + aId;
+   Result.Port := 1000;
+   aConfig.Definitions.Add(Result);
+   if aActive then
+      begin
+      aConfig.ActiveIds.Add(AnsiString(aId));
+      end;
+end;
+
+(* One running service per definition, in the order start-up would add them
+   (active first, then the rest), each tagged with its definition's id. *)
+function FixtureService(const aManager: TExternalLoggers;
+   const aDefinition: TExternalLoggerDefinition; aActive: boolean): TRecordingService;
+begin
+   Result := TRecordingService.Create;
+   Result.Tag := aDefinition.Id;
+   aManager.Add(aDefinition.DeliveryId, Result, aActive, aDefinition.SettingsStamp);
+end;
+
+(* A new-contact message prepared and submitted in a row on this thread. *)
+procedure SendOne(const aManager: TExternalLoggers; const aCall: string);
+var
+   msg: TQsoMessage;
+   rec: ContestExchange;
+begin
+   msg := TQsoMessage.Create(qmNew, aCall);
+   try
+      rec := Default(ContestExchange);
+      rec.Callsign := ShortString(aCall);
+      aManager.PrepareMessage(msg, rec);
+      aManager.SubmitMessage(msg);
+   finally
+      msg.Free;
+   end;
+end;
+
+function SubmitsSoFar: string;
+var
+   i: integer;
+begin
+   Result := '';
+   SubmitLock.Enter;
+   try
+      for i := 0 to SubmitLog.Count - 1 do
+         begin
+         if Result <> '' then
+            begin
+            Result := Result + ',';
+            end;
+         Result := Result + string(SubmitLog[i]);
+         end;
+   finally
+      SubmitLock.Leave;
+   end;
+end;
+
+procedure TExternalLoggersTests.LiveApplyTests;
+var
+   config: TExternalLoggerConfig;
+   defA, defB, defC, defD: TExternalLoggerDefinition;
+   manager: TExternalLoggers;
+   sa, sb, sc: TRecordingService;
+   snapshot: TExternalLoggerSnapshot;
+   dispatcher: TQsoDispatcher;
+   msg: TQsoMessage;
+   rec: ContestExchange;
+   switchedBefore: integer;
+   path: string;
+   database: TLogDatabase;
+   repository: TLogRepository;
+   query: TSQLQuery;
+   rowId: Int64;
+   probe: TWorkerProbe;
+   deadline: QWord;
+   workerSignal: TEvent;
+begin
+   SubmitLog := TStringList.Create;
+   SubmitLock := TCriticalSection.Create;
+   try
+      BeginTest('live apply: enabling hands NEW contacts only, order follows the saved list, disabling stops new handoffs');
+      config := TExternalLoggerConfig.Create;
+      manager := TExternalLoggers.Create;
+      try
+         defA := FixtureDefinition(config, 'a', True);
+         defB := FixtureDefinition(config, 'b', False);
+         defC := FixtureDefinition(config, 'c', False);
+         sa := FixtureService(manager, defA, True);
+         sb := FixtureService(manager, defB, False);
+         sc := FixtureService(manager, defC, False);
+         SendOne(manager, 'W1');
+         CheckEquals('a:W1', SubmitsSoFar);
+         config.SetActive('b', True);
+         CheckEquals(0, manager.ApplyConfiguration(config), 'nothing needs a restart');
+         CheckEquals(1, sb.SwitchedOn, 'b was switched on by Save');
+         SendOne(manager, 'W2');
+         CheckEquals('a:W1,a:W2,b:W2', SubmitsSoFar,
+            'b gets the contact logged after the switch, never the earlier one');
+         (* Reorder: c on, then c, b, a. *)
+         config.ActiveIds.Clear;
+         config.ActiveIds.Add('c');
+         config.ActiveIds.Add('b');
+         config.ActiveIds.Add('a');
+         CheckEquals(0, manager.ApplyConfiguration(config));
+         SendOne(manager, 'W3');
+         CheckEquals('a:W1,a:W2,b:W2,c:W3,b:W3,a:W3', SubmitsSoFar,
+            'delivery order is the saved active order');
+         (* Nothing changed: no service is touched again. *)
+         switchedBefore := sa.SwitchedOn + sa.SwitchedOff + sb.SwitchedOn + sb.SwitchedOff +
+            sc.SwitchedOn + sc.SwitchedOff;
+         CheckEquals(0, manager.ApplyConfiguration(config));
+         CheckEquals(switchedBefore, sa.SwitchedOn + sa.SwitchedOff + sb.SwitchedOn +
+            sb.SwitchedOff + sc.SwitchedOn + sc.SwitchedOff, 'a repeated apply flips nothing');
+         config.SetActive('a', False);
+         config.SetActive('c', False);
+         CheckEquals(0, manager.ApplyConfiguration(config));
+         CheckEquals(1, sa.SwitchedOff);
+         SendOne(manager, 'W4');
+         CheckEquals('a:W1,a:W2,b:W2,c:W3,b:W3,a:W3,b:W4', SubmitsSoFar,
+            'a switched-off logger is handed nothing new');
+         CheckTrue(manager.StateSnapshot(defA.DeliveryId, snapshot));
+         CheckFalse(snapshot.Active, 'the snapshot the grid reads follows the live switch');
+      finally
+         manager.Free;
+         config.Free;
+      end;
+
+      BeginTest('live apply: changed connection settings keep the old service until restart; off always applies; removed goes off');
+      SubmitLog.Clear;
+      config := TExternalLoggerConfig.Create;
+      manager := TExternalLoggers.Create;
+      try
+         defA := FixtureDefinition(config, 'a', True);
+         defB := FixtureDefinition(config, 'b', True);
+         defC := FixtureDefinition(config, 'c', False);
+         sa := FixtureService(manager, defA, True);
+         sb := FixtureService(manager, defB, True);
+         sc := FixtureService(manager, defC, False);
+         defA.ApiKey := 'a-new-key';
+         CheckEquals(1, manager.ApplyConfiguration(config), 'an edited key needs a restart');
+         CheckTrue(manager.StateSnapshot(defA.DeliveryId, snapshot));
+         CheckTrue(snapshot.Stale, 'the grid is told');
+         CheckTrue(snapshot.Active, 'and a keeps running with what it was started with');
+         CheckEquals(Ord(elsRestartNeeded),
+            Ord(DeriveExternalLoggerState(True, True, snapshot, Default(TDeliveryCounts))));
+         config.SetActive('a', False);
+         CheckEquals(0, manager.ApplyConfiguration(config), 'switching a stale logger off needs no restart');
+         CheckEquals(1, sa.SwitchedOff, 'off applies');
+         config.SetActive('a', True);
+         CheckEquals(1, manager.ApplyConfiguration(config));
+         CheckEquals(1, sa.SwitchedOn, 'on does not (only the start-up call): it would send with the old key');
+         defA.ApiKey := '';
+         CheckEquals(0, manager.ApplyConfiguration(config), 'putting the key back clears it');
+         CheckEquals(2, sa.SwitchedOn, 'and a comes back on');
+         (* A new destination under the same definition: the old service is
+            frozen as it was, the new id is not running. *)
+         defB.Address := 'elsewhere';
+         CheckEquals(1, manager.ApplyConfiguration(config));
+         CheckFalse(manager.StateSnapshot(defB.DeliveryId, snapshot), 'the new destination is not running');
+         SendOne(manager, 'W5');
+         CheckEquals('b:W5,a:W5', SubmitsSoFar,
+            'b still goes to the destination it started with (a was re-enabled after it: Order b, a)');
+         (* Removing b, and adding d. *)
+         config.RemoveDefinition('b');
+         defD := FixtureDefinition(config, 'd', True);
+         CheckEquals(1, manager.ApplyConfiguration(config), 'd was never built: restart');
+         SendOne(manager, 'W6');
+         CheckEquals('b:W5,a:W5,a:W6', SubmitsSoFar, 'a removed logger is switched off');
+      finally
+         manager.Free;
+         config.Free;
+      end;
+
+      BeginTest('live apply: a message prepared before Save is delivered once, one prepared after follows the new switches');
+      config := TExternalLoggerConfig.Create;
+      manager := TExternalLoggers.Create;
+      dispatcher := TQsoDispatcher.Create;
+      sa := nil;
+      try
+         SubmitLog.Clear;
+         defA := FixtureDefinition(config, 'a', True);
+         defB := FixtureDefinition(config, 'b', False);
+         sa := FixtureService(manager, defA, True);
+         sb := FixtureService(manager, defB, False);
+         sa.Gate := TEvent.Create(nil, True, False, '');
+         sa.Entered := TEvent.Create(nil, True, False, '');
+         dispatcher.AddSink(TCompositeSink.Create(manager));
+         rec := Default(ContestExchange);
+         rec.Callsign := 'W1';
+         msg := TQsoMessage.Create(qmNew, 'W1');
+         manager.PrepareMessage(msg, rec);
+         dispatcher.Post(msg);
+         (* The dispatcher thread is now INSIDE a's SubmitOp, held open. *)
+         CheckTrue(sa.Entered.WaitFor(3000) = wrSignaled, 'the dispatcher is mid-delivery');
+         config.SetActive('a', False);
+         config.SetActive('b', True);
+         CheckEquals(0, manager.ApplyConfiguration(config), 'applied on this thread meanwhile');
+         rec.Callsign := 'W2';
+         msg := TQsoMessage.Create(qmNew, 'W2');
+         manager.PrepareMessage(msg, rec);
+         dispatcher.Post(msg);
+         sa.Gate.SetEvent;
+         CheckTrue(dispatcher.WaitIdle(3000), 'both delivered');
+         CheckEquals('a:W1,b:W2', SubmitsSoFar,
+            'W1 went to a once and not to b; W2 went to b and not to a: nothing lost, nothing doubled');
+      finally
+         if sa <> nil then
+            begin
+            sa.Gate.SetEvent;
+            end;
+         dispatcher.Free;
+         if sa <> nil then
+            begin
+            sa.Gate.Free;
+            sa.Entered.Free;
+            sa.Gate := nil;
+            sa.Entered := nil;
+            end;
+         manager.Free;
+         config.Free;
+      end;
+   finally
+      SubmitLock.Free;
+      SubmitLock := nil;
+      SubmitLog.Free;
+      SubmitLog := nil;
+   end;
+
+   BeginTest('durable: a switch-off keeps what is queued, a switch-on captures only contacts logged while on, no backfill');
+   path := string(GetTempFileName);
+   DeleteFile(path);
+   database := TLogDatabase.Create;
+   probe := TWorkerProbe.Create('account', 'book', 'key', 'A', True, 'live');
+   try
+      database.CreateNew(path);
+      repository := TLogRepository.Create(database);
+      query := TSQLQuery.Create(nil);
+      try
+         rec := Default(ContestExchange);
+         rec.Callsign := 'W1AW';
+         rec.ceRecordKind := rkQSO;
+         rec.ceComputerID := 'A';
+         rowId := repository.SaveQSO(rec);
+         probe.CaptureSavedQso(database, repository, rowId, True);
+         probe.SetActive(False);
+         rec.Callsign := 'W2';
+         rowId := repository.SaveQSO(rec);
+         probe.CaptureSavedQso(database, repository, rowId, True);
+         probe.SetActive(True);
+         rec.Callsign := 'W3';
+         rowId := repository.SaveQSO(rec);
+         probe.CaptureSavedQso(database, repository, rowId, True);
+         repository.Commit;
+         query.Database := database.Connection;
+         query.Transaction := database.Transaction;
+         query.SQL.Text := 'SELECT COUNT(*) FROM external_delivery';
+         query.Open;
+         CheckEquals(2, query.Fields[0].AsInteger,
+            'W1 (queued before the switch-off) is kept; W2 (logged while off) is not backfilled; W3 is captured');
+         query.Close;
+         database.EndTransaction;
+      finally
+         query.Free;
+         repository.Free;
+      end;
+   finally
+      probe.Free;
+      database.Free;
+      DeleteFile(path);
+      DeleteFile(path + '-wal');
+      DeleteFile(path + '-shm');
+   end;
+
+   BeginTest('durable: switching off parks the worker, switching on never runs two, and the tick starts one');
+   if Application <> nil then
+      begin
+      Application.Initialize;
+      end;
+   path := string(GetTempFileName);
+   DeleteFile(path);
+   database := TLogDatabase.Create;
+   workerSignal := TEvent.Create(nil, True, False, '');
+   probe := TWorkerProbe.Create('account', 'book', 'key', 'A', True, 'live');
+   probe.WorkerEntered := workerSignal;
+   try
+      database.CreateNew(path);
+      probe.AfterLogCommit(database);
+      CheckEquals(1, probe.Started, 'the first commit starts the worker');
+      probe.SetActive(False);
+      deadline := GetTickCount64 + 5000;
+      while (not probe.StopFinished) and (GetTickCount64 < deadline) do
+         begin
+         Sleep(5);
+         end;
+      CheckTrue(probe.StopFinished, 'the worker was asked to stop and left');
+      probe.AfterLogCommit(database);
+      CheckEquals(1, probe.Started, 'a switched-off logger starts nothing');
+      probe.SetActive(True);
+      probe.AfterLogCommit(database);
+      CheckEquals(1, probe.Started, 'the retired worker is still parked: no second worker beside it');
+      probe.Tick;
+      CheckEquals(2, probe.Started, 'the tick frees the old one and starts the new one');
+      probe.Tick;
+      probe.AfterLogCommit(database);
+      CheckEquals(2, probe.Started, 'and only one');
+   finally
+      probe.Free;
+      workerSignal.Free;
       database.Free;
       DeleteFile(path);
       DeleteFile(path + '-wal');

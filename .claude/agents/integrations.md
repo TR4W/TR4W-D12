@@ -200,9 +200,23 @@ a dragged row carries its cells. `Definitions` is an owning `TObjectList`: reord
 flag as a real LCL checkbox column** (`cbsCheckboxColumn`, cells `'1'`/`'0'`, no
 `goEditing`): the click is the grid's own, on mouse RELEASE on the cell it was pressed on
 (toggling regroups rows), and Space; a refused activation must `Refresh` or the box stays
-ticked. It changes the Preferences working copy only -- **applying is restart**, because
-`TExternalLoggers` is immutable once started (`FActive`/`FCommandCount` are set in `Add`;
-live apply is issue 218). **The Connection column** is
+ticked. It changes the Preferences working copy only; **Save applies it LIVE (issue 233,
+2026-11-06)** -- `uExternalLoggerFactory.ApplyExternalLoggerConfiguration` from `SaveStore`:
+`TExternalLoggers.ApplyConfiguration` (main thread) flips each service's flag and rebuilds the
+delivery order (`FOrder`, ids, never indices), then `LogStoreStartExternalDelivery` starts a
+just-enabled durable worker. **The set of services is still fixed** (`FIds`/`FServices` are
+what the dispatcher thread reads and are never resized live; do not add a service live
+without reworking that) and `FActive`/`FOrder`/`FCommandCount` are main-thread only. Rule:
+off always applies, on only for a service whose `SettingsStamp` (provider + every field it
+reads, secrets hashed, Name/LogbookName out; NOT `DeliveryId`) equals the one it started
+with; added/changed definitions wait for a restart (`TExternalLoggerSnapshot.Stale`, state
+`elsRestartNeeded`; unsaved flag changes read `elsApplyOnSave`); a REMOVED definition is
+switched off. A durable service's `SetActive(False)` asks its worker to stop and parks it in
+`FStalled` (never joined on the main thread; the in-flight delivery settles first), and
+`WatchdogTick` starts the replacement only if still enabled -- no second worker beside a
+retiring one. Contacts logged while off are not backfilled. DXKeeper's in-memory queue keeps
+draining after a switch-off. Pinned in `uTestExternalLoggers` (`LiveApplyTests`, including a
+dispatcher held open mid-delivery while Save applies). **The Connection column** is
 `DeriveExternalLoggerState(enabled, known, snapshot, counts)` in `uExternalLoggerService`:
 `StateSnapshot(deliveryId)` on the composite (keyed by DELIVERY id, so an edited
 destination reads "not running"), the worker's `FillSnapshot` (locked `FStatusLock` fields:

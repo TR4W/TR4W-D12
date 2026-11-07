@@ -49,8 +49,10 @@ resourcestring
    SLoggerGridMoveDown    = 'Move down';
    SLoggerGridRemove      = 'Remove...';
    SLoggerGridRemoveAsk   = 'Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition.';
-   SLoggerGridHint        = 'Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences, then restart TR4W to apply changes.';
-   SLoggerGridChanged     = 'Logger definitions changed. Save Preferences, then restart TR4W to apply them.';
+   SLoggerGridHint        = 'Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart.';
+   SLoggerGridChanged     = 'Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart.';
+   (* After a save (issue 233). %d is how many loggers still wait for a restart. *)
+   SLoggerGridSavedRestart = 'Saved. Enabled and Order are in effect. %d logger(s) with new or changed connection settings apply after you restart TR4W.';
    (* THE ENABLED CHECKBOX AND THE CONNECTION STATE COLUMN (issue 226). The
       state text names what the running delivery worker last did; the colour
       only repeats it. %d is a count, %s a fixed delivery code. *)
@@ -58,6 +60,7 @@ resourcestring
    SLoggerGridState       = 'Connection';
    SLoggerStateDisabled   = 'Disabled';
    SLoggerStateRestart    = 'Restart TR4W to apply';
+   SLoggerStateApplyOnSave = 'Applies on Save';
    SLoggerStateIdle       = 'Idle';
    SLoggerStateSending    = 'Sending (%d pending)';
    SLoggerStateRetrying   = 'Retrying: %s';
@@ -229,6 +232,11 @@ resourcestring
    SCaBundleMissingNotice =
       'The certificate file cacert.pem was not found (looked in: %0:s); ' +
       'uploads to %1:s are paused until it is available.';
+
+   { HamScore's status line while no CA bundle is found (issue 221). Nothing is
+     sent and the QSOs are kept. %0:s is the places looked, %1:d the QSOs held. }
+   SHamScoreNoBundleStatus =
+      'Not sent: cacert.pem not found (looked in: %0:s) -- %1:d QSO(s) retained';
 
    (* Shown INSTEAD of an OS error code when the file is simply absent -- see
      TF.UnableToFindFileMessage for why an errno is the wrong thing to print

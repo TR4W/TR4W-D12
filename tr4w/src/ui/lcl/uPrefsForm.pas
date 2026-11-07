@@ -1425,6 +1425,7 @@ uses
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
    uExternalLoggerConfig, uPasswordReveal, uLogStore,
+   uExternalLoggerFactory, // ApplyExternalLoggerConfiguration (issue 233)
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
@@ -2205,6 +2206,7 @@ var
    tciPort: integer;
    clashRadio: string;
    bindErrors: string;
+   pendingRestart: integer;
 begin
    Result := FStore.Validate(aError);
    if not Result then
@@ -2272,6 +2274,30 @@ begin
       // started and stopped here: a library the operator just edited that does
       // not take effect until a restart is a settings screen that lies.
       uRotatorControl.ConfigureRotators(FStore);
+
+      // External loggers, on the same footing (issue 233): the Enabled flag
+      // and the delivery order of the loggers already running take effect now.
+      // Only a logger added since start, or one whose connection settings
+      // changed, still waits for a restart, and the status line says so.  Not
+      // for a settings file with no definition library: there is nothing saved
+      // to apply, and an empty one would switch the running loggers off.
+      if FStore.ExternalLoggers.Present then
+         begin
+         pendingRestart := ApplyExternalLoggerConfiguration(FStore.ExternalLoggers);
+         if FLoggerGrid <> nil then
+            begin
+            FLoggerGrid.Refresh;
+            if pendingRestart > 0 then
+               begin
+               lblLoggerStatus.Caption := UTF8Encode(
+                  UnicodeFormat(SLoggerGridSavedRestart, [pendingRestart]));
+               end
+            else
+               begin
+               lblLoggerStatus.Caption := UTF8Encode(SLoggerGridHint);
+               end;
+            end;
+         end;
 
       // The TCI server, on the same footing and for the same reason.  It was
       // originally started only from tr4w.lpr, which reproduced the exact

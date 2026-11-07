@@ -13,9 +13,11 @@ unit uExternalLoggerGrid;
    with the box. The LCL draws the box from the cell's text ('1'/'0'); the
    click is ours, because the LCL's own toggle needs goEditing and writes the
    cell before the model has had its say. A change reaches the Preferences
-   working copy only; Save writes it and a RESTART applies it -- the running
-   composite (uExternalLoggers) is immutable by design, so the State column
-   says "Restart TR4W to apply" until then.
+   working copy only; Save writes it and APPLIES IT LIVE (issue 233: the
+   composite's set of services is fixed, its switches and order are not), so
+   the State column says "Applies on Save" until then. "Restart TR4W to apply"
+   is kept for what only a restart changes: a logger added since start, or one
+   whose connection settings were changed.
 
    THE STATE COLUMN is read-only text, derived by DeriveExternalLoggerState
    from a snapshot of the running service (OnQueryState, set by the owner) and
@@ -147,6 +149,10 @@ begin
          begin
          Result := RGBToColor(170, 95, 0);
          end;
+      elsApplyOnSave:
+         begin
+         Result := RGBToColor(110, 90, 160);
+         end;
       elsIdle:
          begin
          Result := RGBToColor(0, 120, 0);
@@ -194,6 +200,10 @@ begin
       elsRestartNeeded:
          begin
          Result := SLoggerStateRestart;
+         end;
+      elsApplyOnSave:
+         begin
+         Result := SLoggerStateApplyOnSave;
          end;
       elsIdle:
          begin

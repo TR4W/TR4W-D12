@@ -642,13 +642,15 @@ begin
 end;
 
 procedure TExternalLoggerGridTests.Test_State_DerivationTable;
+var
+   snapshot: TExternalLoggerSnapshot;
 begin
    BeginTest('State: every input combination derives the state the operator should read');
    (*                what                         expected          enab  known active busy  halted result outcome      code                 queue pend fail *)
    CheckDerive('off, not running',               elsDisabled,      False, False, False, False, False, False, doConfirmed, '',                    0, 0, 0);
    CheckDerive('on, not running (restart)',      elsRestartNeeded, True,  False, False, False, False, False, doConfirmed, '',                    0, 0, 0);
-   CheckDerive('switched off here, running on',  elsRestartNeeded, False, True,  True,  False, False, False, doConfirmed, '',                    0, 0, 0);
-   CheckDerive('switched on here, running off',  elsRestartNeeded, True,  True,  False, False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('switched off here, running on',  elsApplyOnSave   , False, True,  True,  False, False, False, doConfirmed, '',                    0, 0, 0);
+   CheckDerive('switched on here, running off',  elsApplyOnSave   , True,  True,  False, False, False, False, doConfirmed, '',                    0, 0, 0);
    CheckDerive('off and running off',            elsDisabled,      False, True,  False, False, False, False, doConfirmed, '',                    0, 0, 0);
    CheckDerive('on, nothing yet',                elsIdle,          True,  True,  True,  False, False, False, doConfirmed, '',                    0, 0, 0);
    CheckDerive('a request is out',               elsSending,       True,  True,  True,  True,  False, False, doConfirmed, '',                    0, 0, 0);
@@ -664,6 +666,21 @@ begin
    CheckDerive('the worker died',                elsFailed,        True,  True,  True,  False, True,  False, doConfirmed, 'DELIVERY_STOPPED',    0, 0, 0);
    CheckDerive('halted beats a request in flight', elsPaused,      True,  True,  True,  True,  True,  False, doConfirmed, 'AUTHENTICATION_REQUIRED', 0, 0, 0);
    CheckDerive('off beats a stale halt',         elsDisabled,      False, True,  False, False, True,  True,  doRetry,     'WRL_AUTH_POLICY',     0, 1, 0);
+   (* Issue 233: a service started with other connection settings than the
+      saved ones needs a restart whenever it is on; off applies live. *)
+   snapshot := Default(TExternalLoggerSnapshot);
+   snapshot.Active := True;
+   snapshot.Stale := True;
+   CheckEquals(Ord(elsRestartNeeded),
+      Ord(DeriveExternalLoggerState(True, True, snapshot, Default(TDeliveryCounts))),
+      'stale and on: restart');
+   snapshot.Active := False;
+   CheckEquals(Ord(elsRestartNeeded),
+      Ord(DeriveExternalLoggerState(True, True, snapshot, Default(TDeliveryCounts))),
+      'stale, wanted on, held off: restart');
+   CheckEquals(Ord(elsDisabled),
+      Ord(DeriveExternalLoggerState(False, True, snapshot, Default(TDeliveryCounts))),
+      'stale but off on both sides: nothing to restart for');
 end;
 
 procedure TExternalLoggerGridTests.Test_Grid_BuildsTheColumns;
@@ -860,11 +877,13 @@ begin
       view.ToggleSendSelected;
       CheckEquals('Restart TR4W to apply', string(grid.Cells[LOGGER_COL_STATE, 3]));
       CheckEquals(IntToStr(Ord(elsRestartNeeded)), string(grid.Cells[LOGGER_COL_STATEKIND, 3]));
-      (* Switching a off here: the service is still running it. *)
+      (* Switching a off here: the service is still running it, and Save
+         switches it off live (issue 233). *)
       grid.Row := 1;
       view.ToggleSendSelected;
       CheckEquals('a', view.SelectedId);
-      CheckEquals('Restart TR4W to apply', string(grid.Cells[LOGGER_COL_STATE, grid.Row]));
+      CheckEquals('Applies on Save', string(grid.Cells[LOGGER_COL_STATE, grid.Row]));
+      CheckEquals(IntToStr(Ord(elsApplyOnSave)), string(grid.Cells[LOGGER_COL_STATEKIND, grid.Row]));
       view.OnQueryState := nil;
       view.RefreshStates;
       CheckEquals('Restart TR4W to apply', string(grid.Cells[LOGGER_COL_STATE, 1]),

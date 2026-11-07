@@ -748,8 +748,17 @@ capture/lifecycle and worker code; HTTP never spans a database transaction.
 New contacts, changes and deletes are required for every implemented provider.
 Club Log replacements delete the last confirmed remote identity before creating
 the edited contact; uncertain creates/replacements are not blindly replayed.
-Configuration changes apply after Save and restart, so queued work cannot be
-retargeted underneath a running worker.
+**Save applies the Enabled flag and the delivery order live, with no restart**
+(issue 233); anything else waits for one, so queued work is never retargeted
+underneath a running worker. Every saved definition gets a service at start-up
+(an inactive one owns no worker) and the set of services is FIXED for the
+session, so the dispatcher thread reads a list that never changes;
+`TExternalLoggers.ApplyConfiguration` (main thread, called by Preferences after
+the file is written) flips each service's switch and reorders. Off always
+applies (it stops NEW handoffs; queued work stays); on applies only to a service
+whose settings are what it was started with. A definition added since start, or
+whose connection settings (anything its provider reads, secrets included, by
+`SettingsStamp`) changed, runs as started until restart and its row says so.
 
 ### 8. Digital mode integration
 
