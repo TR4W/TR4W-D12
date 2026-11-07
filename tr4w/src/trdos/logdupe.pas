@@ -384,6 +384,51 @@ function DomesticMultiplierOfRememberedExchange(aText: Str14;
   fetched ONCE by the caller and shared with whatever else it asks of the
   contest for the same QSO; nil is the classless DUMMYCONTEST. *)
 procedure GetDXQTH(aContest: TContestBase; var RXData: ContestExchange);
+
+type
+  TMultiplierKinds = set of RemainingMultiplierType;
+
+(* WHICH MULTIPLIER KINDS A QSO EARNS -- the credit half of SetMultFlags,
+  LIFTED so the worked counts (issue 12) ask the same chain: no X-QSO, a band
+  the contest credits, a worked station the entrant may credit, and per kind
+  a key, the contest having that multiplier and its CountsAsMultiplier. It
+  says nothing about NEW -- that is the sheet's. aRX.DomMultQTH must already
+  be filled (SetMultFlags fills it from DomesticQTH first). aContest is
+  ActiveContest(Contest), fetched once by the caller; ceClearMultSheet is the
+  caller's test. *)
+function MultiplierKindsCredited(aContest: TContestBase;
+  const aRX: ContestExchange): TMultiplierKinds;
+
+(* THE SHEET'S BAND AND MODE KEYS FOR A MULTIPLIER -- ONE statement for
+  SetMultFlags' new-multiplier question and the spot hint's worked-count read
+  (issue 12). The counts are WRITTEN on the QSO's real band and mode into the
+  AllBands / Both cells as well (mo.CountWorked), as the bits are, so the
+  scope is applied only here, when asked.
+  Per band only where MULT BY BAND is on, per mode only where MULT BY MODE
+  is; and a DX or domestic multiplier the contest counts once over all bands
+  (DXCC / DOMESTIC MULT BY BAND = dmbbAllBand) is keyed on AllBands.
+
+  THE CONTEST DECIDES ALL FOUR. Settings.Mult.ByBand / ByMode are written
+  at FoundContest from the class: its trait (cfMultByBand / cfMultByMode,
+  FCONTEST.ApplyContestTraits), then whatever its DescribeSession states for
+  this station (svMultByBand -- Arizona in state, ALRS), and the operator's
+  own MULT BY BAND / MULT BY MODE line wins over the trait. The dmbb pair is
+  DescribeSession's too (CQMM, RDA, the RF Championships). The bit sheet has
+  always keyed on exactly these; a count keyed on anything else would
+  disagree with it. *)
+function MultiplierSheetBand(aKind: RemainingMultiplierType; aBand: BandType): BandType;
+function MultiplierSheetMode(aMode: ModeType): ModeType;
+
+(* THE TEXT A WORKED COUNT IS KEYED ON for a domestic multiplier: the key
+  itself, or its two-character grid FIELD where the contest's multiplier is
+  the field (HasGridFieldMultiplier) -- what mo.IsDmMult compares. *)
+function DomesticMultiplierCountKey(aContest: TContestBase; const aKey: string): string;
+
+(* ADD ONE QSO TO THE WORKED COUNTS -- issue 12. Every kind the QSO earns
+  (MultiplierKindsCredited) counts once, new or not; a dupe, an X-QSO and a
+  ceClearMultSheet record count nothing. Called from AddQSOToSheets only. *)
+procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange);
+
 //function GetInitialExchange(Call: CallString): CallString;
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
@@ -934,6 +979,16 @@ begin
         begin
         mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
         end;
+
+     (* AND THE WORKED COUNTS (issue 12) -- every credited working, not only
+        the first the flags above record. HERE because the loader, the
+        rescore and LogContact all reach this routine, each in log order;
+        a dupe counts nothing (CountWorkedMultipliers). One ActiveContest
+        per QSO that is not a dupe. *)
+     if not RXData.ceDupe then
+        begin
+        CountWorkedMultipliers(ActiveContest(Contest), RXData^);
+        end;
      end;
 end;
 
@@ -1123,9 +1178,9 @@ procedure DupeAndMultSheet.SetMultFlags(var RXData: ContestExchange);
 var
   //Mult, NumberMults                     : integer;
  // TempBand                              : BandType;
-  MultBand                              : BandType;
   MultMode                              : ModeType;
   contestRules                          : TContestBase;
+  kinds                                 : TMultiplierKinds;
   //CompressedMult                        : FourBytes;
   //DomQTH                                : Str20;
  // c                                     : integer;
@@ -1143,8 +1198,8 @@ begin
   if RXData.ceClearMultSheet then Exit;
   ClearMultiplierFlags(RXData);
 
-  if Settings.Mult.ByBand then MultBand := RXData.Band else MultBand := AllBands;
-  if Settings.Mult.ByMode then MultMode := RXData.Mode else MultMode := Both;
+  (* The band key is asked per kind below -- MultiplierSheetBand. *)
+  MultMode := MultiplierSheetMode(RXData.Mode);
 
   if (RXData.DomMultQTH = '') and (RXData.DomesticQTH <> '') then
      begin
@@ -1163,13 +1218,46 @@ begin
      QSO with no multiplier anywhere. AFTER the DomMultQTH fill, too, so the
      QSO still records the QTH it was worked with -- only its credit goes. *)
   contestRules := ActiveContest(Contest);
-  (* AND NONE FOR ANY X-QSO -- off-band, off-mode or flagged by the operator:
-     the ONE predicate ScoreQSO asks too (Q98 S1, design 8.2v). *)
-  if QSOIsXQSO(contestRules, RXData) then
+  (* THE CREDIT CHAIN -- X-QSO, band, worked station, and per kind the
+     contest's declaration -- is MultiplierKindsCredited, shared with the
+     worked counts (issue 12). WHETHER IT IS NEW is this sheet's. *)
+  kinds := MultiplierKindsCredited(contestRules, RXData);
+
+  if rmDomestic in kinds then
+     begin
+     (* The sheet's grid-field key -- the contest's answer (M11 S6 part 1),
+       on the object this routine already holds; it was the session kind. *)
+     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, MultiplierSheetBand(rmDomestic, RXData.Band), MultMode,
+                                        ContestHasGridFieldMultiplier(contestRules));
+     end;
+
+  if rmDX in kinds then
+     begin
+     RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, MultiplierSheetBand(rmDX, RXData.Band), MultMode);
+     end;
+
+  if rmPrefix in kinds then
+     begin
+     RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultiplierSheetBand(rmPrefix, RXData.Band), MultMode);
+     end;
+
+  if rmZone in kinds then
+     begin
+     RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultiplierSheetBand(rmZone, RXData.Band), MultMode);
+     end;
+end;
+
+function MultiplierKindsCredited(aContest: TContestBase;
+  const aRX: ContestExchange): TMultiplierKinds;
+begin
+  Result := [];
+  (* NO MULTIPLIER CREDIT FOR ANY X-QSO -- off-band, off-mode or flagged by
+     the operator: the ONE predicate ScoreQSO asks too (Q98 S1, design 8.2v). *)
+  if QSOIsXQSO(aContest, aRX) then
      begin
      Exit;
      end;
-  if not ContestCreditsBand(contestRules, RXData.Band) then
+  if not ContestCreditsBand(aContest, aRX.Band) then
      begin
      Exit;
      end;
@@ -1178,43 +1266,130 @@ begin
      host-area rule, Q107 (NY4I, 2026-10-16). The points half is ScoreQSO,
      which asks the same contest the same question; see
      TContestBase.CreditsWorkedStation. *)
-  if not ContestCreditsWorkedStation(contestRules, RXData) then
+  if not ContestCreditsWorkedStation(aContest, aRX) then
      begin
      Exit;
      end;
 
   (* WHETHER THE QSO EARNS A MULTIPLIER OF A KIND AT ALL IS THE CONTEST'S
-     DECLARATION; WHETHER IT IS NEW IS THIS SHEET'S -- M8, design 7.7 stage 2.
-     Five rules that named their contest here went to their classes'
-     CountsAsMultiplier: a 'DX' QTH earns none in the BC (spelt 'dx'), New
-     York and Indiana QSO parties, the PCC's own-country prefix earns none,
-     and the Jock White Field Day's own branch and branch 00 earn no zone.
-     A false answer leaves the flag false, as each `exit` here did. *)
-  if (RXData.DomMultQTH <> '') and ContestHasDomesticMultiplier(contestRules) and
-     ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
+     DECLARATION -- M8, design 7.7 stage 2. Five rules that named their
+     contest in SetMultFlags went to their classes' CountsAsMultiplier: a
+     'DX' QTH earns none in the BC (spelt 'dx'), New York and Indiana QSO
+     parties, the PCC's own-country prefix earns none, and the Jock White
+     Field Day's own branch and branch 00 earn no zone. *)
+  if (aRX.DomMultQTH <> '') and ContestHasDomesticMultiplier(aContest) and
+     ContestCountsMultiplier(aContest, aRX, rmDomestic) then
      begin
-     (* The sheet's grid-field key -- the contest's answer (M11 S6 part 1),
-       on the object this routine already holds; it was the session kind. *)
-     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode,
-                                        ContestHasGridFieldMultiplier(contestRules));
+     Include(Result, rmDomestic);
      end;
 
-  if (RXData.DXQTH <> '') and ContestHasDXMultiplier(contestRules) and
-     ContestCountsMultiplier(contestRules, RXData, rmDX) then
+  if (aRX.DXQTH <> '') and ContestHasDXMultiplier(aContest) and
+     ContestCountsMultiplier(aContest, aRX, rmDX) then
      begin
-     RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
+     Include(Result, rmDX);
      end;
 
-  if (RXData.Prefix <> '') and ContestHasPrefixMultiplier(contestRules) and
-     ContestCountsMultiplier(contestRules, RXData, rmPrefix) then
+  if (aRX.Prefix <> '') and ContestHasPrefixMultiplier(aContest) and
+     ContestCountsMultiplier(aContest, aRX, rmPrefix) then
      begin
-     RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
+     Include(Result, rmPrefix);
      end;
 
-  if (RXData.Zone <> DUMMYZONE) and ContestHasZoneMultiplier(contestRules) and
-     ContestCountsMultiplier(contestRules, RXData, rmZone) then
+  if (aRX.Zone <> DUMMYZONE) and ContestHasZoneMultiplier(aContest) and
+     ContestCountsMultiplier(aContest, aRX, rmZone) then
      begin
-     RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultBand, MultMode);
+     Include(Result, rmZone);
+     end;
+end;
+
+function MultiplierSheetBand(aKind: RemainingMultiplierType; aBand: BandType): BandType;
+begin
+  if Settings.Mult.ByBand then
+     begin
+     Result := aBand;
+     end
+  else
+     begin
+     Result := AllBands;
+     end;
+
+  if aKind = rmDomestic then
+     begin
+     Result := GetAddMultBand(DomesticMultByBand, Result);
+     end
+  else if aKind = rmDX then
+     begin
+     Result := GetAddMultBand(DXCCMultByBand, Result);
+     end;
+end;
+
+function MultiplierSheetMode(aMode: ModeType): ModeType;
+begin
+  if Settings.Mult.ByMode then
+     begin
+     Result := aMode;
+     end
+  else
+     begin
+     Result := Both;
+     end;
+end;
+
+function DomesticMultiplierCountKey(aContest: TContestBase; const aKey: string): string;
+begin
+  if ContestHasGridFieldMultiplier(aContest) then
+     begin
+     Result := Copy(aKey, 1, 2);
+     end
+  else
+     begin
+     Result := aKey;
+     end;
+end;
+
+procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange);
+var
+  rx: ContestExchange;
+  kinds: TMultiplierKinds;
+begin
+  if aRX.ceClearMultSheet or aRX.ceDupe then
+     begin
+     Exit;
+     end;
+
+  (* A COPY, with SetMultFlags' DomMultQTH fill: a row read back from the
+     log carries what SetMultFlags stored, but a peer's or an imported one
+     may hold only DomesticQTH. *)
+  rx := aRX;
+  if (rx.DomMultQTH = '') and (rx.DomesticQTH <> '') then
+     begin
+     rx.DomMultQTH := rx.DomesticQTH;
+     end;
+
+  kinds := MultiplierKindsCredited(aContest, rx);
+  if kinds = [] then
+     begin
+     Exit;
+     end;
+
+  (* THE REAL BAND AND MODE: mo.CountWorked fills the AllBands / Both cells
+     too, and the reader's key applies the scope -- as the bits do. *)
+  if rmDomestic in kinds then
+     begin
+     mo.CountWorked(rmDomestic, DomesticMultiplierCountKey(aContest, string(rx.DomMultQTH)),
+                    rx.Band, rx.Mode);
+     end;
+  if rmDX in kinds then
+     begin
+     mo.CountWorked(rmDX, IntToStr(rx.QTH.Country), rx.Band, rx.Mode);
+     end;
+  if rmPrefix in kinds then
+     begin
+     mo.CountWorked(rmPrefix, string(rx.Prefix), rx.Band, rx.Mode);
+     end;
+  if rmZone in kinds then
+     begin
+     mo.CountWorked(rmZone, IntToStr(rx.Zone), rx.Band, rx.Mode);
      end;
 end;
 

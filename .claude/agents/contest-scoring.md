@@ -729,6 +729,34 @@ Phone) -- `AddCallsign` indexed it with FM until P8 and wrote into the
 entry's CALL, reached by the rescore, which passes a record's stored mode.
 Pinned by `uTestSortedStringList` and `uTestCallsignsList`.
 
+## The sheet also COUNTS each multiplier's workings (issue 12, 2026-11-07)
+
+The bits in `mo` say worked-or-not and are set by the FIRST working only (a
+flag is set by `SetMultFlags` only when the multiplier is new). The band map's
+red / orange / no `M` needs how many times, so `mo` also holds a dictionary,
+`mo.CountWorked` / `mo.WorkedCount`, keyed (kind, multiplier -- case-blind, ten
+characters, as `TSortedStringList` compares --, band key, mode key). **Written
+ONLY by `LOGDUPE.CountWorkedMultipliers`, from `AddQSOToSheets`** (live, loader
+and rescore all reach it, in log order), skipping `ceDupe` and
+`ceClearMultSheet`; **emptied by `mo.ClearAllMults`** with the bits. A delete is
+a reload (`LoadinLog` / `RescoreLog` -> `DisposeOfMemoryAndZeroTotals`), so there
+is no decrement. **The credit chain is ONE function,
+`LOGDUPE.MultiplierKindsCredited`** (X-QSO, band, `CreditsWorkedStation`, and per
+kind key + `Has*Multiplier` + `CountsAsMultiplier`), lifted out of `SetMultFlags`
+so the count and the flags cannot disagree; **the band/mode key is ONE pair,
+`MultiplierSheetBand` / `MultiplierSheetMode`** (the `dmbbAllBand` overrides
+included), used by `SetMultFlags` and the spot read. The count is WRITTEN like
+the bits -- the real band and mode plus the `AllBands`/`Both` cells -- so the
+scope is applied only at the read. Their
+scope is `Settings.Mult.ByBand`/`ByMode`, which IS the class's answer:
+FoundContest writes it from the trait (`cfMultByBand`/`cfMultByMode`,
+`ApplyContestTraits`), then `DescribeSession` (`svMultByBand` -- Arizona in
+state, ALRS), with an operator's stated MULT BY BAND / MULT BY MODE winning over
+the trait. Do not key a count on `ContestIdentity(...).MultByBand` directly: it
+misses the DescribeSession and operator layers the bit sheet obeys. Cost: one
+`ActiveContest` per non-dupe QSO in `AddQSOToSheets` (loader and rescore
+included). Pinned by `uTestSpotCommentMultiplier.Test_Count_*`.
+
 ## The needs strips are recomputed after a QSO is logged (issue #100, 2026-10-26)
 
 "QSO needs for" / "Mult needs for" are computed from `CallsignsList` and

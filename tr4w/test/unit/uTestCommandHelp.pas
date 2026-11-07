@@ -49,10 +49,11 @@ const
      command. This is a measurement, not a decision: writing the text is
      NY4I's (docs/HELP_TEXT_GAPS.md is the work-list). Exact in both
      directions -- remove a name the day its help lands. *)
-   KNOWN_HELP_GAPS: array[0..27] of string = (
+   KNOWN_HELP_GAPS: array[0..28] of string = (
       (* No section in help_en.po. *)
       'ALERT COLOR',
       'BAND MAP WORKED MULT COLOR',
+      'BAND MAP WORKED MULT LIMIT',
       'CALL WINDOW SHOW ALL SPOTS',
       'COUNTRY INFORMATION FILE',
       'DISPLAY LANGUAGE',

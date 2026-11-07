@@ -361,6 +361,10 @@ begin
      tr4wColorsSA, as ALERT COLOR's is. *)
    RegisterModelSetting( 'bandmap.workedMultColor',           'BAND MAP WORKED MULT COLOR',
                          RS_BANDMAP_WORKEDMULTCOLOR);
+   (* ISSUE 12 (NY4I 2026-11-07): how many credited workings of a multiplier
+     before its spot shows no M; fewer, but at least one, is the orange M. *)
+   RegisterModelSetting( 'bandmap.workedMultLimit',           'BAND MAP WORKED MULT LIMIT',
+                         RS_BANDMAP_WORKEDMULTLIMIT);
    RegisterModelSetting( 'logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
                          RS_LOGGING_CHECKLOGFILESIZE);
    RegisterModelSetting( 'logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',

@@ -650,12 +650,14 @@ begin
       end
    else if aSpot.FWorkedMult then
       begin
-      (* A BACKUP (issue 12): the multiplier is worked, the call is not a dupe.
-         A flat fill in BAND MAP WORKED MULT COLOR, and B. Never with M, and a
-         dupe still overrides it below. *)
+      (* A BACKUP WANTED (issue 12, NY4I 2026-11-07): the multiplier is worked
+         fewer than BAND MAP WORKED MULT LIMIT times, the call is not a dupe.
+         The SAME letter M, on a flat fill in BAND MAP WORKED MULT COLOR -- the
+         orange B of f89121be is gone. Never with the red M, and a dupe still
+         overrides it below. *)
       grdSpots.Canvas.Brush.Color := tr4wColorsArray[WorkedMultColor];
       grdSpots.Canvas.FillRect(flagRect);
-      flagText := 'B';
+      flagText := 'M';
       end;
 
    if aSpot.FQSXFrequency <> 0 then

@@ -2455,9 +2455,10 @@ type
     {01}FCQ: boolean;
     {01}FWARCBand: boolean;
 
-    (* THE MULTIPLIER IS ALREADY WORKED, BUT THIS CALL IS NOT A DUPE -- a backup
-      (issue 12). Set only when the spot's multiplier was RESOLVED and is not
-      needed, and never together with FDupe or FMult. LOCAL KNOWLEDGE: it is
+    (* A BACKUP IS WANTED -- the orange M (issue 12, NY4I 2026-11-07): the
+      spot's multiplier is worked at least once but fewer than BAND MAP WORKED
+      MULT LIMIT times, and this call is not a dupe (LogEdit.
+      DetermineMultStatus). Never together with FDupe or FMult. LOCAL KNOWLEDGE: it is
       asked of this station's log, so it is not meaningful from the network or
       from the band map file, and both readers clear it.
 

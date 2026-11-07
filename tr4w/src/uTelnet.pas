@@ -60,8 +60,8 @@ uses
 type
   TelnetStringType = (tstTR4W, tstSend, tstReceived, tstReceivedDupe,
     tstReceivedMult, tstError, tstAlert,
-    (* LAST, so no ordinal moves (issue 12): a spot whose multiplier is already
-       worked but whose call is not a dupe. *)
+    (* LAST, so no ordinal moves (issue 12): a spot whose multiplier wants a
+       backup (TSpotRecord.FWorkedMult) and whose call is not a dupe. *)
     tstReceivedWorkedMult);
 
 type
@@ -1867,8 +1867,9 @@ begin
      (* THE SAME ROUTINE AS THE RE-ASK AFTER A LOG CHANGE
        (TDXSpotsList.UpdateSpotsMultiplierStatus): it reads the spot's
        comment when CLUSTER SPOT COMMENT MULTIPLIER is on (issue 83). *)
-     (* ONE ASK GIVES BOTH FLAGS (issue 12): needed, or already worked on this
-       band/mode for a call that is not a dupe -- a backup. Never both. *)
+     (* ONE ASK GIVES BOTH FLAGS (issue 12): needed (worked 0 times on this
+       band/mode), or a backup wanted (worked fewer than BAND MAP WORKED MULT
+       LIMIT times). Never both. *)
      VisibleLog.DetermineSpotMultStatus(TempSpot, TempSpot.FMult,
                                         TempSpot.FWorkedMult);
      //    TempSpot.FMult := MultString <> 0;

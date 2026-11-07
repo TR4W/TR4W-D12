@@ -444,38 +444,76 @@ happens on the main thread, true before and after.
 3. this -- then the same pattern for the radio, external-logger and WinKey threads,
    which share the shape and the HWND dependency.
 
-## 7. A BACKUP SPOT -- WORKED MULTIPLIER, NOT A DUPE (issue 12, 2026-11-07)
+## 7. THE SPOT'S M BY WORKED COUNT -- RED, ORANGE, NONE (issue 12, 2026-11-07)
 
-A spot has three states, not two. **New mult** (`FMult`, red `M`), **worked mult**
-(`FWorkedMult`, the multiplier is already in the log on this band/mode but the call
-is not a dupe, so the station is a backup; flat fill, letter `B`) and **dupe**
-(`FDupe`, yellow `D`). The flags are never set together, and a dupe overrides both
-in the cell.
+**NY4I's ruling, 2026-11-07, replacing the orange `B` built earlier that day
+(f89121be):** the multiplier indicator is a three-state by how many times the
+spot's multiplier has been WORKED, with N = `BAND MAP WORKED MULT LIMIT`
+(`Settings.BandMap.WorkedMultLimit`, 1..9, default 1):
+
+| worked     | flag          | cell                                              |
+| ---------- | ------------- | ------------------------------------------------- |
+| 0          | `FMult`       | red-to-white gradient, `M` (unchanged)            |
+| 1 .. N-1   | `FWorkedMult` | flat fill in BAND MAP WORKED MULT COLOR, `M`      |
+| N or more  | neither       | no letter                                         |
+
+A dupe (`FDupe`, yellow `D`) is unchanged and overrides both. **At the default
+N = 1 there is no orange state** -- the `M` goes at the first working, as before
+issue 12; N = 2 gives "orange after the first, gone after the second".
 
 - **One routine decides.** `EditableLog.DetermineMultStatus` returns (needed,
-  worked); `DetermineIfNewMult`, `DetermineIfWorkedMult` and
+  backup wanted); `DetermineIfNewMult`, `DetermineIfWorkedMult` and
   `DetermineSpotMultStatus` (the spot form, which reads the comment when CLUSTER
   SPOT COMMENT MULTIPLIER is on) all derive from it, and `ProcessDX` and
   `UpdateSpotsMultiplierStatus` call the spot form, so the live spot and the
   re-ask after a log change cannot disagree.
+- **THE COUNT IS THE ENGINE'S, kept beside the bits.** `mo` (`TMultsObject`)
+  holds a dictionary of worked counts keyed (kind, multiplier, band key, mode
+  key). It is written ONLY by `LOGDUPE.CountWorkedMultipliers`, from
+  `AddQSOToSheets` -- the one routine `LogContact`, `LoadinLog` and the rescore
+  all reach -- and emptied with the bits by `mo.ClearAllMults`. Every credited
+  QSO counts, not only the first (the bits are set only by the first). **A
+  dupe, an X-QSO, an off-band QSO, a host-area-refused QSO and a
+  `ceClearMultSheet` record count nothing**: the credit chain is
+  `LOGDUPE.MultiplierKindsCredited`, lifted out of `SetMultFlags` so both ask it.
+- **A delete is a reload, not a decrement.** Alt-Y ends in `LoadinLog`, an edit or
+  a peer's update in `RescoreLog`; both start at `DisposeOfMemoryAndZeroTotals`,
+  which clears the counts with the bits, and walk the log again without the
+  deleted QSO. There is no decrement API because nothing would call it.
+- **THE SCOPE IS THE CONTEST CLASS'S.** Per band / per mode is
+  `Settings.Mult.ByBand` / `ByMode`, which FoundContest writes from the class (its
+  `cfMultByBand` / `cfMultByMode` trait, then a `DescribeSession` restatement for
+  the station -- Arizona in state, ALRS -- with an operator's MULT BY BAND / MULT
+  BY MODE line winning over the trait), plus the class's `DXCCMultByBand` /
+  `DomesticMultByBand` (`dmbbAllBand`: CQMM, RDA, the RF Championships). ONE pair
+  of helpers, `LOGDUPE.MultiplierSheetBand` / `MultiplierSheetMode`, gives the key
+  for `SetMultFlags`' new-multiplier question and the spot's count read. The
+  count is WRITTEN, like the bits, on the QSO's real band and mode plus the
+  `AllBands` / `Both` cells (`mo.CountWorked`), so the scope is applied only at
+  the read and the bit and the count always answer for the same cell -- even if
+  MULT BY BAND changes without a reload. Sweepstakes counts a section once
+  across bands and modes; CQ WW per band.
 - **"Not needed" is NOT "worked".** `GetMultArray` answers 0 for both "worked on
   every band" and "no multiplier could be named" (unknown country, an unlisted
-  section, Sweepstakes with no comment and no call history). `GetMultArrayResolved`
-  adds `aResolved`, set when a country, zone, prefix or domestic key was found, and
-  worked = resolved and not needed. Without it every unnameable call would be a
-  backup.
-- **Sweepstakes counts a section once per contest**: its class states no
-  `cfMultByBand`, so `Settings.Mult.ByBand` is False and the key is `AllBands`. A
-  section worked on 20 m is a backup on every band. Per-band contests answer per
-  band (a section worked on 20 m is still NEW on 40 m). Pinned by
-  `Test_Worked_*` in `uTestSpotCommentMultiplier`.
-- **`MULTS ONLY` does not show a worked-mult spot** (its filter is `FMult or FCQ`).
+  section, Sweepstakes with no comment and no call history).
+  `GetMultArrayResolved` hands back the keys it resolved
+  (`TResolvedMultiplierKeys`); an empty set is neither state.
+- **A call with two multipliers** (CQ WW's country and zone) shows the orange `M`
+  while its LEAST-worked multiplier is at 1..N-1 -- a judgement call, recorded
+  here: a backup is wanted for at least one of them. The read also requires a
+  count of at least 1, so a count that disagrees with the bit can never paint a
+  multiplier the log does not hold.
+- Pinned by `Test_Worked_*` and `Test_Count_*` in `uTestSpotCommentMultiplier`
+  (NY4I's W7WYS / K7OWY sequence at N = 1 and N = 2, per band vs across bands, a
+  dupe and an X-QSO not counted, a delete rebuilding the count, the class's
+  scope).
+- **`MULTS ONLY` does not show an orange-M spot** (its filter is `FMult or FCQ`).
 - **Colour:** `BAND MAP WORKED MULT COLOR` (`Settings.BandMap.WorkedMultColor`), a
   `tr4wColorsSA` spelling, default `ORANGE` (`trOrange`, added to the END of the
   palette -- colours are stored by spelling). Shown in Preferences > Band Map >
   Window and tuning. `uSpots.WorkedMultColor` resolves it for both the band map and
-  the Telnet window (`tstReceivedWorkedMult`, drawn in that colour). The `M` and
-  `D` colours are NOT configurable (hard-coded red and yellow); nothing was
+  the Telnet window (`tstReceivedWorkedMult`, drawn in that colour). The red `M`
+  and `D` colours are NOT configurable (hard-coded red and yellow); nothing was
   changed there.
 - **The record did not grow.** `FWorkedMult` sits in the tail padding of
   `TSpotRecord`, so `SizeOf(TNetDXSpot)` (pinned at 106 by `uTestNetWireSizes`)

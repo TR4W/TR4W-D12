@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(298, names.Count,
+         CheckEquals(299, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -501,7 +501,9 @@ begin
                      + ' issue 83), 2026-11-05; 297 since FREQUENCY POLL'
                      + ' RATE moved to each radio definition (issue 235'
                      + ' step 3), 2026-11-06; 298 with BAND MAP WORKED MULT'
-                     + ' COLOR (new, no CFGCA row, issue 12), 2026-11-07');
+                     + ' COLOR (new, no CFGCA row, issue 12), 2026-11-07;'
+                     + ' 299 with BAND MAP WORKED MULT LIMIT (new, no CFGCA'
+                     + ' row, issue 12), 2026-11-07');
       finally
          names.Free;
       end;
@@ -1608,6 +1610,7 @@ const
       + '"BAND MAP SO2R DISPLAY",'
       + '"BAND MAP SPLIT MODE",'
       + '"BAND MAP WORKED MULT COLOR",'
+      + '"BAND MAP WORKED MULT LIMIT",'
       + '"BEEP ENABLE",'
       + '"BEEP EVERY 10 QSOS",'
       + '"BOLD FONT",'

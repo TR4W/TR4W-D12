@@ -73,6 +73,15 @@ type
       procedure Test_Worked_SweepstakesCountsOnceAcrossBands;
       procedure Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
       procedure Test_Worked_ColourToken;
+      procedure Test_Count_ScopeIsTheContestClasss;
+      procedure Test_Count_WyomingSequenceAtLimitTwo;
+      procedure Test_Count_DefaultLimitOneShowsNoBackup;
+      procedure Test_Count_DupeAndXQSODoNotCount;
+      procedure Test_Count_DeleteRebuildsTheCount;
+      procedure Test_Count_PerBandAndTheLeastWorkedKind;
+      procedure Test_Count_SpotStoreClearsAtTheLimit;
+      procedure Test_Count_LoaderPathFromStoredRows;
+      procedure Test_Count_ScopeChangeWithoutReload;
    end;
 
 implementation
@@ -130,6 +139,7 @@ var
    savedByMode: boolean;
    savedDomesticByBand: TAdditionalMultByBand;
    savedSetting: boolean;
+   savedLimit: TBandMapWorkedMultLimit;
 
 (* The candidates as one comma-separated string, so a case reads as the text
    it pins. *)
@@ -177,6 +187,7 @@ begin
    savedByMode := Settings.Mult.ByMode;
    savedDomesticByBand := DomesticMultByBand;
    savedSetting := Settings.Cluster.SpotCommentMultiplier;
+   savedLimit := Settings.BandMap.WorkedMultLimit;
    savedCountries := TStringList.Create;
    for i := 0 to DomesticCountries.Count - 1 do
       begin
@@ -199,6 +210,8 @@ begin
    Settings.Mult.ByMode := False;
    DomesticMultByBand := dmbbDefauld;
    Settings.Cluster.SpotCommentMultiplier := False;
+   (* THE DEFAULT, 1 -- a test of the orange M states the limit it needs. *)
+   Settings.BandMap.WorkedMultLimit := 1;
 
    Contest := ContestHandleOf(aContest);
    ReleaseActiveContest;
@@ -228,13 +241,17 @@ begin
    Settings.Mult.ByMode := savedByMode;
    DomesticMultByBand := savedDomesticByBand;
    Settings.Cluster.SpotCommentMultiplier := savedSetting;
+   Settings.BandMap.WorkedMultLimit := savedLimit;
    Contest := savedContest;
    ReleaseActiveContest;
 end;
 
 (* ONE QSO WORKED WITH aQTH, as logsubs2 logs it: the QTH through the domestic
    file (FoundDomesticQTH), then the sheet's flags, then the sheet marked. *)
-procedure LogWorked(const aCall: string; const aQTH: string; aBand: BandType);
+(* aDupe / aXQSO: the QSO as LogContact leaves a dupe (ceDupe, set before the
+   sheets are reached) or an X-QSO flagged by the operator (issue 12). *)
+procedure LogWorkedAs(const aCall: string; const aQTH: string; aBand: BandType;
+                      aDupe, aXQSO: boolean);
 var
    rx: ContestExchange;
 begin
@@ -245,9 +262,16 @@ begin
    rx.Mode := CW;
    rx.Zone := DUMMYZONE;
    rx.QTHString := ShortString(aQTH);
+   rx.ceDupe := aDupe;
+   rx.ceXQSO := aXQSO;
    FoundDomesticQTH(rx);
    Sheet.SetMultFlags(rx);
    Sheet.AddQSOToSheets(@rx, False);
+end;
+
+procedure LogWorked(const aCall: string; const aQTH: string; aBand: BandType);
+begin
+   LogWorkedAs(aCall, aQTH, aBand, False, False);
 end;
 
 procedure TSpotCommentMultiplierTests.Test_Tokens_RealCommentsFromTheIssue;
@@ -635,11 +659,13 @@ begin
    end;
 end;
 
-(* ISSUE 12: A WORKED MULTIPLIER ON A CALL THAT IS NOT A DUPE -- a backup.
+(* ISSUE 12: A MULTIPLIER WORKED FEWER THAN BAND MAP WORKED MULT LIMIT TIMES,
+   ON A CALL THAT IS NOT A DUPE -- a backup wanted, the orange M.
 
    NEEDED and WORKED are the two answers of one routine, DetermineMultStatus,
    so they cannot both be True; and a call whose multiplier cannot be named at
-   all is NEITHER, which is the case a plain "not needed" would get wrong. *)
+   all is NEITHER, which is the case a plain "not needed" would get wrong.
+   These three tests run at a limit of 2, so one working is a backup. *)
 procedure TSpotCommentMultiplierTests.Test_Worked_PerBandMultiplier;
 var
    hint: string;
@@ -650,6 +676,7 @@ begin
    CheckTrue(LoadCountryFile, 'cty.dat loads');
    SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
    try
+      Settings.BandMap.WorkedMultLimit := 2;
       hint := SpotSectionHint('K1DW', 'CQ NTX');
       CheckTrue(hint <> '', 'the hint is a key');
 
@@ -697,6 +724,7 @@ begin
          states no cfMultByBand, so FoundContest leaves Settings.Mult.ByBand
          False. Set it as the contest does. *)
       Settings.Mult.ByBand := False;
+      Settings.BandMap.WorkedMultLimit := 2;
       hint := SpotSectionHint('K1DW', 'CQ NTX');
 
       VisibleLog.DetermineMultStatus('K1DW', Band40, CW, hint, needed, worked);
@@ -729,6 +757,7 @@ begin
    SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
    try
       Settings.Cluster.SpotCommentMultiplier := True;
+      Settings.BandMap.WorkedMultLimit := 2;
       CheckTrue(ParseDXSpotLine('DX de AC0C-1-#:   7037.0  K1DW        CW 21 dB 14 WPM CQ         NTX 0127Z', spot),
                 'the spot decodes');
       spot.FBand := Band40;
@@ -738,12 +767,12 @@ begin
       SpotsList.AddSpot(spot, False);
       CheckEquals(1, SpotsList.Count, 'the spot is on the map');
 
-      (* NEW MULT: flagged M, never B. *)
+      (* NEW MULT: the red M, never the orange one. *)
       SpotsList.UpdateSpotsMultiplierStatus;
       CheckTrue(SpotsList.Get(0).FMult, 'NTX unworked: a new multiplier');
       CheckFalse(SpotsList.Get(0).FWorkedMult, 'and not a backup');
 
-      (* WORKED MULT, NOT A DUPE: B, not M. *)
+      (* WORKED ONCE, LIMIT 2, NOT A DUPE: the orange M, not the red. *)
       LogWorked('W5XYZ', 'NTX', Band40);
       SpotsList.UpdateSpotsMultiplierStatus;
       CheckFalse(SpotsList.Get(0).FMult, 'NTX worked: no longer a new multiplier');
@@ -756,6 +785,404 @@ begin
       CheckFalse(SpotsList.Get(0).FWorkedMult, 'a dupe is not a backup');
       SpotsList.UpdateSpotsMultiplierStatus;
       CheckFalse(SpotsList.Get(0).FWorkedMult, 'and the re-ask keeps it so');
+   finally
+      SpotsList.Clear;
+      RestoreSession;
+   end;
+end;
+
+(* THE SCOPE OF A COUNT -- per band, per mode -- IS THE CONTEST CLASS'S
+   (issue 12, NY4I 2026-11-07). The class states it in its flags
+   (cfMultByBand / cfMultByMode); FoundContest copies it into
+   Settings.Mult.ByBand / ByMode (FCONTEST.ApplyContestTraits; a
+   DescribeSession may restate it for a station, and an operator's MULT BY
+   BAND line wins), and the sheet's keys are read from there by
+   LOGDUPE.MultiplierSheetBand / MultiplierSheetMode. The tests below set the
+   two settings FROM the class, as FoundContest does. *)
+procedure SetScopeFromTheClass;
+begin
+   Settings.Mult.ByBand := ContestIdentity(Contest).MultByBand;
+   Settings.Mult.ByMode := ContestIdentity(Contest).MultByMode;
+end;
+
+procedure TSpotCommentMultiplierTests.Test_Count_ScopeIsTheContestClasss;
+begin
+   BeginTest('Test_Count_ScopeIsTheContestClasss');
+   CheckFalse(ContestIdentity(ContestHandleOf(ARRLSSCW)).MultByBand, 'Sweepstakes counts a section once across bands');
+   CheckFalse(ContestIdentity(ContestHandleOf(ARRLSSCW)).MultByMode, 'and across modes');
+   CheckTrue(ContestIdentity(ContestHandleOf(CQWWCW)).MultByBand, 'CQ WW counts per band');
+   CheckFalse(ContestIdentity(ContestHandleOf(CQWWCW)).MultByMode, 'and not per mode');
+   CheckTrue(ContestIdentity(ContestHandleOf(ARRL10)).MultByMode, 'ARRL 10 counts per mode');
+   CheckFalse(ContestIdentity(ContestHandleOf(ARRL10)).MultByBand, 'and not per band');
+
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      CheckTrue(MultiplierSheetBand(rmDomestic, Band40) = AllBands, 'SS: a 40 m QSO is keyed on AllBands');
+      CheckTrue(MultiplierSheetMode(CW) = Both, 'SS: and on Both');
+      Contest := ContestHandleOf(CQWWCW);
+      ReleaseActiveContest;
+      SetScopeFromTheClass;
+      CheckTrue(MultiplierSheetBand(rmDX, Band40) = Band40, 'CQ WW: a 40 m QSO is keyed on 40 m');
+      CheckTrue(MultiplierSheetBand(rmZone, Band40) = Band40, 'and its zone too');
+      CheckTrue(MultiplierSheetMode(CW) = Both, 'CQ WW: on Both');
+      Contest := ContestHandleOf(ARRL10);
+      ReleaseActiveContest;
+      SetScopeFromTheClass;
+      CheckTrue(MultiplierSheetBand(rmDomestic, Band10) = AllBands, 'ARRL 10: AllBands');
+      CheckTrue(MultiplierSheetMode(CW) = CW, 'ARRL 10: per mode');
+      (* A DX MULTIPLIER THE CONTEST COUNTS ONCE OVER ALL BANDS (CQMM's
+         DescribeSession: dmbbAllBand) is keyed on AllBands even per band. *)
+      Settings.Mult.ByBand := True;
+      DXCCMultByBand := dmbbAllBand;
+      try
+         CheckTrue(MultiplierSheetBand(rmDX, Band20) = AllBands, 'dmbbAllBand: a DX key on AllBands');
+         CheckTrue(MultiplierSheetBand(rmZone, Band20) = Band20, 'but not a zone key');
+      finally
+         DXCCMultByBand := dmbbDefauld;
+      end;
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* NY4I'S SEQUENCE, issue 12: Wyoming in ARRL Sweepstakes at a limit of 2.
+   No WY worked: the red M. W7WYS worked: the orange M. K7OWY worked: no M --
+   on every band, since Sweepstakes counts a section once. *)
+procedure TSpotCommentMultiplierTests.Test_Count_WyomingSequenceAtLimitTwo;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+   b: BandType;
+begin
+   BeginTest('Test_Count_WyomingSequenceAtLimitTwo');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      Settings.BandMap.WorkedMultLimit := 2;
+      hint := SpotSectionHint('K1DW', 'CQ WY');
+      CheckEquals('Wy', hint, 'the hint is the section''s key');
+
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckTrue(needed, 'no WY worked: the red M');
+      CheckFalse(worked, 'and not the orange one');
+
+      LogWorked('W7WYS', 'WY', Band20);
+      CheckEquals(1, mo.WorkedCount(rmDomestic, 'Wy', AllBands, Both), 'WY worked once');
+      for b in [Band20, Band40, Band80, Band10] do
+         begin
+         VisibleLog.DetermineMultStatus('K1DW', b, CW, hint, needed, worked);
+         CheckFalse(needed, 'W7WYS worked: not needed on ' + BandStringsArrayWithOutSpaces[b]);
+         CheckTrue(worked, 'W7WYS worked: the orange M on ' + BandStringsArrayWithOutSpaces[b]);
+         end;
+
+      LogWorked('K7OWY', 'WY', Band40);
+      CheckEquals(2, mo.WorkedCount(rmDomestic, 'WY', AllBands, Both), 'WY worked twice, the key without case');
+      for b in [Band20, Band40, Band80, Band10] do
+         begin
+         VisibleLog.DetermineMultStatus('K1DW', b, CW, hint, needed, worked);
+         CheckFalse(needed, 'K7OWY worked: not needed on ' + BandStringsArrayWithOutSpaces[b]);
+         CheckFalse(worked, 'K7OWY worked: no M on ' + BandStringsArrayWithOutSpaces[b]);
+         end;
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* THE DEFAULT LIMIT, 1: the M goes at the first working, as it did before
+   issue 12 -- 0 worked is the red M, 1 is "N or more". *)
+procedure TSpotCommentMultiplierTests.Test_Count_DefaultLimitOneShowsNoBackup;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Count_DefaultLimitOneShowsNoBackup');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      CheckEquals(1, Settings.BandMap.WorkedMultLimit, 'the default');
+      hint := SpotSectionHint('K1DW', 'CQ WY');
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckTrue(needed, '0 worked: the red M');
+      LogWorked('W7WYS', 'WY', Band20);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(needed, '1 worked: not needed');
+      CheckFalse(worked, '1 worked at limit 1: no M');
+      (* AND A LIMIT OF 3 KEEPS THE ORANGE M AFTER A SECOND WORKING. *)
+      LogWorked('K7OWY', 'WY', Band20);
+      Settings.BandMap.WorkedMultLimit := 3;
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckTrue(worked, '2 worked at limit 3: the orange M');
+      Settings.BandMap.WorkedMultLimit := 2;
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(worked, '2 worked at limit 2: no M');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* A DUPE AND AN X-QSO EARN NO CREDIT, so they do not count toward the limit
+   (NY4I's ruling). *)
+procedure TSpotCommentMultiplierTests.Test_Count_DupeAndXQSODoNotCount;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Count_DupeAndXQSODoNotCount');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      Settings.BandMap.WorkedMultLimit := 2;
+      hint := SpotSectionHint('K1DW', 'CQ WY');
+      LogWorked('W7WYS', 'WY', Band20);
+      LogWorkedAs('W7WYS', 'WY', Band40, True, False);
+      CheckEquals(1, mo.WorkedCount(rmDomestic, 'Wy', AllBands, Both), 'a dupe does not count');
+      LogWorkedAs('K7OWY', 'WY', Band40, False, True);
+      CheckEquals(1, mo.WorkedCount(rmDomestic, 'Wy', AllBands, Both), 'nor an X-QSO');
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(needed, 'not needed');
+      CheckTrue(worked, 'still the orange M');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* A DELETE IS A RELOAD: Alt-Y and an edit end in LoadinLog / RescoreLog,
+   whose head is DisposeOfMemoryAndZeroTotals, and the log is walked again
+   without the deleted QSO. The count must go with the bits -- a stale
+   orange after a delete is the failure. *)
+procedure TSpotCommentMultiplierTests.Test_Count_DeleteRebuildsTheCount;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Count_DeleteRebuildsTheCount');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      Settings.BandMap.WorkedMultLimit := 2;
+      hint := SpotSectionHint('K1DW', 'CQ WY');
+      LogWorked('W7WYS', 'WY', Band20);
+      LogWorked('K7OWY', 'WY', Band40);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(worked, 'worked twice: no M');
+
+      (* K7OWY DELETED: the reload's head, then the log without it. *)
+      Sheet.DisposeOfMemoryAndZeroTotals;
+      CheckEquals(0, mo.WorkedCount(rmDomestic, 'Wy', AllBands, Both), 'the reload empties the count');
+      LogWorked('W7WYS', 'WY', Band20);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(needed, 'W7WYS still in the log: not needed');
+      CheckTrue(worked, 'and the orange M is back');
+
+      (* W7WYS DELETED TOO: the red M. *)
+      Sheet.DisposeOfMemoryAndZeroTotals;
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckTrue(needed, 'none in the log: the red M');
+      CheckFalse(worked, 'and not the orange');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* THE RECORD LogContact STORES for a QSO -- the QTH through the domestic file,
+   the flags set -- but NOT added to the sheets: the loader's input. *)
+function StoredRecord(const aCall: string; const aQTH: string; aBand: BandType): ContestExchange;
+begin
+   Result := Default(ContestExchange);
+   Result.ceRecordKind := rkQSO;
+   Result.Callsign := CallString(aCall);
+   Result.Band := aBand;
+   Result.Mode := CW;
+   Result.Zone := DUMMYZONE;
+   Result.QTHString := ShortString(aQTH);
+   FoundDomesticQTH(Result);
+   Sheet.SetMultFlags(Result);
+end;
+
+(* A LOG OPENED FROM ITS DATABASE: LoadinLog runs no SetMultFlags, only
+   AddQSOToSheets on each stored row (the flags and keys as stored), so the
+   count must come from the stored keys alone. And a row holding only
+   DomesticQTH -- a peer's or an import -- counts by it. *)
+procedure TSpotCommentMultiplierTests.Test_Count_LoaderPathFromStoredRows;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+   first: ContestExchange;
+   second: ContestExchange;
+   replay: ContestExchange;
+begin
+   BeginTest('Test_Count_LoaderPathFromStoredRows');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      Settings.BandMap.WorkedMultLimit := 2;
+      hint := SpotSectionHint('K1DW', 'CQ WY');
+      (* LIVE: the first is the new multiplier, the second is not. *)
+      first := StoredRecord('W7WYS', 'WY', Band20);
+      Sheet.AddQSOToSheets(@first, True);
+      second := StoredRecord('K7OWY', 'WY', Band40);
+      Sheet.AddQSOToSheets(@second, True);
+      CheckTrue(first.DomesticMult, 'the first stored row carries the new-multiplier flag');
+      CheckFalse(second.DomesticMult, 'the second does not');
+
+      (* REOPENED: the reload's head, then each stored row as LoadinLog adds it. *)
+      Sheet.DisposeOfMemoryAndZeroTotals;
+      replay := first;
+      Sheet.AddQSOToSheets(@replay, True);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(needed, 'loaded W7WYS: not needed');
+      CheckTrue(worked, 'loaded W7WYS: the orange M');
+      replay := second;
+      Sheet.AddQSOToSheets(@replay, True);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(worked, 'loaded K7OWY too: no M');
+
+      (* A ROW WITH ONLY DomesticQTH counts by it. *)
+      Sheet.DisposeOfMemoryAndZeroTotals;
+      replay := first;
+      Sheet.AddQSOToSheets(@replay, True);
+      replay := second;
+      replay.DomMultQTH := '';
+      CheckTrue(replay.DomesticQTH <> '', 'the row still has its DomesticQTH');
+      Sheet.AddQSOToSheets(@replay, True);
+      CheckEquals(2, mo.WorkedCount(rmDomestic, 'Wy', AllBands, Both), 'counted by DomesticQTH');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* MULT BY BAND CHANGED WITH NO RELOAD: the bits are stored on the real band
+   and AllBands and the scope applied when asked; the counts are too, so they
+   follow the bits. *)
+procedure TSpotCommentMultiplierTests.Test_Count_ScopeChangeWithoutReload;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Count_ScopeChangeWithoutReload');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      Settings.Mult.ByBand := True;
+      Settings.BandMap.WorkedMultLimit := 2;
+      hint := SpotSectionHint('K1DW', 'CQ WY');
+      LogWorked('W7WYS', 'WY', Band20);
+      VisibleLog.DetermineMultStatus('K1DW', Band40, CW, hint, needed, worked);
+      CheckTrue(needed, 'per band: needed on 40 m');
+      Settings.Mult.ByBand := False;
+      VisibleLog.DetermineMultStatus('K1DW', Band40, CW, hint, needed, worked);
+      CheckFalse(needed, 'across bands now: not needed on 40 m');
+      CheckTrue(worked, 'and the count agrees: the orange M');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* ONE DX QSO, as the engine would leave it for CQ WW: the country and the CQ
+   zone from CTY.DAT, the DX QTH from the contest. *)
+procedure LogWorkedDX(const aCall: string; aBand: BandType);
+var
+   rx: ContestExchange;
+begin
+   rx := Default(ContestExchange);
+   rx.ceRecordKind := rkQSO;
+   rx.Callsign := CallString(aCall);
+   rx.Band := aBand;
+   rx.Mode := CW;
+   ctyLocateCall(rx.Callsign, rx.QTH);
+   rx.Zone := ctyGetCQZone(rx.Callsign);
+   GetDXQTH(ActiveContest(Contest), rx);
+   Sheet.SetMultFlags(rx);
+   Sheet.AddQSOToSheets(@rx, False);
+end;
+
+(* A PER-BAND CONTEST, CQ WW, and a call with TWO multipliers -- its country
+   and its zone. Counted per band, as the class states; the orange M while the
+   LEAST-worked of the two is under the limit. *)
+procedure TSpotCommentMultiplierTests.Test_Count_PerBandAndTheLeastWorkedKind;
+var
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Count_PerBandAndTheLeastWorkedKind');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(CQWWCW, [], 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      CheckTrue(Settings.Mult.ByBand, 'CQ WW: per band');
+      Settings.BandMap.WorkedMultLimit := 2;
+      CheckEquals(14, ctyGetCQZone('DL2XYZ'), 'DL is CQ zone 14');
+      CheckEquals(14, ctyGetCQZone('F5XYZ'), 'and so is F');
+
+      VisibleLog.DetermineMultStatus('DL2XYZ', Band20, CW, '', needed, worked);
+      CheckTrue(needed, 'nothing worked: the red M');
+
+      LogWorkedDX('DL1ABC', Band20);
+      VisibleLog.DetermineMultStatus('DL2XYZ', Band20, CW, '', needed, worked);
+      CheckFalse(needed, 'DL and zone 14 worked on 20 m');
+      CheckTrue(worked, 'once each: the orange M on 20 m');
+      VisibleLog.DetermineMultStatus('DL2XYZ', Band40, CW, '', needed, worked);
+      CheckTrue(needed, 'per band: still the red M on 40 m');
+
+      (* ZONE 14 TWICE, DL ONCE: the least-worked is DL, so still orange. *)
+      LogWorkedDX('F5ABC', Band20);
+      VisibleLog.DetermineMultStatus('DL2XYZ', Band20, CW, '', needed, worked);
+      CheckTrue(worked, 'DL once, zone 14 twice: the orange M');
+
+      LogWorkedDX('DL3ABC', Band20);
+      VisibleLog.DetermineMultStatus('DL2XYZ', Band20, CW, '', needed, worked);
+      CheckFalse(needed, 'not needed');
+      CheckFalse(worked, 'DL twice, zone 14 three times: no M');
+      VisibleLog.DetermineMultStatus('DL2XYZ', Band40, CW, '', needed, worked);
+      CheckTrue(needed, 'and 40 m is untouched');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* THE SPOT STORE OVER THE WHOLE SEQUENCE, limit 2: red, orange, none. *)
+procedure TSpotCommentMultiplierTests.Test_Count_SpotStoreClearsAtTheLimit;
+var
+   spot: TSpotRecord;
+begin
+   BeginTest('Test_Count_SpotStoreClearsAtTheLimit');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      SetScopeFromTheClass;
+      Settings.Cluster.SpotCommentMultiplier := True;
+      Settings.BandMap.WorkedMultLimit := 2;
+      CheckTrue(ParseDXSpotLine('DX de AC0C-1-#:   7037.0  K1DW        CW 21 dB 14 WPM CQ         WY 0127Z', spot),
+                'the spot decodes');
+      spot.FBand := Band40;
+      spot.FMode := CW;
+      spot.FSysTime := Now;
+      SpotsList.Clear;
+      SpotsList.AddSpot(spot, False);
+
+      SpotsList.UpdateSpotsMultiplierStatus;
+      CheckTrue(SpotsList.Get(0).FMult, '0 worked: the red M');
+      CheckFalse(SpotsList.Get(0).FWorkedMult, '0 worked: not orange');
+      LogWorked('W7WYS', 'WY', Band20);
+      SpotsList.UpdateSpotsMultiplierStatus;
+      CheckFalse(SpotsList.Get(0).FMult, '1 worked: not red');
+      CheckTrue(SpotsList.Get(0).FWorkedMult, '1 worked: orange');
+      LogWorked('K7OWY', 'WY', Band20);
+      SpotsList.UpdateSpotsMultiplierStatus;
+      CheckFalse(SpotsList.Get(0).FMult, '2 worked: not red');
+      CheckFalse(SpotsList.Get(0).FWorkedMult, '2 worked: no M');
    finally
       SpotsList.Clear;
       RestoreSession;
@@ -796,6 +1223,15 @@ begin
    Test_Worked_SweepstakesCountsOnceAcrossBands;
    Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
    Test_Worked_ColourToken;
+   Test_Count_ScopeIsTheContestClasss;
+   Test_Count_WyomingSequenceAtLimitTwo;
+   Test_Count_DefaultLimitOneShowsNoBackup;
+   Test_Count_DupeAndXQSODoNotCount;
+   Test_Count_DeleteRebuildsTheCount;
+   Test_Count_PerBandAndTheLeastWorkedKind;
+   Test_Count_SpotStoreClearsAtTheLimit;
+   Test_Count_LoaderPathFromStoredRows;
+   Test_Count_ScopeChangeWithoutReload;
 end;
 
 end.

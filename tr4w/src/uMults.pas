@@ -35,7 +35,9 @@ uses
   Log4D,
   (* TContestBase -- FillVisibleBytes' parameter (M11 S4). A leaf over VC
     and uSettingsModel, already linked by the unit tests. *)
-  uContestBase;   // Issue #1034: dropped uCallsigns (unused here)
+  uContestBase,   // Issue #1034: dropped uCallsigns (unused here)
+  (* TDictionary -- the worked counts (issue 12). *)
+  Generics.Collections;
 
 
 const
@@ -60,6 +62,10 @@ type
     or took its address, so no caller depended on the value semantics; the
     tests that kept a sheet of their own create one. *)
   TMultsObject = class
+  private
+    FWorkedCounts: TDictionary<string, integer>;
+    function WorkedCountKey(aKind: RemainingMultiplierType; const aKey: string;
+                            aBand: BandType; aMode: ModeType): string;
   public
     DXMultsArray: TDXMultsTable;
     ZoneMultsArray: TZoneMultsTable;
@@ -67,6 +73,29 @@ type
     DomList: TSortedStringList;
 
     MTotals: TMultTotals;
+
+    (* HOW MANY TIMES EACH MULTIPLIER IS WORKED -- issue 12 (NY4I 2026-11-07),
+      for the band map's red / orange / no M. The bit tables above say only
+      worked or not, and are set by the FIRST working alone; this counts every
+      QSO that earned the multiplier, dupes and X-QSOs never.
+
+      KEYED as the bits are: aKey is the multiplier (a country or zone
+      number, a prefix, a domestic key -- compared without case and cut at
+      ten characters, as TSortedStringList compares). CountWorked takes the
+      QSO's REAL band and mode and counts four cells (band and AllBands,
+      mode and Both), as SetDXMult and IncrementTotals do; WorkedCount is
+      asked with the sheet's keys, LOGDUPE.MultiplierSheetBand /
+      MultiplierSheetMode -- AllBands / Both where the contest does not
+      count by band / mode.
+
+      WRITTEN ONLY by LOGDUPE.CountWorkedMultipliers from AddQSOToSheets --
+      the one routine the loader, the rescore and LogContact all reach --
+      and EMPTIED with the bits by ClearAllMults. A delete or an edit is a
+      reload or a rescore, so there is no decrement. *)
+    procedure CountWorked(aKind: RemainingMultiplierType; const aKey: string;
+                          aBand: BandType; aMode: ModeType);
+    function WorkedCount(aKind: RemainingMultiplierType; const aKey: string;
+                         aBand: BandType; aMode: ModeType): integer;
 
     constructor Create;
     destructor Destroy; override;
@@ -118,10 +147,12 @@ begin
   inherited Create;
   PrfList := TSortedStringList.Create;
   DomList := TSortedStringList.Create;
+  FWorkedCounts := TDictionary<string, integer>.Create;
 end;
 
 destructor TMultsObject.Destroy;
 begin
+  FWorkedCounts.Free;
   DomList.Free;
   PrfList.Free;
   inherited Destroy;
@@ -157,6 +188,73 @@ begin
   MTotals := Default(TMultTotals);
   PrfList.ClearDupes;
   DomList.ClearDupes;
+  FWorkedCounts.Clear;
+end;
+
+(* ONE KEY FOR THE WRITE AND THE READ. The multiplier is upper-cased ASCII
+  and cut at ten characters because that is how the sheet's sorted lists
+  compare it (a Str10, CompareKeyIgnoreCase): 'Ut' and 'UT' are one domestic
+  multiplier there, so they are one count here. FM is Phone's slot. *)
+function TMultsObject.WorkedCountKey(aKind: RemainingMultiplierType;
+  const aKey: string; aBand: BandType; aMode: ModeType): string;
+begin
+  Result := Chr(Ord(aKind)) + Chr(Ord(aBand)) + Chr(Ord(DupeSlot(aMode))) +
+            string(UpCase(ShortString(Copy(aKey, 1, 10))));
+end;
+
+procedure TMultsObject.CountWorked(aKind: RemainingMultiplierType;
+  const aKey: string; aBand: BandType; aMode: ModeType);
+
+  procedure Bump(aCellBand: BandType; aCellMode: ModeType);
+  var
+    k: string;
+    n: integer;
+  begin
+    k := WorkedCountKey(aKind, aKey, aCellBand, aCellMode);
+    if FWorkedCounts.TryGetValue(k, n) then
+       begin
+       FWorkedCounts[k] := n + 1;
+       end
+    else
+       begin
+       FWorkedCounts.Add(k, 1);
+       end;
+  end;
+
+begin
+  if aKey = '' then
+     begin
+     Exit;
+     end;
+  (* THE FOUR CELLS IncrementTotals KEEPS, and the bit setters beside it: the
+    QSO's band and AllBands, its mode and Both. The scope -- per band or
+    not, per mode or not -- is applied by the READER's key, as the bits'
+    is, so a scope changed without a reload cannot leave the counts behind
+    the bits. *)
+  aMode := DupeSlot(aMode);
+  Bump(aBand, aMode);
+  if aMode <> Both then
+     begin
+     Bump(aBand, Both);
+     end;
+  if aBand <> AllBands then
+     begin
+     Bump(AllBands, aMode);
+     if aMode <> Both then
+        begin
+        Bump(AllBands, Both);
+        end;
+     end;
+end;
+
+function TMultsObject.WorkedCount(aKind: RemainingMultiplierType;
+  const aKey: string; aBand: BandType; aMode: ModeType): integer;
+begin
+  if (aKey = '') or
+     (not FWorkedCounts.TryGetValue(WorkedCountKey(aKind, aKey, aBand, aMode), Result)) then
+     begin
+     Result := 0;
+     end;
 end;
 
 procedure TMultsObject.SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);

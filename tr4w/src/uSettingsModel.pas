@@ -143,6 +143,10 @@ type
    TBandMapItemHeight   = 12..50;
    TBandMapItemWidth    = 100..200;
    TBandMapSize         = 0..8;
+   (* BAND MAP WORKED MULT LIMIT (issue 12): how many credited workings of a
+     multiplier a spot shows an M for. 0 worked is the red M, 1 up to one less
+     than this the orange M (a backup wanted), this many or more no M. *)
+   TBandMapWorkedMultLimit = 1..9;
    (* MINUTES, and the help file is the authority on that -- uSpots and the
      form both multiply by 60 before comparing. Named here so the unit is
      attached to the type rather than rediscovered at each reader. *)
@@ -1249,6 +1253,7 @@ type
       FSize: TBandMapSize;
       FSplitMode: BandMapSplitModeType;
       FWorkedMultColor: string;
+      FWorkedMultLimit: TBandMapWorkedMultLimit;
       procedure SetSplitMode(aValue: BandMapSplitModeType);
       procedure SetAllBands(aValue: boolean);
       procedure SetAllModes(aValue: boolean);
@@ -1292,16 +1297,23 @@ type
         the band-map redraw, so its setter raises like DisplayLimit's. *)
       property SplitMode: BandMapSplitModeType
          read FSplitMode write SetSplitMode;
-      (* THE COLOUR OF A WORKED-MULTIPLIER SPOT -- BAND MAP WORKED MULT COLOR
-        (issue 12). A spot whose multiplier is already worked, but whose call is
-        not a dupe, so a station that can be reworked as a backup: the band map
-        paints it this colour with a B. New to the program (there was no colour
-        setting for the M or the D, which the band map draws red and yellow).
+      (* THE COLOUR OF A BACKUP-WANTED SPOT -- BAND MAP WORKED MULT COLOR
+        (issue 12). A spot whose multiplier is worked fewer times than BAND MAP
+        WORKED MULT LIMIT (but at least once), on a call that is not a dupe: the
+        band map paints its M in this colour. New to the program (there was no
+        colour setting for the red M or the D, which the band map draws red and
+        yellow).
 
         A TOKEN, on ALERT COLOR's pattern: the spellings are VC's
         tr4wColorsSA, registered from uCFG as the allowed values, so the
         default is written out as 'ORANGE' rather than reaching VC from here. *)
       property WorkedMultColor: string read FWorkedMultColor write FWorkedMultColor;
+      (* BAND MAP WORKED MULT LIMIT (issue 12, NY4I 2026-11-07): the number of
+        credited, non-dupe workings of a multiplier after which a spot shows no
+        M. Counted the way the contest counts its multipliers -- per band and
+        mode where it does. Default 1: the M goes at the first working, as it
+        always has; 2 shows an orange M after the first. *)
+      property WorkedMultLimit: TBandMapWorkedMultLimit read FWorkedMultLimit write FWorkedMultLimit;
 
       (* THE THREE BELOW CARRIED crP: 0 AND crJ: 1 -- no redraw, restart
         required -- so they are plain field writes with no notification.
@@ -4667,6 +4679,7 @@ begin
    // logwind commented its default as ByCutoffFrequency, and zero is it.
    FSplitMode        := ByCutoffFrequency;
    FWorkedMultColor  := 'ORANGE';
+   FWorkedMultLimit  := 1;
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.

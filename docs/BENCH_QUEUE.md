@@ -64,15 +64,18 @@ New contacts go to a Cloudlog or Wavelog instance through `POST <address>/api/qs
 
 ---
 
-## Added 2026-11-07 -- A WORKED MULTIPLIER SHOWS AS A BACKUP, "B" IN ORANGE (issue 12)
+## Added 2026-11-07 -- THE SPOT'S M BY WORKED COUNT: RED, ORANGE, NONE (issue 12)
 
-A cluster spot whose multiplier is already worked, but whose call is not a dupe, is now a third state: orange `B` on the band map, orange text in the Telnet window. New multiplier stays red `M`, a dupe stays yellow `D`. The unit tests pin the decision (Sweepstakes sections count once across bands; per-band contests count per band; a dupe is never a backup). They cannot see the screen. Preferences > Band Map > Window and tuning has the new colour row. For Sweepstakes the section reaches TR4W either from the call history or from the spot comment, so turn CLUSTER SPOT COMMENT MULTIPLIER on if the spots carry sections.
+NY4I's ruling replaced the orange `B` built earlier the same day. A cluster spot's multiplier indicator now follows how many times its multiplier is WORKED (credited, non-dupe QSOs), against the new setting BAND MAP WORKED MULT LIMIT (N, 1..9, default 1): 0 worked is the red `M`; 1 up to N-1 is the same `M` in BAND MAP WORKED MULT COLOR (orange: a backup wanted), with orange text in the Telnet window; N or more shows no `M`. A dupe stays yellow `D`. **At the default N = 1 there is no orange state; set N = 2 for the items below.** Both settings are in Preferences > Band Map > Window and tuning. The unit tests pin the counting (Sweepstakes across bands, CQ WW per band, a dupe and an X-QSO not counted, a delete rebuilding the count); they cannot see the screen. For Sweepstakes the section reaches TR4W from the call history or the spot comment, so turn CLUSTER SPOT COMMENT MULTIPLIER on if the spots carry sections.
 
-- [ ] **Sweepstakes (CW).** With CLUSTER SPOT COMMENT MULTIPLIER on, take a spot whose section you have not worked: red `M`. Work a different station in that section. The first spot's `M` becomes an orange `B`, on every band (a section counts once). Work the spotted call itself: its `B` becomes a yellow `D`.
-- [ ] **A spot with no section** (no comment, no call history) shows neither `M` nor `B`.
-- [ ] **A per-band contest** (e.g. a QSO party with multipliers by band): a multiplier worked on 20 m is `B` on 20 m and still `M` on 40 m.
-- [ ] **The colour.** Change BAND MAP WORKED MULT COLOR in Preferences: the `B` and the Telnet lines change colour. Is orange readable on your band map background?
-- [ ] **Multi-op.** Two stations sharing spots: each shows `B` from ITS OWN log, not the sender's.
+- [ ] **ARRL Sweepstakes (CW), N = 2.** Take a spot in a section you have not worked (e.g. `CQ WY`): red `M`. Work a station in that section (W7WYS): the spot's `M` turns orange, on every band (a section counts once). Work a second station in that section (K7OWY): the `M` disappears. Delete the second QSO (Alt-Y on the last entry, or delete it in the log): the orange `M` comes back. Delete the first too: the red `M` comes back.
+- [ ] **Default N = 1.** The same first working removes the `M` altogether, as before issue 12.
+- [ ] **A dupe does not count.** With N = 2 and one station worked in the section, log a dupe of that station: the spot stays orange.
+- [ ] **A spot with no section** (no comment, no call history) shows no `M`.
+- [ ] **A per-band contest** (CQ WW, N = 2): a country worked once on 20 m is an orange `M` on 20 m and still the red `M` on 40 m.
+- [ ] **Reopen the log.** With N = 2 and a section worked once, close and reopen the contest: the spot is still orange (the count is rebuilt from the log).
+- [ ] **The colour.** Change BAND MAP WORKED MULT COLOR: the orange `M` and the Telnet lines change colour. Is orange readable on your band map background?
+- [ ] **Multi-op.** Two stations sharing spots: each shows the state from ITS OWN log, not the sender's.
 
 ---
 

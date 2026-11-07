@@ -114,7 +114,8 @@ resourcestring
    RS_SCP_NAMEFLAG                            = 'Flag a station whose name is known';
    RS_BANDMAP_CALLWINDOWSHOWALLSPOTS          = 'Show every spot in the call window';
    RS_BANDMAP_SWAPPACKETSPOTRADIOS            = 'Send spots to the other radio';
-   RS_BANDMAP_WORKEDMULTCOLOR                 = 'Color of a spot whose multiplier is already worked (not a dupe)';
+   RS_BANDMAP_WORKEDMULTCOLOR                 = 'Color of the M on a spot whose multiplier wants a backup';
+   RS_BANDMAP_WORKEDMULTLIMIT                 = 'Workings of a multiplier before its spot shows no M';
    RS_LOGGING_CHECKLOGFILESIZE                = 'Warn when the log file grows unexpectedly';
    RS_LOGGING_UNKNOWNCOUNTRYFILE              = 'Record callsigns with no country match';
    RS_LOGGING_UPDATERESTARTFILE               = 'Keep the restart file up to date';

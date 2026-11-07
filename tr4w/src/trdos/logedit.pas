@@ -67,6 +67,20 @@ const
   MULT_ZONE = 4;
   MULT_DOM = 8;
 type
+  (* THE MULTIPLIERS A CALL WAS RESOLVED TO by the need hint -- issue 12, so
+    the spot's worked count is read on the very keys the hint looked up
+    rather than by a second resolver. Kinds is empty when no multiplier
+    could be named. A value handed out of GetMultArrayResolved and read at
+    once: an interface parameter, nothing keeps one. Domestic is already
+    DomesticMultiplierCountKey's text. *)
+  TResolvedMultiplierKeys = record
+    Kinds: TMultiplierKinds;
+    Domestic: string;
+    DXCountry: integer;
+    Prefix: string;
+    Zone: integer;
+  end;
+
   EditableLog = class
     //    LogEntries: LogEntryArray;
 
@@ -98,11 +112,13 @@ type
     (* GetMultArray AND "DID IT RESOLVE A MULTIPLIER AT ALL" (issue 12). A zero
        result means two different things -- the multiplier is worked on every
        band, or the call has none we can name (unknown country, an unlisted
-       section) -- and only the first is a WORKED multiplier. aResolved is True
-       when a country, zone, prefix or domestic key was found for the call.
-       GetMultArray is this routine with the answer thrown away. *)
+       section) -- and only the first is a WORKED multiplier. aKeys names
+       every country, zone, prefix or domestic key found for the call (its
+       Kinds is empty when none was), so the caller can ask how many times
+       each is worked (mo.WorkedCount). GetMultArray is this routine with
+       the keys thrown away. *)
     function GetMultArrayResolved(Call: CallString; Mode: ModeType;
-      TempMult: Str10; out aResolved: boolean): Cardinal;
+      TempMult: Str10; out aKeys: TResolvedMultiplierKeys): Cardinal;
 
     procedure CreateModeSpecificMultiplierInfo(
       Call: CallString;
@@ -134,17 +150,22 @@ type
        DetermineIfNewMult on the call, band and mode alone. *)
     function DetermineIfNewSpotMult(const Spot: TSpotRecord): boolean;
 
-    (* THE THREE-WAY ANSWER BEHIND THE BAND MAP'S "B" (issue 12): needed (a new
-       multiplier), WORKED (its multiplier is already in the log on this
-       band/mode, so a station here is a backup) or neither. It is the routine
+    (* THE THREE-WAY ANSWER BEHIND THE BAND MAP'S M (issue 12, NY4I
+       2026-11-07): NEEDED (worked 0 times on this band/mode: the red M),
+       aWorked = A BACKUP WANTED (worked at least once but fewer than BAND MAP
+       WORKED MULT LIMIT times: the orange M), or neither (worked that many
+       times or more, or no multiplier could be named: no M). The count is
+       the sheet's (mo.WorkedCount), keyed as the sheet keys the bits; a
+       call that resolves to more than one multiplier (CQ WW's country and
+       zone) is a backup when its LEAST-worked one is. It is the routine
        DetermineIfNewMult and DetermineIfNewSpotMult are derived from, so the
        three cannot disagree. aSectionHint is DetermineIfNewMult's. Read-only:
        it changes no multiplier sheet. *)
     procedure DetermineMultStatus(Call: CallString; Band: BandType;
       Mode: ModeType; const aSectionHint: string; out aNeeded, aWorked: boolean);
 
-    (* True when the call's multiplier is already worked on the band/mode and
-       the call itself is not asked about -- the caller says dupe. *)
+    (* DetermineMultStatus' aWorked -- a backup wanted -- alone. The call
+       itself is not asked about: the caller says dupe. *)
     function DetermineIfWorkedMult(Call: CallString; Band: BandType; Mode:
       ModeType; const SectionHint: string = ''): boolean;
 
@@ -898,14 +919,24 @@ procedure EditableLog.DetermineMultStatus(Call: CallString; Band: BandType;
 
 var
   OutputValue: Cardinal;
-  Resolved: boolean;
+  Keys: TResolvedMultiplierKeys;
   TempMode: ModeType;
   TempBand: BandType;
+  Least: integer;
+
+  (* The least-worked count so far, with this kind's. *)
+  procedure Consider(aCount: integer);
+  begin
+    if aCount < Least then
+       begin
+       Least := aCount;
+       end;
+  end;
+
 begin
   aNeeded := False;
   aWorked := False;
   OutputValue := 0;
-  Resolved := False;
   if not Settings.Mult.ByMode then
      begin
      TempMode := Both
@@ -934,11 +965,45 @@ begin
      Exit;
      end;
 
-  OutputValue := GetMultArrayResolved(Call, TempMode, Str10(aSectionHint), Resolved);
+  OutputValue := GetMultArrayResolved(Call, TempMode, Str10(aSectionHint), Keys);
   aNeeded := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
-  (* WORKED = a multiplier was named and it is not needed. A zero from "no
-     multiplier could be named" is neither -- Resolved is what tells them apart. *)
-  aWorked := Resolved and (not aNeeded);
+  (* A zero from "no multiplier could be named" is neither needed nor a
+     backup -- an empty Kinds is what tells it from "worked everywhere". *)
+  if aNeeded or (Keys.Kinds = []) then
+     begin
+     Exit;
+     end;
+
+  (* A BACKUP IS WANTED WHILE THE LEAST-WORKED MULTIPLIER OF THE CALL IS
+     WORKED AT LEAST ONCE AND FEWER THAN BAND MAP WORKED MULT LIMIT TIMES --
+     issue 12. The keys are the sheet's (LOGDUPE.MultiplierSheetBand / Mode,
+     on the spot's real band and mode), so the count and the bit above
+     answer for the same cell. "At least once" also keeps a count that
+     disagrees with the bit (a stored flag the counts never saw) from
+     painting a multiplier the log does not hold. *)
+  Least := MaxInt;
+  if rmDomestic in Keys.Kinds then
+     begin
+     Consider(mo.WorkedCount(rmDomestic, Keys.Domestic,
+                             MultiplierSheetBand(rmDomestic, Band), MultiplierSheetMode(Mode)));
+     end;
+  if rmDX in Keys.Kinds then
+     begin
+     Consider(mo.WorkedCount(rmDX, IntToStr(Keys.DXCountry),
+                             MultiplierSheetBand(rmDX, Band), MultiplierSheetMode(Mode)));
+     end;
+  if rmPrefix in Keys.Kinds then
+     begin
+     Consider(mo.WorkedCount(rmPrefix, Keys.Prefix,
+                             MultiplierSheetBand(rmPrefix, Band), MultiplierSheetMode(Mode)));
+     end;
+  if rmZone in Keys.Kinds then
+     begin
+     Consider(mo.WorkedCount(rmZone, IntToStr(Keys.Zone),
+                             MultiplierSheetBand(rmZone, Band), MultiplierSheetMode(Mode)));
+     end;
+
+  aWorked := (Least >= 1) and (Least < Settings.BandMap.WorkedMultLimit);
 end;
 
 procedure EditableLog.DetermineSpotMultStatus(const Spot: TSpotRecord;
@@ -1187,13 +1252,13 @@ end;
 function EditableLog.GetMultArray(Call: CallString; Mode: ModeType; TempMult:
   Str10): Cardinal;
 var
-  Resolved: boolean;
+  Keys: TResolvedMultiplierKeys;
 begin
-  Result := GetMultArrayResolved(Call, Mode, TempMult, Resolved);
+  Result := GetMultArrayResolved(Call, Mode, TempMult, Keys);
 end;
 
 function EditableLog.GetMultArrayResolved(Call: CallString; Mode: ModeType;
-  TempMult: Str10; out aResolved: boolean): Cardinal;
+  TempMult: Str10; out aKeys: TResolvedMultiplierKeys): Cardinal;
 var
   TempCardinal: Cardinal;
   TempRXData: ContestExchange;
@@ -1213,7 +1278,7 @@ var
   zoneList: TZoneMultiplierZones;
 begin
   Result := 0;
-  aResolved := False;
+  aKeys := Default(TResolvedMultiplierKeys);
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
   contestRules := ActiveContest(Contest);
   countsDX := ContestHasDXMultiplier(contestRules);
@@ -1237,7 +1302,8 @@ begin
      GetDXQTH(contestRules, TempRXData);
      if TempRXData.DXQTH <> '' then
         begin
-        aResolved := True;
+        Include(aKeys.Kinds, rmDX);
+        aKeys.DXCountry := TempRXData.QTH.Country;
 
         TempCardinal := $FFFFFFFF xor
           mo.DXMultsArray[TempRXData.QTH.Country][Mode];
@@ -1282,7 +1348,11 @@ begin
         TempCardinal := $FFFFFFFF xor
           mo.ZoneMultsArray[{TempRXData.QTH.}Zone][Mode];
         Result := TempCardinal or Result;
-        aResolved := aResolved or (Zone <> 0);
+        if Zone <> 0 then
+           begin
+           Include(aKeys.Kinds, rmZone);
+           aKeys.Zone := Zone;
+           end;
         end;
      end;
 
@@ -1292,7 +1362,8 @@ begin
      SetPrefix(contestRules, TempRXData);
      if TempRXData.Prefix <> '' then
         begin
-        aResolved := True;
+        Include(aKeys.Kinds, rmPrefix);
+        aKeys.Prefix := string(TempRXData.Prefix);
         if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
            begin
            TempCardinal := $FFFFFFFF xor mo.PrfList.Dupes[Index][Mode];
@@ -1331,7 +1402,8 @@ begin
 
      if TempDomMult <> '' then
         begin
-        aResolved := True;
+        Include(aKeys.Kinds, rmDomestic);
+        aKeys.Domestic := DomesticMultiplierCountKey(contestRules, string(TempDomMult));
         if mo.DomList.FindMult(TempDomMult, Index) then
            begin
            if DomesticMultByBand = dmbbAllBand then
