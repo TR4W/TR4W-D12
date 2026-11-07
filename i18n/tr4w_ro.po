@@ -9720,3 +9720,8 @@ msgstr ""
 msgid "Edit..."
 msgstr ""
 
+#: uappstrings.sradioeditbadpollrate
+#, fuzzy
+msgid "The frequency poll rate must be a whole number of milliseconds from %d to %d."
+msgstr ""
+

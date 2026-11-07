@@ -115,7 +115,7 @@ withdraw a command or to read an old file:
 | list | size | what it is really for |
 |---|---:|---|
 | `uCFG.RETIRED_COMMANDS` | 88 | **removing** a command: accepted so an old file does not error, then ignored |
-| `uCFG.OWNED_BY_A_STORE` | 39 | a name the RADIO / KEYER / CLUSTER library owns, not the settings model |
+| `uCFG.OWNED_BY_A_STORE` | 40 | a name the RADIO / KEYER / CLUSTER library owns, not the settings model |
 | `uCFG.TryApplyCommandAction` | 4 | commands that DO something rather than set something |
 | `uRadioConfigApply.MIGRATED_COMMANDS` | 247 | seeding the store from a legacy `tr4w.ini` |
 | `uRadioConfigLegacyMap` | 111 | legacy key → store field |
@@ -251,3 +251,37 @@ operator to run the conversion once.
    file still names it gets a **modal** *"invalid statement in config file"*,
    once per stale line. That is the only reason the list exists.
 3. Update the frozen vocabulary literal and the `RetiredCommandCount` floor.
+
+## Moving a setting from the settings object into a store
+
+The feature stays; only its home changes -- so the name goes to
+`OWNED_BY_A_STORE`, **not** `RETIRED_COMMANDS` (the log line must not call it
+withdrawn). The worked example is **FREQUENCY POLL RATE**, which moved from
+`Settings.Operating.FrequencyPollRate` to each radio definition,
+`TRadioDefinition.FrequencyPollRate` (issue 235 step 3, NY4I, 2026-11-06):
+
+1. **The new field everywhere the store copies a value**: `Create` (the old
+   default), `Assign`, `SameAs` (which is also what `TAppliedRadioSnapshot`
+   compares -- miss it and Save never reaches a live radio), the JSON read and
+   write, the ini read and write, the legacy `[Radio]` importer.
+2. **The old value must survive the move.** The settings section's old member
+   is skipped by the de-streamer and dropped by the next save, and startup can
+   save the section (`CollapseLegacySettingHomes`) before the store is read --
+   so `TR4WSettings.FromJSON` captures it as it goes past
+   (`FormerFrequencyPollRate`, the `CarryFormerBackupFileName` pattern). The
+   store remembers which entries had no value of their own
+   (`SeedUnstatedFrequencyPollRates`), and startup seeds them from that capture,
+   then the legacy bucket, then the default
+   (`ResolveFormerFrequencyPollRate`, pure and pinned), and saves once **only
+   when something changed** -- a default needs no write, which keeps `/EXPORT`
+   from touching the corpus fixture. Until the seed has run, the store's
+   writer leaves an unstated entry's member OUT: something else (the Cabrillo
+   header store, the external logger seed) can save the file first, and
+   writing the default would make the entry look as though it had chosen it.
+3. **Delete the property, its alias, its registration and its placement row**;
+   keep its `RS_` caption if the new editor shows it, so the catalogues'
+   translations still reach a screen. Lower the frozen vocabulary and its
+   count, raise the `StoreOwnedCommandCount` floor.
+4. **What a `.cfg` line does after the move:** accepted, logged, not applied.
+   A station-wide line has no right entry to land on; the one-time seed is the
+   only carrier of an old value.

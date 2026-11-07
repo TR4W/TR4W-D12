@@ -216,7 +216,9 @@ type
       function Shutdown(aTimeoutMs: Cardinal): boolean;
 
       (* FOR TESTS. True once nothing is in flight and nothing is due now
-        (a failed job waiting out its retry counts as settled). *)
+        (a failed job waiting out its retry counts as settled). "In flight"
+        covers the whole attempt: its file I/O, the outbox file's deletion
+        and EVERY report it raises, so a count read after True is complete. *)
       function WaitUntilSettled(aTimeoutMs: Cardinal): boolean;
       (* FOR TESTS. Finished copy attempts, probes not counted. *)
       function Attempts: integer;
@@ -1091,12 +1093,16 @@ begin
                end;
          end;
 
-         (* THE OUTCOME, under the lock; the reports after it, outside. *)
+         (* THE OUTCOME, under the lock; the reports after it, outside. FBusy
+           stays True until the outbox file is deleted and every report has
+           been delivered: "settled" (WaitUntilSettled) means the attempt is
+           over IN FULL. Clearing it here, as it once was, let a waiter see
+           "settled" with the bceCopied report still to come (CI, 2026-11-06,
+           TestASkipAfterAFailureIsARecoveryOnce). *)
          eventCount := 0;
          deleteAfter := '';
          FLock.Acquire;
          try
-            FBusy := False;
             sameEpoch := epoch = FEpoch;
 
             if job <> nil then
@@ -1178,14 +1184,25 @@ begin
             FLock.Release;
          end;
 
-         if deleteAfter <> '' then
-            begin
-            FOps.DeleteFile(deleteAfter);
+         try
+            if deleteAfter <> '' then
+               begin
+               FOps.DeleteFile(deleteAfter);
+               end;
+            for i := 0 to eventCount - 1 do
+               begin
+               Report(events[i], folder, eventDetail[i]);
+               end;
+         finally
+            (* Not held across the reports: the report lock is never taken
+              inside this one, and is released by now. *)
+            FLock.Acquire;
+            try
+               FBusy := False;
+            finally
+               FLock.Release;
             end;
-         for i := 0 to eventCount - 1 do
-            begin
-            Report(events[i], folder, eventDetail[i]);
-            end;
+         end;
          end;
    finally
       FDone.SetEvent;

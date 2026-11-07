@@ -1040,7 +1040,7 @@ end;
   in the first place.
 *)
 const
-   OWNED_BY_A_STORE: array[0..38] of string = (
+   OWNED_BY_A_STORE: array[0..39] of string = (
       (* THE WINKEYER, owned by the keyer library in settings\tr4w.json.
 
         ApplyKeyerToWinKey writes every one of these fields into
@@ -1108,6 +1108,16 @@ const
         the active cluster definition -- the row was a second writer of the
         same global, and the one that could disagree. *)
       'CONNECTION COMMAND',
+
+      (* THE FREQUENCY POLL RATE, owned by the radio library since issue 235
+        step 3: one value per radio definition, frequencyPollRate. It was one
+        station-wide setting, so an old tr4w.ini, contest .cfg or legacy bucket
+        line names it once for every radio; there is no right radio to give
+        that line to on a .cfg read, so it is accepted and not applied. The
+        one place an old value IS carried is the one-time seed of each
+        radio that has none (TRadioConfigStore.SeedUnstatedFrequencyPollRates,
+        run at startup from the settings file and the bucket). *)
+      'FREQUENCY POLL RATE',
 
       (* UDP BROADCASTING, owned by udpBroadcast in the same file. *)
       'UDP BROADCAST ADDRESS',

@@ -311,6 +311,12 @@ type
       // MEANS is the radio's business -- an Elecraft AI2 and a K4 AI5 are not
       // the same thing and this record must not know the difference.
       AutoInfoLevel:   integer;
+      (* This radio's FREQUENCY POLL RATE, in ms, from its definition
+        (TRadioDefinition.FrequencyPollRate, issue 235 step 3). Assigned by
+        uRadioConfigApply.ApplyRadioToSlot before the radio is rebuilt, read
+        by the polling thread. May be 0 in a slot the applier never reached,
+        so every reader goes through uRadioConfigStore.ClampFrequencyPollRate. *)
+      FrequencyPollRate: integer;
       { TWO FIELDS FOR ONE FACT, which is why so much of this unit was spent
         reconciling them.
 

@@ -463,8 +463,11 @@ placed, or it has no control at all.
   redirected empty settings folder and asserts no such fault.
 - **A new destination needs two things:** its builder call in
   `BuildGeneratedSections`, AND its tag in that test's page list.
-- **FREQUENCY POLL RATE's Hardware home is TEMPORARY.** It moves to the radio
-  definition in issue 235 step 3.
+- **FREQUENCY POLL RATE LEFT PREFERENCES** (issue 235 step 3, 2026-11-06). It
+  is a radio-definition field, a row on the radio editor's Advanced tab (form
+  grown 30 px), captioned from the kept `RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE`
+  and tooltipped through `ApplyCommandHelpHint`. `uTestPrefsPlacement` now pins
+  that no registration or placement comes back for the old key.
 - Nav captions added for this come from `uAppStrings`. The older ones are still
   English literals in `BuildNavTree`, which no catalogue reaches.
 

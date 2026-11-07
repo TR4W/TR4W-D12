@@ -577,8 +577,8 @@ msgstr "当设定为 TRUE,此参数将启用频率内存。 这意味着你会�
 #. Config command: FREQUENCY POLL RATE   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
-msgid "Values: Integer 10 to 1000 (msec). This command tells TR4W how frequently to poll the rig for a new frequency. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr "值:整数 10 到 1000 (毫秒). 这个命令告诉TR4W如何频繁地对钻机进行新频率的测试. 值以毫秒计,允许值在10至1000之间."
+msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
+msgstr ""
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy

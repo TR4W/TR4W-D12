@@ -221,7 +221,6 @@ type
    TCaseSensitiveText = type string;
    (* The Network window's refresh timer, in milliseconds. *)
    TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
-   TFreqPollRate        = 10..1000;   // was crMin:10, crMax:1000 -- ms
    TServerPort          = 0..65535;   // was crMin:0, crMax:MAXWORD
    (* HOW MANY LINES THE DX CLUSTER CONSOLE KEEPS ON SCREEN.
 
@@ -768,7 +767,6 @@ type
       FCustomUserString: string;
       FFrequencyMemoryEnable: boolean;
       FLogSubTitle: string;
-      FFrequencyPollRate: TFreqPollRate;
       FStandardEditKeys: boolean;
    public
       constructor Create;
@@ -846,16 +844,11 @@ type
         title. No live reader in this build; carried, not withdrawn. *)
       property LogSubTitle: string
          read FLogSubTitle write FLogSubTitle;
-      (* Was FreqPollRate in logwind -- how often the polling thread asks
-        the radio for its frequency, in milliseconds.
-
-        STATION-WIDE, NOT PER RADIO, which is why it is here and not in
-        the radio library: a driver that cannot stand a fast rate says so
-        itself with honorsFreqPollRate, so the two answer different
-        questions. The bound is a subrange, from crMin:10 and
-        crMax:1000. *)
-      property FrequencyPollRate: TFreqPollRate
-         read FFrequencyPollRate write FFrequencyPollRate;
+      (* ~~FrequencyPollRate~~ -- MOVED TO THE RADIO DEFINITION (issue 235
+        step 3, NY4I). It is TRadioDefinition.FrequencyPollRate now, one
+        value per radio; the command name is in uCFG.OWNED_BY_A_STORE. An
+        old file's Operating.FrequencyPollRate is carried onto the radios
+        once -- see TR4WSettings.FormerFrequencyPollRate. *)
       (* THE STANDARD EDITING KEYS BELONG TO THE FOCUSED FIELD, OUTSIDE THE
         MAIN WINDOW ONLY.
 
@@ -3707,6 +3700,8 @@ type
       FMessage: TMessageSettings;
       FContest: TContestSettings;
       FMessages: TMessageTemplateSettings;
+      (* See FormerFrequencyPollRate. Not published, so never streamed. *)
+      FFormerFrequencyPollRate: integer;
       procedure BuildCommandMap;
       (* The streamer hook that keeps contest-scoped groups out of the
         file. A method rather than a plain procedure because it has to
@@ -3718,6 +3713,9 @@ type
       procedure UnprotectSecretsAfterLoad;
       (* A settings file written before BACKUP DESTINATION: see FromJSON. *)
       procedure CarryFormerBackupFileName(const aObj: TJSONObject);
+      (* A settings file written before FREQUENCY POLL RATE moved to the
+        radio definition: see FormerFrequencyPollRate. *)
+      procedure CarryFormerFrequencyPollRate(const aObj: TJSONObject);
       procedure SkipContestScoped(aSender: TObject; aObject: TObject;
                                   aInfo: PPropInfo; var aResult: TJSONData);
       (* THE STREAMER'S ONE HOOK, and it does two jobs: the contest-scoped
@@ -3756,6 +3754,20 @@ type
         The caller owns the returned object. *)
       function ToJSON: TJSONObject;
       procedure FromJSON(const aObj: TJSONObject);
+
+      (* THE STATION'S FREQUENCY POLL RATE FROM A FILE WRITTEN BEFORE IT
+        MOVED TO THE RADIO DEFINITION (issue 235 step 3), or 0 when the
+        settings section read had none.
+
+        Operating.FrequencyPollRate is a member no property carries any more,
+        so the de-streamer skips it and the next save of this section drops
+        it -- and startup can save this section (CollapseLegacySettingHomes)
+        before the radio library is read. So FromJSON takes the value as it
+        goes past, the way CarryFormerBackupFileName does, and the radio
+        library's startup apply hands it to
+        TRadioConfigStore.SeedUnstatedFrequencyPollRates. Read-only: nothing
+        but FromJSON may set it, and nothing persists it. *)
+      property FormerFrequencyPollRate: integer read FFormerFrequencyPollRate;
 
       (* SEED FROM THE OLD KEYS, ONCE.  aCommands is the legacy `commands`
         section: flat keys spelled the way a config command is spelled,
@@ -5037,8 +5049,6 @@ begin
    FCustomUserString       := '';
    FFrequencyMemoryEnable  := True;
    FLogSubTitle            := '';
-   // logwind declared FreqPollRate = 10.
-   FFrequencyPollRate      := 10;
    (* TODAY'S BEHAVIOUR: the accelerator table keeps answering Ctrl+C and
      Ctrl+V everywhere, exactly as it does now. *)
    FStandardEditKeys       := False;
@@ -6178,7 +6188,6 @@ begin
    Alias('NAME FLAG ENABLE',           'Scp.NameFlagEnable');
    Alias('CONNECTION AT STARTUP',      'Cluster.ConnectionAtStartup');
    Alias('BROADCAST ALL PACKET DATA',  'Cluster.BroadcastAllPacketData');
-   Alias('FREQUENCY POLL RATE',        'Operating.FrequencyPollRate');
    Alias('RADIUS OF EARTH',            'GridMap.RadiusOfEarth');
    (* Moved out of the contest group 2026-09-12; the command never named
      the call window and still does not. *)
@@ -7375,6 +7384,33 @@ begin
      for a secret the file carries nothing. *)
    UnprotectSecretsAfterLoad;
    CarryFormerBackupFileName(aObj);
+   CarryFormerFrequencyPollRate(aObj);
+end;
+
+(* Operating.FrequencyPollRate, A MEMBER NO PROPERTY CARRIES ANY MORE. Taken
+  only when present and numeric; an absent member leaves an earlier capture
+  alone, so a later reload of a section this build wrote cannot erase it. *)
+procedure TR4WSettings.CarryFormerFrequencyPollRate(const aObj: TJSONObject);
+var
+   groupIndex, oldIndex: integer;
+   groupNode: TJSONObject;
+begin
+   groupIndex := aObj.IndexOfName(UTF8Encode('Operating'));
+   if (groupIndex < 0) or (not (aObj.Items[groupIndex] is TJSONObject)) then
+      begin
+      Exit;
+      end;
+   groupNode := TJSONObject(aObj.Items[groupIndex]);
+   oldIndex := groupNode.IndexOfName(UTF8Encode('FrequencyPollRate'));
+   if oldIndex < 0 then
+      begin
+      Exit;
+      end;
+   if groupNode.Items[oldIndex].JSONType <> jtNumber then
+      begin
+      Exit;
+      end;
+   FFormerFrequencyPollRate := groupNode.Items[oldIndex].AsInteger;
 end;
 
 (* Log.BackupFileName, A MEMBER NO PROPERTY CARRIES ANY MORE, becomes

@@ -390,6 +390,15 @@ station setting.
   M10 S2.** Before that `CheckCommand` logged every occurrence, though this
   file and CLAUDE.md said "once". `RetiredCommandFirstSighting` is the latch;
   `ForgetRetiredCommandSightings` is for tests.
+- **FREQUENCY POLL RATE MOVED INTO THE RADIO LIBRARY (issue 235 step 3,
+  2026-11-06)** -- the worked example of moving a setting into a store, written
+  up in `docs/ADDING_A_SETTING.md`. The property, alias, registration and
+  placement row are gone; the name is in `OWNED_BY_A_STORE` (a `.cfg` line is
+  accepted, not applied). The old `Operating.FrequencyPollRate` is captured by
+  `TR4WSettings.FromJSON` into the read-only `FormerFrequencyPollRate`
+  (`CollapseLegacySettingHomes` can rewrite the section before the store is
+  read), and startup seeds every radio without its own rate from it, then the
+  bucket, then 10 -- saving only when a radio changed.
 - Before this, the log captured every contest-scoped value, which put the
   constructor's `NONE`/`UNKNOWN` into every log. A stored sentinel then
   overwrote a `.cfg` line on reopen (D2). The flag generalises

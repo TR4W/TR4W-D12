@@ -587,7 +587,7 @@ begin
          // keeps asking; it just asks for less.
          Self.SetAIMode(FAutoInfoLevel);
          Self.requiresPolling := True;
-         Self.pollingInterval  := 100; // Default; overridden by FREQUENCY POLL RATE in pFactoryRadio
+         Self.pollingInterval  := 100; // Default; overridden by this radio's FREQUENCY POLL RATE in pFactoryRadio
          end
       else
          begin

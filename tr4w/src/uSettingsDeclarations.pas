@@ -684,8 +684,9 @@ begin
      so it is a command rather than a value. TryApplyCommandAction. *)
    RegisterModelSetting( 'operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE);
-   RegisterModelSetting( 'operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
-                          RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE);
+   (* ~~operating.ctrlj.frequencyPollRate~~ -- FREQUENCY POLL RATE moved to
+     the radio definition (issue 235 step 3) and is edited in the radio
+     editor; uCFG.OWNED_BY_A_STORE accepts the old command name. *)
    RegisterModelSetting( 'operating.ctrlj.ieSwitch',          'IE SWITCH',
                           RS_OPERATING_CTRLJ_IESWITCH);
    RegisterModelSetting( 'operating.ctrlj.incrementTimeEnable','INCREMENT TIME ENABLE',

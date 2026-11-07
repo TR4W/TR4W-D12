@@ -181,6 +181,10 @@ type
       edtAutoInfo: TEdit;
       lblFreqOffset: TLabel;
       edtFreqOffset: TEdit;
+      (* FREQUENCY POLL RATE, per radio since issue 235 step 3 -- milliseconds,
+        FREQUENCY_POLL_RATE_MIN..MAX. Blank means the default. *)
+      lblPollRate: TLabel;
+      edtPollRate: TEdit;
       chkWideCW: TCheckBox;
       chkFT1000MPReverse: TCheckBox;
       btnOK: TButton;
@@ -200,6 +204,9 @@ type
 
       procedure HandleTypeChange(Sender: TObject);
       procedure HandleTransportChange(Sender: TObject);
+      (* Driving the radio through HamLib, or not, changes which fields mean
+        anything -- see UpdateEnabledState. *)
+      procedure HandleUseHamLibClick(Sender: TObject);
       procedure HandleDiscover(Sender: TObject);
       procedure HandleFoundSelect(Sender: TObject);
       procedure HandleOK(Sender: TObject);
@@ -249,6 +256,9 @@ type
       function IsModified: boolean;
       function SelectedRegistryId: string;
       procedure UpdateEnabledState;
+      (* The poll-rate box's tooltip: FREQUENCY POLL RATE's help, in the UI
+        language, through the one rule Preferences uses. *)
+      procedure ApplyPollRateHelp;
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -277,6 +287,12 @@ uses
    ComPortEnumerator,
    VC,
    MainUnit,
+   uAppPaths,              // DataFilePath -- where the help catalogues are
+   uEmbeddedTranslations,  // ActiveUILanguage -- which help catalogue to load
+   uCommandHelp,           // TCommandHelp -- the poll rate's tooltip
+   uSettingsBinding,       // ApplyCommandHelpHint -- the one tooltip rule
+   uSettingsCaptions,      // RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE -- its label
+   uAppStrings,            // SRadioEditBadPollRate
    uPasswordReveal   (* AttachPasswordReveal *);
 
 { ---------------------------------------------------------------------------
@@ -513,6 +529,13 @@ begin
    // table supplies and leaves the designed text alone otherwise.  Today no
    // lookup is assigned, so this is a no-op and the designer is the UI.
    TranslateForm(Self);
+
+   (* THE POLL RATE'S WORDS COME FROM THE CATALOGUES THAT ALREADY HAVE THEM.
+     The caption is the resourcestring the Preferences row used, so its
+     translations still reach the screen; the tooltip is the command's own
+     help, the same text Preferences showed. *)
+   lblPollRate.Caption := RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE;
+   ApplyPollRateHelp;
 
    // ASSIGNED HERE AS WELL AS IN THE RESOURCE, deliberately.  Both are bound by
    // name in the .fmx, but losing them is not a visible fault: the form would
@@ -839,6 +862,10 @@ begin
       edtFreqOffset.Text := '';
       end;
 
+   (* Always a number: unlike the offset, every radio HAS a poll rate, and
+     the default is a real value the operator may want to see. *)
+   edtPollRate.Text := IntToStr(ClampFrequencyPollRate(FRadio.FrequencyPollRate));
+
    if FRadio.IcomDataModeID > 0 then
       begin
       edtDataMode.Text := IntToStr(FRadio.IcomDataModeID);
@@ -904,6 +931,7 @@ end;
 function TRadioEditForm.SaveTo(const aTarget: TRadioDefinition; out aError: string): boolean;
 var
    civ: integer;
+   pollRate: integer;
 begin
    aError := '';
    Result := False;
@@ -946,6 +974,21 @@ begin
       Exit;
       end;
    FRadio.ReceiverAddress := civ;
+   (* REFUSED, NOT CLAMPED. A typed 5 or 5000 is a mistake the operator
+     should see, not a value silently replaced by its nearest bound. Blank
+     is the default. *)
+   if Trim(edtPollRate.Text) = '' then
+      begin
+      pollRate := FREQUENCY_POLL_RATE_DEFAULT;
+      end
+   else if (not TryStrToInt(Trim(edtPollRate.Text), pollRate)) or
+           (not FrequencyPollRateInRange(pollRate)) then
+      begin
+      aError := UnicodeFormat(SRadioEditBadPollRate,
+                       [FREQUENCY_POLL_RATE_MIN, FREQUENCY_POLL_RATE_MAX]);
+      Exit;
+      end;
+   FRadio.FrequencyPollRate := pollRate;
    FRadio.HamLibID        := StrToIntDef(Trim(edtHamLibID.Text), 0);
    FRadio.StartupCommand  := Trim(edtStartup.Text);
    FRadio.IcomFilterByte    := StrToIntDef(Trim(edtFilterByte.Text), 0);
@@ -1124,6 +1167,22 @@ begin
       edtAutoInfo.TextHint := '2';
       end;
 
+   (* THE POLL RATE IS OFFERED FOR EVERY RADIO EXCEPT ONE DRIVEN THROUGH
+     HAMLIB (issue 235 step 3), and that is a statement about the POLLING
+     LOOP, not about any model. For every native driver the rate is the loop's
+     tick -- how often what the driver knows, polled or pushed by transceive,
+     reaches the program -- and for a serial driver declaring
+     honorsFreqPollRate it is also the CAT poll interval. A HamLib radio has
+     its own fixed 50 ms tick and heartbeat, so the field would change
+     nothing. GREYED, NOT HIDDEN, and the value kept: the HamLib box beside it
+     can be cleared again, and the rate then applies. HamLib-only types force
+     HamLib on (logradio.SetUpRadioInterface), so the registry's answer counts
+     as well as the box. *)
+   edtPollRate.Enabled := not (chkUseHamLib.Checked or
+                               ((id <> '') and IsHamLibOnlyId(id)));
+   lblPollRate.Enabled := edtPollRate.Enabled;
+   edtPollRate.TextHint := IntToStr(FREQUENCY_POLL_RATE_DEFAULT);
+
    // Blank a disabled field rather than leave a stale value showing: a greyed
    // box with a number in it reads as "set, but locked", which is the opposite
    // of what it means.
@@ -1139,6 +1198,24 @@ begin
       begin
       chkFT1000MPReverse.Checked := False;
       end;
+end;
+
+procedure TRadioEditForm.HandleUseHamLibClick(Sender: TObject);
+begin
+   UpdateEnabledState;
+end;
+
+procedure TRadioEditForm.ApplyPollRateHelp;
+var
+   help: TCommandHelp;
+begin
+   help := TCommandHelp.Create(DataFilePath('help'), ActiveUILanguage);
+   try
+      ApplyCommandHelpHint(edtPollRate, help, FREQUENCY_POLL_RATE_COMMAND);
+      ApplyCommandHelpHint(lblPollRate, help, FREQUENCY_POLL_RATE_COMMAND);
+   finally
+      help.Free;
+   end;
 end;
 
 procedure TRadioEditForm.HandleTypeChange(Sender: TObject);

@@ -124,6 +124,16 @@ type
       procedure Test_JSONRoundTripsProfileSpeedSyncAndSO2R;
       procedure Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios;
       procedure Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange;
+
+      // --- FREQUENCY POLL RATE, per radio (issue 235 step 3) --------------
+      procedure Test_PollRateIsCopiedComparedAndCloned;
+      procedure Test_AppliedSnapshotSeesAChangedPollRate;
+      procedure Test_PollRateClampIsTheGuardAgainstAZeroSlot;
+      procedure Test_FormerPollRatePrecedence;
+      procedure Test_JSONWithoutPollRateIsSeededFromTheFormerRate;
+      procedure Test_SeedOfTheDefaultRateChangesNothing;
+      procedure Test_AnEarlySaveKeepsARadioWaitingForItsSeed;
+      procedure Test_LegacyIniSeedCarriesTheStationPollRate;
    public
       (* A FRESH, EMPTY VAULT FOR EVERY TEST. The framework calls this from
         BeginTest, so each test starts with nothing stored and no dependence
@@ -299,6 +309,8 @@ begin
    Result.FrequencyAdder    := 12000;
    Result.StartupCommand    := 'FA00014025000;';
    Result.PollingEnable     := False;
+   // Not the default, so a field that is dropped cannot pass by luck.
+   Result.FrequencyPollRate := 250;
 end;
 
 procedure TRadioConfigStoreTests.CheckRadiosMatch(const aExpected, aActual: TRadioDefinition);
@@ -342,6 +354,7 @@ begin
    CheckEquals(aExpected.FrequencyAdder,  aActual.FrequencyAdder,  'FrequencyAdder');
    CheckEquals(aExpected.StartupCommand,  aActual.StartupCommand,  'StartupCommand');
    CheckTrue(aExpected.PollingEnable = aActual.PollingEnable, 'PollingEnable');
+   CheckEquals(aExpected.FrequencyPollRate, aActual.FrequencyPollRate, 'FrequencyPollRate');
 end;
 
 function TRadioConfigStoreTests.MakeLegacyIni: TMemIniFile;
@@ -2887,9 +2900,252 @@ begin
    Test_AppliedSnapshotSeesSlotEmptiedOrFilled;
    Test_AppliedSnapshotSeesADifferentRadioInTheSlot;
    Test_AppliedSnapshotKeepsItsOwnCopy;
+
+   Test_PollRateIsCopiedComparedAndCloned;
+   Test_AppliedSnapshotSeesAChangedPollRate;
+   Test_PollRateClampIsTheGuardAgainstAZeroSlot;
+   Test_FormerPollRatePrecedence;
+   Test_JSONWithoutPollRateIsSeededFromTheFormerRate;
+   Test_SeedOfTheDefaultRateChangesNothing;
+   Test_AnEarlySaveKeepsARadioWaitingForItsSeed;
+   Test_LegacyIniSeedCarriesTheStationPollRate;
    finally
       // Even if a test escapes with an exception, the fixture files go.
       RemoveTempInis;
+   end;
+end;
+
+(* ---------------------------------------------------------------------
+  FREQUENCY POLL RATE, PER RADIO (issue 235 step 3).
+
+  The rate left the settings object for the radio definition. What can go
+  wrong without a compiler noticing: a copy path that forgets the field (the
+  editor edits a clone and Assigns it back), a comparison that forgets it (the
+  edit never reaches a live radio -- the IC-9700 shape), a zero reaching
+  Sleep, and an old station's rate lost on the way across.
+  --------------------------------------------------------------------- *)
+
+procedure TRadioConfigStoreTests.Test_PollRateIsCopiedComparedAndCloned;
+var
+   a, b, c: TRadioDefinition;
+begin
+   BeginTest('Test_PollRateIsCopiedComparedAndCloned');
+   a := TRadioDefinition.Create;
+   b := nil;
+   c := nil;
+   try
+      CheckEquals(FREQUENCY_POLL_RATE_DEFAULT, a.FrequencyPollRate,
+                  'a new definition polls at the default');
+      a.FrequencyPollRate := 400;
+
+      b := a.Clone;
+      CheckEquals(400, b.FrequencyPollRate, 'Clone carries the rate');
+      CheckTrue(a.SameAs(b), 'a clone is the same radio');
+
+      c := TRadioDefinition.Create;
+      c.Assign(a);
+      CheckEquals(400, c.FrequencyPollRate, 'Assign carries the rate');
+
+      c.FrequencyPollRate := 401;
+      CheckFalse(a.SameAs(c), 'a radio differing ONLY in its rate is a different radio');
+   finally
+      c.Free;
+      b.Free;
+      a.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotSeesAChangedPollRate;
+var
+   snap: TAppliedRadioSnapshot;
+   live, edited: TRadioDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotSeesAChangedPollRate');
+   snap   := TAppliedRadioSnapshot.Create;
+   live   := MakeFullyPopulatedRadio('K3S');
+   edited := nil;
+   try
+      snap.RecordSlot(1, live);
+      CheckFalse(snap.SlotChanged(1, live), 'the applied radio is not a change');
+
+      edited := live.Clone;
+      edited.FrequencyPollRate := live.FrequencyPollRate + 10;
+      CheckTrue(snap.SlotChanged(1, edited),
+                'an edited poll rate MUST be seen as needing a re-apply, ' +
+                'or Save leaves the live radio polling at its startup rate');
+   finally
+      edited.Free;
+      live.Free;
+      snap.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_PollRateClampIsTheGuardAgainstAZeroSlot;
+begin
+   BeginTest('Test_PollRateClampIsTheGuardAgainstAZeroSlot');
+   CheckEquals(FREQUENCY_POLL_RATE_MIN, ClampFrequencyPollRate(0),
+               'a slot the applier never reached reads as the minimum, never Sleep(0)');
+   CheckEquals(FREQUENCY_POLL_RATE_MIN, ClampFrequencyPollRate(-5), 'below the range');
+   CheckEquals(FREQUENCY_POLL_RATE_MAX, ClampFrequencyPollRate(5000), 'above the range');
+   CheckEquals(250, ClampFrequencyPollRate(250), 'inside the range is untouched');
+   CheckTrue(FrequencyPollRateInRange(FREQUENCY_POLL_RATE_MIN), 'the minimum is legal');
+   CheckTrue(FrequencyPollRateInRange(FREQUENCY_POLL_RATE_MAX), 'the maximum is legal');
+   CheckFalse(FrequencyPollRateInRange(FREQUENCY_POLL_RATE_MIN - 1), 'one below is not');
+   CheckFalse(FrequencyPollRateInRange(FREQUENCY_POLL_RATE_MAX + 1), 'one above is not');
+   (* THE OLD GLOBAL'S DEFAULT. A radio that never states a rate must behave
+     exactly as every radio did before the move. *)
+   CheckEquals(10, FREQUENCY_POLL_RATE_DEFAULT, 'the default is the old global default');
+end;
+
+procedure TRadioConfigStoreTests.Test_FormerPollRatePrecedence;
+begin
+   BeginTest('Test_FormerPollRatePrecedence');
+   CheckEquals(250, ResolveFormerFrequencyPollRate(250, '40'),
+               'the settings section wins over the legacy bucket');
+   CheckEquals(40, ResolveFormerFrequencyPollRate(0, '40'),
+               'the bucket fills in when the section had none');
+   CheckEquals(40, ResolveFormerFrequencyPollRate(0, ' 40 '), 'a padded bucket value');
+   CheckEquals(FREQUENCY_POLL_RATE_DEFAULT, ResolveFormerFrequencyPollRate(0, ''),
+               'neither home: the default');
+   CheckEquals(FREQUENCY_POLL_RATE_DEFAULT, ResolveFormerFrequencyPollRate(0, 'FAST'),
+               'a bucket value that is not a number is skipped');
+   CheckEquals(FREQUENCY_POLL_RATE_MAX, ResolveFormerFrequencyPollRate(0, '5000'),
+               'an out-of-range bucket value is clamped, as the subrange did');
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONWithoutPollRateIsSeededFromTheFormerRate;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_JSONWithoutPollRateIsSeededFromTheFormerRate');
+   (* One radio from a file written before the move (no member), one from a
+     file written after it (its own rate). Only the first inherits. *)
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"radios":[{"name":"K3","registryId":"K3"},' +
+      '           {"name":"K4","registryId":"K4","frequencyPollRate":500}]}'));
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals(FREQUENCY_POLL_RATE_DEFAULT, store.FindRadio('K3').FrequencyPollRate,
+                     'an absent member reads as the default until seeded');
+         CheckEquals(500, store.FindRadio('K4').FrequencyPollRate,
+                     'a stated rate is read');
+
+         CheckEquals(1, store.SeedUnstatedFrequencyPollRates(50),
+                     'exactly the radio without a rate changes');
+         CheckEquals(50, store.FindRadio('K3').FrequencyPollRate,
+                     'it inherits the station''s former rate');
+         CheckEquals(500, store.FindRadio('K4').FrequencyPollRate,
+                     'a radio with its own rate keeps it');
+
+         CheckEquals(0, store.SeedUnstatedFrequencyPollRates(75),
+                     'the seed happens once per load, not again');
+         CheckEquals(50, store.FindRadio('K3').FrequencyPollRate, 'and is not repeated');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_SeedOfTheDefaultRateChangesNothing;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_SeedOfTheDefaultRateChangesNothing');
+   (* THE CASE THAT KEEPS THE CORPUS FIXTURE AND NY4I'S FILE UNWRITTEN: their
+     former rate is the default, an absent member already reads as it, and
+     the caller saves only when this answers more than zero. *)
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"radios":[{"name":"K3","registryId":"K3"}]}'));
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals(0, store.SeedUnstatedFrequencyPollRates(FREQUENCY_POLL_RATE_DEFAULT),
+                     'seeding the default changes no radio, so nothing is saved');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AnEarlySaveKeepsARadioWaitingForItsSeed;
+var
+   first, second: TRadioConfigStore;
+   root, saved: TJSONObject;
+   text: string;
+begin
+   BeginTest('Test_AnEarlySaveKeepsARadioWaitingForItsSeed');
+   (* THE ORDERING HAZARD. At startup the Cabrillo header store or the
+     external logger seed can save this file BEFORE the poll-rate seed runs.
+     If that save wrote the default, the radio would look as though it had
+     chosen 10 and a station at 100 ms would silently become 10. *)
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"radios":[{"name":"K3","registryId":"K3"},' +
+      '           {"name":"K4","registryId":"K4","frequencyPollRate":10}]}'));
+   first := TRadioConfigStore.Create;
+   second := TRadioConfigStore.Create;
+   saved := nil;
+   try
+      first.LoadFromJSON(root);
+      saved := first.SaveToJSON;
+      text := saved.ToJSON;
+      CheckEquals(1, (Length(text) - Length(StringReplace(text, 'frequencyPollRate', '',
+                                                          [rfReplaceAll])))
+                     div Length('frequencyPollRate'),
+                  'only the radio that STATED a rate writes one; the other stays waiting');
+
+      second.LoadFromJSON(saved);
+      CheckEquals(1, second.SeedUnstatedFrequencyPollRates(100),
+                  'after that save the waiting radio is still seeded');
+      CheckEquals(100, second.FindRadio('K3').FrequencyPollRate, 'with the station''s rate');
+      CheckEquals(10, second.FindRadio('K4').FrequencyPollRate,
+                  'a radio that chose 10 keeps 10');
+
+      (* AND ONCE SEEDED, IT IS WRITTEN. *)
+      FreeAndNil(saved);
+      saved := second.SaveToJSON;
+      text := saved.ToJSON;
+      CheckTrue(Pos('"frequencyPollRate" : 100', text) +
+                Pos('"frequencyPollRate":100', text) > 0,
+                'the seeded rate is written: ' + text);
+   finally
+      saved.Free;
+      second.Free;
+      first.Free;
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_LegacyIniSeedCarriesTheStationPollRate;
+var
+   ini: TMemIniFile;
+   store: TRadioConfigStore;
+   i: integer;
+begin
+   BeginTest('Test_LegacyIniSeedCarriesTheStationPollRate');
+   ini := MakeLegacyIni;
+   store := TRadioConfigStore.Create;
+   try
+      (* In tr4w.ini the rate was ONE station-wide command, not a slot key. *)
+      ini.WriteString('COMMANDS', 'FREQUENCY POLL RATE', '75');
+      store.SeedFromLegacyIni(ini);
+      CheckTrue(store.RadioCount > 0, 'the fixture seeds radios');
+      for i := 0 to store.RadioCount - 1 do
+         begin
+         CheckEquals(75, store.Radio(i).FrequencyPollRate,
+                     store.Radio(i).Name + ' inherits the station''s rate');
+         end;
+   finally
+      store.Free;
+      ini.Free;
    end;
 end;
 

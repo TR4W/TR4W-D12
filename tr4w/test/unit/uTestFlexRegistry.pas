@@ -161,8 +161,9 @@ begin
 end;
 
 // TFlexCAT.PollRadioState sends four commands per cycle, so it must NOT run at
-// the user's FREQUENCY POLL RATE.  uRadioPolling overwrites pollingInterval with
-// that rate (default 10ms) for any serial radio with honorsFreqPollRate = True,
+// the radio's FREQUENCY POLL RATE (per radio definition since issue 235 step 3).
+// uRadioPolling overwrites pollingInterval with that rate (default 10ms) for any
+// serial radio with honorsFreqPollRate = True,
 // which on the bench produced a poll every ~20ms -- ~48 cycles/sec x 4 commands,
 // the same flooding the legacy Kenwood poller did.
 //

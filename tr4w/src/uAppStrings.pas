@@ -810,9 +810,8 @@ resourcestring
    SPrefsGroupTuningOtherRadio = 'Tuning the other radio';
    SPrefsGroupBandMapWindow = 'Band map window';
    SPrefsGroupSpotTuning = 'Tuning to a spot';
-   (* MUST STAY TRUE until FREQUENCY POLL RATE moves to each radio's
-     definition: today it is one value for all of them. *)
-   SPrefsGroupRadioPolling = 'Radio polling - one rate for every radio';
+   (* ~~SPrefsGroupRadioPolling~~ -- gone with its one row: FREQUENCY POLL
+     RATE is a field of each radio definition now (issue 235 step 3). *)
    (* MAIN CALLSIGN: the station's own call, remembered for New Contest; not
      the call being operated, which a contest can override. *)
    SPrefsGroupStationCallsign = 'Your own callsign, remembered for New Contest';
@@ -949,6 +948,10 @@ resourcestring
    (* Shown for a saved choice whose name was never recorded (a definition
       saved before the editor kept names). It still works. *)
    SLoggerChoiceSaved        = 'Saved choice (refresh to see its name)';
+
+   (* The radio editor refusing a FREQUENCY POLL RATE (issue 235 step 3).
+     The two %d are the bounds, 10 and 1000. *)
+   SRadioEditBadPollRate     = 'The frequency poll rate must be a whole number of milliseconds from %d to %d.';
 
 implementation
 

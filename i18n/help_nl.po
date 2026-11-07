@@ -577,8 +577,8 @@ msgstr "Wanneer ingesteld op TRUE, zal deze parameter het frequentiegeheugen ins
 #. Config command: FREQUENCY POLL RATE   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
-msgid "Values: Integer 10 to 1000 (msec). This command tells TR4W how frequently to poll the rig for a new frequency. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr "Waarden: Integer 10 tot 1000 (msec). Dit commando vertelt TR4W hoe vaak de rig voor een nieuwe frequentie moet worden bekeken. De waarde is in milliseconden, en de toegestane waarden liggen in het bereik 10 tot 1000."
+msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
+msgstr ""
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy

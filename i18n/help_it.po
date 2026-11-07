@@ -577,8 +577,8 @@ msgstr "Quando impostato su TRUE, questo parametro consentirà la memoria di fre
 #. Config command: FREQUENCY POLL RATE   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
-msgid "Values: Integer 10 to 1000 (msec). This command tells TR4W how frequently to poll the rig for a new frequency. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr "Valori: Integer da 10 a 1000 (msec). Questo comando dice a TR4W quanto spesso sondare la piattaforma per una nuova frequenza. Il valore è in millisecondi, e i valori consentiti sono nell'intervallo da 10 a 1000."
+msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
+msgstr ""
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy

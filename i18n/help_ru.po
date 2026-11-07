@@ -501,9 +501,12 @@ msgctxt "TC_HELP_FREQUENCY_MEMORY_ENABLE"
 msgid "When set to TRUE, this parameter will enable the frequency memory. This means that you will return to the frequency you were last using when returning to a band (even with the other radio)."
 msgstr "Когда этот параметр установлен в TRUE, то включится режим памяти частоты. Это означает, что при смене диапазонов вы возвратитесь на ту же самую частоту, на которой были на диапазоне ранее (даже при работе с двумя трансиверами)."
 
+# 2026-11-06: the English was reworded (ini2po); this translates the previous English, shown on the #| line
 #. Config command: FREQUENCY POLL RATE   (default: 10)
+#, fuzzy
+#| msgid "Values: Integer 10 to 1000 (msec). This command tells TR4W how frequently to poll the rig for a new frequency. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
-msgid "Values: Integer 10 to 1000 (msec). This command tells TR4W how frequently to poll the rig for a new frequency. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
+msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
 msgstr "Команда определяет периодичность опроса значения частоты трансивера."
 
 #. Config command: GRID MAP CENTER   (default: NONE)

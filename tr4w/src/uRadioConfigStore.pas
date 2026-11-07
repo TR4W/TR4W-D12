@@ -100,6 +100,19 @@ const
    // OFF -- see TRadioDefinition.AutoInfoLevel.
    AUTOINFO_RADIO_DEFAULT = -1;
 
+   (* FREQUENCY POLL RATE, in milliseconds, PER RADIO (issue 235 step 3).
+
+     It was one station-wide setting, Settings.Operating.FrequencyPollRate.
+     NY4I moved it to the radio definition: it was global only because the
+     radio settings were global when it was written. The bounds are the old
+     subrange's (crMin 10, crMax 1000) and the default is the old default, so a
+     radio that never states a rate behaves exactly as every radio did. *)
+   FREQUENCY_POLL_RATE_MIN     = 10;
+   FREQUENCY_POLL_RATE_MAX     = 1000;
+   FREQUENCY_POLL_RATE_DEFAULT = 10;
+   (* The command name an old tr4w.ini, contest .cfg or legacy bucket uses. *)
+   FREQUENCY_POLL_RATE_COMMAND = 'FREQUENCY POLL RATE';
+
 type
    // How TR4W reaches the radio.  This is a property of the DEFINITION, not of
    // the model: a K4 can be driven over serial or over the network, and the
@@ -349,6 +362,13 @@ type
       // different answers, and collapsing them would mean a driver could
       // never have a default of its own.
       AutoInfoLevel: integer;
+      (* How often, in milliseconds, the polling thread asks this radio for
+        its frequency -- FREQUENCY_POLL_RATE_MIN..MAX, default
+        FREQUENCY_POLL_RATE_DEFAULT. It is the polling loop's tick for every
+        radio except a HamLib one, and for a serial radio whose driver
+        declares honorsFreqPollRate it is also the CAT poll interval. See
+        uRadioPolling.pFactoryRadio. *)
+      FrequencyPollRate: integer;
 
       constructor Create;
       procedure Assign(const aSource: TRadioDefinition);
@@ -495,6 +515,11 @@ type
       FColors: TObjectList<TElementColors>;
       FClusters: TObjectList<TClusterDefinition>;
       FUnknownKeys: TStringList;
+      (* The Ids of the radios LoadFromJSON read with no frequencyPollRate
+        member -- see SeedUnstatedFrequencyPollRates. A TList<string>, not a
+        TStringList: an Id is a native string, and a TStringList would narrow
+        it to AnsiString on every Add and IndexOf. *)
+      FPollRateUnstated: TList<string>;
       FActiveClusterName: string;
       { The rotator that turns. ONE at a time (NY4I, 2026-08-16).
 
@@ -739,6 +764,27 @@ type
         setting that is not working. *)
       property UnknownKeys: TStringList read FUnknownKeys;
 
+      (* THE ONE-TIME MOVE OF THE STATION'S FREQUENCY POLL RATE ONTO EACH
+        RADIO (issue 235 step 3).
+
+        A radio read from a file written before the move has no
+        frequencyPollRate member. LoadFromJSON gives it the default and
+        remembers it here; this assigns aRate (clamped) to every such radio
+        and forgets them. Answers how many radios actually CHANGED, so the
+        caller saves only when the file would differ -- a former rate equal
+        to the default needs no write, because an absent member already reads
+        as the default.
+
+        Kept out of the loader on purpose: the former rate lives in the
+        settings section and the legacy bucket, and the settings section may
+        have been rewritten (dropping it) before this store is read. The
+        caller captures it at the settings load and hands it in.
+
+        UNTIL IT RUNS, SaveToJSON leaves such a radio's member out (unless
+        its rate has been changed from the default), so a save that happens
+        first cannot turn "no rate yet" into "chose 10". *)
+      function SeedUnstatedFrequencyPollRates(const aRate: integer): integer;
+
       // Offers a TCI server so other programs can reach the radio THIS
       // program has the COM port open on.  Station-wide, not a property of any
       // one radio or profile -- which is why it is NOT inside the radios
@@ -909,6 +955,25 @@ const
 function TransportToStr(const aTransport: TRadioTransport): string;
 function StrToTransport(const aValue: string): TRadioTransport;
 
+(* True when aRate is a legal frequency poll rate. *)
+function FrequencyPollRateInRange(const aRate: integer): boolean;
+
+(* aRate forced into FREQUENCY_POLL_RATE_MIN..MAX. THE ONE GUARD every reader
+  goes through: a radio slot the applier never reached holds 0, and a 0 here
+  would be Sleep(0) -- a polling thread spinning a core. *)
+function ClampFrequencyPollRate(const aRate: integer): integer;
+
+(* WHICH FORMER STATION RATE A RADIO WITHOUT ITS OWN INHERITS, in order:
+  the settings section's Operating.FrequencyPollRate (aSettingsRate, 0 when
+  the file had none), then the legacy bucket's FREQUENCY POLL RATE
+  (aBucketValue, '' when absent), then FREQUENCY_POLL_RATE_DEFAULT. The
+  settings section wins because it is what the program applied last -- the
+  same precedence LoadSettingsForStartup gives the two homes. A value that
+  is not an integer is skipped; one out of range is clamped, which is what
+  the old subrange did to it on load. *)
+function ResolveFormerFrequencyPollRate(const aSettingsRate: integer;
+                                        const aBucketValue: string): integer;
+
 (* The NAME of a TCI radio in the library that connects, on THIS machine, to
   aServerPort -- the port TR4W's own TCI server wants to listen on.  '' when
   none does.  Two listeners cannot share a port, so such a pair means the
@@ -962,6 +1027,56 @@ begin
       end;
 end;
 
+function FrequencyPollRateInRange(const aRate: integer): boolean;
+begin
+   Result := (aRate >= FREQUENCY_POLL_RATE_MIN) and
+             (aRate <= FREQUENCY_POLL_RATE_MAX);
+end;
+
+function ClampFrequencyPollRate(const aRate: integer): integer;
+begin
+   if aRate < FREQUENCY_POLL_RATE_MIN then
+      begin
+      Result := FREQUENCY_POLL_RATE_MIN;
+      end
+   else if aRate > FREQUENCY_POLL_RATE_MAX then
+      begin
+      Result := FREQUENCY_POLL_RATE_MAX;
+      end
+   else
+      begin
+      Result := aRate;
+      end;
+end;
+
+function ResolveFormerFrequencyPollRate(const aSettingsRate: integer;
+                                        const aBucketValue: string): integer;
+var
+   bucketText: string;
+   bucketRate: integer;
+   code: integer;
+begin
+   if aSettingsRate <> 0 then
+      begin
+      Result := ClampFrequencyPollRate(aSettingsRate);
+      Exit;
+      end;
+   Result := FREQUENCY_POLL_RATE_DEFAULT;
+   bucketText := Trim(aBucketValue);
+   if bucketText = '' then
+      begin
+      Exit;
+      end;
+   (* Val, not TryStrToInt: SysUtils' integer parsers take an AnsiString in
+     FPC 3.2.2, and this unit's strings are UnicodeString -- Val takes it as
+     it is, with no narrowing. *)
+   Val(bucketText, bucketRate, code);
+   if code = 0 then
+      begin
+      Result := ClampFrequencyPollRate(bucketRate);
+      end;
+end;
+
 { ---------------------------------------------------------------- helpers -- }
 
 // Names are compared case-insensitively and with the ends trimmed everywhere
@@ -994,6 +1109,7 @@ begin
    // looks broken to the operator.
    PollingEnable     := True;
    AutoInfoLevel     := AUTOINFO_RADIO_DEFAULT;
+   FrequencyPollRate := FREQUENCY_POLL_RATE_DEFAULT;
 end;
 
 procedure TRadioDefinition.Assign(const aSource: TRadioDefinition);
@@ -1042,6 +1158,7 @@ begin
    StartupCommand    := aSource.StartupCommand;
    PollingEnable     := aSource.PollingEnable;
    AutoInfoLevel     := aSource.AutoInfoLevel;
+   FrequencyPollRate := aSource.FrequencyPollRate;
 end;
 
 function TRadioDefinition.SameAs(const aOther: TRadioDefinition): boolean;
@@ -1075,8 +1192,9 @@ begin
       (FT1000MPCWReverse = aOther.FT1000MPCWReverse)                and
       (FrequencyAdder    = aOther.FrequencyAdder)                   and
       (StartupCommand    = aOther.StartupCommand)                   and
-      (PollingEnable     = aOther.PollingEnable) and
-      (AutoInfoLevel     = aOther.AutoInfoLevel);
+      (PollingEnable     = aOther.PollingEnable)                    and
+      (AutoInfoLevel     = aOther.AutoInfoLevel)                    and
+      (FrequencyPollRate = aOther.FrequencyPollRate);
 end;
 
 function TRadioDefinition.Clone: TRadioDefinition;
@@ -1680,6 +1798,7 @@ begin
    FHeaders.CaseSensitive := False;   // section names are matched like ini's
    FClusters := TObjectList<TClusterDefinition>.Create(True);
    FUnknownKeys := TStringList.Create;
+   FPollRateUnstated := TList<string>.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1758,13 +1877,38 @@ begin
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
    FreeAndNil(FUnknownKeys);
+   FreeAndNil(FPollRateUnstated);
    inherited Destroy;
+end;
+
+function TRadioConfigStore.SeedUnstatedFrequencyPollRates(const aRate: integer): integer;
+var
+   i: integer;
+   radioDef: TRadioDefinition;
+   rate: integer;
+begin
+   Result := 0;
+   rate := ClampFrequencyPollRate(aRate);
+   for i := 0 to FPollRateUnstated.Count - 1 do
+      begin
+      radioDef := FindRadioById(FPollRateUnstated[i]);
+      if (radioDef <> nil) and (radioDef.FrequencyPollRate <> rate) then
+         begin
+         radioDef.FrequencyPollRate := rate;
+         Inc(Result);
+         end;
+      end;
+   FPollRateUnstated.Clear;
 end;
 
 procedure TRadioConfigStore.Clear;
 begin
    FExternalLoggers.Clear;
    FRadios.Clear;
+   if FPollRateUnstated <> nil then
+      begin
+      FPollRateUnstated.Clear;
+      end;
    FBandPlan.Clear;
    FColors.Clear;
    FRotators.Clear;
@@ -2288,6 +2432,9 @@ begin
    aIni.WriteString(section,  'StartupCommand',    aRadio.StartupCommand);
    aIni.WriteBool(section,    'PollingEnable',     aRadio.PollingEnable);
    aIni.WriteInteger(section, 'AutoInfoLevel',     aRadio.AutoInfoLevel);
+   (* AnsiString(), the ini API's own type: the conversion the lines above
+     make implicitly, said out loud so it is not a new narrowing. *)
+   aIni.WriteInteger(AnsiString(section), 'FrequencyPollRate', aRadio.FrequencyPollRate);
 end;
 
 procedure TRadioConfigStore.LoadRadio(const aIni: TCustomIniFile; const aSection, aName: string);
@@ -2333,6 +2480,8 @@ begin
    radioDef.StartupCommand    := aIni.ReadString(aSection,  'StartupCommand',    '');
    radioDef.PollingEnable     := aIni.ReadBool(aSection,    'PollingEnable',     True);
    radioDef.AutoInfoLevel     := aIni.ReadInteger(aSection, 'AutoInfoLevel',     AUTOINFO_RADIO_DEFAULT);
+   radioDef.FrequencyPollRate := ClampFrequencyPollRate(
+      aIni.ReadInteger(AnsiString(aSection), 'FrequencyPollRate', FREQUENCY_POLL_RATE_DEFAULT));
 
    // A duplicate section name cannot happen in a well-formed ini, but a
    // hand-edited file can produce one; drop the later one rather than raise
@@ -2535,7 +2684,8 @@ end;
   StoreSecret keeps the entry and answers True, and the reference is written
   so the next session can still find it. See uKeychain.StoreSecret.
 *)
-function RadioToJSON(const aRadio: TRadioDefinition): TJSONObject;
+function RadioToJSON(const aRadio: TRadioDefinition;
+                     const aWritePollRate: boolean): TJSONObject;
 begin
    Result := TJSONObject.Create;
 
@@ -2576,6 +2726,10 @@ begin
    Result.AddPair('startupCommand',  aRadio.StartupCommand);
    Result.AddPair('pollingEnable',   TJSONBool.Create(aRadio.PollingEnable));
    Result.AddPair('autoInfoLevel',   TJSONNumber.Create(aRadio.AutoInfoLevel));
+   if aWritePollRate then
+      begin
+      Result.AddPair('frequencyPollRate', TJSONNumber.Create(aRadio.FrequencyPollRate));
+      end;
 end;
 
 function ProfileToJSON(const aProfile: TStationProfile): TJSONObject;
@@ -3015,7 +3169,18 @@ begin
    radios := TJSONArray.Create;
    for i := 0 to FRadios.Count - 1 do
       begin
-      radios.AddElement(RadioToJSON(FRadios[i]));
+      (* A RADIO STILL WAITING FOR ITS SEED STAYS WITHOUT A RATE ON DISK.
+        Something can save this store at startup before the one-time seed of
+        the station's old FREQUENCY POLL RATE has run -- the Cabrillo header
+        store and the external logger seed both save through this file -- and
+        writing the default would make the radio look as though it had
+        chosen 10, so the seed would pass it by and a station at 100 ms would
+        silently become 10. Absent reads as the default, so nothing is lost by
+        leaving it out; a rate the operator has set (anything but the
+        default) is always written. *)
+      radios.AddElement(RadioToJSON(FRadios[i],
+         (FPollRateUnstated.IndexOf(FRadios[i].Id) < 0) or
+         (FRadios[i].FrequencyPollRate <> FREQUENCY_POLL_RATE_DEFAULT)));
       end;
    Result.AddPair(JSONKEY_RADIOS, radios);
 
@@ -3344,6 +3509,22 @@ begin
          radioDef.StartupCommand    := JSONStr(obj,  'startupCommand',  '');
          radioDef.PollingEnable     := JSONBool(obj, 'pollingEnable',   True);
          radioDef.AutoInfoLevel     := JSONInt(obj,  'autoInfoLevel',  AUTOINFO_RADIO_DEFAULT);
+         (* ABSENT IS NOT THE SAME AS THE DEFAULT, for one release at least: a
+           file written before issue 235 step 3 has no member here, and the
+           station's former rate belongs on it. The default stands until
+           SeedUnstatedFrequencyPollRates is told what that rate was. A
+           hand-edited value out of range is clamped, as the old subrange
+           clamped the global. *)
+         if obj.GetValue('frequencyPollRate') = nil then
+            begin
+            radioDef.FrequencyPollRate := FREQUENCY_POLL_RATE_DEFAULT;
+            FPollRateUnstated.Add(radioDef.Id);
+            end
+         else
+            begin
+            radioDef.FrequencyPollRate := ClampFrequencyPollRate(
+               JSONInt(obj, 'frequencyPollRate', FREQUENCY_POLL_RATE_DEFAULT));
+            end;
 
          // A blank or duplicate name cannot come from SaveToJSON, but it can
          // come from a hand-edited file.  Drop that entry rather than raise
@@ -3879,6 +4060,10 @@ begin
       radioDef.WideCWFilter      := ReadBool('WIDE CW FILTER');
       radioDef.FT1000MPCWReverse := ReadBool('FT1000MP CW REVERSE');
       radioDef.FrequencyAdder    := ReadInt('FREQUENCY ADDER', 0);
+      (* NOT A SLOT KEY: in the old file the rate was one station-wide command
+        in [COMMANDS], and each radio seeded from that file inherits it. *)
+      radioDef.FrequencyPollRate := ResolveFormerFrequencyPollRate(0,
+         aIni.ReadString('COMMANDS', FREQUENCY_POLL_RATE_COMMAND, ''));
       radioDef.StartupCommand    := ReadStr('STARTUP COMMAND');
 
       // POLL RADIO ONE, again spelled the other way round.  Absent means on,

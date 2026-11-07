@@ -2119,6 +2119,35 @@ begin
                    [aSlot, aRadio.AutoInfoLevel]);
       end;
 
+   (* THE FREQUENCY POLL RATE, BY THE SAME ROUTE AND FOR THE SAME REASON
+     (issue 235 step 3): it has no legacy reader to feed. The default first,
+     so an emptied slot does not keep the previous radio's rate; then the
+     definition's, clamped. The polling thread reads it when the rebuilt
+     radio's thread starts -- this routine runs before CheckAndInitializePorts
+     builds it, and the definition comparison in AppliedRadios (SameAs) is
+     what brings an edited rate back here. *)
+   if aSlot = 1 then
+      begin
+      Radio1.FrequencyPollRate := FREQUENCY_POLL_RATE_DEFAULT;
+      end
+   else
+      begin
+      Radio2.FrequencyPollRate := FREQUENCY_POLL_RATE_DEFAULT;
+      end;
+   if aRadio <> nil then
+      begin
+      if aSlot = 1 then
+         begin
+         Radio1.FrequencyPollRate := ClampFrequencyPollRate(aRadio.FrequencyPollRate);
+         end
+      else
+         begin
+         Radio2.FrequencyPollRate := ClampFrequencyPollRate(aRadio.FrequencyPollRate);
+         end;
+      logger.Debug('[ApplyProfile] radio %d frequency poll rate %d ms',
+                   [aSlot, ClampFrequencyPollRate(aRadio.FrequencyPollRate)]);
+      end;
+
    (* THE PORT'S DEVICE NAME, FOR THE SAME REASON AUTO-INFO IS HERE: no legacy
      reader can hold it.
 
@@ -2595,6 +2624,29 @@ begin
       end;
 end;
 
+(* See the call in ApplyActiveProfileToConfigAtStartup. The former rate is
+  resolved by the pure ResolveFormerFrequencyPollRate (pinned by
+  uTestRadioConfigStore); this routine only fetches its two inputs, applies
+  the result and saves when something changed. *)
+procedure SeedFrequencyPollRatesAtStartup(const aStore: TRadioConfigStore;
+                                          const aKeyers: TKeyerConfigStore);
+var
+   former: integer;
+   seeded: integer;
+begin
+   former := ResolveFormerFrequencyPollRate(
+                Settings.FormerFrequencyPollRate,
+                aStore.CommandValue(FREQUENCY_POLL_RATE_COMMAND, ''));
+   seeded := aStore.SeedUnstatedFrequencyPollRates(former);
+   if seeded > 0 then
+      begin
+      logger.Info('[Radios] the station''s FREQUENCY POLL RATE (%d ms) is now ' +
+                  'set on %d radio definition(s) -- it is per radio from this build',
+                  [former, seeded]);
+      SaveConfig(RadioStoreFileName, aStore, aKeyers, nil);
+      end;
+end;
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 var
    store: TRadioConfigStore;
@@ -2739,6 +2791,17 @@ begin
       ApplyBandPlan(store);
       ApplyElementColors(store);
       ApplyActiveCluster(store);
+
+      (* THE STATION'S OLD FREQUENCY POLL RATE ONTO EVERY RADIO THAT HAS NONE
+        (issue 235 step 3). After the ini seed, so a rate still only in
+        tr4w.ini -- now in the store's bucket -- is seen; before the profile
+        check, so a station with no active profile still migrates. Written
+        back at once, like the keyer seed below, because the settings section
+        that held the old value drops it on its next save. Nothing is written
+        when the old rate is the default: an absent member reads as the
+        default, so the file is already right -- which is also what keeps
+        /EXPORT from writing the corpus fixture. *)
+      SeedFrequencyPollRatesAtStartup(store, keyers);
 
       // The rotator library.  ConfigureRotators seeds one rotator from the
       // legacy ROTATOR TYPE / ROTATOR PORT when the library is empty, so a

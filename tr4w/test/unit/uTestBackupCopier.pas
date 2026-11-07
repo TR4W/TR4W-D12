@@ -13,7 +13,8 @@ unit uTestBackupCopier;
   handed its folders, and the settings tests build their own TR4WSettings.
 
   WAITING. The worker is a real thread, so each test waits for it with
-  WaitUntilSettled (nothing in flight, nothing due) rather than sleeping. A
+  WaitUntilSettled (nothing in flight -- the attempt's reports included --
+  and nothing due) rather than sleeping, so a count read after it is final. A
   failed job waits out its retry, which is set to a minute here, so a test
   moves it on with RetryNow -- the retry clock itself is not what is pinned. *)
 
@@ -47,6 +48,7 @@ type
       procedure TestASkipAfterAFailureIsARecoveryOnce;
       procedure TestTheLocalBackupFolderIsNotADestination;
       procedure TestLeftoverOutboxFilesAreDeletedAtStart;
+      procedure TestNotSettledUntilEveryReportIsDelivered;
    public
       procedure RunAllTests; override;
    end;
@@ -100,6 +102,13 @@ type
       FCounts: array[TBackupCopyEvent] of integer;
       FLastDetail: string;
    public
+      (* A REPORT THAT TAKES ITS TIME. When HoldCopied is set, a bceCopied
+        report signals Entered and waits for Release BEFORE it is counted, so a
+        test can ask the copier whether it is settled while a report is still
+        being delivered. Set both before the copier can report. *)
+      HoldCopied: boolean;
+      Entered: TEvent;
+      Release: TEvent;
       constructor Create;
       destructor Destroy; override;
       procedure Received(aEvent: TBackupCopyEvent; const aDestination, aDetail: string);
@@ -229,10 +238,15 @@ begin
       FCounts[e] := 0;
       end;
    FLastDetail := '';
+   HoldCopied := False;
+   Entered := TEvent.Create(nil, True, False, '');
+   Release := TEvent.Create(nil, True, False, '');
 end;
 
 destructor TReportRecorder.Destroy;
 begin
+   Release.Free;
+   Entered.Free;
    FLock.Free;
    inherited Destroy;
 end;
@@ -240,6 +254,11 @@ end;
 procedure TReportRecorder.Received(aEvent: TBackupCopyEvent;
    const aDestination, aDetail: string);
 begin
+   if HoldCopied and (aEvent = bceCopied) then
+      begin
+      Entered.SetEvent;
+      Release.WaitFor(INFINITE);
+      end;
    FLock.Acquire;
    try
       Inc(FCounts[aEvent]);
@@ -941,6 +960,46 @@ begin
    end;
 end;
 
+(* "SETTLED" MEANS THE REPORTS ARE IN. The worker used to clear its busy flag
+  before it delivered an attempt's reports, so a test could see "settled" and
+  read a count of 0 -- CI failed TestASkipAfterAFailureIsARecoveryOnce that
+  way, 2026-11-06, on a loaded runner. Here the bceCopied report is HELD, so
+  the window is wide open on every run rather than on an unlucky one. *)
+procedure TBackupCopierTests.TestNotSettledUntilEveryReportIsDelivered;
+const
+   HELD_PROBE_MS = 300;
+var
+   rec: TReportRecorder;
+   copier: TBackupCopier;
+   local, why: string;
+begin
+   BeginTest('the copier is not settled while a report is still being delivered');
+   ScrubAll;
+   local := IncludeTrailingPathDelimiter(LocalDir) + FINAL_NAME;
+   rec := TReportRecorder.Create;
+   rec.HoldCopied := True;
+   copier := TBackupCopier.Create(TBackupFileOps.Create, OutboxDir, TEST_RETRY_MS, rec.Received);
+   try
+      copier.SetDestination(DestDir);
+      WriteText(local, 'generation one');
+      CheckTrue(copier.Submit(local, False, why), 'queued: ' + why);
+      CheckTrue(rec.Entered.WaitFor(SETTLE_MS) = wrSignaled, 'the copied report begins');
+      CheckFalse(copier.WaitUntilSettled(HELD_PROBE_MS),
+                 'NOT settled while the copied report is being delivered');
+      CheckEquals(0, rec.Count(bceCopied), 'the held report is not counted yet');
+      rec.Release.SetEvent;
+      CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'settles once the report is delivered');
+      CheckEquals(1, rec.Count(bceCopied), 'and the report is counted when it does');
+      CheckEquals(0, FileCountIn(OutboxDir), 'and the outbox file is already deleted');
+   finally
+      (* Before the copier is freed: its Shutdown waits for a report in
+        progress, so a failed check above must not leave this one held. *)
+      rec.Release.SetEvent;
+      copier.Free;
+      rec.Free;
+   end;
+end;
+
 procedure TBackupCopierTests.RunAllTests;
 begin
    TestACopyArrivesAndThePreviousBecomesBak;
@@ -955,6 +1014,7 @@ begin
    TestASkipAfterAFailureIsARecoveryOnce;
    TestTheLocalBackupFolderIsNotADestination;
    TestLeftoverOutboxFilesAreDeletedAtStart;
+   TestNotSettledUntilEveryReportIsDelivered;
 
    Scrub(LocalDir);
    Scrub(OutboxDir);

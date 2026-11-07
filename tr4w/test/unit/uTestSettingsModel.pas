@@ -40,6 +40,7 @@ type
       procedure Test_DefaultsAreTheOnesTheGlobalsHad;
       procedure Test_RoundTripsThroughJSON;
       procedure Test_AnAbsentKeyLeavesThePropertyAlone;
+      procedure Test_TheFormerFrequencyPollRateIsCarried;
       procedure Test_ShareSpotsDefaultsOnAndSurvivesAnOlderFile;
       procedure Test_LegacyImportReadsTheOldCommandSpellings;
       procedure Test_LegacyImportKeepsWhatItCannotRead;
@@ -183,6 +184,53 @@ begin
       CheckEquals(52099, s.ExternalLogger.Port, 'the key that WAS there applies');
       CheckEquals('10.0.0.7', s.ExternalLogger.Address,
                   'the key that was NOT there must not have been reset');
+   finally
+      s.Free;
+   end;
+end;
+
+(* FREQUENCY POLL RATE LEFT THE SETTINGS OBJECT (issue 235 step 3), and an old
+  file's Operating.FrequencyPollRate is the station's value that every radio
+  must inherit. The de-streamer skips a member no property carries, and the
+  next save drops it, so FromJSON has to take it as it goes past. *)
+procedure TSettingsModelTests.Test_TheFormerFrequencyPollRateIsCarried;
+var
+   s: TR4WSettings;
+   obj: TJSONObject;
+begin
+   BeginTest('an old file''s station-wide FREQUENCY POLL RATE is carried for the radios');
+   s := TR4WSettings.Create;
+   try
+      CheckEquals(0, s.FormerFrequencyPollRate, 'nothing read yet: no former rate');
+
+      obj := TJSONObject(TJSONObject.ParseJSONValue(
+                '{"Operating":{"FrequencyPollRate":75,"HandLogMode":false}}'));
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckEquals(75, s.FormerFrequencyPollRate, 'the old member is carried');
+
+      (* A section this build wrote has no such member. Reading one must not
+        erase what an earlier read carried. *)
+      obj := TJSONObject(TJSONObject.ParseJSONValue('{"Operating":{"HandLogMode":false}}'));
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckEquals(75, s.FormerFrequencyPollRate, 'an absent member leaves the capture alone');
+
+      (* AND IT IS NEVER WRITTEN BACK: the settings section has no home for it. *)
+      obj := s.ToJSON;
+      try
+         CheckTrue(Pos('FrequencyPollRate', obj.AsJSON) = 0,
+                   'the settings section no longer carries a poll rate');
+      finally
+         obj.Free;
+      end;
    finally
       s.Free;
    end;
@@ -419,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(298, names.Count,
+         CheckEquals(297, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -450,7 +498,9 @@ begin
                      + ' 297 since RADIO TCP SERVER PORT was retired --'
                      + ' nothing read it -- 2026-11-01; 298 with CLUSTER'
                      + ' SPOT COMMENT MULTIPLIER (new, no CFGCA row,'
-                     + ' issue 83), 2026-11-05');
+                     + ' issue 83), 2026-11-05; 297 since FREQUENCY POLL'
+                     + ' RATE moved to each radio definition (issue 235'
+                     + ' step 3), 2026-11-06');
       finally
          names.Free;
       end;
@@ -934,6 +984,8 @@ begin
 end;
 
 procedure TSettingsModelTests.Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
+var
+   fresh: TR4WSettings;
 begin
    (* THE THIRD ANSWER A COMMAND NAME CAN GET, and it needed to exist.
 
@@ -996,8 +1048,25 @@ begin
      without being listed, and the failure is a modal dialog on somebody
      else's machine. *)
    (* 31 -> 39: the seven that were mislabelled as retired moved here, plus
-     CONNECTION COMMAND. See the note on RetiredCommandCount above. *)
-   CheckTrue(StoreOwnedCommandCount >= 39, 'the store list has not shrunk');
+     CONNECTION COMMAND. See the note on RetiredCommandCount above.
+     39 -> 40: FREQUENCY POLL RATE, which moved to the radio library (issue
+     235 step 3). *)
+   CheckTrue(StoreOwnedCommandCount >= 40, 'the store list has not shrunk');
+
+   (* FREQUENCY POLL RATE MOVED; IT WAS NOT WITHDRAWN. An old .cfg or ini
+     line is accepted, the settings object no longer answers to it, and the
+     log must not call it a withdrawn feature. *)
+   CheckTrue(CommandIsOwnedByAStore('FREQUENCY POLL RATE'),
+             'FREQUENCY POLL RATE is owned by the radio library');
+   CheckFalse(CommandIsRetired('FREQUENCY POLL RATE'),
+              'and is not withdrawn -- every radio still has one');
+   fresh := TR4WSettings.Create;
+   try
+      CheckFalse(fresh.OwnsCommand('FREQUENCY POLL RATE'),
+                 'and no settings property answers to it');
+   finally
+      fresh.Free;
+   end;
 end;
 
 
@@ -1607,7 +1676,6 @@ const
       + '"FARNSWORTH SPEED",'
       + '"FONT SIZE",'
       + '"FREQUENCY MEMORY ENABLE",'
-      + '"FREQUENCY POLL RATE",'
       + '"GRID MAP CENTER",'
       + '"HAMSCORE ENABLE",'
       + '"HAMSCORE PASSWORD",'
@@ -2264,6 +2332,7 @@ begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
    Test_RoundTripsThroughJSON;
    Test_AnAbsentKeyLeavesThePropertyAlone;
+   Test_TheFormerFrequencyPollRateIsCarried;
    Test_ShareSpotsDefaultsOnAndSurvivesAnOlderFile;
    Test_LegacyImportReadsTheOldCommandSpellings;
    Test_LegacyImportKeepsWhatItCannotRead;

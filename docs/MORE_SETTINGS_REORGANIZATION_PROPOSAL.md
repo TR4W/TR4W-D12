@@ -24,8 +24,10 @@
 > - MISSINGCALLSIGNS FILE ENABLE went to Audio (it is a DVK setting).
 > - The DX Cluster settings went to a DX Cluster > Spots and console leaf, because
 >   the designed page is full.
-> - FREQUENCY POLL RATE is on Hardware TEMPORARILY. It moves to each radio's
->   definition in step 3.
+> - ~~FREQUENCY POLL RATE is on Hardware TEMPORARILY. It moves to each radio's
+>   definition in step 3.~~ DONE (step 3, 2026-11-06): it is
+>   `TRadioDefinition.FrequencyPollRate`, edited on the radio editor's Advanced
+>   tab; the Hardware row is gone and the command name is store-owned.
 > - The band plan button is on Operating > Bands.
 
 Proposal and implementation handoff, November 6, 2026. Reviewed against main at commit 3c0cdede and the working-tree sources available during review. This is documentation only; no application code, settings data, tests, or navigation have been changed.
@@ -183,7 +185,7 @@ Keep Operating > CW distinct from CW Settings: operating-time automatic sending 
 
 1. **Station identity:** MainCallsign is deliberately separate from the callsign being operated. The inspected model says the remembered station value prefills New Contest; a contest override does not replace it. Put both on the appropriate screens with clear labels rather than consolidating their values.
 2. **Scope:** DIGITAL MODE ENABLE is contest-scoped in the settings inventory. A Files setting moved onto Contest, or a station-wide setting placed near contest controls, must retain its actual persistence scope. Do not infer storage scope from its page title.
-3. **Shared radio polling:** FrequencyPollRate is currently one Operating model property. Moving it near radios must not silently turn it into one value per radio definition. Its help text must explain the existing scope.
+3. **Shared radio polling:** ~~FrequencyPollRate is currently one Operating model property. Moving it near radios must not silently turn it into one value per radio definition. Its help text must explain the existing scope.~~ SUPERSEDED by NY4I's ruling on issue 235 ("This should go on the radio definition"): it IS one value per radio definition now, deliberately, each seeded once from the old station-wide value, and its help says it is per radio.
 4. **Initial exchange:** The model identifies IE SWITCH as an initial-exchange behavior read by uSpots. Confirm the actual user-facing explanation and desired placement before relabeling it. The table proposes grouping it beside INITIAL EXCHANGE FILENAME; it does not assume those settings have the same storage scope.
 5. **Log subtitle:** The inspected model explicitly says LogSubTitle has no live reader in this build. Record this as a separate behavior/retirement decision. A navigation cleanup must not silently remove it or claim that changing it currently updates the window title.
 6. **Stereo and messages:** The registration comment associates STEREO PIN HIGH with YCCC stereo behavior. Confirm whether the operator expects this beside Two Radio Mode or its hardware definition. DE ENABLE's shared sending semantics likewise need a clear group before implementation.

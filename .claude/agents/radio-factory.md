@@ -66,6 +66,18 @@ here was wrong within a day, twice.
   radio holding its startup values** — that is the IC-9700 stale-credential
   defect of 2026-09-24, where a corrected LAN password sat in the library while
   every reconnection logged `network credentials set` and sent the old one.
+- **FREQUENCY POLL RATE IS PER RADIO** (issue 235 step 3, 2026-11-06):
+  `TRadioDefinition.FrequencyPollRate` (10..1000 ms, default 10) →
+  `ApplyRadioToSlot` → `RadioObject.FrequencyPollRate` → `pFactoryRadio`, which
+  reads it through `uRadioConfigStore.ClampFrequencyPollRate` (a never-applied
+  slot holds 0, and `Sleep(0)` spins). It drives TWO things, as the global did:
+  the loop tick for every non-HamLib radio (the cadence at which polled or
+  transceive-pushed state is published), and -- serial + `requiresPolling` +
+  `honorsFreqPollRate` only -- the CAT `pollingInterval`. HamLib keeps its own
+  50 ms tick. The editor greys the field for HamLib rather than asking the
+  driver's trait, because the tick reaches every native driver. There is no
+  `Settings.Operating.FrequencyPollRate` any more; the command name is in
+  `uCFG.OWNED_BY_A_STORE`.
 - **Read the D7 tree at `C:\TR4W` as the authority on old behaviour. Never mirror
   a fix back into it.**
 

@@ -1610,12 +1610,9 @@ begin
      beside the box's own checkbox. *)
    aTable.Place('hardware.ctrlj.stereoPinHigh',           NAV_HARDWARE, SPrefsYCCCBoxHeading);
 
-   (* TEMPORARY, MOVES TO THE RADIO DEFINITION (issue 235 step 3).  FREQUENCY
-     POLL RATE belongs on each radio (NY4I); until that data-model change it
-     is still ONE global value under the same key, and it sits here only so
-     More settings could be emptied.  Its group heading says it is one rate
-     for every radio, which is true today. *)
-   aTable.Place('operating.ctrlj.frequencyPollRate',      NAV_HARDWARE, SPrefsGroupRadioPolling);
+   (* ~~operating.ctrlj.frequencyPollRate~~ -- GONE FROM PREFERENCES (issue
+     235 step 3). FREQUENCY POLL RATE is a field of each radio definition
+     now, edited on the radio editor's Advanced tab. *)
 
    (* ----------------------------------------------------------- Station *)
 

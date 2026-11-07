@@ -148,6 +148,7 @@ uses
    uRadioState,     // PTT as STATE. This unit runs on the polling thread and
                     // must not name a control -- see the note in PTTStatusChanged
    uMainThreadWork, // the UI work below runs on the MAIN thread -- see MarshalledJobs
+   uRadioConfigStore, // ClampFrequencyPollRate -- the one guard on a radio's poll rate
    uSettingsModel;  // Settings.AutoSap -- the tuning threshold that means S&P
 
 { ===========================================================================
@@ -580,15 +581,16 @@ begin
                SetRadioAlertState(not ro.IsOperational);
 
                // For serial radios that poll frequency directly (K4/K3-style), honour the
-               // user-configurable FREQUENCY POLL RATE (FreqPollRate, default 10ms, range
-               // 10-1000ms). NOT for the Icom (honorsFreqPollRate=False): its PollRadioState
+               // radio's own FREQUENCY POLL RATE (its definition's frequencyPollRate,
+               // default 10ms, range 10-1000ms; per radio since issue 235 step 3). NOT for
+               // the Icom (honorsFreqPollRate=False): its PollRadioState
                // is a heavy multi-command CI-V state query (RIT/XIT/split/TX) and frequency
                // arrives via CI-V transceive, so a 10ms cadence enqueues ~500 CI-V cmds/sec
                // and permanently floods the rate-limited send queue (25ms/command) -- keep
                // the Icom's own 1s pollingInterval.
                if ro.requiresPolling and (ro.serialPort <> NoPort) and ro.honorsFreqPollRate then
                   begin
-                  ro.pollingInterval := Settings.Operating.FrequencyPollRate;
+                  ro.pollingInterval := ClampFrequencyPollRate(rig^.FrequencyPollRate);
                   logger.Debug('[pFactoryRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
                                [ro.pollingInterval]);
                   end;
@@ -652,14 +654,19 @@ begin
                end;
 
             // HamLib Direct: short sleep so FNeedsPoll is checked promptly when
-            // an async callback fires. Legacy serial radios use FreqPollRate.
+            // an async callback fires. Every other radio ticks at its own
+            // FREQUENCY POLL RATE -- the cadence at which what the driver knows
+            // (polled or pushed) is published to the program. It was the one
+            // station-wide rate until issue 235 step 3; each definition was
+            // seeded from it, so the tick is unchanged until the operator edits
+            // a radio's rate.
             if Assigned(ro) and (ro is THamLibDirect) then
                begin
                Sleep(50)
                end
             else
                begin
-               Sleep(Settings.Operating.FrequencyPollRate);
+               Sleep(ClampFrequencyPollRate(rig^.FrequencyPollRate));
                end;
 
             // Auth failure may happen asynchronously during handshake.

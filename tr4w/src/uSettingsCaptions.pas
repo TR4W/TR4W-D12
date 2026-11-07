@@ -208,6 +208,9 @@ resourcestring
    RS_OPERATING_CTRLJ_DUPESHEETAUTORESET      = 'Dupe Sheet Auto Reset';
    RS_OPERATING_CTRLJ_FREQUENCYMEMORY         = 'Frequency Memory';
    RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE   = 'Frequency Memory Enable';
+   (* KEPT, THOUGH ITS SETTING LEFT (issue 235 step 3): the radio editor's
+     poll-rate label reads it, so the catalogue key -- and every translation
+     already filed under it -- still reaches a screen. *)
    RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE       = 'Frequency Poll Rate';
    RS_OPERATING_CTRLJ_IESWITCH                = 'Ie Switch';
    RS_OPERATING_CTRLJ_INCREMENTTIMEENABLE     = 'Increment Time Enable';

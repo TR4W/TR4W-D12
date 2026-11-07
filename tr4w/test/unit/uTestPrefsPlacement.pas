@@ -246,10 +246,14 @@ begin
    BeginTest('the settings with a stated exception are where the coordinator and NY4I sent them');
    Declared;
 
-   (* FREQUENCY POLL RATE: TEMPORARY, on Hardware, until it moves to each
-     radio's definition (issue 235 step 3).  Still one global value. *)
-   CheckEquals(NAV_HARDWARE, PlacedPage('operating.ctrlj.frequencyPollRate'),
-               'FREQUENCY POLL RATE sits on Hardware until it moves to the radio definition');
+   (* FREQUENCY POLL RATE LEFT PREFERENCES (issue 235 step 3): it is a field
+     of each radio definition, edited in the radio editor. Neither a
+     registration nor a placement may come back for the old key. *)
+   CheckTrue(FindSetting('operating.ctrlj.frequencyPollRate') = nil,
+             'FREQUENCY POLL RATE is no longer a Preferences setting');
+   CheckTrue(PrefsPlacements.PageOf('operating.ctrlj.frequencyPollRate') =
+                PrefsPlacements.PageOf('no.such.setting'),
+             'and nothing places it on a page');
    (* DIGITAL MODE ENABLE is contest-scoped and goes on the Contest page. *)
    CheckEquals(NAV_CONTEST, PlacedPage('operating.ctrlj.digitalModeEnable'),
                'DIGITAL MODE ENABLE goes on the Contest page');

@@ -564,8 +564,9 @@ var
 
   (* FrequencyMemoryEnable is gone (2026-09-12) --
     Settings.Operating.FrequencyMemoryEnable. *)
-  (* FreqPollRate is gone (2026-09-12) --
-    Settings.Operating.FrequencyPollRate. {KK1L: 6.71a} *)
+  (* FreqPollRate is gone (2026-09-12) -- it became
+    Settings.Operating.FrequencyPollRate, and is now per radio,
+    TRadioDefinition.FrequencyPollRate (issue 235 step 3). {KK1L: 6.71a} *)
   GridSquareListShown                   : boolean;
 
 

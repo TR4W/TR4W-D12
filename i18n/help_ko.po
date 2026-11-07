@@ -577,8 +577,8 @@ msgstr "설정할 때 TRUE, 이 모수는 빈도 기억을 가능하게 할 것�
 #. Config command: FREQUENCY POLL RATE   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
-msgid "Values: Integer 10 to 1000 (msec). This command tells TR4W how frequently to poll the rig for a new frequency. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr "값: 정수 10 ~ 1000 (msec). 이 명령은 TR4W에게 새로운 주파수에 대한 의장을 오염시키는 방법을 자주 알려줍니다. 값은 밀리 초에 있으며 허용되는 값은 범위 10에서 1000입니다."
+msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
+msgstr ""
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
