@@ -36,8 +36,9 @@ unit uRadioEditForm;
 
   POPULATION.  The port and radio-type combos depend on what is plugged into
   the machine and what the registry holds, neither of which can be expressed in
-  a .fmx.  AddComboItem marks the items it creates as not Stored, so a save in
-  the designer can never freeze one machine's hardware into the resource.
+  a .fmx.  The .lfm declares no items for them, and items added at run time
+  are never written back into the resource (the IDE only streams what the
+  designer holds), so one machine's hardware cannot be frozen into it.
 
   CAPTIONS ARE THE DESIGNER'S, in English (NY4I 2026-08-06).  What you type in
   the Object Inspector is what ships in the English build -- there is no code to

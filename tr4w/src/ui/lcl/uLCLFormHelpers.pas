@@ -449,9 +449,14 @@ function  NavTagOf(const aNode: TTreeNode): integer;
 
 procedure AddListItem(const aList: TListBox; const aText, aTag: string);
 procedure ClearListItems(const aList: TListBox);
-// Clears a tagged COMBO -- items and tags together. Never call aCombo.Clear
-// directly: it empties Items and leaves the tag list behind, after which
-// SelectedTag returns a stale tag from the previous fill. See the implementation.
+// A TAGGED CONTROL'S Items.Objects[] BELONGS TO THESE HELPERS: they test each
+// slot with `is`, so a control read by SelectedTag / SelectByTag / HasTag /
+// SelectedListTag must never be filled with AddObject or Items.Assign.
+//
+// Clears a tagged COMBO and frees its rows' tags. Each row carries its tag in
+// its own Objects[] slot (issue 216), so a raw aCombo.Clear cannot hand out a
+// stale tag -- but it leaves the tags owned by the combo until the next clear
+// through here. See the implementation.
 procedure ClearComboItems(const aCombo: TComboBox);
 function  SelectedListTag(const aList: TListBox): string;
 procedure SetListItemText(const aList: TListBox; const aIndex: integer;
@@ -665,7 +670,7 @@ uses
    uTR4WConfigFile,     // TR4WConfigFileName, Load/SaveWindowLayout
    SysUtils,
    StrUtils,
-   MainUnit,   // logger -- SyncedTags reports a desynced tag list
+   MainUnit,   // logger -- the minimum-size report
    Log4D,
    uRadioConfigStore,
    uRadioRegistry,
@@ -806,130 +811,120 @@ end;
 
 { ------------------------------------------------------------- helpers ---- }
 
-{ ---------------------------------------------------------------------------
-  COMBO ITEM TAGS.
+(* ---------------------------------------------------------------------------
+  ITEM TAGS: THE IDENTITY IS IN THE ROW (issue 216).
 
   FMX gave every list item a TagString, so a combo could carry a registry id or
-  a radio name alongside the text the operator reads.  The LCL's
-  TComboBox.Items is a plain TStrings: it has Objects[] for a TObject and
-  nothing for a string.
+  a radio name alongside the text the operator reads.  The LCL's Items is a
+  TStrings, whose own per-row slot is Objects[].
 
   The tag must stay a STRING and must never become an index.  That is not a
-  preference -- the comment the FMX version carried says index arithmetic
-  against a list whose contents depend on what hardware is plugged in is how the
-  legacy port combo grew its bugs, and these lists are populated at runtime from
-  this machine's COM ports and the radio registry.
+  preference -- index arithmetic against a list whose contents depend on what
+  hardware is plugged in is how the legacy port combo grew its bugs, and these
+  lists are populated at runtime from this machine's COM ports and the radio
+  registry.
 
-  So each combo gets a TComboTags companion holding a parallel TStringList.  It
-  is a TComponent OWNED BY THE COMBO, which is what makes the lifetime correct
-  with no explicit teardown anywhere: destroying the combo destroys the tags
-  with it.  It is looked up by name, so populating a combo twice reuses the one
-  holder rather than growing a second.
---------------------------------------------------------------------------- }
+  UNTIL ISSUE 216 THE TAGS WERE A SECOND LIST BESIDE THE CONTROL -- a
+  TStringList in a companion component -- and every defect in this area was
+  the two lists disagreeing: a raw Clear (2026-08-31: a new station profile
+  could not be selected), a Delete, an Insert, Sorted, design-time items.  A
+  check squared them up and logged an Error after the fact.
+
+  NOW EACH ROW CARRIES A TItemTag IN ITS OWN Objects[] SLOT, so the control
+  holds its data and a desync is unrepresentable: whatever moves, sorts, deletes
+  or clears a row moves, sorts, deletes or clears its tag with it, on every
+  widget set (each one's Items keeps a row's object -- Win32 as the item data,
+  and Put keeps it across a text change).  A row added straight to Items has
+  no TItemTag and reads as '', never as a neighbour's tag.
+
+  THE TAG IS OWNED BY THE CONTROL (a TComponent with the control as Owner), so
+  the lifetime needs no teardown anywhere: destroying the control destroys its
+  tags.  ClearComboItems / ClearListItems free them at once; a raw Clear only
+  leaves them unreferenced until the next helper clear or the control's end --
+  never matched, because nothing in Items points at them any more.
+
+  A typed object checked with `is`, not an integer dressed as a pointer: the
+  same shape as the DX console's TConsoleLineKind (pointer audit P9).
+--------------------------------------------------------------------------- *)
 
 type
-   TComboTags = class(TComponent)
+   TItemTag = class(TComponent)
+   private
+      FTagString: string;
    public
-      Tags: TStringList;
-      Reported: boolean;   // desync already reported once -- do not spam the log
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+      constructor CreateTag(const aOwner: TComponent; const aTag: string);
+      property TagString: string read FTagString;
    end;
 
-const
-   COMBO_TAGS_NAME = 'TR4WComboTags';
-
-constructor TComboTags.Create(aOwner: TComponent);
+constructor TItemTag.CreateTag(const aOwner: TComponent; const aTag: string);
 begin
    inherited Create(aOwner);
-   Name := COMBO_TAGS_NAME;
-   Tags := TStringList.Create;
+   FTagString := aTag;
 end;
 
-destructor TComboTags.Destroy;
-begin
-   FreeAndNil(Tags);
-   inherited Destroy;
-end;
-
-// The tag list for this combo, created on first use.
-function TagsOf(const aOwner: TWinControl): TStringList;
+(* The tag row aIndex carries, or '' for a row that is not there or was added
+  without one.  The one reader of Objects[] for a tagged control. *)
+function TagOfRow(const aItems: TStrings; const aIndex: integer): string;
 var
-   holder: TComponent;
+   item: TObject;
 begin
-   holder := aOwner.FindComponent(COMBO_TAGS_NAME);
-   if holder = nil then
-      begin
-      holder := TComboTags.Create(aOwner);
-      end;
-   Result := TComboTags(holder).Tags;
-end;
-
-
-{ THE TAG LIST AND THE ITEM LIST ARE TWO SEPARATE OBJECTS, and nothing in the
-  type system keeps them the same length.  They go out of step the moment
-  anything fills or empties the control WITHOUT coming through this unit.
-
-  A raw Items.Clear is the one that actually shipped (2026-08-31: a newly
-  created station profile could not be selected, because RefreshProfileCombo
-  called cbxProfile.Clear -- which empties Items ONLY -- and the stale tags
-  stayed behind, so the rebuild appended on top of them and SelectByTag matched
-  the new name at an index past the end of the rebuilt item list).
-
-  IT IS CHECKED HERE, WHERE THE MAPPING IS USED, RATHER THAN BY A LINT, because
-  a lint can only enumerate the spellings someone thought of.  Items.Delete,
-  Items.Insert, assigning Items.Text, Sorted := True and design-time items left
-  in the .lfm all produce exactly the same desync and none of them is a .Clear.
-
-  It fails LOUD and then CLOSED: the mismatch is reported once per control, and
-  the tag list is squared up to the item count -- padded with empty tags or
-  truncated -- so every index is in range afterwards.  A padded slot matches no
-  tag, so SelectByTag takes its defined fallback (item 0) instead of selecting a
-  silently wrong row, and SelectedTag returns '' rather than another row's tag. }
-function SyncedTags(const aOwner: TWinControl; const aItemCount: integer;
-                    const aWhere: string): TStringList;
-var
-   holder: TComponent;
-begin
-   Result := TagsOf(aOwner);
-   if Result.Count = aItemCount then
+   Result := '';
+   if (aIndex < 0) or (aIndex >= aItems.Count) then
       begin
       Exit;
       end;
-
-   holder := aOwner.FindComponent(COMBO_TAGS_NAME);
-   if (holder <> nil) and (not TComboTags(holder).Reported) then
+   item := aItems.Objects[aIndex];
+   if item is TItemTag then
       begin
-      TComboTags(holder).Reported := True;
-      if logger <> nil then
+      Result := TItemTag(item).TagString;
+      end;
+end;
+
+(* The first row whose tag matches, case-insensitively, or -1.  UnicodeSameText
+  because both sides are UnicodeString here; SysUtils.SameText takes AnsiString
+  in FPC 3.2.2 and would narrow them. *)
+function RowOfTag(const aItems: TStrings; const aTag: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to aItems.Count - 1 do
+      begin
+      if (aItems.Objects[i] is TItemTag) and
+         UnicodeSameText(TagOfRow(aItems, i), aTag) then
          begin
-         logger.Error(Format('%s: tag list out of step with items for %s ' +
-                             '(%d tag(s), %d item(s)).  Something filled or ' +
-                             'emptied this control without using ' +
-                             'AddComboItem/ClearComboItems.',
-                             [aWhere, aOwner.Name, Result.Count, aItemCount]));
+         Result := i;
+         Exit;
          end;
       end;
+end;
 
-   while Result.Count > aItemCount do
+procedure AddTaggedRow(const aControl: TComponent; const aItems: TStrings;
+                       const aText, aTag: string);
+begin
+   aItems.AddObject(aText, TItemTag.CreateTag(aControl, aTag));
+end;
+
+(* Items FIRST, then the tags: at no point does a row point at a freed tag.
+  Every TItemTag the control owns goes, which also collects any a raw Clear
+  left behind, so a control refilled many times never accumulates them. *)
+procedure ClearTaggedRows(const aControl: TComponent; const aItems: TStrings);
+var
+   i: integer;
+begin
+   aItems.Clear;
+   for i := aControl.ComponentCount - 1 downto 0 do
       begin
-      Result.Delete(Result.Count - 1);
-      end;
-   while Result.Count < aItemCount do
-      begin
-      Result.Add('');
+      if aControl.Components[i] is TItemTag then
+         begin
+         aControl.Components[i].Free;
+         end;
       end;
 end;
 
 procedure AddComboItem(const aCombo: TComboBox; const aText, aTag: string);
-var
-   tags: TStringList;
 begin
-   // Squared up BEFORE the append, so a tag added after something else
-   // disturbed the control still lands opposite its own item.
-   tags := SyncedTags(aCombo, aCombo.Items.Count, 'AddComboItem');
-   aCombo.Items.Add(aText);
-   tags.Add(aTag);
+   AddTaggedRow(aCombo, aCombo.Items, aText, aTag);
 end;
 
 type
@@ -986,50 +981,26 @@ end;
 
 procedure AddListItem(const aList: TListBox; const aText, aTag: string);
 begin
-   SyncedTags(aList, aList.Items.Count, 'AddListItem').Add(aTag);
-   aList.Items.Add(aText);
+   AddTaggedRow(aList, aList.Items, aText, aTag);
 end;
 
 procedure ClearListItems(const aList: TListBox);
 begin
-   // BOTH lists, always together -- they are only ever in step because every
-   // mutation goes through this unit.
-   aList.Items.Clear;
-   TagsOf(aList).Clear;
+   ClearTaggedRows(aList, aList.Items);
 end;
 
-{ The combo equivalent, and its absence was a real defect.
-
-  TListBox had ClearListItems from the start; TComboBox did not, so four call
-  sites cleared the combo directly -- cbxType, cbxPort, cbxKeyerPort and the
-  discovery result cbxFound. `TComboBox.Clear` empties Items and knows nothing
-  about the parallel tag list, so every repopulation left the tags one full
-  generation longer than the items.
-
-  What that costs is not a crash: SelectedTag indexes the TAG list by ItemIndex,
-  and the guard there only checks the index is in range. After one repopulation
-  the ranges still overlap, so it returns a STALE TAG from the previous fill --
-  the wrong radio, the wrong COM port, the wrong discovered address, silently and
-  plausibly. Repopulate the radio-type combo a few times and the tag list is
-  hundreds of entries long while the combo shows twenty.
-
-  Everything that empties a tagged combo must come through here. }
+(* Since issue 216 a raw TComboBox.Clear can no longer hand out a stale tag --
+  the tags go with the rows -- but it leaves the cleared rows' TItemTags owned
+  by the combo until the next ClearComboItems.  So everything that empties a
+  tagged combo still comes through here. *)
 procedure ClearComboItems(const aCombo: TComboBox);
 begin
-   aCombo.Items.Clear;
-   TagsOf(aCombo).Clear;
+   ClearTaggedRows(aCombo, aCombo.Items);
 end;
 
 function SelectedListTag(const aList: TListBox): string;
-var
-   tags: TStringList;
 begin
-   Result := '';
-   tags := SyncedTags(aList, aList.Items.Count, 'SelectedListTag');
-   if (aList.ItemIndex >= 0) and (aList.ItemIndex < tags.Count) then
-      begin
-      Result := tags[aList.ItemIndex];
-      end;
+   Result := TagOfRow(aList.Items, aList.ItemIndex);
 end;
 
 // Rewrite one row's text WITHOUT rebuilding the list.  The FMX code was
@@ -1047,53 +1018,27 @@ end;
 // Select the item whose tag matches, or the first item when it is absent.
 procedure SelectByTag(const aCombo: TComboBox; const aTag: string);
 var
-   i: integer;
-   tags: TStringList;
+   row: integer;
 begin
-   tags := SyncedTags(aCombo, aCombo.Items.Count, 'SelectByTag');
-   for i := 0 to tags.Count - 1 do
+   row := RowOfTag(aCombo.Items, aTag);
+   if (row < 0) and (aCombo.Items.Count > 0) then
       begin
-      if SameText(tags[i], aTag) then
-         begin
-         aCombo.ItemIndex := i;
-         Exit;
-         end;
+      row := 0;
       end;
-   if aCombo.Items.Count > 0 then
+   if row >= 0 then
       begin
-      aCombo.ItemIndex := 0;
+      aCombo.ItemIndex := row;
       end;
 end;
 
 function HasTag(const aCombo: TComboBox; const aTag: string): boolean;
-var
-   i: integer;
-   tags: TStringList;
 begin
-   Result := False;
-   tags := SyncedTags(aCombo, aCombo.Items.Count, 'HasTag');
-   for i := 0 to tags.Count - 1 do
-      begin
-      if SameText(tags[i], aTag) then
-         begin
-         Result := True;
-         Exit;
-         end;
-      end;
+   Result := RowOfTag(aCombo.Items, aTag) >= 0;
 end;
 
 function SelectedTag(const aCombo: TComboBox): string;
-var
-   tags: TStringList;
 begin
-   Result := '';
-   tags := SyncedTags(aCombo, aCombo.Items.Count, 'SelectedTag');
-   // Guarded against the TAG list, not just ItemIndex: belt and braces, since
-   // SyncedTags has already squared the two counts up.
-   if (aCombo.ItemIndex >= 0) and (aCombo.ItemIndex < tags.Count) then
-      begin
-      Result := tags[aCombo.ItemIndex];
-      end;
+   Result := TagOfRow(aCombo.Items, aCombo.ItemIndex);
 end;
 
 
@@ -1203,8 +1148,8 @@ end;
 (* ONE FILLER FOR EVERY SERIAL-PORT DROP-DOWN.  There were three copies of this
   loop -- the radio editor filling two combos, the keyer editor, and the rotator
   list in Preferences -- and they had already begun to differ: one cleared with
-  TComboBox.Clear, which leaves AddComboItem's parallel tag list behind and
-  desyncs it.
+  TComboBox.Clear, which then desynced AddComboItem's parallel tag list (the
+  tags are in the rows themselves since issue 216).
 
   THE CAPTION IS FOR THE OPERATOR, THE TAG IS THE CONFIG VALUE.  Storing what is
   displayed would put 'COM17 - Silicon Labs CP210x' into the settings file,
@@ -1286,7 +1231,7 @@ end;
 
 procedure FillStopBitsCombo(const aCombo: TComboBox; const aSelected: integer);
 begin
-   aCombo.Clear;
+   ClearComboItems(aCombo);
    AddComboItem(aCombo, TC_PREFS_NONE, '0');
    AddComboItem(aCombo, '1', '1');
    AddComboItem(aCombo, '2', '2');
@@ -1299,7 +1244,7 @@ const
 var
    i: integer;
 begin
-   aCombo.Clear;
+   ClearComboItems(aCombo);
    for i := Low(RTSDTRROLES) to High(RTSDTRROLES) do
       begin
       AddComboItem(aCombo, RTSDTRROLES[i], RTSDTRROLES[i]);

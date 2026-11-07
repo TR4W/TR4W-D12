@@ -30,6 +30,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-06 -- A DROP-DOWN ROW CARRIES ITS OWN TAG (issue 216, stage A)
+
+Every tagged drop-down and list in Preferences, the radio editor and the keyer editor kept its stored values (a radio id, a COM port, a profile name, a keyer kind) in a second list beside the control. Each row now carries its value in the control's own per-row slot (`Items.Objects[]`). `uTestComboTags` checks this on the Windows widget set, with and without a window. What it cannot check is the other widget sets, or the real dialogs end to end.
+
+- [ ] **Radio editor.** Open the editor and pick a radio type, a CAT port and a keyer port. Click Discover if a radio is attached. Save, then reopen. Each choice is the one you saved, not its neighbour in the list.
+- [ ] **Keyer editor.** Change Kind, WinKeyer mode and sidetone. Save and reopen: the same three values come back. Open the editor twice in a row: no list has doubled.
+- [ ] **Preferences.** Switch the station profile, then add a new profile and select it. The profile list follows your choice. The same goes for the rotator port and the CW output list.
+- [ ] **macOS and Linux (gtk2).** The same three checks. Those widget sets keep a row's value in their own lists, and no test reaches them.
+
+---
+
 ## Added 2026-11-06 -- THE EXTERNAL LOGGER EDITOR LAYS ITSELF OUT FROM MEASUREMENT (issue 232)
 
 The editor's rows used fixed 96-dpi pixels (captions 190 wide, boxes at 200, 42 px rows, Refresh 90 wide). `TExternalLoggersForm.FitLayout` now runs on every show and provider change. The caption column is as wide as the widest caption. Refresh is as wide as its caption needs. Every row is as tall as its tallest control, and the eye is square at its box's height. The status and note lines are as tall as their wrapped text, and the dialog grows (or shrinks back to its designed width) about its centre.

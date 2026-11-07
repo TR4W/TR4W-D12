@@ -485,6 +485,42 @@ placed, or it has no control at all.
 - Nav captions added for this come from `uAppStrings`. The older ones are still
   English literals in `BuildNavTree`, which no catalogue reaches.
 
+## A row's identity lives in the row (issue 216, 2026-11-06)
+
+- **The typed row field is the control's own, per control.** A `TListView`
+  makes its own items: choose their class with `OnCreateItemClass` (Alt-P's
+  `TAltPItem`, `Key: integer`). A `TTreeView` does the same with
+  `OnCreateNodeClass` (`TNavNode`). A `TComboBox` / `TListBox` has neither;
+  its per-row slot is `Items.Objects[]`. Put a REAL object there and read it
+  with `is`, never an integer cast to a pointer.
+- **`AddComboItem` / `AddListItem` put a `TItemTag` in the row's `Objects[]`**,
+  owned by the control. There is no second list any more, so a raw `Clear`,
+  an `Insert`/`Delete`, an `Exchange`/`Move` or `Sorted` cannot desync a tag
+  from its row. A row added straight to `Items` reads `''`. Still empty a
+  tagged control through `ClearComboItems` / `ClearListItems`: they free the
+  tags, while a raw `Clear` leaves them owned (unreferenced) until the next
+  helper clear. A filler REPLACES its list (`uTestComboTags`'s
+  `Test_TheSharedFillersNeverDouble`; Edit QSO's issue 237).
+- **A test that streams a form needing handles calls `Application.Initialize`
+  first.** The widget set registers its window classes there; a handle asked
+  for before that fails with "Cannot find window class". Repeat calls are
+  harmless (`uTestAltPRows.MakeForm`, `uTestComboTags.NewHostForm`).
+- **A `TListView` with no handle drops its FIRST selection** (Lazarus 4.8,
+  traced). With no handle, `SetSelection` writes only its cache (`FSelected`).
+  It sets neither the item's `lisSelected` state nor `lffSelectedValid`, so
+  the next `ItemIndex` read rebuilds the cache from the items, finds none
+  selected and answers -1. Later selections hold. **The loss needs a READ
+  before the handle**: a selection only written before it survives, because
+  `InitializeWnd` re-applies `FSelected` to the new window. No TR4W list view
+  reads its selection before its window shows (Alt-P's fill and
+  `StationsSelectAndShow` only write), so TR4W does not work around it. Do not
+  add such a read; a test that reads before showing gives the view a handle.
+  `uTestAltPRows` pins both halves -- when the first pin fails, the LCL has
+  been fixed.
+- **A tagged control's `Objects[]` belongs to the tag helpers.** They test
+  each slot with `is`, so never `AddObject` or `Items.Assign` into a control
+  you also read with `SelectedTag` / `SelectByTag` / `SelectedListTag`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

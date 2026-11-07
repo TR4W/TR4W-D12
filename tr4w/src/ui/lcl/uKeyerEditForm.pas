@@ -152,7 +152,7 @@ procedure TfrmKeyerEdit.PopulateKindCombo;
 var
    k: TKeyerKind;
 begin
-   cbxKind.Clear;
+   ClearComboItems(cbxKind);
    // Built from the enum, so a device kind added later appears here with no
    // change to this file.
    for k := Low(TKeyerKind) to High(TKeyerKind) do
@@ -172,7 +172,7 @@ begin
    // vocabularies cannot change while TR4W is running.
    cbxWKKeyerMode.Items.BeginUpdate;
    try
-      cbxWKKeyerMode.Clear;
+      ClearComboItems(cbxWKKeyerMode);
       for v in KeyerModeSpellings do
          begin
          AddComboItem(cbxWKKeyerMode, v, v);
@@ -183,7 +183,7 @@ begin
 
    cbxWKSidetone.Items.BeginUpdate;
    try
-      cbxWKSidetone.Clear;
+      ClearComboItems(cbxWKSidetone);
       for v in SidetoneSpellings do
          begin
          AddComboItem(cbxWKSidetone, v, v);

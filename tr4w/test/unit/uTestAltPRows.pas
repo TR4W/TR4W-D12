@@ -36,6 +36,8 @@ type
       procedure Test_NoSelectionIsMinusOne;
       procedure Test_ARefillInAnotherOrderMovesTheKeysWithTheRows;
       procedure Test_TheRowTextStaysBesideItsKey;
+      procedure Test_TheLCLDropsTheFirstSelectionOfAListViewWithNoHandle;
+      procedure Test_AnUnreadSelectionMadeBeforeTheHandleSurvivesIt;
    public
       procedure RunAllTests; override;
    end;
@@ -44,6 +46,7 @@ implementation
 
 uses
    Forms,      (* Application *)
+   ComCtrls,   (* TListView -- the LCL pin *)
    uAltPForm;
 
 (* The four keys that test the edges: -1 (not a function key -- the 'other
@@ -54,11 +57,12 @@ uses
 const
    KEYS: array[0..3] of integer = (11, -1, 35, 0);
 
-(* WITH A WINDOW HANDLE, NEVER SHOWN. Measured: a TListView with no handle
-  drops the FIRST selection made on it (ItemIndex reads -1 afterwards; every
-  later one holds). Selection is the LCL's, not the key's; the cause inside
-  the LCL was not traced. The window the operator opens always has its handle, so the test
-  asks for one rather than pinning the quirk. *)
+(* WITH A WINDOW HANDLE, NEVER SHOWN. A TListView with no handle drops the
+  FIRST selection made on it (ItemIndex reads -1 afterwards; every later one
+  holds). That is the LCL's (traced in issue 216, pinned by
+  Test_TheLCLDropsTheFirstSelectionOfAListViewWithNoHandle below), not the
+  key's; the window the operator opens always has its handle, so these tests
+  ask for one. *)
 procedure MakeForm;
 begin
    (* The widget set registers its window classes here; a handle asked for
@@ -229,6 +233,102 @@ begin
    end;
 end;
 
+(* THE LCL QUIRK THE TESTS ABOVE STEP AROUND, PINNED (issue 216). Lazarus 4.8,
+  lcl/include/customlistview.inc, a non-OwnerData single-select list view with
+  no window:
+
+  1. SetItemIndex(i) calls SetSelection(Items[i]) (line 1766). With no handle,
+     SetSelection only writes the cache FSelected (1801) -- it neither sets
+     the item's lisSelected state (that goes to the widget set, 1802-1804, or
+     through TListItem.SetState, listitem.inc 747) nor includes
+     lffSelectedValid, which only the nil branch does (1798).
+  2. Reading ItemIndex goes through GetSelection (1370-1378 -> 1508). The
+     cache is not marked valid, so it is REBUILT from the items' own states
+     (1523-1547): none is selected, so FSelected becomes nil and the flag is
+     set. ItemIndex reads -1 and the selection is gone.
+  3. From then on the flag is valid, so the next SetSelection's cache write
+     is believed. Every later selection holds -- until something calls
+     InvalidateSelected (460-465; deleting the selected item does, 778) and
+     clears the flag again.
+
+  SO THE LOSS NEEDS A READ BEFORE THE HANDLE. A selection that is only
+  WRITTEN before the handle survives: InitializeWnd re-applies FSelected to
+  the new window (617-618), and the widget set's change notification then
+  sets FSelected and the flag (CNNotify, 377-400) -- pinned by the next test.
+  It is the read in step 2 that throws it away.
+
+  The fix belongs in the LCL (SetSelection should Include lffSelectedValid,
+  or set the item's state, when no handle exists). TR4W does not work around
+  it: checked 2026-11-06, the Alt-P fill (HandleShow -> AltPSelectByKey /
+  AltPSelect) and StationsSelectAndShow only WRITE a selection, and nothing
+  reads ItemIndex or Selected of a list view before its window shows. A new
+  reader before the handle would hit it.
+
+  WHEN THIS TEST FAILS, THE LCL HAS BEEN FIXED: delete it, and MakeForm's
+  HandleNeeded becomes optional. *)
+procedure TAltPRowTests.Test_TheLCLDropsTheFirstSelectionOfAListViewWithNoHandle;
+var
+   lv: TListView;
+   i : integer;
+begin
+   BeginTest('LCL: a list view with no handle drops its first selection (pin)');
+   lv := TListView.Create(nil);
+   try
+      lv.ViewStyle := vsReport;
+      for i := 0 to 2 do
+         begin
+         lv.Items.Add.Caption := AnsiString('row' + IntToStr(i));
+         end;
+      CheckFalse(lv.HandleAllocated, 'the probe must have no window');
+
+      lv.ItemIndex := 1;
+      CheckFalse(lv.Items[1].Selected, 'the item''s own state was set');
+      CheckEquals(-1, lv.ItemIndex, 'the first selection held -- has the LCL been fixed?');
+
+      lv.ItemIndex := 1;
+      CheckEquals(1, lv.ItemIndex, 'the second selection');
+      lv.ItemIndex := 2;
+      CheckEquals(2, lv.ItemIndex, 'a later selection');
+   finally
+      lv.Free;
+   end;
+end;
+
+(* The other half of the trace: a selection WRITTEN before the handle and not
+  read until after it is kept, because InitializeWnd re-applies it. This is
+  the order the Alt-P window uses, so it is the guarantee TR4W relies on. *)
+procedure TAltPRowTests.Test_AnUnreadSelectionMadeBeforeTheHandleSurvivesIt;
+var
+   host: TForm;
+   lv  : TListView;
+   i   : integer;
+begin
+   BeginTest('LCL: a selection written before the handle and read after it holds');
+   if Application <> nil then
+      begin
+      Application.Initialize;
+      end;
+   host := TForm.CreateNew(nil);
+   try
+      host.SetBounds(-10000, -10000, 320, 240);
+      lv           := TListView.Create(host);
+      lv.Parent    := host;
+      lv.ViewStyle := vsReport;
+      for i := 0 to 2 do
+         begin
+         lv.Items.Add.Caption := AnsiString('row' + IntToStr(i));
+         end;
+      CheckFalse(lv.HandleAllocated, 'the probe must start with no window');
+
+      lv.ItemIndex := 1;                   (* written, NOT read *)
+      lv.HandleNeeded;
+      CheckTrue(lv.HandleAllocated, 'the probe has no window');
+      CheckEquals(1, lv.ItemIndex, 'the selection was lost at the handle');
+   finally
+      host.Free;
+   end;
+end;
+
 procedure TAltPRowTests.RunAllTests;
 begin
    Test_EveryRowReportsTheKeyItWasAddedWith;
@@ -238,6 +338,8 @@ begin
    Test_NoSelectionIsMinusOne;
    Test_ARefillInAnotherOrderMovesTheKeysWithTheRows;
    Test_TheRowTextStaysBesideItsKey;
+   Test_TheLCLDropsTheFirstSelectionOfAListViewWithNoHandle;
+   Test_AnUnreadSelectionMadeBeforeTheHandleSurvivesIt;
 end;
 
 end.
