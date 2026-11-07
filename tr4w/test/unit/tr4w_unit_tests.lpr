@@ -83,6 +83,7 @@ uses
    uTestRadioBand       in 'uTestRadioBand.pas',
    uTestComboTags       in 'uTestComboTags.pas',
    uTestAltPRows        in 'uTestAltPRows.pas',
+   uTestListViewSelection in 'uTestListViewSelection.pas',
    uTestLogSearchFilters in 'uTestLogSearchFilters.pas',
    uTestFlowGridCells   in 'uTestFlowGridCells.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
@@ -973,6 +974,7 @@ begin
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TComboTagTests.Create('ComboTags'));
    RegisterSuite(TAltPRowTests.Create('AltPRows'));
+   RegisterSuite(TListViewSelectionTests.Create('ListViewSelection'));
    RegisterSuite(TLogSearchFilterTests.Create('LogSearchFilters'));
    RegisterSuite(TFlowGridCellTests.Create('FlowGridCells'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));

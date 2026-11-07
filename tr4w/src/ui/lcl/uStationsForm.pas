@@ -375,17 +375,16 @@ begin
 end;
 
 procedure StationsSelectAndShow(const aRow: integer);
-var
-   item: TListItem;
 begin
+   (* RowUsable already requires the window, so the helper's handle step is a
+     no-op here; what it brings is the one select-and-scroll every list view
+     shares. *)
    if not RowUsable(aRow) then
       begin
       Exit;
       end;
 
-   item := TR4WStationsForm.lvStations.Items[aRow];
-   TR4WStationsForm.lvStations.Selected := item;
-   item.MakeVisible(False);
+   SelectListViewRow(TR4WStationsForm.lvStations, aRow);
 end;
 
 procedure StationsBeginUpdate;

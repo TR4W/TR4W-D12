@@ -447,6 +447,12 @@ function AskForText(const aCaption, aPrompt: string; var aValue: string): boolea
 procedure UseNavNodes(const aTree: TTreeView);
 function  NavTagOf(const aNode: TTreeNode): integer;
 
+(* SELECT ONE ROW OF A LIST VIEW, IN ITS WINDOW, AND SCROLL IT INTO VIEW.
+  The one way TR4W selects a TListView row (Alt-P, Stations). A row outside
+  the list changes nothing. Why it is not a plain ItemIndex write: see the
+  implementation. *)
+procedure SelectListViewRow(const aView: TCustomListView; const aRow: integer);
+
 procedure AddListItem(const aList: TListBox; const aText, aTag: string);
 procedure ClearListItems(const aList: TListBox);
 // A TAGGED CONTROL'S Items.Objects[] BELONGS TO THESE HELPERS: they test each
@@ -977,6 +983,56 @@ begin
       begin
       Result := 0;
       end;
+end;
+
+(* A TLISTVIEW SELECTION ONLY COUNTS ONCE IT IS IN THE WINDOW (Lazarus 4.8,
+  lcl/include/customlistview.inc).
+
+  With no handle, SetSelection (1773) writes only the private cache FSelected
+  and leaves it unmarked (lffSelectedValid is set by the nil branch alone,
+  1798). Whether that write survives the handle's creation is up to the
+  widget set: InitializeWnd re-applies FSelected (617-618), and Windows and
+  Cocoa keep it, but on gtk2 a selection written before the handle reads -1
+  afterwards (measured on the Linux CI runner, 2026-11-07; pinned in
+  uTestAltPRows). So THE HANDLE COMES FIRST. HandleNeeded is a no-op for a
+  list that is showing; for one that is not, it builds the window now (and
+  its parent's), so the write below goes to the widget set at once
+  (SetSelection, 1802-1804) rather than waiting on InitializeWnd's re-apply.
+  uTestListViewSelection asks the widget which row is selected, both for a
+  list that is showing (the order Alt-P and Stations use) and for one whose
+  rows were added before its window; the Linux CI run is what proves the
+  second on gtk2.
+
+  NIL, THEN THE ROW -- the LCL's own idiom (TListItem.EditCaption,
+  listitem.inc 375-376). SetSelection exits early when FSelected already
+  equals the row (1779), so a cache left pointing at it by any earlier write
+  would make a plain assignment a silent no-op while the window shows no
+  selection. The nil step resets the cache and marks it valid, and the row
+  is then written to the window. The cost: the list raises its change and
+  select events twice (a deselect, then the select). Neither Alt-P nor
+  Stations handles OnSelectItem or OnChange; a list that does must expect
+  the pair. *)
+procedure SelectListViewRow(const aView: TCustomListView; const aRow: integer);
+var
+   row: TListItem;
+begin
+   if (aView = nil)               or
+      (aRow < 0)                  or
+      (aRow >= aView.Items.Count) then
+      begin
+      Exit;
+      end;
+
+   (* A list on no form has no window to build and none to show; it keeps
+     the cache write, which is all such a list can have. *)
+   if GetParentForm(aView) <> nil then
+      begin
+      aView.HandleNeeded;
+      end;
+   row := aView.Items[aRow];
+   aView.Selected := nil;
+   aView.Selected := row;
+   row.MakeVisible(False);
 end;
 
 procedure AddListItem(const aList: TListBox; const aText, aTag: string);

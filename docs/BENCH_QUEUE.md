@@ -30,6 +30,16 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-07 -- ALT-P AND STATIONS OPEN WITH THEIR ROW SELECTED, ON LINUX TOO
+
+On gtk2 a list-view selection written before the list has its window is lost when the window is made (measured on the Linux CI runner; Windows and macOS keep it). Every TR4W list-view selection now goes through `uLCLFormHelpers.SelectListViewRow`, which makes the window first and then writes the row into it. `uTestListViewSelection` shows both real forms off screen and asks the WIDGET which row is selected, with no Linux exception. It passes on Windows; the Linux CI run is its first real test. A screen is still needed to see the highlight.
+
+- [ ] **Linux (gtk2), Alt-P.** Open Alt-P: one row is highlighted, F1 (or the key you right-clicked on the function-key bar). Edit F6, close, open Alt-P again: F6 is highlighted. Change the bank: the first row of the new bank is highlighted. Enter / double-click edits THAT row.
+- [ ] **Linux (gtk2), Stations.** With the Stations window open, log or enter a call: its row is highlighted and scrolled into view. Enter a second call: the highlight moves, and only one row is highlighted.
+- [ ] **Windows and macOS.** The same two checks, to confirm nothing changed.
+
+---
+
 ## Added 2026-11-07 -- THE NEEDS STRIPS AND THE TOTALS GRID SHOW ONLY THE CONTEST'S BANDS (NY4I, Florida QP)
 
 "QSO needs for <call>" listed 160 and 80 in the Florida QSO Party, whose class uses 40/20/15/10 only (the Mult strip already left them blank). The QSO strip's mask now goes through `CreditedBands`, as the Mult strip's does; the totals grid's 160 and 80 headers are blank for such a contest. Columns do not move: an unused band is an empty cell / unnamed column in its usual place. Pinned by `uTestStatusAndNotice` (`Test_TheQSONeedsStripOffersOnlyTheContestsBands`, `Test_TheTotalsHeadersNameOnlyTheContestsBands`) on the streamed form; nothing has looked at a running window.

@@ -61,8 +61,9 @@ const
   FIRST selection made on it (ItemIndex reads -1 afterwards; every later one
   holds). That is the LCL's (traced in issue 216, pinned by
   Test_TheLCLDropsTheFirstSelectionOfAListViewWithNoHandle below), not the
-  key's; the window the operator opens always has its handle, so these tests
-  ask for one. *)
+  key's; the window the operator opens always has its handle when it is
+  filled, so these tests ask for one. (The seam's selection would create it
+  anyway -- SelectListViewRow.) *)
 procedure MakeForm;
 begin
    (* The widget set registers its window classes here; a handle asked for
@@ -258,11 +259,11 @@ end;
   It is the read in step 2 that throws it away.
 
   The fix belongs in the LCL (SetSelection should Include lffSelectedValid,
-  or set the item's state, when no handle exists). TR4W does not work around
-  it: checked 2026-11-06, the Alt-P fill (HandleShow -> AltPSelectByKey /
-  AltPSelect) and StationsSelectAndShow only WRITE a selection, and nothing
-  reads ItemIndex or Selected of a list view before its window shows. A new
-  reader before the handle would hit it.
+  or set the item's state, when no handle exists). TR4W does not depend on
+  it either way: every list-view selection goes through
+  uLCLFormHelpers.SelectListViewRow, which gives the list its window BEFORE
+  it writes, so no selection is ever cache-only. What the program does is
+  pinned, on every platform, by uTestListViewSelection.
 
   WHEN THIS TEST FAILS, THE LCL HAS BEEN FIXED: delete it, and MakeForm's
   HandleNeeded becomes optional. *)
@@ -295,8 +296,9 @@ begin
 end;
 
 (* The other half of the trace: a selection WRITTEN before the handle and not
-  read until after it is kept, because InitializeWnd re-applies it. This is
-  the order the Alt-P window uses, so it is the guarantee TR4W relies on. *)
+  read until after it is kept, because InitializeWnd re-applies it -- on
+  Windows and Cocoa. It documents the LCL, and TR4W relies on it nowhere:
+  SelectListViewRow never writes before the handle (uTestListViewSelection). *)
 procedure TAltPRowTests.Test_AnUnreadSelectionMadeBeforeTheHandleSurvivesIt;
 var
    host: TForm;
@@ -325,8 +327,10 @@ begin
       CheckTrue(lv.HandleAllocated, 'the probe has no window');
       (* Measured on the Linux CI runner (Linux gtk2, 2026-11-07): the handle's
         InitializeWnd does not re-apply the selection there, so it reads -1.
-        Windows and Cocoa keep it. The Alt-P window therefore may open with no
-        row selected on Linux; that is a widget-set difference, not pinned. *)
+        Windows and Cocoa keep it. A widget-set difference in the LCL, so it is
+        not pinned there; the program does not write a selection that way
+        (SelectListViewRow), and uTestListViewSelection asserts the windows on
+        every platform. *)
       {$IFNDEF LINUX}
       CheckEquals(1, lv.ItemIndex, 'the selection was lost at the handle');
       {$ENDIF}

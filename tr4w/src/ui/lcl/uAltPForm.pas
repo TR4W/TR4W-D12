@@ -158,7 +158,7 @@ implementation
 
 uses
    Graphics,          { TFont.Pitch -- fpFixed }
-   uLCLFormHelpers;   { ApplyContentMinimumSize }
+   uLCLFormHelpers;   (* ApplyContentMinimumSize, SelectListViewRow *)
 
 procedure ShowAltPWindow;
 begin
@@ -250,8 +250,10 @@ begin
       Exit;
       end;
 
-   lv.ItemIndex := aIndex;
-   lv.Items[aIndex].MakeVisible(False);
+   (* Into the list's WINDOW, whenever this is called -- see
+     uLCLFormHelpers.SelectListViewRow for why an ItemIndex write is not
+     enough off Windows. *)
+   SelectListViewRow(lv, aIndex);
 end;
 
 function AltPSelectedIndex: integer;
@@ -298,8 +300,7 @@ begin
       begin
       if KeyOfRow(lv.Items[i]) = aKey then
          begin
-         lv.ItemIndex := i;
-         lv.Items[i].MakeVisible(False);
+         SelectListViewRow(lv, i);
          Result := True;
          Exit;
          end;

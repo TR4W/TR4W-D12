@@ -517,14 +517,15 @@ placed, or it has no control at all.
   traced). With no handle, `SetSelection` writes only its cache (`FSelected`).
   It sets neither the item's `lisSelected` state nor `lffSelectedValid`, so
   the next `ItemIndex` read rebuilds the cache from the items, finds none
-  selected and answers -1. Later selections hold. **The loss needs a READ
-  before the handle**: a selection only written before it survives, because
-  `InitializeWnd` re-applies `FSelected` to the new window. No TR4W list view
-  reads its selection before its window shows (Alt-P's fill and
-  `StationsSelectAndShow` only write), so TR4W does not work around it. Do not
-  add such a read; a test that reads before showing gives the view a handle.
-  `uTestAltPRows` pins both halves -- when the first pin fails, the LCL has
-  been fixed.
+  selected and answers -1. Later selections hold. On Windows and Cocoa a
+  selection only WRITTEN before the handle survives, because `InitializeWnd`
+  re-applies `FSelected`; **on gtk2 it is lost too** (the Linux runner,
+  2026-11-07). So every TR4W list-view selection goes through
+  `uLCLFormHelpers.SelectListViewRow`, which makes the window before it
+  writes. `uTestListViewSelection` asserts the widget's own selection on
+  every platform; `uTestAltPRows` pins the raw LCL (its handle-survival
+  check is skipped on Linux) -- when the first pin fails, the LCL has been
+  fixed.
 - **A tagged control's `Objects[]` belongs to the tag helpers.** They test
   each slot with `is`, so never `AddObject` or `Items.Assign` into a control
   you also read with `SelectedTag` / `SelectByTag` / `SelectedListTag`.
