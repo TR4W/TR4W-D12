@@ -2332,6 +2332,9 @@ begin
         begin
         if FileRead(h, Spot, SizeOf(TSpotRecord)) = SizeOf(TSpotRecord) then
            begin
+           (* A FILE WRITTEN BEFORE issue 12 holds padding where FWorkedMult
+             now is; the next multiplier re-ask sets it from the log. *)
+           Spot.FWorkedMult := False;
            SpotsList.AddSpot(Spot, False);
            end;
         end;

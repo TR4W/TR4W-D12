@@ -443,3 +443,41 @@ happens on the main thread, true before and after.
 2. the pivot to `Application.Run`;
 3. this -- then the same pattern for the radio, external-logger and WinKey threads,
    which share the shape and the HWND dependency.
+
+## 7. A BACKUP SPOT -- WORKED MULTIPLIER, NOT A DUPE (issue 12, 2026-11-07)
+
+A spot has three states, not two. **New mult** (`FMult`, red `M`), **worked mult**
+(`FWorkedMult`, the multiplier is already in the log on this band/mode but the call
+is not a dupe, so the station is a backup; flat fill, letter `B`) and **dupe**
+(`FDupe`, yellow `D`). The flags are never set together, and a dupe overrides both
+in the cell.
+
+- **One routine decides.** `EditableLog.DetermineMultStatus` returns (needed,
+  worked); `DetermineIfNewMult`, `DetermineIfWorkedMult` and
+  `DetermineSpotMultStatus` (the spot form, which reads the comment when CLUSTER
+  SPOT COMMENT MULTIPLIER is on) all derive from it, and `ProcessDX` and
+  `UpdateSpotsMultiplierStatus` call the spot form, so the live spot and the
+  re-ask after a log change cannot disagree.
+- **"Not needed" is NOT "worked".** `GetMultArray` answers 0 for both "worked on
+  every band" and "no multiplier could be named" (unknown country, an unlisted
+  section, Sweepstakes with no comment and no call history). `GetMultArrayResolved`
+  adds `aResolved`, set when a country, zone, prefix or domestic key was found, and
+  worked = resolved and not needed. Without it every unnameable call would be a
+  backup.
+- **Sweepstakes counts a section once per contest**: its class states no
+  `cfMultByBand`, so `Settings.Mult.ByBand` is False and the key is `AllBands`. A
+  section worked on 20 m is a backup on every band. Per-band contests answer per
+  band (a section worked on 20 m is still NEW on 40 m). Pinned by
+  `Test_Worked_*` in `uTestSpotCommentMultiplier`.
+- **`MULTS ONLY` does not show a worked-mult spot** (its filter is `FMult or FCQ`).
+- **Colour:** `BAND MAP WORKED MULT COLOR` (`Settings.BandMap.WorkedMultColor`), a
+  `tr4wColorsSA` spelling, default `ORANGE` (`trOrange`, added to the END of the
+  palette -- colours are stored by spelling). Shown in Preferences > Band Map >
+  Window and tuning. `uSpots.WorkedMultColor` resolves it for both the band map and
+  the Telnet window (`tstReceivedWorkedMult`, drawn in that colour). The `M` and
+  `D` colours are NOT configurable (hard-coded red and yellow); nothing was
+  changed there.
+- **The record did not grow.** `FWorkedMult` sits in the tail padding of
+  `TSpotRecord`, so `SizeOf(TNetDXSpot)` (pinned at 106 by `uTestNetWireSizes`)
+  and `bandmap.bin` are unchanged. It is LOCAL knowledge: the network receiver and
+  the band map file reader clear it, and the next multiplier re-ask sets it.

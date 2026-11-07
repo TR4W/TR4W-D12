@@ -116,6 +116,17 @@ You own how spots reach TR4W and how they are shown.
   line that begins `DX de `. The corpus also holds `NY-NLI`, `FL-NFL` and
   `+-FL-NFL` words, which are single unknown words, not sections.
 
+- **A SPOT HAS THREE MULTIPLIER STATES, NOT TWO** (issue 12, 2026-11-07): new mult
+  (`FMult`, red `M`), WORKED mult (`FWorkedMult`: the multiplier is worked on this
+  band/mode, the call is not a dupe -- a backup; orange `B`, colour BAND MAP WORKED
+  MULT COLOR) and dupe. One routine, `EditableLog.DetermineMultStatus`, gives both
+  answers; the spot callers use `DetermineSpotMultStatus`. **"Not needed" is not
+  "worked"**: `GetMultArray` returns 0 for "no multiplier could be named" too, so
+  worked needs `GetMultArrayResolved`'s `aResolved`. The byte lives in
+  `TSpotRecord`'s tail padding so the 106-byte `TNetDXSpot` and `bandmap.bin` did
+  not change; it is local knowledge and the network and file readers clear it.
+  Details: `docs/BANDMAP_LCL_DESIGN.md` section 7.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`

@@ -356,6 +356,11 @@ begin
                          RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
    RegisterModelSetting( 'bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
                          RS_BANDMAP_SWAPPACKETSPOTRADIOS);
+   (* ISSUE 12: the colour of a spot whose multiplier is already worked but whose
+     call is not a dupe. Its vocabulary is registered from uCFG against
+     tr4wColorsSA, as ALERT COLOR's is. *)
+   RegisterModelSetting( 'bandmap.workedMultColor',           'BAND MAP WORKED MULT COLOR',
+                         RS_BANDMAP_WORKEDMULTCOLOR);
    RegisterModelSetting( 'logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
                          RS_LOGGING_CHECKLOGFILESIZE);
    RegisterModelSetting( 'logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',

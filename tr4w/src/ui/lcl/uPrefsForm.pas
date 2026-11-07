@@ -1584,6 +1584,7 @@ begin
    aTable.Place('bandmap.ctrlj.bandMapItemHeight',        NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('bandmap.ctrlj.bandMapItemWidth',         NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('bandmap.ctrlj.bandMapSplitMode',         NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
+   aTable.Place('bandmap.workedMultColor',                NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('operating.ctrlj.qzbRandomOffsetEnable',  NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
 
    (* ------------------------------------------------------ CW Settings *)

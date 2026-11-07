@@ -718,7 +718,11 @@ type
     trWhite,
 
     trBtnFace,
-    trAlert
+    trAlert,
+    (* ADDED AT THE END, 2026-11-07 (issue 12), the way trBtnFace and trAlert
+      were: every store keeps a colour by its SPELLING, so a new tail member
+      re-points nothing. It is the default of BAND MAP WORKED MULT COLOR. *)
+    trOrange
     );
   Ptr4wColors = ^tr4wColors;
 //http://code.google.com/p/doctype/wiki/CSSColors
@@ -753,7 +757,8 @@ const
     'WHITE',
 
     'BTNFACE',
-    'ALERT'
+    'ALERT',
+    'ORANGE'
     );
 
 var
@@ -783,7 +788,8 @@ var
     $FFFFFF,
 
     clbtnface,
-    $0000FF  //ALERT (RED)
+    $0000FF, //ALERT (RED)
+    $00A5FF  //ORANGE (BGR of RGB 255,165,0)
     );
 type
   TMainWindowElementInfo = record
@@ -2448,6 +2454,19 @@ type
 //    {01}FLoudSignal: boolean;
     {01}FCQ: boolean;
     {01}FWARCBand: boolean;
+
+    (* THE MULTIPLIER IS ALREADY WORKED, BUT THIS CALL IS NOT A DUPE -- a backup
+      (issue 12). Set only when the spot's multiplier was RESOLVED and is not
+      needed, and never together with FDupe or FMult. LOCAL KNOWLEDGE: it is
+      asked of this station's log, so it is not meaningful from the network or
+      from the band map file, and both readers clear it.
+
+      PLACED LAST ON PURPOSE: the record is naturally aligned and ends in
+      padding, so one more byte fits in it and SizeOf(TSpotRecord) -- the
+      multi-op wire size (uTestNetWireSizes) and bandmap.bin's record -- does
+      not move. If that test fails, the byte did NOT fit: bump
+      BandMapFileVersion and say so to multi-op-network. *)
+    {01}FWorkedMult: boolean;
 
     //    FInMaster: boolean;
     //    FDistanceFromDXToSource: integer;

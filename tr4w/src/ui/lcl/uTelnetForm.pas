@@ -265,7 +265,8 @@ implementation
 uses
    VC,                { tw_TELNETWINDOW_INDEX, tr4wColorsArray }
    uTR4WStrings,      { TC_CONFIGURE_ELLIPSIS, TC_NODXCLUSTERSDEFINED }
-   MainUnit,          { CloseTR4WWindow }
+   uSpots,            { WorkedMultColor -- the band map's colour for a backup }
+   MainUnit,         { CloseTR4WWindow }
    uPlatformFonts,    { MonospaceFontName -- see HandleShow }
    uLCLFormHelpers;   (* LeaveFormUnowned -- a tool window has no owner
                         form, issue #1; ApplyContentMinimumSize -- see
@@ -299,7 +300,10 @@ var
   grounds that a status line is not an event.  Errors stay red. }
 const
    TelnetStringColor: array[TelnetStringType] of tr4wColors =
-      (trBlack, trBlue, trBlack, trLightGray, trRed, trRed, trBlack);
+      (trBlack, trBlue, trBlack, trLightGray, trRed, trRed, trBlack,
+       (* tstReceivedWorkedMult: the entry is the default only -- the colour is
+          BAND MAP WORKED MULT COLOR, read at draw time (ConsoleDrawItem). *)
+       trOrange);
 
 { One guard for every routine below, and it has to be BOTH tests.  The form is
   nil on the headless export path, and a control exists from the moment it is
@@ -879,7 +883,14 @@ begin
       end;
    cv.FillRect(ARect);
 
-   cv.Font.Color := tr4wColorsArray[TelnetStringColor[kind]];
+   if kind = tstReceivedWorkedMult then
+      begin
+      cv.Font.Color := tr4wColorsArray[WorkedMultColor];
+      end
+   else
+      begin
+      cv.Font.Color := tr4wColorsArray[TelnetStringColor[kind]];
+      end;
    cv.Brush.Style := bsClear;
    cv.TextOut(ARect.Left + 5, ARect.Top, lstConsole.Items[Index]);
    cv.Brush.Style := bsSolid;

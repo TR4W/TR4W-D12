@@ -647,6 +647,15 @@ begin
         TCanvas.GradientFill is native, needs no HDC, and has no type to clash. }
       grdSpots.Canvas.GradientFill(flagRect, clRed, clWhite, gdHorizontal);
       flagText := 'M';
+      end
+   else if aSpot.FWorkedMult then
+      begin
+      (* A BACKUP (issue 12): the multiplier is worked, the call is not a dupe.
+         A flat fill in BAND MAP WORKED MULT COLOR, and B. Never with M, and a
+         dupe still overrides it below. *)
+      grdSpots.Canvas.Brush.Color := tr4wColorsArray[WorkedMultColor];
+      grdSpots.Canvas.FillRect(flagRect);
+      flagText := 'B';
       end;
 
    if aSpot.FQSXFrequency <> 0 then

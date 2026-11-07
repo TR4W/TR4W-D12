@@ -158,6 +158,14 @@ type
   leaf and therefore unit-tested; this is only the spot-shaped wrapper. }
 function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
 
+(* THE COLOUR OF A WORKED-MULTIPLIER SPOT (issue 12) -- BAND MAP WORKED MULT
+   COLOR, a tr4wColorsSA spelling, as a palette member. A spelling the palette
+   does not hold (a hand-edited file) gives trOrange, the default, so a spot is
+   never drawn in no colour. The band map and the telnet window both ask THIS,
+   so they cannot disagree. *)
+function WorkedMultColorOf(const aToken: string): tr4wColors;
+function WorkedMultColor: tr4wColors;
+
 var
   SpotsList: TDXSpotsList;
   SpotsDisplayed: integer;
@@ -180,6 +188,26 @@ uses
 function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
 begin
    Result := AgeSeconds(aSpot.FSysTime, UTCNow);
+end;
+
+function WorkedMultColorOf(const aToken: string): tr4wColors;
+var
+  c: tr4wColors;
+begin
+  Result := trOrange;
+  for c := Low(tr4wColors) to High(tr4wColors) do
+     begin
+     if UnicodeSameText(tr4wColorsSA[c], Trim(aToken)) then
+        begin
+        Result := c;
+        Exit;
+        end;
+     end;
+end;
+
+function WorkedMultColor: tr4wColors;
+begin
+  Result := WorkedMultColorOf(Settings.BandMap.WorkedMultColor);
 end;
 
 { TStringList }
@@ -669,7 +697,12 @@ begin
         // log); only the write-back is locked, so the poller never sees a
         // half-written record.  Only the main thread changes the list, so
         // entry i is still the one that was read.
-        Spot.FMult := VisibleLog.DetermineIfNewSpotMult(Spot);
+        VisibleLog.DetermineSpotMultStatus(Spot, Spot.FMult, Spot.FWorkedMult);
+        (* A DUPE IS A DUPE, NOT A BACKUP (issue 12). *)
+        if Spot.FDupe then
+           begin
+           Spot.FWorkedMult := False;
+           end;
         FCriticalSection.Enter;
         try
            FList[i] := Spot;
@@ -739,6 +772,7 @@ begin
            (Spot.FCall = RXCall) then
            begin
            Spot.FDupe := True;
+           Spot.FWorkedMult := False;
            FList[i] := Spot;
            end;
         end;

@@ -30,6 +30,18 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-07 -- A WORKED MULTIPLIER SHOWS AS A BACKUP, "B" IN ORANGE (issue 12)
+
+A cluster spot whose multiplier is already worked, but whose call is not a dupe, is now a third state: orange `B` on the band map, orange text in the Telnet window. New multiplier stays red `M`, a dupe stays yellow `D`. The unit tests pin the decision (Sweepstakes sections count once across bands; per-band contests count per band; a dupe is never a backup). They cannot see the screen. Preferences > Band Map > Window and tuning has the new colour row. For Sweepstakes the section reaches TR4W either from the call history or from the spot comment, so turn CLUSTER SPOT COMMENT MULTIPLIER on if the spots carry sections.
+
+- [ ] **Sweepstakes (CW).** With CLUSTER SPOT COMMENT MULTIPLIER on, take a spot whose section you have not worked: red `M`. Work a different station in that section. The first spot's `M` becomes an orange `B`, on every band (a section counts once). Work the spotted call itself: its `B` becomes a yellow `D`.
+- [ ] **A spot with no section** (no comment, no call history) shows neither `M` nor `B`.
+- [ ] **A per-band contest** (e.g. a QSO party with multipliers by band): a multiplier worked on 20 m is `B` on 20 m and still `M` on 40 m.
+- [ ] **The colour.** Change BAND MAP WORKED MULT COLOR in Preferences: the `B` and the Telnet lines change colour. Is orange readable on your band map background?
+- [ ] **Multi-op.** Two stations sharing spots: each shows `B` from ITS OWN log, not the sender's.
+
+---
+
 ## Added 2026-11-06 -- A DROP-DOWN ROW CARRIES ITS OWN TAG (issue 216, stage A)
 
 Every tagged drop-down and list in Preferences, the radio editor and the keyer editor kept its stored values (a radio id, a COM port, a profile name, a keyer kind) in a second list beside the control. Each row now carries its value in the control's own per-row slot (`Items.Objects[]`). `uTestComboTags` checks this on the Windows widget set, with and without a window. What it cannot check is the other widget sets, or the real dialogs end to end.

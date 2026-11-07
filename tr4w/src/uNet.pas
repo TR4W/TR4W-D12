@@ -911,6 +911,9 @@ var
               if Settings.Network.ShareSpots then
                  begin
                  NetDXSpotPtr := @NetBuffer[Bufindex];
+                 (* THE SENDER'S LOG, NOT OURS (issue 12): FWorkedMult sits in
+                   what was padding, so an older station sends whatever was there. *)
+                 NetDXSpotPtr^.dsSpot.FWorkedMult := False;
                  SpotsList.AddSpot(NetDXSpotPtr^.dsSpot, False);
                  DisplayBandMap;
                  end

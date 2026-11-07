@@ -69,6 +69,10 @@ type
       procedure Test_Mult_CallHistoryOverridesADifferingComment;
       procedure Test_Key_DomesticKeyOfQTHIsTheListsSpelling;
       procedure Test_Cost_HintForAWholeBandMapIsCheap;
+      procedure Test_Worked_PerBandMultiplier;
+      procedure Test_Worked_SweepstakesCountsOnceAcrossBands;
+      procedure Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
+      procedure Test_Worked_ColourToken;
    end;
 
 implementation
@@ -98,7 +102,9 @@ uses
    LogStuff,
    PostUnit,
    FCONTEST,
-   MainUnit;
+   MainUnit,
+   (* SpotsList, WorkedMultColorOf -- issue 12. *)
+   uSpots;
 
 const
    (* REAL LINES of corpus_test_data/local_test_data/dxcluster, byte for byte. *)
@@ -629,6 +635,147 @@ begin
    end;
 end;
 
+(* ISSUE 12: A WORKED MULTIPLIER ON A CALL THAT IS NOT A DUPE -- a backup.
+
+   NEEDED and WORKED are the two answers of one routine, DetermineMultStatus,
+   so they cannot both be True; and a call whose multiplier cannot be named at
+   all is NEITHER, which is the case a plain "not needed" would get wrong. *)
+procedure TSpotCommentMultiplierTests.Test_Worked_PerBandMultiplier;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Worked_PerBandMultiplier');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      hint := SpotSectionHint('K1DW', 'CQ NTX');
+      CheckTrue(hint <> '', 'the hint is a key');
+
+      (* NEW MULT: needed, so not flagged worked. *)
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckTrue(needed, 'unworked NTX is needed on 20 m');
+      CheckFalse(worked, 'and so is not a backup');
+      CheckFalse(VisibleLog.DetermineIfWorkedMult('K1DW', Band20, CW, hint), 'DetermineIfWorkedMult agrees');
+
+      (* NO MULTIPLIER NAMED: neither. The empty hint is Sweepstakes with no
+         comment and no call history -- "not needed" is true and "worked" is not. *)
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, '', needed, worked);
+      CheckFalse(needed, 'no hint: not needed');
+      CheckFalse(worked, 'no hint: and NOT worked either');
+
+      (* WORKED ON 20 M, PER BAND: a backup on 20 m, and still NEEDED on 40 m. *)
+      LogWorked('W5XYZ', 'NTX', Band20);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(needed, 'NTX worked on 20 m is not needed there');
+      CheckTrue(worked, 'NTX worked on 20 m: a backup on 20 m');
+      CheckTrue(VisibleLog.DetermineIfWorkedMult('K1DW', Band20, CW, hint), 'DetermineIfWorkedMult agrees');
+      VisibleLog.DetermineMultStatus('K1DW', Band40, CW, hint, needed, worked);
+      CheckTrue(needed, 'NTX is still needed on 40 m');
+      CheckFalse(worked, 'and is not a backup there');
+      (* ANOTHER SECTION IS UNAFFECTED. *)
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, SpotSectionHint('K1DW', 'CQ NLI'), needed, worked);
+      CheckTrue(needed, 'NLI is needed on 20 m');
+      CheckFalse(worked, 'NLI is not worked');
+   finally
+      RestoreSession;
+   end;
+end;
+
+procedure TSpotCommentMultiplierTests.Test_Worked_SweepstakesCountsOnceAcrossBands;
+var
+   hint: string;
+   needed: boolean;
+   worked: boolean;
+begin
+   BeginTest('Test_Worked_SweepstakesCountsOnceAcrossBands');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      (* THE SESSION CAN SAY PER BAND; SWEEPSTAKES DOES NOT: its contest class
+         states no cfMultByBand, so FoundContest leaves Settings.Mult.ByBand
+         False. Set it as the contest does. *)
+      Settings.Mult.ByBand := False;
+      hint := SpotSectionHint('K1DW', 'CQ NTX');
+
+      VisibleLog.DetermineMultStatus('K1DW', Band40, CW, hint, needed, worked);
+      CheckTrue(needed, 'unworked: needed');
+      CheckFalse(worked, 'unworked: not a backup');
+
+      LogWorked('W5XYZ', 'NTX', Band20);
+      VisibleLog.DetermineMultStatus('K1DW', Band20, CW, hint, needed, worked);
+      CheckFalse(needed, 'worked on 20 m: not needed on 20 m');
+      CheckTrue(worked, 'worked on 20 m: a backup on 20 m');
+      (* ONCE PER CONTEST: the section worked on 20 m is a backup on 40 m and
+         on 10 m too, and is never needed again. *)
+      VisibleLog.DetermineMultStatus('K1DW', Band40, CW, hint, needed, worked);
+      CheckFalse(needed, 'and not needed on 40 m');
+      CheckTrue(worked, 'a backup on 40 m');
+      VisibleLog.DetermineMultStatus('K1DW', Band10, CW, hint, needed, worked);
+      CheckFalse(needed, 'and not needed on 10 m');
+      CheckTrue(worked, 'a backup on 10 m');
+   finally
+      RestoreSession;
+   end;
+end;
+
+procedure TSpotCommentMultiplierTests.Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
+var
+   spot: TSpotRecord;
+begin
+   BeginTest('Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      Settings.Cluster.SpotCommentMultiplier := True;
+      CheckTrue(ParseDXSpotLine('DX de AC0C-1-#:   7037.0  K1DW        CW 21 dB 14 WPM CQ         NTX 0127Z', spot),
+                'the spot decodes');
+      spot.FBand := Band40;
+      spot.FMode := CW;
+      spot.FSysTime := Now;
+      SpotsList.Clear;
+      SpotsList.AddSpot(spot, False);
+      CheckEquals(1, SpotsList.Count, 'the spot is on the map');
+
+      (* NEW MULT: flagged M, never B. *)
+      SpotsList.UpdateSpotsMultiplierStatus;
+      CheckTrue(SpotsList.Get(0).FMult, 'NTX unworked: a new multiplier');
+      CheckFalse(SpotsList.Get(0).FWorkedMult, 'and not a backup');
+
+      (* WORKED MULT, NOT A DUPE: B, not M. *)
+      LogWorked('W5XYZ', 'NTX', Band40);
+      SpotsList.UpdateSpotsMultiplierStatus;
+      CheckFalse(SpotsList.Get(0).FMult, 'NTX worked: no longer a new multiplier');
+      CheckTrue(SpotsList.Get(0).FWorkedMult, 'a backup');
+      CheckFalse(SpotsList.Get(0).FDupe, 'and not a dupe');
+
+      (* THE CALL ITSELF IS NOW WORKED: a dupe is a dupe, never a backup. *)
+      SpotsList.UpdateSpotsDupeStatus('K1DW', Band40, CW);
+      CheckTrue(SpotsList.Get(0).FDupe, 'the call is a dupe');
+      CheckFalse(SpotsList.Get(0).FWorkedMult, 'a dupe is not a backup');
+      SpotsList.UpdateSpotsMultiplierStatus;
+      CheckFalse(SpotsList.Get(0).FWorkedMult, 'and the re-ask keeps it so');
+   finally
+      SpotsList.Clear;
+      RestoreSession;
+   end;
+end;
+
+procedure TSpotCommentMultiplierTests.Test_Worked_ColourToken;
+begin
+   BeginTest('Test_Worked_ColourToken');
+   CheckEquals('ORANGE', Settings.BandMap.WorkedMultColor, 'the default token');
+   CheckTrue(WorkedMultColorOf('ORANGE') = trOrange, 'ORANGE');
+   CheckTrue(WorkedMultColorOf('orange') = trOrange, 'any case');
+   CheckTrue(WorkedMultColorOf('LIGHT BLUE') = trLightBlue, 'another colour of the palette');
+   CheckTrue(WorkedMultColorOf('RED') = trRed, 'RED');
+   CheckTrue(WorkedMultColorOf('not a colour') = trOrange, 'a spelling the palette lacks gives the default');
+   CheckTrue(WorkedMultColorOf('') = trOrange, 'empty gives the default');
+   CheckTrue(WorkedMultColor = trOrange, 'the setting as it stands');
+   CheckEquals('ORANGE', tr4wColorsSA[trOrange], 'the palette spells it');
+end;
+
 procedure TSpotCommentMultiplierTests.RunAllTests;
 begin
    Test_Tokens_RealCommentsFromTheIssue;
@@ -645,6 +792,10 @@ begin
    Test_Mult_SpotRoutineAndTheSetting;
    Test_Mult_CallHistoryOverridesADifferingComment;
    Test_Cost_HintForAWholeBandMapIsCheap;
+   Test_Worked_PerBandMultiplier;
+   Test_Worked_SweepstakesCountsOnceAcrossBands;
+   Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
+   Test_Worked_ColourToken;
 end;
 
 end.

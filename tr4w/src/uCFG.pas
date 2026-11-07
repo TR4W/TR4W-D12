@@ -1858,5 +1858,7 @@ initialization
      that used to live in CheckCommand matched against, so the vocabulary, the
      refusal and the effect cannot disagree about what 'LIGHT CYAN' means. *)
    RegisterSettingAllowedValues('MainWindow.AlertColor', tr4wColorsSA);
+   (* AND THE WORKED-MULTIPLIER COLOUR, from the same table (issue 12). *)
+   RegisterSettingAllowedValues('BandMap.WorkedMultColor', tr4wColorsSA);
 
 end.

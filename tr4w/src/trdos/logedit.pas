@@ -95,6 +95,15 @@ type
     function GetMultArray(Call: CallString; Mode: ModeType; TempMult: Str10):
       Cardinal;
 
+    (* GetMultArray AND "DID IT RESOLVE A MULTIPLIER AT ALL" (issue 12). A zero
+       result means two different things -- the multiplier is worked on every
+       band, or the call has none we can name (unknown country, an unlisted
+       section) -- and only the first is a WORKED multiplier. aResolved is True
+       when a country, zone, prefix or domestic key was found for the call.
+       GetMultArray is this routine with the answer thrown away. *)
+    function GetMultArrayResolved(Call: CallString; Mode: ModeType;
+      TempMult: Str10; out aResolved: boolean): Cardinal;
+
     procedure CreateModeSpecificMultiplierInfo(
       Call: CallString;
       TempMult: Str10;
@@ -124,6 +133,26 @@ type
        disagree. With CLUSTER SPOT COMMENT MULTIPLIER off it is
        DetermineIfNewMult on the call, band and mode alone. *)
     function DetermineIfNewSpotMult(const Spot: TSpotRecord): boolean;
+
+    (* THE THREE-WAY ANSWER BEHIND THE BAND MAP'S "B" (issue 12): needed (a new
+       multiplier), WORKED (its multiplier is already in the log on this
+       band/mode, so a station here is a backup) or neither. It is the routine
+       DetermineIfNewMult and DetermineIfNewSpotMult are derived from, so the
+       three cannot disagree. aSectionHint is DetermineIfNewMult's. Read-only:
+       it changes no multiplier sheet. *)
+    procedure DetermineMultStatus(Call: CallString; Band: BandType;
+      Mode: ModeType; const aSectionHint: string; out aNeeded, aWorked: boolean);
+
+    (* True when the call's multiplier is already worked on the band/mode and
+       the call itself is not asked about -- the caller says dupe. *)
+    function DetermineIfWorkedMult(Call: CallString; Band: BandType; Mode:
+      ModeType; const SectionHint: string = ''): boolean;
+
+    (* A cluster spot's status, the way DetermineIfNewSpotMult reads its
+       comment: ONE routine for the live spot and the re-ask after a log
+       change. aWorked is never True when aNeeded is. *)
+    procedure DetermineSpotMultStatus(const Spot: TSpotRecord; out aNeeded,
+      aWorked: boolean);
 
     procedure DisplayGridMap(Band: BandType; Mode: ModeType);
 
@@ -849,11 +878,34 @@ function EditableLog.DetermineIfNewMult(Call: CallString; Band: BandType; Mode:
   mult string.  Otherwise, a null string will be returned.  }
 
 var
+  Needed: boolean;
+  Worked: boolean;
+begin
+  DetermineMultStatus(Call, Band, Mode, SectionHint, Needed, Worked);
+  Result := Needed;
+end;
+
+function EditableLog.DetermineIfWorkedMult(Call: CallString; Band: BandType;
+  Mode: ModeType; const SectionHint: string = ''): boolean;
+var
+  Needed: boolean;
+begin
+  DetermineMultStatus(Call, Band, Mode, SectionHint, Needed, Result);
+end;
+
+procedure EditableLog.DetermineMultStatus(Call: CallString; Band: BandType;
+  Mode: ModeType; const aSectionHint: string; out aNeeded, aWorked: boolean);
+
+var
   OutputValue: Cardinal;
+  Resolved: boolean;
   TempMode: ModeType;
   TempBand: BandType;
 begin
+  aNeeded := False;
+  aWorked := False;
   OutputValue := 0;
+  Resolved := False;
   if not Settings.Mult.ByMode then
      begin
      TempMode := Both
@@ -879,25 +931,36 @@ begin
   if (not ContestCreditsBand(ContestIdentity(Contest), Band)) or
      (not ContestCreditsModeKey(ContestIdentity(Contest), Mode)) then
      begin
-     Result := False;
      Exit;
      end;
 
-  OutputValue := GetMultArray(Call, TempMode, Str10(SectionHint));
-  Result := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
+  OutputValue := GetMultArrayResolved(Call, TempMode, Str10(aSectionHint), Resolved);
+  aNeeded := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
+  (* WORKED = a multiplier was named and it is not needed. A zero from "no
+     multiplier could be named" is neither -- Resolved is what tells them apart. *)
+  aWorked := Resolved and (not aNeeded);
 end;
 
-function EditableLog.DetermineIfNewSpotMult(const Spot: TSpotRecord): boolean;
+procedure EditableLog.DetermineSpotMultStatus(const Spot: TSpotRecord;
+  out aNeeded, aWorked: boolean);
 begin
   if Settings.Cluster.SpotCommentMultiplier then
      begin
-     Result := DetermineIfNewMult(Spot.FCall, Spot.FBand, Spot.FMode,
-                                  SpotSectionHint(Spot.FCall, SpotNotesText(Spot)));
+     DetermineMultStatus(Spot.FCall, Spot.FBand, Spot.FMode,
+                         SpotSectionHint(Spot.FCall, SpotNotesText(Spot)),
+                         aNeeded, aWorked);
      end
   else
      begin
-     Result := DetermineIfNewMult(Spot.FCall, Spot.FBand, Spot.FMode);
+     DetermineMultStatus(Spot.FCall, Spot.FBand, Spot.FMode, '', aNeeded, aWorked);
      end;
+end;
+
+function EditableLog.DetermineIfNewSpotMult(const Spot: TSpotRecord): boolean;
+var
+  Worked: boolean;
+begin
+  DetermineSpotMultStatus(Spot, Result, Worked);
 end;
 
 procedure EditableLog.CreateModeSpecificDomesticMultiplierInfo(DomQTH: Str20;
@@ -1124,6 +1187,14 @@ end;
 function EditableLog.GetMultArray(Call: CallString; Mode: ModeType; TempMult:
   Str10): Cardinal;
 var
+  Resolved: boolean;
+begin
+  Result := GetMultArrayResolved(Call, Mode, TempMult, Resolved);
+end;
+
+function EditableLog.GetMultArrayResolved(Call: CallString; Mode: ModeType;
+  TempMult: Str10; out aResolved: boolean): Cardinal;
+var
   TempCardinal: Cardinal;
   TempRXData: ContestExchange;
   Index: integer;
@@ -1142,6 +1213,7 @@ var
   zoneList: TZoneMultiplierZones;
 begin
   Result := 0;
+  aResolved := False;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
   contestRules := ActiveContest(Contest);
   countsDX := ContestHasDXMultiplier(contestRules);
@@ -1165,6 +1237,7 @@ begin
      GetDXQTH(contestRules, TempRXData);
      if TempRXData.DXQTH <> '' then
         begin
+        aResolved := True;
 
         TempCardinal := $FFFFFFFF xor
           mo.DXMultsArray[TempRXData.QTH.Country][Mode];
@@ -1209,6 +1282,7 @@ begin
         TempCardinal := $FFFFFFFF xor
           mo.ZoneMultsArray[{TempRXData.QTH.}Zone][Mode];
         Result := TempCardinal or Result;
+        aResolved := aResolved or (Zone <> 0);
         end;
      end;
 
@@ -1218,6 +1292,7 @@ begin
      SetPrefix(contestRules, TempRXData);
      if TempRXData.Prefix <> '' then
         begin
+        aResolved := True;
         if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
            begin
            TempCardinal := $FFFFFFFF xor mo.PrfList.Dupes[Index][Mode];
@@ -1256,6 +1331,7 @@ begin
 
      if TempDomMult <> '' then
         begin
+        aResolved := True;
         if mo.DomList.FindMult(TempDomMult, Index) then
            begin
            if DomesticMultByBand = dmbbAllBand then

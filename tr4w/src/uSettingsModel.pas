@@ -1248,6 +1248,7 @@ type
       FItemWidth: TBandMapItemWidth;
       FSize: TBandMapSize;
       FSplitMode: BandMapSplitModeType;
+      FWorkedMultColor: string;
       procedure SetSplitMode(aValue: BandMapSplitModeType);
       procedure SetAllBands(aValue: boolean);
       procedure SetAllModes(aValue: boolean);
@@ -1291,6 +1292,16 @@ type
         the band-map redraw, so its setter raises like DisplayLimit's. *)
       property SplitMode: BandMapSplitModeType
          read FSplitMode write SetSplitMode;
+      (* THE COLOUR OF A WORKED-MULTIPLIER SPOT -- BAND MAP WORKED MULT COLOR
+        (issue 12). A spot whose multiplier is already worked, but whose call is
+        not a dupe, so a station that can be reworked as a backup: the band map
+        paints it this colour with a B. New to the program (there was no colour
+        setting for the M or the D, which the band map draws red and yellow).
+
+        A TOKEN, on ALERT COLOR's pattern: the spellings are VC's
+        tr4wColorsSA, registered from uCFG as the allowed values, so the
+        default is written out as 'ORANGE' rather than reaching VC from here. *)
+      property WorkedMultColor: string read FWorkedMultColor write FWorkedMultColor;
 
       (* THE THREE BELOW CARRIED crP: 0 AND crJ: 1 -- no redraw, restart
         required -- so they are plain field writes with no notification.
@@ -4655,6 +4666,7 @@ begin
    FGuardBand        := 0;
    // logwind commented its default as ByCutoffFrequency, and zero is it.
    FSplitMode        := ByCutoffFrequency;
+   FWorkedMultColor  := 'ORANGE';
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.
