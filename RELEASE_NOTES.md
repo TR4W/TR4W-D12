@@ -44,14 +44,68 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
-#### Online Scoring (HamScore, RTC)
 
+---
+
+## 5.0.x — November 2026
+
+### 5.0.37 (2026-11-07) - NY4I
+
+#### External logging
+
+- Club Log is now an external logger, beside DXKeeper and World Radio League.
+  You can keep several loggers, in the order you choose; each new QSO, edit and
+  delete goes to every one that is switched on.
+- Preferences > External Logger is now the editor: Add a logger, right-click to
+  edit it, drag rows to reorder, and tick Enabled. A Connection column shows
+  whether each logger is active.
+- Switching a logger on or off, or reordering, takes effect when you press Save,
+  with no restart. Changing a key, host or logbook still needs a restart, and
+  the row says so.
+- The logger editor shows only the rows its provider needs. World Radio League
+  asks for a key and a logbook name. The separate World Radio League setup
+  window is gone.
+- When the certificate bundle needed for secure connections is missing, TR4W
+  now says so instead of failing quietly.
 - The score posted to online scoring no longer counts each multiplier more
   than once. A one-band CW log of eight grids was reported to the scorer as
   sixteen multipliers; it now sends one row for each band you worked, all
   modes together, and a single summary row, the same shape DXLog sends.
 - Grid-square multipliers (RTC and the VHF contests) are now labelled as grid
   squares in the posted score, not as states.
+- World Radio League setup: if a key is already saved, your logbooks load as
+  soon as the form opens, so you no longer have to press Validate first. If a
+  key is rejected, or you edit it, the logbook list is cleared.
+
+#### Contests
+
+- Sweepstakes: a number touching a precedence (A99, 99A) is always read as the
+  serial. When an entry cannot be told apart, TR4W refuses it and says how to
+  resolve it, and an entry with no check or no section says so.
+- NAQP: the QTH and the name may be typed in either order.
+- IARU HF: the same-zone point is scored against the contact's own ITU zone,
+  never a stated MY ZONE. A remembered zone alone no longer makes a station an
+  HQ (this also applies to WRTC).
+- Black Sea Cup scores the same-zone point against your ITU zone. Every contest
+  that counts ITU zones now sends the ITU zone on the air, in the CQ and S&P
+  exchanges and the function-key messages.
+- Minnesota QSO Party: the 2027 sponsor rules.
+- The "Mult needs" header and strip name the multiplier (the section, the
+  county, the call's letter), not the remembered exchange, and a prior contact's
+  zone now wins over the zone computed from the call.
+- DX cluster spots take their section or state from the spot's comment, and a
+  beacon gets no hint.
+- New Contest: a QSO party asks "I am in" an area, then a county list. The 7QP
+  refuses its own states outside the area.
+- WSJT-X: FST4 and FST4W are recognised modes.
+
+#### Radio
+
+- FREQUENCY POLL RATE is now set for each radio, in the radio editor's Advanced
+  tab, instead of once for the station.
+- Elecraft K4 panadapter: the picture follows the radio's own scale, colour
+  range and waterfall height, is cropped to the radio's span, and is held when
+  the link reconnects. TR4W never writes the scale to the radio.
 
 #### Credentials
 
@@ -66,25 +120,37 @@ user-facing — no file paths or source-level jargon.
   settings in that session could delete it. The entry is left alone, and the
   log says it could not be read.
 
-#### External logging
-
-- World Radio League setup: if a key is already saved, your logbooks load as
-  soon as the form opens, so you no longer have to press Validate first.
-- World Radio League setup: if a key is rejected, or you edit it, the logbook
-  list is cleared. It no longer keeps showing logbooks from the previous key.
-
 #### Logging
 
 - The periodic backup now counts QSOs logged since the last backup, so a
   Backup Frequency of 5 backs up after every 5 QSOs logged. Before, it
   followed the running QSO total, so deleting a QSO or rescoring the log could
   trigger a backup early. The Backup Log menu item also restarts the count.
+- Search Log: with an empty box it lists what the log holds, and the Callsign
+  box no longer opens holding the word SEARCH.
+- File > Open Log... now shows the same New Contest window as startup, instead
+  of a plain file picker. Choosing another contest restarts TR4W into it.
+- Edit QSO: the Band and Mode lists no longer double each time the window is
+  reopened.
 
 #### Usability
 
+- Grids across TR4W now fill their frame. Drag a column header to resize it;
+  the width is remembered for you.
+- Preferences: the "More settings" page is gone and every setting now sits on
+  the page for its task. Each setting's help text is its tooltip, tab order
+  follows reading order, and the restart labels now match what really needs a
+  restart (some settings that never took effect have been fixed).
+- Edit QSO and the external logger editor are laid out from the measured size
+  of their text, so a larger font no longer lets drop-downs cover captions
+  (macOS and Linux).
+- Coming back to TR4W puts the main window above its tool windows, and the
+  startup flashing is reduced.
+- The Alt+letter menu mnemonics were removed; they clashed with function keys
+  and with other languages.
+- DVK volume and recording controls open the operating system's sound settings.
 - The window for opening an existing contest or starting a new one now fills
-  its left pane. When no last contest was available, the contest list and the
-  Browse button stayed narrow, so the Year, Call and Last columns were clipped.
+  its left pane, so the Year, Call and Last columns are no longer clipped.
 - The main window's status line (radio, cluster and network messages) now uses
   the window's font, sized so the longest connection message fits its panel. It
   was clipped on Linux. On Windows the text is a little smaller, in Arial
@@ -92,10 +158,21 @@ user-facing — no file paths or source-level jargon.
 - CW Speed Sync and SO2R Enabled are now remembered when you restart. They were
   lost at every start, so the tick box looked saved and the radio went back to
   not syncing its CW speed. An existing configuration keeps the sync its radios
-  already had.
-- Saving the radio settings now applies a changed CW Speed Sync to the running
-  radio at once, without restarting it. Before, it took effect only after
-  Activate Profile.
+  already had. Saving the radio settings applies a changed CW Speed Sync to the
+  running radio at once.
+- "Synchronize time on all computers" was removed.
+
+#### Reliability
+
+- The CW thread, the WinKeyer reader and DVK playback no longer touch the
+  windows directly, which removes a source of rare freezes.
+- Fixed a rare crash on the Icom network radio (shared transmit history).
+
+#### Translations
+
+- Spanish and Portuguese (Brazil) updates from the community reviewers, 115
+  duplicate catalogue entries removed, and lost line breaks restored in eleven
+  translations. Preferences tooltips now exist in 11 more languages.
 
 ---
 
