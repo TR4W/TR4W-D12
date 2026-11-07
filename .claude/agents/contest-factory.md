@@ -1123,7 +1123,14 @@ the target shape, the M-step migration order and the open questions.
   2026-11-05): the QSO's recorded `my_itu_zone` when the row captured its
   station, else the SERVICE `MyITUZone()` (`uContestFactory.SessionMyITUZone`
   -- the one answer the capture and the export's zone also use); 0 is unknown.
-  IARU is its reader; BSCI and OZCR-Z still compare `MyZone` (open).
+  IARU and the Black Sea Cup (issue #225, WA7BNM's "same ITU Zone") are its
+  readers; OZCR-Z still compares `MyZone` ON PURPOSE -- no readable sponsor
+  rule, pinned in `uTestITUZoneContests`, NY4I to rule. **A zone a contest
+  SENDS is `TContestBase.SentZoneText(aStation)`** (issue #225): the ITU zone
+  in a `zmzITUZones` contest, else `MyZoneText` -- the rule
+  `uContestBase.ZoneTextSent`, shared with the export and FoundContest's
+  default CW messages (`uContestFactory.SessionZoneTextSent`). A
+  `CQExchangeDefault` that sends a zone calls it, never `MyZoneText`.
   **A rule may ASK the multiplier sheet read-only: `IsNewMultiplierAnywhere(aQso,
   nmkDomestic | nmkDX)`** (design 7.13) -- the sheet's all-band, both-mode row;
   RSGB 1.8 is its reader (7 for a new multiplier). Never a write, never the

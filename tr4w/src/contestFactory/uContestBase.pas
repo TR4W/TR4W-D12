@@ -374,8 +374,11 @@ type
 
          Added at M7a for CQExchangeDefault: the default CQ exchange LogCfg
          built put the setting's TEXT into the message, and '05' is not '5'.
-         A rule that compares zones reads MyZone; one that SENDS the zone
-         reads this. *)
+         A rule that compares zones reads MyZone. One that SENDS the zone
+         asks TContestBase.SentZoneText(aStation) -- the ITU zone in an
+         ITU-zone contest, else this text (issue 225); a stated MY ZONE is a
+         CQ zone, so reading this directly in an ITU-zone contest sends the
+         wrong number. *)
       MyZoneText: string;
 
       (* THE SESSION'S CONTEST NAME -- Settings.Contest.Name, as set-up and the
@@ -2056,6 +2059,13 @@ type
          unknown; a rule must not treat it as a zone. NEVER Station.MyZone:
          see TMyITUZoneQuery. *)
       function ScoringMyITUZone: integer;
+
+      (* THE ZONE THIS CONTEST SENDS FROM aStation, AS TEXT -- issue 225.
+         uContestBase.ZoneTextSent over this contest's ZoneMultiplierZones
+         and aStation's MyITUZone / MyZoneText: the ITU zone in an ITU-zone
+         contest, else the MY ZONE text. What a CQExchangeDefault that sends
+         a zone sends, so the default CQ message and the export agree. *)
+      function SentZoneText(const aStation: TStationContext): string;
 
       (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
 
@@ -3821,6 +3831,25 @@ function ContestZoneMultiplierCount(aContest: TContestBase): integer;
    TContestBase.ZoneMultiplierZones. nil answers zmzNotCQOrITU. *)
 function ContestZoneMultiplierZones(aContest: TContestBase): TZoneMultiplierZones;
 
+(* THE ZONE A CONTEST SENDS, AS TEXT -- issue 225 (2026-11-06). THE ONE RULE
+   behind what the export prints (PostUnit.ZoneSentForThisContest), the
+   default CW exchange messages FoundContest writes (FCONTEST's
+   TEngineExchangeMessageWriters, through that same function) and the
+   default CQ exchange an ITU-zone class offers (TContestBase.SentZoneText):
+
+      a contest counting ITU zones     the session's ITU zone (aMyITUZone:
+                                       stated MY ITU ZONE, else CTY.DAT's for
+                                       MY CALL) when it answers above 0
+      anything else, or no answer      aMyZoneText, the MY ZONE text as the
+                                       setting holds it ('05' stays '05')
+
+   NEVER the stated MY ZONE in an ITU contest when an ITU zone is known: a
+   stated MY ZONE is a CQ zone (issue 222). The service is asked only for an
+   ITU-zone contest, so a CQ-zone caller pays no CTY lookup. *)
+function ZoneTextSent(aZones: TZoneMultiplierZones;
+                      aMyITUZone: TMyITUZoneQuery;
+                      const aMyZoneText: string): string;
+
 (* DOES aContest NUMBER ITS ZONES FROM ZERO? -- see
    TContestBase.NumbersZonesFromZero. nil answers False. *)
 function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
@@ -4512,6 +4541,26 @@ begin
       end;
 end;
 
+function ZoneTextSent(aZones: TZoneMultiplierZones;
+                      aMyITUZone: TMyITUZoneQuery;
+                      const aMyZoneText: string): string;
+var
+   ituZone: integer;
+begin
+   (* See the declaration. *)
+   if (aZones = zmzITUZones) and
+      Assigned(aMyITUZone)   then
+      begin
+      ituZone := aMyITUZone();
+      if ituZone > 0 then
+         begin
+         Result := IntToStr(ituZone);
+         Exit;
+         end;
+      end;
+   Result := aMyZoneText;
+end;
+
 function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
 begin
    if aContest = nil then
@@ -4937,6 +4986,12 @@ begin
       begin
       Result := 0;
       end;
+end;
+
+function TContestBase.SentZoneText(const aStation: TStationContext): string;
+begin
+   (* See the declaration. *)
+   Result := ZoneTextSent(ZoneMultiplierZones, aStation.MyITUZone, aStation.MyZoneText);
 end;
 
 (* THE STEPS THEMSELVES, against whatever FStation holds now. *)

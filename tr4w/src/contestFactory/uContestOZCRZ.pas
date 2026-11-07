@@ -43,7 +43,21 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING: IARUQSOPointMethod, copied from TContestIARU (design 1.4) -- a
   society station (a domestic QTH) 1; else our own ITU zone 1, our own
   continent 3, elsewhere 5. Our zone is TStationContext.MyZone, the
-  setting converted once, as IARU's class reads it.
+  setting converted once, as IARU's class read it until issue 222.
+
+  STILL Station.MyZone, ON PURPOSE, UNTIL NY4I RULES -- issue 225
+  (2026-11-06). A STATED MY ZONE is a CQ zone, so this compares a received
+  ITU zone with a CQ zone for an operator who typed one; IARU's identical
+  test was moved to TContestBase.ScoringMyITUZone for that reason. But no
+  sponsor text says which zone OZCHR's "own zone" is: none is in the tree,
+  the QRZ.RU entry (182) could not be reached, WA7BNM has no entry and DXLog
+  no file -- not definitive, so the transcribed D7 rule stands. Pinned by
+  uTestITUZoneContests.Test_OZCRZStillComparesTheStatedMyZone; change the
+  two together.
+
+  ITS DEFAULT CQ EXCHANGE DOES SEND THE ITU ZONE (issue 225): that is what
+  its export already prints (PostUnit.ZoneSentForThisContest), and an
+  exchange is not a scoring rule.
 
   SET-UP: the contest name.
 
@@ -52,7 +66,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   (the bytes were 0x3F); NY4I ruled it restored, and D7's first commit still
   held the cp1251 text -- see DescribeSession.
 
-  LogCfg's CQ exchange: 5NN and MY STATE, or 5NN and MY ZONE with no state.
+  LogCfg's CQ exchange: 5NN and MY STATE, or 5NN and the zone this contest
+  sends with no state (SentZoneText -- the ITU zone, issue 225).
 
   NOT A FAMILY. The OZCHR team and individual contests share a name and a
   sponsor, but not a rule: their point methods, domestic and DX multipliers
@@ -308,7 +323,9 @@ begin
       end
    else
       begin
-      Result := ' 5NN ' + aStation.MyZoneText;
+      (* The ZONE THIS CONTEST SENDS -- the ITU zone, never a stated CQ MY
+         ZONE (issue 225); what the export prints. *)
+      Result := ' 5NN ' + SentZoneText(aStation);
       end;
 end;
 

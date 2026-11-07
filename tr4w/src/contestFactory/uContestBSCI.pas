@@ -41,10 +41,27 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   contest matrix is the proof: every line of its record but `contest.class`
   is unchanged.
 
-  SCORING: BSCIQSOPointMethod -- our own zone 1, our continent 3,
+  SCORING: BSCIQSOPointMethod -- our own ITU zone 1, our continent 3,
   elsewhere 5; 10 for a Black Sea country or a station sending a QTH that
-  starts BS. The zone is Station.MyZone: the arm's Val of MY ZONE, which is
-  0 when MY ZONE is not a number -- the IARU class's precedent.
+  starts BS.
+
+  OUR ZONE IS MY ITU ZONE FOR THE QSO -- issue 225 (2026-11-06), as IARU's
+  since issue 222: TContestBase.ScoringMyITUZone, the QSO's recorded
+  my_itu_zone, or for a QSO that recorded no station the session's ITU zone;
+  0 is unknown and earns no same-zone point. It was Station.MyZone (the
+  legacy arm's Val of MY ZONE), which is a CQ zone whenever MY ZONE is
+  STATED. The sponsor rule is definitive: WA7BNM's calendar (ref 470,
+  revised 2026-02-16) -- "1 point per QSO with same ITU Zone, 3 points per
+  QSO with different ITU Zone same continent, 5 points per QSO with
+  different ITU Zone different continent, 10 points per QSO with Black Sea
+  Region countries or BSCC Members"; DXLog's BSCC.txt scores against
+  CONFIG->ITUZONE too. The sponsor's page (bscc.ucoz.ru) could not be
+  reached; the contest is listed inactive since 2019. Pinned by
+  uTestITUZoneContests.
+
+  NOT BUILT, FOR NY4I: DXLog scores an HQ station (an abbreviation, not a
+  zone) 1 point; WA7BNM's text says nothing of HQ points, and this class has
+  no HQ arm (an HQ in a Black Sea country is 10 here). Issue 225.
 
   SET-UP: nothing -- no FoundContest or LogCfg arm named it. *)
 unit uContestBSCI;
@@ -142,10 +159,14 @@ uses
 procedure TContestBSCI.CalculateQSOPoints(var aQso: ContestExchange);
 var
    rxCty: CallString;
+   myITUZone: integer;
 begin
    rxCty := aQso.QTH.CountryID;
 
-   if aQso.Zone = Station.MyZone then
+   (* MY ITU ZONE FOR THIS QSO, never the stated MY ZONE -- issue 225, see
+      the header. 0 is unknown and matches nothing. *)
+   myITUZone := ScoringMyITUZone;
+   if (myITUZone > 0) and (aQso.Zone = myITUZone) then
       begin
       aQso.QSOPoints := 1;
       end

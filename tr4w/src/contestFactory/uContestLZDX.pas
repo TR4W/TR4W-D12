@@ -301,7 +301,9 @@ begin
       end
    else
       begin
-      Result := ' 5NN ' + aStation.MyZoneText;
+      (* The ZONE THIS CONTEST SENDS -- the ITU zone, never a stated CQ MY
+         ZONE (issue 225); what the export prints. *)
+      Result := ' 5NN ' + SentZoneText(aStation);
       end;
 end;
 

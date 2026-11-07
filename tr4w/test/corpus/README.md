@@ -77,7 +77,7 @@ reference. Each field was measured alone through the factory pass
 | field | effect |
 |---|---|
 | `State: FL` | IARU sends `59 FL` instead of D7's `59 8` (score unchanged); General QSO sends `59 FL` |
-| `Zone: 5` | IARU scored W1AW (ITU zone 8) as 3 points instead of 1: 16 instead of D7's 12. **Fixed by issue 222 (2026-11-05)**: IARU's same-zone point is the QSO's own ITU zone, never the stated MY ZONE; re-measured with `Zone: 5` added to a scratch copy of the fixture, the rescore claims 12. The row stays as a warning for the other ITU-zone contests (BSCI, OZCR-Z), which still compare MY ZONE |
+| `Zone: 5` | IARU scored W1AW (ITU zone 8) as 3 points instead of 1: 16 instead of D7's 12. **Fixed by issue 222 (2026-11-05)**: IARU's same-zone point is the QSO's own ITU zone, never the stated MY ZONE; re-measured with `Zone: 5` added to a scratch copy of the fixture, the rescore claims 12. The row stays as a warning: BSCI was fixed the same way by issue 225 (2026-11-06); OZCR-Z still compares MY ZONE (no readable sponsor rule; NY4I to rule) |
 | `Name: TOM` | General QSO sends `59 TOM`, D7's own exchange. The golden corpus records that set as a known divergence for the missing name; how that row would react was not checked |
 
 The frozen `rescored.*` baselines were once taken from the developer's own

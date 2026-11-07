@@ -340,7 +340,7 @@ and link issue #133 (Ontario's and Quebec's headers do).
 |---|---|---|
 | `CountsAsMultiplier(aQso, aKind)` | every QSO counts | URC (MMS is no multiplier) |
 | `ParseReceivedExchange` (call `inherited`) | the plain parse in your format | URC (reads `MMS`), the ARRL VHF runnings (`RequireReceivedGrid`) |
-| `CQExchangeDefault(aStation)` | `''` | Georgia (`' 5NN ' + MyState`, or `DX`) |
+| `CQExchangeDefault(aStation)` | `''` | Georgia (`' 5NN ' + MyState`, or `DX`); a zone is `SentZoneText(aStation)`, never `MyZoneText` -- the ITU zone in an ITU-zone contest (IARU, issue 225) |
 | `DescribeSession(aStation, aSession)` | states nothing | URC (starts in Digital) |
 | `WriteDefaultExchangeMessages(aMessages)` | writes none | URC |
 | `DescribeNewContestPrompts(aPrompts)` | asks a US state party for county/state | URC (MY STATE is the territory code) |

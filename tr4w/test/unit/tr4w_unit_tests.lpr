@@ -741,6 +741,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
    (* Issue 222: IARU's same-zone point is the QSO's own ITU zone. *)
    uTestIARUScoring     in 'uTestIARUScoring.pas',
+   (* Issue 225: the Black Sea Cup's same-zone point is the ITU zone, OZCR-Z's
+      is pinned as transcribed, and an ITU-zone contest's default exchange
+      sends the ITU zone the export prints. *)
+   uTestITUZoneContests in 'uTestITUZoneContests.pas',
    (* P7: the Super Check Partial cell buffer, over the matrix's TRMASTER fixture. *)
    uTestLogSCP          in 'uTestLogSCP.pas',
    (* Issue 89 / audit 6.6: the TNC packet object's spot memory and display
@@ -1000,6 +1004,7 @@ begin
    RegisterSuite(TDXMultiplierKeyTests.Create('DXMultiplierKey'));
    RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
    RegisterSuite(TIARUScoringTests.Create('IARUScoring'));
+   RegisterSuite(TITUZoneContestTests.Create('ITUZoneContests'));
    RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));

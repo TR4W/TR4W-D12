@@ -521,21 +521,13 @@ makes the fix work for the ordinary operator who never heard of the setting
 
 the CQ zone, if neither is available, which is exactly today's behaviour. *)
 function ZoneSentForThisContest(aContest: TContestBase): string;
-   var
-      ituZone: integer;
    begin
-   if ContestZoneMultiplierZones(aContest) = zmzITUZones then
-      begin
-      (* The first two steps above are uContestFactory.SessionMyITUZone, the
-        one answer scoring and the my_itu_zone capture share (issue 222). *)
-      ituZone := SessionMyITUZone;
-      if ituZone > 0 then
-         begin
-         Result := IntToStr( ituZone );
-         Exit;
-         end;
-      end;
-   Result := Settings.My.ResolvedZone;
+   (* The three steps above are uContestFactory.SessionZoneTextSent since
+     issue 225 (2026-11-06) -- the first two are SessionMyITUZone, the one
+     answer scoring and the my_itu_zone capture share (issue 222) -- so the
+     default CW exchange messages FoundContest writes send exactly what the
+     export prints. *)
+   Result := SessionZoneTextSent( aContest );
    end;
 
 (* THE RECEIVED QTH A CABRILLO QSO LINE CARRIES -- lifted out of

@@ -131,7 +131,7 @@ function FoundMyStateInDomFile: boolean;
 procedure SetUpNameAndStateExchange;
 procedure SetUpRSTQSONumberExchange;
 procedure SetUpRSTMyStateExchange;
-procedure SetUpRSTMyZoneExchange(aSendsStateAfterZone: boolean);
+procedure SetUpRSTMyZoneExchange(const aZoneText: string; aSendsStateAfterZone: boolean);
 
 implementation
 
@@ -392,20 +392,28 @@ end;
   for this contest, the station's MY ZONE is not what is sent, so the
   transient write would have been ignored and the state dropped.
 
-  So the text is a local, made from the zone THIS CONTEST sends -- the
-  resolved MY ZONE -- and the messages are byte-for-byte what they were.
+  So the text is a local, made from the zone THIS CONTEST sends, and the
+  messages are byte-for-byte what they were.
+
+  THE ZONE IS HANDED IN -- issue 225 (2026-11-06). It was the resolved MY
+  ZONE, a CQ zone when stated, so an ITU-zone contest (IARU, the Black Sea
+  Cup, both OZCHR) sent "599 5" on the air while its log exported ITU zone
+  8. The writer passes uContestFactory.SessionZoneTextSent for the
+  contest being set up -- the export's own answer (PostUnit.
+  ZoneSentForThisContest), which is the resolved MY ZONE for every contest
+  that does not count ITU zones, so theirs are unchanged.
 
   WHETHER THE SENT STATE FOLLOWS THE ZONE IS THE CONTEST'S ANSWER -- M11 S7,
   2026-10-14 (TContestBase.SendsStateAfterZone, CQ WW RTTY's), handed in by
   FoundContest. It was a test of the session's exchange shape,
   RSTZoneAndPossibleDomesticQTH, which CQ WW RTTY alone runs. *)
-procedure SetUpRSTMyZoneExchange(aSendsStateAfterZone: boolean);
+procedure SetUpRSTMyZoneExchange(const aZoneText: string; aSendsStateAfterZone: boolean);
 var
   zoneText: string;
 const
   Code599 = '599';
 begin
-  zoneText := Settings.My.ResolvedZone;
+  zoneText := aZoneText;
 
   if (SentMyState <> '') and aSendsStateAfterZone then
      begin
@@ -478,13 +486,26 @@ end;
   of the state this contest sends. *)
 type
   TEngineExchangeMessageWriters = class(TExchangeMessageWriters)
+  private
+    (* THE CONTEST BEING SET UP -- the object FoundContest asks for its set,
+      handed in so the zone writers send the zone THIS contest sends
+      (issue 225) without a second ActiveContest fetch. Not owned; nil is
+      the classless DUMMYCONTEST, which writes nothing anyway. *)
+    FContest: TContestBase;
   public
+    constructor Create(aContest: TContestBase);
     procedure WriteNameAndState; override;
     procedure WriteRSTQSONumber; override;
     procedure WriteRSTStateOrQSONumber; override;
     procedure WriteRSTZone(aStateAfterZone: boolean); override;
     procedure WriteRSTStateOrZone(aStateAfterZone: boolean); override;
   end;
+
+constructor TEngineExchangeMessageWriters.Create(aContest: TContestBase);
+begin
+  inherited Create;
+  FContest := aContest;
+end;
 
 procedure TEngineExchangeMessageWriters.WriteNameAndState;
 begin
@@ -510,14 +531,14 @@ end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTZone(aStateAfterZone: boolean);
 begin
-  SetUpRSTMyZoneExchange(aStateAfterZone);
+  SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone);
 end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTStateOrZone(aStateAfterZone: boolean);
 begin
   if SentMyState = '' then
      begin
-     SetUpRSTMyZoneExchange(aStateAfterZone);
+     SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone);
      end
   else
      begin
@@ -878,6 +899,11 @@ var
      owned here (M11 S9e part 1). *)
   messages: TExchangeMessageWriters;
 
+  (* The ACTIVE contest, fetched once at the foot for the message writers --
+     asked for its set and handed to the writers for its zone (issue 225).
+     Owned by uContestFactory, never freed here. *)
+  activeObject: TContestBase;
+
   TempDomesticQTHDataFileName: string;
   // i,j                                   : integer;
   // k                                     : str10;
@@ -1010,9 +1036,10 @@ begin
     class: DUMMYCONTEST) writes nothing. The JIDX's refusal of the zone
     messages and CQ WW RTTY's state after the zone are the classes' own
     choices since. *)
-  messages := TEngineExchangeMessageWriters.Create;
+  activeObject := ActiveContest(Contest);
+  messages := TEngineExchangeMessageWriters.Create(activeObject);
   try
-     ContestSetUpDefaultExchangeMessages(ActiveContest(Contest), messages);
+     ContestSetUpDefaultExchangeMessages(activeObject, messages);
   finally
      messages.Free;
      end;

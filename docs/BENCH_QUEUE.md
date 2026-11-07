@@ -145,6 +145,15 @@ The FPC + OpenSSL client moved out of `uHTTPDownload` into `uHttpTransportGeneri
 - [x] **A real Club Log (or WRL) send, and a real download.** With the real DLLs and `cacert.pem` beside the program, log a QSO to a throwaway Club Log account and see it confirmed; Alt-O (CTY) and Help > version check complete. `tr4w.log` shows one `[HTTP] transport: generic` line at the first request (it is an Info line: set `DEBUG LOG LEVEL` to INFO or lower to see it).
 - [ ] **`test\integration\tls-verify-probe` still rejects the four bad certificates** (expired, wrong host, self-signed, untrusted root) and accepts a good host. It goes to badssl.com, so it is hand-run only.
 
+## Added 2026-11-06 -- ITU-ZONE CONTESTS SEND THE ITU ZONE; BLACK SEA CUP SCORES IT (issue 225)
+
+The default CW exchange messages FoundContest writes, and the default CQ exchange of IARU, both OZCHR and LZ DX, send the zone the export prints: the ITU zone (stated MY ITU ZONE, else CTY.DAT's for MY CALL), never a stated CQ MY ZONE. The Black Sea Cup's same-zone point is the QSO's ITU zone (as IARU's). Unit-tested (`uTestITUZoneContests`); nothing drives the message windows or keys a radio.
+
+- [ ] **IARU, CQ zone stated.** From a K/W4 station state MY ZONE 5, leave MY ITU ZONE unset, open a new IARU HF log with no MY STATE. The CQ EXCHANGE and S&P EXCHANGE messages read `599 8`, not `599 5`; the CQ F3 memory and the exchange F4/F5 memories carry `8`. The Cabrillo sent column also says 8.
+- [ ] **MY ITU ZONE stated.** Same, with MY ITU ZONE 7: the messages and the export both say 7.
+- [ ] **CQ WW unchanged.** A CQ WW log at the same station still sends `599 5`.
+- [ ] **Black Sea Cup.** With MY ZONE 5 stated, log W1AW `8`: 1 point; VE3 `4`: 3; F4HQ `27`: 5; LZ1AAA `28`: 10.
+
 ## Added 2026-11-05 -- IARU: THE SAME-ZONE POINT IS THE QSO'S OWN ITU ZONE (issue 222)
 
 Scoring asks the QSO's recorded my_itu_zone, or for the QSO being typed now the session's ITU zone (stated MY ITU ZONE, else CTY.DAT's for MY CALL), and never the stated MY ZONE. Unit-tested (`uTestIARUScoring`) and checked headless (the iaru_hf fixture with `Zone: 5` rescores to 12). What no gate drives is typed live entry.

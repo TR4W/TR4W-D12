@@ -110,6 +110,14 @@ function CurrentStation: TStationContext;
   ITU zone an export sends) -- three copies of this rule until then. *)
 function SessionMyITUZone: integer;
 
+(* THE ZONE aContest SENDS IN THIS SESSION, AS TEXT -- issue 225.
+  uContestBase.ZoneTextSent over aContest's zone list (nil: neither),
+  SessionMyITUZone and the resolved MY ZONE text. The ONE answer behind
+  PostUnit.ZoneSentForThisContest (what the export prints) and the default CW
+  exchange messages FoundContest writes (FCONTEST.SetUpRSTMyZoneExchange), so
+  an ITU-zone contest sends on the air the ITU zone its log exports. *)
+function SessionZoneTextSent(aContest: TContestBase): string;
+
 implementation
 
 uses
@@ -189,6 +197,14 @@ begin
       begin
       Result := ctyGetITUZone(Settings.My.Call);
       end;
+end;
+
+function SessionZoneTextSent(aContest: TContestBase): string;
+begin
+   (* See the declaration. *)
+   Result := ZoneTextSent(ContestZoneMultiplierZones(aContest),
+                          @SessionMyITUZone,
+                          Settings.My.ResolvedZone);
 end;
 
 (* THE ACTIVE CONTEST OBJECT -- see ActiveContest. Declared here, ahead of the

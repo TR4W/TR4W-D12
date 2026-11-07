@@ -225,11 +225,32 @@ else `Station.MyITUZone`, the session service. ONE engine answer,
 CALL, else 0), feeds that service, the `my_itu_zone` capture
 (`LogStoreCurrentMyFacts`) and `PostUnit.ZoneSentForThisContest` -- so a QSO
 scored live (entry scores before the row is written, with no facts) and the same
-row rescored later cannot disagree. 0 is unknown and matches no zone. **Still
-reading `Station.MyZone` for an ITU same-zone test: `TContestBSCI` and
-`TContestOZCRZ`** (both `zmzITUZones`, OZCR-Z copied from IARU) -- open. Every
-continent/country arm reads the live `Station.MyContinent`/`MyCountry`;
-`ScoreQSO` overlays only the grid from the record.
+row rescored later cannot disagree. 0 is unknown and matches no zone.
+`TContestBSCI` reads it too since issue #225 (WA7BNM ref 470: "1 point per QSO
+with same ITU Zone"; DXLog `BSCC.txt` agrees). **`TContestOZCRZ` STILL reads
+`Station.MyZone`, ON PURPOSE**: no sponsor text is readable (none in the tree,
+QRZ.RU 182 unreachable, no WA7BNM entry, no DXLog file), so the transcribed D7
+rule stands, pinned by `uTestITUZoneContests.Test_OZCRZStillComparesTheStatedMyZone`
+until NY4I rules. No other ITU-zone class compares a zone (Croatian, Gagarin,
+LZDX score by country/continent; OZCR-O is 1 a QSO); Jock White's
+`Station.MyZone` is an NZART branch, not a zone. Every continent/country arm
+reads the live `Station.MyContinent`/`MyCountry`; `ScoreQSO` overlays only the
+grid from the record.
+
+**THE ZONE A CONTEST SENDS IS ONE RULE (issue #225, 2026-11-06):**
+`uContestBase.ZoneTextSent(zones, MyITUZone service, MY ZONE text)` -- the ITU
+zone in a `zmzITUZones` contest when it is known, else the MY ZONE text. The
+export (`PostUnit.ZoneSentForThisContest`) and FoundContest's default CW
+exchange messages (`FCONTEST.SetUpRSTMyZoneExchange`, handed the zone by
+`TEngineExchangeMessageWriters`, which holds the contest FoundContest fetched
+once) both ask `uContestFactory.SessionZoneTextSent`; a class's
+`CQExchangeDefault` asks `TContestBase.SentZoneText(aStation)` (IARU, OZCR-Z,
+OZCR-O, LZDX). Before it, a stated CQ `MY ZONE = 5` went on the air as `599 5`
+in IARU while the log exported ITU 8. NOTE the writers overwrite the CQ/S&P
+exchanges unconditionally at FoundContest's foot, so `CQExchangeDefault` only
+fills what is still empty afterwards. **Still open:** WRTC sends a zone
+(`WriteRSTStateOrZone`) but is `NoZoneMults`, so it sends and exports the MY
+ZONE text (a CQ zone when stated) inside IARU HF.
 
 ## `FoundContest` READS STATION STATE, so what it reads must already be set
 
