@@ -631,8 +631,30 @@ function TryParseHexByte(const aText: string; out aValue: integer): boolean;
   so it answers before a form is shown, and nothing the form last painted with
   can leak into it. The text is measured as written -- an accelerator '&'
   counts as a glyph, which over-estimates by one character and never under. *)
+const
+   (* THE ROOM A DROP-DOWN'S OWN CHROME TAKES BESIDE ITS TEXT, at 96 dpi: the
+     frame, the text inset and the arrow (Windows) or the bezel and the
+     up/down arrows (a cocoa NSPopUpButton). A STATED ALLOWANCE, NOT A
+     MEASUREMENT: the LCL cannot report it -- Win32 gives a combo no preferred
+     width at all, and cocoa's fittingSize is computed from the title showing
+     at that moment. 40 is generous on Windows (a 17 px button and a 3 px
+     frame each side) and is the number to correct if the Mac bench shows the
+     text still under the arrows. The layout tests assert against this same
+     constant. Lifted from uEditQSOForm (issue 232). *)
+   DROPDOWN_CHROME_96 = 40;
+
 function TextWidthInFont(const aFont: TFont; const aText: TCaption): integer;
 function WidestText(const aFont: TFont; const aTexts: TStrings): integer;
+(* The height of one line of aText in aFont, by the same bitmap canvas. *)
+function TextHeightInFont(const aFont: TFont; const aText: TCaption): integer;
+
+(* WHAT THE WIDGET SET SAYS A CONTROL WOULD LIKE TO BE, without constraints.
+  0 means "no opinion" -- an edit, a Win32 combo, or a label whose parent has
+  no handle yet (customlabel.inc answers nothing then).
+
+  LIFTED FROM uEditQSOForm (2026-11-06, issue 232) when the External logger
+  editor became its second caller. *)
+procedure ControlPreferredSize(const aControl: TControl; out aWidth, aHeight: integer);
 
 implementation
 
@@ -1349,6 +1371,35 @@ begin
    finally
       probe.Free;
    end;
+end;
+
+function TextHeightInFont(const aFont: TFont; const aText: TCaption): integer;
+var
+   probe: TBitmap;
+begin
+   probe := TBitmap.Create;
+   try
+      probe.SetSize(1, 1);
+      probe.Canvas.Font := aFont;
+      Result := probe.Canvas.TextHeight(aText);
+   finally
+      probe.Free;
+   end;
+end;
+
+procedure ControlPreferredSize(const aControl: TControl; out aWidth, aHeight: integer);
+begin
+   aWidth := 0;
+   aHeight := 0;
+   aControl.GetPreferredSize(aWidth, aHeight, True, True);
+   if aWidth < 0 then
+      begin
+      aWidth := 0;
+      end;
+   if aHeight < 0 then
+      begin
+      aHeight := 0;
+      end;
 end;
 
 { =========================================================== TRadioEditForm = }

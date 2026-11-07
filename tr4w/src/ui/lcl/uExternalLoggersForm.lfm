@@ -9,11 +9,14 @@ object ExternalLoggersForm: TExternalLoggersForm
   ClientWidth = 710
   ClientHeight = 510
   OnCloseQuery = EditorCloseQuery
+  OnShow = EditorShow
   object lblName: TLabel
     Left = 16
     Top = 24
     Width = 190
     Height = 24
+    AutoSize = False
+    Layout = tlCenter
     Caption = 'Name'
   end
   object edtName: TEdit
@@ -28,6 +31,8 @@ object ExternalLoggersForm: TExternalLoggersForm
     Top = 66
     Width = 190
     Height = 24
+    AutoSize = False
+    Layout = tlCenter
     Caption = 'Provider'
   end
   object cbProvider: TComboBox
@@ -50,6 +55,7 @@ object ExternalLoggersForm: TExternalLoggersForm
   end
   object lblFieldStatus: TLabel
     Left = 16
+    Anchors = [akTop, akLeft, akRight]
     Top = 314
     Width = 670
     Height = 20
@@ -68,15 +74,17 @@ object ExternalLoggersForm: TExternalLoggersForm
   end
   object lblNote: TLabel
     Left = 16
+    Anchors = [akTop, akLeft, akRight]
     Top = 384
     Width = 670
     Height = 40
     AutoSize = False
-    Caption = 'Save to Preferences returns this logger to the Preferences window. Click Save there to store it, then restart TR4W to apply. Each logger sends independently.'
+    Caption = '(set at run time from SLoggerEditorNote)'
     WordWrap = True
   end
   object lblStatus: TLabel
     Left = 16
+    Anchors = [akTop, akLeft, akRight]
     Top = 432
     Width = 670
     Height = 20

@@ -363,9 +363,8 @@ the parent changes size. `uPasswordReveal` anchors the eye to its EDIT for that 
 **A test that streams a form and never shows it cannot see geometry.** Position, anchors
 and alignment are applied when the form is shown. `uTestPasswordRevealLayout` shows the
 form off screen (as `uTestNewContestForm` does), calls `Application.ProcessMessages` and
-measures; copy it for any run-time layout. Row constants such as the editor's
-`EDIT_LEFT` / `ROW_HEIGHT` are 96-dpi pixels, not scaled (`Scale96ToForm` is the LCL's
-answer); unmeasured at 150%.
+measures; copy it for any run-time layout. The editor's rows are now laid out from
+measurement (issue 232, next section).
 
 ## Fixed 96-dpi widths do not fit cocoa: lay out from measurement (Edit QSO, 2026-11-06)
 
@@ -385,6 +384,21 @@ answer); unmeasured at 150%.
   `uTestEditQSOLayout` checks it off screen at the default font and at 14 pt for
   overlap, clipping and held widths. It is Windows-measured; the Mac judgement is on
   `BENCH_QUEUE.md`.
+- **The External logger editor follows it** (`TExternalLoggersForm.FitLayout`, issue
+  232): one caption column across Name, Provider and the provider's rows, Refresh sized to
+  its caption, one row height from the tallest control, the eye square at its box's
+  height, wrapped labels as tall as they wrap (a `WordWrap` label anchored left AND right
+  reports its wrapped height through `GetPreferredSize`; only after its parent has a
+  handle). The measuring pieces are shared in `uLCLFormHelpers`: `TextWidthInFont`,
+  `TextHeightInFont`, `WidestText`, `ControlPreferredSize`, `DROPDOWN_CHROME_96`.
+  `uTestExternalLoggerEditorLayout` opens every registered provider at the default font,
+  14 pt, and a form adjusted to 144 ppi (`AutoAdjustLayout`, so `Scale96ToForm` really
+  scales).
+- **On Windows `Scale96ToForm` is the identity today.** `W11.manifest` declares no DPI
+  awareness and `Application.Scaled` is never set, so at 150% Windows stretches the
+  window as a bitmap and the program sees 96 ppi. What outgrows fixed pixels is the FONT
+  (cocoa, gtk2), which is why measuring, not scaling, is the fix. Scale the 96-dpi floors
+  anyway: they are right the day either of those changes.
 - **A reused (`caHide`) form that fills a list on show must REPLACE it** (issue 237).
   Edit QSO appended every band and mode on each open, and Save reads
   `BandType(ItemIndex)`. Clear, or `Items.Assign`, in the routine that fills it.

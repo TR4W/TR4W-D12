@@ -16,7 +16,7 @@ unit uTestEditQSOLayout;
     group, and every control lies inside its parent;
   - no label is clipped: its caption, measured in its own font, fits its width;
   - each drop-down is at least its longest item plus the stated chrome
-    allowance (EDITQSO_COMBO_CHROME_96), and holds that width as a
+    allowance (DROPDOWN_CHROME_96), and holds that width as a
     Constraints.MinWidth, which is what survives cocoa's AutoSize;
   - the date picker, the check boxes and the buttons are at least as wide as
     their widget set prefers;
@@ -181,7 +181,7 @@ begin
       else if ctl is TComboBox then
          begin
          need := WidestText(TComboBox(ctl).Font, TComboBox(ctl).Items) +
-                 aForm.Scale96ToForm(EDITQSO_COMBO_CHROME_96);
+                 aForm.Scale96ToForm(DROPDOWN_CHROME_96);
          CheckTrue(ctl.Width >= need,
             aWhere + ': drop-down holds its longest item plus chrome, need ' +
             IntToStr(need) + ' px: ' + Bounds4(ctl));

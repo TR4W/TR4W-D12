@@ -35,7 +35,7 @@ type
    protected
       procedure Test_Descriptors_PerProvider;
       procedure Test_Descriptors_WRLHasNoAccountOrLogbookIdText;
-      procedure Test_Descriptors_FitThePanel;
+      procedure Test_Descriptors_AtMostTheProviderFieldLimit;
       procedure Test_DefinitionError_KeepsTheOldChecks;
       procedure Test_Json_LogbookNameRoundTripsAndOldLoads;
       procedure Test_Json_DeliveryIdIsPinned;
@@ -247,12 +247,12 @@ begin
    end;
 end;
 
-procedure TExternalLoggerFieldsTests.Test_Descriptors_FitThePanel;
+procedure TExternalLoggerFieldsTests.Test_Descriptors_AtMostTheProviderFieldLimit;
 var
    i: integer;
    fields: TLoggerFieldList;
 begin
-   BeginTest('Descriptors: no provider declares more rows than the editor panel holds');
+   BeginTest('Descriptors: no provider declares more than EXTERNAL_LOGGER_MAX_FIELDS rows');
    for i := 0 to ExternalLoggerProviderCount - 1 do
       begin
       fields := ExternalLoggerRegistration(i).CreateFields;
@@ -667,7 +667,7 @@ procedure TExternalLoggerFieldsTests.RunAllTests;
 begin
    Test_Descriptors_PerProvider;
    Test_Descriptors_WRLHasNoAccountOrLogbookIdText;
-   Test_Descriptors_FitThePanel;
+   Test_Descriptors_AtMostTheProviderFieldLimit;
    Test_DefinitionError_KeepsTheOldChecks;
    Test_Json_LogbookNameRoundTripsAndOldLoads;
    Test_Json_DeliveryIdIsPinned;

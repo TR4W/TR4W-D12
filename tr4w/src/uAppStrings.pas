@@ -956,6 +956,15 @@ resourcestring
    (* Shown for a saved choice whose name was never recorded (a definition
       saved before the editor kept names). It still works. *)
    SLoggerChoiceSaved        = 'Saved choice (refresh to see its name)';
+   (* The editor's note under the Active box. What applies on the Preferences
+      Save and what waits for a restart is issue 233's rule, the one
+      SLoggerGridHint states for the grid. *)
+   SLoggerEditorNote         = 'Save to Preferences returns this logger to the Preferences window. Click Save there to store it; Active takes effect then, with no restart. A logger added since TR4W started, or a changed key, host or logbook, applies after you restart TR4W. Each logger sends independently.';
+   (* The editor's delivery status line for this logger in the open contest
+      log. The five %d are counts. *)
+   SLoggerEditorNoLog        = 'No contest log is open.';
+   SLoggerEditorCounts       = 'Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d';
+   SLoggerEditorNoCounts     = 'Delivery status unavailable';
 
    (* The radio editor refusing a FREQUENCY POLL RATE (issue 235 step 3).
      The two %d are the bounds, 10 and 1000. *)

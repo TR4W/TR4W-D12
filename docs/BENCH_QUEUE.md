@@ -30,13 +30,35 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-06 -- THE EXTERNAL LOGGER EDITOR LAYS ITSELF OUT FROM MEASUREMENT (issue 232)
+
+The editor's rows used fixed 96-dpi pixels (captions 190 wide, boxes at 200, 42 px rows, Refresh 90 wide). `TExternalLoggersForm.FitLayout` now runs on every show and provider change. The caption column is as wide as the widest caption. Refresh is as wide as its caption needs. Every row is as tall as its tallest control, and the eye is square at its box's height. The status and note lines are as tall as their wrapped text, and the dialog grows (or shrinks back to its designed width) about its centre.
+
+`uTestExternalLoggerEditorLayout` opens every registered provider off screen at the default font, at 14 pt, and on a form adjusted to 144 ppi. It checks for overlap, for controls outside their parent, and for clipped captions and buttons. That is on the Windows widget set only.
+
+TR4W's Windows manifest declares no DPI awareness. At 150% Windows therefore stretches the window as a bitmap, and the layout is the 100% one, enlarged.
+
+**The dialog is shorter at 100% by design.** It used to keep empty room for four provider rows, and it is now as tall as the rows the provider has. Every provider has two rows, so the dialog measures 710x358 where it was 710x510. The widths and the left edges are unchanged.
+
+- [ ] **Windows at 150%.** Open the editor for WRL, Club Log and DXKeeper. Check that nothing is cut off and Refresh and the eye are inside the dialog. Also say whether the text is blurry: that comes from the manifest, not this change, but it is worth knowing.
+- [ ] **macOS.** Open the editor for each provider and check these things:
+  - no caption is cut off;
+  - the Logbook drop-down shows its name clear of its arrows;
+  - Refresh, Save to Preferences and Cancel show their whole captions;
+  - the eye sits beside the key box at the box's height;
+  - the note under the check box shows all its lines.
+- [ ] **Linux (gtk2).** The same checks as macOS, on DejaVu Sans.
+- [ ] **Provider change while open.** Switch DXKeeper -> WRL -> Club Log -> DXKeeper. The rows re-fit each time and the dialog does not walk across the screen.
+
+---
+
 ## Added 2026-11-06 -- EDIT QSO LAYS ITSELF OUT FROM MEASURED WIDTHS (NY4I, macOS screenshot)
 
 On the Mac, Band and Mode showed only `10` and `C`, with the up/down arrows over the text. The Date control's drop-down button covered the Zone label, so it read `ne`. `Frequency, Hz`, `Number Sent` and `Number Rcvd` were clipped.
 
 The window now lays its fields out in `TfrmEditQSO.FitLayout`, which runs on every open:
 - Each label column is as wide as its widest caption.
-- Each field column is as wide as its widest need. For a drop-down that is its longest item plus a stated chrome allowance (`EDITQSO_COMBO_CHROME_96` = 40 px at 96 dpi), held as a `MinWidth`. For the date picker it is the picker's own measured width.
+- Each field column is as wide as its widest need. For a drop-down that is its longest item plus a stated chrome allowance (`DROPDOWN_CHROME_96` = 40 px at 96 dpi), held as a `MinWidth`. For the date picker it is the picker's own measured width.
 - The check-box column is as wide as its widest check box or button.
 - Rows are as tall as their tallest control.
 - The window may grow, and it keeps its centre.

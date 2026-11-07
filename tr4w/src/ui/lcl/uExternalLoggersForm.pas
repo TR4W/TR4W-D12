@@ -76,6 +76,7 @@ type
       procedure Accept(Sender: TObject);
       procedure PollLoad(Sender: TObject);
       procedure EditorCloseQuery(Sender: TObject; var aCanClose: boolean);
+      procedure EditorShow(Sender: TObject);
    private
       FConfig: TExternalLoggerConfig;
       FDefinition: TExternalLoggerDefinition;
@@ -112,6 +113,10 @@ type
          its own. *)
       procedure RebuildRows(const aFields: TLoggerFieldList);
       function RowCount: integer;
+      (* Lays the dialog out from what its captions and controls measure
+         (issue 232). Runs on every show and after the rows are rebuilt;
+         running it twice moves nothing. *)
+      procedure FitLayout;
       function FieldEdit(const aKey: string): TEdit;
       function FieldCombo(const aKey: string): TComboBox;
       function FieldRefreshButton(const aKey: string): TButton;
@@ -122,8 +127,10 @@ type
    end;
 
 const
-   (* The fields panel holds this many rows; a provider declaring more is a
-      defect found the first time its editor opens. *)
+   (* A provider declares at most this many rows; one declaring more is a
+      defect found the first time its editor opens. The dialog grows to fit
+      the rows it has (FitLayout), so this is a statement about providers,
+      not about room. *)
    EXTERNAL_LOGGER_MAX_FIELDS = 4;
 
 (* Add (aId = '') or edit one definition of aConfig. True when the operator
@@ -137,13 +144,40 @@ function EditExternalLoggerDefinition(const aConfig: TExternalLoggerConfig;
 function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): boolean;
 
 implementation
-uses uLCLTranslate, uPasswordReveal, uAppStrings, uExternalDelivery, uLogStore;
+uses Graphics, Math, uLCLFormHelpers, uLCLTranslate, uPasswordReveal, uAppStrings,
+   uExternalDelivery, uLogStore;
 {$R *.lfm}
 const
-   ROW_HEIGHT = 42;
-   LABEL_WIDTH = 190;
-   EDIT_LEFT = 200;
-   REFRESH_WIDTH = 90;
+   (* THE DESIGNED GEOMETRY, AT 96 DPI, AND ONLY AS FLOORS (issue 232). These
+      were the row geometry itself -- a 42 px row, captions 190 wide, boxes
+      at 200, Refresh 90 wide -- so a caption wider than 190 in the running
+      font was clipped, a box taller than 40 left its row, and Refresh's
+      caption could outgrow its button. FitLayout measures each of those and
+      uses these only as the least it will make them, through
+      Scale96ToForm, so at 100% on Windows the widths and lefts are the
+      designed ones. The HEIGHT is not: the designed dialog kept room for
+      four rows, and the dialog is now as tall as the rows it has.
+
+      A 96-dpi number is honest here only through Scale96ToForm: the form's
+      PixelsPerInch is what the LCL scaled the designed controls to. *)
+   LABEL_WIDTH_96 = 190;      (* the caption column, floor *)
+   LABEL_PAD_96 = 4;          (* beyond the measured caption *)
+   COLUMN_GAP_96 = 10;        (* caption to box, box to Refresh *)
+   FIELD_WIDTH_96 = 470;      (* the box column (edtName's designed width), floor *)
+   REFRESH_WIDTH_96 = 90;     (* the Refresh button, floor *)
+   BUTTON_CHROME_96 = 24;     (* a push button's frame beside its caption *)
+   ROW_PITCH_96 = 42;         (* one row, floor *)
+   ROW_SPACE_96 = 14;         (* what a row leaves around its tallest control *)
+   FIRST_ROW_TOP_96 = 13;     (* the Name row's band, so its box sits at 20 *)
+   SIDE_MARGIN_96 = 16;       (* left of everything *)
+   RIGHT_MARGIN_96 = 24;      (* right of the rows *)
+   SECTION_GAP_96 = 8;        (* between the blocks below the rows *)
+   BUTTONS_GAP_96 = 14;       (* above the buttons *)
+   STATUS_LINES = 2;          (* the field status holds this many lines *)
+   BUTTON_GAP_96 = 10;        (* between Save and Cancel *)
+   BUTTON_RIGHT_96 = 20;      (* right of Cancel *)
+   BOTTOM_MARGIN_96 = 12;     (* below the buttons *)
+   DESIGN_CLIENT_WIDTH_96 = 710;
 
 destructor TFieldRow.Destroy;
 begin
@@ -209,6 +243,10 @@ begin
       cbProvider.Items.Add(AnsiString(ExternalLoggerRegistration(i).Id));
       end;
    TranslateForm(Self);
+   (* RUN-TIME TEXT FROM uAppStrings, after the form walk, so the catalogue
+      is the one route; the .lfm text is a placeholder (uServerLogForm's
+      pattern). Before the first layout, which measures it. *)
+   lblNote.Caption := UTF8Encode(SLoggerEditorNote);
 end;
 
 destructor TExternalLoggersForm.Destroy;
@@ -356,38 +394,32 @@ begin
    Result.Panel.Parent := pnlFields;
    Result.Panel.BevelOuter := bvNone;
    Result.Panel.Caption := '';
-   Result.Panel.Height := ROW_HEIGHT;
-   Result.Panel.Top := aIndex * ROW_HEIGHT;
+   Result.Panel.Height := Scale96ToForm(ROW_PITCH_96);
+   Result.Panel.Top := aIndex * Result.Panel.Height;
    (* THE CONTROLS OF A ROW ARE ANCHORED LEFT AND TOP ONLY (issue 231). The
       panel is created at its default 170 wide and Align stretches it to the
       panel's width afterwards; a control anchored to the right moves by that
       whole difference, which put the key's eye over its box and pushed the
-      Logbook drop-down's arrow and the Refresh button out of the row. The
-      dialog does not resize, so nothing here needs to stretch. *)
+      Logbook drop-down's arrow and the Refresh button out of the row.
+      FitLayout places every control in the row from measurement, after the
+      panel has its width. The bounds given here are only a start. *)
    Result.Panel.Width := rowWidth;
    Result.Panel.Align := alTop;
    Result.CaptionLabel := TLabel.Create(Result.Panel);
    Result.CaptionLabel.Parent := Result.Panel;
    Result.CaptionLabel.AutoSize := False;
-   Result.CaptionLabel.Left := 0;
-   Result.CaptionLabel.Top := 6;
-   Result.CaptionLabel.Width := LABEL_WIDTH;
+   Result.CaptionLabel.Layout := tlCenter;
+   Result.CaptionLabel.SetBounds(0, 0, Scale96ToForm(LABEL_WIDTH_96), Result.Panel.Height);
    Result.CaptionLabel.Caption := UTF8Encode(aDescriptor.Caption);
    if aDescriptor.Kind = lfkChoice then
       begin
       Result.Combo := TComboBox.Create(Result.Panel);
       Result.Combo.Parent := Result.Panel;
       Result.Combo.Style := csDropDownList;
-      Result.Combo.Left := EDIT_LEFT;
-      Result.Combo.Top := 2;
-      Result.Combo.Width := rowWidth - EDIT_LEFT - REFRESH_WIDTH - 10;
       Result.Combo.Anchors := [akTop, akLeft];
       Result.Combo.OnChange := RowChanged;
       Result.RefreshButton := TButton.Create(Result.Panel);
       Result.RefreshButton.Parent := Result.Panel;
-      Result.RefreshButton.Left := rowWidth - REFRESH_WIDTH;
-      Result.RefreshButton.Top := 2;
-      Result.RefreshButton.Width := REFRESH_WIDTH;
       Result.RefreshButton.Anchors := [akTop, akLeft];
       Result.RefreshButton.Caption := UTF8Encode(SLoggerChoiceRefresh);
       Result.RefreshButton.OnClick := RefreshClick;
@@ -398,9 +430,8 @@ begin
       begin
       Result.Edit := TEdit.Create(Result.Panel);
       Result.Edit.Parent := Result.Panel;
-      Result.Edit.Left := EDIT_LEFT;
-      Result.Edit.Top := 2;
-      Result.Edit.Width := rowWidth - EDIT_LEFT;
+      Result.Edit.SetBounds(Scale96ToForm(LABEL_WIDTH_96 + COLUMN_GAP_96), 0,
+         Scale96ToForm(FIELD_WIDTH_96), Result.Edit.Height);
       Result.Edit.Anchors := [akTop, akLeft];
       Result.Edit.Text := UTF8Encode(FDefinition.FieldText(aDescriptor.Key));
       if aDescriptor.Kind = lfkSecret then
@@ -441,6 +472,238 @@ begin
       Dec(FBuilding);
    end;
    SetBusy;
+   (* A provider changed while the dialog is open. Before it is shown the
+      widget set can measure nothing (a label's preferred size needs its
+      parent's handle), so the first layout is the show's. *)
+   if Visible then
+      begin
+      FitLayout;
+      end;
+end;
+
+procedure TExternalLoggersForm.EditorShow(Sender: TObject);
+begin
+   FitLayout;
+end;
+
+(* THE DIALOG IS LAID OUT FROM MEASUREMENT (issue 232), the Edit QSO pattern
+   (uEditQSOForm.FitLayout) on a smaller form:
+
+   - the caption column is as wide as the widest caption -- Name, Provider and
+     every row the provider declared -- measured in its own font;
+   - the box column starts after it, for the Name and Provider boxes and the
+     rows alike, and is wide enough for each drop-down's longest item plus
+     its chrome (DROPDOWN_CHROME_96), and for Refresh beside a choice;
+   - Refresh is as wide as its caption and its widget set want;
+   - every row is as tall as the tallest control in any row, plus the
+     designed space around it, and each control is centred in its row; a
+     secret's eye is as tall and as wide as its box is high, beside it;
+   - below the rows each block is as tall as it measures: the wrapped status
+     and note lines at their width, the check box and the buttons at their
+     own (AutoSize) size.
+
+   The designed numbers are floors, scaled through Scale96ToForm. The dialog
+   grows about its centre, and shrinks back to the designed width when the
+   content allows. *)
+procedure TExternalLoggersForm.FitLayout;
+
+   function Px(const a96: integer): integer;
+   begin
+      Result := Scale96ToForm(a96);
+   end;
+
+   (* As tall as it is, or as its widget set prefers, whichever is more. *)
+   function HeightOf(const aControl: TControl): integer;
+   var
+      pw, ph: integer;
+   begin
+      ControlPreferredSize(aControl, pw, ph);
+      Result := Max(aControl.Height, ph);
+   end;
+
+   function CaptionNeed(const aLabel: TLabel): integer;
+   begin
+      Result := TextWidthInFont(aLabel.Font, aLabel.Caption) + Px(LABEL_PAD_96);
+   end;
+
+   function ButtonNeed(const aButton: TButton; const aFloor: integer): integer;
+   var
+      pw, ph: integer;
+   begin
+      ControlPreferredSize(aButton, pw, ph);
+      Result := Max(aFloor, Max(pw, TextWidthInFont(aButton.Font, aButton.Caption) +
+         Px(BUTTON_CHROME_96)));
+   end;
+
+   (* A word-wrapped label at the width it has been given. Its anchors hold
+      it left and right, which is what makes the LCL wrap the preferred
+      height at that width. aLines lines of its font is the least it takes,
+      so text arriving later (a load's status) has room. *)
+   function WrappedHeight(const aLabel: TLabel; const aLines: integer): integer;
+   var
+      pw, ph: integer;
+   begin
+      ControlPreferredSize(aLabel, pw, ph);
+      Result := Max(ph, aLines * TextHeightInFont(aLabel.Font, 'Ag'));
+   end;
+
+   procedure PlaceDropDown(const aCombo: TComboBox; const aLeft, aBandTop,
+      aBandHeight, aWidth: integer);
+   var
+      h: integer;
+   begin
+      h := HeightOf(aCombo);
+      (* MinWidth AS WELL AS Width: an AutoSize drop-down's widget set would
+         otherwise put its own preferred width back (cocoa shrinks one below
+         its text). Cleared first, so a narrower layout is not held wide. *)
+      aCombo.Constraints.MinWidth := 0;
+      aCombo.SetBounds(aLeft, aBandTop + (aBandHeight - h) div 2, aWidth, h);
+      aCombo.Constraints.MinWidth := aWidth;
+   end;
+
+var
+   row: TFieldRow;
+   eye: TControl;
+   side, labelW, editLeft, fieldW, rowW, refreshW, rowH, h, w, y, eyeW: integer;
+   clientW, pw, ph: integer;
+   oldW, oldH, centreX, centreY: integer;
+begin
+   oldW := Width;
+   oldH := Height;
+   centreX := Left + oldW div 2;
+   centreY := Top + oldH div 2;
+   side := Px(SIDE_MARGIN_96);
+
+   (* The caption column. *)
+   labelW := Max(Px(LABEL_WIDTH_96), Max(CaptionNeed(lblName), CaptionNeed(lblProvider)));
+   for row in FRows do
+      begin
+      labelW := Max(labelW, CaptionNeed(row.CaptionLabel));
+      end;
+   editLeft := labelW + Px(COLUMN_GAP_96);
+
+   (* Refresh, and the box column. *)
+   refreshW := 0;
+   for row in FRows do
+      begin
+      if row.RefreshButton <> nil then
+         begin
+         refreshW := Max(refreshW, ButtonNeed(row.RefreshButton, Px(REFRESH_WIDTH_96)));
+         end;
+      end;
+   fieldW := Max(Px(FIELD_WIDTH_96),
+      WidestText(cbProvider.Font, cbProvider.Items) + Px(DROPDOWN_CHROME_96));
+   for row in FRows do
+      begin
+      if row.Combo <> nil then
+         begin
+         fieldW := Max(fieldW, WidestText(row.Combo.Font, row.Combo.Items) +
+            Px(DROPDOWN_CHROME_96) + Px(COLUMN_GAP_96) + refreshW);
+         end;
+      end;
+   rowW := editLeft + fieldW;
+
+   (* The dialog's width: the rows, the check box and the buttons each fit,
+      and never less than designed. The box column then takes what the
+      dialog gives it. *)
+   ControlPreferredSize(chkActive, pw, ph);
+   clientW := Max(Px(DESIGN_CLIENT_WIDTH_96), side + rowW + Px(RIGHT_MARGIN_96));
+   clientW := Max(clientW, side + Max(chkActive.Width, pw) + Px(RIGHT_MARGIN_96));
+   clientW := Max(clientW, side + btnOK.Width + Px(BUTTON_GAP_96) + btnCancel.Width +
+      Px(BUTTON_RIGHT_96));
+   ClientWidth := clientW;
+   rowW := clientW - side - Px(RIGHT_MARGIN_96);
+   fieldW := rowW - editLeft;
+
+   (* One row height for every row: the tallest control, plus the designed
+      space around it. *)
+   rowH := Max(HeightOf(edtName), HeightOf(cbProvider));
+   for row in FRows do
+      begin
+      if row.Combo <> nil then
+         begin
+         rowH := Max(rowH, Max(HeightOf(row.Combo), HeightOf(row.RefreshButton)));
+         end
+      else
+         begin
+         rowH := Max(rowH, HeightOf(row.Edit));
+         end;
+      end;
+   rowH := Max(Px(ROW_PITCH_96), rowH + Px(ROW_SPACE_96));
+
+   (* Name and Provider, on the form. *)
+   y := Px(FIRST_ROW_TOP_96);
+   lblName.SetBounds(side, y, labelW, rowH);
+   h := HeightOf(edtName);
+   edtName.SetBounds(side + editLeft, y + (rowH - h) div 2, fieldW, h);
+   y := y + rowH;
+   lblProvider.SetBounds(side, y, labelW, rowH);
+   PlaceDropDown(cbProvider, side + editLeft, y, rowH, fieldW);
+   y := y + rowH;
+
+   (* The provider's rows, each in its own panel (aligned to the top of
+      pnlFields, so a panel's width is pnlFields'). *)
+   pnlFields.SetBounds(side, y, rowW, FRows.Count * rowH);
+   for row in FRows do
+      begin
+      row.Panel.Height := rowH;
+      row.CaptionLabel.SetBounds(0, 0, labelW, rowH);
+      if row.Combo <> nil then
+         begin
+         h := HeightOf(row.RefreshButton);
+         row.RefreshButton.SetBounds(rowW - refreshW, (rowH - h) div 2, refreshW, h);
+         PlaceDropDown(row.Combo, editLeft, 0, rowH,
+            fieldW - Px(COLUMN_GAP_96) - refreshW);
+         end
+      else
+         begin
+         h := HeightOf(row.Edit);
+         (* The eye is anchored to the box's right side, top and bottom
+            (uPasswordReveal), so it follows the box; only its width is its
+            own, and it is square at the box's height. *)
+         eyeW := 0;
+         eye := PasswordRevealControl(row.Edit);
+         if eye <> nil then
+            begin
+            eyeW := h;
+            eye.Width := eyeW;
+            end;
+         row.Edit.SetBounds(editLeft, (rowH - h) div 2, fieldW - eyeW, h);
+         end;
+      end;
+   y := pnlFields.Top + pnlFields.Height + Px(SECTION_GAP_96);
+
+   (* The blocks below the rows, each as tall as it measures. *)
+   lblFieldStatus.SetBounds(side, y, rowW, lblFieldStatus.Height);
+   lblFieldStatus.Height := WrappedHeight(lblFieldStatus, STATUS_LINES);
+   y := y + lblFieldStatus.Height + Px(SECTION_GAP_96);
+
+   chkActive.SetBounds(side, y, chkActive.Width, chkActive.Height);
+   y := y + chkActive.Height + Px(SECTION_GAP_96);
+
+   lblNote.SetBounds(side, y, rowW, lblNote.Height);
+   lblNote.Height := WrappedHeight(lblNote, 1);
+   y := y + lblNote.Height + Px(SECTION_GAP_96);
+
+   lblStatus.SetBounds(side, y, rowW, lblStatus.Height);
+   lblStatus.Height := WrappedHeight(lblStatus, 1);
+   y := y + lblStatus.Height + Px(BUTTONS_GAP_96);
+
+   (* Save and Cancel size themselves to their captions (AutoSize); they are
+      placed from the right. *)
+   btnCancel.SetBounds(clientW - Px(BUTTON_RIGHT_96) - btnCancel.Width, y,
+      btnCancel.Width, btnCancel.Height);
+   w := btnOK.Width;
+   btnOK.SetBounds(btnCancel.Left - Px(BUTTON_GAP_96) - w, y, w, btnOK.Height);
+   ClientHeight := y + Max(btnOK.Height, btnCancel.Height) + Px(BOTTOM_MARGIN_96);
+
+   (* KEEP THE CENTRE, as Edit QSO does: the dialog was centred before it was
+      shown, and a provider change while it is open should not walk it
+      across the screen. Unchanged size, no move. *)
+   if (Width <> oldW) or (Height <> oldH) then
+      begin
+      SetBounds(centreX - Width div 2, centreY - Height div 2, Width, Height);
+      end;
 end;
 
 (* A secret edited by the operator invalidates every choice list: the list
@@ -743,17 +1006,17 @@ begin
    end;
    ProviderChanged(nil);
    StartAutoLoad;
-   lblStatus.Caption := 'No contest log is open.';
+   lblStatus.Caption := UTF8Encode(SLoggerEditorNoLog);
    if LogStoreRepository <> nil then
       begin
       try
          counts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, FDefinition.DeliveryId);
-         lblStatus.Caption := Format('Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d',
-            [counts.Pending, counts.InFlight, counts.Synced, counts.Uncertain, counts.Failed]);
+         lblStatus.Caption := UTF8Encode(UnicodeFormat(SLoggerEditorCounts,
+            [counts.Pending, counts.InFlight, counts.Synced, counts.Uncertain, counts.Failed]));
       except
          on E: Exception do
             begin
-            lblStatus.Caption := 'Delivery status unavailable';
+            lblStatus.Caption := UTF8Encode(SLoggerEditorNoCounts);
             end;
       end;
       end;

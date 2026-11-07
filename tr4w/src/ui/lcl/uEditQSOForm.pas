@@ -147,17 +147,9 @@ type
     procedure FillBandAndModeLists;
   end;
 
-const
-  (* THE ROOM A DROP-DOWN'S OWN CHROME TAKES BESIDE ITS TEXT, at 96 dpi: the
-     frame, the text inset and the arrow (Windows) or the bezel and the
-     up/down arrows (a cocoa NSPopUpButton). A STATED ALLOWANCE, NOT A
-     MEASUREMENT: the LCL cannot report it -- Win32 gives a combo no preferred
-     width at all, and cocoa's fittingSize is computed from the title showing
-     at that moment. 40 is generous on Windows (a 17 px button and a 3 px
-     frame each side) and is the number to correct if the Mac bench shows the
-     text still under the arrows. The layout test asserts against this
-     same constant. *)
-  EDITQSO_COMBO_CHROME_96 = 40;
+(* The room a drop-down's chrome takes beside its text is
+   uLCLFormHelpers.DROPDOWN_CHROME_96, lifted from here when the External
+   logger editor became its second user (issue 232). *)
 
 type
   // One row per control in dialog 46. The Id is the Win32 control id the save
@@ -783,7 +775,7 @@ end;
 
   SO THE FIELDS ARE A GRID, and every column is as wide as the widest thing in
   it: a label's caption measured in its own font (TextWidthInFont), a
-  drop-down's longest item plus EDITQSO_COMBO_CHROME_96, and whatever any other
+  drop-down's longest item plus DROPDOWN_CHROME_96, and whatever any other
   control's widget set says it prefers (GetPreferredSize -- the picker, the
   check boxes, the buttons). The designed widths are FLOORS, so on Windows at
   100% the window looks as it did unless something no longer fits. Rows are as
@@ -814,23 +806,8 @@ type
     function Bottom: integer;
   end;
 
-(* What the widget set says a control would like to be, without constraints.
-   0 means "no opinion" -- an edit, or a Win32 combo. *)
-procedure PreferredOf(const aControl: TControl; out aWidth, aHeight: integer);
-begin
-   aWidth := 0;
-   aHeight := 0;
-   aControl.GetPreferredSize(aWidth, aHeight, True, True);
-   if aWidth < 0 then
-      begin
-      aWidth := 0;
-      end;
-   if aHeight < 0 then
-      begin
-      aHeight := 0;
-      end;
-end;
-
+(* What the widget set says a control would like to be is
+   uLCLFormHelpers.ControlPreferredSize, lifted from here (issue 232). *)
 function FieldNeedWidth(const aControl: TControl;
                         const aLabelPad, aComboChrome: integer): integer;
 var
@@ -843,7 +820,7 @@ begin
       Exit;
       end;
 
-   PreferredOf(aControl, Result, h);
+   ControlPreferredSize(aControl, Result, h);
    if aControl is TComboBox then
       begin
       Result := Max(Result, WidestText(TComboBox(aControl).Font,
@@ -936,7 +913,7 @@ begin
          ctl := Cell(r, c);
          if (ctl <> nil) and not (ctl is TLabel) then
             begin
-            PreferredOf(ctl, pw, ph);
+            ControlPreferredSize(ctl, pw, ph);
             content := Max(content, Max(ctl.Height, ph));
             end;
          end;
@@ -961,7 +938,7 @@ begin
                would otherwise put its own preferred width back -- which is
                the cocoa drop-down defect. Its height stays the widget set's;
                it is centred in the row. *)
-            PreferredOf(ctl, pw, ph);
+            ControlPreferredSize(ctl, pw, ph);
             h := Max(ctl.Height, ph);
             ctl.Constraints.MinWidth := ColWidth[c];
             ctl.SetBounds(ColLeft[c], top + (content - h) div 2, ColWidth[c], h);
@@ -1040,7 +1017,7 @@ begin
          fields at 90 and 338, 135 wide, indicators at 480. *)
       fields.Measure(Px(8), [Px(75), Px(135), Px(90), Px(135), Px(90)],
                      [0, Px(7), Px(15), Px(8), Px(7)],
-                     Px(2), Px(EDITQSO_COMBO_CHROME_96));
+                     Px(2), Px(DROPDOWN_CHROME_96));
       fields.Place(Px(16), Px(24), Px(3), Px(17));
 
       lblCountryName.SetBounds(fields.ColLeft[2], fields.RowTop[0],
@@ -1053,7 +1030,7 @@ begin
                    lblMyCQZone,  edtMyCQZone,  lblMyITUZone, edtMyITUZone]);
       mine.Measure(Px(6), [Px(52), Px(76), Px(52), Px(76), Px(52), Px(76), Px(52), Px(76)],
                    [0, Px(2), Px(10), Px(2), Px(10), Px(2), Px(10), Px(2)],
-                   Px(2), Px(EDITQSO_COMBO_CHROME_96));
+                   Px(2), Px(DROPDOWN_CHROME_96));
       mine.Place(Px(4), Px(28), Px(4), Px(17));
 
       (* The group's frame, read from the group as it is now: the caption band

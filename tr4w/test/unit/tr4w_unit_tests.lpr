@@ -618,6 +618,7 @@ uses
    uTestExternalLoggerFields in 'uTestExternalLoggerFields.pas',
    uTestPasswordRevealLayout in 'uTestPasswordRevealLayout.pas',
    uTestEditQSOLayout in 'uTestEditQSOLayout.pas',
+   uTestExternalLoggerEditorLayout in 'uTestExternalLoggerEditorLayout.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
@@ -1119,6 +1120,7 @@ begin
    RegisterSuite(TExternalLoggerFieldsTests.Create('ExternalLoggerFields'));
    RegisterSuite(TPasswordRevealLayoutTests.Create('PasswordRevealLayout'));
    RegisterSuite(TEditQSOLayoutTests.Create('EditQSOLayout'));
+   RegisterSuite(TExternalLoggerEditorLayoutTests.Create('ExternalLoggerEditorLayout'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
