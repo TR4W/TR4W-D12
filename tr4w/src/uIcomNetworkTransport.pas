@@ -1002,21 +1002,30 @@ begin
   Pkt.RcvdID := FCivRemoteId;
   Pkt.Reply := ICOM_DATA_REPLY_MARKER;
   Pkt.DataLen := Length(CivFrame);  // Little-endian (no swap) — matches wfview
-  Pkt.SendSeq := SwapWord(FCivInnerSeq);
-  Inc(FCivInnerSeq);
 
   // Combine header + CI-V data into one byte-exact packet. CivFrame is a string
   // of faithful codepoints (each Char 0..255 == one CI-V byte). Copy the header
   // record verbatim, then the payload byte-faithfully (Ord -> byte). Never Move
   // the string (that would copy UTF-16 code units, not the CI-V bytes).
   SetLength(FullPacket, SizeOf(Pkt) + Length(CivFrame));
-  Move(Pkt, FullPacket[1], SizeOf(Pkt));
   for i := 1 to Length(CivFrame) do
      begin
      FullPacket[SizeOf(Pkt) + i] := AnsiChar(Ord(CivFrame[i]));
      end;
 
-  SendTrackedPacket(FCivSocket, FullPacket, FRadioAddress, FCivPort, FCivSeq);
+  (* FCivInnerSeq is shared with SendCivOpen/SendCivClose on other threads:
+    inner and outer sequence under one hold of FSendLock (issue 214).  The
+    header is copied in after the stamp. *)
+  FSendLock.Enter;
+  try
+     Pkt.SendSeq := SwapWord(FCivInnerSeq);
+     Inc(FCivInnerSeq);
+     Move(Pkt, FullPacket[1], SizeOf(Pkt));
+
+     SendTrackedPacket(FCivSocket, FullPacket, FRadioAddress, FCivPort, FCivSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Trace(LogPrefix + ' Sent CI-V data, outer seq=%d, inner seq=%d, len=%d',
                [FCivSeq - 1, FCivInnerSeq - 1, Length(CivFrame)]);
@@ -1796,9 +1805,16 @@ begin
   // Transition to Connected — CI-V handshake happens within this state (like wfview)
   SetState(icsConnected);
 
-  // Reset CI-V counters (matches wfview initCivSocket)
-  FCivSeq := 1;
-  FCivInnerSeq := 0;
+  (* Reset CI-V counters (matches wfview initCivSocket).  Under FSendLock:
+    this is a reader thread, and the CI-V send queue takes both counters
+    under that lock (issue 214). *)
+  FSendLock.Enter;
+  try
+     FCivSeq := 1;
+     FCivInnerSeq := 0;
+  finally
+     FSendLock.Leave;
+  end;
   FCivRemoteId := 0;
   FCivStreamOpen := False;
 
@@ -1928,11 +1944,13 @@ begin
   Pkt.RcvdID := Pkt.SentID;
   Pkt.SentID := FMyId;
   Pkt.Reply := 1;
-  Inc(FPingSendSeq);
-  Pkt.Seq := FPingSendSeq;
 
+  (* FPingSendSeq is shared with SendPing on the timer thread; this runs on
+    a reader thread.  Take it under FSendLock (issue 214). *)
   FSendLock.Enter;
   try
+    Inc(FPingSendSeq);
+    Pkt.Seq := FPingSendSeq;
     SendRawPacket(Socket, Pkt, SizeOf(Pkt), TargetAddr, TargetPort);
   finally
     FSendLock.Leave;
@@ -1946,15 +1964,16 @@ begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_PING_PKT_SIZE;
   Pkt.PktType := ICOM_PKT_PING;
-  Inc(FPingSendSeq);
-  Pkt.Seq := FPingSendSeq;
   Pkt.SentID := FMyId;
   Pkt.RcvdID := FRemoteId;
   Pkt.Reply := 0;
   Pkt.Time := TickCount32 - FStartTick;
 
+  // FPingSendSeq is shared with SendPingResponse -- see there (issue 214).
   FSendLock.Enter;
   try
+    Inc(FPingSendSeq);
+    Pkt.Seq := FPingSendSeq;
     SendRawPacket(FControlSocket, Pkt, SizeOf(Pkt),
       FRadioAddress, FControlPort);
   finally
@@ -1977,8 +1996,6 @@ begin
   Pkt.PayloadSize := SwapLongWord(ICOM_LOGIN_PKT_SIZE - $10);
   Pkt.RequestReply := $01;
   Pkt.RequestType := $00;
-  Pkt.InnerSeq := SwapWord(FAuthSeq);
-  Inc(FAuthSeq);
 
   // Random token request
   Randomize;
@@ -1997,10 +2014,22 @@ begin
      Pkt.ClientName[I - 1] := Byte(FClientName[I]);
      end;
 
-  // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
-  SetLength(PktStr, SizeOf(Pkt));
-  Move(Pkt, PktStr[1], SizeOf(Pkt));
-  SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  (* THE INNER AND OUTER SEQUENCES ARE TAKEN UNDER ONE HOLD OF FSendLock
+    (issue 214).  FAuthSeq is shared by the login (Connect, and the timer's
+    retry), the token ack and stream request (reader threads) and the token
+    renewal (timer thread). *)
+  FSendLock.Enter;
+  try
+     Pkt.InnerSeq := SwapWord(FAuthSeq);
+     Inc(FAuthSeq);
+
+     // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
+     SetLength(PktStr, SizeOf(Pkt));
+     Move(Pkt, PktStr[1], SizeOf(Pkt));
+     SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Debug(LogPrefix + ' Sent login packet, authSeq=$%.4x, outerSeq=%d',
                [FAuthSeq, FSendSeq - 1]);
@@ -2020,8 +2049,6 @@ begin
   Pkt.PayloadSize := SwapLongWord(ICOM_TOKEN_PKT_SIZE - $10);
   Pkt.RequestReply := $01;
   Pkt.RequestType := ICOM_TOKEN_ACK;
-  Pkt.InnerSeq := SwapWord(FAuthSeq);
-  Inc(FAuthSeq);
   Pkt.TokRequest := FTokRequest;
   Pkt.Token := FToken;
   Pkt.AuthStartID := FAuthStartId;
@@ -2029,10 +2056,19 @@ begin
   Pkt.CommonCap := FCommonCap;
   Move(FMacAddress, Pkt.MacAddress, 6);
 
-  // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
-  SetLength(PktStr, SizeOf(Pkt));
-  Move(Pkt, PktStr[1], SizeOf(Pkt));
-  SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  // Inner and outer sequence under one hold -- see SendLoginPacket (issue 214).
+  FSendLock.Enter;
+  try
+     Pkt.InnerSeq := SwapWord(FAuthSeq);
+     Inc(FAuthSeq);
+
+     // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
+     SetLength(PktStr, SizeOf(Pkt));
+     Move(Pkt, PktStr[1], SizeOf(Pkt));
+     SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Debug(LogPrefix + ' Sent token ack, token=$%.8x, outerSeq=%d',
                [FToken, FSendSeq - 1]);
@@ -2052,8 +2088,6 @@ begin
   Pkt.PayloadSize := SwapLongWord(ICOM_TOKEN_PKT_SIZE - $10);
   Pkt.RequestReply := $01;
   Pkt.RequestType := ICOM_TOKEN_RENEW;
-  Inc(FAuthSeq);
-  Pkt.InnerSeq := SwapWord(FAuthSeq);
   Pkt.TokRequest := FTokRequest;
   Pkt.Token := FToken;
   Pkt.AuthStartID := FAuthStartId;
@@ -2061,10 +2095,23 @@ begin
   Pkt.CommonCap := FCommonCap;
   Move(FMacAddress, Pkt.MacAddress, 6);
 
-  // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
-  SetLength(PktStr, SizeOf(Pkt));
-  Move(Pkt, PktStr[1], SizeOf(Pkt));
-  SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  (* Inner and outer sequence under one hold -- see SendLoginPacket (issue
+    214).  NOTE the order: this one increments BEFORE it stamps, unlike the
+    other three FAuthSeq senders.  That is what went on the wire before the
+    lock was added and it is kept exactly; whether it is intended is not
+    settled here. *)
+  FSendLock.Enter;
+  try
+     Inc(FAuthSeq);
+     Pkt.InnerSeq := SwapWord(FAuthSeq);
+
+     // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
+     SetLength(PktStr, SizeOf(Pkt));
+     Move(Pkt, PktStr[1], SizeOf(Pkt));
+     SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Debug(LogPrefix + ' Sent token renewal, outerSeq=%d', [FSendSeq - 1]);
 end;
@@ -2085,8 +2132,6 @@ begin
   Pkt.PayloadSize := SwapLongWord(ICOM_CONNINFO_PKT_SIZE - $10);
   Pkt.RequestReply := $01;
   Pkt.RequestType := ICOM_CONNINFO_REQUEST;
-  Pkt.InnerSeq := SwapWord(FAuthSeq);
-  Inc(FAuthSeq);
   Pkt.TokRequest := FTokRequest;
   Pkt.Token := FToken;
 
@@ -2161,10 +2206,19 @@ begin
   Pkt.TxBuffer := 0;
   Pkt.Convert := 1;
 
-  // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
-  SetLength(PktStr, SizeOf(Pkt));
-  Move(Pkt, PktStr[1], SizeOf(Pkt));
-  SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  // Inner and outer sequence under one hold -- see SendLoginPacket (issue 214).
+  FSendLock.Enter;
+  try
+     Pkt.InnerSeq := SwapWord(FAuthSeq);
+     Inc(FAuthSeq);
+
+     // Send via SendTrackedPacket (uses FSendSeq, stored in TX buffer)
+     SetLength(PktStr, SizeOf(Pkt));
+     Move(Pkt, PktStr[1], SizeOf(Pkt));
+     SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Debug(LogPrefix + ' Sent stream request for radio %s, outerSeq=%d',
     [FRadioName, FSendSeq - 1]);
@@ -2182,13 +2236,21 @@ begin
   Pkt.SentID := FMyId;
   Pkt.RcvdID := FCivRemoteId;
   Pkt.Data := ICOM_OPENCLOSE_DATA;
-  Pkt.SendSeq := SwapWord(FCivInnerSeq);
-  Inc(FCivInnerSeq);
   Pkt.Magic := ICOM_MAGIC_OPEN;
 
-  SetLength(PktStr, SizeOf(Pkt));
-  Move(Pkt, PktStr[1], SizeOf(Pkt));
-  SendTrackedPacket(FCivSocket, PktStr, FRadioAddress, FCivPort, FCivSeq);
+  (* FCivInnerSeq is shared with SendCivData on the CI-V send queue: inner and
+    outer sequence under one hold of FSendLock (issue 214). *)
+  FSendLock.Enter;
+  try
+     Pkt.SendSeq := SwapWord(FCivInnerSeq);
+     Inc(FCivInnerSeq);
+
+     SetLength(PktStr, SizeOf(Pkt));
+     Move(Pkt, PktStr[1], SizeOf(Pkt));
+     SendTrackedPacket(FCivSocket, PktStr, FRadioAddress, FCivPort, FCivSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Debug(LogPrefix + ' Sent CI-V Open (seq=%d)', [FCivSeq - 1]);
 end;
@@ -2205,13 +2267,20 @@ begin
   Pkt.SentID := FMyId;
   Pkt.RcvdID := FCivRemoteId;
   Pkt.Data := ICOM_OPENCLOSE_DATA;
-  Pkt.SendSeq := SwapWord(FCivInnerSeq);
-  Inc(FCivInnerSeq);
   Pkt.Magic := ICOM_MAGIC_CLOSE;
 
-  SetLength(PktStr, SizeOf(Pkt));
-  Move(Pkt, PktStr[1], SizeOf(Pkt));
-  SendTrackedPacket(FCivSocket, PktStr, FRadioAddress, FCivPort, FCivSeq);
+  // Inner and outer sequence under one hold -- see SendCivOpen (issue 214).
+  FSendLock.Enter;
+  try
+     Pkt.SendSeq := SwapWord(FCivInnerSeq);
+     Inc(FCivInnerSeq);
+
+     SetLength(PktStr, SizeOf(Pkt));
+     Move(Pkt, PktStr[1], SizeOf(Pkt));
+     SendTrackedPacket(FCivSocket, PktStr, FRadioAddress, FCivPort, FCivSeq);
+  finally
+     FSendLock.Leave;
+  end;
 
   logger.Debug(LogPrefix + ' Sent CI-V Close (seq=%d)', [FCivSeq - 1]);
 end;
@@ -2585,41 +2654,52 @@ var
 begin
   Packet := Data;
 
-  // Patch bytes [7..8] (1-indexed string) = offset 6..7 with current SeqCounter (LE)
-  if Length(Packet) >= 8 then
-     begin
-     Packet[7] := AnsiChar(SeqCounter and $FF);
-     Packet[8] := AnsiChar((SeqCounter shr 8) and $FF);
-     end;
-
-  // Store in TX buffer for radio's retransmit requests
-  if Socket = FControlSocket then
-     begin
-     TxBuf := FControlTxBuf
-     end
-  else
-     begin
-     TxBuf := FCivTxBuf;
-     end;
-
-  // seq=0 resets the buffer (sequence wrap or initial connect)
-  if SeqCounter = 0 then
-     begin
-     TxBuf.Clear;
-     end;
-
-  TxBuf.Add(SeqCounter, Packet);
-
-  // Send
+  (* READ, STORE, SEND AND INCREMENT AS ONE STEP UNDER FSendLock (issue 214).
+    This routine is called from the timer thread (idle packet, token renewal,
+    login retry), the Indy reader threads (token ack, stream request, CI-V
+    open) and the CI-V send queue.  The counter used to be read here and
+    incremented only after the send, with the lock held around the send
+    alone, so two senders could stamp the SAME sequence number -- and the
+    second TxBuf.Add would then replace the first packet in the history the
+    radio's retransmit requests are answered from.  Holding the lock for the
+    whole span also makes packets leave in sequence order, which an atomic
+    increment alone would not.  The TX history lock is a leaf, so taking it
+    inside FSendLock cannot form a cycle.  FSendLock is re-entrant for its
+    owner, and the callers that stamp an inner sequence hold it already. *)
   FSendLock.Enter;
   try
-    SendRawPacket(Socket, Packet[1], Length(Packet), TargetAddr, TargetPort);
-  finally
-    FSendLock.Leave;
-  end;
+     // Patch bytes [7..8] (1-indexed string) = offset 6..7 with current SeqCounter (LE)
+     if Length(Packet) >= 8 then
+        begin
+        Packet[7] := AnsiChar(SeqCounter and $FF);
+        Packet[8] := AnsiChar((SeqCounter shr 8) and $FF);
+        end;
 
-  // Increment sequence counter (caller's variable updated by reference)
-  Inc(SeqCounter);
+     // Store in TX buffer for radio's retransmit requests
+     if Socket = FControlSocket then
+        begin
+        TxBuf := FControlTxBuf
+        end
+     else
+        begin
+        TxBuf := FCivTxBuf;
+        end;
+
+     // seq=0 resets the buffer (sequence wrap or initial connect)
+     if SeqCounter = 0 then
+        begin
+        TxBuf.Clear;
+        end;
+
+     TxBuf.Add(SeqCounter, Packet);
+
+     SendRawPacket(Socket, Packet[1], Length(Packet), TargetAddr, TargetPort);
+
+     // Increment sequence counter (caller's variable updated by reference)
+     Inc(SeqCounter);
+  finally
+     FSendLock.Leave;
+  end;
 
   (* DEFER THE IDLE KEEPALIVE -- a tracked send has just served that purpose.
 

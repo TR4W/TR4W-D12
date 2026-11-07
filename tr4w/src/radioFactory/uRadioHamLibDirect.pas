@@ -199,7 +199,7 @@ type
     // Drain the urgent command queue — called from polling thread each loop cycle.
     // Processes all pending user commands (freq, mode, PTT, RIT, XIT, split)
     // before any poll query, ensuring user commands are never delayed by polls.
-    procedure DrainUrgentQueue;
+    procedure DrainUrgentQueue; override;
 
     // Fast poll — every heartbeat (1000ms): freq, mode, PTT, split, VFO B
     procedure SendPollRequests;

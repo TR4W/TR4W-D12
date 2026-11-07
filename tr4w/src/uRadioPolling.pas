@@ -702,10 +702,15 @@ begin
             // then poll when an async callback fired or the heartbeat interval elapsed.
             // Set HAMLIB ASYNC ONLY = TRUE in cfg to disable the heartbeat and only
             // poll on async callbacks � useful for testing whether transceive is working.
+            (* Every radio is asked; only a driver that queues operator commands
+              for this thread does anything (issue 215). *)
+            if Assigned(ro) then
+               begin
+               ro.DrainUrgentQueue;
+               end;
+
             if Assigned(ro) and (ro is THamLibDirect) then
                begin
-               THamLibDirect(ro).DrainUrgentQueue;
-
                if InterlockedExchange(THamLibDirect(ro).FNeedsPoll, 0) <> 0 then
                   begin
                   if TR4W_HAMLIB_DEBUG then

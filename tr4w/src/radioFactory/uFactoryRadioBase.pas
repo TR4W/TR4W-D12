@@ -1189,6 +1189,13 @@ Type TFactoryRadioBase = class(TObject)
       procedure QueryBand; Virtual;              // Query current band
       procedure QuerySplitState; Virtual;        // Query split on/off
       procedure PollRadioState; Virtual;         // Main polling method - calls Query* methods
+      (* SEND WHAT THE OPERATOR ASKED FOR BEFORE ANY POLL (issue 215).  The
+        polling thread calls this once per cycle, for every radio, ahead of
+        its poll.  A driver that queues operator commands for the polling
+        thread to send (HamLib Direct) overrides it to send them; the base,
+        whose drivers send on the caller's thread, does nothing.  It replaces
+        the poller asking "is this a THamLibDirect". *)
+      procedure DrainUrgentQueue; Virtual;
 
       procedure ProcessMsg(msg: string); Virtual; Abstract;
       procedure Transmit; Virtual; Abstract;
@@ -1685,6 +1692,11 @@ begin
   QueryXITState;
   QueryBand;
   QuerySplitState;
+end;
+
+procedure TFactoryRadioBase.DrainUrgentQueue;
+begin
+   (* Nothing queued: see the declaration. *)
 end;
 
 (* CLOSE THE SOCKET WITHOUT READING IT.  SocketIsConnected, not
