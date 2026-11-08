@@ -51,7 +51,9 @@ utils_text,
   uTR4WStrings,
   (* TContestBase -- GetDXQTH's parameter (M11 S4). An interface leaf over
     VC and uSettingsModel; it was in the implementation uses until then. *)
-  uContestBase;
+  uContestBase,
+  (* TCallHistoryAddResult -- LoadCallHistoryFile's store. A leaf. *)
+  uCallHistory;
 
 const
   MaxGridSquaresInList                  = 40;
@@ -437,6 +439,21 @@ procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
 procedure LoadInitialExchangeFile;
 procedure EnumInitialEx(var FileString: ShortString);
 
+(* THE CALL HISTORY FILE INTO THE INITIAL-EXCHANGE STORE -- 2026-11-07
+  (uCallHistory). Read at contest open, AFTER INITIAL.EX and BEFORE the log
+  (SheetInitAndLoad), so INITIAL.EX's entry and the file's first row for a
+  call win over a later row, and a QSO the log holds replaces the file's
+  text (the loader's AddIniitialExchange overwrites). Each entry is stored
+  as the FILE'S (TCallsignsList.AddCallHistoryExchange) so a spot comment
+  can outrank it (LogEdit.SpotSectionHint).
+
+  Reads nothing unless USE CALL HISTORY FILE is on AND the contest names the
+  fields it prefills (TContestBase.CallHistoryFields). The file is CALL
+  HISTORY FILENAME, else the contest's TContestBase.CallHistoryFileName. A file that is not
+  there is a Warning in the log and nothing else -- never a dialog, never an
+  exception. Answers how many entries were added. *)
+function LoadCallHistoryFile: integer;
+
 function PointsToBigCall(Entry: FourBytes): boolean;
 
 
@@ -486,6 +503,8 @@ uses
     earns a multiplier (ContestCreditsBand, uContestBase -- now in the
     interface uses, for GetDXQTH's parameter). *)
   uContestFactory,
+  (* ContestIdentity -- which call history fields the contest prefills. *)
+  uContestRegistry,
   (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
   uContestSession,
   (* ResetLoggedQSOs -- the final score's view of the log is emptied with
@@ -1114,6 +1133,71 @@ begin
  // ShowMessage(wsprintfBuffer);
 end;
 
+(* uCallHistory's store, here: CallsignsList, as the file's entry. *)
+function AddCallHistoryToCallsignsList(const aCall: string; const aExchange: string): TCallHistoryAddResult;
+begin
+  Result := CallsignsList.AddCallHistoryExchange(aCall, aExchange);
+end;
+
+function LoadCallHistoryFile: integer;
+var
+  fields: TCallHistoryFields;
+  name: string;
+  path: string;
+  lines: TStringList;
+  reader: TCallHistoryReader;
+  started: QWord;
+begin
+  Result := 0;
+  if not Settings.Contest.UseCallHistoryFile then
+     begin
+     Exit;
+     end;
+
+  fields := ContestIdentity(Contest).CallHistoryFields;
+  if Length(fields) = 0 then
+     begin
+     logger.Info('[CallHistory] USE CALL HISTORY FILE is on, but %s prefills nothing from one; no file read',
+                 [ContestIdentity(Contest).DisplayName]);
+     Exit;
+     end;
+
+  (* THE OPERATOR'S NAME, else the contest's own default. *)
+  name := Trim(Settings.Contest.CallHistoryFilename);
+  if name = '' then
+     begin
+     name := ContestIdentity(Contest).CallHistoryFileName;
+     end;
+  path := CallHistoryFilePath(name);
+  lines := TStringList.Create;
+  reader := TCallHistoryReader.Create;
+  try
+     started := GetTickCount64;
+     if not ReadCallHistoryLines(path, lines) then
+        begin
+        logger.Warn('[CallHistory] no call history file read: CALL HISTORY FILENAME = "%s", file "%s" (looked for "%s")',
+                    [Settings.Contest.CallHistoryFilename, name, path]);
+        Exit;
+        end;
+     reader.ReadAll(lines, fields, AddCallHistoryToCallsignsList);
+     Result := reader.Added;
+     logger.Info('[CallHistory] %s: %d rows, %d entries added, %d already known, %d missing a field the contest prefills, in %d ms',
+                 [path, reader.DataRows, reader.Added, reader.AlreadyKnown, reader.Incomplete,
+                  integer(GetTickCount64 - started)]);
+     if reader.UnknownDirectives <> '' then
+        begin
+        logger.Info('[CallHistory] directives not implemented, ignored: %s', [reader.UnknownDirectives]);
+        end;
+     if reader.StoreFull > 0 then
+        begin
+        logger.Warn('[CallHistory] the callsign list is full: %d rows were not stored', [reader.StoreFull]);
+        end;
+  finally
+     reader.Free;
+     lines.Free;
+  end;
+end;
+
 procedure DupeAndMultSheet.MakePossibleCallList(Call: CallString; var PossCallList: PossibleCallRecord);
 
 label
@@ -1714,6 +1798,8 @@ begin
   {?? ??????}
 //  SetUpRemainingMultiplierArrays;
   LoadInitialExchangeFile;
+  (* AFTER INITIAL.EX and BEFORE the log -- see LoadCallHistoryFile. *)
+  LoadCallHistoryFile;
   LoadinLog;
 end;
 

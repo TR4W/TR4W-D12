@@ -30,9 +30,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       198,979-line capture corpus, parsed through ParseDXSpotLine so the 30
       comment columns that survive are what is tokenized;
     * the CONTEST-FACING STEP (LogEdit.SpotSectionHint) -- the domestic file
-      of the contest decides which word is a section, the call history
-      overrules the comment, a contest with no domestic file and a DX station
-      get nothing. ARRL Sweepstakes (arrlsect.dom) is the contest;
+      of the contest decides which word is a section, what the log or
+      INITIAL.EX remembers overrules the comment, the comment overrules a
+      call history FILE's entry (2026-11-07), a contest with no domestic file
+      and a DX station get nothing. ARRL Sweepstakes (arrlsect.dom) is the contest;
     * the MULTIPLIER (DetermineIfNewMult / DetermineIfNewSpotMult) through the
       real sheet. THE KEY IS THE ONE THE MULTIPLIER LIST HOLDS, arrlsect.dom's
       `Ut = UT` is 'Ut': a hint spelt as typed misses the list and answers
@@ -64,6 +65,7 @@ type
       procedure Test_Hint_NoOpinionCases;
       procedure Test_Hint_ContestWithoutADomesticFileGetsNone;
       procedure Test_Hint_OurOwnKnowledgeOverrulesTheComment;
+      procedure Test_Hint_ACommentOutranksTheCallHistoryFile;
       procedure Test_Mult_WorkedSectionIsNotNeededAndUnworkedIs;
       procedure Test_Mult_SpotRoutineAndTheSetting;
       procedure Test_Mult_CallHistoryOverridesADifferingComment;
@@ -467,8 +469,9 @@ begin
    SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
    try
       CheckEquals('NFL', UpperCase(SpotSectionHint('W7ST', 'CQ NFL')), 'the comment, before the log knows the station');
-      (* W7ST sent '18 UT' -- the remembered exchange of the call history file
-         or of a QSO already in the log. *)
+      (* W7ST sent '18 UT' -- the remembered exchange of INITIAL.EX or of a
+         QSO already in the log (a call history FILE's entry ranks below the
+         comment: Test_Hint_ACommentOutranksTheCallHistoryFile). *)
       CallsignsList.AddIniitialExchange('W7ST', '18 UT');
       CheckEquals('UT', UpperCase(SpotSectionHint('W7ST', 'CQ NFL')), 'our knowledge wins over a differing comment');
       CheckEquals('UT', UpperCase(SpotSectionHint('W7ST', '')), 'and stands without a comment');
@@ -499,6 +502,41 @@ begin
    try
       CallsignsList.AddIniitialExchange('N6ABC', 'TOM CA');
       CheckEquals('CA', UpperCase(SpotSectionHint('N6ABC', 'CQ OR')), 'the state the log remembers, not the name');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* THE ORDER WITH A CALL HISTORY FILE (NY4I, 2026-11-07): (1) what the log or
+   INITIAL.EX remembers; (2) a section in the spot comment, typed now; (3) the
+   call history file's entry, which may be stale; (4) nothing. N4AF is a row
+   of NY4I's SSCW.txt (NC, 58); the comment says WY. In Sweepstakes and in
+   NAQP (a state, after a name). *)
+procedure TSpotCommentMultiplierTests.Test_Hint_ACommentOutranksTheCallHistoryFile;
+begin
+   BeginTest('Test_Hint_ACommentOutranksTheCallHistoryFile');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      CheckEquals('', SpotSectionHint('N4AF', 'CQ'), '(4) nothing known, nothing in the comment');
+      CallsignsList.AddCallHistoryExchange('N4AF', '58 NC');
+      CheckEquals('WY', UpperCase(SpotSectionHint('N4AF', 'CQ WY')), '(2) the comment beats the file');
+      CheckEquals('NC', UpperCase(SpotSectionHint('N4AF', 'CQ')), '(3) the file, when the comment names none');
+      CheckEquals('NC', UpperCase(SpotSectionHint('N4AF', '')), '(3) and with no comment');
+      (* A QSO IN THE LOG (LogContact's AddIniitialExchange) is (1). *)
+      CallsignsList.AddIniitialExchange('N4AF', '58 NC');
+      CheckEquals('NC', UpperCase(SpotSectionHint('N4AF', 'CQ WY')), '(1) the log beats the comment');
+   finally
+      RestoreSession;
+   end;
+
+   SetUpSession(NAQSOCW, DomesticCountriesKVEKH6KL, 'naqp.dom');
+   try
+      CallsignsList.AddCallHistoryExchange('N6ABC', 'TOM CA');
+      CheckEquals('WY', UpperCase(SpotSectionHint('N6ABC', 'CQ WY')), 'NAQP: (2) the comment beats the file');
+      CheckEquals('CA', UpperCase(SpotSectionHint('N6ABC', 'CQ')), 'NAQP: (3) the file');
+      CallsignsList.AddIniitialExchange('N6ABC', 'TOM CA');
+      CheckEquals('CA', UpperCase(SpotSectionHint('N6ABC', 'CQ WY')), 'NAQP: (1) the log beats the comment');
    finally
       RestoreSession;
    end;
@@ -1215,6 +1253,7 @@ begin
    Test_Hint_NoOpinionCases;
    Test_Hint_ContestWithoutADomesticFileGetsNone;
    Test_Hint_OurOwnKnowledgeOverrulesTheComment;
+   Test_Hint_ACommentOutranksTheCallHistoryFile;
    Test_Mult_WorkedSectionIsNotNeededAndUnworkedIs;
    Test_Mult_SpotRoutineAndTheSetting;
    Test_Mult_CallHistoryOverridesADifferingComment;

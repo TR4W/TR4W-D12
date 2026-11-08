@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(299, names.Count,
+         CheckEquals(301, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -503,7 +503,9 @@ begin
                      + ' step 3), 2026-11-06; 298 with BAND MAP WORKED MULT'
                      + ' COLOR (new, no CFGCA row, issue 12), 2026-11-07;'
                      + ' 299 with BAND MAP WORKED MULT LIMIT (new, no CFGCA'
-                     + ' row, issue 12), 2026-11-07');
+                     + ' row, issue 12), 2026-11-07; 301 with USE CALL'
+                     + ' HISTORY FILE and CALL HISTORY FILENAME (new, no'
+                     + ' CFGCA row), 2026-11-07');
       finally
          names.Free;
       end;
@@ -1615,6 +1617,7 @@ const
       + '"BEEP EVERY 10 QSOS",'
       + '"BOLD FONT",'
       + '"BROADCAST ALL PACKET DATA",'
+      + '"CALL HISTORY FILENAME",'
       + '"CALL OK NOW CW MESSAGE",'
       + '"CALL OK NOW MESSAGE",'
       + '"CALL OK NOW SSB MESSAGE",'
@@ -1855,6 +1858,7 @@ const
       + '"UNKNOWN COUNTRY FILE ENABLE",'
       + '"UNKNOWN COUNTRY FILE NAME",'
       + '"UPDATE RESTART FILE ENABLE",'
+      + '"USE CALL HISTORY FILE",'
       + '"USE RECORDED SIGNS",'
       + '"USER INFO SHOWN",'
       + '"VHF BAND ENABLE",'

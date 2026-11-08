@@ -1,0 +1,19 @@
+!!Order!!,Call,Sect,State,CK,Exch1,
+#
+# A SMALL SWEEPSTAKES CALL HISTORY for uTestCallHistory and
+# uTestStatusAndNotice -- the shape of the community SSCW.txt (VE2FK),
+# its rows chosen to reach each rule. NY4I, N6TV and N4AF are verbatim
+# rows of that file (2026-11-07).
+# SSCW
+# SSSSB
+!!MapStateToSect!!
+NY4I,WCF,FL,80,
+N6TV,SCV,CA,72,
+N4AF,NC,NC,58,
+4U1WB,MDC,DC,89,
+AA0A,MO,MO,60,U,
+AA1RB,VA,VA,8,
+KK6L,,CA,95,
+K1IEB,AZ,AZ,-1,
+
+N4AF,GA,GA,11,

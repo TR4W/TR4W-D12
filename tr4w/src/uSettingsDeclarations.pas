@@ -930,6 +930,11 @@ begin
    (* MODEL, not stored, since 2026-09-13: Settings.Contest holds it. *)
    RegisterModelSetting( 'files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
                           RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME);
+   (* A CALL HISTORY FILE -- 2026-11-07; see TContestSettings. *)
+   RegisterModelSetting( 'files.ctrlj.useCallHistoryFile',     'USE CALL HISTORY FILE',
+                          RS_FILES_CTRLJ_USECALLHISTORYFILE);
+   RegisterModelSetting( 'files.ctrlj.callHistoryFilename',    'CALL HISTORY FILENAME',
+                          RS_FILES_CTRLJ_CALLHISTORYFILENAME);
 
       GComplete := True;
    except

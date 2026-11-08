@@ -27,6 +27,8 @@ uses
 //  SysUtils,
   VC,
   TF,
+  (* TCallHistoryAddResult -- what AddCallHistoryExchange did. A leaf. *)
+  uCallHistory,
   (* WINDOWS IS GONE FROM THIS UNIT (2026-09-08). It was here for ONE call --
     CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, ...) -- and the
     note that stood here said, correctly, that repointing it as a side effect
@@ -65,6 +67,12 @@ type
       issue 213. Written by LOGEDIT.AddQSOToDupeSheets (live, loader,
       rescore, each in log order), cleared with the dupe bits. *)
     LoggedZone: Byte;
+    (* THE EXCHANGE CAME FROM A CALL HISTORY FILE -- 2026-11-07. Such an
+      entry can be stale, so a section typed in a spot comment outranks it
+      (NY4I) where INITIAL.EX's and the log's do not (LogEdit.SpotSectionHint),
+      and FLUSH INITIAL EX does not write it into INITIAL.EX. Set only by
+      AddCallHistoryExchange; any other write of the exchange clears it. *)
+    FromCallHistoryFile: boolean;
   end;
 
   (* THE WORKED-CALLS LIST -- a CLASS over a TObjectList since 2026-10-17
@@ -109,6 +117,16 @@ type
     function AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
     function GetIniitialExchange(const Call: string): string;
     function GetIniitialExchangeByIndex(Index: integer): string;
+    (* A CALL HISTORY FILE'S EXCHANGE -- 2026-11-07. Stored ONLY when the call
+      has no exchange yet (INITIAL.EX, loaded first, and an earlier row of the
+      file win), and marked as the file's. A QSO logged later replaces it
+      through AddIniitialExchange, as it replaces any remembered exchange.
+      charStoreFull when the list is full. *)
+    function AddCallHistoryExchange(const Call: string; const InitialExchangeString: string): TCallHistoryAddResult;
+    (* Is the call's remembered exchange a call history file's? False for a
+      call with none. By index too, for the INITIAL.EX flush. *)
+    function InitialExchangeIsFromCallHistory(const Call: string): boolean;
+    function InitialExchangeIsFromCallHistoryByIndex(Index: integer): boolean;
     (* A PRIOR CONTACT'S ZONE -- issue 213: the zone the call was most
       recently logged with, 0 when it has none. Remembered only for a call
       already in the list (AddCallsign put it there). *)
@@ -290,6 +308,49 @@ begin
      Result := True;
      end;
   FItems[Index].InExchange := ShortString(InitialExchangeString);
+  FItems[Index].FromCallHistoryFile := False;
+end;
+
+function TCallsignsList.AddCallHistoryExchange(const Call: string; const InitialExchangeString: string): TCallHistoryAddResult;
+var
+  Index                                 : integer;
+begin
+  if FindCallsign(Call, Index) then
+     begin
+     if Length(FItems[Index].InExchange) > 0 then
+        begin
+        Result := charAlreadyKnown;
+        Exit;
+        end;
+     end
+  else
+     begin
+     if FItems.Count = MAXCALLSIGNSINLIST then
+        begin
+        Result := charStoreFull;
+        Exit;
+        end;
+     InsertCallsign(Index, ShortString(Call));
+     end;
+  FItems[Index].InExchange := ShortString(InitialExchangeString);
+  FItems[Index].FromCallHistoryFile := True;
+  Result := charAdded;
+end;
+
+function TCallsignsList.InitialExchangeIsFromCallHistory(const Call: string): boolean;
+var
+  Index                                 : integer;
+begin
+  Result := False;
+  if FindCallsign(Call, Index) then
+     begin
+     Result := FItems[Index].FromCallHistoryFile and (Length(FItems[Index].InExchange) > 0);
+     end;
+end;
+
+function TCallsignsList.InitialExchangeIsFromCallHistoryByIndex(Index: integer): boolean;
+begin
+  Result := FItems[Index].FromCallHistoryFile and (Length(FItems[Index].InExchange) > 0);
 end;
 
 function TCallsignsList.GetTotalWorkedStations: integer;

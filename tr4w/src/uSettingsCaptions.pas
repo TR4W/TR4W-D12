@@ -281,6 +281,8 @@ resourcestring
    RS_CLUSTER_CTRLJ_SPOTCOMMENTMULTIPLIER     = 'Spot Comment Multiplier';
    RS_HARDWARE_CTRLJ_STEREOCONTROLPIN         = 'Stereo Control Pin';
    RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME     = 'Initial Exchange Filename';
+   RS_FILES_CTRLJ_USECALLHISTORYFILE          = 'Use Call History File';
+   RS_FILES_CTRLJ_CALLHISTORYFILENAME         = 'Call History Filename';
 implementation
 
 end.

@@ -30,12 +30,27 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-07 -- CALL HISTORY FILE PREFILLS SWEEPSTAKES' CHECK AND SECTION
+
+A call history file (N1MM format) is read at contest open into the initial-exchange store; Sweepstakes takes CK then Sect from each row (`uCallHistory`, `TContestBase.CallHistoryFields`). Off by default.
+
+- [ ] **Load.** Put `SSCW.txt` in `tr4w\target\CallHistoryFiles\` (beside the program). With the SS log OPEN (the two settings are contest-scoped, so they are stored in that log), Preferences > Contest > Initial exchange: tick USE CALL HISTORY FILE and set CALL HISTORY FILENAME to `SSCW.txt`. Reopen the log. `tr4w.log` has a `[CallHistory]` Info line: rows, entries added, rows skipped for a missing field, and the time taken (expect well under a second), plus a line naming `!!`directives that are ignored, if any.
+- [ ] **The contest's default file.** Leave CALL HISTORY FILENAME blank and put supercheckhistory.com's `ARRL-SS-CW.txt` (its column order differs: `Call,Exch1,CK,Sect,UserText`) in the same folder: SS CW reads it by itself (SS SSB looks for `ARRL-SS-SSB.txt`). Same prefill for a call in both files.
+- [ ] **Prefill.** Type `N6TV` and move to the exchange: it holds `72 SCV`. `NY4I` gives `80 WCF`, `N4AF` gives `58 NC`. A station whose file row has a one-digit check (e.g. `AA1RB,VA,VA,8`) gives `08 VA`.
+- [ ] **Mult needs strip.** Typing `N6TV` names SCV in the "Mult needs for" header, with no check in it.
+- [ ] **A spot comment outranks the file.** With CLUSTER SPOT COMMENT MULTIPLIER on and a spot for N4AF whose comment says `WY`, type N4AF: the strip names WY, not the file's NC (the exchange window still offers `58 NC`). Log a QSO with N4AF as NC: the strip then shows NC whatever the spot says.
+- [ ] **Nothing changes when off.** Untick USE CALL HISTORY FILE and reopen: no `[CallHistory]` line, no prefill for N6TV.
+- [ ] **A missing file** (a misspelt name) gives one `[CallHistory]` Warning in `tr4w.log` and no dialog.
+- [ ] **FLUSH INITIAL EX** does NOT write the history entries into INITIAL.EX (only what the log remembers).
+
+---
+
 ## Added 2026-11-07 -- THE "MULT NEEDS FOR" STRIP TAKES A SPOT'S SECTION (issue 12 follow-up)
 
 For a typed call the program remembers nothing about, the strip now uses the section/state/county a cluster spot for that call carries in its comment -- the same answer the band map gives that spot. Needs CLUSTER SPOT COMMENT MULTIPLIER on.
 
 - [ ] **ARRL Sweepstakes.** With a spot on the band map for a call you have never worked, comment carrying a section (e.g. `CQ NTX`), type that call: the "Mult needs for" header names the section and the band cells show where it is needed, and it matches the spot's red `M`. Turn the setting off: the strip no longer names it (and the spot's `M` goes too).
-- [ ] **What the program remembers wins.** Type a call the call history/log holds with a different section than its spot comment: the strip shows the remembered section.
+- [ ] **What the program remembers wins.** Type a call the LOG or INITIAL.EX holds with a different section than its spot comment: the strip shows the remembered section. (A CALL HISTORY FILE's entry does NOT win: the comment outranks it -- see the call history item above.)
 - [ ] **A QSO party** (a county or state in the comment) behaves the same.
 
 ---

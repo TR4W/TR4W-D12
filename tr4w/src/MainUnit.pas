@@ -9002,6 +9002,14 @@ begin
      begin
      FillChar(InitialExchange, SizeOf(InitialExchange), 0);
      InitialExchange := CallsignsList.GetIniitialExchangeByIndex(i);
+     (* A CALL HISTORY FILE'S ENTRY IS NOT WRITTEN (2026-11-07): it is the
+       file's, read again at the next open, and written into INITIAL.EX it
+       would come back as the operator's own -- outranking a spot comment,
+       which a history entry must not (LogEdit.SpotSectionHint). *)
+     if CallsignsList.InitialExchangeIsFromCallHistoryByIndex(i) then
+        begin
+        InitialExchange := '';
+        end;
      if InitialExchange <> '' then
 
         begin

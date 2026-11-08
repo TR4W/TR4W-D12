@@ -43,7 +43,9 @@ unit uContestARRLSSBase;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chfCK, chfSect -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestARRLSSBase = class(TContestBase)
@@ -109,6 +111,15 @@ type
          header read '18 UT' after every logged QSO (NY4I bench, 2026-11-04).
          The section is the multiplier; the check never is. *)
       function DomesticMultiplierHint(const aText: Str14): string; override;
+
+      (* THE CALL HISTORY FILE GIVES THE CHECK AND THE SECTION -- NY4I,
+         2026-11-07: what other loggers prefill for Sweepstakes. In that
+         order, because that is the text the log remembers for a worked
+         station ('18 UT', above), so the prefill, the hint and the parse
+         read a history entry exactly as they read a logged one. The file's
+         State column is not the section and is not asked. See
+         TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
    end;
 
 implementation
@@ -432,6 +443,13 @@ var
 begin
    ScanSweepstakesExchange(string(aText), fields);
    Result := string(fields.Section);
+end;
+
+function TContestARRLSSBase.CallHistoryFields: TCallHistoryFields;
+begin
+   SetLength(Result, 2);
+   Result[0] := chfCK;
+   Result[1] := chfSect;
 end;
 
 end.

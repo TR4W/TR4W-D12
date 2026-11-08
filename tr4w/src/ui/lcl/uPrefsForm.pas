@@ -1697,6 +1697,8 @@ begin
      sets it (AddSettingRows never binds a read-only setting). *)
    aTable.Place('operating.ctrlj.digitalModeEnable',      NAV_CONTEST, SPrefsGroupModes);
    aTable.Place('files.ctrlj.initialExchangeFilename',    NAV_CONTEST, SPrefsGroupInitialExchange);
+   aTable.Place('files.ctrlj.useCallHistoryFile',         NAV_CONTEST, SPrefsGroupInitialExchange);
+   aTable.Place('files.ctrlj.callHistoryFilename',        NAV_CONTEST, SPrefsGroupInitialExchange);
    aTable.Place('files.ctrlj.domesticFilename',           NAV_CONTEST, SPrefsGroupMultiplierData);
 
    (* Answer 5: LOG SUB TITLE heads each PRINTED log page, and CONTACTS PER

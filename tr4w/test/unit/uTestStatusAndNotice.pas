@@ -85,6 +85,7 @@ type
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
       procedure Test_TheMultHeaderPinsOfIssue207;
       procedure Test_TheNeedsStripTakesASpotsSection;
+      procedure Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
       procedure Test_TypingACallNeverChangesASpotsM;
       procedure Test_AnInhibitedKeyUpTurnsThePTTIndicator;
       procedure Test_ARadioSpeedChangeIsDrawnOnTheMainThread;
@@ -2413,6 +2414,94 @@ begin
       end;
 end;
 
+(* A CALL HISTORY FILE THROUGH THE REAL SESSION (NY4I, 2026-11-07): the real
+  loader reads the fixture into the session's store, and a TYPED call then
+  gets the file's text through the existing prefill (InitialExchangeEntry)
+  and the needs strip (ShowNeedsForCall) -- N6TV, a row of NY4I's SSCW.txt,
+  gives '72 SCV'. The strip prefers a spot comment's section to the file's
+  (N4AF: file NC, spot WY), and what the log remembers to both. *)
+procedure TStatusAndNoticeTests.Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
+var
+   header: string;
+   savedSetting: boolean;
+   savedUse: boolean;
+   savedName: string;
+   savedOverwrite: boolean;
+
+   function StripFor(const aCall: string): string;
+   begin
+      TR4WMainForm.pnlMultNeedsHeader.Caption := 'Mult needs for STALE :';
+      ShowNeedsForCall(CallString(aCall));
+      Result := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+   end;
+
+begin
+   BeginTest('Test_ACallHistoryEntryPrefillsAndYieldsToASpot');
+   EnsureMainForm;
+   BindMainGrids;
+   CheckTrue(ctyLoadInCountryFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                                  PathDelim + 'target' + PathDelim + 'cty.dat', False, False, True),
+             'cty.dat loads');
+   savedSetting := Settings.Cluster.SpotCommentMultiplier;
+   savedUse := Settings.Contest.UseCallHistoryFile;
+   savedName := Settings.Contest.CallHistoryFilename;
+   savedOverwrite := Settings.Contest.InitialExchangeOverwrite;
+   SaveNeedsSession;
+   SpotsList.Clear;
+   try
+      OpenNeedsSession(ContestHandleOf(ARRLSSCW), 'arrlsect.dom', DomesticCountriesARRLSections);
+      Settings.Mult.ByBand := False;
+      Settings.Mult.ByMode := False;
+      Settings.Contest.InitialExchangeOverwrite := False;
+      NumberDifferentMults := 1;
+      ActiveBand := Band40;
+      ActiveMode := CW;
+
+      Settings.Contest.UseCallHistoryFile := True;
+      Settings.Contest.CallHistoryFilename := ExtractFilePath(ParamStr(0)) + 'fixtures' +
+                                              PathDelim + 'callhistory_ss_sample.txt';
+      CheckTrue(LoadCallHistoryFile > 0, 'the loader read the fixture');
+
+      (* THE PREFILL: the text as typed into the exchange window. *)
+      CheckEquals('72 SCV', Trim(InitialExchangeEntry('N6TV')), 'N6TV prefills check and section');
+      CheckEquals('80 WCF', Trim(InitialExchangeEntry('NY4I')), 'NY4I');
+      CheckEquals('08 VA', Trim(InitialExchangeEntry('AA1RB')), 'a one-digit check, two digits');
+
+      (* THE STRIP, no spot: the file's section. *)
+      Settings.Cluster.SpotCommentMultiplier := True;
+      header := StripFor('N6TV');
+      CheckTrue(Pos('SCV', header) > 0, 'the strip names the file''s section: ' + header);
+      CheckTrue(Pos('72', header) = 0, 'and holds no check: ' + header);
+
+      (* A SPOT COMMENT OUTRANKS THE FILE. *)
+      CheckTrue(Pos('NC', StripFor('N4AF')) > 0, 'N4AF, no spot: the file''s NC');
+      PutSpot('N4AF', 'WY', Band40, Now);
+      header := StripFor('N4AF');
+      CheckTrue(Pos('WY', header) > 0, 'the spot''s WY beats the file: ' + header);
+      CheckTrue(Pos(' NC', header) = 0, 'and the file''s NC is not shown: ' + header);
+      CheckEquals('58 NC', Trim(InitialExchangeEntry('N4AF')),
+                  'the PREFILL still offers the file''s text (no spot section in the prefill)');
+
+      (* THE SETTING OFF: the file answers again. *)
+      Settings.Cluster.SpotCommentMultiplier := False;
+      CheckTrue(Pos('NC', StripFor('N4AF')) > 0, 'setting off: the file''s NC');
+      Settings.Cluster.SpotCommentMultiplier := True;
+
+      (* WHAT THE LOG REMEMBERS OUTRANKS THE SPOT. *)
+      CallsignsList.AddIniitialExchange('N4AF', '58 NC');
+      header := StripFor('N4AF');
+      CheckTrue(Pos('NC', header) > 0, 'the log''s NC beats the spot: ' + header);
+      CheckTrue(Pos('WY', header) = 0, 'and the spot''s WY is not shown: ' + header);
+   finally
+      SpotsList.Clear;
+      Settings.Cluster.SpotCommentMultiplier := savedSetting;
+      Settings.Contest.UseCallHistoryFile := savedUse;
+      Settings.Contest.CallHistoryFilename := savedName;
+      Settings.Contest.InitialExchangeOverwrite := savedOverwrite;
+      RestoreNeedsSession;
+      end;
+end;
+
 (* ISSUE 12, NY4I BENCH 2026-11-07: TYPING A CALL AND PRESSING THE FIRST ENTER
   (ShowStationInformation -> ShowNeedsForCall) MUST NOT CHANGE ANY SPOT'S M.
   The spot's state changes when a QSO is logged, nothing else. Asked at limit
@@ -3101,6 +3190,7 @@ begin
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
    Test_TheMultHeaderPinsOfIssue207;
    Test_TheNeedsStripTakesASpotsSection;
+   Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
    Test_TypingACallNeverChangesASpotsM;
    Test_AnInhibitedKeyUpTurnsThePTTIndicator;
    Test_ARadioSpeedChangeIsDrawnOnTheMainThread;

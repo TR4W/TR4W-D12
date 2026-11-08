@@ -349,6 +349,39 @@ and link issue #133 (Ontario's and Quebec's headers do).
 | `GetRequiresCabrilloLocation`, `CabrilloQSOLineFormat`, `CabrilloModeString` | not required / the standard `QSO:` line / CW, PH, ... | Arktika Spring's line |
 | `MarksDupes`, `GetIsActive`, `MinimumOffTimeMinutes` | True / True / 30 | `uContestInternetSprint`; `uContestSASprint`; `uContestCQWWBase` (60) |
 | `RunsInMode(aMode)` | every mode -- an IDENTITY question for two contests sharing one ADIF id | the RoPoCo runnings |
+| `CallHistoryFields` | none -- the contest reads no call history file | `TContestARRLSSBase` (`[chfCK, chfSect]`), below |
+| `CallHistoryFileName` | `''` -- no default file | the SS leaves (`ARRL-SS-CW.txt`, `ARRL-SS-SSB.txt`), below |
+
+#### A call history file -- `CallHistoryFields` (2026-11-07)
+
+A community "call history" file (N1MM's format, `src/uCallHistory.pas`) carries
+what each station sent in past runnings. With **USE CALL HISTORY FILE** on and
+**CALL HISTORY FILENAME** naming a file (a bare name is looked for in a
+`CallHistoryFiles` folder -- the writable data directory's, then the one beside
+the program; or a full path; blank is the class's `CallHistoryFileName`, the
+name of the published file for that running, which the engine never spells),
+`LOGDUPE.LoadCallHistoryFile` reads it at contest
+open -- after INITIAL.EX, before the log -- and stores, per row, the fields your
+class names **in your order, joined by one blank** as that call's remembered
+exchange. The file's `!!Order!!` line decides the columns (NY4I's `SSCW.txt` is
+`Call,Sect,State,CK,Exch1`, supercheckhistory.com's `ARRL-SS-CW.txt` is
+`Call,Exch1,CK,Sect,UserText`; both give `'89 MDC'` for 4U1WB). The text must be the shape your contest's prefill and
+`DomesticMultiplierHint` already read for a QSO the log remembers
+(`LOGDUPE.GetInitialExchangeStringFromContestExchange`): Sweepstakes states
+`[chfCK, chfSect]` and gets `'72 SCV'`, as the log remembers `'18 UT'`. A row
+missing any named field is not stored; a CK that is not all digits is dropped
+and a one-digit CK is written `08`. The base answers none, and a contest that
+names none reads nothing whatever the setting says.
+
+Precedence (NY4I, 2026-11-07): INITIAL.EX and the log beat the file (the
+file never replaces an entry; a logged QSO replaces the file's). For the
+spot hint and the "Mult needs for" strip (`LogEdit.SpotSectionHint`) the order
+is **the log or INITIAL.EX, then a section typed in the spot comment, then the
+call history file** -- the comment is typed now and the file may be stale. The
+exchange-window prefill still offers the file's text; it never uses a spot.
+
+When you add a contest that uses it, add it to
+`uTestCallHistory.Test_EveryContestStatesItsCallHistoryFields`.
 
 Everything else in [B2](#b2-the-base-class-reference). **Do not** repeat the
 band rule or the host-area rule in `CalculateQSOPoints` or

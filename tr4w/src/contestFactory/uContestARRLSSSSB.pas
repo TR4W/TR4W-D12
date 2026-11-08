@@ -67,6 +67,10 @@ type
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
+      (* THE CALL HISTORY FILE THIS RUNNING LOOKS FOR when CALL HISTORY
+         FILENAME names none -- supercheckhistory.com's N1MM file for it.
+         See TContestBase.CallHistoryFileName. *)
+      function CallHistoryFileName: string; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
    end;
 
@@ -115,6 +119,11 @@ end;
 function TContestARRLSSSSB.GetDomesticFileName: string;
 begin
    Result := 'arrlsect';
+end;
+
+function TContestARRLSSSSB.CallHistoryFileName: string;
+begin
+   Result := 'ARRL-SS-SSB.txt';
 end;
 
 function TContestARRLSSSSB.GetInitialExchangeKind: InitialExchangeType;

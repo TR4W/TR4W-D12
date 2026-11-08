@@ -3054,6 +3054,8 @@ type
       FLiteralDomesticQth: boolean;
       FCustomInitialExchangeString: string;
       FInitialExchangeFilename: string;
+      FUseCallHistoryFile: boolean;
+      FCallHistoryFilename: string;
       FName: string;
       FTitle: string;
       FCategoryAssisted: tCategoryAssisted;
@@ -3176,6 +3178,23 @@ type
       property InitialExchangeFilename: string
          read FInitialExchangeFilename
          write FInitialExchangeFilename;
+      (* A CALL HISTORY FILE -- 2026-11-07 (uCallHistory). Whether to read one
+         at contest open, and which: CALL HISTORY FILENAME is a bare name
+         looked for in the CallHistoryFiles folder (the writable data
+         directory's, then the one beside the program), or a full path;
+         blank is the contest's own default (TContestBase.CallHistoryFileName:
+         ARRL-SS-CW.txt / ARRL-SS-SSB.txt for Sweepstakes).
+         What a row prefills is the contest's (TContestBase.CallHistoryFields);
+         a contest that names no field reads nothing. OFF by default, so a
+         station that never sets it behaves as before. Contest-scoped like
+         INITIAL EXCHANGE FILENAME beside it: each log states its own. Both
+         aliased: the derived names would say CONTEST first. *)
+      property UseCallHistoryFile: boolean
+         read FUseCallHistoryFile
+         write FUseCallHistoryFile;
+      property CallHistoryFilename: string
+         read FCallHistoryFilename
+         write FCallHistoryFilename;
       (* THE CONTEST'S NAME, as it appears in the Cabrillo header and the
         title bar.  Was the global ContestName, a Str80 -- one of the two
         ShortStrings CFGCA still addressed.
@@ -5679,6 +5698,9 @@ begin
      buffer this replaces.  A bare name, resolved under the log and then the
      program directory by EnumerateLinesInFile. *)
    FInitialExchangeFilename := 'INITIAL.EX';
+   (* No call history unless the operator asks for one. *)
+   FUseCallHistoryFile  := False;
+   FCallHistoryFilename := '';
    (* EACH DEFAULT IS THE SPELLING OF THE VALUE ITS GLOBAL ALREADY CARRIED,
      so a station with no settings file behaves exactly as before -- and so
      that each holds one of its own allowed values, which a test requires and
@@ -6390,6 +6412,8 @@ begin
    Alias('DIGITAL MODE ENABLE',      'Contest.DigitalModeEnable');
    Alias('DOMESTIC FILENAME',        'Contest.DomesticFilename');
    Alias('INITIAL EXCHANGE FILENAME', 'Contest.InitialExchangeFilename');
+   Alias('USE CALL HISTORY FILE',    'Contest.UseCallHistoryFile');
+   Alias('CALL HISTORY FILENAME',    'Contest.CallHistoryFilename');
    (* THE FOLDER A BACKUP IS COPIED TO, and its former name. BACKUP LOG FILE
      NAME named a FILE; a value arriving under it is converted to the folder
      that file was in (see RegisterCommandValueSpelling below), so a .cfg, the

@@ -259,8 +259,9 @@ procedure ShowStationInformation(const Call: CallString);
 procedure ShowNeedsForCall(const Call: CallString);
 
 (* THE MULTIPLIER KEY OF THE SECTION OR STATE THE PROGRAM ALREADY KNOWS FOR A
-  CALL, '' when it knows none: the initial exchange the call history file or a
-  QSO already in the log holds for the station (CallsignsList), read as the
+  CALL, '' when it knows none: the initial exchange INITIAL.EX, a call history
+  file or a QSO already in the log holds for the station (CallsignsList; which
+  of them is SpotSectionHint's question, not this one's), read as the
   contest reads a remembered exchange (DomStringParse) and resolved through
   the contest's domestic file to the key the multiplier list holds. ONE
   lookup, for the cluster spot's hint (SpotSectionHint) -- and issue 70, the
@@ -274,9 +275,12 @@ function DomesticKeyKnownForCall(const Call: CallString): string;
   domestic file (TContestBase.UsesDomesticFile -- the class's own statement),
   and of a station in the contest's domestic countries when it names any.
 
-  PRECEDENCE: (a) what the program knows of the call (DomesticKeyKnownForCall),
-  even where the comment disagrees; else (b) the first UPPER CASE word of the
-  comment that the domestic file knows; else (c) a `+` word the same way. A
+  PRECEDENCE: (a) what the LOG or INITIAL.EX knows of the call
+  (DomesticKeyKnownForCall), even where the comment disagrees; else (b) the
+  first UPPER CASE word of the comment that the domestic file knows; else (c)
+  a `+` word the same way; else (d) a CALL HISTORY FILE's entry for the call
+  -- below the comment, because the file may be stale and the comment is
+  typed now (NY4I, 2026-11-07). A
   beacon, a spotter and the words every skimmer comment carries are never a
   candidate -- see uDXSpotParse.SpotCommentCandidates. *)
 function SpotSectionHint(const Call: CallString; const Comment: AnsiString): string;
@@ -2341,6 +2345,7 @@ var
   candidates: TSpotCommentCandidates;
   key: string;
   i: integer;
+  fromHistoryFile: boolean;
 begin
   Result := '';
   if not ContestUsesDomesticFile(ActiveContest(Contest)) then
@@ -2362,10 +2367,18 @@ begin
      begin
      Exit;
      end;
-  Result := DomesticKeyKnownForCall(Call);
-  if Result <> '' then
+  (* THE ORDER (NY4I, 2026-11-07): (1) what the LOG or INITIAL.EX remembers
+    for the call; (2) a section in the spot's comment -- typed by a spotter
+    now, so it outranks (3) a CALL HISTORY FILE's entry, which may be years
+    old; (4) no opinion. *)
+  fromHistoryFile := CallsignsList.InitialExchangeIsFromCallHistory(string(Call));
+  if not fromHistoryFile then
      begin
-     Exit;
+     Result := DomesticKeyKnownForCall(Call);
+     if Result <> '' then
+        begin
+        Exit;
+        end;
      end;
   SpotCommentCandidates(Comment, candidates);
   for i := Low(candidates) to High(candidates) do
@@ -2376,11 +2389,16 @@ begin
         Exit;
         end;
      end;
+  if fromHistoryFile then
+     begin
+     Result := DomesticKeyKnownForCall(Call);
+     end;
 end;
 
 (* THE SECTION A CLUSTER SPOT FOR A TYPED CALL CARRIES (issue 12 follow-up,
   NY4I): the same answer the band map gives that spot -- SpotSectionHint, which
-  itself lets the log and the call history beat the comment -- gated on the
+  itself lets the log and INITIAL.EX beat the comment and the comment beat a
+  call history file -- gated on the
   same setting as DetermineSpotMultStatus, so the strip and the band map agree
   and switching the setting off removes both. '' when there is no spot, no
   hint or the setting is off. Main thread (the spot store's only writer). *)
@@ -2425,9 +2443,22 @@ begin
            begin
            ParsedTempExchange := DomStringParse(TempExchange);
            end;
-        if ParsedTempExchange <> '' then
+        (* A CALL HISTORY FILE'S ENTRY YIELDS TO A SPOT COMMENT (NY4I,
+          2026-11-07): the spot's answer is SpotSectionHint's, which itself
+          ranks the comment above the file and falls back to the file. *)
+        SpotHint := '';
+        if (ParsedTempExchange <> '') and
+           CallsignsList.InitialExchangeIsFromCallHistory(string(TempString)) then
            begin
-           (* WHAT THE PROGRAM REMEMBERS ALWAYS WINS over a spot. *)
+           SpotHint := SpotHintForTypedCall(Call);
+           end;
+        if SpotHint <> '' then
+           begin
+           VisibleLog.ShowDomesticMultiplierStatus(Str10(SpotHint));
+           end
+        else if ParsedTempExchange <> '' then
+           begin
+           (* WHAT THE LOG OR INITIAL.EX REMEMBERS ALWAYS WINS over a spot. *)
            VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
            end
         else

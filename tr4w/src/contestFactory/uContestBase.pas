@@ -79,7 +79,9 @@ uses
    (* TQsoMyFacts -- a logged QSO's own station (log schema 3), which
       ScoreQSO scores by and TLoggedQSOView hands a whole-log rule. A leaf;
       it declares nothing VC or the settings model does. *)
-   uQsoMyFacts;
+   uQsoMyFacts,
+   (* TCallHistoryFields -- CallHistoryFields' answer. A leaf. *)
+   uCallHistory;
 
 const
    (* THE SHAPE OF ONE QSO: LINE IN A CABRILLO FILE, for every contest that has
@@ -2955,6 +2957,30 @@ type
       function InitialExchangeFromCall(const aCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; virtual;
+
+      (* WHAT THIS CONTEST PREFILLS FROM A CALL HISTORY FILE -- 2026-11-07
+         (NY4I, for the ARRL Sweepstakes; uCallHistory has the format).
+
+         The fields of a history row, IN THE ORDER the remembered exchange is
+         written, joined with one blank -- so the text must be the shape this
+         contest's prefill and its multiplier hint already read for a QSO the
+         log remembers (LOGDUPE.GetInitialExchangeStringFromContestExchange).
+         Sweepstakes: CK then Sect, '72 SCV', as the log remembers '18 UT'.
+         A row missing any of the fields is not prefilled.
+
+         THE BASE ANSWERS NONE: the contest does not use a call history file,
+         and LOGDUPE.LoadCallHistoryFile reads nothing for it whatever USE
+         CALL HISTORY FILE says. No station decides it, so it is asked of
+         ContestIdentity. *)
+      function CallHistoryFields: TCallHistoryFields; virtual;
+
+      (* THE CALL HISTORY FILE THIS CONTEST LOOKS FOR when CALL HISTORY
+         FILENAME names none -- a bare name, found as that setting's is
+         (uCallHistory.CallHistoryFilePath). Each running states its own
+         because the published files are per running (supercheckhistory.com:
+         ARRL-SS-CW.txt, ARRL-SS-SSB.txt); a file that serves both, such as
+         NY4I's SSCW.txt, is named in the setting. The base names none. *)
+      function CallHistoryFileName: string; virtual;
 
       (* THE ADIF SRX_STRING -- the worked station's side of the exchange, as
          received. M5b, 2026-10-02: the counterpart of FormatADIFSentExchange.
@@ -6042,6 +6068,18 @@ function TContestBase.InitialExchangeFromCall(const aCall: string;
 begin
    aExchange := '';
    Result := False;
+end;
+
+function TContestBase.CallHistoryFields: TCallHistoryFields;
+begin
+   (* No call history -- see the declaration. *)
+   Result := nil;
+end;
+
+function TContestBase.CallHistoryFileName: string;
+begin
+   (* No default file -- see the declaration. *)
+   Result := '';
 end;
 
 function TContestBase.FormatADIFReceivedExchange(const aQso: ContestExchange;

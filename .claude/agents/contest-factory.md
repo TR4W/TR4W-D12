@@ -1069,6 +1069,28 @@ the target shape, the M-step migration order and the open questions.
   was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.
+- **A CALL HISTORY FILE'S PREFILL IS THE CONTEST'S (2026-11-07, NY4I, for
+  Sweepstakes).** `TContestBase.CallHistoryFields: TCallHistoryFields`
+  (base `nil` = reads no file) names the N1MM call-history fields a row
+  prefills, IN THE ORDER the remembered exchange is written -- the shape the
+  log remembers for a worked station (`TContestARRLSSBase`: `[chfCK,
+  chfSect]` -> `'72 SCV'`, as the log's `'18 UT'`); `CallHistoryFileName`
+  (base `''`) is the running's default file when CALL HISTORY FILENAME is
+  blank (`ARRL-SS-CW.txt` / `ARRL-SS-SSB.txt`, supercheckhistory.com's names;
+  the engine spells none). A row missing a named field is skipped; the file's
+  `!!Order!!` decides the columns (the two SS layouts in circulation differ).
+  The reader is the leaf
+  `src/uCallHistory.pas`; the loader `LOGDUPE.LoadCallHistoryFile` runs in
+  `SheetInitAndLoad` after INITIAL.EX and before the log, gated by USE CALL
+  HISTORY FILE, and stores each row with `TCallsignsList.AddCallHistoryExchange`
+  (never over an existing exchange; marked `FromCallHistoryFile`, which any
+  `AddIniitialExchange` -- a logged QSO -- clears). **A spot comment outranks a
+  history-FILE entry** in `LogEdit.SpotSectionHint` and the needs strip, while
+  the log's and INITIAL.EX's still outrank the comment (NY4I: the file may be
+  stale). FLUSH INITIAL EX skips history entries. Pinned by
+  `uTestCallHistory` (registry walk: only the two SS runnings answer),
+  `uTestSpotCommentMultiplier.Test_Hint_ACommentOutranksTheCallHistoryFile`
+  and `uTestStatusAndNotice.Test_ACallHistoryEntryPrefillsAndYieldsToASpot`.
 - **THE 3830SCORES REPORT'S TABLE IS THE CONTEST'S (2026-10-25, design
   §8.2x).** Rows = the bands `UsesBand` credits (the form's standard 160-10/6/2
   always, any other credited band only with QSOs -- so WARC QSOs now reach the

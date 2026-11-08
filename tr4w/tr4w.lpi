@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="409">
+    <Units Count="410">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1798,6 +1798,10 @@
         <Filename Value="src/uTelnetTrace.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit408>
+      <Unit409>
+        <Filename Value="src/uCallHistory.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit409>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -144,6 +144,7 @@ uses
   uFunctionKeys,
   uDXClusterClient,
   uDXSpotParse,
+  uCallHistory,
   uTelnet,
   uBandmap,
   uBandMapView,

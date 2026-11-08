@@ -404,6 +404,12 @@ station setting.
   overwrote a `.cfg` line on reopen (D2). The flag generalises
   `MyContinentIsSet` / `ZoneWasSet` / `CountryWasSet`; those three predate it
   and are NOT folded in.
+- **USE CALL HISTORY FILE / CALL HISTORY FILENAME** (2026-11-07) are on
+  `TContestSettings` beside INITIAL EXCHANGE FILENAME -- contest-scoped, so
+  enabling one is stored in the OPEN log only -- aliased, default off / `''`,
+  placed at Contest > Initial exchange. Read once at contest open
+  (`LOGDUPE.LoadCallHistoryFile`); changing them mid-session takes effect at
+  the next open. No help text yet (`KNOWN_HELP_GAPS`).
 
 ## A station fact is a DEFAULT a contest may override (2026-10-13)
 
