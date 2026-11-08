@@ -59,7 +59,7 @@ var
    got     : Integer;
 begin
    Result := '';
-   tmpFile := GetTempFileName;
+   tmpFile := UniqueTempFileName('tr4wutil');
 
    // Write phase
    h := FileCreate(tmpFile);

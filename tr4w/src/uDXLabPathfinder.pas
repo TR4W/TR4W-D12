@@ -247,6 +247,9 @@ begin
            begin
            cs := callsign;
            logger.debug('[uDXLabPathfinder] Calling PutCallToCallWindow with "%s"', [callsign]);
+           (* A new call is a new entry: clear the exchange first, as the band
+              map's tune path does (issue 48), then prefill from the call. *)
+           tCleareExchangeWindow;
            PutCallToCallWindow(cs);
            end;
       end;

@@ -919,6 +919,10 @@ procedure QueuePutCallToCallField(const aCall: string);
   The "ready for the next QSO" gesture; uWSJTX's two copies of it call this. }
 procedure QueueClearCallAndFocus;
 
+{ Clear the exchange field FROM ANY THREAD. MainUnit.tCleareExchangeWindow uses
+  this when it is not on the main thread. }
+procedure QueueClearExchangeField;
+
 procedure QueueAppendSpaceToExchange;
 procedure QueueStartSendingKey(const aKey: AnsiChar);
 procedure QueuePasteIntoCallField;
@@ -2501,7 +2505,7 @@ end;
   --------------------------------------------------------------------------- }
 type
    TDeferredAction = (daAppendSpace, daStartSending, daPasteCall,
-                      daPutCall, daClearCallAndFocus);
+                      daPutCall, daClearCallAndFocus, daClearExchange);
 
 
    TEntryDeferrer = class(TObject)
@@ -2755,6 +2759,13 @@ begin
         FocusEntry(TR4WCallEdit);
         end;
 
+     daClearExchange:
+        begin
+        (* The exchange field alone: a call arriving from another program
+           (DXLab PathFinder, issue 48) starts a fresh entry. *)
+        SetEntryText(TR4WExchangeEdit, '');
+        end;
+
      daPasteCall:
         begin
         // Was WM_PASTE followed by WM_SETFOCUS, both posted.  THE SECOND ONE
@@ -2799,6 +2810,11 @@ end;
 procedure QueueClearCallAndFocus;
 begin
    Queue(daClearCallAndFocus);
+end;
+
+procedure QueueClearExchangeField;
+begin
+   Queue(daClearExchange);
 end;
 
 (* THE WINDOW PROCEDURE IS GONE -- THIS IS AN ORDINARY LCL FORM NOW.

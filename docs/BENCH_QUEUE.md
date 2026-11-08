@@ -30,6 +30,14 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-08 -- DXLAB PATHFINDER CLEARS THE EXCHANGE (issue 48)
+
+The DDE message from PathFinder used to put the call in the call field and leave whatever was in the exchange field. It now clears the exchange first (`tCleareExchangeWindow`, which hands the clear to the main thread when it is called from another one), as the band map's tune path does. Not unit-testable: it needs DXLab's DDE client and the live window.
+
+- [ ] **Clear and prefill.** With DXLab PathFinder running and enabled, type some text in the exchange field, then send a call from PathFinder. The exchange field empties, the call appears in the call field with the caret at the end, and a call-history or remembered-exchange prefill follows for that call. No `entry-field guard` complaint in `tr4w.log`.
+
+---
+
 ## Added 2026-11-08 -- PREFERENCES: THE CONTEST PAGE IS SPLIT INTO LEAVES; A HEADING WITH NO PAGE LISTS ITS PAGES
 
 The Contest page was one long list. Its settings now sit on eight leaves under Contest, beside Printed log: **QSO settings, Modes, Initial exchange, Multiplier data, Quick QSL, QTC, Contest rules, Cabrillo headings**. Contest itself keeps the rest (Contest, Contest Name, Contest Title, Auto-CQ Delay Time, Grid Map Center, the RST and message rows, ...). Only where a control sits changed: keys, scope and stored values are untouched. `uTestPrefsPlacement` pins every key's leaf and builds the real window to prove each setting has exactly one control. Separately, a heading with no page of its own (today only **External Software**; Operating has its own page) now shows its sentence plus one button per page under it.

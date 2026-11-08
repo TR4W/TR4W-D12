@@ -270,7 +270,7 @@ begin
    (* Take a real log and add one byte. That is what a log written by a TR4W with
      a different SizeOfContestExchange looks like from here, and reading it at
      our stride would produce misaligned records that look like data. *)
-   fn := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_stride_test.trw';
+   fn := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_stride_test_' + IntToStr(GetProcessID) + '.trw';
    if FileExists(fn) then
       begin
       DeleteFile(fn);

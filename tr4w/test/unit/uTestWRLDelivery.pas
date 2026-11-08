@@ -204,7 +204,7 @@ end;
 
 procedure TWRLDeliveryTests.OpenFixture;
 begin
-   FFileName := GetTempFileName;
+   FFileName := UniqueTempFileName('tr4wwrl');
    DeleteFile(FFileName);
    FDatabase := TLogDatabase.Create;
    FDatabase.CreateNew(FFileName);

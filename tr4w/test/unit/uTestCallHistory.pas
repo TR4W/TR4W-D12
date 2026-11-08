@@ -611,7 +611,7 @@ var
    savedSeed: Cardinal;
 begin
    BeginTest('Test_Cost_ALargeFileLoadsQuickly');
-   path := string(GetTempDir(False)) + 'tr4w_callhistory_cost.txt';
+   path := string(GetTempDir(False)) + 'tr4w_callhistory_cost_' + IntToStr(GetProcessID) + '.txt';
    savedList := CallsignsList;
    lines := TStringList.Create;
    try
@@ -685,7 +685,7 @@ var
    written: TStringList;
 begin
    BeginTest('Test_FlushInitialExSkipsCallHistoryEntries');
-   path := string(GetTempDir(False)) + 'tr4w_callhistory_flush.ex';
+   path := string(GetTempDir(False)) + 'tr4w_callhistory_flush_' + IntToStr(GetProcessID) + '.ex';
    savedList := CallsignsList;
    CallsignsList := TCallsignsList.Create;
    written := TStringList.Create;

@@ -1850,7 +1850,17 @@ begin
 
      if ContestSession.Exchange = RSTALLJAPrefectureAndPrecedenceExchange then
         begin
-        GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
+        (* A logged QSO whose precedence was never entered holds #0 here. Joined
+           in, it put a NUL and a space in front of the prefecture of the
+           remembered exchange (issue 210): the QTH alone is the prefill. *)
+        if Precedence = #0 then
+           begin
+           GetInitialExchangeStringFromContestExchange := QTHString;
+           end
+        else
+           begin
+           GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
+           end;
         Exit;
         end;
 

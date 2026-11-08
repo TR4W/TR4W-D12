@@ -134,7 +134,7 @@ procedure TLogLockingTests.NewLog;
 var
    db: TLogDatabase;
 begin
-   FFileName := GetTempFileName;
+   FFileName := UniqueTempFileName('tr4wlock');
    DeleteFile(FFileName);
    db := TLogDatabase.Create;
    try

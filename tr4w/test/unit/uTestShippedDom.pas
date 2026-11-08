@@ -54,6 +54,8 @@ implementation
 uses
    Classes,
    SysUtils,
+   (* UniqueTempFileName. *)
+   uTR4WTestFramework,
    (* ExistingDataFile -- a shipped file, whatever case it is spelled in. *)
    uAppPaths,
    (* ShippedDomDir. *)
@@ -118,7 +120,7 @@ var
    path: string;
 begin
    aSegment.Insert(0, 'TEST COPY OF ' + UpperCase(aFileName) + ', INCLUDES REMOVED');
-   path := GetTempFileName(GetTempDir, 'tr4wdom');
+   path := UniqueTempFileName('tr4wdom');
    try
       aSegment.SaveToFile(AnsiString(path));
       if not aTable.ReadDomQTHFile(path, not aTopLevel) then

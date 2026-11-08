@@ -308,11 +308,11 @@ totals.cabrillo = CLAIMED-SCORE: 90
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
 initialexchange.trmaster.fixture = TRUE
-iex W1AW | none=" " trmaster=" " logged=" <#00> " custom=" <#00> "
+iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" A FL " custom=" A FL "
 iex VE3ABC | none=" " trmaster=" " logged=" A ON " custom=" A ON "
 iex XE1ABC | none=" " trmaster=" " logged=" A " custom=" A "
-iex G3ABC | none=" " trmaster=" " logged=" <#00> " custom=" <#00> "
+iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
 iex DL1ABC | none=" " trmaster=" " logged=" A " custom=" A "
 iex JA1ABC | none=" " trmaster=" " logged=" A " custom=" A "
 iex PY2ABC | none=" " trmaster=" " logged=" A " custom=" A "
@@ -651,11 +651,11 @@ totals.cabrillo = CLAIMED-SCORE: 90
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
 initialexchange.trmaster.fixture = TRUE
-iex W1AW | none=" " trmaster=" " logged=" <#00> " custom=" <#00> "
+iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" A FL " custom=" A FL "
 iex VE3ABC | none=" " trmaster=" " logged=" A ON " custom=" A ON "
 iex XE1ABC | none=" " trmaster=" " logged=" A " custom=" A "
-iex G3ABC | none=" " trmaster=" " logged=" <#00> " custom=" <#00> "
+iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
 iex DL1ABC | none=" " trmaster=" " logged=" A " custom=" A "
 iex JA1ABC | none=" " trmaster=" " logged=" A " custom=" A "
 iex PY2ABC | none=" " trmaster=" " logged=" A " custom=" A "
@@ -992,11 +992,11 @@ totals.cabrillo = CLAIMED-SCORE: 90
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
 initialexchange.trmaster.fixture = TRUE
-iex W1AW | none=" " trmaster=" " logged=" <#00> " custom=" <#00> "
+iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" A FL " custom=" A FL "
 iex VE3ABC | none=" " trmaster=" " logged=" A ON " custom=" A ON "
 iex XE1ABC | none=" " trmaster=" " logged=" A " custom=" A "
-iex G3ABC | none=" " trmaster=" " logged=" <#00> " custom=" <#00> "
+iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
 iex DL1ABC | none=" " trmaster=" " logged=" A " custom=" A "
 iex JA1ABC | none=" " trmaster=" " logged=" A " custom=" A "
 iex PY2ABC | none=" " trmaster=" " logged=" A " custom=" A "

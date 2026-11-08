@@ -121,7 +121,7 @@ begin
    { Any existing file will do -- CanPlayFile answers "would this be
      attempted", not "is this valid audio". Distinguishing those is the
      player's job and it reports its own failure. }
-   path := GetTempFileName;
+   path := UniqueTempFileName('tr4waudio');
    AssignFile(f, path);
    Rewrite(f);
    WriteLn(f, 'not really a wav');

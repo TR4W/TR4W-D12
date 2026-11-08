@@ -120,7 +120,7 @@ var
    csv: TStringList;
    path: string;
 begin
-   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-pota-park-fixture.csv';
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-pota-park-fixture-' + IntToStr(GetProcessID) + '.csv';
    csv := TStringList.Create;
    try
       csv.Add('"reference","name","active","entityId","locationDesc","latitude","longitude","grid"');

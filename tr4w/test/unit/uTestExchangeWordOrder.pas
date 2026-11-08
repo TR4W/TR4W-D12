@@ -61,6 +61,7 @@ type
       procedure Test_SprintStateBeforeTheName;
       procedure Test_NAQPStateAndNameInEitherOrder;
       procedure Test_SweepstakesMultiplierHintIsTheSection;
+      procedure Test_ALLJARememberedExchangeHasNoNul;
    end;
 
 implementation
@@ -78,6 +79,8 @@ uses
    uContestBase,
    uContestFactory,
    uContestRegistry,
+   (* ContestSession -- the exchange kind GetInitialExchange... reads. *)
+   uContestSession,
    (* DomesticCountries -- the engine's domestic-country list. *)
    ZoneCont,
    uTestContestObjects,
@@ -1185,8 +1188,36 @@ begin
    end;
 end;
 
+(* ISSUE 210 -- ALL JA's remembered exchange for a QSO logged with no
+   precedence began with a NUL (and a space). The text is only the prefill
+   a repeat call is offered; it is never written to ADIF or Cabrillo. *)
+procedure TExchangeWordOrderTests.Test_ALLJARememberedExchangeHasNoNul;
+var
+   rx: ContestExchange;
+   savedKind: ExchangeType;
+begin
+   BeginTest('Test_ALLJARememberedExchangeHasNoNul');
+   savedKind := ContestSession.Exchange;
+   ContestSession.WriteExchange(RSTALLJAPrefectureAndPrecedenceExchange);
+   try
+      rx := Default(ContestExchange);
+      rx.QTHString := '01';
+
+      rx.Precedence := #0;
+      CheckEquals('01', string(GetInitialExchangeStringFromContestExchange(rx)),
+                  'no precedence: the prefecture alone, no NUL and no space');
+
+      rx.Precedence := 'A';
+      CheckEquals('A 01', string(GetInitialExchangeStringFromContestExchange(rx)),
+                  'a precedence is still put first');
+   finally
+      ContestSession.WriteExchange(savedKind);
+   end;
+end;
+
 procedure TExchangeWordOrderTests.RunAllTests;
 begin
+   Test_ALLJARememberedExchangeHasNoNul;
    Test_SweepstakesMultiplierHintIsTheSection;
    Test_SweepstakesPrecedenceBeforeTheSerial;
    Test_SweepstakesAmbiguousSerialIsRefused;

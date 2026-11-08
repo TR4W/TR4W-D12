@@ -441,7 +441,7 @@ begin
    (* THE LOG, IN THE SYSTEM'S TEMP DIRECTORY: if the refusal ever stops
       working, the import goes on to write -- and must not write into the
       tree (a mutation run left tr4w/test/unit/.db behind, 2026-10-23). *)
-   scratchLog := GetTempDir(False) + 'tr4w_rtc_serial_zero.trw';
+   scratchLog := GetTempDir(False) + 'tr4w_rtc_serial_zero_' + IntToStr(GetProcessID) + '.trw';
    lines := TStringList.Create;
    try
       Contest := ContestHandleOf(RTC);

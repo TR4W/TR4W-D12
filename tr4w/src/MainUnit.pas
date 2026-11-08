@@ -8051,8 +8051,16 @@ procedure tCleareExchangeWindow;
 begin
   // Windows.SetWindowTextA(ExchangeWindowHandle, nil);
   // SetEntryText(TR4WExchangeEdit, nil);
+  (* A caller off the main thread (the DXLab PathFinder DDE handler, issue 48)
+     hands the clear over, as PutCallToCallWindow does for the call field. The
+     queue is FIFO, so a call put right after still lands after the clear. *)
+  if not OnMainThread then
+     begin
+     QueueClearExchangeField;
+     Exit;
+     end;
   SetEntryText(TR4WExchangeEdit, '');
-  
+
 end;
 
 procedure tSetExchWindInitExchangeEntry;

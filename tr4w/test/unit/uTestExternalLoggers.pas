@@ -452,7 +452,7 @@ begin
    end;
 
    BeginTest('durable claims and recovery are isolated by destination');
-   path := string(GetTempFileName);
+   path := UniqueTempFileName('tr4wextlog');
    DeleteFile(path);
    database := TLogDatabase.Create;
    try
@@ -489,7 +489,7 @@ begin
       DeleteFile(path + '-shm');
    end;
    BeginTest('legacy adoption preserves confirmed delivery and unsafe update recovery is isolated');
-   path := string(GetTempFileName);
+   path := UniqueTempFileName('tr4wextlog');
    DeleteFile(path);
    database := TLogDatabase.Create;
    try
@@ -537,7 +537,7 @@ begin
    end;
 
    BeginTest('capture updates only its own binding and inactive destinations keep existing changes');
-   path := string(GetTempFileName);
+   path := UniqueTempFileName('tr4wextlog');
    DeleteFile(path);
    database := TLogDatabase.Create;
    serviceA := TCaptureService.Create('account', 'book', '', 'A', True, 'first');
@@ -593,7 +593,7 @@ begin
    end;
 
    BeginTest('a blocked HTTP destination holds no writer lock and does not delay another worker');
-   path := string(GetTempFileName);
+   path := UniqueTempFileName('tr4wextlog');
    DeleteFile(path);
    database := TLogDatabase.Create;
    gate := TEvent.Create(nil, True, False, '');
@@ -969,7 +969,7 @@ begin
    end;
 
    BeginTest('durable: a switch-off keeps what is queued, a switch-on captures only contacts logged while on, no backfill');
-   path := string(GetTempFileName);
+   path := UniqueTempFileName('tr4wextlog');
    DeleteFile(path);
    database := TLogDatabase.Create;
    probe := TWorkerProbe.Create('account', 'book', 'key', 'A', True, 'live');
@@ -1018,7 +1018,7 @@ begin
       begin
       Application.Initialize;
       end;
-   path := string(GetTempFileName);
+   path := UniqueTempFileName('tr4wextlog');
    DeleteFile(path);
    database := TLogDatabase.Create;
    workerSignal := TEvent.Create(nil, True, False, '');

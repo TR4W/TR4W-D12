@@ -69,6 +69,12 @@ type
 procedure RegisterSuite(Suite: TTestCase);
 function  RunAllSuites: Boolean;  // Returns True if every test passes.
 
+(* A temp file name no OTHER test process can be handed. FPC's GetTempFileName
+   only picks the first <prefix>NNNNN.tmp that does not exist yet, so two suites
+   running at once both got ...00000.tmp (issue 212). The process id in the
+   prefix makes the name per-process. The file is not created. *)
+function  UniqueTempFileName(const aPrefix: string): string;
+
 implementation
 
 var
@@ -186,6 +192,11 @@ end;
 // ---------------------------------------------------------------------------
 // Registry
 // ---------------------------------------------------------------------------
+
+function UniqueTempFileName(const aPrefix: string): string;
+begin
+   Result := GetTempFileName(GetTempDir, aPrefix + IntToStr(GetProcessID) + '_');
+end;
 
 procedure RegisterSuite(Suite: TTestCase);
 begin

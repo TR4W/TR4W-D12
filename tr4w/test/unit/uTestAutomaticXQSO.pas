@@ -69,6 +69,7 @@ type
       procedure Test_TheSummarySheetCountsNoXQSO;
       procedure Test_LogContactCountsNoXQSOButAdvancesTheSerial;
       procedure Test_TheLoaderAndTheRescoreAskThePredicate;
+      procedure Test_ASharedSerialAdvancesTheNextByOne;
    end;
 
 (* A SOURCE FILE UNDER tr4w/src, as text -- for a test that pins the ORDER of
@@ -92,7 +93,12 @@ uses
    uScoreTotals,
    PostUnit,
    uTestContestObjects,
-   uTestRegisteredContests;
+   uTestRegisteredContests,
+   (* MaxSerialSent -- the high-water mark; ServerSerialNumber -- 0 off a net. *)
+   LogDupe,
+   uNet,
+   (* NextSerialToSend, UpdateMaxSerialSent. *)
+   LogEdit;
 
 (* A CQ WW SSB QSO: a US entrant working Europe on 20 m phone -- 3 points.
    The record's own contest is set, as the log's loader sets it. *)
@@ -449,8 +455,57 @@ begin
              'the loader feeds the initial-exchange history by the contest-blind test');
 end;
 
+(* ISSUE 28 -- A MULTI-COUNTY ENTRY LOGS ONE QSO PER COUNTY, ALL WITH THE SAME
+   SENT SERIAL; the next number to send must be one past that serial, not one
+   past the QSO count. DRIVEN: UpdateMaxSerialSent and NextSerialToSend
+   directly, as LogContact calls them (LogContact itself cannot be driven
+   headless -- see the header). *)
+procedure TAutomaticXQSOTests.Test_ASharedSerialAdvancesTheNextByOne;
+var
+   savedMax: array[BandType] of integer;
+   savedServer: integer;
+   savedByBand: boolean;
+   b: BandType;
+begin
+   BeginTest('Test_ASharedSerialAdvancesTheNextByOne');
+   for b := Low(BandType) to High(BandType) do
+      begin
+      savedMax[b] := MaxSerialSent[b];
+      end;
+   savedServer := ServerSerialNumber;
+   savedByBand := Settings.Contest.QsoNumberByBand;
+   try
+      for b := Low(BandType) to High(BandType) do
+         begin
+         MaxSerialSent[b] := 0;
+         end;
+      ServerSerialNumber := 0;
+      Settings.Contest.QsoNumberByBand := False;
+
+      CheckEquals(1, NextSerialToSend, 'an empty log starts at 1');
+
+      (* Serial 1 logged twice: two county legs of one exchange. *)
+      UpdateMaxSerialSent(Band20, 1);
+      UpdateMaxSerialSent(Band20, 1);
+      CheckEquals(2, NextSerialToSend, 'two legs on serial 1: next is 2, not 3');
+
+      UpdateMaxSerialSent(Band20, 2);
+      UpdateMaxSerialSent(Band20, 2);
+      UpdateMaxSerialSent(Band20, 2);
+      CheckEquals(3, NextSerialToSend, 'three legs on serial 2: next is 3');
+   finally
+      for b := Low(BandType) to High(BandType) do
+         begin
+         MaxSerialSent[b] := savedMax[b];
+         end;
+      ServerSerialNumber := savedServer;
+      Settings.Contest.QsoNumberByBand := savedByBand;
+   end;
+end;
+
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
+   Test_ASharedSerialAdvancesTheNextByOne;
    Test_TheContestsRuleMakesAnXQSO;
    Test_AnXQSOScoresNothing;
    Test_AnEditedBandReclassifiesTheQSO;

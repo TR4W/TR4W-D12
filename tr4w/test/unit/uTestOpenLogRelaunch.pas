@@ -310,7 +310,7 @@ var
    path: string;
 begin
    BeginTest('TestTheHandOffFileRoundTrips');
-   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-handoff-test.txt';
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-handoff-test-' + IntToStr(GetProcessID) + '.txt';
    ClearNewContestChoices;
    SetNewContestMainCallsign('W4TA');
    QueueNewContestCommand('MY CALL', 'W4TA');
@@ -340,7 +340,7 @@ var
    lines: TStringList;
 begin
    BeginTest('TestABadHandOffFileQueuesNothing');
-   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-handoff-bad.txt';
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-handoff-bad-' + IntToStr(GetProcessID) + '.txt';
    SysUtils.DeleteFile(path);
    QueueNewContestCommand('CONTEST', 'LEFTOVER');
    CheckFalse(LoadNewContestChoices(path), 'a missing file is not a hand-off');
