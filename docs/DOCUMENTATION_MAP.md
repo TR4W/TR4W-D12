@@ -11,6 +11,7 @@ Read the specific doc before acting in its area — these are current and this f
 | Build & test recipe | `tr4w/docs/BUILD.md` |
 | **Setting up a build environment** | **`tr4w/docs/BUILD.md`** — one installer; verified from scratch 2026-08-14 |
 | CI runner setup | `docs/CI_RUNNER_SETUP.md` |
+| TCI mock radio and build-test integration | [TCI_MOCK_AGENT_HANDOFF.md](TCI_MOCK_AGENT_HANDOFF.md) — standalone mock server, targeted tests, real-client integration plan and isolation requirements; operating details in tools/tcimock/README.md |
 | Adding a radio | `docs/ADDING_A_RADIO.md` |
 | ~~Radio factory design~~ | ~~`docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md`~~ — **both SUPERSEDED and archived**: they describe an enum-keyed simple factory, and the tree shipped a self-registration registry. Read `docs/ADDING_A_RADIO.md` and `uRadioRegistry.pas` |
 | Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
