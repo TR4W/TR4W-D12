@@ -81,7 +81,6 @@ type
 
 type TKenwoodLAN = class(TKenwoodProtocolRadio)
    private
-      FAuthState: TTS890AuthState;
       FInitialized: Boolean;
 
       // TX VFO from the last FT reply.  Informational only: on this radio split
@@ -105,6 +104,11 @@ type TKenwoodLAN = class(TKenwoodProtocolRadio)
       procedure ParseFRResponse(const sMessage: string);
 
    protected
+      // LAN login state.  PROTECTED so a unit-test probe can stand the driver
+      // in the authenticated state without a socket: every CAT send below is
+      // gated on it, so without this nothing past the login is testable.
+      FAuthState: TTS890AuthState;
+
       // The identifier this radio answers to on ID; -- ID024 for the TS-890S,
       // ID022 for the TS-990S.  PROTECTED, not private: Delphi's `private` is
       // unit-scoped, so the model subclasses in uRadioKenwoodTS890.pas and
@@ -152,6 +156,7 @@ type TKenwoodLAN = class(TKenwoodProtocolRadio)
       procedure SetXITFreq(whichVFO: TVFO; hz: integer); override;
 
       procedure Split(splitOn: boolean); override;
+      procedure SplitTransmittingOn(txVFO: TVFO); override;
       procedure SetBand(band: TRadioBand; vfo: TVFO = nrVFOA); override;
       function  ToggleBand(vfo: TVFO = nrVFOA): TRadioBand; override;
       procedure SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA); override;
@@ -1105,6 +1110,19 @@ end;
 // Split / Band / Filter (stubs -- to be expanded in follow-up commits)
 // ============================================================================
 
+// FT<n>; selects the transmit VFO: FT0 = VFO A, FT1 = VFO B.
+function KenwoodFTCommand(txVFO: TVFO): string;
+begin
+   if txVFO = nrVFOB then
+      begin
+      Result := 'FT1;';
+      end
+   else
+      begin
+      Result := 'FT0;';
+      end;
+end;
+
 procedure TKenwoodLAN.Split(splitOn: boolean);
 begin
    if FAuthState <> ksAuthenticated then
@@ -1125,14 +1143,42 @@ begin
    // OPEN QUESTION for the bench: does FT1; alone make a real TS-890 report TB1?
    // If it does, this is correct as-is.  If it does NOT, split has never worked
    // on this radio and the fix is to send TB1;/TB0; here.
+   //
+   // ISSUE 38.  ON stays FT1; (TX = B) for EVERY caller.  The band map's QSX,
+   // WSJT-X and the TCI server write their TX frequency to B and then call
+   // Split(True); were ON to follow the receive VFO, a TS-890 receiving on B
+   // would transmit on A -- for a band-map QSX click, the DX's own frequency.
+   // The '-' entry, which writes its frequency to SplitTransmitVFO, splits
+   // through SplitTransmittingOn below instead.
+   //
+   // OFF puts transmit back on the RECEIVE VFO: the VFO that is not
+   // SplitTransmitVFO.  The family answer is B, so this is FT0; exactly as
+   // before; the TS-890 answers from FR, so with B receiving OFF is FT1;.
+   // FT0; with B receiving would have turned split ON.  Safe for every caller:
+   // OFF can only make TX = RX.
+   //   Hamlib (rigs/kenwood/kenwood.c, kenwood_set_split_vfo, which the TS-890
+   //   uses) sends FT0 for OFF whatever the RX VFO, which with RX B would leave
+   //   split on, so that arm is not followed.  The OFF spelling is reasoned from
+   //   FT = "TX VFO" and awaits the bench (docs/BENCH_QUEUE.md).
    if splitOn then
       begin
-      Self.SendToRadio('FT1;');   // TX = VFO B
+      Self.SendToRadio(KenwoodFTCommand(nrVFOB));
       end
    else
       begin
-      Self.SendToRadio('FT0;');  // TX = VFO A (split off)
+      Self.SendToRadio(KenwoodFTCommand(OtherVFO(Self.SplitTransmitVFO)));
       end;
+end;
+
+// Issue 38: the '-' entry's split, transmitting on the VFO it just tuned.
+// Hamlib agrees for RX B: kenwood_set_split_vfo sends FR1;FT0 (TX = A).
+procedure TKenwoodLAN.SplitTransmittingOn(txVFO: TVFO);
+begin
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
+   Self.SendToRadio(KenwoodFTCommand(txVFO));
 end;
 
 procedure TKenwoodLAN.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);

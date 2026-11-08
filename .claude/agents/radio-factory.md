@@ -347,6 +347,23 @@ as `tCreateThread`'s parameter. It was `procedure(rig: RadioPtr); stdcall`,
 which the untyped thread start never checked. Start it bare,
 `tCreateThread(BeginPolling, ...)`; `Lint-TypedCodePointers` fails on `@`.
 
+**THE SPLIT TX VFO IS THE RADIO'S ANSWER, NOT 'B'** (issue 38, 2026-11-08).
+The `-` entry writes the TX frequency to `RadioObject.SplitTransmitVFOLetter`,
+which asks the virtual `SplitTransmitVFO` (base: `nrVFOB`, the old fixed
+answer). Only `TKenwoodTS890Radio` overrides it, to the VFO it is not receiving
+on (`FR`). The entry then calls `PutRadioIntoSplitTransmittingOn(letter)` ->
+virtual `SplitTransmittingOn` (base: `Split(True)`, refuses anything but B);
+`TKenwoodLAN` sends `FT` for that VFO. **A plain `Split(True)` stays `FT1;`**:
+the band-map QSX, WSJT-X and the TCI server write B then call it, and following
+the receive VFO there would transmit on A -- the DX's frequency for a QSX click.
+`Split(False)` sends `FT` for the receive VFO (safe for every caller). Those
+three callers are still A-centric for a TS-890 receiving on B; routing them is
+follow-up work (TCI: with `tci-interface`). The TS-990 shares the LAN base and
+deliberately keeps B. Pinned over the whole
+registry by `uTestKenwoodLANSplit` (receive VFO set to B first, or the pin
+proves nothing). **Flex still assumes A receives**: `TFlexAPI` never reads a
+slice's `active=`, so its override needs active-slice tracking first.
+
 ## Before any "behaviour-preserving" swap
 
 Prove equivalence **in both directions**, and expect the first check to say no.

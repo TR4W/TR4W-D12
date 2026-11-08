@@ -596,6 +596,7 @@ uses
    uFlexDiscovery       in '..\..\src\radioFactory\uFlexDiscovery.pas',
    uTestFlexDiscovery   in 'uTestFlexDiscovery.pas',
    uTestKenwoodSerial   in 'uTestKenwoodSerial.pas',
+   uTestKenwoodLANSplit in 'uTestKenwoodLANSplit.pas',
    uTestRadioTCI        in 'uTestRadioTCI.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
@@ -1114,6 +1115,7 @@ begin
    RegisterSuite(TFlexRegistryTests.Create('FlexRegistry'));
    RegisterSuite(TFlexDiscoveryTests.Create('FlexDiscovery'));
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));
+   RegisterSuite(TKenwoodLANSplitTests.Create('KenwoodLANSplit'));
    RegisterSuite(TRadioTCITests.Create('RadioTCI'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));

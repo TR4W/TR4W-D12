@@ -402,6 +402,13 @@ type
       function DeleteLastCWCharacter: boolean;
       procedure PutRadioIntoSplit;
       procedure PutRadioOutOfSplit;
+      // The VFO letter a split transmit frequency is written to: the radio's
+      // own answer (TFactoryRadioBase.SplitTransmitVFO), 'B' with no radio.
+      function SplitTransmitVFOLetter: char;
+      // Split on, transmitting on the VFO named by that letter.  Take the letter
+      // ONCE and pass the same one to SetRadioFreq and here, so an A/B press
+      // between the two calls cannot split them.
+      procedure PutRadioIntoSplitTransmittingOn(VFOLetter: char);
      { procedure SendIcomExtendedVFO(bVFO: boolean);
      }
       function MemoryKeyer(mem: integer): boolean;
@@ -1559,6 +1566,36 @@ begin
    if Self.tFactoryObject <> nil then
       begin
       Self.tFactoryObject.Split(false);
+      end;
+end;
+
+(* Issue 38.  'B' is what the transmit-frequency entry always wrote, so a slot
+  with no radio, and every radio that keeps the base answer, are unchanged. *)
+function RadioObject.SplitTransmitVFOLetter: char;
+begin
+   Result := 'B';
+   if Self.tFactoryObject <> nil then
+      begin
+      if Self.tFactoryObject.SplitTransmitVFO = nrVFOA then
+         begin
+         Result := 'A';
+         end;
+      end;
+end;
+
+procedure RadioObject.PutRadioIntoSplitTransmittingOn(VFOLetter: char);
+begin
+   if Self.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+   if VFOLetter = 'A' then
+      begin
+      Self.tFactoryObject.SplitTransmittingOn(nrVFOA);
+      end
+   else
+      begin
+      Self.tFactoryObject.SplitTransmittingOn(nrVFOB);
       end;
 end;
 

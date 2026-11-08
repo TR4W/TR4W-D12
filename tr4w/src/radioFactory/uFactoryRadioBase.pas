@@ -356,6 +356,9 @@ const
 
 function BoolToString(b: boolean): string;
 
+// The VFO that is not this one.  TVFO has exactly two members.
+function OtherVFO(whichVFO: TVFO): TVFO;
+
 // Add telnet client to this base class
 // Add property for IP address, port, type (tcp or udp but just implement tcp right now).
 // Add a connect and disconnect method
@@ -1254,6 +1257,22 @@ Type TFactoryRadioBase = class(TObject)
       procedure XITOn(vfo: TVFO); Virtual; Abstract;
       procedure XITOff(vfo: TVFO); Virtual; Abstract;
       procedure Split(splitOn: boolean); Virtual; Abstract;
+      (* Which VFO a split TRANSMIT frequency belongs on (issue 38).  The
+        transmit-frequency entry ('-') writes the frequency here and then calls
+        Split(True).  Base answers VFO B -- the fixed "A receives, B transmits"
+        model every radio was given before -- so a radio that does not override
+        is byte-for-byte unchanged.  A radio whose receive VFO is selectable and
+        tracked overrides it to answer the VFO it is NOT receiving on. *)
+      function  SplitTransmitVFO: TVFO; Virtual;
+      (* Split ON, transmitting on txVFO -- the '-' entry's split, which has just
+        written its frequency to SplitTransmitVFO.  Every other split-on caller
+        (band map QSX, WSJT-X, the TCI server) still calls Split(True) and still
+        assumes "B transmits"; they are NOT routed here, so their bytes are
+        unchanged on every radio.  Base: Split(True), which is right because a
+        radio that keeps the base SplitTransmitVFO is only ever passed B
+        (pinned over the registry).  Anything else is refused with an ERROR
+        rather than sending a split that would transmit on the wrong VFO. *)
+      procedure SplitTransmittingOn(txVFO: TVFO); Virtual;
       procedure SetRITFreq(vfo: TVFO; hz: integer); Virtual; Abstract;
       procedure SetXITFreq(vfo: TVFO; hz: integer); Virtual; Abstract;
       procedure SetBand(band: TRadioBand; vfo: TVFO = nrVFOA); Virtual; Abstract;
@@ -2959,6 +2978,22 @@ begin
    FActiveVFO := vfo;
 end;
 
+function TFactoryRadioBase.SplitTransmitVFO: TVFO;
+begin
+   Result := nrVFOB;
+end;
+
+procedure TFactoryRadioBase.SplitTransmittingOn(txVFO: TVFO);
+begin
+   if txVFO <> nrVFOB then
+      begin
+      logger.Error('[SplitTransmittingOn] %s: split on VFO %s refused -- this radio can only split with B transmitting',
+                   [Self.radioModel, VFOToString(txVFO)]);
+      Exit;
+      end;
+   Self.Split(True);
+end;
+
 function TFactoryRadioBase.GetDataMode(whichVFO: TVFO): TRadioMode;
 begin
    Result := Self.vfo[whichVFO].dataMode;
@@ -3593,6 +3628,18 @@ end;
 function BoolToString(b: boolean): string;
 begin
    Result := IfThen(b,'True','False');
+end;
+
+function OtherVFO(whichVFO: TVFO): TVFO;
+begin
+   if whichVFO = nrVFOA then
+      begin
+      Result := nrVFOB;
+      end
+   else
+      begin
+      Result := nrVFOA;
+      end;
 end;
 
 initialization

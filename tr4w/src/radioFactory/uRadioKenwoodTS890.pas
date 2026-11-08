@@ -48,6 +48,8 @@ type
   TKenwoodTS890Radio = class(TKenwoodLAN)
   public
     constructor Create; reintroduce;
+    // Issue 38: split transmits on the VFO this radio is NOT receiving on.
+    function SplitTransmitVFO: TVFO; override;
   end;
 
 implementation
@@ -66,6 +68,21 @@ begin
    // P2 under P1=space, which is why the family base pads and this model does
    // not.  (Was uCWFraming's `TS890:` arm, the one model it named on its own.)
    FCapabilities.CWFrame.pad := False;
+end;
+
+(* ISSUE 38: THE TS-890 RECEIVES ON WHICHEVER VFO FR SELECTS, so "B transmits"
+  is only right while A receives.  With B receiving, the old fixed answer put
+  the transmit frequency on the receive VFO and sent FT1; -- TX = RX = B, no
+  split at all.  The receive VFO is tracked from FR (TKenwoodLAN.ParseFRResponse,
+  pushed under AI2 and asked at login), so the answer is the other one.
+
+  THIS MODEL ONLY, not the shared TKenwoodLAN base: the TS-990S shares that base
+  but splits differently (Hamlib rigs/kenwood/kenwood.c drives TB with "Rx MAIN /
+  Tx SUB is the only split method"), and nothing has been benched on it, so it
+  keeps the family answer B and its bytes are unchanged. *)
+function TKenwoodTS890Radio.SplitTransmitVFO: TVFO;
+begin
+   Result := OtherVFO(Self.GetActiveVFO);
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

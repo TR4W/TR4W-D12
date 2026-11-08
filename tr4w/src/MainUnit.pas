@@ -3825,6 +3825,7 @@ procedure tr4w_alt_n_transmit_frequency;
 var
   Freq: integer;
   RadioToSet: RadioPtr {RadioType};
+  TXVFOLetter: char;
 begin
   begin
 
@@ -3901,10 +3902,15 @@ begin
     if Freq > 1000000 then
        begin
        // SetRadioFreq(ActiveRadio, Freq, ActiveMode, 'B');
-       RadioToSet.SetRadioFreq(Freq, RadioToSet.ModeMemory, 'B');
+       // Issue 38: the radio names its split transmit VFO.  'B' for every
+       // radio but one that tracks a selectable receive VFO (the TS-890),
+       // which answers the VFO it is not receiving on.  Asked ONCE, and the
+       // split is told the same VFO the frequency went to.
+       TXVFOLetter := RadioToSet.SplitTransmitVFOLetter;
+       RadioToSet.SetRadioFreq(Freq, RadioToSet.ModeMemory, TXVFOLetter);
        // SetRadioFreq(RadioToSet, Freq, ModeMemory[RadioToSet], 'B'); {KK1L: 6.73}
        // PutRadioIntoSplit(RadioToSet); {KK1L: 6.73}
-       RadioToSet.PutRadioIntoSplit;
+       RadioToSet.PutRadioIntoSplitTransmittingOn(TXVFOLetter);
        SplitFreq := Freq;
        // Same rule as the exit branch: a reporting radio's split state comes
        // from the radio, so do not shadow it here either.

@@ -30,6 +30,19 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-08 -- SPLIT BY '-' WITH VFO B RECEIVING ON A TS-890S (issue 38)
+
+The transmit-frequency entry (the `-` key) always wrote the TX frequency to VFO B and the LAN Kenwood always sent `FT1;`. With VFO B receiving that made TX = RX = B: no split. The radio now names its split TX VFO (`SplitTransmitVFO`); only the TS-890S changes its answer, to the VFO it is NOT receiving on (tracked from `FR`), and the `-` entry splits through `SplitTransmittingOn` with that VFO. With A receiving the bytes are exactly as before (`FB<freq>;` then `FT1;`, off `FT0;`). With B receiving it sends `FA<freq>;` then `FT0;`, and off sends `FT1;`. Split OFF from ANY path now puts TX back on the receive VFO (with B receiving it used to send `FT0;`, which turned split ON). The band map's QSX, WSJT-X and the TCI server still write B and send `FT1;` -- unchanged on purpose, still A-centric for B receiving. Unit-pinned in `uTestKenwoodLANSplit`; what the radio does with it is not. Hamlib agrees with `FT0` for "on, B receiving"; the "off" spelling is reasoned from FT = "TX VFO" (Hamlib's own off arm sends `FT0` regardless, which would leave B-receiving in split). Also still open from before: does `FT` alone make a real TS-890 report `TB1` (the comment in `TKenwoodLAN.Split`)? Watch `tr4w.log` at TRACE for `ParseTBResponse`, `ParseFTResponse`, `ParseFRResponse`.
+
+- [ ] **TS-890S over LAN, VFO A receiving.** Press `-`, enter a TX frequency. Split comes on (radio and TR4W's split indicator), RX stays on A at its frequency, VFO B shows the entered frequency and transmits there. Press `-` again: split off, TX back on A.
+- [ ] **TS-890S over LAN, VFO B receiving** (press A/B on the radio first). Press `-`, enter a TX frequency. Split comes on, RX stays on B and B's frequency is NOT changed, VFO A shows the entered frequency and transmits there (key briefly into a dummy load, or watch the TX VFO indicator). Press `-` again: split OFF (not on), TX back on B, and the radio reports `TB0`.
+- [ ] **Band-map click with B receiving does not split.** With B receiving and split off, double-click an ordinary (non-QSX) band-map spot: the radio must NOT go into split (it used to, because the tune's split-off sent `FT0;`). Known and unchanged: that tune writes VFO A, not the receive VFO.
+- [ ] **Mode with B receiving.** After the B-receiving entry, say whether VFO A's mode changed. Known, not new: `OM` sets the mode of the receive VFO whatever VFO is named, so TR4W can only set the mode of the receive VFO.
+- [ ] **FlexRadio: unchanged.** Flex was deliberately not touched (it never tracks an active slice). With slice A active, `-` behaves as before. With slice B active the old behaviour is expected: TX goes to slice 1 and RX is forced to slice 0. That is a separate fix, so report it but do not count it as a regression of this change.
+- [ ] **TS-990S (if one is to hand): unchanged.** It shares the LAN base but keeps "B transmits" (`FT1;`/`FT0;`) whatever VFO receives, because its split works differently (Hamlib: TB, RX main / TX sub).
+
+---
+
 ## Added 2026-11-08 -- DXLAB PATHFINDER CLEARS THE EXCHANGE (issue 48)
 
 The DDE message from PathFinder used to put the call in the call field and leave whatever was in the exchange field. It now clears the exchange first (`tCleareExchangeWindow`, which hands the clear to the main thread when it is called from another one), as the band map's tune path does. Not unit-testable: it needs DXLab's DDE client and the live window.
