@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: d14cb21e -->
+<!-- D12-CHANGELOG-BASELINE: 51fd7b6d -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -43,6 +43,81 @@ version number is assigned later, when a release is cut. To cut a release: renam
 month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
+
+### Contest settings, call history, band map and fixes - NY4I
+
+#### Preferences
+
+- Contest settings are no longer one long page. Contest now has eight pages
+  under it: QSO settings, Modes, Initial exchange, Multiplier data, Quick QSL,
+  QTC, Contest rules and Cabrillo headings.
+- A heading that has no settings of its own (External Software) now lists the
+  pages under it as buttons, instead of a blank page.
+- CALL HISTORY FILENAME and INITIAL EXCHANGE FILENAME have Browse buttons.
+
+#### Call history
+
+- ARRL Sweepstakes can prefill the check and section from a call history file
+  (the N1MM format). Turn on USE CALL HISTORY FILE; a typed call the log does
+  not know is filled in from the file. With the name left empty it looks for
+  SSCW.txt (CW) or SSSSB.txt (phone).
+- The Help menu can download the call history file for the current contest
+  from supercheckhistory.com. It only downloads when you ask, never per QSO or
+  on a timer. It tells you when the file is already current, and it keeps your
+  existing file if the new one looks wrong.
+
+#### DX cluster and band map
+
+- A multiplier you have worked fewer than a set number of times now shows as an
+  orange M on the spot, not red. The new setting BAND MAP WORKED MULT LIMIT
+  (1 to 9, default 1) says how many workings clear it; at 1 nothing changes.
+  Sweepstakes counts a section across all bands, CQ WW counts per band.
+- MULTS ONLY keeps orange M spots on the band map.
+- The "Mult needs for" strip takes the section from the cluster spot when
+  nothing is remembered for a call.
+- Pressing Enter once on a spotted call no longer replaces the cluster spot, so
+  its M stays until the QSO is logged.
+- The QSO needs strip and the totals headings show only the bands the contest
+  uses (Florida QSO Party no longer lists 160 and 80).
+
+#### Logging and export
+
+- ADIF now writes the worked station's DXCC with every STATE, as ADIF 3.1.6
+  requires. QSO party logs no longer fail an ADIF validator for it.
+- ALL JA: the remembered exchange no longer carries a stray invisible
+  character into the entry field.
+- DXLab PathFinder: when it sends a call, the exchange field is cleared first.
+- The category modes DIGI and RTTY were each spelled as the other; they are now
+  spelled as what they are. A log or file that says RTTY or DIGI lands on the
+  right one. The order in three drop-downs changes to CW, DIGI, RTTY.
+
+#### External logging
+
+- Cloudlog and Wavelog can be added as external loggers. New QSOs are sent;
+  neither server can change or delete one, so editing or deleting a QSO that
+  was already sent shows as a failed row and the remote log is left for you to
+  correct.
+- ACLog (N3FJP AC Log) can be added as an external logger, with a host and a
+  port (default 127.0.0.1, port 1100; turn on "TCP API Enabled" in AC Log).
+  New QSOs are sent; AC Log's interface cannot change or delete one, so editing
+  or deleting a QSO that was already sent shows as a failed row. It sends the
+  QSO straight to AC Log's log, so AC Log's own contest scoring does not see it.
+  Not yet confirmed against a running AC Log.
+- Log4OM needs no new logger: it takes TR4W's standard UDP contact broadcast
+  (Preferences > UDP). New QSOs work; whether it follows an edit is untested.
+
+#### Radio control
+
+- Kenwood TS-890 over LAN: the transmit-frequency key (-) now splits correctly
+  when VFO B is the one you are receiving on. Not yet confirmed on a radio.
+- Icom radios over LAN: two threads could take the same packet number; fixed.
+
+#### Data files
+
+- The monthly TRMASTER build rejects junk operator names (for example a name
+  that is just "2A" or a callsign in brackets) before they reach the file. The
+  next monthly build drops the ones already there.
+
 
 
 ---
