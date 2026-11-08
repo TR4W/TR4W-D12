@@ -145,7 +145,7 @@ Investigated all five currently open issues bearing the label; none were closed 
 | Issue | Provider | Framework requirement identified |
 | --- | --- | --- |
 | [191](https://github.com/TR4W/TR4W-D12/issues/191) | Club Log | Bearer-token JSON REST, returned qsoid, durable real-time create/change/delete. Original [TR4W/TR4W#772](https://github.com/TR4W/TR4W/issues/772) supplied an obsolete queue example; the existing dispatcher/outbox are reused. |
-| [203](https://github.com/TR4W/TR4W-D12/issues/203) | Log4OM | Configurable host/IP and UDP port. This repository asks only for TR4W-to-Log4OM, not inbound logging from the linked project's issue. |
+| [203](https://github.com/TR4W/TR4W-D12/issues/203) | Log4OM | **Closed 2026-11-08, no provider needed**: Log4OM takes TR4W's standard UDP contact broadcast (Preferences > UDP), tested by NY4I. Whether it honours `contactreplace` for edits is untested. |
 | [204](https://github.com/TR4W/TR4W-D12/issues/204) | Cloudlog/Wavelog | Instance URL, API credential and remote station profile; several instances may be active. **Built 2026-11-07, new contacts only**: the servers have no edit or delete call (see "Cloudlog and Wavelog"). |
 | [205](https://github.com/TR4W/TR4W-D12/issues/205) | MacLoggerDX | Verify the actual QSO-import mechanism. Emitting a compatible UDP announcement does not prove that MacLoggerDX will import it. A native macOS adapter remains an option. |
 | [33](https://github.com/TR4W/TR4W-D12/issues/33) | ACLog | Configurable host/IP/TCP port. **Built 2026-11-08, new contacts only**: the AC Log API has no edit or delete call (see "ACLog"). The old non-durable placeholder (`LogQSOToACLog`) is gone. |
