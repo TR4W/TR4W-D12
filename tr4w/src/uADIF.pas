@@ -499,6 +499,14 @@ function PadInt(n: Integer; minLen: Integer): string;
 // here.  The export asks ContestForRecord's answer instead.
 function GetADIFStateForQSO(const rec: ContestExchange): string;
 
+(* THE WORKED STATION'S ADIF DXCC CODE, FROM ITS CALLSIGN (issue 14; Q62).
+   ADIF's STATE is only meaningful with a DXCC, so every writer of STATE
+   writes this beside it. QTH.CountryID is the CTY entity the callsign looked
+   up to; it is NEVER taken from what the station sent. '' when the QSO has no
+   country or the entity is not in uDXCCEntities (a gap is logged once) --
+   the tag is then left out, as an empty ADIF value always is. *)
+function ADIFWorkedStationDXCC(const rec: ContestExchange): string;
+
 // THE CONTEST THAT SPEAKS FOR rec: aContest when it is rec's own contest (it
 // carries the station), else the identity object.  Never the live contest -- a
 // QSO of another contest is judged by its own.  PostUnit's CNTY block asks it
@@ -2018,6 +2026,38 @@ begin
    Result := ContestIdentity(rec.ceContest).ADIFWorkedStationState(rec);
 end;
 
+var
+   lastUnknownDXCCEntity: string;
+
+function ADIFWorkedStationDXCC(const rec: ContestExchange): string;
+var
+   entity: string;
+   code: integer;
+begin
+   Result := '';
+   entity := Trim(string(rec.QTH.CountryID));
+   if entity = '' then
+      begin
+      Exit;
+      end;
+
+   code := ADIFDXCCOfCTYEntity(entity);
+   if code > 0 then
+      begin
+      Result := IntToStr(code);
+      end
+   else
+      begin
+      if entity <> lastUnknownDXCCEntity then
+         begin
+         lastUnknownDXCCEntity := entity;
+         logger.Warn('ADIF: no DXCC code for CTY entity "%s" (QSO with %s) -- ' +
+            'DXCC left out. uDXCCEntities predates this country file.',
+            [entity, string(rec.Callsign)]);
+         end;
+      end;
+end;
+
 const
    (* ADIF 3.1 Primary_Administrative_Subdivision, DXCC 291: the 48
       contiguous states and the District of Columbia. Alaska and Hawaii are
@@ -2404,6 +2444,8 @@ begin
    if (stateForQP <> '') and (rec.QTHString <> '') then
       begin
       Result := Result + EmitADIFField('STATE', stateForQP);
+      (* STATE means nothing without the DXCC it is a subdivision of (issue 14). *)
+      Result := Result + EmitADIFField('DXCC', ADIFWorkedStationDXCC(rec));
       end;
 
    (* THE WORKED STATION'S EXCHANGE -- QTH, PRECEDENCE, CHECK, NAME, the

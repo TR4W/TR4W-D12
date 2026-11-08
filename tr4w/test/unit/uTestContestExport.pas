@@ -71,6 +71,7 @@ type
       procedure Test_ADIFContestIdAndPowerTag;
       procedure Test_RoundTripThroughTodaysImport;
       procedure Test_ADIFStateIsTheWorkedStations;
+      procedure Test_ADIFStateIsWithItsDXCC;
       procedure Test_EveryPartyAndOnlyAPartyWritesAState;
       procedure Test_BCQPExportsStateBCAndNoCounty;
    end;
@@ -892,6 +893,70 @@ begin
    CheckFalse(IsADIFPrimarySubdivision('K', 'D'), 'one letter is no code');
 end;
 
+(* ISSUE 14: ADIF's STATE is only meaningful with the DXCC it is a subdivision
+   of. Every record that carries a STATE carries the worked station's DXCC,
+   ONCE, and a country the table does not know writes none. *)
+function CountADIFTag(const aText, aTag: string): integer;
+var
+   rest: string;
+   p: integer;
+begin
+   Result := 0;
+   rest := aText;
+   p := Pos('<' + aTag + ':', rest);
+   while p > 0 do
+      begin
+      Inc(Result);
+      rest := Copy(rest, p + 1, Length(rest));
+      p := Pos('<' + aTag + ':', rest);
+      end;
+end;
+
+procedure TContestExportTests.Test_ADIFStateIsWithItsDXCC;
+
+   function Written(aContest: ContestType;
+                    const aQTH, aKey, aCountry: string): string;
+   var
+      qso: ContestExchange;
+   begin
+      qso := PartyQSO(aContest, aQTH, aKey, aCountry);
+      qso.ceRecordKind := rkQSO;
+      Result := EmitADIFRecord(qso, nil);
+   end;
+
+   procedure Pin(aContest: ContestType; const aQTH, aKey, aCountry,
+                 aDXCC: string);
+   var
+      text: string;
+   begin
+      text := Written(aContest, aQTH, aKey, aCountry);
+      CheckEquals(1, CountADIFTag(text, 'STATE'), 'STATE written: ' + aQTH);
+      CheckEquals(1, CountADIFTag(text, 'DXCC'), 'DXCC written once: ' + aQTH);
+      CheckTrue(Pos(EmitADIFField('DXCC', aDXCC), text) > 0,
+                'DXCC ' + aDXCC + ': ' + aQTH);
+   end;
+
+begin
+   BeginTest('Test_ADIFStateIsWithItsDXCC');
+
+   Pin(FLORIDAQSOPARTY, 'CT', 'Ct', 'K', '291');
+   Pin(FLORIDAQSOPARTY, 'AK', 'Ak', 'KL', '6');
+   Pin(FLORIDAQSOPARTY, 'HI', 'Hi', 'KH6', '110');
+   Pin(BCQP, 'ABF', 'Abf', 'VE', '1');
+   Pin(NEWENGLANDQSO, 'VO1', 'Nf', 'VE', '1');
+
+   (* NO STATE, NO DXCC. *)
+   CheckEquals(0, CountADIFTag(Written(FLORIDAQSOPARTY, 'DX', 'dx', 'DL'), 'DXCC'),
+               'DX: no STATE and so no DXCC');
+   (* A country the table does not know: STATE is not written either (ADIF
+      allows no subdivision for it), so there is nothing to leave a DXCC out of. *)
+   CheckEquals(0, CountADIFTag(Written(FLORIDAQSOPARTY, 'CT', 'Ct', 'QQ9'), 'DXCC'),
+               'unmapped country: DXCC omitted');
+   (* A contest that writes no STATE here writes no DXCC from here. *)
+   CheckEquals(0, CountADIFTag(Written(CQWWCW, 'CT', 'Ct', 'K'), 'DXCC'),
+               'not a party: no DXCC from the common block');
+end;
+
 (* EVERY CONTEST: which ones answer at all, and where CNTY is written.
 
    An out-of-state station in Connecticut gets STATE:CT from exactly the QSO
@@ -1019,6 +1084,7 @@ begin
    Test_ADIFContestIdAndPowerTag;
    Test_RoundTripThroughTodaysImport;
    Test_ADIFStateIsTheWorkedStations;
+   Test_ADIFStateIsWithItsDXCC;
    Test_EveryPartyAndOnlyAPartyWritesAState;
    Test_BCQPExportsStateBCAndNoCounty;
 end;

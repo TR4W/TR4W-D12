@@ -153,8 +153,6 @@ uses
    uGridShape,
    (* TC_ENTERYOURPARKREFERENCEDESIGNATOR. *)
    uTR4WStrings,
-   (* The worked station's DXCC, from its callsign's CTY entity. *)
-   uDXCCEntities,
    (* Where OUR park is: the downloaded park list's entity and subdivision. *)
    uPOTAParks,
    Log4D;
@@ -164,45 +162,6 @@ var
    (* The last park / CTY entity reported as unknown, so a log of a thousand
       QSOs says it once and not a thousand times. *)
    lastUnlocatedPark: string;
-   lastUnknownEntity: string;
-
-(* THE WORKED STATION'S DXCC, FROM ITS CALLSIGN -- Q62, NY4I 2026-10-17.
-   QTH.CountryID is the CTY entity the callsign was looked up to ('VE3ABC' is
-   'VE', 'KL7ABC' is 'KL'), and uDXCCEntities turns it into ADIF's number. It
-   is NEVER taken from what the station sent: a Canadian who sends 'ON' is
-   still Canada, and a hunter who sent a park reference is somewhere too.
-   '' when the QSO has no country or the entity is not in the table -- the tag
-   is left out, as an empty ADIF value always is, and a table gap is logged
-   once. *)
-function WorkedStationDXCC(const aQso: ContestExchange): string;
-var
-   entity: string;
-   code: integer;
-begin
-   Result := '';
-   entity := Trim(string(aQso.QTH.CountryID));
-   if entity = '' then
-      begin
-      Exit;
-      end;
-
-   code := ADIFDXCCOfCTYEntity(entity);
-   if code > 0 then
-      begin
-      Result := IntToStr(code);
-      end
-   else
-      begin
-      if entity <> lastUnknownEntity then
-         begin
-         lastUnknownEntity := entity;
-         logger.Warn(Format(
-            'POTA ADIF: no DXCC code for CTY entity "%s" (QSO with %s) -- ' +
-            'DXCC left out. uDXCCEntities predates this country file.',
-            [entity, string(aQso.Callsign)]));
-         end;
-      end;
-end;
 
 (* THE ONE SUBDIVISION A PARK'S locationDesc NAMES -- 'US-ME' is 'ME',
    'CA-BC' is 'BC'. A park that spans several ('US-DC,US-MD,US-WV') names no
@@ -454,7 +413,7 @@ begin
    Result := Result + MyStationLocationFields(aMy.MyPark);
    Result := Result + EmitADIFField('SRX_STRING',
       FormatADIFReceivedExchange(aQso, aExchangeCarriesRST));
-   Result := Result + EmitADIFField('DXCC', WorkedStationDXCC(aQso));
+   Result := Result + EmitADIFField('DXCC', ADIFWorkedStationDXCC(aQso));
 
    if IsValidPOTAPark(string(aQso.QTHString)) then
       begin

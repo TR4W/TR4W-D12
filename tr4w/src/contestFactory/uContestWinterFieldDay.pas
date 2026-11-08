@@ -314,13 +314,13 @@ begin
 
    if aQso.QTH.CountryID = 'K' then
       begin
-      Result := Result + EmitADIFField('DXCC', '291');
+      Result := Result + EmitADIFField('DXCC', ADIFWorkedStationDXCC(aQso));
       Result := Result + EmitADIFField('STATE',
          StateFromARRLSection(string(aQso.QTHString)));
       end
    else if aQso.QTH.CountryID = 'VE' then
       begin
-      Result := Result + EmitADIFField('DXCC', '1');
+      Result := Result + EmitADIFField('DXCC', ADIFWorkedStationDXCC(aQso));
       Result := Result + EmitADIFField('STATE',
          StateFromARRLSection(string(aQso.QTHString)));
       end;
