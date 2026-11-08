@@ -831,9 +831,24 @@ resourcestring
    SPrefsGroupUserInfo = 'Information shown under the call window';
    SPrefsGroupAlerts = 'Alerts';
    SPrefsGroupVoiceKeyer = 'Voice keyer';
+   (* THESE THREE ARE CONTEST LEAVES NOW (Contest > Modes, > Initial exchange,
+     > Multiplier data): their nav entry and page heading.  The identifiers
+     stay, because the catalogues already carry their translations under
+     these names; a renamed identifier would orphan them. *)
    SPrefsGroupModes = 'Modes';
    SPrefsGroupInitialExchange = 'Initial exchange';
    SPrefsGroupMultiplierData = 'Multiplier data';
+   (* THE OTHER CONTEST LEAVES: the Contest page was split so it is not one
+     long list.  Each is its page's nav entry and heading. *)
+   SPrefsNavQTC = 'QTC';
+   SPrefsNavQSOSettings = 'QSO settings';
+   SPrefsNavQuickQSL = 'Quick QSL';
+   (* CATEGORY-ASSISTED .. CATEGORY-TRANSMITTER: the Cabrillo header's
+     CATEGORY lines.  NY4I's wording. *)
+   SPrefsNavCabrilloHeadings = 'Cabrillo headings';
+   (* Special contest modes and rules: minitour, R150S, RFOBL, sprint QSY,
+     ten-minute rule, single-band score, multiple bands. *)
+   SPrefsNavContestRules = 'Contest rules';
    (* THE BAND PLAN ROW on the Bands page: a label and the button that opens
      the band plan editor, which saves its own whole section. *)
    SPrefsBandPlanRow = 'Band plan (cutoff frequencies and memories)';

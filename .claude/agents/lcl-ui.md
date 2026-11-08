@@ -485,6 +485,14 @@ placed, or it has no control at all.
   redirected empty settings folder and asserts no such fault.
 - **A new destination needs two things:** its builder call in
   `BuildGeneratedSections`, AND its tag in that test's page list.
+- **The Contest page is split into leaves** (2026-11-08): placements on
+  `NAV_CONTEST*` tags 40-47; the Contest page keeps every `contest.` key no
+  placement takes. `Test_TheContestLeavesHoldTheirRows` pins each key.
+- **A heading with no panel shows an overview** (`ShowParentOverview`): one
+  `TPrefsOverviewLink` button per child, read from the tree's own nodes, and a
+  click goes through `SelectPage`. Old links are hidden and
+  `Application.ReleaseComponent`-ed, never freed, because a link's own click
+  can reach the rebuild. `CheckHeadingOverviews` covers every such heading.
 - **FREQUENCY POLL RATE LEFT PREFERENCES** (issue 235 step 3, 2026-11-06). It
   is a radio-definition field, a row on the radio editor's Advanced tab (form
   grown 30 px), captioned from the kept `RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE`

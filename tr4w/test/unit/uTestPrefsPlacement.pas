@@ -24,7 +24,8 @@ unit uTestPrefsPlacement;
 interface
 
 uses
-   uTR4WTestFramework;
+   uTR4WTestFramework,
+   uPrefsForm;            (* TPrefsForm -- the overview check takes one *)
 
 type
    TPrefsPlacementTests = class(TTestCase)
@@ -36,8 +37,10 @@ type
       procedure Test_TheApprovedMovesArePinned;
       procedure Test_CWHasOneHome;
       procedure Test_TheSpecialCasesAreWhereTheyWereSent;
+      procedure Test_TheContestLeavesHoldTheirRows;
       procedure Test_PlaceRefusesASecondHome;
       procedure Test_TheBuiltFormHasOneEditorPerSetting;
+      procedure CheckHeadingOverviews(const aForm: TPrefsForm);
    public
       procedure RunAllTests; override;
    end;
@@ -48,8 +51,8 @@ uses
    SysUtils,
    Forms,
    Controls,
+   ComCtrls,              (* TTreeNode *)
    uLCLFormHelpers,       (* TNavNode -- the tree's tagged nodes *)
-   uPrefsForm,
    uSettingsRegistry,
    uSettingsLegacy,       (* ActiveStoreProvider -- the form sets and clears it *)
    uSettingsDeclarations,
@@ -131,6 +134,14 @@ begin
                 (page = NAV_ENTRY)         or
                 (page = NAV_CWCHARACTERS)  or
                 (page = NAV_PRINTEDLOG)    or
+                (page = NAV_CONTESTQTC)       or
+                (page = NAV_CONTESTQSO)       or
+                (page = NAV_CONTESTQUICKQSL)  or
+                (page = NAV_CONTESTMODES)     or
+                (page = NAV_CONTESTINITIALEX) or
+                (page = NAV_CONTESTMULTS)     or
+                (page = NAV_CONTESTCABRILLO)  or
+                (page = NAV_CONTESTRULES)     or
                 (page = NAV_LOGDISPLAY)    or
                 (page = NAV_FILES)         or
                 (page = NAV_BANDMAPWINDOW) or
@@ -254,17 +265,77 @@ begin
    CheckTrue(PrefsPlacements.PageOf('operating.ctrlj.frequencyPollRate') =
                 PrefsPlacements.PageOf('no.such.setting'),
              'and nothing places it on a page');
-   (* DIGITAL MODE ENABLE is contest-scoped and goes on the Contest page. *)
-   CheckEquals(NAV_CONTEST, PlacedPage('operating.ctrlj.digitalModeEnable'),
-               'DIGITAL MODE ENABLE goes on the Contest page');
+   (* DIGITAL MODE ENABLE is contest-scoped and goes on Contest > Modes. *)
+   CheckEquals(NAV_CONTESTMODES, PlacedPage('operating.ctrlj.digitalModeEnable'),
+               'DIGITAL MODE ENABLE goes on Contest > Modes');
    (* DOMESTIC FILENAME is shown, never edited: the contest sets it. *)
-   CheckEquals(NAV_CONTEST, PlacedPage('files.ctrlj.domesticFilename'),
-               'DOMESTIC FILENAME goes on the Contest page');
+   CheckEquals(NAV_CONTESTMULTS, PlacedPage('files.ctrlj.domesticFilename'),
+               'DOMESTIC FILENAME goes on Contest > Multiplier data');
    s := FindSetting('files.ctrlj.domesticFilename');
    CheckTrue((s <> nil) and s.ReadOnly, 'DOMESTIC FILENAME stays read-only');
    (* TUNE ALT-D ENABLE is SO2R: it fills calls while tuning the other radio. *)
    CheckEquals(NAV_TWORADIO, PlacedPage('cw.ctrlj.tuneAltDEnable'),
                'TUNE ALT-D ENABLE goes with Two Radio Mode');
+end;
+
+(* THE CONTEST PAGE, SPLIT INTO LEAVES (NY4I): every key on its leaf, and the
+  three that feed only General QSO's Cabrillo CONTEST: line -- or the contest
+  selection itself -- left on the Contest page. *)
+procedure TPrefsPlacementTests.Test_TheContestLeavesHoldTheirRows;
+
+   procedure Pin(const aPage: NativeInt; const aKeys: array of string);
+   var
+      k: string;
+   begin
+      for k in aKeys do
+         begin
+         CheckEquals(integer(aPage), PlacedPage(k), '"' + k + '" is on the wrong Contest leaf');
+         end;
+   end;
+
+begin
+   BeginTest('the Contest page''s settings are on the Contest leaves NY4I named');
+   Declared;
+
+   Pin(NAV_CONTESTQTC, ['contest.qtcEnable', 'contest.qtcExtraSpace',
+                        'contest.qtcMinutes', 'contest.qtcQrs']);
+   Pin(NAV_CONTESTQSO, ['contest.qsoByBand', 'contest.qsoByMode',
+                        'contest.qsoNumberByBand', 'contest.qsoPointsDomesticCw',
+                        'contest.qsoPointsDomesticPhone', 'contest.qsoPointsDxCw',
+                        'contest.qsoPointsDxPhone']);
+   Pin(NAV_CONTESTQUICKQSL, ['contest.quickQslCwMessage', 'contest.quickQslSsbMessage',
+                             'contest.quickQslKey1', 'contest.quickQslKey2',
+                             'contest.quickQslMessage2', 'contest.qslMode',
+                             'contest.autoQslInterval']);
+   Pin(NAV_CONTESTMODES, ['operating.ctrlj.digitalModeEnable', 'contest.multipleModes']);
+   Pin(NAV_CONTESTINITIALEX, ['files.ctrlj.initialExchangeFilename',
+                              'files.ctrlj.useCallHistoryFile',
+                              'files.ctrlj.callHistoryFilename',
+                              'contest.customInitialExchangeString',
+                              'contest.initialExchangeCursorPos',
+                              'contest.initialExchangeOverwrite',
+                              'contest.reverseInitialEx',
+                              'contest.exchangeMemoryEnable']);
+   Pin(NAV_CONTESTMULTS, ['files.ctrlj.domesticFilename', 'contest.multByBand',
+                          'contest.multByMode', 'contest.multSheetAutoReset',
+                          'contest.multReportMinimumBands',
+                          'contest.remainingMultDisplayMode',
+                          'contest.countDomesticCountries',
+                          'contest.showDomesticMultiplierName',
+                          'contest.literalDomesticQth']);
+   Pin(NAV_CONTESTCABRILLO, ['contest.categoryAssisted', 'contest.categoryBand',
+                             'contest.categoryMode', 'contest.categoryOperator',
+                             'contest.categoryOverlay', 'contest.categoryPower',
+                             'contest.categoryTransmitter']);
+   Pin(NAV_CONTESTRULES, ['contest.minitourDuration', 'contest.r150sMode',
+                          'contest.rfoblMode', 'contest.sprintQsyRule',
+                          'contest.tenMinuteRule', 'contest.singleBandScore',
+                          'contest.multipleBands']);
+
+   (* UNPLACED, so the Contest page builds them by prefix. *)
+   Pin(NAV_NONE, ['contest.contest', 'contest.contestName', 'contest.contestTitle']);
+   CheckTrue(FindSetting('contest.contestTitle') <> nil,
+             'CONTEST TITLE is still a registered setting, so the Contest page shows it');
 end;
 
 procedure TPrefsPlacementTests.Test_PlaceRefusesASecondHome;
@@ -308,6 +379,88 @@ begin
          Exit;
          end;
       end;
+end;
+
+(* True when some section panel (a child of layContent) carries aTag. *)
+function HasSectionPanel(const aForm: TPrefsForm; const aTag: NativeInt): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := 0 to aForm.layContent.ControlCount - 1 do
+      begin
+      if aForm.layContent.Controls[i].Tag = aTag then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* A HEADING WITH NO PANEL SHOWS AN OVERVIEW (NY4I): one link per child,
+  captioned and tagged from the tree, and a link opens its child.  Every such
+  heading in the real tree is checked, so a new one is covered unasked; at
+  least one must exist (External Software), or this proves nothing. *)
+procedure TPrefsPlacementTests.CheckHeadingOverviews(const aForm: TPrefsForm);
+var
+   i, k, headings: integer;
+   node, child: TTreeNode;
+   links: array of TPrefsOverviewLink;
+begin
+   headings := 0;
+   for i := 0 to aForm.tvNav.Items.Count - 1 do
+      begin
+      node := aForm.tvNav.Items[i];
+      if (not node.HasChildren) or HasSectionPanel(aForm, TNavNode(node).Tag) then
+         begin
+         Continue;
+         end;
+      Inc(headings);
+
+      node.Selected := True;
+      aForm.tvNavChange(aForm.tvNav);
+
+      CheckTrue((aForm.ParentOverview <> nil) and aForm.ParentOverview.Visible,
+                node.Text + ': a heading with no panel shows its overview');
+      if aForm.ParentOverview = nil then
+         begin
+         Continue;
+         end;
+
+      (* The VISIBLE links: a previous heading's are hidden and released. *)
+      links := nil;
+      for k := 0 to aForm.ParentOverview.ControlCount - 1 do
+         begin
+         if (aForm.ParentOverview.Controls[k] is TPrefsOverviewLink) and
+            aForm.ParentOverview.Controls[k].Visible then
+            begin
+            SetLength(links, Length(links) + 1);
+            links[High(links)] := TPrefsOverviewLink(aForm.ParentOverview.Controls[k]);
+            end;
+         end;
+
+      CheckEquals(node.Count, Length(links), node.Text + ': one link per child page');
+      child := node.GetFirstChild;
+      k := 0;
+      while (child <> nil) and (k < Length(links)) do
+         begin
+         CheckEquals(child.Text, links[k].Caption, node.Text + ': link caption is the child''s');
+         CheckEquals(integer(TNavNode(child).Tag), integer(links[k].PageTag),
+                     node.Text + ': link opens the child''s page');
+         CheckTrue(links[k].TabStop, node.Text + ': a link is reachable by Tab');
+         child := child.GetNextSibling;
+         Inc(k);
+         end;
+
+      if Length(links) > 0 then
+         begin
+         links[0].Click;
+         CheckTrue(aForm.tvNav.Selected = node.GetFirstChild,
+                   node.Text + ': clicking a link selects its child in the tree');
+         end;
+      end;
+
+   CheckTrue(headings > 0, 'no heading without a panel was found -- External Software has none');
 end;
 
 (* THE REAL FORM, BUILT: exactly one editor per setting, counted on the
@@ -366,6 +519,8 @@ begin
         Bands page, the only way into the band plan editor from Preferences. *)
       CheckTrue(HasDescendantNamed(form.layBands, 'gen_bandPlanEdit'),
                 'the band plan Edit... button is on the Bands page');
+
+      CheckHeadingOverviews(form);
    finally
       form.Free;
       uSettingsLegacy.ActiveStoreProvider := oldProvider;
@@ -387,6 +542,7 @@ begin
    Test_TheApprovedMovesArePinned;
    Test_CWHasOneHome;
    Test_TheSpecialCasesAreWhereTheyWereSent;
+   Test_TheContestLeavesHoldTheirRows;
    Test_PlaceRefusesASecondHome;
    Test_TheBuiltFormHasOneEditorPerSetting;
 end;

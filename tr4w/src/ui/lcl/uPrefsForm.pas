@@ -210,6 +210,16 @@ type
       property DialogTitle: string read FDialogTitle write FDialogTitle;
    end;
 
+   (* ONE ROW OF A HEADING'S OVERVIEW: a button naming a child page, carrying
+     that page's nav Tag as a typed field.  A button because it takes focus
+     and Tab, which a link-styled label cannot. *)
+   TPrefsOverviewLink = class(TButton)
+   private
+      FPageTag: NativeInt;
+   public
+      property PageTag: NativeInt read FPageTag write FPageTag;
+   end;
+
    TPrefsForm = class(TForm)
       edtSearch: TEdit;
       tvNav: TTreeView;
@@ -920,6 +930,14 @@ type
       navClusterSpots: TTreeNode;
       navCWCharacters: TTreeNode;
       navPrintedLog: TTreeNode;
+      navContestQTC: TTreeNode;     // the Contest leaves
+      navContestQSO: TTreeNode;
+      navContestQuickQSL: TTreeNode;
+      navContestModes: TTreeNode;
+      navContestInitialEx: TTreeNode;
+      navContestMults: TTreeNode;
+      navContestCabrillo: TTreeNode;
+      navContestRules: TTreeNode;
       navCW: TTreeNode;
       navAudio: TTreeNode;
    navPaddlePTT: TTreeNode;
@@ -1210,6 +1228,12 @@ type
         editor or with two, one per line; '' when none is faulty. *)
       FEditorFaults: string;
       FEditorsChecked: integer;
+      (* A HEADING'S OVERVIEW: one link per child page, under lblPlaceholder,
+        for a parent node that has no panel of its own.  Created on first
+        use; Tag NAV_NONE keeps it out of tvNavChange's panel rotation. *)
+      FParentOverview: TPanel;
+      procedure ShowParentOverview(const aNode: TTreeNode);
+      procedure OverviewLinkClick(Sender: TObject);
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -1220,6 +1244,9 @@ type
       (* How many settings that check counted -- 0 means it never ran, which
         would make an empty EditorFaults meaningless. *)
       property EditorsChecked: integer read FEditorsChecked;
+      (* The overview a panel-less heading shows; nil until one was shown.
+        Read by uTestPrefsPlacement. *)
+      property ParentOverview: TPanel read FParentOverview;
    end;
 
 const
@@ -1331,6 +1358,18 @@ const
    NAV_FILES             = 37;   // Files and updates
    NAV_BANDMAPWINDOW     = 38;   // Operating > Band Map > Window and tuning
    NAV_CLUSTERSPOTS      = 39;   // DX Cluster > Spots and console
+
+   (* THE CONTEST LEAVES: the Contest page was one long list, so NY4I had it
+     split by topic.  Generated pages like the ones above; the Contest page
+     keeps whatever 'contest.' setting no placement takes. *)
+   NAV_CONTESTQTC        = 40;   // Contest > QTC
+   NAV_CONTESTQSO        = 41;   // Contest > QSO settings
+   NAV_CONTESTQUICKQSL   = 42;   // Contest > Quick QSL
+   NAV_CONTESTMODES      = 43;   // Contest > Modes
+   NAV_CONTESTINITIALEX  = 44;   // Contest > Initial exchange
+   NAV_CONTESTMULTS      = 45;   // Contest > Multiplier data
+   NAV_CONTESTCABRILLO   = 46;   // Contest > Cabrillo headings
+   NAV_CONTESTRULES      = 47;   // Contest > Contest rules
 
    (* THE INVENTORY THE OLD MORE SETTINGS PAGE WAS BUILT FROM.  No page is
      built from these prefixes any more: every registered setting carrying one
@@ -1713,15 +1752,79 @@ begin
 
    (* ----------------------------------------------------------- Contest *)
 
-   (* Contest (proposal), after the contest's own settings.  DIGITAL MODE
-     ENABLE is contest-scoped and keeps that scope: only its control moved.
-     DOMESTIC FILENAME is shown READ-ONLY, as it always was -- the contest
-     sets it (AddSettingRows never binds a read-only setting). *)
-   aTable.Place('operating.ctrlj.digitalModeEnable',      NAV_CONTEST, SPrefsGroupModes);
-   aTable.Place('files.ctrlj.initialExchangeFilename',    NAV_CONTEST, SPrefsGroupInitialExchange);
-   aTable.Place('files.ctrlj.useCallHistoryFile',         NAV_CONTEST, SPrefsGroupInitialExchange);
-   aTable.Place('files.ctrlj.callHistoryFilename',        NAV_CONTEST, SPrefsGroupInitialExchange);
-   aTable.Place('files.ctrlj.domesticFilename',           NAV_CONTEST, SPrefsGroupMultiplierData);
+   (* THE CONTEST LEAVES (NY4I: the Contest page had too many rows).  Each
+     leaf is one topic, so no group headings.  Only where a control SITS
+     moved: every setting keeps its scope and its key, so a contest's value
+     is stored and read exactly as before.  The Contest page keeps every
+     'contest.' setting not placed here -- CONTEST, CONTEST NAME and CONTEST
+     TITLE among them: only General QSO writes either name into the Cabrillo
+     CONTEST: line (TContestGeneralQSO.CabrilloContestName), every other
+     contest writes its own Cabrillo name. *)
+   aTable.Place('contest.qtcEnable',                      NAV_CONTESTQTC);
+   aTable.Place('contest.qtcExtraSpace',                  NAV_CONTESTQTC);
+   aTable.Place('contest.qtcMinutes',                     NAV_CONTESTQTC);
+   aTable.Place('contest.qtcQrs',                         NAV_CONTESTQTC);
+
+   (* The QSO-point and by-band rows are READ-ONLY, as they always were: the
+     contest sets them (AddSettingRows never binds a read-only setting). *)
+   aTable.Place('contest.qsoByBand',                      NAV_CONTESTQSO);
+   aTable.Place('contest.qsoByMode',                      NAV_CONTESTQSO);
+   aTable.Place('contest.qsoNumberByBand',                NAV_CONTESTQSO);
+   aTable.Place('contest.qsoPointsDomesticCw',            NAV_CONTESTQSO);
+   aTable.Place('contest.qsoPointsDomesticPhone',         NAV_CONTESTQSO);
+   aTable.Place('contest.qsoPointsDxCw',                  NAV_CONTESTQSO);
+   aTable.Place('contest.qsoPointsDxPhone',               NAV_CONTESTQSO);
+
+   aTable.Place('contest.quickQslCwMessage',              NAV_CONTESTQUICKQSL);
+   aTable.Place('contest.quickQslSsbMessage',             NAV_CONTESTQUICKQSL);
+   aTable.Place('contest.quickQslKey1',                   NAV_CONTESTQUICKQSL);
+   aTable.Place('contest.quickQslKey2',                   NAV_CONTESTQUICKQSL);
+   aTable.Place('contest.quickQslMessage2',               NAV_CONTESTQUICKQSL);
+   aTable.Place('contest.qslMode',                        NAV_CONTESTQUICKQSL);
+   aTable.Place('contest.autoQslInterval',                NAV_CONTESTQUICKQSL);
+
+   (* DIGITAL MODE ENABLE is contest-scoped and keeps that scope. *)
+   aTable.Place('operating.ctrlj.digitalModeEnable',      NAV_CONTESTMODES);
+   aTable.Place('contest.multipleModes',                  NAV_CONTESTMODES);
+
+   aTable.Place('files.ctrlj.initialExchangeFilename',    NAV_CONTESTINITIALEX);
+   aTable.Place('files.ctrlj.useCallHistoryFile',         NAV_CONTESTINITIALEX);
+   aTable.Place('files.ctrlj.callHistoryFilename',        NAV_CONTESTINITIALEX);
+   aTable.Place('contest.customInitialExchangeString',    NAV_CONTESTINITIALEX);
+   aTable.Place('contest.initialExchangeCursorPos',       NAV_CONTESTINITIALEX);
+   aTable.Place('contest.initialExchangeOverwrite',       NAV_CONTESTINITIALEX);
+   aTable.Place('contest.reverseInitialEx',               NAV_CONTESTINITIALEX);
+   aTable.Place('contest.exchangeMemoryEnable',           NAV_CONTESTINITIALEX);
+
+   (* DOMESTIC FILENAME is shown READ-ONLY, as it always was -- the contest
+     sets it.  So are the three MULT rows. *)
+   aTable.Place('files.ctrlj.domesticFilename',           NAV_CONTESTMULTS);
+   aTable.Place('contest.multByBand',                     NAV_CONTESTMULTS);
+   aTable.Place('contest.multByMode',                     NAV_CONTESTMULTS);
+   aTable.Place('contest.multSheetAutoReset',             NAV_CONTESTMULTS);
+   aTable.Place('contest.multReportMinimumBands',         NAV_CONTESTMULTS);
+   aTable.Place('contest.remainingMultDisplayMode',       NAV_CONTESTMULTS);
+   aTable.Place('contest.countDomesticCountries',         NAV_CONTESTMULTS);
+   aTable.Place('contest.showDomesticMultiplierName',     NAV_CONTESTMULTS);
+   aTable.Place('contest.literalDomesticQth',             NAV_CONTESTMULTS);
+
+   (* The Cabrillo header's CATEGORY lines. *)
+   aTable.Place('contest.categoryAssisted',               NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryBand',                   NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryMode',                   NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryOperator',               NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryOverlay',                NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryPower',                  NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryTransmitter',            NAV_CONTESTCABRILLO);
+
+   (* Special contest modes and rules. *)
+   aTable.Place('contest.minitourDuration',               NAV_CONTESTRULES);
+   aTable.Place('contest.r150sMode',                      NAV_CONTESTRULES);
+   aTable.Place('contest.rfoblMode',                      NAV_CONTESTRULES);
+   aTable.Place('contest.sprintQsyRule',                  NAV_CONTESTRULES);
+   aTable.Place('contest.tenMinuteRule',                  NAV_CONTESTRULES);
+   aTable.Place('contest.singleBandScore',                NAV_CONTESTRULES);
+   aTable.Place('contest.multipleBands',                  NAV_CONTESTRULES);
 
    (* Answer 5: LOG SUB TITLE heads each PRINTED log page, and CONTACTS PER
      PAGE says how many QSOs that page holds.  Neither has a reader in this
@@ -3469,6 +3572,14 @@ begin
    total := total + BuildPlacedSection(NAV_PRINTEDLOG,
                                        SPrefsNavPrintedLog + LineEnding +
                                        SPrefsPrintedLogNote);
+   total := total + BuildPlacedSection(NAV_CONTESTQTC, SPrefsNavQTC);
+   total := total + BuildPlacedSection(NAV_CONTESTQSO, SPrefsNavQSOSettings);
+   total := total + BuildPlacedSection(NAV_CONTESTQUICKQSL, SPrefsNavQuickQSL);
+   total := total + BuildPlacedSection(NAV_CONTESTMODES, SPrefsGroupModes);
+   total := total + BuildPlacedSection(NAV_CONTESTINITIALEX, SPrefsGroupInitialExchange);
+   total := total + BuildPlacedSection(NAV_CONTESTMULTS, SPrefsGroupMultiplierData);
+   total := total + BuildPlacedSection(NAV_CONTESTCABRILLO, SPrefsNavCabrilloHeadings);
+   total := total + BuildPlacedSection(NAV_CONTESTRULES, SPrefsNavContestRules);
    total := total + BuildPlacedSection(NAV_LOGDISPLAY, SPrefsNavLogDisplay);
    total := total + BuildPlacedSection(NAV_FILES, SPrefsNavFilesAndUpdates);
    total := total + BuildPlacedSection(NAV_BANDMAPWINDOW, SPrefsNavBandMapWindow);
@@ -3952,8 +4063,9 @@ begin
       n := n + AddGeneratedRows(box, p, y);
       end;
 
-   (* Then whatever TPrefsPlacements puts on this page -- the Contest page's
-     DIGITAL MODE ENABLE, for one (issue 235). *)
+   (* Then whatever TPrefsPlacements puts on this page (issue 235).  Nothing
+     names NAV_CONTEST today -- its placed rows went to the Contest leaves --
+     but a placement there would still be built. *)
    n := n + AddPlacedRows(box, aTag, y);
 
    Result := n;
@@ -5539,12 +5651,20 @@ begin
       begin
       lblPlaceholder.Caption :=
          'Choose one of the pages listed under this heading.';
+      (* AND LIST THEM (NY4I): the sentence alone on a blank page read as
+        something missing.  Built from the node's own children, so a new
+        leaf appears here with no table to update. *)
+      ShowParentOverview(tvNav.Selected);
       end
    else
       begin
       lblPlaceholder.Caption :=
          'This section has not been migrated yet.' + #13#10 +
          'Use the existing configuration screens for it.';
+      if FParentOverview <> nil then
+         begin
+         FParentOverview.Visible := False;
+         end;
       end;
    lblPlaceholder.Visible := not shown;
 
@@ -5569,6 +5689,77 @@ begin
    // far better than building it on every refresh -- 1864 ms measured, once --
    // but a section that pauses when you click it still reads as a slow program.
    // It is built from the drop-down instead; see cbxClusterServerPopup.
+end;
+
+(* A PANEL-LESS HEADING'S OVERVIEW: one button per child page, captioned with
+  the child's nav text (already translated) and carrying its Tag, under the
+  placeholder sentence.  Read from the tree every time, never from a table.
+
+  The previous links are HIDDEN AND RELEASED, not freed: this runs from
+  tvNavChange, which a link's own OnClick reaches through SelectPage, and
+  freeing the button whose click is still being handled would free it under
+  its own handler.  Application.ReleaseComponent frees it once that returns. *)
+procedure TPrefsForm.ShowParentOverview(const aNode: TTreeNode);
+const
+   LINK_MIN_W   = 160;
+   LINK_CHROME  = 24;
+   LINK_H       = 26;
+   LINK_GAP     = 6;
+var
+   child: TTreeNode;
+   link: TPrefsOverviewLink;
+   i, y: integer;
+begin
+   if FParentOverview = nil then
+      begin
+      FParentOverview := TPanel.Create(Self);
+      FParentOverview.Parent      := layContent;
+      FParentOverview.Tag         := NAV_NONE;   // never a section panel
+      FParentOverview.BevelOuter  := bvNone;
+      FParentOverview.ParentColor := True;
+      FParentOverview.Caption     := '';
+      end;
+
+   for i := FParentOverview.ControlCount - 1 downto 0 do
+      begin
+      if FParentOverview.Controls[i] is TPrefsOverviewLink then
+         begin
+         FParentOverview.Controls[i].Visible := False;
+         Application.ReleaseComponent(FParentOverview.Controls[i]);
+         end;
+      end;
+
+   FParentOverview.SetBounds(lblPlaceholder.Left,
+                             lblPlaceholder.Top + lblPlaceholder.Height + 8,
+                             lblPlaceholder.Width, LINK_H);
+   y := 0;
+   child := aNode.GetFirstChild;
+   while child <> nil do
+      begin
+      link := TPrefsOverviewLink.Create(FParentOverview);
+      link.Parent  := FParentOverview;
+      link.Caption := LclText(child.Text);
+      link.PageTag := NavTagOf(child);
+      link.OnClick := OverviewLinkClick;
+      link.SetBounds(0, y,
+                     Max(LINK_MIN_W, TextWidthInFont(link.Font, link.Caption) + LINK_CHROME),
+                     LINK_H);
+      Inc(y, LINK_H + LINK_GAP);
+      child := child.GetNextSibling;
+      end;
+
+   FParentOverview.Height  := Max(LINK_H, y);
+   FParentOverview.Visible := True;
+end;
+
+(* A link opens its page THROUGH THE TREE (SelectPage), so the nav selection
+  and the page shown cannot disagree. *)
+procedure TPrefsForm.OverviewLinkClick(Sender: TObject);
+begin
+   if Sender is TPrefsOverviewLink then
+      begin
+      SelectPage(TPrefsOverviewLink(Sender).PageTag);
+      end;
 end;
 
 procedure TPrefsForm.btnAddClick(Sender: TObject);
@@ -6005,6 +6196,24 @@ begin
       TNavNode(navBackup).Tag := 9;
       navContest := tvNav.Items.Add(nil, 'Contest');
       TNavNode(navContest).Tag := 10;
+      (* THE CONTEST LEAVES, split off the Contest page by topic (NY4I).
+        Their placements are in DeclarePrefsPlacements. *)
+      navContestQSO := tvNav.Items.AddChild(navContest, SPrefsNavQSOSettings);
+      TNavNode(navContestQSO).Tag := NAV_CONTESTQSO;
+      navContestModes := tvNav.Items.AddChild(navContest, SPrefsGroupModes);
+      TNavNode(navContestModes).Tag := NAV_CONTESTMODES;
+      navContestInitialEx := tvNav.Items.AddChild(navContest, SPrefsGroupInitialExchange);
+      TNavNode(navContestInitialEx).Tag := NAV_CONTESTINITIALEX;
+      navContestMults := tvNav.Items.AddChild(navContest, SPrefsGroupMultiplierData);
+      TNavNode(navContestMults).Tag := NAV_CONTESTMULTS;
+      navContestQuickQSL := tvNav.Items.AddChild(navContest, SPrefsNavQuickQSL);
+      TNavNode(navContestQuickQSL).Tag := NAV_CONTESTQUICKQSL;
+      navContestQTC := tvNav.Items.AddChild(navContest, SPrefsNavQTC);
+      TNavNode(navContestQTC).Tag := NAV_CONTESTQTC;
+      navContestRules := tvNav.Items.AddChild(navContest, SPrefsNavContestRules);
+      TNavNode(navContestRules).Tag := NAV_CONTESTRULES;
+      navContestCabrillo := tvNav.Items.AddChild(navContest, SPrefsNavCabrilloHeadings);
+      TNavNode(navContestCabrillo).Tag := NAV_CONTESTCABRILLO;
       // Issue 235: LOG SUB TITLE and CONTACTS PER PAGE -- the printed log.
       navPrintedLog := tvNav.Items.AddChild(navContest, SPrefsNavPrintedLog);
       TNavNode(navPrintedLog).Tag := NAV_PRINTEDLOG;

@@ -9094,3 +9094,28 @@ msgstr ""
 msgid "the file could not be saved"
 msgstr ""
 
+#: uappstrings.sprefsnavqtc
+#, fuzzy
+msgid "QTC"
+msgstr ""
+
+#: uappstrings.sprefsnavqsosettings
+#, fuzzy
+msgid "QSO settings"
+msgstr ""
+
+#: uappstrings.sprefsnavquickqsl
+#, fuzzy
+msgid "Quick QSL"
+msgstr ""
+
+#: uappstrings.sprefsnavcabrilloheadings
+#, fuzzy
+msgid "Cabrillo headings"
+msgstr ""
+
+#: uappstrings.sprefsnavcontestrules
+#, fuzzy
+msgid "Contest rules"
+msgstr ""
+
