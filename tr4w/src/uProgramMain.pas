@@ -145,6 +145,7 @@ uses
   uDXClusterClient,
   uDXSpotParse,
   uCallHistory,
+  uCallHistoryDownload,
   uTelnet,
   uBandmap,
   uBandMapView,

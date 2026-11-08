@@ -403,15 +403,35 @@ begin
                        IsLegacyContest(contests[k], ARRLSSSSB);
       if IsLegacyContest(contests[k], ARRLSSCW) then
          begin
-         CheckEquals('SSCW.txt', contests[k].CallHistoryFileName, 'SS CW''s default file: N1MM''s name');
+         CheckEquals('ARRL-SS-CW.txt', contests[k].CallHistoryFileName, 'SS CW''s default file: the site''s name');
+         CheckEquals('ARRL-SS-CW', contests[k].CallHistorySiteName, 'SS CW''s site file');
+         CheckEquals('SSCW.txt', contests[k].CallHistoryLegacyFileName, 'SS CW''s legacy file: N1MM''s name');
          end
       else if IsLegacyContest(contests[k], ARRLSSSSB) then
          begin
-         CheckEquals('SSSSB.txt', contests[k].CallHistoryFileName, 'SS SSB''s default file: N1MM''s name');
+         CheckEquals('ARRL-SS-SSB.txt', contests[k].CallHistoryFileName, 'SS SSB''s default file: the site''s name');
+         CheckEquals('ARRL-SS-SSB', contests[k].CallHistorySiteName, 'SS SSB''s site file');
+         CheckEquals('SSSSB.txt', contests[k].CallHistoryLegacyFileName, 'SS SSB''s legacy file: N1MM''s name');
          end
       else
          begin
          CheckEquals('', contests[k].CallHistoryFileName, ContestWho(contests[k]) + ' names no default file');
+         CheckEquals('', contests[k].CallHistorySiteName, ContestWho(contests[k]) + ' has no site file');
+         CheckEquals('', contests[k].CallHistoryLegacyFileName, ContestWho(contests[k]) + ' has no legacy file');
+         end;
+      (* THE INVARIANT: a site file is offered only for a contest that can read
+         it, and the default name follows the site's, and the SS site name IS
+         the Cabrillo name. *)
+      if contests[k].CallHistorySiteName <> '' then
+         begin
+         CheckTrue(Length(fields) > 0, ContestWho(contests[k]) + ': a site file needs fields to prefill');
+         CheckEquals(contests[k].CallHistorySiteName + '.txt', contests[k].CallHistoryFileName,
+                     ContestWho(contests[k]) + ': the default file follows the site name');
+         end;
+      if isSweepstakes then
+         begin
+         CheckEquals(contests[k].CabrilloName, contests[k].CallHistorySiteName,
+                     ContestWho(contests[k]) + ': the site name is the Cabrillo name');
          end;
       if isSweepstakes then
          begin
@@ -502,8 +522,9 @@ begin
       Settings.Contest.UseCallHistoryFile := True;
       Settings.Contest.CallHistoryFilename := FixturePath + '.missing';
       CheckEquals(0, LoadCallHistoryFile, 'missing file: nothing loaded');
-      (* NO NAME: the contest's default, SSCW.txt, which no
-         CallHistoryFiles folder beside the test program holds. *)
+      (* NO NAME: the contest's default, ARRL-SS-CW.txt, and its legacy
+         SSCW.txt, which no CallHistoryFiles folder beside the test program
+         holds. *)
       Settings.Contest.CallHistoryFilename := '';
       CheckEquals(0, LoadCallHistoryFile, 'no name, the default not there: nothing loaded');
       CheckEquals(0, CallsignsList.Count, 'missing file: the list is empty');
@@ -736,7 +757,7 @@ begin
    savedContest := Contest;
    try
       Contest := ContestHandleOf(ARRLSSCW);
-      CheckEquals('SSCW.txt', ContestCallHistoryFileName, 'SS CW: the default the loader reads');
+      CheckEquals('ARRL-SS-CW.txt', ContestCallHistoryFileName, 'SS CW: the default the loader reads');
       Contest := ContestHandleOf(CQWWCW);
       CheckEquals('', ContestCallHistoryFileName, 'CQ WW: none');
    finally

@@ -1074,12 +1074,16 @@ the target shape, the M-step migration order and the open questions.
   (base `nil` = reads no file) names the N1MM call-history fields a row
   prefills, IN THE ORDER the remembered exchange is written -- the shape the
   log remembers for a worked station (`TContestARRLSSBase`: `[chfCK,
-  chfSect]` -> `'72 SCV'`, as the log's `'18 UT'`); `CallHistoryFileName`
-  (base `''`) is the running's default file when CALL HISTORY FILENAME is
-  blank (`SSCW.txt` / `SSSSB.txt`, N1MM's library names, NY4I 2026-11-07,
-  until TR4W can download the file; supercheckhistory.com's `ARRL-SS-CW.txt` /
-  `ARRL-SS-SSB.txt` -- Cabrillo name + `.txt` -- is the download's association
-  key, kept in a comment beside each override; the engine spells none). A row missing a named field is skipped; the file's
+  chfSect]` -> `'72 SCV'`, as the log's `'18 UT'`); `CallHistorySiteName`
+  (base `''` = no site file, no download) is supercheckhistory.com's file stem
+  (`TContestARRLSSBase`: its `CabrilloName`, `ARRL-SS-CW` / `ARRL-SS-SSB`);
+  `CallHistoryFileName` is DERIVED (`SiteName + '.txt'`, never overridden) and
+  is the running's default file when CALL HISTORY FILENAME is blank, and what the
+  Help-menu download (`uCallHistoryDownload`, manual only) writes (2026-11-08);
+  `CallHistoryLegacyFileName` (`SSCW.txt` / `SSSSB.txt`, N1MM's names, NY4I
+  2026-11-07) is the fallback `LoadCallHistoryFile` reads when the blank-named
+  default file is absent. A site stem needs `CallHistoryFields` (a pinned
+  invariant). The engine spells none. A row missing a named field is skipped; the file's
   `!!Order!!` decides the columns (the two SS layouts in circulation differ).
   The reader is the leaf
   `src/uCallHistory.pas`; the loader `LOGDUPE.LoadCallHistoryFile` runs in

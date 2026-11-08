@@ -350,7 +350,9 @@ and link issue #133 (Ontario's and Quebec's headers do).
 | `MarksDupes`, `GetIsActive`, `MinimumOffTimeMinutes` | True / True / 30 | `uContestInternetSprint`; `uContestSASprint`; `uContestCQWWBase` (60) |
 | `RunsInMode(aMode)` | every mode -- an IDENTITY question for two contests sharing one ADIF id | the RoPoCo runnings |
 | `CallHistoryFields` | none -- the contest reads no call history file | `TContestARRLSSBase` (`[chfCK, chfSect]`), below |
-| `CallHistoryFileName` | `''` -- no default file | the SS leaves (`SSCW.txt`, `SSSSB.txt` -- N1MM's names until TR4W downloads the file), below |
+| `CallHistorySiteName` | `''` -- the site has no file; no download is offered | `TContestARRLSSBase` (its `CabrilloName`: `ARRL-SS-CW`, `ARRL-SS-SSB`), below |
+| `CallHistoryFileName` | derived: `CallHistorySiteName + '.txt'`, else `''` -- not overridden | the SS leaves get `ARRL-SS-CW.txt` / `ARRL-SS-SSB.txt` from the site name, below |
+| `CallHistoryLegacyFileName` | `''` | the SS leaves (`SSCW.txt`, `SSSSB.txt` -- N1MM's names, the fallback), below |
 
 #### A call history file -- `CallHistoryFields` (2026-11-07)
 
@@ -359,10 +361,19 @@ what each station sent in past runnings. With **USE CALL HISTORY FILE** on and
 **CALL HISTORY FILENAME** naming a file (a bare name is looked for in a
 `CallHistoryFiles` folder -- the writable data directory's, then the one beside
 the program; or a full path; blank is the class's `CallHistoryFileName`, the
-running's default file, which the engine never spells -- N1MM's library name
-until TR4W can download the file (NY4I, 2026-11-07: `SSCW.txt`, `SSSSB.txt`);
-supercheckhistory.com's name, the Cabrillo contest name + `.txt`, is the
-download's association key and is recorded in a comment beside the override),
+running's default file, which the engine never spells. It is DERIVED from
+`CallHistorySiteName` -- supercheckhistory.com's file stem, which for the SS
+leaves is the Cabrillo contest name (`ARRL-SS-CW`, so `ARRL-SS-CW.txt`) -- and a
+contest names a site stem only when it also states `CallHistoryFields`. A class
+with a site stem gets the Help-menu item **Download call history for this
+contest** (`uCallHistoryDownload`; manual only, a conditional GET, the file kept
+on any failure). The download writes the writable `CallHistoryFiles` folder under
+the default name. `CallHistoryLegacyFileName` (the SS leaves: N1MM's `SSCW.txt`,
+`SSSSB.txt`, NY4I 2026-11-07) is read only when CALL HISTORY FILENAME is blank
+and the default file is absent, so an operator's existing file keeps working.
+Other contests' stems on the site (ARRL-10 is `ARRL-10M`, CW Ops is `CWOPS`,
+QSO parties are `QSOP_<STATE>`, from N1MM's own library names) are NOT assumed:
+a contest adds its stem when it has fields and the site's real list confirms it),
 `LOGDUPE.LoadCallHistoryFile` reads it at contest
 open -- after INITIAL.EX, before the log -- and stores, per row, the fields your
 class names **in your order, joined by one blank** as that call's remembered

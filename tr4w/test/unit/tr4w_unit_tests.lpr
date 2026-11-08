@@ -649,6 +649,7 @@ uses
    uTestNetLink in 'uTestNetLink.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uCallHistory         in '..\..\src\uCallHistory.pas',
+   uCallHistoryDownload in '..\..\src\uCallHistoryDownload.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
    uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
    uCrashLog            in '..\..\src\uCrashLog.pas',
@@ -874,6 +875,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestSpotCommentMultiplier in 'uTestSpotCommentMultiplier.pas',
    (* A call history file's prefill (NY4I, 2026-11-07). *)
    uTestCallHistory     in 'uTestCallHistory.pas',
+   (* The call history download -- supercheckhistory.com (NY4I, 2026-11-08). *)
+   uTestCallHistoryDownload in 'uTestCallHistoryDownload.pas',
    uTestContestNames    in 'uTestContestNames.pas',
    (* Every QSO party's stated bands (NY4I, 2026-10-16). *)
    uTestQSOPartyBands   in 'uTestQSOPartyBands.pas',
@@ -1054,6 +1057,7 @@ begin
    RegisterSuite(TExchangeWordOrderTests.Create('ExchangeWordOrder'));
    RegisterSuite(TSpotCommentMultiplierTests.Create('SpotCommentMultiplier'));
    RegisterSuite(TCallHistoryTests.Create('CallHistory'));
+   RegisterSuite(TCallHistoryDownloadTests.Create('CallHistoryDownload'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
    RegisterSuite(TQSOPartyBandsTests.Create('QSOPartyBands'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

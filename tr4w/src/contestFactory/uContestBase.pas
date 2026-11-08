@@ -2977,12 +2977,25 @@ type
       (* THE CALL HISTORY FILE THIS CONTEST LOOKS FOR when CALL HISTORY
          FILENAME names none -- a bare name, found as that setting's is
          (uCallHistory.CallHistoryFilePath). Each running states its own
-         because the files are per running. Until TR4W can download the file
-         it is N1MM's library name (NY4I, 2026-11-07: SSCW.txt, SSSSB.txt);
-         supercheckhistory.com's names (the Cabrillo contest name + '.txt',
-         ARRL-SS-CW.txt) are the download's association key, recorded beside
-         each override. The base names none. *)
+         because the files are per running. It is the site's own name
+         (CallHistorySiteName + '.txt': ARRL-SS-CW.txt), which is also the
+         file the Help-menu download writes; '' when the contest has no site
+         file. The legacy name (CallHistoryLegacyFileName) is the fallback
+         LOGDUPE.LoadCallHistoryFile reads when this file is absent. *)
       function CallHistoryFileName: string; virtual;
+
+      (* THE SITE'S FILE STEM on supercheckhistory.com's N1MM library --
+         'ARRL-SS-CW' for https://supercheckhistory.com/downloads/N1MM/
+         ARRL-SS-CW.txt. '' (the base) means the site has no file for this
+         contest and no download is offered. A contest names its stem only when
+         it also states CallHistoryFields: a file it cannot read is no use. *)
+      function CallHistorySiteName: string; virtual;
+
+      (* THE NAME THIS CONTEST'S FILE HAD BEFORE THE DOWNLOAD (N1MM's library
+         name: SSCW.txt), '' for none. Read only when CALL HISTORY FILENAME is
+         blank and CallHistoryFileName's file is not there, so an operator's
+         existing file keeps working. *)
+      function CallHistoryLegacyFileName: string; virtual;
 
       (* THE ADIF SRX_STRING -- the worked station's side of the exchange, as
          received. M5b, 2026-10-02: the counterpart of FormatADIFSentExchange.
@@ -6080,7 +6093,23 @@ end;
 
 function TContestBase.CallHistoryFileName: string;
 begin
-   (* No default file -- see the declaration. *)
+   (* The site's name, else none -- see the declaration. *)
+   Result := '';
+   if CallHistorySiteName <> '' then
+      begin
+      Result := CallHistorySiteName + '.txt';
+      end;
+end;
+
+function TContestBase.CallHistorySiteName: string;
+begin
+   (* No site file -- see the declaration. *)
+   Result := '';
+end;
+
+function TContestBase.CallHistoryLegacyFileName: string;
+begin
+   (* No legacy name -- see the declaration. *)
    Result := '';
 end;
 

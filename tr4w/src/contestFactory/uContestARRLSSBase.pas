@@ -120,6 +120,11 @@ type
          State column is not the section and is not asked. See
          TContestBase.CallHistoryFields. *)
       function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE FOR THIS RUNNING: supercheckhistory.com names it by the
+         Cabrillo contest name -- ARRL-SS-CW, ARRL-SS-SSB. Derived, not typed
+         twice, so the two cannot drift. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -450,6 +455,11 @@ begin
    SetLength(Result, 2);
    Result[0] := chfCK;
    Result[1] := chfSect;
+end;
+
+function TContestARRLSSBase.CallHistorySiteName: string;
+begin
+   Result := CabrilloName;
 end;
 
 end.

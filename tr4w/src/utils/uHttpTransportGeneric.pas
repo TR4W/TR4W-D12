@@ -172,6 +172,14 @@ begin
          begin
          http.AddHeader('Accept-Encoding', ToWire(aRequest.AcceptEncoding));
          end;
+      if aRequest.IfNoneMatch <> '' then
+         begin
+         http.AddHeader('If-None-Match', ToWire(aRequest.IfNoneMatch));
+         end;
+      if aRequest.IfModifiedSince <> '' then
+         begin
+         http.AddHeader('If-Modified-Since', ToWire(aRequest.IfModifiedSince));
+         end;
       if aRequest.Username <> '' then
          begin
          (* FPC sends basic auth from these two, preemptively. *)
@@ -212,6 +220,9 @@ begin
             aResult.StatusText := FromWire(http.ResponseStatusText);
             aResult.RetryAfter := FromWire(http.GetHeader(http.ResponseHeaders, 'Retry-After'));
             aResult.RequestId  := FromWire(http.GetHeader(http.ResponseHeaders, 'X-Request-Id'));
+            aResult.ETag         := FromWire(http.GetHeader(http.ResponseHeaders, 'ETag'));
+            aResult.LastModified := FromWire(http.GetHeader(http.ResponseHeaders, 'Last-Modified'));
+            aResult.ContentType  := FromWire(http.GetHeader(http.ResponseHeaders, 'Content-Type'));
             if bodyOut <> nil then
                begin
                aResult.Body := bodyOut.DataString;

@@ -790,7 +790,8 @@ uses
   uPendingCounties,
   uCTYUpdate,
   uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
-  ExtCtrls,           // TTimer -- the window-layout autosave
+  uCallHistoryDownload, // Help -> Download call history for this contest
+  ExtCtrls,          // TTimer -- the window-layout autosave
   DateUtils,          // MilliSecondsBetween -- the start-up timing
   uLogSearchForm,     // SaveLogSearchLayout -- not a tw_ window, see SaveTR4WPOSFILE
   uWindowLayoutStore, // the window layout, keyed by name
@@ -5284,6 +5285,7 @@ var
   focus: TWinControl;   { the control to put focus back on -- see below }
   TempCallstring: CallString;
   loginAccepted: boolean;   // menu_login: the call passed its tier's check
+  callHistoryJob: TCallHistoryDownloadJob;   // menu_download_call_history
   //http : TidHttp;
  // page : String;
 begin
@@ -6041,6 +6043,30 @@ begin
       QuickDisplay(TC_DOWNLOADINGTRMASTERDTA);
       DownloadTRMasterAsync(TRMasterDownloadTarget,
         BackgroundEvents.TRMasterDownloadFinished);
+      end;
+
+    menu_download_call_history:
+      begin
+      (* MANUAL ONLY: this arm is the one caller. The contest is read HERE, on
+        the main thread, and the worker gets plain values. *)
+      if CallHistoryDownloadRunning then
+         begin
+         QuickDisplay(SCallHistoryBusy);
+         end
+      else
+         begin
+         callHistoryJob := NewCallHistoryJob(ContestIdentity(Contest));
+         if callHistoryJob = nil then
+            begin
+            QuickDisplay(SCallHistoryNoSource);
+            end
+         else
+            begin
+            QuickDisplay(SCallHistoryDownloading);
+            DownloadCallHistoryAsync(callHistoryJob,
+              BackgroundEvents.CallHistoryDownloadFinished);
+            end;
+         end;
       end;
 
     menu_download_pota_parks:

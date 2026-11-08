@@ -84,6 +84,10 @@ type
                                     and any other raises inside the generic client BEFORE it
                                     follows a redirect: the old Get verbs' behaviour, kept
                                     exactly (see the design, 2.4) *)
+      IfNoneMatch:     string;   (* '' = no If-None-Match header (conditional GET) *)
+      IfModifiedSince: string;   (* '' = no If-Modified-Since header; an HTTP date as the
+                                    server wrote it. A transport MUST send both when set
+                                    (a platform transport has to add them explicitly). *)
       ConnectMs:       integer;
       IOMs:            integer;
       MaxResponseBytes: Int64;   (* 0 = unlimited. Applies to the collected Body only. *)
@@ -100,6 +104,9 @@ type
       StatusText:   string;
       RetryAfter:   string;
       RequestId:    string;
+      ETag:         string;      (* the ETag response header, '' when absent *)
+      LastModified: string;      (* the Last-Modified response header, '' when absent *)
+      ContentType:  string;      (* the Content-Type response header, '' when absent *)
       Body:         RawByteString;   (* only when Execute was given no sink *)
       constructor Create;
       procedure Clear;
@@ -202,6 +209,9 @@ begin
    StatusText   := '';
    RetryAfter   := '';
    RequestId    := '';
+   ETag         := '';
+   LastModified := '';
+   ContentType  := '';
    Body         := '';
 end;
 

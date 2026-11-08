@@ -842,6 +842,30 @@ resourcestring
      FILENAME) -- the same words as the designed Browse buttons. *)
    SPrefsBrowse = 'Browse...';
 
+   (* ------------------------------------ Call history download (Help) - *)
+
+   (* HELP -> THE CONTEST'S CALL HISTORY FILE, from supercheckhistory.com.
+     Manual only: nothing downloads it by itself. *)
+   SMenuDownloadCallHistory = 'Download call history for this contest';
+   SCallHistoryDownloading = 'Downloading call history...';
+   SCallHistoryNoSource = 'This contest has no call history download';
+   SCallHistoryBusy = 'A call history download is already running';
+   SCallHistoryUpdated = 'Call history updated (%d entries, %s); it takes effect the next time the contest is opened';
+   SCallHistoryCurrent = 'Call history already current';
+   SCallHistoryNotAvailable = 'No call history file for this contest on supercheckhistory.com';
+   SCallHistoryFailed = 'Download failed (%s); the previous file was kept';
+   SCallHistoryRefused = 'Server refused (HTTP %d); the previous file was kept';
+   (* Appended to the update message when CALL HISTORY FILENAME names another
+     file: the downloaded one is not the file that is read. %s is that name. *)
+   SCallHistoryOtherFile = 'CALL HISTORY FILENAME is "%s", so the downloaded file is not the one in use';
+   (* WHY A DOWNLOAD WAS NOT KEPT -- the %s of SCallHistoryFailed. *)
+   SCallHistoryReasonHtml = 'the server sent a web page, not a call history file';
+   SCallHistoryReasonTooSmall = 'the file is too small to be a call history';
+   SCallHistoryReasonTooLarge = 'the file is larger than expected';
+   SCallHistoryReasonTooFewRows = 'the file has too few usable rows';
+   SCallHistoryReasonSmaller = 'the new file is much smaller than the one held';
+   SCallHistoryReasonWrite = 'the file could not be saved';
+
    (* ------------------------------------------- HamScore resync (Tools) - *)
 
    (* THE TOOLS MENU ITEM AND THE STATUS WINDOW'S BUTTON for the same action.

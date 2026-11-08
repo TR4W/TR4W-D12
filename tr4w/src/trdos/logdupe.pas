@@ -1154,6 +1154,8 @@ var
   fields: TCallHistoryFields;
   name: string;
   path: string;
+  legacy: string;
+  legacyPath: string;
   lines: TStringList;
   reader: TCallHistoryReader;
   started: QWord;
@@ -1179,6 +1181,26 @@ begin
      name := ContestCallHistoryFileName;
      end;
   path := CallHistoryFilePath(name);
+
+  (* THE LEGACY NAME, only for the contest's own default: the file was
+    SSCW.txt before the default became the site's ARRL-SS-CW.txt, and an
+    operator's existing file must keep working. A name the operator typed is
+    never second-guessed. *)
+  if (Trim(Settings.Contest.CallHistoryFilename) = '') and (not FileExists(path)) then
+     begin
+     legacy := ContestIdentity(Contest).CallHistoryLegacyFileName;
+     if legacy <> '' then
+        begin
+        legacyPath := CallHistoryFilePath(legacy);
+        if FileExists(legacyPath) then
+           begin
+           logger.Info('[CallHistory] "%s" is not there; reading the legacy file "%s"',
+                       [name, legacyPath]);
+           name := legacy;
+           path := legacyPath;
+           end;
+        end;
+     end;
   lines := TStringList.Create;
   reader := TCallHistoryReader.Create;
   try

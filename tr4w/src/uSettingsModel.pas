@@ -3183,7 +3183,8 @@ type
          looked for in the CallHistoryFiles folder (the writable data
          directory's, then the one beside the program), or a full path;
          blank is the contest's own default (TContestBase.CallHistoryFileName:
-         SSCW.txt / SSSSB.txt for Sweepstakes, N1MM's names).
+         ARRL-SS-CW.txt / ARRL-SS-SSB.txt for Sweepstakes, the site's names,
+         with SSCW.txt / SSSSB.txt as the legacy fallback).
          What a row prefills is the contest's (TContestBase.CallHistoryFields);
          a contest that names no field reads nothing. OFF by default, so a
          station that never sets it behaves as before. Contest-scoped like

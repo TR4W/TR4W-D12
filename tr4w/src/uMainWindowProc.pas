@@ -30,6 +30,7 @@ uses
   LCLIntf,
   LCLType,
   Classes,   // TShiftState, TObject -- the LCL event signatures
+  uCallHistoryDownload, // TCallHistoryDownloadResult -- the background event's parameter
   uTR4WStrings;
 
 type
@@ -112,6 +113,8 @@ type
       procedure PotaDownloadFinished(Sender: TObject; aSucceeded: boolean);
       procedure PotaParksParsed(Sender: TObject; aParks: TStringList);
       procedure TRMasterDownloadFinished(Sender: TObject; aSucceeded: boolean);
+      procedure CallHistoryDownloadFinished(Sender: TObject;
+                                            aResult: TCallHistoryDownloadResult);
       procedure CTYVersionChecked(Sender: TObject; aLatestDate: integer);
       procedure CTYDownloadFinished(Sender: TObject; aSucceeded: boolean);
    end;
@@ -151,7 +154,9 @@ uses
   uFunctionKeys,      // ShowFMessages
   uPOTAParks,         // WM_POTA_DOWNLOAD_DONE / _LOAD_DONE and the loaders
   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
-  uCTYUpdate,         // WM_CTY_DOWNLOAD_DONE / WM_CTY_VERSION_CHECKED
+  uAppStrings,       // SCallHistoryOtherFile
+  uCallHistory,      // CallHistoryFilePath -- which file CALL HISTORY FILENAME means
+  uCTYUpdate,        // WM_CTY_DOWNLOAD_DONE / WM_CTY_VERSION_CHECKED
   uTCIServer,         // WM_TCI_APPLY
   uMMTTY,             // the MMTTY window message
   LOGSUBS2,           // ExitProgram, on WM_CLOSE
@@ -630,6 +635,44 @@ begin
       begin
       QuickDisplay(TC_TRMASTERDTADOWNLOADFAILED);
       end;
+end;
+
+(* THE CALL HISTORY DOWNLOAD HAS FINISHED -- on the main thread, the result
+  valid only during this call. One line to the operator. A downloaded file is
+  read when a contest OPENS, not live, so the message says so; and if CALL
+  HISTORY FILENAME names a file other than the one just written, the message
+  says THAT, because the download then changes nothing the program reads. *)
+procedure TTR4WBackgroundEvents.CallHistoryDownloadFinished(Sender: TObject;
+                                                            aResult: TCallHistoryDownloadResult);
+var
+   text: string;
+   named: string;
+   inUse: string;
+   written: string;
+   same: boolean;
+begin
+   text  := aResult.MessageText;
+   named := Trim(Settings.Contest.CallHistoryFilename);
+   if (aResult.Outcome in [chdUpdated, chdCurrent]) and (named <> '') then
+      begin
+      (* THE FILE THE SETTING RESOLVES TO, as the loader resolves it (a bare name
+        through the CallHistoryFiles folders), against the file just written. *)
+      inUse   := ExpandFileName(CallHistoryFilePath(named));
+      written := ExpandFileName(aResult.TargetFile);
+      if FileNameCaseSensitive then
+         begin
+         same := inUse = written;
+         end
+      else
+         begin
+         same := UnicodeSameText(inUse, written);
+         end;
+      if not same then
+         begin
+         text := text + '. ' + UnicodeFormat(SCallHistoryOtherFile, [named]);
+         end;
+      end;
+   QuickDisplay(text);
 end;
 
 (* aLatestDate is the date of the CTY.DAT on country-files.com, or 0 when

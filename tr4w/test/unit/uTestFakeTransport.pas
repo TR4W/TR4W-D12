@@ -27,6 +27,9 @@ type
       ScriptStatusText:   string;
       ScriptRetryAfter:   string;
       ScriptRequestId:    string;
+      ScriptETag:         string;
+      ScriptLastModified: string;
+      ScriptContentType:  string;
       ScriptBody:         RawByteString;
       (* what the transport saw *)
       Calls:   integer;
@@ -93,6 +96,8 @@ begin
    Last.UserAgent        := aRequest.UserAgent;
    Last.ContentType      := aRequest.ContentType;
    Last.AcceptEncoding   := aRequest.AcceptEncoding;
+   Last.IfNoneMatch      := aRequest.IfNoneMatch;
+   Last.IfModifiedSince  := aRequest.IfModifiedSince;
    Last.Username         := aRequest.Username;
    Last.Password         := aRequest.Password;
    Last.BearerToken      := aRequest.BearerToken;
@@ -113,6 +118,9 @@ begin
    aResult.StatusText   := ScriptStatusText;
    aResult.RetryAfter   := ScriptRetryAfter;
    aResult.RequestId    := ScriptRequestId;
+   aResult.ETag         := ScriptETag;
+   aResult.LastModified := ScriptLastModified;
+   aResult.ContentType  := ScriptContentType;
    if (ScriptFailure = hfNone) and (ScriptBody <> '') then
       begin
       if aSink <> nil then

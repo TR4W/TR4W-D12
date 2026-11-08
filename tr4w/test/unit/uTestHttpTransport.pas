@@ -51,6 +51,7 @@ type
       procedure Test_HeadersAndBodyBytes;
       procedure Test_BasicAuthIsPreemptive;
       procedure Test_ResponseHeadersAreReturned;
+      procedure Test_ConditionalHeadersGoOutAndComeBack;
       procedure Test_ResponseCap;
       procedure Test_SinkReceivesTheBody;
       procedure Test_RedirectsOnlyWhenAsked;
@@ -69,6 +70,7 @@ type
       procedure Test_VerifyOffReachesTheWire;
       procedure Test_GetTextBuildsAGetAndReturnsTheBody;
       procedure Test_DownloadWritesTheFileAndARefusalMakesNone;
+      procedure Test_ConditionalDownloadOutcomes;
       procedure Test_NoTransportFailsClosed;
    public
       procedure RunAllTests; override;
@@ -189,6 +191,23 @@ begin
       status := '302 Found';
       extra  := 'Location: /ok'#13#10;
       body   := '';
+      end
+   else if path = '/etag' then
+      begin
+      (* A conditional resource: a copy that names its ETag gets a bodiless 304. *)
+      if Pos('if-none-match: "v1"', LowerCase(head)) > 0 then
+         begin
+         status := '304 Not Modified';
+         extra  := 'ETag: "v1"'#13#10;
+         body   := '';
+         end
+      else
+         begin
+         extra := 'ETag: "v1"'#13#10 +
+                  'Last-Modified: Sat, 01 Nov 2025 00:00:00 GMT'#13#10 +
+                  'Content-Type: text/plain'#13#10;
+         body  := 'conditional body';
+         end;
       end
    else if path = '/big' then
       begin
@@ -426,6 +445,65 @@ begin
    finally
       res.Free;
       req.Free;
+      t.Free;
+      StopServer;
+   end;
+end;
+
+procedure THttpTransportTests.Test_ConditionalHeadersGoOutAndComeBack;
+var
+   t:   TGenericHttpTransport;
+   req: THttpWireRequest;
+   res: THttpWireResult;
+   port: Word;
+begin
+   BeginTest('If-None-Match and If-Modified-Since go out when set; ETag, Last-Modified and Content-Type come back; a 304 has no body');
+   t := TGenericHttpTransport.Create;
+   port := StartServer;
+   res := THttpWireResult.Create;
+   try
+      (* No condition: neither header is sent, and the validators come back. *)
+      req := NewGet(Url(port, '/etag'));
+      try
+         t.Execute(req, nil, res);
+      finally
+         req.Free;
+      end;
+      CheckEquals(200, res.StatusCode, 'unconditional: status');
+      CheckEquals('"v1"', res.ETag, 'ETag');
+      CheckEquals('Sat, 01 Nov 2025 00:00:00 GMT', res.LastModified, 'Last-Modified');
+      CheckEquals('text/plain', res.ContentType, 'Content-Type');
+      CheckEquals('conditional body', string(res.Body), 'body');
+      FLock.Enter;
+      try
+         CheckEquals(0, Pos('if-none-match', FHeaders), 'no If-None-Match when not set');
+         CheckEquals(0, Pos('if-modified-since', FHeaders), 'no If-Modified-Since when not set');
+      finally
+         FLock.Leave;
+      end;
+
+      (* The ETag held: the server answers 304 with no body. *)
+      req := NewGet(Url(port, '/etag'));
+      req.IfNoneMatch     := '"v1"';
+      req.IfModifiedSince := 'Sat, 01 Nov 2025 00:00:00 GMT';
+      try
+         t.Execute(req, nil, res);
+      finally
+         req.Free;
+      end;
+      CheckEquals(304, res.StatusCode, 'conditional: status');
+      CheckTrue(res.Failure = hfNone, '304 is an answer, not a failure');
+      CheckEquals('', string(res.Body), '304 has no body');
+      FLock.Enter;
+      try
+         CheckTrue(Pos('if-none-match: "v1"', FHeaders) > 0, 'If-None-Match sent');
+         CheckTrue(Pos('if-modified-since: sat, 01 nov 2025 00:00:00 gmt', FHeaders) > 0,
+                   'If-Modified-Since sent');
+      finally
+         FLock.Leave;
+      end;
+   finally
+      res.Free;
       t.Free;
       StopServer;
    end;
@@ -1029,6 +1107,103 @@ begin
    end;
 end;
 
+procedure THttpTransportTests.Test_ConditionalDownloadOutcomes;
+var
+   fake:   TFakeHttpTransport;
+   folder, target, reason, etag, modified, ctype: string;
+   status: integer;
+   outcome: TConditionalDownloadOutcome;
+begin
+   BeginTest('DownloadFileConditional: outcomes, request headers, response validators, no leftover file');
+   DeclareVerifyOn;
+   folder := IncludeTrailingPathDelimiter(GetTempDir(False)) + 'tr4w-cond-' +
+             IntToStr(Random(100000000)) + PathDelim;
+   ForceDirectories(folder);
+   target := folder + 'file.tmp';
+   fake := TFakeHttpTransport.Create;
+   SetHttpTransportForTest(fake);
+   try
+      (* 200: the body arrives, the validators come back, the request carried the condition. *)
+      fake.ScriptStatus       := 200;
+      fake.ScriptBody         := ToWire('payload');
+      fake.ScriptETag         := '"abc"';
+      fake.ScriptLastModified := 'Sat, 01 Nov 2025 00:00:00 GMT';
+      fake.ScriptContentType  := 'text/plain';
+      outcome := DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '"old"', 'Fri, 31 Oct 2025 00:00:00 GMT',
+                                         etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoUpdated, '200 is Updated');
+      CheckTrue(FileExists(target), 'the body is in the target');
+      CheckEquals('"abc"', etag, 'ETag back');
+      CheckEquals('Sat, 01 Nov 2025 00:00:00 GMT', modified, 'Last-Modified back');
+      CheckEquals('text/plain', ctype, 'Content-Type back');
+      CheckEquals('"old"', fake.Last.IfNoneMatch, 'If-None-Match went out');
+      CheckEquals('Fri, 31 Oct 2025 00:00:00 GMT', fake.Last.IfModifiedSince, 'If-Modified-Since went out');
+      CheckEquals('TR4W/test', fake.Last.UserAgent, 'User-Agent as given');
+      CheckTrue(fake.Last.AcceptAnyStatus, 'every status is an answer');
+      CheckTrue(fake.Last.FollowRedirects, 'redirects followed');
+
+      (* No condition held: neither header. *)
+      DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test', '', '',
+                              etag, modified, ctype, status, reason);
+      CheckEquals('', fake.Last.IfNoneMatch, 'no If-None-Match when none held');
+      CheckEquals('', fake.Last.IfModifiedSince, 'no If-Modified-Since when none held');
+
+      (* 304: nothing written, the target is removed. *)
+      fake.ScriptStatus := 304;
+      fake.ScriptBody   := '';
+      outcome := DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '"abc"', '', etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoNotModified, '304 is NotModified');
+      CheckEquals(304, status, 'status 304');
+      CheckFalse(FileExists(target), 'no file for a 304');
+
+      (* 404 with a body: no file left. *)
+      fake.ScriptStatus := 404;
+      fake.ScriptBody   := ToWire('<html>not here</html>');
+      outcome := DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '', '', etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoNotFound, '404 is NotFound');
+      CheckFalse(FileExists(target), 'the 404 page is not kept');
+
+      (* 429 and 503: HttpError carrying the status. *)
+      fake.ScriptStatus := 429;
+      outcome := DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '', '', etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoHttpError, '429 is HttpError');
+      CheckEquals(429, status, 'status 429');
+      CheckFalse(FileExists(target), 'no file for a 429');
+      fake.ScriptStatus := 503;
+      outcome := DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '', '', etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoHttpError, '503 is HttpError');
+
+      (* No answer: TransportFail with the reason, no file. *)
+      fake.ScriptStatus       := 0;
+      fake.ScriptFailure      := hfOther;
+      fake.ScriptErrorClass   := 'EFault';
+      fake.ScriptErrorMessage := 'connection reset';
+      outcome := DownloadFileConditional('https://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '', '', etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoTransportFail, 'no answer is TransportFail');
+      CheckEquals('connection reset', reason, 'with the reason');
+      CheckFalse(FileExists(target), 'no file');
+
+      (* Plain http is refused before the transport is asked. *)
+      fake.Calls := 0;
+      outcome := DownloadFileConditional('http://tr4w.invalid/f.txt', target, 'TR4W/test',
+                                         '', '', etag, modified, ctype, status, reason);
+      CheckTrue(outcome = cdoTransportFail, 'plaintext refused');
+      CheckEquals(0, fake.Calls, 'the transport was not asked');
+      CheckFalse(FileExists(target), 'no file');
+   finally
+      SetHttpTransportForTest(nil);
+      fake.Free;
+      SysUtils.DeleteFile(target);
+      RemoveDir(folder);
+   end;
+end;
+
 procedure THttpTransportTests.Test_NoTransportFailsClosed;
 var
    request: THttpRequest;
@@ -1068,6 +1243,7 @@ begin
       Test_HeadersAndBodyBytes;
       Test_BasicAuthIsPreemptive;
       Test_ResponseHeadersAreReturned;
+      Test_ConditionalHeadersGoOutAndComeBack;
       Test_ResponseCap;
       Test_SinkReceivesTheBody;
       Test_RedirectsOnlyWhenAsked;
@@ -1084,6 +1260,7 @@ begin
       Test_VerifyOffReachesTheWire;
       Test_GetTextBuildsAGetAndReturnsTheBody;
       Test_DownloadWritesTheFileAndARefusalMakesNone;
+      Test_ConditionalDownloadOutcomes;
       Test_NoTransportFailsClosed;
    finally
       StopServer;

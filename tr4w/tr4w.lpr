@@ -150,6 +150,7 @@ uses
   uDXClusterClient in 'src\uDXClusterClient.pas',
   uDXSpotParse in 'src\uDXSpotParse.pas',
   uCallHistory in 'src\uCallHistory.pas',
+  uCallHistoryDownload in 'src\uCallHistoryDownload.pas',
   uTelnet in 'src\uTelnet.pas',
   uTelnetTrace in 'src\uTelnetTrace.pas',
   uBandmap in 'src\uBandmap.pas',

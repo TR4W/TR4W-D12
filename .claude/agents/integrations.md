@@ -445,6 +445,23 @@ run against a live server:
   http: HTTP_TRANSPORT_DESIGN questions 12 and 13 are NY4I's. Do not invent either here.
 * Response cap is 256 KB: the 201 echoes the whole ADIF back.
 
+## Call history download -- supercheckhistory.com (2026-11-08)
+
+`uCallHistoryDownload`. **MANUAL ONLY**: the one caller is Help > Download call history for
+this contest (`menu_download_call_history`); no timer, no open-time check, no per-QSO path --
+the site blocks hammering. A conditional GET (`uHTTPDownload.DownloadFileConditional`, which
+streams to a path the CALLER names and never renames) with the ETag / Last-Modified kept in
+`<file>.meta`; the sidecar is trusted only while the file's size matches what it recorded (a
+hand-edited file sends no condition). The body is validated (not HTML, 200 B..20 MB, >= 20 rows,
+>= 50 % of rows prefill, not under half the old file's rows) BEFORE one-step replace
+(`ReplaceFileAtomic`: MoveFileEx on Windows, rename elsewhere); on any failure the old file and
+sidecar are untouched and no `.tmp` stays. The thresholds are unattended defaults for NY4I to rule
+on. The job (`TCallHistoryDownloadJob`) is built on the MAIN thread by
+`uCallHistoryDownload.NewCallHistoryJob` (called from the `ProcessMenu` arm; the contest is not thread-safe); the worker gets plain
+values; the in-flight flag is main-thread only. User-Agent is `TR4W/<version>`. Tests use only the
+fake transport and an `https://*.invalid` base URL; the real fetch is a BENCH_QUEUE item.
+Pinned in `uTestCallHistoryDownload` and `uTestHttpTransport`.
+
 ## SuperCheckPartial upload (2026-10-25)
 
 `uSuperCheckPartialFileUpload`. **The signature is over BYTES:** `SCPSignature(secret,

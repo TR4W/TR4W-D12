@@ -9242,3 +9242,83 @@ msgstr ""
 msgid "Browse..."
 msgstr "Поза «69»."
 
+#: uappstrings.smenudownloadcallhistory
+#, fuzzy
+msgid "Download call history for this contest"
+msgstr ""
+
+#: uappstrings.scallhistorydownloading
+#, fuzzy
+msgid "Downloading call history..."
+msgstr ""
+
+#: uappstrings.scallhistorynosource
+#, fuzzy
+msgid "This contest has no call history download"
+msgstr ""
+
+#: uappstrings.scallhistorybusy
+#, fuzzy
+msgid "A call history download is already running"
+msgstr ""
+
+#: uappstrings.scallhistoryupdated
+#, fuzzy
+msgid "Call history updated (%d entries, %s); it takes effect the next time the contest is opened"
+msgstr ""
+
+#: uappstrings.scallhistorycurrent
+#, fuzzy
+msgid "Call history already current"
+msgstr ""
+
+#: uappstrings.scallhistorynotavailable
+#, fuzzy
+msgid "No call history file for this contest on supercheckhistory.com"
+msgstr ""
+
+#: uappstrings.scallhistoryfailed
+#, fuzzy
+msgid "Download failed (%s); the previous file was kept"
+msgstr ""
+
+#: uappstrings.scallhistoryrefused
+#, fuzzy
+msgid "Server refused (HTTP %d); the previous file was kept"
+msgstr ""
+
+#: uappstrings.scallhistoryotherfile
+#, fuzzy
+msgid "CALL HISTORY FILENAME is \"%s\", so the downloaded file is not the one in use"
+msgstr ""
+
+#: uappstrings.scallhistoryreasonhtml
+#, fuzzy
+msgid "the server sent a web page, not a call history file"
+msgstr ""
+
+#: uappstrings.scallhistoryreasontoosmall
+#, fuzzy
+msgid "the file is too small to be a call history"
+msgstr ""
+
+#: uappstrings.scallhistoryreasontoolarge
+#, fuzzy
+msgid "the file is larger than expected"
+msgstr ""
+
+#: uappstrings.scallhistoryreasontoofewrows
+#, fuzzy
+msgid "the file has too few usable rows"
+msgstr ""
+
+#: uappstrings.scallhistoryreasonsmaller
+#, fuzzy
+msgid "the new file is much smaller than the one held"
+msgstr ""
+
+#: uappstrings.scallhistoryreasonwrite
+#, fuzzy
+msgid "the file could not be saved"
+msgstr ""
+

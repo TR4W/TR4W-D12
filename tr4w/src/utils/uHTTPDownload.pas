@@ -120,6 +120,37 @@ function DownloadFileToPath(const AURL, ATargetFile: string;
 // name, and it is '' when the function returns True.
 
 
+type
+   (* WHAT A CONDITIONAL DOWNLOAD CAME TO. *)
+   TConditionalDownloadOutcome = (
+      cdoUpdated,        (* 200: the body is in the target file *)
+      cdoNotModified,    (* 304: the copy held is current; no file written *)
+      cdoNotFound,       (* 404 *)
+      cdoHttpError,      (* any other status: AStatus says which *)
+      cdoTransportFail); (* no answer: TLS, trust, network, timeout; AFailReason says why *)
+
+function DownloadFileConditional(const AURL, ATargetFile, AUserAgent: string;
+                                 const AIfNoneMatch, AIfModifiedSince: string;
+                                 out AETag, ALastModified, AContentType: string;
+                                 out AStatus: integer;
+                                 out AFailReason: string): TConditionalDownloadOutcome;
+(* A GET THAT ASKS "IS MY COPY STILL CURRENT?" -- If-None-Match and
+  If-Modified-Since are sent when not '' (a copy that is not on disk must send
+  neither: the caller's rule).
+
+  IT NEVER RENAMES AND NEVER TOUCHES ANYTHING BUT ATargetFile. The body goes to
+  ATargetFile, which the caller names (its own .tmp) and validates before it
+  replaces a good file; this routine only reports what arrived. ATargetFile
+  exists afterwards ONLY for cdoUpdated -- for every other outcome it is
+  deleted, because every status's body is streamed into it (a 404 or 429 page,
+  or nothing at all for a 304).
+
+  Unlike DownloadFileToPath, any status is an answer (AcceptAnyStatus). The
+  scheme rule is the shared one (https only); redirects are followed. AETag,
+  ALastModified and AContentType are the response headers of a 200 (and of a
+  304 when the server repeats them); '' when absent. Never raises. DownloadFileToPath's
+  behaviour for its callers is unchanged. *)
+
 function HttpGetText(const AURL: string;
                      out AText: string;
                      out AFailReason: string;
@@ -177,6 +208,8 @@ type
       FollowRedirects: boolean;
       MaxResponseBytes: Int64;  (* 0 = unlimited, retained for existing POST callers *)
       AcceptEncoding: string;
+      IfNoneMatch:    string;   (* conditional GET: the ETag held; '' = no header *)
+      IfModifiedSince: string;  (* conditional GET: the Last-Modified held; '' = none *)
       AllowInsecure:  boolean;  (* the caller accepts an http:// URL *)
       ConnectMs:      integer;
       IOMs:           integer;
@@ -193,6 +226,9 @@ type
       Failure:        THttpFailure;
       RetryAfter:     string;
       RequestId:      string;
+      ETag:           string;   (* response headers, '' when absent *)
+      LastModified:   string;
+      ResponseContentType: string;
 
       (* The two proof flags every caller used before issue 224. They are now
         views of Failure: reading is Failure = hfTlsUnavailable /
@@ -317,6 +353,14 @@ begin
    if aWire.AcceptEncoding <> '' then
       begin
       Result := Result + ' Accept-Encoding: ' + aWire.AcceptEncoding;
+      end;
+   if aWire.IfNoneMatch <> '' then
+      begin
+      Result := Result + ' If-None-Match: ' + aWire.IfNoneMatch;
+      end;
+   if aWire.IfModifiedSince <> '' then
+      begin
+      Result := Result + ' If-Modified-Since: ' + aWire.IfModifiedSince;
       end;
    if aWire.Username <> '' then
       begin
@@ -696,6 +740,106 @@ begin
    end;
 end;
 
+function DownloadFileConditional(const AURL, ATargetFile, AUserAgent: string;
+                                 const AIfNoneMatch, AIfModifiedSince: string;
+                                 out AETag, ALastModified, AContentType: string;
+                                 out AStatus: integer;
+                                 out AFailReason: string): TConditionalDownloadOutcome;
+var
+   wire:    THttpWireRequest;
+   res:     THttpWireResult;
+   fs:      TFileStream;
+   useTLS:  boolean;
+   failure: THttpFailure;
+   refusalLogged: boolean;
+   answered: boolean;
+begin
+   Result       := cdoTransportFail;
+   AETag        := '';
+   ALastModified := '';
+   AContentType := '';
+   AStatus      := 0;
+   AFailReason  := '';
+
+   if not CheckScheme(AURL, False, useTLS, AFailReason, failure) then
+      begin
+      Exit;
+      end;
+
+   wire := THttpWireRequest.Create;
+   res  := THttpWireResult.Create;
+   try
+      wire.Method          := 'GET';
+      wire.URL             := AURL;
+      wire.UserAgent       := AUserAgent;
+      wire.IfNoneMatch     := AIfNoneMatch;
+      wire.IfModifiedSince := AIfModifiedSince;
+      wire.FollowRedirects := True;
+      wire.AcceptAnyStatus := True;
+      wire.ConnectMs       := 15000;
+      wire.IOMs            := 30000;
+
+      try
+         fs := TFileStream.Create(AnsiString(ATargetFile), fmCreate);
+      except
+         on E: Exception do
+            begin
+            logger.Error('[HTTP] %s -> %s failed: %s: %s',
+                         [AURL, ATargetFile, E.ClassName, E.Message]);
+            AFailReason := E.Message;
+            Exit;
+            end;
+      end;
+      try
+         answered := RunTransport(wire, fs, res, '', '', failure, AFailReason,
+                                  refusalLogged);
+      finally
+         fs.Free;
+      end;
+
+      if not answered then
+         begin
+         if not refusalLogged then
+            begin
+            logger.Error('[HTTP] GET %s failed: %s', [AURL, res.Detail]);
+            end;
+         AStatus := res.StatusCode;
+         SysUtils.DeleteFile(ATargetFile);
+         Exit;
+         end;
+
+      AStatus       := res.StatusCode;
+      AETag         := res.ETag;
+      ALastModified := res.LastModified;
+      AContentType  := res.ContentType;
+      case res.StatusCode of
+         200:
+            begin
+            Result := cdoUpdated;
+            end;
+         304:
+            begin
+            Result := cdoNotModified;
+            end;
+         404:
+            begin
+            Result := cdoNotFound;
+            end;
+      else
+         begin
+         Result := cdoHttpError;
+         end;
+      end;
+      if Result <> cdoUpdated then
+         begin
+         SysUtils.DeleteFile(ATargetFile);
+         end;
+   finally
+      res.Free;
+      wire.Free;
+   end;
+end;
+
 function HttpGetText(const AURL: string;
                      out AText: string;
                      out AFailReason: string;
@@ -819,6 +963,9 @@ begin
    StatusCode := 0;
    RetryAfter := '';
    RequestId := '';
+   ETag := '';
+   LastModified := '';
+   ResponseContentType := '';
    Failure    := hfNone;
 
    if (BearerToken <> '') and
@@ -849,6 +996,8 @@ begin
       wire.UserAgent        := UserAgent;
       wire.ContentType      := ContentType;
       wire.AcceptEncoding   := AcceptEncoding;
+      wire.IfNoneMatch      := IfNoneMatch;
+      wire.IfModifiedSince  := IfModifiedSince;
       wire.Username         := Username;
       wire.Password         := Password;
       wire.BearerToken      := BearerToken;
@@ -871,6 +1020,9 @@ begin
          ResponseStatusText := res.StatusText;
          RetryAfter := res.RetryAfter;
          RequestId  := res.RequestId;
+         ETag := res.ETag;
+         LastModified := res.LastModified;
+         ResponseContentType := res.ContentType;
          Result     := True;
          end
       else if not refusalLogged then

@@ -261,6 +261,20 @@ should be a stream if a platform wants to avoid a copy of a whole Cabrillo file.
 14. **Secrets.** See 3.1: no transport logs request-derived text.
 15. **Detail is for the log, not the operator.** The operator-facing sentence comes from the
     shared layer (`SDownloadCannotVerify` and the other resourcestrings).
+16. **Conditional GET fields (added 2026-11-08 for the call history download).** The wire request
+    carries `IfNoneMatch` and `IfModifiedSince` (both `''` = no header) and a transport MUST send
+    each as `If-None-Match` / `If-Modified-Since` when set; the wire result carries `ETag`,
+    `LastModified` and `ContentType` (the response headers, `''` when absent). All five default
+    to `''`, so a transport that never sets them behaves as before. A 304 is an answer
+    (line 4) with no body. **The WinHTTP transport (S2) must add the two request headers
+    explicitly** (`WinHttpAddRequestHeaders`) and read the three response headers
+    (`WinHttpQueryHeaders`); it must not enable a platform cache that would answer the
+    conditional itself (line 9). Covered by `Test_ConditionalHeadersGoOutAndComeBack` (the
+    generic transport over loopback, including a bodiless 304) and
+    `Test_ConditionalDownloadOutcomes` (the shared layer's `DownloadFileConditional`, over the
+    fake). The shared layer's `DownloadFileConditional` (outcomes Updated / NotModified /
+    NotFound / HttpError / TransportFail) streams the body to a path the CALLER names and never
+    renames: the caller validates, then replaces. `DownloadFileToPath` is unchanged.
 
 ### 3.4 Registry and selection (the radio-factory pattern, not a case)
 

@@ -415,7 +415,14 @@ station setting.
   when the lookup finds the picked file by its name
   (`uCallHistory.CallHistoryNameToStore`), else as a full path. A blank
   CALL HISTORY FILENAME shows the contest's default as the box's hint
-  (`LOGDUPE.ContestCallHistoryFileName`, the loader's own fallback).
+  (`LOGDUPE.ContestCallHistoryFileName`, the loader's own fallback) -- the
+  site's name since 2026-11-08 (`ARRL-SS-CW.txt`; `SSCW.txt` stays as the legacy
+  fallback when the blank-named default is absent). Help > Download call history
+  for this contest (`uCallHistoryDownload`, manual only, never a timer or an
+  open-time check) writes that default file into the writable `CallHistoryFiles`
+  folder with an ETag sidecar (`<file>.meta`); no setting is involved, and it takes
+  effect at the next contest open. If CALL HISTORY FILENAME names another file the
+  completion message says the downloaded one is not the file in use.
 
 ## A station fact is a DEFAULT a contest may override (2026-10-13)
 
