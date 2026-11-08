@@ -311,12 +311,12 @@ type
 
    (* THE SIX CABRILLO CATEGORY TYPES, moved from VC on 2026-09-13.
 
-     ONE OF THEM CARRIES A KNOWN QUIRK AND IT IS PRESERVED EXACTLY.
-     tCategoryMode's spelling table maps cmDIGITAL to 'RTTY' and cmRTTY to
-     'DIGI' -- a swap VC's own comment called out as a follow-up. The
-     spellings are matched BY POSITION, so moving the table cannot change
-     which word an operator's file means; correcting it would be a separate,
-     deliberate decision with a log-format consequence. *)
+     tCategoryMode's spelling table had cmDIGITAL spelled 'RTTY' and cmRTTY
+     spelled 'DIGI', a swap inherited from D7. It was corrected on 2026-11-08
+     (issue 37): each member now spells its own name. The table maps a
+     spelling to the member at its POSITION, and nothing stores that
+     position, so the correction changed which member holds a word and not
+     which word any file, log row or datagram carries. *)
    (* EVERY CATEGORY MAY BE LEFT UNSET -- NY4I, 2026-10-29: "NONE of the
      CATEGORY-* fields is strictly required". The *UNSET member is that
      choice. Its spelling is '' and the Cabrillo header then writes the bare
@@ -327,8 +327,10 @@ type
      NON-ASSISTED, ALL, CW, SINGLE-OP, ONE), and TStationContext notes that a
      FillChar'd station scores as cpHIGH. A first member would make UNSET the
      default of every contest. The value is persisted by its SPELLING (the
-     contest log's config rows, a peer's parameter), never by ordinal, so
-     appending renumbers nothing that is stored.
+     contest log's config rows and contest row, a .cfg line, a peer's
+     parameter), never by ordinal, so appending renumbers nothing that is
+     stored. settings\tr4w.json never holds one: TContestSettings is
+     contest-scoped and SkipContestScoped leaves it out.
 
      NOT caNONE: that name is TCloseAction's in Forms. *)
    tCategoryAssisted = (caNONASSISTED, caASSISTED, caUNSET);
@@ -4226,12 +4228,15 @@ const
    tCategoryBandSA: array[tCategoryBand] of string =
       ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M',
        '222', '432', '902', '1.2G', '');
-   (* THE KNOWN SWAP IS PRESERVED: cmDIGITAL spells 'RTTY' and cmRTTY spells
-     'DIGI'. VC's own comment called it a follow-up; correcting it changes
-     what an operator's existing file means, so it is a deliberate decision
-     with a log-format consequence rather than a side effect of this move. *)
+   (* EACH SPELLING IS ITS MEMBER'S NAME: cmDIGITAL is 'DIGI', cmRTTY is
+     'RTTY' (issue 37, 2026-11-08). Until then the two were swapped, as in
+     D7's VC.pas. Correcting it changed no stored or exported word: every
+     store, file and datagram carries the SPELLING, never the ordinal (see
+     the types), so a saved 'RTTY' still reads back and exports as 'RTTY'.
+     What moved is which member holds that word, and the order of the two in
+     a list built from this table (CW, DIGI, RTTY, ...). *)
    tCategoryModeSA: array[tCategoryMode] of string =
-      ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM', '');
+      ('CW', 'DIGI', 'RTTY', 'SSB', 'MIXED', 'FM', '');
    tCategoryOperatorSA: array[tCategoryOperator] of string =
       ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG', '');
    tCategoryPowerSA: array[tCategoryPower] of string =

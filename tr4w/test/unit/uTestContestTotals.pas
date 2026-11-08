@@ -697,6 +697,8 @@ begin
       CheckEquals(500, Bonus(SALMONRUN, station, view), 'an FM entry is a phone entry');
       station.MyCategoryMode := cmDIGITAL;
       CheckEquals(0, Bonus(SALMONRUN, station, view), 'a digital entry has no Salmon Run mode');
+      station.MyCategoryMode := cmRTTY;
+      CheckEquals(0, Bonus(SALMONRUN, station, view), 'nor has an RTTY entry');
    finally
       view.Free;
    end;

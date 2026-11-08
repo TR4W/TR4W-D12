@@ -64,6 +64,7 @@ type
       procedure Test_CategoryPowerChange;
       procedure Test_Q61_CategoriesAreOneValueEach;
       procedure Test_EveryCategoryMayBeBlank;
+      procedure Test_CategoryModeSpellsItsOwnName;
       procedure Test_OnlyCQWWHasASixtyMinuteBreak;
       procedure Test_AGapCountsUpToTheBreak;
    end;
@@ -713,6 +714,56 @@ begin
 end;
 
 (* ------------------------------------------------------------------------ *)
+(* CATEGORY-MODE: EACH MEMBER SPELLS ITS OWN NAME -- issue 37                *)
+(* ------------------------------------------------------------------------ *)
+
+(* cmDIGITAL is 'DIGI' and cmRTTY is 'RTTY'. They were swapped, as in D7,
+  until 2026-11-08. Every ordinal is pinned to its word in both directions:
+  the table, a set by name, and a read back. 'RTTY' and 'DIGI' must both still
+  parse, because a log, a .cfg or a peer written before the fix carries those
+  words, and the words keep their meaning. A local settings object, so the
+  global one is untouched. *)
+procedure TContestUITests.Test_CategoryModeSpellsItsOwnName;
+const
+   EXPECTED: array[tCategoryMode] of string = (
+      'CW', 'DIGI', 'RTTY', 'SSB', 'MIXED', 'FM', '');
+var
+   m: tCategoryMode;
+   s: TR4WSettings;
+   v: string;
+begin
+   BeginTest('Test_CategoryModeSpellsItsOwnName');
+
+   for m := Low(tCategoryMode) to High(tCategoryMode) do
+      begin
+      CheckEquals(EXPECTED[m], tCategoryModeSA[m],
+                  'ordinal ' + IntToStr(Ord(m)) + ' spells ' + EXPECTED[m]);
+      end;
+
+   s := TR4WSettings.Create;
+   try
+      for m := Low(tCategoryMode) to High(tCategoryMode) do
+         begin
+         CheckTrue(s.TrySetByCommand('CATEGORY-MODE', EXPECTED[m]),
+                   '''' + EXPECTED[m] + ''' parses');
+         CheckEquals(Ord(m), Ord(s.Contest.CategoryMode),
+                     '''' + EXPECTED[m] + ''' is ordinal ' + IntToStr(Ord(m)));
+         CheckTrue(s.TryGetByCommand('CATEGORY-MODE', v),
+                   '''' + EXPECTED[m] + ''' reads back');
+         CheckEquals(EXPECTED[m], v, '''' + EXPECTED[m] + ''' round trips');
+         end;
+
+      (* THE TWO THAT WERE SWAPPED, by name and in lower case. *)
+      CheckTrue(s.TrySetByCommand('CATEGORY-MODE', 'rtty'), 'rtty parses');
+      CheckTrue(s.Contest.CategoryMode = cmRTTY, 'RTTY is cmRTTY');
+      CheckTrue(s.TrySetByCommand('CATEGORY-MODE', 'digi'), 'digi parses');
+      CheckTrue(s.Contest.CategoryMode = cmDIGITAL, 'DIGI is cmDIGITAL');
+   finally
+      s.Free;
+   end;
+end;
+
+(* ------------------------------------------------------------------------ *)
 (* THE MINIMUM OFF TIME -- Q60, NY4I 2026-10-15                              *)
 (* ------------------------------------------------------------------------ *)
 
@@ -790,6 +841,7 @@ begin
    Test_CategoryPowerChange;
    Test_Q61_CategoriesAreOneValueEach;
    Test_EveryCategoryMayBeBlank;
+   Test_CategoryModeSpellsItsOwnName;
    Test_OnlyCQWWHasASixtyMinuteBreak;
    Test_AGapCountsUpToTheBreak;
 end;
