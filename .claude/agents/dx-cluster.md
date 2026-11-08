@@ -128,7 +128,11 @@ You own how spots reach TR4W and how they are shown.
   the orange `B` is gone): worked 0 times = `FMult`, red `M`; 1 up to N-1 =
   `FWorkedMult`, the same `M` in BAND MAP WORKED MULT COLOR (a backup wanted);
   N or more = no `M`. N is BAND MAP WORKED MULT LIMIT (default 1, so no orange
-  by default). The count is the ENGINE's (`mo.WorkedCount`, written by
+  by default). **BAND MAP MULTS ONLY means "spots that still show an M"**: red
+  OR orange, plus CQ spots -- `uSpots.SpotPassesMultsOnly`, the one test both
+  the navigation scan and `BuildVisibleSpots` ask (it once read `FMult` alone
+  at two copies and hid every orange-M spot; pin
+  `Test_Count_MultsOnlyKeepsTheOrangeM`). The count is the ENGINE's (`mo.WorkedCount`, written by
   `LOGDUPE.CountWorkedMultipliers` from `AddQSOToSheets`, cleared by
   `mo.ClearAllMults`) -- see contest-scoring. One routine,
   `EditableLog.DetermineMultStatus`, gives both answers; the spot callers use

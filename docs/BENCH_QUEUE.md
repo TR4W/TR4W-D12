@@ -96,6 +96,7 @@ NY4I's ruling replaced the orange `B` built earlier the same day. A cluster spot
 
 - [ ] **ARRL Sweepstakes (CW), N = 2.** Take a spot in a section you have not worked (e.g. `CQ WY`): red `M`. Work a station in that section (W7WYS): the spot's `M` turns orange, on every band (a section counts once). Work a second station in that section (K7OWY): the `M` disappears. Delete the second QSO (Alt-Y on the last entry, or delete it in the log): the orange `M` comes back. Delete the first too: the red `M` comes back.
 - [ ] **Default N = 1.** The same first working removes the `M` altogether, as before issue 12.
+- [ ] **MULTS ONLY keeps the orange M.** With N = 2, one station worked in a section, and BAND MAP MULTS ONLY on: the spot for that section stays on the band map with its orange `M` (as it does in the cluster window); a spot with no `M` is hidden; a CQ spot stays.
 - [ ] **A dupe does not count.** With N = 2 and one station worked in the section, log a dupe of that station: the spot stays orange.
 - [ ] **A spot with no section** (no comment, no call history) shows no `M`.
 - [ ] **A per-band contest** (CQ WW, N = 2): a country worked once on 20 m is an orange `M` on 20 m and still the red `M` on 40 m.

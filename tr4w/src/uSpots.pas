@@ -173,6 +173,11 @@ function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
 function WorkedMultColorOf(const aToken: string): tr4wColors;
 function WorkedMultColor: tr4wColors;
 
+(* WHAT BAND MAP MULTS ONLY KEEPS: A SPOT THAT STILL SHOWS AN M -- the red M
+   (FMult) or the orange M (FWorkedMult, issue 12) -- and a CQ spot. The
+   navigation scan and BuildVisibleSpots both ask THIS, so they cannot drift. *)
+function SpotPassesMultsOnly(const aSpot: TSpotRecord): boolean;
+
 var
   SpotsList: TDXSpotsList;
   SpotsDisplayed: integer;
@@ -215,6 +220,12 @@ end;
 function WorkedMultColor: tr4wColors;
 begin
   Result := WorkedMultColorOf(Settings.BandMap.WorkedMultColor);
+end;
+
+function SpotPassesMultsOnly(const aSpot: TSpotRecord): boolean;
+begin
+  (* Gav added FCQ to stop CQ spots being trapped by the Mult only filter. *)
+  Result := aSpot.FMult or aSpot.FWorkedMult or aSpot.FCQ;
 end;
 
 { TStringList }
@@ -304,9 +315,9 @@ begin
         Continue;
         end;
      if Settings.BandMap.MultsOnly then
-       if not ((FList[i].FMult) or (FList[i].FCQ)) then
+       if not SpotPassesMultsOnly(FList[i]) then
           begin
-          Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
+          Continue;
           end;
      if not Settings.Bands.VhfEnabled then
        if (FList[i].FBand > Band12) then
@@ -436,10 +447,10 @@ begin
           Continue;
           end;
      if Settings.BandMap.MultsOnly then
-       if not ((FList[i].FMult) or (FList[i].FCQ)) then
+       if not SpotPassesMultsOnly(FList[i]) then
           begin
           Inc(rejMultsOnly);
-          Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
+          Continue;
           end;
      if not Settings.Bands.VhfEnabled then
        if (FList[i].FBand > Band12) then

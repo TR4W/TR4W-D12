@@ -82,6 +82,7 @@ type
       procedure Test_Count_DeleteRebuildsTheCount;
       procedure Test_Count_PerBandAndTheLeastWorkedKind;
       procedure Test_Count_SpotStoreClearsAtTheLimit;
+      procedure Test_Count_MultsOnlyKeepsTheOrangeM;
       procedure Test_Count_LoaderPathFromStoredRows;
       procedure Test_Count_ScopeChangeWithoutReload;
    end;
@@ -1227,6 +1228,85 @@ begin
    end;
 end;
 
+(* BAND MAP MULTS ONLY KEEPS EVERY SPOT THAT STILL SHOWS AN M -- red or orange --
+   and a CQ spot; a spot with no M is hidden. It used to read FMult alone, so
+   a spot turned orange by BAND MAP WORKED MULT LIMIT vanished. *)
+procedure TSpotCommentMultiplierTests.Test_Count_MultsOnlyKeepsTheOrangeM;
+var
+   spot: TSpotRecord;
+   index: array[0..9] of integer;
+   cursorRow: integer;
+   n, k: integer;
+   savedMultsOnly, savedAllBands, savedAllModes, savedDisplayCQ: boolean;
+
+   function Shown(const aCall: string): boolean;
+   var
+      j: integer;
+   begin
+      Result := False;
+      for j := 0 to n - 1 do
+         begin
+         if SpotsList.Get(index[j]).FCall = aCall then
+            begin
+            Result := True;
+            end;
+         end;
+   end;
+
+   procedure AddOne(const aLine: string; aCQ: boolean);
+   begin
+      CheckTrue(ParseDXSpotLine(aLine, spot), 'the spot decodes');
+      spot.FBand := Band40;
+      spot.FMode := CW;
+      spot.FSysTime := Now;
+      spot.FCQ := aCQ;
+      SpotsList.AddSpot(spot, False);
+   end;
+
+begin
+   BeginTest('Test_Count_MultsOnlyKeepsTheOrangeM');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRLSSCW, DomesticCountriesARRLSections, 'arrlsect.dom');
+   savedMultsOnly := Settings.BandMap.MultsOnly;
+   savedAllBands  := Settings.BandMap.AllBands;
+   savedAllModes  := Settings.BandMap.AllModes;
+   savedDisplayCQ := Settings.BandMap.DisplayCQ;
+   try
+      SetScopeFromTheClass;
+      Settings.Cluster.SpotCommentMultiplier := True;
+      Settings.BandMap.WorkedMultLimit := 2;
+      Settings.BandMap.AllBands := True;
+      Settings.BandMap.AllModes := True;
+      Settings.BandMap.DisplayCQ := True;
+      Settings.BandMap.MultsOnly := True;
+      SpotsList.Clear;
+      AddOne('DX de AC0C-1-#:   7037.0  K1DW        CW 21 dB 14 WPM CQ         WY 0127Z', False);
+      AddOne('DX de AC0C-1-#:   7038.0  W1AW        CW 21 dB 14 WPM CQ            0127Z', False);
+      AddOne('DX de AC0C-1-#:   7039.0  K2ZZZ       CW 21 dB 14 WPM CQ            0127Z', True);
+
+      LogWorked('W7WYS', 'WY', Band20);
+      cursorRow := 0;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow);
+      k := 0;
+      while (k < SpotsList.Count) and (SpotsList.Get(k).FCall <> 'K1DW') do
+         begin
+         Inc(k);
+         end;
+      CheckTrue(SpotsList.Get(k).FWorkedMult, 'precondition: K1DW is the orange M');
+      CheckFalse(SpotsList.Get(k).FMult, 'and not the red M');
+      CheckTrue(Shown('K1DW'), 'MULTS ONLY keeps the orange-M spot');
+      CheckFalse(Shown('W1AW'), 'MULTS ONLY hides a spot with no M');
+      CheckTrue(Shown('K2ZZZ'), 'MULTS ONLY keeps a CQ spot');
+   finally
+      Settings.BandMap.MultsOnly := savedMultsOnly;
+      Settings.BandMap.AllBands  := savedAllBands;
+      Settings.BandMap.AllModes  := savedAllModes;
+      Settings.BandMap.DisplayCQ := savedDisplayCQ;
+      SpotsList.Clear;
+      RestoreSession;
+   end;
+end;
+
 procedure TSpotCommentMultiplierTests.Test_Worked_ColourToken;
 begin
    BeginTest('Test_Worked_ColourToken');
@@ -1269,6 +1349,7 @@ begin
    Test_Count_DeleteRebuildsTheCount;
    Test_Count_PerBandAndTheLeastWorkedKind;
    Test_Count_SpotStoreClearsAtTheLimit;
+   Test_Count_MultsOnlyKeepsTheOrangeM;
    Test_Count_LoaderPathFromStoredRows;
    Test_Count_ScopeChangeWithoutReload;
 end;
