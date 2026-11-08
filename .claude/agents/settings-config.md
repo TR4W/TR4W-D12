@@ -409,7 +409,13 @@ station setting.
   enabling one is stored in the OPEN log only -- aliased, default off / `''`,
   placed at Contest > Initial exchange. Read once at contest open
   (`LOGDUPE.LoadCallHistoryFile`); changing them mid-session takes effect at
-  the next open. No help text yet (`KNOWN_HELP_GAPS`).
+  the next open. No help text yet (`KNOWN_HELP_GAPS`). Both file rows
+  (and INITIAL EXCHANGE FILENAME) have a Browse... button in Preferences
+  (`TPrefsForm.AddFileBrowseButton`); a call history file is stored BARE
+  when the lookup finds the picked file by its name
+  (`uCallHistory.CallHistoryNameToStore`), else as a full path. A blank
+  CALL HISTORY FILENAME shows the contest's default as the box's hint
+  (`LOGDUPE.ContestCallHistoryFileName`, the loader's own fallback).
 
 ## A station fact is a DEFAULT a contest may override (2026-10-13)
 

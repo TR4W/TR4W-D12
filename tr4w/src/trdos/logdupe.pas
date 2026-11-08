@@ -454,6 +454,11 @@ procedure EnumInitialEx(var FileString: ShortString);
   exception. Answers how many entries were added. *)
 function LoadCallHistoryFile: integer;
 
+(* THE FILE A BLANK CALL HISTORY FILENAME MEANS: the running contest's own
+   default (TContestBase.CallHistoryFileName), '' when it names none. Asked
+   by LoadCallHistoryFile and shown by Preferences as the box's hint. *)
+function ContestCallHistoryFileName: string;
+
 function PointsToBigCall(Entry: FourBytes): boolean;
 
 
@@ -1139,6 +1144,11 @@ begin
   Result := CallsignsList.AddCallHistoryExchange(aCall, aExchange);
 end;
 
+function ContestCallHistoryFileName: string;
+begin
+  Result := ContestIdentity(Contest).CallHistoryFileName;
+end;
+
 function LoadCallHistoryFile: integer;
 var
   fields: TCallHistoryFields;
@@ -1166,7 +1176,7 @@ begin
   name := Trim(Settings.Contest.CallHistoryFilename);
   if name = '' then
      begin
-     name := ContestIdentity(Contest).CallHistoryFileName;
+     name := ContestCallHistoryFileName;
      end;
   path := CallHistoryFilePath(name);
   lines := TStringList.Create;

@@ -64,6 +64,7 @@ type
       procedure Test_Loader_SettingOffMissingFileAndOtherContest;
       procedure Test_Loader_FillsTheStoreForSweepstakes;
       procedure Test_Path_BareNameAndFullPath;
+      procedure Test_Browse_StoresABareNameOnlyWhenItFindsThePickedFile;
       procedure Test_Cost_ALargeFileLoadsQuickly;
       procedure Test_FlushInitialExSkipsCallHistoryEntries;
    end;
@@ -693,6 +694,56 @@ begin
              CallHistoryFilePath('SSCW.txt'));
 end;
 
+(* WHAT PREFERENCES' BROWSE STORES (CallHistoryNameToStore): the bare name
+   when the lookup brings that name back to the file picked, else the full
+   path -- and either way the program then opens the file picked. The decision
+   is pinned on given paths (CallHistoryStoredName), the wrapper on the real
+   lookup without writing a file: a name in no CallHistoryFiles folder
+   resolves beside the program, which is exactly where it was "picked". *)
+procedure TCallHistoryTests.Test_Browse_StoresABareNameOnlyWhenItFindsThePickedFile;
+var
+   folder, picked, other, stored: string;
+   savedContest: TContestHandle;
+begin
+   BeginTest('Test_Browse_StoresABareNameOnlyWhenItFindsThePickedFile');
+   folder := string(GetTempDir(False)) + CALL_HISTORY_FOLDER + PathDelim;
+   picked := folder + 'SSCW.txt';
+   other  := string(GetTempDir(False)) + 'elsewhere' + PathDelim + 'SSCW.txt';
+
+   CheckEquals('', CallHistoryStoredName('', picked), 'nothing picked, nothing stored');
+   CheckEquals('SSCW.txt', CallHistoryStoredName(picked, picked),
+               'the bare name finds the picked file: stored bare');
+   CheckEquals(picked, CallHistoryStoredName(picked, other),
+               'the bare name finds ANOTHER file (a same-named copy shadows it): the full path');
+   CheckEquals(picked, CallHistoryStoredName(picked, ''), 'no lookup answer: the full path');
+{$IFDEF WINDOWS}
+   CheckEquals('SSCW.txt', CallHistoryStoredName(picked, UpperCase(picked)),
+               'Windows file names are case-blind');
+{$ENDIF}
+
+   (* THE REAL LOOKUP. *)
+   picked := CallHistoryFilePath('tr4w_no_such_call_history.txt');
+   stored := CallHistoryNameToStore(picked);
+   CheckEquals('tr4w_no_such_call_history.txt', stored,
+               'a file in the CallHistoryFiles folder is stored bare: ' + picked);
+   CheckEquals(picked, CallHistoryFilePath(stored), 'and the bare name finds it again');
+
+   stored := CallHistoryNameToStore(FixturePath);
+   CheckEquals(FixturePath, stored, 'a file anywhere else keeps its path');
+   CheckEquals(FixturePath, CallHistoryFilePath(stored), 'and is opened as picked');
+
+   (* THE BLANK BOX'S HINT is the contest's own default. *)
+   savedContest := Contest;
+   try
+      Contest := ContestHandleOf(ARRLSSCW);
+      CheckEquals('ARRL-SS-CW.txt', ContestCallHistoryFileName, 'SS CW: the default the loader reads');
+      Contest := ContestHandleOf(CQWWCW);
+      CheckEquals('', ContestCallHistoryFileName, 'CQ WW: none');
+   finally
+      Contest := savedContest;
+   end;
+end;
+
 procedure TCallHistoryTests.RunAllTests;
 begin
    gCollected := TStringList.Create;
@@ -710,6 +761,7 @@ begin
       Test_Loader_SettingOffMissingFileAndOtherContest;
       Test_Loader_FillsTheStoreForSweepstakes;
       Test_Path_BareNameAndFullPath;
+      Test_Browse_StoresABareNameOnlyWhenItFindsThePickedFile;
       Test_Cost_ALargeFileLoadsQuickly;
       Test_FlushInitialExSkipsCallHistoryEntries;
    finally

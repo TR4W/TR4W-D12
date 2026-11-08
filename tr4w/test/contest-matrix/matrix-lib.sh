@@ -76,8 +76,12 @@
 #     built from trmaster-fixture.txt by make-trmaster-fixture.py, copied into
 #     each run directory under that name -- NOT as TRMASTER.DTA, so the
 #     program's own file resolution never finds it. Only the record's
-#     initialexchange section opens it (uContestMatrix), so no record depends
-#     on the shipped TRMASTER.DTA, which is refreshed monthly.
+#     initialexchange section opens it (uContestMatrix). THAT IS NOT THE WHOLE
+#     STORY: POTA's profile sets initialexchange.trmaster.program, so its parse
+#     reads operator names through InitOperatorNameSet from the SHIPPED
+#     tr4w/target/TRMASTER.DTA, which is refreshed monthly. A refresh that gives
+#     a call a junk name (2A, QRA:) can turn POTA's record red with no code
+#     change (seen 2026-11-07).
 #   Two consecutive runs are byte-identical -- that was checked when the
 #   matrix was first frozen, and the compare would expose any drift since.
 set -u

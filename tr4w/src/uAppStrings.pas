@@ -838,6 +838,9 @@ resourcestring
      the band plan editor, which saves its own whole section. *)
    SPrefsBandPlanRow = 'Band plan (cutoff frequencies and memories)';
    SPrefsBandPlanEdit = 'Edit...';
+   (* A GENERATED FILE ROW'S BUTTON (CALL HISTORY FILENAME, INITIAL EXCHANGE
+     FILENAME) -- the same words as the designed Browse buttons. *)
+   SPrefsBrowse = 'Browse...';
 
    (* ------------------------------------------- HamScore resync (Tools) - *)
 

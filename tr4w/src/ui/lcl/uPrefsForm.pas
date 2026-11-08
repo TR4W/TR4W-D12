@@ -197,6 +197,19 @@ type
       property Refused: integer read FRefused;
    end;
 
+   (* THE BROWSE BUTTON OF A GENERATED FILE ROW: the edit it fills and the
+     dialog's title, as typed fields the button owns -- not a Tag, not a
+     lookup by name.  Which row it serves is decided when it is built, by the
+     handler it is given (TPrefsForm.FileBrowseHandlerFor). *)
+   TPrefsFileBrowseButton = class(TButton)
+   private
+      FEdit: TEdit;
+      FDialogTitle: string;
+   public
+      property Edit: TEdit read FEdit write FEdit;
+      property DialogTitle: string read FDialogTitle write FDialogTitle;
+   end;
+
    TPrefsForm = class(TForm)
       edtSearch: TEdit;
       tvNav: TTreeView;
@@ -690,8 +703,8 @@ type
         Sender, which is the house rule and what keeps a rename
         from silently repointing a button at the wrong edit. }
       procedure BrowseForFolder(const aEdit: TEdit; const aTitle: string);
-      procedure BrowseForProgram(const aEdit: TEdit; const aTitle,
-                                 aFilter: string);
+      function  BrowseForFile(const aTitle, aFilter, aInitialDir,
+                              aStartFile: string; out aPicked: string): boolean;
       procedure btnBrowseBackupClick(Sender: TObject);
       // OnSelectionChange, NOT OnChange -- and hence the extra parameter.  An
       // LCL TListBox has no OnChange at all (TComboBox does, which is why only
@@ -1119,6 +1132,13 @@ type
       // editor and it edits the whole band plan -- there is nothing to branch
       // on, so this is not the branch-on-Sender the house rule forbids.
       procedure GeneratedBandPlanClick(Sender: TObject);
+      (* A Browse button beside a generated file row, when the row's key is
+        one that has one (FileBrowseHandlerFor); one handler per row. *)
+      procedure AddFileBrowseButton(const aParent: TWinControl; const aEdit: TEdit;
+                                    const aSetting: TSettingBase);
+      function  FileBrowseHandlerFor(const aKey: string): TNotifyEvent;
+      procedure GeneratedCallHistoryBrowseClick(Sender: TObject);
+      procedure GeneratedInitialExchangeBrowseClick(Sender: TObject);
       procedure BuildGeneratedBlock(const aParent: TWinControl; const aTop: integer;
                                     const aHeading: string;
                                     const aPrefixes: array of string);
@@ -1429,7 +1449,9 @@ uses
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
-   VC;          // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
+   uCallHistory,        (* CallHistoryNameToStore -- the call history file's Browse *)
+   LogDupe,             (* ContestCallHistoryFileName -- that box's hint *)
+   VC;        // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
 
 var
    gPrefsForm: TPrefsForm = nil;
@@ -4196,6 +4218,57 @@ begin
    aHost.Visible := True;
 end;
 
+(* WHICH GENERATED ROWS NAME A FILE THE OPERATOR MAY BROWSE FOR, and the
+  handler each one's button gets; nil for every other key. *)
+function TPrefsForm.FileBrowseHandlerFor(const aKey: string): TNotifyEvent;
+begin
+   Result := nil;
+   if UnicodeSameText(aKey, 'files.ctrlj.callHistoryFilename') then
+      begin
+      Result := GeneratedCallHistoryBrowseClick;
+      end
+   else if UnicodeSameText(aKey, 'files.ctrlj.initialExchangeFilename') then
+      begin
+      Result := GeneratedInitialExchangeBrowseClick;
+      end;
+end;
+
+(* A Browse... button at the right of the row's edit box, which gives up the
+  room: the row ends where every generated row ends, inside the page and clear
+  of its scroll bar.  As wide as its caption needs (a translation is often
+  longer than 'Browse...'), never narrower than the designed Browse buttons. *)
+procedure TPrefsForm.AddFileBrowseButton(const aParent: TWinControl; const aEdit: TEdit;
+                                         const aSetting: TSettingBase);
+const
+   BUTTON_MIN_W  = 70;    // the designed Browse buttons
+   BUTTON_CHROME = 20;    // the button's own border and padding
+   BUTTON_GAP    = 6;
+var
+   handler: TNotifyEvent;
+   btn: TPrefsFileBrowseButton;
+   w: integer;
+begin
+   handler := FileBrowseHandlerFor(aSetting.Key);
+   if not Assigned(handler) then
+      begin
+      Exit;
+      end;
+
+   btn := TPrefsFileBrowseButton.Create(aParent);
+   btn.Parent := aParent;
+   (* NAMED BEFORE IT IS CAPTIONED: TControl.SetName copies the name onto a
+     caption that still equals the old name (see AddSettingRows). *)
+   btn.Name        := LclText(aEdit.Name + '_browse');
+   btn.Caption     := LclText(SPrefsBrowse);
+   btn.Edit        := aEdit;
+   btn.DialogTitle := aSetting.Caption;
+   btn.OnClick     := handler;
+
+   w := Max(BUTTON_MIN_W, TextWidthInFont(btn.Font, btn.Caption) + BUTTON_CHROME);
+   aEdit.Width := GENERATED_CTRL_W - w - BUTTON_GAP;
+   btn.SetBounds(GENERATED_CTRL_X + GENERATED_CTRL_W - w, aEdit.Top, w, aEdit.Height);
+end;
+
 (* The settings TPrefsPlacements puts on aPageTag, in the table's order, with a
   bold heading wherever the placements' group changes to a non-empty one.  A
   placed key the registry does not know is logged, not skipped in silence. *)
@@ -4363,6 +4436,14 @@ begin
 
          FBindings.Bind(edt, s.Key);
          ctl := edt;
+
+         (* A BLANK CALL HISTORY FILENAME IS NOT "NONE": the loader then reads
+           the running contest's own default (LOGDUPE.LoadCallHistoryFile), so
+           the empty box says which file that is. *)
+         if UnicodeSameText(s.Key, 'files.ctrlj.callHistoryFilename') then
+            begin
+            edt.TextHint := LclText(ContestCallHistoryFileName);
+            end;
          end;
 
       // PAIRS THE CAPTION TO THE CONTROL, and is how HighlightSearchedRow
@@ -4407,6 +4488,12 @@ begin
       if ctl is TCheckBox then
          begin
          TCheckBox(ctl).Caption := '';
+         end;
+
+      (* AFTER THE NAME: the button is named from its edit's. *)
+      if (not ro) and (ctl is TEdit) then
+         begin
+         AddFileBrowseButton(aParent, TEdit(ctl), s);
          end;
 
       Inc(n);
@@ -7719,23 +7806,14 @@ end;
 
 procedure TPrefsForm.btnBrowseMMTTYClick(Sender: TObject);
 var
-   dlg: TOpenDialog;
+   picked: string;
 begin
-   dlg := TOpenDialog.Create(nil);
-   try
-      dlg.Title  := 'Locate MMTTY.EXE';
-      dlg.Filter := 'MMTTY|MMTTY.exe|Programs (*.exe)|*.exe|All files (*.*)|*.*';
-      if Trim(edtMMTTYEngine.Text) <> '' then
-         begin
-         dlg.FileName := Trim(edtMMTTYEngine.Text);
-         end;
-      if dlg.Execute then
-         begin
-         edtMMTTYEngine.Text := dlg.FileName;
-         end;
-   finally
-      dlg.Free;
-   end;
+   if BrowseForFile('Locate MMTTY.EXE',
+                    'MMTTY|MMTTY.exe|Programs (*.exe)|*.exe|All files (*.*)|*.*',
+                    '', Trim(edtMMTTYEngine.Text), picked) then
+      begin
+      edtMMTTYEngine.Text := LclText(picked);
+      end;
 end;
 
 
@@ -7763,26 +7841,89 @@ begin
    end;
 end;
 
-procedure TPrefsForm.BrowseForProgram(const aEdit: TEdit; const aTitle,
-                                      aFilter: string);
+(* THE ONE FILE PICKER on this form -- the MMTTY engine, the DVK recorder and
+  the generated file rows. True, aPicked holding the chosen path, when the
+  operator chose one; the CALLER writes it, so a row can store something other
+  than the full path (CALL HISTORY FILENAME stores a bare name). aStartFile
+  pre-selects the current value; aInitialDir, when not '', is where the
+  dialog opens. *)
+function TPrefsForm.BrowseForFile(const aTitle, aFilter, aInitialDir,
+                                  aStartFile: string; out aPicked: string): boolean;
 var
    dlg: TOpenDialog;
 begin
+   Result  := False;
+   aPicked := '';
    dlg := TOpenDialog.Create(nil);
    try
-      dlg.Title  := aTitle;
-      dlg.Filter := aFilter;
-      if Trim(aEdit.Text) <> '' then
+      dlg.Title  := LclText(aTitle);
+      dlg.Filter := LclText(aFilter);
+      if aInitialDir <> '' then
          begin
-         dlg.FileName := Trim(aEdit.Text);
+         dlg.InitialDir := LclText(aInitialDir);
+         end;
+      if aStartFile <> '' then
+         begin
+         dlg.FileName := LclText(aStartFile);
          end;
       if dlg.Execute then
          begin
-         aEdit.Text := dlg.FileName;
+         aPicked := dlg.FileName;
+         Result  := True;
          end;
    finally
       dlg.Free;
    end;
+end;
+
+(* CALL HISTORY FILENAME'S Browse button (AddFileBrowseButton). Opens in the
+  CallHistoryFiles folder, with the current value shown where the program
+  would find it -- a bare name means nothing to the dialog -- and stores what
+  CallHistoryNameToStore says: the bare name for a file the program will find
+  by it, the full path otherwise. *)
+procedure TPrefsForm.GeneratedCallHistoryBrowseClick(Sender: TObject);
+var
+   btn: TPrefsFileBrowseButton;
+   current, picked: string;
+begin
+   if not (Sender is TPrefsFileBrowseButton) then
+      begin
+      Exit;
+      end;
+   btn := TPrefsFileBrowseButton(Sender);
+   (* Only a file that is there: a name found nowhere would point the dialog
+     into a folder that may not exist, so the folder decides instead. *)
+   current := CallHistoryFilePath(Trim(btn.Edit.Text));
+   if not FileExists(current) then
+      begin
+      current := '';
+      end;
+   if BrowseForFile(btn.DialogTitle,
+                    'Call history (*.txt)|*.txt|All files (*.*)|*.*',
+                    CallHistoryBrowseFolder,
+                    current, picked) then
+      begin
+      btn.Edit.Text := LclText(CallHistoryNameToStore(picked));
+      end;
+end;
+
+(* INITIAL EXCHANGE FILENAME'S Browse button: the full path picked. *)
+procedure TPrefsForm.GeneratedInitialExchangeBrowseClick(Sender: TObject);
+var
+   btn: TPrefsFileBrowseButton;
+   picked: string;
+begin
+   if not (Sender is TPrefsFileBrowseButton) then
+      begin
+      Exit;
+      end;
+   btn := TPrefsFileBrowseButton(Sender);
+   if BrowseForFile(btn.DialogTitle,
+                    'Initial exchange (*.ex)|*.ex|All files (*.*)|*.*',
+                    '', Trim(btn.Edit.Text), picked) then
+      begin
+      btn.Edit.Text := LclText(picked);
+      end;
 end;
 
 procedure TPrefsForm.btnBrowseDVKPathClick(Sender: TObject);
@@ -7791,13 +7932,19 @@ begin
 end;
 
 procedure TPrefsForm.btnBrowseDVKRecorderClick(Sender: TObject);
+var
+   picked: string;
 begin
    // DLLs ARE OFFERED, and that is not a slip: NY4I's own station has
    // lame_enc.dll in this field. The recorder is whatever component does the
    // encoding, so a filter that showed only .exe would hide the working answer.
-   BrowseForProgram(edtDVKRecorder, 'DVK recorder',
+   if BrowseForFile('DVK recorder',
                     'Programs and encoders (*.exe;*.dll)|*.exe;*.dll|' +
-                    'All files (*.*)|*.*');
+                    'All files (*.*)|*.*',
+                    '', Trim(edtDVKRecorder.Text), picked) then
+      begin
+      edtDVKRecorder.Text := LclText(picked);
+      end;
 end;
 
 procedure TPrefsForm.LoadStationPanel;

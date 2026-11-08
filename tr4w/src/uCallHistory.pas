@@ -142,6 +142,27 @@ function CallHistoryExchangeText(const aValues: TCallHistoryValues;
    (uAppPaths.PreferredDataFilePath), matched case-tolerantly. '' for ''. *)
 function CallHistoryFilePath(const aName: string): string;
 
+(* WHAT CALL HISTORY FILENAME SHOULD HOLD FOR A FILE THE OPERATOR PICKED
+   (Preferences' Browse button): its BARE NAME when that name, looked up the
+   way the program will look it up (CallHistoryFilePath), comes back to the
+   very file picked -- which is the case for a file in either CallHistoryFiles
+   folder; otherwise the full path. A ROUND TRIP, not a folder comparison: a
+   file picked in the folder beside the program while the writable folder
+   holds one of the same name would, stored bare, load the OTHER file, so it
+   is stored with its path. '' for ''. *)
+function CallHistoryNameToStore(const aPickedPath: string): string;
+
+(* THE DECISION ITSELF, with the lookup's answer given rather than asked:
+   aResolvedBareName is where the bare name of aPickedPath resolves. Compared
+   as file names (SameFileName: case-blind on Windows only), each expanded. *)
+function CallHistoryStoredName(const aPickedPath: string;
+                               const aResolvedBareName: string): string;
+
+(* THE FOLDER A BROWSE FOR A CALL HISTORY FILE OPENS IN: the writable data
+   directory's CallHistoryFiles if it exists, else the one beside the
+   program, else '' (the dialog's own default). *)
+function CallHistoryBrowseFolder: string;
+
 (* THE LINES OF A FILE, a UTF-8 byte-order mark removed. False, aLines
    empty, when the file cannot be read; never raises. *)
 function ReadCallHistoryLines(const aPath: string; aLines: TStringList): boolean;
@@ -466,6 +487,58 @@ begin
    else
       begin
       Result := PreferredDataFilePath(CALL_HISTORY_FOLDER + PathDelim + Trim(aName));
+      end;
+end;
+
+function CallHistoryStoredName(const aPickedPath: string;
+                               const aResolvedBareName: string): string;
+var
+   picked: string;
+   resolved: string;
+   same: boolean;
+begin
+   picked := Trim(aPickedPath);
+   Result := picked;
+   if (picked = '') or (aResolvedBareName = '') then
+      begin
+      Exit;
+      end;
+   (* SameFileName's rule, stated here: SysUtils' SameFileName takes an
+      AnsiString, and these are not. FileNameCaseSensitive is the RTL's
+      own answer per platform. *)
+   picked   := ExpandFileName(picked);
+   resolved := ExpandFileName(aResolvedBareName);
+   if FileNameCaseSensitive then
+      begin
+      same := resolved = picked;
+      end
+   else
+      begin
+      same := UnicodeSameText(resolved, picked);
+      end;
+   if same then
+      begin
+      Result := ExtractFileName(picked);
+      end;
+end;
+
+function CallHistoryNameToStore(const aPickedPath: string): string;
+begin
+   Result := CallHistoryStoredName(aPickedPath,
+                                   CallHistoryFilePath(ExtractFileName(Trim(aPickedPath))));
+end;
+
+function CallHistoryBrowseFolder: string;
+begin
+   Result := ExistingDataFile(DownloadedDataFilePath(CALL_HISTORY_FOLDER));
+   if DirectoryExists(Result) then
+      begin
+      Exit;
+      end;
+   Result := ExistingDataFile(DataFilePath(CALL_HISTORY_FOLDER));
+   if not DirectoryExists(Result) then
+      begin
+      Result := '';
       end;
 end;
 
