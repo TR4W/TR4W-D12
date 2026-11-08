@@ -350,7 +350,7 @@ and link issue #133 (Ontario's and Quebec's headers do).
 | `MarksDupes`, `GetIsActive`, `MinimumOffTimeMinutes` | True / True / 30 | `uContestInternetSprint`; `uContestSASprint`; `uContestCQWWBase` (60) |
 | `RunsInMode(aMode)` | every mode -- an IDENTITY question for two contests sharing one ADIF id | the RoPoCo runnings |
 | `CallHistoryFields` | none -- the contest reads no call history file | `TContestARRLSSBase` (`[chfCK, chfSect]`), below |
-| `CallHistoryFileName` | `''` -- no default file | the SS leaves (`ARRL-SS-CW.txt`, `ARRL-SS-SSB.txt`), below |
+| `CallHistoryFileName` | `''` -- no default file | the SS leaves (`SSCW.txt`, `SSSSB.txt` -- N1MM's names until TR4W downloads the file), below |
 
 #### A call history file -- `CallHistoryFields` (2026-11-07)
 
@@ -359,7 +359,10 @@ what each station sent in past runnings. With **USE CALL HISTORY FILE** on and
 **CALL HISTORY FILENAME** naming a file (a bare name is looked for in a
 `CallHistoryFiles` folder -- the writable data directory's, then the one beside
 the program; or a full path; blank is the class's `CallHistoryFileName`, the
-name of the published file for that running, which the engine never spells),
+running's default file, which the engine never spells -- N1MM's library name
+until TR4W can download the file (NY4I, 2026-11-07: `SSCW.txt`, `SSSSB.txt`);
+supercheckhistory.com's name, the Cabrillo contest name + `.txt`, is the
+download's association key and is recorded in a comment beside the override),
 `LOGDUPE.LoadCallHistoryFile` reads it at contest
 open -- after INITIAL.EX, before the log -- and stores, per row, the fields your
 class names **in your order, joined by one blank** as that call's remembered

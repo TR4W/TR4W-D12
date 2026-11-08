@@ -2977,9 +2977,11 @@ type
       (* THE CALL HISTORY FILE THIS CONTEST LOOKS FOR when CALL HISTORY
          FILENAME names none -- a bare name, found as that setting's is
          (uCallHistory.CallHistoryFilePath). Each running states its own
-         because the published files are per running (supercheckhistory.com:
-         ARRL-SS-CW.txt, ARRL-SS-SSB.txt); a file that serves both, such as
-         NY4I's SSCW.txt, is named in the setting. The base names none. *)
+         because the files are per running. Until TR4W can download the file
+         it is N1MM's library name (NY4I, 2026-11-07: SSCW.txt, SSSSB.txt);
+         supercheckhistory.com's names (the Cabrillo contest name + '.txt',
+         ARRL-SS-CW.txt) are the download's association key, recorded beside
+         each override. The base names none. *)
       function CallHistoryFileName: string; virtual;
 
       (* THE ADIF SRX_STRING -- the worked station's side of the exchange, as

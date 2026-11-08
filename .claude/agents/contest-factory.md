@@ -1076,8 +1076,10 @@ the target shape, the M-step migration order and the open questions.
   log remembers for a worked station (`TContestARRLSSBase`: `[chfCK,
   chfSect]` -> `'72 SCV'`, as the log's `'18 UT'`); `CallHistoryFileName`
   (base `''`) is the running's default file when CALL HISTORY FILENAME is
-  blank (`ARRL-SS-CW.txt` / `ARRL-SS-SSB.txt`, supercheckhistory.com's names;
-  the engine spells none). A row missing a named field is skipped; the file's
+  blank (`SSCW.txt` / `SSSSB.txt`, N1MM's library names, NY4I 2026-11-07,
+  until TR4W can download the file; supercheckhistory.com's `ARRL-SS-CW.txt` /
+  `ARRL-SS-SSB.txt` -- Cabrillo name + `.txt` -- is the download's association
+  key, kept in a comment beside each override; the engine spells none). A row missing a named field is skipped; the file's
   `!!Order!!` decides the columns (the two SS layouts in circulation differ).
   The reader is the leaf
   `src/uCallHistory.pas`; the loader `LOGDUPE.LoadCallHistoryFile` runs in

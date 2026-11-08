@@ -68,8 +68,9 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       (* THE CALL HISTORY FILE THIS RUNNING LOOKS FOR when CALL HISTORY
-         FILENAME names none -- supercheckhistory.com's N1MM file for it.
-         See TContestBase.CallHistoryFileName. *)
+         FILENAME names none -- N1MM's library name for this running
+         (N1MM calls the contest SSCW), which is what NY4I's shipped file is
+         called (NY4I, 2026-11-07). See TContestBase.CallHistoryFileName. *)
       function CallHistoryFileName: string; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
    end;
@@ -121,9 +122,14 @@ begin
    Result := 'arrlsect';
 end;
 
+(* N1MM'S NAME UNTIL THE PROGRAM CAN DOWNLOAD THE FILE (NY4I, 2026-11-07).
+   supercheckhistory.com publishes this running's file as ARRL-SS-CW.txt --
+   the Cabrillo contest name + '.txt' -- and that is the association key the
+   download feature will use; this default may follow it once TR4W fetches
+   the file itself. *)
 function TContestARRLSSCW.CallHistoryFileName: string;
 begin
-   Result := 'ARRL-SS-CW.txt';
+   Result := 'SSCW.txt';
 end;
 
 function TContestARRLSSCW.GetInitialExchangeKind: InitialExchangeType;

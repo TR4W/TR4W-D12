@@ -403,11 +403,11 @@ begin
                        IsLegacyContest(contests[k], ARRLSSSSB);
       if IsLegacyContest(contests[k], ARRLSSCW) then
          begin
-         CheckEquals('ARRL-SS-CW.txt', contests[k].CallHistoryFileName, 'SS CW''s default file');
+         CheckEquals('SSCW.txt', contests[k].CallHistoryFileName, 'SS CW''s default file: N1MM''s name');
          end
       else if IsLegacyContest(contests[k], ARRLSSSSB) then
          begin
-         CheckEquals('ARRL-SS-SSB.txt', contests[k].CallHistoryFileName, 'SS SSB''s default file');
+         CheckEquals('SSSSB.txt', contests[k].CallHistoryFileName, 'SS SSB''s default file: N1MM''s name');
          end
       else
          begin
@@ -502,7 +502,7 @@ begin
       Settings.Contest.UseCallHistoryFile := True;
       Settings.Contest.CallHistoryFilename := FixturePath + '.missing';
       CheckEquals(0, LoadCallHistoryFile, 'missing file: nothing loaded');
-      (* NO NAME: the contest's default, ARRL-SS-CW.txt, which no
+      (* NO NAME: the contest's default, SSCW.txt, which no
          CallHistoryFiles folder beside the test program holds. *)
       Settings.Contest.CallHistoryFilename := '';
       CheckEquals(0, LoadCallHistoryFile, 'no name, the default not there: nothing loaded');
@@ -736,7 +736,7 @@ begin
    savedContest := Contest;
    try
       Contest := ContestHandleOf(ARRLSSCW);
-      CheckEquals('ARRL-SS-CW.txt', ContestCallHistoryFileName, 'SS CW: the default the loader reads');
+      CheckEquals('SSCW.txt', ContestCallHistoryFileName, 'SS CW: the default the loader reads');
       Contest := ContestHandleOf(CQWWCW);
       CheckEquals('', ContestCallHistoryFileName, 'CQ WW: none');
    finally
