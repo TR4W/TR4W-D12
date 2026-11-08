@@ -1029,6 +1029,7 @@ procedure TExternalLoggersForm.ProviderChanged(Sender: TObject);
 var
    registration: TExternalLoggerRegistration;
    fields: TLoggerFieldList;
+   previousDefault: integer;
 begin
    if FDefinition = nil then
       begin
@@ -1038,7 +1039,20 @@ begin
       begin
       ReadRows(FDefinition, False);
       ClearCredentials;
+      previousDefault := 0;
+      if FindExternalLoggerRegistration(FDefinition.ProviderId, registration) then
+         begin
+         previousDefault := registration.DefaultPort;
+         end;
       FDefinition.ProviderId := UTF8Decode(cbProvider.Text);
+      (* A port still at the old provider's default (or empty) moves to the new
+         provider's own; a port the operator chose stays. *)
+      if FindExternalLoggerRegistration(FDefinition.ProviderId, registration) and
+         (registration.DefaultPort <> 0) and
+         ((FDefinition.Port = 0) or (FDefinition.Port = previousDefault)) then
+         begin
+         FDefinition.Port := registration.DefaultPort;
+         end;
       end;
    if FindExternalLoggerRegistration(FDefinition.ProviderId, registration) then
       begin
@@ -1136,7 +1150,7 @@ begin
          definition.Name := dialog.FConfig.NewDefinitionName;
          definition.ProviderId := 'DXKEEPER';
          definition.Address := '127.0.0.1';
-         definition.Port := 52001;
+         definition.Port := DXKEEPER_DEFAULT_PORT;
          dialog.FConfig.Definitions.Add(definition);
          end
       else

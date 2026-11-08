@@ -61,6 +61,11 @@ function BoolToString(b: boolean): string;
 // Add property for IP address, port, type (tcp or udp but just implement tcp right now).
 // Add a connect and disconnect method
 
+(* The members are the legacy single-logger setting's TOKENS (see
+  ExternalLoggerTypeSA), kept so an old settings file still loads and
+  uExternalLoggerMigration can turn it into a definition. lt_ACLog and lt_WRL
+  name providers that are durable (uACLogExternalLogger, uWRLExternalLogger);
+  no volatile TExternalLogger path serves them. *)
 Type ExternalLoggerType = (lt_NoExternalLogger, lt_DXKeeper, lt_ACLog, lt_HRD, lt_WRL);
 
 (* THE CONFIG-FILE TOKEN FOR EACH LOGGER, IN ORDINAL ORDER.

@@ -179,10 +179,28 @@ naming the sink; the broadcaster also names address:port) or raises is contained
 | type | status |
 |---|---|
 | `lt_DXKeeper` | Complete |
-| `lt_ACLog` | **Incomplete** — the factory logs a warning on creation |
-| `lt_HRD` | **Incomplete** — same |
+| `ACLOG` (provider, `uACLogExternalLogger`) | Complete for NEW contacts (2026-11-08, issue 33): durable, Cloudlog shape; no edit or delete exists in the AC Log API |
+| `lt_HRD` | **Incomplete** — the factory logs a warning on creation |
 
-Each logger runs its own `TReadingThread` / `TSenderThread` pair.
+`lt_ACLog` and `lt_WRL` stay in `ExternalLoggerType` only as the legacy single-logger
+setting's TOKENS (settings vocabulary, `uExternalLoggerMigration`); nothing delivers through
+them, and `LogQSOToACLog` is deleted. DXKeeper (the old `TExternalLogger`) runs its own
+`TReadingThread` / `TSenderThread` pair; the durable providers run a delivery worker.
+
+**ACLog (issue 33, 2026-11-08; `docs/EXTERNAL_LOGGERS_DESIGN.md` "ACLog").** AC Log is the TCP
+server (enable "TCP API Enabled", default port 1100). One connection per contact:
+`<CMD><ADDADIFRECORD><VALUE>` ADIF `</VALUE></CMD>` CR LF, then a bare CR LF. Facts that
+bite: **a CR LF anywhere in the line ends the command**, and `EmitADIFContact` ends its
+record with one, so `ACLogAddFrame` drops the trailing pair and turns inner ones into
+spaces; **no reply is documented, so a written command is a HAND-OFF** (`doConfirmed`,
+marker `aclog:added`), never an acknowledgement; connect failure is `doRetry` 60 s not paused
+(AC Log closed), a failure after the connection was up is `doUncertain` paused; edit and
+delete of a delivered contact fail visibly (`ACLOG_EDIT_UNSUPPORTED` /
+`ACLOG_DELETE_UNSUPPORTED`). `ADDADIFRECORD` bypasses scoring and the dupe sheet, so this
+targets AC Log, not the N3FJP contest programs. A provider may register a default port
+(`RegisterExternalLogger`'s last argument; ACLog 1100, DXKeeper 52001) and the editor and
+`SeedExternalLoggers` honour it. Pinned in `uTestACLog` (loopback TCP server, exact bytes).
+Never run against a live AC Log.
 
 **The Preferences External Logger page edits DEFINITIONS in its grid (issue 220,
 2026-11-05; `docs/EXTERNAL_LOGGERS_DESIGN.md` is authoritative).** `uExternalLoggerGrid`

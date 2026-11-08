@@ -610,6 +610,7 @@ uses
    uTestHttpSecrets in 'uTestHttpSecrets.pas',
    uTestFakeTransport in 'uTestFakeTransport.pas',
    uTestCloudlog in 'uTestCloudlog.pas',
+   uTestACLog in 'uTestACLog.pas',
    uTestHttpTransport in 'uTestHttpTransport.pas',
    uTestNothingSent in 'uTestNothingSent.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
@@ -1132,6 +1133,7 @@ begin
    RegisterSuite(THttpTransportTests.Create('HttpTransport'));
    RegisterSuite(TNothingSentTests.Create('NothingSent'));
    RegisterSuite(TCloudlogTests.Create('Cloudlog'));
+   RegisterSuite(TACLogTests.Create('ACLog'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));

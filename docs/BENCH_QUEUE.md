@@ -30,6 +30,26 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-08 -- ACLOG EXTERNAL LOGGER (issue 33)
+
+Needs a real AC Log (N3FJP) with "TCP API Enabled" ticked (default port 1100). The unit
+tests only prove the bytes against a loopback server; nobody has run this against AC Log, and
+no reply to `ADDADIFRECORD` is documented.
+
+- [ ] Add an ACLog logger in Preferences > External Logger; the port starts at 1100 when you
+      switch the provider from DXKeeper; host `127.0.0.1` (or the AC Log machine's address).
+- [ ] Log a QSO: it appears in AC Log's log AND its recent-contacts list.
+- [ ] The call, date, time (UTC), band spelling, mode and RST/exchange fields are right in
+      AC Log; a phone QSO and a CW one; a QSO whose call or name has an accent (UTF-8).
+- [ ] A QSO with `<`, `>` or `&` in a note/comment is stored whole and does not break AC Log.
+- [ ] Close AC Log (or untick TCP API) and log QSOs: the row reads Retrying (ACLOG_NOT_REACHABLE),
+      logging is not slowed; reopen AC Log and the waiting QSOs drain within about a minute.
+- [ ] Log the same call twice in the same minute: note what AC Log does (duplicate row, refusal).
+- [ ] Edit a delivered QSO and delete one: each shows Failed with `ACLOG_EDIT_UNSUPPORTED` /
+      `ACLOG_DELETE_UNSUPPORTED`, AC Log is untouched, and later QSOs still deliver.
+- [ ] An old settings file with `EXTERNAL LOGGER = ACLOG` becomes an ACLog definition on first
+      start (host kept, port 1100 unless one was set).
+
 ## Added 2026-11-08 -- SPLIT BY '-' WITH VFO B RECEIVING ON A TS-890S (issue 38)
 
 The transmit-frequency entry (the `-` key) always wrote the TX frequency to VFO B and the LAN Kenwood always sent `FT1;`. With VFO B receiving that made TX = RX = B: no split. The radio now names its split TX VFO (`SplitTransmitVFO`); only the TS-890S changes its answer, to the VFO it is NOT receiving on (tracked from `FR`), and the `-` entry splits through `SplitTransmittingOn` with that VFO. With A receiving the bytes are exactly as before (`FB<freq>;` then `FT1;`, off `FT0;`). With B receiving it sends `FA<freq>;` then `FT0;`, and off sends `FT1;`. Split OFF from ANY path now puts TX back on the receive VFO (with B receiving it used to send `FT0;`, which turned split ON). The band map's QSX, WSJT-X and the TCI server still write B and send `FT1;` -- unchanged on purpose, still A-centric for B receiving. Unit-pinned in `uTestKenwoodLANSplit`; what the radio does with it is not. Hamlib agrees with `FT0` for "on, B receiving"; the "off" spelling is reasoned from FT = "TX VFO" (Hamlib's own off arm sends `FT0` regardless, which would leave B-receiving in split). Also still open from before: does `FT` alone make a real TS-890 report `TB1` (the comment in `TKenwoodLAN.Split`)? Watch `tr4w.log` at TRACE for `ParseTBResponse`, `ParseFTResponse`, `ParseFRResponse`.

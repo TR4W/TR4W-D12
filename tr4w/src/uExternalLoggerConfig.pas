@@ -15,6 +15,9 @@ const
    LF_LOGBOOK_NAME = 'logbookName';
    LF_API_KEY      = 'apiKey';
    LF_PASSWORD     = 'password';
+   (* DXKeeper's port: what the legacy single-logger setting defaulted to and
+      what a new definition starts with. *)
+   DXKEEPER_DEFAULT_PORT = 52001;
 
 type
    TExternalLoggerDefinition = class

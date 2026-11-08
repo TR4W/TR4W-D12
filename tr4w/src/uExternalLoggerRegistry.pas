@@ -73,11 +73,14 @@ type
       Id, DisplayName: string;
       Construct: TExternalLoggerConstructor;
       Declare: TLoggerFieldDeclarer;
+      (* The port a new definition of this provider starts with; 0 = none. *)
+      DefaultPort: integer;
       (* A fresh list the caller frees; empty when the provider declares none. *)
       function CreateFields: TLoggerFieldList;
    end;
 procedure RegisterExternalLogger(const aId, aDisplayName: string;
-   aConstructor: TExternalLoggerConstructor; aDeclarer: TLoggerFieldDeclarer = nil);
+   aConstructor: TExternalLoggerConstructor; aDeclarer: TLoggerFieldDeclarer = nil;
+   aDefaultPort: integer = 0);
 (* nil when aId is not registered. The registry owns the result. *)
 function FindExternalLoggerRegistration(const aId: string;
    out aRegistration: TExternalLoggerRegistration): boolean;
@@ -187,7 +190,8 @@ begin
 end;
 
 procedure RegisterExternalLogger(const aId, aDisplayName: string;
-   aConstructor: TExternalLoggerConstructor; aDeclarer: TLoggerFieldDeclarer);
+   aConstructor: TExternalLoggerConstructor; aDeclarer: TLoggerFieldDeclarer;
+   aDefaultPort: integer);
 var
    i: integer;
    registration: TExternalLoggerRegistration;
@@ -208,6 +212,7 @@ begin
    registration.DisplayName := aDisplayName;
    registration.Construct := aConstructor;
    registration.Declare := aDeclarer;
+   registration.DefaultPort := aDefaultPort;
    Providers.Add(registration);
 end;
 function FindExternalLoggerRegistration(const aId: string;

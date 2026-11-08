@@ -20,9 +20,6 @@ Type TExternalLogger = class(TExternalLoggerBase)
       function BuildDXKeeperDeleteMessage(ce: ContestExchange): string; // These functions should be changed to an interface so we just call one based on the interface (by log type). ny4i
       function LookupCallsignToDXKeeper(ce: ContestExchange): integer;
 
-      // ACLog
-      function LogQSOToACLog(ce: ContestExchange): integer;
-
       // HRD
       function LogQSOToHRD(ce: ContestExchange): integer;
 
@@ -217,7 +214,7 @@ begin
    aCommand1 := '';
    aCommand2 := '';
    Result := xoNone;
-   // Only DXKeeper builds commands; ACLog and HRD are the incomplete types.
+   // Only DXKeeper builds commands here; HRD is the incomplete type.
    if Self.logType <> lt_DxKeeper then
       begin
       Exit;
@@ -273,8 +270,13 @@ begin
          Self.SubmitOp(Self.PrepareOp(qmNew, ce, cmd1, cmd2), cmd1, cmd2, 'Log ' + ce.Callsign);
          Result := 0;
          end;
-      lt_ACLog: Result := Self.LogQSOToACLog(ce);
       lt_HRD: Result := Self.LogQSOToHRD(ce);
+   else
+      begin
+      (* ACLog is a durable provider now (uACLogExternalLogger); this volatile
+         class never carried it. *)
+      Result := -1;
+      end;
    end;
 end;
 
@@ -282,7 +284,7 @@ function TExternalLogger.DeleteQSO(ce: ContestExchange): integer;
 var
    cmd1, cmd2: string;
 begin
-   Result := -1;   // ACLog and HRD have no arm: not supported, never garbage
+   Result := -1;   // HRD has no arm: not supported, never garbage
    case Self.logType of
       lt_NoExternalLogger:
          begin
@@ -294,7 +296,6 @@ begin
          Self.SubmitOp(Self.PrepareOp(qmDeleted, ce, cmd1, cmd2), cmd1, cmd2, 'Delete ' + ce.Callsign);
          Result := 0;
          end;
-      //lt_ACLog: Result := Self.LogQSOToACLog(ce);
       //lt_HRD: Result := Self.LogQSOToHRD(ce);
    end;
 end;
@@ -329,7 +330,7 @@ begin
 end;
 
 (* Result: 0 = the lookup was queued for the logger; -1 = this logger type does
-  not support a lookup (none, ACLog, HRD).  Assigned up front so no path of
+  not support a lookup (none, HRD, and the legacy ACLog token).  Assigned up front so no path of
   the case can return an unassigned value (garbage under -gt). *)
 function TExternalLogger.LookupCallsign(ce: ContestExchange): integer;
 begin
@@ -547,12 +548,6 @@ begin
   Result := 0;
 end;
 //--------------------------------
-function TExternalLogger.LogQSOToACLog(ce: ContestExchange): integer;
-begin
-   logger.Info('Logging to ACLog not yet implemented');
-   Result := -1;
-end;
-
 function TExternalLogger.LogQSOToHRD(ce: ContestExchange): integer;
 begin
    logger.Info('Logging to HRD not yet implemented');
@@ -586,5 +581,6 @@ begin
    aFields.AddPort(LF_PORT, SLoggerFieldPort);
 end;
 initialization
-   RegisterExternalLogger('DXKEEPER', 'DXKeeper', CreateDXKeeper, DeclareDXKeeperFields);
+   RegisterExternalLogger('DXKEEPER', 'DXKeeper', CreateDXKeeper, DeclareDXKeeperFields,
+      DXKEEPER_DEFAULT_PORT);
 end.
