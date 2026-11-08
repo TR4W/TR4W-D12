@@ -13,7 +13,7 @@ Use exports to transfer or submit contacts, and reports to inspect the contest. 
 | Initial exchanges list | Produce exchange-reference output for later use. |
 | Notes | Export recorded notes. |
 
-The [ADIF and Cabrillo procedure](export.md) explains how to generate and inspect those files. ADIF export uses the log's name with `.ADI`; Cabrillo output is identified in the corpus documentation as `<CALL>.LOG`. Inspect the preview and destination rather than assuming every `.LOG` file is a contest submission.
+The [ADIF and Cabrillo procedure](export.md) explains how to generate and inspect those files. Current ADIF, Cabrillo, and CSV exports use the database log's basename with `.adi`, `.log`, and `.csv`, beside that database. Older corpus examples may use different filenames. Inspect the preview and destination rather than assuming every `.LOG` file is a contest submission.
 
 ## File → Reports
 

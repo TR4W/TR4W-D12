@@ -1,5 +1,8 @@
 # Old-to-new command lookup
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 Names are extracted from the 335-command table of contents of the local v4.01 manual. Classification comes from the current inventory and dispatch lists, not from name similarity. Unclassified names can include message commands or other specialized parsers.
 
 Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Current dispatch (`tr4w/src/uCFG.pas`)

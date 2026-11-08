@@ -4,6 +4,8 @@ Internationalization (I18N) is the machinery that lets one TR4W build present it
 
 See [Available languages and translation status](../reference/languages.md) for all language names, command-line testing codes, earlier translation credits, and measured review/empty counts. Italian, French, and the other newly seeded catalogues require review of their machine-generated drafts.
 
+The 5.0.37 notes record review work for Spanish and Brazilian Portuguese, and translated setting-help additions in other languages. The generated reference counts are an older snapshot, not current approval totals.
+
 ## Choose the interface language
 
 Use **Language:** in Preferences and restart TR4W to load the chosen interface language. The startup selection order is:
@@ -36,7 +38,7 @@ Consequently, text appearing in this preview is not proof that a translator has 
 
 ## Help improve a translation
 
-Work on the appropriate `.po` catalogue: `tr4w_<code>.po` for the interface, or `help_<code>.po` for configuration help. Review contesting terms in their actual context—especially dupe, multiplier, exchange, run, S&P, and spot. Preserve formatting placeholders such as `%s`, `%d`, and `%.2f`, including their types and order; they are filled by the program. Preserve the role of `&` keyboard-access markers and test the resulting shortcuts and text layout. Review the text in the application before marking a translation reviewed. See the [language and review-status table](../reference/languages.md) for the catalogue names and command-line language codes.
+Work on the appropriate `.po` catalogue: `tr4w_<code>.po` for the interface, or `help_<code>.po` for configuration help. Review contesting terms in their actual context—especially dupe, multiplier, exchange, run, S&P, and spot. Preserve formatting placeholders such as `%s`, `%d`, and `%.2f`, including their types and order; they are filled by the program. Menu Alt+letter mnemonics have been removed in 5.0.37; assigned command shortcuts remain. Do not add menu shortcut markers expecting the old behavior. Test translated control text, assigned shortcuts, and layout in the application. Review the text in the application before marking a translation reviewed. See the [language and review-status table](../reference/languages.md) for the catalogue names and command-line language codes.
 
 For a useful report, include the TR4W version, OS, selected language, window/control, the displayed wording, and a proposed correction. A screenshot helps identify clipped text and ambiguous context. This MkDocs prototype is currently English; application localization does not automatically translate these pages.
 

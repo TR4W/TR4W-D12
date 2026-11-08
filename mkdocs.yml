@@ -55,6 +55,7 @@ nav:
       - Files and folders: start/files.md
       - Update reference data: start/data-updates.md
       - Open your first contest: start/first-contest.md
+      - Find and save settings: start/preferences.md
       - Moving from 4.x: start/migration.md
       - Convert INI settings to JSON: start/ini-to-json.md
   - Station setup:
@@ -69,6 +70,7 @@ nav:
       - Language and translations: station/language.md
       - Multi-station networking: station/network.md
   - Operating:
+      - Contest additions and rule checks: operating/contests.md
       - POTA and park-to-park: operating/pota.md
       - Keyboard essentials: operating/keyboard.md
       - Colors, sizing, and lost windows: operating/appearance.md

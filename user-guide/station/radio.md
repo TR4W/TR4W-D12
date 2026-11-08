@@ -22,6 +22,10 @@ Open the radio configuration dialog for the radio you want to configure. Confirm
 
 Choose **Save and close** to keep the configuration, or **Cancel** to discard the dialog changes.
 
+## Per-radio polling
+
+In the newer radio editor, **FREQUENCY POLL RATE** is under **Advanced** for each radio. Set it for the selected radio rather than looking for a station-wide value. Check both configured radios after changing profiles or polling settings.
+
 ## Verify the connection
 
 Tune the radio and check that TR4W follows its frequency. Then check a mode change. If either fails, confirm the selected model and transport settings before investigating other integrations.

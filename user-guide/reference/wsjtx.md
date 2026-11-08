@@ -1,5 +1,8 @@
 # WSJT-X settings
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 These names are explicitly registered as aliases in the 5.0.22 settings model. Use the [setup guide](../station/wsjtx.md) to connect the programs.
 
 | Setting | Purpose |

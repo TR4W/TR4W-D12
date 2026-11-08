@@ -1,5 +1,20 @@
 # Recent guide updates
 
+## November 8, 2026 — 5.0.37 and marked source additions
+
+Reviewed RELEASE_NOTES.md and CHANGES.md against the previous 5.0.26 baseline, using source through **48806af1**.
+
+- Added [Preferences guidance](../start/preferences.md) and [contest additions and rule checks](../operating/contests.md).
+- Replaced obsolete singleton-logger instructions with the editable grid, Save/restart rules, queue status, provider fields, and operation limits.
+- Corrected backups: local snapshots work without an external destination; optional copies run in the background; the interval counts newly logged records.
+- Corrected ADIF import transaction semantics, restore guidance, and export filenames.
+- Updated contest creation/reopening, per-radio polling, keyboard guidance, and translation notes.
+- Marked protocol-2 networking, Sweepstakes history downloads, multiplier targets, Cloudlog/Wavelog, and ACLog as Unreleased source features.
+
+The generated inventories remain historical snapshots. The command-reference generator correctly refused vocabulary drift; updating its inventory/extraction is a separate maintenance task. Strict offline and hosted site builds passed, including navigation and anchor validation. This review did not install release packages or run hardware/live-service tests.
+
+The September entry below records its historical scope; its then-unmerged contest work has since landed.
+
 ## September 29, 2026 — 5.0.26
 
 Reviewed main-branch changes from `24f06a3` through `3753d2ba`, and checked the published 5.0.26 assets.

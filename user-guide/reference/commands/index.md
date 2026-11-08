@@ -1,8 +1,11 @@
 # Command reference
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 **Find a setting by its current name or an older name from the reference manual.**
 
-This reference combines the current settings inventory, source declarations, English help, and the v4.01 manual contents. It targets the same 5.0.22 snapshot as this guide.
+This reference combines the settings inventory, source declarations, English help, and v4.01 manual contents from its original 5.0.22 snapshot. The operating guide has since been refreshed; this generated inventory has not.
 
 There are **288 settings** with **298 accepted names**, plus **4 action commands** documented separately. Radio, keyer, message, and compatibility command routes are not all ordinary settings.
 

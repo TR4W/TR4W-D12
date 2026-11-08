@@ -1,5 +1,8 @@
 # Available contests
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 **184 choices** from the same `ContestTypeSA` table used by the new-contest picker. The internal DUMMY CONTEST entry is omitted, just as it is in that picker. This list includes general logging and operating activities as well as competitive events.
 
 Select the exact event/mode when [starting a contest](../start/first-contest.md). A selectable name means the program has a contest definition; it does not certify current sponsor rules, every exchange variation, or hardware/platform testing. Check the event rules and exercise an example exchange and export before operating.

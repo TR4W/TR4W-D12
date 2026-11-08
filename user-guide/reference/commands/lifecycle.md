@@ -1,5 +1,8 @@
 # Actions and moved configuration
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 ## Actions
 
 These commands do work rather than simply storing a preference. They are handled separately in `TryApplyCommandAction`; do not document them as persistent checkboxes.

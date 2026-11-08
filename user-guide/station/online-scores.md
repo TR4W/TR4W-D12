@@ -13,10 +13,13 @@ Normally the worker posts every two minutes. **Push Now** requests an immediate 
 
 ## Rebuild the remote log
 
-Use **Tools → HamScore: Resync log from scratch** when the remote log needs to be rebuilt from the current local log. This queues a remote `<deletelog>` request and walks the current contacts for upload. Contact uploads still require the contact-information setting and an RTC-capable contest: do not request a remote-log rebuild in score-only mode. It changes the remote log; use it deliberately for the correct contest/account. It does not delete the local contest database.
+In source through **48806af1**, **Tools → Re-send Log to HamScore...** and the status window's **Re-send Log to HamScore...** button open the same confirmation dialog:
 
-!!! warning "Current status-window button limitation"
-    The status window's **Resync from log** button currently calls a helper that queues only `<deletelog>` and tells the operator to use the Tools menu to enqueue all QSOs. Use the complete Tools-menu action for a rebuild, rather than relying on that button alone.
+- **Re-send only** uploads the current contacts with their original IDs, without deleting remote contacts. A QSO deleted locally can therefore remain on the server.
+- **Delete and re-send** deletes the server's log for this contest, then uploads the current contacts. The remote deletion cannot be undone, and the scoreboard can be empty or incomplete until the upload finishes.
+- **Cancel** leaves the queue unchanged.
+
+Both sending choices request an immediate upload cycle. Confirm the correct contest/account and contact-upload settings before proceeding. Neither choice deletes the local database. Older builds used a different caption and had an incomplete status-window resync action; those instructions no longer describe this source.
 
 A server request for `ResyncLog` is reported for manual action rather than automatically rebuilding. Do not treat the in-memory upload queue as a backup of the local database. See [backups](../log/backup.md) and [diagnostic logging](../log/diagnostics.md) for recovery evidence.
 

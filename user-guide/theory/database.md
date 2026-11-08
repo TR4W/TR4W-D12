@@ -6,7 +6,7 @@ TR4W uses a SQLite database as the contest log. Protection comes from several ch
 
 The database layer checks file identity and schema version. A foreign database or a schema newer than the program understands is refused rather than treated as a compatible log.
 
-On opening the contest store, TR4W checks database integrity and then checks whether it can write. An integrity failure or a failed write check disables the log store and reports the problem. Opening a file successfully is not treated as proof that a later QSO can be saved.
+On opening the contest store, TR4W checks database integrity and then checks whether it can write. An integrity failure prevents normal logging and reports the problem. If another process locks the log, startup offers **Retry**, **Open read-only (no logging)**, or **Quit TR4W**. Read-only mode permits viewing and export but cannot save QSOs. Release the other process's lock and retry when you need to log; opening read-only does not repair a damaged database. Opening a file successfully is not treated as proof that a later QSO can be saved.
 
 | Check | What it detects |
 | --- | --- |

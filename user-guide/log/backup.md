@@ -1,41 +1,35 @@
 # Back up your log
 
-TR4W can create a verified snapshot of the open contest database, manually or after a chosen number of logged contacts.
+TR4W creates a verified snapshot of the open contest database. A manual backup works without an external backup destination.
 
-## Configure a destination
+## Make and check a backup
 
-1. Open settings with **Ctrl+J** and find **Log backup**. Searching for `BACKUP LOG FILE NAME` also locates the destination control.
-2. In **Copy to:**, enter a destination filename or use **Browse...**. Choose a different physical disk if you want protection against failure of the log's disk. Use a distinct filename for each contest.
-3. In **Back up every:**, set the number of QSOs between automatic backups. **0 = never** disables the automatic schedule. For example, `10` requests a backup at each ten-QSO total.
-4. Apply the settings, return to the operating window, and press **Alt+F** for a manual backup.
-5. Look for the success message **Log backed up to …**, then confirm the file exists at the reported destination.
+1. Press **Alt+F** to back up the open log.
+2. Read the result and note the local snapshot path. Local backups are kept in the **backup** folder under TR4W's writable settings folder.
+3. If you configured **BACKUP DESTINATION**, TR4W also copies the snapshot there in the background. Check that copy's completion separately: a successful local snapshot does not prove the external copy completed.
+4. Confirm the reported file exists. Keep a copy on another physical disk for protection against loss of the local disk.
 
-!!! warning "Set the destination first"
-    A manual backup with an empty destination does not create a file. A periodic interval alone is not enough.
+## Set an automatic interval
 
-## What the backup files mean
+Open **Ctrl+J**, find the backup settings, and set the number of new QSOs between backups. **0** disables the automatic schedule.
 
-| File | Meaning |
-| --- | --- |
-| The destination you configured | Latest successfully published snapshot. |
-| The same name followed by `.bak` | Previous destination displaced by a later successful backup cycle. |
-| The same name followed by `.new` | Staging file; a failure message may identify it as a verified copy that could not be published. |
+The interval counts newly logged records since the last backup, rather than the current log total. It starts at zero each session. New dupes, X-QSOs, and contacts received from peer stations count; notes do not. A manual backup resets the interval counter, including a failed attempt, so check the result and retry a failure yourself.
 
-TR4W writes a snapshot and checks its integrity before replacing the destination. It reports failures and records them in the diagnostic log. If a message names a `.new` file, preserve that file and the existing backups while investigating; the extension alone does not establish whether a staged file is usable.
+An optional **BACKUP DESTINATION** adds a background copy; it is not required for local backups.
 
-## Avoid copying only an open database
+## Snapshot files
 
-Use TR4W's backup command while the contest is open. The database can have committed contacts in a separate write-ahead log, so copying only the `.db` file during operation can miss data.
+The periodic snapshot is named for its log, with **periodic.db** in the filename. A successful replacement retains the prior snapshot as **.bak**. A **.new** file is a staging file: preserve it after a failure, but check the result and diagnostic log before trusting it.
 
-For a full station archive, close TR4W and retain the contest folder and your settings as well. The log snapshot procedure does not establish that all external station files or downloaded databases are included.
+**Clear Log** first makes a separate UTC-dated snapshot in the local backup folder. If that snapshot fails, clearing stops without removing the contacts. Keep the dated snapshot until you have verified the intended result.
 
-## Check a recovery copy before you need it
+## Recover safely
 
-See [Restore files and recover a contest](restore.md) for the copy-first recovery procedure, settings recovery, and handling database sidecar files.
+Use TR4W's backup command while the log is open. Copying only an active database file can miss committed contacts still in its write-ahead log.
 
-Keep the backup untouched and make a separate working copy for a restore rehearsal. Open that copy as an existing contest and compare the contest identity and recent contacts against the original. This rehearsal remains an operator-review task for the preview; do not replace a live contest database as part of it.
+For a full station archive, close TR4W and retain the contest folder, settings, and custom support files as well. A log snapshot does not back up every station file or credential.
 
-If a backup fails, check the destination path, write permissions, available space, and whether the destination is open elsewhere. Repeat the backup and look for explicit success.
+Follow [Restore files and recover a contest](restore.md) to rehearse recovery on a separate copy. Check identity, contact count, recent QSOs, and score before relying on it.
 
-??? info "Source check"
-    Controls: `ui/lcl/uPrefsForm.lfm` and `.pas`. Schedule: `trdos/logsubs2.pas`. Manual action: `uAccelerators.pas`, `MainUnit.pas`, and `BackupLogNow` in `trdos/logstuff.pas`. Snapshot verification and rotation: `domain/uLogBackup.pas` and `uLogStore.pas`. This guide has not performed a restore test.
+??? info "Source and review boundary"
+    Reviewed at 48806af1: uAppPaths.BackupDir, uLogStore, domain/uLogBackup, uBackupCopyService, and manual/periodic backup callers. No live contest was cleared or restored during this review.
