@@ -5,6 +5,8 @@ The TRLOG-descended contest logger for Windows, macOS and Linux.
 
 Website available at https://tr4w.net
 
+**Operator guide:** https://tr4w.github.io/TR4W-D12/ — source in `user-guide/` on main. See [DOCS.md](DOCS.md) for local preview, pinned dependencies and publishing. Guide content remains a 5.x preview, last reviewed through 5.0.26.
+
 New to contesting? The big loggers are powerful — and intimidating enough that most newcomers give up and just use their everyday logger, missing dupe checking, spotting, and live scoring. TR4W takes the other path: type the exchange in plain order into one field, let the software handle CW and FT8 for you, and plug a modern radio straight into the network. Real contest features, none of the learning cliff. 
 
 ## Free and open-source.

@@ -334,3 +334,6 @@ tr4w/src/backup/
 
 # N1MM UDC downloads: third-party files, this repository is public
 tools/udc/cache/
+
+# Documentation preview environment
+.venv-docs/
