@@ -35,6 +35,9 @@ changes).
 - **`qrz_geo.py`**, **`county_section.py`** — the pure halves of that: a QRZ cache
   entry → grid + section, and state + county → ARRL/RAC section. Tests:
   `python -I test_qrz_geo.py`, `python -I test_county_section.py`.
+- **`check_dta_names.py`** — read-only scan of a `.dta` for names that fail the name
+  rule below. `python check_dta_names.py ../../target/TRMASTER.DTA` prints the
+  offenders and a count; exit 1 if any. Tests: `python -I test_name_validator.py`.
 
 ## Quick start (monthly)
 
@@ -111,6 +114,36 @@ Name precedence, highest → lowest: **CWops > FOC > history > seed > QRZ**.
 6. `--names-csv` (QRZ) fills any remaining nameless call
 7. `--geo-csv` (QRZ) fills an **empty** `Grid` / `Section` slot; a value already in the
    seed is curated and is never overwritten
+
+## Name validator (issue 239)
+
+One rule, `trmaster_build.valid_name`, gates **every** name before it is merged: the
+CWops roster, the FOC/HSC exports, the history files, `--names-csv` (QRZ) **and the
+names carried forward from the previous DTA / seed**. A name is accepted only if it
+is words of `A-Z` joined by a single space, hyphen or apostrophe (`ED`, `MARY-ANN`,
+`O'BRIEN`, `JEAN PIERRE`), with at least 2 letters. No digits, no other punctuation,
+no leading/trailing/doubled separator, no non-ASCII (the `.dta` is single-byte
+uppercase).
+
+A rejected name is **logged with its call and source** (`rejected name '2A' for PS2CIA
+from names csv (QRZ)`) and simply not stored, so the call **falls through to the next
+source** in the order above: a junk CWops name keeps the member's number and lets the
+history/seed/QRZ name stand; a junk name in the old DTA is dropped, never carried
+forward. Inside the history layer a junk name in ICWC lets K1USN/VE2FK name the call.
+
+Why: the program reads operator names from TRMASTER.DTA, and POTA's free-form
+exchange accepted a class word (`2A`) as the operator. Measured on the 2026-11-07 DTA
+(1,368 of 64,018 names invalid): nearly all came from the **QRZ cache** -- QRZ
+`2ª Cia. Com` folded to `2A`, `NIGHTOWL（夜猫）` to `NIGHTOWL()`, `宇(YU)` to `(YU)`,
+`QRA: TORRES...` to `QRA:`, plus a callsign or `146TH` in the name field -- and were
+then carried forward. The rest were accented CWops names (`JÜRGEN` read as
+`J?RGEN`) and one-letter history names.
+
+Audit an existing file (read-only; it never changes the `.dta`):
+
+```
+python check_dta_names.py ../../target/TRMASTER.DTA --limit 0
+```
 
 Calls present only in the SCP source stay **bare** — still work for Super Check
 Partial, just no prefill.

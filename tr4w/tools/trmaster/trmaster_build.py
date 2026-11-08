@@ -8,6 +8,9 @@ HSC) and any previously-accumulated names from the existing TRMASTER.DTA, then
 writes a single K1EA .dta that TR4W's existing reader consumes unchanged.
 
 Pipeline (Name precedence shown, high -> low):  CWops > FOC > history > seed > QRZ
+Every name from every source (and from the previous DTA) must pass
+valid_name() (letters, internal space/hyphen/apostrophe, >= 2 letters); a
+rejected name is logged and the call falls through to the next source.
   call universe  = MASTER.DTA calls  (+ every roster/existing call)
   per call fields:
     1. existing TRMASTER.DTA            (preserve accumulated Name + memberships)
@@ -78,6 +81,30 @@ def valid_call(c):
     return bool(c) and bool(CALL_RE.match(c))
 
 
+# An operator name is words of A-Z joined by a single space, hyphen or
+# apostrophe (MARY-ANN, O'BRIEN, JEAN PIERRE).  No digits, no other
+# punctuation, no leading/trailing/doubled separator.  The DTA stores names
+# UPPERCASE, so lower case is not accepted here.
+NAME_RE = re.compile(r"^[A-Z]+(?:[ '-][A-Z]+)*$")
+
+
+def valid_name(n):
+    """True if `n` is a usable operator name: shaped like NAME_RE and at least
+    2 letters.  Rejects '2A', 'QRA:', 'NIGHTOWL()', '(YU)', 'KARL-', 'U'."""
+    return bool(n) and bool(NAME_RE.match(n)) and sum(c.isalpha() for c in n) >= 2
+
+
+def accept_name(call, name, source):
+    """THE name gate: every name source passes its names through here before
+    they are merged.  Returns `name` if valid, else None after logging the call,
+    the name and the source, so the caller leaves the call to the next source
+    in the precedence order (a bad curated name never erases a good lower one)."""
+    if valid_name(name):
+        return name
+    log(f"  rejected name {name!r} for {call} from {source}")
+    return None
+
+
 # --- source loaders ---------------------------------------------------------
 
 def load_calls_from_dta(path):
@@ -118,7 +145,13 @@ def load_existing(path):
     """Existing TRMASTER fields, to preserve accumulated names + memberships."""
     if not path or not os.path.exists(path):
         return {}
-    return tc.read_dta(path)["calls"]
+    calls = tc.read_dta(path)["calls"]
+    # A name carried forward from the previous DTA is held to the same rule as
+    # any other source, so an old file cannot keep a junk name alive.
+    for call, f in calls.items():
+        if "Name" in f and accept_name(call, f["Name"], "previous DTA") is None:
+            del f["Name"]
+    return calls
 
 
 def parse_cwops_csv(path):
@@ -137,7 +170,7 @@ def parse_cwops_csv(path):
             if not valid_call(call) or not num.isdigit():
                 continue
             rec = {"User1": num}
-            if name:
+            if name and accept_name(call, name, "CWops"):
                 rec["Name"] = name
             out[call] = rec
     return out
@@ -161,7 +194,9 @@ def parse_simple_csv(path, field):
             if len(row) > 1 and row[1].strip():
                 rec[field] = row[1].strip()
             if len(row) > 2 and row[2].strip():
-                rec["Name"] = row[2].strip().upper()
+                name = row[2].strip().upper()
+                if accept_name(call, name, f"{field} csv"):
+                    rec["Name"] = name
             if rec:
                 out[call] = rec
     return out
@@ -177,7 +212,10 @@ def load_names_csv(path):
     with open(path, newline="", encoding="utf-8", errors="replace") as f:
         for row in csv.reader(f):
             if len(row) >= 2 and valid_call(row[0].strip().upper()) and row[1].strip():
-                out[row[0].strip().upper()] = row[1].strip().upper()
+                call = row[0].strip().upper()
+                name = accept_name(call, row[1].strip().upper(), "names csv (QRZ)")
+                if name:
+                    out[call] = name
     return out
 
 
@@ -259,7 +297,8 @@ def load_history_names(paths):
                     continue
                 call = c0.upper()
                 name = row[1].strip().upper() if len(row) > 1 else ""
-                if valid_call(call) and name and call not in out:
+                if (valid_call(call) and name and call not in out and
+                        accept_name(call, name, os.path.basename(path))):
                     out[call] = name
         log(f"  history {os.path.basename(path)}: +{len(out) - n0} new names "
             f"(total {len(out)})")
