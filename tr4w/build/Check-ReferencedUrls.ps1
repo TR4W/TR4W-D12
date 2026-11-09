@@ -261,7 +261,8 @@ foreach ($e in $entries)
       continue
       }
    # BELT AND BRACES: the never-contact host is refused here too, not only in the lint.
-   if (($e.Probe -eq 'skip') -or ($e.Url -match 'supercheckhistory\.com'))
+   if (($e.Probe -eq 'skip') -or ($e.Url -match 'supercheckhistory\.com') -or
+       ($e.Url -match '^https?://([^/]*\.)?(contestcalendar\.com|hornucopia\.com/contestcal)'))
       {
       $why = $e.Arg
       if ($why -eq '')

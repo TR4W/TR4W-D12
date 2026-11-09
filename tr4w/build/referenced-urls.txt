@@ -36,11 +36,11 @@ https://tr4w.net | link | head | uAboutForm
 https://tr4w.net/ | link | head | MainUnit
 https://tr4w.net/download/ | link | head | VC | TR4W_DOWNLOAD_LINK, version appended after the '?'
 http://www.tr4w.com/wiki/ | link | head | MainUnit
-http://www.hornucopia.com/contestcal/weeklycont.php | link | head | MainUnit
+http://www.hornucopia.com/contestcal/weeklycont.php | link | skip | MainUnit | never contacted by a check (WA7BNM Contest Calendar terms forbid automated access)
 http://www.3830scores.com/ | link | head | MainUnit
 http://contest-log-submission.arrl.org/ | link | head | MainUnit
 http://www.qrz.ru/contest/detail/%d.html | template | sample | MainUnit | http://www.qrz.ru/contest/detail/100.html
-https://contestcalendar.com/contestdetails.php?ref=%u | template | sample | MainUnit | https://contestcalendar.com/contestdetails.php?ref=305
+https://contestcalendar.com/contestdetails.php?ref=%u | template | skip | MainUnit | never contacted by a check (WA7BNM Contest Calendar terms forbid automated access)
 # ---- tooling: fetched by a build script or a tools program, not by the app -------------------
 https://curl.se/ca/cacert.pem | tooling | head | build\full.nsi
 https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage | template | sample | build-appimage.sh | https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage | github.com,objects.githubusercontent.com,release-assets.githubusercontent.com
@@ -78,7 +78,7 @@ https://blog.contestonlinescore.com/online-scoring-xml-specification/ | doc | he
 https://blog.contestonlinescore.com/real-time-contest-rtc-rules/ | doc | head | uContestRTC
 http://www.arrl.org/country-lists-prefixes | doc | head | uContestNewMexicoQP
 https://adif.org.uk/317/ADIF_317.htm#Contest_ID | doc | head | uContestIdahoQP
-https://www.contestcalendar.com/contestdetails.php?ref=305 | doc | head | uContestIdahoQP
+https://www.contestcalendar.com/contestdetails.php?ref=305 | doc | skip | uContestIdahoQP | never contacted by a check (WA7BNM Contest Calendar terms forbid automated access)
 https://www.idahoqsoparty.org/rules.htm | doc | head | uContestIdahoQP
 https://www.idahoqsoparty.org/MAPcountylist.htm | doc | head | uContestIdahoQP
 https://www.idahoqsoparty.org/cabrillo.htm | doc | head | uContestIdahoQP

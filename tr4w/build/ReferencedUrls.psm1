@@ -162,6 +162,14 @@ function Test-UrlTableRules
          {
          [void] $errs.Add("$where : supercheckhistory.com must be probe 'skip' -- never contacted by a check")
          }
+      # THE WA7BNM CONTEST CALENDAR (contestcalendar.com, and hornucopia.com/contestcal, its
+      # older address): its Terms of Use forbid "any software robot, spider or other automated
+      # means to access, monitor or copy the content of the Site" without the owner's written
+      # authorization. A check is such a robot, so these are never probed (issue 248, 2026-11-09).
+      if (($e.Url -match '^https?://([^/]*\.)?(contestcalendar\.com|hornucopia\.com/contestcal)') -and ($e.Probe -ne 'skip'))
+         {
+         [void] $errs.Add("$where : the WA7BNM Contest Calendar must be probe 'skip' -- its terms forbid automated access")
+         }
       }
    return @($errs)
 }
