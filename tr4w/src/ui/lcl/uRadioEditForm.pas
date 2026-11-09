@@ -288,7 +288,7 @@ uses
    ComPortEnumerator,
    VC,
    MainUnit,
-   uAppPaths,              // DataFilePath -- where the help catalogues are
+   uAppPaths,              // HelpDir -- where the help catalogues are
    uEmbeddedTranslations,  // ActiveUILanguage -- which help catalogue to load
    uCommandHelp,           // TCommandHelp -- the poll rate's tooltip
    uSettingsBinding,       // ApplyCommandHelpHint -- the one tooltip rule
@@ -1210,7 +1210,7 @@ procedure TRadioEditForm.ApplyPollRateHelp;
 var
    help: TCommandHelp;
 begin
-   help := TCommandHelp.Create(DataFilePath('help'), ActiveUILanguage);
+   help := TCommandHelp.Create(HelpDir,ActiveUILanguage);
    try
       ApplyCommandHelpHint(edtPollRate, help, FREQUENCY_POLL_RATE_COMMAND);
       ApplyCommandHelpHint(lblPollRate, help, FREQUENCY_POLL_RATE_COMMAND);

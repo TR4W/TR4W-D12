@@ -1495,6 +1495,7 @@ uses
 var
    gPrefsForm: TPrefsForm = nil;
    gPlacements: TPrefsPlacements = nil;
+   GHelpMissingLogged: boolean = False;   // the "no help catalogue" warning, once
 
 const
    (* THE GENERATED ROW GEOMETRY, 96-dpi pixels -- shared by every generated
@@ -6474,7 +6475,15 @@ begin
 
    if FCommandHelp = nil then
       begin
-      FCommandHelp := TCommandHelp.Create(DataFilePath('help'), ActiveUILanguage);
+      FCommandHelp := TCommandHelp.Create(HelpDir, ActiveUILanguage);
+      if FCommandHelp.NothingLoaded and not GHelpMissingLogged then
+         begin
+         (* Once per run, however many times Preferences is opened. *)
+         GHelpMissingLogged := True;
+         logger.Warn('[Prefs] No help catalogue found in "%s": Preferences tooltips will be empty. ' +
+                     'An installed copy has help\ beside the program; a run from the tree needs ' +
+                     'Build-App.ps1 to stage i18n\help_*.po there.', [HelpDir]);
+         end;
       logger.Info('[Prefs] Setting tooltips: "%s" over English "%s" (UI language "%s")',
                   [FCommandHelp.LanguageFile, FCommandHelp.EnglishFile,
                    ActiveUILanguage]);

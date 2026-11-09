@@ -313,6 +313,7 @@ begin
                   'a section the language lacks falls back to English');
       CheckEquals('', help.Describe('NOT ANYWHERE'), 'and none is none');
       CheckEquals('', help.Describe(''), 'an empty name asks nothing');
+      CheckFalse(help.NothingLoaded, 'a loaded catalogue is not "nothing loaded"');
    finally
       help.Free;
    end;
@@ -368,6 +369,7 @@ begin
    try
       CheckEquals('', help.Describe('CW TONE'), 'no files, no help, no exception');
       CheckEquals('', help.EnglishFile, 'and says it loaded nothing');
+      CheckTrue(help.NothingLoaded, 'NothingLoaded is what the log warning keys on (issue 245)');
    finally
       help.Free;
    end;

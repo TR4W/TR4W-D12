@@ -665,6 +665,39 @@ if ($exeDir -ne $dllSource)
          $staged++
          }
       }
+
+   # The Preferences tooltips (issue 245). The installer puts i18n\help_*.po in
+   # help\ (full.nsi); a run from the tree had none, so every tooltip was empty.
+   # uAppPaths.HelpDir finds this folder when the working directory has no
+   # help\ of its own. build-out\ is git-ignored, so the copy is too.
+   $helpDest = Join-Path $exeDir 'help'
+   $helpSrc  = @(Get-ChildItem -LiteralPath (Join-Path $REPO 'i18n') -Filter 'help_*.po' -File -ErrorAction SilentlyContinue)
+   if ($helpSrc.Count -eq 0)
+      {
+      Write-Warning "no i18n\help_*.po found: Preferences tooltips will be empty in this run"
+      }
+   else
+      {
+      if (-not (Test-Path $helpDest))
+         {
+         New-Item -ItemType Directory -Path $helpDest | Out-Null
+         }
+      foreach ($po in $helpSrc)
+         {
+         $dest = Join-Path $helpDest $po.Name
+         $need = -not (Test-Path $dest)
+         if (-not $need)
+            {
+            $d    = Get-Item $dest
+            $need = ($d.Length -ne $po.Length) -or ($d.LastWriteTimeUtc -lt $po.LastWriteTimeUtc)
+            }
+         if ($need)
+            {
+            Copy-Item -LiteralPath $po.FullName -Destination $dest -Force
+            $staged++
+            }
+         }
+      }
    }
 
 if ($staged -gt 0)

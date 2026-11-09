@@ -112,6 +112,10 @@ type
       (* The files actually loaded, '' for none -- for the log line. *)
       property LanguageFile: string read FLanguageFile;
       property EnglishFile: string read FEnglishFile;
+
+      (* True when NO catalogue was read, English included: every Describe
+        answers '' and no tooltip will ever show. The caller logs it. *)
+      function NothingLoaded: boolean;
    end;
 
 (* 'S&P EXCHANGE' -> 'TC_HELP_S_P_EXCHANGE'. Exactly ini2po.key_for:
@@ -666,6 +670,11 @@ begin
    FreeAndNil(FLanguage);
    FreeAndNil(FEnglish);
    inherited Destroy;
+end;
+
+function TCommandHelp.NothingLoaded: boolean;
+begin
+   Result := (FLanguageFile = '') and (FEnglishFile = '');
 end;
 
 function TCommandHelp.Describe(const aCommand: string): string;

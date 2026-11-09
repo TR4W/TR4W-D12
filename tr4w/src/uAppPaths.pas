@@ -335,6 +335,15 @@ function PrivateLibraryDir: string;
   path. *)
 function BesideProgramFilePath(const aName: string): string;
 
+(* THE FOLDER HOLDING help_<code>.po, the Preferences tooltips (issue 245).
+
+  DataFilePath('help') first -- the installed layout, and the one that wins when
+  both exist. Failing that, the program's own folder, because a developer run
+  from tr4w\target with the binary in build-out\ has the working directory in
+  one place and Build-App.ps1's staged help\ in the other. When neither exists
+  the first answer is returned, so the log names where it looked. *)
+function HelpDir: string;
+
 implementation
 
 uses SysUtils, StrUtils;
@@ -820,6 +829,22 @@ begin
 {$ELSE}
    Result := ExtractFilePath(ParamStr(0)) + aName;
 {$ENDIF}
+end;
+
+function HelpDir: string;
+var
+   beside: string;
+begin
+   Result := DataFilePath('help');
+   if DirectoryExists(Result) then
+      begin
+      Exit;
+      end;
+   beside := BesideProgramFilePath('help');
+   if DirectoryExists(beside) then
+      begin
+      Result := beside;
+      end;
 end;
 
 end.

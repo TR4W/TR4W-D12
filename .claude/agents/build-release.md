@@ -109,6 +109,12 @@ still publishes (it ignores that exit), so READ the summary. Keep the two hash
 definitions (PowerShell and sh) identical. The Lazarus `lclstrconsts` catalogues
 embedded in the `.res` are deliberately not hashed.
 
+## What `Build-App.ps1` stages beside the exe
+
+When the exe is not in `tr4w\target`: the runtime DLLs, `cacert.pem`, and (issue
+245) `i18n\help_*.po` into `help\` -- the Preferences tooltips. `uAppPaths.HelpDir`
+finds it when the working directory has no `help\`. Detail in `i18n.md`.
+
 ## The ceilings, and the rule about them
 
 `Build-App.ps1` enforces them. **Split a string in ShortString rather than raising
