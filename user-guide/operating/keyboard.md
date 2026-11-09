@@ -11,9 +11,9 @@ Learn a small set of commands in a practice contest before adding more. These bi
 | **Alt+L** | Search log. |
 | **Ctrl+N** | Add a note. |
 | **Ctrl+R** | Recall last entry. |
-| **Alt+F** | Back up the log to the configured destination. |
+| **Alt+F** | Make a local log snapshot and, if configured, queue an external backup copy. |
 
-[Configure backups](../log/backup.md) before relying on Alt+F. With no destination set, the backup handler returns without creating a copy.
+[Check the backup result](../log/backup.md) after Alt+F. An external destination is optional; check background-copy completion separately.
 
 ## Operating tools
 

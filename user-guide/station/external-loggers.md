@@ -1,39 +1,38 @@
-# Send contacts to an external logger
+# Send contacts to external loggers
 
-Use TR4W for the contest and forward contacts to another logging application when its integration is implemented. This is separate from importing or exporting a file and separate from using another application as a radio-control bridge.
+TR4W can send contacts to several named external loggers. Each destination has its own queue and delivery state. Network work runs away from the main logging window; saving a contact does not mean the receiving logger has accepted it yet.
 
-## Which integrations are implemented?
+## Configure destinations
 
-| Choice | Status in this source snapshot |
-| --- | --- |
-| `NONE` | No external logger. |
-| `DXKEEPER` | QSO delivery implementation is present, with a queued TCP sender. Operator verification is still needed. |
-| `ACLOG` | Selectable, but the QSO-send method reports “not yet implemented.” |
-| `HRD` | Selectable, but the QSO-send method reports “not yet implemented.” |
+1. Open **Ctrl+J → External Software → External Logger**.
+2. Choose **Add...**, give the destination a useful name, and select its provider. Enter that provider's connection details.
+3. Select **Enabled** for destinations that should send new QSOs. Drag an **Order** cell to change their order. Double-click a row, or right-click and choose **Edit...**, to edit it.
+4. Save Preferences. **Enabled** and **Order** changes apply immediately on Save. A new destination or changed connection details require a restart; check for **Restart TR4W to apply** in the row.
+5. In a practice log, send one contact and check it in every enabled receiving logger. Compare the call, UTC time, band, mode, and exchange.
 
-The **N3FJP ACLog (HamLib bridge)** entry in the radio factory is a different integration. Its presence does not establish contact forwarding to ACLog.
+Order controls dispatch order, not the order in which independent remote services finish. Changing a destination's name does not redirect its existing backlog to another account.
 
-## Set up DXKeeper forwarding
+## Provider details and limits
 
-1. Configure the receiving logger to accept its supported TCP logging interface, and note its listening address and port.
-2. In TR4W, open settings with **Ctrl+J**, then **External Software → External Logger**.
-3. Select `DXKEEPER` in **Program:**.
-4. Enter **Address:** and **Port:** to match the receiving service. When both programs run on the same computer, use the local address for that service.
-5. Select **Send QSOs to it as they are logged**, apply the settings, and restart TR4W. The panel explicitly says these settings take effect on the next start.
-6. In a practice contest, log one contact and verify it appears once in DXKeeper with the expected call, date/time, band, mode, and reports.
+| Provider | Connection details | Changes and deletes |
+| --- | --- | --- |
+| DXKeeper | Receiving TCP host/IP and port | Supported; replacement can involve deleting and re-sending the QSO. Check the receiving log after an interrupted replacement. |
+| World Radio League | API key; choose the logbook from the retrieved list | Supported, with persistent delivery/retry state. Create logbooks in WRL before selecting one here. |
+| Club Log | Club Log callsign and API token | Supported through the bearer-token QSO API. An edit deletes the old remote QSO then creates its replacement; a failure between these steps requires review. No Club Log email/password is needed. |
+| Cloudlog / Wavelog — **Unreleased source** | Server URL, API key, station profile ID | New QSOs only. Editing or deleting a previously sent QSO produces a failed delivery row; correct the remote log manually. |
+| ACLog — **Unreleased source** | Host/IP and port; defaults 127.0.0.1:1100. Enable **TCP API Enabled** in ACLog. | New QSOs only. Changes/deletes of sent QSOs fail explicitly; correct the remote log manually. Live ACLog verification remains outstanding. Direct logging does not perform ACLog contest scoring. |
 
-## Check edits and delivery failures
+The first three providers are covered by the 5.0.37 release notes. Additional providers describe source through **48806af1**; check your installed build before expecting them in its list. The ACLog radio-control bridge is a separate feature.
 
-The sender queues operations away from the main operating window and retries connections. QSO replacement uses a delete followed by a re-log; this is not an atomic transaction in the external logger. Check the receiving log after an edit, especially if a connection failed during it.
+For **Log4OM**, use TR4W's standard **UDP** contact-broadcast settings rather than adding an external-logger provider. New-QSO forwarding is documented in the change history; edit forwarding still needs verification.
 
-Do not assume that a contact visible in TR4W has already reached the external logger. Compare the two logs and inspect the diagnostic log for delivery errors. The source describes a persistent replay queue as deferred, so do not promise delivery across an application restart.
+## Check delivery and credentials
 
-## Command reference
+Review pending, retrying, uncertain, and failed counts. **Enabled** means a destination is selected for sending, not that all its contacts have arrived. A persistent queue can resume earlier work after startup, before you log a new QSO. Investigate an uncertain result in the receiving log before retrying it, to avoid duplicates.
 
-- [EXTERNAL LOGGER](../reference/commands/e-l.md#external-logger)
-- [EXTERNAL LOGGER ENABLED](../reference/commands/e-l.md#external-logger-enabled)
-- [EXTERNAL LOGGER ADDRESS](../reference/commands/e-l.md#external-logger-address)
-- [EXTERNAL LOGGER PORT](../reference/commands/e-l.md#external-logger-port)
+Not every remote API supports the same operations. A successful create does not establish that a later edit or delete succeeded. Keep the TR4W log and inspect the receiving log when a delivery fails.
 
-??? info "Evidence and review status"
-    `uExternalLoggerFactory.pas` supplies the choices and flags incomplete integrations; `uExternalLogger.pas` contains the actual sender methods; `uExternalLoggerBase.pas` describes queue and replacement semantics. UI labels and restart instructions come from `ui/lcl/uPrefsForm.lfm` and `.pas`. This page does not report a live DXKeeper test.
+API keys and passwords use the operating system's credential store. Copying the settings file to another computer does not copy those secrets; re-enter credentials there. Resolve a locked or unavailable credential store rather than expecting a plaintext fallback.
+
+??? info "Source and review boundary"
+    Reviewed November 8, 2026 against release notes and the provider units, registry, queue service, and external-logger grid at 48806af1. This documentation update did not send contacts to live services.

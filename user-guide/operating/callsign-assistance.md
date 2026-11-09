@@ -12,6 +12,12 @@ The older manual distinguishes three related tools:
 
 Open preferences with **Ctrl+J** and search for those command names. Use the [current command reference](../reference/commands/index.md) for their current storage and accepted settings. In particular, do not assume the old manual's `NAMES` default is the current default: the current settings constructor selects **ALL**.
 
+## Sweepstakes call history in newer source
+
+**Unreleased source through 48806af1:** enable **USE CALL HISTORY FILE** and choose **CALL HISTORY FILENAME** in Preferences to use an N1MM-format history file. For Sweepstakes, a call not already known in the local log can prefill its check and section. With no filename set, the defaults are **SSCW.txt** for CW and **SSSSB.txt** for phone. Always confirm the received exchange on the air.
+
+**Help → Download call history for this contest** downloads the contest file on demand from supercheckhistory.com. Downloads do not run for every QSO or on a timer. Invalid downloads do not replace an existing file. If you configured a custom filename, confirm that the downloaded file is the one you selected; downloading does not necessarily change that choice.
+
 ## Use the possible-call strip
 
 Enter the call or uncertain fragment. **Ctrl+P** requests possible-call processing (and the associated short-path rotor action if configured). With the default keys, **comma** selects left, **period** selects right, and **semicolon** copies the selected call into the callsign entry field. The three keys are configurable. Selection alone does not log a contact.

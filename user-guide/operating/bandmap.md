@@ -10,6 +10,12 @@ In a two-radio setup, double-click behavior can target the inactive radio when t
 
 Tuning to a spot does not complete or log a contact. Confirm the station's callsign and exchange on the air.
 
+## Worked-multiplier target in newer source
+
+**Unreleased source through 48806af1:** **BAND MAP WORKED MULT LIMIT** accepts **1–9**, with **1** as the default. An orange **M** marks a multiplier already worked fewer times than your chosen target. **MULTS ONLY** keeps those spots visible. Sweepstakes counts a section across bands; CQ WW counts the relevant multiplier per band.
+
+A spot needs usable multiplier information, such as a section or state in the cluster comment. Tuning to a spot does not count it as worked; logging the contact changes the count.
+
 ## Control what you see
 
 Right-click the map for its display controls:

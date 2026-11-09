@@ -17,6 +17,6 @@ The Linux packages covered here are preview builds. The tarball and AppImage hav
 
 ## What this guide verifies
 
-The guide was first built from **5.0.22** (`24f06a3`). Operator-facing changes through **5.0.26** and main-branch commit `3753d2ba0327285fde1a11fb0956a010b0a088f9` were reviewed on September 29, 2026, including the published release assets. See [recent guide updates](../about/updates.md). A setting found in source is evidence that it exists, not evidence that every radio or operating system has been tested.
+The guide was first built from **5.0.22** (24f06a3), then reviewed through 5.0.26. The November 8, 2026 refresh covers operating changes documented for **5.0.37**, plus explicitly labeled **Unreleased** additions in source through **48806af1**. These additions may not be in your installed release. Generated reference tables retain their original snapshot and are labeled accordingly. See [recent guide updates](../about/updates.md). A setting found in source is evidence that it exists, not evidence that every radio or operating system has been tested.
 
 [Evidence and outstanding reviews](../about/sources.md)

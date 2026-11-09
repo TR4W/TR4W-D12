@@ -1,5 +1,8 @@
 # Available languages and translation status
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 The source snapshot contains **22 UI catalogues, including English**. A normal resource build embeds the catalogues; the language choices in your installed build are authoritative if it was packaged differently.
 
 ## Test a language

@@ -2,7 +2,7 @@
 
 Source of truth: **main**. Editorial source: `user-guide/`. Configuration: `mkdocs.yml`.
 
-The MkDocs toolchain was adopted into main on November 8, 2026. The old docs/mkdocs-prototype branch is retained as history, not a second editing location. The guide content is still a preview last reviewed through **5.0.26**; moving its source does not bring the instructions or generated reference up to date with current application code.
+The MkDocs toolchain was adopted into main on November 8, 2026. The old docs/mkdocs-prototype branch is retained as history, not a second editing location. Operating instructions were refreshed on November 8 through **5.0.37**, with explicitly marked **Unreleased** changes from source **48806af1**. Generated reference inventories remain at their original snapshot; they are not current settings, radio, or contest inventories.
 
 The existing engineering `docs/` folder is intentionally not the site's input: it mixes plans, investigations, historical manuals, and current instructions. The operator guide selects and reconciles sources rather than presenting every Markdown file as current documentation.
 
@@ -20,7 +20,9 @@ Visit http://127.0.0.1:8000. On Linux/macOS, use `.venv-docs/bin/python` instead
 
 ## Build and check
 
-The following generators were built against the original source snapshot. Before regenerating references against newer application code, check their compatibility with the current settings inventory and registration layout; they deliberately fail on vocabulary drift. Do not replace the reviewed reference with a partial or failed generation. Regeneration commands:
+The following generators were built against the original source snapshot. Before regenerating references against newer application code, check their compatibility with the current settings inventory and registration layout; they deliberately fail on vocabulary drift. Do not replace the reviewed reference with a partial or failed generation. The November 8 review found that the command generator stops with **Inventory differs from frozen settings vocabulary; regenerate/review inventory first.** It left the reference unchanged. Reconcile the inventory and generator with current settings before regenerating; do not bypass that check. Keep the historical-reference notices until the corresponding inventory has been refreshed and reviewed.
+
+Regeneration commands:
 
 ```powershell
 python tools/build_command_reference.py
@@ -34,6 +36,12 @@ This reads only the current worktree. It checks inventory names against the froz
 ```
 
 Output: `build-out/docs-site/index.html`. Flat HTML URLs and Material's offline plugin permit a local-file preview, including search. The generated site is ignored by Git. Dependencies pin the two primary packages; transitive dependencies are not yet locked.
+
+## Refresh operating instructions
+
+Start with RELEASE_NOTES.md and CHANGES.md after the guide's recorded baseline. Distinguish published releases from their Unreleased sections, then check affected forms and handlers before rewriting procedures. Update the version scope in the guide homepage, Choose your version, Evidence and review, Recent guide updates, and this file. Reconcile related pages so old instructions do not contradict the new procedure.
+
+Do not infer live hardware or remote-service success from source review. Record those review limits. Preserve generated reference provenance until its inventory and extractor have been reconciled and successfully regenerated. Validate both strict site configurations and the search index; publishing is a separate step.
 
 ## Pinned versions and the Material startup notice
 

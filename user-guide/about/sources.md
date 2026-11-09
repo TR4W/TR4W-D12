@@ -5,8 +5,9 @@
 | Source | Revision / scope |
 | --- | --- |
 | Original reference baseline | `24f06a30081b607dbca5020fe583d97944be97d8`, version 5.0.22 |
-| Operator-guide update | Changes through `3753d2ba0327285fde1a11fb0956a010b0a088f9` on main, version 5.0.26; reviewed September 29, 2026 |
-| Published packages | [5.0.26 release assets](https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.26), checked September 29, 2026 |
+| Earlier operator review | 5.0.26 through 3753d2ba; September 29, 2026 |
+| Current operator review | Release notes and changes through 48806af1, November 8, 2026; 5.0.37 plus explicitly marked Unreleased changes |
+| Published release | [5.0.37](https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.37), published November 7, 2026; release metadata checked November 8. Packages were not installed in this review. |
 | TR4W wiki | `d512ef6d6adfa8c187b6c9c7992af0cc9d60d791`, fetched September 24, 2026 |
 | Public website | [tr4w.net](https://tr4w.net/), consulted September 24, 2026; describes 4.x |
 | Local documentation | Files in the development snapshot above; includes historical manuals and design proposals |
@@ -14,6 +15,12 @@
 The wiki was read from its Git repository after browser retrieval failed. It is a source for editorial comparison, not an automatically published mirror. No external images or entire manuals are copied into this prototype.
 
 Operator instructions are included in this guide. Development-tree filenames below and in source notes identify editorial evidence; they are not external links or required reading. The generated reference retains this provenance without requiring access to the TR4W-D12 repository.
+
+## November 8 review scope
+
+RELEASE_NOTES.md and CHANGES.md were compared with the 5.0.26 guide. Refreshed instructions cover contest creation, Preferences, backups/recovery, transactional imports, logger queues and provider limits, per-radio polling, and source-only network/call-history/band-map additions. Related export and keyboard instructions were reconciled. No live service, physical radio, multi-station network, or GUI recovery test was run.
+
+Generated reference tables still use the original baseline. The command generator refused the changed settings vocabulary without writing a replacement. Its inventory and extraction rules need a separate review; historical counts and names must not be represented as a current inventory. See DOCS.md in the repository for maintenance details.
 
 ## Evidence by page
 
@@ -41,7 +48,7 @@ Operator instructions are included in this guide. Development-tree filenames bel
 | Languages | `uUILanguage`, embedded loader, resource-build script, `i18n/*.po`, translator documents | Human translation quality and screen layout; source counts are not approval counts |
 | Contests | `VC.ContestTypeSA` and new-contest picker | Sponsor rule changes and event-specific examples |
 | Installation / files / data | Build scripts, Linux notes, `uAppPaths`, downloaders | Package-specific installation checks; owner confirms native macOS operation |
-| Reports / imports | Menus, `MainUnit.ImportFromADIF`, ADIF and report implementations | Individual report output and representative migration files |
+| Reports / imports | Menus, `MainUnit.ImportFromADIF` batch transaction, ADIF and report implementations | Individual report output and representative migration files |
 | Network | `uNet`, network/compare forms, corrected networking analysis | Real multi-station disconnect/sync tests |
 | INI conversion | `tools/tr4wconvert/tr4wconvert.lpr`, `uSettingsConvert` | Conversion of representative copied settings and post-conversion station checks |
 
@@ -49,7 +56,7 @@ Operator instructions are included in this guide. Development-tree filenames bel
 
 The operating additions also reconcile the old reference manual and wiki SO2R tips with current code: colors and resizing (`uPrefsForm`, `uMainForm`), monitor recovery (`MainUnit`, `uWindowLayoutStore`), radio-panel fields (`uRadioPanelForm`), callsign assistance (`logedit`, `logscp`), message programming (`uEditMessageForm`, `logsend`), HamScore (`uHamScore`, Tools and status-window handlers), and radio reconnects (`ResetRadioPorts`). Each page records its source check. Physical-radio, multi-monitor, remote-scoreboard, and GUI restore rehearsals remain open.
 
-The HamScore source check exposed a current UI limitation: the status-window resync button queues the remote delete request without the full-log walk performed by the Tools action. The operator page documents the distinction; this documentation change does not modify the application.
+The earlier HamScore status-window resync limitation has been fixed in the reviewed source. Both entry points now use a confirmation dialog offering re-send only, delete and re-send, or cancel; the operator page reflects that behavior.
 
 1. Label the target version and platform. Never turn a development plan into a released feature claim.
 2. Start a procedure with an operator task and finish with a visible success check.

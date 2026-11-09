@@ -11,7 +11,7 @@ ADIF import adds contacts to the open contest database. Choose the receiving con
 5. Review the completion counts and any failures, then check representative calls, dates/times, bands, modes, and exchanges in the log.
 6. Export the resulting contest and compare important fields with the source, especially contest-specific exchanges and multi-location contacts.
 
-The importer appends through the database store and counts a contact as loaded only when its append commits. It rescores and reloads the log afterward. A partially failed import can therefore leave some contacts successfully added; do not rerun it blindly and assume the first attempt was all-or-nothing.
+The importer collects contacts and writes the batch in one database transaction. A database write failure rolls back that batch, leaving the receiving log unchanged. This does not mean every malformed line is imported: incomplete or malformed input can be skipped and reported. Read the completion counts and skipped-record report, then compare the result with the original file. A successful import rescores and reloads the log.
 
 ## Avoid accidental duplicates
 
@@ -26,4 +26,4 @@ The opening picker also recognizes legacy configurations where no matching datab
 This guide does not establish a Cabrillo-import command. Cabrillo appears here as an export/submission format.
 
 ??? info "Source check"
-    `MainUnit.pas`, `ImportFromADIF`, supplies the picker, append prompt, commit-based counts, and rescore/reload. `uADIF.pas` supplies parsing. Tests include `uTestLogImport`, `uTestLogRepository`, and ADIF fixtures. No user log was imported for this page.
+    `MainUnit.pas`, `ImportFromADIF`, supplies the picker, append prompt, batch transaction, skipped-record report, and rescore/reload. `uADIF.pas` supplies parsing. Tests include `uTestLogImport`, `uTestLogRepository`, and ADIF fixtures. No user log was imported for this page.

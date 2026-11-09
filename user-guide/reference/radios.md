@@ -1,5 +1,8 @@
 # Radio support and connection reference
 
+!!! warning "Historical reference snapshot"
+    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
+
 **101 registrations** extracted from the radio factory in this source snapshot. This is a declared driver/transport inventory, not a report of successful hardware tests.
 
 ## Read the table

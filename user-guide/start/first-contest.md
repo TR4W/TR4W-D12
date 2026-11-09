@@ -12,16 +12,18 @@ Check both your callsign and grid before continuing. You can review or change th
 
 1. Start TR4W. In **Open configuration file or start a new contest**, find **Start a new contest**.
 2. Enter your station callsign in **MY CALL**.
-3. Select the event in **CONTEST**. Read any information shown for that selection and complete the contest-specific information the program requests.
+3. Search for part of the event name and select it in **CONTEST**. Read its information and complete the requested operating area, county, category, and exchange as applicable.
 4. Choose **OK**.
 5. Check the contest and station information before entering contacts. Configure your [radio](../station/radio.md) if you want frequency and mode information from the rig.
 
 !!! note "Screen labels"
-    These are the English labels in the 5.0.22 form. A translated build will use different labels. A complete first-QSO walkthrough with screenshots is still awaiting an operator review.
+    Labels are checked against source through 48806af1. Translated builds use different wording. A complete first-QSO walkthrough with screenshots still needs operator review. New contests use a database; TR4W no longer creates a new legacy CFG file for them.
 
 ## Reopen a contest
 
-Under **Open an existing configuration**, select an existing entry or use **Browse...** to locate it. **Latest config file** is another shortcut to the most recent configuration.
+Under **Open an existing configuration**, select a log or use **Browse...**. The recent-log grid shows contest, year, call, last QSO, contact count, and file, with recent activity first. **Last Contest** reopens the most recent contest.
+
+While operating, **File → Open Log** opens the same picker. Selecting a different contest restarts TR4W to load that contest.
 
 The current picker lists contest `.db` files. It also lists a legacy `.CFG` when no corresponding `.db` exists. Opening a legacy contest can start migration; use a copy when evaluating the preview. See [Moving from 4.x](migration.md).
 

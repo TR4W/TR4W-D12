@@ -16,6 +16,8 @@ The **contest log** contains your contacts. The **diagnostic log**, `tr4w.log`, 
 
 On Linux, `XDG_CONFIG_HOME` and `XDG_STATE_HOME` override the `.config` and `.local/state` bases. A `--settings <path>` launch option selects a different settings file and also relocates downloaded data beside that file. Opening a contest elsewhere does not imply that the station settings moved with it.
 
+Local log snapshots are stored in a **backup** subfolder of the writable settings directory. **BACKUP DESTINATION** adds an optional background copy. See [Back up your log](../log/backup.md). Passwords and API keys in the OS credential store are separate from the settings file.
+
 ## Example directory trees
 
 These examples use `practice.db` as an illustrative contest filename. You can open a contest elsewhere; these show the default roots. Downloaded files appear after you obtain them, and SQLite companion files need not always be present.

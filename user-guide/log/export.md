@@ -31,6 +31,12 @@ The Tools menu also includes **Edit Cabrillo Summary...**. Use the current form'
 
 Generating a file does not submit it to the sponsor. Retain the submitted file and the sponsor's receipt when you complete that step.
 
+## Current export details
+
+ADIF, Cabrillo, and CSV files are written beside the contest database using its basename and the appropriate extension. Check the preview path before replacing an earlier export. Station facts saved with individual QSOs are used for their applicable exported station/location fields.
+
+ADIF output follows the current standard-mode and contest-exchange handling described in the release notes. **Unreleased source through 48806af1** also includes STATE alongside DXCC where applicable; inspect these fields in the receiving application.
+
 ## What to check before delivery
 
 - The file belongs to the intended contest and station.

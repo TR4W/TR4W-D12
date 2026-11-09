@@ -23,9 +23,15 @@ Synchronization pulls the server's log; do not assume it merges every unsent loc
 
 [SERVER AUTO SYNCHRONIZE LOG ON CONNECT](../reference/commands/q-s.md#server-auto-synchronize-log-on-connect) can bypass the mismatch dialog when enabled and the contest matches, or when the server has no contest yet. A different contest falls back to the dialog. Enable this only after testing the intended server and synchronization behavior.
 
+## Version compatibility in newer source
+
+**Unreleased source through 48806af1** uses **protocol 2** in both the client and TR4WServer. A HELLO handshake checks protocol compatibility. Delphi 7 / 4.x clients and older 5.x builds without this handshake cannot join. Update the server and every station together; a shared password alone does not make versions compatible.
+
+The handshake carries the registered contest identifier, allowing the newer contests to travel over the multi-op link. Earlier restrictions that excluded new contest identifiers no longer describe this source. Test the actual client/server pair before an event.
+
 ## What the protocol does and does not promise
 
-The current networking analysis describes a legacy protocol with a plaintext password and a separate bulk-sync connection. It also contains a proposed V2 protocol for another project; TLS, Protocol Buffers, and that proposal's server-authoritative behavior are not promises of this TR4W build. Use the station network accordingly rather than treating the legacy password as encrypted transport.
+The password and bulk-sync transport are not made encrypted by the protocol-2 handshake. The networking analysis also describes a proposed V2 design for another project; its TLS, Protocol Buffers, and server-authoritative behavior are not features of this TR4W handshake. Use a trusted station network.
 
 Database integrity at one client and agreement between several clients are different properties. Verify both [local log protection](../theory/database.md) and network consistency.
 
