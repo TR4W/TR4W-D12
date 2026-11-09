@@ -36,6 +36,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN KS
 setting.CQ EXCHANGE =  5NN KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nebraska_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -51,6 +52,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN KS
 setting.S&P EXCHANGE = _@_ 5NN KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -353,6 +355,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN ADMS
 setting.CQ EXCHANGE =  5NN ADMS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nebraska.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -368,6 +371,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN ADMS
 setting.S&P EXCHANGE = _@_ 5NN ADMS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -700,6 +704,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN ON
 setting.CQ EXCHANGE =  5NN ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nebraska_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = VE
@@ -715,6 +720,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN ON
 setting.S&P EXCHANGE = _@_ 5NN ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -1017,6 +1023,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN
 setting.CQ EXCHANGE =  5NN 
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nebraska_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = DL
@@ -1030,6 +1037,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN 
 setting.S&P EXCHANGE = _@_ 5NN 
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

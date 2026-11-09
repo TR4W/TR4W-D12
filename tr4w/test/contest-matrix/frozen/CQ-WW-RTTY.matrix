@@ -34,6 +34,7 @@ setting.CQ CW EXCHANGE =  599 4 KS
 setting.CQ EXCHANGE =  599 4 KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = s48p14dc.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
@@ -51,6 +52,7 @@ setting.REPEAT S&P CW EXCHANGE =  599 4 KS 4 KS
 setting.REPEAT S&P EXCHANGE =  599 4 KS 4 KS
 setting.S&P CW EXCHANGE =  599 4 KS
 setting.S&P EXCHANGE =  599 4 KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=5 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=5 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
@@ -346,6 +348,7 @@ setting.CQ CW EXCHANGE =  599 4 ON
 setting.CQ EXCHANGE =  599 4 ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = s48p14dc.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
@@ -363,6 +366,7 @@ setting.REPEAT S&P CW EXCHANGE =  599 4 ON 4 ON
 setting.REPEAT S&P EXCHANGE =  599 4 ON 4 ON
 setting.S&P CW EXCHANGE =  599 4 ON
 setting.S&P EXCHANGE =  599 4 ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=5 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=5 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
@@ -658,6 +662,7 @@ setting.CQ CW EXCHANGE =  599 14
 setting.CQ EXCHANGE =  599 14
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = s48p14dc.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
@@ -673,6 +678,7 @@ setting.REPEAT S&P CW EXCHANGE =  599 14 14
 setting.REPEAT S&P EXCHANGE =  599 14 14
 setting.S&P CW EXCHANGE =  599 14
 setting.S&P EXCHANGE =  599 14
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=5 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=5 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5

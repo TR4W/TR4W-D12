@@ -34,6 +34,7 @@ setting.CQ CW EXCHANGE =  5NN KS
 setting.CQ EXCHANGE =  5NN KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = ve7_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = K0AAA
@@ -53,6 +54,7 @@ setting.REPEAT S&P CW EXCHANGE = 5NN KS
 setting.REPEAT S&P EXCHANGE = 5NN KS
 setting.S&P CW EXCHANGE = ~ %5NN KS
 setting.S&P EXCHANGE = ~ %5NN KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -352,6 +354,7 @@ setting.CQ CW EXCHANGE =  5NN ABF
 setting.CQ EXCHANGE =  5NN ABF
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = ve7.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = VE7AAA
@@ -371,6 +374,7 @@ setting.REPEAT S&P CW EXCHANGE = 5NN ABF
 setting.REPEAT S&P EXCHANGE = 5NN ABF
 setting.S&P CW EXCHANGE = ~ %5NN ABF
 setting.S&P EXCHANGE = ~ %5NN ABF
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=4 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -686,6 +690,7 @@ setting.CQ CW EXCHANGE =  5NN ON
 setting.CQ EXCHANGE =  5NN ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = ve7_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = VE3AAA
@@ -705,6 +710,7 @@ setting.REPEAT S&P CW EXCHANGE = 5NN ON
 setting.REPEAT S&P EXCHANGE = 5NN ON
 setting.S&P CW EXCHANGE = ~ %5NN ON
 setting.S&P EXCHANGE = ~ %5NN ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -1004,6 +1010,7 @@ setting.CQ CW EXCHANGE =  5NN #
 setting.CQ EXCHANGE =  5NN #
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = ve7_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = DL1AAA
@@ -1021,6 +1028,7 @@ setting.REPEAT S&P CW EXCHANGE =  5NN #
 setting.REPEAT S&P EXCHANGE =  5NN #
 setting.S&P CW EXCHANGE =  5NN #
 setting.S&P EXCHANGE =  5NN #
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

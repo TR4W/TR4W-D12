@@ -36,6 +36,7 @@ setting.CQ CW EXCHANGE =  TOM KS
 setting.CQ EXCHANGE =  TOM KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = naqp.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.LITERAL DOMESTIC QTH = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = K0AAA
@@ -58,6 +59,7 @@ setting.REPEAT S&P CW EXCHANGE =  TOM KS
 setting.REPEAT S&P EXCHANGE =  TOM KS
 setting.S&P CW EXCHANGE =  TOM KS
 setting.S&P EXCHANGE =  TOM KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -391,6 +393,7 @@ setting.CQ CW EXCHANGE =  TOM ON
 setting.CQ EXCHANGE =  TOM ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = naqp.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.LITERAL DOMESTIC QTH = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = VE3AAA
@@ -413,6 +416,7 @@ setting.REPEAT S&P CW EXCHANGE =  TOM ON
 setting.REPEAT S&P EXCHANGE =  TOM ON
 setting.S&P CW EXCHANGE =  TOM ON
 setting.S&P EXCHANGE =  TOM ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -746,6 +750,7 @@ setting.CQ CW EXCHANGE =  TOM
 setting.CQ EXCHANGE =  TOM 
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = naqp.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.LITERAL DOMESTIC QTH = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = DL1AAA
@@ -766,6 +771,7 @@ setting.REPEAT S&P CW EXCHANGE =  TOM
 setting.REPEAT S&P EXCHANGE =  TOM 
 setting.S&P CW EXCHANGE =  TOM 
 setting.S&P EXCHANGE =  TOM 
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

@@ -36,6 +36,7 @@ setting.CQ CW EXCHANGE = _# A  K0AAA  99 KS
 setting.CQ EXCHANGE = _# A  K0AAA  99 KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = arrlsect.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -58,6 +59,7 @@ setting.REPEAT S&P CW EXCHANGE = NR # A K0AAA 99 KS
 setting.REPEAT S&P EXCHANGE = NR # A K0AAA 99 KS
 setting.S&P CW EXCHANGE = NR # A K0AAA 99 KS
 setting.S&P EXCHANGE = NR # A K0AAA 99 KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -384,6 +386,7 @@ setting.CQ CW EXCHANGE = _# A  VE3AAA  99 ON
 setting.CQ EXCHANGE = _# A  VE3AAA  99 ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = arrlsect.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = VE
@@ -406,6 +409,7 @@ setting.REPEAT S&P CW EXCHANGE = NR # A VE3AAA 99 ON
 setting.REPEAT S&P EXCHANGE = NR # A VE3AAA 99 ON
 setting.S&P CW EXCHANGE = NR # A VE3AAA 99 ON
 setting.S&P EXCHANGE = NR # A VE3AAA 99 ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -732,6 +736,7 @@ setting.CQ CW EXCHANGE = _# A  DL1AAA  99 DX
 setting.CQ EXCHANGE = _# A  DL1AAA  99 DX
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = arrlsect.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = DL
@@ -752,6 +757,7 @@ setting.REPEAT S&P CW EXCHANGE = NR # A DL1AAA 99 DX
 setting.REPEAT S&P EXCHANGE = NR # A DL1AAA 99 DX
 setting.S&P CW EXCHANGE = NR # A DL1AAA 99 DX
 setting.S&P EXCHANGE = NR # A DL1AAA 99 DX
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

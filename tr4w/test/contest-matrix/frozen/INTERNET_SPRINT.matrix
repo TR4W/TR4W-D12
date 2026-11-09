@@ -36,6 +36,7 @@ setting.CQ EXCHANGE =  \ #   (   KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = s49p13.dom
 setting.EXCHANGE MEMORY ENABLE = FALSE
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -54,6 +55,7 @@ setting.REPEAT S&P CW EXCHANGE = @ #   (   KS
 setting.REPEAT S&P EXCHANGE = @ #   (   KS
 setting.S&P CW EXCHANGE = @ #   (   KS \
 setting.S&P EXCHANGE = @ #   (   KS \
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.SPRINT QSY RULE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -383,6 +385,7 @@ setting.CQ EXCHANGE =  \ #   (   ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = s49p13.dom
 setting.EXCHANGE MEMORY ENABLE = FALSE
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = VE
@@ -401,6 +404,7 @@ setting.REPEAT S&P CW EXCHANGE = @ #   (   ON
 setting.REPEAT S&P EXCHANGE = @ #   (   ON
 setting.S&P CW EXCHANGE = @ #   (   ON \
 setting.S&P EXCHANGE = @ #   (   ON \
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.SPRINT QSY RULE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -730,6 +734,7 @@ setting.CQ EXCHANGE =  \ #   (
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = s49p13.dom
 setting.EXCHANGE MEMORY ENABLE = FALSE
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = DL
@@ -746,6 +751,7 @@ setting.REPEAT S&P CW EXCHANGE = @ #   (
 setting.REPEAT S&P EXCHANGE = @ #   (   
 setting.S&P CW EXCHANGE = @ #   (    \
 setting.S&P EXCHANGE = @ #   (    \
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.SPRINT QSY RULE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

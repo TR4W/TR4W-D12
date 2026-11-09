@@ -32,6 +32,7 @@ setting.CONTEST NAME = FLORIDA QSO PARTY (out of state)
 setting.CONTEST = FLORIDA QSO PARTY
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = florida_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
@@ -48,6 +49,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -345,6 +347,7 @@ setting.CONTEST NAME = FLORIDA QSO PARTY (in state)
 setting.CONTEST = FLORIDA QSO PARTY
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = florida.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
@@ -361,6 +364,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -674,6 +678,7 @@ setting.CONTEST NAME = FLORIDA QSO PARTY (out of state)
 setting.CONTEST = FLORIDA QSO PARTY
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = florida_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
@@ -690,6 +695,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -987,6 +993,7 @@ setting.CONTEST NAME = FLORIDA QSO PARTY (out of state)
 setting.CONTEST = FLORIDA QSO PARTY
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = florida_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
@@ -1001,6 +1008,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

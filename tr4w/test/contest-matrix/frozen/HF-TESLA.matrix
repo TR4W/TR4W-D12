@@ -31,6 +31,7 @@ memory.cw.ex.AltF4 =
 setting.CONTEST NAME = HF-TESLA
 setting.CONTEST = HF-TESLA
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
@@ -46,6 +47,7 @@ setting.MY ZONE = 7
 setting.QSO BY BAND = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
@@ -357,6 +359,7 @@ memory.cw.ex.AltF4 =
 setting.CONTEST NAME = HF-TESLA
 setting.CONTEST = HF-TESLA
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
@@ -372,6 +375,7 @@ setting.MY ZONE = 4
 setting.QSO BY BAND = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
@@ -683,6 +687,7 @@ memory.cw.ex.AltF4 =
 setting.CONTEST NAME = HF-TESLA
 setting.CONTEST = HF-TESLA
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
@@ -696,6 +701,7 @@ setting.MY ZONE = 28
 setting.QSO BY BAND = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5

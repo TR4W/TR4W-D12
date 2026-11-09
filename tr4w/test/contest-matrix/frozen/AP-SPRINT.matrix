@@ -33,6 +33,7 @@ setting.CONTEST = AP-SPRINT
 setting.CQ CW EXCHANGE =  5NN #
 setting.CQ EXCHANGE =  5NN #
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -49,6 +50,7 @@ setting.REPEAT S&P CW EXCHANGE =  5NN #
 setting.REPEAT S&P EXCHANGE =  5NN #
 setting.S&P CW EXCHANGE =  5NN #
 setting.S&P EXCHANGE =  5NN #
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/TRUE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx=W1 dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/TRUE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx=W1 dxqth= dommultqth= domqth= zone=5
@@ -382,6 +384,7 @@ setting.CONTEST = AP-SPRINT
 setting.CQ CW EXCHANGE =  5NN #
 setting.CQ EXCHANGE =  5NN #
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = VE
@@ -398,6 +401,7 @@ setting.REPEAT S&P CW EXCHANGE =  5NN #
 setting.REPEAT S&P EXCHANGE =  5NN #
 setting.S&P CW EXCHANGE =  5NN #
 setting.S&P EXCHANGE =  5NN #
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/TRUE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx=W1 dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/TRUE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx=W1 dxqth= dommultqth= domqth= zone=5
@@ -731,6 +735,7 @@ setting.CONTEST = AP-SPRINT
 setting.CQ CW EXCHANGE =  5NN #
 setting.CQ EXCHANGE =  5NN #
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = DL
@@ -745,6 +750,7 @@ setting.REPEAT S&P CW EXCHANGE =  5NN #
 setting.REPEAT S&P EXCHANGE =  5NN #
 setting.S&P CW EXCHANGE =  5NN #
 setting.S&P EXCHANGE =  5NN #
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/TRUE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx=W1 dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/TRUE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx=W1 dxqth= dommultqth= domqth= zone=5

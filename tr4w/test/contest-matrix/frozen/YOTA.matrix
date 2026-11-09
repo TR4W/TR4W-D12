@@ -33,6 +33,7 @@ setting.CONTEST = YOTA
 setting.COUNT DOMESTIC COUNTRIES = TRUE
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = YOTA.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
@@ -49,6 +50,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=40 domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=40 domqth=CT zone=5
@@ -385,6 +387,7 @@ setting.CONTEST = YOTA
 setting.COUNT DOMESTIC COUNTRIES = TRUE
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = YOTA.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
@@ -401,6 +404,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=40 domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=40 domqth=CT zone=5
@@ -737,6 +741,7 @@ setting.CONTEST = YOTA
 setting.COUNT DOMESTIC COUNTRIES = TRUE
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = YOTA.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
@@ -751,6 +756,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=40 domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=40 domqth=CT zone=5

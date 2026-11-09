@@ -81,6 +81,7 @@ type
       procedure Test_TheMultStripSaysBothOnlyBesideASplitQSOStrip;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
       procedure Test_TheQSONeedsStripOffersOnlyTheContestsBands;
+      procedure Test_TheMultNeedsStripOffersOnlyTheContestsBands;
       procedure Test_TheTotalsHeadersNameOnlyTheContestsBands;
       procedure Test_TheSweepstakesMultHeaderNamesTheSection;
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
@@ -1519,12 +1520,157 @@ begin
       CheckEquals('160', Reads(1, Band160), 'ARRL 160: 160 m is offered');
       CheckEquals('', Reads(1, Band40),     'ARRL 160: 40 m is not');
       CheckEveryCellFollowsTheClass('ARRL 160');
+
+      (* ARRL 10: 10 m and nothing else (issue 56, the QSO strip's half). *)
+      Contest := ContestHandleOf(ARRL10);
+      VisibleLog.ShowQSOStatus(call);
+      CheckEquals('10', Reads(1, Band10),  'ARRL 10, CW row: 10 m is offered');
+      CheckEquals('10', Reads(2, Band10),  'ARRL 10, SSB row: 10 m is offered');
+      CheckEquals('', Reads(1, Band20),    'ARRL 10, CW row: 20 m is not');
+      CheckEquals('', Reads(2, Band160),   'ARRL 10, SSB row: 160 m is not');
+      CheckEveryCellFollowsTheClass('ARRL 10');
    finally
       ClearAllDupeSheets;
       ActiveMode := savedActiveMode;
       ActiveBand := savedActiveBand;
       Settings.Qso.ByMode := savedQsoByMode;
       Settings.Qso.ByBand := savedQsoByBand;
+      Contest := savedContest;
+      ReleaseActiveContest;
+      end;
+end;
+
+(* THE MULT NEEDS STRIP OFFERS ONLY THE BANDS THE CONTEST USES -- issue 56
+  (NY4I, ARRL 10, 2024-12-14): "Mult needs for AZ" listed every band of the
+  strip in a single-band contest. The strip renders LOGEDIT's mask verbatim
+  and LOGEDIT clears every band the contest does not credit through
+  CreditedBands -- so the answer is the class's UsesBand, and ARRL 10 had not
+  stated one (the base credits every band).
+
+  SetMultStatus is asked directly -- the Mult strip's own writer -- with the
+  multipliers per mode and not per band, as ARRL 10 counts them, so BOTH rows
+  (CW, SSB) are judged. AZ is on no sheet, so it is needed wherever the
+  contest credits it. CQ WW is the control: every band. *)
+procedure TStatusAndNoticeTests.Test_TheMultNeedsStripOffersOnlyTheContestsBands;
+var
+   savedContest:     TContestHandle;
+   savedMultByBand:  boolean;
+   savedMultByMode:  boolean;
+   savedNumberMults: Byte;
+   savedActiveBand:  BandType;
+   savedActiveMode:  ModeType;
+   ctyPath:          string;
+
+   function Cell(const aRow: integer; const aBand: BandType): TElementPanel;
+   begin
+      Result := TR4WMainForm.FindComponent(
+                   Format('pnlMultNeedR%d_%s',
+                          [aRow, string(BandStringsArrayWithOutSpaces[aBand])]))
+                as TElementPanel;
+   end;
+
+   function Reads(const aRow: integer; const aBand: BandType): string;
+   begin
+      Result := Trim(string(Cell(aRow, aBand).Caption));
+   end;
+
+   (* Every cell of both rows against the class's UsesBand. *)
+   procedure CheckEveryCellFollowsTheClass(const aName: string);
+   var
+      row:  integer;
+      band: BandType;
+   begin
+      for row := 1 to 2 do
+         begin
+         for band := Band160 to Band10 do
+            begin
+            if ContestIdentity(Contest).UsesBand(band) then
+               begin
+               CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[band])),
+                           Reads(row, band),
+                           Format('%s row %d: a band the contest uses reads its name', [aName, row]));
+               end
+            else
+               begin
+               CheckEquals('', Reads(row, band),
+                           Format('%s row %d: a band the contest does not use is an empty cell', [aName, row]));
+               end;
+            end;
+         end;
+   end;
+
+var
+   row:  integer;
+   band: BandType;
+begin
+   BeginTest('Test_TheMultNeedsStripOffersOnlyTheContestsBands');
+
+   EnsureMainForm;
+   BindMainGrids;
+
+   for row := 1 to 2 do
+      begin
+      for band := Band160 to Band10 do
+         begin
+         if Cell(row, band) = nil then
+            begin
+            CheckTrue(False, 'uMainForm.lfm has every Mult-need cell of rows 1 and 2');
+            Exit;
+            end;
+         end;
+      end;
+
+   (* The hint locates the call first (a DX-multiplier contest exits on an
+     unknown country), so the shipped CTY.DAT is loaded, as above. *)
+   ctyPath := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+              PathDelim + 'target' + PathDelim + 'cty.dat';
+   CheckTrue(ctyLoadInCountryFile(ctyPath, False, False, True), 'cty.dat loads');
+
+   savedContest     := Contest;
+   savedMultByBand  := Settings.Mult.ByBand;
+   savedMultByMode  := Settings.Mult.ByMode;
+   savedNumberMults := NumberDifferentMults;
+   savedActiveBand  := ActiveBand;
+   savedActiveMode  := ActiveMode;
+   try
+      (* ARRL 10 as it counts: per mode, not per band. NumberDifferentMults is
+        LogCfg's start-up count, which a test binary never runs -- at 0 the
+        strip is never written. *)
+      Settings.Mult.ByBand := False;
+      Settings.Mult.ByMode := True;
+      NumberDifferentMults := 2;
+      ActiveBand := Band10;
+      ActiveMode := CW;
+      mo.ClearAllMults;
+      ClearAllDupeSheets;
+
+      (* ARRL 10: the defect. *)
+      Contest := ContestHandleOf(ARRL10);
+      VisibleLog.SetMultStatus('W7XYZ', 'AZ');
+      CheckEquals('10', Reads(1, Band10),  'ARRL 10, CW row: AZ is needed on 10 m');
+      CheckEquals('10', Reads(2, Band10),  'ARRL 10, SSB row: AZ is needed on 10 m');
+      CheckEquals('', Reads(1, Band160),   'ARRL 10, CW row: 160 m is not offered');
+      CheckEquals('', Reads(1, Band20),    'ARRL 10, CW row: 20 m is not offered');
+      CheckEquals('', Reads(2, Band40),    'ARRL 10, SSB row: 40 m is not offered');
+      CheckEquals('', Reads(2, Band15),    'ARRL 10, SSB row: 15 m is not offered');
+      CheckEveryCellFollowsTheClass('ARRL 10');
+
+      (* CQ WW: the control -- a DX call is needed on every band. *)
+      Contest := ContestHandleOf(CQWWSSB);
+      ActiveBand := Band20;
+      ActiveMode := Phone;
+      VisibleLog.SetMultStatus('PJ4K', '');
+      CheckEquals('160', Reads(1, Band160), 'CQ WW: 160 m is offered');
+      CheckEquals('20', Reads(2, Band20),   'CQ WW: 20 m is offered');
+      CheckEveryCellFollowsTheClass('CQ WW');
+   finally
+      mo.ClearAllMults;
+      ClearAllDupeSheets;
+      ActiveMode := savedActiveMode;
+      ActiveBand := savedActiveBand;
+      NumberDifferentMults := savedNumberMults;
+      Settings.Mult.ByMode := savedMultByMode;
+      Settings.Mult.ByBand := savedMultByBand;
       Contest := savedContest;
       ReleaseActiveContest;
       end;
@@ -1580,6 +1726,19 @@ begin
                   'Florida: 10 m keeps its column and its header');
       CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[AllBands])), Head(7),
                   'Florida: the All column keeps its header');
+
+      (* ARRL 10 (issue 56): only the 10 m column and All are named. *)
+      Contest := ContestHandleOf(ARRL10);
+      ActiveBand := Band10;
+      UpdateTotals2;
+      CheckEquals('', Head(1), 'ARRL 10: the 160 m column has no header');
+      CheckEquals('', Head(4), 'ARRL 10: the 20 m column has no header');
+      CheckEquals('', Head(5), 'ARRL 10: the 15 m column has no header');
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[Band10])), Head(6),
+                  'ARRL 10: 10 m keeps its column and its header');
+      CheckEquals(Trim(string(BandStringsArrayWithOutSpaces[AllBands])), Head(7),
+                  'ARRL 10: the All column keeps its header');
+      ActiveBand := Band20;
 
       Contest := ContestHandleOf(CQWWSSB);
       UpdateTotals2;
@@ -3248,6 +3407,7 @@ begin
    Test_TheMultStripSaysBothOnlyBesideASplitQSOStrip;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
    Test_TheQSONeedsStripOffersOnlyTheContestsBands;
+   Test_TheMultNeedsStripOffersOnlyTheContestsBands;
    Test_TheTotalsHeadersNameOnlyTheContestsBands;
    Test_TheSweepstakesMultHeaderNamesTheSection;
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;

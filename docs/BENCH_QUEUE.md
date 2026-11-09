@@ -6133,3 +6133,11 @@ Written with no screen and no network: unit tests pin the wording, the request (
 - [ ] **Real answers, both transports** (Network > How downloads and uploads connect: generic, then platform). Record the exact label text for: `https://hamscore.com/postxml/` (a POST endpoint: expect a status, perhaps 405 or 200), `http://uparc.org` (plain 200), `http://ny4i.com` (a 301 followed: `Answered 200 from https://ny4i.com/`), a path that is 404, a host that does not exist, a closed port, a host that never answers (timeout 10 or 15 s, WinHTTP rounds up to about 4 s), `https://expired.badssl.com/` and `https://self-signed.badssl.com/` (certificate rejected), and with `cacert.pem` hidden (the trust sentence). Put the results in `docs/HTTP_TRANSPORT_DESIGN.md` section 11, which says which kinds each transport is expected to produce. `FinalURL` from WinHTTP (`WINHTTP_OPTION_URL`) has never run: confirm it shows the redirected address and nothing for a bare host.
 - [ ] **No credentials leave.** With a packet capture or the HamScore server log: the test request carries no Authorization header, no username or password, and no body (the generic transport sends `Content-Length: 0` on the GET, as `THttpRequest.Send` always does).
 
+
+## Added 2026-11-09 -- ARRL 10: THE NEEDS STRIPS AND TOTALS HEADERS SHOW 10 M ONLY (issue 56)
+
+`TContestARRL10` now states `UsesBand` (10 m only). Unit tests drive the strips and headers on the streamed form; the screen and a real log are below.
+
+- [ ] **Mult needs for a state.** ARRL 10 on 10 m CW, type a W/VE call, enter `AZ`: "Mult needs for AZ" shows 10 on the CW and SSB rows and nothing under 160-15. Log it on CW: the CW row clears and SSB still shows 10. Switch to SSB and repeat.
+- [ ] **The totals grid.** The 160-15 column headers are blank, 10 and All are named, and the numbers sit under 10 and All.
+- [ ] **An off-band QSO** (log one on 20 m by mistake): it scores 0, earns no multiplier, is not a dupe, and the Cabrillo writes it as `X-QSO:`. A rescore of an existing ARRL 10 log zeroes any such QSO.

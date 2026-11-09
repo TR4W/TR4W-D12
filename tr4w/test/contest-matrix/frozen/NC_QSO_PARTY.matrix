@@ -34,6 +34,7 @@ setting.CQ CW EXCHANGE =  5NN KS
 setting.CQ EXCHANGE =  5NN KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nc_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -51,6 +52,7 @@ setting.REPEAT S&P CW EXCHANGE = 5NN KS
 setting.REPEAT S&P EXCHANGE = 5NN KS
 setting.S&P CW EXCHANGE = ~ %5NN KS
 setting.S&P EXCHANGE = ~ %5NN KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -350,6 +352,7 @@ setting.CQ CW EXCHANGE =  5NN ALA
 setting.CQ EXCHANGE =  5NN ALA
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nc.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -367,6 +370,7 @@ setting.REPEAT S&P CW EXCHANGE = 5NN ALA
 setting.REPEAT S&P EXCHANGE = 5NN ALA
 setting.S&P CW EXCHANGE = ~ %5NN ALA
 setting.S&P EXCHANGE = ~ %5NN ALA
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -691,6 +695,7 @@ setting.CQ CW EXCHANGE =  5NN ON
 setting.CQ EXCHANGE =  5NN ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nc_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = VE
@@ -708,6 +713,7 @@ setting.REPEAT S&P CW EXCHANGE = 5NN ON
 setting.REPEAT S&P EXCHANGE = 5NN ON
 setting.S&P CW EXCHANGE = ~ %5NN ON
 setting.S&P EXCHANGE = ~ %5NN ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -1007,6 +1013,7 @@ setting.CQ CW EXCHANGE =  5NN #
 setting.CQ EXCHANGE =  5NN #
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = nc_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = DL
@@ -1022,6 +1029,7 @@ setting.REPEAT S&P CW EXCHANGE =  5NN #
 setting.REPEAT S&P EXCHANGE =  5NN #
 setting.S&P CW EXCHANGE =  5NN #
 setting.S&P EXCHANGE =  5NN #
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

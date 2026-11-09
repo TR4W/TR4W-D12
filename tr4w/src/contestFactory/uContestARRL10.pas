@@ -90,6 +90,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* 10 m and nothing else -- issue 56; see the body. *)
+      function UsesBand(aBand: BandType): boolean; override;
+   public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -133,6 +136,20 @@ uses
 procedure TContestARRL10.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 4, 2, 2);
+end;
+
+(* THE BANDS: 10 m ONLY -- issue 56 (NY4I, 2024-12-14: "Mult needs for AZ
+   ... show all the bands"), and Q98 S3's single-band statement. The
+   contest's name says so, its own set-up says so (DescribeSession:
+   Band10, MultipleBands off), and DXLog's ARRL_10.txt states BANDS=10.
+   Until this statement the class inherited the base's "every band", so
+   every needs strip and the totals headers offered 160-15 m. A QSO on any
+   other band is logged, scores 0 and earns no multiplier (design 7.4,
+   8.2v) -- as in ARRL 160. The modes (DXLog: CW;SSB) are NOT stated here:
+   that is the other half of S3 and changes what a digital QSO scores. *)
+function TContestARRL10.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand = Band10;
 end;
 
 function TContestARRL10.GetDisplayName: string;

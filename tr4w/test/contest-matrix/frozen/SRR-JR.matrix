@@ -33,6 +33,7 @@ setting.CONTEST = SRR-JR
 setting.COUNT DOMESTIC COUNTRIES = TRUE
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = russian.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MINITOUR DURATION = 60
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
@@ -49,6 +50,7 @@ setting.QSO BY BAND = TRUE
 setting.RFOBL MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/TRUE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/TRUE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
@@ -382,6 +384,7 @@ setting.CONTEST = SRR-JR
 setting.COUNT DOMESTIC COUNTRIES = TRUE
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = russian.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MINITOUR DURATION = 60
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
@@ -398,6 +401,7 @@ setting.QSO BY BAND = TRUE
 setting.RFOBL MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/TRUE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/TRUE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
@@ -731,6 +735,7 @@ setting.CONTEST = SRR-JR
 setting.COUNT DOMESTIC COUNTRIES = TRUE
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = russian.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MINITOUR DURATION = 60
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
@@ -745,6 +750,7 @@ setting.QSO BY BAND = TRUE
 setting.RFOBL MODE = TRUE
 setting.S&P CW EXCHANGE = _@_
 setting.S&P EXCHANGE = _@_
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/TRUE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/TRUE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth=K dommultqth=CT domqth=CT zone=5

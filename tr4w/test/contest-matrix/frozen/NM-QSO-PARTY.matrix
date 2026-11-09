@@ -36,6 +36,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN KS
 setting.CQ EXCHANGE =  5NN KS
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = newmexico_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -51,6 +52,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN KS
 setting.S&P EXCHANGE = _@_ 5NN KS
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -353,6 +355,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN BER
 setting.CQ EXCHANGE =  5NN BER
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = newmexico.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = K0AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = K
@@ -368,6 +371,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN BER
 setting.S&P EXCHANGE = _@_ 5NN BER
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=TRUE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -701,6 +705,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN ON
 setting.CQ EXCHANGE =  5NN ON
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = newmexico_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = VE3AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = VE
@@ -716,6 +721,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN ON
 setting.S&P EXCHANGE = _@_ 5NN ON
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5
@@ -1018,6 +1024,7 @@ setting.CQ EXCHANGE NAME KNOWN =  5NN DL
 setting.CQ EXCHANGE =  5NN DL
 setting.DEBUG LOG LEVEL = WARN
 setting.DOMESTIC FILENAME = newmexico_cty.dom
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MY CALL = DL1AAA
 setting.MY CHECK = 99
 setting.MY COUNTRY = DL
@@ -1031,6 +1038,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN DL
 setting.S&P EXCHANGE = _@_ 5NN DL
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 setting.VHF BAND ENABLE = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=0 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth=CT domqth=CT zone=5

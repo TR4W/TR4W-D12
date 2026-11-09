@@ -35,6 +35,7 @@ setting.CQ CW EXCHANGE =  5NN # 7
 setting.CQ EXCHANGE NAME KNOWN =  5NN # 7
 setting.CQ EXCHANGE =  5NN # 7
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = K0AAA
@@ -52,6 +53,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN # 7
 setting.S&P EXCHANGE = _@_ 5NN # 7
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/TRUE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/TRUE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
@@ -392,6 +394,7 @@ setting.CQ CW EXCHANGE =  5NN # 4
 setting.CQ EXCHANGE NAME KNOWN =  5NN # 4
 setting.CQ EXCHANGE =  5NN # 4
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = VE3AAA
@@ -409,6 +412,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN # 4
 setting.S&P EXCHANGE = _@_ 5NN # 4
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/TRUE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/TRUE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
@@ -748,6 +752,7 @@ setting.CQ CW EXCHANGE =  5NN # 28
 setting.CQ EXCHANGE NAME KNOWN =  5NN # 28
 setting.CQ EXCHANGE =  5NN # 28
 setting.DEBUG LOG LEVEL = WARN
+setting.HAMSCORE URL DEFAULT MIGRATED = TRUE
 setting.MULT BY BAND = TRUE
 setting.MULT BY MODE = TRUE
 setting.MY CALL = DL1AAA
@@ -763,6 +768,7 @@ setting.QSO BY BAND = TRUE
 setting.QSO BY MODE = TRUE
 setting.S&P CW EXCHANGE = _@_ 5NN # 28
 setting.S&P EXCHANGE = _@_ 5NN # 28
+setting.SCORE POSTING URL DEFAULT MIGRATED = TRUE
 == scoring
 qso 01 W1AW Band20 CW/eCW full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/TRUE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
 qso 02 W1AW Band20 Phone/eUSB full | pts=10 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/TRUE cty=K qthzone=8 cont=NorthAmerica qthpfx=W1 pfx= dxqth= dommultqth= domqth= zone=5
