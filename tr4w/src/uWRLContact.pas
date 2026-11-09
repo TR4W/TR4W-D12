@@ -7,10 +7,41 @@ interface
    unit knows ADIF and WRL field names, never contest types or park rules. *)
 function WRLContactFromADIF(const aADIF, aStationCall: string): string;
 
+const
+   WRL_NOTES_MAX = 2000;
+
+(* The spec's notes maxLength, counted in characters (code points) of the JSON
+   string. Cuts on a code point, never between the halves of a surrogate pair. *)
+function WRLNotesLimit(const aText: string): string;
+
 implementation
 
 uses
    SysUtils, Classes, fpjson, uADIF;
+
+function WRLNotesLimit(const aText: string): string;
+var
+   i, count: integer;
+begin
+   Result := aText;
+   count := 0;
+   i := 1;
+   while i <= Length(aText) do
+      begin
+      Inc(count);
+      if count > WRL_NOTES_MAX then
+         begin
+         Result := Copy(aText, 1, i - 1);
+         Exit;
+         end;
+      if (Ord(aText[i]) >= $D800) and (Ord(aText[i]) <= $DBFF) and
+         (i < Length(aText)) then
+         begin
+         Inc(i);
+         end;
+      Inc(i);
+      end;
+end;
 
 function WRLContactFromADIF(const aADIF, aStationCall: string): string;
 var
@@ -60,6 +91,66 @@ var
       else
          begin
          body.Add(UTF8Encode(aJSONName), TJSONNull.Create);
+         end;
+   end;
+
+   (* WRL's API has no contest-exchange fields, so the exchange rides in the one
+      free-text field. COMMENT alone when there is no contest data (as before),
+      else "<comment> | <CONTEST_ID>: sent <STX>, rcvd <SRX>". An edit that
+      changes the exchange is a normal PATCH of notes; the value is never empty
+      unless the comment and the contest data both are. *)
+   procedure NotesField;
+   var
+      notes, contest, sent, rcvd, part: string;
+   begin
+      notes := Value('COMMENT');
+      contest := Value('CONTEST_ID');
+      sent := Value('STX_STRING');
+      rcvd := Value('SRX_STRING');
+      part := '';
+      if (contest <> '') or (sent <> '') or (rcvd <> '') then
+         begin
+         if contest <> '' then
+            begin
+            part := contest;
+            end;
+         if sent <> '' then
+            begin
+            if part <> '' then
+               begin
+               part := part + ': ';
+               end;
+            part := part + 'sent ' + sent;
+            end;
+         if rcvd <> '' then
+            begin
+            if sent <> '' then
+               begin
+               part := part + ', ';
+               end
+            else if part <> '' then
+               begin
+               part := part + ': ';
+               end;
+            part := part + 'rcvd ' + rcvd;
+            end;
+         if notes <> '' then
+            begin
+            notes := notes + ' | ' + part;
+            end
+         else
+            begin
+            notes := part;
+            end;
+         end;
+      notes := WRLNotesLimit(notes);
+      if notes = '' then
+         begin
+         body.Add('notes', TJSONNull.Create);
+         end
+      else
+         begin
+         body.Add('notes', UTF8Encode(notes));
          end;
    end;
 
@@ -160,7 +251,7 @@ begin
       TextField('MY_GRIDSQUARE', 'myGridsquare');
       TextField('QTH', 'qth');
       TextField('STATE', 'state');
-      TextField('COMMENT', 'notes');
+      NotesField;
       Activities('MY_', 'myActivities');
       Activities('', 'theirActivities');
       Result := UTF8Decode(body.AsJSON);

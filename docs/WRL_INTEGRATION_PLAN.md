@@ -33,6 +33,13 @@ Implementation baseline subsequently fast-forwarded to local `main` at
   arrays. It contains no contest-type or park interpretation branches. The current
   file exporter emits per row; WRL follows that existing contact boundary rather
   than inventing an independent grouping policy.
+- **The WRL API (spec 1.1.0) has no contest-exchange fields** (no stx/srx string, contest
+  id or serial). The one free-text field is `notes` (maxLength 2000, on create and
+  update), so the exchange goes there: `<comment> | <CONTEST_ID>: sent <STX_STRING>,
+  rcvd <SRX_STRING>`, each part omitted when absent, the ` | ` omitted with no comment,
+  and the whole only when the ADIF states a contest id or an exchange (else `notes` is
+  the comment alone, as before). Cut to 2000 code points, never inside a surrogate pair.
+  An edit that changes the exchange is an ordinary PATCH of `notes`.
 - `TWRLWorker` owns its HTTP client and a separate SQLDB connection. Claims commit
   before HTTP, and results commit afterwards. SQLite busy/snapshot conflicts roll
   back and retry; no transaction spans a network request. The local connection has

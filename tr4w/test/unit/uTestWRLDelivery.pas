@@ -25,6 +25,7 @@ type
       procedure TestClient;
       procedure TestAuthenticationGuards;
       procedure TestADIFMapping;
+      procedure TestNotesCarryTheExchange;
       procedure TestSavedContactCapture;
       procedure TestClearingFields;
       procedure TestSecretType;
@@ -479,6 +480,54 @@ begin
    finally
       body.Free;
    end;
+end;
+
+procedure TWRLDeliveryTests.TestNotesCarryTheExchange;
+const
+   BASE = '<CALL:4>W1AW<BAND:3>20m<FREQ:6>14.031<MODE:2>CW' +
+      '<QSO_DATE:8>20261030<TIME_ON:6>123456';
+var
+   longText: string;
+
+   function Notes(const aExtra: string): string;
+   var
+      body: TJSONData;
+      node: TJSONData;
+   begin
+      body := GetJSON(UTF8Encode(WRLContactFromADIF(BASE + aExtra + '<EOR>', 'N1MM')));
+      try
+         node := TJSONObject(body).Find('notes');
+         if (node = nil) or (node.JSONType = jtNull) then
+            begin
+            Result := '<none>';
+            end
+         else
+            begin
+            Result := node.AsString;
+            end;
+      finally
+         body.Free;
+      end;
+   end;
+
+begin
+   BeginTest('notes carry the contest exchange; no contest data leaves them as the comment');
+   CheckEquals('<none>', Notes(''), 'no comment, no contest: null as before');
+   CheckEquals('hello', Notes('<COMMENT:5>hello'), 'comment alone is unchanged');
+   CheckEquals('CQ-WW-CW: sent 5NN 05, rcvd 5NN 14',
+      Notes('<CONTEST_ID:8>CQ-WW-CW<STX_STRING:6>5NN 05<SRX_STRING:6>5NN 14'));
+   CheckEquals('hello | CQ-WW-CW: sent 5NN 05, rcvd 5NN 14',
+      Notes('<COMMENT:5>hello<CONTEST_ID:8>CQ-WW-CW<STX_STRING:6>5NN 05<SRX_STRING:6>5NN 14'));
+   CheckEquals('ARRL-DX-CW: rcvd 5NN 100',
+      Notes('<CONTEST_ID:10>ARRL-DX-CW<SRX_STRING:7>5NN 100'));
+   (* 1999 ASCII then a two-unit character: 2000 code points, so it stays. *)
+   longText := StringOfChar('a', 1999) + #$D83D#$DE00 + 'zz';
+   CheckEquals(2000, Length(WRLNotesLimit(StringOfChar('a', 2005))), 'ASCII cut at 2000');
+   CheckEquals(1999 + 2, Length(WRLNotesLimit(longText)),
+      'a surrogate pair at the boundary is kept whole and counts once');
+   longText := StringOfChar('a', 2000) + #$D83D#$DE00;
+   CheckEquals(2000, Length(WRLNotesLimit(longText)), 'a pair past 2000 is dropped whole');
+   CheckEquals(2000, Length(WRLNotesLimit(StringOfChar('a', 2000))), 'exactly 2000 is kept');
 end;
 
 procedure TWRLDeliveryTests.TestSavedContactCapture;
@@ -1006,6 +1055,7 @@ begin
    TestClient;
    TestAuthenticationGuards;
    TestADIFMapping;
+   TestNotesCarryTheExchange;
    TestSavedContactCapture;
    TestClearingFields;
    TestSecretType;
