@@ -208,6 +208,7 @@ comes last, a word run together.
 | `NAME FLAG ENABLE` |  | global | `Settings.Scp.NameFlagEnable` | boolean |  |
 | `NET STATUS UPDATE INTERVAL` |  | global | `Settings.Network.StatusUpdateInterval` | TNetStatusInterval |  |
 | `NETWORK AUTO CONNECT` |  | global | `Settings.Network.AutoConnect` | boolean |  |
+| `NETWORK HTTP TRANSPORT` |  | global | `Settings.Network.HttpTransport` | string |  |
 | `NETWORK SHARE SPOTS` |  | global | `Settings.Network.ShareSpots` | boolean |  |
 | `NO BORDER` |  | global | `Settings.MainWindow.NoBorder` | boolean |  |
 | `NO CAPTION` |  | global | `Settings.MainWindow.NoCaption` | boolean |  |

@@ -71,26 +71,6 @@ uses
    uOpenSSLLoader,
    uTLSTrust;
 
-type
-   (* The collected response, with a size cap. Exceeded is set BEFORE the raise,
-     so Execute can tell a cap from any other stream error. *)
-   TBoundedHttpResponse = class(TRawByteStringStream)
-   public
-      Limit:    Int64;
-      Exceeded: boolean;
-      function Write(const Buffer; Count: LongInt): LongInt; override;
-   end;
-
-function TBoundedHttpResponse.Write(const Buffer; Count: LongInt): LongInt;
-begin
-   if (Limit > 0) and (Int64(Count) > Limit - Position) then
-      begin
-      Exceeded := True;
-      raise EStreamError.Create('HTTP response exceeds the configured size limit');
-      end;
-   Result := inherited Write(Buffer, Count);
-end;
-
 class function TGenericHttpTransport.Id: string;
 begin
    Result := 'generic';

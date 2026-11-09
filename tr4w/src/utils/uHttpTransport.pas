@@ -114,6 +114,17 @@ type
       function Detail: string;
    end;
 
+   (* The collected response, with a size cap, shared by every transport so the
+     cap behaves the same whichever one is selected (design 3.3, line 7).
+     Exceeded is set BEFORE the raise, so a transport can tell a cap from any
+     other stream error. Limit 0 = unlimited. *)
+   TBoundedHttpResponse = class(TRawByteStringStream)
+   public
+      Limit:    Int64;
+      Exceeded: boolean;
+      function Write(const Buffer; Count: LongInt): LongInt; override;
+   end;
+
    TPlatformHttpTransport = class abstract
    public
       class function Id: string; virtual; abstract;   (* 'generic', 'winhttp' ... *)
@@ -153,10 +164,24 @@ function IsHttpsUrl(const aUrl: string): boolean;
   and is what is left when no preferred one is available. *)
 procedure RegisterHttpTransport(aClass: TPlatformHttpTransportClass; aPreferred: boolean);
 
-(* The transport every request uses: decided at first use, logged once, never
-  re-decided within the session. NIL only when nothing is registered, which the
-  caller must treat as a failed request (never an access violation). *)
-function ActiveHttpTransport: TPlatformHttpTransport;
+const
+   (* THE VALUES OF network.httpTransport (design 6, S2). The registry knows no
+     setting: the shared layer reads it and passes the value in. *)
+   HTTP_TRANSPORT_AUTO     = 'auto';      (* a platform transport if Available, else generic *)
+   HTTP_TRANSPORT_PLATFORM = 'platform';  (* the same, but a platform with none says so at Warn *)
+   HTTP_TRANSPORT_GENERIC  = 'generic';   (* FPC + OpenSSL: the default at S2 *)
+
+(* The transport every request uses for this POLICY (one of the values above;
+  blank or anything unrecognised means generic, the safe answer). Decided at
+  first use and logged once as '[HTTP] transport: <id>'. It is decided again,
+  and logged again, only when the policy VALUE changes -- the setting is read
+  before it is loaded (the startup country-file download runs ahead of the
+  configuration), and an operator may change it in Preferences. Nothing is ever
+  re-decided because a request FAILED: there is no per-request fallback. A
+  transport that was replaced is kept alive until exit, because another thread
+  may still be inside its Execute. NIL only when nothing is registered, which
+  the caller must treat as a failed request (never an access violation). *)
+function ActiveHttpTransport(const aPolicy: string): TPlatformHttpTransport;
 
 (* TEST SEAMS. SetHttpTransportForTest makes aTransport the active one (the
   caller keeps ownership); nil goes back to the registry. A test that needs the
@@ -182,10 +207,24 @@ var
    GLock:     TCriticalSection = nil;
    GEntries:  array of THttpTransportEntry;
    GActive:   TPlatformHttpTransport = nil;
+   GActivePolicy: string = '';
+   (* Transports a changed policy replaced. Never freed before exit: a worker
+     may be inside Execute on one. *)
+   GRetired:  array of TPlatformHttpTransport;
    GOverride: TPlatformHttpTransport = nil;
    GNoneLogged: boolean = False;
    (* The same logger name as uHTTPDownload, so one appender sees both. *)
    GLog:      TLogLogger = nil;
+
+function TBoundedHttpResponse.Write(const Buffer; Count: LongInt): LongInt;
+begin
+   if (Limit > 0) and (Int64(Count) > Limit - Position) then
+      begin
+      Exceeded := True;
+      raise EStreamError.Create('HTTP response exceeds the configured size limit');
+      end;
+   Result := inherited Write(Buffer, Count);
+end;
 
 constructor THttpWireRequest.Create;
 begin
@@ -346,7 +385,34 @@ begin
       end;
 end;
 
-function ActiveHttpTransport: TPlatformHttpTransport;
+(* The policy as one of the three values: blank or unknown is generic. *)
+function NormalisePolicy(const aPolicy: string): string;
+begin
+   Result := LowerCase(Trim(aPolicy));
+   if (Result <> HTTP_TRANSPORT_AUTO) and (Result <> HTTP_TRANSPORT_PLATFORM) then
+      begin
+      Result := HTTP_TRANSPORT_GENERIC;
+      end;
+end;
+
+function HasPreferredEntry: boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := 0 to High(GEntries) do
+      begin
+      if GEntries[i].Preferred then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function ActiveHttpTransport(const aPolicy: string): TPlatformHttpTransport;
+var
+   policy: string;
 begin
    GLock.Enter;
    try
@@ -355,16 +421,32 @@ begin
          Result := GOverride;
          Exit;
          end;
+      policy := NormalisePolicy(aPolicy);
+      if (GActive <> nil) and (GActivePolicy <> policy) then
+         begin
+         SetLength(GRetired, Length(GRetired) + 1);
+         GRetired[High(GRetired)] := GActive;
+         GActive := nil;
+         end;
       if GActive = nil then
          begin
-         GActive := PickTransport(True);
+         GActivePolicy := policy;
+         if policy <> HTTP_TRANSPORT_GENERIC then
+            begin
+            if (policy = HTTP_TRANSPORT_PLATFORM) and (not HasPreferredEntry) then
+               begin
+               GLog.Warn('[HTTP] the setting asks for the platform transport and this '
+                         + 'platform has none; using generic');
+               end;
+            GActive := PickTransport(True);
+            end;
          if GActive = nil then
             begin
             GActive := PickTransport(False);
             end;
          if GActive <> nil then
             begin
-            GLog.Info('[HTTP] transport: %s', [GActive.Id]);
+            GLog.Info('[HTTP] transport: %s (setting: %s)', [GActive.Id, policy]);
             GNoneLogged := False;
             end
          else if not GNoneLogged then
@@ -395,10 +477,22 @@ begin
    GLock.Enter;
    try
       FreeAndNil(GActive);
+      GActivePolicy := '';
       GNoneLogged := False;
    finally
       GLock.Leave;
    end;
+end;
+
+procedure FreeRetiredTransports;
+var
+   i: integer;
+begin
+   for i := 0 to High(GRetired) do
+      begin
+      GRetired[i].Free;
+      end;
+   GRetired := nil;
 end;
 
 initialization
@@ -407,6 +501,7 @@ initialization
 
 finalization
    FreeAndNil(GActive);
+   FreeRetiredTransports;
    FreeAndNil(GLock);
 
 end.

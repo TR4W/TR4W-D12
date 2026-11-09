@@ -414,10 +414,27 @@ used to be written out in `uHTTPDownload`. Rules that are easy to break:
   `hfVerificationUnavailable` (all before the connection); anything raised once the client is
   moving is `hfOther` / `hfTlsLibraryFault` / `hfResponseTooLarge`, "may have been sent". Do not
   promote an exception to a nothing-sent kind because it looks like a refusal.
-* **Selection is once, logged, and there is NO per-request fallback** (non-idempotent POSTs).
+* **Selection is by the SETTING, logged, and there is NO per-request fallback** (non-idempotent
+  POSTs). `ActiveHttpTransport(aPolicy)`: `uHTTPDownload.TransportPolicy` reads
+  `network.httpTransport` (`generic` default, `auto`, `platform`) and the registry, which knows no
+  setting, maps it; blank or unknown is generic. It re-decides, and logs `[HTTP] transport: <id>
+  (setting: <v>)` again, only when the policy VALUE changes (the startup CTY download runs before
+  settings load, so "once" would have locked in the default). A failed request never re-decides.
   Tests that must not depend on a platform transport name `TGenericHttpTransport` or install a
   `TFakeHttpTransport` with `SetHttpTransportForTest`; `uTestTLSRefusal` and `uTestHttpSecrets`
-  run against the registry's generic default.
+  run against the default setting, which is generic. A registry test must take the REAL WinHTTP
+  transport out (`HideRealPlatformTransports`): it is registered preferred in the test binary.
+* **The Windows transport is `uHttpTransportWinHttp` (issue 224 S2, 2026-11-09; unbenched, NOT the
+  default; S2b flips the default after the bench).** Static `winhttp` unit (NY4I's decision).
+  Facts that bite: **never call `WinHttpSetTimes`** (the real export is `WinHttpSetTimeouts`; a
+  static import of a missing name stops the program from starting); timeouts go through
+  `WinHttpSetOption` and **WinHTTP rounds them UP to a multiple of about 4 s** (measured), and
+  `WinHttpSendRequest` did not return until the server answered; so **every timeout is
+  `hfIOTimedOut`**, and name, connect and certificate kinds are claimed "not sent" only when
+  `FollowRedirects` is False. It builds Basic by hand, switches off cookies and auto-authentication,
+  never enables decompression, and refuses https-to-http through WinHTTP's own redirect policy. The
+  same contract suite runs against both transports (`uTestHttpTransport.RunContract`); TLS, proxy,
+  connect timeout and the downgrade are BENCH_QUEUE items.
 * `THttpRequest.TlsUnavailable` / `TrustBundleMissing` are properties over `Failure`, readable
   and writable (stubs assign them). `AcceptAnyStatus` and `HasBody` on the wire request exist to
   keep the Get verbs (`[200]` only, no body) and `Send` (any status, always a body stream, so
@@ -431,8 +448,9 @@ used to be written out in `uHTTPDownload`. Rules that are easy to break:
   **The CA-bundle `OperatorNotice` is raised for `hfTrustUnavailable` and no other kind**
   (`uTestNothingSent` loops every kind). A failure that may have been sent keeps its old
   answer (uncertain for a POST). Pinned in `uTestNothingSent`.
-* The Get verbs FOLLOW redirects (pinned by `Test_AGetStillFollowsARedirect`); S1c decides the
-  https-to-http hop. No Windows or macOS transport exists (S2+ wait for NY4I's section-8 answers).
+* The Get verbs FOLLOW redirects (pinned by `Test_AGetStillFollowsARedirect`). NY4I (2026-11-09):
+  NO redirect policing in code (S1c not done; a separate pre-release URL-validity check is its own
+  issue); WinHTTP's default policy already forbids https to http. No macOS transport exists yet (S3).
 
 ## Cloudlog / Wavelog provider (issue 204, 2026-11-07)
 

@@ -108,6 +108,7 @@ resourcestring
    RS_NETWORK_INTERCOMFILE                    = 'Log network messages to INTERCOM.TXT';
    RS_NETWORK_AUTOCONNECT                     = 'Connect to the multi-op server when TR4W starts';
    RS_NETWORK_SHARESPOTS                      = 'Share DX spots around the network';
+   RS_NETWORK_HTTPTRANSPORT                   = 'How downloads and uploads connect (generic, auto or platform)';
    RS_SCP_POSSIBLECALLS                       = 'Offer possible calls';
    RS_SCP_PARTIALCALL                         = 'Match on a partial callsign';
    RS_SCP_WILDCARDPARTIALS                    = 'Allow wildcards in a partial';

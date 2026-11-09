@@ -676,9 +676,29 @@ type
       FIntercomFileEnable: boolean;
       FAutoConnect: boolean;
       FShareSpots: boolean;
+      FHttpTransport: string;
    public
       constructor Create;
    published
+      (* NEW 2026-11-09 (issue 224, stage S2) -- which transport carries
+        TR4W's HTTP and HTTPS requests (downloads, uploads, the external
+        loggers). generic is FPC's own client over the shipped OpenSSL and
+        cacert.pem, on every platform. auto and platform use the operating
+        system's own client where this platform has one (WinHTTP on Windows,
+        which trusts the Windows certificate store and follows the system
+        proxy) and generic where it has none. A platform with none reads
+        platform as generic and says so in the log.
+
+        DEFAULT generic: the Windows transport is not benched yet, so it runs
+        only for an operator who asks (design doc section 6, S2; S2b moves the
+        default to auto). NOT in SHARED_WITH_PEERS: what one station's network
+        allows is that station's business. Read by the shared HTTP layer
+        (uHTTPDownload.TransportPolicy) at each request, so a change takes
+        effect from the next request, with no restart. It NEVER switches a
+        request that failed to another transport: a non-idempotent POST could
+        be sent twice. The vocabulary is HTTP_TRANSPORT_SPELLINGS. *)
+      property HttpTransport: string
+         read FHttpTransport write FHttpTransport;
       (* NEW 2026-10-29 -- whether this station shares DX spots around the
         multi-op network: it posts the spots its own cluster connection
         receives AND accepts the ones the other stations post. Read at the
@@ -5115,6 +5135,7 @@ begin
    FIntercomFileEnable   := False;
    FAutoConnect          := False;
    FShareSpots           := True;
+   FHttpTransport        := 'generic';
 end;
 
 constructor TWsjtxSettings.Create;
@@ -7724,6 +7745,14 @@ const
        'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
        'USER 3', 'USER 4', 'USER 5', 'CUSTOM');
 
+const
+   (* The values of NETWORK HTTP TRANSPORT. The meaning of each is the registry's
+     (the HTTP_TRANSPORT_ constants in uHttpTransport); this unit only names the
+     vocabulary, and does not link the HTTP layer. generic FIRST: it is the
+     default. *)
+   HTTP_TRANSPORT_SPELLINGS: array[0..2] of string =
+      ('generic', 'auto', 'platform');
+
 function LogLevelSpelling(const aLevel: tLogLevels): string;
 begin
    Result := LOG_LEVEL_SPELLINGS[aLevel];
@@ -7755,6 +7784,7 @@ initialization
    RegisterSettingAllowedValues('Operating.DupeCheckSound',
                                 DUPE_CHECK_SOUND_SPELLINGS);
    RegisterSettingAllowedValues('Log.DebugLevel', LOG_LEVEL_SPELLINGS);
+   RegisterSettingAllowedValues('Network.HttpTransport', HTTP_TRANSPORT_SPELLINGS);
    RegisterSettingAllowedValues('Scp.PossibleCallMode',
                                 POSSIBLE_CALL_MODE_SPELLINGS);
    RegisterSettingAllowedValues('MainWindow.UserInfoShown',

@@ -825,6 +825,7 @@ resourcestring
    SPrefsGroupStationCallsign = 'Your own callsign, remembered for New Contest';
    SPrefsGroupSuggestedCalls = 'Suggested-call keys';
    SPrefsGroupNetworkStations = 'Stations and the Network window';
+   SPrefsGroupInternet = 'Internet downloads and uploads';
    SPrefsGroupRateDisplay = 'Rate display';
    SPrefsGroupLogWindow = 'Log window';
    (* USER INFO SHOWN: the TRMASTER field shown just below the call window. *)

@@ -28,6 +28,7 @@ interface
 uses
    SyncObjs, Classes, SysUtils, Log4D,
    IdTCPServer, IdContext, IdGlobal,
+   uHttpTransport,
    uTR4WTestFramework;
 
 type
@@ -39,6 +40,15 @@ type
       FBody:    RawByteString;
       FPath:    string;
       FHits:    integer;
+      (* WHICH TRANSPORT THE CONTRACT RUNS AGAINST. The contract tests are
+        written once and RunContract runs them for each transport this
+        platform has: the generic one always, and the WinHTTP one on Windows
+        (design 5.3). FTag prefixes each test's name so a failure says which. *)
+      FUseWinHttp: boolean;
+      FTag:        string;
+      FCutSlow:    boolean;   (* set by a test to end the /slow wait early *)
+      function  NewTransport: TPlatformHttpTransport;
+      procedure RunContract;
       procedure ServerExecute(AContext: TIdContext);
       function  StartServer: Word;
       procedure StopServer;
@@ -59,8 +69,14 @@ type
       procedure Test_ARefusedConnectionIsNotProvedUnsent;
       procedure Test_TlsUnavailableIsProvedUnsent;
       procedure Test_ExecuteNeverRaisesAndClearsTheResult;
+      procedure Test_BadUrlsAreFailuresNotExceptions;
+      procedure Test_AnAttachedEmptyBodySendsContentLengthZero;
+      procedure Test_TheBodyIsNotDecompressed;
+      procedure Test_ASilentServerTimesOutAfterTheRequestWent;
       (* the registry *)
       procedure Test_RegistrySelectsOnceAndLogsOnce;
+      procedure Test_ThePolicyChoosesTheTransport;
+      procedure Test_TheSettingDefaultsToGenericAndTheSharedLayerReadsIt;
       (* the shared layer, over a fake transport *)
       procedure Test_SchemeAndBearerPolicyRefuseWithoutTheTransport;
       procedure Test_SendBuildsTheWireRequest;
@@ -79,8 +95,10 @@ type
 implementation
 
 uses
-   uHttpTransport, uHttpTransportGeneric, uHTTPDownload, uOpenSSLLoader,
-   uSettingsRegistry, uSettingsDeclarations, uTestFakeTransport;
+   uHttpTransportGeneric,
+   {$IFDEF WINDOWS}uHttpTransportWinHttp,{$ENDIF}
+   uHTTPDownload, uOpenSSLLoader,
+   uSettingsRegistry, uSettingsDeclarations, uSettingsModel, uTestFakeTransport;
 
 const
    TOKEN = 'zq-FAKE-TOKEN-0123456789abcdef';
@@ -213,6 +231,34 @@ begin
       begin
       body := StringOfChar('x', 100);
       end
+   else if path = '/gz' then
+      begin
+      (* Says it is gzip and is not: a client that decompresses fails or alters it. *)
+      extra := 'Content-Encoding: gzip'#13#10;
+      body  := 'not-really-gzip';
+      end
+   else if path = '/slow' then
+      begin
+      (* The request has arrived and been recorded below only AFTER this wait,
+        so record it first: a silent server is one that has READ the request. *)
+      FLock.Enter;
+      try
+         FHeaders := LowerCase(head);
+         FPath    := path;
+         Inc(FHits);
+      finally
+         FLock.Leave;
+      end;
+      (* Silent for up to 5.5 s, in slices, so a test that has its answer can
+        cut it short (FCutSlow) and StopServer does not wait out the rest. *)
+      i := 0;
+      while (i < 5500) and (not FCutSlow) do
+         begin
+         Sleep(25);
+         Inc(i, 25);
+         end;
+      body := 'late';
+      end
    else if path = '/echo' then
       begin
       body := got;
@@ -297,7 +343,7 @@ var
    f:        THttpFailure;
    expected: boolean;
 begin
-   BeginTest('NothingSent: True only for the failures that PROVE no byte left, for every kind');
+   BeginTest(FTag + 'NothingSent: True only for the failures that PROVE no byte left, for every kind');
    for f := Low(THttpFailure) to High(THttpFailure) do
       begin
       expected := f in [hfTlsUnavailable, hfTrustUnavailable, hfVerificationUnavailable,
@@ -317,12 +363,12 @@ end;
 
 procedure THttpTransportTests.Test_AnyStatusIsAnAnswerWhenAsked;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('contract 4: with AcceptAnyStatus a 404 is an answer, not a failure');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'contract 4: with AcceptAnyStatus a 404 is an answer, not a failure');
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/missing'));
    res := THttpWireResult.Create;
    try
@@ -341,12 +387,12 @@ end;
 
 procedure THttpTransportTests.Test_OnlyOkIsAnAnswerWhenNotAsked;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('the Get verbs: only 200 is an answer; any other status is a failure with FPC''s words and the status');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'the Get verbs: only 200 is an answer; any other status is a failure with FPC''s words and the status');
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/missing'));
    req.AcceptAnyStatus := False;
    res := THttpWireResult.Create;
@@ -366,14 +412,14 @@ end;
 
 procedure THttpTransportTests.Test_HeadersAndBodyBytes;
 var
-   t:    TGenericHttpTransport;
+   t:    TPlatformHttpTransport;
    req:  THttpWireRequest;
    res:  THttpWireResult;
    sent: RawByteString;
 begin
-   BeginTest('contract 10, 13: UA, Content-Type, Bearer, Accept-Encoding and the body BYTES (UTF-8) reach the server');
+   BeginTest(FTag + 'contract 10, 13: UA, Content-Type, Bearer, Accept-Encoding and the body BYTES (UTF-8) reach the server');
    sent := ToWire('caf' + #$00E9 + ' ok');
-   t := TGenericHttpTransport.Create;
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/echo'));
    req.Method         := 'POST';
    req.ContentType    := 'application/json';
@@ -402,12 +448,12 @@ end;
 
 procedure THttpTransportTests.Test_BasicAuthIsPreemptive;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('contract 10: Basic auth is sent on the FIRST request, not after a 401 challenge');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'contract 10: Basic auth is sent on the FIRST request, not after a 401 challenge');
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/ok'));
    req.Username := 'user';
    req.Password := 'pw';
@@ -428,12 +474,12 @@ end;
 
 procedure THttpTransportTests.Test_ResponseHeadersAreReturned;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('status text, Retry-After and X-Request-Id come back');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'status text, Retry-After and X-Request-Id come back');
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/ok'));
    res := THttpWireResult.Create;
    try
@@ -452,13 +498,13 @@ end;
 
 procedure THttpTransportTests.Test_ConditionalHeadersGoOutAndComeBack;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
    port: Word;
 begin
-   BeginTest('If-None-Match and If-Modified-Since go out when set; ETag, Last-Modified and Content-Type come back; a 304 has no body');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'If-None-Match and If-Modified-Since go out when set; ETag, Last-Modified and Content-Type come back; a 304 has no body');
+   t := NewTransport;
    port := StartServer;
    res := THttpWireResult.Create;
    try
@@ -511,13 +557,13 @@ end;
 
 procedure THttpTransportTests.Test_ResponseCap;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
    port: Word;
 begin
-   BeginTest('contract 7: a response over MaxResponseBytes is hfResponseTooLarge (not provable unsent); 0 is unlimited');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'contract 7: a response over MaxResponseBytes is hfResponseTooLarge (not provable unsent); 0 is unlimited');
+   t := NewTransport;
    port := StartServer;
    req := NewGet(Url(port, '/big'));
    res := THttpWireResult.Create;
@@ -540,13 +586,13 @@ end;
 
 procedure THttpTransportTests.Test_SinkReceivesTheBody;
 var
-   t:    TGenericHttpTransport;
+   t:    TPlatformHttpTransport;
    req:  THttpWireRequest;
    res:  THttpWireResult;
    sink: TMemoryStream;
 begin
-   BeginTest('a sink receives the body; the result then holds none');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'a sink receives the body; the result then holds none');
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/ok'));
    res := THttpWireResult.Create;
    sink := TMemoryStream.Create;
@@ -566,13 +612,13 @@ end;
 
 procedure THttpTransportTests.Test_RedirectsOnlyWhenAsked;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
    port: Word;
 begin
-   BeginTest('contract 8: a redirect is followed only when FollowRedirects (Send''s any-status mode)');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'contract 8: a redirect is followed only when FollowRedirects (Send''s any-status mode)');
+   t := NewTransport;
    port := StartServer;
    req := NewGet(Url(port, '/redir'));
    res := THttpWireResult.Create;
@@ -596,18 +642,18 @@ end;
 
 procedure THttpTransportTests.Test_AGetStillFollowsARedirect;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('PINS TODAY''S BEHAVIOUR: the Get verbs (only 200 allowed) still FOLLOW a redirect, to any scheme');
+   BeginTest(FTag + 'PINS TODAY''S BEHAVIOUR: the Get verbs (only 200 allowed) still FOLLOW a redirect, to any scheme');
    (* I expected FPC to raise on the 302 before following it, because the
      allowed list is [200]. It does not: the redirect is followed and the
      FINAL status is checked. So HttpGetText/Download follow redirects, as the
      design doc says (2.4), and nothing in TR4W checks the scheme of the target
      -- that is open question 5 / S1c. If S1c forbids an https-to-http hop,
      this test is the one that changes. *)
-   t := TGenericHttpTransport.Create;
+   t := NewTransport;
    req := NewGet(Url(StartServer, '/redir'));
    req.AcceptAnyStatus := False;
    req.FollowRedirects := True;
@@ -628,18 +674,32 @@ end;
 
 procedure THttpTransportTests.Test_ARefusedConnectionIsNotProvedUnsent;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('contract 3: the generic client cannot tell a refused connection from a reset, so it claims nothing');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'contract 3: a refused connection: the generic client cannot tell it from a reset and claims nothing; WinHTTP says ERROR_WINHTTP_CANNOT_CONNECT and may claim "not sent"');
+   t := NewTransport;
    req := NewGet('http://127.0.0.1:1/probe');
    res := THttpWireResult.Create;
    try
       t.Execute(req, nil, res);
-      CheckTrue(res.Failure = hfOther, 'hfOther: ' + HttpFailureName(res.Failure));
-      CheckFalse(NothingSent(res.Failure), 'so a caller must treat it as possibly sent');
+      if FUseWinHttp then
+         begin
+         CheckTrue(res.Failure = hfCannotConnect, 'hfCannotConnect: ' + HttpFailureName(res.Failure) + ' ' + res.Detail);
+         CheckTrue(NothingSent(res.Failure), 'proved unsent (redirects are off)');
+         (* With redirects on, the failure could belong to a SECOND request, so
+           nothing is claimed. *)
+         req.FollowRedirects := True;
+         t.Execute(req, nil, res);
+         CheckTrue(res.Failure = hfOther, 'with FollowRedirects the same refusal is hfOther: ' + HttpFailureName(res.Failure));
+         CheckFalse(NothingSent(res.Failure), 'and claims nothing');
+         end
+      else
+         begin
+         CheckTrue(res.Failure = hfOther, 'hfOther: ' + HttpFailureName(res.Failure));
+         CheckFalse(NothingSent(res.Failure), 'so a caller must treat it as possibly sent');
+         end;
       CheckTrue(res.ErrorMessage <> '', 'with the library''s text for the log');
    finally
       res.Free;
@@ -650,13 +710,13 @@ end;
 
 procedure THttpTransportTests.Test_TlsUnavailableIsProvedUnsent;
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('contract 3, 11: https with no usable TLS is hfTlsUnavailable and proved unsent');
+   BeginTest(FTag + 'contract 3, 11: https with no usable TLS is hfTlsUnavailable and proved unsent');
    SetOpenSSLForcedUnavailable('test-only: forced unavailable for the contract');
-   t := TGenericHttpTransport.Create;
+   t := NewTransport;
    req := NewGet('https://tr4w-contract.invalid/x');
    res := THttpWireResult.Create;
    try
@@ -673,14 +733,180 @@ begin
    end;
 end;
 
-procedure THttpTransportTests.Test_ExecuteNeverRaisesAndClearsTheResult;
+(* THE URLS A TRANSPORT CANNOT USE are failures, never exceptions: an unusable
+  scheme, no host, a bad port. (The shared layer vets the scheme first; this is
+  the contract's "never raises" held by the transport itself.) *)
+procedure THttpTransportTests.Test_BadUrlsAreFailuresNotExceptions;
+const
+   BAD: array[0..4] of string = (
+      'ftp://127.0.0.1/x', 'http://', 'http:///nohost', 'http://127.0.0.1:0/x',
+      'no-scheme-at-all');
 var
-   t:   TGenericHttpTransport;
+   t:   TPlatformHttpTransport;
+   req: THttpWireRequest;
+   res: THttpWireResult;
+   i:   integer;
+begin
+   BeginTest(FTag + 'contract 2: an unusable URL is a failure with a reason, and never an exception');
+   t   := NewTransport;
+   res := THttpWireResult.Create;
+   try
+      for i := Low(BAD) to High(BAD) do
+         begin
+         req := NewGet(BAD[i]);
+         try
+            t.Execute(req, nil, res);
+            CheckTrue(res.Failure <> hfNone, BAD[i] + ' is a failure');
+            CheckEquals(0, res.StatusCode, BAD[i] + ' got no answer');
+         finally
+            req.Free;
+         end;
+      end;
+   finally
+      res.Free;
+      t.Free;
+   end;
+end;
+
+(* An attached body, even an empty one, goes out with Content-Length: 0 on every
+  verb. FPC's client always did it, and the WRL bodiless GET depends on the
+  same bytes (HasBody, design 6 S1a). *)
+procedure THttpTransportTests.Test_AnAttachedEmptyBodySendsContentLengthZero;
+var
+   t:   TPlatformHttpTransport;
    req: THttpWireRequest;
    res: THttpWireResult;
 begin
-   BeginTest('contract 2: Execute never raises, and starts from a clean result');
-   t := TGenericHttpTransport.Create;
+   BeginTest(FTag + 'HasBody with an empty body sends Content-Length: 0, and no body means no Content-Length');
+   t := NewTransport;
+   req := NewGet(Url(StartServer, '/ok'));
+   res := THttpWireResult.Create;
+   try
+      req.HasBody := True;
+      req.Body    := '';
+      t.Execute(req, nil, res);
+      CheckTrue(res.Failure = hfNone, 'answered: ' + res.Detail);
+      FLock.Enter;
+      try
+         CheckTrue(Pos('content-length: 0', FHeaders) > 0, 'Content-Length: 0 on the wire: ' + FHeaders);
+      finally
+         FLock.Leave;
+      end;
+      req.HasBody := False;
+      t.Execute(req, nil, res);
+      FLock.Enter;
+      try
+         CheckEquals(0, Pos('content-length', FHeaders), 'no body, no Content-Length: ' + FHeaders);
+      finally
+         FLock.Leave;
+      end;
+   finally
+      res.Free;
+      req.Free;
+      t.Free;
+      StopServer;
+   end;
+end;
+
+(* CONTRACT 9: no automatic decompression. The server claims gzip and sends text
+  that is not gzip: a client that tried to decode it would fail or change it. *)
+procedure THttpTransportTests.Test_TheBodyIsNotDecompressed;
+var
+   t:   TPlatformHttpTransport;
+   req: THttpWireRequest;
+   res: THttpWireResult;
+begin
+   BeginTest(FTag + 'contract 9: a Content-Encoding: gzip response comes back exactly as sent');
+   t := NewTransport;
+   req := NewGet(Url(StartServer, '/gz'));
+   req.AcceptEncoding := 'gzip,deflate';
+   res := THttpWireResult.Create;
+   try
+      t.Execute(req, nil, res);
+      CheckTrue(res.Failure = hfNone, 'answered: ' + res.Detail);
+      CheckEquals('not-really-gzip', string(res.Body), 'the bytes the server sent');
+      FLock.Enter;
+      try
+         CheckTrue(Pos('accept-encoding: gzip,deflate', FHeaders) > 0, 'and the request still offered it');
+      finally
+         FLock.Leave;
+      end;
+   finally
+      res.Free;
+      req.Free;
+      t.Free;
+      StopServer;
+   end;
+end;
+
+(* CONTRACT 3 AND 5. The server READS the request and then says nothing for
+  longer than the I/O timeout. The request went out, so the timeout is "may have
+  been sent" (hfIOTimedOut for WinHTTP; the generic client calls it hfOther).
+
+  THE TWO TRANSPORTS DIFFER ON HOW PRECISELY THE TIMEOUT IS KEPT, and the
+  difference is measured, not assumed. The generic client returns at the
+  timeout. WinHTTP enforces its timeouts on a COARSE CLOCK: with a 5.5 s silent
+  server, IOMs of 200, 400, 1000 and 2500 ms all returned at 4000 ms (4016) and
+  6000 ms returned at 8000 -- the value rounded UP to a multiple of 4 s
+  (measured on Windows 11 build 26200, both options on the session and on the
+  request, all three proxy modes, with a Python and an Indy server). So the
+  assertion for WinHTTP is "it gives up, in a bounded time, and says
+  hfIOTimedOut" -- not "at 400 ms". *)
+procedure THttpTransportTests.Test_ASilentServerTimesOutAfterTheRequestWent;
+var
+   t:       TPlatformHttpTransport;
+   req:     THttpWireRequest;
+   res:     THttpWireResult;
+   started: QWord;
+   elapsed: QWord;
+begin
+   BeginTest(FTag + 'contract 5: IOMs bounds the wait for an answer; the timeout never claims "not sent"');
+   t := NewTransport;
+   FCutSlow := False;
+   req := NewGet(Url(StartServer, '/slow'));
+   req.IOMs := 400;
+   res := THttpWireResult.Create;
+   try
+      started := GetTickCount64;
+      t.Execute(req, nil, res);
+      elapsed := GetTickCount64 - started;
+      CheckTrue(res.Failure <> hfNone, 'a failure: ' + HttpFailureName(res.Failure));
+      CheckFalse(NothingSent(res.Failure), 'the request had been read by the server: ' + HttpFailureName(res.Failure));
+      if FUseWinHttp then
+         begin
+         CheckTrue(res.Failure = hfIOTimedOut, 'WinHTTP: hfIOTimedOut: ' + HttpFailureName(res.Failure) + ' ' + res.Detail);
+         end;
+      if FUseWinHttp then
+         begin
+         CheckTrue(elapsed < 5000, 'WinHTTP gave up at its coarse 4 s tick, before the server''s 5.5 s silence ends (' + IntToStr(elapsed) + ' ms)');
+         end
+      else
+         begin
+         CheckTrue(elapsed < 1400, 'it returned in about the timeout (' + IntToStr(elapsed) + ' ms)');
+         end;
+      FCutSlow := True;
+      FLock.Enter;
+      try
+         CheckTrue(FHits >= 1, 'the server did receive the request');
+      finally
+         FLock.Leave;
+      end;
+   finally
+      res.Free;
+      req.Free;
+      t.Free;
+      StopServer;
+   end;
+end;
+
+procedure THttpTransportTests.Test_ExecuteNeverRaisesAndClearsTheResult;
+var
+   t:   TPlatformHttpTransport;
+   req: THttpWireRequest;
+   res: THttpWireResult;
+begin
+   BeginTest(FTag + 'contract 2: Execute never raises, and starts from a clean result');
+   t := NewTransport;
    req := NewGet('');
    res := THttpWireResult.Create;
    try
@@ -701,6 +927,23 @@ end;
 
 (* ---- the registry --------------------------------------------------------------- *)
 
+(* The REAL WinHTTP transport is registered as preferred in this binary, so a
+  test of the registry's own rules would have it competing with the fakes. These
+  take it out for the test and put it back, exactly as it was. *)
+procedure HideRealPlatformTransports;
+begin
+{$IFDEF WINDOWS}
+   UnregisterHttpTransport(TWinHttpTransport);
+{$ENDIF}
+end;
+
+procedure RestoreRealPlatformTransports;
+begin
+{$IFDEF WINDOWS}
+   RegisterHttpTransport(TWinHttpTransport, True);
+{$ENDIF}
+end;
+
 procedure THttpTransportTests.Test_RegistrySelectsOnceAndLogsOnce;
 var
    lg:       TLogLogger;
@@ -708,15 +951,16 @@ var
    oldLevel: TLogLevel;
    first, again: TPlatformHttpTransport;
 begin
-   BeginTest('registry: the generic transport by default; a preferred one only if Available; decided once, logged once');
+   BeginTest('registry: a preferred transport only if the policy asks AND it is Available; decided once, logged once');
    SetHttpTransportForTest(nil);
+   HideRealPlatformTransports;
    ResetHttpTransportSelection;
    StartCapture(lg, keep, oldLevel);
    try
-      first := ActiveHttpTransport;
+      first := ActiveHttpTransport(HTTP_TRANSPORT_GENERIC);
       CheckTrue(first <> nil, 'something is selected');
-      CheckEquals('generic', first.Id, 'and with nothing else registered it is the generic one');
-      again := ActiveHttpTransport;
+      CheckEquals('generic', first.Id, 'generic policy: the generic one, whatever platform transport is registered');
+      again := ActiveHttpTransport(HTTP_TRANSPORT_GENERIC);
       CheckTrue(first = again, 'asked again: the same instance');
       CheckEquals(1, CountLinesWith('[HTTP] transport: generic'), 'logged once');
 
@@ -725,25 +969,104 @@ begin
       RegisterHttpTransport(TFakeUnavailablePlatform, True);
       ResetHttpTransportSelection;
       GCaptured.Clear;
-      CheckEquals('generic', ActiveHttpTransport.Id, 'an unavailable preferred transport falls back to generic');
+      CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_AUTO).Id, 'an unavailable preferred transport falls back to generic');
       CheckEquals(1, CountLinesWith('fake-unavailable'), 'and the log names the one that could not start');
       CheckTrue(CountLinesWith('cannot start') >= 1, 'and why');
 
-      (* One that can start wins. *)
+      (* One that can start wins, when the policy asks for it. *)
       RegisterHttpTransport(TFakeAvailablePlatform, True);
       ResetHttpTransportSelection;
-      CheckEquals('fake-available', ActiveHttpTransport.Id, 'an available preferred transport is chosen');
+      CheckEquals('fake-available', ActiveHttpTransport(HTTP_TRANSPORT_AUTO).Id, 'an available preferred transport is chosen');
 
-      (* Decided once: removing it does not change the answer in this session. *)
+      (* Decided once: removing it does not change the answer for the same policy. *)
       UnregisterHttpTransport(TFakeAvailablePlatform);
-      CheckEquals('fake-available', ActiveHttpTransport.Id, 'the decision is not re-made');
+      CheckEquals('fake-available', ActiveHttpTransport(HTTP_TRANSPORT_AUTO).Id, 'the decision is not re-made');
    finally
       StopCapture(lg, keep, oldLevel);
       UnregisterHttpTransport(TFakeAvailablePlatform);
       UnregisterHttpTransport(TFakeUnavailablePlatform);
+      RestoreRealPlatformTransports;
       ResetHttpTransportSelection;
    end;
-   CheckEquals('generic', ActiveHttpTransport.Id, 'back to the registry default afterwards');
+   CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_GENERIC).Id, 'back to generic afterwards');
+end;
+
+(* THE POLICY IS WHAT CHOOSES (design 6, S2). Registering a platform transport
+  must NOT make it the default: only auto and platform pick it, and a blank or
+  unknown value is generic. A changed policy re-decides and logs again; the
+  transport it replaced stays alive for a worker that may still be inside it. *)
+procedure THttpTransportTests.Test_ThePolicyChoosesTheTransport;
+var
+   lg:       TLogLogger;
+   keep:     ILogAppender;
+   oldLevel: TLogLevel;
+   generic:  TPlatformHttpTransport;
+begin
+   BeginTest('policy: generic, blank and unknown choose generic; auto and platform choose the preferred one; platform with none says so');
+   SetHttpTransportForTest(nil);
+   HideRealPlatformTransports;
+   ResetHttpTransportSelection;
+   StartCapture(lg, keep, oldLevel);
+   try
+      RegisterHttpTransport(TFakeAvailablePlatform, True);
+      CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_GENERIC).Id, 'generic');
+      generic := ActiveHttpTransport(HTTP_TRANSPORT_GENERIC);
+      CheckEquals('generic', ActiveHttpTransport('').Id, 'blank is generic');
+      CheckEquals('generic', ActiveHttpTransport('nonsense').Id, 'unknown is generic');
+      CheckTrue(generic = ActiveHttpTransport(''), 'blank and generic are the same decision: no re-decide');
+      CheckEquals('fake-available', ActiveHttpTransport(HTTP_TRANSPORT_AUTO).Id, 'auto: the preferred one');
+      CheckEquals('fake-available', ActiveHttpTransport('  PLATFORM ').Id, 'platform: the preferred one, case and spaces ignored');
+      CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_GENERIC).Id, 'and back to generic when the setting goes back');
+
+      (* platform on a platform with none: generic, and a Warn that says so. *)
+      UnregisterHttpTransport(TFakeAvailablePlatform);
+      ResetHttpTransportSelection;
+      GCaptured.Clear;
+      CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_PLATFORM).Id, 'platform with no platform transport is generic');
+      CheckTrue(CountLinesWith('this platform has none') = 1, 'and the log says so');
+      GCaptured.Clear;
+      ResetHttpTransportSelection;
+      CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_AUTO).Id, 'auto with none is generic');
+      CheckEquals(0, CountLinesWith('this platform has none'), 'and says nothing: that is what auto is');
+   finally
+      StopCapture(lg, keep, oldLevel);
+      UnregisterHttpTransport(TFakeAvailablePlatform);
+      RestoreRealPlatformTransports;
+      ResetHttpTransportSelection;
+   end;
+end;
+
+(* THE SETTING ITSELF: default generic, in the model and in the registry the
+  shared layer reads; its vocabulary is the registry's three words. *)
+procedure THttpTransportTests.Test_TheSettingDefaultsToGenericAndTheSharedLayerReadsIt;
+var
+   s:       TR4WSettings;
+   setting: TSettingBase;
+   values:  TArray<string>;
+begin
+   BeginTest('network.httpTransport: default generic; its vocabulary is generic, auto, platform; the shared layer can find it');
+   s := TR4WSettings.Create;
+   try
+      CheckEquals('generic', s.Network.HttpTransport, 'a new settings object uses the generic transport');
+      CheckTrue(s.TrySetByCommand('NETWORK HTTP TRANSPORT', 'auto'), 'set by command');
+      CheckEquals('auto', s.Network.HttpTransport, 'the property took it');
+      CheckFalse(s.TrySetByCommand('NETWORK HTTP TRANSPORT', 'curl'), 'a word outside the vocabulary is refused');
+      CheckEquals('auto', s.Network.HttpTransport, 'and changes nothing');
+   finally
+      s.Free;
+   end;
+
+   DeclareAllSettings;
+   setting := FindSetting('network.httpTransport');
+   CheckTrue(setting <> nil, 'it is registered for Preferences and for uHTTPDownload.TransportPolicy');
+   if setting <> nil then
+      begin
+      values := setting.AllowedValues;
+      CheckEquals(3, Length(values), 'three values');
+      CheckEquals('generic', values[0], 'generic first: the default');
+      CheckEquals('auto', values[1], 'auto');
+      CheckEquals('platform', values[2], 'platform');
+      end;
 end;
 
 (* ---- the shared layer, over a fake transport ------------------------------------- *)
@@ -1212,9 +1535,11 @@ begin
    BeginTest('an empty registry fails closed with a reason, never an access violation');
    SetHttpTransportForTest(nil);
    UnregisterHttpTransport(TGenericHttpTransport);
+   HideRealPlatformTransports;
    ResetHttpTransportSelection;
    try
-      CheckTrue(ActiveHttpTransport = nil, 'nothing is selected');
+      CheckTrue(ActiveHttpTransport(HTTP_TRANSPORT_GENERIC) = nil, 'nothing is selected');
+      CheckTrue(ActiveHttpTransport(HTTP_TRANSPORT_AUTO) = nil, 'nor for auto');
       request := THttpRequest.Create('https://api.invalid/x');
       try
          CheckFalse(request.Send, 'the request fails');
@@ -1227,9 +1552,56 @@ begin
       CheckTrue(reason <> '', 'with a reason');
    finally
       RegisterHttpTransport(TGenericHttpTransport, False);
+      RestoreRealPlatformTransports;
       ResetHttpTransportSelection;
    end;
-   CheckEquals('generic', ActiveHttpTransport.Id, 'the generic transport is back');
+   CheckEquals('generic', ActiveHttpTransport(HTTP_TRANSPORT_GENERIC).Id, 'the generic transport is back');
+end;
+
+(* A NEW instance of the transport under test. The contract tests call this and
+  nothing else, so they cannot silently test the wrong transport (design 5.2:
+  never go through the registry here). *)
+function THttpTransportTests.NewTransport: TPlatformHttpTransport;
+begin
+   Result := nil;
+{$IFDEF WINDOWS}
+   if FUseWinHttp then
+      begin
+      Result := TWinHttpTransport.Create;
+      end;
+{$ENDIF}
+   if Result = nil then
+      begin
+      Result := TGenericHttpTransport.Create;
+      end;
+end;
+
+(* THE CONTRACT, once per transport this platform has. The TLS refusal test is
+  the generic transport's alone (it forces OpenSSL unavailable, which WinHTTP
+  does not use); TLS correctness for WinHTTP is a bench item (design 5.4). *)
+procedure THttpTransportTests.RunContract;
+begin
+   Test_NothingSentTable;
+   Test_AnyStatusIsAnAnswerWhenAsked;
+   Test_OnlyOkIsAnAnswerWhenNotAsked;
+   Test_HeadersAndBodyBytes;
+   Test_BasicAuthIsPreemptive;
+   Test_ResponseHeadersAreReturned;
+   Test_ConditionalHeadersGoOutAndComeBack;
+   Test_ResponseCap;
+   Test_SinkReceivesTheBody;
+   Test_RedirectsOnlyWhenAsked;
+   Test_AGetStillFollowsARedirect;
+   Test_ARefusedConnectionIsNotProvedUnsent;
+   if not FUseWinHttp then
+      begin
+      Test_TlsUnavailableIsProvedUnsent;
+      end;
+   Test_ExecuteNeverRaisesAndClearsTheResult;
+   Test_BadUrlsAreFailuresNotExceptions;
+   Test_AnAttachedEmptyBodySendsContentLengthZero;
+   Test_TheBodyIsNotDecompressed;
+   Test_ASilentServerTimesOutAfterTheRequestWent;
 end;
 
 procedure THttpTransportTests.RunAllTests;
@@ -1237,21 +1609,19 @@ begin
    GCaptured := TStringList.Create;
    FLock := TCriticalSection.Create;
    try
-      Test_NothingSentTable;
-      Test_AnyStatusIsAnAnswerWhenAsked;
-      Test_OnlyOkIsAnAnswerWhenNotAsked;
-      Test_HeadersAndBodyBytes;
-      Test_BasicAuthIsPreemptive;
-      Test_ResponseHeadersAreReturned;
-      Test_ConditionalHeadersGoOutAndComeBack;
-      Test_ResponseCap;
-      Test_SinkReceivesTheBody;
-      Test_RedirectsOnlyWhenAsked;
-      Test_AGetStillFollowsARedirect;
-      Test_ARefusedConnectionIsNotProvedUnsent;
-      Test_TlsUnavailableIsProvedUnsent;
-      Test_ExecuteNeverRaisesAndClearsTheResult;
+      FUseWinHttp := False;
+      FTag        := '';
+      RunContract;
+{$IFDEF WINDOWS}
+      FUseWinHttp := True;
+      FTag        := '[winhttp] ';
+      RunContract;
+      FUseWinHttp := False;
+      FTag        := '';
+{$ENDIF}
       Test_RegistrySelectsOnceAndLogsOnce;
+      Test_ThePolicyChoosesTheTransport;
+      Test_TheSettingDefaultsToGenericAndTheSharedLayerReadsIt;
       Test_SchemeAndBearerPolicyRefuseWithoutTheTransport;
       Test_SendBuildsTheWireRequest;
       Test_ThePostVerbDefaultsReachTheWire;

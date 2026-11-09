@@ -1719,6 +1719,9 @@ begin
    aTable.Place('operating.ctrlj.stationsCallsignsMask',  NAV_NETWORK, SPrefsGroupNetworkStations);
    aTable.Place('appearance.ctrlj.showTypedCallsign',     NAV_NETWORK, SPrefsGroupNetworkStations);
    aTable.Place('files.ctrlj.allowAutoUpdate',            NAV_NETWORK, SPrefsGroupNetworkStations);
+   (* Issue 224, S2: which transport carries the program's HTTP requests. A
+     generated row on the Network page, so no designed-form change. *)
+   aTable.Place('network.httpTransport',                  NAV_NETWORK, SPrefsGroupInternet);
 
    (* -------------------------------------------------------- Appearance *)
 

@@ -342,6 +342,11 @@ begin
                          RS_NETWORK_AUTOCONNECT);
    RegisterModelSetting( 'network.shareSpots',                'NETWORK SHARE SPOTS',
                          RS_NETWORK_SHARESPOTS);
+   (* Issue 224, stage S2 (2026-11-09). Placed on the Network page by
+     uPrefsForm.PrefsPlacements. The registry key is the one the design doc
+     names; the HTTP layer reads it through FindSetting. *)
+   RegisterModelSetting( 'network.httpTransport',             'NETWORK HTTP TRANSPORT',
+                         RS_NETWORK_HTTPTRANSPORT);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
    RegisterModelSetting( 'scp.possibleCalls',                 'POSSIBLE CALLS',

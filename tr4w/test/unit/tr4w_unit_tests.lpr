@@ -681,6 +681,7 @@ uses
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
    uHttpTransport       in '..\..\src\utils\uHttpTransport.pas',
    uHttpTransportGeneric in '..\..\src\utils\uHttpTransportGeneric.pas',
+   uHttpTransportWinHttp in '..\..\src\utils\uHttpTransportWinHttp.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',

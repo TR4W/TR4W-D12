@@ -485,6 +485,25 @@ begin
       end;
 end;
 
+(* WHICH TRANSPORT THE OPERATOR ASKED FOR (network.httpTransport: generic, auto
+  or platform). Read here, in the shared layer, so the registry stays blind to
+  settings; the registry decides what the value means. NO SETTING YET -- the
+  startup country-file download runs before the configuration is loaded, and
+  the settings registry may not be declared in a tool that links this unit --
+  reads as blank, which the registry treats as generic. Read from a worker as
+  well as the main thread, like VerifyWanted; it is one short string. *)
+function TransportPolicy: string;
+var
+   setting: TSettingBase;
+begin
+   Result  := '';
+   setting := FindSetting('network.httpTransport');
+   if setting <> nil then
+      begin
+      Result := setting.AsText;
+      end;
+end;
+
 (* Log a TLS setup refusal ONCE per distinct reason, not once per request: a
   delivery worker retries, and the same diagnostic every few seconds buries the
   log. The text is the kind; a different one is logged again. The latches are
@@ -588,7 +607,7 @@ begin
      place every request passes, and nowhere else. *)
    logger.Debug('[HTTP] request %s', [RequestDebugLine(aWire, aSecret1, aSecret2)]);
 
-   transport := ActiveHttpTransport;
+   transport := ActiveHttpTransport(TransportPolicy);
    if transport = nil then
       begin
       aResult.Clear;

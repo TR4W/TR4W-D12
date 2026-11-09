@@ -6089,3 +6089,22 @@ Save in Preferences now switches each running logger on or off and sets the deli
 - [ ] **Order.** Drag two active loggers into the reverse order, Save, log a QSO: the lines for the two loggers appear in the new order.
 - [ ] **A changed key or host is NOT applied live.** Edit an active logger's API key (or the DXKeeper host), Save: the status line says N logger(s) apply after you restart, its Connection cell reads "Restart TR4W to apply", and the next QSO still goes with the OLD settings. Restart: the new settings are used. Untick a logger whose key was edited, Save: it stops at once.
 - [ ] **Remove live.** Remove an active logger's definition, Save: it receives nothing new. Add a brand-new logger and tick it, Save: its row reads "Restart TR4W to apply" until restart.
+
+## Added 2026-11-09 -- THE WINDOWS (WinHTTP) HTTP TRANSPORT, NETWORK HTTP TRANSPORT (issue 224, S2)
+
+Needs a Windows 11 machine (Windows 10 may work and is unsupported). The transport is built and its plain-HTTP
+loopback contract suite is green; the default stays `generic`. Everything below is what no loopback test can
+prove (docs/HTTP_TRANSPORT_DESIGN.md, "S2, as built" and section 5). Set Preferences > Network > "How downloads
+and uploads connect" to `auto`, Save, and read `tr4w.log`.
+
+- [ ] **It is selected, and OpenSSL is not.** After the first request the log has `[HTTP] transport: winhttp (setting: auto)`. With `cacert.pem` deliberately absent from beside the exe (and from the data directory), no `[TLS] CA bundle` line and no OpenSSL load appear, and a version check, a CTY download and a TRMASTER download succeed. (This is the failure class of issue 221 gone.)
+- [ ] **Switching live.** Change the setting to `generic`, Save, make a request: a second `[HTTP] transport: generic (setting: generic)` line; back to `auto`: `winhttp` again. No restart. Setting `platform` on this machine selects winhttp; there is no Warn.
+- [ ] **A good host.** `https://tr4w.net/version.json` (the Help menu's version check) works; note the TLS version in a capture if one is handy.
+- [ ] **Club Log and WRL.** A Club Log test-mode create and a WRL create against throwaway accounts each settle confirmed.
+- [ ] **A bad certificate is refused, and nothing was sent.** badssl.com's expired, wrong.host, self-signed and untrusted-root hosts, through an external-logger style caller that does not follow redirects: each settles with a `*_NOT_SENT` retry code and the request is absent from the server's log. (A caller that follows redirects reports "may have been sent" for the same failure by design.)
+- [ ] **Verify off.** With `network.verifyServerCertificates` false, the self-signed host proceeds and the Warn line says checking is OFF.
+- [ ] **Timeouts.** A black-holed address (for example `http://10.255.255.1/`) with the callers' 5 s connect timeout: record the real return time and the failure kind. The IO timeout was measured to be rounded up to a multiple of about 4 s (so 5 s gives 8 s); the connect timeout was NOT measured and may do the same. A timeout is `hfIOTimedOut` ("may have been sent"), never a not-sent kind.
+- [ ] **A proxy.** With a real system proxy configured (and, separately, a PAC file): the request goes through it. On a network with no WPAD server, a request does not stall (the loopback tests did not, but they bypass the proxy). Record what `WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY` honours: the user's Internet Options or the machine's WinHTTP setting.
+- [ ] **An https to http redirect is refused.** A URL that answers 302 from https to http: the request fails, the log shows `ERROR_WINHTTP_REDIRECT_FAILED`, nothing is followed. (The plain-HTTP loopback suite cannot test this.)
+- [ ] **HamScore, contest score post, SCP upload.** HamScore over plain `http://` (the default) and over `https://` with its Basic credentials; the contest score post; the SuperCheckPartial upload of a large Cabrillo body. Each completes, and the version check (main thread) does not freeze the window for longer than its timeouts.
+- [ ] **The Preferences row.** On the Network page, "How downloads and uploads connect" under "Internet downloads and uploads": the caption fits, the drop-down offers generic, auto and platform, and the tooltip shows the help text (needs `help\` staged beside the exe).

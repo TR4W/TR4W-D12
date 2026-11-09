@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(301, names.Count,
+         CheckEquals(302, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -505,7 +505,10 @@ begin
                      + ' 299 with BAND MAP WORKED MULT LIMIT (new, no CFGCA'
                      + ' row, issue 12), 2026-11-07; 301 with USE CALL'
                      + ' HISTORY FILE and CALL HISTORY FILENAME (new, no'
-                     + ' CFGCA row), 2026-11-07');
+                     + ' CFGCA row), 2026-11-07; 302 with NETWORK HTTP'
+                     + ' TRANSPORT, which transport carries the HTTP'
+                     + ' requests (new, no CFGCA row, issue 224),'
+                     + ' 2026-11-09');
       finally
          names.Free;
       end;
@@ -1747,6 +1750,7 @@ const
       + '"NAME FLAG ENABLE",'
       + '"NET STATUS UPDATE INTERVAL",'
       + '"NETWORK AUTO CONNECT",'
+      + '"NETWORK HTTP TRANSPORT",'
       + '"NETWORK SHARE SPOTS",'
       + '"NO BORDER",'
       + '"NO CAPTION",'
