@@ -391,8 +391,9 @@ exe's folder; macOS Resources, which is the data directory already). First USABL
 session:** the client puts `uTLSTrust.TrustBundleAlertText(service)` (resourcestring
 `SCaBundleMissingNotice`; '' after the first) in `TExternalDeliveryResult.OperatorNotice`, the
 worker passes it to `Notice`, and the owner shows it on the main thread through its
-`QueueAsyncCall` + `showwarning` path (`TDurableExternalLogger.ShowDeliveryNotice`, which shows
-one notice per owner: `FReported`). Nothing visible is touched from the worker. Seams:
+`QueueAsyncCall` path (`TDurableExternalLogger.ShowDeliveryNotice`, which shows one notice per
+owner, `FReported`, through `QuickDisplay`: NON-MODAL, NY4I 2026-11-08, "no modal errors", after
+an ACLOG_EDIT_UNSUPPORTED box interrupted a live contest). Nothing visible is touched from the worker. Seams:
 `SetTrustBundleFolders`, `ResetTrustBundleLatches`. NOT done (issue 221 remainder / 224): an OS
 trust-store fallback and a platform transport. The other HTTP callers (version check, CTY, POTA,
 HamScore, SCP) only read `FailReason` and are unchanged.

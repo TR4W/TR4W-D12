@@ -60,7 +60,7 @@ implementation
 
 uses
    SysUtils, sqldb, uExternalDelivery,  PostUnit, Log4D,
-   uAppStrings, TF, Forms;
+   uAppStrings, TF, Forms, logwind;
 
 constructor TDurableExternalLogger.Create(const aLoggerId, aAccount, aLogbook, aApiKey: string;
    aComputerId: AnsiChar; aEnabled: boolean);
@@ -367,7 +367,11 @@ begin
       FReported := True;
       if not tSilentExport then
          begin
-         showwarning(DisplayName + ': ' + notice);
+         (* NON-MODAL (NY4I, live contest): a notice must never interrupt the
+           operator's flow. The quick-command panel shows it, wipes it after
+           30 s and logs it at Info. The worker already logged the cause and
+           the Connection column keeps the Failed/Paused state. *)
+         QuickDisplay(DisplayName + ': ' + notice);
          end;
       end;
 end;
