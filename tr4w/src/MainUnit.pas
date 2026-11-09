@@ -936,10 +936,10 @@ begin
      // records: per CQ Magazine guidance for the California QSO Party (and
      // other state QPs that combine serial numbers with county-line ops),
      // ALL legs of a single on-air exchange share the one transmitted serial
-     // number.  Both records inherit it from the first.  See issue #892 for
-     // the related "next station's serial jumps by N" question, which is a
-     // separate architectural concern (TotalContacts/QSOTotals is bumped per
-     // LogContact call rather than per distinct station worked).
+     // number.  Both records inherit it from the first.  The NEXT station's
+     // serial moves by one, not by the number of legs (issue 28): it is
+     // LOGEDIT.NextSerialToSend, the highest serial sent + 1 (Issue #954),
+     // not a count of records.  Pinned by uTestAutomaticXQSO.
      LogContact(TempRX, True);
      end;
 end;

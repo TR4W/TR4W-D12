@@ -70,6 +70,7 @@ type
       procedure Test_LogContactCountsNoXQSOButAdvancesTheSerial;
       procedure Test_TheLoaderAndTheRescoreAskThePredicate;
       procedure Test_ASharedSerialAdvancesTheNextByOne;
+      procedure Test_TheMultiCountyDrainKeepsOneSerial;
    end;
 
 (* A SOURCE FILE UNDER tr4w/src, as text -- for a test that pins the ORDER of
@@ -98,7 +99,9 @@ uses
    LogDupe,
    uNet,
    (* NextSerialToSend, UpdateMaxSerialSent. *)
-   LogEdit;
+   LogEdit,
+   (* ActiveBand -- the band a by-band serial is read for. *)
+   LogWind;
 
 (* A CQ WW SSB QSO: a US entrant working Europe on 20 m phone -- 3 points.
    The record's own contest is set, as the log's loader sets it. *)
@@ -465,9 +468,11 @@ var
    savedMax: array[BandType] of integer;
    savedServer: integer;
    savedByBand: boolean;
+   savedBand: BandType;
    b: BandType;
 begin
    BeginTest('Test_ASharedSerialAdvancesTheNextByOne');
+   savedBand := ActiveBand;
    for b := Low(BandType) to High(BandType) do
       begin
       savedMax[b] := MaxSerialSent[b];
@@ -493,6 +498,20 @@ begin
       UpdateMaxSerialSent(Band20, 2);
       UpdateMaxSerialSent(Band20, 2);
       CheckEquals(3, NextSerialToSend, 'three legs on serial 2: next is 3');
+
+      (* A single-county entry after them: one record, one number. *)
+      UpdateMaxSerialSent(Band20, 3);
+      CheckEquals(4, NextSerialToSend, 'a single entry on serial 3: next is 4');
+
+      (* QSO NUMBER BY BAND: two legs on 40 m serial 1 move only 40 m's
+         number, and only by one; 20 m keeps its own. *)
+      Settings.Contest.QsoNumberByBand := True;
+      UpdateMaxSerialSent(Band40, 1);
+      UpdateMaxSerialSent(Band40, 1);
+      ActiveBand := Band40;
+      CheckEquals(2, NextSerialToSend, 'by band: two legs on 40 m serial 1, next on 40 m is 2');
+      ActiveBand := Band20;
+      CheckEquals(4, NextSerialToSend, 'by band: 20 m is untouched by the 40 m legs');
    finally
       for b := Low(BandType) to High(BandType) do
          begin
@@ -500,12 +519,53 @@ begin
          end;
       ServerSerialNumber := savedServer;
       Settings.Contest.QsoNumberByBand := savedByBand;
+      ActiveBand := savedBand;
    end;
+end;
+
+(* ISSUE 28, THE PATH AROUND THE HIGH-WATER MARK, READ (neither routine can be
+   driven headless): the multi-county drain copies the first leg's record and
+   never assigns NumberSent, so every leg carries one serial; and the rescore
+   the GUI runs ends in LoadinLog, which empties the mark
+   (DisposeOfMemoryAndZeroTotals) and rebuilds it from every stored serial, so
+   an edit, a delete or a rescore never restarts the count. *)
+procedure TAutomaticXQSOTests.Test_TheMultiCountyDrainKeepsOneSerial;
+var
+   text: string;
+   body: string;
+   p: integer;
+   e: integer;
+begin
+   BeginTest('Test_TheMultiCountyDrainKeepsOneSerial');
+   text := SourceText('MainUnit.pas');
+
+   p := Pos('procedure DrainPendingMultiQSORefs;', text);
+   CheckTrue(p > 0, 'DrainPendingMultiQSORefs is found');
+   e := PosEx('function LocateCallStrippingRoverCounty(', text, p);
+   CheckTrue(e > p, 'and its end');
+   body := Copy(text, p, e - p);
+   CheckTrue(Pos('TempRX := ReceivedData;', body) > 0,
+             'every leg is a copy of the first leg''s record');
+   CheckTrue(Pos('NumberSent :=', body) = 0,
+             'and the drain assigns no serial of its own');
+
+   p := Pos('procedure RescoreLog;' + sLineBreak + 'begin', text);
+   CheckTrue(p > 0, 'RescoreLog''s body is found');
+   e := PosEx('end;', text, p);
+   body := Copy(text, p, e - p);
+   CheckTrue(Pos('tUpdateLog(actRescore);', body) > 0, 'RescoreLog rescores');
+   CheckTrue(Pos('tUpdateLog(actRescore);', body) < Pos('LoadinLog;', body),
+             'and then reloads, which rebuilds the serial mark');
+
+   p := PosEx('UpdateMaxSerialSent(TempRXData.Band, TempRXData.NumberSent);',
+              text, Pos('procedure LoadinLog;' + sLineBreak + 'label', text));
+   CheckTrue(p > 0, 'the loader feeds every stored serial to the mark');
 end;
 
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
    Test_ASharedSerialAdvancesTheNextByOne;
+   Test_TheMultiCountyDrainKeepsOneSerial;
    Test_TheContestsRuleMakesAnXQSO;
    Test_AnXQSOScoresNothing;
    Test_AnEditedBandReclassifiesTheQSO;
