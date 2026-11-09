@@ -270,7 +270,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1140,6 +1168,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2490,11 +2546,13 @@
 </ol>
 <p>Normally the worker posts every two minutes. <strong>Push Now</strong> requests an immediate cycle. Unconfirmed contacts remain queued for retry; explicit server confirmation clears them. A growing queue or repeated error needs attention: check credentials, service URL, connectivity, and whether the service accepts the contest. Both radios use the same uploader.</p>
 <h2 id="rebuild-the-remote-log">Rebuild the remote log<a class="headerlink" href="#rebuild-the-remote-log" title="Permanent link">&para;</a></h2>
-<p>Use <strong>Tools → HamScore: Resync log from scratch</strong> when the remote log needs to be rebuilt from the current local log. This queues a remote <code>&lt;deletelog&gt;</code> request and walks the current contacts for upload. Contact uploads still require the contact-information setting and an RTC-capable contest: do not request a remote-log rebuild in score-only mode. It changes the remote log; use it deliberately for the correct contest/account. It does not delete the local contest database.</p>
-<div class="admonition warning">
-<p class="admonition-title">Current status-window button limitation</p>
-<p>The status window's <strong>Resync from log</strong> button currently calls a helper that queues only <code>&lt;deletelog&gt;</code> and tells the operator to use the Tools menu to enqueue all QSOs. Use the complete Tools-menu action for a rebuild, rather than relying on that button alone.</p>
-</div>
+<p>In source through <strong>48806af1</strong>, <strong>Tools → Re-send Log to HamScore...</strong> and the status window's <strong>Re-send Log to HamScore...</strong> button open the same confirmation dialog:</p>
+<ul>
+<li><strong>Re-send only</strong> uploads the current contacts with their original IDs, without deleting remote contacts. A QSO deleted locally can therefore remain on the server.</li>
+<li><strong>Delete and re-send</strong> deletes the server's log for this contest, then uploads the current contacts. The remote deletion cannot be undone, and the scoreboard can be empty or incomplete until the upload finishes.</li>
+<li><strong>Cancel</strong> leaves the queue unchanged.</li>
+</ul>
+<p>Both sending choices request an immediate upload cycle. Confirm the correct contest/account and contact-upload settings before proceeding. Neither choice deletes the local database. Older builds used a different caption and had an incomplete status-window resync action; those instructions no longer describe this source.</p>
 <p>A server request for <code>ResyncLog</code> is reported for manual action rather than automatically rebuilding. Do not treat the in-memory upload queue as a backup of the local database. See <a href="../log/backup.html">backups</a> and <a href="../log/diagnostics.html">diagnostic logging</a> for recovery evidence.</p>
 <details class="info">
 <summary>Source check</summary>

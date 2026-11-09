@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1085,6 +1113,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../operating/pota.html" class="md-nav__link">
         
   
@@ -1433,10 +1489,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configure-a-destination" class="md-nav__link">
+  <a href="#make-and-check-a-backup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configure a destination
+        Make and check a backup
       
     </span>
   </a>
@@ -1444,10 +1500,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-the-backup-files-mean" class="md-nav__link">
+  <a href="#set-an-automatic-interval" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What the backup files mean
+        Set an automatic interval
       
     </span>
   </a>
@@ -1455,10 +1511,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#avoid-copying-only-an-open-database" class="md-nav__link">
+  <a href="#snapshot-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Avoid copying only an open database
+        Snapshot files
       
     </span>
   </a>
@@ -1466,10 +1522,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#check-a-recovery-copy-before-you-need-it" class="md-nav__link">
+  <a href="#recover-safely" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Check a recovery copy before you need it
+        Recover safely
       
     </span>
   </a>
@@ -2484,10 +2540,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configure-a-destination" class="md-nav__link">
+  <a href="#make-and-check-a-backup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configure a destination
+        Make and check a backup
       
     </span>
   </a>
@@ -2495,10 +2551,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-the-backup-files-mean" class="md-nav__link">
+  <a href="#set-an-automatic-interval" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What the backup files mean
+        Set an automatic interval
       
     </span>
   </a>
@@ -2506,10 +2562,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#avoid-copying-only-an-open-database" class="md-nav__link">
+  <a href="#snapshot-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Avoid copying only an open database
+        Snapshot files
       
     </span>
   </a>
@@ -2517,10 +2573,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#check-a-recovery-copy-before-you-need-it" class="md-nav__link">
+  <a href="#recover-safely" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Check a recovery copy before you need it
+        Recover safely
       
     </span>
   </a>
@@ -2545,53 +2601,28 @@
 
 
 <h1 id="back-up-your-log">Back up your log<a class="headerlink" href="#back-up-your-log" title="Permanent link">&para;</a></h1>
-<p>TR4W can create a verified snapshot of the open contest database, manually or after a chosen number of logged contacts.</p>
-<h2 id="configure-a-destination">Configure a destination<a class="headerlink" href="#configure-a-destination" title="Permanent link">&para;</a></h2>
+<p>TR4W creates a verified snapshot of the open contest database. A manual backup works without an external backup destination.</p>
+<h2 id="make-and-check-a-backup">Make and check a backup<a class="headerlink" href="#make-and-check-a-backup" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Open settings with <strong>Ctrl+J</strong> and find <strong>Log backup</strong>. Searching for <code>BACKUP LOG FILE NAME</code> also locates the destination control.</li>
-<li>In <strong>Copy to:</strong>, enter a destination filename or use <strong>Browse...</strong>. Choose a different physical disk if you want protection against failure of the log's disk. Use a distinct filename for each contest.</li>
-<li>In <strong>Back up every:</strong>, set the number of QSOs between automatic backups. <strong>0 = never</strong> disables the automatic schedule. For example, <code>10</code> requests a backup at each ten-QSO total.</li>
-<li>Apply the settings, return to the operating window, and press <strong>Alt+F</strong> for a manual backup.</li>
-<li>Look for the success message <strong>Log backed up to …</strong>, then confirm the file exists at the reported destination.</li>
+<li>Press <strong>Alt+F</strong> to back up the open log.</li>
+<li>Read the result and note the local snapshot path. Local backups are kept in the <strong>backup</strong> folder under TR4W's writable settings folder.</li>
+<li>If you configured <strong>BACKUP DESTINATION</strong>, TR4W also copies the snapshot there in the background. Check that copy's completion separately: a successful local snapshot does not prove the external copy completed.</li>
+<li>Confirm the reported file exists. Keep a copy on another physical disk for protection against loss of the local disk.</li>
 </ol>
-<div class="admonition warning">
-<p class="admonition-title">Set the destination first</p>
-<p>A manual backup with an empty destination does not create a file. A periodic interval alone is not enough.</p>
-</div>
-<h2 id="what-the-backup-files-mean">What the backup files mean<a class="headerlink" href="#what-the-backup-files-mean" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>File</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>The destination you configured</td>
-<td>Latest successfully published snapshot.</td>
-</tr>
-<tr>
-<td>The same name followed by <code>.bak</code></td>
-<td>Previous destination displaced by a later successful backup cycle.</td>
-</tr>
-<tr>
-<td>The same name followed by <code>.new</code></td>
-<td>Staging file; a failure message may identify it as a verified copy that could not be published.</td>
-</tr>
-</tbody>
-</table>
-<p>TR4W writes a snapshot and checks its integrity before replacing the destination. It reports failures and records them in the diagnostic log. If a message names a <code>.new</code> file, preserve that file and the existing backups while investigating; the extension alone does not establish whether a staged file is usable.</p>
-<h2 id="avoid-copying-only-an-open-database">Avoid copying only an open database<a class="headerlink" href="#avoid-copying-only-an-open-database" title="Permanent link">&para;</a></h2>
-<p>Use TR4W's backup command while the contest is open. The database can have committed contacts in a separate write-ahead log, so copying only the <code>.db</code> file during operation can miss data.</p>
-<p>For a full station archive, close TR4W and retain the contest folder and your settings as well. The log snapshot procedure does not establish that all external station files or downloaded databases are included.</p>
-<h2 id="check-a-recovery-copy-before-you-need-it">Check a recovery copy before you need it<a class="headerlink" href="#check-a-recovery-copy-before-you-need-it" title="Permanent link">&para;</a></h2>
-<p>See <a href="restore.html">Restore files and recover a contest</a> for the copy-first recovery procedure, settings recovery, and handling database sidecar files.</p>
-<p>Keep the backup untouched and make a separate working copy for a restore rehearsal. Open that copy as an existing contest and compare the contest identity and recent contacts against the original. This rehearsal remains an operator-review task for the preview; do not replace a live contest database as part of it.</p>
-<p>If a backup fails, check the destination path, write permissions, available space, and whether the destination is open elsewhere. Repeat the backup and look for explicit success.</p>
+<h2 id="set-an-automatic-interval">Set an automatic interval<a class="headerlink" href="#set-an-automatic-interval" title="Permanent link">&para;</a></h2>
+<p>Open <strong>Ctrl+J</strong>, find the backup settings, and set the number of new QSOs between backups. <strong>0</strong> disables the automatic schedule.</p>
+<p>The interval counts newly logged records since the last backup, rather than the current log total. It starts at zero each session. New dupes, X-QSOs, and contacts received from peer stations count; notes do not. A manual backup resets the interval counter, including a failed attempt, so check the result and retry a failure yourself.</p>
+<p>An optional <strong>BACKUP DESTINATION</strong> adds a background copy; it is not required for local backups.</p>
+<h2 id="snapshot-files">Snapshot files<a class="headerlink" href="#snapshot-files" title="Permanent link">&para;</a></h2>
+<p>The periodic snapshot is named for its log, with <strong>periodic.db</strong> in the filename. A successful replacement retains the prior snapshot as <strong>.bak</strong>. A <strong>.new</strong> file is a staging file: preserve it after a failure, but check the result and diagnostic log before trusting it.</p>
+<p><strong>Clear Log</strong> first makes a separate UTC-dated snapshot in the local backup folder. If that snapshot fails, clearing stops without removing the contacts. Keep the dated snapshot until you have verified the intended result.</p>
+<h2 id="recover-safely">Recover safely<a class="headerlink" href="#recover-safely" title="Permanent link">&para;</a></h2>
+<p>Use TR4W's backup command while the log is open. Copying only an active database file can miss committed contacts still in its write-ahead log.</p>
+<p>For a full station archive, close TR4W and retain the contest folder, settings, and custom support files as well. A log snapshot does not back up every station file or credential.</p>
+<p>Follow <a href="restore.html">Restore files and recover a contest</a> to rehearse recovery on a separate copy. Check identity, contact count, recent QSOs, and score before relying on it.</p>
 <details class="info">
-<summary>Source check</summary>
-<p>Controls: <code>ui/lcl/uPrefsForm.lfm</code> and <code>.pas</code>. Schedule: <code>trdos/logsubs2.pas</code>. Manual action: <code>uAccelerators.pas</code>, <code>MainUnit.pas</code>, and <code>BackupLogNow</code> in <code>trdos/logstuff.pas</code>. Snapshot verification and rotation: <code>domain/uLogBackup.pas</code> and <code>uLogStore.pas</code>. This guide has not performed a restore test.</p>
+<summary>Source and review boundary</summary>
+<p>Reviewed at 48806af1: uAppPaths.BackupDir, uLogStore, domain/uLogBackup, uBackupCopyService, and manual/periodic backup callers. No live contest was cleared or restored during this review.</p>
 </details>
 
 

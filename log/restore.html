@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1077,6 +1105,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2505,7 +2561,7 @@
 <h2 id="restore-a-verified-log-snapshot">Restore a verified log snapshot<a class="headerlink" href="#restore-a-verified-log-snapshot" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Stop logging and close TR4W. Preserve the current contest folder before replacing anything, including any <code>.db-wal</code> and <code>.db-shm</code> files that remain. Keep the originals together and untouched for investigation.</li>
-<li>Locate the most recent successful <a href="backup.html">TR4W backup</a>. The configured destination is the latest published snapshot; its <code>.bak</code> is the prior snapshot. A <code>.new</code> file needs the backup result/log checked before treating it as a valid backup.</li>
+<li>Locate the most recent successful <a href="backup.html">TR4W backup</a>. Start with the reported local snapshot in the writable settings folder's <code>backup</code> directory; an optional external destination holds a separate background copy. The snapshot's <code>.bak</code> is the prior snapshot. A <code>.new</code> file needs the backup result/log checked before treating it as a valid backup.</li>
 <li>Make a separate working copy of the chosen snapshot in a recovery folder. Give the copy a <code>.db</code> extension if the backup filename has another extension, so it can be selected as a database. Keep the backup itself unchanged.</li>
 <li>Start TR4W and open that copy as an existing contest. TR4W performs database identity, version, integrity, and foreign-key checks during opening. If it refuses the file, retain the error and diagnostic log; do not work around it by creating an empty file over the original.</li>
 <li>Verify the contest, station identity, contact count, recent QSOs, and score. Determine which QSOs occurred after the snapshot. Reconcile them from independent records before continuing; a successful open alone does not show that the backup contains every contact.</li>
@@ -2523,7 +2579,7 @@
 <tbody>
 <tr>
 <td><code>tr4w.json</code> station settings and window layout</td>
-<td>With TR4W closed, retain the current file and restore a known-good copy to the actual settings path. This can also restore older radio addresses, passwords, and window positions; check them before operating.</td>
+<td>With TR4W closed, retain the current file and restore a known-good copy to the actual settings path. This can restore older radio addresses and window positions; check them before operating. Passwords and API keys stored in the OS credential store are not included in this file; re-enter them when moving to another computer.</td>
 </tr>
 <tr>
 <td>CTY.DAT and TRMASTER.DTA</td>

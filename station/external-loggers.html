@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#send-contacts-to-an-external-logger" class="md-skip">
+        <a href="#send-contacts-to-external-loggers" class="md-skip">
           Skip to content
         </a>
       
@@ -270,7 +270,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -631,6 +631,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../start/migration.html" class="md-nav__link">
         
   
@@ -895,10 +923,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#which-integrations-are-implemented" class="md-nav__link">
+  <a href="#configure-destinations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Which integrations are implemented?
+        Configure destinations
       
     </span>
   </a>
@@ -906,10 +934,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#set-up-dxkeeper-forwarding" class="md-nav__link">
+  <a href="#provider-details-and-limits" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Set up DXKeeper forwarding
+        Provider details and limits
       
     </span>
   </a>
@@ -917,21 +945,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#check-edits-and-delivery-failures" class="md-nav__link">
+  <a href="#check-delivery-and-credentials" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Check edits and delivery failures
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command reference
+        Check delivery and credentials
       
     </span>
   </a>
@@ -1173,6 +1190,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2484,10 +2529,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#which-integrations-are-implemented" class="md-nav__link">
+  <a href="#configure-destinations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Which integrations are implemented?
+        Configure destinations
       
     </span>
   </a>
@@ -2495,10 +2540,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#set-up-dxkeeper-forwarding" class="md-nav__link">
+  <a href="#provider-details-and-limits" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Set up DXKeeper forwarding
+        Provider details and limits
       
     </span>
   </a>
@@ -2506,21 +2551,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#check-edits-and-delivery-failures" class="md-nav__link">
+  <a href="#check-delivery-and-credentials" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Check edits and delivery failures
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#command-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Command reference
+        Check delivery and credentials
       
     </span>
   </a>
@@ -2544,58 +2578,63 @@
 
 
 
-<h1 id="send-contacts-to-an-external-logger">Send contacts to an external logger<a class="headerlink" href="#send-contacts-to-an-external-logger" title="Permanent link">&para;</a></h1>
-<p>Use TR4W for the contest and forward contacts to another logging application when its integration is implemented. This is separate from importing or exporting a file and separate from using another application as a radio-control bridge.</p>
-<h2 id="which-integrations-are-implemented">Which integrations are implemented?<a class="headerlink" href="#which-integrations-are-implemented" title="Permanent link">&para;</a></h2>
+<h1 id="send-contacts-to-external-loggers">Send contacts to external loggers<a class="headerlink" href="#send-contacts-to-external-loggers" title="Permanent link">&para;</a></h1>
+<p>TR4W can send contacts to several named external loggers. Each destination has its own queue and delivery state. Network work runs away from the main logging window; saving a contact does not mean the receiving logger has accepted it yet.</p>
+<h2 id="configure-destinations">Configure destinations<a class="headerlink" href="#configure-destinations" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Open <strong>Ctrl+J → External Software → External Logger</strong>.</li>
+<li>Choose <strong>Add...</strong>, give the destination a useful name, and select its provider. Enter that provider's connection details.</li>
+<li>Select <strong>Enabled</strong> for destinations that should send new QSOs. Drag an <strong>Order</strong> cell to change their order. Double-click a row, or right-click and choose <strong>Edit...</strong>, to edit it.</li>
+<li>Save Preferences. <strong>Enabled</strong> and <strong>Order</strong> changes apply immediately on Save. A new destination or changed connection details require a restart; check for <strong>Restart TR4W to apply</strong> in the row.</li>
+<li>In a practice log, send one contact and check it in every enabled receiving logger. Compare the call, UTC time, band, mode, and exchange.</li>
+</ol>
+<p>Order controls dispatch order, not the order in which independent remote services finish. Changing a destination's name does not redirect its existing backlog to another account.</p>
+<h2 id="provider-details-and-limits">Provider details and limits<a class="headerlink" href="#provider-details-and-limits" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Choice</th>
-<th>Status in this source snapshot</th>
+<th>Provider</th>
+<th>Connection details</th>
+<th>Changes and deletes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>NONE</code></td>
-<td>No external logger.</td>
+<td>DXKeeper</td>
+<td>Receiving TCP host/IP and port</td>
+<td>Supported; replacement can involve deleting and re-sending the QSO. Check the receiving log after an interrupted replacement.</td>
 </tr>
 <tr>
-<td><code>DXKEEPER</code></td>
-<td>QSO delivery implementation is present, with a queued TCP sender. Operator verification is still needed.</td>
+<td>World Radio League</td>
+<td>API key; choose the logbook from the retrieved list</td>
+<td>Supported, with persistent delivery/retry state. Create logbooks in WRL before selecting one here.</td>
 </tr>
 <tr>
-<td><code>ACLOG</code></td>
-<td>Selectable, but the QSO-send method reports “not yet implemented.”</td>
+<td>Club Log</td>
+<td>Club Log callsign and API token</td>
+<td>Supported through the bearer-token QSO API. An edit deletes the old remote QSO then creates its replacement; a failure between these steps requires review. No Club Log email/password is needed.</td>
 </tr>
 <tr>
-<td><code>HRD</code></td>
-<td>Selectable, but the QSO-send method reports “not yet implemented.”</td>
+<td>Cloudlog / Wavelog — <strong>Unreleased source</strong></td>
+<td>Server URL, API key, station profile ID</td>
+<td>New QSOs only. Editing or deleting a previously sent QSO produces a failed delivery row; correct the remote log manually.</td>
+</tr>
+<tr>
+<td>ACLog — <strong>Unreleased source</strong></td>
+<td>Host/IP and port; defaults 127.0.0.1:1100. Enable <strong>TCP API Enabled</strong> in ACLog.</td>
+<td>New QSOs only. Changes/deletes of sent QSOs fail explicitly; correct the remote log manually. Live ACLog verification remains outstanding. Direct logging does not perform ACLog contest scoring.</td>
 </tr>
 </tbody>
 </table>
-<p>The <strong>N3FJP ACLog (HamLib bridge)</strong> entry in the radio factory is a different integration. Its presence does not establish contact forwarding to ACLog.</p>
-<h2 id="set-up-dxkeeper-forwarding">Set up DXKeeper forwarding<a class="headerlink" href="#set-up-dxkeeper-forwarding" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Configure the receiving logger to accept its supported TCP logging interface, and note its listening address and port.</li>
-<li>In TR4W, open settings with <strong>Ctrl+J</strong>, then <strong>External Software → External Logger</strong>.</li>
-<li>Select <code>DXKEEPER</code> in <strong>Program:</strong>.</li>
-<li>Enter <strong>Address:</strong> and <strong>Port:</strong> to match the receiving service. When both programs run on the same computer, use the local address for that service.</li>
-<li>Select <strong>Send QSOs to it as they are logged</strong>, apply the settings, and restart TR4W. The panel explicitly says these settings take effect on the next start.</li>
-<li>In a practice contest, log one contact and verify it appears once in DXKeeper with the expected call, date/time, band, mode, and reports.</li>
-</ol>
-<h2 id="check-edits-and-delivery-failures">Check edits and delivery failures<a class="headerlink" href="#check-edits-and-delivery-failures" title="Permanent link">&para;</a></h2>
-<p>The sender queues operations away from the main operating window and retries connections. QSO replacement uses a delete followed by a re-log; this is not an atomic transaction in the external logger. Check the receiving log after an edit, especially if a connection failed during it.</p>
-<p>Do not assume that a contact visible in TR4W has already reached the external logger. Compare the two logs and inspect the diagnostic log for delivery errors. The source describes a persistent replay queue as deferred, so do not promise delivery across an application restart.</p>
-<h2 id="command-reference">Command reference<a class="headerlink" href="#command-reference" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../reference/commands/e-l.html#external-logger">EXTERNAL LOGGER</a></li>
-<li><a href="../reference/commands/e-l.html#external-logger-enabled">EXTERNAL LOGGER ENABLED</a></li>
-<li><a href="../reference/commands/e-l.html#external-logger-address">EXTERNAL LOGGER ADDRESS</a></li>
-<li><a href="../reference/commands/e-l.html#external-logger-port">EXTERNAL LOGGER PORT</a></li>
-</ul>
+<p>The first three providers are covered by the 5.0.37 release notes. Additional providers describe source through <strong>48806af1</strong>; check your installed build before expecting them in its list. The ACLog radio-control bridge is a separate feature.</p>
+<p>For <strong>Log4OM</strong>, use TR4W's standard <strong>UDP</strong> contact-broadcast settings rather than adding an external-logger provider. New-QSO forwarding is documented in the change history; edit forwarding still needs verification.</p>
+<h2 id="check-delivery-and-credentials">Check delivery and credentials<a class="headerlink" href="#check-delivery-and-credentials" title="Permanent link">&para;</a></h2>
+<p>Review pending, retrying, uncertain, and failed counts. <strong>Enabled</strong> means a destination is selected for sending, not that all its contacts have arrived. A persistent queue can resume earlier work after startup, before you log a new QSO. Investigate an uncertain result in the receiving log before retrying it, to avoid duplicates.</p>
+<p>Not every remote API supports the same operations. A successful create does not establish that a later edit or delete succeeded. Keep the TR4W log and inspect the receiving log when a delivery fails.</p>
+<p>API keys and passwords use the operating system's credential store. Copying the settings file to another computer does not copy those secrets; re-enter credentials there. Resolve a locked or unavailable credential store rather than expecting a plaintext fallback.</p>
 <details class="info">
-<summary>Evidence and review status</summary>
-<p><code>uExternalLoggerFactory.pas</code> supplies the choices and flags incomplete integrations; <code>uExternalLogger.pas</code> contains the actual sender methods; <code>uExternalLoggerBase.pas</code> describes queue and replacement semantics. UI labels and restart instructions come from <code>ui/lcl/uPrefsForm.lfm</code> and <code>.pas</code>. This page does not report a live DXKeeper test.</p>
+<summary>Source and review boundary</summary>
+<p>Reviewed November 8, 2026 against release notes and the provider units, registry, queue service, and external-logger grid at 48806af1. This documentation update did not send contacts to live services.</p>
 </details>
 
 

@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1077,6 +1105,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2381,6 +2437,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#november-8-review-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        November 8 review scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#evidence-by-page" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2495,6 +2562,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#november-8-review-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        November 8 review scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#evidence-by-page" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2559,12 +2637,16 @@
 <td><code>24f06a30081b607dbca5020fe583d97944be97d8</code>, version 5.0.22</td>
 </tr>
 <tr>
-<td>Operator-guide update</td>
-<td>Changes through <code>3753d2ba0327285fde1a11fb0956a010b0a088f9</code> on main, version 5.0.26; reviewed September 29, 2026</td>
+<td>Earlier operator review</td>
+<td>5.0.26 through 3753d2ba; September 29, 2026</td>
 </tr>
 <tr>
-<td>Published packages</td>
-<td><a href="https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.26">5.0.26 release assets</a>, checked September 29, 2026</td>
+<td>Current operator review</td>
+<td>Release notes and changes through 48806af1, November 8, 2026; 5.0.37 plus explicitly marked Unreleased changes</td>
+</tr>
+<tr>
+<td>Published release</td>
+<td><a href="https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.37">5.0.37</a>, published November 7, 2026; release metadata checked November 8. Packages were not installed in this review.</td>
 </tr>
 <tr>
 <td>TR4W wiki</td>
@@ -2582,6 +2664,9 @@
 </table>
 <p>The wiki was read from its Git repository after browser retrieval failed. It is a source for editorial comparison, not an automatically published mirror. No external images or entire manuals are copied into this prototype.</p>
 <p>Operator instructions are included in this guide. Development-tree filenames below and in source notes identify editorial evidence; they are not external links or required reading. The generated reference retains this provenance without requiring access to the TR4W-D12 repository.</p>
+<h2 id="november-8-review-scope">November 8 review scope<a class="headerlink" href="#november-8-review-scope" title="Permanent link">&para;</a></h2>
+<p>RELEASE_NOTES.md and CHANGES.md were compared with the 5.0.26 guide. Refreshed instructions cover contest creation, Preferences, backups/recovery, transactional imports, logger queues and provider limits, per-radio polling, and source-only network/call-history/band-map additions. Related export and keyboard instructions were reconciled. No live service, physical radio, multi-station network, or GUI recovery test was run.</p>
+<p>Generated reference tables still use the original baseline. The command generator refused the changed settings vocabulary without writing a replacement. Its inventory and extraction rules need a separate review; historical counts and names must not be represented as a current inventory. See DOCS.md in the repository for maintenance details.</p>
 <h2 id="evidence-by-page">Evidence by page<a class="headerlink" href="#evidence-by-page" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2704,7 +2789,7 @@
 </tr>
 <tr>
 <td>Reports / imports</td>
-<td>Menus, <code>MainUnit.ImportFromADIF</code>, ADIF and report implementations</td>
+<td>Menus, <code>MainUnit.ImportFromADIF</code> batch transaction, ADIF and report implementations</td>
 <td>Individual report output and representative migration files</td>
 </tr>
 <tr>
@@ -2721,7 +2806,7 @@
 </table>
 <h2 id="editorial-rules">Editorial rules<a class="headerlink" href="#editorial-rules" title="Permanent link">&para;</a></h2>
 <p>The operating additions also reconcile the old reference manual and wiki SO2R tips with current code: colors and resizing (<code>uPrefsForm</code>, <code>uMainForm</code>), monitor recovery (<code>MainUnit</code>, <code>uWindowLayoutStore</code>), radio-panel fields (<code>uRadioPanelForm</code>), callsign assistance (<code>logedit</code>, <code>logscp</code>), message programming (<code>uEditMessageForm</code>, <code>logsend</code>), HamScore (<code>uHamScore</code>, Tools and status-window handlers), and radio reconnects (<code>ResetRadioPorts</code>). Each page records its source check. Physical-radio, multi-monitor, remote-scoreboard, and GUI restore rehearsals remain open.</p>
-<p>The HamScore source check exposed a current UI limitation: the status-window resync button queues the remote delete request without the full-log walk performed by the Tools action. The operator page documents the distinction; this documentation change does not modify the application.</p>
+<p>The earlier HamScore status-window resync limitation has been fixed in the reviewed source. Both entry points now use a confirmation dialog offering re-send only, delete and re-send, or cancel; the operator page reflects that behavior.</p>
 <ol>
 <li>Label the target version and platform. Never turn a development plan into a released feature claim.</li>
 <li>Start a procedure with an operator task and finish with a visible success check.</li>

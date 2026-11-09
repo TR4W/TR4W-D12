@@ -270,7 +270,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="pota.html" class="md-tabs__link">
+        <a href="contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1090,6 +1118,34 @@
   
   
     <li class="md-nav__item">
+      <a href="contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="pota.html" class="md-nav__link">
         
   
@@ -1260,6 +1316,17 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sweepstakes-call-history-in-newer-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sweepstakes call history in newer source
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#use-the-possible-call-strip" class="md-nav__link">
@@ -2462,6 +2529,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sweepstakes-call-history-in-newer-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sweepstakes call history in newer source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#use-the-possible-call-strip" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2526,6 +2604,9 @@
 </tbody>
 </table>
 <p>Open preferences with <strong>Ctrl+J</strong> and search for those command names. Use the <a href="../reference/commands/index.html">current command reference</a> for their current storage and accepted settings. In particular, do not assume the old manual's <code>NAMES</code> default is the current default: the current settings constructor selects <strong>ALL</strong>.</p>
+<h2 id="sweepstakes-call-history-in-newer-source">Sweepstakes call history in newer source<a class="headerlink" href="#sweepstakes-call-history-in-newer-source" title="Permanent link">&para;</a></h2>
+<p><strong>Unreleased source through 48806af1:</strong> enable <strong>USE CALL HISTORY FILE</strong> and choose <strong>CALL HISTORY FILENAME</strong> in Preferences to use an N1MM-format history file. For Sweepstakes, a call not already known in the local log can prefill its check and section. With no filename set, the defaults are <strong>SSCW.txt</strong> for CW and <strong>SSSSB.txt</strong> for phone. Always confirm the received exchange on the air.</p>
+<p><strong>Help → Download call history for this contest</strong> downloads the contest file on demand from supercheckhistory.com. Downloads do not run for every QSO or on a timer. Invalid downloads do not replace an existing file. If you configured a custom filename, confirm that the downloaded file is the one you selected; downloading does not necessarily change that choice.</p>
 <h2 id="use-the-possible-call-strip">Use the possible-call strip<a class="headerlink" href="#use-the-possible-call-strip" title="Permanent link">&para;</a></h2>
 <p>Enter the call or uncertain fragment. <strong>Ctrl+P</strong> requests possible-call processing (and the associated short-path rotor action if configured). With the default keys, <strong>comma</strong> selects left, <strong>period</strong> selects right, and <strong>semicolon</strong> copies the selected call into the callsign entry field. The three keys are configurable. Selection alone does not log a contact.</p>
 <p>The current strip uses bold selection and red/white dupe cells rather than relying on the old manual's angle-bracket cursor illustration. It clears when there are no candidates, so a previous result should not be mistaken for the current search.</p>

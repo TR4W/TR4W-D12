@@ -268,7 +268,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1077,6 +1105,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2570,7 +2626,7 @@
 <p>TR4W uses a SQLite database as the contest log. Protection comes from several checks at different stages, not from a single “database is safe” flag.</p>
 <h2 id="before-accepting-contacts">Before accepting contacts<a class="headerlink" href="#before-accepting-contacts" title="Permanent link">&para;</a></h2>
 <p>The database layer checks file identity and schema version. A foreign database or a schema newer than the program understands is refused rather than treated as a compatible log.</p>
-<p>On opening the contest store, TR4W checks database integrity and then checks whether it can write. An integrity failure or a failed write check disables the log store and reports the problem. Opening a file successfully is not treated as proof that a later QSO can be saved.</p>
+<p>On opening the contest store, TR4W checks database integrity and then checks whether it can write. An integrity failure prevents normal logging and reports the problem. If another process locks the log, startup offers <strong>Retry</strong>, <strong>Open read-only (no logging)</strong>, or <strong>Quit TR4W</strong>. Read-only mode permits viewing and export but cannot save QSOs. Release the other process's lock and retry when you need to log; opening read-only does not repair a damaged database. Opening a file successfully is not treated as proof that a later QSO can be saved.</p>
 <table>
 <thead>
 <tr>

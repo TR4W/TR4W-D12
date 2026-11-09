@@ -16,7 +16,7 @@
         <link rel="prev" href="language.html">
       
       
-        <link rel="next" href="../operating/pota.html">
+        <link rel="next" href="../operating/contests.html">
       
       
         
@@ -270,7 +270,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../operating/pota.html" class="md-tabs__link">
+        <a href="../operating/contests.html" class="md-tabs__link">
           
   
   
@@ -611,6 +611,34 @@
     
   
     Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../start/preferences.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and save settings
   
 
     
@@ -1085,6 +1113,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#version-compatibility-in-newer-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version compatibility in newer source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-the-protocol-does-and-does-not-promise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1173,6 +1212,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operating/contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contest additions and rule checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2506,6 +2573,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#version-compatibility-in-newer-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version compatibility in newer source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-the-protocol-does-and-does-not-promise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2561,8 +2639,11 @@
 <p>The client compares local and server log information. A mismatch can open <strong>Differences in the log</strong>, with <strong>Synchronize</strong>, <strong>Clear all logs</strong>, and <strong>Exit</strong> choices.</p>
 <p>Synchronization pulls the server's log; do not assume it merges every unsent local contact. Establish which log is authoritative and preserve local work before replacing it. <strong>Clear all logs</strong> is a destructive action, not a routine fix for a reconnect warning.</p>
 <p><a href="../reference/commands/q-s.html#server-auto-synchronize-log-on-connect">SERVER AUTO SYNCHRONIZE LOG ON CONNECT</a> can bypass the mismatch dialog when enabled and the contest matches, or when the server has no contest yet. A different contest falls back to the dialog. Enable this only after testing the intended server and synchronization behavior.</p>
+<h2 id="version-compatibility-in-newer-source">Version compatibility in newer source<a class="headerlink" href="#version-compatibility-in-newer-source" title="Permanent link">&para;</a></h2>
+<p><strong>Unreleased source through 48806af1</strong> uses <strong>protocol 2</strong> in both the client and TR4WServer. A HELLO handshake checks protocol compatibility. Delphi 7 / 4.x clients and older 5.x builds without this handshake cannot join. Update the server and every station together; a shared password alone does not make versions compatible.</p>
+<p>The handshake carries the registered contest identifier, allowing the newer contests to travel over the multi-op link. Earlier restrictions that excluded new contest identifiers no longer describe this source. Test the actual client/server pair before an event.</p>
 <h2 id="what-the-protocol-does-and-does-not-promise">What the protocol does and does not promise<a class="headerlink" href="#what-the-protocol-does-and-does-not-promise" title="Permanent link">&para;</a></h2>
-<p>The current networking analysis describes a legacy protocol with a plaintext password and a separate bulk-sync connection. It also contains a proposed V2 protocol for another project; TLS, Protocol Buffers, and that proposal's server-authoritative behavior are not promises of this TR4W build. Use the station network accordingly rather than treating the legacy password as encrypted transport.</p>
+<p>The password and bulk-sync transport are not made encrypted by the protocol-2 handshake. The networking analysis also describes a proposed V2 design for another project; its TLS, Protocol Buffers, and server-authoritative behavior are not features of this TR4W handshake. Use a trusted station network.</p>
 <p>Database integrity at one client and agreement between several clients are different properties. Verify both <a href="../theory/database.html">local log protection</a> and network consistency.</p>
 <h2 id="evidence-and-review-status">Evidence and review status<a class="headerlink" href="#evidence-and-review-status" title="Permanent link">&para;</a></h2>
 <p>Current synchronization decision: <code>uNet.pas</code>, including the contest guard around automatic synchronization. Form labels: <code>ui/lcl/uLogCompareForm.lfm</code>. Network settings: <code>ui/lcl/uPrefsForm.pas</code>. Networking analysis and corrections (<code>docs/TR4W_NETWORKING_ANALYSIS.md</code>) explains the protocol's history and separates it from the unimplemented V2 proposal.</p>
@@ -2619,13 +2700,13 @@
         
         
           
-          <a href="../operating/pota.html" class="md-footer__link md-footer__link--next" aria-label="Next: POTA and park-to-park">
+          <a href="../operating/contests.html" class="md-footer__link md-footer__link--next" aria-label="Next: Contest additions and rule checks">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                POTA and park-to-park
+                Contest additions and rule checks
               </div>
             </div>
             <div class="md-footer__button md-icon">
