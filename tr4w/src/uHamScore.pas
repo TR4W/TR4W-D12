@@ -28,7 +28,11 @@
   Configuration (uCFG.pas)
   ------------------------
     HAMSCORE ENABLE   = TRUE | FALSE   (default FALSE)
-    HAMSCORE URL      = https://...    (default hamscore.com)
+    HAMSCORE URL      = https://...    (default https://hamscore.com/postxml/;
+                                        the spec recommends
+                                        http://scoredistributor.net/, we deviate
+                                        by NY4I's decision, issue 250; editable;
+                                        a saved old default is migrated once)
     HAMSCORE USERNAME = <call>         (empty -> uses MY CALL)
     HAMSCORE PASSWORD = <pw>           (empty disables uploader at start)
 
@@ -749,7 +753,8 @@ begin
     post.Password       := FPassword;
     post.AcceptEncoding := 'gzip,deflate';
     (* PLAINTEXT IS ALLOWED HERE, DELIBERATELY (2026-10-29). HamScore's own
-      recommended address is http://scoredistributor.net/, and the shared
+      recommended address is http://scoredistributor.net/ (our default is now
+      https://hamscore.com/postxml/, issue 250), and the shared
       transport refuses an http:// URL unless the caller says it accepts one,
       so without this every cycle failed with "refused before it began (bad
       URL)" and nothing was ever posted. The URL is the operator's setting, as
@@ -1012,11 +1017,12 @@ begin
 
   if Settings.Hamscore.Url = '' then
      begin
-     Settings.Hamscore.Url := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
+     Settings.Hamscore.Url := HAMSCORE_DEFAULT_URL;   // issue 250: hamscore.com over https
      end;
 
   (* PLAIN HTTP IS ALLOWED, AND SAID ONCE. The post carries the password, so a
-    plain-http URL sends it unencrypted. Nothing is refused -- both schemes keep
+    plain-http URL (the spec's recommended scoredistributor.net, or an old saved
+    default) sends it unencrypted. Nothing is refused -- both schemes keep
     working -- but the operator who reads the log learns the alternative. The
     URL is logged; the password never is. IsPlainHttpUrl is the same test
     Preferences uses for its note, so the two cannot disagree. *)

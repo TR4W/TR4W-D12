@@ -71,7 +71,7 @@ type
         Was a typed constant in logwind.pas, reached by nine call sites across
         MainUnit and LOGSTUFF.  Range 1..10, enforced by the CFGCA row. }
 
-      { HAMSCORE -- live score posting to scoredistributor.net (issues #783,
+      { HAMSCORE -- live score posting (issues #783,
         #931).  Was five variables in uHamScore.pas.
 
         THE TYPES MUST MATCH THE OLD DECLARATIONS EXACTLY.  CheckCommand writes
@@ -187,8 +187,10 @@ var
 
       // Issue #920: the RTC 3.0 endpoint per the spec.  An operator may point
       // HAMSCORE URL at hamscore.com/postxml/index.php (which also serves 3.0)
-      // or any future mirror.  Plain HTTP is the spec default; an https:// URL
-      // takes the existing TIdHTTP + TLS path transparently.
+      // or any future mirror.  The spec recommends http://scoredistributor.net/;
+      // our default is https://hamscore.com/postxml/ (issue 250, NY4I's decision;
+      // see HAMSCORE_DEFAULT_URL in uSettingsModel; a saved old default is migrated
+      // once).  The URL stays editable.
 
 
       CWEnable: True;

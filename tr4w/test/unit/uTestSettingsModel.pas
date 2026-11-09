@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(302, names.Count,
+         CheckEquals(303, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -507,8 +507,10 @@ begin
                      + ' HISTORY FILE and CALL HISTORY FILENAME (new, no'
                      + ' CFGCA row), 2026-11-07; 302 with NETWORK HTTP'
                      + ' TRANSPORT, which transport carries the HTTP'
-                     + ' requests (new, no CFGCA row, issue 224),'
-                     + ' 2026-11-09');
+                     + ' requests (new, no CFGCA row, issue 224); 303 with'
+                     + ' HAMSCORE URL DEFAULT MIGRATED, the saved flag of'
+                     + ' the one-time HamScore URL migration (bookkeeping,'
+                     + ' issue 250), 2026-11-09');
       finally
          names.Free;
       end;
@@ -1692,6 +1694,7 @@ const
       + '"HAMSCORE PASSWORD",'
       + '"HAMSCORE SEND CONTACT INFO",'
       + '"HAMSCORE URL",'
+      + '"HAMSCORE URL DEFAULT MIGRATED",'
       + '"HAMSCORE USERNAME",'
       + '"HAND LOG MODE",'
       + '"HF BAND ENABLE",'

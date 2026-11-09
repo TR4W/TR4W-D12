@@ -1098,7 +1098,8 @@ type
    end;
 
    (*
-     HAMSCORE -- live score posting to scoredistributor.net.
+     HAMSCORE -- live score posting (default https://hamscore.com/postxml/,
+     see HAMSCORE_DEFAULT_URL; a saved old default is migrated once).
 
      THREE OF FIVE. HAMSCORE USERNAME is ctCaseSensitive and HAMSCORE
      PASSWORD is ctPassword, and both wait on the same case-restoring
@@ -1116,9 +1117,29 @@ type
       FSendContactInfo: boolean;
       FUsername: TCaseSensitiveText;
       FPassword: TSecretText;
+      FUrlDefaultMigrated: boolean;
+      FUrlMigratedFrom: string;
    public
       constructor Create;
+      (* THE ONE-TIME MOVE OFF THE OLD DEFAULT (issue 250, NY4I 2026-11-09).
+        Called by TR4WSettings.FromJSON after a load. While UrlDefaultMigrated
+        is False, a saved Url that is EXACTLY the old default
+        http://scoredistributor.net/ (trimmed, any case) becomes
+        HAMSCORE_DEFAULT_URL; anything else is left alone. Either way the
+        flag is then set, so a later deliberate choice of the old URL is never
+        rewritten. A file that already carries the flag True is not touched. *)
+      procedure MigrateOldDefaultUrl;
+      (* The URL replaced by the migration in THIS load, '' when it did not
+        fire. Not published: the loader reads it to log one line (the model
+        has no logger). *)
+      property UrlMigratedFrom: string read FUrlMigratedFrom;
    published
+      (* TRUE ONCE THE OLD-DEFAULT MIGRATION HAS RUN -- bookkeeping, not a
+        preference. It is published only so it is saved with the file, which
+        is what makes the migration happen once. Do not offer it to the
+        operator. *)
+      property UrlDefaultMigrated: boolean
+         read FUrlDefaultMigrated write FUrlDefaultMigrated;
       (* Was Config.HamScoreURL. uHamScore fills in the RTC 3.0 default when
         it is empty, and that assignment still works -- it is a property with
         a setter rather than a field, which is the only thing that changed. *)
@@ -4297,6 +4318,20 @@ const
       'FdClass', 'Check', 'Prec', 'Park', 'Iota', 'PostalCode',
       'FocNumber');
 
+   (* THE HAMSCORE UPLOAD ADDRESS A NEVER-SET HAMSCORE URL GETS (issue 250,
+     NY4I 2026-11-09). It is the direct hamscore.com endpoint, over https, so
+     the HamScore password is not sent in the clear. THE HAMSCORE SPEC
+     RECOMMENDS http://scoredistributor.net/ INSTEAD (section 2.6); we deviate
+     by NY4I's decision, and the spec itself says clients should let the
+     operator edit the URL, which Preferences does. An UNSET value takes this,
+     and so does a saved URL that is exactly the old default, ONCE
+     (UrlDefaultMigrated); any other saved URL is loaded over it untouched. *)
+   HAMSCORE_DEFAULT_URL = 'https://hamscore.com/postxml/';
+   (* The default before issue 250. A saved Url equal to this is moved to
+     HAMSCORE_DEFAULT_URL ONCE (THamscoreSettings.MigrateOldDefaultUrl); after
+     that the operator may choose it again and it stays. *)
+   HAMSCORE_OLD_DEFAULT_URL = 'http://scoredistributor.net/';
+
 implementation
 
 uses
@@ -5045,10 +5080,27 @@ begin
    (* The values uConfigValues' initialiser carried, and neither is the
      zero value: the URL is the service's own address and contact info is
      ON. *)
-   FUrl             := 'http://scoredistributor.net/';
+   FUrl             := HAMSCORE_DEFAULT_URL;
    FSendContactInfo := True;
    FUsername        := '';
    FPassword        := '';
+   FUrlDefaultMigrated := False;
+   FUrlMigratedFrom    := '';
+end;
+
+procedure THamscoreSettings.MigrateOldDefaultUrl;
+begin
+   FUrlMigratedFrom := '';
+   if FUrlDefaultMigrated then
+      begin
+      Exit;
+      end;
+   if UnicodeSameText(Trim(FUrl), HAMSCORE_OLD_DEFAULT_URL) then
+      begin
+      FUrlMigratedFrom := FUrl;
+      FUrl := HAMSCORE_DEFAULT_URL;
+      end;
+   FUrlDefaultMigrated := True;
 end;
 
 constructor TScoreSettings.Create;
@@ -7461,6 +7513,9 @@ begin
    UnprotectSecretsAfterLoad;
    CarryFormerBackupFileName(aObj);
    CarryFormerFrequencyPollRate(aObj);
+   (* THE ONE-SHOT FIXUP FOR THE HAMSCORE URL (issue 250): after the load, so
+     it sees what the file carried, including UrlDefaultMigrated. *)
+   FHamscore.MigrateOldDefaultUrl;
 end;
 
 (* Operating.FrequencyPollRate, A MEMBER NO PROPERTY CARRIES ANY MORE. Taken

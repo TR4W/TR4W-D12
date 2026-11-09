@@ -612,6 +612,16 @@ begin
          begin
          aSettings.FromJSON(TJSONObject(section));
          Result := True;
+         (* THE ONE-TIME HAMSCORE URL MIGRATION (issue 250) happened inside
+           FromJSON; the model has no logger, so say so here. URLs only,
+           never the password. *)
+         if aSettings.Hamscore.UrlMigratedFrom <> '' then
+            begin
+            TLogLogger.GetLogger('uTR4WConfigFile').Info(
+               'HamScore URL moved once from the old default ' +
+               aSettings.Hamscore.UrlMigratedFrom + ' to ' +
+               aSettings.Hamscore.Url);
+            end;
          end;
    finally
       root.Free;
