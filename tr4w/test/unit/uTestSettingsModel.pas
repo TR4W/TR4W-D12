@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(303, names.Count,
+         CheckEquals(304, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -510,7 +510,9 @@ begin
                      + ' requests (new, no CFGCA row, issue 224); 303 with'
                      + ' HAMSCORE URL DEFAULT MIGRATED, the saved flag of'
                      + ' the one-time HamScore URL migration (bookkeeping,'
-                     + ' issue 250), 2026-11-09');
+                     + ' issue 250), 2026-11-09; 304 with SCORE POSTING URL'
+                     + ' DEFAULT MIGRATED, the same flag for the score'
+                     + ' posting URL (bookkeeping, issue 253), 2026-11-09');
       finally
          names.Free;
       end;
@@ -1825,6 +1827,7 @@ const
       + '"SAY HI ENABLE",'
       + '"SAY HI RATE CUTOFF",'
       + '"SCORE POSTING URL",'
+      + '"SCORE POSTING URL DEFAULT MIGRATED",'
       + '"SCORE READING URL",'
       + '"SCP COUNTRY STRING",'
       + '"SCP MINIMUM LETTERS",'

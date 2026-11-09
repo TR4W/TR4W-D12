@@ -85,7 +85,7 @@ The product callers at `4dc105b9`:
 | POTA parks, `uPOTAParks.pas:744`                   | `DownloadFileToPath` | worker `TPOTADownloadThread`                                                                                                               | https `pota.app/all_parks_ext.csv`                                                                                                    | none                                                                   | followed                             | file, size not measured                                                 |                                                                                  |
 | SCP upload, `uSuperCheckPartialFileUpload.pas:235` | `THttpPost`          | called from `postunit.pas:735` right after a `YesOrNo` dialog, so **main thread (inference)**                                              | https `supercheckpartial.com`                                                                                                         | none (a shared key is inside the JSON body)                            | followed (`THttpPost` default)       | JSON body of the whole Cabrillo file; response unbounded                | non-2xx is an answer: `Send` True, body is the server's reason                   |
 | HamScore, `uHamScore.pas:736`                      | `THttpPost`          | worker `THamScoreUploader` (**read**: `Execute`, line 943; 2-minute cycle per the integrations agent)                                      | **default is `https://hamscore.com/postxml/`** since issue 250 (was plain http); `AllowInsecure := True`                               | **Basic auth, username and password**; `Accept-Encoding: gzip,deflate` | followed                             | XML body; response unbounded                                            | the only caller that sends a password, and by default in the clear               |
-| Contest score post, `uGetScores.pas:140`           | `THttpPost`          | worker, `tCreateThread` at line 111                                                                                                        | default `https://post.contestonlinescore.com/post/` (`uSettingsModel.pas:4978`); operator may type `http://`; `AllowInsecure := True` | none                                                                   | followed                             | form body, response saved to a file                                     |                                                                                  |
+| Contest score post, `uGetScores.pas:140`           | `THttpPost`          | worker, `tCreateThread` at line 111                                                                                                        | **default is `https://contestonlinescore.com/post/`** (`SCORE_POSTING_DEFAULT_URL`, issue 253; the former `post.contestonlinescore.com` host serves an expired self-signed placeholder certificate, so it could never verify; a saved copy of it is migrated once, flag `Score.PostingUrlDefaultMigrated`); operator may type `http://`; `AllowInsecure := True` | none                                                                   | followed                             | form body, response saved to a file                                     |                                                                                  |
 | Club Log, `uClubLogClient.pas:69-81`               | `THttpRequest`       | delivery worker (`TExternalDeliveryWorker = class(TThread)`)                                                                               | https only                                                                                                                            | **bearer token**                                                       | **none**                             | response capped at 4096                                                 | 5000/10000 ms. Outcome drives `doRetry` / `doUncertain` / `doFailed`.            |
 | WRL, `uWRLClient.pas:62-71`                        | `THttpRequest`       | delivery worker                                                                                                                            | https only                                                                                                                            | **bearer token**                                                       | **none**                             | default cap (1 MB)                                                      | 5000/10000 ms. Same classification, plus `Retry-After` and `X-Request-Id`.       |
 
@@ -1086,3 +1086,32 @@ parenthesised words are one line, at most 160 characters. The record of what eac
 really prints for NY4I's two sites (`uparc.org`, `ny4i.com`) is the BENCH_QUEUE item for the plain
 http URL. `THttpWireResult.FinalURL` (the generic transport reads it from `OnRedirect`, WinHTTP from
 `WINHTTP_OPTION_URL`) is set only when a followed redirect ended at another address.
+
+## 12. What a POST becomes across a redirect (issue 253, 2026-11-09)
+
+**Measured over loopback, no third-party host contacted.** `Test_APostAcrossARedirect` (in the
+contract suite, so it runs for BOTH transports; `[winhttp]` prefix for the second) POSTs a form body
+to a path that answers 301, 302, 303, 307 or 308 with `Location: /echo`, and records the method
+and body the server received at `/echo`. `Test_ThePostVerbCarriesItsBodyAcrossA301` asks the same
+through `THttpPost` (the class `uGetScores` uses, `FollowRedirects` True by default) and the active
+transport.
+
+| status | generic (FPC `TFPHTTPClient`)                       | WinHTTP                                   |
+| ------ | --------------------------------------------------- | ----------------------------------------- |
+| 301    | POST, body arrives                                  | **GET, body DROPPED**                     |
+| 302    | POST, body arrives                                  | **GET, body DROPPED**                     |
+| 303    | GET, **body still sent** with the GET               | GET, body dropped                         |
+| 307    | POST, body arrives                                  | POST, body arrives                        |
+| 308    | POST, body arrives                                  | POST, body arrives                        |
+
+The generic half is also readable from source: `fphttpclient.pp`'s `RedirectForcesGET` is true
+for 303 only, and the loop rewinds `RequestBody` before the repeat (its own comment says "307/308",
+the code says 303). **WinHTTP is the surprise: it turns a POST into a GET on 301 and 302, so with
+that transport a score POST sent to a URL that answers 301 (for example
+`https://contestonlinescore.com/post`, no trailing slash) would arrive at `/post/` as a body-less
+GET, and `uGetScores` would see whatever that answers (a 200 page) and report success.** The
+generic transport, which is the default today, delivers it. Redirect policy was NOT changed. This
+is why the default carries the trailing slash, and it is a reason to decide the platform
+transport's default (S2b) with this table in front of us. Nothing in the repo copies the RTC
+rules or the XML specification's posting endpoint (`uContestRTC.pas` and `uScoreBreakdown.pas` only
+cite the sponsor's blog pages), so the endpoint is the one in the issue.

@@ -380,6 +380,19 @@ only with `FollowRedirects` False); `docs/HTTP_TRANSPORT_DESIGN.md` section 11 h
 what each transport is expected to say. Pinned in `uTestUrlTest` and `uTestHttpTransport`
 (`FinalURL` over loopback, both transports).
 
+## The score POSTING URL default, and a POST across a redirect (issue 253, 2026-11-09)
+
+`SCORE_POSTING_DEFAULT_URL` = `https://contestonlinescore.com/post/` (trailing slash; the server
+answers 301 to it from `/post`). The former default `post.contestonlinescore.com` serves an
+expired self-signed placeholder certificate and could never verify; a saved copy of exactly
+`SCORE_POSTING_OLD_DEFAULT_URL` is moved once by `TScoreSettings.MigrateOldDefaultUrl` (called at
+the end of `TR4WSettings.FromJSON`; published flag `PostingUrlDefaultMigrated`, command name
+`SCORE POSTING URL DEFAULT MIGRATED`; the HamScore mechanism of issue 250). Any other saved value is
+kept. **A POST across a redirect differs by transport (measured, `Test_APostAcrossARedirect`): the
+generic transport keeps POST and body on 301/302/307/308; WinHTTP turns 301 and 302 into a body-less
+GET.** `docs/HTTP_TRANSPORT_DESIGN.md` section 12 has the table; redirect policy is unchanged.
+Never point a posting URL at an address that redirects while WinHTTP can be the transport.
+
 ## What the HTTP layer logs, and TLS that cannot start (NY4I, 2026-11-05)
 
 **The URL is logged; the secret never is.** `uHTTPDownload` writes method, URL, exception class

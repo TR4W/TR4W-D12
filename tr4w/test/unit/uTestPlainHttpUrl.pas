@@ -34,6 +34,10 @@ type
       procedure Test_OnlyTheExactOldDefaultIsMigrated;
       procedure Test_AFreshFileGetsTheDefaultAndTheFlag;
       procedure Test_ASavedCustomUrlIsKept;
+      procedure Test_AFreshFileGetsTheScorePostingDefaultAndTheFlag;
+      procedure Test_ASavedOldScorePostingUrlIsMigratedOnce;
+      procedure Test_AScoreFlagTrueFileIsNeverTouched;
+      procedure Test_OnlyTheExactOldScoreDefaultIsMigrated;
    public
       procedure RunAllTests; override;
    end;
@@ -220,8 +224,102 @@ begin
                'a custom http URL too');
 end;
 
+(* THE SCORE POSTING DEFAULT (issue 253), the same mechanism as HamScore's. *)
+function ScorePostingUrlAfterLoading(const aJson: string): string;
+var
+   s: TR4WSettings;
+begin
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      LoadJson(s, aJson);
+      Result := s.Score.PostingUrl;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TPlainHttpUrlTests.Test_AFreshFileGetsTheScorePostingDefaultAndTheFlag;
+var
+   s: TR4WSettings;
+begin
+   BeginTest('a file with no Score section ends on the new posting default with the flag set');
+   CheckEquals('https://contestonlinescore.com/post/', SCORE_POSTING_DEFAULT_URL, 'the constant');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      LoadJson(s, '{}');
+      CheckEquals(SCORE_POSTING_DEFAULT_URL, s.Score.PostingUrl, 'default');
+      CheckTrue(s.Score.PostingUrlDefaultMigrated, 'flag');
+      CheckEquals('', s.Score.PostingUrlMigratedFrom, 'nothing was migrated');
+      CheckEquals('https://contestonlinescore.com/scoreboard/', s.Score.ReadingUrl,
+                  'the reading URL is untouched');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TPlainHttpUrlTests.Test_ASavedOldScorePostingUrlIsMigratedOnce;
+var
+   s: TR4WSettings;
+begin
+   BeginTest('a saved https://post.contestonlinescore.com/post/ is moved once, and the flag is set');
+   CheckEquals('https://post.contestonlinescore.com/post/', SCORE_POSTING_OLD_DEFAULT_URL, 'the old constant');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      LoadJson(s, '{"Score":{"PostingUrl":"https://post.contestonlinescore.com/post/"}}');
+      CheckEquals(SCORE_POSTING_DEFAULT_URL, s.Score.PostingUrl, 'migrated');
+      CheckTrue(s.Score.PostingUrlDefaultMigrated, 'flag set');
+      CheckEquals(SCORE_POSTING_OLD_DEFAULT_URL, s.Score.PostingUrlMigratedFrom,
+                  'the old value is reported for the log');
+
+      (* ONCE: a later deliberate choice of the old URL is kept. *)
+      s.Score.PostingUrl := SCORE_POSTING_OLD_DEFAULT_URL;
+      LoadJson(s, '{"Score":{"PostingUrl":"https://post.contestonlinescore.com/post/",'
+                  + '"PostingUrlDefaultMigrated":true}}');
+      CheckEquals(SCORE_POSTING_OLD_DEFAULT_URL, s.Score.PostingUrl,
+                  'a later deliberate choice is not rewritten');
+      CheckEquals('', s.Score.PostingUrlMigratedFrom, 'and nothing is reported');
+   finally
+      s.Free;
+   end;
+   CheckEquals(SCORE_POSTING_DEFAULT_URL,
+               ScorePostingUrlAfterLoading('{"Score":{"PostingUrl":" HTTPS://Post.ContestOnlineScore.com/post/ "}}'),
+               'trimmed, any case');
+end;
+
+procedure TPlainHttpUrlTests.Test_AScoreFlagTrueFileIsNeverTouched;
+begin
+   BeginTest('a file carrying PostingUrlDefaultMigrated=true keeps the old posting URL');
+   CheckEquals(SCORE_POSTING_OLD_DEFAULT_URL,
+               ScorePostingUrlAfterLoading('{"Score":{"PostingUrl":"https://post.contestonlinescore.com/post/",'
+                                           + '"PostingUrlDefaultMigrated":true}}'));
+end;
+
+procedure TPlainHttpUrlTests.Test_OnlyTheExactOldScoreDefaultIsMigrated;
+begin
+   BeginTest('only the exact old posting default is migrated; the slashless URL and others are kept');
+   CheckEquals('https://contestonlinescore.com/post',
+               ScorePostingUrlAfterLoading('{"Score":{"PostingUrl":"https://contestonlinescore.com/post"}}'),
+               'the apex host without the slash');
+   CheckEquals('https://post.contestonlinescore.com/post',
+               ScorePostingUrlAfterLoading('{"Score":{"PostingUrl":"https://post.contestonlinescore.com/post"}}'),
+               'the old host, no slash');
+   CheckEquals('http://post.contestonlinescore.com/',
+               ScorePostingUrlAfterLoading('{"Score":{"PostingUrl":"http://post.contestonlinescore.com/"}}'),
+               'the D7 plain http default');
+   CheckEquals('https://club.example.org/rtc/',
+               ScorePostingUrlAfterLoading('{"Score":{"PostingUrl":"https://club.example.org/rtc/"}}'),
+               'a custom URL');
+end;
+
 procedure TPlainHttpUrlTests.RunAllTests;
 begin
+   Test_AFreshFileGetsTheScorePostingDefaultAndTheFlag;
+   Test_ASavedOldScorePostingUrlIsMigratedOnce;
+   Test_AScoreFlagTrueFileIsNeverTouched;
+   Test_OnlyTheExactOldScoreDefaultIsMigrated;
    Test_ANeverSetUrlGetsTheHttpsDefault;
    Test_ASavedOldHttpUrlIsMigratedOnce;
    Test_AFlagTrueFileIsNeverTouched;

@@ -622,6 +622,14 @@ begin
                aSettings.Hamscore.UrlMigratedFrom + ' to ' +
                aSettings.Hamscore.Url);
             end;
+         (* AND THE SCORE POSTING URL (issue 253). *)
+         if aSettings.Score.PostingUrlMigratedFrom <> '' then
+            begin
+            TLogLogger.GetLogger('uTR4WConfigFile').Info(
+               'Score posting URL moved once from the old default ' +
+               aSettings.Score.PostingUrlMigratedFrom + ' to ' +
+               aSettings.Score.PostingUrl);
+            end;
          end;
    finally
       root.Free;

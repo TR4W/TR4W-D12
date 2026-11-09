@@ -24,7 +24,8 @@ https://pota.app/all_parks_ext.csv | endpoint | head | uPOTAParks
 https://supercheckhistory.com/downloads/N1MM/ | endpoint | skip | uCallHistoryDownload | never contacted by a check (call-history download rules)
 https://hamscore.com/postxml/ | endpoint | root | uHamScore | POST only
 http://scoredistributor.net/ | endpoint | head | uHamScore | HamScore default address, plain http by design (issue 920); POST target is the same URL
-https://post.contestonlinescore.com/post/ | endpoint | root | uSettingsModel | RTC score post, POST only
+https://contestonlinescore.com/post/ | endpoint | root | uSettingsModel | RTC score post, POST only (default since issue 253)
+https://post.contestonlinescore.com/post/ | doc | skip | uSettingsModel | retired default (expired self-signed certificate, issue 253); kept only so a saved copy can be migrated
 https://contestonlinescore.com/scoreboard/ | endpoint | head | uSettingsModel | RTC scoreboard read address
 https://www.supercheckpartial.com/api/v1/cabsubmit | endpoint | root | uSuperCheckPartialFileUpload | POST only (SCP upload)
 https://www.supercheckpartial.com/api/v1/testcabsubmit | endpoint | root | uSuperCheckPartialFileUpload | POST only (SCP upload, test)

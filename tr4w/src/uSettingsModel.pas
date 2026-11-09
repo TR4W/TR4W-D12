@@ -1013,9 +1013,27 @@ type
    private
       FPostingUrl: string;
       FReadingUrl: string;
+      FPostingUrlDefaultMigrated: boolean;
+      FPostingUrlMigratedFrom: string;
    public
       constructor Create;
+      (* THE ONE-TIME MOVE OFF THE OLD DEFAULT (issue 253, NY4I 2026-11-09).
+        Called by TR4WSettings.FromJSON after a load. While
+        PostingUrlDefaultMigrated is False, a saved PostingUrl that is EXACTLY
+        SCORE_POSTING_OLD_DEFAULT_URL (trimmed, any case) becomes
+        SCORE_POSTING_DEFAULT_URL; anything else is left alone. Either way the
+        flag is then set, so a later deliberate choice of the old URL is never
+        rewritten. A file that already carries the flag True is not touched. *)
+      procedure MigrateOldDefaultUrl;
+      (* The URL replaced by the migration in THIS load, '' when it did not
+        fire. Not published: the loader reads it to log one line. *)
+      property PostingUrlMigratedFrom: string read FPostingUrlMigratedFrom;
    published
+      (* TRUE ONCE THE OLD-DEFAULT MIGRATION HAS RUN -- bookkeeping, not a
+        preference; published only so it is saved with the file. Do not offer
+        it to the operator. *)
+      property PostingUrlDefaultMigrated: boolean
+         read FPostingUrlDefaultMigrated write FPostingUrlDefaultMigrated;
       (* Was Config.GetScoresSeverPostingAddress, a ShortString. The old row
         was ctURL, which CheckCommand treated exactly as a string -- there was
         no validation behind the type. *)
@@ -4332,6 +4350,16 @@ const
      that the operator may choose it again and it stays. *)
    HAMSCORE_OLD_DEFAULT_URL = 'http://scoredistributor.net/';
 
+   (* THE SCORE POSTING ADDRESS A NEVER-SET POSTING URL GETS (issue 253, NY4I
+     2026-11-09). post.contestonlinescore.com serves an expired self-signed
+     placeholder certificate (2017-2018), so the former default could never
+     verify; the apex host has a valid one. The trailing slash is deliberate:
+     without it the server answers 301 to /post/. A saved URL that is exactly
+     the old default is moved here ONCE (TScoreSettings.MigrateOldDefaultUrl);
+     any other saved value, including .../post without the slash, is kept. *)
+   SCORE_POSTING_DEFAULT_URL = 'https://contestonlinescore.com/post/';
+   SCORE_POSTING_OLD_DEFAULT_URL = 'https://post.contestonlinescore.com/post/';
+
 implementation
 
 uses
@@ -5109,8 +5137,25 @@ begin
    (* THE VALUES InitializeStrings SEEDED AT EVERY STARTUP, not the
      record initialisers empty string -- the table that held them is
      deleted with this move, and a default belongs in a constructor. *)
-   FPostingUrl := 'https://post.contestonlinescore.com/post/';
+   FPostingUrl := SCORE_POSTING_DEFAULT_URL;
    FReadingUrl := 'https://contestonlinescore.com/scoreboard/';
+   FPostingUrlDefaultMigrated := False;
+   FPostingUrlMigratedFrom    := '';
+end;
+
+procedure TScoreSettings.MigrateOldDefaultUrl;
+begin
+   FPostingUrlMigratedFrom := '';
+   if FPostingUrlDefaultMigrated then
+      begin
+      Exit;
+      end;
+   if UnicodeSameText(Trim(FPostingUrl), SCORE_POSTING_OLD_DEFAULT_URL) then
+      begin
+      FPostingUrlMigratedFrom := FPostingUrl;
+      FPostingUrl := SCORE_POSTING_DEFAULT_URL;
+      end;
+   FPostingUrlDefaultMigrated := True;
 end;
 
 constructor TScpSettings.Create;
@@ -7516,6 +7561,8 @@ begin
    (* THE ONE-SHOT FIXUP FOR THE HAMSCORE URL (issue 250): after the load, so
      it sees what the file carried, including UrlDefaultMigrated. *)
    FHamscore.MigrateOldDefaultUrl;
+   (* AND THE SAME FOR THE SCORE POSTING URL (issue 253). *)
+   FScore.MigrateOldDefaultUrl;
 end;
 
 (* Operating.FrequencyPollRate, A MEMBER NO PROPERTY CARRIES ANY MORE. Taken

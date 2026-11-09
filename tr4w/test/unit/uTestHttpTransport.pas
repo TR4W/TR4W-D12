@@ -66,6 +66,8 @@ type
       procedure Test_SinkReceivesTheBody;
       procedure Test_RedirectsOnlyWhenAsked;
       procedure Test_AGetStillFollowsARedirect;
+      procedure Test_APostAcrossARedirect;
+      procedure Test_ThePostVerbCarriesItsBodyAcrossA301;
       procedure Test_ARefusedConnectionIsNotProvedUnsent;
       procedure Test_TlsUnavailableIsProvedUnsent;
       procedure Test_ExecuteNeverRaisesAndClearsTheResult;
@@ -258,6 +260,16 @@ begin
          Inc(i, 25);
          end;
       body := 'late';
+      end
+   else if (Length(path) = 5) and (Copy(path, 1, 2) = '/r') and
+           (StrToIntDef(Copy(path, 3, 3), 0) >= 301) and
+           (StrToIntDef(Copy(path, 3, 3), 0) <= 308) then
+      begin
+      (* /r301 .. /r308: that status, Location /echo (issue 253's question:
+        what happens to a POST and its body across each redirect). *)
+      status := Copy(path, 3, 3) + ' Redirect';
+      extra  := 'Location: /echo'#13#10;
+      body   := '';
       end
    else if path = '/echo' then
       begin
@@ -638,6 +650,111 @@ begin
       res.Free;
       req.Free;
       t.Free;
+      StopServer;
+   end;
+end;
+
+(* ISSUE 253: DOES A POST SURVIVE A REDIRECT? The score post goes through
+  THttpPost, which follows redirects, and the server answers 301 for
+  https://contestonlinescore.com/post (no slash). For each redirect status this
+  POSTs a body to /rNNN, which redirects to /echo, and records what /echo
+  received: the method on the request line and the body bytes.
+
+  WHAT THE FPC CLIENT DOES IS READ FROM ITS SOURCE (fphttpclient.pp,
+  RedirectForcesGET: only 303 forces GET) and pinned here; WHAT WINHTTP DOES
+  IS WHATEVER THIS TEST OBSERVES, pinned per transport so a change is noticed. *)
+procedure THttpTransportTests.Test_APostAcrossARedirect;
+const
+   CODES: array[0..4] of integer = (301, 302, 303, 307, 308);
+var
+   t:      TPlatformHttpTransport;
+   req:    THttpWireRequest;
+   res:    THttpWireResult;
+   port:   Word;
+   i:      integer;
+   sent:   RawByteString;
+   keeps:  boolean;
+   gotLine: string;
+begin
+   BeginTest(FTag + 'issue 253: what a POST and its body become across 301, 302, 303, 307 and 308');
+   sent := ToWire('a=1&b=two');
+   port := StartServer;
+   t    := NewTransport;
+   try
+      for i := Low(CODES) to High(CODES) do
+         begin
+         req := NewGet(Url(port, '/r' + IntToStr(CODES[i])));
+         res := THttpWireResult.Create;
+         try
+            req.Method          := 'POST';
+            req.ContentType     := 'application/x-www-form-urlencoded';
+            req.Body            := sent;
+            req.HasBody         := True;
+            req.FollowRedirects := True;
+            t.Execute(req, nil, res);
+            CheckTrue(res.Failure = hfNone, IntToStr(CODES[i]) + ' answered: ' + res.Detail);
+            CheckEquals(200, res.StatusCode, IntToStr(CODES[i]) + ': the redirect was followed to /echo');
+            CheckEquals(Url(port, '/echo'), res.FinalURL, IntToStr(CODES[i]) + ': final address');
+            gotLine := Copy(FHeaders, 1, Pos(' http/', FHeaders) - 1);
+            CheckEquals('/echo', FPath, IntToStr(CODES[i]) + ': the last request was /echo');
+            (* The expectation per transport and status. *)
+            (* Only 303 becomes a GET in the FPC client. (A set of 301..308
+              would be wrong: a Pascal set holds 0..255.) *)
+            keeps := CODES[i] <> 303;
+            if FUseWinHttp then
+               begin
+               (* WinHTTP, as MEASURED by this test on the first run. *)
+               keeps := (CODES[i] = 307) or (CODES[i] = 308);
+               end;
+            if keeps then
+               begin
+               CheckEquals('post /echo', gotLine, IntToStr(CODES[i]) + ': still a POST');
+               CheckTrue(FBody = sent, IntToStr(CODES[i]) + ': the body arrived at /echo');
+               end
+            else
+               begin
+               CheckEquals('get /echo', gotLine, IntToStr(CODES[i]) + ': turned into a GET');
+               if FUseWinHttp then
+                  begin
+                  CheckEquals('', string(FBody), IntToStr(CODES[i]) + ': and the body was dropped');
+                  end
+               else
+                  begin
+                  (* MEASURED: the FPC client keeps RequestBody and sends it
+                    with the GET (a GET carrying the form body). Only 303
+                    reaches this arm for the generic transport. *)
+                  CheckTrue(FBody = sent, IntToStr(CODES[i]) + ': FPC still sends the body, on the GET');
+                  end;
+               end;
+         finally
+            res.Free;
+            req.Free;
+         end;
+         end;
+   finally
+      t.Free;
+      StopServer;
+   end;
+end;
+
+(* The same question one layer up: THttpPost (what uGetScores uses) with its
+  own defaults, through the ACTIVE transport. A 301 and the body at /echo. *)
+procedure THttpTransportTests.Test_ThePostVerbCarriesItsBodyAcrossA301;
+var
+   post: THttpPost;
+begin
+   BeginTest('issue 253: THttpPost follows a 301 and the body arrives at the redirected URL (active transport)');
+   post := THttpPost.Create(Url(StartServer, '/r301'));
+   try
+      post.AllowInsecure := True;
+      post.Body          := 'a=1&b=two';
+      CheckTrue(post.Send, 'sent: ' + post.FailReason);
+      CheckEquals(200, post.StatusCode, 'followed');
+      CheckEquals('/echo', FPath, 'the redirected URL answered');
+      CheckEquals('post /echo', Copy(FHeaders, 1, Pos(' http/', FHeaders) - 1), 'still a POST');
+      CheckEquals('a=1&b=two', string(FBody), 'with its body');
+   finally
+      post.Free;
       StopServer;
    end;
 end;
@@ -1594,6 +1711,7 @@ begin
    Test_SinkReceivesTheBody;
    Test_RedirectsOnlyWhenAsked;
    Test_AGetStillFollowsARedirect;
+   Test_APostAcrossARedirect;
    Test_ARefusedConnectionIsNotProvedUnsent;
    if not FUseWinHttp then
       begin
@@ -1621,6 +1739,7 @@ begin
       FUseWinHttp := False;
       FTag        := '';
 {$ENDIF}
+      Test_ThePostVerbCarriesItsBodyAcrossA301;
       Test_RegistrySelectsOnceAndLogsOnce;
       Test_ThePolicyChoosesTheTransport;
       Test_TheSettingDefaultsToGenericAndTheSharedLayerReadsIt;
