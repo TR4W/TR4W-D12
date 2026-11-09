@@ -1018,6 +1018,35 @@ resourcestring
      The two %d are the bounds, 10 and 1000. *)
    SRadioEditBadPollRate     = 'The frequency poll rate must be a whole number of milliseconds from %d to %d.';
 
+   (* THE URL TEST BUTTON (issue 251, Preferences > Online scoring). NY4I's
+      rule: report what came back and let the operator decide. A 200 is
+      success; nothing here calls an address invalid, bad or failed, because
+      an error is not a verdict on what the operator typed. A reply is
+      "Answered <status>"; no reply is "No answer: <what happened>". The
+      words in parentheses are the program's own account of the problem and
+      are never translated (a library or the system wrote them). *)
+   SUrlTestButton            = 'Test';
+   SUrlTestRunning           = 'Asking...';
+   SUrlTestNothing           = 'Nothing to test: the address box is empty.';
+   (* %d is the HTTP status code. *)
+   SUrlTestAnswered          = 'Answered %d';
+   (* %d is the HTTP status code, %s the address that answered after a redirect. *)
+   SUrlTestAnsweredFrom      = 'Answered %d from %s';
+   SUrlTestNoAnswerScheme    = 'No answer: the address does not start with http:// or https://';
+   SUrlTestNoAnswerPlain     = 'No answer: a plain http:// address was not sent';
+   SUrlTestNoAnswerTls       = 'No answer: the OpenSSL libraries could not be loaded';
+   SUrlTestNoAnswerTlsLib    = 'No answer: the TLS library stopped while connecting';
+   SUrlTestNoAnswerTrust     = 'No answer: the certificate file cacert.pem could not be used';
+   SUrlTestNoAnswerVerify    = 'No answer: server certificates cannot be checked on this machine';
+   SUrlTestNoAnswerCert      = 'No answer: the server''s certificate was not accepted';
+   SUrlTestNoAnswerName      = 'No answer: the host name was not found';
+   SUrlTestNoAnswerConnect   = 'No answer: could not connect';
+   SUrlTestNoAnswerConnTime  = 'No answer: timed out connecting';
+   SUrlTestNoAnswerIoTime    = 'No answer: timed out waiting for the server';
+   SUrlTestNoAnswerLost      = 'No answer: the connection was lost';
+   SUrlTestNoAnswerCancelled = 'No answer: the request was cancelled';
+   SUrlTestNoAnswerOther     = 'No answer';
+
 implementation
 
 end.

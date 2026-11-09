@@ -68,8 +68,36 @@ uses
    SysUtils,
    fphttpclient,      (* FPC's own client *)
    opensslsockets,    (* registers the TLS handler fphttpclient asks for *)
+   URIParser,         (* ResolveRelativeURI, for the final address only *)
    uOpenSSLLoader,
    uTLSTrust;
+
+type
+   (* WHERE A REDIRECT CHAIN ENDED. FPC raises OnRedirect once per hop, with the
+     address it left and the Location the server sent, which may be relative
+     (it resolves it only AFTER the event). The last hop's resolved target is
+     the address that answered. One per Execute: the transport object is shared
+     by every thread, so this state cannot live on it. The parameters are
+     AnsiString because that is what fphttpclient's TRedirectEvent declares. *)
+   TRedirectNote = class
+   public
+      Final: string;
+      procedure Redirected(Sender: TObject; const ASrc: AnsiString;
+                           var ADest: AnsiString);
+   end;
+
+procedure TRedirectNote.Redirected(Sender: TObject; const ASrc: AnsiString;
+                                   var ADest: AnsiString);
+var
+   resolved: AnsiString;
+begin
+   resolved := ADest;
+   if not ResolveRelativeURI(ASrc, ADest, resolved) then
+      begin
+      resolved := ADest;
+      end;
+   Final := FromWire(resolved);
+end;
 
 class function TGenericHttpTransport.Id: string;
 begin
@@ -95,10 +123,12 @@ var
    bodyIn:  TRawByteStringStream;
    bodyOut: TBoundedHttpResponse;
    dest:    TStream;
+   note:    TRedirectNote;
 begin
    aResult.Clear;
    bodyIn  := nil;
    bodyOut := nil;
+   note    := nil;
 
    useTLS := IsHttpsUrl(aRequest.URL);
 
@@ -115,6 +145,11 @@ begin
    http := TFPHTTPClient.Create(nil);
    try
       http.AllowRedirect   := aRequest.FollowRedirects;
+      if aRequest.FollowRedirects then
+         begin
+         note := TRedirectNote.Create;
+         http.OnRedirect := note.Redirected;
+         end;
       http.AddHeader('User-Agent', ToWire(aRequest.UserAgent));
       http.ConnectTimeout  := aRequest.ConnectMs;
       http.IOTimeout       := aRequest.IOMs;
@@ -203,6 +238,10 @@ begin
             aResult.ETag         := FromWire(http.GetHeader(http.ResponseHeaders, 'ETag'));
             aResult.LastModified := FromWire(http.GetHeader(http.ResponseHeaders, 'Last-Modified'));
             aResult.ContentType  := FromWire(http.GetHeader(http.ResponseHeaders, 'Content-Type'));
+            if note <> nil then
+               begin
+               aResult.FinalURL := note.Final;
+               end;
             if bodyOut <> nil then
                begin
                aResult.Body := bodyOut.DataString;
@@ -216,6 +255,10 @@ begin
                aResult.StatusCode   := http.ResponseStatusCode;
                aResult.ErrorClass   := E.ClassName;
                aResult.ErrorMessage := E.Message;
+               if note <> nil then
+                  begin
+                  aResult.FinalURL := note.Final;
+                  end;
                if (bodyOut <> nil) and bodyOut.Exceeded then
                   begin
                   aResult.Failure := hfResponseTooLarge;
@@ -241,6 +284,7 @@ begin
       end;
    finally
       http.Free;
+      note.Free;
    end;
 end;
 

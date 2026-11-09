@@ -1043,3 +1043,46 @@ already exist in `uTestExternalLoggerSocket.pas`, **read**).
 | MacLoggerDX needs a macOS-native interface (AppleScript, a file drop, Apple events) | no                                                             | a platform provider unit with a `{$IFDEF DARWIN}` body, registered like the keychain backends                                                                                |
 | Log4OM UDP                                                                          | no                                                             | the existing UDP sink machinery                                                                                                                                              |
 | a destination needs TLS client certificates, or a pinned certificate                | **yes**: `THttpWireRequest` has nowhere to put either          | decide when one exists; none of the current or planned destinations is known to                                                                                              |
+
+## 11. The URL test: what the operator reads (issue 251, 2026-11-09)
+
+Preferences > Online scoring has a **Test** button beside the HamScore Service URL and the score
+board Posting and Reading URLs. NY4I's rule: a **200 is success; anything else is DISPLAYED, not
+judged**. The wording never says invalid, bad or failed. `uUrlTest` owns the request (one GET
+through `THttpRequest`: no credentials, no body type, redirects followed, `AllowInsecure`, 10 s
+connect and 15 s I/O, a 1 MB cap that still counts as an answer) and `uUrlTest.UrlTestText` owns the
+sentences; `uUrlTestButton.TUrlTester` is the reusable control. The text tested is the box as it
+stands, saved or not, untrimmed (a real upload does not trim either). Only a reply or "no answer" is
+reported, so **a refused request never reaches the network**: an empty box, a non-http scheme.
+
+| outcome (`THttpFailure`)                       | the sentence (resourcestring)                                       | words added in parentheses                 |
+| ---------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
+| answered (`hfNone`, or `hfResponseTooLarge` with a status) | `Answered 200` (`SUrlTestAnswered`); after a redirect `Answered 200 from <final address>` (`SUrlTestAnsweredFrom`) | none |
+| empty box                                      | `Nothing to test: the address box is empty.`                        | none                                       |
+| `hfBadScheme`                                  | `No answer: the address does not start with http:// or https://`    | none (the shared layer has no words)       |
+| `hfPlaintextNotAllowed`                        | `No answer: a plain http:// address was not sent`                   | none; unreachable, the test allows http    |
+| `hfTlsUnavailable`                             | `No answer: the OpenSSL libraries could not be loaded`              | the loader's diagnostic                    |
+| `hfTlsLibraryFault`                            | `No answer: the TLS library stopped while connecting`               | the library's message                      |
+| `hfTrustUnavailable`                           | `No answer: the certificate file cacert.pem could not be used`      | the bundle search result                   |
+| `hfVerificationUnavailable`                    | `No answer: server certificates cannot be checked on this machine`  | the setup reason                           |
+| `hfVerificationFailed`                         | `No answer: the server's certificate was not accepted`              | WinHTTP error name                         |
+| `hfNameNotResolved`                            | `No answer: the host name was not found`                            | WinHTTP error name                         |
+| `hfCannotConnect`                              | `No answer: could not connect`                                      | WinHTTP error name                         |
+| `hfConnectTimedOut`                            | `No answer: timed out connecting`                                   | the transport's message                    |
+| `hfIOTimedOut`                                 | `No answer: timed out waiting for the server`                       | WinHTTP error name                         |
+| `hfConnectionLost`                             | `No answer: the connection was lost`                                | WinHTTP error name                         |
+| `hfCancelled`                                  | `No answer: the request was cancelled`                              | WinHTTP error name                         |
+| `hfAuthPolicy`, `hfResponseTooLarge` without a status, `hfOther` | `No answer: <the words>` (`No answer` alone when there are none) | the transport's message, which IS the answer |
+
+**Which kinds actually occur.** The URL test follows redirects, and a transport claims a
+"nothing sent" kind only when no redirect can have sent an earlier request. So in this test the
+**WinHTTP** transport reports DNS, refused connection and certificate rejection as `hfOther`, with
+text like `WinHttpSendRequest failed with error 12007 ERROR_WINHTTP_NAME_NOT_RESOLVED`; the
+**generic** transport reports all of those, and a timeout, as `hfOther` with FPC's or OpenSSL's own
+message (it can prove only `hfTlsUnavailable`, `hfTrustUnavailable`, `hfVerificationUnavailable`).
+The distinct sentences above therefore mostly appear for the TLS-setup kinds, a scheme refusal and
+a WinHTTP timeout or lost connection; the rest are there for a transport that can say more. The
+parenthesised words are one line, at most 160 characters. The record of what each transport
+really prints for NY4I's two sites (`uparc.org`, `ny4i.com`) is the BENCH_QUEUE item for the plain
+http URL. `THttpWireResult.FinalURL` (the generic transport reads it from `OnRedirect`, WinHTTP from
+`WINHTTP_OPTION_URL`) is set only when a followed redirect ended at another address.

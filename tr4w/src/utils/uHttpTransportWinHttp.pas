@@ -521,6 +521,58 @@ begin
       end;
 end;
 
+(* THE ADDRESS THAT ANSWERED, after any redirect WinHTTP followed (the request
+  handle's WINHTTP_OPTION_URL, UTF-16 text). '' when it cannot be read. The
+  caller decides whether it differs from what was asked. *)
+function QueryRequestUrl(aRequest: HINTERNET): string;
+var
+   size, err: DWORD;
+   buffer: UnicodeString;
+begin
+   Result := '';
+   size   := 0;
+   if WinHttpQueryOption(aRequest, WINHTTP_OPTION_URL, nil, @size) then
+      begin
+      Exit;
+      end;
+   err := GetLastError;
+   if (err <> ERROR_INSUFFICIENT_BUFFER_CODE) or (size < SizeOf(WideChar)) then
+      begin
+      Exit;
+      end;
+   SetLength(buffer, (size div SizeOf(WideChar)) + 1);
+   if WinHttpQueryOption(aRequest, WINHTTP_OPTION_URL, PWideChar(buffer), @size) then
+      begin
+      SetLength(buffer, size div SizeOf(WideChar));
+      Result := buffer;
+      end;
+end;
+
+(* A redirect is reported only when the final address is really another one:
+  WinHTTP may hand back the request's own address with a trailing slash added
+  (a bare host), and that is not a redirect. *)
+function RedirectedTo(const aAsked, aAnswered: string): string;
+var
+   asked, answered: string;
+begin
+   Result   := '';
+   asked    := aAsked;
+   answered := aAnswered;
+   (* Not ExcludeTrailingPathDelimiter: it takes AnsiString and would narrow. *)
+   if (asked <> '') and (asked[Length(asked)] = '/') then
+      begin
+      SetLength(asked, Length(asked) - 1);
+      end;
+   if (answered <> '') and (answered[Length(answered)] = '/') then
+      begin
+      SetLength(answered, Length(answered) - 1);
+      end;
+   if (aAnswered <> '') and (not UnicodeSameText(asked, answered)) then
+      begin
+      Result := aAnswered;
+      end;
+end;
+
 function QueryStatusCode(aRequest: HINTERNET): integer;
 var
    code, size: DWORD;
@@ -713,6 +765,10 @@ begin
    aResult.ETag         := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'ETag');
    aResult.LastModified := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'Last-Modified');
    aResult.ContentType  := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'Content-Type');
+   if aWire.FollowRedirects then
+      begin
+      aResult.FinalURL := RedirectedTo(aWire.URL, QueryRequestUrl(aRequest));
+      end;
 
    if (not aWire.AcceptAnyStatus) and (status <> 200) then
       begin

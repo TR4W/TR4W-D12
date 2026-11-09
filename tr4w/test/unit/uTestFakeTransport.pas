@@ -30,7 +30,8 @@ type
       ScriptETag:         string;
       ScriptLastModified: string;
       ScriptContentType:  string;
-      ScriptBody:         RawByteString;
+      ScriptFinalURL:     string;
+      ScriptBody:        RawByteString;
       (* what the transport saw *)
       Calls:   integer;
       Last:    THttpWireRequest;
@@ -121,6 +122,7 @@ begin
    aResult.ETag         := ScriptETag;
    aResult.LastModified := ScriptLastModified;
    aResult.ContentType  := ScriptContentType;
+   aResult.FinalURL     := ScriptFinalURL;
    if (ScriptFailure = hfNone) and (ScriptBody <> '') then
       begin
       if aSink <> nil then

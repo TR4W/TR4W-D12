@@ -538,6 +538,22 @@ placed, or it has no control at all.
   each slot with `is`, so never `AddObject` or `Items.Assign` into a control
   you also read with `SelectedTag` / `SelectByTag` / `SelectedListTag`.
 
+## A URL field's Test button is `TUrlTester` (issue 251, 2026-11-09)
+
+Preferences > Online scoring has a Test button beside the HamScore, score Posting and Reading
+URLs. `uUrlTestButton.TUrlTester` is a NON-VISUAL helper over three plain controls the `.lfm`
+already holds (edit, button, label): `TUrlTester.Create(Self, edit, button, label)`. Not a custom
+control, because a custom class in an `.lfm` needs `RegisterClass` and the lfm lints cannot see it.
+Facts that bite: it **chains the edit's `OnChange`** (to blank a stale result), and
+`HookDirtyMarker` installs `MarkDirty` only on an edit with NO `OnChange`, so **create the tester
+AFTER `HookDirtyMarkers`** (it is, at the end of the form's create) or the edit stops arming Save.
+A worker never touches a control: it fills an `IUrlTestTicket` (reference counted, shared with the
+thread) and the tester reads it from a `TTimer` on the main thread, so freeing the form drops the
+reference and waits for nothing. The result row under each edit is a 34 px wrapped label; the
+button is 80 px right of a 380-px edit. Wording and request: `uUrlTest` (integrations agent).
+Pinned in `uTestUrlTest` (a real `TForm.CreateNew`, never shown). The layout is unmeasured
+(BENCH_QUEUE).
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

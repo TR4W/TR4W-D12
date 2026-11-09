@@ -494,12 +494,18 @@ type
       edtClusterCommand: TEdit;
       chkHamScoreEnable: TCheckBox;
       edtHamScoreURL: TEdit;
+      btnHamScoreTest: TButton;
+      lblHamScoreTestResult: TLabel;
       lblHamScoreHttpNote: TLabel;
       edtHamScoreUser: TEdit;
       edtHamScorePass: TEdit;
       chkHamScoreContact: TCheckBox;
       edtScorePostURL: TEdit;
+      btnScorePostTest: TButton;
+      lblScorePostTestResult: TLabel;
       edtScoreReadURL: TEdit;
+      btnScoreReadTest: TButton;
+      lblScoreReadTestResult: TLabel;
       chkSayHiEnable: TCheckBox;
       edtSayHiCutoff: TEdit;
       chkKeypadCWMemories: TCheckBox;
@@ -1488,6 +1494,7 @@ uses
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
    uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
+   uUrlTestButton,      (* TUrlTester -- the Test buttons beside the scoring URLs *)
    uCallHistory,        (* CallHistoryNameToStore -- the call history file's Browse *)
    LogDupe,             (* ContestCallHistoryFileName -- that box's hint *)
    VC;        // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
@@ -2129,6 +2136,14 @@ begin
    // the cost of getting this wrong is a save prompt on an untouched window.
    HookDirtyMarkers(Self);
    LogPhase(FTiming, 'HookDirtyMarkers');
+
+   // THE TEST BUTTONS BESIDE THE ONLINE SCORING ADDRESSES (issue 251). AFTER the
+   // dirty hooks: a tester chains the edit's OnChange, and HookDirtyMarker only
+   // installs MarkDirty on an edit that has none. A test saves nothing and
+   // marks nothing; it asks the text in the box, saved or not, what it answers.
+   TUrlTester.Create(Self, edtHamScoreURL,  btnHamScoreTest,  lblHamScoreTestResult);
+   TUrlTester.Create(Self, edtScorePostURL, btnScorePostTest, lblScorePostTestResult);
+   TUrlTester.Create(Self, edtScoreReadURL, btnScoreReadTest, lblScoreReadTestResult);
 
    // Through the SETTER, so the button starts greyed.  A freshly opened window
    // has nothing unsaved, but the designer leaves every button enabled, and

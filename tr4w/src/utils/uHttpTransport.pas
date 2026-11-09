@@ -107,6 +107,10 @@ type
       ETag:         string;      (* the ETag response header, '' when absent *)
       LastModified: string;      (* the Last-Modified response header, '' when absent *)
       ContentType:  string;      (* the Content-Type response header, '' when absent *)
+      FinalURL:     string;      (* the address that ANSWERED, set only when a redirect
+                                    was followed (so it differs from the request's URL);
+                                    '' when there was none or the transport cannot say.
+                                    Informational: nothing decides on it. *)
       Body:         RawByteString;   (* only when Execute was given no sink *)
       constructor Create;
       procedure Clear;
@@ -251,6 +255,7 @@ begin
    ETag         := '';
    LastModified := '';
    ContentType  := '';
+   FinalURL     := '';
    Body         := '';
 end;
 

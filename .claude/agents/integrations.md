@@ -360,6 +360,26 @@ tree, and defining it would not have helped — the var block was commented out 
 `tw_MixWWINDOW_INDEX` was never declared. `SendMessageToMixW` compiled to an empty
 procedure and its six live callers did nothing.
 
+## The URL Test button: `uUrlTest` (issue 251, 2026-11-09)
+
+Preferences > Online scoring tests the HamScore, score Posting and score Reading URLs. NY4I's
+rules: **a 200 is success; anything else is DISPLAYED (status or reason), never judged** -- the
+words are "Answered 200", "Answered 404", "No answer: ...", never invalid / bad / failed (a test
+loops every `THttpFailure` for those words). Read-only: one GET through `THttpRequest` with
+`AllowInsecure` (the real uploads allow http), redirects followed, no credentials, no body, the
+text in the box (untrimmed, as a real upload sends it). **Not `HttpGetText`**: that treats any
+non-200 as a failure. **Never show `FailReason`**: for a refused scheme it says "bad URL", and the
+TLS ones are multi-line dialog text; `UrlTestText` (pure) picks one sentence per kind
+(resourcestrings `SUrlTest*`) and appends `THttpRequest.ErrorDetail` (the transport's own words,
+scrubbed of the request's credentials) in parentheses. `THttpWireResult.FinalURL` /
+`THttpRequest.FinalURL`: set only when a followed redirect ended elsewhere (generic: `OnRedirect`,
+resolving a relative Location itself; WinHTTP: `WINHTTP_OPTION_URL`, unbenched). The worker is a
+`FreeOnTerminate` thread holding an `IUrlTestTicket`; nothing is joined. The distinct failure
+sentences mostly cannot occur while redirects are followed (a transport claims "nothing sent" kinds
+only with `FollowRedirects` False); `docs/HTTP_TRANSPORT_DESIGN.md` section 11 has the table of
+what each transport is expected to say. Pinned in `uTestUrlTest` and `uTestHttpTransport`
+(`FinalURL` over loopback, both transports).
+
 ## What the HTTP layer logs, and TLS that cannot start (NY4I, 2026-11-05)
 
 **The URL is logged; the secret never is.** `uHTTPDownload` writes method, URL, exception class

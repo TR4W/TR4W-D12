@@ -10333,3 +10333,98 @@ msgstr ""
 msgid "Contest rules"
 msgstr ""
 
+
+#: uappstrings.surltestbutton
+#, fuzzy
+msgid "Test"
+msgstr ""
+
+#: uappstrings.surltestrunning
+#, fuzzy
+msgid "Asking..."
+msgstr ""
+
+#: uappstrings.surltestnothing
+#, fuzzy
+msgid "Nothing to test: the address box is empty."
+msgstr ""
+
+#: uappstrings.surltestanswered
+#, fuzzy
+msgid "Answered %d"
+msgstr ""
+
+#: uappstrings.surltestansweredfrom
+#, fuzzy
+msgid "Answered %d from %s"
+msgstr ""
+
+#: uappstrings.surltestnoanswerscheme
+#, fuzzy
+msgid "No answer: the address does not start with http:// or https://"
+msgstr ""
+
+#: uappstrings.surltestnoanswerplain
+#, fuzzy
+msgid "No answer: a plain http:// address was not sent"
+msgstr ""
+
+#: uappstrings.surltestnoanswertls
+#, fuzzy
+msgid "No answer: the OpenSSL libraries could not be loaded"
+msgstr ""
+
+#: uappstrings.surltestnoanswertlslib
+#, fuzzy
+msgid "No answer: the TLS library stopped while connecting"
+msgstr ""
+
+#: uappstrings.surltestnoanswertrust
+#, fuzzy
+msgid "No answer: the certificate file cacert.pem could not be used"
+msgstr ""
+
+#: uappstrings.surltestnoanswerverify
+#, fuzzy
+msgid "No answer: server certificates cannot be checked on this machine"
+msgstr ""
+
+#: uappstrings.surltestnoanswercert
+#, fuzzy
+msgid "No answer: the server's certificate was not accepted"
+msgstr ""
+
+#: uappstrings.surltestnoanswername
+#, fuzzy
+msgid "No answer: the host name was not found"
+msgstr ""
+
+#: uappstrings.surltestnoanswerconnect
+#, fuzzy
+msgid "No answer: could not connect"
+msgstr ""
+
+#: uappstrings.surltestnoanswerconntime
+#, fuzzy
+msgid "No answer: timed out connecting"
+msgstr ""
+
+#: uappstrings.surltestnoansweriotime
+#, fuzzy
+msgid "No answer: timed out waiting for the server"
+msgstr ""
+
+#: uappstrings.surltestnoanswerlost
+#, fuzzy
+msgid "No answer: the connection was lost"
+msgstr ""
+
+#: uappstrings.surltestnoanswercancelled
+#, fuzzy
+msgid "No answer: the request was cancelled"
+msgstr ""
+
+#: uappstrings.surltestnoanswerother
+#, fuzzy
+msgid "No answer"
+msgstr ""

@@ -229,6 +229,9 @@ type
       ETag:           string;   (* response headers, '' when absent *)
       LastModified:   string;
       ResponseContentType: string;
+      FinalURL:       string;   (* set only when a followed redirect ended at another address *)
+      ErrorDetail:    string;   (* the transport's own words ('Class: message'), '' after an answer
+                                   or when the failure came from the shared layer's own checks *)
 
       (* The two proof flags every caller used before issue 224. They are now
         views of Failure: reading is Failure = hfTlsUnavailable /
@@ -985,6 +988,8 @@ begin
    ETag := '';
    LastModified := '';
    ResponseContentType := '';
+   FinalURL   := '';
+   ErrorDetail := '';
    Failure    := hfNone;
 
    if (BearerToken <> '') and
@@ -1065,6 +1070,12 @@ begin
             FailReason := 'Authenticated HTTP request failed (' + res.ErrorClass + ')';
             end;
          end;
+      (* WHAT A READ-ONLY CALLER MAY SHOW (the URL test, issue 251): the address
+        that answered after a redirect, and the transport's own words for a
+        failure. The words are scrubbed of this request's credentials, and a
+        credentialed caller should still prefer FailReason. *)
+      FinalURL    := res.FinalURL;
+      ErrorDetail := ScrubBoth(res.Detail, BearerToken, Password);
    finally
       res.Free;
       wire.Free;

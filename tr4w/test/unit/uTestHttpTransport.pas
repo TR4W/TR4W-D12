@@ -627,10 +627,12 @@ begin
       t.Execute(req, nil, res);
       CheckTrue(res.Failure = hfNone, 'answered: ' + res.Detail);
       CheckEquals(302, res.StatusCode, 'not followed: the 302 itself is the answer');
+      CheckEquals('', res.FinalURL, 'no hop followed, so no final address');
       req.FollowRedirects := True;
       t.Execute(req, nil, res);
       CheckTrue(res.Failure = hfNone, 'answered: ' + res.Detail);
       CheckEquals(200, res.StatusCode, 'followed to /ok');
+      CheckEquals(Url(port, '/ok'), res.FinalURL, 'the address that answered, resolved from the relative Location');
       CheckEquals('hello', string(res.Body), 'and the final body');
    finally
       res.Free;

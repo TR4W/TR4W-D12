@@ -612,6 +612,7 @@ uses
    uTestCloudlog in 'uTestCloudlog.pas',
    uTestACLog in 'uTestACLog.pas',
    uTestHttpTransport in 'uTestHttpTransport.pas',
+   uTestUrlTest in 'uTestUrlTest.pas',
    uTestNothingSent in 'uTestNothingSent.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
@@ -683,6 +684,8 @@ uses
    uHttpTransportGeneric in '..\..\src\utils\uHttpTransportGeneric.pas',
    uHttpTransportWinHttp in '..\..\src\utils\uHttpTransportWinHttp.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
+   uUrlTest             in '..\..\src\utils\uUrlTest.pas',
+   uUrlTestButton       in '..\..\src\ui\lcl\uUrlTestButton.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',
    uTestLogBinaryFile   in 'uTestLogBinaryFile.pas',
    uLogSchema           in '..\..\src\domain\uLogSchema.pas',
@@ -1138,6 +1141,7 @@ begin
    RegisterSuite(TCloudlogTests.Create('Cloudlog'));
    RegisterSuite(TACLogTests.Create('ACLog'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
+   RegisterSuite(TUrlTestTests.Create('UrlTest'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));
    RegisterSuite(TColumnWidthStoreTests.Create('ColumnWidthStore'));
