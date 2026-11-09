@@ -376,6 +376,16 @@ and every `INCLUDE FILE` line, to the file's EXACT case; 10 class names and 95
 INCLUDE lines are upper case against lower-case files, pinned and ratcheted
 (`$LegacyNames`, `$INCLUDE_CEILING`). Windows cannot see this class of bug.
 
+## Referenced URLs (issue 248)
+
+`tr4w/build/referenced-urls.txt` lists EVERY URL under `src`, `tools`, `build`, `tr4wserver` and
+`tr4w.lpr` (kind, probe, owner). `Lint-ReferencedUrls` (in `Run-Lints`, offline) fails on a URL
+with no row and on a row with no URL. `Check-ReferencedUrls.ps1` (network, read-only, retries a
+transient once, NOT in `Run-Lints`) probes them; run it as a pre-release step or with
+`FullBuild.ps1 -CheckUrls`. POST-only endpoints are probed at the host root, never posted to, and
+`supercheckhistory.com` is `skip` (the lint enforces it). A new endpoint = a new row in the same
+commit. Format and rules: `build/ReferencedUrls.psm1`.
+
 ## Coordinate with
 
 Every agent — you are the gate they all pass through.

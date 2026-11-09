@@ -330,6 +330,25 @@ about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
    You should see exactly the version you're about to tag, e.g.
    `TR4W_CURRENTVERSION_NUMBER = '5.0.36'`.
 
+   **Check the URLs (issue 248, pre-release, needs the network).** Every URL the tree
+   references -- the CTY / TRMASTER / POTA downloads, the version check, the score,
+   HamScore, SCP and logger endpoints, the links in the menus -- is a row in
+   `tr4w\build\referenced-urls.txt`. Probe them read-only:
+   ```
+   powershell -File tr4w\build\Check-ReferencedUrls.ps1            # endpoints, links, tooling
+   powershell -File tr4w\build\Check-ReferencedUrls.ps1 -IncludeDocs
+   powershell -File tr4w\FullBuild.ps1 -CheckUrls                  # same, as a build step
+   ```
+   HEAD or a body-less GET, no credentials, never a POST (a POST-only endpoint is probed
+   at its host root), and `supercheckhistory.com` is never contacted. A transient failure
+   is retried once. The report separates UNREACHABLE (no answer), ERROR (answered 4xx/5xx),
+   REDIRECTED (landed on another host) and INSECURE-REDIRECT (https to http); exit code is
+   the failure count. REACHABLE (401/403/405) is a warning: the host is alive and refuses an
+   anonymous request. **It is not in `Run-Lints` and does not gate an ordinary build** -- a
+   remote site being briefly down must not stop one. Its offline half,
+   `Lint-ReferencedUrls`, does gate: a URL added to the tree without a row, or a row the
+   tree no longer carries, fails the build.
+
 3. **Create the tag and push it.** (`utils\TagIt.cmd 5.0.36` does the same with the checks
    described in the TL;DR.)
 

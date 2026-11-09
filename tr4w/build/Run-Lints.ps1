@@ -287,6 +287,11 @@ $lints = @(
    # counter had no ceiling. Count-LiveMove.ps1 is both the measurement and, with
    # -Gate, this lint: it runs its fixture first and fails below its floors.
    @{ Name = 'Count-LiveMove'; Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Gate') }
+
+   # EVERY URL THE TREE CARRIES IS A ROW IN build\referenced-urls.txt (issue
+   # 248), so the pre-release probe (Check-ReferencedUrls.ps1, network, NOT part
+   # of this gate) cannot miss a new endpoint. Offline; both directions fail.
+   @{ Name = 'Lint-ReferencedUrls'; Arg = $Tr4wDir; NeedsFpc = $false }
 )
 
 $failed  = 0

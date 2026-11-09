@@ -46,6 +46,11 @@ param(
    # marks the build unshippable -- it must not become the silent default.
    [switch] $SkipServer,
    [switch] $SkipLints,
+   # PRE-RELEASE ONLY (issue 248): probe every URL TR4W references, read-only
+   # (build\Check-ReferencedUrls.ps1). Off by default because a REMOTE site being
+   # briefly down must not block an ordinary build; a dead or redirected endpoint
+   # fails this run when it is asked for.
+   [switch] $CheckUrls,
    [string] $Repo = (Split-Path $PSScriptRoot -Parent),
    # Empty by default: Find-Toolchain discovers FPC and Lazarus and honours
    # FPC_HOME / LAZARUS_DIR. Pass these only to force a particular install.
@@ -214,6 +219,13 @@ else
    Phase 'Lints'
    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $BUILD_DIR 'Run-Lints.ps1') | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail "$LASTEXITCODE lint(s) failed" }
+   }
+
+if ($CheckUrls)
+   {
+   Phase 'Referenced URLs (network, read-only)'
+   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $BUILD_DIR 'Check-ReferencedUrls.ps1') | Out-Host
+   if ($LASTEXITCODE -ne 0) { Fail "$LASTEXITCODE referenced URL(s) dead or redirected elsewhere" }
    }
 
 # ---------------------------------------------------------------------------

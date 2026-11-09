@@ -1,0 +1,102 @@
+# Every URL the tree references (issue 248).  Format and rules: build\ReferencedUrls.psm1.
+#
+#   url | kind | probe | owner | arg | allow
+#
+# TWO scripts read this file and nothing else:
+#   Lint-ReferencedUrls.ps1     offline, gates the build. Every URL literal under src, tools,
+#                               build, tr4wserver and tr4w.lpr must be a row here, and every row
+#                               must still be in the tree (a stale row fails).
+#   Check-ReferencedUrls.ps1    network, read-only, a PRE-RELEASE step. Probes endpoint, link and
+#                               tooling rows (doc rows too with -IncludeDocs).
+#
+# ADDING AN ENDPOINT: add its row here in the same commit, kind `endpoint`. A URL the program
+# POSTS to is probe `root` (the host is asked; nothing is ever sent to the real path).
+#
+# supercheckhistory.com is probe `skip`, always: call-history files are downloaded before a
+# contest and never by a check (docs: supercheckhistory download rules). The lint enforces it.
+#
+# ---- endpoints: the program contacts these --------------------------------------------------
+https://www.country-files.com/cty/cty.dat | endpoint | head | uCTYUpdate
+https://www.country-files.com/feed/ | endpoint | get | uCTYUpdate
+https://tr4w.net/TRMASTER.DTA | endpoint | head | uTRMasterUpdate
+https://tr4w.net/version.json | endpoint | get | uCheckLatestVersion
+https://pota.app/all_parks_ext.csv | endpoint | head | uPOTAParks
+https://supercheckhistory.com/downloads/N1MM/ | endpoint | skip | uCallHistoryDownload | never contacted by a check (call-history download rules)
+https://hamscore.com/postxml/ | endpoint | root | uHamScore | POST only
+http://scoredistributor.net/ | endpoint | head | uHamScore | HamScore default address, plain http by design (issue 920); POST target is the same URL
+https://post.contestonlinescore.com/post/ | endpoint | root | uSettingsModel | RTC score post, POST only
+https://contestonlinescore.com/scoreboard/ | endpoint | head | uSettingsModel | RTC scoreboard read address
+https://www.supercheckpartial.com/api/v1/cabsubmit | endpoint | root | uSuperCheckPartialFileUpload | POST only (SCP upload)
+https://www.supercheckpartial.com/api/v1/testcabsubmit | endpoint | root | uSuperCheckPartialFileUpload | POST only (SCP upload, test)
+https://clublog.org/api/v1/qso | endpoint | root | uClubLogClient | POST only
+https://clublog.org/api/v1 | endpoint | root | uClubLogClient | API base
+https://api.worldradioleague.com/v1 | endpoint | root | uWRLClient | API base, POST only
+# ---- links: opened in the operator's browser -------------------------------------------------
+https://tr4w.net | link | head | uAboutForm
+https://tr4w.net/ | link | head | MainUnit
+https://tr4w.net/download/ | link | head | VC | TR4W_DOWNLOAD_LINK, version appended after the '?'
+http://www.tr4w.com/wiki/ | link | head | MainUnit
+http://www.hornucopia.com/contestcal/weeklycont.php | link | head | MainUnit
+http://www.3830scores.com/ | link | head | MainUnit
+http://contest-log-submission.arrl.org/ | link | head | MainUnit
+http://www.qrz.ru/contest/detail/%d.html | template | sample | MainUnit | http://www.qrz.ru/contest/detail/100.html
+https://contestcalendar.com/contestdetails.php?ref=%u | template | sample | MainUnit | https://contestcalendar.com/contestdetails.php?ref=305
+# ---- tooling: fetched by a build script or a tools program, not by the app -------------------
+https://curl.se/ca/cacert.pem | tooling | head | build\full.nsi
+https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage | template | sample | build-appimage.sh | https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage | github.com,objects.githubusercontent.com,release-assets.githubusercontent.com
+https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$ARCH | template | sample | build-appimage.sh | https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64 | github.com,objects.githubusercontent.com,release-assets.githubusercontent.com
+https://supercheckpartial.com/downloads/MASTER.DTA | tooling | head | tools\trmaster\trmaster_build.py
+https://supercheckpartial.com/downloads/SCP.DB | tooling | head | tools\trmaster\trmaster_build.py
+https://xmldata.qrz.com/xml/current/ | tooling | head | tools\trmaster\trmaster_names_qrz.py | the real use is credentialed; a check sends none
+https://docs.google.com/spreadsheets/d/1Ew8b1WAorFRCixGRsr031atxmS0SsycvmOczS_fDqzc/export?format=csv | tooling | head | tools\trmaster\build_trmaster.cmd | CWops member sheet | docs.google.com,googleusercontent.com
+http://www.dxcluster.info/telnet/TRCLUSTER.DAT | tooling | head | build\Invoke-Release.ps1
+https://github.com/ | doc | head | build\Invoke-Release.ps1 | a repository's actions page is built from the runner's slug
+# ---- namespaces and licences: identifiers, never fetched -------------------------------------
+http://www.apple.com/DTDs/PropertyList-1.0.dtd | namespace | none | build\build-unix.sh
+http://www.gnu.org/licenses/gpl-3.0.txt | license | none | every source header
+http://www.gnu.org/licenses/ | license | none | source headers
+http://www.gnu.org/copyleft/lesser.html | license | none | source headers
+http://www.mozilla.org/MPL/ | license | none | source headers
+https://www.mozilla.org/MPL/1.1/ | license | none | source headers
+# ---- documentation links in comments: probed only with -IncludeDocs --------------------------
+http://code.google.com/p/doctype/wiki/CSSColors | doc | head | colour parsing comment
+http://www.w3.org/TR/CSS2/syndata.html#value-def-color | doc | head | colour parsing comment
+http://www.w3schools.com/CSS/css_colorsfull.asp | doc | head | colour parsing comment
+http://docwiki.embarcadero.com/RADStudio/Seattle/en/Conditional_compilation_%28Delphi%29 | doc | head | conditional compilation comment
+http://www.delphi-jedi.org | doc | head | vendored header
+http://tr4w.net/4.42/tr4w_setup_4_42.1.exe | doc | head | VC | commented-out old download link
+https://groups.google.com/group/tr4w/feeds?hl=ru | doc | head | tr4w.lpr
+https://192.168.1.1 | doc | skip | uSuperCheckPartialFileUpload | commented-out private test address
+https://n1mmwp.hamdocs.com/setup/call-history/ | doc | head | uCallHistory
+https://groups.io/g/N1MMLoggerPlus/message/70623 | doc | head | logsubs2
+https://wwrof.org/cabrillo/cabrillo-qso-data/ | doc | head | uCabrilloFormat, postunit
+https://www.dxlabsuite.com/Interoperation.htm | doc | head | uExternalLogger
+https://www.kenwood.com/i/products/info/amateur/pdf/ts890_pc_command_en_rev1.pdf | doc | head | uRadioKenwoodLAN
+https://github.com/ny4i/TR4QT/blob/master/docs/kenwood-direct-connection-flow.md | doc | head | uRadioKenwoodLAN
+https://github.com/dioannidis/HIDAPI.pas | doc | head | uYCCCSO2R
+https://blog.contestonlinescore.com/online-scoring-xml-specification/ | doc | head | uScoreBreakdown
+https://blog.contestonlinescore.com/real-time-contest-rtc-rules/ | doc | head | uContestRTC
+http://www.arrl.org/country-lists-prefixes | doc | head | uContestNewMexicoQP
+https://adif.org.uk/317/ADIF_317.htm#Contest_ID | doc | head | uContestIdahoQP
+https://www.contestcalendar.com/contestdetails.php?ref=305 | doc | head | uContestIdahoQP
+https://www.idahoqsoparty.org/rules.htm | doc | head | uContestIdahoQP
+https://www.idahoqsoparty.org/MAPcountylist.htm | doc | head | uContestIdahoQP
+https://www.idahoqsoparty.org/cabrillo.htm | doc | head | uContestIdahoQP
+https://www.idahoqsoparty.org/idaho_rovers.htm | doc | head | uContestIdahoQP
+https://idqp.contesting.com | doc | head | uContestIdahoQP
+https://www.jarl.org/English/4_Library/A-4-3_Contests/cabrilloformat.html | doc | head | uContestAllAsianSSB, uContestAllAsianCW
+https://www.fsarc.org/qsoparty/rules-2024.html | doc | head | uContestDelawareQP
+https://www.fsarc.org/qsoparty/cabrillo.htm | doc | head | uContestDelawareQP
+https://www.nzart.org.nz/activities/contests/jwfd | doc | head | uContestJockWhiteFieldDay
+https://nebraskaqsoparty.com | doc | head | uContestNebraskaQP
+https://ncqsoparty.org/rules/ | doc | head | uContestNorthCarolinaQP
+http://k5cm.com/okqp2026rules.pdf | doc | head | uContestOklahomaQP
+https://okqp.contesting.com/ | doc | head | uContestOklahomaQP
+https://quebecqsoparty.org/soumission-qso-qso-download/ | doc | head | uContestQuebecQP
+https://ua9qcq.ru/submit_log.php | doc | head | uContestRussianDX
+https://ssbsprint.com/rules/ | doc | head | uContestSprintSSB
+https://unicomradio.com | doc | head | uContestURCDXRTTY
+https://salmonrun.wwdxc.org/rules/ | doc | head | uContestWashingtonSalmonRun
+https://hfcontest.ssa.se/ssa-jt/ssa-jt-cabrillo.html | doc | head | uContestXmas
+https://hfcontest.ssa.se/ssa-jt/regler.html | doc | head | uContestXmas
+https://web.archive.org/web/20250126012214id_/http://www.qrz.ru/contest/detail/100.html | doc | head | uContestXmas
