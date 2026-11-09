@@ -3323,10 +3323,21 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         WordWrap = True
       end
+      object chkHamScoreVerify: TCheckBox
+        Left = 160
+        Height = 22
+        Top = 130
+        Width = 240
+        AutoSize = True
+        Caption = 'Verify the server''s certificate'
+        Constraints.MinWidth = 200
+        TabOrder = 3
+        OnChange = chkHamScoreVerifyChange
+      end
       object lblHamScoreHttpNote: TLabel
         Left = 160
-        Height = 51
-        Top = 130
+        Height = 36
+        Top = 154
         Width = 472
         AutoSize = False
         Caption = 'Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it.'
@@ -3347,7 +3358,7 @@ object PrefsForm: TPrefsForm
         Top = 188
         Width = 240
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 4
       end
       object lblHamScorePass: TLabel
         Left = 12
@@ -3365,7 +3376,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         EchoMode = emPassword
         PasswordChar = '*'
-        TabOrder = 4
+        TabOrder = 5
       end
       object chkHamScoreContact: TCheckBox
         Left = 12
@@ -3374,7 +3385,7 @@ object PrefsForm: TPrefsForm
         Width = 460
         AutoSize = False
         Caption = 'Include contact information'
-        TabOrder = 5
+        TabOrder = 6
       end
       object lblScoreRestart: TLabel
         Left = 12
@@ -3388,7 +3399,7 @@ object PrefsForm: TPrefsForm
       object lblScoreBoardHeading: TLabel
         Left = 12
         Height = 17
-        Top = 332
+        Top = 324
         Width = 400
         AutoSize = False
         Caption = 'Score board'
@@ -3398,7 +3409,7 @@ object PrefsForm: TPrefsForm
       object lblScorePostURL: TLabel
         Left = 12
         Height = 17
-        Top = 366
+        Top = 358
         Width = 140
         AutoSize = False
         Caption = 'Posting URL:'
@@ -3406,37 +3417,49 @@ object PrefsForm: TPrefsForm
       object edtScorePostURL: TEdit
         Left = 160
         Height = 22
-        Top = 362
+        Top = 354
         Width = 380
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 7
+        OnChange = edtScorePostURLChange
       end
       object btnScorePostTest: TButton
         AnchorSideLeft.Control = edtScorePostURL
         AnchorSideLeft.Side = asrBottom
         Left = 548
         Height = 24
-        Top = 361
+        Top = 353
         Width = 80
         Anchors = [akTop, akLeft]
         AutoSize = True
         BorderSpacing.Left = 8
         Constraints.MinWidth = 80
         Caption = 'Test'
-        TabOrder = 7
+        TabOrder = 8
       end
       object lblScorePostTestResult: TLabel
         Left = 160
-        Height = 34
-        Top = 388
+        Height = 32
+        Top = 380
         Width = 472
         AutoSize = False
         WordWrap = True
       end
+      object chkScoreVerify: TCheckBox
+        Left = 160
+        Height = 22
+        Top = 414
+        Width = 240
+        AutoSize = True
+        Caption = 'Verify the server''s certificate'
+        Constraints.MinWidth = 200
+        TabOrder = 9
+        OnChange = chkScoreVerifyChange
+      end
       object lblScoreReadURL: TLabel
         Left = 12
         Height = 17
-        Top = 434
+        Top = 444
         Width = 140
         AutoSize = False
         Caption = 'Reading URL:'
@@ -3444,42 +3467,54 @@ object PrefsForm: TPrefsForm
       object edtScoreReadURL: TEdit
         Left = 160
         Height = 22
-        Top = 430
+        Top = 440
         Width = 380
         AutoSize = False
-        TabOrder = 8
+        TabOrder = 10
       end
       object btnScoreReadTest: TButton
         AnchorSideLeft.Control = edtScoreReadURL
         AnchorSideLeft.Side = asrBottom
         Left = 548
         Height = 24
-        Top = 429
+        Top = 439
         Width = 80
         Anchors = [akTop, akLeft]
         AutoSize = True
         BorderSpacing.Left = 8
         Constraints.MinWidth = 80
         Caption = 'Test'
-        TabOrder = 9
+        TabOrder = 11
       end
       object lblScoreReadTestResult: TLabel
         Left = 160
-        Height = 34
-        Top = 456
+        Height = 32
+        Top = 466
         Width = 472
         AutoSize = False
         WordWrap = True
       end
       object lblScoreBoardHint: TLabel
         Left = 12
-        Height = 51
-        Top = 496
+        Height = 34
+        Top = 502
         Width = 620
         AutoSize = False
         Caption = 'Where TR4W posts its score and where it reads other stations'' scores from.  The two are separate so a club board can be read while posting elsewhere.'
         Font.Color = clGrayText
         ParentFont = False
+        WordWrap = True
+      end
+      object lblScoreVerifyNote: TLabel
+        Left = 12
+        Height = 30
+        Top = 538
+        Width = 620
+        AutoSize = False
+        Caption = 'The server''s identity is not checked; anyone between you and it can read what you send.'
+        Font.Color = clMaroon
+        ParentFont = False
+        Visible = False
         WordWrap = True
       end
     end

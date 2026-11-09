@@ -554,6 +554,17 @@ button is 80 px right of a 380-px edit. Wording and request: `uUrlTest` (integra
 Pinned in `uTestUrlTest` (a real `TForm.CreateNew`, never shown). The layout is unmeasured
 (BENCH_QUEUE).
 
+**Issue 256 (2026-11-09) added a "Verify the server's certificate" check box to the page.**
+`TUrlTester` takes an optional `TCheckBox` (read at the click; toggling blanks the result and chains
+the box's own handler, so the same create-after-`HookDirtyMarkers` rule holds). The page is a fixed
+572 px `TPanel`, so the HamScore box sits in the gap that was reserved for the plain-http note and
+**that note's label carries BOTH messages** (`ShowHamScorePlainHttpNote`: plain http, else the
+unverified warning; they never apply together, because a plain URL disables the box); the Posting
+URL's box has its own red warning line at the bottom (`lblScoreVerifyNote`). The designed `OnChange`
+handlers (`chkHamScoreVerifyChange`, `chkScoreVerifyChange`, `edtScorePostURLChange`) call `MarkDirty`
+themselves. The external logger editor gained a check row (`lfkCheck`, `row.Check`, `FieldCheck`) and
+`lblVerifyNote`, laid out by `FitLayout` only while shown. Captions are resourcestrings set in code.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

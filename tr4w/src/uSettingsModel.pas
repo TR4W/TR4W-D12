@@ -1015,6 +1015,7 @@ type
       FReadingUrl: string;
       FPostingUrlDefaultMigrated: boolean;
       FPostingUrlMigratedFrom: string;
+      FVerifyServer: boolean;
    public
       constructor Create;
       (* THE ONE-TIME MOVE OFF THE OLD DEFAULT (issue 253, NY4I 2026-11-09).
@@ -1041,6 +1042,15 @@ type
       (* Was Config.GetScoresSeverReadingAddress. The PostScores window opens
         this in a browser. *)
       property ReadingUrl: string read FReadingUrl write FReadingUrl;
+      (* VERIFY THE SCORE SERVER'S CERTIFICATE (issue 256, SCORE VERIFY SERVER).
+        ONE choice for the score board, and it governs the POSTING URL: the one
+        address TR4W itself sends to. The Reading URL is only opened in the
+        operator's browser (which checks its own certificate) and tried by the
+        Test button, which asks the global setting alone. True by default and
+        for a file saved before the setting existed. It can only lower what the
+        global network.verifyServerCertificates master allows; it is never
+        shared with other positions. *)
+      property VerifyServer: boolean read FVerifyServer write FVerifyServer;
    end;
 
    (*
@@ -1137,6 +1147,7 @@ type
       FPassword: TSecretText;
       FUrlDefaultMigrated: boolean;
       FUrlMigratedFrom: string;
+      FVerifyServer: boolean;
    public
       constructor Create;
       (* THE ONE-TIME MOVE OFF THE OLD DEFAULT (issue 250, NY4I 2026-11-09).
@@ -1178,6 +1189,14 @@ type
         peer, and is masked in Preferences -- four behaviours from one
         declaration. *)
       property Password: TSecretText read FPassword write FPassword;
+      (* VERIFY THE HAMSCORE SERVER'S CERTIFICATE (issue 256, HAMSCORE VERIFY
+        SERVER). True by default and for a file saved before the setting
+        existed. The HamScore upload carries the operator's Basic-auth
+        password, which is why a self-signed server elsewhere must not switch
+        verification off here too. It can only lower what the global
+        network.verifyServerCertificates master allows; read when the uploader
+        starts; never shared with other positions. *)
+      property VerifyServer: boolean read FVerifyServer write FVerifyServer;
    end;
 
    (* TMp3Settings WAS HERE -- MP3 RECORDER ENABLE, MP3 PATH, MP3 PLAYER.
@@ -5114,6 +5133,7 @@ begin
    FPassword        := '';
    FUrlDefaultMigrated := False;
    FUrlMigratedFrom    := '';
+   FVerifyServer       := True;
 end;
 
 procedure THamscoreSettings.MigrateOldDefaultUrl;
@@ -5141,6 +5161,7 @@ begin
    FReadingUrl := 'https://contestonlinescore.com/scoreboard/';
    FPostingUrlDefaultMigrated := False;
    FPostingUrlMigratedFrom    := '';
+   FVerifyServer              := True;
 end;
 
 procedure TScoreSettings.MigrateOldDefaultUrl;

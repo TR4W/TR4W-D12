@@ -47,6 +47,10 @@ type
       procedure Test_Editor_ProviderChangeKeepsHostDropsCredentials;
       procedure Test_Editor_NoProviderHasASetupButton;
       procedure Test_WRL_LoaderReadsAccountAndSkipsLockedBooks;
+      procedure Test_Json_VerifyServerRoundTripsAndOldLoadsTrue;
+      procedure Test_Definition_VerifyServerIsAConnectionSettingNotADestination;
+      procedure Test_Editor_TheCertificateBoxAndItsWarning;
+      procedure Test_WRL_LoaderUsesTheRowsCertificateChoice;
    public
       procedure RunAllTests; override;
    end;
@@ -200,23 +204,41 @@ begin
    BeginTest('Descriptors: Club Log declares the callsign (stored as the logbook) and a secret token');
    fields := FieldsOf('CLUBLOG');
    try
-      CheckEquals('logbook,apiKey', KeysOf(fields));
+      CheckEquals('logbook,apiKey,verifyServer', KeysOf(fields));
       CheckTrue(fields[0].Kind = lfkText);
       CheckEquals(SLoggerFieldClubLogCall, fields[0].Caption);
       CheckTrue(fields[0].Required, 'the callsign is required');
       CheckTrue(fields[1].Kind = lfkSecret);
       CheckFalse(fields[1].Required, 'a locked vault leaves the token empty and must still start');
+      CheckTrue(fields[2].Kind = lfkCheck, 'the certificate choice is a check box (issue 256)');
+      CheckEquals(SVerifyServerCaption, fields[2].Caption);
+      CheckEquals(SVerifyServerOffWarning, fields[2].OffWarning);
+      CheckFalse(fields[2].Required, 'either answer is valid');
    finally
       fields.Free;
    end;
    BeginTest('Descriptors: WRL declares a secret key and a logbook CHOICE keyed to a name');
    fields := FieldsOf('WRL');
    try
-      CheckEquals('apiKey,logbook', KeysOf(fields));
+      CheckEquals('apiKey,logbook,verifyServer', KeysOf(fields));
       CheckTrue(fields[0].Kind = lfkSecret);
       CheckTrue(fields[1].Kind = lfkChoice);
       CheckEquals(LF_LOGBOOK_NAME, fields[1].DisplayKey);
       CheckTrue(Assigned(fields[1].Loader), 'it can obtain its choices');
+      CheckTrue(fields[2].Kind = lfkCheck, 'the certificate choice (issue 256)');
+   finally
+      fields.Free;
+   end;
+   BeginTest('Descriptors: DXKeeper and ACLog (TCP) declare no certificate choice (issue 256)');
+   fields := FieldsOf('DXKEEPER');
+   try
+      CheckTrue(fields.Find(LF_VERIFY_SERVER) = nil, 'DXKeeper');
+   finally
+      fields.Free;
+   end;
+   fields := FieldsOf('ACLOG');
+   try
+      CheckTrue(fields.Find(LF_VERIFY_SERVER) = nil, 'ACLog');
    finally
       fields.Free;
    end;
@@ -406,7 +428,8 @@ begin
       BeginTest('Editor: Club Log shows the callsign as text and the token masked');
       form.cbProvider.ItemIndex := form.cbProvider.Items.IndexOf('CLUBLOG');
       form.ProviderChanged(form.cbProvider);
-      CheckEquals(2, form.RowCount);
+      CheckEquals(3, form.RowCount, 'callsign, token and the certificate box');
+      CheckTrue(form.FieldCheck(LF_VERIFY_SERVER) <> nil, 'the certificate box');
       CheckTrue(form.FieldEdit(LF_LOGBOOK) <> nil);
       CheckTrue(form.FieldEdit(LF_LOGBOOK).PasswordChar = #0, 'a callsign is not a secret');
       CheckTrue(form.FieldEdit(LF_API_KEY).PasswordChar <> #0, 'the token is masked');
@@ -416,7 +439,7 @@ begin
       BeginTest('Editor: WRL shows the key and a logbook drop-down, and no account or id text box');
       form.cbProvider.ItemIndex := form.cbProvider.Items.IndexOf('WRL');
       form.ProviderChanged(form.cbProvider);
-      CheckEquals(2, form.RowCount);
+      CheckEquals(3, form.RowCount, 'key, logbook and the certificate box');
       CheckTrue(form.FieldEdit(LF_API_KEY).PasswordChar <> #0);
       CheckTrue(form.FieldCombo(LF_LOGBOOK) <> nil, 'the logbook is a drop-down');
       CheckTrue(form.FieldEdit(LF_LOGBOOK) = nil, 'and not a text box');
@@ -663,8 +686,195 @@ begin
    end;
 end;
 
+(* ---- issue 256: the per-destination certificate choice ---------------------------- *)
+
+procedure TExternalLoggerFieldsTests.Test_Json_VerifyServerRoundTripsAndOldLoadsTrue;
+var
+   source, loaded, assigned: TExternalLoggerDefinition;
+   json: TJSONObject;
+begin
+   InstallTestKeychain;
+   source := TExternalLoggerDefinition.Create;
+   loaded := TExternalLoggerDefinition.Create;
+   assigned := TExternalLoggerDefinition.Create;
+   try
+      source.Id := 'def-1';
+      source.Name := 'Shack Wavelog';
+      source.ProviderId := 'CLOUDLOG';
+      source.URL := 'https://shack.lan';
+      source.Logbook := '3';
+      BeginTest('Json: a new definition verifies, and writes nothing for it (a definition that never opted out round-trips as before)');
+      CheckTrue(source.VerifyServer, 'the default is ON');
+      CheckEquals('1', source.FieldText(LF_VERIFY_SERVER), 'the field reads 1');
+      json := source.ToJSON;
+      try
+         CheckTrue(json.GetValue('verifyServer') = nil, 'nothing written while ON');
+      finally
+         json.Free;
+      end;
+
+      BeginTest('Json: an opt-out is written, read back, and copied by Assign');
+      source.VerifyServer := False;
+      CheckEquals('0', source.FieldText(LF_VERIFY_SERVER), 'the field reads 0');
+      json := source.ToJSON;
+      try
+         CheckTrue(json.GetValue('verifyServer') <> nil, 'written when OFF');
+         loaded.VerifyServer := True;
+         loaded.LoadJSON(json);
+      finally
+         json.Free;
+      end;
+      CheckFalse(loaded.VerifyServer, 'read back OFF');
+      assigned.Assign(loaded);
+      CheckFalse(assigned.VerifyServer, 'Assign copies it');
+
+      BeginTest('Json: a definition saved before the field existed loads ON (a missing value is the safe one)');
+      source.VerifyServer := True;
+      json := source.ToJSON;
+      try
+         loaded.VerifyServer := False;
+         loaded.LoadJSON(json);
+      finally
+         json.Free;
+      end;
+      CheckTrue(loaded.VerifyServer, 'missing reads True');
+
+      BeginTest('Field text: 0 is the only OFF; anything else reads ON');
+      source.SetFieldText(LF_VERIFY_SERVER, '0');
+      CheckFalse(source.VerifyServer, '0');
+      source.SetFieldText(LF_VERIFY_SERVER, '1');
+      CheckTrue(source.VerifyServer, '1');
+      source.SetFieldText(LF_VERIFY_SERVER, '0');
+      source.SetFieldText(LF_VERIFY_SERVER, '');
+      CheckTrue(source.VerifyServer, 'blank');
+   finally
+      assigned.Free;
+      loaded.Free;
+      source.Free;
+   end;
+end;
+
+procedure TExternalLoggerFieldsTests.Test_Definition_VerifyServerIsAConnectionSettingNotADestination;
+var
+   d: TExternalLoggerDefinition;
+   stamp, delivery, fingerprint: string;
+begin
+   BeginTest('the choice is in the settings stamp (a change is a connection-setting change, issue 233) and NOT in the destination');
+   d := TExternalLoggerDefinition.Create;
+   try
+      d.Id := 'fixed';
+      d.ProviderId := 'CLOUDLOG';
+      d.URL := 'https://shack.lan';
+      d.Logbook := '3';
+      d.ApiKey := 'k';
+      stamp := d.SettingsStamp;
+      delivery := d.DeliveryId;
+      fingerprint := d.DestinationFingerprint;
+      d.VerifyServer := False;
+      CheckTrue(stamp <> d.SettingsStamp, 'the stamp moves: the running service holds the old choice until a restart');
+      CheckEquals(delivery, d.DeliveryId, 'the queue does not move: ticking a box must not park the backlog');
+      CheckEquals(fingerprint, d.DestinationFingerprint, 'the destination fingerprint is unchanged');
+      d.VerifyServer := True;
+      CheckEquals(stamp, d.SettingsStamp, 'and back to the same stamp');
+   finally
+      d.Free;
+   end;
+end;
+
+procedure TExternalLoggerFieldsTests.Test_Editor_TheCertificateBoxAndItsWarning;
+var
+   form: TExternalLoggersForm;
+   d: TExternalLoggerDefinition;
+   box: TCheckBox;
+begin
+   InitWidgetSet;
+   BeginTest('Editor: the certificate box shows the definition''s choice, and the warning follows it');
+   form := TExternalLoggersForm.Create(nil);
+   try
+      form.AutoLoadChoices := False;
+      d := TExternalLoggerDefinition.Create;
+      d.ProviderId := 'CLOUDLOG';
+      d.Name := 'Shack';
+      d.URL := 'https://shack.lan';
+      d.Logbook := '3';
+      d.VerifyServer := False;
+      form.Config.Definitions.Add(d);
+      form.BeginEdit(d);
+      box := form.FieldCheck(LF_VERIFY_SERVER);
+      CheckTrue(box <> nil, 'a check box row');
+      CheckEquals(SVerifyServerCaption, UTF8Decode(box.Caption), 'its own translatable caption');
+      CheckFalse(box.Checked, 'it shows OFF');
+      CheckTrue(form.lblVerifyNote.Visible, 'the warning is shown while cleared');
+      CheckEquals(SVerifyServerOffWarning, UTF8Decode(form.lblVerifyNote.Caption), 'and says what it costs');
+
+      box.Checked := True;
+      CheckFalse(form.lblVerifyNote.Visible, 'ticking hides the warning');
+      form.Capture;
+      CheckTrue(d.VerifyServer, 'captured ON');
+      box.Checked := False;
+      form.Capture;
+      CheckFalse(d.VerifyServer, 'captured OFF');
+
+      BeginTest('Editor: over a plain http:// address the box is disabled, keeps its value and shows no warning');
+      form.FieldEdit(LF_URL).Text := 'http://shack.lan';
+      CheckFalse(box.Enabled, 'disabled: a plain connection has no certificate');
+      CheckFalse(box.Checked, 'its saved value is untouched');
+      CheckFalse(form.lblVerifyNote.Visible, 'no warning while the choice is moot');
+      form.FieldEdit(LF_URL).Text := 'https://shack.lan';
+      CheckTrue(box.Enabled, 'enabled again over https');
+      CheckTrue(form.lblVerifyNote.Visible, 'and the warning is back');
+
+      BeginTest('Editor: a provider change starts the new provider verifying');
+      form.cbProvider.ItemIndex := form.cbProvider.Items.IndexOf('CLUBLOG');
+      form.ProviderChanged(form.cbProvider);
+      CheckTrue(form.FieldCheck(LF_VERIFY_SERVER).Checked, 'Club Log: ON, another provider''s opt-out is not carried over');
+      CheckFalse(form.lblVerifyNote.Visible, 'no warning');
+
+      BeginTest('Editor: a TCP provider shows no certificate box');
+      form.cbProvider.ItemIndex := form.cbProvider.Items.IndexOf('DXKEEPER');
+      form.ProviderChanged(form.cbProvider);
+      CheckTrue(form.FieldCheck(LF_VERIFY_SERVER) = nil, 'DXKeeper has none');
+      CheckFalse(form.lblVerifyNote.Visible, 'and no warning');
+   finally
+      form.Free;
+   end;
+end;
+
+procedure TExternalLoggerFieldsTests.Test_WRL_LoaderUsesTheRowsCertificateChoice;
+var
+   fake: TWRLScriptTransport;
+   work: TExternalLoggerDefinition;
+   choices: TLoggerChoices;
+begin
+   BeginTest('WRL loader (the editor''s Refresh): it sees the row''s certificate choice, so a refresh sees what a delivery will see');
+   DeclareVerifyOn;
+   fake := TWRLScriptTransport.Create;
+   SetHttpTransportForTest(fake);
+   work := TExternalLoggerDefinition.Create;
+   choices := TLoggerChoices.Create;
+   try
+      work.ApiKey := 'fixture-wrl-key';
+      work.VerifyServer := False;
+      CheckEquals('', LoadWRLLogbookChoices(work, choices));
+      CheckFalse(fake.Last.VerifyServer, 'opted out: unverified');
+      work.VerifyServer := True;
+      choices.Clear;
+      CheckEquals('', LoadWRLLogbookChoices(work, choices));
+      CheckTrue(fake.Last.VerifyServer, 'ticked: verified');
+   finally
+      choices.Free;
+      work.Free;
+      SetHttpTransportForTest(nil);
+      fake.Free;
+   end;
+end;
+
 procedure TExternalLoggerFieldsTests.RunAllTests;
 begin
+   Test_Json_VerifyServerRoundTripsAndOldLoadsTrue;
+   Test_Definition_VerifyServerIsAConnectionSettingNotADestination;
+   Test_Editor_TheCertificateBoxAndItsWarning;
+   Test_WRL_LoaderUsesTheRowsCertificateChoice;
    Test_Descriptors_PerProvider;
    Test_Descriptors_WRLHasNoAccountOrLogbookIdText;
    Test_Descriptors_AtMostTheProviderFieldLimit;

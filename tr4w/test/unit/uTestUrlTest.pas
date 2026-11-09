@@ -29,6 +29,7 @@ type
       procedure Test_AnOversizedAnswerIsStillAnAnswer;
       procedure Test_TheWorkerDeliversAndSurvivesADroppedTicket;
       procedure Test_TheButtonShowsTheAnswerAndTheEditBlanksIt;
+      procedure Test_TheButtonUsesTheRowsCertificateBox;
       procedure Test_ClosingTheFormWhileARequestRunsIsHarmless;
    public
       procedure RunAllTests; override;
@@ -39,6 +40,7 @@ implementation
 uses
    Classes, Forms, StdCtrls, Controls,
    uHTTPDownload, uUrlTest, uUrlTestButton, uAppStrings,
+   uSettingsRegistry, uSettingsDeclarations,
    uTestFakeTransport;
 
 (* Make aFake the transport the shared layer uses, run aProc, put it back. *)
@@ -420,8 +422,71 @@ begin
    end;
 end;
 
+(* THE ROW'S OWN CERTIFICATE BOX (issue 256): the button reads it at the
+  moment of the click, so a test sees what the real call sees; ticking it
+  blanks a result that belonged to the other choice, and the box's own handler
+  still runs. *)
+procedure TUrlTestTests.Test_TheButtonUsesTheRowsCertificateBox;
+var
+   fake:   TFakeHttpTransport;
+   form:   TForm;
+   edit:   TEdit;
+   button: TButton;
+   lbl:    TLabel;
+   box:    TCheckBox;
+   probe:  TChainProbe;
+   setting: TSettingBase;
+begin
+   BeginTest('the button asks with the row''s certificate box: cleared is unverified, ticked is verified, and a toggle blanks the result');
+   Application.Initialize;
+   DeclareAllSettings;
+   setting := FindSetting('network.verifyServerCertificates');
+   if setting is TBoolSetting then
+      begin
+      TBoolSetting(setting).SetValue(True);
+      end;
+   fake  := TFakeHttpTransport.Create;
+   fake.ScriptStatus := 200;
+   WithFake(fake);
+   probe := TChainProbe.Create;
+   form  := TForm.CreateNew(nil);
+   try
+      edit   := TEdit.Create(form);
+      edit.Parent := form;
+      button := TButton.Create(form);
+      button.Parent := form;
+      lbl    := TLabel.Create(form);
+      lbl.Parent := form;
+      box    := TCheckBox.Create(form);
+      box.Parent := form;
+      box.Checked := True;
+      box.OnChange := probe.Changed;
+      TUrlTester.Create(form, edit, button, lbl, box, 'Row');
+      edit.Text := 'https://self.example.invalid/post/';
+
+      box.Checked := False;
+      CheckEquals(1, probe.Fired, 'the box''s own handler still runs');
+      button.Click;
+      PumpUntil(lbl, 'Answered 200');
+      CheckFalse(fake.Last.VerifyServer, 'cleared: the test is unverified, like the real call');
+
+      box.Checked := True;
+      CheckEquals('', string(lbl.Caption), 'a toggle blanks a result that belonged to the other choice');
+      CheckEquals(2, probe.Fired, 'and the chain still runs');
+      button.Click;
+      PumpUntil(lbl, 'Answered 200');
+      CheckTrue(fake.Last.VerifyServer, 'ticked: verified');
+      CheckEquals(2, fake.Calls, 'two requests, one per click');
+   finally
+      form.Free;
+      probe.Free;
+      ReleaseFake(fake);
+   end;
+end;
+
 procedure TUrlTestTests.RunAllTests;
 begin
+   Test_TheButtonUsesTheRowsCertificateBox;
    Test_AnAnswerIsWordedByItsStatus;
    Test_EveryFailureKindHasASentenceAndNoVerdict;
    Test_TheTransportsWordsRideInParentheses;

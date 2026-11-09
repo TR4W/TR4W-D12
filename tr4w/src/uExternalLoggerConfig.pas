@@ -15,6 +15,9 @@ const
    LF_LOGBOOK_NAME = 'logbookName';
    LF_API_KEY      = 'apiKey';
    LF_PASSWORD     = 'password';
+   (* The destination's own "verify the server's certificate" choice (issue
+      256). A boolean field: FieldText reads '1' or '0'. *)
+   LF_VERIFY_SERVER = 'verifyServer';
    (* DXKeeper's port: what the legacy single-logger setting defaulted to and
       what a new definition starts with. *)
    DXKEEPER_DEFAULT_PORT = 52001;
@@ -33,6 +36,14 @@ type
       LegacyWRL: boolean;
       LegacySecretPending: boolean;
       ApiKeyProtected, PasswordProtected: boolean;
+      (* VERIFY THE SERVER'S CERTIFICATE FOR THIS DESTINATION (issue 256).
+         True by default and for a definition saved before the field existed
+         (a missing value reads True). It only ever LOWERS what the global
+         network.verifyServerCertificates master allows, and matters only for
+         an https:// destination. It is in SettingsStamp (a changed choice is a
+         connection-setting change, issue 233) and NOT in DestinationFingerprint
+         (the queue must not park when the operator ticks a box). *)
+      VerifyServer: boolean;
       constructor Create;
       procedure Assign(const aOther: TExternalLoggerDefinition);
       function DeliveryId: string;
@@ -110,6 +121,7 @@ constructor TExternalLoggerDefinition.Create;
 begin
    inherited Create;
    Id := NewDefinitionId;
+   VerifyServer := True;
 end;
 
 function TExternalLoggerDefinition.DeliveryId: string;
@@ -129,7 +141,8 @@ function TExternalLoggerDefinition.SettingsStamp: string;
 begin
    Result := string(SHA256OfBytes(UTF8Encode(ProviderId + #0 + URL + #0 +
       LowerCase(Trim(Address)) + #0 + string(IntToStr(Port)) + #0 + Account + #0 +
-      Logbook + #0 + ApiKey + #0 + Password)));
+      Logbook + #0 + ApiKey + #0 + Password + #0 +
+      string(IntToStr(Ord(VerifyServer))))));
 end;
 
 function TExternalLoggerDefinition.FieldText(const aKey: string): string;
@@ -166,6 +179,17 @@ begin
    else if aKey = LF_PASSWORD then
       begin
       Result := Password;
+      end
+   else if aKey = LF_VERIFY_SERVER then
+      begin
+      if VerifyServer then
+         begin
+         Result := '1';
+         end
+      else
+         begin
+         Result := '0';
+         end;
       end;
 end;
 
@@ -202,6 +226,11 @@ begin
    else if aKey = LF_PASSWORD then
       begin
       Password := aValue;
+      end
+   else if aKey = LF_VERIFY_SERVER then
+      begin
+      (* Anything but an explicit '0' is True: the safe reading. *)
+      VerifyServer := aValue <> '0';
       end;
 end;
 
@@ -222,6 +251,7 @@ begin
    LegacySecretPending := aOther.LegacySecretPending;
    ApiKeyProtected := aOther.ApiKeyProtected;
    PasswordProtected := aOther.PasswordProtected;
+   VerifyServer := aOther.VerifyServer;
 end;
 
 function TExternalLoggerDefinition.ToJSON: TJSONObject;
@@ -242,6 +272,13 @@ begin
       Result.AddPair('logbookName', LogbookName);
       end;
    Result.AddPair('legacyWRL', TJSONBool.Create(LegacyWRL));
+   if not VerifyServer then
+      begin
+      (* Written only when the operator opted out, so a definition that never
+         did round-trips to the JSON it was loaded from; a missing value is
+         True. *)
+      Result.AddPair('verifyServer', TJSONBool.Create(False));
+      end;
    if (ApiKey <> '') or ApiKeyProtected then
       begin
       AddProtectedPassword(Result, 'apiKey', SecretName(Id, 'ApiKey'), ApiKey, ApiKeyProtected);
@@ -275,6 +312,10 @@ begin
    LogbookName := JSONGetStr(aObject, 'logbookName', '');
    LegacyWRL := (aObject.GetValue('legacyWRL') <> nil) and
       aObject.GetValue('legacyWRL').AsBoolean;
+   (* A MISSING VALUE IS TRUE (a definition saved before issue 256), unlike
+      legacyWRL above, whose absence is False. *)
+   VerifyServer := (aObject.GetValue('verifyServer') = nil) or
+      aObject.GetValue('verifyServer').AsBoolean;
    ApiKey := ReadProtectedPassword(aObject, 'apiKey', SecretName(Id, 'ApiKey'));
    Password := ReadProtectedPassword(aObject, 'password', SecretName(Id, 'Password'));
    ApiKeyProtected := aObject.GetValue('apiKey' + KEYCHAIN_REF_SUFFIX) <> nil;

@@ -18,7 +18,24 @@ type
    end;
 
    TExternalDeliveryClient = class
+   private
+      (* Inverted: a client nobody configured verifies (fields start at zero). *)
+      FUnverified: boolean;
+      FDestination: string;
+      function GetVerifyServer: boolean;
+      procedure SetVerifyServer(aValue: boolean);
+   protected
+      (* EVERY REQUEST A CLIENT MAKES PASSES THROUGH THIS (issue 256): it puts
+         the destination's certificate choice and name on the THttpRequest, so
+         the shared layer (uHTTPDownload.VerifyWanted) decides with the global
+         master. A client calls it right after NewRequest, so a test double
+         that replaces NewRequest is stamped as well. *)
+      procedure StampRequest(aRequest: THttpRequest);
    public
+      (* The destination's own "verify the server's certificate" choice and its
+         display name, set by the worker that built the client. *)
+      property VerifyServer: boolean read GetVerifyServer write SetVerifyServer;
+      property Destination: string read FDestination write FDestination;
       function RecoverUpdatesAsUncertain: boolean; virtual;
       function Deliver(const aJob: TDeliveryJob): TExternalDeliveryResult; virtual; abstract;
    end;
@@ -121,6 +138,22 @@ begin
       aResult.ErrorCode := aCodePrefix + 'NOT_SENT';
       end;
    end;
+end;
+
+function TExternalDeliveryClient.GetVerifyServer: boolean;
+begin
+   Result := not FUnverified;
+end;
+
+procedure TExternalDeliveryClient.SetVerifyServer(aValue: boolean);
+begin
+   FUnverified := not aValue;
+end;
+
+procedure TExternalDeliveryClient.StampRequest(aRequest: THttpRequest);
+begin
+   aRequest.VerifyServer := VerifyServer;
+   aRequest.Destination := FDestination;
 end;
 
 function TExternalDeliveryClient.RecoverUpdatesAsUncertain: boolean;

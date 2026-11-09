@@ -9670,3 +9670,15 @@ msgstr ""
 #, fuzzy
 msgid "No answer"
 msgstr ""
+
+#: uappstrings.sverifyservercaption
+#: usettingscaptions.rs_scoring_board_verifyserver
+#: usettingscaptions.rs_scoring_hamscore_verifyserver
+#, fuzzy
+msgid "Verify the server's certificate"
+msgstr ""
+
+#: uappstrings.sverifyserveroffwarning
+#, fuzzy
+msgid "The server's identity is not checked; anyone between you and it can read what you send."
+msgstr ""

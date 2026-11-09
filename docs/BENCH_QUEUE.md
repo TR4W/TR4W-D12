@@ -30,6 +30,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-09 -- THE PER-DESTINATION "VERIFY THE SERVER'S CERTIFICATE" BOX (issue 256)
+
+Written with no screen and no network: unit tests pin the rule (global AND destination) for every destination through a fake transport, the definition and settings round trips, the editor's controls on an unshown form, and the Test button. What is below needs a screen, or a server whose certificate TR4W will not accept.
+
+- [ ] **Preferences > Online scoring fits and reads right.** The page has two new check boxes, "Verify the server's certificate": one under the HamScore Service URL (below its Test result) and one under the score Posting URL. Nothing overlaps, nothing is clipped at the page's 572 px, and the Score board hint and the new red warning line at the bottom still fit (the Posting URL block moved up 8 px and the Reading URL block down 10 px; the test-result labels are 32 px high, were 34). Look at it at 100% and 150% scaling, and in a translated language.
+- [ ] **Both boxes start ticked, and Save is armed by them.** A fresh settings file, and a settings file saved before this change, show both ticked. Untick one: Save un-greys. Cancel, reopen: ticked again.
+- [ ] **Unticking shows the warning, ticking hides it.** HamScore: the sentence "The server's identity is not checked; anyone between you and it can read what you send." appears in the slot under the box (the same label that carries the plain-http note); the Posting URL row shows it as a red line at the bottom of the page. Over a plain `http://` URL the box is greyed (it keeps its value) and the HamScore slot shows the plain-http note instead; a plain http:// Posting URL shows no warning.
+- [ ] **The Test button follows its row.** With the global `network.verifyServerCertificates` ON, a server with a self-signed certificate: Test with the box ticked answers `No answer: the server's certificate was not accepted ...`; untick the box, Test again: `Answered 200` (or what it answers), and `tr4w.log` has `server certificate checking is OFF for HamScore by its own setting` (or `score posting`) naming the URL and no password. Ticking the box blanks the old result. The Reading URL Test has no box and obeys the global setting only.
+- [ ] **A real self-signed destination, end to end.** A Wavelog or Cloudlog on a LAN with a self-signed certificate: add it in Preferences > External Logger, untick the box in the editor, Save (the row says a restart is needed; restart). A QSO delivers; `tr4w.log` has the Warn naming the definition and its URL. The same box ticked fails closed with a certificate refusal and the delivery retries, it never goes unverified. Club Log and WRL, left ticked, are verified in the same session.
+- [ ] **The external logger editor.** Open a Cloudlog, a Club Log and a WRL definition: a "Verify the server's certificate" box row sits last, the caption column beside it is empty, the box fits its caption, and unticking shows the red warning under the rows and lays the dialog out again (taller by one wrapped line, buttons still on screen). A plain `http://` Cloudlog address greys the box and hides the warning. WRL's logbook Refresh uses the box's current state. A DXKeeper or ACLog definition shows no such row.
+- [ ] **Global OFF still wins.** With `network.verifyServerCertificates` false in `settings\tr4w.json`, a ticked destination is NOT verified (the log has the existing "OFF by setting" line, not the per-destination one).
+
+---
+
 ## Added 2026-11-08 -- ACLOG EXTERNAL LOGGER (issue 33)
 
 Needs a real AC Log (N3FJP) with "TCP API Enabled" ticked (default port 1100). The unit

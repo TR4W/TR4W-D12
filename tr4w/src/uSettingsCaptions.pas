@@ -131,6 +131,8 @@ resourcestring
    RS_SCORING_HAMSCORE_CONTACTINFO            = 'Include contact information';
    RS_SCORING_BOARD_POSTINGURL                = 'Posting URL';
    RS_SCORING_BOARD_READINGURL                = 'Reading URL';
+   RS_SCORING_HAMSCORE_VERIFYSERVER           = 'Verify the server''s certificate';
+   RS_SCORING_BOARD_VERIFYSERVER              = 'Verify the server''s certificate';
    RS_CLUSTER_CONNECTATSTARTUP                = 'Connect at startup';
    RS_CONTEST_AUTOQSLINTERVAL                 = 'Auto QSL Interval';
    RS_CONTEST_AUTOCQDELAYTIME                 = 'Auto-CQ Delay Time';

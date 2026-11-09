@@ -845,7 +845,7 @@ his answers stand as he left them.
 | 10, 15. Proxy | the platform transports follow the operating system's proxy configuration; no TR4W proxy field | NY4I accepted the recommendation |
 | 11. Linux | stays on OpenSSL with system CA tiers (no libcurl) | NY4I accepted the recommendation |
 | 12. Credential over plain http | only as an explicit per-definition choice with a visible warning; never a bearer token; never by default | NY4I accepted the recommendation |
-| 13. Verify certificates | per definition on the HTTP providers, default on; the global setting stays the master switch | NY4I accepted the recommendation |
+| 13. Verify certificates | per definition on the HTTP providers, default on; the global setting stays the master switch | NY4I accepted the recommendation; **BUILT 2026-11-09 (issue 256), see section 13** |
 | 14. Dropping `libeay32.dll` / `ssleay32.dll` | only after a release has run on `auto` | NY4I accepted the recommendation |
 
 1. **Windows API: WinHTTP (recommended) or WinINet?** WinHTTP is thread-safe, has explicit
@@ -896,7 +896,7 @@ his answers stand as he left them.
 13. **Should "verify certificates" become per destination?** Today it is one global setting.
     A self-signed Cloudlog server needs it off for that destination only. Recommend: yes, a
     per-definition choice on the HTTP providers, default on, with the global setting kept as the
-    master switch.
+    master switch. **Built 2026-11-09 (issue 256); see section 13.**
 14. **Once Windows and macOS ship the platform transport as default, drop `libeay32.dll` and
     `ssleay32.dll` (1.0.2u, TLS 1.2 at most) from the installer?** This is question 3 asked for
     the DLLs alone. Recommend: not until a release has run on `auto`, and only if the Windows
@@ -1010,7 +1010,7 @@ the first thing issue 204 must do is confirm them against a real instance.**
 | property                               | consequence for the design                                                                                                                                            | what the design already says, and the gap                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | plain `http://` on a LAN is common     | the bearer policy (`hfAuthPolicy`) refuses a bearer token over http. If Cloudlog sends its key in the BODY, the policy does not fire and the key travels in the clear | Club Log and WRL are https-only. **Gap:** a destination definition needs a per-destination "allow plain http" choice (the verbs already have `AllowInsecure`), and an open question for NY4I on whether secrets may ever travel in the clear on a private network (question 12). The transport interface is unchanged.                                                                                                                                                                               |
-| self-signed or private-CA certificates | the global "verify certificates" setting is all-or-nothing today, and `cacert.pem` will never contain a home CA                                                       | A platform transport on Windows or macOS trusts what the OS trusts, so an operator who installed their CA in the system store is served for free (an advantage of section 4.2 and 4.3 the document should claim). **Gap:** an operator with a self-signed server and no CA to install needs a per-destination "do not verify" choice. `THttpWireRequest.VerifyServer` is already per request, so the INTERFACE needs nothing; the SETTING needs to move from global to per definition (question 13). |
+| self-signed or private-CA certificates | the global "verify certificates" setting is all-or-nothing today, and `cacert.pem` will never contain a home CA                                                       | A platform transport on Windows or macOS trusts what the OS trusts, so an operator who installed their CA in the system store is served for free (an advantage of section 4.2 and 4.3 the document should claim). **Gap:** an operator with a self-signed server and no CA to install needs a per-destination "do not verify" choice. `THttpWireRequest.VerifyServer` is already per request, so the INTERFACE needs nothing; the SETTING needs to move from global to per definition (question 13). **Built 2026-11-09, issue 256: section 13.** |
 | redirects, especially http to https    | a POST that is redirected may be re-sent as a GET, and a redirected write is a double-delivery risk                                                                   | Club Log and WRL disable redirects. A Cloudlog client does the same and reports the 301 with its `Location` as a failure that names the cure ("use the https address"), which needs `Location` in `THttpWireResult` (**gap**, one more header like `RetryAfter`). Contract line 8 is unchanged.                                                                                                                                                                                                      |
 | the host is a LAN name or an address   | `.local` names, short names and private addresses                                                                                                                     | Resolved by the platform resolver in WinHTTP and NSURLSession (their reason to exist) and by the existing `uHostResolve` path for the generic one. On macOS, ATS treats local networking differently from the internet (**unverified**: `NSAllowsLocalNetworking`), so the Info.plist answer in question 8 should be chosen with this destination in mind.                                                                                                                                           |
 | several instances at once              | independent destination queues                                                                                                                                        | The registry, definitions, per-definition namespace and one worker each already do this; Club Log and WRL are two such instances. The HTTP seam is stateless between requests, so there is no shared transport state to collide.                                                                                                                                                                                                                                                                     |
@@ -1115,3 +1115,73 @@ is why the default carries the trailing slash, and it is a reason to decide the 
 transport's default (S2b) with this table in front of us. Nothing in the repo copies the RTC
 rules or the XML specification's posting endpoint (`uContestRTC.pas` and `uScoreBreakdown.pas` only
 cite the sponsor's blog pages), so the endpoint is the one in the issue.
+
+## 13. The per-destination "verify the server's certificate" choice (issue 256, 2026-11-09)
+
+**Question 13, built.** NY4I accepted the recommendation and asked for it the same day.
+
+**The rule, written once (`uHTTPDownload.VerifyWanted`):**
+
+    a certificate is verified  =  (global network.verifyServerCertificates ON)  AND  (the destination's own choice ON)
+
+| global | destination | the transport is told | log |
+| ------ | ----------- | --------------------- | --- |
+| ON     | ON          | verify                | nothing |
+| ON     | OFF         | do not verify, for this request only | Warn: `server certificate checking is OFF for <destination> by its own setting -- <url> is not being verified` |
+| OFF    | ON or OFF   | do not verify         | the existing `OFF by setting` Warn; the per-destination line is not also written |
+
+So global OFF is exactly what it was (nothing is verified), and global ON lets one destination
+opt out for itself and nobody else. **The destination's choice can only lower verification, never
+raise it past the master.** A request that cannot be verified when verification is wanted still
+fails closed (`hfTrustUnavailable` / `hfVerificationUnavailable`, unchanged). The refusal text no
+longer names a Preferences page that does not exist; it points at the destination's box (or the
+global setting, for a download).
+
+**How the choice travels.** `THttpRequest.VerifyServer` (default True) and `.Destination` (the log
+name) are what a caller sets; `RunTransport` hands both to `VerifyWanted` and the transports
+still read only `THttpWireRequest.VerifyServer`, unchanged. The three download verbs
+(`DownloadFileToPath`, `DownloadFileConditional`, `HttpGetText`) have no destination: they pass
+True and obey the master alone. It is read only for an https:// URL, so over a plain `http://`
+URL the choice is **ignored** (not read, not warned about) and the existing plain-http rules are
+untouched -- question 12's plain-http credential work was NOT done here, and nothing in this
+change widens or narrows it.
+
+**Where the choice lives, per destination:**
+
+| destination | stored | name / key | UI |
+| ----------- | ------ | ---------- | -- |
+| Club Log, WRL, Cloudlog / Wavelog | `verifyServer` in the JSON definition (`TExternalLoggerDefinition.VerifyServer`, written only when False; missing reads True) | `LF_VERIFY_SERVER`, a `lfkCheck` field the provider declares with `aFields.AddVerifyServer` | the external logger editor, last row; warning label under the rows |
+| HamScore | `Settings.Hamscore.VerifyServer` | `HAMSCORE VERIFY SERVER` | Preferences > Online scoring, under the Service URL |
+| score Posting URL **and** Reading URL | `Settings.Score.VerifyServer` | `SCORE VERIFY SERVER` | Preferences > Online scoring, under the Posting URL |
+
+**ONE switch for the score board, and it governs the Posting URL.** TR4W itself only ever POSTs
+the Posting URL (`uGetScores`); the Reading URL is opened in the operator's browser
+(`uPostScoresForm`: `OpenUrl`), which checks its own certificate. The Reading URL's Test button
+therefore has no box and asks the master alone. (A second box would be a setting nothing reads.)
+
+**The definition's stamp, not its identity.** `VerifyServer` is in `SettingsStamp` (a changed
+choice is a connection-setting change: a running service keeps the old one until a restart, and
+its row says so, issue 233) and NOT in `DestinationFingerprint` or `DeliveryId` (ticking a box
+must not park the queue; pinned). The service hands the choice to its worker, the worker to the
+client it builds (`StampRequest` puts it on every `THttpRequest`), and the editor's WRL Refresh
+runs with the row's current value, so a refresh sees what a delivery will see. The inverted
+storage (`FUnverified`) on the service, worker and client is on purpose: a class field starts
+as zero, and the safe default is the zero one.
+
+**The Test buttons (issue 251)** pass the row's box (`TUrlTester` takes an optional `TCheckBox`,
+read at the click), so a test sees what the real call sees; toggling the box blanks a stale result.
+
+**Never shared with other positions.** Neither new setting is in `uCFG.SHARED_WITH_PEERS`
+(pinned): one position's security choice is not pushed to another.
+
+**In the UI, an opt-out is visible, not modal.** Unticking shows "The server's identity is not
+checked; anyone between you and it can read what you send." beside the box (the HamScore slot,
+a red line on the Posting URL row, a label under the editor's rows). Over a plain `http://`
+address the box is disabled (it keeps its value) and the warning is not shown.
+
+**Pinned:** `uTestVerifyServer` (every destination x the four combinations, the Warn line,
+no secret in it, the default, a definition reaching its service), `uTestExternalLoggerFields`
+(descriptors, JSON round trip, old JSON, stamp-not-identity, the editor's box and warning, the WRL
+refresh), `uTestPlainHttpUrl` (settings defaults, old files, not shared), `uTestUrlTest` (the
+button), `uTestSettingsModel` (vocabulary 306). **Bench-only:** the page layout, the boxes and
+warnings on a screen, and a real self-signed server (`docs/BENCH_QUEUE.md`).

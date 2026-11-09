@@ -464,7 +464,7 @@ begin
    CheckEquals('Cloudlog / Wavelog', registration.DisplayName);
    fields := registration.CreateFields;
    try
-      CheckEquals(3, fields.Count);
+      CheckEquals(4, fields.Count, 'address, key, profile, certificate choice (issue 256)');
       CheckEquals(LF_URL, fields[0].Key);
       CheckTrue(fields[0].Kind = lfkText, 'address is text');
       CheckTrue(fields[0].Required, 'address is required');
@@ -475,6 +475,8 @@ begin
       CheckEquals(LF_LOGBOOK, fields[2].Key);
       CheckTrue(fields[2].Required, 'the station profile is required');
       CheckEquals(SLoggerFieldCloudlogProfile, fields[2].Caption);
+      CheckEquals(LF_VERIFY_SERVER, fields[3].Key);
+      CheckTrue(fields[3].Kind = lfkCheck, 'the certificate choice is a check box');
    finally
       fields.Free;
    end;

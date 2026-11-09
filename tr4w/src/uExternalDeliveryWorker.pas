@@ -41,6 +41,10 @@ type
    TExternalDeliveryWorker = class(TThread)
    private
       FFileName, FAccount, FLoggerId: string;
+      (* The destination's certificate choice and name (issue 256), handed to
+         the client the worker builds. Inverted so an unset worker verifies. *)
+      FUnverified: boolean;
+      FDestination: string;
       FWake: TEvent;
       FNoticeLock: TCriticalSection;
       FNotice: string;
@@ -54,6 +58,8 @@ type
       FBusy, FHalted, FHasResult: boolean;
       FLastOutcome: TDeliveryOutcome;
       FCode: string;
+      function GetVerifyServer: boolean;
+      procedure SetVerifyServer(aValue: boolean);
       procedure SetBusy(aBusy: boolean);
       procedure RecordResult(aOutcome: TDeliveryOutcome; const aCode: string);
       procedure MarkHalted(const aCode: string);
@@ -82,6 +88,11 @@ type
         at close): nothing it does from now on calls back into the owner. *)
       procedure ForgetOwner;
       property OnNotice: TThreadMethod read FOnNotice write FOnNotice;
+      (* THE DESTINATION'S "VERIFY THE SERVER'S CERTIFICATE" CHOICE and its
+         display name (issue 256). The owner sets both on the main thread
+         BEFORE Start; the worker copies them onto the client it builds. *)
+      property VerifyServer: boolean read GetVerifyServer write SetVerifyServer;
+      property Destination: string read FDestination write FDestination;
       (* Registered with the watchdog from Create to Destroy. Its OnGiveUp
         belongs to the owner. *)
       property Watch: TLogConnectionWatch read FWatch;
@@ -91,6 +102,16 @@ implementation
 
 uses
    DateUtils, sqldb, Log4D;
+
+function TExternalDeliveryWorker.GetVerifyServer: boolean;
+begin
+   Result := not FUnverified;
+end;
+
+procedure TExternalDeliveryWorker.SetVerifyServer(aValue: boolean);
+begin
+   FUnverified := not aValue;
+end;
 
 constructor TExternalDeliveryWorker.Create(const aFileName, aAccount, aLoggerId: string);
 begin
@@ -332,6 +353,8 @@ begin
 
          delivery := TExternalDelivery.Create(database);
          client := NewClient;
+         client.VerifyServer := VerifyServer;
+         client.Destination := FDestination;
          attempts := 0;
          done := False;
          repeat

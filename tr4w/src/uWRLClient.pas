@@ -87,6 +87,7 @@ begin
       end;
    request := NewRequest(WRL_BASE + aPath);
    try
+      StampRequest(request);
       request.Method := aMethod;
       request.Body := aBody;
       request.ContentType := 'application/json';

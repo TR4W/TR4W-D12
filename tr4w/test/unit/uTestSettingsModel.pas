@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(304, names.Count,
+         CheckEquals(306, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -512,7 +512,12 @@ begin
                      + ' the one-time HamScore URL migration (bookkeeping,'
                      + ' issue 250), 2026-11-09; 304 with SCORE POSTING URL'
                      + ' DEFAULT MIGRATED, the same flag for the score'
-                     + ' posting URL (bookkeeping, issue 253), 2026-11-09');
+                     + ' posting URL (bookkeeping, issue 253), 2026-11-09;'
+                     + ' 306 with HAMSCORE VERIFY SERVER and SCORE VERIFY'
+                     + ' SERVER, the per-destination "verify the server''s'
+                     + ' certificate" choices under the global master (new,'
+                     + ' no CFGCA row, never shared with peers, issue 256),'
+                     + ' 2026-11-09');
       finally
          names.Free;
       end;
@@ -1698,6 +1703,7 @@ const
       + '"HAMSCORE URL",'
       + '"HAMSCORE URL DEFAULT MIGRATED",'
       + '"HAMSCORE USERNAME",'
+      + '"HAMSCORE VERIFY SERVER",'
       + '"HAND LOG MODE",'
       + '"HF BAND ENABLE",'
       + '"HOUR DISPLAY",'
@@ -1829,6 +1835,7 @@ const
       + '"SCORE POSTING URL",'
       + '"SCORE POSTING URL DEFAULT MIGRATED",'
       + '"SCORE READING URL",'
+      + '"SCORE VERIFY SERVER",'
       + '"SCP COUNTRY STRING",'
       + '"SCP MINIMUM LETTERS",'
       + '"SEND COMPLETE FOUR LETTER CALL",'

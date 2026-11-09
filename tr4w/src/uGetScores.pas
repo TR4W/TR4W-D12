@@ -55,6 +55,14 @@ procedure RunPOSTGetScoresThread;
 function MakePOSTRequestNew: integer;
 procedure ShowGetScoresStatus(Status: string);
 
+(* THE SCORE POST, CONFIGURED BUT NOT YET SENT (issue 256): the request the
+   posting thread sends, built in one place so a test sees what the thread
+   sends. Plain http:// is allowed (a club server may be plain), and the score
+   board's own certificate choice (Settings.Score.VerifyServer) rides on it; the
+   shared layer ANDs that with the global master. The caller sets the Body and
+   owns the result. *)
+function NewScorePostRequest(const aUrl: string): THttpPost;
+
 // Issue #783 -- HamScore RTC support reuses the dynamicresults fragment
 // the existing scoreboard poster already builds.  This returns just the
 // XML container (no <?xml> prolog, no `xml=` form-encoding prefix), so
@@ -114,6 +122,16 @@ begin
 //  CreateConnectionAndSendReportToGetScores;
 end;
 
+function NewScorePostRequest(const aUrl: string): THttpPost;
+begin
+   Result := THttpPost.Create(aUrl);
+   Result.UserAgent     := TR4W_CURRENTVERSION;
+   Result.ContentType   := 'application/x-www-form-urlencoded';
+   Result.AllowInsecure := True;
+   Result.VerifyServer  := Settings.Score.VerifyServer;
+   Result.Destination   := 'score posting';
+end;
+
 function CreateConnectionAndSendReportToGetScores(aParameter: Pointer): DWORD; stdcall;
 var
    post      : THttpPost;
@@ -137,11 +155,8 @@ begin
      configuration, which is why AllowInsecure is set -- the shared unit
      refuses http:// unless a caller says otherwise, and this caller says so.
      It is logged as plaintext either way. *)
-   post := THttpPost.Create(sURL);
+   post := NewScorePostRequest(sURL);
    try
-      post.UserAgent     := TR4W_CURRENTVERSION;
-      post.ContentType   := 'application/x-www-form-urlencoded';
-      post.AllowInsecure := True;
       post.Body          := CharBufferText(GetScoresBuffer);
 
       logger.Debug('Score post: URL = %s', [sURL]);

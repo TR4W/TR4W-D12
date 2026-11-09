@@ -50,8 +50,20 @@ type
    (* Protocol-neutral contract. The factory selects the implementation;
       callers neither select a wire format nor own a transport. *)
    TExternalLoggerService = class
+   private
+      (* STORED INVERTED, so a service nobody configured verifies: a class's
+         fields start as zero, and the safe default must be the zero one. *)
+      FUnverified: boolean;
+      function GetVerifyServer: boolean;
+      procedure SetVerifyServer(aValue: boolean);
    public
       DisplayName: string;
+      (* THIS DESTINATION'S OWN "VERIFY THE SERVER'S CERTIFICATE" CHOICE (issue
+         256), from its definition. True unless the operator opted out; only
+         an HTTPS service reads it, and it can only lower what the global
+         master switch allows (uHTTPDownload.VerifyWanted). Set once, on the
+         main thread, right after construction. *)
+      property VerifyServer: boolean read GetVerifyServer write SetVerifyServer;
       (* Fills the parts of aSnapshot only this service knows. Main thread. *)
       procedure FillSnapshot(var aSnapshot: TExternalLoggerSnapshot); virtual;
       (* The snapshot of the destination aDeliveryId names; False when this
@@ -174,6 +186,16 @@ begin
       begin
       Result := elsIdle;
       end;
+end;
+
+function TExternalLoggerService.GetVerifyServer: boolean;
+begin
+   Result := not FUnverified;
+end;
+
+procedure TExternalLoggerService.SetVerifyServer(aValue: boolean);
+begin
+   FUnverified := not aValue;
 end;
 
 procedure TExternalLoggerService.FillSnapshot(var aSnapshot: TExternalLoggerSnapshot);

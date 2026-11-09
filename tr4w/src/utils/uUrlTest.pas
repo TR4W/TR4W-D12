@@ -74,13 +74,21 @@ function UrlTestText(aAnswered: boolean; aStatus: integer; const aFinalUrl: stri
                      aFailure: THttpFailure; const aDetail: string): string;
 
 (* THE TEST ITSELF, SYNCHRONOUS: one GET of aUrl through the selected transport.
-   Never raises. The caller owns the result. An empty aUrl makes no request. *)
-function RunUrlTest(const aUrl: string): TUrlTestOutcome;
+   Never raises. The caller owns the result. An empty aUrl makes no request.
+
+   aVerify IS THE ROW'S OWN "VERIFY THE SERVER'S CERTIFICATE" CHOICE (issue
+   256), so a test sees what the real call sees: the shared layer ANDs it with
+   the global master exactly as it does for the upload. True when a row has no
+   box of its own (the Reading URL, whose real use is the operator's browser).
+   aDestination names the row in the one Warn line an opt-out writes. *)
+function RunUrlTest(const aUrl: string; aVerify: boolean = True;
+                    const aDestination: string = ''): TUrlTestOutcome;
 
 (* THE TEST ON A WORKER THREAD. Returns at once. The ticket reports Finished
    when the answer is in; whoever started it polls (a timer) and may drop the
    ticket at any time. *)
-function StartUrlTest(const aUrl: string): IUrlTestTicket;
+function StartUrlTest(const aUrl: string; aVerify: boolean = True;
+                      const aDestination: string = ''): IUrlTestTicket;
 
 implementation
 
@@ -215,7 +223,8 @@ begin
       end;
 end;
 
-function RunUrlTest(const aUrl: string): TUrlTestOutcome;
+function RunUrlTest(const aUrl: string; aVerify: boolean;
+                    const aDestination: string): TUrlTestOutcome;
 var
    request:  THttpRequest;
    answered: boolean;
@@ -236,6 +245,8 @@ begin
       request.ContentType     := '';
       request.FollowRedirects := True;
       request.AllowInsecure   := True;
+      request.VerifyServer    := aVerify;
+      request.Destination     := aDestination;
       request.UserAgent       := 'TR4W';
       request.ConnectMs       := URL_TEST_CONNECT_MS;
       request.IOMs            := URL_TEST_IO_MS;
@@ -285,6 +296,8 @@ type
    TUrlTestThread = class(TThread)
    private
       FUrl:    string;
+      FVerify: boolean;
+      FDestination: string;
       (* The reference that keeps the ticket alive for as long as the thread
         runs, whatever the starter does. *)
       FTicket: IUrlTestTicket;
@@ -292,7 +305,8 @@ type
    protected
       procedure Execute; override;
    public
-      constructor Create(const aUrl: string; aTicket: TUrlTestTicket);
+      constructor Create(const aUrl: string; aVerify: boolean;
+                         const aDestination: string; aTicket: TUrlTestTicket);
    end;
 
 constructor TUrlTestTicket.Create;
@@ -339,11 +353,14 @@ begin
    end;
 end;
 
-constructor TUrlTestThread.Create(const aUrl: string; aTicket: TUrlTestTicket);
+constructor TUrlTestThread.Create(const aUrl: string; aVerify: boolean;
+                                  const aDestination: string; aTicket: TUrlTestTicket);
 begin
    inherited Create(True);
    FreeOnTerminate := True;
    FUrl            := aUrl;
+   FVerify         := aVerify;
+   FDestination    := aDestination;
    FTarget         := aTicket;
    FTicket         := aTicket;   (* the interface reference: counted *)
 end;
@@ -355,7 +372,7 @@ begin
    (* RunUrlTest never raises, but a thread that lets one escape ends the
      program, so the last line of defence is here too. *)
    try
-      FTarget.Complete(RunUrlTest(FUrl));
+      FTarget.Complete(RunUrlTest(FUrl, FVerify, FDestination));
    except
       on E: Exception do
          begin
@@ -367,14 +384,15 @@ begin
    end;
 end;
 
-function StartUrlTest(const aUrl: string): IUrlTestTicket;
+function StartUrlTest(const aUrl: string; aVerify: boolean;
+                      const aDestination: string): IUrlTestTicket;
 var
    ticket: TUrlTestTicket;
    worker: TUrlTestThread;
 begin
    ticket := TUrlTestTicket.Create;
    Result := ticket;   (* the first count; the thread takes a second *)
-   worker := TUrlTestThread.Create(aUrl, ticket);
+   worker := TUrlTestThread.Create(aUrl, aVerify, aDestination, ticket);
    worker.Start;
 end;
 

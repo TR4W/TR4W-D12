@@ -497,6 +497,9 @@ type
       btnHamScoreTest: TButton;
       lblHamScoreTestResult: TLabel;
       lblHamScoreHttpNote: TLabel;
+      chkHamScoreVerify: TCheckBox;
+      chkScoreVerify: TCheckBox;
+      lblScoreVerifyNote: TLabel;
       edtHamScoreUser: TEdit;
       edtHamScorePass: TEdit;
       chkHamScoreContact: TCheckBox;
@@ -709,6 +712,9 @@ type
       procedure chkSO2RChange(Sender: TObject);
       procedure chkAutoConnectChange(Sender: TObject);
       procedure edtHamScoreURLChange(Sender: TObject);
+      procedure chkHamScoreVerifyChange(Sender: TObject);
+      procedure edtScorePostURLChange(Sender: TObject);
+      procedure chkScoreVerifyChange(Sender: TObject);
       procedure chkTCIServerChange(Sender: TObject);
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
@@ -1012,6 +1018,7 @@ type
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
       procedure BuildBindings;
       procedure ShowHamScorePlainHttpNote;
+      procedure ShowScoreVerifyNote;
       procedure LoadClusterServerList;
       procedure ShowClusterDirectoryState;
       procedure LoadClusterList;
@@ -2071,6 +2078,13 @@ begin
      whichever catalogue key a language carries; the .lfm holds the same
      English for the designer. *)
    lblHamScoreHttpNote.Caption := SHamScorePlainHttpNote;
+   (* THE CERTIFICATE BOXES AND THE SCORE BOARD'S WARNING (issue 256): captions
+     from the resourcestrings, UTF-8 for the LCL. The HamScore note label
+     carries the plain-http note OR the unverified warning
+     (ShowHamScorePlainHttpNote), since the two never apply together. *)
+   chkHamScoreVerify.Caption  := UTF8Encode(SVerifyServerCaption);
+   chkScoreVerify.Caption     := UTF8Encode(SVerifyServerCaption);
+   lblScoreVerifyNote.Caption := UTF8Encode(SVerifyServerOffWarning);
    (* Same pattern: it names the pages below Operating, and CW left them
      (issue 235). *)
    lblOperatingInfo.Caption := SPrefsOperatingInfo;
@@ -2141,8 +2155,13 @@ begin
    // dirty hooks: a tester chains the edit's OnChange, and HookDirtyMarker only
    // installs MarkDirty on an edit that has none. A test saves nothing and
    // marks nothing; it asks the text in the box, saved or not, what it answers.
-   TUrlTester.Create(Self, edtHamScoreURL,  btnHamScoreTest,  lblHamScoreTestResult);
-   TUrlTester.Create(Self, edtScorePostURL, btnScorePostTest, lblScorePostTestResult);
+   (* Each row that has a certificate box hands it over, so the test uses the
+     row's own choice, as the real call does (issue 256). The Reading URL has
+     none: its real use is the operator's browser. *)
+   TUrlTester.Create(Self, edtHamScoreURL,  btnHamScoreTest,  lblHamScoreTestResult,
+                     chkHamScoreVerify, 'HamScore');
+   TUrlTester.Create(Self, edtScorePostURL, btnScorePostTest, lblScorePostTestResult,
+                     chkScoreVerify, 'score posting');
    TUrlTester.Create(Self, edtScoreReadURL, btnScoreReadTest, lblScoreReadTestResult);
 
    // Through the SETTER, so the button starts greyed.  A freshly opened window
@@ -3132,6 +3151,7 @@ begin
       BuildBindings;
       FBindings.LoadAll;
       ShowHamScorePlainHttpNote;
+      ShowScoreVerifyNote;
       LogPhase(FTiming, '  Bindings');
       LoadTCIPanel;
       LoadLoggingPanel;
@@ -6090,21 +6110,84 @@ begin
    MarkDirty(Sender);
 end;
 
-(* THE PLAIN-HTTP NOTE UNDER THE HAMSCORE URL: shown while the URL is http://,
-  hidden otherwise. Asked on every keystroke and after the page loads, and it
-  only sets Visible -- it blocks nothing and marks nothing changed.
+procedure TPrefsForm.chkHamScoreVerifyChange(Sender: TObject);
+begin
+   ShowHamScorePlainHttpNote;
+   MarkDirty(Sender);
+end;
+
+procedure TPrefsForm.edtScorePostURLChange(Sender: TObject);
+begin
+   ShowScoreVerifyNote;
+   MarkDirty(Sender);
+end;
+
+procedure TPrefsForm.chkScoreVerifyChange(Sender: TObject);
+begin
+   ShowScoreVerifyNote;
+   MarkDirty(Sender);
+end;
+
+(* THE NOTE UNDER THE HAMSCORE URL: one label, two mutually exclusive messages.
+
+  - the URL is http://: the plain-http note (the password is unencrypted), and
+    the certificate box is DISABLED -- a plain connection has no certificate,
+    so the choice is ignored, and the box keeps its saved value;
+  - the URL is https:// and the certificate box is CLEARED: the unverified
+    warning (issue 256);
+  - otherwise hidden.
+
+  Asked on every keystroke and after the page loads, and it only sets Visible,
+  Enabled and Caption -- it blocks nothing and marks nothing changed.
 
   NIL-SAFE ON PURPOSE. Streaming the .lfm fires the edit's OnChange, and the
   label is streamed AFTER the edit, so on that first call the field is still
   nil. LoadStore calls this again once every value is in place. *)
 procedure TPrefsForm.ShowHamScorePlainHttpNote;
+var
+   plain: boolean;
 begin
    if (lblHamScoreHttpNote = nil) or
-      (edtHamScoreURL = nil)      then
+      (edtHamScoreURL = nil)      or
+      (chkHamScoreVerify = nil)   then
       begin
       Exit;
       end;
-   lblHamScoreHttpNote.Visible := IsPlainHttpUrl(edtHamScoreURL.Text);
+   plain := IsPlainHttpUrl(edtHamScoreURL.Text);
+   chkHamScoreVerify.Enabled := not plain;
+   if plain then
+      begin
+      lblHamScoreHttpNote.Caption := UTF8Encode(SHamScorePlainHttpNote);
+      lblHamScoreHttpNote.Visible := True;
+      end
+   else if not chkHamScoreVerify.Checked then
+      begin
+      lblHamScoreHttpNote.Caption := UTF8Encode(SVerifyServerOffWarning);
+      lblHamScoreHttpNote.Visible := True;
+      end
+   else
+      begin
+      lblHamScoreHttpNote.Visible := False;
+      end;
+end;
+
+(* THE SCORE BOARD'S CERTIFICATE BOX (issue 256). It governs the Posting URL, so
+  a plain http:// Posting URL disables it (nothing to verify; the saved value
+  is kept) and hides the warning; an https:// one shows the warning while the
+  box is cleared. Nil-safe for the same streaming reason as above. *)
+procedure TPrefsForm.ShowScoreVerifyNote;
+var
+   plain: boolean;
+begin
+   if (lblScoreVerifyNote = nil) or
+      (edtScorePostURL = nil)    or
+      (chkScoreVerify = nil)     then
+      begin
+      Exit;
+      end;
+   plain := IsPlainHttpUrl(edtScorePostURL.Text);
+   chkScoreVerify.Enabled := not plain;
+   lblScoreVerifyNote.Visible := (not plain) and (not chkScoreVerify.Checked);
 end;
 
 
@@ -6608,6 +6691,8 @@ begin
    // Operating - Online scoring
    FBindings.Bind(chkHamScoreEnable,  'scoring.hamscore.enable');
    FBindings.Bind(edtHamScoreURL,     'scoring.hamscore.url');
+   FBindings.Bind(chkHamScoreVerify,  'scoring.hamscore.verifyServer');
+   FBindings.Bind(chkScoreVerify,     'scoring.board.verifyServer');
    FBindings.Bind(edtHamScoreUser,    'scoring.hamscore.username');
    FBindings.Bind(edtHamScorePass,    'scoring.hamscore.password');
    FBindings.Bind(chkHamScoreContact, 'scoring.hamscore.contactInfo');

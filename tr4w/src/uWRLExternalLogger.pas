@@ -86,6 +86,10 @@ var
 begin
    Result := '';
    client := TWRLClient.Create(aWork.ApiKey);
+   (* THE EDITOR'S REFRESH SEES WHAT A REAL DELIVERY WILL SEE (issue 256): the
+      work copy carries the row's current certificate choice. *)
+   client.VerifyServer := aWork.VerifyServer;
+   client.Destination := aWork.Name;
    books := TWRLLogbookList.Create(True);
    try
       if not WRLReadAccountId(client, account, code) then
@@ -114,6 +118,7 @@ begin
    aFields.AddSecret(LF_API_KEY, SLoggerFieldWRLKey, False);
    aFields.AddChoice(LF_LOGBOOK, LF_LOGBOOK_NAME, SLoggerFieldWRLLogbook,
       LoadWRLLogbookChoices);
+   aFields.AddVerifyServer;
    (* The id of the account and of the logbook are never fields. TR4W does not
       create logbooks: the operator makes one on the WRL website or app and
       picks it here. *)

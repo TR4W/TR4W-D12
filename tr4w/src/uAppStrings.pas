@@ -1047,6 +1047,15 @@ resourcestring
    SUrlTestNoAnswerCancelled = 'No answer: the request was cancelled';
    SUrlTestNoAnswerOther     = 'No answer';
 
+   (* THE PER-DESTINATION "VERIFY THE SERVER'S CERTIFICATE" CHECK BOX (issue
+      256): beside each HTTP destination -- an external logger's editor, the
+      HamScore URL and the score Posting URL. Ticked by default. The global
+      setting network.verifyServerCertificates stays the master: with it off
+      nothing is verified whatever this box says. The warning is shown beside
+      the box while it is CLEARED and says what that costs. *)
+   SVerifyServerCaption      = 'Verify the server''s certificate';
+   SVerifyServerOffWarning   = 'The server''s identity is not checked; anyone between you and it can read what you send.';
+
 implementation
 
 end.

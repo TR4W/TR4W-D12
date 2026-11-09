@@ -613,6 +613,7 @@ uses
    uTestACLog in 'uTestACLog.pas',
    uTestHttpTransport in 'uTestHttpTransport.pas',
    uTestUrlTest in 'uTestUrlTest.pas',
+   uTestVerifyServer in 'uTestVerifyServer.pas',
    uTestNothingSent in 'uTestNothingSent.pas',
    uTestPlainHttpUrl in 'uTestPlainHttpUrl.pas',
    uTestWRLDelivery in 'uTestWRLDelivery.pas',
@@ -1142,6 +1143,7 @@ begin
    RegisterSuite(TACLogTests.Create('ACLog'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TUrlTestTests.Create('UrlTest'));
+   RegisterSuite(TVerifyServerTests.Create('VerifyServer'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));
    RegisterSuite(TColumnWidthStoreTests.Create('ColumnWidthStore'));

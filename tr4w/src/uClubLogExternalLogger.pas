@@ -61,6 +61,7 @@ procedure DeclareClubLogFields(const aFields: TLoggerFieldList);
 begin
    aFields.AddText(LF_LOGBOOK, SLoggerFieldClubLogCall, True);
    aFields.AddSecret(LF_API_KEY, SLoggerFieldClubLogToken, False);
+   aFields.AddVerifyServer;
 end;
 initialization
    RegisterExternalLogger('CLUBLOG', 'Club Log', CreateClubLog, DeclareClubLogFields);

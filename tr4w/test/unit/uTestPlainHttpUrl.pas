@@ -38,11 +38,16 @@ type
       procedure Test_ASavedOldScorePostingUrlIsMigratedOnce;
       procedure Test_AScoreFlagTrueFileIsNeverTouched;
       procedure Test_OnlyTheExactOldScoreDefaultIsMigrated;
+      procedure Test_TheCertificateChoicesDefaultOnAndOldFilesLoadOn;
+      procedure Test_TheCertificateChoicesRoundTripAndAreNotShared;
    public
       procedure RunAllTests; override;
    end;
 
 implementation
+
+uses
+   uCFG;   (* CommandIsSharedWithPeers *)
 
 procedure TPlainHttpUrlTests.Test_HttpIsPlain;
 begin
@@ -314,8 +319,69 @@ begin
                'a custom URL');
 end;
 
+(* THE PER-DESTINATION CERTIFICATE CHOICES (issue 256): HAMSCORE VERIFY SERVER
+  and SCORE VERIFY SERVER. ON by default, and ON for a file saved before they
+  existed (the loader leaves a property the file does not carry at its
+  default). *)
+procedure TPlainHttpUrlTests.Test_TheCertificateChoicesDefaultOnAndOldFilesLoadOn;
+var
+   s: TR4WSettings;
+begin
+   BeginTest('a new settings object and an old file (no VerifyServer keys) both verify');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      CheckTrue(s.Hamscore.VerifyServer, 'HamScore: default ON');
+      CheckTrue(s.Score.VerifyServer, 'score board: default ON');
+   finally
+      s.Free;
+   end;
+   s := TR4WSettings.Create;
+   try
+      LoadJson(s, '{"Hamscore":{"Url":"https://hamscore.com/postxml/"},'
+                  + '"Score":{"PostingUrl":"https://contestonlinescore.com/post/"}}');
+      CheckTrue(s.Hamscore.VerifyServer, 'HamScore: a file without the key loads ON');
+      CheckTrue(s.Score.VerifyServer, 'score board: a file without the key loads ON');
+   finally
+      s.Free;
+   end;
+   s := TR4WSettings.Create;
+   try
+      LoadJson(s, '{}');
+      CheckTrue(s.Hamscore.VerifyServer and s.Score.VerifyServer, 'an empty file: both ON');
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TPlainHttpUrlTests.Test_TheCertificateChoicesRoundTripAndAreNotShared;
+var
+   s: TR4WSettings;
+   value: string;
+begin
+   BeginTest('an opt-out loads, answers to its command name, and is never shared with other positions');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      LoadJson(s, '{"Hamscore":{"VerifyServer":false},"Score":{"VerifyServer":false}}');
+      CheckFalse(s.Hamscore.VerifyServer, 'HamScore: loaded OFF');
+      CheckFalse(s.Score.VerifyServer, 'score board: loaded OFF');
+      CheckTrue(s.OwnsCommand('HAMSCORE VERIFY SERVER'), 'the command name derives exactly');
+      CheckTrue(s.OwnsCommand('SCORE VERIFY SERVER'), 'the command name derives exactly');
+      CheckTrue(s.TryGetByCommand('HAMSCORE VERIFY SERVER', value), 'readable by name');
+      CheckEquals('FALSE', UpperCase(value), 'and reads OFF');
+   finally
+      s.Free;
+   end;
+   CheckFalse(CommandIsSharedWithPeers('HAMSCORE VERIFY SERVER'),
+              'one position''s security choice is not pushed to another');
+   CheckFalse(CommandIsSharedWithPeers('SCORE VERIFY SERVER'), 'nor this one');
+end;
+
 procedure TPlainHttpUrlTests.RunAllTests;
 begin
+   Test_TheCertificateChoicesDefaultOnAndOldFilesLoadOn;
+   Test_TheCertificateChoicesRoundTripAndAreNotShared;
    Test_AFreshFileGetsTheScorePostingDefaultAndTheFlag;
    Test_ASavedOldScorePostingUrlIsMigratedOnce;
    Test_AScoreFlagTrueFileIsNeverTouched;

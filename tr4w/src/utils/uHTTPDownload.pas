@@ -211,6 +211,18 @@ type
       IfNoneMatch:    string;   (* conditional GET: the ETag held; '' = no header *)
       IfModifiedSince: string;  (* conditional GET: the Last-Modified held; '' = none *)
       AllowInsecure:  boolean;  (* the caller accepts an http:// URL *)
+      (* THIS DESTINATION'S OWN "VERIFY THE SERVER'S CERTIFICATE" CHOICE (issue
+        256, docs/HTTP_TRANSPORT_DESIGN.md question 13). True unless the
+        operator opted this one destination out. It is a REQUEST to be
+        checked, never a way to check: the shared layer decides, in ONE place
+        (VerifyWanted), that a certificate is verified only when the global
+        master switch (network.verifyServerCertificates) AND this choice are
+        both on. So True never overrides a global off, and False weakens this
+        destination alone. It is read only for an https:// URL. *)
+      VerifyServer:   boolean;
+      (* WHO IS ASKING, for the one Warn line an opt-out writes ('Cloudlog
+        shack'): the destination's display name. '' = not named. Never a secret. *)
+      Destination:    string;
       ConnectMs:      integer;
       IOMs:           integer;
 
@@ -465,26 +477,52 @@ end;
   connected anyway and said so only in the log. That is worse than the old
   unverified-everywhere state, because a verification setting makes fail-open
   read as a secure default. FAIL CLOSED: the only way to send unverified is to
-  ask for it (network.verifyServerCertificates, see uSettingsDeclarations). *)
-function VerifyWanted(const aShownUrl: string): boolean;
+  ask for it (network.verifyServerCertificates, see uSettingsDeclarations).
+
+  PER DESTINATION (issue 256): aDestinationWants is the destination's own
+  choice (THttpRequest.VerifyServer), aDestination its display name for the
+  log. THE RULE, written once: verified = (global master ON) AND (the
+  destination ON). Global off wins for everything, exactly as before; global
+  on lets one destination opt out for itself and nothing else. A request that
+  names no destination (a download) passes True. Each opt-out is a Warn line
+  naming the destination and the URL (credentials already scrubbed by the
+  caller) -- the visible half of the warning is the Preferences / editor
+  check box. *)
+function VerifyWanted(const aShownUrl: string; aDestinationWants: boolean;
+                      const aDestination: string): boolean;
 var
-   setting: TSettingBase;
+   setting:    TSettingBase;
+   globalWants: boolean;
+   shownName:  string;
 begin
-   Result  := True;
-   setting := FindSetting('network.verifyServerCertificates');
+   globalWants := True;
+   setting     := FindSetting('network.verifyServerCertificates');
    if setting <> nil then
       begin
       (* NO CAST. AsText is already the byte string SameText takes -- my
         first attempt wrapped it in string(), which converted UTF-16 back
         DOWN at the call and turned a safe widening into a narrowing the
         build counts. The compiler was right and I was tidying. *)
-      Result := (UpperCase(setting.AsText) = 'TRUE') or (setting.AsText = '1');
+      globalWants := (UpperCase(setting.AsText) = 'TRUE') or (setting.AsText = '1');
       end;
 
-   if not Result then
+   Result := globalWants and aDestinationWants;
+
+   if not globalWants then
       begin
       logger.Warn('[HTTP] server certificate checking is OFF by setting -- '
                   + '%s is not being verified', [aShownUrl]);
+      end
+   else if not aDestinationWants then
+      begin
+      shownName := aDestination;
+      if shownName = '' then
+         begin
+         shownName := '(unnamed destination)';
+         end;
+      logger.Warn('[HTTP] server certificate checking is OFF for %s by its own '
+                  + 'setting -- %s is not being verified',
+                  [shownName, aShownUrl]);
       end;
 end;
 
@@ -545,8 +583,10 @@ begin
          begin
          GLastRefusalLogged := aWhy;
          logger.Error('[HTTP] REFUSING %s -- server certificates cannot be '
-                      + 'verified (%s). Turn off Preferences > Network > verify '
-                      + 'server certificates to proceed unverified.',
+                      + 'verified (%s). To proceed unverified, clear the '
+                      + '"Verify the server''s certificate" box of the '
+                      + 'destination (or network.verifyServerCertificates in '
+                      + 'settings\tr4w.json for a download).',
                       [aShownUrl, aWhy]);
          end
       else
@@ -587,6 +627,8 @@ end;
 function RunTransport(aWire: THttpWireRequest; aSink: TStream;
                       aResult: THttpWireResult;
                       const aSecret1, aSecret2: string;
+                      aDestinationWants: boolean;
+                      const aDestination: string;
                       out aFailure: THttpFailure;
                       out aFailReason: string;
                       out aRefusalLogged: boolean): boolean;
@@ -603,7 +645,7 @@ begin
    aWire.VerifyServer := True;
    if useTLS then
       begin
-      aWire.VerifyServer := VerifyWanted(shownUrl);
+      aWire.VerifyServer := VerifyWanted(shownUrl, aDestinationWants, aDestination);
       end;
 
    (* ONE REQUEST LOG FOR ALL THREE VERBS: the line is written here, the one
@@ -725,8 +767,8 @@ begin
             end;
       end;
       try
-         Result := RunTransport(wire, fs, res, '', '', failure, AFailReason,
-                                refusalLogged);
+         Result := RunTransport(wire, fs, res, '', '', True, '', failure,
+                                AFailReason, refusalLogged);
       finally
          fs.Free;
       end;
@@ -813,8 +855,8 @@ begin
             end;
       end;
       try
-         answered := RunTransport(wire, fs, res, '', '', failure, AFailReason,
-                                  refusalLogged);
+         answered := RunTransport(wire, fs, res, '', '', True, '', failure,
+                                  AFailReason, refusalLogged);
       finally
          fs.Free;
       end;
@@ -894,8 +936,8 @@ begin
       wire.ConnectMs       := AConnectMs;
       wire.IOMs            := AIOMs;
 
-      Result := RunTransport(wire, nil, res, '', '', failure, AFailReason,
-                             refusalLogged);
+      Result := RunTransport(wire, nil, res, '', '', True, '', failure,
+                             AFailReason, refusalLogged);
       if Result then
          begin
          AText := FromWire(res.Body);
@@ -955,6 +997,7 @@ begin
    URL         := aURL;
    Method      := 'POST';
    FollowRedirects := False;
+   VerifyServer := True;   (* a destination opts OUT, never in *)
    MaxResponseBytes := 1024 * 1024;
    ContentType := 'application/x-www-form-urlencoded';
    UserAgent   := 'TR4W';
@@ -1033,8 +1076,8 @@ begin
       wire.IOMs             := IOMs;
       wire.MaxResponseBytes := MaxResponseBytes;
 
-      if RunTransport(wire, nil, res, BearerToken, Password, Failure,
-                      FailReason, refusalLogged) then
+      if RunTransport(wire, nil, res, BearerToken, Password, VerifyServer,
+                      Destination, Failure, FailReason, refusalLogged) then
          begin
          (* Post allows EVERY status code (AcceptAnyStatus), so a 400 does not
            fail: Send returns True, StatusCode holds 400 and Response holds the

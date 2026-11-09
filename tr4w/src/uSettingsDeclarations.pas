@@ -396,6 +396,14 @@ begin
                          RS_SCORING_HAMSCORE_PASSWORD);
    RegisterModelSetting( 'scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
                          RS_SCORING_HAMSCORE_CONTACTINFO);
+   (* The per-destination certificate choices (issue 256). Neither is in
+     SHARED_WITH_PEERS: a position's own security choice is never pushed to
+     another position. The global network.verifyServerCertificates stays the
+     master; each of these can only lower it for its own destination. *)
+   RegisterModelSetting( 'scoring.hamscore.verifyServer', 'HAMSCORE VERIFY SERVER',
+                         RS_SCORING_HAMSCORE_VERIFYSERVER);
+   RegisterModelSetting( 'scoring.board.verifyServer',    'SCORE VERIFY SERVER',
+                         RS_SCORING_BOARD_VERIFYSERVER);
    RegisterModelSetting( 'scoring.board.postingUrl',     'SCORE POSTING URL',
                          RS_SCORING_BOARD_POSTINGURL);
    RegisterModelSetting( 'scoring.board.readingUrl',     'SCORE READING URL',

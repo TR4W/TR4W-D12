@@ -40,11 +40,18 @@ type
       FEdit:       TEdit;
       FButton:     TButton;
       FResult:     TLabel;
+      (* THE ROW'S OWN "VERIFY THE SERVER'S CERTIFICATE" BOX (issue 256), or nil
+        for a row with none. Read at the moment of the click, so a test sees
+        what the real call sees. *)
+      FVerify:     TCheckBox;
+      FDestination: string;
       FTimer:      TTimer;
       FTicket:     IUrlTestTicket;
       FPrevChange: TNotifyEvent;
+      FPrevVerifyChange: TNotifyEvent;
       procedure ButtonClick(Sender: TObject);
       procedure EditChange(Sender: TObject);
+      procedure VerifyChange(Sender: TObject);
       procedure PollTimer(Sender: TObject);
       procedure ShowText(const aText: string);
       procedure DropTicket;
@@ -52,8 +59,11 @@ type
    protected
       procedure Notification(aComponent: TComponent; aOperation: TOperation); override;
    public
+      (* aVerify is the row's certificate box, or nil; aDestination names the
+        row in the log. *)
       constructor Create(aOwner: TComponent; aEdit: TEdit; aButton: TButton;
-                         aResult: TLabel); reintroduce;
+                         aResult: TLabel; aVerify: TCheckBox = nil;
+                         const aDestination: string = ''); reintroduce;
       destructor Destroy; override;
       function Running: boolean;
    end;
@@ -67,12 +77,15 @@ const
    POLL_INTERVAL_MS = 200;
 
 constructor TUrlTester.Create(aOwner: TComponent; aEdit: TEdit; aButton: TButton;
-                              aResult: TLabel);
+                              aResult: TLabel; aVerify: TCheckBox;
+                              const aDestination: string);
 begin
    inherited Create(aOwner);
    FEdit   := aEdit;
    FButton := aButton;
    FResult := aResult;
+   FVerify := aVerify;
+   FDestination := aDestination;
 
    (* If one of the three is freed first, forget it rather than touch it. *)
    FEdit.FreeNotification(Self);
@@ -91,6 +104,15 @@ begin
 
    FPrevChange     := FEdit.OnChange;
    FEdit.OnChange  := EditChange;
+
+   if FVerify <> nil then
+      begin
+      (* Ticking the box changes what the test would do, so a result shown
+        for the old choice is blanked, like one for old text. *)
+      FVerify.FreeNotification(Self);
+      FPrevVerifyChange := FVerify.OnChange;
+      FVerify.OnChange  := VerifyChange;
+      end;
 end;
 
 destructor TUrlTester.Destroy;
@@ -102,6 +124,10 @@ begin
    if (FEdit <> nil) and (TMethod(FEdit.OnChange).Data = Pointer(Self)) then
       begin
       FEdit.OnChange := FPrevChange;
+      end;
+   if (FVerify <> nil) and (TMethod(FVerify.OnChange).Data = Pointer(Self)) then
+      begin
+      FVerify.OnChange := FPrevVerifyChange;
       end;
    FTicket := nil;
    ShowBusy(False);
@@ -124,6 +150,10 @@ begin
       if aComponent = FResult then
          begin
          FResult := nil;
+         end;
+      if aComponent = FVerify then
+         begin
+         FVerify := nil;
          end;
       end;
 end;
@@ -187,6 +217,8 @@ begin
 end;
 
 procedure TUrlTester.ButtonClick(Sender: TObject);
+var
+   verify: boolean;
 begin
    if (FEdit = nil) or (FButton = nil) or (FTicket <> nil) then
       begin
@@ -195,8 +227,25 @@ begin
    ShowText(SUrlTestRunning);
    FButton.Enabled := False;
    ShowBusy(True);
-   FTicket         := StartUrlTest(UTF8Decode(FEdit.Text));
+   verify := True;
+   if FVerify <> nil then
+      begin
+      verify := FVerify.Checked;
+      end;
+   FTicket         := StartUrlTest(UTF8Decode(FEdit.Text), verify, FDestination);
    FTimer.Enabled  := True;
+end;
+
+(* The certificate box changed: a result (or a request still running) belongs
+  to the old choice. Then the box's own handler runs (MarkDirty, the warning). *)
+procedure TUrlTester.VerifyChange(Sender: TObject);
+begin
+   DropTicket;
+   ShowText('');
+   if Assigned(FPrevVerifyChange) then
+      begin
+      FPrevVerifyChange(Sender);
+      end;
 end;
 
 (* The edit changed: whatever the label says, or a request still running, is

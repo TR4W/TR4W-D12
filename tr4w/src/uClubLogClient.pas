@@ -67,6 +67,7 @@ begin
    Result.ErrorCode := 'CLUBLOG_RESPONSE_REQUIRES_REVIEW';
    request := NewRequest;
    try
+      StampRequest(request);
       request.URL := 'https://clublog.org/api/v1' + aPath;
       request.Method := aMethod;
       request.Body := aBody;

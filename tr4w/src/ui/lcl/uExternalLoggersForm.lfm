@@ -2,12 +2,12 @@ object ExternalLoggersForm: TExternalLoggersForm
   Left = 200
   Top = 150
   Width = 710
-  Height = 510
+  Height = 530
   Caption = 'External logger'
   Position = poScreenCenter
   BorderStyle = bsDialog
   ClientWidth = 710
-  ClientHeight = 510
+  ClientHeight = 530
   OnCloseQuery = EditorCloseQuery
   OnShow = EditorShow
   object lblName: TLabel
@@ -63,9 +63,21 @@ object ExternalLoggersForm: TExternalLoggersForm
     WordWrap = True
     Caption = ''
   end
+  object lblVerifyNote: TLabel
+    Left = 16
+    Anchors = [akTop, akLeft, akRight]
+    Top = 336
+    Width = 670
+    Height = 20
+    AutoSize = False
+    Font.Color = clMaroon
+    Visible = False
+    WordWrap = True
+    Caption = ''
+  end
   object chkActive: TCheckBox
     Left = 16
-    Top = 344
+    Top = 366
     Width = 300
     Height = 28
     AutoSize = True
@@ -75,7 +87,7 @@ object ExternalLoggersForm: TExternalLoggersForm
   object lblNote: TLabel
     Left = 16
     Anchors = [akTop, akLeft, akRight]
-    Top = 384
+    Top = 404
     Width = 670
     Height = 40
     AutoSize = False
@@ -85,7 +97,7 @@ object ExternalLoggersForm: TExternalLoggersForm
   object lblStatus: TLabel
     Left = 16
     Anchors = [akTop, akLeft, akRight]
-    Top = 432
+    Top = 452
     Width = 670
     Height = 20
     AutoSize = False
@@ -94,7 +106,7 @@ object ExternalLoggersForm: TExternalLoggersForm
   end
   object btnOK: TButton
     Left = 396
-    Top = 466
+    Top = 486
     Width = 174
     Height = 32
     AutoSize = True
@@ -106,7 +118,7 @@ object ExternalLoggersForm: TExternalLoggersForm
   end
   object btnCancel: TButton
     Left = 580
-    Top = 466
+    Top = 486
     Width = 110
     Height = 32
     AutoSize = True

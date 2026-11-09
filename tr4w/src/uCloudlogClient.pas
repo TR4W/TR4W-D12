@@ -116,6 +116,7 @@ begin
    body := TJSONObject.Create;
    request := NewRequest(CloudlogQsoUrl(FBaseUrl));
    try
+      StampRequest(request);
       body.Add('key', UTF8Encode(FKey));
       body.Add('station_profile_id', UTF8Encode(FProfileId));
       body.Add('type', 'adif');

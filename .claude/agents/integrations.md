@@ -252,11 +252,11 @@ bench-only (BENCH_QUEUE).
 **A PROVIDER DECLARES ITS EDITOR ROWS; THE EDITOR NAMES NO PROVIDER (issue 227,
 2026-11-06).** The `lcf*` flag set is gone. `RegisterExternalLogger(id, name, ctor,
 declarer)`: the declarer fills a `TLoggerFieldList` (`AddText/AddPort/AddSecret/
-AddChoice`), built afresh on every `CreateFields` because captions are resourcestrings
+AddChoice`, and since issue 256 `AddCheck` / `AddVerifyServer` for a yes/no box), built afresh on every `CreateFields` because captions are resourcestrings
 (a copy made at registration is never translated). `ExternalLoggerDefinitionError`
 reads the same list: required text, port range, and a choice needs its value AND
 `Account`; a secret is never required (a locked vault leaves it empty and the logger
-must still start). A registration is a class owned by the registry. Facts that bite:
+must still start), and neither is a check box (either answer is valid). A registration is a class owned by the registry. Facts that bite:
 **WRL's account id and logbook id are never fields.** The logbook is a CHOICE
 (`LF_LOGBOOK` with `LF_LOGBOOK_NAME` beside it); the loader (`LoadWRLLogbookChoices`,
 over `uWRLClient.WRLReadAccountId/WRLReadLogbooks`) runs
@@ -485,6 +485,45 @@ used to be written out in `uHTTPDownload`. Rules that are easy to break:
   NO redirect policing in code (S1c not done; a separate pre-release URL-validity check is its own
   issue); WinHTTP's default policy already forbids https to http. No macOS transport exists yet (S3).
 
+## Verify the server's certificate, per destination (issue 256, 2026-11-09)
+
+**A certificate is verified only when the global master (`network.verifyServerCertificates`)
+AND the destination's own choice are both ON -- decided in ONE place, `uHTTPDownload.VerifyWanted`.**
+Global OFF verifies nothing, as before; global ON lets one destination opt out for itself. The choice
+only LOWERS verification and is read only for an https URL (a plain http:// request ignores it, and
+question 12's plain-http rule is untouched: nothing else was needed here). A request that cannot be
+verified when it is wanted still fails closed. `docs/HTTP_TRANSPORT_DESIGN.md` section 13 has the table.
+Facts that bite:
+
+* **A caller sets `THttpRequest.VerifyServer` (default True) and `.Destination` (the log name);
+  never a wire field.** `RunTransport` takes both and the three download verbs pass `True, ''`.
+  The opt-out Warn names the destination and the (scrubbed) URL; the master's own line is separate.
+  Do not copy the decision into a caller or a transport.
+* **External loggers:** `TExternalLoggerDefinition.VerifyServer` (JSON `verifyServer`, written only
+  when False, a MISSING value reads True -- unlike `legacyWRL`). It is in `SettingsStamp`, NOT in
+  `DestinationFingerprint`/`DeliveryId` (a toggle must not park the queue; pinned with a literal id).
+  A provider declares it with `aFields.AddVerifyServer` (an `lfkCheck` field; Club Log, WRL, Cloudlog;
+  never DXKeeper or ACLog, which are TCP). `CreateExternalLogger` copies it to the service
+  (`TExternalLoggerService.VerifyServer`), `TDurableExternalLogger.StartWorker` to the worker, the worker
+  to its client, and every client calls `StampRequest(request)` right after `NewRequest`. **Service,
+  worker and client store it INVERTED (`FUnverified`)**: a field starts at zero, so an object nobody
+  configured verifies. `LoadWRLLogbookChoices` takes it from the work copy, so the editor's Refresh sees
+  what a delivery will.
+* **HamScore:** `Settings.Hamscore.VerifyServer` (`HAMSCORE VERIFY SERVER`) -> `THamScoreUploader.VerifyServer`,
+  set where the uploader is built (`HamScoreInit`). `PostToServer` is `protected` so a test drives the real
+  request without a thread.
+* **The score board has ONE switch, `Settings.Score.VerifyServer` (`SCORE VERIFY SERVER`), and it governs the
+  Posting URL** (`uGetScores.NewScorePostRequest`, which the thread and the test share). The Reading URL is
+  opened in a browser, never fetched by TR4W, so its Test button asks the master alone.
+* **Neither setting is in `uCFG.SHARED_WITH_PEERS`** (pinned): a position's security choice is not pushed.
+* **The Test buttons** pass the row's box (`TUrlTester(..., aVerify: TCheckBox, aDestination)`), read at the
+  click; a toggle blanks the stale result.
+* **A for-in over an untyped literal array of strings truncates to the first element's width**
+  (`['CLUBLOG', 'CLOUDLOG']` gave `CLOUDLO`). Use a typed `array of string` constant. A test found it.
+* NOT built and for NY4I: Q12's plain-http credential choice; help text for the two settings (they are in
+  `KNOWN_HELP_GAPS`); an OS trust-store option; a per-destination choice for the download verbs (CTY, TRMASTER,
+  POTA, call history, SCP, version check obey the master alone).
+
 ## Cloudlog / Wavelog provider (issue 204, 2026-11-07)
 
 `uCloudlogClient` + `uCloudlogExternalLogger` (provider id `CLOUDLOG`, linked from
@@ -511,8 +550,9 @@ run against a live server:
   implemented provider"; it is NY4I's decision, not an agent's.** A confirmed create has no remote
   id, so the local marker `cloudlog:created` stands in (the outbox refuses a confirmed create with
   an empty one).
-* **TLS is the global setting only, https only.** No per-destination "do not verify" and no plain
-  http: HTTP_TRANSPORT_DESIGN questions 12 and 13 are NY4I's. Do not invent either here.
+* **https only, and the certificate choice is the definition's own box** under the global master (issue
+  256, the section above). There is still no plain-http Cloudlog: HTTP_TRANSPORT_DESIGN question 12 is
+  NY4I's, so do not invent it here.
 * Response cap is 256 KB: the 201 echoes the whole ADIF back.
 
 ## Call history download -- supercheckhistory.com (2026-11-08)

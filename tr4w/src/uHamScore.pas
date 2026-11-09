@@ -112,6 +112,9 @@ type
     FURL:          string;
     FUsername:     string;
     FPassword:     string;
+    (* HAMSCORE VERIFY SERVER (issue 256), stored inverted so an uploader
+      nobody configured verifies. Set on the main thread before Start. *)
+    FUnverified:   Boolean;
     FCycleMs:      Integer;          // 120000 in production; injectable for tests
     FLogger:       TLogLogger;
     (* WORKER THREAD ONLY. Set by PostToServer when the last post provably sent
@@ -129,13 +132,16 @@ type
     function  TakePendingSnapshot: TList;     // moves FPending to a local list, replaces with new empty list
     procedure RestorePending(snapshot: TList); // puts un-CFMed contacts back at the head of FPending
     function  BuildPayload(snapshot: TList; out hadQSOs: Boolean): AnsiString;
-    function  PostToServer(const xml: AnsiString; out responseBody: string): Integer;  // returns HTTP status
     function  ResponseStatusKind(const responseBody: string): string;  // 'CFM' | 'OK' | 'Error' | 'ResyncLog' | ''
     procedure DoCycle;
     procedure FreeContactList(list: TList);
     procedure SetCycleStatus(const status: string);
   protected
     procedure Execute; override;
+    (* One upload, through the shared HTTP layer. Protected (not private) so a
+      test can drive the real request into a scripted transport without a
+      thread or a cycle. Returns the HTTP status, 0 for no answer. *)
+    function  PostToServer(const xml: AnsiString; out responseBody: string): Integer;
   public
     constructor Create(const AURL, AUsername, APassword: string);
     destructor  Destroy; override;
@@ -144,6 +150,12 @@ type
     procedure   PushNow;                         // wake the worker for an immediate cycle
     procedure   SetScoreXml(const AXml: AnsiString);   // main thread
     function    GetScoreXml: AnsiString;               // worker thread
+    (* The operator's "verify the server's certificate" choice for HamScore,
+      read when the uploader is built. It can only lower the global master
+      (uHTTPDownload.VerifyWanted); True unless the operator opted out. *)
+    procedure   SetVerifyServer(aValue: Boolean);
+    function    GetVerifyServer: Boolean;
+    property    VerifyServer: Boolean read GetVerifyServer write SetVerifyServer;
 
     // Read-only status accessors for the Phase 4 dialog (thread-safe snapshot).
     function    GetPendingCount: Integer;
@@ -507,6 +519,16 @@ begin
     [FURL, FUsername, FCycleMs]);
 end;
 
+function THamScoreUploader.GetVerifyServer: Boolean;
+begin
+  Result := not FUnverified;
+end;
+
+procedure THamScoreUploader.SetVerifyServer(aValue: Boolean);
+begin
+  FUnverified := not aValue;
+end;
+
 destructor THamScoreUploader.Destroy;
 begin
   FreeContactList(FPending);
@@ -752,6 +774,12 @@ begin
     post.Username       := effectiveUser;
     post.Password       := FPassword;
     post.AcceptEncoding := 'gzip,deflate';
+    (* THE PASSWORD GOES OVER THIS CONNECTION, so HamScore has its own
+      certificate choice (issue 256): a self-signed server elsewhere does not
+      switch checking off here. The shared layer ANDs it with the global
+      master. *)
+    post.VerifyServer   := VerifyServer;
+    post.Destination    := 'HamScore';
     (* PLAINTEXT IS ALLOWED HERE, DELIBERATELY (2026-10-29). HamScore's own
       recommended address is http://scoredistributor.net/ (our default is now
       https://hamscore.com/postxml/, issue 250), and the shared
@@ -1037,6 +1065,7 @@ begin
     Settings.Hamscore.Url,
     Settings.Hamscore.Username,
     Settings.Hamscore.Password);
+  Uploader.VerifyServer := Settings.Hamscore.VerifyServer;   // issue 256
   Uploader.Resume;   // Delphi 7 TThread; later Delphis renamed to Start.
   GetModuleLogger.Info('[HamScore] Started');
 end;

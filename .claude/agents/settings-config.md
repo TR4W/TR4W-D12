@@ -480,6 +480,18 @@ Wiring `NeedsRestart` to emit that hint per bound control is the real fix and is
 `MY COUNTRY` mid-session, nothing said it would not take effect, and the
 contest kept its original exchange.
 
+## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
+
+`HAMSCORE VERIFY SERVER` (`Settings.Hamscore.VerifyServer`) and `SCORE VERIFY SERVER`
+(`Settings.Score.VerifyServer`) are per-destination certificate choices that sit UNDER the global
+`network.verifyServerCertificates`: a destination is verified only when both are on (decided in
+`uHTTPDownload.VerifyWanted`; integrations owns it). Both default True, and a file saved before they
+existed loads True (the loader leaves a property the file does not carry at its constructor default).
+**Neither is in `uCFG.SHARED_WITH_PEERS`** -- an allow-list, so a new setting is local by default;
+pinned in `uTestPlainHttpUrl` -- one position must not switch another's certificate checking off.
+Vocabulary count 306 (derived names: group `Hamscore`/`Score` + `VerifyServer`). Help text is not
+written (both are in `KNOWN_HELP_GAPS`). An external logger's choice is a definition field, not a setting.
+
 ## Open
 
 **The startup precedence defect is NARROWER, NOT CLOSED.** The

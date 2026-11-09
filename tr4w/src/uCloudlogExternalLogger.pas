@@ -79,6 +79,7 @@ begin
    aFields.AddText(LF_URL, SLoggerFieldCloudlogUrl, True);
    aFields.AddSecret(LF_API_KEY, SLoggerFieldCloudlogKey, False);
    aFields.AddText(LF_LOGBOOK, SLoggerFieldCloudlogProfile, True);
+   aFields.AddVerifyServer;
 end;
 initialization
    RegisterExternalLogger('CLOUDLOG', 'Cloudlog / Wavelog', CreateCloudlog,

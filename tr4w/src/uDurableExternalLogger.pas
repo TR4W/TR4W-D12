@@ -270,6 +270,10 @@ end;
 procedure TDurableExternalLogger.StartWorker;
 begin
    FWorker := CreateWorker;
+   (* THE DEFINITION'S CERTIFICATE CHOICE reaches every HTTP request through
+      here: worker, then client, then THttpRequest (issue 256). *)
+   FWorker.VerifyServer := VerifyServer;
+   FWorker.Destination := DisplayName;
    FWorker.OnNotice := QueueDeliveryNotice;
    FWorker.Watch.OnGiveUp := WorkerStalled;
    if FWatchdog = nil then

@@ -15,7 +15,8 @@ unit uExternalLoggerRegistry;
 interface
 uses SysUtils, Generics.Collections, uExternalLoggerConfig, uExternalLoggerService;
 type
-   TLoggerFieldKind = (lfkText, lfkPort, lfkSecret, lfkChoice);
+   (* lfkCheck is a yes/no box (issue 256): FieldText reads '1' or '0'. *)
+   TLoggerFieldKind = (lfkText, lfkPort, lfkSecret, lfkChoice, lfkCheck);
 
    (* The values a choice field offers: what the operator sees (Display) and
       what is stored (Value). *)
@@ -51,6 +52,9 @@ type
       Kind: TLoggerFieldKind;
       Required: boolean;
       Loader: TLoggerChoiceLoader;
+      (* A check box only: the sentence the editor shows while the box is
+         CLEARED. '' = none. *)
+      OffWarning: string;
    end;
 
    TLoggerFieldList = class(TObjectList<TLoggerFieldDescriptor>)
@@ -60,6 +64,12 @@ type
       function AddSecret(const aKey, aCaption: string; aRequired: boolean): TLoggerFieldDescriptor;
       function AddChoice(const aKey, aDisplayKey, aCaption: string;
          aLoader: TLoggerChoiceLoader): TLoggerFieldDescriptor;
+      (* A yes/no box. Never required: either answer is valid. *)
+      function AddCheck(const aKey, aCaption, aOffWarning: string): TLoggerFieldDescriptor;
+      (* THE "VERIFY THE SERVER'S CERTIFICATE" BOX (issue 256) with its caption
+         and warning, so every HTTP provider declares it the same way in one
+         line. Declared by Club Log, WRL and Cloudlog; never by a TCP provider. *)
+      function AddVerifyServer: TLoggerFieldDescriptor;
       function Find(const aKey: string): TLoggerFieldDescriptor;
    end;
 
@@ -165,6 +175,17 @@ begin
    Result.DisplayKey := aDisplayKey;
    Result.Loader := aLoader;
 end;
+function TLoggerFieldList.AddCheck(const aKey, aCaption,
+   aOffWarning: string): TLoggerFieldDescriptor;
+begin
+   Result := AddText(aKey, aCaption, False);
+   Result.Kind := lfkCheck;
+   Result.OffWarning := aOffWarning;
+end;
+function TLoggerFieldList.AddVerifyServer: TLoggerFieldDescriptor;
+begin
+   Result := AddCheck(LF_VERIFY_SERVER, SVerifyServerCaption, SVerifyServerOffWarning);
+end;
 function TLoggerFieldList.Find(const aKey: string): TLoggerFieldDescriptor;
 var
    i: integer;
@@ -257,6 +278,7 @@ begin
          begin
          Result := Providers[i].Construct(aDefinition, aComputerId);
          Result.DisplayName := aDefinition.Name;
+         Result.VerifyServer := aDefinition.VerifyServer;
          Exit;
          end;
       end;

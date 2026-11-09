@@ -27,6 +27,8 @@ type
       Edit: TEdit;
       Combo: TComboBox;
       RefreshButton: TButton;
+      (* A yes/no field (issue 256): the box; the caption is its own. *)
+      Check: TCheckBox;
       (* A choice: the stored value and the true name behind each combo item.
          A name is '' when it was never recorded; the item then shows a
          placeholder. *)
@@ -71,6 +73,8 @@ type
       btnOK, btnCancel: TButton;
       lblName, lblProvider, lblNote: TLabel;
       lblFieldStatus, lblStatus: TLabel;
+      (* The warning shown while a certificate box is cleared (issue 256). *)
+      lblVerifyNote: TLabel;
       tmrLoad: TTimer;
       procedure ProviderChanged(Sender: TObject);
       procedure Accept(Sender: TObject);
@@ -92,6 +96,7 @@ type
       function RowOf(const aSender: TObject): TFieldRow;
       function RowByKey(const aKey: string): TFieldRow;
       procedure RowChanged(Sender: TObject);
+      procedure UpdateVerifyNote;
       procedure RefreshClick(Sender: TObject);
       procedure SetChoiceSaved(const aRow: TFieldRow; const aValue, aName: string);
       procedure ShowChoice(const aRow: TFieldRow);
@@ -119,6 +124,7 @@ type
       procedure FitLayout;
       function FieldEdit(const aKey: string): TEdit;
       function FieldCombo(const aKey: string): TComboBox;
+      function FieldCheck(const aKey: string): TCheckBox;
       function FieldRefreshButton(const aKey: string): TButton;
       function LoadRunning: boolean;
       property Config: TExternalLoggerConfig read FConfig;
@@ -145,7 +151,7 @@ function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): b
 
 implementation
 uses Graphics, Math, uLCLFormHelpers, uLCLTranslate, uPasswordReveal, uAppStrings,
-   uExternalDelivery, uLogStore;
+   uExternalDelivery, uLogStore, uHTTPDownload;
 {$R *.lfm}
 const
    (* THE DESIGNED GEOMETRY, AT 96 DPI, AND ONLY AS FLOORS (issue 232). These
@@ -288,7 +294,7 @@ begin
    for row in FRows do
       begin
       if (row.Edit = aSender) or (row.Combo = aSender) or
-         (row.RefreshButton = aSender) then
+         (row.RefreshButton = aSender) or (row.Check = aSender) then
          begin
          Result := row;
          Exit;
@@ -317,6 +323,18 @@ begin
    if row <> nil then
       begin
       Result := row.Combo;
+      end;
+end;
+
+function TExternalLoggersForm.FieldCheck(const aKey: string): TCheckBox;
+var
+   row: TFieldRow;
+begin
+   Result := nil;
+   row := RowByKey(aKey);
+   if row <> nil then
+      begin
+      Result := row.Check;
       end;
 end;
 
@@ -411,7 +429,20 @@ begin
    Result.CaptionLabel.Layout := tlCenter;
    Result.CaptionLabel.SetBounds(0, 0, Scale96ToForm(LABEL_WIDTH_96), Result.Panel.Height);
    Result.CaptionLabel.Caption := UTF8Encode(aDescriptor.Caption);
-   if aDescriptor.Kind = lfkChoice then
+   if aDescriptor.Kind = lfkCheck then
+      begin
+      (* THE BOX CARRIES ITS OWN CAPTION in the box column, so the caption
+         column stays empty for this row (issue 256). FitLayout sizes it. *)
+      Result.CaptionLabel.Caption := '';
+      Result.Check := TCheckBox.Create(Result.Panel);
+      Result.Check.Parent := Result.Panel;
+      Result.Check.AutoSize := False;
+      Result.Check.Anchors := [akTop, akLeft];
+      Result.Check.Caption := UTF8Encode(aDescriptor.Caption);
+      Result.Check.Checked := FDefinition.FieldText(aDescriptor.Key) <> '0';
+      Result.Check.OnChange := RowChanged;
+      end
+   else if aDescriptor.Kind = lfkChoice then
       begin
       Result.Combo := TComboBox.Create(Result.Panel);
       Result.Combo.Parent := Result.Panel;
@@ -434,6 +465,12 @@ begin
          Scale96ToForm(FIELD_WIDTH_96), Result.Edit.Height);
       Result.Edit.Anchors := [akTop, akLeft];
       Result.Edit.Text := UTF8Encode(FDefinition.FieldText(aDescriptor.Key));
+      if aDescriptor.Key = LF_URL then
+         begin
+         (* A plain http:// address has no certificate: the certificate box
+            is disabled while it stands (UpdateVerifyNote). *)
+         Result.Edit.OnChange := RowChanged;
+         end;
       if aDescriptor.Kind = lfkSecret then
          begin
          Result.Edit.PasswordChar := '*';
@@ -472,6 +509,7 @@ begin
       Dec(FBuilding);
    end;
    SetBusy;
+   UpdateVerifyNote;
    (* A provider changed while the dialog is open. Before it is shown the
       widget set can measure nothing (a label's preferred size needs its
       parent's handle), so the first layout is the show's. *)
@@ -624,6 +662,10 @@ begin
          begin
          rowH := Max(rowH, Max(HeightOf(row.Combo), HeightOf(row.RefreshButton)));
          end
+      else if row.Check <> nil then
+         begin
+         rowH := Max(rowH, HeightOf(row.Check));
+         end
       else
          begin
          rowH := Max(rowH, HeightOf(row.Edit));
@@ -655,6 +697,13 @@ begin
          PlaceDropDown(row.Combo, editLeft, 0, rowH,
             fieldW - Px(COLUMN_GAP_96) - refreshW);
          end
+      else if row.Check <> nil then
+         begin
+         (* The box, in the box column, as wide as the column: its caption is
+            its own and is clipped by nothing narrower than the column. *)
+         h := HeightOf(row.Check);
+         row.Check.SetBounds(editLeft, (rowH - h) div 2, fieldW, h);
+         end
       else
          begin
          h := HeightOf(row.Edit);
@@ -677,6 +726,15 @@ begin
    lblFieldStatus.SetBounds(side, y, rowW, lblFieldStatus.Height);
    lblFieldStatus.Height := WrappedHeight(lblFieldStatus, STATUS_LINES);
    y := y + lblFieldStatus.Height + Px(SECTION_GAP_96);
+
+   (* The certificate warning takes room only while it is shown (issue 256),
+      so a provider without the box lays out exactly as before. *)
+   if lblVerifyNote.Visible then
+      begin
+      lblVerifyNote.SetBounds(side, y, rowW, lblVerifyNote.Height);
+      lblVerifyNote.Height := WrappedHeight(lblVerifyNote, 2);
+      y := y + lblVerifyNote.Height + Px(SECTION_GAP_96);
+      end;
 
    chkActive.SetBounds(side, y, chkActive.Width, chkActive.Height);
    y := y + chkActive.Height + Px(SECTION_GAP_96);
@@ -709,9 +767,43 @@ end;
 (* A secret edited by the operator invalidates every choice list: the list
    belongs to the credentials it was loaded with, and so does the account
    derived from it. *)
+(* THE CERTIFICATE WARNING (issue 256): shown while a certificate box is
+   CLEARED, with the sentence its descriptor declared. A plain http://
+   address has no certificate, so the box is DISABLED (it keeps its value) and
+   no warning is shown while that address stands. Only the check box rows and
+   the URL row matter; a provider with neither shows nothing. *)
+procedure TExternalLoggersForm.UpdateVerifyNote;
+var
+   row, urlRow: TFieldRow;
+   plain: boolean;
+   warning: string;
+begin
+   plain := False;
+   urlRow := RowByKey(LF_URL);
+   if (urlRow <> nil) and (urlRow.Edit <> nil) then
+      begin
+      plain := IsPlainHttpUrl(UTF8Decode(urlRow.Edit.Text));
+      end;
+   warning := '';
+   for row in FRows do
+      begin
+      if row.Check <> nil then
+         begin
+         row.Check.Enabled := not plain;
+         if (not plain) and (not row.Check.Checked) and (warning = '') then
+            begin
+            warning := row.Descriptor.OffWarning;
+            end;
+         end;
+      end;
+   lblVerifyNote.Caption := UTF8Encode(warning);
+   lblVerifyNote.Visible := warning <> '';
+end;
+
 procedure TExternalLoggersForm.RowChanged(Sender: TObject);
 var
    row, other: TFieldRow;
+   noteWasShown: boolean;
 begin
    if FBuilding > 0 then
       begin
@@ -720,6 +812,18 @@ begin
    row := RowOf(Sender);
    if row = nil then
       begin
+      Exit;
+      end;
+   if (row.Descriptor.Kind = lfkCheck) or (row.Descriptor.Key = LF_URL) then
+      begin
+      (* The certificate warning follows the box and the address. Only when it
+         appears or goes does the dialog need laying out again. *)
+      noteWasShown := lblVerifyNote.Visible;
+      UpdateVerifyNote;
+      if (noteWasShown <> lblVerifyNote.Visible) and Visible then
+         begin
+         FitLayout;
+         end;
       Exit;
       end;
    if row.Descriptor.Kind = lfkChoice then
@@ -795,6 +899,18 @@ begin
             aTarget.SetFieldText(row.Descriptor.Key, '');
             aTarget.SetFieldText(row.Descriptor.DisplayKey, '');
             aTarget.Account := '';
+            end;
+         end
+      else if row.Check <> nil then
+         begin
+         (* '1' / '0' is the definition's own spelling for a yes/no field. *)
+         if row.Check.Checked then
+            begin
+            aTarget.SetFieldText(row.Descriptor.Key, '1');
+            end
+         else
+            begin
+            aTarget.SetFieldText(row.Descriptor.Key, '0');
             end;
          end
       else
@@ -984,6 +1100,9 @@ begin
    FDefinition.LogbookName := '';
    FDefinition.LegacySecretPending := False;
    FDefinition.LegacyWRL := False;
+   (* A new provider starts verifying: another provider's opt-out is not
+      carried over (issue 256). *)
+   FDefinition.VerifyServer := True;
 end;
 
 procedure TExternalLoggersForm.BeginEdit(const aDefinition: TExternalLoggerDefinition);
