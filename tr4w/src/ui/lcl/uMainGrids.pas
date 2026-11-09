@@ -579,12 +579,25 @@ end;
 
 procedure ConfigureNeedRows(const aQSOByMode, aMultByMode: boolean);
 
+   (* aUnsplitCaption IS ROW ONE'S LABEL WHEN THE STRIP IS NOT BY MODE. Empty
+     means "no label": the cell then takes the window's neutral colours
+     (mweWholeScreen, as the QSO strip's labels always have), because an empty
+     label in the new-mult yellow is a yellow block that says nothing. *)
    procedure LabelRows(const aLabels: array of TElementPanel;
                        const aByMode: boolean;
-                       const aElement: TMainWindowElement);
+                       const aElement: TMainWindowElement;
+                       const aUnsplitCaption: TCaption);
+   var
+      rowOneElement: TMainWindowElement;
    begin
+      rowOneElement := aElement;
+      if (not aByMode) and (Length(aUnsplitCaption) = 0) then
+         begin
+         rowOneElement := mweWholeScreen;
+         end;
+
       (* Open-array indexing is zero-based; the rows are one-based. *)
-      PrepareNeedPanel(aLabels[0], aElement, '');
+      PrepareNeedPanel(aLabels[0], rowOneElement, '');
       PrepareNeedPanel(aLabels[1], aElement, '');
 
       if aByMode then
@@ -594,7 +607,7 @@ procedure ConfigureNeedRows(const aQSOByMode, aMultByMode: boolean);
          end
       else
          begin
-         aLabels[0].Caption := 'Both:';
+         aLabels[0].Caption := aUnsplitCaption;
          end;
 
       aLabels[0].Visible := True;
@@ -617,16 +630,25 @@ begin
       Exit;
       end;
 
-   (* THE QSO STRIP'S ROW-ONE LABEL WAS BLANK WHEN NOT BY MODE, where the mult
-     strip's said 'Both:'. Kept: that is what the two creators did, and the QSO
+   (* THE QSO STRIP'S ROW-ONE LABEL IS BLANK WHEN NOT BY MODE, as D7's was: the
      strip sits under a heading that already says what it is. *)
-   LabelRows([GQSONeedLabel[1], GQSONeedLabel[2]], aQSOByMode, mweWholeScreen);
-   if not aQSOByMode then
-      begin
-      GQSONeedLabel[1].Caption := '';
-      end;
+   LabelRows([GQSONeedLabel[1], GQSONeedLabel[2]], aQSOByMode, mweWholeScreen, '');
 
-   LabelRows([GMultNeedLabel[1], GMultNeedLabel[2]], aMultByMode, mweNewMultStatus);
+   (* 'Both:' ON THE MULT STRIP ONLY WHERE IT CONTRASTS WITH SOMETHING: the QSO
+     strip above is split CW:/SSB: and the mults are not, so it says "a mult
+     counts once across both modes". D7 showed 'Both:' whenever mults were not
+     by mode, which in a single-mode contest (ARRL SS CW, NY4I 2026-11-08)
+     names a mode split that does not exist. The mode question is asked of the
+     two flags, not of TContestBase.UsesMode: SS CW does not override UsesMode,
+     so the base's "every mode" answer would call it a mixed contest. *)
+   if aQSOByMode then
+      begin
+      LabelRows([GMultNeedLabel[1], GMultNeedLabel[2]], aMultByMode, mweNewMultStatus, 'Both:');
+      end
+   else
+      begin
+      LabelRows([GMultNeedLabel[1], GMultNeedLabel[2]], aMultByMode, mweNewMultStatus, '');
+      end;
 end;
 
 procedure SetTotalsCell(const aColumn, aRow: integer; const aText: string);

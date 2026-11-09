@@ -78,6 +78,7 @@ type
       procedure Test_EveryStatusNamesItsOwnSubsystem;
       procedure Test_NoStatusOverrunsItsPanel;
       procedure Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
+      procedure Test_TheMultStripSaysBothOnlyBesideASplitQSOStrip;
       procedure Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
       procedure Test_TheQSONeedsStripOffersOnlyTheContestsBands;
       procedure Test_TheTotalsHeadersNameOnlyTheContestsBands;
@@ -1172,6 +1173,67 @@ begin
       CheckTrue(cell[band].Visible, 'no band needed hides no cell');
       CheckEquals('', cell[band].Caption, 'no band needed leaves every cell empty');
       end;
+end;
+
+(* THE MULT STRIP'S ROW-ONE LABEL SAYS 'Both:' ONLY BESIDE A SPLIT QSO STRIP
+  (NY4I, 2026-11-08, ARRL SS CW: a yellow 'Both:' in a single-mode contest).
+
+  Not by mode on either strip -- the single-mode case -- the label is empty
+  AND NOT YELLOW: it takes the QSO strip's label colours, so no empty
+  new-mult block is left behind. QSOs by mode and mults not: 'Both:' in the
+  new-mult colours, D7's display, because there it contrasts with the CW:/SSB:
+  rows above. Both by mode: CW:/SSB: on both strips. *)
+procedure TStatusAndNoticeTests.Test_TheMultStripSaysBothOnlyBesideASplitQSOStrip;
+var
+   multOne:  TElementPanel;
+   multTwo:  TElementPanel;
+   qsoOne:   TElementPanel;
+   multBack: integer;
+begin
+   BeginTest('Test_TheMultStripSaysBothOnlyBesideASplitQSOStrip');
+   EnsureMainForm;
+   BindMainGrids;
+
+   multOne := TR4WMainForm.FindComponent('pnlMultNeedR1Label') as TElementPanel;
+   multTwo := TR4WMainForm.FindComponent('pnlMultNeedR2Label') as TElementPanel;
+   qsoOne  := TR4WMainForm.FindComponent('pnlQSONeedR1Label') as TElementPanel;
+   if (multOne = nil) or (multTwo = nil) or (qsoOne = nil) then
+      begin
+      CheckTrue(False, 'uMainForm.lfm has both strips'' row labels');
+      Exit;
+      end;
+
+   multBack := tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG];
+
+   try
+      (* Single mode: nothing on row one, and not the new-mult yellow. *)
+      ConfigureNeedRows(False, False);
+      CheckEquals('', string(multOne.Caption), 'single-mode: the mult strip names no mode split');
+      CheckEquals('', string(qsoOne.Caption), 'single-mode: the QSO strip names none either');
+      CheckTrue(integer(multOne.Color) <> multBack,
+                'single-mode: the empty mult label is not a yellow block');
+      CheckEquals(integer(qsoOne.Color), integer(multOne.Color),
+                  'single-mode: the empty mult label has the QSO label''s colours');
+      CheckFalse(multTwo.Visible, 'single-mode: the second mult row is hidden');
+
+      (* QSOs by mode, mults not: 'Both:' is the contrast, in the new-mult colour. *)
+      ConfigureNeedRows(True, False);
+      CheckEquals('Both:', string(multOne.Caption),
+                  'QSOs split and mults not: the mult strip says Both:');
+      CheckEquals(multBack, integer(multOne.Color), 'Both: is in the new-mult colours');
+      CheckEquals('CW:', string(qsoOne.Caption), 'the QSO strip above is split');
+      CheckFalse(multTwo.Visible, 'mults not by mode: one mult row');
+
+      (* Both by mode. *)
+      ConfigureNeedRows(True, True);
+      CheckEquals('CW:', string(multOne.Caption), 'mults by mode: row one is CW:');
+      CheckEquals('SSB:', string(multTwo.Caption), 'mults by mode: row two is SSB:');
+      CheckEquals(multBack, integer(multOne.Color), 'CW: is in the new-mult colours');
+      CheckTrue(multTwo.Visible, 'mults by mode: both mult rows shown');
+   finally
+      (* Back to the session's own rows, for the tests after this one. *)
+      ConfigureNeedRows(Settings.Qso.ByMode, Settings.Mult.ByMode);
+   end;
 end;
 
 (* A LOGGED QSO TAKES ITS BAND OUT OF BOTH NEEDS STRIPS -- issue #100.
@@ -3183,6 +3245,7 @@ begin
    Test_EveryStatusNamesItsOwnSubsystem;
    Test_NoStatusOverrunsItsPanel;
    Test_ANotNeededBandIsAnEmptyCellNotAHiddenOne;
+   Test_TheMultStripSaysBothOnlyBesideASplitQSOStrip;
    Test_LoggingAQSOTakesItsBandOutOfTheNeedsStrips;
    Test_TheQSONeedsStripOffersOnlyTheContestsBands;
    Test_TheTotalsHeadersNameOnlyTheContestsBands;
