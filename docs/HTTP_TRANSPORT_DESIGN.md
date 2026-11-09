@@ -15,6 +15,16 @@ external logger and destination against this design (finding: the HTTP seam fits
 destinations and nothing else, and no change to section 3 is needed); section 6 gained exit
 criteria per platform; section 8 gained questions 11 to 15.
 
+**Update 2026-11-08 (section 10 is partly overtaken by the tree):** ACLog (issue 33, commit
+`51fd7b6d`) is no longer a stub: it is a built durable provider over raw TCP, one connection per
+contact, `<CMD><ADDADIFRECORD>`, no acknowledgement, so it is OUT of this seam's scope exactly
+as section 10 predicted (see `.claude/agents/integrations.md`, "ACLog"). Cloudlog/Wavelog
+(issue 204, `uCloudlogClient`) is built and is an ordinary `THttpRequest` caller: its key
+travels in the JSON body via `Password` + `Sensitive`, https only, global TLS setting only;
+the per-destination verify and plain-http choices of section 10.3 finding 4 were NOT added
+(questions 12 and 13 remain NY4I's). Read section 10's ACLog and Cloudlog rows with this
+note; the rest of section 10 stands.
+
 **Evidence key.** Every claim is marked **read** (a file and line I opened), **inference**
 (reasoned from something read, not run) or **unverified** (a belief from outside this
 tree, to be checked before anyone relies on it). Line numbers are at `4dc105b9` and drift;
