@@ -830,6 +830,7 @@ procedure DisplayNextQSONumber {(QSONumber: integer)};
 //procedure DisplayPossibleCalls(Call: CallString);
 //procedure DisplayPrefixInfo(Prefix: Str20);
 procedure DisplayQTCNumber(QTCNumber: integer);
+procedure DisplaySpotComment(const Comment: AnsiString);
 procedure DisplayRadio(Radio: RadioType);
 procedure DisplayRate(Rate: Cardinal);
 procedure DisplayQSOsByOpMode;
@@ -1475,6 +1476,33 @@ end;
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
   TR4WMainForm.pnlUserInfo.Caption := SysUtils.Format(AnsiString(LclText(TC_HAVEQTCS)), [QTCNumber]);
+end;
+
+(* THE CLICKED SPOT'S COMMENT, in the user-info panel (issue 247). That panel
+  already holds "what we know about this call" (call-history fields, a QTC
+  count) and is the element that was free of a modal and of the quick-command
+  line other notices overwrite. What the call history put there stays, and the
+  comment follows it. The panel is cleared by CallWindowChange, so the comment
+  goes when the call is logged or edited. The hint carries the whole comment
+  for when the panel is too narrow for it. An empty comment changes nothing. *)
+procedure DisplaySpotComment(const Comment: AnsiString);
+const
+  Separator: AnsiString = ' | ';
+begin
+  if Comment = '' then
+     begin
+     Exit;
+     end;
+  if TR4WMainForm.pnlUserInfo.Caption = '' then
+     begin
+     TR4WMainForm.pnlUserInfo.Caption := Comment;
+     end
+  else
+     begin
+     TR4WMainForm.pnlUserInfo.Caption := TR4WMainForm.pnlUserInfo.Caption + Separator + Comment;
+     end;
+  TR4WMainForm.pnlUserInfo.Hint := Comment;
+  TR4WMainForm.pnlUserInfo.ShowHint := True;
 end;
 
 procedure DisplayCountryName(Call: CallString);

@@ -4332,6 +4332,7 @@ begin
   // CallDataBase.ClearDataEntry;
   TR4WMainForm.pnlName.Caption := '';
   TR4WMainForm.pnlUserInfo.Caption := '';
+  TR4WMainForm.pnlUserInfo.Hint := '';  // a clicked spot's comment (issue 247)
 
   ShowCallEntryFrequencyWarning;
 

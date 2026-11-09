@@ -143,6 +143,19 @@ You own how spots reach TR4W and how they are shown.
   not change; it is local knowledge and the network and file readers clear it.
   Details: `docs/BANDMAP_LCL_DESIGN.md` section 7.
 
+- **EVERY SPOT CLICK ENDS IN `uBandmap.TuneRadioToSpot`** (band map double-click,
+  console double-click, NEXTBM) and it is where the call reaches the field
+  (issues 244 and 247, 2026-11-08). **Typing a call runs only
+  `ShowPartialCallMults`; the full needs/mult/name pass is
+  `ShowStationInformation`, which only Space/Enter ran** -- so a click now runs
+  it too (`ShowClickedSpotInformation`), reusing the one routine, after clearing
+  its `StationInformationCall` latch. The spot's comment goes to `pnlUserInfo`
+  through `logwind.DisplaySpotComment` (text from `SpotCommentForDisplay`),
+  appended to any call-history info; `CallWindowChange` clears it, so logging or
+  editing the call removes it. No caption of ours is involved, so no
+  resourcestring. A dedicated field would mean a new main-window element
+  (positions are per-element settings): not done. Needs a screen to judge.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`

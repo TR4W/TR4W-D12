@@ -199,6 +199,12 @@ type
   dB 25 WPM CQ         NFL 0132Z` the section ends on the last column. *)
 function SpotNotesText(const Spot: TSpotRecord): AnsiString;
 
+(* THE SPOT'S COMMENT AS A SINGLE LINE FOR THE MAIN WINDOW (issue 247): the
+  cluster's padding and runs of blanks squeezed to one space, the ends trimmed.
+  '' when there is nothing to show. The text is the spotter's, shown verbatim --
+  it carries no caption of ours, so it needs no translation. *)
+function SpotCommentForDisplay(const Comment: AnsiString): AnsiString;
+
 (* IS THIS COMMENT A BEACON'S -- a word `NCDXF`, `BEACON` or `BCN`, in any
   case. SpotCommentCandidates gives a beacon none; this is the test on its
   own, for a caller that must refuse a beacon BEFORE it consults anything else
@@ -1241,6 +1247,31 @@ begin
          Break;
          end;
       Result := Result + Spot.FNotes[i];
+      end;
+end;
+
+function SpotCommentForDisplay(const Comment: AnsiString): AnsiString;
+var
+   i: integer;
+   PendingBlank: boolean;
+begin
+   Result := '';
+   PendingBlank := False;
+   for i := 1 to Length(Comment) do
+      begin
+      if Comment[i] <= ' ' then
+         begin
+         PendingBlank := True;
+         end
+      else
+         begin
+         if PendingBlank and (Result <> '') then
+            begin
+            Result := Result + ' ';
+            end;
+         PendingBlank := False;
+         Result := Result + Comment[i];
+         end;
       end;
 end;
 

@@ -92,9 +92,42 @@ var
 implementation
 uses
    MainUnit,
+   uCrashLog,        // OnMainThread
    uDupesheet,
-   uDXSpotParse,     // SpotCallIsCQMarker / SpotCallIsNewMarker
+   uDXSpotParse,     // SpotCallIsCQMarker / SpotCallIsNewMarker, SpotCommentForDisplay
    uSettingsModel;   // Settings.BandMap -- the eight display filters
+
+(* WHAT TYPING A CALL AND THEN PRESSING SPACE DOES, FOR A CALL A SPOT CLICK
+  FILLED IN (issue 244), plus the spot's comment (issue 247).
+
+  Typing runs only ShowPartialCallMults (from CallWindowChange); the full
+  needs / mult / name / country pass is ShowStationInformation, which Space and
+  Enter run. A spot click used to stop at the field write, so the needs strip
+  and the "Mult needs for" header waited for a keystroke. This runs the SAME
+  routine -- nothing is derived a second time -- and then the comment.
+
+  It logs nothing and moves no focus (TuneRadioToSpot has already returned focus
+  to the call field). A dupe still shows: DispalayB4 below and ShowInformation
+  from CallWindowChange are untouched.
+
+  StationInformationCall is a latch against repeats that only a logged QSO
+  clears; a click is a deliberate new look, so it is cleared first. Nothing is
+  done unless the field really holds the spot's call (the call is refused when
+  it is our own) or off the main thread, where the panels must not be touched. *)
+procedure ShowClickedSpotInformation(const Spot: TSpotRecord);
+begin
+  if not OnMainThread then
+     begin
+     Exit;
+     end;
+  if CallWindowString <> Spot.FCall then
+     begin
+     Exit;
+     end;
+  StationInformationCall := '';
+  ShowStationInformation(CallWindowString);
+  DisplaySpotComment(SpotCommentForDisplay(SpotNotesText(Spot)));
+end;
 
 procedure TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType);
 var
@@ -222,6 +255,7 @@ begin
    //  tSetExchWindInitExchangeEntry ; // 4.138.2
        begin
        PutCallToCallWindow(Spot.FCall);
+       ShowClickedSpotInformation(Spot);
        end;
   
 

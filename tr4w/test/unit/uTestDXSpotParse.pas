@@ -129,6 +129,11 @@ type
       procedure Test_Marker_NearMissesAreNot;
       procedure Test_Marker_StaleBytesBeyondTheLength;
 
+      // The comment shown in the main window (issue 247)
+      procedure Test_CommentDisplay_Squeezed;
+      procedure Test_CommentDisplay_EmptyShowsNothing;
+      procedure Test_CommentDisplay_FromARealSpotRecord;
+
    public
       procedure RunAllTests; override;
    end;
@@ -1125,8 +1130,43 @@ begin
    CheckFalse(MarkerIsCQ(s.FCall), 'CQ left over from CQ/ 5 is not the marker');
 end;
 
+procedure TDXSpotParseTests.Test_CommentDisplay_Squeezed;
+begin
+   BeginTest('a spot comment is shown on one line, blanks squeezed');
+   CheckEquals('UP 2', SpotCommentForDisplay('UP 2'), 'already tidy');
+   CheckEquals('UP 2', SpotCommentForDisplay('  UP   2  '), 'ends trimmed, run squeezed');
+   CheckEquals('NFL CW 24 dB', SpotCommentForDisplay('NFL'#9'CW   24 dB'), 'a tab is a blank');
+end;
+
+procedure TDXSpotParseTests.Test_CommentDisplay_EmptyShowsNothing;
+begin
+   BeginTest('no comment, nothing to show');
+   CheckEquals('', SpotCommentForDisplay(''), 'empty');
+   CheckEquals('', SpotCommentForDisplay('     '), 'only blanks');
+end;
+
+procedure TDXSpotParseTests.Test_CommentDisplay_FromARealSpotRecord;
+var
+   s: TSpotRecord;
+   Text: AnsiString;
+   i: integer;
+begin
+   BeginTest('the comment of a decoded cluster line reaches the display text');
+   s := Default(TSpotRecord);
+   Text := '  UP 2   WI ';
+   for i := 1 to Length(Text) do
+      begin
+      s.FNotes[Low(s.FNotes) + i - 1] := Text[i];
+      end;
+   CheckEquals('UP 2 WI', SpotCommentForDisplay(SpotNotesText(s)), 'NUL padding is not part of the comment');
+end;
+
 procedure TDXSpotParseTests.RunAllTests;
 begin
+   Test_CommentDisplay_Squeezed;
+   Test_CommentDisplay_EmptyShowsNothing;
+   Test_CommentDisplay_FromARealSpotRecord;
+
    Test_Marker_ShortCallsAreNeitherCQNorNew;
    Test_Marker_RealMarkersAreRecognised;
    Test_Marker_OnlyTheFirstFourCharactersMatter;
