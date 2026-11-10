@@ -500,6 +500,15 @@ type
          RSGB RoPoCo's first QSO sends its own postcode. *)
       RecordNumber: integer;
 
+      (* ISSUE 91: THE DIGITS OF THE HIGHEST SERIAL IN THE WHOLE LOG, sent and
+         received, counted once by the exporter before the first line. A
+         class that zero-pads a serial uses max(its floor, this), so every
+         line of one file is as wide as the widest, and the factory never
+         queries the log. Zero (an exporter that did not count, a test) is
+         "no information": the class's own floor stands. *)
+      SerialWidthSent: integer;
+      SerialWidthReceived: integer;
+
       (* Settings.Contest.Title -- read by the shared helpers' 'PGA' test, an
          operator-titled event with no ContestType (inventory D7, design Q8). *)
       ContestTitle: string;

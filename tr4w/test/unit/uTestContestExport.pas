@@ -109,6 +109,7 @@ end;
 (* The context the Cabrillo writer hands a contest, for one QSO. *)
 function Ctx(const aRST, aHisQTH: string): TCabrilloQSOContext;
 begin
+   Result := Default(TCabrilloQSOContext);   (* the serial widths are 0 = not counted *)
    Result.RSTSent := aRST;
    Result.RSTReceived := aRST;
    Result.HisQTH := aHisQTH;

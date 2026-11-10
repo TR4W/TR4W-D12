@@ -165,6 +165,11 @@ function LogSourceReadNewestStation(out aFacts: TQsoMyFacts;
   every reverse scan. This returns N. *)
 function LogSourceRecordCount: Int64;
 
+(* ISSUE 91: the digit counts of the highest sent and received serial of the
+  exported QSOs (0 = none, or no store open). The Cabrillo exporter floors them
+  and hands them to the contest through TCabrilloQSOContext. *)
+procedure LogSourceSerialDigitWidths(out aSent, aReceived: integer);
+
 (* THE aOffsetFromEnd'th RECORD BACK FROM THE END: 1 is the last one logged.
 
   What a reverse scan wants, and what `tSetFilePointer(-n * SizeOf(rec),
@@ -427,6 +432,16 @@ begin
    else
       begin
       Result := -1;
+      end;
+end;
+
+procedure LogSourceSerialDigitWidths(out aSent, aReceived: integer);
+begin
+   aSent     := 0;
+   aReceived := 0;
+   if Repo <> nil then
+      begin
+      Repo.SerialDigitWidths(aSent, aReceived);
       end;
 end;
 

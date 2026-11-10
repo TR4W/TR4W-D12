@@ -436,6 +436,7 @@ const
 implementation
 
 uses
+  Math,                    // Max, the serial width floor (issue 91)
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
@@ -3098,6 +3099,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           parameter; the two were always equal, and since M4 this is the one
           the contest is handed. *)
         previousqsonr: integer;
+        serialDigitsSent, serialDigitsReceived: integer;
         contacts: integer;
         PreviousQTHString: Str10;
         slOperators: TStringList;
@@ -3136,6 +3138,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           // them from the rx/my it is passed (PostUnit builds myStationEx at the call).
 
           previousqsonr := 0;
+          (* ISSUE 91: ONE WIDTH PER COLUMN FOR THE WHOLE FILE, floored at 3
+            so a small log still prints 001. Counted once; the contest only
+            reads it from the context. *)
+          LogSourceSerialDigitWidths( serialDigitsSent, serialDigitsReceived );
+          qsoContext := Default( TCabrilloQSOContext );
+          qsoContext.SerialWidthSent     := Max( 3, serialDigitsSent );
+          qsoContext.SerialWidthReceived := Max( 3, serialDigitsReceived );
         1:
           if LogSourceNext( TempRXData, rowMyFacts ) then
              begin

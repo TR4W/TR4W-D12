@@ -99,6 +99,7 @@ function Fmt(aSent, aRec: TColumnHelper;
 var
    ctx: TCabrilloQSOContext;
 begin
+   ctx := Default(TCabrilloQSOContext);   (* the serial widths are 0 = not counted *)
    ctx.RSTSent := aRSTSent;
    ctx.RSTReceived := aRSTReceived;
    ctx.HisQTH := aHisQTH;

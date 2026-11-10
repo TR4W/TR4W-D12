@@ -76,6 +76,7 @@ type
       procedure Test_EveryContestWritesItsPinnedColumns;
       procedure Test_EachHelperWritesItsColumn;
       procedure Test_TheBaseWritesTheMarker;
+      procedure Test_SerialWidthIsTheLogs;
    end;
 
 implementation
@@ -1516,8 +1517,52 @@ begin
       end;
 end;
 
+(* ISSUE 91: THE ZERO-PADDED SERIAL IS AS WIDE AS THE LOG'S HIGHEST. The
+   exporter counts once and hands the widths in the context; a class floors
+   at its own minimum. Zero in the context is "not counted" and changes
+   nothing -- which is what every pin above relies on. *)
+procedure TCabrilloColumnsTests.Test_SerialWidthIsTheLogs;
+var
+   my: TMyStationExchange;
+   qso: ContestExchange;
+   ctx: TCabrilloQSOContext;
+   tail: string;
+begin
+   BeginTest('Test_SerialWidthIsTheLogs');
+   my := PinMy(0);
+   qso := PinQso(0);
+   ctx := PinCtx(0);
+   qso.NumberSent := 42;
+   qso.NumberReceived := 42;
+
+   ctx.SerialWidthSent := 0;
+   ctx.SerialWidthReceived := 0;
+   CheckEquals('599 042 ', CabrilloSentRSTQSONumber(my, qso, ctx), 'not counted keeps 3');
+   ctx.SerialWidthSent := 3;
+   ctx.SerialWidthReceived := 3;
+   CheckEquals('599 042 ', CabrilloSentRSTQSONumber(my, qso, ctx), 'a small log keeps 001');
+   CheckEquals('579 042', CabrilloReceivedRSTQSONumber(my, qso, ctx), 'received, small log');
+
+   ctx.SerialWidthSent := 4;
+   ctx.SerialWidthReceived := 5;
+   CheckEquals('599 0042 ', CabrilloSentRSTQSONumber(my, qso, ctx), 'sent pads to the log''s 4');
+   CheckEquals('579 00042', CabrilloReceivedRSTQSONumber(my, qso, ctx),
+               'received pads to ITS OWN 5');
+   qso.NumberSent := 1234;
+   CheckEquals('599 1234 ', CabrilloSentRSTQSONumber(my, qso, ctx), 'the widest is not cut');
+
+   qso.NumberSent := 42;
+   tail := CabrilloSentStateQSONumber2(my, qso, ctx);
+   CheckEquals('0042 ', Copy(tail, Length(tail) - 4, 5), 'the state-and-serial sent shape');
+   tail := CabrilloSentQSONumberStateShort(my, qso, ctx);
+   CheckEquals('0042 ', Copy(tail, 1, 5), 'the serial-and-state sent shape');
+   tail := CabrilloReceivedZoneQSONumber(my, qso, ctx);
+   CheckEquals('00042', Copy(tail, Length(tail) - 4, 5), 'the zone-and-serial received shape');
+end;
+
 procedure TCabrilloColumnsTests.RunAllTests;
 begin
+   Test_SerialWidthIsTheLogs;
    Test_EveryContestWritesItsPinnedColumns;
    Test_EachHelperWritesItsColumn;
    Test_TheBaseWritesTheMarker;

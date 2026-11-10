@@ -1,0 +1,13 @@
+# #91 (NY4I ruling 2026-10-26): a zero-padded Cabrillo serial column is as wide as the log's highest serial
+#
+# This log's highest received serial is 2198, so every zero-padded received
+# serial is four wide: the one QSO with received serial 537 is written 0537. The
+# other received serials already had four digits, and the sent serials stay at
+# the three-digit floor (the highest sent is under 1000). ref.cbr is D7-written
+# and is NEVER regenerated, so the change is pinned here exactly.
+#
+# Read by run-golden-diff.sh: the lines below the comments are EXACTLY the
+# changed lines golden_diff.py must report for ref.cbr vs cand.cbr -- any
+# other difference in this artifact is a FAIL.
+-QSO: 14034 CW 2026-05-30 1829 NY4I    599 001 W1MX           599 537         
++QSO: 14034 CW 2026-05-30 1829 NY4I    599 001 W1MX           599 0537        

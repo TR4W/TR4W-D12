@@ -851,6 +851,13 @@ type
         section 9a: no stored derived values, no in-memory mirror. *)
       function QSOCount: integer;
 
+      (* ISSUE 91: how many digits the highest sent and the highest received
+        serial of the exported QSOs have -- not deleted, not skipped, as the
+        export reads them. 0 where the log has no serial at all (MAX is NULL),
+        so the caller applies its own floor. A negative maximum (the -1 "no
+        serial" sentinel) counts its sign, which is below every floor. *)
+      procedure SerialDigitWidths(out aSent, aReceived: integer);
+
       (* EVERY row, including deleted ones and non-QSO record kinds.
 
         Distinct from QSOCount on purpose: this is the number that compares
@@ -3718,6 +3725,35 @@ begin
       q.SQL.Text := 'SELECT COUNT(*) FROM qso WHERE deleted = 0';
       q.Open;
       Result := q.Fields[0].AsInteger;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.SerialDigitWidths(out aSent, aReceived: integer);
+var
+   q: TSQLQuery;
+begin
+   aSent     := 0;
+   aReceived := 0;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT LENGTH(CAST(MAX(serial_sent) AS TEXT)), ' +
+                    'LENGTH(CAST(MAX(serial_received) AS TEXT)) ' +
+                    'FROM qso WHERE deleted = 0 AND COALESCE(is_skipped, 0) = 0';
+      q.Open;
+      if not q.EOF then
+         begin
+         if not q.Fields[0].IsNull then
+            begin
+            aSent := q.Fields[0].AsInteger;
+            end;
+         if not q.Fields[1].IsNull then
+            begin
+            aReceived := q.Fields[1].AsInteger;
+            end;
+         end;
       q.Close;
    finally
       q.Free;

@@ -430,10 +430,29 @@ function SerialWidth(aNumber, aWidth: integer): integer;
 
 implementation
 
+uses
+  Math;
+
 (* See the declaration. *)
 function SerialWidth(aNumber, aWidth: integer): integer;
 begin
   Result := aWidth - Ord(aNumber < 0);
+end;
+
+(* ISSUE 91: THE ZERO-PADDED SERIAL WIDTH OF THIS FILE -- the class's own floor,
+   or the digits of the highest serial in the log if that is wider, so a log
+   past 999 prints 0001 and 1000 and not 001 beside 1000. The context's zero
+   (not counted) leaves the floor. The sign rule stays SerialWidth's. *)
+function SentSerialWidth(aNumber, aFloor: integer;
+                         const aCtx: TCabrilloQSOContext): integer;
+begin
+  Result := SerialWidth(aNumber, Max(aFloor, aCtx.SerialWidthSent));
+end;
+
+function ReceivedSerialWidth(aNumber, aFloor: integer;
+                             const aCtx: TCabrilloQSOContext): integer;
+begin
+  Result := SerialWidth(aNumber, Max(aFloor, aCtx.SerialWidthReceived));
 end;
 
 (* A ZONE FIELD AS THE MACHINE READ IT: MY ZONE is text, and an unreadable one
@@ -575,7 +594,7 @@ function CabrilloSentStateQSONumber2(const aMy: TMyStationExchange;
                                      const aQso: ContestExchange;
                                      const aCtx: TCabrilloQSOContext): string;
 begin
-  Result := SysUtils.Format('%-2s %.*d ', [aMy.MyState, SerialWidth(aQso.NumberSent, 3),
+  Result := SysUtils.Format('%-2s %.*d ', [aMy.MyState, SentSerialWidth(aQso.NumberSent, 3, aCtx),
                                            aQso.NumberSent]);
 end;
 
@@ -583,7 +602,7 @@ function CabrilloSentQSONumberStateShort(const aMy: TMyStationExchange;
                                          const aQso: ContestExchange;
                                          const aCtx: TCabrilloQSOContext): string;
 begin
-  Result := SysUtils.Format('%.*d %-6.4s ', [SerialWidth(aQso.NumberSent, 3), aQso.NumberSent,
+  Result := SysUtils.Format('%.*d %-6.4s ', [SentSerialWidth(aQso.NumberSent, 3, aCtx), aQso.NumberSent,
                                              aMy.MyState]);
 end;
 
@@ -665,7 +684,7 @@ function CabrilloSentRSTQSONumber(const aMy: TMyStationExchange;
                                   const aQso: ContestExchange;
                                   const aCtx: TCabrilloQSOContext): string;
 begin
-  Result := SysUtils.Format('%-3s %.*d ', [aCtx.RSTSent, SerialWidth(aQso.NumberSent, 3),
+  Result := SysUtils.Format('%-3s %.*d ', [aCtx.RSTSent, SentSerialWidth(aQso.NumberSent, 3, aCtx),
                                            aQso.NumberSent]);   // issue 177
 end;
 
@@ -807,7 +826,7 @@ var
   age: integer;
 begin
   age := aQso.Age;
-  Result := SysUtils.Format(' %-3d %.*d', [age, SerialWidth(aQso.NumberReceived, 4),
+  Result := SysUtils.Format(' %-3d %.*d', [age, ReceivedSerialWidth(aQso.NumberReceived, 4, aCtx),
                                            aQso.NumberReceived]);   // n4af 4.42.4
 end;
 
@@ -908,7 +927,8 @@ function CabrilloReceivedRSTQSONumber(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       const aCtx: TCabrilloQSOContext): string;
 begin
-  Result := SysUtils.Format('%-3s %-3.3u', [aCtx.RSTReceived, aQso.NumberReceived]);   // issue 177
+  Result := SysUtils.Format('%-3s %.*u', [aCtx.RSTReceived, Max(3, aCtx.SerialWidthReceived),
+                                           aQso.NumberReceived]);   // issue 177, 91
 end;
 
 function CabrilloReceivedRSTContinent(const aMy: TMyStationExchange;
@@ -976,7 +996,8 @@ var
   zone: integer;
 begin
   zone := aQso.Zone;
-  Result := SysUtils.Format('  %-4u   %.3d', [zone, aQso.NumberReceived]);   // 4.98.4
+  Result := SysUtils.Format('  %-4u   %.*d', [zone, Max(3, aCtx.SerialWidthReceived),
+                                           aQso.NumberReceived]);   // 4.98.4, issue 91
 end;
 
 function CabrilloReceivedRSTZone(const aMy: TMyStationExchange;
@@ -1010,7 +1031,8 @@ begin
      end
   else
      begin
-     Result := SysUtils.Format('%-3s %.3u', [aCtx.RSTReceived, aQso.NumberReceived]);
+     Result := SysUtils.Format('%-3s %.*u', [aCtx.RSTReceived, Max(3, aCtx.SerialWidthReceived),
+                                              aQso.NumberReceived]);
      end;
 end;
 

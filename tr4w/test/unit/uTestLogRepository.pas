@@ -62,6 +62,7 @@ type
       procedure TestMarkingServerProgressWritesTheFlagsAndNothingElse;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
+      procedure Test_SerialDigitWidths;
       procedure TestSentinelsBecomeNullAndComeBack;
       procedure TestEveryRowGetsItsOwnGuid;
       procedure TestCountyLineQSOsShareAnExchangeId;
@@ -290,6 +291,73 @@ begin
          repo.Commit;
          CheckTrue(repo.LoadQSO(rowId, after), 'the saved QSO reads back');
          CompareQSO(before, after, 'cqww first QSO');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+(* ISSUE 91: THE DIGITS OF THE HIGHEST SERIAL, sent and received separately,
+  over the QSOs that are not deleted. An empty log answers 0 (the caller's
+  floor applies); a deleted QSO's serial does not widen the file. *)
+procedure TLogRepositoryTests.Test_SerialDigitWidths;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   reader: TLogBinaryReader;
+   qso: ContestExchange;
+   rowId: Int64;
+   fn: string;
+   got: boolean;
+   sentDigits, receivedDigits: integer;
+begin
+   BeginTest('Test_SerialDigitWidths');
+   fn := TempLogName('serialwidth.db');
+   Scrub(fn);
+
+   reader := TLogBinaryReader.Create(BinaryLogFixture('cqww_ssb_2025_ny4i'));
+   try
+      got := False;
+      while (not got) and reader.ReadNext(qso) do
+         begin
+         got := GoodLookingQSO(qso);
+         end;
+      CheckTrue(got, 'the fixture has a QSO to use');
+   finally
+      reader.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(qso.ceContest);
+         repo.SerialDigitWidths(sentDigits, receivedDigits);
+         CheckEquals(0, sentDigits, 'no QSOs: sent is 0');
+         CheckEquals(0, receivedDigits, 'no QSOs: received is 0');
+
+         qso.NumberSent := 42;
+         qso.NumberReceived := 12345;
+         qso.ceQSO_Deleted := False;
+         repo.SaveQSO(qso);
+         qso.NumberSent := 1234;
+         qso.NumberReceived := 7;
+         repo.SaveQSO(qso);
+         qso.NumberSent := 99999;
+         qso.NumberReceived := 99999;
+         qso.ceQSO_Deleted := True;
+         rowId := repo.SaveQSO(qso);
+         repo.Commit;
+         CheckTrue(rowId > 0, 'the deleted QSO is saved');
+
+         repo.SerialDigitWidths(sentDigits, receivedDigits);
+         CheckEquals(4, sentDigits, 'sent: 1234, the deleted 99999 does not count');
+         CheckEquals(5, receivedDigits, 'received: 12345, counted on its own');
       finally
          repo.Free;
       end;
@@ -3239,6 +3307,7 @@ begin
 {$ENDIF}
    TestOneQSORoundTrips;
    Test_LegacySkippedIsReadAsDeleted;
+   Test_SerialDigitWidths;
    TestSentinelsBecomeNullAndComeBack;
    TestEveryRowGetsItsOwnGuid;
    TestCountyLineQSOsShareAnExchangeId;
