@@ -4304,9 +4304,18 @@ was last left. Every filter that names a page now maps to one:
 | WinKeyer          | **CW Settings** -- the keying-device library |
 | Radio 1 / Radio 2 | Radios                                       |
 
-- [ ] Settings > WinKeyer must land on **CW Settings**, with the keying devices
-  list at the top. Pick the keyer, **Edit...**, and all seventeen options are
-  there.
+- [ ] Settings > WinKeyer must land on **Hardware > CW keyers** (issue 264),
+  with the keying devices list at the top. Pick the keyer, **Edit...**, and all
+  seventeen options are there.
+- [ ] Preferences search: type `winkey`. "WinKeyer and YCCC SO2R+ keyers" is
+  listed with "CW keyers" at the right; choosing it opens Hardware > CW keyers
+  with the list focused. Same for `WK`, `YCCC`, `keyer`, `switchpoint`.
+- [ ] The nav tree shows Hardware > Radios, Rotators, CW keyers. CW Settings
+  opens with the grey pointer line first, then Sending (Send CW ... key number)
+  with no gap and nothing clipped. The CW keyers page shows its hint, then the
+  pointer back to CW Settings.
+- [ ] The Hardware page's longer introduction fits its 40 px label above the
+  YCCC checkbox, including in a language where it wraps to three lines.
 - [ ] Settings > Colors, Appearance, and the radio items likewise.
 
 **2. The keyer LIBRARY was never seeded from the legacy settings, and this is

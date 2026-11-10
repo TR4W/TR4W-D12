@@ -81,6 +81,145 @@ object PrefsForm: TPrefsForm
       ParentColor = False
       TabOrder = 2
       Visible = False
+      object lblCWKeyersPointer: TLabel
+        Left = 12
+        Height = 34
+        Top = 8
+        Width = 620
+        AutoSize = False
+        Caption = 'WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers.'
+        Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
+      end
+      object lblCWSendHeading: TLabel
+        Left = 12
+        Height = 17
+        Top = 52
+        Width = 400
+        AutoSize = False
+        Caption = 'Sending'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object chkCWEnable: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 78
+        Width = 460
+        AutoSize = False
+        Caption = 'Send CW'
+        TabOrder = 0
+      end
+      object chkCWSpeedFromDatabase: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 104
+        Width = 460
+        AutoSize = False
+        Caption = 'Match the speed a station was worked at before'
+        TabOrder = 1
+      end
+      object lblCWSpeedIncrement: TLabel
+        Left = 12
+        Height = 17
+        Top = 142
+        Width = 180
+        AutoSize = False
+        Caption = 'Speed step:'
+      end
+      object cbxCWSpeedIncrement: TComboBox
+        Left = 200
+        Height = 22
+        Top = 138
+        Width = 80
+        AutoSize = False
+        ItemHeight = 0
+        TabOrder = 2
+      end
+      object lblCWSpeedIncrementUnits: TLabel
+        Left = 290
+        Height = 17
+        Top = 142
+        Width = 280
+        AutoSize = False
+        Caption = 'WPM per PageUp / PageDown'
+        Font.Color = clGrayText
+        ParentFont = False
+      end
+      object lblCWTone: TLabel
+        Left = 12
+        Height = 17
+        Top = 174
+        Width = 180
+        AutoSize = False
+        Caption = 'Sidetone:'
+      end
+      object edtCWTone: TEdit
+        Left = 200
+        Height = 22
+        Top = 170
+        Width = 80
+        AutoSize = False
+        TabOrder = 3
+      end
+      object lblCWToneUnits: TLabel
+        Left = 290
+        Height = 17
+        Top = 174
+        Width = 300
+        AutoSize = False
+        Caption = 'Hz  (0 = the radios own sidetone)'
+        Font.Color = clGrayText
+        ParentFont = False
+      end
+      object chkCWMessagesChainable: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 206
+        Width = 460
+        Caption = 'Any CW message may chain into the next'
+        TabOrder = 4
+      end
+      object chkTuneWithDits: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 232
+        Width = 460
+        Caption = 'Tune with dits rather than a solid carrier'
+        TabOrder = 5
+      end
+      object chkSendFourLetterCall: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 258
+        Width = 460
+        Caption = 'Always send all four letters of a four-letter call'
+        TabOrder = 6
+      end
+      object chkIncludeFKeyNumber: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 284
+        Width = 460
+        Caption = 'Show the key number on the function-key buttons'
+        TabOrder = 7
+      end
+    end
+    object layKeyers: TPanel
+      Tag = 48
+      Left = 0
+      Height = 572
+      Top = 0
+      Width = 675
+      BevelOuter = bvNone
+      ClientHeight = 572
+      ClientWidth = 675
+      Color = clWindow
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 25
+      Visible = False
       object lblMyKeyers: TLabel
         Left = 12
         Height = 17
@@ -145,118 +284,16 @@ object PrefsForm: TPrefsForm
         ParentFont = False
         WordWrap = True
       end
-      object lblCWSendHeading: TLabel
+      object lblKeyersCWPointer: TLabel
         Left = 12
-        Height = 17
-        Top = 262
-        Width = 400
+        Height = 34
+        Top = 254
+        Width = 540
         AutoSize = False
-        Caption = 'Sending'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object chkCWEnable: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 288
-        Width = 460
-        AutoSize = False
-        Caption = 'Send CW'
-        TabOrder = 5
-      end
-      object chkCWSpeedFromDatabase: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 314
-        Width = 460
-        AutoSize = False
-        Caption = 'Match the speed a station was worked at before'
-        TabOrder = 6
-      end
-      object lblCWSpeedIncrement: TLabel
-        Left = 12
-        Height = 17
-        Top = 352
-        Width = 180
-        AutoSize = False
-        Caption = 'Speed step:'
-      end
-      object cbxCWSpeedIncrement: TComboBox
-        Left = 200
-        Height = 22
-        Top = 348
-        Width = 80
-        AutoSize = False
-        ItemHeight = 0
-        TabOrder = 7
-      end
-      object lblCWSpeedIncrementUnits: TLabel
-        Left = 290
-        Height = 17
-        Top = 352
-        Width = 280
-        AutoSize = False
-        Caption = 'WPM per PageUp / PageDown'
+        Caption = 'The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings.'
         Font.Color = clGrayText
         ParentFont = False
-      end
-      object lblCWTone: TLabel
-        Left = 12
-        Height = 17
-        Top = 384
-        Width = 180
-        AutoSize = False
-        Caption = 'Sidetone:'
-      end
-      object edtCWTone: TEdit
-        Left = 200
-        Height = 22
-        Top = 380
-        Width = 80
-        AutoSize = False
-        TabOrder = 8
-      end
-      object lblCWToneUnits: TLabel
-        Left = 290
-        Height = 17
-        Top = 384
-        Width = 300
-        AutoSize = False
-        Caption = 'Hz  (0 = the radios own sidetone)'
-        Font.Color = clGrayText
-        ParentFont = False
-      end
-      object chkCWMessagesChainable: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 416
-        Width = 460
-        Caption = 'Any CW message may chain into the next'
-        TabOrder = 9
-      end
-      object chkTuneWithDits: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 442
-        Width = 460
-        Caption = 'Tune with dits rather than a solid carrier'
-        TabOrder = 10
-      end
-      object chkSendFourLetterCall: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 468
-        Width = 460
-        Caption = 'Always send all four letters of a four-letter call'
-        TabOrder = 11
-      end
-      object chkIncludeFKeyNumber: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 494
-        Width = 460
-        Caption = 'Show the key number on the function-key buttons'
-        TabOrder = 12
+        WordWrap = True
       end
     end
     object layRadios: TPanel
@@ -1680,7 +1717,7 @@ object PrefsForm: TPrefsForm
         Top = 34
         Width = 620
         AutoSize = False
-        Caption = 'Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators.'
+        Caption = 'Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True

@@ -9682,3 +9682,33 @@ msgstr ""
 #, fuzzy
 msgid "The server's identity is not checked; anyone between you and it can read what you send."
 msgstr ""
+
+#: uappstrings.sprefsnavcwkeyers
+#, fuzzy
+msgid "CW keyers"
+msgstr ""
+
+#: uappstrings.sprefshardwareinfo
+#, fuzzy
+msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers."
+msgstr ""
+
+#: uappstrings.sprefscwkeyerspointer
+#, fuzzy
+msgid "WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers."
+msgstr ""
+
+#: uappstrings.sprefskeyerscwpointer
+#, fuzzy
+msgid "The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings."
+msgstr ""
+
+#: uappstrings.sprefssearchcwkeyers
+#, fuzzy
+msgid "WinKeyer and YCCC SO2R+ keyers"
+msgstr ""
+
+#: uappstrings.sprefssearchwinkeyersettings
+#, fuzzy
+msgid "Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles"
+msgstr ""

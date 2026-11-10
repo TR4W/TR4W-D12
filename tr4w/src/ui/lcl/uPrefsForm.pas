@@ -141,6 +141,10 @@ type
    TPrefsSearchEntry = record
       Caption: string;
       Command: string;       // the legacy Ctrl-J spelling, or ''
+      (* More words the row answers to, matched like Command and never shown
+        or used as a command (issue 264: the keyer library, whose settings are
+        in the keyer editor, a form not built while Preferences is open). *)
+      Keywords: string;
       SectionTag: NativeInt;
       SectionName: string;
       Control: TWinControl;
@@ -577,8 +581,13 @@ type
       btnOpenLogFile: TButton;
       lblLogFilePath: TLabel;
 
-      // --- CW section (Tag = NAV_CW), the keying-device library ---------------
+      // --- CW section (Tag = NAV_CW), the CW TR4W sends ----------------------
       layCW: TPanel;
+      lblCWKeyersPointer: TLabel;
+      (* Hardware > CW keyers (Tag = NAV_KEYERS), the keying-device library.
+        Its own page since issue 264: a WinKeyer is hardware to an operator. *)
+      layKeyers: TPanel;
+      lblKeyersCWPointer: TLabel;
       chkCWMessagesChainable: TCheckBox;
       chkTuneWithDits: TCheckBox;
       chkSendFourLetterCall: TCheckBox;
@@ -919,6 +928,7 @@ type
       navHardware: TTreeNode;
       navRadios: TTreeNode;
       navRotators: TTreeNode;
+      navKeyers: TTreeNode;
       navCluster: TTreeNode;
       navOperating: TTreeNode;
       navBandMap: TTreeNode;
@@ -1180,7 +1190,8 @@ type
         correct: there is no command to open it AT. }
       procedure AddStoreBackedToSearchIndex(var aN: integer;
                                             const aControl: TWinControl;
-                                            const aCaption: string = '');
+                                            const aCaption: string = '';
+                                            const aKeywords: string = '');
       procedure AddHandWiredToSearchIndex(var aN: integer; const aCommand: string;
                                           const aControl: TWinControl);
       procedure ShowBusyCursor;
@@ -1260,6 +1271,10 @@ type
       (* The overview a panel-less heading shows; nil until one was shown.
         Read by uTestPrefsPlacement. *)
       property ParentOverview: TPanel read FParentOverview;
+      (* True when typing aNeedle into the search box lists a row that lands
+        on aControl -- the same search, over the same index, as the box.
+        Read by uTestPrefsPlacement (issue 264). *)
+      function SearchFinds(const aNeedle: string; const aControl: TWinControl): boolean;
    end;
 
 const
@@ -1383,6 +1398,11 @@ const
    NAV_CONTESTMULTS      = 45;   // Contest > Multiplier data
    NAV_CONTESTCABRILLO   = 46;   // Contest > Cabrillo headings
    NAV_CONTESTRULES      = 47;   // Contest > Contest rules
+
+   (* Hardware > CW keyers: the WinKeyer / YCCC keying-device library, which
+     was the top of the CW Settings page until issue 264 (NY4I: a new operator
+     takes a WinKeyer to be hardware).  A designed panel, layKeyers. *)
+   NAV_KEYERS            = 48;
 
    (* THE INVENTORY THE OLD MORE SETTINGS PAGE WAS BUILT FROM.  No page is
      built from these prefixes any more: every registered setting carrying one
@@ -2088,6 +2108,11 @@ begin
    (* Same pattern: it names the pages below Operating, and CW left them
      (issue 235). *)
    lblOperatingInfo.Caption := SPrefsOperatingInfo;
+   (* Same pattern again (issue 264): the keyer library left CW Settings for
+     Hardware > CW keyers, and these three sentences say where each half is. *)
+   lblHardwareInfo.Caption    := SPrefsHardwareInfo;
+   lblCWKeyersPointer.Caption := SPrefsCWKeyersPointer;
+   lblKeyersCWPointer.Caption := SPrefsKeyersCWPointer;
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -3485,6 +3510,12 @@ const
      726-item combo cost 1.8 seconds to populate. }
    SEARCH_MAX_HITS = 12;
 
+   (* What the keyer library answers to besides its caption (issue 264).
+     Product names, not prose: the same in every language, so they are NOT a
+     resourcestring a translation could drop.  'WK' is the WinKeyer's own
+     abbreviation, and is not a substring of "WinKeyer". *)
+   KEYER_SEARCH_DEVICE_WORDS = 'WinKeyer WinKey WK YCCC SO2R+ keyer CW keying device';
+
 function TPrefsForm.SelectPage(const aTag: NativeInt): boolean;
 var
    navItem: TTreeNode;
@@ -4780,7 +4811,8 @@ end;
   ShowPreferencesForCommand answer for a command that does not exist. }
 procedure TPrefsForm.AddStoreBackedToSearchIndex(var aN: integer;
                                                  const aControl: TWinControl;
-                                                 const aCaption: string = '');
+                                                 const aCaption: string = '';
+                                                 const aKeywords: string = '');
 var
    panel: TControl;
    navItem: TTreeNode;
@@ -4809,6 +4841,7 @@ begin
    SetLength(FSearchIndex, aN + 1);
    FSearchIndex[aN].Caption     := text;
    FSearchIndex[aN].Command     := '';
+   FSearchIndex[aN].Keywords    := aKeywords;
    FSearchIndex[aN].SectionTag  := panel.Tag;
    FSearchIndex[aN].Control     := aControl;
    FSearchIndex[aN].SectionName := '';
@@ -4956,6 +4989,17 @@ begin
    // --- layHardware ---
    AddHandWiredToSearchIndex(aN, 'YCCC SO2R ENABLE',                  chkYCCCSO2R);
 
+   // --- layKeyers ---
+   (* THE KEYER LIBRARY IS A LIST, NOT A SETTING, so nothing indexed it and
+     "winkey" found nothing (issue 264).  One row for the list, answering to
+     the device names and to every WinKeyer setting the keyer editor holds --
+     that editor is a separate form, not built while Preferences is open, so
+     its captions cannot be indexed where they are.  The device names are a
+     constant, so no translation can drop them; the settings' words are the
+     resourcestring, so an operator finds them in his own language. *)
+   AddStoreBackedToSearchIndex(aN, lstKeyers, SPrefsSearchCWKeyers,
+                               KEYER_SEARCH_DEVICE_WORDS + ' ' + SPrefsSearchWinKeyerSettings);
+
    // --- layLogging ---
    AddStoreBackedToSearchIndex(aN, cbxLogLevel);
    AddStoreBackedToSearchIndex(aN, chkHamLibAsyncOnly);
@@ -5000,6 +5044,7 @@ procedure TPrefsForm.RunSearch(const aNeedle: string);
 var
    i, j, score, count: integer;
    hit: TPrefsSearchHit;
+   matchWords: string;
 begin
    if not FSearchIndexBuilt then
       begin
@@ -5017,7 +5062,13 @@ begin
    SetLength(FSearchHits, Length(FSearchIndex));
    for i := 0 to High(FSearchIndex) do
       begin
-      score := PrefsMatchScore(FSearchIndex[i].Caption, FSearchIndex[i].Command, aNeedle);
+      // Keywords rank as the command does: below the caption the row shows.
+      matchWords := FSearchIndex[i].Command;
+      if FSearchIndex[i].Keywords <> '' then
+         begin
+         matchWords := Trim(matchWords + ' ' + FSearchIndex[i].Keywords);
+         end;
+      score := PrefsMatchScore(FSearchIndex[i].Caption, matchWords, aNeedle);
       if score > PREFS_MATCH_NONE then
          begin
          FSearchHits[count].Score := score;
@@ -5083,6 +5134,25 @@ begin
       begin
       FSearchList.Visible := False;
       end;
+end;
+
+function TPrefsForm.SearchFinds(const aNeedle: string; const aControl: TWinControl): boolean;
+var
+   i: integer;
+begin
+   // RunSearch itself, so the answer is the rows the operator would be shown
+   // -- ranking and the SEARCH_MAX_HITS cut included.
+   Result := False;
+   RunSearch(aNeedle);
+   for i := 0 to High(FSearchHits) do
+      begin
+      if FSearchIndex[FSearchHits[i].Entry].Control = aControl then
+         begin
+         Result := True;
+         Break;
+         end;
+      end;
+   HideSearchResults;
 end;
 
 // Select the section that owns aControl, then focus aControl itself.
@@ -6256,6 +6326,8 @@ begin
       TNavNode(navRadios).Tag := 26;
       navRotators := tvNav.Items.AddChild(navHardware, 'Rotators');
       TNavNode(navRotators).Tag := 27;
+      navKeyers := tvNav.Items.AddChild(navHardware, SPrefsNavCWKeyers);
+      TNavNode(navKeyers).Tag := NAV_KEYERS;
       navCluster := tvNav.Items.Add(nil, 'DX Cluster');
       TNavNode(navCluster).Tag := 3;
       navClusterSpots := tvNav.Items.AddChild(navCluster, SPrefsNavClusterSpots);

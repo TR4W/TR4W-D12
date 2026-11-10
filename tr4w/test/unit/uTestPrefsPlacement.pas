@@ -41,6 +41,7 @@ type
       procedure Test_PlaceRefusesASecondHome;
       procedure Test_TheBuiltFormHasOneEditorPerSetting;
       procedure CheckHeadingOverviews(const aForm: TPrefsForm);
+      procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
    public
       procedure RunAllTests; override;
    end;
@@ -463,6 +464,54 @@ begin
    CheckTrue(headings > 0, 'no heading without a panel was found -- External Software has none');
 end;
 
+(* ISSUE 264: THE KEYER LIBRARY IS HARDWARE, AND SEARCH FINDS IT.  NY4I typed
+  "winkey" and got nothing, and looked for a WinKeyer under Hardware.  So: the
+  library's page is a child of Hardware, its list is on that page, CW Settings
+  keeps what TR4W sends, and each word NY4I named -- plus WinKeyer settings
+  from the keyer editor -- lists a row that lands on the library. *)
+procedure TPrefsPlacementTests.CheckKeyersUnderHardware(const aForm: TPrefsForm);
+const
+   NEEDLES: array[0..8] of string =
+      ('winkey', 'winkeyer', 'WK', 'keyer', 'YCCC',
+       'switchpoint', 'paddle-only sidetone', 'keyer weight', 'lead-in');
+var
+   i: integer;
+   node: TTreeNode;
+   panel: TControl;
+begin
+   node := nil;
+   for i := 0 to aForm.tvNav.Items.Count - 1 do
+      begin
+      if TNavNode(aForm.tvNav.Items[i]).Tag = NAV_KEYERS then
+         begin
+         node := aForm.tvNav.Items[i];
+         Break;
+         end;
+      end;
+   CheckTrue(node <> nil, 'a navigation entry opens the keyer library (NAV_KEYERS)');
+   if node = nil then
+      begin
+      Exit;
+      end;
+   CheckTrue((node.Parent <> nil) and (TNavNode(node.Parent).Tag = NAV_HARDWARE),
+             'the keyer library is a child of Hardware');
+
+   panel := aForm.lstKeyers.Parent;
+   CheckTrue(panel = aForm.layKeyers, 'the keyer list is on its own page');
+   CheckEquals(NAV_KEYERS, integer(aForm.layKeyers.Tag), 'that page answers to NAV_KEYERS');
+   CheckTrue(aForm.chkCWEnable.Parent = aForm.layCW,
+             'CW Settings keeps the sending settings');
+   CheckEquals(NAV_CW, integer(aForm.layCW.Tag), 'CW Settings keeps its tag');
+
+   for i := Low(NEEDLES) to High(NEEDLES) do
+      begin
+      CheckTrue(aForm.SearchFinds(NEEDLES[i], aForm.lstKeyers),
+                'searching "' + NEEDLES[i] + '" lists the keyer library');
+      end;
+   CheckFalse(aForm.SearchFinds('winkey zzz', aForm.lstKeyers),
+              'a word nothing carries still empties the result');
+end;
+
 (* THE REAL FORM, BUILT: exactly one editor per setting, counted on the
   controls rather than the table.  The settings file is REDIRECTED to an empty
   temp folder first, and the test refuses to build the form unless
@@ -521,6 +570,7 @@ begin
                 'the band plan Edit... button is on the Bands page');
 
       CheckHeadingOverviews(form);
+      CheckKeyersUnderHardware(form);
    finally
       form.Free;
       uSettingsLegacy.ActiveStoreProvider := oldProvider;

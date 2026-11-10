@@ -480,6 +480,12 @@ placed, or it has no control at all.
 - The band plan's Edit... button is `AddBandPlanRow`, on the Bands block.
 - **Search needs no table of its own.** It takes a hit's section from the panel
   the control was built on.
+- **A row that is not a setting can still be found** (issue 264): the keyer
+  library (`lstKeyers`, Hardware > CW keyers, `layKeyers`, tag 48) is indexed by
+  `AddStoreBackedToSearchIndex` with `TPrefsSearchEntry.Keywords` -- matched like
+  `Command`, never shown, never a command name. Product names
+  (`KEYER_SEARCH_DEVICE_WORDS`) are a constant; the editor's setting words are a
+  resourcestring. `TPrefsForm.SearchFinds` runs the real search for a test.
 - `CheckEveryInventoriedSettingHasOneEditor` logs an Error for a setting with zero
   editors or with two. `uTestPrefsPlacement` builds the real form against a
   redirected empty settings folder and asserts no such fault.

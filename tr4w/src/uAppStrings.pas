@@ -796,6 +796,29 @@ resourcestring
    SPrefsOperatingInfo =
       'How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings.';
 
+   (* ISSUE 264: THE KEYER LIBRARY MOVED UNDER HARDWARE.  A WinKeyer is
+     hardware to a new operator, so the list of keying devices (WinKeyer, YCCC
+     SO2R+) left the top of CW Settings for Hardware > CW keyers. *)
+   (* Hardware > CW keyers: the nav entry. *)
+   SPrefsNavCWKeyers = 'CW keyers';
+   (* THE HARDWARE PAGE'S INTRODUCTION, which names the pages below it. *)
+   SPrefsHardwareInfo =
+      'Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers.';
+   (* At the top of CW Settings: where the keyer library went. *)
+   SPrefsCWKeyersPointer =
+      'WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers.';
+   (* On Hardware > CW keyers: what stayed under CW Settings. *)
+   SPrefsKeyersCWPointer =
+      'The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings.';
+   (* The Preferences search result for the keyer library. *)
+   SPrefsSearchCWKeyers = 'WinKeyer and YCCC SO2R+ keyers';
+   (* NEVER SHOWN: words the Preferences search matches to find the keyer
+     library.  They are the WinKeyer settings in the keyer editor (Edit... on
+     Hardware > CW keyers); translate each one exactly as that window's caption
+     is translated, so an operator's search for it finds the list. *)
+   SPrefsSearchWinKeyerSettings =
+      'Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles';
+
    (* Issue 235, stage 2: the rest of More settings.  New navigation entries
      (each is also its page's heading)... *)
    SPrefsNavEntryAndDupeChecking = 'Entry and dupe checking';

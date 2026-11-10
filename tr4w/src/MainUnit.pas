@@ -11413,8 +11413,9 @@ begin
   // cfWK, cfRadio1 and cfRadio2 were left unmapped in the first pass on the
   // grounds that they name DEVICES rather than sections.  That was wrong, and
   // NY4I found it immediately: "where did all those winkeyer options go?"  The
-  // devices live in a LIBRARY, and the library is on a page -- CW Settings
-  // holds the keying devices, Radios holds the radios.  Landing there is
+  // devices live in a LIBRARY, and the library is on a page -- Hardware > CW
+  // keyers holds the keying devices (issue 264; it was the top of CW
+  // Settings), Radios holds the radios.  Landing there is
   // exactly what the menu item means, and the operator picks the device from
   // the list.  Opening Preferences wherever it was last left made settings that
   // are perfectly present look deleted.
@@ -11424,7 +11425,7 @@ begin
   case f of
     cfCol:        page := NAV_COLORS;
     cfAppearance: page := NAV_APPEARANCE;
-    cfWK:         page := NAV_CW;       // the CW keying-device library
+    cfWK:         page := NAV_KEYERS;   // the CW keying-device library
     cfRadio1,
     cfRadio2:     page := NAV_RADIOS;
   end;
