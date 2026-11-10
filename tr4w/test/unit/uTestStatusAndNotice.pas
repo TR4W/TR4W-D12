@@ -87,6 +87,7 @@ type
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
       procedure Test_TheMultHeaderPinsOfIssue207;
       procedure Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
+      procedure Test_EUHFCYearNeedFollowsTheRememberedExchange;
       procedure Test_TheNeedsStripTakesASpotsSection;
       procedure Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
       procedure Test_TypingACallNeverChangesASpotsM;
@@ -2627,6 +2628,169 @@ begin
       end;
 end;
 
+(* ISSUE 70 (HB9RB): THE EUROPEAN HF CHAMPIONSHIP'S MULTIPLIER IS THE YEAR THE
+   OPERATOR WAS FIRST LICENSED, 00 TO 99, sent where a zone goes ('599 85'). The
+   call alone cannot say it -- unlike a CQ or ITU zone, CTY.DAT has no year --
+   so the hint had no opinion and no call or spot was ever shown needing a
+   year. What INITIAL.EX, a call history file or the log REMEMBERS for the call
+   can say it: the class reads that text as the year
+   (TContestBase.ZoneMultiplierFromCall), and the need strip, the call-window
+   MULT flag and the band map's M (all GetMultArray) follow it.
+
+   THE QSO IS ENTERED AS TYPED (ParametersOkay), so the year lands in the cell
+   the parser and SetMultFlags use -- the hint must read the same cell. YEAR 00
+   IS A YEAR: 0 is never "none" for this contest. *)
+var
+   gEUHFCRemembered: string;
+
+function EUHFCRememberedText(const aCall: string): string;
+begin
+   Result := gEUHFCRemembered;
+end;
+
+(* The class's reading of a remembered text alone: True and the year, or
+   False ('-' in the result). *)
+function EUHFCYearOf(const aRemembered: string): string;
+var
+   lookups: TMultiplierHintLookups;
+   year: integer;
+begin
+   lookups := Default(TMultiplierHintLookups);
+   lookups.InitialExchangeOf := @EUHFCRememberedText;
+   gEUHFCRemembered := aRemembered;
+   if ContestIdentity(ContestHandleOf(EUROPEANHFC)).ZoneMultiplierFromCall('S50A', lookups, year) then
+      begin
+      Result := IntToStr(year);
+      end
+   else
+      begin
+      Result := '-';
+      end;
+end;
+
+procedure TStatusAndNoticeTests.Test_EUHFCYearNeedFollowsTheRememberedExchange;
+var
+   multNeed20: TElementPanel;
+   multNeed40: TElementPanel;
+   savedCallWindow: CallString;
+   savedZoneMode: ZoneModeType;
+   baseProbe: integer;
+
+   procedure LogYear(const aCall: string; const aTyped: string; aYear: integer);
+   var
+      qso: ContestExchange;
+   begin
+      qso := Default(ContestExchange);
+      CallWindowString := CallString(aCall);
+      ExchangeErrorMessage := '';
+      CheckTrue(ParametersOkay(CallString(aCall), Str40(aTyped), Band20, CW, 14025000, qso),
+                'EUHFC ' + aCall + ' "' + aTyped + '" is accepted: ' + string(ExchangeErrorMessage));
+      CheckEquals(aYear, integer(qso.Zone), 'EUHFC "' + aTyped + '": the year is the zone field');
+      qso.ceRecordKind := rkQSO;
+      CallsignsList.AddIniitialExchange(aCall, GetInitialExchangeStringFromContestExchange(qso));
+      CheckEquals(IntToStr(aYear), Trim(CallsignsList.GetIniitialExchange(aCall)),
+                  'EUHFC ' + aCall + ': the log remembers the year');
+      Sheet.SetMultFlags(qso);
+      CheckTrue(qso.ZoneMult, 'EUHFC ' + aCall + ': the year is a new multiplier on 20 m');
+      Sheet.AddQSOToSheets(@qso, True);
+      AddQSOToDupeSheets(qso, False);
+   end;
+
+   procedure StripFor(const aCall: string; const aNeed20: string; const aNeed40: string;
+                      const aWhat: string);
+   begin
+      ShowNeedsForCall(CallString(aCall));
+      CheckEquals(aNeed20, Trim(string(multNeed20.Caption)), aWhat + ': the 20 m cell');
+      CheckEquals(aNeed40, Trim(string(multNeed40.Caption)), aWhat + ': the 40 m cell');
+   end;
+
+begin
+   BeginTest('Test_EUHFCYearNeedFollowsTheRememberedExchange');
+   (* THE CLASS'S READING: the last word, one or two digits. *)
+   CheckEquals('85', EUHFCYearOf('85'), 'EUHFC remembered "85"');
+   CheckEquals('5', EUHFCYearOf('5 '), 'EUHFC remembered "5 " (year 05, as the log writes it)');
+   CheckEquals('0', EUHFCYearOf('00'), 'EUHFC remembered "00"');
+   CheckEquals('85', EUHFCYearOf('599 85'), 'EUHFC remembered "599 85"');
+   CheckEquals('-', EUHFCYearOf(''), 'EUHFC nothing remembered');
+   CheckEquals('-', EUHFCYearOf('1985'), 'EUHFC remembered "1985": not guessed');
+   CheckEquals('-', EUHFCYearOf('TOM'), 'EUHFC remembered "TOM"');
+   CheckEquals('-', EUHFCYearOf('8A'), 'EUHFC remembered "8A"');
+   CheckFalse(ContestIdentity(ContestHandleOf(IOTA)).ZoneMultiplierFromCall('S50A',
+                 Default(TMultiplierHintLookups), baseProbe),
+              'the base has no opinion');
+
+   EnsureMainForm;
+   BindMainGrids;
+   multNeed20 := TR4WMainForm.FindComponent('pnlMultNeedR1_20') as TElementPanel;
+   multNeed40 := TR4WMainForm.FindComponent('pnlMultNeedR1_40') as TElementPanel;
+   if (multNeed20 = nil) or (multNeed40 = nil) then
+      begin
+      CheckTrue(False, 'uMainForm.lfm has the 20 m and 40 m mult need cells of row 1');
+      Exit;
+      end;
+   CheckTrue(ctyLoadInCountryFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                                  PathDelim + 'target' + PathDelim + 'cty.dat', False, False, True),
+             'cty.dat loads');
+
+   savedCallWindow := CallWindowString;
+   savedZoneMode := CTY.ctyZoneMode;
+   SaveNeedsSession;
+   try
+      OpenNeedsSession(ContestHandleOf(EUROPEANHFC), '', []);
+      (* THE CTY ZONE MODE FoundContest SETS (ApplyContestTraits): ITU, so the
+         parser's CQ-zone limit (40) does not refuse a year above it. *)
+      CheckTrue(ContestIdentity(Contest).ZoneMode = ITUZoneMode, 'EUHFC runs ITU zone mode');
+      CTY.ctyZoneMode := ContestIdentity(Contest).ZoneMode;
+      CheckTrue(DoingZoneMults, 'EUHFC has a zone (year) multiplier');
+      CheckFalse(DoingDXMults or DoingDomesticMults or DoingPrefixMults, 'EUHFC has no other multiplier');
+      Settings.Mult.ByBand := ContestIdentity(Contest).MultByBand;
+      Settings.Mult.ByMode := ContestIdentity(Contest).MultByMode;
+      CheckTrue(Settings.Mult.ByBand, 'EUHFC counts its multiplier by band');
+      NumberDifferentMults := 1;
+      ActiveBand := Band20;
+      ActiveMode := CW;
+
+      (* INITIAL.EX SAYS S51B WAS LICENSED IN 85, nothing is logged: 85 is
+         needed everywhere. This is the issue: it read "not needed". *)
+      CallsignsList.AddIniitialExchange('S51B', '85');
+      CheckTrue(VisibleLog.DetermineIfNewMult('S51B', Band20, CW),
+                'EUHFC S51B remembered 85, nothing logged: a new multiplier on 20 m');
+      StripFor('S51B', '20', '40', 'EUHFC S51B remembered 85, nothing logged');
+
+      (* NOTHING REMEMBERED: no opinion, as before -- not "needed". *)
+      CheckFalse(VisibleLog.DetermineIfNewMult('S53D', Band20, CW),
+                 'EUHFC S53D, nothing remembered: no year, so no new multiplier');
+
+      (* S50A LOGGED ON 20 m WITH 85: 85 is worked on 20, still needed on 40,
+         for S50A and for S51B alike. *)
+      LogYear('S50A', '599 85', 85);
+      CheckFalse(VisibleLog.DetermineIfNewMult('S51B', Band20, CW),
+                 'EUHFC 85 logged on 20: S51B (85) is not a new multiplier on 20 m');
+      CheckTrue(VisibleLog.DetermineIfNewMult('S51B', Band40, CW),
+                'EUHFC 85 logged on 20: S51B (85) is a new multiplier on 40 m');
+      StripFor('S51B', '', '40', 'EUHFC 85 logged on 20, S51B remembered 85');
+      StripFor('S50A', '', '40', 'EUHFC S50A logged 85 on 20, retyped');
+
+      (* YEAR 00 IS A YEAR, NOT "NONE". *)
+      CallsignsList.AddIniitialExchange('S52C', '00');
+      CheckTrue(VisibleLog.DetermineIfNewMult('S52C', Band20, CW),
+                'EUHFC S52C remembered 00: year 00 is a new multiplier on 20 m');
+      LogYear('S54E', '599 00', 0);
+      CheckFalse(VisibleLog.DetermineIfNewMult('S52C', Band20, CW),
+                 'EUHFC 00 logged on 20: S52C (00) is not a new multiplier on 20 m');
+      StripFor('S52C', '', '40', 'EUHFC 00 logged on 20, S52C remembered 00');
+
+      (* A REMEMBERED TEXT THAT IS NOT A YEAR is no opinion. *)
+      CallsignsList.AddIniitialExchange('S55F', 'TOM');
+      CheckFalse(VisibleLog.DetermineIfNewMult('S55F', Band20, CW),
+                 'EUHFC S55F remembered TOM: no year, so no new multiplier');
+   finally
+      RestoreNeedsSession;
+      CTY.ctyZoneMode := savedZoneMode;
+      CallWindowString := savedCallWindow;
+      end;
+end;
+
 (* ISSUE 12 FOLLOW-UP (NY4I): THE "MULT NEEDS FOR" STRIP OF A TYPED CALL USES THE
   SECTION A CLUSTER SPOT FOR THAT CALL CARRIES, as the band map does, when the
   program remembers none. Gated on CLUSTER SPOT COMMENT MULTIPLIER like the band
@@ -3541,6 +3705,7 @@ begin
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
    Test_TheMultHeaderPinsOfIssue207;
    Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
+   Test_EUHFCYearNeedFollowsTheRememberedExchange;
    Test_TheNeedsStripTakesASpotsSection;
    Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
    Test_TypingACallNeverChangesASpotsM;

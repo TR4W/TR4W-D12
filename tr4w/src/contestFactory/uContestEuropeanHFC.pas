@@ -130,6 +130,11 @@ type
          ZoneMultiplierZones is the base's. *)
       function ZoneMultiplierCount: integer; override;
       function NumbersZonesFromZero: boolean; override;
+      (* THE YEAR A CALL IMPLIES -- issue 70; see the body and
+         TContestBase.ZoneMultiplierFromCall. *)
+      function ZoneMultiplierFromCall(const aCall: string;
+                                      const aLookups: TMultiplierHintLookups;
+                                      out aZone: integer): boolean; override;
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
@@ -139,6 +144,7 @@ type
 implementation
 
 uses
+   SysUtils,         (* Trim -- ZoneMultiplierFromCall *)
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -294,6 +300,55 @@ end;
 
 function TContestEuropeanHFC.NumbersZonesFromZero: boolean;
 begin
+   Result := True;
+end;
+
+(* THE YEAR LICENSED THE PROGRAM REMEMBERS FOR A CALL -- issue 70 (HB9RB:
+   "Allow initial_ex to contain mult, say YEAR in EUHFC, when spotted ... should
+   trigger id as mult"). The remembered exchange is INITIAL.EX's text, a call
+   history file's, or the last logged QSO's (LOGDUPE's
+   GetInitialExchangeStringFromContestExchange writes the zone field, the
+   year, as IntToStr -- so 05 is remembered as '5'). Its LAST word is read,
+   so an INITIAL.EX line that also carries the RST ('599 85') still gives the
+   year. One or two digits, 0 to 99; anything else -- no text, a name, a
+   four-digit year -- is no opinion, never a guess. *)
+function TContestEuropeanHFC.ZoneMultiplierFromCall(const aCall: string;
+                                                    const aLookups: TMultiplierHintLookups;
+                                                    out aZone: integer): boolean;
+var
+   remembered: string;
+   first: integer;
+   i: integer;
+   year: integer;
+begin
+   aZone := 0;
+   Result := False;
+   if not Assigned(aLookups.InitialExchangeOf) then
+      begin
+      Exit;
+      end;
+   remembered := Trim(aLookups.InitialExchangeOf(aCall));
+   (* The last word: after the last blank, if any. *)
+   first := Length(remembered) + 1;
+   while (first > 1) and (remembered[first - 1] <> ' ') do
+      begin
+      Dec(first);
+      end;
+   if (Length(remembered) - first + 1 < 1) or
+      (Length(remembered) - first + 1 > 2) then
+      begin
+      Exit;
+      end;
+   year := 0;
+   for i := first to Length(remembered) do
+      begin
+      if (remembered[i] < '0') or (remembered[i] > '9') then
+         begin
+         Exit;
+         end;
+      year := year * 10 + (Ord(remembered[i]) - Ord('0'));
+      end;
+   aZone := year;
    Result := True;
 end;
 

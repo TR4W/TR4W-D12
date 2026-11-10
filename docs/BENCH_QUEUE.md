@@ -30,6 +30,13 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-10 -- EUROPEAN HF CHAMPIONSHIP: A REMEMBERED YEAR MARKS A CALL OR SPOT AS A NEW MULTIPLIER (issue 70)
+
+Unit-tested through the real parser and the sheets (`uTestStatusAndNotice.Test_EUHFCYearNeedFollowsTheRememberedExchange`); nothing below has been seen on a screen. The year comes only from what the program remembers for the call -- INITIAL.EX, a call history file, or a logged QSO -- never from the call itself.
+
+- [ ] **INITIAL.EX with years marks spots.** An EUHFC log, INITIAL.EX holding `S51B 85` (and a line with the RST, `S52C 599 73`). With 85 not yet worked on 20 m, a spot of S51B on 20 m shows the band map's multiplier `M`; after a QSO with any station giving 85 on 20 m, the S51B spot on 20 m loses its `M` and a 40 m spot of it keeps one. A spot of a call INITIAL.EX does not know shows no `M`, as before.
+- [ ] **The call window agrees.** Type S51B: the MULT flag and the "Mult needs for S51B" strip follow the same answer (20 empty once 85 is worked on 20, 40 still shown). Year 00 (`S54E 00`) behaves like any other year.
+
 ## Added 2026-11-09 -- THE PER-DESTINATION "VERIFY THE SERVER'S CERTIFICATE" BOX (issue 256)
 
 Written with no screen and no network: unit tests pin the rule (global AND destination) for every destination through a fake transport, the definition and settings round trips, the editor's controls on an unshown form, and the Test button. What is below needs a screen, or a server whose certificate TR4W will not accept.

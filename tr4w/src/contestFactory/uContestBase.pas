@@ -2218,6 +2218,24 @@ type
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; virtual;
 
+      (* THE ZONE MULTIPLIER A CALL IMPLIES, FOR A CONTEST THAT NUMBERS ITS OWN
+         ZONES -- issue 70 (HB9RB), 2026-11-10.
+
+         The need-multiplier hint (LOGEDIT's GetMultArray) takes a CQ or ITU
+         zone from CTY.DAT, or a prior contact's (issue 213). A zone the
+         contest numbers itself (ZoneMultiplierZones = zmzNotCQOrITU) has no
+         such source, so the hint had no opinion and no call or spot was ever
+         shown needing one. GetMultArray asks this instead, for such a contest
+         only: TRUE WITH aZone means "the call's zone multiplier is aZone" --
+         which may be 0, a real zone where the contest numbers from zero (the
+         European HF Championship's year 00), so no zone value means "none".
+
+         A HINT, NOT A CREDIT, as DomesticMultiplierFromCall. THE BASE ANSWERS
+         FALSE -- no opinion, what GetMultArray had for every such contest. *)
+      function ZoneMultiplierFromCall(const aCall: string;
+                                      const aLookups: TMultiplierHintLookups;
+                                      out aZone: integer): boolean; virtual;
+
       (* THE PREFIX MULTIPLIER KEY A QSO EARNS IN THIS CONTEST -- M11 S3,
          2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S3).
 
@@ -5518,6 +5536,15 @@ function TContestBase.DomesticMultiplierFromCall(const aCall: string;
 begin
    (* No opinion, as GetMultArray had for every contest it did not name. *)
    Result := '';
+end;
+
+function TContestBase.ZoneMultiplierFromCall(const aCall: string;
+                                             const aLookups: TMultiplierHintLookups;
+                                             out aZone: integer): boolean;
+begin
+   (* No opinion -- see the declaration. *)
+   aZone := 0;
+   Result := False;
 end;
 
 function TContestBase.PrefixMultiplierKey(const aQso: ContestExchange;

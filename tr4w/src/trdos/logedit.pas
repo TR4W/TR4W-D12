@@ -264,9 +264,11 @@ procedure ShowNeedsForCall(const Call: CallString);
   of them is SpotSectionHint's question, not this one's), read as the
   contest reads a remembered exchange (DomStringParse) and resolved through
   the contest's domestic file to the key the multiplier list holds. ONE
-  lookup, for the cluster spot's hint (SpotSectionHint) -- and issue 70, the
-  same question for a mult that is not a section (EUHFC's YEAR), reads the
-  same remembered exchange. A text the file does not know is no answer. *)
+  lookup, for the cluster spot's hint (SpotSectionHint). Issue 70, the same
+  question for a mult that is not a section (EUHFC's YEAR), reads the same
+  remembered exchange through the class's TContestBase.ZoneMultiplierFromCall
+  (GetMultArrayResolved), not through this. A text the file does not know is
+  no answer. *)
 function DomesticKeyKnownForCall(const Call: CallString): string;
 
 (* THE SECTION OR STATE A CLUSTER SPOT IS THOUGHT TO BE IN -- issue 83. The
@@ -1281,11 +1283,18 @@ var
   countsZones: boolean;
   (* The zone list the contest's zone multiplier counts -- M11 S5. *)
   zoneList: TZoneMultiplierZones;
+  (* A zone the contest numbers itself, from its own hint -- issue 70. *)
+  ownZone: integer;
 begin
   Result := 0;
   aKeys := Default(TResolvedMultiplierKeys);
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
   contestRules := ActiveContest(Contest);
+  (* THE ENGINE'S LOOKUPS A CONTEST'S HINT MAY ASK -- the zone hint of a
+    contest that numbers its own zones (issue 70) and the domestic one. *)
+  hintLookups.InitialExchangeOf := @EngineInitialExchangeOf;
+  hintLookups.GridOfCall := @EngineGridOfCall;
+  hintLookups.CountryOfCall := @EngineCountryOfCall;
   countsDX := ContestHasDXMultiplier(contestRules);
   countsZones := ContestHasZoneMultiplier(contestRules);
 
@@ -1327,7 +1336,7 @@ begin
      begin
      (* WHICH ZONE LIST, ASKED OF THE CONTEST ALREADY IN HAND -- M11 S5. It
        was `ContestSession.ZoneMult in [CQZones, ITUZones]`; a contest that
-       numbers its own zones gives no hint here, as before. *)
+       numbers its own zones answers its own hint (issue 70, below). *)
      zoneList := ContestZoneMultiplierZones(contestRules);
      if zoneList in [zmzCQZones, zmzITUZones] then
         begin
@@ -1358,6 +1367,19 @@ begin
            Include(aKeys.Kinds, rmZone);
            aKeys.Zone := Zone;
            end;
+        end
+     else if contestRules.ZoneMultiplierFromCall(string(Call), hintLookups, ownZone) and
+             (ownZone >= 0) and (ownZone <= ZoneMultArraySize) then
+        begin
+        (* A ZONE THE CONTEST NUMBERS ITSELF -- issue 70 (HB9RB): CTY.DAT
+          cannot name it, the class can from what the program remembers for
+          the call (the European HF Championship's year licensed). No answer,
+          no opinion, as before. 0 IS A ZONE HERE (year 00), so it is
+          included, unlike the CTY branch's "no zone". *)
+        TempCardinal := $FFFFFFFF xor mo.ZoneMultsArray[ownZone][Mode];
+        Result := TempCardinal or Result;
+        Include(aKeys.Kinds, rmZone);
+        aKeys.Zone := ownZone;
         end;
      end;
 
@@ -1397,10 +1419,8 @@ begin
            M8. The `case Contest of` that stood here (the Russian DX contest
            and the RF Championships, the Ural Cup, RDA, YO DX) is each
            contest's DomesticMultiplierFromCall now. Assigned to a Str10, as
-           the arms did, so a longer answer is cut where it always was. *)
-        hintLookups.InitialExchangeOf := @EngineInitialExchangeOf;
-        hintLookups.GridOfCall := @EngineGridOfCall;
-        hintLookups.CountryOfCall := @EngineCountryOfCall;
+           the arms did, so a longer answer is cut where it always was.
+           hintLookups is filled at the head. *)
         TempDomMult := ShortString(ContestIdentity(Contest).DomesticMultiplierFromCall(string(Call),
                                                                                        hintLookups));
         end;
