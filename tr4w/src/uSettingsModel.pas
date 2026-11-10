@@ -1323,6 +1323,7 @@ type
       FDisplayCQ: boolean;
       FDisplayGhz: boolean;
       FDupeDisplay: boolean;
+      FFilterOutDigital: boolean;
       FMultsOnly: boolean;
       FSo2rDisplay: boolean;
       FDisplayLimit: TBandMapDisplayLimit;
@@ -1341,6 +1342,7 @@ type
       procedure SetDisplayCQ(aValue: boolean);
       procedure SetDisplayGhz(aValue: boolean);
       procedure SetDupeDisplay(aValue: boolean);
+      procedure SetFilterOutDigital(aValue: boolean);
       procedure SetMultsOnly(aValue: boolean);
       procedure SetSo2rDisplay(aValue: boolean);
       procedure SetDisplayLimit(aValue: TBandMapDisplayLimit);
@@ -1362,6 +1364,10 @@ type
       property DisplayGhz: boolean read FDisplayGhz write SetDisplayGhz;
       // Was BandMapDupeDisplay.
       property DupeDisplay: boolean read FDupeDisplay write SetDupeDisplay;
+      (* BAND MAP FILTER OUT DIGITAL (issue 73): hide the spots that are
+        digital, so CW and phone remain. Default False -- every spot shows, as
+        before. Whether a spot IS digital is uDXSpotParse.SpotIsDigital. *)
+      property FilterOutDigital: boolean read FFilterOutDigital write SetFilterOutDigital;
       // Was BandMapMultsOnly.
       property MultsOnly: boolean read FMultsOnly write SetMultsOnly;
       // Was BandMapSO2RDisplay.
@@ -4788,6 +4794,7 @@ begin
    FDisplayCQ        := True;
    FDisplayGhz       := False;
    FDupeDisplay      := True;
+   FFilterOutDigital := False;
    FMultsOnly        := False;
    FSo2rDisplay      := False;
    (* The values the globals carried: logwind.pas 164 (GAV, for the centred
@@ -4842,6 +4849,11 @@ end;
 procedure TBandMapSettings.SetDupeDisplay(aValue: boolean);
 begin
    SetBool(FDupeDisplay, aValue, 'DupeDisplay');
+end;
+
+procedure TBandMapSettings.SetFilterOutDigital(aValue: boolean);
+begin
+   SetBool(FFilterOutDigital, aValue, 'FilterOutDigital');
 end;
 
 procedure TBandMapSettings.SetMultsOnly(aValue: boolean);

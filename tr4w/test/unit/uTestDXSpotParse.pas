@@ -128,6 +128,9 @@ type
       procedure Test_Marker_OnlyTheFirstFourCharactersMatter;
       procedure Test_Marker_NearMissesAreNot;
       procedure Test_Marker_StaleBytesBeyondTheLength;
+      procedure Test_Digital_CommentNamesTheMode;
+      procedure Test_Digital_FrequencyOnlyWhenTheCommentIsSilent;
+      procedure Test_Digital_RealClusterLines;
 
       // The comment shown in the main window (issue 247)
       procedure Test_CommentDisplay_Squeezed;
@@ -1018,6 +1021,20 @@ begin
    Result.FCall := ShortString(aCall);
 end;
 
+procedure SetNotes(var aSpot: TSpotRecord; const aText: string);
+var
+   i: integer;
+begin
+   for i := Low(aSpot.FNotes) to High(aSpot.FNotes) do
+      begin
+      aSpot.FNotes[i] := #0;
+      end;
+   for i := 1 to Length(aText) do
+      begin
+      aSpot.FNotes[i - 1] := AnsiChar(aText[i]);
+      end;
+end;
+
 procedure TDXSpotParseTests.Test_Marker_ShortCallsAreNeitherCQNorNew;
 var
    s: TSpotRecord;
@@ -1161,6 +1178,66 @@ begin
    CheckEquals('UP 2 WI', SpotCommentForDisplay(SpotNotesText(s)), 'NUL padding is not part of the comment');
 end;
 
+procedure TDXSpotParseTests.Test_Digital_CommentNamesTheMode;
+begin
+   BeginTest('a comment that names a digital mode is a digital spot (issue 73)');
+   CheckTrue(SpotCommentStatesDigital('FT8 -12 dB'), 'FT8');
+   CheckTrue(SpotCommentStatesDigital('ft4'), 'FT4, lower case');
+   CheckTrue(SpotCommentStatesDigital('RTTY 45 baud'), 'RTTY');
+   CheckTrue(SpotCommentStatesDigital('PSK31'), 'PSK31');
+   CheckTrue(SpotCommentStatesDigital('JT65'), 'JT65');
+   CheckTrue(SpotCommentStatesDigital('JS8 CQ'), 'JS8');
+   CheckTrue(SpotCommentStatesDigital('DATA'), 'DATA');
+   CheckFalse(SpotCommentStatesDigital('CW 21 dB 14 WPM CQ'), 'CW');
+   CheckFalse(SpotCommentStatesDigital('USB'), 'SSB');
+   CheckFalse(SpotCommentStatesDigital('FM'), 'FM');
+   CheckFalse(SpotCommentStatesDigital(''), 'no comment');
+   CheckFalse(SpotCommentStatesDigital('NCDXF B'), 'a beacon');
+end;
+
+procedure TDXSpotParseTests.Test_Digital_FrequencyOnlyWhenTheCommentIsSilent;
+var
+   s: TSpotRecord;
+begin
+   BeginTest('the frequency decides only when the comment names no mode');
+   CheckTrue(SpotFrequencyIsDigitalCalling(14074000), '20 m FT8 dial');
+   CheckTrue(SpotFrequencyIsDigitalCalling(14076500), 'inside the 3 kHz window');
+   CheckFalse(SpotFrequencyIsDigitalCalling(14077001), 'just above the window');
+   CheckFalse(SpotFrequencyIsDigitalCalling(14073999), 'just below the dial');
+   CheckTrue(SpotFrequencyIsDigitalCalling(7047500), '40 m FT4 dial');
+   CheckFalse(SpotFrequencyIsDigitalCalling(14025000), 'a CW frequency');
+   CheckFalse(SpotFrequencyIsDigitalCalling(14250000), 'a phone frequency');
+
+   s := SpotWith('K1ABC');
+   s.FFrequency := 14074500;
+   CheckTrue(SpotIsDigital(s), 'no comment on an FT8 frequency: digital');
+   SetNotes(s, 'CW 24 dB');
+   CheckFalse(SpotIsDigital(s), 'a comment saying CW beats the frequency');
+   SetNotes(s, 'RTTY');
+   s.FFrequency := 14025000;
+   CheckTrue(SpotIsDigital(s), 'a comment saying RTTY beats a CW frequency');
+   s := SpotWith('K1ABC');
+   s.FFrequency := 14025000;
+   CheckFalse(SpotIsDigital(s), 'no comment on a CW frequency: not digital');
+end;
+
+procedure TDXSpotParseTests.Test_Digital_RealClusterLines;
+var
+   s: TSpotRecord;
+begin
+   BeginTest('lines through the real decoder (layout of a live cluster line)');
+   CheckTrue(ParseDXSpotLine('DX de AC0C-1-#:   3552.0  WA4BAM       CW 24 dB 25 WPM CQ         NFL 0132Z', s), 'CW line decodes');
+   CheckFalse(SpotIsDigital(s), 'a CW spot');
+   CheckTrue(ParseDXSpotLine('DX de W3LPL-#:    14074.0  JA1XYZ       FT8 -12 dB 1200 Hz                1801Z', s), 'FT8 line decodes');
+   CheckTrue(SpotIsDigital(s), 'an FT8 spot');
+   CheckTrue(ParseDXSpotLine('DX de W3LPL-#:    14080.0  K5ABC        RTTY 45 baud CQ                   1802Z', s), 'RTTY line decodes');
+   CheckTrue(SpotIsDigital(s), 'an RTTY spot');
+   CheckTrue(ParseDXSpotLine('DX de W3LPL-#:    14074.5  K5XYZ                                          1803Z', s), 'bare line decodes');
+   CheckTrue(SpotIsDigital(s), 'no comment, FT8 frequency');
+   CheckTrue(ParseDXSpotLine('DX de W3LPL-#:    14195.0  K5XYZ        USB                               1804Z', s), 'SSB line decodes');
+   CheckFalse(SpotIsDigital(s), 'an SSB spot');
+end;
+
 procedure TDXSpotParseTests.RunAllTests;
 begin
    Test_CommentDisplay_Squeezed;
@@ -1172,6 +1249,9 @@ begin
    Test_Marker_OnlyTheFirstFourCharactersMatter;
    Test_Marker_NearMissesAreNot;
    Test_Marker_StaleBytesBeyondTheLength;
+   Test_Digital_CommentNamesTheMode;
+   Test_Digital_FrequencyOnlyWhenTheCommentIsSilent;
+   Test_Digital_RealClusterLines;
 
    Test_PlainSpot_Frequency;
    Test_PlainSpot_Call;

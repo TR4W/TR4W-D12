@@ -6157,3 +6157,11 @@ Written with no screen and no network: unit tests pin the wording, the request (
 - [ ] **Mult needs for a state.** ARRL 10 on 10 m CW, type a W/VE call, enter `AZ`: "Mult needs for AZ" shows 10 on the CW and SSB rows and nothing under 160-15. Log it on CW: the CW row clears and SSB still shows 10. Switch to SSB and repeat.
 - [ ] **The totals grid.** The 160-15 column headers are blank, 10 and All are named, and the numbers sit under 10 and All.
 - [ ] **An off-band QSO** (log one on 20 m by mistake): it scores 0, earns no multiplier, is not a dupe, and the Cabrillo writes it as `X-QSO:`. A rescore of an existing ARRL 10 log zeroes any such QSO.
+
+### 2026-11-10 Band map: Hide digital spots (issue 73)
+
+- [ ] Preferences > Band map: the **Hide digital spots** checkbox sits under "Show GHz"; the note and the last two checkboxes are not overlapped or clipped.
+- [ ] Searching "filter out digital" in Preferences finds the checkbox.
+- [ ] With a live cluster, turning it on makes FT8, FT4 and RTTY spots disappear from the band map at once, no restart; CW and SSB stay. Turning it off brings them back; the setting survives a restart.
+- [ ] A bare spot at 14.074 to 14.077 MHz is hidden (frequency rule); a spot commented "CW" at 14.074 MHz stays visible; a CQ marker on an FT8 frequency stays visible.
+- [ ] Ask NY4I whether a band map right-click toggle is wanted too (the issue asked only for the Preferences setting).

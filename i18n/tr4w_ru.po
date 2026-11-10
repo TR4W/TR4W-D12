@@ -10039,3 +10039,8 @@ msgstr ""
 #, fuzzy
 msgid "Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles"
 msgstr ""
+
+#: tprefsform.chkbandmapfilterdigital.caption
+#, fuzzy
+msgid "Hide digital spots"
+msgstr ""

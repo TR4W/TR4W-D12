@@ -2712,10 +2712,18 @@ object PrefsForm: TPrefsForm
         Caption = 'Show GHz'
         TabOrder = 10
       end
+      object chkBandMapFilterDigital: TCheckBox
+        Left = 12
+        Height = 22
+        Top = 340
+        Width = 460
+        Caption = 'Hide digital spots'
+        TabOrder = 11
+      end
       object lblBandMapNote: TLabel
         Left = 12
         Height = 51
-        Top = 350
+        Top = 376
         Width = 620
         AutoSize = False
         Caption = 'A band map does not need a DX cluster: it also holds spots you make yourself and anything the SO2R radio hears.  Cluster settings are on the DX Cluster page.'
@@ -2726,18 +2734,18 @@ object PrefsForm: TPrefsForm
       object chkCallWindowShowAllSpots: TCheckBox
         Left = 12
         Height = 22
-        Top = 410
+        Top = 436
         Width = 540
         Caption = 'Show every spot in the call window'
-        TabOrder = 11
+        TabOrder = 12
       end
       object chkSwapPacketSpotRadios: TCheckBox
         Left = 12
         Height = 22
-        Top = 436
+        Top = 462
         Width = 540
         Caption = 'Send spots to the other radio'
-        TabOrder = 12
+        TabOrder = 13
       end
     end
     object laySCP: TPanel

@@ -184,6 +184,26 @@ function ParseSplitHint(const Comment: AnsiString; BaseFrequencyHz: integer;
 function SpotCallIsCQMarker(const ACall: CallString): boolean;
 function SpotCallIsNewMarker(const ACall: CallString): boolean;
 
+(* IS THIS A DIGITAL SPOT (issue 73, BAND MAP FILTER OUT DIGITAL). A spot
+  record carries no mode of its own: FMode is only the CW/phone split of the
+  band map, computed from the frequency, so it can never say "digital". Two
+  things can, and they are asked in this order:
+
+  1. THE COMMENT. A mode the spotter named decides, whichever it is: a comment
+     reading "FT8 -12 dB" or "RTTY" is digital, and "CW" on an FT8 dial
+     frequency is NOT (the same precedence ParseSplitHint gives the comment).
+     The words are the ones ModeStatedInComment already knows: RTTY PSK FT (FT8
+     and FT4 tokenize as FT plus a number) JT MFSK JS DIGI DATA.
+  2. THE FREQUENCY, only when the comment names no mode: within
+     SPOT_DIGITAL_WINDOW_HZ above the conventional FT8 or FT4 dial frequency
+     of a band. That is a guess, and a narrow one, because a band plan cannot
+     say it (FreqModeArray has no digital segment).
+
+  Hz in, as TSpotRecord.FFrequency is. *)
+function SpotIsDigital(const Spot: TSpotRecord): boolean;
+function SpotCommentStatesDigital(const Comment: AnsiString): boolean;
+function SpotFrequencyIsDigitalCalling(FrequencyHz: integer): boolean;
+
 type
    TSpotCommentCandidates = array of AnsiString;
 
@@ -1233,6 +1253,58 @@ begin
              (ACall[2] = 'E')     and
              (ACall[3] = 'W')     and
              (ACall[4] = ' ');
+end;
+
+const
+   (* The FT8 and FT4 dial frequencies, in Hz, from the WSJT-X defaults. The
+     signal sits up to 3 kHz above the dial. *)
+   SPOT_DIGITAL_WINDOW_HZ = 3000;
+   SPOT_DIGITAL_DIALS: array[0..20] of integer = (
+      1840000, 3573000, 3575000, 5357000, 7047500, 7074000, 10136000,
+      10140000, 14074000, 14080000, 18100000, 18104000, 21074000, 21140000,
+      24915000, 24919000, 28074000, 28180000, 50313000, 50318000, 144174000);
+
+function SpotFrequencyIsDigitalCalling(FrequencyHz: integer): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(SPOT_DIGITAL_DIALS) to High(SPOT_DIGITAL_DIALS) do
+      begin
+      if (FrequencyHz >= SPOT_DIGITAL_DIALS[i]) and
+         (FrequencyHz <= SPOT_DIGITAL_DIALS[i] + SPOT_DIGITAL_WINDOW_HZ) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function SpotCommentStatesDigital(const Comment: AnsiString): boolean;
+var
+   Toks: TCommentTokens;
+   n: integer;
+begin
+   n := TokenizeComment(Comment, Toks);
+   Result := ModeStatedInComment(Toks, n) = Digital;
+end;
+
+function SpotIsDigital(const Spot: TSpotRecord): boolean;
+var
+   Toks: TCommentTokens;
+   Stated: ModeType;
+   n: integer;
+begin
+   n := TokenizeComment(SpotNotesText(Spot), Toks);
+   Stated := ModeStatedInComment(Toks, n);
+   if Stated <> NoMode then
+      begin
+      Result := Stated = Digital;
+      end
+   else
+      begin
+      Result := SpotFrequencyIsDigitalCalling(Spot.FFrequency);
+      end;
 end;
 
 function SpotNotesText(const Spot: TSpotRecord): AnsiString;

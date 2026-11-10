@@ -178,6 +178,12 @@ function WorkedMultColor: tr4wColors;
    navigation scan and BuildVisibleSpots both ask THIS, so they cannot drift. *)
 function SpotPassesMultsOnly(const aSpot: TSpotRecord): boolean;
 
+(* BAND MAP FILTER OUT DIGITAL (issue 73): False for a digital spot while the
+  setting is on, True for everything else. A CQ or NEW marker is never a
+  station, so it is never filtered whatever its frequency. The setting is
+  tested first so that, off, no spot's comment is ever tokenized. *)
+function SpotPassesDigitalFilter(const aSpot: TSpotRecord): boolean;
+
 var
   SpotsList: TDXSpotsList;
   SpotsDisplayed: integer;
@@ -226,6 +232,21 @@ function SpotPassesMultsOnly(const aSpot: TSpotRecord): boolean;
 begin
   (* Gav added FCQ to stop CQ spots being trapped by the Mult only filter. *)
   Result := aSpot.FMult or aSpot.FWorkedMult or aSpot.FCQ;
+end;
+
+function SpotPassesDigitalFilter(const aSpot: TSpotRecord): boolean;
+begin
+  Result := True;
+  if not Settings.BandMap.FilterOutDigital then
+     begin
+     Exit;
+     end;
+  if aSpot.FCQ or SpotCallIsCQMarker(aSpot.FCall) or
+     SpotCallIsNewMarker(aSpot.FCall) then
+     begin
+     Exit;
+     end;
+  Result := not SpotIsDigital(aSpot);
 end;
 
 { TStringList }
@@ -319,6 +340,10 @@ begin
           begin
           Continue;
           end;
+     if not SpotPassesDigitalFilter(FList[i]) then
+        begin
+        Continue;
+        end;
      if not Settings.Bands.VhfEnabled then
        if (FList[i].FBand > Band12) then
           begin
@@ -391,13 +416,13 @@ var
   NumberEntriesDisplayed: integer;
   // Diagnostic counters -- per-filter rejection tallies (issue: bandmap-startup-clear).
   // Total of all reject* + rejNoNext + NumberEntriesDisplayed should equal FList.Count.
-  rejDupeNext, rejBand, rejMode, rejDupeFlag, rejCQ, rejWARC, rejMultsOnly, rejVHF: Integer;
+  rejDupeNext, rejBand, rejMode, rejDupeFlag, rejCQ, rejWARC, rejMultsOnly, rejVHF, rejDigital: Integer;
 begin
   bottom := 0;
   top := 1;
   centrefound := False; // 4.79.3
   rejDupeNext := 0; rejBand := 0; rejMode := 0; rejDupeFlag := 0;
-  rejCQ := 0; rejWARC := 0; rejMultsOnly := 0; rejVHF := 0;
+  rejCQ := 0; rejWARC := 0; rejMultsOnly := 0; rejVHF := 0; rejDigital := 0;
   //  inc(SpotsDisplayed);
   //  setwindowtext(OpModeWindowHandle,inttopchar(SpotsDisplayed));
   UpdateSpotsMultiplierStatus;
@@ -452,6 +477,11 @@ begin
           Inc(rejMultsOnly);
           Continue;
           end;
+     if not SpotPassesDigitalFilter(FList[i]) then
+        begin
+        Inc(rejDigital);
+        Continue;
+        end;
      if not Settings.Bands.VhfEnabled then
        if (FList[i].FBand > Band12) then
           begin
@@ -468,9 +498,9 @@ begin
      inc(k);
 
      end;
-  logger.Trace('[BuildVisibleSpots] filter pass: FList.Count=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d',
+  logger.Trace('[BuildVisibleSpots] filter pass: FList.Count=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d Digital=%d',
     [FList.Count, NumberEntriesDisplayed, rejDupeNext, rejBand, rejMode, rejDupeFlag,
-     rejCQ, rejWARC, rejMultsOnly, rejVHF]);
+     rejCQ, rejWARC, rejMultsOnly, rejVHF, rejDigital]);
 
   //Gav   Start of added section to limit and centre bandmap on vfo, using pointers to Flist stored in aIndex arrray
 

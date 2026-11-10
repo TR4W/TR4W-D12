@@ -83,6 +83,7 @@ type
       procedure Test_Count_PerBandAndTheLeastWorkedKind;
       procedure Test_Count_SpotStoreClearsAtTheLimit;
       procedure Test_Count_MultsOnlyKeepsTheOrangeM;
+      procedure Test_Count_FilterOutDigital;
       procedure Test_Count_LoaderPathFromStoredRows;
       procedure Test_Count_ScopeChangeWithoutReload;
    end;
@@ -1307,6 +1308,90 @@ begin
    end;
 end;
 
+procedure TSpotCommentMultiplierTests.Test_Count_FilterOutDigital;
+var
+   spot: TSpotRecord;
+   index: array[0..9] of integer;
+   cursorRow: integer;
+   n: integer;
+   fresh: TBandMapSettings;
+   savedDigital,savedAllBands, savedAllModes, savedDisplayCQ, savedMultsOnly,
+   savedDupes: boolean;
+
+   function Shown(const aCall: string): boolean;
+   var
+      j: integer;
+   begin
+      Result := False;
+      for j := 0 to n - 1 do
+         begin
+         if SpotsList.Get(index[j]).FCall = aCall then
+            begin
+            Result := True;
+            end;
+         end;
+   end;
+
+   procedure AddOne(const aLine: string);
+   begin
+      CheckTrue(ParseDXSpotLine(aLine, spot), 'the spot decodes');
+      spot.FBand := Band20;
+      spot.FMode := Phone;
+      spot.FSysTime := Now;
+      SpotsList.AddSpot(spot, False);
+   end;
+
+begin
+   BeginTest('Test_Count_FilterOutDigital');
+   savedDigital   := Settings.BandMap.FilterOutDigital;
+   savedAllBands  := Settings.BandMap.AllBands;
+   savedAllModes  := Settings.BandMap.AllModes;
+   savedDisplayCQ := Settings.BandMap.DisplayCQ;
+   savedMultsOnly := Settings.BandMap.MultsOnly;
+   savedDupes     := Settings.BandMap.DupeDisplay;
+   try
+      fresh := TBandMapSettings.Create;
+      try
+         CheckFalse(fresh.FilterOutDigital, 'the default is off');
+      finally
+         fresh.Free;
+      end;
+      Settings.BandMap.AllBands := True;
+      Settings.BandMap.AllModes := True;
+      Settings.BandMap.DisplayCQ := True;
+      Settings.BandMap.MultsOnly := False;
+      Settings.BandMap.DupeDisplay := True;
+      SpotsList.Clear;
+      AddOne('DX de W3LPL-#:    14074.0  JA1XYZ       FT8 -12 dB                        1801Z');
+      AddOne('DX de W3LPL-#:    14080.0  K5ABC        RTTY 45 baud                      1802Z');
+      AddOne('DX de W3LPL-#:    14025.0  K1CW         CW 24 dB 25 WPM CQ                1803Z');
+      AddOne('DX de W3LPL-#:    14195.0  K5SSB        USB                               1804Z');
+      AddOne('DX de W3LPL-#:    14075.0  K5BARE                                         1805Z');
+
+      Settings.BandMap.FilterOutDigital := False;
+      cursorRow := 0;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow);
+      CheckEquals(5, n, 'off: every spot shows, as before');
+
+      Settings.BandMap.FilterOutDigital := True;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow);
+      CheckFalse(Shown('JA1XYZ'), 'on: FT8 hidden');
+      CheckFalse(Shown('K5ABC'), 'on: RTTY hidden');
+      CheckFalse(Shown('K5BARE'), 'on: a bare spot on an FT8 frequency hidden');
+      CheckTrue(Shown('K1CW'), 'on: CW stays');
+      CheckTrue(Shown('K5SSB'), 'on: SSB stays');
+      CheckEquals(2, n, 'on: exactly CW and SSB');
+   finally
+      Settings.BandMap.FilterOutDigital := savedDigital;
+      Settings.BandMap.AllBands  := savedAllBands;
+      Settings.BandMap.AllModes  := savedAllModes;
+      Settings.BandMap.DisplayCQ := savedDisplayCQ;
+      Settings.BandMap.MultsOnly := savedMultsOnly;
+      Settings.BandMap.DupeDisplay := savedDupes;
+      SpotsList.Clear;
+   end;
+end;
+
 procedure TSpotCommentMultiplierTests.Test_Worked_ColourToken;
 begin
    BeginTest('Test_Worked_ColourToken');
@@ -1338,6 +1423,7 @@ begin
    Test_Mult_SpotRoutineAndTheSetting;
    Test_Mult_CallHistoryOverridesADifferingComment;
    Test_Cost_HintForAWholeBandMapIsCheap;
+   Test_Count_FilterOutDigital;
    Test_Worked_PerBandMultiplier;
    Test_Worked_SweepstakesCountsOnceAcrossBands;
    Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;

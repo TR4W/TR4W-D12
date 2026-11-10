@@ -467,7 +467,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(306, names.Count,
+         CheckEquals(307, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -517,7 +517,8 @@ begin
                      + ' SERVER, the per-destination "verify the server''s'
                      + ' certificate" choices under the global master (new,'
                      + ' no CFGCA row, never shared with peers, issue 256),'
-                     + ' 2026-11-09');
+                     + ' 2026-11-09; 307 with BAND MAP FILTER OUT DIGITAL'
+                     + ' (new, no CFGCA row, issue 73), 2026-11-10');
       finally
          names.Free;
       end;
@@ -1616,6 +1617,7 @@ const
       + '"BAND MAP DISPLAY GHZ",'
       + '"BAND MAP DISPLAY LIMIT",'
       + '"BAND MAP DUPE DISPLAY",'
+      + '"BAND MAP FILTER OUT DIGITAL",'
       + '"BAND MAP GUARD BAND",'
       + '"BAND MAP ITEM HEIGHT",'
       + '"BAND MAP ITEM WIDTH",'
