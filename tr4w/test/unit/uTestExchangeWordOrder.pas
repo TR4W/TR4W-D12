@@ -95,106 +95,11 @@ uses
    LogStuff,
    PostUnit,
    FCONTEST,
-   MainUnit;
-
-var
-   (* What each test saves and puts back: the engine state ParametersOkay
-      reads. One set, because the three tests run one after another. *)
-   savedContest: TContestHandle;
-   savedActiveMode: ModeType;
-   savedCallWindow: CallString;
-   savedTable: TDomQTHTable;
-   savedList: TCallsignsList;
-   savedQualified: TQualifiedDupeSheet;
-   savedCountries: TStringList;
-   savedMyCountry: string;
-   savedDomesticFilename: string;
-
-(* ONE EXCHANGE, AS AN OPERATOR ENTERS IT -- ParametersOkay alone; no QSO is
-   logged. *)
-function Enter(const aCall: string; const aExch: string; var aRX: ContestExchange): boolean;
-begin
-   aRX := Default(ContestExchange);
-   ActiveMode := CW;
-   CallWindowString := CallString(aCall);
-   ExchangeErrorMessage := '';
-   Result := ParametersOkay(CallString(aCall), Str40(aExch), Band20, CW,
-                            14025000, aRX);
-end;
-
-(* THE SESSION AS FoundContest SETS aContest UP, for what a parse reads: the
-   contest, its domestic countries, its domestic file in the table and named
-   in the setting, and a station in the USA. *)
-procedure SetUpSession(aContest: ContestType; const aCountries: array of string;
-                       const aDomFile: string);
-var
-   i: integer;
-begin
-   savedContest := Contest;
-   savedActiveMode := ActiveMode;
-   savedCallWindow := CallWindowString;
-   savedTable := DomQTHTable;
-   savedList := CallsignsList;
-   savedQualified := QualifiedDupes;
-   savedMyCountry := Settings.My.Country;
-   savedDomesticFilename := Settings.Contest.DomesticFilename;
-   savedCountries := TStringList.Create;
-   for i := 0 to DomesticCountries.Count - 1 do
-      begin
-      savedCountries.Add(DomesticCountries.IDs[i]);
-      end;
-
-   DomQTHTable := TDomQTHTable.Create;
-   CallsignsList := TCallsignsList.Create;
-   QualifiedDupes := TQualifiedDupeSheet.Create;
-
-   DomesticCountries.Clear;
-   for i := Low(aCountries) to High(aCountries) do
-      begin
-      DomesticCountries.Add(CallString(aCountries[i]));
-      end;
-   LoadShippedDomFollowingIncludes(DomQTHTable, aDomFile, True, 0);
-   Settings.Contest.DomesticFilename := aDomFile;
-   Settings.My.DeriveCountry('K');
-
-   Contest := ContestHandleOf(aContest);
-   ReleaseActiveContest;
-end;
-
-procedure RestoreSession;
-var
-   i: integer;
-begin
-   DomesticCountries.Clear;
-   for i := 0 to savedCountries.Count - 1 do
-      begin
-      DomesticCountries.Add(CallString(savedCountries[i]));
-      end;
-   savedCountries.Free;
-   QualifiedDupes.Free;
-   QualifiedDupes := savedQualified;
-   CallsignsList.Free;
-   CallsignsList := savedList;
-   DomQTHTable.Free;
-   DomQTHTable := savedTable;
-   CallWindowString := savedCallWindow;
-   ActiveMode := savedActiveMode;
-   Settings.Contest.DomesticFilename := savedDomesticFilename;
-   Settings.My.DeriveCountry(savedMyCountry);
-   ExchangeErrorMessage := '';
-   ExchangeErrorToken := '';
-   Contest := savedContest;
-   ReleaseActiveContest;
-end;
-
-function LoadCountryFile: boolean;
-var
-   ctyPath: string;
-begin
-   ctyPath := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
-              PathDelim + 'target' + PathDelim + 'cty.dat';
-   Result := ctyLoadInCountryFile(ctyPath, False, False, True);
-end;
+   MainUnit,
+   (* Enter, SetUpSession, RestoreSession, LoadCountryFile -- the engine
+      entry harness, lifted out of this unit (issue 13). LAST, so its names
+      win. *)
+   uTestEngineEntry;
 
 (* ---------------------------------------------------------------------------
    #174 -- SWEEPSTAKES

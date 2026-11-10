@@ -880,6 +880,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* An exchange's words in another order: Sweepstakes U123, Sprint and
       NAQP state first (issues #174, #170, #169; 2026-11-04). *)
    uTestExchangeWordOrder in 'uTestExchangeWordOrder.pas',
+   (* The engine-entry harness both above and below share (issue 13). *)
+   uTestEngineEntry     in 'uTestEngineEntry.pas',
+   (* A section typed as an alias -- EM is EMA (issue 13, 2026-11-10). *)
+   uTestARRLSectionAlias in 'uTestARRLSectionAlias.pas',
    (* A spot's section from its comment (issue 83, 2026-11-05). *)
    uTestSpotCommentMultiplier in 'uTestSpotCommentMultiplier.pas',
    (* A call history file's prefill (NY4I, 2026-11-07). *)
@@ -1064,6 +1068,7 @@ begin
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TExchangeWordOrderTests.Create('ExchangeWordOrder'));
+   RegisterSuite(TARRLSectionAliasTests.Create('ARRLSectionAlias'));
    RegisterSuite(TSpotCommentMultiplierTests.Create('SpotCommentMultiplier'));
    RegisterSuite(TCallHistoryTests.Create('CallHistory'));
    RegisterSuite(TCallHistoryDownloadTests.Create('CallHistoryDownload'));
