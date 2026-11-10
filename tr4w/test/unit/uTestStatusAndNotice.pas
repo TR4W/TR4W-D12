@@ -86,6 +86,7 @@ type
       procedure Test_TheSweepstakesMultHeaderNamesTheSection;
       procedure Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
       procedure Test_TheMultHeaderPinsOfIssue207;
+      procedure Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
       procedure Test_TheNeedsStripTakesASpotsSection;
       procedure Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
       procedure Test_TypingACallNeverChangesASpotsM;
@@ -2499,6 +2500,133 @@ begin
       end;
 end;
 
+(* ISSUE 79 (GM0GAV, RSGB IOTA): "Mult needs for" did not follow an island
+   worked on another band. GM0GAV gave EU5 on 40 m CW; typed again on 20 m
+   CW the strip must name EU-005 and show it needed on 20 m and worked on
+   40 m, and once the 20 m QSO is logged, worked on 20 m too. IOTA has no
+   domestic file: its multiplier is the reference the class reads from the
+   typed text (TContestRSGBIOTA.DomesticMultiplierFromQTH), and the header's
+   hint is the same reading of the remembered text (DomesticMultiplierHint).
+   By band AND by mode, as the class's flags state, so row 1 is CW.
+
+   THE QSO IS ENTERED AS TYPED (ParametersOkay), then put on the sheets and
+   remembered as LogContact does -- so the remembered text is the one the
+   entry path leaves ('EU5', the literal the SQLite log also stores and the
+   loader re-remembers; uTestLogRepository round-trips QTHString). The
+   entry shapes the parser documents ('599 12 EU5', '12 EU5') pass on the
+   current code: GM0GAV's own 2016 port of the domestic "needs" display
+   (D7 6961582d, n4af/tr4w #81) and issue #100's post-log refresh are what
+   this pins. ONE SHAPE REPRODUCES THE SYMPTOM and is deliberately NOT pinned
+   here, because whether to refuse it is a parse ruling: '5NN 12 EU5' is
+   ACCEPTED with QTH '5NN' -- the '<word> <number>' branch of
+   ProcessRSTQSONumberAndPossibleDomesticQTHExchange overwrites the
+   FoundDomesticQTH answer with True (as D7 does) -- so the QSO has no
+   island, scores 2, the log remembers '5NN' and the header names the call. *)
+procedure TStatusAndNoticeTests.Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
+var
+   multNeed20: TElementPanel;
+   multNeed40: TElementPanel;
+   header: string;
+   savedCallWindow: CallString;
+
+   procedure LogIsland(const aCall: string; aBand: BandType; const aTyped: string);
+   var
+      qso: ContestExchange;
+      hz: integer;
+   begin
+      qso := Default(ContestExchange);
+      if aBand = Band40 then
+         begin
+         hz := 7025000;
+         end
+      else
+         begin
+         hz := 14025000;
+         end;
+      CallWindowString := CallString(aCall);
+      ExchangeErrorMessage := '';
+      CheckTrue(ParametersOkay(CallString(aCall), Str40(aTyped), aBand, CW, hz, qso),
+                'IOTA ' + aCall + ' "' + aTyped + '" is accepted: ' + string(ExchangeErrorMessage));
+      CheckEquals('EU-005', string(qso.DomMultQTH), 'IOTA "' + aTyped + '": the multiplier is EU-005');
+      CheckEquals(15, integer(qso.QSOPoints), 'IOTA "' + aTyped + '": an island QSO scores 15');
+      qso.ceRecordKind := rkQSO;
+      CallsignsList.AddIniitialExchange(aCall, GetInitialExchangeStringFromContestExchange(qso));
+      CheckEquals('EU5', CallsignsList.GetIniitialExchange(aCall),
+                  'IOTA ' + aCall + ': the log remembers the reference as typed');
+      Sheet.SetMultFlags(qso);
+      Sheet.AddQSOToSheets(@qso, True);
+      AddQSOToDupeSheets(qso, False);
+   end;
+
+begin
+   BeginTest('Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand');
+   EnsureMainForm;
+   BindMainGrids;
+   multNeed20 := TR4WMainForm.FindComponent('pnlMultNeedR1_20') as TElementPanel;
+   multNeed40 := TR4WMainForm.FindComponent('pnlMultNeedR1_40') as TElementPanel;
+   if (multNeed20 = nil) or (multNeed40 = nil) then
+      begin
+      CheckTrue(False, 'uMainForm.lfm has the 20 m and 40 m mult need cells of row 1');
+      Exit;
+      end;
+   CheckTrue(ctyLoadInCountryFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                                  PathDelim + 'target' + PathDelim + 'cty.dat', False, False, True),
+             'cty.dat loads');
+
+   savedCallWindow := CallWindowString;
+   SaveNeedsSession;
+   try
+      OpenNeedsSession(ContestHandleOf(IOTA), '', []);
+      (* WHAT FoundContest AND LogCfg DERIVE, asked of the contest rather than
+         assumed: by band and by mode (ApplyContestTraits reads these flags),
+         and one multiplier kind, the domestic one -- LogCfg counts
+         NumberDifferentMults from the Doing*Mults answers, and at 0 the
+         strip is never written. *)
+      CheckTrue(ContestIdentity(Contest).MultByBand, 'IOTA counts multipliers by band');
+      CheckTrue(ContestIdentity(Contest).MultByMode, 'IOTA counts multipliers by mode');
+      CheckTrue(DoingDomesticMults, 'IOTA has a domestic multiplier');
+      CheckFalse(DoingDXMults or DoingZoneMults or DoingPrefixMults, 'IOTA has no other multiplier');
+      Settings.Mult.ByBand := ContestIdentity(Contest).MultByBand;
+      Settings.Mult.ByMode := ContestIdentity(Contest).MultByMode;
+      NumberDifferentMults := 1;
+      ActiveBand := Band20;
+      ActiveMode := CW;
+
+      (* WORKED ON 40 m CW WITH HIS ISLAND. *)
+      LogIsland('GM0GAV', Band40, '599 12 EU5');
+      RefreshNeedsAfterLoggedQSO('GM0GAV', True, False);
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('EU-005', header) > 0, 'logged on 40: the header names EU-005: ' + header);
+      CheckEquals('', Trim(string(multNeed40.Caption)), 'logged on 40: EU-005 is worked on 40 m CW');
+      CheckEquals('20', Trim(string(multNeed20.Caption)), 'logged on 40: EU-005 is still needed on 20 m CW');
+
+      (* TYPED AGAIN ON 20 m. *)
+      TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+      ShowNeedsForCall('GM0GAV');
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('EU-005', header) > 0, 'retyped on 20: the header names EU-005: ' + header);
+      CheckEquals('', Trim(string(multNeed40.Caption)), 'retyped on 20: EU-005 is worked on 40 m CW');
+      CheckEquals('20', Trim(string(multNeed20.Caption)), 'retyped on 20: EU-005 is needed on 20 m CW');
+
+      (* AND LOGGED ON 20 m: the strip takes 20 out. *)
+      LogIsland('GM0GAV', Band20, '12 EU5');
+      RefreshNeedsAfterLoggedQSO('GM0GAV', True, False);
+      header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
+      CheckTrue(Pos('EU-005', header) > 0, 'logged on 20: the header names EU-005: ' + header);
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'logged on 20: EU-005 is worked on 20 m CW');
+
+      (* ANOTHER STATION ON THE SAME ISLAND, never worked: EU-005 is worked on
+         both bands already, whoever sent it. *)
+      CallsignsList.AddIniitialExchange('GM3ABC', 'EU005');
+      ShowNeedsForCall('GM3ABC');
+      CheckEquals('', Trim(string(multNeed20.Caption)), 'GM3ABC on EU005: EU-005 is worked on 20 m CW');
+      CheckEquals('', Trim(string(multNeed40.Caption)), 'GM3ABC on EU005: EU-005 is worked on 40 m CW');
+   finally
+      RestoreNeedsSession;
+      CallWindowString := savedCallWindow;
+      end;
+end;
+
 (* ISSUE 12 FOLLOW-UP (NY4I): THE "MULT NEEDS FOR" STRIP OF A TYPED CALL USES THE
   SECTION A CLUSTER SPOT FOR THAT CALL CARRIES, as the band map does, when the
   program remembers none. Gated on CLUSTER SPOT COMMENT MULTIPLIER like the band
@@ -3412,6 +3540,7 @@ begin
    Test_TheSweepstakesMultHeaderNamesTheSection;
    Test_TheMultHeaderIsTheMultiplierInEveryDomesticFileContest;
    Test_TheMultHeaderPinsOfIssue207;
+   Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
    Test_TheNeedsStripTakesASpotsSection;
    Test_ACallHistoryEntryPrefillsAndYieldsToASpot;
    Test_TypingACallNeverChangesASpotsM;
