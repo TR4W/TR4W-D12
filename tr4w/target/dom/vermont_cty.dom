@@ -1,0 +1,20 @@
+Vermont QSO Party -- the 14 Vermont counties, each its own multiplier.
+Three-letter codes from the sponsor's 2027 rules, section 7(B)(c) (docs/ContestRules/QSOParties/Vermont/vtqso.md, dated 30-OCT-2026); the same 14 codes as DXLog.net's VTQP.txt.
+No county maps to the state: the rules count the 14 Vermont counties as multipliers of their own for every entrant.
+No INCLUDE here: an out-of-state entrant's table holds only the counties (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+ADD = ADD,^Addison
+BEN = BEN,^Bennington
+CAL = CAL,^Caledonia
+CHI = CHI,^Chittenden
+ESS = ESS,^Essex
+FRA = FRA,^Franklin
+GRA = GRA,^Grand Isle
+LAM = LAM,^Lamoille
+ORA = ORA,^Orange
+ORL = ORL,^Orleans
+RUT = RUT,^Rutland
+WAS = WAS,^Washington
+WNH = WNH,^Windham
+WNS = WNS,^Windsor

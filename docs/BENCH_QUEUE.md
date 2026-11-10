@@ -6165,3 +6165,48 @@ Written with no screen and no network: unit tests pin the wording, the request (
 - [ ] With a live cluster, turning it on makes FT8, FT4 and RTTY spots disappear from the band map at once, no restart; CW and SSB stay. Turning it off brings them back; the setting survives a restart.
 - [ ] A bare spot at 14.074 to 14.077 MHz is hidden (frequency rule); a spot commented "CW" at 14.074 MHz stays visible; a CQ marker on an FT8 frequency stays visible.
 - [ ] Ask NY4I whether a band map right-click toggle is wanted too (the issue asked only for the Preferences setting).
+
+## Added 2026-11-10 -- THE VERMONT QSO PARTY (issue #130)
+
+A new by-id contest (`VT-QSO-PARTY`), built from the sponsor's 2027 rules
+(`docs/ContestRules/QSOParties/Vermont/`). Unit-tested
+(`uTestContestVermontQP`, including a real-engine run for an out-of-state and
+an in-state entrant); nothing sees the screen, the multiplier windows or a
+written file.
+
+- [ ] **In Vermont** (New Contest, tick "I am in VT", county `CHI`). Type
+  `599 NY` on 20 m CW, then `59 NY` on 40 m SSB: EXPECT both are new
+  multipliers (once PER MODE), and `599 NY` on 40 m CW is not. `599 DC` is
+  multiplier **MD**. `599 CHI` for another Vermont station is the county
+  multiplier.
+- [ ] **A county does NOT also give VT** (NY4I's ruling is not built): after a
+  `CHI` QSO, a station sending `599 VT` is still shown as a new multiplier.
+  Confirm that is what the screen says, so the gap is visible.
+- [ ] **A DX station sends RST only.** In Vermont, work DL1xxx and type just
+  `599`: EXPECT it is taken, scores 3 on CW, is a new **DX** multiplier, and
+  the Cabrillo received column reads `599 DL` (the DXCC prefix, not `DX`).
+  With the exchange EMPTY it is refused today (pinned): the operator must
+  type the RST. Ask NY4I whether a blank DX exchange should be taken.
+- [ ] **FT8 and FT4.** A WSJT-X FT8 QSO logged from WSJT-X scores 2 and earns
+  NO multiplier of any kind (county, state, DXCC); its grid multipliers are
+  not built. Outside Vermont, a WSJT-X QSO whose exchange is a grid is
+  refused / an X-QSO (the host-area table knows counties only) -- check what
+  the log shows for a real WSJT-X-logged QSO.
+- [ ] **WARC.** A 30, 17 or 12 m QSO in any mode, FT8 included, is a greyed
+  X-QSO (the rules allow FT8/FT4 there; TR4W cannot say so yet).
+- [ ] **A county line.** In Vermont, `599 LAM/ORL` logs two QSOs; `599
+  LAM/ORL/FRA` is refused ("too many counties", maximum 2).
+- [ ] **A DX entrant** (MY CALL DL1xxx; New Contest, MY STATE `DX`, and once
+  more with MY STATE empty): EXPECT the CQ exchange is `5NN` alone, the ADIF
+  `STX_STRING` is `599` alone, and the Cabrillo sent column is `599 DL` --
+  never `DX`.
+- [ ] **The power multiplier.** Set CATEGORY-POWER to LOW on a log whose points
+  x multipliers is odd: EXPECT the CLAIMED-SCORE is x1.5 rounded half to
+  EVEN (13.5 -> 14, 22.5 -> 22). QRP doubles; HIGH and unset are x1.
+- [ ] **The Cabrillo header.** Export with LOCATION empty: EXPECT the
+  "location field empty" warning (the rules reject a log without one). Check
+  b4h.net/vtqp accepts the file as written, and that a log holding FT8 QSOs
+  needs splitting by hand (the rules want those in a separate ADIF upload).
+- [ ] **WA7BNM and 3830.** The class states WA7BNM 0 (not found). Look the
+  contest up on the calendar and on 3830scores.com; if 3830's form breaks
+  the multipliers out, the class needs a `Get3830Summary`.

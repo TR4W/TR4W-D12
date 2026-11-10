@@ -1111,6 +1111,24 @@ the target shape, the M-step migration order and the open questions.
   the header block and asks `ActiveContest` (identity for "no contest").
   `uTestScore3830Report` pins it; no oracle writes this report. State a
   contest's columns only from its actual 3830 form.
+- **THE VERMONT QSO PARTY (2026-11-10, #130) SETTLED FOUR THINGS A PARTY
+  WILL MEET AGAIN.** (1) A DX station that sends RST ONLY needs no override:
+  under `RSTDomesticOrDXQTHExchange` a DX call typed `599` is taken with its
+  RST (an EMPTY exchange is refused, pinned), and
+  `CabrilloReceivedRSTQTHOrDXQTH` writes the DXCC key as the received
+  column. A DX ENTRANT'S MY STATE MAY BE `DX`, not empty: the New Contest
+  host-area row takes `DX` (`uNewContestHostArea.HOST_AREA_DX`) and
+  `SentMyState` passes it on, so `LocationOrOwnCountry` sends "DX" for it.
+  Vermont tests both spellings (`StatesNoLocation`); North Dakota,
+  Oklahoma, New Mexico and Ontario do not -- suspected, not changed. (2) The first x1.5 power
+  multiplier on a final score: `VermontScoreWithPower`, `Round` -- half to
+  EVEN, the Stew Perry/Makrothen convention -- pinned at 13.5 and 22.5.
+  (3) "A WSJT-X QSO earns no county multiplier" IS representable: the
+  class's `CountsAsMultiplier` on `aQso.ExtMode` (stored as `submode`, set by
+  ADIF import). Grid multipliers and "WARC for FT8 only" are not
+  (`UsesBand` cannot see the mode). (4) ONE QSO CARRIES ONE DOMESTIC KEY --
+  "a county also earns its state" (DXLog's MULT1 + MULT2) cannot be built
+  without a new seam; do not fake it with bonus points or the prefix kind.
 - **The UI itself asks the contest** (M9b, 2026-10-02, design §8.2n).
   `IsActive` (base True; SA Sprint and Locust False, on NY4I's word only --
   `uTestContestUI.INACTIVE_CONTESTS` is the ratchet) places a contest in the

@@ -1,0 +1,14 @@
+Entries for the Vermont QSO Party used by in-state (Vermont) stations
+The 14 Vermont counties (each its own multiplier), the 50 states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier, not entries here.
+The county file comes FIRST, so a county code wins over any state or province alias spelled the same.
+DC is mapped to Md before S50.DOM (the rules: DC is counted as MD).
+NF and LB are read as NL (the last line); the rules list NL.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+https://www.ranv.org/vtqso.html
+
+INCLUDE FILE vermont_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

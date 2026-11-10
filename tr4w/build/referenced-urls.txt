@@ -95,6 +95,7 @@ http://k5cm.com/okqp2026rules.pdf | doc | head | uContestOklahomaQP
 https://okqp.contesting.com/ | doc | head | uContestOklahomaQP
 https://quebecqsoparty.org/soumission-qso-qso-download/ | doc | head | uContestQuebecQP
 https://ua9qcq.ru/submit_log.php | doc | head | uContestRussianDX
+https://www.b4h.net/vtqp/vtqpsubmitlog.php | doc | head | uContestVermontQP | web robot for the Vermont QSO Party logs (a form page, never POSTed to)
 https://ssbsprint.com/rules/ | doc | head | uContestSprintSSB
 https://unicomradio.com | doc | head | uContestURCDXRTTY
 https://salmonrun.wwdxc.org/rules/ | doc | head | uContestWashingtonSalmonRun
