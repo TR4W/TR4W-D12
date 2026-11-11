@@ -647,7 +647,7 @@ type
       ('Parse' + the member, less 'Exchange'), so a reader can find the old
       arm. Five arms no registered contest reached went with the machine.
 
-      AN ABSTRACT CLASS, NOT A RECORD OF FUNCTION POINTERS: fifty-one
+      AN ABSTRACT CLASS, NOT A RECORD OF FUNCTION POINTERS: some fifty
       parsers, and a test double that forgets one fails by name
       (EAbstractError) instead of calling nil. LOGSTUFF's
       TEngineExchangeParsers is the one implementation the program uses; the
@@ -690,6 +690,11 @@ type
       function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+      (* THE LICENCE YEAR, 00..99, after an optional RS(T) -- the European HF
+         Championship and KVP (2026-11-11). The word shapes of ParseRSTZone,
+         and NO zone rule: it does not ask the CTY zone mode. Stored in the
+         zone slot (StoreLicenceYear). *)
+      function ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
@@ -3943,6 +3948,19 @@ function ZoneTextSent(aZones: TZoneMultiplierZones;
    TContestBase.NumbersZonesFromZero. nil answers False. *)
 function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
 
+(* THE LICENCE YEAR IS STORED IN THE ZONE SLOT -- 2026-11-11, NY4I's
+   coordinator ruling on the European HF Championship and KVP ("the contract is
+   the encoding, not the type"). The year the operator was first licensed,
+   00..99, is the received exchange field AND the multiplier in those two
+   contests; it lives in ContestExchange.Zone (rcvd_zone) and is counted on the
+   zone sheet (ZoneMult, mult_zone, mo's zone table, the rmZone window), so no
+   column, stored value or export byte changed. What changed is that nothing
+   about it asks the CTY zone mode: its parser is ParseRSTLicenceYear. These
+   two name the alias; read and write the year through them, never as a
+   "zone". A real field of its own is a schema decision, not taken. *)
+function LicenceYearOf(const aQso: ContestExchange): integer;
+procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
+
 (* WHAT A RECEIVED DOMESTIC QTH MEANS IN aContest -- see
    TContestBase.DomesticMultiplierFromQTH. nil answers dqaLookUpDomesticFile
    and writes nothing: the classless DUMMYCONTEST runs NoDomesticMults, which
@@ -4685,6 +4703,18 @@ begin
       begin
       Result := aContest.NumbersZonesFromZero;
       end;
+end;
+
+function LicenceYearOf(const aQso: ContestExchange): integer;
+begin
+   (* See the declaration: the zone slot holds it. *)
+   Result := aQso.Zone;
+end;
+
+procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
+begin
+   (* See the declaration. The parser hands 0..99 only; the Byte holds it. *)
+   aQso.Zone := Byte(aYear);
 end;
 
 function ContestDomesticMultiplierFromQTH(aContest: TContestBase;

@@ -529,6 +529,7 @@ The five exchange statements must agree. These sets are in use:
   before.
 | RST + serial | `RSTQSONumberExchange` | `ExchangeFieldsRSTQSONumber` | `ParseRSTQSONumber` | `ADIFSentRSTQSONumber` | `CabrilloSentRSTQSONumber` / `CabrilloReceivedRSTQSONumber` | `uContestBaltic` |
 | RST + zone | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTZone` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestJIDXCW`, CQ WW |
+| RST + licence year 00..99 (stored in the zone slot; no zone-mode rule) | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTLicenceYear` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestEuropeanHFC`, `uContestKVP` |
 | name + state | `NameAndDomesticOrDXQTHExchange` | `ExchangeFieldsNameQTH` | `ParseNameAndDomesticOrDXQTH` | `ADIFSentNameState` | `CabrilloSentNameState` / `CabrilloReceivedNameQTH` | `uContestNAQPCW`, `uContestCWOps` |
 | RST and/or grid (VHF) | `RSTAndOrGridExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTAndOrGrid` | `ADIFSentRSTGrid` | `CabrilloSentRSTGrid` / `CabrilloReceivedRSTQTH` | `uContestARRLVHFJan` |
 

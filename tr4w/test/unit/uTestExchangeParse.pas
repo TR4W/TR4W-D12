@@ -1149,11 +1149,21 @@ begin
 
 
 
-      CQWWCW, CQWWSSB, EUROPEANHFC, GACWWWSACW, JTDX, KVP, WWIH:
+      CQWWCW, CQWWSSB, GACWWWSACW, JTDX, WWIH:
 
          begin
 
          Result := 'ParseRSTZone';
+
+         end;
+
+      (* THE LICENCE YEAR'S OWN PARSER, 2026-11-11 -- see
+         LEFT_THEIR_SESSION_SHAPES_PARSER. *)
+      EUROPEANHFC, KVP:
+
+         begin
+
+         Result := 'ParseRSTLicenceYear';
 
          end;
 
@@ -1418,6 +1428,13 @@ end;
 (* THE CROSS-CHECK: the parser a plain exchange reaches is the one the old
    machine's arm called for the session's shape, for every ContestType at
    every roster station that names one. Until S9e deletes the shape. *)
+const
+   (* THE CONTESTS WHOSE PARSER LEFT THEIR SHAPE'S ARM ON PURPOSE -- the
+      European HF Championship and KVP, 2026-11-11: the licence year is no
+      zone, so it has its own parser (ParseRSTLicenceYear) and does not ask
+      the CTY zone mode. Their shape stays RSTZoneExchange. *)
+   LEFT_THEIR_SESSION_SHAPES_PARSER = [EUROPEANHFC, KVP];
+
 procedure TExchangeParseTests.Test_PinnedHelperIsTheSessionShapes;
 var
    c: ContestType;
@@ -1432,6 +1449,17 @@ begin
          begin
          if PinnedHelper(c, s) = '' then
             begin
+            Continue;
+            end;
+         if c in LEFT_THEIR_SESSION_SHAPES_PARSER then
+            begin
+            (* Their shape is still RSTZoneExchange (the history renders
+               read it); their parser is no longer that arm's. *)
+            CheckEquals('ParseRSTZone', LegacyHelper(Kinds(c, PinStation(s, c)).Exchange),
+                        string(ContestTypeSA[c]) + ': the shape it left');
+            CheckEquals('ParseRSTLicenceYear', PinnedHelper(c, s),
+                        string(ContestTypeSA[c]) + ': the licence year''s own parser');
+            Inc(checked);
             Continue;
             end;
          CheckEquals(LegacyHelper(Kinds(c, PinStation(s, c)).Exchange), PinnedHelper(c, s),

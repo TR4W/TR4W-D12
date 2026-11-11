@@ -639,10 +639,14 @@ function ProcessClassAndDomesticOrDXQTHExchange(Exchange: string {Str80}; var
   RXData: ContestExchange): boolean;
 function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
   boolean;
-(* RST and zone (CQ WW, IARU, the European HF Championship's year...). In the
-  interface for uTestZoneEntryRefusal (issue 267): a refused entry must leave
-  RXData.Zone as it found it. *)
+(* RST and zone (CQ WW, IARU...). In the interface for uTestZoneEntryRefusal
+  (issue 267): a refused entry must leave RXData.Zone as it found it. *)
 function ProcessRSTAndZoneExchange(Exchange: ShortString; var RXData:
+  ContestExchange): boolean;
+(* RS(T) and the licence year, 00..99 (the European HF Championship, KVP) --
+  the zone parser's words with no zone rule, so it does not depend on the CTY
+  zone mode. In the interface for uTestLicenceYearEntry. *)
+function ProcessRSTAndLicenceYearExchange(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
 (* RS(T), zone and a possible domestic QTH (CQ WW RTTY). In the interface for
   uTestZoneEntryRefusal (issue 274): a refused entry leaves the zone, the QTH
@@ -5384,11 +5388,11 @@ begin
 end;
 
 (* THERE ARE 40 CQ ZONES: a zone above 40 is refused in CQ zone mode (NY4I,
-  issue 267, 2026-11-10). ITU zone mode is not limited here -- the European HF
-  Championship and KVP send a licence year, 00..99, through the RST-and-zone
-  parser in ITU mode. ONE answer for both zone parsers that apply the limit
-  (issue 274). 0 is not refused: '00' was accepted before the limit and is
-  still. *)
+  issue 267, 2026-11-10). ITU zone mode is not limited here. ONE answer for
+  both zone parsers that apply the limit (issue 274). 0 is not refused: '00'
+  was accepted before the limit and is still. The European HF Championship's
+  and KVP's licence year never reaches it: it has its own parser,
+  ProcessRSTAndLicenceYearExchange (2026-11-11). *)
 function ZoneIsAboveTheCQZones(aZone: integer): boolean;
 begin
   Result := (CTY.ctyZoneMode = CQZoneMode) and (aZone > 40);
@@ -5702,26 +5706,38 @@ begin
   ProcessRSTAndPowerExchange := RXData.Power <> '';
 end;
 
-function ProcessRSTAndZoneExchange(Exchange: ShortString {Str80}; var RXData:
-  ContestExchange): boolean;
+(* THE WORD SHAPES OF AN RS(T) AND A ONE- OR TWO-DIGIT NUMBER -- lifted out of
+  ProcessRSTAndZoneExchange on 2026-11-11 so the zone parser and the licence
+  year parser (the European HF Championship, KVP) read the same words, once.
+  It knows nothing of zones or years: it reads the number and leaves the rule
+  to its caller.
 
-{ Each entry of the exchange must be separated by spaces.  The following
+  Each entry of the exchange must be separated by spaces.  The following
   formats work:
 
    Entry  #1   Entry  #2
    ---------   ---------
-   RS(T)       Zone
-   Zone                       (RS(T) = default)
-   Zone        RST            (RST must be three characters, CW only)
+   RS(T)       Number
+   Number                     (RS(T) = default)
+   Number      RST            (RST must be three characters, CW only)
 
-  You can enter just the strength of the RS(T) if you like.    }
+  You can enter just the strength of the RS(T) if you like.
 
+  aNumberLeads is True for the last form (the number, then a CW RST): the zone
+  parser has never applied its 40-zone limit there (issue 274, open). Writes
+  RXData.RSTReceived, as the zone parser always did -- before a refusal too --
+  and NOTHING ELSE of RXData; the caller writes the number only once it
+  accepts the entry. Answers whether the words have the shape. *)
+function ReadRSTAndOneOrTwoDigitNumber(Exchange: ShortString;
+                                       var RXData: ContestExchange;
+                                       out aNumber: integer;
+                                       out aNumberLeads: boolean): boolean;
 var
   FirstString, SecondString, ThirdString: Str10;
-
 begin
-  ExchangeErrorMessage := TC_IMPROPERZONENUMBER;
-  ProcessRSTAndZoneExchange := False;
+  Result := False;
+  aNumber := 0;
+  aNumberLeads := False;
   if not StringIsAllNumbersOrSpaces(Exchange) then
      begin
      Exit;
@@ -5737,10 +5753,9 @@ begin
         if (length(SecondString) = 3) and (length(FirstString) < 3) then
            begin
            RXData.RSTReceived := StrToIntDef(SecondString, 0);
-           RXData.Zone := StrToIntDef(FirstString, 0);
-           //        if length(RXData.Zone) = 1 then          Insert('0', RXData.Zone, 1);
-           ProcessRSTAndZoneExchange := True;
-           ExchangeErrorMessage := '';
+           aNumber := StrToIntDef(FirstString, 0);
+           aNumberLeads := True;
+           Result := True;
            Exit;
            end;
         end;
@@ -5752,50 +5767,76 @@ begin
      GetRidOfPrecedingSpaces(Exchange);
      end;
 
-  case length(Exchange) of
-    1:
-      begin
-        RXData.Zone := StrToIntDef(Exchange, 0);
-        ProcessRSTAndZoneExchange := True;
-        ExchangeErrorMessage := '';
-      end;
+  (* THREE ZONE-KIND ARMS STOOD IN THE TWO-DIGIT CASE, AND NONE WAS A RULE ANY
+    CONTEST RAN -- M11 S5, 2026-10-14: `ZoneMult = EUHFCYear` (0..99, which two
+    digits always are), and two JAPrefectures arms reading a kind no contest
+    stated. The year has its own parser since 2026-11-11. *)
+  if (length(Exchange) = 1) or (length(Exchange) = 2) then
+     begin
+     aNumber := StrToIntDef(Exchange, 0);
+     Result := True;
+     end;
+end;
 
-    2:
-      begin
-        (* THE ZONE IS WRITTEN ONLY ONCE THE ENTRY IS ACCEPTED -- issue 267.
-          It was written first, so an entry refused below (a CQ zone above
-          40) still carried the zone it was refused for (D7 did the same). *)
-        (* THREE ZONE-KIND ARMS STOOD HERE, AND NONE IS A RULE ANY CONTEST
-          RUNS -- M11 S5, 2026-10-14.
+function ProcessRSTAndZoneExchange(Exchange: ShortString {Str80}; var RXData:
+  ContestExchange): boolean;
+var
+  number: integer;
+  numberLeads: boolean;
+begin
+  ExchangeErrorMessage := TC_IMPROPERZONENUMBER;
+  Result := False;
+  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, RXData, number, numberLeads) then
+     begin
+     Exit;
+     end;
 
-          `ZoneMult = EUHFCYear` accepted the two digits as 0..99 and exited
-          before the CQ-zone limit below. Two digits are always 0..99, and
-          the limit applies only in CQ zone mode, while the European HF
-          Championship and KVP -- the only EUHFCYear contests -- both run
-          ITU zone mode (their own GetFlags, no cfCQZoneMode), which is the
-          only mode their session ever sets. So the arm and the fall-through
-          gave the same answer for every input; the matrix's "599 45"
-          (accepted, zone 45) pins it for both. Nothing moved into their
-          parse because there was no rule to move.
+  (* THERE ARE 40 CQ ZONES: above 40 is refused. This compared the first digit
+    with '5', so 50..59 passed (D7 did the same; NY4I ruled it a bug, issue
+    267, 2026-11-10). ITU zone mode is not limited. Not asked of the
+    zone-then-RST form, which never had a range check (issue 274, open). *)
+  if (not numberLeads) and ZoneIsAboveTheCQZones(number) then
+     begin
+     Exit;
+     end;
 
-          `ZoneMult <> JAPrefectures` and `= JAPrefectures` (a prefecture-number limit)
-          read a kind no contest's trait or DescribeSession states: dead
-          since M11 S2 (plan 2.4), so the first test was always true and
-          the second never. *)
-        (* THERE ARE 40 CQ ZONES: above 40 is refused. This compared the
-          first digit with '5', so 50..59 passed (D7 did the same; NY4I ruled
-          it a bug, issue 267, 2026-11-10). ITU zone mode is not limited. *)
-        if ZoneIsAboveTheCQZones(StrToIntDef(Exchange, 0)) then
-           begin
-           Exit;
-           end;
+  (* THE ZONE IS WRITTEN ONLY ONCE THE ENTRY IS ACCEPTED -- issue 267. It was
+    written first, so an entry refused for a CQ zone above 40 still carried
+    the zone it was refused for (D7 did the same). *)
+  RXData.Zone := number;
+  Result := True;
+  ExchangeErrorMessage := '';
+end;
 
-        RXData.Zone := StrToIntDef(Exchange, 0);
-        ProcessRSTAndZoneExchange := True;
-        ExchangeErrorMessage := '';
-      end;
+(* THE YEAR OF THE OPERATOR'S FIRST LICENCE, AFTER AN OPTIONAL RS(T) -- the
+  European HF Championship (rules 5 and 6: "RS report / CW: RST report +
+  two-digit number of the Year of Operator's first ever official amateur radio
+  license"; the multipliers "are different two-digit numbers") and KVP, which
+  shares its multiplier. 2026-11-11.
 
-  end;
+  It reads the zone parser's words (ReadRSTAndOneOrTwoDigitNumber) and applies
+  NO zone rule: every one- or two-digit number, 0..99, is a year, whatever the
+  CTY zone mode. Until today the year went through ProcessRSTAndZoneExchange
+  and passed only because FoundContest set ITU zone mode for these contests,
+  so the 40-zone limit never ran. A refusal names the reason the zone parser's
+  does (TC_IMPROPERZONENUMBER, no new string) and leaves the stored year
+  alone. The year is stored in the zone slot -- uContestBase.StoreLicenceYear. *)
+function ProcessRSTAndLicenceYearExchange(Exchange: ShortString; var RXData:
+  ContestExchange): boolean;
+var
+  year: integer;
+  yearLeads: boolean;
+begin
+  ExchangeErrorMessage := TC_IMPROPERZONENUMBER;
+  Result := False;
+  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, RXData, year, yearLeads) then
+     begin
+     Exit;
+     end;
+
+  StoreLicenceYear(RXData, year);
+  Result := True;
+  ExchangeErrorMessage := '';
 end;
 
 (* BACK THE CONTEST LOG UP, NOW.
@@ -6914,6 +6955,7 @@ type
       function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; override;
@@ -7199,6 +7241,11 @@ end;
 function TEngineExchangeParsers.ParseRSTZone(const aText: string; var aExch: ContestExchange): boolean;
 begin
    Result := ProcessRSTAndZoneExchange(TypedExchange(aText), aExch);
+end;
+
+function TEngineExchangeParsers.ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean;
+begin
+   Result := ProcessRSTAndLicenceYearExchange(TypedExchange(aText), aExch);
 end;
 
 function TEngineExchangeParsers.ParseRSTZoneAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;

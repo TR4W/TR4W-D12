@@ -6272,3 +6272,7 @@ England QSO Party.
 - [ ] **CQ WW RTTY, type the exchange the way an operator does.** On RTTY or CW: `599 5`, `599 14`, `599 5 CT` and `599 CT 14` are accepted with the zone and QTH read; `14 CT` (no RST) is accepted too. EXPECT the Exchange window shows the zone and the multiplier needs correctly and the Cabrillo line carries the typed exchange.
 - [ ] **Refusals show a message.** Type `599 CT` (no zone), `599 45` (above 40), `599 14 ZZZ` and `JOE 10 CT`. EXPECT a message each time (Not enough info in exchange, Improper zone number, Improper domestic QTH naming the file, Invalid Entry) and no zone or QTH left in the entry fields. In QSL AND LOG mode a refused entry now logs no zone or QTH.
 - [ ] **ARRL RTTY Roundup** uses the same parser without a zone: `599 CT` and `599 GA` are accepted with no zone needed.
+
+## Added 2026-11-11 -- THE EUHFC AND KVP YEAR PARSER (issue 281)
+
+- [ ] **EUHFC and KVP, type the licence year.** On CW: `599 85`, `85 599`, `599 5`, `599 00`; on Phone: `59 85`, `59 00`. EXPECT each is accepted with the year shown as the received exchange and counted once per band regardless of mode. `599 123`, `599 1982` and `599 CT` are refused with a message (it still says Improper zone number, which is awkward wording for a year). In the call window of a booted contest, also check `599 00` on Phone is refused WITH a message (the engine path returned an empty one in the unit test).

@@ -50,8 +50,15 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   want has not been checked against the sponsor; the row's value is
   transcribed exactly. Since M11 S5 the rule is this class's own --
   ZoneMultiplierCount (100) and NumbersZonesFromZero (True), which LOGDUPE
-  and LOGEDIT read from the session's zone kind until then; LOGSTUFF's
-  EUHFCYear range test was vacuous here (ITU zone mode) and was deleted.
+  and LOGEDIT read from the session's zone kind until then.
+
+  THE YEAR HAS ITS OWN PARSER SINCE 2026-11-11, as the European HF
+  Championship's: aParsers.ParseRSTLicenceYear, 00..99, which does not ask
+  the CTY zone mode (it was the zone parser, accepted only because this
+  contest runs ITU zone mode). Still STORED in the zone slot
+  (uContestBase.LicenceYearOf / StoreLicenceYear) and counted on the zone
+  sheet: no column, stored value or export byte changed. See
+  uContestEuropeanHFC's header.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
   sits on TContestBase directly and states its own points, calling
@@ -215,11 +222,13 @@ begin
    Result := ExchangeFieldsRSTZone;
 end;
 
+(* RS(T) AND THE LICENCE YEAR, 00..99 -- the European HF Championship's
+   parser, since 2026-11-11: see the unit header. *)
 function TContestKVP.ParseReceivedExchangeFormat(const aText: string;
                                                  aParsers: TExchangeParsers;
                                                  var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTZone(aText, aExch);
+   Result := aParsers.ParseRSTLicenceYear(aText, aExch);
 end;
 
 procedure TContestKVP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);

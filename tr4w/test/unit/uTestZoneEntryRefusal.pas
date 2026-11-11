@@ -5,9 +5,11 @@ unit uTestZoneEntryRefusal;
 
    LOGSTUFF.ProcessRSTAndZoneExchange wrote RXData.Zone from the two digits
    typed and only then refused a CQ zone above 40, so a refused '599 85' still
-   carried zone 85 (D7 did the same). The European HF Championship and KVP send
-   the year licensed there, 00..99, and are accepted only because FoundContest
-   sets ITU zone mode for them.
+   carried zone 85 (D7 did the same). The European HF Championship and KVP sent
+   the year licensed through this parser, accepted only because FoundContest
+   sets ITU zone mode for them; since 2026-11-11 the year has its own parser
+   (uTestLicenceYearEntry), and the ITU-mode rows below pin only the zone
+   parser.
 
    Driven directly, with the CTY zone mode and the active mode set and restored
    here: the zone is pre-set to a sentinel, so "untouched" is visible. RST is

@@ -42,13 +42,29 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   carries a CQ-exchange line naming this contest, and it is COMMENTED
   OUT; nothing is read from it. FCONTEST has no arm for it.
 
-  THE ZONE MULTIPLIER (the trait EUHFCYear, which KVP shares) is this
-  class's own since M11 S5: ZoneMultiplierCount (100) and
-  NumbersZonesFromZero (True), which LOGDUPE and LOGEDIT read from the
-  session's zone kind until then. LOGSTUFF's EUHFCYear range test in the
-  zone parse was vacuous -- two digits are always 0..99, and the CQ-zone
-  limit it skipped never applies in this contest's ITU zone mode -- so it
-  was deleted rather than moved; the matrix's "599 45" pins the parse.
+  THE LICENCE YEAR IS ITS OWN EXCHANGE FIELD, STORED IN THE ZONE SLOT
+  (2026-11-11). Rules 5 and 6 (docs/ContestRules/euhfc_rules_latest.md): RS
+  on SSB / RST on CW plus the two-digit year of the operator's first-ever
+  licence, 00..99; the multipliers are the different two-digit values, once
+  per band regardless of mode (GetFlags: cfMultByBand, no cfMultByMode).
+    - PARSE: aParsers.ParseRSTLicenceYear (LOGSTUFF's
+      ProcessRSTAndLicenceYearExchange), the zone parser's word shapes with
+      no zone rule. Until 2026-11-11 the year went through ParseRSTZone and
+      was accepted only because FoundContest set ITU zone mode here (no
+      cfCQZoneMode), so the 40-CQ-zone limit never ran; it no longer asks the
+      zone mode at all.
+    - STORAGE: ContestExchange.Zone (rcvd_zone) and ZoneMult (mult_zone),
+      through uContestBase.LicenceYearOf / StoreLicenceYear -- the encoding
+      is the contract; no column, stored value or export byte changed.
+    - MULTIPLIER: the zone sheet, a hundred "zones" numbered from zero
+      (ZoneMultiplierCount 100, NumbersZonesFromZero, HasZoneMultiplier);
+      ZoneMultiplierZones is the base's zmzNotCQOrITU, so the hint never
+      offers a CTY zone and ADIF writes no CQZ/ITUZ tag.
+    - SENT: MY ZONE holds the operator's year (the New Contest prompt).
+  A field and a multiplier kind of its own would be a schema change (a
+  column, or the 376-byte record the wire and server log carry) -- not taken.
+  The ITU zone mode stays: it is what CTY.DAT gives a logged call, and
+  changing it would change the stored cty zone of new rows.
 
   THE ADIF ID WAS BLANK UNTIL 2026-09-29 AND IS NOW 'EU-HF', the ADIF 3.1.7
   Contest_ID enumeration's spelling (EU HF Championship), on NY4I's ruling.
@@ -220,11 +236,13 @@ begin
    Result := ExchangeFieldsRSTZone;
 end;
 
+(* RS(T) AND THE LICENCE YEAR, 00..99 -- rule 5. Its own parser since
+   2026-11-11, not the zone parser: see the unit header. *)
 function TContestEuropeanHFC.ParseReceivedExchangeFormat(const aText: string;
                                                          aParsers: TExchangeParsers;
                                                          var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTZone(aText, aExch);
+   Result := aParsers.ParseRSTLicenceYear(aText, aExch);
 end;
 
 procedure TContestEuropeanHFC.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);

@@ -738,7 +738,20 @@ i - 1 (D7), so erase mode hid each year by the next year's cell. Pinned in
 `uTestMults`. **A refused RST-and-zone entry leaves `Zone` untouched**
 (`ProcessRSTAndZoneExchange`, in LOGSTUFF's interface for
 `uTestZoneEntryRefusal`), and in CQ zone mode it refuses every zone above
-40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones"). **So does CQ
+40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones").
+**THE EUHFC/KVP LICENCE YEAR HAS ITS OWN PARSER, STILL STORED IN `Zone`
+(2026-11-11).** `ParseRSTLicenceYear` -> `ProcessRSTAndLicenceYearExchange`
+takes 00..99 after an optional RS(T) and asks NO zone rule, so it no longer
+depends on FoundContest setting ITU zone mode (it was the zone parser,
+accepted only because the 40-zone limit never ran in ITU mode). Both parsers
+read their words through ONE reader, `ReadRSTAndOneOrTwoDigitNumber` -- do
+not copy it. The year is written through `uContestBase.LicenceYearOf` /
+`StoreLicenceYear` into the zone slot (`rcvd_zone`, `mult_zone`, the zone
+sheet, rmZone) -- the encoding is the contract, so no column, stored value
+or export byte moved. A field and multiplier kind of its own would change the
+schema AND the 376-byte record the wire and server log carry: not taken.
+Pinned by `uTestLicenceYearEntry` (every year in CQ and ITU zone mode, the
+engine path for both classes, once per band, export bytes). **So does CQ
 WW RTTY's `ProcessRSTZoneAndPossibleDomesticQTHExchange` (issue 274,
 2026-11-11, NY4I's rulings)**: it parses into locals and writes `Zone`,
 `QTHString`, `DomesticQTH` and `DomMultQTH` only once accepted (the domestic
