@@ -653,6 +653,12 @@ function ProcessRSTAndLicenceYearExchange(Exchange: ShortString; var RXData:
   and the domestic QTH as it found them. *)
 function ProcessRSTZoneAndPossibleDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
+(* RS(T), QSO number and a possible domestic QTH (RSGB IOTA, UK/EI, RSGB
+  1.8 MHz, UBA DX, DARC 10 m). In the interface for
+  uTestPossibleDomesticQTHEntry (issue 263): a word typed ahead of the number
+  is the QTH only when the contest knows it. *)
+function ProcessRSTQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
@@ -4690,6 +4696,7 @@ function ProcessRSTQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
 
 var
   NumberString, FirstString, SecondString, ThirdString: Str10;
+  Resolved: ContestExchange;
 begin
 
   ProcessRSTQSONumberAndPossibleDomesticQTHExchange := False;
@@ -4717,15 +4724,32 @@ begin
        Result := True;
        exit;
        end;
+  (* A WORD, THEN A NUMBER (n4af 4.42.7) -- issue 263, 2026-11-11.
+
+    D7 set the answer from FoundDomesticQTH and then overwrote it with True,
+    so any word was taken as the QTH: '5NN 12 EU5' in the RSGB IOTA logged
+    QTH '5NN', no island, 2 points. The word is the QTH only when the contest
+    knows it; otherwise the entry is refused through RefuseDomesticQTH and
+    the QSO is left as it was found. The QTH is resolved on a copy, as in
+    ProcessRSTZoneAndPossibleDomesticQTHExchange, so a refusal writes
+    nothing; FoundDomesticQTH's every answer is kept ('XXX' included). *)
   if not StringIsAllNumbers(FirstString) and StringIsAllNumbers(SecondString)
-    then // n4af 4.42.7
+    then
      begin
+     Resolved := RXData;
+     Resolved.QTHString := FirstString;
+     if not FoundDomesticQTH(Resolved) then
+        begin
+        RefuseDomesticQTH('ProcessRSTQSONumberAndPossibleDomesticQTHExchange',
+                          TC_IMPROPERDOMESITCQTH, string(FirstString), string(Exchange));
+        Exit;
+        end;
      RXData.QTHString := FirstString;
+     RXData.DomesticQTH := Resolved.DomesticQTH;
+     RXData.DomMultQTH := Resolved.DomMultQTH;
      RXData.NumberReceived := StrToIntDef(SecondString, 0);
-     ProcessRSTQSONumberAndPossibleDomesticQTHExchange :=
-       FoundDomesticQTH(RXData);
      Result := True;
-     exit;
+     Exit;
      end;
   if ThirdString <> '' then
      begin

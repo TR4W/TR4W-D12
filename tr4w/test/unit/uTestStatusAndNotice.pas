@@ -2517,12 +2517,13 @@ end;
    entry shapes the parser documents ('599 12 EU5', '12 EU5') pass on the
    current code: GM0GAV's own 2016 port of the domestic "needs" display
    (D7 6961582d, n4af/tr4w #81) and issue #100's post-log refresh are what
-   this pins. ONE SHAPE REPRODUCES THE SYMPTOM and is deliberately NOT pinned
-   here, because whether to refuse it is a parse ruling: '5NN 12 EU5' is
-   ACCEPTED with QTH '5NN' -- the '<word> <number>' branch of
-   ProcessRSTQSONumberAndPossibleDomesticQTHExchange overwrites the
-   FoundDomesticQTH answer with True (as D7 does) -- so the QSO has no
-   island, scores 2, the log remembers '5NN' and the header names the call. *)
+   this pins. ONE SHAPE REPRODUCED THE SYMPTOM: '5NN 12 EU5' was ACCEPTED
+   with QTH '5NN' -- the '<word> <number>' branch of
+   ProcessRSTQSONumberAndPossibleDomesticQTHExchange overwrote the
+   FoundDomesticQTH answer with True (as D7 did) -- so the QSO had no island,
+   scored 2, and the header named the call. Since issue 263 it is refused
+   with its message and writes nothing; uTestPossibleDomesticQTHEntry pins
+   it. *)
 procedure TStatusAndNoticeTests.Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
 var
    multNeed20: TElementPanel;

@@ -204,6 +204,7 @@ uses
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
    uTestZoneEntryRefusal in 'uTestZoneEntryRefusal.pas',
+   uTestPossibleDomesticQTHEntry in 'uTestPossibleDomesticQTHEntry.pas',
    uTestLicenceYearEntry in 'uTestLicenceYearEntry.pas',
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
@@ -1122,6 +1123,7 @@ begin
    RegisterSuite(TContestReadinessTests.Create('ContestReadiness'));
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TZoneEntryRefusalTests.Create('ZoneEntryRefusal'));
+   RegisterSuite(TPossibleDomesticQTHEntryTests.Create('PossibleDomesticQTHEntry'));
    RegisterSuite(TLicenceYearEntryTests.Create('LicenceYearEntry'));
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));

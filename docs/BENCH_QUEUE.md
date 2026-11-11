@@ -6276,3 +6276,8 @@ England QSO Party.
 ## Added 2026-11-11 -- THE EUHFC AND KVP YEAR PARSER (issue 281)
 
 - [ ] **EUHFC and KVP, type the licence year.** On CW: `599 85`, `85 599`, `599 5`, `599 00`; on Phone: `59 85`, `59 00`. EXPECT each is accepted with the year shown as the received exchange and counted once per band regardless of mode. `599 123`, `599 1982` and `599 CT` are refused with a message (it still says Improper zone number, which is awkward wording for a year). In the call window of a booted contest, also check `599 00` on Phone is refused WITH a message (the engine path returned an empty one in the unit test).
+
+## Added 2026-11-11 -- A WORD BEFORE THE NUMBER IS NO LONGER TAKEN AS THE QTH (issue 263)
+
+- [ ] **RSGB-IOTA.** Type `5NN 12 EU5`, then `EU5 12` and `599 12 EU5`. EXPECT the first refused with Improper domestic QTH (5NN not known) and nothing left in the entry; the other two accepted with island EU-005 and the multiplier needs header naming the call. Typing the canonical `EU-005` is still refused (3-5 characters, as in D7).
+- [ ] **UBA-DX, RSGB-160, UK/EI, DARC 10 m.** `CT 123` or `JOE 123` (word first) is refused with a message naming the contest's domestic file where that file does not list the word; DARC 10 m still takes any word.
