@@ -897,6 +897,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestARRLSectionAlias in 'uTestARRLSectionAlias.pas',
    (* A spot's section from its comment (issue 83, 2026-11-05). *)
    uTestSpotCommentMultiplier in 'uTestSpotCommentMultiplier.pas',
+   (* Clear Mult Sheet and the score already earned (issue 164, 2026-11-11). *)
+   uTestClearMultSheet  in 'uTestClearMultSheet.pas',
    (* A call history file's prefill (NY4I, 2026-11-07). *)
    uTestCallHistory     in 'uTestCallHistory.pas',
    (* The call history download -- supercheckhistory.com (NY4I, 2026-11-08). *)
@@ -1083,6 +1085,7 @@ begin
    RegisterSuite(TExchangeWordOrderTests.Create('ExchangeWordOrder'));
    RegisterSuite(TARRLSectionAliasTests.Create('ARRLSectionAlias'));
    RegisterSuite(TSpotCommentMultiplierTests.Create('SpotCommentMultiplier'));
+   RegisterSuite(TClearMultSheetTests.Create('ClearMultSheet'));
    RegisterSuite(TCallHistoryTests.Create('CallHistory'));
    RegisterSuite(TCallHistoryDownloadTests.Create('CallHistoryDownload'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
