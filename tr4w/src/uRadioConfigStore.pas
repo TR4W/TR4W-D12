@@ -417,6 +417,15 @@ type
       SpeedSync1: boolean;
       SpeedSync2: boolean;
       SO2REnabled: boolean;
+      (* WHETHER STARTUP CONNECTS THIS PROFILE'S RADIOS (issue 286, NY4I).
+        On the PROFILE because a profile is what names the radios in the
+        slots; a station-wide flag (the old general.autoConnect, which nothing
+        ever read) cannot say what a given pair should do, and a per-radio
+        flag cannot say what a slot should do. True by default, and an absent
+        key reads True: every start before this connected the active
+        profile's radios regardless of the old box. Activate and Reset Radio
+        Ports always connect -- this is the start-up decision only. *)
+      ConnectAtStartup: boolean;
 
       constructor Create;
       procedure Assign(const aSource: TStationProfile);
@@ -429,6 +438,14 @@ type
       function ReferencesRadio(const aRadioName: string): boolean;
    end;
 
+   (* THE START-UP RULE, as a function so it is testable without a radio. No
+     profile -- no library, no active profile, or one that did not resolve --
+     connects, which is what every start did before issue 286: the slots keep
+     whatever configuration they already had, and an unresolved profile
+     must never quietly mean "no radios". *)
+   function ProfileConnectsAtStartup(const aProfile: TStationProfile): boolean;
+
+type
    { WHAT IS ACTUALLY ON THE AIR, as opposed to what is stored.
 
      WHY THIS EXISTS.  A radio's settings reach the running program by exactly
@@ -564,7 +581,9 @@ type
       FHeaders: TStringList;   // section name -> TStringList, owned
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
-      FAutoConnectOnStartup: boolean;
+      (* ~~FAutoConnectOnStartup~~ (general.autoConnect) -- DELETED for issue
+        286. Saved and shown in Preferences since 2026-08-05 and read by
+        nothing; connecting at startup is the profile's ConnectAtStartup. *)
       FKeepLegacyIni: boolean;
 
       // TCI SERVER -- ITS OWN SECTION, not three more keys in "general".
@@ -737,7 +756,6 @@ type
       procedure SeedFromLegacyIni(const aIni: TCustomIniFile);
 
       property ActiveProfileName: string read FActiveProfileName write FActiveProfileName;
-      property AutoConnectOnStartup: boolean read FAutoConnectOnStartup write FAutoConnectOnStartup;
 
       { The operator was offered the removal of a now-unused tr4w.ini and said
         no.  Recorded so the question is asked ONCE: a prompt that returns every
@@ -1239,6 +1257,7 @@ begin
    DefaultActiveSlot := 1;
    CWOutput1         := CWOUTPUT_NONE;
    CWOutput2         := CWOUTPUT_NONE;
+   ConnectAtStartup  := True;
 end;
 
 procedure TStationProfile.Assign(const aSource: TStationProfile);
@@ -1262,6 +1281,7 @@ begin
    SpeedSync1        := aSource.SpeedSync1;
    SpeedSync2        := aSource.SpeedSync2;
    SO2REnabled       := aSource.SO2REnabled;
+   ConnectAtStartup  := aSource.ConnectAtStartup;
 end;
 
 function TStationProfile.SameAs(const aOther: TStationProfile): boolean;
@@ -1275,13 +1295,26 @@ begin
       (CWOutput2         = aOther.CWOutput2)             and
       (SpeedSync1        = aOther.SpeedSync1)            and
       (SpeedSync2        = aOther.SpeedSync2)            and
-      (SO2REnabled       = aOther.SO2REnabled);
+      (SO2REnabled       = aOther.SO2REnabled)           and
+      (ConnectAtStartup  = aOther.ConnectAtStartup);
 end;
 
 function TStationProfile.Clone: TStationProfile;
 begin
    Result := TStationProfile.Create;
    Result.Assign(Self);
+end;
+
+function ProfileConnectsAtStartup(const aProfile: TStationProfile): boolean;
+begin
+   if aProfile = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aProfile.ConnectAtStartup;
+      end;
 end;
 
 { The id for a slot -- what every lookup should ask for. }
@@ -1917,7 +1950,6 @@ begin
    FActiveRotatorName := '';
    FProfiles.Clear;
    FActiveProfileName    := '';
-   FAutoConnectOnStartup := False;
    FKeepLegacyIni := False;
 
    FTCIServerEnabled     := False;
@@ -2756,6 +2788,7 @@ begin
    Result.AddPair('speedSync1',        TJSONBool.Create(aProfile.SpeedSync1));
    Result.AddPair('speedSync2',        TJSONBool.Create(aProfile.SpeedSync2));
    Result.AddPair('so2rEnabled',       TJSONBool.Create(aProfile.SO2REnabled));
+   Result.AddPair('connectAtStartup',  TJSONBool.Create(aProfile.ConnectAtStartup));
 end;
 
 { command -> section, built ONCE.
@@ -2914,12 +2947,11 @@ begin
    Result.AddPair(JSONKEY_VERSION, TJSONNumber.Create(JSON_SCHEMA_VERSION));
    FExternalLoggers.SaveJSON(Result);
 
-   // "general" keeps what is genuinely general: which profile is active, and
-   // whether to connect the radios at startup.  Both are single station-wide
-   // statements with no subsystem of their own.
+   // "general" keeps what is genuinely general: which profile is active.
+   // Whether to connect the radios at startup is the PROFILE's (issue 286);
+   // the old general.autoConnect is read and dropped -- see LoadFromJSON.
    general := TJSONObject.Create;
    general.AddPair('activeProfile', FActiveProfileName);
-   general.AddPair('autoConnect',   TJSONBool.Create(FAutoConnectOnStartup));
    general.AddPair('keepLegacyIni', TJSONBool.Create(FKeepLegacyIni));
    Result.AddPair(JSONKEY_GENERAL, general);
 
@@ -3221,8 +3253,11 @@ begin
       general := TJSONObject(v);
       end;
    FActiveProfileName    := JSONStr(general,  'activeProfile', '');
-   FAutoConnectOnStartup := JSONBool(general, 'autoConnect',   False);
-   FKeepLegacyIni        := JSONBool(general, 'keepLegacyIni', False);
+   (* general.autoConnect is NOT read: nothing ever acted on it, and its
+     default False carried into a profile would stop that profile's radios
+     connecting on upgrade. It stays a KNOWN key below, so an older file is
+     not reported as holding an unknown setting; the next save drops it. *)
+   FKeepLegacyIni       := JSONBool(general, 'keepLegacyIni', False);
 
    // TCI: the new section, falling back to the OLD general.tciServer key.
    //
@@ -3287,9 +3322,13 @@ begin
    FUnknownKeys.Clear;
 
    CollectUnknownKeys('general', general,
-      ['activeProfile', 'autoConnect', 'keepLegacyIni', 'activeCluster',
+      ['activeProfile', 'keepLegacyIni', 'activeCluster',
        'activeRotatorId', 'activeRotator', 'latestConfigFile',
        'gridPromptShown',
+       (* NOT written by SaveToJSON since issue 286 -- the retired
+          station-wide "connect radios at startup", which an older file
+          carries. Known so it is dropped quietly, not reported. *)
+       'autoConnect',
        (* NOT written by SaveToJSON -- it is a LEGACY key still READ as a
           fallback for tci.enabled, so a file carrying one from an older
           build is understood, not unknown. *)
@@ -3612,6 +3651,12 @@ begin
             begin
             profile.SO2REnabled := (profile.Radio1Name <> '') and (profile.Radio2Name <> '');
             end;
+         (* ABSENT MEANS TRUE, NOT FALSE: a file written before issue 286 has
+           no key, and every start before it connected the active profile's
+           radios. The old station-wide general.autoConnect is deliberately
+           NOT carried over -- nothing ever read it, and its default False
+           would turn radios off on upgrade for nearly every station. *)
+         profile.ConnectAtStartup := JSONBool(obj, 'connectAtStartup', True);
 
          if not AddProfile(profile, err) then
             begin
@@ -3740,7 +3785,7 @@ begin
    end;
 
    FActiveProfileName    := aIni.ReadString(GENERALSECTION, 'ActiveProfile', '');
-   FAutoConnectOnStartup := aIni.ReadBool(GENERALSECTION,   'AutoConnect',   False);
+   // [General] AutoConnect is not read, for the reason given in LoadFromJSON.
 
    // The legacy ini store, which JSON replaced.  It is a READ path for old
    // files, so it keeps the flat [General] TCIServer key it was written with
@@ -3779,7 +3824,6 @@ begin
 
    aIni.WriteInteger(GENERALSECTION, 'Version',       RADIOCONFIG_SCHEMA_VERSION);
    aIni.WriteString(GENERALSECTION,  'ActiveProfile', FActiveProfileName);
-   aIni.WriteBool(GENERALSECTION,    'AutoConnect',   FAutoConnectOnStartup);
    aIni.WriteBool(GENERALSECTION,    'TCIServer',     FTCIServerEnabled);
 
    for i := 0 to FRadios.Count - 1 do

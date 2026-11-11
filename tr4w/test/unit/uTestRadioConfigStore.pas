@@ -125,6 +125,11 @@ type
       procedure Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios;
       procedure Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange;
 
+      // --- CONNECT AT STARTUP is the profile's (issue 286) -----------------
+      procedure Test_ProfileConnectAtStartupDefaultsOnAndTravels;
+      procedure Test_OldFileWithoutTheKeyConnectsAndDropsGeneralAutoConnect;
+      procedure Test_StartupRuleConnectsUnlessAProfileSaysNo;
+
       // --- FREQUENCY POLL RATE, per radio (issue 235 step 3) --------------
       procedure Test_PollRateIsCopiedComparedAndCloned;
       procedure Test_AppliedSnapshotSeesAChangedPollRate;
@@ -458,7 +463,6 @@ begin
          CheckTrue(store.AddProfile(prof, err), 'profile added: ' + err);
 
          store.ActiveProfileName    := 'Home SO2R';
-         store.AutoConnectOnStartup := True;
          store.SaveTo(ini);
       finally
          store.Free;
@@ -482,7 +486,6 @@ begin
             CheckTrue(loaded.SO2REnabled,      'SO2REnabled');
             end;
          CheckEquals('Home SO2R', store.ActiveProfileName, 'ActiveProfileName');
-         CheckTrue(store.AutoConnectOnStartup, 'AutoConnectOnStartup');
          CheckTrue(store.ActiveProfile = loaded, 'ActiveProfile resolves');
       finally
          store.Free;
@@ -2084,10 +2087,12 @@ begin
       prof.DefaultActiveSlot := 2;
       prof.CWOutput1         := 'CAT';
       prof.CWOutput2         := 'NONE';
+      (* Off, because on is the default and would survive a writer that
+        forgot the key. *)
+      prof.ConnectAtStartup  := False;
       CheckTrue(store.AddProfile(prof, err), 'profile: ' + err);
 
       store.ActiveProfileName    := 'Field Day';
-      store.AutoConnectOnStartup := True;
 
       root := store.SaveToJSON;
    finally
@@ -2109,7 +2114,7 @@ begin
          // [General] travels too -- forgetting it would silently deactivate the
          // operator's profile on the next start.
          CheckEquals('Field Day', store.ActiveProfileName, 'active profile');
-         CheckTrue(store.AutoConnectOnStartup, 'auto-connect');
+         CheckFalse(loaded.ConnectAtStartup, 'connect at startup is the profile''s, and travels');
       finally
          store.Free;
       end;
@@ -2540,7 +2545,8 @@ begin
          CheckTrue(root.GetValue('tci') <> nil, 'the tci section is written');
          // The keys that genuinely are general stay put.
          CheckTrue(general.GetValue('activeProfile') <> nil, 'activeProfile stays in general');
-         CheckTrue(general.GetValue('autoConnect')   <> nil, 'autoConnect stays in general');
+         CheckTrue(general.GetValue('autoConnect')   = nil,
+                   'autoConnect is no longer written -- the profile owns it (issue 286)');
       finally
          root.Free;
       end;
@@ -2826,6 +2832,102 @@ begin
    end;
 end;
 
+(* CONNECT AT STARTUP IS THE PROFILE'S (issue 286). On by default, because
+   every start before this connected the active profile's radios; copied by
+   Assign and Clone, and seen by SameAs, or Preferences could neither copy
+   a profile nor notice the box changing. *)
+procedure TRadioConfigStoreTests.Test_ProfileConnectAtStartupDefaultsOnAndTravels;
+var
+   prof, twin: TStationProfile;
+begin
+   BeginTest('Test_ProfileConnectAtStartupDefaultsOnAndTravels');
+   prof := TStationProfile.Create;
+   try
+      CheckTrue(prof.ConnectAtStartup, 'a new profile connects at startup');
+
+      prof.ConnectAtStartup := False;
+      twin := prof.Clone;
+      try
+         CheckFalse(twin.ConnectAtStartup, 'Clone carries it');
+         CheckTrue(twin.SameAs(prof), 'equal when it matches');
+         twin.ConnectAtStartup := True;
+         CheckFalse(twin.SameAs(prof), 'SameAs sees it change');
+      finally
+         twin.Free;
+      end;
+   finally
+      prof.Free;
+   end;
+end;
+
+(* EVERY FILE WRITTEN BEFORE ISSUE 286: no profile key, and a station-wide
+   general.autoConnect that nothing ever read -- false on most stations,
+   whose radios connected anyway. The profile must read ON, the old key must
+   not be reported as unknown (that is an ERROR at every start), and the
+   next save must not write it. *)
+procedure TRadioConfigStoreTests.Test_OldFileWithoutTheKeyConnectsAndDropsGeneralAutoConnect;
+var
+   store: TRadioConfigStore;
+   root, saved, general: TJSONObject;
+   loaded: TStationProfile;
+begin
+   BeginTest('Test_OldFileWithoutTheKeyConnectsAndDropsGeneralAutoConnect');
+   root := TJSONObject(TJSONObject.ParseJSONValue(
+      '{"radios":[{"name":"K3","registryId":"K3"}],' +
+      ' "profiles":[{"name":"Old","radio1":"K3"},' +
+      '             {"name":"Off","radio1":"K3","connectAtStartup":false}],' +
+      ' "general":{"activeProfile":"Old","autoConnect":false}}'));
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+
+         loaded := store.FindProfile('Old');
+         CheckTrue(loaded <> nil, 'Old is there');
+         CheckTrue(loaded.ConnectAtStartup,
+                   'no key reads ON, whatever general.autoConnect said');
+         loaded := store.FindProfile('Off');
+         CheckTrue(loaded <> nil, 'Off is there');
+         CheckFalse(loaded.ConnectAtStartup, 'a key that is there is the operator''s word');
+
+         CheckTrue(store.UnknownKeys.IndexOf('general.autoConnect') < 0,
+                   'the retired key is known, so not reported');
+
+         saved := store.SaveToJSON;
+         try
+            general := saved.GetValue('general') as TJSONObject;
+            CheckTrue(general <> nil, 'general is written');
+            CheckTrue(general.GetValue('autoConnect') = nil,
+                      'the next save drops general.autoConnect');
+         finally
+            saved.Free;
+         end;
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+(* THE START-UP RULE. Anything short of a resolved profile that says no
+   connects -- an unresolved profile must never mean "no radios". *)
+procedure TRadioConfigStoreTests.Test_StartupRuleConnectsUnlessAProfileSaysNo;
+var
+   prof: TStationProfile;
+begin
+   BeginTest('Test_StartupRuleConnectsUnlessAProfileSaysNo');
+   CheckTrue(ProfileConnectsAtStartup(nil), 'no profile: connect');
+   prof := TStationProfile.Create;
+   try
+      CheckTrue(ProfileConnectsAtStartup(prof), 'a default profile: connect');
+      prof.ConnectAtStartup := False;
+      CheckFalse(ProfileConnectsAtStartup(prof), 'a profile that says no: do not');
+   finally
+      prof.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -2893,6 +2995,9 @@ begin
    Test_JSONRoundTripsProfileSpeedSyncAndSO2R;
    Test_JSONProfileWithoutSpeedSyncKeysSeedsFromTheRadios;
    Test_AppliedSnapshotSeesAProfileSpeedSyncAndCWOutputChange;
+   Test_ProfileConnectAtStartupDefaultsOnAndTravels;
+   Test_OldFileWithoutTheKeyConnectsAndDropsGeneralAutoConnect;
+   Test_StartupRuleConnectsUnlessAProfileSaysNo;
    Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
 
    Test_AppliedSnapshotSeesAChangedPassword;

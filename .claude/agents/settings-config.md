@@ -480,6 +480,21 @@ Wiring `NeedsRestart` to emit that hint per bound control is the real fix and is
 `MY COUNTRY` mid-session, nothing said it would not take effect, and the
 contest kept its original exchange.
 
+## Connect-at-startup is the PROFILE's (issue 286, 2026-11-11)
+
+`TStationProfile.ConnectAtStartup` (profile JSON `connectAtStartup`, absent =
+True). The station-wide `general.autoConnect` / `AutoConnectOnStartup` is
+DELETED: saved and shown since 2026-08-05, read by nothing -- every start
+connected the active profile's radios. It is **not migrated** (its default
+False would have switched radios off on upgrade); it stays in the known-keys
+list so an old file logs no ERROR, and the next save drops it. Startup:
+`uRadioConfigApply.RadioLibraryConnectAtStartup` (True unless a RESOLVED
+profile says no, via `ProfileConnectsAtStartup`) gates only the two
+`CheckAndInitializePorts_ForThisRadio` calls in
+`LogCfg.CheckAndInitializeSerialPorts`. Activate and Reset Radio Ports never
+ask it. The ini store (`SaveTo`/`LoadFrom`) does not carry it, by that
+format's stated policy.
+
 ## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
 
 `HAMSCORE VERIFY SERVER` (`Settings.Hamscore.VerifyServer`) and `SCORE VERIFY SERVER`

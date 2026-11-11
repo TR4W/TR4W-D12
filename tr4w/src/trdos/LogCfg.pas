@@ -116,6 +116,7 @@ uses
    uUDPBroadcastConfig,
    uTR4WConfigFile,
    uRotatorControl,   // OpenRotatorPorts -- the library opens its own ports
+   uRadioConfigApply, // RadioLibraryConnectAtStartup -- issue 286
    uContestFileKind,  // a .db chosen as the contest must not be line-parsed
    (* ContestIdentity(Contest).CQExchangeDefault and the station it is
       handed -- tSetupExchangeNumbers (M7a). *)
@@ -289,8 +290,19 @@ begin
      Radio2.tCATPortName := '';
      end;
 
-  Radio1.CheckAndInitializePorts_ForThisRadio;
-  Radio2.CheckAndInitializePorts_ForThisRadio;
+  (* THE ACTIVE PROFILE DECIDES (issue 286). Skipping leaves both slots
+    configured and closed; Activate and Reset Radio Ports open them, and
+    neither asks this flag. Only the radios: the rotators above and the keyer
+    below are not the profile's start-up choice. *)
+  if RadioLibraryConnectAtStartup then
+     begin
+     Radio1.CheckAndInitializePorts_ForThisRadio;
+     Radio2.CheckAndInitializePorts_ForThisRadio;
+     end
+  else
+     begin
+     logger.Info('[Startup] radios not connected -- the active profile does not connect at startup');
+     end;
 
 end;
 

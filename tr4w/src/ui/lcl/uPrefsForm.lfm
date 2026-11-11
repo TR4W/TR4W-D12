@@ -526,7 +526,7 @@ object PrefsForm: TPrefsForm
           Top = 212
           Width = 225
           Caption = 'Activate this profile now'
-          TabOrder = 11
+          TabOrder = 12
           OnClick = btnActivateClick
         end
         object lblActivateHint: TLabel
@@ -540,16 +540,16 @@ object PrefsForm: TPrefsForm
           ParentFont = False
           WordWrap = True
         end
-      end
-      object chkAutoConnect: TCheckBox
-        Left = 12
-        Height = 19
-        Top = 458
-        Width = 300
-        AutoSize = False
-        Caption = 'Connect radios at startup'
-        TabOrder = 6
-        OnChange = chkAutoConnectChange
+        object chkAutoConnect: TCheckBox
+          Left = 220
+          Height = 19
+          Top = 182
+          Width = 300
+          AutoSize = False
+          Caption = 'Connect radios at startup'
+          TabOrder = 11
+          OnChange = chkAutoConnectChange
+        end
       end
     end
     object layRotators: TPanel

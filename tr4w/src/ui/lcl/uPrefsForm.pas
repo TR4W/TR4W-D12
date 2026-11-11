@@ -3124,6 +3124,10 @@ begin
          chkSpeedSync1.Checked := False;
          chkSpeedSync2.Checked := False;
          chkSO2R.Checked  := False;
+         (* No profile connects at startup -- ProfileConnectsAtStartup -- and
+           there is nothing here to change, so say so and offer nothing. *)
+         chkAutoConnect.Checked := True;
+         chkAutoConnect.Enabled := False;
          end
       else
          begin
@@ -3140,6 +3144,8 @@ begin
          chkSpeedSync1.Checked := prof.SpeedSync1;
          chkSpeedSync2.Checked := prof.SpeedSync2;
          chkSO2R.Checked  := prof.SO2REnabled;
+         chkAutoConnect.Checked := prof.ConnectAtStartup;
+         chkAutoConnect.Enabled := True;
          end;
 
       // RESTARTED HERE.  FTiming is a field, so between one refresh and the next
@@ -3159,7 +3165,6 @@ begin
          end;
       FLoaded.Clear;
 
-      chkAutoConnect.Checked := FStore.AutoConnectOnStartup;
       LogPhase(FTiming, '  profile combos');
       LoadStationPanel;
       LogPhase(FTiming, '  Station');
@@ -3400,7 +3405,6 @@ begin
       Exit;
       end;
 
-   FStore.AutoConnectOnStartup := chkAutoConnect.Checked;
    SaveStationPanel;
    SaveExternalSoftwarePanels;
    SaveHardwarePanel;
@@ -3497,6 +3501,7 @@ begin
    prof.SpeedSync1  := chkSpeedSync1.Checked;
    prof.SpeedSync2  := chkSpeedSync2.Checked;
    prof.SO2REnabled := chkSO2R.Checked;
+   prof.ConnectAtStartup := chkAutoConnect.Checked;
 
    Dirty := True;
 end;
