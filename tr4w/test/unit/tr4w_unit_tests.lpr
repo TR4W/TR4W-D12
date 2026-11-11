@@ -185,6 +185,8 @@ uses
    uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uN1MMMode            in '..\..\src\uN1MMMode.pas',
+   uWSJTXReport         in '..\..\src\uWSJTXReport.pas',
+   uTestWSJTXReport     in 'uTestWSJTXReport.pas',
    uTestN1MMMode        in 'uTestN1MMMode.pas',
    uTestUDPContactXml   in 'uTestUDPContactXml.pas',
    uTestUDPDatagrams    in 'uTestUDPDatagrams.pas',
@@ -1000,6 +1002,7 @@ begin
    RegisterSuite(TQsoDispatcherTests.Create('QsoDispatcher'));
    RegisterSuite(TNetSendQueueTests.Create('NetSendQueue'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
+   RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));

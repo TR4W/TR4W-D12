@@ -440,6 +440,7 @@ uses
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
+  uWSJTXReport,      // which modes carry a WSJT-X dB SNR (issue 261)
   // utils_text.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
   MainUnit,
@@ -3177,23 +3178,11 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 RSTSent := sysutils.Format( '%d', [ TempRXData.RSTSent ] );
                 end;
 
-             if ( TempRXData.ExtMode in [ eFT8, eMFSK, eJT65 ] ) and
-                ( TempRXData.RSTReceived < 25 ) then
-                begin
-                if Settings.Wsjtx.Enabled then
-                   begin
-                   RSTReceived := sysutils.Format( '%d',
-                      [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] );
-                   end
-                else
-                   begin
-                   RSTReceived := '599';
-                   end;
-                end
-             else
-                begin
-                RSTReceived := sysutils.Format( '%d', [ TempRXData.RSTReceived ] );
-                end;
+             (* Which modes carry a dB SNR here, and the 25 limit, are
+               uWSJTXReport's (issue 261). *)
+             RSTReceived := sysutils.Format( '%d',
+                [ WSJTXReceivedReportForExport( TempRXData.ExtMode,
+                     TempRXData.RSTReceived, Settings.Wsjtx.Enabled ) ] );
 
              nrReceived := TempRXData.NumberReceived;
              nrSent     := TempRXData.NumberSent;

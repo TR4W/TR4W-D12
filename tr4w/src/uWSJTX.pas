@@ -176,6 +176,7 @@ implementation
 
 uses
    uSettingsModel,     // Settings -- the settings that have left CFGCA
+  uWSJTXReport, // WSJTXSnrToRST -- one table, shared with the Cabrillo export
   uWSJTXState, { the link state -- uStateBridge decides what it looks like }
   VC // For ContestExchange
   , MainUnit // For ParseADIFRecord
@@ -2339,46 +2340,7 @@ end;
 
 function TWSJTXServer.ConvertSNRToRST(snr: integer): integer;
 begin
-  if snr <= -20 then
-     begin
-     Result := 509;
-     end
-  else if snr < -14 then
-     begin
-     Result := 519;
-     end
-  else if snr < -8 then
-     begin
-     Result := 529;
-     end
-  else if snr < -2 then
-     begin
-     Result := 539;
-     end
-  else if snr < 4 then
-     begin
-     Result := 549;
-     end
-  else if snr < 10 then
-     begin
-     Result := 559;
-     end
-  else if snr < 16 then
-     begin
-     Result := 569;
-     end
-  else if snr < 22 then
-     begin
-     Result := 579;
-     end
-  else if snr < 28 then
-     begin
-     Result := 589;
-     end
-  else
-     begin
-     Result := 599;
-     end;
+  Result := WSJTXSnrToRST(snr);
 end;
 
 initialization
