@@ -91,7 +91,6 @@ const
   {NEW CONTEST}
   TC_LATEST_CONFIG_FILE                 = 'Najnowszy plik konfiguracyjny';
   TC_OPENCONFIGURATIONFILE              = ' - otwórz plik konfiguracyjny albo utwórz nowy contest';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Folder "%s" juz istnieje.'#13'czy nadpisaæ ?';
   TC_IAMIN                              = '&Jestem w %s';
   TC_NEWENGLANDSTATEABREVIATION         = 'Wpisz swój skrót stanu New England'#13'(ME, NH, VT, MA, CT, RI):';
   TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Wpisz nazwê QTH któr¹ bêdziesz nadawaæ:';

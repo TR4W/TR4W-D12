@@ -740,6 +740,30 @@ ALREADY STOPPED.
   "not writable". The worker does not restart itself after a busy failure at
   ITS open (it stops; the next QSO's `AfterLogCommit` only Wakes it).
 
+## A TAKEN NEW-CONTEST LOG NAME GETS A NUMBER, NEVER AN OVERWRITE (issue 276, 2026-11-11)
+
+NY4I: an automatic numeric suffix, and never offer to overwrite. CW Open runs
+three sessions a day (serials from 1, separate submissions), so one contest,
+date and callsign must name several logs.
+
+- **`uLogNaming.FirstFreeLogFileName(dir, name[, aTaken])`** is the rule:
+  `X.db`, then `X 2.db`, `X 3.db`... the FIRST free number (a gap is filled).
+  `aTaken` is injectable; the two-argument overload asks the disk. Pinned in
+  `uTestLogNaming`. It raises past 9999 rather than loop on a broken test.
+- **`uNewContest.SaveNewContest` decides BEFORE it queues anything**: Create
+  new log (the numbered name, default), Open existing log, Cancel (the New
+  Contest dialog is shown again; nothing queued, no file). Open existing is
+  answered as `nccOpenSelected`, exactly like choosing that log's row, so File >
+  Open Log relaunches on it without a hand-off file.
+- **The old `TC_FOLDERALREADYEXISTSOVERWRITE` question was false**: Yes and No
+  both opened the existing log, because an existing `.db` is opened and
+  `TLogDatabase.CreateNew` refuses to replace one. It is retired from every
+  catalogue.
+- **No reader of the name's parts was found** (searched 2026-11-11: the only
+  caller of `ContestLogFileName` is `SaveNewContest`, and no routine named for
+  parsing a log's file name exists in `src/`). Keep it so: `W1AW 2.db` reads
+  the same as the sanitised `W1AW/2`, so the name cannot be an identity record.
+
 ## The `config` table holds only what the operator STATED (2026-10-01)
 
 For a contest-scoped setting, a row means the operator stated it, and a

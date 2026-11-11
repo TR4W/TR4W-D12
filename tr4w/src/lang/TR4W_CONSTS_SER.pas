@@ -107,7 +107,6 @@ const
   TC_EUDX                               = 'EU zemlja, unesite četvoroznakovni kod zemlje';
   TC_LATEST_CONFIG_FILE                 = 'Poslednja konfiguraciona datoteka';
   TC_OPENCONFIGURATIONFILE              = ' - Otvori konfiguracionu datoteku ili kreiraj konfiguraciju za novo takmicenje';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Direktorijum "%s" vec postoji.'#13' Presnimiti ga?';
   TC_IAMIN                              = '&Ja sam u %s';
 
   TC_NEWENGLANDSTATEABREVIATION         = 'Upisi skracenicu za drzave Nove Engleske(New England)'#13'(ME, NH, VT, MA, CT, RI):';

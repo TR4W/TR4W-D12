@@ -104,7 +104,6 @@ const
   TC_EUDX                               = 'Страна ЕС, введите ваш 4-символьный код страны';
   TC_LATEST_CONFIG_FILE                 = 'Последний файл конфигурации';
   TC_OPENCONFIGURATIONFILE              = ' - Открыть файл конфигурации или начать новый контест';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Каталог "%s" уже существует.'#13' Переписать его?';
   TC_NEWENGLANDSTATEABREVIATION         = 'Введите сокращения для штатов в Новой Англии (New England)'#13'(ME, NH, VT, MA, CT, RI):';
   TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Введите QTH который Вы хотите передать:';
   TC_ENTERSTATEFORUSPROVINCEFORCANADA   = 'Введите штат для США, провинцию для Канады:';

@@ -92,7 +92,6 @@
   {NEW CONTEST}
   TC_LATEST_CONFIG_FILE                 = 'Latest config file';
   TC_OPENCONFIGURATIONFILE              = ' - Open configuration file or start a new contest';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Folder "%s" already exists.'#13'Overwrite ?';
   TC_IAMIN                              = '&I am in %s';
 
   TC_NEWENGLANDSTATEABREVIATION         = 'Enter your New England state abreviation'#13'(ME, NH, VT, MA, CT, RI):';

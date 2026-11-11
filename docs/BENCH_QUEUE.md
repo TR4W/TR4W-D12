@@ -6025,7 +6025,7 @@ Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-i386
 4. New England QP with the "I am in" box ticked: "...New England Staat ein" / "(ME, NH, VT, MA, CT, RI):".
 5. Optional: `--lang ru` for steps 1 and 2. Russian sweepstakes is one of four reviewed translations written on one line, so it shows one line with no stray "r".
 
-Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_FOLDERALREADYEXISTSOVERWRITE and TC_INVALIDSTATEMENTIN (no reliable trigger found).
+Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_INVALIDSTATEMENTIN (no reliable trigger found). (TC_FOLDERALREADYEXISTSOVERWRITE, also listed here, was retired with issue 276.)
 
 **Periodic HamScore score tick (2026-11-04):** `HamScoreScoreTick` calls `CalculateTotals`, which walks the WHOLE log on the main thread (every 5 s after a change, 30 s heartbeat). Not measured. Needs a latency measurement on a large contest log (tens of thousands of QSOs); watch for operator-visible stalls on Enter. Also confirm that with the log source unreadable the last posted score is kept and one warning is logged.
 
@@ -6288,3 +6288,13 @@ A DEPARTURE FROM D7, which keyed them. `MainUnit.AutoSendKeysCallWindowKey`.
 
 - [ ] **Each keyer: WinKeyer, CPU (DTR/RTS), and CW-by-CAT on a KY radio (K3/K4 or a Kenwood) and on an Icom.** In CQ mode on CW, with AUTO SEND CHARACTER COUNT 3, type `W1A`, then while it is keying press `,` `.` `;` (or the remapped POSSIBLE CALL keys), then finish the call. EXPECT none of the three is heard (no comma, period, AA or extra gap), the possible-call selection still moves and `;` still accepts, and letters typed after them are still keyed. On a KY radio, EXPECT no `?;` error reply from the radio after `;` (a keyed `;` used to end the `KY` command early).
 - [ ] **Accept key mid-auto-send (NOT changed, ruling needed).** Press `;` to accept a possible call while auto-send is keying the partial call. Note what is keyed: the call in the window is replaced, but only the characters typed so far went out. Read from code (issue 29 trace), not observed: `ReturnInCQOpMode` does not resend the call while auto-send ran, so the accepted call may never be keyed in full.
+
+## Added 2026-11-11 -- A TAKEN NEW-CONTEST LOG NAME ASKS THREE WAYS, NEVER "OVERWRITE" (issue 276)
+
+The numbering is unit-tested (`uTestLogNaming`: free, taken, two taken, a gap, a sanitised call, the disk). The dialog and the re-shown New Contest window are not: nothing drives them. `uNewContest.AskAboutATakenLogName`, `SaveNewContest`, `RunNewContestDialog`.
+
+- [ ] **The question.** Create CWOps CW Open as W1AW, log nothing, close. Start again, choose CW Open, same call, OK. Expect a box titled "This contest already has a log" naming `CWOPEN <date> W1AW.db` and `CWOPEN <date> W1AW 2.db`, with three buttons: **Create new log** (the default: Enter picks it), **Open existing log**, **Cancel** (Escape and the close box are Cancel). The word "Folder" and "Overwrite" appear nowhere. Windows and Linux (gtk2: the button order is the desktop's, which is expected).
+- [ ] **Create new log.** A new empty log `CWOPEN <date> W1AW 2.db` opens, serials from 1; the first log is untouched (its QSO is still there when opened later). A third session gives ` 3.db`.
+- [ ] **Open existing log.** The existing log opens with its QSOs; no new file appears in the logs folder.
+- [ ] **Cancel.** The New Contest window comes back as it was left (contest, call and fields still filled in); choosing another contest and OK proceeds normally, and nothing from the cancelled pass is applied. No file is created.
+- [ ] **File > Open Log, same three.** From a running contest, File > Open Log, New Contest for a name that is taken: Create new log relaunches on the numbered log; Open existing log relaunches on the existing one (or says it is already open, if it is the running log); Cancel returns to the dialog and the session continues if that is then cancelled.

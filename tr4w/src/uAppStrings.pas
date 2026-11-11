@@ -946,6 +946,25 @@ resourcestring
    SLogLockedReadOnly = 'Open read-only (no logging)';
    SLogLockedQuit = 'Quit TR4W';
 
+   (* ------------------------ a new contest's log name is taken (issue 276) - *)
+
+   (* THE NEW CONTEST QUESTION (uNewContest.AskAboutATakenLogName), asked when
+     a log for the same contest, date and callsign already exists -- CW Open
+     runs three sessions a day. The first %s is the existing log, the second
+     the numbered name a new log would get. The two captions are buttons; the
+     third is the LCL's own Cancel. NOTHING HERE OVERWRITES OR DELETES A LOG.
+     It replaced TC_FOLDERALREADYEXISTSOVERWRITE, which offered to overwrite
+     a "folder" and opened the existing log whichever button was chosen. *)
+   SNewLogNameTakenTitle = 'This contest already has a log';
+   SNewLogNameTakenBody =
+      'A log for this contest, date and callsign already exists:' + #10 + '%s' + #10#10 +
+      'Create new log: start a separate, empty log named' + #10 + '%s' + #10 +
+      'The existing log is kept unchanged.' + #10#10 +
+      'Open existing log: continue logging in the existing log.' + #10#10 +
+      'Cancel: go back to the New Contest window. Nothing is created.';
+   SNewLogCreateNumbered = 'Create new log';
+   SNewLogOpenExisting = 'Open existing log';
+
    (* Shown once, the first time a read-only session refuses a write. %s is the
      log's file. *)
    SLogReadOnlyRefused =

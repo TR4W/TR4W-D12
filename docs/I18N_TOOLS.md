@@ -269,7 +269,7 @@ build puts the default back (the stamp's `mode` line no longer matches).
 
 **The shipped copy says `\n` where the `.po` says `\r`** (2026-11-03). LazUtils'
 `.po` reader decodes only `\t \n \" \\` (`lazutf8.pas:1044`); any other escape loses
-its backslash and keeps its LETTER, so the ten `TC_` strings that break with
+its backslash and keeps its LETTER, so the `TC_` strings that break with
 `#13` showed `willstrund` for `willst\rund`, in every language, English fallbacks
 included. `Make-LanguageRes.ps1` rewrites `\r` and `\r\n` as `\n` while trimming
 (escapes are read left to right, so `\\r` -- a backslash and an r -- is left

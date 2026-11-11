@@ -668,14 +668,6 @@ msgid " - Open configuration file or start a new contest"
 msgstr " - 構成ファイルを開くか、新しいコンテストを開始する"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_folderalreadyexistsoverwrite
-#: tr4w/src/lang/tr4w_consts_eng.pas:102
-#, fuzzy
-msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
-msgid "Folder \"%s\" already exists.\rOverwrite ?"
-msgstr "フォルダ \"%s\" は既に存在しています.\rオーバーライト?"
-
-#. Section: NEW CONTEST
 #: utr4wstrings:tc_iamin
 #: tr4w/src/lang/tr4w_consts_eng.pas:103
 #: utr4wstrings.tc_iamin
@@ -8208,15 +8200,6 @@ msgstr ""
 "送信したいQTHを入力してください\n"
 "使用する名前:"
 
-#: utr4wstrings.tc_folderalreadyexistsoverwrite
-#, fuzzy
-msgid ""
-"Folder \"%s\" already exists.\n"
-"Overwrite ?"
-msgstr ""
-"フォルダ \"%s\" は既に存在しています。\n"
-"オーバーライト?"
-
 #: utr4wstrings.tc_invalidstatementin
 #, fuzzy
 msgid ""
@@ -10462,4 +10445,24 @@ msgstr ""
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
+msgstr ""
+
+#: uappstrings.snewlognametakentitle
+#, fuzzy
+msgid "This contest already has a log"
+msgstr ""
+
+#: uappstrings.snewlognametakenbody
+#, fuzzy
+msgid "A log for this contest, date and callsign already exists:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe existing log is kept unchanged.\n\nOpen existing log: continue logging in the existing log.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.snewlogcreatenumbered
+#, fuzzy
+msgid "Create new log"
+msgstr ""
+
+#: uappstrings.snewlogopenexisting
+#, fuzzy
+msgid "Open existing log"
 msgstr ""

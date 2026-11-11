@@ -600,13 +600,6 @@ msgid " - Open configuration file or start a new contest"
 msgstr " - Otvori konfiguracionu datoteku ili kreiraj konfiguraciju za novo takmicenje"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_folderalreadyexistsoverwrite
-#: tr4w/src/lang/tr4w_consts_eng.pas:102
-msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
-msgid "Folder \"%s\" already exists.\rOverwrite ?"
-msgstr "Direktorijum \"%s\" vec postoji.\r Presnimiti ga?"
-
-#. Section: NEW CONTEST
 #: utr4wstrings:tc_iamin
 #: tr4w/src/lang/tr4w_consts_eng.pas:103
 #: utr4wstrings.tc_iamin
@@ -7621,13 +7614,6 @@ msgid ""
 "and the name you want to use:"
 msgstr ""
 
-#: utr4wstrings.tc_folderalreadyexistsoverwrite
-#, fuzzy
-msgid ""
-"Folder \"%s\" already exists.\n"
-"Overwrite ?"
-msgstr ""
-
 #: utr4wstrings.tc_invalidstatementin
 #, fuzzy
 msgid ""
@@ -9807,4 +9793,24 @@ msgstr ""
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
+msgstr ""
+
+#: uappstrings.snewlognametakentitle
+#, fuzzy
+msgid "This contest already has a log"
+msgstr ""
+
+#: uappstrings.snewlognametakenbody
+#, fuzzy
+msgid "A log for this contest, date and callsign already exists:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe existing log is kept unchanged.\n\nOpen existing log: continue logging in the existing log.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.snewlogcreatenumbered
+#, fuzzy
+msgid "Create new log"
+msgstr ""
+
+#: uappstrings.snewlogopenexisting
+#, fuzzy
+msgid "Open existing log"
 msgstr ""

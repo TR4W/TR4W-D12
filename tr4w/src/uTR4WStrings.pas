@@ -112,7 +112,6 @@ resourcestring
    TC_IRTS                               = 'EI/GI, enter your County';
    TC_LATEST_CONFIG_FILE                 = 'Last Contest';
    TC_OPENCONFIGURATIONFILE              = ' - Open configuration file or start a new contest';
-   TC_FOLDERALREADYEXISTSOVERWRITE       = 'Folder "%s" already exists.'#13'Overwrite ?';
    TC_IAMIN                              = '&I am in %s';
    TC_CROAT                              = 'I am in Croatia';
    TC_NEWENGLANDSTATEABREVIATION         = 'Enter your New England state abbreviation'#13'(ME, NH, VT, MA, CT, RI):';

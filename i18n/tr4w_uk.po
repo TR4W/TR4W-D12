@@ -534,13 +534,6 @@ msgid " - Open configuration file or start a new contest"
 msgstr " - Відкрити файли конфігурації або розмістити новий контест"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_folderalreadyexistsoverwrite
-#: tr4w/src/lang/tr4w_consts_eng.pas:102
-msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
-msgid "Folder \"%s\" already exists.\rOverwrite ?"
-msgstr "Каталог \"%s\" уже існує.\r Переписати його?"
-
-#. Section: NEW CONTEST
 #: utr4wstrings:tc_iamin tr4w/src/lang/tr4w_consts_eng.pas:103
 #: utr4wstrings.tc_iamin
 msgctxt "TC_IAMIN"
@@ -7252,15 +7245,6 @@ msgstr ""
 "Введіть свій QTH, який ви хочете надіслати\n"
 "і ім'я, яку ви хочете використовувати:"
 
-#: utr4wstrings.tc_folderalreadyexistsoverwrite
-#, fuzzy
-msgid ""
-"Folder \"%s\" already exists.\n"
-"Overwrite ?"
-msgstr ""
-"Складання \"%s\" вже існує.\n"
-"Овертюра ?"
-
 #: utr4wstrings.tc_invalidstatementin
 msgid ""
 "Invalid statement in %s !!\n"
@@ -9488,4 +9472,24 @@ msgstr ""
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
+msgstr ""
+
+#: uappstrings.snewlognametakentitle
+#, fuzzy
+msgid "This contest already has a log"
+msgstr ""
+
+#: uappstrings.snewlognametakenbody
+#, fuzzy
+msgid "A log for this contest, date and callsign already exists:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe existing log is kept unchanged.\n\nOpen existing log: continue logging in the existing log.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.snewlogcreatenumbered
+#, fuzzy
+msgid "Create new log"
+msgstr ""
+
+#: uappstrings.snewlogopenexisting
+#, fuzzy
+msgid "Open existing log"
 msgstr ""

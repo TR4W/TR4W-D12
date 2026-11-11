@@ -532,13 +532,6 @@ msgid " - Open configuration file or start a new contest"
 msgstr " - Avaa asetustiedosto tai aloita uusi kilpailu"
 
 #. Section: NEW CONTEST
-#: tr4w/src/lang/tr4w_consts_eng.pas:102
-#, fuzzy
-msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
-msgid "Folder \"%s\" already exists.\rOverwrite ?"
-msgstr "Kansio \"%s\" on jo olemassa.\rKorvaa?"
-
-#. Section: NEW CONTEST
 #: tr4w/src/lang/tr4w_consts_eng.pas:103
 #: utr4wstrings.tc_iamin
 #, fuzzy
@@ -7475,15 +7468,6 @@ msgstr ""
 "Anna QTH, jonka haluat lähettää\n"
 "ja nimi, jota haluat käyttää:"
 
-#: utr4wstrings.tc_folderalreadyexistsoverwrite
-#, fuzzy
-msgid ""
-"Folder \"%s\" already exists.\n"
-"Overwrite ?"
-msgstr ""
-"Kansio \"%s\" on jo olemassa.\n"
-"Korvaa?"
-
 #: utr4wstrings.tc_invalidstatementin
 #, fuzzy
 msgid ""
@@ -9715,4 +9699,24 @@ msgstr ""
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
+msgstr ""
+
+#: uappstrings.snewlognametakentitle
+#, fuzzy
+msgid "This contest already has a log"
+msgstr ""
+
+#: uappstrings.snewlognametakenbody
+#, fuzzy
+msgid "A log for this contest, date and callsign already exists:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe existing log is kept unchanged.\n\nOpen existing log: continue logging in the existing log.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.snewlogcreatenumbered
+#, fuzzy
+msgid "Create new log"
+msgstr ""
+
+#: uappstrings.snewlogopenexisting
+#, fuzzy
+msgid "Open existing log"
 msgstr ""

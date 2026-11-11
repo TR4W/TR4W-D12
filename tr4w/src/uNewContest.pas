@@ -54,13 +54,25 @@ uses
   ChangeDir and StartContestFromListbox, which existed to drive DlgDirListA
   and DlgDirSelectExA around a filesystem the brief says this dialog should
   not be browsing. See TfrmNewContest.PopulateFiles. }
+type
+   (* WHAT OK ON A NEW CONTEST CAME TO (issue 276). nloCreate: a new log, its
+     choices queued. nloOpenExisting: a log for that contest, date and callsign
+     already existed and the operator chose to open it -- nothing queued.
+     nloCancel: back to the dialog -- nothing queued, no file. *)
+   TNewLogOutcome = (nloCreate, nloOpenExisting, nloCancel);
+
 procedure BeginNewContest;
 procedure ClearFields;
-(* Queues what the form holds and answers the new contest's log file. It
-  writes no global: the startup caller puts the answer in TR4W_CFG_FILENAME,
+(* Queues what the form holds and answers the new contest's log file in aFile.
+  It writes no global: the startup caller puts the answer in TR4W_CFG_FILENAME,
   and File > Open Log must not, because the running contest's writers read
-  that name (issue 228). *)
-function SaveNewContest: string;
+  that name (issue 228).
+
+  WHEN THE NAME IS TAKEN IT ASKS (issue 276): create a new log under the next
+  free numbered name (uLogNaming.FirstFreeLogFileName), open the existing one
+  (aFile is that log), or cancel (aFile is ''). It never overwrites or deletes
+  a file. Only nloCreate leaves anything queued. *)
+function SaveNewContest(out aFile: string): TNewLogOutcome;
 procedure DisplayCheckBox(Text: string);
 procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField);
 procedure DisplayInitialCommand(Command: TNewContestField);
@@ -85,7 +97,12 @@ procedure ShowNewContest;
   and the file it was started on); the Last Contest button is hidden when it
   names one of them, because choosing it could only answer "already open".
   At startup there is none. For nccCreate the choices are queued in
-  uNewContestCommands, exactly as at startup. *)
+  uNewContestCommands, exactly as at startup.
+
+  OK ON A NEW CONTEST CAN ANSWER nccOpenSelected (issue 276): when its log
+  name is taken and the operator chooses Open existing log, the answer is that
+  log, as if its row had been chosen, with nothing queued. Cancel on that
+  question shows the dialog again. *)
 function RunNewContestDialog(aMode: TNewContestDialogMode;
                              const aOpenContest: array of string;
                              out aFile: string): TNewContestChoice;
@@ -123,6 +140,8 @@ uses
   uAppPaths,   // ContestDir -- where an operator's contest files live
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
+  Dialogs,             (* QuestionDlg -- a taken log name, asked natively (issue 276) *)
+  System.UITypes,      (* TModalResult -- QuestionDlg's answer; Controls does not re-export it *)
   uLatestContest,     (* TLatestContest -- the last contest, as its log describes it *)
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
@@ -526,8 +545,92 @@ end;
 (* ApplyNewContestCommand MOVED to uNewContestCommands as its ApplyOne, and
   it runs at startup now rather than here -- see that unit for why. *)
 
-function SaveNewContest: string;
+(* THE QUESTION WHEN A NEW CONTEST'S LOG NAME IS TAKEN (issue 276). The
+  answer is read by MODAL RESULT, never by button position: GTK draws the
+  buttons in the other order (see MainUnit.YesOrNo). 'IsDefault' binds to the
+  button BEFORE it, so Create new log is the default. Cancel is the LCL's own
+  button with its own translated caption; Escape and closing the box are
+  Cancel too, so nothing proceeds that the operator did not choose.
+  QuestionDlg's custom captions must be UTF-8 ansi strings, hence LclText. *)
+function AskAboutATakenLogName(const aExisting, aNumbered: string): TNewLogOutcome;
+var
+   answer: TModalResult;
 begin
+   answer := QuestionDlg(LclText(SNewLogNameTakenTitle),
+                         LclText(Format(SNewLogNameTakenBody, [aExisting, aNumbered])),
+                         mtConfirmation,
+                         [mrYes,    LclText(SNewLogCreateNumbered), 'IsDefault',
+                          mrNo,     LclText(SNewLogOpenExisting),
+                          mrCancel, 'IsCancel'], 0);
+   if answer = mrYes then
+      begin
+      Result := nloCreate;
+      end
+   else if answer = mrNo then
+      begin
+      Result := nloOpenExisting;
+      end
+   else
+      begin
+      Result := nloCancel;
+      end;
+end;
+
+function SaveNewContest(out aFile: string): TNewLogOutcome;
+var
+   defaultName, freeName: string;
+begin
+  (* THE LOG FILE. Named by uLogNaming, where the rule and its tests live; this
+    supplies the three facts and nothing else.
+
+    ContestDir, NOT TR4W_PATH_NAME, AND THAT IS THE WHOLE FIX FOR A CLASS OF
+    BUG.  TR4W_PATH_NAME is uAppPaths.DataDir -- where SHIPPED, READ-ONLY data
+    lives.  Everything about a contest is composed from THIS ONE PATH: FCONTEST
+    derives TR4W_LOG_FILENAME, the .RST, the .DOM, the server log and the
+    preferred CTY.DAT from the directory of the .cfg, so pointing it at a
+    read-only place put every one of them there.
+
+    NY4I hit it on a fresh Debian 13 running the AppImage, which mounts itself
+    read-only: the contest log could not be created and QSOs were not saved
+    (2026-09-10).  On Windows ContestDir IS the binary's directory, so nothing
+    changes there.
+
+    THE ANSWER, NOT TR4W_CFG_FILENAME (issue 228). The caller decides where
+    it goes: startup's global, or File > Open Log's restart.
+
+    DECIDED BEFORE ANYTHING IS QUEUED (issue 276). The old question, "Folder
+    ... already exists. Overwrite ?", was false twice: the object is a log,
+    and Yes and No both opened it, because an existing log is opened and
+    never replaced (uLogStore, TLogDatabase.CreateNew). So a second CW Open
+    session on the same day could not be created at all. Now a taken name
+    offers the next free numbered one, the existing log, or Cancel, and
+    nothing is queued until the answer is Create. *)
+   Result := nloCreate;
+   defaultName := ContestLogFileName(frmNewContest.ContestName,
+                                     Now,
+                                     frmNewContest.MyCall);
+   freeName := FirstFreeLogFileName(ContestDir, defaultName);
+   aFile := ContestDir + freeName;
+
+   if freeName <> defaultName then
+      begin
+      Result := AskAboutATakenLogName(ContestDir + defaultName, aFile);
+      if Result <> nloCreate then
+         begin
+         (* Nothing of this pass stays queued, whichever it was. *)
+         ClearNewContestChoices;
+         if Result = nloOpenExisting then
+            begin
+            aFile := ContestDir + defaultName;
+            end
+         else
+            begin
+            aFile := '';
+            end;
+         Exit;
+         end;
+      end;
+
   begin
     (* QUEUED, NOT ASSIGNED AND SAVED HERE. The settings object has not been
       loaded from settings\tr4w.json yet -- that happens after this dialog --
@@ -558,45 +661,6 @@ begin
        needs no special case -- it was the general rule, arriving early. *)
   end;
 
-  (* THE LOG FILE. Named by uLogNaming, where the rule and its tests live; this
-    supplies the three facts and nothing else.
-
-    ContestDir, NOT TR4W_PATH_NAME, AND THAT IS THE WHOLE FIX FOR A CLASS OF
-    BUG.  TR4W_PATH_NAME is uAppPaths.DataDir -- where SHIPPED, READ-ONLY data
-    lives.  Everything about a contest is composed from THIS ONE PATH: FCONTEST
-    derives TR4W_LOG_FILENAME, the .RST, the .DOM, the server log and the
-    preferred CTY.DAT from the directory of the .cfg, so pointing it at a
-    read-only place put every one of them there.
-
-    NY4I hit it on a fresh Debian 13 running the AppImage, which mounts itself
-    read-only: the contest log could not be created and QSOs were not saved
-    (2026-09-10).  On Windows ContestDir IS the binary's directory, so nothing
-    changes there. *)
-  (* BOTH ARGUMENTS WERE PAnsiChar OF A TEMPORARY -- PAnsiChar(AnsiString(x))
-    takes the address of a value whose lifetime ends at the semicolon. Two of
-    them on one call. *)
-  (* THE ANSWER, NOT TR4W_CFG_FILENAME (issue 228). The caller decides where
-    it goes: startup's global, or File > Open Log's restart. *)
-  Result := ContestDir + ContestLogFileName(frmNewContest.ContestName,
-                                            Now,
-                                            frmNewContest.MyCall);
-
-  if FileExists(Result) then
-     begin
-     (* NO BUFFER AT ALL. The message was formatted into SYSERRORBUFFER and
-       read straight back out of it one line later -- a global round trip for
-       a value that never left this if-statement.
-
-       "No" KEEPS WHAT IT ALWAYS DID: the existing file is the answer, with
-       only the callsign queued, so that log is opened rather than written
-       over. *)
-     if YesOrNo(SysUtils.Format(TC_FOLDERALREADYEXISTSOVERWRITE,
-                                [Result])) = IDno then
-        begin
-        Exit;
-        end;
-     end;
-
   (* THE SETTINGS ARE QUEUED, NOT APPLIED -- AND NOT WRITTEN TO A FILE.
 
     This built a .cfg line by line and startup read it back AFTER the station
@@ -614,11 +678,11 @@ begin
 
   QueueNewContestRows;
 
-  { CONTEST LAST, AND THAT IS NOT COSMETIC. It was the last line the .cfg
+  (* CONTEST LAST, AND THAT IS NOT COSMETIC. It was the last line the .cfg
     carried, so it was applied last, and its effect (FoundContest) builds the
     contest's state -- exchange type, multipliers, domestic file -- from the
     values set above it. Applied first, it would build that state from
-    whatever the previous contest left behind. The queue keeps this order. }
+    whatever the previous contest left behind. The queue keeps this order. *)
   QueueNewContestCommand('CONTEST', frmNewContest.ContestName);
 
   begin
@@ -919,7 +983,8 @@ function RunNewContestDialog(aMode: TNewContestDialogMode;
                              out aFile: string): TNewContestChoice;
 var
    form: TfrmNewContest;
-   created: string;
+   created, selected: string;
+   showAgain: boolean;
 begin
    aFile  := '';
    Result := nccNone;
@@ -928,18 +993,38 @@ begin
       frmNewContest.Mode := aMode;
       PrepareForm(aOpenContest);
 
-      if frmNewContest.ShowModal = mrOk then
-         begin
-         Result  := frmNewContest.Choice;
-         created := '';
-         if Result = nccCreate then
+      (* CANCEL ON A TAKEN LOG NAME SHOWS THE DIALOG AGAIN (issue 276), as the
+        operator left it -- the form is still attached and nothing resets it on
+        show. SaveNewContest has queued nothing for that answer. OPEN EXISTING
+        is answered as if that log's row had been chosen in the grid, so File >
+        Open Log reopens it rather than handing over a new contest. *)
+      repeat
+         showAgain := False;
+         if frmNewContest.ShowModal = mrOk then
             begin
-            created := SaveNewContest;
+            Result   := frmNewContest.Choice;
+            selected := frmNewContest.SelectedFile;
+            created  := '';
+            if Result = nccCreate then
+               begin
+               case SaveNewContest(created) of
+                  nloOpenExisting:
+                     begin
+                     Result   := nccOpenSelected;
+                     selected := created;
+                     end;
+                  nloCancel:
+                     begin
+                     Result    := nccNone;
+                     showAgain := True;
+                     end;
+               end;
+               end;
+            (* The last contest from the store, not from a global copy of it. *)
+            aFile := NewContestResultFile(Result, selected,
+                                          GetLatestConfigFile, created);
             end;
-         (* The last contest from the store, not from a global copy of it. *)
-         aFile := NewContestResultFile(Result, frmNewContest.SelectedFile,
-                                       GetLatestConfigFile, created);
-         end;
+      until not showAgain;
    finally
       (* Handlers down BEFORE the form goes, as they always were, so nothing
         the form raises while it is destroyed reaches this unit. *)
