@@ -738,8 +738,28 @@ i - 1 (D7), so erase mode hid each year by the next year's cell. Pinned in
 `uTestMults`. **A refused RST-and-zone entry leaves `Zone` untouched**
 (`ProcessRSTAndZoneExchange`, in LOGSTUFF's interface for
 `uTestZoneEntryRefusal`), and in CQ zone mode it refuses every zone above
-40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones"). Its sibling `ProcessRSTZoneAndPossibleDomesticQTHExchange`
-still writes before refusing (open).
+40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones"). **So does CQ
+WW RTTY's `ProcessRSTZoneAndPossibleDomesticQTHExchange` (issue 274,
+2026-11-11, NY4I's rulings)**: it parses into locals and writes `Zone`,
+`QTHString`, `DomesticQTH` and `DomMultQTH` only once accepted (the domestic
+QTH is resolved by `FoundDomesticQTH` on a copy); the 40-zone limit is ONE
+predicate, `LOGSTUFF.ZoneIsAboveTheCQZones`, both parsers ask. **A 599 in
+front is valid on CW and RTTY** (Phone's report stays 59): D7's
+"first word longer than two characters" refusal is now a test of the ZONE
+word only (`HasTheShapeOfAZone`), and after an RS(T) the rest reads as the
+unprefixed forms (`599 5`, `599 5 CT`, `599 CT 14`). **Whether a zone is
+needed is the CLASS's `ReceivedExchangeFields.Zone`**, asked of
+`ExchangeContest` -- never the mode: CQ WW RTTY needs one, so `59 CT` on
+Phone (59 is no CQ zone, and has a report's shape) is refused as missing the
+zone while `14 CT` is zone 14; a class that needs no zone reads a
+report-shaped first word as the RS(T) and takes a QTH alone (no registered
+contest does; `uTestZoneEntryRefusal` drives it under ARRL RTTY Roundup).
+**Every refusal names its reason** in `ExchangeErrorMessage`, existing strings
+only: `TC_IMPROPERZONENUMBER`, `TC_NOTENOUGHINFOINEXCHANGE` (zone missing),
+`RefuseDomesticQTH` (unknown QTH), `TC_INVALID` (malformed). The RS(T) is
+still written before a refusal. Open on #274: the CW zone-then-RST arm and
+`ProcessQSONumberAndZoneExchange` have no range check; ValidRST takes
+100..599 on CW/RTTY, so `123 CT` reads as a report.
 
 ## The sheet also COUNTS each multiplier's workings (issue 12, 2026-11-07)
 

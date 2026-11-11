@@ -644,6 +644,11 @@ function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
   RXData.Zone as it found it. *)
 function ProcessRSTAndZoneExchange(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
+(* RS(T), zone and a possible domestic QTH (CQ WW RTTY). In the interface for
+  uTestZoneEntryRefusal (issue 274): a refused entry leaves the zone, the QTH
+  and the domestic QTH as it found them. *)
+function ProcessRSTZoneAndPossibleDomesticQTHExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
@@ -5378,25 +5383,203 @@ begin
      end;
 end;
 
+(* THERE ARE 40 CQ ZONES: a zone above 40 is refused in CQ zone mode (NY4I,
+  issue 267, 2026-11-10). ITU zone mode is not limited here -- the European HF
+  Championship and KVP send a licence year, 00..99, through the RST-and-zone
+  parser in ITU mode. ONE answer for both zone parsers that apply the limit
+  (issue 274). 0 is not refused: '00' was accepted before the limit and is
+  still. *)
+function ZoneIsAboveTheCQZones(aZone: integer): boolean;
+begin
+  Result := (CTY.ctyZoneMode = CQZoneMode) and (aZone > 40);
+end;
+
+(* THE WORDS OF AN RS(T)-ZONE-QTH ENTRY, AS THE PARSER BELOW READS THEM (issue
+  274, NY4I's rulings of 2026-11-11). *)
+
+(* A WORD IN THE ZONE'S PLACE THAT CAN BE A ZONE: one or two characters, not
+  letters -- D7's test (n4af 4.52.5), now asked of the zone word only. It
+  was asked of the FIRST word, so it refused a three-digit RST in front of the
+  zone. A non-numeric word that passes ('2A') still reads as zone 0, as it
+  always did (NY4I: leave it). *)
+function HasTheShapeOfAZone(const aWord: Str10): boolean;
+begin
+  Result := (aWord <> '')         and
+            (length(aWord) <= 2)  and
+            (not IsAlpha(aWord));
+end;
+
+(* A WORD WITH THE SHAPE OF THE MODE'S RS(T) THAT ValidRST TAKES: three digits
+  on CW and RTTY (599), two on Phone (59). ValidRST is asked on copies, so a
+  word that is then read as something else leaves no RS(T) behind; aRST is
+  the report when True. *)
+function IsAnRSTWord(const aWord: Str10; out aRST: smallInt): boolean;
+var
+  probe: ShortString;
+  shapeLength: integer;
+begin
+  aRST := 0;
+  if ActiveMode in [CW, Digital] then
+     begin
+     shapeLength := 3;
+     end
+  else
+     begin
+     shapeLength := 2;
+     end;
+  Result := False;
+  if (length(aWord) = shapeLength) and StringIsAllNumbers(string(aWord)) then
+     begin
+     probe := aWord;
+     aRST := DefaultRST;
+     Result := ValidRST(probe, aRST, ActiveMode);
+     end;
+end;
+
 function ProcessRSTZoneAndPossibleDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
-{ Each entry of the exchange must be separated by spaces.  The following
-  formats work:
+(* THE FORMATS, words separated by spaces:
 
-   Entry  #1   Entry  #2   Entry  #3
-   ---------   ---------   ---------
-   RS(T)       Zone        QTH
-   RS(T)       Zone                      (No QTH)
-   Zone                                  (RS(T) = default, no QTH)
-   Zone        QTH                       (RS(T) = default)
+     Zone                  Zone QTH              QTH Zone
+     RS(T) Zone            RS(T) Zone QTH        RS(T) QTH Zone
 
-  You can enter just the strength of the RS(T) if you like.       }
+  An RS(T) in front is taken in every mode -- 599 on CW and RTTY, 59 on Phone
+  (NY4I, issue 274: "599 is VALID in RTTY and CW"); after it the rest reads as
+  the forms without it. You can enter just the strength of the RS(T).
+
+  WHETHER A ZONE IS NEEDED IS THE CONTEST CLASS'S ANSWER, never the mode
+  (NY4I, issue 274): its received exchange fields (ReceivedExchangeFields,
+  .Zone), asked of ExchangeContest as RefuseDomesticQTH asks it. CQ WW RTTY
+  states a zone, so '59 CT' on Phone is the report and the QTH with the zone
+  missing, and is refused -- while '14 CT' is zone 14 and the QTH, because 14
+  can be a zone and the class needs one. A class that needs no zone reads a
+  report-shaped first word as the RS(T) ('59 CT', '599 CT' accepted, the zone
+  left alone) and takes a QTH alone. No registered contest runs this parser
+  without a zone today; the unit test reaches that branch.
+
+  THE ZONE, THE QTH AND THE DOMESTIC QTH ARE WRITTEN ONLY ONCE THE ENTRY IS
+  ACCEPTED (issue 274, as ProcessRSTAndZoneExchange since issue 267): '599 CT'
+  used to leave zone 87, 599 in a byte. The RS(T) is still written before a
+  refusal, as in the sibling (NY4I: leave it).
+
+  EVERY REFUSAL NAMES ITS REASON in ExchangeErrorMessage, which ParametersOkay
+  shows (it was a bare QuickDisplay of 'Invalid Entry', or nothing):
+  TC_IMPROPERZONENUMBER for a zone that cannot be one, TC_NOTENOUGHINFOINEXCHANGE
+  for a missing zone, RefuseDomesticQTH for a QTH the domestic file does not
+  know, TC_INVALID for anything else. *)
 
 var
-
   FirstString, SecondString, ThirdString: Str10;
-  FirstStringRST: ShortString;
+  RSTWord: ShortString;
+  ZoneRequired: boolean;
+  RSTFirst: boolean;
+  FirstWordRST: smallInt;
+  EnteredZone: integer;
+  ZoneGiven: boolean;
+  EnteredQTH: Str10;
+  Resolved: ContestExchange;
+
+   procedure Refuse(const aMessage: string);
+   begin
+      ExchangeErrorMessage := aMessage;
+   end;
+
+   (* THE WORDS AFTER AN RS(T), OR THE WHOLE ENTRY WITHOUT ONE: Zone, Zone QTH
+      or QTH Zone. aMayBeRST: no RS(T) was taken in front, so the first word
+      may still be the report, and DefaultRST is written where D7 wrote it.
+      False is a refusal with its message set. *)
+   function ReadZoneAndQTH(const aWord1, aWord2: Str10; aMayBeRST: boolean): boolean;
+   var
+      reportRST: smallInt;
+   begin
+      Result := False;
+
+      (* QTH ZONE (n4af 4.52.2). The zone word is only tested as a number,
+         as it was. *)
+      if IsAlpha(aWord1) and StringIsAllNumbers(string(aWord2)) and (aWord2 <> '') then
+         begin
+         if aMayBeRST then
+            begin
+            RXData.RSTReceived := DefaultRST;
+            end;
+         EnteredQTH := aWord1;
+         (* StrToIntDef, not StrToInt: ten digits overflow and raised. *)
+         EnteredZone := StrToIntDef(aWord2, 0);
+         ZoneGiven := True;
+         Result := True;
+         Exit;
+         end;
+
+      if (aWord2 <> '') and not IsAlpha(aWord2) then
+         begin
+         Refuse(TC_INVALID);
+         Exit;
+         end;
+
+      (* ONE WORD, OR A WORD AND THE QTH. *)
+      if aWord2 <> '' then
+         begin
+         EnteredQTH := aWord2;
+         if aMayBeRST then
+            begin
+            (* D7 wrote the default here, before any refusal. *)
+            RXData.RSTReceived := DefaultRST;
+            end;
+         end;
+
+      if IsAlpha(aWord1) then
+         begin
+         if aWord2 <> '' then
+            begin
+            (* 'JOE CT': letters where the zone goes. *)
+            Refuse(TC_INVALID);
+            Exit;
+            end;
+         (* A QTH ALONE. *)
+         EnteredQTH := aWord1;
+         if ZoneRequired then
+            begin
+            Refuse(TC_NOTENOUGHINFOINEXCHANGE);
+            Exit;
+            end;
+         Result := True;
+         Exit;
+         end;
+
+      (* A CLASS THAT NEEDS NO ZONE: a report-shaped word is the RS(T). *)
+      if aMayBeRST and (not ZoneRequired) and IsAnRSTWord(aWord1, reportRST) then
+         begin
+         RXData.RSTReceived := reportRST;
+         Result := True;
+         Exit;
+         end;
+
+      if HasTheShapeOfAZone(aWord1) and
+         not ZoneIsAboveTheCQZones(StrToIntDef(aWord1, 0)) then
+         begin
+         if aMayBeRST and (aWord2 = '') then
+            begin
+            (* D7 wrote the default for a zone alone once it was accepted. *)
+            RXData.RSTReceived := DefaultRST;
+            end;
+         EnteredZone := StrToIntDef(aWord1, 0);
+         ZoneGiven := True;
+         Result := True;
+         Exit;
+         end;
+
+      (* NOT A ZONE THE CONTEST CAN HAVE, BUT A REPORT: the zone is missing
+         ('59 CT' on Phone, '599 CT', a bare '599'). *)
+      if aMayBeRST and IsAnRSTWord(aWord1, reportRST) then
+         begin
+         RXData.RSTReceived := reportRST;
+         Refuse(TC_NOTENOUGHINFOINEXCHANGE);
+         Exit;
+         end;
+
+      Refuse(TC_IMPROPERZONENUMBER);
+   end;
 
 begin
   ProcessRSTZoneAndPossibleDomesticQTHExchange := False;
@@ -5405,75 +5588,84 @@ begin
      Exit;
      end;
 
-  RXData.QTHString := '';
+  ZoneRequired := ContestReceivedExchangeFields(ExchangeContest).Zone;
+  EnteredZone := 0;
+  ZoneGiven := False;
+  EnteredQTH := '';
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
 
-  (* THE RS(T) IS THE FIRST TOKEN IN BOTH BRANCHES BELOW, AND IT IS SET HERE.
-    Only the three-token branch used to assign it; the two-token branch
-    handed ValidRST whatever the stack held, so "599 14" from a DX station --
-    refused either way, by the length test below -- left a different RS(T)
-    and zone behind on every run. The same in the D7 source. Found by the
-    contest matrix's parse capture (M5b), whose records came out different on
-    two runs of the same binary. *)
-  FirstStringRST := FirstString;
+  (* AN RS(T) IN FRONT: three words, or two that are not letters ('599 14',
+     '59 14', '5 14'). Anything else is read without one. *)
+  RSTFirst := (ThirdString <> '') or
+              ((SecondString <> '')        and
+               (not IsAlpha(FirstString))  and
+               (not IsAlpha(SecondString)));
 
-  if (IsAlpha(FirstString) and (StringIsAllNumbers(SecondString))) then
-    // n4af 4.52.2
+  if RSTFirst then
      begin
-     RXData.RSTReceived := DefaultRST;
-     RXData.QTHString := FirstString;
-     RXData.Zone := StrtoInt(SecondString);
-     ProcessRSTZoneAndPossibleDomesticQTHExchange := FoundDomesticQTH(RXData);
-     exit;
-     end;
-
-  if ThirdString <> '' then
-     begin
-     if not ValidRST(FirstStringRST, RXData.RSTReceived, ActiveMode) then
+     RSTWord := FirstString;
+     FirstWordRST := 0;
+     if not ValidRST(RSTWord, FirstWordRST, ActiveMode) then
+        begin
+        Refuse(TC_INVALID);
+        Exit;
+        end;
+     (* ValidRST leaves the report alone for a two-digit word on CW and
+        RTTY ('59 14'), as it always did. *)
+     if (FirstWordRST <> 0) then
+        begin
+        RXData.RSTReceived := FirstWordRST;
+        end;
+     if not ReadZoneAndQTH(SecondString, ThirdString, False) then
         begin
         Exit;
         end;
-     RXData.Zone := StrToIntDef(SecondString, 0);
-     RXData.QTHString := ThirdString;
-     end
-  else if SecondString <> '' then
-     begin
-     if IsAlpha(SecondString) then
-        begin
-        RXData.RSTReceived := DefaultRST;
-        RXData.Zone := StrToIntDef(FirstString, 0);
-        RXData.QTHString := SecondString;
-        end
-     else
-        begin
-        if not ValidRST(FirstStringRST, RXData.RSTReceived, ActiveMode) then
-           begin
-           Exit;
-           end;
-        RXData.Zone := StrToIntDef(SecondString, 0);
-        end;
-     end;
-
-  if ((length(FirstString) > 2) or (isalpha(Firststring))) then
-     begin
-     QuickDisplay(TC_INVALID);
-     exit
-     end
-  else if (SecondString = '') and (ThirdString = '') then // 4.52.5
-     begin
-     RXData.RSTReceived := DefaultRST;
-     RXData.Zone := StrToIntDef(Exchange, 0);
-     end;
-
-  if RXData.QTHString <> '' then
-     begin
-     ProcessRSTZoneAndPossibleDomesticQTHExchange := FoundDomesticQTH(RXData)
      end
   else
      begin
-     ProcessRSTZoneAndPossibleDomesticQTHExchange := True;
+     if not ReadZoneAndQTH(FirstString, SecondString, True) then
+        begin
+        Exit;
+        end;
      end;
+
+  if ZoneGiven and ZoneIsAboveTheCQZones(EnteredZone) then
+     begin
+     Refuse(TC_IMPROPERZONENUMBER);
+     Exit;
+     end;
+
+  if ZoneRequired and not ZoneGiven then
+     begin
+     Refuse(TC_NOTENOUGHINFOINEXCHANGE);
+     Exit;
+     end;
+
+  (* THE DOMESTIC QTH IS RESOLVED ON A COPY, so a QTH the file does not know
+    leaves the QSO as it was. FoundDomesticQTH itself, so its every answer is
+    kept -- 'XXX' accepted with the domestic QTH left alone included. *)
+  Resolved := RXData;
+  Resolved.QTHString := EnteredQTH;
+  if EnteredQTH <> '' then
+     begin
+     if not FoundDomesticQTH(Resolved) then
+        begin
+        RefuseDomesticQTH('ProcessRSTZoneAndPossibleDomesticQTHExchange',
+                          TC_IMPROPERDOMESITCQTH, string(EnteredQTH), string(Exchange));
+        Exit;
+        end;
+     end;
+
+  if ZoneGiven then
+     begin
+     RXData.Zone := EnteredZone;
+     end;
+  RXData.QTHString := EnteredQTH;
+  RXData.DomesticQTH := Resolved.DomesticQTH;
+  RXData.DomMultQTH := Resolved.DomMultQTH;
+  ExchangeErrorMessage := '';
+  ProcessRSTZoneAndPossibleDomesticQTHExchange := True;
 end;
 
 function ProcessRSTAndPowerExchange(Exchange: ShortString {Str80}; var RXData:
@@ -5593,13 +5785,9 @@ begin
         (* THERE ARE 40 CQ ZONES: above 40 is refused. This compared the
           first digit with '5', so 50..59 passed (D7 did the same; NY4I ruled
           it a bug, issue 267, 2026-11-10). ITU zone mode is not limited. *)
-        if CTY.ctyZoneMode = CQZoneMode then
+        if ZoneIsAboveTheCQZones(StrToIntDef(Exchange, 0)) then
            begin
-           if (Exchange[1] > '4')                          or
-              ((Exchange[1] = '4') and (Exchange[2] >= '1')) then
-              begin
-              Exit;
-              end;
+           Exit;
            end;
 
         RXData.Zone := StrToIntDef(Exchange, 0);

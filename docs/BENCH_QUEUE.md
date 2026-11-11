@@ -6266,3 +6266,9 @@ England QSO Party.
 - [ ] **DXKeeper hand-off in a section contest.** Log EM or WF with DXKeeper connected. EXPECT DXKeeper receives EMA or WCF in ARRL_SECT, never the typed alias.
 - [ ] **EUHFC or KVP, remaining multipliers in erase mode.** Work year 85, then look at the multiplier window. EXPECT 85 is gone and 84 and 86 remain (it used to hide 84 and keep 85). Year 00 is listed until worked.
 - [ ] **A refused CQ zone.** In CQ WW CW type 599 45, then 599 55. EXPECT both refused with Improper zone number, and the zone field does not keep the typed value. CQ zones above 40 are no longer accepted (50-59 used to get through).
+
+## Added 2026-11-11 -- THE CQ WW RTTY EXCHANGE PARSER (issue 274)
+
+- [ ] **CQ WW RTTY, type the exchange the way an operator does.** On RTTY or CW: `599 5`, `599 14`, `599 5 CT` and `599 CT 14` are accepted with the zone and QTH read; `14 CT` (no RST) is accepted too. EXPECT the Exchange window shows the zone and the multiplier needs correctly and the Cabrillo line carries the typed exchange.
+- [ ] **Refusals show a message.** Type `599 CT` (no zone), `599 45` (above 40), `599 14 ZZZ` and `JOE 10 CT`. EXPECT a message each time (Not enough info in exchange, Improper zone number, Improper domestic QTH naming the file, Invalid Entry) and no zone or QTH left in the entry fields. In QSL AND LOG mode a refused entry now logs no zone or QTH.
+- [ ] **ARRL RTTY Roundup** uses the same parser without a zone: `599 CT` and `599 GA` are accepted with no zone needed.
