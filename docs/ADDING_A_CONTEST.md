@@ -919,7 +919,9 @@ Answered as data the UI renders; a class never touches a form.
 `GetPermittedOperatingAids`, `GetOffersQTCs`, `GetOffersParkTools`,
 `GetShowsContestStatus`, `GetMaximumContestDates`, `GetBandStepIncludesWARC`,
 `GetPowerFieldIsFOCNumber`, `CallEntryFrequencyWarning`. Base: what the UI does
-for any contest. Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
+for any contest. `GetTotalsDisplay` labels the totals grid's domestic AND (since
+issue 277, 2026-11-11) prefix-multiplier rows: a contest whose prefix key is not a
+prefix states its own caption, as the CW Open's `Calls` (each different callsign). Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
 sees the screen, so a change here also gets a `docs/BENCH_QUEUE.md` item.
 
 **The 3830scores report** (`Get3830Summary`, `Make3830Column`, design 8.2x):

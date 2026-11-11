@@ -42,7 +42,7 @@ Worksheet, which settles the last open part -- see the end of the entry.
 **Resolved 2026-10-22 by the D7/D12 baseline or an unambiguous current rule
 (details in each entry)**
 
-- **No change -- today already matches D7:** Q27 SAC (a Russian station is not workable), Q88 NA Sprint files, Q95 Croatian / CW Open zones, Q106(6) P13's `LA`, Q114 ALRS (a grid), Q122 PY0S/PY0T stay DX, Q123 RF Cup Digital (no mode limit), Q124 OZCHR 1/1/3/5, Q125 Ukraine Championship, Q126 the five unidentified contests, Q23 Cup RF, Q26 WAG (empty QTH), Q112 peers and Rescore.
+- **No change -- today already matches D7:** Q27 SAC (a Russian station is not workable), Q88 NA Sprint files, Q95 Croatian zones (CW Open's half changed 2026-11-11, issue 277 -- see Q95), Q106(6) P13's `LA`, Q114 ALRS (a grid), Q122 PY0S/PY0T stay DX, Q123 RF Cup Digital (no mode limit), Q124 OZCHR 1/1/3/5, Q125 Ukraine Championship, Q126 the five unidentified contests, Q23 Cup RF, Q26 WAG (empty QTH), Q112 peers and Rescore.
 - **To build:** ~~Q47 bound the three read-past-the-end shapes~~ (built 2026-10-23, `a8a499db`); ~~Q113 edited memories survive a restart (as D7)~~ (built 2026-10-23); ~~Q119 a host-area-refused QSO is an X-QSO~~ (built 2026-10-23); Q120 bands and modes (D7's "every band and mode" where no unambiguous rule, ARRL Digi excludes RTTY by its current rules); ~~Q127 GAGARIN-CUP -> `GC` only~~ (built 2026-10-23, `a8a499db`).
 - **Parked:** Q101 ([#94](https://github.com/TR4W/TR4W-D12/issues/94)), Q137 ([#93](https://github.com/TR4W/TR4W-D12/issues/93)) -- not D7/D12 work; Q128, Q129 -- i18n after contestFactory.
 - **Built earlier from the sponsors' rules:** Q97, Q131-Q136, Q138 (`722690bf`).
@@ -817,6 +817,18 @@ closes it; anything else reopens it.
   (`VC.pas:3455, 3581`). The sponsor research cited above was never saved,
   so it is not an unambiguous current rule. No change; a fix follows only
   if a sponsor's current rules are saved. CLOSED.
+  **Update 2026-11-11 (issue 277), CW Open only:** the sponsor's current
+  rules (https://cwops.org/cwops-tests/cw-open, read 2026-11-11 during the
+  issue 277 label work) say "For each session, each different call sign is
+  a multiplier the first time it is worked in that session" and "the total
+  number of multipliers in your log is the number of different call signs
+  logged"; zones are never mentioned. `[DXLog CWOpen.txt]` (updated
+  2026-10-19) agrees: one multiplier, `MULT1_TYPE=CALLSIGN`,
+  `MULT1_COUNT=ALL`, 1 point a QSO, `DOUBLE_QSO=PER_BAND`. A definitive
+  current rule overrides D7, so `TContestCWOpen` no longer counts zones (the
+  base answers no zone multiplier); its zone mode stays ITU. The full page
+  is NOT yet saved under `docs/ContestRules/` -- save it there. The Croatian
+  half of Q95 is unchanged.
 
 ---
 

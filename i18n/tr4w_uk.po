@@ -9508,3 +9508,43 @@ msgstr ""
 #, fuzzy
 msgid "MY QTH OR MEMBER NO"
 msgstr ""
+
+#: uappstrings.snewcontesthostareacountylabel
+#, fuzzy
+msgid "MY COUNTY"
+msgstr ""
+
+#: uappstrings.snewcontesthostareastatelabel
+#, fuzzy
+msgid "MY STATE"
+msgstr ""
+
+#: uappstrings.snewcontesthostareainsidenotice
+#, fuzzy
+msgid "You are in %s: choose your county from the list."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaoutsidenotice
+#, fuzzy
+msgid "You are outside %0:s: enter your US state or Canadian province (two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaentryisinside
+#, fuzzy
+msgid "%0:s is inside %1:s: tick the box and choose your county from the list."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaentrynotastate
+#, fuzzy
+msgid "%s is not a US state, a Canadian province or DX. Enter the two-letter code, e.g. GA or ON, or DX."
+msgstr ""
+
+#: uappstrings.stotalscallsignmults
+#, fuzzy
+msgid "Calls"
+msgstr ""
+
+#: uappstrings.snewlognametakenopenbody
+#, fuzzy
+msgid "The log for this contest, date and callsign is the log you have open:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe open log is kept unchanged.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""

@@ -6341,3 +6341,31 @@ The old station-wide box was read by nothing: every start connected the active p
 `uDXLabPathfinder` now logs how long each DDE connect takes (debug level). One start with SpotCollector enabled showed 47 ms (Pathfinder probe) and 16 ms (SpotCollector). Issue 252 is on hold until a slow start recurs.
 
 - [ ] **Collect the lines whenever a start feels slow** (DEBUG LOG LEVEL on, SpotCollector enabled): `rg -a --no-ignore -g "*.log*" "DdeConnect took"` from the repo root (cmd.exe: double quotes; `-a` because tr4w.log can hold a NUL byte). Seconds = the DDE call is the cause; near zero = machine load, close the issue.
+
+## Added 2026-11-11 -- THE CW OPEN'S MULTIPLIER ROW SAYS CALLS (issue 277)
+
+The totals grid's prefix-multiplier row is now the contest's label (`TTotalsDisplay.PrefixMultsCaption`, beside the domestic captions IARU and the Russian contests already state). The CW Open says **Calls**, because its multiplier is each different callsign worked (the sponsor: "each different call sign is a multiplier the first time it is worked in that session"). Every other contest still says **Prefixes**. A label only: no count or score changes. Unit-tested (`uTestContestDisplay.Test_TotalsDisplay`). The Zones row is NOT changed -- see the last item.
+
+- [ ] **CW Open totals block.** Open (or create) a CWOps CW Open log. The left column reads QSOs, **Calls**, Zones; it no longer says Prefixes. Log one QSO (e.g. K6RB): the Calls row counts 1 on its band and in the All column. Windows and Linux (gtk2): "Calls" fits the left column.
+- [ ] **Another contest unchanged.** Open a contest with a real prefix multiplier (CQ WPX CW): the row still reads **Prefixes**.
+- [ ] **Wording.** Is "Calls" the word you want (the issue suggested "Callsign multipliers" or "Unique calls"; the grid's left column is narrow)? It is one resourcestring, `uAppStrings.STotalsCallsignMults`.
+- [ ] **Live score check for the CW Open's Zones row (feeds a follow-up stage).** The class still counts CQ zones as a multiplier (carried from the D7 row); the sponsor's current rules name only callsigns, so removing it is a separate stage. The frozen contest matrix counts zones into the score -- 15 x (11 calls + 10 zones) = 315 -- and its QSO 16, which carries NO zone (0), still counted one zone on 80 m. Whether a live CW Open log does the same is unverified: log two QSOs and read the Zones row and the score (the issue saw 1 Pts after one QSO). Removing it is a rule change (zone pins, kind pin, matrix re-freeze), for NY4I to rule on (a follow-up issue), not done here.
+
+## Added 2026-11-11 -- A NEW CONTEST NAMED LIKE THE OPEN LOG DOES NOT OFFER "OPEN EXISTING"
+
+From File > Open Log, New Contest for the same contest, date and callsign as the log already running used to offer Open existing, and choosing it did nothing visible (only the quick line "That log is already open."). Now, when the taken name is the open log (`uNewContest.IsOneOfOpenContestFiles`, the same `IsSameLogFile` comparison `[OpenLog]` makes), the question says it is the log you have open and has two buttons: Create new log and Cancel (`SNewLogNameTakenOpenBody`, translations fuzzy-empty). The answer is read by modal result (`TakenLogOutcome`, unit tested). tr4w.log says `[NewContest] the log name is taken by the log already open, so Open existing is not offered: <file>`.
+
+- [ ] **Same contest as the open log.** With a CWOps CW Open log for today open, File > Open Log > New Contest, choose CW Open with the same callsign, OK. The question names the open log, says it is the log you have open, and shows **Create new log** and **Cancel** only (no Open existing). Read the wording on Windows, and the button order on gtk2 if you can.
+- [ ] **Create new log.** From that question: TR4W restarts on `... NY4I 2.db` (or the next free number), a new empty log; the old one is unchanged.
+- [ ] **Cancel and Escape.** Each returns to the New Contest window as you left it; nothing is created and the running log is untouched.
+- [ ] **A taken name that is NOT the open log still has three buttons.** At startup (nothing open), New Contest with a name that exists shows Create new log / Open existing log / Cancel, and Open existing opens it. Likewise from File > Open Log when the taken log is a different one from the running log.
+
+## Added 2026-11-11 -- THE CW OPEN COUNTS NO ZONES (issue 277)
+
+The CWOps CW Open no longer has a zone multiplier. Its sponsor's current rules (cwops.org/cwops-tests/cw-open) name one multiplier, "each different call sign ... the first time it is worked in that session", and never mention zones; DXLog's CWOpen.txt agrees. The class had carried the D7 row's 40 CQ zones. Its score is now QSO points x different callsigns. **This replaces two items in the "MULTIPLIER ROW SAYS CALLS" section above:** the left column is now QSOs and **Calls**, with no Zones row, and the live score check there is answered by this section. Unit-tested (`uTestZoneMultiplier`); the contest matrix moves for CWOPEN only (the zone flag, zones.max, the zone counts, the ADIF CQZ tag, the score 315 -> 165). Points (1 a QSO, a dupe per band) are unchanged.
+
+- [ ] **No Zones row.** Open (or create) a CWOps CW Open log. The totals block's left column reads QSOs and **Calls** only; no Zones row. Windows and Linux (gtk2).
+- [ ] **Two QSOs, the score.** Log two QSOs with different callsigns on one band (e.g. K6RB 1 ROB, W1AW 2 JOE on 20 m CW). Calls reads 2 and the score reads **2 x 2 = 4** (before this change it would have counted their zones too). Work K6RB again on 40 m: a new QSO (points 3), no new multiplier, score **3 x 2 = 6**.
+- [ ] **The remaining-multipliers window** opens on callsigns/prefixes rather than zones (its default was zones, because LogCfg asks for zones before prefixes); it shows no zone list for this contest.
+- [ ] **ADIF export.** File > export ADIF from that log: the records carry no `<CQZ:..>` tag. Cabrillo is unchanged (serial + name).
+- [ ] **An existing CW Open log** opened after the update. Expected (by reading, not measured): on open the score STILL counts the zones, because loading trusts the zone flags stored in each QSO; after a Rescore (or `/RESCORE`) the flags are re-derived, the zones drop out, and the score is points x calls. Report whether opening alone already shows the lower score.

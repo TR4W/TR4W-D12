@@ -507,8 +507,9 @@ the target shape, the M-step migration order and the open questions.
   (base False; the European HFC and KVP). **`TZoneMultiplierZones` IS NOT
   `ZoneModeType`**: it is the list the multiplier counts, `ZoneMode`
   (`cfCQZoneMode`) is which zone CTY.DAT gives a call, and they disagree for
-  the Croatian and CW Open today (plan F5, Q95 open) -- never derive one
-  from the other. 20 contests in 19 units state it (CQ WW on its family
+  the Croatian today (plan F5, Q95 open; CW Open was the inverse until its
+  sponsor's rule took its zones away, issue 277, 2026-11-11) -- never derive
+  one from the other. 19 contests in 18 units state it (CQ WW on its family
   base; JIDX for a Japanese entrant only, through `IsJapaneseEntrant`, the
   renamed `CountsDXMultiplier` its DX answers also ask). A NEW zone contest
   overrides `ZoneMultiplierCount` (and `ZoneMultiplierZones` for CQ or ITU
@@ -1062,7 +1063,9 @@ the target shape, the M-step migration order and the open questions.
   the queued command stays MY STATE, the row's FIELD, never its label;
   the base answers for every `IsUSQSOParty`, BC/ON/QC/IN7QPNE state False
   with their reason; `uTestNewContestHostArea` walks the registry);
-  `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
+  `TotalsDisplay` (uTotal; the domestic and, since issue 277 2026-11-11, the
+  PREFIX row's captions -- the CW Open says `Calls`, its key being the whole
+  callsign; every other contest `Prefixes`, pinned); `SummarySheet` (PostUnit);
   `ReportsRunningScore` (hour totals); `CabrilloContestName`,
   `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` (keyed on the
   Cabrillo tag NAME -- `CabrilloTags` is a UI unit's),

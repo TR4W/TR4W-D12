@@ -673,6 +673,13 @@ resourcestring
      the contest's display name. *)
    SContestInactive = '%s (inactive)';
 
+   (* THE TOTALS GRID'S MULTIPLIER ROW WHEN THE MULTIPLIER IS EACH DIFFERENT
+     CALLSIGN WORKED -- issue 277 (2026-11-11): the CWOps CW Open's rule,
+     "each different call sign is a multiplier the first time it is worked in
+     that session", where the row read 'Prefixes'. Short: it shares the grid's
+     left column with 'Prefixes' and 'Dom Mults'. *)
+   STotalsCallsignMults = 'Calls';
+
    (* THE NEW CONTEST DIALOG'S CONTEST LIST -- Q103 / Q52, 2026-10-19. The
      label over the search box and the list, in the same capitals as the
      MY CALL and CATEGORY-* labels beside it. *)
@@ -985,6 +992,15 @@ resourcestring
       'Cancel: go back to the New Contest window. Nothing is created.';
    SNewLogCreateNumbered = 'Create new log';
    SNewLogOpenExisting = 'Open existing log';
+   (* The same question when the taken log IS THE ONE OPEN (File > Open Log,
+     2026-11-11): Open existing is not offered, because opening the open log
+     does nothing. The first %s is that log, the second the numbered name.
+     Buttons: SNewLogCreateNumbered and the LCL's own Cancel. *)
+   SNewLogNameTakenOpenBody =
+      'The log for this contest, date and callsign is the log you have open:' + #10 + '%s' + #10#10 +
+      'Create new log: start a separate, empty log named' + #10 + '%s' + #10 +
+      'The open log is kept unchanged.' + #10#10 +
+      'Cancel: go back to the New Contest window. Nothing is created.';
 
    (* Shown once, the first time a read-only session refuses a write. %s is the
      log's file. *)

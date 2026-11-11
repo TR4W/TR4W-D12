@@ -489,8 +489,11 @@ zone and DX answers ask. Do not bring back a stored "doing zone" flag.
 `ZoneModeType` / `cfCQZoneMode` STAY -- the CTY lookup's zone system.
 **Never answer the
 zone LIST from `ZoneMode` or the reverse** -- the Croatian counts ITU zones
-over a CQ zone mode, CW Open the inverse (F5, Q95 open, pinned in
-`uTestZoneMultiplier`). LOGSTUFF's EUHFC range arm was vacuous and is gone;
+over a CQ zone mode (F5, Q95 open, pinned in
+`uTestZoneMultiplier`). **CW Open has NO zone multiplier (issue 277,
+2026-11-11)**: its sponsor names one multiplier, each different callsign
+(`[DXLog CWOpen.txt]` agrees), so the D7 row's CQ zones were taken away; its
+ITU zone mode stays and its ADIF writes no zone tag. LOGSTUFF's EUHFC range arm was vacuous and is gone;
 so are its dead JAPrefectures arms. **The TRMASTER initial zone
 (`InitialExchangeEntry`) asks `ActiveContest` like every other zone reader
 (M11 S5 part 2).** It asked `ContestIdentity` at part 1 because of plan

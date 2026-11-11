@@ -1357,6 +1357,9 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
     `uTestZoneMultiplier.Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart`
     pins the two facts side by side, so Q95's decision is a deliberate edit
     there. The matrix pins both contests' ADIF zone tags at us/ve/dx.
+    (2026-11-11, issue 277: CW Open has no zone multiplier on its sponsor's
+    rule; the test is `Test_CroatianKeepsItsTwoZoneSystemsApart` and pins CW
+    Open's list as none.)
   - **THE PER-QSO PATH IS UNCHANGED.** `SetMultFlags`' zone test still asks
     `DoingZoneMults` and nothing else; the rescore's per-QSO work has no new
     lookup. New `ActiveContest` calls, each once: per remaining-mults set-up

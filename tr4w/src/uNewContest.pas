@@ -30,6 +30,7 @@ uses
     wanted here, and LCLType declares them -- on Windows AS the Windows
     declarations, so no signature moves. *)
   LCLType,
+  System.UITypes,     (* TModalResult -- TakenLogOutcome reads the question's answer *)
   uContestBase,       // TNewContestField, TNewContestPrompts -- M9a
   Tree,
   LogDupe,
@@ -71,8 +72,28 @@ procedure ClearFields;
   WHEN THE NAME IS TAKEN IT ASKS (issue 276): create a new log under the next
   free numbered name (uLogNaming.FirstFreeLogFileName), open the existing one
   (aFile is that log), or cancel (aFile is ''). It never overwrites or deletes
-  a file. Only nloCreate leaves anything queued. *)
-function SaveNewContest(out aFile: string): TNewLogOutcome;
+  a file. Only nloCreate leaves anything queued.
+
+  aOpenContest is RunNewContestDialog's: the files the running contest was
+  opened from. When the taken name IS one of them, Open existing is not
+  offered -- it could only answer "already open" (2026-11-11). *)
+function SaveNewContest(out aFile: string;
+                        const aOpenContest: array of string): TNewLogOutcome;
+
+(* Is aFile one of the files the running contest was opened from? The same
+  comparison File > Open Log makes (uOpenLogRelaunch.IsSameLogFile). An empty
+  aOpenContest -- startup -- answers False. *)
+function IsOneOfOpenContestFiles(const aFile: string;
+                                 const aOpenContest: array of string): boolean;
+
+(* THE TAKEN-NAME QUESTION'S ANSWER, read by modal result (never by button
+  position): mrYes is Create new log, mrNo is Open existing log, anything
+  else -- Cancel, Escape, closing the box -- is Cancel. When the taken log is
+  the one open (aTakenIsOpen) Open existing is never the answer, whatever
+  arrives: that button is not offered, and opening the open log does nothing
+  visible. *)
+function TakenLogOutcome(aAnswer: TModalResult;
+                         aTakenIsOpen: boolean): TNewLogOutcome;
 procedure DisplayCheckBox(Text: string);
 (* aRowLabel: the row's label when the contest names one, else '' for the
   field's command name. The command queued is the field's either way. *)
@@ -105,7 +126,9 @@ procedure ShowNewContest;
   OK ON A NEW CONTEST CAN ANSWER nccOpenSelected (issue 276): when its log
   name is taken and the operator chooses Open existing log, the answer is that
   log, as if its row had been chosen, with nothing queued. Cancel on that
-  question shows the dialog again. *)
+  question shows the dialog again. When the taken log is one of aOpenContest
+  Open existing is not offered, so this never answers the open log
+  (2026-11-11). *)
 function RunNewContestDialog(aMode: TNewContestDialogMode;
                              const aOpenContest: array of string;
                              out aFile: string): TNewContestChoice;
@@ -144,7 +167,6 @@ uses
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
   Dialogs,             (* QuestionDlg -- a taken log name, asked natively (issue 276) *)
-  System.UITypes,      (* TModalResult -- QuestionDlg's answer; Controls does not re-export it *)
   uLatestContest,     (* TLatestContest -- the last contest, as its log describes it *)
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
@@ -555,21 +577,14 @@ end;
   button with its own translated caption; Escape and closing the box are
   Cancel too, so nothing proceeds that the operator did not choose.
   QuestionDlg's custom captions must be UTF-8 ansi strings, hence LclText. *)
-function AskAboutATakenLogName(const aExisting, aNumbered: string): TNewLogOutcome;
-var
-   answer: TModalResult;
+function TakenLogOutcome(aAnswer: TModalResult;
+                         aTakenIsOpen: boolean): TNewLogOutcome;
 begin
-   answer := QuestionDlg(LclText(SNewLogNameTakenTitle),
-                         LclText(Format(SNewLogNameTakenBody, [aExisting, aNumbered])),
-                         mtConfirmation,
-                         [mrYes,    LclText(SNewLogCreateNumbered), 'IsDefault',
-                          mrNo,     LclText(SNewLogOpenExisting),
-                          mrCancel, 'IsCancel'], 0);
-   if answer = mrYes then
+   if aAnswer = mrYes then
       begin
       Result := nloCreate;
       end
-   else if answer = mrNo then
+   else if (aAnswer = mrNo) and (not aTakenIsOpen) then
       begin
       Result := nloOpenExisting;
       end
@@ -579,7 +594,56 @@ begin
       end;
 end;
 
-function SaveNewContest(out aFile: string): TNewLogOutcome;
+function IsOneOfOpenContestFiles(const aFile: string;
+                                 const aOpenContest: array of string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(aOpenContest) to High(aOpenContest) do
+      begin
+      if IsSameLogFile(aFile, aOpenContest[i]) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE TAKEN LOG IS THE ONE OPEN (2026-11-11). From File > Open Log, a New
+  Contest whose name matches the running log used to offer Open existing,
+  which reached [OpenLog]'s "already open" arm and showed only a quick line:
+  the operator saw nothing happen. So the question says it is the log they
+  have open and offers Create new log and Cancel only. *)
+function AskAboutATakenLogName(const aExisting, aNumbered: string;
+                               aTakenIsOpen: boolean): TNewLogOutcome;
+var
+   answer: TModalResult;
+begin
+   if aTakenIsOpen then
+      begin
+      logger.Info('[NewContest] the log name is taken by the log already open, ' +
+                  'so Open existing is not offered: %s', [aExisting]);
+      answer := QuestionDlg(LclText(SNewLogNameTakenTitle),
+                            LclText(Format(SNewLogNameTakenOpenBody, [aExisting, aNumbered])),
+                            mtConfirmation,
+                            [mrYes,    LclText(SNewLogCreateNumbered), 'IsDefault',
+                             mrCancel, 'IsCancel'], 0);
+      end
+   else
+      begin
+      answer := QuestionDlg(LclText(SNewLogNameTakenTitle),
+                            LclText(Format(SNewLogNameTakenBody, [aExisting, aNumbered])),
+                            mtConfirmation,
+                            [mrYes,    LclText(SNewLogCreateNumbered), 'IsDefault',
+                             mrNo,     LclText(SNewLogOpenExisting),
+                             mrCancel, 'IsCancel'], 0);
+      end;
+   Result := TakenLogOutcome(answer, aTakenIsOpen);
+end;
+
+function SaveNewContest(out aFile: string;
+                        const aOpenContest: array of string): TNewLogOutcome;
 var
    defaultName, freeName: string;
 begin
@@ -607,7 +671,9 @@ begin
     never replaced (uLogStore, TLogDatabase.CreateNew). So a second CW Open
     session on the same day could not be created at all. Now a taken name
     offers the next free numbered one, the existing log, or Cancel, and
-    nothing is queued until the answer is Create. *)
+    nothing is queued until the answer is Create. When the taken log is the
+    one OPEN (File > Open Log), only the numbered name or Cancel is offered
+    (2026-11-11). *)
    Result := nloCreate;
    defaultName := ContestLogFileName(frmNewContest.ContestName,
                                      Now,
@@ -617,7 +683,8 @@ begin
 
    if freeName <> defaultName then
       begin
-      Result := AskAboutATakenLogName(ContestDir + defaultName, aFile);
+      Result := AskAboutATakenLogName(ContestDir + defaultName, aFile,
+                   IsOneOfOpenContestFiles(ContestDir + defaultName, aOpenContest));
       if Result <> nloCreate then
          begin
          (* Nothing of this pass stays queued, whichever it was. *)
@@ -795,22 +862,6 @@ begin
 end;
 
 
-(* Is aFile one of the files the running contest was opened from? *)
-function IsOneOf(const aFile: string; const aFiles: array of string): boolean;
-var
-   i: integer;
-begin
-   Result := False;
-   for i := Low(aFiles) to High(aFiles) do
-      begin
-      if IsSameLogFile(aFile, aFiles[i]) then
-         begin
-         Result := True;
-         Exit;
-         end;
-      end;
-end;
-
 { WHAT WM_INITDIALOG DID, minus creating thirty controls by hand. }
 procedure PrepareForm(const aOpenContest: array of string);
 var
@@ -885,7 +936,7 @@ begin
      It is recorded once, at startup (uProgramMain, SetLatestConfigFile), so
      mid-session it names the contest already open, and the button could only
      answer "already open". Hidden, and said in the log. *)
-   if (latest <> '') and IsOneOf(latest, aOpenContest) then
+   if (latest <> '') and IsOneOfOpenContestFiles(latest, aOpenContest) then
       begin
       logger.Info('[NewContest] the last contest is the one open, so its ' +
                   'button is hidden: %s', [latest]);
@@ -1024,7 +1075,7 @@ begin
             created  := '';
             if Result = nccCreate then
                begin
-               case SaveNewContest(created) of
+               case SaveNewContest(created, aOpenContest) of
                   nloOpenExisting:
                      begin
                      Result   := nccOpenSelected;

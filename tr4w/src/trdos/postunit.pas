@@ -2593,8 +2593,10 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // ----- CQZ / ITUZ (zone) -----
   (* The contest's zone list, not the CTY zone mode -- M11 S5; it was
     ContestSession.ZoneMult. The Croatian counts ITU zones over a CQ zone
-    mode and so writes a CQ zone as ITUZ; CW Open is the inverse (plan F5,
-    open question Q95). Transcribed, not fixed. *)
+    mode and so writes a CQ zone as ITUZ (plan F5, open question Q95).
+    Transcribed, not fixed. CW Open was the inverse until it lost its zone
+    multiplier on its sponsor's rule (issue 277, 2026-11-11); it writes no
+    zone tag now. *)
   zoneList := ContestZoneMultiplierZones( contestRules );
   if rec.Zone <> DUMMYZONE then
      begin

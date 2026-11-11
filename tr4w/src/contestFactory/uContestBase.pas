@@ -1384,12 +1384,20 @@ type
       QSOs, the left column shows each mode's SHARE of the QSOs ('CW: 60%',
       'PH: 40%') in place of the per-mode QSO rows -- the OZCHR teams'
       display. The domestic-multiplier captions are the row labels for the
-      domestic multipliers: all modes, and per mode on CW and on phone. *)
+      domestic multipliers: all modes, and per mode on CW and on phone.
+
+      The prefix-multiplier captions are the same three labels for the
+      prefix multipliers' row (issue 277, 2026-11-11): 'Prefixes', unless the
+      contest's key is something else -- the CW Open's is the whole worked
+      callsign, so its row says so. *)
    TTotalsDisplay = record
       ShowsModeShares: boolean;
       DomesticMultsCaption: string;
       DomesticMultsCaptionCW: string;
       DomesticMultsCaptionPhone: string;
+      PrefixMultsCaption: string;
+      PrefixMultsCaptionCW: string;
+      PrefixMultsCaptionPhone: string;
    end;
 
    (* HOW THIS CONTEST'S SUMMARY SHEET COUNTS -- M9a
@@ -6583,6 +6591,9 @@ begin
    Result.DomesticMultsCaption := TC_DOMMULTS;
    Result.DomesticMultsCaptionCW := 'CW Dom';
    Result.DomesticMultsCaptionPhone := 'Ph Dom';
+   Result.PrefixMultsCaption := TC_PREFIX;
+   Result.PrefixMultsCaptionCW := 'CW Pfxs';
+   Result.PrefixMultsCaptionPhone := 'Ph Pfxs';
 end;
 
 function TContestBase.GetSummarySheet: TSummarySheetLayout;

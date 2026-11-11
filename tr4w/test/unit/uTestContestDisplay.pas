@@ -1233,6 +1233,16 @@ begin
                CheckTrue(d.ShowsModeShares, 'the OZCHR teams show mode shares');
                CheckEquals(TC_DOMMULTS, d.DomesticMultsCaption, 'OZCHR teams: the usual label');
                end;
+            CWOPEN:
+               begin
+               (* Issue 277: the multiplier is each different callsign, so
+                 the prefix row says Calls -- and nothing else moves. *)
+               CheckEquals(STotalsCallsignMults, d.PrefixMultsCaption, 'CW Open: callsign multipliers');
+               CheckEquals('CW Calls', d.PrefixMultsCaptionCW, 'CW Open on CW');
+               CheckEquals('Ph Calls', d.PrefixMultsCaptionPhone, 'CW Open on phone');
+               CheckFalse(d.ShowsModeShares, 'CW Open shows QSO rows');
+               CheckEquals(TC_DOMMULTS, d.DomesticMultsCaption, 'CW Open: the usual domestic label');
+               end;
          else
             begin
             CheckFalse(d.ShowsModeShares, who + ' shows QSO rows');
@@ -1240,6 +1250,15 @@ begin
             CheckEquals('CW Dom', d.DomesticMultsCaptionCW, who + ' CW label');
             CheckEquals('Ph Dom', d.DomesticMultsCaptionPhone, who + ' phone label');
             end;
+         end;
+      (* THE PREFIX ROW SAYS PREFIXES EVERYWHERE BUT THE CW OPEN (issue 277)
+        -- a contest that labels it otherwise is added to the arm above, on
+        its sponsor's rule, never by widening this test. *)
+      if c <> CWOPEN then
+         begin
+         CheckEquals(TC_PREFIX, d.PrefixMultsCaption, who + ' prefix label');
+         CheckEquals('CW Pfxs', d.PrefixMultsCaptionCW, who + ' CW prefix label');
+         CheckEquals('Ph Pfxs', d.PrefixMultsCaptionPhone, who + ' phone prefix label');
          end;
       finally
          obj.Free;

@@ -361,22 +361,25 @@ begin
 
      end;
 
+  (* THE PREFIX ROW'S LABEL IS THE CONTEST'S (issue 277, 2026-11-11): it said
+    'Prefixes' for every contest, and the CW Open's key is the whole worked
+    callsign. *)
   if DoingPrefixMults then
      begin
      if Settings.Mult.ByMode then
         begin
         if ActiveMode = CW then
            begin
-           WriteLeftColumnText('CW Pfxs');
+           WriteLeftColumnText(display.PrefixMultsCaptionCW);
            end;
         if ActiveMode = Phone then
            begin
-           WriteLeftColumnText('Ph Pfxs');
+           WriteLeftColumnText(display.PrefixMultsCaptionPhone);
            end;
         end
      else
         begin
-        WriteLeftColumnText(TC_PREFIX);
+        WriteLeftColumnText(display.PrefixMultsCaption);
         end;
      end;
 
