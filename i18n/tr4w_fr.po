@@ -10486,3 +10486,8 @@ msgstr ""
 #, fuzzy
 msgid "Open existing log"
 msgstr ""
+
+#: uappstrings.snewcontestlicenseyearlabel
+#, fuzzy
+msgid "MY LICENSE YEAR"
+msgstr ""

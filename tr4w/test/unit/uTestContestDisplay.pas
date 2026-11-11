@@ -57,6 +57,7 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_NewContestPromptsAreTheDialogsArms;
+      procedure Test_ALicenseYearRowIsLabelledForWhatItHolds;
       procedure Test_TotalsDisplay;
       procedure Test_SummarySheet;
       procedure Test_CabrilloHeaderAndMode;
@@ -1059,6 +1060,59 @@ begin
                RenderedPrompts(BCQP, False), 'British Columbia: no head');
 end;
 
+(* A ROW IS LABELLED FOR WHAT IT HOLDS (NY4I, 2026-11-11): the European HF
+  Championship and KVP ask for the year of the first licence, kept in MY
+  ZONE, and the row beside the prompt read MY ZONE. They label it
+  SNewContestLicenseYearLabel and still ask for ncfMyZone -- the command
+  queued (uTestNewContestHostArea drives the dialog for that). Every other
+  contest gives no label, so its rows read their command names as before: a
+  registry walk, so a by-id contest is held too. *)
+procedure TContestDisplayTests.Test_ALicenseYearRowIsLabelledForWhatItHolds;
+var
+   contests: TContestIdentityList;
+   obj: TContestBase;
+   prompts: TNewContestPrompts;
+   step: TNewContestPrompt;
+   k, i: integer;
+   labelled: boolean;
+   who: string;
+begin
+   BeginTest('Test_ALicenseYearRowIsLabelledForWhatItHolds');
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      who := ContestWho(obj);
+      labelled := IsLegacyContest(obj, EUROPEANHFC) or IsLegacyContest(obj, KVP);
+      prompts := TNewContestPrompts.Create;
+      try
+         obj.DescribeNewContestPrompts(prompts);
+         if labelled then
+            begin
+            CheckEquals(1, prompts.ChoiceCount, who + ': one step on choosing');
+            step := prompts.Choice(0);
+            CheckEquals(Ord(npkFieldWithComment), Ord(step.Kind), who + ': a row with a comment');
+            CheckEquals(Ord(ncfMyZone), Ord(step.Field), who + ': the year is still MY ZONE''s');
+            CheckEquals(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, step.Text, who + ': the year prompt');
+            CheckEquals(SNewContestLicenseYearLabel, step.RowLabel, who + ': the row names the year');
+            end
+         else
+            begin
+            for i := 0 to prompts.ChoiceCount - 1 do
+               begin
+               CheckEquals('', prompts.Choice(i).RowLabel, who + ': no row label on choosing');
+               end;
+            end;
+         for i := 0 to prompts.InsideCount - 1 do
+            begin
+            CheckEquals('', prompts.Inside(i).RowLabel, who + ': no row label on ticking');
+            end;
+      finally
+         prompts.Free;
+         end;
+      end;
+end;
+
 (* ------------------------------------------------------------------------ *)
 (* THE TOTALS WINDOW, THE SUMMARY SHEET, THE HOUR TOTALS                     *)
 (* ------------------------------------------------------------------------ *)
@@ -2017,6 +2071,7 @@ end;
 procedure TContestDisplayTests.RunAllTests;
 begin
    Test_NewContestPromptsAreTheDialogsArms;
+   Test_ALicenseYearRowIsLabelledForWhatItHolds;
    Test_TotalsDisplay;
    Test_SummarySheet;
    Test_CabrilloHeaderAndMode;

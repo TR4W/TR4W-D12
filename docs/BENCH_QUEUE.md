@@ -6298,3 +6298,11 @@ The numbering is unit-tested (`uTestLogNaming`: free, taken, two taken, a gap, a
 - [ ] **Open existing log.** The existing log opens with its QSOs; no new file appears in the logs folder.
 - [ ] **Cancel.** The New Contest window comes back as it was left (contest, call and fields still filled in); choosing another contest and OK proceeds normally, and nothing from the cancelled pass is applied. No file is created.
 - [ ] **File > Open Log, same three.** From a running contest, File > Open Log, New Contest for a name that is taken: Create new log relaunches on the numbered log; Open existing log relaunches on the existing one (or says it is already open, if it is the running log); Cancel returns to the dialog and the session continues if that is then cancelled.
+
+## Added 2026-11-11 -- THE LICENCE-YEAR ROW IS LABELLED FOR WHAT IT HOLDS (European HF Championship, KVP)
+
+The row beside "Enter the last two digits of the year of your first official amateur radio license:" read MY ZONE (a D7 artifact). The contest now names the row (`TNewContestPrompt.RowLabel`, `uAppStrings.SNewContestLicenseYearLabel`); the command queued is still MY ZONE. Unit-tested on a never-shown form (`uTestNewContestHostArea.Test_ALicenseYearRowQueuesMyZone`); not seen on a screen.
+
+- [ ] **European HF Championship.** New Contest, choose European HF Championship. Expect the row beside the year prompt to read **MY LICENSE YEAR**, and no row to read MY ZONE. Type `64`, OK. Expect the new log's MY ZONE to be `64` (Preferences, or the sent exchange's year). Windows and Linux (gtk2): the label fits beside its field.
+- [ ] **KVP.** The same with KVP.
+- [ ] **Another contest is unchanged.** Choose NAQP CW: its rows still read MY STATE and MY NAME. (The Jock White Field Day still asks for a branch number on a row reading MY ZONE -- the same artifact, deliberately not changed here; it gets a label once NY4I says what to call it.)

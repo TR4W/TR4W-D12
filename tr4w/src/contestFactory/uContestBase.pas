@@ -1293,6 +1293,13 @@ type
       Kind: TNewContestPromptKind;
       Field: TNewContestField;
       Text: string;
+      (* WHAT THE ROW IS LABELLED, when not its field's command name -- '' is
+         the command name, as before. The European HF Championship and KVP
+         keep the licence year in MY ZONE, and the row read "MY ZONE" beside
+         a prompt asking for a year (NY4I, 2026-11-11). The label is only
+         what the operator reads: the command queued is still the field's
+         (uNewContest.RowCommand), as for the host-area MY COUNTY label. *)
+      RowLabel: string;
    end;
 
    (* WHAT THE NEW CONTEST DIALOG ASKS FOR WHEN THIS CONTEST IS CHOSEN -- M9a.
@@ -1311,11 +1318,16 @@ type
       FOnChoice: array of TNewContestPrompt;
       FWhenInside: array of TNewContestPrompt;
       procedure AddChoice(aKind: TNewContestPromptKind; aField: TNewContestField;
-                          const aText: string);
+                          const aText, aRowLabel: string);
    public
       (* WHEN THE CONTEST IS CHOSEN. *)
       procedure AskField(aField: TNewContestField);
       procedure AskFieldWithComment(const aComment: string; aField: TNewContestField);
+      (* The same, with the row labelled aRowLabel instead of the field's
+         command name -- see TNewContestPrompt.RowLabel. *)
+      procedure AskFieldWithCommentAndLabel(const aComment: string;
+                                            aField: TNewContestField;
+                                            const aRowLabel: string);
       (* "I am in <aRegion>" -- the dialog supplies the words around it. *)
       procedure OfferIAmIn(const aRegion: string);
       (* The box with aCaption as it stands (the IOTA's island station). *)
@@ -6640,7 +6652,7 @@ end;
 
 procedure TNewContestPrompts.AddChoice(aKind: TNewContestPromptKind;
                                        aField: TNewContestField;
-                                       const aText: string);
+                                       const aText, aRowLabel: string);
 var
    n: integer;
 begin
@@ -6649,28 +6661,36 @@ begin
    FOnChoice[n].Kind := aKind;
    FOnChoice[n].Field := aField;
    FOnChoice[n].Text := aText;
+   FOnChoice[n].RowLabel := aRowLabel;
 end;
 
 procedure TNewContestPrompts.AskField(aField: TNewContestField);
 begin
-   AddChoice(npkField, aField, '');
+   AddChoice(npkField, aField, '', '');
 end;
 
 procedure TNewContestPrompts.AskFieldWithComment(const aComment: string;
                                                  aField: TNewContestField);
 begin
-   AddChoice(npkFieldWithComment, aField, aComment);
+   AddChoice(npkFieldWithComment, aField, aComment, '');
+end;
+
+procedure TNewContestPrompts.AskFieldWithCommentAndLabel(const aComment: string;
+                                                         aField: TNewContestField;
+                                                         const aRowLabel: string);
+begin
+   AddChoice(npkFieldWithComment, aField, aComment, aRowLabel);
 end;
 
 procedure TNewContestPrompts.OfferIAmIn(const aRegion: string);
 begin
    (* The field is not read for a box; ncfMyState is its zero. *)
-   AddChoice(npkIAmIn, ncfMyState, aRegion);
+   AddChoice(npkIAmIn, ncfMyState, aRegion, '');
 end;
 
 procedure TNewContestPrompts.OfferIAmInCaption(const aCaption: string);
 begin
-   AddChoice(npkIAmInCaption, ncfMyState, aCaption);
+   AddChoice(npkIAmInCaption, ncfMyState, aCaption, '');
 end;
 
 procedure TNewContestPrompts.AskFieldWithCommentWhenInside(const aComment: string;
@@ -6683,6 +6703,7 @@ begin
    FWhenInside[n].Kind := npkFieldWithComment;
    FWhenInside[n].Field := aField;
    FWhenInside[n].Text := aComment;
+   FWhenInside[n].RowLabel := '';
 end;
 
 function TNewContestPrompts.ChoiceCount: integer;

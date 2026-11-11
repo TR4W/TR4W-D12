@@ -74,8 +74,11 @@ procedure ClearFields;
   a file. Only nloCreate leaves anything queued. *)
 function SaveNewContest(out aFile: string): TNewLogOutcome;
 procedure DisplayCheckBox(Text: string);
-procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField);
-procedure DisplayInitialCommand(Command: TNewContestField);
+(* aRowLabel: the row's label when the contest names one, else '' for the
+  field's command name. The command queued is the field's either way. *)
+procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField;
+                                         const aRowLabel: string = '');
+procedure DisplayInitialCommand(Command: TNewContestField; const aRowLabel: string = '');
 //procedure FillMyStateComboBox;
 
 
@@ -248,11 +251,11 @@ begin
    case aPrompt.Kind of
       npkField:
          begin
-         DisplayInitialCommand(aPrompt.Field);
+         DisplayInitialCommand(aPrompt.Field, aPrompt.RowLabel);
          end;
       npkFieldWithComment:
          begin
-         SetCommentAndEnableEditControl(aPrompt.Text, aPrompt.Field);
+         SetCommentAndEnableEditControl(aPrompt.Text, aPrompt.Field, aPrompt.RowLabel);
          end;
       npkIAmIn:
          begin
@@ -753,9 +756,10 @@ begin
   frmNewContest.ShowIAmIn(Format(TC_IAMIN, [Text]));
 end;
 
-procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField);
+procedure SetCommentAndEnableEditControl(comment: string; EditControl: TNewContestField;
+                                         const aRowLabel: string);
 begin
-  DisplayInitialCommand(EditControl);
+  DisplayInitialCommand(EditControl, aRowLabel);
   frmNewContest.SetComment(comment);
   NewContestPromptComment := comment;
 end;
@@ -766,15 +770,28 @@ end;
 { Rows are handed out IN ORDER as contests ask for them -- the counter is the
   next free row, not the command's identity. Two contests wanting two fields
   get rows 1 and 2 whichever fields those are. }
-procedure DisplayInitialCommand(Command: TNewContestField);
+(* THE ROW'S LABEL IS THE CONTEST'S WORD WHEN IT GIVES ONE (NY4I,
+  2026-11-11: the European HF Championship asked for a licence year beside a
+  row labelled MY ZONE). The FIELD is recorded either way, and RowCommand
+  queues that -- the label never becomes a command. *)
+procedure DisplayInitialCommand(Command: TNewContestField; const aRowLabel: string);
+var
+   rowLabel: string;
 begin
   inc(NewContestDisplayedCommands);
   if NewContestDisplayedCommands <= CSAS then
      begin
      NewContestRowFields[NewContestDisplayedCommands] := Command;
      end;
-  frmNewContest.EnableRow(NewContestDisplayedCommands,
-                          InitialCommandsSA[Command]);
+  if aRowLabel <> '' then
+     begin
+     rowLabel := aRowLabel;
+     end
+  else
+     begin
+     rowLabel := InitialCommandsSA[Command];
+     end;
+  frmNewContest.EnableRow(NewContestDisplayedCommands, rowLabel);
 end;
 
 

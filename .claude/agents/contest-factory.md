@@ -1043,7 +1043,12 @@ the target shape, the M-step migration order and the open questions.
   canvas or a global. Seams: `DescribeNewContestPrompts(TNewContestPrompts)`
   -- the New Contest dialog's two `case`s, ordered steps (rows go out in the
   order asked, the last comment wins), the QSO-party head on the base from
-  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area');
+  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); a step may
+  NAME ITS ROW (`AskFieldWithCommentAndLabel`, `TNewContestPrompt.RowLabel`,
+  2026-11-11: EUHFC and KVP label their MY ZONE row "MY LICENSE YEAR", a
+  `uAppStrings` resourcestring) -- the label is only what is read, the
+  command queued is still the field's (`uNewContest.RowCommand`); the Jock
+  White Field Day's branch number still sits under a MY ZONE label;
   `NewContestValueRefusal(field, value)` (Q104, 2026-10-17: '' accepts, any
   other answer is the message `uNewContest.BeginNewContest` shows while OK stays
   disabled; the base accepts everything, IN7QPNE refuses an in-area MY STATE);

@@ -149,7 +149,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry, uContestFixedPoints,
-   uTR4WStrings;
+   uTR4WStrings,
+   uAppStrings;      (* SNewContestLicenseYearLabel *)
 
 procedure TContestKVP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -291,7 +292,9 @@ end;
    changing one changes one. *)
 procedure TContestKVP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.AskFieldWithComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+   (* The year is kept in MY ZONE, but the row names what it holds. *)
+   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+                                        SNewContestLicenseYearLabel);
 end;
 
 (* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the year licensed, 00 to 99 --

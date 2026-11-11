@@ -22,7 +22,9 @@ unit uTestNewContestHostArea;
     the dialog      queues MY STATE with the same text either way: 'ALC'
                     chosen from the list is what typing ALC queued, and 'GA'
                     typed outside is 'GA'. Driven through uNewContest's real
-                    rules on a form that is never shown. *)
+                    rules on a form that is never shown;
+    a licence year  row a contest labels itself (European HF Championship,
+                    KVP) queues MY ZONE, the label never a command. *)
 
 interface
 
@@ -39,6 +41,7 @@ type
       procedure Test_TheDialogQueuesTheSameMyStateInsideAndOut;
       procedure Test_TickingKeepsTheOtherRows;
       procedure Test_APartyWithoutTheBoxKeepsFreeEntry;
+      procedure Test_ALicenseYearRowQueuesMyZone;
    public
       procedure RunAllTests; override;
    end;
@@ -523,6 +526,49 @@ begin
    end;
 end;
 
+(* THE SAME SEPARATION OF LABEL AND COMMAND, FOR A ROW A CONTEST LABELS
+  ITSELF (NY4I, 2026-11-11): the European HF Championship and KVP ask for the
+  year of the first licence, kept in MY ZONE. The row reads
+  SNewContestLicenseYearLabel; what is typed is queued as MY ZONE, and the
+  label is no command -- as MY COUNTY above. *)
+procedure TNewContestHostAreaTests.Test_ALicenseYearRowQueuesMyZone;
+const
+   CONTESTS: array[0..1] of ContestType = (EUROPEANHFC, KVP);
+var
+   frm: TfrmNewContest;
+   row: integer;
+   i: integer;
+   who: string;
+begin
+   BeginTest('Test_ALicenseYearRowQueuesMyZone');
+
+   for i := Low(CONTESTS) to High(CONTESTS) do
+      begin
+      who := string(ContestTypeSA[CONTESTS[i]]);
+      frm := NewDialog;
+      try
+         frm.SetMyCall('DL1AAA');
+         CheckTrue(Choose(frm, ContestHandleOf(CONTESTS[i])), who + ' can be chosen');
+         row := RowCaptioned(frm, SNewContestLicenseYearLabel);
+         CheckTrue(row > 0, who + ': the row reads ' + SNewContestLicenseYearLabel);
+         CheckEquals(0, RowCaptioned(frm, 'MY ZONE'), who + ': no row reads MY ZONE');
+         CheckEquals(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, frm.lblComment.Caption,
+                     who + ': beside the year prompt');
+
+         frm.SetRowText(row, '64');
+         CheckTrue(frm.btnOK.Enabled, who + ': a year is accepted');
+         ClearNewContestChoices;
+         QueueNewContestRows;
+         CheckEquals('64', QueuedNewContestValue('MY ZONE'), who + ': the year is queued as MY ZONE');
+         CheckEquals('', QueuedNewContestValue(SNewContestLicenseYearLabel),
+                     who + ': the label is not a command');
+      finally
+         ClearNewContestChoices;
+         FreeDialog(frm);
+      end;
+      end;
+end;
+
 procedure TNewContestHostAreaTests.RunAllTests;
 begin
    Test_PlacesAreTheCountyFileKeys;
@@ -532,6 +578,7 @@ begin
    Test_TheDialogQueuesTheSameMyStateInsideAndOut;
    Test_TickingKeepsTheOtherRows;
    Test_APartyWithoutTheBoxKeepsFreeEntry;
+   Test_ALicenseYearRowQueuesMyZone;
 end;
 
 end.

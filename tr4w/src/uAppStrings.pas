@@ -629,6 +629,13 @@ resourcestring
      operator reads -- the command queued is MY STATE on both sides. *)
    SNewContestHostAreaCountyLabel = 'MY COUNTY';
    SNewContestHostAreaStateLabel = 'MY STATE';
+
+   (* THE LICENCE-YEAR ROW'S LABEL -- the European HF Championship and KVP
+     (NY4I, 2026-11-11: their prompt asks for the year of the first licence,
+     and the row beside it read MY ZONE, a D7 artifact). The year is kept in
+     MY ZONE and the command queued is MY ZONE; this is only what the
+     operator reads (TNewContestPrompt.RowLabel). *)
+   SNewContestLicenseYearLabel = 'MY LICENSE YEAR';
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
    SNewContestHostAreaOutsideNotice =
