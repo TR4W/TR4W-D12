@@ -1826,6 +1826,7 @@ type
       function GetPermittedOperatingAids: TOperatingAids; virtual;
       function GetOffersQTCs: boolean; virtual;
       function GetOffersParkTools: boolean; virtual;
+      function GetSubmitsLogToARRL: boolean; virtual;
 
       (* WHAT THE UI ITSELF ASKS -- M9b. See the properties. *)
       function GetIsActive: boolean; virtual;
@@ -3442,6 +3443,16 @@ type
          otherwise; it tested `Contest <> POTA` until POTA gained its class
          (2026-10-13). The base does not. *)
       property OffersParkTools: boolean read GetOffersParkTools;
+
+      (* IS THIS CONTEST'S LOG SUBMITTED THROUGH THE ARRL'S PORTAL? -- the
+         sponsor's own log submission site, which Tools > Submit ARRL Log
+         opens (contest-log-submission.arrl.org). MainUnit greys the row
+         otherwise; it was enabled for every contest, the CWT included
+         (NY4I, 2026-11-11). True for the ARRL-sponsored contests only:
+         ARRL DX and Sweepstakes on their family bases, and ARRL 160, 10 m,
+         Digi, the three VHF runnings, the RTTY Roundup and Field Day. The
+         base does not. *)
+      property SubmitsLogToARRL: boolean read GetSubmitsLogToARRL;
 
       (* IS THIS CONTEST STILL RUN? -- M9b. An inactive contest stays in the
          factory so an old log still opens and scores (NY4I, 2026-10-01), and
@@ -6611,6 +6622,13 @@ begin
 end;
 
 function TContestBase.GetOffersParkTools: boolean;
+begin
+   Result := False;
+end;
+
+(* The sponsor's submission portal is the ARRL's only for an ARRL contest --
+   see the property SubmitsLogToARRL. *)
+function TContestBase.GetSubmitsLogToARRL: boolean;
 begin
    Result := False;
 end;

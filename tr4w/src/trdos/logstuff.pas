@@ -648,6 +648,10 @@ function ProcessRSTAndZoneExchange(Exchange: ShortString; var RXData:
   zone mode. In the interface for uTestLicenceYearEntry. *)
 function ProcessRSTAndLicenceYearExchange(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
+(* Serial and name (CW Open and others). In the interface for
+  uTestQSONumberAndNameEntry: every refusal names its reason. *)
+function ProcessQSONumberAndNameExchange(Exchange: ShortString; var
+  RXData: ContestExchange): boolean;
 (* RS(T), zone and a possible domestic QTH (CQ WW RTTY). In the interface for
   uTestZoneEntryRefusal (issue 274): a refused entry leaves the zone, the QTH
   and the domestic QTH as it found them. *)
@@ -2370,8 +2374,26 @@ begin
 
      end;
 
-  if (NumberString = '') or (NameString = '') then
+  (* EVERY REFUSAL NAMES ITS REASON -- 2026-11-11. These exits said nothing,
+    and ParametersOkay shows an error only when ExchangeErrorMessage is set,
+    so in CW Open a name typed without its serial made Enter do nothing. The
+    wording follows ProcessQSONumberAndDomesticQTHExchange; no token is
+    named, since a missing field has no word to put the caret after. *)
+  if (NumberString = '') and (NameString = '') then
      begin
+     ExchangeErrorMessage := TC_NOTENOUGHINFOINEXCHANGE;
+     Exit;
+     end;
+
+  if NumberString = '' then
+     begin
+     ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
+     Exit;
+     end;
+
+  if NameString = '' then
+     begin
+     ExchangeErrorMessage := SExchangeNoNameFound;
      Exit;
      end;
 
@@ -2379,7 +2401,15 @@ begin
 
   Val(NumberString, RXData.NumberReceived, Result1);
 
-  ProcessQSONumberAndNameExchange := Result1 = 0;
+  (* An all-digit word that does not fit the number (overflow) is a bad
+    serial, said as the serial-and-QTH parser says it. *)
+  if Result1 <> 0 then
+     begin
+     ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
+     Exit;
+     end;
+
+  ProcessQSONumberAndNameExchange := True;
 end;
 
 function ProcessQSONumberAndZoneExchange(Exchange: ShortString; var RXData:

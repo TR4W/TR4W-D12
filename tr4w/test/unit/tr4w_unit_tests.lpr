@@ -208,6 +208,7 @@ uses
    uTestZoneEntryRefusal in 'uTestZoneEntryRefusal.pas',
    uTestPossibleDomesticQTHEntry in 'uTestPossibleDomesticQTHEntry.pas',
    uTestLicenceYearEntry in 'uTestLicenceYearEntry.pas',
+   uTestQSONumberAndNameEntry in 'uTestQSONumberAndNameEntry.pas',
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
@@ -1131,6 +1132,7 @@ begin
    RegisterSuite(TZoneEntryRefusalTests.Create('ZoneEntryRefusal'));
    RegisterSuite(TPossibleDomesticQTHEntryTests.Create('PossibleDomesticQTHEntry'));
    RegisterSuite(TLicenceYearEntryTests.Create('LicenceYearEntry'));
+   RegisterSuite(TQSONumberAndNameEntryTests.Create('QSONumberAndNameEntry'));
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));

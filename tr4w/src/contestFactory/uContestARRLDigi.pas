@@ -126,6 +126,9 @@ type
       (* MAY AN EXCHANGE WORD BE A GRID? -- see
          TContestBase.ExchangeTextMayHoldGridSquare (M11 S9e part 1). *)
       function ExchangeTextMayHoldGridSquare: boolean; override;
+   protected
+      (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
+      function GetSubmitsLogToARRL: boolean; override;
    end;
 
 implementation
@@ -378,6 +381,13 @@ end;
 procedure TContestARRLDigi.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
+end;
+
+(* THE SPONSOR'S LOG PORTAL -- an ARRL contest, whose log goes to the
+   ARRL's submission site (TContestBase.SubmitsLogToARRL, 2026-11-11). *)
+function TContestARRLDigi.GetSubmitsLogToARRL: boolean;
+begin
+   Result := True;
 end;
 
 initialization

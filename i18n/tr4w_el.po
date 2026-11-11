@@ -9726,3 +9726,13 @@ msgstr ""
 #, fuzzy
 msgid "MY LICENSE YEAR"
 msgstr ""
+
+#: uappstrings.sexchangenonamefound
+#, fuzzy
+msgid "No name found!!"
+msgstr ""
+
+#: uappstrings.snewcontestqthormemberlabel
+#, fuzzy
+msgid "MY QTH OR MEMBER NO"
+msgstr ""

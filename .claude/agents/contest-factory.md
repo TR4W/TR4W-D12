@@ -1045,8 +1045,11 @@ the target shape, the M-step migration order and the open questions.
   order asked, the last comment wins), the QSO-party head on the base from
   `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); a step may
   NAME ITS ROW (`AskFieldWithCommentAndLabel`, `TNewContestPrompt.RowLabel`,
-  2026-11-11: EUHFC and KVP label their MY ZONE row "MY LICENSE YEAR", a
-  `uAppStrings` resourcestring) -- the label is only what is read, the
+  2026-11-11: EUHFC and KVP label their MY ZONE row "MY LICENSE YEAR", the
+  CWT its MY STATE row "MY QTH OR MEMBER NO" -- `uAppStrings`
+  resourcestrings; Locust and the NCCC Sprint show the CWT's prompt words
+  but take no member number, so keep MY STATE; the prompts table renders a
+  label, `StepCommentLabelled`) -- the label is only what is read, the
   command queued is still the field's (`uNewContest.RowCommand`); the Jock
   White Field Day's branch number still sits under a MY ZONE label;
   `NewContestValueRefusal(field, value)` (Q104, 2026-10-17: '' accepts, any
@@ -1070,7 +1073,12 @@ the target shape, the M-step migration order and the open questions.
   `PermittedOperatingAids` (WRTC: no SCP, cluster or score posting --
   `MainUnit.OperatingAidOfWindow` is the UI's window-to-aid wiring);
   `OffersQTCs` (the WAE QTC menu); `OffersParkTools` (POTA's two menu
-  rows, since its class). **uNewContest names no contest**: `ClasslessPrompts`
+  rows, since its class); `SubmitsLogToARRL` (2026-11-11, base False: Tools >
+  Submit ARRL Log opens the ARRL's portal and is greyed otherwise -- True on
+  `TContestARRLDXBase`, `TContestARRLSSBase` and every other
+  `uContestARRL*` class; IARU HF and ARRL Kids Day NOT stated, on no
+  sponsor word; the `ARRL_PORTAL` list in
+  `uTestContestUI.Test_OnlyARRLContestsOfferTheARRLLogPortal` is the exact set). **uNewContest names no contest**: `ClasslessPrompts`
   was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.

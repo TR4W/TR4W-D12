@@ -272,6 +272,7 @@ var
   hConv          : THandle;
   hResult        : THandle;
   cmd            : AnsiString;
+  tStart         : QWord;
 begin
   logger.debug('[uDXLabPathfinder] InformSpotCollector: connecting to SpotCollector|DDEClient');
   hszSvc := DdeCreateStringHandleA(GInstId, 'SpotCollector', CP_WINANSI_);
@@ -289,7 +290,10 @@ begin
         end;
      Exit;
      end;
-  hConv := DdeConnect(GInstId, hszSvc, hszTop, nil);
+  tStart := GetTickCount64;
+  hConv  := DdeConnect(GInstId, hszSvc, hszTop, nil);
+  logger.debug('[uDXLabPathfinder] SpotCollector DdeConnect took %d ms',
+               [Integer(GetTickCount64 - tStart)]);
   if hConv = 0 then
      begin
      logger.debug('[uDXLabPathfinder] InformSpotCollector: DdeConnect failed - SpotCollector not running?');
@@ -323,6 +327,7 @@ var
   checkInst      : DWORD;
   hszSvc, hszTop : THandle;
   hTest          : THandle;
+  tStart         : QWord;
 begin
   Result := false;
   logger.debug('[uDXLabPathfinder] StartDXLabPathfinder called');
@@ -343,7 +348,13 @@ begin
      hTest  := 0;
      if (hszSvc <> 0) and (hszTop <> 0) then
         begin
-        hTest := DdeConnect(checkInst, hszSvc, hszTop, nil);
+        (* TIMED (issue 252): DdeConnect broadcasts to every top-level
+          window and waits for each, so one hung window stalls the main
+          thread. The log line makes a slow start name its cause. *)
+        tStart := GetTickCount64;
+        hTest  := DdeConnect(checkInst, hszSvc, hszTop, nil);
+        logger.debug('[uDXLabPathfinder] Pathfinder probe DdeConnect took %d ms',
+                     [Integer(GetTickCount64 - tStart)]);
         end;
      if hszSvc <> 0 then
         begin

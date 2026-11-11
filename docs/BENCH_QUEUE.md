@@ -6306,3 +6306,38 @@ The row beside "Enter the last two digits of the year of your first official ama
 - [ ] **European HF Championship.** New Contest, choose European HF Championship. Expect the row beside the year prompt to read **MY LICENSE YEAR**, and no row to read MY ZONE. Type `64`, OK. Expect the new log's MY ZONE to be `64` (Preferences, or the sent exchange's year). Windows and Linux (gtk2): the label fits beside its field.
 - [ ] **KVP.** The same with KVP.
 - [ ] **Another contest is unchanged.** Choose NAQP CW: its rows still read MY STATE and MY NAME. (The Jock White Field Day still asks for a branch number on a row reading MY ZONE -- the same artifact, deliberately not changed here; it gets a label once NY4I says what to call it.)
+
+## Added 2026-11-11 -- THE CWT'S QTH-OR-MEMBER ROW IS LABELLED FOR WHAT IT HOLDS; SUBMIT ARRL LOG IS GREYED OUTSIDE AN ARRL CONTEST
+
+The CWT's row beside "Enter your name and QTH (US state, Canadian Province or DX country) or member number:" read MY STATE. The contest now names the row (`uAppStrings.SNewContestQTHOrMemberLabel`); the command queued is still MY STATE. Tools > Submit ARRL Log opens the ARRL's portal and was enabled for every contest; it is now greyed unless the contest says `SubmitsLogToARRL` (the ARRL DX, Sweepstakes, 160, 10 m, Digi, three VHF runnings, RTTY Roundup and Field Day). Unit-tested (`uTestNewContestHostArea.Test_ACWTMemberRowQueuesMyState` on a never-shown form, `uTestContestUI.Test_OnlyARRLContestsOfferTheARRLLogPortal`); neither seen on a screen.
+
+- [ ] **CWT row label.** New Contest, choose CWops Test (CWT). Expect two rows: MY NAME, then **MY QTH OR MEMBER NO** beside the QTH/member prompt; no row reads MY STATE. Type a name and `1234`, OK. Expect the new log's MY STATE to be `1234`. Windows and Linux (gtk2): the 19-character label fits the 160-pixel label column (CATEGORY-TRANSMITTER, 20 characters, already does).
+- [ ] **Locust QSO Party / NCCC Sprint unchanged.** Their rows still read MY NAME and MY STATE (they take a QTH, not a member number).
+- [ ] **Submit ARRL Log greyed for the CWT.** Open a CWT log: Tools > Submit ARRL Log is greyed. Windows, Linux and macOS (one menu, built once).
+- [ ] **Submit ARRL Log enabled for an ARRL contest.** Open an ARRL DX CW (or Sweepstakes, Field Day) log: the row is enabled and opens contest-log-submission.arrl.org.
+- [ ] **NY4I's call: does Field Day belong on that portal?** The row is enabled for Field Day, but the agent that built it believes Field Day entries go through a separate Field Day web form, not contest-log-submission.arrl.org. Left unset (greyed) and unverified: IARU HF (probably the same ARRL portal) and ARRL Kids Day (probably an online form). Say which of the three should be on or off.
+
+## Added 2026-11-11 -- A REFUSED CW OPEN EXCHANGE SAYS WHAT IS MISSING
+
+Pressing Enter in CW Open with the serial or the name missing used to do nothing. `ProcessQSONumberAndNameExchange` now sets the message (CW Open, the four EU Sprints and MST share it): **No QSO number found!!**, **No name found!!** or **Not enough info in exchange!!**; an all-digit serial too large for the field gives the first. Unit-tested (`uTestQSONumberAndNameEntry`, including the engine path); the contest matrix moved only the `err=` field of 93 parse lines in each of those six contests (re-frozen with the reason recorded). 34 other parsers still refuse silently: not changed (issue to follow).
+
+- [ ] **CW Open, serial missing.** Call W7SP, type only a name (`WOODY`), Enter: the red error line reads **No QSO number found!!** and the caret is left alone. Nothing is logged.
+- [ ] **CW Open, name missing.** Type only `234`, Enter: **No name found!!**.
+- [ ] **CW Open, a good exchange.** `234 WOODY`, Enter: logs as before, no error text left over from the earlier attempts.
+- [ ] **Empty Enter still shows nothing in CW Open** (known gap: it exits before any parser runs; follow-up).
+
+## Added 2026-11-11 -- "CONNECT RADIOS AT STARTUP" IS ON THE PROFILE, AND STARTUP OBEYS IT (issue 286)
+
+The old station-wide box was read by nothing: every start connected the active profile's radios whatever it said. The setting is now the profile's (`connectAtStartup`, a missing key reads as on, so nothing changes on upgrade) and `LogCfg` skips the two radio connects when the active profile says off. The old `general.autoConnect` is not migrated (it never did anything) and is dropped on the next save. Note for the earlier report: deleting a RADIO does not change the box now; it follows the selected PROFILE.
+
+- [ ] **Radios page layout.** The box sits inside the Station profile group beside "SO2R enabled", does not overlap it, follows the profile combo, and is greyed with no profiles. Tab order goes SO2R, Connect at startup, Activate. Windows and Linux (gtk2).
+- [ ] **Off means no connect.** Untick it on the active profile, Save, restart: tr4w.log shows `[Startup] profile "..." does not connect its radios at startup` and `radios not connected`, and no `Created Radio ... thread` line. F1 (CW), clicking a band-map spot and typing a frequency must not crash with no radio.
+- [ ] **Activate and Reset Radio Ports still connect** with the box off.
+- [ ] **On connects as before** after ticking it again and restarting. An old `tr4w.json` with `general.autoConnect` loads with no ERROR line about an unknown key.
+- [ ] **Caption question.** The box shows the profile selected in the combo, but startup uses the ACTIVE profile. Should the caption say "when this profile is active"? (New string if yes.)
+
+## Added 2026-11-11 -- DX LAB PATHFINDER DDE TIMING LINES (issue 252, on hold)
+
+`uDXLabPathfinder` now logs how long each DDE connect takes (debug level). One start with SpotCollector enabled showed 47 ms (Pathfinder probe) and 16 ms (SpotCollector). Issue 252 is on hold until a slow start recurs.
+
+- [ ] **Collect the lines whenever a start feels slow** (DEBUG LOG LEVEL on, SpotCollector enabled): `rg -a --no-ignore -g "*.log*" "DdeConnect took"` from the repo root (cmd.exe: double quotes; `-a` because tr4w.log can hold a NUL byte). Seconds = the DDE call is the cause; near zero = machine load, close the issue.

@@ -136,6 +136,9 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   protected
+      (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
+      function GetSubmitsLogToARRL: boolean; override;
    end;
 
 implementation
@@ -380,6 +383,13 @@ end;
 function TContestARRLDXBase.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := not CountsDXMultiplier;
+end;
+
+(* THE SPONSOR'S LOG PORTAL -- an ARRL contest, whose log goes to the
+   ARRL's submission site (TContestBase.SubmitsLogToARRL, 2026-11-11). *)
+function TContestARRLDXBase.GetSubmitsLogToARRL: boolean;
+begin
+   Result := True;
 end;
 
 end.

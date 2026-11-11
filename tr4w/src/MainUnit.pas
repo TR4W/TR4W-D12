@@ -4692,6 +4692,15 @@ begin
      begin
      SetMenuEnabled(menu_WA7BNM_calendar, False);
      end;
+  (* SUBMIT ARRL LOG opens the ARRL's log portal, so it is offered only for a
+    contest whose log goes there -- the contest says (SubmitsLogToARRL). It
+    was enabled for every contest, the CWT included (2026-11-11). Applied
+    once, here, as the calendar rows above: a later CONTEST change does not
+    re-apply it. *)
+  if not ContestIdentity(Contest).SubmitsLogToARRL then
+     begin
+     SetMenuEnabled(menu_arrl_submit, False);
+     end;
   (* THE OPERATING AIDS THE CONTEST FORBIDS ARE GREYED -- M9a. This was
     `Contest = WRTC`; the contest says which aids it allows (TOperatingAid),
     and each menu row is the aid it opens. *)

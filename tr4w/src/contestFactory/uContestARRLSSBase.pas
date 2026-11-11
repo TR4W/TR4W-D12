@@ -125,6 +125,9 @@ type
          Cabrillo contest name -- ARRL-SS-CW, ARRL-SS-SSB. Derived, not typed
          twice, so the two cannot drift. See TContestBase.CallHistorySiteName. *)
       function CallHistorySiteName: string; override;
+   protected
+      (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
+      function GetSubmitsLogToARRL: boolean; override;
    end;
 
 implementation
@@ -465,6 +468,13 @@ end;
 function TContestARRLSSBase.CallHistorySiteName: string;
 begin
    Result := CabrilloName;
+end;
+
+(* THE SPONSOR'S LOG PORTAL -- an ARRL contest, whose log goes to the
+   ARRL's submission site (TContestBase.SubmitsLogToARRL, 2026-11-11). *)
+function TContestARRLSSBase.GetSubmitsLogToARRL: boolean;
+begin
+   Result := True;
 end;
 
 end.

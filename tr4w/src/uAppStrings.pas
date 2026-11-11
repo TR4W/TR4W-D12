@@ -564,6 +564,12 @@ resourcestring
    SExchangeNoCheck = 'Missing check (two digits)';
    SExchangeNoSection = 'Missing section';
 
+   (* A SERIAL-AND-NAME EXCHANGE WITH NO NAME (CW Open and the other
+     LOGSTUFF.ProcessQSONumberAndNameExchange contests). '123' alone was
+     refused with no message, so Enter appeared to do nothing. A missing
+     serial says TC_NOQSONUMBERFOUND, as the serial-and-QTH parser does. *)
+   SExchangeNoNameFound = 'No name found!!';
+
    (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
      NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
      VE station in the NC QSO party", "we should refuse to log it and show an
@@ -636,6 +642,14 @@ resourcestring
      MY ZONE and the command queued is MY ZONE; this is only what the
      operator reads (TNewContestPrompt.RowLabel). *)
    SNewContestLicenseYearLabel = 'MY LICENSE YEAR';
+
+   (* THE CWT'S QTH-OR-MEMBER-NUMBER ROW'S LABEL (2026-11-11): the prompt asks
+     for a QTH or a CWops member number, and the row beside it read MY STATE.
+     What is typed is kept in MY STATE and the command queued is MY STATE;
+     this is only what the operator reads (TNewContestPrompt.RowLabel). Kept
+     to the width of CATEGORY-TRANSMITTER, the longest label the same
+     160-pixel column already shows. *)
+   SNewContestQTHOrMemberLabel = 'MY QTH OR MEMBER NO';
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
    SNewContestHostAreaOutsideNotice =

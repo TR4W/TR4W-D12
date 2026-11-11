@@ -57,7 +57,7 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_NewContestPromptsAreTheDialogsArms;
-      procedure Test_ALicenseYearRowIsLabelledForWhatItHolds;
+      procedure Test_ARowIsLabelledForWhatItHolds;
       procedure Test_TotalsDisplay;
       procedure Test_SummarySheet;
       procedure Test_CabrilloHeaderAndMode;
@@ -150,6 +150,16 @@ begin
    Result := 'row ' + IntToStr(Ord(aField)) + ' comment "' + aText + '";';
 end;
 
+(* A ROW THE CONTEST LABELS ITSELF (TNewContestPrompt.RowLabel, 2026-11-11):
+  the comment step, then the label it reads instead of the command name. A
+  step with no label renders as StepComment, so every other row is unchanged. *)
+function StepCommentLabelled(const aText: string; aField: TNewContestField;
+                             const aRowLabel: string): string;
+begin
+   Result := 'row ' + IntToStr(Ord(aField)) + ' comment "' + aText + '"' +
+             ' label "' + aRowLabel + '";';
+end;
+
 function StepBox(const aRegion: string): string;
 begin
    Result := 'box in "' + aRegion + '";';
@@ -170,7 +180,14 @@ begin
          end;
       npkFieldWithComment:
          begin
-         Result := StepComment(aStep.Text, aStep.Field);
+         if aStep.RowLabel <> '' then
+            begin
+            Result := StepCommentLabelled(aStep.Text, aStep.Field, aStep.RowLabel);
+            end
+         else
+            begin
+            Result := StepComment(aStep.Text, aStep.Field);
+            end;
          end;
       npkIAmIn:
          begin
@@ -446,7 +463,10 @@ begin
          end;
       CWOPS:
          begin
-         Result := StepField(ncfMyName) + StepComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+         (* The QTH-or-member row names what it holds (2026-11-11). *)
+         Result := StepField(ncfMyName) +
+                   StepCommentLabelled(TC_ENTERYOURNAMEANDQTH, ncfMyState,
+                                       SNewContestQTHOrMemberLabel);
          end;
       DARC10M:
          begin
@@ -462,7 +482,8 @@ begin
          end;
       EUROPEANHFC:
          begin
-         Result := StepComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+                                       SNewContestLicenseYearLabel);
          end;
       EUROPEANVHF:
          begin
@@ -534,7 +555,8 @@ begin
          end;
       KVP:
          begin
-         Result := StepComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+                                       SNewContestLicenseYearLabel);
          end;
       LABRE:
          begin
@@ -1060,14 +1082,55 @@ begin
                RenderedPrompts(BCQP, False), 'British Columbia: no head');
 end;
 
-(* A ROW IS LABELLED FOR WHAT IT HOLDS (NY4I, 2026-11-11): the European HF
-  Championship and KVP ask for the year of the first licence, kept in MY
-  ZONE, and the row beside the prompt read MY ZONE. They label it
-  SNewContestLicenseYearLabel and still ask for ncfMyZone -- the command
-  queued (uTestNewContestHostArea drives the dialog for that). Every other
-  contest gives no label, so its rows read their command names as before: a
-  registry walk, so a by-id contest is held too. *)
-procedure TContestDisplayTests.Test_ALicenseYearRowIsLabelledForWhatItHolds;
+(* A ROW IS LABELLED FOR WHAT IT HOLDS (NY4I, 2026-11-11). Three contests
+  name a row themselves (TNewContestPrompt.RowLabel), and each still asks
+  for the field whose command is queued (uTestNewContestHostArea drives the
+  dialog for that):
+    - the European HF Championship and KVP ask for the year of the first
+      licence, kept in MY ZONE; the row read MY ZONE. Their one step is
+      labelled SNewContestLicenseYearLabel.
+    - the CWT asks for a QTH or a CWops member number, kept in MY STATE; the
+      row read MY STATE. Its SECOND step (after MY NAME) is labelled
+      SNewContestQTHOrMemberLabel.
+  The Locust QSO Party and the NCCC Sprint show the same prompt words but
+  take no member number (a name and a QTH), so their rows keep MY STATE.
+  Every other step of every contest gives no label, so its row reads its
+  command name as before: a registry walk, so a by-id contest is held too. *)
+
+(* The one labelled step aContest states on choosing, or False when it
+  labels none. A function, not a typed-constant table: the labels are
+  resourcestrings. *)
+function ExpectedLabelledRow(aContest: TContestBase;
+                             out aStep: integer;
+                             out aField: TNewContestField;
+                             out aComment, aRowLabel: string): boolean;
+begin
+   Result := True;
+   if IsLegacyContest(aContest, EUROPEANHFC) or IsLegacyContest(aContest, KVP) then
+      begin
+      aStep := 0;
+      aField := ncfMyZone;
+      aComment := TC_ENTERTHELASTTWODIGITSOFTHEYEAR;
+      aRowLabel := SNewContestLicenseYearLabel;
+      end
+   else if IsLegacyContest(aContest, CWOPS) then
+      begin
+      aStep := 1;
+      aField := ncfMyState;
+      aComment := TC_ENTERYOURNAMEANDQTH;
+      aRowLabel := SNewContestQTHOrMemberLabel;
+      end
+   else
+      begin
+      Result := False;
+      aStep := -1;
+      aField := ncfMyState;
+      aComment := '';
+      aRowLabel := '';
+      end;
+end;
+
+procedure TContestDisplayTests.Test_ARowIsLabelledForWhatItHolds;
 var
    contests: TContestIdentityList;
    obj: TContestBase;
@@ -1075,32 +1138,40 @@ var
    step: TNewContestPrompt;
    k, i: integer;
    labelled: boolean;
+   labelledStep: integer;
+   field: TNewContestField;
+   comment, rowLabel: string;
    who: string;
 begin
-   BeginTest('Test_ALicenseYearRowIsLabelledForWhatItHolds');
+   BeginTest('Test_ARowIsLabelledForWhatItHolds');
    contests := ContestsToWalk;
    for k := 0 to High(contests) do
       begin
       obj := contests[k];
       who := ContestWho(obj);
-      labelled := IsLegacyContest(obj, EUROPEANHFC) or IsLegacyContest(obj, KVP);
+      labelled := ExpectedLabelledRow(obj, labelledStep, field, comment, rowLabel);
       prompts := TNewContestPrompts.Create;
       try
          obj.DescribeNewContestPrompts(prompts);
          if labelled then
             begin
-            CheckEquals(1, prompts.ChoiceCount, who + ': one step on choosing');
-            step := prompts.Choice(0);
-            CheckEquals(Ord(npkFieldWithComment), Ord(step.Kind), who + ': a row with a comment');
-            CheckEquals(Ord(ncfMyZone), Ord(step.Field), who + ': the year is still MY ZONE''s');
-            CheckEquals(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, step.Text, who + ': the year prompt');
-            CheckEquals(SNewContestLicenseYearLabel, step.RowLabel, who + ': the row names the year');
-            end
-         else
-            begin
-            for i := 0 to prompts.ChoiceCount - 1 do
+            CheckTrue(labelledStep < prompts.ChoiceCount, who + ': the labelled step is there');
+            if labelledStep < prompts.ChoiceCount then
                begin
-               CheckEquals('', prompts.Choice(i).RowLabel, who + ': no row label on choosing');
+               step := prompts.Choice(labelledStep);
+               CheckEquals(Ord(npkFieldWithComment), Ord(step.Kind), who + ': a row with a comment');
+               CheckEquals(Ord(field), Ord(step.Field),
+                           who + ': the row still queues its field''s command');
+               CheckEquals(comment, step.Text, who + ': beside its prompt');
+               CheckEquals(rowLabel, step.RowLabel, who + ': the row names what it holds');
+               end;
+            end;
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            if (not labelled) or (i <> labelledStep) then
+               begin
+               CheckEquals('', prompts.Choice(i).RowLabel,
+                           who + ': no row label on choosing, step ' + IntToStr(i));
                end;
             end;
          for i := 0 to prompts.InsideCount - 1 do
@@ -1111,6 +1182,13 @@ begin
          prompts.Free;
          end;
       end;
+
+   (* THE CWT BY NAME, so an emptied registry or a renamed member cannot pass
+      it by skipping: MY NAME, then the labelled MY STATE row. *)
+   CheckEquals(StepField(ncfMyName) +
+               StepCommentLabelled(TC_ENTERYOURNAMEANDQTH, ncfMyState,
+                                   SNewContestQTHOrMemberLabel),
+               RenderedPrompts(CWOPS, False), 'CWT: MY NAME, then the QTH-or-member row');
 end;
 
 (* ------------------------------------------------------------------------ *)
@@ -2071,7 +2149,7 @@ end;
 procedure TContestDisplayTests.RunAllTests;
 begin
    Test_NewContestPromptsAreTheDialogsArms;
-   Test_ALicenseYearRowIsLabelledForWhatItHolds;
+   Test_ARowIsLabelledForWhatItHolds;
    Test_TotalsDisplay;
    Test_SummarySheet;
    Test_CabrilloHeaderAndMode;
