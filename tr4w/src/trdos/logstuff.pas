@@ -639,6 +639,11 @@ function ProcessClassAndDomesticOrDXQTHExchange(Exchange: string {Str80}; var
   RXData: ContestExchange): boolean;
 function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
   boolean;
+(* RST and zone (CQ WW, IARU, the European HF Championship's year...). In the
+  interface for uTestZoneEntryRefusal (issue 267): a refused entry must leave
+  RXData.Zone as it found it. *)
+function ProcessRSTAndZoneExchange(Exchange: ShortString; var RXData:
+  ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
@@ -5565,8 +5570,9 @@ begin
 
     2:
       begin
-        RXData.Zone := StrToIntDef(Exchange, 0);
-
+        (* THE ZONE IS WRITTEN ONLY ONCE THE ENTRY IS ACCEPTED -- issue 267.
+          It was written first, so an entry refused below (a CQ zone above
+          40) still carried the zone it was refused for (D7 did the same). *)
         (* THREE ZONE-KIND ARMS STOOD HERE, AND NONE IS A RULE ANY CONTEST
           RUNS -- M11 S5, 2026-10-14.
 
@@ -5584,15 +5590,19 @@ begin
           read a kind no contest's trait or DescribeSession states: dead
           since M11 S2 (plan 2.4), so the first test was always true and
           the second never. *)
+        (* THERE ARE 40 CQ ZONES: above 40 is refused. This compared the
+          first digit with '5', so 50..59 passed (D7 did the same; NY4I ruled
+          it a bug, issue 267, 2026-11-10). ITU zone mode is not limited. *)
         if CTY.ctyZoneMode = CQZoneMode then
            begin
-           if (Exchange[1] > '5')                          or
+           if (Exchange[1] > '4')                          or
               ((Exchange[1] = '4') and (Exchange[2] >= '1')) then
               begin
               Exit;
               end;
            end;
 
+        RXData.Zone := StrToIntDef(Exchange, 0);
         ProcessRSTAndZoneExchange := True;
         ExchangeErrorMessage := '';
       end;

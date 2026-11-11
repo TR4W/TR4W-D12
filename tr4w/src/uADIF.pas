@@ -199,6 +199,19 @@ function ADIFZoneInRange(aZone, aMaxZone: Integer): Boolean;
 function ADIFZoneField(const aTag: string; aZone, aMaxZone: Integer): string;
 function ADIFSectionOf(const aQso: ContestExchange): string;
 
+(* THE WORKED STATION'S STATE FROM ITS ARRL SECTION -- issue 266, 2026-11-10,
+  for the Field Days' ADIF STATE. The state of the RESOLVED section
+  (DomesticQTH: 'WcF' for a typed WF, 'NLi' for NY), and only when that
+  names none, the state of the QSO's QTH as logged -- so a row stored before
+  the section was resolved ('EM' in both fields) keeps the 'MA' it wrote.
+  It was StateFromARRLSection(QTHString) alone, and a typed alias the table
+  knows but uARRLSections does not (WF, SN, ST, NY, HA, LOS, KL, CON ...)
+  wrote no STATE. Never a different state where the old answer was not
+  empty: no alias of arrlsect.dom is itself another section
+  (uTestARRLSectionAlias pins both). A section of two states (MDC) or of
+  none uARRLSections knows answers ''. *)
+function ADIFSectionStateOf(const aQso: ContestExchange): string;
+
 function IsGenericDataMode(aExtMode: ExtendedModeType): Boolean;
 function CountGenericDataModeQSOs(const records: TContestExchangeArray): Integer;
 function ADIFGenericDataModeNote(aCount: Integer): string;
@@ -1201,6 +1214,15 @@ begin
    if not IsADIFARRLSection(Result) then
       begin
       Result := '';
+      end;
+end;
+
+function ADIFSectionStateOf(const aQso: ContestExchange): string;
+begin
+   Result := StateFromARRLSection(Trim(string(aQso.DomesticQTH)));
+   if Result = '' then
+      begin
+      Result := StateFromARRLSection(Trim(string(aQso.QTHString)));
       end;
 end;
 

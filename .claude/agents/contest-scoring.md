@@ -729,6 +729,18 @@ Phone) -- `AddCallsign` indexed it with FM until P8 and wrote into the
 entry's CALL, reached by the rescore, which passes a record's stored mode.
 Pinned by `uTestSortedStringList` and `uTestCallsignsList`.
 
+**A ZONE IS STORED, LISTED AND COLOURED AT ITS OWN NUMBER (issue 267,
+2026-11-10).** The remaining-zones walk is `mo.RemainingZoneIndices(count,
+fromZero, includeWorked, band, mode)`: 0..count-1 for a contest that
+`NumbersZonesFromZero` (EUHFC/KVP years 00..99), else 1..count, asking and
+listing the SAME index. `ShowRemMultsInWindow` used to ask zone i and list
+i - 1 (D7), so erase mode hid each year by the next year's cell. Pinned in
+`uTestMults`. **A refused RST-and-zone entry leaves `Zone` untouched**
+(`ProcessRSTAndZoneExchange`, in LOGSTUFF's interface for
+`uTestZoneEntryRefusal`), and in CQ zone mode it refuses every zone above
+40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones"). Its sibling `ProcessRSTZoneAndPossibleDomesticQTHExchange`
+still writes before refusing (open).
+
 ## The sheet also COUNTS each multiplier's workings (issue 12, 2026-11-07)
 
 The bits in `mo` say worked-or-not and are set by the FIRST working only (a

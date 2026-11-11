@@ -361,3 +361,5 @@ multipliers, CTY.DAT, band lookup and CRC32.
 `contest-scoring` (Cabrillo is scored output) · `log-database` (import lands in
 SQLite; the `.TRW` is import-only) · `contest-factory` (per-contest Cabrillo
 fields).
+
+An ADIF import resolves an ARRL section the way typed entry does (#265): `TADIFImportSession.ResolveDomesticQTH` (`LOGDUPE.DomesticQTHAndKeyOf`, set by `ParseADIFRecord`; nil in `NeutralADIFImportSession`) through `uContestBase.ImportDomesticQTH`, which Sweepstakes, Field Day and Winter Field Day call. QTHString stays as written. ARRL 160 and the base (QSO party) import do not yet. Field Day / WFD STATE is `uADIF.ADIFSectionStateOf` (the resolved section first, then QTHString).

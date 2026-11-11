@@ -6258,3 +6258,11 @@ England QSO Party.
 - [ ] **WA7BNM and 3830.** The class states WA7BNM 0 (not found). Look the
   contest up on the calendar and on 3830scores.com; if 3830's form breaks
   the multipliers out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-11 -- SECTION ALIASES ON IMPORT AND THE ERASE-MODE YEAR WINDOW (issues 265, 266, 267)
+
+- [ ] **Import a D7 ADIF into Sweepstakes or Field Day.** The file carries ARRL_SECT EM (or QTH WF, SN, NY). EXPECT the log shows EMA (WCF, SNJ, NLI), the multiplier window counts it once beside a typed EMA, and a re-export writes the resolved ARRL_SECT. Work a real section contest's import before relying on it.
+- [ ] **Field Day / Winter Field Day ADIF STATE.** Log a QSO with an alias section (WF, SN, ST, NY, LOS). EXPECT the exported ADIF has the STATE of the resolved section (WF is WCF, state FL; SN is SNJ, NJ; ST is STX, TX) and ARRL_SECT is the resolved section.
+- [ ] **DXKeeper hand-off in a section contest.** Log EM or WF with DXKeeper connected. EXPECT DXKeeper receives EMA or WCF in ARRL_SECT, never the typed alias.
+- [ ] **EUHFC or KVP, remaining multipliers in erase mode.** Work year 85, then look at the multiplier window. EXPECT 85 is gone and 84 and 86 remain (it used to hide 84 and keep 85). Year 00 is listed until worked.
+- [ ] **A refused CQ zone.** In CQ WW CW type 599 45, then 599 55. EXPECT both refused with Improper zone number, and the zone field does not keep the typed value. CQ zones above 40 are no longer accepted (50-59 used to get through).

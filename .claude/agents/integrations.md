@@ -606,3 +606,5 @@ fails to start, or an incomplete logger type selected by an operator, should
 
 `contest-scoring` (a decode becomes a QSO) · `log-database` (hand-off writes) ·
 `multi-op-network` (the other UDP/TCP consumers) · `lcl-ui` (`uMMTTYForm`).
+
+DXKeeper ARRL_SECT is `uExternalLogger.ExternalLoggerARRLSection` (#266): `ADIFSectionOf` where `ContestQTHIsAnARRLSection`, the legacy `LooksLikeASection(QTHString)` elsewhere. Never `ADIFSectionOf` contest-blind: another contest's domestic key (a Wisconsin county `Mar`) would be sent as a section.

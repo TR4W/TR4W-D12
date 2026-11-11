@@ -251,7 +251,15 @@ roundtrip_one() {
    records_only "$out"       | strip_tags "$drop" > "$WORK.cand.txt"
    records_only "$input" | strip_tags "$drop" > "$WORK.ref.txt"
 
-   pin="$d/known.adi.diff"
+   # THE ROUND TRIP MAY CARRY ITS OWN PIN, known.roundtrip.adi.diff (#265). The
+   # export oracle exports a log.db whose stored section is what the operator
+   # typed; the round trip IMPORTS ref.adi, and an import now resolves an alias
+   # to its section (MD -> MDC), so the two see different lines for the same
+   # set. One pin file cannot excuse both, and each is exact on its own.
+   pin="$d/known.roundtrip.adi.diff"
+   if [ ! -f "$pin" ]; then
+      pin="$d/known.adi.diff"
+   fi
    # The normaliser this set's view went through, for the pinned lines. The
    # view is records_only -- record lines, each ending <EOR> -- so a pinned
    # HEADER line (the generic-DATA note, 2026-10-23) is outside it and is

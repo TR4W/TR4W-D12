@@ -203,6 +203,7 @@ uses
    uTestContestReadiness in 'uTestContestReadiness.pas',
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
+   uTestZoneEntryRefusal in 'uTestZoneEntryRefusal.pas',
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
@@ -1119,6 +1120,7 @@ begin
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
    RegisterSuite(TContestReadinessTests.Create('ContestReadiness'));
    RegisterSuite(TMultsTests.Create('Mults'));
+   RegisterSuite(TZoneEntryRefusalTests.Create('ZoneEntryRefusal'));
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));

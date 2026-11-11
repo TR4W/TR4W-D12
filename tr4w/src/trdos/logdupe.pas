@@ -336,6 +336,16 @@ function DomesticTableKnowsQTH(const aQTH: string): boolean;
   tests aKey <> '' as well. aKey is empty when the answer is False. *)
 function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
 
+(* DomesticKeyOfQTH WITH THE DOMESTIC QTH BESIDE THE KEY -- issue 265,
+  2026-11-10. aDomesticQTH is what FoundDomesticQTH writes to the QSO's
+  DomesticQTH (the file's left side, 'EMA' for 'EM'), aKey its DomMultQTH.
+  uContestBase's TDomesticQTHResolve: the ADIF import's lookup
+  (MainUnit.ParseADIFRecord hands it in), so an imported section is resolved
+  by the very routine a typed one is. Both empty when the answer is False. *)
+function DomesticQTHAndKeyOf(const aQTH: string;
+                             out aDomesticQTH: string;
+                             out aKey: string): boolean;
+
 (* THE MULTIPLIER A REMEMBERED EXCHANGE NAMES -- issue 207, 2026-11-05.
 
   aText is the exchange the log REMEMBERS for a call (CallsignsList's initial
@@ -571,10 +581,13 @@ begin
 
 (* FoundDomesticQTH itself, on a scratch exchange, so the answer is the
   table's own and no QSO is touched. See the declaration. *)
-function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
+function DomesticQTHAndKeyOf(const aQTH: string;
+                             out aDomesticQTH: string;
+                             out aKey: string): boolean;
 var
   scratch: ContestExchange;
 begin
+  aDomesticQTH := '';
   aKey := '';
   (* No QTH is no domestic QTH -- answered here so FoundDomesticQTH does not
     log its blank-QTH error for a question nobody typed. *)
@@ -589,8 +602,16 @@ begin
   Result := FoundDomesticQTH(scratch);
   if Result then
      begin
+     aDomesticQTH := string(scratch.DomesticQTH);
      aKey := string(scratch.DomMultQTH);
      end;
+end;
+
+function DomesticKeyOfQTH(const aQTH: string; out aKey: string): boolean;
+var
+  ignoredDomesticQTH: string;
+begin
+  Result := DomesticQTHAndKeyOf(aQTH, ignoredDomesticQTH, aKey);
 end;
 
 (* The last space-separated word of aText the table maps to a key -- see

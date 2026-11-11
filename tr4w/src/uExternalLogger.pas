@@ -59,6 +59,26 @@ Type TExternalLogger = class(TExternalLoggerBase)
 end;
 
 
+(* THE ARRL_SECT THE DXKEEPER HAND-OFF SENDS, or '' for none -- issue 266,
+  2026-11-10.
+
+  IN A CONTEST WHOSE QTH IS AN ARRL SECTION (uContestBase.
+  ContestQTHIsAnARRLSection: both Sweepstakes, both Field Days, ARRL 160) it
+  is uADIF.ADIFSectionOf, the rule the ADIF export writes: the section the
+  domestic table resolved, so a typed EM sends EMA and a typed WF sends WCF.
+  It sent the typed text when Tree.LooksLikeASection passed it -- EM went out
+  as <ARRL_SECT:2>EM, not a section ADIF knows -- and nothing for WF, SN, NY
+  or any Canadian section.
+
+  IN EVERY OTHER CONTEST IT IS WHAT IT WAS: the QSO's QTH when
+  LooksLikeASection passes it (a state-party or NAQP 'OH'). NOT
+  ADIFSectionOf: its DomesticQTH fallback reads another contest's domestic
+  key as a section -- measured over the shipped .dom files, Wisconsin's
+  county 'Mar' would go out as Maritime, xe.dom's Baja California 'BC' as
+  British Columbia, ukraine.dom's 'Vi' as the Virgin Islands. Whether a
+  non-section contest should send ARRL_SECT at all is NY4I's question. *)
+function ExternalLoggerARRLSection(const ce: ContestExchange): string;
+
 var
    firstProcessMessage: boolean = true;
 implementation
@@ -66,10 +86,27 @@ implementation
 Uses
    uExternalLoggerRegistry, uExternalLoggerConfig, uExternalLoggerService,
    uAppStrings,
-   uADIF,          // ResolveADIFModeSubmode
+   uADIF,          // ResolveADIFModeSubmode, ADIFSectionOf
    uSettingsModel,   // Settings.My.Call
    MainUnit,
+   uContestBase,     // ContestQTHIsAnARRLSection
    uContestRegistry; // ContestIdentity -- the contest's ADIF id
+
+function ExternalLoggerARRLSection(const ce: ContestExchange): string;
+begin
+   if ContestQTHIsAnARRLSection(ContestIdentity(ce.ceContest)) then
+      begin
+      Result := ADIFSectionOf(ce);
+      end
+   else if LooksLikeASection(string(ce.QTHString)) then
+      begin
+      Result := string(ce.QTHString);
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
 
 Constructor TExternalLogger.Create();
 begin
@@ -365,6 +402,7 @@ var sCoreADIF: string;
     sMessage: string;
     sSubMode: string;
     sTemp: string;
+    sSection: string;
     saveDecimalSeparator: char;
 begin
 {   This is the example from https://www.dxlabsuite.com/Interoperation.htm
@@ -468,11 +506,11 @@ This is all we need to send as we DO NOT want to send every contact to any of th
      begin
      sCoreADIF := sCoreADIF + AddADIFField('GRIDSQUARE',ce.DomesticQTH);
      end;
-  if LooksLikeASection(ce.QTHString) then
+  sSection := ExternalLoggerARRLSection(ce);
+  if sSection <> '' then
      begin
-     sCoreADIF := sCoreADIF + AddADIFField('ARRL_SECT', ce.QTHString);
+     sCoreADIF := sCoreADIF + AddADIFField('ARRL_SECT', sSection);
      end;
-   // TODO To include ARRL_SECTION, the EXCHANGEINFORMATION record should have a section indicator, thenuse that to grab section from   QTHString
   sCoreADIF := sCoreADIF + '<EOR>';
   nCoreADIFLength := length(sCoreADIF);
   sCoreADIF := '<ExternalLogADIF:' + IntToStr(nCoreADIFLength) + '>' + sCoreADIF;

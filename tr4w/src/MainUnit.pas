@@ -10624,6 +10624,10 @@ begin
   session.CountsGridSquares  := ContestHasGridSquareMultiplier(importContest);
   session.ReceivesGridSquare := ContestReceivesGridSquareExchange(importContest);
   session.DoingDomesticMults := ContestHasDomesticMultiplier(importContest);
+  (* THE LOOKUP TYPED ENTRY RUNS (issue 265): an imported section alias is
+    resolved to its section by the same routine, against the table loaded
+    for the open contest -- the one the import's closing rescore uses. *)
+  session.ResolveDomesticQTH := @DomesticQTHAndKeyOf;
 
   (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,
     through its class. ApplyClasslessADIFImport stood between these two for

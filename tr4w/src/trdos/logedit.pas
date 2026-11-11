@@ -1867,20 +1867,13 @@ begin
              KVP, whose zone is the year licensed). It was
              `ContestSession.ZoneMult = EUHFCYear`, inside the loop -- M11 S5. *)
            zonesFromZero := ContestNumbersZonesFromZero(ActiveContest(Contest));
-           for i := 1 to MaxNumberOfZones do
+           (* The walk is the sheet's (issue 267): it asked zone i and listed
+             zone i - 1 for the zero-based contests, so erase mode hid each
+             year by the NEXT year's cell. *)
+           for i in mo.RemainingZoneIndices(MaxNumberOfZones, zonesFromZero,
+                                            HiLighting, MultBand, MultMode) do
               begin
-              if HiLighting                            or
-                 mo.IsZnMult(i, MultBand, MultMode)    then
-                 begin
-                 if zonesFromZero then
-                    begin
-                    Add(i - 1);
-                    end
-                 else
-                    begin
-                    Add(i);
-                    end;
-                 end;
+              Add(i);
               end;
            end;
       end;

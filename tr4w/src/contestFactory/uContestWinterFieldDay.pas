@@ -175,10 +175,9 @@ uses
    uCabrilloExchange,
    uExchangeFields,
    SysUtils, uTR4WStrings, uContestRegistry,
-   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   (* EmitADIFField -- the tag spellings are ADIF's; ADIFSectionStateOf,
+      STATE from the worked station's resolved section (issue 266). *)
    uADIF,
-   (* STATE from the worked station's section -- a leaf, lifted at M4. *)
-   uARRLSections,
    uCanonicalExchange;
 
 (* ONE POINT FOR PHONE (FM INCLUDED), TWO OTHERWISE.
@@ -312,17 +311,16 @@ begin
       Exit;
       end;
 
+   (* STATE is the RESOLVED section's (uADIF.ADIFSectionStateOf, issue 266). *)
    if aQso.QTH.CountryID = 'K' then
       begin
       Result := Result + EmitADIFField('DXCC', ADIFWorkedStationDXCC(aQso));
-      Result := Result + EmitADIFField('STATE',
-         StateFromARRLSection(string(aQso.QTHString)));
+      Result := Result + EmitADIFField('STATE', ADIFSectionStateOf(aQso));
       end
    else if aQso.QTH.CountryID = 'VE' then
       begin
       Result := Result + EmitADIFField('DXCC', ADIFWorkedStationDXCC(aQso));
-      Result := Result + EmitADIFField('STATE',
-         StateFromARRLSection(string(aQso.QTHString)));
+      Result := Result + EmitADIFField('STATE', ADIFSectionStateOf(aQso));
       end;
    (* Only a section ADIF's enumeration has (ADIFSectionOf). *)
    Result := Result + EmitADIFField('ARRL_SECT', ADIFSectionOf(aQso));
@@ -422,7 +420,11 @@ end;
    DX IS NOT A SECTION, ON THE WAY IN EITHER -- M5b, design Q25, as for ARRL
    Field Day: a QTH of 'DX', in <QTH> or in another logger's ARRL_SECT, stays
    the QSO's QTH and is never made its domestic QTH -- what the live parse
-   does. Until M5b the import alone made it a section. *)
+   does. Until M5b the import alone made it a section.
+
+   A SECTION IS RESOLVED, NOT COPIED (issue 265, 2026-11-10) -- see
+   uContestBase.ImportDomesticQTH: an alias ('NY', 'MD') is stored as the
+   file's section ('NLi', 'MDC'), as typed entry stores it. *)
 procedure TContestWinterFieldDay.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                              const aSession: TADIFImportSession;
                                              var aExch: ContestExchange);
@@ -433,8 +435,8 @@ begin
       end
    else if aTemps.ARRL_Sect <> '' then
       begin
-      aExch.DomesticQTH := ShortString(aTemps.ARRL_Sect);
-      aExch.QTHString   := ShortString(aTemps.ARRL_Sect);
+      aExch.QTHString := ShortString(aTemps.ARRL_Sect);
+      ImportDomesticQTH(aSession, aTemps.ARRL_Sect, aExch);
       end
    else if UpperCase(Trim(string(aExch.QTHString))) = 'DX' then
       begin
@@ -442,7 +444,7 @@ begin
       end
    else if aExch.QTHString <> '' then
       begin
-      aExch.DomesticQTH := aExch.QTHString;
+      ImportDomesticQTH(aSession, string(aExch.QTHString), aExch);
       end;
 
    if (aExch.ceClass = '') and (aTemps.N1MM_Exchange1 <> '') then

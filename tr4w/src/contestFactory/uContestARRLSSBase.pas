@@ -352,19 +352,24 @@ end;
    correctly, on 1310 of the 1316 QSOs in the corpus's winter_fd set. So
    ARRL_SECT wins when it is present, because it is the unambiguous field;
    otherwise whatever <QTH> supplied stands, and the domestic multiplier is
-   taken from it. *)
+   taken from it.
+
+   THE SECTION IS RESOLVED, NOT COPIED (issue 265, 2026-11-10): D7 wrote
+   <ARRL_SECT:2>EM for a typed EM, and copying it made a multiplier 'EM'
+   beside 'EMA'. ImportDomesticQTH stores what typed entry stores --
+   DomesticQTH and DomMultQTH the file's section, QTHString as written. *)
 procedure TContestARRLSSBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                              const aSession: TADIFImportSession;
                                              var aExch: ContestExchange);
 begin
    if aTemps.ARRL_Sect <> '' then
       begin
-      aExch.DomesticQTH := ShortString(aTemps.ARRL_Sect);
-      aExch.QTHString   := ShortString(aTemps.ARRL_Sect);
+      aExch.QTHString := ShortString(aTemps.ARRL_Sect);
+      ImportDomesticQTH(aSession, aTemps.ARRL_Sect, aExch);
       end
    else if aExch.QTHString <> '' then
       begin
-      aExch.DomesticQTH := aExch.QTHString;
+      ImportDomesticQTH(aSession, string(aExch.QTHString), aExch);
       end;
 end;
 

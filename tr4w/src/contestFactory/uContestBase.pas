@@ -204,6 +204,19 @@ type
       so the two can never answer differently. *)
    TDomesticQTHTest = function(const aQTH: string): boolean;
 
+   (* WHAT THE SESSION'S DOMESTIC QTH TABLE MAKES OF THIS TEXT -- issue 265,
+      2026-11-10. The lookup typed entry runs (LOGDUPE.FoundDomesticQTH, so
+      GetDomQTH with the OPEN contest's rule, then the file's alias), on a
+      scratch exchange: aDomesticQTH is the file's LEFT side as the file
+      spells it ('EMA' for 'EM', 'WcF' for 'WF') and aMultiplier the
+      multiplier key ('QTH > MULT' lines give a different one). True when
+      the table knows the text; aDomesticQTH can still be empty then (the
+      'XXX' wildcard). Handed to an ADIF import in TADIFImportSession, by
+      LOGDUPE.DomesticQTHAndKeyOf. *)
+   TDomesticQTHResolve = function(const aQTH: string;
+                                  out aDomesticQTH: string;
+                                  out aMultiplier: string): boolean;
+
    (* WHICH SHEET A "NEW MULTIPLIER" QUESTION IS ASKED OF. *)
    TNewMultiplierKind = (nmkDomestic, nmkDX);
 
@@ -605,6 +618,14 @@ type
       (* The open contest's HasDomesticMultiplier -- M11 S6 part 2; it was
          the session's DoingDomesticMults, the kind's "not none". *)
       DoingDomesticMults: boolean;
+      (* THE ENGINE'S DOMESTIC QTH LOOKUP -- issue 265, 2026-11-10. An
+         imported section written as an alias ('EM') is resolved through it
+         to the file's section ('EMA'), as typed entry resolves it (see
+         ImportDomesticQTH). It reads the table the engine loaded for the
+         OPEN contest, which is the table the import's closing rescore
+         scores the record with. nil (NeutralADIFImportSession, a test's
+         zeroed record) keeps the text as written. *)
+      ResolveDomesticQTH: TDomesticQTHResolve;
    end;
 
    (* THE ENGINE'S EXCHANGE PARSERS, ONE NAMED METHOD PER FORMAT -- M11 S9d,
@@ -3966,6 +3987,31 @@ function ContestUsesDomesticFile(aContest: TContestBase): boolean;
    the active contest; a caller already holding the object asks it here. *)
 function ContestHasDomesticMultiplier(aContest: TContestBase): boolean;
 
+(* IS aContest's RECEIVED QTH AN ARRL SECTION? -- issue 266, 2026-11-10.
+   True exactly where the contest looks its QTH up in arrlsect.dom (the ARRL
+   and RAC section list): then the QSO's DomesticQTH is a section key and
+   uADIF.ADIFSectionOf names the section. Measured the day it was written:
+   the five classes answering True (both Sweepstakes, both Field Days, ARRL
+   160) are exactly the five whose ADIF tail writes ARRL_SECT. A text
+   compare of the class's own DomesticFileName, not of a loaded file -- a
+   <logstem>.DOM beside a log does not change what the contest IS. nil
+   answers False. *)
+function ContestQTHIsAnARRLSection(aContest: TContestBase): boolean;
+
+(* THE IMPORTED DOMESTIC QTH, RESOLVED AS TYPED ENTRY RESOLVES IT -- issue
+   265, 2026-11-10. Writes aText into aExch.DomesticQTH; then, when the
+   session hands in the engine's lookup (aSession.ResolveDomesticQTH) and it
+   knows aText as a QTH with a name, the file's section and multiplier
+   replace it -- an ARRL_SECT of 'EM' is stored as DomesticQTH 'EMA',
+   DomMultQTH 'EMA', exactly what a typed EM stores. A text the table does
+   not know, or a session with no lookup, keeps the text as written (what
+   every import did before). QTHString is not touched: it is the operator's
+   literal value, typed or imported (Q45). The Sweepstakes and both Field
+   Day imports call it. *)
+procedure ImportDomesticQTH(const aSession: TADIFImportSession;
+                            const aText: string;
+                            var aExch: ContestExchange);
+
 (* THREE OF THE EXCHANGE RULES OF aContest -- see TContestBase.
    StripsRoverCountyFromCall, LogsSeveralQTHsFromOneEntry and
    AcceptsBlankExchange (M11 S7). nil answers False to each: the classless
@@ -4763,6 +4809,43 @@ begin
       begin
       Result := aContest.HasDomesticMultiplier;
       end;
+end;
+
+function ContestQTHIsAnARRLSection(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := UpperCase(aContest.DomesticFileName) = 'ARRLSECT';
+      end;
+end;
+
+procedure ImportDomesticQTH(const aSession: TADIFImportSession;
+                            const aText: string;
+                            var aExch: ContestExchange);
+var
+   domesticQTH: string;
+   multiplier: string;
+begin
+   aExch.DomesticQTH := ShortString(aText);
+   if not Assigned(aSession.ResolveDomesticQTH) then
+      begin
+      Exit;
+      end;
+   if not aSession.ResolveDomesticQTH(aText, domesticQTH, multiplier) then
+      begin
+      Exit;
+      end;
+   (* Known with no name -- the 'XXX' wildcard -- is no section to store. *)
+   if domesticQTH = '' then
+      begin
+      Exit;
+      end;
+   aExch.DomesticQTH := ShortString(domesticQTH);
+   aExch.DomMultQTH := ShortString(multiplier);
 end;
 
 function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;

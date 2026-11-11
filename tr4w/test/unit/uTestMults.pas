@@ -49,6 +49,9 @@ type
       procedure Test_OtherZoneStillNeeded;
       procedure Test_OutOfRangeZone;
       procedure Test_ZoneCount;
+      procedure Test_RemainingYearsEraseTheWorkedYearItself;
+      procedure Test_RemainingYearsHiLightListsEveryYear;
+      procedure Test_RemainingCQZonesEraseTheWorkedZone;
    end;
 
 implementation
@@ -154,6 +157,84 @@ begin
    CheckEquals(3, Integer(mo.MTotals[AllBands, CW, rmZone]), 'AllBands CW roll-up');
 end;
 
+function ListHas(const aList: TArray<integer>; aValue: integer): boolean;
+var
+   v: integer;
+begin
+   Result := False;
+   for v in aList do
+      begin
+      if v = aValue then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* ISSUE 267: THE REMAINING-MULTS WINDOW, ZERO-BASED (European HF Championship,
+   KVP -- the year licensed, 00..99, count 100). The window asked zone i and
+   listed zone i - 1, so in erase mode a worked year 85 hid 84 and kept 85. *)
+procedure TMultsTests.Test_RemainingYearsEraseTheWorkedYearItself;
+var
+   years: TArray<integer>;
+begin
+   BeginTest('Test_RemainingYearsEraseTheWorkedYearItself');
+   FreshMults;
+   mo.SetZnMult(85, Band20, CW);
+   mo.SetZnMult(0, Band20, CW);
+   years := mo.RemainingZoneIndices(100, True, False, Band20, CW);
+   CheckFalse(ListHas(years, 85), 'worked year 85 is not remaining');
+   CheckTrue(ListHas(years, 84), 'year 84 is still remaining');
+   CheckTrue(ListHas(years, 86), 'year 86 is still remaining');
+   CheckFalse(ListHas(years, 0), 'worked year 00 is not remaining');
+   CheckTrue(ListHas(years, 1), 'year 01 is still remaining');
+   CheckFalse(ListHas(years, 100), 'there is no year 100');
+   CheckEquals(98, Length(years), 'one hundred years less the two worked');
+   CheckEquals(99, years[High(years)], 'the last year is 99');
+   years := mo.RemainingZoneIndices(100, True, False, Band40, CW);
+   CheckTrue(ListHas(years, 85), 'year 85 is still needed on 40 m');
+end;
+
+(* HiLight mode lists every year, 00..99, worked or not -- the set the old
+   walk produced too, so only erase mode moves. *)
+procedure TMultsTests.Test_RemainingYearsHiLightListsEveryYear;
+var
+   years: TArray<integer>;
+   i: integer;
+begin
+   BeginTest('Test_RemainingYearsHiLightListsEveryYear');
+   FreshMults;
+   mo.SetZnMult(85, Band20, CW);
+   years := mo.RemainingZoneIndices(100, True, True, Band20, CW);
+   CheckEquals(100, Length(years), 'one hundred years');
+   for i := 0 to 99 do
+      begin
+      CheckEquals(i, years[i], 'year in order');
+      end;
+end;
+
+(* A one-based count (CQ zones, 40): 1..40, the worked zone erased. *)
+procedure TMultsTests.Test_RemainingCQZonesEraseTheWorkedZone;
+var
+   zones: TArray<integer>;
+begin
+   BeginTest('Test_RemainingCQZonesEraseTheWorkedZone');
+   FreshMults;
+   mo.SetZnMult(5, Band20, CW);
+   zones := mo.RemainingZoneIndices(40, False, False, Band20, CW);
+   CheckEquals(39, Length(zones), 'forty zones less the one worked');
+   CheckEquals(1, zones[0], 'the first zone is 1');
+   CheckEquals(40, zones[High(zones)], 'the last zone is 40');
+   CheckFalse(ListHas(zones, 5), 'worked zone 5 is not remaining');
+   CheckTrue(ListHas(zones, 4), 'zone 4 is still remaining');
+   CheckFalse(ListHas(zones, 0), 'there is no CQ zone 0');
+   zones := mo.RemainingZoneIndices(40, False, True, Band20, CW);
+   CheckEquals(40, Length(zones), 'HiLight lists all forty');
+   CheckEquals(0, Length(mo.RemainingZoneIndices(0, False, True, Band20, CW)),
+               'no zone multiplier lists nothing');
+end;
+
 // ---------------------------------------------------------------------------
 // Suite entry point
 // ---------------------------------------------------------------------------
@@ -166,6 +247,9 @@ begin
    Test_OtherZoneStillNeeded;
    Test_OutOfRangeZone;
    Test_ZoneCount;
+   Test_RemainingYearsEraseTheWorkedYearItself;
+   Test_RemainingYearsHiLightListsEveryYear;
+   Test_RemainingCQZonesEraseTheWorkedZone;
 end;
 
 finalization

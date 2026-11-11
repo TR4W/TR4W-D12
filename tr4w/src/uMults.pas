@@ -110,6 +110,17 @@ type
     procedure SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
 
     function IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
+    (* THE ZONES THE REMAINING-MULTS WINDOW LISTS, in order -- issue 267.
+      aCount is the contest's zone count (MaxNumberOfZones); aFromZero says
+      it numbers them 0..aCount-1 (the European HF Championship and KVP, whose
+      zone is the year licensed, 00..99), else 1..aCount. aIncludeWorked lists
+      every zone (HiLight mode); otherwise only those still needed on aBand /
+      aMode. The index asked and the index answered are ONE index: a zone is
+      stored, labelled and coloured at its own number. LOGEDIT used to ask
+      zone i and list zone i - 1 for the zero-based contests, so in erase mode
+      a worked year 85 hid 84 and kept 85 on show (D7, LOGEDIT.PAS 1262). *)
+    function RemainingZoneIndices(aCount: integer; aFromZero, aIncludeWorked: boolean;
+                                  aBand: BandType; aMode: ModeType): TArray<integer>;
     function IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
     function IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
     (* aKeyedOnGridField: the contest's domestic multiplier is the grid FIELD
@@ -312,6 +323,40 @@ begin
      begin
      Result := False;
      end;
+end;
+
+function TMultsObject.RemainingZoneIndices(aCount: integer;
+  aFromZero, aIncludeWorked: boolean; aBand: BandType; aMode: ModeType): TArray<integer>;
+var
+  first, last, i, n: integer;
+begin
+  Result := nil;
+  if aCount <= 0 then
+     begin
+     Exit;
+     end;
+  if aFromZero then
+     begin
+     first := 0;
+     last := aCount - 1;
+     end
+  else
+     begin
+     first := 1;
+     last := aCount;
+     end;
+  SetLength(Result, last - first + 1);
+  n := 0;
+  for i := first to last do
+     begin
+     if aIncludeWorked                  or
+        IsZnMult(i, aBand, aMode)       then
+        begin
+        Result[n] := i;
+        inc(n);
+        end;
+     end;
+  SetLength(Result, n);
 end;
 
 function TMultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
