@@ -11,10 +11,14 @@ Check both your callsign and grid before continuing. You can review or change th
 ## Create a contest
 
 1. Start TR4W. In **Open configuration file or start a new contest**, find **Start a new contest**.
-2. Enter your station callsign in **MY CALL**.
+2. Enter your station callsign in **Callsign**.
 3. Search for part of the event name and select it in **CONTEST**. Read its information and complete the requested operating area, county, category, and exchange as applicable.
 4. Choose **OK**.
 5. Check the contest and station information before entering contacts. Configure your [radio](../station/radio.md) if you want frequency and mode information from the rig.
+
+The following example shows CW Open setup in the Windows 5.0.37 application. Other contests request different exchange fields.
+
+![CW Open selection and setup](../assets/cwops/new-contest.png)
 
 !!! note "Screen labels"
     Labels are checked against source through 48806af1. Translated builds use different wording. A complete first-QSO walkthrough with screenshots still needs operator review. New contests use a database; TR4W no longer creates a new legacy CFG file for them.

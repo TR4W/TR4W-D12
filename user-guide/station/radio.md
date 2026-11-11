@@ -26,6 +26,10 @@ Choose **Save and close** to keep the configuration, or **Cancel** to discard th
 
 In the newer radio editor, **FREQUENCY POLL RATE** is under **Advanced** for each radio. Set it for the selected radio rather than looking for a station-wide value. Check both configured radios after changing profiles or polling settings.
 
+The current Preferences page separates reusable radio definitions from station-profile assignments. This test capture has no radio configured; it illustrates the controls rather than a verified hardware connection.
+
+![Radio library and station-profile assignments](../assets/cwops/preferences.png)
+
 ## Verify the connection
 
 Tune the radio and check that TR4W follows its frequency. Then check a mode change. If either fails, confirm the selected model and transport settings before investigating other integrations.

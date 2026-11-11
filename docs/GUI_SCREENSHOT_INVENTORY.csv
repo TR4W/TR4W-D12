@@ -1,0 +1,56 @@
+page,title,priority,requested_states,existing_images,status
+about/evaluation.md,Evaluate the prototype,review,Decide whether an illustration aids this page,,not illustrated
+about/sources.md,Evidence and review,review,Decide whether an illustration aids this page,,not illustrated
+about/tr4w.md,About TR4W,review,Decide whether an illustration aids this page,,not illustrated
+about/updates.md,Recent guide updates,review,Decide whether an illustration aids this page,,not illustrated
+index.md,TR4W — Cross-platform contest logging,review,Decide whether an illustration aids this page,,not illustrated
+log/backup.md,Back up your log,high,"Backup settings, success path and external-copy status",,not illustrated
+log/diagnostics.md,"Diagnostic logging: INFO, DEBUG, and TRACE",review,Decide whether an illustration aids this page,,not illustrated
+log/export.md,Export ADIF and Cabrillo,high,"Cabrillo headings, generated file preview and output location",,not illustrated
+log/import.md,Import contacts,high,Append confirmation and completion counts in a practice log,,not illustrated
+log/reports.md,Reports and exported files,review,Decide whether an illustration aids this page,,not illustrated
+log/restore.md,Restore files and recover a contest,high,Open backup copy and verify contest identity,,not illustrated
+operating/appearance.md,"Colors, log rows, and window recovery",high,Color settings and recovery of an off-screen window,,not illustrated
+operating/bandmap.md,Use the band map,high,"Spots, filters, tuning and context menu using a mock radio",,not illustrated
+operating/callsign-assistance.md,Possible calls and Super Check Partial,high,Partial-call candidates and history settings,,not illustrated
+operating/contests.md,Contest additions and rule checks,review,Decide whether an illustration aids this page,,not illustrated
+operating/dxcluster.md,Connect a DX cluster,review,Decide whether an illustration aids this page,,not illustrated
+operating/keyboard.md,Keyboard essentials,review,Decide whether an illustration aids this page,,not illustrated
+operating/multipliers.md,Read the multiplier windows,review,Decide whether an illustration aids this page,,not illustrated
+operating/pota.md,Operate POTA and park-to-park,review,Decide whether an illustration aids this page,,not illustrated
+operating/radio-windows.md,Radio 1 and Radio 2 windows,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/a-d.md,Commands A–D,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/coverage.md,Reference coverage and review,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/e-l.md,Commands E–L,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/index.md,Command reference,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/legacy-map.md,Old-to-new command lookup,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/lifecycle.md,Actions and moved configuration,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/m-p.md,Commands M–P,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/q-s.md,Commands Q–S,review,Decide whether an illustration aids this page,,not illustrated
+reference/commands/t-z.md,Commands T–Z,review,Decide whether an illustration aids this page,,not illustrated
+reference/contests.md,Available contests,review,Decide whether an illustration aids this page,,not illustrated
+reference/languages.md,Available languages and translation status,review,Decide whether an illustration aids this page,,not illustrated
+reference/legacy.md,Earlier manuals and wiki,review,Decide whether an illustration aids this page,,not illustrated
+reference/radios.md,Radio support and connection reference,review,Decide whether an illustration aids this page,,not illustrated
+reference/wsjtx.md,WSJT-X settings,review,Decide whether an illustration aids this page,,not illustrated
+start/data-updates.md,"Update country, callsign, and park data",review,Decide whether an illustration aids this page,,not illustrated
+start/files.md,Files and folders,review,Decide whether an illustration aids this page,,not illustrated
+start/first-contest.md,Open your first contest,high,"New contest search, call/name/category prompts, recent-log picker",../assets/cwops/new-contest.png,images linked; review currency
+start/ini-to-json.md,Convert INI settings to JSON,review,Decide whether an illustration aids this page,,not illustrated
+start/install.md,Install TR4W,review,Decide whether an illustration aids this page,,not illustrated
+start/migration.md,Moving from 4.x,review,Decide whether an illustration aids this page,,not illustrated
+start/preferences.md,Find and save settings,high,"Tree, search, Save/Cancel, restart notices",,not illustrated
+start/version.md,Choose your version,review,Decide whether an illustration aids this page,,not illustrated
+station/cw-messages.md,Program CW function keys,high,"Message-group chooser, message list, message editor",../assets/cwops/message-chooser.png | ../assets/cwops/cq-messages.png | ../assets/cwops/message-editor.png,images linked; review currency
+station/cw.md,Choose a CW sending method,high,"Keyer library, WinKeyer editor, CW output assignment",,not illustrated
+station/external-loggers.md,Send contacts to external loggers,high,"Logger grid, provider fields, enabled/order/status",,not illustrated
+station/language.md,Language and internationalization,high,Language selection and translated Preferences layout,,not illustrated
+station/network.md,Multi-station networking,review,Decide whether an illustration aids this page,,not illustrated
+station/online-scores.md,Post scores to HamScore,review,Decide whether an illustration aids this page,,not illustrated
+station/radio.md,Connect a radio,high,"Radio library, profile assignments, serial/network editor",../assets/cwops/preferences.png,images linked; review currency
+station/so2r.md,"SO2R: one operator, two radios",high,Two-radio profile and active-radio indication,,not illustrated
+station/tci.md,TCI connections,review,Decide whether an illustration aids this page,,not illustrated
+station/wsjtx.md,Connect WSJT-X,high,UDP settings and received practice contact,,not illustrated
+theory/database.md,SQLite integrity and durability,review,Decide whether an illustration aids this page,,not illustrated
+theory/overview.md,How the parts work together,review,Decide whether an illustration aids this page,,not illustrated
+theory/testing.md,Test methodology,review,Decide whether an illustration aids this page,,not illustrated

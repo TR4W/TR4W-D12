@@ -8,6 +8,7 @@ Read the specific doc before acting in its area — these are current and this f
 
 | Topic | Document |
 |-------|----------|
+| CW Open/CWT walkthrough and GUI evidence | [TR4W-for-CWOPS.md](TR4W-for-CWOPS.md), [GUI_DOCUMENTATION_TEST_REPORT.md](GUI_DOCUMENTATION_TEST_REPORT.md) — Python scenarios, screenshots, limits and filed issues |
 | Operator guide website: build, preview and publish | [DOCS.md](../DOCS.md) — source in user-guide/ on main, generated Pages site on gh-pages; pinned MkDocs/Material and content-review baseline |
 | Build & test recipe | `tr4w/docs/BUILD.md` |
 | **Setting up a build environment** | **`tr4w/docs/BUILD.md`** — one installer; verified from scratch 2026-08-14 |

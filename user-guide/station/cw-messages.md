@@ -2,11 +2,19 @@
 
 TR4W retains the manual's separate message banks for running and search-and-pounce operation. The same function key can send a different message in each operating context.
 
-1. Select CW and open **Tools → Program message**.
+1. Select CW and open **Settings → Program messages**.
 2. Choose **C** for a CQ function key, **E** for an exchange/search-and-pounce function key, or **O** for other messages.
 3. Select the message to edit. Enter the transmitted content in **Message** and a useful button description in **Caption**.
 4. Use **List of commands** to insert a supported command rather than guessing its spelling or control-character encoding.
 5. Choose **OK** to apply the message. Test the key in the intended CQ or exchange context with the correct radio and [CW sending backend](cw.md). Function-key memories are captured in the contest database when the log closes; exit normally and reopen the practice log to check persistence. Do not edit the `.db` as though it were an old `.cfg` text file.
+
+Alt+P opens the current message list. The chooser, list and editor below were captured from the Windows 5.0.37 GUI-test VM on November 11, 2026; no physical transmitter was involved.
+
+![Choose the message group](../assets/cwops/message-chooser.png)
+
+![Current message list](../assets/cwops/cq-messages.png)
+
+![Message editor](../assets/cwops/message-editor.png)
 
 ## Start with simple messages
 

@@ -31,7 +31,7 @@ Ctrl+Enter is a logging action: check the call and exchange before using it. Fun
 
 ## Focus and menu shortcuts
 
-Menus now display assigned shortcuts in a separate column. **Ctrl+C**, **Ctrl+V**, and **Ctrl+A** perform normal copy, paste, and select-all operations in focused text controls, including the cluster console and dialogs. Their effect depends on which window has focus.
+Menus now display assigned shortcuts in a separate column. In the main QSO-entry window, **Ctrl+A** opens keyboard CW; do not assume it selects all callsign text. **Ctrl+C**, **Ctrl+V**, and **Ctrl+A** perform normal copy, paste, and select-all operations in focused text controls, including the cluster console and dialogs. Their effect depends on which window has focus.
 
 **Alt+-** toggles autosend. **PgUp**, **PgDn**, **Pause**, and **Ins** can reach the operating actions from tool windows. The band map, log, and cluster console retain their own PgUp/PgDn paging behavior. Practice these actions with transmission disabled before relying on them during a contest.
 
