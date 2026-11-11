@@ -6281,3 +6281,10 @@ England QSO Party.
 
 - [ ] **RSGB-IOTA.** Type `5NN 12 EU5`, then `EU5 12` and `599 12 EU5`. EXPECT the first refused with Improper domestic QTH (5NN not known) and nothing left in the entry; the other two accepted with island EU-005 and the multiplier needs header naming the call. Typing the canonical `EU-005` is still refused (3-5 characters, as in D7).
 - [ ] **UBA-DX, RSGB-160, UK/EI, DARC 10 m.** `CT 123` or `JOE 123` (word first) is refused with a message naming the contest's domestic file where that file does not list the word; DARC 10 m still takes any word.
+
+## Added 2026-11-11 -- AUTO-SEND NO LONGER KEYS THE POSSIBLE-CALL KEYS (issue 258)
+
+A DEPARTURE FROM D7, which keyed them. `MainUnit.AutoSendKeysCallWindowKey`.
+
+- [ ] **Each keyer: WinKeyer, CPU (DTR/RTS), and CW-by-CAT on a KY radio (K3/K4 or a Kenwood) and on an Icom.** In CQ mode on CW, with AUTO SEND CHARACTER COUNT 3, type `W1A`, then while it is keying press `,` `.` `;` (or the remapped POSSIBLE CALL keys), then finish the call. EXPECT none of the three is heard (no comma, period, AA or extra gap), the possible-call selection still moves and `;` still accepts, and letters typed after them are still keyed. On a KY radio, EXPECT no `?;` error reply from the radio after `;` (a keyed `;` used to end the `KY` command early).
+- [ ] **Accept key mid-auto-send (NOT changed, ruling needed).** Press `;` to accept a possible call while auto-send is keying the partial call. Note what is keyed: the call in the window is replaced, but only the characters typed so far went out. Read from code (issue 29 trace), not observed: `ReturnInCQOpMode` does not resend the call while auto-send ran, so the accepted call may never be keyed in full.

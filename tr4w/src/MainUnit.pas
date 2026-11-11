@@ -560,6 +560,11 @@ procedure ProcessTAB(lowparam: Word);
 procedure ProcessReturn;
 procedure CreateMainWindow;
 procedure CallWindowKeyDownProc(wParam: integer);
+(* Whether a call-window keystroke made while CW auto-send is running is
+  CW TEXT, to be keyed now, or a call-window COMMAND that must not be keyed.
+  The commands are the start-sending-now key and the three possible-call
+  keys (issue 258); see the body. *)
+function AutoSendKeysCallWindowKey(aKey: Char): boolean;
 procedure CallWindowKeyUpProc;
 procedure ExchangeWindowKeyDownProc(wParam: integer);
 procedure RepeatLastCWMessage;
@@ -6522,6 +6527,31 @@ begin
       end;
 end;
 
+function AutoSendKeysCallWindowKey(aKey: Char): boolean;
+begin
+   (* ISSUE 258.  While auto-send runs, CallWindowKeyDownProc keys each
+     keystroke as it arrives.  Until issue 258 it keyed EVERY keystroke except
+     Backspace and the start-sending-now key -- and D7 did the same
+     (C:\TR4W MainUnit.CallWindowKeyDownProc, the same unfiltered branch).
+
+     The possible-call keys (default ',' '.' ';') are commands in the call
+     window: they move or accept the possible-call selection, and
+     KeyboardCallsignChar (tree.pas) refuses them, so they never enter the
+     callsign.  Keying them made the transmitted call differ from the call on
+     the screen, and each keyer did something different with them:
+       CPU keyer   '.' -> .-.-.-   ',' -> --..--   ';' -> no element, a gap
+       WinKeyer    '.' period   ',' comma   ';' AA  (WK3 datasheet, Table 14)
+       KY radios   ';' ENDS the 'KY <text>;' command early -- the rest of the
+                   frame reaches the radio as a malformed command
+       TCI         ';' is escaped to '*', which the server strips
+     Compared with the SETTINGS, not the literals, because an operator can
+     remap all three keys. *)
+   Result := (aKey <> Settings.Cw.StartSendingNowKey)   and
+             (aKey <> Settings.PossibleCall.LeftKey)    and
+             (aKey <> Settings.PossibleCall.RightKey)   and
+             (aKey <> Settings.PossibleCall.AcceptKey);
+end;
+
 procedure CallWindowKeyDownProc(wParam: integer);
 var
   Key: Char;
@@ -6598,7 +6628,7 @@ begin
         end
      else
         begin
-        if Key <> Settings.Cw.StartSendingNowKey then
+        if AutoSendKeysCallWindowKey(Key) then
            begin
            // B2: the three-way keyer branch that stood here (CAT sends the char
            // plus its terminator, WinKeyer sends UpCase'd, CPU buffers the raw

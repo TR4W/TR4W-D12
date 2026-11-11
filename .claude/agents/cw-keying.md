@@ -241,6 +241,23 @@ them into `mtCWByCATMessageEnded`.
   drain; a comment-stripped source guard covers the WinKeyer reader and the
   auto call terminate. All fail on the pre-#132 code. Bench: `docs/BENCH_QUEUE.md`.
 
+## Auto-send keys TEXT, not call-window commands (issue 258, 2026-11-11)
+
+While auto-send runs, `CallWindowKeyDownProc` keys each keystroke through
+`ActiveCWKeyer.SendChar` -- its ONE caller. What may be keyed is decided there,
+once, by `MainUnit.AutoSendKeysCallWindowKey`: not the start-sending-now key
+and not the three POSSIBLE CALL keys (read from `Settings.PossibleCall`, never
+the literals ',' '.' ';'). **Do not add a filter to an adapter**: the keyer
+factory does not know what a possible-call key is. D7 keyed them (a departure,
+bench item in `docs/BENCH_QUEUE.md`). Why they had to go: the call field
+refuses them (`KeyboardCallsignChar`), so the keyed call differed from the
+screen, and each keyer did something different -- CPU keys period/comma and a
+bare gap for ';', a WinKeyer keys period/comma/AA (WK3 datasheet Table 14),
+**a ';' ENDS a `KY <text>;` command early**, and TCI's server strips it.
+Still keyed, open for a ruling: every other character the field refuses
+(QUICK QSL KEY 1/2 '\' '=' among them), and `QuestionMarkChar`/`SlashMarkChar`
+reach the field substituted but the keyer RAW.
+
 ## Open, and decided
 
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain
