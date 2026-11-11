@@ -1,0 +1,16 @@
+New Hampshire QSO Party -- the 10 New Hampshire counties, each its own multiplier.
+Three-letter codes from the sponsor's 2026 rules, "NH Counties (Abbreviations)" (docs/ContestRules/QSOParties/NewHampshire/NH-QSO-PARTY-Rules.txt); the same 10 codes as DXLog.net's NHQP.txt.
+No county maps to the state: the rules count "Each NH county" as a multiplier of its own for every entrant.
+No INCLUDE here: an out-of-state entrant's table holds only the counties (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+BEL = BEL,^Belknap
+CAR = CAR,^Carroll
+CHE = CHE,^Cheshire
+COO = COO,^Coos
+GRA = GRA,^Grafton
+HIL = HIL,^Hillsborough
+MER = MER,^Merrimack
+ROC = ROC,^Rockingham
+STR = STR,^Strafford
+SUL = SUL,^Sullivan

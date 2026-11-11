@@ -1129,6 +1129,10 @@ the target shape, the M-step migration order and the open questions.
   (`UsesBand` cannot see the mode). (4) ONE QSO CARRIES ONE DOMESTIC KEY --
   "a county also earns its state" (DXLog's MULT1 + MULT2) cannot be built
   without a new seam; do not fake it with bonus points or the prefix kind.
+- **NEW HAMPSHIRE (2026-11-10, #112)**: a multiplier scope that differs by
+  entrant goes in `DescribeSession`, stating `MultByBand` BOTH ways (Arizona's
+  pattern), and the real-engine test must apply that answer per half (guide
+  A5) -- the identity's flag alone stays green on a broken in-state rule.
 - **The UI itself asks the contest** (M9b, 2026-10-02, design §8.2n).
   `IsActive` (base True; SA Sprint and Locust False, on NY4I's word only --
   `uTestContestUI.INACTIVE_CONTESTS` is the ratchet) places a contest in the

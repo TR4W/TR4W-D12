@@ -1,0 +1,14 @@
+Entries for the New Hampshire QSO Party used by in-state (New Hampshire) stations
+The 10 New Hampshire counties (each its own multiplier), the states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier (at most 10 in the score), not entries here.
+The county file comes FIRST, so a county code wins over any state or province alias spelled the same.
+DC is mapped to Md before S50.DOM: the rules count "each state" and are silent on DC (an open question on issue 112).
+NH itself is listed by S50.DOM but is no multiplier: the class refuses it (New Hampshire stations send their county).
+NF and LB are read as NL (the last line).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE newhampshire_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

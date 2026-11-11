@@ -694,7 +694,12 @@ matrix only says it is unchanged (A6). Pin, quoting the rule each test holds:
   one failure you caused. `Line(i)` answers `''`.
 - **Set the engine's flags FROM THE CLASS** (`Settings.Mult.ByMode :=
   ContestIdentity(h).MultByMode`, ...), as `FCONTEST.ApplyContestTraits` does --
-  hard-coding them makes the engine test blind to a wrong `GetFlags`.
+  hard-coding them makes the engine test blind to a wrong `GetFlags`. If your
+  class's `DescribeSession` states `MultByBand` (it differs by entrant: New
+  Hampshire, Arizona), apply that answer for EACH half after the flags, as
+  `FCONTEST.ApplySessionDefaults` does (`uTestContestNewHampshireQP.
+  ApplyFlagsFor`); the identity's flag alone tests one entrant with the other's
+  rule.
 
 **The real-engine test's globals** -- save each, set it, restore it in a
 `finally` (copy a newer party's `Test_<Name>RealEngine`, which also covers

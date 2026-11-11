@@ -6210,3 +6210,51 @@ written file.
 - [ ] **WA7BNM and 3830.** The class states WA7BNM 0 (not found). Look the
   contest up on the calendar and on 3830scores.com; if 3830's form breaks
   the multipliers out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-10 -- THE NEW HAMPSHIRE QSO PARTY (issue #112)
+
+A new by-id contest (`NH-QSO-PARTY`), built from the sponsor's 2026 rules
+(`docs/ContestRules/QSOParties/NewHampshire/`). Unit-tested
+(`uTestContestNewHampshireQP`, including a real-engine run for an
+out-of-state and an in-state entrant, each with its own MultByBand); nothing
+sees the screen, the multiplier windows or a written file. NOT the New
+England QSO Party.
+
+- [ ] **Out of New Hampshire** (New Contest, MY STATE `NY`). Type `599 BEL` on
+  20 m CW, then on 40 m CW, then `59 BEL` on 20 m SSB: EXPECT Belknap is a
+  new multiplier on 20 and on 40 m (once PER BAND), and the SSB QSO is no
+  dupe but no new multiplier (not per mode). The multiplier window and the
+  summary count 2, not 1. `599 NY` is refused ("work NH stations only").
+- [ ] **In New Hampshire** (New Contest, tick "I am in NH", county `HIL`).
+  `599 NY` on 20 m CW is a new multiplier; on 40 m CW and on 20 m SSB it is
+  NOT (every multiplier counts ONCE). Check the session really came up with
+  multipliers not by band: the in-state answer comes from the class's
+  `DescribeSession`, and nothing but the unit test has seen it applied.
+- [ ] **`599 NH` in state** is taken and scores, but shows NO multiplier (an
+  NH station sends its county). `599 DC` is multiplier **MD** (a question
+  on #112).
+- [ ] **A DX station sends DX.** In New Hampshire, work DL1xxx and type
+  `599 DX`: EXPECT 2 points on CW, a new DX multiplier, and the Cabrillo
+  received column `599 DX`. Work more than 10 DXCC countries: EXPECT the
+  multiplier window and sheet keep counting them, but the CLAIMED-SCORE
+  counts only 10 ("up to 10 DXCC country") -- decide whether the display
+  should say so.
+- [ ] **A DX entrant** (MY CALL DL1xxx; New Contest, MY STATE `DX`, and once
+  more with MY STATE empty): EXPECT the CQ exchange is `5NN DX`, the ADIF
+  `STX_STRING` is `599 DX` and the Cabrillo sent column is `599 DX` both
+  times.
+- [ ] **Bands and modes.** A 160 m, 6 m, WARC or RTTY/FT8 QSO is logged as a
+  greyed X-QSO (0 points, no multiplier). FM on 10 m scores 1 and is the
+  same dupe as SSB on 10 m.
+- [ ] **A county line** (a question on #112: the rules are silent; built as
+  two). `599 GRA/COO` logs two QSOs; `599 GRA/COO/CAR` is refused ("too many
+  counties", maximum 2).
+- [ ] **Between the sessions.** A QSO stamped 0400-1200 UTC Sunday still
+  scores (the contest period is not built); confirm the operator sees no
+  warning, so the gap is visible.
+- [ ] **The Cabrillo file.** `CONTEST: NH-QSO-PARTY` (DXLog's name; the rules
+  give none). Check https://w1wqm.org/submit-log.php accepts the file as
+  written.
+- [ ] **WA7BNM and 3830.** The class states WA7BNM 0 (not found). Look the
+  contest up on the calendar and on 3830scores.com; if 3830's form breaks
+  the multipliers out, the class needs a `Get3830Summary`.

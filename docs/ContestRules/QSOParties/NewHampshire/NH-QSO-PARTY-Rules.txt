@@ -1,0 +1,152 @@
+NEW HAMPSHIRE QSO PARTY -- sponsor rules, transcribed
+
+Source:        "New Hampshire QSO Party Rules", NHQP_Rules.pdf beside this
+               file (three pages, no revision date printed). It states the
+               2026 running: "September 19 - 20, 2026 (3rd Weekend in
+               September)". The sponsor's page is
+               https://w1wqm.org/nh-qso-party/ (the 2026 State QSO Party
+               Calendar's link, GitHub issue #112). The PDF was saved by
+               NY4I (file dated 2026-10-26). This file has the same wording,
+               re-wrapped; no word is changed (the sponsor's "1 Point" and
+               "10 DXCC country once" are kept).
+Fetched:       2026-10-26 (NY4I's copy of the PDF); transcribed 2026-11-10
+Cabrillo:      NH-QSO-PARTY -- the rules state no CONTEST: value; this is
+               DXLog.net's CABRILLO_CONTEST_NAME (NHQP.txt, updated
+               2026-09-05). The sponsor prefers N1MM+ logs.
+ADIF:          NH-QSO-PARTY (CONTEST_ID) -- in the ADIF 3.1.6 Contest_ID
+               enumeration as "New Hampshire QSO Party".
+WA7BNM:        not found (the calendar's terms bar automated access); the
+               class states 0.
+TR4W class:    tr4w/src/contestFactory/uContestNewHampshireQP.pas -- its
+               header says where each rule below landed, and which are not
+               built. Sponsor questions: GitHub issue #112.
+Sessions:      the calendar's two rows (9/19/2026 1600Z-9/20/2026 0400Z and
+               9/20/2026 1200Z-2200Z) are ONE event: the rules' "Contest
+               Period" and "Time" give both sessions, "Total operating time
+               22 hours".
+Not the same:  the New England QSO Party is a different event
+               (uContestNewEnglandQP).
+
+==============================================================================
+
+New Hampshire QSO Party Rules
+
+United States/Canada state/province QSO party
+Open to all worldwide participants
+
+Objective:
+
+NH Stations contact as many participants in states, provinces and DXCC
+countries during the contest period. Stations outside of NH contact as many
+NH stations as possible during the contest period.
+
+Contest Period:
+
+September 19 - 20, 2026 (3rd Weekend in September)
+
+Time: 1600 UTC Saturday to 0400 UTC Sunday; 1200 UTC to 2200 UTC Sunday
+(Total operating time 22 hours)
+
+Frequency Bands:
+
+80m through 10m, except WARC bands (12m, 17m, 30m).
+Suggested frequencies: CW 35 kHz up from bottom, SSB US General Band.
+
+Modes:
+
+CW/Phone
+
+Categories:
+
+ Fixed, home location categories:
+  * Single-operator high power (>150w to maximum legal limit)
+  * Single-operator low power (150w or less)
+  * Single-operator QRP (5w or less)
+  * Multi-operator, single transmitter (all power levels)
+  * Multi-operator, multi-transmitter (all power levels)
+
+ Mobile categories:
+A mobile station is a station that can be operated from a vehicle while in
+motion or while parked. All antennas are mounted on the vehicle. A mobile
+station may operate from one or more counties.
+  * Single-operator high power (>150w to maximum legal limit)
+  * Single-operator low power (150w or less)
+  * Single-operator QRP (5w or less)
+  * Multi-operator, single transmitter (all power levels)
+
+ Portable categories:
+A portable station is a station that is a temporary POTA type of station.
+Antennas used are erected for each contest and removed after the operation.
+Operation cannot be from a 'fixed'/home station. A portable station may
+operate from one or more counties.
+  * Single-operator, high power (>150w to maximum legal limit)
+  * Single-operator, low power (150w or less)
+  * Single-operator QRP (5w or less)
+  * Multi-operator, single transmitter (all power levels)
+
+Spotting assistance:
+
+Use of spotting assistance and self-spotting is permitted in all categories.
+
+Power levels:
+
+High: >150 watts to legal limit
+Low: 150 watts or less
+QRP: 5 watts or less
+
+Exchange:
+
+NH: RS(T) + County
+non-NH W/VE: RS(T) + (State/Province)
+DX: RS(T) + "DX"
+
+Work Stations: Once per band per mode
+
+Scoring:
+
+ Points:
+QSO Point Credit: 1 Point per phone QSO; 2 points per CW QSO.
+
+ Multipliers:
+NH Stations: Each NH county, each state, each Canadian province and up to 10
+DXCC country once.
+
+Non-NH Stations: Each NH county once per band. Maximum multiplier count: 50
+(10 counties per band, 5 bands)
+
+ Score Calculation:
+Total score = total QSO points x total multipliers
+
+Preferred Log Submission:
+
+N1MM+ logging software is preferred, scores generated from other programs are
+subject to possible revision.
+
+Submit logs at https://w1wqm.org/submit-log.php
+
+General Rules:
+
+All participants must comply with your countries' regulations and
+requirements.
+
+Deadline for log submission: October 1
+
+NH Counties (Abbreviations):
+
+Belknap (BEL)
+Carroll (CAR)
+Cheshire (CHE)
+Coos (COO)
+Grafton (GRA)
+Hillsborough (HIL)
+Merrimack (MER)
+Rockingham (ROC)
+Strafford (STR)
+Sullivan (SUL)
+
+Awards:
+
+Certificates will be emailed to participants that place first in their
+respective category. Winners shall be notified via their email associated
+with the log. Each county winner (NH Operators), each category winner (Fixed,
+Mobile, Portable US/Canadian, DX station highest score).
