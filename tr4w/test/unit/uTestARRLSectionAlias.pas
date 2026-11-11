@@ -89,7 +89,7 @@ type
       procedure Test_FieldDayStateIsTheResolvedSections;
       procedure Test_FieldDayStateKeepsAnUnresolvedRow;
       procedure Test_DXKeeperSendsTheResolvedSection;
-      procedure Test_DXKeeperElsewhereSendsWhatItDid;
+      procedure Test_DXKeeperNonSectionContestSendsNoSection;
    end;
 
 implementation
@@ -927,11 +927,11 @@ end;
    read as a section (Wisconsin's county 'Mar' is not Maritime). Whether such
    a contest should send ARRL_SECT at all is NY4I's question; this pins the
    answer that stands. *)
-procedure TARRLSectionAliasTests.Test_DXKeeperElsewhereSendsWhatItDid;
+procedure TARRLSectionAliasTests.Test_DXKeeperNonSectionContestSendsNoSection;
 var
    qso: ContestExchange;
 begin
-   BeginTest('Test_DXKeeperElsewhereSendsWhatItDid');
+   BeginTest('Test_DXKeeperNonSectionContestSendsNoSection');
    CheckFalse(ContestQTHIsAnARRLSection(ContestIdentity(ContestHandleOf(NAQSOCW))),
               'NAQP CW: its QTH is no ARRL section');
    CheckFalse(ContestQTHIsAnARRLSection(ContestIdentity(ContestHandleOf(WISCONSINQSOPARTY))),
@@ -941,10 +941,11 @@ begin
    qso.ceContest := ContestHandleOf(NAQSOCW);
    qso.QTHString := 'OH';
    qso.DomesticQTH := 'OH';
-   CheckEquals('OH', ExternalLoggerARRLSection(qso), 'NAQP OH: as before');
+   CheckEquals('', ExternalLoggerARRLSection(qso),
+               'NAQP OH: an Ohio QTH, not a section the contest states -- none');
    qso.QTHString := 'CA';
    qso.DomesticQTH := 'CA';
-   CheckEquals('', ExternalLoggerARRLSection(qso), 'NAQP CA: as before, none');
+   CheckEquals('', ExternalLoggerARRLSection(qso), 'NAQP CA: none');
 
    qso := Default(ContestExchange);
    qso.ceContest := ContestHandleOf(WISCONSINQSOPARTY);
@@ -966,7 +967,7 @@ begin
    Test_FieldDayStateIsTheResolvedSections;
    Test_FieldDayStateKeepsAnUnresolvedRow;
    Test_DXKeeperSendsTheResolvedSection;
-   Test_DXKeeperElsewhereSendsWhatItDid;
+   Test_DXKeeperNonSectionContestSendsNoSection;
 end;
 
 end.

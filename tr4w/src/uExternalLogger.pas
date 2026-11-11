@@ -70,13 +70,14 @@ end;
   as <ARRL_SECT:2>EM, not a section ADIF knows -- and nothing for WF, SN, NY
   or any Canadian section.
 
-  IN EVERY OTHER CONTEST IT IS WHAT IT WAS: the QSO's QTH when
-  LooksLikeASection passes it (a state-party or NAQP 'OH'). NOT
-  ADIFSectionOf: its DomesticQTH fallback reads another contest's domestic
-  key as a section -- measured over the shipped .dom files, Wisconsin's
-  county 'Mar' would go out as Maritime, xe.dom's Baja California 'BC' as
-  British Columbia, ukraine.dom's 'Vi' as the Virgin Islands. Whether a
-  non-section contest should send ARRL_SECT at all is NY4I's question. *)
+  IN EVERY OTHER CONTEST IT IS NONE (NY4I, 2026-11-11: "unless we know the
+  ARRL section for certain, then we should not send that in ADIF to any ADIF
+  consumer"). A state-party or NAQP 'OH' is an Ohio QTH, not a section the
+  contest states, and ADIFSectionOf's DomesticQTH fallback reads another
+  contest's domestic key as a section -- measured over the shipped .dom
+  files, Wisconsin's county 'Mar' would go out as Maritime, xe.dom's Baja
+  California 'BC' as British Columbia, ukraine.dom's 'Vi' as the Virgin
+  Islands. This used to send the typed QTH when LooksLikeASection passed it. *)
 function ExternalLoggerARRLSection(const ce: ContestExchange): string;
 
 var
@@ -97,10 +98,6 @@ begin
    if ContestQTHIsAnARRLSection(ContestIdentity(ce.ceContest)) then
       begin
       Result := ADIFSectionOf(ce);
-      end
-   else if LooksLikeASection(string(ce.QTHString)) then
-      begin
-      Result := string(ce.QTHString);
       end
    else
       begin
