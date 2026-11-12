@@ -1159,6 +1159,12 @@ resourcestring
    SVerifyServerCaption      = 'Verify the server''s certificate';
    SVerifyServerOffWarning   = 'The server''s identity is not checked; anyone between you and it can read what you send.';
 
+   (* THE TAILCAT ADDRESS ROW on Preferences > Network (issue 293): the
+      string a server operator gives a remote position to reach the multi-op
+      server through a Tailcat tunnel. *)
+   SPrefsNetTailcatCaption   = 'Tailcat address:';
+   SPrefsNetTailcatHint      = 'Paste the address the server operator gave you to reach a server on another network. Leave empty for a server on your own network. Treat it like a password.';
+
 implementation
 
 end.

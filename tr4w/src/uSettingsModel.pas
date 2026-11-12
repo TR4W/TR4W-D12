@@ -1099,6 +1099,8 @@ type
       FPort: TServerPort;
       FAutoSynchronizeLogOnConnect: boolean;
       FPassword: TSecretText;
+      FTailcatAddress: TSecretText;
+      procedure SetTailcatAddress(const aValue: TSecretText);
    public
       constructor Create;
    published
@@ -1123,6 +1125,22 @@ type
         one position could overwrite another's. As TSecretText it is refused
         from a peer and each position holds its own (NY4I, 2026-09-12). *)
       property Password: TSecretText read FPassword write FPassword;
+      (* SERVER TAILCAT ADDRESS (issue 293, new, no CFGCA row) -- the string
+        a server operator hands a remote position so it can reach the server
+        through a Tailcat tunnel from another network. Empty means "the
+        server is on this network; use Address".
+
+        A SECRET, because the string carries the tunnel's pre-shared key: it
+        is TSecretText for exactly the reasons Password is -- the vault, not
+        the file; refused from a peer; masked in Preferences and in every log
+        line (ValueForLog); never captured into a contest log.
+
+        TRIMMED ON SET, because it is pasted and a paste often brings a line
+        end. Its length bound (TAILCAT_ADDRESS_MAX_LENGTH) is a registered
+        value check, not this setter: a setter cannot refuse, and cutting a
+        key short in silence would make it fail with no reason given. *)
+      property TailcatAddress: TSecretText
+         read FTailcatAddress write SetTailcatAddress;
    end;
 
    (*
@@ -4402,6 +4420,17 @@ const
    SCORE_POSTING_DEFAULT_URL = 'https://contestonlinescore.com/post/';
    SCORE_POSTING_OLD_DEFAULT_URL = 'https://post.contestonlinescore.com/post/';
 
+   (* THE LONGEST SERVER TAILCAT ADDRESS ACCEPTED (issue 293), after trimming.
+     A real one is about 230 characters; this leaves room for a longer key
+     format without letting a stray paste of a whole document through. The
+     Preferences field carries the same bound as its MaxLength. *)
+   TAILCAT_ADDRESS_MAX_LENGTH = 1024;
+
+(* The registered check for SERVER TAILCAT ADDRESS: empty (no tunnel) or at
+  most TAILCAT_ADDRESS_MAX_LENGTH characters once trimmed. Public so a test
+  can ask it directly. *)
+function TailcatAddressLengthIsAllowed(const aValue: string): boolean;
+
 implementation
 
 uses
@@ -5148,6 +5177,18 @@ begin
      server ships with, so it is a default rather than a secret until the
      operator changes one or both ends. *)
    FPassword                    := 'TR4WSERVER';
+   (* Empty: no tunnel, so the link uses Address. *)
+   FTailcatAddress              := '';
+end;
+
+procedure TServerSettings.SetTailcatAddress(const aValue: TSecretText);
+begin
+   FTailcatAddress := TSecretText(Trim(string(aValue)));
+end;
+
+function TailcatAddressLengthIsAllowed(const aValue: string): boolean;
+begin
+   Result := Length(Trim(aValue)) <= TAILCAT_ADDRESS_MAX_LENGTH;
 end;
 
 constructor THamscoreSettings.Create;
@@ -7919,6 +7960,11 @@ initialization
    (* BACKUP LOG FILE NAME's value was a FILE; the property it reaches is a
      FOLDER. Here because this unit owns both names (BuildCommandMap). *)
    RegisterCommandValueSpelling('BACKUP LOG FILE NAME', @FolderOfFormerBackupFileName);
+
+   (* SERVER TAILCAT ADDRESS's length bound (issue 293). Here because this
+     unit owns the property and the bound; a setter cannot refuse a value. *)
+   RegisterSettingValueCheck('Server.TailcatAddress',
+                             @TailcatAddressLengthIsAllowed);
 
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
 

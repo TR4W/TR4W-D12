@@ -463,6 +463,8 @@ type
       lblNetAddress: TLabel;
       lblNetPort: TLabel;
       lblNetPassword: TLabel;
+      lblNetTailcat: TLabel;
+      lblNetTailcatHint: TLabel;
       lblNetComputerID: TLabel;
       lblNetComputerIDHint: TLabel;
       lblNetHint: TLabel;
@@ -481,6 +483,7 @@ type
       edtNetAddress: TEdit;
       edtNetPort: TEdit;
       edtNetPassword: TEdit;
+      edtNetTailcat: TEdit;
       edtNetComputerID: TEdit;
       edtMainFont: TEdit;
       edtFontSize: TEdit;
@@ -2088,6 +2091,9 @@ begin
      to -- see uPasswordReveal. *)
    AttachPasswordReveal(edtClusterPassword);
    AttachPasswordReveal(edtNetPassword);
+   (* The Tailcat address carries the tunnel's key, so it is masked and
+     revealed exactly like the password above it (issue 293). *)
+   AttachPasswordReveal(edtNetTailcat);
    AttachPasswordReveal(edtHamScorePass);
    LogPhase(FTiming, 'stream .lfm');
 
@@ -2108,6 +2114,10 @@ begin
    chkHamScoreVerify.Caption  := UTF8Encode(SVerifyServerCaption);
    chkScoreVerify.Caption     := UTF8Encode(SVerifyServerCaption);
    lblScoreVerifyNote.Caption := UTF8Encode(SVerifyServerOffWarning);
+   (* THE TAILCAT ADDRESS ROW (issue 293): its label and hint from the
+     resourcestrings; the .lfm holds the same English for the designer. *)
+   lblNetTailcat.Caption     := UTF8Encode(SPrefsNetTailcatCaption);
+   lblNetTailcatHint.Caption := UTF8Encode(SPrefsNetTailcatHint);
    (* Same pattern: it names the pages below Operating, and CW left them
      (issue 235). *)
    lblOperatingInfo.Caption := SPrefsOperatingInfo;
@@ -5022,6 +5032,7 @@ begin
    AddHandWiredToSearchIndex(aN, 'COMPUTER ID',                       edtNetComputerID);
    AddHandWiredToSearchIndex(aN, 'SERVER PASSWORD',                   edtNetPassword);
    AddHandWiredToSearchIndex(aN, 'SERVER PORT',                       edtNetPort);
+   AddHandWiredToSearchIndex(aN, 'SERVER TAILCAT ADDRESS',            edtNetTailcat);
 
    // --- laySCP ---
    AddHandWiredToSearchIndex(aN, 'SCP MINIMUM LETTERS',               cbxSCPMinLetters);
@@ -7829,6 +7840,10 @@ begin
                                CFGCommandValueAsString('SERVER PORT'));
    edtNetPassword.Text   := FStore.CommandValue('SERVER PASSWORD',
                                CFGCommandValueAsString('SERVER PASSWORD'));
+   (* Converted explicitly: the LCL's Text is UTF-8, and an implicit narrowing
+     here is one more than the build's ratcheted ceiling allows. *)
+   edtNetTailcat.Text    := LclText(FStore.CommandValue('SERVER TAILCAT ADDRESS',
+                               CFGCommandValueAsString('SERVER TAILCAT ADDRESS')));
    edtNetComputerID.Text := FStore.CommandValue('COMPUTER ID',
                                CFGCommandValueAsString('COMPUTER ID'));
    chkNetAutoSync.Checked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
@@ -7861,7 +7876,10 @@ begin
    // NOT trimmed: a password may legitimately begin or end with a space, and
    // silently removing one turns "wrong password" into an unsolvable puzzle.
    ApplyIfChanged('SERVER PASSWORD', edtNetPassword.Text);
-   ApplyIfChanged('COMPUTER ID',     Trim(edtNetComputerID.Text));
+   // Trimmed: it is pasted, and a paste often brings a line end. The setter
+   // trims as well; this keeps "changed?" honest.
+   ApplyIfChanged('SERVER TAILCAT ADDRESS', Trim(edtNetTailcat.Text));
+   ApplyIfChanged('COMPUTER ID',    Trim(edtNetComputerID.Text));
    SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.Checked);
 
    ApplyIfChanged('MAIN FONT', Trim(edtMainFont.Text));

@@ -296,6 +296,14 @@ var
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 
+(* A VALUE FOR A COMMAND THE SETTINGS OBJECT OWNS, from a trusted caller --
+  CheckCommand's owned arm, lifted out so a caller holding a STRING can reach
+  it without CheckCommand's ShortString parameters, which cut a value at 255
+  characters in silence (and the value check then judged the cut copy).
+  A refusal is logged, and a secret's value never is (ValueForLog). The
+  caller must have asked Settings.OwnsCommand. *)
+function ApplyOwnedSetting(const aCommand, aValue: string): boolean;
+
 (* ONE COMMAND THAT THE CONTEST STATED -- a contest .cfg line, a New Contest
   choice, or a row of the contest's own log on reopen.
 
@@ -1300,6 +1308,19 @@ begin
    Result := False;
 end;
 
+function ApplyOwnedSetting(const aCommand, aValue: string): boolean;
+begin
+   Result := Settings.TrySetByCommand(aCommand, aValue);
+   if (not Result) and (logger <> nil) then
+      begin
+      (* A value the property's type refuses -- reported, never swallowed.
+        The config file said something this setting cannot be. A
+        credential's value is never written to the log (ValueForLog). *)
+      logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
+                  [aCommand, Settings.ValueForLog(aCommand, aValue)]);
+      end;
+end;
+
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 var
@@ -1394,17 +1415,7 @@ begin
          Exit;
          end;
 
-      Result := Settings.TrySetByCommand(string(Command),
-                                         string(CustomCMD));
-      if (not Result) and (logger <> nil) then
-         begin
-         (* A value the property's type refuses -- reported, never swallowed.
-           The config file said something this setting cannot be. A
-           credential's value is never written to the log (ValueForLog). *)
-         logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
-                     [Command, Settings.ValueForLog(string(Command),
-                                                    string(CustomCMD))]);
-         end;
+      Result := ApplyOwnedSetting(string(Command), string(CustomCMD));
       Exit;
       end;
    (* THE FUNCTION-KEY MEMORY ARM IS GONE -- 2026-09-14, the last pattern

@@ -1271,12 +1271,25 @@ begin
    // hook; the store is only what makes it survive a restart.  Recording a
    // value CFGCA rejected would put it in the file for the next start to
    // stumble over.
-   FillChar(keyShort, SizeOf(keyShort), 0);
-   FillChar(valueShort, SizeOf(valueShort), 0);
-   keyShort   := ShortString(AnsiString(aCommand));
-   valueShort := ShortString(AnsiString(aValue));
+   if settingsOwned then
+      begin
+      (* AN OWNED VALUE STAYS A STRING (issue 293). CheckCommand takes
+        ShortStrings, so a value longer than 255 characters -- a Tailcat
+        address may be up to 1024 -- was cut there in silence, and the
+        registered check then judged the cut copy. ApplyOwnedSetting is the
+        owned arm CheckCommand runs (none of TryApplyCommandAction's four
+        names is owned), reached without the narrowing. *)
+      Result := ApplyOwnedSetting(aCommand, aValue);
+      end
+   else
+      begin
+      FillChar(keyShort, SizeOf(keyShort), 0);
+      FillChar(valueShort, SizeOf(valueShort), 0);
+      keyShort   := ShortString(AnsiString(aCommand));
+      valueShort := ShortString(AnsiString(aValue));
 
-   Result := CheckCommand(keyShort, valueShort, True);
+      Result := CheckCommand(keyShort, valueShort, True);
+      end;
    if not Result then
       begin
       Exit;
