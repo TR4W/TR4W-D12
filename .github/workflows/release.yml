@@ -153,7 +153,9 @@ jobs:
   build:
     name: Build TR4W installer
     runs-on: [self-hosted, win-ci]
-    timeout-minutes: 30
+    # 30 minutes cancelled the first 64-bit run at the installer step, after
+    # lints, both test suites and the app, server and converter had passed.
+    timeout-minutes: 60
 
     outputs:
       version: ${{ steps.ver.outputs.version }}
