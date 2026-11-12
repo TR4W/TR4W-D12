@@ -785,7 +785,7 @@ def case_hello(ctx):
    r.add('hello', 'and it was not relayed',
          'PASS' if a.take(NET_QSOINFO_ID, 0.5) is None else 'FAIL')
 
-   for version, label in ((1, 'older'), (3, 'newer')):
+   for version, label in ((NET_PROTOCOL_VERSION - 1, 'older'), (NET_PROTOCOL_VERSION + 1, 'newer')):
       p = ctx.probe('P%d' % version, 6, claim=False)
       p.send(build_hello(version, 6, 'netprobe', 'X'))
       refusal = p.take(NET_SERVERMESSAGE_ID, timeout, SM_PROTOCOL_MISMATCH)
