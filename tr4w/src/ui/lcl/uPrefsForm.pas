@@ -7836,8 +7836,10 @@ begin
                                CFGCommandValueAsString('SERVER PORT'));
    edtNetPassword.Text   := FStore.CommandValue('SERVER PASSWORD',
                                CFGCommandValueAsString('SERVER PASSWORD'));
-   edtNetTailcat.Text    := FStore.CommandValue('SERVER TAILCAT ADDRESS',
-                               CFGCommandValueAsString('SERVER TAILCAT ADDRESS'));
+   (* Converted explicitly: the LCL's Text is UTF-8, and an implicit narrowing
+     here is one more than the build's ratcheted ceiling allows. *)
+   edtNetTailcat.Text    := LclText(FStore.CommandValue('SERVER TAILCAT ADDRESS',
+                               CFGCommandValueAsString('SERVER TAILCAT ADDRESS')));
    edtNetComputerID.Text := FStore.CommandValue('COMPUTER ID',
                                CFGCommandValueAsString('COMPUTER ID'));
    chkNetAutoSync.Checked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
