@@ -737,6 +737,48 @@ posted; a source read that no clock setter is in `uNet`), `uTestNetFraming` and
 not relayed, the line behind it relayed, A still connected). Bench: BENCH_QUEUE,
 "AN OLDER STATION'S TIME SYNC IS SKIPPED".
 
+## The link can go through a Tailcat tunnel (issue 293, 2026-11-12)
+
+`SERVER USE TAILCAT` on: the link does NOT connect to `SERVER ADDRESS`. It
+connects to `127.0.0.1` at a port `uNetTunnel` answers, and
+`utils/uTailcatForwarder` carries the bytes through the tunnel that
+`SERVER TAILCAT ADDRESS` (a secret) names. `TNetClient`, the write queue and the
+catch-up download are UNTOUCHED: they are given a different address, in
+`uNet.ConnectToTR4WServer` and `uGetServerLog.StartServerCatchUp`, and nowhere
+else. Both server ports travel (port and port + 1), each with its own local
+door on a port the system picks.
+
+- **`utils/uTailcatLib` is the only unit that names the library** (`libtailcat`,
+  upstream's own C ABI, version 1, checked at load). Loaded at run time from
+  `PrivateLibraryDir`, only when the box is ticked, and NEVER unloaded (it
+  embeds a Go runtime; the header says so). Upstream builds 64-bit only, so a
+  32-bit TR4W reports that and stays down.
+- **The tunnel is opened on the CONNECT THREAD** (`NetTunnelOpen` blocks: load,
+  reach a relay, ping the server, up to 15 s). `NetTunnelSyncPort` and
+  `NetTunnelClose` do not wait on the network and run on the main thread.
+- **Lifetime:** one tunnel, kept across a DROPPED link (`NetLinkWentDown` alone
+  leaves it), closed by `NetLinkDisconnect`, `NetLinkShutdown`, an unticked box,
+  and a connect through it that FAILED -- so the next attempt pings again,
+  which is the only step that can say whether the tunnel or the server is at
+  fault.
+- **A tunnel that cannot open is told to the operator once per reason**
+  (`SNetTailcatFailed`, then Debug on the retries) and is never a fall back to
+  `SERVER ADDRESS`. A wrong address and a server that is not running look the
+  same: the address is the only thing that names the server.
+- **NOTHING LOGS THE ADDRESS.** Log and status lines call the server `Tailcat`
+  (`ServerNameForLog`); the library's error text has the address cut out.
+- **Loopback only**, on purpose: a listener on every interface would hand the
+  tunnel to the station's whole network.
+- **Oracle:** `tools/netprobe` through the forwarder against TR4WServerPy with
+  `--tailcat`, identical to the plain port (the one failure, TIMESYN relayed, is
+  TR4WServerPy's own). What is NOT yet shown: the link inside a running TR4W,
+  two separate networks, a tunnel that dies mid-contest. No unit test drives
+  the forwarder; it needs the library and a relay.
+- **Open under issue 293:** shipping the library (CI build per platform at the
+  pinned upstream commit, macOS signing, BSD notice), the in-tree `tr4wserver`
+  as a tunnel server, a link status that says "tunnel up" apart from
+  "admitted".
+
 ## Coordinate with
 
 `log-database` (row-level sync is the destination) · `contest-scoring` (dupes,

@@ -1100,6 +1100,7 @@ type
       FAutoSynchronizeLogOnConnect: boolean;
       FPassword: TSecretText;
       FTailcatAddress: TSecretText;
+      FUseTailcat: boolean;
       procedure SetTailcatAddress(const aValue: TSecretText);
    public
       constructor Create;
@@ -1127,8 +1128,9 @@ type
       property Password: TSecretText read FPassword write FPassword;
       (* SERVER TAILCAT ADDRESS (issue 293, new, no CFGCA row) -- the string
         a server operator hands a remote position so it can reach the server
-        through a Tailcat tunnel from another network. Empty means "the
-        server is on this network; use Address".
+        through a Tailcat tunnel from another network. Whether the link USES
+        it is UseTailcat below, so an operator who is sometimes at the server's
+        own network keeps the address and unticks one box.
 
         A SECRET, because the string carries the tunnel's pre-shared key: it
         is TSecretText for exactly the reasons Password is -- the vault, not
@@ -1141,6 +1143,14 @@ type
         key short in silence would make it fail with no reason given. *)
       property TailcatAddress: TSecretText
          read FTailcatAddress write SetTailcatAddress;
+      (* SERVER USE TAILCAT (issue 293, new, no CFGCA row) -- reach the server
+        through the Tailcat tunnel TailcatAddress names, instead of at
+        Address. NY4I, 2026-11-12: "we should have a checkbox that states Use
+        Tailcat". Off by default. While it is on, Address is not used at all
+        (Port still is: it is the server's port inside the tunnel), and an
+        empty TailcatAddress is a reported failure to connect, never a quiet
+        fall back to Address -- the operator asked for the tunnel. *)
+      property UseTailcat: boolean read FUseTailcat write FUseTailcat;
    end;
 
    (*
@@ -5177,8 +5187,9 @@ begin
      server ships with, so it is a default rather than a secret until the
      operator changes one or both ends. *)
    FPassword                    := 'TR4WSERVER';
-   (* Empty: no tunnel, so the link uses Address. *)
    FTailcatAddress              := '';
+   (* Off: the link uses Address. *)
+   FUseTailcat                  := False;
 end;
 
 procedure TServerSettings.SetTailcatAddress(const aValue: TSecretText);

@@ -560,7 +560,9 @@ uses
   uAppStrings,   { SNetComputerIDInUse -- new UI text does not go in uTR4WStrings }
   uComputerID,   { the station-id rule and its two wire encodings }
    uConfigValues,
-   uHostResolve;   { TryResolveHost -- a .local name through the C library, issue 148 }
+   uHostResolve,   { TryResolveHost -- a .local name through the C library, issue 148 }
+   uTailcatForwarder,   { TTailcatLogLevel -- the tunnel's log lines, issue 293 }
+   uNetTunnel;     { the Tailcat tunnel SERVER USE TAILCAT asks for, issue 293 }
 
 { THE ID THE SERVER REFUSED, in the ordinal form the wire uses, or #0.
 
@@ -641,9 +643,24 @@ const
     ordinary failure at any other time is not blamed on the protocol. *)
   HELLO_ANSWER_WINDOW_MS = 5000;
 
+(* WHAT THE SERVER IS CALLED IN A LOG LINE AND ON THE STATUS LINE. Through a
+  Tailcat tunnel (issue 293) there is no host name to show -- SERVER ADDRESS is
+  not used -- and the tunnel's address is a secret, so the word stands for it. *)
+function ServerNameForLog: string;
+begin
+   if Settings.Server.UseTailcat then
+      begin
+      Result := 'Tailcat';
+      end
+   else
+      begin
+      Result := Settings.Server.Address;
+      end;
+end;
+
 function ServerKey: string;
 begin
-   Result := Settings.Server.Address + ':' + IntToStr(Settings.Server.Port);
+   Result := ServerNameForLog + ':' + IntToStr(Settings.Server.Port);
 end;
 
 (* THE SERVER CANNOT BE USED: TELL THE OPERATOR ONCE AND LET GO.
@@ -1732,7 +1749,7 @@ begin
   announce := FConnectLogState in [nclsInitial, nclsConnected];
   if announce then
      begin
-     logger.Debug('TryConnectToNetwork -> %s:%d  (will retry every 5s while server is unreachable; further attempts logged only on state change)', [Settings.Server.Address, Settings.Server.Port]);
+     logger.Debug('TryConnectToNetwork -> %s:%d  (will retry every 5s while server is unreachable; further attempts logged only on state change)', [ServerNameForLog, Settings.Server.Port]);
      FConnectLogState := nclsTrying;
      end;
   if not ThreadStarted(NetThreadID) then
@@ -1794,11 +1811,82 @@ begin
       end;
 end;
 
+var
+   (* THE REASON THE TAILCAT TUNNEL LAST FAILED TO OPEN, as the operator has
+     already been told it, under GNetLock (the connect thread sets it,
+     ForgetServerRefusal on the main thread clears it). The retry timer comes
+     back every few seconds: the first failure for a reason is shown and is an
+     Error, the rest are Debug. *)
+   FTunnelFailedFor: string = '';
+
+(* The tunnel's own lines, in the link's log. Any thread. *)
+procedure TunnelLogLine(const aLevel: TTailcatLogLevel; const aText: string);
+begin
+   case aLevel of
+      tllWarn:
+         begin
+         logger.Warn('[Net] Tailcat: %s', [aText]);
+         end;
+      tllInfo:
+         begin
+         logger.Info('[Net] Tailcat: %s', [aText]);
+         end;
+   else
+      logger.Debug('[Net] Tailcat: %s', [aText]);
+   end;
+end;
+
+(* OPEN THE TAILCAT TUNNEL AND ANSWER WHERE THE LINK CONNECTS (issue 293).
+  Runs on the CONNECT THREAD: it can wait many seconds for the relays and the
+  server. False has told the operator why, once for each reason, and leaves
+  the link down -- never a quiet fall back to SERVER ADDRESS, which is some
+  other machine when the operator asked for the tunnel. *)
+function OpenServerTunnel(out aAddress: string; out aPort: word): boolean;
+var
+   why:   string;
+   first: boolean;
+begin
+   aAddress := NET_TUNNEL_HOST;
+   Result := NetTunnelOpen(string(Settings.Server.TailcatAddress),
+                           Settings.Server.Port, aPort, why);
+
+   GNetLock.Acquire;
+   try
+      if Result then
+         begin
+         FTunnelFailedFor := '';
+         first := False;
+         end
+      else
+         begin
+         first := FTunnelFailedFor <> why;
+         FTunnelFailedFor := why;
+         end;
+   finally
+      GNetLock.Release;
+   end;
+
+   if not Result then
+      begin
+      if first then
+         begin
+         logger.Error('[Net] Tailcat: %s', [why]);
+         showwarning(UnicodeFormat(SNetTailcatFailed, [why]));
+         end
+      else
+         begin
+         logger.Debug('[Net] Tailcat: %s', [why]);
+         end;
+      end;
+end;
+
 function ConnectToTR4WServer: boolean;
 var
    err: string;
    wrongPassword: boolean;
    serverAddress: string;
+   serverPort: word;
+   tunnelled: boolean;
 begin
    if NetClient = nil then
       begin
@@ -1806,21 +1894,46 @@ begin
       AttachNetClient(NetClient);
       end;
 
-   (* A name the platform cannot resolve is a failed attempt, and the Error line
-     above has named it. Indy is handed the ADDRESS this returns; the log lines
-     that follow still print Settings.Server.Address, the name as typed. *)
-   if not ResolveServerAddress(serverAddress) then
+   (* WHERE THE SERVER IS: a local door into the Tailcat tunnel, or the name the
+     operator typed. Read once, so one attempt cannot be half of each. *)
+   tunnelled := Settings.Server.UseTailcat;
+   if tunnelled then
       begin
-      Result := False;
-      Exit;
+      if not OpenServerTunnel(serverAddress, serverPort) then
+         begin
+         Result := False;
+         Exit;
+         end;
+      end
+   else
+      begin
+      (* A tunnel left from before the box was unticked. *)
+      NetTunnelClose;
+      serverPort := Settings.Server.Port;
+      (* A name the platform cannot resolve is a failed attempt, and the Error
+        line above has named it. Indy is handed the ADDRESS this returns; the
+        log lines that follow still print the name as typed. *)
+      if not ResolveServerAddress(serverAddress) then
+         begin
+         Result := False;
+         Exit;
+         end;
       end;
 
-   Result := NetClient.Connect(serverAddress, Settings.Server.Port,
+   Result := NetClient.Connect(serverAddress, serverPort,
                                AnsiString(Settings.Server.Password),
                                err, wrongPassword);
    if Result then
       begin
       Exit;
+      end;
+
+   (* A CONNECT THROUGH THE TUNNEL THAT FAILED TAKES THE TUNNEL WITH IT. The
+     next attempt builds a new one and pings the server again, which is the
+     only step that can say whether the tunnel or the server is at fault. *)
+   if tunnelled then
+      begin
+      NetTunnelClose;
       end;
 
    if wrongPassword then
@@ -1830,7 +1943,7 @@ begin
    else
       begin
       logger.Debug('[Net] connect to %s:%d failed: %s',
-                   [Settings.Server.Address, Settings.Server.Port, err]);
+                   [ServerNameForLog, Settings.Server.Port, err]);
       end;
 end;
 
@@ -1889,7 +2002,7 @@ begin
         ShowConnectionStatus(TC_CONNECTEDTO);
         if FConnectLogState <> nclsConnected then
            begin
-           logger.Info('Connected to TR4WServer at %s:%d', [Settings.Server.Address, Settings.Server.Port]);
+           logger.Info('Connected to TR4WServer at %s:%d', [ServerNameForLog, Settings.Server.Port]);
            FConnectLogState := nclsConnected;
            end;
         end;
@@ -1901,7 +2014,7 @@ begin
      NetDisconnect;
      if FConnectLogState <> nclsFailed then
         begin
-        logger.Warn('Failed to connect to TR4WServer at %s:%d (will keep retrying silently)', [Settings.Server.Address, Settings.Server.Port]);
+        logger.Warn('Failed to connect to TR4WServer at %s:%d (will keep retrying silently)', [ServerNameForLog, Settings.Server.Port]);
         FConnectLogState := nclsFailed;
         end;
      end;
@@ -1914,6 +2027,11 @@ begin
      begin
      NetDisconnect;
      ShowConnectionStatus(TC_DISCONNECTEDFROM);
+     end;
+  (* And the tunnel this attempt may have opened for a link nobody wants. *)
+  if not NetLinkWanted then
+     begin
+     NetTunnelClose;
      end;
   // Issue #1041: log destruction at the same volume as creation -- debug on a
   // genuine (announced) attempt so create/destroy pair up in the log, trace
@@ -2230,7 +2348,7 @@ begin
       end;
 
    Result := Format(TC_NETWORK,
-                    [operation, Settings.Server.Address, Settings.Server.Port]);
+                    [operation, ServerNameForLog, Settings.Server.Port]);
 end;
 
 (* ------------------------------------------------------- THE LINK'S OWNER *)
@@ -2350,6 +2468,10 @@ begin
       end;
 
    NetLinkWentDown;
+   (* THE OPERATOR LEFT THE NETWORK, so the Tailcat tunnel goes too. A link
+     that merely DROPPED keeps it (NetLinkWentDown alone): the retry is a new
+     stream through a tunnel that is already up. *)
+   NetTunnelClose;
 end;
 
 procedure NetLinkReconnect;
@@ -2384,6 +2506,7 @@ begin
      is still open. Whatever it misses is sent again next time and ignored by
      whoever already has it. *)
    SettleServerProgress;
+   NetTunnelClose;
 end;
 
 procedure NetLinkStartup;
@@ -2391,7 +2514,7 @@ begin
    if ShouldConnectAtStartup(Settings.Network.AutoConnect, Settings.Computer.Id) then
       begin
       logger.Info('[Net] connecting to %s:%d at startup (NETWORK AUTO CONNECT)',
-                  [Settings.Server.Address, Settings.Server.Port]);
+                  [ServerNameForLog, Settings.Server.Port]);
       NetLinkConnect;
       Exit;
       end;
@@ -2658,6 +2781,12 @@ end;
 
 procedure ForgetServerRefusal;
 begin
+   GNetLock.Acquire;
+   try
+      FTunnelFailedFor := '';
+   finally
+      GNetLock.Release;
+   end;
    FServerRefusedFor := '';
    FRefusedComputerID := #0;
    GNetLock.Acquire;
@@ -3177,6 +3306,7 @@ initialization
 //GetDiskFreeSpace(nil,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W);
 
   GNetLock    := SyncObjs.TCriticalSection.Create;
+  NetTunnelLog := TunnelLogLine;
   GNetDrainer := TNetDrainer.Create;
   GPeers      := TNetPeers.Create;
   GSendRefusals := TNetSendRefusals.Create;
