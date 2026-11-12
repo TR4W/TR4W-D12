@@ -2992,13 +2992,23 @@ object PrefsForm: TPrefsForm
         PasswordChar = '*'
         TabOrder = 3
       end
+      object chkNetUseTailcat: TCheckBox
+        Left = 440
+        Height = 22
+        Top = 134
+        Width = 100
+        AutoSize = True
+        Constraints.MinWidth = 100
+        Caption = 'Use Tailcat'
+        TabOrder = 4
+      end
       object lblNetTailcatHint: TLabel
         Left = 160
         Height = 52
         Top = 160
         Width = 500
         AutoSize = False
-        Caption = 'Paste the address the server operator gave you to reach a server on another network. Leave empty for a server on your own network. Treat it like a password.'
+        Caption = 'To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
@@ -3017,7 +3027,7 @@ object PrefsForm: TPrefsForm
         Top = 218
         Width = 60
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 5
       end
       object lblNetComputerIDHint: TLabel
         Left = 230
@@ -3036,7 +3046,7 @@ object PrefsForm: TPrefsForm
         Width = 500
         AutoSize = False
         Caption = 'Synchronize the log when connecting'
-        TabOrder = 5
+        TabOrder = 6
       end
       object chkMultiMultsOnly: TCheckBox
         Left = 12
@@ -3044,7 +3054,7 @@ object PrefsForm: TPrefsForm
         Top = 280
         Width = 520
         Caption = 'Pass only new multipliers around the network'
-        TabOrder = 6
+        TabOrder = 7
       end
       object chkIntercomFile: TCheckBox
         Left = 12
@@ -3052,7 +3062,7 @@ object PrefsForm: TPrefsForm
         Top = 306
         Width = 520
         Caption = 'Log network messages to INTERCOM.TXT'
-        TabOrder = 7
+        TabOrder = 8
       end
       object chkNetAutoConnect: TCheckBox
         Left = 12
@@ -3060,7 +3070,7 @@ object PrefsForm: TPrefsForm
         Top = 332
         Width = 520
         Caption = 'Connect to the multi-op server when TR4W starts'
-        TabOrder = 8
+        TabOrder = 9
       end
       object chkNetShareSpots: TCheckBox
         Left = 12
@@ -3068,7 +3078,7 @@ object PrefsForm: TPrefsForm
         Top = 358
         Width = 520
         Caption = 'Share DX spots around the network'
-        TabOrder = 9
+        TabOrder = 10
       end
       object lblNetHint: TLabel
         Left = 12

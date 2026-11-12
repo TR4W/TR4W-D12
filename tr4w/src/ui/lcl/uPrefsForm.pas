@@ -490,6 +490,7 @@ type
       edtBackupEvery: TEdit;
       edtBackupFile: TEdit;
       chkNetAutoSync: TCheckBox;
+      chkNetUseTailcat: TCheckBox;
       chkBoldFont: TCheckBox;
       btnBrowseBackup: TButton;
 
@@ -2118,6 +2119,7 @@ begin
      resourcestrings; the .lfm holds the same English for the designer. *)
    lblNetTailcat.Caption     := UTF8Encode(SPrefsNetTailcatCaption);
    lblNetTailcatHint.Caption := UTF8Encode(SPrefsNetTailcatHint);
+   chkNetUseTailcat.Caption  := UTF8Encode(SPrefsNetUseTailcat);
    (* Same pattern: it names the pages below Operating, and CW left them
      (issue 235). *)
    lblOperatingInfo.Caption := SPrefsOperatingInfo;
@@ -5033,6 +5035,7 @@ begin
    AddHandWiredToSearchIndex(aN, 'SERVER PASSWORD',                   edtNetPassword);
    AddHandWiredToSearchIndex(aN, 'SERVER PORT',                       edtNetPort);
    AddHandWiredToSearchIndex(aN, 'SERVER TAILCAT ADDRESS',            edtNetTailcat);
+   AddHandWiredToSearchIndex(aN, 'SERVER USE TAILCAT',                chkNetUseTailcat);
 
    // --- laySCP ---
    AddHandWiredToSearchIndex(aN, 'SCP MINIMUM LETTERS',               cbxSCPMinLetters);
@@ -7847,6 +7850,7 @@ begin
    edtNetComputerID.Text := FStore.CommandValue('COMPUTER ID',
                                CFGCommandValueAsString('COMPUTER ID'));
    chkNetAutoSync.Checked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
+   chkNetUseTailcat.Checked := CommandBool('SERVER USE TAILCAT');
 
    edtMainFont.Text := CommandText('MAIN FONT');
    edtFontSize.Text := CommandText('FONT SIZE');
@@ -7881,6 +7885,7 @@ begin
    ApplyIfChanged('SERVER TAILCAT ADDRESS', Trim(edtNetTailcat.Text));
    ApplyIfChanged('COMPUTER ID',    Trim(edtNetComputerID.Text));
    SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.Checked);
+   SetCommandBool('SERVER USE TAILCAT', chkNetUseTailcat.Checked);
 
    ApplyIfChanged('MAIN FONT', Trim(edtMainFont.Text));
    ApplyIfChanged('FONT SIZE', Trim(edtFontSize.Text));

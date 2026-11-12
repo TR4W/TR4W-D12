@@ -367,6 +367,13 @@ resourcestring
      older end, or this program is. The first %d is the protocol the server
      speaks, the second the one this TR4W speaks. They say what to update and
      on which computer; the operator has nothing else to act on. *)
+   (* THE TAILCAT TUNNEL COULD NOT BE OPENED (issue 293). %s is the reason,
+     which is English today: it comes from uNetTunnel and its two units. Shown
+     once for each reason, not on every retry. *)
+   SNetTailcatFailed =
+      'The link to the multi-op server through Tailcat could not be opened: ' +
+      '%s. TR4W keeps trying.';
+
    SNetServerProtocolOlder =
       'The multi-op server speaks network protocol %d, but this TR4W needs ' +
       'protocol %d. Update TR4WServer on the server computer, then choose ' +
@@ -1163,7 +1170,10 @@ resourcestring
       string a server operator gives a remote position to reach the multi-op
       server through a Tailcat tunnel. *)
    SPrefsNetTailcatCaption   = 'Tailcat address:';
-   SPrefsNetTailcatHint      = 'Paste the address the server operator gave you to reach a server on another network. Leave empty for a server on your own network. Treat it like a password.';
+   SPrefsNetTailcatHint      = 'To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password.';
+   (* The checkbox beside the address (NY4I, 2026-11-12). "Tailcat" is a
+     product name and is not translated. *)
+   SPrefsNetUseTailcat       = 'Use Tailcat';
 
 implementation
 

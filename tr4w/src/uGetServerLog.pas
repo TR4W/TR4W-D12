@@ -194,6 +194,7 @@ uses SysUtils,
    MainUnit,     // RescoreLog, YesOrNo, logger
    uNet,         // NetPeers, NetIsConnected
    uHostResolve, // TryResolveHost -- the server's name, issue 148
+   uNetTunnel,   // the Tailcat tunnel's local door for the sync port, issue 293
    uNetClient,       (* ServerPasswordOnWire -- the one wire form *)
    uSettingsModel,   (* Settings.Server *)
    uAppStrings,
@@ -884,6 +885,7 @@ end;
 function StartServerCatchUp(aOrigin: TCatchUpOrigin): boolean;
 var
    job: TFetchJob;
+   tunnelPort: word;
 begin
    Result := False;
 
@@ -907,6 +909,24 @@ begin
      and narrowed again. *)
    job.Host := AnsiString(Settings.Server.Address);
    job.Port := Settings.Server.Port + 1;
+   (* THROUGH THE TAILCAT TUNNEL (issue 293) the server's second port has a
+     local door of its own. A catch-up runs over a live link, so the tunnel is
+     open; if it is not, there is no way to the server and nothing is tried at
+     SERVER ADDRESS, which is not the server the operator asked for. *)
+   if Settings.Server.UseTailcat then
+      begin
+      job.Host := NET_TUNNEL_HOST;
+      if NetTunnelSyncPort(tunnelPort) then
+         begin
+         job.Port := tunnelPort;
+         end
+      else
+         begin
+         logger.Warn('[Net] catch-up: the Tailcat tunnel is not open');
+         job.Free;
+         Exit;
+         end;
+      end;
    job.Password := ServerPasswordOnWire(AnsiString(Settings.Server.Password));
    job.Image := TServerLogImage.Create;
 

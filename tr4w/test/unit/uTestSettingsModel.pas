@@ -468,7 +468,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(309, names.Count,
+         CheckEquals(310, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -524,7 +524,10 @@ begin
                      + ' contests that exchange it send (new, no CFGCA row,'
                      + ' issue 298), 2026-11-12; 309 with SERVER TAILCAT'
                      + ' ADDRESS, the multi-op server''s tunnel address, a'
-                     + ' secret (new, no CFGCA row, issue 293), 2026-11-12');
+                     + ' secret (new, no CFGCA row, issue 293), 2026-11-12;'
+                     + ' 310 with SERVER USE TAILCAT, the box that sends the'
+                     + ' link through that tunnel (new, no CFGCA row, issue'
+                     + ' 293), 2026-11-12');
       finally
          names.Free;
       end;
@@ -1453,6 +1456,15 @@ begin
    s := TR4WSettings.Create;
    try
       CheckEquals('', string(s.Server.TailcatAddress), 'empty by default');
+      (* SERVER USE TAILCAT: the box beside it. Off until the operator ticks
+        it, a plain boolean (not a secret), and holding an address does not
+        turn it on. *)
+      CheckFalse(s.Server.UseTailcat, 'the tunnel is not used by default');
+      CheckFalse(s.CommandIsSecret('SERVER USE TAILCAT'), 'the box is not a secret');
+      CheckTrue(s.TrySetByCommand('SERVER USE TAILCAT', 'TRUE'), 'the box is a command');
+      CheckTrue(s.Server.UseTailcat, 'and it sets the property');
+      CheckTrue(s.TrySetByCommand('SERVER USE TAILCAT', 'FALSE'), 'and clears it');
+      CheckFalse(s.Server.UseTailcat, 'off again');
       CheckTrue(s.CommandIsSecret(CMD), 'a secret, like SERVER PASSWORD');
       CheckEquals('(secret, 6 characters)', s.ValueForLog(CMD, 'tcABCD'),
                   'its value is masked in a log line');
@@ -1916,6 +1928,7 @@ const
       + '"SERVER PASSWORD",'
       + '"SERVER PORT",'
       + '"SERVER TAILCAT ADDRESS",'
+      + '"SERVER USE TAILCAT",'
       + '"SHIFT KEY ENABLE",'
       + '"SHORT 0",'
       + '"SHORT 1",'

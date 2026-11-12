@@ -509,6 +509,14 @@ goes through `uCFG.ApplyOwnedSetting` (the owned arm, lifted out) with its
 string intact; a non-owned one still goes through `CheckCommand`. Pinned by
 `uTestSettingsModel.Test_TheTailcatAddressIsASecretTrimmedAndBounded`.
 
+`SERVER USE TAILCAT` (`Settings.Server.UseTailcat`, boolean, default off, NY4I
+2026-11-12) is the box beside it: the address is only STORED until the box is
+ticked, and with the box ticked `SERVER ADDRESS` is not used at all (the link
+connects to a local door into the tunnel, `uNetTunnel`). Ticked with an empty
+address is a reported failure to connect, never a fall back to the address.
+Hand-wired on Preferences > Network (`chkNetUseTailcat`), pinned by the same
+test.
+
 ## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
 
 `HAMSCORE VERIFY SERVER` (`Settings.Hamscore.VerifyServer`) and `SCORE VERIFY SERVER`

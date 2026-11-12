@@ -6609,3 +6609,18 @@ Unit-tested (`uTestLogMyFacts.TestALicenceYearIsNeverReplacedByACapturedZone`, t
   - Windows FAIL on both EUHFC and KVP: editing visible Preferences License year to 05 and saving leaves stored MY ZONE=64 and ADIF STX_STRING=599 64. [#300 follow-up](https://github.com/TR4W/TR4W-D12/issues/300#issuecomment-6817167958).
 - [x] **A real zone contest unchanged.** In a CQ WW or IARU log, edit a QSO's captured CQ (CQ WW) / ITU (IARU) zone and export: that QSO's sent zone follows the edit, as before.
   - Windows e1e4 PASS: EUHFC keeps sent year 64 after ITU=42; IARU sends ITU 42 after the same edit. Both actual ADIF and Cabrillo verified. [Comparison](GUI_BENCH_RESULTS.md#captured-itu-zone-edits-e1e4-build).
+
+## Added 2026-11-12 -- THE LINK THROUGH A TAILCAT TUNNEL (issue 293)
+
+The forwarder is measured outside TR4W (`tools/netprobe` through it, same result as the plain port). The link INSIDE a running TR4W has not been seen. Needs the 64-bit build with `libtailcat.dll` beside the executable, and a TR4WServerPy on network protocol 3 started with `--tailcat`.
+
+- [ ] **Connects.** Preferences > Network: paste the address, tick Use Tailcat, leave Server as it is, Save. Net > Connect. The status line reads connected to `Tailcat:1061`; `tr4w.log` has `the Tailcat tunnel is up: the server answered in N ms` and never the address.
+- [ ] **Catch-up.** With QSOs in the server log that this log lacks, the catch-up runs through the tunnel (the server log shows a second connection, on the sync port).
+- [ ] **QSOs pass both ways** with a second station on the LAN side.
+- [ ] **Unticked** goes back to Server/Port with the address still stored.
+- [ ] **Ticked with an empty address:** one warning saying so, no connection to Server.
+- [ ] **Wrong address** (change a character): one warning after about 15 s that there was no answer through the tunnel; the retries stay silent.
+- [ ] **Server stopped mid-session:** the link drops and retries; restart the server and it reconnects without touching Preferences.
+- [ ] **Net > Disconnect, then exit:** no long wait at exit.
+- [ ] **Two separate networks** (station on a phone hotspot, server at home).
+- [ ] **The checkbox** sits right of the Tailcat address on the same row and does not overlap the reveal button; Tab goes address, Use Tailcat, This station.
