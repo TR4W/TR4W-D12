@@ -1,0 +1,28 @@
+# tailcat.pin -- WHAT libtailcat IS BUILT FROM. The one place that says so.
+#
+# Read by tr4w/build/Build-Tailcat.ps1 (Windows) and tr4w/build/build-tailcat.sh
+# (Linux, macOS), and by nothing else: CI calls those scripts. KEY=VALUE, one a
+# line, no quotes, no spaces round the equals sign. A line starting with # is a
+# comment. Both scripts refuse a key that is missing.
+#
+# TO MOVE TO A NEWER TAILCAT: change TAILCAT_COMMIT, read upstream's
+# cmd/libtailcat/tailcat.h at that commit, and if TC_ABI_VERSION moved, change
+# TAILCAT_ABI_VERSION in tr4w/src/utils/uTailcatLib.pas in the same commit. The
+# library refuses to load on a mismatch, so a forgotten half is a "Tailcat
+# library is the wrong version" warning and not a crash. Upstream promises no
+# stable API or wire format (its README), so the server end -- TR4WServerPy's
+# libtailcat -- must be built from the SAME commit.
+#
+# TO MOVE TO A NEWER GO: change GO_VERSION and all three GO_SHA256 values. They
+# are the sha256 column of https://go.dev/dl/ for these three archives:
+#   go<version>.windows-amd64.zip   go<version>.linux-amd64.tar.gz
+#   go<version>.darwin-arm64.tar.gz
+# upstream's go.mod names the minimum (go 1.27.2 at this commit).
+
+TAILCAT_REPO=https://github.com/tailscale/tailcat.git
+TAILCAT_COMMIT=e00cdde6ff787f801361ff85ed085775c775d4c5
+
+GO_VERSION=1.27.3
+GO_SHA256_WINDOWS_AMD64=f26081f438319757f8a1b46d7d0b2c5ec7583d4038e485e0aa725cfde7885fff
+GO_SHA256_LINUX_AMD64=65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40
+GO_SHA256_DARWIN_ARM64=dd3908cf20959d798c1e06ebe5b72213f0505ce01373b40ce3110975a6cd99c2
