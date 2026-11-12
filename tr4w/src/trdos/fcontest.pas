@@ -930,6 +930,10 @@ begin
   if Contest <> NoContest then
      begin
      definition := ContestIdentity(Contest);
+     (* A YEAR STATED AS MY ZONE BEFORE MY LICENSE YEAR EXISTED MOVES TO IT --
+       issue 298. The contest's statements are all in by now (the .cfg, the
+       New Contest queue, the log's own rows), and the contest is known. *)
+     AdoptLegacyLicenseYear(definition.ReceivedYearKind);
      ApplyContestTraits(definition);
 
      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));

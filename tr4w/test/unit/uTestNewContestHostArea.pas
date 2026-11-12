@@ -22,7 +22,10 @@ unit uTestNewContestHostArea;
     the dialog      queues MY STATE with the same text either way: 'ALC'
                     chosen from the list is what typing ALC queued, and 'GA'
                     typed outside is 'GA'. Driven through uNewContest's real
-                    rules on a form that is never shown. *)
+                    rules on a form that is never shown;
+    a licence year  row a contest labels itself (European HF Championship,
+                    KVP) queues MY ZONE, the label never a command;
+    a member row    the CWT labels itself queues MY STATE, the same way. *)
 
 interface
 
@@ -39,6 +42,8 @@ type
       procedure Test_TheDialogQueuesTheSameMyStateInsideAndOut;
       procedure Test_TickingKeepsTheOtherRows;
       procedure Test_APartyWithoutTheBoxKeepsFreeEntry;
+      procedure Test_ALicenseYearRowQueuesMyLicenseYear;
+      procedure Test_ACWTMemberRowQueuesMyState;
    public
       procedure RunAllTests; override;
    end;
@@ -523,6 +528,90 @@ begin
    end;
 end;
 
+(* THE LICENSE YEAR ROW (NY4I, 2026-11-11; issue 298): the European HF
+  Championship and KVP ask for the year of the first licence. The row reads
+  SNewContestLicenseYearLabel, which IS the command's own name since the year
+  became a setting of its own, and what is typed is queued as MY LICENSE YEAR
+  -- never as MY ZONE, which it was kept in until then. *)
+procedure TNewContestHostAreaTests.Test_ALicenseYearRowQueuesMyLicenseYear;
+const
+   CONTESTS: array[0..1] of ContestType = (EUROPEANHFC, KVP);
+var
+   frm: TfrmNewContest;
+   row: integer;
+   i: integer;
+   who: string;
+begin
+   BeginTest('Test_ALicenseYearRowQueuesMyLicenseYear');
+
+   for i := Low(CONTESTS) to High(CONTESTS) do
+      begin
+      who := string(ContestTypeSA[CONTESTS[i]]);
+      frm := NewDialog;
+      try
+         frm.SetMyCall('DL1AAA');
+         CheckTrue(Choose(frm, ContestHandleOf(CONTESTS[i])), who + ' can be chosen');
+         row := RowCaptioned(frm, SNewContestLicenseYearLabel);
+         CheckTrue(row > 0, who + ': the row reads ' + SNewContestLicenseYearLabel);
+         CheckEquals(0, RowCaptioned(frm, 'MY ZONE'), who + ': no row reads MY ZONE');
+         CheckEquals(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, frm.lblComment.Caption,
+                     who + ': beside the year prompt');
+
+         frm.SetRowText(row, '64');
+         CheckTrue(frm.btnOK.Enabled, who + ': a year is accepted');
+         ClearNewContestChoices;
+         QueueNewContestRows;
+         CheckEquals('64', QueuedNewContestValue('MY LICENSE YEAR'),
+                     who + ': the year is queued as MY LICENSE YEAR');
+         CheckEquals('', QueuedNewContestValue('MY ZONE'),
+                     who + ': and not as MY ZONE');
+      finally
+         ClearNewContestChoices;
+         FreeDialog(frm);
+      end;
+      end;
+end;
+
+(* THE SAME, FOR THE CWT'S QTH-OR-MEMBER ROW (2026-11-11): the prompt asks for
+  a QTH or a CWops member number, kept in MY STATE, and the row read MY
+  STATE. It reads SNewContestQTHOrMemberLabel; what is typed is queued as MY
+  STATE, MY NAME is still its own row, and the label is no command. *)
+procedure TNewContestHostAreaTests.Test_ACWTMemberRowQueuesMyState;
+var
+   frm: TfrmNewContest;
+   nameRow: integer;
+   row: integer;
+begin
+   BeginTest('Test_ACWTMemberRowQueuesMyState');
+
+   frm := NewDialog;
+   try
+      frm.SetMyCall('NY4I');
+      CheckTrue(Choose(frm, ContestHandleOf(CWOPS)), 'the CWT can be chosen');
+      nameRow := RowCaptioned(frm, 'MY NAME');
+      CheckTrue(nameRow > 0, 'the CWT still asks for MY NAME');
+      row := RowCaptioned(frm, SNewContestQTHOrMemberLabel);
+      CheckTrue(row > 0, 'the row reads ' + SNewContestQTHOrMemberLabel);
+      CheckEquals(0, RowCaptioned(frm, 'MY STATE'), 'no row reads MY STATE');
+      CheckEquals(TC_ENTERYOURNAMEANDQTH, frm.lblComment.Caption,
+                  'beside the QTH-or-member prompt');
+
+      frm.SetRowText(nameRow, 'TOM');
+      frm.SetRowText(row, '1234');
+      CheckTrue(frm.btnOK.Enabled, 'a member number is accepted');
+      ClearNewContestChoices;
+      QueueNewContestRows;
+      CheckEquals('1234', QueuedNewContestValue('MY STATE'),
+                  'the member number is queued as MY STATE');
+      CheckEquals('TOM', QueuedNewContestValue('MY NAME'), 'and the name as MY NAME');
+      CheckEquals('', QueuedNewContestValue(SNewContestQTHOrMemberLabel),
+                  'the label is not a command');
+   finally
+      ClearNewContestChoices;
+      FreeDialog(frm);
+   end;
+end;
+
 procedure TNewContestHostAreaTests.RunAllTests;
 begin
    Test_PlacesAreTheCountyFileKeys;
@@ -532,6 +621,8 @@ begin
    Test_TheDialogQueuesTheSameMyStateInsideAndOut;
    Test_TickingKeepsTheOtherRows;
    Test_APartyWithoutTheBoxKeepsFreeEntry;
+   Test_ALicenseYearRowQueuesMyLicenseYear;
+   Test_ACWTMemberRowQueuesMyState;
 end;
 
 end.

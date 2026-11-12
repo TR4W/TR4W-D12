@@ -137,6 +137,9 @@ type
                                      out aErrorMessage: string): boolean; override;
       (* A GRID WORD IS NEVER A CALL -- see TContestBase.MayBeACallsign. *)
       function MayBeACallsign(const aWord: string): boolean; override;
+   protected
+      (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
+      function GetSubmitsLogToARRL: boolean; override;
    end;
 
 implementation
@@ -414,6 +417,13 @@ end;
    SQUARE -- M11 S6 part 1, moved from the four `= GridSquares` engine
    sites. See TContestBase.HasGridSquareMultiplier. *)
 function TContestARRLVHFJun.HasGridSquareMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* THE SPONSOR'S LOG PORTAL -- an ARRL contest, whose log goes to the
+   ARRL's submission site (TContestBase.SubmitsLogToARRL, 2026-11-11). *)
+function TContestARRLVHFJun.GetSubmitsLogToARRL: boolean;
 begin
    Result := True;
 end;

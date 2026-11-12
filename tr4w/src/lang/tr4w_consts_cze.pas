@@ -104,7 +104,6 @@ const
   TC_UKEI                               = 'Zkontrolovat, je-li UK/EI';
   TC_LATEST_CONFIG_FILE                 = 'poslední konfigurace';
   TC_OPENCONFIGURATIONFILE              = ' - Otevře konfigurační soubor nebo deník závodu';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Adresář "%s" již existuje.'#13'Přepsat ?';
   TC_IAMIN                              = '&Moje QTH je %s';
   TC_NEWENGLANDSTATEABREVIATION         = 'Zadej zkratku svého státu pro NEQP'#13'(ME, NH, VT, MA, CT, RI):';
   TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Zadej QTH, které budeš vysílat:';

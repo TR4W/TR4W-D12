@@ -110,6 +110,16 @@ function CurrentStation: TStationContext;
   ITU zone an export sends) -- three copies of this rule until then. *)
 function SessionMyITUZone: integer;
 
+(* MY CQ ZONE AS A QSO RECORDS IT (my_cq_zone) -- issue 298. TStationContext.
+  MyCQZone's answer: a stated MY ZONE wins, else MY CALL's CQ zone from
+  CTY.DAT. The same in every contest: until MY LICENSE YEAR existed the
+  European HF Championship and KVP kept the SENT licence year in MY ZONE and
+  recorded it as the CQ zone (NY4I's row read 80), so this asked the contest;
+  MY ZONE is a zone everywhere now. aContest is kept so the caller does not
+  change. Rows already stored keep what they hold: nothing rewrites a
+  captured row. uLogStore.LogStoreCurrentMyFacts is the caller. *)
+function SessionMyCQZone(aContest: TContestBase): integer;
+
 (* THE ZONE aContest SENDS IN THIS SESSION, AS TEXT -- issue 225.
   uContestBase.ZoneTextSent over aContest's zone list (nil: neither),
   SessionMyITUZone and the resolved MY ZONE text. The ONE answer behind
@@ -117,6 +127,21 @@ function SessionMyITUZone: integer;
   exchange messages FoundContest writes (FCONTEST.SetUpRSTMyZoneExchange), so
   an ITU-zone contest sends on the air the ITU zone its log exports. *)
 function SessionZoneTextSent(aContest: TContestBase): string;
+
+(* A LOG OR .cfg THAT STATED THE LICENCE YEAR AS MY ZONE -- issue 298. Before
+  MY LICENSE YEAR existed the European HF Championship and KVP kept the year in
+  the zone slot, so a contest the operator set up then holds it as a MY ZONE
+  statement (a New Contest answer, a .cfg line, the log's own row). Asked once
+  the open contest is known (FCONTEST.FoundContest): when aKind says the
+  contest exchanges a year, and it STATED a MY ZONE but no MY LICENSE YEAR, the
+  statement moves -- the year becomes this contest's MY LICENSE YEAR, and the
+  MY ZONE statement is withdrawn, so the zone is derived from MY CALL again
+  rather than read as a CQ zone of 80. A statement that is not one to four
+  digits is left alone (the year would be nothing). The next capture writes
+  the log's rows under their own names; nothing else changes. A station-wide
+  MY ZONE is never moved: it is the station's zone, and only a contest's own
+  statement can have been a year. aKind rykNone does nothing. *)
+procedure AdoptLegacyLicenseYear(aKind: TReceivedYearKind);
 
 implementation
 
@@ -199,12 +224,61 @@ begin
       end;
 end;
 
-function SessionZoneTextSent(aContest: TContestBase): string;
+function SessionMyCQZone(aContest: TContestBase): integer;
 begin
-   (* See the declaration. *)
+   (* See the declaration. MY ZONE is a CQ zone in every contest since MY
+      LICENSE YEAR took the year (issue 298), so aContest no longer matters. *)
+   Result := EngineMyCQZone;
+end;
+
+(* THIS YEAR, from the calendar -- what MY LICENSE YEAR is read against
+   (TStationContext.CurrentYear). *)
+function CalendarYear: integer;
+var
+   year, month, day: word;
+begin
+   DecodeDate(Date, year, month, day);
+   Result := year;
+end;
+
+function SessionZoneTextSent(aContest: TContestBase): string;
+var
+   kind: TReceivedYearKind;
+begin
+   (* See the declaration. A contest that exchanges a year sends MY LICENSE
+      YEAR in the zone's place (issue 298). *)
+   kind := ContestReceivedYearKind(aContest);
+   if kind <> rykNone then
+      begin
+      Result := SentLicenseYearText(kind, Settings.My.ResolvedLicenseYear,
+                                    CalendarYear);
+      Exit;
+      end;
    Result := ZoneTextSent(ContestZoneMultiplierZones(aContest),
                           @SessionMyITUZone,
                           Settings.My.ResolvedZone);
+end;
+
+procedure AdoptLegacyLicenseYear(aKind: TReceivedYearKind);
+var
+   stated: string;
+   year: integer;
+begin
+   (* See the declaration. *)
+   if (aKind = rykNone) or
+      (not Settings.My.HasContestOverride(sfZone)) or
+      Settings.My.HasContestOverride(sfLicenseYear) then
+      begin
+      Exit;
+      end;
+   stated := Trim(Settings.My.ContestOverride(sfZone));
+   if (stated = '') or (Length(stated) > 4) or
+      (not TryStrToInt(stated, year)) or (year < 0) then
+      begin
+      Exit;
+      end;
+   Settings.My.SetContestOverride(sfLicenseYear, stated);
+   Settings.My.ClearContestOverride(sfZone);
 end;
 
 (* THE ACTIVE CONTEST OBJECT -- see ActiveContest. Declared here, ahead of the
@@ -293,6 +367,10 @@ begin
    Result.MyPrec := Settings.My.ResolvedPrec;
    Result.MyCheck := Settings.My.ResolvedCheck;
    Result.MyZoneText := Settings.My.ResolvedZone;
+   (* MY LICENSE YEAR, as stated, and this year to read it against -- see
+      TStationContext. *)
+   Result.MyLicenseYear := Settings.My.ResolvedLicenseYear;
+   Result.CurrentYear := CalendarYear;
    (* The session's contest name -- see TStationContext.ContestName (M7b). *)
    Result.ContestName := Settings.Contest.Name;
    (* The engine's domestic-country CTY lookup, as a service (M7b). *)

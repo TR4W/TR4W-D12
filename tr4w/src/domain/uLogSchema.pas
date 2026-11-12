@@ -214,7 +214,22 @@ const
      log a schema-4 build has opened is refused by every earlier build. *)
    (* 5: durable external-logger delivery, scoped to destination and contact.
       As with earlier versions, older builds refuse a migrated database. *)
-   LOG_SCHEMA_VERSION = 5;
+   (* 6 SINCE 2026-11-12 (issue 298, stage 1): qso.rcvd_year -- the received
+     year (first licensed, or years licensed), a standard exchange field of
+     its own instead of the zone slot (LOG_V6_QSO_YEAR_COLUMN). The migration
+     carries an existing log's years from rcvd_zone, for a contest that keeps
+     its year there only (TLogDatabase.MigrateSchema). Schema 5 SHIPPED in
+     5.0.37, so a log this build has opened is refused by 5.0.37 and every
+     earlier build -- the same consequence as 3 and 4. *)
+   (* 7 SINCE 2026-11-12 (issue 298, stage 2): NO SHAPE CHANGE -- a re-carry.
+     Through stage 1 the zone column was authoritative and rcvd_year a copy
+     that Edit QSO and the ADIF import could leave stale (an edit saved a new
+     zone beside the old year). Stage 2 moves the readers to rcvd_year, so a
+     log below 7 of a contest that receives a year has rcvd_year SET FROM
+     rcvd_zone, every row, overwriting (TLogDatabase.MigrateSchema). From 7
+     on, StoreLicenceYear writes both and rcvd_year is what is read. A log of
+     any other contest is only re-stamped. *)
+   LOG_SCHEMA_VERSION = 7;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -246,6 +261,14 @@ const
      which is what restores nothing from an old log. *)
    LOG_V4_MESSAGE_COLUMN: TLogAddedColumn = (
       Name: 'edited'; Declaration: 'INTEGER NOT NULL DEFAULT 0');
+
+   (* THE qso COLUMN SCHEMA 6 ADDED -- the received year (issue 298). The
+     LAST column of the CREATE TABLE below, so ADD COLUMN gives a migrated log
+     the same shape as a new one. NULLABLE, like every other rcvd_* number:
+     NULL is "no year" (ContestExchange.RcvdYearKnown False), and 0 is a real
+     year (00 = first licensed in 2000). *)
+   LOG_V6_QSO_YEAR_COLUMN: TLogAddedColumn = (
+      Name: 'rcvd_year'; Declaration: 'INTEGER');
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -569,7 +592,12 @@ const
       '    my_continent      TEXT,'#10 +
       '    my_cq_zone        INTEGER,'#10 +
       '    my_itu_zone       INTEGER,'#10 +
-      '    my_source         TEXT'#10 +
+      '    my_source         TEXT,'#10 +
+      '    rcvd_year         INTEGER'#10 +
+      '    -- SCHEMA 6: rcvd_year, THE RECEIVED YEAR (issue 298) -- the year'#10 +
+      '    -- first licensed, or years licensed, as the contest asks. NULL: no'#10 +
+      '    -- year; 0 is a real one. LAST, so a migrated log matches a new one.'#10 +
+      '    -- See LOG_V6_QSO_YEAR_COLUMN.'#10 +
       '    -- SCHEMA 3: THE REST OF OURS, AT THE MOMENT OF THIS QSO (tier 3),'#10 +
       '    -- beside my_county / my_grid / my_state above: my_call .. my_source,'#10 +
       '    -- LAST in the table, so a log migrated by ALTER TABLE ADD COLUMN has'#10 +

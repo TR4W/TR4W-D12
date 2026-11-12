@@ -68,7 +68,15 @@ const
    (* The protocol this build speaks.  V1 was the D7 / pre-HELLO wire (no
      HELLO message at all); this is 2.  Raise it when ANY wire record changes
      size or meaning, and say so in docs/TR4W_NETWORKING_ANALYSIS.md. *)
-   NET_PROTOCOL_VERSION = 2;
+   (* 3 SINCE 2026-11-12 (issue 298, stage 1): the QSO record carries the
+     RECEIVED YEAR (ContestExchange.RcvdYear / RcvdYearKnown) in bytes that
+     were sReserved. Every size is unchanged -- a QSO packet is still 384
+     bytes and the server stores the record as it comes -- but the MEANING
+     changed: a protocol-2 station sends those bytes as zero, so its QSOs
+     would arrive with no year. NY4I ruled no compatibility with a released
+     server or station is required. TR4WServerPy (another repository) judges
+     the version as EQUAL and must move to 3 with this build. *)
+   NET_PROTOCOL_VERSION = 3;
 
    HELLO_VERSION_CHARS  = 16;
    HELLO_CONTEST_CHARS  = 48;

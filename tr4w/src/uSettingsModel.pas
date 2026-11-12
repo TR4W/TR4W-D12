@@ -1099,6 +1099,8 @@ type
       FPort: TServerPort;
       FAutoSynchronizeLogOnConnect: boolean;
       FPassword: TSecretText;
+      FTailcatAddress: TSecretText;
+      procedure SetTailcatAddress(const aValue: TSecretText);
    public
       constructor Create;
    published
@@ -1123,6 +1125,22 @@ type
         one position could overwrite another's. As TSecretText it is refused
         from a peer and each position holds its own (NY4I, 2026-09-12). *)
       property Password: TSecretText read FPassword write FPassword;
+      (* SERVER TAILCAT ADDRESS (issue 293, new, no CFGCA row) -- the string
+        a server operator hands a remote position so it can reach the server
+        through a Tailcat tunnel from another network. Empty means "the
+        server is on this network; use Address".
+
+        A SECRET, because the string carries the tunnel's pre-shared key: it
+        is TSecretText for exactly the reasons Password is -- the vault, not
+        the file; refused from a peer; masked in Preferences and in every log
+        line (ValueForLog); never captured into a contest log.
+
+        TRIMMED ON SET, because it is pasted and a paste often brings a line
+        end. Its length bound (TAILCAT_ADDRESS_MAX_LENGTH) is a registered
+        value check, not this setter: a setter cannot refuse, and cutting a
+        key short in silence would make it fail with no reason given. *)
+      property TailcatAddress: TSecretText
+         read FTailcatAddress write SetTailcatAddress;
    end;
 
    (*
@@ -2304,7 +2322,7 @@ type
      the two cannot drift apart unnoticed. *)
    TStationFact = (sfState, sfSection, sfZone, sfItuZone, sfGrid, sfName,
                    sfFdClass, sfCheck, sfPrec, sfPark, sfIota, sfPostalCode,
-                   sfFocNumber);
+                   sfFocNumber, sfLicenseYear);
 
    (*
      THE STATION'S OWN FACTS -- the seventeen MY ... commands.
@@ -2339,6 +2357,7 @@ type
    TMySettings = class(TSettingsGroup)
    private
       FFocNumber: string;
+      FLicenseYear: string;
       FIota: string;
       FPark: string;
       FCheck: string;
@@ -2416,6 +2435,7 @@ type
       property ResolvedIota: string index Ord(sfIota) read GetResolvedText;
       property ResolvedPostalCode: string index Ord(sfPostalCode) read GetResolvedText;
       property ResolvedFocNumber: string index Ord(sfFocNumber) read GetResolvedText;
+      property ResolvedLicenseYear: string index Ord(sfLicenseYear) read GetResolvedText;
       (* MY ITU ZONE resolved; 0 still means "use CTY.DAT". *)
       property ResolvedItuZone: integer read GetResolvedItuZone;
 
@@ -2460,6 +2480,21 @@ type
    published
       // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
       property FocNumber: string read FFocNumber write FFocNumber;
+      (* THE YEAR THIS OPERATOR WAS FIRST LICENSED -- MY LICENSE YEAR, issue 298.
+        A standard exchange fact of its own: the European HF Championship and
+        KVP (two digits), and the contests that ask for four digits or for the
+        years licensed (TReceivedYearKind). It was the MY ZONE slot, which it
+        shared with the CQ zone and which is why Preferences, the New Contest
+        row, the tooltip and the Cabrillo export each needed an override to
+        say "year" where the setting said "zone".
+
+        THE TEXT AS TYPED -- '1985', or '85' (a year of 00..99 is the closest
+        past one; uContestBase.LicenseYearValue states the rule). What a
+        contest SENDS from it is the contest's kind's answer
+        (uContestBase.SentLicenseYearText): 85, 1985, or the count of years.
+        A contest may state its own (the contest's override, as for MY STATE),
+        so one station can run two contests with different years. *)
+      property LicenseYear: string read FLicenseYear write FLicenseYear;
       (* Was MyIOTA in logstuff.pas, and IT HAS NO READER -- the global was
         declared, initialised to '' and used by nothing but its own config
         row. Migrated rather than withdrawn on NY4I's instruction
@@ -4359,7 +4394,7 @@ const
    STATION_FACT_PROPERTY: array[TStationFact] of string = (
       'State', 'Section', 'Zone', 'ItuZone', 'Grid', 'Name',
       'FdClass', 'Check', 'Prec', 'Park', 'Iota', 'PostalCode',
-      'FocNumber');
+      'FocNumber', 'LicenseYear');
 
    (* THE HAMSCORE UPLOAD ADDRESS A NEVER-SET HAMSCORE URL GETS (issue 250,
      NY4I 2026-11-09). It is the direct hamscore.com endpoint, over https, so
@@ -4384,6 +4419,17 @@ const
      any other saved value, including .../post without the slash, is kept. *)
    SCORE_POSTING_DEFAULT_URL = 'https://contestonlinescore.com/post/';
    SCORE_POSTING_OLD_DEFAULT_URL = 'https://post.contestonlinescore.com/post/';
+
+   (* THE LONGEST SERVER TAILCAT ADDRESS ACCEPTED (issue 293), after trimming.
+     A real one is about 230 characters; this leaves room for a longer key
+     format without letting a stray paste of a whole document through. The
+     Preferences field carries the same bound as its MaxLength. *)
+   TAILCAT_ADDRESS_MAX_LENGTH = 1024;
+
+(* The registered check for SERVER TAILCAT ADDRESS: empty (no tunnel) or at
+  most TAILCAT_ADDRESS_MAX_LENGTH characters once trimmed. Public so a test
+  can ask it directly. *)
+function TailcatAddressLengthIsAllowed(const aValue: string): boolean;
 
 implementation
 
@@ -5131,6 +5177,18 @@ begin
      server ships with, so it is a default rather than a secret until the
      operator changes one or both ends. *)
    FPassword                    := 'TR4WSERVER';
+   (* Empty: no tunnel, so the link uses Address. *)
+   FTailcatAddress              := '';
+end;
+
+procedure TServerSettings.SetTailcatAddress(const aValue: TSecretText);
+begin
+   FTailcatAddress := TSecretText(Trim(string(aValue)));
+end;
+
+function TailcatAddressLengthIsAllowed(const aValue: string): boolean;
+begin
+   Result := Length(Trim(aValue)) <= TAILCAT_ADDRESS_MAX_LENGTH;
 end;
 
 constructor THamscoreSettings.Create;
@@ -5389,6 +5447,7 @@ begin
      cfgdef sets the two strings to '' explicitly and VC leaves the Byte at
      its zero. Zero is the "use CTY.DAT" sentinel, not an unset value. *)
    FFocNumber  := '';
+   FLicenseYear := '';
    FIota       := '';
    FPark       := '';
    FCheck      := '';
@@ -5501,6 +5560,10 @@ begin
       sfFocNumber:
          begin
          Result := FFocNumber;
+         end;
+      sfLicenseYear:
+         begin
+         Result := FLicenseYear;
          end;
    end;
 end;
@@ -7897,6 +7960,11 @@ initialization
    (* BACKUP LOG FILE NAME's value was a FILE; the property it reaches is a
      FOLDER. Here because this unit owns both names (BuildCommandMap). *)
    RegisterCommandValueSpelling('BACKUP LOG FILE NAME', @FolderOfFormerBackupFileName);
+
+   (* SERVER TAILCAT ADDRESS's length bound (issue 293). Here because this
+     unit owns the property and the bound; a setter cannot refuse a value. *)
+   RegisterSettingValueCheck('Server.TailcatAddress',
+                             @TailcatAddressLengthIsAllowed);
 
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
 

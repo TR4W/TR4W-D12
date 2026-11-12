@@ -72,6 +72,31 @@ function ContestLogFileName(const aContest: string; aWhen: TDateTime;
   and POSIX object to, not just Windows'. *)
 function SanitiseForFileName(const aText: string): string;
 
+type
+   (* Whether a full path names an existing file. The question FirstFreeLogFileName
+     asks, passed in so a test can answer it without a disk. *)
+   TLogFileTaken = function(const aPath: string): boolean;
+
+(* THE FIRST NAME IN aDir THAT NAMES NO FILE (issue 276, NY4I 2026-11-11).
+
+  aFileName is the default -- ContestLogFileName's answer, no directory. When it
+  is free it is the answer; otherwise a number goes before the extension,
+  space-separated like the rest of the name: "X.db", "X 2.db", "X 3.db"... The
+  FIRST free number wins, so a gap left by a renamed log is filled.
+
+  WHY A NUMBER AND NOT AN OVERWRITE. CW Open runs three independent sessions on
+  one date, each with serials from 1 and its own submission, so one contest,
+  date and callsign must be able to name several logs. Nothing here deletes or
+  replaces a file; it only finds a name that is not in use.
+
+  The answer is a file NAME, like aFileName. aDir may end with a separator or
+  not. aTaken is asked of the full path; the overload without it asks the disk.
+  It raises if 9999 numbers are all taken: that is a broken test of
+  existence, not a real directory, and looping for ever would hang. *)
+function FirstFreeLogFileName(const aDir, aFileName: string;
+                              aTaken: TLogFileTaken): string; overload;
+function FirstFreeLogFileName(const aDir, aFileName: string): string; overload;
+
 implementation
 
 function SanitiseForFileName(const aText: string): string;
@@ -135,6 +160,54 @@ begin
       end;
 
    Result := Result + '.db';
+end;
+
+const
+   (* The highest number FirstFreeLogFileName tries. *)
+   LAST_LOG_NUMBER = 9999;
+
+function FirstFreeLogFileName(const aDir, aFileName: string;
+                              aTaken: TLogFileTaken): string;
+var
+   dir, stem, ext: string;
+   n: integer;
+begin
+   dir := aDir;
+   if dir <> '' then
+      begin
+      dir := IncludeTrailingPathDelimiter(dir);
+      end;
+
+   Result := aFileName;
+   if not aTaken(dir + Result) then
+      begin
+      Exit;
+      end;
+
+   ext  := ExtractFileExt(aFileName);
+   stem := Copy(aFileName, 1, Length(aFileName) - Length(ext));
+   for n := 2 to LAST_LOG_NUMBER do
+      begin
+      Result := stem + ' ' + IntToStr(n) + ext;
+      if not aTaken(dir + Result) then
+         begin
+         Exit;
+         end;
+      end;
+
+   raise Exception.CreateFmt('No free log name for "%s" in "%s"', [aFileName, aDir]);
+end;
+
+(* The disk's answer. FileExists itself cannot be passed: it is overloaded
+  and has a default parameter. *)
+function LogFileOnDisk(const aPath: string): boolean;
+begin
+   Result := FileExists(aPath);
+end;
+
+function FirstFreeLogFileName(const aDir, aFileName: string): string;
+begin
+   Result := FirstFreeLogFileName(aDir, aFileName, @LogFileOnDisk);
 end;
 
 end.

@@ -185,6 +185,8 @@ uses
    uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uN1MMMode            in '..\..\src\uN1MMMode.pas',
+   uWSJTXReport         in '..\..\src\uWSJTXReport.pas',
+   uTestWSJTXReport     in 'uTestWSJTXReport.pas',
    uTestN1MMMode        in 'uTestN1MMMode.pas',
    uTestUDPContactXml   in 'uTestUDPContactXml.pas',
    uTestUDPDatagrams    in 'uTestUDPDatagrams.pas',
@@ -204,6 +206,9 @@ uses
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
    uTestZoneEntryRefusal in 'uTestZoneEntryRefusal.pas',
+   uTestPossibleDomesticQTHEntry in 'uTestPossibleDomesticQTHEntry.pas',
+   uTestLicenceYearEntry in 'uTestLicenceYearEntry.pas',
+   uTestQSONumberAndNameEntry in 'uTestQSONumberAndNameEntry.pas',
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
@@ -645,6 +650,7 @@ uses
    uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
    uNetCatchUp in '..\..\src\uNetCatchUp.pas',
    uTestNetSupport in 'uTestNetSupport.pas',
+   uTestMainFormHarness in 'uTestMainFormHarness.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
@@ -711,6 +717,15 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogStore        in 'uTestLogStore.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
+   (* Issue 298 stage 1: the received year's field, column, migration, import
+      and wire. *)
+   uTestLogReceivedYear in 'uTestLogReceivedYear.pas',
+   (* Issue 298 stage 3: the year on screen and in every export, the zone
+      box of Edit QSO, and the my_cq_zone a year contest records. *)
+   uTestReceivedYearDisplay in 'uTestReceivedYearDisplay.pas',
+   (* Issue 298: the SENT year is MY LICENSE YEAR, a setting of its own -- its
+      reading, the three kinds, the station fact, the readers, the legacy move. *)
+   uTestLicenseYearSetting in 'uTestLicenseYearSetting.pas',
    (* A locked log: the busy classifier, the lock probe, the stale-snapshot
       write, the WRL worker's rollback and the watchdog (2026-10-31). *)
    uLogConnectionWatch  in '..\..\src\domain\uLogConnectionWatch.pas',
@@ -895,6 +910,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestARRLSectionAlias in 'uTestARRLSectionAlias.pas',
    (* A spot's section from its comment (issue 83, 2026-11-05). *)
    uTestSpotCommentMultiplier in 'uTestSpotCommentMultiplier.pas',
+   (* Clear Mult Sheet and the score already earned (issue 164, 2026-11-11). *)
+   uTestClearMultSheet  in 'uTestClearMultSheet.pas',
    (* A call history file's prefill (NY4I, 2026-11-07). *)
    uTestCallHistory     in 'uTestCallHistory.pas',
    (* The call history download -- supercheckhistory.com (NY4I, 2026-11-08). *)
@@ -996,6 +1013,7 @@ begin
    RegisterSuite(TQsoDispatcherTests.Create('QsoDispatcher'));
    RegisterSuite(TNetSendQueueTests.Create('NetSendQueue'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
+   RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
@@ -1081,6 +1099,7 @@ begin
    RegisterSuite(TExchangeWordOrderTests.Create('ExchangeWordOrder'));
    RegisterSuite(TARRLSectionAliasTests.Create('ARRLSectionAlias'));
    RegisterSuite(TSpotCommentMultiplierTests.Create('SpotCommentMultiplier'));
+   RegisterSuite(TClearMultSheetTests.Create('ClearMultSheet'));
    RegisterSuite(TCallHistoryTests.Create('CallHistory'));
    RegisterSuite(TCallHistoryDownloadTests.Create('CallHistoryDownload'));
    RegisterSuite(TContestNamesTests.Create('ContestNames'));
@@ -1121,6 +1140,9 @@ begin
    RegisterSuite(TContestReadinessTests.Create('ContestReadiness'));
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TZoneEntryRefusalTests.Create('ZoneEntryRefusal'));
+   RegisterSuite(TPossibleDomesticQTHEntryTests.Create('PossibleDomesticQTHEntry'));
+   RegisterSuite(TLicenceYearEntryTests.Create('LicenceYearEntry'));
+   RegisterSuite(TQSONumberAndNameEntryTests.Create('QSONumberAndNameEntry'));
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
@@ -1241,6 +1263,10 @@ begin
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
+   RegisterSuite(TLogReceivedYearTests.Create('LogReceivedYear'));
+   RegisterSuite(TNetReceivedYearTests.Create('NetReceivedYear'));
+   RegisterSuite(TReceivedYearDisplayTests.Create('ReceivedYearDisplay'));
+   RegisterSuite(TLicenseYearSettingTests.Create('LicenseYearSetting'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));

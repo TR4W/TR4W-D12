@@ -49,7 +49,7 @@ NET_COMPUTERID_ID = 1130
 NET_SERVERMESSAGE_ID = 1140
 NET_HELLO_ID = 1150
 
-NET_PROTOCOL_VERSION = 2        # network protocol 2: the first message is a HELLO
+NET_PROTOCOL_VERSION = 3        # protocol 2: the first message is a HELLO; 3 (issue 298): the QSO record carries a received year
 HELLO_VERSION_CHARS = 16
 HELLO_CONTEST_CHARS = 48
 HELLO_SIZE = 2 + 2 + 1 + 1 + HELLO_VERSION_CHARS + HELLO_CONTEST_CHARS     # 70

@@ -5581,13 +5581,6 @@ msgstr ""
 msgid "FLUSHINITIALEX command is executed."
 msgstr ""
 
-#: utr4wstrings.tc_folderalreadyexistsoverwrite
-#, object-pascal-format
-msgid ""
-"Folder \"%s\" already exists.\n"
-"Overwrite ?"
-msgstr ""
-
 #: utr4wstrings.tc_footsw
 msgid "Footsw."
 msgstr ""

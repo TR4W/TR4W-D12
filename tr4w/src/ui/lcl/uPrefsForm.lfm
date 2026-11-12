@@ -526,7 +526,7 @@ object PrefsForm: TPrefsForm
           Top = 212
           Width = 225
           Caption = 'Activate this profile now'
-          TabOrder = 11
+          TabOrder = 12
           OnClick = btnActivateClick
         end
         object lblActivateHint: TLabel
@@ -540,16 +540,16 @@ object PrefsForm: TPrefsForm
           ParentFont = False
           WordWrap = True
         end
-      end
-      object chkAutoConnect: TCheckBox
-        Left = 12
-        Height = 19
-        Top = 458
-        Width = 300
-        AutoSize = False
-        Caption = 'Connect radios at startup'
-        TabOrder = 6
-        OnChange = chkAutoConnectChange
+        object chkAutoConnect: TCheckBox
+          Left = 220
+          Height = 19
+          Top = 182
+          Width = 300
+          AutoSize = False
+          Caption = 'Connect radios at startup'
+          TabOrder = 11
+          OnChange = chkAutoConnectChange
+        end
       end
     end
     object layRotators: TPanel
@@ -1441,6 +1441,23 @@ object PrefsForm: TPrefsForm
         Width = 150
         AutoSize = False
         TabOrder = 15
+      end
+      object lblMyLicenseYear: TLabel
+        Left = 380
+        Height = 17
+        Top = 218
+        Width = 110
+        AutoSize = False
+        Caption = 'License year:'
+      end
+      object edtMyLicenseYear: TEdit
+        Left = 496
+        Height = 22
+        Top = 214
+        Width = 150
+        AutoSize = False
+        MaxLength = 4
+        TabOrder = 16
       end
       object lblStationHint: TLabel
         Left = 12
@@ -2956,10 +2973,40 @@ object PrefsForm: TPrefsForm
         PasswordChar = '*'
         TabOrder = 2
       end
-      object lblNetComputerID: TLabel
+      object lblNetTailcat: TLabel
         Left = 12
         Height = 17
         Top = 138
+        Width = 140
+        AutoSize = False
+        Caption = 'Tailcat address:'
+      end
+      object edtNetTailcat: TEdit
+        Left = 160
+        Height = 22
+        Top = 134
+        Width = 240
+        AutoSize = False
+        EchoMode = emPassword
+        MaxLength = 1024
+        PasswordChar = '*'
+        TabOrder = 3
+      end
+      object lblNetTailcatHint: TLabel
+        Left = 160
+        Height = 52
+        Top = 160
+        Width = 500
+        AutoSize = False
+        Caption = 'Paste the address the server operator gave you to reach a server on another network. Leave empty for a server on your own network. Treat it like a password.'
+        Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
+      end
+      object lblNetComputerID: TLabel
+        Left = 12
+        Height = 17
+        Top = 222
         Width = 140
         AutoSize = False
         Caption = 'This station:'
@@ -2967,15 +3014,15 @@ object PrefsForm: TPrefsForm
       object edtNetComputerID: TEdit
         Left = 160
         Height = 22
-        Top = 134
+        Top = 218
         Width = 60
         AutoSize = False
-        TabOrder = 3
+        TabOrder = 4
       end
       object lblNetComputerIDHint: TLabel
         Left = 230
         Height = 17
-        Top = 138
+        Top = 222
         Width = 300
         AutoSize = False
         Caption = 'a single letter, unique in the network'
@@ -2985,48 +3032,48 @@ object PrefsForm: TPrefsForm
       object chkNetAutoSync: TCheckBox
         Left = 12
         Height = 22
-        Top = 170
+        Top = 254
         Width = 500
         AutoSize = False
         Caption = 'Synchronize the log when connecting'
-        TabOrder = 4
+        TabOrder = 5
       end
       object chkMultiMultsOnly: TCheckBox
         Left = 12
         Height = 22
-        Top = 196
+        Top = 280
         Width = 520
         Caption = 'Pass only new multipliers around the network'
-        TabOrder = 5
+        TabOrder = 6
       end
       object chkIntercomFile: TCheckBox
         Left = 12
         Height = 22
-        Top = 222
+        Top = 306
         Width = 520
         Caption = 'Log network messages to INTERCOM.TXT'
-        TabOrder = 6
+        TabOrder = 7
       end
       object chkNetAutoConnect: TCheckBox
         Left = 12
         Height = 22
-        Top = 248
+        Top = 332
         Width = 520
         Caption = 'Connect to the multi-op server when TR4W starts'
-        TabOrder = 7
+        TabOrder = 8
       end
       object chkNetShareSpots: TCheckBox
         Left = 12
         Height = 22
-        Top = 274
+        Top = 358
         Width = 520
         Caption = 'Share DX spots around the network'
-        TabOrder = 8
+        TabOrder = 9
       end
       object lblNetHint: TLabel
         Left = 12
         Height = 40
-        Top = 302
+        Top = 386
         Width = 620
         AutoSize = False
         Caption = 'TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers.'

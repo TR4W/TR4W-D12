@@ -296,6 +296,14 @@ var
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 
+(* A VALUE FOR A COMMAND THE SETTINGS OBJECT OWNS, from a trusted caller --
+  CheckCommand's owned arm, lifted out so a caller holding a STRING can reach
+  it without CheckCommand's ShortString parameters, which cut a value at 255
+  characters in silence (and the value check then judged the cut copy).
+  A refusal is logged, and a secret's value never is (ValueForLog). The
+  caller must have asked Settings.OwnsCommand. *)
+function ApplyOwnedSetting(const aCommand, aValue: string): boolean;
+
 (* ONE COMMAND THAT THE CONTEST STATED -- a contest .cfg line, a New Contest
   choice, or a row of the contest's own log on reopen.
 
@@ -1300,6 +1308,19 @@ begin
    Result := False;
 end;
 
+function ApplyOwnedSetting(const aCommand, aValue: string): boolean;
+begin
+   Result := Settings.TrySetByCommand(aCommand, aValue);
+   if (not Result) and (logger <> nil) then
+      begin
+      (* A value the property's type refuses -- reported, never swallowed.
+        The config file said something this setting cannot be. A
+        credential's value is never written to the log (ValueForLog). *)
+      logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
+                  [aCommand, Settings.ValueForLog(aCommand, aValue)]);
+      end;
+end;
+
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 var
@@ -1394,17 +1415,7 @@ begin
          Exit;
          end;
 
-      Result := Settings.TrySetByCommand(string(Command),
-                                         string(CustomCMD));
-      if (not Result) and (logger <> nil) then
-         begin
-         (* A value the property's type refuses -- reported, never swallowed.
-           The config file said something this setting cannot be. A
-           credential's value is never written to the log (ValueForLog). *)
-         logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
-                     [Command, Settings.ValueForLog(string(Command),
-                                                    string(CustomCMD))]);
-         end;
+      Result := ApplyOwnedSetting(string(Command), string(CustomCMD));
       Exit;
       end;
    (* THE FUNCTION-KEY MEMORY ARM IS GONE -- 2026-09-14, the last pattern
@@ -1656,6 +1667,27 @@ begin
    Result := (Length(aValue) = 1) and (aValue[1] >= 'A') and (aValue[1] <= 'Z');
 end;
 
+(* MY LICENSE YEAR: NOTHING, OR ONE TO FOUR DIGITS -- a year ('1985'), a
+  year's last two digits ('85') or a count of years ('9'). A value that is not
+  digits would send nothing and say nothing, so it is refused where it is
+  typed. Whether the number suits the open contest's kind is the contest's
+  question (uContestBase.SentLicenseYearText), not this check's. *)
+function MyLicenseYearIsDigits(const aValue: string): boolean;
+var
+   value: string;
+   i: integer;
+begin
+   value := Trim(aValue);
+   Result := Length(value) <= 4;
+   for i := 1 to Length(value) do
+      begin
+      if (value[i] < '0') or (value[i] > '9') then
+         begin
+         Result := False;
+         end;
+      end;
+end;
+
 function MyCountryIsAKnownPrefix(const aValue: string): boolean;
 var
    TempQTH: QTHRecord;
@@ -1793,6 +1825,7 @@ end;
   first MY COUNTRY line of the first file. *)
 initialization
    RegisterSettingValueCheck('My.Country', @MyCountryIsAKnownPrefix);
+   RegisterSettingValueCheck('My.LicenseYear', @MyLicenseYearIsDigits);
    (* AND THE ONE THAT USED TO BE A crType. COMPUTER ID was ctAlphaChar,
      whose whole difference from ctChar is `if CustomCMD[1] in ['A'..'Z']`
      and Exit otherwise -- a REFUSAL, which is what a registered check does

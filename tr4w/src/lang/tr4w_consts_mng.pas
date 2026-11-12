@@ -96,7 +96,6 @@ const
   TC_EUDX                               = 'EU country, enter your four character country code';
   TC_LATEST_CONFIG_FILE                 = 'Сvvлчийн Config File';
   TC_OPENCONFIGURATIONFILE              = ' Тохируулгын (config.file) файл шинээр нээх,шинэ тэмцээн сонгоно уу';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = '"%s" хавтас байсан байнаa. '#13'Дээрээс нь дараад биччих уу?';
   TC_IAMIN                              = 'Та & %s станц бол тэмдэглэнэ vv';
   TC_NEWENGLANDSTATEABREVIATION         = 'Шинэ Ингланд штатын товчлол'#13'(ME, NH, VT, MA, CT, RI):';
   TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Явуулах QTH-ээ оруулна уу:';

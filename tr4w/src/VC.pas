@@ -1929,6 +1929,27 @@ type
 type
   PLogFileInformation = ^TLogFileInformation;
 
+  (* WHAT KIND OF YEAR A CONTEST RECEIVES -- issue 298, stage 2 (2026-11-12).
+     The kind of ContestExchange.RcvdYear below. NY4I read the DXLog.net
+     contest files: ten contests carry a year in the exchange, and it comes in
+     three kinds. The contest STATES its kind (uContestBase's
+     TContestBase.ReceivedYearKind); nothing guesses it from the digits typed.
+
+        rykNone            no year (every contest but the ones below)
+        rykTwoDigitYear    the last two digits of the year first licensed,
+                           00..99 -- EUHFC, S5 KVP (classes); ARRL Rookie
+                           Roundup, LU 40m (DXLog only)
+        rykFourDigitYear   the year first licensed, four digits -- SCC RTTY,
+                           IG-RY, RTTYops WW (DXLog only; no class yet)
+        rykYearsLicensed   how many years licensed, a COUNT -- WIA
+                           Remembrance Day, HA YL-OM, RYBNICKIE (DXLog only)
+
+     HERE, NOT IN uContestBase, because the engine's parser
+     (LOGSTUFF.ProcessRSTAndLicenceYearExchange) takes it in its interface and
+     LOGSTUFF names uContestBase only in its implementation. The range each
+     kind implies is uContestBase.ReceivedYearRange. *)
+  TReceivedYearKind = (rykNone, rykTwoDigitYear, rykFourDigitYear, rykYearsLicensed);
+
   {(*}
 
 (* The TLogHeader type had a dependency on the size of the ContestExchange
@@ -2087,7 +2108,27 @@ type
 // length byte of unused sReserved (always zero), so existing logs read
 // with ceXQSO = False after the layout change.  Issue #750.
 {01}  ceXQSO:              Boolean;
-{49} sReserved:               string[49]
+(* THE RECEIVED YEAR -- issue 298, stage 1 (2026-11-12). The year the other
+   station was first licensed (or, for a contest that asks it, how many years
+   it has been licensed): the European HF Championship and KVP today. SQLite
+   column rcvd_year.
+
+   TAKEN FROM sReserved, LIKE ceXQSO BEFORE IT, SO THE RECORD STAYS 376 BYTES
+   and every earlier offset stays put: a D7 .TRW, the server's SERVERLOG.TRW
+   and the multi-op QSO packet keep their layout. sReserved went from
+   string[49] to string[46]. Those bytes (324..326) were zero in every record
+   of the six binary-log fixtures (measured 2026-11-12) and nothing ever wrote
+   sReserved; the .TRW reader clears them anyway (uLogBinaryFile.ReadNext),
+   because a D7 log never carries a year here.
+
+   TWO FIELDS, NOT A SENTINEL. 0 is a real value (00 = first licensed in 2000;
+   0 years licensed), and a zero-filled record -- FillChar, an older peer, an
+   old server log -- must read as "no year", not as 00. So RcvdYearKnown says
+   whether there is one, and RcvdYear is meaningful only when it is True.
+   Write both through uContestBase.StoreLicenceYear. *)
+{02}  RcvdYear:            Word;
+{01}  RcvdYearKnown:       Boolean;
+{47} sReserved:               string[46]
    end;
 {*)}
 

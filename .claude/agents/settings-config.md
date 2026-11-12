@@ -480,6 +480,35 @@ Wiring `NeedsRestart` to emit that hint per bound control is the real fix and is
 `MY COUNTRY` mid-session, nothing said it would not take effect, and the
 contest kept its original exchange.
 
+## Connect-at-startup is the PROFILE's (issue 286, 2026-11-11)
+
+`TStationProfile.ConnectAtStartup` (profile JSON `connectAtStartup`, absent =
+True). The station-wide `general.autoConnect` / `AutoConnectOnStartup` is
+DELETED: saved and shown since 2026-08-05, read by nothing -- every start
+connected the active profile's radios. It is **not migrated** (its default
+False would have switched radios off on upgrade); it stays in the known-keys
+list so an old file logs no ERROR, and the next save drops it. Startup:
+`uRadioConfigApply.RadioLibraryConnectAtStartup` (True unless a RESOLVED
+profile says no, via `ProfileConnectsAtStartup`) gates only the two
+`CheckAndInitializePorts_ForThisRadio` calls in
+`LogCfg.CheckAndInitializeSerialPorts`. Activate and Reset Radio Ports never
+ask it. The ini store (`SaveTo`/`LoadFrom`) does not carry it, by that
+format's stated policy.
+
+## SERVER TAILCAT ADDRESS, and the 255-character cut it exposed (issue 293, 2026-11-12)
+
+`Settings.Server.TailcatAddress` -- a `TSecretText` (vault, masked, never shared,
+`ValueForLog`), default `''`, trimmed by its setter, at most
+`TAILCAT_ADDRESS_MAX_LENGTH` = 1024 by a registered value check
+(`TailcatAddressLengthIsAllowed`). Hand-wired on Preferences > Network like its
+three siblings (no `RegisterModelSetting`, so no `KNOWN_HELP_GAPS` entry; no
+`help_en.po` text yet). **`ApplyAndStoreCommand` used to send every owned value
+through `CheckCommand`'s ShortString parameters, cutting it at 255 characters in
+silence -- and the value check then judged the cut copy.** An owned command now
+goes through `uCFG.ApplyOwnedSetting` (the owned arm, lifted out) with its
+string intact; a non-owned one still goes through `CheckCommand`. Pinned by
+`uTestSettingsModel.Test_TheTailcatAddressIsASecretTrimmedAndBounded`.
+
 ## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
 
 `HAMSCORE VERIFY SERVER` (`Settings.Hamscore.VerifyServer`) and `SCORE VERIFY SERVER`

@@ -67,6 +67,7 @@ type
       procedure Test_CategoryModeSpellsItsOwnName;
       procedure Test_OnlyCQWWHasASixtyMinuteBreak;
       procedure Test_AGapCountsUpToTheBreak;
+      procedure Test_OnlyARRLContestsOfferTheARRLLogPortal;
    end;
 
 implementation
@@ -828,6 +829,56 @@ begin
               'IARU HF: a 45-minute gap is off time');
 end;
 
+(* SUBMIT ARRL LOG IS OFFERED ONLY FOR AN ARRL CONTEST (2026-11-11). The menu
+  row opens the ARRL's log submission portal and was enabled for every
+  contest, the CWT included; MainUnit now greys it unless the contest says
+  SubmitsLogToARRL. EXACTLY the ARRL-sponsored contests in ARRL_PORTAL answer
+  True -- a registry walk, so a by-id contest is held to False. IARU HF, the
+  Kids Day and every CQ contest are deliberately NOT on it: add one only on
+  the sponsor's word that its log goes to that portal. *)
+procedure TContestUITests.Test_OnlyARRLContestsOfferTheARRLLogPortal;
+const
+   ARRL_PORTAL: array[0..11] of ContestType = (
+      ARRLDXCW, ARRLDXSSB, ARRLSSCW, ARRLSSSSB, ARRL160, ARRL10, ARRLDIGI,
+      ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, ARRL_RTTY_ROUNDUP, ARRLFIELDDAY);
+var
+   contests: TContestIdentityList;
+   obj: TContestBase;
+   k, i: integer;
+   listed: boolean;
+   answered: integer;
+begin
+   BeginTest('Test_OnlyARRLContestsOfferTheARRLLogPortal');
+   answered := 0;
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      listed := False;
+      for i := Low(ARRL_PORTAL) to High(ARRL_PORTAL) do
+         begin
+         if IsLegacyContest(obj, ARRL_PORTAL[i]) then
+            begin
+            listed := True;
+            end;
+         end;
+      CheckEquals(Ord(listed), Ord(obj.SubmitsLogToARRL),
+                  ContestWho(obj) + ': submits its log to the ARRL''s portal');
+      if obj.SubmitsLogToARRL then
+         begin
+         Inc(answered);
+         end;
+      end;
+   (* Every listed contest was walked and answered -- a member dropped from
+      the registry cannot pass by being skipped. *)
+   CheckEquals(Length(ARRL_PORTAL), answered, 'every ARRL contest was walked');
+
+   (* By name: the report that started it, and the two nearest neighbours. *)
+   CheckFalse(ContestIdentity(CWOPS).SubmitsLogToARRL, 'the CWT is not an ARRL contest');
+   CheckFalse(ContestIdentity(IARU).SubmitsLogToARRL, 'IARU HF: not stated');
+   CheckFalse(ContestIdentity(DUMMYCONTEST).SubmitsLogToARRL, 'no contest: no ARRL portal');
+end;
+
 procedure TContestUITests.RunAllTests;
 begin
    Test_ChoicesListEveryContestOnce;
@@ -844,6 +895,7 @@ begin
    Test_CategoryModeSpellsItsOwnName;
    Test_OnlyCQWWHasASixtyMinuteBreak;
    Test_AGapCountsUpToTheBreak;
+   Test_OnlyARRLContestsOfferTheARRLLogPortal;
 end;
 
 end.

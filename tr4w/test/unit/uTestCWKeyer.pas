@@ -43,6 +43,7 @@ type
       procedure Test_SendStringAndStopKeysOneRadio;
       procedure Test_NoKeyUpIsNotedWhenCATKeysNothing;
       procedure Test_AFaultInTheReviewNeverReachesKeying;
+      procedure Test_AutoSendKeysNoPossibleCallKey;
    public
       procedure RunAllTests; override;
    end;
@@ -1049,6 +1050,63 @@ begin
    end;
 end;
 
+(* ISSUE 258.  While auto-send runs, the possible-call keys are call-window
+  commands, not CW: the call field refuses them, so keying them sent a call
+  that differed from the one on the screen.  The rule follows the SETTINGS --
+  a remapped key is filtered and the freed default is keyed again -- and the
+  start-sending-now exclusion it absorbed is unchanged. *)
+procedure TCWKeyerTests.Test_AutoSendKeysNoPossibleCallKey;
+var
+   savedLeft: Char;
+   savedRight: Char;
+   savedAccept: Char;
+   savedStartNow: Char;
+   ch: Char;
+begin
+   savedLeft := Settings.PossibleCall.LeftKey;
+   savedRight := Settings.PossibleCall.RightKey;
+   savedAccept := Settings.PossibleCall.AcceptKey;
+   savedStartNow := Settings.Cw.StartSendingNowKey;
+   try
+      Settings.PossibleCall.LeftKey := ',';
+      Settings.PossibleCall.RightKey := '.';
+      Settings.PossibleCall.AcceptKey := ';';
+      Settings.Cw.StartSendingNowKey := '''';
+
+      CheckFalse(AutoSendKeysCallWindowKey(','), 'the possible-call LEFT key is not keyed');
+      CheckFalse(AutoSendKeysCallWindowKey('.'), 'the possible-call RIGHT key is not keyed');
+      CheckFalse(AutoSendKeysCallWindowKey(';'), 'the possible-call ACCEPT key is not keyed');
+      CheckFalse(AutoSendKeysCallWindowKey(''''), 'the start-sending-now key is still not keyed');
+
+      for ch := 'A' to 'Z' do
+         begin
+         CheckTrue(AutoSendKeysCallWindowKey(ch), 'a letter is keyed: ' + ch);
+         end;
+      for ch := '0' to '9' do
+         begin
+         CheckTrue(AutoSendKeysCallWindowKey(ch), 'a digit is keyed: ' + ch);
+         end;
+      CheckTrue(AutoSendKeysCallWindowKey('/'), 'a slash is keyed');
+      CheckTrue(AutoSendKeysCallWindowKey('?'), 'a question mark is keyed');
+
+      (* Remapped: the rule is the settings, not the literals. *)
+      Settings.PossibleCall.LeftKey := '[';
+      Settings.PossibleCall.RightKey := ']';
+      Settings.PossibleCall.AcceptKey := '\';
+      CheckFalse(AutoSendKeysCallWindowKey('['), 'a remapped LEFT key is not keyed');
+      CheckFalse(AutoSendKeysCallWindowKey(']'), 'a remapped RIGHT key is not keyed');
+      CheckFalse(AutoSendKeysCallWindowKey('\'), 'a remapped ACCEPT key is not keyed');
+      CheckTrue(AutoSendKeysCallWindowKey(','), 'a comma that is no longer a command is keyed');
+      CheckTrue(AutoSendKeysCallWindowKey('.'), 'a period that is no longer a command is keyed');
+      CheckTrue(AutoSendKeysCallWindowKey(';'), 'a semicolon that is no longer a command is keyed');
+   finally
+      Settings.PossibleCall.LeftKey := savedLeft;
+      Settings.PossibleCall.RightKey := savedRight;
+      Settings.PossibleCall.AcceptKey := savedAccept;
+      Settings.Cw.StartSendingNowKey := savedStartNow;
+   end;
+end;
+
 procedure TCWKeyerTests.RunAllTests;
 begin
    Test_SelectionPrecedence;
@@ -1066,6 +1124,7 @@ begin
    Test_SendStringAndStopKeysOneRadio;
    Test_NoKeyUpIsNotedWhenCATKeysNothing;
    Test_AFaultInTheReviewNeverReachesKeying;
+   Test_AutoSendKeysNoPossibleCallKey;
 end;
 
 end.

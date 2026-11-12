@@ -440,6 +440,7 @@ uses
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
+  uWSJTXReport,      // which modes carry a WSJT-X dB SNR (issue 261)
   // utils_text.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
   MainUnit,
@@ -2298,7 +2299,11 @@ end;
     MyGrid, MySection, MyPark   the row's
     MyZone                      the row's zone of the kind this contest sends
                                 (ITU for an ITU-zone contest, else the CTY
-                                zone mode's), '' when unknown
+                                zone mode's), '' when unknown -- and NOT
+                                AT ALL where MY ZONE holds no station zone
+                                (the European HF Championship's and KVP's
+                                licence year, 2026-11-12):
+                                uContestBase.SentZoneKindOfQSO
     MyState                     the row's my_state, BUT ONLY WHEN THE SESSION
                                 SENDS MY STATE ITSELF in that slot: a contest
                                 whose set-up sends something else there (the
@@ -2321,8 +2326,7 @@ begin
      send. *)
    Result := MyStationExchangeOfQSO( CurrentMyStationExchange( aContest ), aFacts,
       SentMyState = Settings.My.ResolvedState,
-      ( ContestZoneMultiplierZones( aContest ) = zmzITUZones ) or
-      ( CTY.ctyZoneMode <> CQZoneMode ) );
+      SentZoneKindOfQSO( aContest, CTY.ctyZoneMode ) );
 end;
 
 (* OUR CALL FOR ONE LOGGED QSO is uLogSource.ExportCallFor (D5, log schema 3,
@@ -2592,8 +2596,10 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // ----- CQZ / ITUZ (zone) -----
   (* The contest's zone list, not the CTY zone mode -- M11 S5; it was
     ContestSession.ZoneMult. The Croatian counts ITU zones over a CQ zone
-    mode and so writes a CQ zone as ITUZ; CW Open is the inverse (plan F5,
-    open question Q95). Transcribed, not fixed. *)
+    mode and so writes a CQ zone as ITUZ (plan F5, open question Q95).
+    Transcribed, not fixed. CW Open was the inverse until it lost its zone
+    multiplier on its sponsor's rule (issue 277, 2026-11-11); it writes no
+    zone tag now. *)
   zoneList := ContestZoneMultiplierZones( contestRules );
   if rec.Zone <> DUMMYZONE then
      begin
@@ -3177,23 +3183,11 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 RSTSent := sysutils.Format( '%d', [ TempRXData.RSTSent ] );
                 end;
 
-             if ( TempRXData.ExtMode in [ eFT8, eMFSK, eJT65 ] ) and
-                ( TempRXData.RSTReceived < 25 ) then
-                begin
-                if Settings.Wsjtx.Enabled then
-                   begin
-                   RSTReceived := sysutils.Format( '%d',
-                      [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] );
-                   end
-                else
-                   begin
-                   RSTReceived := '599';
-                   end;
-                end
-             else
-                begin
-                RSTReceived := sysutils.Format( '%d', [ TempRXData.RSTReceived ] );
-                end;
+             (* Which modes carry a dB SNR here, and the 25 limit, are
+               uWSJTXReport's (issue 261). *)
+             RSTReceived := sysutils.Format( '%d',
+                [ WSJTXReceivedReportForExport( TempRXData.ExtMode,
+                     TempRXData.RSTReceived, Settings.Wsjtx.Enabled ) ] );
 
              nrReceived := TempRXData.NumberReceived;
              nrSent     := TempRXData.NumberSent;

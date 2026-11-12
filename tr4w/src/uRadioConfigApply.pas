@@ -159,6 +159,13 @@ var
    // uRadioConfigStore.TCIRadioUsingServerPort.
    RadioLibraryTCIClashingRadio: string = '';
 
+   (* WHETHER THE START-UP SEQUENCE OPENS THE RADIOS (issue 286): the active
+     profile's ConnectAtStartup, through ProfileConnectsAtStartup. Read once,
+     by LogCfg.CheckAndInitializeSerialPorts. True unless a resolved active
+     profile says otherwise -- no library, no active profile, a profile naming
+     a missing radio, and the headless /EXPORT all keep the old behaviour. *)
+   RadioLibraryConnectAtStartup: boolean = True;
+
 // Logging settings from the store into the globals -- see the implementation
 // for why the level cannot simply be assigned.
 procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
@@ -1264,12 +1271,25 @@ begin
    // hook; the store is only what makes it survive a restart.  Recording a
    // value CFGCA rejected would put it in the file for the next start to
    // stumble over.
-   FillChar(keyShort, SizeOf(keyShort), 0);
-   FillChar(valueShort, SizeOf(valueShort), 0);
-   keyShort   := ShortString(AnsiString(aCommand));
-   valueShort := ShortString(AnsiString(aValue));
+   if settingsOwned then
+      begin
+      (* AN OWNED VALUE STAYS A STRING (issue 293). CheckCommand takes
+        ShortStrings, so a value longer than 255 characters -- a Tailcat
+        address may be up to 1024 -- was cut there in silence, and the
+        registered check then judged the cut copy. ApplyOwnedSetting is the
+        owned arm CheckCommand runs (none of TryApplyCommandAction's four
+        names is owned), reached without the narrowing. *)
+      Result := ApplyOwnedSetting(aCommand, aValue);
+      end
+   else
+      begin
+      FillChar(keyShort, SizeOf(keyShort), 0);
+      FillChar(valueShort, SizeOf(valueShort), 0);
+      keyShort   := ShortString(AnsiString(aCommand));
+      valueShort := ShortString(AnsiString(aValue));
 
-   Result := CheckCommand(keyShort, valueShort, True);
+      Result := CheckCommand(keyShort, valueShort, True);
+      end;
    if not Result then
       begin
       Exit;
@@ -2662,6 +2682,7 @@ var
 begin
    aError := '';
    Result := True;
+   RadioLibraryConnectAtStartup := True;
 
    if not FileExists(RadioStoreFileName) then
       begin
@@ -2845,6 +2866,16 @@ begin
             Result := False;
             Exit;
             end;
+         end;
+
+      (* AFTER BOTH SLOTS RESOLVE, so a profile that could not be applied
+        never turns the radios off -- see RadioLibraryConnectAtStartup. *)
+      RadioLibraryConnectAtStartup := ProfileConnectsAtStartup(profile);
+      if not RadioLibraryConnectAtStartup then
+         begin
+         logger.Info('[Startup] profile "%s" does not connect its radios at ' +
+                     'startup -- Activate or Reset Radio Ports connects them',
+                     [profile.Name]);
          end;
 
       // Once, across both slots -- see ApplyKeyersForProfile.  This is the path

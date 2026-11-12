@@ -45,7 +45,8 @@ uses
    uRadioPolling,   (* ShowRadioLinkFailure -- the condition/remedy split *)
    uElementPanel,   (* TElementPanel -- the need-strip cells *)
    uMainGrids,      (* BindMainGrids / SetMultNeedBands -- the need strips *)
-   uMainForm;       (* the form, the panels and the notice timer *)
+   uMainForm,       (* the form, the panels and the notice timer *)
+   uTestMainFormHarness; (* EnsureTestMainForm / ReleaseTestMainForm *)
 
 type
    TStatusAndNoticeTests = class(TTestCase)
@@ -364,56 +365,13 @@ end;
 
 (* ---------------------------------------------------------------------- *)
 
+(* THE DESIGNED MAIN WINDOW, STREAMED ONCE -- uTestMainFormHarness, lifted
+  from here (2026-11-12) when uTestLogReceivedYear became its second caller;
+  the reasons for each step are written there. FREED AT THE END OF THE SUITE:
+  see ReleaseMainForm. *)
 procedure TStatusAndNoticeTests.EnsureMainForm;
 begin
-   if TR4WMainForm <> nil then
-      begin
-      Exit;
-      end;
-
-   (* Create(nil) STREAMS uMainForm.lfm and nothing else: this form has no
-     OnCreate, so none of TR4W's startup runs and no window handle is
-     allocated.  BindMainElements is what makes SetElementText able to reach
-     pnlQuickCommand -- it is the same call CreateMainWindow makes.
-
-     FREED AT THE END OF THE SUITE -- see ReleaseMainForm for why that matters
-     to somebody else's tests. *)
-   (* WITHOUT THIS EVERY GUARD IN uMainForm SAYS "OFF THE MAIN THREAD", AND
-     THAT IS A FACT ABOUT THIS BINARY, NOT ABOUT THE CODE UNDER TEST.
-     uCrashLog.OnMainThread compares against GMainThreadId, which is recorded by
-     InstallCrashLog and is 0 until something calls it -- BOTH shipping programs
-     call InstallCrashLogLCL (the app from uProgramMain, tr4wserver from its own
-     program body), and that installs the RTL half too, so both are fine.  This
-     said "tr4wserver calls InstallCrashLog" until 2026-09-28; it does not, and
-     for a while it called neither.  A test binary that skips it finds
-     SetElementText deferring every write and SetStatusText dropping every one,
-     with nothing in the log to say so, because ReportOffMainThread also stays
-     quiet while GMainThreadId is 0.  Idempotent. *)
-   InstallCrashLog;
-
-   (* AND THE WIDGET SET HAS TO BE INITIALISED, which a test binary never
-     does for itself: without it the first control that needs a window dies with
-     "Failed to create win32 control, error 1407: Cannot find window class",
-     because the classes are registered by Application.Initialize.  It starts no
-     message loop -- Application.Run is what does that -- so this stays a
-     console test. *)
-   if Application <> nil then
-      begin
-      Application.Initialize;
-      end;
-
-   TR4WMainForm := TTR4WMainForm.Create(nil);
-   BindMainElements;
-
-   (* AND THE PANEL NEEDS A WINDOW, because ControlUsable asks HandleAllocated
-     -- deliberately, after a startup crash in 2026-08 that came of dropping
-     that half of the guard.  The LCL creates a control's window lazily, and
-     this form is never shown, so the test has to give the control what a
-     running program gives it.  Reading .Handle is what forces it. *)
-   if MainElement(mweQuickCommand) <> nil then
-      begin
-      MainElement(mweQuickCommand).HandleNeeded;
-      end;
+   EnsureTestMainForm;
 end;
 
 (* PUT THE PROCESS BACK AS IT WAS FOUND, AND THIS IS NOT TIDINESS.
@@ -422,25 +380,10 @@ end;
   pins that the main window is exempt from the editing-key rule, and says in its
   own comment that a console test can only ask it that way.  Leaving a form
   behind failed three of their assertions, which is the clearest possible
-  demonstration that a suite must not leave global state behind.
-
-  BindMainElements with no form clears GElements, so nothing is left pointing at
-  the freed panels. *)
+  demonstration that a suite must not leave global state behind. *)
 procedure TStatusAndNoticeTests.ReleaseMainForm;
-var
-   frm: TTR4WMainForm;
 begin
-   if TR4WMainForm = nil then
-      begin
-      Exit;
-      end;
-
-   frm := TR4WMainForm;
-   TR4WMainForm := nil;
-   BindMainElements;
-   (* The need strips too: with no form, BindMainGrids forgets its panels. *)
-   BindMainGrids;
-   frm.Free;
+   ReleaseTestMainForm;
 end;
 
 procedure TStatusAndNoticeTests.Drain;
@@ -2517,12 +2460,13 @@ end;
    entry shapes the parser documents ('599 12 EU5', '12 EU5') pass on the
    current code: GM0GAV's own 2016 port of the domestic "needs" display
    (D7 6961582d, n4af/tr4w #81) and issue #100's post-log refresh are what
-   this pins. ONE SHAPE REPRODUCES THE SYMPTOM and is deliberately NOT pinned
-   here, because whether to refuse it is a parse ruling: '5NN 12 EU5' is
-   ACCEPTED with QTH '5NN' -- the '<word> <number>' branch of
-   ProcessRSTQSONumberAndPossibleDomesticQTHExchange overwrites the
-   FoundDomesticQTH answer with True (as D7 does) -- so the QSO has no
-   island, scores 2, the log remembers '5NN' and the header names the call. *)
+   this pins. ONE SHAPE REPRODUCED THE SYMPTOM: '5NN 12 EU5' was ACCEPTED
+   with QTH '5NN' -- the '<word> <number>' branch of
+   ProcessRSTQSONumberAndPossibleDomesticQTHExchange overwrote the
+   FoundDomesticQTH answer with True (as D7 did) -- so the QSO had no island,
+   scored 2, and the header named the call. Since issue 263 it is refused
+   with its message and writes nothing; uTestPossibleDomesticQTHEntry pins
+   it. *)
 procedure TStatusAndNoticeTests.Test_IOTAMultNeedsFollowAnIslandWorkedOnAnotherBand;
 var
    multNeed20: TElementPanel;

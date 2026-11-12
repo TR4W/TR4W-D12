@@ -357,6 +357,8 @@ type
       edtMyIOTA: TEdit;
       lblMyPark: TLabel;
       edtMyPark: TEdit;
+      lblMyLicenseYear: TLabel;
+      edtMyLicenseYear: TEdit;
 
       // --- External Software (Tags 16..19) ------------------------------------
       // Four children of the External Software node.  DXLab has no settings of
@@ -461,6 +463,8 @@ type
       lblNetAddress: TLabel;
       lblNetPort: TLabel;
       lblNetPassword: TLabel;
+      lblNetTailcat: TLabel;
+      lblNetTailcatHint: TLabel;
       lblNetComputerID: TLabel;
       lblNetComputerIDHint: TLabel;
       lblNetHint: TLabel;
@@ -479,6 +483,7 @@ type
       edtNetAddress: TEdit;
       edtNetPort: TEdit;
       edtNetPassword: TEdit;
+      edtNetTailcat: TEdit;
       edtNetComputerID: TEdit;
       edtMainFont: TEdit;
       edtFontSize: TEdit;
@@ -2086,6 +2091,9 @@ begin
      to -- see uPasswordReveal. *)
    AttachPasswordReveal(edtClusterPassword);
    AttachPasswordReveal(edtNetPassword);
+   (* The Tailcat address carries the tunnel's key, so it is masked and
+     revealed exactly like the password above it (issue 293). *)
+   AttachPasswordReveal(edtNetTailcat);
    AttachPasswordReveal(edtHamScorePass);
    LogPhase(FTiming, 'stream .lfm');
 
@@ -2106,6 +2114,10 @@ begin
    chkHamScoreVerify.Caption  := UTF8Encode(SVerifyServerCaption);
    chkScoreVerify.Caption     := UTF8Encode(SVerifyServerCaption);
    lblScoreVerifyNote.Caption := UTF8Encode(SVerifyServerOffWarning);
+   (* THE TAILCAT ADDRESS ROW (issue 293): its label and hint from the
+     resourcestrings; the .lfm holds the same English for the designer. *)
+   lblNetTailcat.Caption     := UTF8Encode(SPrefsNetTailcatCaption);
+   lblNetTailcatHint.Caption := UTF8Encode(SPrefsNetTailcatHint);
    (* Same pattern: it names the pages below Operating, and CW left them
      (issue 235). *)
    lblOperatingInfo.Caption := SPrefsOperatingInfo;
@@ -3124,6 +3136,10 @@ begin
          chkSpeedSync1.Checked := False;
          chkSpeedSync2.Checked := False;
          chkSO2R.Checked  := False;
+         (* No profile connects at startup -- ProfileConnectsAtStartup -- and
+           there is nothing here to change, so say so and offer nothing. *)
+         chkAutoConnect.Checked := True;
+         chkAutoConnect.Enabled := False;
          end
       else
          begin
@@ -3140,6 +3156,8 @@ begin
          chkSpeedSync1.Checked := prof.SpeedSync1;
          chkSpeedSync2.Checked := prof.SpeedSync2;
          chkSO2R.Checked  := prof.SO2REnabled;
+         chkAutoConnect.Checked := prof.ConnectAtStartup;
+         chkAutoConnect.Enabled := True;
          end;
 
       // RESTARTED HERE.  FTiming is a field, so between one refresh and the next
@@ -3159,7 +3177,6 @@ begin
          end;
       FLoaded.Clear;
 
-      chkAutoConnect.Checked := FStore.AutoConnectOnStartup;
       LogPhase(FTiming, '  profile combos');
       LoadStationPanel;
       LogPhase(FTiming, '  Station');
@@ -3400,7 +3417,6 @@ begin
       Exit;
       end;
 
-   FStore.AutoConnectOnStartup := chkAutoConnect.Checked;
    SaveStationPanel;
    SaveExternalSoftwarePanels;
    SaveHardwarePanel;
@@ -3497,6 +3513,7 @@ begin
    prof.SpeedSync1  := chkSpeedSync1.Checked;
    prof.SpeedSync2  := chkSpeedSync2.Checked;
    prof.SO2REnabled := chkSO2R.Checked;
+   prof.ConnectAtStartup := chkAutoConnect.Checked;
 
    Dirty := True;
 end;
@@ -5015,6 +5032,7 @@ begin
    AddHandWiredToSearchIndex(aN, 'COMPUTER ID',                       edtNetComputerID);
    AddHandWiredToSearchIndex(aN, 'SERVER PASSWORD',                   edtNetPassword);
    AddHandWiredToSearchIndex(aN, 'SERVER PORT',                       edtNetPort);
+   AddHandWiredToSearchIndex(aN, 'SERVER TAILCAT ADDRESS',            edtNetTailcat);
 
    // --- laySCP ---
    AddHandWiredToSearchIndex(aN, 'SCP MINIMUM LETTERS',               cbxSCPMinLetters);
@@ -5030,6 +5048,7 @@ begin
    AddHandWiredToSearchIndex(aN, 'MY GRID',                           edtMyGrid);
    AddHandWiredToSearchIndex(aN, 'MY IOTA',                           edtMyIOTA);
    AddHandWiredToSearchIndex(aN, 'MY ITU ZONE',                       edtMyITUZone);
+   AddHandWiredToSearchIndex(aN, 'MY LICENSE YEAR',                   edtMyLicenseYear);
    AddHandWiredToSearchIndex(aN, 'MY NAME',                           edtMyName);
    AddHandWiredToSearchIndex(aN, 'MY PARK',                           edtMyPark);
    AddHandWiredToSearchIndex(aN, 'MY POSTAL CODE',                    edtMyPostalCode);
@@ -6515,7 +6534,8 @@ begin
       MakeStationField('MY FD CLASS',     edtMyFDClass),
       MakeStationField('MY FOC NUMBER',   edtMyFOCNumber),
       MakeStationField('MY IOTA',         edtMyIOTA),
-      MakeStationField('MY PARK',         edtMyPark)
+      MakeStationField('MY PARK',         edtMyPark),
+      MakeStationField('MY LICENSE YEAR', edtMyLicenseYear)
    ];
 end;
 
@@ -7820,6 +7840,10 @@ begin
                                CFGCommandValueAsString('SERVER PORT'));
    edtNetPassword.Text   := FStore.CommandValue('SERVER PASSWORD',
                                CFGCommandValueAsString('SERVER PASSWORD'));
+   (* Converted explicitly: the LCL's Text is UTF-8, and an implicit narrowing
+     here is one more than the build's ratcheted ceiling allows. *)
+   edtNetTailcat.Text    := LclText(FStore.CommandValue('SERVER TAILCAT ADDRESS',
+                               CFGCommandValueAsString('SERVER TAILCAT ADDRESS')));
    edtNetComputerID.Text := FStore.CommandValue('COMPUTER ID',
                                CFGCommandValueAsString('COMPUTER ID'));
    chkNetAutoSync.Checked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
@@ -7852,7 +7876,10 @@ begin
    // NOT trimmed: a password may legitimately begin or end with a space, and
    // silently removing one turns "wrong password" into an unsolvable puzzle.
    ApplyIfChanged('SERVER PASSWORD', edtNetPassword.Text);
-   ApplyIfChanged('COMPUTER ID',     Trim(edtNetComputerID.Text));
+   // Trimmed: it is pasted, and a paste often brings a line end. The setter
+   // trims as well; this keeps "changed?" honest.
+   ApplyIfChanged('SERVER TAILCAT ADDRESS', Trim(edtNetTailcat.Text));
+   ApplyIfChanged('COMPUTER ID',    Trim(edtNetComputerID.Text));
    SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.Checked);
 
    ApplyIfChanged('MAIN FONT', Trim(edtMainFont.Text));

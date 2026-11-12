@@ -228,6 +228,9 @@ begin
    SameBool('ceDupe', a.ceDupe, b.ceDupe);
    SameBool('ceSearchAndPounce', a.ceSearchAndPounce, b.ceSearchAndPounce);
    SameBool('ceXQSO', a.ceXQSO, b.ceXQSO);
+   (* the received year, schema 6 (issue 298) *)
+   SameBool('RcvdYearKnown', a.RcvdYearKnown, b.RcvdYearKnown);
+   SameInt('RcvdYear', a.RcvdYear, b.RcvdYear);
    (* ceQSO_Skiped IS DELIBERATELY NOT ROUND-TRIPPED. It is a legacy slot kept
       so the 376-byte binary record still reads; the database never stores it
       and the reader always returns False. Asserting equality here would pin
@@ -1431,6 +1434,16 @@ begin
    aQso.ceDupe := not Odd(aSeed);
    aQso.ceSearchAndPounce := Odd(aSeed);
    aQso.ceXQSO := not Odd(aSeed);
+   (* The received year: present on odd seeds, absent (and so 0) on even. *)
+   aQso.RcvdYearKnown := Odd(aSeed);
+   if aQso.RcvdYearKnown then
+      begin
+      aQso.RcvdYear := 1980 + aSeed;
+      end
+   else
+      begin
+      aQso.RcvdYear := 0;
+      end;
    aQso.ceWasSendInQTC := Odd(aSeed);
    aQso.NameSent := not Odd(aSeed);
    aQso.MP3Record := Odd(aSeed);

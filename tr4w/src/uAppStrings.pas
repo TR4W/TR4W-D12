@@ -297,6 +297,12 @@ resourcestring
    SReadinessMyZoneMissing =
       'MY ZONE is empty and this contest sends your zone.';
 
+   (* A contest that exchanges the year first licensed (TReceivedYearKind) --
+     MY LICENSE YEAR, issue 298. It sends nothing for the year while empty. *)
+   SReadinessMyLicenseYearMissing =
+      'MY LICENSE YEAR is empty and this contest sends the year you were ' +
+      'first licensed.';
+
    SReadinessMyGridMissing =
       'MY GRID is empty and this contest sends your grid square.';
 
@@ -564,6 +570,21 @@ resourcestring
    SExchangeNoCheck = 'Missing check (two digits)';
    SExchangeNoSection = 'Missing section';
 
+   (* A SERIAL-AND-NAME EXCHANGE WITH NO NAME (CW Open and the other
+     LOGSTUFF.ProcessQSONumberAndNameExchange contests). '123' alone was
+     refused with no message, so Enter appeared to do nothing. A missing
+     serial says TC_NOQSONUMBERFOUND, as the serial-and-QTH parser does. *)
+   SExchangeNoNameFound = 'No name found!!';
+
+   (* THE EUROPEAN HF CHAMPIONSHIP'S AND KVP'S LICENSE YEAR
+     (LOGSTUFF.ProcessRSTAndLicenceYearExchange, 2026-11-11). A lone '599'
+     said 'Improper zone number!!' -- these contests have no zone. "No year"
+     is an empty entry or a report alone; anything else that is not one or two
+     digits after an optional report is an improper year. "License" as the
+     New Contest row (SNewContestLicenseYearLabel) and the sponsor spell it. *)
+   SExchangeNoLicenseYear = 'No license year found!!';
+   SExchangeImproperLicenseYear = 'Improper license year!!';
+
    (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
      NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
      VE station in the NC QSO party", "we should refuse to log it and show an
@@ -629,6 +650,22 @@ resourcestring
      operator reads -- the command queued is MY STATE on both sides. *)
    SNewContestHostAreaCountyLabel = 'MY COUNTY';
    SNewContestHostAreaStateLabel = 'MY STATE';
+
+   (* THE LICENCE-YEAR ROW'S LABEL -- the European HF Championship and KVP
+     (NY4I, 2026-11-11: their prompt asks for the year of the first licence,
+     and the row beside it read MY ZONE, a D7 artifact). The year has been
+     its own setting since issue 298, so the label IS the command queued, MY
+     LICENSE YEAR; the label mechanism stays for the rows that still differ
+     (TNewContestPrompt.RowLabel). *)
+   SNewContestLicenseYearLabel = 'MY LICENSE YEAR';
+
+   (* THE CWT'S QTH-OR-MEMBER-NUMBER ROW'S LABEL (2026-11-11): the prompt asks
+     for a QTH or a CWops member number, and the row beside it read MY STATE.
+     What is typed is kept in MY STATE and the command queued is MY STATE;
+     this is only what the operator reads (TNewContestPrompt.RowLabel). Kept
+     to the width of CATEGORY-TRANSMITTER, the longest label the same
+     160-pixel column already shows. *)
+   SNewContestQTHOrMemberLabel = 'MY QTH OR MEMBER NO';
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
    SNewContestHostAreaOutsideNotice =
@@ -651,6 +688,21 @@ resourcestring
      ticked, and cannot be chosen for a new contest; the mark says why. %s is
      the contest's display name. *)
    SContestInactive = '%s (inactive)';
+
+   (* THE TOTALS GRID'S MULTIPLIER ROW WHEN THE MULTIPLIER IS EACH DIFFERENT
+     CALLSIGN WORKED -- issue 277 (2026-11-11): the CWOps CW Open's rule,
+     "each different call sign is a multiplier the first time it is worked in
+     that session", where the row read 'Prefixes'. Short: it shares the grid's
+     left column with 'Prefixes' and 'Dom Mults'. *)
+   STotalsCallsignMults = 'Calls';
+
+   (* THE TOTALS GRID'S ZONE ROW AND THE LOG'S ZONE COLUMN WHEN THE "ZONE" IS
+     THE YEAR OF FIRST LICENSE -- the European HF Championship and KVP
+     (2026-11-11), whose year is kept in the zone slot. The row read 'Zones'
+     and the column 'Zn'. The column's ColumnsArray text stays 'Zn': it is
+     also the COLUMN WIDTH token. *)
+   STotalsLicenseYearMults = 'Years';
+   SLogColumnLicenseYear = 'Year';
 
    (* THE NEW CONTEST DIALOG'S CONTEST LIST -- Q103 / Q52, 2026-10-19. The
      label over the search box and the list, in the same capitals as the
@@ -946,6 +998,34 @@ resourcestring
    SLogLockedReadOnly = 'Open read-only (no logging)';
    SLogLockedQuit = 'Quit TR4W';
 
+   (* ------------------------ a new contest's log name is taken (issue 276) - *)
+
+   (* THE NEW CONTEST QUESTION (uNewContest.AskAboutATakenLogName), asked when
+     a log for the same contest, date and callsign already exists -- CW Open
+     runs three sessions a day. The first %s is the existing log, the second
+     the numbered name a new log would get. The two captions are buttons; the
+     third is the LCL's own Cancel. NOTHING HERE OVERWRITES OR DELETES A LOG.
+     It replaced TC_FOLDERALREADYEXISTSOVERWRITE, which offered to overwrite
+     a "folder" and opened the existing log whichever button was chosen. *)
+   SNewLogNameTakenTitle = 'This contest already has a log';
+   SNewLogNameTakenBody =
+      'A log for this contest, date and callsign already exists:' + #10 + '%s' + #10#10 +
+      'Create new log: start a separate, empty log named' + #10 + '%s' + #10 +
+      'The existing log is kept unchanged.' + #10#10 +
+      'Open existing log: continue logging in the existing log.' + #10#10 +
+      'Cancel: go back to the New Contest window. Nothing is created.';
+   SNewLogCreateNumbered = 'Create new log';
+   SNewLogOpenExisting = 'Open existing log';
+   (* The same question when the taken log IS THE ONE OPEN (File > Open Log,
+     2026-11-11): Open existing is not offered, because opening the open log
+     does nothing. The first %s is that log, the second the numbered name.
+     Buttons: SNewLogCreateNumbered and the LCL's own Cancel. *)
+   SNewLogNameTakenOpenBody =
+      'The log for this contest, date and callsign is the log you have open:' + #10 + '%s' + #10#10 +
+      'Create new log: start a separate, empty log named' + #10 + '%s' + #10 +
+      'The open log is kept unchanged.' + #10#10 +
+      'Cancel: go back to the New Contest window. Nothing is created.';
+
    (* Shown once, the first time a read-only session refuses a write. %s is the
      log's file. *)
    SLogReadOnlyRefused =
@@ -1078,6 +1158,12 @@ resourcestring
       the box while it is CLEARED and says what that costs. *)
    SVerifyServerCaption      = 'Verify the server''s certificate';
    SVerifyServerOffWarning   = 'The server''s identity is not checked; anyone between you and it can read what you send.';
+
+   (* THE TAILCAT ADDRESS ROW on Preferences > Network (issue 293): the
+      string a server operator gives a remote position to reach the multi-op
+      server through a Tailcat tunnel. *)
+   SPrefsNetTailcatCaption   = 'Tailcat address:';
+   SPrefsNetTailcatHint      = 'Paste the address the server operator gave you to reach a server on another network. Leave empty for a server on your own network. Treat it like a password.';
 
 implementation
 

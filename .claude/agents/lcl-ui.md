@@ -392,6 +392,14 @@ measurement (issue 232, next section).
   `uTestEditQSOLayout` checks it off screen at the default font and at 14 pt for
   overlap, clipping and held widths. It is Windows-measured; the Mac judgement is on
   `BENCH_QUEUE.md`.
+- **A caption or limit that depends on the QSO is set by the LOAD, both ways, before
+  `FitLayout`.** The form is created once and hidden, so a value set for one QSO stays
+  for the next. `TfrmEditQSO.ShowZoneBoxFor(contest)` (issue 298 stage 3) captures the
+  designed (translated) `lblZone` caption and `edtZone.MaxLength` on first use and
+  restores them for a contest with no received year; it sets `MaxLength` BEFORE the
+  text goes in (a shorter limit cuts the text -- see the 4f0339d4 truncation). A
+  UTF-16 string reaches a caption through `utils_text.LclText`, or the narrowing
+  ceiling fails the build.
 - **The External logger editor follows it** (`TExternalLoggersForm.FitLayout`, issue
   232): one caption column across Name, Provider and the provider's rows, Refresh sized to
   its caption, one row height from the tallest control, the eye square at its box's

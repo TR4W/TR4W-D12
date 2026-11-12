@@ -321,6 +321,15 @@ begin
    aRecord.ceQSO_Deleted := aRecord.ceQSO_Deleted or aRecord.ceQSO_Skiped;
    aRecord.ceQSO_Skiped  := False;
 
+   (* NO .TRW CARRIES A RECEIVED YEAR (issue 298, stage 1). Those bytes were
+     sReserved, which nothing ever wrote -- zero in every fixture record, but
+     a D7 log is somebody else's file, so they are cleared here rather than
+     believed. A contest that kept its year in the zone slot gets it from
+     there: the importer's job (uLogImport), because it knows the contest and
+     this reader does not. *)
+   aRecord.RcvdYear      := 0;
+   aRecord.RcvdYearKnown := False;
+
    Inc(FRecordsRead);
    Result := True;
 end;

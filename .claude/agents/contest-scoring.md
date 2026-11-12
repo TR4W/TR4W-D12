@@ -489,8 +489,11 @@ zone and DX answers ask. Do not bring back a stored "doing zone" flag.
 `ZoneModeType` / `cfCQZoneMode` STAY -- the CTY lookup's zone system.
 **Never answer the
 zone LIST from `ZoneMode` or the reverse** -- the Croatian counts ITU zones
-over a CQ zone mode, CW Open the inverse (F5, Q95 open, pinned in
-`uTestZoneMultiplier`). LOGSTUFF's EUHFC range arm was vacuous and is gone;
+over a CQ zone mode (F5, Q95 open, pinned in
+`uTestZoneMultiplier`). **CW Open has NO zone multiplier (issue 277,
+2026-11-11)**: its sponsor names one multiplier, each different callsign
+(`[DXLog CWOpen.txt]` agrees), so the D7 row's CQ zones were taken away; its
+ITU zone mode stays and its ADIF writes no zone tag. LOGSTUFF's EUHFC range arm was vacuous and is gone;
 so are its dead JAPrefectures arms. **The TRMASTER initial zone
 (`InitialExchangeEntry`) asks `ActiveContest` like every other zone reader
 (M11 S5 part 2).** It asked `ContestIdentity` at part 1 because of plan
@@ -738,8 +741,50 @@ i - 1 (D7), so erase mode hid each year by the next year's cell. Pinned in
 `uTestMults`. **A refused RST-and-zone entry leaves `Zone` untouched**
 (`ProcessRSTAndZoneExchange`, in LOGSTUFF's interface for
 `uTestZoneEntryRefusal`), and in CQ zone mode it refuses every zone above
-40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones"). Its sibling `ProcessRSTZoneAndPossibleDomesticQTHExchange`
-still writes before refusing (open).
+40 -- 50..59 used to pass (NY4I: "there are only 40 CQ zones").
+**THE EUHFC/KVP LICENCE YEAR HAS ITS OWN PARSER, STILL STORED IN `Zone`
+(2026-11-11).** `ParseRSTLicenceYear` -> `ProcessRSTAndLicenceYearExchange`
+takes 00..99 after an optional RS(T) and asks NO zone rule, so it no longer
+depends on FoundContest setting ITU zone mode (it was the zone parser,
+accepted only because the 40-zone limit never ran in ITU mode). Both parsers
+read their words through ONE reader, `ReadRSTAndOneOrTwoDigitNumber` -- do
+not copy it. The year is written through `uContestBase.LicenceYearOf` /
+`StoreLicenceYear` into the zone slot (`rcvd_zone`, `mult_zone`, the zone
+sheet, rmZone) -- the encoding is the contract, so no column, stored value
+or export byte moved. A field and multiplier kind of its own would change the
+schema AND the 376-byte record the wire and server log carry: not taken.
+Pinned by `uTestLicenceYearEntry` (every year in CQ and ITU zone mode, the
+engine path for both classes, once per band, export bytes). **SUPERSEDED IN
+PART BY ISSUE 298 (2026-11-12):** the year has its own field (`RcvdYear`,
+`rcvd_year`, carved from `sReserved` -- the record stayed 376 bytes); the
+parser takes the CONTEST'S STATED KIND (`ProcessRSTAndLicenceYearExchange(
+text, aKind, rx)`; the shared reader is now `ReadRSTAndNumberOfDigits` with
+the kind's digit count, `ReadRSTAndOneOrTwoDigitNumber` its 1..2 wrapper for
+the zone parser); readers read the field (`TryLicenceYearOf`, and LOGDUPE's
+remembered exchange gives `RcvdYear` when known); `StoreLicenceYear` still
+writes the zone slot too, so the zone SHEET still counts the year until stage
+4. **So does CQ
+WW RTTY's `ProcessRSTZoneAndPossibleDomesticQTHExchange` (issue 274,
+2026-11-11, NY4I's rulings)**: it parses into locals and writes `Zone`,
+`QTHString`, `DomesticQTH` and `DomMultQTH` only once accepted (the domestic
+QTH is resolved by `FoundDomesticQTH` on a copy); the 40-zone limit is ONE
+predicate, `LOGSTUFF.ZoneIsAboveTheCQZones`, both parsers ask. **A 599 in
+front is valid on CW and RTTY** (Phone's report stays 59): D7's
+"first word longer than two characters" refusal is now a test of the ZONE
+word only (`HasTheShapeOfAZone`), and after an RS(T) the rest reads as the
+unprefixed forms (`599 5`, `599 5 CT`, `599 CT 14`). **Whether a zone is
+needed is the CLASS's `ReceivedExchangeFields.Zone`**, asked of
+`ExchangeContest` -- never the mode: CQ WW RTTY needs one, so `59 CT` on
+Phone (59 is no CQ zone, and has a report's shape) is refused as missing the
+zone while `14 CT` is zone 14; a class that needs no zone reads a
+report-shaped first word as the RS(T) and takes a QTH alone (no registered
+contest does; `uTestZoneEntryRefusal` drives it under ARRL RTTY Roundup).
+**Every refusal names its reason** in `ExchangeErrorMessage`, existing strings
+only: `TC_IMPROPERZONENUMBER`, `TC_NOTENOUGHINFOINEXCHANGE` (zone missing),
+`RefuseDomesticQTH` (unknown QTH), `TC_INVALID` (malformed). The RS(T) is
+still written before a refusal. Open on #274: the CW zone-then-RST arm and
+`ProcessQSONumberAndZoneExchange` have no range check; ValidRST takes
+100..599 on CW/RTTY, so `123 CT` reads as a report.
 
 ## The sheet also COUNTS each multiplier's workings (issue 12, 2026-11-07)
 

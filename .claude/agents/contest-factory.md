@@ -507,8 +507,9 @@ the target shape, the M-step migration order and the open questions.
   (base False; the European HFC and KVP). **`TZoneMultiplierZones` IS NOT
   `ZoneModeType`**: it is the list the multiplier counts, `ZoneMode`
   (`cfCQZoneMode`) is which zone CTY.DAT gives a call, and they disagree for
-  the Croatian and CW Open today (plan F5, Q95 open) -- never derive one
-  from the other. 20 contests in 19 units state it (CQ WW on its family
+  the Croatian today (plan F5, Q95 open; CW Open was the inverse until its
+  sponsor's rule took its zones away, issue 277, 2026-11-11) -- never derive
+  one from the other. 19 contests in 18 units state it (CQ WW on its family
   base; JIDX for a Japanese entrant only, through `IsJapaneseEntrant`, the
   renamed `CountsDXMultiplier` its DX answers also ask). A NEW zone contest
   overrides `ZoneMultiplierCount` (and `ZoneMultiplierZones` for CQ or ITU
@@ -1043,7 +1044,15 @@ the target shape, the M-step migration order and the open questions.
   canvas or a global. Seams: `DescribeNewContestPrompts(TNewContestPrompts)`
   -- the New Contest dialog's two `case`s, ordered steps (rows go out in the
   order asked, the last comment wins), the QSO-party head on the base from
-  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area');
+  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); a step may
+  NAME ITS ROW (`AskFieldWithCommentAndLabel`, `TNewContestPrompt.RowLabel`,
+  2026-11-11: EUHFC and KVP label their MY ZONE row "MY LICENSE YEAR", the
+  CWT its MY STATE row "MY QTH OR MEMBER NO" -- `uAppStrings`
+  resourcestrings; Locust and the NCCC Sprint show the CWT's prompt words
+  but take no member number, so keep MY STATE; the prompts table renders a
+  label, `StepCommentLabelled`) -- the label is only what is read, the
+  command queued is still the field's (`uNewContest.RowCommand`); the Jock
+  White Field Day's branch number still sits under a MY ZONE label;
   `NewContestValueRefusal(field, value)` (Q104, 2026-10-17: '' accepts, any
   other answer is the message `uNewContest.BeginNewContest` shows while OK stays
   disabled; the base accepts everything, IN7QPNE refuses an in-area MY STATE);
@@ -1054,7 +1063,55 @@ the target shape, the M-step migration order and the open questions.
   the queued command stays MY STATE, the row's FIELD, never its label;
   the base answers for every `IsUSQSOParty`, BC/ON/QC/IN7QPNE state False
   with their reason; `uTestNewContestHostArea` walks the registry);
-  `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
+  `TotalsDisplay` (uTotal; the domestic and, since issue 277 2026-11-11, the
+  PREFIX row's captions -- the CW Open says `Calls`, its key being the whole
+  callsign; every other contest `Prefixes`, pinned -- and since 2026-11-11
+  the ZONE row's, `Years` -- answered BY THE BASE for any contest that states
+  a `ReceivedYearKind` since issue 298 stage 3; EUHFC and KVP no longer
+  override it); `ZoneColumnHeading` (2026-11-11: the log grid's heading over
+  the zone column, asked by `uLogGrid.HeaderText` and, since stage 3, Edit
+  QSO's year label; base = ColumnsArray's `Zn`, and `Year` for a stated year
+  kind, again from the base -- ColumnsArray's text NEVER changes, it is also the
+  COLUMN WIDTH token uCFG matches; `Test_ZoneColumnHeading` walks the
+  registry); `MyZoneLabel` (2026-11-11: Preferences > Station information's
+  label beside MY ZONE, asked by `uPrefsForm.ShowContestStationLabels` on
+  load, show and Station-page selection; base `SPrefsMyZoneLabel` 'CQ zone:',
+  which shares the `.lfm` caption's catalogue entry, EUHFC/KVP
+  `SPrefsMyLicenseYearLabel`; `Test_MyZoneLabel`); `MyZoneHelp` (its
+  tooltip on the label and box; base '' = keep the MY ZONE command's help,
+  EUHFC/KVP `SPrefsMyLicenseYearHelp`; reapplied after `BuildSearchIndex`,
+  which sets the command help); `MyZoneIsAStationZone` (2026-11-12, base
+  True, EUHFC/KVP False: a logged QSO's captured zone never replaces a
+  licence year in the SENT exchange -- their Cabrillo and STX_STRING sent the
+  QSO's ITU zone until then. ONE rule picks the zone a stored QSO sends,
+  `uContestBase.SentZoneKindOfQSO(contest, zoneMode)` -> `TSentZoneKind`,
+  handed to `MyStationExchangeOfQSO`; never key it on `ZoneMultiplierZones`,
+  whose `zmzNotCQOrITU` is also CQ 160, WRTC, EU DX ... which send a real
+  zone; `uTestLogMyFacts` walks the registry for the exact set);
+  `ReceivedYearKind` (issue 298 stage 2, 2026-11-12: base `rykNone`,
+  EUHFC/KVP `rykTwoDigitYear`; `VC.TReceivedYearKind` also has
+  `rykFourDigitYear` (1900..the QSO's own year) and `rykYearsLicensed` (0..99),
+  from DXLog's files, no class yet -- a four-digit one needs stage 4's sheet.
+  The RECEIVED side: the parser's digits and range
+  (`ParseRSTLicenceYear(aText, ReceivedYearKind, aExch)`), the base
+  `ApplyADIFImport`'s year, Edit QSO and `ContestKeepsYearInZoneSlot` all ask
+  it; the year is `RcvdYear`, read by `TryLicenceYearOf`, written by
+  `StoreLicenceYear` / `ClearLicenceYear` only. `MyZoneIsAStationZone` stays
+  the SENT side; `uTestLogReceivedYear.Test_ExactlyTheYearContestsStateAKind`
+  walks the registry holding the two equal. STAGE 3 (2026-11-12): display
+  and export read the field too, through ONE answer --
+  `uContestBase.ReceivedYearTextOf` / `TryReceivedZoneOrYear` /
+  `RSTAndReceivedYearText`, asked with the RECORD's contest's kind; the base's
+  `ZoneColumnHeading`, `TotalsDisplay`, `FormatADIFReceivedExchange` and
+  `CanonicalReceivedExchange` follow a stated kind, so a year contest states
+  only `CabrilloReceivedRSTYear(ReceivedYearKind, ...)` for its received
+  column -- never `CabrilloReceivedRSTZone`, which reads the slot. And
+  `my_cq_zone` is `uContestFactory.SessionMyCQZone(contest)`: MY CALL's CTY
+  zone where `MyZoneIsAStationZone` is False, never the year;
+  `uTestReceivedYearDisplay` walks the registry proving the field reaches no
+  other contest's output). The licence-year parser names a YEAR in its refusals
+  (`SExchangeNoLicenseYear` / `SExchangeImproperLicenseYear`), never the
+  zone parser's `TC_IMPROPERZONENUMBER`; `SummarySheet` (PostUnit);
   `ReportsRunningScore` (hour totals); `CabrilloContestName`,
   `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` (keyed on the
   Cabrillo tag NAME -- `CabrilloTags` is a UI unit's),
@@ -1065,7 +1122,12 @@ the target shape, the M-step migration order and the open questions.
   `PermittedOperatingAids` (WRTC: no SCP, cluster or score posting --
   `MainUnit.OperatingAidOfWindow` is the UI's window-to-aid wiring);
   `OffersQTCs` (the WAE QTC menu); `OffersParkTools` (POTA's two menu
-  rows, since its class). **uNewContest names no contest**: `ClasslessPrompts`
+  rows, since its class); `SubmitsLogToARRL` (2026-11-11, base False: Tools >
+  Submit ARRL Log opens the ARRL's portal and is greyed otherwise -- True on
+  `TContestARRLDXBase`, `TContestARRLSSBase` and every other
+  `uContestARRL*` class; IARU HF and ARRL Kids Day NOT stated, on no
+  sponsor word; the `ARRL_PORTAL` list in
+  `uTestContestUI.Test_OnlyARRLContestsOfferTheARRLLogPortal` is the exact set). **uNewContest names no contest**: `ClasslessPrompts`
   was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.

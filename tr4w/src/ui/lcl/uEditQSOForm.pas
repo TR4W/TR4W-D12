@@ -82,7 +82,8 @@ uses
   LCLType,
   uTR4WStrings,
   uQsoMyFacts,   // TQsoMyFacts -- our station as recorded for the QSO
-  uExternalDelivery;  // TDeliveryStatus -- the read-only delivery line
+  uExternalDelivery,  // TDeliveryStatus -- the read-only delivery line
+  uContestBase;  // TContestBase -- ShowZoneBoxFor asks the QSO's contest (issue 298)
 
 type
   TfrmEditQSO = class(TForm)
@@ -145,6 +146,21 @@ type
     (* THE BAND AND MODE LISTS, REPLACED -- never appended to (issue 237). The
        load calls this on every open, through EditQSOFillBandAndModeLists. *)
     procedure FillBandAndModeLists;
+    (* THE ZONE BOX AS aContest READS IT -- issue 298, stage 3. A contest that
+       states a received year (TContestBase.ReceivedYearKind) keeps the year
+       there: the label is its ZoneColumnHeading ('Year') and the box takes as
+       many digits as the kind has (uContestBase.ReceivedYearDigits: 2, or 4
+       for a four-digit year). Any other contest, or nil, gets the designed
+       label and length back -- the form is created once and reused, so both
+       directions are set on every load. Public for the test, which calls it
+       on a form it built and never showed. *)
+    procedure ShowZoneBoxFor(aContest: TContestBase);
+  private
+    (* The .lfm's label (as translated) and length of the zone box, taken the
+       first time ShowZoneBoxFor runs, before anything changed them. *)
+    FZoneDesignCaptured: boolean;
+    FZoneDesignCaption: TCaption;
+    FZoneDesignMaxLength: integer;
   end;
 
 (* The room a drop-down's chrome takes beside its text is
@@ -260,6 +276,10 @@ procedure EditQSOCloseForm;
 procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
 function  EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
 
+// THE ZONE BOX FOR THE QSO'S CONTEST -- TfrmEditQSO.ShowZoneBoxFor on the open
+// form (issue 298). A no-op when the form is not up.
+procedure EditQSOShowZoneBox(aContest: TContestBase);
+
 // THE EXTERNAL-LOGGER DELIVERY LINE, under the our-station group. Shown only
 // when the QSO has a delivery row (aStatus.Logger <> ''), hidden otherwise,
 // and the form's height follows it. A no-op when the form is not up.
@@ -310,6 +330,7 @@ uses
   uSettingsModel,     // Settings.Log.ConfirmEditChanges
   uDialogs,           // YesOrNo
   VC,                 // TC_SAVECHANGES
+  utils_text,         // LclText -- the year heading, converted for the LCL once
   Log4D;
 
 var
@@ -648,6 +669,42 @@ begin
    frmEditQSO.edtMyPark.Text := aFacts.Park;
    frmEditQSO.edtMyCQZone.Text := ZoneText(aFacts.CQZone);
    frmEditQSO.edtMyITUZone.Text := ZoneText(aFacts.ITUZone);
+end;
+
+// ------------------------------------------------- the zone box, or the year
+procedure TfrmEditQSO.ShowZoneBoxFor(aContest: TContestBase);
+var
+   kind: TReceivedYearKind;
+   fewest, most: integer;
+begin
+   if not FZoneDesignCaptured then
+      begin
+      FZoneDesignCaption := lblZone.Caption;
+      FZoneDesignMaxLength := edtZone.MaxLength;
+      FZoneDesignCaptured := True;
+      end;
+
+   kind := ContestReceivedYearKind(aContest);
+   if (kind <> rykNone) and ReceivedYearDigits(kind, fewest, most) then
+      begin
+      (* LclText: the heading is UTF-16, the caption the LCL's UTF-8 -- the
+         conversion at the boundary, as uLogGrid's heading does it. *)
+      lblZone.Caption := LclText(aContest.ZoneColumnHeading);
+      edtZone.MaxLength := most;
+      end
+   else
+      begin
+      lblZone.Caption := FZoneDesignCaption;
+      edtZone.MaxLength := FZoneDesignMaxLength;
+      end;
+end;
+
+procedure EditQSOShowZoneBox(aContest: TContestBase);
+begin
+   if frmEditQSO <> nil then
+      begin
+      frmEditQSO.ShowZoneBoxFor(aContest);
+      end;
 end;
 
 function EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;

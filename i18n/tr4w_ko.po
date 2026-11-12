@@ -661,14 +661,6 @@ msgid " - Open configuration file or start a new contest"
 msgstr " - 구성 파일을 열고 새로운 대회를 시작합니다"
 
 #. Section: NEW CONTEST
-#: utr4wstrings:tc_folderalreadyexistsoverwrite
-#: tr4w/src/lang/tr4w_consts_eng.pas:102
-#, fuzzy
-msgctxt "TC_FOLDERALREADYEXISTSOVERWRITE"
-msgid "Folder \"%s\" already exists.\rOverwrite ?"
-msgstr "폴더 \"%s\" 이미 존재합니다.\r읽기 ?"
-
-#. Section: NEW CONTEST
 #: utr4wstrings:tc_iamin
 #: tr4w/src/lang/tr4w_consts_eng.pas:103
 #: utr4wstrings.tc_iamin
@@ -8169,15 +8161,6 @@ msgstr ""
 "보낼 QTH를 입력\n"
 "사용하고 싶은 이름:"
 
-#: utr4wstrings.tc_folderalreadyexistsoverwrite
-#, fuzzy
-msgid ""
-"Folder \"%s\" already exists.\n"
-"Overwrite ?"
-msgstr ""
-"폴더 \"%s\" 이미 존재합니다.\n"
-"읽기 ?"
-
 #: utr4wstrings.tc_invalidstatementin
 #, fuzzy
 msgid ""
@@ -9557,6 +9540,7 @@ msgid "File"
 msgstr "파일"
 
 #: uappstrings.snewcontestfilesyear
+#: uappstrings.slogcolumnlicenseyear
 #, fuzzy
 msgid "Year"
 msgstr "연도"
@@ -10408,4 +10392,104 @@ msgstr ""
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
+msgstr ""
+
+#: uappstrings.snewlognametakentitle
+#, fuzzy
+msgid "This contest already has a log"
+msgstr ""
+
+#: uappstrings.snewlognametakenbody
+#, fuzzy
+msgid "A log for this contest, date and callsign already exists:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe existing log is kept unchanged.\n\nOpen existing log: continue logging in the existing log.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.snewlogcreatenumbered
+#, fuzzy
+msgid "Create new log"
+msgstr ""
+
+#: uappstrings.snewlogopenexisting
+#, fuzzy
+msgid "Open existing log"
+msgstr ""
+
+#: uappstrings.snewcontestlicenseyearlabel
+#, fuzzy
+msgid "MY LICENSE YEAR"
+msgstr ""
+
+#: uappstrings.sexchangenonamefound
+#, fuzzy
+msgid "No name found!!"
+msgstr ""
+
+#: uappstrings.snewcontestqthormemberlabel
+#, fuzzy
+msgid "MY QTH OR MEMBER NO"
+msgstr ""
+
+#: uappstrings.snewcontesthostareacountylabel
+#, fuzzy
+msgid "MY COUNTY"
+msgstr ""
+
+#: uappstrings.snewcontesthostareastatelabel
+#, fuzzy
+msgid "MY STATE"
+msgstr ""
+
+#: uappstrings.snewcontesthostareainsidenotice
+#, fuzzy
+msgid "You are in %s: choose your county from the list."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaoutsidenotice
+#, fuzzy
+msgid "You are outside %0:s: enter your US state or Canadian province (two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaentryisinside
+#, fuzzy
+msgid "%0:s is inside %1:s: tick the box and choose your county from the list."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaentrynotastate
+#, fuzzy
+msgid "%s is not a US state, a Canadian province or DX. Enter the two-letter code, e.g. GA or ON, or DX."
+msgstr ""
+
+#: uappstrings.stotalscallsignmults
+#, fuzzy
+msgid "Calls"
+msgstr ""
+
+#: uappstrings.snewlognametakenopenbody
+#, fuzzy
+msgid "The log for this contest, date and callsign is the log you have open:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe open log is kept unchanged.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.sexchangenolicenseyear
+#, fuzzy
+msgid "No license year found!!"
+msgstr ""
+
+#: uappstrings.sexchangeimproperlicenseyear
+#, fuzzy
+msgid "Improper license year!!"
+msgstr ""
+
+#: uappstrings.stotalslicenseyearmults
+#, fuzzy
+msgid "Years"
+msgstr ""
+
+#: tprefsform.lblmylicenseyear.caption
+#, fuzzy
+msgid "License year:"
+msgstr ""
+
+#: uappstrings.sreadinessmylicenseyearmissing
+#, fuzzy
+msgid "MY LICENSE YEAR is empty and this contest sends the year you were first licensed."
 msgstr ""

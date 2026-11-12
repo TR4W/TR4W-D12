@@ -42,6 +42,7 @@ type
       procedure Test_TheBuiltFormHasOneEditorPerSetting;
       procedure CheckHeadingOverviews(const aForm: TPrefsForm);
       procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
+      procedure CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
    public
       procedure RunAllTests; override;
    end;
@@ -60,6 +61,7 @@ uses
    uTR4WConfigFile,       (* TR4WConfigFileName -- proof the redirect landed *)
    uFileText,             (* TempDirectory, CombinePath, DeleteFileIfExists *)
    utils_text,            (* CharBufferText, SetCharBuffer *)
+   uCommandHelp,          (* TCommandHelp -- the License year command's own help *)
    VC;                    (* TR4W_INI_FILENAME *)
 
 const
@@ -512,6 +514,41 @@ begin
               'a word nothing carries still empties the result');
 end;
 
+(* THE LICENSE YEAR HAS A BOX OF ITS OWN (issue 298). It was the MY ZONE box
+  relabelled by the open contest, with a tooltip swapped in beside it; the year
+  is its own setting now, so MY ZONE is a CQ zone in every contest and nothing
+  here follows the contest. The two boxes are separate controls, the zone's
+  words are the .lfm's, and the year's box is a station field (read and saved
+  with the rest of the page) whose command has English help in the catalogue
+  the installer ships as help\help_en.po -- read from the repository's i18n
+  directory, as TestEveryRegisteredSettingHasHelp reads it. *)
+procedure TPrefsPlacementTests.CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
+var
+   path: string;
+   help: TCommandHelp;
+begin
+   CheckTrue((aForm.lblMyLicenseYear <> nil) and (aForm.edtMyLicenseYear <> nil),
+             'the Station page has a License year label and box');
+   CheckTrue(aForm.edtMyLicenseYear <> aForm.edtMyZone,
+             'the year is not the zone box relabelled');
+   CheckEquals('License year:', string(aForm.lblMyLicenseYear.Caption),
+               'the year''s label');
+   CheckEquals('CQ zone:', string(aForm.lblMyZone.Caption),
+               'the zone''s label does not follow the contest');
+
+   path := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim +
+           '..' + PathDelim + '..' + PathDelim + 'i18n');
+   help := TCommandHelp.Create(path, 'en');
+   try
+      CheckTrue(help.Describe('MY LICENSE YEAR') <> '',
+                'MY LICENSE YEAR has help in help_en.po');
+      CheckTrue(help.Describe('MY LICENSE YEAR') <> help.Describe('MY ZONE'),
+                'and it is not the zone''s');
+   finally
+      help.Free;
+   end;
+end;
+
 (* THE REAL FORM, BUILT: exactly one editor per setting, counted on the
   controls rather than the table.  The settings file is REDIRECTED to an empty
   temp folder first, and the test refuses to build the form unless
@@ -571,6 +608,8 @@ begin
 
       CheckHeadingOverviews(form);
       CheckKeyersUnderHardware(form);
+
+      CheckLicenseYearHasItsOwnBox(form);
    finally
       form.Free;
       uSettingsLegacy.ActiveStoreProvider := oldProvider;

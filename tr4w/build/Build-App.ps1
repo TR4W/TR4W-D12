@@ -40,6 +40,23 @@ if (-not $tc) { exit 2 }
 $out = Join-Path $REPO "build-out\app-$Cpu-$Os"
 $exe = if ($OutExe -ne '') { $OutExe } else { Join-Path $out 'tr4w_fpc.exe' }
 
+# A NON-i386 BUILD MUST NEVER LAND IN tr4w\target. The exe's directory is also
+# where the runtime DLLs are staged below, so an x64 exe there would overwrite
+# the 32-bit DLLs the i386 build and full.nsi read. See Get-StagingDir.ps1.
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+try
+   {
+   Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'executable and staged DLLs'
+   }
+catch
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($_.Exception.Message)"
+   exit 1
+   }
+$exeParent = Split-Path $exe -Parent
+if (-not (Test-Path $exeParent)) { New-Item -ItemType Directory -Path $exeParent -Force | Out-Null }
+
 if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null }
 
 # -Sc  C-style operators.

@@ -33,17 +33,24 @@ operating system's own message points the wrong way.
 **The seven 32-bit runtime DLLs still live in `tr4w/target/`**, which is the
 i386 program directory as well as the staging area. They are not moved here,
 because moving them would touch `full.nsi`, `Build-Tests.ps1`, the AppImage
-script and `docs/UPDATING_RUNTIME_DLLS.md` for no benefit until a second
-architecture actually builds. **When the x64 toolchain lands, move them and
-give each build target a manifest** — that is the moment the split pays, and
-doing it before then is churn.
+script and `docs/UPDATING_RUNTIME_DLLS.md`. The x64 build now exists (see
+below), and the i386 build was deliberately left reading `target\` so the
+installer for it is byte-for-byte what it was. **Move them when the default
+flips to 64-bit and 32-bit is retired** -- then `target\` stops being an
+architecture's private directory.
 
-## Nothing consumes this yet
+## What consumes this (issue 299, 2026-11-12)
 
-There is **no x86_64-win64 build target**, so nothing copies this file
-anywhere. It is staged so that the DLL is already in the tree, at a known
-version, when the toolchain arrives — not because a build reads it today. Do
-not add a copy step that silently stages an x64 DLL into an i386 `target/`.
+`Build-App.ps1 -Cpu x86_64 -Os win64` copies this directory's DLLs beside the
+exe it links. **That exe is staged under `build-out\dist\x86_64-win64\`, never
+in `tr4w\target`**: `build\Get-StagingDir.ps1` holds the rule and
+`Assert-Tr4wNotI386Path` refuses an x64 build pointed at `tr4w\target` or
+`tr4w\tr4wserver`; `Lint-ArchStaging` pins it. `FullBuild.ps1 -Cpu x86_64`
+stages the app, `tr4wserver.exe` and `tr4wconvert.exe` there too, and
+`full.nsi /DTR4WARCH=x86_64` (via `build\Build-Installer.ps1`) builds the
+64-bit installer from that stage -- which is why the x64 DLL set, with
+`libgcc_s_seh-1.dll` in place of `libgcc_s_dw2-1.dll`, must be complete here.
+Do not add a copy step that stages an x64 DLL into an i386 `target/`.
 
 ## Adding to it
 

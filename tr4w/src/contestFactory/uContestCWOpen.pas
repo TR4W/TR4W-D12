@@ -41,6 +41,20 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   SCORING: OnePointPerQSO -- 1 in every mode.
 
+  NO ZONE MULTIPLIER, ON THE SPONSOR'S RULE (issue 277, 2026-11-11). The row
+  above says `ZnM: CQZones`, and until this date the class counted the 40 CQ
+  zones beside the callsign multiplier. The sponsor's current rules
+  (cwops.org/cwops-tests/cw-open, read 2026-11-11) name one multiplier only:
+  "For each session, each different call sign is a multiplier the first time
+  it is worked in that session" and "the total number of multipliers in your
+  log is the number of different call signs logged" -- zones are never
+  mentioned. [DXLog CWOpen.txt] agrees: a single MULT1_TYPE=CALLSIGN. A
+  definitive sponsor rule overrides D7, so the three zone overrides are
+  deleted and the base answers no zone multiplier, as CWOPS and MST do. This
+  also ends this contest's half of plan F5 / open question Q95 (CQ zones
+  counted over an ITU zone mode): there is no zone list left to disagree.
+  GetFlags' zone mode (ITU, no cfCQZoneMode) is unchanged.
+
   SET-UP: nothing in FoundContest. LogCfg's CQ exchange: the serial and
   MY NAME.
 
@@ -110,14 +124,13 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
-   public
-      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
-         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
-      function HasZoneMultiplier: boolean; override;
-      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
-         ZoneMultiplierZones (M11 S5). *)
-      function ZoneMultiplierCount: integer; override;
-      function ZoneMultiplierZones: TZoneMultiplierZones; override;
+      (* NO ZONE MULTIPLIER -- the base's HasZoneMultiplier (False),
+         ZoneMultiplierCount (0) and ZoneMultiplierZones stand: see the
+         header (issue 277, 2026-11-11). *)
+   protected
+      (* THE TOTALS GRID'S MULTIPLIER ROW SAYS CALLS -- see
+         TContestBase.GetTotalsDisplay (issue 277). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
    end;
 
 implementation
@@ -129,6 +142,7 @@ uses
    uContestRegistry,
    uContestFixedPoints,
    uTR4WStrings,
+   uAppStrings,
    SysUtils,
    uCanonicalExchange;
 
@@ -281,32 +295,19 @@ begin
    Result := True;
 end;
 
-(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, at every
-   station. What the trait's CQZones gave LOGDUPE's zone count and the
-   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
-   S5.
-
-   PLAN F5 / OPEN QUESTION Q95, TRANSCRIBED, NOT FIXED: this contest counts
-   CQ zones while its CTY zone mode (GetFlags, no cfCQZoneMode) is ITU, so a
-   logged zone is an ITU zone and ADIF export writes it as CQZ. The two
-   facts are kept apart here and pinned side by side in uTestZoneMultiplier;
-   reconciling them is NY4I's call. *)
-function TContestCWOpen.ZoneMultiplierCount: integer;
+(* THE TOTALS GRID'S MULTIPLIER ROW SAYS CALLS, NOT PREFIXES -- issue 277
+   (2026-11-11). The sponsor (cwops.org/cwops-tests/cw-open, read 2026-11-11):
+   "For each session, each different call sign is a multiplier the first time
+   it is worked in that session" -- and PrefixMultiplierKey above is the whole
+   worked callsign. A LABEL ONLY: no rule, count or score changes here. There
+   is no Zones row: the contest has no zone multiplier (header, SCORING), and
+   uTotal shows that row only where DoingZoneMults. *)
+function TContestCWOpen.GetTotalsDisplay: TTotalsDisplay;
 begin
-   Result := CQ_ZONE_MULTIPLIERS;
-end;
-
-(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
-   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
-   before the kind was deleted. *)
-function TContestCWOpen.HasZoneMultiplier: boolean;
-begin
-   Result := True;
-end;
-
-function TContestCWOpen.ZoneMultiplierZones: TZoneMultiplierZones;
-begin
-   Result := zmzCQZones;
+   Result := inherited GetTotalsDisplay;
+   Result.PrefixMultsCaption := STotalsCallsignMults;
+   Result.PrefixMultsCaptionCW := 'CW Calls';
+   Result.PrefixMultsCaptionPhone := 'Ph Calls';
 end;
 
 initialization

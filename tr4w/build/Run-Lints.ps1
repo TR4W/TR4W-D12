@@ -292,6 +292,12 @@ $lints = @(
    # 248), so the pre-release probe (Check-ReferencedUrls.ps1, network, NOT part
    # of this gate) cannot miss a new endpoint. Offline; both directions fail.
    @{ Name = 'Lint-ReferencedUrls'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # A 64-BIT BUILD MUST NEVER WRITE INTO tr4w\target (issue 299): the x64 DLLs
+   # share their file names with the 32-bit set that full.nsi ships. Runs the
+   # staging guard against a fixture (floor 14 cases) and checks the build
+   # scripts still call it. Reads only; compiles nothing.
+   @{ Name = 'Lint-ArchStaging'; Arg = $null; NeedsFpc = $false }
 )
 
 $failed  = 0

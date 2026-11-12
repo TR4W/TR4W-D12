@@ -2643,6 +2643,189 @@ transaction (it is transactional; `journal_mode` is not). **Follow-up B:**
 trigger plants a row that breaks a DEFERRED foreign key, and SQLite checks that
 only at commit.
 
+### 12j. Schema 6 — the received year is a column of its own (issue 298, stage 1, 2026-11-12)
+
+The year the other station was first licensed (EUHFC, KVP) lived in the zone
+slot (`ContestExchange.Zone`, `rcvd_zone`). NY4I ruled it a standard field.
+Stage 1 is storage and transport only; no reader moved.
+
+- **Record.** `ContestExchange.RcvdYear: Word` (offset 324) and
+  `RcvdYearKnown: Boolean` (326), taken from `sReserved` (now `string[46]`,
+  327..373) as `ceXQSO` was. **The record stays 376 bytes; no earlier offset
+  moved**, so a D7 `.TRW`, `SERVERLOG.TRW` and the 384-byte QSO packet keep
+  their layout, and no legacy record type was needed. Bytes 323..375 were zero
+  in every record of the six binary-log fixtures (measured).
+- **Two fields, not a sentinel.** 0 is a real value (00 = first licensed in
+  2000; 0 years licensed), and a zero-filled record (FillChar, an older peer,
+  an old server log) must read as "no year". `RcvdYearKnown` False = no year.
+- **Column `qso.rcvd_year INTEGER`**, nullable, LAST in the table
+  (`LOG_V6_QSO_YEAR_COLUMN`). NULL = no year. In `QSO_COLUMNS`,
+  `QSO_COLUMNS_UPDATABLE` (an edit changes it) and `TQsoColumn`, after
+  `rcvd_zone`. `LOG_SCHEMA_VERSION` = 6; **schema 5 shipped in 5.0.37, so a
+  log this build opens is refused by 5.0.37 and earlier.**
+- **Migration** (`MigrateSchema`, one commit): asks first whether the column is
+  missing and the contest row's `contest_type`, then `ALTER TABLE ... ADD
+  COLUMN` and, for a contest that keeps its year in the zone slot, `UPDATE qso
+  SET rcvd_year = rcvd_zone WHERE rcvd_zone IS NOT NULL`, then the stamp. The
+  contest question is answered from outside the leaf through the global
+  `uLogDatabase.LogContestKeepsYearInZone`, which `uLogStore` assigns at
+  initialization to `uContestRegistry.ContestKeepsYearInZoneSlot` (the class's
+  `MyZoneIsAStationZone` = False). **Unassigned, a log below 6 is REFUSED, not
+  migrated** -- stamping 6 without the years would lose them for good.
+- **`.TRW` import.** `TLogBinaryReader.ReadNext` clears the two fields (D7
+  never wrote them); `uLogImport` fills them from `Zone` (not `DUMMYZONE`) for a
+  year contest, by the same rule.
+- **Stage 1 writes both.** `uContestBase.StoreLicenceYear` sets the zone slot
+  AND the field; `LicenceYearOf` still reads the slot. Scoring, display and
+  export are unchanged; the corpus and frozen files should not move.
+- **`rcvd_zone` IS AUTHORITATIVE THROUGHOUT STAGE 1.** Anything that writes
+  `Zone` for a year contest without `StoreLicenceYear` -- Edit QSO
+  (`FLD_ZONE`, which saves the whole record back with its OLD year), the ADIF
+  `CQZ` import arm -- leaves `rcvd_year` WRONG or empty. The v6 carry never
+  runs again on a log stamped 6, so **stage 2 must re-carry, overwriting, for
+  year contests (a v7 step) before any reader moves to the field**, and stage 1
+  should not ship in a release on its own.
+- Tests: `uTestLogReceivedYear` (rule, accessor, repository round trip, the
+  EUHFC migration in one commit, a zone contest's log, no judge, the reader,
+  the import, the packet, the catch-up), offsets in `uTestLogBinaryFile`, the
+  column in `uTestLogRepository`'s round trip, `DowngradeTestLog` drops it
+  below 6.
+
+### 12k. Schema 7 — the year is re-carried and the readers move to it (issue 298, stage 2, 2026-11-12)
+
+**No shape change.** `LOG_SCHEMA_VERSION` = 7 is a re-carry: through stage 1
+`rcvd_zone` was authoritative and `rcvd_year` a copy that Edit QSO and the ADIF
+import could leave stale. Stage 2 moves the readers to `rcvd_year`, so the copy
+must be right first.
+
+- **Migration** (`MigrateSchema`, still one commit): for every log below 7 whose
+  contest keeps its year in the zone slot (`LogContestKeepsYearInZone`, now the
+  class's STATED kind -- `TContestBase.ReceivedYearKind <> rykNone`),
+  `UPDATE qso SET rcvd_year = rcvd_zone`, **every row, overwriting, no WHERE**: a
+  zone an edit cleared clears the year too. The v6 ALTER stays guarded on the
+  column being missing; a schema-5 log takes both in the same commit. Any other
+  contest's log is only re-stamped. **No judge assigned: a log below 7 is
+  refused**, as at 6.
+- **The readers.** `uContestBase.TryLicenceYearOf` / `LicenceYearOf` read
+  `RcvdYear`; a record that never carried the field (Known False) falls back to
+  the zone slot when it holds a zone -- exactly what the migration would copy (a
+  record caught up from a server log written by a protocol-2 station).
+  `LOGDUPE.GetInitialExchangeStringFromContestExchange` (the remembered exchange,
+  which EUHFC's need hint reads back) gives `RcvdYear` when known.
+- **The writers.** Edit QSO saves the year box through
+  `ApplyEditedReceivedYear` (`StoreLicenceYear`, or `ClearLicenceYear` for an
+  empty box; a year the kind refuses refuses the save). The ADIF import takes
+  the year in the contest's `ApplyADIFImport` (the base, for any stated kind):
+  `SRX_STRING` first (one word after the RST -- what TR4W writes), else a
+  `CQZ`/`ITUZ` value. **Until now a TR4W EUHFC ADIF re-imported with no year at
+  all**: TR4W writes no CQZ for these contests and nothing read SRX_STRING's
+  year.
+- **Still dual-written**: `StoreLicenceYear` writes the zone slot too, for a
+  value 0..99, because the multiplier sheet (`SetMultFlags`, `mo`'s zone table,
+  `mult_zone`) and the export (stage 3) still read it.
+- **Consequence:** a log this build opens is refused by every build that knows
+  only schema 6 -- the uncommitted stage 1 never shipped, so in practice by
+  5.0.37 and earlier, as at 6.
+- Tests: `uTestLogReceivedYear` -- `Test_ASchema6LogIsReCarriedFromTheZone` (a
+  schema-6 EUHFC log with stale years comes out with every year its zone, one
+  commit; a second open changes nothing; a CQ WW log keeps its values),
+  `Test_EditQSOSavesTheYearAndTheZoneTogether`,
+  `Test_AnImportedADIFRecordTakesItsYear`, `Test_TheYearIsReadFromItsField`.
+  `DowngradeTestLog(..., 6)` only re-stamps.
+
+### 12l. Stage 3 — display and export read the field (issue 298, 2026-11-12)
+
+**No schema change** (still 7). Every reader that SHOWS or EXPORTS the year
+reads `RcvdYear` now, so stage 4 can stop writing the zone slot without moving
+a screen or a file.
+
+- **One answer**, in `uContestBase`: `ReceivedYearTextOf(kind, qso)` (the text:
+  `05`, `1985`, the count; `''` for no year or `rykNone`),
+  `TryReceivedZoneOrYear(kind, qso, out v)` (a number where a zone stood: the
+  year in a year contest, else the zone), `RSTAndReceivedYearText(rst, kind,
+  qso)`. Callers pass the RECORD's contest's kind (`ContestIdentity(
+  rec.ceContest).ReceivedYearKind`).
+- **The readers.** The log grid's zone cell (`MainUnit.BuildLogRow`; `05`
+  where it showed `5`), Edit QSO's box (label `ZoneColumnHeading`, MaxLength the
+  kind's digits -- `TfrmEditQSO.ShowZoneBoxFor`, reset both ways on every load),
+  the Cabrillo received column (`uCabrilloExchange.CabrilloReceivedRSTYear`,
+  `'%-3s %-7s'`, stated by EUHFC and KVP), the ADIF `SRX_STRING` and the
+  canonical received exchange (the base, for any stated kind: RST + the year
+  FROM THE FIELD -- they were the typed `ExchString`, stale after an Edit QSO
+  change), the UDP contact's `<zone>` (`logsubs2`; a number, as before).
+- **The capture fix.** `my_cq_zone` was `TStationContext.MyCQZone`, i.e. the
+  stated MY ZONE -- in EUHFC/KVP the SENT licence year (NY4I's row recorded 80;
+  the ADIF writer emits MY_CQ_ZONE for 1..40, so a year such as 05 would have
+  been exported as a zone). `uContestFactory.SessionMyCQZone(contest)` records
+  MY CALL's CTY CQ zone when `MyZoneIsAStationZone` is False.
+  **Existing rows keep the value they captured -- nothing rewrites a row**; a
+  log from before this build still exports its year as MY_CQ_ZONE where it is
+  1..40. Edit QSO's "our station" box can correct one row.
+- **Byte-identity.** A two-digit year prints exactly as before in Cabrillo.
+  What moves, on purpose: a no-year row's Cabrillo column is blank (was
+  `255`); `SRX_STRING` and the canonical exchange carry the year as two
+  digits from the field (a typed `5` exported `599 5`, now `599 05`; a record
+  with no `ExchString` exported `599`, now `599 05`); the grid shows `05`.
+- **NOT moved, stage 4's:** the multiplier sheet (`SetMultFlags`, `mo`'s zone
+  table, `mult_zone`), `LOGEDIT`'s logged-zone hint (`SetLoggedZone`, which
+  records a year contest's year as the call's prior zone), and PostUnit's
+  first-call-in-each-zone report (`GenerateZoneMultiplierTotals`, which
+  already drops year 00 with `Zone > 0`). PostUnit's bad-zone report
+  (`ZoneReport`) is unreachable -- its menu arm is commented out.
+- Tests: `uTestReceivedYearDisplay` (the answers per kind; the Cabrillo column
+  byte-equal to the zone helper for 0..99 and four digits through an
+  unregistered probe; SRX_STRING/canonical/round trip; the grid cell and
+  `<zone>` through the real routines; a registry walk proving the year field
+  reaches no other contest's output; Edit QSO's box on the real form, never
+  shown; the capture).
+
+### 12m. The SENT year is its own setting (issue 298, 2026-11-12)
+
+**No schema change** (still 7) -- NY4I: *"the whole point was to add the year
+field to the database and add the new field to the UX, so do NOT leave it as
+MY ZONE."* Stages 1-3 gave the RECEIVED year its column; this gives the year
+the station SENDS the same standing, as the setting `MY LICENSE YEAR`
+(`Settings.My.LicenseYear`, `TStationFact` `sfLicenseYear`).
+
+- **Stored per contest in the log with no new table or column**: it is a
+  station fact, so `CaptureStationFactRows` writes it as a `config` row named
+  `MY LICENSE YEAR` (`contest` while the contest states it, `station`
+  otherwise) and the reopen makes it the override again -- the same mechanism
+  as MY STATE or MY GRID (`uTestStationFactOverrides.
+  Test_LicenseYearIsCapturedAndReopened`).
+- **The value is the text as typed** -- `1985`, `85`, or a count -- and what a
+  contest sends is its `ReceivedYearKind`'s answer
+  (`uContestBase.SentLicenseYearText`: `85`, `1985`, the years licensed). A
+  two-digit year is read as the closest past one (`LicenseYearValue`: 85 is
+  1985, 05 is 2005 in 2026).
+- **No migration step, deliberately.** A log (or `.cfg`, or New Contest
+  answer) that stated the year as `MY ZONE` is moved by
+  `uContestFactory.AdoptLegacyLicenseYear`, which `FCONTEST.FoundContest`
+  calls once the contest is known: for a year contest, a contest-stated MY
+  ZONE of one to four digits becomes MY LICENSE YEAR and the MY ZONE statement
+  is withdrawn. The next capture writes the rows under their own names. A
+  schema bump would have made every log this build opens unreadable by 5.0.37
+  for a rename a read-time move does as well. **A station-wide MY ZONE is not
+  moved** (only a contest's own statement can have been a year).
+- **MY ZONE is a CQ zone in every contest now.** `SessionMyCQZone` no longer
+  asks the contest; the sent zone slot of a year contest is
+  `SessionZoneTextSent`'s year, and `MyZoneIsAStationZone` is derived from the
+  kind. The Preferences label/tooltip override, `MyZoneLabel`/`MyZoneHelp` and
+  their strings are gone: Preferences has a License year box and help of its
+  own, and the New Contest row asks `ncfMyLicenseYear`.
+- A year contest with no year stated sends NO year (it used to send the CTY
+  zone as a licence year); startup names it (`SReadinessMyLicenseYearMissing`).
+- Multi-op: not shared with peers (it is not in `SHARED_WITH_PEERS`, as MY
+  ZONE is not); each station states its own year.
+
+**Stage 4 (not built)** stops the dual write: the multiplier sheet counts
+`RcvdYear` (a year key, not a zone index, so a four-digit year can be a
+multiplier), `mult_zone` gives way to a year flag or reads the field, the zone
+slot of a year contest is left `DUMMYZONE`, and a v8 step clears `rcvd_zone`
+for year-contest logs. It also removes `TryLicenceYearOf`'s zone-slot fallback
+once the catch-up path fills the field, and moves the three readers listed as
+NOT moved above.
+
 ---
 
 ## 13. What is built so far

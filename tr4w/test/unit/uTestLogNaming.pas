@@ -46,11 +46,20 @@ type
       procedure TestPathCharactersCannotEscapeTheName;
       procedure TestASlashedCallDoesNotRunTogether;
       procedure TestAnEmptyContestStillNamesAFile;
+      procedure TestAFreeDefaultIsTheAnswer;
+      procedure TestATakenDefaultGetsNumberTwo;
+      procedure TestTwoTakenGetNumberThree;
+      procedure TestAGapIsFilled;
+      procedure TestTheNumberGoesBeforeTheExtension;
+      procedure TestASanitisedNameIsNumberedAsItIs;
+      procedure TestTheDirectoryIsJoinedWithOneSeparator;
+      procedure TestTheDiskIsAsked;
    end;
 
 implementation
 
 uses
+   Classes,     (* TStringList -- the fake directory *)
    SysUtils, uLogNaming;
 
 procedure TLogNamingTests.TestTheOrdinaryCase;
@@ -119,6 +128,147 @@ begin
                'a placeholder rather than ".db"');
 end;
 
+(* ---------------------------------------------------------------------------
+  FirstFreeLogFileName (issue 276). The fake directory is a list of full
+  paths; every path the function asks about is recorded, so a test can see
+  that the directory was joined correctly.
+  --------------------------------------------------------------------------- *)
+
+var
+   GTakenPaths: TStringList = nil;
+   GAskedPaths: TStringList = nil;
+
+function FakeTaken(const aPath: string): boolean;
+begin
+   GAskedPaths.Add(aPath);
+   Result := GTakenPaths.IndexOf(aPath) >= 0;
+end;
+
+(* A fresh fake directory holding aNames, each under aDir. *)
+procedure FakeDirectoryHolds(const aDir: string; const aNames: array of string);
+var
+   i: integer;
+begin
+   if GTakenPaths = nil then
+      begin
+      GTakenPaths := TStringList.Create;
+      GAskedPaths := TStringList.Create;
+      end;
+   GTakenPaths.Clear;
+   GAskedPaths.Clear;
+   for i := Low(aNames) to High(aNames) do
+      begin
+      GTakenPaths.Add(aDir + aNames[i]);
+      end;
+end;
+
+const
+   FAKE_DIR = 'LOGS' + PathDelim;
+   CW_OPEN  = 'CWOPEN 2026-11-11 W1AW.db';
+
+procedure TLogNamingTests.TestAFreeDefaultIsTheAnswer;
+begin
+   BeginTest('TestAFreeDefaultIsTheAnswer');
+   FakeDirectoryHolds(FAKE_DIR, []);
+   CheckEquals(CW_OPEN, FirstFreeLogFileName(FAKE_DIR, CW_OPEN, @FakeTaken),
+               'nothing there: the default, unnumbered');
+   CheckEquals(1, GAskedPaths.Count, 'one question is enough');
+end;
+
+procedure TLogNamingTests.TestATakenDefaultGetsNumberTwo;
+begin
+   BeginTest('TestATakenDefaultGetsNumberTwo');
+   (* The second CW Open session of the day. *)
+   FakeDirectoryHolds(FAKE_DIR, [CW_OPEN]);
+   CheckEquals('CWOPEN 2026-11-11 W1AW 2.db',
+               FirstFreeLogFileName(FAKE_DIR, CW_OPEN, @FakeTaken),
+               'the default is taken: number 2, space-separated');
+end;
+
+procedure TLogNamingTests.TestTwoTakenGetNumberThree;
+begin
+   BeginTest('TestTwoTakenGetNumberThree');
+   (* The third session. *)
+   FakeDirectoryHolds(FAKE_DIR, [CW_OPEN, 'CWOPEN 2026-11-11 W1AW 2.db']);
+   CheckEquals('CWOPEN 2026-11-11 W1AW 3.db',
+               FirstFreeLogFileName(FAKE_DIR, CW_OPEN, @FakeTaken),
+               'the default and 2 are taken: number 3');
+end;
+
+procedure TLogNamingTests.TestAGapIsFilled;
+begin
+   BeginTest('TestAGapIsFilled');
+   (* "X 2.db" renamed away by the operator: the first free number is 2, not
+      the one after the highest. *)
+   FakeDirectoryHolds(FAKE_DIR, [CW_OPEN, 'CWOPEN 2026-11-11 W1AW 3.db']);
+   CheckEquals('CWOPEN 2026-11-11 W1AW 2.db',
+               FirstFreeLogFileName(FAKE_DIR, CW_OPEN, @FakeTaken),
+               'X.db and X 3.db exist: X 2.db');
+end;
+
+procedure TLogNamingTests.TestTheNumberGoesBeforeTheExtension;
+var
+   n: string;
+begin
+   BeginTest('TestTheNumberGoesBeforeTheExtension');
+   FakeDirectoryHolds(FAKE_DIR, [CW_OPEN]);
+   n := FirstFreeLogFileName(FAKE_DIR, CW_OPEN, @FakeTaken);
+   CheckEquals('.db', ExtractFileExt(n), 'still a .db: ' + n);
+   CheckTrue(Pos('.db', n) = Length(n) - 2, 'one .db, at the end: ' + n);
+   CheckTrue(Pos(PathDelim, n) = 0, 'a name, not a path: ' + n);
+end;
+
+procedure TLogNamingTests.TestASanitisedNameIsNumberedAsItIs;
+var
+   expected: string;
+begin
+   BeginTest('TestASanitisedNameIsNumberedAsItIs');
+   (* W1AW/4 is sanitised to "W1AW 4" by ContestLogFileName; the number is
+      added after it and the sanitised text is left alone. *)
+   expected := ContestLogFileName('ARRL-SS-SSB', EncodeDate(2026, 11, 7), 'W1AW/4');
+   FakeDirectoryHolds(FAKE_DIR, [expected]);
+   CheckEquals('ARRL-SS-SSB 2026-11-07 W1AW 4 2.db',
+               FirstFreeLogFileName(FAKE_DIR, expected, @FakeTaken),
+               'the sanitised name, then the number');
+end;
+
+procedure TLogNamingTests.TestTheDirectoryIsJoinedWithOneSeparator;
+begin
+   BeginTest('TestTheDirectoryIsJoinedWithOneSeparator');
+   (* ContestDir ends with a separator; a caller that passes one without must
+      get the same questions, never "LOGSCWOPEN..." and never a doubled one. *)
+   FakeDirectoryHolds(FAKE_DIR, [CW_OPEN]);
+   CheckEquals('CWOPEN 2026-11-11 W1AW 2.db',
+               FirstFreeLogFileName('LOGS', CW_OPEN, @FakeTaken),
+               'no trailing separator: joined with one');
+   CheckEquals(FAKE_DIR + CW_OPEN, GAskedPaths[0], 'the first question is the full path');
+end;
+
+procedure TLogNamingTests.TestTheDiskIsAsked;
+var
+   dir, first, second: string;
+begin
+   BeginTest('TestTheDiskIsAsked');
+   (* The overload the program calls, against a real scratch folder. *)
+   dir := IncludeTrailingPathDelimiter(GetTempDir) +
+          'tr4w_lognaming_' + IntToStr(GetProcessID) + PathDelim;
+   ForceDirectories(dir);
+   first := dir + CW_OPEN;
+   second := dir + 'CWOPEN 2026-11-11 W1AW 2.db';
+   try
+      CheckEquals(CW_OPEN, FirstFreeLogFileName(dir, CW_OPEN),
+                  'an empty folder: the default');
+      FileClose(FileCreate(first));
+      CheckEquals('CWOPEN 2026-11-11 W1AW 2.db', FirstFreeLogFileName(dir, CW_OPEN),
+                  'the default on disk: number 2');
+      CheckTrue(FileExists(first), 'the existing file is left where it was');
+   finally
+      DeleteFile(first);
+      DeleteFile(second);
+      RemoveDir(dir);
+   end;
+end;
+
 procedure TLogNamingTests.RunAllTests;
 begin
    TestTheOrdinaryCase;
@@ -127,6 +277,20 @@ begin
    TestPathCharactersCannotEscapeTheName;
    TestASlashedCallDoesNotRunTogether;
    TestAnEmptyContestStillNamesAFile;
+   TestAFreeDefaultIsTheAnswer;
+   TestATakenDefaultGetsNumberTwo;
+   TestTwoTakenGetNumberThree;
+   TestAGapIsFilled;
+   TestTheNumberGoesBeforeTheExtension;
+   TestASanitisedNameIsNumberedAsItIs;
+   TestTheDirectoryIsJoinedWithOneSeparator;
+   TestTheDiskIsAsked;
 end;
+
+initialization
+
+finalization
+   GTakenPaths.Free;
+   GAskedPaths.Free;
 
 end.

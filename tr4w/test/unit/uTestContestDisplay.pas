@@ -57,7 +57,10 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_NewContestPromptsAreTheDialogsArms;
+      procedure Test_ARowIsLabelledForWhatItHolds;
       procedure Test_TotalsDisplay;
+      procedure Test_ZoneColumnHeading;
+      procedure Test_OnlyAYearContestAsksForTheLicenseYear;
       procedure Test_SummarySheet;
       procedure Test_CabrilloHeaderAndMode;
       procedure Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
@@ -149,6 +152,16 @@ begin
    Result := 'row ' + IntToStr(Ord(aField)) + ' comment "' + aText + '";';
 end;
 
+(* A ROW THE CONTEST LABELS ITSELF (TNewContestPrompt.RowLabel, 2026-11-11):
+  the comment step, then the label it reads instead of the command name. A
+  step with no label renders as StepComment, so every other row is unchanged. *)
+function StepCommentLabelled(const aText: string; aField: TNewContestField;
+                             const aRowLabel: string): string;
+begin
+   Result := 'row ' + IntToStr(Ord(aField)) + ' comment "' + aText + '"' +
+             ' label "' + aRowLabel + '";';
+end;
+
 function StepBox(const aRegion: string): string;
 begin
    Result := 'box in "' + aRegion + '";';
@@ -169,7 +182,14 @@ begin
          end;
       npkFieldWithComment:
          begin
-         Result := StepComment(aStep.Text, aStep.Field);
+         if aStep.RowLabel <> '' then
+            begin
+            Result := StepCommentLabelled(aStep.Text, aStep.Field, aStep.RowLabel);
+            end
+         else
+            begin
+            Result := StepComment(aStep.Text, aStep.Field);
+            end;
          end;
       npkIAmIn:
          begin
@@ -445,7 +465,10 @@ begin
          end;
       CWOPS:
          begin
-         Result := StepField(ncfMyName) + StepComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+         (* The QTH-or-member row names what it holds (2026-11-11). *)
+         Result := StepField(ncfMyName) +
+                   StepCommentLabelled(TC_ENTERYOURNAMEANDQTH, ncfMyState,
+                                       SNewContestQTHOrMemberLabel);
          end;
       DARC10M:
          begin
@@ -461,7 +484,8 @@ begin
          end;
       EUROPEANHFC:
          begin
-         Result := StepComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyLicenseYear,
+                                       SNewContestLicenseYearLabel);
          end;
       EUROPEANVHF:
          begin
@@ -533,7 +557,8 @@ begin
          end;
       KVP:
          begin
-         Result := StepComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyLicenseYear,
+                                       SNewContestLicenseYearLabel);
          end;
       LABRE:
          begin
@@ -1059,6 +1084,115 @@ begin
                RenderedPrompts(BCQP, False), 'British Columbia: no head');
 end;
 
+(* A ROW IS LABELLED FOR WHAT IT HOLDS (NY4I, 2026-11-11). Three contests
+  name a row themselves (TNewContestPrompt.RowLabel), and each still asks
+  for the field whose command is queued (uTestNewContestHostArea drives the
+  dialog for that):
+    - the European HF Championship and KVP ask for the year of the first
+      licence, kept in MY ZONE; the row read MY ZONE. Their one step is
+      labelled SNewContestLicenseYearLabel.
+    - the CWT asks for a QTH or a CWops member number, kept in MY STATE; the
+      row read MY STATE. Its SECOND step (after MY NAME) is labelled
+      SNewContestQTHOrMemberLabel.
+  The Locust QSO Party and the NCCC Sprint show the same prompt words but
+  take no member number (a name and a QTH), so their rows keep MY STATE.
+  Every other step of every contest gives no label, so its row reads its
+  command name as before: a registry walk, so a by-id contest is held too. *)
+
+(* The one labelled step aContest states on choosing, or False when it
+  labels none. A function, not a typed-constant table: the labels are
+  resourcestrings. *)
+function ExpectedLabelledRow(aContest: TContestBase;
+                             out aStep: integer;
+                             out aField: TNewContestField;
+                             out aComment, aRowLabel: string): boolean;
+begin
+   Result := True;
+   if IsLegacyContest(aContest, EUROPEANHFC) or IsLegacyContest(aContest, KVP) then
+      begin
+      aStep := 0;
+      aField := ncfMyLicenseYear;
+      aComment := TC_ENTERTHELASTTWODIGITSOFTHEYEAR;
+      aRowLabel := SNewContestLicenseYearLabel;
+      end
+   else if IsLegacyContest(aContest, CWOPS) then
+      begin
+      aStep := 1;
+      aField := ncfMyState;
+      aComment := TC_ENTERYOURNAMEANDQTH;
+      aRowLabel := SNewContestQTHOrMemberLabel;
+      end
+   else
+      begin
+      Result := False;
+      aStep := -1;
+      aField := ncfMyState;
+      aComment := '';
+      aRowLabel := '';
+      end;
+end;
+
+procedure TContestDisplayTests.Test_ARowIsLabelledForWhatItHolds;
+var
+   contests: TContestIdentityList;
+   obj: TContestBase;
+   prompts: TNewContestPrompts;
+   step: TNewContestPrompt;
+   k, i: integer;
+   labelled: boolean;
+   labelledStep: integer;
+   field: TNewContestField;
+   comment, rowLabel: string;
+   who: string;
+begin
+   BeginTest('Test_ARowIsLabelledForWhatItHolds');
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      who := ContestWho(obj);
+      labelled := ExpectedLabelledRow(obj, labelledStep, field, comment, rowLabel);
+      prompts := TNewContestPrompts.Create;
+      try
+         obj.DescribeNewContestPrompts(prompts);
+         if labelled then
+            begin
+            CheckTrue(labelledStep < prompts.ChoiceCount, who + ': the labelled step is there');
+            if labelledStep < prompts.ChoiceCount then
+               begin
+               step := prompts.Choice(labelledStep);
+               CheckEquals(Ord(npkFieldWithComment), Ord(step.Kind), who + ': a row with a comment');
+               CheckEquals(Ord(field), Ord(step.Field),
+                           who + ': the row still queues its field''s command');
+               CheckEquals(comment, step.Text, who + ': beside its prompt');
+               CheckEquals(rowLabel, step.RowLabel, who + ': the row names what it holds');
+               end;
+            end;
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            if (not labelled) or (i <> labelledStep) then
+               begin
+               CheckEquals('', prompts.Choice(i).RowLabel,
+                           who + ': no row label on choosing, step ' + IntToStr(i));
+               end;
+            end;
+         for i := 0 to prompts.InsideCount - 1 do
+            begin
+            CheckEquals('', prompts.Inside(i).RowLabel, who + ': no row label on ticking');
+            end;
+      finally
+         prompts.Free;
+         end;
+      end;
+
+   (* THE CWT BY NAME, so an emptied registry or a renamed member cannot pass
+      it by skipping: MY NAME, then the labelled MY STATE row. *)
+   CheckEquals(StepField(ncfMyName) +
+               StepCommentLabelled(TC_ENTERYOURNAMEANDQTH, ncfMyState,
+                                   SNewContestQTHOrMemberLabel),
+               RenderedPrompts(CWOPS, False), 'CWT: MY NAME, then the QTH-or-member row');
+end;
+
 (* ------------------------------------------------------------------------ *)
 (* THE TOTALS WINDOW, THE SUMMARY SHEET, THE HOUR TOTALS                     *)
 (* ------------------------------------------------------------------------ *)
@@ -1101,6 +1235,16 @@ begin
                CheckTrue(d.ShowsModeShares, 'the OZCHR teams show mode shares');
                CheckEquals(TC_DOMMULTS, d.DomesticMultsCaption, 'OZCHR teams: the usual label');
                end;
+            CWOPEN:
+               begin
+               (* Issue 277: the multiplier is each different callsign, so
+                 the prefix row says Calls -- and nothing else moves. *)
+               CheckEquals(STotalsCallsignMults, d.PrefixMultsCaption, 'CW Open: callsign multipliers');
+               CheckEquals('CW Calls', d.PrefixMultsCaptionCW, 'CW Open on CW');
+               CheckEquals('Ph Calls', d.PrefixMultsCaptionPhone, 'CW Open on phone');
+               CheckFalse(d.ShowsModeShares, 'CW Open shows QSO rows');
+               CheckEquals(TC_DOMMULTS, d.DomesticMultsCaption, 'CW Open: the usual domestic label');
+               end;
          else
             begin
             CheckFalse(d.ShowsModeShares, who + ' shows QSO rows');
@@ -1109,9 +1253,112 @@ begin
             CheckEquals('Ph Dom', d.DomesticMultsCaptionPhone, who + ' phone label');
             end;
          end;
+      (* THE PREFIX ROW SAYS PREFIXES EVERYWHERE BUT THE CW OPEN (issue 277)
+        -- a contest that labels it otherwise is added to the arm above, on
+        its sponsor's rule, never by widening this test. *)
+      if c <> CWOPEN then
+         begin
+         CheckEquals(TC_PREFIX, d.PrefixMultsCaption, who + ' prefix label');
+         CheckEquals('CW Pfxs', d.PrefixMultsCaptionCW, who + ' CW prefix label');
+         CheckEquals('Ph Pfxs', d.PrefixMultsCaptionPhone, who + ' phone prefix label');
+         end;
+      (* THE ZONE ROW SAYS ZONES EVERYWHERE BUT WHERE THE "ZONE" IS THE YEAR
+        OF FIRST LICENSE (2026-11-11) -- since issue 298 stage 3 decided by
+        the stated kind, which the European HF Championship and KVP state
+        (asserted first, so the arm cannot be vacuous). Every other contest
+        renders as before. *)
+      if IsLegacyContest(identities[k], EUROPEANHFC) or
+         IsLegacyContest(identities[k], KVP) then
+         begin
+         CheckTrue(identities[k].ReceivedYearKind <> rykNone, who + ': states a year kind');
+         end;
+      if identities[k].ReceivedYearKind <> rykNone then
+         begin
+         CheckEquals(STotalsLicenseYearMults, d.ZoneMultsCaption, who + ': years');
+         CheckEquals('Years', d.ZoneMultsCaption, who + ': the English caption');
+         CheckEquals('CW Years', d.ZoneMultsCaptionCW, who + ' on CW');
+         CheckEquals('Ph Years', d.ZoneMultsCaptionPhone, who + ' on phone');
+         end
+      else
+         begin
+         CheckEquals(TC_ZONE, d.ZoneMultsCaption, who + ' zone label');
+         CheckEquals('CW Zone', d.ZoneMultsCaptionCW, who + ' CW zone label');
+         CheckEquals('Ph Zone', d.ZoneMultsCaptionPhone, who + ' phone zone label');
+         end;
       finally
          obj.Free;
          end;
+      end;
+end;
+
+(* THE LOG GRID'S HEADING OVER THE ZONE COLUMN (2026-11-11): 'Zn' --
+   ColumnsArray's own text, which is also the COLUMN WIDTH token and is never
+   changed -- for every registered contest but the two whose "zone" is the
+   year of first license. Asked of the identity: no station decides it. *)
+procedure TContestDisplayTests.Test_ZoneColumnHeading;
+var
+   identities: TContestIdentityList;
+   k: integer;
+   who: string;
+begin
+   BeginTest('Test_ZoneColumnHeading');
+   CheckEquals('Zn', string(ColumnsArray[logColZoneMult].Text),
+               'the column''s own text -- the COLUMN WIDTH token -- is unchanged');
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
+      begin
+      who := ContestWho(identities[k]);
+      (* The kind decides since issue 298 stage 3; EUHFC and KVP state one. *)
+      if IsLegacyContest(identities[k], EUROPEANHFC) or
+         IsLegacyContest(identities[k], KVP) then
+         begin
+         CheckTrue(identities[k].ReceivedYearKind <> rykNone, who + ': states a year kind');
+         end;
+      if identities[k].ReceivedYearKind <> rykNone then
+         begin
+         CheckEquals(SLogColumnLicenseYear, identities[k].ZoneColumnHeading, who + ': year');
+         CheckEquals('Year', identities[k].ZoneColumnHeading, who + ': the English heading');
+         end
+      else
+         begin
+         CheckEquals('Zn', identities[k].ZoneColumnHeading, who + ': zone');
+         end;
+      end;
+end;
+
+(* THE LICENSE YEAR IS ITS OWN SETTING (issue 298): a contest that states a
+   received year kind asks the New Contest dialog for MY LICENSE YEAR, and no
+   other contest does. Before, the year lived in MY ZONE and Preferences, the
+   New Contest row and the tooltip each overrode the zone's words. *)
+procedure TContestDisplayTests.Test_OnlyAYearContestAsksForTheLicenseYear;
+var
+   identities: TContestIdentityList;
+   prompts: TNewContestPrompts;
+   k, i: integer;
+   asks: boolean;
+   who: string;
+begin
+   BeginTest('Test_OnlyAYearContestAsksForTheLicenseYear');
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
+      begin
+      who := ContestWho(identities[k]);
+      prompts := TNewContestPrompts.Create;
+      try
+         identities[k].DescribeNewContestPrompts(prompts);
+         asks := False;
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            if prompts.Choice(i).Field = ncfMyLicenseYear then
+               begin
+               asks := True;
+               end;
+            end;
+      finally
+         prompts.Free;
+      end;
+      CheckTrue((identities[k].ReceivedYearKind <> rykNone) = asks,
+                who + ': asks for MY LICENSE YEAR exactly when it exchanges a year');
       end;
 end;
 
@@ -1491,7 +1738,7 @@ begin
 
       session := Default(TMyStationExchange);
       session.MyGrid := 'EL88';
-      my := MyStationExchangeOfQSO(session, facts, True, False);
+      my := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
       exportSent := ContestIdentity(q.ceContest).FormatCabrilloSentExchange(
                        my, q, Default(TCabrilloQSOContext));
       CheckTrue(Pos('12', exportSent) > 0,
@@ -1547,7 +1794,7 @@ begin
          overlaid by what the row recorded (CurrentMyStationExchange). *)
       session := Default(TMyStationExchange);
       session.MyGrid := 'FN42';
-      my := MyStationExchangeOfQSO(session, facts, True, False);
+      my := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
       exportSent := ContestIdentity(q.ceContest).FormatCabrilloSentExchange(
                        my, q, Default(TCabrilloQSOContext));
       CheckTrue(Pos('EL88', exportSent) > 0,
@@ -1703,6 +1950,12 @@ begin
          ARRLFIELDDAY, WINTERFIELDDAY:
             begin
             expected := '2A CT';
+            end;
+         (* THE RECEIVED YEAR, from the record (issue 298 stage 3): the QSO
+            never carried the field, so its zone slot's 5 is the year 05. *)
+         EUROPEANHFC, KVP:
+            begin
+            expected := '599 05';
             end;
       else
          begin
@@ -2017,7 +2270,10 @@ end;
 procedure TContestDisplayTests.RunAllTests;
 begin
    Test_NewContestPromptsAreTheDialogsArms;
+   Test_ARowIsLabelledForWhatItHolds;
    Test_TotalsDisplay;
+   Test_ZoneColumnHeading;
+   Test_OnlyAYearContestAsksForTheLicenseYear;
    Test_SummarySheet;
    Test_CabrilloHeaderAndMode;
    Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;

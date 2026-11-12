@@ -60,15 +60,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DescribeSession test -- and the INVARIANT that it is True exactly where
   the zone count is above 0 is asserted for every contest at every station.
 
-  CROATIAN AND CW OPEN ARE PINNED ON PURPOSE (plan F5, open question Q95).
-  The zone MULTIPLIER's list and the CTY lookup's ZONE MODE are two facts,
-  and for these two contests they disagree today: the Croatian counts ITU
-  zones over a CQ zone mode (so a W1AW contact, CQ zone 5, exports
-  <ITUZ:2>05), and CW Open counts CQ zones over an ITU zone mode. S5
-  transcribes that exactly; Test_CroatianAndCWOpenKeepTheirTwoZoneSystems
-  Apart pins both facts for both contests, so whatever Q95 decides is a
-  deliberate, visible change to this file and not a side effect of folding
-  one fact into the other.
+  THE CROATIAN IS PINNED ON PURPOSE (plan F5, open question Q95). The zone
+  MULTIPLIER's list and the CTY lookup's ZONE MODE are two facts, and for
+  the Croatian they disagree today: it counts ITU zones over a CQ zone mode
+  (so a W1AW contact, CQ zone 5, exports <ITUZ:2>05). S5 transcribes that
+  exactly; Test_CroatianKeepsItsTwoZoneSystemsApart pins both facts, so
+  whatever Q95 decides is a deliberate, visible change to this file and not
+  a side effect of folding one fact into the other. CW Open was the inverse
+  (CQ zones over an ITU zone mode) until 2026-11-11, when its sponsor's rules
+  -- one multiplier, each different callsign -- took its zone multiplier
+  away (issue 277); the same test pins its list as none and its zone mode
+  as still ITU, so its half of Q95 is gone, not reconciled.
 
   THE TRMASTER INITIAL ZONE. Which zone a call-history entry offers is
   pinned on its own -- uContestBase.InitialZoneFromCallHistory -- with the
@@ -94,7 +96,7 @@ type
    private
       procedure Test_EveryZoneContestGivesItsPinnedAnswers;
       procedure Test_EveryContestHasItsPinnedZoneMultiplier;
-      procedure Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
+      procedure Test_CroatianKeepsItsTwoZoneSystemsApart;
       procedure Test_CallHistoryOffersTheZoneOfTheContestsList;
       procedure Test_TheITUQuestionDependsOnNoStation;
    end;
@@ -159,16 +161,16 @@ const
    );
 
    (* WRITTEN BY HAND FROM THE OLD CODE AND RUN GREEN AGAINST IT -- see the
-      unit header. Every one of the 20 zone contests has a row, and JIDX has
-      one on each side of its station test. *)
+      unit header. Every one of the 19 zone contests has a row (20 until the
+      CW Open lost its zones, issue 277), and JIDX has one on each side of
+      its station test. *)
    ZONE_PINS: array[0..35] of TZonePin = (
       (* CQ ZONES, 40, AT EVERY STATION. *)
       (Contest: CQWWCW;            Station: psUS;   Count: 40;  Zones: 'CQ';   FromZero: False),
       (Contest: CQWWCW;            Station: psJA;   Count: 40;  Zones: 'CQ';   FromZero: False),
       (Contest: CQWWSSB;           Station: psVE;   Count: 40;  Zones: 'CQ';   FromZero: False),
       (Contest: CQWWRTTY;          Station: psDX;   Count: 40;  Zones: 'CQ';   FromZero: False),
-      (Contest: CWOPEN;            Station: psUS;   Count: 40;  Zones: 'CQ';   FromZero: False),
-      (Contest: GACWWWSACW;        Station: psDX;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: GACWWWSACW;       Station: psDX;   Count: 40;  Zones: 'CQ';   FromZero: False),
       (Contest: WWIH;              Station: psHost; Count: 40;  Zones: 'CQ';   FromZero: False),
 
       (* CQ ZONES FOR A JAPANESE ENTRANT ONLY -- JIDX's DescribeSession. *)
@@ -204,8 +206,11 @@ const
 
       (* NO ZONE MULTIPLIER -- contests the move must not give one, the All
          Asian at a Japanese station, a party in its host state, and the
-         classless DUMMYCONTEST. *)
-      (Contest: CQWPXCW;           Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
+         classless DUMMYCONTEST. The CW Open counted CQ zones until
+         2026-11-11 (the D7 row); its sponsor's rules name only callsigns
+         (issue 277), so it is here now. *)
+      (Contest: CWOPEN;            Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: CQWPXCW;          Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
       (Contest: ARRLDXCW;          Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
       (Contest: ARRLSSCW;          Station: psVE;   Count: 0;   Zones: 'none'; FromZero: False),
       (Contest: ALLASIANCW;        Station: psJA;   Count: 0;   Zones: 'none'; FromZero: False),
@@ -232,9 +237,9 @@ const
       (* ... and NOTHING when the entry has no ITU zone: no CQ fall-back. *)
       (Contest: CROATIAN; CQZone: '25'; ITUZone: '';   Offers: False; Offered: ''),
       (Contest: IARU;     CQZone: '25'; ITUZone: '';   Offers: False; Offered: ''),
-      (* Every other contest offers the CQ zone -- IRTS and WRTC count no
-         zone multiplier and run ITU CTY zone mode, and still take the CQ
-         field; CQ WW and CW Open count CQ zones. *)
+      (* Every other contest offers the CQ zone -- IRTS, WRTC and the CW
+         Open count no zone multiplier and run ITU CTY zone mode, and still
+         take the CQ field; CQ WW counts CQ zones. *)
       (Contest: IRTS;     CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
       (Contest: WRTC;     CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
       (Contest: CQWWCW;   CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
@@ -251,7 +256,7 @@ const
       station. JIDX is in CQ_FOR_JA_ONLY and counts nothing elsewhere. Read
       from the frozen kind pin's ZoneMult column (us, ve, dx and us-host,
       the program's own S0b output) and JIDX's DescribeSession test. *)
-   CQ_EVERYWHERE: set of ContestType = [CQWWCW, CQWWSSB, CQWWRTTY, CWOPEN,
+   CQ_EVERYWHERE: set of ContestType = [CQWWCW, CQWWSSB, CQWWRTTY,
                                         GACWWWSACW, WWIH];
    CQ_FOR_JA_ONLY: set of ContestType = [JIDXCW, JIDXSSB];
    ITU_EVERYWHERE: set of ContestType = [BSCI, CROATIAN, GAGARINCUP, IARU,
@@ -358,7 +363,7 @@ procedure TZoneMultiplierTests.RunAllTests;
 begin
    Test_EveryZoneContestGivesItsPinnedAnswers;
    Test_EveryContestHasItsPinnedZoneMultiplier;
-   Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
+   Test_CroatianKeepsItsTwoZoneSystemsApart;
    Test_CallHistoryOffersTheZoneOfTheContestsList;
    Test_TheITUQuestionDependsOnNoStation;
 end;
@@ -494,13 +499,15 @@ end;
    answer, which the sheet, the hint, the initial zone, the zone sent and the
    ADIF CQZ/ITUZ tag ask) and the CTY lookup's ZONE MODE (ZoneMode, from
    cfCQZoneMode, which decides which zone CTY.DAT gives a logged call). They
-   disagree for these two contests and NOTHING here may reconcile them: a
-   change to either line is the Q95 decision, made deliberately. *)
-procedure TZoneMultiplierTests.Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
+   disagree for the Croatian and NOTHING here may reconcile them: a change to
+   either line is the Q95 decision, made deliberately.
+   THE CW OPEN COUNTS NO ZONES (issue 277, 2026-11-11, its sponsor's rule):
+   it was the inverse case, and its zone mode is still ITU. *)
+procedure TZoneMultiplierTests.Test_CroatianKeepsItsTwoZoneSystemsApart;
 var
    station: TStationContext;
 begin
-   BeginTest('Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart');
+   BeginTest('Test_CroatianKeepsItsTwoZoneSystemsApart');
 
    station := PinStation(psUS, CROATIAN);
    CheckEquals('ITU', ProgramZones(CROATIAN, station),
@@ -509,8 +516,9 @@ begin
                'CROATIAN looks zones up in CQ zone mode');
 
    station := PinStation(psUS, CWOPEN);
-   CheckEquals('CQ', ProgramZones(CWOPEN, station),
-               'CWOPEN counts CQ zones (exports an ITU zone as CQZ)');
+   CheckEquals('none', ProgramZones(CWOPEN, station),
+               'CWOPEN counts no zones (its sponsor: each callsign, issue 277)');
+   CheckFalse(ProgramHas(CWOPEN, station), 'CWOPEN has no zone multiplier');
    CheckEquals(Ord(ITUZoneMode), Ord(ContestIdentity(CWOPEN).ZoneMode),
                'CWOPEN looks zones up in ITU zone mode');
 end;

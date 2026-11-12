@@ -67,6 +67,13 @@
 > | a duplicate computer id is accepted | refused with `SM_COMPUTERID_IN_USE` (8320), in both servers |
 > | no protocol version | `SM_PROTOCOL_MISMATCH` (8330) carries the server's version to a station whose HELLO differs |
 >
+> **PROTOCOL 3 (2026-11-12, issue 298)** is protocol 2 with one change of
+> MEANING and none of size: `ContestExchange` carries the received year
+> (`RcvdYear` Word at offset 324, `RcvdYearKnown` at 326, taken from
+> `sReserved`). The QSO packet is still 384 bytes and the record 376; a
+> protocol-2 station would send those bytes as zero. TR4WServerPy must move
+> its version to 3.
+>
 > The sizes in section 2 of this document are therefore **not** to be used to
 > write a protocol 2 peer; `tr4w/test/unit/uTestNetWireSizes.pas` pins what this
 > tree sends and `tools/netprobe/netprobe.py` is an independent client that

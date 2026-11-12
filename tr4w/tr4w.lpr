@@ -762,6 +762,7 @@ uLogEditForm in 'src\ui\lcl\uLogEditForm.pas',
   // (they were pulled in via other units' uses clauses but never listed here).
   uADIF in 'src\uADIF.pas',
   uN1MMMode in 'src\uN1MMMode.pas',
+  uWSJTXReport in 'src\uWSJTXReport.pas',
   uCabrillo in 'src\uCabrillo.pas',
   uCallCompress in 'src\uCallCompress.pas',
   uFlexRadioUtils in 'src\radioFactory\uFlexRadioUtils.pas',

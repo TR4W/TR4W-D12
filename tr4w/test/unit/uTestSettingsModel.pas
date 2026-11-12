@@ -72,6 +72,7 @@ type
       procedure Test_ABoundedSettingOffersItsValues;
       procedure Test_ARegisteredVocabularyIsAlsoTheRefusal;
       procedure Test_AnEnumSettingSpeaksTheFilesSpellings;
+      procedure Test_TheTailcatAddressIsASecretTrimmedAndBounded;
    public
       procedure RunAllTests; override;
    end;
@@ -467,7 +468,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(307, names.Count,
+         CheckEquals(309, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -518,7 +519,12 @@ begin
                      + ' certificate" choices under the global master (new,'
                      + ' no CFGCA row, never shared with peers, issue 256),'
                      + ' 2026-11-09; 307 with BAND MAP FILTER OUT DIGITAL'
-                     + ' (new, no CFGCA row, issue 73), 2026-11-10');
+                     + ' (new, no CFGCA row, issue 73), 2026-11-10; 308 with'
+                     + ' MY LICENSE YEAR, the year first licensed the'
+                     + ' contests that exchange it send (new, no CFGCA row,'
+                     + ' issue 298), 2026-11-12; 309 with SERVER TAILCAT'
+                     + ' ADDRESS, the multi-op server''s tunnel address, a'
+                     + ' secret (new, no CFGCA row, issue 293), 2026-11-12');
       finally
          names.Free;
       end;
@@ -1428,6 +1434,69 @@ begin
    end;
 end;
 
+(* SERVER TAILCAT ADDRESS (issue 293): the multi-op server's tunnel address,
+  which carries the tunnel's key. It must be treated exactly like the server
+  password, be trimmed (it is pasted), and take up to 1024 characters through
+  the path Preferences saves by -- which used to cut every owned value at 255
+  in silence, because CheckCommand takes ShortStrings. *)
+procedure TSettingsModelTests.Test_TheTailcatAddressIsASecretTrimmedAndBounded;
+const
+   CMD = 'SERVER TAILCAT ADDRESS';
+var
+   s: TR4WSettings;
+   doc: TJSONObject;
+   text, saved, long300, tooLong: string;
+begin
+   BeginTest('the Tailcat address is a secret, trimmed, and bounded at 1024');
+
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      CheckEquals('', string(s.Server.TailcatAddress), 'empty by default');
+      CheckTrue(s.CommandIsSecret(CMD), 'a secret, like SERVER PASSWORD');
+      CheckEquals('(secret, 6 characters)', s.ValueForLog(CMD, 'tcABCD'),
+                  'its value is masked in a log line');
+
+      CheckTrue(s.TrySetByCommand(CMD, '  tcABCD' + #13#10), 'a pasted value is taken');
+      CheckEquals('tcABCD', string(s.Server.TailcatAddress),
+                  'with the surrounding white space and line end trimmed');
+
+      doc := s.ToJSON;
+      try
+         text := doc.AsJSON;
+         CheckTrue(Pos('tcABCD', text) = 0, 'the value is nowhere in the settings file');
+         CheckTrue(Pos('TailcatAddressRef', text) > 0,
+                   'a vault reference member is there instead');
+      finally
+         doc.Free;
+      end;
+
+      CheckTrue(TailcatAddressLengthIsAllowed(''), 'empty is allowed');
+      CheckTrue(TailcatAddressLengthIsAllowed(StringOfChar('a', TAILCAT_ADDRESS_MAX_LENGTH)),
+                '1024 characters is allowed');
+      CheckFalse(TailcatAddressLengthIsAllowed(StringOfChar('a', TAILCAT_ADDRESS_MAX_LENGTH + 1)),
+                 '1025 is not');
+   finally
+      s.Free;
+   end;
+
+   (* THE PATH PREFERENCES SAVES BY (ApplyAndStoreCommand -> ApplyOwnedSetting),
+     on the global settings object, put back afterwards. *)
+   long300 := 'tc' + StringOfChar('x', 298);
+   tooLong := 'tc' + StringOfChar('y', TAILCAT_ADDRESS_MAX_LENGTH - 1);
+   saved   := string(Settings.Server.TailcatAddress);
+   try
+      CheckTrue(ApplyOwnedSetting(CMD, long300), 'a 300-character address is taken');
+      CheckEquals(300, Length(string(Settings.Server.TailcatAddress)),
+                  'whole -- not cut at 255');
+      CheckFalse(ApplyOwnedSetting(CMD, tooLong), 'a 1025-character one is refused');
+      CheckEquals(long300, string(Settings.Server.TailcatAddress),
+                  'and the refusal leaves the value as it was');
+   finally
+      Settings.Server.TailcatAddress := TSecretText(saved);
+   end;
+end;
+
 procedure TSettingsModelTests.Test_ALegacyPlaintextPasswordIsKeptAndMigrated;
 var
    s: TR4WSettings;
@@ -1752,6 +1821,7 @@ const
       + '"MY GRID",'
       + '"MY IOTA",'
       + '"MY ITU ZONE",'
+      + '"MY LICENSE YEAR",'
       + '"MY NAME",'
       + '"MY PARK",'
       + '"MY POSTAL CODE",'
@@ -1845,6 +1915,7 @@ const
       + '"SERVER AUTO SYNCHRONIZE LOG ON CONNECT",'
       + '"SERVER PASSWORD",'
       + '"SERVER PORT",'
+      + '"SERVER TAILCAT ADDRESS",'
       + '"SHIFT KEY ENABLE",'
       + '"SHORT 0",'
       + '"SHORT 1",'
@@ -2392,6 +2463,7 @@ begin
    Test_ABoundedSettingOffersItsValues;
    Test_ARegisteredVocabularyIsAlsoTheRefusal;
    Test_AnEnumSettingSpeaksTheFilesSpellings;
+   Test_TheTailcatAddressIsASecretTrimmedAndBounded;
 end;
 
 end.

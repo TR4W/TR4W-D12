@@ -96,7 +96,6 @@
   TC_IRTS                               = 'EI/GI, dein County eingeben';
   TC_LATEST_CONFIG_FILE                 = 'Neueste Config Datei';
   TC_OPENCONFIGURATIONFILE              = ' - Konfigurationsdatei oeffnen oder neuen Contest starten';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Ordner "%s" existiert schon.'#13'ueberschreiben ?';
   TC_IAMIN                              = '&Ich bin in %s';
   TC_NEWENGLANDSTATEABREVIATION         = 'Gib die Abkuerzung fuer deinen New England Staat ein'#13'(ME, NH, VT, MA, CT, RI):';
   TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Gib das QTH ein, dass du senden willst:';

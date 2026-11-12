@@ -1929,7 +1929,20 @@ begin
      if ExchangeInformation.Zone then
 
         begin
-        TempString := IntToStr(Zone);
+        (* A RECEIVED YEAR IS READ FROM ITS OWN FIELD -- issue 298, stage 2.
+          The European HF Championship's and KVP's year rides the zone slot of
+          the field list; RcvdYearKnown is set only where a contest received a
+          year (uContestBase.StoreLicenceYear), so a zone contest's record
+          still gives its zone. What this remembers is what the class's
+          ZoneMultiplierFromCall reads back for the need hint. *)
+        if RcvdYearKnown then
+           begin
+           TempString := IntToStr(RcvdYear);
+           end
+        else
+           begin
+           TempString := IntToStr(Zone);
+           end;
         end;
 
      if ExchangeInformation.Name then

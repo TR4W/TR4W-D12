@@ -560,6 +560,11 @@ procedure ProcessTAB(lowparam: Word);
 procedure ProcessReturn;
 procedure CreateMainWindow;
 procedure CallWindowKeyDownProc(wParam: integer);
+(* Whether a call-window keystroke made while CW auto-send is running is
+  CW TEXT, to be keyed now, or a call-window COMMAND that must not be keyed.
+  The commands are the start-sending-now key and the three possible-call
+  keys (issue 258); see the body. *)
+function AutoSendKeysCallWindowKey(aKey: Char): boolean;
 procedure CallWindowKeyUpProc;
 procedure ExchangeWindowKeyDownProc(wParam: integer);
 procedure RepeatLastCWMessage;
@@ -4687,6 +4692,15 @@ begin
      begin
      SetMenuEnabled(menu_WA7BNM_calendar, False);
      end;
+  (* SUBMIT ARRL LOG opens the ARRL's log portal, so it is offered only for a
+    contest whose log goes there -- the contest says (SubmitsLogToARRL). It
+    was enabled for every contest, the CWT included (2026-11-11). Applied
+    once, here, as the calendar rows above: a later CONTEST change does not
+    re-apply it. *)
+  if not ContestIdentity(Contest).SubmitsLogToARRL then
+     begin
+     SetMenuEnabled(menu_arrl_submit, False);
+     end;
   (* THE OPERATING AIDS THE CONTEST FORBIDS ARE GREYED -- M9a. This was
     `Contest = WRTC`; the contest says which aids it allows (TOperatingAid),
     and each menu row is the aid it opens. *)
@@ -6522,6 +6536,31 @@ begin
       end;
 end;
 
+function AutoSendKeysCallWindowKey(aKey: Char): boolean;
+begin
+   (* ISSUE 258.  While auto-send runs, CallWindowKeyDownProc keys each
+     keystroke as it arrives.  Until issue 258 it keyed EVERY keystroke except
+     Backspace and the start-sending-now key -- and D7 did the same
+     (C:\TR4W MainUnit.CallWindowKeyDownProc, the same unfiltered branch).
+
+     The possible-call keys (default ',' '.' ';') are commands in the call
+     window: they move or accept the possible-call selection, and
+     KeyboardCallsignChar (tree.pas) refuses them, so they never enter the
+     callsign.  Keying them made the transmitted call differ from the call on
+     the screen, and each keyer did something different with them:
+       CPU keyer   '.' -> .-.-.-   ',' -> --..--   ';' -> no element, a gap
+       WinKeyer    '.' period   ',' comma   ';' AA  (WK3 datasheet, Table 14)
+       KY radios   ';' ENDS the 'KY <text>;' command early -- the rest of the
+                   frame reaches the radio as a malformed command
+       TCI         ';' is escaped to '*', which the server strips
+     Compared with the SETTINGS, not the literals, because an operator can
+     remap all three keys. *)
+   Result := (aKey <> Settings.Cw.StartSendingNowKey)   and
+             (aKey <> Settings.PossibleCall.LeftKey)    and
+             (aKey <> Settings.PossibleCall.RightKey)   and
+             (aKey <> Settings.PossibleCall.AcceptKey);
+end;
+
 procedure CallWindowKeyDownProc(wParam: integer);
 var
   Key: Char;
@@ -6598,7 +6637,7 @@ begin
         end
      else
         begin
-        if Key <> Settings.Cw.StartSendingNowKey then
+        if AutoSendKeysCallWindowKey(Key) then
            begin
            // B2: the three-way keyer branch that stood here (CAT sends the char
            // plus its terminator, WinKeyer sends UpCase'd, CPU buffers the raw
@@ -8665,6 +8704,7 @@ var
   MultString: array[0..7] of AnsiChar;
   FreqAnsi: AnsiString;   // D12: persistent buffer for pszText (see freq column below)
   RowTextAnsi: AnsiString;   // the same, for the rkNote and deleted-QSO captions
+  yearKind: TReceivedYearKind;   // the zone column's: a received year, or none (issue 298)
 begin
 
   (* elvi IS A CARRIER, NOT A LIST-VIEW ITEM, and has been since the last
@@ -8798,12 +8838,28 @@ begin
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
+  (* THE ZONE COLUMN HOLDS THE RECEIVED YEAR in a contest that states one
+    (issue 298 stage 3), read from its field and written as the operator
+    types it -- '05', '1985' -- the text Edit QSO shows. Everywhere else the
+    zone number, as before. The record's own contest is asked. *)
   if ColumnsArray[logColZoneMult].Enable then
      begin
-     if RXData.Zone <> DUMMYZONE then
+     yearKind := ContestIdentity(RXData.ceContest).ReceivedYearKind;
+     if yearKind <> rykNone then
+        begin
+        elviText := AnsiString(ReceivedYearTextOf(yearKind, RXData));
+        end
+     else if RXData.Zone <> DUMMYZONE then
+        begin
+        elviText := AnsiString(IntToStr(RXData.Zone));
+        end
+     else
+        begin
+        elviText := '';
+        end;
+     if elviText <> '' then
         begin
         elviCol := ColumnsArray[logColZoneMult].pos; //Ord(logColZoneMult);
-        elviText := AnsiString(IntToStr(RXData.Zone));
         EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
         end;
      end;

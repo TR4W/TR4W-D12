@@ -88,7 +88,6 @@
   {NEW CONTEST}
   TC_LATEST_CONFIG_FILE                 = 'Último archivo de configuración';
   TC_OPENCONFIGURATIONFILE              = ' - Abrir fichero configuración o inciar un nuevo concurso';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = '¿El directorio "%s" ya existe.'#13'sobreescribir?';
   TC_IAMIN                              = '&Estoy en %s';
   TC_NEWENGLANDSTATEABREVIATION         = 'Entre su estado de New England abreviacion'#13'(ME, NH, VT, MA, CT, RI):';
   TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Enter su QTH a enviar:';

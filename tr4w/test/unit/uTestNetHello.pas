@@ -80,14 +80,15 @@ begin
    CheckEquals(22, Integer(PtrUInt(@h.hmContestId) - base),    'contest id at 22');
    CheckEquals(16, HELLO_VERSION_CHARS, 'the version field is 16 characters');
    CheckEquals(48, HELLO_CONTEST_CHARS, 'the contest field is 48 characters');
-   CheckEquals(2,  NET_PROTOCOL_VERSION, 'this build speaks protocol 2');
+   (* 3 since issue 298 stage 1: the QSO record's received year. *)
+   CheckEquals(3,  NET_PROTOCOL_VERSION, 'this build speaks protocol 3');
    CheckEquals(1150, NET_HELLO_ID, 'the id is 1150');
 
    CheckTrue(BuildHello(NET_PROTOCOL_VERSION, 5, 'ab', 'XY', h), 'built');
    WireOf(h, wire);
    CheckEquals($7E, wire[0], 'id low byte (1150 = $047E, little-endian)');
    CheckEquals($04, wire[1], 'id high byte');
-   CheckEquals(2,   wire[2], 'protocol low byte');
+   CheckEquals(NET_PROTOCOL_VERSION, wire[2], 'protocol low byte');
    CheckEquals(0,   wire[3], 'protocol high byte');
    CheckEquals(5,   wire[4], 'computer id');
    CheckEquals(0,   wire[5], 'reserved');

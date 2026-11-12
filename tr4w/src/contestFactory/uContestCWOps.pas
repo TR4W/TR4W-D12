@@ -129,6 +129,7 @@ uses
    uADIFExchange,
    SysUtils, uContestRegistry, uContestFixedPoints,
    uTR4WStrings,
+   uAppStrings,      (* SNewContestQTHOrMemberLabel *)
    uCanonicalExchange;
 
 procedure TContestCWOps.CalculateQSOPoints(var aQso: ContestExchange);
@@ -264,7 +265,11 @@ end;
 procedure TContestCWOps.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskField(ncfMyName);
-   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+   (* The QTH or member number is kept in MY STATE, but the row names what
+      it holds (2026-11-11) -- it read MY STATE beside a prompt asking for a
+      member number. *)
+   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERYOURNAMEANDQTH, ncfMyState,
+                                        SNewContestQTHOrMemberLabel);
 end;
 
 (* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this

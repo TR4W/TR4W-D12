@@ -441,6 +441,17 @@ begin
    CheckEquals(290, Off(r.id),              'id, a string[32], sits at 290');
    CheckEquals(376, SizeOf(ContestExchange), 'and the whole record is 376');
 
+   (* THE RECEIVED YEAR (issue 298, stage 1), carved out of sReserved as
+     ceXQSO was: the bytes after ceXQSO, so nothing before them moved. Zero in
+     every fixture record (measured 2026-11-12), and cleared by the reader. *)
+   CheckEquals(323, Off(r.ceXQSO),          'ceXQSO sits at 323');
+   CheckEquals(324, Off(r.RcvdYear),        'RcvdYear, a Word, sits at 324');
+   CheckEquals(2,   SizeOf(r.RcvdYear),     'and is two bytes');
+   CheckEquals(326, Off(r.RcvdYearKnown),   'RcvdYearKnown sits at 326');
+   CheckEquals(327, Off(r.sReserved),       'sReserved, now a string[46], from 327');
+   CheckEquals(374, Off(r.sReserved) + SizeOf(r.sReserved),
+               'and ends at 374, where it always did; 374..375 are padding');
+
    (* THE CONTEST BYTE -- a registry handle since Q108 S2, an enum before it.
      Measured against HEAD's VC.pas and the handle's, 2026-10-16: offset 265
      and one byte in both, so a .TRW record, a multi-op packet and the

@@ -34,6 +34,10 @@ type
       procedure TestTheHandOffSwitch;
       procedure TestTheHandOffFileRoundTrips;
       procedure TestABadHandOffFileQueuesNothing;
+      (* 2026-11-11: a New Contest whose name is the OPEN log is never
+        answered Open existing. *)
+      procedure TestTheTakenNameIsTheOpenLog;
+      procedure TestTheTakenNameAnswers;
    public
       procedure RunAllTests; override;
    end;
@@ -45,6 +49,7 @@ uses
    Classes,
    uContestFileKind,     (* TContestFileKind -- what PlanOpenLog is told *)
    uNewContestForm,      (* TNewContestChoice -- the dialog's answer *)
+   System.UITypes,       (* mrYes, mrNo -- the taken-name question's answers *)
    uNewContest,          (* NewContestResultFile -- the answer as a file *)
    uNewContestCommands,  (* the queue and its hand-off file *)
    uOpenLogRelaunch;
@@ -361,6 +366,48 @@ begin
    end;
 end;
 
+(* IS THE TAKEN NAME THE LOG OPEN? File > Open Log passes the open log and the
+  file it was started on; startup passes nothing. *)
+procedure TOpenLogRelaunchTests.TestTheTakenNameIsTheOpenLog;
+var
+   dir:   string;
+   taken: string;
+begin
+   BeginTest('TestTheTakenNameIsTheOpenLog');
+   dir   := IncludeTrailingPathDelimiter(GetTempDir);
+   taken := dir + 'CWOPS 2026-11-11 NY4I.db';
+   CheckTrue(IsOneOfOpenContestFiles(taken, [taken, dir + 'old.cfg']),
+             'the open log itself');
+   CheckTrue(IsOneOfOpenContestFiles(taken, [dir + 'other.db', taken]),
+             'the file the session was started on');
+   CheckTrue(IsOneOfOpenContestFiles(taken,
+                [dir + 'sub' + PathDelim + '..' + PathDelim + 'CWOPS 2026-11-11 NY4I.db']),
+             'compared expanded, as [OpenLog] compares');
+   CheckFalse(IsOneOfOpenContestFiles(taken, [dir + 'CWOPS 2026-11-11 NY4I 2.db']),
+              'a different session of the same day is not the open log');
+   CheckFalse(IsOneOfOpenContestFiles(taken, []),
+              'startup: nothing is open');
+   CheckFalse(IsOneOfOpenContestFiles(taken, ['', '']),
+              'an empty open name is never the same file');
+end;
+
+(* THE ANSWER, BY MODAL RESULT. Open existing is never the outcome for the
+  open log, even if mrNo somehow arrives. *)
+procedure TOpenLogRelaunchTests.TestTheTakenNameAnswers;
+begin
+   BeginTest('TestTheTakenNameAnswers');
+   CheckTrue(TakenLogOutcome(mrYes, False) = nloCreate, 'Create, another log');
+   CheckTrue(TakenLogOutcome(mrNo, False) = nloOpenExisting, 'Open existing, another log');
+   CheckTrue(TakenLogOutcome(mrCancel, False) = nloCancel, 'Cancel, another log');
+   CheckTrue(TakenLogOutcome(mrNone, False) = nloCancel, 'closed box, another log');
+
+   CheckTrue(TakenLogOutcome(mrYes, True) = nloCreate, 'Create, the open log');
+   CheckTrue(TakenLogOutcome(mrNo, True) = nloCancel,
+             'the open log is never answered Open existing');
+   CheckTrue(TakenLogOutcome(mrCancel, True) = nloCancel, 'Cancel, the open log');
+   CheckTrue(TakenLogOutcome(mrNone, True) = nloCancel, 'closed box, the open log');
+end;
+
 procedure TOpenLogRelaunchTests.RunAllTests;
 begin
    TestRefusal;
@@ -378,6 +425,8 @@ begin
    TestTheHandOffSwitch;
    TestTheHandOffFileRoundTrips;
    TestABadHandOffFileQueuesNothing;
+   TestTheTakenNameIsTheOpenLog;
+   TestTheTakenNameAnswers;
 end;
 
 end.
