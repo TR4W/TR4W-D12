@@ -1,5 +1,89 @@
 # TR4W Win64 — task list, checked off against the tree
 
+## STATUS 2026-11-12 -- THE x64 APP WAS REBUILT AND RUN HEADLESS AND STARTED UNATTENDED (issue 299, step 1)
+
+Measured, not assumed. `Build-App.ps1 -Cpu x86_64 -Os win64` (full, `-B`), then the app's
+`/EXPORT` mode over the 13 tracked corpus fixtures, then the GUI, all from a scratch directory
+(never `tr4w/target`).
+
+| measure | x86_64-win64 | i386-win32 |
+|---|---|---|
+| errors + fatals | 0 | 0 |
+| range warnings | 3 (ceiling 3) | 3 |
+| narrowing conversions | 1189 (ceiling 1189) | 1189 |
+| `tr4w_fpc.exe` | 16,023,059 bytes, PE machine 0x8664 | 13,010,963 bytes, 0x014C |
+| staged runtime files | 7 DLLs + cacert.pem + help\ (23 files), all 0x8664 | 7 DLLs, all 0x014C |
+
+- **Staging is complete and every DLL is 0x8664**: `libeay32`, `ssleay32`, `sqlite3`,
+  `libhamlib-4`, `libusb-1.0`, `libwinpthread-1`, `libgcc_s_seh-1` (the x64 unwinder, which replaces
+  `libgcc_s_dw2-1`). The app's own import table is system DLLs only (`winmm`, `ws2_32`, `winhttp`,
+  `setupapi`, `hid`, ...); SQLite, OpenSSL and HamLib are loaded by name at run time. None of the
+  third-party DLLs imports a VC runtime (`msvcrt` only), so there is no redistributable to ship.
+  The log line `HamLib DLL = ...libhamlib-4.dll, x64 (64-bit), not loaded until a HamLib radio is
+  used` confirms the loader found the 64-bit copy.
+- **Headless `/EXPORT`, 13 sets x (ADIF + Cabrillo): every run exited 0, and the x64 output is
+  byte-identical to the i386 output** (the CREATED timestamp lines aside) **for all 26 artifacts.**
+  Against the frozen D7 references the two builds give the SAME verdict on every artifact (PASS or
+  a pinned KNOWN divergence). One set, `general_qso_2026_w1aw4`, FAILS against its reference on
+  BOTH architectures -- and the tracked `cand.cbr` fails the same way -- so it is not a 64-bit
+  matter; it is the tree's current state (the set was re-frozen in `dd63dda6`).
+- **The GUI starts and stays up.** With a contest log argument: window title
+  `TR4W v.5.0.37 - 2026 ARRL-FD NY4I`, responding, 12 threads, 39 MB, killed by PID at 20 s. With no
+  argument: the New Contest dialog, responding. No DLL load failure, no exception and no crash
+  record in `tr4w.log`. The corpus settings fixture names an IC-7100 on COM18, which this PC does
+  not have, so `Cannot open COM18` is expected and is the same on i386.
+- **One measured difference, not yet explained:** the first x64 main-window start took 11.5 s,
+  and 11.1 s of it was `uDXLabPathfinder`'s startup `DdeConnect` probe on the UI thread; the i386
+  run took 2.7 s (2.3 s of it the same call). One run each, so this may be noise in DDE, but a
+  blocking DDE call at start-up is worth a look either way.
+
+**NOT proven by any of this:** serial and LAN radios, CW keying and WinKeyer, the DX cluster,
+WSJT-X, a HamLib radio (the DLL is only loaded when one is used), the Preferences window, SO2R
+and the installer. Those are NY4I's bench list (`BENCH_QUEUE.md`, "x64 build"). Compiling and
+starting are still not running a contest.
+
+**The build scripts were not ready for the default to flip** (that hazard is now fixed, see the next
+block): `FullBuild.ps1 -Cpu x86_64` would have written `target\tr4w.exe` and `Build-App.ps1` would
+then have staged the x64 DLLs INTO `tr4w\target`, overwriting the 32-bit set that the i386 build and
+`full.nsi` read.
+
+## STATUS 2026-11-12 (later) -- PER-ARCHITECTURE STAGING AND A 64-BIT INSTALLER EXIST (issue 299)
+
+The DEFAULT IS STILL i386 everywhere; this is plumbing only, awaiting NY4I's bench pass.
+
+- **Staging.** `build\Get-StagingDir.ps1`: i386-win32 stages into `tr4w\target` (and
+  `tr4w\tr4wserver\tr4wserver.exe`) exactly as before; any other target stages into
+  `build-out\dist\<cpu>-<os>\` (app, `tr4wserver.exe`, `tr4wconvert.exe`, the `redist` DLLs,
+  `cacert.pem`, `help\`). `Assert-Tr4wNotI386Path` is called by Build-App, Build-Server,
+  Build-Convert, Build-Installer and FullBuild and throws if a non-i386 build is pointed at
+  `tr4w\target` or `tr4w\tr4wserver`. `Lint-ArchStaging` (in `Run-Lints`) runs it against a
+  14-case fixture and checks the call sites. `FullBuild.ps1 -Cpu x86_64` implies `-Os win64`.
+- **x64 server and converter build** (`Build-Server.ps1` / `Build-Convert.ps1 -Cpu x86_64 -Os
+  win64`): 0 errors both; `tr4wserver.exe` 30,055,929 bytes, `tr4wconvert.exe` 4,616,378 bytes, PE
+  0x8664. Neither has been RUN as x64.
+- **Installer.** `build\Build-Installer.ps1` (called by FullBuild; usable on a scratch stage with
+  `-StageDir`/`-OutDir`) runs makensis; `full.nsi /DTR4WARCH=x86_64 /DTR4WSTAGE=<dir>` builds
+  `tr4w_setup_<version>-x64.exe`: `$PROGRAMFILES64\TR4W`, `SetRegView 64`, refuses to run on 32-bit
+  Windows, ships the stage's exe/DLLs (`libgcc_s_seh-1.dll`)/`tr4wconvert`/`tr4wserver`, and
+  MIGRATES a 32-bit install (copy data forward, remove only old program files). **The i386 installer
+  built from the changed script is byte-identical to the one the old script built** (same size, same
+  CRC), so the 32-bit path is unchanged.
+- **NOT proven:** nothing has been installed. The upgrade path, the registry write, the shortcuts and
+  silent mode need a real install on a spare machine (`BENCH_QUEUE.md`).
+- **`tr4w.dbg` keeps its name** in the installer (the linker's `.gnu_debuglink` names `tr4w.dbg`, and
+  the crash reporter looks for that name beside the exe). Only a release ATTACHMENT needs an
+  architecture-qualified name, and `release.yml` still names it by version alone.
+- **Still naming i386 -- the default flip must change each:** `Build-App.ps1`, `Build-Server.ps1`,
+  `Build-Convert.ps1` `-Cpu 'i386'`/`-Os 'win32'` defaults; `FullBuild.ps1` `$Cpu`/`$Os` defaults;
+  `Build-Tests.ps1` and `Build-Bench.ps1` (the test exe is still the i386 one);
+  `Get-StagingDir.ps1` (`Test-Tr4wIsI386Win32` is "the i386 special case" and `target\` the
+  i386 stage); `full.nsi`'s no-`TR4WARCH` branch, `InstallDirRegKey`, and `..\target` payload paths;
+  `tr4w.lpi`; `release.yml`'s Windows job (still builds and publishes the i386 installer; no x64
+  job or artifact, no `-x64` filename in its artifact filters or release-notes warnings, `.dbg`
+  naming); `tr4w\target`'s 32-bit DLLs vs `redist\x86_64-win64` (move them, see
+  `redist\README.md`); `Lint-ArchStaging` (it pins the i386 paths as the protected ones);
+  `docs/UPDATING_RUNTIME_DLLS.md`, `CLAUDE.md`, `BUILD.md`, `RELEASE_WORKFLOW.md`.
+
 **Source:** `C:\tr4w-d12-codex-64bit\docs\codex\64_BIT_COMPLETION_TASKLIST.md`,
 written 2026-09-12 in the codex worktree. This is that plan **re-measured
 against `main` on 2026-09-14** and turned into a task list, per NY4I.

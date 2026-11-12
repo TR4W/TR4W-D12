@@ -24,7 +24,7 @@ a bundled DLL with a newer copy.
 | `inpout32.dll` | [InpOut32 by Phil Gibbons](https://www.highrez.co.uk/downloads/inpout32/) | **32-bit** | Direct parallel-port I/O for LPT CW keying (legacy stations) |
 | `sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) precompiled Windows binary (`sqlite-dll-win-x86-*`) | **32-bit** | **The contest log.** Supplied by NY4I 2026-08-29; currently 3.53.4, 2,572,288 bytes. Bound at RUN TIME, not link time — see the note below |
 | `rigctld.exe` | HamLib Windows build | **64-bit (x86_64)** -- measured 2026-09-14, this row said 32-bit and was wrong | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
-| `redist/x86_64-win64/sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) `sqlite-dll-win-x64-3530400` | **64-bit** | **STAGED, NOT SHIPPED.** SQLite 3.53.4, the same version as the 32-bit copy. Nothing builds x64 yet; see `tr4w/redist/README.md` |
+| `redist/x86_64-win64/sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) `sqlite-dll-win-x64-3530400` | **64-bit** | **Shipped by the 64-bit installer** (since 2026-11-12, with the rest of `redist/x86_64-win64/`, which has `libgcc_s_seh-1.dll` where the 32-bit set has `libgcc_s_dw2-1.dll`). SQLite 3.53.4, the same version as the 32-bit copy; see `tr4w/redist/README.md` |
 
 ### `sqlite3.dll` — the one that fails differently
 
@@ -53,10 +53,15 @@ the 32-bit copy**, verified `0x8664` from its PE header. Matching the version
 across architectures is deliberate: a failure after a combined version-and-
 bitness change has two candidate causes.
 
-**Nothing consumes it yet** — there is no `x86_64-win64` build target — and it
-is deliberately NOT in `tr4w/target/`, which is the i386 program directory. The
-two files have the same name in both bitnesses, so only a directory can keep
-them apart. See `tr4w/redist/README.md`.
+**The x64 build consumes it** (`Build-App.ps1 -Cpu x86_64 -Os win64` stages the
+`redist` DLLs beside an exe that lives in `build-out\dist\x86_64-win64\`, and
+`full.nsi /DTR4WARCH=x86_64` packs them from there). It is deliberately NOT in
+`tr4w/target/`, which is the i386 program directory, and a guard refuses an x64
+build that would write there. The two files have the same name in both
+bitnesses, so only a directory can keep them apart. **A DLL update therefore
+has two homes now:** `tr4w/target/` for the 32-bit installer and
+`tr4w/redist/x86_64-win64/` for the 64-bit one -- update both, same version.
+See `tr4w/redist/README.md`.
 
 The DLL is also copied beside the unit-test binary by `build\Build-Tests.ps1`,
 because the `LogDatabase` suite opens real databases.
@@ -199,7 +204,9 @@ needed"`).
 `rigctld.exe` is **x86_64** and imports `libhamlib-4.dll`, which is i386.
 A 64-bit process cannot load a 32-bit DLL, so it dies before `main` --
 `rigctld.exe --version` produces no output and exits 127. Harmless only
-because nothing launches it.
+because nothing launches it. (Issue 299, 2026-11-12: the 64-bit installer does
+not ship it either, so "rigctld bitness" is moot until it is wanted; if it ever
+is, the x64 build is the one that matches an x64 `libhamlib-4.dll`.)
 
 **Don't update it.** The right move is to remove it entirely on a future
 cleanup pass. Tracked separately as a TODO.

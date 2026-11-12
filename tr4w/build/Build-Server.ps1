@@ -47,7 +47,22 @@ $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
 if (-not $tc) { exit 2 }
 
 $out = Join-Path $REPO "build-out\server-$Cpu-$Os"
-$exe = if ($OutExe -ne '') { $OutExe } else { Join-Path $SERVER_DIR 'tr4wserver.exe' }
+# The default is per architecture (Get-StagingDir.ps1): i386 keeps
+# tr4w\tr4wserver\tr4wserver.exe, which full.nsi ships; everything else goes under
+# build-out\dist and may NEVER be written over that file.
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+$exe = if ($OutExe -ne '') { $OutExe } else { Get-Tr4wServerExePath -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os }
+try
+   {
+   Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'tr4wserver.exe'
+   }
+catch
+   {
+   Write-Host "tr4wserver build FAILED: $($_.Exception.Message)" -ForegroundColor Red
+   exit 1
+   }
+$exeDirectory = Split-Path $exe -Parent
+if (-not (Test-Path $exeDirectory)) { New-Item -ItemType Directory -Path $exeDirectory -Force | Out-Null }
 
 if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null }
 

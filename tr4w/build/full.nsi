@@ -8,6 +8,36 @@
 !ifndef TR4WVERSION
   !error "TR4WVERSION is not defined.  Build installers with FullBuild.ps1 -BuildInstallers (it derives the version from src\Version.pas and passes /DTR4WVERSION), not by running makensis on this script directly."
 !endif
+
+; ---------------------------------------------------------------------------
+; ARCHITECTURE (issue 299).  ABSENT /DTR4WARCH = THE 32-BIT INSTALLER, EXACTLY AS
+; IT WAS: every payload line reads ..\target and ..\tr4wserver.
+;
+; /DTR4WARCH=x86_64 /DTR4WSTAGE=<dir> (passed by build\Build-Installer.ps1) builds
+; the 64-bit installer: the exe, tr4w.dbg, the runtime DLLs, tr4wconvert.exe,
+; cacert.pem and tr4wserver.exe come from the STAGE directory
+; (build-out\dist\x86_64-win64), never from ..\target -- those are the 32-bit
+; files.  Files that are the same for every bitness (the .dat and .ini files,
+; TRMASTER.DTA, cty.dat, dom\) are still read from ..\target.
+; ---------------------------------------------------------------------------
+!ifdef TR4WARCH
+  !ifndef TR4WSTAGE
+    !error "TR4WARCH is defined without TR4WSTAGE.  Build the 64-bit installer with build\Build-Installer.ps1 (or FullBuild.ps1 -Cpu x86_64 -BuildInstaller)."
+  !endif
+  !if "${TR4WARCH}" != "x86_64"
+    !error "TR4WARCH must be x86_64 (the only 64-bit Windows target)."
+  !endif
+  !define BINDIR    "${TR4WSTAGE}"
+  !define SERVERDIR "${TR4WSTAGE}"
+  !define TR4WSUFFIX "-x64"
+  !include LogicLib.nsh
+  !include x64.nsh
+!else
+  !define BINDIR    "..\target"
+  !define SERVERDIR "..\tr4wserver"
+  !define TR4WSUFFIX ""
+!endif
+
 !define TR4WINSTFOLDER 'Software\TR4W'
 !define TR4WDRVREG     'SYSTEM\CurrentControlSet\Services\TR4WIO'
 
@@ -28,15 +58,21 @@
 !ifdef MMTTYMODE
 Name    "TR4W v.${TR4WVERSION} - MMTTY"
 !else
+!ifdef TR4WARCH
+Name    "TR4W v.${TR4WVERSION} (64-bit)"
+!else
 Name    "TR4W v.${TR4WVERSION}"
 !endif
+!endif
 
+; The 64-bit installer carries an -x64 suffix so it can never collide with, or
+; be mistaken for, the 32-bit one.
 !ifdef TR4WLANG
-OutFile release\tr4w_setup_${TR4WVERSION}_${TR4WLANG}.exe
+OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}_${TR4WLANG}.exe
 !else
-OutFile release\tr4w_setup_${TR4WVERSION}.exe
+OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}.exe
 !ifdef MMTTYMODE
-OutFile release\tr4w_setup_${TR4WVERSION}_mmtty.exe
+OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}_mmtty.exe
 !endif
 !endif
 
@@ -88,7 +124,62 @@ OutFile release\tr4w_setup_${TR4WVERSION}_mmtty.exe
 
 
 ;Get installation folder from registry if available
+!ifndef TR4WARCH
 InstallDirRegKey HKCU "Software\TR4W" ""
+!else
+; ---------------------------------------------------------------------------
+; THE 64-BIT INSTALLER DOES NOT USE InstallDirRegKey.  HKCU\Software\TR4W is
+; shared with the 32-bit installer, so for someone upgrading it holds the old
+; "C:\Program Files (x86)\TR4W", and InstallDirRegKey would put the 64-bit
+; program back into the 32-bit folder.  .onInit below reads the key itself and
+; decides deliberately.  (SetRegView 64 does not matter for HKCU\Software, which
+; is not redirected; it is there for anything under HKLM.)
+; ---------------------------------------------------------------------------
+InstallDir "$PROGRAMFILES64\TR4W"
+Var OLDDIR       ; an old 32-bit install to migrate from; empty when there is none
+
+Function .onInit
+	SetRegView 64
+
+	${IfNot} ${RunningX64}
+		MessageBox MB_OK|MB_ICONSTOP "This is the 64-bit TR4W installer and this is not a 64-bit Windows.$\r$\n$\r$\nUse the 32-bit TR4W installer instead." /SD IDOK
+		Abort
+	${EndIf}
+
+	StrCpy $OLDDIR ""
+
+	; /D=<dir> on the command line already replaced $INSTDIR; honour it and do
+	; not second-guess the operator.  Otherwise $INSTDIR is still the InstallDir
+	; default above.
+	StrCmp $INSTDIR "$PROGRAMFILES64\TR4W" 0 onInit_done
+
+	ReadRegStr $0 HKCU "Software\TR4W" ""
+	StrCmp $0 "" onInit_noreg
+
+	; Under "Program Files (x86)": the 32-bit installer's default.  Install to
+	; Program Files and migrate.  Compared case-insensitively (StrCmp is).
+	StrLen $2 "$PROGRAMFILES32"
+	StrCpy $1 $0 $2
+	StrCmp $1 "$PROGRAMFILES32" 0 onInit_elsewhere
+		StrCpy $OLDDIR $0
+		Goto onInit_done
+
+onInit_elsewhere:
+	; Anywhere else (a custom folder such as C:\TR4W, or an earlier 64-bit
+	; install): there is no Program Files (x86) problem, so upgrade IN PLACE and
+	; keep the operator's choice.  Nothing to migrate.
+	StrCpy $INSTDIR $0
+	Goto onInit_done
+
+onInit_noreg:
+	; No registry key, but the 32-bit installer's default folder may still hold
+	; an install (a copy, or the key was cleaned).
+	IfFileExists "$PROGRAMFILES32\TR4W\tr4w.exe" 0 onInit_done
+		StrCpy $OLDDIR "$PROGRAMFILES32\TR4W"
+
+onInit_done:
+FunctionEnd
+!endif
 
 
 Page components
@@ -113,10 +204,117 @@ InstallColors  0000FF FFFFFF
 
 
 
+!ifdef TR4WARCH
+; ---------------------------------------------------------------------------
+; UPGRADING FROM A 32-BIT INSTALL (64-bit installer only; hidden, runs first).
+;
+; .onInit set $OLDDIR when it found a 32-bit TR4W under Program Files (x86).
+; The 64-bit program goes to Program Files, so the operator's data has to come
+; with it.  What this does, and deliberately does not:
+;
+;   * ASKS first (OK / Cancel; a silent install, setup /S, answers OK).
+;   * COPIES, never moves: settings\, every other sub-folder of the old install
+;     (each contest keeps its log in its own folder -- "2026 ARRL-FD NY4I\" --
+;     plus dom\, dvk\, dxcluster\, CallHistoryFiles\), and the loose log files
+;     (*.db with its -wal and -shm, *.trw, *.cfg, *.rst, *.adi, *.cbr).  A .db
+;     without its -wal loses every QSO not yet checkpointed, so the three travel
+;     together.  The old folder's DATA is left exactly as it was.
+;   * SKIPS the copy when $INSTDIR\settings\tr4w.json already exists, so running
+;     the installer twice can never overwrite live settings with stale ones.
+;   * REMOVES ONLY the old PROGRAM files (exe, .dbg, the DLLs, tr4wconvert,
+;     server\tr4wserver.exe, the shortcuts) -- and only when the copy left a
+;     settings folder behind.  Not the old folder, not data files.
+;
+; There is no uninstaller and no Add/Remove entry, so nothing else refers to the
+; old program files.  The registry key HKCU\Software\TR4W is rewritten to the new
+; folder by the tr4w.exe section below, and the shortcuts by the sections after.
+; ---------------------------------------------------------------------------
+Section "" SecMigrate
+	StrCmp $OLDDIR "" mig_done
+	StrCmp $OLDDIR $INSTDIR mig_done
+	IfFileExists "$OLDDIR\tr4w.exe" 0 mig_done
+
+	DetailPrint "A 32-bit TR4W was found in $OLDDIR"
+	MessageBox MB_OKCANCEL|MB_ICONINFORMATION "A 32-bit TR4W was found in:$\r$\n    $OLDDIR$\r$\n$\r$\nTR4W is now 64-bit and installs to:$\r$\n    $INSTDIR$\r$\n$\r$\nYour settings, contest logs and data folders will be COPIED to the new folder, and the old program files (tr4w.exe and its DLLs) will be removed. The data left in the old folder is not touched.$\r$\n$\r$\nClose TR4W before you continue.$\r$\n$\r$\nOK to continue, Cancel to stop the installation." /SD IDOK IDOK mig_go
+		Abort
+mig_go:
+	CreateDirectory "$INSTDIR"
+
+	IfFileExists "$INSTDIR\settings\tr4w.json" 0 mig_copy
+		DetailPrint "settings\tr4w.json already exists in $INSTDIR - not copying over it."
+		Goto mig_remove
+
+mig_copy:
+	; Loose files in the old folder's top level.
+	CopyFiles /SILENT "$OLDDIR\*.db"     "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.db-wal" "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.db-shm" "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.trw"    "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.cfg"    "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.rst"    "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.adi"    "$INSTDIR"
+	CopyFiles /SILENT "$OLDDIR\*.cbr"    "$INSTDIR"
+
+	; Every sub-folder except the two this installer owns outright.
+	FindFirst $0 $1 "$OLDDIR\*.*"
+mig_loop:
+	StrCmp $1 "" mig_loopdone
+	StrCmp $1 "." mig_next
+	StrCmp $1 ".." mig_next
+	StrCmp $1 "help" mig_next
+	StrCmp $1 "server" mig_next
+	IfFileExists "$OLDDIR\$1\*.*" 0 mig_next
+		DetailPrint "copying $1"
+		CopyFiles /SILENT "$OLDDIR\$1\*.*" "$INSTDIR\$1"
+mig_next:
+	FindNext $0 $1
+	Goto mig_loop
+mig_loopdone:
+	FindClose $0
+
+mig_remove:
+	; CopyFiles does not report failure reliably, so check the one thing that
+	; matters: if the old install had settings, the new folder must now have them.
+	; If not, leave the old program in place rather than strand the operator.
+	IfFileExists "$OLDDIR\settings\*.*" 0 mig_delete
+	IfFileExists "$INSTDIR\settings\*.*" mig_delete 0
+		MessageBox MB_OK|MB_ICONEXCLAMATION "The settings could not be copied to $INSTDIR.$\r$\n$\r$\nThe old TR4W in $OLDDIR has been left as it was." /SD IDOK
+		Goto mig_done
+
+mig_delete:
+	Delete "$OLDDIR\tr4w.exe"
+	Delete "$OLDDIR\tr4w.dbg"
+	Delete "$OLDDIR\libeay32.dll"
+	Delete "$OLDDIR\ssleay32.dll"
+	Delete "$OLDDIR\libhamlib-4.dll"
+	Delete "$OLDDIR\libgcc_s_dw2-1.dll"
+	Delete "$OLDDIR\libusb-1.0.dll"
+	Delete "$OLDDIR\libwinpthread-1.dll"
+	Delete "$OLDDIR\sqlite3.dll"
+	Delete "$OLDDIR\tr4wconvert.exe"
+	Delete "$OLDDIR\server\tr4wserver.exe"
+	RMDir "$OLDDIR\server"
+	; The shortcuts point at the deleted exe.  The ones this installer creates
+	; replace them below.
+	Delete "$DESKTOP\TR4W.lnk"
+	Delete "$SMPROGRAMS\TR4W\TR4W.lnk"
+	Delete "$SMPROGRAMS\TR4W\history.lnk"
+	DetailPrint "old 32-bit program files removed from $OLDDIR"
+mig_done:
+SectionEnd
+!endif
+
 Section "tr4w.exe" secexe
 	SectionIn RO
 	SetOutPath "$INSTDIR"
-	File ..\target\tr4w.exe
+	File "${BINDIR}\tr4w.exe"
+!ifdef TR4WARCH
+	; A 64-bit install into a folder that held the 32-bit one (an in-place
+	; upgrade of a custom folder) must not keep the 32-bit unwinder: it is not
+	; loaded by anything now, and a wrong-architecture DLL left beside the exe
+	; is exactly the 0xC000007B trap tr4w\redist\README.md describes.
+	Delete "$INSTDIR\libgcc_s_dw2-1.dll"
+!endif
 
 	; SYMBOLS, WHILE WE ARE ON BENCH TESTERS (NY4I, 2026-08-16): "until we
 	; go to release, we can ship the debug files with the release in the
@@ -132,7 +330,7 @@ Section "tr4w.exe" secexe
 	; tr4w-<version>.dbg, so an emailed log can be symbolised on a machine
 	; that never ran the installer -- see .github/workflows/release.yml.
 !ifdef INCLUDE_SYMBOLS
-	File ..\target\tr4w.dbg
+	File "${BINDIR}\tr4w.dbg"
 !endif
 	File ..\target\r150s.dat
 	File ..\target\rfobl.dat
@@ -142,18 +340,22 @@ Section "tr4w.exe" secexe
 	; is a legacy feature; users who need it supply inpout32.dll themselves
 	; (next to tr4w.exe). TR4W loads it on demand only when an LPT port is
 	; configured, and runs fine without it otherwise. See uIO.pas.
-	File ..\target\libeay32.dll
-	File ..\target\ssleay32.dll
+	File "${BINDIR}\libeay32.dll"
+	File "${BINDIR}\ssleay32.dll"
 	; The trusted root certificates those two are checked against. Without it
 	; TR4W cannot verify any server it downloads from or uploads to, and says
 	; so in the log rather than failing -- see src\utils\uTLSTrust.pas.
 	; Refresh from https://curl.se/ca/cacert.pem at each release; the checksum
 	; is published beside it and MUST be checked.
-	File ..\target\cacert.pem
-	File ..\target\libhamlib-4.dll
+	File "${BINDIR}\cacert.pem"
+	File "${BINDIR}\libhamlib-4.dll"
+!ifdef TR4WARCH
+	File "${BINDIR}\libgcc_s_seh-1.dll"
+!else
 	File ..\target\libgcc_s_dw2-1.dll
-	File ..\target\libusb-1.0.dll
-	File ..\target\libwinpthread-1.dll
+!endif
+	File "${BINDIR}\libusb-1.0.dll"
+	File "${BINDIR}\libwinpthread-1.dll"
 	; The contest log.  SQLITE_LOG_SCHEMA_PLAN.md section 9 said to add this line
 	; "in the same commit as the first code that opens a database" -- which is
 	; the commit that added src\domain\uLogDatabase.pas, so here it is.
@@ -169,7 +371,7 @@ Section "tr4w.exe" secexe
 	; has to swap it.  Windows reports a mismatch as "the specified module could
 	; not be found", naming a file that is present -- which is why
 	; uLogDatabase.DiagnoseSQLiteLoad reads the PE header and says so.
-	File ..\target\sqlite3.dll
+	File "${BINDIR}\sqlite3.dll"
 
 	; THE CONVERTER, WHICH IS THE TOOL THE UPGRADE MESSAGE AT THE END OF THIS
 	; SCRIPT TELLS AN OPERATOR TO RUN.  It was not shipped until 2026-09-19,
@@ -179,7 +381,7 @@ Section "tr4w.exe" secexe
 	;
 	; IT MUST LAND IN $INSTDIR, not a subfolder: it looks for settings\tr4w.json
 	; beside its own binary, which is where TR4W keeps it.
-	File ..\target\tr4wconvert.exe
+	File "${BINDIR}\tr4wconvert.exe"
 
 !ifdef TR4WLANG
 !ifdef include_ini_file
@@ -230,7 +432,7 @@ SectionEnd
 Section "tr4wserver.exe" secserv
   SectionIn RO
   SetOutPath "$INSTDIR\server"
-  File ..\tr4wserver\tr4wserver.exe
+  File "${SERVERDIR}\tr4wserver.exe"
   SetOutPath "$INSTDIR"
 SectionEnd
 

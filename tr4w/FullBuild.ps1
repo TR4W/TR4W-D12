@@ -59,11 +59,19 @@ param(
    # NSIS directory (the one containing makensis.exe). Also read from
    # $env:NSIS_BIN. Only consulted when -BuildInstaller is given.
    [string] $NsisBin = '',
+   # Where the installer is written. Empty = tr4w\build\release\, as ever. Set it
+   # to build one somewhere else (a scratch directory) without touching release\.
+   [string] $InstallerOutDir = '',
+   # i386 (default, the shipping build) or x86_64 (-Os win64). A non-i386 build
+   # stages into build-out\dist\<cpu>-<os> and never into tr4w\target.
    [string] $Cpu  = 'i386',
    [string] $Os   = 'win32'
 )
 
 $ErrorActionPreference = 'Stop'
+
+# -Cpu x86_64 alone means Windows 64: the only x86_64 Windows target is win64.
+if (($Cpu -eq 'x86_64') -and (-not $PSBoundParameters.ContainsKey('Os'))) { $Os = 'win64' }
 
 $TR4W_DIR    = $PSScriptRoot
 $BUILD_DIR   = Join-Path $TR4W_DIR 'build'
@@ -92,6 +100,7 @@ function Phase([string] $name)
 Phase 'Toolchain'
 
 . (Join-Path $BUILD_DIR 'Find-Toolchain.ps1')
+. (Join-Path $BUILD_DIR 'Get-StagingDir.ps1')
 
 $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os
 if (-not $tc) { Fail 'no FPC + Lazarus able to target this platform (see above)' }
@@ -311,7 +320,24 @@ else
 # ---------------------------------------------------------------------------
 Phase 'Application'
 
-$appExe = Join-Path $TARGET_DIR 'tr4w.exe'
+# PER-ARCHITECTURE STAGING (issue 299). i386-win32 stages into tr4w\target exactly
+# as it always has. Any other target stages into build-out\dist\<cpu>-<os> and
+# NEVER into tr4w\target, whose 32-bit exe and DLLs the i386 build and the 32-bit
+# installer read -- see build\Get-StagingDir.ps1, which also holds the guard
+# (Lint-ArchStaging pins it).
+$STAGE_DIR = Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
+try
+   {
+   Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $STAGE_DIR -What 'staging directory'
+   }
+catch
+   {
+   Fail $_.Exception.Message
+   }
+if (-not (Test-Path -LiteralPath $STAGE_DIR)) { New-Item -ItemType Directory -Path $STAGE_DIR -Force | Out-Null }
+Write-Host "  staging  : $STAGE_DIR"
+
+$appExe = Join-Path $STAGE_DIR 'tr4w.exe'
 
 & (Join-Path $BUILD_DIR 'Build-App.ps1') `
       -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
@@ -518,7 +544,7 @@ else
    {
    Phase 'TR4WServer'
 
-   $serverExe = Join-Path $SERVER_DIR 'tr4wserver.exe'
+   $serverExe = Get-Tr4wServerExePath -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
 
    & (Join-Path $BUILD_DIR 'Build-Server.ps1') `
          -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
@@ -546,7 +572,7 @@ else
 # ---------------------------------------------------------------------------
 Phase 'tr4wconvert'
 
-$convertExe = Join-Path $TARGET_DIR 'tr4wconvert.exe'
+$convertExe = Join-Path $STAGE_DIR 'tr4wconvert.exe'
 
 & (Join-Path $BUILD_DIR 'Build-Convert.ps1') `
       -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
@@ -564,47 +590,22 @@ if ($BuildInstaller)
    {
    Phase 'Installer'
 
-   $nsi = Join-Path $BUILD_DIR 'full.nsi'
-
-   # -NsisBin (or $env:NSIS_BIN) first, then the usual install locations. CI
-   # pins it explicitly so a release build cannot depend on where an installer
-   # happened to put things.
-   #
-   # The usual locations are searched on EVERY fixed drive, not just C:, via the
-   # same Get-Tr4wFixedDriveRoots that Find-Toolchain uses -- a PC whose tools
-   # live on D: is a normal PC, not a misconfiguration, and hardcoding C: made
-   # it look like NSIS was missing when it was merely elsewhere.
-   $nsisCandidates = @()
-   if ($NsisBin)      { $nsisCandidates += (Join-Path $NsisBin      'makensis.exe') }
-   if ($env:NSIS_BIN) { $nsisCandidates += (Join-Path $env:NSIS_BIN 'makensis.exe') }
-   foreach ($drive in Get-Tr4wFixedDriveRoots)
-      {
-      $nsisCandidates += (Join-Path $drive 'Program Files (x86)\NSIS\makensis.exe')
-      $nsisCandidates += (Join-Path $drive 'Program Files\NSIS\makensis.exe')
-      }
-
-   $makensis = $nsisCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-   if (-not $makensis)
-      {
-      Write-Host '  looked in:' -ForegroundColor Red
-      $nsisCandidates | ForEach-Object { Write-Host "    $_" }
-      Fail 'makensis.exe not found -- install NSIS, set NSIS_BIN, or omit -BuildInstaller'
-      }
-   Write-Host "  makensis : $makensis"
-   if (-not (Test-Path $nsi)) { Fail "full.nsi not found at $nsi" }
-
-   # full.nsi refuses to build without /DTR4WVERSION, which is what stops a
-   # silently mis-versioned installer.
-   $nsisArgs = @("/DTR4WVERSION=$TR4W_VERSION")
-   if ($ExcludeSymbols) {
-      Write-Host "  symbols  : EXCLUDED -- release build"
-   } else {
-      $nsisArgs += "/DINCLUDE_SYMBOLS"
-      Write-Host "  symbols  : bundled (tr4w.dbg) -- testing build, "  `
-                 "pass -ExcludeSymbols for a public release"
+   # The makensis step lives in build\Build-Installer.ps1 (one implementation,
+   # also runnable against a scratch stage). For i386 it passes exactly the
+   # arguments this script always passed; a non-i386 target adds the
+   # architecture define and its stage directory, and the installer file gets an
+   # -x64 suffix so it cannot collide with the 32-bit one.
+   $installerArgs = @{
+      Version = $TR4W_VERSION
+      Cpu     = $Cpu
+      Os      = $Os
+      NsisBin = $NsisBin
    }
-   & $makensis $nsisArgs $nsi | Out-Host
+   if ($ExcludeSymbols)           { $installerArgs['ExcludeSymbols'] = $true }
+   if ($InstallerOutDir -ne '')   { $installerArgs['OutDir'] = $InstallerOutDir }
+   if (-not (Test-Tr4wIsI386Win32 -Cpu $Cpu -Os $Os)) { $installerArgs['StageDir'] = $STAGE_DIR }
+
+   & (Join-Path $BUILD_DIR 'Build-Installer.ps1') @installerArgs | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'NSIS installer build failed' }
    }
 

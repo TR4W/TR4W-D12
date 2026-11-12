@@ -180,6 +180,34 @@ through `PascalSource.psm1`, never a local regex. A new one takes
 literal is not a call. It also runs a built-in fixture before it reports a
 tree number, so it cannot fail open.
 
+## Per-architecture staging and the 64-bit installer (issue 299, 2026-11-12)
+
+The default is still i386; the plumbing for x86_64 exists and is unrun on a real machine.
+
+- **`build\Get-StagingDir.ps1`** owns where an architecture stages: i386-win32 -> `tr4w\target`
+  (+ `tr4w\tr4wserver\tr4wserver.exe`), unchanged; anything else -> `build-out\dist\<cpu>-<os>\`.
+  `Assert-Tr4wNotI386Path` (called by Build-App/Server/Convert/Installer and FullBuild) throws when a
+  non-i386 build targets `tr4w\target` or `tr4w\tr4wserver` -- the x64 DLLs have the SAME NAMES as the
+  32-bit ones. `Lint-ArchStaging` (in `Run-Lints`) pins it with a fixture. Never weaken it to make an
+  x64 build "land in target".
+- **`build\Build-Installer.ps1`** is the one makensis caller (FullBuild uses it; `-StageDir`/`-OutDir`
+  build an installer from a scratch stage without touching `release\`). It overrides the output with
+  makensis `/XOutFile` AFTER the script name. i386 passes no arch define, so `full.nsi` is its old self:
+  a rebuild is byte-identical (same size and CRC) -- check that again after ANY `full.nsi` edit.
+- **`full.nsi /DTR4WARCH=x86_64 /DTR4WSTAGE=<dir>`** -> `tr4w_setup_<v>-x64.exe`: `$PROGRAMFILES64`,
+  `SetRegView 64`, aborts on 32-bit Windows, `libgcc_s_seh-1.dll`, arch-neutral data still from
+  `..\target`. It does NOT use `InstallDirRegKey` (HKCU\Software\TR4W is shared with the 32-bit
+  installer and would send the 64-bit program to Program Files (x86)); `.onInit` reads it itself:
+  under Program Files (x86) or an old `...\TR4W\tr4w.exe` -> migrate; any other folder -> upgrade in
+  place. The hidden `SecMigrate` COPIES settings, loose logs (`*.db` + `-wal` + `-shm`) and every
+  sub-folder (contests keep logs in per-contest folders) except `help`/`server`, skips the copy if the
+  new `settings\tr4w.json` exists, and deletes ONLY old program files (exe, dbg, DLLs, tr4wconvert,
+  server exe, shortcuts), and only if the settings folder arrived.
+- **`tr4w.dbg` is installed under that name**: the linker's debuglink and the crash reporter use it.
+- **`rigctld.exe` is not in the installer** (either bitness).
+- Hazards: `/D` defines through Git-Bash need `MSYS2_ARG_CONV_EXCL="*"`; a trailing `\` before a
+  closing quote breaks PowerShell argument passing; never run an installer you built here.
+
 ## Platforms
 
 Windows i386, Linux x86_64 (app + server + tarball), macOS aarch64 (app + server +
