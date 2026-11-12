@@ -2,6 +2,8 @@
 
 Prepared November 12, 2026 for the agent continuing on `main`. This covers the `codex/cwops-guide` worktree: guide updates, screenshot automation, Preferences checks, BENCH_QUEUE triage and the reusable Python regression suite. Application Pascal sources were not changed by this work.
 
+Integration completed locally: work committed as `795ce663`, current main merged into the handoff as `595ed469`, and main fast-forwarded to that merge. The worktree and its merged local branch were removed after evidence preservation. Nothing was pushed. The final SSH check reported no TR4W processes and no `TR4W-GuiScenario` task. Main's unrelated working changes were preserved.
+
 ## Start here
 
 1. Read this document, [the results ledger](GUI_REMAINING_TESTS.md), [detailed bench results](GUI_BENCH_RESULTS.md) and [the test plan](GUI_BENCH_TEST_PLAN.md).
@@ -86,4 +88,4 @@ Read [GUI_BENCH_RESULTS.md](GUI_BENCH_RESULTS.md) and [GUI_DOCUMENTATION_TEST_RE
 
 Committed evidence is under `docs/gui-test/` and `user-guide/assets/cwops/`. Large executable/symbol archives, full runtime logs, exploratory screenshots and suite runs remain local. On worktree closure its entire roughly **4.8 GB** `build-out` directory is preserved at **`C:\tr4w-d12\build-out\gui-worktree-handoff-20261112`**. Thus an older reference to worktree `build-out/gui-regression/...` is found under that archive's `gui-regression/...`; similarly for `bench-ui`, radio retries and guide captures. Guest snapshots and fixtures remain under `C:\TR4W-Test`.
 
-Main's pre-existing overlapping guide/pilot files and its modified documentation map are preserved under **`C:\tr4w-d12\.worktree-backups\cwops-guide-integration-20261112`** before integration. Unrelated main edits must remain untouched. The final batch completed; no further GUI batch should run during transfer. Verify the guest has no test-owned TR4W process or scenario task before restarting work.
+Main's pre-existing overlapping guide/pilot files and its modified documentation map were preserved under **`C:\tr4w-d12\.worktree-backups\cwops-guide-integration-20261112`** before integration. Its manifest records hashes and the pre-integration status. Additional ignored exports/logs and the generated resource are preserved in the archive's `worktree-ignored/`; referenced ADIF evidence was also copied to main's `docs/gui-test/`. Unrelated main edits must remain untouched. Verify the guest has no test-owned TR4W process or scenario task before restarting work.

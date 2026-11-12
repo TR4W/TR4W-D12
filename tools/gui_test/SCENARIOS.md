@@ -10,7 +10,7 @@ Run `python tools/gui_test/stage_main_build.py` before a new batch. Stage its ap
 
 `bench-catalog` reads the visible list, including inactive entries, without creating a contest. This established that KVP is displayed as KV PRVENSTVO ZRS and Locust is inactive with no setup inputs. `bench-basic` records Locust as NOT RUN and continues; it does not silently pass that source item. A successful task is still pending semantic screenshot review until the results document supplies the verdicts. Fatal-log/timeout diagnostics use bench-workflow.json to find the owned process for dump collection; ordinary harness assertion failures preserve diagnostics and stop only their own application.
 
-Run the nine portable guard/parser/staging tests with `python -m unittest discover -s tools/gui_test -p "test_*.py"`. They do not replace live checks, certify other operating systems or prove physical radio/keyer behavior.
+Run the eleven portable guard/parser/staging tests with `python -m unittest discover -s tools/gui_test -p "test_*.py"`. They do not replace live checks, certify other operating systems or prove physical radio/keyer behavior.
 
 ## Guide scenarios
 
