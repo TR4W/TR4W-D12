@@ -1,0 +1,10 @@
+{
+   "scenario": "bench-export-cabrillo",
+   "passed": true,
+   "captures": [],
+   "records": 3,
+   "sent_serial_name": true,
+   "upload_declined": true,
+   "note": "Actual local Cabrillo export contains three serial/name exchanges; no submission performed",
+   "pid": 6076
+}

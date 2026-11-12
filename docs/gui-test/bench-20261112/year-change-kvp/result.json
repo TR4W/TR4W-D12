@@ -1,0 +1,6 @@
+{
+   "scenario": "bench-export-year05-adif",
+   "passed": false,
+   "captures": [],
+   "error": "Traceback (most recent call last):\n  File \"C:\\TR4W-Test\\readiness\\scenarios.py\", line 29, in main\n    result.update(run(args.root, args.run, args.scenario))\n                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\TR4W-Test\\readiness\\bench_ui.py\", line 38, in run\n    result = check_export(app, main, root, run_name, output, journal, phase)\n  File \"C:\\TR4W-Test\\readiness\\bench_exports.py\", line 118, in check\n    raise AssertionError(\"Year ADIF does not send expected license year \" + expected_year)\nAssertionError: Year ADIF does not send expected license year 05\n"
+}

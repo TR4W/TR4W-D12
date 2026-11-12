@@ -1,0 +1,28 @@
+{
+   "version": 1,
+   "settings": {
+      "My": {
+         "MainCallsign": "W1AW",
+         "Grid": "FN31"
+      },
+      "Log": {
+         "DebugLevel": "llDebug",
+         "ConfirmEditChanges": true
+      },
+      "ExternalLogger": {
+         "LoggerType": "NONE",
+         "Enabled": false
+      }
+   },
+   "general": {
+      "autoConnect": false,
+      "gridPromptShown": true
+   },
+   "externalLoggers": [],
+   "activeExternalLoggerIds": [],
+   "radios": [],
+   "profiles": [],
+   "keyers": [],
+   "clusters": [],
+   "rotators": []
+}

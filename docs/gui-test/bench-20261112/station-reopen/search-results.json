@@ -1,0 +1,56 @@
+[
+   {
+      "term": "DE ENABLE",
+      "kind": "check",
+      "value": 0,
+      "focus": {
+         "handle": 2294812,
+         "text": "",
+         "class": "Button",
+         "rect": [
+            715,
+            167,
+            733,
+            184
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   },
+   {
+      "term": "SCP MINIMUM LETTERS",
+      "kind": "combo",
+      "value": "3",
+      "focus": {
+         "handle": 2032690,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            588,
+            142,
+            625,
+            159
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   },
+   {
+      "term": "RADIUS OF EARTH",
+      "kind": "edit",
+      "value": "",
+      "focus": {
+         "handle": 2163802,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            715,
+            225,
+            995,
+            248
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   }
+]

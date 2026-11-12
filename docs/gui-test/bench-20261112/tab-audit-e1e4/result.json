@@ -1,0 +1,8 @@
+{
+   "scenario": "bench-prefs-audit",
+   "passed": true,
+   "captures": [],
+   "pages_observed": 47,
+   "note": "Mechanical Tab observations only; semantic order and screenshots require review",
+   "pid": 9376
+}

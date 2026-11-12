@@ -1,0 +1,86 @@
+{
+  "sourceSHA256": "1832e9fdf3c5be207816ce1c784ab798cc160e18ef4576a9b3da92305780504f",
+  "items": [
+    {
+      "line": 6315,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE LICENCE-YEAR ROW IS LABELLED FOR WHAT IT HOLDS (European HF Championship, KVP)",
+      "title": "**European HF Championship.** New Contest, choose European HF Championship. Expect the row beside the year prompt to read **MY LICENSE YEAR**, and no row to read MY ZONE. Type `64`, OK. Expect the new log's MY ZONE to be `64` (Preferences, or the sent exchange's year). Windows and Linux (gtk2): the label fits beside its field.",
+      "text": "**European HF Championship.** New Contest, choose European HF Championship. Expect the row beside the year prompt to read **MY LICENSE YEAR**, and no row to read MY ZONE. Type `64`, OK. Expect the new log's MY ZONE to be `64` (Preferences, or the sent exchange's year). Windows and Linux (gtk2): the label fits beside its field.",
+      "id": "b77e75b208085420",
+      "signals": [
+        "screen_form",
+        "local_data",
+        "other_platform"
+      ]
+    },
+    {
+      "line": 6316,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE LICENCE-YEAR ROW IS LABELLED FOR WHAT IT HOLDS (European HF Championship, KVP)",
+      "title": "**KVP.** The same with KVP.",
+      "text": "**KVP.** The same with KVP.",
+      "id": "7cd65b1994c67145",
+      "signals": [
+        "screen_form"
+      ]
+    },
+    {
+      "line": 6317,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE LICENCE-YEAR ROW IS LABELLED FOR WHAT IT HOLDS (European HF Championship, KVP)",
+      "title": "**Another contest is unchanged.** Choose NAQP CW: its rows still read MY STATE and MY NAME. (The Jock White Field Day still asks for a branch number on a row reading MY ZONE -- the same artifact, deliberately not changed here; it gets a label once NY4I says what to call it.)",
+      "text": "**Another contest is unchanged.** Choose NAQP CW: its rows still read MY STATE and MY NAME. (The Jock White Field Day still asks for a branch number on a row reading MY ZONE -- the same artifact, deliberately not changed here; it gets a label once NY4I says what to call it.)",
+      "id": "86df6e958f983de6",
+      "signals": [
+        "screen_form"
+      ]
+    },
+    {
+      "line": 6323,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE CWT'S QTH-OR-MEMBER ROW IS LABELLED FOR WHAT IT HOLDS; SUBMIT ARRL LOG IS GREYED OUTSIDE AN ARRL CONTEST",
+      "title": "**CWT row label.** New Contest, choose CWops Test (CWT). Expect two rows: MY NAME, then **MY QTH OR MEMBER NO** beside the QTH/member prompt; no row reads MY STATE. Type a name and `1234`, OK. Expect the new log's MY STATE to be `1234`. Windows and Linux (gtk2): the 19-character label fits the 160-pixel label column (CATEGORY-TRANSMITTER, 20 characters, already does).",
+      "text": "**CWT row label.** New Contest, choose CWops Test (CWT). Expect two rows: MY NAME, then **MY QTH OR MEMBER NO** beside the QTH/member prompt; no row reads MY STATE. Type a name and `1234`, OK. Expect the new log's MY STATE to be `1234`. Windows and Linux (gtk2): the 19-character label fits the 160-pixel label column (CATEGORY-TRANSMITTER, 20 characters, already does).",
+      "id": "49d42f1723a8506d",
+      "signals": [
+        "screen_form",
+        "local_data",
+        "transmission_audio",
+        "other_platform"
+      ]
+    },
+    {
+      "line": 6324,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE CWT'S QTH-OR-MEMBER ROW IS LABELLED FOR WHAT IT HOLDS; SUBMIT ARRL LOG IS GREYED OUTSIDE AN ARRL CONTEST",
+      "title": "**Locust QSO Party / NCCC Sprint unchanged.** Their rows still read MY NAME and MY STATE (they take a QTH, not a member number).",
+      "text": "**Locust QSO Party / NCCC Sprint unchanged.** Their rows still read MY NAME and MY STATE (they take a QTH, not a member number).",
+      "id": "a0814eda824b77e8",
+      "signals": [
+        "screen_form"
+      ]
+    },
+    {
+      "line": 6376,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE CW OPEN COUNTS NO ZONES (issue 277)",
+      "title": "**No Zones row.** Open (or create) a CWOps CW Open log. The totals block's left column reads QSOs and **Calls** only; no Zones row. Windows and Linux (gtk2).",
+      "text": "**No Zones row.** Open (or create) a CWOps CW Open log. The totals block's left column reads QSOs and **Calls** only; no Zones row. Windows and Linux (gtk2).",
+      "id": "9795455eb912366a",
+      "signals": [
+        "screen_form",
+        "other_platform"
+      ]
+    },
+    {
+      "line": 6377,
+      "state": " ",
+      "section": "Added 2026-11-11 -- THE CW OPEN COUNTS NO ZONES (issue 277)",
+      "title": "**Two QSOs, the score.** Log two QSOs with different callsigns on one band (e.g. K6RB 1 ROB, W1AW 2 JOE on 20 m CW). Calls reads 2 and the score reads **2 x 2 = 4** (before this change it would have counted their zones too). Work K6RB again on 40 m: a new QSO (points 3), no new multiplier, score **3 x 2 = 6**.",
+      "text": "**Two QSOs, the score.** Log two QSOs with different callsigns on one band (e.g. K6RB 1 ROB, W1AW 2 JOE on 20 m CW). Calls reads 2 and the score reads **2 x 2 = 4** (before this change it would have counted their zones too). Work K6RB again on 40 m: a new QSO (points 3), no new multiplier, score **3 x 2 = 6**.",
+      "id": "7b90247b7d38d591",
+      "signals": []
+    }
+  ]
+}

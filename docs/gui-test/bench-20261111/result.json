@@ -1,0 +1,7 @@
+{
+   "scenario": "bench-basic",
+   "passed": true,
+   "captures": [],
+   "pid": 2800,
+   "note": "UI actions and field assertions passed; label/score screenshots require visual review"
+}

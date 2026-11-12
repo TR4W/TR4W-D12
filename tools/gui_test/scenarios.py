@@ -1,6 +1,7 @@
 """Named documentation captures and Preferences evidence, driven by Python."""
 
 import argparse
+from scenario_names import SCENARIOS
 import ctypes
 import json
 import time
@@ -8,25 +9,50 @@ import traceback
 from pathlib import Path
 from pywinauto.timings import wait_until
 
-from session import capture, describe_windows, launch
+from session import capture, close_normally, describe_windows, launch, hover_control
 
 
 def main():
    parser = argparse.ArgumentParser(description=__doc__)
-   parser.add_argument("scenario", choices=["preferences", "preferences-audit", "station-hints", "new-contest", "cw-open", "cw-open-qso", "cw-open-collision"])
+   parser.add_argument("scenario", choices=SCENARIOS)
    parser.add_argument("--run", default="pilot-001")
    parser.add_argument("--root", type=Path, default=Path(r"C:\TR4W-Test"))
    args = parser.parse_args()
    output = args.root / "artifacts" / args.scenario
    output.mkdir(parents=True, exist_ok=True)
    ctypes.windll.user32.SetProcessDPIAware()
-   result = {"scenario": args.scenario, "passed": False, "captures": []}
+   result = {"scenario": args.scenario, "run": args.run, "root": str(args.root), "passed": False, "captures": []}
+   if args.scenario.startswith(("radio-", "bench-")):
+      try:
+         if args.scenario.startswith("bench-"):
+            from bench_ui import run
+            result.update(run(args.root, args.run, args.scenario))
+         else:
+            from radio_workflow import step
+            result.update(step(args.root, args.run, args.scenario))
+      except Exception:
+         result["error"] = traceback.format_exc()
+         if args.scenario.startswith("radio-"):
+            try:
+               from radio_workflow import diagnose
+               diagnose(args.root, args.run, output)
+            except Exception:
+               result["diagnostic_error"] = traceback.format_exc()
+      (output / "result.json").write_text(json.dumps(result, indent=3), encoding="utf-8")
+      return 0 if result["passed"] else 1
    app = None
    try:
       existing = list((args.root / "runs" / args.run).glob("CWOPEN*.db"))
+      cwt_cases = {"cwt-messages", "capture-check", "guide-cwt", "cwt-setup"}
+      if args.scenario in cwt_cases:
+         existing = list((args.root / "runs" / args.run).glob("CWOPS*.db"))
+         if len(existing) > 1:
+            raise AssertionError("Expected at most one isolated CWOPS practice database")
       is_cwo = args.scenario in {"cw-open", "cw-open-qso"}
-      create = args.scenario in {"new-contest", "cw-open-collision"} or (is_cwo and not existing)
-      contest = existing[0].name if is_cwo and existing else "practice.db"
+      create = args.scenario in {"new-contest", "cw-open-collision", "cwt-setup"} or ((is_cwo or args.scenario == "cwt-messages") and not existing)
+      if args.scenario == "capture-check" and len(existing) != 1:
+         raise AssertionError("Capture check requires one existing CWOPS practice log")
+      contest = existing[0].name if (is_cwo or args.scenario in cwt_cases) and existing else "practice.db"
       app = launch(args.root, args.run, "" if create else contest)
       result["pid"] = app.process
       if create:
@@ -38,13 +64,19 @@ def main():
          main_window.type_keys("^j")
          window = app.window(title="TR4W Preferences")
       else:
-         window = app.window(title_re=r"TR4W v.*CWOPEN.*")
+         window = app.window(title_re=r"TR4W v.*CWOPS.*" if args.scenario in cwt_cases else r"TR4W v.*CWOPEN.*")
       window.wait("visible", timeout=30)
+      if args.scenario == "capture-check":
+         from evidence import StepLog
+         journal = StepLog(output / "steps.jsonl")
+         journal.perform("wait for main window ready", lambda: window.wait("enabled", timeout=15))
+         window.set_focus()
+         window.capture_as_image().save(output / "desktop-rectangle-before.png")
       if create:
          edits = sorted(window.descendants(class_name="Edit"), key=lambda c: c.rectangle().left)
          if len(edits) != 2:
             raise AssertionError("Expected search and callsign fields before contest selection")
-         edits[0].set_edit_text("CW Open")
+         edits[0].set_edit_text("CWT" if args.scenario in cwt_cases else "CW Open")
          lists = [c for c in window.descendants() if c.class_name() == "LCLListBox"]
          if len(lists) != 1:
             raise AssertionError("Contest list was not uniquely identified")
@@ -59,9 +91,75 @@ def main():
          if len(name_fields) == 1:
             name_fields[0].set_focus()
             name_fields[0].type_keys("^aTOM{TAB}", with_spaces=True)
+         if args.scenario in cwt_cases:
+            name_fields.sort(key=lambda c: c.rectangle().top)
+            if len(name_fields) != 2:
+               raise AssertionError("Expected CWT MY NAME and MY STATE inputs")
+            name_fields[0].set_focus()
+            name_fields[0].type_keys("^aTOM{TAB}")
+            name_fields[1].set_focus()
+            name_fields[1].type_keys("^aFL{TAB}")
       describe_windows(app, output)
       capture(window, output / (args.scenario + ".png"))
       result["captures"].append(args.scenario + ".png")
+      if args.scenario == "guide-bandmap":
+         from evidence import StepLog
+         from guide_capture import capture_cluster
+         journal = StepLog(output / "steps.jsonl")
+         capture_cluster(app, window, output, journal)
+         describe_windows(app, output)
+         close_normally(app, window, journal)
+         app = None
+      if args.scenario in {"guide-cwo", "guide-cwt"}:
+         from evidence import StepLog
+         from message_workflow import program_messages
+         journal = StepLog(output / "steps.jsonl")
+         is_cwt = args.scenario == "guide-cwt"
+         program_messages(app, window, output, journal,
+            event="CWT" if is_cwt else "CWO", exchange="TOM FL" if is_cwt else "# TOM", read_only=True)
+         if not is_cwt:
+            from guide_capture import capture_station
+            capture_station(app, window, output, journal)
+         describe_windows(app, output)
+         close_normally(app, window, journal)
+         app = None
+      if args.scenario == "capture-check":
+         window.menu_select("Settings->Program messages")
+         chooser = app.window(title="Memory program function")
+         chooser.wait("visible", timeout=10)
+         chooser.set_focus()
+         chooser.capture_as_image().save(output / "dialog-rectangle-before.png")
+         capture(chooser, output / "dialog-visible-frame.png")
+         result["captures"].append("dialog-visible-frame.png")
+         chooser.type_keys("{ESC}")
+         close_normally(app, window, journal)
+         app = None
+      if args.scenario == "cwt-messages":
+         from evidence import StepLog
+         from message_workflow import program_messages
+         journal = StepLog(output / "steps.jsonl")
+         if create:
+            journal.perform("create isolated CWT practice log", lambda: window.child_window(title_re="&?OK", class_name="Button").click_input())
+         main_window = app.window(title_re=r"TR4W v.*CWOPS.*")
+         journal.perform("wait for CWOPS main window", lambda: main_window.wait("visible", timeout=30))
+         notice = app.window(class_name="#32770")
+         if notice.exists(timeout=2):
+            from pywinauto import Application
+            uiapp = Application(backend="uia").connect(process=app.process)
+            text = " ".join(c.window_text() for c in uiapp.window(handle=notice.handle).descendants())
+            if "Set value of MY GRID" not in text:
+               raise RuntimeError("Unexpected startup prompt: " + text)
+            journal.perform("defer grid setup in isolated message-only fixture", lambda: notice.child_window(title="&No").click_input())
+         journal.perform("wait for main window ready", lambda: main_window.wait("enabled", timeout=10))
+         program_messages(app, main_window, output, journal, event="CWT", exchange="TOM FL")
+         result["captures"].extend([
+            "message-chooser.png", "cq-messages.png", "message-editor.png",
+            "sp-messages.png", "other-messages.png", "cwt-main.png",
+         ])
+         journal.perform("capture CWT main window", lambda: capture(main_window, output / "cwt-main.png"))
+         describe_windows(app, output)
+         close_normally(app, main_window, journal)
+         app = None
       if args.scenario == "cw-open-collision":
          if not existing:
             raise AssertionError("Collision scenario requires the existing same-day CWOPEN fixture")
@@ -91,7 +189,7 @@ def main():
          from pywinauto import mouse
          mouse.move(coords=(bounds.left + 10, bounds.top + 10))
          time.sleep(0.3)
-         grid[0].move_mouse_input(coords=(rect.width() // 2, rect.height() // 2))
+         hover_control(grid[0])
          time.sleep(2)
          capture(window, output / "my-grid-hover.png")
          result["captures"].append("my-grid-hover.png")
@@ -116,48 +214,20 @@ def main():
             submenu = item.sub_menu()
             menus[item.text()] = [child.text() for child in submenu.items()] if submenu else []
          (output / "menus.json").write_text(json.dumps(menus, indent=3), encoding="utf-8")
-         main_window.set_focus()
-         main_window.type_keys("%p")
-         messages = app.window(title="List of messages")
-         messages.wait("visible", timeout=10)
-         capture(messages, output / "cq-messages.png")
-         result["captures"].append("cq-messages.png")
-         lists = messages.descendants(class_name="SysListView32")
-         if len(lists) != 1:
-            raise AssertionError("Message list not uniquely observable")
-         lists[0].select(0)
-         lists[0].set_focus()
-         messages.type_keys("{ENTER}")
-         editor = app.window(title="Program message")
-         editor.wait("visible", timeout=10)
-         capture(editor, output / "message-editor.png")
-         result["captures"].append("message-editor.png")
-         editor.type_keys("{ESC}")
-         messages.type_keys("{ESC}")
-         main_window.menu_select("Settings->Program messages")
-         chooser = app.window(title="Memory program function")
-         chooser.wait("visible", timeout=10)
-         capture(chooser, output / "message-chooser.png")
-         result["captures"].append("message-chooser.png")
-         chooser.type_keys("{ESC}")
+         from evidence import StepLog
+         from message_workflow import program_messages
+         program_messages(app, main_window, output, StepLog(output / "steps.jsonl"))
+         result["captures"].extend([
+            "message-chooser.png", "cq-messages.png", "message-editor.png",
+            "sp-messages.png", "other-messages.png",
+         ])
          describe_windows(app, output)
+         close_normally(app, main_window, StepLog(output / "steps.jsonl"))
+         app = None
       if args.scenario == "cw-open-qso":
-         fields = sorted(
-            [c for c in window.descendants(class_name="Edit") if c.is_visible()],
-            key=lambda c: c.rectangle().top,
-         )
-         if len(fields) != 2:
-            raise AssertionError("Call and exchange entry fields are not uniquely identifiable")
-         fields[0].set_focus()
-         fields[0].set_edit_text("")
-         fields[0].type_keys("K6RB")
-         fields[1].set_focus()
-         fields[1].set_edit_text("")
-         fields[1].type_keys("1 ROB", with_spaces=True)
-         fields[1].type_keys("^{ENTER}")
-         # The CQ state machine may first advance to the exchange stage.
-         if fields[0].window_text():
-            fields[1].type_keys("^{ENTER}")
+         from evidence import StepLog
+         from qso_entry import log_without_cw
+         log_without_cw(window, "K6RB", "1 ROB", StepLog(output / "steps.jsonl"))
          time.sleep(1)
          capture(window, output / "practice-qso.png")
          result["captures"].append("practice-qso.png")

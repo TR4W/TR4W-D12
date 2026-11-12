@@ -1,0 +1,9 @@
+{
+   "scenario": "bench-export-zone-edit42-adif",
+   "passed": true,
+   "captures": [],
+   "records": 1,
+   "license_year_checked": false,
+   "note": "Actual File > Export > ADIF output verified",
+   "pid": 3064
+}

@@ -1,0 +1,162 @@
+{
+   "Tools": [
+      {
+         "text": "Beacons monitor",
+         "enabled": true
+      },
+      {
+         "text": "Windows control\tCtrl+Alt+M",
+         "enabled": true
+      },
+      {
+         "text": "Set time zone",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "Ping [SERVER ADDRESS]",
+         "enabled": true
+      },
+      {
+         "text": "Run TR4WSERVER",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "DVK volume control",
+         "enabled": true
+      },
+      {
+         "text": "Recording control",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "Rules for CWOPEN contest at WA7BNM Contest Calendar",
+         "enabled": true
+      },
+      {
+         "text": "Rules for CWOPEN contest at QRZ.RU",
+         "enabled": false
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "Calculator",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "Reset Radio Ports",
+         "enabled": true
+      },
+      {
+         "text": "Re-send Log to HamScore...",
+         "enabled": true
+      },
+      {
+         "text": "Edit Cabrillo Summary...",
+         "enabled": true
+      },
+      {
+         "text": "Run Verification Checks...",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "3830 Score posting",
+         "enabled": true
+      },
+      {
+         "text": "Submit ARRL Log",
+         "enabled": false
+      },
+      {
+         "text": "-",
+         "enabled": false
+      }
+   ],
+   "Windows": [
+      {
+         "text": "Bandmap\tShift+Ctrl+`",
+         "enabled": true
+      },
+      {
+         "text": "Dupesheet",
+         "enabled": true
+      },
+      {
+         "text": "Function keys\tShift+Ctrl+2",
+         "enabled": true
+      },
+      {
+         "text": "SCP\tShift+Ctrl+3",
+         "enabled": true
+      },
+      {
+         "text": "Mults",
+         "enabled": true
+      },
+      {
+         "text": "Radio 1\tShift+Ctrl+5",
+         "enabled": true
+      },
+      {
+         "text": "Radio 2\tShift+Ctrl+6",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "DX Cluster",
+         "enabled": true
+      },
+      {
+         "text": "Network",
+         "enabled": true
+      },
+      {
+         "text": "-",
+         "enabled": false
+      },
+      {
+         "text": "Intercom\tShift+Ctrl+7",
+         "enabled": true
+      },
+      {
+         "text": "Post score\tShift+Ctrl+8",
+         "enabled": true
+      },
+      {
+         "text": "HamScore RTC Status",
+         "enabled": true
+      },
+      {
+         "text": "Stations\tShift+Ctrl+9",
+         "enabled": true
+      },
+      {
+         "text": "MMTTY",
+         "enabled": true
+      }
+   ]
+}

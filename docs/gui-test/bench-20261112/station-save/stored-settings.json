@@ -1,0 +1,24 @@
+{
+   "paths": {
+      "DE ENABLE": [
+         "settings",
+         "Message",
+         "DeEnable"
+      ],
+      "SCP MINIMUM LETTERS": [
+         "settings",
+         "Scp",
+         "MinimumLetters"
+      ],
+      "RADIUS OF EARTH": [
+         "settings",
+         "GridMap",
+         "RadiusOfEarth"
+      ]
+   },
+   "values": {
+      "DE ENABLE": false,
+      "SCP MINIMUM LETTERS": 3,
+      "RADIUS OF EARTH": 6371.0
+   }
+}

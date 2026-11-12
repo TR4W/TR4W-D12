@@ -1,0 +1,36 @@
+{
+   "before": {
+      "qso_count": 1,
+      "my_zone": [
+         [
+            "64"
+         ]
+      ]
+   },
+   "original_control": {
+      "term": "MY ZONE",
+      "kind": "edit",
+      "value": "8",
+      "focus": {
+         "handle": 3802138,
+         "text": "8",
+         "class": "Edit",
+         "rect": [
+            525,
+            255,
+            725,
+            277
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   },
+   "after_save": {
+      "qso_count": 1,
+      "my_zone": [
+         [
+            "64"
+         ]
+      ]
+   }
+}

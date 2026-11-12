@@ -1,0 +1,18 @@
+{
+   "sha256": "4d244c6f3d26f682f250e8a7cc00b84afbddf86630f9caaf03776ab44bfeaffa",
+   "application_bits": 32,
+   "python_bits": 32,
+   "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:14:44) [MSC v.1951 32 bit (Intel)]",
+   "debug_crc32": "F964CC0E",
+   "debug_sha256": "e1a510bd5bb51adcc04c245c36558bd96c8d7a05a9f05ed29cdc80e33a8fe7da",
+   "archive": "C:\\TR4W-Test\\bench-main-4d244c6f3d26\\evidence\\builds\\4d244c6f3d26f682f250e8a7cc00b84afbddf86630f9caaf03776ab44bfeaffa",
+   "source": {
+      "ProvenanceKind": "user-selected-existing-binary",
+      "SourceExecutable": "C:\\tr4w-d12\\build-out\\app-i386-win32\\tr4w_fpc.exe",
+      "SourceSHA256": "4d244c6f3d26f682f250e8a7cc00b84afbddf86630f9caaf03776ab44bfeaffa",
+      "SourceRevision": null,
+      "SourceClean": false,
+      "CapturedUtc": "2026-11-12T07:26:16.480295+00:00",
+      "Note": "Build-time source revision is unknown; a current checkout is not build provenance."
+   }
+}

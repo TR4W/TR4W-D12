@@ -1,0 +1,9 @@
+{
+   "scenario": "bench-export-discover",
+   "passed": true,
+   "captures": [],
+   "records": 3,
+   "license_year_checked": false,
+   "note": "Actual File > Export > ADIF output verified",
+   "pid": 6448
+}

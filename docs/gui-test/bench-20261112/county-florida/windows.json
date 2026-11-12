@@ -1,0 +1,370 @@
+[
+   {
+      "title": "TR4W v.5.0.37 - Open configuration file or start a new contest",
+      "class": "Window",
+      "controls": [
+         {
+            "text": "Cancel",
+            "class": "Button",
+            "handle": 7799332,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1105,
+               "top": 633,
+               "right": 1193,
+               "bottom": 663
+            }
+         },
+         {
+            "text": "&OK",
+            "class": "Button",
+            "handle": 8127002,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 1009,
+               "top": 633,
+               "right": 1097,
+               "bottom": 663
+            }
+         },
+         {
+            "text": "Start a new contest",
+            "class": "Button",
+            "handle": 4129664,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 406,
+               "top": 157,
+               "right": 1193,
+               "bottom": 625
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4129676,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 827,
+               "top": 175,
+               "right": 1191,
+               "bottom": 623
+            }
+         },
+         {
+            "text": "",
+            "class": "LCLComboBox",
+            "handle": 7143566,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 313,
+               "right": 1183,
+               "bottom": 336
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 7602338,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 343,
+               "right": 1183,
+               "bottom": 366
+            }
+         },
+         {
+            "text": "&I am in FL",
+            "class": "Button",
+            "handle": 7930048,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 219,
+               "right": 1183,
+               "bottom": 238
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 7864906,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 313,
+               "right": 1183,
+               "bottom": 336
+            }
+         },
+         {
+            "text": "ONE",
+            "class": "LCLComboBox",
+            "handle": 5898868,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 553,
+               "right": 1183,
+               "bottom": 576
+            }
+         },
+         {
+            "text": "HIGH",
+            "class": "LCLComboBox",
+            "handle": 6488688,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 523,
+               "right": 1183,
+               "bottom": 546
+            }
+         },
+         {
+            "text": "SINGLE-OP",
+            "class": "LCLComboBox",
+            "handle": 7406170,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 493,
+               "right": 1183,
+               "bottom": 516
+            }
+         },
+         {
+            "text": "CW",
+            "class": "LCLComboBox",
+            "handle": 8585734,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 463,
+               "right": 1183,
+               "bottom": 486
+            }
+         },
+         {
+            "text": "ALL",
+            "class": "LCLComboBox",
+            "handle": 4850584,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 433,
+               "right": 1183,
+               "bottom": 456
+            }
+         },
+         {
+            "text": "NON-ASSISTED",
+            "class": "LCLComboBox",
+            "handle": 3998612,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 403,
+               "right": 1183,
+               "bottom": 426
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3736466,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 835,
+               "top": 247,
+               "right": 1183,
+               "bottom": 299
+            }
+         },
+         {
+            "text": "W1AW",
+            "class": "Edit",
+            "handle": 3474320,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1003,
+               "top": 186,
+               "right": 1183,
+               "bottom": 209
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 6030212,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 408,
+               "top": 175,
+               "right": 827,
+               "bottom": 623
+            }
+         },
+         {
+            "text": "Show inactive contests",
+            "class": "Button",
+            "handle": 4260746,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 416,
+               "top": 600,
+               "right": 827,
+               "bottom": 619
+            }
+         },
+         {
+            "text": "",
+            "class": "LCLListBox",
+            "handle": 5047176,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 416,
+               "top": 234,
+               "right": 827,
+               "bottom": 596
+            }
+         },
+         {
+            "text": "Florida QSO Party",
+            "class": "Edit",
+            "handle": 4588422,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 416,
+               "top": 207,
+               "right": 827,
+               "bottom": 230
+            }
+         },
+         {
+            "text": "Open an existing configuration",
+            "class": "Button",
+            "handle": 7275114,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 86,
+               "top": 157,
+               "right": 398,
+               "bottom": 625
+            }
+         },
+         {
+            "text": "Last Contest, Alt+&A:\r\nCWops Test (CWT) 2026\r\nW1AW - CWOPS 2026-11-11 W1AW.db",
+            "class": "Button",
+            "handle": 5046372,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 98,
+               "top": 546,
+               "right": 386,
+               "bottom": 607
+            }
+         },
+         {
+            "text": "Browse...",
+            "class": "Button",
+            "handle": 4391806,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 98,
+               "top": 502,
+               "right": 386,
+               "bottom": 532
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 6947436,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 98,
+               "top": 183,
+               "right": 386,
+               "bottom": 494
+            }
+         }
+      ]
+   },
+   {
+      "title": "tr4w_fpc",
+      "class": "Window",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "M",
+      "class": "MSCTFIME UI",
+      "controls": []
+   },
+   {
+      "title": "Default IME",
+      "class": "IME",
+      "controls": []
+   }
+]

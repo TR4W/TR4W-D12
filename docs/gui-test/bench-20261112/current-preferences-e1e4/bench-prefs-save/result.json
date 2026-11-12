@@ -1,0 +1,7 @@
+{
+   "scenario": "bench-prefs-save",
+   "passed": true,
+   "captures": [],
+   "note": "Cancel verified on three leaves; Save completed, restart verification pending",
+   "pid": 6392
+}

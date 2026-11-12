@@ -1,0 +1,36 @@
+{"utc": "2026-11-12T06:23:24.192010+00:00", "action": "launch isolated current-main build", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:26.339144+00:00", "action": "launch isolated current-main build", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:26.342792+00:00", "action": "wait for New Contest", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.064053+00:00", "action": "wait for New Contest", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.080661+00:00", "action": "find contest KV PRVENSTVO ZRS", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.108302+00:00", "action": "find contest KV PRVENSTVO ZRS", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.114217+00:00", "action": "focus contest results", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.290468+00:00", "action": "focus contest results", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.292335+00:00", "action": "select first matching contest", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.477381+00:00", "action": "select first matching contest", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.479134+00:00", "action": "enter practice station call", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.504886+00:00", "action": "enter practice station call", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.507520+00:00", "action": "leave callsign field", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.693134+00:00", "action": "leave callsign field", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.709196+00:00", "action": "focus form input", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.890356+00:00", "action": "focus form input", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.892345+00:00", "action": "enter 64", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.917850+00:00", "action": "enter 64", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:27.920144+00:00", "action": "leave form input", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:27.933120+00:00", "action": "leave form input", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:31.915573+00:00", "action": "request normal close to save messages", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:31.919644+00:00", "action": "request normal close to save messages", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:31.921032+00:00", "action": "wait for exit confirmation", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:32.018344+00:00", "action": "wait for exit confirmation", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:32.160617+00:00", "action": "confirm normal exit", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:32.291737+00:00", "action": "confirm normal exit", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:32.293494+00:00", "action": "wait for owned application exit", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:32.597866+00:00", "action": "wait for owned application exit", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:36.659356+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:36.846237+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:36.848481+00:00", "action": "search MY ZONE", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:36.877820+00:00", "action": "search MY ZONE", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:36.887370+00:00", "action": "click first visible result for MY ZONE", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:37.373405+00:00", "action": "click first visible result for MY ZONE", "state": "after", "detail": null}
+{"utc": "2026-11-12T06:23:37.507172+00:00", "action": "capture searched page MY ZONE", "state": "before", "detail": null}
+{"utc": "2026-11-12T06:23:38.096593+00:00", "action": "capture searched page MY ZONE", "state": "after", "detail": null}

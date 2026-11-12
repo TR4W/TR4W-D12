@@ -1,0 +1,74 @@
+[
+   {
+      "term": "QTC MINUTES",
+      "kind": "check",
+      "value": 0,
+      "focus": {
+         "handle": 3081228,
+         "text": "",
+         "class": "Button",
+         "rect": [
+            715,
+            227,
+            733,
+            244
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   },
+   {
+      "term": "CATEGORY-POWER",
+      "kind": "combo",
+      "value": "HIGH",
+      "focus": {
+         "handle": 3015730,
+         "text": "",
+         "class": "LCLComboBox",
+         "rect": [
+            715,
+            315,
+            995,
+            338
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   },
+   {
+      "term": "SPRINT QSY RULE",
+      "kind": "check",
+      "value": 0,
+      "focus": {
+         "handle": 2294856,
+         "text": "",
+         "class": "Button",
+         "rect": [
+            715,
+            257,
+            733,
+            274
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   },
+   {
+      "term": "CALL HISTORY FILENAME",
+      "kind": "edit",
+      "value": "",
+      "focus": {
+         "handle": 2425948,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            715,
+            225,
+            919,
+            248
+         ],
+         "visible": true,
+         "enabled": true
+      }
+   }
+]

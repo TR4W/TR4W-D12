@@ -1,0 +1,24 @@
+{
+   "scenario": "bench-lognames",
+   "passed": true,
+   "captures": [],
+   "pid": 2624,
+   "original_sha256_before_numbering": "f8e8ffe619fbe6fffcc02249d310e7675b9e2deb5674d01f9bba97e9e8a18a4e",
+   "original_unchanged_after_numbering": true,
+   "cancel_actions": [
+      "Escape",
+      "Close",
+      "Cancel"
+   ],
+   "inputs_preserved": true,
+   "cancel_created_no_files": true,
+   "numbered_logs": [
+      2,
+      3
+   ],
+   "open_existing_created_no_file": true,
+   "different_contest_after_cancel": "CWOPS",
+   "cwt_submit_arrl_enabled": false,
+   "cwt_saved_my_state": "1234",
+   "note": "Behavior assertions passed; question wording, empty serials and original-QSO screenshots need visual review"
+}

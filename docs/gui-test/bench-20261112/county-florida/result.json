@@ -1,0 +1,6 @@
+{
+   "scenario": "bench-county-check",
+   "passed": true,
+   "captures": [],
+   "note": "County validation and saved Florida county passed; screenshots require review"
+}

@@ -1,0 +1,6 @@
+{
+   "scenario": "bench-prefs-station-verify",
+   "passed": false,
+   "captures": [],
+   "error": "Traceback (most recent call last):\n  File \"C:\\TR4W-Test\\readiness\\scenarios.py\", line 29, in main\n    result.update(run(args.root, args.run, args.scenario))\n                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\TR4W-Test\\readiness\\bench_ui.py\", line 36, in run\n    result = check(app, main, output, journal, phase, root, run_name)\n  File \"C:\\TR4W-Test\\readiness\\bench_preferences.py\", line 247, in check\n    raise AssertionError(\"After restart \" + term + \" is \" + repr(actual[term]) + \", expected \" + repr(value))\nAssertionError: After restart RADIUS OF EARTH is '', expected '6371'\n"
+}

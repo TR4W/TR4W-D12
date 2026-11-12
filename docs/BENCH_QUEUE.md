@@ -20,6 +20,16 @@ for runs in which Preferences never opened. So nothing below is asking whether
 a dialog appears; every item is about whether what appears is CORRECT, which is
 the part no gate reaches.
 
+**Windows UI triage, 2026-11-11.** [GUI_BENCH_TEST_PLAN.md](GUI_BENCH_TEST_PLAN.md)
+identifies screen/form and local-data batches the Python tester can perform;
+[GUI_BENCH_RESULTS.md](GUI_BENCH_RESULTS.md) records exact-build evidence.
+NY4I selected the frequently updated main executable, not a worktree build.
+Available equipment is the K4 and DX cluster only. A Windows-only sub-result
+does not close a checkbox that also requires Linux/macOS, 150% scaling,
+saved-value verification, another device or a real external service. The older
+claim below that an agent cannot review screenshots is superseded by this
+Python-plus-reviewed-captures workflow; a window merely opening still is not a pass.
+
 **Why this exists.** Every defect NY4I found during the Phase 3/4 conversions was
 invisible to the lints, the unit tests and the golden corpus: a
 swallowed menu, invisible entry fields, a double caret, a window collapsed to
@@ -29,6 +39,147 @@ a message key written with four bytes of garbage on the end. The gates are good
 at what they cover; this is the list of what they cannot see.
 
 ---
+
+## Added 2026-11-12 -- MY LICENSE YEAR: THE SENT YEAR HAS ITS OWN SETTING, BOX AND ROW (issue 298)
+
+Unit-tested (`uTestLicenseYearSetting`, `uTestStationFactOverrides`); nothing
+below has been seen on a screen. No schema change (still 7). The year you SEND
+was the MY ZONE setting relabelled; it is now `MY LICENSE YEAR`.
+
+- [ ] **Preferences > Station information has a License year box**, in the
+      Contest exchange column under Park, with its own tooltip (it describes the
+      year, four digits or two). The CQ zone box is still labelled CQ zone in
+      EVERY contest -- open Preferences with an EUHFC log and with a CQ WW log
+      and confirm the zone box never changes its words.
+- [ ] **Type 1985 (or 85) in License year, Save, open a new EUHFC contest.** The
+      New Contest row reads MY LICENSE YEAR and is pre-asked; the default CQ
+      message and the Cabrillo/ADIF sent exchange carry `85`. KVP the same.
+- [ ] **Your EUHFC log from before this build** (`EUROPEAN HFC 2026-11-11
+      NY4I.log` -- copy it first, do not open the only copy): its year, which
+      the log stored as MY ZONE, is moved to MY LICENSE YEAR when the contest
+      opens, so the Cabrillo and ADIF sent exchange show the year you stated
+      (not `08`/`8`, not your ITU zone). Preferences shows the STATION's
+      License year (the default), not this contest's, so it may read empty
+      there. If the sent year is missing, say what the log's MY ZONE held.
+- [ ] **A zone contest is untouched**: CQ WW still sends its CQ zone, and the
+      License year box being filled changes nothing in it.
+- [ ] **An EUHFC contest with no License year** warns at startup ("MY LICENSE
+      YEAR is empty ...") and sends no year, rather than your CQ zone.
+
+## Added 2026-11-12 -- THE RECEIVED YEAR ON SCREEN AND IN EVERY EXPORT (issue 298, stage 3)
+
+Unit-tested (`uTestReceivedYearDisplay`); nothing below has been seen on a
+screen. No schema change (still 7).
+
+- [ ] **The log grid shows the year as typed.** In an EUHFC or KVP log the
+      column headed Year shows `05`, not `5` (a CQ WW log still shows its
+      zone under `Zn`).
+- [ ] **Edit QSO names the year.** Open an EUHFC QSO in Edit QSO: the box that
+      said Zone is labelled Year and holds two digits. Then open a CQ WW QSO in
+      the same session: it says Zone again (the form is reused). The "Our
+      station for this QSO" CQ zone box on a NEW EUHFC QSO shows your CALL's
+      CQ zone (e.g. 15 for an S5), not your licence year -- an EUHFC QSO logged
+      before this build still shows the year it recorded (80 in NY4I's log);
+      nothing rewrites it.
+- [ ] **Edit the year, then export.** Change a QSO's year in Edit QSO and save:
+      the ADIF `SRX_STRING` and the Cabrillo received column both carry the
+      NEW year (the ADIF used to carry the typed one). A QSO typed `5` exports
+      `SRX_STRING` `599 05` now.
+- [ ] **ADIF MY_CQ_ZONE.** Export ADIF from a NEW EUHFC log: `MY_CQ_ZONE` is
+      your call's CQ zone, never your licence year.
+- [ ] **UDP.** With UDP broadcast on, an EUHFC QSO's contact carries the year
+      in `<zone>` (5 for 05, as before) and `599 05` as its exchange.
+
+## Added 2026-11-12 -- LOG SCHEMA 7: THE RECEIVED YEAR IS READ FROM ITS OWN FIELD (issue 298, stage 2)
+
+Unit-tested (`uTestLogReceivedYear`: the kinds, the parser, Edit QSO's save
+rule, the ADIF import through `ParseADIFRecord`, the v7 re-carry, a QSO
+received live through the NET_QSOINFO arm); nothing below has been seen on a
+screen. **Keep a copy of the log first: a log this build opens is refused by
+5.0.37 and earlier.**
+
+- [ ] **Edit QSO keeps the year and the zone together.** In an EUHFC log, open
+      a QSO in Edit QSO: the zone box shows its year as two digits (`05`, not
+      `5`). Change it (e.g. 85 to 84), save, then: the log grid's Year column
+      shows 84, a Rescore counts 84 (not 85) on that band, and Cabrillo's
+      received column reads `599 84`. Empty the box and save: the grid shows no
+      year and the QSO earns no year multiplier. Type `1982` or `8A`: the save
+      is refused with "Improper license year!!" and the form stays open.
+- [ ] **An existing EUHFC/KVP log migrates.** Open an EUHFC log last saved by
+      a stage-1 build (or 5.0.37): nothing visible changes -- years, score and
+      export are what they were -- and the log is now schema 7.
+- [ ] **ADIF import carries the year.** Export ADIF from an EUHFC log, start a
+      new EUHFC log, import that file: every QSO keeps its year (grid Year
+      column, Cabrillo received column, the score's multipliers). Before this
+      change it came back with none. An ADIF from another logger whose year is
+      only in `CQZ` imports that value as the year.
+- [ ] **Multi-op.** Two stations on EUHFC (TR4WServerPy moved to protocol 3,
+      see stage 1 below): a QSO logged on one shows the right year on the
+      other, in the grid and in its Edit QSO.
+
+## Added 2026-11-12 -- NETWORK PROTOCOL 3 AND LOG SCHEMA 6: THE RECEIVED YEAR (issue 298, stage 1)
+
+The QSO record carries the received year in bytes that were reserved; packet and
+record sizes are unchanged. What only a real run can judge:
+- **TR4WServerPy must be moved to protocol 3** (it judges the version as equal),
+  or every station of this build is refused with "protocol mismatch". The in-tree
+  `tr4wserver` builds from this tree and is already 3. Then two stations: log an
+  EUHFC QSO on one, check the other's log row has `rcvd_year` (and a catch-up
+  after a restart keeps it).
+- Opening an existing EUHFC or KVP log migrates it to schema 7 (6 was stage
+  1's; stage 2's 7 re-copies the years) and copies each
+  QSO's year out of the zone column; **5.0.37 cannot open it afterwards** --
+  keep a copy before trying. A log of any other contest gets an empty column.
+
+## Added 2026-11-12 -- THE 64-BIT (x64) WINDOWS BUILD (issue 299)
+
+NY4I wants 32-bit Windows retired. Step 1 (rebuild, headless export identical to i386, GUI
+starts) is recorded at the top of `docs/64_BIT_TASKLIST.md`. Nobody has used the x64 app for
+anything real. **Run:** `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe` (rebuild first with
+`.\tr4w\build\Build-App.ps1 -Cpu x86_64 -Os win64`; its 64-bit DLLs are staged beside it). Use a
+copy of your station settings, not the live ones, for the first pass.
+
+- [ ] It starts, opens your contest log, and shows the main window with no error box
+- [ ] Preferences opens, every page loads, a change saves and is still there after a restart
+- [ ] A new contest, a QSO logged, edited and deleted; the log grid and score update
+- [ ] A SERIAL radio (an Icom CI-V and a Yaesu or Kenwood if you have them): connects, frequency and
+      mode follow the dial, a band change from TR4W reaches the radio
+- [ ] A LAN radio (K4 or an Icom LAN radio): connects, credentials are sent, reconnects after a drop
+- [ ] A HamLib radio (this is the first time the 64-bit `libhamlib-4.dll` is actually loaded)
+- [ ] CW from the function keys: CW-by-CAT, a WinKeyer, and DTR/RTS keying; speed changes; Esc stops it
+- [ ] DX cluster login, spots in the band map, click-to-tune
+- [ ] WSJT-X: decodes arrive, a logged QSO is accepted
+- [ ] An external logger (WRL or Club Log), which exercises the 64-bit OpenSSL pair
+- [ ] A multi-op station against `tr4wserver` (the 64-bit server now builds and is in the x64
+      installer, but it has never been RUN; the old 32-bit one still works against an x64 client)
+- [ ] SO2R with two radios; the intercom/voice (winmm) functions if you use them
+- [ ] ADIF and Cabrillo export from the GUI; compare with what the 32-bit build gives for the same log
+- [ ] **The 64-bit INSTALLER (nothing has ever run it).** Built by `FullBuild.ps1 -Cpu x86_64
+      -BuildInstaller` into `tr4w\build\release\tr4w_setup_<version>-x64.exe`. On a TEST machine or VM
+      that has a 32-bit TR4W in `C:\Program Files (x86)\TR4W` with real settings and contest logs
+      (copy a station's folder there; do not use the live PC): close TR4W, run the x64 installer.
+      Expected: a message names the old and new folders; TR4W lands in `C:\Program Files\TR4W`;
+      `settings\tr4w.json`, every contest folder and loose `.db` (with `-wal`/`-shm`) are in the new
+      folder and open with their QSOs; the old folder keeps its data and loses `tr4w.exe`, its DLLs
+      and `tr4wconvert.exe`; the Desktop and Start Menu shortcuts start the 64-bit exe;
+      `HKCU\Software\TR4W` names the new folder; a second run of the installer does NOT overwrite the
+      new settings. Also: `setup /S` over the old install (no dialog, same result); the installer on a
+      machine with a custom 32-bit folder such as `C:\TR4W` (upgrades in place, no stale
+      `libgcc_s_dw2-1.dll`); a fresh machine (no old install); and a 32-bit Windows refuses it with a
+      message. The installer manifest is `requireAdministrator` (measured), so a UAC prompt must
+      appear; run it as an account that is also the operator's own, because HKCU, `$DESKTOP` and the
+      Start Menu belong to whoever elevates (true of the 32-bit installer too).
+- [ ] Start-up time: the first x64 start took 11.5 s to the main window against 2.7 s for i386, almost all of
+      it a `DdeConnect` to DXLab Pathfinder -- is that repeatable on your PC?
+
+## Added 2026-11-11 -- EUROPEAN HF CHAMPIONSHIP AND KVP SAY "YEAR", NOT "ZONE"
+
+Unit-tested (`uTestLicenceYearEntry`, `uTestContestDisplay.Test_TotalsDisplay` / `Test_ZoneColumnHeading` / `Test_MyZoneLabel`); nothing below has been seen on a screen.
+
+- [ ] **A lone report.** An EUHFC log on CW: type a call and `599` alone, Enter. The message reads `No license year found!!`, not `Improper zone number!!`. `599 1982` or `599 CT` reads `Improper license year!!`. `599 85` logs as before. Same in a KVP log.
+- [ ] **The log column.** The main log's and Edit Log's column over the year reads `Year`, wide enough to read in full; in CQ WW (or any zone contest) it still reads `Zn`. A saved COLUMN WIDTH for that column still applies in both.
+- [ ] **The totals rows.** EUHFC's totals grid shows a `Years` row where it showed `Zones`; KVP (multipliers by mode) shows `CW Years` / `Ph Years`. Every other zone contest still shows `Zones` / `CW Zone` / `Ph Zone`.
+- [ ] **Preferences > Station information.** In an EUHFC (and a KVP) log the label beside the MY ZONE box reads `License year:`, not cut off; in CQ WW (or any other contest) it reads `CQ zone:`. Searching `MY ZONE` still lands on the box. Hovering the label or the box in EUHFC/KVP shows the year's help ("The last two digits of the year you were first licensed..."), not the CQ-zone help; in CQ WW both show the MY ZONE command's usual help (`Values: Integer. Normally, your zone is determined by your callsign...`).
 
 ## Added 2026-11-10 -- EUROPEAN HF CHAMPIONSHIP: A REMEMBERED YEAR MARKS A CALL OR SPOT AS A NEW MULTIPLIER (issue 70)
 
@@ -98,9 +249,13 @@ The Contest page was one long list. Its settings now sit on eight leaves under C
 
 - [ ] **The Contest leaves.** Open Preferences with a contest log open. Contest has the eight children above plus Printed log. Each holds only its rows: **QSO settings** -- QSO By Band, QSO By Mode, QSO Number By Band, the four QSO Points rows (QSO By Band/Mode and the points greyed "(set by the contest)"); **Modes** -- Digital Mode Enable, Multiple Modes; **Initial exchange** -- Initial Exchange Filename (Browse...), Use Call History File, Call History Filename (Browse...), Custom Initial Exchange String, Initial Exchange Cursor Pos, Initial Exchange Overwrite, Reverse Initial Ex, Exchange Memory Enable; **Multiplier data** -- Domestic Filename and the three MULT BY / MULT SHEET rows greyed, Mult Report Minimum Bands, Remaining Mult Display Mode, Count Domestic Countries, Show Domestic Multiplier Name, Literal Domestic QTH; **Quick QSL** -- the five Quick QSL rows, QSL Mode, Auto QSL Interval; **QTC** -- QTC Enable, Extra Space, Minutes, QRS; **Contest rules** -- Minitour Duration (greyed), R150S Mode, RFOBL Mode, Sprint QSY Rule, Ten Minute Rule, Single Band Score, Multiple Bands; **Cabrillo headings** -- the seven CATEGORY rows. Nothing appears twice and the Contest page no longer shows any of them.
 - [ ] **Search and Ctrl-J land on the leaf.** Search `QTC MINUTES`, `CATEGORY-POWER`, `SPRINT QSY RULE`, `CALL HISTORY FILENAME`: each hit names its new leaf and opens it with the control focused. The same for ShowPreferencesForCommand (any route that opens Preferences at a command, e.g. from a setting's help).
+  - Windows search PASS: all four hits opened their leaf and focused the control. Direct ShowPreferencesForCommand routes remain untested.
 - [ ] **Save round trip.** Change one value on three leaves, Save, reopen the log: the values held, contest-scoped ones in the log, station ones in `settings\tr4w.json` under their OLD keys. `tr4w.log` has no `editor(s) in Preferences` Error.
+  - Windows contest PASS: QTC MINUTES, CATEGORY-POWER and SPRINT QSY RULE survive Save/restart under their original SQLite keys; Cancel and restoration passed. Station JSON Save/Cancel passed, but Radius Of Earth reopens blank: [#295](https://github.com/TR4W/TR4W-D12/issues/295). Parent remains open for complete station round trip.
 - [ ] **German.** The five new leaf names (QSO settings, Quick QSL, QTC, Contest rules, Cabrillo headings) are English until translated (fuzzy, empty); nothing is clipped in the tree.
 - [ ] **External Software overview.** Click External Software: under "Choose one of the pages listed under this heading." are buttons WSJT-X, External Logger, DXLab, MMTTY. Tab reaches them; Enter or a click opens that page and selects it in the tree. Click Operating: its own page shows as before, no buttons. Click a leaf, then External Software again: the buttons are there once (not doubled).
+  - Later 47-page audit verified Operating has its own page, with no overview buttons (tag 21); previous wrong-page assertion is superseded. Enter failure #297 still keeps this parent open.
+  - Windows partial 2026-11-12: Tab reaches all four; mouse clicks open all four leaves; returned overview has no duplicate buttons. Enter fails on all four: [#297](https://github.com/TR4W/TR4W-D12/issues/297). Operating-page assertion rejected after screenshot review; remains untested.
 
 ---
 
@@ -281,12 +436,14 @@ Every setting that was on **More settings** is now on a task page, and so is the
   - Hardware: YCCC box (Stereo Pin High). ~~**Radio polling - one rate for every radio** (Frequency Poll Rate)~~ -- moved to each radio's definition (issue 235 step 3, 2026-11-06); Hardware no longer has a polling block. See the entry below.
   - Bands: band, mode, frequency memory, and the **band plan Edit... button**, which opens the same editor with its own save.
 - [ ] ~~**Contest page**: after the contest's own rows come *Digital Mode Enable*, *Initial Exchange Filename*, and *Domestic Filename*, which is greyed with "(set by the contest)" and cannot be edited.~~ -- the Contest page was split into leaves on 2026-11-08; those three are on Contest > Modes, > Initial exchange and > Multiplier data. See the 2026-11-08 entry.
-- [ ] **Advanced**: Radius Of Earth is at the end.
-- [ ] **The Operating page** has no *Stop sending when the call window changes* box; the boxes below it moved up with no gap, and Tab still moves down in order. Its introduction says CW is under CW Settings and fits in two lines.
+- [x] **Advanced**: Radius Of Earth is at the end. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+- [x] **The Operating page** has no *Stop sending when the call window changes* box; the boxes below it moved up with no gap, and Tab still moves down in order. Its introduction says CW is under CW Settings and fits in two lines.
+  - Windows e1e4 GUI PASS 2026-11-12; focus cycle/screenshot reviewed. Current footer captions are Save and close / Cancel / Save; disabled Save is skipped. [Audit results](GUI_BENCH_RESULTS.md#preferences-focus-audit-e1e4-build).
 - [ ] **Search and deep link.** Search for a few old command names: `DE ENABLE`, `FREQUENCY POLL RATE`, `POSSIBLE CALL MODE`, `TELNET CONSOLE LINES`, `BAND MAP SIZE`, `DIGITAL MODE ENABLE`, `COUNTRY INFORMATION FILE`, `MAIN CALLSIGN`. Each hit names its NEW section and lands on its control. (Since issue 235 step 3 `FREQUENCY POLL RATE` is NOT a Preferences setting -- it is in the radio editor -- so it should find nothing in Preferences; drop it from this list once confirmed.)
 - [ ] **Save and Cancel.** Change one moved value on each of three pages and press Cancel: nothing changes on disk. Change them again and Save: `settings\tr4w.json` holds them under their OLD keys (`operating.ctrlj.*`, `cw.ctrlj.*`, ...).
+  - Windows partial: DE ENABLE, SCP MINIMUM LETTERS and RADIUS OF EARTH Cancel unchanged, Save to typed JSON keys confirmed; first two reload correctly. Radius reload FAIL [#295](https://github.com/TR4W/TR4W-D12/issues/295). Original fixture values restored.
 - [ ] **150% scaling.** The blocks still sit below their pages' last designed control. They are anchored to it, but their own rows are 96-dpi pixels, like every generated row.
-- [ ] **tr4w.log after opening Preferences** has no `editor(s) in Preferences` Error and no `placement ... refused` line.
+- [x] **tr4w.log after opening Preferences** has no `editor(s) in Preferences` Error and no `placement ... refused` line. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
 
 ## Added 2026-11-06 -- FREQUENCY POLL RATE IS PER RADIO (issue 235 step 3)
 
@@ -956,13 +1113,17 @@ reviewed are in `tr4w/build/lint-taborder.txt`).
   Mode, SCP, UDP Broadcast, Network, Appearance, Logging, Backup, Audio,
   CW Settings, Paddle and PTT, TCI Server, WSJT-X, External Logger,
   MMTTY.
+  - Mechanical Windows PASS across 47 pages: complete Tab/Shift+Tab cycles, exact reverse order and no hidden/disabled stop. Full semantic order review remains open; Station, Appearance and Operating sequences reviewed separately.
 - [ ] **Station** reads down the left column (Call ... Postal code), then the
   right one (Check ... Park). NY4I to judge whether that is right, or
   whether it should go row by row.
-- [ ] From the search box: Tab goes to the tree, then into the page, then
+  - Observed Windows sequence matches left column then right column; screenshot/focus rectangles preserved. NY4I preference judgment remains open as requested by this item.
+- [x] From the search box: Tab goes to the tree, then into the page, then
   OK, Cancel, Apply. Shift-Tab reverses it.
-- [ ] **Appearance**: the generated "Layout" block below the designed
+  - Windows e1e4 GUI PASS 2026-11-12; focus cycle/screenshot reviewed. Current footer captions are Save and close / Cancel / Save; disabled Save is skipped. [Audit results](GUI_BENCH_RESULTS.md#preferences-focus-audit-e1e4-build).
+- [x] **Appearance**: the generated "Layout" block below the designed
   controls comes after Show gridlines.
+  - Windows e1e4 GUI PASS 2026-11-12; focus cycle/screenshot reviewed. Current footer captions are Save and close / Cancel / Save; disabled Save is skipped. [Audit results](GUI_BENCH_RESULTS.md#preferences-focus-audit-e1e4-build).
 - [ ] **Linux (gtk2)**: the same walk on two pages. gtk2 takes the order
   from the same `TabOrder`, but it has not been seen there.
 - [ ] **The other forms** (same fix, `.lfm` only): Tab through the UDP
@@ -2563,16 +2724,18 @@ transaction (`uLogStore.LogStoreAppendQSOs`). Headless `/IMPORT` is proven
 line holding only `<EOR>` after a few records of any ADIF -- a record with no
 CALL, which the log refuses (`callsign` is NOT NULL).
 
-- [ ] **Import the bad file into a log that already has QSOs.** A warning
+- [x] **Import the bad file into a log that already has QSOs.** A warning
   dialog says NOTHING was imported, names the record (`record N of M (no CALL,
   no QSO_DATE)`), the reason (`NOT NULL constraint failed: qso.callsign`) and
   that the contest log is unchanged; the quick-command line reads `ADIF import
   FAILED -- nothing was imported` behind it. The log window, totals and score
   are exactly what they were. Is it unmissable, and is it clear?
-- [ ] **Then log a QSO by hand.** It logs: a rolled-back import no longer stops
+  - Windows PASS 2026-11-12, SHA256 363a9b550b17: warning reviewed (record 3 of 3, no CALL, NOT NULL, unchanged); contact digest and 6-point score unchanged. Python `--case import`; [turnover/evidence](GUI_TEST_HANDOFF.md).
+- [x] **Then log a QSO by hand.** It logs: a rolled-back import no longer stops
   the log (only a rollback that itself fails does -- see
   `docs/SQLITE_LOG_SCHEMA_PLAN.md` 9c). There is no second dialog saying THE
   CONTEST LOG IS NOT BEING SAVED.
+  - Windows PASS in the same import case: later N0GUI stored, then two valid imports and six-record re-export. Large-file import performance remains untested.
 - [ ] **Import a good file.** The quick-command line shows `N Qs imported.` as
   before, the log window fills once, and on a large file (a few thousand
   records) the wait is noticeably shorter than before -- the progress count
@@ -5895,18 +6058,22 @@ from a stale sqldb read snapshot after the WRL worker committed
   `database is locked`, no `THE LOG WAS LOCKED`, and the WRL worker starts AFTER
   the log is loaded (its first `[WRL]` line follows the `[EditableLog]` lines).
   Close: no `could not be recorded on close`.
-- [ ] **The startup dialog on a really locked log.** Lock the log from outside
+- [x] **The startup dialog on a really locked log.** Lock the log from outside
   (e.g. open the `sqlite3` shell on `<log>.db`, run `BEGIN IMMEDIATE;` and
   leave it open), then start TR4W. After about 2 s a warning box titled "Contest log is
   locked" names the file and the likely causes, with three buttons.
-- [ ] **Retry** with the lock still held asks again; release the lock, Retry
+  - Windows PASS 2026-11-12, SHA256 363a9b550b17, real Python SQLite BEGIN IMMEDIATE connection; actual warning text/choices captured. `--case locked`; [turnover/evidence](GUI_TEST_HANDOFF.md).
+- [x] **Retry** with the lock still held asks again; release the lock, Retry
   again: the log opens normally and QSOs log.
+  - Windows PASS in the same locked case: held lock asks again, rollback releases it, N0GUI is stored as contact four.
 - [ ] **Open read-only (no logging)**: the log shows and can be exported; trying
   to log a QSO shows "QSO NOT LOGGED" with a beep, and ONE box saying the log
   is read-only (not one per QSO). The WRL worker does not start. Close: nothing
   is written (no `recorded on exit` line).
-- [ ] **Quit TR4W** ends the program cleanly (exit code 1, `operator chose Quit`
+  - Windows partial: read-only export, unchanged contact digest, logging refusal and one warning verified. No live WRL setup, beep or complete no-write assertion; full checkbox remains open. Current quick-display wording is NOT LOGGED, observed in runtime log.
+- [x] **Quit TR4W** ends the program cleanly (exit code 1, `operator chose Quit`
   in tr4w.log). Escape and the window's close button also Quit.
+  - Windows PASS for all three paths in suite 20261112T144826-bb589e; actual exit code 1 and operator chose Quit log marker asserted.
 - [ ] **The box on gtk2 (Mint) and Cocoa (macOS)**: the body wraps without
   clipping and the three captions fit. GTK draws the buttons in the other
   order -- the action must follow the caption, not the position.
@@ -6025,7 +6192,7 @@ Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-i386
 4. New England QP with the "I am in" box ticked: "...New England Staat ein" / "(ME, NH, VT, MA, CT, RI):".
 5. Optional: `--lang ru` for steps 1 and 2. Russian sweepstakes is one of four reviewed translations written on one line, so it shows one line with no stray "r".
 
-Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_FOLDERALREADYEXISTSOVERWRITE and TC_INVALIDSTATEMENTIN (no reliable trigger found).
+Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the English uses a bare CR; no doubled blank line is expected. Not benched: TC_INVALIDSTATEMENTIN (no reliable trigger found). (TC_FOLDERALREADYEXISTSOVERWRITE, also listed here, was retired with issue 276.)
 
 **Periodic HamScore score tick (2026-11-04):** `HamScoreScoreTick` calls `CalculateTotals`, which walks the WHOLE log on the main thread (every 5 s after a change, 30 s heartbeat). Not measured. Needs a latency measurement on a large contest log (tens of thousands of QSOs); watch for operator-visible stalls on Enter. Also confirm that with the log source unreadable the last posted score is kept and one warning is logged.
 
@@ -6049,9 +6216,12 @@ Set `DEBUG LOG LEVEL = TRACE` (the per-window `[Startup] restored ...` lines are
 
 File > Open Log... (the first item on the File menu, no keystroke) switches to another contest by RESTARTING: TR4W exits the way File > Exit does (radios unkeyed and shut down, restart file saved, score to UDP, backup copier stopped, network left, log closed) and starts a new instance on the chosen contest. The new instance is given `--wait-for-instance=<pid>` and retries the single-instance lock for up to 10 s while the old one finishes. Nothing is reset in place; that is S1-S6. **Since issue 228 the choice is the startup New Contest dialog, not a file picker.** Use `build-out\app-i386-win32\tr4w_fpc.exe` with two contests' `.db` files in the contest folder, radios connected, `DEBUG LOG LEVEL = DEBUG`.
 
-- [ ] **The dialog shows.** File > Open Log opens the same window as at startup (grid of logs, Browse, New Contest side), titled "TR4W ... - Switch to another contest (TR4W restarts on the one you choose)".
-- [ ] **No Last Contest button mid-session.** The last contest is recorded at startup, so it is the one open; the button is hidden and `tr4w.log` has `[NewContest] the last contest is the one open, so its button is hidden`. (The recorded file IS the one this session was started on, so from the menu the button is always hidden; Last Contest still shows at startup as before.)
-- [ ] **Cancel does nothing.** Cancel, or close the window: TR4W keeps running on the same contest, nothing restarts; `tr4w.log` has `[OpenLog] the dialog was cancelled`.
+- [x] **The dialog shows.** File > Open Log opens the same window as at startup (grid of logs, Browse, New Contest side), titled "TR4W ... - Switch to another contest (TR4W restarts on the one you choose)".
+  - Windows PASS 2026-11-12, e1e4 build: reviewed dialog/title and no Last Contest button; Cancel and physical X retain same PID/session. Both expected diagnostic lines found. [Results](GUI_BENCH_RESULTS.md#open-log-cancellation-e1e4-build).
+- [x] **No Last Contest button mid-session.** The last contest is recorded at startup, so it is the one open; the button is hidden and `tr4w.log` has `[NewContest] the last contest is the one open, so its button is hidden`. (The recorded file IS the one this session was started on, so from the menu the button is always hidden; Last Contest still shows at startup as before.)
+  - Windows PASS 2026-11-12, e1e4 build: reviewed dialog/title and no Last Contest button; Cancel and physical X retain same PID/session. Both expected diagnostic lines found. [Results](GUI_BENCH_RESULTS.md#open-log-cancellation-e1e4-build).
+- [x] **Cancel does nothing.** Cancel, or close the window: TR4W keeps running on the same contest, nothing restarts; `tr4w.log` has `[OpenLog] the dialog was cancelled`.
+  - Windows PASS 2026-11-12, e1e4 build: reviewed dialog/title and no Last Contest button; Cancel and physical X retain same PID/session. Both expected diagnostic lines found. [Results](GUI_BENCH_RESULTS.md#open-log-cancellation-e1e4-build).
 - [ ] **The same contest does nothing.** Double-click the open contest's row: the notice line says "That log is already open." and TR4W keeps running.
 - [ ] **An existing contest restarts on it.** Double-click (or select and Enter) another row, or Browse to another `.db`: TR4W closes and comes back on that contest (checks below).
 - [ ] **A New Contest restarts on it.** Fill in the New Contest side (a contest, your call, its rows) and OK. TR4W closes and comes back on a NEW log named as at startup, with the contest, call, exchange rows and categories you chose (check the title, the exchange prompt and Cabrillo categories). `tr4w.log`: the old session has `[OpenLog] the new contest is handed over in <settings>\open-log-new-contest-<pid>.txt`; the new one has `[OpenLog] the new contest handed over in ... is queued` and `[NewContest] applied N of N setting(s)`. The hand-off file is gone afterwards. A club call typed here wins over the station call, as at startup.
@@ -6070,11 +6240,17 @@ File > Open Log... (the first item on the File menu, no keystroke) switches to a
 New Contest, for a US QSO party, now shows an "I am in <area>" box above the party's row. Ticked: the row reads MY COUNTY and is a drop-down of the party's county codes (Texas shows "ANDE - Anderson"; Florida shows the bare code). Unticked: the row reads MY STATE and takes a US state, a Canadian province or DX. Anything else is refused, with the reason shown in the notice line and OK greyed. The value saved is MY STATE either way, with the same text as before (ALC chosen = ALC typed). The unit tests drive this on a form that is never shown; only a screen can judge the layout. Use `build-out\app-i386-win32\tr4w_fpc.exe` from a full `.\build\Build-App.ps1`. That build reports BUILD FAILED on the narrowing ceiling (1207 vs 1201; HEAD `fc20d3c9` measures the same without this change), but it links the exe first. Check the exe's timestamp is from that run.
 
 - [ ] **Florida QSO Party, in Florida.** Choose it. The box reads "I am in FL", unticked, and the row reads MY STATE. Tick it: the row becomes a list labelled MY COUNTY, the notice reads "You are in FL: choose your county from the list.", and OK stays grey until a county is chosen. OK must enable THE MOMENT a county is clicked in the list (the unit test raises the list's OnChange itself; whether a real click raises it is only visible here). Choose ALC, create the contest, and in the new log check that MY STATE is ALC and the session is "(in state)" (title bar or `tr4w.log` `[FCONTEST]`). A QSO's sent exchange is your county.
-- [ ] **Florida, out of state.** Leave the box unticked and type GA: OK enables. Type XX: the notice says it is not a state, province or DX, and OK greys. Type ALC or FL: the notice says to tick the box. Type DX and ON: both accepted.
-- [ ] **Another party with named counties (Texas QSO Party).** Tick the box: the list shows "CODE - Name". Choose one: the saved MY STATE is the code alone (ANDE, not "ANDE - Anderson").
-- [ ] **A party that asks for a name too (Colorado or Minnesota).** Type MY NAME, then tick and untick the box. The name must still be there, and only the state/county row changes.
-- [ ] **The 7QP.** The box reads "I am in 7th area" and the list is the 7th-area county codes (AZAPH ...). Typing AZ (or any of the eight 7th-area states) while unticked is refused with "tick the box"; CA is accepted.
+  - Windows partial PASS: blank county disables OK, physical ALC click enables it, MY STATE saves ALC and title says in state. Sent exchange has not been exercised.
+- [x] **Florida, out of state.** Leave the box unticked and type GA: OK enables. Type XX: the notice says it is not a state, province or DX, and OK greys. Type ALC or FL: the notice says to tick the box. Type DX and ON: both accepted.
+  - Windows GUI PASS 2026-11-12 on e1e4 build; Python input, reviewed screenshots and saved county values in [results](GUI_BENCH_RESULTS.md#qso-party-forms-e1e4-build).
+- [x] **Another party with named counties (Texas QSO Party).** Tick the box: the list shows "CODE - Name". Choose one: the saved MY STATE is the code alone (ANDE, not "ANDE - Anderson").
+  - Windows GUI PASS 2026-11-12 on e1e4 build; Python input, reviewed screenshots and saved county values in [results](GUI_BENCH_RESULTS.md#qso-party-forms-e1e4-build).
+- [x] **A party that asks for a name too (Colorado or Minnesota).** Type MY NAME, then tick and untick the box. The name must still be there, and only the state/county row changes.
+  - Windows GUI PASS 2026-11-12 on e1e4 build; Python input, reviewed screenshots and saved county values in [results](GUI_BENCH_RESULTS.md#qso-party-forms-e1e4-build).
+- [x] **The 7QP.** The box reads "I am in 7th area" and the list is the 7th-area county codes (AZAPH ...). Typing AZ (or any of the eight 7th-area states) while unticked is refused with "tick the box"; CA is accepted.
+  - Windows GUI PASS 2026-11-12 on e1e4 build; Python input, reviewed screenshots and saved county values in [results](GUI_BENCH_RESULTS.md#qso-party-forms-e1e4-build).
 - [ ] **Unchanged parties.** British Columbia, Ontario, Quebec and IN7QPNE show NO box: the same free-entry row and notice as before.
+  - Windows no-box/free-entry PASS for all four listed parties. Ontario instruction is clipped: [#301](https://github.com/TR4W/TR4W-D12/issues/301); full presentation remains open.
 - [ ] **Layout.** The MY COUNTY drop-down sits exactly where the box does, the same width, and the label is not clipped. The drop-down list scrolls for Texas (254 entries). Check the box caption and notices in a second language (`--lang de`): the new strings are untranslated until the resourcestring harvest, so English is expected there today.
 - [ ] **Linux (gtk2).** The same, once: the drop-down list is a real list (no typing into it).
 
@@ -6266,3 +6442,135 @@ England QSO Party.
 - [ ] **DXKeeper hand-off in a section contest.** Log EM or WF with DXKeeper connected. EXPECT DXKeeper receives EMA or WCF in ARRL_SECT, never the typed alias.
 - [ ] **EUHFC or KVP, remaining multipliers in erase mode.** Work year 85, then look at the multiplier window. EXPECT 85 is gone and 84 and 86 remain (it used to hide 84 and keep 85). Year 00 is listed until worked.
 - [ ] **A refused CQ zone.** In CQ WW CW type 599 45, then 599 55. EXPECT both refused with Improper zone number, and the zone field does not keep the typed value. CQ zones above 40 are no longer accepted (50-59 used to get through).
+
+## Added 2026-11-11 -- THE CQ WW RTTY EXCHANGE PARSER (issue 274)
+
+- [ ] **CQ WW RTTY, type the exchange the way an operator does.** On RTTY or CW: `599 5`, `599 14`, `599 5 CT` and `599 CT 14` are accepted with the zone and QTH read; `14 CT` (no RST) is accepted too. EXPECT the Exchange window shows the zone and the multiplier needs correctly and the Cabrillo line carries the typed exchange.
+- [ ] **Refusals show a message.** Type `599 CT` (no zone), `599 45` (above 40), `599 14 ZZZ` and `JOE 10 CT`. EXPECT a message each time (Not enough info in exchange, Improper zone number, Improper domestic QTH naming the file, Invalid Entry) and no zone or QTH left in the entry fields. In QSL AND LOG mode a refused entry now logs no zone or QTH.
+- [ ] **ARRL RTTY Roundup** uses the same parser without a zone: `599 CT` and `599 GA` are accepted with no zone needed.
+
+## Added 2026-11-11 -- THE EUHFC AND KVP YEAR PARSER (issue 281)
+
+- [ ] **EUHFC and KVP, type the licence year.** On CW: `599 85`, `85 599`, `599 5`, `599 00`; on Phone: `59 85`, `59 00`. EXPECT each is accepted with the year shown as the received exchange and counted once per band regardless of mode. `599 123`, `599 1982` and `599 CT` are refused with a message (it still says Improper zone number, which is awkward wording for a year). In the call window of a booted contest, also check `599 00` on Phone is refused WITH a message (the engine path returned an empty one in the unit test).
+
+## Added 2026-11-11 -- A WORD BEFORE THE NUMBER IS NO LONGER TAKEN AS THE QTH (issue 263)
+
+- [ ] **RSGB-IOTA.** Type `5NN 12 EU5`, then `EU5 12` and `599 12 EU5`. EXPECT the first refused with Improper domestic QTH (5NN not known) and nothing left in the entry; the other two accepted with island EU-005 and the multiplier needs header naming the call. Typing the canonical `EU-005` is still refused (3-5 characters, as in D7).
+- [ ] **UBA-DX, RSGB-160, UK/EI, DARC 10 m.** `CT 123` or `JOE 123` (word first) is refused with a message naming the contest's domestic file where that file does not list the word; DARC 10 m still takes any word.
+
+## Added 2026-11-11 -- AUTO-SEND NO LONGER KEYS THE POSSIBLE-CALL KEYS (issue 258)
+
+A DEPARTURE FROM D7, which keyed them. `MainUnit.AutoSendKeysCallWindowKey`.
+
+- [ ] **Each keyer: WinKeyer, CPU (DTR/RTS), and CW-by-CAT on a KY radio (K3/K4 or a Kenwood) and on an Icom.** In CQ mode on CW, with AUTO SEND CHARACTER COUNT 3, type `W1A`, then while it is keying press `,` `.` `;` (or the remapped POSSIBLE CALL keys), then finish the call. EXPECT none of the three is heard (no comma, period, AA or extra gap), the possible-call selection still moves and `;` still accepts, and letters typed after them are still keyed. On a KY radio, EXPECT no `?;` error reply from the radio after `;` (a keyed `;` used to end the `KY` command early).
+- [ ] **Accept key mid-auto-send (NOT changed, ruling needed).** Press `;` to accept a possible call while auto-send is keying the partial call. Note what is keyed: the call in the window is replaced, but only the characters typed so far went out. Read from code (issue 29 trace), not observed: `ReturnInCQOpMode` does not resend the call while auto-send ran, so the accepted call may never be keyed in full.
+
+## Added 2026-11-11 -- A TAKEN NEW-CONTEST LOG NAME ASKS THREE WAYS, NEVER "OVERWRITE" (issue 276)
+
+The numbering is unit-tested (`uTestLogNaming`: free, taken, two taken, a gap, a sanitised call, the disk). The dialog and the re-shown New Contest window are not: nothing drives them. `uNewContest.AskAboutATakenLogName`, `SaveNewContest`, `RunNewContestDialog`.
+
+- [ ] **The question.** Create CWOps CW Open as W1AW, log nothing, close. Start again, choose CW Open, same call, OK. Expect a box titled "This contest already has a log" naming `CWOPEN <date> W1AW.db` and `CWOPEN <date> W1AW 2.db`, with three buttons: **Create new log** (the default: Enter picks it), **Open existing log**, **Cancel** (Escape and the close box are Cancel). The word "Folder" and "Overwrite" appear nowhere. Windows and Linux (gtk2: the button order is the desktop's, which is expected).
+  - Windows PASS: three choices, default Enter creates numbered log, Escape and physical title-bar X cancel. Linux remains untested.
+- [x] **Create new log.** A new empty log `CWOPEN <date> W1AW 2.db` opens, serials from 1; the first log is untouched (its QSO is still there when opened later). A third session gives ` 3.db`. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+- [x] **Open existing log.** The existing log opens with its QSOs; no new file appears in the logs folder. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+- [x] **Cancel.** The New Contest window comes back as it was left (contest, call and fields still filled in); choosing another contest and OK proceeds normally, and nothing from the cancelled pass is applied. No file is created. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+- [ ] **File > Open Log, same three.** From a running contest, File > Open Log, New Contest for a name that is taken: Create new log relaunches on the numbered log; Open existing log relaunches on the existing one (or says it is already open, if it is the running log); Cancel returns to the dialog and the session continues if that is then cancelled.
+
+## Added 2026-11-11 -- THE LICENCE-YEAR ROW IS LABELLED FOR WHAT IT HOLDS (European HF Championship, KVP)
+
+The row beside "Enter the last two digits of the year of your first official amateur radio license:" read MY ZONE (a D7 artifact). The contest now names the row (`TNewContestPrompt.RowLabel`, `uAppStrings.SNewContestLicenseYearLabel`); the command queued is still MY ZONE. Unit-tested on a never-shown form (`uTestNewContestHostArea.Test_ALicenseYearRowQueuesMyZone`); not seen on a screen.
+
+- [ ] **European HF Championship.** New Contest, choose European HF Championship. Expect the row beside the year prompt to read **MY LICENSE YEAR**, and no row to read MY ZONE. Type `64`, OK. Expect the new log's MY ZONE to be `64` (Preferences, or the sent exchange's year). Windows and Linux (gtk2): the label fits beside its field.
+  - New main 4d244c6f3d26 probe: stored year 64 still reopens as 8 in Preferences; #300 remains reproducible. Broader export passes remain scoped to e1e4.
+  - Windows 100% label/input PASS: MY LICENSE YEAR fits and 64 was entered. Saved-year storage is 64, but reopened Preferences displays 8: FAIL [#300](https://github.com/TR4W/TR4W-D12/issues/300), tested e1e4 build. Linux remains open. [Evidence](GUI_BENCH_RESULTS.md).
+- [ ] **KVP.** The same with KVP.
+  - Windows 100% label/input PASS using the visible name KV PRVENSTVO ZRS; saved-year storage is 64, but reopened Preferences displays 8: FAIL [#300](https://github.com/TR4W/TR4W-D12/issues/300), tested e1e4 build. Linux remains open. [Evidence](GUI_BENCH_RESULTS.md).
+- [ ] **Another contest is unchanged.** Choose NAQP CW: its rows still read MY STATE and MY NAME. (The Jock White Field Day still asks for a branch number on a row reading MY ZONE -- the same artifact, deliberately not changed here; it gets a label once NY4I says what to call it.)
+  - Windows 100% PASS: NAQP CW shows MY STATE / MY NAME, with FL / TOM entered. Other platforms not checked. [Evidence](GUI_BENCH_RESULTS.md).
+
+## Added 2026-11-11 -- THE CWT'S QTH-OR-MEMBER ROW IS LABELLED FOR WHAT IT HOLDS; SUBMIT ARRL LOG IS GREYED OUTSIDE AN ARRL CONTEST
+
+The CWT's row beside "Enter your name and QTH (US state, Canadian Province or DX country) or member number:" read MY STATE. The contest now names the row (`uAppStrings.SNewContestQTHOrMemberLabel`); the command queued is still MY STATE. Tools > Submit ARRL Log opens the ARRL's portal and was enabled for every contest; it is now greyed unless the contest says `SubmitsLogToARRL` (the ARRL DX, Sweepstakes, 160, 10 m, Digi, three VHF runnings, RTTY Roundup and Field Day). Unit-tested (`uTestNewContestHostArea.Test_ACWTMemberRowQueuesMyState` on a never-shown form, `uTestContestUI.Test_OnlyARRLContestsOfferTheARRLLogPortal`); neither seen on a screen.
+
+- [ ] **CWT row label.** New Contest, choose CWops Test (CWT). Expect two rows: MY NAME, then **MY QTH OR MEMBER NO** beside the QTH/member prompt; no row reads MY STATE. Type a name and `1234`, OK. Expect the new log's MY STATE to be `1234`. Windows and Linux (gtk2): the 19-character label fits the 160-pixel label column (CATEGORY-TRANSMITTER, 20 characters, already does).
+  - Windows 100% label/input PASS: MY NAME / MY QTH OR MEMBER NO fit, TOM / 1234 entered. Saved MY STATE and Linux remain open. [Evidence](GUI_BENCH_RESULTS.md).
+- [ ] **Locust QSO Party / NCCC Sprint unchanged.** Their rows still read MY NAME and MY STATE (they take a QTH, not a member number).
+  - NCCC Windows 100% PASS: MY NAME / MY STATE. Locust NOT RUN: the visible list marks it inactive and New Contest has no exchange fields; clarify whether a legacy log is intended. [Evidence](GUI_BENCH_RESULTS.md).
+- [ ] **Submit ARRL Log greyed for the CWT.** Open a CWT log: Tools > Submit ARRL Log is greyed. Windows, Linux and macOS (one menu, built once).
+- [ ] **Submit ARRL Log enabled for an ARRL contest.** Open an ARRL DX CW (or Sweepstakes, Field Day) log: the row is enabled and opens contest-log-submission.arrl.org.
+- [ ] **NY4I's call: does Field Day belong on that portal?** The row is enabled for Field Day, but the agent that built it believes Field Day entries go through a separate Field Day web form, not contest-log-submission.arrl.org. Left unset (greyed) and unverified: IARU HF (probably the same ARRL portal) and ARRL Kids Day (probably an online form). Say which of the three should be on or off.
+
+## Added 2026-11-11 -- A REFUSED CW OPEN EXCHANGE SAYS WHAT IS MISSING
+
+Pressing Enter in CW Open with the serial or the name missing used to do nothing. `ProcessQSONumberAndNameExchange` now sets the message (CW Open, the four EU Sprints and MST share it): **No QSO number found!!**, **No name found!!** or **Not enough info in exchange!!**; an all-digit serial too large for the field gives the first. Unit-tested (`uTestQSONumberAndNameEntry`, including the engine path); the contest matrix moved only the `err=` field of 93 parse lines in each of those six contests (re-frozen with the reason recorded). 34 other parsers still refuse silently: not changed (issue to follow).
+
+- [ ] **CW Open, serial missing.** Call W7SP, type only a name (`WOODY`), Enter: the red error line reads **No QSO number found!!** and the caret is left alone. Nothing is logged.
+  - Windows behavior PASS with Ctrl+Enter: exact message, focus retained, zero contacts. Screenshot shows BLACK text rather than the red specified here; color requirement remains open: [#296](https://github.com/TR4W/TR4W-D12/issues/296).
+- [x] **CW Open, name missing.** Type only `234`, Enter: **No name found!!**. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+- [x] **CW Open, a good exchange.** `234 WOODY`, Enter: logs as before, no error text left over from the earlier attempts. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+- [x] **Empty Enter still shows nothing in CW Open** (known gap: it exits before any parser runs; follow-up). — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
+
+## Added 2026-11-11 -- "CONNECT RADIOS AT STARTUP" IS ON THE PROFILE, AND STARTUP OBEYS IT (issue 286)
+
+The old station-wide box was read by nothing: every start connected the active profile's radios whatever it said. The setting is now the profile's (`connectAtStartup`, a missing key reads as on, so nothing changes on upgrade) and `LogCfg` skips the two radio connects when the active profile says off. The old `general.autoConnect` is not migrated (it never did anything) and is dropped on the next save. Note for the earlier report: deleting a RADIO does not change the box now; it follows the selected PROFILE.
+
+- [ ] **Radios page layout.** The box sits inside the Station profile group beside "SO2R enabled", does not overlap it, follows the profile combo, and is greyed with no profiles. Tab order goes SO2R, Connect at startup, Activate. Windows and Linux (gtk2).
+- [ ] **Off means no connect.** Untick it on the active profile, Save, restart: tr4w.log shows `[Startup] profile "..." does not connect its radios at startup` and `radios not connected`, and no `Created Radio ... thread` line. F1 (CW), clicking a band-map spot and typing a frequency must not crash with no radio.
+- [ ] **Activate and Reset Radio Ports still connect** with the box off.
+- [ ] **On connects as before** after ticking it again and restarting. An old `tr4w.json` with `general.autoConnect` loads with no ERROR line about an unknown key.
+- [ ] **Caption question.** The box shows the profile selected in the combo, but startup uses the ACTIVE profile. Should the caption say "when this profile is active"? (New string if yes.)
+
+## Added 2026-11-11 -- DX LAB PATHFINDER DDE TIMING LINES (issue 252, on hold)
+
+`uDXLabPathfinder` now logs how long each DDE connect takes (debug level). One start with SpotCollector enabled showed 47 ms (Pathfinder probe) and 16 ms (SpotCollector). Issue 252 is on hold until a slow start recurs.
+
+- [ ] **Collect the lines whenever a start feels slow** (DEBUG LOG LEVEL on, SpotCollector enabled): `rg -a --no-ignore -g "*.log*" "DdeConnect took"` from the repo root (cmd.exe: double quotes; `-a` because tr4w.log can hold a NUL byte). Seconds = the DDE call is the cause; near zero = machine load, close the issue.
+
+## Added 2026-11-11 -- THE CW OPEN'S MULTIPLIER ROW SAYS CALLS (issue 277)
+
+The totals grid's prefix-multiplier row is now the contest's label (`TTotalsDisplay.PrefixMultsCaption`, beside the domestic captions IARU and the Russian contests already state). The CW Open says **Calls**, because its multiplier is each different callsign worked (the sponsor: "each different call sign is a multiplier the first time it is worked in that session"). Every other contest still says **Prefixes**. A label only: no count or score changes. Unit-tested (`uTestContestDisplay.Test_TotalsDisplay`). The Zones row is NOT changed -- see the last item.
+
+- [ ] **CW Open totals block.** Open (or create) a CWOps CW Open log. The left column reads QSOs, **Calls**, Zones; it no longer says Prefixes. Log one QSO (e.g. K6RB): the Calls row counts 1 on its band and in the All column. Windows and Linux (gtk2): "Calls" fits the left column.
+- [ ] **Another contest unchanged.** Open a contest with a real prefix multiplier (CQ WPX CW): the row still reads **Prefixes**.
+- [ ] **Wording.** Is "Calls" the word you want (the issue suggested "Callsign multipliers" or "Unique calls"; the grid's left column is narrow)? It is one resourcestring, `uAppStrings.STotalsCallsignMults`.
+- [ ] **Live score check for the CW Open's Zones row (feeds a follow-up stage).** The class still counts CQ zones as a multiplier (carried from the D7 row); the sponsor's current rules name only callsigns, so removing it is a separate stage. The frozen contest matrix counts zones into the score -- 15 x (11 calls + 10 zones) = 315 -- and its QSO 16, which carries NO zone (0), still counted one zone on 80 m. Whether a live CW Open log does the same is unverified: log two QSOs and read the Zones row and the score (the issue saw 1 Pts after one QSO). Removing it is a rule change (zone pins, kind pin, matrix re-freeze), for NY4I to rule on (a follow-up issue), not done here.
+
+## Added 2026-11-11 -- A NEW CONTEST NAMED LIKE THE OPEN LOG DOES NOT OFFER "OPEN EXISTING"
+
+From File > Open Log, New Contest for the same contest, date and callsign as the log already running used to offer Open existing, and choosing it did nothing visible (only the quick line "That log is already open."). Now, when the taken name is the open log (`uNewContest.IsOneOfOpenContestFiles`, the same `IsSameLogFile` comparison `[OpenLog]` makes), the question says it is the log you have open and has two buttons: Create new log and Cancel (`SNewLogNameTakenOpenBody`, translations fuzzy-empty). The answer is read by modal result (`TakenLogOutcome`, unit tested). tr4w.log says `[NewContest] the log name is taken by the log already open, so Open existing is not offered: <file>`.
+
+- [ ] **Same contest as the open log.** With a CWOps CW Open log for today open, File > Open Log > New Contest, choose CW Open with the same callsign, OK. The question names the open log, says it is the log you have open, and shows **Create new log** and **Cancel** only (no Open existing). Read the wording on Windows, and the button order on gtk2 if you can.
+  - Windows wording/two-choice PASS on e1e4 build: question names the open log and offers Create new log / Cancel only. Cancel preserves form/session. Gtk2 remains open. [Evidence](GUI_BENCH_RESULTS.md#already-open-name-e1e4-build).
+- [ ] **Create new log.** From that question: TR4W restarts on `... NY4I 2.db` (or the next free number), a new empty log; the old one is unchanged.
+- [ ] **Cancel and Escape.** Each returns to the New Contest window as you left it; nothing is created and the running log is untouched.
+  - Windows Cancel-button PASS with preserved form/session; Escape in this in-session two-choice question remains untested.
+- [ ] **A taken name that is NOT the open log still has three buttons.** At startup (nothing open), New Contest with a name that exists shows Create new log / Open existing log / Cancel, and Open existing opens it. Likewise from File > Open Log when the taken log is a different one from the running log.
+
+## Added 2026-11-11 -- THE CW OPEN COUNTS NO ZONES (issue 277)
+
+The CWOps CW Open no longer has a zone multiplier. Its sponsor's current rules (cwops.org/cwops-tests/cw-open) name one multiplier, "each different call sign ... the first time it is worked in that session", and never mention zones; DXLog's CWOpen.txt agrees. The class had carried the D7 row's 40 CQ zones. Its score is now QSO points x different callsigns. **This replaces two items in the "MULTIPLIER ROW SAYS CALLS" section above:** the left column is now QSOs and **Calls**, with no Zones row, and the live score check there is answered by this section. Unit-tested (`uTestZoneMultiplier`); the contest matrix moves for CWOPEN only (the zone flag, zones.max, the zone counts, the ADIF CQZ tag, the score 315 -> 165). Points (1 a QSO, a dupe per band) are unchanged.
+
+- [ ] **No Zones row.** Open (or create) a CWOps CW Open log. The totals block's left column reads QSOs and **Calls** only; no Zones row. Windows and Linux (gtk2).
+  - Windows 100% PASS on the main-executable snapshot 98db42069823: QSOs / Calls only. Linux remains open. [Evidence](GUI_BENCH_RESULTS.md).
+- [x] **Two QSOs, the score.** Log two QSOs with different callsigns on one band (e.g. K6RB 1 ROB, W1AW 2 JOE on 20 m CW). Calls reads 2 and the score reads **2 x 2 = 4** (before this change it would have counted their zones too). Work K6RB again on 40 m: a new QSO (points 3), no new multiplier, score **3 x 2 = 6**.
+  - Windows UI PASS, 2026-11-11: K6RB / W7SP on 20 m -> 2 QSOs, 2 Calls, 4 Pts; K6RB on 40 m -> 3 QSOs, 2 Calls, 6 Pts. Main executable SHA256 98db42069823..., debug CRC 51ADCB58; Ctrl+Enter, no hardware/CW. [Screenshots and full build identity](GUI_BENCH_RESULTS.md).
+- [x] **The remaining-multipliers window** opens on callsigns/prefixes rather than zones (its default was zones, because LogCfg asks for zones before prefixes); it shows no zone list for this contest.
+  - Windows GUI PASS 2026-11-12, pinned e1e4 build: actual local exports/Default window reviewed; no external submission. [Evidence](GUI_BENCH_RESULTS.md#cw-open-exports-and-remaining-multipliers-e1e4-build).
+- [x] **ADIF export.** File > export ADIF from that log: the records carry no `<CQZ:..>` tag. Cabrillo is unchanged (serial + name).
+  - Windows GUI PASS 2026-11-12, pinned e1e4 build: actual local exports/Default window reviewed; no external submission. [Evidence](GUI_BENCH_RESULTS.md#cw-open-exports-and-remaining-multipliers-e1e4-build).
+- [ ] **An existing CW Open log** opened after the update. Expected (by reading, not measured): on open the score STILL counts the zones, because loading trusts the zone flags stored in each QSO; after a Rescore (or `/RESCORE`) the flags are re-derived, the zones drop out, and the score is points x calls. Report whether opening alone already shows the lower score.
+
+## Added 2026-11-12 -- EUROPEAN HF CHAMPIONSHIP AND KVP EXPORT THE STATED YEAR, NOT A CAPTURED ZONE
+
+Unit-tested (`uTestLogMyFacts.TestALicenceYearIsNeverReplacedByACapturedZone`, through the same rule PostUnit asks); not yet seen in a real export. The fault was in NY4I's own log (`EUROPEAN HFC 2026-11-11 NY4I`): MY ZONE (the year) 80, captured ITU zone 8, Cabrillo sent `08`; editing the QSO's ITU zone to 42 sent `42`.
+
+- [x] **Cabrillo sends the year.** In that log (or a new EUHFC log with MY ZONE = your licence year), export Cabrillo: every QSO's sent column is `599 80` (your year), not your ITU zone.
+  - Windows e1e4 PASS: new EUHFC and KVP test logs with year 64 each export 599 64. Local file verified, upload declined. [Results](GUI_BENCH_RESULTS.md#license-year-exports-and-preferences-edit-e1e4-build).
+- [ ] **ADIF sends the year.** Export ADIF: every `STX_STRING` is `599 80`; `MY_CQ_ZONE` and `MY_ITU_ZONE` still carry the captured zones, unchanged.
+  - Sent-year Windows PASS for EUHFC and KVP: STX_STRING=599 64; MY_ITU_ZONE=8. MY_CQ_ZONE is absent in these fixtures, so the complete captured-zone requirement remains open. Captured-CQ metadata discrepancy now filed as [#305](https://github.com/TR4W/TR4W-D12/issues/305).
+- [x] **An edited ITU zone moves nothing.** Edit QSO, change "ITU zone" to 42, save, export both again: the sent year is still 80.
+  - Windows e1e4 PASS: EUHFC keeps sent year 64 after ITU=42; IARU sends ITU 42 after the same edit. Both actual ADIF and Cabrillo verified. [Comparison](GUI_BENCH_RESULTS.md#captured-itu-zone-edits-e1e4-build).
+- [ ] **Changing MY ZONE changes the year.** Set MY ZONE to another year (e.g. 05), export: every sent column reads `05`, in both files. Same in a KVP log.
+  - Windows FAIL on both EUHFC and KVP: editing visible Preferences License year to 05 and saving leaves stored MY ZONE=64 and ADIF STX_STRING=599 64. [#300 follow-up](https://github.com/TR4W/TR4W-D12/issues/300#issuecomment-6817167958).
+- [x] **A real zone contest unchanged.** In a CQ WW or IARU log, edit a QSO's captured CQ (CQ WW) / ITU (IARU) zone and export: that QSO's sent zone follows the edit, as before.
+  - Windows e1e4 PASS: EUHFC keeps sent year 64 after ITU=42; IARU sends ITU 42 after the same edit. Both actual ADIF and Cabrillo verified. [Comparison](GUI_BENCH_RESULTS.md#captured-itu-zone-edits-e1e4-build).

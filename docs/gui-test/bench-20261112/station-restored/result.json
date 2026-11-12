@@ -1,0 +1,7 @@
+{
+   "scenario": "bench-prefs-station-restore",
+   "passed": true,
+   "captures": [],
+   "note": "Original fixture values restored after failed restart check",
+   "pid": 6168
+}

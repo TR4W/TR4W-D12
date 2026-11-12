@@ -1,0 +1,21 @@
+[
+   {
+      "method": "Cancel",
+      "dialog_title": "TR4W v.5.0.37 - Switch to another contest (TR4W restarts on the one you choose)",
+      "same_pid": 2144,
+      "last_contest_hidden": true
+   },
+   {
+      "method": "Close",
+      "dialog_title": "TR4W v.5.0.37 - Switch to another contest (TR4W restarts on the one you choose)",
+      "same_pid": 2144,
+      "last_contest_hidden": true
+   },
+   {
+      "same_log_choices": [
+         "Create new log",
+         "Cancel"
+      ],
+      "cancel_preserves_form": true
+   }
+]

@@ -1,0 +1,15 @@
+{
+   "baseline": {
+      "QTC MINUTES": 0,
+      "CATEGORY-POWER": "HIGH",
+      "SPRINT QSY RULE": 0
+   },
+   "expected": {
+      "QTC MINUTES": 1,
+      "CATEGORY-POWER": "LOW",
+      "SPRINT QSY RULE": 1
+   },
+   "cancel_verified": true,
+   "restart_verified": true,
+   "baseline_restored": true
+}

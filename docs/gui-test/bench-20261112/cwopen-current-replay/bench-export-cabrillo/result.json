@@ -1,0 +1,10 @@
+{
+   "scenario": "bench-export-cabrillo",
+   "passed": true,
+   "captures": [],
+   "records": 3,
+   "license_year_checked": false,
+   "upload_declined": true,
+   "note": "Actual local Cabrillo export verified; no submission performed",
+   "pid": 9944
+}

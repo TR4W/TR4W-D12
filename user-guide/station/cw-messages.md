@@ -8,7 +8,7 @@ TR4W retains the manual's separate message banks for running and search-and-poun
 4. Use **List of commands** to insert a supported command rather than guessing its spelling or control-character encoding.
 5. Choose **OK** to apply the message. Test the key in the intended CQ or exchange context with the correct radio and [CW sending backend](cw.md). Function-key memories are captured in the contest database when the log closes; exit normally and reopen the practice log to check persistence. Do not edit the `.db` as though it were an old `.cfg` text file.
 
-Alt+P opens the current message list. The chooser, list and editor below were captured from the Windows 5.0.37 GUI-test VM on November 11, 2026; no physical transmitter was involved.
+Alt+P opens the current message list. The chooser, list and editor below show the CW Open examples programmed through the Windows 5.0.37 GUI-test VM on November 11, 2026. No CW was transmitted. Their CWO exchange is a serial and name; CWT instead calls CQ CWT and exchanges first name plus CWops member number, or first name plus state/province/DX country prefix for non-members.
 
 ![Choose the message group](../assets/cwops/message-chooser.png)
 

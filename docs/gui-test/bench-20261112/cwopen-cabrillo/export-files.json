@@ -1,0 +1,62 @@
+[
+   {
+      "name": "bandmap.bin",
+      "bytes": 0
+   },
+   {
+      "name": "bench-workflow.json",
+      "bytes": 13
+   },
+   {
+      "name": "CTY.DAT",
+      "bytes": 106119
+   },
+   {
+      "name": "CWOPEN 2026-11-11 W1AW.adi",
+      "bytes": 1270
+   },
+   {
+      "name": "CWOPEN 2026-11-11 W1AW.db",
+      "bytes": 135168
+   },
+   {
+      "name": "CWOPEN 2026-11-11 W1AW.db-shm",
+      "bytes": 32768
+   },
+   {
+      "name": "CWOPEN 2026-11-11 W1AW.db-wal",
+      "bytes": 8272
+   },
+   {
+      "name": "CWOPEN 2026-11-11 W1AW.log",
+      "bytes": 581
+   },
+   {
+      "name": "fixture.json",
+      "bytes": 263
+   },
+   {
+      "name": "owned-process.json",
+      "bytes": 88
+   },
+   {
+      "name": "prefs-roundtrip.json",
+      "bytes": 253
+   },
+   {
+      "name": "prefs-station-roundtrip.json",
+      "bytes": 260
+   },
+   {
+      "name": "tr4w-early.log",
+      "bytes": 2702
+   },
+   {
+      "name": "tr4w.json",
+      "bytes": 15908
+   },
+   {
+      "name": "tr4w.log",
+      "bytes": 615813
+   }
+]

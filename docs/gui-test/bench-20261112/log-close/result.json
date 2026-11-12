@@ -1,0 +1,9 @@
+{
+   "scenario": "bench-lognames-close",
+   "passed": true,
+   "captures": [],
+   "pid": 1780,
+   "close_button": "physical mouse click",
+   "inputs_preserved": true,
+   "created_no_files": true
+}

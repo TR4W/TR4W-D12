@@ -1,0 +1,6 @@
+{
+   "scenario": "bench-year-euhfc",
+   "passed": false,
+   "captures": [],
+   "error": "Traceback (most recent call last):\n  File \"C:\\TR4W-Test\\readiness\\scenarios.py\", line 29, in main\n    result.update(run(args.root, args.run, args.scenario))\n                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\TR4W-Test\\readiness\\bench_ui.py\", line 45, in run\n    return check(app, startup, root, run_name, output, journal, phase)\n  File \"C:\\TR4W-Test\\readiness\\bench_years.py\", line 48, in check\n    raise AssertionError(\"Reopened MY ZONE differs: \" + repr(observation))\nAssertionError: Reopened MY ZONE differs: {'term': 'MY ZONE', 'kind': 'edit', 'value': '8', 'focus': {'handle': 3474454, 'text': '8', 'class': 'Edit', 'rect': (525, 255, 725, 277), 'visible': True, 'enabled': True}}\n"
+}

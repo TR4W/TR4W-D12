@@ -1,0 +1,23 @@
+{
+   "scenario": "bench-entry-errors",
+   "passed": true,
+   "captures": [],
+   "pid": 6636,
+   "refusals": [
+      {
+         "input": "WOODY",
+         "message": "No QSO number found!!",
+         "qso_count": 0,
+         "focus_retained": true
+      },
+      {
+         "input": "234",
+         "message": "No name found!!",
+         "qso_count": 0,
+         "focus_retained": true
+      }
+   ],
+   "valid_qso_count": 1,
+   "empty_enter_qso_count": 1,
+   "note": "Notice strings, counts and focus passed; screenshots need review for red notices and their clearing"
+}

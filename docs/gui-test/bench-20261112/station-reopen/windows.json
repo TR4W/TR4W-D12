@@ -1,0 +1,2501 @@
+[
+   {
+      "title": "TR4W Preferences",
+      "class": "Window",
+      "controls": [
+         {
+            "text": "",
+            "class": "LCLListBox",
+            "handle": 2163736,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 214,
+               "top": 129,
+               "right": 644,
+               "bottom": 163
+            }
+         },
+         {
+            "text": "Save",
+            "class": "Button",
+            "handle": 2884548,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 970,
+               "top": 683,
+               "right": 1055,
+               "bottom": 708
+            }
+         },
+         {
+            "text": "Cancel",
+            "class": "Button",
+            "handle": 2622402,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 875,
+               "top": 683,
+               "right": 960,
+               "bottom": 708
+            }
+         },
+         {
+            "text": "Save and close",
+            "class": "Button",
+            "handle": 2753470,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 762,
+               "top": 683,
+               "right": 865,
+               "bottom": 708
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2950056,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 101,
+               "right": 1060,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2032724,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 101,
+               "right": 1060,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 2163802,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 225,
+               "right": 995,
+               "bottom": 248
+            }
+         },
+         {
+            "text": "",
+            "class": "Button",
+            "handle": 1967192,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 197,
+               "right": 733,
+               "bottom": 214
+            }
+         },
+         {
+            "text": "",
+            "class": "Button",
+            "handle": 2753622,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 167,
+               "right": 733,
+               "bottom": 184
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 1967138,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 101,
+               "right": 1060,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2163776,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 460,
+               "right": 1060,
+               "bottom": 606
+            }
+         },
+         {
+            "text": ".",
+            "class": "Edit",
+            "handle": 2753616,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 576,
+               "right": 995,
+               "bottom": 599
+            }
+         },
+         {
+            "text": ",",
+            "class": "Edit",
+            "handle": 2032718,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 546,
+               "right": 995,
+               "bottom": 569
+            }
+         },
+         {
+            "text": ";",
+            "class": "Edit",
+            "handle": 2032716,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 516,
+               "right": 995,
+               "bottom": 539
+            }
+         },
+         {
+            "text": "ALL",
+            "class": "LCLComboBox",
+            "handle": 1901640,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 486,
+               "right": 995,
+               "bottom": 509
+            }
+         },
+         {
+            "text": "Flag a station whose name is already known",
+            "class": "Button",
+            "handle": 2032702,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 429,
+               "right": 646,
+               "bottom": 448
+            }
+         },
+         {
+            "text": "Allow wildcards in a partial",
+            "class": "Button",
+            "handle": 2098234,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 403,
+               "right": 556,
+               "bottom": 422
+            }
+         },
+         {
+            "text": "Match on a partial callsign",
+            "class": "Button",
+            "handle": 2098232,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 377,
+               "right": 554,
+               "bottom": 396
+            }
+         },
+         {
+            "text": "Offer possible calls",
+            "class": "Button",
+            "handle": 1967158,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 351,
+               "right": 514,
+               "bottom": 370
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 1967156,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 585,
+               "top": 173,
+               "right": 885,
+               "bottom": 195
+            }
+         },
+         {
+            "text": "3",
+            "class": "LCLComboBox",
+            "handle": 1967150,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 585,
+               "top": 139,
+               "right": 645,
+               "bottom": 162
+            }
+         },
+         {
+            "text": "3",
+            "class": "Edit",
+            "handle": 2032690,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 588,
+               "top": 142,
+               "right": 625,
+               "bottom": 159
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2163738,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 101,
+               "right": 1060,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "",
+            "class": "Button",
+            "handle": 2294812,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 715,
+               "top": 167,
+               "right": 733,
+               "bottom": 184
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2425798,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 101,
+               "right": 1060,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "Station profile",
+            "class": "Button",
+            "handle": 2556890,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 296,
+               "right": 937,
+               "bottom": 556
+            }
+         },
+         {
+            "text": "Connect radios at startup",
+            "class": "Button",
+            "handle": 2622486,
+            "visible": false,
+            "enabled": false,
+            "rect": {
+               "left": 619,
+               "top": 496,
+               "right": 919,
+               "bottom": 515
+            }
+         },
+         {
+            "text": "Activate this profile now",
+            "class": "Button",
+            "handle": 2425876,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 699,
+               "top": 526,
+               "right": 924,
+               "bottom": 551
+            }
+         },
+         {
+            "text": "SO2R enabled",
+            "class": "Button",
+            "handle": 2491408,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 411,
+               "top": 496,
+               "right": 611,
+               "bottom": 515
+            }
+         },
+         {
+            "text": "Speed sync",
+            "class": "Button",
+            "handle": 2556942,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 784,
+               "top": 466,
+               "right": 924,
+               "bottom": 485
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "LCLComboBox",
+            "handle": 2688008,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 784,
+               "top": 436,
+               "right": 924,
+               "bottom": 459
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "Edit",
+            "handle": 2360332,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 787,
+               "top": 439,
+               "right": 904,
+               "bottom": 456
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "LCLComboBox",
+            "handle": 2425858,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 489,
+               "top": 436,
+               "right": 679,
+               "bottom": 459
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "Edit",
+            "handle": 2360326,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 492,
+               "top": 439,
+               "right": 659,
+               "bottom": 456
+            }
+         },
+         {
+            "text": "Speed sync",
+            "class": "Button",
+            "handle": 2819072,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 784,
+               "top": 406,
+               "right": 924,
+               "bottom": 425
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "LCLComboBox",
+            "handle": 2425846,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 784,
+               "top": 376,
+               "right": 924,
+               "bottom": 399
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "Edit",
+            "handle": 1704958,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 787,
+               "top": 379,
+               "right": 904,
+               "bottom": 396
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "LCLComboBox",
+            "handle": 2229226,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 489,
+               "top": 376,
+               "right": 679,
+               "bottom": 399
+            }
+         },
+         {
+            "text": "(none)",
+            "class": "Edit",
+            "handle": 2294770,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 492,
+               "top": 379,
+               "right": 659,
+               "bottom": 396
+            }
+         },
+         {
+            "text": "Delete",
+            "class": "Button",
+            "handle": 2556902,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 799,
+               "top": 340,
+               "right": 879,
+               "bottom": 365
+            }
+         },
+         {
+            "text": "Rename...",
+            "class": "Button",
+            "handle": 2491364,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 704,
+               "top": 340,
+               "right": 794,
+               "bottom": 365
+            }
+         },
+         {
+            "text": "New...",
+            "class": "Button",
+            "handle": 2491362,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 619,
+               "top": 340,
+               "right": 699,
+               "bottom": 365
+            }
+         },
+         {
+            "text": "",
+            "class": "LCLComboBox",
+            "handle": 3081180,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 411,
+               "top": 340,
+               "right": 611,
+               "bottom": 363
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 2360288,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 414,
+               "top": 343,
+               "right": 591,
+               "bottom": 360
+            }
+         },
+         {
+            "text": "Remove",
+            "class": "Button",
+            "handle": 2491352,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 227,
+               "right": 925,
+               "bottom": 252
+            }
+         },
+         {
+            "text": "Duplicate",
+            "class": "Button",
+            "handle": 3277782,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 195,
+               "right": 925,
+               "bottom": 220
+            }
+         },
+         {
+            "text": "Edit...",
+            "class": "Button",
+            "handle": 3212244,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 163,
+               "right": 925,
+               "bottom": 188
+            }
+         },
+         {
+            "text": "Add...",
+            "class": "Button",
+            "handle": 2491346,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 131,
+               "right": 925,
+               "bottom": 156
+            }
+         },
+         {
+            "text": "",
+            "class": "LCLListBox",
+            "handle": 2556874,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 131,
+               "right": 817,
+               "bottom": 281
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2360236,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 385,
+               "top": 101,
+               "right": 1060,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "Also broadcast edited and previously logged QSOs",
+            "class": "Button",
+            "handle": 2229180,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 331,
+               "right": 817,
+               "bottom": 353
+            }
+         },
+         {
+            "text": "Test",
+            "class": "Button",
+            "handle": 2229178,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 263,
+               "right": 930,
+               "bottom": 288
+            }
+         },
+         {
+            "text": "Remove",
+            "class": "Button",
+            "handle": 2360248,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 231,
+               "right": 930,
+               "bottom": 256
+            }
+         },
+         {
+            "text": "Edit...",
+            "class": "Button",
+            "handle": 2491318,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 199,
+               "right": 930,
+               "bottom": 224
+            }
+         },
+         {
+            "text": "Add...",
+            "class": "Button",
+            "handle": 2491316,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 830,
+               "top": 167,
+               "right": 930,
+               "bottom": 192
+            }
+         },
+         {
+            "text": "",
+            "class": "LCLListBox",
+            "handle": 2950066,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 167,
+               "right": 817,
+               "bottom": 317
+            }
+         },
+         {
+            "text": "Broadcast UDP data",
+            "class": "Button",
+            "handle": 3474352,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 397,
+               "top": 111,
+               "right": 697,
+               "bottom": 133
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2950054,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 210,
+               "top": 132,
+               "right": 380,
+               "bottom": 673
+            }
+         },
+         {
+            "text": "RADIUS OF EARTH",
+            "class": "Edit",
+            "handle": 3081124,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 214,
+               "top": 105,
+               "right": 376,
+               "bottom": 128
+            }
+         }
+      ]
+   },
+   {
+      "title": "Function keys",
+      "class": "Window",
+      "controls": [
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2622366,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 970,
+               "top": 539,
+               "right": 1032,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2491292,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 907,
+               "top": 539,
+               "right": 969,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2294682,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 844,
+               "top": 539,
+               "right": 906,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3212184,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 781,
+               "top": 539,
+               "right": 843,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 1770390,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 708,
+               "top": 539,
+               "right": 770,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2491284,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 645,
+               "top": 539,
+               "right": 707,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2229138,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 582,
+               "top": 539,
+               "right": 644,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2556812,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 519,
+               "top": 539,
+               "right": 581,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753418,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 446,
+               "top": 539,
+               "right": 508,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408776,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 383,
+               "top": 539,
+               "right": 445,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753414,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 320,
+               "top": 539,
+               "right": 382,
+               "bottom": 609
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4064132,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 539,
+               "right": 319,
+               "bottom": 609
+            }
+         }
+      ]
+   },
+   {
+      "title": "tr4w_fpc",
+      "class": "Window",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "",
+      "class": "ComboLBox",
+      "controls": []
+   },
+   {
+      "title": "TR4W v.5.0.37 - 2026 CWOPEN W1AW",
+      "class": "Window",
+      "controls": [
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2622336,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 270,
+               "right": 1039,
+               "bottom": 395
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2687868,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1005,
+               "top": 236,
+               "right": 1037,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3998584,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 236,
+               "right": 1003,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753396,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 937,
+               "top": 236,
+               "right": 969,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3081074,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 236,
+               "right": 935,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2818928,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 869,
+               "top": 236,
+               "right": 901,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2818926,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 835,
+               "top": 236,
+               "right": 867,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3539820,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1005,
+               "top": 219,
+               "right": 1037,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2818922,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 219,
+               "right": 1003,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3736424,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 937,
+               "top": 219,
+               "right": 969,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3605350,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 219,
+               "right": 935,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2556770,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 869,
+               "top": 219,
+               "right": 901,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2818906,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 835,
+               "top": 219,
+               "right": 867,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2884440,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1005,
+               "top": 185,
+               "right": 1037,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753366,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 185,
+               "right": 1003,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753364,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 937,
+               "top": 185,
+               "right": 969,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753362,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 185,
+               "right": 935,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753360,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 869,
+               "top": 185,
+               "right": 901,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753358,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 835,
+               "top": 185,
+               "right": 867,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753356,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 1005,
+               "top": 168,
+               "right": 1037,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2818890,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 168,
+               "right": 1003,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2949960,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 937,
+               "top": 168,
+               "right": 969,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3081030,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 168,
+               "right": 935,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 2753348,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 869,
+               "top": 168,
+               "right": 901,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3277634,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 835,
+               "top": 168,
+               "right": 867,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 3277632,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 512,
+               "top": 437,
+               "right": 733,
+               "bottom": 461
+            }
+         },
+         {
+            "text": "",
+            "class": "Edit",
+            "handle": 3867442,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 512,
+               "top": 412,
+               "right": 733,
+               "bottom": 436
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3867424,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 236,
+               "right": 835,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3932956,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 219,
+               "right": 835,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4981510,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 185,
+               "right": 835,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4195076,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 168,
+               "right": 835,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "All",
+            "class": "Window",
+            "handle": 3408640,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 594,
+               "top": 151,
+               "right": 645,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "10",
+            "class": "Window",
+            "handle": 3408638,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 552,
+               "top": 151,
+               "right": 594,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "15",
+            "class": "Window",
+            "handle": 3539708,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 510,
+               "top": 151,
+               "right": 552,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "20",
+            "class": "Window",
+            "handle": 3080954,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 468,
+               "top": 151,
+               "right": 510,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "40",
+            "class": "Window",
+            "handle": 3015416,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 426,
+               "top": 151,
+               "right": 468,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "80",
+            "class": "Window",
+            "handle": 3212022,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 384,
+               "top": 151,
+               "right": 426,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "160",
+            "class": "Window",
+            "handle": 3015412,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 342,
+               "top": 151,
+               "right": 384,
+               "bottom": 185
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3146482,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 594,
+               "top": 236,
+               "right": 645,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3343086,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 594,
+               "top": 219,
+               "right": 645,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "2",
+            "class": "Window",
+            "handle": 3474156,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 594,
+               "top": 202,
+               "right": 645,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "3",
+            "class": "Window",
+            "handle": 3343082,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 594,
+               "top": 185,
+               "right": 645,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408614,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 552,
+               "top": 236,
+               "right": 594,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408612,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 552,
+               "top": 219,
+               "right": 594,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474146,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 552,
+               "top": 202,
+               "right": 594,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408608,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 552,
+               "top": 185,
+               "right": 594,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408606,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 510,
+               "top": 236,
+               "right": 552,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408604,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 510,
+               "top": 219,
+               "right": 552,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408602,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 510,
+               "top": 202,
+               "right": 552,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408600,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 510,
+               "top": 185,
+               "right": 552,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408598,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 468,
+               "top": 236,
+               "right": 510,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474126,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 468,
+               "top": 219,
+               "right": 510,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3670722,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 468,
+               "top": 202,
+               "right": 510,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "2",
+            "class": "Window",
+            "handle": 3670720,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 468,
+               "top": 185,
+               "right": 510,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408574,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 426,
+               "top": 236,
+               "right": 468,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408572,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 426,
+               "top": 219,
+               "right": 468,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408570,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 426,
+               "top": 202,
+               "right": 468,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "1",
+            "class": "Window",
+            "handle": 3408568,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 426,
+               "top": 185,
+               "right": 468,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408566,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 384,
+               "top": 236,
+               "right": 426,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474100,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 384,
+               "top": 219,
+               "right": 426,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474098,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 384,
+               "top": 202,
+               "right": 426,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3539632,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 384,
+               "top": 185,
+               "right": 426,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474094,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 342,
+               "top": 236,
+               "right": 384,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3539628,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 342,
+               "top": 219,
+               "right": 384,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474090,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 342,
+               "top": 202,
+               "right": 384,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408552,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 342,
+               "top": 185,
+               "right": 384,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408550,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 236,
+               "right": 342,
+               "bottom": 253
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408548,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 219,
+               "right": 342,
+               "bottom": 236
+            }
+         },
+         {
+            "text": "Calls",
+            "class": "Window",
+            "handle": 3408546,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 202,
+               "right": 342,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "QSOs",
+            "class": "Window",
+            "handle": 3408544,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 185,
+               "right": 342,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "WSJTX",
+            "class": "Window",
+            "handle": 3408542,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 393,
+               "top": 429,
+               "right": 444,
+               "bottom": 446
+            }
+         },
+         {
+            "text": "WK",
+            "class": "Window",
+            "handle": 3474076,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 903,
+               "top": 463,
+               "right": 971,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408538,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 512,
+               "top": 463,
+               "right": 682,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "6 Pts",
+            "class": "Window",
+            "handle": 3408536,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 648,
+               "top": 151,
+               "right": 801,
+               "bottom": 168
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3408534,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 168,
+               "right": 342,
+               "bottom": 185
+            }
+         },
+         {
+            "text": " SP: 0",
+            "class": "Window",
+            "handle": 3474068,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 412,
+               "right": 1039,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "Rate = 0",
+            "class": "Window",
+            "handle": 3474064,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 818,
+               "top": 429,
+               "right": 903,
+               "bottom": 446
+            }
+         },
+         {
+            "text": "Radio 2",
+            "class": "Window",
+            "handle": 3474062,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 325,
+               "top": 429,
+               "right": 393,
+               "bottom": 446
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474060,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 325,
+               "top": 412,
+               "right": 393,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "Radio 1",
+            "class": "Window",
+            "handle": 3474056,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 429,
+               "right": 325,
+               "bottom": 446
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474054,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 412,
+               "right": 325,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "Newer CTY.DAT available (dated 20261107). Press Alt-O to download.",
+            "class": "Window",
+            "handle": 3670660,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 480,
+               "right": 1039,
+               "bottom": 497
+            }
+         },
+         {
+            "text": "4",
+            "class": "Window",
+            "handle": 3474050,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 444,
+               "top": 395,
+               "right": 512,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474048,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 151,
+               "right": 1039,
+               "bottom": 168
+            }
+         },
+         {
+            "text": "QSOB4",
+            "class": "Window",
+            "handle": 3474046,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 444,
+               "top": 429,
+               "right": 512,
+               "bottom": 446
+            }
+         },
+         {
+            "text": "OFF",
+            "class": "Window",
+            "handle": 3474044,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 682,
+               "top": 463,
+               "right": 733,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3474042,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 648,
+               "top": 395,
+               "right": 682,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "Paddle",
+            "class": "Window",
+            "handle": 3474040,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 903,
+               "top": 446,
+               "right": 971,
+               "bottom": 463
+            }
+         },
+         {
+            "text": "CQ",
+            "class": "Window",
+            "handle": 3867254,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 733,
+               "top": 463,
+               "right": 818,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3736180,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 733,
+               "top": 412,
+               "right": 818,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4260466,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 682,
+               "top": 395,
+               "right": 733,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 3998320,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 202,
+               "right": 1039,
+               "bottom": 219
+            }
+         },
+         {
+            "text": "MULT",
+            "class": "Window",
+            "handle": 3867244,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 444,
+               "top": 463,
+               "right": 512,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "MASTER",
+            "class": "Window",
+            "handle": 4260458,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 444,
+               "top": 446,
+               "right": 512,
+               "bottom": 463
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4784742,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 395,
+               "right": 971,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4457060,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 818,
+               "top": 412,
+               "right": 903,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "INSERT",
+            "class": "Window",
+            "handle": 4260446,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 395,
+               "right": 1039,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "This hr = 0",
+            "class": "Window",
+            "handle": 3605084,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 733,
+               "top": 429,
+               "right": 818,
+               "bottom": 446
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4325978,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 818,
+               "top": 463,
+               "right": 903,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "05:08:37",
+            "class": "Window",
+            "handle": 5112402,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 151,
+               "right": 342,
+               "bottom": 168
+            }
+         },
+         {
+            "text": "Footsw.",
+            "class": "Window",
+            "handle": 4850254,
+            "visible": true,
+            "enabled": false,
+            "rect": {
+               "left": 971,
+               "top": 446,
+               "right": 1039,
+               "bottom": 463
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 5309004,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 648,
+               "top": 168,
+               "right": 801,
+               "bottom": 202
+            }
+         },
+         {
+            "text": "12-11-26",
+            "class": "Window",
+            "handle": 4784714,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 325,
+               "top": 395,
+               "right": 393,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "W1AW",
+            "class": "Window",
+            "handle": 4915780,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 971,
+               "top": 463,
+               "right": 1039,
+               "bottom": 480
+            }
+         },
+         {
+            "text": "CQ total: 0",
+            "class": "Window",
+            "handle": 5177922,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 429,
+               "right": 1039,
+               "bottom": 446
+            }
+         },
+         {
+            "text": " CQ: 3",
+            "class": "Window",
+            "handle": 5374512,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 903,
+               "top": 412,
+               "right": 971,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4850214,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 733,
+               "top": 395,
+               "right": 903,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 4719140,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 393,
+               "top": 412,
+               "right": 444,
+               "bottom": 429
+            }
+         },
+         {
+            "text": "35 WPM",
+            "class": "Window",
+            "handle": 5046810,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 446,
+               "right": 325,
+               "bottom": 463
+            }
+         },
+         {
+            "text": "05:08",
+            "class": "Window",
+            "handle": 5046804,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 393,
+               "top": 395,
+               "right": 444,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "",
+            "class": "Window",
+            "handle": 5505542,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 801,
+               "top": 253,
+               "right": 1039,
+               "bottom": 270
+            }
+         },
+         {
+            "text": "160CW",
+            "class": "Window",
+            "handle": 4587998,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 395,
+               "right": 325,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "\u2193",
+            "class": "Window",
+            "handle": 4653478,
+            "visible": false,
+            "enabled": true,
+            "rect": {
+               "left": 529,
+               "top": 395,
+               "right": 546,
+               "bottom": 412
+            }
+         },
+         {
+            "text": "",
+            "class": "msctls_progress32",
+            "handle": 4981110,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 818,
+               "top": 446,
+               "right": 903,
+               "bottom": 463
+            }
+         },
+         {
+            "text": "",
+            "class": "msctls_progress32",
+            "handle": 5046570,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 733,
+               "top": 446,
+               "right": 818,
+               "bottom": 463
+            }
+         },
+         {
+            "text": "",
+            "class": "msctls_statusbar32",
+            "handle": 4587626,
+            "visible": true,
+            "enabled": true,
+            "rect": {
+               "left": 257,
+               "top": 520,
+               "right": 1039,
+               "bottom": 543
+            }
+         }
+      ]
+   },
+   {
+      "title": "M",
+      "class": "MSCTFIME UI",
+      "controls": []
+   },
+   {
+      "title": "Default IME",
+      "class": "IME",
+      "controls": []
+   }
+]

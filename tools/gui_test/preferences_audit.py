@@ -42,7 +42,7 @@ def focus_info(window):
    }
 
 
-def audit(app, prefs, log, output):
+def navigation_tree(prefs):
    # Locate the visible navigation area by its observed geometry, not LCL names.
    bounds = prefs.rectangle()
    candidates = [
@@ -53,7 +53,31 @@ def audit(app, prefs, log, output):
    ]
    if len(candidates) != 1:
       raise AssertionError("Preferences navigation region is not uniquely observable")
-   tree = candidates[0]
+   return candidates[0]
+
+
+def select_page(prefs, log, tag):
+   tree = navigation_tree(prefs)
+   tree.set_focus()
+   tree.type_keys("{HOME}", pause=0.05)
+   for _ in range(100):
+      time.sleep(0.15)
+      selected = re.findall(r"\[Prefs\] section tag=(\d+) -> (?:panel|placeholder)",
+         log.read_text(encoding="utf-8", errors="replace"))
+      if selected and selected[-1] == str(tag):
+         return tree
+      tree.type_keys("{RIGHT}", pause=0.05)
+      time.sleep(0.15)
+      selected = re.findall(r"\[Prefs\] section tag=(\d+) -> (?:panel|placeholder)",
+         log.read_text(encoding="utf-8", errors="replace"))
+      if selected and selected[-1] == str(tag):
+         return tree
+      tree.type_keys("{DOWN}", pause=0.05)
+   raise AssertionError("Preferences page was not reached: " + str(tag))
+
+
+def audit(app, prefs, log, output):
+   tree = navigation_tree(prefs)
    tree.set_focus()
    tree.type_keys("{HOME}", pause=0.03)
    pages = {}

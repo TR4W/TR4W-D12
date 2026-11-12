@@ -1,0 +1,50 @@
+[
+   {
+      "name": "bandmap.bin",
+      "bytes": 0
+   },
+   {
+      "name": "bench-workflow.json",
+      "bytes": 13
+   },
+   {
+      "name": "CTY.DAT",
+      "bytes": 106119
+   },
+   {
+      "name": "fixture.json",
+      "bytes": 181
+   },
+   {
+      "name": "IARU-HF 2026-11-12 W1AW.adi",
+      "bytes": 536
+   },
+   {
+      "name": "IARU-HF 2026-11-12 W1AW.db",
+      "bytes": 135168
+   },
+   {
+      "name": "IARU-HF 2026-11-12 W1AW.db-shm",
+      "bytes": 32768
+   },
+   {
+      "name": "IARU-HF 2026-11-12 W1AW.db-wal",
+      "bytes": 74192
+   },
+   {
+      "name": "owned-process.json",
+      "bytes": 88
+   },
+   {
+      "name": "tr4w-early.log",
+      "bytes": 676
+   },
+   {
+      "name": "tr4w.json",
+      "bytes": 11910
+   },
+   {
+      "name": "tr4w.log",
+      "bytes": 114332
+   }
+]

@@ -1,0 +1,49 @@
+{
+   "scenario": "bench-prefs-overview",
+   "passed": false,
+   "captures": [],
+   "navigation": [
+      {
+         "label": "WSJT-X",
+         "method": "Enter",
+         "navigated": false
+      },
+      {
+         "label": "WSJT-X",
+         "method": "Click",
+         "navigated": true
+      },
+      {
+         "label": "External Logger",
+         "method": "Enter",
+         "navigated": false
+      },
+      {
+         "label": "External Logger",
+         "method": "Click",
+         "navigated": true
+      },
+      {
+         "label": "DXLab",
+         "method": "Enter",
+         "navigated": false
+      },
+      {
+         "label": "DXLab",
+         "method": "Click",
+         "navigated": true
+      },
+      {
+         "label": "MMTTY",
+         "method": "Enter",
+         "navigated": false
+      },
+      {
+         "label": "MMTTY",
+         "method": "Click",
+         "navigated": true
+      }
+   ],
+   "note": "Overview navigation outcomes recorded individually; screenshots need review",
+   "pid": 6940
+}

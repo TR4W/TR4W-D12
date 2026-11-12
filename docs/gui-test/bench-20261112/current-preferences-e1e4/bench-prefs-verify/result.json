@@ -1,0 +1,7 @@
+{
+   "scenario": "bench-prefs-verify",
+   "passed": true,
+   "captures": [],
+   "note": "Three leaf values survived restart; original fixture values restored",
+   "pid": 4728
+}

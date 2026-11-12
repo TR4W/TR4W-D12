@@ -1,0 +1,18 @@
+{
+   "term": "MY ZONE",
+   "kind": "edit",
+   "value": "8",
+   "focus": {
+      "handle": 3539990,
+      "text": "8",
+      "class": "Edit",
+      "rect": [
+         525,
+         255,
+         725,
+         277
+      ],
+      "visible": true,
+      "enabled": true
+   }
+}

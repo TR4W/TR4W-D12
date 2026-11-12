@@ -1,0 +1,9 @@
+{
+   "scenario": "bench-export-discover",
+   "passed": true,
+   "captures": [],
+   "records": 3,
+   "cqz_absent": true,
+   "note": "Actual File > Export > ADIF output verified; Cabrillo remains untested",
+   "pid": 1136
+}
