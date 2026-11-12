@@ -44,13 +44,24 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+---
+
+## 5.0.x — November 2026
+
+### 5.0.40 (2026-11-12) - NY4I
+
+#### Windows
+
 - TR4W for Windows is 64-bit only. There is no 32-bit build of TR4W 5, and there are no plans for
   one; the installer now says so and stops on a 32-bit Windows. If you are on a 32-bit Windows, stay
   on TR4W 4.x from tr4w.net.
 
----
+#### Multi-op network
 
-## 5.0.x — November 2026
+- The Tailcat tunnel library (`libtailcat.dll`) is now part of the installer, so the Use Tailcat box
+  in Preferences > Network can work. It is still experimental: the link through a tunnel has had
+  little testing in a running TR4W. The licences of the code inside the library are installed
+  beside it in `libtailcat-NOTICES.txt`.
 
 ### 5.0.39 (2026-11-12) - NY4I
 
