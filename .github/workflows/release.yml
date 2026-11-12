@@ -364,7 +364,7 @@ jobs:
   build-linux:
     name: Linux (x86_64)
     runs-on: [self-hosted, linux-ci]
-    timeout-minutes: 45
+    timeout-minutes: 60
     continue-on-error: true
     needs: build
 
@@ -570,7 +570,7 @@ jobs:
   build-macos:
     name: macOS (aarch64)
     runs-on: [self-hosted, mac-ci]
-    timeout-minutes: 45
+    timeout-minutes: 60
     continue-on-error: true
     needs: build
 

@@ -1162,6 +1162,97 @@ mac_bundle_openssl() {
    return 0
 }
 
+# ---------------------------------------------------------------------------
+# libtailcat (issue 293): the multi-op link through a Tailcat tunnel.
+#
+# BUILT, NOT COMMITTED: build-tailcat.sh makes it from the commit pinned in
+# tailcat.pin, the same pin the Windows job uses, and that script's header says
+# why.  This function only PLACES the result, and where depends on the
+# platform because uAppPaths.PrivateLibraryDir does:
+#     Linux   beside the binary           $stage/libtailcat.so
+#     macOS   Contents/Frameworks         BEFORE mac-sign.sh runs, which signs
+#                                         every file there with the hardened
+#                                         runtime (one unsigned dylib fails
+#                                         notarization of the whole bundle)
+# The licence texts of everything linked travel with it, as on Windows.
+#
+# IT FAILS THE STAGE when the library cannot be built, like the Windows step: a
+# release that quietly lacked it would turn "Use Tailcat" into a warning on
+# every user's screen.  TR4W_SKIP_TAILCAT=1 is the explicit way out for a
+# developer build on a machine with no network; it is never set in CI.
+#
+#    package_tailcat <directory for the library> <directory for the notices>
+# ---------------------------------------------------------------------------
+package_tailcat() {
+   _libdir=$1
+   _notedir=$2
+
+   if [ "${TR4W_SKIP_TAILCAT:-0}" = 1 ]; then
+      say '  libtailcat: SKIPPED (TR4W_SKIP_TAILCAT=1) -- this package cannot use Tailcat'
+      return 0
+   fi
+
+   if ! sh "$BUILD_DIR/build-tailcat.sh" --jobs 2; then
+      say '  FAILED: libtailcat did not build; see build-tailcat above.'
+      return 1
+   fi
+
+   if [ "$OS" = darwin ]; then
+      _name=libtailcat.dylib
+   else
+      _name=libtailcat.so
+   fi
+   _built="$OUTROOT/tailcat/$ARCH"
+   if [ ! -f "$_built/$_name" ] || [ ! -f "$_built/libtailcat-NOTICES.txt" ]; then
+      say "  FAILED: build-tailcat exited 0 but $_built lacks $_name or its notices."
+      return 1
+   fi
+
+   mkdir -p "$_libdir" "$_notedir" || return 1
+   cp "$_built/$_name" "$_libdir/$_name" || return 1
+   cp "$_built/libtailcat-NOTICES.txt" "$_notedir/libtailcat-NOTICES.txt" || return 1
+
+   if [ "$OS" = darwin ]; then
+      chmod u+w "$_libdir/$_name" || return 1
+      # Name it where it will sit, as the OpenSSL copies are.  This rewrites
+      # the Mach-O and so invalidates the signature Go's linker gave it, and
+      # arm64 kills a process that loads an image with a bad one -- so it is
+      # re-signed ad hoc here, and mac-sign.sh replaces that with the real
+      # identity when TR4W_MAC_SIGN=1.
+      install_name_tool -id "@loader_path/$_name" "$_libdir/$_name" 2>/dev/null || {
+         say "  FAILED: install_name_tool could not set the id of $_name"
+         return 1
+      }
+      codesign --force --sign - "$_libdir/$_name" 2>/dev/null || {
+         say "  FAILED: could not ad-hoc re-sign $_name"
+         return 1
+      }
+      codesign --verify --strict "$_libdir/$_name" 2>/dev/null || {
+         say "  FAILED: $_name does not verify after re-signing"
+         return 1
+      }
+      # Only the OS may be named by absolute path, as for OpenSSL: anything
+      # else resolves on this machine and nowhere else.
+      _bad=''
+      for _dep in $(otool -L "$_libdir/$_name" | tail -n +2 | awk '{print $1}'); do
+         case "$_dep" in
+            /usr/lib/*|/System/*|@loader_path/*) ;;
+            *) _bad="$_bad $_dep" ;;
+         esac
+      done
+      if [ -n "$_bad" ]; then
+         say "  FAILED: $_name names paths outside the OS:$_bad"
+         return 1
+      fi
+      # What the library asks of the OS, for the log: Info.plist promises 11.0
+      # and Go sets its own floor.  Read it, do not assume it.
+      say "  tailcat  : $_name, $(otool -l "$_libdir/$_name" | awk '/minos/ { print "minos " $2; exit }')"
+   else
+      say "  tailcat  : $_name, $(($(wc -c < "$_libdir/$_name") / 1024)) KB"
+   fi
+   return 0
+}
+
 mac_bundle_localizations() {
    res="$TR4W_DIR/res/tr4w_languages.res"
    [ -f "$res" ] || return 0
@@ -1413,6 +1504,12 @@ stage_package() {
          return 1
       fi
 
+      # Tailcat, beside OpenSSL so mac-sign.sh signs it with the rest.
+      if ! package_tailcat "$bundle/Contents/Frameworks" "$bundle/Contents/Resources"; then
+         record FAIL 'package' 'libtailcat could not be built into TR4W.app'
+         return 1
+      fi
+
       # The Finder icon.  See the header on mac_bundle_icon for why this is
       # generated rather than tracked, and why it fails instead of warning.
       if ! mac_bundle_icon "$bundle"; then
@@ -1472,6 +1569,12 @@ PLIST
       fi
    else
       cp "$APP_EXE" "$stage/tr4w"
+      # Beside the binary, which is where PrivateLibraryDir looks.  The
+      # AppImage copies $stage into usr/bin, so it carries it too.
+      if ! package_tailcat "$stage" "$stage"; then
+         record FAIL 'package' 'libtailcat could not be built'
+         return 1
+      fi
       if [ -f "${SERVER_EXE:-}" ]; then
          mkdir -p "$stage/server"
          cp "$SERVER_EXE" "$stage/server/tr4wserver"
