@@ -44,7 +44,47 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
-### Contest settings, call history, band map and fixes - NY4I
+---
+
+## 5.0.x — November 2026
+
+### 5.0.38 (2026-11-12) - NY4I
+
+#### Windows is now 64-bit
+
+- TR4W for Windows is now a 64-bit program, with 64-bit radio, database and
+  SSL libraries beside it. The installer is named `-x64`. This is the first
+  64-bit release and it has not had a full bench pass yet: please report
+  anything that behaves differently. The 32-bit program is no longer shipped.
+- Installing over a 32-bit TR4W replaces it; your settings and logs are kept.
+- HamLib radios: TR4W looks for HamLib beside the program first and skips a
+  copy of the wrong bitness, instead of refusing to start HamLib.
+- A number that is too large for its field (a serial number with eleven digits,
+  say) is refused instead of being cut down and accepted. A value outside the
+  range of a small field is refused instead of wrapping around.
+
+#### Contests that exchange the year first licensed
+
+- European HF Championship and KVP keep the year as its own field, no longer in
+  the CQ-zone slot. The message says "No license year found", the log heading
+  reads Year, and the totals count Years.
+- There is a License year setting in Preferences and in the New Contest dialog.
+  CQ zone is again only a zone. The year you send comes from it, and an
+  edited ITU zone no longer changes the year in Cabrillo or ADIF.
+- Edit QSO shows the year for these contests. Contests whose year has four
+  digits, or that count years licensed, are supported by the same field.
+- A log made in an older version moves its year the first time it is opened.
+  TR4W 5.0.37 and earlier cannot open a log that this version has opened.
+- The multi-op network protocol is now version 3: every station and the
+  server must run the same release.
+
+#### Multi-op network
+
+- Experimental: the link to the multi-op server can go through a Tailcat
+  tunnel (Preferences > Network: an address and a Use Tailcat box). The tunnel
+  library is not part of this release, so ticking the box shows a warning
+  until you have it.
+- Preferences no longer cuts a saved setting value at 255 characters.
 
 #### Preferences
 
@@ -117,12 +157,6 @@ user-facing — no file paths or source-level jargon.
 - The monthly TRMASTER build rejects junk operator names (for example a name
   that is just "2A" or a callsign in brackets) before they reach the file. The
   next monthly build drops the ones already there.
-
-
-
----
-
-## 5.0.x — November 2026
 
 ### 5.0.37 (2026-11-07) - NY4I
 
