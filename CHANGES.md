@@ -41,6 +41,48 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Year first licensed, Win64 as the only Windows target, Tailcat link, online-URL work - NY4I
+
+#### Year first licensed (`uLogSchema`, `uContestExchange`, `uContestBase`, `uSettingsModel`, `fcontest`) - Issue #298
+
+- **Standard field `qso.rcvd_year`** (schema 7); `ContestExchange.RcvdYear` / `RcvdYearKnown`; NET_PROTOCOL_VERSION 3. EUHFC and KVP read the year with their own parser (not the zone parser), accept a 2-digit year, a 4-digit year or years licensed, and a call or spot is a new multiplier when the remembered exchange holds its year.
+- **`MY LICENSE YEAR`** (`Settings.My.LicenseYear`, `ResolvedLicenseYear`, `SentLicenseYearText`): the sent year is its own setting; `AdoptLegacyLicenseYear` moves a contest-stated MY ZONE of 1-4 digits on open. `SessionMyCQZone` ignores the contest; `MyZoneIsAStationZone` derives from the year kind. Stage 4 (multiplier sheet counting the year) is not done.
+
+#### Win64 (`build/Get-StagingDir.ps1`, `Lint-ArchStaging`, `full.nsi`, `logsubs2`, `uHamLibDirect`, `utils_text`) - Issue #299
+
+- **x86_64-win64 only**: the build scripts take no `-Cpu`/`-Os`; the 32-bit DLL set (`redist/i386-win32`) is deleted; `Lint-ArchStaging` PE-checks every DLL under `target` and `redist`; the installer is 64-bit (`tr4w_setup_<v>-x64.exe`), refuses a 32-bit Windows, and migrates a 32-bit 5.0.x install.
+- **6-second exit**: `WaitForPollingThreadWithMessages` passed a `DWord` `TThreadID` where `MsgWaitForMultipleObjects` reads a `QWord` `THandle`; now a correctly sized handle (`WaitForPollingThreadFlag`).
+- **HamLib resolution**: `LocateHamLib` looks beside the exe (`PrivateLibraryDir`), then the data directory, cwd and PATH, and skips a wrong-bitness DLL by its PE header.
+- **`Val` is not range-checked on Win64** (`ValSInt` is Int64): `utils_text.ValChecked` overloads, 86 call sites in 21 units, `Lint-BareVal` fails the build on a bare `Val(`. `StrToInt`/`StrToIntDef`/`TryStrToInt` have the same hole and are not wrapped yet.
+
+#### Tailcat tunnel (`uNet`, `uGetServerLog`, `uPrefsForm`, `uSettingsModel`, `build/Build-Tailcat.ps1`, `build-tailcat.sh`, `tailcat.pin`, `build-unix.sh`, `release.yml`) - Issue #293
+
+- **Use Tailcat** box and a Tailcat address row (stored as a secret); the library is loaded from `PrivateLibraryDir` only when ticked.
+- **`libtailcat` is built, not committed**: one pin file (upstream commit and Go version), a script per platform. The Windows CI job builds it with a sha256-checked Go toolchain and the Qt MinGW gcc, and the installer ships it with `libtailcat-NOTICES.txt` (`/nonfatal`).
+- **Linux and macOS**: `build-unix.sh`'s package stage calls `package_tailcat`: beside the binary on Linux (the AppImage copies the stage, so it carries it), `Contents/Frameworks` on macOS before `mac-sign.sh` (install name, ad-hoc re-sign, no non-OS dependency paths, minimum macOS printed). A failed build fails the stage; `TR4W_SKIP_TAILCAT=1` is the developer-only way out. Those two jobs get 60 minutes.
+- `referenced-urls.txt` lists the Go download; the Windows job timeout is 60 min; `FullBuild.ps1` prints a banner with clock and elapsed time for each phase.
+
+#### Contests and exchanges (`contestFactory`, `logstuff`)
+
+- **New**: Vermont QSO Party (`VT-QSO-PARTY`, 2027 rules) and New Hampshire QSO Party (`NH-QSO-PARTY`, 2026 rules).
+- **ARRL sections**: a typed alias scores, counts and exports as its canonical section; aliases accepted on import and in the hand-offs; DXKeeper gets `ARRL_SECT` only where the contest states a section; ARRL 10 states its band (10 m).
+- **CQ WW RTTY** parser accepts 599, asks the class for the zone, refuses with a message; CQ zone limit; CW Open counts calls not zones and a refused exchange names what is missing; a word before the number is the QTH only when the contest lists it.
+- **Cabrillo**: a zero-padded serial column is as wide as the log's highest serial (min 3). Mult strip "Both:" only beside a split QSO strip (#243, part). Pins only: Clear Mult Sheet (#164), IOTA needs, multi-county serial, Florida/Michigan rescore baselines.
+
+#### Radio, CW and WSJT-X
+
+- **Connect radios at startup** belongs to the profile and startup obeys it. CW auto-send no longer keys the possible-call keys. SNR-to-RST covers FT4, FST4, FST4W.
+- Preferences: WinKeyer and YCCC get their own pages under Hardware and search finds them; a saved value is no longer cut to 255 characters; tooltip catalogues are found beside the program.
+- **Band map**: `BAND MAP FILTER OUT DIGITAL` (default off). A spot click runs the needs check at once and shows the comment.
+- A taken log name gets the next free number (no false overwrite prompt); six host-area strings reach the catalogues.
+
+#### HTTP and online destinations (`uHttp*`, `uHamScore`, `uSettingsModel`, `build/ReferencedUrls.psm1`) - Issues #224, #248, #250
+
+- WinHTTP transport (#224 S2), selected by a setting, default generic. Per-destination "verify the server's certificate" (the global setting stays master).
+- Score posting default `https://contestonlinescore.com/post/` and HamScore `https://hamscore.com/postxml/`; a saved old default is migrated once. Test button beside each URL (200 is success, anything else shown).
+- **Inventory of every referenced URL** (#248): `referenced-urls.txt`, offline `Lint-ReferencedUrls` (gates the build), pre-release `Check-ReferencedUrls`; the WA7BNM Contest Calendar is never contacted (`skip`).
+- External loggers: a delivery notice no longer opens a modal box; WRL carries the contest exchange in the contact's notes.
+
 ### CW Speed Sync and SO2R Enabled were never saved to tr4w.json - NY4I
 
 #### Profile persistence and apply (`uRadioConfigStore`, `uRadioConfigApply`, `ui/lcl/uPrefsForm`) — RTC 2026
