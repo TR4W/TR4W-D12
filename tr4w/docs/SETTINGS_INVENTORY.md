@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (286)
+## Settings that have moved (287)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -282,6 +282,7 @@ comes last, a word run together.
 | `SERVER AUTO SYNCHRONIZE LOG ON CONNECT` |  | global | `Settings.Server.AutoSynchronizeLogOnConnect` | boolean |  |
 | `SERVER PASSWORD` |  | global | `Settings.Server.Password` | TSecretText |  |
 | `SERVER PORT` |  | global | `Settings.Server.Port` | TServerPort |  |
+| `SERVER TAILCAT ADDRESS` |  | global | `Settings.Server.TailcatAddress` | TSecretText |  |
 | `SHIFT KEY ENABLE` |  | global | `Settings.Operating.ShiftKeyEnable` | boolean |  |
 | `SHORT 0` |  | global | `Settings.Cw.Short0` | AnsiChar |  |
 | `SHORT 1` |  | global | `Settings.Cw.Short1` | AnsiChar |  |

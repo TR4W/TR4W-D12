@@ -495,6 +495,20 @@ profile says no, via `ProfileConnectsAtStartup`) gates only the two
 ask it. The ini store (`SaveTo`/`LoadFrom`) does not carry it, by that
 format's stated policy.
 
+## SERVER TAILCAT ADDRESS, and the 255-character cut it exposed (issue 293, 2026-11-12)
+
+`Settings.Server.TailcatAddress` -- a `TSecretText` (vault, masked, never shared,
+`ValueForLog`), default `''`, trimmed by its setter, at most
+`TAILCAT_ADDRESS_MAX_LENGTH` = 1024 by a registered value check
+(`TailcatAddressLengthIsAllowed`). Hand-wired on Preferences > Network like its
+three siblings (no `RegisterModelSetting`, so no `KNOWN_HELP_GAPS` entry; no
+`help_en.po` text yet). **`ApplyAndStoreCommand` used to send every owned value
+through `CheckCommand`'s ShortString parameters, cutting it at 255 characters in
+silence -- and the value check then judged the cut copy.** An owned command now
+goes through `uCFG.ApplyOwnedSetting` (the owned arm, lifted out) with its
+string intact; a non-owned one still goes through `CheckCommand`. Pinned by
+`uTestSettingsModel.Test_TheTailcatAddressIsASecretTrimmedAndBounded`.
+
 ## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
 
 `HAMSCORE VERIFY SERVER` (`Settings.Hamscore.VerifyServer`) and `SCORE VERIFY SERVER`
