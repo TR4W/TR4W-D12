@@ -91,10 +91,26 @@ function Fail([string] $msg)
    exit 1
    }
 
+# A phase header says WHEN it started and how long the previous phase took, so
+# a quiet step (the test runs print nothing until the exe exits) can be told
+# from a hung one by anyone watching the log.
+$script:BuildStart = Get-Date
+$script:PhaseStart = $script:BuildStart
+$script:PhaseName  = ''
+
 function Phase([string] $name)
    {
+   $now = Get-Date
+   if ($script:PhaseName -ne '')
+      {
+      $took = $now - $script:PhaseStart
+      Write-Host ("  ({0} took {1:N0}m {2:00}s)" -f $script:PhaseName, [math]::Floor($took.TotalMinutes), $took.Seconds) -ForegroundColor DarkGray
+      }
+   $script:PhaseStart = $now
+   $script:PhaseName  = $name
+   $total = $now - $script:BuildStart
    Write-Host ''
-   Write-Host "=== $name ===" -ForegroundColor Cyan
+   Write-Host ("=== {0} ===  {1:HH:mm:ss}, {2:N0}m {3:00}s into the build" -f $name, $now, [math]::Floor($total.TotalMinutes), $total.Seconds) -ForegroundColor Cyan
    }
 
 # ---------------------------------------------------------------------------
@@ -263,6 +279,8 @@ else
    $testExe = Join-Path $TR4W_DIR 'test\unit\tr4w_unit_tests_fpc.exe'
    if (-not (Test-Path $testExe)) { Fail "unit test binary missing at $testExe" }
 
+   Write-Host '  running the unit tests; this prints nothing until the test exe exits'
+
    Push-Location (Split-Path $testExe -Parent)
    try
       {
@@ -295,6 +313,8 @@ else
    # output directory, so it cannot disturb the normal test build above.
    # -----------------------------------------------------------------------
    Phase 'Unit tests (checked: -gt -gh)'
+   Write-Host '  builds the checked test exe, then runs the whole suite under heaptrc;'
+   Write-Host '  after "BUILD OK" the run prints nothing until it exits (minutes, not seconds)'
 
    & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Checked -Run -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'checked unit tests failed -- app build aborted' }

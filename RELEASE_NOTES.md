@@ -48,7 +48,7 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — November 2026
 
-### 5.0.38 (2026-11-12) - NY4I
+### 5.0.39 (2026-11-12) - NY4I
 
 #### Windows is now 64-bit
 
