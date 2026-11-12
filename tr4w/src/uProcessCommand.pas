@@ -312,7 +312,7 @@ begin
 
         if StringIsAllNumbers(CommandString) then
            begin
-           Val(CommandString, TempInt, Result1);
+           ValChecked(CommandString, TempInt, Result1);
            SetSpeed(TempInt);
            DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
            end
@@ -567,7 +567,7 @@ begin
   (* WROTE A RAW BYTE TO AN LPT DATA PORT, which is gone with the parallel
     port itself (NY4I, 2026-09-13).  The SO2R functions it served are the
     YCCC box's now. *)
-  Val(scFileName, TempByte, r);
+  ValChecked(scFileName, TempByte, r);
   if r <> 0 then Exit;
 end;
 

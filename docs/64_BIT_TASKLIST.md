@@ -1,5 +1,59 @@
 # TR4W Win64 — task list, checked off against the tree
 
+## STATUS 2026-11-12 (latest) -- THE DEFAULT IS NOW x86_64-win64 (issue 299, NY4I: "make the 64 bit version the default now", "I want 32 bit to go away")
+
+**The "Still naming i386" list in the block further down is DONE** (it is kept as history). What the
+flip changed: `Build-App/Server/Convert/Tests/Installer`, `FullBuild`, `Find-Toolchain`, the lint
+helpers and `tr4w.lpi` default to x86_64-win64 (`Get-StagingDir.ps1` names the shipping architecture
+once); the shipping stage is `tr4w\target`, i386 stages under `build-out\dist\i386-win32`;
+`tr4w\target` holds the x64 DLLs and `tr4w\redist\i386-win32` the 32-bit set (hashes checked);
+`full.nsi` with no define is the 64-bit installer (`-x64`), `/DTR4WARCH=i386` the 32-bit one
+(`-x86`); `release.yml` builds and uploads the x64 installer and compiles the 32-bit app as a proof
+step; the corpus, round trip and matrix read `tr4w/test/app-exe.sh`; the GUI suite follows the exe's
+bitness.
+
+Measured on x86_64 (one run each, serial): **unit tests 466,723 passed, 0 failed** (checked build
+`-gt -gh`: same, 0 heaptrc corruption reports, 57 unfreed blocks = the ceiling); `Run-Lints` 57 of 57;
+`tr4w_fpc.exe` 0 errors, range warnings 3, narrowing 1189 (same ceilings as i386); the `-Cpu i386`
+build still 0 errors / 3 / 1189; `Count-LiveMove` 430 (ceiling 430); **corpus 15 passed, 0 failed,
+11 known**; ADIF round trip 8 passed, 0 failed, 6 known; **contest matrix 195 identical, 1 differing
+(POTA, only because the uncommitted `target\TRMASTER.DTA` gained a call named `2A`)**; ADIF validator
+0 compliance errors on all three.
+
+**THE TWO x64-ONLY UNIT FAILURES, ROOT-CAUSED.**
+- `QSONumberAndNameEntry` accepting `99999999999 TOM`: FPC win64's `Val` works in a 64-bit `ValSInt`
+  and does not range-check a base-10 result against a Longint/Cardinal destination. Measured with one
+  source on both targets: `Val('99999999999', L, Code)` is `L = 0, Code = 10` on i386 and
+  `L = 1215752191, Code = 0` on x64. **Byte, Word, SmallInt and ShortInt were never checked on either
+  bitness** (`Val('300', B, Code)` = 44 / 0 on i386 as well). Fixed by `utils_text.ValChecked`
+  (parse to Int64, check the destination's range; overloads take VAR parameters of the exact type, so a
+  type with no overload does not compile). 86 call sites in 21 files converted; the four left are in
+  `uSettingsModel.pas` (held back: another session had it open) and are the one recorded exception in
+  `Lint-BareVal`, which fails the build on any new bare `Val(`. i386 behaviour changes only for the
+  Byte/Word/SmallInt/ShortInt out-of-range inputs that used to wrap silently, and for a `$HEX` literal
+  into a Longint ($FFFFFFFF was -1, now refused; nothing in the tree feeds Val hex).
+- `TLSRefusal`: the 32-bit OpenSSL pair sitting in `test\unit`. `Build-Tests.ps1` now stages the
+  architecture's DLLs itself and fails closed (see below); it passes.
+
+**OPEN, MEASURED, NOT FIXED: THE RTL's `StrToInt`, `StrToIntDef`, `TryStrToInt` HAVE THE SAME HOLE ON
+WIN64** (same probe): `StrToIntDef('99999999999', -9)` is `-9` on i386 and `1215752191` on x64;
+`TryStrToInt` returns True; `StrToInt` does not raise; `2147483648` wraps to `-2147483648`,
+`4294967296` gives 0. About 229 `StrToIntDef`, 12 `TryStrToInt` and 16 `StrToInt` call sites in 65
+files (53 in `logstuff.pas`), running through files the tailcat session holds. Not converted here
+(outside the stated scope); wants an issue, a `StrToIntDefChecked` beside `ValChecked`, and a lint.
+Until then an out-of-range number in an exchange, a config value or an import is accepted truncated
+on x64 where i386 refused it.
+
+**TEST STAGING.** `Build-Tests.ps1` copies the architecture's `redist\` set into `test\unit`, removes
+the other bitness's `libgcc_s_*`, then reads the PE machine word of EVERY `*.dll` there and fails on a
+mismatch or a missing source. **Left in the tree, not mine:** `tr4w\target\tr4w_fpc.exe`,
+`tr4w_laz.exe` and `tr4w-forWWDIGI.exe` and `tr4w\test\unit\tr4w_unit_tests.exe` are old 32-bit
+executables; the three in `target\` now sit beside x64 DLLs and will not load -- delete or move them.
+
+**NOT proven:** nothing from the bench list in `BENCH_QUEUE.md`; the installer has never been
+installed; `release.yml` and `tr4w.lpi` have not been exercised (a `workflow_dispatch` is needed; the
+Verify-toolchain step needs both an x64 and an i386 FPC+Lazarus pair on win-ci).
+
 ## STATUS 2026-11-12 -- THE x64 APP WAS REBUILT AND RUN HEADLESS AND STARTED UNATTENDED (issue 299, step 1)
 
 Measured, not assumed. `Build-App.ps1 -Cpu x86_64 -Os win64` (full, `-B`), then the app's
@@ -46,6 +100,41 @@ starting are still not running a contest.
 block): `FullBuild.ps1 -Cpu x86_64` would have written `target\tr4w.exe` and `Build-App.ps1` would
 then have staged the x64 DLLs INTO `tr4w\target`, overwriting the 32-bit set that the i386 build and
 `full.nsi` read.
+
+## STATUS 2026-11-12 (NY4I's first interactive x64 run, K4 over LAN) -- TWO DEFECTS, BOTH FIXED
+
+- **HamLib was refused: "libhamlib-4.dll is x86 (32-bit) but TR4W is x64".** The lookup took only
+  `DataFilePath`, which on Windows is the WORKING directory; NY4I ran the x64 exe from
+  `build-out\app-x86_64-win64` with the working directory at `tr4w\target`, where the 32-bit copy
+  lives. **THE RULE NOW:** `uHamLibDirect.HamLibCandidates` lists beside the running binary
+  (`uAppPaths.PrivateLibraryDir`) FIRST, then `DataFilePath`, the working directory and PATH;
+  `ResolveHamLibPath` takes the first that exists AND matches this process's PE machine word,
+  passing over the other bitness (and naming it if nothing fits). HamLib's own dependents need no
+  `SetDllDirectory`: `DynLibs.LoadLibrary` is a plain `LoadLibraryW`, and the loader's standard
+  search starts at the application directory, where the chosen copy and its dependents sit. Pinned
+  by six `uTestHamLibIDs` resolver tests over fake PE headers. Nothing else locates a DLL this way:
+  there is no `rigctld` launcher in the tree (`HAMLIB RIGCTLD *` are accepted-and-ignored config
+  names), and SQLite/OpenSSL already load by bare name (application directory first).
+- **Exit took 6 s and LEAKED the K4: `[WaitForPollingThread] TIMED OUT after 6000ms`.** Not the
+  radio, not the network: `LogSubs2.WaitForPollingThreadWithMessages` kept the thread handle in a
+  `TThreadID` and passed it to `MsgWaitForMultipleObjects`' untyped `var pHandles`. FPC declares
+  `TThreadID = DWord` on Windows in BOTH bitnesses but `THandle = QWord` on Win64
+  (`rtl/win/sysosh.inc`), so Win64 read an 8-byte handle out of a 4-byte variable, got
+  `WAIT_FAILED` on every call, and the loop (which tested only `WAIT_OBJECT_0` and `WAIT_TIMEOUT`)
+  spun to the deadline. The poller had exited within ~10 ms. **Measured:** an x64 build of the unit
+  tests failed `Test_ExitInterruptsTheLinkAndFreesPromptly` at 6016 ms with no radio at all; i386
+  passes it, and every one of 34 i386 shutdown waits in NY4I's log was clean. Fixed by waiting on a
+  `THandle` local, and a `WAIT_FAILED` now logs the OS error and finishes on `PollingThreadRunning`
+  instead of spinning (two new `uTestRadioDestructors` tests pin that on every build). The
+  `YCCC` waits already used `array of THandle`; this was the only untyped-`var` handle wait.
+  **The general trap:** a Win32 API that takes handles by untyped `var` or by pointer must be given
+  a `THandle`, never a `TThreadID` -- nothing in the compiler checks it.
+- **The x64 unit-test run needs the x64 `sqlite3.dll` in `tr4w\test\unit`.** `Build-Tests.ps1 -Cpu
+  x86_64` builds, but the test exe then loads the 32-bit `sqlite3.dll` staged there and crashes in
+  `ContestNames`. Measured by swapping the x64 copy in for one run and restoring it. With it, three
+  x64-only failures remain, NOT investigated here: `QSONumberAndNameEntry` accepts
+  `"99999999999 TOM"` (an 11-digit number) on x64, and `TLSRefusal` fails, probably on the 32-bit
+  OpenSSL pair in `test\unit`. **The x64 unit tests belong in the gates before the default flips.**
 
 ## STATUS 2026-11-12 (later) -- PER-ARCHITECTURE STAGING AND A 64-BIT INSTALLER EXIST (issue 299)
 

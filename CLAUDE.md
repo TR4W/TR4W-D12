@@ -107,7 +107,7 @@ NY4I, 2026-09-18:
 > *"I also want to ensure you know that if an issue or feature touches one of the
 > sub agent areas, to involve that agent."*
 
-**This is a routing rule, not a suggestion.** `.claude/agents/` holds fifteen
+**This is a routing rule, not a suggestion.** `.claude/agents/` holds sixteen
 subsystem specialists, each scoped to a real seam in this tree. Before working an
 issue or a feature, identify which areas it touches and involve those agents —
 **plural is the normal case**, because almost nothing here lives in one subsystem.
@@ -129,6 +129,7 @@ issue or a feature, identify which areas it touches and involve those agents —
 | `lcl-ui`           | `src/ui/lcl/` , `MainUnit` , display, colours, Win32-artifact removal |
 | `i18n`             | resourcestrings, the `.po` catalogues, caption visibility             |
 | `build-release`    | the build scripts, lints, CI runners, installer, releases             |
+| `gui-test`         | `tools/gui_test`, the Windows test VM, running cases against a built exe |
 
 **Why it pays here specifically.** Each definition carries the traps of its area
 that no compiler and no lint can catch — the ones this file records at length: a
@@ -189,8 +190,12 @@ minutes), `.\build\Build-Tests.ps1 -Run`, `.\build\Build-Server.ps1`.
 - **`-Incremental` for chasing one defect; a full build before believing any result.** FPC's mtime
   rule cannot see a changed compiler switch, `.inc`, or define flip. A designed form is *two* files
   and FPC only watches the `.pas`, so the script touches a `.pas` whose `.lfm` is newer.
-- Intermediate output goes to `build-out/` at the repo root (gitignored). `FullBuild.ps1` puts the
-  binaries where they ship: `target/tr4w.exe` and `tr4wserver/tr4wserver.exe`.
+- Intermediate output goes to `build-out/` at the repo root (gitignored): a plain
+  `Build-App.ps1` writes `build-out\app-x86_64-win64\tr4w_fpc.exe`, `-Cpu i386` writes
+  `app-i386-win32`. `FullBuild.ps1` puts the binaries where they ship: `target/tr4w.exe` and
+  `tr4wserver/tr4wserver.exe`. **The corpus, the ADIF round trip and the contest matrix take their
+  exe path from ONE file, `tr4w/test/app-exe.sh`** (`TR4W_APP_ARCH=i386-win32` selects the 32-bit
+  build); the GUI suite's default is `tools/gui_test/stage_main_build.DEFAULT_EXE`.
 - **The unit-test exe must live in `tr4w/test/unit/`** — several suites resolve their data from
   `ParamStr(0)`, not the working directory.
 
@@ -212,8 +217,13 @@ do not invent a substitute guard in passing, and do not repeat the retracted cla
 
 ### Building off Windows
 
-**THREE PLATFORMS BUILD FROM THIS TREE**, as of 2026-09-08 — Windows i386, Linux x86_64 and macOS
-aarch64. Anything in this file or in `docs/` that says the port "has not been attempted", or that a
+**THREE PLATFORMS BUILD FROM THIS TREE**, as of 2026-09-08 — Windows, Linux x86_64 and macOS
+aarch64. **Windows is x86_64-win64 since 2026-11-12** (issue 299; NY4I: *"I want 32 bit to go
+away"*): a plain `Build-App.ps1`, `FullBuild.ps1`, `Build-Tests.ps1` and the installer all
+build and ship the 64-bit program, and `tr4w\target` holds the 64-bit DLL set. `-Cpu i386`
+still builds (it stages under `build-out\dist\i386-win32`, never `target`), is proved by the
+release workflow, and is **not shipped** until a 64-bit release has had its bench pass. The
+shipping architecture is named once, in `build\Get-StagingDir.ps1`. Anything in this file or in `docs/` that says the port "has not been attempted", or that a
 Linux compile is blocked on `VC.pas`, is stale: `VC.pas` uses `LCLType`, not `Windows`.
 
 **TO VERIFY A PLATFORM, RUN THE WORKFLOW. DO NOT SSH IN AND BUILD BY HAND.**
@@ -320,8 +330,9 @@ closed if FPC or the LCL is missing.
 ### Lazarus
 
 Open **`tr4w/tr4w.lpi`** with `C:\Lazarus` — **not** the fpcupdeluxe shortcut, which is x86_64-only
-and cannot build a Win32 target at all. The project pins the i386 compiler, since the IDE defaults to
-its own x86_64 one.
+and cannot build a Win32 target at all. The project targets x86_64-win64 (the shipping
+architecture) and finds its compiler and RTL units through the `$(LazarusDir)` macro; that
+wiring is **unverified in the IDE** (the build scripts, not Lazarus, are what is gated).
 
 ### Language variants — being replaced, don't extend
 
@@ -347,6 +358,16 @@ stated here because it grows every commit. Take it from the newest commit messag
 
 Run with `.\tr4w\build\Build-Tests.ps1 -Run`. `FullBuild.ps1` runs them too, **before** it builds
 the app. The exe must land in `tr4w/test/unit/` (several suites resolve data from `ParamStr(0)`).
+They build for the shipping architecture (x86_64) and **stage that architecture's DLLs beside the
+exe themselves** (from `redist\`, failing closed on a missing or wrong-bitness one); a hand-swapped
+`sqlite3.dll` is no longer needed or wanted.
+
+**`System.Val` IS NOT RANGE-CHECKED ON WIN64.** `Val('99999999999', longintVar, code)` gives
+`Code = 0` and a truncated value there and `Code = 10` on i386 (FPC's `ValSInt` is Int64 on Win64);
+Byte/Word/SmallInt/ShortInt were never checked on either. **Every text-to-number conversion with a
+code goes through `utils_text.ValChecked`**, and `Lint-BareVal` fails the build on a bare `Val(`.
+The RTL's `StrToInt`/`StrToIntDef`/`TryStrToInt` have the SAME hole on Win64 and are not wrapped
+yet -- see `docs/64_BIT_TASKLIST.md` before trusting one with untrusted digits.
 
 The test `.lpr` uses `MainUnit`, and the contest pins link `FCONTEST`, `LOGSTUFF`, `PostUnit` and
 `LogEdit`: every contest's parse dispatch, export columns, field list and exchange rules are pinned
@@ -910,11 +931,19 @@ has downloaded. Do not make the corpus read a location a developer can write to.
 **The installer still ships `target/cty.dat` and `target/TRMASTER.DTA`** and `full.nsi` is
 unchanged: those are the shipped tier.
 
-**DLLs:** `libhamlib-4.dll` (+ `libgcc_s_dw2-1.dll`, `libusb-1.0.dll`, `libwinpthread-1.dll`),
-`libeay32.dll` / `ssleay32.dll` (OpenSSL), **`sqlite3.dll` (THE CONTEST LOG — the installer ships
-it; FPC binds SQLite dynamically, so a missing DLL is a run-time failure, not a link error)**, and
-`rigctld.exe`. (`inpout32.dll` is not a dependency: the parallel port was removed 2026-09-13.)
+**DLLs:** `libhamlib-4.dll` (+ the MinGW unwinder `libgcc_s_seh-1.dll`, `libusb-1.0.dll`,
+`libwinpthread-1.dll`), `libeay32.dll` / `ssleay32.dll` (OpenSSL), and **`sqlite3.dll` (THE
+CONTEST LOG — the installer ships it; FPC binds SQLite dynamically, so a missing DLL is a
+run-time failure, not a link error)**. (`inpout32.dll` is not a dependency: the parallel port
+was removed 2026-09-13. `rigctld.exe` is not shipped.)
 See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
+
+**EVERY ARCHITECTURE'S DLL SET LIVES IN `tr4w/redist/<cpu>-<os>/`** (`x86_64-win64`,
+`i386-win32`), because the file names are identical in both bitnesses and only a directory
+keeps them apart. `tr4w\target` holds a COPY of the shipping (x86_64) set so the program runs
+from the tree; the build scripts and `Build-Tests.ps1` stage from `redist\`, never from
+`target\`, and fail on a DLL whose PE machine word is not the target's. `Lint-ArchStaging`
+PE-checks all of them.
 
 **Created at runtime:** `settings/tr4w.json` (the legacy `settings/tr4w.ini` is neither created
 nor read — it is `tr4wconvert`'s input, see

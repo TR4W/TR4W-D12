@@ -126,6 +126,52 @@ function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): 
   and the settings model, so it is not in the unit-test program at all. *)
 function LeadingInt(const s: string): integer;
 
+(* VAL THAT REFUSES WHAT THE DESTINATION CANNOT HOLD -- THE ONLY WAY THIS
+  PROGRAM TURNS TEXT INTO A NUMBER WITH A CODE.  (2026-11-12, issue 299)
+
+  System.Val(s, longintVar, code) IS NOT RANGE-CHECKED ON WIN64.  FPC 3.2.2's
+  fpc_Val_SInt_* work in a ValSInt, which is Longint on i386 and Int64 on
+  Win64 (rtl/inc/sstrings.inc), and for a base-10 string the result is then cut
+  down to the destination with no check.  Measured, same source, both targets:
+
+     Val('99999999999', L, Code)    i386: L = 0, Code = 10
+                                    x64 : L = 1215752191, Code = 0   <- accepted
+
+  So an 11-digit QSO number was a valid QSO number, and the same truncation
+  reaches every Longint and Cardinal destination.  Byte, Word, SmallInt and
+  ShortInt were never checked on EITHER bitness (Val('300', B, Code) gives B = 44
+  and Code = 0 on i386 too).  The RTL's StrToInt, StrToIntDef and TryStrToInt
+  sit on the same routine and have the same hole on Win64 -- see
+  docs/64_BIT_TASKLIST.md; they are not wrapped here.
+
+  THE CONTRACT IS Val's, WITH THE HOLE CLOSED: Code = 0 and Value set on
+  success; otherwise Value = 0 and Code <> 0.  A syntax error reports the
+  position of the bad character exactly as Val does; a number that parses but
+  does not fit reports the position of the character at which the digits first
+  overflow, which is what i386's Val reports for a Longint (10 for
+  '99999999999', 11 for '-2147483649').  Callers compare Code with 0 and must
+  not rely on more than that.
+
+  A destination narrower than 32 bits, or unsigned, refuses a negative number
+  (Val already did for Byte, Word and Cardinal: Code = 2 for '-5').
+
+  A $HEX literal is checked as the NON-NEGATIVE number it spells, so
+  '$FFFFFFFF' is refused for a Longint (i386's Val took it as -1).  Nothing in
+  this tree feeds Val a hex string; the divergence is pinned in uTestUtilsText.
+
+  The float overloads are plain Val, here so that NO call site anywhere uses
+  System.Val and Lint-NarrowVal can hold the count at zero.  Overloads take
+  VAR parameters of the exact type, so a destination type with no overload is
+  a compile error, never a silent binding to the wrong width. *)
+procedure ValChecked(const S: string; var Value: Longint;  var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: Cardinal; var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: Word;     var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: Byte;     var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: SmallInt; var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: ShortInt; var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: Int64;    var Code: integer); overload;
+procedure ValChecked(const S: string; var Value: Double;   var Code: integer); overload;
+
 (* CASE-INSENSITIVE EQUALITY THAT DOES NOT NARROW ITS ARGUMENTS.
 
   SysUtils.SameText takes `string`, and SysUtils is compiled WITHOUT
@@ -779,5 +825,100 @@ begin
      end;
 end;
 
-end.
 
+(* THE ONE RANGE CHECK BEHIND EVERY ValChecked OVERLOAD.  Parses into an Int64
+  (which is exact on both bitnesses), then compares with the destination's
+  bounds.  Wide is 0 unless the result is returned with Code = 0. *)
+function ValWide(const S: string; aLow, aHigh: Int64; var aWide: Int64): integer;
+var
+   c: integer;
+   i: integer;
+   prefix: Int64;
+begin
+   Val(S, aWide, Result);
+   if Result <> 0 then
+      begin
+      aWide := 0;
+      exit;
+      end;
+
+   if (aWide >= aLow) and (aWide <= aHigh) then
+      begin
+      exit;
+      end;
+
+   (* It parsed but does not fit: report the position where the digits first
+     overflow, which is what i386's Val says. A prefix that does not parse
+     (a lone sign, the '$') is skipped. *)
+   Result := Length(S);
+   for i := 1 to Length(S) do
+      begin
+      Val(Copy(S, 1, i), prefix, c);
+      if (c = 0) and ((prefix < aLow) or (prefix > aHigh)) then
+         begin
+         Result := i;
+         break;
+         end;
+      end;
+   aWide := 0;
+end;
+
+procedure ValChecked(const S: string; var Value: Longint; var Code: integer);
+var
+   w: Int64;
+begin
+   Code := ValWide(S, Low(Longint), High(Longint), w);
+   Value := w;
+end;
+
+procedure ValChecked(const S: string; var Value: Cardinal; var Code: integer);
+var
+   w: Int64;
+begin
+   Code := ValWide(S, 0, High(Cardinal), w);
+   Value := w;
+end;
+
+procedure ValChecked(const S: string; var Value: Word; var Code: integer);
+var
+   w: Int64;
+begin
+   Code := ValWide(S, 0, High(Word), w);
+   Value := w;
+end;
+
+procedure ValChecked(const S: string; var Value: Byte; var Code: integer);
+var
+   w: Int64;
+begin
+   Code := ValWide(S, 0, High(Byte), w);
+   Value := w;
+end;
+
+procedure ValChecked(const S: string; var Value: SmallInt; var Code: integer);
+var
+   w: Int64;
+begin
+   Code := ValWide(S, Low(SmallInt), High(SmallInt), w);
+   Value := w;
+end;
+
+procedure ValChecked(const S: string; var Value: ShortInt; var Code: integer);
+var
+   w: Int64;
+begin
+   Code := ValWide(S, Low(ShortInt), High(ShortInt), w);
+   Value := w;
+end;
+
+procedure ValChecked(const S: string; var Value: Int64; var Code: integer);
+begin
+   Val(S, Value, Code);
+end;
+
+procedure ValChecked(const S: string; var Value: Double; var Code: integer);
+begin
+   Val(S, Value, Code);
+end;
+
+end.

@@ -9,6 +9,21 @@ import zipfile
 
 from evidence import file_digest, pe_info
 
+# THE ONE DEFINITION of which app the GUI suite runs by default, and of which guest
+# Python drives it. The shipping app is x86_64-win64 since 2026-11-12 (issue 299),
+# so a plain Build-App.ps1 writes this path. The guest Python MUST match the app's
+# bitness: pywinauto reads the remote common-control structures, and their layout
+# differs between 32 and 64 bit (issue 283).
+DEFAULT_EXE = Path(r"C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe")
+GUEST_PYTHON = {
+   64: r"C:\TR4W-Test\.venv\Scripts\python.exe",
+   32: r"C:\TR4W-Test\.venv-x86\Scripts\python.exe",
+}
+
+
+def guest_python_for(exe):
+   return GUEST_PYTHON[pe_info(exe)["bits"]]
+
 
 def stage(exe, output):
    exe = exe.resolve()
@@ -54,7 +69,7 @@ def stage(exe, output):
 
 def main():
    parser = argparse.ArgumentParser(description=__doc__)
-   parser.add_argument("--exe", type=Path, default=Path(r"C:\tr4w-d12\build-out\app-i386-win32\tr4w_fpc.exe"))
+   parser.add_argument("--exe", type=Path, default=DEFAULT_EXE)
    parser.add_argument("--output", type=Path, default=Path("build-out/bench-ui"))
    args = parser.parse_args()
    metadata = stage(args.exe, args.output)

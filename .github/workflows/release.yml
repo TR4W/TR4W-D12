@@ -45,8 +45,10 @@
 #
 #   * Toolchain paths are DISCOVERED, not configured. tr4w/build/Find-Toolchain.ps1
 #     locates FPC and Lazarus and verifies what actually matters: a compiler
-#     that can TARGET i386-win32 (fpc.exe is only a driver -- the backend is
-#     ppc386/ppcross386), an i386 RTL, and i386 LCL units. FPC_HOME and
+#     that can TARGET x86_64-win64 (the SHIPPING architecture since 2026-11-12,
+#     issue 299), an x86_64 RTL, and x86_64 LCL units paired with that RTL. The
+#     32-bit app is proved to still BUILD by a separate step (-Cpu i386), which
+#     needs ppc386/ppcross386 and i386 units too; it is not shipped. FPC_HOME and
 #     LAZARUS_DIR below pin it explicitly, which is what you want on CI.
 #
 #   * The lints now run as part of the build. They used to live in
@@ -54,10 +56,15 @@
 #     FullBuild.ps1 invokes build/Run-Lints.ps1 explicitly.
 #
 # Runner setup (one-time on the self-hosted win-ci runner):
-#   - FPC able to target i386-win32 (fpc.exe + ppc386/ppcross386 + i386 RTL).
-#     Pin with repo variable FPC_HOME (the directory holding fpc.exe).
-#   - Lazarus WITH LCL units for i386-win32. An x86_64-only install -- the
-#     fpcupdeluxe default -- CANNOT build TR4W. Pin with LAZARUS_DIR.
+#   - FPC able to target x86_64-win64 (shipping) AND i386-win32 (the build-only
+#     proof step): fpc.exe + ppcx64 / ppc386 or ppcross386 + both RTLs. Pin with
+#     repo variable FPC_HOME (the directory holding fpc.exe).
+#   - Lazarus WITH LCL units for x86_64-win64 and i386-win32, each paired with
+#     the RTL of the FPC that builds it. Pin with LAZARUS_DIR.
+#     NOT VERIFIED ON win-ci: nobody has dispatched this workflow since the
+#     default flipped, and `gh variable list` shows no FPC_HOME / LAZARUS_DIR, so
+#     discovery decides. If no x64 pair exists there the Verify toolchain step
+#     below fails first, naming every path tried.
 #   - NSIS (makensis.exe) -- default C:\Program Files (x86)\NSIS. Pin with NSIS_BIN.
 #   - Indy 10 is bundled in tr4w\include; nothing to install.
 #
@@ -192,9 +199,14 @@ jobs:
           # the build then fails to find a compiler -- and so its failure output
           # lists every location tried.
           . "$env:GITHUB_WORKSPACE\tr4w\build\Find-Toolchain.ps1"
-          $tc = Find-Tr4wToolchain -Fpc $env:FPC_HOME -Laz $env:LAZARUS_DIR
+          $tc = Find-Tr4wToolchain -Fpc $env:FPC_HOME -Laz $env:LAZARUS_DIR -Cpu x86_64 -Os win64
           if (-not $tc) {
-            throw "No FPC + Lazarus able to target i386-win32. Set repo variables FPC_HOME / LAZARUS_DIR."
+            throw "No FPC + Lazarus able to target x86_64-win64. Set repo variables FPC_HOME / LAZARUS_DIR."
+          }
+          # The 32-bit app is built (never shipped) as a compile proof below.
+          $tc32 = Find-Tr4wToolchain -Fpc $env:FPC_HOME -Laz $env:LAZARUS_DIR -Cpu i386 -Os win32
+          if (-not $tc32) {
+            throw "No FPC + Lazarus able to target i386-win32 (needed by the build-only 32-bit proof step). Set repo variables FPC_HOME / LAZARUS_DIR."
           }
 
           $makensis = Join-Path $env:NSIS_BIN 'makensis.exe'
@@ -217,6 +229,18 @@ jobs:
           .\FullBuild.ps1 -BuildInstaller
           if ($LASTEXITCODE -ne 0) { throw "FullBuild.ps1 failed with exit code $LASTEXITCODE" }
 
+      # THE 32-BIT APP IS BUILT, NOT SHIPPED (issue 299, 2026-11-12). FullBuild
+      # above produced the x86_64 installer, which is the only Windows artifact.
+      # This keeps -Cpu i386 compiling until a 64-bit release has had its bench
+      # pass; it writes only under build-out\ (Assert-Tr4wShippingPathOnly would
+      # refuse tr4w\target), so nothing it makes can reach the installer.
+      - name: Build 32-bit app (compile proof, not shipped)
+        shell: powershell
+        working-directory: ${{ github.workspace }}\tr4w
+        run: |
+          .\build\Build-App.ps1 -Cpu i386 -Os win32
+          if ($LASTEXITCODE -ne 0) { throw "Build-App.ps1 -Cpu i386 failed with exit code $LASTEXITCODE" }
+
       - name: Locate installer
         id: artifact
         shell: powershell
@@ -229,12 +253,13 @@ jobs:
           # Match THIS version explicitly. A wildcard would happily pick up a
           # stale installer from an earlier version left in the directory and
           # ship it under the new tag.
-          $installer = Get-ChildItem $releaseDir -Filter "tr4w_setup_$version.exe" -File |
+          # The shipping installer is the 64-bit one: tr4w_setup_<v>-x64.exe.
+          $installer = Get-ChildItem $releaseDir -Filter "tr4w_setup_$version-x64.exe" -File |
                        Select-Object -First 1
           if (-not $installer) {
             Write-Host "Contents of ${releaseDir}:"
             Get-ChildItem $releaseDir -File | ForEach-Object { Write-Host "  $($_.Name)" }
-            throw "No installer named tr4w_setup_$version.exe in $releaseDir"
+            throw "No installer named tr4w_setup_$version-x64.exe in $releaseDir"
           }
           Write-Host "Found $($installer.Name) ($($installer.Length) bytes)"
           "release_dir=$releaseDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
@@ -243,7 +268,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tr4w-installer-${{ steps.ver.outputs.version }}
-          path: ${{ steps.artifact.outputs.release_dir }}\tr4w_setup_${{ steps.ver.outputs.version }}.exe
+          path: ${{ steps.artifact.outputs.release_dir }}\tr4w_setup_${{ steps.ver.outputs.version }}-x64.exe
           retention-days: 90
           if-no-files-found: error
 

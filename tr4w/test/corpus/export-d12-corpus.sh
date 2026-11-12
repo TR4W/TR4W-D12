@@ -56,7 +56,8 @@ EXE="tr4w/target/$EXE_NAME"
 #
 # Refusing is the only safe answer: a warning in a 30-line pass list is a
 # warning nobody reads.
-BUILD_OUT="build-out/app-i386-win32/tr4w_fpc.exe"
+. "$(dirname "${BASH_SOURCE[0]}")/../app-exe.sh"
+BUILD_OUT="$TR4W_APP_EXE_REL"
 if [ -f "$BUILD_OUT" ] && [ -f "$EXE" ] && [ "$BUILD_OUT" -nt "$EXE" ]; then
    echo "corpus: REFUSING TO RUN -- $EXE is older than $BUILD_OUT." >&2
    echo "        The corpus would measure the previous build and report PASS" >&2

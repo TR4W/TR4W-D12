@@ -4,23 +4,24 @@
 # own against a STAGE directory that already holds the binaries -- which is how an
 # installer can be built to a scratch directory without touching tr4w\target.
 #
-#   .\Build-Installer.ps1 -Version 5.0.37                       # i386, as FullBuild does
-#   .\Build-Installer.ps1 -Version 5.0.37 -Cpu x86_64 -Os win64 # 64-bit installer
-#   .\Build-Installer.ps1 -Version 5.0.37 -Cpu x86_64 -Os win64 -StageDir <dir> -OutDir <scratch>
+#   .\Build-Installer.ps1 -Version 5.0.37                       # 64-bit (shipping), as FullBuild does
+#   .\Build-Installer.ps1 -Version 5.0.37 -StageDir <dir> -OutDir <scratch>   # 64-bit from a scratch stage
+#   .\Build-Installer.ps1 -Version 5.0.37 -Cpu i386 -Os win32   # 32-bit: built, NOT shipped
 #
-# THE i386 INSTALLER IS BUILT EXACTLY AS BEFORE: no architecture define is passed,
-# so full.nsi reads tr4w\target and tr4w\tr4wserver and writes
-# build\release\tr4w_setup_<version>.exe. Only a non-i386 target adds
-# /DTR4WARCH and /DTR4WSTAGE.
+# THE SHIPPING (x86_64) INSTALLER passes no architecture define, so full.nsi reads
+# tr4w\target and tr4w\tr4wserver and writes build\release\tr4w_setup_<version>-x64.exe.
+# Any other target adds /DTR4WARCH and /DTR4WSTAGE (its own stage, never target\).
 #
 # Reads only. Never runs the installer it builds.
 
 param(
    [Parameter(Mandatory = $true)][string] $Version,
-   [string] $Cpu = 'i386',
-   [string] $Os  = 'win32',
+   # Empty = the shipping architecture (Get-StagingDir.ps1).
+   [string] $Cpu = '',
+   [string] $Os  = '',
    # Where this architecture's exe, DLLs and tr4wserver.exe were staged. Empty =
-   # Get-Tr4wStageDir's answer. Ignored for i386-win32 (full.nsi reads target\).
+   # Get-Tr4wStageDir's answer. For the shipping target, empty means full.nsi
+   # reads target\ itself; a value builds from that scratch stage instead.
    [string] $StageDir = '',
    # Empty = the script's own OutFile (tr4w\build\release\). Set it to build
    # somewhere else, e.g. a scratch directory.
@@ -33,6 +34,10 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+
+$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
+$Cpu = $resolved.Cpu
+$Os  = $resolved.Os
 
 $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $nsi      = Join-Path $PSScriptRoot 'full.nsi'
@@ -79,17 +84,20 @@ else
    Write-Host "  symbols  : bundled (tr4w.dbg) -- testing build, pass -ExcludeSymbols for a public release"
    }
 
-$is386 = Test-Tr4wIsI386Win32 -Cpu $Cpu -Os $Os
-$suffix = ''
+$isShipping = Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os
+$suffix = '-x64'
 
-if (-not $is386)
+if ((-not $isShipping) -and ($Cpu -ne 'i386'))
    {
-   if ($Cpu -ne 'x86_64')
-      {
-      Write-Host "no installer is defined for $Cpu-$Os (only i386-win32 and x86_64-win64)" -ForegroundColor Red
-      exit 1
-      }
+   Write-Host "no installer is defined for $Cpu-$Os (only x86_64-win64, shipping, and i386-win32)" -ForegroundColor Red
+   exit 1
+   }
 
+if ((-not $isShipping) -or ($StageDir -ne ''))
+   {
+   # A stage is passed to full.nsi: always for the 32-bit installer (it has no
+   # other source), and for a scratch 64-bit one. The shipping installer with no
+   # -StageDir passes nothing and full.nsi reads tr4w\target itself.
    if ($StageDir -eq '') { $StageDir = Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os }
    $StageDir = Get-Tr4wFullPath $StageDir
    if (-not (Test-Path -LiteralPath $StageDir))
@@ -98,11 +106,11 @@ if (-not $is386)
       exit 1
       }
 
-   # THE INSTALLER MUST NOT BE ASSEMBLED FROM THE 32-BIT FILES. A stage that is
-   # really tr4w\target would bundle the i386 exe into a 64-bit installer.
+   # THE 32-BIT INSTALLER MUST NOT BE ASSEMBLED FROM THE 64-BIT FILES. A stage
+   # that is really tr4w\target would bundle the x64 exe into a 32-bit installer.
    try
       {
-      Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $StageDir -What 'installer payload'
+      Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $StageDir -What 'installer payload'
       }
    catch
       {
@@ -112,9 +120,9 @@ if (-not $is386)
 
    $nsisArgs += "/DTR4WARCH=$Cpu"
    $nsisArgs += "/DTR4WSTAGE=$StageDir"
-   $suffix = '-x64'
    Write-Host "  stage    : $StageDir"
    }
+if ($Cpu -eq 'i386') { $suffix = '-x86' }
 
 # /XOutFile AFTER the script name overrides the script's own OutFile, so the
 # script keeps one name for each architecture and a scratch build can go

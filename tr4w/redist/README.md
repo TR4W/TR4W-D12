@@ -21,36 +21,50 @@ machine word and says which architecture it actually found
 (`DescribePEArchitecture`, `DiagnoseSQLiteLoad`) precisely because the
 operating system's own message points the wrong way.
 
-## What is here
+## What is here (2026-11-12: the default flipped to 64-bit, issue 299)
 
-| | |
-|---|---|
-| `x86_64-win64/sqlite3.dll` | SQLite **3.53.4**, x86_64. The SAME VERSION as the 32-bit copy in `tr4w/target/` — deliberately, so the eventual 64-bit build changes bitness and nothing else |
-| `x86_64-win64/sqlite3.def` | shipped beside it in sqlite.org's zip; kept with it |
+| directory | holds | PE machine |
+|---|---|---|
+| `x86_64-win64/` | `libeay32`, `ssleay32` (OpenSSL 1.0.2), `sqlite3` (3.53.4) + `sqlite3.def`, `libhamlib-4`, `libusb-1.0`, `libwinpthread-1`, **`libgcc_s_seh-1`** (the x64 unwinder) | `0x8664` |
+| `i386-win32/` | the same set with **`libgcc_s_dw2-1`** in place of the seh unwinder. Moved here from `tr4w/target/` on the flip; byte-identical to what `target/` held (sha256 checked) | `0x014C` |
 
-## What is NOT here, and why
+**`tr4w/target/` holds a COPY of the shipping (x86_64) set**, so the program runs from the
+tree and `full.nsi` finds the DLLs where it always did. It is NOT a source: every build script
+and `Build-Tests.ps1` stage from the architecture's own `redist\` directory, and
+`Lint-ArchStaging` PE-checks every DLL in `target\` and both `redist\` directories against the
+directory's architecture (floor 12). After updating a DLL here, copy the x64 one to `target\`
+too.
 
-**The seven 32-bit runtime DLLs still live in `tr4w/target/`**, which is the
-i386 program directory as well as the staging area. They are not moved here,
-because moving them would touch `full.nsi`, `Build-Tests.ps1`, the AppImage
-script and `docs/UPDATING_RUNTIME_DLLS.md`. The x64 build now exists (see
-below), and the i386 build was deliberately left reading `target\` so the
-installer for it is byte-for-byte what it was. **Move them when the default
-flips to 64-bit and 32-bit is retired** -- then `target\` stops being an
-architecture's private directory.
+**HamLib 32-bit copies.** The 32-bit `libhamlib-4.dll` is `i386-win32/libhamlib-4.dll` now (it
+had been renamed `libhamlib-4.dll.w32` in `target\` by NY4I's approval). A 64-bit exe must not
+be able to pick up a 32-bit HamLib: `uHamLibDirect.ResolveHamLibPath` already passes over a
+copy of the other bitness, and the lint refuses a stray `libhamlib*` under `target\`. Any
+32-bit HamLib found elsewhere is renamed `.w32` or kept under `i386-win32\`.
 
-## What consumes this (issue 299, 2026-11-12)
+## What consumes this
 
-`Build-App.ps1 -Cpu x86_64 -Os win64` copies this directory's DLLs beside the
-exe it links. **That exe is staged under `build-out\dist\x86_64-win64\`, never
-in `tr4w\target`**: `build\Get-StagingDir.ps1` holds the rule and
-`Assert-Tr4wNotI386Path` refuses an x64 build pointed at `tr4w\target` or
-`tr4w\tr4wserver`; `Lint-ArchStaging` pins it. `FullBuild.ps1 -Cpu x86_64`
-stages the app, `tr4wserver.exe` and `tr4wconvert.exe` there too, and
-`full.nsi /DTR4WARCH=x86_64` (via `build\Build-Installer.ps1`) builds the
-64-bit installer from that stage -- which is why the x64 DLL set, with
-`libgcc_s_seh-1.dll` in place of `libgcc_s_dw2-1.dll`, must be complete here.
-Do not add a copy step that stages an x64 DLL into an i386 `target/`.
+`Build-App.ps1` copies the target architecture's directory beside the exe it links; it
+requires the six fixed names plus one `libgcc_s_*.dll`, validates every PE machine word
+**before** staging any of them (a rejected DLL is never left beside the binary), and removes a
+`libgcc_s_*.dll` of the other bitness already sitting there. `Build-Tests.ps1` does the same
+for the unit-test exe in `test\unit\` and then scans every `*.dll` there. The shipping
+architecture's exe stages into `tr4w\target`; the 32-bit build (`-Cpu i386`) stages under
+`build-out\dist\i386-win32\`, never in `target`: `build\Get-StagingDir.ps1` holds the rule and
+`Assert-Tr4wShippingPathOnly` refuses a 32-bit build pointed at `tr4w\target` or
+`tr4w\tr4wserver`; `Lint-ArchStaging` pins it. `full.nsi` (no define) builds the 64-bit
+installer from `target\`; `/DTR4WARCH=i386 /DTR4WSTAGE=<dir>` builds the 32-bit one from a stage.
+
+## How the program finds them at run time (2026-11-12)
+
+**Beside the running exe first, whatever the working directory is.** SQLite
+and OpenSSL are loaded by bare name, and Windows searches the application
+directory before anything else. HamLib is located by TR4W itself
+(`uHamLibDirect.HamLibCandidates`): beside the exe, then the shipped-data
+location (the working directory on Windows), then PATH -- and a copy of the
+**other** bitness is passed over, never loaded. HamLib's own dependents
+(`libgcc_s_*`, `libusb-1.0`, `libwinpthread-1`) resolve the same way, from the
+exe's directory, so they must be staged there with it -- which `Build-App.ps1`
+does.
 
 ## Adding to it
 
@@ -63,4 +77,4 @@ Follow `docs/UPDATING_RUNTIME_DLLS.md`. Two extra obligations here:
    one step means a failure has two candidate causes.
 
 `*.dll` is gitignored tree-wide, so these are added with `git add -f`, the same
-way `tr4w/target/`'s are.
+way `tr4w/target/`'s are (`git add -f tr4w/redist/i386-win32` after the move).

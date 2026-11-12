@@ -75,8 +75,8 @@ function Find-Tr4wToolchain
    param(
       [string] $Fpc = '',
       [string] $Laz = '',
-      [string] $Cpu = 'i386',
-      [string] $Os  = 'win32',
+      [string] $Cpu = 'x86_64',
+      [string] $Os  = 'win64',
       [switch] $Quiet
    )
 

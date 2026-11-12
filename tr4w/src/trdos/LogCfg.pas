@@ -879,7 +879,7 @@ begin
          if StringIsAllNumbers(ParamStr(ParameterCount + 2)) then
             begin
             TempString := ParamStr(ParameterCount + 2);
-            Val(TempString, PacketInputFileDelay, Result);
+            ValChecked(TempString, PacketInputFileDelay, Result);
             end;
          end;
 

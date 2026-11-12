@@ -27,7 +27,8 @@ set -u
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 TARGET="$REPO_ROOT/tr4w/target"
-EXE_SRC="$REPO_ROOT/build-out/app-i386-win32/tr4w_fpc.exe"
+. "$(dirname "${BASH_SOURCE[0]}")/../app-exe.sh"
+EXE_SRC="$REPO_ROOT/$TR4W_APP_EXE_REL"
 EXE="rescore-run.exe"
 WORK="rescoretest"
 

@@ -56,6 +56,15 @@ unit uTestRadioDestructors;
     ShutDownRadiosForExit, ExitProgram's radio step.  It kept its own copy of
     the stop sequence (3 s wait, answer ignored, no InterruptLink), so the
     first must now be freed promptly and the second leaked with one ERROR.
+  - Test_WaitThatCannotWait* (2026-11-12) -- WaitForPollingThreadWithMessages
+    handed a handle Windows cannot wait on.  On Win64 the shipped wait passed
+    a 4-byte TThreadID where the API reads an 8-byte HANDLE, got WAIT_FAILED
+    on every call, spun the main thread to the deadline and reported a
+    TIMEOUT -- leaking a K4 whose poller had exited (NY4I's first x64 exit;
+    Test_ExitInterruptsTheLinkAndFreesPromptly took 6016 ms in an x64 test
+    build).  The width itself cannot be shown on i386, where the two types
+    are one size; what these pin on EVERY build is the answer to a failed
+    wait: finish on PollingThreadRunning, inside the budget, rather than spin.
 *)
 
 interface
@@ -160,11 +169,16 @@ type
       procedure Test_ShutDownLeaksARadioWhosePollerWillNotStop;
       procedure Test_ExitInterruptsTheLinkAndFreesPromptly;
       procedure Test_ExitLeaksARadioWhosePollerWillNotStop;
+      procedure Test_WaitThatCannotWait_FinishesOnTheFlagPromptly;
+      procedure Test_WaitThatCannotWait_StillTimesOutOnARunningThread;
    public
       procedure RunAllTests; override;
    end;
 
 implementation
+
+uses
+   LogSubs2;   // WaitForPollingThreadWithMessages -- the x64 exit, 2026-11-12
 
 var
    gProbeDestroyed: Boolean = False;
@@ -873,6 +887,85 @@ begin
    gPollRig.PollingStopRequested := False;
 end;
 
+(* ---- 2026-11-12: a wait that cannot wait ------------------------------------ *)
+
+const
+   (* NO PROCESS CAN HOLD THIS HANDLE.  A process's handle table stops at
+     2^24 entries and a handle value is four times its index, so the largest
+     value Windows can issue is below $4000000.  Off Windows the wait never
+     looks at the handle -- it only has to be non-zero, so the wait is made. *)
+   UNWAITABLE_HANDLE = $0FFFFFFC;
+
+procedure TRadioDestructorTests.Test_WaitThatCannotWait_FinishesOnTheFlagPromptly;
+const
+   BUDGET_MS = 3000;
+   PROMPT_MS = 1000;
+var
+   savedHandle: TThreadID;
+   savedRunning: Boolean;
+   started: QWord;
+   elapsed: QWord;
+   stopped: Boolean;
+begin
+   BeginTest('a polling-thread wait whose handle cannot be waited on finishes on the running flag, promptly');
+
+   savedHandle := gPollRig.tRadioInterfaceThreadHandle;
+   savedRunning := gPollRig.PollingThreadRunning;
+   try
+      gPollRig.tRadioInterfaceThreadHandle := TThreadID(UNWAITABLE_HANDLE);
+      gPollRig.PollingThreadRunning := False;   // the thread has already left
+
+      started := GetTickCount64;
+      stopped := WaitForPollingThreadWithMessages(@gPollRig, BUDGET_MS);
+      elapsed := GetTickCount64 - started;
+
+      CheckTrue(stopped,
+                'the thread had exited, so the wait must say it stopped -- a False here leaks a ' +
+                'radio whose poller is gone (the x64 K4 exit, 2026-11-12)');
+      CheckTrue(elapsed < PROMPT_MS,
+                Format('the wait took %d ms of its %d ms budget for a thread that had already exited -- ' +
+                       'a FAILED wait must fall back to the flag, not spin to the deadline',
+                       [elapsed, BUDGET_MS]));
+   finally
+      gPollRig.tRadioInterfaceThreadHandle := savedHandle;
+      gPollRig.PollingThreadRunning := savedRunning;
+   end;
+end;
+
+procedure TRadioDestructorTests.Test_WaitThatCannotWait_StillTimesOutOnARunningThread;
+const
+   BUDGET_MS = 300;
+   BOUND_MS = 2000;
+var
+   savedHandle: TThreadID;
+   savedRunning: Boolean;
+   started: QWord;
+   elapsed: QWord;
+   stopped: Boolean;
+begin
+   BeginTest('a polling-thread wait whose handle cannot be waited on still gives up on a running thread, within its budget');
+
+   savedHandle := gPollRig.tRadioInterfaceThreadHandle;
+   savedRunning := gPollRig.PollingThreadRunning;
+   try
+      gPollRig.tRadioInterfaceThreadHandle := TThreadID(UNWAITABLE_HANDLE);
+      gPollRig.PollingThreadRunning := True;    // as if still inside a call
+
+      started := GetTickCount64;
+      stopped := WaitForPollingThreadWithMessages(@gPollRig, BUDGET_MS);
+      elapsed := GetTickCount64 - started;
+
+      CheckFalse(stopped,
+                 'the thread is still running: the wait must say so, or the shutdown frees a ' +
+                 'radio under it (issue #104)');
+      CheckTrue(elapsed < BOUND_MS,
+                Format('the wait took %d ms on a %d ms budget', [elapsed, BUDGET_MS]));
+   finally
+      gPollRig.tRadioInterfaceThreadHandle := savedHandle;
+      gPollRig.PollingThreadRunning := savedRunning;
+   end;
+end;
+
 procedure TRadioDestructorTests.RunAllTests;
 begin
    Test_FreeThroughBaseReferenceRunsTheDestructor;
@@ -882,6 +975,8 @@ begin
    Test_EveryRegisteredRadio_StopAndUnkeyWithNoLink_LogNoError;
    Test_FreeRunningCIVSendThread;
    Test_FreeNeverStartedCIVSendThread;
+   Test_WaitThatCannotWait_FinishesOnTheFlagPromptly;
+   Test_WaitThatCannotWait_StillTimesOutOnARunningThread;
 
    gPollBlocked := TEvent.Create(nil, True, False, '');
    gPollRelease := TEvent.Create(nil, True, False, '');

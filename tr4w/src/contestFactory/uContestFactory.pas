@@ -146,6 +146,7 @@ procedure AdoptLegacyLicenseYear(aKind: TReceivedYearKind);
 implementation
 
 uses
+   utils_text,
    SysUtils,
    (* THE ONE UNIT IN THE FACTORY THAT TOUCHES THE PROGRAM'S GLOBALS.
 
@@ -202,7 +203,7 @@ var
 begin
    if Settings.My.HasContestOverride(sfZone) or Settings.My.ZoneWasSet then
       begin
-      Val(Settings.My.ResolvedZone, Result, code);
+      ValChecked(Settings.My.ResolvedZone, Result, code);
       if code <> 0 then
          begin
          Result := 0;
@@ -387,7 +388,7 @@ begin
 
    (* MY ZONE, RESOLVED -- design 7.12. In the contest's zone mode when
       unstated; see TStationContext.MyZone. *)
-   Val(Settings.My.ResolvedZone, Result.MyZone, code);
+   ValChecked(Settings.My.ResolvedZone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.ResolvedZone <> '');
    if not Result.MyZoneValid then
       begin

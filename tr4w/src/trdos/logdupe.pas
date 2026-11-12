@@ -1786,7 +1786,7 @@ function DupeAndMultSheet.ReadInBinFiles {(JustDoIt: boolean)}: boolean;
          begin
          Exit;
          end;
-      Val(UTF8Decode(text), v, code);
+      ValChecked(UTF8Decode(text), v, code);
       if code = 0 then
          begin
          aValue := v;

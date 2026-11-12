@@ -713,12 +713,12 @@ begin
 
             cpLatitude:
               begin
-                Val(string(AnsiStringFromBytes(raw, s, l)), Lat, code);   // Issue #1033: was TF.ValExt (asm); RTL Val is equivalent for cty.dat's well-formed decimals
+                ValChecked(string(AnsiStringFromBytes(raw, s, l)), Lat, code);   // Issue #1033: was TF.ValExt (asm); RTL Val is equivalent for cty.dat's well-formed decimals
               end;
             cpLongitude:
               begin
 
-                Val(string(AnsiStringFromBytes(raw, s, l)), Lon, code);   // Issue #1033: was TF.ValExt (asm)
+                ValChecked(string(AnsiStringFromBytes(raw, s, l)), Lon, code);   // Issue #1033: was TF.ValExt (asm)
                 if code = 0 then
                    begin
                    r.DefaultGrid := ConvertLatLonToGrid(Lat, Lon);

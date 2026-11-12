@@ -131,6 +131,26 @@ record sizes are unchanged. What only a real run can judge:
   QSO's year out of the zone column; **5.0.37 cannot open it afterwards** --
   keep a copy before trying. A log of any other contest gets an empty column.
 
+## Added 2026-11-12 -- THE DEFAULT IS NOW 64-BIT: WHAT TO CHECK AT THE FLIP (issue 299)
+
+You ruled the 64-bit build the default and the 32-bit DLLs out of `tr4w\target`. The tree now
+builds, tests and packages x86_64: `FullBuild.ps1` stages `tr4w\target\tr4w.exe`, and `tr4w\target`
+holds the x64 DLLs (the 32-bit set is in `tr4w\redist\i386-win32`, including the HamLib that was
+`libhamlib-4.dll.w32`). Nothing below has been run by anyone:
+
+- [ ] **Launch from `tr4w\target`**: after a `FullBuild.ps1`, `tr4w\target\tr4w.exe` opens your contest
+      log with no error box and `tr4w.log` says `HamLib DLL = ...\target\libhamlib-4.dll, x64 (64-bit)`.
+      (A 32-bit `libhamlib-4.dll` is no longer anywhere a 64-bit exe looks.)
+- [ ] **Install the x64 installer OVER a 32-bit install** (a test machine/VM, as in the installer item
+      below): `tr4w_setup_<version>-x64.exe` is now THE installer the release builds; the 32-bit one is no
+      longer built by the release.
+- [ ] **A HamLib radio** loads the 64-bit `libhamlib-4.dll` from the install folder and connects.
+- [ ] **K4 (or any LAN radio) exit time**: exit is prompt and `tr4w.log` shows
+      `[WaitForPollingThread] Thread exited cleanly` -- the fix is in, the unit tests pin it, a real
+      radio has not shown it since.
+- [ ] **A big QSO number**: type `99999999999 TOM` as a number-and-name exchange; it must be refused (it is
+      now, in the unit tests and the corpus, on x64 -- `Val` was not range-checked on Win64).
+
 ## Added 2026-11-12 -- THE 64-BIT (x64) WINDOWS BUILD (issue 299)
 
 NY4I wants 32-bit Windows retired. Step 1 (rebuild, headless export identical to i386, GUI
@@ -171,6 +191,21 @@ copy of your station settings, not the live ones, for the first pass.
       Start Menu belong to whoever elevates (true of the 32-bit installer too).
 - [ ] Start-up time: the first x64 start took 11.5 s to the main window against 2.7 s for i386, almost all of
       it a `DdeConnect` to DXLab Pathfinder -- is that repeatable on your PC?
+- [ ] **Exit with the K4 connected is prompt (2026-11-12).** Your first x64 exit took 6 s and logged
+      `[WaitForPollingThread] TIMED OUT after 6000ms ... deliberately LEAKED`. The poller had in fact
+      exited in milliseconds: the shutdown wait passed a 4-byte thread id where Win64 reads an 8-byte
+      handle, so every wait FAILED and it spun to the deadline (reproduced in an x64 unit-test build
+      with no radio: 6016 ms; 5/5 checks pass after the fix). Expected now: exit closes the window in
+      well under a second, and `tr4w.log` shows `[WaitForPollingThread] Thread exited cleanly` then
+      `Freeing radio object` right after `Stopping polling thread`. A line `the wait on the polling
+      thread FAILED (error n)` would mean the wait still cannot see the thread -- report it.
+- [ ] **HamLib loads from beside the x64 exe (2026-11-12).** Start the x64 exe with the working
+      directory at `tr4w\target` (as you did). The startup line must read
+      `HamLib DLL = C:\tr4w-d12\build-out\app-x86_64-win64\libhamlib-4.dll, x64 (64-bit), not loaded...`
+      -- the copy beside the exe, whatever the working directory holds. Then select a HamLib radio and
+      confirm it connects (the first real load of the 64-bit DLL and its `libgcc_s_seh-1`/`libusb`/
+      `libwinpthread` dependents). Also start the 32-bit build-out exe from `tr4w\target`: it must
+      name `build-out\app-i386-win32\libhamlib-4.dll`.
 
 ## Added 2026-11-11 -- EUROPEAN HF CHAMPIONSHIP AND KVP SAY "YEAR", NOT "ZONE"
 

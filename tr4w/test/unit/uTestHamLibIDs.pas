@@ -48,10 +48,16 @@ unit uTestHamLibIDs;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uRadioRegistry, VC, uHamLibDirect;
+   SysUtils, uTR4WTestFramework, uRadioRegistry, VC, uHamLibDirect,
+   uAppPaths;   // PrivateLibraryDir -- where the candidate list must start
 
 type
    THamLibIDTests = class(TTestCase)
+   private
+      FScratch: string;
+      procedure MakeScratch;
+      procedure RemoveScratch;
+      function  FakeLibrary(const aSubDir: string; aMachine: Word): string;
    protected
       procedure CheckID(model: InterfacedRadioType; expected: Integer;
                         const label_: string);
@@ -60,6 +66,13 @@ type
       procedure Test_UnregisteredIsZero;
       procedure Test_IcomCIVAddresses;
       procedure Test_ScalarWidthsMatchTheCABI;
+      (* WHICH libhamlib-4.dll -- 2026-11-12, the x64 build refusing HamLib *)
+      procedure Test_ResolverTakesTheBinarysOwnCopyFirst;
+      procedure Test_ResolverPassesOverTheOtherBitness;
+      procedure Test_ResolverReportsAWrongBitnessCopyWhenNothingFits;
+      procedure Test_ResolverFindsNothingWhenThereIsNothing;
+      procedure Test_ResolverAcceptsAHeaderItCannotRead;
+      procedure Test_CandidatesStartBesideTheBinaryAndNeverRepeat;
    public
       procedure RunAllTests; override;
    end;
@@ -195,6 +208,210 @@ begin
 {$ENDIF}
 end;
 
+(* ---- which copy of the library: the resolver ---------------------------------
+
+  NY4I ran the 64-bit tr4w_fpc.exe out of build-out\app-x86_64-win64 with the
+  working directory at tr4w\target.  The x64 DLL was staged beside the exe; the
+  lookup looked only in the working directory, found the 32-bit copy there and
+  refused HamLib.  These pin the rule that replaced it, over FAKE libraries:
+  a file of 0x40 bytes of DOS header, e_lfanew = $40, then "PE"#0#0 and the
+  machine word -- everything PEMachineOf reads, and nothing a loader could
+  load.  Machine words are the PE constants: $014C x86, $8664 x64. *)
+
+const
+   MACHINE_X86 = $014C;
+   MACHINE_X64 = $8664;
+
+procedure THamLibIDTests.MakeScratch;
+begin
+   FScratch := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+               Format('tr4w_hamlibresolve_%d_%d', [GetProcessID, GetTickCount64 mod 100000]);
+   ForceDirectories(FScratch);
+end;
+
+procedure THamLibIDTests.RemoveScratch;
+var
+   sr: TSearchRec;
+   dirs: array of string;
+   i: Integer;
+begin
+   (* Two levels, files only in the subdirectories this suite made. *)
+   dirs := nil;
+   if FindFirst(IncludeTrailingPathDelimiter(FScratch) + '*', faDirectory, sr) = 0 then
+      begin
+      repeat
+         if (sr.Name <> '.') and (sr.Name <> '..') and ((sr.Attr and faDirectory) <> 0) then
+            begin
+            SetLength(dirs, Length(dirs) + 1);
+            dirs[High(dirs)] := IncludeTrailingPathDelimiter(FScratch) + sr.Name;
+            end;
+      until FindNext(sr) <> 0;
+      FindClose(sr);
+      end;
+   for i := 0 to High(dirs) do
+      begin
+      DeleteFile(IncludeTrailingPathDelimiter(dirs[i]) + HAMLIB_LIB);
+      RemoveDir(dirs[i]);
+      end;
+   RemoveDir(FScratch);
+end;
+
+(* aMachine = 0 writes a file that is not PE at all -- a .so or a .dylib, as far
+  as the header probe is concerned. *)
+function THamLibIDTests.FakeLibrary(const aSubDir: string; aMachine: Word): string;
+var
+   bytes: array[0..$47] of Byte;
+   h: THandle;
+   i: Integer;
+begin
+   ForceDirectories(IncludeTrailingPathDelimiter(FScratch) + aSubDir);
+   Result := IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(FScratch) + aSubDir) + HAMLIB_LIB;
+   for i := Low(bytes) to High(bytes) do
+      begin
+      bytes[i] := 0;
+      end;
+   if aMachine <> 0 then
+      begin
+      bytes[0] := Ord('M');
+      bytes[1] := Ord('Z');
+      bytes[$3C] := $40;                  // e_lfanew, little-endian LongInt
+      bytes[$40] := Ord('P');
+      bytes[$41] := Ord('E');
+      bytes[$44] := Lo(aMachine);
+      bytes[$45] := Hi(aMachine);
+      end;
+   h := FileCreate(Result);
+   CheckTrue(h <> THandle(-1), 'precondition: the fake library can be written at ' + Result);
+   if h <> THandle(-1) then
+      begin
+      FileWrite(h, bytes, SizeOf(bytes));
+      FileClose(h);
+      end;
+end;
+
+procedure THamLibIDTests.Test_ResolverTakesTheBinarysOwnCopyFirst;
+var
+   beside, workdir, chosen, rejected: string;
+begin
+   BeginTest('HamLib: the copy beside the binary wins over the working directory''s, for either bitness');
+
+   MakeScratch;
+   try
+      (* NY4I's run: x64 exe in build-out with its x64 DLL; working dir target\ with x86. *)
+      beside  := FakeLibrary('exe64', MACHINE_X64);
+      workdir := FakeLibrary('target', MACHINE_X86);
+      chosen := ResolveHamLibPath([beside, workdir], MACHINE_X64, rejected);
+      CheckEquals(beside, chosen, 'a 64-bit TR4W takes the 64-bit copy beside it');
+
+      (* And the 32-bit exe in build-out, run from target\: both are x86, the binary's wins. *)
+      beside := FakeLibrary('exe32', MACHINE_X86);
+      chosen := ResolveHamLibPath([beside, workdir], MACHINE_X86, rejected);
+      CheckEquals(beside, chosen, 'a 32-bit TR4W takes the copy beside it first');
+      CheckEquals('', rejected, 'nothing was rejected on the way');
+   finally
+      RemoveScratch;
+   end;
+end;
+
+procedure THamLibIDTests.Test_ResolverPassesOverTheOtherBitness;
+var
+   wrong, right, chosen, rejected: string;
+begin
+   BeginTest('HamLib: a copy of the other bitness is passed over, not chosen, when a matching one follows');
+
+   MakeScratch;
+   try
+      (* The old failure shape: the first place looked holds the 32-bit file. *)
+      wrong := FakeLibrary('first', MACHINE_X86);
+      right := FakeLibrary('later', MACHINE_X64);
+      chosen := ResolveHamLibPath([wrong, right], MACHINE_X64, rejected);
+      CheckEquals(right, chosen, 'the 64-bit copy further down the list is used');
+      CheckEquals(wrong, rejected, 'and the 32-bit one it skipped is named');
+
+      (* And the WSJT-X case the PE check was written for: 64-bit on PATH, 32-bit TR4W. *)
+      chosen := ResolveHamLibPath([right, wrong], MACHINE_X86, rejected);
+      CheckEquals(wrong, chosen, 'a 32-bit TR4W passes over a 64-bit copy to reach its own');
+   finally
+      RemoveScratch;
+   end;
+end;
+
+procedure THamLibIDTests.Test_ResolverReportsAWrongBitnessCopyWhenNothingFits;
+var
+   only, chosen, rejected: string;
+begin
+   BeginTest('HamLib: with only the other bitness available nothing is chosen, and that file is named');
+
+   MakeScratch;
+   try
+      only := FakeLibrary('target', MACHINE_X86);
+      chosen := ResolveHamLibPath([FScratch + PathDelim + 'nothere' + PathDelim + HAMLIB_LIB, only],
+                                  MACHINE_X64, rejected);
+      CheckEquals('', chosen, 'a 32-bit library is never chosen for a 64-bit TR4W');
+      CheckEquals(only, rejected, 'the file that could not be used is handed back for the report');
+   finally
+      RemoveScratch;
+   end;
+end;
+
+procedure THamLibIDTests.Test_ResolverFindsNothingWhenThereIsNothing;
+var
+   chosen, rejected: string;
+begin
+   BeginTest('HamLib: no copy anywhere is an empty answer, with nothing rejected');
+
+   MakeScratch;
+   try
+      chosen := ResolveHamLibPath([FScratch + PathDelim + 'a' + PathDelim + HAMLIB_LIB, ''],
+                                  MACHINE_X64, rejected);
+      CheckEquals('', chosen, 'nothing chosen');
+      CheckEquals('', rejected, 'nothing rejected');
+   finally
+      RemoveScratch;
+   end;
+end;
+
+procedure THamLibIDTests.Test_ResolverAcceptsAHeaderItCannotRead;
+var
+   notpe, chosen, rejected: string;
+begin
+   BeginTest('HamLib: a file with no PE header (a .so, a .dylib) is accepted -- there is nothing to compare');
+
+   MakeScratch;
+   try
+      notpe := FakeLibrary('unix', 0);
+      chosen := ResolveHamLibPath([notpe], MACHINE_X64, rejected);
+      CheckEquals(notpe, chosen, 'an unreadable header lets the load itself give the verdict');
+   finally
+      RemoveScratch;
+   end;
+end;
+
+procedure THamLibIDTests.Test_CandidatesStartBesideTheBinaryAndNeverRepeat;
+var
+   list: THamLibPathList;
+   i, j: Integer;
+begin
+   BeginTest('HamLib: the program''s candidate list starts beside the binary and names no path twice');
+
+   list := HamLibCandidates;
+   CheckTrue(Length(list) >= 1, 'there is at least one candidate');
+   if Length(list) = 0 then
+      begin
+      Exit;
+      end;
+   CheckTrue(SameFileName(ExpandFileName(IncludeTrailingPathDelimiter(PrivateLibraryDir) + HAMLIB_LIB), list[0]),
+             'the first candidate is PrivateLibraryDir, the binary''s own library folder: ' + list[0]);
+   for i := 0 to High(list) do
+      begin
+      for j := i + 1 to High(list) do
+         begin
+         CheckFalse(SameFileName(list[i], list[j]),
+                    Format('candidate %d repeats candidate %d (%s)', [j, i, list[i]]));
+         end;
+      end;
+end;
+
 procedure THamLibIDTests.RunAllTests;
 begin
    Test_EnumRadiosCarryTheirHamLibID;
@@ -202,6 +419,12 @@ begin
    Test_UnregisteredIsZero;
    Test_IcomCIVAddresses;
    Test_ScalarWidthsMatchTheCABI;
+   Test_ResolverTakesTheBinarysOwnCopyFirst;
+   Test_ResolverPassesOverTheOtherBitness;
+   Test_ResolverReportsAWrongBitnessCopyWhenNothingFits;
+   Test_ResolverFindsNothingWhenThereIsNothing;
+   Test_ResolverAcceptsAHeaderItCannotRead;
+   Test_CandidatesStartBesideTheBinaryAndNeverRepeat;
 end;
 
 end.

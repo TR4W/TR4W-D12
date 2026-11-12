@@ -1026,7 +1026,7 @@ begin
       // which band a line was for.
       if SameText(key, 'BAND MAP CUTOFF FREQUENCY') then
          begin
-         Val(value, freq, err);
+         ValChecked(value, freq, err);
          if err = 0 then
             begin
             CalculateBandMode(freq, band, mode);
@@ -1038,7 +1038,7 @@ begin
          // The 'SSB ' prefix inside the VALUE is what selected phone.
          if Copy(UpperCase(value), 1, 4) = 'SSB ' then
             begin
-            Val(Trim(Copy(value, 5, Length(value))), freq, err);
+            ValChecked(Trim(Copy(value, 5, Length(value))), freq, err);
             if err = 0 then
                begin
                CalculateBandMode(freq, band, mode);
@@ -1047,7 +1047,7 @@ begin
             end
          else
             begin
-            Val(value, freq, err);
+            ValChecked(value, freq, err);
             if err = 0 then
                begin
                CalculateBandMode(freq, band, mode);
@@ -1807,7 +1807,7 @@ var
    var
       code: integer;
    begin
-      Val(aValue, aOut, code);
+      ValChecked(aValue, aOut, code);
       Result := (code = 0) and (aOut >= aMin) and (aOut <= aMax);
       if not Result then
          begin
@@ -1844,7 +1844,7 @@ var
       i, code: integer;
    begin
       Result := False;
-      Val(aValue, aOut, code);
+      ValChecked(aValue, aOut, code);
       if code <> 0 then
          begin
          aOut := 0;

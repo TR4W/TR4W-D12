@@ -1010,6 +1010,7 @@ function TCIRadioUsingServerPort(const aStore: TRadioConfigStore;
 implementation
 
 uses
+   utils_text,
    uSettingsRegistry,   { AllSettings -- the dotted key that names a command
                           section is already registered there }
    uKeychain;           (* the OS vault the network password lives in -- see
@@ -1088,7 +1089,7 @@ begin
    (* Val, not TryStrToInt: SysUtils' integer parsers take an AnsiString in
      FPC 3.2.2, and this unit's strings are UnicodeString -- Val takes it as
      it is, with no narrowing. *)
-   Val(bucketText, bucketRate, code);
+   ValChecked(bucketText, bucketRate, code);
    if code = 0 then
       begin
       Result := ClampFrequencyPollRate(bucketRate);

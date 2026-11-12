@@ -111,7 +111,9 @@ embedded in the `.res` are deliberately not hashed.
 
 ## What `Build-App.ps1` stages beside the exe
 
-When the exe is not in `tr4w\target`: the runtime DLLs, `cacert.pem`, and (issue
+The target architecture's runtime DLLs (from `redist\<cpu>-<os>`, PE-checked before any is
+copied; into `tr4w\target` itself only the DLLs are staged), and, when the exe is not in
+`tr4w\target`, `cacert.pem` and (issue
 245) `i18n\help_*.po` into `help\` -- the Preferences tooltips. `uAppPaths.HelpDir`
 finds it when the working directory has no `help\`. Detail in `i18n.md`.
 
@@ -182,18 +184,32 @@ tree number, so it cannot fail open.
 
 ## Per-architecture staging and the 64-bit installer (issue 299, 2026-11-12)
 
-The default is still i386; the plumbing for x86_64 exists and is unrun on a real machine.
+**THE DEFAULT IS x86_64-win64 (flipped 2026-11-12; NY4I: "I want 32 bit to go away")** and it has
+never been run on a real machine. `-Cpu i386` is buildable and not shipped.
 
-- **`build\Get-StagingDir.ps1`** owns where an architecture stages: i386-win32 -> `tr4w\target`
-  (+ `tr4w\tr4wserver\tr4wserver.exe`), unchanged; anything else -> `build-out\dist\<cpu>-<os>\`.
-  `Assert-Tr4wNotI386Path` (called by Build-App/Server/Convert/Installer and FullBuild) throws when a
-  non-i386 build targets `tr4w\target` or `tr4w\tr4wserver` -- the x64 DLLs have the SAME NAMES as the
-  32-bit ones. `Lint-ArchStaging` (in `Run-Lints`) pins it with a fixture. Never weaken it to make an
-  x64 build "land in target".
+- **`build\Get-StagingDir.ps1`** names the shipping architecture ONCE (`$script:Tr4wShippingCpu`/`Os`)
+  and owns where an architecture stages: the shipping one -> `tr4w\target` (+
+  `tr4w\tr4wserver\tr4wserver.exe`); anything else -> `build-out\dist\<cpu>-<os>\`. The scripts take
+  empty `-Cpu`/`-Os` and `Resolve-Tr4wTarget` fills them. `Assert-Tr4wShippingPathOnly` (called by
+  Build-App/Server/Convert/Installer and FullBuild) throws when a NON-shipping build targets
+  `tr4w\target` or `tr4w\tr4wserver` -- the two bitnesses' DLLs have the SAME NAMES. Every
+  architecture's DLLs live in `tr4w\redist\<cpu>-<os>\`; `target\` holds a copy of the shipping set and
+  is never a source. `Lint-ArchStaging` (in `Run-Lints`) pins the guard with a fixture AND PE-checks
+  every DLL in `target\` and both redist directories. Never weaken it to make a 32-bit build "land in
+  target".
+- **`Build-Tests.ps1` stages its own DLLs** from `redist\<cpu>-<os>`, deletes the other bitness's
+  `libgcc_s_*`, then PE-scans every `*.dll` in `test\unit` and FAILS on a mismatch or a missing source.
+- **`Lint-BareVal`** (Run-Lints) holds bare `System.Val` at zero outside `utils_text` (one recorded
+  exception row, uSettingsModel, until that file is free): Val is not range-checked on Win64.
+- **The corpus/roundtrip/matrix runners read ONE definition**, `tr4w/test/app-exe.sh`
+  (`TR4W_APP_ARCH=i386-win32` for the 32-bit exe); the GUI suite's is `stage_main_build.DEFAULT_EXE`.
+- **release.yml**: the Windows job runs `FullBuild.ps1 -BuildInstaller` (x64, artifact
+  `tr4w_setup_<v>-x64.exe`) and then `Build-App.ps1 -Cpu i386` as a build-only proof. Its toolchain
+  check needs BOTH pairs on win-ci; **no `workflow_dispatch` has been run since the flip** -- do one.
 - **`build\Build-Installer.ps1`** is the one makensis caller (FullBuild uses it; `-StageDir`/`-OutDir`
   build an installer from a scratch stage without touching `release\`). It overrides the output with
-  makensis `/XOutFile` AFTER the script name. i386 passes no arch define, so `full.nsi` is its old self:
-  a rebuild is byte-identical (same size and CRC) -- check that again after ANY `full.nsi` edit.
+  makensis `/XOutFile` AFTER the script name. The SHIPPING (x86_64) installer passes no arch define and reads `target`; the 32-bit one passes `/DTR4WARCH=i386 /DTR4WSTAGE=<dir>` (`-x86` suffix). Check that a `full.nsi` edit leaves the shipping installer sane:
+  (the old "byte-identical i386 rebuild" check ended with the flip -- nothing built from the new script has been installed).
 - **`full.nsi /DTR4WARCH=x86_64 /DTR4WSTAGE=<dir>`** -> `tr4w_setup_<v>-x64.exe`: `$PROGRAMFILES64`,
   `SetRegView 64`, aborts on 32-bit Windows, `libgcc_s_seh-1.dll`, arch-neutral data still from
   `..\target`. It does NOT use `InstallDirRegKey` (HKCU\Software\TR4W is shared with the 32-bit
@@ -210,9 +226,9 @@ The default is still i386; the plumbing for x86_64 exists and is unrun on a real
 
 ## Platforms
 
-Windows i386, Linux x86_64 (app + server + tarball), macOS aarch64 (app + server +
-`.app` bundle). x86_64-win64 **compiles and links** — 0 errors, same ceilings —
-and **does not run; nobody has tried.** Compiling is not running.
+Windows x86_64 (since 2026-11-12; i386 builds but is not shipped), Linux x86_64 (app + server + tarball), macOS aarch64 (app + server +
+`.app` bundle). x86_64-win64 compiles, links, passes the unit tests, the corpus and the matrix, and starts —
+and **has not been run for a contest by anyone.** Compiling is not running.
 
 **We do not cross-compile to check**, and a Windows gate is a guess until a
 **native** compiler disagrees — `Lint-LinuxCompile` was retired for exactly that

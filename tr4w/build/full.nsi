@@ -10,32 +10,45 @@
 !endif
 
 ; ---------------------------------------------------------------------------
-; ARCHITECTURE (issue 299).  ABSENT /DTR4WARCH = THE 32-BIT INSTALLER, EXACTLY AS
-; IT WAS: every payload line reads ..\target and ..\tr4wserver.
+; ARCHITECTURE (issue 299, flipped 2026-11-12).  ABSENT /DTR4WARCH = THE 64-BIT
+; INSTALLER, which is the shipping one: the exe, tr4w.dbg, the runtime DLLs,
+; tr4wconvert.exe and cacert.pem are read from ..\target and tr4wserver.exe from
+; ..\tr4wserver, which is where the shipping (x86_64-win64) build stages them
+; (build\Get-StagingDir.ps1).
 ;
-; /DTR4WARCH=x86_64 /DTR4WSTAGE=<dir> (passed by build\Build-Installer.ps1) builds
-; the 64-bit installer: the exe, tr4w.dbg, the runtime DLLs, tr4wconvert.exe,
-; cacert.pem and tr4wserver.exe come from the STAGE directory
-; (build-out\dist\x86_64-win64), never from ..\target -- those are the 32-bit
-; files.  Files that are the same for every bitness (the .dat and .ini files,
-; TRMASTER.DTA, cty.dat, dom\) are still read from ..\target.
+; /DTR4WARCH=i386 /DTR4WSTAGE=<dir> (passed by build\Build-Installer.ps1) builds
+; the 32-bit installer from a stage directory (build-out\dist\i386-win32),
+; NEVER from ..\target -- those are 64-bit files now.  It is buildable and not
+; shipped.  /DTR4WARCH=x86_64 may be given explicitly with a /DTR4WSTAGE of its
+; own (a scratch stage).  Files that are the same for every bitness (the .dat and
+; .ini files, TRMASTER.DTA, cty.dat, dom\) are always read from ..\target.
 ; ---------------------------------------------------------------------------
-!ifdef TR4WARCH
-  !ifndef TR4WSTAGE
-    !error "TR4WARCH is defined without TR4WSTAGE.  Build the 64-bit installer with build\Build-Installer.ps1 (or FullBuild.ps1 -Cpu x86_64 -BuildInstaller)."
+!ifndef TR4WARCH
+  !define TR4WARCH "x86_64"
+!endif
+!if "${TR4WARCH}" == "x86_64"
+  !define TR4W64
+  !ifdef TR4WSTAGE
+    !define BINDIR    "${TR4WSTAGE}"
+    !define SERVERDIR "${TR4WSTAGE}"
+  !else
+    !define BINDIR    "..\target"
+    !define SERVERDIR "..\tr4wserver"
   !endif
-  !if "${TR4WARCH}" != "x86_64"
-    !error "TR4WARCH must be x86_64 (the only 64-bit Windows target)."
-  !endif
-  !define BINDIR    "${TR4WSTAGE}"
-  !define SERVERDIR "${TR4WSTAGE}"
   !define TR4WSUFFIX "-x64"
   !include LogicLib.nsh
   !include x64.nsh
 !else
-  !define BINDIR    "..\target"
-  !define SERVERDIR "..\tr4wserver"
-  !define TR4WSUFFIX ""
+  !if "${TR4WARCH}" == "i386"
+    !ifndef TR4WSTAGE
+      !error "TR4WARCH=i386 needs TR4WSTAGE.  The 32-bit installer is built from a stage directory, never from ..\target (64-bit files); use build\Build-Installer.ps1 -Cpu i386."
+    !endif
+    !define BINDIR    "${TR4WSTAGE}"
+    !define SERVERDIR "${TR4WSTAGE}"
+    !define TR4WSUFFIX "-x86"
+  !else
+    !error "TR4WARCH must be x86_64 or i386."
+  !endif
 !endif
 
 !define TR4WINSTFOLDER 'Software\TR4W'
@@ -58,15 +71,15 @@
 !ifdef MMTTYMODE
 Name    "TR4W v.${TR4WVERSION} - MMTTY"
 !else
-!ifdef TR4WARCH
+!ifdef TR4W64
 Name    "TR4W v.${TR4WVERSION} (64-bit)"
 !else
 Name    "TR4W v.${TR4WVERSION}"
 !endif
 !endif
 
-; The 64-bit installer carries an -x64 suffix so it can never collide with, or
-; be mistaken for, the 32-bit one.
+; Each installer carries its architecture in the name (-x64 shipping, -x86 not
+; shipped), so a 32-bit one can never be mistaken for the real one.
 !ifdef TR4WLANG
 OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}_${TR4WLANG}.exe
 !else
@@ -124,7 +137,7 @@ OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}_mmtty.exe
 
 
 ;Get installation folder from registry if available
-!ifndef TR4WARCH
+!ifndef TR4W64
 InstallDirRegKey HKCU "Software\TR4W" ""
 !else
 ; ---------------------------------------------------------------------------
@@ -204,7 +217,7 @@ InstallColors  0000FF FFFFFF
 
 
 
-!ifdef TR4WARCH
+!ifdef TR4W64
 ; ---------------------------------------------------------------------------
 ; UPGRADING FROM A 32-BIT INSTALL (64-bit installer only; hidden, runs first).
 ;
@@ -308,7 +321,7 @@ Section "tr4w.exe" secexe
 	SectionIn RO
 	SetOutPath "$INSTDIR"
 	File "${BINDIR}\tr4w.exe"
-!ifdef TR4WARCH
+!ifdef TR4W64
 	; A 64-bit install into a folder that held the 32-bit one (an in-place
 	; upgrade of a custom folder) must not keep the 32-bit unwinder: it is not
 	; loaded by anything now, and a wrong-architecture DLL left beside the exe
@@ -349,10 +362,10 @@ Section "tr4w.exe" secexe
 	; is published beside it and MUST be checked.
 	File "${BINDIR}\cacert.pem"
 	File "${BINDIR}\libhamlib-4.dll"
-!ifdef TR4WARCH
+!ifdef TR4W64
 	File "${BINDIR}\libgcc_s_seh-1.dll"
 !else
-	File ..\target\libgcc_s_dw2-1.dll
+	File "${BINDIR}\libgcc_s_dw2-1.dll"
 !endif
 	File "${BINDIR}\libusb-1.0.dll"
 	File "${BINDIR}\libwinpthread-1.dll"
@@ -367,7 +380,7 @@ Section "tr4w.exe" secexe
 	; its own log.  2.5 MB against a remembered step is not a close call, and
 	; this tree's whole position is that remembered steps drift.
 	;
-	; IT MUST MATCH THE BUILD'S ARCHITECTURE.  This one is i386; the 64-bit move
+	; IT MUST MATCH THE BUILD'S ARCHITECTURE.  BINDIR is the stage of that build, so the right one is copied; the 64-bit move
 	; has to swap it.  Windows reports a mismatch as "the specified module could
 	; not be found", naming a file that is present -- which is why
 	; uLogDatabase.DiagnoseSQLiteLoad reads the PE header and says so.

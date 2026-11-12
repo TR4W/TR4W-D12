@@ -372,6 +372,30 @@ function HamLibLoadError: string;
 // the first attempt.
 function HamLibDllPath: string;
 
+(* WHICH COPY OF THE LIBRARY TO USE, FROM AN ORDERED LIST OF FULL PATHS.
+
+  The first candidate that EXISTS and is THIS process's architecture wins
+  (aWanted, a PE machine word; 0, or a file whose header is not PE -- a .so or
+  a .dylib -- is accepted, because there is nothing to compare).  A file of the
+  WRONG architecture is skipped, not chosen, and the first one seen is handed
+  back in aRejected so the caller can still say what it found and why it cannot
+  be used.  '' when nothing usable exists.
+
+  Pure apart from reading file headers, so a unit test can drive it over a
+  directory of fake headers.  The program's own list is HamLibCandidates. *)
+function ResolveHamLibPath(const aCandidates: array of string; aWanted: Word;
+                           out aRejected: string): string;
+
+(* WHERE TR4W LOOKS FOR HAMLIB, IN ORDER, as full paths with duplicates
+  removed: beside the running binary (uAppPaths.PrivateLibraryDir), the shipped
+  data location (DataFilePath), the working directory, then every PATH entry.
+  Its own array type rather than SysUtils.TStringArray, which FPC 3.2.2
+  declares as AnsiString -- the paths are this program's native string. *)
+type
+  THamLibPathList = array of string;
+
+function HamLibCandidates: THamLibPathList;
+
 // WITHOUT LOADING ANYTHING. Reports where the DLL is, its architecture, and
 // whether that matches this process -- by reading the file's PE header. This
 // is what startup logs, so a mismatch appears in tr4w.log as a sentence
@@ -727,6 +751,101 @@ begin
 {$IFEND}
 end;
 
+function ResolveHamLibPath(const aCandidates: array of string; aWanted: Word;
+                           out aRejected: string): string;
+var
+  i     : Integer;
+  found : Word;
+begin
+   Result    := '';
+   aRejected := '';
+   for i := Low(aCandidates) to High(aCandidates) do
+      begin
+      if (aCandidates[i] = '') or (not FileExists(aCandidates[i])) then
+         begin
+         Continue;
+         end;
+      found := PEMachineOf(aCandidates[i]);
+      if (aWanted <> 0) and (found <> 0) and (found <> aWanted) then
+         begin
+         // The other bitness: never loaded, but remembered, so "the only copy
+         // there is is 32-bit" can still be said in so many words.
+         if aRejected = '' then
+            begin
+            aRejected := aCandidates[i];
+            end;
+         Continue;
+         end;
+      Result := aCandidates[i];
+      Exit;
+      end;
+end;
+
+function HamLibCandidates: THamLibPathList;
+var
+  count : Integer;
+
+   procedure AddCandidate(const aPath: string);
+   var
+     full : string;
+     j    : Integer;
+   begin
+      if aPath = '' then
+         begin
+         Exit;
+         end;
+      full := ExpandFileName(aPath);
+      // Case-blind where the file system is (Windows), exact where it is not
+      // -- the same copy named twice is looked at once.  Not SameFileName:
+      // FPC 3.2.2 declares it for AnsiString only, so it would narrow a path.
+      for j := 0 to count - 1 do
+         begin
+         if (FileNameCaseSensitive and (Result[j] = full)) or
+            ((not FileNameCaseSensitive) and (UnicodeCompareText(Result[j], full) = 0)) then
+            begin
+            Exit;
+            end;
+         end;
+      if count = Length(Result) then
+         begin
+         SetLength(Result, count + 8);
+         end;
+      Result[count] := full;
+      Inc(count);
+   end;
+
+   procedure AddPathEntry(const aDir: string);
+   begin
+      if Trim(aDir) <> '' then
+         begin
+         AddCandidate(IncludeTrailingPathDelimiter(Trim(aDir)) + HAMLIB_LIB);
+         end;
+   end;
+
+var
+  path : string;
+  sep  : Integer;
+begin
+   Result := nil;
+   count  := 0;
+   AddCandidate(IncludeTrailingPathDelimiter(PrivateLibraryDir) + HAMLIB_LIB);
+   AddCandidate(DataFilePath(HAMLIB_LIB));
+   AddCandidate(HAMLIB_LIB);   // the working directory: FileSearch's implicit first stop, kept
+
+   // PATH, entry by entry, in order -- what FileSearch walked, but each entry
+   // now becomes a candidate whose architecture is checked.
+   path := GetEnvironmentVariable('PATH');
+   sep  := Pos(PathSeparator, path);
+   while sep > 0 do
+      begin
+      AddPathEntry(Copy(path, 1, sep - 1));
+      Delete(path, 1, sep);
+      sep := Pos(PathSeparator, path);
+      end;
+   AddPathEntry(path);
+   SetLength(Result, count);
+end;
+
 (*
    WHERE THE LIBRARY SHOULD COME FROM, AS A FULL PATH.
 
@@ -736,33 +855,48 @@ end;
    a 64-bit libhamlib-4.dll from a directory on the MACHINE path. That is how a
    32-bit TR4W came to be handed a 64-bit DLL.
 
-   DataFilePath, not ExtractFilePath(ParamStr(0)): a shipped read-only file is
-   exactly what this is, and uAppPaths owns that rule per platform -- the
-   working directory on Windows (NY4I, 2026-08-31, chosen because it keeps
-   working when the binary is run from build-out), Contents/Resources on macOS,
-   the XDG data directory on Linux. Resolving it here would be a fourth copy of
-   a rule that has already caused one defect by existing twice.
+   "TR4W'S OWN COPY" IS THE ONE BESIDE THE RUNNING BINARY, FIRST (2026-11-12).
+   A library is a property of the BINARY, not of the directory TR4W was started
+   in: NY4I ran the 64-bit build-out\app-x86_64-win64\tr4w_fpc.exe with the
+   working directory at tr4w\target -- where the 32-bit copy lives -- and this
+   used to look ONLY there (DataFilePath is the working directory on Windows),
+   so the x64 DLL staged beside the exe was never seen and HamLib was refused.
+   PrivateLibraryDir is uAppPaths' answer to "where does this program keep the
+   libraries it ships" (beside the binary on Windows and Linux,
+   Contents/Frameworks on macOS), and uOpenSSLLoader already asks it.
 
-   Only if TR4W has no copy do we fall back to searching PATH ourselves -- with
-   FileSearch, so that we still end up holding a real path to check and to name
-   in an error, rather than letting the loader pick silently.
+   THE WORKING DIRECTORY STAYS, SECOND. NY4I chose it on 2026-08-31 so a binary
+   run from build-out keeps working; Build-App.ps1 now stages the DLLs beside
+   every build-out binary, so the first candidate normally answers, and the
+   second still covers a binary started elsewhere with its DLLs in the working
+   directory (and Contents/Resources inside a macOS bundle).
+
+   A WRONG-ARCHITECTURE COPY IS PASSED OVER, NOT FATAL: each candidate's PE
+   header is read and only this process's machine type is accepted, so a
+   32-bit file in the working directory no longer hides a 64-bit one later in
+   the list, and WSJT-X's 64-bit copy on PATH no longer stops a 32-bit TR4W.
+   If NOTHING fits, the first rejected file is returned so EnsureHamLib and
+   DescribeHamLibDll report it -- name, architecture, and which way round.
+
+   ITS OWN DEPENDENCIES (libgcc_s_*, libusb-1.0, libwinpthread-1) need no help
+   here, and no raw call. DynLibs.LoadLibrary is a plain LoadLibraryW
+   (rtl/win/sysdl.inc), and the loader resolves a DLL's imports by the standard
+   search -- whose FIRST stop is the APPLICATION'S directory, which is exactly
+   where the first candidate is.  The one case it would not cover is a HamLib
+   found by the working-directory or PATH fallback with its dependents beside
+   it and not beside the binary; the standard search does reach the working
+   directory too (after the system directories), which covers the first.
+   SetDllDirectory / LoadLibraryEx(LOAD_WITH_ALTERED_SEARCH_PATH) would change
+   that, and were not added: nothing measured needs them.
 *)
 function LocateHamLib: string;
+var
+  rejected : string;
 begin
-   Result := DataFilePath(HAMLIB_LIB);
-   if FileExists(Result) then
+   Result := ResolveHamLibPath(HamLibCandidates, ThisProcessMachine, rejected);
+   if Result = '' then
       begin
-      Exit;
-      end;
-   Result := FileSearch(HAMLIB_LIB, GetEnvironmentVariable('PATH'));
-
-   // ALWAYS A FULL PATH. FileSearch answers relative to whatever entry matched
-   // -- including the current directory, which it searches first -- and
-   // "libhamlib-4.dll is 64-bit" without a directory is precisely the report
-   // that cannot be acted on. WHICH copy is the entire question here.
-   if Result <> '' then
-      begin
-      Result := ExpandFileName(Result);
+      Result := rejected;   // '' when there is no copy at all
       end;
 end;
 

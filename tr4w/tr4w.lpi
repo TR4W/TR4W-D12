@@ -1815,7 +1815,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="src;src/trdos;Include;include/Core;include/System;include/Protocols;$(ProjOutDir)"/>
-      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/domain;src/radioFactory;src/contestFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;C:/FPC/3.2.2/units/i386-win32/regexpr/;C:/FPC/3.2.2/units/i386-win32/fcl-json/;$(LazarusDir)/components/datetimectrls"/>
+      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/domain;src/radioFactory;src/contestFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;$(LazarusDir)/fpc/3.2.2/units/$(TargetCPU)-$(TargetOS)/regexpr/;$(LazarusDir)/fpc/3.2.2/units/$(TargetCPU)-$(TargetOS)/fcl-json/;$(LazarusDir)/components/datetimectrls"/>
       <UnitOutputDirectory Value="../build-out/laz-$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
@@ -1824,8 +1824,8 @@
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
-      <TargetCPU Value="i386"/>
-      <TargetOS Value="win32"/>
+      <TargetCPU Value="x86_64"/>
+      <TargetOS Value="win64"/>
     </CodeGeneration>
     <Linking>
       <Debugging>
@@ -1838,7 +1838,7 @@
       </Options>
     </Linking>
     <Other>
-      <CompilerPath Value="C:/FPC/3.2.2/bin/i386-win32/fpc.exe"/>
+      <CompilerPath Value="$(LazarusDir)/fpc/3.2.2/bin/x86_64-win64/fpc.exe"/>
     </Other>
   </CompilerOptions>
   <Debugging>

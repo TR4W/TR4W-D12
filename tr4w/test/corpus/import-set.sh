@@ -46,7 +46,8 @@ cp "$cfg" "$dest/log.cfg"
 #
 # THE REFERENCES ARE STILL D7'S and are copied straight across, untouched.
 # ---------------------------------------------------------------------------
-EXE_SRC="build-out/app-i386-win32/tr4w_fpc.exe"
+. "$(dirname "${BASH_SOURCE[0]}")/../app-exe.sh"
+EXE_SRC="$TR4W_APP_EXE_REL"
 [ -f "$EXE_SRC" ] || EXE_SRC="tr4w/target/tr4w.exe"
 [ -f "$EXE_SRC" ] || { echo "ERROR: no built app -- build first, the fixture is made by it" >&2; exit 1; }
 . tr4w/test/corpus/corpus-lib.sh

@@ -268,6 +268,12 @@ $lints = @(
    # tree, so the server and the tests are held to it too.
    @{ Name = 'Lint-PointerTruncation'; Arg = $Tr4wDir; NeedsFpc = $false }
 
+   # NO BARE System.Val (issue 299, 2026-11-12). On Win64 Val into a Longint or
+   # Cardinal is not range-checked: Val('99999999999') gives Code 0 and a
+   # truncated value, where i386 refuses it. utils_text.ValChecked is the
+   # replacement; the ratchet holds the one file still waiting for it.
+   @{ Name = 'Lint-BareVal'; Arg = $Tr4wDir; NeedsFpc = $false }
+
    # NO HAND-WRITTEN NUL AFTER A STRING (NY4I, 2026-11-02: "we are supposed to
    # be out of the business of terminating our own strings"). `s[Length(s) + 1]
    # := #0` was a Win32-era habit; nothing downstream read it, and on a

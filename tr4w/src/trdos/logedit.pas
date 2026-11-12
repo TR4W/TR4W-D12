@@ -2562,7 +2562,7 @@ begin
      Exit;
      end;
 
-  Val(QTCNumberString, QTCNumber, Result1);
+  ValChecked(QTCNumberString, QTCNumber, Result1);
 
   if Result1 <> 0 then
      begin
@@ -2571,7 +2571,7 @@ begin
      Exit;
      end;
 
-  Val(NumberMessagesString, Quantity, Result1);
+  ValChecked(NumberMessagesString, Quantity, Result1);
 
   if Result1 <> 0 then
      begin

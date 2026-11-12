@@ -688,6 +688,47 @@ begin
   ShowMessage(p);
   //  QuickDisplay(p);
 end;
+(* WAIT FOR THE POLLING THREAD BY ITS FLAG ALONE, until ADeadline
+  (GetTickCount64).  BeginPolling clears PollingThreadRunning in its finally,
+  as the thread leaves, so the flag is the one answer every platform has.
+
+  Two callers, one loop: the non-Windows arm of WaitForPollingThreadWithMessages,
+  where it is the only way to wait, and the Windows arm when the handle wait
+  FAILS -- which was the x64 exit defect of 2026-11-12, and which used to spin
+  the main thread to the deadline and then report a timeout.  20 ms slices: the
+  poller re-tests PollingStopRequested every pass, so the slice only bounds how
+  long we take to notice. *)
+function WaitForPollingThreadFlag(ARig: RadioPtr; ADeadline: QWord; TimeoutMs: DWORD): boolean;
+var
+   Remaining: DWORD;
+begin
+   repeat
+      if not ARig^.PollingThreadRunning then
+         begin
+         logger.Info('[WaitForPollingThread] Thread exited cleanly');
+         Result := True;
+         Exit;
+         end;
+      Remaining := ADeadline - GetTickCount64;
+      if Remaining > TimeoutMs then
+         begin
+         (* Past the deadline: the QWord subtraction underflowed, so the
+           truncated DWORD is larger than the budget. *)
+         logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
+         Result := False;
+         Exit;
+         end;
+      if Remaining > 20 then
+         begin
+         Sleep(20);
+         end
+      else
+         begin
+         Sleep(Remaining);
+         end;
+   until False;
+end;
+
 // Wait for a thread handle to signal, pumping Windows messages so that a
 // cross-thread SendMessage from the polling thread cannot deadlock the main
 // thread.  No poller path sends one since issue #108; the pump stays as the
@@ -715,6 +756,22 @@ var
      2026-09-08.) *)
 {$IFDEF WINDOWS}
    Msg: Windows.TMsg;
+   (* THE HANDLE THE WAIT IS GIVEN, AT THE OS's WIDTH -- NEVER H ITSELF.
+     MsgWaitForMultipleObjects takes its handles as an untyped `var`, so the
+     compiler checks nothing: it hands over H's ADDRESS and Windows reads one
+     HANDLE from it.  On Windows FPC declares TThreadID = DWord in BOTH
+     bitnesses but THandle = QWord on Win64 (rtl/win/sysosh.inc), so on x64 the
+     wait read eight bytes out of a four-byte variable -- an invalid handle,
+     WAIT_FAILED on every call, a busy loop to the deadline, and a radio LEAKED
+     whose poller had exited in milliseconds (NY4I, K4, 2026-11-12: "TIMED OUT
+     after 6000ms" on the first x64 exit; Test_ExitInterruptsTheLinkAndFrees-
+     Promptly took 6016 ms in an x64 test build).  i386 could not show it: there
+     the two types are the same size.
+
+     Widening is lossless: BeginThread returns the CreateThread handle, and
+     Windows guarantees a kernel handle's significant bits fit in 32 (that is
+     why the RTL can carry it in a DWord at all). *)
+   WaitHandle: THandle;
 {$ENDIF}
 begin
    (* ThreadStarted, not `= 0` -- TThreadID is a pointer on the BSD/macOS RTL
@@ -732,6 +789,9 @@ begin
       Exit;
       end;
    Deadline := GetTickCount64 + TimeoutMs;
+{$IFDEF WINDOWS}
+   WaitHandle := THandle(H);
+{$ENDIF}
    repeat
       Remaining := Deadline - GetTickCount64;
       if Remaining > TimeoutMs then
@@ -746,7 +806,7 @@ begin
          Break;
          end;
 {$IFDEF WINDOWS}
-      WaitResult := MsgWaitForMultipleObjects(1, H, False, Remaining, QS_SENDMESSAGE);
+      WaitResult := MsgWaitForMultipleObjects(1, WaitHandle, False, Remaining, QS_SENDMESSAGE);
       if WaitResult = WAIT_OBJECT_0 then
          begin
          logger.Info('[WaitForPollingThread] Thread exited cleanly');
@@ -754,10 +814,26 @@ begin
          end;
       if WaitResult = WAIT_TIMEOUT then
          begin
-         logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
+         logger.Info('[WaitForPollingThread] TIMED OUT after %dms (thread still running: %s)',
+                     [TimeoutMs, BoolToStr(ARig^.PollingThreadRunning, True)]);
          Result := False;
          Break;  // timed out
          end;
+      (* THE WAIT ITSELF FAILED -- a handle it cannot wait on.  This used to
+        fall through to the PeekMessage below and straight back here, so the
+        main thread spun at full speed for the whole budget and then reported a
+        TIMEOUT, indistinguishable in the log from a poller that really was
+        stuck.  Say so once, with the OS's reason, and finish on the flag
+        BeginPolling clears in its finally -- the same answer the non-Windows
+        arm relies on, inside the same budget. *)
+      if WaitResult = WAIT_FAILED then
+         begin
+         logger.Error('[WaitForPollingThread] the wait on the polling thread FAILED (error %d) -- ' +
+                      'waiting on its running flag instead', [GetLastError]);
+         Result := WaitForPollingThreadFlag(ARig, Deadline, TimeoutMs);
+         Break;
+         end;
+      (* WAIT_OBJECT_0 + 1: a sent message is waiting -- the peek below. *)
 {$ELSE}
       (* NO MESSAGE QUEUE, SO NOTHING TO PUMP -- but there is still something
         to WAIT FOR, and until 2026-09-21 this arm did neither: it logged
@@ -781,22 +857,10 @@ begin
         routine now, and a False answer makes it leak the radio rather than
         free it under a running thread.)
 
-        20 ms slices: the polling loop re-tests PollingStopRequested at the top
-        of every pass and inside its backoff sleep, so it exits promptly; the
-        slice only bounds how long we notice. *)
-      if not ARig^.PollingThreadRunning then
-         begin
-         logger.Info('[WaitForPollingThread] Thread exited cleanly');
-         Break;
-         end;
-      if Remaining > 20 then
-         begin
-         Sleep(20);
-         end
-      else
-         begin
-         Sleep(Remaining);
-         end;
+        The poll itself is WaitForPollingThreadFlag, shared with the Windows
+        arm's WAIT_FAILED fallback. *)
+      Result := WaitForPollingThreadFlag(ARig, Deadline, TimeoutMs);
+      Break;
 {$ENDIF}
       // WAIT_OBJECT_0 + 1 = message available — pump it so SendMessage unblocks
 {$IFDEF WINDOWS}

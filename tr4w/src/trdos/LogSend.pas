@@ -222,7 +222,7 @@ begin
                if TempChar = '+' then
                   begin
                   TempChar := SendString[CharacterCount + 2];
-                  Val(TempChar, Offset, Result);
+                  ValChecked(TempChar, Offset, Result);
                   if Result = 0 then
                      begin
                      QSONumber := QSONumber + Offset;
@@ -233,7 +233,7 @@ begin
                if TempChar = '-' then
                   begin
                   TempChar := SendString[CharacterCount + 2];
-                  Val(TempChar, Offset, Result);
+                  ValChecked(TempChar, Offset, Result);
                   if Result = 0 then
                      begin
                      QSONumber := QSONumber - Offset;

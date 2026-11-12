@@ -124,6 +124,16 @@ type
         trace (uIcomNetworkTransport.BytesToHexStr, deleted) always printed,
         and what uServerNet.HexOf builds on. *)
       procedure Test_BinToHexStr_SeparatorGoesBetweenBytesOnly;
+
+      (* ValChecked -- System.Val is not range-checked on Win64 (issue 299).
+        Every case states what BOTH bitnesses must answer. *)
+      procedure Test_ValChecked_Longint_RefusesWhatDoesNotFit;
+      procedure Test_ValChecked_Longint_AcceptsInRange;
+      procedure Test_ValChecked_KeepsValsSyntaxCodes;
+      procedure Test_ValChecked_Cardinal_Word_Byte_Ranges;
+      procedure Test_ValChecked_SmallInt_ShortInt_Ranges;
+      procedure Test_ValChecked_Int64_And_Double_PassThrough;
+      procedure Test_ValChecked_HexIsCheckedAsNonNegative;
    end;
 
 implementation
@@ -1046,6 +1056,180 @@ begin
    CheckEquals('', BinToHexStr(b, ' '), 'and nothing is nothing');
 end;
 
+// ---------------------------------------------------------------------------
+// ValChecked -- Val with the destination's range enforced (issue 299)
+// ---------------------------------------------------------------------------
+
+procedure TUtilsTextTests.Test_ValChecked_Longint_RefusesWhatDoesNotFit;
+var
+   v: Longint;
+   code: integer;
+begin
+   BeginTest('ValChecked(Longint) refuses a number Longint cannot hold');
+
+   (* THE FAILURE THIS EXISTS FOR. System.Val gave Code = 0 and a truncated
+     value for this on Win64 (1215752191), and Code = 10 on i386. Same answer
+     required on both now. *)
+   v := 77;
+   ValChecked('99999999999', v, code);
+   CheckTrue(code <> 0, '11 digits is not a Longint');
+   CheckEquals(0, v, 'a refusal leaves 0, as Val does');
+   CheckEquals(10, code, 'the position where the digits overflow, as i386 Val reports it');
+
+   ValChecked('2147483648', v, code);
+   CheckEquals(10, code, 'High(Longint) + 1');
+   ValChecked('4294967295', v, code);
+   CheckTrue(code <> 0, 'High(Cardinal) is not a Longint either');
+   ValChecked('4294967296', v, code);
+   CheckTrue(code <> 0, '2^32 would truncate to 0');
+   ValChecked('-2147483649', v, code);
+   CheckEquals(11, code, 'Low(Longint) - 1');
+   CheckEquals(0, v, 'and 0 again');
+end;
+
+procedure TUtilsTextTests.Test_ValChecked_Longint_AcceptsInRange;
+var
+   v: Longint;
+   code: integer;
+begin
+   BeginTest('ValChecked(Longint) accepts every in-range value Val accepted');
+
+   ValChecked('5', v, code);
+   CheckEquals(0, code, '5 code');
+   CheckEquals(5, v, '5 value');
+   ValChecked('-5', v, code);
+   CheckEquals(0, code, '-5 code');
+   CheckEquals(-5, v, '-5 value');
+   ValChecked(' 7', v, code);
+   CheckEquals(0, code, 'leading blank, as Val');
+   CheckEquals(7, v, 'leading blank value');
+   ValChecked('+5', v, code);
+   CheckEquals(0, code, 'plus sign');
+   ValChecked('2147483647', v, code);
+   CheckEquals(0, code, 'High(Longint) code');
+   CheckEquals(High(Longint), v, 'High(Longint)');
+   ValChecked('-2147483648', v, code);
+   CheckEquals(0, code, 'Low(Longint) code');
+   CheckEquals(Low(Longint), v, 'Low(Longint)');
+   ValChecked('007', v, code);
+   CheckEquals(7, v, 'leading zeros');
+end;
+
+procedure TUtilsTextTests.Test_ValChecked_KeepsValsSyntaxCodes;
+var
+   v: Longint;
+   code: integer;
+begin
+   BeginTest('ValChecked reports a syntax error where Val does, with Value 0');
+
+   v := 77;
+   ValChecked('', v, code);
+   CheckEquals(1, code, 'empty string');
+   CheckEquals(0, v, 'empty value');
+   v := 77;
+   ValChecked('12x', v, code);
+   CheckEquals(3, code, 'bad character at 3');
+   CheckEquals(0, v, 'bad value');
+   ValChecked('1.5', v, code);
+   CheckEquals(2, code, 'a decimal point is not an integer');
+   ValChecked('-', v, code);
+   CheckTrue(code <> 0, 'a lone sign');
+end;
+
+procedure TUtilsTextTests.Test_ValChecked_Cardinal_Word_Byte_Ranges;
+var
+   c: Cardinal;
+   w: Word;
+   b: Byte;
+   code: integer;
+begin
+   BeginTest('ValChecked: unsigned and narrow destinations are range-checked and refuse a minus sign');
+
+   ValChecked('4294967295', c, code);
+   CheckEquals(0, code, 'High(Cardinal) code');
+   CheckTrue(c = High(Cardinal), 'High(Cardinal)');
+   ValChecked('4294967296', c, code);
+   CheckTrue(code <> 0, 'High(Cardinal) + 1');
+   CheckTrue(c = 0, 'refused leaves 0');
+   ValChecked('-5', c, code);
+   CheckEquals(2, code, 'Cardinal refuses a minus, as Val does');
+
+   ValChecked('65535', w, code);
+   CheckEquals(0, code, 'High(Word) code');
+   CheckEquals(65535, w, 'High(Word)');
+   ValChecked('70000', w, code);
+   CheckTrue(code <> 0, 'Word: 70000 (Val gave 4464 and Code 0 on BOTH bitnesses)');
+   CheckEquals(0, w, 'Word refused');
+   ValChecked('-1', w, code);
+   CheckEquals(2, code, 'Word refuses a minus');
+
+   ValChecked('255', b, code);
+   CheckEquals(0, code, 'High(Byte) code');
+   CheckEquals(255, b, 'High(Byte)');
+   ValChecked('300', b, code);
+   CheckTrue(code <> 0, 'Byte: 300 (Val gave 44 and Code 0 on BOTH bitnesses)');
+   CheckEquals(0, b, 'Byte refused');
+end;
+
+procedure TUtilsTextTests.Test_ValChecked_SmallInt_ShortInt_Ranges;
+var
+   si: SmallInt;
+   sh: ShortInt;
+   code: integer;
+begin
+   BeginTest('ValChecked: SmallInt and ShortInt hold their signed range');
+
+   ValChecked('-32768', si, code);
+   CheckEquals(0, code, 'Low(SmallInt) code');
+   CheckEquals(-32768, si, 'Low(SmallInt)');
+   ValChecked('40000', si, code);
+   CheckTrue(code <> 0, 'SmallInt: 40000 (Val gave -25536)');
+   ValChecked('32767', si, code);
+   CheckEquals(32767, si, 'High(SmallInt)');
+
+   ValChecked('-128', sh, code);
+   CheckEquals(0, code, 'Low(ShortInt) code');
+   CheckEquals(-128, sh, 'Low(ShortInt)');
+   ValChecked('200', sh, code);
+   CheckTrue(code <> 0, 'ShortInt: 200');
+   ValChecked('-200', sh, code);
+   CheckTrue(code <> 0, 'ShortInt: -200 (Val gave 56)');
+end;
+
+procedure TUtilsTextTests.Test_ValChecked_Int64_And_Double_PassThrough;
+var
+   i: Int64;
+   d: Double;
+   code: integer;
+begin
+   BeginTest('ValChecked: Int64 and Double overloads are plain Val');
+
+   ValChecked('99999999999', i, code);
+   CheckEquals(0, code, 'Int64 holds 11 digits');
+   CheckTrue(i = 99999999999, 'Int64 value');
+   ValChecked('1.5', d, code);
+   CheckEquals(0, code, 'Double code');
+   CheckTrue(Abs(d - 1.5) < 1E-12, 'Double value');
+   ValChecked('x', d, code);
+   CheckEquals(1, code, 'Double syntax error position');
+end;
+
+procedure TUtilsTextTests.Test_ValChecked_HexIsCheckedAsNonNegative;
+var
+   v: Longint;
+   code: integer;
+begin
+   BeginTest('ValChecked: a $hex literal is the non-negative number it spells');
+
+   ValChecked('$FF', v, code);
+   CheckEquals(0, code, '$FF code');
+   CheckEquals(255, v, '$FF');
+   (* DOCUMENTED DIVERGENCE: i386 System.Val read $FFFFFFFF as -1 into a
+     Longint. The helper refuses it; nothing in this tree passes hex. *)
+   ValChecked('$FFFFFFFF', v, code);
+   CheckTrue(code <> 0, '$FFFFFFFF does not fit a Longint');
+end;
+
 procedure TUtilsTextTests.RunAllTests;
 begin
    Test_BinToHexStr_UppercaseUnseparated;
@@ -1096,6 +1280,14 @@ begin
    Test_AnsiStringFromBytes_Slices;
    Test_AnsiStringFromBytes_OutOfRangeIsEmpty;
    Test_AnsiStringFromBytes_KeepsHighBytes;
+
+   Test_ValChecked_Longint_RefusesWhatDoesNotFit;
+   Test_ValChecked_Longint_AcceptsInRange;
+   Test_ValChecked_KeepsValsSyntaxCodes;
+   Test_ValChecked_Cardinal_Word_Byte_Ranges;
+   Test_ValChecked_SmallInt_ShortInt_Ranges;
+   Test_ValChecked_Int64_And_Double_PassThrough;
+   Test_ValChecked_HexIsCheckedAsNonNegative;
 end;
 
 end.

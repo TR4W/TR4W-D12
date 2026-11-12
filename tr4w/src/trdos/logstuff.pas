@@ -1868,7 +1868,7 @@ begin
 
      if StringIsAllNumbers(NumberString) then
         begin
-        Val(NumberString, RXData.TenTenNum, Result1)
+        ValChecked(NumberString, RXData.TenTenNum, Result1)
         end
      else
         begin
@@ -2261,7 +2261,7 @@ begin
         Exit;
         end;
 
-     Val(NumericTokens[0], RXData.NumberReceived, ConversionResult);
+     ValChecked(NumericTokens[0], RXData.NumberReceived, ConversionResult);
 
      if ConversionResult <> 0 then
         begin
@@ -2338,7 +2338,7 @@ begin
 
   RXData.QTHString := GridString;
 
-  Val(NumberString, RXData.NumberReceived, Result1);
+  ValChecked(NumberString, RXData.NumberReceived, Result1);
 
   if Result1 <> 0 then
      begin
@@ -2401,7 +2401,7 @@ begin
 
   RXData.Name := NameString;
 
-  Val(NumberString, RXData.NumberReceived, Result1);
+  ValChecked(NumberString, RXData.NumberReceived, Result1);
 
   (* An all-digit word that does not fit the number (overflow) is a bad
     serial, said as the serial-and-QTH parser says it. *)
@@ -2502,7 +2502,7 @@ begin
 
   RXData.QTHString := QTHString;
 
-  Val(NumberString, RXData.NumberReceived, Result1);
+  ValChecked(NumberString, RXData.NumberReceived, Result1);
 
   Result := Result1 = 0;
 
@@ -2560,7 +2560,7 @@ begin
      end;
 
   RXData.QTHString := QTHString;
-  Val(NumberString, RXData.NumberReceived, Result1);
+  ValChecked(NumberString, RXData.NumberReceived, Result1);
   Result := Result1 = 0;
 end;
 
@@ -2584,7 +2584,7 @@ begin
   if length(QTHString) > 3 then Exit;
 
   RXData.QTHString := QTHString;
-  Val(NumberString, RXData.NumberReceived, Result1);
+  ValChecked(NumberString, RXData.NumberReceived, Result1);
   Result := Result1 = 0;
 end;
 }
@@ -2855,12 +2855,12 @@ begin
      getridofprecedingspaces(ThirdString);
      if StringIsAllNumbers(FirstString) then
         begin
-        Val(FirstString, RXData.NumberReceived, Result1);
+        ValChecked(FirstString, RXData.NumberReceived, Result1);
         ProcessQSONumberAndDomesticOrDXQTHExchange := Result1 = 0;
         end
      else if StringIsAllNumbers(SecondString) then
         begin
-        Val(SecondString, RXData.NumberReceived, Result1);
+        ValChecked(SecondString, RXData.NumberReceived, Result1);
         ProcessQSONumberAndDomesticOrDXQTHExchange := Result1 = 0;
         end;
 
@@ -3077,7 +3077,7 @@ begin
         Exit;
         end;
 
-     Val(FirstString, RXData.NumberReceived, Result1);
+     ValChecked(FirstString, RXData.NumberReceived, Result1);
 
      RXData.Name := SecondString;
      RXData.Chapter := UpperCase(ThirdString);
@@ -3097,7 +3097,7 @@ begin
         Exit;
         end;
 
-     Val(FourthString, RXData.NumberReceived, Result1);
+     ValChecked(FourthString, RXData.NumberReceived, Result1);
 
      RXData.Name := FirstString;
      RXData.Chapter := UpperCase(SecondString);
@@ -3165,7 +3165,7 @@ begin
      begin
      if StringIsAllNumbers(EntryList[1]) then
         begin
-        Val(EntryList[1], RXData.NumberReceived, Result1);
+        ValChecked(EntryList[1], RXData.NumberReceived, Result1);
         RXData.Name := EntryList[2];
         if NumberEntries >= 3 then
            begin
@@ -3174,7 +3174,7 @@ begin
         end
      else if StringIsAllNumbers(EntryList[2]) then
         begin
-        Val(EntryList[2], RXData.NumberReceived, Result1);
+        ValChecked(EntryList[2], RXData.NumberReceived, Result1);
         RXData.Name := EntryList[1];
         if NumberEntries >= 3 then
            begin
@@ -3183,7 +3183,7 @@ begin
         end
      else if StringIsAllNumbers(EntryList[3]) then
         begin
-        Val(EntryList[3], RXData.NumberReceived, Result1);
+        ValChecked(EntryList[3], RXData.NumberReceived, Result1);
         RXData.Name := EntryList[1];
         RXData.QTHString := EntryList[2];
         end
@@ -3200,20 +3200,20 @@ begin
        begin
        if StringIsAllNumbers(EntryList[2]) then
           begin
-          Val(EntryList[2], RXData.NumberReceived, Result1);
+          ValChecked(EntryList[2], RXData.NumberReceived, Result1);
           RXData.Name := EntryList[3];
           RXData.QTHString := EntryList[4];
           end
        else if StringIsAllNumbers(EntryList[3]) then
           begin
-          Val(EntryList[3], RXData.NumberReceived, Result1);
+          ValChecked(EntryList[3], RXData.NumberReceived, Result1);
           RXData.Name := EntryList[4];
           RXData.QTHString := EntryList[2];
           end
        else if StringIsAllNumbers(EntryList[1]) and
          StringIsAllNumbers(EntryList[4]) then
           begin
-          Val(EntryList[4], RXData.NumberReceived, Result1);
+          ValChecked(EntryList[4], RXData.NumberReceived, Result1);
           RXData.Name := EntryList[2];
           RXData.QTHString := EntryList[3];
 
@@ -3223,7 +3223,7 @@ begin
          { Last chance - five or more entries }if
          StringIsAllNumbers(EntryList[NumberEntries - 2]) then
             begin
-            Val(EntryList[NumberEntries - 2], RXData.NumberReceived, Result1);
+            ValChecked(EntryList[NumberEntries - 2], RXData.NumberReceived, Result1);
             RXData.Name := EntryList[NumberEntries - 1];
             RXData.QTHString := EntryList[NumberEntries];
             end
@@ -3231,7 +3231,7 @@ begin
            if ((IsAlpha(EntryList[4])) and (StringIsAllNumbers(EntryList[1])))
              then
               begin
-              Val(EntryList[1], RXData.NumberReceived, Result1);
+              ValChecked(EntryList[1], RXData.NumberReceived, Result1);
               RXData.Name := EntryList[4];
               RXData.QTHString := EntryList[3];
               end;
@@ -3349,7 +3349,7 @@ begin
        (SSEx.Check <> '') and
        (SSEx.Section <> '') then
         begin
-        Val(SSEx.Number, RXData.NumberReceived, Result1);
+        ValChecked(SSEx.Number, RXData.NumberReceived, Result1);
         if Result1 <> 0 then
            begin
            Exit;
@@ -3439,7 +3439,7 @@ begin
      Delete(Prefecture, 1, 1);
      end;
 
-  Val(Prefecture, PrefectureValue, Result1);
+  ValChecked(Prefecture, PrefectureValue, Result1);
 
   if Result1 <> 0 then
      begin
@@ -4400,7 +4400,7 @@ begin
 
   if StringIsAllNumbers(Exchange) then
      begin
-     Val(Exchange, RXData.NumberReceived, code);
+     ValChecked(Exchange, RXData.NumberReceived, code);
      if code <> 0 then
         begin
         Exit;
@@ -4411,7 +4411,7 @@ begin
   else if ValidRST(Exchange, RXData.RSTReceived, ActiveMode) then
      begin
      Exchange := RemoveFirstString(Exchange);
-     Val(Exchange, RXData.NumberReceived, code);
+     ValChecked(Exchange, RXData.NumberReceived, code);
      if code <> 0 then
         begin
         exit;
@@ -5041,7 +5041,7 @@ begin
 
   if StringIsAllNumbers(EntryList[1]) then { member number }
      begin
-     Val(EntryList[1], RXData.NumberReceived, Result1)
+     ValChecked(EntryList[1], RXData.NumberReceived, Result1)
      end
   else
      begin

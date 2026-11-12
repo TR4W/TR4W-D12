@@ -1443,7 +1443,7 @@ begin
           'H':
             if Ignore <> 'H' then
                begin
-               Val(Command, Hits, Result);
+               ValChecked(Command, Hits, Result);
                end;
 
           'I':
@@ -1498,7 +1498,7 @@ begin
           'S':
             if Ignore <> 'S' then
                begin
-               Val(Command, Speed, Result);
+               ValChecked(Command, Speed, Result);
                end;
 
           'T':

@@ -1744,7 +1744,7 @@ begin
 
   if InputString <> '' then
      begin
-     Val(InputString, InputValue, Result1);
+     ValChecked(InputString, InputValue, Result1);
      if Result1 = 0 then
         begin
         QuickEditInteger := InputValue;
@@ -1800,12 +1800,12 @@ begin
         HertzString := HertzString + '0';
         end;
 
-     Val(KHzString + HertzString, InputValue, Result1);
+     ValChecked(KHzString + HertzString, InputValue, Result1);
      end
   else
      begin
      InputString := InputString + '000';
-     Val(InputString, InputValue, Result1);
+     ValChecked(InputString, InputValue, Result1);
      end;
 
   if (CTRLStr = 'CTRL') and (Result1 = 0) then
@@ -1857,7 +1857,7 @@ begin
 
   if InputString <> '' then
      begin
-     Val(InputString, InputValue, Result1);
+     ValChecked(InputString, InputValue, Result1);
 
      if Result1 = 0 then
         begin
@@ -2827,7 +2827,7 @@ var
 
 begin
   GetRidOfPostcedingSpaces(MessageString);
-  Val(MessageString, Freq, Result);
+  ValChecked(MessageString, Freq, Result);
 
   if Result <> 0 then
      begin

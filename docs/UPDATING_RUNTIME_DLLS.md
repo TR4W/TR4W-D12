@@ -11,6 +11,20 @@ a bundled DLL with a newer copy.
 
 ---
 
+## STATUS 2026-11-12 -- THE SHIPPING SET IS 64-BIT (issue 299)
+
+**Read the bitness column below as the history it is.** The default flipped to
+x86_64-win64: `tr4w/target/` now holds a COPY of the **64-bit** set, and every
+architecture's set lives in its own directory, `tr4w/redist/x86_64-win64/` and
+`tr4w/redist/i386-win32/` (the old 32-bit files, moved there byte-identical; the
+32-bit HamLib is `i386-win32/libhamlib-4.dll`). The x64 unwinder is
+`libgcc_s_seh-1.dll`, not `libgcc_s_dw2-1.dll`. **To update a DLL: replace it in
+`redist\<arch>\`, then copy the x64 one into `target\` (same name), measure the
+PE machine word (`0x8664` / `0x014C`) and run `build\Lint-ArchStaging.ps1`, which
+checks all of them.** `rigctld.exe` is not shipped. The build scripts and the
+unit-test build stage from `redist\`, never from `target\`. See
+`tr4w/redist/README.md`.
+
 ## Bundled runtime files at a glance
 
 | File | Source | Bitness | Purpose |
@@ -67,10 +81,10 @@ The DLL is also copied beside the unit-test binary by `build\Build-Tests.ps1`,
 because the `LogDatabase` suite opens real databases.
 
 
-> ⚠️ **Everything is 32-bit.** TR4W is a Delphi 7 application and compiles
-> exclusively for 32-bit Windows. The 64-bit builds of HamLib, OpenSSL, and
-> inpout32 are **not compatible** and will cause crashes or load failures at
-> runtime, even on a 64-bit Windows host.
+> ⚠️ **A DLL's bitness must match the program's.** ~~Everything is 32-bit~~ was
+> true of the Delphi 7 program; since 2026-11-12 the shipping program is 64-bit
+> and so are the DLLs in `target/`. A DLL of the other bitness fails to load,
+> reported by Windows as "module not found" -- see the status block at the top.
 
 ---
 

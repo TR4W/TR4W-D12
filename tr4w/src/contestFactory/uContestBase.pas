@@ -4504,6 +4504,7 @@ function LogContestYear(const aTotals: TScoreTotals; aView: TLoggedQSOView): int
 implementation
 
 uses
+   utils_text,
    SysUtils,
    (* ContestId -- the contest's stored name, which the name fallbacks
       answer (Q108 S2). *)
@@ -5973,7 +5974,7 @@ begin
       begin
       zone := aFacts.CQZone;
       end;
-   Val(Result.MyZone, sessionZone, code);
+   ValChecked(Result.MyZone, sessionZone, code);
    if (code <> 0) or (sessionZone <> zone) then
       begin
       if zone > 0 then

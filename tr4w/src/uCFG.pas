@@ -1208,7 +1208,7 @@ var
    v: double;
    code: integer;
 begin
-   Val(aValue, v, code);
+   ValChecked(aValue, v, code);
    Result := (code = 0) and (v >= 0) and (v <= 6553.5);
 end;
 
@@ -1266,7 +1266,7 @@ begin
 
    if UnicodeSameText(aCommand, 'BAND MAP CUTOFF FREQUENCY') then
       begin
-      Val(aValue, n, code);
+      ValChecked(aValue, n, code);
       Result := code = 0;
       if Result then
          begin
@@ -1284,7 +1284,7 @@ begin
       if Pos('SSB', UpperCase(text)) > 0 then
          begin
          Delete(text, Pos('SSB ', UpperCase(text)), 4);
-         Val(text, freq, code);
+         ValChecked(text, freq, code);
          Result := code = 0;
          if Result then
             begin
@@ -1294,7 +1294,7 @@ begin
          end
       else
          begin
-         Val(text, freq, code);
+         ValChecked(text, freq, code);
          Result := code = 0;
          if Result then
             begin
@@ -1492,7 +1492,7 @@ begin
             end;
          end;
 
-      Val(CustomCMD, TempInteger, code);
+      ValChecked(CustomCMD, TempInteger, code);
       if (code = 0) and (TempInteger > 0) then
          begin
          ContestColumnWidths.SetWidth(CONTEST_LOG_COLUMNS_NAME, ColumnTokenText,
@@ -1625,7 +1625,7 @@ end;
 {
 function F_ICOM_RESPONSE_TIMEOUT: boolean;
 begin
-  Val(CMD, cmdIcomResponseTimeout, Result1);
+  ValChecked(CMD, cmdIcomResponseTimeout, Result1);
   RESULT := Result1 = 0;
   if Result1 = 0 then cmdIcomResponseTimeout := cmdIcomResponseTimeout div 10 else Exit;
   if not (cmdIcomResponseTimeout in [10..100]) then cmdIcomResponseTimeout := 10;

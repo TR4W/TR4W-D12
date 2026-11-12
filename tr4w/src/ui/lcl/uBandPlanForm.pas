@@ -120,6 +120,7 @@ implementation
 {$R *.lfm}
 
 uses
+   utils_text,
   LCLIntf,   (* GetSystemMetrics -- see the width floor *)
   Types,               // TRect / IntersectRect
   uTR4WConfigFile,     // TR4WConfigFileName, Save/LoadWindowLayout
@@ -447,7 +448,7 @@ begin
       row := 1;
       for b := FIRST_BAND to LAST_BAND do
          begin
-         Val(Trim(grdBandPlan.Cells[col, row]), freq, err);
+         ValChecked(Trim(grdBandPlan.Cells[col, row]), freq, err);
          Inc(row);
 
          // NOT A NUMBER: skip it, leaving that band's stored value alone. The

@@ -1505,7 +1505,7 @@ procedure PrintHourTotals;
         LastHourPrinted := 0;
         end;
 
-     Val( LogHourTotals[ HourIndex ].HourName, ThisHour, Result );
+     ValChecked( LogHourTotals[ HourIndex ].HourName, ThisHour, Result );
 
      if HourIndex = 0 then
         begin
@@ -1626,7 +1626,7 @@ procedure PrintHourTotals;
            end;
         end;
 
-     Val( LogHourTotals[ HourIndex ].HourName, LastHourPrinted, Result );
+     ValChecked( LogHourTotals[ HourIndex ].HourName, LastHourPrinted, Result );
      inc( HourIndex );
      end;
 
@@ -1726,7 +1726,7 @@ procedure FinishOutLastHour;
 
      LastMinuteString := PostcedingString( LastTimeString, ':' );
 
-     Val( LastMinuteString, LastMinute, Result );
+     ValChecked( LastMinuteString, LastMinute, Result );
 
      if ( LastMinute >= 50 ) and ( LastMinute < 59 ) then
         begin

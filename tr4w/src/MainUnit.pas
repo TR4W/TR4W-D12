@@ -3396,7 +3396,7 @@ begin
   i := 0;
   if length(TempString) = 3 then i := tBaseFrequencys[ActiveBand];
   if pos('.', TempString) in [3, 4] then i := tBaseFrequencys[ActiveBand];
-  Val(TempString, f, code);
+  ValChecked(TempString, f, code);
 
   if f > (maxdword / 1000) then Exit;
   TempFreq := round((i + f) * 1000);

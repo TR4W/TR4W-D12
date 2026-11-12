@@ -62,19 +62,24 @@ param(
    # Where the installer is written. Empty = tr4w\build\release\, as ever. Set it
    # to build one somewhere else (a scratch directory) without touching release\.
    [string] $InstallerOutDir = '',
-   # i386 (default, the shipping build) or x86_64 (-Os win64). A non-i386 build
-   # stages into build-out\dist\<cpu>-<os> and never into tr4w\target.
-   [string] $Cpu  = 'i386',
-   [string] $Os   = 'win32'
+   # Empty = the shipping architecture, x86_64-win64 (build\Get-StagingDir.ps1).
+   # -Cpu i386 builds the 32-bit app: buildable, not shipped. A non-shipping
+   # build stages into build-out\dist\<cpu>-<os> and never into tr4w\target.
+   [string] $Cpu  = '',
+   [string] $Os   = ''
 )
 
 $ErrorActionPreference = 'Stop'
 
-# -Cpu x86_64 alone means Windows 64: the only x86_64 Windows target is win64.
-if (($Cpu -eq 'x86_64') -and (-not $PSBoundParameters.ContainsKey('Os'))) { $Os = 'win64' }
-
 $TR4W_DIR    = $PSScriptRoot
 $BUILD_DIR   = Join-Path $TR4W_DIR 'build'
+
+# No -Cpu means the shipping architecture; -Cpu alone implies its Windows target.
+. (Join-Path $BUILD_DIR 'Get-StagingDir.ps1')
+$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
+$Cpu = $resolved.Cpu
+$Os  = $resolved.Os
+
 $TARGET_DIR  = Join-Path $TR4W_DIR 'target'
 $SERVER_DIR  = Join-Path $TR4W_DIR 'tr4wserver'
 $VERSION_PAS = Join-Path $TR4W_DIR 'src\Version.pas'
@@ -320,15 +325,15 @@ else
 # ---------------------------------------------------------------------------
 Phase 'Application'
 
-# PER-ARCHITECTURE STAGING (issue 299). i386-win32 stages into tr4w\target exactly
-# as it always has. Any other target stages into build-out\dist\<cpu>-<os> and
-# NEVER into tr4w\target, whose 32-bit exe and DLLs the i386 build and the 32-bit
-# installer read -- see build\Get-StagingDir.ps1, which also holds the guard
-# (Lint-ArchStaging pins it).
+# PER-ARCHITECTURE STAGING (issue 299). The shipping x86_64-win64 build stages
+# into tr4w\target. Any other target (i386-win32) stages into
+# build-out\dist\<cpu>-<os> and NEVER into tr4w\target, whose 64-bit exe and DLLs
+# the shipping installer reads -- see build\Get-StagingDir.ps1, which also holds
+# the guard (Lint-ArchStaging pins it).
 $STAGE_DIR = Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
 try
    {
-   Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $STAGE_DIR -What 'staging directory'
+   Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $STAGE_DIR -What 'staging directory'
    }
 catch
    {
@@ -591,10 +596,9 @@ if ($BuildInstaller)
    Phase 'Installer'
 
    # The makensis step lives in build\Build-Installer.ps1 (one implementation,
-   # also runnable against a scratch stage). For i386 it passes exactly the
-   # arguments this script always passed; a non-i386 target adds the
-   # architecture define and its stage directory, and the installer file gets an
-   # -x64 suffix so it cannot collide with the 32-bit one.
+   # also runnable against a scratch stage). The shipping x86_64 installer reads
+   # tr4w\target itself and is named tr4w_setup_<v>-x64.exe; the 32-bit one gets
+   # the architecture define and its stage directory, and a -x86 suffix.
    $installerArgs = @{
       Version = $TR4W_VERSION
       Cpu     = $Cpu
@@ -603,7 +607,7 @@ if ($BuildInstaller)
    }
    if ($ExcludeSymbols)           { $installerArgs['ExcludeSymbols'] = $true }
    if ($InstallerOutDir -ne '')   { $installerArgs['OutDir'] = $InstallerOutDir }
-   if (-not (Test-Tr4wIsI386Win32 -Cpu $Cpu -Os $Os)) { $installerArgs['StageDir'] = $STAGE_DIR }
+   if (-not (Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os)) { $installerArgs['StageDir'] = $STAGE_DIR }
 
    & (Join-Path $BUILD_DIR 'Build-Installer.ps1') @installerArgs | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'NSIS installer build failed' }

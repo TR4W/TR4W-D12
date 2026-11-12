@@ -20,8 +20,8 @@ param(
    [string] $OutExe = '',
    [string] $Fpc = '',
    [string] $Laz = '',
-   [string] $Cpu = 'i386',
-   [string] $Os  = 'win32',
+   [string] $Cpu = '',
+   [string] $Os  = '',
    [switch] $Run
 )
 
@@ -29,6 +29,11 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+
+$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
+$Cpu = $resolved.Cpu
+$Os  = $resolved.Os
 
 $TR4W_DIR    = Split-Path $PSScriptRoot -Parent
 $REPO        = Split-Path $TR4W_DIR -Parent
@@ -38,13 +43,13 @@ $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
 if (-not $tc) { exit 2 }
 
 $out = Join-Path $REPO "build-out\convert-$Cpu-$Os"
-# The default is per architecture (Get-StagingDir.ps1): i386 keeps tr4w\target,
-# everything else goes under build-out\dist and may NEVER be written into target.
-. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+# The default is per architecture (Get-StagingDir.ps1): the shipping x86_64 build
+# keeps tr4w\target; the 32-bit build goes under build-out\dist and may NEVER be
+# written into target.
 $exe = if ($OutExe -ne '') { $OutExe } else { Join-Path (Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os) 'tr4wconvert.exe' }
 try
    {
-   Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'tr4wconvert.exe'
+   Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'tr4wconvert.exe'
    }
 catch
    {

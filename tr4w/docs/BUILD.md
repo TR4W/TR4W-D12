@@ -48,7 +48,9 @@ plain `mkdir` usually succeeds), and locked-down machines refuse it outright.
 
 ## Build environment
 
-TR4W is a 32-bit (`i386-win32`) application. Use the 32-bit Lazarus + FPC toolchain, because a default 64-bit Pascal installation usually fails late and produces misleading errors.
+**UPDATE 2026-11-12 (issue 299): the default build is x86_64-win64.** `Build-App.ps1`, `Build-Server.ps1`, `Build-Convert.ps1`, `Build-Tests.ps1`, `FullBuild.ps1` and the installer build and ship the 64-bit program (`build-out\app-x86_64-win64\tr4w_fpc.exe`; `FullBuild.ps1` stages `tr4w\target\tr4w.exe`). `-Cpu i386` still builds the 32-bit program (`build-out\dist\i386-win32\`), which is **not shipped**. A 64-bit build needs an FPC and a Lazarus whose RTL and LCL units are for `x86_64-win64` and come from the same FPC (the build discovers and pairs them); a 32-bit build needs the i386 pair described below. The runtime DLLs of each architecture are in `tr4w\redist\<cpu>-<os>\` and `tr4w\target\` holds the 64-bit copy -- see `tr4w\redist\README.md`. The rest of this page was written when 32-bit was the only target; read its toolchain sections as the **-Cpu i386** instructions.
+
+TR4W was a 32-bit (`i386-win32`) application. For the 32-bit build, use the 32-bit Lazarus + FPC toolchain, because a default 64-bit Pascal installation usually fails late and produces misleading errors.
 
 ### One installer, and that is genuinely all
 

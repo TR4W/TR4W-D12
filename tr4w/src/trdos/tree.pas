@@ -1962,7 +1962,7 @@ var
 
 begin
   HourString := Copy(LogEntry, LogEntryHourAddress, LogEntryHourWidth);
-  Val(HourString, Hour, Result1);
+  ValChecked(HourString, Hour, Result1);
   if Result1 = 0 then GetLogEntryHour := Hour else GetLogEntryHour := -1;
 end;
 
@@ -2019,7 +2019,7 @@ begin
 
   TempString := NumberPartOfString(TempString);
 
-  Val(TempString, QSONumber, Result1);
+  ValChecked(TempString, QSONumber, Result1);
   if Result1 = 0 then
      begin
      GetLogEntryQSONumber := QSONumber
@@ -2055,7 +2055,7 @@ begin
      end
   else
      begin
-     Val(TempString, QSOPoints, Result1);
+     ValChecked(TempString, QSOPoints, Result1);
      GetLogEntryQSOPoints := QSOPoints;
      end;
 end;
@@ -2081,7 +2081,7 @@ begin
   TempString := Copy(LogEntry, LogEntryHourAddress, 5);
   Delete(TempString, 3, 1);
 
-  Val(TempString, Time, Result1);
+  ValChecked(TempString, Time, Result1);
 
   if Result1 = 0 then
      begin
@@ -2860,7 +2860,7 @@ var
 
 begin
   IntegerString := RemoveFirstString(LongString);
-  Val(IntegerString, Number, Result1);
+  ValChecked(IntegerString, Number, Result1);
   if Result1 = 0 then
      begin
      RemoveFirstLongInteger := Number
@@ -2881,7 +2881,7 @@ var
 begin
   TempString := RemoveFirstString(LongString);
 
-  Val(TempString, TempReal, Result1);
+  ValChecked(TempString, TempReal, Result1);
 
   if Result1 = 0 then
      begin
@@ -3189,7 +3189,7 @@ begin
   MonthString := UpperCase(BracketedString(DateString, '-', '-'));
 
   YearString := Copy(DateString, length(DateString) - 1, 2);
-  Val(YearString, Year, Result);
+  ValChecked(YearString, Year, Result);
 
   if MonthString = 'JAN' then
      begin
@@ -3276,8 +3276,8 @@ var
   MinuteString, HourString, DayString, MonthString, YearString: Str20;
 
 begin
-  Val(PostcedingString(TimeString, ':'), Minute, Result);
-  Val(PrecedingString(TimeString, ':'), Hour, Result);
+  ValChecked(PostcedingString(TimeString, ':'), Minute, Result);
+  ValChecked(PrecedingString(TimeString, ':'), Hour, Result);
 
   inc(Minute);
 
@@ -3290,7 +3290,7 @@ begin
         begin
         Hour := 0;
 
-        Val(PrecedingString(DateString, '-'), Day, Result);
+        ValChecked(PrecedingString(DateString, '-'), Day, Result);
         inc(Day);
         Str(Day, DayString);
 
@@ -3320,7 +3320,7 @@ begin
            if MonthString = 'FEB' then
               begin
               YearString := Copy(DateString, length(DateString) - 1, 2);
-              Val(YearString, Year, Result);
+              ValChecked(YearString, Year, Result);
 
               if (Year mod 4 = 0) and (Year <> 0) then { Leap year }
                  begin

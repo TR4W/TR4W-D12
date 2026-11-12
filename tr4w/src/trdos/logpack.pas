@@ -264,7 +264,7 @@ begin
         begin
         if StringHas(FrequencyString, '.') then
            begin
-           Val(FrequencyString, QSXFreq, Result1);
+           ValChecked(FrequencyString, QSXFreq, Result1);
 
                  { Convert MHz to Hz }
 
@@ -283,7 +283,7 @@ begin
 
         if length(FrequencyString) >= 4 then { Entered complete kHz }
            begin
-           Val(FrequencyString, QSXFreq, Result1);
+           ValChecked(FrequencyString, QSXFreq, Result1);
 
                  { Convert KHz to Hz }
 
@@ -293,7 +293,7 @@ begin
 
         if length(FrequencyString) = 3 then { Entered kHz w/o MHz }
            begin
-           Val(FrequencyString, QSXFreq, Result1);
+           ValChecked(FrequencyString, QSXFreq, Result1);
 
                  { Compute MHz part of PacketFrequency }
 
@@ -315,7 +315,7 @@ begin
 
      if length(FrequencyString) <= 2 then { Entered kHz offset }
         begin
-        Val(FrequencyString, QSXFreq, Result1);
+        ValChecked(FrequencyString, QSXFreq, Result1);
 
             { Add them together }
 
@@ -332,7 +332,7 @@ begin
 
      if length(FrequencyString) <= 2 then { Entered kHz offset }
         begin
-        Val(FrequencyString, QSXFreq, Result1);
+        ValChecked(FrequencyString, QSXFreq, Result1);
 
             { Add them together }
 
@@ -394,7 +394,7 @@ begin
 
      FrequencyString := RemoveFirstString(InputString);
 
-     Val(FrequencyString, TempFrequency, Result1);
+     ValChecked(FrequencyString, TempFrequency, Result1);
 
      if Result1 <> 0 then Exit;
 
@@ -484,7 +484,7 @@ begin
 
      if not StringHas(FrequencyString, '.') then Exit;
 
-     Val(FrequencyString, TempFrequency, Result1);
+     ValChecked(FrequencyString, TempFrequency, Result1);
      if Result1 <> 0 then Exit;
 
        { Look at the date and time syntax }
@@ -579,7 +579,7 @@ begin
 
      if not StringHas(FrequencyString, '.') then Exit;
 
-     Val(FrequencyString, TempFrequency, Result1);
+     ValChecked(FrequencyString, TempFrequency, Result1);
      if Result1 <> 0 then Exit;
 
        { Look at the date and time syntax }
@@ -668,7 +668,7 @@ begin
 
      if not StringHas(FrequencyString, '.') then Exit;
 
-     Val(FrequencyString, TempFrequency, Result1);
+     ValChecked(FrequencyString, TempFrequency, Result1);
      if Result1 <> 0 then Exit;
 
        { Look at the date and time syntax }

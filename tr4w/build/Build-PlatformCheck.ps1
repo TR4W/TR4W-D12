@@ -19,8 +19,8 @@ param(
    [switch] $Run,
    [string] $Fpc = '',
    [string] $Laz = '',
-   [string] $Cpu = 'i386',
-   [string] $Os  = 'win32'
+   [string] $Cpu = 'x86_64',
+   [string] $Os  = 'win64'
 )
 
 $ErrorActionPreference = 'Stop'

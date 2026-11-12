@@ -168,6 +168,9 @@ end;
 
 implementation
 
+uses
+   utils_text;
+
 // No uses clause: the `logger` referred to here is the FIELD on
 // TFactoryRadioBase, not MainUnit's global.  See uRadioElecraftK4.
 
@@ -558,7 +561,7 @@ begin
       end;
 
    freqStr := Copy(sMessage, 3, 11);
-   Val(freqStr, freqVal, convErr);
+   ValChecked(freqStr, freqVal, convErr);
    if convErr <> 0 then
       begin
       logger.Warn('[%s.ParseFAOrFBResponse] Non-numeric freq: %s',
@@ -640,7 +643,7 @@ begin
       Exit;
       end;
    wpmStr := Copy(sMessage, 3, 3);
-   Val(wpmStr, wpmVal, convErr);
+   ValChecked(wpmStr, wpmVal, convErr);
    if convErr = 0 then
       begin
       Self.localCWSpeed := wpmVal;
@@ -757,7 +760,7 @@ begin
       Exit;
       end;
 
-   Val(Copy(sMessage, 4, 4), magVal, convErr);   // P2: 4-digit magnitude in Hz
+   ValChecked(Copy(sMessage, 4, 4), magVal, convErr);   // P2: 4-digit magnitude in Hz
    if convErr <> 0 then
       begin
       logger.Warn('[%s.ParseRFResponse] Non-numeric RF offset: %s',

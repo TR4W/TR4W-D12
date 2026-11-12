@@ -93,11 +93,17 @@ param(
    [switch] $Lines,
    [string] $Fpc = '',
    [string] $Laz = '',
-   [string] $Cpu = 'i386',
-   [string] $Os  = 'win32'
+   # Empty = the shipping architecture, x86_64-win64 (Get-StagingDir.ps1).
+   [string] $Cpu = '',
+   [string] $Os  = ''
 )
 
 $ErrorActionPreference = 'Stop'
+
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
+$Cpu = $resolved.Cpu
+$Os  = $resolved.Os
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
@@ -231,37 +237,59 @@ Write-Host "BUILD OK -> $exe"
 # through with an unhandled exception, which reads like a broken test rather
 # than a missing file. Copied for the same reason as the rest: the tests run
 # from test\unit and the DLLs ship in target\.
-$runtimeDlls = @(
-   'libhamlib-4.dll',      # the load-time import itself
-   'libgcc_s_dw2-1.dll',   # ...and what it needs in turn
-   'libwinpthread-1.dll',
-   'libusb-1.0.dll',
-   'sqlite3.dll',          # the contest log; run-time bound, see above
-
-   # THE OpenSSL PAIR IS HERE SO A TEST CAN REACH THE CASE AFTER IT LOADS.
-   # uTestTLSRefusal pins that an HTTPS request whose verification cannot
-   # be set up is REFUSED rather than sent unverified. Without these,
-   # CheckScheme refuses one step earlier -- 'TLS unavailable' -- and the
-   # test passes without ever running the code it exists for. cacert.pem is
-   # deliberately NOT copied: a missing trusted-root bundle IS the fixture.
-   'libeay32.dll',
-   'ssleay32.dll'
-)
-$dllSrc = Join-Path $PSScriptRoot '..\target'
+#
+# THE DLLs COME FROM redist\<cpu>-<os>, NEVER FROM target\ (2026-11-12). The two
+# bitnesses' sets differ by NAME as well as by content (libgcc_s_dw2-1 for 32-bit,
+# libgcc_s_seh-1 for 64-bit), so copying over whatever was there last leaves the
+# other bitness's unwinder behind. Hence: stage the whole set, delete any
+# libgcc_s_* that is not in it, then read the PE machine of EVERY *.dll in the
+# test directory and FAIL if one is the wrong architecture or the set is
+# incomplete. A test exe that loads a wrong-bitness sqlite3.dll crashes in the
+# first LogDatabase suite, and a 32-bit OpenSSL pair makes TLSRefusal fail --
+# both measured 2026-11-12 -- so this is a gate, not a note.
+$dllSrc = Get-Tr4wRedistDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
 $dllDst = Split-Path $exe -Parent
-foreach ($d in $runtimeDlls)
+$srcDlls = @()
+if (Test-Path -LiteralPath $dllSrc) { $srcDlls = @(Get-ChildItem -LiteralPath $dllSrc -Filter '*.dll' -File) }
+$neededDlls = @('libhamlib-4.dll', 'libwinpthread-1.dll', 'libusb-1.0.dll', 'sqlite3.dll',
+                'libeay32.dll', 'ssleay32.dll')
+$haveNames = @($srcDlls | ForEach-Object { $_.Name })
+$missingDlls = @($neededDlls | Where-Object { $haveNames -notcontains $_ })
+if (@($haveNames | Where-Object { $_ -match '^libgcc_s_' }).Count -eq 0) { $missingDlls += 'libgcc_s_*.dll' }
+if ($missingDlls.Count -gt 0)
    {
-   $src = Join-Path $dllSrc $d
-   if (Test-Path -LiteralPath $src)
+   Write-Host ''
+   Write-Host "BUILD FAILED: unit-test runtime DLLs missing from $dllSrc :" -ForegroundColor Red
+   $missingDlls | ForEach-Object { Write-Host "  $_" }
+   exit 1
+   }
+
+foreach ($old in @(Get-ChildItem -LiteralPath $dllDst -Filter 'libgcc_s_*.dll' -File))
+   {
+   if ($haveNames -notcontains $old.Name) { Remove-Item -LiteralPath $old.FullName -Force }
+   }
+foreach ($dll in $srcDlls)
+   {
+   Copy-Item -LiteralPath $dll.FullName -Destination $dllDst -Force
+   }
+
+$wantMachine = Get-Tr4wExpectedPeMachine -Cpu $Cpu
+$wrongDlls = @()
+foreach ($dll in @(Get-ChildItem -LiteralPath $dllDst -Filter '*.dll' -File))
+   {
+   $m = Get-Tr4wPeMachine -Path $dll.FullName
+   if ($m -ne $wantMachine)
       {
-      Copy-Item -LiteralPath $src -Destination $dllDst -Force
+      $got = if ($m -eq 0) { 'not a PE image' } else { Get-Tr4wPeMachineName -Machine $m }
+      $wrongDlls += "  $($dll.Name) is $got, this test build is $(Get-Tr4wPeMachineName -Machine $wantMachine)"
       }
-   else
-      {
-      # Report rather than fail: only libhamlib-4.dll is strictly load-time, and
-      # a tree without the others should say so rather than die here.
-      Write-Host "  note: $d not found in target\ -- tests may not start" -ForegroundColor Yellow
-      }
+   }
+if ($wrongDlls.Count -gt 0)
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: wrong-architecture DLL(s) beside the test exe in $dllDst :" -ForegroundColor Red
+   $wrongDlls | ForEach-Object { Write-Host $_ }
+   exit 1
    }
 
 if ($Run)

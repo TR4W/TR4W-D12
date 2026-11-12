@@ -20,8 +20,10 @@ param(
    [string]   $OutExe = '',
    [string]   $Fpc = '',
    [string]   $Laz = '',
-   [string]   $Cpu = 'i386',
-   [string]   $Os  = 'win32'
+   # Empty = the shipping architecture, x86_64-win64 (Get-StagingDir.ps1). Pass
+   # -Cpu i386 for the 32-bit build, which is buildable but not shipped.
+   [string]   $Cpu = '',
+   [string]   $Os  = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,6 +31,11 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
 . (Join-Path $PSScriptRoot 'Build-Manifest.ps1')
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+
+$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
+$Cpu = $resolved.Cpu
+$Os  = $resolved.Os
 
 $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $REPO     = Split-Path $TR4W_DIR -Parent
@@ -40,13 +47,13 @@ if (-not $tc) { exit 2 }
 $out = Join-Path $REPO "build-out\app-$Cpu-$Os"
 $exe = if ($OutExe -ne '') { $OutExe } else { Join-Path $out 'tr4w_fpc.exe' }
 
-# A NON-i386 BUILD MUST NEVER LAND IN tr4w\target. The exe's directory is also
-# where the runtime DLLs are staged below, so an x64 exe there would overwrite
-# the 32-bit DLLs the i386 build and full.nsi read. See Get-StagingDir.ps1.
-. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
+# A NON-SHIPPING (i386) BUILD MUST NEVER LAND IN tr4w\target. The exe's
+# directory is also where the runtime DLLs are staged below, so a 32-bit exe
+# there would overwrite the shipping 64-bit DLLs full.nsi reads. See
+# Get-StagingDir.ps1.
 try
    {
-   Assert-Tr4wNotI386Path -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'executable and staged DLLs'
+   Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'executable and staged DLLs'
    }
 catch
    {
@@ -512,56 +519,21 @@ if ($rc -ne 0)
 # and at that point the mismatch INVERTS: the 32-bit DLLs become the wrong ones.
 # A check written as "64-bit is bad" would then pass the broken case and fail
 # the good one, which is worse than no check at all.
-function Get-PEMachineType
-   {
-   param([Parameter(Mandatory = $true)][string] $Path)
+$expectMachine = Get-Tr4wExpectedPeMachine -Cpu $Cpu
 
-   $fs = [IO.File]::OpenRead($Path)
-   try
-      {
-      $br = New-Object IO.BinaryReader($fs)
-      $fs.Position = 0x3C
-      $peOffset = $br.ReadInt32()
-      if ($peOffset -le 0 -or $peOffset -ge $fs.Length - 6) { return 0 }
-      $fs.Position = $peOffset
-      if ($br.ReadUInt32() -ne 0x00004550) { return 0 }    # the PE signature
-      return [int] $br.ReadUInt16()
-      }
-   finally
-      {
-      $fs.Dispose()
-      }
-   }
-
-$MACHINE_NAMES = @{ 0x014C = 'x86 (32-bit)'; 0x8664 = 'x64 (64-bit)'; 0x01C0 = 'ARM'; 0xAA64 = 'ARM64' }
-$expectMachine = switch ($Cpu)
-   {
-   'i386'   { 0x014C }
-   'x86_64' { 0x8664 }
-   default  { 0 }
-   }
-
-# WHERE THE RUNTIME DLLs COME FROM IS PER ARCHITECTURE (2026-09-14).
+# WHERE THE RUNTIME DLLs COME FROM IS PER ARCHITECTURE, AND ALWAYS redist\.
 #
-# tr4w\target is the i386 PROGRAM directory as well as its DLL staging area,
-# and the files there are 32-bit. They cannot also be the x64 set: sqlite3.dll
-# and libhamlib-4.dll have the SAME FILE NAME in both bitnesses, so only a
-# directory can keep them apart -- which is what tr4w\redist\<cpu>-<os> is
-# for. See tr4w/redist/README.md.
-#
-# i386-win32 keeps reading tr4w\target so nothing about the shipping build
-# changes; any other target reads its redist directory, and gets NOTHING at
-# all if that directory is absent, which the missing-file check below turns
-# into a named list rather than a silent partial stage.
-$archRedist = Join-Path $TR4W_DIR "redist\$Cpu-$Os"
-if ($Cpu -eq 'i386' -and $Os -eq 'win32')
-   {
-   $dllSource = Join-Path $TR4W_DIR 'target'
-   }
-else
-   {
-   $dllSource = $archRedist
-   }
+# sqlite3.dll and libhamlib-4.dll have the SAME FILE NAME in both bitnesses, so
+# only a directory can keep them apart -- which is what tr4w\redist\<cpu>-<os>
+# is for (see tr4w/redist/README.md). EVERY architecture stages from its own
+# redist directory. tr4w\target holds a COPY of the shipping architecture's set
+# (so the program runs from the tree) and is never a source: before 2026-11-12
+# the 32-bit set lived there and the i386 build read it, which is exactly the
+# arrangement that made the flip dangerous. A redist directory that is absent
+# yields NO DLLs, which the missing-file check below turns into a named list
+# rather than a silent partial stage.
+$archRedist = Get-Tr4wRedistDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
+$dllSource  = $archRedist
 $exeDir    = Split-Path $exe -Parent
 $staged    = 0
 $badArch   = @()
@@ -569,8 +541,8 @@ $badArch   = @()
 $dlls = @()
 if (Test-Path $dllSource) { $dlls = @(Get-ChildItem -Path $dllSource -Filter '*.dll' -File) }
 
-# WHAT THE PROGRAM NEEDS IS DEFINED BY THE SHIPPING i386 SET, MINUS the one
-# name that legitimately differs between bitnesses.
+# WHAT THE PROGRAM NEEDS IS ONE NAME LIST, MINUS the one name that legitimately
+# differs between bitnesses.
 #
 # libgcc_s_dw2-1.dll is MinGW's DWARF-2 unwinder and exists only for 32-bit;
 # the x64 HamLib zip ships libgcc_s_seh-1.dll instead. That is not a missing
@@ -578,35 +550,27 @@ if (Test-Path $dllSource) { $dlls = @(Get-ChildItem -Path $dllSource -Filter '*.
 # shipped the wrong one of these -- HamLib 4.7.0 needed dw2 while the
 # installer still carried the older sjlj build, and clean Windows installs
 # died with "missing libgcc_s_dw2-1.dll". Same failure mode, one variant
-# further along.
-if ($dllSource -ne (Join-Path $TR4W_DIR 'target'))
-   {
-   $i386Dir = Join-Path $TR4W_DIR 'target'
-   $needed  = @()
-   if (Test-Path $i386Dir)
-      {
-      $needed = @(Get-ChildItem -Path $i386Dir -Filter '*.dll' -File |
-                  ForEach-Object { $_.Name } |
-                  Where-Object { $_ -notmatch '^libgcc_s_' })
-      }
-   $have    = @($dlls | ForEach-Object { $_.Name })
-   $unwind  = @($have | Where-Object { $_ -match '^libgcc_s_' })
-   $missing = @($needed | Where-Object { $have -notcontains $_ })
-   if ($unwind.Count -eq 0) { $missing += 'a libgcc_s_*.dll (MinGW unwinder)' }
+# further along. So: every non-libgcc name below must be present, plus exactly
+# one libgcc_s_*.dll.
+$needed  = @('libeay32.dll', 'ssleay32.dll', 'sqlite3.dll', 'libhamlib-4.dll',
+             'libusb-1.0.dll', 'libwinpthread-1.dll')
+$have    = @($dlls | ForEach-Object { $_.Name })
+$unwind  = @($have | Where-Object { $_ -match '^libgcc_s_' })
+$missing = @($needed | Where-Object { $have -notcontains $_ })
+if ($unwind.Count -eq 0) { $missing += 'a libgcc_s_*.dll (MinGW unwinder)' }
 
-   if ($missing.Count -gt 0)
-      {
-      Write-Host ''
-      Write-Host "BUILD FAILED: $Cpu-$Os runtime DLLs are missing from redist."
-      $missing | ForEach-Object { Write-Host "  $_" }
-      Write-Host ''
-      Write-Host "  Looked in: $dllSource"
-      Write-Host '  These are LOAD-TIME imports -- the Windows loader resolves them before'
-      Write-Host '  a line of TR4W runs, so an absent one is a bare failure at launch with'
-      Write-Host '  nothing in tr4w.log. The linked binary is left in place; only staging'
-      Write-Host '  was refused.'
-      exit 1
-      }
+if ($missing.Count -gt 0)
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: $Cpu-$Os runtime DLLs are missing from redist."
+   $missing | ForEach-Object { Write-Host "  $_" }
+   Write-Host ''
+   Write-Host "  Looked in: $dllSource"
+   Write-Host '  These are LOAD-TIME imports -- the Windows loader resolves them before'
+   Write-Host '  a line of TR4W runs, so an absent one is a bare failure at launch with'
+   Write-Host '  nothing in tr4w.log. The linked binary is left in place; only staging'
+   Write-Host '  was refused.'
+   exit 1
    }
 
 # VALIDATE EVERY DLL BEFORE STAGING ANY OF THEM, and that order is the whole
@@ -619,11 +583,12 @@ if ($dllSource -ne (Join-Path $TR4W_DIR 'target'))
 foreach ($dll in $dlls)
    {
    if ($expectMachine -eq 0) { break }
-   $m = Get-PEMachineType -Path $dll.FullName
-   if ($m -ne 0 -and $m -ne $expectMachine)
+   $m = Get-Tr4wPeMachine -Path $dll.FullName
+   if ($m -ne $expectMachine)
       {
-      $got  = if ($MACHINE_NAMES.ContainsKey($m))             { $MACHINE_NAMES[$m] }             else { "0x{0:X4}" -f $m }
-      $want = if ($MACHINE_NAMES.ContainsKey($expectMachine)) { $MACHINE_NAMES[$expectMachine] } else { "0x{0:X4}" -f $expectMachine }
+      # m = 0 is "not a PE image at all" -- refused too, fail closed.
+      $got  = if ($m -eq 0) { 'not a PE image' } else { Get-Tr4wPeMachineName -Machine $m }
+      $want = Get-Tr4wPeMachineName -Machine $expectMachine
       $badArch += "  $($dll.Name) is $got, but this build targets $want"
       }
    }
@@ -641,9 +606,27 @@ if ($badArch.Count -gt 0)
    exit 1
    }
 
-# Same directory means the binary already sits with its DLLs (FullBuild links
-# straight into target). Nothing to stage.
-if ($exeDir -ne $dllSource)
+# The program directory (tr4w\target, the shipping stage) already holds
+# cacert.pem and gets help\ from the installer; only the DLL copy applies there.
+$stagingIntoTarget = Test-Tr4wUnder -Path $exeDir -Dir (Join-Path $TR4W_DIR 'target')
+
+# A MinGW unwinder of the OTHER bitness left beside the exe by an earlier build
+# of that architecture is removed: libgcc_s_dw2-1.dll (32-bit) and
+# libgcc_s_seh-1.dll (64-bit) have different NAMES, so copying over an old stage
+# would otherwise leave the wrong one in place beside the right one.
+if (Test-Path -LiteralPath $exeDir)
+   {
+   foreach ($old in @(Get-ChildItem -LiteralPath $exeDir -Filter 'libgcc_s_*.dll' -File))
+      {
+      if ($have -notcontains $old.Name)
+         {
+         Remove-Item -LiteralPath $old.FullName -Force
+         Write-Host "  removed stale $($old.Name) from $exeDir (not part of the $Cpu-$Os set)"
+         }
+      }
+   }
+
+if (Test-Path -LiteralPath $exeDir)
    {
    foreach ($dll in $dlls)
       {
@@ -663,10 +646,10 @@ if ($exeDir -ne $dllSource)
 
    # cacert.pem is not a DLL, so the loop above never sees it, but HTTPS
    # verification (Club Log, issue 221) reads it from beside the exe. It is
-   # sourced from the i386 target directory whatever the CPU: x86_64 redist
+   # sourced from the tr4w\target program directory whatever the CPU: redist
    # holds DLLs only, and the file is the same for every bitness.
    $cacertSrc = Join-Path (Join-Path $TR4W_DIR 'target') 'cacert.pem'
-   if (Test-Path $cacertSrc)
+   if ((-not $stagingIntoTarget) -and (Test-Path $cacertSrc))
       {
       $cacert = Get-Item $cacertSrc
       $dest   = Join-Path $exeDir 'cacert.pem'
@@ -689,7 +672,11 @@ if ($exeDir -ne $dllSource)
    # help\ of its own. build-out\ is git-ignored, so the copy is too.
    $helpDest = Join-Path $exeDir 'help'
    $helpSrc  = @(Get-ChildItem -LiteralPath (Join-Path $REPO 'i18n') -Filter 'help_*.po' -File -ErrorAction SilentlyContinue)
-   if ($helpSrc.Count -eq 0)
+   if ($stagingIntoTarget)
+      {
+      # shipping stage: nothing to add (installer supplies help)
+      }
+   elseif ($helpSrc.Count -eq 0)
       {
       Write-Warning "no i18n\help_*.po found: Preferences tooltips will be empty in this run"
       }

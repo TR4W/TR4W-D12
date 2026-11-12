@@ -182,6 +182,14 @@ cleared BEFORE the stop request is withdrawn -- `pFactoryRadio` leaves its loop
 when `rig^.tFactoryObject <> ro`, so a leaked poller cannot become a second
 one. `RadioObject.StartPollingThread` is the one place a poller starts.
 Pinned by the two `Test_ShutDown*` tests.
+**A "TIMED OUT" IS NOT PROOF THE POLLER WAS STUCK** (2026-11-12, x64). FPC's
+`TThreadID` is `DWord` on Windows in both bitnesses; `THandle` is `QWord` on
+Win64. The wait passed the `TThreadID` to `MsgWaitForMultipleObjects`' untyped
+`var`, Win64 read 8 bytes, every wait was `WAIT_FAILED`, and NY4I's K4 was
+leaked after 6 s although its poller had left in ~10 ms. The wait now uses a
+`THandle` local and finishes a `WAIT_FAILED` on `PollingThreadRunning`
+(`Test_WaitThatCannotWait*`). Run `Build-Tests.ps1 -Cpu x86_64` before
+believing a threading result on x64; i386 cannot show a width defect.
 **EXIT GOES THROUGH THE SAME ROUTINE** (issue #107, 2026-10-26).
 `ExitProgram` used to keep its own copy -- a 3 s wait it ignored, then
 `Disconnect`, no `InterruptLink` -- so a switched-off network radio held exit

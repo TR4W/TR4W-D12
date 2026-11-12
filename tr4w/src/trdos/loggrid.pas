@@ -820,13 +820,13 @@ begin
   (Coordinates[length(Coordinates)] <> 'W') then Exit;
 
   TempStr10 := Copy(Coordinates, 1, LatPos - 1);
-  Val(TempStr10, LatValue, ConvResult);
+  ValChecked(TempStr10, LatValue, ConvResult);
   if ConvResult <> 0 then Exit;
   if LatValue > 89 then Exit;
   if length(TempStr10) > 2 then Exit;
 
   TempStr10 := Copy(Coordinates, LatPos + 1, length(Coordinates) - LatPos - 1);
-  Val(TempStr10, LongValue, ConvResult);
+  ValChecked(TempStr10, LongValue, ConvResult);
   if ConvResult <> 0 then Exit;
   if LongValue > 179 then Exit;
   if length(TempStr10) > 3 then Exit;
