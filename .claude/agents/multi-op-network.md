@@ -774,10 +774,19 @@ door on a port the system picks.
   TR4WServerPy's own). What is NOT yet shown: the link inside a running TR4W,
   two separate networks, a tunnel that dies mid-contest. No unit test drives
   the forwarder; it needs the library and a relay.
-- **Open under issue 293:** shipping the library (CI build per platform at the
-  pinned upstream commit, macOS signing, BSD notice), the in-tree `tr4wserver`
-  as a tunnel server, a link status that says "tunnel up" apart from
-  "admitted".
+- **The library is BUILT, never committed** (NY4I, 2026-11-12).
+  `tr4w/build/tailcat.pin` is the one place that names the upstream commit and
+  the Go version; `build/Build-Tailcat.ps1` (Windows) and
+  `build/build-tailcat.sh` (Linux, macOS) read it, fetch that commit, fail
+  closed on anything else, and write `libtailcat-NOTICES.txt` beside the
+  library (the licence of every module linked in -- it must ship with the
+  binary). **The server end must be built from the SAME commit**: upstream
+  promises no stable wire format, so moving the pin means rebuilding
+  TR4WServerPy's `libtailcat` too.
+- **Open under issue 293:** the release workflow calling those scripts and the
+  packages carrying the result (macOS: in `Contents/Frameworks` before
+  `mac-sign.sh`), the in-tree `tr4wserver` as a tunnel server, a link status
+  that says "tunnel up" apart from "admitted".
 
 ## Coordinate with
 
