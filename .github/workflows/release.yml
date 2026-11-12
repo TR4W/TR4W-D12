@@ -211,6 +211,35 @@ jobs:
           Write-Host "  makensis : $makensis"
 
       # ---------------------------------------------------------------
+      # libtailcat.dll (issue 293) is BUILT here from a pinned upstream commit,
+      # never committed (32 MB, and a binary nobody could rebuild from the
+      # tree). tr4w\build\tailcat.pin names the repo, the commit and the Go
+      # version; Build-Tailcat.ps1 fetches the commit, refuses anything that
+      # is not exactly that commit, downloads the pinned Go (checksummed) and
+      # writes the DLL into tr4w\redist\x86_64-win64, from which Build-App
+      # stages it beside the exe and full.nsi packs it. cgo needs an x86_64
+      # MinGW-w64 gcc: win-ci has one inside the Qt install, off the PATH.
+      # FATAL on purpose: a release meant to carry Tailcat must not ship
+      # without it unnoticed.
+      # ---------------------------------------------------------------
+      - name: Build libtailcat.dll
+        shell: powershell
+        working-directory: ${{ github.workspace }}\tr4w
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $mingw = 'C:\Qt\Tools\mingw1310_64\bin'
+          if (-not (Test-Path (Join-Path $mingw 'gcc.exe'))) {
+            throw "No x86_64 MinGW-w64 gcc at $mingw (cgo needs it to build libtailcat)."
+          }
+          $env:TAILCAT_CC = Join-Path $mingw 'gcc.exe'
+          $env:PATH = "$mingw;$env:PATH"
+          .\build\Build-Tailcat.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Build-Tailcat.ps1 failed with exit code $LASTEXITCODE" }
+          $dll = Join-Path $env:GITHUB_WORKSPACE 'tr4w\redist\x86_64-win64\libtailcat.dll'
+          if (-not (Test-Path $dll)) { throw "libtailcat.dll was not produced at $dll" }
+          Write-Host "  libtailcat.dll: $((Get-Item $dll).Length) bytes"
+
+      # ---------------------------------------------------------------
       # ONE packaging path. FullBuild.ps1 runs the lints, builds and RUNS the
       # unit tests (a failing test aborts before any binary is produced),
       # builds the app and tr4wserver, and drives NSIS. Nothing here duplicates

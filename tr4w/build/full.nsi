@@ -339,9 +339,15 @@ Section "tr4w.exe" secexe
 	File "${BINDIR}\libusb-1.0.dll"
 	File "${BINDIR}\libwinpthread-1.dll"
 	; The Tailcat tunnel library (issue 293), loaded beside the exe
-	; and only when Use Tailcat is ticked. /nonfatal: a build that did not stage
-	; it still makes an installer, and the box then says the library is missing.
+	; and only when Use Tailcat is ticked. /nonfatal: a developer build that did
+	; not build it still makes an installer, and the box then says the library is
+	; missing. The RELEASE cannot lack it: release.yml builds it in a fatal step
+	; (Build-Tailcat.ps1) before this installer is made.
 	File /nonfatal "${BINDIR}\libtailcat.dll"
+	; The licence notices for the library and the Go modules linked into it
+	; (BSD-3, MIT, Apache-2.0 require them to travel with the binary); written
+	; by Build-Tailcat.ps1 beside its output under build-out.
+	File /nonfatal "..\..\build-out\tailcat\x86_64-win64\libtailcat-NOTICES.txt"
 	; The contest log.  SQLITE_LOG_SCHEMA_PLAN.md section 9 said to add this line
 	; "in the same commit as the first code that opens a database" -- which is
 	; the commit that added src\domain\uLogDatabase.pas, so here it is.
