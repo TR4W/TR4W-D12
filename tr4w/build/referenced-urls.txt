@@ -46,6 +46,7 @@ https://contestcalendar.com/contestdetails.php?ref=%u | template | skip | MainUn
 https://curl.se/ca/cacert.pem | tooling | head | build\full.nsi
 https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage | template | sample | build-appimage.sh | https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage | github.com,objects.githubusercontent.com,release-assets.githubusercontent.com
 https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$ARCH | template | sample | build-appimage.sh | https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64 | github.com,objects.githubusercontent.com,release-assets.githubusercontent.com
+https://go.dev/dl/$archive | template | sample | build\Build-Tailcat.ps1 | https://go.dev/dl/go1.27.3.windows-amd64.zip | go.dev,dl.google.com
 https://supercheckpartial.com/downloads/MASTER.DTA | tooling | head | tools\trmaster\trmaster_build.py
 https://supercheckpartial.com/downloads/SCP.DB | tooling | head | tools\trmaster\trmaster_build.py
 https://xmldata.qrz.com/xml/current/ | tooling | head | tools\trmaster\trmaster_names_qrz.py | the real use is credentialed; a check sends none
