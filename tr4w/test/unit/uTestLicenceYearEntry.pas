@@ -16,8 +16,10 @@ unit uTestLicenceYearEntry;
    counted on the zone sheet, so no stored value or export byte moves.
 
    What is pinned here: every year 00..99, bare and after the report, on CW and
-   Phone; RS against RST; every refusal names TC_IMPROPERZONENUMBER and leaves
-   the stored year alone; the SAME answers in CQ and ITU zone mode (the zone
+   Phone; RS against RST; every refusal names a YEAR (SExchangeNoLicenseYear
+   for nothing or a report alone, SExchangeImproperLicenseYear otherwise --
+   never the zone parser's TC_IMPROPERZONENUMBER) and leaves the stored year
+   alone; the SAME answers in CQ and ITU zone mode (the zone
    parser, in CQ mode, refuses the same years -- the contrast); both classes
    reach the year parser through the real engine (ProcessExchange) in CQ zone
    mode; the year counted once per band regardless of mode; the remaining-years
@@ -38,7 +40,8 @@ type
                          aZoneMode: ZoneModeType; out aRX: ContestExchange): boolean;
       procedure Accepted(const aText: string; aMode: ModeType; aZoneMode: ZoneModeType;
                          aExpectYear: integer; aExpectRST: integer);
-      procedure Refused(const aText: string; aMode: ModeType; aZoneMode: ZoneModeType);
+      procedure Refused(const aText: string; aMode: ModeType; aZoneMode: ZoneModeType;
+                        const aExpectMessage: string);
       procedure Test_EveryYearIsAcceptedBareAndAfterTheReport;
       procedure Test_TheReportIsRSOnPhoneAndRSTOnCW;
       procedure Test_RefusalsNameTheirReasonAndLeaveTheYear;
@@ -58,6 +61,8 @@ uses
    uCallsigns,
    uMults,
    uTR4WStrings,
+   (* SExchangeNoLicenseYear, SExchangeImproperLicenseYear *)
+   uAppStrings,
    uContestBase,
    uContestFactory,
    uContestRegistry,
@@ -94,7 +99,8 @@ begin
       aRX := Default(ContestExchange);
       StoreLicenceYear(aRX, SENTINEL_YEAR);
       ExchangeErrorMessage := '';
-      Result := ProcessRSTAndLicenceYearExchange(ShortString(aText), aRX);
+      (* The kind both contests state (issue 298, stage 2). *)
+      Result := ProcessRSTAndLicenceYearExchange(ShortString(aText), rykTwoDigitYear, aRX);
    finally
       ActiveMode := savedMode;
       CTY.ctyZoneMode := savedZoneMode;
@@ -122,7 +128,7 @@ begin
 end;
 
 procedure TLicenceYearEntryTests.Refused(const aText: string; aMode: ModeType;
-   aZoneMode: ZoneModeType);
+   aZoneMode: ZoneModeType; const aExpectMessage: string);
 var
    rx: ContestExchange;
    ok: boolean;
@@ -131,7 +137,7 @@ begin
    what := '"' + aText + '" mode ' + IntToStr(Ord(aMode)) + ' zm ' + IntToStr(Ord(aZoneMode));
    ok := YearEntry(aText, aMode, aZoneMode, rx);
    CheckFalse(ok, what + ' is refused');
-   CheckEquals(string(TC_IMPROPERZONENUMBER), ExchangeErrorMessage, what + ' message');
+   CheckEquals(aExpectMessage, ExchangeErrorMessage, what + ' message');
    CheckEquals(SENTINEL_YEAR, LicenceYearOf(rx), what + ' year untouched');
 end;
 
@@ -178,12 +184,18 @@ begin
    Accepted('5 82', Phone, CQZoneMode, 82, 55);
 end;
 
-(* NOT A YEAR: three or four digits, letters, a report alone. Each refused with
-   the zone parser's message (no new string) and the year left as it was. *)
+(* NOT A YEAR, AND THE MESSAGE NAMES A YEAR, NEVER A ZONE (2026-11-11 -- a
+   lone '599' said 'Improper zone number!!' in contests that have no zone).
+   NO YEAR: nothing typed, or a report alone -- one word with the mode's RS(T)
+   shape, which ValidRST takes ('599' and '123' on CW; on Phone a lone two
+   digits is a year, so a three-digit word there is no report). IMPROPER: every
+   other entry that is not one or two digits after an optional report --
+   three or four digits after a report, a four-digit year, letters. The year is
+   left as it was either way. *)
 procedure TLicenceYearEntryTests.Test_RefusalsNameTheirReasonAndLeaveTheYear;
 const
-   NOT_A_YEAR: array[0..8] of string = (
-      '', '123', '1982', '599 123', '599 1982', 'CT', '599 CT', '82A', '5NN 82');
+   IMPROPER_EVERYWHERE: array[0..7] of string = (
+      '1982', '599 123', '599 1982', 'CT', '599 CT', '82A', '5NN 82', '699');
 var
    zm: ZoneModeType;
    s: string;
@@ -191,10 +203,18 @@ begin
    BeginTest('Test_RefusalsNameTheirReasonAndLeaveTheYear');
    for zm := CQZoneMode to ITUZoneMode do
       begin
-      for s in NOT_A_YEAR do
+      Refused('', CW, zm, SExchangeNoLicenseYear);
+      Refused('', Phone, zm, SExchangeNoLicenseYear);
+      Refused('599', CW, zm, SExchangeNoLicenseYear);
+      Refused('579', CW, zm, SExchangeNoLicenseYear);
+      Refused('123', CW, zm, SExchangeNoLicenseYear);
+      Refused('599', Digital, zm, SExchangeNoLicenseYear);
+      Refused('599', Phone, zm, SExchangeImproperLicenseYear);
+      Refused('123', Phone, zm, SExchangeImproperLicenseYear);
+      for s in IMPROPER_EVERYWHERE do
          begin
-         Refused(s, CW, zm);
-         Refused(s, Phone, zm);
+         Refused(s, CW, zm, SExchangeImproperLicenseYear);
+         Refused(s, Phone, zm, SExchangeImproperLicenseYear);
          end;
       end;
 end;
@@ -297,8 +317,18 @@ begin
          ExchangeErrorMessage := '';
          ok := ProcessExchange('599 1982', rx);
          CheckFalse(ok, who + ': a four-digit year is refused');
-         CheckEquals(string(TC_IMPROPERZONENUMBER), ExchangeErrorMessage, who + ': its message');
+         CheckEquals(SExchangeImproperLicenseYear, ExchangeErrorMessage, who + ': its message');
          CheckEquals(SENTINEL_YEAR, LicenceYearOf(rx), who + ': the year untouched');
+
+         (* THE SCREENSHOT'S CASE: the report alone. It said 'Improper zone
+            number!!'. *)
+         rx := Default(ContestExchange);
+         StoreLicenceYear(rx, SENTINEL_YEAR);
+         ExchangeErrorMessage := '';
+         ok := ProcessExchange('599', rx);
+         CheckFalse(ok, who + ': 599 alone is refused');
+         CheckEquals(SExchangeNoLicenseYear, ExchangeErrorMessage, who + ': no year found');
+         CheckEquals(SENTINEL_YEAR, LicenceYearOf(rx), who + ': 599 alone, the year untouched');
          end;
    finally
       Contest := savedContest;

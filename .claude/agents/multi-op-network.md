@@ -136,6 +136,35 @@ with `SM_COMPUTERID_IN_USE`; its computer id is no longer taken from
 
 The server's own log holds each sender's `ceContest` byte as it came (a by-id handle means nothing outside the program that wrote it), and the log-compare packet reads the first record's. Neither is judged by the server. The late catch-up (below) reads that log and restamps, as the receive arms do, and judges each record's contest itself.
 
+## Network protocol 3: the QSO record carries a received year (issue 298, 2026-11-12)
+
+`NET_PROTOCOL_VERSION` = **3**. `ContestExchange` gained `RcvdYear` (Word, offset
+324) and `RcvdYearKnown` (326), carved from `sReserved`: **every size is
+unchanged** (QSO packet 384, record 376, `SERVERLOG.TRW` stride 376) and the
+server stores and relays the record without knowing. The bump is for MEANING: a
+protocol-2 station sends those bytes as zero, so its QSOs would arrive with no
+year. NY4I ruled no compatibility with a released server is needed.
+**TR4WServerPy (other repository, the pi400 bench rig) judges versions EQUAL and
+must move to 3**, or it refuses every station of this build;
+`tools/netprobe/netprobe.py` is at 3. Pins: `uTestNetHello` (the version),
+`uTestLogReceivedYear` (`TNetReceivedYearTests`: the packet carries the year
+and the year 00; a QSO caught up from the server's log keeps it; and since
+stage 2 a QSO received LIVE through the real NET_QSOINFO arm stores it).
+
+**A UNIT TEST CAN DRIVE THE NET_QSOINFO ARM WITH A NEW QSO -- IF IT STREAMS THE
+MAIN FORM** (diagnosed 2026-11-12, issue 298 stage 2). The access violation
+stage 1 met, and the old belief that "LogContact cannot be survived in a unit
+test" (`uTestNetResend`, `uTestContestById`), were both the display: run step
+by step, `LogContact(.., False)` COMPLETES and the row is stored; the fault is
+`UpdateWindows` (`DisplayTotalScore`, `DisplayNextQSONumber`,
+`DisplayQSOsByOpMode`) and `LogContact`'s `DisplayHour`, which write
+`TR4WMainForm` panels -- nil in the test binary. NOT a live defect: the program
+creates the form before `NetLinkStartup`, and a packet is parsed on the main
+thread via `Application.QueueAsyncCall`. `uTestMainFormHarness.EnsureTestMainForm`
+/ `ReleaseTestMainForm` (lifted from `uTestStatusAndNotice`) supply and remove
+it; always release it (other suites assert it is nil). Send the peer's QSO as
+an X-QSO to keep it off the session totals and sheets later suites share.
+
 ## The link belongs to the program, not to the Network window (2026-10-27)
 
 NY4I: *"I never liked the idea that we only connected when the Network window

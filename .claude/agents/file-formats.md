@@ -47,6 +47,28 @@ behaviour FINDING; report it with the diff.
 logs in `tr4w/test/unit/fixtures/binarylog/`. NY4I: *"that becomes a unit test
 and not the corpus."* Do not put `.trw` fixtures back in the corpus.
 
+**The record carries a received year since issue 298 stage 1 (2026-11-12)** --
+`RcvdYear` (Word, 324) and `RcvdYearKnown` (326), carved from `sReserved` like
+`ceXQSO`; still 376 bytes, no earlier offset moved. `TLogBinaryReader.ReadNext`
+CLEARS both (a D7 log never wrote them), and `uLogImport` refills them from
+`Zone` for a contest that kept its year there (`ContestKeepsYearInZoneSlot`).
+ADIF and Cabrillo still read the zone slot until stage 3. **ADIF IMPORT TAKES
+THE YEAR since stage 2 (2026-11-12)** -- in the contest's `ApplyADIFImport` (the
+base, for any contest that states a `ReceivedYearKind`), never at the `CQZ` tag,
+which may precede `CONTEST_ID`: `SRX_STRING` first (one word after the RST, as
+TR4W writes it), else a `CQZ`/`ITUZ` value, through `StoreLicenceYear`. Before
+that a TR4W EUHFC ADIF re-imported with NO year: TR4W writes no CQZ for those
+contests. Expect the matrix's EUHFC/KVP import lines with a numeric SRX
+(`srx.rst+number`, `rtty.dx`) to gain `zone=`. **EXPORT READS THE FIELD since
+stage 3 (2026-11-12)**: a year contest's Cabrillo received column is
+`CabrilloReceivedRSTYear` (`'%-3s %-7s'`, byte-identical for two digits, blank
+for no year where the slot printed `255`), and its `SRX_STRING` is the RST and
+the year from `RcvdYear` (the base `FormatADIFReceivedExchange` for a stated
+kind) -- no longer the typed `ExchString`, which an Edit QSO change left
+stale. No CQZ/ITUZ is written for EUHFC/KVP (`zmzNotCQOrITU`). `MY_CQ_ZONE` of
+a NEW year-contest QSO is the call's CTY zone (`SessionMyCQZone`); rows
+captured before keep the year they recorded.
+
 Rules for running it:
 
 - **Rebuild the app first**, and confirm TR4W is not running (`Get-Process -Name

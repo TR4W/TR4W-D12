@@ -133,7 +133,8 @@ function ImportBinaryLog(const aSourceFile, aTargetFile: string;
 implementation
 
 uses
-   uContestRegistry;   (* ContestLegacyNumber -- the first record's contest *)
+   uContestRegistry,   (* ContestLegacyNumber -- the first record's contest *)
+   uContestBase;       (* StoreLicenceYear -- the received year, issue 298 *)
 
 (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE, and the first of them present:
   uLogDatabase.LOG_SIDECAR_SUFFIXES and LogSidecarPresent. Both lived here
@@ -189,9 +190,11 @@ var
    repo: TLogRepository;
    rec: ContestExchange;
    legacyNumber: integer;
+   yearInZone: boolean;
 begin
    Result := False;
    aFailure := '';
+   yearInZone := False;
 
    db := TLogDatabase.Create;
    try
@@ -260,6 +263,7 @@ begin
                      Break;
                      end;
                   repo.SetContest(rec.ceContest);
+                  yearInZone := ContestKeepsYearInZoneSlot(rec.ceContest);
                   end
                else if (rec.ceContest <> repo.LogContest) and
                        (aResult.Message = '') then
@@ -270,6 +274,15 @@ begin
                      'contest per log.',
                      [aResult.RecordsRead, rec.ceContest.ToByte,
                       repo.LogContest.ToByte]);
+                  end;
+               (* THE RECEIVED YEAR (issue 298, stage 1). The reader hands every
+                 record with none; a contest that kept its year in the zone slot
+                 -- the log's contest, the first record's -- gets it from there,
+                 by the rule the schema 6 migration applies to a .db
+                 (ContestKeepsYearInZoneSlot; DUMMYZONE is no year). *)
+               if yearInZone and (rec.Zone <> DUMMYZONE) then
+                  begin
+                  StoreLicenceYear(rec, rec.Zone);
                   end;
                try
                   (* Grouped, so a county line or a POTA n-fer arrives as one

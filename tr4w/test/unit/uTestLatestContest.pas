@@ -99,6 +99,10 @@ procedure ScrubTestLog(const aFileName: string);
   the current schema, then EVERY addition made after aToVersion is removed
   and user_version is stamped aToVersion:
 
+    v7  nothing to remove -- 7 changed no shape, it is a re-carry of
+        rcvd_year from rcvd_zone (issue 298, stage 2); stamping 6 is the
+        whole downgrade
+    v6  qso.rcvd_year (issue 298)
     v5  the external_delivery table
     v4  message.edited
     v3  the LOG_V3_QSO_COLUMNS, from index aFirstV3Dropped on (pass
@@ -170,6 +174,13 @@ begin
    db := TLogDatabase.Create;
    try
       db.Open(aFileName);
+      if aToVersion < 6 then
+         begin
+         (* Issue 298: the received year, the last qso column, so it goes
+           first and the my_* columns below are again the table's tail. *)
+         db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                string(LOG_V6_QSO_YEAR_COLUMN.Name)));
+         end;
       if aToVersion < 5 then
          begin
          (* Its two indexes go with it. *)

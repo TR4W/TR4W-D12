@@ -1230,6 +1230,7 @@ var
   readinessGaps                         : TStringList;
   gapIndex                              : integer;
   readinessContest                      : TContestBase;
+  yearContest                           : boolean;
   // What /IMPORT tells the operator, for the headless run's own trace.
   importReport                          : string;
    //  P                                   : Pchar; //n4af
@@ -2850,9 +2851,14 @@ begin
        too (M11 S9d); this handed in the session's exchange kind. One fetch
        for all four. *)
      readinessContest := ActiveContest(Contest);
+     (* A CONTEST THAT EXCHANGES THE YEAR FIRST LICENSED SENDS MY LICENSE YEAR,
+       NOT A ZONE (issue 298): it is asked for its own gap below, and MY ZONE
+       is not required of it. *)
+     yearContest := ContestReceivedYearKind(readinessContest) <> rykNone;
      CollectContestSettingsGaps(Contest <> NoContest,
                                 ContestExchangeCarriesDomesticQTH(readinessContest),
-                                ContestExchangeCarriesZone(readinessContest),
+                                ContestExchangeCarriesZone(readinessContest) and
+                                   (not yearContest),
                                 ContestExchangeCarriesGridSquare(readinessContest),
                                 ContestUsesDomesticFile(readinessContest),
                                 Settings.My.Call,
@@ -2863,6 +2869,11 @@ begin
                                 Settings.My.ResolvedGrid,
                                 Settings.Contest.DomesticFilename,
                                 readinessGaps);
+     if yearContest and (Contest <> NoContest) and
+        (Trim(Settings.My.ResolvedLicenseYear) = '') then
+        begin
+        readinessGaps.Add(SReadinessMyLicenseYearMissing);
+        end;
 
      for gapIndex := 0 to readinessGaps.Count - 1 do
         begin

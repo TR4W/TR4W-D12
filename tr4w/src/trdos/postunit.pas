@@ -2299,7 +2299,11 @@ end;
     MyGrid, MySection, MyPark   the row's
     MyZone                      the row's zone of the kind this contest sends
                                 (ITU for an ITU-zone contest, else the CTY
-                                zone mode's), '' when unknown
+                                zone mode's), '' when unknown -- and NOT
+                                AT ALL where MY ZONE holds no station zone
+                                (the European HF Championship's and KVP's
+                                licence year, 2026-11-12):
+                                uContestBase.SentZoneKindOfQSO
     MyState                     the row's my_state, BUT ONLY WHEN THE SESSION
                                 SENDS MY STATE ITSELF in that slot: a contest
                                 whose set-up sends something else there (the
@@ -2322,8 +2326,7 @@ begin
      send. *)
    Result := MyStationExchangeOfQSO( CurrentMyStationExchange( aContest ), aFacts,
       SentMyState = Settings.My.ResolvedState,
-      ( ContestZoneMultiplierZones( aContest ) = zmzITUZones ) or
-      ( CTY.ctyZoneMode <> CQZoneMode ) );
+      SentZoneKindOfQSO( aContest, CTY.ctyZoneMode ) );
 end;
 
 (* OUR CALL FOR ONE LOGGED QSO is uLogSource.ExportCallFor (D5, log schema 3,

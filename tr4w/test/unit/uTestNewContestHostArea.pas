@@ -42,7 +42,7 @@ type
       procedure Test_TheDialogQueuesTheSameMyStateInsideAndOut;
       procedure Test_TickingKeepsTheOtherRows;
       procedure Test_APartyWithoutTheBoxKeepsFreeEntry;
-      procedure Test_ALicenseYearRowQueuesMyZone;
+      procedure Test_ALicenseYearRowQueuesMyLicenseYear;
       procedure Test_ACWTMemberRowQueuesMyState;
    public
       procedure RunAllTests; override;
@@ -528,12 +528,12 @@ begin
    end;
 end;
 
-(* THE SAME SEPARATION OF LABEL AND COMMAND, FOR A ROW A CONTEST LABELS
-  ITSELF (NY4I, 2026-11-11): the European HF Championship and KVP ask for the
-  year of the first licence, kept in MY ZONE. The row reads
-  SNewContestLicenseYearLabel; what is typed is queued as MY ZONE, and the
-  label is no command -- as MY COUNTY above. *)
-procedure TNewContestHostAreaTests.Test_ALicenseYearRowQueuesMyZone;
+(* THE LICENSE YEAR ROW (NY4I, 2026-11-11; issue 298): the European HF
+  Championship and KVP ask for the year of the first licence. The row reads
+  SNewContestLicenseYearLabel, which IS the command's own name since the year
+  became a setting of its own, and what is typed is queued as MY LICENSE YEAR
+  -- never as MY ZONE, which it was kept in until then. *)
+procedure TNewContestHostAreaTests.Test_ALicenseYearRowQueuesMyLicenseYear;
 const
    CONTESTS: array[0..1] of ContestType = (EUROPEANHFC, KVP);
 var
@@ -542,7 +542,7 @@ var
    i: integer;
    who: string;
 begin
-   BeginTest('Test_ALicenseYearRowQueuesMyZone');
+   BeginTest('Test_ALicenseYearRowQueuesMyLicenseYear');
 
    for i := Low(CONTESTS) to High(CONTESTS) do
       begin
@@ -561,9 +561,10 @@ begin
          CheckTrue(frm.btnOK.Enabled, who + ': a year is accepted');
          ClearNewContestChoices;
          QueueNewContestRows;
-         CheckEquals('64', QueuedNewContestValue('MY ZONE'), who + ': the year is queued as MY ZONE');
-         CheckEquals('', QueuedNewContestValue(SNewContestLicenseYearLabel),
-                     who + ': the label is not a command');
+         CheckEquals('64', QueuedNewContestValue('MY LICENSE YEAR'),
+                     who + ': the year is queued as MY LICENSE YEAR');
+         CheckEquals('', QueuedNewContestValue('MY ZONE'),
+                     who + ': and not as MY ZONE');
       finally
          ClearNewContestChoices;
          FreeDialog(frm);
@@ -620,7 +621,7 @@ begin
    Test_TheDialogQueuesTheSameMyStateInsideAndOut;
    Test_TickingKeepsTheOtherRows;
    Test_APartyWithoutTheBoxKeepsFreeEntry;
-   Test_ALicenseYearRowQueuesMyZone;
+   Test_ALicenseYearRowQueuesMyLicenseYear;
    Test_ACWTMemberRowQueuesMyState;
 end;
 

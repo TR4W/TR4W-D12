@@ -809,6 +809,12 @@ msgctxt "TC_HELP_MY_IOTA"
 msgid "PENDING RE-IMPLEMENTATION. Values: IOTA designator. Sets the IOTA identifier of the island from which you are operating (e.g., EU-006)."
 msgstr "Wert: IOTA Referenz. Damit wird die IOTA-Referenz der Insel festgelegt von der man arbeitet (z.B. EU-006)."
 
+#. Config command: MY LICENSE YEAR   (default: NONE)
+#, fuzzy
+msgctxt "TC_HELP_MY_LICENSE_YEAR"
+msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
+msgstr ""
+
 #. Config command: MY NAME   (default: NONE)
 msgctxt "TC_HELP_MY_NAME"
 msgid "Values: Any string. Use this command before the CONTEST statement if you are operating a contest that uses your name as part of the exchange. In contests where the exchange includes the name received in the prior QSO (using the special CW character (), TR4W will use this value as the name that is sent in the first QSO."

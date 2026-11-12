@@ -59,6 +59,8 @@ type
       procedure Test_NewContestPromptsAreTheDialogsArms;
       procedure Test_ARowIsLabelledForWhatItHolds;
       procedure Test_TotalsDisplay;
+      procedure Test_ZoneColumnHeading;
+      procedure Test_OnlyAYearContestAsksForTheLicenseYear;
       procedure Test_SummarySheet;
       procedure Test_CabrilloHeaderAndMode;
       procedure Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;
@@ -482,7 +484,7 @@ begin
          end;
       EUROPEANHFC:
          begin
-         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyLicenseYear,
                                        SNewContestLicenseYearLabel);
          end;
       EUROPEANVHF:
@@ -555,7 +557,7 @@ begin
          end;
       KVP:
          begin
-         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+         Result := StepCommentLabelled(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyLicenseYear,
                                        SNewContestLicenseYearLabel);
          end;
       LABRE:
@@ -1109,7 +1111,7 @@ begin
    if IsLegacyContest(aContest, EUROPEANHFC) or IsLegacyContest(aContest, KVP) then
       begin
       aStep := 0;
-      aField := ncfMyZone;
+      aField := ncfMyLicenseYear;
       aComment := TC_ENTERTHELASTTWODIGITSOFTHEYEAR;
       aRowLabel := SNewContestLicenseYearLabel;
       end
@@ -1260,9 +1262,103 @@ begin
          CheckEquals('CW Pfxs', d.PrefixMultsCaptionCW, who + ' CW prefix label');
          CheckEquals('Ph Pfxs', d.PrefixMultsCaptionPhone, who + ' phone prefix label');
          end;
+      (* THE ZONE ROW SAYS ZONES EVERYWHERE BUT WHERE THE "ZONE" IS THE YEAR
+        OF FIRST LICENSE (2026-11-11) -- since issue 298 stage 3 decided by
+        the stated kind, which the European HF Championship and KVP state
+        (asserted first, so the arm cannot be vacuous). Every other contest
+        renders as before. *)
+      if IsLegacyContest(identities[k], EUROPEANHFC) or
+         IsLegacyContest(identities[k], KVP) then
+         begin
+         CheckTrue(identities[k].ReceivedYearKind <> rykNone, who + ': states a year kind');
+         end;
+      if identities[k].ReceivedYearKind <> rykNone then
+         begin
+         CheckEquals(STotalsLicenseYearMults, d.ZoneMultsCaption, who + ': years');
+         CheckEquals('Years', d.ZoneMultsCaption, who + ': the English caption');
+         CheckEquals('CW Years', d.ZoneMultsCaptionCW, who + ' on CW');
+         CheckEquals('Ph Years', d.ZoneMultsCaptionPhone, who + ' on phone');
+         end
+      else
+         begin
+         CheckEquals(TC_ZONE, d.ZoneMultsCaption, who + ' zone label');
+         CheckEquals('CW Zone', d.ZoneMultsCaptionCW, who + ' CW zone label');
+         CheckEquals('Ph Zone', d.ZoneMultsCaptionPhone, who + ' phone zone label');
+         end;
       finally
          obj.Free;
          end;
+      end;
+end;
+
+(* THE LOG GRID'S HEADING OVER THE ZONE COLUMN (2026-11-11): 'Zn' --
+   ColumnsArray's own text, which is also the COLUMN WIDTH token and is never
+   changed -- for every registered contest but the two whose "zone" is the
+   year of first license. Asked of the identity: no station decides it. *)
+procedure TContestDisplayTests.Test_ZoneColumnHeading;
+var
+   identities: TContestIdentityList;
+   k: integer;
+   who: string;
+begin
+   BeginTest('Test_ZoneColumnHeading');
+   CheckEquals('Zn', string(ColumnsArray[logColZoneMult].Text),
+               'the column''s own text -- the COLUMN WIDTH token -- is unchanged');
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
+      begin
+      who := ContestWho(identities[k]);
+      (* The kind decides since issue 298 stage 3; EUHFC and KVP state one. *)
+      if IsLegacyContest(identities[k], EUROPEANHFC) or
+         IsLegacyContest(identities[k], KVP) then
+         begin
+         CheckTrue(identities[k].ReceivedYearKind <> rykNone, who + ': states a year kind');
+         end;
+      if identities[k].ReceivedYearKind <> rykNone then
+         begin
+         CheckEquals(SLogColumnLicenseYear, identities[k].ZoneColumnHeading, who + ': year');
+         CheckEquals('Year', identities[k].ZoneColumnHeading, who + ': the English heading');
+         end
+      else
+         begin
+         CheckEquals('Zn', identities[k].ZoneColumnHeading, who + ': zone');
+         end;
+      end;
+end;
+
+(* THE LICENSE YEAR IS ITS OWN SETTING (issue 298): a contest that states a
+   received year kind asks the New Contest dialog for MY LICENSE YEAR, and no
+   other contest does. Before, the year lived in MY ZONE and Preferences, the
+   New Contest row and the tooltip each overrode the zone's words. *)
+procedure TContestDisplayTests.Test_OnlyAYearContestAsksForTheLicenseYear;
+var
+   identities: TContestIdentityList;
+   prompts: TNewContestPrompts;
+   k, i: integer;
+   asks: boolean;
+   who: string;
+begin
+   BeginTest('Test_OnlyAYearContestAsksForTheLicenseYear');
+   identities := IdentitiesToWalk;
+   for k := 0 to High(identities) do
+      begin
+      who := ContestWho(identities[k]);
+      prompts := TNewContestPrompts.Create;
+      try
+         identities[k].DescribeNewContestPrompts(prompts);
+         asks := False;
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            if prompts.Choice(i).Field = ncfMyLicenseYear then
+               begin
+               asks := True;
+               end;
+            end;
+      finally
+         prompts.Free;
+      end;
+      CheckTrue((identities[k].ReceivedYearKind <> rykNone) = asks,
+                who + ': asks for MY LICENSE YEAR exactly when it exchanges a year');
       end;
 end;
 
@@ -1642,7 +1738,7 @@ begin
 
       session := Default(TMyStationExchange);
       session.MyGrid := 'EL88';
-      my := MyStationExchangeOfQSO(session, facts, True, False);
+      my := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
       exportSent := ContestIdentity(q.ceContest).FormatCabrilloSentExchange(
                        my, q, Default(TCabrilloQSOContext));
       CheckTrue(Pos('12', exportSent) > 0,
@@ -1698,7 +1794,7 @@ begin
          overlaid by what the row recorded (CurrentMyStationExchange). *)
       session := Default(TMyStationExchange);
       session.MyGrid := 'FN42';
-      my := MyStationExchangeOfQSO(session, facts, True, False);
+      my := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
       exportSent := ContestIdentity(q.ceContest).FormatCabrilloSentExchange(
                        my, q, Default(TCabrilloQSOContext));
       CheckTrue(Pos('EL88', exportSent) > 0,
@@ -1854,6 +1950,12 @@ begin
          ARRLFIELDDAY, WINTERFIELDDAY:
             begin
             expected := '2A CT';
+            end;
+         (* THE RECEIVED YEAR, from the record (issue 298 stage 3): the QSO
+            never carried the field, so its zone slot's 5 is the year 05. *)
+         EUROPEANHFC, KVP:
+            begin
+            expected := '599 05';
             end;
       else
          begin
@@ -2170,6 +2272,8 @@ begin
    Test_NewContestPromptsAreTheDialogsArms;
    Test_ARowIsLabelledForWhatItHolds;
    Test_TotalsDisplay;
+   Test_ZoneColumnHeading;
+   Test_OnlyAYearContestAsksForTheLicenseYear;
    Test_SummarySheet;
    Test_CabrilloHeaderAndMode;
    Test_WinterFieldDayFMIsWrittenFMAndScoredAsPhone;

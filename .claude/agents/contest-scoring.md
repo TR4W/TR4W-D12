@@ -754,7 +754,16 @@ sheet, rmZone) -- the encoding is the contract, so no column, stored value
 or export byte moved. A field and multiplier kind of its own would change the
 schema AND the 376-byte record the wire and server log carry: not taken.
 Pinned by `uTestLicenceYearEntry` (every year in CQ and ITU zone mode, the
-engine path for both classes, once per band, export bytes). **So does CQ
+engine path for both classes, once per band, export bytes). **SUPERSEDED IN
+PART BY ISSUE 298 (2026-11-12):** the year has its own field (`RcvdYear`,
+`rcvd_year`, carved from `sReserved` -- the record stayed 376 bytes); the
+parser takes the CONTEST'S STATED KIND (`ProcessRSTAndLicenceYearExchange(
+text, aKind, rx)`; the shared reader is now `ReadRSTAndNumberOfDigits` with
+the kind's digit count, `ReadRSTAndOneOrTwoDigitNumber` its 1..2 wrapper for
+the zone parser); readers read the field (`TryLicenceYearOf`, and LOGDUPE's
+remembered exchange gives `RcvdYear` when known); `StoreLicenceYear` still
+writes the zone slot too, so the zone SHEET still counts the year until stage
+4. **So does CQ
 WW RTTY's `ProcessRSTZoneAndPossibleDomesticQTHExchange` (issue 274,
 2026-11-11, NY4I's rulings)**: it parses into locals and writes `Zone`,
 `QTHString`, `DomesticQTH` and `DomMultQTH` only once accepted (the domestic

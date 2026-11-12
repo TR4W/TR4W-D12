@@ -217,7 +217,8 @@ const
     'MY SECTION',
     'MY STATE',
     'MY ZONE',
-    'MY POSTAL CODE'
+    'MY POSTAL CODE',
+    'MY LICENSE YEAR'
     );
 
 var

@@ -56,6 +56,7 @@ type
       procedure Test_RefusedValuesAndNamesThatAreNotFacts;
       procedure Test_CaptureWritesTheOverrideAsTheContests;
       procedure Test_ReopenMakesTheRowTheOverrideAgain;
+      procedure Test_LicenseYearIsCapturedAndReopened;
       procedure Test_ALogWrittenBefore712;
       procedure Test_StationContextCarriesTheResolvedCQZone;
       procedure Test_TheStateSentFallsBackToTheResolvedState;
@@ -459,6 +460,52 @@ begin
    Scrub(fn);
 end;
 
+(* THE LICENSE YEAR IS A ROW OF ITS OWN IN THE LOG (issue 298): captured as
+  'MY LICENSE YEAR', not as MY ZONE, and a reopen makes it the contest's year
+  again -- the station's stays what Preferences holds. *)
+procedure TStationFactOverrideTests.Test_LicenseYearIsCapturedAndReopened;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   before, after: TR4WSettings;
+   fn, v, src: string;
+begin
+   BeginTest('MY LICENSE YEAR is captured as its own contest row and reopened as the override');
+   fn := TempLogName('licenseyear.db');
+   Scrub(fn);
+   before := TR4WSettings.Create;
+   after := TR4WSettings.Create;
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         before.TrySetByCommand('MY LICENSE YEAR', '1985');
+         before.TryOverrideForContest('MY LICENSE YEAR', '1990');
+         CaptureStationFactRows(before, repo);
+         repo.Commit;
+
+         v := StoredRow(repo, 'MY LICENSE YEAR', src);
+         CheckEquals('contest', src, 'the contest''s year is a row the reopen applies');
+         CheckEquals('1990', v, 'holding the contest''s year');
+         StoredRow(repo, 'MY ZONE', src);
+         CheckEquals('', src, 'and no MY ZONE row says it');
+
+         after.TrySetByCommand('MY LICENSE YEAR', '2005');
+         ApplyStoredRows(after, repo);
+         CheckEquals('1990', after.My.ResolvedLicenseYear, 'this contest''s year again');
+         CheckEquals('2005', after.My.LicenseYear, 'the station''s year was not written');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+      after.Free;
+      before.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TStationFactOverrideTests.Test_ALogWrittenBefore712;
 var
    db: TLogDatabase;
@@ -585,6 +632,7 @@ begin
    Test_RefusedValuesAndNamesThatAreNotFacts;
    Test_CaptureWritesTheOverrideAsTheContests;
    Test_ReopenMakesTheRowTheOverrideAgain;
+   Test_LicenseYearIsCapturedAndReopened;
    Test_ALogWrittenBefore712;
    Test_StationContextCarriesTheResolvedCQZone;
    Test_TheStateSentFallsBackToTheResolvedState;

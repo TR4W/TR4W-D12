@@ -50,6 +50,11 @@ type
       (* The store pointed at a scratch copy of a D7 fixture, and back. *)
       procedure StartStore(const aLeaf: string);
       procedure StopStore;
+      (* the sent zone of one contest, from the record, through the rule
+         PostUnit asks: word 2 of the Cabrillo column and of the STX_STRING *)
+      procedure SentZoneWords(aContest: ContestType; const aStatedZone: string;
+                              const aFacts: TQsoMyFacts;
+                              out aCabrillo, aADIF: string);
    protected
       (* the leaf *)
       procedure TestEverySourceTokenRoundTrips;
@@ -88,6 +93,9 @@ type
       procedure TestTheExportCallFollowsTheRecord;
       procedure TestAnImportedQSOSentWhatItsFileSays;
       procedure TestTheSentExchangeIsBuiltFromTheRecord;
+      procedure TestALicenceYearIsNeverReplacedByACapturedZone;
+      procedure TestAStationZoneContestSendsTheCapturedZone;
+      procedure TestOnlyTheLicenceYearContestsSayMyZoneIsNoStationZone;
       (* the store *)
       procedure TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
       procedure TestTheEditorReadsAndWritesThroughTheStore;
@@ -117,7 +125,11 @@ uses
    uCabrillo,  (* BuildSingleQsoCabrilloLine -- HamScore's one-QSO line *)
    LogSubs2,   (* DeliverLogToHamScore -- the resync's log walk *)
    (* DowngradeTestLog and TestLogHasColumn -- the shared fixture helpers *)
-   uTestLatestContest;
+   uTestLatestContest,
+   (* ContestIdentity, ContestHandleOf, TContestIdentityList -- the sent zone *)
+   uContestRegistry,
+   (* ContestsToWalk, IsLegacyContest, ContestWho -- the registry walk *)
+   uTestRegisteredContests;
 
 const
    (* 101 records -- the store suite's log. *)
@@ -340,10 +352,12 @@ begin
       begin
       tail := tail + '|' + string(LOG_V3_QSO_COLUMNS[i].Name);
       end;
+   (* Then schema 6's received year (issue 298), added after them. *)
+   tail := tail + '|' + string(LOG_V6_QSO_YEAR_COLUMN.Name);
    (* LAST, IN THIS ORDER -- the order ALTER TABLE ADD COLUMN gives a
      migrated log, so the two cannot differ. *)
    CheckEquals(tail, Copy(names, Length(names) - Length(tail) + 1, MaxInt),
-               'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, in order');
+               'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, then rcvd_year, in order');
    CheckTrue(Pos('|my_grid|', names) > 0, 'my_grid, from schema 1, is still there');
    Scrub(fn);
 end;
@@ -1295,13 +1309,13 @@ begin
    session.MyPark := 'US-0001';
    session.MyCheck := '72';
 
-   got := MyStationExchangeOfQSO(session, NotCapturedMyFacts, True, False);
+   got := MyStationExchangeOfQSO(session, NotCapturedMyFacts, True, szkCQZone);
    CheckEquals('FL', got.MyState, 'never captured: the session''s state');
    CheckEquals('EL88', got.MyGrid, 'never captured: the session''s grid');
    CheckEquals('05', got.MyZone, 'never captured: the session''s zone, as typed');
 
    facts := SampleFacts;   (* EN01AB, NE, section NE, park US-1234, CQ 4, ITU 7 *)
-   got := MyStationExchangeOfQSO(session, facts, True, False);
+   got := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
    CheckEquals('EN01AB', got.MyGrid, 'the QSO''s grid');
    CheckEquals('NE', got.MyState, 'the QSO''s state, where the session sends MY STATE');
    CheckEquals('NE', got.MySection, 'the QSO''s section');
@@ -1310,20 +1324,169 @@ begin
    CheckEquals('TOM', got.MyName, 'the name the record holds no column for: the session''s');
    CheckEquals('72', got.MyCheck, 'and the check');
 
-   got := MyStationExchangeOfQSO(session, facts, False, True);
+   got := MyStationExchangeOfQSO(session, facts, False, szkITUZone);
    CheckEquals('FL', got.MyState,
                'a contest that sends something else in the state slot keeps it');
    CheckEquals('7', got.MyZone, 'an ITU-zone contest sends the QSO''s ITU zone');
 
    facts.CQZone := 5;
-   got := MyStationExchangeOfQSO(session, facts, True, False);
+   got := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
    CheckEquals('05', got.MyZone, 'the same zone keeps the session''s text: 05, not 5');
 
    facts.CQZone := 0;
    facts.Grid := '';
-   got := MyStationExchangeOfQSO(session, facts, True, False);
+   got := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
    CheckEquals('', got.MyZone, 'an unknown zone is sent as none, never the session''s');
    CheckEquals('', got.MyGrid, 'an unknown grid likewise');
+
+   (* A LICENCE YEAR (szkStatedMyZone): the session's MY ZONE, whatever the
+      record captured -- and the rest of the overlay still applies. *)
+   facts := SampleFacts;
+   got := MyStationExchangeOfQSO(session, facts, True, szkStatedMyZone);
+   CheckEquals('05', got.MyZone, 'a stated licence year is sent as stated');
+   CheckEquals('EN01AB', got.MyGrid, 'and the grid is still the QSO''s');
+   CheckEquals('NE', got.MyState, 'and the state');
+   facts.CQZone := 0;
+   facts.ITUZone := 0;
+   got := MyStationExchangeOfQSO(session, facts, True, szkStatedMyZone);
+   CheckEquals('05', got.MyZone, 'an unknown captured zone does not blank the year');
+end;
+
+procedure TLogMyFactsTests.SentZoneWords(aContest: ContestType;
+                                         const aStatedZone: string;
+                                         const aFacts: TQsoMyFacts;
+                                         out aCabrillo, aADIF: string);
+var
+   rules: TContestBase;
+   session, my: TMyStationExchange;
+   q: ContestExchange;
+   ctx: TCabrilloQSOContext;
+   failure: string;
+begin
+   rules := ContestIdentity(aContest);
+   session := Default(TMyStationExchange);
+   session.MyZone := aStatedZone;   (* a DX entrant: no state, so the zone *)
+   (* THE RULE POSTUNIT.CurrentMyStationExchange ASKS, with the zone mode
+      FoundContest sets for this contest (CTY.ctyZoneMode := ZoneMode). The
+      entrant sends no state (False), so the state-or-zone layouts send the
+      zone. *)
+   my := MyStationExchangeOfQSO(session, aFacts, False,
+                                SentZoneKindOfQSO(rules, rules.ZoneMode));
+   MakeQSO(q, 1);
+   q.ceContest := ContestHandleOf(aContest);
+   q.RSTSent := 599;
+   ctx := Default(TCabrilloQSOContext);
+   ctx.RSTSent := '599';
+   aCabrillo := ExtractWord(2, rules.FormatCabrilloSentExchange(my, q, ctx), [' ']);
+   aADIF := '';
+   if rules.TryFormatADIFSentExchange(my, q, aADIF, failure) then
+      begin
+      aADIF := ExtractWord(2, aADIF, [' ']);
+      end
+   else
+      begin
+      aADIF := 'failed: ' + failure;
+      end;
+end;
+
+(* THE EUROPEAN HF CHAMPIONSHIP AND KVP SEND THE YEAR OF FIRST LICENCE IN
+   THE MY ZONE SLOT (2026-11-12, NY4I's log): a QSO that captured its
+   station's zones -- CQ 80, ITU 8 -- exported 08, and editing its ITU zone
+   to 42 exported 42. The year is MY ZONE as stated, in BOTH exports. *)
+procedure TLogMyFactsTests.TestALicenceYearIsNeverReplacedByACapturedZone;
+const
+   YEAR_CONTESTS: array[0..1] of ContestType = (EUROPEANHFC, KVP);
+var
+   i: integer;
+   facts: TQsoMyFacts;
+   cab, adif, who: string;
+begin
+   BeginTest('a licence year is never replaced by a QSO''s captured zone');
+   for i := Low(YEAR_CONTESTS) to High(YEAR_CONTESTS) do
+      begin
+      who := ContestIdentity(YEAR_CONTESTS[i]).DisplayName + ': ';
+      CheckTrue(SentZoneKindOfQSO(ContestIdentity(YEAR_CONTESTS[i]),
+                                  ContestIdentity(YEAR_CONTESTS[i]).ZoneMode) = szkStatedMyZone,
+                who + 'the slot holds no station zone');
+
+      facts := SampleFacts;
+      facts.CQZone := 80;
+      facts.ITUZone := 8;
+      SentZoneWords(YEAR_CONTESTS[i], '80', facts, cab, adif);
+      CheckEquals('80', cab, who + 'Cabrillo sends the stated year, not ITU 8');
+      CheckEquals('80', adif, who + 'STX_STRING sends the stated year, not ITU 8');
+
+      facts.ITUZone := 42;
+      SentZoneWords(YEAR_CONTESTS[i], '80', facts, cab, adif);
+      CheckEquals('80', cab, who + 'an edited ITU zone does not move the Cabrillo year');
+      CheckEquals('80', adif, who + 'nor the STX_STRING year');
+
+      SentZoneWords(YEAR_CONTESTS[i], '05', facts, cab, adif);
+      CheckEquals('05', cab, who + 'a stated 05 prints 05 in Cabrillo');
+      CheckEquals('05', adif, who + 'and in the STX_STRING');
+
+      SentZoneWords(YEAR_CONTESTS[i], '80', NotCapturedMyFacts, cab, adif);
+      CheckEquals('80', cab, who + 'a row that captured nothing: the year, as before');
+      CheckEquals('80', adif, who + 'in both');
+      end;
+end;
+
+(* AND A CONTEST WHOSE MY ZONE IS A STATION ZONE STILL SENDS THE QSO'S OWN --
+   the three shapes of the rule. CQ WW: a CQ-zone multiplier. IARU: an
+   ITU-zone multiplier. CQ 160 and WRTC: NO zone multiplier
+   (ZoneMultiplierZones answers zmzNotCQOrITU) and a real zone sent, by the
+   CTY zone mode -- the case a fix keyed on the zone LIST would freeze. *)
+procedure TLogMyFactsTests.TestAStationZoneContestSendsTheCapturedZone;
+var
+   facts: TQsoMyFacts;
+   cab, adif: string;
+begin
+   BeginTest('a station-zone contest sends the QSO''s captured zone');
+   facts := SampleFacts;   (* CQ 4, ITU 7 *)
+
+   SentZoneWords(CQWWCW, '05', facts, cab, adif);
+   CheckEquals('04', cab, 'CQ WW: the captured CQ zone in Cabrillo');
+   CheckEquals('04', adif, 'CQ WW: and in the STX_STRING');
+
+   SentZoneWords(IARU, '05', facts, cab, adif);
+   CheckEquals('7', cab, 'IARU: the captured ITU zone in Cabrillo');
+   CheckEquals('7', adif, 'IARU: and in the STX_STRING');
+
+   SentZoneWords(CQ160CW, '05', facts, cab, adif);
+   CheckEquals('4', cab, 'CQ 160 (CQ zone mode, no zone mult): the captured CQ zone');
+   CheckEquals('4', adif, 'CQ 160: and in the STX_STRING');
+
+   SentZoneWords(WRTC, '05', facts, cab, adif);
+   CheckEquals('7', cab, 'WRTC (ITU zone mode, no zone mult): the captured ITU zone');
+   CheckEquals('7', adif, 'WRTC: and in the STX_STRING');
+
+   facts.CQZone := 5;
+   SentZoneWords(CQWWCW, '05', facts, cab, adif);
+   CheckEquals('05', cab, 'CQ WW: the same zone keeps the stated text');
+end;
+
+(* THE EXACT SET whose MY ZONE is no station zone -- a registry walk, so a
+   new contest that keeps something else in MY ZONE must be added here on
+   evidence. *)
+procedure TLogMyFactsTests.TestOnlyTheLicenceYearContestsSayMyZoneIsNoStationZone;
+var
+   identities: TContestIdentityList;
+   k: integer;
+   obj: TContestBase;
+   expected: boolean;
+begin
+   BeginTest('only the licence-year contests say MY ZONE is no station zone');
+   CheckTrue(ContestMyZoneIsAStationZone(nil), 'no contest: a station zone');
+   identities := ContestsToWalk;
+   for k := 0 to High(identities) do
+      begin
+      obj := identities[k];
+      expected := not (IsLegacyContest(obj, EUROPEANHFC) or
+                       IsLegacyContest(obj, KVP));
+      CheckTrue(expected = obj.MyZoneIsAStationZone,
+                ContestWho(obj) + ': MyZoneIsAStationZone should be ' +
+                BoolToStr(expected, True));
+      end;
 end;
 
 (* -------------------------------------------------------------- the store *)
@@ -1975,6 +2138,9 @@ begin
    TestTheExportCallFollowsTheRecord;
    TestAnImportedQSOSentWhatItsFileSays;
    TestTheSentExchangeIsBuiltFromTheRecord;
+   TestALicenceYearIsNeverReplacedByACapturedZone;
+   TestAStationZoneContestSendsTheCapturedZone;
+   TestOnlyTheLicenceYearContestsSayMyZoneIsNoStationZone;
 
 {$IFDEF WINDOWS}
    (* As the LogStore suite: these migrate a D7 binary log, which is a

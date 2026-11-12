@@ -1488,7 +1488,10 @@ begin
    CheckHelper('CabrilloReceivedRSTQTHDX', CabrilloReceivedRSTQTHDX, MICHQSOPARTY, psUS, False);
    CheckHelper('CabrilloReceivedRSTQTHOrDXQTH', CabrilloReceivedRSTQTHOrDXQTH, LABRE, psUS, False);
    CheckHelper('CabrilloReceivedZoneQSONumber', CabrilloReceivedZoneQSONumber, RFCHAMPIONSHIPCW, psUS, False);
-   CheckHelper('CabrilloReceivedRSTZone', CabrilloReceivedRSTZone, EUROPEANHFC, psUS, False);
+   (* CQ WW, not the European HF Championship: since issue 298 stage 3 EUHFC
+      and KVP state CabrilloReceivedRSTYear (the kind is a fourth input, so it
+      is not in this table; uTestReceivedYearDisplay pins its widths). *)
+   CheckHelper('CabrilloReceivedRSTZone', CabrilloReceivedRSTZone, CQWWCW, psUS, False);
    CheckHelper('CabrilloReceivedRSTQTHOrQSONumber', CabrilloReceivedRSTQTHOrQSONumber, ARI_DX, psUS, False);
    CheckHelper('CabrilloReceivedNotHandled', CabrilloReceivedNotHandled, ALLJA, psUS, False);
 end;

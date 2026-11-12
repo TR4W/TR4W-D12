@@ -107,10 +107,10 @@ begin
 
    (* THE STATION AS IT WAS FOR THIS QSO: the session's, overlaid by what the
       row recorded -- the same function the final export asks. Only the grid
-      is read here. *)
+      is read here, so the zone kind does not matter. *)
    session := Default(TMyStationExchange);
    session.MyGrid := Settings.My.ResolvedGrid;
-   my := MyStationExchangeOfQSO(session, aFacts, False, False);
+   my := MyStationExchangeOfQSO(session, aFacts, False, szkCQZone);
    Result := BuildSentExchangeWithGrid(RXData, my.MyGrid);
 end;
 

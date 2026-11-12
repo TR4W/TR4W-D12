@@ -851,6 +851,14 @@ begin
       aRX.DomMultQTH := ShortString(aSpec.QTH);
       end;
    aRX.Zone := aSpec.Zone;
+   (* A CONTEST THAT RECEIVES A YEAR keeps it in the year field, which every
+      display and export reads since issue 298 stage 3 -- so the year goes in
+      through its ONE writer, StoreLicenceYear (which still sets the zone slot
+      to the same value for the multiplier sheet, so zone= does not move). *)
+   if ContestIdentity(Contest).ReceivedYearKind <> rykNone then
+      begin
+      StoreLicenceYear(aRX, aSpec.Zone);
+      end;
    aRX.Name := 'JOE';
    aRX.Power := '100';
    aRX.ceClass := '2A';
@@ -1308,6 +1316,21 @@ procedure DescribeExchange(const aRX: ContestExchange; aParts: TStringList);
          end;
    end;
 
+   (* The year field as stored: its number when Known, '' when not. Not
+      TryLicenceYearOf, whose zone-slot fallback would print a year for every
+      contest's zone. *)
+   function YearPartText: string;
+   begin
+      if aRX.RcvdYearKnown then
+         begin
+         Result := IntToStr(aRX.RcvdYear);
+         end
+      else
+         begin
+         Result := '';
+         end;
+   end;
+
 begin
    Part('contest', ContestText(aRX.ceContest));
    Part('call', string(aRX.Callsign));
@@ -1324,6 +1347,10 @@ begin
    Part('nr.rcvd', IntToStr(aRX.NumberReceived));
    Part('tenten', IntToStr(aRX.TenTenNum));
    Part('zone', IntToStr(aRX.Zone));
+   (* THE RECEIVED YEAR'S OWN FIELD (issue 298): empty when the record holds
+      none, which is a cleared exchange's state -- so the part shows only
+      where a year contest set one. *)
+   Part('year', YearPartText);
    Part('qth', string(aRX.QTHString));
    Part('domqth', string(aRX.DomesticQTH));
    Part('dommultqth', string(aRX.DomMultQTH));

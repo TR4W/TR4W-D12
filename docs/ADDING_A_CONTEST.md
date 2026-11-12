@@ -353,6 +353,81 @@ and link issue #133 (Ontario's and Quebec's headers do).
 | `CallHistorySiteName` | `''` -- the site has no file; no download is offered | `TContestARRLSSBase` (its `CabrilloName`: `ARRL-SS-CW`, `ARRL-SS-SSB`), below |
 | `CallHistoryFileName` | derived: `CallHistorySiteName + '.txt'`, else `''` -- not overridden | the SS leaves get `ARRL-SS-CW.txt` / `ARRL-SS-SSB.txt` from the site name, below |
 | `CallHistoryLegacyFileName` | `''` | the SS leaves (`SSCW.txt`, `SSSSB.txt` -- N1MM's names, the fallback), below |
+| `GetReceivedYearKind` | `rykNone` -- the exchange carries no year | the European HF Championship and KVP (`rykTwoDigitYear`), below |
+
+#### A received year -- `GetReceivedYearKind` (issue 298, 2026-11-12)
+
+A contest whose exchange carries the year the other operator was first
+licensed, or how many years they have been licensed, STATES WHICH KIND -- never
+guess it from the digits typed. Ten contests do (NY4I read DXLog.net's files),
+in three kinds (`VC.TReceivedYearKind`):
+
+| kind | range (`uContestBase.ReceivedYearRange`) | DXLog's evidence |
+|---|---|---|
+| `rykTwoDigitYear` | 00..99, typed in one or two digits | EUHFC, S5 KVP, ARRL Rookie Roundup, LU 40m |
+| `rykFourDigitYear` | 1900 .. the QSO's own year, exactly four digits | SCC RTTY (1941-2030), IG-RY and RTTYops WW (1945-2040) |
+| `rykYearsLicensed` | 0..99, one or two digits (a COUNT) | WIA Remembrance Day, HA YL-OM, RYBNICKIE |
+
+Stating it is the whole job; the rest follows from the kind:
+- your `ParseReceivedExchangeFormat` calls
+  `aParsers.ParseRSTLicenceYear(aText, ReceivedYearKind, aExch)` -- the parser
+  takes the kind's digits and range and stores through `StoreLicenceYear`;
+- the base `ApplyADIFImport` reads the year out of `SRX_STRING` (one word after
+  the RST), else out of a `CQZ`/`ITUZ` tag, for any stated kind -- call
+  `inherited` if you override it;
+- Edit QSO's zone box shows and saves the year (`ApplyEditedReceivedYear`),
+  labelled with your `ZoneColumnHeading` and as many digits long as the kind
+  has (`TfrmEditQSO.ShowZoneBoxFor`, issue 298 stage 3);
+- the log migration treats your log's zone column as years
+  (`uContestRegistry.ContestKeepsYearInZoneSlot`);
+- **display and export read the field (stage 3)** -- with nothing stated by
+  you: the log grid's cell and Edit QSO show `ReceivedYearTextOf` (`05`,
+  `1985`); the column heading and the totals row say Year / Years (the base's
+  `ZoneColumnHeading` and `TotalsDisplay` follow the kind -- do not override
+  them); the ADIF `SRX_STRING` and the canonical received exchange (UDP,
+  HamScore) are the RST and the year from the field
+  (`RSTAndReceivedYearText`), so an Edit QSO change reaches the file; the UDP
+  `<zone>` carries the year as a number (`TryReceivedZoneOrYear`);
+- **your received Cabrillo column is the one thing you state**: call
+  `CabrilloReceivedRSTYear(ReceivedYearKind, aMy, aQso, aCtx)` -- `'%-3s %-7s'`
+  of the year text, byte for byte the old zone column for a two-digit year,
+  four digits for a four-digit one. Never `CabrilloReceivedRSTZone`, which
+  reads the zone slot. The SENT columns (`CabrilloSentRSTZone`,
+  `ADIFSentRSTZone`) print the sent text in the zone slot, four digits
+  included;
+- **THE YEAR YOU SEND is the setting `MY LICENSE YEAR`** (`Settings.My.
+  LicenseYear`, a station fact a contest may state, so one station can run two
+  contests with two years; **never `MY ZONE`**, which is a CQ zone in every
+  contest). The operator types a year (`1985`) or its last two digits (`85`),
+  or -- for a count kind -- the count; **what you SEND follows your
+  `ReceivedYearKind` and nothing else** (`uContestBase.SentLicenseYearText`:
+  `85`, `1985`, or the years licensed) and arrives in the zone slot of the
+  sent exchange through the one reader, `uContestFactory.SessionZoneTextSent`
+  (the export and the default CW exchange) and `TContestBase.SentZoneText`
+  (the station context) -- so you state nothing for it. Your New Contest
+  prompt asks for it with `aPrompts.AskFieldWithCommentAndLabel(..,
+  ncfMyLicenseYear, ..)` (the field, not `ncfMyZone`); Preferences has its own
+  License year box and its own help. A log or `.cfg` from before the setting
+  that stated the year as `MY ZONE` is moved to it when the contest is set up
+  (`uContestFactory.AdoptLegacyLicenseYear`, called by `FoundContest`);
+- what a QSO records as `my_cq_zone` is MY CALL's CTY zone, or a MY ZONE the
+  operator stated -- the year is never in it
+  (`uContestFactory.SessionMyCQZone`); `MyZoneIsAStationZone` is derived from
+  the kind (False for a year contest) and only decides that a captured zone
+  never replaces the year in an export.
+
+The year lives in `ContestExchange.RcvdYear` / `RcvdYearKnown` (column
+`rcvd_year`; NULL is no year, 0 is a year). Read it with `TryLicenceYearOf` /
+`LicenceYearOf`, write it with `StoreLicenceYear` or `ClearLicenceYear` --
+never the zone slot. Until stage 4 of #298, `StoreLicenceYear` also writes the
+zone slot for the multiplier sheet, and only a value the sheet can hold
+(0..99): **a four-digit contest would get no multiplier until the sheet moves to
+the field**, so it is not buildable yet (display and export are ready for it
+since stage 3; a years-licensed contest's heading would read "Year" -- state
+your own `GetZoneColumnHeading` then). Today a year contest must also answer
+`GetMyZoneIsAStationZone` False (its MY ZONE is the SENT year);
+`uTestLogReceivedYear.Test_ExactlyTheYearContestsStateAKind` walks the
+registry and fails if the two disagree.
 
 #### A call history file -- `CallHistoryFields` (2026-11-07)
 
@@ -529,7 +604,7 @@ The five exchange statements must agree. These sets are in use:
   before.
 | RST + serial | `RSTQSONumberExchange` | `ExchangeFieldsRSTQSONumber` | `ParseRSTQSONumber` | `ADIFSentRSTQSONumber` | `CabrilloSentRSTQSONumber` / `CabrilloReceivedRSTQSONumber` | `uContestBaltic` |
 | RST + zone | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTZone` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestJIDXCW`, CQ WW |
-| RST + licence year 00..99 (stored in the zone slot; no zone-mode rule) | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTLicenceYear` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTZone` | `uContestEuropeanHFC`, `uContestKVP` |
+| RST + a received YEAR (state `GetReceivedYearKind`, below; no zone-mode rule) | `RSTZoneExchange` | `ExchangeFieldsRSTZone` | `ParseRSTLicenceYear(aText, ReceivedYearKind, aExch)` | `ADIFSentRSTZone` | `CabrilloSentRSTZone` / `CabrilloReceivedRSTYear(ReceivedYearKind, ...)` | `uContestEuropeanHFC`, `uContestKVP` (two-digit) |
 | name + state | `NameAndDomesticOrDXQTHExchange` | `ExchangeFieldsNameQTH` | `ParseNameAndDomesticOrDXQTH` | `ADIFSentNameState` | `CabrilloSentNameState` / `CabrilloReceivedNameQTH` | `uContestNAQPCW`, `uContestCWOps` |
 | RST and/or grid (VHF) | `RSTAndOrGridExchange` | `ExchangeFieldsRSTQTH` | `ParseRSTAndOrGrid` | `ADIFSentRSTGrid` | `CabrilloSentRSTGrid` / `CabrilloReceivedRSTQTH` | `uContestARRLVHFJan` |
 
@@ -921,7 +996,13 @@ Answered as data the UI renders; a class never touches a form.
 `GetPowerFieldIsFOCNumber`, `CallEntryFrequencyWarning`. Base: what the UI does
 for any contest. `GetTotalsDisplay` labels the totals grid's domestic AND (since
 issue 277, 2026-11-11) prefix-multiplier rows: a contest whose prefix key is not a
-prefix states its own caption, as the CW Open's `Calls` (each different callsign). Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
+prefix states its own caption, as the CW Open's `Calls` (each different callsign);
+the zone row likewise -- `Years` for any contest that states a received year
+kind, from the base (issue 298 stage 3; EUHFC and KVP no longer override it), with
+`GetZoneColumnHeading` for the log grid's zone-column heading (base `Zn`, `Year`
+for a stated year kind) and
+`GetMyZoneLabel` / `GetMyZoneHelp` for the Preferences label beside MY ZONE and its
+tooltip (base `CQ zone:` and '', the command's own help). Pinned in `uTestContestDisplay` / `uTestContestUI`; no oracle
 sees the screen, so a change here also gets a `docs/BENCH_QUEUE.md` item.
 
 **The 3830scores report** (`Get3830Summary`, `Make3830Column`, design 8.2x):

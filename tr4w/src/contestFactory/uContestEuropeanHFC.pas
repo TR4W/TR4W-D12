@@ -56,11 +56,21 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     - STORAGE: ContestExchange.Zone (rcvd_zone) and ZoneMult (mult_zone),
       through uContestBase.LicenceYearOf / StoreLicenceYear -- the encoding
       is the contract; no column, stored value or export byte changed.
+      SINCE ISSUE 298 the year is a field of its own (RcvdYear, rcvd_year);
+      stage 2 (2026-11-12) gave the class its stated kind,
+      GetReceivedYearKind = rykTwoDigitYear, and the readers read the field.
+      StoreLicenceYear still writes the zone slot for the multiplier sheet.
+      Stage 3 (2026-11-12) moved display and export to the field: the
+      received Cabrillo column is CabrilloReceivedRSTYear, and the grid,
+      Edit QSO, SRX_STRING, the canonical exchange, the totals row and the
+      column heading follow the stated kind from the base.
     - MULTIPLIER: the zone sheet, a hundred "zones" numbered from zero
       (ZoneMultiplierCount 100, NumbersZonesFromZero, HasZoneMultiplier);
       ZoneMultiplierZones is the base's zmzNotCQOrITU, so the hint never
       offers a CTY zone and ADIF writes no CQZ/ITUZ tag.
-    - SENT: MY ZONE holds the operator's year (the New Contest prompt).
+    - SENT: MY LICENSE YEAR holds the operator's year (the New Contest
+      prompt; issue 298 -- it was MY ZONE until then), read through the
+      stated kind: two digits (TContestBase.SentZoneText).
   A field and a multiplier kind of its own would be a schema change (a
   column, or the 376-byte record the wire and server log carry) -- not taken.
   The ITU zone mode stays: it is what CTY.DAT gives a logged call, and
@@ -133,6 +143,14 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      (* THE YEAR, NOT A ZONE, ON SCREEN AND ON THE AIR -- from the stated
+         kind since issue 298: the totals row, the log column's heading, and
+         the year it SENDS (MY LICENSE YEAR, TContestBase.SentZoneText) all
+         follow ReceivedYearKind, so none is stated here. *)
+      (* THE YEAR IT RECEIVES IS TWO DIGITS, 00..99 -- rule 5 (issue 298,
+         stage 2). See TContestBase.ReceivedYearKind: the parser's range, the
+         ADIF import and Edit QSO follow from it. *)
+      function GetReceivedYearKind: TReceivedYearKind; override;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
@@ -171,6 +189,11 @@ uses
 procedure TContestEuropeanHFC.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
+end;
+
+function TContestEuropeanHFC.GetReceivedYearKind: TReceivedYearKind;
+begin
+   Result := rykTwoDigitYear;
 end;
 
 function TContestEuropeanHFC.GetDisplayName: string;
@@ -243,7 +266,7 @@ function TContestEuropeanHFC.ParseReceivedExchangeFormat(const aText: string;
                                                          aParsers: TExchangeParsers;
                                                          var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTLicenceYear(aText, aExch);
+   Result := aParsers.ParseRSTLicenceYear(aText, ReceivedYearKind, aExch);
 end;
 
 procedure TContestEuropeanHFC.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
@@ -273,7 +296,9 @@ function TContestEuropeanHFC.GetCabrilloReceivedExchange(const aMy: TMyStationEx
                                                          const aQso: ContestExchange;
                                                          const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTZone(aMy, aQso, aCtx);
+   (* THE YEAR FROM ITS FIELD (issue 298 stage 3), in the seven columns the
+      zone helper printed it in: two digits, byte for byte as before. *)
+   Result := CabrilloReceivedRSTYear(ReceivedYearKind, aMy, aQso, aCtx);
 end;
 
 function TContestEuropeanHFC.GetFlags: TContestFlags;
@@ -297,8 +322,8 @@ end;
    changing one changes one. *)
 procedure TContestEuropeanHFC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   (* The year is kept in MY ZONE, but the row names what it holds. *)
-   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+   (* The year is MY LICENSE YEAR (issue 298); the row reads "License year". *)
+   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyLicenseYear,
                                         SNewContestLicenseYearLabel);
 end;
 
@@ -339,7 +364,6 @@ function TContestEuropeanHFC.ZoneMultiplierFromCall(const aCall: string;
 var
    remembered: string;
    first: integer;
-   i: integer;
    year: integer;
 begin
    aZone := 0;
@@ -355,19 +379,15 @@ begin
       begin
       Dec(first);
       end;
-   if (Length(remembered) - first + 1 < 1) or
-      (Length(remembered) - first + 1 > 2) then
+   (* A YEAR OF THIS CONTEST'S KIND -- the one word test the parser, Edit QSO
+      and the import ask too (issue 298, stage 2; it was a digit loop of its
+      own here). No QSO, so the ceiling is the latest year a QSO can carry,
+      which a two-digit year never reaches. *)
+   if not ReceivedYearFromWord(ReceivedYearKind,
+                               Copy(remembered, first, Length(remembered) - first + 1),
+                               LATEST_QSO_YEAR, year) then
       begin
       Exit;
-      end;
-   year := 0;
-   for i := first to Length(remembered) do
-      begin
-      if (remembered[i] < '0') or (remembered[i] > '9') then
-         begin
-         Exit;
-         end;
-      year := year * 10 + (Ord(remembered[i]) - Ord('0'));
       end;
    aZone := year;
    Result := True;

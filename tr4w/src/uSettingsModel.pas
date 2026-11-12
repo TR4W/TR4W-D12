@@ -2304,7 +2304,7 @@ type
      the two cannot drift apart unnoticed. *)
    TStationFact = (sfState, sfSection, sfZone, sfItuZone, sfGrid, sfName,
                    sfFdClass, sfCheck, sfPrec, sfPark, sfIota, sfPostalCode,
-                   sfFocNumber);
+                   sfFocNumber, sfLicenseYear);
 
    (*
      THE STATION'S OWN FACTS -- the seventeen MY ... commands.
@@ -2339,6 +2339,7 @@ type
    TMySettings = class(TSettingsGroup)
    private
       FFocNumber: string;
+      FLicenseYear: string;
       FIota: string;
       FPark: string;
       FCheck: string;
@@ -2416,6 +2417,7 @@ type
       property ResolvedIota: string index Ord(sfIota) read GetResolvedText;
       property ResolvedPostalCode: string index Ord(sfPostalCode) read GetResolvedText;
       property ResolvedFocNumber: string index Ord(sfFocNumber) read GetResolvedText;
+      property ResolvedLicenseYear: string index Ord(sfLicenseYear) read GetResolvedText;
       (* MY ITU ZONE resolved; 0 still means "use CTY.DAT". *)
       property ResolvedItuZone: integer read GetResolvedItuZone;
 
@@ -2460,6 +2462,21 @@ type
    published
       // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
       property FocNumber: string read FFocNumber write FFocNumber;
+      (* THE YEAR THIS OPERATOR WAS FIRST LICENSED -- MY LICENSE YEAR, issue 298.
+        A standard exchange fact of its own: the European HF Championship and
+        KVP (two digits), and the contests that ask for four digits or for the
+        years licensed (TReceivedYearKind). It was the MY ZONE slot, which it
+        shared with the CQ zone and which is why Preferences, the New Contest
+        row, the tooltip and the Cabrillo export each needed an override to
+        say "year" where the setting said "zone".
+
+        THE TEXT AS TYPED -- '1985', or '85' (a year of 00..99 is the closest
+        past one; uContestBase.LicenseYearValue states the rule). What a
+        contest SENDS from it is the contest's kind's answer
+        (uContestBase.SentLicenseYearText): 85, 1985, or the count of years.
+        A contest may state its own (the contest's override, as for MY STATE),
+        so one station can run two contests with different years. *)
+      property LicenseYear: string read FLicenseYear write FLicenseYear;
       (* Was MyIOTA in logstuff.pas, and IT HAS NO READER -- the global was
         declared, initialised to '' and used by nothing but its own config
         row. Migrated rather than withdrawn on NY4I's instruction
@@ -4359,7 +4376,7 @@ const
    STATION_FACT_PROPERTY: array[TStationFact] of string = (
       'State', 'Section', 'Zone', 'ItuZone', 'Grid', 'Name',
       'FdClass', 'Check', 'Prec', 'Park', 'Iota', 'PostalCode',
-      'FocNumber');
+      'FocNumber', 'LicenseYear');
 
    (* THE HAMSCORE UPLOAD ADDRESS A NEVER-SET HAMSCORE URL GETS (issue 250,
      NY4I 2026-11-09). It is the direct hamscore.com endpoint, over https, so
@@ -5389,6 +5406,7 @@ begin
      cfgdef sets the two strings to '' explicitly and VC leaves the Byte at
      its zero. Zero is the "use CTY.DAT" sentinel, not an unset value. *)
    FFocNumber  := '';
+   FLicenseYear := '';
    FIota       := '';
    FPark       := '';
    FCheck      := '';
@@ -5501,6 +5519,10 @@ begin
       sfFocNumber:
          begin
          Result := FFocNumber;
+         end;
+      sfLicenseYear:
+         begin
+         Result := FLicenseYear;
          end;
    end;
 end;

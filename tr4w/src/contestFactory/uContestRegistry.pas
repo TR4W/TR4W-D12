@@ -337,6 +337,21 @@ function ContestAllowsCountyLineOnImport(aContest: TContestHandle): boolean;
   False: there the slash call is the call. *)
 function ContestSplitsRoverCallOnExport(aContest: TContestHandle): boolean;
 
+(* DOES aContest KEEP A YEAR IN THE ZONE SLOT? -- issue 298, stage 1
+  (2026-11-12). The rule the log schema 6 migration and the .TRW import use
+  to carry an existing log's received years from rcvd_zone / Zone into the
+  year field (rcvd_year / RcvdYear): only for these contests, because in every
+  other one the zone slot is a zone.
+
+  The contest's own answer, not a list: True when its class STATES A RECEIVED
+  YEAR (TContestBase.ReceivedYearKind is not rykNone -- the European HF
+  Championship and KVP, whose zone slot holds the year first licensed, since
+  StoreLicenceYear writes both). False for an unknown handle and for
+  NoContest. Repointed at stage 2 (2026-11-12) from "MyZoneIsAStationZone is
+  False", the SENT side's question; the two agree for every registered
+  contest, which uTestLogReceivedYear walks the registry to pin. *)
+function ContestKeepsYearInZoneSlot(aContest: TContestHandle): boolean;
+
 (* THE OBJECT THAT JUDGES A LOGGED RECORD OF CONTEST aContest -- Q119
    (2026-10-23).
 
@@ -853,6 +868,13 @@ begin
    (* ContestIdentity is never nil; NoContest's plain TContestBase answers
       the base's False. *)
    Result := ContestIdentity(aContest).SplitsRoverCallOnExport;
+end;
+
+function ContestKeepsYearInZoneSlot(aContest: TContestHandle): boolean;
+begin
+   (* See the declaration. ContestIdentity is never nil; the base answers
+      rykNone, so NoContest and a class that says nothing answer False here. *)
+   Result := ContestIdentity(aContest).ReceivedYearKind <> rykNone;
 end;
 
 var

@@ -103,7 +103,8 @@ type
       function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
-      function ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTLicenceYear(const aText: string; aKind: TReceivedYearKind;
+                                   var aExch: ContestExchange): boolean; override;
       function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; override;
@@ -320,8 +321,10 @@ begin
    Result := Answer('ParseRSTDomesticQTHOrQSONumber', aText, aExch);
 end;
 
-function TStubExchangeParsers.ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean;
+function TStubExchangeParsers.ParseRSTLicenceYear(const aText: string; aKind: TReceivedYearKind;
+                                                  var aExch: ContestExchange): boolean;
 begin
+   (* The kind is the contest's; the stub records only that it was asked. *)
    Result := Answer('ParseRSTLicenceYear', aText, aExch);
 end;
 

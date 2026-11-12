@@ -38,7 +38,12 @@ unit uCabrilloExchange;
   (aMy), the worked QSO (aQso) and what the exporter decided about it before
   asking (aCtx -- the formatted RSTs, the his-QTH it selected, the previous
   record's values). None of it is the session's exchange: the field that
-  carried it is gone from TCabrilloQSOContext.
+  carried it is gone from TCabrilloQSOContext. ONE HELPER TAKES A FOURTH:
+  CabrilloReceivedRSTYear's received-year KIND (issue 298 stage 3), which
+  the calling class passes from its own ReceivedYearKind -- a kind, never a
+  contest, so the rule below holds. Its widths are pinned in
+  uTestReceivedYearDisplay rather than uTestCabrilloColumns' helper table,
+  whose type holds three-input helpers.
 
   THE WIDTHS ARE THE CONTRACT. Cabrillo is a column format and these strings
   are what a robot scorer reads, so every Format string below is the arm's,
@@ -404,6 +409,18 @@ function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;
 
 (* RST and zone, two digits: '%-3s %-7.2d'. *)
 function CabrilloReceivedRSTZone(const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange;
+                                 const aCtx: TCabrilloQSOContext): string;
+
+(* RST and the RECEIVED YEAR of a contest of aKind, from the record's field
+   (uContestBase.ReceivedYearTextOf): '%-3s %-7s' -- issue 298, stage 3. A
+   two-digit year prints exactly what CabrilloReceivedRSTZone printed from the
+   zone slot ('05     '); a four-digit one its four digits ('1985   ') in the
+   same seven columns. A QSO with no year leaves the column blank, where the
+   zone slot printed DUMMYZONE's 255. The kind is a parameter, not a contest:
+   the class that states the kind passes it. *)
+function CabrilloReceivedRSTYear(aKind: TReceivedYearKind;
+                                 const aMy: TMyStationExchange;
                                  const aQso: ContestExchange;
                                  const aCtx: TCabrilloQSOContext): string;
 
@@ -1008,6 +1025,16 @@ var
 begin
   zone := aQso.Zone;
   Result := SysUtils.Format('%-3s %-7.2d', [aCtx.RSTReceived, zone]);   // 4.51.1 issue185
+end;
+
+function CabrilloReceivedRSTYear(aKind: TReceivedYearKind;
+                                 const aMy: TMyStationExchange;
+                                 const aQso: ContestExchange;
+                                 const aCtx: TCabrilloQSOContext): string;
+begin
+  (* UnicodeFormat: FPC 3.2.2's SysUtils.Format takes AnsiString, and this
+     unit's strings are UnicodeString -- no narrowing added. *)
+  Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, ReceivedYearTextOf(aKind, aQso)]);
 end;
 
 function CabrilloReceivedQSONumberPreviousQSONumber(const aMy: TMyStationExchange;

@@ -198,6 +198,7 @@ comes last, a word run together.
 | `MY GRID` |  | global | `Settings.My.Grid` | string |  |
 | `MY IOTA` |  | global | `Settings.My.Iota` | string |  |
 | `MY ITU ZONE` |  | global | `Settings.My.ItuZone` | TMyItuZone |  |
+| `MY LICENSE YEAR` |  | global | `Settings.My.LicenseYear` | string |  |
 | `MY NAME` |  | global | `Settings.My.Name` | string |  |
 | `MY PARK` |  | global | `Settings.My.Park` | string |  |
 | `MY POSTAL CODE` |  | global | `Settings.My.PostalCode` | string |  |

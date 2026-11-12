@@ -172,6 +172,32 @@ const
 function LogSidecarPresent(const aDatabase: string): string;
 
 type
+   (* DOES THE CONTEST NAMED aContestType (the contest row's contest_type)
+     KEEP ITS RECEIVED YEAR IN THE ZONE SLOT? -- issue 298, stage 1. *)
+   TLogContestKeepsYearInZone = function(const aContestType: string): boolean;
+
+var
+   (* THE SCHEMA 6 MIGRATION'S ONE QUESTION, ANSWERED FROM OUTSIDE THE LEAF.
+
+     The migration carries an existing log's received years from rcvd_zone
+     into rcvd_year, and only for a contest whose zone slot holds a year (the
+     European HF Championship and KVP). Which contest that is, is the
+     contest registry's answer, and this unit is a domain leaf that cannot
+     ask the registry -- so the answer is handed in. uLogStore assigns it in
+     its initialization (uContestRegistry.ContestKeepsYearInZoneSlot over
+     uContestNames.ContestFromName), so every Open in a program that links the
+     store -- the store, the WRL worker, the tests -- asks the same rule.
+
+     SINCE SCHEMA 7 (stage 2) it is asked of every log below 7: the re-carry
+     overwrites a schema-6 log's rcvd_year from rcvd_zone for these contests.
+
+     A GLOBAL, NOT A PROPERTY OF EACH TLogDatabase, so no opener can forget
+     it. AND NIL FAILS CLOSED: a log below schema 7 is then refused by Open
+     before anything changes (ELogDatabaseError), rather than migrated without
+     its years and stamped current, after which nothing would ever carry them. *)
+   LogContestKeepsYearInZone: TLogContestKeepsYearInZone = nil;
+
+type
    (* SQLiteCode: the extended result code of the failure it wraps, 0 when
      none -- kept so SQLiteIsBusy can answer through a re-wrap. *)
    ELogDatabaseError = class(Exception)
@@ -1846,6 +1872,9 @@ var
    missing: array of integer;
    messageEditedMissing: boolean;
    lastSentMissing: boolean;
+   yearMissing: boolean;
+   carryYears: boolean;
+   contestType: string;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
 
@@ -1869,6 +1898,42 @@ begin
    if (version >= LOG_SCHEMA_VERSION) and not lastSentMissing then
       begin
       Exit;
+      end;
+
+   (* v5 -> v6: IS qso.rcvd_year MISSING, AND DOES THIS LOG'S CONTEST KEEP
+     ITS YEAR IN THE ZONE SLOT -- both asked here, before anything changes, so
+     the migration stays one transaction (issue 298). The contest is the
+     contest row's, asked through LogContestKeepsYearInZone; with no answer to
+     ask, the log is refused before any change (see the declaration). A log
+     with no contest row names no contest: nothing is carried. *)
+   (* AND v6 -> v7 (issue 298, stage 2): THE RE-CARRY, asked with it. Below 7
+     the zone column was authoritative and rcvd_year a copy that an edit or an
+     import could leave stale, so a year contest's log has every row's
+     rcvd_year set from rcvd_zone -- the v6 carry and the v7 re-carry are the
+     same statement, and a log below 6 runs it once. *)
+   yearMissing := False;
+   carryYears := False;
+   if version < 7 then
+      begin
+      if not Assigned(LogContestKeepsYearInZone) then
+         begin
+         raise ELogDatabaseError.CreateFmt(
+            'The contest log "%s" is schema %d and must be upgraded to %d, ' +
+            'which carries each QSO''s received year out of the zone column ' +
+            'for the contests that keep it there. This program has not said ' +
+            'which contests those are (uLogDatabase.LogContestKeepsYearInZone ' +
+            'is not assigned), so the log was left as it is.',
+            [FFileName, version, LOG_SCHEMA_VERSION]);
+         end;
+      yearMissing :=
+         PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                        'WHERE name = ''' + string(LOG_V6_QSO_YEAR_COLUMN.Name) +
+                        '''')) = '';
+      contestType := UTF8Decode(PragmaAsString('SELECT contest_type FROM contest WHERE id = 1'));
+      (* NOT "only when the column was added" any more: a schema-6 log has the
+        column, and its copy is the one that may be stale. *)
+      carryYears := (contestType <> '') and
+                    LogContestKeepsYearInZone(contestType);
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -1960,6 +2025,28 @@ begin
          'ALTER TABLE external_delivery ADD COLUMN ' +
          string(LOG_V5_DELIVERY_LAST_SENT_COLUMN.Name) + ' ' +
          string(LOG_V5_DELIVERY_LAST_SENT_COLUMN.Declaration)));
+      end;
+
+   (* v5 -> v6: qso.rcvd_year, NULL ("no year") in every existing row, added
+     only when it is missing (a hand repair, or a log made by this build and
+     stamped back, keeps its column). *)
+   if yearMissing then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V6_QSO_YEAR_COLUMN.Name) +
+         ' ' + string(LOG_V6_QSO_YEAR_COLUMN.Declaration)));
+      end;
+
+   (* v5/v6 -> v7: FOR A CONTEST THAT KEEPS ITS YEAR IN THE ZONE SLOT, EVERY
+     ROW'S rcvd_year IS rcvd_zone -- OVERWRITING (issue 298, stage 2). Below 7
+     the zone column was the one every reader read and every writer kept
+     right; rcvd_year was a copy, and Edit QSO saved a new zone beside the old
+     year. So NO WHERE: a zone an edit cleared (NULL) clears the year too, and
+     0 is the year 00. The zone column is left as it is: StoreLicenceYear
+     still writes both. Any other contest's rows are untouched. *)
+   if carryYears then
+      begin
+      FConnection.ExecuteDirect('UPDATE qso SET rcvd_year = rcvd_zone');
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

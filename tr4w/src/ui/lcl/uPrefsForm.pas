@@ -357,6 +357,8 @@ type
       edtMyIOTA: TEdit;
       lblMyPark: TLabel;
       edtMyPark: TEdit;
+      lblMyLicenseYear: TLabel;
+      edtMyLicenseYear: TEdit;
 
       // --- External Software (Tags 16..19) ------------------------------------
       // Four children of the External Software node.  DXLab has no settings of
@@ -5035,6 +5037,7 @@ begin
    AddHandWiredToSearchIndex(aN, 'MY GRID',                           edtMyGrid);
    AddHandWiredToSearchIndex(aN, 'MY IOTA',                           edtMyIOTA);
    AddHandWiredToSearchIndex(aN, 'MY ITU ZONE',                       edtMyITUZone);
+   AddHandWiredToSearchIndex(aN, 'MY LICENSE YEAR',                   edtMyLicenseYear);
    AddHandWiredToSearchIndex(aN, 'MY NAME',                           edtMyName);
    AddHandWiredToSearchIndex(aN, 'MY PARK',                           edtMyPark);
    AddHandWiredToSearchIndex(aN, 'MY POSTAL CODE',                    edtMyPostalCode);
@@ -6520,7 +6523,8 @@ begin
       MakeStationField('MY FD CLASS',     edtMyFDClass),
       MakeStationField('MY FOC NUMBER',   edtMyFOCNumber),
       MakeStationField('MY IOTA',         edtMyIOTA),
-      MakeStationField('MY PARK',         edtMyPark)
+      MakeStationField('MY PARK',         edtMyPark),
+      MakeStationField('MY LICENSE YEAR', edtMyLicenseYear)
    ];
 end;
 

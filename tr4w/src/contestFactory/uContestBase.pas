@@ -396,6 +396,22 @@ type
          wrong number. *)
       MyZoneText: string;
 
+      (* MY LICENSE YEAR AS THE SETTING HOLDS IT -- the text as typed, resolved
+         (the contest's own value if it stated one, else the station's), issue
+         298. NOT what is sent: a contest that exchanges a year sends
+         TContestBase.SentZoneText, which reads this through its
+         ReceivedYearKind (SentLicenseYearText). '' when unset. *)
+      MyLicenseYear: string;
+
+      (* THIS YEAR, FOR THE ONE RULE THAT NEEDS IT -- a contest whose exchange
+         is the NUMBER OF YEARS LICENSED derives that count from a stated year
+         (SentLicenseYearText), and a two-digit year is read against it
+         (LicenseYearValue). uContestFactory.CurrentStation supplies the
+         calendar year; 0 is "not supplied", which reads a two-digit year as
+         19xx past 1999 and derives no count. It is NOT a clock a scoring rule
+         may use: a rule that changes by year asks the QSO's own date. *)
+      CurrentYear: integer;
+
       (* THE SESSION'S CONTEST NAME -- Settings.Contest.Name, as set-up and the
          operator's CONTEST NAME line left it.
 
@@ -474,6 +490,17 @@ type
       MyPostalCode: string;
       MyPark      : string;
    end;
+
+   (* WHICH ZONE ONE LOGGED QSO SENDS IN ITS MY ZONE SLOT -- 2026-11-12, the
+      European HF Championship's exported year. See SentZoneKindOfQSO, the one
+      rule that chooses it, and MyStationExchangeOfQSO, which applies it:
+
+         szkCQZone        the QSO's captured CQ zone
+         szkITUZone       the QSO's captured ITU zone
+         szkStatedMyZone  the session's MY ZONE as stated -- the slot holds no
+                          station zone (a licence year), so no captured zone
+                          may replace it *)
+   TSentZoneKind = (szkCQZone, szkITUZone, szkStatedMyZone);
 
    (* WHAT THE CABRILLO EXPORTER HAS DECIDED ABOUT ONE QSO BEFORE IT ASKS THE
       CONTEST FOR THE TWO EXCHANGE COLUMNS -- M4, 2026-10-01.
@@ -690,11 +717,14 @@ type
       function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
-      (* THE LICENCE YEAR, 00..99, after an optional RS(T) -- the European HF
+      (* THE RECEIVED YEAR, after an optional RS(T) -- the European HF
          Championship and KVP (2026-11-11). The word shapes of ParseRSTZone,
-         and NO zone rule: it does not ask the CTY zone mode. Stored in the
-         zone slot (StoreLicenceYear). *)
-      function ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
+         and NO zone rule: it does not ask the CTY zone mode. aKind is the
+         contest's stated kind (issue 298, stage 2): it says how many digits
+         the year has and its range (ReceivedYearRange). Stored through
+         StoreLicenceYear. *)
+      function ParseRSTLicenceYear(const aText: string; aKind: TReceivedYearKind;
+                                   var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
       function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; virtual; abstract;
@@ -1277,7 +1307,7 @@ type
       reads it. *)
    TNewContestField = (ncfMyCheck, ncfMyFDClass, ncfMyGrid, ncfMyFOC, ncfMyIOTA,
                        ncfMyName, ncfMyPark, ncfMyPrec, ncfMyQTH, ncfMySection,
-                       ncfMyState, ncfMyZone, ncfMyPostalCode);
+                       ncfMyState, ncfMyZone, ncfMyPostalCode, ncfMyLicenseYear);
 
    (* WHAT ONE STEP OF A PROMPT DOES, in the dialog's own terms:
         npkField             offer the field's row (the next free one);
@@ -1295,8 +1325,8 @@ type
       Text: string;
       (* WHAT THE ROW IS LABELLED, when not its field's command name -- '' is
          the command name, as before. The European HF Championship and KVP
-         keep the licence year in MY ZONE, and the row read "MY ZONE" beside
-         a prompt asking for a year (NY4I, 2026-11-11). The label is only
+         ask for the licence year, and read "License year" rather than the
+         command name MY LICENSE YEAR (NY4I, 2026-11-11). The label is only
          what the operator reads: the command queued is still the field's
          (uNewContest.RowCommand), as for the host-area MY COUNTY label. *)
       RowLabel: string;
@@ -1389,7 +1419,12 @@ type
       The prefix-multiplier captions are the same three labels for the
       prefix multipliers' row (issue 277, 2026-11-11): 'Prefixes', unless the
       contest's key is something else -- the CW Open's is the whole worked
-      callsign, so its row says so. *)
+      callsign, so its row says so.
+
+      The zone-multiplier captions are the same three for the zone row
+      (2026-11-11): 'Zones', 'CW Zone', 'Ph Zone', unless the contest's "zone"
+      is something else -- the European HF Championship's and KVP's is the
+      year of first license, kept in the zone slot. *)
    TTotalsDisplay = record
       ShowsModeShares: boolean;
       DomesticMultsCaption: string;
@@ -1398,6 +1433,9 @@ type
       PrefixMultsCaption: string;
       PrefixMultsCaptionCW: string;
       PrefixMultsCaptionPhone: string;
+      ZoneMultsCaption: string;
+      ZoneMultsCaptionCW: string;
+      ZoneMultsCaptionPhone: string;
    end;
 
    (* HOW THIS CONTEST'S SUMMARY SHEET COUNTS -- M9a
@@ -1835,6 +1873,9 @@ type
       function GetOffersQTCs: boolean; virtual;
       function GetOffersParkTools: boolean; virtual;
       function GetSubmitsLogToARRL: boolean; virtual;
+      function GetZoneColumnHeading: string; virtual;
+      function GetMyZoneIsAStationZone: boolean; virtual;
+      function GetReceivedYearKind: TReceivedYearKind; virtual;
 
       (* WHAT THE UI ITSELF ASKS -- M9b. See the properties. *)
       function GetIsActive: boolean; virtual;
@@ -2121,8 +2162,11 @@ type
       (* THE ZONE THIS CONTEST SENDS FROM aStation, AS TEXT -- issue 225.
          uContestBase.ZoneTextSent over this contest's ZoneMultiplierZones
          and aStation's MyITUZone / MyZoneText: the ITU zone in an ITU-zone
-         contest, else the MY ZONE text. What a CQExchangeDefault that sends
-         a zone sends, so the default CQ message and the export agree. *)
+         contest, else the MY ZONE text -- and, for a contest that exchanges
+         a licence year (ReceivedYearKind), the year from MY LICENSE YEAR
+         (SentLicenseYearText), which is what its slot carries. What a
+         CQExchangeDefault that sends a zone sends, so the default CQ message
+         and the export agree. *)
       function SentZoneText(const aStation: TStationContext): string;
 
       (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
@@ -3079,7 +3123,14 @@ type
          RST (aExchangeCarriesRST, LOGDUPE's ExchangeInformation.RST), the
          typed exchange as it stands when it does not. The Field Days
          override for a DX station, whose full exchange is its class and
-         'DX' (NY4I, design 7.10, Q20). *)
+         'DX' (NY4I, design 7.10, Q20).
+
+         A CONTEST THAT STATES A RECEIVED YEAR (ReceivedYearKind, issue 298
+         stage 3) writes the RST and the year FROM THE RECORD'S FIELD
+         (RSTAndReceivedYearText), not the typed text: an Edit QSO change of
+         the year reached the field and not ExchString, so the file carried
+         the old year, and the base's import reads the year back out of this
+         tag. *)
       function FormatADIFReceivedExchange(const aQso: ContestExchange;
                                           aExchangeCarriesRST: boolean): string; virtual;
 
@@ -3395,6 +3446,8 @@ type
          RECEIVED: the base is the exchange as typed. A contest that knows
          its own fields rebuilds them in its sponsor's order (uCanonicalExchange
          holds the shared pieces); the caller collapses the whitespace.
+         A contest that states a received year gets the RST and the year from
+         the record's field (RSTAndReceivedYearText, issue 298 stage 3).
          SENT: the base rebuilds what was sent from the CQ exchange template --
          '#' our serial, 5NN as 599 -- or, with no template, the typed exchange;
          the RTC sends its serial and grid with no RST. *)
@@ -3461,6 +3514,43 @@ type
          Digi, the three VHF runnings, the RTTY Roundup and Field Day. The
          base does not. *)
       property SubmitsLogToARRL: boolean read GetSubmitsLogToARRL;
+
+      (* THE LOG GRID'S HEADING OVER THE ZONE COLUMN -- what the operator
+         reads, asked by uLogGrid for that one column (2026-11-11). The base
+         answers ColumnsArray's text, 'Zn' -- and 'Year' for a contest that
+         states a received year (ReceivedYearKind <> rykNone; issue 298 stage
+         3), so such a contest states nothing here: the European HF
+         Championship and KVP stopped overriding it. Edit QSO's year box is
+         labelled with it too. ColumnsArray's text itself never changes: it is
+         also the COLUMN WIDTH token uCFG matches. *)
+      property ZoneColumnHeading: string read GetZoneColumnHeading;
+
+      (* DOES THE ZONE SLOT OF THE SENT EXCHANGE HOLD A STATION ZONE? --
+         2026-11-12. True unless the contest sends a licence year there (it
+         states a ReceivedYearKind): then the slot holds the year from MY
+         LICENSE YEAR, which CTY.DAT cannot give and a captured zone must
+         never replace -- the European HF Championship's and KVP's export sent
+         the QSO's ITU zone instead of the year until then. NOT derived from
+         ZoneMultiplierZones: zmzNotCQOrITU is also every contest with no zone
+         multiplier, and CQ 160, WRTC, EU DX and others send a real zone under
+         it. Asked through SentZoneKindOfQSO. MY ZONE is a station zone in
+         EVERY contest now: the year is its own setting since issue 298. *)
+      property MyZoneIsAStationZone: boolean read GetMyZoneIsAStationZone;
+
+      (* WHAT KIND OF YEAR THIS CONTEST RECEIVES -- issue 298, stage 2
+         (2026-11-12); see TReceivedYearKind. The base answers rykNone. A
+         contest whose exchange carries a year states its kind here, and the
+         rest follows from it: its parser's digits and range (it passes this
+         to TExchangeParsers.ParseRSTLicenceYear), the ADIF import (the base's
+         ApplyADIFImport reads the year out of SRX_STRING for any stated
+         kind), Edit QSO (ApplyEditedReceivedYear), and the log migration's
+         "this log's zone column holds years" (uContestRegistry.
+         ContestKeepsYearInZoneSlot). The European HF Championship and KVP
+         answer rykTwoDigitYear. It is also the SENT side's answer: the year
+         such a contest sends is MY LICENSE YEAR read through this kind
+         (SentLicenseYearText), and MyZoneIsAStationZone is False for exactly
+         these contests. *)
+      property ReceivedYearKind: TReceivedYearKind read GetReceivedYearKind;
 
       (* IS THIS CONTEST STILL RUN? -- M9b. An inactive contest stays in the
          factory so an old log still opens and scores (NY4I, 2026-10-01), and
@@ -3988,9 +4078,168 @@ function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
    column, stored value or export byte changed. What changed is that nothing
    about it asks the CTY zone mode: its parser is ParseRSTLicenceYear. These
    two name the alias; read and write the year through them, never as a
-   "zone". A real field of its own is a schema decision, not taken. *)
+   "zone". A real field of its own is a schema decision, not taken.
+
+   ISSUE 298 STAGE 1 (2026-11-12): THE FIELD EXISTS NOW --
+   ContestExchange.RcvdYear / RcvdYearKnown, column rcvd_year (log schema 6).
+
+   STAGE 2 (2026-11-12): THE READERS READ THE FIELD. LicenceYearOf /
+   TryLicenceYearOf read RcvdYear; StoreLicenceYear STILL WRITES BOTH, because
+   the multiplier sheet (SetMultFlags, mo's zone table, mult_zone) and the
+   export (stage 3) still read the zone slot. Stage 4 stops the dual write and
+   moves the sheet. *)
+
+const
+   (* "No year" from LicenceYearOf. Never a year: every kind's range is >= 0. *)
+   NO_RECEIVED_YEAR = -1;
+   (* THE FOUR-DIGIT YEAR'S FLOOR. DXLog's own lists start at 1941 (SCC RTTY)
+      and 1945 (IG-RY, RTTYops WW); 1900 sits below both, so no year a DXLog
+      file accepts is refused, and it predates any amateur licence. *)
+   FOUR_DIGIT_YEAR_FLOOR = 1900;
+   (* THE LATEST YEAR A QSO RECORD CAN HOLD: TQSOTime.qtYear is the year less
+      2000, two digits. The four-digit ceiling for a QSO with no date. *)
+   LATEST_QSO_YEAR = 2099;
+
+(* THE RANGE OF A RECEIVED YEAR OF aKind -- the one statement, asked by the
+   parser, Edit QSO and the ADIF import:
+
+      rykTwoDigitYear    0..99    DXLog: EUHFC 00..99, S5 KVP 0-99, ARRL RR
+                                  and LU 40m ^[0-9]{2}$
+      rykYearsLicensed   0..99    DXLog: HA YL-OM ^[0-9][0-9]?$ (0..99, the
+                                  widest), RYBNICKIE 1..99, WIA RD
+                                  ^0?[0-9]?[1-9]$ (which refuses 10, 20 ...;
+                                  read as a DXLog slip, not copied)
+      rykFourDigitYear   1900..aReferenceYear   DXLog: SCC 1941-2030, IG-RY
+                                  and RTTYops 1945-2040 -- fixed lists; NY4I:
+                                  "up to the current one"
+      rykNone            none: answers False
+
+   aReferenceYear is the QSO's OWN year (ReferenceYearOfQSO), never the clock
+   -- a rule that changes by year asks the log, not the wall (Q35). *)
+function ReceivedYearRange(aKind: TReceivedYearKind; aReferenceYear: integer;
+                           out aLow, aHigh: integer): boolean;
+
+(* HOW MANY DIGITS A YEAR OF aKind IS TYPED WITH: one or two for a two-digit
+   year ('5' has always been taken as 05) and for a count; exactly four for a
+   four-digit year. False for rykNone. The parser's word shape. *)
+function ReceivedYearDigits(aKind: TReceivedYearKind;
+                            out aFewest, aMost: integer): boolean;
+
+(* THE YEAR A QSO WAS MADE IN, as the four-digit ceiling: its tSysTime's year
+   when it has a date, else LATEST_QSO_YEAR (a record not yet stamped -- a
+   test, or an import with no QSO_DATE). Live entry stamps the QSO before it
+   parses the exchange (MainUnit.ParametersOkay). *)
+function ReferenceYearOfQSO(const aQso: ContestExchange): integer;
+
+(* ONE TYPED WORD AS A YEAR OF aKind: all digits, as many as the kind has
+   (one or two for a two-digit year or a count, exactly four for a four-digit
+   year), and inside ReceivedYearRange. aYear is NO_RECEIVED_YEAR when False. *)
+function ReceivedYearFromWord(aKind: TReceivedYearKind; const aWord: string;
+                              aReferenceYear: integer; out aYear: integer): boolean;
+
+(* THE YEAR AS THE OPERATOR READS AND TYPES IT: two digits for a two-digit
+   year ('05' is 2005), the number otherwise. '' for rykNone or a negative. *)
+function ReceivedYearText(aKind: TReceivedYearKind; aYear: integer): string;
+
+(* THE YEAR A MY LICENSE YEAR TEXT NAMES -- the SENT side of the year, issue
+   298. The setting holds what the operator typed: four digits ('1985') are a
+   year; one or two ('85', '5') are a year's last two digits, read as the
+   closest one not after aCurrentYear (85 is 1985 in 2026, 05 is 2005, 26 is
+   2026). aCurrentYear 0 reads them as 19xx. Anything else -- empty, three
+   digits, a letter, a four-digit year before FOUR_DIGIT_YEAR_FLOOR -- is no
+   year: False, aYear NO_RECEIVED_YEAR. *)
+function LicenseYearValue(const aText: string; aCurrentYear: integer;
+                          out aYear: integer): boolean;
+
+(* WHAT A STATION SENDS FOR ITS LICENCE YEAR, in a contest of aKind, from the
+   setting aSetting -- the ONE statement, asked by SessionLicenseYearSent (the
+   export and the default CW exchange) and TContestBase.SentZoneText:
+
+      rykTwoDigitYear    '85'   the year's last two digits, zero-padded
+      rykFourDigitYear   '1985' the year
+      rykYearsLicensed   '41'   the COUNT: a one- or two-digit setting is the
+                                count as stated; a four-digit setting is a
+                                year and gives aCurrentYear less it (0..99).
+                                aCurrentYear 0 cannot derive it: ''.
+      rykNone, or no year in the setting: ''
+
+   The kind decides, never the digits typed: '85' is a two-digit year in
+   EUHFC and a count of 85 years in a count contest. *)
+function SentLicenseYearText(aKind: TReceivedYearKind; const aSetting: string;
+                             aCurrentYear: integer): string;
+
+(* THE RECEIVED YEAR OF aQso -- RcvdYear when RcvdYearKnown. A RECORD THAT
+   NEVER CARRIED THE FIELD falls back to the zone slot, exactly where the log
+   migration (schema 6/7) and the .TRW import would have copied it: Known
+   False and Zone not DUMMYZONE. That covers a record from before the field
+   that no migration saw -- a server log written by a protocol-2 station and
+   caught up from. Ask only of a year contest's record: in any other contest
+   the zone slot is a zone.
+
+   "A ZERO-FILLED RECORD IS NO YEAR" (VC's note on RcvdYearKnown) HOLDS FOR
+   THE FIELD, NOT THROUGH THIS FALLBACK: a FillChar'd record has Zone 0, which
+   reads as the year 00 here -- what the zone slot always answered, so nothing
+   regresses. Stage 4 removes the fallback once the catch-up path fills the
+   field (uGetServerLog.MergeServerLog stores such a record with rcvd_year
+   NULL, and no re-carry runs on a log already at 7). *)
+function TryLicenceYearOf(const aQso: ContestExchange; out aYear: integer): boolean;
+(* The same, NO_RECEIVED_YEAR when there is none. *)
 function LicenceYearOf(const aQso: ContestExchange): integer;
+
+(* THE RECEIVED YEAR OF aQso AS THE OPERATOR READS IT, for a contest of aKind
+   -- issue 298, stage 3: the ONE answer every display and export of the year
+   asks (the log grid's cell, Edit QSO's box, the Cabrillo column, the ADIF
+   SRX_STRING, the canonical received exchange). ReceivedYearText over
+   TryLicenceYearOf: '05' for a two-digit year, '1985' for a four-digit one, the
+   count for years licensed. '' for rykNone or a QSO with no year. *)
+function ReceivedYearTextOf(aKind: TReceivedYearKind; const aQso: ContestExchange): string;
+
+(* THE ZONE COLUMN OF A LOGGED QSO AS A NUMBER, for a contest of aKind --
+   issue 298, stage 3: the received year (TryLicenceYearOf) in a contest that
+   receives one, else the zone slot when it holds a zone (not DUMMYZONE). False:
+   nothing to show. For a reader that prints a NUMBER where a zone stood (the
+   UDP contact's <zone>); a reader that prints TEXT asks ReceivedYearTextOf. *)
+function TryReceivedZoneOrYear(aKind: TReceivedYearKind; const aQso: ContestExchange;
+                               out aValue: integer): boolean;
+
+(* THE RECEIVED EXCHANGE OF A YEAR CONTEST: aRST, a blank and the year as
+   ReceivedYearTextOf writes it -- aRST alone when the QSO has no year. The ONE
+   shape the base's SRX_STRING and canonical received exchange give a contest
+   of a stated year kind (issue 298, stage 3), each with its own RST text. *)
+function RSTAndReceivedYearText(const aRST: string; aKind: TReceivedYearKind;
+                                const aQso: ContestExchange): string;
+(* THE ONE WRITER of a received year: the field (RcvdYear, RcvdYearKnown) and,
+   while the multiplier sheet still counts the zone slot (until stage 4), the
+   zone slot too -- but only a value the slot's sheet can hold (0..99, a
+   two-digit year or a count). A four-digit year leaves Zone at DUMMYZONE: no
+   contest of that kind exists yet, and its multiplier needs stage 4. *)
 procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
+(* No year: the field cleared and the zone slot DUMMYZONE. *)
+procedure ClearLicenceYear(var aQso: ContestExchange);
+
+(* EDIT QSO's SAVE OF THE YEAR BOX for a contest of aKind (not rykNone) -- issue
+   298, stage 2. Empty: no year (ClearLicenceYear). A year of the kind
+   (ReceivedYearFromWord, ceiling the QSO's own year): stored with
+   StoreLicenceYear, so the zone slot and the field never disagree -- stage 1
+   saved a new zone with the OLD rcvd_year. Anything else answers False and
+   leaves aQso as it was: the caller refuses the save. *)
+function ApplyEditedReceivedYear(aKind: TReceivedYearKind; const aText: string;
+                                 var aQso: ContestExchange): boolean;
+
+(* THE ADIF IMPORT'S YEAR for a contest of aKind -- issue 298, stage 2. Asked
+   by TContestBase.ApplyADIFImport once the whole record is read, because the
+   CQZ tag may come before CONTEST_ID. FIRST the received exchange: aSRX less
+   its leading RST (uADIF.ExchangeFromSRXString) must be ONE word that is a
+   year of the kind -- TR4W writes its year there, and writes no CQZ tag for
+   these contests (their zone list is zmzNotCQOrITU). ELSE a value a CQZ or
+   ITUZ tag left in the zone slot (what the import did before the field: the
+   year was the zone slot), if it is a year of the kind. ELSE no year. *)
+procedure ApplyImportedReceivedYear(aKind: TReceivedYearKind; const aSRX: string;
+                                    var aQso: ContestExchange);
+
+(* WHAT KIND OF YEAR aContest RECEIVES -- see TContestBase.ReceivedYearKind.
+   nil answers rykNone. *)
+function ContestReceivedYearKind(aContest: TContestBase): TReceivedYearKind;
 
 (* WHAT A RECEIVED DOMESTIC QTH MEANS IN aContest -- see
    TContestBase.DomesticMultiplierFromQTH. nil answers dqaLookUpDomesticFile
@@ -4173,8 +4422,9 @@ function QSOCountsTowardTotals(aContest: TContestBase;
 
    A ROW THAT RECORDED NO STATION (aFacts never captured) is aSession, exactly
    as before (ruling A). One that did takes its grid, section and park; its
-   zone of the kind the contest sends (aSendsITUZone: the ITU zone, else the CQ
-   zone); and its state ONLY when aSessionSendsMyState -- the session sends MY
+   zone of the kind the contest sends (aZoneSent, from SentZoneKindOfQSO: the
+   ITU zone, the CQ zone, or -- szkStatedMyZone, a licence year -- none: the
+   session's sent text, the year, stays); and its state ONLY when aSessionSendsMyState -- the session sends MY
    STATE itself in that slot, where a contest that sends something else there
    (the Cup of the RF sends the grid) keeps it. Name, FD class, check,
    precedence, FOC number and postal code stay the session's: the record holds
@@ -4185,7 +4435,29 @@ function QSOCountsTowardTotals(aContest: TContestBase;
 function MyStationExchangeOfQSO(const aSession: TMyStationExchange;
                                 const aFacts: TQsoMyFacts;
                                 aSessionSendsMyState: boolean;
-                                aSendsITUZone: boolean): TMyStationExchange;
+                                aZoneSent: TSentZoneKind): TMyStationExchange;
+
+(* WHICH ZONE A LOGGED QSO OF aContest SENDS -- the one rule (2026-11-12):
+
+      the slot holds a licence year      szkStatedMyZone (the European HF
+      (ContestMyZoneIsAStationZone)      Championship's and KVP's year, MY
+                                         LICENSE YEAR)
+      a zone multiplier of ITU zones,    szkITUZone
+      or a session in ITU zone mode
+      anything else                      szkCQZone
+
+   The last two rows are the rule PostUnit wrote inline before 2026-11-12,
+   unchanged; only the first is new.
+
+   aContest is the object that holds the station (JIDX's zone list depends on
+   the entrant); nil is a classless contest, which sends a station zone.
+   PostUnit.CurrentMyStationExchange asks it for every export. *)
+function SentZoneKindOfQSO(aContest: TContestBase;
+                           aZoneMode: ZoneModeType): TSentZoneKind;
+
+(* DOES aContest's MY ZONE HOLD A STATION ZONE? -- see
+   TContestBase.MyZoneIsAStationZone. nil answers True. *)
+function ContestMyZoneIsAStationZone(aContest: TContestBase): boolean;
 
 (* aQso EARNS NO MULTIPLIER: its four flags -- domestic, DX, prefix, zone --
    cleared. The one statement of "no multiplier on this record", for the
@@ -4260,7 +4532,9 @@ uses
    uExchangeFields,
    (* ResolveSRXString -- the received-exchange half of the ADIF SRX_STRING
       the base's FormatADIFReceivedExchange writes (M5b). The Field Day
-      classes already reach uADIF the same way, from their implementation. *)
+      classes already reach uADIF the same way, from their implementation.
+      And ExchangeFromSRXString -- the imported year (ApplyImportedReceivedYear,
+      issue 298). *)
    uADIF;
 
 var
@@ -4736,16 +5010,377 @@ begin
       end;
 end;
 
+function ReceivedYearRange(aKind: TReceivedYearKind; aReferenceYear: integer;
+                           out aLow, aHigh: integer): boolean;
+begin
+   (* See the declaration for the evidence behind each row. *)
+   aLow := 0;
+   aHigh := -1;
+   case aKind of
+      rykTwoDigitYear, rykYearsLicensed:
+         begin
+         aLow := 0;
+         aHigh := 99;
+         end;
+      rykFourDigitYear:
+         begin
+         aLow := FOUR_DIGIT_YEAR_FLOOR;
+         aHigh := aReferenceYear;
+         end;
+   end;
+   Result := aLow <= aHigh;
+end;
+
+function ReferenceYearOfQSO(const aQso: ContestExchange): integer;
+begin
+   if (aQso.tSysTime.qtYear = 0)  and
+      (aQso.tSysTime.qtMonth = 0) and
+      (aQso.tSysTime.qtDay = 0)   then
+      begin
+      Result := LATEST_QSO_YEAR;
+      end
+   else
+      begin
+      Result := 2000 + aQso.tSysTime.qtYear;
+      end;
+end;
+
+(* See the declaration. EUHFC rule 5: "17 means 2017". *)
+function ReceivedYearDigits(aKind: TReceivedYearKind;
+                            out aFewest, aMost: integer): boolean;
+begin
+   aFewest := 0;
+   aMost := -1;
+   case aKind of
+      rykTwoDigitYear, rykYearsLicensed:
+         begin
+         aFewest := 1;
+         aMost := 2;
+         end;
+      rykFourDigitYear:
+         begin
+         aFewest := 4;
+         aMost := 4;
+         end;
+   end;
+   Result := aFewest <= aMost;
+end;
+
+function ReceivedYearFromWord(aKind: TReceivedYearKind; const aWord: string;
+                              aReferenceYear: integer; out aYear: integer): boolean;
+var
+   fewest, most, low, high, value, i: integer;
+begin
+   aYear := NO_RECEIVED_YEAR;
+   Result := False;
+   if not ReceivedYearDigits(aKind, fewest, most) then
+      begin
+      Exit;
+      end;
+   if (Length(aWord) < fewest) or (Length(aWord) > most) then
+      begin
+      Exit;
+      end;
+   value := 0;
+   for i := 1 to Length(aWord) do
+      begin
+      if (aWord[i] < '0') or (aWord[i] > '9') then
+         begin
+         Exit;
+         end;
+      value := value * 10 + (Ord(aWord[i]) - Ord('0'));
+      end;
+   if not ReceivedYearRange(aKind, aReferenceYear, low, high) then
+      begin
+      Exit;
+      end;
+   if (value < low) or (value > high) then
+      begin
+      Exit;
+      end;
+   aYear := value;
+   Result := True;
+end;
+
+function ReceivedYearText(aKind: TReceivedYearKind; aYear: integer): string;
+begin
+   if (aKind = rykNone) or (aYear < 0) then
+      begin
+      Result := '';
+      end
+   else if (aKind = rykTwoDigitYear) and (aYear < 10) then
+      begin
+      Result := '0' + IntToStr(aYear);
+      end
+   else
+      begin
+      Result := IntToStr(aYear);
+      end;
+end;
+
+(* The digits of aText as a number, or -1: all of 1..4 of them, nothing else. *)
+function LicenseYearDigits(const aText: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   if (aText = '') or (Length(aText) > 4) then
+      begin
+      Exit;
+      end;
+   Result := 0;
+   for i := 1 to Length(aText) do
+      begin
+      if (aText[i] < '0') or (aText[i] > '9') then
+         begin
+         Result := -1;
+         Exit;
+         end;
+      Result := Result * 10 + (Ord(aText[i]) - Ord('0'));
+      end;
+end;
+
+function LicenseYearValue(const aText: string; aCurrentYear: integer;
+                          out aYear: integer): boolean;
+var
+   text: string;
+   n: integer;
+begin
+   (* See the declaration. *)
+   aYear := NO_RECEIVED_YEAR;
+   Result := False;
+   text := Trim(aText);
+   n := LicenseYearDigits(text);
+   if (n < 0) or (Length(text) = 3) then
+      begin
+      Exit;
+      end;
+   if Length(text) = 4 then
+      begin
+      if n < FOUR_DIGIT_YEAR_FLOOR then
+         begin
+         Exit;
+         end;
+      aYear := n;
+      end
+   else if (aCurrentYear > 0) and (n <= aCurrentYear mod 100) then
+      begin
+      aYear := (aCurrentYear div 100) * 100 + n;
+      end
+   else
+      begin
+      aYear := 1900 + n;
+      end;
+   Result := True;
+end;
+
+function SentLicenseYearText(aKind: TReceivedYearKind; const aSetting: string;
+                             aCurrentYear: integer): string;
+var
+   text: string;
+   n, year: integer;
+begin
+   (* See the declaration. *)
+   Result := '';
+   text := Trim(aSetting);
+   case aKind of
+      rykTwoDigitYear:
+         begin
+         if LicenseYearValue(text, aCurrentYear, year) then
+            begin
+            Result := ReceivedYearText(aKind, year mod 100);
+            end;
+         end;
+      rykFourDigitYear:
+         begin
+         if LicenseYearValue(text, aCurrentYear, year) then
+            begin
+            Result := ReceivedYearText(aKind, year);
+            end;
+         end;
+      rykYearsLicensed:
+         begin
+         n := LicenseYearDigits(text);
+         if (n >= 0) and (Length(text) <= 2) then
+            begin
+            Result := ReceivedYearText(aKind, n);
+            end
+         else if (aCurrentYear > 0) and LicenseYearValue(text, aCurrentYear, year) then
+            begin
+            n := aCurrentYear - year;
+            if (n >= 0) and (n <= 99) then
+               begin
+               Result := ReceivedYearText(aKind, n);
+               end;
+            end;
+         end;
+   end;
+end;
+
+function TryLicenceYearOf(const aQso: ContestExchange; out aYear: integer): boolean;
+begin
+   (* See the declaration: the field, else the zone slot where the migration
+      would have copied it, else none. *)
+   if aQso.RcvdYearKnown then
+      begin
+      aYear := aQso.RcvdYear;
+      Result := True;
+      end
+   else if aQso.Zone <> DUMMYZONE then
+      begin
+      aYear := aQso.Zone;
+      Result := True;
+      end
+   else
+      begin
+      aYear := NO_RECEIVED_YEAR;
+      Result := False;
+      end;
+end;
+
 function LicenceYearOf(const aQso: ContestExchange): integer;
 begin
-   (* See the declaration: the zone slot holds it. *)
-   Result := aQso.Zone;
+   if not TryLicenceYearOf(aQso, Result) then
+      begin
+      Result := NO_RECEIVED_YEAR;
+      end;
+end;
+
+function ReceivedYearTextOf(aKind: TReceivedYearKind; const aQso: ContestExchange): string;
+begin
+   (* See the declaration. ReceivedYearText answers '' for rykNone and for
+      NO_RECEIVED_YEAR, so no case is written twice. *)
+   if aKind = rykNone then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := ReceivedYearText(aKind, LicenceYearOf(aQso));
+      end;
+end;
+
+function TryReceivedZoneOrYear(aKind: TReceivedYearKind; const aQso: ContestExchange;
+                               out aValue: integer): boolean;
+begin
+   (* See the declaration. *)
+   if aKind <> rykNone then
+      begin
+      Result := TryLicenceYearOf(aQso, aValue);
+      end
+   else if aQso.Zone <> DUMMYZONE then
+      begin
+      aValue := aQso.Zone;
+      Result := True;
+      end
+   else
+      begin
+      aValue := 0;
+      Result := False;
+      end;
+end;
+
+function RSTAndReceivedYearText(const aRST: string; aKind: TReceivedYearKind;
+                                const aQso: ContestExchange): string;
+var
+   year: string;
+begin
+   (* See the declaration. *)
+   year := ReceivedYearTextOf(aKind, aQso);
+   if year = '' then
+      begin
+      Result := aRST;
+      end
+   else
+      begin
+      Result := aRST + ' ' + year;
+      end;
 end;
 
 procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
 begin
-   (* See the declaration. The parser hands 0..99 only; the Byte holds it. *)
-   aQso.Zone := Byte(aYear);
+   (* See the declaration. The field first -- what every reader reads since
+      stage 2 -- then the zone slot the multiplier sheet still counts. *)
+   aQso.RcvdYear := Word(aYear);
+   aQso.RcvdYearKnown := True;
+   if (aYear >= 0) and (aYear <= 99) then
+      begin
+      aQso.Zone := Byte(aYear);
+      end
+   else
+      begin
+      aQso.Zone := DUMMYZONE;
+      end;
+end;
+
+procedure ClearLicenceYear(var aQso: ContestExchange);
+begin
+   aQso.RcvdYear := 0;
+   aQso.RcvdYearKnown := False;
+   aQso.Zone := DUMMYZONE;
+end;
+
+function ApplyEditedReceivedYear(aKind: TReceivedYearKind; const aText: string;
+                                 var aQso: ContestExchange): boolean;
+var
+   entry: string;
+   year: integer;
+begin
+   (* See the declaration. *)
+   entry := Trim(aText);
+   if entry = '' then
+      begin
+      ClearLicenceYear(aQso);
+      Result := True;
+      Exit;
+      end;
+   Result := ReceivedYearFromWord(aKind, entry, ReferenceYearOfQSO(aQso), year);
+   if Result then
+      begin
+      StoreLicenceYear(aQso, year);
+      end;
+end;
+
+procedure ApplyImportedReceivedYear(aKind: TReceivedYearKind; const aSRX: string;
+                                    var aQso: ContestExchange);
+var
+   received: string;
+   year: integer;
+   reference: integer;
+begin
+   (* See the declaration. The received exchange first: one word after the
+      RST, and a year of the kind. *)
+   reference := ReferenceYearOfQSO(aQso);
+   received := ExchangeFromSRXString(aSRX, aQso.RSTReceived);
+   if (Pos(' ', received) = 0) and
+      ReceivedYearFromWord(aKind, received, reference, year) then
+      begin
+      StoreLicenceYear(aQso, year);
+      Exit;
+      end;
+
+   (* Else what a CQZ or ITUZ tag left in the zone slot -- the import's only
+      carrier of the year before the field existed. *)
+   if (aQso.Zone <> DUMMYZONE) and
+      ReceivedYearFromWord(aKind, IntToStr(aQso.Zone), reference, year) then
+      begin
+      StoreLicenceYear(aQso, year);
+      Exit;
+      end;
+
+   ClearLicenceYear(aQso);
+end;
+
+function ContestReceivedYearKind(aContest: TContestBase): TReceivedYearKind;
+begin
+   if aContest = nil then
+      begin
+      Result := rykNone;
+      end
+   else
+      begin
+      Result := aContest.ReceivedYearKind;
+      end;
 end;
 
 function ContestDomesticMultiplierFromQTH(aContest: TContestBase;
@@ -5202,8 +5837,17 @@ end;
 
 function TContestBase.SentZoneText(const aStation: TStationContext): string;
 begin
-   (* See the declaration. *)
-   Result := ZoneTextSent(ZoneMultiplierZones, aStation.MyITUZone, aStation.MyZoneText);
+   (* See the declaration. A contest that exchanges a year sends MY LICENSE
+      YEAR in the zone's place (issue 298). *)
+   if ReceivedYearKind <> rykNone then
+      begin
+      Result := SentLicenseYearText(ReceivedYearKind, aStation.MyLicenseYear,
+                                    aStation.CurrentYear);
+      end
+   else
+      begin
+      Result := ZoneTextSent(ZoneMultiplierZones, aStation.MyITUZone, aStation.MyZoneText);
+      end;
 end;
 
 (* THE STEPS THEMSELVES, against whatever FStation holds now. *)
@@ -5296,7 +5940,7 @@ end;
 function MyStationExchangeOfQSO(const aSession: TMyStationExchange;
                                 const aFacts: TQsoMyFacts;
                                 aSessionSendsMyState: boolean;
-                                aSendsITUZone: boolean): TMyStationExchange;
+                                aZoneSent: TSentZoneKind): TMyStationExchange;
 var
    zone, sessionZone, code: integer;
 begin
@@ -5314,7 +5958,14 @@ begin
    Result.MySection := string(aFacts.Section);
    Result.MyPark := string(aFacts.Park);
 
-   if aSendsITUZone then
+   (* A LICENCE YEAR IS NOT A STATION ZONE: the record captured none of it,
+      so the session's MY ZONE is sent as stated. *)
+   if aZoneSent = szkStatedMyZone then
+      begin
+      Exit;
+      end;
+
+   if aZoneSent = szkITUZone then
       begin
       zone := aFacts.ITUZone;
       end
@@ -5333,6 +5984,37 @@ begin
          begin
          Result.MyZone := '';
          end;
+      end;
+end;
+
+function SentZoneKindOfQSO(aContest: TContestBase;
+                           aZoneMode: ZoneModeType): TSentZoneKind;
+begin
+   (* See the declaration. *)
+   if not ContestMyZoneIsAStationZone(aContest) then
+      begin
+      Result := szkStatedMyZone;
+      end
+   else if (ContestZoneMultiplierZones(aContest) = zmzITUZones) or
+           (aZoneMode <> CQZoneMode)                             then
+      begin
+      Result := szkITUZone;
+      end
+   else
+      begin
+      Result := szkCQZone;
+      end;
+end;
+
+function ContestMyZoneIsAStationZone(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aContest.MyZoneIsAStationZone;
       end;
 end;
 
@@ -6213,6 +6895,15 @@ begin
       begin
       aExch.ExchString := ShortString(aTemps.SRX_String);
       end;
+
+   (* THE RECEIVED YEAR, for a contest that states one -- issue 298, stage 2.
+      Here, once the whole record is in, and not at the CQZ tag, because
+      CONTEST_ID may come after it. See ApplyImportedReceivedYear. A contest
+      that states no kind is untouched: its zone slot is a zone. *)
+   if ReceivedYearKind <> rykNone then
+      begin
+      ApplyImportedReceivedYear(ReceivedYearKind, aTemps.SRX_String, aExch);
+      end;
 end;
 
 function TContestBase.ParseReceivedExchange(const aText: string;
@@ -6296,8 +6987,21 @@ end;
 function TContestBase.FormatADIFReceivedExchange(const aQso: ContestExchange;
                                                  aExchangeCarriesRST: boolean): string;
 begin
-   (* PostUnit's SRX_STRING arm, moved -- see the declaration. *)
-   if aExchangeCarriesRST then
+   (* PostUnit's SRX_STRING arm, moved -- see the declaration. A received
+      year is written from its field (issue 298 stage 3). *)
+   if ReceivedYearKind <> rykNone then
+      begin
+      if aExchangeCarriesRST then
+         begin
+         Result := RSTAndReceivedYearText(IntToStr(aQso.RSTReceived),
+                                          ReceivedYearKind, aQso);
+         end
+      else
+         begin
+         Result := ReceivedYearTextOf(ReceivedYearKind, aQso);
+         end;
+      end
+   else if aExchangeCarriesRST then
       begin
       Result := ResolveSRXString(aQso);
       end
@@ -6556,8 +7260,16 @@ end;
 function TContestBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    (* The exchange as the operator typed it -- what uExchangeBuilder sent for
-      a contest it did not name, "no worse, and avoids fabricating fields". *)
-   Result := Trim(string(aQso.ExchString));
+      a contest it did not name, "no worse, and avoids fabricating fields".
+      A received year is read from its field (issue 298 stage 3). *)
+   if ReceivedYearKind <> rykNone then
+      begin
+      Result := RSTAndReceivedYearText(RSTReceivedText(aQso), ReceivedYearKind, aQso);
+      end
+   else
+      begin
+      Result := Trim(string(aQso.ExchString));
+      end;
 end;
 
 function TContestBase.CanonicalSentExchange(const aQso: ContestExchange;
@@ -6594,6 +7306,49 @@ begin
    Result.PrefixMultsCaption := TC_PREFIX;
    Result.PrefixMultsCaptionCW := 'CW Pfxs';
    Result.PrefixMultsCaptionPhone := 'Ph Pfxs';
+   (* THE ZONE ROW COUNTS YEARS in a contest that states a received year
+      (issue 298 stage 3; the European HF Championship's and KVP's own
+      override until then): the kind decides, so a new year contest gets the
+      row for free. 'Years' is right for a count of years licensed too. *)
+   if ReceivedYearKind <> rykNone then
+      begin
+      Result.ZoneMultsCaption := STotalsLicenseYearMults;
+      Result.ZoneMultsCaptionCW := 'CW Years';
+      Result.ZoneMultsCaptionPhone := 'Ph Years';
+      end
+   else
+      begin
+      Result.ZoneMultsCaption := TC_ZONE;
+      Result.ZoneMultsCaptionCW := 'CW Zone';
+      Result.ZoneMultsCaptionPhone := 'Ph Zone';
+      end;
+end;
+
+(* See the property ZoneColumnHeading. The kind decides (issue 298 stage 3).
+   rykYearsLicensed would be labelled 'Year' too -- a count; no contest of
+   that kind exists, and its own heading is its first commit's question. *)
+function TContestBase.GetZoneColumnHeading: string;
+begin
+   if ReceivedYearKind <> rykNone then
+      begin
+      Result := SLogColumnLicenseYear;
+      end
+   else
+      begin
+      Result := string(ColumnsArray[logColZoneMult].Text);
+      end;
+end;
+
+(* See the property MyZoneIsAStationZone. *)
+function TContestBase.GetMyZoneIsAStationZone: boolean;
+begin
+   Result := ReceivedYearKind = rykNone;
+end;
+
+(* See the property ReceivedYearKind. *)
+function TContestBase.GetReceivedYearKind: TReceivedYearKind;
+begin
+   Result := rykNone;
 end;
 
 function TContestBase.GetSummarySheet: TSummarySheetLayout;

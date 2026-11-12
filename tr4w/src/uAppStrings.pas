@@ -297,6 +297,12 @@ resourcestring
    SReadinessMyZoneMissing =
       'MY ZONE is empty and this contest sends your zone.';
 
+   (* A contest that exchanges the year first licensed (TReceivedYearKind) --
+     MY LICENSE YEAR, issue 298. It sends nothing for the year while empty. *)
+   SReadinessMyLicenseYearMissing =
+      'MY LICENSE YEAR is empty and this contest sends the year you were ' +
+      'first licensed.';
+
    SReadinessMyGridMissing =
       'MY GRID is empty and this contest sends your grid square.';
 
@@ -570,6 +576,15 @@ resourcestring
      serial says TC_NOQSONUMBERFOUND, as the serial-and-QTH parser does. *)
    SExchangeNoNameFound = 'No name found!!';
 
+   (* THE EUROPEAN HF CHAMPIONSHIP'S AND KVP'S LICENSE YEAR
+     (LOGSTUFF.ProcessRSTAndLicenceYearExchange, 2026-11-11). A lone '599'
+     said 'Improper zone number!!' -- these contests have no zone. "No year"
+     is an empty entry or a report alone; anything else that is not one or two
+     digits after an optional report is an improper year. "License" as the
+     New Contest row (SNewContestLicenseYearLabel) and the sponsor spell it. *)
+   SExchangeNoLicenseYear = 'No license year found!!';
+   SExchangeImproperLicenseYear = 'Improper license year!!';
+
    (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
      NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
      VE station in the NC QSO party", "we should refuse to log it and show an
@@ -638,9 +653,10 @@ resourcestring
 
    (* THE LICENCE-YEAR ROW'S LABEL -- the European HF Championship and KVP
      (NY4I, 2026-11-11: their prompt asks for the year of the first licence,
-     and the row beside it read MY ZONE, a D7 artifact). The year is kept in
-     MY ZONE and the command queued is MY ZONE; this is only what the
-     operator reads (TNewContestPrompt.RowLabel). *)
+     and the row beside it read MY ZONE, a D7 artifact). The year has been
+     its own setting since issue 298, so the label IS the command queued, MY
+     LICENSE YEAR; the label mechanism stays for the rows that still differ
+     (TNewContestPrompt.RowLabel). *)
    SNewContestLicenseYearLabel = 'MY LICENSE YEAR';
 
    (* THE CWT'S QTH-OR-MEMBER-NUMBER ROW'S LABEL (2026-11-11): the prompt asks
@@ -679,6 +695,14 @@ resourcestring
      that session", where the row read 'Prefixes'. Short: it shares the grid's
      left column with 'Prefixes' and 'Dom Mults'. *)
    STotalsCallsignMults = 'Calls';
+
+   (* THE TOTALS GRID'S ZONE ROW AND THE LOG'S ZONE COLUMN WHEN THE "ZONE" IS
+     THE YEAR OF FIRST LICENSE -- the European HF Championship and KVP
+     (2026-11-11), whose year is kept in the zone slot. The row read 'Zones'
+     and the column 'Zn'. The column's ColumnsArray text stays 'Zn': it is
+     also the COLUMN WIDTH token. *)
+   STotalsLicenseYearMults = 'Years';
+   SLogColumnLicenseYear = 'Year';
 
    (* THE NEW CONTEST DIALOG'S CONTEST LIST -- Q103 / Q52, 2026-10-19. The
      label over the search box and the list, in the same capitals as the

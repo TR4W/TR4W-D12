@@ -659,6 +659,50 @@ connection.
 - **`DowngradeTestLog` to below 5 drops `external_delivery`** (it did not, so a
   "schema-4" fixture still had the v5 table).
 
+## SCHEMA 6: `rcvd_year`, THE RECEIVED YEAR (issue 298, stage 1, 2026-11-12)
+
+The year first licensed (EUHFC, KVP) is a standard field. Detail:
+`docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12j.
+
+- **`ContestExchange.RcvdYear: Word` (324) + `RcvdYearKnown: Boolean` (326)**,
+  carved from `sReserved` (now `string[46]`). **Still 376 bytes, no offset
+  before them moved** -- `.TRW`, `SERVERLOG.TRW` and the 384-byte packet keep
+  their layout. Pinned in `uTestLogBinaryFile`'s offsets test.
+- **NOT "0 = none".** 00 is a year (first licensed 2000), and a zero-filled
+  record must read as no year: `RcvdYearKnown` False. Column NULL = no year.
+- **`qso.rcvd_year`** last in the table (`LOG_V6_QSO_YEAR_COLUMN`), updatable.
+  **Schema 5 shipped (5.0.37): a log this build opens is refused by 5.0.37.**
+- **The migration asks the CONTEST** through the global
+  `uLogDatabase.LogContestKeepsYearInZone` (the leaf cannot see the registry;
+  `uLogStore`'s initialization assigns it to
+  `uContestRegistry.ContestKeepsYearInZoneSlot`). **Unassigned, a log below 6
+  is REFUSED by `Open`** -- never stamped 6 without its years. Carry =
+  `UPDATE qso SET rcvd_year = rcvd_zone WHERE rcvd_zone IS NOT NULL`, in the
+  ALTER's one commit.
+- **`TLogBinaryReader.ReadNext` clears the year** (D7 never wrote it);
+  `uLogImport` refills it from `Zone` for a year contest, same rule.
+- **Stage 1 writes both** (`StoreLicenceYear`: slot + field) and reads the slot
+  (`LicenceYearOf`). **`rcvd_zone` is authoritative in stage 1**: Edit QSO
+  (`FLD_ZONE`) saves a new zone with the OLD year, and the ADIF `CQZ` arm writes
+  only `Zone`. Stage 2 must re-carry (overwrite, v7) for year contests before
+  any reader moves to `rcvd_year`.
+- **SCHEMA 7 (stage 2, 2026-11-12) IS THAT RE-CARRY, and no shape change**
+  (plan 12k): below 7, a year contest's log gets `UPDATE qso SET rcvd_year =
+  rcvd_zone` -- every row, NO WHERE -- in the migration's one commit; the judge
+  is asked of every log below 7 (unassigned: refused). The judge is now the
+  class's stated `ReceivedYearKind`. From 7 the READERS read `rcvd_year`
+  (`TryLicenceYearOf`, the remembered exchange), Edit QSO and the ADIF import
+  write it through `StoreLicenceYear`, and the dual write stays until stage 4
+  moves the multiplier sheet. `DowngradeTestLog(..., 6)` only re-stamps.
+- **STAGE 3 (2026-11-12, plan 12l, no schema change): display and export read
+  `rcvd_year`**, and `my_cq_zone` stops recording the year:
+  `LogStoreCurrentMyFacts` asks `uContestFactory.SessionMyCQZone(
+  ContestIdentity(Contest))` -- MY CALL's CTY zone where the contest's MY ZONE
+  is no station zone. **Rows captured before keep their value; nothing
+  rewrites a captured row.** What stage 4 still reads from `rcvd_zone`: the
+  multiplier sheet, `LOGEDIT.SetLoggedZone`, PostUnit's first-call-per-zone
+  report.
+
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 
 NY4I: the log belongs to TR4W; the database must never get in the way of

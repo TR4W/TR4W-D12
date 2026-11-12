@@ -1442,6 +1442,23 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 15
       end
+      object lblMyLicenseYear: TLabel
+        Left = 380
+        Height = 17
+        Top = 218
+        Width = 110
+        AutoSize = False
+        Caption = 'License year:'
+      end
+      object edtMyLicenseYear: TEdit
+        Left = 496
+        Height = 22
+        Top = 214
+        Width = 150
+        AutoSize = False
+        MaxLength = 4
+        TabOrder = 16
+      end
       object lblStationHint: TLabel
         Left = 12
         Height = 68

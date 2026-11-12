@@ -8840,6 +8840,7 @@ msgid "File"
 msgstr "Fil"
 
 #: uappstrings.snewcontestfilesyear
+#: uappstrings.slogcolumnlicenseyear
 #, fuzzy
 msgid "Year"
 msgstr "År"
@@ -9761,4 +9762,29 @@ msgstr ""
 #: uappstrings.snewlognametakenopenbody
 #, fuzzy
 msgid "The log for this contest, date and callsign is the log you have open:\n%s\n\nCreate new log: start a separate, empty log named\n%s\nThe open log is kept unchanged.\n\nCancel: go back to the New Contest window. Nothing is created."
+msgstr ""
+
+#: uappstrings.sexchangenolicenseyear
+#, fuzzy
+msgid "No license year found!!"
+msgstr ""
+
+#: uappstrings.sexchangeimproperlicenseyear
+#, fuzzy
+msgid "Improper license year!!"
+msgstr ""
+
+#: uappstrings.stotalslicenseyearmults
+#, fuzzy
+msgid "Years"
+msgstr ""
+
+#: tprefsform.lblmylicenseyear.caption
+#, fuzzy
+msgid "License year:"
+msgstr ""
+
+#: uappstrings.sreadinessmylicenseyearmissing
+#, fuzzy
+msgid "MY LICENSE YEAR is empty and this contest sends the year you were first licensed."
 msgstr ""

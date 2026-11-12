@@ -1314,7 +1314,7 @@ const
       'band, mode, submode, ' +
       'exchange_sent, exchange_received, ' +
       'rst_sent, rst_received, serial_sent, serial_received, ' +
-      'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
+      'rcvd_zone, rcvd_year, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
       'rcvd_random, random_sent, rcvd_kids, qtc_call, domestic_qth, ' +
       'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
@@ -1354,7 +1354,7 @@ const
       'band, mode, submode, ' +
       'exchange_received, ' +
       'rst_sent, rst_received, serial_sent, serial_received, ' +
-      'rcvd_zone, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
+      'rcvd_zone, rcvd_year, rcvd_name, rcvd_age, rcvd_check, rcvd_precedence, rcvd_class, ' +
       'rcvd_power, rcvd_chapter, rcvd_prefecture, rcvd_member_no, rcvd_qth, ' +
       'rcvd_random, random_sent, rcvd_kids, qtc_call, domestic_qth, ' +
       'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
@@ -1371,7 +1371,7 @@ const
       ':band, :mode, :submode, ' +
       ':exchange_sent, :exchange_received, ' +
       ':rst_sent, :rst_received, :serial_sent, :serial_received, ' +
-      ':rcvd_zone, :rcvd_name, :rcvd_age, :rcvd_check, :rcvd_precedence, :rcvd_class, ' +
+      ':rcvd_zone, :rcvd_year, :rcvd_name, :rcvd_age, :rcvd_check, :rcvd_precedence, :rcvd_class, ' +
       ':rcvd_power, :rcvd_chapter, :rcvd_prefecture, :rcvd_member_no, :rcvd_qth, ' +
       ':rcvd_random, :random_sent, :rcvd_kids, :qtc_call, :domestic_qth, ' +
       ':dxcc_prefix, :dxcc_entity, :dxcc_code, :cty_cq_zone, :cty_continent, ' +
@@ -1497,7 +1497,7 @@ type
       qc_band, qc_mode, qc_submode,
       qc_exchange_sent, qc_exchange_received,
       qc_rst_sent, qc_rst_received, qc_serial_sent, qc_serial_received,
-      qc_rcvd_zone, qc_rcvd_name, qc_rcvd_age, qc_rcvd_check,
+      qc_rcvd_zone, qc_rcvd_year, qc_rcvd_name, qc_rcvd_age, qc_rcvd_check,
       qc_rcvd_precedence, qc_rcvd_class,
       qc_rcvd_power, qc_rcvd_chapter, qc_rcvd_prefecture, qc_rcvd_member_no,
       qc_rcvd_qth,
@@ -1922,6 +1922,16 @@ begin
    BindSerial(P('serial_received'), rec.NumberReceived);
 
    BindByte(P('rcvd_zone'), rec.Zone, DUMMYZONE);
+   (* THE RECEIVED YEAR (schema 6): NULL when the record has none, and 0 is
+     a real year -- see ContestExchange.RcvdYear. *)
+   if rec.RcvdYearKnown then
+      begin
+      P('rcvd_year').AsInteger := rec.RcvdYear;
+      end
+   else
+      begin
+      P('rcvd_year').Clear;
+      end;
    BindText(P('rcvd_name'), AnsiString(rec.Name));
    P('rcvd_age').AsInteger := rec.Age;
    P('rcvd_check').AsInteger := rec.Check;
@@ -2254,6 +2264,16 @@ begin
    aQso.NumberReceived := FieldSerial(F(qc_serial_received));
 
    aQso.Zone := FieldByte(F(qc_rcvd_zone), DUMMYZONE);
+   (* NULL is "no year", and 0 a real one -- see ContestExchange.RcvdYear. *)
+   aQso.RcvdYearKnown := not F(qc_rcvd_year).IsNull;
+   if aQso.RcvdYearKnown then
+      begin
+      aQso.RcvdYear := word(F(qc_rcvd_year).AsInteger);
+      end
+   else
+      begin
+      aQso.RcvdYear := 0;
+      end;
    aQso.Name := S(qc_rcvd_name);
    aQso.Age := byte(F(qc_rcvd_age).AsInteger);
    aQso.Check := byte(F(qc_rcvd_check).AsInteger);

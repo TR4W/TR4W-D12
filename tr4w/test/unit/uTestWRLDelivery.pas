@@ -353,7 +353,7 @@ begin
       FDelivery.Enqueue(Key, '{}', False);
       CheckTrue(FDelivery.Claim('WRL', 'account', 0, job));
       CheckEquals('0', Field('last_sent'), 'the table a migration creates carries last_sent');
-      CheckEquals(5, FDatabase.SchemaVersion);
+      CheckEquals(LOG_SCHEMA_VERSION, FDatabase.SchemaVersion, 'stamped current (7 since issue 298 stage 2)');
    finally
       CloseFixture;
    end;
@@ -1032,7 +1032,9 @@ begin
       FDatabase.Close;
 
       FDatabase.Open(FFileName);
-      CheckEquals(5, FDatabase.SchemaVersion, 'the number does not move');
+      (* last_sent did not move the number; the same open now also takes the
+        log to 6 (issue 298, rcvd_year), so it is stamped current. *)
+      CheckEquals(LOG_SCHEMA_VERSION, FDatabase.SchemaVersion, 'stamped current');
       CheckEquals(fresh, DeliveryColumns(FDatabase), 'a migrated table matches a new one');
       CheckEquals('synced', Field('state'), 'the existing row is kept');
       CheckEquals('0', Field('last_sent'), 'and reads as never answered');

@@ -650,6 +650,7 @@ uses
    uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
    uNetCatchUp in '..\..\src\uNetCatchUp.pas',
    uTestNetSupport in 'uTestNetSupport.pas',
+   uTestMainFormHarness in 'uTestMainFormHarness.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uTestNetWireSizes in 'uTestNetWireSizes.pas',
    uTestNetHello in 'uTestNetHello.pas',
@@ -716,6 +717,15 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogStore        in 'uTestLogStore.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
+   (* Issue 298 stage 1: the received year's field, column, migration, import
+      and wire. *)
+   uTestLogReceivedYear in 'uTestLogReceivedYear.pas',
+   (* Issue 298 stage 3: the year on screen and in every export, the zone
+      box of Edit QSO, and the my_cq_zone a year contest records. *)
+   uTestReceivedYearDisplay in 'uTestReceivedYearDisplay.pas',
+   (* Issue 298: the SENT year is MY LICENSE YEAR, a setting of its own -- its
+      reading, the three kinds, the station fact, the readers, the legacy move. *)
+   uTestLicenseYearSetting in 'uTestLicenseYearSetting.pas',
    (* A locked log: the busy classifier, the lock probe, the stale-snapshot
       write, the WRL worker's rollback and the watchdog (2026-10-31). *)
    uLogConnectionWatch  in '..\..\src\domain\uLogConnectionWatch.pas',
@@ -1253,6 +1263,10 @@ begin
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));
+   RegisterSuite(TLogReceivedYearTests.Create('LogReceivedYear'));
+   RegisterSuite(TNetReceivedYearTests.Create('NetReceivedYear'));
+   RegisterSuite(TReceivedYearDisplayTests.Create('ReceivedYearDisplay'));
+   RegisterSuite(TLicenseYearSettingTests.Create('LicenseYearSetting'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));

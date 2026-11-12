@@ -30,6 +30,147 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-12 -- MY LICENSE YEAR: THE SENT YEAR HAS ITS OWN SETTING, BOX AND ROW (issue 298)
+
+Unit-tested (`uTestLicenseYearSetting`, `uTestStationFactOverrides`); nothing
+below has been seen on a screen. No schema change (still 7). The year you SEND
+was the MY ZONE setting relabelled; it is now `MY LICENSE YEAR`.
+
+- [ ] **Preferences > Station information has a License year box**, in the
+      Contest exchange column under Park, with its own tooltip (it describes the
+      year, four digits or two). The CQ zone box is still labelled CQ zone in
+      EVERY contest -- open Preferences with an EUHFC log and with a CQ WW log
+      and confirm the zone box never changes its words.
+- [ ] **Type 1985 (or 85) in License year, Save, open a new EUHFC contest.** The
+      New Contest row reads MY LICENSE YEAR and is pre-asked; the default CQ
+      message and the Cabrillo/ADIF sent exchange carry `85`. KVP the same.
+- [ ] **Your EUHFC log from before this build** (`EUROPEAN HFC 2026-11-11
+      NY4I.log` -- copy it first, do not open the only copy): its year, which
+      the log stored as MY ZONE, is moved to MY LICENSE YEAR when the contest
+      opens, so the Cabrillo and ADIF sent exchange show the year you stated
+      (not `08`/`8`, not your ITU zone). Preferences shows the STATION's
+      License year (the default), not this contest's, so it may read empty
+      there. If the sent year is missing, say what the log's MY ZONE held.
+- [ ] **A zone contest is untouched**: CQ WW still sends its CQ zone, and the
+      License year box being filled changes nothing in it.
+- [ ] **An EUHFC contest with no License year** warns at startup ("MY LICENSE
+      YEAR is empty ...") and sends no year, rather than your CQ zone.
+
+## Added 2026-11-12 -- THE RECEIVED YEAR ON SCREEN AND IN EVERY EXPORT (issue 298, stage 3)
+
+Unit-tested (`uTestReceivedYearDisplay`); nothing below has been seen on a
+screen. No schema change (still 7).
+
+- [ ] **The log grid shows the year as typed.** In an EUHFC or KVP log the
+      column headed Year shows `05`, not `5` (a CQ WW log still shows its
+      zone under `Zn`).
+- [ ] **Edit QSO names the year.** Open an EUHFC QSO in Edit QSO: the box that
+      said Zone is labelled Year and holds two digits. Then open a CQ WW QSO in
+      the same session: it says Zone again (the form is reused). The "Our
+      station for this QSO" CQ zone box on a NEW EUHFC QSO shows your CALL's
+      CQ zone (e.g. 15 for an S5), not your licence year -- an EUHFC QSO logged
+      before this build still shows the year it recorded (80 in NY4I's log);
+      nothing rewrites it.
+- [ ] **Edit the year, then export.** Change a QSO's year in Edit QSO and save:
+      the ADIF `SRX_STRING` and the Cabrillo received column both carry the
+      NEW year (the ADIF used to carry the typed one). A QSO typed `5` exports
+      `SRX_STRING` `599 05` now.
+- [ ] **ADIF MY_CQ_ZONE.** Export ADIF from a NEW EUHFC log: `MY_CQ_ZONE` is
+      your call's CQ zone, never your licence year.
+- [ ] **UDP.** With UDP broadcast on, an EUHFC QSO's contact carries the year
+      in `<zone>` (5 for 05, as before) and `599 05` as its exchange.
+
+## Added 2026-11-12 -- LOG SCHEMA 7: THE RECEIVED YEAR IS READ FROM ITS OWN FIELD (issue 298, stage 2)
+
+Unit-tested (`uTestLogReceivedYear`: the kinds, the parser, Edit QSO's save
+rule, the ADIF import through `ParseADIFRecord`, the v7 re-carry, a QSO
+received live through the NET_QSOINFO arm); nothing below has been seen on a
+screen. **Keep a copy of the log first: a log this build opens is refused by
+5.0.37 and earlier.**
+
+- [ ] **Edit QSO keeps the year and the zone together.** In an EUHFC log, open
+      a QSO in Edit QSO: the zone box shows its year as two digits (`05`, not
+      `5`). Change it (e.g. 85 to 84), save, then: the log grid's Year column
+      shows 84, a Rescore counts 84 (not 85) on that band, and Cabrillo's
+      received column reads `599 84`. Empty the box and save: the grid shows no
+      year and the QSO earns no year multiplier. Type `1982` or `8A`: the save
+      is refused with "Improper license year!!" and the form stays open.
+- [ ] **An existing EUHFC/KVP log migrates.** Open an EUHFC log last saved by
+      a stage-1 build (or 5.0.37): nothing visible changes -- years, score and
+      export are what they were -- and the log is now schema 7.
+- [ ] **ADIF import carries the year.** Export ADIF from an EUHFC log, start a
+      new EUHFC log, import that file: every QSO keeps its year (grid Year
+      column, Cabrillo received column, the score's multipliers). Before this
+      change it came back with none. An ADIF from another logger whose year is
+      only in `CQZ` imports that value as the year.
+- [ ] **Multi-op.** Two stations on EUHFC (TR4WServerPy moved to protocol 3,
+      see stage 1 below): a QSO logged on one shows the right year on the
+      other, in the grid and in its Edit QSO.
+
+## Added 2026-11-12 -- NETWORK PROTOCOL 3 AND LOG SCHEMA 6: THE RECEIVED YEAR (issue 298, stage 1)
+
+The QSO record carries the received year in bytes that were reserved; packet and
+record sizes are unchanged. What only a real run can judge:
+- **TR4WServerPy must be moved to protocol 3** (it judges the version as equal),
+  or every station of this build is refused with "protocol mismatch". The in-tree
+  `tr4wserver` builds from this tree and is already 3. Then two stations: log an
+  EUHFC QSO on one, check the other's log row has `rcvd_year` (and a catch-up
+  after a restart keeps it).
+- Opening an existing EUHFC or KVP log migrates it to schema 7 (6 was stage
+  1's; stage 2's 7 re-copies the years) and copies each
+  QSO's year out of the zone column; **5.0.37 cannot open it afterwards** --
+  keep a copy before trying. A log of any other contest gets an empty column.
+
+## Added 2026-11-12 -- THE 64-BIT (x64) WINDOWS BUILD (issue 299)
+
+NY4I wants 32-bit Windows retired. Step 1 (rebuild, headless export identical to i386, GUI
+starts) is recorded at the top of `docs/64_BIT_TASKLIST.md`. Nobody has used the x64 app for
+anything real. **Run:** `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe` (rebuild first with
+`.\tr4w\build\Build-App.ps1 -Cpu x86_64 -Os win64`; its 64-bit DLLs are staged beside it). Use a
+copy of your station settings, not the live ones, for the first pass.
+
+- [ ] It starts, opens your contest log, and shows the main window with no error box
+- [ ] Preferences opens, every page loads, a change saves and is still there after a restart
+- [ ] A new contest, a QSO logged, edited and deleted; the log grid and score update
+- [ ] A SERIAL radio (an Icom CI-V and a Yaesu or Kenwood if you have them): connects, frequency and
+      mode follow the dial, a band change from TR4W reaches the radio
+- [ ] A LAN radio (K4 or an Icom LAN radio): connects, credentials are sent, reconnects after a drop
+- [ ] A HamLib radio (this is the first time the 64-bit `libhamlib-4.dll` is actually loaded)
+- [ ] CW from the function keys: CW-by-CAT, a WinKeyer, and DTR/RTS keying; speed changes; Esc stops it
+- [ ] DX cluster login, spots in the band map, click-to-tune
+- [ ] WSJT-X: decodes arrive, a logged QSO is accepted
+- [ ] An external logger (WRL or Club Log), which exercises the 64-bit OpenSSL pair
+- [ ] A multi-op station against `tr4wserver` (the 64-bit server now builds and is in the x64
+      installer, but it has never been RUN; the old 32-bit one still works against an x64 client)
+- [ ] SO2R with two radios; the intercom/voice (winmm) functions if you use them
+- [ ] ADIF and Cabrillo export from the GUI; compare with what the 32-bit build gives for the same log
+- [ ] **The 64-bit INSTALLER (nothing has ever run it).** Built by `FullBuild.ps1 -Cpu x86_64
+      -BuildInstaller` into `tr4w\build\release\tr4w_setup_<version>-x64.exe`. On a TEST machine or VM
+      that has a 32-bit TR4W in `C:\Program Files (x86)\TR4W` with real settings and contest logs
+      (copy a station's folder there; do not use the live PC): close TR4W, run the x64 installer.
+      Expected: a message names the old and new folders; TR4W lands in `C:\Program Files\TR4W`;
+      `settings\tr4w.json`, every contest folder and loose `.db` (with `-wal`/`-shm`) are in the new
+      folder and open with their QSOs; the old folder keeps its data and loses `tr4w.exe`, its DLLs
+      and `tr4wconvert.exe`; the Desktop and Start Menu shortcuts start the 64-bit exe;
+      `HKCU\Software\TR4W` names the new folder; a second run of the installer does NOT overwrite the
+      new settings. Also: `setup /S` over the old install (no dialog, same result); the installer on a
+      machine with a custom 32-bit folder such as `C:\TR4W` (upgrades in place, no stale
+      `libgcc_s_dw2-1.dll`); a fresh machine (no old install); and a 32-bit Windows refuses it with a
+      message. The installer manifest is `requireAdministrator` (measured), so a UAC prompt must
+      appear; run it as an account that is also the operator's own, because HKCU, `$DESKTOP` and the
+      Start Menu belong to whoever elevates (true of the 32-bit installer too).
+- [ ] Start-up time: the first x64 start took 11.5 s to the main window against 2.7 s for i386, almost all of
+      it a `DdeConnect` to DXLab Pathfinder -- is that repeatable on your PC?
+
+## Added 2026-11-11 -- EUROPEAN HF CHAMPIONSHIP AND KVP SAY "YEAR", NOT "ZONE"
+
+Unit-tested (`uTestLicenceYearEntry`, `uTestContestDisplay.Test_TotalsDisplay` / `Test_ZoneColumnHeading` / `Test_MyZoneLabel`); nothing below has been seen on a screen.
+
+- [ ] **A lone report.** An EUHFC log on CW: type a call and `599` alone, Enter. The message reads `No license year found!!`, not `Improper zone number!!`. `599 1982` or `599 CT` reads `Improper license year!!`. `599 85` logs as before. Same in a KVP log.
+- [ ] **The log column.** The main log's and Edit Log's column over the year reads `Year`, wide enough to read in full; in CQ WW (or any zone contest) it still reads `Zn`. A saved COLUMN WIDTH for that column still applies in both.
+- [ ] **The totals rows.** EUHFC's totals grid shows a `Years` row where it showed `Zones`; KVP (multipliers by mode) shows `CW Years` / `Ph Years`. Every other zone contest still shows `Zones` / `CW Zone` / `Ph Zone`.
+- [ ] **Preferences > Station information.** In an EUHFC (and a KVP) log the label beside the MY ZONE box reads `License year:`, not cut off; in CQ WW (or any other contest) it reads `CQ zone:`. Searching `MY ZONE` still lands on the box. Hovering the label or the box in EUHFC/KVP shows the year's help ("The last two digits of the year you were first licensed..."), not the CQ-zone help; in CQ WW both show the MY ZONE command's usual help (`Values: Integer. Normally, your zone is determined by your callsign...`).
+
 ## Added 2026-11-10 -- EUROPEAN HF CHAMPIONSHIP: A REMEMBERED YEAR MARKS A CALL OR SPOT AS A NEW MULTIPLIER (issue 70)
 
 Unit-tested through the real parser and the sheets (`uTestStatusAndNotice.Test_EUHFCYearNeedFollowsTheRememberedExchange`); nothing below has been seen on a screen. The year comes only from what the program remembers for the call -- INITIAL.EX, a call history file, or a logged QSO -- never from the call itself.
@@ -6369,3 +6510,13 @@ The CWOps CW Open no longer has a zone multiplier. Its sponsor's current rules (
 - [ ] **The remaining-multipliers window** opens on callsigns/prefixes rather than zones (its default was zones, because LogCfg asks for zones before prefixes); it shows no zone list for this contest.
 - [ ] **ADIF export.** File > export ADIF from that log: the records carry no `<CQZ:..>` tag. Cabrillo is unchanged (serial + name).
 - [ ] **An existing CW Open log** opened after the update. Expected (by reading, not measured): on open the score STILL counts the zones, because loading trusts the zone flags stored in each QSO; after a Rescore (or `/RESCORE`) the flags are re-derived, the zones drop out, and the score is points x calls. Report whether opening alone already shows the lower score.
+
+## Added 2026-11-12 -- EUROPEAN HF CHAMPIONSHIP AND KVP EXPORT THE STATED YEAR, NOT A CAPTURED ZONE
+
+Unit-tested (`uTestLogMyFacts.TestALicenceYearIsNeverReplacedByACapturedZone`, through the same rule PostUnit asks); not yet seen in a real export. The fault was in NY4I's own log (`EUROPEAN HFC 2026-11-11 NY4I`): MY ZONE (the year) 80, captured ITU zone 8, Cabrillo sent `08`; editing the QSO's ITU zone to 42 sent `42`.
+
+- [ ] **Cabrillo sends the year.** In that log (or a new EUHFC log with MY ZONE = your licence year), export Cabrillo: every QSO's sent column is `599 80` (your year), not your ITU zone.
+- [ ] **ADIF sends the year.** Export ADIF: every `STX_STRING` is `599 80`; `MY_CQ_ZONE` and `MY_ITU_ZONE` still carry the captured zones, unchanged.
+- [ ] **An edited ITU zone moves nothing.** Edit QSO, change "ITU zone" to 42, save, export both again: the sent year is still 80.
+- [ ] **Changing MY ZONE changes the year.** Set MY ZONE to another year (e.g. 05), export: every sent column reads `05`, in both files. Same in a KVP log.
+- [ ] **A real zone contest unchanged.** In a CQ WW or IARU log, edit a QSO's captured CQ (CQ WW) / ITU (IARU) zone and export: that QSO's sent zone follows the edit, as before.

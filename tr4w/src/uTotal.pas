@@ -383,22 +383,24 @@ begin
         end;
      end;
 
+  (* THE ZONE ROW'S LABEL IS THE CONTEST'S TOO (2026-11-11): the European HF
+    Championship's and KVP's "zone" is the year of first license. *)
   if DoingZoneMults then
      begin
      if Settings.Mult.ByMode then
         begin
         if ActiveMode = CW then
            begin
-           WriteLeftColumnText('CW Zone');
+           WriteLeftColumnText(display.ZoneMultsCaptionCW);
            end;
         if ActiveMode = Phone then
            begin
-           WriteLeftColumnText('Ph Zone');
+           WriteLeftColumnText(display.ZoneMultsCaptionPhone);
            end;
         end
      else
         begin
-        WriteLeftColumnText(TC_ZONE);
+        WriteLeftColumnText(display.ZoneMultsCaption);
         end;
    //    WriteLeftColumnText('CW-Ratio');
    //    WriteLeftColumnText('PH-Ratio');

@@ -58,7 +58,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   contest runs ITU zone mode). Still STORED in the zone slot
   (uContestBase.LicenceYearOf / StoreLicenceYear) and counted on the zone
   sheet: no column, stored value or export byte changed. See
-  uContestEuropeanHFC's header.
+  uContestEuropeanHFC's header. Since issue 298 stage 2 (2026-11-12) it
+  states its kind, GetReceivedYearKind = rykTwoDigitYear (DXLog's S5KVP.txt:
+  "last 2 digits of year of first licence", =0-99), and the readers read the
+  year's own field. Stage 3 (2026-11-12): display and export read it too --
+  its received Cabrillo column is CabrilloReceivedRSTYear, and the totals
+  rows and column heading follow the kind from the base.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
   sits on TContestBase directly and states its own points, calling
@@ -119,6 +124,14 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      (* THE YEAR, NOT A ZONE, ON SCREEN AND ON THE AIR -- from the stated
+         kind since issue 298: the totals rows (per mode here: cfMultByMode),
+         the log column's heading, and the year it SENDS (MY LICENSE YEAR,
+         TContestBase.SentZoneText) all follow ReceivedYearKind, so none is
+         stated here. *)
+      (* THE YEAR IT RECEIVES IS TWO DIGITS, 00..99 (issue 298, stage 2) --
+         see TContestBase.ReceivedYearKind. *)
+      function GetReceivedYearKind: TReceivedYearKind; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -155,6 +168,11 @@ uses
 procedure TContestKVP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+end;
+
+function TContestKVP.GetReceivedYearKind: TReceivedYearKind;
+begin
+   Result := rykTwoDigitYear;
 end;
 
 function TContestKVP.GetDisplayName: string;
@@ -229,7 +247,7 @@ function TContestKVP.ParseReceivedExchangeFormat(const aText: string;
                                                  aParsers: TExchangeParsers;
                                                  var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTLicenceYear(aText, aExch);
+   Result := aParsers.ParseRSTLicenceYear(aText, ReceivedYearKind, aExch);
 end;
 
 procedure TContestKVP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
@@ -259,7 +277,9 @@ function TContestKVP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                  const aQso: ContestExchange;
                                                  const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTZone(aMy, aQso, aCtx);
+   (* THE YEAR FROM ITS FIELD (issue 298 stage 3), in the seven columns the
+      zone helper printed it in: two digits, byte for byte as before. *)
+   Result := CabrilloReceivedRSTYear(ReceivedYearKind, aMy, aQso, aCtx);
 end;
 
 function TContestKVP.GetFlags: TContestFlags;
@@ -292,8 +312,8 @@ end;
    changing one changes one. *)
 procedure TContestKVP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   (* The year is kept in MY ZONE, but the row names what it holds. *)
-   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone,
+   (* The year is MY LICENSE YEAR (issue 298); the row reads "License year". *)
+   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyLicenseYear,
                                         SNewContestLicenseYearLabel);
 end;
 

@@ -2868,6 +2868,7 @@ var
    sExchange: AnsiString;
    sMultiplierFields: AnsiString;
    sTimestamp: AnsiString;
+   nZone: integer;   (* <zone>: the zone, or a year contest's received year *)
 begin
    // if operator is blank, use Settings.My.Call
    // Add CR to output
@@ -3037,6 +3038,17 @@ begin
    // Field Day, Winter FD) with the same logic the RTC POST uses.
    sExchange := BuildRxExchangeText(RxData);
 
+   (* <zone> CARRIES THE RECEIVED YEAR in a contest that states one (issue 298
+      stage 3), read from its field: N1MM's contact has no year element, and
+      this is where the year always went. A number, as before ('5' for 05).
+      Nothing to send -- no year, no zone -- keeps what the slot holds, which
+      is DUMMYZONE's 255, exactly as this line always wrote it. *)
+   if not TryReceivedZoneOrYear(ContestIdentity(RxData.ceContest).ReceivedYearKind,
+                                RxData, nZone) then
+      begin
+      nZone := RxData.Zone;
+      end;
+
    Result := Result + #9 + '<exchange1>' + sExchange + '</exchange1>' + sLineBreak;
    Result := Result +
             #9 + '<section>' + RxData.QTHString + '</section>' + sLineBreak +    // Issue 262
@@ -3045,7 +3057,7 @@ begin
             #9 + '<name>' + RxData.Name + '</name>' + sLineBreak +
             #9 + '<power>' + RxData.Power + '</power>' + sLineBreak +
             #9 + '<misctext></misctext>' + sLineBreak +
-            #9 + '<zone>' + Format('%d',[RxData.Zone]) + '</zone>' + sLineBreak +
+            #9 + '<zone>' + Format('%d',[nZone]) + '</zone>' + sLineBreak +
             #9 + '<prec>' + {sPrecedence +} '</prec>' + sLineBreak +
             #9 + '<ck>' + Format('%d',[RxData.Check]) + '</ck>' + sLineBreak +                // TODO
                  sMultiplierFields +

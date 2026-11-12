@@ -643,11 +643,13 @@ function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
   (issue 267): a refused entry must leave RXData.Zone as it found it. *)
 function ProcessRSTAndZoneExchange(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
-(* RS(T) and the licence year, 00..99 (the European HF Championship, KVP) --
-  the zone parser's words with no zone rule, so it does not depend on the CTY
-  zone mode. In the interface for uTestLicenceYearEntry. *)
-function ProcessRSTAndLicenceYearExchange(Exchange: ShortString; var RXData:
-  ContestExchange): boolean;
+(* RS(T) and the received year of aKind (the European HF Championship and KVP:
+  rykTwoDigitYear, 00..99) -- the zone parser's words with no zone rule, so
+  it does not depend on the CTY zone mode; the digits and the range are the
+  kind's (issue 298, stage 2). In the interface for uTestLicenceYearEntry and
+  uTestLogReceivedYear. *)
+function ProcessRSTAndLicenceYearExchange(Exchange: ShortString;
+  aKind: TReceivedYearKind; var RXData: ContestExchange): boolean;
 (* Serial and name (CW Open and others). In the interface for
   uTestQSONumberAndNameEntry: every refusal names its reason. *)
 function ProcessQSONumberAndNameExchange(Exchange: ShortString; var
@@ -5446,7 +5448,7 @@ end;
   both zone parsers that apply the limit (issue 274). 0 is not refused: '00'
   was accepted before the limit and is still. The European HF Championship's
   and KVP's licence year never reaches it: it has its own parser,
-  ProcessRSTAndLicenceYearExchange (2026-11-11). *)
+  ProcessRSTAndLicenceYearExchange, with its own messages (2026-11-11). *)
 function ZoneIsAboveTheCQZones(aZone: integer): boolean;
 begin
   Result := (CTY.ctyZoneMode = CQZoneMode) and (aZone > 40);
@@ -5781,11 +5783,18 @@ end;
   parser has never applied its 40-zone limit there (issue 274, open). Writes
   RXData.RSTReceived, as the zone parser always did -- before a refusal too --
   and NOTHING ELSE of RXData; the caller writes the number only once it
-  accepts the entry. Answers whether the words have the shape. *)
-function ReadRSTAndOneOrTwoDigitNumber(Exchange: ShortString;
-                                       var RXData: ContestExchange;
-                                       out aNumber: integer;
-                                       out aNumberLeads: boolean): boolean;
+  accepts the entry. Answers whether the words have the shape.
+
+  aFewest..aMost IS THE NUMBER'S WORD LENGTH (issue 298, stage 2): 1..2 for a
+  zone, a two-digit year or a count; 4..4 for a four-digit year, so '1987
+  599' and '599 1987' read as they do for two digits. With 1..2 every test
+  below is the one it always was: the lead form asked length < 3 of a word
+  that cannot be empty when a second word follows it. *)
+function ReadRSTAndNumberOfDigits(Exchange: ShortString;
+                                  var RXData: ContestExchange;
+                                  aFewest, aMost: integer;
+                                  out aNumber: integer;
+                                  out aNumberLeads: boolean): boolean;
 var
   FirstString, SecondString, ThirdString: Str10;
 begin
@@ -5804,7 +5813,9 @@ begin
         begin
         ParseExchange(Exchange, FirstString, SecondString, ThirdString);
 
-        if (length(SecondString) = 3) and (length(FirstString) < 3) then
+        if (length(SecondString) = 3)      and
+           (length(FirstString) >= aFewest) and
+           (length(FirstString) <= aMost)   then
            begin
            RXData.RSTReceived := StrToIntDef(SecondString, 0);
            aNumber := StrToIntDef(FirstString, 0);
@@ -5825,11 +5836,21 @@ begin
     CONTEST RAN -- M11 S5, 2026-10-14: `ZoneMult = EUHFCYear` (0..99, which two
     digits always are), and two JAPrefectures arms reading a kind no contest
     stated. The year has its own parser since 2026-11-11. *)
-  if (length(Exchange) = 1) or (length(Exchange) = 2) then
+  if (length(Exchange) >= aFewest) and (length(Exchange) <= aMost) then
      begin
      aNumber := StrToIntDef(Exchange, 0);
      Result := True;
      end;
+end;
+
+(* A ZONE'S WORDS: an RS(T) and a one- or two-digit number. See
+  ReadRSTAndNumberOfDigits. *)
+function ReadRSTAndOneOrTwoDigitNumber(Exchange: ShortString;
+                                       var RXData: ContestExchange;
+                                       out aNumber: integer;
+                                       out aNumberLeads: boolean): boolean;
+begin
+  Result := ReadRSTAndNumberOfDigits(Exchange, RXData, 1, 2, aNumber, aNumberLeads);
 end;
 
 function ProcessRSTAndZoneExchange(Exchange: ShortString {Str80}; var RXData:
@@ -5872,19 +5893,74 @@ end;
   NO zone rule: every one- or two-digit number, 0..99, is a year, whatever the
   CTY zone mode. Until today the year went through ProcessRSTAndZoneExchange
   and passed only because FoundContest set ITU zone mode for these contests,
-  so the 40-zone limit never ran. A refusal names the reason the zone parser's
-  does (TC_IMPROPERZONENUMBER, no new string) and leaves the stored year
-  alone. The year is stored in the zone slot -- uContestBase.StoreLicenceYear. *)
-function ProcessRSTAndLicenceYearExchange(Exchange: ShortString; var RXData:
-  ContestExchange): boolean;
+  so the 40-zone limit never ran. A refusal leaves the stored year alone and
+  names a YEAR, not a zone (2026-11-11; a lone '599' said 'Improper zone
+  number!!' in contests that have no zone): SExchangeNoLicenseYear for an
+  entry with no year in it (LicenceYearEntryHasNoYear), else
+  SExchangeImproperLicenseYear. The year is stored in the zone slot --
+  uContestBase.StoreLicenceYear.
+
+  ISSUE 298 STAGE 2 (2026-11-12): THE CONTEST'S KIND decides the digits and
+  the range (ReadRSTAndNumberOfDigits, uContestBase.ReceivedYearRange): a
+  two-digit year or a count reads exactly as above; a four-digit year reads
+  four digits, 1900 to the QSO's own year. StoreLicenceYear writes the year's
+  own field and, for a value the sheet can count, the zone slot. *)
+
+(* AN ENTRY WITH NO YEAR IN IT: nothing typed, or one word with the shape of
+  the mode's RS(T) (IsAnRSTWord -- '599' on CW and RTTY). On Phone a lone
+  two-digit word is a year, so it never reaches here. *)
+function LicenceYearEntryHasNoYear(const aExchange: ShortString): boolean;
+var
+  entry: string;
+  report: smallInt;
+begin
+  entry := Trim(string(aExchange));
+  if entry = '' then
+     begin
+     Result := True;
+     Exit;
+     end;
+  Result := (Pos(' ', entry) = 0)        and
+            (Length(entry) <= 10)        and
+            IsAnRSTWord(Str10(entry), report);
+end;
+
+function ProcessRSTAndLicenceYearExchange(Exchange: ShortString;
+  aKind: TReceivedYearKind; var RXData: ContestExchange): boolean;
 var
   year: integer;
   yearLeads: boolean;
+  fewest, most: integer;
+  low, high: integer;
 begin
-  ExchangeErrorMessage := TC_IMPROPERZONENUMBER;
   Result := False;
-  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, RXData, year, yearLeads) then
+  (* THE KIND SAYS HOW MANY DIGITS AND WHICH RANGE (issue 298, stage 2):
+    uContestBase.ReceivedYearDigits / ReceivedYearRange, the ones Edit QSO and
+    the ADIF import ask. A contest that states no kind has no year to parse. *)
+  if not ReceivedYearDigits(aKind, fewest, most) then
      begin
+     ExchangeErrorMessage := SExchangeImproperLicenseYear;
+     Exit;
+     end;
+  if not ReadRSTAndNumberOfDigits(Exchange, RXData, fewest, most, year, yearLeads) then
+     begin
+     if LicenceYearEntryHasNoYear(Exchange) then
+        begin
+        ExchangeErrorMessage := SExchangeNoLicenseYear;
+        end
+     else
+        begin
+        ExchangeErrorMessage := SExchangeImproperLicenseYear;
+        end;
+     Exit;
+     end;
+
+  (* THE RANGE: 00..99 for a two-digit year or a count, which its digits
+    always are; 1900 to the QSO's own year for a four-digit one. *)
+  if (not ReceivedYearRange(aKind, ReferenceYearOfQSO(RXData), low, high)) or
+     (year < low) or (year > high) then
+     begin
+     ExchangeErrorMessage := SExchangeImproperLicenseYear;
      Exit;
      end;
 
@@ -7009,7 +7085,8 @@ type
       function ParseRSTDomesticOrDXQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTDomesticQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTDomesticQTHOrQSONumber(const aText: string; var aExch: ContestExchange): boolean; override;
-      function ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean; override;
+      function ParseRSTLicenceYear(const aText: string; aKind: TReceivedYearKind;
+                                   var aExch: ContestExchange): boolean; override;
       function ParseRSTLongJAPrefecture(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTNameAndQTH(const aText: string; var aExch: ContestExchange): boolean; override;
       function ParseRSTPossibleDomesticQTHAndPower(const aText: string; var aExch: ContestExchange): boolean; override;
@@ -7297,9 +7374,10 @@ begin
    Result := ProcessRSTAndZoneExchange(TypedExchange(aText), aExch);
 end;
 
-function TEngineExchangeParsers.ParseRSTLicenceYear(const aText: string; var aExch: ContestExchange): boolean;
+function TEngineExchangeParsers.ParseRSTLicenceYear(const aText: string; aKind: TReceivedYearKind;
+                                                    var aExch: ContestExchange): boolean;
 begin
-   Result := ProcessRSTAndLicenceYearExchange(TypedExchange(aText), aExch);
+   Result := ProcessRSTAndLicenceYearExchange(TypedExchange(aText), aKind, aExch);
 end;
 
 function TEngineExchangeParsers.ParseRSTZoneAndPossibleDomesticQTH(const aText: string; var aExch: ContestExchange): boolean;

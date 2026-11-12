@@ -153,6 +153,7 @@ type
       procedure ReadSavedWidths;
       function  UserWidth(const aColumn: LogColumnsType): integer;
       function  HeaderTextWidth(const aColumn: LogColumnsType): integer;
+      function  HeaderText(const aColumn: LogColumnsType): RawByteString;
    protected
       (* A divider was dragged or double-clicked: the width is this grid's,
         and is marked for the settings file -- see the body. *)
@@ -256,7 +257,9 @@ uses
    uSettingsModel,   (* Settings.Log.ColumnAutoSize -- was the global ColumnAutoSize *)
    uColumnWidthStore, (* TColumnWidthStore, ClampRestoredWidth -- issue 234 *)
    uLCLFormHelpers,  (* LoadSavedColumnWidths, NoteColumnWidth, the 96-dpi scaling *)
-   utils_text;       (* LclText -- a header's text, converted for the LCL once *)
+   utils_text,       (* LclText -- a header's text, converted for the LCL once *)
+   PostUnit,         (* Contest -- the open contest's handle *)
+   uContestRegistry; (* ContestIdentity -- the zone column's heading *)
 
 const
    (* A DIRECT-MAPPED CACHE, sized to comfortably exceed a screenful so that
@@ -1071,7 +1074,26 @@ end;
   The caller has assigned the font. *)
 function TLogGrid.HeaderTextWidth(const aColumn: LogColumnsType): integer;
 begin
-   Result := Canvas.TextWidth(LclText(ColumnsArray[aColumn].Text));
+   Result := Canvas.TextWidth(HeaderText(aColumn));
+end;
+
+(* A COLUMN'S HEADING, AS THE OPERATOR READS IT, for the LCL. ColumnsArray's
+  text, except over the zone column, whose heading is the open contest's
+  (TContestBase.ZoneColumnHeading, 2026-11-11): the European HF Championship
+  and KVP keep the year of first license there and say 'Year'. ColumnsArray's
+  'Zn' is not changed -- it is also the COLUMN WIDTH token. Asked at every
+  measurement and every header paint, so a contest opened later is read; one
+  registry lookup for one column. *)
+function TLogGrid.HeaderText(const aColumn: LogColumnsType): RawByteString;
+begin
+   if aColumn = logColZoneMult then
+      begin
+      Result := LclText(ContestIdentity(Contest).ZoneColumnHeading);
+      end
+   else
+      begin
+      Result := LclText(ColumnsArray[aColumn].Text);
+      end;
 end;
 
 (* THE WIDTH THE OPERATOR CHOSE FOR A COLUMN, in this grid's pixels, or 0 for
@@ -1475,7 +1497,7 @@ begin
         unit names no platform. *)
       Inc(aRect.Left, CELL_PAD);
       Dec(aRect.Right, CELL_PAD);
-      Canvas.TextRect(aRect, aRect.Left, aRect.Top, ColumnsArray[c].Text, style);
+      Canvas.TextRect(aRect, aRect.Left, aRect.Top, HeaderText(c), style);
       Canvas.Brush.Style := bsSolid;
       Exit;
       end;

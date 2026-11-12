@@ -81,6 +81,11 @@ type
       procedure RunAllTests; override;
    end;
 
+(* How many commits a WAL file holds -- see the implementation. In the
+  interface since issue 298, whose migration test (uTestLogReceivedYear)
+  counts them too. *)
+function CommitFramesInWal(const aWal: string): integer;
+
 implementation
 
 uses

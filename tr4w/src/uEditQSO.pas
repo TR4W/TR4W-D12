@@ -148,6 +148,9 @@ uses
   uUDPBroadcastConfig, // usContact
   uContestBase,      // ContestLoggedQSORefusal -- the contest refuses a record
   uContestRegistry,  // ContestIdentity -- the record's own contest
+  (* SExchangeImproperLicenseYear -- a received year the contest's kind
+     refuses (issue 298). *)
+  uAppStrings,
   uLogNote,         // NoteText -- the note's text
   uConfigValues;
 
@@ -348,7 +351,20 @@ begin
    EditQSOSetText(FLD_DOMMULTQTH, string(EditableQSORXData.DomMultQTH));
    EditQSOSetText(FLD_PREFIX,     string(EditableQSORXData.Prefix));
 
-   if EditableQSORXData.Zone <> DUMMYZONE then
+   (* THE ZONE BOX SHOWS THE RECEIVED YEAR in a contest that receives one
+     (issue 298, stage 2): the record's own field, as the operator types it
+     ('05'), asked of the record's own contest. Everywhere else, the zone.
+     The box's label and length follow the contest first (stage 3: 'Year',
+     four digits for a four-digit year), so the text is never cut to the
+     designed two. *)
+   EditQSOShowZoneBox(ContestIdentity(EditableQSORXData.ceContest));
+   if ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind <> rykNone then
+      begin
+      EditQSOSetText(FLD_ZONE,
+                     ReceivedYearTextOf(ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind,
+                                        EditableQSORXData));
+      end
+   else if EditableQSORXData.Zone <> DUMMYZONE then
       begin
       EditQSOSetInt(FLD_ZONE, EditableQSORXData.Zone);
       end;
@@ -630,18 +646,36 @@ begin
 
   {Zone}
 
-  TempByte := Byte(EditQSOGetInt(FLD_ZONE, lpTranslated));
-  if lpTranslated then
+  (* OR THE RECEIVED YEAR, in a contest that receives one (issue 298, stage 2):
+    saved through StoreLicenceYear, so the year field and the zone slot the
+    sheet counts change together -- stage 1 saved a new zone beside the OLD
+    year. A year the contest's kind refuses is refused here, as a bad call is:
+    nothing is written and the form stays open. *)
+  if ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind <> rykNone then
      begin
-     FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
-     EditableQSORXData.Zone := TempByte
+     if not ApplyEditedReceivedYear(ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind,
+                                    EditQSOGetText(FLD_ZONE), EditableQSORXData) then
+        begin
+        showwarning(SExchangeImproperLicenseYear);
+        Result := False;
+        Exit;
+        end;
      end
   else
      begin
-     if TempByte = 0 then
+     TempByte := Byte(EditQSOGetInt(FLD_ZONE, lpTranslated));
+     if lpTranslated then
         begin
         FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
-        EditableQSORXData.Zone := DUMMYZONE;
+        EditableQSORXData.Zone := TempByte
+        end
+     else
+        begin
+        if TempByte = 0 then
+           begin
+           FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
+           EditableQSORXData.Zone := DUMMYZONE;
+           end;
         end;
      end;
 

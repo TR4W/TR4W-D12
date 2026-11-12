@@ -635,6 +635,7 @@ uses
       return type. *)
    MainUnit, uLogDatabase, uLogImport,
    uContestRegistry,   (* ContestId -- a contest's stored name *)
+   uContestNames,      (* ContestFromName -- the schema 6 migration's contest *)
    uLogBinaryFile,
    (* TLogBackup -- the ORDER of a backup's file operations, which is a leaf so
       the unit tests can hold it. LogStoreBackup supplies the live database. *)
@@ -2327,7 +2328,10 @@ begin
       begin
       Result.Continent := AnsiString(ContinentTypeSA[station.MyContinent]);
       end;
-   Result.CQZone := station.MyCQZone();
+   (* MY CQ ZONE -- never the licence year the European HF Championship and KVP
+     send: that is MY LICENSE YEAR, a setting of its own (issue 298), and MY
+     ZONE is a zone in every contest. See uContestFactory.SessionMyCQZone. *)
+   Result.CQZone := uContestFactory.SessionMyCQZone(ContestIdentity(Contest));
    (* The session's ITU zone -- the ONE answer scoring and the export share
      (issue 222). 0 is unknown, and is stored as NULL. *)
    Result.ITUZone := uContestFactory.SessionMyITUZone;
@@ -4040,6 +4044,24 @@ begin
       ContestColumnWidths.Clear;
       end;
 end;
+
+(* THE SCHEMA 6 MIGRATION'S QUESTION, ANSWERED BY THE CONTEST REGISTRY --
+  issue 298, stage 1. uLogDatabase is a leaf and cannot ask the registry,
+  so it asks this (LogContestKeepsYearInZone, assigned below). aContestType is
+  the contest row's text: the contest's ID, or a legacy spelling, both of
+  which uContestNames.ContestFromName reads; anything else is NoContest and
+  answers False. The rule itself is ContestKeepsYearInZoneSlot -- the same
+  one the .TRW import applies, and since schema 7 (stage 2) the class's
+  stated ReceivedYearKind; asked of every log below 7, for the re-carry. *)
+function ContestTypeKeepsYearInZone(const aContestType: string): boolean;
+begin
+   Result := ContestKeepsYearInZoneSlot(uContestNames.ContestFromName(aContestType));
+end;
+
+initialization
+   (* Every TLogDatabase.Open in a program that links the store migrates with
+     this answer -- the store's own, the WRL worker's, the tests'. *)
+   LogContestKeepsYearInZone := ContestTypeKeepsYearInZone;
 
 (* A BACKSTOP FOR THE EXIT PATHS THAT ARE NOT tr4w_ShutDown.
 

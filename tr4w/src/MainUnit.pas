@@ -8704,6 +8704,7 @@ var
   MultString: array[0..7] of AnsiChar;
   FreqAnsi: AnsiString;   // D12: persistent buffer for pszText (see freq column below)
   RowTextAnsi: AnsiString;   // the same, for the rkNote and deleted-QSO captions
+  yearKind: TReceivedYearKind;   // the zone column's: a received year, or none (issue 298)
 begin
 
   (* elvi IS A CARRIER, NOT A LIST-VIEW ITEM, and has been since the last
@@ -8837,12 +8838,28 @@ begin
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
+  (* THE ZONE COLUMN HOLDS THE RECEIVED YEAR in a contest that states one
+    (issue 298 stage 3), read from its field and written as the operator
+    types it -- '05', '1985' -- the text Edit QSO shows. Everywhere else the
+    zone number, as before. The record's own contest is asked. *)
   if ColumnsArray[logColZoneMult].Enable then
      begin
-     if RXData.Zone <> DUMMYZONE then
+     yearKind := ContestIdentity(RXData.ceContest).ReceivedYearKind;
+     if yearKind <> rykNone then
+        begin
+        elviText := AnsiString(ReceivedYearTextOf(yearKind, RXData));
+        end
+     else if RXData.Zone <> DUMMYZONE then
+        begin
+        elviText := AnsiString(IntToStr(RXData.Zone));
+        end
+     else
+        begin
+        elviText := '';
+        end;
+     if elviText <> '' then
         begin
         elviCol := ColumnsArray[logColZoneMult].pos; //Ord(logColZoneMult);
-        elviText := AnsiString(IntToStr(RXData.Zone));
         EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
         end;
      end;

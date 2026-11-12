@@ -209,8 +209,10 @@ NY4I's example: *"I take my laptop to CQ zone 3 in Utah for a contest, so just
 that contest is CQ zone 3."* These are the `TMySettings` properties in
 `uSettingsModel.TStationFact`: MY STATE (and its alias MY QTH), MY SECTION,
 MY ZONE (the CQ zone), MY ITU ZONE, MY GRID, MY NAME, MY FD CLASS, MY CHECK,
-MY PREC, MY PARK, MY IOTA, MY POSTAL CODE and MY FOC NUMBER. That is every
-field the New Contest dialog can ask for, plus MY ITU ZONE.
+MY PREC, MY PARK, MY IOTA, MY POSTAL CODE, MY FOC NUMBER and MY LICENSE YEAR
+(the year first licensed, which the contests that exchange it send; issue 298 --
+it was MY ZONE until then). That is every field the New Contest dialog can ask
+for, plus MY ITU ZONE.
 
 - **The published property is the station's value.** Preferences edits it
   and `settings/tr4w.json` stores it. A contest never writes it.
