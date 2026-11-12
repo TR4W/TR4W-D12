@@ -14,7 +14,7 @@ Screenshots use session.capture → window_capture.capture_window. The shared ro
 
 Pillow's direct HWND capture was tested but omitted the title/menu in the installed version; a full PrintWindow trial changed title-bar styling. Neither is used for documentation. The chosen frame bounds follow [Microsoft's GetWindowRect guidance](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect). The diagnostic capture-check scenario saves old/new main and dialog images without changing message memories, then closes normally. Earlier screenshots are historical captures and are not automatically repaired by this change.
 
-Use Python matching the application's PE bitness. The current application is x86, so the VM runner defaults to C:\TR4W-Test\.venv-x86\Scripts\python.exe (Python 3.15.2 x86 plus the Microsoft x86 VC runtime). The original x64 environment below is historical and must not drive x86 common controls: pywinauto's remote tab structures have different layouts. See issue #283.
+Use Python matching the application's PE bitness. Windows TR4W is 64-bit only (2026-11-12), so the VM runner defaults to C:\TR4W-Test\.venv\Scripts\python.exe (Python 3.15.2 x64). A 32-bit Python must not drive a 64-bit application's common controls (or the reverse): pywinauto's remote tab structures have different layouts. See issue #283. The guard that refuses a mismatch is evidence.require_matching_bitness. Results recorded before 2026-11-12 below were driven against the old 32-bit app with a 32-bit Python.
 
 `evidence.py` rejects a bitness mismatch before UI automation and requires an adjacent matching `.dbg`, verified debug-link CRC and a build-identity sidecar. Source-certified snapshots record a clean 40-character source revision before compilation; the explicit user-selected binary mode above records an exact hash and unknown source instead. It archives the executable, symbols and identity by executable SHA256. Do not generate source provenance from a checkout inspected after a build. The earlier certified retry root is C:\TR4W-Test\certified-7668; its original fixture remains separate.
 
@@ -75,7 +75,7 @@ It was an existing local 32-bit build dated November 10 at 23:49. The checkout r
 From GUI-TEST's interactive desktop, after staging a fresh disposable fixture:
 
 ```cmd
-"C:\TR4W-Test\.venv-x86\Scripts\python.exe" C:\TR4W-Test\readiness\pilot.py
+"C:\TR4W-Test\.venv\Scripts\python.exe" C:\TR4W-Test\readiness\pilot.py
 ```
 
 The copy of `pilot.py` can live elsewhere; `--root` overrides the default `C:\TR4W-Test`. Use one GUI job per desktop. Before starting, ensure no other TR4W session is running in the test guest. The SSH orchestration performed that preflight; it is not a substitute for protecting the guest against concurrent operators.

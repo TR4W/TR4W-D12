@@ -9,6 +9,8 @@ import subprocess
 import time
 from pathlib import Path
 
+from stage_main_build import GUEST_PYTHON
+
 
 def ps_quote(value):
    return "'" + value.replace("'", "''") + "'"
@@ -32,7 +34,7 @@ def main():
    parser.add_argument("--host", default="tr4w-gui-test")
    parser.add_argument("--run", default="pilot-001")
    parser.add_argument("--root", default=r"C:\TR4W-Test")
-   parser.add_argument("--python", default=r"C:\TR4W-Test\.venv-x86\Scripts\python.exe")
+   parser.add_argument("--python", default=GUEST_PYTHON)
    parser.add_argument("--output", type=Path, required=True)
    args = parser.parse_args()
    if not args.run.replace("-", "").isalnum():

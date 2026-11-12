@@ -26,7 +26,7 @@ output, and that is what the fuzzy flag is recording.
 WHERE THE FILE GOES. Beside the EXE, not beside the working directory:
 uEmbeddedTranslations builds its path from ExtractFilePath(ParamStr(0)) and a
 file there wins over the embedded catalogue. So for a build-out binary run from
-tr4w/target, the target is build-out/app-i386-win32/languages/<lang>/tr4w.po.
+tr4w/target, the target is build-out/app-x86_64-win64/languages/<lang>/tr4w.po.
 --install does that for you. The program says which one it used:
 
     UI language: "es" selected by ... loaded from <path> (overriding the
@@ -53,7 +53,7 @@ import sys
 BARE_FUZZY = re.compile(r'^#,\s*fuzzy\s*$')
 ANY_FLAGS = re.compile(r'^#,\s*(.+?)\s*$')
 
-DEFAULT_EXE_DIR = os.path.join('build-out', 'app-i386-win32')
+DEFAULT_EXE_DIR = os.path.join('build-out', 'app-x86_64-win64')
 
 
 def defuzz(text):

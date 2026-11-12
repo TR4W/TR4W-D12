@@ -9,7 +9,7 @@ import sys
 import uuid
 import zipfile
 
-from stage_main_build import DEFAULT_EXE, guest_python_for, stage
+from stage_main_build import DEFAULT_EXE, GUEST_PYTHON, stage
 from vm_run import remote, ps_quote
 
 
@@ -110,13 +110,11 @@ def main():
    parser.add_argument("--exe", type=Path, default=DEFAULT_EXE)
    parser.add_argument("--data-root", type=Path)
    parser.add_argument("--host", default="tr4w-gui-test")
-   parser.add_argument("--python", default=None, help="guest Python; default follows the app's bitness")
+   parser.add_argument("--python", default=GUEST_PYTHON, help="guest Python (64-bit; must match the app)")
    parser.add_argument("--output", type=Path, default=Path("build-out/gui-regression"))
    parser.add_argument("--case", action="append", choices=CASES)
    parser.add_argument("--list", action="store_true")
    args = parser.parse_args()
-   if args.python is None:
-      args.python = guest_python_for(args.exe)
    if args.list:
       print("\n".join(CASES))
       return 0

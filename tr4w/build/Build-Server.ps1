@@ -17,7 +17,7 @@
 # THE STALE CLAIM BELOW IS LEFT IN PLACE AS A WARNING, not deleted, because it is
 # what made the missing switch look deliberate to three separate readers. Its
 # every clause is now false, and the Get-SearchPaths comparison it appeals to is
-# false too: the Server list resolves src\ui\lcl and the i386-win32 LCL, and
+# false too: the Server list resolves src\ui\lcl and the Windows LCL, and
 # differs from App only by three SQLite directories.
 #
 # ~~NO LCL AND NO -WG. tr4wserver is a console program with no UI at all, so it
@@ -29,9 +29,7 @@
 param(
    [string] $OutExe = '',
    [string] $Fpc = '',
-   [string] $Laz = '',
-   [string] $Cpu = '',
-   [string] $Os  = ''
+   [string] $Laz = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,31 +38,19 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
 . (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
 
-$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
-$Cpu = $resolved.Cpu
-$Os  = $resolved.Os
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 $TR4W_DIR   = Split-Path $PSScriptRoot -Parent
 $REPO       = Split-Path $TR4W_DIR -Parent
 $SERVER_DIR = Join-Path $TR4W_DIR 'tr4wserver'
 
-$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Quiet
 if (-not $tc) { exit 2 }
 
 $out = Join-Path $REPO "build-out\server-$Cpu-$Os"
-# The default is per architecture (Get-StagingDir.ps1): the shipping x86_64 build keeps
-# tr4w\tr4wserver\tr4wserver.exe, which full.nsi ships; everything else goes under
-# build-out\dist and may NEVER be written over that file.
-$exe = if ($OutExe -ne '') { $OutExe } else { Get-Tr4wServerExePath -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os }
-try
-   {
-   Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'tr4wserver.exe'
-   }
-catch
-   {
-   Write-Host "tr4wserver build FAILED: $($_.Exception.Message)" -ForegroundColor Red
-   exit 1
-   }
+# The default is tr4w\tr4wserver\tr4wserver.exe, which full.nsi ships.
+$exe = if ($OutExe -ne '') { $OutExe } else { Join-Path $TR4W_DIR 'tr4wserver\tr4wserver.exe' }
 $exeDirectory = Split-Path $exe -Parent
 if (-not (Test-Path $exeDirectory)) { New-Item -ItemType Directory -Path $exeDirectory -Force | Out-Null }
 

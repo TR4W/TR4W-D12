@@ -10,19 +10,14 @@ import zipfile
 from evidence import file_digest, pe_info
 
 # THE ONE DEFINITION of which app the GUI suite runs by default, and of which guest
-# Python drives it. The shipping app is x86_64-win64 since 2026-11-12 (issue 299),
-# so a plain Build-App.ps1 writes this path. The guest Python MUST match the app's
-# bitness: pywinauto reads the remote common-control structures, and their layout
-# differs between 32 and 64 bit (issue 283).
+# Python drives it. Windows TR4W is x86_64-win64 only, so a plain Build-App.ps1
+# writes this path and the guest Python is 64-bit. The two MUST match in bitness:
+# pywinauto reads the remote common-control structures, and their layout differs
+# between 32 and 64 bit (issue 283). evidence.require_matching_bitness is the
+# guard that refuses a mismatch before any UI action; this repo builds no 32-bit
+# exe, so one can only arrive through --exe or --python.
 DEFAULT_EXE = Path(r"C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe")
-GUEST_PYTHON = {
-   64: r"C:\TR4W-Test\.venv\Scripts\python.exe",
-   32: r"C:\TR4W-Test\.venv-x86\Scripts\python.exe",
-}
-
-
-def guest_python_for(exe):
-   return GUEST_PYTHON[pe_info(exe)["bits"]]
+GUEST_PYTHON = r"C:\TR4W-Test\.venv\Scripts\python.exe"
 
 
 def stage(exe, output):

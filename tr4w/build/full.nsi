@@ -10,46 +10,29 @@
 !endif
 
 ; ---------------------------------------------------------------------------
-; ARCHITECTURE (issue 299, flipped 2026-11-12).  ABSENT /DTR4WARCH = THE 64-BIT
-; INSTALLER, which is the shipping one: the exe, tr4w.dbg, the runtime DLLs,
+; THIS IS THE 64-BIT INSTALLER, AND THE ONLY ONE.  NY4I, 2026-11-12: "I have no
+; plans to ever support 32 bit Windows OS".  The exe, tr4w.dbg, the runtime DLLs,
 ; tr4wconvert.exe and cacert.pem are read from ..\target and tr4wserver.exe from
-; ..\tr4wserver, which is where the shipping (x86_64-win64) build stages them
-; (build\Get-StagingDir.ps1).
+; ..\tr4wserver, which is where the build stages them.
 ;
-; /DTR4WARCH=i386 /DTR4WSTAGE=<dir> (passed by build\Build-Installer.ps1) builds
-; the 32-bit installer from a stage directory (build-out\dist\i386-win32),
-; NEVER from ..\target -- those are 64-bit files now.  It is buildable and not
-; shipped.  /DTR4WARCH=x86_64 may be given explicitly with a /DTR4WSTAGE of its
-; own (a scratch stage).  Files that are the same for every bitness (the .dat and
-; .ini files, TRMASTER.DTA, cty.dat, dom\) are always read from ..\target.
+; /DTR4WSTAGE=<dir> (passed by build\Build-Installer.ps1 -StageDir) reads those
+; files from a scratch stage instead.  Files that do not depend on the build (the
+; .dat and .ini files, TRMASTER.DTA, cty.dat, dom\) are always read from ..\target.
+;
+; The installer itself is a 32-bit NSIS program, so it STARTS on a 32-bit Windows;
+; .onInit below refuses there with a message that points those users at TR4W 4.x.
 ; ---------------------------------------------------------------------------
-!ifndef TR4WARCH
-  !define TR4WARCH "x86_64"
-!endif
-!if "${TR4WARCH}" == "x86_64"
-  !define TR4W64
-  !ifdef TR4WSTAGE
-    !define BINDIR    "${TR4WSTAGE}"
-    !define SERVERDIR "${TR4WSTAGE}"
-  !else
-    !define BINDIR    "..\target"
-    !define SERVERDIR "..\tr4wserver"
-  !endif
-  !define TR4WSUFFIX "-x64"
-  !include LogicLib.nsh
-  !include x64.nsh
+!ifdef TR4WSTAGE
+  !define BINDIR    "${TR4WSTAGE}"
+  !define SERVERDIR "${TR4WSTAGE}"
 !else
-  !if "${TR4WARCH}" == "i386"
-    !ifndef TR4WSTAGE
-      !error "TR4WARCH=i386 needs TR4WSTAGE.  The 32-bit installer is built from a stage directory, never from ..\target (64-bit files); use build\Build-Installer.ps1 -Cpu i386."
-    !endif
-    !define BINDIR    "${TR4WSTAGE}"
-    !define SERVERDIR "${TR4WSTAGE}"
-    !define TR4WSUFFIX "-x86"
-  !else
-    !error "TR4WARCH must be x86_64 or i386."
-  !endif
+  !define BINDIR    "..\target"
+  !define SERVERDIR "..\tr4wserver"
 !endif
+; The architecture is in the file name, so users can tell which they have.
+!define TR4WSUFFIX "-x64"
+!include LogicLib.nsh
+!include x64.nsh
 
 !define TR4WINSTFOLDER 'Software\TR4W'
 !define TR4WDRVREG     'SYSTEM\CurrentControlSet\Services\TR4WIO'
@@ -71,15 +54,9 @@
 !ifdef MMTTYMODE
 Name    "TR4W v.${TR4WVERSION} - MMTTY"
 !else
-!ifdef TR4W64
 Name    "TR4W v.${TR4WVERSION} (64-bit)"
-!else
-Name    "TR4W v.${TR4WVERSION}"
-!endif
 !endif
 
-; Each installer carries its architecture in the name (-x64 shipping, -x86 not
-; shipped), so a 32-bit one can never be mistaken for the real one.
 !ifdef TR4WLANG
 OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}_${TR4WLANG}.exe
 !else
@@ -136,13 +113,9 @@ OutFile release\tr4w_setup_${TR4WVERSION}${TR4WSUFFIX}_mmtty.exe
 
 
 
-;Get installation folder from registry if available
-!ifndef TR4W64
-InstallDirRegKey HKCU "Software\TR4W" ""
-!else
 ; ---------------------------------------------------------------------------
-; THE 64-BIT INSTALLER DOES NOT USE InstallDirRegKey.  HKCU\Software\TR4W is
-; shared with the 32-bit installer, so for someone upgrading it holds the old
+; THIS INSTALLER DOES NOT USE InstallDirRegKey.  HKCU\Software\TR4W is shared
+; with the old 32-bit 5.0.x installer, so for someone upgrading it holds the old
 ; "C:\Program Files (x86)\TR4W", and InstallDirRegKey would put the 64-bit
 ; program back into the 32-bit folder.  .onInit below reads the key itself and
 ; decides deliberately.  (SetRegView 64 does not matter for HKCU\Software, which
@@ -152,12 +125,15 @@ InstallDir "$PROGRAMFILES64\TR4W"
 Var OLDDIR       ; an old 32-bit install to migrate from; empty when there is none
 
 Function .onInit
-	SetRegView 64
-
+	; A 32-bit Windows cannot run TR4W 5.  Say so, and say where to go instead.
+	; This must come first: nothing below makes sense there.  /SD IDOK answers
+	; the box in a silent install (setup /S), which then aborts all the same.
 	${IfNot} ${RunningX64}
-		MessageBox MB_OK|MB_ICONSTOP "This is the 64-bit TR4W installer and this is not a 64-bit Windows.$\r$\n$\r$\nUse the 32-bit TR4W installer instead." /SD IDOK
+		MessageBox MB_OK|MB_ICONSTOP "TR4W 5 needs a 64-bit version of Windows, and this is a 32-bit Windows.$\r$\n$\r$\nTR4W 5 cannot be installed here. Stay on TR4W 4.x, which is available from https://tr4w.net" /SD IDOK
 		Abort
 	${EndIf}
+
+	SetRegView 64
 
 	StrCpy $OLDDIR ""
 
@@ -192,7 +168,6 @@ onInit_noreg:
 
 onInit_done:
 FunctionEnd
-!endif
 
 
 Page components
@@ -217,9 +192,10 @@ InstallColors  0000FF FFFFFF
 
 
 
-!ifdef TR4W64
 ; ---------------------------------------------------------------------------
-; UPGRADING FROM A 32-BIT INSTALL (64-bit installer only; hidden, runs first).
+; UPGRADING FROM A 32-BIT INSTALL (hidden, runs first).  This serves operators
+; on a 64-bit Windows who ran the 32-bit 5.0.x installer; it is NOT a 32-bit
+; Windows feature (.onInit refuses those).
 ;
 ; .onInit set $OLDDIR when it found a 32-bit TR4W under Program Files (x86).
 ; The 64-bit program goes to Program Files, so the operator's data has to come
@@ -315,19 +291,16 @@ mig_delete:
 	DetailPrint "old 32-bit program files removed from $OLDDIR"
 mig_done:
 SectionEnd
-!endif
 
 Section "tr4w.exe" secexe
 	SectionIn RO
 	SetOutPath "$INSTDIR"
 	File "${BINDIR}\tr4w.exe"
-!ifdef TR4W64
 	; A 64-bit install into a folder that held the 32-bit one (an in-place
 	; upgrade of a custom folder) must not keep the 32-bit unwinder: it is not
 	; loaded by anything now, and a wrong-architecture DLL left beside the exe
 	; is exactly the 0xC000007B trap tr4w\redist\README.md describes.
 	Delete "$INSTDIR\libgcc_s_dw2-1.dll"
-!endif
 
 	; SYMBOLS, WHILE WE ARE ON BENCH TESTERS (NY4I, 2026-08-16): "until we
 	; go to release, we can ship the debug files with the release in the
@@ -362,13 +335,13 @@ Section "tr4w.exe" secexe
 	; is published beside it and MUST be checked.
 	File "${BINDIR}\cacert.pem"
 	File "${BINDIR}\libhamlib-4.dll"
-!ifdef TR4W64
 	File "${BINDIR}\libgcc_s_seh-1.dll"
-!else
-	File "${BINDIR}\libgcc_s_dw2-1.dll"
-!endif
 	File "${BINDIR}\libusb-1.0.dll"
 	File "${BINDIR}\libwinpthread-1.dll"
+	; The Tailcat tunnel library (issue 293), loaded beside the exe
+	; and only when Use Tailcat is ticked. /nonfatal: a build that did not stage
+	; it still makes an installer, and the box then says the library is missing.
+	File /nonfatal "${BINDIR}\libtailcat.dll"
 	; The contest log.  SQLITE_LOG_SCHEMA_PLAN.md section 9 said to add this line
 	; "in the same commit as the first code that opens a database" -- which is
 	; the commit that added src\domain\uLogDatabase.pas, so here it is.
@@ -380,8 +353,7 @@ Section "tr4w.exe" secexe
 	; its own log.  2.5 MB against a remembered step is not a close call, and
 	; this tree's whole position is that remembered steps drift.
 	;
-	; IT MUST MATCH THE BUILD'S ARCHITECTURE.  BINDIR is the stage of that build, so the right one is copied; the 64-bit move
-	; has to swap it.  Windows reports a mismatch as "the specified module could
+	; IT MUST BE THE 64-BIT BUILD.  Windows reports a mismatch as "the specified module could
 	; not be found", naming a file that is present -- which is why
 	; uLogDatabase.DiagnoseSQLiteLoad reads the PE header and says so.
 	File "${BINDIR}\sqlite3.dll"
@@ -587,7 +559,7 @@ Section "" SecSC
 ; ONLY UPGRADERS SEE IT.  settings\tr4w.ini is what distinguishes them: TR4W 5
 ; neither writes that file nor reads it, so its presence in the install
 ; directory means an earlier version left it there.  4.x wrote it to exactly
-; this path (<installdir>\settings\tr4w.ini), and the InstallDirRegKey at the
+; this path (<installdir>\settings\tr4w.ini), and .onInit at the
 ; top of this script points $INSTDIR at the existing installation on an
 ; upgrade.  A first-time installer has no old settings and is told nothing.
 ;

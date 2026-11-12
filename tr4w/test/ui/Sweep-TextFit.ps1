@@ -58,7 +58,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $target = Join-Path $Repo 'tr4w\target'
-if (-not $Exe) { $Exe = Join-Path $Repo 'build-out\app-i386-win32\tr4w_fpc.exe' }
+if (-not $Exe) { $Exe = Join-Path $Repo 'build-out\app-x86_64-win64\tr4w_fpc.exe' }
 if (-not (Test-Path $Exe)) { throw "no exe at $Exe -- build first" }
 
 # THE CATALOGUE HAS TO SIT BESIDE THE BINARY WE ACTUALLY RUN.

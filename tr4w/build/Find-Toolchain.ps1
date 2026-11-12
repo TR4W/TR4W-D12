@@ -2,26 +2,23 @@
 # defines Find-Tr4wToolchain.
 #
 # WHY DISCOVERY RATHER THAN CONSTANTS.  Every build script here used to default
-# to C:\FPC\3.2.2\bin\i386-win32\fpc.exe and C:\Lazarus, which is one
-# developer's machine written into the build system. A clone on any other PC
-# would need every path passed on every invocation.
+# to one developer's FPC and Lazarus paths, which is one machine written into
+# the build system. A clone on any other PC would need every path passed on
+# every invocation.
 #
 # WHAT IT ACTUALLY CHECKS -- and this is the part that matters, because "fpc.exe
-# exists" is not the question:
+# exists" is not the question. The target is x86_64-win64 (Get-StagingDir.ps1
+# names it once):
 #
-#   * a compiler that can TARGET i386-win32. fpc.exe is only a driver; the
-#     backend is ppc386.exe (native) or ppcross386.exe (cross). An x86_64-only
-#     install has neither, and TR4W is a Win32 program.
-#   * an i386-win32 RTL (units\i386-win32\rtl\system.ppu).
-#   * LCL units for i386-win32. This is exactly where the two Lazarus installs
-#     on NY4I's machine differ: C:\Lazarus carries them, the fpcupdeluxe one is
-#     x86_64-only and cannot build TR4W at all. Finding "a Lazarus" is not
-#     enough; finding one with the right units is.
+#   * an x86_64-win64 RTL (units\x86_64-win64\rtl\system.ppu) under the compiler.
+#   * LCL units for x86_64-win64 in the Lazarus install, paired with that
+#     compiler (see the pairing note below). Finding "a Lazarus" is not enough;
+#     finding one with the right units is.
 #
 # WHERE IT LOOKS.  Every FIXED drive, not just C:.  The install roots below are
 # relative names crossed with each fixed drive root, because "C:" is not a fact
 # about the user's machine -- it was a fact about the machine this script was
-# written on.  N4AF hit exactly that on 2026-08-19: a correct 32-bit FPC +
+# written on.  N4AF hit exactly that on 2026-08-19: a correct FPC +
 # Lazarus install on a PC whose tools live on D:, reported as TOOLCHAIN NOT
 # FOUND with no hint that the drive was the problem.
 #
@@ -70,15 +67,18 @@ function Get-Tr4wFixedDriveRoots
    return $roots
    }
 
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')   # $script:Tr4wCpu / Tr4wOs
+
 function Find-Tr4wToolchain
    {
    param(
       [string] $Fpc = '',
       [string] $Laz = '',
-      [string] $Cpu = 'x86_64',
-      [string] $Os  = 'win64',
       [switch] $Quiet
    )
+
+   $Cpu = $script:Tr4wCpu
+   $Os  = $script:Tr4wOs
 
    $searched = [System.Collections.Generic.List[string]]::new()
 
@@ -91,18 +91,6 @@ function Find-Tr4wToolchain
          }
 
       $bin = Split-Path $exe -Parent
-
-      # ppc386 = native i386 backend, ppcross386 = cross from another host.
-      # Either will do; neither means this install cannot make a Win32 binary.
-      $backend = @('ppc386.exe', 'ppcross386.exe') |
-                 ForEach-Object { Join-Path $bin $_ } |
-                 Where-Object { Test-Path -LiteralPath $_ } |
-                 Select-Object -First 1
-
-      if ($cpuWanted -eq 'i386' -and -not $backend)
-         {
-         return $null
-         }
 
       # <root>\bin\<host>\fpc.exe -> <root>
       $root = Split-Path (Split-Path $bin -Parent) -Parent
@@ -117,7 +105,6 @@ function Find-Tr4wToolchain
          Bin     = $bin
          Root    = $root
          FpcRes  = Join-Path $bin 'fpcres.exe'
-         Backend = $backend
       }
       }
 
@@ -360,14 +347,14 @@ function Find-Tr4wToolchain
          if ($fpcPin)
             {
             Write-Host "  PINNED FPC REJECTED: $fpcPin" -ForegroundColor Red
-            Write-Host "  It has no ppc386/ppcross386 backend or no $Cpu-$Os RTL, so it cannot"
+            Write-Host "  It has no $Cpu-$Os RTL, so it cannot"
             Write-Host '  build TR4W. Discovery is NOT attempted when a pin is given -- fix the'
             Write-Host '  pin or clear FPC_HOME / -Fpc to search instead.'
             }
          else
             {
             Write-Host "  No FPC able to target $Cpu-$Os." -ForegroundColor Red
-            Write-Host '  Needs fpc.exe with a ppc386/ppcross386 backend and an i386-win32 RTL.'
+            Write-Host '  Needs fpc.exe with an x86_64-win64 RTL (the ppcx64 backend).'
             Write-Host '  Set FPC_HOME, or pass -Fpc <path to fpc.exe or its directory>.'
             }
          }
@@ -376,14 +363,12 @@ function Find-Tr4wToolchain
          if ($lazPin)
             {
             Write-Host "  PINNED LAZARUS REJECTED: $lazPin" -ForegroundColor Red
-            Write-Host "  It carries no LCL units for $Cpu-$Os. An x86_64-only install (the"
-            Write-Host '  fpcupdeluxe default) cannot build TR4W, which is Win32. Discovery is'
+            Write-Host "  It carries no LCL units for $Cpu-$Os. Discovery is"
             Write-Host '  NOT attempted when a pin is given -- fix the pin or clear LAZARUS_DIR.'
             }
          else
             {
             Write-Host "  No Lazarus with LCL units for $Cpu-$Os." -ForegroundColor Red
-            Write-Host '  An x86_64-only install (fpcupdeluxe default) will NOT do -- TR4W is Win32.'
             Write-Host '  Set LAZARUS_DIR, or pass -Laz <lazarus dir>.'
             }
          }

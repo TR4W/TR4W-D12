@@ -11,34 +11,34 @@ a bundled DLL with a newer copy.
 
 ---
 
-## STATUS 2026-11-12 -- THE SHIPPING SET IS 64-BIT (issue 299)
+## STATUS 2026-11-12 -- EVERY DLL IS 64-BIT, AND THERE IS NO 32-BIT SET (issue 299)
 
-**Read the bitness column below as the history it is.** The default flipped to
-x86_64-win64: `tr4w/target/` now holds a COPY of the **64-bit** set, and every
-architecture's set lives in its own directory, `tr4w/redist/x86_64-win64/` and
-`tr4w/redist/i386-win32/` (the old 32-bit files, moved there byte-identical; the
-32-bit HamLib is `i386-win32/libhamlib-4.dll`). The x64 unwinder is
-`libgcc_s_seh-1.dll`, not `libgcc_s_dw2-1.dll`. **To update a DLL: replace it in
-`redist\<arch>\`, then copy the x64 one into `target\` (same name), measure the
-PE machine word (`0x8664` / `0x014C`) and run `build\Lint-ArchStaging.ps1`, which
-checks all of them.** `rigctld.exe` is not shipped. The build scripts and the
-unit-test build stage from `redist\`, never from `target\`. See
-`tr4w/redist/README.md`.
+Windows TR4W is x86_64-win64 only (NY4I: "I have no plans to ever support 32 bit Windows OS").
+The 32-bit set (`tr4w/redist/i386-win32/`, with `libgcc_s_dw2-1.dll`) was deleted that day; it is
+in git history. The DLLs live in `tr4w/redist/x86_64-win64/` and `tr4w/target/` holds a COPY.
+The unwinder is `libgcc_s_seh-1.dll`. **To update a DLL: replace it in
+`redist\x86_64-win64\`, then copy it into `target\` (same name), measure the PE machine word
+(`0x8664`) and run `build\Lint-ArchStaging.ps1`, which checks every DLL.** `rigctld.exe` is not
+shipped. The build scripts and the unit-test build stage from `redist\`, never from `target\`.
+See `tr4w/redist/README.md`.
 
 ## Bundled runtime files at a glance
 
-| File | Source | Bitness | Purpose |
-|---|---|---|---|
-| `libhamlib-4.dll` | [HamLib](https://hamlib.github.io/) Windows build, `hamlib-w32-4.7.0.zip` | **32-bit** | Radio control via the HamLib library (used by `uRadioHamLibDirect.pas`). **The shipped build is 4.7.0** (`2026-02-15T21:14:25Z SHA=554e02b39`), read out of the DLL itself -- it carries NO Windows version resource, so Explorer and `Get-ChildItem .VersionInfo` both show blank. |
-| `libgcc_s_dw2-1.dll` | Ships in the HamLib Windows zip | **32-bit** | MinGW runtime — required by `libhamlib-4.dll` |
-| `libusb-1.0.dll` | Ships in the HamLib Windows zip | **32-bit** | USB transport — required by `libhamlib-4.dll` for USB-attached radios |
-| `libwinpthread-1.dll` | Ships in the HamLib Windows zip | **32-bit** | POSIX-threads runtime — required by `libhamlib-4.dll` |
-| `libeay32.dll` | OpenSSL 1.0.2 (legacy series) | **32-bit** | Used by Indy for HTTPS (HamScore RTC, TR4WSERVER TLS) |
-| `ssleay32.dll` | OpenSSL 1.0.2 (legacy series) | **32-bit** | SSL/TLS layer — required by `libeay32.dll` |
-| `inpout32.dll` | [InpOut32 by Phil Gibbons](https://www.highrez.co.uk/downloads/inpout32/) | **32-bit** | Direct parallel-port I/O for LPT CW keying (legacy stations) |
-| `sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) precompiled Windows binary (`sqlite-dll-win-x86-*`) | **32-bit** | **The contest log.** Supplied by NY4I 2026-08-29; currently 3.53.4, 2,572,288 bytes. Bound at RUN TIME, not link time — see the note below |
-| `rigctld.exe` | HamLib Windows build | **64-bit (x86_64)** -- measured 2026-09-14, this row said 32-bit and was wrong | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
-| `redist/x86_64-win64/sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) `sqlite-dll-win-x64-3530400` | **64-bit** | **Shipped by the 64-bit installer** (since 2026-11-12, with the rest of `redist/x86_64-win64/`, which has `libgcc_s_seh-1.dll` where the 32-bit set has `libgcc_s_dw2-1.dll`). SQLite 3.53.4, the same version as the 32-bit copy; see `tr4w/redist/README.md` |
+All are **64-bit** (PE machine `0x8664`).
+
+| File | Source | Purpose |
+|---|---|---|
+| `libhamlib-4.dll` | [HamLib](https://hamlib.github.io/) Windows 64-bit build (`hamlib-w64-X.Y.Z.zip`) | Radio control via the HamLib library (used by `uRadioHamLibDirect.pas`). **The version is read out of the DLL itself** -- it carries NO Windows version resource, so Explorer and `Get-ChildItem .VersionInfo` both show blank. |
+| `libgcc_s_seh-1.dll` | Ships in the HamLib Windows zip | MinGW runtime — required by `libhamlib-4.dll` |
+| `libusb-1.0.dll` | Ships in the HamLib Windows zip | USB transport — required by `libhamlib-4.dll` for USB-attached radios |
+| `libwinpthread-1.dll` | Ships in the HamLib Windows zip | POSIX-threads runtime — required by `libhamlib-4.dll` |
+| `libeay32.dll` | OpenSSL 1.0.2 (legacy series) | Used by Indy for HTTPS (HamScore RTC, TR4WSERVER TLS) |
+| `ssleay32.dll` | OpenSSL 1.0.2 (legacy series) | SSL/TLS layer — required by `libeay32.dll` |
+| `sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) `sqlite-dll-win-x64-*` | **The contest log.** Currently 3.53.4. Bound at RUN TIME, not link time — see the note below |
+| `libtailcat.dll` | the Tailcat tunnel library (issue 293) | Loaded only when Use Tailcat is ticked; installed `/nonfatal` |
+| `rigctld.exe` | HamLib Windows build | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
+
+`inpout32.dll` is not a dependency: the parallel port was removed 2026-09-13.
 
 ### `sqlite3.dll` — the one that fails differently
 
@@ -58,33 +58,23 @@ people afternoons.
 
 So `src\domain\uLogDatabase.pas` reads the PE machine word out of the file it
 found and says which architecture it is (`DescribePEArchitecture`,
-`DiagnoseSQLiteLoad`). **When the 64-bit move happens this DLL must be swapped**,
-and the diagnostic is what will tell whoever forgets.
+`DiagnoseSQLiteLoad`). A 32-bit `sqlite3.dll` on the path is the mismatch it
+will name.
 
-**THE x64 COPY IS ALREADY IN THE TREE** (2026-09-14, supplied by NY4I):
-`tr4w/redist/x86_64-win64/sqlite3.dll`, **SQLite 3.53.4 — the same version as
-the 32-bit copy**, verified `0x8664` from its PE header. Matching the version
-across architectures is deliberate: a failure after a combined version-and-
-bitness change has two candidate causes.
-
-**The x64 build consumes it** (`Build-App.ps1 -Cpu x86_64 -Os win64` stages the
-`redist` DLLs beside an exe that lives in `build-out\dist\x86_64-win64\`, and
-`full.nsi /DTR4WARCH=x86_64` packs them from there). It is deliberately NOT in
-`tr4w/target/`, which is the i386 program directory, and a guard refuses an x64
-build that would write there. The two files have the same name in both
-bitnesses, so only a directory can keep them apart. **A DLL update therefore
-has two homes now:** `tr4w/target/` for the 32-bit installer and
-`tr4w/redist/x86_64-win64/` for the 64-bit one -- update both, same version.
-See `tr4w/redist/README.md`.
+The 64-bit copy is `tr4w/redist/x86_64-win64/sqlite3.dll` (SQLite 3.53.4,
+verified `0x8664` from its PE header). **A DLL update has two homes:**
+`tr4w/redist/x86_64-win64/` (what the builds stage from) and `tr4w/target/`
+(what the installer packs) -- update both, same version. See
+`tr4w/redist/README.md`.
 
 The DLL is also copied beside the unit-test binary by `build\Build-Tests.ps1`,
 because the `LogDatabase` suite opens real databases.
 
 
-> ⚠️ **A DLL's bitness must match the program's.** ~~Everything is 32-bit~~ was
-> true of the Delphi 7 program; since 2026-11-12 the shipping program is 64-bit
-> and so are the DLLs in `target/`. A DLL of the other bitness fails to load,
-> reported by Windows as "module not found" -- see the status block at the top.
+> ⚠️ **A DLL must be 64-bit.** Since 2026-11-12 the program is 64-bit only.
+> A DLL of the other bitness fails to load, reported by Windows as "module not
+> found" -- see the status block at the top. `Get-Tr4wWrongArchDlls` (build
+> scripts) and `Lint-ArchStaging` refuse one.
 
 ---
 
@@ -118,38 +108,40 @@ you really mean to update the bundled copy, `-f` says so.
 
 ## Procedure: updating the HamLib DLLs
 
-The four HamLib DLLs (`libhamlib-4.dll`, `libgcc_s_dw2-1.dll`,
+The four HamLib DLLs (`libhamlib-4.dll`, `libgcc_s_seh-1.dll`,
 `libusb-1.0.dll`, `libwinpthread-1.dll`) ship as a set in the upstream
 HamLib Windows zip. Update them together so the runtime is internally
 consistent.
 
 1. **Download the upstream zip.** Go to
    <https://github.com/Hamlib/Hamlib/releases> and grab the latest
-   **`hamlib-win32-X.Y.Z.zip`** — the file name explicitly contains
-   `win32`. Do **not** download `hamlib-w64-X.Y.Z.zip`.
-2. **Extract** to a scratch directory. The four DLLs live in
-   `hamlib-win32-X.Y.Z/bin/`.
+   **`hamlib-w64-X.Y.Z.zip`** — the 64-bit build. Do **not** download
+   `hamlib-w32-X.Y.Z.zip` (or the older `hamlib-win32-` name); 32-bit
+   Windows is not supported.
+2. **Extract** to a scratch directory. The four DLLs live in the zip's
+   `bin/`.
 3. **Verify bitness** before copying. From a PowerShell prompt:
    ```
    $bytes = [System.IO.File]::ReadAllBytes("path\to\libhamlib-4.dll")
    $peOffset = [System.BitConverter]::ToInt32($bytes, 60)
    $machine  = [System.BitConverter]::ToUInt16($bytes, $peOffset + 4)
-   # 0x14c = 32-bit (i386), 0x8664 = 64-bit (x64)
+   # 0x8664 = 64-bit (x64); 0x14c = 32-bit and WRONG
    "0x{0:x}" -f $machine
    ```
-   Confirm the output is `0x14c` for all four DLLs.
-4. **Replace** the four files in `tr4w/target/`.
+   Confirm the output is `0x8664` for all four DLLs.
+4. **Replace** the four files in `tr4w/redist/x86_64-win64/`, then copy them
+   into `tr4w/target/`.
 5. **Test build** — run `Build.cmd` then launch `tr4w/target/tr4w.exe` and
-   confirm a HamLib-controlled radio still connects. The dep check in
-   `FullBuild.ps1` won't catch wrong-bitness DLLs (the file is present);
-   only a runtime load failure will, so a smoke test matters.
+   confirm a HamLib-controlled radio still connects.
+   `build\Lint-ArchStaging.ps1` reads every DLL's PE header and refuses a
+   wrong-bitness one; a smoke test still matters for the rest.
 6. **Stage with `-f`** and commit:
    ```
-   git -C C:\TR4W add -f tr4w/target/libhamlib-4.dll
-   git -C C:\TR4W add -f tr4w/target/libgcc_s_dw2-1.dll
-   git -C C:\TR4W add -f tr4w/target/libusb-1.0.dll
-   git -C C:\TR4W add -f tr4w/target/libwinpthread-1.dll
-   git -C C:\TR4W commit -m "Bump bundled HamLib to X.Y.Z (32-bit)"
+   git add -f tr4w/redist/x86_64-win64/libhamlib-4.dll tr4w/target/libhamlib-4.dll
+   git add -f tr4w/redist/x86_64-win64/libgcc_s_seh-1.dll tr4w/target/libgcc_s_seh-1.dll
+   git add -f tr4w/redist/x86_64-win64/libusb-1.0.dll tr4w/target/libusb-1.0.dll
+   git add -f tr4w/redist/x86_64-win64/libwinpthread-1.dll tr4w/target/libwinpthread-1.dll
+   git commit -m "Bump bundled HamLib to X.Y.Z (64-bit)"
    ```
 7. **Open a PR** even though it's an infra change — the upstream version
    bump is worth a review.
@@ -171,12 +163,13 @@ Indy-compatible 1.0.2 binaries are no longer published by OpenSSL itself
 - <https://wiki.openssl.org/index.php/Binaries> — pointers to community
   mirrors
 
-Pick a 32-bit OpenSSL 1.0.2u (or latest 1.0.2-series) build, then follow
+Pick a 64-bit OpenSSL 1.0.2u (or latest 1.0.2-series) build, then follow
 the same steps as HamLib above:
 
-1. Download the 32-bit 1.0.2-series build.
-2. Verify bitness (same PE-header check).
-3. Replace `libeay32.dll` and `ssleay32.dll` in `tr4w/target/`.
+1. Download the 64-bit 1.0.2-series build.
+2. Verify bitness (same PE-header check; `0x8664`).
+3. Replace `libeay32.dll` and `ssleay32.dll` in `tr4w/redist/x86_64-win64/`
+   and `tr4w/target/`.
 4. Test — log a QSO into a HamScore-enabled contest and confirm HTTPS POST
    succeeds (check `tr4w.log` for `[HamScore] POST ... -> 200`).
 5. `git add -f` both files, commit, PR.
@@ -187,22 +180,11 @@ the same steps as HamLib above:
 
 ---
 
-## Procedure: updating inpout32
+## inpout32 (gone)
 
-`inpout32.dll` ships unchanged from
-<https://www.highrez.co.uk/downloads/inpout32/>. It's an old, stable
-component — releases are infrequent. The 32-bit variant is the only one
-that works with TR4W.
-
-Same procedure as the others: download, verify bitness, replace,
-test (only matters if you can actually exercise LPT CW keying on a host
-with a parallel port — increasingly rare), `git add -f`, commit, PR.
-
-> 📋 **Long-term**: this DLL is on a deprecation track. It's the single
-> true-positive VirusTotal flag on TR4W installers (DrWeb labels it
-> `Tool.VulnDriver.32` — correctly, since inpout32 is a known userland →
-> kernel I/O port primitive). LPT CW itself is candidate for removal during
-> the Delphi 12/13 port. Don't invest heavily in refreshing this one.
+`inpout32.dll` is not a dependency any more: the parallel port was removed
+2026-09-13, and it was a 32-bit-only DLL that could not be loaded by the
+64-bit program in any case.
 
 ---
 

@@ -48,16 +48,13 @@ plain `mkdir` usually succeeds), and locked-down machines refuse it outright.
 
 ## Build environment
 
-**UPDATE 2026-11-12 (issue 299): the default build is x86_64-win64.** `Build-App.ps1`, `Build-Server.ps1`, `Build-Convert.ps1`, `Build-Tests.ps1`, `FullBuild.ps1` and the installer build and ship the 64-bit program (`build-out\app-x86_64-win64\tr4w_fpc.exe`; `FullBuild.ps1` stages `tr4w\target\tr4w.exe`). `-Cpu i386` still builds the 32-bit program (`build-out\dist\i386-win32\`), which is **not shipped**. A 64-bit build needs an FPC and a Lazarus whose RTL and LCL units are for `x86_64-win64` and come from the same FPC (the build discovers and pairs them); a 32-bit build needs the i386 pair described below. The runtime DLLs of each architecture are in `tr4w\redist\<cpu>-<os>\` and `tr4w\target\` holds the 64-bit copy -- see `tr4w\redist\README.md`. The rest of this page was written when 32-bit was the only target; read its toolchain sections as the **-Cpu i386** instructions.
+**Windows TR4W is x86_64-win64 only (2026-11-12, issue 299). 32-bit Windows is not supported and never will be**; there is no `-Cpu`/`-Os` switch and no 32-bit build. `Build-App.ps1`, `Build-Server.ps1`, `Build-Convert.ps1`, `Build-Tests.ps1`, `FullBuild.ps1` and the installer build and ship the 64-bit program (`build-out\app-x86_64-win64\tr4w_fpc.exe`; `FullBuild.ps1` stages `tr4w\target\tr4w.exe`). The build needs an FPC and a Lazarus whose RTL and LCL units are for `x86_64-win64` and come from the same FPC (it discovers and pairs them, and refuses a pair whose RTL checksums disagree). The runtime DLLs are in `tr4w\redist\x86_64-win64\` and `tr4w\target\` holds a copy -- see `tr4w\redist\README.md`.
 
-TR4W was a 32-bit (`i386-win32`) application. For the 32-bit build, use the 32-bit Lazarus + FPC toolchain, because a default 64-bit Pascal installation usually fails late and produces misleading errors.
+**The toolchain recipe below was written when 32-bit was the only target and has not been redone for 64-bit.** The tool that decides is `Find-Toolchain.cmd` (next section): install a Lazarus + FPC 3.2.2 for `x86_64-win64`, confirm the installer's exact file name on <https://www.lazarus-ide.org/>, and run it. Mentions of a 32-bit Lazarus elsewhere on this page are history.
 
-### One installer, and that is genuinely all
+### One installer
 
-Install **`lazarus-4.8-fpc-3.2.2-win32.exe`** — the **32-bit** Lazarus — from <https://www.lazarus-ide.org/> (or SourceForge, under *Lazarus Windows 32 bits*).
-The site usually defaults to the 64-bit Windows build, so be sure to select the 32-bit installer.
-
-![The Lazarus download page, with the 32-bit Windows build selected](images/lazarus-32bit-download.png)
+Install a **64-bit** Lazarus with FPC 3.2.2 from <https://www.lazarus-ide.org/> (or SourceForge). It carries the `x86_64-win64` FPC, RTL and LCL units together; `Find-Toolchain.cmd` below says whether it is usable.
 
 ## Verify before you build
 
@@ -68,7 +65,7 @@ Run it from a **cmd prompt** — see [If PowerShell refuses to run the scripts](
 tr4w\build\Find-Toolchain.cmd
 ```
 
-It should name an `fpc.exe` under `bin\i386-win32` and an LCL unit directory ending `lcl\units\i386-win32`.
+It should name an `fpc.exe` under `bin\x86_64-win64` and an LCL unit directory ending `lcl\units\x86_64-win64`.
 When it cannot find a usable toolchain it prints **every path it tried**, which is the first thing to read — and the first thing to paste if you ask for help.
 
 Then, from the repo root, the quickest way to get a first successful build on a fresh machine is the wrapper:
@@ -182,20 +179,9 @@ The version comes from `tr4w\src\Version.pas`; the script *fails* rather than de
 
 ## Advanced setups
 
-### Keeping a 64-bit Lazarus install
-
-If you already run a 64-bit Lazarus and would rather not replace it, you can add the missing i386 LCL units yourself — this is how the reference machine got there, and `lazbuild` is unattended so it scripts fine:
-
-```powershell
-C:\Lazarus\lazbuild.exe --cpu=i386 --os=win32 --ws=win32 C:\Lazarus\lcl\lclbase.lpk
-C:\Lazarus\lazbuild.exe --cpu=i386 --os=win32 --ws=win32 C:\Lazarus\lcl\interfaces\lcl.lpk
-```
-
-You still need a **32-bit FPC** beside it (<https://www.freepascal.org/download.html>, the `i386-win32` installer, default `C:\FPC\3.2.2`). Two installers and two commands instead of one installer — which is why the 32-bit Lazarus is the recommendation.
-
 ### On fpcupdeluxe
 
-A fine way to *obtain* FPC and Lazarus, and how the reference machine originally got there. But **its own tree is not the toolchain the build uses**: on that machine `C:\fpcupdeluxe\fpc\units\i386-win32` and `C:\fpcupdeluxe\lazarus\lcl\units\i386-win32` do not exist, because that install is x86_64-only. You do not need it for TR4W.
+A fine way to *obtain* FPC and Lazarus. Whether an fpcupdeluxe tree pairs with the `x86_64-win64` target has not been checked on the reference machine (its `fpc` and `lcl` trees were refused while the app was 32-bit, because they are x86_64-only); `Find-Toolchain.cmd` will say, and it rejects a pair whose RTL and LCL checksums disagree.
 
 Whatever you install with, the test is not "which tool did I use" — it is the checks above.
 

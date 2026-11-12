@@ -61,12 +61,7 @@ param(
    [string] $NsisBin = '',
    # Where the installer is written. Empty = tr4w\build\release\, as ever. Set it
    # to build one somewhere else (a scratch directory) without touching release\.
-   [string] $InstallerOutDir = '',
-   # Empty = the shipping architecture, x86_64-win64 (build\Get-StagingDir.ps1).
-   # -Cpu i386 builds the 32-bit app: buildable, not shipped. A non-shipping
-   # build stages into build-out\dist\<cpu>-<os> and never into tr4w\target.
-   [string] $Cpu  = '',
-   [string] $Os   = ''
+   [string] $InstallerOutDir = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -74,11 +69,10 @@ $ErrorActionPreference = 'Stop'
 $TR4W_DIR    = $PSScriptRoot
 $BUILD_DIR   = Join-Path $TR4W_DIR 'build'
 
-# No -Cpu means the shipping architecture; -Cpu alone implies its Windows target.
+# Windows TR4W is x86_64-win64 only; Get-StagingDir.ps1 names it once.
 . (Join-Path $BUILD_DIR 'Get-StagingDir.ps1')
-$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
-$Cpu = $resolved.Cpu
-$Os  = $resolved.Os
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 $TARGET_DIR  = Join-Path $TR4W_DIR 'target'
 $SERVER_DIR  = Join-Path $TR4W_DIR 'tr4wserver'
@@ -123,7 +117,7 @@ Phase 'Toolchain'
 . (Join-Path $BUILD_DIR 'Find-Toolchain.ps1')
 . (Join-Path $BUILD_DIR 'Get-StagingDir.ps1')
 
-$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os
+$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz
 if (-not $tc) { Fail 'no FPC + Lazarus able to target this platform (see above)' }
 
 $FPCRES = $tc.FpcRes
@@ -270,7 +264,7 @@ else
    {
    Phase 'Unit tests'
 
-   & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
+   & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'unit test build failed' }
 
    # Run from tr4w\test\unit: several suites resolve their data relative to the
@@ -316,7 +310,7 @@ else
    Write-Host '  builds the checked test exe, then runs the whole suite under heaptrc;'
    Write-Host '  after "BUILD OK" the run prints nothing until it exits (minutes, not seconds)'
 
-   & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Checked -Run -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
+   & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Checked -Run -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'checked unit tests failed -- app build aborted' }
 
    # -----------------------------------------------------------------------
@@ -345,27 +339,15 @@ else
 # ---------------------------------------------------------------------------
 Phase 'Application'
 
-# PER-ARCHITECTURE STAGING (issue 299). The shipping x86_64-win64 build stages
-# into tr4w\target. Any other target (i386-win32) stages into
-# build-out\dist\<cpu>-<os> and NEVER into tr4w\target, whose 64-bit exe and DLLs
-# the shipping installer reads -- see build\Get-StagingDir.ps1, which also holds
-# the guard (Lint-ArchStaging pins it).
-$STAGE_DIR = Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
-try
-   {
-   Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $STAGE_DIR -What 'staging directory'
-   }
-catch
-   {
-   Fail $_.Exception.Message
-   }
+# The release build stages into tr4w\target, which full.nsi reads.
+$STAGE_DIR = $TARGET_DIR
 if (-not (Test-Path -LiteralPath $STAGE_DIR)) { New-Item -ItemType Directory -Path $STAGE_DIR -Force | Out-Null }
 Write-Host "  staging  : $STAGE_DIR"
 
 $appExe = Join-Path $STAGE_DIR 'tr4w.exe'
 
 & (Join-Path $BUILD_DIR 'Build-App.ps1') `
-      -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
+      -Fpc $tc.FpcExe -Laz $tc.LazDir `
       -Defines @('LANG_ENG', 'VERSIONINFO_RES') `
       -OutExe $appExe | Out-Host
 
@@ -569,10 +551,10 @@ else
    {
    Phase 'TR4WServer'
 
-   $serverExe = Get-Tr4wServerExePath -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
+   $serverExe = Join-Path $SERVER_DIR 'tr4wserver.exe'
 
    & (Join-Path $BUILD_DIR 'Build-Server.ps1') `
-         -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
+         -Fpc $tc.FpcExe -Laz $tc.LazDir `
          -OutExe $serverExe | Out-Host
 
    if ($LASTEXITCODE -ne 0) { Fail 'tr4wserver build failed' }
@@ -600,7 +582,7 @@ Phase 'tr4wconvert'
 $convertExe = Join-Path $STAGE_DIR 'tr4wconvert.exe'
 
 & (Join-Path $BUILD_DIR 'Build-Convert.ps1') `
-      -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
+      -Fpc $tc.FpcExe -Laz $tc.LazDir `
       -OutExe $convertExe | Out-Host
 
 if ($LASTEXITCODE -ne 0) { Fail 'tr4wconvert build failed' }
@@ -616,18 +598,14 @@ if ($BuildInstaller)
    Phase 'Installer'
 
    # The makensis step lives in build\Build-Installer.ps1 (one implementation,
-   # also runnable against a scratch stage). The shipping x86_64 installer reads
-   # tr4w\target itself and is named tr4w_setup_<v>-x64.exe; the 32-bit one gets
-   # the architecture define and its stage directory, and a -x86 suffix.
+   # also runnable against a scratch stage). The installer reads tr4w\target
+   # itself and is named tr4w_setup_<v>-x64.exe.
    $installerArgs = @{
       Version = $TR4W_VERSION
-      Cpu     = $Cpu
-      Os      = $Os
       NsisBin = $NsisBin
    }
    if ($ExcludeSymbols)           { $installerArgs['ExcludeSymbols'] = $true }
    if ($InstallerOutDir -ne '')   { $installerArgs['OutDir'] = $InstallerOutDir }
-   if (-not (Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os)) { $installerArgs['StageDir'] = $STAGE_DIR }
 
    & (Join-Path $BUILD_DIR 'Build-Installer.ps1') @installerArgs | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'NSIS installer build failed' }

@@ -111,7 +111,7 @@ embedded in the `.res` are deliberately not hashed.
 
 ## What `Build-App.ps1` stages beside the exe
 
-The target architecture's runtime DLLs (from `redist\<cpu>-<os>`, PE-checked before any is
+The runtime DLLs (from `redist\x86_64-win64`, PE-checked before any is
 copied; into `tr4w\target` itself only the DLLs are staged), and, when the exe is not in
 `tr4w\target`, `cacert.pem` and (issue
 245) `i18n\help_*.po` into `help\` -- the Preferences tooltips. `uAppPaths.HelpDir`
@@ -182,51 +182,61 @@ through `PascalSource.psm1`, never a local regex. A new one takes
 literal is not a call. It also runs a built-in fixture before it reports a
 tree number, so it cannot fail open.
 
-## Per-architecture staging and the 64-bit installer (issue 299, 2026-11-12)
+## Windows is 64-bit only: the DLL guard and the 64-bit installer (issue 299, 2026-11-12)
 
-**THE DEFAULT IS x86_64-win64 (flipped 2026-11-12; NY4I: "I want 32 bit to go away")** and it has
-never been run on a real machine. `-Cpu i386` is buildable and not shipped.
+**WINDOWS TR4W IS x86_64-win64 AND NOTHING ELSE** (NY4I, 2026-11-12: "I have no plans to ever
+support 32 bit Windows OS"). The 32-bit build was kept behind `-Cpu i386` as a safety net until that
+ruling and was then deleted as one change: no `-Cpu`/`-Os` parameters on the Windows build scripts,
+no second stage directory, no `tr4w\redist\i386-win32`, no `/DTR4WARCH`, no 32-bit proof step in
+`release.yml`. The 64-bit app has still never been run for a contest on a real machine.
 
-- **`build\Get-StagingDir.ps1`** names the shipping architecture ONCE (`$script:Tr4wShippingCpu`/`Os`)
-  and owns where an architecture stages: the shipping one -> `tr4w\target` (+
-  `tr4w\tr4wserver\tr4wserver.exe`); anything else -> `build-out\dist\<cpu>-<os>\`. The scripts take
-  empty `-Cpu`/`-Os` and `Resolve-Tr4wTarget` fills them. `Assert-Tr4wShippingPathOnly` (called by
-  Build-App/Server/Convert/Installer and FullBuild) throws when a NON-shipping build targets
-  `tr4w\target` or `tr4w\tr4wserver` -- the two bitnesses' DLLs have the SAME NAMES. Every
-  architecture's DLLs live in `tr4w\redist\<cpu>-<os>\`; `target\` holds a copy of the shipping set and
-  is never a source. `Lint-ArchStaging` (in `Run-Lints`) pins the guard with a fixture AND PE-checks
-  every DLL in `target\` and both redist directories. Never weaken it to make a 32-bit build "land in
-  target".
-- **`Build-Tests.ps1` stages its own DLLs** from `redist\<cpu>-<os>`, deletes the other bitness's
-  `libgcc_s_*`, then PE-scans every `*.dll` in `test\unit` and FAILS on a mismatch or a missing source.
+- **`build\Get-StagingDir.ps1`** names the target ONCE (`$script:Tr4wCpu`/`Tr4wOs`/`Tr4wPeMachine`)
+  and holds `Get-Tr4wWrongArchDlls` -- the ONE definition of "every `*.dll` in this directory is a PE
+  image of machine 0x8664" -- plus `Get-Tr4wPeMachine`, `Get-Tr4wRedistDir` and `Test-Tr4wUnder`. The
+  file name is historical (it once chose a stage directory); the release stage is simply `tr4w\target`
+  (+ `tr4w\tr4wserver\tr4wserver.exe`), a plain `build\Build-App.ps1` writes
+  `build-out\app-x86_64-win64\`. The DLLs live in `tr4w\redist\x86_64-win64\`; `target\` holds a copy
+  and is never a source. Windows reports a wrong-bitness DLL as "module not found", so the guard is
+  kept even with one architecture: `Build-App.ps1` and `Build-Tests.ps1` call it before staging, and
+  `Lint-ArchStaging` (in `Run-Lints`) pins it with a fixture (synthetic good/32-bit/bad-signature/
+  too-short PE files, floor 4), checks both scripts still call it (floor 2) and PE-checks every DLL
+  under `target\` and EVERY directory under `redist\` (floor 12), so a 32-bit set added back is read,
+  not skipped. Never weaken it.
+- **`Build-Tests.ps1` stages its own DLLs** from `redist\x86_64-win64`, then PE-scans every `*.dll`
+  in `test\unit` and FAILS on a wrong-bitness one (a leftover from an old 32-bit build is named; delete
+  it) or a missing source.
 - **`Lint-BareVal`** (Run-Lints) holds bare `System.Val` at zero outside `utils_text` (one recorded
   exception row, uSettingsModel, until that file is free): Val is not range-checked on Win64.
-- **The corpus/roundtrip/matrix runners read ONE definition**, `tr4w/test/app-exe.sh`
-  (`TR4W_APP_ARCH=i386-win32` for the 32-bit exe); the GUI suite's is `stage_main_build.DEFAULT_EXE`.
-- **release.yml**: the Windows job runs `FullBuild.ps1 -BuildInstaller` (x64, artifact
-  `tr4w_setup_<v>-x64.exe`) and then `Build-App.ps1 -Cpu i386` as a build-only proof. Its toolchain
-  check needs BOTH pairs on win-ci; **no `workflow_dispatch` has been run since the flip** -- do one.
+- **The corpus/roundtrip/matrix runners read ONE definition**, `tr4w/test/app-exe.sh`; the GUI
+  suite's is `stage_main_build.DEFAULT_EXE` (its guest Python is `stage_main_build.GUEST_PYTHON`,
+  64-bit; `evidence.require_matching_bitness` refuses a mismatch).
+- **release.yml**: the Windows job runs `FullBuild.ps1 -BuildInstaller` (artifact
+  `tr4w_setup_<v>-x64.exe`). Its toolchain check needs the x86_64-win64 FPC + Lazarus LCL pair
+  only; **no `workflow_dispatch` has been run since the flip** -- do one.
 - **`build\Build-Installer.ps1`** is the one makensis caller (FullBuild uses it; `-StageDir`/`-OutDir`
   build an installer from a scratch stage without touching `release\`). It overrides the output with
-  makensis `/XOutFile` AFTER the script name. The SHIPPING (x86_64) installer passes no arch define and reads `target`; the 32-bit one passes `/DTR4WARCH=i386 /DTR4WSTAGE=<dir>` (`-x86` suffix). Check that a `full.nsi` edit leaves the shipping installer sane:
-  (the old "byte-identical i386 rebuild" check ended with the flip -- nothing built from the new script has been installed).
-- **`full.nsi /DTR4WARCH=x86_64 /DTR4WSTAGE=<dir>`** -> `tr4w_setup_<v>-x64.exe`: `$PROGRAMFILES64`,
-  `SetRegView 64`, aborts on 32-bit Windows, `libgcc_s_seh-1.dll`, arch-neutral data still from
-  `..\target`. It does NOT use `InstallDirRegKey` (HKCU\Software\TR4W is shared with the 32-bit
-  installer and would send the 64-bit program to Program Files (x86)); `.onInit` reads it itself:
+  makensis `/XOutFile` AFTER the script name. With no `-StageDir` full.nsi reads `target`; a stage is
+  passed as `/DTR4WSTAGE=<dir>`. There is no other installer. Nothing built from the current script
+  has been installed.
+- **`full.nsi`** -> `tr4w_setup_<v>-x64.exe`: `$PROGRAMFILES64`, `SetRegView 64`, `libgcc_s_seh-1.dll`,
+  arch-neutral data still from `..\target`, and **`.onInit` refuses a 32-bit Windows** (`${RunningX64}`)
+  with a message sending the user to TR4W 4.x at tr4w.net -- the installer is a 32-bit NSIS program,
+  so it starts there; this cannot be tested on a 64-bit PC. It does NOT use `InstallDirRegKey`
+  (HKCU\Software\TR4W is shared with the old 32-bit 5.0.x installer and would send the 64-bit program
+  to Program Files (x86)); `.onInit` reads it itself:
   under Program Files (x86) or an old `...\TR4W\tr4w.exe` -> migrate; any other folder -> upgrade in
   place. The hidden `SecMigrate` COPIES settings, loose logs (`*.db` + `-wal` + `-shm`) and every
   sub-folder (contests keep logs in per-contest folders) except `help`/`server`, skips the copy if the
   new `settings\tr4w.json` exists, and deletes ONLY old program files (exe, dbg, DLLs, tr4wconvert,
   server exe, shortcuts), and only if the settings folder arrived.
 - **`tr4w.dbg` is installed under that name**: the linker's debuglink and the crash reporter use it.
-- **`rigctld.exe` is not in the installer** (either bitness).
+- **`rigctld.exe` is not in the installer.**
 - Hazards: `/D` defines through Git-Bash need `MSYS2_ARG_CONV_EXCL="*"`; a trailing `\` before a
   closing quote breaks PowerShell argument passing; never run an installer you built here.
 
 ## Platforms
 
-Windows x86_64 (since 2026-11-12; i386 builds but is not shipped), Linux x86_64 (app + server + tarball), macOS aarch64 (app + server +
+Windows x86_64 only (32-bit Windows is not supported, ever), Linux x86_64 (app + server + tarball), macOS aarch64 (app + server +
 `.app` bundle). x86_64-win64 compiles, links, passes the unit tests, the corpus and the matrix, and starts —
 and **has not been run for a contest by anyone.** Compiling is not running.
 

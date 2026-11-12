@@ -65,7 +65,7 @@ build, and promoting to an installer release.
 
 - You have **write access** to ~~`TR4W/TR4W`~~ **`TR4W/TR4W-D12`** on GitHub.
 - You're on Windows with the toolchain installed (~~Delphi 7, Indy, NSIS, UPX~~ **FPC + Lazarus
-  with i386 LCL units, NSIS**; Indy is vendored — see
+  with x86_64-win64 LCL units, NSIS**; Indy is vendored — see
   [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md)).
 - You're working from a clone of the repo (any location — the build derives its own paths).
 - You have `gh` (GitHub CLI) authenticated, or you'll use the GitHub web UI for PR
@@ -79,10 +79,10 @@ build, and promoting to an installer release.
 > authoritative version of this section is [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md); the
 > summary below is enough to get a release out.
 
-- [ ] **FPC able to target i386-win32** — `fpc.exe` plus a `ppc386`/`ppcross386` backend and an
-      i386-win32 RTL. `fpc.exe` is only a driver; an x86_64-only install cannot build TR4W.
-- [ ] **Lazarus carrying LCL units for i386-win32** (`<lazarus>\lcl\units\i386-win32`).
-      **An x86_64-only install — the fpcupdeluxe default — will not do.**
+- [ ] **FPC able to target x86_64-win64** — `fpc.exe` plus an x86_64-win64 RTL. (Windows TR4W is
+      64-bit only since 2026-11-12; the 32-bit target was retired.)
+- [ ] **Lazarus carrying LCL units for x86_64-win64** (`<lazarus>\lcl\units\x86_64-win64`), paired
+      with that FPC's RTL (`Find-Toolchain.cmd` checks the pairing).
 - [ ] **NSIS** — only for `-BuildInstaller`.
 - [ ] **Indy 10.6.3.3** — **vendored** in `tr4w\include`. Nothing to install, and no `INDY_ROOT`.
 - [ ] **PowerShell** and **Git** — built in / already present.

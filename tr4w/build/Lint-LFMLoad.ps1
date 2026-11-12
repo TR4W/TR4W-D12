@@ -32,8 +32,6 @@ param(
    [string] $SourceDir = (Join-Path $PSScriptRoot '..\src'),
    [string] $Fpc       = '',
    [string] $Laz       = '',
-   [string] $Cpu       = 'x86_64',
-   [string] $Os        = 'win64',
    [switch] $Rebuild,
    # Runs the checker against built-in fixtures instead of the tree: one clean
    # form, and one carrying the exact shape that shipped broken.
@@ -42,14 +40,17 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')       # the Windows target, named once
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 if ((-not $Fpc) -or (-not $Laz))
    {
    . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
-   $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+   $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Quiet
    if ($null -eq $tc)
       {
-      Write-Host 'Lint-LFMLoad: no FPC + Lazarus able to target $Cpu-$Os.' -ForegroundColor Red
+      Write-Host "Lint-LFMLoad: no FPC + Lazarus able to target $Cpu-$Os." -ForegroundColor Red
       Write-Host '  Find-Toolchain printed every path it tried. This lint needs the LCL'
       Write-Host '  itself to answer the question at all -- see the header.'
       exit 2

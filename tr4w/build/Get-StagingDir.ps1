@@ -1,40 +1,27 @@
-# Get-StagingDir.ps1 -- where each architecture's build output is STAGED, the one
-# place that names the SHIPPING architecture, and the guard that keeps any other
-# architecture out of the shipping program directory.
+# Get-StagingDir.ps1 -- the one place that names the Windows target, and the
+# PE-bitness helpers every build script uses to refuse a wrong-architecture DLL.
 #
 # Dot-source it:  . (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
 #
-# THE SHIPPING ARCHITECTURE IS x86_64-win64 (issue 299, flipped 2026-11-12; NY4I:
-# "you can make the 64 bit version the default now" and "I want 32 bit to go
-# away"). It is named ONCE, in the two constants below, and everything else in
-# the build asks these functions rather than writing "x86_64" or "i386".
+# WINDOWS TR4W IS x86_64-win64 AND NOTHING ELSE. NY4I, 2026-11-12: "I have no
+# plans to ever support 32 bit Windows OS". Until that day an i386-win32 build
+# was kept behind -Cpu i386 as a safety net; the per-architecture staging that
+# kept the two bitnesses apart (a second stage directory, a guard refusing a
+# 32-bit build the shipping directory) went with it. What stays is the part that
+# was never about i386: a DLL of the wrong bitness is not reported by Windows as
+# a bitness problem, it is "module not found" naming a file sitting right there,
+# or a bare 0xC000007B from the loader with nothing in tr4w.log. So the machine
+# word is read from each DLL's PE header and compared with $script:Tr4wPeMachine
+# -- never trusted from a name.
 #
-# WHY THERE IS A GUARD AT ALL.
-#
-# tr4w\target is the SHIPPING program directory: tr4w.exe, tr4wconvert.exe and the
-# runtime DLLs live there, and full.nsi reads them from there. The DLLs of the
-# two bitnesses have the SAME FILE NAMES (sqlite3.dll, libhamlib-4.dll, ...), so a
-# build of the other architecture that staged beside its exe in target\ would
-# silently replace the shipping DLLs with ones of the wrong bitness, and Windows
-# reports that as "module not found" naming a file sitting right there. Four build
-# scripts write into or beside it (FullBuild, Build-App, Build-Server,
-# Build-Convert).
-#
-# THE RULE: the shipping architecture stages into tr4w\target (and
-# tr4w\tr4wserver\tr4wserver.exe). Every other target writes ONLY under
-# <repo>\build-out\dist\<cpu>-<os>\  (gitignored, with the rest of build-out).
-# Assert-Tr4wShippingPathOnly throws when a non-shipping build is pointed at the
-# shipping locations, so a direct -OutExe cannot get round it.
-# Lint-ArchStaging.ps1 pins this, with a fixture, and PE-checks every DLL.
-#
-# THE RUNTIME DLLs of EVERY architecture live in tr4w\redist\<cpu>-<os>\ (see
-# redist\README.md). target\ holds a COPY of the shipping architecture's set, so
-# the program runs from the tree; Build-App.ps1 and Build-Tests.ps1 stage from
-# redist\ for any architecture and never from target\.
+# THE RUNTIME DLLs live in tr4w\redist\x86_64-win64\ (see redist\README.md);
+# tr4w\target holds a COPY so the program runs from the tree, and is never a
+# source. Build-App.ps1 and Build-Tests.ps1 stage from redist\.
+# Lint-ArchStaging.ps1 pins all of this, with a fixture.
 
-$script:Tr4wShippingCpu = 'x86_64'
-$script:Tr4wShippingOs  = 'win64'
-$script:Tr4wShippingPeMachine = 0x8664
+$script:Tr4wCpu       = 'x86_64'
+$script:Tr4wOs        = 'win64'
+$script:Tr4wPeMachine = 0x8664
 
 function Get-Tr4wFullPath
    {
@@ -43,41 +30,17 @@ function Get-Tr4wFullPath
    return [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
    }
 
-function Test-Tr4wIsShippingTarget
+# True when $Path is $Dir itself or anything beneath it. Full paths, ordinal
+# case-insensitive (Windows), so '..\target\', 'TARGET' and 'target\.' all match.
+function Test-Tr4wUnder
    {
-   param([string] $Cpu, [string] $Os)
+   param([string] $Path, [string] $Dir)
 
-   return ($Cpu -eq $script:Tr4wShippingCpu) -and ($Os -eq $script:Tr4wShippingOs)
-   }
-
-# Fills in whatever a script was not given: no -Cpu means the shipping
-# architecture, and -Cpu alone implies its Windows target (i386 -> win32,
-# x86_64 -> win64). Returns a hashtable { Cpu; Os }.
-function Resolve-Tr4wTarget
-   {
-   param([string] $Cpu, [string] $Os)
-
-   if ($Cpu -eq '') { $Cpu = $script:Tr4wShippingCpu }
-   if ($Os -eq '')
-      {
-      if ($Cpu -eq 'i386') { $Os = 'win32' } else { $Os = 'win64' }
-      }
-   return @{ Cpu = $Cpu; Os = $Os }
+   $p = Get-Tr4wFullPath $Path
+   $d = Get-Tr4wFullPath $Dir
+   if ($p.Equals($d, [StringComparison]::OrdinalIgnoreCase)) { return $true }
+   return $p.StartsWith($d + '\', [StringComparison]::OrdinalIgnoreCase)
 }
-
-# The PE machine word a given target's binaries carry: 0x014C (x86), 0x8664 (x64),
-# 0 for a target this project does not build for Windows.
-function Get-Tr4wExpectedPeMachine
-   {
-   param([string] $Cpu)
-
-   switch ($Cpu)
-      {
-      'i386'   { return 0x014C }
-      'x86_64' { return 0x8664 }
-      default  { return 0 }
-      }
-   }
 
 # The PE machine word of a file, 0 if it is not a PE image. Read from the header,
 # never trusted from a file name: rigctld.exe once sat in target\ as x86_64 while
@@ -118,85 +81,32 @@ function Get-Tr4wPeMachineName
       }
    }
 
-# Where an architecture's runtime DLLs are kept: tr4w\redist\<cpu>-<os>.
-function Get-Tr4wRedistDir
+# THE GUARD, ONE DEFINITION. Every *.dll in $Dir must be a PE image of the
+# Windows target's machine word. Returns one message per offender (empty = all
+# good), so a caller can print the list, fail, or count. A file that is not a PE
+# image at all is an offender too -- fail closed.
+function Get-Tr4wWrongArchDlls
    {
-   param(
-      [Parameter(Mandatory = $true)][string] $Tr4wDir,
-      [Parameter(Mandatory = $true)][string] $Cpu,
-      [Parameter(Mandatory = $true)][string] $Os
-   )
+   param([Parameter(Mandatory = $true)][string] $Dir)
 
-   return (Join-Path $Tr4wDir "redist\$Cpu-$Os")
-}
-
-# The directory a build's exe and runtime files are staged into.
-# The shipping architecture -> tr4w\target; anything else -> build-out\dist\<cpu>-<os>.
-function Get-Tr4wStageDir
-   {
-   param(
-      [Parameter(Mandatory = $true)][string] $Tr4wDir,
-      [Parameter(Mandatory = $true)][string] $Cpu,
-      [Parameter(Mandatory = $true)][string] $Os
-   )
-
-   if (Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os)
+   $bad = @()
+   foreach ($f in @(Get-ChildItem -LiteralPath $Dir -Filter '*.dll' -File))
       {
-      return (Join-Path $Tr4wDir 'target')
-      }
-   return (Join-Path (Split-Path $Tr4wDir -Parent) "build-out\dist\$Cpu-$Os")
-   }
-
-# Where tr4wserver.exe goes. The shipping architecture keeps tr4w\tr4wserver\
-# (full.nsi reads it there); other targets keep it beside the rest of their stage.
-function Get-Tr4wServerExePath
-   {
-   param(
-      [Parameter(Mandatory = $true)][string] $Tr4wDir,
-      [Parameter(Mandatory = $true)][string] $Cpu,
-      [Parameter(Mandatory = $true)][string] $Os
-   )
-
-   if (Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os)
-      {
-      return (Join-Path $Tr4wDir 'tr4wserver\tr4wserver.exe')
-      }
-   return (Join-Path (Get-Tr4wStageDir -Tr4wDir $Tr4wDir -Cpu $Cpu -Os $Os) 'tr4wserver.exe')
-   }
-
-# True when $Path is $Dir itself or anything beneath it. Full paths, ordinal
-# case-insensitive (Windows), so '..\target\', 'TARGET' and 'target\.' all match.
-function Test-Tr4wUnder
-   {
-   param([string] $Path, [string] $Dir)
-
-   $p = Get-Tr4wFullPath $Path
-   $d = Get-Tr4wFullPath $Dir
-   if ($p.Equals($d, [StringComparison]::OrdinalIgnoreCase)) { return $true }
-   return $p.StartsWith($d + '\', [StringComparison]::OrdinalIgnoreCase)
-}
-
-# THE GUARD. Throws when a NON-shipping build would write into tr4w\target or
-# tr4w\tr4wserver. $What names the file in the message ("-OutExe", "staging dir").
-function Assert-Tr4wShippingPathOnly
-   {
-   param(
-      [Parameter(Mandatory = $true)][string] $Tr4wDir,
-      [Parameter(Mandatory = $true)][string] $Cpu,
-      [Parameter(Mandatory = $true)][string] $Os,
-      [Parameter(Mandatory = $true)][string] $Path,
-      [string] $What = 'output'
-   )
-
-   if (Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os) { return }
-
-   foreach ($shippingDir in @((Join-Path $Tr4wDir 'target'), (Join-Path $Tr4wDir 'tr4wserver')))
-      {
-      if (Test-Tr4wUnder -Path $Path -Dir $shippingDir)
+      $m = Get-Tr4wPeMachine -Path $f.FullName
+      if ($m -ne $script:Tr4wPeMachine)
          {
-         throw ("REFUSED: a $Cpu-$Os build would write its $What to '$Path', which is inside " +
-                "'$shippingDir' -- the $script:Tr4wShippingCpu-$script:Tr4wShippingOs program directory that full.nsi ships. " +
-                "Stage it under '$(Get-Tr4wStageDir -Tr4wDir $Tr4wDir -Cpu $Cpu -Os $Os)' instead.")
+         $got  = if ($m -eq 0) { 'not a PE image' } else { Get-Tr4wPeMachineName -Machine $m }
+         $want = Get-Tr4wPeMachineName -Machine $script:Tr4wPeMachine
+         $bad += "$($f.FullName) is $got, expected $want"
          }
       }
-   }
+   return $bad
+}
+
+# Where the runtime DLLs are kept: tr4w\redist\x86_64-win64.
+function Get-Tr4wRedistDir
+   {
+   param([Parameter(Mandatory = $true)][string] $Tr4wDir)
+
+   return (Join-Path $Tr4wDir "redist\$script:Tr4wCpu-$script:Tr4wOs")
+}

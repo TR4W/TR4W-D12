@@ -39,11 +39,11 @@ program textfit_probe;
   by hand on the platform whose answer you want.
 
     Windows
-      fpc -Mdelphi -Twin32 -Pi386 ^
-          -FuC:\Lazarus\lcl\units\i386-win32 ^
-          -FuC:\Lazarus\lcl\units\i386-win32\win32 ^
-          -FuC:\Lazarus\components\lazutils\lib\i386-win32 ^
-          -FuC:\Lazarus\packager\units\i386-win32 textfit_probe.lpr
+      fpc -Mdelphi -Twin64 -Px86_64 ^
+          -FuC:\Lazarus\lcl\units\x86_64-win64 ^
+          -FuC:\Lazarus\lcl\units\x86_64-win64\win32 ^
+          -FuC:\Lazarus\components\lazutils\lib\x86_64-win64 ^
+          -FuC:\Lazarus\packager\units\x86_64-win64 textfit_probe.lpr
 
     macOS (fpcupdeluxe; -XR because mac-ci's fpc.cfg is never read, and
     -k-framework UserNotifications because cocoawsextctrls references it)

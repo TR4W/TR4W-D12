@@ -1,5 +1,25 @@
 # TR4W Win64 — task list, checked off against the tree
 
+## CLOSING NOTE 2026-11-12 -- THE 64-BIT MOVE IS COMPLETE; THE 32-BIT BUILD IS RETIRED (issue 299)
+
+NY4I, 2026-11-12: *"I have no plans to ever support 32 bit Windows OS"*. Windows TR4W is
+x86_64-win64 only, and this task list is finished as a MIGRATION. The i386 safety net (`-Cpu i386`, the
+`build-out\dist\i386-win32` stage, `tr4w\redist\i386-win32`, `/DTR4WARCH=i386`, the release workflow's
+32-bit compile proof, the GUI harness's x86 Python) was deleted in one change on that day; the history
+is in git. The per-architecture staging machinery that kept the bitnesses apart went with it. What was
+KEPT, and why: the PE-machine check of every runtime DLL (`Get-Tr4wWrongArchDlls`, called by
+`Build-App.ps1` and `Build-Tests.ps1`, pinned by `Lint-ArchStaging`) because Windows reports a
+wrong-bitness DLL as "module not found"; the installer's migration of a 32-bit 5.0.x install on a
+64-bit Windows; and the GUI harness's refusal of a Python whose bitness differs from the exe's
+(`evidence.require_matching_bitness`). The installer now refuses a 32-bit Windows outright and points
+those users at TR4W 4.x.
+
+**Still open, and NOT part of the retirement:** the RTL's `StrToInt`/`StrToIntDef`/`TryStrToInt`
+range hole on Win64 (below); the `BENCH_QUEUE.md` items that only a real 64-bit run can judge; a
+`workflow_dispatch` of `release.yml` to exercise the x64-only toolchain check. Everything below this
+note is the record of how the move went, written while the 32-bit build still existed -- read "i386" in
+it as history.
+
 ## STATUS 2026-11-12 (latest) -- THE DEFAULT IS NOW x86_64-win64 (issue 299, NY4I: "make the 64 bit version the default now", "I want 32 bit to go away")
 
 **The "Still naming i386" list in the block further down is DONE** (it is kept as history). What the

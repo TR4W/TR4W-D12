@@ -59,6 +59,6 @@ it from outside. If that download fails the log checks are reported as SKIP.
   never a station's live one, and give the server its own working directory.
 - The records are built for a legacy contest handle (`ceContest` = 1) and carry
   the sender's ordinal in `qiSenderID`. The server stores whatever byte arrives.
-- The size table is the Windows i386 one (`TNetDXSpot` = 106). The Pascal side
+- The size table is the Windows one (`TNetDXSpot` = 106; the same on x86_64, which is all Windows builds now). The Pascal side
   pins every size in `tr4w/test/unit/uTestNetWireSizes.pas`; if that test and this
   table ever disagree, the test is the authority for what the tree sends.

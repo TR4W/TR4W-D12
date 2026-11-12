@@ -165,7 +165,7 @@ try
       {
       $repo   = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
       $target = Join-Path $repo 'tr4w\target'
-      if (-not $Exe) { $Exe = Join-Path $repo 'build-out\app-i386-win32\tr4w_fpc.exe' }
+      if (-not $Exe) { $Exe = Join-Path $repo 'build-out\app-x86_64-win64\tr4w_fpc.exe' }
       $args = @()
       if ($Lang) { $args = @('--lang', $Lang) }
       $cfg = Join-Path $target 'uitest.cfg'

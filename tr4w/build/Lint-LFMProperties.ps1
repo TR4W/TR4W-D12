@@ -32,15 +32,13 @@ param(
    # other script here uses.  These used to default to C:\FPC\3.2.2\... and
    # C:\Lazarus, which is the one hardcoded toolchain that survived the move to
    # Find-Toolchain, and it hid on any machine that happens to have those paths.
-   # It was found by building on a clean box whose only Pascal install is the
-   # 32-bit Lazarus, whose FPC lives at C:\lazarus\fpc\3.2.2: every other lint
+   # It was found by building on a clean box whose only Pascal install is
+   # Lazarus, whose FPC lives at C:\lazarus\fpc\3.2.2: every other lint
    # passed, the app and the tests built, and this one lint failed -- so the
    # whole build failed on a machine that was correctly set up.
    [string] $SourceDir = (Join-Path $PSScriptRoot '..\src'),
    [string] $Fpc       = '',
    [string] $Laz       = '',
-   [string] $Cpu       = 'x86_64',
-   [string] $Os        = 'win64',
    [switch] $Rebuild,
    # Runs the checker against built-in fixtures instead of the tree. Extending
    # this lint means extending these -- see the header of Invoke-SelfTest.
@@ -49,17 +47,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
-
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')       # the Windows target, named once
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 # Resolve before anything uses them.  A caller may still pin either one, and a
 # pin is honoured exactly as Find-Toolchain honours FPC_HOME / LAZARUS_DIR.
 if ((-not $Fpc) -or (-not $Laz))
    {
    . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
-   $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+   $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Quiet
    if ($null -eq $tc)
       {
-      Write-Host 'Lint-LFMProperties: no FPC + Lazarus able to target $Cpu-$Os.' -ForegroundColor Red
+      Write-Host "Lint-LFMProperties: no FPC + Lazarus able to target $Cpu-$Os." -ForegroundColor Red
       Write-Host '  Find-Toolchain printed every path it tried. This lint needs FPC and the'
       Write-Host '  LCL to answer the question at all -- see the header.'
       exit 2
@@ -114,7 +114,6 @@ if ($needBuild)
    if (-not (Test-Path -LiteralPath $lclUnits))
       {
       Write-Host "Lint-LFMProperties: no LCL units for $Cpu-$Os at $lclUnits" -ForegroundColor Red
-      Write-Host "  C:\Lazarus carries i386 LCL units; an fpcupdeluxe x86_64-only install does not."
       exit 2
       }
 
@@ -129,13 +128,13 @@ if ($needBuild)
       Join-Path $Laz "components\lazutils\lib\$Cpu-$Os"
       Join-Path $Laz "packager\units\$Cpu-$Os"
       # TDateTimePicker: Lazarus prebuilds datetimectrls for x86_64 only, so
-      # this is the source dir and FPC compiles it for i386 -- the same line
+      # this is the source dir and FPC compiles it here -- the same line
       # Get-SearchPaths adds for the app.
       Join-Path $Laz "components\datetimectrls"
       # TR4W'S OWN CONTROLS.  A form may legitimately use a class this tree
       # DEFINES -- TElementPanel is the main window's status readout -- and
       # the checker cannot resolve a class it cannot link.  Source, not units:
-      # these are compiled for i386 here, the same way datetimectrls above is.
+      # these are compiled here, the same way datetimectrls above is.
       Join-Path $PSScriptRoot "..\src\ui\lcl"
    )
 

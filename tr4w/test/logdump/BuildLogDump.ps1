@@ -39,11 +39,11 @@ $toolchain = Find-Tr4wToolchain
 $unitPaths    = Get-Tr4wSearchPaths -Tr4wDir $tr4wDir -Toolchain $toolchain -For 'App'
 $includePaths = Get-Tr4wIncludePaths -Tr4wDir $tr4wDir
 
-$outDir = Join-Path (Split-Path $tr4wDir -Parent) 'build-out\logdump-i386-win32'
+$outDir = Join-Path (Split-Path $tr4wDir -Parent) 'build-out\logdump-x86_64-win64'
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 $args = @(
-   '-Twin32', '-Pi386', '-Mdelphi', '-O1',
+   '-Twin64', '-Px86_64', '-Mdelphi', '-O1',
    "-FU$outDir",
    "-FE$here"
 )

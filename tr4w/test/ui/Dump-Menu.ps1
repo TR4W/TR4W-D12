@@ -166,7 +166,7 @@ $target = Join-Path $Repo 'tr4w\target'
 if (-not $Exe)
    {
    # The same binary Build-App.ps1 refreshes, which is what the operator runs.
-   $Exe = Join-Path $Repo 'build-out\app-i386-win32\tr4w_fpc.exe'
+   $Exe = Join-Path $Repo 'build-out\app-x86_64-win64\tr4w_fpc.exe'
    if (-not (Test-Path -LiteralPath $Exe)) { $Exe = Join-Path $target 'tr4w.exe' }
    }
 

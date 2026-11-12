@@ -546,9 +546,9 @@ every edit was lost. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12i.
   drops only the column under test leaves a hybrid file.
 - **PowerShell is refused in an isolated worktree** (the worktree-isolation
   guard cannot prove it runs no git). Run `Build-Tests.ps1`'s FPC command
-  directly instead: `-Mdelphi -Pi386 -Twin32 -Sc -B`, the `Get-SearchPaths.ps1`
+  directly instead: `-Mdelphi -Px86_64 -Twin64 -Sc -B`, the `Get-SearchPaths.ps1`
   Tests list, run from `tr4w/test/unit`. Then copy the runtime DLLs from
-  `tr4w/target`.
+  `tr4w/redist/x86_64-win64`.
 
 ## THE MULTI-OP SERVER'S BOOKKEEPING: `sent_to_server`, `server_dirty` (Phase 1, C5, 2026-10-27)
 

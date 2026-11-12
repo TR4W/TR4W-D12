@@ -48,7 +48,7 @@ cd tr4w
 . .\build\Get-SearchPaths.ps1
 $tc = Find-Tr4wToolchain -Quiet
 $sp = 'test\tools\ctygen'
-$a = @('-Mdelphi','-Pi386','-Twin32','-Sc','-WG',"-FU$sp",'-dLANG_ENG')
+$a = @('-Mdelphi','-Px86_64','-Twin64','-Sc','-WG',"-FU$sp",'-dLANG_ENG')
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir (Get-Location) -Toolchain $tc -For Tests)) { $a += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir (Get-Location)))                          { $a += "-Fi$p" }
 & $tc.FpcExe @a "$sp\ctygen.lpr"

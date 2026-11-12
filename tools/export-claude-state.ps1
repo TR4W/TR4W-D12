@@ -185,10 +185,9 @@ Caches, image-cache, paste-cache, daemon state: machine state, not project state
 
 ## What still has to be installed separately
 
-The bundle carries no toolchain. tr4w\docs\BUILD.md has that recipe, and it is
-ONE installer: lazarus-4.8-fpc-3.2.2-win32.exe (the 32-BIT build -- it carries
-the i386 FPC, RTL and LCL together; a 64-bit Lazarus looks right and has none of
-them).
+The bundle carries no toolchain. tr4w\docs\BUILD.md has that recipe: a Lazarus
+with FPC 3.2.2 whose RTL and LCL units are for x86_64-win64 (Windows TR4W is
+64-bit only; Find-Toolchain.cmd says whether an install is usable).
 
 Beyond it, this machine also had: Python 3 (the generators and two lints),
 NSIS (only for -BuildInstaller), sqlite3 and objdump (diagnostics), and

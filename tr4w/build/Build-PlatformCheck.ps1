@@ -18,20 +18,21 @@
 param(
    [switch] $Run,
    [string] $Fpc = '',
-   [string] $Laz = '',
-   [string] $Cpu = 'x86_64',
-   [string] $Os  = 'win64'
+   [string] $Laz = ''
 )
 
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
+. (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')   # the Windows target, named once
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $REPO     = Split-Path $TR4W_DIR -Parent
 $probeDir = Join-Path $TR4W_DIR 'test\platform'
 
-$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Quiet
 if (-not $tc) { exit 2 }
 
 $out = Join-Path $REPO "build-out\platformcheck-$Cpu-$Os"

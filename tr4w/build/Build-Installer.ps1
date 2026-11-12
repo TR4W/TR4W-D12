@@ -4,23 +4,18 @@
 # own against a STAGE directory that already holds the binaries -- which is how an
 # installer can be built to a scratch directory without touching tr4w\target.
 #
-#   .\Build-Installer.ps1 -Version 5.0.37                       # 64-bit (shipping), as FullBuild does
-#   .\Build-Installer.ps1 -Version 5.0.37 -StageDir <dir> -OutDir <scratch>   # 64-bit from a scratch stage
-#   .\Build-Installer.ps1 -Version 5.0.37 -Cpu i386 -Os win32   # 32-bit: built, NOT shipped
+#   .\Build-Installer.ps1 -Version 5.0.37                       # as FullBuild does
+#   .\Build-Installer.ps1 -Version 5.0.37 -StageDir <dir> -OutDir <scratch>   # from a scratch stage
 #
-# THE SHIPPING (x86_64) INSTALLER passes no architecture define, so full.nsi reads
-# tr4w\target and tr4w\tr4wserver and writes build\release\tr4w_setup_<version>-x64.exe.
-# Any other target adds /DTR4WARCH and /DTR4WSTAGE (its own stage, never target\).
+# THE INSTALLER IS 64-BIT ONLY (there is no 32-bit Windows build). With no
+# -StageDir, full.nsi reads tr4w\target and tr4w\tr4wserver itself and writes
+# build\release\tr4w_setup_<version>-x64.exe.
 #
 # Reads only. Never runs the installer it builds.
 
 param(
    [Parameter(Mandatory = $true)][string] $Version,
-   # Empty = the shipping architecture (Get-StagingDir.ps1).
-   [string] $Cpu = '',
-   [string] $Os  = '',
-   # Where this architecture's exe, DLLs and tr4wserver.exe were staged. Empty =
-   # Get-Tr4wStageDir's answer. For the shipping target, empty means full.nsi
+   # Where the exe, DLLs and tr4wserver.exe were staged. Empty means full.nsi
    # reads target\ itself; a value builds from that scratch stage instead.
    [string] $StageDir = '',
    # Empty = the script's own OutFile (tr4w\build\release\). Set it to build
@@ -34,10 +29,6 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
-
-$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
-$Cpu = $resolved.Cpu
-$Os  = $resolved.Os
 
 $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $nsi      = Join-Path $PSScriptRoot 'full.nsi'
@@ -84,21 +75,11 @@ else
    Write-Host "  symbols  : bundled (tr4w.dbg) -- testing build, pass -ExcludeSymbols for a public release"
    }
 
-$isShipping = Test-Tr4wIsShippingTarget -Cpu $Cpu -Os $Os
 $suffix = '-x64'
 
-if ((-not $isShipping) -and ($Cpu -ne 'i386'))
+if ($StageDir -ne '')
    {
-   Write-Host "no installer is defined for $Cpu-$Os (only x86_64-win64, shipping, and i386-win32)" -ForegroundColor Red
-   exit 1
-   }
-
-if ((-not $isShipping) -or ($StageDir -ne ''))
-   {
-   # A stage is passed to full.nsi: always for the 32-bit installer (it has no
-   # other source), and for a scratch 64-bit one. The shipping installer with no
-   # -StageDir passes nothing and full.nsi reads tr4w\target itself.
-   if ($StageDir -eq '') { $StageDir = Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os }
+   # A scratch stage is passed to full.nsi; with none, full.nsi reads tr4w\target.
    $StageDir = Get-Tr4wFullPath $StageDir
    if (-not (Test-Path -LiteralPath $StageDir))
       {
@@ -106,27 +87,12 @@ if ((-not $isShipping) -or ($StageDir -ne ''))
       exit 1
       }
 
-   # THE 32-BIT INSTALLER MUST NOT BE ASSEMBLED FROM THE 64-BIT FILES. A stage
-   # that is really tr4w\target would bundle the x64 exe into a 32-bit installer.
-   try
-      {
-      Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $StageDir -What 'installer payload'
-      }
-   catch
-      {
-      Write-Host $_.Exception.Message -ForegroundColor Red
-      exit 1
-      }
-
-   $nsisArgs += "/DTR4WARCH=$Cpu"
    $nsisArgs += "/DTR4WSTAGE=$StageDir"
    Write-Host "  stage    : $StageDir"
    }
-if ($Cpu -eq 'i386') { $suffix = '-x86' }
 
-# /XOutFile AFTER the script name overrides the script's own OutFile, so the
-# script keeps one name for each architecture and a scratch build can go
-# anywhere. The file name matches full.nsi's (-x64 for the 64-bit installer).
+# /XOutFile AFTER the script name overrides the script's own OutFile, so a
+# scratch build can go anywhere. The file name matches full.nsi's (-x64).
 $nsisTail = @()
 if ($OutDir -ne '')
    {

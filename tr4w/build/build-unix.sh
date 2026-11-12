@@ -77,7 +77,7 @@
 # Nothing of the sort happens natively.  Lazarus 3.0 here ships COMPILED LCL
 # units for x86_64-linux, so the LCL is consumed as .ppu and never recompiled --
 # exactly as on Windows, where the app build has always used -Mdelphi against
-# prebuilt i386-win32 LCL units.  Mode is a property of the unit being compiled,
+# prebuilt Windows LCL units.  Mode is a property of the unit being compiled,
 # not of the ones it uses.
 #
 # And -Mdelphi is not a preference: tr4w.lpr's uses clause pulls in the vendored
@@ -307,8 +307,8 @@ find_toolchain() {
    fi
 
    # THE COMPILER MUST BE ABLE TO TARGET THIS ARCH, which "fpc exists" does not
-   # establish -- the Windows script checks for a ppc386 backend and an
-   # i386-win32 RTL for exactly this reason.  Natively the equivalent question
+   # establish -- the Windows script checks for the x86_64-win64
+   # RTL for exactly this reason.  Natively the equivalent question
    # is whether the RTL for our own target is present, and the cheapest honest
    # test is to ask the compiler to find `system` rather than to guess where the
    # distro put it.  /etc/fpc.cfg carries the RTL paths on a packaged install
@@ -2159,7 +2159,7 @@ report_gates_not_run() {
    if command -v pwsh > /dev/null 2>&1; then
       say '  pwsh IS installed here, so build/Run-Lints.ps1 could be attempted --'
       say '  but several lints read Windows-only artifacts (PE headers, .res'
-      say '  files, i386 unit output), so a run would mix real findings with'
+      say '  files, unit output), so a run would mix real findings with'
       say '  noise.  Deciding which of the ten are platform-neutral is its own'
       say '  piece of work and is not guessed at here.'
    else

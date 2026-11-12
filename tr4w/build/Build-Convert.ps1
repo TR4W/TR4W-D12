@@ -20,8 +20,6 @@ param(
    [string] $OutExe = '',
    [string] $Fpc = '',
    [string] $Laz = '',
-   [string] $Cpu = '',
-   [string] $Os  = '',
    [switch] $Run
 )
 
@@ -31,31 +29,19 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
 . (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
 
-$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
-$Cpu = $resolved.Cpu
-$Os  = $resolved.Os
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 $TR4W_DIR    = Split-Path $PSScriptRoot -Parent
 $REPO        = Split-Path $TR4W_DIR -Parent
 $CONVERT_DIR = Join-Path $TR4W_DIR 'tools\tr4wconvert'
 
-$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Quiet
 if (-not $tc) { exit 2 }
 
 $out = Join-Path $REPO "build-out\convert-$Cpu-$Os"
-# The default is per architecture (Get-StagingDir.ps1): the shipping x86_64 build
-# keeps tr4w\target; the 32-bit build goes under build-out\dist and may NEVER be
-# written into target.
-$exe = if ($OutExe -ne '') { $OutExe } else { Join-Path (Get-Tr4wStageDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os) 'tr4wconvert.exe' }
-try
-   {
-   Assert-Tr4wShippingPathOnly -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os -Path $exe -What 'tr4wconvert.exe'
-   }
-catch
-   {
-   Write-Host "tr4wconvert build FAILED: $($_.Exception.Message)" -ForegroundColor Red
-   exit 1
-   }
+# The default lands in tr4w\target, beside the exe and the DLLs full.nsi ships.
+$exe = if ($OutExe -ne '') { $OutExe } else { Join-Path (Join-Path $TR4W_DIR 'target') 'tr4wconvert.exe' }
 $exeDirectory = Split-Path $exe -Parent
 if (-not (Test-Path $exeDirectory)) { New-Item -ItemType Directory -Path $exeDirectory -Force | Out-Null }
 

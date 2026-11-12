@@ -80,7 +80,7 @@
 # together rather than needing a rule for each.
 #
 # THE LINKED BINARY IS LEFT ALONE, deliberately. It is not an input to the
-# compile, and NY4I runs build-out\app-i386-win32\tr4w_fpc.exe directly -- if a
+# compile, and NY4I runs build-out\app-x86_64-win64\tr4w_fpc.exe directly -- if a
 # build fails he should still have the last one that worked, rather than nothing.
 function Clear-Tr4wUnitOutput
    {
@@ -148,20 +148,13 @@ function Get-Tr4wSearchPaths
    $paths.Add((Join-Path $src 'contestFactory'))
    $paths.Add((Join-Path $src 'rotatorFactory'))
 
-   # Lazarus ships an x86_64 fpc binary but carries LCL units for BOTH
-   # targets, and their PPU format matches FPC 3.2.2, so the i386 compiler
-   # consumes them directly -- no cross-compiler and no Lazarus fpc needed.
-   #
    # THE WIDGET SET IS NOT THE OS, AND THIS LINE USED TO SAY IT WAS.
    # The interface units live in lcl\units\<cpu>-<os>\<WIDGETSET>, and on
-   # Windows that directory is 'win32' for BOTH bitnesses -- there is no
+   # Windows that directory is 'win32' for 64-bit too -- there is no
    # 'win64' widget set, because the LCL's Windows interface serves win32 and
-   # win64 alike. Writing "$cpu-$os\$os" was therefore correct for
-   # i386-win32 BY COINCIDENCE (the OS name and the widget-set name are the
-   # same string there) and produced a directory that does not exist for
-   # x86_64-win64:
+   # win64 alike. Writing "$cpu-$os\$os" produced a directory that does not
+   # exist for x86_64-win64:
    #
-   #     lcl\units\i386-win32\win32     EXISTS
    #     lcl\units\x86_64-win64\win64   DOES NOT
    #     lcl\units\x86_64-win64\win32   EXISTS  <- what is wanted
    #
@@ -176,7 +169,7 @@ function Get-Tr4wSearchPaths
    $paths.Add((Join-Path $laz "packager\units\$cpu-$os"))
    # TDateTimePicker for the Edit QSO date/time field. Lazarus ships
    # datetimectrls but prebuilds it for x86_64 only, so this is the SOURCE
-   # directory -- FPC compiles datetimepicker.pas for i386 into our own
+   # directory -- FPC compiles datetimepicker.pas into our own
    # output dir. Derived from LAZARUS_DIR like everything else above, so a
    # fresh clone still builds.
    $paths.Add((Join-Path $laz 'components\datetimectrls'))

@@ -26,7 +26,7 @@ REM     tr4w\build\Find-Toolchain.cmd -Laz 'C:\Program Files\Lazarus'
 REM The -File wrappers beside this one (Build-App.cmd and friends) take the
 REM ordinary cmd double quotes instead.
 REM
-REM Exit code: 0 if a usable i386-win32 toolchain was found, 2 if not (the
+REM Exit code: 0 if a usable x86_64-win64 toolchain was found, 2 if not (the
 REM function returns $null and has already printed every path it tried).
 REM ---------------------------------------------------------------------------
 setlocal

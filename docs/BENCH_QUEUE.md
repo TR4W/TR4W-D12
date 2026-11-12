@@ -135,15 +135,15 @@ record sizes are unchanged. What only a real run can judge:
 
 You ruled the 64-bit build the default and the 32-bit DLLs out of `tr4w\target`. The tree now
 builds, tests and packages x86_64: `FullBuild.ps1` stages `tr4w\target\tr4w.exe`, and `tr4w\target`
-holds the x64 DLLs (the 32-bit set is in `tr4w\redist\i386-win32`, including the HamLib that was
-`libhamlib-4.dll.w32`). Nothing below has been run by anyone:
+holds the x64 DLLs (the 32-bit set was deleted from the tree later the same day, see
+`docs/64_BIT_TASKLIST.md`). Nothing below has been run by anyone:
 
 - [ ] **Launch from `tr4w\target`**: after a `FullBuild.ps1`, `tr4w\target\tr4w.exe` opens your contest
       log with no error box and `tr4w.log` says `HamLib DLL = ...\target\libhamlib-4.dll, x64 (64-bit)`.
       (A 32-bit `libhamlib-4.dll` is no longer anywhere a 64-bit exe looks.)
-- [ ] **Install the x64 installer OVER a 32-bit install** (a test machine/VM, as in the installer item
-      below): `tr4w_setup_<version>-x64.exe` is now THE installer the release builds; the 32-bit one is no
-      longer built by the release.
+- [ ] **Install the x64 installer OVER a 32-bit 5.0.x install on a 64-bit Windows** (a test machine/VM,
+      as in the installer item below): `tr4w_setup_<version>-x64.exe` is the only installer the release
+      builds; the 32-bit one no longer exists.
 - [ ] **A HamLib radio** loads the 64-bit `libhamlib-4.dll` from the install folder and connects.
 - [ ] **K4 (or any LAN radio) exit time**: exit is prompt and `tr4w.log` shows
       `[WaitForPollingThread] Thread exited cleanly` -- the fix is in, the unit tests pin it, a real
@@ -153,10 +153,10 @@ holds the x64 DLLs (the 32-bit set is in `tr4w\redist\i386-win32`, including the
 
 ## Added 2026-11-12 -- THE 64-BIT (x64) WINDOWS BUILD (issue 299)
 
-NY4I wants 32-bit Windows retired. Step 1 (rebuild, headless export identical to i386, GUI
-starts) is recorded at the top of `docs/64_BIT_TASKLIST.md`. Nobody has used the x64 app for
-anything real. **Run:** `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe` (rebuild first with
-`.\tr4w\build\Build-App.ps1 -Cpu x86_64 -Os win64`; its 64-bit DLLs are staged beside it). Use a
+32-bit Windows is retired (NY4I: no plans to ever support it). Step 1 (rebuild, headless export
+identical to the old 32-bit build, GUI starts) is recorded at the top of `docs/64_BIT_TASKLIST.md`.
+Nobody has used the x64 app for anything real. **Run:** `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe` (rebuild first with
+`.\tr4w\build\Build-App.ps1`; its 64-bit DLLs are staged beside it). Use a
 copy of your station settings, not the live ones, for the first pass.
 
 - [ ] It starts, opens your contest log, and shows the main window with no error box
@@ -171,10 +171,11 @@ copy of your station settings, not the live ones, for the first pass.
 - [ ] WSJT-X: decodes arrive, a logged QSO is accepted
 - [ ] An external logger (WRL or Club Log), which exercises the 64-bit OpenSSL pair
 - [ ] A multi-op station against `tr4wserver` (the 64-bit server now builds and is in the x64
-      installer, but it has never been RUN; the old 32-bit one still works against an x64 client)
+      installer, but it has never been RUN)
 - [ ] SO2R with two radios; the intercom/voice (winmm) functions if you use them
-- [ ] ADIF and Cabrillo export from the GUI; compare with what the 32-bit build gives for the same log
-- [ ] **The 64-bit INSTALLER (nothing has ever run it).** Built by `FullBuild.ps1 -Cpu x86_64
+- [ ] ADIF and Cabrillo export from the GUI; compare with what the released 5.0.37 (the last
+      32-bit build) gives for the same log
+- [ ] **The 64-bit INSTALLER (nothing has ever run it).** Built by `FullBuild.ps1
       -BuildInstaller` into `tr4w\build\release\tr4w_setup_<version>-x64.exe`. On a TEST machine or VM
       that has a 32-bit TR4W in `C:\Program Files (x86)\TR4W` with real settings and contest logs
       (copy a station's folder there; do not use the live PC): close TR4W, run the x64 installer.
@@ -185,8 +186,10 @@ copy of your station settings, not the live ones, for the first pass.
       `HKCU\Software\TR4W` names the new folder; a second run of the installer does NOT overwrite the
       new settings. Also: `setup /S` over the old install (no dialog, same result); the installer on a
       machine with a custom 32-bit folder such as `C:\TR4W` (upgrades in place, no stale
-      `libgcc_s_dw2-1.dll`); a fresh machine (no old install); and a 32-bit Windows refuses it with a
-      message. The installer manifest is `requireAdministrator` (measured), so a UAC prompt must
+      `libgcc_s_dw2-1.dll`); a fresh machine (no old install); and a **32-bit Windows refuses it** (added
+      2026-11-12, `.onInit`: the message says TR4W 5 needs a 64-bit Windows and to stay on TR4W 4.x from
+      tr4w.net -- the installer is a 32-bit NSIS program, so it starts there; nobody has run it on a
+      32-bit OS, and it cannot be tested on this PC). The installer manifest is `requireAdministrator` (measured), so a UAC prompt must
       appear; run it as an account that is also the operator's own, because HKCU, `$DESKTOP` and the
       Start Menu belong to whoever elevates (true of the 32-bit installer too).
 - [ ] Start-up time: the first x64 start took 11.5 s to the main window against 2.7 s for i386, almost all of
@@ -204,8 +207,7 @@ copy of your station settings, not the live ones, for the first pass.
       `HamLib DLL = C:\tr4w-d12\build-out\app-x86_64-win64\libhamlib-4.dll, x64 (64-bit), not loaded...`
       -- the copy beside the exe, whatever the working directory holds. Then select a HamLib radio and
       confirm it connects (the first real load of the 64-bit DLL and its `libgcc_s_seh-1`/`libusb`/
-      `libwinpthread` dependents). Also start the 32-bit build-out exe from `tr4w\target`: it must
-      name `build-out\app-i386-win32\libhamlib-4.dll`.
+      `libwinpthread` dependents).
 
 ## Added 2026-11-11 -- EUROPEAN HF CHAMPIONSHIP AND KVP SAY "YEAR", NOT "ZONE"
 
@@ -1211,7 +1213,7 @@ Tick items in their own sections.
 
 **Build both stations from `main` at or after the catch-up commit
 (`02fa68d9`).** A released 5.0.35 station cannot connect: it sends no
-HELLO and both servers drop it. Windows: `build-out\app-i386-win32\tr4w_fpc.exe`.
+HELLO and both servers drop it. Windows: `build-out\app-x86_64-win64\tr4w_fpc.exe`.
 Mint: the Linux artifact of a `release.yml` dispatch run on that commit.
 Servers: `tr4wserver` built from the same commit (`Build-Server.ps1`; it can
 also run on Mint, which has a display), and TR4WServerPy at `master`
@@ -6219,7 +6221,7 @@ TR4W now decodes `#REF`, `#REF$`, `#SCL`, `#WFH`, `#HWFH`, `#WBS`, `#HWBS`, `#AV
 
 The `\r` escape in eleven TC_ messages was shipping as the letter "r" (LazUtils does not decode it). The build now rewrites it to `\n` in the shipped copy. Only a screen can judge it.
 
-Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-i386-win32\tr4w_fpc.exe uitest.cfg --lang de`. Open New Contest and select each contest. The comment label above the field should sit on two lines (the old build ran the halves together with an "r").
+Start the test build in German: `cd tr4w\target`, then `..\..\build-out\app-x86_64-win64\tr4w_fpc.exe uitest.cfg --lang de`. Open New Contest and select each contest. The comment label above the field should sit on two lines (the old build ran the halves together with an "r").
 
 1. NA Sprint CW: "Gib dein QTH ein, das du senden willst" / "und den Namen:" (old: "...willstrund den Namen:").
 2. ARRL Sweepstakes: two lines, no stray "r" before "(die".
@@ -6235,7 +6237,7 @@ Check on Windows and on Linux (gtk2). Windows breaks these with CRLF where the E
 
 Two changes; neither can be judged without a screen. (1) The tool-window restore no longer hands the keyboard back to the main window after EACH window (`OpenTR4WWindow(i, False)`); it does so once, at the end. Each window still activates as it is shown: the LCL has no way to show a form without activating it. (2) The "raise every window when you switch back to TR4W" handler (b8f4125c) is armed only AFTER the restore, so it can no longer raise everything a second time at start-up.
 
-Set `DEBUG LOG LEVEL = TRACE` (the per-window `[Startup] restored ...` lines are Trace; the new raiser lines are Debug). "The previous build" means v5.0.36 from the release page or a build of `b4b92ef4`: `build-out\app-i386-win32\tr4w_fpc.exe` is already this build. Use the same contest and the same `settings\tr4w.pos` with many tool windows left open (band map, function keys, master, radio 1, telnet, the remaining-mults windows, HamScore, a panadapter).
+Set `DEBUG LOG LEVEL = TRACE` (the per-window `[Startup] restored ...` lines are Trace; the new raiser lines are Debug). "The previous build" means v5.0.36 from the release page or a build of `b4b92ef4`: `build-out\app-x86_64-win64\tr4w_fpc.exe` is already this build. Use the same contest and the same `settings\tr4w.pos` with many tool windows left open (band map, function keys, master, radio 1, telnet, the remaining-mults windows, HamScore, a panadapter).
 
 - [ ] **Compare with the previous build.** Start the previous build (or v5.0.36) three times, then this build three times. Watch for these and note them for each start:
   - title bars switching between active and inactive colour, back and forth;

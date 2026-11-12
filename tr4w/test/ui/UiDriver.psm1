@@ -148,7 +148,7 @@ function Resolve-TR4WExe
 
    .DESCRIPTION
       EVERY SCRIPT HERE DEFAULTED TO target\tr4w.exe, WHICH IS THE SHIPPED
-      BINARY. The FPC build writes build-out\app-i386-win32\tr4w_fpc.exe and
+      BINARY. The FPC build writes build-out\app-x86_64-win64\tr4w_fpc.exe and
       that is what NY4I runs; target\tr4w.exe is whatever was last installed.
 
       So the harness was testing an artifact nobody had built. Measured
@@ -163,7 +163,7 @@ function Resolve-TR4WExe
 
    if ($Exe) { return $Exe }
 
-   $built    = Join-Path $Repo 'build-out\app-i386-win32\tr4w_fpc.exe'
+   $built    = Join-Path $Repo 'build-out\app-x86_64-win64\tr4w_fpc.exe'
    $shipped  = Join-Path $Repo 'tr4w\target\tr4w.exe'
    $haveB    = Test-Path $built
    $haveS    = Test-Path $shipped

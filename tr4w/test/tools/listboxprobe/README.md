@@ -84,11 +84,11 @@ fpc -Mdelphi -Sc -gl -O1 -FUout -olistboxprobe \
 
 ```powershell
 # Windows
-fpc -Mdelphi -Sc -Twin32 -Pi386 -gl -O1 -FUout -olistboxprobe.exe `
-    -FuC:\Lazarus\lcl\units\i386-win32 `
-    -FuC:\Lazarus\lcl\units\i386-win32\win32 `
-    -FuC:\Lazarus\components\lazutils\lib\i386-win32 `
-    -FuC:\Lazarus\packager\units\i386-win32 listboxprobe.lpr
+fpc -Mdelphi -Sc -Twin64 -Px86_64 -gl -O1 -FUout -olistboxprobe.exe `
+    -FuC:\Lazarus\lcl\units\x86_64-win64 `
+    -FuC:\Lazarus\lcl\units\x86_64-win64\win32 `
+    -FuC:\Lazarus\components\lazutils\lib\x86_64-win64 `
+    -FuC:\Lazarus\packager\units\x86_64-win64 listboxprobe.lpr
 ```
 
 It has not been built on macOS, which is the platform it is about. That is not

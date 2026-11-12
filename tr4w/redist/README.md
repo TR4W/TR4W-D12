@@ -1,17 +1,16 @@
-# `tr4w/redist/` — third-party runtime binaries, **per architecture**
+# `tr4w/redist/` — third-party runtime binaries (64-bit only)
 
-Created 2026-09-14, when NY4I supplied the first x86_64 runtime DLL. It exists
-for one reason, and the 64-bit task list states it as a requirement:
-
-> Architecture-specific output directories — `build-out/app-x86_64-win64` must
-> share no `.ppu`, `.o` or **staged DLL** with `app-i386-win32`.
+Created 2026-09-14, when NY4I supplied the first x86_64 runtime DLL. **Windows TR4W is
+x86_64-win64 only** (NY4I, 2026-11-12: "I have no plans to ever support 32 bit Windows OS"), so
+this holds one directory, `x86_64-win64/`. The 32-bit set that used to sit beside it
+(`i386-win32/`, with `libgcc_s_dw2-1.dll`) was deleted that day; it is in git history if anyone
+ever needs the bytes.
 
 ## The rule
 
-**A DLL here is named by the architecture it is FOR, never by the one that is
-current.** `sqlite3.dll` and `libhamlib-4.dll` have identical file names in
-both bitnesses, so two copies in one directory are indistinguishable and the
-only thing that can keep them apart is the directory.
+**A DLL here must be 64-bit, and the machine word is read from its PE header, never trusted
+from a name.** `sqlite3.dll` and `libhamlib-4.dll` have identical file names in both bitnesses,
+so a wrong-bitness copy is indistinguishable by name.
 
 That matters more than it sounds. Windows reports a 32/64-bit mismatch as
 *"the specified module could not be found"* — naming a file that is sitting
@@ -21,38 +20,29 @@ machine word and says which architecture it actually found
 (`DescribePEArchitecture`, `DiagnoseSQLiteLoad`) precisely because the
 operating system's own message points the wrong way.
 
-## What is here (2026-11-12: the default flipped to 64-bit, issue 299)
+## What is here
 
 | directory | holds | PE machine |
 |---|---|---|
-| `x86_64-win64/` | `libeay32`, `ssleay32` (OpenSSL 1.0.2), `sqlite3` (3.53.4) + `sqlite3.def`, `libhamlib-4`, `libusb-1.0`, `libwinpthread-1`, **`libgcc_s_seh-1`** (the x64 unwinder) | `0x8664` |
-| `i386-win32/` | the same set with **`libgcc_s_dw2-1`** in place of the seh unwinder. Moved here from `tr4w/target/` on the flip; byte-identical to what `target/` held (sha256 checked) | `0x014C` |
+| `x86_64-win64/` | `libeay32`, `ssleay32` (OpenSSL 1.0.2), `sqlite3` (3.53.4) + `sqlite3.def`, `libhamlib-4`, `libusb-1.0`, `libwinpthread-1`, `libgcc_s_seh-1` (the x64 unwinder) | `0x8664` |
 
-**`tr4w/target/` holds a COPY of the shipping (x86_64) set**, so the program runs from the
-tree and `full.nsi` finds the DLLs where it always did. It is NOT a source: every build script
-and `Build-Tests.ps1` stage from the architecture's own `redist\` directory, and
-`Lint-ArchStaging` PE-checks every DLL in `target\` and both `redist\` directories against the
-directory's architecture (floor 12). After updating a DLL here, copy the x64 one to `target\`
-too.
+**`tr4w/target/` holds a COPY of this set**, so the program runs from the tree and `full.nsi`
+finds the DLLs where it always did. It is NOT a source: `Build-App.ps1` and `Build-Tests.ps1`
+stage from `redist\x86_64-win64\`. After updating a DLL here, copy it to `target\` too.
 
-**HamLib 32-bit copies.** The 32-bit `libhamlib-4.dll` is `i386-win32/libhamlib-4.dll` now (it
-had been renamed `libhamlib-4.dll.w32` in `target\` by NY4I's approval). A 64-bit exe must not
-be able to pick up a 32-bit HamLib: `uHamLibDirect.ResolveHamLibPath` already passes over a
-copy of the other bitness, and the lint refuses a stray `libhamlib*` under `target\`. Any
-32-bit HamLib found elsewhere is renamed `.w32` or kept under `i386-win32\`.
+`Lint-ArchStaging` PE-checks every DLL in `target\` and in EVERY directory under `redist\`
+(floor 12), so a 32-bit set added here again is read and refused, not skipped, and it refuses
+a stray `libhamlib*` copy under `target\`. A 32-bit HamLib found anywhere else is passed over by
+`uHamLibDirect.ResolveHamLibPath`, which never loads a copy of the other bitness.
 
 ## What consumes this
 
-`Build-App.ps1` copies the target architecture's directory beside the exe it links; it
-requires the six fixed names plus one `libgcc_s_*.dll`, validates every PE machine word
-**before** staging any of them (a rejected DLL is never left beside the binary), and removes a
-`libgcc_s_*.dll` of the other bitness already sitting there. `Build-Tests.ps1` does the same
-for the unit-test exe in `test\unit\` and then scans every `*.dll` there. The shipping
-architecture's exe stages into `tr4w\target`; the 32-bit build (`-Cpu i386`) stages under
-`build-out\dist\i386-win32\`, never in `target`: `build\Get-StagingDir.ps1` holds the rule and
-`Assert-Tr4wShippingPathOnly` refuses a 32-bit build pointed at `tr4w\target` or
-`tr4w\tr4wserver`; `Lint-ArchStaging` pins it. `full.nsi` (no define) builds the 64-bit
-installer from `target\`; `/DTR4WARCH=i386 /DTR4WSTAGE=<dir>` builds the 32-bit one from a stage.
+`Build-App.ps1` copies this directory beside the exe it links; it requires the six fixed names
+plus one `libgcc_s_*.dll`, and validates every PE machine word **before** staging any of them
+(`Get-Tr4wWrongArchDlls` in `build\Get-StagingDir.ps1`; a rejected DLL is never left beside the
+binary). `Build-Tests.ps1` does the same for the unit-test exe in `test\unit\` and then scans
+every `*.dll` there, so a leftover 32-bit DLL from an old build is named and fails the build —
+delete it. `full.nsi` builds the installer from `target\`.
 
 ## How the program finds them at run time (2026-11-12)
 
@@ -73,8 +63,8 @@ Follow `docs/UPDATING_RUNTIME_DLLS.md`. Two extra obligations here:
 1. **State the architecture by measuring the PE header**, not by trusting the
    download's name — `rigctld.exe` sat in `target/` as x86_64 while the docs
    called it 32-bit, and it could never have run.
-2. **Match the version across architectures.** Changing version and bitness in
-   one step means a failure has two candidate causes.
+2. **Match the version.** Changing a library's version and its source in one
+   step means a failure has two candidate causes.
 
 `*.dll` is gitignored tree-wide, so these are added with `git add -f`, the same
-way `tr4w/target/`'s are (`git add -f tr4w/redist/i386-win32` after the move).
+way `tr4w/target/`'s are.

@@ -44,6 +44,10 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+- TR4W for Windows is 64-bit only. There is no 32-bit build of TR4W 5, and there are no plans for
+  one; the installer now says so and stops on a 32-bit Windows. If you are on a 32-bit Windows, stay
+  on TR4W 4.x from tr4w.net.
+
 ---
 
 ## 5.0.x — November 2026

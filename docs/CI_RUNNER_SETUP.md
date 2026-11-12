@@ -4,7 +4,7 @@
 THREE runners, and this document described only the first.**
 
 TR4W's workflows run on **self-hosted runners** — one per platform — because the build needs a
-32-bit FreePascal + Lazarus toolchain that no GitHub-hosted image carries, and because the macOS
+FreePascal + Lazarus toolchain that no GitHub-hosted image carries, and because the macOS
 signing identity lives in a machine's keychain rather than in a secret. This is the whole setup.
 
 | runner | label | builds |
@@ -98,11 +98,15 @@ services for `n4af/TR4W`, `ny4i/TR4QT` and `ny4i/QK4` — so give each its own d
 
 ### 2. Install the toolchain
 
-Per [`BUILD.md`](../tr4w/docs/BUILD.md): the **32-bit** Lazarus, which carries the i386 FPC, the
-i386 RTL and the i386 LCL units in one package. Silent, for an unattended box:
+Per [`BUILD.md`](../tr4w/docs/BUILD.md): a Lazarus + FPC 3.2.2 that carries the **x86_64-win64**
+RTL and LCL units (Windows TR4W is 64-bit only since 2026-11-12; the recipe here used to name the
+32-bit Lazarus, `lazarus-4.8-fpc-3.2.2-win32.exe`). **Not verified:** whether the install already on
+`win-ci` has those units and a matching FPC -- `gh workflow run release.yml` answers it, and the
+"Verify toolchain" step prints every path it tried. Silent install flags for an unattended box
+(confirm the installer file name first):
 
 ```powershell
-lazarus-4.8-fpc-3.2.2-win32.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=C:\Lazarus
+<lazarus installer>.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=C:\Lazarus
 ```
 
 Plus **NSIS** (`makensis.exe`) for the installer step, and **git**.
@@ -141,7 +145,7 @@ upload in one pass, which is what you actually want to know.
 Windows 11 Pro, on Proxmox. Runner user `runner`. Already present: git, NSIS at the default path,
 Python 3.14, and several unpacked runner packages (2.322 → 2.336) under `C:\actions-runner*`.
 
-**Lazarus 4.8 / FPC 3.2.2 (32-bit) is installed at `C:\Lazarus`** and a full build was verified
+**Lazarus 4.8 / FPC 3.2.2 (the 32-bit package, when this was recorded) is installed at `C:\Lazarus`** and a full build was verified
 there: 10 lints, 3978/0, `tr4w_setup_5.0.0.exe` in **160 s** — against ~142 s on the development
 workstation, so the VM is not a meaningful bottleneck.
 

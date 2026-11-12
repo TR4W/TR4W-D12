@@ -92,18 +92,14 @@ param(
    [switch] $Checked,
    [switch] $Lines,
    [string] $Fpc = '',
-   [string] $Laz = '',
-   # Empty = the shipping architecture, x86_64-win64 (Get-StagingDir.ps1).
-   [string] $Cpu = '',
-   [string] $Os  = ''
+   [string] $Laz = ''
 )
 
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Get-StagingDir.ps1')
-$resolved = Resolve-Tr4wTarget -Cpu $Cpu -Os $Os
-$Cpu = $resolved.Cpu
-$Os  = $resolved.Os
+$Cpu = $script:Tr4wCpu
+$Os  = $script:Tr4wOs
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
@@ -113,7 +109,7 @@ $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $REPO     = Split-Path $TR4W_DIR -Parent
 $test     = Join-Path $TR4W_DIR 'test\unit'
 
-$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Quiet
 if (-not $tc) { exit 2 }
 
 # THE TEST BINARY LINKS THE SAME tr4w_languages.res THE APP DOES, and
@@ -238,16 +234,14 @@ Write-Host "BUILD OK -> $exe"
 # than a missing file. Copied for the same reason as the rest: the tests run
 # from test\unit and the DLLs ship in target\.
 #
-# THE DLLs COME FROM redist\<cpu>-<os>, NEVER FROM target\ (2026-11-12). The two
-# bitnesses' sets differ by NAME as well as by content (libgcc_s_dw2-1 for 32-bit,
-# libgcc_s_seh-1 for 64-bit), so copying over whatever was there last leaves the
-# other bitness's unwinder behind. Hence: stage the whole set, delete any
-# libgcc_s_* that is not in it, then read the PE machine of EVERY *.dll in the
-# test directory and FAIL if one is the wrong architecture or the set is
-# incomplete. A test exe that loads a wrong-bitness sqlite3.dll crashes in the
-# first LogDatabase suite, and a 32-bit OpenSSL pair makes TLSRefusal fail --
-# both measured 2026-11-12 -- so this is a gate, not a note.
-$dllSrc = Get-Tr4wRedistDir -Tr4wDir $TR4W_DIR -Cpu $Cpu -Os $Os
+# THE DLLs COME FROM redist\x86_64-win64, NEVER FROM target\ (2026-11-12).
+# Stage the whole set, then read the PE machine of EVERY *.dll in the test
+# directory and FAIL if one is not 64-bit or the set is incomplete. A test exe
+# that loads a wrong-bitness sqlite3.dll crashes in the first LogDatabase suite,
+# and a wrong-bitness OpenSSL pair makes TLSRefusal fail -- both measured
+# 2026-11-12 -- so this is a gate, not a note. A leftover DLL from a build made
+# before the 32-bit target was retired is named by the same gate; delete it.
+$dllSrc = Get-Tr4wRedistDir -Tr4wDir $TR4W_DIR
 $dllDst = Split-Path $exe -Parent
 $srcDlls = @()
 if (Test-Path -LiteralPath $dllSrc) { $srcDlls = @(Get-ChildItem -LiteralPath $dllSrc -Filter '*.dll' -File) }
@@ -264,31 +258,17 @@ if ($missingDlls.Count -gt 0)
    exit 1
    }
 
-foreach ($old in @(Get-ChildItem -LiteralPath $dllDst -Filter 'libgcc_s_*.dll' -File))
-   {
-   if ($haveNames -notcontains $old.Name) { Remove-Item -LiteralPath $old.FullName -Force }
-   }
 foreach ($dll in $srcDlls)
    {
    Copy-Item -LiteralPath $dll.FullName -Destination $dllDst -Force
    }
 
-$wantMachine = Get-Tr4wExpectedPeMachine -Cpu $Cpu
-$wrongDlls = @()
-foreach ($dll in @(Get-ChildItem -LiteralPath $dllDst -Filter '*.dll' -File))
-   {
-   $m = Get-Tr4wPeMachine -Path $dll.FullName
-   if ($m -ne $wantMachine)
-      {
-      $got = if ($m -eq 0) { 'not a PE image' } else { Get-Tr4wPeMachineName -Machine $m }
-      $wrongDlls += "  $($dll.Name) is $got, this test build is $(Get-Tr4wPeMachineName -Machine $wantMachine)"
-      }
-   }
+$wrongDlls = @(Get-Tr4wWrongArchDlls -Dir $dllDst)
 if ($wrongDlls.Count -gt 0)
    {
    Write-Host ''
    Write-Host "BUILD FAILED: wrong-architecture DLL(s) beside the test exe in $dllDst :" -ForegroundColor Red
-   $wrongDlls | ForEach-Object { Write-Host $_ }
+   $wrongDlls | ForEach-Object { Write-Host "  $_" }
    exit 1
    }
 
@@ -362,8 +342,7 @@ if ($Run)
 
          # THE ReleaseSig COLLISION, PROVEN OR NOT EXCUSED. See the header and
          # HeaptrcReport.ps1. Fail closed if the verifier has drifted.
-         $pointerSize = 4
-         if ($Cpu -eq 'x86_64') { $pointerSize = 8 }
+         $pointerSize = 8
          $excused = @{}
          $collisions = 0
          $collisionKinds = @{}

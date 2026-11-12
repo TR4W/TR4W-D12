@@ -27,7 +27,7 @@ python -m unittest discover -s tools/gui_test -p "test_*.py"   # portable tests,
 
 `run_suite.py` stages an identified build (default `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe`,
 the 64-bit shipping app since 2026-11-12; the one definition is `stage_main_build.DEFAULT_EXE`; `--exe`
-overrides, e.g. `build-out\app-i386-win32\tr4w_fpc.exe` for the 32-bit build), snapshots exe,
+overrides), snapshots exe,
 `.dbg` and runtime assets, then runs cases sequentially over `ssh tr4w-gui-test` (`ConnectTimeout=60`).
 Exit 0 all pass, 1 assertion failures, 2 setup/driver error (no reliable verdict). Evidence goes to
 `build-out/gui-regression/<UTC>-<id>/` (`summary.json`, `runner.log`, per case `result.json`,
@@ -36,12 +36,13 @@ assertions are.
 
 ## Hard rules
 
-- **Bitness must match, and the harness now follows the app.** `run_suite.py` reads the exe's PE machine
-  word and picks the guest Python itself (`stage_main_build.guest_python_for`): a 64-bit app is driven by
+- **Bitness must match; Windows TR4W is 64-bit only.** The app is x86_64 and the guest Python is
   `C:\TR4W-Test\.venv\Scripts\python.exe` (3.15.2, 64-bit, pywinauto 0.6.9, Pillow 13, pywin32, comtypes;
-  present and verified 2026-11-12, **NOT yet exercised against the x64 app**) and a 32-bit app by
-  `C:\TR4W-Test\.venv-x86\Scripts\python.exe`. `--python` still overrides; an x64 Python driving the x86 app
-  crashed the radio editor (issue 283). Verify one case (import) before claiming x64 coverage.
+  present and verified 2026-11-12, **NOT yet exercised against the x64 app**), one definition
+  (`stage_main_build.GUEST_PYTHON`) with no per-bitness selection. `evidence.require_matching_bitness`
+  refuses a Python whose bitness differs from the exe's PE machine word before any UI action (an x64
+  Python driving a 32-bit app crashed the radio editor, issue 283); this repo builds no 32-bit exe, so a
+  mismatch can only come from `--exe` or `--python`. Verify one case (import) before claiming x64 coverage.
 - **The GUI-TEST console session (user gui-test, id 1) must be logged in, unlocked, 1280x800 at 96 DPI.**
   Do not operate the console or run a second GUI job while a case runs. SSH only schedules and stages; the
   UI worker runs in the interactive desktop through the limited scheduled task `TR4W-GuiScenario`.

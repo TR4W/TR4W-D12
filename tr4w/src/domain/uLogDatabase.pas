@@ -44,8 +44,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   through LoadLibrary at run time -- so a missing or wrong-architecture DLL is a
   RUN-TIME failure, not a link error.  Windows reports a 32/64-bit mismatch as
   "the specified module could not be found", which sends the reader looking for
-  a file that is sitting right there.  We ship a 32-bit DLL because we build
-  i386; the 64-bit move has to swap it (plan section 9).  So on failure this
+  a file that is sitting right there.  We ship a 64-bit DLL; a 32-bit one
+  found on the path is the mismatch.  So on failure this
   unit reads the PE machine word out of the file it found and says what it is,
   which turns a half-hour into a sentence.
 
