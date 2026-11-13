@@ -1,0 +1,12 @@
+{
+   "scenario": "bench-yearsent-check-euhfc-yes",
+   "run": "x-20261113T215440-02d55b-euhfc-yes",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": false,
+   "captures": [],
+   "failures": [
+      "ADIF MY_CQ_ZONE is not W1AW's zone 5: ['5', '5', '8']"
+   ],
+   "note": "Questions read without answering by position; per-QSO export rows asserted",
+   "pid": 8164
+}

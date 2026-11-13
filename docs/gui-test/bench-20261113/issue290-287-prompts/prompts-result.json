@@ -1,0 +1,100 @@
+{
+   "observed": {
+      "nccc": {
+         "contest": "NCCC Sprint",
+         "texts": [
+            "Cancel",
+            "OK",
+            "Start a new contest",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Show inactive contests",
+            "NCCC Sprint",
+            "Open an existing configuration",
+            "Browse...",
+            "System",
+            "System",
+            "Close"
+         ],
+         "prompt_readable": false
+      },
+      "cwt": {
+         "contest": "CWops Test (CWT)",
+         "texts": [
+            "Cancel",
+            "OK",
+            "Start a new contest",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Show inactive contests",
+            "CWops Test (CWT)",
+            "Open an existing configuration",
+            "Browse...",
+            "System",
+            "System",
+            "Close"
+         ],
+         "prompt_readable": false
+      },
+      "locust": {
+         "contest": "Locust QSO Party (inactive)",
+         "texts": [
+            "Cancel",
+            "OK",
+            "Start a new contest",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Show inactive contests",
+            "Locust QSO Party (inactive)",
+            "Open an existing configuration",
+            "Browse...",
+            "System",
+            "System",
+            "Close"
+         ],
+         "prompt_readable": false
+      },
+      "jockwhite": {
+         "contest": "Jock White Memorial Field Day",
+         "texts": [
+            "Cancel",
+            "OK",
+            "Start a new contest",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Open",
+            "Show inactive contests",
+            "Jock White Memorial Field Day",
+            "Open an existing configuration",
+            "Browse...",
+            "System",
+            "System",
+            "Close"
+         ],
+         "my_zone_rows": [
+            [
+               "MY ZONE",
+               "27",
+               "contest"
+            ]
+         ],
+         "database": "NZ FIELD DAY 2026-11-13 W1AW.db"
+      }
+   },
+   "failures": []
+}

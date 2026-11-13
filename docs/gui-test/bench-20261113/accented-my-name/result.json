@@ -1,0 +1,9 @@
+{
+   "scenario": "bench-pending-accented-name",
+   "run": "x-20261113T220856-59adaa-accented",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "pid": 8384
+}

@@ -23,8 +23,9 @@ def run(root, run_name, phase):
       from bench_locked import run as check_locked
       return check_locked(root, run_name, output, journal)
    database = ""
-   if phase.startswith(("bench-prefs", "bench-switch", "bench-export", "bench-messages", "bench-tools", "bench-import", "bench-search", "bench-k4", "bench-tailcat")):
-      databases = list((root / "runs" / run_name).glob("*.db" if phase.startswith(("bench-export-year", "bench-export-zone")) else "CWOPEN*.db"))
+   any_log = ("bench-export-year", "bench-export-zone", "bench-yearsent-check")
+   if phase.startswith(("bench-prefs", "bench-switch", "bench-export", "bench-messages", "bench-tools", "bench-import", "bench-search", "bench-k4", "bench-tailcat", "bench-yearsent-check", "bench-pending")):
+      databases = list((root / "runs" / run_name).glob("*.db" if phase.startswith(any_log) else "CWOPEN*.db"))
       if len(databases) != 1:
          raise RuntimeError("Preferences batch requires exactly one CW Open fixture")
       database = databases[0].name
@@ -32,11 +33,17 @@ def run(root, run_name, phase):
    state = root / "runs" / run_name / "bench-workflow.json"
    state.write_text(json.dumps({"pid": app.process}), encoding="utf-8")
    try:
-      if phase.startswith(("bench-prefs", "bench-switch", "bench-export", "bench-messages", "bench-tools", "bench-import", "bench-search", "bench-k4", "bench-tailcat")):
+      if phase.startswith(("bench-prefs", "bench-switch", "bench-export", "bench-messages", "bench-tools", "bench-import", "bench-search", "bench-k4", "bench-tailcat", "bench-yearsent-check", "bench-pending")):
          from bench_preferences import check, verify_storage
-         main = app.window(title_re=r"TR4W v.*" if phase.startswith(("bench-export-year", "bench-export-zone")) else r"TR4W v.*CWOPEN.*")
+         main = app.window(title_re=r"TR4W v.*" if phase.startswith(any_log) else r"TR4W v.*CWOPEN.*")
          main.wait("visible enabled", timeout=30)
-         if phase.startswith("bench-tailcat"):
+         if phase.startswith("bench-yearsent-check"):
+            from bench_year_sent import check as check_year_sent
+            result = check_year_sent(app, main, root, run_name, output, journal, phase)
+         elif phase.startswith("bench-pending"):
+            from bench_pending import check as check_pending
+            result = check_pending(app, main, root, run_name, output, journal, phase)
+         elif phase.startswith("bench-tailcat"):
             from bench_tailcat import check as check_tailcat
             result = check_tailcat(app, main, root, run_name, output, journal, phase)
          elif phase.startswith("bench-k4"):
@@ -75,6 +82,12 @@ def run(root, run_name, phase):
          return inspect(app, startup, output, journal)
       if phase in {"bench-county-check", "bench-county-texas"}:
          from bench_county import check
+         return check(app, startup, root, run_name, output, journal, phase)
+      if phase.startswith("bench-yearsent-create-"):
+         from bench_year_sent import create
+         return create(app, startup, root, run_name, output, journal, phase.rsplit("-", 1)[1])
+      if phase.startswith("bench-countyhost-"):
+         from bench_county_host import check
          return check(app, startup, root, run_name, output, journal, phase)
       if phase.startswith("bench-year-") or phase in {"bench-zone-create", "bench-prompts-check"}:
          from bench_years import check

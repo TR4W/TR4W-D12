@@ -1,0 +1,18 @@
+{
+   "scenario": "bench-yearsent-check-euhfc-zone",
+   "run": "x-20261113T214945-c0101b-euhfc-zone",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": false,
+   "captures": [],
+   "failures": [
+      "N7BB captured my_cq_zone 8"
+   ],
+   "my_cq_zone_by_call": {
+      "W7SP": 5,
+      "K6RB": 5,
+      "N7AA": 5,
+      "N7BB": 8
+   },
+   "note": "W1AW's CTY CQ zone is 5; every QSO should capture 5",
+   "pid": 6064
+}

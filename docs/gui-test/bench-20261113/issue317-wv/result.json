@@ -1,0 +1,12 @@
+{
+   "scenario": "bench-countyhost-wv",
+   "run": "x-20261113T221958-36b623-wv",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "points_texts": [
+      "12 Pts"
+   ],
+   "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures"
+}

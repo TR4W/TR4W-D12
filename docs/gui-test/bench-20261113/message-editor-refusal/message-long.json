@@ -1,0 +1,53 @@
+{
+   "command": "CQ CW MEMORY F3",
+   "before": "",
+   "typed_length": 252,
+   "control_characters": [
+      "0x1",
+      "0x1"
+   ],
+   "new_windows": [
+      {
+         "title": "Warning",
+         "class": "#32770"
+      }
+   ],
+   "warning": {
+      "title": "Warning",
+      "class": "#32770",
+      "handle": 2818854,
+      "win32_buttons": [
+         {
+            "text": "&OK",
+            "handle": 1573738,
+            "default_style": true
+         }
+      ],
+      "uia_buttons": [
+         "OK",
+         "Close"
+      ],
+      "uia_texts": [
+         "The message is 258 bytes long and a message holds 255. Shorten it and press OK again."
+      ],
+      "win32_texts": [],
+      "focused": {
+         "name": "OK",
+         "type": "button",
+         "handle": 1573738
+      },
+      "answers": [
+         "OK"
+      ],
+      "default": "&OK"
+   },
+   "editor_still_open": true,
+   "focus_after_warning": {
+      "class": "Edit",
+      "is_message_field": true
+   },
+   "after": "",
+   "log_lines": [
+      "13 Nov 2026 17:13:08.502 4571 [6996] warn TR4WDebugLog  - [EditMessage] CQ CW MEMORY F3: the message is 258 bytes and a message holds 255 -- not saved, the dialog stays open"
+   ]
+}

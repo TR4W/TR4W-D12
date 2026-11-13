@@ -1,0 +1,12 @@
+{
+   "scenario": "bench-countyhost-fl",
+   "run": "x-20261113T221958-36b623-fl",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "points_texts": [
+      "8 Pts"
+   ],
+   "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures"
+}

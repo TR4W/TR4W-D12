@@ -61,8 +61,10 @@ def check(app, main, root, run_name, output, journal, phase, expected_records=No
          observations = []
 
          def itu_field(editor):
-            fields = [control for control in editor.descendants(class_name="Edit") if control.is_visible()]
-            return max(fields, key=lambda control: (control.rectangle().top, control.rectangle().left))
+            # By the group's designed rows: since issue 300 the lowest, leftmost
+            # box is Year sent, not the ITU zone.
+            from qso_entry import my_station_fields
+            return my_station_fields(editor)["itu_zone"]
 
          for action, expected in (("Cancel", "8"), ("Save", "42")):
             editor = open_contact_editor(app, main, journal)
@@ -104,10 +106,63 @@ def check(app, main, root, run_name, output, journal, phase, expected_records=No
       capture(candidates[0], output / "remaining-multipliers.png")
       candidates[0].post_message(0x0010)
       return {"passed": True, "note": "Remaining-multiplier window captured; semantic screenshot review required"}
+   kind = "cabrillo" if phase.endswith("-cabrillo") else "adif"
+   text, outcome = run_export(app, main, root, run_name, output, journal, kind, prefix)
+   if kind == "adif" and text is not None:
+      if len(re.findall(r"<EOR>", text, re.I)) != count:
+         raise AssertionError("Unexpected exported contact count")
+      if not year and not zone and re.search(r"<CQZ:", text, re.I):
+         raise AssertionError("CW Open ADIF must contain three contacts and no CQZ tag")
+      if year and not re.search(r"<STX_STRING:6>599 " + expected_year, text, re.I):
+         raise AssertionError("Year ADIF does not send expected license year " + expected_year)
+      if year:
+         # Issues 298/305: MY_CQ_ZONE is the station call's CQ zone, present,
+         # and never the licence year this contest sends.
+         my_cq = re.search(r"<MY_CQ_ZONE:\d+>(\d+)", text, re.I)
+         received = re.search(r"<SRX_STRING:\d+>([^<]*)", text, re.I)
+         (output / "year-adif-fields.json").write_text(json.dumps({
+            "MY_CQ_ZONE": my_cq.group(1) if my_cq else None,
+            "SRX_STRING": received.group(1).strip() if received else None}, indent=3), encoding="utf-8")
+         if not my_cq or int(my_cq.group(1)) == int(expected_year):
+            raise AssertionError("Year ADIF MY_CQ_ZONE missing or equal to the licence year: "
+               + (my_cq.group(0) if my_cq else "absent"))
+      if zone and not re.search(r"<STX_STRING:\d+>599 " + expected_sent + r"\b", text, re.I):
+         raise AssertionError("Zone-contest ADIF does not send expected ITU zone " + expected_sent)
+      if "edit42" in phase and not re.search(r"<MY_ITU_ZONE:2>42", text, re.I):
+         raise AssertionError("ADIF did not retain the edited ITU zone 42")
+      return {"passed": True, "records": count, "license_year_checked": year,
+         "note": "Actual File > Export > ADIF output verified"}
+   if kind == "cabrillo":
+      rows = [line for line in text.splitlines() if line.startswith("QSO:")]
+      pattern_ok = all(re.search(r"\b599\s+" + expected_sent + r"\b", line) for line in rows) if year or zone else all(
+         re.search(r"\b0*" + str(index) + r"\s+TOM\b", line) for index, line in enumerate(rows, 1))
+      if len(rows) != count or not pattern_ok:
+         raise AssertionError("Cabrillo contacts/exchanges do not match the fixture: " + repr(rows))
+      return {"passed": True, "records": count, "license_year_checked": year,
+         "upload_declined": outcome,
+         "note": "Actual local Cabrillo export verified; no submission performed"}
+   top = outcome
+   if top.handle != main.handle:
+      cancel = [control for control in top.descendants(class_name="Button")
+         if control.is_visible() and control.window_text().replace("&", "") == "Cancel"]
+      if len(cancel) != 1:
+         raise RuntimeError("Unclassified export dialog; inspect captured controls")
+      cancel[0].click_input()
+      top.wait_not("visible", timeout=10)
+   return {"passed": True, "note": "Export route inspected only; no content requirement accepted"}
+
+
+def run_export(app, main, root, run_name, output, journal, kind, prefix):
+   """Drive File > Export > ADIF or Cabrillo in the isolated fixture and keep the file.
+
+   Returns (text, outcome). ADIF: the preserved file's text and None once its
+   viewer is closed, or (None, top window) when no ADIF viewer appeared, for the
+   caller to classify. Cabrillo: the text and whether the optional SuperCheck
+   upload question was seen and answered No. Assertions are the caller's; this
+   only performs the UI route and refuses a file the command did not rewrite."""
    export = main.menu().get_menu_path("File")[0].sub_menu().get_menu_path("Export")[0].sub_menu()
    entries = [item.text() for item in export.items()]
    (output / "export-menu.json").write_text(json.dumps(entries, indent=3), encoding="utf-8")
-   kind = "cabrillo" if phase.endswith("-cabrillo") else "adif"
    fixture_db = list((root / "runs" / run_name).glob("*.db"))
    if len(fixture_db) != 1:
       raise RuntimeError("Export requires exactly one isolated database")
@@ -130,71 +185,30 @@ def check(app, main, root, run_name, output, journal, phase, expected_records=No
    (output / "export-files.json").write_text(json.dumps([
       {"name": path.name, "bytes": path.stat().st_size} for path in (root / "runs" / run_name).iterdir()
       if path.is_file()], indent=3), encoding="utf-8")
-   if top.handle != main.handle and top.window_text().lower().endswith(".adi"):
+   suffix = ".cbr" if kind == "cabrillo" else ".adi"
+   if kind == "adif":
+      if top.handle == main.handle or not top.window_text().lower().endswith(".adi"):
+         return None, top
       path = Path(top.window_text()).resolve()
       if not path.is_relative_to((root / "runs" / run_name).resolve()) or path != generated.resolve():
          raise RuntimeError("Export viewer points outside the isolated fixture")
-      metadata = preserve_generated_file(path, output / (prefix + ".adi"), previous_mtime_ns)
-      (output / "export-write.json").write_text(json.dumps(metadata, indent=3), encoding="utf-8")
-      data = (output / (prefix + ".adi")).read_bytes()
-      text = data.decode("utf-8", errors="replace")
-      if len(re.findall(r"<EOR>", text, re.I)) != count:
-         raise AssertionError("Unexpected exported contact count")
-      if not year and not zone and re.search(r"<CQZ:", text, re.I):
-         raise AssertionError("CW Open ADIF must contain three contacts and no CQZ tag")
-      if year and not re.search(r"<STX_STRING:6>599 " + expected_year, text, re.I):
-         raise AssertionError("Year ADIF does not send expected license year " + expected_year)
-      if year:
-         # Issues 298/305: MY_CQ_ZONE is the station call's CQ zone, present,
-         # and never the licence year this contest sends.
-         my_cq = re.search(r"<MY_CQ_ZONE:\d+>(\d+)", text, re.I)
-         received = re.search(r"<SRX_STRING:\d+>([^<]*)", text, re.I)
-         (output / "year-adif-fields.json").write_text(json.dumps({
-            "MY_CQ_ZONE": my_cq.group(1) if my_cq else None,
-            "SRX_STRING": received.group(1).strip() if received else None}, indent=3), encoding="utf-8")
-         if not my_cq or int(my_cq.group(1)) == int(expected_year):
-            raise AssertionError("Year ADIF MY_CQ_ZONE missing or equal to the licence year: "
-               + (my_cq.group(0) if my_cq else "absent"))
-      if zone and not re.search(r"<STX_STRING:\d+>599 " + expected_sent + r"\b", text, re.I):
-         raise AssertionError("Zone-contest ADIF does not send expected ITU zone " + expected_sent)
-      if "edit42" in phase and not re.search(r"<MY_ITU_ZONE:2>42", text, re.I):
-         raise AssertionError("ADIF did not retain the edited ITU zone 42")
-      top.post_message(0x0010)
-      top.wait_not("visible", timeout=10)
-      return {"passed": True, "records": count, "license_year_checked": year,
-         "note": "Actual File > Export > ADIF output verified"}
-   if kind == "cabrillo":
-      databases = list((root / "runs" / run_name).glob("*.db"))
-      if len(databases) != 1:
-         raise RuntimeError("Cabrillo fixture database not unique")
-      path = databases[0].with_suffix(".log").resolve()
+   else:
+      path = generated.resolve()
       if not path.is_relative_to((root / "runs" / run_name).resolve()):
          raise RuntimeError("Cabrillo viewer points outside the isolated fixture")
-      metadata = preserve_generated_file(path, output / (prefix + ".cbr"), previous_mtime_ns)
-      (output / "export-write.json").write_text(json.dumps(metadata, indent=3), encoding="utf-8")
-      data = (output / (prefix + ".cbr")).read_bytes()
-      text = data.decode("utf-8", errors="replace")
-      rows = [line for line in text.splitlines() if line.startswith("QSO:")]
-      pattern_ok = all(re.search(r"\b599\s+" + expected_sent + r"\b", line) for line in rows) if year or zone else all(
-         re.search(r"\b0*" + str(index) + r"\s+TOM\b", line) for index, line in enumerate(rows, 1))
-      if len(rows) != count or not pattern_ok:
-         raise AssertionError("Cabrillo contacts/exchanges do not match the fixture: " + repr(rows))
-      if top.handle != main.handle:
-         if Path(top.window_text()).resolve() != path:
-            raise RuntimeError("Unclassified window after declining upload: " + top.window_text())
-         top.post_message(0x0010)
-         top.wait_not("visible", timeout=10)
-      declined = answer_question(app, "upload your Cabrillo file to SuperCheck", journal,
-         output / "upload-prompt-declined.png")
-      wait_until(10, 0.1, main.is_enabled)
-      return {"passed": True, "records": count, "license_year_checked": year,
-         "upload_declined": declined,
-         "note": "Actual local Cabrillo export verified; no submission performed"}
-   if top.handle != main.handle:
-      cancel = [control for control in top.descendants(class_name="Button")
-         if control.is_visible() and control.window_text().replace("&", "") == "Cancel"]
-      if len(cancel) != 1:
-         raise RuntimeError("Unclassified export dialog; inspect captured controls")
-      cancel[0].click_input()
+   metadata = preserve_generated_file(path, output / (prefix + suffix), previous_mtime_ns)
+   (output / "export-write.json").write_text(json.dumps(metadata, indent=3), encoding="utf-8")
+   text = (output / (prefix + suffix)).read_bytes().decode("utf-8", errors="replace")
+   if kind == "adif":
+      top.post_message(0x0010)
       top.wait_not("visible", timeout=10)
-   return {"passed": True, "note": "Export route inspected only; no content requirement accepted"}
+      return text, None
+   if top.handle != main.handle:
+      if Path(top.window_text()).resolve() != path:
+         raise RuntimeError("Unclassified window after declining upload: " + top.window_text())
+      top.post_message(0x0010)
+      top.wait_not("visible", timeout=10)
+   declined = answer_question(app, "upload your Cabrillo file to SuperCheck", journal,
+      output / "upload-prompt-declined.png")
+   wait_until(10, 0.1, main.is_enabled)
+   return text, declined

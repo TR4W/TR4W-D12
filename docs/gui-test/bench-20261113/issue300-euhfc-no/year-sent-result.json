@@ -1,0 +1,283 @@
+{
+   "contest": "European HF",
+   "answer": "No",
+   "log_at_start": {
+      "user_version": 8,
+      "meta_tables": {},
+      "config": [
+         [
+            "MY LICENSE YEAR",
+            "64",
+            "contest"
+         ],
+         [
+            "MY ZONE",
+            "8",
+            "station"
+         ]
+      ],
+      "qsos": [
+         {
+            "_rowid": 1,
+            "callsign": "W7SP",
+            "band": "40m",
+            "mode": "CW",
+            "rst_sent": 599,
+            "rst_received": 599,
+            "rcvd_zone": 85,
+            "cty_cq_zone": 8,
+            "cty_itu_zone": null,
+            "mult_zone": 1,
+            "my_cq_zone": 5,
+            "my_itu_zone": 8,
+            "rcvd_year": 85,
+            "year_sent": 64
+         },
+         {
+            "_rowid": 2,
+            "callsign": "K6RB",
+            "band": "40m",
+            "mode": "SSB",
+            "rst_sent": 59,
+            "rst_received": 59,
+            "rcvd_zone": 72,
+            "cty_cq_zone": 8,
+            "cty_itu_zone": null,
+            "mult_zone": 1,
+            "my_cq_zone": 5,
+            "my_itu_zone": 8,
+            "rcvd_year": 72,
+            "year_sent": 64
+         }
+      ]
+   },
+   "preferences_license_year_on_reopen": "",
+   "preferences_cq_zone_on_reopen": "8",
+   "edit_qso_before": {
+      "call": {
+         "text": "W1AW",
+         "enabled": true,
+         "rect": "(L417, T495, R493, B518)"
+      },
+      "grid": {
+         "text": "FN31",
+         "enabled": true,
+         "rect": "(L557, T495, R633, B518)"
+      },
+      "state": {
+         "text": "",
+         "enabled": true,
+         "rect": "(L697, T495, R773, B518)"
+      },
+      "county": {
+         "text": "",
+         "enabled": true,
+         "rect": "(L837, T495, R913, B518)"
+      },
+      "section": {
+         "text": "",
+         "enabled": true,
+         "rect": "(L417, T523, R493, B546)"
+      },
+      "park": {
+         "text": "",
+         "enabled": true,
+         "rect": "(L557, T523, R633, B546)"
+      },
+      "cq_zone": {
+         "text": "5",
+         "enabled": true,
+         "rect": "(L697, T523, R773, B546)"
+      },
+      "itu_zone": {
+         "text": "8",
+         "enabled": true,
+         "rect": "(L837, T523, R913, B546)"
+      },
+      "year_sent": {
+         "text": "64",
+         "enabled": true,
+         "rect": "(L417, T551, R493, B574)"
+      }
+   },
+   "question_1": {
+      "title": "License year",
+      "class": "#32770",
+      "handle": 590930,
+      "win32_buttons": [
+         {
+            "text": "Also this contest",
+            "handle": 722032,
+            "default_style": false
+         },
+         {
+            "text": "Station default only",
+            "handle": 722036,
+            "default_style": true
+         }
+      ],
+      "uia_buttons": [
+         "Also this contest",
+         "Station default only",
+         "Close"
+      ],
+      "uia_texts": [
+         "The station's default license year is now 05.\r\n\r\nEuropean HF Championship sends the license year, and sends 64 now.\r\n\r\nShould this contest send the new year too?\r\n\r\nQSOs already logged keep the year they sent."
+      ],
+      "win32_texts": [],
+      "focused": {
+         "name": "Station default only",
+         "type": "button",
+         "handle": 722036
+      },
+      "answers": [
+         "Also this contest",
+         "Station default only"
+      ],
+      "default": "Station default only"
+   },
+   "question_2": {
+      "title": "Correct logged QSOs?",
+      "class": "#32770",
+      "handle": 394358,
+      "win32_buttons": [
+         {
+            "text": "&Yes",
+            "handle": 656474,
+            "default_style": false
+         },
+         {
+            "text": "&No",
+            "handle": 525398,
+            "default_style": true
+         }
+      ],
+      "uia_buttons": [
+         "Yes",
+         "No",
+         "Close"
+      ],
+      "uia_texts": [
+         "2 QSO(s) already logged in this contest sent the license year 64.\r\n\r\nChange them to 05?\r\n\r\nAnswer Yes only if 64 was a mistake. A QSO logged with 64 on the air sent 64, and its log should say so."
+      ],
+      "win32_texts": [],
+      "focused": {
+         "name": "No",
+         "type": "button",
+         "handle": 525398
+      },
+      "answers": [
+         "Yes",
+         "No"
+      ],
+      "default": "&No"
+   },
+   "third_qso_band_mode": [
+      "40",
+      "CW"
+   ],
+   "adif_rows": [
+      {
+         "CALL": "W7SP",
+         "MODE": "CW",
+         "BAND": "40m",
+         "STX_STRING": "599 64",
+         "SRX_STRING": "599 85",
+         "MY_CQ_ZONE": "5",
+         "MY_ITU_ZONE": "8"
+      },
+      {
+         "CALL": "K6RB",
+         "MODE": "SSB",
+         "BAND": "40m",
+         "STX_STRING": "59 64",
+         "SRX_STRING": "59 72",
+         "MY_CQ_ZONE": "5",
+         "MY_ITU_ZONE": "8"
+      },
+      {
+         "CALL": "N7XX",
+         "MODE": "CW",
+         "BAND": "40m",
+         "STX_STRING": "599 05",
+         "SRX_STRING": "599 91",
+         "MY_CQ_ZONE": "8",
+         "MY_ITU_ZONE": "8"
+      }
+   ],
+   "log_after_export": {
+      "user_version": 8,
+      "meta_tables": {},
+      "config": [
+         [
+            "MY LICENSE YEAR",
+            "05",
+            "contest"
+         ],
+         [
+            "MY ZONE",
+            "8",
+            "station"
+         ]
+      ],
+      "qsos": [
+         {
+            "_rowid": 1,
+            "callsign": "W7SP",
+            "band": "40m",
+            "mode": "CW",
+            "rst_sent": 599,
+            "rst_received": 599,
+            "rcvd_zone": 85,
+            "cty_cq_zone": 8,
+            "cty_itu_zone": null,
+            "mult_zone": 1,
+            "my_cq_zone": 5,
+            "my_itu_zone": 8,
+            "rcvd_year": 85,
+            "year_sent": 64
+         },
+         {
+            "_rowid": 2,
+            "callsign": "K6RB",
+            "band": "40m",
+            "mode": "SSB",
+            "rst_sent": 59,
+            "rst_received": 59,
+            "rcvd_zone": 72,
+            "cty_cq_zone": 8,
+            "cty_itu_zone": null,
+            "mult_zone": 1,
+            "my_cq_zone": 5,
+            "my_itu_zone": 8,
+            "rcvd_year": 72,
+            "year_sent": 64
+         },
+         {
+            "_rowid": 3,
+            "callsign": "N7XX",
+            "band": "40m",
+            "mode": "CW",
+            "rst_sent": 599,
+            "rst_received": 599,
+            "rcvd_zone": 91,
+            "cty_cq_zone": 8,
+            "cty_itu_zone": null,
+            "mult_zone": 1,
+            "my_cq_zone": 8,
+            "my_itu_zone": 8,
+            "rcvd_year": 91,
+            "year_sent": 5
+         }
+      ]
+   },
+   "cabrillo_qso_lines": [
+      "QSO:  7000 CW 2026-11-13 2151 W1AW    599 64     W7SP           599 85           ",
+      "QSO:  7000 PH 2026-11-13 2151 W1AW    59  64     K6RB           59  72           ",
+      "QSO:  7000 CW 2026-11-13 2151 W1AW    599 05     N7XX           599 91           "
+   ],
+   "upload_declined": true,
+   "failures": [
+      "ADIF MY_CQ_ZONE is not W1AW's zone 5: ['5', '5', '8']"
+   ]
+}

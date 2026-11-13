@@ -43,4 +43,13 @@ SCENARIOS = (
    "bench-k4-observe", "bench-k4-cw",
    "bench-tailcat-empty",
    "bench-lognames", "bench-lognames-close",
+   "bench-prefs-station-names",
+   "bench-yearsent-create-euhfc", "bench-yearsent-create-kvp",
+   "bench-yearsent-check-euhfc-no", "bench-yearsent-check-euhfc-yes",
+   "bench-yearsent-check-kvp-no", "bench-yearsent-check-kvp-yes",
+   "bench-yearsent-check-cwopen",
+   "bench-yearsent-check-euhfc-zone", "bench-yearsent-check-kvp-zone", "bench-yearsent-check-cwopen-zone",
+   "bench-countyhost-ky", "bench-countyhost-al", "bench-countyhost-wv",
+   "bench-countyhost-vt", "bench-countyhost-fl",
+   "bench-pending-empty-exchange", "bench-pending-accented-name", "bench-pending-message-long",
 )

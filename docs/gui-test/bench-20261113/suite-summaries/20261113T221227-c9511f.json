@@ -1,0 +1,39 @@
+{
+   "suite": "20261113T221227-c9511f",
+   "steps": [
+      "seed=bench-seed",
+      "message-long=bench-pending-message-long@seed"
+   ],
+   "cases": [
+      {
+         "case": "seed",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221227-c9511f\\seed\\bench-seed\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "CW Open score/label assertions and three saved contacts passed; other setup captures are inspection only",
+         "phase": "bench-seed",
+         "run": "x-20261113T221227-c9511f-seed"
+      },
+      {
+         "case": "message-long",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221227-c9511f\\message-long\\bench-pending-message-long\\result.json",
+         "error": null,
+         "failures": [],
+         "note": null,
+         "phase": "bench-pending-message-long",
+         "run": "x-20261113T221227-c9511f-message-long"
+      }
+   ],
+   "status": "PASS",
+   "build": {
+      "sha256": "d78de7f9de0b42d191a86e3d3cf3711016639be3aa573db17ce7538de061c765",
+      "debug_crc32": "19712079",
+      "snapshot": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221227-c9511f\\build\\selected-d78de7f9de0b\\app",
+      "archive": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221227-c9511f\\build\\selected-d78de7f9de0b\\app.zip",
+      "vm_root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b"
+   }
+}

@@ -1,0 +1,75 @@
+{
+   "suite": "20261113T221958-36b623",
+   "steps": [
+      "ky=bench-countyhost-ky",
+      "al=bench-countyhost-al",
+      "wv=bench-countyhost-wv",
+      "vt=bench-countyhost-vt",
+      "fl=bench-countyhost-fl"
+   ],
+   "cases": [
+      {
+         "case": "ky",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\ky\\bench-countyhost-ky\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures",
+         "phase": "bench-countyhost-ky",
+         "run": "x-20261113T221958-36b623-ky"
+      },
+      {
+         "case": "al",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\al\\bench-countyhost-al\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures",
+         "phase": "bench-countyhost-al",
+         "run": "x-20261113T221958-36b623-al"
+      },
+      {
+         "case": "wv",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\wv\\bench-countyhost-wv\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures",
+         "phase": "bench-countyhost-wv",
+         "run": "x-20261113T221958-36b623-wv"
+      },
+      {
+         "case": "vt",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\vt\\bench-countyhost-vt\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures",
+         "phase": "bench-countyhost-vt",
+         "run": "x-20261113T221958-36b623-vt"
+      },
+      {
+         "case": "fl",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\fl\\bench-countyhost-fl\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "QSOs logged; multiplier verdict from recorded totals and reviewed captures",
+         "phase": "bench-countyhost-fl",
+         "run": "x-20261113T221958-36b623-fl"
+      }
+   ],
+   "status": "PASS",
+   "build": {
+      "sha256": "d78de7f9de0b42d191a86e3d3cf3711016639be3aa573db17ce7538de061c765",
+      "debug_crc32": "19712079",
+      "snapshot": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\build\\selected-d78de7f9de0b\\app",
+      "archive": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T221958-36b623\\build\\selected-d78de7f9de0b\\app.zip",
+      "vm_root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b"
+   }
+}

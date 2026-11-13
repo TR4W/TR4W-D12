@@ -1,0 +1,1063 @@
+{
+   "party": "West Virginia QSO Party",
+   "my_county": "MIN",
+   "qsos": [
+      {
+         "call": "W1AW",
+         "exchange": "599 CT",
+         "totals_after": [
+            " 10",
+            " 15",
+            " 20",
+            " 40",
+            " 80",
+            " 10",
+            " 15",
+            " 20",
+            " 80",
+            "Both:",
+            "SSB:",
+            "CW:",
+            "All",
+            "10",
+            "15",
+            "20",
+            "40",
+            "80",
+            "1",
+            "1",
+            "1",
+            "DX Mults",
+            "Dom Mults",
+            "CW - ",
+            "WSJTX",
+            "WK",
+            "2 Pts",
+            " SP: 0",
+            "Rate = 0",
+            "Radio 2",
+            "Radio 1",
+            "2",
+            " QSO needs for W1AW :",
+            "OFF",
+            "Paddle",
+            "CQ",
+            "00:00:00",
+            " Mult needs for CT :",
+            "00:00:00",
+            "INSERT",
+            "This hr = 0",
+            "22:21:41",
+            "Footsw.",
+            "13-11-26",
+            "W1AW",
+            "CQ total: 0",
+            " CQ: 1",
+            "35 WPM",
+            "22:21",
+            " 40CW"
+         ],
+         "uia_after": [
+            {
+               "type": "ScrollBar",
+               "name": "Vertical"
+            },
+            {
+               "type": "Button",
+               "name": "Line up"
+            },
+            {
+               "type": "Button",
+               "name": "Line down"
+            },
+            {
+               "type": "Pane",
+               "name": " 10"
+            },
+            {
+               "type": "Pane",
+               "name": " 15"
+            },
+            {
+               "type": "Pane",
+               "name": " 20"
+            },
+            {
+               "type": "Pane",
+               "name": " 40"
+            },
+            {
+               "type": "Pane",
+               "name": " 80"
+            },
+            {
+               "type": "Pane",
+               "name": " 10"
+            },
+            {
+               "type": "Pane",
+               "name": " 15"
+            },
+            {
+               "type": "Pane",
+               "name": " 20"
+            },
+            {
+               "type": "Pane",
+               "name": " 80"
+            },
+            {
+               "type": "Pane",
+               "name": "Both:"
+            },
+            {
+               "type": "Pane",
+               "name": "SSB:"
+            },
+            {
+               "type": "Pane",
+               "name": "CW:"
+            },
+            {
+               "type": "Pane",
+               "name": "All"
+            },
+            {
+               "type": "Pane",
+               "name": "10"
+            },
+            {
+               "type": "Pane",
+               "name": "15"
+            },
+            {
+               "type": "Pane",
+               "name": "20"
+            },
+            {
+               "type": "Pane",
+               "name": "40"
+            },
+            {
+               "type": "Pane",
+               "name": "80"
+            },
+            {
+               "type": "Pane",
+               "name": "1"
+            },
+            {
+               "type": "Pane",
+               "name": "1"
+            },
+            {
+               "type": "Pane",
+               "name": "1"
+            },
+            {
+               "type": "Pane",
+               "name": "DX Mults"
+            },
+            {
+               "type": "Pane",
+               "name": "Dom Mults"
+            },
+            {
+               "type": "Pane",
+               "name": "CW - "
+            },
+            {
+               "type": "Pane",
+               "name": "WSJTX"
+            },
+            {
+               "type": "Pane",
+               "name": "WK"
+            },
+            {
+               "type": "Pane",
+               "name": "2 Pts"
+            },
+            {
+               "type": "Pane",
+               "name": " SP: 0"
+            },
+            {
+               "type": "Pane",
+               "name": "Rate = 0"
+            },
+            {
+               "type": "Pane",
+               "name": "Radio 2"
+            },
+            {
+               "type": "Pane",
+               "name": "Radio 1"
+            },
+            {
+               "type": "Pane",
+               "name": "2"
+            },
+            {
+               "type": "Pane",
+               "name": " QSO needs for W1AW :"
+            },
+            {
+               "type": "Pane",
+               "name": "OFF"
+            },
+            {
+               "type": "Pane",
+               "name": "Paddle"
+            },
+            {
+               "type": "Pane",
+               "name": "CQ"
+            },
+            {
+               "type": "Pane",
+               "name": "00:00:01"
+            },
+            {
+               "type": "Pane",
+               "name": " Mult needs for CT :"
+            },
+            {
+               "type": "Pane",
+               "name": "00:00:00"
+            },
+            {
+               "type": "Pane",
+               "name": "INSERT"
+            },
+            {
+               "type": "Pane",
+               "name": "This hr = 0"
+            },
+            {
+               "type": "Pane",
+               "name": "22:21:42"
+            },
+            {
+               "type": "Pane",
+               "name": "Footsw."
+            },
+            {
+               "type": "Pane",
+               "name": "13-11-26"
+            },
+            {
+               "type": "Pane",
+               "name": "W1AW"
+            },
+            {
+               "type": "Pane",
+               "name": "CQ total: 0"
+            },
+            {
+               "type": "Pane",
+               "name": " CQ: 1"
+            },
+            {
+               "type": "Pane",
+               "name": "35 WPM"
+            },
+            {
+               "type": "Pane",
+               "name": "22:21"
+            },
+            {
+               "type": "Pane",
+               "name": " 40CW"
+            },
+            {
+               "type": "MenuBar",
+               "name": "System"
+            },
+            {
+               "type": "MenuItem",
+               "name": "System"
+            },
+            {
+               "type": "Button",
+               "name": "Minimize"
+            },
+            {
+               "type": "Button",
+               "name": "Maximize"
+            },
+            {
+               "type": "Button",
+               "name": "Close"
+            },
+            {
+               "type": "MenuBar",
+               "name": "Application"
+            },
+            {
+               "type": "MenuItem",
+               "name": "File"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Settings"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Windows"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Alt-"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Ctrl-"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Commands"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Tools"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Net"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Help"
+            }
+         ],
+         "score_shown": [
+            "2 Pts"
+         ]
+      },
+      {
+         "call": "K8AAA",
+         "exchange": "599 BAR",
+         "totals_after": [
+            " 10",
+            " 15",
+            " 20",
+            " 40",
+            " 80",
+            " 10",
+            " 15",
+            " 20",
+            " 80",
+            "Both:",
+            "SSB:",
+            "CW:",
+            "All",
+            "10",
+            "15",
+            "20",
+            "40",
+            "80",
+            "3",
+            "2",
+            "2",
+            "DX Mults",
+            "Dom Mults",
+            "CW - ",
+            "WSJTX",
+            "WK",
+            "12 Pts",
+            " SP: 0",
+            "Rate = 0",
+            "Radio 2",
+            "Radio 1",
+            "3",
+            " QSO needs for K8AAA :",
+            "OFF",
+            "Paddle",
+            "CQ",
+            "00:00:03",
+            " Mult needs for BAR :",
+            "00:00:00",
+            "INSERT",
+            "This hr = 0",
+            "22:21:44",
+            "Footsw.",
+            "13-11-26",
+            "W1AW",
+            "CQ total: 0",
+            " CQ: 2",
+            "35 WPM",
+            "22:21",
+            " 40CW"
+         ],
+         "uia_after": [
+            {
+               "type": "ScrollBar",
+               "name": "Vertical"
+            },
+            {
+               "type": "Button",
+               "name": "Line up"
+            },
+            {
+               "type": "Button",
+               "name": "Line down"
+            },
+            {
+               "type": "Pane",
+               "name": " 10"
+            },
+            {
+               "type": "Pane",
+               "name": " 15"
+            },
+            {
+               "type": "Pane",
+               "name": " 20"
+            },
+            {
+               "type": "Pane",
+               "name": " 40"
+            },
+            {
+               "type": "Pane",
+               "name": " 80"
+            },
+            {
+               "type": "Pane",
+               "name": " 10"
+            },
+            {
+               "type": "Pane",
+               "name": " 15"
+            },
+            {
+               "type": "Pane",
+               "name": " 20"
+            },
+            {
+               "type": "Pane",
+               "name": " 80"
+            },
+            {
+               "type": "Pane",
+               "name": "Both:"
+            },
+            {
+               "type": "Pane",
+               "name": "SSB:"
+            },
+            {
+               "type": "Pane",
+               "name": "CW:"
+            },
+            {
+               "type": "Pane",
+               "name": "All"
+            },
+            {
+               "type": "Pane",
+               "name": "10"
+            },
+            {
+               "type": "Pane",
+               "name": "15"
+            },
+            {
+               "type": "Pane",
+               "name": "20"
+            },
+            {
+               "type": "Pane",
+               "name": "40"
+            },
+            {
+               "type": "Pane",
+               "name": "80"
+            },
+            {
+               "type": "Pane",
+               "name": "3"
+            },
+            {
+               "type": "Pane",
+               "name": "2"
+            },
+            {
+               "type": "Pane",
+               "name": "2"
+            },
+            {
+               "type": "Pane",
+               "name": "DX Mults"
+            },
+            {
+               "type": "Pane",
+               "name": "Dom Mults"
+            },
+            {
+               "type": "Pane",
+               "name": "CW - "
+            },
+            {
+               "type": "Pane",
+               "name": "WSJTX"
+            },
+            {
+               "type": "Pane",
+               "name": "WK"
+            },
+            {
+               "type": "Pane",
+               "name": "12 Pts"
+            },
+            {
+               "type": "Pane",
+               "name": " SP: 0"
+            },
+            {
+               "type": "Pane",
+               "name": "Rate = 0"
+            },
+            {
+               "type": "Pane",
+               "name": "Radio 2"
+            },
+            {
+               "type": "Pane",
+               "name": "Radio 1"
+            },
+            {
+               "type": "Pane",
+               "name": "3"
+            },
+            {
+               "type": "Pane",
+               "name": " QSO needs for K8AAA :"
+            },
+            {
+               "type": "Pane",
+               "name": "OFF"
+            },
+            {
+               "type": "Pane",
+               "name": "Paddle"
+            },
+            {
+               "type": "Pane",
+               "name": "CQ"
+            },
+            {
+               "type": "Pane",
+               "name": "00:00:03"
+            },
+            {
+               "type": "Pane",
+               "name": " Mult needs for BAR :"
+            },
+            {
+               "type": "Pane",
+               "name": "00:00:00"
+            },
+            {
+               "type": "Pane",
+               "name": "INSERT"
+            },
+            {
+               "type": "Pane",
+               "name": "This hr = 0"
+            },
+            {
+               "type": "Pane",
+               "name": "22:21:44"
+            },
+            {
+               "type": "Pane",
+               "name": "Footsw."
+            },
+            {
+               "type": "Pane",
+               "name": "13-11-26"
+            },
+            {
+               "type": "Pane",
+               "name": "W1AW"
+            },
+            {
+               "type": "Pane",
+               "name": "CQ total: 0"
+            },
+            {
+               "type": "Pane",
+               "name": " CQ: 2"
+            },
+            {
+               "type": "Pane",
+               "name": "35 WPM"
+            },
+            {
+               "type": "Pane",
+               "name": "22:21"
+            },
+            {
+               "type": "Pane",
+               "name": " 40CW"
+            },
+            {
+               "type": "MenuBar",
+               "name": "System"
+            },
+            {
+               "type": "MenuItem",
+               "name": "System"
+            },
+            {
+               "type": "Button",
+               "name": "Minimize"
+            },
+            {
+               "type": "Button",
+               "name": "Maximize"
+            },
+            {
+               "type": "Button",
+               "name": "Close"
+            },
+            {
+               "type": "MenuBar",
+               "name": "Application"
+            },
+            {
+               "type": "MenuItem",
+               "name": "File"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Settings"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Windows"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Alt-"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Ctrl-"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Commands"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Tools"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Net"
+            },
+            {
+               "type": "MenuItem",
+               "name": "Help"
+            }
+         ],
+         "score_shown": [
+            "12 Pts"
+         ]
+      }
+   ],
+   "setup_fields": [
+      ""
+   ],
+   "county_items": 55,
+   "title": "TR4W v.5.0.40 - 2026 WV-QSO-PARTY (in state) W1AW",
+   "band_mode": [
+      "40",
+      "CW"
+   ],
+   "totals_empty": [
+      "Both:",
+      "SSB:",
+      "CW:",
+      "All",
+      "10",
+      "15",
+      "20",
+      "40",
+      "80",
+      "DX Mults",
+      "Dom Mults",
+      "CW - ",
+      "WSJTX",
+      "WK",
+      "0 Pts",
+      " SP: 0",
+      "Rate = 0",
+      "Radio 2",
+      "Radio 1",
+      "Newer CTY.DAT available (dated 20261107). Press Alt-O to download.",
+      "1",
+      "OFF",
+      "Paddle",
+      "CQ",
+      "INSERT",
+      "This hr = 0",
+      "22:21:40",
+      "Footsw.",
+      "13-11-26",
+      "W1AW",
+      "CQ total: 0",
+      " CQ: 0",
+      "35 WPM",
+      "22:21",
+      " 40CW"
+   ],
+   "mults_menu": [
+      "Default\tShift+Ctrl+4",
+      "DX",
+      "Domestic",
+      "Zones",
+      "Prefixes"
+   ],
+   "mults_windows": [
+      {
+         "entry": "Default\tShift+Ctrl+4",
+         "title": "Default",
+         "windows": 1,
+         "texts": [],
+         "uia": [
+            {
+               "type": "ScrollBar",
+               "name": "Horizontal"
+            },
+            {
+               "type": "Button",
+               "name": "Column left"
+            },
+            {
+               "type": "Thumb",
+               "name": "Position"
+            },
+            {
+               "type": "Button",
+               "name": "Page right"
+            },
+            {
+               "type": "Button",
+               "name": "Column right"
+            },
+            {
+               "type": "Button",
+               "name": "Close"
+            }
+         ]
+      },
+      {
+         "entry": "DX",
+         "title": "DX",
+         "windows": 1,
+         "texts": [],
+         "uia": [
+            {
+               "type": "ScrollBar",
+               "name": "Horizontal"
+            },
+            {
+               "type": "Button",
+               "name": "Column left"
+            },
+            {
+               "type": "Thumb",
+               "name": "Position"
+            },
+            {
+               "type": "Button",
+               "name": "Page right"
+            },
+            {
+               "type": "Button",
+               "name": "Column right"
+            },
+            {
+               "type": "Button",
+               "name": "Close"
+            }
+         ]
+      },
+      {
+         "entry": "Domestic",
+         "title": "Domestic",
+         "windows": 1,
+         "texts": [],
+         "uia": [
+            {
+               "type": "ScrollBar",
+               "name": "Horizontal"
+            },
+            {
+               "type": "Button",
+               "name": "Column left"
+            },
+            {
+               "type": "Thumb",
+               "name": "Position"
+            },
+            {
+               "type": "Button",
+               "name": "Page right"
+            },
+            {
+               "type": "Button",
+               "name": "Column right"
+            },
+            {
+               "type": "Button",
+               "name": "Close"
+            }
+         ],
+         "pages_captured": 2
+      },
+      {
+         "entry": "Zones",
+         "title": "Zones",
+         "windows": 1,
+         "texts": [],
+         "uia": [
+            {
+               "type": "Button",
+               "name": "Close"
+            }
+         ]
+      },
+      {
+         "entry": "Prefixes",
+         "title": "Prefixes",
+         "windows": 1,
+         "texts": [],
+         "uia": [
+            {
+               "type": "Button",
+               "name": "Close"
+            }
+         ]
+      }
+   ],
+   "logged_rows": [
+      {
+         "_rowid": 1,
+         "id": 1,
+         "guid": "01a1d70091087ee0bb50cb416333e194",
+         "exchange_id": "157284876c0d4aad90c84e03b7a1b07e",
+         "qso_set_id": "01a1d70091087ee0bb50cb416333e194",
+         "session_id": 10736234,
+         "session_seq": 10745078,
+         "computer_id": "\u0000",
+         "operator_id": 0,
+         "record_kind": "QSO",
+         "qso_at": 1794608501,
+         "callsign": "W1AW",
+         "freq_tx_hz": 0,
+         "freq_rx_hz": 0,
+         "is_split": 0,
+         "band": "40m",
+         "mode": "CW",
+         "submode": "NoMode",
+         "exchange_sent": "599 MIN",
+         "exchange_received": "599 CT",
+         "rst_sent": 599,
+         "rst_received": 599,
+         "snr_sent": null,
+         "snr_received": null,
+         "serial_sent": 1,
+         "serial_received": null,
+         "rcvd_zone": null,
+         "rcvd_state": null,
+         "rcvd_county": null,
+         "rcvd_section": null,
+         "rcvd_grid": null,
+         "rcvd_name": null,
+         "rcvd_age": 0,
+         "rcvd_check": 0,
+         "rcvd_precedence": "\u0000",
+         "rcvd_class": null,
+         "rcvd_power": null,
+         "rcvd_chapter": null,
+         "rcvd_prefecture": null,
+         "rcvd_continent": null,
+         "rcvd_postal_code": null,
+         "rcvd_member_no": null,
+         "rcvd_society": null,
+         "rcvd_department": null,
+         "rcvd_rda": null,
+         "rcvd_qth": "CT",
+         "rcvd_random": null,
+         "random_sent": null,
+         "rcvd_kids": null,
+         "qtc_call": null,
+         "rcvd_park": null,
+         "rcvd_summit": null,
+         "rcvd_iota": null,
+         "rcvd_coords": null,
+         "rcvd_extra": null,
+         "my_county": null,
+         "my_grid": "FN31",
+         "my_state": "MIN",
+         "dxcc_prefix": "W1",
+         "standard_call": "W1AW",
+         "dxcc_entity": "K",
+         "dxcc_code": 183,
+         "cty_cq_zone": 8,
+         "cty_itu_zone": null,
+         "cty_continent": "NA",
+         "mult_domestic": 1,
+         "mult_dx": 0,
+         "mult_prefix": 0,
+         "mult_zone": 0,
+         "inhibit_mults": 0,
+         "prefix_mult": null,
+         "dx_mult": null,
+         "domestic_mult": "Ct",
+         "domestic_qth": "Ct",
+         "qso_points": 2,
+         "is_dupe": 0,
+         "is_run": 1,
+         "is_xqso": 0,
+         "is_skipped": 0,
+         "sent_in_qtc": 0,
+         "name_sent": 0,
+         "mp3_recorded": 0,
+         "clear_dupe_sheet": 0,
+         "clear_mult_sheet": 0,
+         "radio_nr": 1,
+         "operator_call": "W1AW",
+         "deleted": 0,
+         "notes": null,
+         "sent_to_server": 0,
+         "server_dirty": 0,
+         "sent_udp": 0,
+         "udp_dirty": 0,
+         "my_call": "W1AW",
+         "my_section": null,
+         "my_park": null,
+         "my_iota": null,
+         "my_country": "K",
+         "my_continent": "NA",
+         "my_cq_zone": 5,
+         "my_itu_zone": 8,
+         "my_source": "logged",
+         "rcvd_year": null,
+         "year_sent": null
+      },
+      {
+         "_rowid": 2,
+         "id": 2,
+         "guid": "01a1d70098d87d068276c81127a55857",
+         "exchange_id": "d0b4d45d4d7a4624994b4611bb329eac",
+         "qso_set_id": "01a1d70098d87d068276c81127a55857",
+         "session_id": 10736234,
+         "session_seq": 10747093,
+         "computer_id": "\u0000",
+         "operator_id": 0,
+         "record_kind": "QSO",
+         "qso_at": 1794608503,
+         "callsign": "K8AAA",
+         "freq_tx_hz": 0,
+         "freq_rx_hz": 0,
+         "is_split": 0,
+         "band": "40m",
+         "mode": "CW",
+         "submode": "NoMode",
+         "exchange_sent": "599 MIN",
+         "exchange_received": "599 BAR",
+         "rst_sent": 599,
+         "rst_received": 599,
+         "snr_sent": null,
+         "snr_received": null,
+         "serial_sent": 2,
+         "serial_received": null,
+         "rcvd_zone": null,
+         "rcvd_state": null,
+         "rcvd_county": null,
+         "rcvd_section": null,
+         "rcvd_grid": null,
+         "rcvd_name": null,
+         "rcvd_age": 0,
+         "rcvd_check": 0,
+         "rcvd_precedence": "\u0000",
+         "rcvd_class": null,
+         "rcvd_power": null,
+         "rcvd_chapter": null,
+         "rcvd_prefecture": null,
+         "rcvd_continent": null,
+         "rcvd_postal_code": null,
+         "rcvd_member_no": null,
+         "rcvd_society": null,
+         "rcvd_department": null,
+         "rcvd_rda": null,
+         "rcvd_qth": "BAR",
+         "rcvd_random": null,
+         "random_sent": null,
+         "rcvd_kids": null,
+         "qtc_call": null,
+         "rcvd_park": null,
+         "rcvd_summit": null,
+         "rcvd_iota": null,
+         "rcvd_coords": null,
+         "rcvd_extra": null,
+         "my_county": null,
+         "my_grid": "FN31",
+         "my_state": "MIN",
+         "dxcc_prefix": "K8",
+         "standard_call": "K8AAA",
+         "dxcc_entity": "K",
+         "dxcc_code": 183,
+         "cty_cq_zone": 8,
+         "cty_itu_zone": null,
+         "cty_continent": "NA",
+         "mult_domestic": 1,
+         "mult_dx": 0,
+         "mult_prefix": 0,
+         "mult_zone": 0,
+         "inhibit_mults": 0,
+         "prefix_mult": null,
+         "dx_mult": null,
+         "domestic_mult": "BAR",
+         "domestic_qth": "BAR",
+         "qso_points": 2,
+         "is_dupe": 0,
+         "is_run": 1,
+         "is_xqso": 0,
+         "is_skipped": 0,
+         "sent_in_qtc": 0,
+         "name_sent": 0,
+         "mp3_recorded": 0,
+         "clear_dupe_sheet": 0,
+         "clear_mult_sheet": 0,
+         "radio_nr": 1,
+         "operator_call": "W1AW",
+         "deleted": 0,
+         "notes": null,
+         "sent_to_server": 0,
+         "server_dirty": 0,
+         "sent_udp": 0,
+         "udp_dirty": 0,
+         "my_call": "W1AW",
+         "my_section": null,
+         "my_park": null,
+         "my_iota": null,
+         "my_country": "K",
+         "my_continent": "NA",
+         "my_cq_zone": 5,
+         "my_itu_zone": 8,
+         "my_source": "logged",
+         "rcvd_year": null,
+         "year_sent": null
+      }
+   ],
+   "points_texts": [
+      "12 Pts"
+   ]
+}

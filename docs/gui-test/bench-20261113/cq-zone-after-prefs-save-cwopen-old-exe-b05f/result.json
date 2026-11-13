@@ -1,0 +1,18 @@
+{
+   "scenario": "bench-yearsent-check-cwopen-zone",
+   "run": "x-20261113T222339-d97c57-cwopen-zone",
+   "root": "C:\\TR4W-Test\\bench-main-b05fb564f88e",
+   "passed": false,
+   "captures": [],
+   "failures": [
+      "N7BB captured my_cq_zone 8"
+   ],
+   "my_cq_zone_by_call": {
+      "K6RB": 5,
+      "W7SP": 5,
+      "N7AA": 5,
+      "N7BB": 8
+   },
+   "note": "W1AW's CTY CQ zone is 5; every QSO should capture 5",
+   "pid": 4600
+}

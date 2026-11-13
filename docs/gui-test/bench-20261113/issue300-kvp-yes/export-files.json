@@ -1,0 +1,50 @@
+[
+   {
+      "name": "bench-workflow.json",
+      "bytes": 13
+   },
+   {
+      "name": "CTY.DAT",
+      "bytes": 106119
+   },
+   {
+      "name": "fixture.json",
+      "bytes": 321
+   },
+   {
+      "name": "KVP 2026-11-13 W1AW.adi",
+      "bytes": 1223
+   },
+   {
+      "name": "KVP 2026-11-13 W1AW.db",
+      "bytes": 135168
+   },
+   {
+      "name": "KVP 2026-11-13 W1AW.db-shm",
+      "bytes": 32768
+   },
+   {
+      "name": "KVP 2026-11-13 W1AW.db-wal",
+      "bytes": 61832
+   },
+   {
+      "name": "KVP 2026-11-13 W1AW.log",
+      "bytes": 598
+   },
+   {
+      "name": "owned-process.json",
+      "bytes": 88
+   },
+   {
+      "name": "tr4w-early.log",
+      "bytes": 169
+   },
+   {
+      "name": "tr4w.json",
+      "bytes": 15898
+   },
+   {
+      "name": "tr4w.log",
+      "bytes": 53472
+   }
+]

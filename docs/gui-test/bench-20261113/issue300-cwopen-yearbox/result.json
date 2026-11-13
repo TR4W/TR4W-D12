@@ -1,0 +1,14 @@
+{
+   "scenario": "bench-yearsent-check-cwopen",
+   "run": "x-20261113T214213-7abbb3-cwopen-yearbox",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "year_sent": {
+      "text": "",
+      "enabled": false,
+      "rect": "(L417, T551, R493, B574)"
+   },
+   "pid": 5984
+}

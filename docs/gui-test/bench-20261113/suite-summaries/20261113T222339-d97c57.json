@@ -1,0 +1,41 @@
+{
+   "suite": "20261113T222339-d97c57",
+   "steps": [
+      "seed=bench-seed",
+      "cwopen-zone=bench-yearsent-check-cwopen-zone@seed"
+   ],
+   "cases": [
+      {
+         "case": "seed",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T222339-d97c57\\seed\\bench-seed\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "CW Open score/label assertions and three saved contacts passed; other setup captures are inspection only",
+         "phase": "bench-seed",
+         "run": "x-20261113T222339-d97c57-seed"
+      },
+      {
+         "case": "cwopen-zone",
+         "status": "FAIL",
+         "exit_code": 1,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T222339-d97c57\\cwopen-zone\\bench-yearsent-check-cwopen-zone\\result.json",
+         "error": null,
+         "failures": [
+            "N7BB captured my_cq_zone 8"
+         ],
+         "note": "W1AW's CTY CQ zone is 5; every QSO should capture 5",
+         "phase": "bench-yearsent-check-cwopen-zone",
+         "run": "x-20261113T222339-d97c57-cwopen-zone"
+      }
+   ],
+   "status": "FAIL",
+   "build": {
+      "sha256": "b05fb564f88e7c79260b371ab5b16f9b0db0ba36479e36acd7b4390a89413976",
+      "debug_crc32": "B1C0F021",
+      "snapshot": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T222339-d97c57\\build\\selected-b05fb564f88e\\app",
+      "archive": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T222339-d97c57\\build\\selected-b05fb564f88e\\app.zip",
+      "vm_root": "C:\\TR4W-Test\\bench-main-b05fb564f88e"
+   }
+}

@@ -20,6 +20,36 @@ def open_contact_editor(app, main, journal):
    return editor
 
 
+MY_STATION_ROWS = (("call", "grid", "state", "county"), ("section", "park", "cq_zone", "itu_zone"),
+   ("year_sent",))
+
+
+def my_station_fields(editor):
+   """Edit QSO's "Our station for this QSO" inputs by their designed rows
+   (uEditQSOForm.lfm grpMyStation): the one container whose direct Edit
+   children form rows of 4, 4 and 1. Rows and columns are observed geometry;
+   a different shape fails rather than guessing which box is which."""
+   matches = []
+   for container in editor.descendants():
+      if container.class_name() == "Edit" or not container.is_visible():
+         continue
+      edits = [child for child in container.children() if child.class_name() == "Edit"]
+      if len(edits) != 9:
+         continue
+      rows = {}
+      for edit in edits:
+         top = edit.rectangle().top
+         key = next((existing for existing in rows if abs(existing - top) <= 4), top)
+         rows.setdefault(key, []).append(edit)
+      ordered = [sorted(rows[key], key=lambda c: c.rectangle().left) for key in sorted(rows)]
+      if [len(row) for row in ordered] == [len(names) for names in MY_STATION_ROWS]:
+         matches.append({name: control for names, row in zip(MY_STATION_ROWS, ordered)
+            for name, control in zip(names, row)})
+   if len(matches) != 1:
+      raise RuntimeError("Edit QSO our-station group not uniquely observable: " + str(len(matches)))
+   return matches[0]
+
+
 def log_without_cw(main, call, exchange, journal):
    call_field, exchange_field = entry_fields(main)
    if call_field.window_text() or exchange_field.window_text():

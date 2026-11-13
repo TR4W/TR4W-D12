@@ -1,0 +1,47 @@
+{
+   "call": {
+      "text": "W1AW",
+      "enabled": true,
+      "rect": "(L417, T495, R493, B518)"
+   },
+   "grid": {
+      "text": "FN31",
+      "enabled": true,
+      "rect": "(L557, T495, R633, B518)"
+   },
+   "state": {
+      "text": "",
+      "enabled": true,
+      "rect": "(L697, T495, R773, B518)"
+   },
+   "county": {
+      "text": "",
+      "enabled": true,
+      "rect": "(L837, T495, R913, B518)"
+   },
+   "section": {
+      "text": "",
+      "enabled": true,
+      "rect": "(L417, T523, R493, B546)"
+   },
+   "park": {
+      "text": "",
+      "enabled": true,
+      "rect": "(L557, T523, R633, B546)"
+   },
+   "cq_zone": {
+      "text": "5",
+      "enabled": true,
+      "rect": "(L697, T523, R773, B546)"
+   },
+   "itu_zone": {
+      "text": "8",
+      "enabled": true,
+      "rect": "(L837, T523, R913, B546)"
+   },
+   "year_sent": {
+      "text": "",
+      "enabled": false,
+      "rect": "(L417, T551, R493, B574)"
+   }
+}

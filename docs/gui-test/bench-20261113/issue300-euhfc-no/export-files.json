@@ -1,0 +1,50 @@
+[
+   {
+      "name": "bench-workflow.json",
+      "bytes": 13
+   },
+   {
+      "name": "CTY.DAT",
+      "bytes": 106119
+   },
+   {
+      "name": "EUROPEAN HFC 2026-11-13 W1AW.adi",
+      "bytes": 1229
+   },
+   {
+      "name": "EUROPEAN HFC 2026-11-13 W1AW.db",
+      "bytes": 135168
+   },
+   {
+      "name": "EUROPEAN HFC 2026-11-13 W1AW.db-shm",
+      "bytes": 32768
+   },
+   {
+      "name": "EUROPEAN HFC 2026-11-13 W1AW.db-wal",
+      "bytes": 57712
+   },
+   {
+      "name": "EUROPEAN HFC 2026-11-13 W1AW.log",
+      "bytes": 606
+   },
+   {
+      "name": "fixture.json",
+      "bytes": 332
+   },
+   {
+      "name": "owned-process.json",
+      "bytes": 88
+   },
+   {
+      "name": "tr4w-early.log",
+      "bytes": 169
+   },
+   {
+      "name": "tr4w.json",
+      "bytes": 15908
+   },
+   {
+      "name": "tr4w.log",
+      "bytes": 53597
+   }
+]

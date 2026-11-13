@@ -281,3 +281,39 @@ Driver errors along the way, fixed in the driver: "Radio 1" also matches `Window
 - **Use Tailcat ticked, empty address (queue item, no secret needed): PASS.** Fixture: `UseTailcat` true, `Server.Address` 192.0.2.10 (TEST-NET-1), COMPUTER ID T. Net > Connect gives exactly one warning, 3.4 s later: "The link to the multi-op server through Tailcat could not be opened: Use Tailcat is ticked and the Tailcat address is empty. TR4W keeps trying." The log has one Error line, then a Debug line every 5 s. 192.0.2.10 never appears in tr4w.log (no fall-back to Server). The retries stop at Net > Disconnect, and exit takes 0.30 s. `20261113T035103-ad6222/tailcat`, [warning](gui-test/bench-20261112/tailcat-empty-b05f/tailcat-warning-0.png), [observations](gui-test/bench-20261112/tailcat-empty-b05f/tailcat-observations.json). Two earlier attempts were driver errors: a COMPUTER ID prompt (fixture precondition, now set), and a wrapper with no `wait_not`.
 
 Harness additions in this session: `bench_k4.py` (phases `bench-k4-observe`, `bench-k4-cw`), `bench_tailcat.py` (`bench-tailcat-empty`), and observation-only additions to `bench_entry_errors.py`; its assertions are unchanged. No application source changed.
+
+
+## 2026-11-13 16:34-17:16 EST: issues 278, 300, 317 and pending checks (x64 d78de7f9de0b)
+
+Every run drove `build-out\app-x86_64-win64\tr4w_fpc.exe`, SHA256 `d78de7f9de0b42d191a86e3d3cf3711016639be3aa573db17ce7538de061c765`, debug CRC `19712079`, VM root `C:\TR4W-Test\bench-main-d78de7f9de0b`, guest Python `.venv-x64`. The caller named main `d6a64f99`; the exe is dated 16:10 and the working tree held other agents' uncommitted source edits, so the build-time source revision is **unknown**. Harness proof first: `--case import` PASS (seed PASS), suite `20261113T213433-b6f973`. Windows 1280x800, 96 DPI, fresh disposable fixtures, no radio, keyer, cluster or logger. Portable tests: 11 passed. Before and after: no test TR4W process, no `TR4W-GuiScenario` task. Reviewed evidence: [bench-20261113](gui-test/bench-20261113/).
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| 278 UIA names, Station page | **FAIL: route (a) did not name the inputs.** All 17 inputs read Name `""` through `IUIAutomationElement.CurrentName` and MSAA `accName`. The result is the same initially, after another page and back, and after closing and reopening Preferences. Callsign does not read "First name". The Continent ComboBox element is `""` and its inner Edit is `""`. Main Callsign is `""`, as expected. The 17 captions ARE windows now (class `Static`, UIA Text named e.g. `Callsign:`), and each sits directly before its input in z-order. The method's control is a worker-owned Static + Edit, named `Probe label:` by both UIA and MSAA. It stays named when replayed with TR4W's exact static (`0x56000100`) and edit (`0x56010080`) styles. Neither TR4W's edit nor the probe answers WM_GETOBJECT itself (0). Old-exe control b05f (TLabel captions): also `""` everywhere | `issue278-new-exe/`, `issue278-new-exe-style-replay/`, `issue278-old-exe-b05f-control/` |
+| 278 Tab order and captions | PASS: Tab runs Callsign ... Postal code, Check ... License year, then Main Callsign and the footer, and never lands on a caption. Clicking any of the 17 captions leaves focus where it was (the search box): click-to-focus does nothing | `issue278-new-exe/station-names.json` |
+| 300 schema 8, EUHFC and KVP | Every licence-year assertion PASSES; each of the four check phases is FAIL in its summary ONLY on the MY_CQ_ZONE row below (third QSO captured 8). `user_version` 8. Two QSOs (CW W7SP, SSB K6RB) store `year_sent` 64. Edit QSO shows an enabled Year sent `64`; the CW Open control shows it empty and disabled. Question 1 (TaskDialog "License year") has exactly two answers; "Station default only" is BS_DEFPUSHBUTTON and focused. Question 2 ("Correct logged QSOs?", "2 QSO(s) ... sent the license year 64 ... Change them to 05?") has default No. With No, the export sends `599 64` / `59 64`, and the third QSO `599 05`. With Yes, all three send `05` (`59 05` on SSB). ADIF and Cabrillo agree | `issue300-*` |
+| 300 "Preferences shows 64 on reopen" | **Not as worded:** the License year box shows `""`, the station default, as designed since 298 (`LoadStationPanel` reads the station value). Edit QSO Year sent shows 64 | `issue300-euhfc-no/year-sent-result.json` |
+| Captured CQ zone (related to 305) | **FAIL, newly observed, PRE-EXISTING** (the b05f exe, schema 7, does the same: suite `20261113T222339-d97c57`): the first QSOs capture `my_cq_zone` 5 (W1AW, CTY). After ANY Preferences "Save and close", even one that changes only MY NAME, the next QSO captures 8. Reproduced in EUHFC and CW Open. The Station page shows CQ zone `8` and ITU zone `0` for W1AW, and the log's `MY ZONE` row is `8` (source station) from creation | `cq-zone-after-prefs-save-*` (incl. `-cwopen-old-exe-b05f`) |
+| 317 county plus host state (KY, AL, WV, VT in state) | PASS, score ASSERTED after each QSO (2 then 12 Pts; VT 3 then 18; county-only would be 8 or 12), suite `20261113T221958-36b623`: W1AW `599 CT`, then a host county, takes CW Dom (All) from 1 to 3 (county + host state). Score 12 Pts (KY, AL, WV) and 18 Pts (VT). Domestic remaining-mults list shows `Ky`, `Al`, `Wv`, `Vt` as worked (reviewed captures, not asserted) | `issue317-*` |
+| 317 Florida in state | PASS (asserted): W7SP `599 UT` then W4AFC `599 PIN` = 8 Pts, CW Dom 2 | `issue317-fl` |
+| 292 Enter on empty exchange | PASS (CW Open, CQ, plain Enter, no keyer): the first Enter is silent, and the box holds `" "`. After clearing it, Enter shows "Not enough info in exchange!!" and logs nothing (3 QSOs before and after). The beep is not verifiable | `issue292-empty-exchange` |
+| 287 Jock White | PASS: row reads MY BRANCH NUMBER, `27` stored as contest MY ZONE | `issue290-287-prompts/jockwhite.png` |
+| 290 NCCC / Locust | NCCC PASS (reviewed: no member number, MY STATE row). Locust still NOT RUNNABLE: inactive, empty prompt, no rows | `issue290-287-prompts` |
+| Accented MY NAME | PASS: `José` saved, shown after a full restart | `accented-my-name` |
+| Message editor refusal | PASS: 250 letters plus two Ctrl+P Ctrl+A escapes. The Warning box reads "The message is 258 bytes long and a message holds 255. Shorten it and press OK again." The editor stays open with the message field focused, nothing is saved, and tr4w.log has the `[EditMessage] ... not saved` line. A plain 300-letter entry cannot be typed (the box stops at 255) | `message-editor-refusal` |
+
+Harness additions: `bench_station_names.py`, `bench_year_sent.py`, `bench_county_host.py` and `bench_pending.py`. Shared code added to existing modules:
+
+- `session.dialog_facts` and `session.click_dialog_button`: read a QuestionDlg or TaskDialog without answering by position.
+- `qso_entry.my_station_fields`: Edit QSO's our-station boxes by designed rows. The old ITU-zone lookup took the lowest-rightmost box, which is now Year sent.
+- `bench_exports.run_export`: the export UI route, shared.
+- `bench_county.pick_county`: scrolls the popup to the county before the physical click.
+
+Driver errors fixed along the way:
+
+- Alt-M cycles CW, DIGI, SSB.
+- `answer_question` read a vanishing `#32770`.
+- The county popup click landed below the visible rows (KY SCO, WV MIN).
+- The first message-length attempt was capped at 255 by the box.
+
+The refactored export driver re-passed the existing `bench-export-discover` and `bench-export-cabrillo` phases (suite `20261113T221533-8bd35d`). No application source changed.

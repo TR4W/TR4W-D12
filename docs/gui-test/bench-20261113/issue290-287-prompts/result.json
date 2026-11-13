@@ -1,0 +1,9 @@
+{
+   "scenario": "bench-prompts-check",
+   "run": "x-20261113T220856-59adaa-prompts",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "note": "Prompt wording asserted where UIA exposes it; row labels require screenshot review"
+}

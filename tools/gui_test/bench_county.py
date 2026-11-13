@@ -36,25 +36,68 @@ def inspect(app, startup, output, journal):
    return {"passed": True, "note": "Discovery captures only; no county requirements accepted yet"}
 
 
+def in_state_box(startup):
+   matches = [control for control in startup.descendants(class_name="Button")
+      if control.is_visible() and "I am in" in control.window_text().replace("&", "")]
+   if len(matches) != 1:
+      raise AssertionError("In-state checkbox is not unique")
+   return matches[0]
+
+
+def county_combo(startup):
+   controls = [control for control in startup.descendants(class_name="LCLComboBox") if control.is_visible()]
+   return ComboBoxWrapper(min(controls, key=lambda control: control.rectangle().top).handle)
+
+
+def tick_in_state(startup, area, output):
+   # Wait for the selected party's own caption: the form is rebuilt per contest.
+   wait_until(5, 0.1, lambda: area in in_state_box(startup).window_text())
+   capture(startup, output / (area.lower() + "-before-checkbox.png"))
+   if in_state_box(startup).get_check_state() != 1:
+      in_state_box(startup).click_input()
+   wait_until(3, 0.1, lambda: in_state_box(startup).get_check_state() == 1)
+
+
+def pick_county(app, startup, ok, area, code, journal):
+   """Physically click county CODE in the in-state list; the OK button must enable."""
+   listing = county_combo(startup)
+   items = listing.item_texts()
+   matches = [index for index, text in enumerate(items) if text.split(" - ")[0] == code]
+   if len(matches) != 1:
+      raise AssertionError("County code is not unique: " + code)
+   index = matches[0]
+   listing.click_input(coords=(listing.rectangle().width() - 10, 10))
+   popup = app.window(class_name="ComboLBox", visible_only=True)
+   popup.wait("visible", timeout=3)
+   native = ListBoxWrapper(popup.handle)
+   # Scroll (not select) the item into the popup's view first: an item below
+   # the visible rows has a rectangle outside the list, and a click there
+   # closes the popup without choosing anything (KY SCO, WV MIN).
+   import win32gui
+   win32gui.SendMessage(popup.handle, 0x0197, index, 0)
+   rectangle = native.item_rect(index)
+   inside = native.client_rect()
+   if not (0 <= rectangle.top and rectangle.bottom <= inside.bottom):
+      raise RuntimeError("County " + code + " is not inside the visible popup after scrolling")
+   journal.perform("physically click " + area + " " + code + " county", lambda: native.click_input(
+      coords=(rectangle.left + 15, (rectangle.top + rectangle.bottom) // 2)))
+   wait_until(3, 0.1, ok.is_enabled)
+   if listing.window_text().split(" - ")[0] != code:
+      raise AssertionError("Physical click selected a different county: " + listing.window_text())
+   return items
+
+
 def check(app, startup, root, run_name, output, journal, phase):
    results = {}
+
    def box():
-      matches = [control for control in startup.descendants(class_name="Button")
-         if control.is_visible() and "I am in" in control.window_text().replace("&", "")]
-      if len(matches) != 1:
-         raise AssertionError("In-state checkbox is not unique")
-      return matches[0]
+      return in_state_box(startup)
 
    def county():
-      controls = [control for control in startup.descendants(class_name="LCLComboBox") if control.is_visible()]
-      return ComboBoxWrapper(min(controls, key=lambda control: control.rectangle().top).handle)
+      return county_combo(startup)
 
    def in_state(area):
-      wait_until(5, 0.1, lambda: area in box().window_text())
-      capture(startup, output / (area.lower() + "-before-checkbox.png"))
-      if box().get_check_state() != 1:
-         box().click_input()
-      wait_until(3, 0.1, lambda: box().get_check_state() == 1)
+      tick_in_state(startup, area, output)
 
    state = choose_contest(startup, "Florida QSO Party", journal)[0]
    ok = startup.child_window(title_re="&?OK", class_name="Button")
@@ -107,22 +150,7 @@ def check(app, startup, root, run_name, output, journal, phase):
    in_state(area)
    if ok.is_enabled():
       raise AssertionError("Florida OK enabled before choosing county")
-   listing = county()
-   items = listing.item_texts()
-   matches = [index for index, text in enumerate(items) if text.split(" - ")[0] == code]
-   if len(matches) != 1:
-      raise AssertionError("County code is not unique: " + code)
-   index = matches[0]
-   listing.click_input(coords=(listing.rectangle().width() - 10, 10))
-   popup = app.window(class_name="ComboLBox", visible_only=True)
-   popup.wait("visible", timeout=3)
-   native = ListBoxWrapper(popup.handle)
-   rectangle = native.item_rect(index)
-   journal.perform("physically click " + area + " " + code + " county", lambda: native.click_input(
-      coords=(rectangle.left + 15, (rectangle.top + rectangle.bottom) // 2)))
-   wait_until(3, 0.1, ok.is_enabled)
-   if listing.window_text().split(" - ")[0] != code:
-      raise AssertionError("Physical click selected a different county: " + listing.window_text())
+   pick_county(app, startup, ok, area, code, journal)
    capture(startup, output / (slug + "-county-selected.png"))
    ok.click_input()
    main = app.window(title_re=r"TR4W v.*")

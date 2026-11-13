@@ -254,11 +254,22 @@ def wait_for_hint(timeout=3):
 def answer_question(app, expected_text, journal, screenshot=None, timeout=3, answer="No"):
    if answer not in {"Yes", "No"}:
       raise ValueError("Only explicit Yes/No answers are supported")
-   notice = app.window(class_name="#32770")
-   if not notice.exists(timeout=timeout):
+   # Visible only, bound to one handle, and re-resolved while a notice vanishes
+   # under us: a transient #32770 once "disappeared" before its body was read
+   # while the real question was already on screen (euhfc-yes, 2026-11-13).
+   spec = app.window(class_name="#32770", visible_only=True)
+   if not spec.exists(timeout=timeout):
       return False
-   opened = app.window(handle=notice.handle)
-   text = notice_text(app, notice)
+   deadline = time.monotonic() + 10
+   while True:
+      notice = app.window(handle=spec.handle)
+      try:
+         text = notice_text(app, notice)
+         break
+      except LookupError:
+         if time.monotonic() > deadline or not spec.exists(timeout=2):
+            raise
+   opened = notice
    if expected_text not in text:
       raise RuntimeError("Unclassified question: " + text)
    if screenshot is not None:
@@ -270,6 +281,62 @@ def answer_question(app, expected_text, journal, screenshot=None, timeout=3, ans
    journal.perform("answer " + answer + ": " + expected_text, buttons[0].click_input)
    opened.wait_not("visible", timeout=10)
    return True
+
+
+def dialog_facts(app, title, timeout=10):
+   """Read a modal question WITHOUT answering it: its class, body text, every
+   button and which one is the default. Works for an LCL QuestionDlg form and
+   a native #32770 / TaskDialog alike, because it reads both the win32 buttons
+   (BS_DEFPUSHBUTTON is the default) and UI Automation (whose buttons a
+   TaskDialog draws without windows). The focused element is recorded too: in
+   both kinds the default button starts with the keyboard focus."""
+   import win32gui
+   import win32con
+   from pywinauto.uia_defines import IUIA
+   dialog = app.window(title=title, visible_only=True)
+   dialog.wait("visible", timeout=timeout)
+   facts = {"title": dialog.window_text(), "class": dialog.class_name(), "handle": dialog.handle,
+      "win32_buttons": [], "uia_buttons": [], "uia_texts": [], "win32_texts": []}
+   for control in dialog.descendants():
+      if not control.is_visible():
+         continue
+      if control.class_name() == "Button":
+         style = win32gui.GetWindowLong(control.handle, win32con.GWL_STYLE)
+         facts["win32_buttons"].append({"text": control.window_text(), "handle": control.handle,
+            "default_style": (style & 0x0F) == win32con.BS_DEFPUSHBUTTON})
+      elif control.window_text().strip():
+         facts["win32_texts"].append({"class": control.class_name(), "text": control.window_text()})
+   uiapp = Application(backend="uia").connect(process=app.process)
+   for control in uiapp.window(handle=dialog.handle).descendants():
+      kind = control.element_info.control_type
+      name = control.element_info.element.CurrentName
+      if kind == "Button":
+         facts["uia_buttons"].append(name)
+      elif kind == "Text" and name.strip():
+         facts["uia_texts"].append(name)
+   try:
+      focused = IUIA().iuia.GetFocusedElement()
+      facts["focused"] = {"name": focused.CurrentName, "type": focused.CurrentLocalizedControlType,
+         "handle": focused.CurrentNativeWindowHandle}
+   except Exception as error:
+      facts["focused_error"] = repr(error)
+   # The title-bar Close of a TaskDialog is a UIA button too; it is not an answer.
+   facts["answers"] = [name for name in facts["uia_buttons"] if name.replace("&", "") != "Close"]
+   defaults = [button["text"] for button in facts["win32_buttons"] if button["default_style"]]
+   facts["default"] = defaults[0] if len(defaults) == 1 else facts.get("focused", {}).get("name")
+   return dialog, facts
+
+
+def click_dialog_button(app, dialog, caption, journal):
+   """Press the named answer of a dialog read by dialog_facts, by its caption."""
+   uiapp = Application(backend="uia").connect(process=app.process)
+   buttons = [control for control in uiapp.window(handle=dialog.handle).descendants(control_type="Button")
+      if control.element_info.element.CurrentName.replace("&", "") == caption]
+   if len(buttons) != 1:
+      raise RuntimeError("Dialog button not unique: " + caption)
+   handle = dialog.handle
+   journal.perform("answer " + caption, buttons[0].click_input)
+   app.window(handle=handle).wait_not("visible", timeout=10)
 
 
 def describe_windows(app, output):

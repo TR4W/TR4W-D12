@@ -1,0 +1,34 @@
+{
+   "suite": "20261113T213433-b6f973",
+   "requested_cases": [
+      "import"
+   ],
+   "cases": [
+      {
+         "case": "seed",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T213433-b6f973\\seed\\bench-seed\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "CW Open score/label assertions and three saved contacts passed; other setup captures are inspection only"
+      },
+      {
+         "case": "import",
+         "status": "PASS",
+         "exit_code": 0,
+         "result": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T213433-b6f973\\import\\bench-import-regression\\result.json",
+         "error": null,
+         "failures": [],
+         "note": "Bad import rolled back with visible warning; later logging, good import and re-export verified"
+      }
+   ],
+   "status": "PASS",
+   "build": {
+      "sha256": "d78de7f9de0b42d191a86e3d3cf3711016639be3aa573db17ce7538de061c765",
+      "debug_crc32": "19712079",
+      "snapshot": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T213433-b6f973\\build\\selected-d78de7f9de0b\\app",
+      "archive": "C:\\tr4w-d12\\build-out\\gui-regression\\20261113T213433-b6f973\\build\\selected-d78de7f9de0b\\app.zip",
+      "vm_root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b"
+   }
+}

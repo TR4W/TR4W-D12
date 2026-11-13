@@ -1,0 +1,10 @@
+{
+   "scenario": "bench-pending-empty-exchange",
+   "run": "x-20261113T220856-59adaa-empty-exchange",
+   "root": "C:\\TR4W-Test\\bench-main-d78de7f9de0b",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "note": "Two plain Enters, no keyer configured",
+   "pid": 7100
+}
