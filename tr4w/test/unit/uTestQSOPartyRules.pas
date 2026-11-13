@@ -96,10 +96,20 @@ procedure FreeCountyTable;
 function CountyTable: TDomQTHTable;
 function CountyFileKnowsQTH(const aQTH: string): boolean;
 
+(* An entered QSO through ParametersOkay and the real dupe/multiplier
+   sheets. Returns whether the accepted QSO was a dupe. Shared by all party
+   tests; the no-submode overload preserves the radio-derived default. *)
+function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
+   aMode: ModeType; aExtMode: ExtendedModeType;
+   out aAccepted: boolean; var aRX: ContestExchange): boolean; overload;
+function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
+   aMode: ModeType; out aAccepted: boolean;
+   var aRX: ContestExchange): boolean; overload;
+
 implementation
 
 uses
-   SysUtils,
+   SysUtils, LogWind, LogStuff, MainUnit,
    uSettingsModel,
    uMults,
    uCallsigns,
@@ -295,6 +305,41 @@ var
 begin
    Result := (GCountyTable <> nil) and
              GCountyTable.FindAlias(UpperCase(Trim(aQTH)), entry);
+end;
+
+function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
+   aMode: ModeType; aExtMode: ExtendedModeType;
+   out aAccepted: boolean; var aRX: ContestExchange): boolean;
+begin
+   aRX := Default(ContestExchange);
+   aRX.ExtMode := aExtMode;
+   ActiveMode := aMode;
+   CallWindowString := CallString(aCall);
+   ExchangeErrorMessage := '';
+   aAccepted := ParametersOkay(CallString(aCall), Str40(aExch), aBand, aMode,
+                               14025000, aRX);
+   aRX.ceRecordKind := rkQSO;
+   aRX.ceContest := Contest;
+   Result := False;
+   if aAccepted then
+      begin
+      Result := VisibleLog.QSOIsADupe(aRX);
+      if Result then
+         begin
+         aRX.ceDupe := True;
+         aRX.QSOPoints := 0;
+         end;
+      Sheet.SetMultFlags(aRX);
+      Sheet.AddQSOToSheets(@aRX, False);
+      AddQSOToDupeSheets(aRX, False);
+      end;
+end;
+
+function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
+   aMode: ModeType; out aAccepted: boolean;
+   var aRX: ContestExchange): boolean;
+begin
+   Result := EnterPartyQSO(aCall, aExch, aBand, aMode, eNoMode, aAccepted, aRX);
 end;
 
 end.

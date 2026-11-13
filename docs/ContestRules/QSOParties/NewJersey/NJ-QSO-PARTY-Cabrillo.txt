@@ -1,0 +1,151 @@
+Source: https://sites.google.com/view/k2td-bcrc/nj-qp/cabrillo-format
+Fetched: 2026-11-13
+Cabrillo: NJ-QSO-PARTY (sponsor Cabrillo page)
+ADIF: NJ-QSO-PARTY (ADIF 3.1.7 Contest_ID)
+WA7BNM: 92 - https://www.contestcalendar.com/contestdetails.php?ref=92
+Image table transcription: NJ-QSO-PARTY-ImageTables.txt
+Issue: https://github.com/TR4W/TR4W-D12/issues/124
+
+K2TD-BCRC.org - Cabrillo Format
+Search this site
+Embedded Files
+Skip to main content
+Skip to navigation
+NEXT meeting Monday Nov 16 (nominations)  ==>
+Meetings
+K2TD-BCRC.org
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+K2TD-BCRC.org
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+More
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+Cabrillo Format
+Cabrillo: Essential Header Fields  (callsign.log filename)
+These lines must exist at the top of your file. Order matters less than accuracy.
+Most logging programs like N3FJP or N1MM will output this for you.
+START-OF-LOG: 3.0
+: The very first line.
+CATEGORY-OVERLAY:
+ROOKIE (if licensed < 1 year of contest)
+CALLSIGN:
+The callsign used.
+CONTEST:
+The official contest name (e.g., NJ-QSO-Party).
+CATEGORY-OPERATOR:
+(e.g., SINGLE-OP, MULTI-OP).
+CATEGORY-STATION:
+MOBILE (or FIXED or PORTABLE)
+CATEGORY-BAND:
+(e.g., ALL, 10M, 40M).
+CATEGORY-MODE:
+(e.g., SSB, CW, DIGI).
+CATEGORY-POWER:
+(e.g., HIGH, LOW, QRP).
+CLAIMED-SCORE:
+Integer value.
+OPERATORS:
+Call sign(s) of operators.
+NAME:
+&
+ADDRESS:
+Mailing address for awards.
+SOAPBOX:
+Comments (optional).
+QSO Line Formatting (Crucial)
+QSO lines must follow a specific, space-separated format.
+Do not use tabs
+. There should be a 'space' between QSO: and FREQ
+Format:
+QSO: FREQ MO DATE TIME CALL SENT RCVD [OTHER]
+Example:
+QSO: 14090 DG 2024-12-07 1833 W0YK -03 CM97 KL7DE +01 BE49.
+Frequency:
+In kHz (e.g., 14090) or MHz (e.g., 14).
+Mode:
+CW, PH (Phone), SSB, DG (Digital), FM.
+Date:
+YYYY-MM-DD.
+Time:
+4-digit UTC format (e.g., 1833).
+Callsigns:
+Must be accurate.
+Exchange:
+Sent and received signal reports/serial numbers/grids.
+Common Mistakes to Avoid
+Incorrect Categories:
+Use only permitted categories from the specific contest rules.
+Missing Data:
+Ensure all required headers (Address, Operator) are present.
+Filename:
+Name the file YOURCALL.log or YOURCALL.cbr.
+File Extension:
+Save as a .txt or .log file in plain text, not a formatted document like .doc or .pdf.
+For more information, you can visit the
+World Wide Radio Operators Foundation
+(c) 2026 Burlington County Radio Club
+Google Sites
+Report abuse
+Page details
+Page updated
+Google Sites
+Report abuse

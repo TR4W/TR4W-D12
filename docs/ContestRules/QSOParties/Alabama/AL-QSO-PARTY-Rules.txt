@@ -1,0 +1,112 @@
+Source: https://alabamacontestgroup.org/aqp/rules/
+Fetched: 2026-11-13
+Cabrillo: AL-QSO-PARTY (WA7BNM ref 134)
+WA7BNM: https://www.contestcalendar.com/contestdetails.php?ref=134
+ADIF: AL-QSO-PARTY (ADIF 3.1.7 Contest_ID)
+NY4I ruling on #114: "AL would get credit for working that AL station."
+The first county in each mode also earns the Alabama state multiplier.
+
+Rules
+2026 AQP Rules
+Sponsored by Alabama Contest Group
+Object:
+For Alabama amateurs to make contact with amateur radio stations throughout the world. Stations outside of Alabama make contact with Alabama amateur radio stations and as many Alabama counties as possible.
+Contest Period:
+1500Z July 25th to 0300Z July 26th, 2026. This is a 12-hour period starting at 10:00 AM CDST until 10:00 PM CDST on Saturday, July 25th, 2026. All stations may operate the full 12 hours contest period.
+Categories:
+a)
+Single Operator:
+One person performs all operating and logging functions. Only allowed one transmitted signal on the air at a time.
+b)
+Multi operators.
+(1)
+Multi-Single
+. (2)
+Multi-multi
+.
+c)
+Mobile:
+Mobile is defined as a station that is self-contained (radio, antenna, power source capable of motion). No county line sitting.
+d)
+Single Operator.
+One person performs all the operating, logging and driving.
+e)
+Single Operator with Driver.
+One person performs all the operating and logging, with a separate non-operating driver. The driver may not assist the operator in any way with the contest.
+f)
+Multi Operator
+. More than one that share driving and operating duties.
+Power:
+Three power output categories. Logs not showing power category will be listed as high power.
+a) QRP – 5 watts output or less.
+b) Low Power (LP) – 150 watts or less
+c) High Power (HP) – more than 150 watts output.
+Modes:
+a) Mixed mode (Phone and CW) b) Phone only
+c) CW only
+Contest Exchange
+:
+a) Alabama stations send signal report and county abbreviations. Abbreviations may have changed, please check the website for the correct ones.
+b) Alabama stations working other Alabama stations should log the actual county for the station they work.
+c) W/VE stations (including KH6/KL7) send signal report and state or VE province.
+d) DX stations (including KP2/KP4) send signal report and prefix of country.
+Scoring:
+QSO points:
+Both CW and phone QSOs count 2 points per QSO.
+Multipliers: Alabama Stations:
+Maximum of 50 states (includes Alabama).
+Note: District of Columbia counts as Maryland (MDC)
+Thirteen Canadian provinces/territories:
+(1) Alberta [AB] (VE6, VA6) / (2) British Columbia [BC] (VE7, VA7) / (3) Manitoba [MB] (VE4, VA4) / (4) New Brunswick [NB] (VE9) / (5) Newfoundland and Labrador [NL] (VO1, VO2) / (6) Northwest Territories [NT] (VE8) / (7) Nova Scotia [NS] (VE1, VA1, CY9, CY) / (8) Nunavut [NU] (VY0) / (9) Ontario [ON] (VE3, VA3) / (10) Prince Edward Island [PE] (VY2) / (11) Quebec [QC] (VE2, VA2) / (12) Saskatchewan [SK] (VE5, VA5) / (13) Yukon [YT] (VY1)
+Total possible multipliers for Alabama stations are 63 per CW or Phone mode, 67 Alabama counties, plus any DXCC entities (prefix logged)for CW, phone or mixed operation.
+c) Multipliers can be counted once per mode
+.
+d) Stations may be worked on multiple bands for QSO credit.
+Alabama Station Scoring Example:
+For a low power station that works 25 CW contacts with 10 multipliers and 25 phone contacts with 10 multipliers:
+25 (CW QSOs) times 2 = 50 and 25 (PH QSOs) times 2 = 50 (PH points) added together is 100 QSOs points; times 20 (mults 10 CW + 10 PH = 20 mults) = a total score of 2000 Points (100 QSO points times 20 mults)
+Multipliers: All other stations
+:
+(1) Maximum of 67 Alabama counties (please see the list of counties with abbreviations—as they have changed from previous years/contests).
+(2) Alabama Mobiles that change counties are considered to be a new station and may be contacted again for QSO points and/or multiplier credit.
+(3) Multiplier will be counted once per mode
+.
+Stations can be worked on multiple bands for QSO credit.
+(4) Total possible multipliers are 67 per CW or PH mode 134 for mixed mode.
+Non-Alabama Station Scoring Example
+:
+For a QRP station that worked 25 CW contacts with 10 multipliers and 25 phone contacts with 10 multipliers
+25 (CW QSOs) times 2 points = 50 (CW points) + 25 (PH QSOs) times 2 points = 50 (PH points) for a total of 100 QSO points; times 10 CW mults + 10 PH mults = 20 total mults for a total of 2000 points
+(100 QSO points times 20 mults).
+Suggested Frequencies
+:
+a) Operate consistent with ARRL band plans and your license privileges for 10m to 80m. No WARC bands.
+b) PH operation centered around 3.855, 7.230, 14.250, 21.350, 28.450 and above
+c) CW Operation centered around 3.545, 7.045, 14.045, 21.045, 28.045 and above
+d) Mobile Window:
+For Mobile CW stations: First 5 to 10 Khz of suggested center frequency. For example, 7035 to 7040 only mobile call CQ.
+For Mobile PH stations: First 10 kHz of the general PH band. For example, 7175 to 7185.
+e) Please avoid: Fixed stations please do not call CQ in the recommended mobile window.
+The SSTV on 20m. Recommend that mobiles operate from 14238 to The Alabama Traffic net on 3.965 at 6:30PM CT.
+Be considerate of other official nets that may be operating during our event. Thanks!
+Miscellaneous:
+a) County line sitting operation is NOT permitted for any entry.
+b) CW contacts in CW portion only. Phone contacts in phone band only. No cross-mode contacts.
+c) Self spotting and the use of spotting networks i.e., DX Cluster and RBN are permitted for all categories.
+d) Call signs and exchange information (county, state/province or DX) must be received by each station and recorded in the log to have a complete QSO.
+e) DX stations will send “59 + Country prefix” For example a German station would send: “599 DL (CW) or 59 Delta Lima (Phone).”
+f) Call sign must indicate your DXCC country.
+g) Out of state stations working from multiple states must submit separate logs for each state. This would be applicable to those out of state mobiles that are participating. Each state score stands alone and is not consolidated with other state operations.
+h) Alabama stations working other Alabama stations must log the appropriate county information for multiplier credit. Alabama stations should NOT log AL as the exchange.
+i) Alabama stations should call CQ AQP and stations outside Alabama should call CQ AL.
+j) Alabama Mobiles should sign their callsign/mobile in Phone and callsign/m for CW. Alabama Mobiles use only one call sign.
+Reporting/Log Submission:
+a) Logs should be submitted no later than 30 days after the end of the contest.
+b) All logs must be submitted in the Cabrillo format.
+c) Email Cabrillo logs to:
+Email AQP Log
+or submit via
+Online Log Submission
+d) All logs must indicate category (including power used), band, mode, date, time (UTC), calls sent and received and contest exchange information (to include Alabama County, US States, VE Provinces, DXCC countries. Mobiles must indicate in which County they were operating during contact/exchange.
+See the website for logging software vendors that support the Alabama QSO Party.
+Results will be posted to the Alabama QSO Party web site.

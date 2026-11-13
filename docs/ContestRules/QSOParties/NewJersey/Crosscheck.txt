@@ -1,0 +1,25 @@
+Secondary cross-check, 2026-11-13
+Command: python tools/dom-crosscheck/crosscheck_dom_dxlog.py --contest NJ-QSO-PARTY
+DXLog source: C:/Program Files (x86)/DXLog.net/Contest/NJQP.txt
+
+All 21 out-of-state county multipliers agree exactly with DXLog.
+
+The in-state report compares TR4W's combined domestic county/state/province
+table with DXLog's CUSTOM state/province/DX list and reports 21 additional
+county multipliers. DXLog declares those counties separately as MULT1_TYPE
+FIELD with the full county regex; MULT2 is its CUSTOM state/province/DX
+multiplier. The apparent difference is the script's single-list view.
+
+TR4W has the sponsor's 84 in-state multipliers: 21 counties + 49 states +
+13 provinces + one DX. The report counts DX separately, so it prints 83
+non-DX domestic keys. The sponsor uses NF for Newfoundland and Labrador;
+TR4W accepts NF and standard alias NL as the same multiplier and exports
+ADIF STATE NL. NJ and DC are absent from the sponsor's state table. NY4I
+confirmed on #124 (2026-11-13) that DC will never be received and the
+maximum remains 84. No DC alias or additional multiplier is added.
+
+DXLog permits a slash county-line exchange, but the sponsor's current rules
+explicitly forbid simultaneous operation in multiple counties. TR4W refuses
+county-line entries. The sponsor FAQ also explicitly excludes FT8.
+
+Sponsor 2026 rev0.5 rules, tables and FAQ govern, rather than DXLog.

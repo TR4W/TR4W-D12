@@ -92,6 +92,7 @@ uses
    LogStuff,
    PostUnit,
    FCONTEST,
+   uTestQSOPartyRules,
    MainUnit;
 
 (* ---------------------------------------------------------------------------
@@ -478,32 +479,7 @@ var
    (* ONE QSO, AS AN OPERATOR ENTERS IT -- uTestContestGeorgiaQP's shape:
       ParametersOkay, then what LogContact does with the record it accepts.
       Returns whether it was a dupe. *)
-   function Enter(const aCall: string; const aExch: string; aBand: BandType;
-                  aMode: ModeType; out aAccepted: boolean;
-                  var aRX: ContestExchange): boolean;
-   begin
-      aRX := Default(ContestExchange);
-      ActiveMode := aMode;
-      CallWindowString := CallString(aCall);
-      ExchangeErrorMessage := '';
-      aAccepted := ParametersOkay(CallString(aCall), Str40(aExch), aBand, aMode,
-                                  14025000, aRX);
-      aRX.ceRecordKind := rkQSO;
-      aRX.ceContest := Contest;
-      Result := False;
-      if aAccepted then
-         begin
-         Result := VisibleLog.QSOIsADupe(aRX);
-         if Result then
-            begin
-            aRX.ceDupe := True;
-            aRX.QSOPoints := 0;
-            end;
-         Sheet.SetMultFlags(aRX);
-         Sheet.AddQSOToSheets(@aRX, False);
-         AddQSOToDupeSheets(aRX, False);
-         end;
-   end;
+
 
 begin
    if aInNewEngland then
@@ -581,14 +557,14 @@ begin
       mo.ClearAllMults;
 
       (* A ROVER IN ANDROSCOGGIN, ITS BARE CALL. *)
-      dupe := Enter('K1AR', '599 MEAND', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('K1AR', '599 MEAND', Band20, CW, accepted, rx);
       CheckTrue(accepted, who + '599 MEAND is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, who + 'the first QSO is not a dupe');
       CheckEquals(2, Integer(rx.QSOPoints), who + 'CW scores 2');
       CheckTrue(rx.DomesticMult, who + 'Androscoggin (or Maine) is a new multiplier');
 
       (* THE SAME ROVER IN CUMBERLAND: a new station. *)
-      dupe := Enter('K1AR', '599 MECUM', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('K1AR', '599 MECUM', Band20, CW, accepted, rx);
       CheckTrue(accepted, who + '599 MECUM is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, who + 'the rover from a new county, same band and mode, is NOT a dupe');
       CheckEquals(2, Integer(rx.QSOPoints), who + 'and scores');
@@ -602,12 +578,12 @@ begin
          end;
 
       (* THE SAME CALL, COUNTY, BAND AND MODE: a dupe. *)
-      dupe := Enter('K1AR', '599 MEAND', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('K1AR', '599 MEAND', Band20, CW, accepted, rx);
       CheckTrue(dupe, who + 'Androscoggin again on 20 m CW IS a dupe');
       CheckEquals(0, Integer(rx.QSOPoints), who + 'and scores 0');
 
       (* ANOTHER BAND: a new QSO, but no multiplier again -- once per contest. *)
-      dupe := Enter('K1AR', '599 MEAND', Band40, CW, accepted, rx);
+      dupe := EnterPartyQSO('K1AR', '599 MEAND', Band40, CW, accepted, rx);
       CheckFalse(dupe, who + 'Androscoggin on 40 m is not a dupe');
       CheckFalse(rx.DomesticMult, who + 'and is no new multiplier -- once per contest');
 
@@ -617,13 +593,13 @@ begin
       if not aInNewEngland then
          begin
          ClearPendingCounties;
-         dupe := Enter('W1XX', '599 MEAND/MECUM', Band15, CW, accepted, rx);
+         dupe := EnterPartyQSO('W1XX', '599 MEAND/MECUM', Band15, CW, accepted, rx);
          CheckTrue(accepted, who + 'a county line is taken: ' + string(ExchangeErrorMessage));
          CheckFalse(dupe, who + 'its first county is not a dupe');
          CheckEquals('MEAND', UpperCase(string(rx.QTHString)), who + 'the first county is this QSO');
          CheckEquals(1, PendingCountiesCount, who + 'the second is queued');
          CheckEquals('MECUM', UpperCase(DequeuePendingCounty), who + 'Cumberland');
-         dupe := Enter('W1XX', '599 MECUM', Band15, CW, accepted, rx);
+         dupe := EnterPartyQSO('W1XX', '599 MECUM', Band15, CW, accepted, rx);
          CheckFalse(dupe, who + 'the second county of the line is its own QSO, not a dupe');
          CheckEquals(2, Integer(rx.QSOPoints), who + 'and scores');
          ClearPendingCounties;

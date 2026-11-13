@@ -25,6 +25,12 @@ exchange is closest to yours:
 | Ontario | `926617b3` | a Canadian host (no ADIF `CNTY`, its own New Contest prompt); a bonus keyed on the worked call |
 | Quebec | `e751a346` | every QTH from the `.dom`, with ONE `Dx` entry as the DX multiplier; rules in two languages |
 
+The new Alabama and New Jersey tests share `uTestQSOPartyEngine` for isolated
+real-engine sessions and exact county-file comparison with sponsor data.
+Use that fixture for a new party rather than copying the session save/restore
+and QSO-entry routines. See `docs/QSO_PARTY_ADDITIONS.md` for its ownership and
+the exchange-dependent string-key timing found while adding Alabama (#114).
+
 The design behind all of this is `docs/CONTEST_OWNERSHIP_DESIGN.md`: **a
 contest class owns its rules outright**, through virtuals on `TContestBase`.
 There are no shared strategy objects and no per-rule registries.

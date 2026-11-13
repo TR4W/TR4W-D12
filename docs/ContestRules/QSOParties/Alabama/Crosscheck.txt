@@ -1,0 +1,21 @@
+Secondary cross-check, 2026-11-13
+Command: python tools/dom-crosscheck/crosscheck_dom_dxlog.py --contest AL-QSO-PARTY
+DXLog source: C:/Program Files (x86)/DXLog.net/Contest/AQP.txt
+
+All 67 out-of-state county multipliers agree exactly with DXLog.
+
+The in-state report compares TR4W's combined domestic county/state/province
+table with DXLog's CUSTOM state/province list and therefore reports the
+counties as additional multipliers. DXLog declares its county multiplier
+separately as MULT1_TYPE FIELD, restricted by its full county regex; MULT2
+is the CUSTOM state/province multiplier and MULT3 is DXCC. Thus the script's
+single-list comparison does not describe DXLog's whole scoring model.
+
+TR4W's DOM contains 129 keys: 67 counties + 49 other states + 13 provinces.
+The 50th state (AL) is a separate string-sheet credit on a county QSO,
+per NY4I's ruling on #114. It is not a missing DOM entry, and typing AL
+instead of the required county is refused. DC maps to Maryland. DXCC is a
+separate multiplier kind. See the class header and its tests.
+
+The sponsor's saved rules/table and NY4I's ruling govern; the cross-check
+is secondary evidence, not proof of correct scoring.

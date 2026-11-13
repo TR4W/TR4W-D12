@@ -1,0 +1,102 @@
+# New QSO parties
+
+Worktree: `.worktrees/new-qso-parties`, branch `codex/new-qso-parties`.
+Requests come from GitHub's `New Contest Request` label; titles containing
+`QSO Party` are the first batch. South Carolina #111 and #113 are one event.
+
+## Architecture
+
+Each event owns its rules in `tr4w/src/contestFactory/uContest<State>QP.pas`
+and registers by a stable string ID. Application/test imports link its unit;
+no frozen enum member or new-contest CFG is added. Sponsor documents and
+dated transcriptions live under `docs/ContestRules/QSOParties/<State>/`.
+
+The state-party base supplies host-area eligibility, county-qualified rover
+dupes and ADIF county/state handling. Each leaf explicitly states its bands,
+modes, points, exchange helpers, multiplier scope and county-line limit.
+`<state>_cty.dom` contains only host counties; `<state>.dom` adds the other
+locations an in-state entrant may work. Sponsor codes take precedence over
+another logger's definition.
+
+The shared entry path retains its existing country and string-key lookup
+order before exchange parsing. Alabama overrides `ParseReceivedExchange`,
+calls the inherited parser, and finalizes its received-location string key
+only after a successful parse. It calls the same `PrefixMultiplierKey`
+policy used by rescore. Existing contests retain their refusal behavior,
+including prefix keys derived from fields a refusing parser later changes.
+
+Alabama's first received county in each mode earns both that county and the
+Alabama state multiplier (NY4I, #114, 2026-11-13). Counties and other
+states/provinces use the domestic sheet; the additional `AL` key uses the
+existing string-key sheet, which already supports non-prefix keys for CW
+Open. Its totals row is labelled `AL`. The normal sheet scope, dupe/X-QSO
+exclusion, worked counts, score summation and rescore apply to both credits.
+No additional QSO field or database schema is required.
+
+The new tests share `uTestQSOPartyEngine`: it owns isolated domestic,
+multiplier and dupe sheets, configures the entrant from the class and shipped
+files, enters contacts through the real parser and sheets, and restores the
+session globals on destruction. `CountyFileDifference` compares canonical
+county entries against independently saved sponsor transcriptions.
+The fixture and ten older party tests call `uTestQSOPartyRules.EnterPartyQSO`
+for the parser/dupe/multiplier entry step. The older bodies were compared
+before extraction; two used the default submode and the rest were identical.
+Both overloads reach one implementation, so fixes cannot drift between copies.
+
+## First implementations
+
+| Issue | Event | Stored ID | Rules |
+|---|---|---|---|
+| #114 | Alabama | AL-QSO-PARTY | 2026 sponsor rules; NY4I's county plus state ruling |
+| #124 | New Jersey | NJ-QSO-PARTY | 2026 rev0.5, multiplier tables and FT8 FAQ |
+
+New Jersey's power factors follow the declared category: HIGH 1, LOW 2,
+QRP 4. Its table has 21 counties, 49 other states, 13 provinces and one DX
+multiplier (84 total). Sponsor `NF` is exported as ADIF `NL`. FT8 is excluded
+explicitly by the sponsor FAQ; other digital contacts require the full
+exchange.
+
+The entrant's mobile-category and own-county rework support is still the
+pre-existing gap #133, as recorded in the class headers. Received rover
+county changes are supported. Real-screen setup and 3830 report comparison
+remain bench work in `BENCH_QUEUE.md`.
+
+## Issue workflow
+
+Post rule questions on the relevant issue and apply `Agent Question`.
+Read answers directly, retain the ruling in the source/rules transcription,
+and remove the label once every question on that issue is resolved. Keep
+implementation findings and validation results on the issue. Do not close
+requests merely because a class compiles.
+
+## Remaining queue
+
+Kentucky #110; South Carolina #111/#113; Arkansas #115; Atlantic Canada
+#116; Canadian Prairies #117; Hawaii #118; Illinois #119; Iowa #120; Kansas
+#121; Louisiana #122; Mississippi #123; South Dakota #129; West Virginia #131.
+
+These remain requests, not claimed implementations. Regional Canadian
+events require their actual multi-province eligibility, not an assumed
+single-state base.
+
+Questions posted with `Agent Question`: #110 (2027 draft versus final 2026
+rules), #129 (digital-grid exchange, eligibility and mixed-mode formula),
+#131 (multiplier scope). #114's state-credit ruling is resolved and its
+question label has been removed. #124's DC question is also resolved: NY4I
+confirmed that DC will never be received, citing the 84-multiplier maximum.
+The sponsor table remains unchanged and #124's question label is removed.
+
+## Validation, 2026-11-13
+
+- Full FPC application rebuild passed; range warnings remain 3/3 and narrowing conversions 1187/1187.
+- Full unit suite: 473,358 passed, zero failures. Focused party run: 2,361 passed, zero failures.
+- All 58 lints passed. Deliberate point, scope, band and county-line mutations were detected for both parties.
+- New contest records were generated by the freeze script only, with the sponsor-rule and #114 ruling reason recorded in the commit message.
+- Full matrix: 198 identical, zero differing, missing or unfrozen. Independent ADIF validation: no unpinned findings or stale pins; the four existing WAG finding lines remain pinned. Both new contests have zero compliance errors.
+- Corpus exports: 15 passed, zero failed, 11 existing known divergences, zero awaiting candidates. Its 13 ADIF files have zero compliance errors.
+- Corpus rescore: all 13 logs identical to their frozen legacy baseline.
+- Sponsor county comparisons: all 67 Alabama and 21 New Jersey canonical codes/names agree; DXLog cross-check results and differences are retained with the rules.
+
+The generated contest-rules inventory was not regenerated: its existing model explicitly refuses RegisterContestById, including the parties already present on the base branch. Registry walks, matrix coverage and linked-unit lints cover these additions. Extending that separate inventory tool is outside this batch.
+
+Screen setup/totals and real 3830 form comparison remain in BENCH_QUEUE.md. Own-mobile reworks remain the existing engine gap #133; received rover county reworks are covered by the new tests.

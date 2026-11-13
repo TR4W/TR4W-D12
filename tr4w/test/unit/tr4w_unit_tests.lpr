@@ -355,6 +355,8 @@ uses
    uContestNewMexicoQP in '..\..\src\contestFactory\uContestNewMexicoQP.pas',
    uContestOntarioQP in '..\..\src\contestFactory\uContestOntarioQP.pas',
    uContestQuebecQP in '..\..\src\contestFactory\uContestQuebecQP.pas',
+   uContestNewJerseyQP in '..\..\src\contestFactory\uContestNewJerseyQP.pas',
+   uContestAlabamaQP in '..\..\src\contestFactory\uContestAlabamaQP.pas',
    uContestVermontQP in '..\..\src\contestFactory\uContestVermontQP.pas',
    uContestNewHampshireQP in '..\..\src\contestFactory\uContestNewHampshireQP.pas',
    uContestIN7QPNE in '..\..\src\contestFactory\uContestIN7QPNE.pas',
@@ -862,6 +864,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Quebec QSO Party, a new contest registered by its id
       (2026-10-26, #128). *)
    uTestContestQuebecQP in 'uTestContestQuebecQP.pas',
+   uTestContestNewJerseyQP in 'uTestContestNewJerseyQP.pas',
+   uTestContestAlabamaQP in 'uTestContestAlabamaQP.pas',
    (* The Vermont QSO Party, a new contest registered by its id
       (2026-11-10, #130). *)
    uTestContestVermontQP in 'uTestContestVermontQP.pas',
@@ -1086,6 +1090,8 @@ begin
    RegisterSuite(TContestNewMexicoQPTests.Create('ContestNewMexicoQP'));
    RegisterSuite(TContestOntarioQPTests.Create('ContestOntarioQP'));
    RegisterSuite(TContestQuebecQPTests.Create('ContestQuebecQP'));
+   RegisterSuite(TContestNewJerseyQPTests.Create('ContestNewJerseyQP'));
+   RegisterSuite(TContestAlabamaQPTests.Create('ContestAlabamaQP'));
    RegisterSuite(TContestVermontQPTests.Create('ContestVermontQP'));
    RegisterSuite(TContestNewHampshireQPTests.Create('ContestNewHampshireQP'));
    RegisterSuite(TContestStateQSOPartyBaseTests.Create('ContestStateQSOPartyBase'));

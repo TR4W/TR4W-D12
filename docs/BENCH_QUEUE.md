@@ -1,5 +1,13 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] New QSO parties #114/#124: create Alabama and New Jersey logs for
+  in-state, out-of-state and DX entrants; check setup prompts and typed
+  county-line refusal on screen. Alabama's first county must show county
+  plus AL state credit per mode, with the extra totals row labelled AL.
+- [ ] Export 3830 reports for Alabama and New Jersey and compare multiplier
+  columns with the events' real 3830 forms. Direct form retrieval was refused;
+  the classes currently use the base combined Mults column.
+
 A **living list**, not a log. An item goes in when a change lands that no
 automated gate can check, and comes **out** when NY4I confirms it. Items that
 pass are deleted from here; if the result is interesting it goes into the

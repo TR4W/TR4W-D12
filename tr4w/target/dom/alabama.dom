@@ -1,0 +1,70 @@
+Alabama QSO Party in-state county, state and province multipliers
+The class adds Alabama state credit when a county is worked, once per mode.
+AL is not a received exchange: Alabama stations must send their county.
+DC and MDC count as Maryland. DXCC entities are the separate DX multiplier.
+Only canonical state and province aliases: longer keys are host counties.
+
+INCLUDE FILE alabama_cty.dom
+Dc > Md = DC,MDC
+Ar = AR,^Arkansas
+Az = AZ,^Arizona
+Ca = CA,^California
+Co = CO,^Colorado
+Ct = CT,^Connecticut
+De = DE,^Delaware
+Fl = FL,^Florida
+Ga = GA,^Georgia
+Ia = IA,^Iowa
+Id = ID,^Idaho
+Il = IL,^Illinois
+In = IN,^Indiana
+Ks = KS,^Kansas
+Ky = KY,^Kentucky
+La = LA,^Louisiana
+Ma = MA,^Massachusetts
+Md = MD,^Maryland
+Me = ME,^Maine
+Mi = MI,^Michigan
+Mn = MN,^Minnesota
+Mo = MO,^Missouri
+Ms = MS,^Mississippi
+Mt = MT,^Montana
+Nc = NC,^North Carolina
+Nd = ND,^North Dakota
+Ne = NE,^Nebraska
+Nh = NH,^New Hampshire
+Nj = NJ,^New Jersey
+Nm = NM,^New Mexico
+Nv = NV,^Nevada
+Ny = NY,^New York
+Oh = OH,^Ohio
+Ok = OK,^Oklahoma
+Or = OR,^Oregon
+Pa = PA,^Pennsylvania
+Ri = RI,^Rhode Island
+Sc = SC,^South Carolina
+Sd = SD,^South Dakota
+Tn = TN,^Tennessee
+Tx = TX,^Texas
+Ut = UT,^Utah
+Va = VA,^Virginia
+Vt = VT,^Vermont
+Wa = WA,^Washington
+Wi = WI,^Wisconsin
+Wv = WV,^West Virginia
+Wy = WY,^Wyoming
+Ak = AK,^Alaska
+Hi = HI,^Hawaii
+AB = AB,^Alberta
+BC = BC,^British Columbia
+MB = MB,^Manitoba
+NB = NB,^New Brunswick
+NL = NL,^Newfoundland and Labrador
+NS = NS,^Nova Scotia
+NT = NT,^Northwest Territories
+NU = NU,^Nunavut
+ON = ON,^Ontario
+PE = PE,^Prince Edward Island
+QC = QC,^Quebec
+SK = SK,^Saskatchewan
+YT = YT,^Yukon
