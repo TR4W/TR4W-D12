@@ -91,6 +91,9 @@ type
       (* 2026-11-01: the left pane fills the group the file grid widened,
         with and without a Last Contest. *)
       procedure Test_TheLeftPaneFillsTheGrownGroup;
+      (* Issue 301: the notice grows to its wrapped text, and the rows below
+        move clear of it. *)
+      procedure Test_ALongNoticeIsShownWhole;
    private
       (* Lays out one path of the left pane on a SHOWN form -- see the test. *)
       procedure CheckLeftPaneFills(const aDir: string; aWithLatest: boolean);
@@ -1648,6 +1651,81 @@ begin
    end;
 end;
 
+(* ISSUE 301, MEASURED ON A SHOWN FORM: a label measures its wrapped text only
+  once its parent has a handle, so a form that is never shown cannot see the
+  defect. Ontario's notice was centred in a two-line label and lost its first
+  line above the yellow box. *)
+procedure TNewContestFormTests.Test_ALongNoticeIsShownWhole;
+var
+   frm: TfrmNewContest;
+   designedPanel: integer;
+   w, h: integer;
+   ctl: TControl;
+   noticeBottom: integer;
+
+   procedure CheckRowsClear(const aWhat: string);
+   var
+      k: integer;
+   begin
+      noticeBottom := frm.pnlComment.Top + frm.pnlComment.Height;
+      for k := 0 to frm.pnlDetails.ControlCount - 1 do
+         begin
+         ctl := frm.pnlDetails.Controls[k];
+         if (ctl <> frm.pnlComment) and (ctl.Top > frm.pnlComment.Top) then
+            begin
+            CheckTrue(ctl.Top >= noticeBottom,
+                      ctl.ClassName + ' at ' + IntToStr(ctl.Top) +
+                      ' is below the notice (bottom ' + IntToStr(noticeBottom) +
+                      ') -- ' + aWhat);
+            end;
+         end;
+   end;
+
+begin
+   BeginTest('Test_ALongNoticeIsShownWhole');
+
+   frm := NewForm;
+   try
+      designedPanel := frm.pnlComment.Height;
+      ShowOffScreen(frm);
+      try
+         frm.SetComment(SNewContestOntarioQPCountyOrLocation);
+         Application.ProcessMessages;
+
+         frm.lblComment.InvalidatePreferredSize;
+         w := 0;
+         h := 0;
+         frm.lblComment.GetPreferredSize(w, h, True, True);
+         CheckTrue(h > 0, 'the shown label measures its text');
+         WriteLn('  [NewContest] Ontario notice needs ', h, ' px; label ',
+                 frm.lblComment.Height, ', box ', frm.pnlComment.Height,
+                 ' (designed ', designedPanel, ')');
+         CheckTrue(h <= frm.lblComment.Height,
+                   'the label is as tall as its wrapped text (needs ' +
+                   IntToStr(h) + ', has ' + IntToStr(frm.lblComment.Height) + ')');
+         CheckTrue(frm.lblComment.Top + frm.lblComment.Height <=
+                   frm.pnlComment.ClientHeight,
+                   'and the yellow box holds the whole label');
+         CheckRowsClear('the long notice');
+
+         (* A short notice puts everything back where it was designed. *)
+         frm.SetComment('Enter your call.');
+         Application.ProcessMessages;
+         CheckEquals(designedPanel, frm.pnlComment.Height,
+                     'a one-line notice keeps the designed box');
+         CheckRowsClear('the short notice');
+
+         frm.SetComment('');
+         CheckEquals(designedPanel, frm.pnlComment.Height,
+                     'no notice keeps the designed box');
+      finally
+         frm.Hide;
+      end;
+   finally
+      frm.Free;
+   end;
+end;
+
 procedure TNewContestFormTests.Test_TheLeftPaneFillsTheGrownGroup;
 var
    dir: string;
@@ -1695,6 +1773,7 @@ begin
    Test_TheGridListsInTheSortedOrder;
    Test_EnterOpensTheSelectedLog;
    Test_TheLeftPaneFillsTheGrownGroup;
+   Test_ALongNoticeIsShownWhole;
 end;
 
 end.

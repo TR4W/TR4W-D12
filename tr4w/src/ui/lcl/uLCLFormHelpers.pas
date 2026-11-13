@@ -658,6 +658,15 @@ function TextWidthInFont(const aFont: TFont; const aText: TCaption): integer;
 function WidestText(const aFont: TFont; const aTexts: TStrings): integer;
 (* The height of one line of aText in aFont, by the same bitmap canvas. *)
 function TextHeightInFont(const aFont: TFont; const aText: TCaption): integer;
+(* THE HEIGHT OF aText WRAPPED AT WORD BREAKS TO aWidth, in aFont: whole lines
+  times one line's height, by the same bitmap canvas -- so it answers before
+  a form is shown, which a word-wrapped label's own preferred size cannot
+  (ControlPreferredSize below). Spaces are the only break, as a label's word
+  wrap breaks; a word wider than aWidth has a line to itself. Issue 304: the
+  generated Preferences rows are laid out at construction, long before any
+  handle exists. *)
+function WrappedTextHeight(const aFont: TFont; const aText: TCaption;
+                           const aWidth: integer): integer;
 
 (* WHAT THE WIDGET SET SAYS A CONTROL WOULD LIKE TO BE, without constraints.
   0 means "no opinion" -- an edit, a Win32 combo, or a label whose parent has
@@ -1383,6 +1392,71 @@ begin
       probe.SetSize(1, 1);
       probe.Canvas.Font := aFont;
       Result := probe.Canvas.TextHeight(aText);
+   finally
+      probe.Free;
+   end;
+end;
+
+function WrappedTextHeight(const aFont: TFont; const aText: TCaption;
+                           const aWidth: integer): integer;
+var
+   probe:     TBitmap;
+   lines:     integer;
+   i, start:  integer;
+   token:      TCaption;
+   line:      TCaption;
+   candidate: TCaption;
+begin
+   probe := TBitmap.Create;
+   try
+      probe.SetSize(1, 1);
+      probe.Canvas.Font := aFont;
+
+      lines := 1;
+      line  := '';
+      i     := 1;
+      while i <= Length(aText) do
+         begin
+         (* One word: up to the next space, the spaces themselves skipped. *)
+         while (i <= Length(aText)) and (aText[i] = ' ') do
+            begin
+            Inc(i);
+            end;
+         start := i;
+         while (i <= Length(aText)) and (aText[i] <> ' ') do
+            begin
+            Inc(i);
+            end;
+         token := Copy(aText, start, i - start);
+         if token = '' then
+            begin
+            Continue;
+            end;
+
+         if line = '' then
+            begin
+            candidate := token;
+            end
+         else
+            begin
+            candidate := line + ' ' + token;
+            end;
+
+         (* A word that does not fit on the current line starts the next one; a
+           word wider than the whole width has a line of its own, as a word
+           break leaves it. *)
+         if (line <> '') and (probe.Canvas.TextWidth(candidate) > aWidth) then
+            begin
+            Inc(lines);
+            line := token;
+            end
+         else
+            begin
+            line := candidate;
+            end;
+         end;
+
+      Result := lines * probe.Canvas.TextHeight('Wg');
    finally
       probe.Free;
    end;

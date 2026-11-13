@@ -287,7 +287,9 @@ begin
     something stops it reaching the main window: logging dies silently for the
     rest of the session. Enter on a secondary form is a real question and it
     is not this defect; leaving it alone keeps a fix from becoming a
-    regression. }
+    regression. (Enter on a focused BUTTON was answered by issue 297 and is
+    the focused control's -- see the uEditingKeys call below. Enter in a
+    field of a modeless window is still the open question.) }
   if (Screen.ActiveCustomForm <> nil) and
      (Screen.ActiveCustomForm <> TCustomForm(TR4WMainForm)) and
      (Shift * [ssCtrl, ssAlt, ssShift] = []) and
@@ -300,6 +302,18 @@ begin
                      [IfThen(Key = VK_TAB, 'Tab', 'Escape'),
                       Screen.ActiveCustomForm.Name]);
         end;
+     Exit;
+     end;
+
+  (* THE FOCUSED CONTROL'S OWN KEYSTROKES ARE NOT ACCELERATORS -- the one rule
+    TTR4WMainForm.IsShortcut also asks (uEditingKeys). Asked here for Enter on
+    a button outside the main window (issue 297): this handler runs BEFORE
+    the control and before TApplication.DoReturnKey, so dispatching 10651 and
+    blanking the key stopped the focused button from ever being pressed. The
+    rule's other arms answer keystrokes the menu owns, which this handler
+    already skips, so asking it changes nothing for them. *)
+  if KeystrokeBelongsToTheFocusedControl(Key, Shift) then
+     begin
      Exit;
      end;
 

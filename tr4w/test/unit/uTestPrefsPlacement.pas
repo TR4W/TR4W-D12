@@ -25,6 +25,7 @@ interface
 
 uses
    uTR4WTestFramework,
+   Controls,              (* TWinControl -- the generated-caption walk *)
    uPrefsForm;            (* TPrefsForm -- the overview check takes one *)
 
 type
@@ -43,6 +44,7 @@ type
       procedure CheckHeadingOverviews(const aForm: TPrefsForm);
       procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
       procedure CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
+      function CheckGeneratedLabelsFit(const aRoot: TWinControl): integer;
    public
       procedure RunAllTests; override;
    end;
@@ -52,9 +54,10 @@ implementation
 uses
    SysUtils,
    Forms,
-   Controls,
+   StdCtrls,              (* TLabel -- the generated captions *)
    ComCtrls,              (* TTreeNode *)
-   uLCLFormHelpers,       (* TNavNode -- the tree's tagged nodes *)
+   uLCLFormHelpers,       (* TNavNode -- the tree's tagged nodes; TextWidthInFont,
+                             WrappedTextHeight -- the caption check *)
    uSettingsRegistry,
    uSettingsLegacy,       (* ActiveStoreProvider -- the form sets and clears it *)
    uSettingsDeclarations,
@@ -384,6 +387,70 @@ begin
       end;
 end;
 
+(* ISSUE 304: EVERY GENERATED ROW'S CAPTION FITS ITS COLUMN, or wraps in it
+  and its row grows. A generated row's control is named gen_<key> and its
+  caption is the label whose FocusControl it is. Measured by TEXT width, not
+  by the label's Width: an AutoSize label has no handle here, so its Width is
+  still the column's, and the defect only shows once it is sized on screen.
+  Returns how many generated labels it judged. *)
+function TPrefsPlacementTests.CheckGeneratedLabelsFit(const aRoot: TWinControl): integer;
+var
+   i, k: integer;
+   lbl, other: TLabel;
+   wrapped: integer;
+begin
+   Result := 0;
+   for i := 0 to aRoot.ControlCount - 1 do
+      begin
+      if aRoot.Controls[i] is TWinControl then
+         begin
+         Result := Result +
+                   CheckGeneratedLabelsFit(TWinControl(aRoot.Controls[i]));
+         end;
+
+      if not (aRoot.Controls[i] is TLabel) then
+         begin
+         Continue;
+         end;
+      lbl := TLabel(aRoot.Controls[i]);
+      if (lbl.FocusControl = nil) or
+         (Pos('gen_', string(lbl.FocusControl.Name)) <> 1) then
+         begin
+         Continue;
+         end;
+
+      Inc(Result);
+      CheckTrue(lbl.Left + lbl.Width <= lbl.FocusControl.Left,
+                      'the caption column ends before ' + lbl.FocusControl.Name);
+      if TextWidthInFont(lbl.Font, lbl.Caption) <= lbl.Width then
+         begin
+         Continue;
+         end;
+
+      wrapped := WrappedTextHeight(lbl.Font, lbl.Caption, lbl.Width);
+      WriteLn('  [Prefs] wrapped caption (', lbl.Height, ' px, needs ', wrapped,
+              '): ', string(lbl.Caption));
+      CheckTrue(lbl.WordWrap and (not lbl.AutoSize),
+                      '"' + string(lbl.Caption) + '" is wider than its column, so it wraps');
+      CheckTrue(lbl.Height >= wrapped,
+                      '"' + string(lbl.Caption) + '" is as tall as it wraps (' +
+                      IntToStr(lbl.Height) + ' < ' + IntToStr(wrapped) + ')');
+      for k := 0 to aRoot.ControlCount - 1 do
+         begin
+         if (aRoot.Controls[k] is TLabel) and (aRoot.Controls[k] <> lbl) then
+            begin
+            other := TLabel(aRoot.Controls[k]);
+            if other.Top > lbl.Top then
+               begin
+               CheckTrue(other.Top >= lbl.Top + lbl.Height,
+                               'the row after "' + string(lbl.Caption) +
+                               '" starts below its wrapped caption');
+               end;
+            end;
+         end;
+      end;
+end;
+
 (* True when some section panel (a child of layContent) carries aTag. *)
 function HasSectionPanel(const aForm: TPrefsForm; const aTag: NativeInt): boolean;
 var
@@ -610,6 +677,9 @@ begin
       CheckKeyersUnderHardware(form);
 
       CheckLicenseYearHasItsOwnBox(form);
+
+      CheckTrue(CheckGeneratedLabelsFit(form) > 0,
+                'the generated captions were found and judged (issue 304)');
    finally
       form.Free;
       uSettingsLegacy.ActiveStoreProvider := oldProvider;

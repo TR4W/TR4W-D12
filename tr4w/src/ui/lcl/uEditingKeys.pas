@@ -17,8 +17,11 @@ unit uEditingKeys;
                    scrolls whatever the setting says, because nobody asked for
                    an option about that and a control that stops scrolling
                    reads as broken.
+    Enter          on a BUTTON outside the main window, added 2026-11-12 for
+                   issue 297: the focused button presses itself, as Enter does
+                   in every toolkit. See the arm.
 
-  ONE FUNCTION ANSWERS BOTH. Two predicates side by side would be two rules
+  ONE FUNCTION ANSWERS ALL OF THEM. Two predicates side by side would be two rules
   free to disagree about the case they share -- which form is the main window,
   and what "the focused control" even means -- and the cost of that is exactly
   what the note below records about the hook's copy and the form's copy.
@@ -320,6 +323,39 @@ begin
          begin
          logger.Trace('[EditingKeys] PgUp/PgDn left to %s on %s -- it scrolls',
                       [aFocused.ClassName, owner.Name]);
+         end;
+
+      Exit;
+      end;
+
+   (* ARM THREE: AN UNMODIFIED ENTER ON A FOCUSED BUTTON OUTSIDE THE MAIN
+     WINDOW (issue 297).
+
+     Enter is accelerator 10651, the keystroke that logs a QSO, and the input
+     hook dispatches it to the main window from every form that is not modal.
+     Preferences is shown with Show, so Tab reached its overview buttons and
+     Enter on one ran the MAIN WINDOW's Enter instead of pressing the button;
+     a click worked. A focused button is the one control where Enter has a
+     single meaning in every toolkit -- press me -- and the LCL already clicks
+     it when the key reaches it.
+
+     BUTTONS ONLY. Whether Enter in a FIELD of a modeless window belongs to
+     that window (its Default button) or to the main window is an open
+     question recorded in uAppInputHooks, and tool windows may rely on today's
+     answer. This arm does not decide it.
+
+     NOT ON THE MAIN WINDOW, for the reason the other arms give: its Enter is
+     the logging keystroke. *)
+   if (aKey = VK_RETURN) and ((aShift * [ssCtrl, ssAlt, ssShift]) = []) then
+      begin
+      Result := (owner <> nil) and
+                (owner <> TCustomForm(TR4WMainForm)) and
+                (aFocused is TCustomButton);
+
+      if Result and (logger <> nil) and logger.IsTraceEnabled then
+         begin
+         logger.Trace('[EditingKeys] Enter left to %s on %s -- it is a button',
+                      [aFocused.Name, owner.Name]);
          end;
 
       Exit;

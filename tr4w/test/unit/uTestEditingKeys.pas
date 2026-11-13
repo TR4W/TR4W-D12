@@ -51,6 +51,7 @@ type
       procedure Test_TheScrollingKeystrokeHalfIsTheBarePageKeys;
       procedure Test_AScrollableControlKeepsThePageKeys;
       procedure Test_ThePageKeysAreNotGatedOnTheSetting;
+      procedure Test_EnterOnAButtonOutsideTheMainWindowIsTheButtons;
    public
       procedure RunAllTests; override;
    end;
@@ -333,6 +334,46 @@ begin
    end;
 end;
 
+(* ISSUE 297: Enter on a focused button outside the main window is the
+  button's, so the input hook leaves it to the LCL, which presses the button
+  (TApplication.DoReturnKey). Only a button, only unmodified, and never for a
+  control the rule cannot place. *)
+procedure TEditingKeysTests.Test_EnterOnAButtonOutsideTheMainWindowIsTheButtons;
+var
+   form:   TForm;
+   button: TButton;
+   edit:   TEdit;
+   loose:  TButton;
+begin
+   BeginTest('Test_EnterOnAButtonOutsideTheMainWindowIsTheButtons');
+
+   form  := TForm.Create(nil);
+   loose := TButton.Create(nil);
+   try
+      button        := TButton.Create(form);
+      button.Parent := form;
+      edit          := TEdit.Create(form);
+      edit.Parent   := form;
+
+      CheckTrue(KeystrokeBelongsToTheControl(VK_RETURN, [], button),
+                'Enter on a focused button presses it (issue 297)');
+      CheckFalse(KeystrokeBelongsToTheControl(VK_RETURN, [], edit),
+                 'Enter in a field is still the open question -- unchanged');
+      CheckFalse(KeystrokeBelongsToTheControl(VK_RETURN, [ssCtrl], button),
+                 'Ctrl+Enter is a command in its own right');
+      CheckFalse(KeystrokeBelongsToTheControl(VK_RETURN, [ssShift], button),
+                 'Shift+Enter likewise');
+      CheckFalse(KeystrokeBelongsToTheControl(VK_RETURN, [], loose),
+                 'a button the rule cannot place keeps the accelerator, as on '
+                 + 'the main window');
+      CheckFalse(KeystrokeBelongsToTheControl(VK_RETURN, [], nil),
+                 'nothing focused, nothing to decline for');
+   finally
+      loose.Free;
+      form.Free;
+   end;
+end;
+
 procedure TEditingKeysTests.RunAllTests;
 begin
    Test_TheKeystrokeHalfIsCtrlAndFourLetters;
@@ -343,6 +384,7 @@ begin
    Test_TheScrollingKeystrokeHalfIsTheBarePageKeys;
    Test_AScrollableControlKeepsThePageKeys;
    Test_ThePageKeysAreNotGatedOnTheSetting;
+   Test_EnterOnAButtonOutsideTheMainWindowIsTheButtons;
 end;
 
 end.

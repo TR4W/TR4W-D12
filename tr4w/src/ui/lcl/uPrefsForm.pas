@@ -4557,6 +4557,7 @@ var
    ctl: TWinControl;
    s: TSettingBase;
    n, n2: integer;
+   extra: integer;   (* the height a wrapped caption adds to its row *)
    ro: boolean;
 begin
    n := 0;
@@ -4698,8 +4699,27 @@ begin
          AddFileBrowseButton(aParent, TEdit(ctl), s);
          end;
 
+      (* A CAPTION WIDER THAN ITS COLUMN WRAPS, AND ITS ROW GROWS (issue 304).
+        The label is AutoSize, so a long caption ran under the control at
+        CTRL_X and lost its end -- the band map's "Color of the M on a spot
+        whose multiplier wants a backup" did at the default font, and a
+        translation can do it anywhere. Measured after the caption is final
+        (the read-only suffix above), against the column it is given; the
+        rows are laid out before any handle exists, so the measurement is the
+        bitmap canvas's, not the label's own. A caption that fits is left
+        exactly as it was. *)
+      extra := 0;
+      if TextWidthInFont(lbl.Font, lbl.Caption) > LABEL_W then
+         begin
+         lbl.AutoSize := False;
+         lbl.WordWrap := True;
+         lbl.SetBounds(16, aY + 4, LABEL_W,
+                       WrappedTextHeight(lbl.Font, lbl.Caption, LABEL_W));
+         extra := Max(0, lbl.Top + lbl.Height + 4 - (aY + ROW_H));
+         end;
+
       Inc(n);
-      Inc(aY, ROW_H);
+      Inc(aY, ROW_H + extra);
       end;
 
    Result := n;

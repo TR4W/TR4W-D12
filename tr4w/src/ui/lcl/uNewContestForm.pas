@@ -180,6 +180,10 @@ type
        .lfm's Align and BorderSpacing. *)
     FLatestHeight: integer;
     FGeometry:     boolean;      (* FLatestHeight has been captured *)
+    (* The notice's designed heights, captured with FLatestHeight: the floor
+       FitComment never sizes below (issue 301). *)
+    FCommentPanelHeight: integer;
+    FCommentLabelHeight: integer;
     (* THE LAST CONTEST, as its log describes it -- owned here, nil when there
        is none. The button's caption is COMPOSED from it on every layout, never
        read back from the button, so a second layout starts from the whole
@@ -192,6 +196,7 @@ type
     function  LatestCaptionFits(const aCaption: string): boolean;
     procedure BuildRows;
     procedure CaptureGeometry;
+    procedure FitComment;
 
     procedure ApplyMinimumSize;
     function  LatestRoomWidth: integer;
@@ -507,6 +512,10 @@ begin
      button's present Height. }
    ReassertLatestCaption;
    LayoutLatestButton;
+   (* The notice measures itself only once the form has a handle, so a notice
+     captioned before the show (PrepareForm) is fitted here -- before the
+     minimum size, which reads the last row's bottom. *)
+   FitComment;
    ApplyMinimumSize;
 
    if logger.IsDebugEnabled then
@@ -1164,8 +1173,74 @@ begin
       begin
       Exit;
       end;
-   FLatestHeight := btnLatest.Height;
-   FGeometry     := True;
+   FLatestHeight       := btnLatest.Height;
+   FCommentPanelHeight := pnlComment.Height;
+   FCommentLabelHeight := lblComment.Height;
+   FGeometry           := True;
+end;
+
+(* THE NOTICE IS AS TALL AS ITS TEXT WRAPS (issue 301).
+
+  The .lfm gives the label 40 px, two lines at the default font, and centres
+  the text in it. A longer notice -- Ontario's county, province and DX
+  instruction is four lines in the 330 px column -- was centred over the
+  label's edges, so its first line sat above the yellow box and was cut off.
+
+  THE LABEL MEASURES ITSELF. It is WordWrap and anchored left and right, so
+  its preferred height is its text wrapped at its own width
+  (TCustomLabel.CalculatePreferredSize) -- the widget set's own wrapping, at
+  the running font. That answer exists only once the panel has a handle; with
+  none, or with no text, the designed height stands. The designed heights are
+  the floor, so a short notice looks exactly as it did.
+
+  THE ROWS BELOW MOVE WITH IT, by the same amount, from ROW_TOP: they are
+  placed at fixed offsets under the panel (BuildRows), so a taller panel
+  would otherwise cover the first of them. Computed from the designed values
+  every time, so it is idempotent and a shorter notice moves them back. *)
+procedure TfrmNewContest.FitComment;
+var
+   w, h:   integer;
+   labelH: integer;
+   shift:  integer;
+   rowTop: integer;
+   i:      integer;
+begin
+   CaptureGeometry;
+
+   labelH := FCommentLabelHeight;
+   if lblComment.Caption <> '' then
+      begin
+      (* A measurement taken before the handle existed answered 0 and may be
+        cached; ask afresh. *)
+      lblComment.InvalidatePreferredSize;
+      ControlPreferredSize(lblComment, w, h);
+      labelH := Max(FCommentLabelHeight, h);
+      end;
+
+   shift := labelH - FCommentLabelHeight;
+   pnlComment.Height := FCommentPanelHeight + shift;
+   lblComment.Height := labelH;
+
+   for i := Low(FRows) to High(FRows) do
+      begin
+      rowTop := ROW_TOP + shift + (i - 1) * ROW_HEIGHT;
+      if Assigned(FRows[i].Caption) then
+         begin
+         FRows[i].Caption.Top := rowTop + 3;
+         end;
+      if Assigned(FRows[i].Field) then
+         begin
+         FRows[i].Field.Top := rowTop;
+         end;
+      if Assigned(FRows[i].Pick) then
+         begin
+         FRows[i].Pick.Top := rowTop;
+         end;
+      if Assigned(FRows[i].Choice) then
+         begin
+         FRows[i].Choice.Top := rowTop;
+         end;
+      end;
 end;
 
 (* A button insets its text from its own edges; measure against the inside. *)
@@ -1521,6 +1596,7 @@ end;
 procedure TfrmNewContest.SetComment(const aText: string);
 begin
    lblComment.Caption := aText;
+   FitComment;
 end;
 
 { Forget what the PREVIOUS contest asked for.
@@ -1560,7 +1636,7 @@ begin
       FRows[i].Caption.Caption := '';
       FRows[i].Caption.Visible := False;
       end;
-   lblComment.Caption := '';
+   SetComment('');
 end;
 
 procedure TfrmNewContest.EnableRow(aRow: integer; const aCaption: string);

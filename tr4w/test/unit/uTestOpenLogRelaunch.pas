@@ -38,6 +38,9 @@ type
         answered Open existing. *)
       procedure TestTheTakenNameIsTheOpenLog;
       procedure TestTheTakenNameAnswers;
+      (* Issue 306: text named .db is refused before anything closes. *)
+      procedure TestTextNamedDbIsRefused;
+      procedure TestTheIssue306FileIsRefused;
    public
       procedure RunAllTests; override;
    end;
@@ -408,6 +411,59 @@ begin
    CheckTrue(TakenLogOutcome(mrNone, True) = nloCancel, 'closed box, the open log');
 end;
 
+(* ISSUE 306: TEXT NAMED .db. The child would open the chosen .db as its log
+  database, so text there fails AFTER this instance has closed. Refused
+  whatever the case of the extension; a text .cfg still relaunches. *)
+procedure TOpenLogRelaunchTests.TestTextNamedDbIsRefused;
+var
+   args: TRelaunchArgs;
+begin
+   BeginTest('TestTextNamedDbIsRefused');
+   CheckTrue(OpenLogAction('x.db', False, False, cfkTextConfig) = olaNotAContestLog,
+             'text named .db is not a contest log');
+   CheckTrue(OpenLogAction('C:\L\X.DB', False, False, cfkTextConfig) = olaNotAContestLog,
+             'whatever the case of the extension');
+   CheckTrue(OpenLogAction('x.cfg', False, False, cfkTextConfig) = olaRelaunch,
+             'a text .cfg still relaunches');
+   CheckTrue(OpenLogAction('x.db', False, False, cfkTR4WDatabase) = olaRelaunch,
+             'a real TR4W log named .db still relaunches');
+   CheckTrue(OpenLogAction('x.db', True, False, cfkTextConfig) = olaRelaunchNew,
+             'a new contest is decided before the kind, as before');
+   CheckTrue(PlanOpenLog('C:\L\x.db', False, False, cfkTextConfig, ['--lang', 'de'],
+                         11, '', args) = olaNotAContestLog,
+             'the plan refuses it');
+   CheckEquals(0, Length(args), 'and starts nothing');
+end;
+
+(* THE ISSUE'S OWN FILE, through the real classifier: ASCII text, no zero
+  byte, named .db. *)
+procedure TOpenLogRelaunchTests.TestTheIssue306FileIsRefused;
+var
+   path: string;
+   lines: TStringList;
+   args: TRelaunchArgs;
+begin
+   BeginTest('TestTheIssue306FileIsRefused');
+   path := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w-issue306-not-a-log.db';
+   lines := TStringList.Create;
+   try
+      lines.Add('This is not a SQLite contest log.');
+      lines.SaveToFile(path);
+   finally
+      lines.Free;
+   end;
+   try
+      CheckTrue(ClassifyContestFile(path) = cfkTextConfig,
+                'the classifier answers by content: text');
+      CheckTrue(PlanOpenLog(path, False, False, ClassifyContestFile(path), [],
+                            11, '', args) = olaNotAContestLog,
+                'and Open Log refuses it before anything closes');
+      CheckEquals(0, Length(args), 'no relaunch is planned');
+   finally
+      DeleteFile(path);
+   end;
+end;
+
 procedure TOpenLogRelaunchTests.RunAllTests;
 begin
    TestRefusal;
@@ -427,6 +483,8 @@ begin
    TestABadHandOffFileQueuesNothing;
    TestTheTakenNameIsTheOpenLog;
    TestTheTakenNameAnswers;
+   TestTextNamedDbIsRefused;
+   TestTheIssue306FileIsRefused;
 end;
 
 end.

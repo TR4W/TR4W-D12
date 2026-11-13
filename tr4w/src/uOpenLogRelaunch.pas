@@ -140,8 +140,18 @@ function NewContestHandOffFileName(const aDir: string; aParentPid: cardinal): st
      nothing chosen ('')             olaNothing      Cancel touches nothing
      the contest already running     olaAlreadyOpen  no pointless restart
      a new contest                   olaRelaunchNew  its file need not exist
+     text NAMED .db                  olaNotAContestLog  (issue 306, below)
      a TR4W log or a text .cfg       olaRelaunch     what startup opens
      anything else                   olaNotAContestLog
+
+  TEXT NAMED .db IS REFUSED (issue 306). The classifier answers by content
+  only, so a text file called not-a-log.db is cfkTextConfig. But the child
+  derives its log database from the chosen name's stem (FCONTEST:
+  stem + '.TRW', then uLogDatabase.LogDatabaseFileName), and for a .db that
+  is the chosen file itself: the child would parse it as a .cfg, then open
+  the same text as its SQLite log and fail with "file is not a database",
+  after this instance had already closed. An EMPTY .db is text to the
+  classifier too, and is refused for the same reason: no TR4W log is empty.
 
   A TEXT .cfg IS ACCEPTED, unlike S0's picker: the dialog's own grid lists a
   .cfg that has no .db beside it (the migration path) and its Browse filter
@@ -353,6 +363,11 @@ begin
    else if aIsNew then
       begin
       Result := olaRelaunchNew;
+      end
+   else if (aKind = cfkTextConfig) and
+           UnicodeSameText(ExtractFileExt(aChosen), '.db') then
+      begin
+      Result := olaNotAContestLog;
       end
    else if aKind in [cfkTR4WDatabase, cfkTextConfig] then
       begin
