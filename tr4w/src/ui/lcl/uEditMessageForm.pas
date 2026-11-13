@@ -97,7 +97,7 @@ type
     FMessageSel: integer;       // caret position, remembered across focus loss
     FCaptionSel: integer;
     FAllowEscapes: boolean;     // armed by Ctrl+P -- see the unit header
-    procedure SaveToConfig;
+    function SaveToConfig: boolean;
   end;
 
 // the single-message editor.  Parent and message index both come from the
@@ -126,6 +126,24 @@ function ApplyAcceptedMessageEdit(const aKeyName: AnsiString;
                                   aHasCaption: boolean;
                                   const aCaption: ShortString): boolean;
 
+(* DOES THIS EDIT FIT WHERE IT IS KEPT -- issue 302, 2026-11-12.
+
+  A message and its caption are ShortStrings all the way down (the escape
+  resolver, LogCW's memories), so they hold 255 BYTES of the control's text
+  -- fewer characters than that when the text is not ASCII. OK used to cut
+  a longer one in silence; it is refused instead, and the dialog stays open.
+  aText is the control's own text (TCaption, its bytes as the LCL holds
+  them). A plain function so the test program can ask it. *)
+const
+   MESSAGE_EDIT_MAX_BYTES = 255;
+
+function MessageEditFits(const aText: AnsiString): boolean;
+
+(* WHAT THE OPERATOR IS TOLD when aText does not fit: '' when it does, else
+  the translated message (the caption's wording when aIsCaption). Apart from
+  the dialog so a test can read it without a modal. *)
+function MessageEditRefusalText(const aText: AnsiString; aIsCaption: boolean): string;
+
 implementation
 
 {$R *.lfm}
@@ -152,6 +170,8 @@ uses
   LogWind,
   MainUnit,       // ActiveMode, SetCommand, logger
   uLCLFormHelpers,
+  Dialogs,        // MessageDlg -- the too-long refusal (issue 302)
+  uAppStrings,    // SMessageEditTextTooLong / SMessageEditCaptionTooLong
   Log4D;
 
 const
@@ -471,10 +491,65 @@ begin
    Result := LogStoreRecordContestStatement(string(aKeyName));
 end;
 
-procedure TfrmEditMessage.SaveToConfig;
+function MessageEditFits(const aText: AnsiString): boolean;
+begin
+   Result := Length(aText) <= MESSAGE_EDIT_MAX_BYTES;
+end;
+
+function MessageEditRefusalText(const aText: AnsiString; aIsCaption: boolean): string;
+begin
+   Result := '';
+   if MessageEditFits(aText) then
+      begin
+      Exit;
+      end;
+   (* UnicodeFormat, not TF's or SysUtils' Format: both take AnsiStrings. *)
+   if aIsCaption then
+      begin
+      Result := UnicodeFormat(SMessageEditCaptionTooLong,
+                             [Length(aText), MESSAGE_EDIT_MAX_BYTES]);
+      end
+   else
+      begin
+      Result := UnicodeFormat(SMessageEditTextTooLong,
+                             [Length(aText), MESSAGE_EDIT_MAX_BYTES]);
+      end;
+end;
+
+function TfrmEditMessage.SaveToConfig: boolean;
 var
   cmdShort: ShortString;
+  refusal: string;
 begin
+   (* REFUSED, NOT CUT (issue 302). The conversion below keeps 255 bytes and
+     drops the rest without a word. The operator is told why in a warning
+     box; then the field that is too long gets the focus, and the dialog
+     stays open, so nothing typed is lost. The log line stays too. *)
+   Result := False;
+   refusal := MessageEditRefusalText(edtMessage.Text, False);
+   if refusal <> '' then
+      begin
+      logger.Warn('[EditMessage] %s: the message is %d bytes and a message ' +
+                  'holds %d -- not saved, the dialog stays open',
+                  [lblKeyName.Caption, Length(edtMessage.Text),
+                   MESSAGE_EDIT_MAX_BYTES]);
+      MessageDlg(AnsiString(refusal), mtWarning, [mbOK], 0);
+      edtMessage.SetFocus;
+      Exit;
+      end;
+   refusal := MessageEditRefusalText(edtCaption.Text, True);
+   if refusal <> '' then
+      begin
+      logger.Warn('[EditMessage] %s: the caption is %d bytes and a caption ' +
+                  'holds %d -- not saved, the dialog stays open',
+                  [lblKeyName.Caption, Length(edtCaption.Text),
+                   MESSAGE_EDIT_MAX_BYTES]);
+      MessageDlg(AnsiString(refusal), mtWarning, [mbOK], 0);
+      edtCaption.SetFocus;
+      Exit;
+      end;
+   Result := True;
+
    (* NO FILE IS WRITTEN HERE -- neither the contest .cfg nor tr4w.ini. The
      edit is applied, and committed to the contest log
      (ApplyAcceptedMessageEdit). *)
@@ -499,7 +574,11 @@ end;
 
 procedure TfrmEditMessage.btnOKClick(Sender: TObject);
 begin
-   SaveToConfig;
+   (* A REFUSED EDIT KEEPS THE DIALOG OPEN (issue 302) -- see SaveToConfig. *)
+   if not SaveToConfig then
+      begin
+      Exit;
+      end;
    DisplaymessagesList(MesWindow, ActiveMode);
    Close;
 end;

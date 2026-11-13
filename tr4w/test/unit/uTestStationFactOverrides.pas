@@ -57,6 +57,7 @@ type
       procedure Test_CaptureWritesTheOverrideAsTheContests;
       procedure Test_ReopenMakesTheRowTheOverrideAgain;
       procedure Test_LicenseYearIsCapturedAndReopened;
+      procedure Test_OneFactIsWrittenTheMomentItChanges;
       procedure Test_ALogWrittenBefore712;
       procedure Test_StationContextCarriesTheResolvedCQZone;
       procedure Test_TheStateSentFallsBackToTheResolvedState;
@@ -506,6 +507,70 @@ begin
    Scrub(fn);
 end;
 
+procedure TStationFactOverrideTests.Test_OneFactIsWrittenTheMomentItChanges;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   before, after: TR4WSettings;
+   fn, v, src: string;
+begin
+   (* ISSUE 300: Preferences states the contest's license year mid-session,
+     and uLogStore.LogStoreRecordContestStatement writes it at once through
+     CaptureStationFactRow -- the close capture's rule for one command. An
+     EMPTY statement must survive too: "Station default only" pins a contest
+     that sent no year to sending none. *)
+   BeginTest('one station fact is written the moment it changes, an empty statement included');
+   fn := TempLogName('onefact.db');
+   Scrub(fn);
+   before := TR4WSettings.Create;
+   after := TR4WSettings.Create;
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckFalse(CaptureStationFactRow(before, repo, 'MY CALL'),
+                    'MY CALL is not a fact a contest states');
+         CheckFalse(CaptureStationFactRow(before, repo, 'CATEGORY-POWER'),
+                    'nor is a contest-scoped setting');
+         CheckFalse(CaptureStationFactRow(before, nil, 'MY LICENSE YEAR'),
+                    'no log, nothing written');
+
+         before.TrySetByCommand('MY LICENSE YEAR', '1985');
+         CheckTrue(CaptureStationFactRow(before, repo, 'MY LICENSE YEAR'),
+                   'the station''s year is written as a record');
+         repo.Commit;
+         StoredRow(repo, 'MY LICENSE YEAR', src);
+         CheckEquals('', src, 'which the reopen does not apply');
+
+         CheckTrue(before.TryOverrideForContest('MY LICENSE YEAR', '1990'), 'stated');
+         CheckTrue(CaptureStationFactRow(before, repo, 'MY LICENSE YEAR'), 'written');
+         repo.Commit;
+         v := StoredRow(repo, 'MY LICENSE YEAR', src);
+         CheckEquals('contest', src, 'now a row the reopen applies');
+         CheckEquals('1990', v, 'holding the contest''s year');
+
+         CheckTrue(before.TryOverrideForContest('MY LICENSE YEAR', ''), 'an empty year stated');
+         CheckTrue(CaptureStationFactRow(before, repo, 'MY LICENSE YEAR'), 'written');
+         repo.Commit;
+         StoredRow(repo, 'MY LICENSE YEAR', src);
+         CheckEquals('contest', src, 'the empty statement is still the contest''s row');
+
+         after.TrySetByCommand('MY LICENSE YEAR', '2005');
+         ApplyStoredRows(after, repo);
+         CheckTrue(after.My.HasContestOverride(sfLicenseYear), 'reopened as a statement');
+         CheckEquals('', after.My.ResolvedLicenseYear, 'of no year -- not the station''s 2005');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+      after.Free;
+      before.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TStationFactOverrideTests.Test_ALogWrittenBefore712;
 var
    db: TLogDatabase;
@@ -633,6 +698,7 @@ begin
    Test_CaptureWritesTheOverrideAsTheContests;
    Test_ReopenMakesTheRowTheOverrideAgain;
    Test_LicenseYearIsCapturedAndReopened;
+   Test_OneFactIsWrittenTheMomentItChanges;
    Test_ALogWrittenBefore712;
    Test_StationContextCarriesTheResolvedCQZone;
    Test_TheStateSentFallsBackToTheResolvedState;

@@ -40,6 +40,38 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-12 -- PREFERENCES ASKS WHERE A NEW LICENSE YEAR GOES (issue 300)
+
+Unit-tested (`uTestLicenseYearScope`, `uTestStationFactOverrides`
+`Test_OneFactIsWrittenTheMomentItChanges`); the question itself has never been
+on a screen. "Also this contest" and "This contest and its existing QSOs" do
+the SAME thing today -- a logged QSO stores no sent year, so its export always
+sends the contest's current year (pinned by
+`Test_ALoggedQSOExportsTheContestsCurrentYear`).
+
+- [ ] **European HF Championship (or KVP) open, created with year 64. Preferences
+      > Station, License year: type 05, Save.** A question titled "License year"
+      appears with three buttons. Enter AND Escape both choose "Station default
+      only"; closing the box with X does too. Export ADIF: the STX_STRING still
+      sends `599 64`.
+- [ ] **The same, choosing "Also this contest".** Export ADIF and Cabrillo: every
+      QSO now sends `05`, including the ones logged before the change. Close and
+      reopen the log: it still sends `05` (the choice is written to the log at
+      once, `MY LICENSE YEAR` row source `contest`), and Preferences shows 05.
+- [ ] **A contest that never stated a year** (the year came from the Station
+      page, not New Contest): change the Station year, choose "Station default
+      only". The contest keeps sending the OLD year after a close and reopen.
+- [ ] **CQ WW (no year exchanged): change the License year.** No question.
+- [ ] **Type letters in License year and Save.** The usual "these entries were
+      not accepted" message; the contest's year is unchanged whatever was
+      answered.
+- [ ] **The default CW exchange memory** of a year contest after "Also this
+      contest": does F2 / the CQ exchange send the new year at once, or only
+      after a reopen? Set-up writes those memories; this change does not rewrite
+      them. Report which.
+- [ ] **gtk2 / cocoa:** the three captions fit and the default button is the
+      station-only one.
+
 ## Added 2026-11-12 -- ENTER ON AN EMPTY EXCHANGE, AND THE STATION TOOLTIPS (issues 292, 280, 279)
 
 Unit-tested (`uTestEmptyExchangeNotice`, `uTestPrefsPlacement`); none of it seen
@@ -6654,3 +6686,14 @@ The forwarder is measured outside TR4W (`tools/netprobe` through it, same result
 - [ ] **RSGB IOTA, reference first with RS(T) (282).** Type `EU5 599 12` for a G station: logged with island EU-005, RST 599, number 12 (it logged number 599 before).
 - [ ] **RSGB IOTA, unknown reference in the standard order (282).** Type `599 123 XYZ`: refused, the status line says `Improper domestic QTH!! (XYZ not known)` (it was refused with no message before), and the QSO keeps no QTH or number. `123 JOE CT`: refused with `No QSO number found!!`.
 - [ ] **UK/EI, same (282).** As a G station, `599 123 ZZZ` is refused naming uk-ei.dom; `AB 599 12` logs district AB, number 12.
+
+## Added 2026-11-12 -- A SETTING'S VALUE IS NO LONGER CUT OR RE-ENCODED (issue 302)
+
+`CheckCommand` takes strings, the contest `.cfg` is read as whole lines, and the settings object reads and writes a string property without an AnsiString hop. Unit-tested in `uTestSettingValueWidth` (45 checks); none of it has been seen in a running program. Use a name with an accent, a Cyrillic and a Chinese character, e.g. `José Ж 中`.
+
+- [ ] **Preferences, accented MY NAME.** Station page, Name `José Ж 中`, Save. Reopen Preferences: the field shows exactly `José Ж 中`. Exit, restart: still exact. `settings\tr4w.json` holds it (as UTF-8 or a `\u` escape), not `Jos?` or `JosÃ©`.
+- [ ] **Where the name is SENT.** In a contest that sends MY NAME (CWops CWT, NA Sprint), the name appears on the main window and in a sent CW/SSB message as stored. Note what a CW keyer does with the non-ASCII characters (expected: not keyed); that is outside this change, but record it.
+- [ ] **A contest .cfg import, accented name.** Import an old contest whose `.cfg` (saved as UTF-8) has `MY NAME = José Ж 中`. In the opened contest the name reads `JOSé Ж 中` -- the .cfg reader upper-cases a..z only, as it always has -- and the station's own name in Preferences is unchanged. Close and reopen the contest: the same.
+- [ ] **A .cfg saved in Windows-1252** (an old D7 file) with `MY NAME = José`: record what TR4W shows. Expected and NOT changed by this work: the byte is decoded as UTF-8 and the é is lost. If that matters, it is a separate import question.
+- [ ] **A long value.** Preferences > Network, a Tailcat address of 300+ characters: saved and shown whole after a restart. The message editor (Alt-P, edit a memory) with more than 255 bytes of text: OK shows a warning box ("The message is N bytes long and a message holds 255. Shorten it and press OK again."; the caption has its own); after it the dialog stays open with the field focused, nothing is saved, and `tr4w.log` has an `[EditMessage] ... not saved` line.
+- [ ] **Multi-op.** Two positions: change a shared setting whose value is more than 255 bytes (or 128+ Cyrillic characters). The sender's status line reads "<SETTING> was not sent to the other stations: it is N bytes and the network carries 255." with a warning beep, `tr4w.log` has `[Net] ... NOT sent`, and the other position keeps its value; a short value is still shared as before.

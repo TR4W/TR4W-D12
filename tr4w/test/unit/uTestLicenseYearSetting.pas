@@ -405,8 +405,10 @@ var
    savedStation: string;
    euhfcRules: TContestBase;
 begin
-   (* DESIGN 7.12 AS IT STANDS -- pinned because issue 300 asks for something
-     else, and the answer is NY4I's to give, not this test's.
+   (* DESIGN 7.12 AS IT STANDS. Issue 300 kept it: the Station page still
+     writes the STATION's year, and when the open contest sends the year
+     Preferences then asks what the contest should do (uLicenseYearChange,
+     pinned in uTestLicenseYearScope).
 
      The New Contest dialog's year is the CONTEST's statement (an override).
      The Preferences Station page shows and edits the STATION's value: it

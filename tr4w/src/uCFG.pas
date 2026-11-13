@@ -292,16 +292,23 @@ var
        a STORE'S value    OWNED_BY_A_STORE -- accepted here, applied there
 
      CheckCommand still exists and still means the same thing to a config
-     file. What it no longer has is a table to scan. *)
-function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
+     file. What it no longer has is a table to scan.
+
+     IT TAKES STRINGS (issue 302, 2026-11-12). It took ShortStrings, and
+     every caller narrowed its command and value to fit -- so a value longer
+     than 255 characters was cut in silence before any check saw it, and a
+     value went through AnsiString on the way. Nothing in the body needed
+     the ShortString except ADD DOMESTIC COUNTRY, which converts at its one
+     call. A caller that holds a ShortString passes it and it widens. *)
+function CheckCommand(const Command: string; const CustomCMD: string;
                       const aApplyJSONOwned: boolean = False): boolean;
 
 (* A VALUE FOR A COMMAND THE SETTINGS OBJECT OWNS, from a trusted caller --
-  CheckCommand's owned arm, lifted out so a caller holding a STRING can reach
-  it without CheckCommand's ShortString parameters, which cut a value at 255
-  characters in silence (and the value check then judged the cut copy).
-  A refusal is logged, and a secret's value never is (ValueForLog). The
-  caller must have asked Settings.OwnsCommand. *)
+  CheckCommand's owned arm, lifted out (issue 293) when CheckCommand still
+  took ShortStrings that cut a value at 255 characters. CheckCommand takes
+  strings now (issue 302) and calls this. A refusal is logged, and a
+  secret's value never is (ValueForLog). The caller must have asked
+  Settings.OwnsCommand. *)
 function ApplyOwnedSetting(const aCommand, aValue: string): boolean;
 
 (* ONE COMMAND THAT THE CONTEST STATED -- a contest .cfg line, a New Contest
@@ -598,9 +605,6 @@ end;
 
 
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
-var
-   keyShort, valueShort: ShortString;
-   idKey, cmdValue: AnsiString;
 begin
    // VALIDATE FIRST, PERSIST SECOND -- the same order, and for the same reason,
    // as ApplyRadioToSlot: CheckCommand is what moves the value into the live
@@ -622,16 +626,8 @@ begin
      sent from here now -- a routine every settings screen already goes
      through, rather than from a window that may not be open. *)
    //
-   // Fresh AnsiStrings per call, not a reused buffer: the ini write takes
-   // @s[1] as a null-terminated PAnsiChar, so a shorter value written over a
-   // longer one in the same ShortString leaves the previous tail behind.
-   idKey    := AnsiString(aCommand);
-   cmdValue := AnsiString(aValue);
-
-   FillChar(keyShort, SizeOf(keyShort), 0);
-   FillChar(valueShort, SizeOf(valueShort), 0);
-   keyShort   := ShortString(idKey);
-   valueShort := ShortString(cmdValue);
+   (* THE STRINGS GO TO CheckCommand AS GIVEN (issue 302). They were copied
+     into ShortStrings here, which cut a value at 255 characters. *)
 
    // A csJSON ROW MUST NOT COME THROUGH HERE, and refusing is the only safe
    // answer.  CheckCommand returns TRUE for such a row WITHOUT APPLYING IT
@@ -658,7 +654,7 @@ begin
      through here and that row IS csJSON, so every save was refused and logged
      as an error. *)
 
-   Result := CheckCommand(keyShort, valueShort);
+   Result := CheckCommand(aCommand, aValue);
    if Result then
       begin
       (* PERSISTED THROUGH THE STORE, NOT INTO tr4w.ini.
@@ -1232,7 +1228,7 @@ end;
   line adds. These four, and only these four, are the accumulating
   commands -- which is what CommandIsSingleValued used to be asked. *)
 function TryApplyCommandAction(const aCommand: string;
-                               const aValue: ShortString): boolean;
+                               const aValue: string): boolean;
 var
    n: integer;
    code: integer;
@@ -1251,7 +1247,10 @@ begin
          end
       else
          begin
-         AddDomesticCountry(aValue);
+         (* A DXCC id, which the TRDOS list holds as a CallString -- the one
+           place this routine needs a ShortString, converted here as it was
+           when CheckCommand handed one in. *)
+         AddDomesticCountry(ShortString(aValue));
          end;
       Exit;
       end;
@@ -1280,7 +1279,7 @@ begin
       (* THE HOOK'S BODY, with its own locals rather than the unit-wide
         scratch it used. 'SSB 14250' means the phone memory for that band;
         a bare frequency means CW. *)
-      text := string(aValue);
+      text := aValue;
       if Pos('SSB', UpperCase(text)) > 0 then
          begin
          Delete(text, Pos('SSB ', UpperCase(text)), 4);
@@ -1321,7 +1320,7 @@ begin
       end;
 end;
 
-function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
+function CheckCommand(const Command: string; const CustomCMD: string;
                       const aApplyJSONOwned: boolean = False): boolean;
 var
    { The command as a STRING, so the tests below are Pos() on a value with a
@@ -1415,7 +1414,7 @@ begin
          Exit;
          end;
 
-      Result := ApplyOwnedSetting(string(Command), string(CustomCMD));
+      Result := ApplyOwnedSetting(Command, CustomCMD);
       Exit;
       end;
    (* THE FUNCTION-KEY MEMORY ARM IS GONE -- 2026-09-14, the last pattern
@@ -1587,8 +1586,6 @@ begin
 end;
 
 function ApplyContestStatement(const aCommand, aValue: string): boolean;
-var
-   key, val: ShortString;
 begin
    if Settings.CommandIsContestOverridable(aCommand) then
       begin
@@ -1610,11 +1607,10 @@ begin
       Exit;
       end;
 
-   (* Plain assignment: the same conversion as a ShortString() cast, see
-     test/unit/uTestShortStringConversion.pas. *)
-   key := AnsiString(aCommand);
-   val := AnsiString(aValue);
-   Result := CheckCommand(key, val, True);
+   (* THE STRINGS AS GIVEN (issue 302). This narrowed both to ShortString,
+     so a contest .cfg line or a stored row longer than 255 characters was
+     cut here before CheckCommand saw it. *)
+   Result := CheckCommand(aCommand, aValue, True);
 end;
 
 

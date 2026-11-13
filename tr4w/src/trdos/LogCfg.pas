@@ -94,7 +94,10 @@ function ConfigurationOkay: boolean;
 procedure ReadInConfigFile(ConfigFileName: TCFGType);
 procedure TryRunPaddleAndFootSwitchThread;
 procedure tSetupExchangeNumbers;
-procedure EnmuCFGFile(var FileString: ShortString);
+(* ONE LINE OF THE CONTEST .cfg -- a string since issue 302 (2026-11-12),
+  handed over by TF.EnumerateTextLinesInFile, so a value longer than 255
+  bytes reaches the settings object whole. *)
+procedure EnmuCFGFile(var FileString: string);
 procedure SetUpGlobalsAndInitialize;
 
 var
@@ -774,7 +777,9 @@ begin
      end;
 
   logger.Info('[Config] Loading %s', [CFGFileName(ConfigFileName)]);
-  EnumerateLinesInFile(CFGFileName(ConfigFileName), EnmuCFGFile, True);
+  (* AS STRINGS (issue 302): EnumerateLinesInFile cut every line at 255
+    bytes, so a long .cfg value was shortened before anything read it. *)
+  EnumerateTextLinesInFile(CFGFileName(ConfigFileName), EnmuCFGFile, True);
 
   // CW-state desync fix: the 'CW ENABLE' config command writes only Config.CWEnable,
   // but the actual transmit gate (SendCrypticCWString) and the Alt-K toggle
@@ -962,31 +967,34 @@ begin
      end;
 end;
 
-procedure EnmuCFGFile(var FileString: ShortString);
+procedure EnmuCFGFile(var FileString: string);
 var
-  ID                                    : ShortString;
-  CMD                                   : ShortString;
+  (* STRINGS, NOT ShortStrings (issue 302): the name and the value of a line
+    of any length. The spaces-and-tabs trim is the GetRidOf... pair's. *)
+  ID                                    : string;
+  CMD                                   : string;
  begin
+  if FileString = '' then
+     begin
+     Exit;
+     end;
 
   // Lines whose FIRST character (column 1, before any spaces are stripped) is a
   // comment/section marker are ignored:  ;  and  #  are comments,  [  is a
   // section header,  _  is an internal marker.  Kept in sync with the same test
   // in RestoreCFGPasswordCase so both passes treat comments identically.
-  if FileString[1] in [';', '#', '[', '_'] then Exit;
+  if (FileString[1] = ';') or (FileString[1] = '#') or
+     (FileString[1] = '[') or (FileString[1] = '_') then
+     begin
+     Exit;
+     end;
 
-  GetRidOfPrecedingSpaces(FileString);
-  GetRidOfPostcedingSpaces(FileString);
+  FileString := TrimSpacesAndTabs(FileString);
 
-
-  ID := PrecedingString(FileString, '=');
-  CMD := PostcedingString(FileString, '=');
+  ID := TrimSpacesAndTabs(PrecedingString(FileString, '='));
+  CMD := TrimSpacesAndTabs(PostcedingString(FileString, '='));
 
   if ID = '' then Exit;
-
-  GetRidOfPrecedingSpaces(ID);
-  GetRidOfPrecedingSpaces(CMD);
-  GetRidOfPostcedingSpaces(ID);
-  GetRidOfPostcedingSpaces(CMD);
 
   inc(LineNumberInConfigFile);
 
@@ -1085,14 +1093,17 @@ var
     the CheckCommand(.., True) this always was. *)
   if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
      begin
-     if ApplyContestStatement(string(ID), string(CMD)) then
+     (* ValueForLog: a credential in an old .cfg (SERVER PASSWORD) is never
+       written to the log. *)
+     if ApplyContestStatement(ID, CMD) then
         begin
         logger.Info('[Config] %s = %s from the contest .cfg -- overrides the stored value for this contest',
-                    [ID, CMD]);
+                    [ID, Settings.ValueForLog(ID, CMD)]);
         end
      else
         begin
-        logger.Warn('[Config] %s = %s in the contest .cfg was REFUSED by CFGCA', [ID, CMD]);
+        logger.Warn('[Config] %s = %s in the contest .cfg was REFUSED by CFGCA',
+                    [ID, Settings.ValueForLog(ID, CMD)]);
         end;
      end
   else if not CheckCommand(ID, CMD) then
@@ -1141,7 +1152,8 @@ var
           was a PShortString then, so a first attempt that replaced
           @FileString^[1] with FileString changed nothing -- that was still
           a pointer. Since pointer audit P16 (2026-11-05) the parameter is a
-          `var ShortString` and there is no dereference to forget. *)
+          `var ShortString` and there is no dereference to forget -- and a
+          `var string` since issue 302 (2026-11-12). *)
         showwarning(AnsiString(CFGFileName(CurrentConfigFile)) + ':' + #13
                     + 'Invalid statement in config file.' + #13 + #13
                     + 'Line ' + AnsiString(IntToStr(LineNumberInConfigFile))

@@ -1531,6 +1531,11 @@ uses
    uUrlTestButton,      (* TUrlTester -- the Test buttons beside the scoring URLs *)
    uCallHistory,        (* CallHistoryNameToStore -- the call history file's Browse *)
    LogDupe,             (* ContestCallHistoryFileName -- that box's hint *)
+   uLicenseYearChange,  (* issue 300 -- what a Station-page year edit does to the contest *)
+   uContestBase,        (* ContestReceivedYearKind -- does the open contest send the year *)
+   uContestRegistry,    (* ContestIdentity -- the open contest *)
+   uContestFactory,     (* SessionZoneTextSent -- the year the open contest sends *)
+   PostUnit,            (* Contest -- the open contest's handle *)
    VC;        // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
 
 var
@@ -8431,11 +8436,63 @@ begin
                              CFGCommandValueAsString('MY CONTINENT')))));
 end;
 
+(* THE LICENSE-YEAR QUESTION -- issue 300; the rule is uLicenseYearChange.
+  Read by MODAL RESULT, never by button position (GTK orders the buttons
+  differently; see uLogStore.AskAboutALockedLog). The station-only answer is
+  the default for Enter AND Escape, and closing the box counts as it too. *)
+function AskLicenseYearScope(const aNewYear, aContestName,
+                             aContestYear: string): TLicenseYearScope;
+
+   function Shown(const aYear: string): string;
+   begin
+      if Trim(aYear) = '' then
+         begin
+         Result := SLicenseYearNone;
+         end
+      else
+         begin
+         Result := Trim(aYear);
+         end;
+   end;
+
+var
+   answer: TModalResult;
+begin
+   answer := QuestionDlg(LclText(SLicenseYearScopeTitle),
+                         LclText(UnicodeFormat(SLicenseYearScopeBody,
+                                        [Shown(aNewYear), aContestName,
+                                         Shown(aContestYear)])),
+                         mtConfirmation,
+                         [mrYes, LclText(SLicenseYearScopeAlsoContest),
+                          mrAll, LclText(SLicenseYearScopeContestAndQSOs),
+                          mrNo,  LclText(SLicenseYearScopeStationOnly),
+                          'IsDefault', 'IsCancel'], 0);
+   if answer = mrYes then
+      begin
+      Result := lysAlsoContest;
+      end
+   else if answer = mrAll then
+      begin
+      Result := lysContestAndQSOs;
+      end
+   else
+      begin
+      Result := lysStationOnly;
+      end;
+end;
+
 function TPrefsForm.SaveStationPanel: boolean;
 var
    f: TStationField;
    bad: string;
    callText: string;
+   (* Issue 300: the license year before the write -- the station's, what the
+     open contest resolved to and what it sent -- and the answer. *)
+   stationYearBefore: string;
+   contestYearBefore: string;
+   contestSentBefore: string;
+   contestSendsYear: boolean;
+   yearScope: TLicenseYearScope;
 begin
    Result := True;
    bad := '';
@@ -8491,6 +8548,15 @@ begin
    // csOwned -- hidden from Ctrl-J so there is ONE editor -- but stay applied.
    // Moving them to JSON needs the multi-op receive path to have somewhere else
    // to land, which is its own piece of work.
+   (* THE LICENSE YEAR AS IT WAS, READ BEFORE ANY WRITE (issue 300): once the
+     station's year is written, a contest with no year of its own already
+     resolves to it. contestSentBefore is what the contest SENDS (64 for a
+     stated 1964), the text the export uses. *)
+   stationYearBefore := Settings.My.LicenseYear;
+   contestYearBefore := Settings.My.ResolvedLicenseYear;
+   contestSentBefore := SessionZoneTextSent(ContestIdentity(Contest));
+   contestSendsYear := ContestReceivedYearKind(ContestIdentity(Contest)) <> rykNone;
+
    for f in StationFields do
       begin
       if not ApplyIfChanged(f.Command, Trim(f.Edit.Text)) then
@@ -8507,6 +8573,22 @@ begin
          begin
          bad := bad + 'MY CONTINENT' + sLineBreak;
          Result := False;
+         end;
+      end;
+
+   (* THE QUESTION, ONLY WHEN THE STATION'S YEAR REALLY CHANGED -- asked after
+     the write, so a refused year asks nothing and leaves the contest exactly
+     as it was. A changed statement is written into the log now, not at the
+     next clean close (Q61). *)
+   if LicenseYearEditAsks(contestSendsYear, stationYearBefore,
+                          Settings.My.LicenseYear) then
+      begin
+      yearScope := AskLicenseYearScope(Settings.My.LicenseYear,
+                                       ContestIdentity(Contest).DisplayName,
+                                       contestSentBefore);
+      if ApplyLicenseYearScope(Settings, yearScope, contestYearBefore) then
+         begin
+         LogStoreRecordContestStatement(LICENSE_YEAR_COMMAND);
          end;
       end;
 

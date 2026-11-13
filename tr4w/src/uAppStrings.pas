@@ -666,6 +666,29 @@ resourcestring
      (TNewContestPrompt.RowLabel). *)
    SNewContestLicenseYearLabel = 'MY LICENSE YEAR';
 
+   (* THE QUESTION PREFERENCES ASKS WHEN THE STATION'S LICENSE YEAR CHANGES
+     WHILE THE OPEN CONTEST SENDS THE YEAR -- issue 300 (NY4I confirmed the
+     three buttons, 2026-11-12; uLicenseYearChange is the rule). The body's
+     %0:s is the new station year, %1:s the contest's name, %2:s the year it
+     sends now; SLicenseYearNone stands in for an empty year. Its last line is
+     true and must stay: a logged QSO records no year, so its export follows
+     the contest's (see uLicenseYearChange's header). The station-only button
+     is the default for Enter and Escape. *)
+   SLicenseYearScopeTitle = 'License year';
+   SLicenseYearScopeBody =
+      'The station''s default license year is now %0:s.' + sLineBreak +
+      sLineBreak +
+      '%1:s sends the license year, and sends %2:s now.' + sLineBreak +
+      sLineBreak +
+      'Should this contest send the new year too?' + sLineBreak +
+      sLineBreak +
+      'QSOs already logged do not store the year they sent: an export sends ' +
+      'this contest''s year for all of them.';
+   SLicenseYearScopeAlsoContest = 'Also this contest';
+   SLicenseYearScopeContestAndQSOs = 'This contest and its existing QSOs';
+   SLicenseYearScopeStationOnly = 'Station default only';
+   SLicenseYearNone = '(none)';
+
    (* THE CWT'S QTH-OR-MEMBER-NUMBER ROW'S LABEL (2026-11-11): the prompt asks
      for a QTH or a CWops member number, and the row beside it read MY STATE.
      What is typed is kept in MY STATE and the command queued is MY STATE;
@@ -1196,6 +1219,17 @@ resourcestring
    (* The checkbox beside the address (NY4I, 2026-11-12). "Tailcat" is a
      product name and is not translated. *)
    SPrefsNetUseTailcat       = 'Use Tailcat';
+
+   (* A VALUE TOO LONG FOR WHERE IT IS KEPT -- issue 302. Both places hold 255
+      BYTES, which is fewer characters when the text is not plain ASCII, so
+      the text says bytes. The editor's dialog stays open after its message.
+      %0:d is the length of what was typed, %1:d the limit. *)
+   SMessageEditTextTooLong    = 'The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again.';
+   SMessageEditCaptionTooLong = 'The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again.';
+   (* On the status line when a shared setting is too long for the network:
+      %0:s is the setting's name, %1:d its length, %2:d the limit. The setting
+      is still changed on this station. *)
+   SNetParameterTooLong       = '%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d.';
 
 implementation
 

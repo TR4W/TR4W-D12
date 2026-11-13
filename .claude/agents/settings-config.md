@@ -504,10 +504,49 @@ format's stated policy.
 three siblings (no `RegisterModelSetting`, so no `KNOWN_HELP_GAPS` entry; no
 `help_en.po` text yet). **`ApplyAndStoreCommand` used to send every owned value
 through `CheckCommand`'s ShortString parameters, cutting it at 255 characters in
-silence -- and the value check then judged the cut copy.** An owned command now
-goes through `uCFG.ApplyOwnedSetting` (the owned arm, lifted out) with its
-string intact; a non-owned one still goes through `CheckCommand`. Pinned by
+silence -- and the value check then judged the cut copy.** Issue 293 lifted the
+owned arm out as `uCFG.ApplyOwnedSetting`; issue 302 (below) then made
+`CheckCommand` itself take strings. Pinned by
 `uTestSettingsModel.Test_TheTailcatAddressIsASecretTrimmedAndBounded`.
+
+## `CheckCommand` TAKES STRINGS -- no route cuts a value at 255 (issue 302, 2026-11-12)
+
+`CheckCommand(const Command, CustomCMD: string; aApplyJSONOwned)`. Every caller
+used to narrow to `ShortString` (and through `AnsiString`) before calling it, so
+the cut was AT THE CALLERS, not in the parameter: changing the signature alone
+fixes nothing -- **a new caller must pass the string it holds.** Fixed together:
+`SetCFGCommandValue`, `ApplyContestStatement`, `ApplyAndStoreCommand` (one call
+now; `settingsOwned` decides only where the value is KEPT -- its contest-scoped
+arm still narrowed after 293), `ApplyStoredCommands`, `ApplyPeerCommand`'s
+withdrawn arm, `ApplyRadioToSlot`, and uLogStore's replay (MY CALL hoist, COLUMN
+WIDTH rows, the row loop).
+
+- **The contest `.cfg` was cut EARLIER, by the line reader:**
+  `TF.EnumerateLinesInFile` hands 255-byte ShortString lines. `EnmuCFGFile` now
+  takes `var string` from `TF.EnumerateTextLinesInFile` (one scanner,
+  `NextLineSpan`, serves both; same decode -- bytes via AnsiString by
+  `DefaultSystemCodePage` -- and the same ASCII-only upper-casing, so a .cfg
+  `José` arrives `JOSé`). Its trim is `utils_text.TrimSpacesAndTabs` (spaces and
+  tabs only, as the GetRidOf... pair). Its two log lines now use `ValueForLog`.
+- **The model had an AnsiString hop too:** `AssignByCommand` / `TryGetByCommand`
+  used `SetStrProp(AnsiString(..))` / `GetStrProp`; they use the Unicode accessors
+  now, so a non-ANSI value does not depend on `DefaultSystemCodePage`.
+- **WHERE 255 IS REAL, the caller REFUSES:** the multi-op parameter packet
+  (`TParameterToNetwork`, two ShortStrings -- a deployed encoding,
+  multi-op-network's call) asks `uNet.ParameterFitsTheWire` and does not send,
+  with a Warn; the message editor (TRDOS memories are ShortStrings) asks
+  `uEditMessageForm.MessageEditFits` and keeps the dialog open. Both count
+  BYTES of the encoded text, and both tell the operator (uAppStrings
+  `SMessageEditTextTooLong` / `SMessageEditCaptionTooLong` in a MessageDlg;
+  `SNetParameterTooLong` through `QuickDisplayError`) as well as logging a
+  Warn. The texts are `MessageEditRefusalText` / `ParameterNotSentText`, pure,
+  so a test reads them without a modal.
+- **Left on purpose:** CfgCmd's Ctrl-V executed file and `ProcessConfigInstruction`
+  (untrusted -- an owned name is accepted and inert there, so no setting value is
+  lost); `SetUpContestByCommand` (a contest id). The eight other
+  `EnumerateLinesInFile` readers (.dom, HELLO.DAT, ...) still cut at 255.
+- Pinned by `uTestSettingValueWidth` (45 checks, incl. the test binary's code page
+  being 65001 -- the premise of every non-ASCII check).
 
 `SERVER USE TAILCAT` (`Settings.Server.UseTailcat`, boolean, default off, NY4I
 2026-11-12) is the box beside it: the address is only STORED until the box is

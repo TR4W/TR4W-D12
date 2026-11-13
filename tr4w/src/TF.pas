@@ -109,6 +109,14 @@ c80: array[0..3] of Byte;
     convert every non-ASCII byte by code page and back. *)
   TEnumLinesFunc = procedure(var aLine: ShortString);
 
+  (* ONE LINE OF A FILE AS A STRING, WHOLE -- issue 302, 2026-11-12. For a
+    reader that turns each line into a string anyway (the contest .cfg, whose
+    values reach the settings object as strings). The bytes are decoded
+    exactly as a ShortString line is when its reader converts it -- through
+    AnsiString, by DefaultSystemCodePage -- so the only difference is that a
+    line longer than 255 bytes is not cut. *)
+  TEnumTextLinesFunc = procedure(var aLine: string);
+
 const
   LB_STYLE_1                            = LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_NOINTEGRALHEIGHT or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_HSCROLL or WS_TABSTOP;
   LB_STYLE_2                            = LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS or LBS_NOINTEGRALHEIGHT or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_HSCROLL or WS_TABSTOP;
@@ -158,6 +166,12 @@ function CreateRichEdit(hwndParent: HWND): HWND;
 {$ENDIF}
 
 function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+(* EnumerateLinesInFile's twin for TEnumTextLinesFunc: the same file lookup,
+  the same lines (a run of CR/LF ends one, an empty line is skipped), and the
+  same ASCII-only upper-casing -- with no 255-byte cut. One scanner serves
+  both. *)
+function EnumerateTextLinesInFile(const FileName: string; Func: TEnumTextLinesFunc;
+                                  aUpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): string;
 (* aSetting NAMES THE SETTING THAT PRODUCED THE PATH, when one did.
 
@@ -1052,50 +1066,23 @@ end;
 // So the safe conversion was a deletion. Checked before removing, not after.
 
 
-function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+(* THE FILE THE TWO LINE ENUMERATORS READ, WHOLE -- True when it was found,
+  read, and is not empty. Lifted out of EnumerateLinesInFile on 2026-11-12
+  (issue 302) so EnumerateTextLinesInFile reads the same file the same way. *)
+function ReadLinesFile(const FileName: string; out raw: TBytes): boolean;
 var
   (* THE FILE IS READ, NOT MEMORY-MAPPED (2026-09-07).
 
     It was CreateFileMapping + MapViewOfFile with two labels and two gotos to
     unwind three handles on a partial failure -- all Windows-only, and the RTL
     has no portable mapping. It is a TFileStream read into a TBytes now: one
-    allocation, and the unwinding disappears with the handles.
-
-    THE SCAN INDEXES raw ITSELF (2026-09-15). It walked a PAnsiChar laid over
-    raw, jumped back into the middle of the loop with a goto for the last
-    line, and copied each line with a Move that had no bound -- see
-    DeliverLine. *)
-  raw                                   : TBytes;
+    allocation, and the unwinding disappears with the handles. *)
   fs                                    : TFileStream;
-  FileSize                              : integer;
-  StartPos, FilePos                     : integer;
-  TempString                            : ShortString;
   (* THE RESOLVED PATH, AS A STRING.  It was a 256-byte AnsiChar buffer built
     with TF.Format, which is the Win32 habit this tree is removing: a path is
     text, the three candidates below are ordinary concatenation, and 256 bytes
     was a silent truncation waiting for a deep directory. *)
   path                                  : string;
-  NewLine                               : boolean;
-
-  procedure DeliverLine(aStart, aLength: integer);
-  begin
-     if aLength <= 0 then
-        begin
-        Exit;
-        end;
-     (* AT MOST 255 BYTES, AND EVERY BYTE OF TempString SET. This was
-       FillChar, a length byte of AnsiChar(LineSize), and Move(..., LineSize)
-       with LineSize unbounded -- so a line longer than 255 bytes wrote past
-       the 256-byte ShortString on the stack, and its length wrapped. No file
-       this program ships has such a line; any user .cfg or .dom could. *)
-     SetShortStringFromBytes(TempString, raw, aStart, aLength);
-     if UpperCase then
-        begin
-        strU(TempString);
-        end;
-     Func(TempString);
-  end;
-
 begin
   Result := False;
   raw := nil;
@@ -1154,48 +1141,99 @@ begin
      Exit;
   end;
 
-  if Length(raw) = 0 then
+  (* NOTHING TO UNWIND. This was UnmapViewOfFile / CloseHandle(MapFin) /
+    CloseHandle(h), with labels 2 and 3 as the goto targets for a mapping that
+    failed halfway. The stream is closed and `raw` is freed by the compiler. *)
+  Result := Length(raw) > 0;
+end;
+
+(* THE NEXT LINE OF raw FROM aPos: its start and length, and aPos moved past
+  it. False when nothing is left.
+
+  A LINE IS A RUN OF BYTES THAT ARE NOT CR OR LF, so any run of CR and LF ends
+  one and an empty line is never delivered -- exactly what the loop that stood
+  in EnumerateLinesInFile did (it walked a NewLine flag and handed over a
+  zero-length span it then ignored). The last line needs no break after it.
+
+  THE SCAN INDEXES raw ITSELF (2026-09-15). It walked a PAnsiChar laid over
+  raw, jumped back into the middle of the loop with a goto for the last line,
+  and copied each line with a Move that had no bound. *)
+function NextLineSpan(const raw: TBytes; var aPos: integer;
+                      out aStart, aLength: integer): boolean;
+begin
+  while (aPos < Length(raw)) and (raw[aPos] in [13, 10]) do
+     begin
+     inc(aPos);
+     end;
+
+  aStart := aPos;
+  while (aPos < Length(raw)) and not (raw[aPos] in [13, 10]) do
+     begin
+     inc(aPos);
+     end;
+
+  aLength := aPos - aStart;
+  Result := aLength > 0;
+end;
+
+function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+var
+  raw                                   : TBytes;
+  at, start, len                        : integer;
+  TempString                            : ShortString;
+begin
+  Result := ReadLinesFile(FileName, raw);
+  if not Result then
      begin
      Exit;
      end;
 
-  FileSize := Length(raw);
-
-  Result := True;
-
-  StartPos := 0;
-  NewLine := False;
-
-  for FilePos := 0 to FileSize - 1 do
+  at := 0;
+  while NextLineSpan(raw, at, start, len) do
      begin
-     if raw[FilePos] in [13, 10] then
+     (* AT MOST 255 BYTES, AND EVERY BYTE OF TempString SET. This was
+       FillChar, a length byte of AnsiChar(LineSize), and Move(..., LineSize)
+       with LineSize unbounded -- so a line longer than 255 bytes wrote past
+       the 256-byte ShortString on the stack, and its length wrapped. No file
+       this program ships has such a line; any user .cfg or .dom could. A
+       reader that must not lose the rest uses EnumerateTextLinesInFile. *)
+     SetShortStringFromBytes(TempString, raw, start, len);
+     if UpperCase then
         begin
-        if not NewLine then
-           begin
-           DeliverLine(StartPos, FilePos - StartPos);
-           end;
-        NewLine := True;
-        end
-     else
-        begin
-        if NewLine then
-           begin
-           NewLine := False;
-           StartPos := FilePos;
-           end;
+        strU(TempString);
         end;
+     Func(TempString);
      end;
+end;
 
-  (* THE LAST LINE, when the file does not end with a line break. This was a
-    goto back into the middle of the loop body. *)
-  if not NewLine then
+function EnumerateTextLinesInFile(const FileName: string; Func: TEnumTextLinesFunc;
+                                  aUpperCase: boolean): boolean;
+var
+  raw                                   : TBytes;
+  at, start, len                        : integer;
+  line                                  : string;
+begin
+  Result := ReadLinesFile(FileName, raw);
+  if not Result then
      begin
-     DeliverLine(StartPos, FileSize - StartPos);
+     Exit;
      end;
 
-  (* NOTHING TO UNWIND. This was UnmapViewOfFile / CloseHandle(MapFin) /
-    CloseHandle(h), with labels 2 and 3 as the goto targets for a mapping that
-    failed halfway. The stream is closed and `raw` is freed by the compiler. *)
+  at := 0;
+  while NextLineSpan(raw, at, start, len) do
+     begin
+     (* DECODED AS A ShortString LINE IS WHEN ITS READER CONVERTS IT: the
+       bytes as an AnsiString, then to string by DefaultSystemCodePage. *)
+     line := string(AnsiStringFromBytes(raw, start, len));
+     if aUpperCase then
+        begin
+        (* SysUtils.UpperCase of a UnicodeString changes 'a'..'z' ONLY, which
+          is what strU does to a ShortString line: an accented or non-Latin
+          letter is left as it is. *)
+        line := SysUtils.UpperCase(line);
+        end;
+     Func(line);
+     end;
 end;
 
 

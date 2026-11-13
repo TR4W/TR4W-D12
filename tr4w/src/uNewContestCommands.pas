@@ -148,9 +148,10 @@ begin
       Exit;
       end;
    (* AnsiString() STATED: TStringList holds the RTL string while tr4w.inc
-     makes this unit's string UnicodeString. ApplyOne hands CheckCommand a
-     ShortString anyway, so the text becomes ANSI on the way there either
-     way; saying so here keeps the conversion out of the narrowing count. *)
+     makes this unit's string UnicodeString; saying so here keeps the
+     conversion out of the narrowing count. No length is lost, and the text
+     is UTF-8 in this program (DefaultSystemCodePage). ApplyOne hands it on
+     as a string -- CheckCommand no longer takes a ShortString (issue 302). *)
    Commands.Add(AnsiString(Trim(aCommand) + '=' + aValue));
 end;
 

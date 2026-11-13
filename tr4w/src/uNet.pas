@@ -160,6 +160,21 @@ function SendToNet(var buf; Len: integer; aTag: Int64 = 0): integer;
   that did not open. *)
 procedure SendParameterToNetwork(const aCommand, aValue: string);
 
+(* DOES THIS PARAMETER FIT THE PACKET -- issue 302, 2026-11-12.
+
+  TParameterToNetwork carries the command and the value as two ShortStrings,
+  255 BYTES each as AnsiString renders them. That is the deployed encoding
+  older positions and the server read, so it does not change here; a
+  setting that does not fit is NOT SENT -- a Warn in the log and a notice on
+  the status line -- where it used to be cut and sent as a value the
+  operator never chose. *)
+function ParameterFitsTheWire(const aCommand, aValue: string): boolean;
+
+(* THE STATUS-LINE NOTICE when a parameter does not fit: '' when it does,
+  else the translated text naming the setting, its length in bytes and the
+  limit. Apart from the send so a test can read it. *)
+function ParameterNotSentText(const aCommand, aValue: string): string;
+
 (* THE FOUR RECORDS WHOSE ID WAS LOST (2026-10-27).
 
   Each procedure owns one record and sets its id word on EVERY send, as
@@ -2553,10 +2568,44 @@ begin
   SetClientCell(i, 11, string(Msg.msCWMessage));
 end;
 
+function ParameterFitsTheWire(const aCommand, aValue: string): boolean;
+begin
+   (* The bytes the assignment below would keep -- AnsiString's rendering,
+     which is UTF-8 in this program, so a name outside ASCII counts two or
+     three bytes a character. *)
+   Result := (Length(AnsiString(aCommand)) <= 255) and
+             (Length(AnsiString(aValue)) <= 255);
+end;
+
+function ParameterNotSentText(const aCommand, aValue: string): string;
+begin
+   Result := '';
+   if ParameterFitsTheWire(aCommand, aValue) then
+      begin
+      Exit;
+      end;
+   Result := UnicodeFormat(SNetParameterTooLong,
+                           [aCommand, Length(AnsiString(aValue)), 255]);
+end;
+
 procedure SendParameterToNetwork(const aCommand, aValue: string);
 begin
    if not NetIsConnected then
       begin
+      Exit;
+      end;
+
+   if not ParameterFitsTheWire(aCommand, aValue) then
+      begin
+      if logger <> nil then
+         begin
+         logger.Warn('[Net] "%s" is %d bytes and a parameter packet holds 255 ' +
+                     '-- NOT sent; the other positions keep their value',
+                     [aCommand, Length(AnsiString(aValue))]);
+         end;
+      (* AND THE OPERATOR WHO MADE THE CHANGE IS TOLD, on the status line
+        with a warning beep -- the setting has changed here and not there. *)
+      QuickDisplayError(ParameterNotSentText(aCommand, aValue));
       Exit;
       end;
 

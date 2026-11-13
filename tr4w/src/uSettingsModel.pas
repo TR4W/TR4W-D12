@@ -7149,14 +7149,21 @@ begin
          begin
          (* THE TEXT AS GIVEN, untrimmed, as this arm always took it --
            unless a registered spelling REPLACED it, when the current
-           spelling is what is stored. *)
+           spelling is what is stored.
+
+           SetUnicodeStrProp, NOT SetStrProp(AnsiString(..)) (issue 302):
+           the AnsiString hop is lossless only while DefaultSystemCodePage
+           is UTF-8, so a name outside the ANSI code page depended on how
+           the program was started. The Unicode accessor converts only
+           for a property that is not a UnicodeString, as the stream
+           hooks already do. *)
          if text <> Trim(aValue) then
             begin
-            SetStrProp(owner, info, AnsiString(text));
+            SetUnicodeStrProp(owner, info, text);
             end
          else
             begin
-            SetStrProp(owner, info, AnsiString(aValue));
+            SetUnicodeStrProp(owner, info, aValue);
             end;
          Result := True;
          end;
@@ -7261,7 +7268,9 @@ begin
          end;
       tkString, tkLString, tkAString, tkUString, tkWString:
          begin
-         aValue := string(GetStrProp(owner, info));
+         (* GetUnicodeStrProp -- the reading half of AssignByCommand's
+           SetUnicodeStrProp (issue 302); no AnsiString hop. *)
+         aValue := GetUnicodeStrProp(owner, info);
          Result := True;
          end;
    end;

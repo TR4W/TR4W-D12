@@ -449,6 +449,12 @@ function RestoreEditedMessageMemories(aRepository: TLogRepository): integer;
   from the open-time replay: those are not statements, and startup must not
   become a write per memory.
 
+  AND A STATION FACT THE CONTEST MAY STATE (issue 300) -- MY LICENSE YEAR
+  when Preferences asks and the operator chooses this contest's year. Its row
+  is the close capture's rule for one command
+  (uLogContestStatements.CaptureStationFactRow): 'contest' while stated,
+  else the station's value as 'station'.
+
   True when the row is committed. A batch /EXPORT writes nothing, like the
   close capture. With the store disabled nothing is written, a warning says
   so, and the statement holds for the session only. A write failure
@@ -3141,6 +3147,13 @@ begin
          CaptureMessageMemory(GRepository, cqBank, mode, key);
          written := True;
          end
+      else if Settings.CommandIsContestOverridable(aCommand) then
+         begin
+         (* A STATION FACT THE CONTEST MAY STATE (issue 300: the license year
+           chosen in Preferences). Not contest-scoped, so CaptureContestStatement
+           would write nothing; the close capture's own rule, for one row. *)
+         written := CaptureStationFactRow(Settings, GRepository, aCommand);
+         end
       else
          begin
          written := CaptureContestStatement(Settings, GRepository, aCommand);
@@ -3200,13 +3213,10 @@ var
    i: integer;
    cmd, val: string;
    renderable: boolean;
-   (* A NAMED LOCAL, so PAnsiChar below points at a string that is still alive.
-      PAnsiChar of a temporary is a dangling pointer -- Delphi's allocator hid
-      that and FPC's does not. *)
-   cmdName: ShortString;
+   (* The contest id for the set-up callback, whose type takes a ShortString
+     (TLogContestSetUp). A contest id is a short ASCII name. *)
    valName: ShortString;
    idx: integer;
-   valAsShort: ShortString;
    columnToken: string;
 begin
    Result := 0;
@@ -3318,16 +3328,16 @@ begin
          idx := rows.IndexOfName('MY CALL');
          if idx >= 0 then
             begin
-            cmdName := ShortString(AnsiString('MY CALL'));
-            valAsShort := ShortString(AnsiString(rows.ValueFromIndex[idx]));
-            if CheckCommand(cmdName, valAsShort, True) then
+            (* The stored string as it is -- CheckCommand takes strings
+              (issue 302). *)
+            if CheckCommand('MY CALL', rows.ValueFromIndex[idx], True) then
                begin
                if logger <> nil then
                   begin
                   logger.Info('[LogStore] MY CALL = %s applied before the ' +
                               'contest, so the country and zone derived ' +
                               'from it are settled before FCONTEST reads them',
-                              [string(valAsShort)]);
+                              [rows.ValueFromIndex[idx]]);
                   end;
                end;
             end;
@@ -3539,9 +3549,7 @@ begin
               widths get their own line below. *)
             if IsColumnWidthCommand(cmd, columnToken) then
                begin
-               cmdName := ShortString(AnsiString(cmd));
-               valAsShort := ShortString(AnsiString(val));
-               CheckCommand(cmdName, valAsShort, True);
+               CheckCommand(cmd, val, True);
                Continue;
                end;
 
@@ -3704,28 +3712,13 @@ begin
                Continue;
                end;
 
-            FillChar(cmdName, SizeOf(cmdName), 0);
-            FillChar(valAsShort, SizeOf(valAsShort), 0);
-            cmdName := ShortString(AnsiString(cmd));
-
-            (* THIS COMMENT USED TO SAY THE CAST BELOW WAS A POINTER
-               REINTERPRETATION AND HAD TO BE A PLAIN ASSIGNMENT. It said so
-               while the code kept the cast, which was the first clue.
-
-               MEASURED 2026-09-24 against FPC 3.2.2 / i386-win32 in this
-               tree's mode: ShortString(x) and `short := x` are the SAME
-               conversion and give byte-identical results, including for a
-               source longer than the target. The claim was folklore; it is
-               retracted in CLAUDE.md and pinned by
-               test/unit/uTestShortStringConversion.pas.
-
-               WHAT IS REAL AND IS WHY THE FillChar ABOVE STAYS: a ShortString
-               carries no NUL terminator, so anything downstream that treats
-               @s[1] as a C string reads past the text. CheckCommand takes the
-               ShortString itself and is safe; the zero-fill costs nothing and
-               keeps that true if a caller ever changes. *)
-            valAsShort := ShortString(AnsiString(val));
-            if CheckCommand(cmdName, valAsShort, True) then
+            (* THE STORED STRINGS AS THEY ARE (issue 302). They were narrowed
+               to ShortString here, so a stored value longer than 255
+               characters came back cut on every open (reasoned, not measured:
+               a later capture would then store the cut copy). CheckCommand takes
+               strings, so there is nothing to convert and no buffer to
+               zero-fill. *)
+            if CheckCommand(cmd, val, True) then
                begin
                inc(Result);
                end

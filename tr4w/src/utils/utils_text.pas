@@ -102,6 +102,13 @@ function AnsiStringFromBytes(const aRaw: array of Byte; aStart, aLength: integer
 procedure SetShortStringFromBytes(var aDest: ShortString; const aRaw: TBytes;
                                   aStart, aLength: integer);
 
+(* aText WITHOUT ITS LEADING AND TRAILING SPACES AND TABS, and nothing else
+  removed -- what Tree.GetRidOfPrecedingSpaces and GetRidOfPostcedingSpaces
+  do together to a ShortString, for a reader that holds a string (the
+  contest .cfg, issue 302). NOT SysUtils.Trim, which also drops every other
+  control character, so a value ending in one would change. *)
+function TrimSpacesAndTabs(const aText: string): string;
+
 (* ONE SLICE OF A BUFFER, BY POSITION AND LENGTH.
 
   For fixed-column parsing -- a DX cluster line, where the callsign sits at a
@@ -600,6 +607,23 @@ begin
       begin
       aDest[i] := #0;
       end;
+end;
+
+function TrimSpacesAndTabs(const aText: string): string;
+var
+   first, last: integer;
+begin
+   first := 1;
+   last := Length(aText);
+   while (first <= last) and ((aText[first] = ' ') or (aText[first] = #9)) do
+      begin
+      Inc(first);
+      end;
+   while (last >= first) and ((aText[last] = ' ') or (aText[last] = #9)) do
+      begin
+      Dec(last);
+      end;
+   Result := Copy(aText, first, last - first + 1);
 end;
 
 function CharBufferBytes(const aBuf: array of AnsiChar): AnsiString;

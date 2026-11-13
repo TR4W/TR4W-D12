@@ -819,7 +819,6 @@ procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
 var
    i: integer;
    name, value: string;
-   keyShort, valueShort: ShortString;
 begin
    // EVERY RETIRED ROW, APPLIED THROUGH CFGCA.
    //
@@ -935,12 +934,8 @@ begin
          Continue;
          end;
 
-      FillChar(keyShort, SizeOf(keyShort), 0);
-      FillChar(valueShort, SizeOf(valueShort), 0);
-      keyShort   := ShortString(AnsiString(name));
-      valueShort := ShortString(AnsiString(value));
-
-      if not CheckCommand(keyShort, valueShort, True) then
+      (* The strings as stored -- CheckCommand takes strings (issue 302). *)
+      if not CheckCommand(name, value, True) then
          begin
          // Loud: a stored value CFGCA refuses is a setting the operator
          // believes is in force and is not.
@@ -1236,7 +1231,6 @@ end;
 function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
                               const aCommand, aValue: string): boolean;
 var
-   keyShort, valueShort: ShortString;
    before, after: string;
    settingsOwned: boolean;
 begin
@@ -1271,25 +1265,15 @@ begin
    // hook; the store is only what makes it survive a restart.  Recording a
    // value CFGCA rejected would put it in the file for the next start to
    // stumble over.
-   if settingsOwned then
-      begin
-      (* AN OWNED VALUE STAYS A STRING (issue 293). CheckCommand takes
-        ShortStrings, so a value longer than 255 characters -- a Tailcat
-        address may be up to 1024 -- was cut there in silence, and the
-        registered check then judged the cut copy. ApplyOwnedSetting is the
-        owned arm CheckCommand runs (none of TryApplyCommandAction's four
-        names is owned), reached without the narrowing. *)
-      Result := ApplyOwnedSetting(aCommand, aValue);
-      end
-   else
-      begin
-      FillChar(keyShort, SizeOf(keyShort), 0);
-      FillChar(valueShort, SizeOf(valueShort), 0);
-      keyShort   := ShortString(AnsiString(aCommand));
-      valueShort := ShortString(AnsiString(aValue));
-
-      Result := CheckCommand(keyShort, valueShort, True);
-      end;
+   (* ONE CALL, THE STRINGS AS GIVEN (issues 293 and 302). This narrowed the
+     command and the value to ShortString, so a value longer than 255
+     characters was cut in silence and a registered check judged the cut
+     copy. Issue 293 sent an owned, station-scoped value round it; issue 302
+     made CheckCommand take strings, so a contest-scoped one (the CATEGORY-*
+     values the Cabrillo summary saves) and a command the settings object does
+     not own are whole too. settingsOwned decides only where the value is
+     KEPT, below. *)
+   Result := CheckCommand(aCommand, aValue, True);
    if not Result then
       begin
       Exit;
@@ -1508,8 +1492,7 @@ begin
      reports a withdrawn name, once per name per session; nothing is stored. *)
    if CommandIsRetired(aCommand) then
       begin
-      Result := CheckCommand(ShortString(AnsiString(aCommand)),
-                             ShortString(AnsiString(aValue)), True);
+      Result := CheckCommand(aCommand, aValue, True);
       Exit;
       end;
 
@@ -2065,8 +2048,6 @@ var
    (* KeyerPortForSlot settles the port and cwByCAT together; only the port is
      wanted here, since CW BY CAT is still a rendered key. *)
    keyerByCAT: boolean;
-   idKey, cmdValue: AnsiString;
-   keyShort, valueShort: ShortString;
    accepted: boolean;
 begin
    (* RECORDED HERE, AT THE RENDER, NOT AT THE CALL SITES.
@@ -2262,19 +2243,8 @@ begin
          Continue;
          end;
 
-      // A FRESH AnsiString per value, not a reused buffer.  The ini write takes
-      // @s[1] as a null-terminated PAnsiChar, so a shorter value assigned over
-      // a longer one in the same ShortString leaves the previous tail in place
-      // and the FILE receives the leftover -- the corruption NY4I hit on the
-      // port combo, where the log and the ini disagreed.
-      idKey    := AnsiString(rendered[i].Key);
-      cmdValue := AnsiString(rendered[i].Value);
-
-      FillChar(keyShort, SizeOf(keyShort), 0);
-      FillChar(valueShort, SizeOf(valueShort), 0);
-      keyShort   := ShortString(idKey);
-      valueShort := ShortString(cmdValue);
-
+      (* THE RENDERED STRINGS AS GIVEN (issue 302). They were copied into
+        ShortStrings for CheckCommand, which takes strings now. *)
       // VALIDATE FIRST, PERSIST SECOND.  CheckCommand is what actually moves the
       // value into TR4W's globals; the ini write is only what makes it survive
       // a restart.  The order used to be the other way round, so a value CFGCA
@@ -2287,7 +2257,7 @@ begin
       // A rejected key now leaves the ini untouched, so at worst the file keeps
       // its previous value for that one key -- a stale line beats an unstartable
       // program, and the warning still says the renderer and CFGCA have drifted.
-      accepted := CheckCommand(keyShort, valueShort);
+      accepted := CheckCommand(rendered[i].Key, rendered[i].Value);
       if not accepted then
          begin
          logger.Warn('[ApplyRadioToSlot] CFGCA did not accept "%s" = "%s" -- NOT written to the ini',

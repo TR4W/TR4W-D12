@@ -443,7 +443,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1205 -> 1201, 2026-11-03: window titles without their '&' (DisplayedText,
 # now uCaptionText) and the radio-slot title built once (RadioWindowTitle);
 # measured by the full build of that work.
-$NARROW_CEILING = 1189
+$NARROW_CEILING = 1187
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

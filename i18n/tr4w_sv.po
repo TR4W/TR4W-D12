@@ -5412,6 +5412,7 @@ msgid "Remove radio \"%s\"?"
 msgstr "Ta bort radio \"%s\"?"
 
 #: ulclformhelpers.tc_prefs_none
+#: uappstrings.slicenseyearnone
 #, fuzzy
 msgid "(none)"
 msgstr "(ingen)"
@@ -10244,4 +10245,51 @@ msgstr ""
 #: uappstrings.sprefspagehasnosettingsyet
 #, fuzzy
 msgid "There are no settings on this page yet."
+msgstr ""
+
+#: uappstrings.slicenseyearscopealsocontest
+#, fuzzy
+msgid "Also this contest"
+msgstr ""
+
+#: uappstrings.slicenseyearscopebody
+#, fuzzy
+msgid ""
+"The station's default license year is now %0:s.\n"
+"\n"
+"%1:s sends the license year, and sends %2:s now.\n"
+"\n"
+"Should this contest send the new year too?\n"
+"\n"
+"QSOs already logged do not store the year they sent: an export sends this contest's year for all of them."
+msgstr ""
+
+#: uappstrings.slicenseyearscopecontestandqsos
+#, fuzzy
+msgid "This contest and its existing QSOs"
+msgstr ""
+
+#: uappstrings.slicenseyearscopestationonly
+#, fuzzy
+msgid "Station default only"
+msgstr ""
+
+#: uappstrings.slicenseyearscopetitle
+#, fuzzy
+msgid "License year"
+msgstr ""
+
+#: uappstrings.smessageeditcaptiontoolong
+#, fuzzy
+msgid "The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again."
+msgstr ""
+
+#: uappstrings.smessageedittexttoolong
+#, fuzzy
+msgid "The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again."
+msgstr ""
+
+#: uappstrings.snetparametertoolong
+#, fuzzy
+msgid "%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d."
 msgstr ""

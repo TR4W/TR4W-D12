@@ -183,6 +183,15 @@ function RecordEntryDeclaration(aRepository: TLogRepository;
 function CaptureStationFactRows(aSettings: TR4WSettings;
                                 aRepository: TLogRepository): integer;
 
+(* THE SAME RULE FOR ONE STATION FACT, written the moment it changes (Q61) --
+  issue 300: a contest's license year chosen in Preferences mid-session must
+  not wait for a clean close. CaptureStationFactRows loops over this, so the
+  two are one rule. True when a row was written; False for a command that is
+  not an overridable station fact. Does not commit. *)
+function CaptureStationFactRow(aSettings: TR4WSettings;
+                               aRepository: TLogRepository;
+                               const aCommand: string): boolean;
+
 (* WHAT CaptureStationFactRows WRITES FOR ONE COMMAND -- the value and the
   source -- or False for a command that is not an overridable station fact.
   Separate so a test can ask what the log will hold without a database. *)
@@ -400,14 +409,27 @@ begin
       end;
 end;
 
+function CaptureStationFactRow(aSettings: TR4WSettings;
+                               aRepository: TLogRepository;
+                               const aCommand: string): boolean;
+var
+   value: string;
+   source: string;
+begin
+   Result := (aRepository <> nil) and
+             StationFactRow(aSettings, aCommand, value, source);
+   if Result then
+      begin
+      aRepository.SaveConfigValue(AnsiString(aCommand), AnsiString(value),
+                                  AnsiString(source));
+      end;
+end;
+
 function CaptureStationFactRows(aSettings: TR4WSettings;
                                 aRepository: TLogRepository): integer;
 var
    names: TStringList;
    i: integer;
-   cmd: string;
-   value: string;
-   source: string;
 begin
    Result := 0;
    if (aSettings = nil) or (aRepository = nil) then
@@ -419,11 +441,8 @@ begin
    try
       for i := 0 to names.Count - 1 do
          begin
-         cmd := string(names[i]);
-         if StationFactRow(aSettings, cmd, value, source) then
+         if CaptureStationFactRow(aSettings, aRepository, string(names[i])) then
             begin
-            aRepository.SaveConfigValue(AnsiString(cmd), AnsiString(value),
-                                        AnsiString(source));
             Inc(Result);
             end;
          end;

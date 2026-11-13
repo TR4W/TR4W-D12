@@ -123,6 +123,7 @@ uses
   uContestChoices in 'src\uContestChoices.pas',
   uLatestContest in 'src\uLatestContest.pas',
   uCategoryPowerChange in 'src\uCategoryPowerChange.pas',
+  uLicenseYearChange in 'src\uLicenseYearChange.pas',
   uContestReadiness in 'src\uContestReadiness.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
   uRadioLinkRetry in 'src\uRadioLinkRetry.pas',

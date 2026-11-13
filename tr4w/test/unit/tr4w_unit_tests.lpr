@@ -726,6 +726,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* Issue 298: the SENT year is MY LICENSE YEAR, a setting of its own -- its
       reading, the three kinds, the station fact, the readers, the legacy move. *)
    uTestLicenseYearSetting in 'uTestLicenseYearSetting.pas',
+   (* Issue 300: a Station-page year edit while the open contest sends the
+      year -- the question's rule, and what each answer writes. *)
+   uLicenseYearChange   in '..\..\src\uLicenseYearChange.pas',
+   uTestLicenseYearScope in 'uTestLicenseYearScope.pas',
    (* A locked log: the busy classifier, the lock probe, the stale-snapshot
       write, the WRL worker's rollback and the watchdog (2026-10-31). *)
    uLogConnectionWatch  in '..\..\src\domain\uLogConnectionWatch.pas',
@@ -942,6 +946,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* TF.EnumerateLinesInFile's promises to its nine loaders, and the
       HELLO.DAT reader that had no test (pointer audit P16, 2026-11-05). *)
    uTestEnumerateLines in 'uTestEnumerateLines.pas',
+   (* Issue 302: a setting's value arrives whole -- longer than 255
+      characters, and outside ASCII -- on every route to the settings object. *)
+   uTestSettingValueWidth in 'uTestSettingValueWidth.pas',
    (* Shipped .dom files against their sponsor's list: LABRE's 28 codes and
       HQ, EUDX's regions only (UDC cross-walk leads, 2026-10-19). *)
    uTestShippedDomLists in 'uTestShippedDomLists.pas',
@@ -1116,6 +1123,7 @@ begin
    RegisterSuite(TGridExchangeTests.Create('GridExchange'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
    RegisterSuite(TEnumerateLinesTests.Create('EnumerateLines'));
+   RegisterSuite(TSettingValueWidthTests.Create('SettingValueWidth'));
    RegisterSuite(TShippedDomListsTests.Create('ShippedDomLists'));
    RegisterSuite(TDomesticCountryListTests.Create('DomesticCountryList'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
@@ -1271,6 +1279,7 @@ begin
    RegisterSuite(TNetReceivedYearTests.Create('NetReceivedYear'));
    RegisterSuite(TReceivedYearDisplayTests.Create('ReceivedYearDisplay'));
    RegisterSuite(TLicenseYearSettingTests.Create('LicenseYearSetting'));
+   RegisterSuite(TLicenseYearScopeTests.Create('LicenseYearScope'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));
