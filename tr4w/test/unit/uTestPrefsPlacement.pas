@@ -754,7 +754,8 @@ type
       Edit: TEdit;
    end;
 var
-   oldIni, oldDir, dir, fn, source: string;
+   oldIni, oldDir, dir, fn, source, besideHelp: string;
+   stagedBeside: boolean;
    oldProvider: TActiveStoreProvider;
    form: TPrefsForm;
    help: TCommandHelp;
@@ -763,6 +764,8 @@ var
    i: integer;
 begin
    BeginTest('the Station boxes carry their setting''s help as a tooltip (issue 280)');
+   stagedBeside := False;
+   besideHelp   := ExtractFilePath(ParamStr(0)) + 'help';
    if Application <> nil then
       begin
       Application.Initialize;
@@ -794,6 +797,24 @@ begin
          CheckTrue(False, 'could not make ' + dir + ' the working directory');
          Exit;
          end;
+
+{$IFNDEF WINDOWS}
+      (* Off Windows HelpDir does not look in the working directory: it tries
+        /usr/share/tr4w, then beside the program.  So the catalogue is also staged
+        beside the test binary -- only when nothing is there already, and removed
+        afterwards.  A help\ that is already there is left alone and the checks
+        below fail closed if it holds no help_en.po. *)
+      if not DirectoryExists(besideHelp) then
+         begin
+         if (not ForceDirectories(besideHelp)) or
+            (not CopyFile(source, CombinePath(besideHelp, 'help_en.po'))) then
+            begin
+            CheckTrue(False, 'the English help catalogue could not be staged in ' + besideHelp);
+            Exit;
+            end;
+         stagedBeside := True;
+         end;
+{$ENDIF}
 
       SetCharBuffer(TR4W_INI_FILENAME, CombinePath(dir, 'tr4w.ini'));
       fn := TR4WConfigFileName;
@@ -832,6 +853,10 @@ begin
       if DirectoryExists(dir) then
          begin
          DeleteDirectory(dir, False);
+         end;
+      if stagedBeside then
+         begin
+         DeleteDirectory(besideHelp, False);
          end;
    end;
 end;
