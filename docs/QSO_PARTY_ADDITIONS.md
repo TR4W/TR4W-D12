@@ -79,12 +79,27 @@ These remain requests, not claimed implementations. Regional Canadian
 events require their actual multi-province eligibility, not an assumed
 single-state base.
 
-Questions posted with `Agent Question`: #110 (2027 draft versus final 2026
-rules), #129 (digital-grid exchange, eligibility and mixed-mode formula),
-#131 (multiplier scope). #114's state-credit ruling is resolved and its
-question label has been removed. #124's DC question is also resolved: NY4I
-confirmed that DC will never be received, citing the 84-multiplier maximum.
-The sponsor table remains unchanged and #124's question label is removed.
+NY4I answered the three queued issues in comments on 2026-11-13:
+
+- Kentucky #110, comment 6857618922: use the **2027 draft**. NY4I will
+  update the rules when finalized if necessary. The rule-year question is
+  resolved and `Agent Question` is removed.
+- South Dakota #129, comment 6857555807: score FT4/FT8 as total digital
+  contacts times total grids worked digitally; calculate the CW/phone
+  geographic component separately and add the components. The scoring
+  formula is resolved. Grid precision, establishing an out-of-state FT
+  contact's SD eligibility, and DX digital eligibility still need answers;
+  `Agent Question` remains for those original questions.
+- West Virginia #131, comment 6857387343: all multiplier kinds count once
+  per contest, with **no repetition by mode**. The scope question is
+  resolved. The older Cabrillo-name question (comment 6429514855, WVQP
+  versus WV-QSO-PARTY) remains unanswered, so `Agent Question` remains
+  for that question alone.
+
+#114's state-credit ruling is resolved and its question label has been
+removed. #124's DC question is also resolved: NY4I confirmed that DC will
+never be received, citing the 84-multiplier maximum. The sponsor table
+remains unchanged and #124's question label is removed.
 
 ## Validation, 2026-11-13
 
