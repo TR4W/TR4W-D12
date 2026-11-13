@@ -200,16 +200,37 @@ python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
 ```
 
 **Only new RESOURCESTRINGS? No IDE needed.** FPC writes a `.rsj` for every unit
-with resourcestrings on every build (`build-out\app-i386-win32\uAppStrings.rsj`),
+with resourcestrings on every build (`build-out\app-x86_64-win64\uAppStrings.rsj`),
 and Lazarus' own `updatepofiles` turns one into a template. Write it to a
-**scratch** file, never to `tr4w_laz.pot`:
+**scratch** file, never to `tr4w_laz.pot`, one template per unit
+(`uAppStrings`, `uSettingsCaptions`, `uLCLFormHelpers`, `uTR4WStrings`, ...):
 
 ```powershell
 New-Item -ItemType File <scratch>\uappstrings.pot -Force     # it refuses a missing .pot
-C:\Lazarus\tools\updatepofiles.exe build-out\app-i386-win32\uAppStrings.rsj <scratch>\uappstrings.pot
-python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot          # dry run first
-python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot --apply
+C:\Lazarus\tools\updatepofiles.exe build-out\app-x86_64-win64\uAppStrings.rsj <scratch>\uappstrings.pot
+python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot --add-only          # dry run first
+python tools\i18n\po_merge.py --pot <scratch>\uappstrings.pot --apply --add-only
 ```
+
+**Use `--add-only` for this.** A plain `--apply` also deletes obsolete (`#~`)
+entries, third-party strings and empty not-language entries, and seeds a new
+entry from a same-English translation elsewhere in the file. On 2026-11-12 the
+two obsolete entries each catalogue held carried translator text in de and pl,
+so a merge meant only to add would have deleted it. `--add-only` adds every new
+entry fuzzy with an empty `msgstr` and deletes nothing.
+
+**`updatepofiles` gives an entry a `msgctxt`** (`uappstrings.seditqsomycall`)
+when two resourcestrings in the same unit share their English (`Call`, `Edit...`,
+`Year`). That keeps the pair distinct for gettext, so it does not create the
+duplicate described below.
+
+**THE GATE: `tools\i18n\po_coverage.py` (issue 291).** `Build-Tests.ps1` runs it
+straight after its compile, on the `.rsj` files that compile wrote, and FAILS the
+build when a TR4W unit's resourcestring has no `<unit>.<name>` entry in some
+`i18n\tr4w_*.po` (an empty fuzzy entry counts as present). Before it, 85 strings
+in four units were in no catalogue and showed English in every language. It
+fails closed (exit 2) on no `.rsj`, no names or no catalogue. By hand:
+`python tools\i18n\po_coverage.py --rsj-dir build-out\tests-x86_64-win64`.
 
 **Never point `updatepofiles` at `tr4w\languages\tr4w_laz.pot`.** It deletes
 every template entry that is not in the files it was given
@@ -368,7 +389,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 |---|---|
 | `mt_seed.py` | machine drafts for empty entries, always marked "Needs work" |
 | `po_lint.py` | checks placeholders, line breaks and entry state |
-| `po_merge.py` | adds new strings to every catalogue; never edits an existing translation; never adds -- and drops when empty -- an entry that is not language (`F1`, `8`, `...`) |
+| `po_merge.py` | adds new strings to every catalogue; never edits an existing translation; never adds -- and drops when empty -- an entry that is not language (`F1`, `8`, `...`). `--add-only` adds empty entries and deletes nothing |
+| `po_coverage.py` | the gate: fails when a TR4W resourcestring (read from a compile's `.rsj` files) has no entry in some catalogue; run by `Build-Tests.ps1` |
 | `pas2po.py` | creates a new language (`--new-lang`). Never writes English, which has no catalogue |
 | `po2pas.py` | `.po` → language tables; refuses anything still "Needs work" |
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |

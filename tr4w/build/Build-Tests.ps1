@@ -210,6 +210,32 @@ if ($rc -ne 0)
 Write-Host ''
 Write-Host "BUILD OK -> $exe"
 
+# EVERY RESOURCESTRING IS IN EVERY CATALOGUE (issue 291, 2026-11-12). 85 were
+# in none -- an operator saw English in every language and nothing said so.
+# HERE, NOT IN Run-Lints: the check reads the .rsj files THIS compile just
+# wrote into $out, which is the compiler's own list of resourcestrings; a lint
+# runs before any compile and would read a stale list or none at all.
+# PYTHON IS NOT A BUILD REQUIREMENT for this tree (see Lint-MainElements), so a
+# missing interpreter is reported as SKIPPED, never as a pass.
+# IT FAILS THE SCRIPT AT THE END, NOT HERE, so the suite still runs and its
+# result is still seen: a string another agent has just added must not hide
+# every test result until someone merges it.
+$coverageFailed = $false
+$python = Get-Command python -ErrorAction SilentlyContinue
+if (-not $python)
+   {
+   Write-Host 'po_coverage: SKIPPED -- python not on PATH' -ForegroundColor Yellow
+   }
+else
+   {
+   & $python.Source (Join-Path $REPO 'tools\i18n\po_coverage.py') --rsj-dir $out
+   if ($LASTEXITCODE -ne 0)
+      {
+      Write-Host 'po_coverage FAILED (above) -- this script will exit 1' -ForegroundColor Red
+      $coverageFailed = $true
+      }
+   }
+
 # THE TEST EXE CANNOT START WITHOUT THESE, and the failure is silent.
 #
 # libhamlib-4.dll is a LOAD-TIME import of the test binary (the radio-factory
@@ -300,7 +326,7 @@ if ($Run)
    $summary = $testOut | Select-String 'PASSED:' | Select-Object -Last 1
    if ($summary) { Write-Host "  $($summary.Line.Trim())" }
 
-   $failed = $false
+   $failed = $coverageFailed
 
    # 203 IS heaptrc's "the heap had an error" exit, which it sets only when the
    # program would otherwise have exited 0 -- so every test passed. Whether
@@ -434,6 +460,13 @@ if ($Run)
       }
 
    if ($failed) { exit 1 }
+   }
+
+if ($coverageFailed)
+   {
+   Write-Host ''
+   Write-Host 'BUILD FAILED: a resourcestring is missing from a language catalogue (po_coverage, above)' -ForegroundColor Red
+   exit 1
    }
 
 exit 0

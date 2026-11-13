@@ -53,6 +53,7 @@ Usage
 -----
   python tools/i18n/po_merge.py --pot <path>            # dry run
   python tools/i18n/po_merge.py --pot <path> --apply
+  python tools/i18n/po_merge.py --pot <path> --apply --add-only   # adds, deletes nothing
 """
 
 import argparse
@@ -145,7 +146,17 @@ def is_known(entry, seen_ids, seen_sources):
    return entry.source in seen_sources
 
 
-def merge(path, template, ours, apply_changes):
+def merge(path, template, ours, apply_changes, add_only=False):
+   """Add the template's unknown entries to one catalogue.
+
+   ADD_ONLY (issue 291, 2026-11-12) adds and does NOTHING ELSE: none of the
+   three deletions below, and no carry-over -- every new entry arrives fuzzy
+   with an EMPTY msgstr. It exists because the deletions are not always as
+   harmless as their comments assume: the two obsolete entries every
+   catalogue held on that day ('Quick QSL Message 1', 'Quick QSL CW
+   Message1') carried translator text in de and pl, and a merge whose only
+   job was to add 85 missing resourcestrings would have deleted them as a
+   side effect. With --add-only, `git diff --numstat i18n` is pure +N 0."""
    existing = pofile.read_po(path)
    seen_ids = set()
    seen_sources = set()
@@ -174,9 +185,13 @@ def merge(path, template, ours, apply_changes):
    # mistake. no need for them to be there").
    #
    # Measured before deleting: 1 of the 48 had any text at all.
-   before = len(existing)
-   existing = [e for e in existing if not is_third_party(e, ours)]
-   retired = before - len(existing)
+   retired = 0
+   if add_only:
+      by_source = {}                   # no carry-over: a new entry is empty
+   else:
+      before = len(existing)
+      existing = [e for e in existing if not is_third_party(e, ours)]
+      retired = before - len(existing)
 
    # AND DROP THE OBSOLETE ENTRIES TOO, for the same reason one step further out.
    #
@@ -194,27 +209,28 @@ def merge(path, template, ours, apply_changes):
    # The translations they held are not lost: po_merge carries a matching
    # English into the new entry as it adds it, which is how 'Connect' ->
    # 'Conectar' moved from TC_TELNET_CONNECT to tfrmtelnet.btnconnect.caption.
-   before = len(existing)
-   existing = [e for e in existing if not e.obsolete]
-   dropped = before - len(existing)
-   retired += dropped
+   if not add_only:
+      before = len(existing)
+      existing = [e for e in existing if not e.obsolete]
+      retired += before - len(existing)
 
    # AND WHAT IS NOT LANGUAGE -- pofile.is_translatable, the one rule. An
    # earlier harvest let in every .lfm caption, 'F1' and '8' and '...'
    # included, and Weblate offered them to translators (2026-10-21). Removed
    # only while EMPTY: a msgstr someone wrote is kept and reported, because
    # deciding it is noise is a person's call, not this tool's.
-   kept = []
-   for e in existing:
-      if pofile.is_translatable(e.source):
-         kept.append(e)
-      elif e.target.strip():
-         kept.append(e)
-         print('  %s: KEPT %r -- not language, but it carries %r'
-               % (os.path.basename(path), e.source, e.target))
-      else:
-         retired += 1
-   existing = kept
+   if not add_only:
+      kept = []
+      for e in existing:
+         if pofile.is_translatable(e.source):
+            kept.append(e)
+         elif e.target.strip():
+            kept.append(e)
+            print('  %s: KEPT %r -- not language, but it carries %r'
+                  % (os.path.basename(path), e.source, e.target))
+         else:
+            retired += 1
+      existing = kept
 
    added = carried = skipped = 0
    for t in template:
@@ -267,6 +283,8 @@ def main():
    ap.add_argument('--pot', required=True, help='the template to merge in')
    ap.add_argument('--apply', action='store_true', help='write the files')
    ap.add_argument('--dir', default=None, help='the i18n directory')
+   ap.add_argument('--add-only', action='store_true',
+                   help='add new entries, empty, and delete nothing (see merge)')
    args = ap.parse_args()
 
    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -280,7 +298,8 @@ def main():
    files = sorted(f for f in os.listdir(i18n)
                   if f.lower().startswith('tr4w_') and f.lower().endswith('.po'))
    for f in files:
-      added, carried, retired, total = merge(os.path.join(i18n, f), template, ours, args.apply)
+      added, carried, retired, total = merge(os.path.join(i18n, f), template, ours,
+                                             args.apply, args.add_only)
       print('  %-16s +%4d new (%2d carried), %3d retired  -> %4d entries'
             % (f, added, carried, retired, total))
 

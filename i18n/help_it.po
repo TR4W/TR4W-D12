@@ -1613,6 +1613,18 @@ msgctxt "TC_HELP_SERVER_PORT"
 msgid "Ethernet port number, which will used connection with TR4WSERVER."
 msgstr "Numero porta Ethernet, che utilizzerà la connessione con TR4WSERVER."
 
+#. Config command: SERVER TAILCAT ADDRESS   (default: NONE)
+#, fuzzy
+msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
+msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
+msgstr ""
+
+#. Config command: SERVER USE TAILCAT   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_SERVER_USE_TAILCAT"
+msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
+msgstr ""
+
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
 msgctxt "TC_HELP_SHIFT_KEY_ENABLE"

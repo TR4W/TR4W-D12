@@ -7373,6 +7373,7 @@ msgid "Contest"
 msgstr "Konkurrence"
 
 #: ulclformhelpers.tc_radioedit_transport
+#: uappstrings.sloggergridstate
 #, fuzzy
 msgid "Connection"
 msgstr "Forbindelse"
@@ -9171,11 +9172,6 @@ msgstr ""
 msgid "Enabled"
 msgstr ""
 
-#: uappstrings.sloggergridstate
-#, fuzzy
-msgid "Connection"
-msgstr ""
-
 #: uappstrings.sloggerstatedisabled
 #, fuzzy
 msgid "Disabled"
@@ -9787,4 +9783,461 @@ msgstr ""
 #: uappstrings.sreadinessmylicenseyearmissing
 #, fuzzy
 msgid "MY LICENSE YEAR is empty and this contest sends the year you were first licensed."
+msgstr ""
+
+#: uappstrings.snewcontestenternameandqth
+#, fuzzy
+msgid "Enter your name and QTH (US state, Canadian Province or DX country):"
+msgstr ""
+
+#: uappstrings.snewcontestbranchnumberlabel
+#, fuzzy
+msgid "MY BRANCH NUMBER"
+msgstr ""
+
+#: uappstrings.scabundlemissingnotice
+#, fuzzy
+msgid "The certificate file cacert.pem was not found (looked in: %0:s); uploads to %1:s are paused until it is available."
+msgstr ""
+
+#: uappstrings.seditqsodeliveryfailed
+#, fuzzy
+msgid "failed"
+msgstr ""
+
+#: uappstrings.seditqsodeliveryfailedwithcode
+#, fuzzy
+msgid "failed (%s)"
+msgstr ""
+
+#: uappstrings.seditqsodeliverylastsent
+#, fuzzy
+msgid "Last sent %s UTC"
+msgstr ""
+
+#: uappstrings.seditqsodeliveryline
+#, fuzzy
+msgid "External logger %s: %s. %s"
+msgstr ""
+
+#: uappstrings.seditqsodeliveryneversent
+#, fuzzy
+msgid "Not sent yet"
+msgstr ""
+
+#: uappstrings.seditqsodeliverypending
+#, fuzzy
+msgid "pending"
+msgstr ""
+
+#: uappstrings.seditqsodeliverysending
+#, fuzzy
+msgid "sending"
+msgstr ""
+
+#: uappstrings.seditqsodeliverysynced
+#, fuzzy
+msgid "up to date"
+msgstr ""
+
+#: uappstrings.seditqsodeliveryuncertain
+#, fuzzy
+msgid "uncertain"
+msgstr ""
+
+#: uappstrings.seditqsomycall
+#, fuzzy
+msgctxt "uappstrings.seditqsomycall"
+msgid "Call"
+msgstr ""
+
+#: uappstrings.seditqsomycounty
+#, fuzzy
+msgid "County"
+msgstr ""
+
+#: uappstrings.seditqsomycqzone
+#, fuzzy
+msgid "CQ zone"
+msgstr ""
+
+#: uappstrings.seditqsomygrid
+#, fuzzy
+msgid "Grid"
+msgstr ""
+
+#: uappstrings.seditqsomyituzone
+#, fuzzy
+msgid "ITU zone"
+msgstr ""
+
+#: uappstrings.seditqsomypark
+#, fuzzy
+msgid "Park"
+msgstr ""
+
+#: uappstrings.seditqsomysection
+#, fuzzy
+msgid "Section"
+msgstr ""
+
+#: uappstrings.seditqsomystate
+#, fuzzy
+msgid "State"
+msgstr ""
+
+#: uappstrings.seditqsomystation
+#, fuzzy
+msgid "Our station for this QSO"
+msgstr ""
+
+#: uappstrings.seditqsomystationassumed
+#, fuzzy
+msgid "Our station for this QSO (assumed: a network QSO)"
+msgstr ""
+
+#: uappstrings.seditqsomystationnotrecorded
+#, fuzzy
+msgid "Our station for this QSO (not recorded)"
+msgstr ""
+
+#: uappstrings.sexchangeambiguousserial
+#, fuzzy
+msgid "Ambiguous exchange - enter %s or %s to resolve"
+msgstr ""
+
+#: uappstrings.sexchangecallorexchange
+#, fuzzy
+msgid "Ambiguous entry - %s may be a callsign or an exchange. For the exchange, enter %s; for the call, type it in the call window"
+msgstr ""
+
+#: uappstrings.sexchangechecknottwodigits
+#, fuzzy
+msgid "Check must be two digits (%s)"
+msgstr ""
+
+#: uappstrings.sexchangenocheck
+#, fuzzy
+msgid "Missing check (two digits)"
+msgstr ""
+
+#: uappstrings.sexchangenosection
+#, fuzzy
+msgid "Missing section"
+msgstr ""
+
+#: uappstrings.shamscorenobundlestatus
+#, fuzzy
+msgid "Not sent: cacert.pem not found (looked in: %0:s) -- %1:d QSO(s) retained"
+msgstr ""
+
+#: uappstrings.slogbusynotsaved
+#, fuzzy
+msgid ""
+"The contest log was locked by another program while %s, so that change was NOT saved. The log itself is not damaged and TR4W keeps it open.\n"
+"\n"
+"If this was a QSO, it is still in the entry window: log it again. If this keeps happening, run Tools > Run Verification Checks."
+msgstr ""
+
+#: uappstrings.sloggereditorcounts
+#, fuzzy
+msgid "Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d"
+msgstr ""
+
+#: uappstrings.sloggereditornocounts
+#, fuzzy
+msgid "Delivery status unavailable"
+msgstr ""
+
+#: uappstrings.sloggereditornolog
+#, fuzzy
+msgid "No contest log is open."
+msgstr ""
+
+#: uappstrings.sloggereditornote
+#, fuzzy
+msgid "Save to Preferences returns this logger to the Preferences window. Click Save there to store it; Active takes effect then, with no restart. A logger added since TR4W started, or a changed key, host or logbook, applies after you restart TR4W. Each logger sends independently."
+msgstr ""
+
+#: uappstrings.sloggerfieldcloudlogkey
+#, fuzzy
+msgid "Cloudlog / Wavelog API key"
+msgstr ""
+
+#: uappstrings.sloggerfieldcloudlogprofile
+#, fuzzy
+msgid "Station profile ID"
+msgstr ""
+
+#: uappstrings.sloggerfieldcloudlogurl
+#, fuzzy
+msgid "Cloudlog / Wavelog address (https://...)"
+msgstr ""
+
+#: uappstrings.sloggergridadd
+#, fuzzy
+msgid "Add..."
+msgstr ""
+
+#: uappstrings.sloggergridchanged
+#, fuzzy
+msgid "Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart."
+msgstr ""
+
+#: uappstrings.sloggergridedit
+#, fuzzy
+msgctxt "uappstrings.sloggergridedit"
+msgid "Edit..."
+msgstr ""
+
+#: uappstrings.sloggergridhint
+#, fuzzy
+msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart."
+msgstr ""
+
+#: uappstrings.sloggergridlogger
+#, fuzzy
+msgid "Logger"
+msgstr ""
+
+#: uappstrings.sloggergridmovedown
+#, fuzzy
+msgid "Move down"
+msgstr ""
+
+#: uappstrings.sloggergridmoveup
+#, fuzzy
+msgid "Move up"
+msgstr ""
+
+#: uappstrings.sloggergridno
+#, fuzzy
+msgid "No"
+msgstr ""
+
+#: uappstrings.sloggergridnone
+#, fuzzy
+msgid "No loggers configured"
+msgstr ""
+
+#: uappstrings.sloggergridorder
+#, fuzzy
+msgid "Order"
+msgstr ""
+
+#: uappstrings.sloggergridprovider
+#, fuzzy
+msgid "Provider"
+msgstr ""
+
+#: uappstrings.sloggergridremove
+#, fuzzy
+msgid "Remove..."
+msgstr ""
+
+#: uappstrings.sloggergridremoveask
+#, fuzzy
+msgid "Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition."
+msgstr ""
+
+#: uappstrings.sloggergridsavedrestart
+#, fuzzy
+msgid "Saved. Enabled and Order are in effect. %d logger(s) with new or changed connection settings apply after you restart TR4W."
+msgstr ""
+
+#: uappstrings.sloggergridsend
+#, fuzzy
+msgid "Send new QSOs"
+msgstr ""
+
+#: uappstrings.sloggergridyes
+#, fuzzy
+msgid "Yes"
+msgstr ""
+
+#: uappstrings.sloggerstateapplyonsave
+#, fuzzy
+msgid "Applies on Save"
+msgstr ""
+
+#: uappstrings.sloglockedbody
+#, fuzzy
+msgid ""
+"TR4W cannot open the contest log for writing:\n"
+"%s\n"
+"\n"
+"%s\n"
+"\n"
+"To fix it: close the other TR4W (look for one stopped at an error dialog, or end it in the Task Manager), or pause the backup, sync or antivirus tool that has the file, then choose Retry.\n"
+"\n"
+"Open read-only lets you view and export the log, but NO QSO CAN BE LOGGED until TR4W is restarted with the log unlocked."
+msgstr ""
+
+#: uappstrings.sloglockedheldelsewhere
+#, fuzzy
+msgid "Another program is holding it -- most likely another TR4W, or one that crashed and is still waiting at an error dialog; or a backup, cloud sync (OneDrive, Dropbox) or antivirus program reading the file."
+msgstr ""
+
+#: uappstrings.sloglockedheldhere
+#, fuzzy
+msgid "This TR4W's own background connection is holding it: %s."
+msgstr ""
+
+#: uappstrings.sloglockedquit
+#, fuzzy
+msgid "Quit TR4W"
+msgstr ""
+
+#: uappstrings.sloglockedreadonly
+#, fuzzy
+msgid "Open read-only (no logging)"
+msgstr ""
+
+#: uappstrings.sloglockedretry
+#, fuzzy
+msgid "Retry"
+msgstr ""
+
+#: uappstrings.sloglockedtitle
+#, fuzzy
+msgid "Contest log is locked"
+msgstr ""
+
+#: uappstrings.slogreadonlyrefused
+#, fuzzy
+msgid ""
+"This contest log was opened READ-ONLY because it was locked:\n"
+"%s\n"
+"\n"
+"Nothing can be saved to it -- NO QSO IS BEING LOGGED. Close what holds the log and restart TR4W to log again."
+msgstr ""
+
+#: uappstrings.snettailcatfailed
+#, fuzzy
+msgid "The link to the multi-op server through Tailcat could not be opened: %s. TR4W keeps trying."
+msgstr ""
+
+#: uappstrings.sprefsgroupinternet
+#, fuzzy
+msgid "Internet downloads and uploads"
+msgstr ""
+
+#: uappstrings.sprefsnettailcatcaption
+#, fuzzy
+msgid "Tailcat address:"
+msgstr ""
+
+#: uappstrings.sprefsnettailcathint
+#, fuzzy
+msgid "To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password."
+msgstr ""
+
+#: uappstrings.sprefsnetusetailcat
+#, fuzzy
+msgid "Use Tailcat"
+msgstr ""
+
+#: uappstrings.swrldeliveryissue
+#, fuzzy
+msgid "World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records."
+msgstr ""
+
+#: uappstrings.swrlstatusunavailable
+#, fuzzy
+msgid "WRL delivery status is unavailable for the current log."
+msgstr ""
+
+#: uappstrings.swrlsummary
+#, fuzzy
+msgid "WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh."
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_ports_unavailable
+#, fuzzy
+msgid "(port list not available on this platform)"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_port_not_present
+#, fuzzy
+msgid "(not present)"
+msgstr ""
+
+#: ulclformhelpers.tc_prefs_port_unsupported
+#, fuzzy
+msgid "(not selectable yet)"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_workedmultcolor
+#, fuzzy
+msgid "Color of the M on a spot whose multiplier wants a backup"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_workedmultlimit
+#, fuzzy
+msgid "Workings of a multiplier before its spot shows no M"
+msgstr ""
+
+#: usettingscaptions.rs_cluster_ctrlj_spotcommentmultiplier
+#, fuzzy
+msgid "Spot Comment Multiplier"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_callhistoryfilename
+#, fuzzy
+msgid "Call History Filename"
+msgstr ""
+
+#: usettingscaptions.rs_files_ctrlj_usecallhistoryfile
+#, fuzzy
+msgid "Use Call History File"
+msgstr ""
+
+#: usettingscaptions.rs_network_httptransport
+#, fuzzy
+msgid "How downloads and uploads connect (generic, auto or platform)"
+msgstr ""
+
+#: utr4wstrings.tc_improperdomesticqthhostonly
+#, fuzzy
+msgid "(%s: work %s stations only)"
+msgstr ""
+
+#: utr4wstrings.tc_improperdomesticqthnoqth
+#, fuzzy
+msgid "(no QTH)"
+msgstr ""
+
+#: utr4wstrings.tc_improperdomesticqthnotinfile
+#, fuzzy
+msgid "(%s not in %s)"
+msgstr ""
+
+#: utr4wstrings.tc_improperdomesticqthunknown
+#, fuzzy
+msgid "(%s not known)"
+msgstr ""
+
+#: utr4wstrings.tc_invalidarrlsection
+#, fuzzy
+msgid "Invalid ARRL Section"
+msgstr ""
+
+#: utr4wstrings.tc_qsonumberzeronotvalid
+#, fuzzy
+msgid "QSO number 0 is not valid in this contest."
+msgstr ""
+
+#: utr4wstrings.tc_tciserverportusedbytciradio
+#, fuzzy
+msgid "The TCI server cannot use port %d: your TCI radio '%s' connects to the SDR on that port on this PC. Choose a different port for the TCI server (default %d) or turn the TCI server off."
+msgstr ""
+
+#: utr4wstrings.tc_toomanycounties
+#, fuzzy
+msgid "Too many counties for this contest (maximum %d)!!"
+msgstr ""
+
+#: uappstrings.sprefspagehasnosettingsyet
+#, fuzzy
+msgid "There are no settings on this page yet."
 msgstr ""
