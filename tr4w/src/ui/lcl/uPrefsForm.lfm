@@ -1174,7 +1174,15 @@ object PrefsForm: TPrefsForm
         Font.Style = [fsBold]
         ParentFont = False
       end
-      object lblMyCall: TLabel
+      object edtMyCall: TEdit
+        Left = 140
+        Height = 22
+        Top = 34
+        Width = 200
+        AutoSize = False
+        TabOrder = 1
+      end
+      object lblMyCall: TStaticText
         Left = 12
         Height = 17
         Top = 38
@@ -1182,23 +1190,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'Callsign:'
         FocusControl = edtMyCall
-      end
-      object edtMyCall: TEdit
-        Left = 140
-        Height = 22
-        Top = 34
-        Width = 200
-        AutoSize = False
         TabOrder = 0
-      end
-      object lblMyName: TLabel
-        Left = 12
-        Height = 17
-        Top = 68
-        Width = 120
-        AutoSize = False
-        Caption = 'First name:'
-        FocusControl = edtMyName
       end
       object edtMyName: TEdit
         Left = 140
@@ -1206,16 +1198,17 @@ object PrefsForm: TPrefsForm
         Top = 64
         Width = 200
         AutoSize = False
-        TabOrder = 1
+        TabOrder = 3
       end
-      object lblMyGrid: TLabel
+      object lblMyName: TStaticText
         Left = 12
         Height = 17
-        Top = 98
+        Top = 68
         Width = 120
         AutoSize = False
-        Caption = 'Grid square:'
-        FocusControl = edtMyGrid
+        Caption = 'First name:'
+        FocusControl = edtMyName
+        TabOrder = 2
       end
       object edtMyGrid: TEdit
         Left = 140
@@ -1223,15 +1216,17 @@ object PrefsForm: TPrefsForm
         Top = 94
         Width = 200
         AutoSize = False
-        TabOrder = 2
+        TabOrder = 5
       end
-      object lblMyContinent: TLabel
+      object lblMyGrid: TStaticText
         Left = 12
         Height = 17
-        Top = 128
+        Top = 98
         Width = 120
         AutoSize = False
-        Caption = 'Continent:'
+        Caption = 'Grid square:'
+        FocusControl = edtMyGrid
+        TabOrder = 4
       end
       object cbxMyContinent: TComboBox
         Left = 140
@@ -1240,16 +1235,17 @@ object PrefsForm: TPrefsForm
         Width = 200
         AutoSize = False
         ItemHeight = 0
-        TabOrder = 3
+        TabOrder = 7
       end
-      object lblMyZone: TLabel
+      object lblMyContinent: TStaticText
         Left = 12
         Height = 17
-        Top = 158
+        Top = 128
         Width = 120
         AutoSize = False
-        Caption = 'CQ zone:'
-        FocusControl = edtMyZone
+        Caption = 'Continent:'
+        FocusControl = cbxMyContinent
+        TabOrder = 6
       end
       object edtMyZone: TEdit
         Left = 140
@@ -1257,16 +1253,17 @@ object PrefsForm: TPrefsForm
         Top = 154
         Width = 200
         AutoSize = False
-        TabOrder = 4
+        TabOrder = 9
       end
-      object lblMyITUZone: TLabel
+      object lblMyZone: TStaticText
         Left = 12
         Height = 17
-        Top = 188
+        Top = 158
         Width = 120
         AutoSize = False
-        Caption = 'ITU zone:'
-        FocusControl = edtMyITUZone
+        Caption = 'CQ zone:'
+        FocusControl = edtMyZone
+        TabOrder = 8
       end
       object edtMyITUZone: TEdit
         Left = 140
@@ -1274,16 +1271,17 @@ object PrefsForm: TPrefsForm
         Top = 184
         Width = 200
         AutoSize = False
-        TabOrder = 5
+        TabOrder = 11
       end
-      object lblMyState: TLabel
+      object lblMyITUZone: TStaticText
         Left = 12
         Height = 17
-        Top = 218
+        Top = 188
         Width = 120
         AutoSize = False
-        Caption = 'State/Province:'
-        FocusControl = edtMyState
+        Caption = 'ITU zone:'
+        FocusControl = edtMyITUZone
+        TabOrder = 10
       end
       object edtMyState: TEdit
         Left = 140
@@ -1291,16 +1289,17 @@ object PrefsForm: TPrefsForm
         Top = 214
         Width = 200
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 13
       end
-      object lblMySection: TLabel
+      object lblMyState: TStaticText
         Left = 12
         Height = 17
-        Top = 248
+        Top = 218
         Width = 120
         AutoSize = False
-        Caption = 'ARRL section:'
-        FocusControl = edtMySection
+        Caption = 'State/Province:'
+        FocusControl = edtMyState
+        TabOrder = 12
       end
       object edtMySection: TEdit
         Left = 140
@@ -1308,16 +1307,17 @@ object PrefsForm: TPrefsForm
         Top = 244
         Width = 200
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 15
       end
-      object lblMyCountry: TLabel
+      object lblMySection: TStaticText
         Left = 12
         Height = 17
-        Top = 278
+        Top = 248
         Width = 120
         AutoSize = False
-        Caption = 'Country:'
-        FocusControl = edtMyCountry
+        Caption = 'ARRL section:'
+        FocusControl = edtMySection
+        TabOrder = 14
       end
       object edtMyCountry: TEdit
         Left = 140
@@ -1325,16 +1325,17 @@ object PrefsForm: TPrefsForm
         Top = 274
         Width = 200
         AutoSize = False
-        TabOrder = 8
+        TabOrder = 17
       end
-      object lblMyPostalCode: TLabel
+      object lblMyCountry: TStaticText
         Left = 12
         Height = 17
-        Top = 308
+        Top = 278
         Width = 120
         AutoSize = False
-        Caption = 'Postal code:'
-        FocusControl = edtMyPostalCode
+        Caption = 'Country:'
+        FocusControl = edtMyCountry
+        TabOrder = 16
       end
       object edtMyPostalCode: TEdit
         Left = 140
@@ -1342,7 +1343,17 @@ object PrefsForm: TPrefsForm
         Top = 304
         Width = 200
         AutoSize = False
-        TabOrder = 9
+        TabOrder = 19
+      end
+      object lblMyPostalCode: TStaticText
+        Left = 12
+        Height = 17
+        Top = 308
+        Width = 120
+        AutoSize = False
+        Caption = 'Postal code:'
+        FocusControl = edtMyPostalCode
+        TabOrder = 18
       end
       object lblContestHeading: TLabel
         Left = 380
@@ -1355,7 +1366,15 @@ object PrefsForm: TPrefsForm
         Font.Style = [fsBold]
         ParentFont = False
       end
-      object lblMyCheck: TLabel
+      object edtMyCheck: TEdit
+        Left = 496
+        Height = 22
+        Top = 34
+        Width = 150
+        AutoSize = False
+        TabOrder = 21
+      end
+      object lblMyCheck: TStaticText
         Left = 380
         Height = 17
         Top = 38
@@ -1363,23 +1382,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'Check:'
         FocusControl = edtMyCheck
-      end
-      object edtMyCheck: TEdit
-        Left = 496
-        Height = 22
-        Top = 34
-        Width = 150
-        AutoSize = False
-        TabOrder = 10
-      end
-      object lblMyPrec: TLabel
-        Left = 380
-        Height = 17
-        Top = 68
-        Width = 110
-        AutoSize = False
-        Caption = 'Precedence:'
-        FocusControl = edtMyPrec
+        TabOrder = 20
       end
       object edtMyPrec: TEdit
         Left = 496
@@ -1387,16 +1390,17 @@ object PrefsForm: TPrefsForm
         Top = 64
         Width = 150
         AutoSize = False
-        TabOrder = 11
+        TabOrder = 23
       end
-      object lblMyFDClass: TLabel
+      object lblMyPrec: TStaticText
         Left = 380
         Height = 17
-        Top = 98
+        Top = 68
         Width = 110
         AutoSize = False
-        Caption = 'FD class:'
-        FocusControl = edtMyFDClass
+        Caption = 'Precedence:'
+        FocusControl = edtMyPrec
+        TabOrder = 22
       end
       object edtMyFDClass: TEdit
         Left = 496
@@ -1404,16 +1408,17 @@ object PrefsForm: TPrefsForm
         Top = 94
         Width = 150
         AutoSize = False
-        TabOrder = 12
+        TabOrder = 25
       end
-      object lblMyFOCNumber: TLabel
+      object lblMyFDClass: TStaticText
         Left = 380
         Height = 17
-        Top = 128
+        Top = 98
         Width = 110
         AutoSize = False
-        Caption = 'FOC number:'
-        FocusControl = edtMyFOCNumber
+        Caption = 'FD class:'
+        FocusControl = edtMyFDClass
+        TabOrder = 24
       end
       object edtMyFOCNumber: TEdit
         Left = 496
@@ -1421,16 +1426,17 @@ object PrefsForm: TPrefsForm
         Top = 124
         Width = 150
         AutoSize = False
-        TabOrder = 13
+        TabOrder = 27
       end
-      object lblMyIOTA: TLabel
+      object lblMyFOCNumber: TStaticText
         Left = 380
         Height = 17
-        Top = 158
+        Top = 128
         Width = 110
         AutoSize = False
-        Caption = 'IOTA:'
-        FocusControl = edtMyIOTA
+        Caption = 'FOC number:'
+        FocusControl = edtMyFOCNumber
+        TabOrder = 26
       end
       object edtMyIOTA: TEdit
         Left = 496
@@ -1438,16 +1444,17 @@ object PrefsForm: TPrefsForm
         Top = 154
         Width = 150
         AutoSize = False
-        TabOrder = 14
+        TabOrder = 29
       end
-      object lblMyPark: TLabel
+      object lblMyIOTA: TStaticText
         Left = 380
         Height = 17
-        Top = 188
+        Top = 158
         Width = 110
         AutoSize = False
-        Caption = 'Park:'
-        FocusControl = edtMyPark
+        Caption = 'IOTA:'
+        FocusControl = edtMyIOTA
+        TabOrder = 28
       end
       object edtMyPark: TEdit
         Left = 496
@@ -1455,16 +1462,17 @@ object PrefsForm: TPrefsForm
         Top = 184
         Width = 150
         AutoSize = False
-        TabOrder = 15
+        TabOrder = 31
       end
-      object lblMyLicenseYear: TLabel
+      object lblMyPark: TStaticText
         Left = 380
         Height = 17
-        Top = 218
+        Top = 188
         Width = 110
         AutoSize = False
-        Caption = 'License year:'
-        FocusControl = edtMyLicenseYear
+        Caption = 'Park:'
+        FocusControl = edtMyPark
+        TabOrder = 30
       end
       object edtMyLicenseYear: TEdit
         Left = 496
@@ -1473,7 +1481,17 @@ object PrefsForm: TPrefsForm
         Width = 150
         AutoSize = False
         MaxLength = 4
-        TabOrder = 16
+        TabOrder = 33
+      end
+      object lblMyLicenseYear: TStaticText
+        Left = 380
+        Height = 17
+        Top = 218
+        Width = 110
+        AutoSize = False
+        Caption = 'License year:'
+        FocusControl = edtMyLicenseYear
+        TabOrder = 32
       end
       object lblStationHint: TLabel
         Left = 12

@@ -676,6 +676,18 @@ function WrappedTextHeight(const aFont: TFont; const aText: TCaption;
   editor became its second caller. *)
 procedure ControlPreferredSize(const aControl: TControl; out aWidth, aHeight: integer);
 
+(* THE INPUT A CAPTION NAMES: the FocusControl of a TLabel or a TStaticText,
+  nil for any other control (or a caption that names nothing).
+
+  TWO CLASSES, because they are two kinds of caption (issue 278). A TLabel is
+  painted by its parent and has no window, so Windows UI Automation cannot see
+  it and the input beside it reads as unnamed. A TStaticText IS a window (a
+  Win32 STATIC), and UIA names an input from the static immediately before it
+  in z-order. A form that wants its inputs named on Windows uses TStaticText;
+  everything that pairs a caption with its input asks this, so it does not
+  care which. *)
+function CaptionFocusControl(const aCaption: TControl): TWinControl;
+
 implementation
 
 uses
@@ -1474,6 +1486,19 @@ begin
    if aHeight < 0 then
       begin
       aHeight := 0;
+      end;
+end;
+
+function CaptionFocusControl(const aCaption: TControl): TWinControl;
+begin
+   Result := nil;
+   if aCaption is TLabel then
+      begin
+      Result := TLabel(aCaption).FocusControl;
+      end
+   else if aCaption is TStaticText then
+      begin
+      Result := TStaticText(aCaption).FocusControl;
       end;
 end;
 

@@ -1875,6 +1875,8 @@ var
    yearMissing: boolean;
    carryYears: boolean;
    contestType: string;
+   yearSentMissing: boolean;
+   markYearSentBackfill: boolean;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
 
@@ -1934,6 +1936,25 @@ begin
         column, and its copy is the one that may be stale. *)
       carryYears := (contestType <> '') and
                     LogContestKeepsYearInZone(contestType);
+      end;
+
+   (* v7 -> v8: IS qso.year_sent MISSING, AND DOES THE LOG HOLD ANY QSO -- asked
+     here, before anything changes, for the one-transaction reason (issue
+     300). A log with rows is marked for the store's one-shot backfill
+     (LOG_YEAR_SENT_BACKFILL_KEY): what those rows sent was the contest's
+     year, which only the set-up contest knows. An empty log has nothing to
+     fill, and a log made by this build and stamped back keeps its column and
+     is not marked again. *)
+   yearSentMissing := False;
+   markYearSentBackfill := False;
+   if version < 8 then
+      begin
+      yearSentMissing :=
+         PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                        'WHERE name = ''' + string(LOG_V8_QSO_YEAR_SENT_COLUMN.Name) +
+                        '''')) = '';
+      markYearSentBackfill := yearSentMissing and
+                              (PragmaAsString('SELECT 1 FROM qso LIMIT 1') <> '');
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -2047,6 +2068,22 @@ begin
    if carryYears then
       begin
       FConnection.ExecuteDirect('UPDATE qso SET rcvd_year = rcvd_zone');
+      end;
+
+   (* v7 -> v8: qso.year_sent, NULL in every existing row until the store's
+     backfill, and the mark that asks for it -- both in this transaction, so
+     a migrated log either has the column AND the mark, or neither. *)
+   if yearSentMissing then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V8_QSO_YEAR_SENT_COLUMN.Name) +
+         ' ' + string(LOG_V8_QSO_YEAR_SENT_COLUMN.Declaration)));
+      end;
+   if markYearSentBackfill then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'INSERT OR REPLACE INTO session_state (key, value, saved_at) VALUES (''' +
+         string(LOG_YEAR_SENT_BACKFILL_KEY) + ''', ''1'', NULL)'));
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

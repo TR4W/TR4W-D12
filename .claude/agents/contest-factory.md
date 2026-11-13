@@ -1111,7 +1111,14 @@ the target shape, the M-step migration order and the open questions.
   `my_cq_zone` is `uContestFactory.SessionMyCQZone(contest)`: MY CALL's CTY
   zone where `MyZoneIsAStationZone` is False, never the year;
   `uTestReceivedYearDisplay` walks the registry proving the field reaches no
-  other contest's output). The licence-year parser names a YEAR in its refusals
+  other contest's output). THE SENT YEAR IS THE ROW'S since log schema 8
+  (issue 300, 2026-11-13): `SentLicenseYearValue` is the number
+  `SentLicenseYearText` formats and `qso.year_sent` stores;
+  `MyStationExchangeOfQSO(..., aYearKind)` puts the row's year in the zone
+  slot; and the base `CanonicalSentExchange` BRANCHES ON `ReceivedYearKind` --
+  a year contest's canonical sent exchange is the QSO's sent RST and
+  `TCanonicalExchangeContext.SentYearText`, not the CW template (which said
+  `599` on phone). The licence-year parser names a YEAR in its refusals
   (`SExchangeNoLicenseYear` / `SExchangeImproperLicenseYear`), never the
   zone parser's `TC_IMPROPERZONENUMBER`; `SummarySheet` (PostUnit);
   `ReportsRunningScore` (hour totals); `CabrilloContestName`,

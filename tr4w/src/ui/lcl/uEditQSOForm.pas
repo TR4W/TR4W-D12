@@ -117,6 +117,12 @@ type
       lblMyCQZone, lblMyITUZone: TLabel;
     edtMyCall, edtMyGrid, edtMyState, edtMyCounty, edtMySection, edtMyPark,
       edtMyCQZone, edtMyITUZone: TEdit;
+    // THE LICENCE YEAR THIS QSO SENT (qso.year_sent, issue 300) -- by name, as
+    // the rest of the group: EditQSOShowSentYear / EditQSOSentYearText. Enabled
+    // only in a contest that sends a year; the text is the contest's (two or
+    // four digits, or a count), and uContestBase.ApplyEditedSentYear reads it.
+    lblMyYearSent: TLabel;
+    edtMyYearSent: TEdit;
 
     // WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, by name,
     // through EditQSOShowDelivery. A label: it raises no OnChange, so it can
@@ -275,6 +281,14 @@ procedure EditQSOCloseForm;
 // continent) and the source are carried through untouched.
 procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
 function  EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
+
+// THE LICENCE YEAR THE QSO SENT (issue 300). Show: the box holds the row's
+// year as aContest formats it (uContestBase.SentYearTextOfFacts) and takes as
+// many digits as the contest's kind has; in a contest that sends no year it is
+// empty and disabled. Read: the text as typed, for ApplyEditedSentYear. Both
+// no-ops ('' back) when the form is not up.
+procedure EditQSOShowSentYear(aContest: TContestBase; const aFacts: TQsoMyFacts);
+function  EditQSOSentYearText: string;
 
 // THE ZONE BOX FOR THE QSO'S CONTEST -- TfrmEditQSO.ShowZoneBoxFor on the open
 // form (issue 298). A no-op when the form is not up.
@@ -726,6 +740,39 @@ begin
    Result.ITUZone := StrToIntDef(Trim(frmEditQSO.edtMyITUZone.Text), 0);
 end;
 
+procedure EditQSOShowSentYear(aContest: TContestBase; const aFacts: TQsoMyFacts);
+var
+   kind: TReceivedYearKind;
+   fewest, most: integer;
+begin
+   if frmEditQSO = nil then
+      begin
+      Exit;
+      end;
+
+   kind := ContestReceivedYearKind(aContest);
+   if (kind <> rykNone) and ReceivedYearDigits(kind, fewest, most) then
+      begin
+      frmEditQSO.edtMyYearSent.MaxLength := most;
+      frmEditQSO.edtMyYearSent.Enabled := True;
+      frmEditQSO.edtMyYearSent.Text := LclText(SentYearTextOfFacts(kind, aFacts));
+      end
+   else
+      begin
+      frmEditQSO.edtMyYearSent.Text := '';
+      frmEditQSO.edtMyYearSent.Enabled := False;
+      end;
+end;
+
+function EditQSOSentYearText: string;
+begin
+   Result := '';
+   if frmEditQSO <> nil then
+      begin
+      Result := Trim(frmEditQSO.edtMyYearSent.Text);
+      end;
+end;
+
 // --------------------------------------------- the external-logger delivery
 // The stored state words (uLogSchema's CHECK) in the operator's words -- the
 // same ones the Preferences delivery summary uses. A state this build does
@@ -1085,6 +1132,8 @@ begin
                    lblMyState,   edtMyState,   lblMyCounty, edtMyCounty]);
       mine.AddRow([lblMySection, edtMySection, lblMyPark, edtMyPark,
                    lblMyCQZone,  edtMyCQZone,  lblMyITUZone, edtMyITUZone]);
+      mine.AddRow([lblMyYearSent, edtMyYearSent, nil, nil,
+                   nil,          nil,          nil, nil]);
       mine.Measure(Px(6), [Px(52), Px(76), Px(52), Px(76), Px(52), Px(76), Px(52), Px(76)],
                    [0, Px(2), Px(10), Px(2), Px(10), Px(2), Px(10), Px(2)],
                    Px(2), Px(DROPDOWN_CHROME_96));
@@ -1147,6 +1196,7 @@ begin
    aForm.lblMyPark.Caption := SEditQSOMyPark;
    aForm.lblMyCQZone.Caption := SEditQSOMyCQZone;
    aForm.lblMyITUZone.Caption := SEditQSOMyITUZone;
+   aForm.lblMyYearSent.Caption := SEditQSOMyYearSent;
 end;
 
 procedure TfrmEditQSO.HandleShow(Sender: TObject);

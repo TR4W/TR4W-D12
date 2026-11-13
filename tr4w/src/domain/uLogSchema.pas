@@ -229,7 +229,16 @@ const
      rcvd_zone, every row, overwriting (TLogDatabase.MigrateSchema). From 7
      on, StoreLicenceYear writes both and rcvd_year is what is read. A log of
      any other contest is only re-stamped. *)
-   LOG_SCHEMA_VERSION = 7;
+   (* 8 SINCE 2026-11-13 (issue 300, NY4I): qso.year_sent -- the licence year
+     THIS QSO SENT, as the contest sends it (85, 1985, or a count), NULL when
+     the contest sends none (LOG_V8_QSO_YEAR_SENT_COLUMN). A QSO record depends
+     on nothing but its own row: the export used to send the contest's CURRENT
+     year for every logged QSO. Schema 7 SHIPPED in 5.0.40, so a log this
+     build has opened is refused by 5.0.40 and every earlier build. The
+     migration adds the column and MARKS the log for the one-shot backfill
+     (LOG_YEAR_SENT_BACKFILL_KEY); the store runs it once the contest is set
+     up, because only then is the contest's year known. *)
+   LOG_SCHEMA_VERSION = 8;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -262,13 +271,31 @@ const
    LOG_V4_MESSAGE_COLUMN: TLogAddedColumn = (
       Name: 'edited'; Declaration: 'INTEGER NOT NULL DEFAULT 0');
 
-   (* THE qso COLUMN SCHEMA 6 ADDED -- the received year (issue 298). The
-     LAST column of the CREATE TABLE below, so ADD COLUMN gives a migrated log
-     the same shape as a new one. NULLABLE, like every other rcvd_* number:
+   (* THE qso COLUMN SCHEMA 6 ADDED -- the received year (issue 298). It was
+     the LAST column of the CREATE TABLE below (year_sent follows it since
+     schema 8), so ADD COLUMN gives a migrated log the same shape as a new one. NULLABLE, like every other rcvd_* number:
      NULL is "no year" (ContestExchange.RcvdYearKnown False), and 0 is a real
      year (00 = first licensed in 2000). *)
    LOG_V6_QSO_YEAR_COLUMN: TLogAddedColumn = (
       Name: 'rcvd_year'; Declaration: 'INTEGER');
+
+   (* THE qso COLUMN SCHEMA 8 ADDED -- the licence year this QSO sent (issue
+     300). The LAST column of the CREATE TABLE below, so ADD COLUMN gives a
+     migrated log the same shape as a new one. NULLABLE: NULL is "sent none"
+     (TQsoMyFacts.YearSentKnown False); 0 is the year 00. INSERT-ONLY like the
+     my_* columns (uLogRepository.QSO_MY_COLUMNS): only Edit QSO and the
+     migration's backfill write an existing row's. *)
+   LOG_V8_QSO_YEAR_SENT_COLUMN: TLogAddedColumn = (
+      Name: 'year_sent'; Declaration: 'INTEGER');
+
+   (* THE session_state KEY THAT SAYS "BACKFILL year_sent ONCE" -- written by
+     the schema-8 migration, in its one transaction, when it added the column
+     to a log that already held rows; read and deleted by the store
+     (uLogStore) once the contest is set up and its year is known, in the
+     backfill's own transaction. So the backfill runs exactly once per
+     migrated log, and a crash between the two runs it again: it touches only
+     rows whose year_sent is still NULL. *)
+   LOG_YEAR_SENT_BACKFILL_KEY = 'yearSentBackfillPending';
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -593,10 +620,14 @@ const
       '    my_cq_zone        INTEGER,'#10 +
       '    my_itu_zone       INTEGER,'#10 +
       '    my_source         TEXT,'#10 +
-      '    rcvd_year         INTEGER'#10 +
+      '    rcvd_year         INTEGER,'#10 +
+      '    year_sent         INTEGER'#10 +
+      '    -- SCHEMA 8: year_sent, THE LICENCE YEAR THIS QSO SENT (issue 300),'#10 +
+      '    -- as the contest sends it (85, 1985, a count). NULL: sent none;'#10 +
+      '    -- 0 is the year 00. LAST. See LOG_V8_QSO_YEAR_SENT_COLUMN.'#10 +
       '    -- SCHEMA 6: rcvd_year, THE RECEIVED YEAR (issue 298) -- the year'#10 +
       '    -- first licensed, or years licensed, as the contest asks. NULL: no'#10 +
-      '    -- year; 0 is a real one. LAST, so a migrated log matches a new one.'#10 +
+      '    -- year; 0 is a real one. Added at the end then, as year_sent was.'#10 +
       '    -- See LOG_V6_QSO_YEAR_COLUMN.'#10 +
       '    -- SCHEMA 3: THE REST OF OURS, AT THE MOMENT OF THIS QSO (tier 3),'#10 +
       '    -- beside my_county / my_grid / my_state above: my_call .. my_source,'#10 +

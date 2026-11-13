@@ -40,18 +40,51 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-13 -- EACH QSO STORES THE LICENSE YEAR IT SENT (issue 300, log schema 8)
+
+Unit-tested (`uTestLogYearSent`, `uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent`,
+`uTestLicenseYearScope.Test_ALoggedQSOKeepsTheYearItSent`). SUPERSEDES the
+second item of the 2026-11-12 entry below: "Also this contest" no longer
+changes logged QSOs. The Preferences question has TWO buttons ("Also this
+contest", "Station default only"), and after "Also this contest" a second
+question offers to correct the logged QSOs (issue 300 step 7; the gate is
+`uTestLicenseYearScope.Test_TheCorrectionIsAskedOnlyAfterAlsoThisContest`, the
+dialogs have never been on a screen).
+
+- [ ] **EUHFC with year 64 and two QSOs logged. Preferences > Station, License
+      year 05, Save.** The first box has two buttons; Enter and Escape choose
+      "Station default only". Choose "Also this contest": a second box, "Correct
+      logged QSOs?", says 2 QSO(s) sent 64 and asks to change them to 05.
+      Enter, Escape and X all answer No: the export still sends `64` for both.
+- [ ] **The same, answering Yes.** Both QSOs export `05`; a third QSO logged
+      afterwards sends `05` too.
+- [ ] **No QSOs logged, or "Station default only", or 1964 -> 64 (the same year
+      sent).** No second box.
+
+- [ ] **EUHFC with year 64, log a CW and an SSB QSO, then change the year to 05
+      ("Also this contest").** Export ADIF and Cabrillo: the two old QSOs send
+      `599 64` / `59 64`; a QSO logged after the change sends `05`.
+- [ ] **Edit QSO on one of them.** The "Year sent" box (our-station group, third
+      row) shows `64`; type `05`, Save: that QSO now exports `05`, the other
+      `64`. Type `1985` or `x`: refused with "Improper license year sent!!".
+      In CQ WW the box is empty and greyed.
+- [ ] **A log made by 5.0.40 (schema 7) with QSOs**, opened by this build: the
+      log says "schema 8: N QSO(s) given the licence year this contest sends";
+      the export is unchanged; change the contest's year and the old QSOs keep
+      theirs. 5.0.40 refuses the log afterwards (expected).
+
 ## Added 2026-11-12 -- PREFERENCES ASKS WHERE A NEW LICENSE YEAR GOES (issue 300)
 
 Unit-tested (`uTestLicenseYearScope`, `uTestStationFactOverrides`
 `Test_OneFactIsWrittenTheMomentItChanges`); the question itself has never been
 on a screen. "Also this contest" and "This contest and its existing QSOs" do
 the SAME thing today -- a logged QSO stores no sent year, so its export always
-sends the contest's current year (pinned by
-`Test_ALoggedQSOExportsTheContestsCurrentYear`).
+sends the contest's current year (that pin was flipped by schema 8 on
+2026-11-13 -- see the entry above).
 
 - [ ] **European HF Championship (or KVP) open, created with year 64. Preferences
       > Station, License year: type 05, Save.** A question titled "License year"
-      appears with three buttons. Enter AND Escape both choose "Station default
+      appears with two buttons (three until issue 300 step 7). Enter AND Escape both choose "Station default
       only"; closing the box with X does too. Export ADIF: the STX_STRING still
       sends `599 64`.
 - [ ] **The same, choosing "Also this contest".** Export ADIF and Cabrillo: every

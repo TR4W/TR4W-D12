@@ -1962,7 +1962,8 @@ begin
          'IFNULL(qso_points, '''') || '':'' || IFNULL(exchange_sent, '''') ' +
          '|| '':'' || IFNULL(my_grid, '''') || '':'' || IFNULL(my_source, '''') ' +
          '|| '':'' || IFNULL(sent_to_server, '''') || '':'' || ' +
-         'IFNULL(server_dirty, '''') AS c FROM qso ORDER BY id)), ' +
+         'IFNULL(server_dirty, '''') || '':'' || IFNULL(year_sent, '''') ' +
+         'AS c FROM qso ORDER BY id)), ' +
          '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
          'value AS c FROM config ORDER BY command)), ' +
@@ -2004,7 +2005,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 17;
+   STEPS = 19;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -2022,7 +2023,9 @@ const
       'two SaveQSOs in a row',
       'UpdateQSO and then SaveConfigValue',
       'UpdateQSOMyFacts',
-      'MarkServerProgress');
+      'MarkServerProgress',
+      'BackfillYearSent',
+      'CorrectSentYear');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -2151,6 +2154,19 @@ begin
                   marks[0].SessionId := seed.ceQSOID1;
                   marks[0].SessionSeq := seed.ceQSOID2;
                   repo.MarkServerProgress(marks, marks);
+                  end;
+               17:
+                  begin
+                  (* Issue 300: the mark and the fill, neither committed. The
+                    seed never captured a station and holds no year, so it is
+                    filled. *)
+                  repo.SaveSessionValue(LOG_YEAR_SENT_BACKFILL_KEY, '1');
+                  repo.BackfillYearSent(True, 64);
+                  end;
+               18:
+                  begin
+                  (* The seed sent no year: the correction gives it one. *)
+                  repo.CorrectSentYear(False, 0, True, 64);
                   end;
             end;
 

@@ -1,8 +1,8 @@
 unit uTestLicenseYearScope;
 
 (* A STATION-PAGE EDIT OF MY LICENSE YEAR WHILE THE OPEN CONTEST SENDS THE
-  YEAR -- issue 300 (NY4I confirmed the three answers, 2026-11-12). The rule
-  is uLicenseYearChange; the form only asks and records. These pin:
+  YEAR -- issue 300 (two answers since log schema 8, NY4I 2026-11-13). The
+  rule is uLicenseYearChange; the form only asks and records. These pin:
 
     the question   asked only when the open contest sends the year and the
                    station's value really changes;
@@ -11,14 +11,17 @@ unit uTestLicenseYearScope;
                    that FOLLOWED the station is pinned to the year it was
                    following, empty included, so the edit does not move it;
 
-    this contest   the contest states the new year -- and "this contest and
-                   its existing QSOs" is the SAME write;
+    this contest   the contest states the new year;
 
-    the evidence   why they are the same: a QSO logged here records no year,
-                   so its exported sent exchange follows the contest's year
-                   whichever button was pressed. If this test ever fails, rows
-                   have started recording a year and the two buttons can, and
-                   must, be told apart. *)
+    the correction asked only after "Also this contest", when a correction
+                   is offered and logged QSOs sent the old year (a log that
+                   cannot be read asks nothing);
+
+    the evidence   FLIPPED BY LOG SCHEMA 8 (issue 300, NY4I 2026-11-13): a
+                   QSO logged here records the year it sent (qso.year_sent),
+                   so its export keeps that year after the contest's changes.
+                   Existing QSOs move only through the correction question
+                   (uTestLogYearSent pins its rule and its write). *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -35,8 +38,8 @@ type
       procedure Test_StationOnlyPinsTheYearTheContestFollowed;
       procedure Test_StationOnlyPinsAContestThatSentNoYear;
       procedure Test_ThisContestStatesTheNewYear;
-      procedure Test_ExistingQSOsIsTheSameWrite;
-      procedure Test_ALoggedQSOExportsTheContestsCurrentYear;
+      procedure Test_TheCorrectionIsAskedOnlyAfterAlsoThisContest;
+      procedure Test_ALoggedQSOKeepsTheYearItSent;
    public
       procedure RunAllTests; override;
    end;
@@ -180,70 +183,111 @@ begin
    end;
 end;
 
-procedure TLicenseYearScopeTests.Test_ExistingQSOsIsTheSameWrite;
+procedure TLicenseYearScopeTests.Test_TheCorrectionIsAskedOnlyAfterAlsoThisContest;
 var
-   a, b: TR4WSettings;
+   s: TR4WSettings;
    before: string;
+   c: TLicenseYearCorrection;
+   offered: boolean;
 begin
-   BeginTest('this contest and its existing QSOs is the same write as this contest');
-   a := NewSettings('1985', True, '64');
-   b := NewSettings('1985', True, '64');
+   BeginTest('the correction question follows "Also this contest", an offer and QSOs to correct');
+
+   CheckTrue(LicenseYearCorrectionAsks(lysAlsoContest, True, 3),
+             'also this contest, a new year sent, three QSOs sent the old one');
+   CheckTrue(LicenseYearCorrectionAsks(lysAlsoContest, True, 1), 'one QSO is enough');
+   CheckFalse(LicenseYearCorrectionAsks(lysStationOnly, True, 3),
+              'station only never asks: the contest goes on sending what it sent');
+   CheckFalse(LicenseYearCorrectionAsks(lysAlsoContest, False, 3),
+              'no change in what is sent: nothing to correct');
+   CheckFalse(LicenseYearCorrectionAsks(lysAlsoContest, True, 0),
+              'no QSO sent the old year: nothing to ask');
+   CheckFalse(LicenseYearCorrectionAsks(lysAlsoContest, True, -1),
+              'a log that cannot be read asks nothing');
+
+   (* THE FORM'S SEQUENCE ON A SETTINGS OBJECT: the resolved year before the
+      write, the answer applied, the resolved year after -- what
+      LicenseYearCorrectionOf is given, so the offer is the one it reads. *)
+   s := NewSettings('1985', True, '1964');
    try
-      before := a.My.ResolvedLicenseYear;
-      a.TrySetByCommand(LICENSE_YEAR_COMMAND, '1990');
-      b.TrySetByCommand(LICENSE_YEAR_COMMAND, '1990');
-      CheckTrue(ApplyLicenseYearScope(a, lysAlsoContest, before), 'this contest records');
-      CheckTrue(ApplyLicenseYearScope(b, lysContestAndQSOs, before), 'and so does the other');
-      CheckEquals(a.My.ResolvedLicenseYear, b.My.ResolvedLicenseYear, 'the same year');
-      CheckTrue(a.My.HasContestOverride(sfLicenseYear) =
-                b.My.HasContestOverride(sfLicenseYear), 'the same statement');
+      before := s.My.ResolvedLicenseYear;
+      s.TrySetByCommand(LICENSE_YEAR_COMMAND, '1990');
+      ApplyLicenseYearScope(s, lysAlsoContest, before);
+      offered := LicenseYearCorrectionOf(rykTwoDigitYear, before,
+                                         s.My.ResolvedLicenseYear, 2026, c);
+      CheckTrue(offered, 'the contest moved from 1964 to 1990');
+      CheckTrue(c.OldKnown and (c.OldValue = 64), 'the QSOs to correct sent 64');
+      CheckTrue(c.NewKnown and (c.NewValue = 90), 'and are offered 90');
+      CheckTrue(LicenseYearCorrectionAsks(lysAlsoContest, offered, 2), 'so it asks');
    finally
-      b.Free;
-      a.Free;
+      s.Free;
+   end;
+
+   s := NewSettings('1985', True, '1964');
+   try
+      before := s.My.ResolvedLicenseYear;
+      s.TrySetByCommand(LICENSE_YEAR_COMMAND, '1990');
+      ApplyLicenseYearScope(s, lysStationOnly, before);
+      offered := LicenseYearCorrectionOf(rykTwoDigitYear, before,
+                                         s.My.ResolvedLicenseYear, 2026, c);
+      CheckFalse(offered, 'station only: the contest still sends 64, nothing offered');
+      CheckFalse(LicenseYearCorrectionAsks(lysStationOnly, offered, 2), 'and nothing asked');
+   finally
+      s.Free;
    end;
 end;
 
-procedure TLicenseYearScopeTests.Test_ALoggedQSOExportsTheContestsCurrentYear;
+procedure TLicenseYearScopeTests.Test_ALoggedQSOKeepsTheYearItSent;
 var
    euhfc: TContestBase;
    stated: boolean;
    saved: string;
    facts: TQsoMyFacts;
    my: TMyStationExchange;
+   year: integer;
 
    (* What the export sends for a QSO logged HERE, as PostUnit builds it:
       the session's MY-station exchange overlaid by the row's own facts
-      (CurrentMyStationExchange's two steps). *)
+      (CurrentMyStationExchange's two steps), the year included. *)
    function ExportedSentYear: string;
    begin
       my := Default(TMyStationExchange);
       my.MyZone := SessionZoneTextSent(euhfc);
       my := MyStationExchangeOfQSO(my, facts, False,
-                                   SentZoneKindOfQSO(euhfc, CQZoneMode));
+                                   SentZoneKindOfQSO(euhfc, CQZoneMode),
+                                   ContestReceivedYearKind(euhfc));
       Result := my.MyZone;
    end;
 
 begin
-   BeginTest('a QSO logged here records no year: its export follows the contest''s current year');
+   BeginTest('a QSO logged here keeps the year it sent after the contest''s year changes');
    euhfc := ContestIdentity(EUROPEANHFC);
    stated := Settings.My.HasContestOverride(sfLicenseYear);
    saved := Settings.My.ContestOverride(sfLicenseYear);
    try
       (* A row as the capture writes it (uLogStore.LogStoreCurrentMyFacts):
-         every my_* field there is, and none of them a year. *)
+         every my_* field there is, and -- since log schema 8 -- the year it
+         sent, as the session sent it then. *)
+      Settings.My.SetContestOverride(sfLicenseYear, '1964');
       facts := NotCapturedMyFacts;
       facts.Source := mfsLogged;
       facts.Call := 'S50A';
       facts.CQZone := 15;
       facts.ITUZone := 28;
-
-      Settings.My.SetContestOverride(sfLicenseYear, '1964');
+      facts.YearSentKnown := SessionLicenseYearSent(euhfc, year);
+      facts.YearSent := year;
+      CheckTrue(facts.YearSentKnown, 'the capture records a year');
       CheckEquals('64', ExportedSentYear, 'logged while the contest sent 64');
 
       Settings.My.SetContestOverride(sfLicenseYear, '1990');
-      CheckEquals('90', ExportedSentYear,
-                  'the same row exports the contest''s new year -- so "this contest" ' +
-                  'already changes its existing QSOs');
+      CheckEquals('90', SessionZoneTextSent(euhfc), 'the contest sends 90 now');
+      CheckEquals('64', ExportedSentYear,
+                  'and the logged row still exports the 64 it sent -- "this contest" ' +
+                  'no longer reaches its existing QSOs (issue 300, schema 8)');
+
+      (* A ROW THAT NEVER CAPTURED A STATION, AND HOLDS NO YEAR, IS THE
+         SESSION'S (ruling A): a log the backfill has not reached. *)
+      facts := NotCapturedMyFacts;
+      CheckEquals('90', ExportedSentYear, 'a never-captured row follows the session');
    finally
       if stated then
          begin
@@ -263,8 +307,8 @@ begin
    Test_StationOnlyPinsTheYearTheContestFollowed;
    Test_StationOnlyPinsAContestThatSentNoYear;
    Test_ThisContestStatesTheNewYear;
-   Test_ExistingQSOsIsTheSameWrite;
-   Test_ALoggedQSOExportsTheContestsCurrentYear;
+   Test_TheCorrectionIsAskedOnlyAfterAlsoThisContest;
+   Test_ALoggedQSOKeepsTheYearItSent;
 end;
 
 end.

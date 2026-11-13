@@ -618,6 +618,10 @@ begin
         exchange: we do not know what the author sent. *)
       facts := LogStoreCurrentMyFacts;
       facts.Source := mfsAssumed;
+      (* AND NO SENT LICENCE YEAR (issue 300): the author's QSO sent the
+        AUTHOR's year, which the protocol-3 record does not carry; ours would
+        be invented (uQsoMyFacts.TSentYearSource, sysPeer). *)
+      SetFactsYearSent(facts, False, 0);
 
       appends := TLogQsoAppends.Create;
       try

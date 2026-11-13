@@ -70,25 +70,45 @@ uses
   uSettingsModel,      // the CQ exchange template, and Settings.My.ResolvedGrid
   uContestBase,        // TCanonicalExchangeContext
   uContestRegistry,    // ContestIdentity -- the QSO's contest
+  (* SessionLicenseYearSent -- the year the session sends (issue 300). *)
+  uContestFactory,
   uCanonicalExchange;  // CollapseWhitespace
 
-(* THE ONE BUILDER: the session's CQ template and a grid HANDED IN. *)
-function BuildSentExchangeWithGrid(const RXData: ContestExchange;
-                                   const aGrid: string): string;
+(* THE ONE BUILDER: the session's CQ template, and a grid and a sent licence
+  year HANDED IN. *)
+function BuildSentExchangeWith(const RXData: ContestExchange;
+                               const aGrid, aSentYearText: string): string;
 var
    ctx: TCanonicalExchangeContext;
 begin
    (* THE SESSION'S VALUES, HANDED IN -- the contest reads no global. The
       template is CQ EXCHANGE CW as it stands; the RTC builds from MY GRID
-      instead, with no RST (its HamScore organizer, 2026-05). *)
+      instead, with no RST (its HamScore organizer, 2026-05); a contest that
+      sends a licence year builds from the QSO's RST and the year (issue
+      300). *)
    ctx.CQExchangeTemplate := string(Settings.Messages.CqExchangeCw);
    ctx.MyGrid := aGrid;
+   ctx.SentYearText := aSentYearText;
    Result := ContestIdentity(RXData.ceContest).CanonicalSentExchange(RXData, ctx);
+end;
+
+(* THE YEAR THIS SESSION SENDS IN aContest, as text -- '' where it sends
+  none. *)
+function SessionSentYearText(aContest: TContestBase): string;
+var
+   value: integer;
+begin
+   Result := '';
+   if SessionLicenseYearSent(aContest, value) then
+      begin
+      Result := ReceivedYearText(ContestReceivedYearKind(aContest), value);
+      end;
 end;
 
 function BuildSentExchangeText(const RXData: ContestExchange): string;
 begin
-   Result := BuildSentExchangeWithGrid(RXData, Settings.My.ResolvedGrid);
+   Result := BuildSentExchangeWith(RXData, Settings.My.ResolvedGrid,
+                                   SessionSentYearText(ContestIdentity(RXData.ceContest)));
 end;
 
 function BuildSentExchangeTextOf(const RXData: ContestExchange;
@@ -96,6 +116,9 @@ function BuildSentExchangeTextOf(const RXData: ContestExchange;
                                  const aRecordedSent: AnsiString): string;
 var
    session, my: TMyStationExchange;
+   contest: TContestBase;
+   yearKind: TReceivedYearKind;
+   yearText: string;
 begin
    (* AN IMPORTED ROW SENT WHAT ITS FILE SAYS -- the rule the ADIF writer
       applies; a logged row returns '' and is rebuilt. *)
@@ -106,12 +129,23 @@ begin
       end;
 
    (* THE STATION AS IT WAS FOR THIS QSO: the session's, overlaid by what the
-      row recorded -- the same function the final export asks. Only the grid
-      is read here, so the zone kind does not matter. *)
+      row recorded -- the same function the final export asks. The grid is
+      read, and in a contest that sends a licence year the year the ROW sent
+      (issue 300): the zone slot carries it, so the zone kind is the
+      contest's own (szkStatedMyZone there, which overlays no zone). *)
+   contest := ContestIdentity(RXData.ceContest);
+   yearKind := ContestReceivedYearKind(contest);
    session := Default(TMyStationExchange);
    session.MyGrid := Settings.My.ResolvedGrid;
-   my := MyStationExchangeOfQSO(session, aFacts, False, szkCQZone);
-   Result := BuildSentExchangeWithGrid(RXData, my.MyGrid);
+   session.MyZone := SessionSentYearText(contest);
+   my := MyStationExchangeOfQSO(session, aFacts, False,
+                                SentZoneKindOfQSO(contest, CQZoneMode), yearKind);
+   yearText := '';
+   if yearKind <> rykNone then
+      begin
+      yearText := my.MyZone;
+      end;
+   Result := BuildSentExchangeWith(RXData, my.MyGrid, yearText);
 end;
 
 function BuildRxExchangeText(const RXData: ContestExchange): string;

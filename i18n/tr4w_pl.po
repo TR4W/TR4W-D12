@@ -14064,3 +14064,40 @@ msgstr ""
 #, fuzzy
 msgid "zone or society"
 msgstr ""
+
+#: uappstrings.seditqsomyyearsent
+#, fuzzy
+msgid "Year sent"
+msgstr ""
+
+#: uappstrings.seditqsoimpropersentyear
+#, fuzzy
+msgid "Improper license year sent!!"
+msgstr ""
+
+#: uappstrings.slicenseyearscopebodystored
+#, fuzzy
+msgid ""
+"The station's default license year is now %0:s.\n"
+"\n"
+"%1:s sends the license year, and sends %2:s now.\n"
+"\n"
+"Should this contest send the new year too?\n"
+"\n"
+"QSOs already logged keep the year they sent."
+msgstr ""
+
+#: uappstrings.slicenseyearcorrecttitle
+#, fuzzy
+msgid "Correct logged QSOs?"
+msgstr ""
+
+#: uappstrings.slicenseyearcorrectbody
+#, fuzzy
+msgid ""
+"%0:d QSO(s) already logged in this contest sent the license year %1:s.\n"
+"\n"
+"Change them to %2:s?\n"
+"\n"
+"Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the air sent %1:s, and its log should say so."
+msgstr ""

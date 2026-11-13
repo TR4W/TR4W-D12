@@ -391,7 +391,10 @@ measurement (issue 232, next section).
   on every show and is idempotent, and the window grows about its centre.
   `uTestEditQSOLayout` checks it off screen at the default font and at 14 pt for
   overlap, clipping and held widths. It is Windows-measured; the Mac judgement is on
-  `BENCH_QUEUE.md`.
+  `BENCH_QUEUE.md`. The our-station group has a THIRD row since issue 300 (log
+  schema 8): `lblMyYearSent` / `edtMyYearSent`, the licence year the QSO sent,
+  set both ways on every load by `EditQSOShowSentYear` (enabled only in a
+  contest that sends a year) and read by `EditQSOSentYearText`.
 - **A caption or limit that depends on the QSO is set by the LOAD, both ways, before
   `FitLayout`.** The form is created once and hidden, so a value set for one QSO stays
   for the next. `TfrmEditQSO.ShowZoneBoxFor(contest)` (issue 298 stage 3) captures the
@@ -589,8 +592,23 @@ themselves. The external logger editor gained a check row (`lfkCheck`, `row.Chec
   field has focus; gtk2 hides it on focus. `uExchangeHint.pas` builds the wording from `ReceivedExchangeFields`.
 - **`AccessibleName`/`AccessibleDescription` reach nothing on win32**: `RegisterLazAccessibleObject` returns False
   (`win32wsfactory.pas`), gtk2 and cocoa are the same stub. Preferences sets them anyway (`uSettingsBinding`,
-  label `FocusControl`); making UI Automation see them needs a windowed label before the input or a deliberate
-  `IAccPropServices` call, which is NY4I's decision (issue 278).
+  label `FocusControl`). NY4I chose the windowed-caption route (issue 278): **UIA names an edit from the STATIC
+  immediately ABOVE it in z-order** (`GW_HWNDPREV`; measured on plain Win32 windows), so the caption is a
+  `TStaticText`, not a `TLabel` (no window).
+- **THE LCL'S CHILD LIST IS THE REVERSE OF WIN32 Z-ORDER**: the last child is the top window
+  (`win32wscontrols.pp`, `SetChildZPosition`). So a caption meant to be "before" its input in z-order is streamed
+  AFTER it in the `.lfm`. Streamed before it, the window above each Station box was the next row's caption --
+  UIA would have named the Callsign box "First name". Tab order is `TabOrder`, not stream order; a `TStaticText`
+  has no Tab stop. Keep the component NAME when changing a caption's class: the form translator keys
+  `tprefsform.<name>.caption`, not the class. Pairing code asks `uLCLFormHelpers.CaptionFocusControl` (a `TLabel`
+  or a `TStaticText`). The Station page is converted and pinned by `uTestPrefsPlacement`
+  (`CheckStationCaptionsAreWindowsBeforeTheirInputs`, which shows the form and reads `GetWindow`); the generated
+  rows (`AddSettingRows`) are still `TLabel`.
+- **A `TTreeView`'s `OnChange` comes from its own 1 ms `TTimer`** (`treeview.inc`, `FChangeTimer`), not from
+  `Selected := True`; a test that selects a Preferences page waits for it.
+- **Neither `TCustomLabel` nor `TCustomStaticText` focuses its `FocusControl` on a mouse click** in the LCL source
+  (only the accelerator / `LM_ACTIVATE` path, which win32 raises for menus). Whether a click on a Preferences
+  caption focuses its box is unmeasured -- a GUI-suite question, not an assumption.
 
 ## Coordinate with
 

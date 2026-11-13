@@ -273,7 +273,9 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 17 write paths.** `SetSentExchange` joined it and left
+- **The pin covers 19 write paths** (17 until issue 300 added
+  `BackfillYearSent` and `CorrectSentYear`, 2026-11-13; the fingerprint now
+  includes `year_sent`). `SetSentExchange` joined it and left
   again the same day (2026-10-17) when its only caller was deleted; the
   fingerprint still includes `exchange_sent`. `UpdateQSOMyFacts` (the Edit
   QSO write of the my_* columns) joined on 2026-10-18, and the fingerprint
@@ -415,7 +417,8 @@ program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
 NY4I: *"The QSO record should have all the MY_ values (such as MY_GRID)."*
 Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h.
 
-- **`LOG_SCHEMA_VERSION` WAS 3 HERE, AND IS 4 SINCE Q113 (below). ONCE A
+- **`LOG_SCHEMA_VERSION` WAS 3 HERE (8 since issue 300; each later schema
+  has its section below). ONCE A
   SCHEMA-3 BUILD HAS OPENED A LOG, NO EARLIER 5.0.x BUILD CAN OPEN IT**
   (accepted by NY4I). `Open` migrates;
   `OpenReadOnly` does not. The corpus is safe because every script works on a
@@ -702,6 +705,52 @@ The year first licensed (EUHFC, KVP) is a standard field. Detail:
   rewrites a captured row.** What stage 4 still reads from `rcvd_zone`: the
   multiplier sheet, `LOGEDIT.SetLoggedZone`, PostUnit's first-call-per-zone
   report.
+
+## SCHEMA 8: `year_sent`, THE LICENCE YEAR EACH QSO SENT (issue 300, 2026-11-13)
+
+NY4I: *"a QSO record depends on nothing but its own row."* Detail: plan
+section 12m-bis.
+
+- **`exchange_sent` IS NOT A RECORD OF THE YEAR SENT. Measured** (headless
+  `/MATRIX`, EUHFC and KVP, `MY LICENSE YEAR=64`): `599 64` on every logged row,
+  SSB included -- the CW template, rebuilt once. Never read the year from it.
+- **`qso.year_sent`**, last column, the number AS SENT (64 / 1964 / a count);
+  NULL = none, 0 = 00. One rule: `uContestBase.SentLicenseYearValue`
+  (`SentLicenseYearText` formats it). The last of `QSO_MY_COLUMNS`, so
+  insert-only plus Edit QSO; `TQsoMyFacts.YearSent` / `YearSentKnown`.
+  **Read whatever `my_source` says** (`ReadMyFacts` reads it before the
+  never-captured exit) -- a backfilled row's year is its own.
+- **Where it comes from: `uQsoMyFacts.SentYearSourceOf`.** Ours when logged
+  here; **NEVER OURS ON A PEER'S ROW** (`assumed`, live or caught up --
+  `CaptureMyFactsNow` and `uGetServerLog` clear it; the protocol-3 packet does
+  not carry the peer's year); an import's STX_STRING, else the contest's
+  (`ApplyImportedSentYear`; `MyFactsForImport` keeps the record's year
+  whichever station the operator picks).
+- **Readers:** `MyStationExchangeOfQSO(..., aYearKind)` (default `rykNone`, so
+  a grid-only caller is unchanged; PostUnit passes the contest's kind) puts
+  the row's year in the zone slot; logged/edited/imported-with-none sends
+  none; never-captured-with-none AND `assumed`-with-none are the session's
+  (a peer's column stays NULL; the export sends what it did before schema 8). A year contest's
+  `CanonicalSentExchange` is RST + `ctx.SentYearText`, not the template.
+- **Migration: ALTER + the session_state mark `LOG_YEAR_SENT_BACKFILL_KEY`
+  (only when the log has rows), one commit. The BACKFILL is the store's**,
+  after set-up (`LogStoreApplyContestConfigWith`), through
+  `TLogRepository.BackfillYearSent`: the rows whose export was rebuilt from
+  the session (NULL/`logged`/`edited`, or `imported`/`stamped` with no
+  `exchange_sent`), NULL-only, mark deleted in the same commit. Never
+  `assumed`. Read-only leaves the mark. `DowngradeTestLog(..., 7)` drops the
+  column and the mark.
+- **Correction:** Edit QSO's "Year sent" box (a year alone does NOT mark the
+  station edited: `MyFactsYearSentDiffers`); `LogStoreCountQSOsSentYear` /
+  `LogStoreCorrectSentYear` for Preferences' default-No question (this
+  station's rows only), ruled by `uLicenseYearChange.LicenseYearCorrectionOf`.
+  `uPrefsForm.SaveStationPanel` asks it (issue 300 step 7) after the
+  two-answer question, gated by `uLicenseYearChange.LicenseYearCorrectionAsks`;
+  "This contest and its existing QSOs" and `lysContestAndQSOs` are retired.
+- **OPEN, NY4I's decision: the peer's year on the wire** (a pair carved from
+  `ContestExchange.sReserved`, protocol 3 -> 4, TR4WServerPy to match). Not
+  built.
+- Schema 7 shipped in 5.0.40: a log this build opens is refused by it.
 
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 

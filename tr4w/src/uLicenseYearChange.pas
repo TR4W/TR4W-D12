@@ -20,7 +20,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
 (* WHAT A STATION-PAGE EDIT OF MY LICENSE YEAR DOES TO THE OPEN CONTEST --
-  issue 300 (NY4I confirmed the three answers, 2026-11-12).
+  issue 300 (NY4I confirmed the first answers 2026-11-12, the two below
+  2026-11-13).
 
   The Station page edits the STATION's year (design 7.12). A contest that
   sends the year may state its own (the contest's override, uSettingsModel.
@@ -30,27 +31,30 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   year, Preferences asks which; this unit is the decision, so the rule is
   unit tested (uTestLicenseYearScope). The form asks and records.
 
-  THE THREE ANSWERS:
+  THE ANSWERS, SINCE LOG SCHEMA 8 (NY4I, 2026-11-13):
     lysStationOnly      the default (Enter and Escape). The contest keeps
                         sending what it sent: a stated year stays; a contest
                         that FOLLOWED the station is pinned to the year it was
                         following, or it would move with the edit.
-    lysAlsoContest      the contest states the new year.
-    lysContestAndQSOs   the same write. SEE BELOW.
+    lysAlsoContest      the contest states the new year. Its LOGGED QSOs keep
+                        the year each one sent (qso.year_sent): a QSO record
+                        depends on nothing but its own row. THEN, when logged
+                        QSOs sent the old year, a second question offers to
+                        correct them, default No (LicenseYearCorrectionOf is
+                        the rule; uLogStore.LogStoreCorrectSentYear the write;
+                        SLicenseYearCorrectTitle/Body the text;
+                        LicenseYearCorrectionAsks the gate the form asks).
 
-  WHY THE LAST TWO ARE ONE WRITE -- measured, not chosen (issue 300 report).
-  A QSO logged here does not record the year it sent. Its my_* columns
-  (uQsoMyFacts) hold no year, my_cq_zone is the CTY zone since issue 298, and
-  for a year contest the export keeps the SESSION's sent text in the zone's
-  slot (uContestBase.SentZoneKindOfQSO answers szkStatedMyZone, so
-  MyStationExchangeOfQSO overlays nothing). Every logged row therefore exports
-  the contest's CURRENT year: changing the contest's year changes what its
-  existing QSOs export, whichever button said so. exchange_sent holds the
-  text as sent, but it is insert-only and is read back only for an imported
-  row. Keeping "this contest but not its existing QSOs" apart needs a per-row
-  year, which is a schema decision for NY4I, not this unit's.
+  WHY THERE ARE TWO -- until schema 8 a QSO logged here did not record the
+  year it sent, so its export followed the contest's current year, and the
+  dialog's third answer, "this contest and its existing QSOs", was the same
+  write as "also this contest" (measured, issue 300). Schema 8 stores the year
+  per row, so the contest's year no longer reaches its logged QSOs except
+  through the correction, and the third answer was retired with the form's
+  move to two (issue 300 step 7).
 
-  A LEAF ABOVE uSettingsModel: no form, no log write. *)
+  A LEAF ABOVE uSettingsModel and uContestBase's year rule: no form, no log
+  write. *)
 unit uLicenseYearChange;
 
 {$I tr4w.inc}
@@ -58,14 +62,28 @@ unit uLicenseYearChange;
 interface
 
 uses
-   uSettingsModel;   (* TR4WSettings -- the station's year and the contest's *)
+   uSettingsModel,   (* TR4WSettings -- the station's year and the contest's *)
+   VC,               (* TReceivedYearKind *)
+   uContestBase;     (* SentLicenseYearValue -- the year sent *)
 
 const
    (* The command the Station page edits and the log records. *)
    LICENSE_YEAR_COMMAND = 'MY LICENSE YEAR';
 
 type
-   TLicenseYearScope = (lysStationOnly, lysAlsoContest, lysContestAndQSOs);
+   TLicenseYearScope = (lysStationOnly, lysAlsoContest);
+
+   (* THE CORRECTION OF LOGGED QSOs THE SECOND QUESTION OFFERS -- the year they
+      sent (Old) and the year the contest sends now (New), each as the row
+      stores it (uContestBase.SentLicenseYearValue); Known False is "none".
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER: what the form hands from
+      this rule to uLogStore.LogStoreCorrectSentYear, no behaviour of its own. *)
+   TLicenseYearCorrection = record
+      OldKnown: boolean;
+      OldValue: integer;
+      NewKnown: boolean;
+      NewValue: integer;
+   end;
 
 (* DOES A STATION-PAGE EDIT OF THE YEAR ASK? Only when the open contest sends
   the year (aContestSendsYear -- its ReceivedYearKind is not rykNone) and the
@@ -84,6 +102,27 @@ function LicenseYearEditAsks(aContestSendsYear: boolean;
 function ApplyLicenseYearScope(aSettings: TR4WSettings;
                                aScope: TLicenseYearScope;
                                const aOldResolved: string): boolean;
+
+(* IS THERE A CORRECTION TO OFFER after the contest's year changed from
+   aOldResolved to aNewResolved (the resolved MY LICENSE YEAR before and after,
+   as ApplyLicenseYearScope's caller read them)? True when the contest sends a
+   year (aKind not rykNone) and the two differ AS SENT -- '1964' and '64' are
+   one two-digit year, so changing the spelling offers nothing. aCurrentYear is
+   the calendar year the session reads a setting against
+   (TStationContext.CurrentYear). The caller then asks the log how many QSOs
+   sent the old year, and asks the operator only when there are some. *)
+function LicenseYearCorrectionOf(aKind: TReceivedYearKind;
+                                 const aOldResolved, aNewResolved: string;
+                                 aCurrentYear: integer;
+                                 out aCorrection: TLicenseYearCorrection): boolean;
+
+(* DOES PREFERENCES ASK THE CORRECTION QUESTION? Only after "Also this contest"
+   (aScope lysAlsoContest), when LicenseYearCorrectionOf offered a correction
+   (aOffered), and when the log holds QSOs that sent the old year (aCount, from
+   uLogStore.LogStoreCountQSOsSentYear: -1 is "the log could not be read",
+   which asks nothing, like 0). *)
+function LicenseYearCorrectionAsks(aScope: TLicenseYearScope; aOffered: boolean;
+                                   aCount: integer): boolean;
 
 implementation
 
@@ -128,13 +167,35 @@ begin
             Result := StateContestYear(aSettings, Trim(aOldResolved));
             end;
          end;
-      lysAlsoContest, lysContestAndQSOs:
+      lysAlsoContest:
          begin
-         (* ONE WRITE FOR BOTH -- see the header: a logged row records no
-            year, so its export follows the contest's either way. *)
+         (* The contest only. Its logged QSOs keep the year each sent; the
+            correction question is the caller's (see the header). *)
          Result := StateContestYear(aSettings, Trim(aSettings.My.LicenseYear));
          end;
    end;
+end;
+
+function LicenseYearCorrectionOf(aKind: TReceivedYearKind;
+                                 const aOldResolved, aNewResolved: string;
+                                 aCurrentYear: integer;
+                                 out aCorrection: TLicenseYearCorrection): boolean;
+begin
+   (* See the declaration. *)
+   aCorrection.OldKnown := SentLicenseYearValue(aKind, aOldResolved, aCurrentYear,
+                                                aCorrection.OldValue);
+   aCorrection.NewKnown := SentLicenseYearValue(aKind, aNewResolved, aCurrentYear,
+                                                aCorrection.NewValue);
+   Result := (aKind <> rykNone) and
+             ((aCorrection.OldKnown <> aCorrection.NewKnown) or
+              (aCorrection.OldKnown and (aCorrection.OldValue <> aCorrection.NewValue)));
+end;
+
+function LicenseYearCorrectionAsks(aScope: TLicenseYearScope; aOffered: boolean;
+                                   aCount: integer): boolean;
+begin
+   (* See the declaration. *)
+   Result := (aScope = lysAlsoContest) and aOffered and (aCount > 0);
 end;
 
 end.

@@ -163,17 +163,51 @@ var
   ones -- marked edited when the operator changed any, and otherwise exactly
   what was recorded, its source included. ONE answer for the two places that
   need it: the points the save computes, and what the save writes. *)
+(* THE SENT YEAR IS ITS OWN EDIT (issue 300): a changed year is written with
+  the station's values as they stand, and does NOT on its own mark the station
+  edited -- a never-captured row whose year is corrected keeps falling back to
+  the session for the rest (uQsoMyFacts.MyFactsYearSentDiffers). A year the
+  contest's kind refuses is refused by the save before this is asked
+  (SentYearIsValid); here it leaves the recorded year. *)
 function MyFactsAsSaved: TQsoMyFacts;
+var
+  typed: TQsoMyFacts;
 begin
-  Result := EditQSOReadMyFacts(EditableMyFacts);
-  if MyFactsValuesDiffer(Result, EditableMyFacts) then
+  typed := EditQSOReadMyFacts(EditableMyFacts);
+  if not ApplyEditedSentYear(ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind,
+                             EditQSOSentYearText, EditableQSORXData, typed) then
      begin
+     SetFactsYearSent(typed, EditableMyFacts.YearSentKnown, EditableMyFacts.YearSent);
+     end;
+
+  if MyFactsValuesDiffer(typed, EditableMyFacts) then
+     begin
+     Result := typed;
      Result.Source := mfsEdited;
      end
   else
      begin
      Result := EditableMyFacts;
+     SetFactsYearSent(Result, typed.YearSentKnown, typed.YearSent);
      end;
+end;
+
+(* DOES THE SAVE WRITE OUR STATION'S COLUMNS? When the operator changed the
+  station (marked edited) or the year it sent. *)
+function MyFactsNeedWriting(const aSaved: TQsoMyFacts): boolean;
+begin
+  Result := (aSaved.Source = mfsEdited) or
+            MyFactsYearSentDiffers(aSaved, EditableMyFacts);
+end;
+
+(* IS THE TYPED SENT YEAR ONE THE QSO'S CONTEST CAN SEND? Empty is (no year). *)
+function SentYearIsValid: boolean;
+var
+  scratch: TQsoMyFacts;
+begin
+  scratch := EditableMyFacts;
+  Result := ApplyEditedSentYear(ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind,
+                                EditQSOSentYearText, EditableQSORXData, scratch);
 end;
 
 // Fills the form from the log record under the edit cursor.
@@ -410,6 +444,9 @@ begin
      fields, not as today's values. *)
    LogStoreReadMyFactsAtIndex(IndexOfItemInLogForEdit, EditableMyFacts);
    EditQSOShowMyFacts(EditableMyFacts);
+   (* AND THE LICENCE YEAR IT SENT, from the row (issue 300) -- where a
+     mistaken year is corrected. *)
+   EditQSOShowSentYear(ContestIdentity(EditableQSORXData.ceContest), EditableMyFacts);
 
    (* WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, and shown
      only when the QSO has a delivery row. Read on every load and the line
@@ -660,6 +697,13 @@ begin
         Result := False;
         Exit;
         end;
+     (* AND THE YEAR WE SENT (issue 300), refused the same way. *)
+     if not SentYearIsValid then
+        begin
+        showwarning(SEditQSOImproperSentYear);
+        Result := False;
+        Exit;
+        end;
      end
   else
      begin
@@ -879,7 +923,7 @@ begin
     exactly what it had, its source included: an edit changes only what was
     edited (Q13). *)
   editedMyFacts := MyFactsAsSaved;
-  if editedMyFacts.Source = mfsEdited then
+  if MyFactsNeedWriting(editedMyFacts) then
      begin
      LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData, editedMyFacts);
      end

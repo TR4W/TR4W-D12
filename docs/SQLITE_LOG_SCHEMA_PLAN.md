@@ -2821,10 +2821,89 @@ the station SENDS the same standing, as the setting `MY LICENSE YEAR`
 **Stage 4 (not built)** stops the dual write: the multiplier sheet counts
 `RcvdYear` (a year key, not a zone index, so a four-digit year can be a
 multiplier), `mult_zone` gives way to a year flag or reads the field, the zone
-slot of a year contest is left `DUMMYZONE`, and a v8 step clears `rcvd_zone`
-for year-contest logs. It also removes `TryLicenceYearOf`'s zone-slot fallback
-once the catch-up path fills the field, and moves the three readers listed as
-NOT moved above.
+slot of a year contest is left `DUMMYZONE`, and a later schema step (v8 is
+taken, below) clears `rcvd_zone` for year-contest logs. It also removes
+`TryLicenceYearOf`'s zone-slot fallback once the catch-up path fills the
+field, and moves the three readers listed as NOT moved above.
+
+#### 12m-bis. Schema 8 — each QSO stores the year it SENT (issue 300, 2026-11-13)
+
+NY4I: *"a QSO record depends on nothing but its own row in the qso table."*
+Through 12m a logged QSO recorded no year, and every export of a year contest
+sent the contest's CURRENT `MY LICENSE YEAR` for every row: change the year,
+and every past QSO said it had sent the new one.
+
+**Measured first (headless `/MATRIX` probe, `MY LICENSE YEAR=64`, 2026-11-13,
+on a 02:59 build of main, 45 minutes before HEAD):** `exchange_sent` held
+`599 64` on EVERY logged row of EUHFC and of KVP -- **the SSB rows
+included**, which the ADIF exports as `59 64`. It is the CW CQ template
+rebuilt once at log time, not a record of what was sent, so it cannot be the
+source of the year. (Side finding: rows whose received year was 00 stored
+`rcvd_zone` 0 and `rcvd_year` NULL in that probe and exported `599 00`
+through `TryLicenceYearOf`'s zone-slot fallback.)
+
+- **`qso.year_sent INTEGER`** (`LOG_V8_QSO_YEAR_SENT_COLUMN`), LAST in the
+  table. The number **as the contest sends it** -- 64 for a two-digit year,
+  1964 for a four-digit one, a count of years licensed -- so formatting it
+  again (`ReceivedYearText`) needs no clock and no setting. NULL: sent none;
+  0 is the year 00. One rule makes the number: `uContestBase.
+  SentLicenseYearValue`, which `SentLicenseYearText` now formats.
+- **In the my_* tier**: the last of `QSO_MY_COLUMNS` (so insert-only, written
+  by `SetNextMyFacts` and by Edit QSO's `UpdateQSOMyFacts`), carried in
+  `TQsoMyFacts.YearSent` / `YearSentKnown` (two fields, for `RcvdYear`'s
+  reason). **Unlike the other my_* values it is read whatever `my_source`
+  says**: a backfilled never-captured row holds its own year.
+- **Where a new row's year comes from: `uQsoMyFacts.SentYearSourceOf`**
+  (`TSentYearSource`) -- ours for a QSO logged here (`LogStoreCurrentMyFacts`
+  over `uContestFactory.SessionLicenseYearSent`); **NONE for a peer's QSO**
+  (`assumed`), live (`CaptureMyFactsNow`) or caught up (`uGetServerLog`) --
+  the protocol-3 packet does not carry the peer's year, and `assumed` would
+  otherwise stamp ours on it; an ADIF import's STX_STRING year, else the
+  contest's (`ApplyImportedSentYear`; the station question never moves it).
+- **The readers read the row.** `MyStationExchangeOfQSO(..., aYearKind)` puts
+  the row's year in the zone slot (STX_STRING, the Cabrillo sent column);
+  a row logged/edited/imported here with none sends none; a never-captured
+  row with none is the session's (ruling A); **a peer's (`assumed`) row with
+  none is the session's too** -- the column stays NULL (nothing invented) and
+  the export sends what it sent before schema 8, until the wire carries the
+  peer's year. `TContestBase.CanonicalSentExchange` for a year
+  contest is the QSO's sent RST and the year (`TCanonicalExchangeContext.
+  SentYearText`), not the CW template -- so `exchange_sent` and HamScore's line
+  say `59 64` on phone.
+- **The migration** adds the column and, for a log that holds rows, writes
+  the session_state mark `LOG_YEAR_SENT_BACKFILL_KEY` -- one commit. **The
+  backfill runs in the store** (`LogStoreApplyContestConfigWith`, after the
+  set-up, because only then is the contest's year known):
+  `TLogRepository.BackfillYearSent` fills, with the year the contest sends
+  now, exactly the rows whose export was REBUILT from the session -- QSO rows,
+  `my_source` NULL / `logged` / `edited`, or `imported`/`stamped` with no
+  `exchange_sent` -- never `assumed`, never a row whose file's STX_STRING is
+  exported verbatim. NULL-only and the mark deleted in the same commit: once,
+  and a crash re-runs it harmlessly. A read-only open leaves the mark. A
+  `.TRW` migration creates a new schema-8 log (no mark): its never-captured
+  rows keep following the session.
+- **Correction.** Edit QSO has a "Year sent" box (`edtMyYearSent`;
+  `ApplyEditedSentYear` refuses a year the kind cannot send). A year changed
+  alone does NOT mark the station edited (`MyFactsYearSentDiffers`), so a
+  never-captured row keeps its session fallback. Preferences' question
+  becomes two answers plus a default-No correction
+  (`uLicenseYearChange.LicenseYearCorrectionOf`,
+  `LogStoreCountQSOsSentYear` / `LogStoreCorrectSentYear`: this station's QSOs
+  that sent the old year, none of a peer's or a file's).
+  The form asks it (`uPrefsForm.SaveStationPanel`, issue 300 step 7; the
+  gate is `uLicenseYearChange.LicenseYearCorrectionAsks`), and the
+  three-button dialog's "This contest and its existing QSOs" is retired.
+- **Consequence:** schema 7 shipped in 5.0.40, so a log this build opens is
+  refused by 5.0.40 and earlier.
+- **Open:** the peer's year needs the wire (a `YearSent`/`YearSentKnown` pair
+  carved from `ContestExchange.sReserved`, protocol 3 -> 4, TR4WServerPy to
+  match) -- NOT built, a decision for NY4I.
+- Tests: `uTestLogYearSent` (the rule, the reader, the column, the migration's
+  one commit and mark, the backfill's row set and once-only, the correction,
+  Edit and import), `uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent`
+  (the live capture through the store: ours 64 and `59 64`, a peer's NULL),
+  `uTestLicenseYearScope.Test_ALoggedQSOKeepsTheYearItSent` (flipped: the
+  same row exports 64 after the contest moves to 90).
 
 ---
 

@@ -99,6 +99,7 @@ procedure ScrubTestLog(const aFileName: string);
   the current schema, then EVERY addition made after aToVersion is removed
   and user_version is stamped aToVersion:
 
+    v8  qso.year_sent and the session_state backfill mark (issue 300)
     v7  nothing to remove -- 7 changed no shape, it is a re-carry of
         rcvd_year from rcvd_zone (issue 298, stage 2); stamping 6 is the
         whole downgrade
@@ -174,6 +175,16 @@ begin
    db := TLogDatabase.Create;
    try
       db.Open(aFileName);
+      if aToVersion < 8 then
+         begin
+         (* Issue 300: the sent year, the last qso column, so it goes first,
+           with the backfill mark a migration may have left -- an older log
+           has neither. *)
+         db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                string(LOG_V8_QSO_YEAR_SENT_COLUMN.Name)));
+         db.Connection.ExecuteDirect(UTF8Encode('DELETE FROM session_state WHERE key = ''' +
+                                                string(LOG_YEAR_SENT_BACKFILL_KEY) + ''''));
+         end;
       if aToVersion < 6 then
          begin
          (* Issue 298: the received year, the last qso column, so it goes

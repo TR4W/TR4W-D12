@@ -172,8 +172,9 @@ procedure ApplyCommandHelpHint(const aControl: TControl;
   setting's caption, the hand-wired controls with CaptionOfLabelFor. *)
 procedure ApplyAccessibleName(const aControl: TControl; const aCaption: TCaption);
 
-(* THE CAPTION OF THE LABEL THAT NAMES aControl: the sibling TLabel whose
-  FocusControl is aControl -- the LCL's own label-to-input link, the same one
+(* THE CAPTION OF THE LABEL THAT NAMES aControl: the sibling TLabel or
+  TStaticText whose FocusControl is aControl (uLCLFormHelpers.CaptionFocusControl)
+  -- the LCL's own label-to-input link, the same one
   TPrefsForm.HighlightSearchedRow follows. '' when there is none. *)
 function CaptionOfLabelFor(const aControl: TControl): TCaption;
 
@@ -181,6 +182,7 @@ implementation
 
 uses
    uCaptionText,   // DisplayedText -- the caption as it is drawn
+   uLCLFormHelpers, // CaptionFocusControl -- a TLabel's or a TStaticText's input
    MainUnit;       // logger
 
 procedure ApplyCommandHelpHint(const aControl: TControl;
@@ -265,9 +267,9 @@ begin
    for i := 0 to aControl.Parent.ControlCount - 1 do
       begin
       sibling := aControl.Parent.Controls[i];
-      (* TLabel, not TCustomLabel: FocusControl is protected on the latter. *)
-      if (sibling is TLabel) and
-         (TLabel(sibling).FocusControl = aControl) then
+      (* A TLabel or a TStaticText -- the Station page's captions are the
+        windowed kind, so Windows UI Automation can read them (issue 278). *)
+      if CaptionFocusControl(sibling) = aControl then
          begin
          Result := sibling.Caption;
          Exit;

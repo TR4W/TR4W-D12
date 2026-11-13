@@ -151,6 +151,21 @@ must move to 3**, or it refuses every station of this build;
 and the year 00; a QSO caught up from the server's log keeps it; and since
 stage 2 a QSO received LIVE through the real NET_QSOINFO arm stores it).
 
+**THE SENT YEAR IS NOT ON THE WIRE (issue 300, log schema 8, 2026-11-13).** A
+QSO row stores the licence year it SENT (`qso.year_sent`); NY4I wants a peer's
+QSO to carry the year THE PEER sent. Protocol 3 carries only the RECEIVED year,
+so the store records NONE for a peer's row -- live (`uLogStore.
+CaptureMyFactsNow`) and caught up (`uGetServerLog`) -- and never this
+station's (`assumed` would otherwise stamp ours on it). The EXPORT of such a
+row falls back to this session's year (`MyStationExchangeOfQSO`), which is
+what it sent before schema 8. The smallest compatible
+change, **NOT BUILT, a decision for NY4I**: a `YearSent: Word` +
+`YearSentKnown: Boolean` pair carved from `sReserved` (string[46] -> [43]),
+sizes unchanged, the `.TRW` reader clearing it, protocol 3 -> 4 and
+TR4WServerPy to match (protocol 3 stations could not join). Note the EUHFC
+rules are single-operator only; a networked SO2R pair sends one operator's
+year.
+
 **A UNIT TEST CAN DRIVE THE NET_QSOINFO ARM WITH A NEW QSO -- IF IT STREAMS THE
 MAIN FORM** (diagnosed 2026-11-12, issue 298 stage 2). The access violation
 stage 1 met, and the old belief that "LogContact cannot be survived in a unit

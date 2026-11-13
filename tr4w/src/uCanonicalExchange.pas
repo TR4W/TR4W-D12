@@ -61,6 +61,12 @@ function DefaultRST(aMode: ModeType): string;
 (* The received RST as text: the QSO's own, else DefaultRST. *)
 function RSTReceivedText(const aQso: ContestExchange): string;
 
+(* The SENT RST as text, the same rule: the QSO's own, else DefaultRST --
+  issue 300, the canonical sent exchange of a contest that sends a licence
+  year, which is built from the row rather than the CW template (so a phone
+  QSO says 59, not the template's 599). *)
+function RSTSentText(const aQso: ContestExchange): string;
+
 (* WHAT WAS SENT, REBUILT FROM THE CQ EXCHANGE TEMPLATE -- the canonical sent
   exchange of every contest that has not said otherwise.
 
@@ -126,6 +132,18 @@ begin
    if aQso.RSTReceived > 0 then
       begin
       Result := IntToStr(aQso.RSTReceived);
+      end
+   else
+      begin
+      Result := DefaultRST(aQso.Mode);
+      end;
+end;
+
+function RSTSentText(const aQso: ContestExchange): string;
+begin
+   if aQso.RSTSent > 0 then
+      begin
+      Result := IntToStr(aQso.RSTSent);
       end
    else
       begin

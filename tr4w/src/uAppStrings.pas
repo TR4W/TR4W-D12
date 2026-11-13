@@ -667,27 +667,38 @@ resourcestring
    SNewContestLicenseYearLabel = 'MY LICENSE YEAR';
 
    (* THE QUESTION PREFERENCES ASKS WHEN THE STATION'S LICENSE YEAR CHANGES
-     WHILE THE OPEN CONTEST SENDS THE YEAR -- issue 300 (NY4I confirmed the
-     three buttons, 2026-11-12; uLicenseYearChange is the rule). The body's
+     WHILE THE OPEN CONTEST SENDS THE YEAR -- issue 300 (uLicenseYearChange is
+     the rule). TWO answers since log schema 8 (NY4I, 2026-11-13: a logged QSO
+     stores the year it sent); the three-button dialog's body and its "this
+     contest and its existing QSOs" button were retired with it. The body's
      %0:s is the new station year, %1:s the contest's name, %2:s the year it
-     sends now; SLicenseYearNone stands in for an empty year. Its last line is
-     true and must stay: a logged QSO records no year, so its export follows
-     the contest's (see uLicenseYearChange's header). The station-only button
-     is the default for Enter and Escape. *)
+     sends now; SLicenseYearNone stands in for an empty year. Buttons:
+     SLicenseYearScopeAlsoContest and SLicenseYearScopeStationOnly, the default
+     for Enter and Escape. *)
    SLicenseYearScopeTitle = 'License year';
-   SLicenseYearScopeBody =
+   SLicenseYearScopeAlsoContest = 'Also this contest';
+   SLicenseYearScopeStationOnly = 'Station default only';
+   SLicenseYearNone = '(none)';
+   SLicenseYearScopeBodyStored =
       'The station''s default license year is now %0:s.' + sLineBreak +
       sLineBreak +
       '%1:s sends the license year, and sends %2:s now.' + sLineBreak +
       sLineBreak +
       'Should this contest send the new year too?' + sLineBreak +
       sLineBreak +
-      'QSOs already logged do not store the year they sent: an export sends ' +
-      'this contest''s year for all of them.';
-   SLicenseYearScopeAlsoContest = 'Also this contest';
-   SLicenseYearScopeContestAndQSOs = 'This contest and its existing QSOs';
-   SLicenseYearScopeStationOnly = 'Station default only';
-   SLicenseYearNone = '(none)';
+      'QSOs already logged keep the year they sent.';
+
+   (* ASKED AFTER "Also this contest" WHEN LOGGED QSOs SENT THE OLD YEAR --
+     the correction, default No (NY4I, 2026-11-13: a mistaken year is
+     corrected by editing the QSO; this is the same correction for all of
+     them at once). %0:d is how many, %1:s the old year, %2:s the new one. *)
+   SLicenseYearCorrectTitle = 'Correct logged QSOs?';
+   SLicenseYearCorrectBody =
+      '%0:d QSO(s) already logged in this contest sent the license year %1:s.' +
+      sLineBreak + sLineBreak +
+      'Change them to %2:s?' + sLineBreak + sLineBreak +
+      'Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the ' +
+      'air sent %1:s, and its log should say so.';
 
    (* THE CWT'S QTH-OR-MEMBER-NUMBER ROW'S LABEL (2026-11-11): the prompt asks
      for a QTH or a CWops member number, and the row beside it read MY STATE.
@@ -1109,6 +1120,10 @@ resourcestring
    SEditQSOMyPark               = 'Park';
    SEditQSOMyCQZone             = 'CQ zone';
    SEditQSOMyITUZone            = 'ITU zone';
+   (* THE LICENCE YEAR THE QSO SENT (qso.year_sent, issue 300), and the
+     refusal of one the contest's kind cannot send. *)
+   SEditQSOMyYearSent           = 'Year sent';
+   SEditQSOImproperSentYear     = 'Improper license year sent!!';
 
    (* FILE > OPEN LOG... (issue 218, S0; the New Contest dialog since issue
      228). TR4W closes the open contest the way File > Exit does and starts

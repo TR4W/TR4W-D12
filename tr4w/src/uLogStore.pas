@@ -239,6 +239,20 @@ function LogStoreCollectForServerRestock(aInto: TLogRowUpdates;
 function LogStoreMarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): boolean;
 function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 
+(* THE CORRECTION OF THE LICENCE YEAR LOGGED QSOs SENT -- issue 300, the
+  second question Preferences asks after "Also this contest" (uLicenseYearChange
+  .LicenseYearCorrectionOf decides whether there is one to offer). The rows
+  are this station's QSOs (TLogRepository.CountQSOsSentYear): never a peer's
+  or an imported one.
+
+  Count: how many sent aYear (aKnown False: none); -1 when the log cannot be
+  read, which a caller treats as "do not ask". Correct: sets them to aNew
+  (aNewKnown False: none) in ONE transaction and commits; -1 when nothing was
+  written (no store, read-only, or a failure, which is logged). *)
+function LogStoreCountQSOsSentYear(aKnown: boolean; aYear: integer): integer;
+function LogStoreCorrectSentYear(aOldKnown: boolean; aOld: integer;
+                                 aNewKnown: boolean; aNew: integer): integer;
+
 (* EMPTY THE LOG. False if there was no usable store to empty, so a caller can
   tell "cleared" from "could not".
 
@@ -2341,10 +2355,24 @@ begin
    (* The session's ITU zone -- the ONE answer scoring and the export share
      (issue 222). 0 is unknown, and is stored as NULL. *)
    Result.ITUZone := uContestFactory.SessionMyITUZone;
+   (* THE LICENCE YEAR THIS STATION SENDS, as the row stores it (issue 300):
+     MY LICENSE YEAR read by the contest's kind -- none where the contest
+     sends no year. *)
+   Result.YearSentKnown := uContestFactory.SessionLicenseYearSent(
+                              ContestIdentity(Contest), Result.YearSent);
+   if not Result.YearSentKnown then
+      begin
+      Result.YearSent := 0;
+      end;
 end;
 
 (* The capture for a QSO being logged now: this station's values, and whether
-  it was logged HERE or arrived from a multi-op peer (ruling D). *)
+  it was logged HERE or arrived from a multi-op peer (ruling D).
+
+  THE SENT YEAR FOLLOWS uQsoMyFacts.SentYearSourceOf (issue 300): ours for a
+  QSO logged here; for a PEER'S QSO the year THE PEER sent, which the
+  protocol-3 packet does not carry -- so none, never ours (my_source
+  'assumed' would otherwise stamp this station's year on the peer's row). *)
 function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
 begin
    Result := LogStoreCurrentMyFacts;
@@ -2352,6 +2380,17 @@ begin
       begin
       Result.Source := mfsAssumed;
       end;
+   case SentYearSourceOf(ContestReceivedYearKind(ContestIdentity(aQso.ceContest)) <> rykNone,
+                         Result.Source) of
+      sysThisStation:
+         begin
+         (* LogStoreCurrentMyFacts read it. *)
+         end;
+   else
+      begin
+      SetFactsYearSent(Result, False, 0);
+      end;
+   end;
 end;
 
 (* ONE ATTEMPT AT LogStoreAppendQSO. aBusy comes back True when the log was
@@ -3055,6 +3094,72 @@ begin
    end;
 end;
 
+function LogStoreCountQSOsSentYear(aKnown: boolean; aYear: integer): integer;
+var
+   rebuilt: boolean;
+begin
+   (* See the declaration. *)
+   Result := -1;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      Result := GRepository.CountQSOsSentYear(aKnown, aYear);
+   except
+      on E: Exception do
+         begin
+         Result := -1;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not count the QSOs that sent a licence ' +
+                         'year: %s', [E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreCorrectSentYear(aOldKnown: boolean; aOld: integer;
+                                 aNewKnown: boolean; aNew: integer): integer;
+var
+   rebuilt: boolean;
+begin
+   (* See the declaration. *)
+   Result := -1;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if RefuseReadOnly('correcting the licence year logged QSOs sent') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
+      Result := GRepository.CorrectSentYear(aOldKnown, aOld, aNewKnown, aNew);
+      GRepository.Commit;
+      if logger <> nil then
+         begin
+         logger.Info('[LogStore] %d logged QSO(s) corrected to the licence year ' +
+                     'this contest sends', [Result]);
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := -1;
+         Disable('correcting the licence year logged QSOs sent', E);
+         end;
+   end;
+end;
+
 function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 var
    rebuilt: boolean;
@@ -3218,6 +3323,8 @@ var
    valName: ShortString;
    idx: integer;
    columnToken: string;
+   (* The year the contest sends, for the schema-8 backfill (issue 300). *)
+   year: integer;
 begin
    Result := 0;
    if GDisabled then
@@ -3800,6 +3907,29 @@ begin
          begin
          logger.Info('[LogStore] %d function-key memory(ies) the operator ' +
                      'edited restored from the log', [i]);
+         end;
+
+      (* THE SENT YEAR OF THE ROWS A SCHEMA-8 MIGRATION FOUND -- issue 300.
+        HERE, after the set-up, because only now is the year this contest
+        sends known; once, because the migration's mark is deleted with the
+        fill. A read-only open leaves the mark for the next writable one. *)
+      if not GReadOnly then
+         begin
+         BeginMainWrite;
+         if not uContestFactory.SessionLicenseYearSent(ContestIdentity(Contest), year) then
+            begin
+            year := NO_RECEIVED_YEAR;
+            end;
+         i := GRepository.BackfillYearSent(year <> NO_RECEIVED_YEAR, year);
+         if i >= 0 then
+            begin
+            GRepository.Commit;
+            if logger <> nil then
+               begin
+               logger.Info('[LogStore] schema 8: %d QSO(s) given the licence year ' +
+                           'this contest sends (%d), once', [i, year]);
+               end;
+            end;
          end;
    except
       on E: Exception do

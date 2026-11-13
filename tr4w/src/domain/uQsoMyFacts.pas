@@ -71,7 +71,39 @@ type
       Continent: AnsiString;   (* our continent, as cty_continent spells it *)
       CQZone: integer;         (* MY_CQ_ZONE; 0 = unknown *)
       ITUZone: integer;        (* MY_ITU_ZONE; 0 = unknown *)
+
+      (* THE LICENCE YEAR THIS QSO SENT -- qso.year_sent, log schema 8 (issue
+         300). The number AS THE CONTEST SENDS IT (uContestBase.
+         SentLicenseYearValue): 85 for a two-digit year, 1985 for a four-digit
+         one, a count of years licensed -- so the sent text is rebuilt from
+         the row alone. TWO FIELDS, NOT A SENTINEL, for RcvdYear's reason: 0
+         is a real value (00 = first licensed in 2000) and a zero record must
+         read as "none". YearSent means something only when YearSentKnown.
+
+         UNLIKE THE OTHER FIELDS IT DOES NOT FOLLOW Source: a row backfilled
+         at the schema-8 migration holds a year with my_source still NULL,
+         and the year is the row's own. The repository reads it whatever the
+         source; see TSentYearSource for where a new row's year comes from. *)
+      YearSent: integer;
+      YearSentKnown: boolean;
    end;
+
+   (* WHERE A NEW ROW'S year_sent COMES FROM -- issue 300 (NY4I, 2026-11-13: a
+      QSO record depends on nothing but its own row). SentYearSourceOf is the
+      rule; the store asks it when a row is written.
+
+         sysNone          the contest sends no year (or the record is not a
+                          QSO): year_sent is NULL
+         sysThisStation   logged here: the year this station sends now --
+                          MY LICENSE YEAR, the contest's statement or the
+                          station's (uContestFactory.SessionLicenseYearSent)
+         sysPeer          a multi-op PEER's QSO: the year THE PEER sent. The
+                          protocol-3 QSO packet does not carry it, so until the
+                          wire does the row stores NONE -- never this
+                          station's year, which my_source 'assumed' would
+                          otherwise stamp on it
+         sysFile          imported: the year the file's STX_STRING sent *)
+   TSentYearSource = (sysNone, sysThisStation, sysPeer, sysFile);
 
 (* The value a row written before schema 3 reads back as. *)
 function NotCapturedMyFacts: TQsoMyFacts;
@@ -86,6 +118,13 @@ function TokenToMyFactsSource(const aToken: AnsiString): TQsoMyFactsSource;
    whether the operator changed anything. *)
 function MyFactsValuesDiffer(const a, b: TQsoMyFacts): boolean;
 
+(* Do the two hold a different SENT YEAR (issue 300)? Asked apart from the
+   station's values: the year has its own provenance (a backfilled row holds
+   one with my_source NULL), so correcting it alone must not mark a
+   never-captured row's station as edited -- that would turn its empty
+   columns from "fall back to the session" into "unknown". *)
+function MyFactsYearSentDiffers(const a, b: TQsoMyFacts): boolean;
+
 (* DID THIS STATION LOG THE QSO, or did it arrive from a multi-op peer?
 
    Every local logging path stamps the record with this station's computer id
@@ -96,6 +135,17 @@ function MyFactsValuesDiffer(const a, b: TQsoMyFacts): boolean;
    single-op station has no id (#0) on both sides, and logs everything
    itself. *)
 function QsoWasLoggedHere(aQsoComputerID, aOurComputerID: AnsiChar): boolean;
+
+(* WHERE A NEW ROW'S SENT YEAR COMES FROM -- see TSentYearSource.
+   aContestSendsYear: the QSO's contest states a ReceivedYearKind (it sends
+   the year it receives). aSource: the row's my_source as it is being written.
+   mfsNotCaptured (a note, a QTC) and every row of a contest that sends no
+   year answer sysNone. *)
+function SentYearSourceOf(aContestSendsYear: boolean;
+                          aSource: TQsoMyFactsSource): TSentYearSource;
+
+(* aFacts with its sent year set to aYear (aKnown) or cleared. *)
+procedure SetFactsYearSent(var aFacts: TQsoMyFacts; aKnown: boolean; aYear: integer);
 
 (* ---------------------------------------------------------------------------
   THE IMPORT RULE -- NY4I, 2026-10-18, replacing stage 2's "an absent tag is
@@ -128,7 +178,11 @@ function MyFactFieldTag(aField: TMyFactField): string;
                                                    every field
 
    aContest is this station's values at import time (uLogStore.
-   LogStoreCurrentMyFacts) -- what a QSO logged now would record. *)
+   LogStoreCurrentMyFacts) -- what a QSO logged now would record.
+
+   THE SENT YEAR IS aFile's IN EVERY CASE (issue 300): the year a record sent
+   comes from its STX_STRING (uContestBase.ApplyImportedSentYear), not from a
+   MY_ tag, so the station answer does not move it. *)
 function MyFactsForImport(const aFile, aContest: TQsoMyFacts;
                           aUseFile: boolean): TQsoMyFacts;
 
@@ -221,9 +275,56 @@ begin
              (a.ITUZone <> b.ITUZone);
 end;
 
+function MyFactsYearSentDiffers(const a, b: TQsoMyFacts): boolean;
+begin
+   Result := (a.YearSentKnown <> b.YearSentKnown) or
+             (a.YearSentKnown and (a.YearSent <> b.YearSent));
+end;
+
 function QsoWasLoggedHere(aQsoComputerID, aOurComputerID: AnsiChar): boolean;
 begin
    Result := aQsoComputerID = aOurComputerID;
+end;
+
+function SentYearSourceOf(aContestSendsYear: boolean;
+                          aSource: TQsoMyFactsSource): TSentYearSource;
+begin
+   Result := sysNone;
+   if not aContestSendsYear then
+      begin
+      Exit;
+      end;
+   case aSource of
+      mfsLogged, mfsEdited:
+         begin
+         Result := sysThisStation;
+         end;
+      mfsAssumed:
+         begin
+         Result := sysPeer;
+         end;
+      mfsImported, mfsStamped:
+         begin
+         Result := sysFile;
+         end;
+   else
+      begin
+      Result := sysNone;
+      end;
+   end;
+end;
+
+procedure SetFactsYearSent(var aFacts: TQsoMyFacts; aKnown: boolean; aYear: integer);
+begin
+   aFacts.YearSentKnown := aKnown and (aYear >= 0);
+   if aFacts.YearSentKnown then
+      begin
+      aFacts.YearSent := aYear;
+      end
+   else
+      begin
+      aFacts.YearSent := 0;
+      end;
 end;
 
 function MyFactFieldValue(const aFacts: TQsoMyFacts; aField: TMyFactField): AnsiString;
@@ -332,6 +433,9 @@ begin
       Result := aContest;
       Result.Source := mfsStamped;
       end;
+   (* THE SENT YEAR IS THE RECORD'S, whichever station the operator chose
+      (issue 300): it is what the file's STX_STRING sent, not a MY_ tag. *)
+   SetFactsYearSent(Result, aFile.YearSentKnown, aFile.YearSent);
 end;
 
 end.

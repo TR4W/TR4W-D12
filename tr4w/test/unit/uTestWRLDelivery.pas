@@ -353,7 +353,7 @@ begin
       FDelivery.Enqueue(Key, '{}', False);
       CheckTrue(FDelivery.Claim('WRL', 'account', 0, job));
       CheckEquals('0', Field('last_sent'), 'the table a migration creates carries last_sent');
-      CheckEquals(LOG_SCHEMA_VERSION, FDatabase.SchemaVersion, 'stamped current (7 since issue 298 stage 2)');
+      CheckEquals(LOG_SCHEMA_VERSION, FDatabase.SchemaVersion, 'stamped current (8 since issue 300)');
    finally
       CloseFixture;
    end;

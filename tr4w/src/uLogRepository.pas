@@ -572,6 +572,38 @@ type
       procedure SaveSessionValue(const aKey, aValue: AnsiString);
       function SessionValue(const aKey: AnsiString;
                             const aDefault: AnsiString = ''): AnsiString;
+
+      (* THE ONE-SHOT year_sent BACKFILL OF A LOG THE SCHEMA-8 MIGRATION
+        MARKED -- issue 300 (uLogSchema.LOG_YEAR_SENT_BACKFILL_KEY). The
+        caller hands in the year the contest sends NOW (aKnown, aYear, as
+        uContestFactory.SessionLicenseYearSent answers it), because that is
+        what every rebuilt row exported before it had a year of its own.
+
+        FILLED: a QSO row whose year_sent is NULL and whose export was rebuilt
+        from the session -- my_source NULL, 'logged' or 'edited', or an
+        'imported'/'stamped' row with no exchange_sent (one with an
+        exchange_sent exports it verbatim, its file's year). NEVER an
+        'assumed' row: a peer's QSO sent the PEER's year, not ours.
+
+        Then the mark is deleted, so it never runs again; NULL-only, so a run
+        repeated after a crash changes nothing it already did. -1: no mark,
+        nothing done; else the rows filled (0 when aKnown is False -- the
+        contest sends no year, or the setting holds none, and the rows
+        exported none). DOES NOT COMMIT: the caller commits the fill and the
+        mark's removal together. *)
+      function BackfillYearSent(aKnown: boolean; aYear: integer): integer;
+
+      (* THE QSOs THIS STATION LOGGED THAT SENT A GIVEN LICENCE YEAR -- issue
+        300, the correction Preferences offers after the contest's year
+        changes. "This station's": a QSO row whose my_source is NULL,
+        'logged' or 'edited' -- never a peer's ('assumed') or an imported
+        row, whose year is its file's. aKnown False matches year_sent NULL
+        (the QSOs that sent none). Count reads; Correct sets year_sent to the
+        new value (NULL when aNewKnown is False) on exactly those rows and
+        answers how many, and DOES NOT COMMIT. *)
+      function CountQSOsSentYear(aKnown: boolean; aYear: integer): integer;
+      function CorrectSentYear(aOldKnown: boolean; aOld: integer;
+                               aNewKnown: boolean; aNew: integer): integer;
       (* aEdited is the row's edited flag (schema 4, Q113): True for a memory
          the OPERATOR edited, which LoadEditedMessages hands back at open.
          Every other row records the contest's default as it stood. *)
@@ -942,7 +974,8 @@ uses
    utils_text,   (* CharBufferBytes -- a fixed char field read back *)
    uLogNote,   (* NoteText / SetNoteText -- where a note's text lives *)
    uContestRegistry,   (* ContestIdentity, ContestId -- the contest's names *)
-   uContestNames;      (* ContestFromName -- the contest row read back *)
+   uContestNames,      (* ContestFromName -- the contest row read back *)
+   uLogSchema;         (* LOG_YEAR_SENT_BACKFILL_KEY -- BackfillYearSent *)
 
 (* --------------------------------------------------------------------------- *)
 (* sentinels -- crosswalk finding 3                                            *)
@@ -1303,7 +1336,7 @@ const
      them. *)
    QSO_MY_COLUMNS =
       'my_county, my_grid, my_state, my_call, my_section, my_park, my_iota, ' +
-      'my_country, my_continent, my_cq_zone, my_itu_zone, my_source';
+      'my_country, my_continent, my_cq_zone, my_itu_zone, my_source, year_sent';
 
    (* Named once. Adding a column means adding it here, in BindRecord and in
      ReadRecord, and the round-trip test fails if the three disagree. *)
@@ -1381,7 +1414,7 @@ const
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
       ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
-      ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source';
+      ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source, :year_sent';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -1516,7 +1549,9 @@ type
       (* QSO_MY_COLUMNS, in its order. *)
       qc_my_county, qc_my_grid, qc_my_state, qc_my_call, qc_my_section,
       qc_my_park, qc_my_iota, qc_my_country, qc_my_continent, qc_my_cq_zone,
-      qc_my_itu_zone, qc_my_source);
+      qc_my_itu_zone, qc_my_source,
+      (* year_sent, schema 8 (issue 300) -- the last of QSO_MY_COLUMNS. *)
+      qc_year_sent);
 
 const
    QC_PREFIX: AnsiString = 'qc_';
@@ -2122,6 +2157,15 @@ begin
    BindZone(P('my_itu_zone'), aFacts.ITUZone);
    (* '' for mfsNotCaptured, which BindText stores as NULL. *)
    BindText(P('my_source'), MyFactsSourceToken(aFacts.Source));
+   (* THE SENT YEAR (schema 8): NULL when none was sent; 0 is the year 00. *)
+   if aFacts.YearSentKnown then
+      begin
+      P('year_sent').AsInteger := aFacts.YearSent;
+      end
+   else
+      begin
+      P('year_sent').Clear;
+      end;
 end;
 
 procedure TLogRepository.ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts);
@@ -2158,6 +2202,12 @@ procedure TLogRepository.ReadMyFacts(aQuery: TSQLQuery; out aFacts: TQsoMyFacts)
 begin
    aFacts := NotCapturedMyFacts;
    aFacts.Source := TokenToMyFactsSource(S(qc_my_source));
+
+   (* THE SENT YEAR IS READ WHATEVER THE SOURCE (issue 300): the schema-8
+     backfill gives a never-captured row its year, and that year is the
+     row's own. *)
+   SetFactsYearSent(aFacts, not F(qc_year_sent).IsNull, Z(qc_year_sent));
+
    (* A ROW NEVER CAPTURED holds nothing to read -- and if a hand edit put a
      value in one of its columns without a source, that value has no
      provenance and is not reported as ours. *)
@@ -2566,6 +2616,118 @@ begin
          Result := q.Fields[0].AsAnsiString;
          end;
       q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.BackfillYearSent(aKnown: boolean; aYear: integer): integer;
+var
+   q: TSQLQuery;
+begin
+   (* See the declaration. *)
+   Result := -1;
+   if SessionValue(LOG_YEAR_SENT_BACKFILL_KEY) = '' then
+      begin
+      Exit;
+      end;
+
+   Result := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      if aKnown and (aYear >= 0) then
+         begin
+         q.SQL.Text :=
+            'UPDATE qso SET year_sent = :year ' +
+            'WHERE year_sent IS NULL AND record_kind = ''QSO'' ' +
+            '  AND (my_source IS NULL ' +
+            '       OR my_source IN (''logged'', ''edited'') ' +
+            '       OR (my_source IN (''imported'', ''stamped'') ' +
+            '           AND exchange_sent IS NULL))';
+         q.ParamByName('year').AsInteger := aYear;
+         q.ExecSQL;
+         Result := q.RowsAffected;
+         end;
+      q.SQL.Text := 'DELETE FROM session_state WHERE key = :key';
+      q.ParamByName('key').AsString := LOG_YEAR_SENT_BACKFILL_KEY;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+const
+   (* THE ROWS WHOSE SENT YEAR IS THIS STATION'S -- see CountQSOsSentYear. *)
+   OUR_SENT_YEAR_ROWS =
+      'record_kind = ''QSO'' ' +
+      'AND (my_source IS NULL OR my_source IN (''logged'', ''edited'')) ';
+
+   (* The two statements' fixed heads, typed AnsiString so that adding
+     SentYearMatch at run time is AnsiString + AnsiString. A literal joined
+     to an AnsiString at run time is a UnicodeString, and SQL.Text is not
+     (the narrowing CountRows' note describes). *)
+   COUNT_OUR_SENT_YEAR_ROWS: AnsiString =
+      'SELECT count(id) FROM qso WHERE ' + OUR_SENT_YEAR_ROWS;
+   CORRECT_OUR_SENT_YEAR_ROWS: AnsiString =
+      'UPDATE qso SET year_sent = :new WHERE ' + OUR_SENT_YEAR_ROWS;
+
+function SentYearMatch(aKnown: boolean): AnsiString;
+begin
+   if aKnown then
+      begin
+      Result := 'AND year_sent = :old';
+      end
+   else
+      begin
+      Result := 'AND year_sent IS NULL';
+      end;
+end;
+
+function TLogRepository.CountQSOsSentYear(aKnown: boolean; aYear: integer): integer;
+var
+   q: TSQLQuery;
+begin
+   (* See the declaration. *)
+   q := NewReadQuery;
+   try
+      q.SQL.Text := COUNT_OUR_SENT_YEAR_ROWS + SentYearMatch(aKnown);
+      if aKnown then
+         begin
+         q.ParamByName('old').AsInteger := aYear;
+         end;
+      q.Open;
+      Result := q.Fields[0].AsInteger;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.CorrectSentYear(aOldKnown: boolean; aOld: integer;
+                                        aNewKnown: boolean; aNew: integer): integer;
+var
+   q: TSQLQuery;
+begin
+   (* See the declaration. *)
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := CORRECT_OUR_SENT_YEAR_ROWS + SentYearMatch(aOldKnown);
+      if aNewKnown then
+         begin
+         q.ParamByName('new').AsInteger := aNew;
+         end
+      else
+         begin
+         q.ParamByName('new').Clear;
+         end;
+      if aOldKnown then
+         begin
+         q.ParamByName('old').AsInteger := aOld;
+         end;
+      q.ExecSQL;
+      Result := q.RowsAffected;
    finally
       q.Free;
    end;

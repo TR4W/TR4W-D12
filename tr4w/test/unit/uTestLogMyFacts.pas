@@ -98,6 +98,7 @@ type
       procedure TestOnlyTheLicenceYearContestsSayMyZoneIsNoStationZone;
       (* the store *)
       procedure TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
+      procedure TestTheStoreRecordsTheYearOurQSOSent;
       procedure TestTheEditorReadsAndWritesThroughTheStore;
       procedure TestHamScoreResyncDeliversEachRowsRecord;
       procedure TestHamScoreUndeleteReadsTheNewestRowsRecord;
@@ -112,6 +113,9 @@ type
 implementation
 
 uses
+   (* Contest -- the active contest, which the capture asks (issue 300).
+     FIRST, for uADIF's reason: every unit below wins a name it shares. *)
+   PostUnit,
    (* The ADIF readers and writer -- FIRST, so the units below still win
      any name it shares with them. *)
    uADIF,
@@ -354,10 +358,12 @@ begin
       end;
    (* Then schema 6's received year (issue 298), added after them. *)
    tail := tail + '|' + string(LOG_V6_QSO_YEAR_COLUMN.Name);
+   (* And schema 8's sent year (issue 300), after that. *)
+   tail := tail + '|' + string(LOG_V8_QSO_YEAR_SENT_COLUMN.Name);
    (* LAST, IN THIS ORDER -- the order ALTER TABLE ADD COLUMN gives a
      migrated log, so the two cannot differ. *)
    CheckEquals(tail, Copy(names, Length(names) - Length(tail) + 1, MaxInt),
-               'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, then rcvd_year, in order');
+               'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, rcvd_year, then year_sent, in order');
    CheckTrue(Pos('|my_grid|', names) > 0, 'my_grid, from schema 1, is still there');
    Scrub(fn);
 end;
@@ -1650,6 +1656,89 @@ begin
    end;
 end;
 
+(* THE STORE, AS A QSO IS LOGGED IN A CONTEST THAT SENDS THE YEAR -- issue
+  300, log schema 8: our QSO records the year it sent, as the contest sends
+  it; a peer's QSO records none, never ours (the protocol-3 packet does not
+  carry the peer's year); and the sent exchange captured with it is built
+  from the QSO's RST and that year, not the CW template. *)
+procedure TLogMyFactsTests.TestTheStoreRecordsTheYearOurQSOSent;
+var
+   savedContest: TContestHandle;
+   savedYear: string;
+   savedYearStated: boolean;
+   qso: ContestExchange;
+   logDb: TLogDatabase;
+   q: TSQLQuery;
+begin
+   BeginTest('the store records the licence year our QSO sent, and none for a peer''s');
+
+   StartStore(FIXTURE_SET + '-yearsent.trw');
+   savedContest := Contest;
+   savedYearStated := Settings.My.HasContestOverride(sfLicenseYear);
+   savedYear := Settings.My.ContestOverride(sfLicenseYear);
+   try
+      Contest := ContestHandleOf(EUROPEANHFC);
+      Settings.My.SetContestOverride(sfLicenseYear, '1964');
+
+      MakeQSO(qso, 1);
+      qso.ceContest := Contest;
+      qso.ceComputerID := Settings.Computer.Id;
+      qso.Mode := Phone;
+      qso.RSTSent := 59;
+      CheckTrue(LogStoreAppendQSO(qso), 'our phone QSO is logged');
+
+      MakeQSO(qso, 2);
+      qso.ceContest := Contest;
+      if Settings.Computer.Id = 'B' then
+         begin
+         qso.ceComputerID := 'C';
+         end
+      else
+         begin
+         qso.ceComputerID := 'B';
+         end;
+      CheckTrue(LogStoreAppendQSO(qso), 'a peer''s QSO is logged');
+
+      (* THE CONTEST'S YEAR CHANGES -- which no logged QSO may follow. *)
+      Settings.My.SetContestOverride(sfLicenseYear, '1990');
+      LogStoreClose;
+
+      logDb := TLogDatabase.Create;
+      try
+         logDb.OpenReadOnly(FDb);
+         q := TSQLQuery.Create(nil);
+         try
+            q.DataBase := logDb.Connection;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT IFNULL(year_sent, -1), IFNULL(exchange_sent, ''<null>'') ' +
+                          'FROM qso ORDER BY id DESC LIMIT 2';
+            q.Open;
+            CheckEquals(-1, q.Fields[0].AsInteger, 'a peer''s QSO: no year -- never ours');
+            q.Next;
+            CheckEquals(64, q.Fields[0].AsInteger, 'our QSO: the 64 it sent, not today''s 90');
+            CheckEquals('59 64', q.Fields[1].AsString,
+                        'and its sent exchange is its own RST and year (not the CW 599)');
+            q.Close;
+         finally
+            q.Free;
+         end;
+      finally
+         logDb.Free;
+      end;
+   finally
+      Contest := savedContest;
+      if savedYearStated then
+         begin
+         Settings.My.SetContestOverride(sfLicenseYear, savedYear);
+         end
+      else
+         begin
+         Settings.My.ClearContestOverride(sfLicenseYear);
+         end;
+      StopStore;
+   end;
+end;
+
 (* ------------------------------------------------------------------------
   ISSUE 95 -- HAMSCORE RE-EMITS A STORED QSO FROM ITS RECORD (closure
   evidence). The three paths that re-emit one, each driven against a real log:
@@ -2146,6 +2235,7 @@ begin
    (* As the LogStore suite: these migrate a D7 binary log, which is a
      Windows migration path. *)
    TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
+   TestTheStoreRecordsTheYearOurQSOSent;
    TestTheEditorReadsAndWritesThroughTheStore;
    TestHamScoreResyncDeliversEachRowsRecord;
    TestHamScoreUndeleteReadsTheNewestRowsRecord;

@@ -2017,13 +2017,18 @@ var
    q: ContestExchange;
    savedTemplate: string;
    savedGrid: string;
+   savedYear: string;
+   savedYearStated: boolean;
 begin
    BeginTest('Test_CanonicalSentExchanges');
    savedTemplate := Settings.Messages.CqExchangeCw;
    savedGrid := Settings.My.Grid;
+   savedYearStated := Settings.My.HasContestOverride(sfLicenseYear);
+   savedYear := Settings.My.ContestOverride(sfLicenseYear);
    try
       Settings.My.Grid := ' FN42 ';
       Settings.Messages.CqExchangeCw := ' 5nn  # ';
+      Settings.My.SetContestOverride(sfLicenseYear, '1985');
       identities := IdentitiesToWalk;
       for k := 0 to High(identities) do
          begin
@@ -2031,6 +2036,15 @@ begin
          if IsLegacyContest(identities[k], RTC) then
             begin
             CheckEquals('7 FN42', BuildSentExchangeText(q), 'RTC: serial and grid, no RST');
+            end
+         else if ContestReceivedYearKind(identities[k]) <> rykNone then
+            begin
+            (* A CONTEST THAT SENDS A LICENCE YEAR builds from the QSO's RST and
+              the year it sends -- not the template (issue 300). *)
+            CheckEquals('599 ' + SentLicenseYearText(ContestReceivedYearKind(identities[k]),
+                                                     '1985', 2026),
+                        BuildSentExchangeText(q),
+                        ContestWho(identities[k]) + ': its RST and the year it sends');
             end
          else
             begin
@@ -2048,6 +2062,14 @@ begin
    finally
       Settings.Messages.CqExchangeCw := savedTemplate;
       Settings.My.Grid := savedGrid;
+      if savedYearStated then
+         begin
+         Settings.My.SetContestOverride(sfLicenseYear, savedYear);
+         end
+      else
+         begin
+         Settings.My.ClearContestOverride(sfLicenseYear);
+         end;
       end;
 end;
 

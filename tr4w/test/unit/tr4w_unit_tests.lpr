@@ -730,6 +730,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       year -- the question's rule, and what each answer writes. *)
    uLicenseYearChange   in '..\..\src\uLicenseYearChange.pas',
    uTestLicenseYearScope in 'uTestLicenseYearScope.pas',
+   (* Issue 300, log schema 8: the licence year a QSO sent is its row's --
+      the rule, the reader, the column, the migration, the backfill and the
+      correction. *)
+   uTestLogYearSent     in 'uTestLogYearSent.pas',
    (* A locked log: the busy classifier, the lock probe, the stale-snapshot
       write, the WRL worker's rollback and the watchdog (2026-10-31). *)
    uLogConnectionWatch  in '..\..\src\domain\uLogConnectionWatch.pas',
@@ -1285,6 +1289,7 @@ begin
    RegisterSuite(TReceivedYearDisplayTests.Create('ReceivedYearDisplay'));
    RegisterSuite(TLicenseYearSettingTests.Create('LicenseYearSetting'));
    RegisterSuite(TLicenseYearScopeTests.Create('LicenseYearScope'));
+   RegisterSuite(TLogYearSentTests.Create('LogYearSent'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));

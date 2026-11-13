@@ -321,43 +321,61 @@ type
       // The TR4QT station pane combined with TR4W's MY* commands, per
       // docs/Settings Design Proposal.md.  ONE control for MY STATE: 'MY QTH'
       // is the same global (@MyState), a back-compat alias.
+      //
+      // THE ROW CAPTIONS ARE TStaticText, NOT TLabel (issue 278). A TLabel
+      // has no window, so Windows UI Automation reported every box here as
+      // unnamed. A TStaticText is a Win32 STATIC, and UIA names an edit from
+      // the static immediately ABOVE it in z-order (measured on plain Win32
+      // windows, 2026-11-13).
+      //
+      // SO EACH CAPTION COMES AFTER ITS INPUT IN THE .lfm. The LCL keeps a
+      // parent's children in the REVERSE of window z-order -- the last child
+      // is the top window (win32wscontrols.pp, SetChildZPosition) -- so the
+      // caption streamed after its input is the window above it. Streamed
+      // before it, the window above each box was the NEXT row's caption, and
+      // UIA would have called the Callsign box "First name". Do not reorder
+      // them; uTestPrefsPlacement checks the windows. Tab order is TabOrder,
+      // not stream order, and the captions take no Tab stop.
+      //
+      // The names are still lblMy*: the form translator keys a caption by
+      // component name (tprefsform.lblmycall.caption), not by class.
       layStation: TPanel;
       lblStationHeading: TLabel;
       lblContestHeading: TLabel;
       lblStationHint: TLabel;
-      lblMyContinent: TLabel;
+      lblMyContinent: TStaticText;
       cbxMyContinent: TComboBox;
-      lblMyCall: TLabel;
+      lblMyCall: TStaticText;
       edtMyCall: TEdit;
-      lblMyName: TLabel;
+      lblMyName: TStaticText;
       edtMyName: TEdit;
-      lblMyGrid: TLabel;
+      lblMyGrid: TStaticText;
       edtMyGrid: TEdit;
-      lblMyZone: TLabel;
+      lblMyZone: TStaticText;
       edtMyZone: TEdit;
-      lblMyITUZone: TLabel;
+      lblMyITUZone: TStaticText;
       edtMyITUZone: TEdit;
-      lblMyState: TLabel;
+      lblMyState: TStaticText;
       edtMyState: TEdit;
-      lblMySection: TLabel;
+      lblMySection: TStaticText;
       edtMySection: TEdit;
-      lblMyCountry: TLabel;
+      lblMyCountry: TStaticText;
       edtMyCountry: TEdit;
-      lblMyPostalCode: TLabel;
+      lblMyPostalCode: TStaticText;
       edtMyPostalCode: TEdit;
-      lblMyCheck: TLabel;
+      lblMyCheck: TStaticText;
       edtMyCheck: TEdit;
-      lblMyPrec: TLabel;
+      lblMyPrec: TStaticText;
       edtMyPrec: TEdit;
-      lblMyFDClass: TLabel;
+      lblMyFDClass: TStaticText;
       edtMyFDClass: TEdit;
-      lblMyFOCNumber: TLabel;
+      lblMyFOCNumber: TStaticText;
       edtMyFOCNumber: TEdit;
-      lblMyIOTA: TLabel;
+      lblMyIOTA: TStaticText;
       edtMyIOTA: TEdit;
-      lblMyPark: TLabel;
+      lblMyPark: TStaticText;
       edtMyPark: TEdit;
-      lblMyLicenseYear: TLabel;
+      lblMyLicenseYear: TStaticText;
       edtMyLicenseYear: TEdit;
 
       // --- External Software (Tags 16..19) ------------------------------------
@@ -1534,7 +1552,8 @@ uses
    uLicenseYearChange,  (* issue 300 -- what a Station-page year edit does to the contest *)
    uContestBase,        (* ContestReceivedYearKind -- does the open contest send the year *)
    uContestRegistry,    (* ContestIdentity -- the open contest *)
-   uContestFactory,     (* SessionZoneTextSent -- the year the open contest sends *)
+   uContestFactory,     (* SessionZoneTextSent -- the year the open contest sends;
+                           CurrentStation -- the calendar year it is read against *)
    PostUnit,            (* Contest -- the open contest's handle *)
    VC;        // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
 
@@ -5352,14 +5371,13 @@ var
 begin
    for i := 0 to aRoot.ControlCount - 1 do
       begin
-      // Only a GENERATED row caption: those are the labels that carry a
-      // FocusControl.  Section headings are bold by design and must be left
-      // alone, and they have none.
-      if (aRoot.Controls[i] is TLabel) and
-         (TLabel(aRoot.Controls[i]).FocusControl <> nil) then
+      // Only a row caption: those are the labels (or, on the Station page,
+      // static texts -- issue 278) that carry a FocusControl.  Section
+      // headings are bold by design and must be left alone, and they have none.
+      if CaptionFocusControl(aRoot.Controls[i]) <> nil then
          begin
-         TLabel(aRoot.Controls[i]).Font.Style := [];
-         TLabel(aRoot.Controls[i]).Font.Color := clDefault;
+         aRoot.Controls[i].Font.Style := [];
+         aRoot.Controls[i].Font.Color := clDefault;
          end;
 
       if aRoot.Controls[i] is TWinControl then
@@ -5372,7 +5390,7 @@ end;
 procedure TPrefsForm.HighlightSearchedRow(const aControl: TWinControl);
 var
    i: integer;
-   lbl: TLabel;
+   lbl: TControl;   (* a TLabel or a TStaticText -- CaptionFocusControl *)
 begin
    // Whole form, not just this page: the operator may have searched twice, and
    // the earlier hit can be on a page that is no longer showing.  Walking a
@@ -5387,13 +5405,8 @@ begin
 
    for i := 0 to aControl.Parent.ControlCount - 1 do
       begin
-      if not (aControl.Parent.Controls[i] is TLabel) then
-         begin
-         Continue;
-         end;
-
-      lbl := TLabel(aControl.Parent.Controls[i]);
-      if lbl.FocusControl = aControl then
+      lbl := aControl.Parent.Controls[i];
+      if CaptionFocusControl(lbl) = aControl then
          begin
          lbl.Font.Style := [fsBold];
          lbl.Font.Color := clHighlight;
@@ -8444,49 +8457,64 @@ begin
                              CFGCommandValueAsString('MY CONTINENT')))));
 end;
 
+(* A license year as the two license-year questions show it: trimmed, or
+  SLicenseYearNone for none. *)
+function ShownLicenseYear(const aYear: string): string;
+begin
+   if Trim(aYear) = '' then
+      begin
+      Result := SLicenseYearNone;
+      end
+   else
+      begin
+      Result := Trim(aYear);
+      end;
+end;
+
 (* THE LICENSE-YEAR QUESTION -- issue 300; the rule is uLicenseYearChange.
+  TWO answers since log schema 8 (a logged QSO keeps the year it sent).
   Read by MODAL RESULT, never by button position (GTK orders the buttons
   differently; see uLogStore.AskAboutALockedLog). The station-only answer is
   the default for Enter AND Escape, and closing the box counts as it too. *)
 function AskLicenseYearScope(const aNewYear, aContestName,
                              aContestYear: string): TLicenseYearScope;
-
-   function Shown(const aYear: string): string;
-   begin
-      if Trim(aYear) = '' then
-         begin
-         Result := SLicenseYearNone;
-         end
-      else
-         begin
-         Result := Trim(aYear);
-         end;
-   end;
-
 var
    answer: TModalResult;
 begin
    answer := QuestionDlg(LclText(SLicenseYearScopeTitle),
-                         LclText(UnicodeFormat(SLicenseYearScopeBody,
-                                        [Shown(aNewYear), aContestName,
-                                         Shown(aContestYear)])),
+                         LclText(UnicodeFormat(SLicenseYearScopeBodyStored,
+                                        [ShownLicenseYear(aNewYear), aContestName,
+                                         ShownLicenseYear(aContestYear)])),
                          mtConfirmation,
                          [mrYes, LclText(SLicenseYearScopeAlsoContest),
-                          mrAll, LclText(SLicenseYearScopeContestAndQSOs),
                           mrNo,  LclText(SLicenseYearScopeStationOnly),
                           'IsDefault', 'IsCancel'], 0);
    if answer = mrYes then
       begin
       Result := lysAlsoContest;
       end
-   else if answer = mrAll then
-      begin
-      Result := lysContestAndQSOs;
-      end
    else
       begin
       Result := lysStationOnly;
       end;
+end;
+
+(* THE CORRECTION QUESTION -- issue 300, asked after "Also this contest" when
+  logged QSOs sent the old year (LicenseYearCorrectionAsks). aCount is how
+  many; the years are as the contest SENDS them, the text the first question
+  showed. No is the default for Enter AND Escape: a QSO logged with a year
+  sent that year, so correcting is for a mistake only (NY4I, 2026-11-13).
+  Plain Yes and No, so the LCL's own (translated) buttons and its default-
+  button overload; anything but Yes, closing the box included, is No. *)
+function AskLicenseYearCorrection(aCount: integer;
+                                  const aOldSent, aNewSent: string): boolean;
+begin
+   Result := MessageDlg(LclText(SLicenseYearCorrectTitle),
+                        LclText(UnicodeFormat(SLicenseYearCorrectBody,
+                                       [aCount, ShownLicenseYear(aOldSent),
+                                        ShownLicenseYear(aNewSent)])),
+                        mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+                        TMsgDlgBtn.mbNo) = mrYes;
 end;
 
 function TPrefsForm.SaveStationPanel: boolean;
@@ -8501,6 +8529,10 @@ var
    contestSentBefore: string;
    contestSendsYear: boolean;
    yearScope: TLicenseYearScope;
+   (* ...and the correction of logged QSOs it may lead to. *)
+   correction: TLicenseYearCorrection;
+   correctionOffered: boolean;
+   qsosSentOld: integer;
 begin
    Result := True;
    bad := '';
@@ -8597,6 +8629,34 @@ begin
       if ApplyLicenseYearScope(Settings, yearScope, contestYearBefore) then
          begin
          LogStoreRecordContestStatement(LICENSE_YEAR_COMMAND);
+         end;
+
+      (* THEN THE CORRECTION, after "Also this contest" only: the contest's
+        logged QSOs keep the year each sent (log schema 8) unless the operator
+        says the old year was a mistake. Default No. A failed write is logged
+        and disables the store (uLogStore); nothing more is said here. *)
+      if yearScope = lysAlsoContest then
+         begin
+         correctionOffered :=
+            LicenseYearCorrectionOf(ContestReceivedYearKind(ContestIdentity(Contest)),
+                                    contestYearBefore,
+                                    Settings.My.ResolvedLicenseYear,
+                                    CurrentStation.CurrentYear, correction);
+         qsosSentOld := 0;
+         if correctionOffered then
+            begin
+            qsosSentOld := LogStoreCountQSOsSentYear(correction.OldKnown,
+                                                     correction.OldValue);
+            end;
+         if LicenseYearCorrectionAsks(yearScope, correctionOffered, qsosSentOld) then
+            begin
+            if AskLicenseYearCorrection(qsosSentOld, contestSentBefore,
+                                        SessionZoneTextSent(ContestIdentity(Contest))) then
+               begin
+               LogStoreCorrectSentYear(correction.OldKnown, correction.OldValue,
+                                       correction.NewKnown, correction.NewValue);
+               end;
+            end;
          end;
       end;
 

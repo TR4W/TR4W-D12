@@ -807,6 +807,25 @@ object frmEditQSO: TfrmEditQSO
       TabOrder = 7
       OnChange = FieldChanged
     end
+    object lblMyYearSent: TLabel
+      Left = 6
+      Height = 17
+      Top = 58
+      Width = 52
+      AutoSize = False
+      Caption = 'Year sent'
+      Layout = tlCenter
+    end
+    object edtMyYearSent: TEdit
+      Left = 60
+      Height = 21
+      Top = 56
+      Width = 76
+      MaxLength = 4
+      NumbersOnly = True
+      TabOrder = 8
+      OnChange = FieldChanged
+    end
   end
   object lblDelivery: TLabel
     Left = 8

@@ -11144,6 +11144,15 @@ begin
                    end;
                 end;
 
+             (* AND THE LICENCE YEAR IT SENT (issue 300): its STX_STRING's,
+               else the year this contest sends now -- what the row exported
+               before it had a year of its own. Not a MY_ tag, so the station
+               question below never changes it. *)
+             ApplyImportedSentYear(ContestIdentity(TempRXData.ceContest).ReceivedYearKind,
+                                   string(recordSentExchange), TempRXData,
+                                   contestMyFacts.YearSentKnown, contestMyFacts.YearSent,
+                                   recordMyFacts);
+
              (* BY THAT STATION (stage 3). RescoreLog, after the commit, scores
                again by what was stored, so a row the answer below changes is
                scored by its final station. *)

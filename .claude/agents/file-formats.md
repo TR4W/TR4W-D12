@@ -69,6 +69,17 @@ stale. No CQZ/ITUZ is written for EUHFC/KVP (`zmzNotCQOrITU`). `MY_CQ_ZONE` of
 a NEW year-contest QSO is the call's CTY zone (`SessionMyCQZone`); rows
 captured before keep the year they recorded.
 
+**THE SENT YEAR IS THE ROW'S since log schema 8 (issue 300, 2026-11-13).** A
+year contest's `STX_STRING` and Cabrillo sent column print `qso.year_sent`
+(through `MyStationExchangeOfQSO`'s year kind), not the contest's current
+`MY LICENSE YEAR`; an imported row with an `exchange_sent` still writes it back
+verbatim. The ADIF import fills `year_sent` from the `STX_STRING`'s one word
+after the RST, else the contest's year (`uContestBase.ApplyImportedSentYear`).
+The canonical sent exchange (HamScore, UDP, `exchange_sent`) of a year contest
+is the QSO's own sent RST and year -- `59 64` on phone, where the CW template
+gave `599 64` on every mode (measured). Expect the matrix's EUHFC/KVP records
+to move where they show a sent exchange.
+
 Rules for running it:
 
 - **Rebuild the app first**, and confirm TR4W is not running (`Get-Process -Name

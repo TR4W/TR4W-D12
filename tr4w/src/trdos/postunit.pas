@@ -2303,7 +2303,9 @@ end;
                                 AT ALL where MY ZONE holds no station zone
                                 (the European HF Championship's and KVP's
                                 licence year, 2026-11-12):
-                                uContestBase.SentZoneKindOfQSO
+                                uContestBase.SentZoneKindOfQSO -- where
+                                the slot carries THE YEAR THE ROW SENT
+                                (year_sent, issue 300)
     MyState                     the row's my_state, BUT ONLY WHEN THE SESSION
                                 SENDS MY STATE ITSELF in that slot: a contest
                                 whose set-up sends something else there (the
@@ -2326,7 +2328,9 @@ begin
      send. *)
    Result := MyStationExchangeOfQSO( CurrentMyStationExchange( aContest ), aFacts,
       SentMyState = Settings.My.ResolvedState,
-      SentZoneKindOfQSO( aContest, CTY.ctyZoneMode ) );
+      SentZoneKindOfQSO( aContest, CTY.ctyZoneMode ),
+      (* THE YEAR THE ROW SENT, in a contest that sends one (issue 300). *)
+      ContestReceivedYearKind( aContest ) );
 end;
 
 (* OUR CALL FOR ONE LOGGED QSO is uLogSource.ExportCallFor (D5, log schema 3,

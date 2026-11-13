@@ -128,6 +128,15 @@ function SessionMyCQZone(aContest: TContestBase): integer;
   an ITU-zone contest sends on the air the ITU zone its log exports. *)
 function SessionZoneTextSent(aContest: TContestBase): string;
 
+(* THE LICENCE YEAR THIS SESSION SENDS IN aContest, AS A QSO ROW STORES IT --
+  issue 300 (qso.year_sent). uContestBase.SentLicenseYearValue over aContest's
+  ReceivedYearKind, the resolved MY LICENSE YEAR and the calendar year: the
+  same three inputs SessionZoneTextSent formats, so the row stores exactly
+  the year the export of the session would have printed. False where the
+  contest sends no year or the setting holds none. Asked by the log-time
+  capture (uLogStore.LogStoreCurrentMyFacts) and the schema-8 backfill. *)
+function SessionLicenseYearSent(aContest: TContestBase; out aValue: integer): boolean;
+
 (* A LOG OR .cfg THAT STATED THE LICENCE YEAR AS MY ZONE -- issue 298. Before
   MY LICENSE YEAR existed the European HF Championship and KVP kept the year in
   the zone slot, so a contest the operator set up then holds it as a MY ZONE
@@ -258,6 +267,14 @@ begin
    Result := ZoneTextSent(ContestZoneMultiplierZones(aContest),
                           @SessionMyITUZone,
                           Settings.My.ResolvedZone);
+end;
+
+function SessionLicenseYearSent(aContest: TContestBase; out aValue: integer): boolean;
+begin
+   (* See the declaration. rykNone answers False. *)
+   Result := SentLicenseYearValue(ContestReceivedYearKind(aContest),
+                                  Settings.My.ResolvedLicenseYear,
+                                  CalendarYear, aValue);
 end;
 
 procedure AdoptLegacyLicenseYear(aKind: TReceivedYearKind);

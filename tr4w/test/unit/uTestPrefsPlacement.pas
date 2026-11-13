@@ -47,6 +47,7 @@ type
       procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
       procedure CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
       procedure CheckBoundControlsAreNamed(const aForm: TPrefsForm);
+      procedure CheckStationCaptionsAreWindowsBeforeTheirInputs(const aForm: TPrefsForm);
       function CheckGeneratedLabelsFit(const aRoot: TWinControl): integer;
    public
       procedure RunAllTests; override;
@@ -55,6 +56,12 @@ type
 implementation
 
 uses
+{$IFDEF WINDOWS}
+   (* FIRST, so it shadows nothing below (it declares its own CopyFile).
+     GetWindow, GW_HWNDPREV/NEXT: see the z-order check. *)
+   Windows,
+   Win32WSStdCtrls,       (* TWin32WSCustomStaticText -- the z-order check *)
+{$ENDIF}
    SysUtils,
    Forms,
    StdCtrls,              (* TLabel -- the generated captions *)
@@ -69,7 +76,10 @@ uses
    utils_text,            (* CharBufferText, SetCharBuffer *)
    uCommandHelp,          (* TCommandHelp -- the License year command's own help *)
    uAppStrings,           (* SPrefsPageHasNoSettingsYet -- issue 279 *)
+   uSettingsBinding,      (* CaptionOfLabelFor -- issue 278 *)
    FileUtil,              (* CopyFile, DeleteDirectory -- the staged help, issue 280 *)
+   Classes,               (* TFPList -- the Station page's tab order *)
+   uTestShowOffScreen,    (* ShowOffScreen -- handles exist only once shown *)
    VC;                    (* TR4W_INI_FILENAME *)
 
 const
@@ -757,6 +767,9 @@ begin
 
       CheckTrue(CheckGeneratedLabelsFit(form) > 0,
                 'the generated captions were found and judged (issue 304)');
+
+      (* Last: it SHOWS the form, which the checks above do not need. *)
+      CheckStationCaptionsAreWindowsBeforeTheirInputs(form);
    finally
       form.Free;
       uSettingsLegacy.ActiveStoreProvider := oldProvider;
@@ -806,6 +819,292 @@ begin
                   lbl.FocusControl.Name + ': a generated check box (blank caption) '
                   + 'is named by its label');
       end;
+end;
+
+(* ISSUE 278: EVERY STATION INPUT IS NAMED BY A WINDOW IMMEDIATELY BEFORE IT.
+
+  Windows UI Automation ignores the LCL's AccessibleName (the win32 widget set
+  registers no accessible object), and names an edit from the STATIC window
+  immediately ABOVE it in z-order (GW_HWNDPREV; measured on plain Win32
+  windows). A TLabel has no window, so every Station box read as unnamed. The
+  captions are TStaticText now, each streamed AFTER its input in the .lfm,
+  because the LCL's child list is the reverse of window z-order (the last
+  child is the top window). The first version streamed them before, and this
+  check found the window above each box was the NEXT row's caption.
+
+  What is proved here, in two halves:
+    * on the streamed form: each caption is a TStaticText paired (FocusControl)
+      with its input, the control just after it in its parent, with the
+      designed English text, no Tab stop, transparent, and to the left of its
+      input in the same row; CaptionOfLabelFor finds it; and the Tab sequence
+      of the page is the seventeen inputs, in order, with no caption in it.
+    * SHOWN off screen, the Station page selected through the navigation tree
+      as the program selects it: on Windows, the window above each input in
+      z-order IS its caption's window, and the caption's widget-set class is
+      the win32 one that creates a STATIC. That is the exact boundary UIA
+      reads. A handle recreated after load would move in the z-order and fail
+      here.
+
+  The z-order is read with Win32 GetWindow because the LCL has no call for it
+  (none in winapih.inc or lclintfh.inc), and nothing else here touches a raw
+  handle: the window found is turned straight back into its LCL control with
+  FindControl, so the check compares CONTROLS. The window CLASS is not asked
+  of Windows either: the win32 widget set creates every TCustomStaticText as
+  a 'STATIC' (win32wsstdctrls.pp, TWin32WSCustomStaticText.CreateHandle), so
+  the check asks the caption which widget-set class built it.
+
+  What is NOT proved: that UIA then reports the name. That is the GUI suite's
+  question (pywinauto, the UIA backend). The Main callsign row placed on this
+  page is generated (a TLabel, shared with every page) and is deliberately
+  not converted yet. *)
+{$IFDEF WINDOWS}
+(* The LCL control whose window is next to aControl's in z-order, in the
+  direction GW_HWNDPREV (above) or GW_HWNDNEXT (below); nil when there is no
+  such window or it is not an LCL control. *)
+function ControlNextInZOrder(const aControl: TWinControl; const aDirection: UINT): TWinControl;
+begin
+   Result := FindControl(GetWindow(aControl.Handle, aDirection));
+end;
+
+(* A control by name, for a failure message. *)
+function NameOfControl(const aControl: TWinControl): string;
+begin
+   if aControl = nil then
+      begin
+      Result := '(none, or not an LCL control)';
+      Exit;
+      end;
+   Result := aControl.Name + ':' + aControl.ClassName;
+end;
+{$ENDIF}
+
+procedure TPrefsPlacementTests.CheckStationCaptionsAreWindowsBeforeTheirInputs(const aForm: TPrefsForm);
+type
+   TStationRow = record
+      Caption: TStaticText;
+      Input: TWinControl;
+      Text: string;
+   end;
+var
+   rows: array of TStationRow;
+   i, at, n: integer;
+   order: TFPList;
+   stop: TWinControl;
+   expected: string;
+
+   procedure AddRow(const aCaption: TStaticText; const aInput: TWinControl;
+                    const aText: string);
+   begin
+      SetLength(rows, Length(rows) + 1);
+      rows[High(rows)].Caption := aCaption;
+      rows[High(rows)].Input   := aInput;
+      rows[High(rows)].Text    := aText;
+   end;
+
+   (* A page selected the way SelectPage selects it: through the tree, whose
+     change handler is the one place that shows a panel. The tree raises
+     OnChange from its own 1 ms TTimer (treeview.inc, FChangeTimer), not from
+     the assignment, so wait for it -- bounded, and checked. *)
+   procedure SelectNavPage(const aTag: integer; const aWhen: string);
+   var
+      k: integer;
+      wantStation: boolean;
+   begin
+      for k := 0 to aForm.tvNav.Items.Count - 1 do
+         begin
+         if TNavNode(aForm.tvNav.Items[k]).Tag = aTag then
+            begin
+            aForm.tvNav.Items[k].Selected := True;
+            Break;
+            end;
+         end;
+      wantStation := aTag = NAV_STATION;
+      for k := 1 to 200 do
+         begin
+         Application.ProcessMessages;
+         if aForm.layStation.IsVisible = wantStation then
+            begin
+            Break;
+            end;
+         Sleep(5);
+         end;
+      Application.ProcessMessages;
+      CheckTrue(aForm.layStation.IsVisible = wantStation,
+                aWhen + ': the Station page is ' + BoolToStr(wantStation, 'showing', 'hidden')
+                + ' (form ' + BoolToStr(aForm.Visible, True)
+                + ', page ' + BoolToStr(aForm.layStation.Visible, True) + ')');
+   end;
+
+   (* THE Z-ORDER UIA READS: the window immediately ABOVE each input is its
+     caption's, and the caption was built by the win32 STATIC class. *)
+   procedure CheckWindowsAbove(const aWhen: string);
+{$IFDEF WINDOWS}
+   var
+      k: integer;
+      above: TWinControl;
+      wsName: string;
+{$ENDIF}
+   begin
+{$IFDEF WINDOWS}
+      for k := 0 to High(rows) do
+         begin
+         if (rows[k].Caption = nil) or (rows[k].Input = nil) then
+            begin
+            Continue;
+            end;
+         CheckTrue(rows[k].Input.HandleAllocated and rows[k].Caption.HandleAllocated,
+                   aWhen + ': ' + rows[k].Input.Name + ' and its caption have windows');
+         if not (rows[k].Input.HandleAllocated and rows[k].Caption.HandleAllocated) then
+            begin
+            Continue;
+            end;
+         above := ControlNextInZOrder(rows[k].Input, GW_HWNDPREV);
+         CheckTrue(above = rows[k].Caption,
+                   aWhen + ': ' + rows[k].Input.Name + ': the window above it is '
+                   + rows[k].Caption.Name + ' (found ' + NameOfControl(above)
+                   + '; below it ' + NameOfControl(ControlNextInZOrder(rows[k].Input, GW_HWNDNEXT)) + ')');
+         if rows[k].Caption.WidgetSetClass = nil then
+            begin
+            wsName := '(none)';
+            end
+         else
+            begin
+            wsName := rows[k].Caption.WidgetSetClass.ClassName;
+            end;
+         (* By NAME, not InheritsFrom: the LCL hands a control a run-time COPY
+           of its widget-set class's VMT, named '(V)' + that class's name and
+           re-parented past it (wslclclasses.pp, CreateVClass), so it does not
+           inherit from the class it copies. The name is taken from the class
+           reference, so a rename is still the compiler's to catch. *)
+         CheckTrue((wsName = TWin32WSCustomStaticText.ClassName) or
+                   (wsName = '(V)' + TWin32WSCustomStaticText.ClassName),
+                   aWhen + ': ' + rows[k].Caption.Name + ' was built by the win32 STATIC class (found '
+                   + wsName + ')');
+         end;
+{$ELSE}
+      (* The rule checked here is Win32's. How the gtk2 and cocoa
+        accessibility layers name a field is not measured. *)
+{$ENDIF}
+   end;
+
+begin
+   (* .lfm order, which is also reading order down each column. *)
+   AddRow(aForm.lblMyCall,        aForm.edtMyCall,        'Callsign:');
+   AddRow(aForm.lblMyName,        aForm.edtMyName,        'First name:');
+   AddRow(aForm.lblMyGrid,        aForm.edtMyGrid,        'Grid square:');
+   AddRow(aForm.lblMyContinent,   aForm.cbxMyContinent,   'Continent:');
+   AddRow(aForm.lblMyZone,        aForm.edtMyZone,        'CQ zone:');
+   AddRow(aForm.lblMyITUZone,     aForm.edtMyITUZone,     'ITU zone:');
+   AddRow(aForm.lblMyState,       aForm.edtMyState,       'State/Province:');
+   AddRow(aForm.lblMySection,     aForm.edtMySection,     'ARRL section:');
+   AddRow(aForm.lblMyCountry,     aForm.edtMyCountry,     'Country:');
+   AddRow(aForm.lblMyPostalCode,  aForm.edtMyPostalCode,  'Postal code:');
+   AddRow(aForm.lblMyCheck,       aForm.edtMyCheck,       'Check:');
+   AddRow(aForm.lblMyPrec,        aForm.edtMyPrec,        'Precedence:');
+   AddRow(aForm.lblMyFDClass,     aForm.edtMyFDClass,     'FD class:');
+   AddRow(aForm.lblMyFOCNumber,   aForm.edtMyFOCNumber,   'FOC number:');
+   AddRow(aForm.lblMyIOTA,        aForm.edtMyIOTA,        'IOTA:');
+   AddRow(aForm.lblMyPark,        aForm.edtMyPark,        'Park:');
+   AddRow(aForm.lblMyLicenseYear, aForm.edtMyLicenseYear, 'License year:');
+
+   for i := 0 to High(rows) do
+      begin
+      CheckTrue((rows[i].Caption <> nil) and (rows[i].Input <> nil),
+                rows[i].Text + ' has a caption and an input');
+      if (rows[i].Caption = nil) or (rows[i].Input = nil) then
+         begin
+         Continue;
+         end;
+
+      CheckEquals(rows[i].Text, string(rows[i].Caption.Caption),
+                  rows[i].Caption.Name + ': the designed caption');
+      CheckTrue(rows[i].Caption.FocusControl = rows[i].Input,
+                rows[i].Caption.Name + ' is paired with ' + rows[i].Input.Name);
+      CheckTrue((rows[i].Caption.Parent = aForm.layStation) and
+                (rows[i].Input.Parent = aForm.layStation),
+                rows[i].Caption.Name + ' and its input are on the Station page');
+
+      (* AFTER its input in the child list, which is the window ABOVE it:
+        the LCL's child list is the reverse of window z-order. *)
+      at := aForm.layStation.GetControlIndex(rows[i].Input);
+      CheckTrue((at >= 0) and (at + 1 < aForm.layStation.ControlCount) and
+                (aForm.layStation.Controls[at + 1] = rows[i].Caption),
+                rows[i].Caption.Name + ' is the control immediately after '
+                + rows[i].Input.Name + ' in the child list');
+
+      CheckFalse(rows[i].Caption.TabStop,
+                 rows[i].Caption.Name + ' takes no Tab stop');
+      CheckTrue(rows[i].Caption.Transparent,
+                rows[i].Caption.Name + ' is transparent (the panel shows through)');
+      CheckTrue(rows[i].Caption.Left + rows[i].Caption.Width <= rows[i].Input.Left,
+                rows[i].Caption.Name + ' ends before its input');
+      CheckTrue(Abs(rows[i].Caption.Top - rows[i].Input.Top) <= 8,
+                rows[i].Caption.Name + ' is on its input''s row');
+
+      CheckEquals(rows[i].Text, string(CaptionOfLabelFor(rows[i].Input)),
+                  rows[i].Input.Name + ': CaptionOfLabelFor finds the static text');
+
+      (* The LCL property too, as 8706893b set it -- not for the continent,
+        which is store-backed and never passed through ApplyAccessibleName. *)
+      if rows[i].Input is TEdit then
+         begin
+         expected := Copy(rows[i].Text, 1, Length(rows[i].Text) - 1);
+         CheckEquals(expected, string(rows[i].Input.AccessibleName),
+                     rows[i].Input.Name + ': AccessibleName is its caption');
+         end;
+      end;
+
+   (* SHOWN, with the page selected the way SelectPage selects it: through the
+     tree, whose change handler is the one place that shows a panel. *)
+   ShowOffScreen(aForm);
+   try
+      SelectNavPage(NAV_STATION, 'first show');
+
+      (* THE TAB SEQUENCE: the page's own Tab stops, in order, are the inputs.
+        A caption in it would be a stop that goes nowhere. *)
+      order := TFPList.Create;
+      try
+         aForm.layStation.GetTabOrderList(order);
+         n := 0;
+         for i := 0 to order.Count - 1 do
+            begin
+            stop := TWinControl(order[i]);
+            if (stop.Parent <> aForm.layStation) or (not stop.TabStop) then
+               begin
+               Continue;
+               end;
+            CheckTrue(not (stop is TStaticText),
+                      stop.Name + ': a caption is not a Tab stop');
+            if n <= High(rows) then
+               begin
+               CheckTrue(stop = rows[n].Input,
+                         'Tab stop ' + IntToStr(n) + ' is ' + rows[n].Input.Name
+                         + ' (found ' + stop.Name + ')');
+               end;
+            Inc(n);
+            end;
+         CheckEquals(Length(rows), n, 'the Station page has one Tab stop per input');
+      finally
+         order.Free;
+      end;
+
+      CheckWindowsAbove('first show');
+
+      (* THE REUSED WINDOW. Preferences is created once and hidden on close,
+        so the operator meets this page after other pages and after a
+        reopen; a handle recreated on either path would move in z-order. *)
+      SelectNavPage(NAV_HARDWARE, 'away');
+      SelectNavPage(NAV_STATION, 'back');
+      CheckWindowsAbove('after another page');
+
+      aForm.Hide;
+      Application.ProcessMessages;
+      ShowOffScreen(aForm);
+      SelectNavPage(NAV_STATION, 'reopened');
+      CheckWindowsAbove('after hide and show');
+   finally
+      aForm.Hide;
+   end;
 end;
 
 (* ISSUE 280: THE STATION BOXES CARRY THEIR SETTING'S HELP AS A TOOLTIP.  A GUI

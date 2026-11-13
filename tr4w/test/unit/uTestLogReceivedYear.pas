@@ -35,6 +35,8 @@ unit uTestLogReceivedYear;
 interface
 
 uses
+   VC,                (* ContestExchange -- MakeRow *)
+   uLogDatabase,      (* TLogDatabase -- QueryText *)
    uTR4WTestFramework,
    uTestNetSupport;   (* TNetStoreTestCase -- the wire tests' scratch store *)
 
@@ -86,12 +88,18 @@ type
       procedure RunAllTests; override;
    end;
 
+(* SHARED WITH uTestLogYearSent (issue 300, the SENT year): one QSO,
+  initialised (not FillChar'd), with no year; and the first column of the
+  first row a query answers, '' for none. *)
+function MakeRow(aSeed: integer; aZone: integer): ContestExchange;
+function QueryText(aDb: TLogDatabase; const aSql: string): string;
+
 implementation
 
 uses
    SysUtils, Classes, sqldb,
-   VC, TF,
-   uLogDatabase, uLogSchema, uLogRepository, uLogImport, uLogBinaryFile,
+   TF,
+   uLogSchema, uLogRepository, uLogImport, uLogBinaryFile,
    uLogStore,
    uContestRegistry, uContestBase,
    uNet, uNetClient, uNetCatchUp, uGetServerLog,
@@ -370,7 +378,7 @@ begin
       CheckEquals(1, CommitFramesInWal(fn + '-wal'),
                   'the column, the copy and the stamp went in ONE commit');
       CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
-      CheckEquals(7, LOG_SCHEMA_VERSION, 'which is 7 (stage 2''s re-carry)');
+      CheckEquals(8, LOG_SCHEMA_VERSION, 'which is 8 (issue 300''s year_sent)');
       CheckEquals('85,0,N', QueryText(db, YEARS_SQL), 'each row''s year, from its zone');
       CheckEquals('85,0,N', QueryText(db,
                   'SELECT group_concat(IFNULL(rcvd_zone, ''N''), '','') ' +

@@ -1491,10 +1491,18 @@ type
 
       CQExchangeTemplate is CQ EXCHANGE CW as the session holds it -- the base
       rebuilds what was SENT from it. MyGrid is MY GRID (the RTC's sent
-      exchange is its serial and grid). *)
+      exchange is its serial and grid).
+
+      SentYearText is THE LICENCE YEAR THIS QSO SENT, as the contest formats
+      it (issue 300): the row's year_sent for a stored QSO, the session's for
+      the QSO being logged now; '' when none. A contest that sends a year
+      builds its canonical sent exchange from the QSO's RST and this, not
+      from the CW template (which said 599 on phone and held the year as
+      literal text). *)
    TCanonicalExchangeContext = record
       CQExchangeTemplate: string;
       MyGrid: string;
+      SentYearText: string;
    end;
 
    (* THE CONTEST'S YES/NO FACTS, AS ONE SET -- M10 S5, 2026-10-14.
@@ -4168,6 +4176,23 @@ function LicenseYearValue(const aText: string; aCurrentYear: integer;
 function SentLicenseYearText(aKind: TReceivedYearKind; const aSetting: string;
                              aCurrentYear: integer): string;
 
+(* THE SAME, AS THE NUMBER A QSO ROW STORES -- issue 300, log schema 8
+   (qso.year_sent). The value SentLicenseYearText writes, as the integer the
+   contest SENDS, not a resolved year: 85 for a two-digit year, 1985 for a
+   four-digit one, 41 for a count of years licensed. Stored that way, the row's
+   sent text is ReceivedYearText(aKind, aValue) again with no clock and no
+   setting (a QSO record depends on nothing but its own row). False, aValue
+   NO_RECEIVED_YEAR, where SentLicenseYearText answers '': rykNone, or no year
+   in the setting. SentLicenseYearText is this, formatted. *)
+function SentLicenseYearValue(aKind: TReceivedYearKind; const aSetting: string;
+                              aCurrentYear: integer; out aValue: integer): boolean;
+
+(* THE YEAR A LOGGED QSO SENT, AS TEXT, for a contest of aKind -- issue 300:
+   ReceivedYearText of its recorded value (TQsoMyFacts.YearSent) when the row
+   holds one, else ''. The ONE formatter of a stored sent year, asked by
+   MyStationExchangeOfQSO (the export) and Edit QSO's box. *)
+function SentYearTextOfFacts(aKind: TReceivedYearKind; const aFacts: TQsoMyFacts): string;
+
 (* THE RECEIVED YEAR OF aQso -- RcvdYear when RcvdYearKnown. A RECORD THAT
    NEVER CARRIED THE FIELD falls back to the zone slot, exactly where the log
    migration (schema 6/7) and the .TRW import would have copied it: Known
@@ -4236,6 +4261,28 @@ function ApplyEditedReceivedYear(aKind: TReceivedYearKind; const aText: string;
    year was the zone slot), if it is a year of the kind. ELSE no year. *)
 procedure ApplyImportedReceivedYear(aKind: TReceivedYearKind; const aSRX: string;
                                     var aQso: ContestExchange);
+
+(* THE ADIF IMPORT'S SENT YEAR for a contest of aKind -- issue 300, the
+   sysFile arm of uQsoMyFacts.TSentYearSource. FIRST the file's STX_STRING
+   (aSTX) less its leading RST (aQso.RSTSent), when that is ONE word that is
+   a year of the kind (ReceivedYearFromWord, ceiling the QSO's own year) --
+   the received rule, applied to the sent side. ELSE aFallback (known when
+   aFallbackKnown): the year the contest sends now, which is what such a row
+   exported before schema 8 and what a QSO logged now records. rykNone: none.
+   Sets aFacts' year and nothing else. *)
+procedure ApplyImportedSentYear(aKind: TReceivedYearKind; const aSTX: string;
+                                const aQso: ContestExchange;
+                                aFallbackKnown: boolean; aFallback: integer;
+                                var aFacts: TQsoMyFacts);
+
+(* EDIT QSO's SAVE OF THE SENT-YEAR BOX for a contest of aKind -- issue 300.
+   Empty: the QSO sent no year. A year of the kind (ReceivedYearFromWord,
+   ceiling the QSO's own year): that year. Anything else answers False and
+   leaves aFacts as it was: the caller refuses the save. rykNone answers True
+   and changes nothing (the box is not shown). *)
+function ApplyEditedSentYear(aKind: TReceivedYearKind; const aText: string;
+                             const aQso: ContestExchange;
+                             var aFacts: TQsoMyFacts): boolean;
 
 (* WHAT KIND OF YEAR aContest RECEIVES -- see TContestBase.ReceivedYearKind.
    nil answers rykNone. *)
@@ -4431,11 +4478,31 @@ function QSOCountsTowardTotals(aContest: TContestBase;
    no column for them, and they do not change within a log.
 
    A ZONE THAT IS THE SAME NUMBER KEEPS THE SESSION'S TEXT: the record holds a
-   number, so a stated '05' would otherwise come back '5'. *)
+   number, so a stated '05' would otherwise come back '5'.
+
+   THE LICENCE YEAR IS THE ROW'S (issue 300, log schema 8). For a contest that
+   sends a year (aYearKind not rykNone) the zone slot carries the year THIS
+   QSO SENT, formatted by the kind (SentYearTextOfFacts), and never the
+   contest's current year:
+      the row holds a year (year_sent)          that year
+      a row logged, edited or imported here     '' -- it sent none
+      that holds none
+      a PEER'S row ('assumed') that holds none  the session's, as before
+                                                schema 8: the protocol-3
+                                                packet does not carry the
+                                                peer's year, so the column
+                                                stays NULL (nothing invented)
+                                                and the export keeps sending
+                                                what it always did -- ruling
+                                                D's assumption, at read time
+      a row that never captured a station       the session's, as ruling A
+   aYearKind defaults to rykNone: a caller that asks only for the grid, or a
+   contest that sends no year, sees no change. *)
 function MyStationExchangeOfQSO(const aSession: TMyStationExchange;
                                 const aFacts: TQsoMyFacts;
                                 aSessionSendsMyState: boolean;
-                                aZoneSent: TSentZoneKind): TMyStationExchange;
+                                aZoneSent: TSentZoneKind;
+                                aYearKind: TReceivedYearKind = rykNone): TMyStationExchange;
 
 (* WHICH ZONE A LOGGED QSO OF aContest SENDS -- the one rule (2026-11-12):
 
@@ -5175,28 +5242,28 @@ begin
    Result := True;
 end;
 
-function SentLicenseYearText(aKind: TReceivedYearKind; const aSetting: string;
-                             aCurrentYear: integer): string;
+function SentLicenseYearValue(aKind: TReceivedYearKind; const aSetting: string;
+                              aCurrentYear: integer; out aValue: integer): boolean;
 var
    text: string;
    n, year: integer;
 begin
    (* See the declaration. *)
-   Result := '';
+   aValue := NO_RECEIVED_YEAR;
    text := Trim(aSetting);
    case aKind of
       rykTwoDigitYear:
          begin
          if LicenseYearValue(text, aCurrentYear, year) then
             begin
-            Result := ReceivedYearText(aKind, year mod 100);
+            aValue := year mod 100;
             end;
          end;
       rykFourDigitYear:
          begin
          if LicenseYearValue(text, aCurrentYear, year) then
             begin
-            Result := ReceivedYearText(aKind, year);
+            aValue := year;
             end;
          end;
       rykYearsLicensed:
@@ -5204,18 +5271,42 @@ begin
          n := LicenseYearDigits(text);
          if (n >= 0) and (Length(text) <= 2) then
             begin
-            Result := ReceivedYearText(aKind, n);
+            aValue := n;
             end
          else if (aCurrentYear > 0) and LicenseYearValue(text, aCurrentYear, year) then
             begin
             n := aCurrentYear - year;
             if (n >= 0) and (n <= 99) then
                begin
-               Result := ReceivedYearText(aKind, n);
+               aValue := n;
                end;
             end;
          end;
    end;
+   Result := aValue <> NO_RECEIVED_YEAR;
+end;
+
+function SentLicenseYearText(aKind: TReceivedYearKind; const aSetting: string;
+                             aCurrentYear: integer): string;
+var
+   value: integer;
+begin
+   (* See the declaration: the value, formatted -- one rule, two shapes. *)
+   Result := '';
+   if SentLicenseYearValue(aKind, aSetting, aCurrentYear, value) then
+      begin
+      Result := ReceivedYearText(aKind, value);
+      end;
+end;
+
+function SentYearTextOfFacts(aKind: TReceivedYearKind; const aFacts: TQsoMyFacts): string;
+begin
+   (* See the declaration. ReceivedYearText answers '' for rykNone. *)
+   Result := '';
+   if aFacts.YearSentKnown then
+      begin
+      Result := ReceivedYearText(aKind, aFacts.YearSent);
+      end;
 end;
 
 function TryLicenceYearOf(const aQso: ContestExchange; out aYear: integer): boolean;
@@ -5370,6 +5461,56 @@ begin
       end;
 
    ClearLicenceYear(aQso);
+end;
+
+procedure ApplyImportedSentYear(aKind: TReceivedYearKind; const aSTX: string;
+                                const aQso: ContestExchange;
+                                aFallbackKnown: boolean; aFallback: integer;
+                                var aFacts: TQsoMyFacts);
+var
+   sent: string;
+   year: integer;
+begin
+   (* See the declaration. *)
+   if aKind = rykNone then
+      begin
+      SetFactsYearSent(aFacts, False, 0);
+      Exit;
+      end;
+   sent := ExchangeFromSRXString(aSTX, aQso.RSTSent);
+   if (sent <> '') and (Pos(' ', sent) = 0) and
+      ReceivedYearFromWord(aKind, sent, ReferenceYearOfQSO(aQso), year) then
+      begin
+      SetFactsYearSent(aFacts, True, year);
+      Exit;
+      end;
+   SetFactsYearSent(aFacts, aFallbackKnown, aFallback);
+end;
+
+function ApplyEditedSentYear(aKind: TReceivedYearKind; const aText: string;
+                             const aQso: ContestExchange;
+                             var aFacts: TQsoMyFacts): boolean;
+var
+   text: string;
+   year: integer;
+begin
+   (* See the declaration. *)
+   Result := True;
+   if aKind = rykNone then
+      begin
+      Exit;
+      end;
+   text := Trim(aText);
+   if text = '' then
+      begin
+      SetFactsYearSent(aFacts, False, 0);
+      Exit;
+      end;
+   Result := ReceivedYearFromWord(aKind, text, ReferenceYearOfQSO(aQso), year);
+   if Result then
+      begin
+      SetFactsYearSent(aFacts, True, year);
+      end;
 end;
 
 function ContestReceivedYearKind(aContest: TContestBase): TReceivedYearKind;
@@ -5941,11 +6082,27 @@ end;
 function MyStationExchangeOfQSO(const aSession: TMyStationExchange;
                                 const aFacts: TQsoMyFacts;
                                 aSessionSendsMyState: boolean;
-                                aZoneSent: TSentZoneKind): TMyStationExchange;
+                                aZoneSent: TSentZoneKind;
+                                aYearKind: TReceivedYearKind): TMyStationExchange;
 var
    zone, sessionZone, code: integer;
 begin
    Result := aSession;
+
+   (* THE YEAR THIS QSO SENT -- see the declaration. Before the never-captured
+      exit: a backfilled row holds its year with my_source NULL. *)
+   if aYearKind <> rykNone then
+      begin
+      if aFacts.YearSentKnown then
+         begin
+         Result.MyZone := SentYearTextOfFacts(aYearKind, aFacts);
+         end
+      else if not (aFacts.Source in [mfsNotCaptured, mfsAssumed]) then
+         begin
+         Result.MyZone := '';
+         end;
+      end;
+
    if aFacts.Source = mfsNotCaptured then
       begin
       Exit;
@@ -7276,7 +7433,18 @@ end;
 function TContestBase.CanonicalSentExchange(const aQso: ContestExchange;
                                             const aCtx: TCanonicalExchangeContext): string;
 begin
-   Result := CanonicalFromCQTemplate(aQso, aCtx.CQExchangeTemplate);
+   (* A CONTEST THAT SENDS A LICENCE YEAR (issue 300) says what the QSO's own
+      record says: its sent RST and the year it sent -- the same two parts
+      its STX_STRING and Cabrillo column carry. Every other contest rebuilds
+      from the template, as before. *)
+   if ReceivedYearKind <> rykNone then
+      begin
+      Result := CollapseWhitespace(RSTSentText(aQso) + ' ' + aCtx.SentYearText);
+      end
+   else
+      begin
+      Result := CanonicalFromCQTemplate(aQso, aCtx.CQExchangeTemplate);
+      end;
 end;
 
 function TContestBase.ScorePostingMultiplierType(aKind: RemainingMultiplierType;
