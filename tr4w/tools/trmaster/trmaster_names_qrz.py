@@ -201,6 +201,10 @@ class QRZNameClient:
             return True
         return want_geo and not self._geo_fresh(e)
 
+    def cached(self, call):
+        """The cache entry for call, fresh or stale, or None. Never queries QRZ."""
+        return self._cache.get(call.upper().strip())
+
     @staticmethod
     def _ns(root):
         return root.tag.split("}")[0] + "}" if "}" in root.tag else ""
@@ -370,7 +374,8 @@ def main(argv=None):
     ap.add_argument("--save-every", type=int, default=50,
                     help="flush cache to disk every N new lookups (kill-safety)")
     ap.add_argument("--cache-only", action="store_true",
-                    help="emit names only from cache; never query QRZ")
+                    help="emit names only from cache (stale entries included); "
+                         "never query QRZ")
     args = ap.parse_args(argv)
 
     creds = read_credentials(args.qrz_cfg)
@@ -404,20 +409,31 @@ def main(argv=None):
         f"(sleep {args.sleep}s); status every 100 ...")
     rows = []
     new_lookups = 0
+    live = not args.cache_only
     try:
         for call in cand:
             will_query = client.needs_lookup(call, want_geo)
-            if will_query:
-                if args.cache_only:
-                    continue                       # cache-only: skip uncached
+            entry = None
+            if will_query and live:
                 if args.limit and new_lookups >= args.limit:
                     continue
                 new_lookups += 1
-            try:
-                entry = client.lookup(call, want_geo)
-            except Exception as e:   # network/API hiccup: stop, keep what we have
-                log(f"  stopping at {call}: {e}")
-                break
+                try:
+                    entry = client.lookup(call, want_geo)
+                except Exception as e:
+                    # A QRZ failure ends the LIVE lookups, never the run: breaking
+                    # here dropped every cached name after the failing call (the
+                    # 4.153.0 TRMASTER.DTA shipped 26,647 names instead of ~64,000).
+                    log(f"  live QRZ lookups disabled at {call}: {e}")
+                    log("  continuing cache-only so cached names are still emitted")
+                    live = False
+            if entry is None:
+                # No live lookup happened (cache-only, or QRZ failed earlier in
+                # this run): a stale cached name still beats a bare call.
+                entry = client.cached(call)
+                will_query = False
+                if entry is None:
+                    continue
             nm = ascii_fold(entry.get("name", ""))
             if nm:
                 rows.append((call, nm))
