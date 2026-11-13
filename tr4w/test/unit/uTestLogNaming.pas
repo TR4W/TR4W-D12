@@ -46,6 +46,7 @@ type
       procedure TestPathCharactersCannotEscapeTheName;
       procedure TestASlashedCallDoesNotRunTogether;
       procedure TestAnEmptyContestStillNamesAFile;
+      procedure TestANewLogIsNamedByTheUTCDate;
       procedure TestAFreeDefaultIsTheAnswer;
       procedure TestATakenDefaultGetsNumberTwo;
       procedure TestTwoTakenGetNumberThree;
@@ -60,7 +61,9 @@ implementation
 
 uses
    Classes,     (* TStringList -- the fake directory *)
-   SysUtils, uLogNaming;
+   SysUtils,
+   DateUtils,   (* LocalTimeToUniversal -- issue 284 *)
+   uLogNaming;
 
 procedure TLogNamingTests.TestTheOrdinaryCase;
 begin
@@ -126,6 +129,46 @@ begin
    CheckEquals('CONTEST 2026-01-02.db',
                ContestLogFileName('', EncodeDate(2026, 1, 2), ''),
                'a placeholder rather than ".db"');
+end;
+
+(* A NEW LOG CARRIES TODAY'S UTC DATE, NOT THE LOCAL ONE (issue 284).
+
+  The test cannot set the machine's time zone, so it reads both clocks around
+  the call and retries if a date changes under it. Where the local and UTC
+  dates differ at the moment it runs -- a US evening, a Pacific morning -- it
+  also proves the LOCAL date is absent; elsewhere that half is vacuous, and
+  says so in its message. *)
+procedure TLogNamingTests.TestANewLogIsNamedByTheUTCDate;
+var
+   utcBefore, utcAfter, localDate: string;
+   name: string;
+   attempt: integer;
+begin
+   BeginTest('TestANewLogIsNamedByTheUTCDate');
+   for attempt := 1 to 3 do
+      begin
+      utcBefore := FormatDateTime('yyyy-mm-dd', LocalTimeToUniversal(Now));
+      localDate := FormatDateTime('yyyy-mm-dd', Now);
+      name := NewContestLogFileName('CWOPEN', 'NY4I');
+      utcAfter := FormatDateTime('yyyy-mm-dd', LocalTimeToUniversal(Now));
+      if utcBefore = utcAfter then
+         begin
+         Break;
+         end;
+      end;
+
+   CheckEquals('CWOPEN ' + utcAfter + ' NY4I.db', name,
+               'the UTC date at creation');
+   if localDate <> utcAfter then
+      begin
+      CheckEquals(0, Pos(localDate, name),
+                  'the local date ' + localDate + ' is not in ' + name);
+      end
+   else
+      begin
+      CheckTrue(True, 'local and UTC dates agree here (' + localDate +
+                      '); only the UTC half is proven on this run');
+      end;
 end;
 
 (* ---------------------------------------------------------------------------
@@ -277,6 +320,7 @@ begin
    TestPathCharactersCannotEscapeTheName;
    TestASlashedCallDoesNotRunTogether;
    TestAnEmptyContestStillNamesAFile;
+   TestANewLogIsNamedByTheUTCDate;
    TestAFreeDefaultIsTheAnswer;
    TestATakenDefaultGetsNumberTwo;
    TestTwoTakenGetNumberThree;

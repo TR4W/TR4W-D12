@@ -807,6 +807,12 @@ date and callsign must name several logs.
   caller of `ContestLogFileName` is `SaveNewContest`, and no routine named for
   parsing a log's file name exists in `src/`). Keep it so: `W1AW 2.db` reads
   the same as the sanitised `W1AW/2`, so the name cannot be an identity record.
+- **The date in a new log's name is TODAY'S UTC DATE** (issue 284,
+  2026-11-12): `SaveNewContest` asks `uLogNaming.NewContestLogFileName`,
+  which is `ContestLogFileName` on `LocalTimeToUniversal(Now)`. It was the
+  local date, a day behind the contest on a US evening. Not the contest's
+  start date: nothing writes `start_time` yet (Q99). An existing log keeps
+  its name.
 
 ## The `config` table holds only what the operator STATED (2026-10-01)
 

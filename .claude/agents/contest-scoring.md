@@ -786,6 +786,37 @@ still written before a refusal. Open on #274: the CW zone-then-RST arm and
 `ProcessQSONumberAndZoneExchange` have no range check; ValidRST takes
 100..599 on CW/RTTY, so `123 CT` reads as a report.
 
+**`ProcessRSTQSONumberAndPossibleDomesticQTHExchange` (DARC-10M, RSGB-160
+-- the RSGB 1.8 --, RSGB-IOTA, UBA CW/SSB, UK/EI) refuses the same way since issue 282
+(2026-11-12; #263 did the word-first order):** every order is parsed on a
+copy and written only when accepted; an unknown QTH goes through
+`RefuseDomesticQTH`, an unreadable number says `TC_NOQSONUMBERFOUND` (the
+standard order refused both with an EMPTY message and left QTH, RS(T) and
+number in the QSO). With three words and a word first, the order is QTH RS(T)
+NUMBER (`EU5 599 12`; the third word was ignored); a third word that is no
+number refuses. `LookForCutNumbers` still reads cut letters as digits (`EU6`
+is 526). D7's "QTH alone" row was unreachable and its branch is deleted.
+`uTestPossibleDomesticQTHEntry` pins it. NY4I's ruling on #282: *"If the
+operator entered an invalid code anywhere and we know it to be invalid, we
+should tell them."* **A new site that looks a typed QTH up and refuses it
+calls `LOGSTUFF.DomesticQTHFoundOrRefused(caller, var copy, exchange)`** (the
+word kept before the lookup, an empty QTH refused as "no QTH" without asking
+the table, stem `TC_IMPROPERDOMESITCQTH`); this parser,
+`ProcessRSTZoneAndPossibleDomesticQTHExchange`, and the two siblings of the
+same shape call it -- `ProcessRSTQSONumberAndDomesticQTHExchange` (NRAU
+Baltic, Ohio QP: QTH required) and `ProcessQSONumberAndPossibleDomesticQTHExchange`
+(CQIR), both now parsed on a copy that is written only when accepted. Five
+OLDER sites still pair `FoundDomesticQTH` and `RefuseDomesticQTH` inline (the
+class/section, name, multi-county, SS-name and single-word RST parsers; some
+use another stem) -- not repointed. Still a
+silent refusal (audited, not changed): the tail-shape parsers that end in
+`Result := FoundDomesticQTH(RXData)` after writing (Ten-Ten, FISTS, ARCI,
+JIDX/JA prefecture, French department, the grid parsers), and CQIR's
+unreadable number. **A dashed IOTA reference is accepted** (#282 item 5, the
+agent's reading of the ruling; NY4I did not answer it in terms):
+`ReadIOTAReference` drops ONE dash straight after the continent, so
+`EU-005`/`EU-5` are `EU-005`. Open: the `IntitialExLoaded` latch (#267).
+
 ## The sheet also COUNTS each multiplier's workings (issue 12, 2026-11-07)
 
 The bits in `mo` say worked-or-not and are set by the FIRST working only (a

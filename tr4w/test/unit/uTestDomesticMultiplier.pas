@@ -280,7 +280,7 @@ const
       (Contest: IOTA;              Station: psUS;  Text: ptIOTA6;    Answer: 'decided F [] []'),
       (Contest: IOTA;              Station: psUS;  Text: ptNoCont;   Answer: 'file F [] []'),
       (Contest: IOTA;              Station: psUS;  Text: ptNonNum;   Answer: 'decided F [] []'),
-      (Contest: IOTA;              Station: psUS;  Text: ptDash;     Answer: 'decided F [] []'),
+      (Contest: IOTA;              Station: psUS;  Text: ptDash;     Answer: 'file T [EU-012] [EU-012]'),  (* issue 282 item 5: the dash is dropped *)
       (Contest: IOTA;              Station: psUS;  Text: ptState;    Answer: 'decided F [] []'),
       (Contest: IOTA;              Station: psUS;  Text: ptRDA;      Answer: 'file F [] []'),
       (Contest: IOTA;              Station: psUS;  Text: ptDOK;      Answer: 'file F [] []'),
@@ -422,7 +422,7 @@ const
       (Contest: IOTA;              Station: psUS;  Text: ptIOTA6;    Hint: ''),
       (Contest: IOTA;              Station: psUS;  Text: ptNoCont;   Hint: ''),
       (Contest: IOTA;              Station: psUS;  Text: ptNonNum;   Hint: ''),
-      (Contest: IOTA;              Station: psUS;  Text: ptDash;     Hint: ''),
+      (Contest: IOTA;              Station: psUS;  Text: ptDash;     Hint: 'EU-012'),  (* issue 282 item 5 *)
       (Contest: IOTA;              Station: psUS;  Text: ptState;    Hint: ''),
       (Contest: IOTA;              Station: psUS;  Text: ptRDA;      Hint: ''),
       (Contest: IOTA;              Station: psUS;  Text: ptDOK;      Hint: ''),

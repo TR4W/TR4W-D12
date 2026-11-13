@@ -674,11 +674,13 @@ begin
     offers the next free numbered one, the existing log, or Cancel, and
     nothing is queued until the answer is Create. When the taken log is the
     one OPEN (File > Open Log), only the numbered name or Cancel is offered
-    (2026-11-11). *)
+    (2026-11-11).
+
+    THE DATE IN THE NAME IS TODAY'S UTC DATE (issue 284), not the local one:
+    see uLogNaming.NewContestLogFileName. *)
    Result := nloCreate;
-   defaultName := ContestLogFileName(frmNewContest.ContestName,
-                                     Now,
-                                     frmNewContest.MyCall);
+   defaultName := NewContestLogFileName(frmNewContest.ContestName,
+                                        frmNewContest.MyCall);
    freeName := FirstFreeLogFileName(ContestDir, defaultName);
    aFile := ContestDir + freeName;
 

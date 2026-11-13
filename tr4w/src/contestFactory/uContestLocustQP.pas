@@ -134,7 +134,7 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   uTR4WStrings;
+   uAppStrings;      (* SNewContestEnterNameAndQTH *)
 
 const
    (* THE SPONSOR'S STATION AND THE SPONSOR'S NAME -- a contact with either
@@ -292,11 +292,15 @@ end;
    TContestBase.DescribeNewContestPrompts.
    The same steps on choosing stood for CWOPS, NCCCSPRINT.
    Each contest holds its own copy (design 1.4), so a sponsor
-   changing one changes one. *)
+   changing one changes one.
+
+   NO MEMBER NUMBER (issue 290, 2026-11-12): the prompt was the CWT's,
+   ending 'or member number'. The LQP exchange is a name and a QTH only
+   (2015 rules, "CONTEST EXCHANGE"), so it says what the row holds. *)
 procedure TContestLocustQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskField(ncfMyName);
-   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+   aPrompts.AskFieldWithComment(SNewContestEnterNameAndQTH, ncfMyState);
 end;
 
 (* INACTIVE, ON NY4I'S WORD -- see the header. Stated at M9b (2026-10-02):

@@ -58,11 +58,25 @@ uses
 (* The file name -- no directory -- for a contest log.
 
   aContest is the contest's name as an operator sees it ("ARRL-DX-CW"),
-  aWhen its start date, aCall the station callsign. Any of them may be empty;
-  the result is still a usable name rather than a malformed one, because this
-  is called from a dialog where a field can legitimately not be filled in yet. *)
+  aWhen the UTC date the name carries, aCall the station callsign. Any of
+  them may be empty; the result is still a usable name rather than a
+  malformed one, because this is called from a dialog where a field can
+  legitimately not be filled in yet. *)
 function ContestLogFileName(const aContest: string; aWhen: TDateTime;
                             const aCall: string): string;
+
+(* THE DEFAULT NAME OF A LOG CREATED NOW: ContestLogFileName on TODAY'S UTC
+  DATE (issue 284, 2026-11-12).
+
+  It was given Now, the LOCAL clock, so a log made on a US evening carried
+  the previous day's date although the contest -- defined in UTC, the
+  sponsor's UTC being authoritative -- had already reached the next one:
+  20:00 EST on 2026-11-10 is 2026-11-11 UTC, and the file said 2026-11-10.
+  The contest's own start date would be better still, but nothing records it
+  yet (the contest row's start_time is unwritten until Q99), so the date is
+  the UTC date at creation. An existing log keeps its name: this is asked
+  only when a log is created. *)
+function NewContestLogFileName(const aContest, aCall: string): string;
 
 (* Strips the characters a file name cannot hold, and collapses what is left.
 
@@ -98,6 +112,9 @@ function FirstFreeLogFileName(const aDir, aFileName: string;
 function FirstFreeLogFileName(const aDir, aFileName: string): string; overload;
 
 implementation
+
+uses
+   DateUtils;        (* LocalTimeToUniversal -- issue 284 *)
 
 function SanitiseForFileName(const aText: string): string;
 const
@@ -160,6 +177,11 @@ begin
       end;
 
    Result := Result + '.db';
+end;
+
+function NewContestLogFileName(const aContest, aCall: string): string;
+begin
+   Result := ContestLogFileName(aContest, LocalTimeToUniversal(Now), aCall);
 end;
 
 const

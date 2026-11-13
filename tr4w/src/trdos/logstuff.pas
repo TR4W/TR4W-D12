@@ -665,6 +665,14 @@ function ProcessRSTZoneAndPossibleDomesticQTHExchange(Exchange: Str80; var
   is the QTH only when the contest knows it. *)
 function ProcessRSTQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
+(* RS(T), QSO number and a REQUIRED domestic QTH (NRAU Baltic, Ohio QP), and
+  QSO number and a possible domestic QTH (CQIR). In the interface for
+  uTestPossibleDomesticQTHEntry (issue 282): an unlisted QTH is refused with
+  a message and leaves the QSO as it found it. *)
+function ProcessRSTQSONumberAndDomesticQTHExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
+function ProcessQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
@@ -944,6 +952,37 @@ begin
      begin
      ExchangeErrorMessage := aStem +
         DomesticQTHRefusalReason(refusal, qth, listName, hostArea, True);
+     end;
+end;
+
+(* LOOK THE QSO'S QTH UP, OR REFUSE IT -- issue 282, 2026-11-12. NY4I: "If
+  the operator entered an invalid code anywhere and we know it to be
+  invalid, we should tell them." The pair every parser that judges a typed
+  domestic QTH needs: FoundDomesticQTH on aResolved (the caller's COPY of the
+  QSO, so a refusal writes nothing to the real one), and on a miss the one
+  refusal, naming the word as typed -- read before the lookup, which clears
+  what it cannot find. An empty QTH is refused as "no QTH" without asking the
+  table (FoundDomesticQTH logs a blank as an error). Answers what
+  FoundDomesticQTH answered, 'XXX' included. *)
+function DomesticQTHFoundOrRefused(const aCaller: string;
+                                   var aResolved: ContestExchange;
+                                   const aExchange: string): boolean;
+var
+  typedQTH: string;
+begin
+  typedQTH := string(aResolved.QTHString);
+  if typedQTH = '' then
+     begin
+     Result := False;
+     end
+  else
+     begin
+     Result := FoundDomesticQTH(aResolved);
+     end;
+
+  if not Result then
+     begin
+     RefuseDomesticQTH(aCaller, TC_IMPROPERDOMESITCQTH, typedQTH, aExchange);
      end;
 end;
 
@@ -4576,22 +4615,35 @@ end;
 function ProcessRSTQSONumberAndDomesticQTHExchange(Exchange: Str80; var RXData:
   ContestExchange): boolean;
 
-{ Each entry of the exchange must be separated by spaces.  The following
+(* Each entry of the exchange must be separated by spaces.  The following
   formats work:
 
    Entry  #1   Entry  #2   Entry  #3
    ---------   ---------   ---------
-   QTH                                    (RS(T) = default, QSO number = 1)
    QTH         QSO Number                 (RS(T) = default)
    QTH         RS(T)       QSO Number
    QSO Number  QTH                        (RS(T) = default)
    RS(T)       QTH         QSO Number
    RS(T)       QSO Number  QTH
 
-  You can enter just the strength of the RS(T) if desired.      }
+  You can enter just the strength of the RS(T) if desired. D7's table also
+  listed a QTH alone ("QSO number = 1"); it never worked -- the number
+  parser refuses the empty number -- and is refused with that message now.
+
+  A REFUSAL WRITES NOTHING AND SAYS WHY (issue 282, 2026-11-12 -- NY4I: "If
+  the operator entered an invalid code anywhere and we know it to be
+  invalid, we should tell them"). The orders are read as D7 read them, on a
+  copy that is kept only when the whole exchange was read. Until then a QTH
+  the contest does not list -- and a missing one, and a number the number
+  parser could not read -- were refused with NO message, leaving the QTH,
+  RS(T) and number in the QSO. The QTH goes through
+  DomesticQTHFoundOrRefused; an unreadable number says TC_NOQSONUMBERFOUND,
+  as ProcessRSTQSONumberAndPossibleDomesticQTHExchange does. What was
+  accepted still is. *)
 
 var
   NumberString, FirstString, SecondString, ThirdString: Str10;
+  Resolved: ContestExchange;
 
 begin
   ProcessRSTQSONumberAndDomesticQTHExchange := False;
@@ -4602,9 +4654,10 @@ begin
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
 
+  Resolved := RXData;
   if not StringIsAllNumbers(FirstString) then
      begin
-     RXData.QTHString := FirstString;
+     Resolved.QTHString := FirstString;
      if ThirdString <> '' then
         begin
         NumberString := SecondString + ' ' + ThirdString
@@ -4616,7 +4669,7 @@ begin
      end
   else if not StringIsAllNumbers(SecondString) then
      begin
-     RXData.QTHString := SecondString;
+     Resolved.QTHString := SecondString;
      if ThirdString <> '' then
         begin
         NumberString := FirstString + ' ' + ThirdString
@@ -4628,15 +4681,24 @@ begin
      end
   else
      begin
-     RXData.QTHString := ThirdString;
+     Resolved.QTHString := ThirdString;
      NumberString := FirstString + ' ' + SecondString;
      end;
 
-  if ProcessRSTAndQSONumberExchange(NumberString, RXData) then
-    if RXData.QTHString <> '' then
-       begin
-       ProcessRSTQSONumberAndDomesticQTHExchange := FoundDomesticQTH(RXData);
-       end;
+  if not ProcessRSTAndQSONumberExchange(NumberString, Resolved) then
+     begin
+     ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
+     Exit;
+     end;
+
+  if not DomesticQTHFoundOrRefused('ProcessRSTQSONumberAndDomesticQTHExchange',
+                                   Resolved, string(Exchange)) then
+     begin
+     Exit;
+     end;
+
+  RXData := Resolved;
+  ProcessRSTQSONumberAndDomesticQTHExchange := True;
 end;
 
 function ProcessRSTQSONumberAndGridSquareExchange(Exchange: Str80; var RXData:
@@ -4710,13 +4772,12 @@ end;
 function ProcessRSTQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
-{ Each entry of the exchange must be separated by spaces.  The following
-  formats work:
+(* THE FORMATS THAT WORK -- each entry separated by spaces (issue 282,
+  2026-11-12: the table is what the code accepts, not what D7's said):
 
    Entry  #1   Entry  #2   Entry  #3
    ---------   ---------   ---------
    QSO Number                             (RS(T) = default, No QTH)
-   QTH                                    (RS(T) = default, QSO number = 1)
    QTH         QSO Number                 (RS(T) = default)
    QTH         RS(T)       QSO Number
    QSO Number  QTH                        (RS(T) = default)
@@ -4724,7 +4785,20 @@ function ProcessRSTQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
    RS(T)       QSO Number                 (No QTH)
    RS(T)       QSO Number  QTH
 
-  You can enter just the strength of the RS(T) if desired.      }
+  You can enter just the strength of the RS(T) if desired.
+
+  A QTH ALONE IS NOT ONE OF THEM. D7's table listed it ("QSO number = 1")
+  and a branch handed a lone word to ProcessRSTAndDomesticQTHExchange and
+  answered True whatever it said -- but no word is all digits then, so the
+  no-number check below refused it first and the branch never ran (the
+  matrix's "CT" row: No QSO number found!!). Deleted with this table's line.
+
+  A REFUSAL WRITES NOTHING AND SAYS WHY (issue 282, extending issue 263's
+  ruling to the standard order; Q115, a format never drops a word). Every
+  order is parsed on a copy, Resolved, and the copy is kept only when the
+  whole exchange was read: an unknown QTH is refused through
+  RefuseDomesticQTH, and a number the number parser cannot read says
+  TC_NOQSONUMBERFOUND. *)
 
 var
   NumberString, FirstString, SecondString, ThirdString: Str10;
@@ -4749,13 +4823,6 @@ begin
          exit;
          end;
 
-  if not StringIsAllNumbers(FirstString) then // n4af 4.40.5
-    if SecondString = '' then
-       begin
-       ProcessRSTAndDomesticQTHExchange(Exchange, RXData); // n4af 4.40.5
-       Result := True;
-       exit;
-       end;
   (* A WORD, THEN A NUMBER (n4af 4.42.7) -- issue 263, 2026-11-11.
 
     D7 set the answer from FoundDomesticQTH and then overwrote it with True,
@@ -4764,35 +4831,52 @@ begin
     knows it; otherwise the entry is refused through RefuseDomesticQTH and
     the QSO is left as it was found. The QTH is resolved on a copy, as in
     ProcessRSTZoneAndPossibleDomesticQTHExchange, so a refusal writes
-    nothing; FoundDomesticQTH's every answer is kept ('XXX' included). *)
+    nothing; FoundDomesticQTH's every answer is kept ('XXX' included).
+
+    WITH A THIRD WORD THE ORDER IS QTH, RS(T), QSO NUMBER (issue 282,
+    2026-11-12). The third word was ignored, so 'EU5 599 12' logged number
+    599 and the table's 'QTH RS(T) QSO Number' could not be entered. The
+    second and third words are now read as the RS(T) and the number, and an
+    exchange whose third word is no number is refused rather than dropping
+    it. Two words keep their old reading: the number alone, RS(T) as the
+    engine left it. *)
   if not StringIsAllNumbers(FirstString) and StringIsAllNumbers(SecondString)
     then
      begin
      Resolved := RXData;
      Resolved.QTHString := FirstString;
-     if not FoundDomesticQTH(Resolved) then
+     if not DomesticQTHFoundOrRefused('ProcessRSTQSONumberAndPossibleDomesticQTHExchange',
+                                      Resolved, string(Exchange)) then
         begin
-        RefuseDomesticQTH('ProcessRSTQSONumberAndPossibleDomesticQTHExchange',
-                          TC_IMPROPERDOMESITCQTH, string(FirstString), string(Exchange));
         Exit;
+        end;
+     if ThirdString = '' then
+        begin
+        Resolved.NumberReceived := StrToIntDef(SecondString, 0);
+        end
+     else
+        begin
+        NumberString := SecondString + ' ' + ThirdString;
+        if not ProcessRSTAndQSONumberExchange(NumberString, Resolved) then
+           begin
+           ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
+           Exit;
+           end;
         end;
      RXData.QTHString := FirstString;
      RXData.DomesticQTH := Resolved.DomesticQTH;
      RXData.DomMultQTH := Resolved.DomMultQTH;
-     RXData.NumberReceived := StrToIntDef(SecondString, 0);
+     RXData.NumberReceived := Resolved.NumberReceived;
+     RXData.RSTReceived := Resolved.RSTReceived;
      Result := True;
      Exit;
      end;
-  if ThirdString <> '' then
-     begin
-     NumberString := SecondString + ' ' + ThirdString;
-     end;
-  //  else                                           // N4AF 4.42.9
-  //    NumberString := SecondString;
 
+  (* THE STANDARD ORDERS, NUMBER FIRST, ON THE COPY (issue 282). *)
+  Resolved := RXData;
   if not StringIsAllNumbers(SecondString) then
      begin
-     RXData.QTHString := SecondString;
+     Resolved.QTHString := SecondString;
      if ThirdString <> '' then
         begin
         NumberString := FirstString + ' ' + ThirdString
@@ -4804,23 +4888,29 @@ begin
      end
   else
      begin
-     RXData.QTHString := ThirdString;
+     Resolved.QTHString := ThirdString;
      NumberString := FirstString + ' ' + SecondString;
      end;
 
-  if ProcessRSTAndQSONumberExchange(NumberString, RXData) then
+  if not ProcessRSTAndQSONumberExchange(NumberString, Resolved) then
      begin
-     if RXData.QTHString = '' then
-        begin
-        ProcessRSTQSONumberAndPossibleDomesticQTHExchange := True
-        end
-     else
-        begin
-        ProcessRSTQSONumberAndPossibleDomesticQTHExchange :=
-          FoundDomesticQTH(RXData)
-        end
+     (* The number parser names only an unreadable RS(T); a number it could
+        not read after one left the message empty. *)
+     ExchangeErrorMessage := TC_NOQSONUMBERFOUND;
+     Exit;
      end;
 
+  if Resolved.QTHString <> '' then
+     begin
+     if not DomesticQTHFoundOrRefused('ProcessRSTQSONumberAndPossibleDomesticQTHExchange',
+                                      Resolved, string(Exchange)) then
+        begin
+        Exit;
+        end;
+     end;
+
+  RXData := Resolved;
+  ProcessRSTQSONumberAndPossibleDomesticQTHExchange := True;
 end;
 {KK1L: 6.73 For Michigan QSO Party NOT WORKING!!!!!!}
 
@@ -4837,8 +4927,19 @@ function ProcessQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
    QTH         QSO Number
    QSO Number  QTH                                            }
 
+(* A QTH THE CONTEST DOES NOT LIST IS REFUSED WITH A MESSAGE AND WRITES
+  NOTHING (issue 282, 2026-11-12; NY4I: "If the operator entered an invalid
+  code anywhere and we know it to be invalid, we should tell them"). The
+  words are read exactly as before, onto a copy kept only when the entry is
+  accepted; the lookup goes through DomesticQTHFoundOrRefused. A number that
+  cannot be read is still refused WITHOUT a message, as before: in this
+  reading an RS(T) in front ('599 123 CT') leaves no number word, so "no
+  number" would misname it. NumberString starts empty -- it was read
+  unassigned when the first two words were both numbers. *)
+
 var
   NumberString, FirstString, SecondString, ThirdString: Str10;
+  Resolved: ContestExchange;
 
 begin
   ProcessQSONumberAndPossibleDomesticQTHExchange := False;
@@ -4849,39 +4950,36 @@ begin
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
 
+  Resolved := RXData;
+  NumberString := '';
   if not StringIsAllNumbers(FirstString) then
      begin
-     RXData.QTHString := FirstString;
+     Resolved.QTHString := FirstString;
      NumberString := SecondString;
-     end
-  else if (not StringIsAllNumbers(FirstString)) then
-    if SecondString = '' then
-       begin
-       RXData.QTHString := FirstString;
-       NumberString := '';
-       Result := False;
-       end;
+     end;
   if not StringIsAllNumbers(SecondString) then // 4,93.2
      begin
-     RXData.QTHString := SecondString;
+     Resolved.QTHString := SecondString;
      NumberString := FirstString;
      end;
 
-  if StringIsAllNumbers(NumberString) then
-    if RXData.QTHString = '' then
-       begin
-       ProcessQSONumberAndPossibleDomesticQTHExchange := True
-       end
-    else
-       begin
-       ProcessQSONumberAndPossibleDomesticQTHExchange :=
-         FoundDomesticQTH(RXData);
-       end;
-
-  if Result = True then
+  if not StringIsAllNumbers(NumberString) then
      begin
-     RXData.NumberReceived := StrToIntDef(NumberString, 0);
+     Exit;
      end;
+
+  if Resolved.QTHString <> '' then
+     begin
+     if not DomesticQTHFoundOrRefused('ProcessQSONumberAndPossibleDomesticQTHExchange',
+                                      Resolved, string(Exchange)) then
+        begin
+        Exit;
+        end;
+     end;
+
+  Resolved.NumberReceived := StrToIntDef(NumberString, 0);
+  RXData := Resolved;
+  ProcessQSONumberAndPossibleDomesticQTHExchange := True;
 end;
 
 function ProcessNZFieldDayExchange(Exchange: ShortString {Str80}; var RXData:
@@ -5709,10 +5807,9 @@ begin
   Resolved.QTHString := EnteredQTH;
   if EnteredQTH <> '' then
      begin
-     if not FoundDomesticQTH(Resolved) then
+     if not DomesticQTHFoundOrRefused('ProcessRSTZoneAndPossibleDomesticQTHExchange',
+                                      Resolved, string(Exchange)) then
         begin
-        RefuseDomesticQTH('ProcessRSTZoneAndPossibleDomesticQTHExchange',
-                          TC_IMPROPERDOMESITCQTH, string(EnteredQTH), string(Exchange));
         Exit;
         end;
      end;

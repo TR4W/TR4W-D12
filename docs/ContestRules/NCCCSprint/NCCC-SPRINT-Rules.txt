@@ -1,0 +1,94 @@
+Source: https://www.ncccsprint.com/rules.html (fetched 2026-11-12)
+
+NS - CW Rules
+
+Note
+
+These are the "nominal" NS rules; they may be modified on a weekly basis.
+Refer to the Next NS web page and nccc-blue or CQ-Contest reflector messages for details.
+
+Date & Time
+
+• 0230-0300 UTC Fridays (Thursday evening NA time, DST ignored)
+
+Note: NS begins at exactly 02:30:00
+
+• A participant may not
+respond to a CQ or it's equivalent more than 30.00 minutes later -- 03:00:00 . In other words, if the soliciting station receives and sends
+the call sign of the responding station before 30.00 minutes after the
+start, then the QSO can be completed and counted. Otherwise, not.
+
+Frequencies (kHz)
+
+• 1810-1820
+
+• 3540-3545
+
+• 7040-7045 (avoid W1AW at 7047.5 and PSK at 7038)
+
+• 14040-14045 (avoid W1AW at 14047.5)
+
+• 21040-21045
+
+Exchange
+
+• Serial Number
+
+• Name
+
+• QTH
+Rules
+
+NCJ NA CW Sprint rules
+with the following modifications:
+
+Rules modified to NAQP rules:
+
+NAQP Multipliers plus DC
+
+Additional Countries considered by NS/NSL to be valid mults:
+
+1. Trinidad & Tobago (9Y, 9Z)
+
+2. Aruba (P4)
+
+3. Netherlands Antilles (PJ0-4 and PJ9)
+
+Multipliers count once per band
+
+160 meter QSOs permitted
+
+100 watts or less power
+
+Scoring = total QSOs times sum of multipliers on each band
+
+1kHz QSY rule for both calling and answering CQs
+
+If any station (“X”) solicits a contact (e.g., by sending “CQ,” “QRZ?”, “QSY up 1”, or any other means of soliciting a contact, including completion of a contact where the frequency was inherited by X), X is permitted to make only one contact in response to that solicitation. X must thereafter move at least 1 KHz before calling another station, or at least 1 kHz before soliciting another contact. Once X is required to QSY, X is not allowed to make another contact on the frequency that X just vacated until X makes at least one subsequent contact on a frequency other than the frequency that X just vacated.
+
+30-minute contest period (see Time above)
+
+Use of Skimmer or Packet not permitted
+
+Reduce CW speed for slower stations
+
+Reporting
+
+Post to the 3830 reflector via the 3830
+submittal web page for the NS Ladder Competition within 48 hours
+after the NS. Direct posting to N6ZFO is also acceptable.
+Software
+
+Use either the
+NA CW Sprint or Internet
+Sprint module of your favorite logging program.
+
+If your logging software cannot add band-multipliers to the score computation, then some manual post-contest work will
+be necessary to get the total score or use the NS
+Score Calculator which operates off a Cabrillo file.
+
+N1MM Logger, TR-Log, Win-Test and WriteLog handle NS completely,
+including proper score computation. Details are available on the
+NS Software web page, along
+with specific information on other popular contest loggers. If
+you can enhance this information, please contact N3ZZ .

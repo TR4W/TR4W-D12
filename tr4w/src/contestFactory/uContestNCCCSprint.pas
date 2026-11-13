@@ -120,7 +120,7 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    SysUtils, uContestRegistry, uContestFixedPoints,
-   uTR4WStrings;
+   uAppStrings;      (* SNewContestEnterNameAndQTH *)
 
 procedure TContestNCCCSprint.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -268,11 +268,16 @@ end;
    TContestBase.DescribeNewContestPrompts.
    The same steps on choosing stood for CWOPS, LQP.
    Each contest holds its own copy (design 1.4), so a sponsor
-   changing one changes one. *)
+   changing one changes one.
+
+   NO MEMBER NUMBER (issue 290, 2026-11-12): the prompt was the CWT's,
+   ending 'or member number'. The NCCC Sprint exchange is "Serial Number,
+   Name, QTH" (ncccsprint.com rules); the serial is the program's, so the
+   operator is asked for a name and a QTH only. *)
 procedure TContestNCCCSprint.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskField(ncfMyName);
-   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+   aPrompts.AskFieldWithComment(SNewContestEnterNameAndQTH, ncfMyState);
 end;
 
 

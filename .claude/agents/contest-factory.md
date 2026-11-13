@@ -1047,12 +1047,14 @@ the target shape, the M-step migration order and the open questions.
   `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); a step may
   NAME ITS ROW (`AskFieldWithCommentAndLabel`, `TNewContestPrompt.RowLabel`,
   2026-11-11: EUHFC and KVP label their MY ZONE row "MY LICENSE YEAR", the
-  CWT its MY STATE row "MY QTH OR MEMBER NO" -- `uAppStrings`
-  resourcestrings; Locust and the NCCC Sprint show the CWT's prompt words
-  but take no member number, so keep MY STATE; the prompts table renders a
-  label, `StepCommentLabelled`) -- the label is only what is read, the
-  command queued is still the field's (`uNewContest.RowCommand`); the Jock
-  White Field Day's branch number still sits under a MY ZONE label;
+  CWT its MY STATE row "MY QTH OR MEMBER NO", the Jock White Field Day its
+  MY ZONE row "MY BRANCH NUMBER" (issue 287, NZART rule 8's words) --
+  `uAppStrings` resourcestrings; Locust and the NCCC Sprint take no member
+  number (issue 290, sponsor rules), so they ask `SNewContestEnterNameAndQTH`
+  -- the CWT's text without "or member number" -- and keep the MY STATE
+  label; the CWT alone keeps `TC_ENTERYOURNAMEANDQTH`; the prompts table
+  renders a label, `StepCommentLabelled`) -- the label is only what is read,
+  the command queued is still the field's (`uNewContest.RowCommand`);
   `NewContestValueRefusal(field, value)` (Q104, 2026-10-17: '' accepts, any
   other answer is the message `uNewContest.BeginNewContest` shows while OK stays
   disabled; the base accepts everything, IN7QPNE refuses an in-area MY STATE);

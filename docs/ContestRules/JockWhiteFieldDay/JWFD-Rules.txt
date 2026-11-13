@@ -1,0 +1,140 @@
+Source: https://www.nzart.org.nz/activities/contests/jwfd (fetched 2026-11-12)
+
+Jock White Memorial Field Day
+
+This annual contest is named to honour Jock White ZL2GX, NZART Contest and Awards Manager for over 40 years, for the service he gave to NZART during that time.
+
+This contest is primarily to test Branch organisation and weld a team of workers together. Your team can aim to be as competitive or as social as it likes, or all points in between. There is work for all: spouses/partners, prospective members etc.
+
+The next Jock White Memorial Field Day will be held on Saturday 27th February 2027 and Sunday 28th February 2027
+
+Results:
+
+Results page
+
+Rules
+
+1. AIMS and OBJECTIVES
+
+For NZART Branches and clubs (hereafter referred to as branches) to establish effective temporary HF radio stations, to work as many other New Zealand stations as possible and to learn to operate in an abnormal situation in less-than-optimal conditions.
+
+Home stations can also participate but are strongly encouraged to make a minimum of either 50 phone and/or 20 CW contacts on 80m and/or 40m and submit logs.
+
+2. WHEN
+
+The last full weekend in February each year: on Saturday 1500-2400 NZDT and Sunday 0600-1500 NZDT.
+
+NOTE: when February only has three full weekends then field day will be held on Saturday 28th February and Sunday 1st March. This is to avoid a clash with the ARRL International CW contest.
+
+3. BANDS, MODES and POWER
+
+40 and/or 80 metres, PHONE (SSB) and/or CW, 100 watts PEP maximum.
+
+Stations using two transmitters may operate simultaneously on both bands. However only one transmitter may be operated on a single band at a time. Single transmitter stations may operate on one or both bands.
+
+Suggested frequencies
+
+40m CW 7010-7035 kHz, LSB 7080-7140 kHz
+80m CW 3510-3550 kHz, LSB 3600-3660 kHz
+
+A mix of Running (calling CQ) and Search and Pounce (tuning the band looking for stations) is the most effective way to ensure you work all the stations available each period
+
+4. SITES and SHELTERS
+
+Field station shelters may be one or more tents sited within 40 metres of each other and erected on the weekend of the contest. Caravans, mobile homes or other vehicles may also be used, but may only be moved on to the site on the weekend of the contest. If a branch wishes to operate a field station at their clubrooms location, the above still applies. i.e. the radios must be set up and operated outside the clubrooms in temporary shelter. Antenna (5) and Electrical Power (6) rules below must be complied with as well.
+
+5. ANTENNAS
+
+Field station antennas must be erected on the weekend of the contest. Some stations may chose to erect antenna supports while others may use natural or standing supports such as hills, trees, towers and buildings..
+
+6. ELECTRICAL POWER
+
+For field stations electrical power must be from an independent source.such as batteries, portable generator engine alternators, solar power, wind or water powered generators.
+
+7. ENTRY CATEGORIES
+
+(Stations may only enter one category)
+
+Northern Region (Montgomery Cup)
+
+Central Region (Patea Shield)
+
+Midlands Region (ZL3/4 Trophy)
+
+Southern Region (‘4’ Trophy)
+
+Single Operator – unassisted by any other person
+
+CW only
+
+Phone only
+
+80m only
+
+Single-transmitter station 40m and 80m
+
+QRP – 5 Watts CW/10 Watts SSB maximum (WM Hall Memorial Cup)
+
+Home stations
+
+Overseas stations in the Oceania Region
+
+8. EXCHANGE
+
+RS(T) report plus a serial number starting with 001 and incrementing by one for each successive contact, plus an NZART Branch number
+
+Simultaneous two-band operating stations must use separate serial number series for each band
+
+The same serial number series must be used for both Phone and CW contacts on the same band
+
+9. MULTIPLIER NUMBERS
+
+Field day stations are usually at sites within the ‘local area’ of the branch that the operators and others associated with the station are members of and use the number allocated to that branch. If the chosen location is within the ‘local area’ of another branch, care must be taken not to clash with the other branch station. The onus is on the ‘moved’ station to ensure that there is no clash.
+
+The numbers of branches in recess may be used after arranging this with the Contest Manager. Note that in special circumstances, the Contest Manager may, at his sole discretion, issue temporary branch numbers in the unallocated range of 91 to 99.
+
+Individual operators or groups of operators might not have an affiliation to a particular NZART branch but wish to operate a field station. In these cases it is suggested that they approach nearby branches that don’t normally operate in this event and seek permission to use that branch’s number.
+
+The Field Day Contest Manager should be contacted well before the event if there are potential problems with the use of branch numbers. Contact details are under point 14 below.
+
+Home stations must use 00 as a Branch number.
+
+10. OPERATING PERIODS
+
+Each hour will be an operating period with a total of 18 operating periods.
+
+Contacts may be made with any other field, ZL home or overseas ( Oceania ) station, once each operating period, on each mode on each band.
+
+11. SCORING
+
+Contact Points
+
+Phone – 3 points, CW – 5 points (note change from 2024 onwards)
+
+Multiplier Points
+
+Each different branch contacted on each band and mode counts as a multiplier. i.e.: a maximum total of four multiplier points may be claimed for each branch
+
+Only one station per branch may be claimed as a multiplier per band and mode. However, in cases where a branch has more than one station active, different stations contacted, may be claimed for multiplier points, up to a maximum of four multiplier points per branch, not four per station
+
+Contacts between stations using the same branch number count for contact points only. Multiplier points cannot be claimed.
+
+Field stations must make a minimum of 50 contacts on phone or 20 contacts on CW on each band that the station is active on, in order for the multiplier points for their station to be valid for other stations
+
+Total Scores
+
+The sum of the contact points multiplied by the total Branch multiplier point numbers worked.
+
+12. LOGS
+
+Separate logs must be submitted for each band in time and serial number order, regardless of the operating mode
+
+Head each log sheet with; Station Callsign, Branch number or HS for Home Station, Page Number, Operator Callsign and Name
+
+Log sheet layout order; date – time – station worked – mode, CW or PH – band – exchange sent – exchange received. The total of PH/CW contacts on each page will be useful for log checking purposes
+
+Use a separate log sheet per hour period, except that where there are very few contacts in a period, several periods (ruled off between periods) can be on one sheet
+
+Highlight or underline each contact claimed as a Branch multiplier number
+
+Sample log sheets are provided in PDF here

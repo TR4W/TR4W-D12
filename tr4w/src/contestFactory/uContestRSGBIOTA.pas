@@ -334,30 +334,46 @@ end;
    the old arms made, once: GetDomQTH's and DomStringParse's IOTA arms
    (plan F6) differed in what they did with the answer, not in this. Its
    three outcomes are theirs: malformed (a length out of range, or a
-   number that is not all digits), a continent nobody knows, a reference. *)
+   number that is not all digits), a continent nobody knows, a reference.
+
+   THE DASH IS ACCEPTED (issue 282 item 5, 2026-11-12). A reference is
+   written 'EU-005' on the air and in the IOTA directory; D7 refused it as
+   six characters. NY4I's ruling on the issue -- "If the operator entered an
+   invalid code anywhere and we know it to be invalid, we should tell them"
+   -- means refusing a VALID reference is the wrong answer, so ONE dash
+   straight after the continent is dropped before the length is judged
+   ('EU-5' is 'EU5'). This reading of the ruling is the agent's; item 5 was
+   not answered in terms. Nothing else about the text changes. *)
 type
    TIOTAReading = (irMalformed, irUnknownContinent, irReference);
 
 function ReadIOTAReference(const aText: ShortString; out aKey: ShortString): TIOTAReading;
 var
+   undashed: ShortString;
    continent: ShortString;
    number: ShortString;
 begin
    aKey := '';
    Result := irMalformed;
-   if (Length(aText) < 3) or (Length(aText) > 5) then
+   undashed := aText;
+   if (Length(undashed) > 3) and (undashed[3] = '-') then
+      begin
+      Delete(undashed, 3, 1);
+      end;
+
+   if (Length(undashed) < 3) or (Length(undashed) > 5) then
       begin
       Exit;
       end;
 
-   continent := ShortString(utils_text.UpperCase(Copy(aText, 1, 2)));
+   continent := ShortString(utils_text.UpperCase(Copy(undashed, 1, 2)));
    if GetContinentFromString(continent) = UnknownContinent then
       begin
       Result := irUnknownContinent;
       Exit;
       end;
 
-   number := Copy(aText, 3, Length(aText) - 2);
+   number := Copy(undashed, 3, Length(undashed) - 2);
    if not StringIsAllNumbers(number) then
       begin
       Exit;

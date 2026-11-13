@@ -566,7 +566,8 @@ begin
          end;
       LQP:
          begin
-         Result := StepField(ncfMyName) + StepComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+         (* No member number in the LQP exchange (issue 290). *)
+         Result := StepField(ncfMyName) + StepComment(SNewContestEnterNameAndQTH, ncfMyState);
          end;
       LZDX:
          begin
@@ -606,7 +607,8 @@ begin
          end;
       NCCCSPRINT:
          begin
-         Result := StepField(ncfMyName) + StepComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+         (* No member number in the NCCC Sprint exchange (issue 290). *)
+         Result := StepField(ncfMyName) + StepComment(SNewContestEnterNameAndQTH, ncfMyState);
          end;
       NEWENGLANDQSO:
          begin
@@ -622,7 +624,9 @@ begin
          end;
       NZFIELDDAY:
          begin
-         Result := StepComment(TC_ENTERYOURBRANCHNUMBER, ncfMyZone);
+         (* The branch row names what it holds (issue 287). *)
+         Result := StepCommentLabelled(TC_ENTERYOURBRANCHNUMBER, ncfMyZone,
+                                       SNewContestBranchNumberLabel);
          end;
       OKDX:
          begin
@@ -1122,6 +1126,13 @@ begin
       aComment := TC_ENTERYOURNAMEANDQTH;
       aRowLabel := SNewContestQTHOrMemberLabel;
       end
+   else if IsLegacyContest(aContest, NZFIELDDAY) then
+      begin
+      aStep := 0;
+      aField := ncfMyZone;
+      aComment := TC_ENTERYOURBRANCHNUMBER;
+      aRowLabel := SNewContestBranchNumberLabel;
+      end
    else
       begin
       Result := False;
@@ -1191,6 +1202,26 @@ begin
                StepCommentLabelled(TC_ENTERYOURNAMEANDQTH, ncfMyState,
                                    SNewContestQTHOrMemberLabel),
                RenderedPrompts(CWOPS, False), 'CWT: MY NAME, then the QTH-or-member row');
+
+   (* THE JOCK WHITE FIELD DAY BY NAME (issue 287): the branch-number row is
+      labelled, and still queues MY ZONE. *)
+   CheckEquals(StepCommentLabelled(TC_ENTERYOURBRANCHNUMBER, ncfMyZone,
+                                   SNewContestBranchNumberLabel),
+               RenderedPrompts(NZFIELDDAY, False), 'JWFD: the branch-number row');
+
+   (* ONLY THE CWT ASKS FOR A MEMBER NUMBER (issue 290): the Locust QSO Party
+      and the NCCC Sprint take a name and a QTH, so their prompt does not
+      offer one. Pinned against the words as well as the constant, so a
+      later edit that puts 'member' back into the shared text fails here. *)
+   CheckEquals(StepField(ncfMyName) + StepComment(SNewContestEnterNameAndQTH, ncfMyState),
+               RenderedPrompts(LQP, False), 'LQP: MY NAME, then name-and-QTH, no member number');
+   CheckEquals(StepField(ncfMyName) + StepComment(SNewContestEnterNameAndQTH, ncfMyState),
+               RenderedPrompts(NCCCSPRINT, False),
+               'NCCC Sprint: MY NAME, then name-and-QTH, no member number');
+   CheckEquals(0, Pos('MEMBER', UpperCase(SNewContestEnterNameAndQTH)),
+               'the LQP/NCCC prompt does not mention a member number');
+   CheckTrue(Pos('MEMBER', UpperCase(TC_ENTERYOURNAMEANDQTH)) > 0,
+             'the CWT prompt still offers the member number');
 end;
 
 (* ------------------------------------------------------------------------ *)

@@ -155,7 +155,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   uTR4WStrings;
+   uTR4WStrings,
+   uAppStrings;      (* SNewContestBranchNumberLabel *)
 
 function TContestJockWhiteFieldDay.CountsAsMultiplier(const aQso: ContestExchange;
                                                       aKind: RemainingMultiplierType): boolean;
@@ -300,10 +301,17 @@ end;
    `case SelectedContest of` arms for this contest, moved here as they
    stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
    ones on ticking its "I am in" box. See
-   TContestBase.DescribeNewContestPrompts. *)
+   TContestBase.DescribeNewContestPrompts.
+
+   THE ROW NAMES WHAT IT HOLDS (issue 287, 2026-11-12): it read MY ZONE
+   beside a prompt for the NZART branch number. NZART rule 8: "plus an NZART
+   Branch number". The branch is still kept in MY ZONE and the command queued
+   is still MY ZONE (the zone multiplier and the CQ exchange read it); only
+   the label changes. *)
 procedure TContestJockWhiteFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.AskFieldWithComment(TC_ENTERYOURBRANCHNUMBER, ncfMyZone);
+   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERYOURBRANCHNUMBER, ncfMyZone,
+                                        SNewContestBranchNumberLabel);
 end;
 
 (* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the NZART branches, 1 to 99.
