@@ -293,26 +293,12 @@ end;
 
 function TContestAlabamaQP.PrefixMultiplierKey(const aQso: ContestExchange;
    out aKey: PrefixMultiplierString): boolean;
-var
-   county: string;
 begin
    aKey := '';
    Result := HasPrefixMultiplier;
-   if not Result then
+   if Result then
       begin
-      Exit;
-      end;
-   county := UpperCase(Trim(string(aQso.DomesticQTH)));
-   if county = '' then
-      begin
-      county := UpperCase(Trim(string(aQso.QTHString)));
-      end;
-   (* The engine accepts XXX as unknown QTH, with no multiplier key. *)
-   if (Length(county) > 2) and (county <> 'XXX') and
-      Assigned(Station.IsDomesticQTH) and
-      Station.IsDomesticQTH(county) then
-      begin
-      aKey := 'AL';
+      aKey := PrefixMultiplierString(CountyStateMultiplierKey(aQso));
       end;
 end;
 

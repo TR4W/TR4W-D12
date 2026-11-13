@@ -1,0 +1,37 @@
+West Virginia QSO Party, sponsor/DXLog cross-check, 2026-11-13
+
+Sources: sponsor 2026rules.pdf and Counties.pdf saved in this directory;
+installed DXLog WVQP.txt, updated 2026-09-07. Read with the existing
+tools/dom-crosscheck/crosscheck_dom_dxlog.py DXLogFile and regex_literals.
+
+All 55 sponsor county codes match DXLog's received-county regex exactly.
+The class tests independently compare every shipped county code and display
+name against the saved sponsor transcription. The ordinary cross-check's
+out-of-state view also reports 55 versus 55, same multipliers.
+
+The in-state report compares only DXLog's CUSTOM list: 50 states plus
+13 provinces, with counties mapped to WV. It reports 54 apparent extra
+TR4W counties because it does not combine DXLog's separate FIELD county
+multiplier with that CUSTOM list. TR4W deliberately retains all 55 county
+keys and awards the WV state on the existing string-key sheet. Its domestic
+table has 117 keys: 55 counties, 49 other states and 13 provinces. WV is the
+50th state on the string sheet; DXCC is a separate multiplier kind.
+
+The sponsor explicitly folds DC into Maryland, whereas DXLog refuses DC.
+TR4W follows the sponsor's DC-to-Maryland rule. Received WV stations send a
+county, so literal WV is not accepted in place of the county. State/province
+aliases are canonical two-letter keys, avoiding Mineral/Minnesota collisions.
+
+NY4I #131, comment 6857387343: all multiplier kinds once per contest, no
+repetition by mode. This resolves the sponsor's provinces-per-band wording.
+NY4I directed using DXLog's CABRILLO_CONTEST_NAME: WV-QSO-PARTY. The existing
+parser confirms that name; ADIF 3.1.7 independently lists WV-QSO-PARTY.
+
+DXLog notes that bonus stations are not recognized; TR4W implements the
+sponsor's W8WVA bonus, 100 once per band/mode after multiplying. Entrant
+mobile activated-county bonus and own-county reworks remain gap #133/#87.
+The declared bonus helper matches exact logged calls; a county-suffixed
+W8WVA call shares the existing New Mexico/SC matcher gap #111. The proper
+fix belongs in the common bonus-call matcher, not another leaf bonus scan.
+The sponsor and NY4I rulings govern scoring differences; DXLog supplies the
+accepted Cabrillo name and an independent county cross-check.

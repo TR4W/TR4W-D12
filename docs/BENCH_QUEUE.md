@@ -1,10 +1,14 @@
 # Bench queue — what is waiting for a real run
 
-- [ ] New QSO parties #114/#124: create Alabama and New Jersey logs for
+- [ ] New QSO parties #114/#124/#131: create Alabama, New Jersey and West Virginia logs for
   in-state, out-of-state and DX entrants; check setup prompts and typed
   county-line refusal on screen. Alabama's first county must show county
   plus AL state credit per mode, with the extra totals row labelled AL.
-- [ ] Export 3830 reports for Alabama and New Jersey and compare multiplier
+  WV's first county must show county plus WV state credit once overall;
+  a second band/mode must not repeat either multiplier. Check two-county
+  entry creates two separate records and W8WVA pays once per band/mode.
+  County-suffixed bonus-call matching remains the existing gap #111.
+- [ ] Export 3830 reports for Alabama, New Jersey and West Virginia and compare multiplier
   columns with the events' real 3830 forms. Direct form retrieval was refused;
   the classes currently use the base combined Mults column.
 
