@@ -962,8 +962,9 @@ order (A6). The worked examples are `uContestGeorgiaQP` (a state QSO party) and
 `docs/migration_interim_artifacts/ADDING_A_NEW_CONTEST.md` (2026-10-23) -- history, not a checklist.
 
 **The `ContestType` enum is FROZEN** (`Lint-FrozenContestNumbers`, since Q108 S3): a new contest
-registers by its string id (`RegisterContestById`) with **no `VC.pas` entry**. It is refused on
-the multi-op network and its UDP `<contestnr>` is derived from its id; its class writes neither.
+registers by its string id (`RegisterContestById`) with **no `VC.pas` entry**. It works on the
+multi-op network (protocol 2 announces the contest by its id string in the HELLO, `uNetHello`; the
+old refusal is gone) and its UDP `<contestnr>` is derived from its id; its class writes neither.
 
 **For a new contest, the unit tests are the only statement that it is correct.** The corpus has
 no log of it, and the matrix record is frozen from its own first run.

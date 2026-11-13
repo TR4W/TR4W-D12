@@ -1479,12 +1479,12 @@ begin
       CheckEquals('CHI', UpperCase(string(rx.DomMultQTH)), 'its multiplier is the county');
       CheckTrue(rx.DomesticMult, 'and Chittenden is a new multiplier: "14 Vermont Counties"');
 
-      (* NOT BUILT (NY4I's ruling): the county did not also earn VT, so a
-         station sending VT is still a new multiplier. *)
+      (* BUILT (#317, NY4I's ruling): the county ALSO earned VT, so a
+         station sending VT is no new multiplier in CW. *)
       dupe := EnterPartyQSO('W1CCC', '599 VT', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 VT is taken: ' + string(ExchangeErrorMessage));
       CheckEquals('VT', UpperCase(string(rx.DomMultQTH)), 'its multiplier is VT');
-      CheckTrue(rx.DomesticMult, 'NOT BUILT: VT is still new after a county QSO (the gap)');
+      CheckFalse(rx.DomesticMult, '#317: VT was earned by the county QSO before it');
 
       dupe := EnterPartyQSO('W3DC', '599 DC', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 DC is taken: ' + string(ExchangeErrorMessage));

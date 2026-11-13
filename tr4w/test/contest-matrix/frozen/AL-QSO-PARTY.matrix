@@ -325,7 +325,7 @@ contest.class = TContestAlabamaQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-doing.domestic/dx/prefix/zone = TRUE TRUE TRUE FALSE
+doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
 my.continent = NorthAmerica
@@ -530,9 +530,9 @@ parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=TRUE err="" token="" pend
 parse ss.wrong.order W1AW Band20/CW "CT 99 A 123" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=CT domqth=Ct dommultqth=Ct exch=CT 99 A 123 cty=K/8/NorthAmerica/W1
 parse ss.no.check W1AW Band20/CW "123 A CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=CT domqth=Ct dommultqth=Ct exch=123 A CT cty=K/8/NorthAmerica/W1
 parse ss.bad.section W1AW Band20/CW "123 A 99 XYZ" | ok=FALSE err="Improper domestic QTH!! (A not in alabama.dom)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=99 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse county W1AW Band20/CW "AUTA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AUTA domqth=AUTA dommultqth=AUTA exch=AUTA cty=K/8/NorthAmerica/W1 prefix=AL
-parse rst.county W1AW Band20/CW "599 AUTA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AUTA domqth=AUTA dommultqth=AUTA exch=599 AUTA cty=K/8/NorthAmerica/W1 prefix=AL
-parse serial.county W1AW Band20/CW "123 AUTA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=AUTA domqth=AUTA dommultqth=AUTA exch=123 AUTA cty=K/8/NorthAmerica/W1 prefix=AL
+parse county W1AW Band20/CW "AUTA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AUTA domqth=AUTA dommultqth=AUTA exch=AUTA cty=K/8/NorthAmerica/W1
+parse rst.county W1AW Band20/CW "599 AUTA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=AUTA domqth=AUTA dommultqth=AUTA exch=599 AUTA cty=K/8/NorthAmerica/W1
+parse serial.county W1AW Band20/CW "123 AUTA" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=AUTA domqth=AUTA dommultqth=AUTA exch=123 AUTA cty=K/8/NorthAmerica/W1
 parse county.line W1AW Band20/CW "599 AUTA/BALD" | ok=FALSE err="Too many counties for this contest (maximum 0)!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse county.bad W1AW Band20/CW "599 ZZZ" | ok=FALSE err="Improper domestic QTH!! (ZZZ not in alabama.dom)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=GA domqth=Ga dommultqth=Ga exch=599 GA cty=K/8/NorthAmerica/K4

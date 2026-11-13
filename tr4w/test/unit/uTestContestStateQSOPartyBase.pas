@@ -88,9 +88,16 @@ type
       function Matches(const aCall, aBonus: string): boolean;
    end;
 
+(* '' when the helper answers False -- and the helper's aKey must then be ''. *)
 function TSentLocationProbe.ExtraState(const aQso: ContestExchange): string;
 begin
-   Result := CountyStateMultiplierKey(aQso);
+   if not InStateCountyEarnsHostState(aQso, Result) then
+      begin
+      if Result <> '' then
+         begin
+         Result := 'False with a key';
+         end;
+      end;
 end;
 
 function TSentLocationProbe.RoverCall(const aCall: string): string;
@@ -323,21 +330,36 @@ begin
    try
       qso := Default(ContestExchange);
       qso.DomesticQTH := 'MON';
+      station := NoStation;
+      station.InHostState := True;
+      probe.SetStation(station);
       CheckEquals('', probe.ExtraState(qso), 'no county table means no extra state');
       CheckEquals('W1AW/5/MON', probe.RoverCall('W1AW/5/MON'), 'no table means no strip');
-      station := NoStation;
       station.IsDomesticQTH := @StubKnowsMON;
       probe.SetStation(station);
       CheckEquals('XX', probe.ExtraState(qso), 'resolved county earns host state key');
+      qso.DomMultQTH := 'MON';
       qso.DomesticQTH := '';
+      CheckEquals('XX', probe.ExtraState(qso), 'the credited key (a rover row) earns it');
+      qso.DomMultQTH := '';
       qso.QTHString := 'mon';
-      CheckEquals('XX', probe.ExtraState(qso), 'typed county fallback is verified');
+      CheckEquals('', probe.ExtraState(qso), '#317: a typed QTH the sheet did not credit earns nothing');
       qso.DomesticQTH := 'ON';
-      CheckEquals('', probe.ExtraState(qso), 'stored province wins over typed county');
+      CheckEquals('', probe.ExtraState(qso), 'a province is not a county');
+      qso.DomesticQTH := 'MON';
+      qso.DomMultQTH := 'ON';
+      CheckEquals('', probe.ExtraState(qso), 'the credited key wins over DomesticQTH');
+      qso.DomMultQTH := '';
       qso.DomesticQTH := 'XXX';
       CheckEquals('', probe.ExtraState(qso), 'unknown placeholder is not a county');
       qso.DomesticQTH := 'KP4';
       CheckEquals('', probe.ExtraState(qso), 'unrecognized DX prefix is not a county');
+      qso.DomesticQTH := 'MON';
+      station.InHostState := False;
+      probe.SetStation(station);
+      CheckEquals('', probe.ExtraState(qso), 'an out-of-state entrant earns no host state');
+      station.InHostState := True;
+      probe.SetStation(station);
       CheckEquals('W1AW/5', probe.RoverCall('W1AW/5/MON'), 'last county suffix only; preserve /5');
       CheckEquals('W1AW/5', probe.RoverCall('W1AW/5/MON/MON'), 'multiple verified county suffixes');
       CheckEquals('W1AW/5/M', probe.RoverCall('W1AW/5/M'), 'portable suffix preserved');

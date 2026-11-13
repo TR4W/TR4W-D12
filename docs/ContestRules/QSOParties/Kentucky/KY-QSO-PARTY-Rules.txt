@@ -10,9 +10,8 @@ Province source: https://kyqsoparty.org/canadianprovinces/
 
 Implementation notes:
 - NY4I #110 comment 6862605577 confirms county + KY state credit for a KY
-  entrant. Correct two-domestic-multiplier support belongs to specialist
-  engine work #317. Additional KY credit is NOT BUILT in this leaf; do not
-  fake it with prefix or bonus points. 183 current keys versus 184 with KY.
+  entrant. BUILT at #317 (2026-11-13) as a second domestic key; the
+  in-state list is 184 with KY (kentucky.dom's Ky line has no alias).
 - No 160 m or digital: this approved draft supersedes old DXLog rules.
 - Received mobile/expedition county lines are allowed, with no numeric
   cap stated. Fixed sending stations choose one county. Own-mobile and

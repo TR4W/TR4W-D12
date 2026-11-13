@@ -2389,6 +2389,50 @@ type
          uTestPrefixMultiplierKey. THE BASE ANSWERS FALSE. *)
       function HasPrefixMultiplier: boolean; virtual;
 
+      (* A SECOND DOMESTIC MULTIPLIER KEY THE SAME QSO EARNS -- issue #317
+         (NY4I approved the work 2026-11-13).
+
+         Some state parties give an in-state entrant's QSO with a host county
+         BOTH the county and the host STATE as multipliers (Alabama, West
+         Virginia, Kentucky, Vermont; NY4I on #114: "AL would get credit for
+         working that AL station"). A record carries ONE domestic key, so the
+         state is this answer: TRUE WITH aKey means "this QSO also earns the
+         domestic multiplier aKey". THE BASE ANSWERS FALSE, and so does every
+         contest that does not override it -- Florida, Arkansas and New
+         Jersey among them -- so their sheets are untouched.
+
+         ASKED ONLY BY THE SHEET, ONLY FOR A QSO THAT ALREADY EARNS ITS
+         DOMESTIC MULTIPLIER (LOGDUPE.AdditionalDomesticMultiplierCredited,
+         from AddQSOToSheets): the X-QSO, band, host-area and
+         CountsAsMultiplier exclusions are the county's, inherited, never
+         restated (a dupe marks the key only where its county is new, which
+         is the county flag's own behaviour; it never counts as worked).
+         aQso.DomMultQTH is filled (from DomesticQTH where empty) before this
+         is asked. aKey must be a key of the session's domestic file -- the
+         party's .dom names it with an alias nobody can type (`Ky = ^Kentucky`),
+         so it is on the remaining-multiplier list and counts there.
+
+         NOTHING IS STORED. No flag, no column, no wire field: the sheet
+         re-derives the key from the record every time a QSO reaches
+         AddQSOToSheets -- live, LoadinLog, the rescore -- so a load and a
+         rescore agree by construction.
+
+         THE SCOPE IS THE COUNTY'S, AND THAT IS LOAD-BEARING. The key is
+         marked on the domestic sheet with the domestic band/mode scope
+         (MultiplierSheetBand(rmDomestic) / MultiplierSheetMode), because a
+         contest has one domestic scope. Since the key is reached only
+         through a credited county, it is new exactly on the first credited
+         county QSO of each scope.
+
+         KNOWN UNDERCOUNT, NOT FIXED HERE: readers that count a QSO's STORED
+         multiplier flags (the UDP <ismultiplier2>, the hourly report's Mults
+         column, HamScore's per-QSO CountMultipliers) see the county's flag
+         only, so they show one fewer
+         multiplier on the first county QSO of each scope. The totals
+         (MTotals) and the score are right. *)
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: string): boolean; virtual;
+
       (* THE DX MULTIPLIER KEY A QSO EARNS IN THIS CONTEST -- M11 S4,
          2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4).
 
@@ -4029,6 +4073,13 @@ function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestE
    active contest. *)
 function ContestHasPrefixMultiplier(aContest: TContestBase): boolean;
 
+(* THE SECOND DOMESTIC MULTIPLIER KEY aQso EARNS IN aContest -- see
+   TContestBase.AdditionalDomesticMultiplierKey (#317). nil answers False:
+   the classless DUMMYCONTEST earns one domestic key a QSO. *)
+function ContestAdditionalDomesticMultiplierKey(aContest: TContestBase;
+                                                const aQso: ContestExchange;
+                                                out aKey: string): boolean;
+
 (* THE DX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.DXMultiplierKey. nil answers False, leaving the DX QTH as it
    was: the classless DUMMYCONTEST runs NoDXMults. *)
@@ -4955,6 +5006,21 @@ begin
    else
       begin
       Result := aContest.PrefixMultiplierKey(aQso, aKey);
+      end;
+end;
+
+function ContestAdditionalDomesticMultiplierKey(aContest: TContestBase;
+                                                const aQso: ContestExchange;
+                                                out aKey: string): boolean;
+begin
+   aKey := '';
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.AdditionalDomesticMultiplierKey(aQso, aKey);
       end;
 end;
 
@@ -6378,19 +6444,25 @@ begin
    Result := aLoggedCall = aBonusCall;
 end;
 
+type
+   (* THE SCOPES' PAID MARKS. Named types so each starts from Default(), which is the language's own
+      clear, instead of a FillChar over the array. *)
+   TBonusPaidPairs = array[BandType, ModeType] of boolean;
+   TBonusPaidModes = array[ModeType] of boolean;
+
 function TContestBase.CountBonusStationContacts(aView: TLoggedQSOView;
    const aCall: string; aScope: TBonusStationScope;
    aAnyMode: boolean; aMode: ModeType): integer;
 var
-   paidPairs: array[BandType, ModeType] of boolean;
-   paidModes: array[ModeType] of boolean;
+   paidPairs: TBonusPaidPairs;
+   paidModes: TBonusPaidModes;
    i: integer;
    qso: ContestExchange;
    mode: ModeType;
 begin
    Result := 0;
-   FillChar(paidPairs, SizeOf(paidPairs), 0);
-   FillChar(paidModes, SizeOf(paidModes), 0);
+   paidPairs := Default(TBonusPaidPairs);
+   paidModes := Default(TBonusPaidModes);
    for i := 0 to aView.Count - 1 do
       begin
       qso := aView.QSO(i);
@@ -6543,6 +6615,14 @@ end;
 function TContestBase.HasPrefixMultiplier: boolean;
 begin
    (* No prefix multiplier -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                                      out aKey: string): boolean;
+begin
+   (* One domestic key a QSO -- see the declaration (#317). *)
+   aKey := '';
    Result := False;
 end;
 

@@ -31,12 +31,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   and ARRL DXCC entities except USA/Canada/Hawaii/Alaska. NY4I #131,
   comment 6857387343: once per contest, no repetition by mode, resolving
   the sponsor's conflicting provinces-per-band wording. The additional WV
-  state key uses the existing string sheet and CountyStateMultiplierKey,
-  also used by Alabama. This class finalizes it after inherited parsing;
-  rescore calls the same PrefixMultiplierKey policy. Shared entry unchanged.
-  INTERIM: #317 owns migration of this prefix-sheet state credit to a
-  second domestic key and correct domestic totals/needs displays. NY4I
-  assigned that broader engine work to specialist agents.
+  state is a second DOMESTIC key on an in-state county QSO (#317,
+  AdditionalDomesticMultiplierKey -> InStateCountyEarnsHostState, shared
+  with Alabama, Kentucky and Vermont), once overall like every multiplier
+  here. westvirginia.dom names it `Wv = ^West Virginia` -- no alias, so WV
+  is never received instead of a county. Nothing is stored; the sheet
+  re-derives it on load and rescore. The interim prefix-sheet credit and its
+  "WV" totals row are gone.
 
   W8WVA earns 100 once per band/mode, after multiplying; dupes and X-QSOs
   excluded. Shared bonus matching removes only county suffixes verified by
@@ -67,7 +68,6 @@ type
    private
       function CountsDXMultiplier: boolean;
    protected
-      function GetTotalsDisplay: TTotalsDisplay; override;
       function GetDisplayName: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
@@ -94,18 +94,14 @@ type
          const aQso: ContestExchange; const aCtx: TCabrilloQSOContext): string; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function ParseReceivedExchange(const aText: string;
-         const aSession: TReceivedExchangeSession; var aExch: ContestExchange;
-         out aErrorMessage: string): boolean; override;
       function UsesBand(aBand: BandType): boolean; override;
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       function CQExchangeDefault(const aStation: TStationContext): string; override;
       function HasDXMultiplier: boolean; override;
       function HasZoneMultiplier: boolean; override;
-      function HasPrefixMultiplier: boolean; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
-      function PrefixMultiplierKey(const aQso: ContestExchange;
-         out aKey: PrefixMultiplierString): boolean; override;
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+         out aKey: string): boolean; override;
       function DXMultiplierKey(const aQso: ContestExchange;
          out aKey: DXMultiplierString): boolean; override;
       function CountryMode: CountryModeType; override;
@@ -213,19 +209,6 @@ begin
    Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
 end;
 
-function TContestWestVirginiaQP.ParseReceivedExchange(const aText: string;
-   const aSession: TReceivedExchangeSession; var aExch: ContestExchange;
-   out aErrorMessage: string): boolean;
-var
-   key: PrefixMultiplierString;
-begin
-   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
-   if Result and PrefixMultiplierKey(aExch, key) then
-      begin
-      aExch.Prefix := key;
-      end;
-end;
-
 function TContestWestVirginiaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
    const aQso: ContestExchange): string;
 begin
@@ -303,36 +286,16 @@ begin
    Result := False;
 end;
 
-function TContestWestVirginiaQP.HasPrefixMultiplier: boolean;
-begin
-   Result := Station.InHostState;
-end;
-
 function TContestWestVirginiaQP.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
 end;
 
-function TContestWestVirginiaQP.PrefixMultiplierKey(const aQso: ContestExchange;
-   out aKey: PrefixMultiplierString): boolean;
+function TContestWestVirginiaQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+   out aKey: string): boolean;
 begin
-   aKey := '';
-   Result := HasPrefixMultiplier;
-   if Result then
-      begin
-      aKey := PrefixMultiplierString(CountyStateMultiplierKey(aQso));
-      end;
-end;
-
-function TContestWestVirginiaQP.GetTotalsDisplay: TTotalsDisplay;
-begin
-   Result := inherited GetTotalsDisplay;
-   if HasPrefixMultiplier then
-      begin
-      Result.PrefixMultsCaption := 'WV';
-      Result.PrefixMultsCaptionCW := 'CW WV';
-      Result.PrefixMultsCaptionPhone := 'Ph WV';
-      end;
+   (* A county also earns WV, in state -- the header (#317). *)
+   Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
 initialization

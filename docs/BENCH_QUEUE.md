@@ -2,10 +2,15 @@
 
 - [ ] New QSO parties #114/#124/#131: create Alabama, New Jersey and West Virginia logs for
   in-state, out-of-state and DX entrants; check setup prompts and typed
-  county-line refusal on screen. Alabama's first county must show county
-  plus AL state credit per mode, with the extra totals row labelled AL.
-  WV's first county must show county plus WV state credit once overall;
-  a second band/mode must not repeat either multiplier. Check two-county
+  county-line refusal on screen. **Since #317 (2026-11-13) the host state is a
+  DOMESTIC multiplier, not a separate totals row:** in state, Alabama's first
+  county must add TWO to the domestic count per mode (county + AL), WV's and
+  Kentucky's two once overall, Vermont's two per mode; the state must show as
+  worked on the remaining-multipliers list, no "AL"/"WV" prefix row may
+  appear, and reopening the log (and a /RESCORE) must give the same totals.
+  Expected and documented: the UDP `<ismultiplier2>`, the hourly report's
+  Mults column and HamScore show one fewer on that first county QSO.
+  A second band/mode must not repeat either multiplier. Check two-county
   entry creates two separate records and W8WVA pays once per band/mode.
   County-suffixed bonus-call matching is fixed by the shared state-party matcher (#111); confirm on screen.
 - [ ] Export 3830 reports for Alabama, New Jersey and West Virginia and compare multiplier

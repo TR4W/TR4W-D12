@@ -24,9 +24,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   ITS ID IS VT-QSO-PARTY AND IT IS STORED DATA FROM THE FIRST LOG MADE WITH
   IT: never give it to another contest. There is no ContestType member -- the
-  enum is frozen (Lint-FrozenContestNumbers) -- so the contest is refused on
-  the multi-op network and its UDP contest number is derived from its id
-  (both the registry's, nothing here).
+  enum is frozen (Lint-FrozenContestNumbers) -- so its UDP contest number is
+  derived from its id, and on the multi-op network (protocol 2) stations
+  agree on it by that id string (both the registry's, nothing here).
 
   ON THE STATE-PARTY BASE, BECAUSE IT IS ONE: one host state, county
   multipliers for everyone outside it, and "Stations outside Vermont work
@@ -129,14 +129,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Non-Vermont         vermont_cty.dom: "Vermont Counties", each its own
                           multiplier (FCONTEST sets MultipliersIsCounties).
                           No DX multiplier.
-    NOT BUILT -- A VT COUNTY ALSO EARNING THE STATE VT for an in-state
-      entrant. NY4I ruled it (DXLog's VTQP.txt maps every county to VT in its
-      state list; the rules are silent), but a QSO carries ONE domestic
-      multiplier key and the DX sheet keys on the CTY country, so a county
-      QSO cannot also add "VT". Faking it as bonus points or a prefix
-      multiplier would make the shown multiplier counts wrong. An in-state
-      entrant who logs a station sending "VT" itself gets VT from S50.DOM.
-      Recorded as a gap for NY4I.
+    A VT COUNTY ALSO EARNS THE STATE VT for an in-state entrant (#317).
+      NY4I ruled it (DXLog's VTQP.txt maps every county to VT in its state
+      list; the rules are silent). It is a second DOMESTIC key
+      (AdditionalDomesticMultiplierKey -> InStateCountyEarnsHostState),
+      per mode like every multiplier here, landing on the Vt entry S50.DOM
+      already gives the in-state file -- so a station that sent "VT" itself
+      and a county QSO make ONE VT multiplier, not two, and the in-state
+      list stays 77. Nothing is stored; the sheet re-derives it on load and
+      rescore. A WSJT-X QSO earns no county, so no VT either (the credit
+      follows the county's, CountsAsMultiplier included).
     NOT BUILT -- THE VERMONT CLUB-STATION MULTIPLIER, 7B(e): the stations are
       named by the QSO Party Manager each year, two weeks before the event;
       there is no list to state. A gap for NY4I.
@@ -299,6 +301,10 @@ type
       function CountryMode: CountryModeType; override;
       function HasZoneMultiplier: boolean; override;
       function HasPrefixMultiplier: boolean; override;
+
+      (* AN IN-STATE COUNTY QSO ALSO EARNS VT -- the header (#317). *)
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: string): boolean; override;
 
       (* WHAT THE EXCHANGE CARRIES -- a domestic QTH (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
@@ -610,6 +616,12 @@ end;
 function TContestVermontQP.HasPrefixMultiplier: boolean;
 begin
    Result := False;
+end;
+
+function TContestVermontQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                                           out aKey: string): boolean;
+begin
+   Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
 initialization

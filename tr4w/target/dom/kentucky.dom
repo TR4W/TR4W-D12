@@ -1,9 +1,12 @@
 Kentucky QSO Party in-state received locations
-120 counties plus 49 other states plus DC plus 13 provinces.
-KY stations must send county; additional KY state credit depends on issue 317.
+120 counties plus 49 other states plus DC plus 13 provinces plus KY: 184.
+KY stations must send county. The class adds KY state credit on a county QSO (issue 317).
+The Ky line below has a display name and NO alias, so it is on the multiplier list
+but KY can never be received instead of a county.
 DX is points only, parsed separately, with no multiplier entry.
 
 INCLUDE FILE kentucky_cty.dom
+Ky = ^Kentucky
 Dc = DC,^District of Columbia
 Al = AL,^Alabama
 Ar = AR,^Arkansas

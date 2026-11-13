@@ -436,10 +436,37 @@ function MultiplierSheetMode(aMode: ModeType): ModeType;
   the field (HasGridFieldMultiplier) -- what mo.IsDmMult compares. *)
 function DomesticMultiplierCountKey(aContest: TContestBase; const aKey: string): string;
 
+(* DOES THE QSO EARN A SECOND DOMESTIC MULTIPLIER, AND WHICH -- issue #317.
+  TRUE WITH aKey when the QSO earns its domestic multiplier (rmDomestic in
+  aKinds, so every exclusion the county has -- X-QSO, band, host area,
+  CountsAsMultiplier -- is inherited, never restated) AND the contest names
+  a second key (TContestBase.AdditionalDomesticMultiplierKey; the base and
+  nil answer False). aRX is the copy AddQSOToSheets made, DomMultQTH filled.
+  ONE predicate for the sheet mark and the worked count, both in
+  AddQSOToSheets; the dupe and ceClearMultSheet tests are that caller's (a
+  dupe still marks, as its county flag does; it does not count).
+
+  NO FLAG IS STORED for this key: the sheet re-derives it every time a QSO
+  reaches AddQSOToSheets (live, LoadinLog, the rescore), so a load that
+  trusts the stored flags and a rescore that re-derives them agree. It is
+  marked in the DOMESTIC scope (MultiplierSheetBand(rmDomestic) /
+  MultiplierSheetMode) -- the county's -- which is load-bearing: the key is
+  reached only through a credited county, so it is new exactly on the first
+  credited county QSO of its scope. KNOWN UNDERCOUNT: a reader of the QSO's
+  stored flags (UDP <ismultiplier2>, the hourly report's Mults column,
+  uHamScore.CountMultipliers) shows one fewer multiplier on that QSO; MTotals
+  and the score are right. *)
+function AdditionalDomesticMultiplierCredited(aContest: TContestBase;
+  const aRX: ContestExchange; aKinds: TMultiplierKinds; out aKey: string): boolean;
+
 (* ADD ONE QSO TO THE WORKED COUNTS -- issue 12. Every kind the QSO earns
-  (MultiplierKindsCredited) counts once, new or not; a dupe, an X-QSO and a
-  ceClearMultSheet record count nothing. Called from AddQSOToSheets only. *)
-procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange);
+  (aKinds, MultiplierKindsCredited of aRX) counts once, new or not, and so
+  does aAdditionalDomesticKey when it is not empty (#317); a dupe, an X-QSO
+  and a ceClearMultSheet record count nothing. aRX has DomMultQTH filled.
+  Called from AddQSOToSheets only, which computes aKinds once for both
+  this and the additional key. *)
+procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange;
+  aKinds: TMultiplierKinds; const aAdditionalDomesticKey: string);
 
 //function GetInitialExchange(Call: CallString): CallString;
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
@@ -984,9 +1011,11 @@ procedure DupeAndMultSheet.AddQSOToSheets(RXData: ContestExchangePtr; AddToParti
   with information after it has gone through the EditableWindow or when
   reading in the LOG.DAT file at the start.                               }
 
-//var
-//  {MultBand, }TempDOMBand               : BandType;
-//  MultMode                              : ModeType;
+var
+  contestRules                          : TContestBase;
+  credited                              : ContestExchange;
+  kinds                                 : TMultiplierKinds;
+  additionalKey                         : string;
 begin
 
   if RXData.ceSearchAndPounce then
@@ -1025,14 +1054,47 @@ begin
         mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
         end;
 
-     (* AND THE WORKED COUNTS (issue 12) -- every credited working, not only
-        the first the flags above record. HERE because the loader, the
-        rescore and LogContact all reach this routine, each in log order;
-        a dupe counts nothing (CountWorkedMultipliers). One ActiveContest
-        per QSO that is not a dupe. *)
+     (* THE SECOND DOMESTIC KEY (#317), which has no stored flag and is
+        derived here, from the record, every time -- AND THE WORKED COUNTS
+        (issue 12), every credited working, not only the first the flags
+        above record. HERE because the loader, the rescore and LogContact
+        all reach this routine, each in log order. One ActiveContest and one
+        credit chain per QSO. *)
+     contestRules := ActiveContest(Contest);
+
+     (* SetMultFlags' DomMultQTH fill, on a copy: a row read back from the
+        log carries what SetMultFlags stored, but a peer's or an imported one
+        may hold only DomesticQTH. *)
+     credited := RXData^;
+     if (credited.DomMultQTH = '') and (credited.DomesticQTH <> '') then
+        begin
+        credited.DomMultQTH := credited.DomesticQTH;
+        end;
+     kinds := MultiplierKindsCredited(contestRules, credited);
+
+     (* A DUPE IS NOT EXCLUDED HERE, on purpose: SetMultFlags does not ask
+        ceDupe, so a dupe whose county was never credited before (Vermont: a
+        WSJT-X QSO earns no county, and the same call, band, mode and county
+        in RTTY is a dupe of it) still marks its county above -- and the
+        state rides on the county exactly. For every other dupe the county,
+        so the state, is already on the sheet and this marks nothing. *)
+     if AdditionalDomesticMultiplierCredited(contestRules, credited, kinds, additionalKey) then
+        begin
+        (* NEW in the county's scope -> marked and totalled, exactly as a
+           stored DomesticMult flag is above. *)
+        if mo.IsDmMult(additionalKey,
+                       MultiplierSheetBand(rmDomestic, credited.Band),
+                       MultiplierSheetMode(credited.Mode),
+                       ContestHasGridFieldMultiplier(contestRules)) then
+           begin
+           mo.SetDmMult(additionalKey, credited.Band, credited.Mode);
+           end;
+        end;
+
+     (* A dupe counts nothing (CountWorkedMultipliers). *)
      if not RXData.ceDupe then
         begin
-        CountWorkedMultipliers(ActiveContest(Contest), RXData^);
+        CountWorkedMultipliers(contestRules, credited, kinds, additionalKey);
         end;
      end;
 end;
@@ -1484,49 +1546,59 @@ begin
      end;
 end;
 
-procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange);
-var
-  rx: ContestExchange;
-  kinds: TMultiplierKinds;
+function AdditionalDomesticMultiplierCredited(aContest: TContestBase;
+  const aRX: ContestExchange; aKinds: TMultiplierKinds; out aKey: string): boolean;
+begin
+  aKey := '';
+  Result := False;
+  if not (rmDomestic in aKinds) then
+     begin
+     Exit;
+     end;
+  Result := ContestAdditionalDomesticMultiplierKey(aContest, aRX, aKey) and
+            (aKey <> '');
+  if not Result then
+     begin
+     aKey := '';
+     end;
+end;
+
+procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange;
+  aKinds: TMultiplierKinds; const aAdditionalDomesticKey: string);
 begin
   if aRX.ceClearMultSheet or aRX.ceDupe then
      begin
      Exit;
      end;
 
-  (* A COPY, with SetMultFlags' DomMultQTH fill: a row read back from the
-     log carries what SetMultFlags stored, but a peer's or an imported one
-     may hold only DomesticQTH. *)
-  rx := aRX;
-  if (rx.DomMultQTH = '') and (rx.DomesticQTH <> '') then
-     begin
-     rx.DomMultQTH := rx.DomesticQTH;
-     end;
-
-  kinds := MultiplierKindsCredited(aContest, rx);
-  if kinds = [] then
+  if aKinds = [] then
      begin
      Exit;
      end;
 
   (* THE REAL BAND AND MODE: mo.CountWorked fills the AllBands / Both cells
      too, and the reader's key applies the scope -- as the bits do. *)
-  if rmDomestic in kinds then
+  if rmDomestic in aKinds then
      begin
-     mo.CountWorked(rmDomestic, DomesticMultiplierCountKey(aContest, string(rx.DomMultQTH)),
-                    rx.Band, rx.Mode);
+     mo.CountWorked(rmDomestic, DomesticMultiplierCountKey(aContest, string(aRX.DomMultQTH)),
+                    aRX.Band, aRX.Mode);
+     if aAdditionalDomesticKey <> '' then
+        begin
+        mo.CountWorked(rmDomestic, DomesticMultiplierCountKey(aContest, aAdditionalDomesticKey),
+                       aRX.Band, aRX.Mode);
+        end;
      end;
-  if rmDX in kinds then
+  if rmDX in aKinds then
      begin
-     mo.CountWorked(rmDX, IntToStr(rx.QTH.Country), rx.Band, rx.Mode);
+     mo.CountWorked(rmDX, IntToStr(aRX.QTH.Country), aRX.Band, aRX.Mode);
      end;
-  if rmPrefix in kinds then
+  if rmPrefix in aKinds then
      begin
-     mo.CountWorked(rmPrefix, string(rx.Prefix), rx.Band, rx.Mode);
+     mo.CountWorked(rmPrefix, string(aRX.Prefix), aRX.Band, aRX.Mode);
      end;
-  if rmZone in kinds then
+  if rmZone in aKinds then
      begin
-     mo.CountWorked(rmZone, IntToStr(rx.Zone), rx.Band, rx.Mode);
+     mo.CountWorked(rmZone, IntToStr(aRX.Zone), aRX.Band, aRX.Mode);
      end;
 end;
 

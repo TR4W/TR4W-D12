@@ -27,11 +27,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Dupes per band/mode/received county. Multipliers once OVERALL. DX earns
   points but no multiplier. DC is its own state multiplier, not Maryland.
   KY stations must send county, not KY. NY4I comment 6862605577 confirms
-  an in-state county QSO also earns KY state. NOT BUILT: that second domestic
-  key belongs to specialist engine work #317, including domestic totals and
-  needs displays. Do not introduce another prefix-sheet implementation.
-  Current in-state keys: 120 counties + 49 other states + DC + 13 provinces;
-  the extra KY state will make 184 after #317, not the current 183.
+  an in-state county QSO also earns KY state: a second DOMESTIC key (#317,
+  AdditionalDomesticMultiplierKey -> InStateCountyEarnsHostState), once
+  overall. kentucky.dom names it `Ky = ^Kentucky` -- no alias, so KY is never
+  received instead of a county. Nothing is stored; the sheet re-derives it
+  on load and rescore. In-state keys: 120 counties + 49 other states + DC +
+  13 provinces + KY = 184.
   Power factors from stated CATEGORY-POWER: HIGH 1, LOW 2, QRP 3.
   K4KCG earns 100 per band/mode, after multiplication, valid QSOs only.
   County suffixes verified by the shared party matcher also pay. Committee
@@ -94,6 +95,8 @@ type
       function HasZoneMultiplier: boolean; override;
       function HasPrefixMultiplier: boolean; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+         out aKey: string): boolean; override;
    end;
 
 implementation
@@ -277,6 +280,13 @@ end;
 function TContestKentuckyQP.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
+end;
+
+function TContestKentuckyQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+   out aKey: string): boolean;
+begin
+   (* A county also earns KY, in state -- the header (#317). *)
+   Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
 function TContestKentuckyQP.GetBonusStations: TBonusStationList;

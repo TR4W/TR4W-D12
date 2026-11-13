@@ -78,7 +78,7 @@ begin
       party := Make(PartyHandle, station);
       try
          CheckTrue(party.HasDXMultiplier = inHost, 'DXCC only inside Alabama');
-         CheckTrue(party.HasPrefixMultiplier = inHost, 'extra AL state credit only inside');
+         CheckFalse(party.HasPrefixMultiplier, '#317: the AL state is a domestic key, no prefix sheet');
          CheckFalse(party.HasZoneMultiplier, 'no zones');
          for band := Low(BandType) to High(BandType) do
             begin
@@ -117,7 +117,7 @@ var
    party: TContestBase;
    station: TStationContext;
    qso: ContestExchange;
-   key: PrefixMultiplierString;
+   key: string;
 begin
    BeginTest('Test_AlabamaDataAndStateKey');
    CheckEquals('', CountyFileDifference('Alabama', 'alabama_cty.dom',
@@ -137,29 +137,33 @@ begin
       try
          qso := Default(ContestExchange);
          qso.DomesticQTH := 'AUTA';
-         CheckTrue(party.PrefixMultiplierKey(qso, key), 'class supplies additional string key');
-         CheckEquals('AL', string(key), 'NY4I: county ALSO earns AL');
+         CheckTrue(party.AdditionalDomesticMultiplierKey(qso, key), '#317: a second domestic key');
+         CheckEquals('AL', key, 'NY4I: county ALSO earns AL');
          qso.DomesticQTH := 'LEE';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('AL', string(key), 'three-letter Lee county also earns AL');
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('AL', key, 'three-letter Lee county also earns AL');
          qso.DomesticQTH := '';
+         qso.DomMultQTH := 'BALD';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('AL', key, 'a rover row: the credited key, no DomesticQTH');
+         qso.DomMultQTH := '';
          qso.QTHString := 'BALD';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('AL', string(key), 'rover QTH without DomesticQTH');
-         qso.QTHString := 'PA';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('', string(key), 'other state no AL');
-         qso.QTHString := 'KP4';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('', string(key), 'DX prefix is no county');
-         qso.QTHString := 'XXXX';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('', string(key), 'unknown location no AL');
-         CheckEquals('AL', party.TotalsDisplay.PrefixMultsCaption, 'additional-credit row is labelled AL');
+         CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key),
+            '#317: the typed QTH alone is not the credited key');
+         qso.DomesticQTH := 'PA';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('', key, 'other state no AL');
+         qso.DomesticQTH := 'KP4';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('', key, 'DX prefix is no county');
+         qso.DomesticQTH := 'XXXX';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('', key, 'unknown location no AL');
+         CheckTrue(party.TotalsDisplay.PrefixMultsCaption <> 'AL', 'the interim AL totals row is gone');
          station.InHostState := False;
          party.SetStation(station);
-         qso.QTHString := 'AUTA';
-         CheckFalse(party.PrefixMultiplierKey(qso, key), 'outside entrant earns no extra state');
+         qso.DomesticQTH := 'AUTA';
+         CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key), 'outside entrant earns no extra state');
       finally
          party.Free;
       end;
@@ -189,12 +193,10 @@ begin
       totals.ScoredBand := AllBands;
       totals.SessionCountsMultipliers := True;
       totals.QSOPoints := 100;
-      totals.Mults[AllBands, CW, rmDomestic] := 9;
-      totals.Mults[AllBands, Phone, rmDomestic] := 9;
-      totals.Mults[AllBands, CW, rmPrefix] := 1;
-      totals.Mults[AllBands, Phone, rmPrefix] := 1;
-      totals.Mults[AllBands, Both, rmDomestic] := 18;
-      totals.Mults[AllBands, Both, rmPrefix] := 2;
+      (* 9 counties/states per mode plus AL in each -- all domestic (#317). *)
+      totals.Mults[AllBands, CW, rmDomestic] := 10;
+      totals.Mults[AllBands, Phone, rmDomestic] := 10;
+      totals.Mults[AllBands, Both, rmDomestic] := 20;
       for power := Low(tCategoryPower) to High(tCategoryPower) do
          begin
          station.MyPower := power;
@@ -244,36 +246,36 @@ begin
    engine := TQSOPartyEngine.Create(PartyHandle);
    try
       engine.Activate(True);
-      CheckEquals(129, mo.DomList.Count, '67 counties, 49 other states, 13 provinces');
+      CheckEquals(130, mo.DomList.Count, '67 counties, AL, 49 other states, 13 provinces (#317)');
       engine.Enter('K4UNKNOWN', '599 XXX', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'engine unknown-QTH placeholder can be logged');
       CheckFalse(rx.DomesticMult, 'unknown QTH earns no county');
-      CheckFalse(rx.PrefixMult, 'and cannot earn Alabama state credit');
+      CheckEquals(0, mo.MTotals[AllBands, CW, rmDomestic], 'and cannot earn Alabama state credit');
       dupe := engine.Enter('K4AAA', '599 AUTA', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'county exchange accepted');
       CheckFalse(dupe, 'first county QSO');
       CheckTrue(rx.DomesticMult, 'first county multiplier');
-      CheckTrue(rx.PrefixMult, 'AL state multiplier at the SAME QSO');
-      CheckEquals('AL', string(rx.Prefix), 'additional state key');
       CheckEquals(2, Integer(rx.QSOPoints), 'two CW points');
-      CheckEquals(1, mo.MTotals[AllBands, CW, rmDomestic], 'one county');
-      CheckEquals(1, mo.MTotals[AllBands, CW, rmPrefix], 'and one state');
+      CheckEquals(2, mo.MTotals[AllBands, CW, rmDomestic], 'county AND the AL state, both domestic');
+      CheckFalse(mo.IsDmMult('AL', AllBands, CW, False), 'AL is worked in CW');
+      CheckTrue(mo.IsDmMult('AL', AllBands, Phone, False), 'but not in phone');
+      CheckEquals(0, mo.MTotals[AllBands, CW, rmPrefix], 'no prefix sheet any more');
       engine.Enter('K4BBB', '599 BALD', Band20, CW, eCW, accepted, rx);
       CheckTrue(rx.DomesticMult, 'second county earns its own multiplier');
-      CheckFalse(rx.PrefixMult, 'but not AL again in CW');
+      CheckEquals(3, mo.MTotals[AllBands, CW, rmDomestic], 'but not AL again in CW');
       engine.Enter('K4AAA', '599 AUTA', Band40, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'county not again on new band');
-      CheckFalse(rx.PrefixMult, 'nor AL state');
+      CheckEquals(3, mo.MTotals[AllBands, CW, rmDomestic], 'nor AL state');
       engine.Enter('K4AAA', '59 AUTA', Band20, Phone, eUSB, accepted, rx);
       CheckTrue(rx.DomesticMult, 'county again in phone');
-      CheckTrue(rx.PrefixMult, 'AL again in phone');
+      CheckEquals(2, mo.MTotals[AllBands, Phone, rmDomestic], 'AL again in phone');
       dupe := engine.Enter('K4AAA', '59 AUTA', Band20, FM, eFM, accepted, rx);
       CheckTrue(dupe, 'FM after SSB is a phone dupe');
-      CheckFalse(rx.PrefixMult, 'dupe no AL credit');
+      CheckEquals(2, mo.MTotals[AllBands, Phone, rmDomestic], 'dupe no AL credit');
       engine.Enter('W3AAA', '599 PA', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'other state accepted');
       CheckTrue(rx.DomesticMult, 'PA multiplier');
-      CheckFalse(rx.PrefixMult, 'no additional AL state for PA');
+      CheckEquals(4, mo.MTotals[AllBands, CW, rmDomestic], 'PA alone, no additional AL state');
       engine.Enter('W3DC', '599 DC', Band20, CW, eCW, accepted, rx);
       CheckEquals('MD', UpperCase(string(rx.DomMultQTH)), 'DC folded into Maryland');
       engine.Enter('W3MD', '599 MD', Band20, CW, eCW, accepted, rx);
@@ -281,9 +283,9 @@ begin
       engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'DX prefix accepted');
       CheckTrue(rx.DXMult, 'DXCC multiplier');
-      CheckFalse(rx.PrefixMult, 'no AL for a DX prefix');
+      CheckEquals(5, mo.MTotals[AllBands, CW, rmDomestic], 'no AL for a DX prefix');
       engine.Enter('K4BAD', '599 AL', Band20, CW, eCW, accepted, rx);
-      CheckFalse(accepted, 'literal AL cannot replace county');
+      CheckFalse(accepted, 'literal AL cannot replace county (its .dom line has no alias)');
       ClearPendingCounties;
       engine.Enter('K4LINE', '599 AUTA/BALD', Band20, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'county-line sitting forbidden');
@@ -293,7 +295,7 @@ begin
       dupe := engine.Enter('K4ROV', '599 LEE', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'outside entrant works Lee');
       CheckTrue(rx.DomesticMult, 'county multiplier');
-      CheckFalse(rx.PrefixMult, 'outside entrant no extra AL state');
+      CheckEquals(1, mo.MTotals[AllBands, CW, rmDomestic], 'outside entrant no extra AL state');
       CheckFalse(rx.DXMult, 'outside entrant no DXCC');
       dupe := engine.Enter('K4ROV', '599 AUTA', Band20, CW, eCW, accepted, rx);
       CheckFalse(dupe, 'received rover new county');
@@ -308,7 +310,6 @@ begin
       CheckTrue(LoggedQSOIsXQSO(rx), 'digital automatic X-QSO');
       CheckEquals(0, Integer(rx.QSOPoints), 'digital zero points');
       CheckFalse(rx.DomesticMult, 'digital no county multiplier');
-      CheckFalse(rx.PrefixMult, 'digital no state multiplier');
       engine.Enter('K4DIG', '599 CULM', Band20, CW, eCW, accepted, rx);
       CheckTrue(rx.DomesticMult, 'digital did not mark county');
 
@@ -317,11 +318,15 @@ begin
       engine.Enter('K4WARC', '599 JEFF', Band30, CW, eCW, accepted, rx);
       CheckTrue(LoggedQSOIsXQSO(rx), 'off-band automatic X-QSO');
       CheckFalse(rx.DomesticMult, 'off-band no county');
-      CheckFalse(rx.PrefixMult, 'off-band no AL state');
+      CheckEquals(0, mo.MTotals[AllBands, CW, rmDomestic], 'off-band no AL state');
       engine.Enter('K4WARC', '599 JEFF', Band20, CW, eCW, accepted, rx);
       CheckTrue(rx.DomesticMult, 'valid QSO still earns county');
-      CheckTrue(rx.PrefixMult, 'and AL state');
-      CheckEquals(1, mo.WorkedCount(rmPrefix, 'AL', AllBands, CW), 'state worked count');
+      CheckEquals(2, mo.MTotals[AllBands, CW, rmDomestic], 'and AL state');
+      CheckEquals(1, mo.WorkedCount(rmDomestic, 'AL', AllBands, CW), 'state worked count');
+      engine.Enter('K4WAR2', '599 AUTA', Band20, CW, eCW, accepted, rx);
+      CheckEquals(2, mo.WorkedCount(rmDomestic, 'AL', AllBands, CW),
+         'the state is COUNTED on every county QSO, new or not');
+      CheckEquals(3, mo.MTotals[AllBands, CW, rmDomestic], 'but totalled once');
 
       (* Import/rescore starts with a complete received record, not the
          typed exchange. Stale stored keys must be derived again. *)
@@ -335,18 +340,21 @@ begin
       rx.Band := Band20;
       rx.Mode := CW;
       rx.ExtMode := eCW;
-      rx.Prefix := 'BAD';
       rx.QSOPoints := 99;
       RecomputeQSOScoring(rx);
-      CheckEquals('AL', string(rx.Prefix), 'rescore derives AL from the received rover county');
       CheckEquals(2, Integer(rx.QSOPoints), 'rescore replaces stale points');
       CheckTrue(rx.DomesticMult, 'rescore gives county credit');
-      CheckTrue(rx.PrefixMult, 'and independent state credit');
+      CheckFalse(rx.PrefixMult, 'no prefix credit any more');
+      Sheet.AddQSOToSheets(@rx, False);
+      CheckEquals(2, mo.MTotals[AllBands, CW, rmDomestic],
+         'the sheet derives AL from the credited rover county');
       rx.ceXQSO := True;
       RecomputeQSOScoring(rx);
       CheckEquals(0, Integer(rx.QSOPoints), 'explicit X-QSO rescored to zero');
       CheckFalse(rx.DomesticMult, 'explicit X-QSO no county');
-      CheckFalse(rx.PrefixMult, 'explicit X-QSO no state');
+      mo.ClearAllMults;
+      Sheet.AddQSOToSheets(@rx, False);
+      CheckEquals(0, mo.MTotals[AllBands, CW, rmDomestic], 'explicit X-QSO no state');
    finally
       engine.Free;
    end;

@@ -883,6 +883,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Vermont QSO Party, a new contest registered by its id
       (2026-11-10, #130). *)
    uTestContestVermontQP in 'uTestContestVermontQP.pas',
+   (* A second domestic multiplier key per QSO: the host state a party's
+      in-state county QSO also earns (#317, 2026-11-13). *)
+   uTestAdditionalDomesticMultiplier in 'uTestAdditionalDomesticMultiplier.pas',
    (* The New Hampshire QSO Party, a new contest registered by its id
       (2026-11-10, #112). *)
    uTestContestNewHampshireQP in 'uTestContestNewHampshireQP.pas',
@@ -1111,6 +1114,7 @@ begin
    RegisterSuite(TContestArkansasQPTests.Create('ContestArkansasQP'));
    RegisterSuite(TContestKentuckyQPTests.Create('ContestKentuckyQP'));
    RegisterSuite(TContestVermontQPTests.Create('ContestVermontQP'));
+   RegisterSuite(TAdditionalDomesticMultiplierTests.Create('AdditionalDomesticMultiplier'));
    RegisterSuite(TContestNewHampshireQPTests.Create('ContestNewHampshireQP'));
    RegisterSuite(TContestStateQSOPartyBaseTests.Create('ContestStateQSOPartyBase'));
    RegisterSuite(TContestNewEnglandQPTests.Create('ContestNewEnglandQP'));

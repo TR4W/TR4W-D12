@@ -1,4 +1,5 @@
-(* Kentucky #110: NY4I-approved 2027 draft; extra KY state belongs to #317. *)
+(* Kentucky #110: NY4I-approved 2027 draft; the extra KY state is #317's
+   second domestic key, pinned in uTestAdditionalDomesticMultiplier. *)
 unit uTestContestKentuckyQP;
 
 {$I ..\..\src\tr4w.inc}

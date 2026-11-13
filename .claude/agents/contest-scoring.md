@@ -61,7 +61,37 @@ section runs `RescoreLog` before counting, and writes `totals MOVED BY A
 RESCORE` if a second rescore disagrees. A path that stores flags without
 scoring in order must end in `RescoreLog`, not a bare `LoadinLog` --
 `ImportFromADIF`, `uEditQSO` and a network update (`uNet.ConsumeNetBuffer`)
-already do.
+already do. **The one key the load does NOT trust is the second domestic key
+(#317, below): it has no stored flag, and `AddQSOToSheets` re-derives it from
+the record on every load, rescore and live QSO.**
+
+## A QSO CAN EARN TWO DOMESTIC KEYS (issue #317, 2026-11-13)
+
+An in-state entrant's host-county QSO earns the county AND the host state in
+Alabama (per mode), West Virginia (overall), Kentucky (overall) and Vermont
+(per mode). The record carries ONE domestic key; the state is
+`TContestBase.AdditionalDomesticMultiplierKey` (base False, nil-safe
+`ContestAdditionalDomesticMultiplierKey`), each leaf one line calling
+`TContestStateQSOPartyBase.InStateCountyEarnsHostState` (in host state, the
+CREDITED key -- DomMultQTH, else DomesticQTH, never QTHString -- longer than
+two characters, not XXX, known to the table). `LOGDUPE.AddQSOToSheets` asks
+`AdditionalDomesticMultiplierCredited` only when `rmDomestic` is in the QSO's
+`MultiplierKindsCredited` (one credit chain per QSO, shared with
+`CountWorkedMultipliers`), marks the key with `IsDmMult` / `SetDmMult` in the
+DOMESTIC scope, and counts it as worked (not for a dupe). A dupe still MARKS
+it, because `SetMultFlags` does not ask `ceDupe` and can credit a county the
+earlier QSO did not earn (Vermont: RTTY after FT8). **THE SCOPE IS THE
+COUNTY'S, AND THAT IS LOAD-BEARING**: the key is reached only through a
+credited county, so it is new exactly on the first credited county QSO of each
+scope (`uTestAdditionalDomesticMultiplier.Test_EqualScopeInvariant`). The
+in-state `.dom` lists the key with a display name and NO alias (`Ky = ^Kentucky`)
+so it is on the remaining list but never received instead of a county: KY 184,
+AL 130, WV 118, VT 77 (VT's `Vt` is S50.DOM's). No stored field, schema or wire
+change. **Known undercount, not fixed:** readers of a QSO's stored flags (UDP
+`<ismultiplier2>`, the hourly report's Mults column, `uHamScore.CountMultipliers`) show one fewer on that
+QSO. Every other contest answers False (pinned over the registry walk;
+Florida, Arkansas and New Jersey named). The AL/WV prefix-sheet stand-in is
+deleted -- never put a second key on the prefix sheet again.
 
 So: **scoring, multiplier and exchange-parsing changes deserve real-contest
 testing.** The corpus is a strong net, not a proof. Say so in your report rather

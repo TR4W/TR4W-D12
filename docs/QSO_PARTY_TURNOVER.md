@@ -52,25 +52,36 @@ Current-batch shared changes:
 Architecture and detailed history: `QSO_PARTY_ADDITIONS.md` and
 `CONTEST_OWNERSHIP_DESIGN.md`. Screen/3830 work: `BENCH_QUEUE.md`.
 
-## Specialist handoff: double domestic multipliers #317
+## Double domestic multipliers #317 -- RESOLVED 2026-11-13
 
-NY4I explicitly assigned this broader engine work to the Claude specialist
-agents. Issue #317 has been updated with all affected additions and paths:
+NY4I approved the work 2026-11-13. An in-state entrant's host-county QSO now
+earns the county AND the host state, both on the DOMESTIC sheet:
 
-- AL: current local implementation uses a prefix/string key for extra AL,
-  per mode. It must migrate to proper domestic keys/totals/needs displays.
-- WV: same interim approach for extra WV, once overall; also must migrate.
-- KY: NY4I #110 comment 6862605577 confirms county + KY state. The new leaf
-  **does not implement the extra KY credit** and does not add another prefix
-  workaround. Its current 183 in-state keys become 184 after #317.
-- SC (#111/#113) is already listed on #317 and remains unimplemented here.
+- the hook `TContestBase.AdditionalDomesticMultiplierKey` (base False; nil-safe
+  `ContestAdditionalDomesticMultiplierKey`), answered in AL, WV, KY and VT by
+  one line calling the party base's `InStateCountyEarnsHostState`, which reads
+  the CREDITED domestic key (DomMultQTH, else DomesticQTH -- no QTHString
+  fallback);
+- the engine predicate `LOGDUPE.AdditionalDomesticMultiplierCredited`, asked by
+  `AddQSOToSheets` only for a QSO whose county is credited, which marks the key
+  in the domestic scope and counts it with the worked counts;
+- one `.dom` line per file with a display name and no alias (`Al`, `Wv`, `Ky`;
+  VT's `Vt` already came from S50.DOM): AL 130, WV 118, KY 184, VT 77;
+- no stored field, no schema, no wire change: the sheet re-derives the key on
+  every load and rescore. The interim AL/WV prefix-sheet credit (their
+  `ParseReceivedExchange`, `HasPrefixMultiplier`, `PrefixMultiplierKey`,
+  `GetTotalsDisplay` overrides and `CountyStateMultiplierKey`) is deleted.
 
-The shared `CountyStateMultiplierKey` only computes a validated county's host
-key; it is not an implementation of multiple domestic multipliers. AL/WV
-tests currently expect the interim prefix flags and must migrate with the
-leaves. Passing tests do not certify correct domestic multiplier UI.
-Arkansas explicitly excludes AR from its 49 state multipliers; NJ excludes
-NJ and never receives DC (NY4I). Neither should gain an extra host-state key.
+THE SCOPE IS THE COUNTY'S, AND THAT IS LOAD-BEARING: the key is reached only
+through a credited county, so it is new exactly on the first credited county
+QSO of each scope. KNOWN UNDERCOUNT (follow-up issue to be filed by the
+integrator): the UDP `<ismultiplier2>`, the hourly report's Mults column and
+`uHamScore.CountMultipliers` read the QSO's stored flags and show one fewer
+on that QSO (boolean readers -- the multiplier alarm, the log row's mult
+marker, the EDI new-mult column -- are unaffected: the county flag is set on
+that QSO anyway); MTotals and the
+score are right. SC (#111/#113) will use the same one-line override when
+built. Arkansas and NJ exclude their own state and answer False.
 
 Other explicit dependencies: own-mobile/category support and activation
 bonuses (#133/#87); Arkansas mobile/portable/rover two-point scoring;
@@ -106,7 +117,7 @@ Important retained rulings:
   digital score, added to CW/phone geographic scoring. No digital county
   requirement/credit, no grid-centre inference; DX entrants may work SD digital.
 - WV #131: all multiplier kinds once overall, without repetition by mode.
-- KY #110: approved 2027 draft, and extra KY state confirmed/deferred to #317.
+- KY #110: approved 2027 draft, and extra KY state confirmed; built at #317.
 - #88 still has older unresolved BC retired-alias and Missouri electronic
   submission-bonus questions; `Agent Question` remains there.
 

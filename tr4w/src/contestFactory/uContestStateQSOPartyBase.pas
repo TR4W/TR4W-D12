@@ -169,12 +169,27 @@ type
       FReportedNoTableForYear: boolean;
       FReportedNoTableYear: integer;
    protected
-      (* A resolved host county's state key, when the leaf elects to award
-         separate county and host-state credits. No multiplier scope or
-         eligibility policy: those remain the leaf's decisions. The caller's
-         table must use county keys longer than two characters and canonical
-         two-letter state/province keys (Alabama and West Virginia). *)
-      function CountyStateMultiplierKey(const aQso: ContestExchange): string;
+      (* AN IN-STATE ENTRANT'S HOST-COUNTY QSO ALSO EARNS THE HOST STATE --
+         issue #317. A HELPER a party CALLS from its
+         AdditionalDomesticMultiplierKey override (Alabama, West Virginia,
+         Kentucky, Vermont), never a rule this base applies: Arkansas and New
+         Jersey exclude their own state, and Florida's in-state file maps a
+         county to Fl already.
+
+         TRUE WITH aKey = HostState when the station is in the host state and
+         the QSO's DOMESTIC MULTIPLIER KEY -- DomMultQTH, else DomesticQTH, the
+         sheet's own fill rule -- is a host county: longer than two
+         characters, not the engine's XXX placeholder, and known to the
+         session's table (Station.IsDomesticQTH). It reads the key the sheet
+         CREDITS, never the typed QTHString: a rover row carries its county in
+         DomMultQTH with no DomesticQTH, and a typed text the sheet did not
+         credit earns nothing.
+
+         THE TABLE RULE IT RELIES ON: in each of these parties' in-state files
+         every key longer than two characters is a host county (the states
+         and provinces are two letters). Pinned per party. *)
+      function InStateCountyEarnsHostState(const aQso: ContestExchange;
+                                           out aKey: string): boolean;
       (* Strip only trailing county keys verified by the session table.
          Preserve portable and district suffixes, including W1AW/5. *)
       function CallWithoutRoverCounty(const aCall: string): string;
@@ -480,23 +495,32 @@ begin
    Result := UnicodeSameText(CallWithoutRoverCounty(aLoggedCall), aBonusCall);
 end;
 
-function TContestStateQSOPartyBase.CountyStateMultiplierKey(
-   const aQso: ContestExchange): string;
+function TContestStateQSOPartyBase.InStateCountyEarnsHostState(
+   const aQso: ContestExchange; out aKey: string): boolean;
 var
    county: string;
 begin
-   Result := '';
-   county := UpperCase(Trim(string(aQso.DomesticQTH)));
+   aKey := '';
+   Result := False;
+   if not Station.InHostState then
+      begin
+      Exit;
+      end;
+
+   (* The sheet's key: DomMultQTH, filled from DomesticQTH where empty. *)
+   county := UpperCase(Trim(string(aQso.DomMultQTH)));
    if county = '' then
       begin
-      county := UpperCase(Trim(string(aQso.QTHString)));
+      county := UpperCase(Trim(string(aQso.DomesticQTH)));
       end;
+
    (* XXX is the engine's unknown QTH placeholder, not a county. *)
    if (Length(county) > 2) and (county <> 'XXX') and
       Assigned(Station.IsDomesticQTH) and
       Station.IsDomesticQTH(county) then
       begin
-      Result := HostState;
+      aKey := HostState;
+      Result := True;
       end;
 end;
 

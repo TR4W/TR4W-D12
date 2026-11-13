@@ -1,10 +1,13 @@
 Alabama QSO Party in-state county, state and province multipliers
-The class adds Alabama state credit when a county is worked, once per mode.
+The class adds Alabama state credit when a county is worked, once per mode (issue 317).
 AL is not a received exchange: Alabama stations must send their county.
+The Al line below has a display name and NO alias, so it is on the multiplier list
+but AL can never be received instead of a county.
 DC and MDC count as Maryland. DXCC entities are the separate DX multiplier.
 Only canonical state and province aliases: longer keys are host counties.
 
 INCLUDE FILE alabama_cty.dom
+Al = ^Alabama
 Dc > Md = DC,MDC
 Ar = AR,^Arkansas
 Az = AZ,^Arizona

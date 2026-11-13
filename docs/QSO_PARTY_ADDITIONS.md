@@ -26,21 +26,17 @@ policy used by rescore. Existing contests retain their refusal behavior,
 including prefix keys derived from fields a refusing parser later changes.
 
 Alabama's first received county in each mode earns both that county and the
-Alabama state multiplier (NY4I, #114, 2026-11-13). Counties and other
-states/provinces use the domestic sheet; the additional `AL` key uses the
-existing string-key sheet, which already supports non-prefix keys for CW
-Open. Its totals row is labelled `AL`. The normal sheet scope, dupe/X-QSO
-exclusion, worked counts, score summation and rescore apply to both credits.
-No additional QSO field or database schema is required.
+Alabama state multiplier (NY4I, #114, 2026-11-13). **Since #317 (2026-11-13)
+both are DOMESTIC keys**: the state is `TContestBase.AdditionalDomesticMultiplierKey`,
+answered by the party base's `InStateCountyEarnsHostState`, and marked by
+`LOGDUPE.AddQSOToSheets` in the domestic scope; `alabama.dom` lists it as
+`Al = ^Alabama` (no alias). Nothing is stored, so no QSO field, schema or
+wire change. (The interim string-key/prefix-sheet credit, with its `AL`
+totals row and `CountyStateMultiplierKey`, is deleted.)
 
 West Virginia uses the same two-credit mechanism with its own once-overall
-scope, as NY4I ruled on #131. The county-to-state computation is now
-`TContestStateQSOPartyBase.CountyStateMultiplierKey`, extracted from Alabama
-when WV became its second caller. Each class elects to use it and owns its
-multiplier availability and scope; the helper validates the county and
-returns the host-state key. Both leaf parsers finalize the key after their
-inherited validation, and rescore uses the same leaf key policy. Alabama's
-policy is unchanged. WV's W8WVA bonus uses the existing declared bonus-station
+scope, as NY4I ruled on #131; Kentucky and Vermont joined it at #317.
+WV's W8WVA bonus uses the existing declared bonus-station
 mechanism, filtered by `IsCreditedContact`, with no new engine path.
 Shared bonus counting now scans the view once for any declared scope,
 including `bsPerQSO` for Arkansas's WR5P. Each leaf still owns contact and
@@ -80,17 +76,19 @@ remain bench work in `BENCH_QUEUE.md`.
 
 ## Issue workflow
 
-### Two domestic multipliers: specialist handoff #317
+### Two domestic multipliers: #317 (built 2026-11-13)
 
 NY4I confirmed on #110 (comment 6862605577) that a Kentucky entrant's
-county QSO also earns KY as a state. All such engine work belongs to the
-Claude specialist agents on #317. Kentucky documents the missing extra state credit in its new leaf and
-rules transcription, without adding another prefix-sheet solution. Alabama and WV are already added locally with that
-interim string-sheet implementation; #317 now names both leaves, their
-tests and scopes (AL per mode, WV overall) for migration. Their passing
-tests do not establish correct domestic totals/needs UI. South Carolina is
-also tracked there. Arkansas explicitly excludes AR from its states, and
-New Jersey excludes NJ, so neither should gain an additional host-state key.
+county QSO also earns KY as a state. **Built at #317** for Alabama (per
+mode), West Virginia (overall), Kentucky (overall) and Vermont (per mode):
+see the paragraph above and `.claude/agents/contest-scoring.md`. The
+in-state lists are KY 184, AL 130, WV 118, VT 77 (VT's `Vt` already came
+from S50.DOM). Pinned by `uTestAdditionalDomesticMultiplier`. Known
+undercount, not fixed: a reader of a QSO's STORED flags (the UDP
+`<ismultiplier2>`, the hourly report's Mults column, `uHamScore.CountMultipliers`) shows one fewer
+multiplier on the first county QSO of each scope. South Carolina, when
+built, uses the same one-line override. Arkansas explicitly excludes AR from
+its states, and New Jersey excludes NJ, so neither gains a host-state key.
 
 Post rule questions on the relevant issue and apply `Agent Question`.
 Read answers directly, retain the ruling in the source/rules transcription,

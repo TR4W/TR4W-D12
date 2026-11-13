@@ -29,22 +29,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   except USA/Canada/Hawaii/Alaska. No power factor or bonus.
 
   NY4I on #114, 2026-11-13: "AL would get credit for working that AL
-  station." A county earns BOTH its county and the AL state multiplier.
-  The counties and 49 other states use the domestic sheet; the additional
-  AL key uses the existing arbitrary string-key sheet (PrefixMultiplierKey,
-  as CW Open uses it for callsigns). Its totals row is labelled AL. This
-  keeps both keys independently scoped per mode, with no new stored fields,
-  lookup table or contest-name test in shared code. This class finalizes the
-  string key after its inherited parser has validated the county.
-  AL is absent from the received table because the rules forbid sending AL
-  instead of the county. The table's only keys longer than two letters are
-  counties, so a resolved county earns the extra state credit. The same
-  predicate works for an imported county or a received rover suffix.
-  DXCC and prefix keys are still subject to the engine's ordinary dupe and
-  X-QSO exclusion and are rebuilt on rescore, just like every multiplier.
-  INTERIM: #317 owns replacement of the prefix-sheet state credit with a
-  second domestic key, including totals/needs displays. NY4I assigned that
-  broader engine work to specialist agents; this leaf must migrate with it.
+  station." An in-state entrant's county QSO earns BOTH its county and the
+  AL state multiplier, both on the DOMESTIC sheet, per mode (#317,
+  AdditionalDomesticMultiplierKey -> InStateCountyEarnsHostState).
+  alabama.dom names the key `Al = ^Alabama`: on the remaining list, but
+  with no alias, so AL still cannot be received instead of the county (the
+  rules forbid it). The table's only keys longer than two letters are
+  counties, so a credited county earns the extra state credit -- typed,
+  imported, or a received rover county. Nothing is stored: the sheet
+  re-derives the key on load and rescore. Until #317 the AL credit was a
+  prefix-sheet key with its own "AL" totals row; that is gone.
 
   Cabrillo AL-QSO-PARTY verified at WA7BNM ref 134; ADIF independently
   verified in ADIF 3.1.7. No sponsor Cabrillo example: tests pin required
@@ -68,7 +62,6 @@ type
    private
       function CountsDXMultiplier: boolean;
    protected
-      function GetTotalsDisplay: TTotalsDisplay; override;
       function GetDisplayName: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
@@ -94,18 +87,14 @@ type
          const aQso: ContestExchange; const aCtx: TCabrilloQSOContext): string; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function ParseReceivedExchange(const aText: string;
-         const aSession: TReceivedExchangeSession; var aExch: ContestExchange;
-         out aErrorMessage: string): boolean; override;
       function UsesBand(aBand: BandType): boolean; override;
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       function CQExchangeDefault(const aStation: TStationContext): string; override;
       function HasDXMultiplier: boolean; override;
       function HasZoneMultiplier: boolean; override;
-      function HasPrefixMultiplier: boolean; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
-      function PrefixMultiplierKey(const aQso: ContestExchange;
-         out aKey: PrefixMultiplierString): boolean; override;
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+         out aKey: string): boolean; override;
       function DXMultiplierKey(const aQso: ContestExchange;
          out aKey: DXMultiplierString): boolean; override;
       function CountryMode: CountryModeType; override;
@@ -198,19 +187,6 @@ begin
    Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
 end;
 
-function TContestAlabamaQP.ParseReceivedExchange(const aText: string;
-   const aSession: TReceivedExchangeSession; var aExch: ContestExchange;
-   out aErrorMessage: string): boolean;
-var
-   key: PrefixMultiplierString;
-begin
-   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
-   if Result and PrefixMultiplierKey(aExch, key) then
-      begin
-      aExch.Prefix := key;
-      end;
-end;
-
 function TContestAlabamaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
    const aQso: ContestExchange): string;
 begin
@@ -284,36 +260,16 @@ begin
    Result := False;
 end;
 
-function TContestAlabamaQP.HasPrefixMultiplier: boolean;
-begin
-   Result := Station.InHostState;
-end;
-
 function TContestAlabamaQP.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
 end;
 
-function TContestAlabamaQP.PrefixMultiplierKey(const aQso: ContestExchange;
-   out aKey: PrefixMultiplierString): boolean;
+function TContestAlabamaQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+   out aKey: string): boolean;
 begin
-   aKey := '';
-   Result := HasPrefixMultiplier;
-   if Result then
-      begin
-      aKey := PrefixMultiplierString(CountyStateMultiplierKey(aQso));
-      end;
-end;
-
-function TContestAlabamaQP.GetTotalsDisplay: TTotalsDisplay;
-begin
-   Result := inherited GetTotalsDisplay;
-   if HasPrefixMultiplier then
-      begin
-      Result.PrefixMultsCaption := 'AL';
-      Result.PrefixMultsCaptionCW := 'CW AL';
-      Result.PrefixMultsCaptionPhone := 'Ph AL';
-      end;
+   (* A county also earns AL, in state -- the header (#317). *)
+   Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
 initialization

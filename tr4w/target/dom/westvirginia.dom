@@ -1,9 +1,12 @@
 West Virginia QSO Party in-state county, state and province multipliers
 Counties plus 49 other states plus 13 provinces; DC counts as Maryland.
-The class adds WV state credit on a county QSO, once per contest.
+The class adds WV state credit on a county QSO, once per contest (issue 317).
+The Wv line below has a display name and NO alias, so it is on the multiplier list
+but WV can never be received instead of a county.
 DXCC is separate. Only canonical two-letter state and province aliases.
 
 INCLUDE FILE westvirginia_cty.dom
+Wv = ^West Virginia
 Dc > Md = DC,MDC
 Al = AL,^Alabama
 Ar = AR,^Arkansas

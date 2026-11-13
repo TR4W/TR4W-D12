@@ -18,9 +18,8 @@ Alabama/NJ were committed locally as `bad18048`; WV as `ae586527`.
 **Round scope versus implementation status:** the remaining missing entries below
 are queued within the current new-QSO-party round, not additional work
 excluded from it. South Dakota remains in that queue with its rule questions answered.
-Kentucky now has its class/data/tests; its additional KY state credit is
-explicitly deferred to specialist engine work #317. AL/WV also need migration
-from their interim prefix-sheet state credit under #317. The five new
+Kentucky now has its class/data/tests; its additional KY state credit, and
+AL/WV/VT's, is a second domestic key since #317 (2026-11-13). The five new
 registrations do not establish complete category or report support. "Missing" in the table means not implemented
 yet, not outside the round's scope.
 
@@ -46,7 +45,7 @@ yet, not outside the round's scope.
 | Indiana QSO Party | `IN QSO PARTY` | Present | Present |  |
 | Iowa QSO Party | None | Absent | Missing | #120 |
 | Kansas QSO Party | None | Absent | Missing | #121 |
-| Kentucky QSO Party | `KY-QSO-PARTY` | Absent | Present | #110; extra KY credit deferred to #317 |
+| Kentucky QSO Party | `KY-QSO-PARTY` | Absent | Present | #110; extra KY credit built at #317 |
 | Louisiana QSO Party | None | Absent | Missing | #122 |
 | Michigan QSO Party | `MICHIGAN QSO PARTY` | Present | Present |  |
 | Minnesota QSO Party | `MINNESOTA QSO PARTY` | Present | Present |  |
@@ -91,7 +90,9 @@ The Challenge website calls this four-event workflow IN7QPNEDE.
   and their DOM data. Verify that actual release build against this list.
 - Complete the relevant #88 rule-correctness and bench follow-ups. Known
   shared limitations include own-mobile/category rules (#133/#87),
-  double domestic multipliers (#317), and pending screen/3830 checks.
+  the stored-flag undercount of the second domestic key (UDP
+  `<ismultiplier2>`, hourly Mults column, HamScore; #317 follow-up), and pending
+  screen/3830 checks.
   Registered presence alone must not hide those limits in an external claim.
   A concrete existing #88 gap is Wisconsin: its class still records the
   typed DX exchanges as refused. NY4I resolved the power-factor rounding

@@ -91,7 +91,7 @@ begin
       party := Make(PartyHandle, station);
       try
          CheckTrue(party.HasDXMultiplier = inHost, 'DXCC for WV entrant only');
-         CheckTrue(party.HasPrefixMultiplier = inHost, 'extra WV state only inside');
+         CheckFalse(party.HasPrefixMultiplier, '#317: the WV state is a domestic key, no prefix sheet');
          CheckFalse(party.HasZoneMultiplier, 'no zones');
          for band := Low(BandType) to High(BandType) do
             begin
@@ -131,7 +131,7 @@ var
    my: TMyStationExchange;
    ctx: TCabrilloQSOContext;
    qso: ContestExchange;
-   key: PrefixMultiplierString;
+   key: string;
 begin
    BeginTest('Test_WestVirginiaTablesAndExchange');
    CheckEquals('', CountyFileDifference('WestVirginia', 'westvirginia_cty.dom',
@@ -151,19 +151,23 @@ begin
       party := Make(PartyHandle, station);
       try
          qso := WVQSO('W8ABC', Band20, CW, eCW);
-         CheckTrue(party.PrefixMultiplierKey(qso, key), 'additional state key supplied');
-         CheckEquals('WV', string(key), 'county also earns WV state');
+         CheckTrue(party.AdditionalDomesticMultiplierKey(qso, key), '#317: a second domestic key');
+         CheckEquals('WV', key, 'county also earns WV state');
          qso.DomesticQTH := '';
+         qso.DomMultQTH := 'MIN';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('WV', key, 'received rover county: the credited key');
+         qso.DomMultQTH := '';
          qso.QTHString := 'MIN';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('WV', string(key), 'received rover county without stored domestic field');
-         qso.QTHString := 'XXX';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('', string(key), 'unknown placeholder no state credit');
-         qso.QTHString := 'KP4';
-         party.PrefixMultiplierKey(qso, key);
-         CheckEquals('', string(key), 'DX prefix is not a county');
-         CheckEquals('WV', party.TotalsDisplay.PrefixMultsCaption, 'extra state totals caption');
+         CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key),
+            '#317: the typed QTH alone is not the credited key');
+         qso.DomesticQTH := 'XXX';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('', key, 'unknown placeholder no state credit');
+         qso.DomesticQTH := 'KP4';
+         party.AdditionalDomesticMultiplierKey(qso, key);
+         CheckEquals('', key, 'DX prefix is not a county');
+         CheckTrue(party.TotalsDisplay.PrefixMultsCaption <> 'WV', 'the interim WV totals row is gone');
          qso := WVQSO('W8ABC', Band20, CW, eCW);
          qso.RSTSent := 599;
          qso.RSTReceived := 599;
@@ -184,7 +188,7 @@ begin
          CheckEquals('599 DL     ', party.FormatCabrilloSentExchange(my, qso, ctx), 'DX sends prefix');
          CheckEquals('599 DL     ', party.FormatADIFSentExchange(my, qso), 'ADIF DX prefix');
          CheckEquals(' 5NN DL', party.CQExchangeDefault(station), 'default DX exchange agrees');
-         CheckFalse(party.PrefixMultiplierKey(qso, key), 'outside entrant earns county only');
+         CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key), 'outside entrant earns county only');
       finally
          party.Free;
       end;
@@ -240,8 +244,8 @@ begin
       totals.QSOPoints := 100;
       totals.ScoredBand := AllBands;
       totals.SessionCountsMultipliers := True;
-      totals.Mults[AllBands, Both, rmDomestic] := 12;
-      totals.Mults[AllBands, Both, rmPrefix] := 1;
+      (* 12 counties/states plus WV, all domestic (#317), and 2 DXCC. *)
+      totals.Mults[AllBands, Both, rmDomestic] := 13;
       totals.Mults[AllBands, Both, rmDX] := 2;
       for power := Low(tCategoryPower) to High(tCategoryPower) do
          begin
@@ -265,23 +269,24 @@ begin
    engine := TQSOPartyEngine.Create(PartyHandle);
    try
       engine.Activate(True);
-      CheckEquals(117, mo.DomList.Count, '55 counties plus 49 other states plus 13 provinces');
+      CheckEquals(118, mo.DomList.Count, '55 counties, WV, 49 other states, 13 provinces (#317)');
       engine.Enter('W8UNKNOWN', '599 XXX', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'unknown QTH placeholder can be logged');
       CheckFalse(rx.DomesticMult, 'unknown no county');
-      CheckFalse(rx.PrefixMult, 'unknown no WV state');
+      CheckEquals(0, mo.MTotals[AllBands, Both, rmDomestic], 'unknown no WV state');
       dupe := engine.Enter('W8AAA', '599 BAR', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'county accepted');
       CheckFalse(dupe, 'first contact');
       CheckTrue(rx.DomesticMult, 'county multiplier');
-      CheckTrue(rx.PrefixMult, 'WV state at the same contact');
-      CheckEquals('WV', string(rx.Prefix), 'extra state key');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'WV state at the same contact, domestic');
+      CheckFalse(mo.IsDmMult('WV', AllBands, Both, False), 'WV worked, once overall');
+      CheckEquals(0, mo.MTotals[AllBands, Both, rmPrefix], 'no prefix sheet any more');
       engine.Enter('W8AAA', '599 BAR', Band40, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'county not repeated per band');
-      CheckFalse(rx.PrefixMult, 'state not repeated per band');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'state not repeated per band');
       engine.Enter('W8AAA', '59 BAR', Band20, Phone, eUSB, accepted, rx);
       CheckFalse(rx.DomesticMult, 'county not repeated per mode');
-      CheckFalse(rx.PrefixMult, 'state not repeated per mode');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'state not repeated per mode');
       CheckEquals(1, Integer(rx.QSOPoints), 'phone one point');
       dupe := engine.Enter('W8AAA', '59 BAR', Band20, FM, eFM, accepted, rx);
       CheckTrue(dupe, 'FM and SSB share phone dupe group');
@@ -289,7 +294,7 @@ begin
       CheckTrue(accepted, 'digital exchange accepted');
       CheckEquals(2, Integer(rx.QSOPoints), 'digital two points');
       CheckFalse(rx.DomesticMult, 'digital no repeated county');
-      CheckFalse(rx.PrefixMult, 'digital no repeated state');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'digital no repeated state');
       dupe := engine.Enter('W8AAA', '599 BAR', Band20, Digital, ePSK31, accepted, rx);
       CheckTrue(dupe, 'non-CW digital submodes one dupe group');
       engine.Enter('W8MIN', '599 MIN', Band20, CW, eCW, accepted, rx);
@@ -304,7 +309,8 @@ begin
       engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'DX prefix accepted');
       CheckTrue(rx.DXMult, 'DXCC multiplier');
-      CheckFalse(rx.PrefixMult, 'DX prefix not WV county');
+      CheckEquals(5, mo.MTotals[AllBands, Both, rmDomestic],
+         'BAR, WV, MIN, MN, MD -- a DX prefix is no WV county');
       engine.Enter('DL1AAA', '59 DL', Band40, Phone, eUSB, accepted, rx);
       CheckFalse(rx.DXMult, 'DXCC not repeated per band/mode');
       engine.Enter('KH6AAA', '599 HI', Band20, CW, eCW, accepted, rx);
@@ -319,7 +325,7 @@ begin
       CheckEquals('BER', DequeuePendingCounty, 'second county is Berkeley');
       engine.Enter('W8LINE', '599 BER', Band15, CW, eCW, accepted, rx);
       CheckTrue(rx.DomesticMult, 'second county earns separate credit');
-      CheckFalse(rx.PrefixMult, 'WV state still once');
+      CheckEquals(7, mo.MTotals[AllBands, Both, rmDomestic], 'HI and BER; WV state still once');
       engine.Enter('W8THREE', '599 BAR/BER/BOO', Band15, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'three counties refused');
       CheckEquals(0, PendingCountiesCount, 'refusal leaves no county queue');
@@ -327,7 +333,7 @@ begin
       engine.Activate(False);
       engine.Enter('W8ROV', '599 BAR', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'outside entrant works county');
-      CheckFalse(rx.PrefixMult, 'outside no separate WV state');
+      CheckEquals(1, mo.MTotals[AllBands, Both, rmDomestic], 'outside no separate WV state');
       dupe := engine.Enter('W8ROV', '599 BER', Band20, CW, eCW, accepted, rx);
       CheckFalse(dupe, 'bare-call rover new county is new QSO');
       dupe := engine.Enter('W8ROV', '599 BAR', Band20, CW, eCW, accepted, rx);
@@ -347,18 +353,21 @@ begin
       rx.DomesticQTH := '';
       rx.QTHString := 'MIN';
       rx.DomMultQTH := 'MIN';
-      rx.Prefix := 'BAD';
       rx.QSOPoints := 99;
       RecomputeQSOScoring(rx);
-      CheckEquals('WV', string(rx.Prefix), 'rescore derives WV from received rover county');
       CheckEquals(2, Integer(rx.QSOPoints), 'rescore replaces stale points');
       CheckTrue(rx.DomesticMult, 'rescore county credit');
-      CheckTrue(rx.PrefixMult, 'rescore separate state credit');
+      CheckFalse(rx.PrefixMult, 'no prefix credit any more');
+      Sheet.AddQSOToSheets(@rx, False);
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic],
+         'the sheet derives WV from the credited rover county');
       rx.ceXQSO := True;
       RecomputeQSOScoring(rx);
       CheckFalse(rx.DomesticMult, 'X-QSO no county');
-      CheckFalse(rx.PrefixMult, 'X-QSO no state');
       CheckEquals(0, Integer(rx.QSOPoints), 'X-QSO zero');
+      mo.ClearAllMults;
+      Sheet.AddQSOToSheets(@rx, False);
+      CheckEquals(0, mo.MTotals[AllBands, Both, rmDomestic], 'X-QSO no state');
    finally
       engine.Free;
    end;
