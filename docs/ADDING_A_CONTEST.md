@@ -25,6 +25,19 @@ exchange is closest to yours:
 | Ontario | `926617b3` | a Canadian host (no ADIF `CNTY`, its own New Contest prompt); a bonus keyed on the worked call |
 | Quebec | `e751a346` | every QTH from the `.dom`, with ONE `Dx` entry as the DX multiplier; rules in two languages |
 
+The new Alabama, New Jersey and West Virginia tests share `uTestQSOPartyEngine` for isolated
+real-engine sessions and exact county-file comparison with sponsor data.
+Use that fixture for a new party rather than copying the session save/restore
+and QSO-entry routines. See `docs/QSO_PARTY_ADDITIONS.md` for its ownership and
+the exchange-dependent string-key timing found while adding Alabama (#114).
+When a party awards its host state in addition to a received county,
+document its dependency on #317 and update that issue with the new leaf.
+NY4I assigned the correct two-domestic-key engine support to specialist
+agents. Alabama and WV currently use an interim prefix/string-sheet key;
+do not introduce another such implementation. Their shared protected
+`CountyStateMultiplierKey` computes the county's host key but does not
+solve domestic scope, totals or needs displays.
+
 The design behind all of this is `docs/CONTEST_OWNERSHIP_DESIGN.md`: **a
 contest class owns its rules outright**, through virtuals on `TContestBase`.
 There are no shared strategy objects and no per-rule registries.
@@ -67,6 +80,15 @@ Then the edits to shared files listed in [A4](#a4-every-place-outside-the-class-
 
 ### The rules folder
 
+For a PDF, use the configured local `pdftomarkdown` MCP tool
+`convert_to_markdown` and retain the Markdown beside the original PDF.
+On NY4I's machine this is the checkout at `C:\projects\pdftomarkdown`;
+the CLI fallback is `bun <checkout>/bin/cli.js <input.pdf> -o <output.md>`.
+Use that explicit local path, not an unqualified `npx pdftomarkdown` which
+can resolve a different npm product. This converter needs no API key and
+processes local PDFs on box. Check the full page range and independently
+verify any county/table extraction before building DOM data from it.
+
 One folder per contest. It holds:
 
 - **the sponsor's own document** -- the PDF, or whatever the sponsor
@@ -87,6 +109,24 @@ One folder per contest. It holds:
 
 A table the class or its `.dom` is built from (counties, multipliers) may be
 its own transcription beside the rules (`OK-QSO-PARTY-Counties.txt`).
+
+### Contest names when the sponsor is silent
+
+NY4I's naming strategy (2026-11-13, #131): consult the installed DXLog
+definitions in `C:\Program Files (x86)\DXLog.net\Contest\`. Search their
+`CONTESTNAME` fields with `rg -i` to identify the event, then use the file's
+`CABRILLO_CONTEST_NAME` as the default Cabrillo name. Do not infer it from
+the filename or ask merely because another calendar prefers an alias.
+For example, `WVQP.txt` identifies West Virginia and explicitly states
+`CABRILLO_CONTEST_NAME=WV-QSO-PARTY`.
+
+Reuse `DXLogFile` in `tools/dom-crosscheck/crosscheck_dom_dxlog.py` to read
+definitions; it already exposes `contestname` and `cabrillo`. Consult
+`docs/DXLOG_CONTEST_FIELD_DEFINITIONS_REFERENCE.md` for field meanings.
+The file also helps cross-check ADIF export fields, but `ADIF_KEYS` describes
+exported tags, not the ADIF contest identifier. Verify the ADIF identifier
+against the ADIF enumeration separately; a Cabrillo name does not imply it.
+Retain the chosen names and their sources in the rules transcription.
 
 ### The `.dom` format
 

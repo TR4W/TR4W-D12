@@ -1,0 +1,109 @@
+Source: https://sites.google.com/view/k2td-bcrc/nj-qp/faqs
+Fetched: 2026-11-13
+Cabrillo: NJ-QSO-PARTY (sponsor Cabrillo page)
+ADIF: NJ-QSO-PARTY (ADIF 3.1.7 Contest_ID)
+WA7BNM: 92 - https://www.contestcalendar.com/contestdetails.php?ref=92
+Image table transcription: NJ-QSO-PARTY-ImageTables.txt
+Issue: https://github.com/TR4W/TR4W-D12/issues/124
+
+K2TD-BCRC.org - FAQs
+Search this site
+Embedded Files
+Skip to main content
+Skip to navigation
+NEXT meeting Monday Nov 16 (nominations)  ==>
+Meetings
+K2TD-BCRC.org
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+K2TD-BCRC.org
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+More
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+NJ QSO Party - FAQs
+(Frequently Asked Questions - click each to expand)
+Can I use FT8 for this state party?
+Thank you for your question and interest in the New Jersey QSO Party!
+We're sorry, but
+FT8 cannot be used
+in the official New Jersey QSO Party.
+While the contest rules explicitly allow digital modes, the mandatory exchange requires New Jersey stations to send their County and out-of-state stations to send their State, Province, or "DX". Standard FT8 protocol only supports grid squares and signal reports. Because WSJT-X lacks a custom operating module configured to pass the NJ county/state data structure, FT8 is fundamentally incapable of completing the mandatory exchange.
+If you want to operate the digital category for the NJ QSO Party (which we encourage), you will need to use macro-driven, keyboard-to-keyboard digital modes like RTTY or PSK, which easily allow you to type out or automate the required geographic exchange.
+The bottom line:  any mode that can exchange the required information is allowed, but FT8 cannot do it currently.
+73, NJ QSO Party team
+Why the date change in 2026?
+Primarily because we have received suggestions /comments /complaints for several years from out-of-state participants that their participation would be greater if there were fewer state QSO parties running simultaneously.  When first started, only NJ and Washington State were on that date.  Since then, other QSO parties moved in culminating with Texas, one of the huge parties.  A great deal of thought and research went into discussions by the team as we considered this date change.  There are virtually no days when nothing is going on so whatever date we choose would be better for some and worse for others.
+Did we figure in other events?  Yes.  Do we have a definitive answer to “did we do the best thing”?  No, and we won’t until after the logs are received this year.  Next year’s date depends on how this year goes.  Our goal is to announce the 2027 date by December at the latest.
+How can I join the fun for this event?
+"I'm a licensed ham operator, how do i join in the fun and submit QSO's ? "
+First of all, thank you for your interest in the NJ QSO Contest!  We have put together a short summary of the event and how to participate in the PDF file located on the contest site.  just use this link:
+https://sites.google.com/view/k2td-bcrc/nj-qp?authuser=0
+The PDF file linked at the top should give you a summary of the event and how to participate.  We recommend getting your club or some friends involved also - it can make it much more fun and interesting!
+We hope you enjoy the event, 73 and good luck!
+- NJ QSO Party Team
+(c) 2026 Burlington County Radio Club
+Google Sites
+Report abuse
+Page details
+Page updated
+Google Sites
+Report abuse

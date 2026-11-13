@@ -95,6 +95,7 @@ uses
    FCONTEST,
    (* BuildSingleQsoCabrilloLine -- the X-QSO: prefix, Q119. *)
    uCabrillo,
+   uTestQSOPartyRules,
    MainUnit;
 
 (* ---------------------------------------------------------------------------
@@ -789,32 +790,7 @@ var
    (* ONE QSO, AS AN OPERATOR ENTERS IT: ParametersOkay, then what
       LogContact does with the record it accepts -- the dupe question, the
       dupe's zero points, the sheets. Returns whether it was a dupe. *)
-   function Enter(const aCall: string; const aExch: string; aBand: BandType;
-                  aMode: ModeType; out aAccepted: boolean;
-                  var aRX: ContestExchange): boolean;
-   begin
-      aRX := Default(ContestExchange);
-      ActiveMode := aMode;
-      CallWindowString := CallString(aCall);
-      ExchangeErrorMessage := '';
-      aAccepted := ParametersOkay(CallString(aCall), Str40(aExch), aBand, aMode,
-                                  14025000, aRX);
-      aRX.ceRecordKind := rkQSO;
-      aRX.ceContest := Contest;
-      Result := False;
-      if aAccepted then
-         begin
-         Result := VisibleLog.QSOIsADupe(aRX);
-         if Result then
-            begin
-            aRX.ceDupe := True;
-            aRX.QSOPoints := 0;
-            end;
-         Sheet.SetMultFlags(aRX);
-         Sheet.AddQSOToSheets(@aRX, False);
-         AddQSOToDupeSheets(aRX, False);
-         end;
-   end;
+
 
 begin
    BeginTest('Test_GeorgiaRealEngineOutOfState');
@@ -870,7 +846,7 @@ begin
       mo.ClearAllMults;
 
       (* A ROVER IN HARRIS COUNTY, CW. *)
-      dupe := Enter('KU8E/HARR', '599 HARR', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('KU8E/HARR', '599 HARR', Band20, CW, accepted, rx);
       CheckTrue(accepted, '599 HARR is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, 'and is not a dupe');
       CheckEquals('KU8E/HARR', string(rx.Callsign), 'the call is stored as typed');
@@ -879,32 +855,32 @@ begin
       CheckEquals(2, Integer(rx.QSOPoints), 'CW scores 2');
 
       (* "Each multiplier may be counted once per mode. (Not per band)". *)
-      dupe := Enter('KU8E/HARR', '599 HARR', Band40, CW, accepted, rx);
+      dupe := EnterPartyQSO('KU8E/HARR', '599 HARR', Band40, CW, accepted, rx);
       CheckFalse(dupe, 'the same station on 40 m CW is not a dupe');
       CheckEquals(2, Integer(rx.QSOPoints), 'and scores 2');
       CheckFalse(rx.DomesticMult, 'but Harris on CW is NOT a new multiplier on 40 m');
 
-      dupe := Enter('KU8E/HARR', '59 HARR', Band40, Phone, accepted, rx);
+      dupe := EnterPartyQSO('KU8E/HARR', '59 HARR', Band40, Phone, accepted, rx);
       CheckTrue(accepted, '59 HARR on SSB is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, 'the same station on 40 m SSB is not a dupe');
       CheckEquals(1, Integer(rx.QSOPoints), 'SSB scores 1');
       CheckTrue(rx.DomesticMult, 'Harris on SSB IS a new multiplier');
 
       (* "Rovers that move to a new county can work everyone again". *)
-      dupe := Enter('KU8E/MUSC', '599 MUSC', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('KU8E/MUSC', '599 MUSC', Band20, CW, accepted, rx);
       CheckFalse(dupe, 'the rover from Muscogee on 20 m CW is not a dupe');
       CheckTrue(rx.DomesticMult, 'Muscogee is a new multiplier');
 
-      dupe := Enter('W4ABC', '599 COBB', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('W4ABC', '599 COBB', Band20, CW, accepted, rx);
       CheckFalse(dupe, 'a plain call from Cobb');
-      dupe := Enter('W4ABC', '599 FULT', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('W4ABC', '599 FULT', Band20, CW, accepted, rx);
       CheckFalse(dupe, 'the same plain call from Fulton, same band and mode: a new county (Q118)');
       CheckEquals(2, Integer(rx.QSOPoints), 'and scores');
-      dupe := Enter('W4ABC', '599 COBB', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('W4ABC', '599 COBB', Band20, CW, accepted, rx);
       CheckTrue(dupe, 'Cobb again on 20 m CW IS a dupe');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
 
-      dupe := Enter('KU8E/HARR', '599 HARR', Band20, CW, accepted, rx);
+      dupe := EnterPartyQSO('KU8E/HARR', '599 HARR', Band20, CW, accepted, rx);
       CheckTrue(dupe, 'the Harris rover again on 20 m CW IS a dupe');
 
       (* "Stations outside Georgia may not count contacts with non-Georgia or
@@ -928,7 +904,7 @@ begin
       (* A STATE: a place the contest knows (georgia.dom has PA through
          S50), which an out-of-state entrant may not work. *)
       accepted := True;
-      Enter('AA3B', '599 PA', Band20, CW, accepted, rx);
+      EnterPartyQSO('AA3B', '599 PA', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a Pennsylvania station is refused');
       CheckEquals('Improper domestic QTH!! (PA: work GA stations only)',
                   string(ExchangeErrorMessage),
@@ -936,7 +912,7 @@ begin
 
       (* The SAME reason from the single-word parser -- CT typed alone. *)
       accepted := True;
-      Enter('W1AW', 'CT', Band20, CW, accepted, rx);
+      EnterPartyQSO('W1AW', 'CT', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a Connecticut station is refused');
       CheckEquals('Improper domestic QTH!! (CT: work GA stations only)',
                   string(ExchangeErrorMessage),
@@ -945,7 +921,7 @@ begin
       (* A TYPO: not a county, not a state -- not in the file this entrant
          loaded, which is named. *)
       accepted := True;
-      Enter('K4BAI', '599 HARX', Band20, CW, accepted, rx);
+      EnterPartyQSO('K4BAI', '599 HARX', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a misspelt county is refused');
       CheckEquals('Improper domestic QTH!! (HARX not in georgia_cty.dom)',
                   string(ExchangeErrorMessage),
@@ -953,7 +929,7 @@ begin
 
       (* NOTHING THAT COULD BE A QTH -- a report alone. *)
       accepted := True;
-      Enter('K4BAI', '599', Band20, CW, accepted, rx);
+      EnterPartyQSO('K4BAI', '599', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a report alone is refused');
       CheckEquals('Improper domestic QTH!! (no QTH)',
                   string(ExchangeErrorMessage),
@@ -963,7 +939,7 @@ begin
          configuration gap comes before any QTH reason. *)
       Settings.My.DeriveCountry('');
       accepted := True;
-      Enter('AA3B', '599 PA', Band20, CW, accepted, rx);
+      EnterPartyQSO('AA3B', '599 PA', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'still refused with no MY COUNTRY');
       CheckEquals(TC_IMPROPERDOMESITCQTH + ' ' + SExchangeModeBriefEmptyCountry,
                   string(ExchangeErrorMessage),
@@ -971,7 +947,7 @@ begin
       Settings.My.DeriveCountry('K');
 
       accepted := True;
-      Enter('DL1AAA', '599 DX', Band20, CW, accepted, rx);
+      EnterPartyQSO('DL1AAA', '599 DX', Band20, CW, accepted, rx);
       CheckFalse(accepted, 'a DX station is refused');
       CheckEquals(Format(SExchangeOutOfStateWorksHostOnly, ['GA']), string(ExchangeErrorMessage),
                   'with the host-area reason');
@@ -979,14 +955,14 @@ begin
       (* A COUNTY LINE -- "KU8E/HARR/MUSC": the first county is this QSO,
          the second is queued as its own QSO; three is refused. *)
       ClearPendingCounties;
-      dupe := Enter('K4BAI', '599 TLBT/MUSC', Band15, CW, accepted, rx);
+      dupe := EnterPartyQSO('K4BAI', '599 TLBT/MUSC', Band15, CW, accepted, rx);
       CheckTrue(accepted, 'a county line of two is taken: ' + string(ExchangeErrorMessage));
       CheckEquals('TLBT', UpperCase(string(rx.QTHString)), 'the first county is this QSO');
       CheckEquals(1, PendingCountiesCount, 'one more county is queued');
       CheckEquals('MUSC', UpperCase(DequeuePendingCounty), 'Muscogee, as its own QSO');
       ClearPendingCounties;
       accepted := True;
-      Enter('K4BAI', '599 TLBT/MUSC/HARR', Band15, CW, accepted, rx);
+      EnterPartyQSO('K4BAI', '599 TLBT/MUSC/HARR', Band15, CW, accepted, rx);
       CheckFalse(accepted, 'three counties are refused');
       CheckEquals(Format(TC_TOOMANYCOUNTIES, [2]), string(ExchangeErrorMessage),
                   'with the county-count message');
@@ -994,7 +970,7 @@ begin
 
       (* "Digital contacts aren't allowed": logged, an automatic X-QSO,
          nothing earned. *)
-      dupe := Enter('N4DIG', '599 BIBB', Band20, Digital, accepted, rx);
+      dupe := EnterPartyQSO('N4DIG', '599 BIBB', Band20, Digital, accepted, rx);
       CheckTrue(accepted, 'a digital QSO is logged');
       CheckTrue(QSOIsXQSO(ContestIdentity(GeorgiaHandle), rx), 'as an X-QSO');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');

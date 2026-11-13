@@ -1,0 +1,25 @@
+Source: https://sites.google.com/view/k2td-bcrc/nj-qp/nj-mults
+Fetched: 2026-11-13
+Transcribed from CountiesAndProvinces.png; canonical code and county name.
+
+ATLA=Atlantic
+BERG=Bergen
+BURL=Burlington
+CAPE=Cape May
+CMDN=Camden
+CUMB=Cumberland
+ESSE=Essex
+GLOU=Gloucester
+HUDS=Hudson
+HUNT=Hunterdon
+MERC=Mercer
+MIDD=Middlesex
+MONM=Monmouth
+MORR=Morris
+OCEA=Ocean
+PASS=Passaic
+SALE=Salem
+SOME=Somerset
+SUSS=Sussex
+UNIO=Union
+WRRN=Warren

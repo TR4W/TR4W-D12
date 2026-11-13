@@ -1,0 +1,256 @@
+Source: https://sites.google.com/view/k2td-bcrc/nj-qp/rules
+Fetched: 2026-11-13
+Cabrillo: NJ-QSO-PARTY (sponsor Cabrillo page)
+ADIF: NJ-QSO-PARTY (ADIF 3.1.7 Contest_ID)
+WA7BNM: 92 - https://www.contestcalendar.com/contestdetails.php?ref=92
+Image table transcription: NJ-QSO-PARTY-ImageTables.txt
+Issue: https://github.com/TR4W/TR4W-D12/issues/124
+
+K2TD-BCRC.org - Rules
+Search this site
+Embedded Files
+Skip to main content
+Skip to navigation
+NEXT meeting Monday Nov 16 (nominations)  ==>
+Meetings
+K2TD-BCRC.org
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+K2TD-BCRC.org
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+More
+Home
+Activities
+POTA
+Winter Field Day
+ARRL Field Day
+N2M Special Event
+PICNIC
+Public Events
+Meetings
+Calendar
+NJ QP
+Results
+NJ-Mults
+Rules
+Cabrillo Format
+FAQs
+About
+Getting Started
+Communication
+Contact Us
+Ham Videos
+NJQP
+-
+RESULTS
+-
+RULES
+-
+MULTIPLIERS
+Submission Info:
+email to:
+NewJerseyQSOParty@gmail.com
+REQUIRED:
+Properly formatted Cabrillo file
+("callsign.log")
+Deadline
+: Oct 1, 2026 after the contest.
+2026 NJ QSO Party Rules
+Welcome to the official rules page for the New Jersey QSO Party, an eagerly anticipated event within the amateur radio community hosted by the Burlington County Radio Club. This page provides comprehensive details on the contest's objectives, operating bands, entry categories, modes of communication, scoring system, and the exchange protocol that participants are expected to follow. Whether you're a seasoned ham operator or a newcomer to the scene, understanding these rules will ensure you're well-prepared to compete effectively and enjoy the camaraderie and excitement of the NJ QSO Party. The contest is designed to encourage radio operators to connect across New Jersey and beyond, fostering a spirit of competition and fellowship among enthusiasts. For full details on the contest's date and time, specific rules regarding NJ Club Aggregate Scores, and the necessary information for logging and submitting your contacts, please review the sections below. Happy contesting!
+Objectives
+Contact as many NJ amateurs in as many NJ counties as possible.
+NJ stations contact as many amateurs in the US, Canada and the world as possible.
+Note: 2026 Changes are highlighted in
+RED
+.
+Date/Time
+Date:
+Saturday September 12, 2026
+Start Time:
+Sat 10:00 AM EDT  (1400 UTC)
+End Time:
+Sat 10:00 PM EDT  (0200 UTC)
+Bands
+80, 40, 20, 15 and 10 meters ONLY.
+Note: 'Self spotting' is allowed & encouraged as is 'assisted'.
+Suggested frequencies:
+Bands
+80, 40, 20, 15 and 10 meters ONLY.
+Note: 'Self spotting' is allowed & encouraged as is 'assisted'.
+Suggested frequencies in table
+Entry Categories
+"category-operator: SO or MO"
+Single Operator
+(SO)
+High power / Low power / QRP
+Multi-operator
+(MO)
+High power / Low power / QRP
+;
+Simultaneous multiple transmitters belong in the MO category.
+Equipment:
+Antenna, Receiver, Transmitters to be located within 1000’ circle if not Mobile/Rover/Portable.
+Remote operation of equipment within that circle is allowed.
+Mobile/Rover/Portable
+"
+category-station: Mobile”
+Low power / QRP
+NJ stations, operating in more than one NJ county, must append a slash and the county abbreviation to their call.
+Non-NJ stations operating in more than one state or province should append a slash and their state or province abbreviation to their call.
+Mobile or portable stations that change geographic area (county for NJ stations or S/P/DX for others) are considered to be a new station and may be contacted again for QSO points and multiplier credit. No station may claim simultaneous operation in more than one county, state, or province.
+Rookie
+"
+category-overlay: ROOKIE"
+Licensed within 1 year of date of the NJQP.
+Rookie operators should select "Rookie" in the overlay category.
+Remote Station
+Remote station is defined by the location of the transmitter.
+For example, if the transmitter is in NJ, then it is an in-NJ station, regardless of where the operator is located. If the transmitter and receiver are out of NJ then it is an out-of-NJ station, again regardless of operator location.
+Modes
+CW and Phone.
+Digital - Any mode capable of completing a QSO with the NJQP exchange will be considered a valid digital contact.
+No repeater or internet modes.
+NJ Club Aggregate Score
+Entrants should specify which NJ based club, if any, they wish their score to be attributed.
+Must be a bona-fide member in good standing of said club.
+Only members operating in NJ are eligible to contribute toward club aggregate score.
+Exchange
+New Jersey Stations: RS(T), 4-character county (see table below)
+Outside of New Jersey Stations: RS(T), 2-character state abbreviation, Canadian province abbreviation, or DX (see tables below)
+See the
+MULTIPLIERS
+Page for details on Abbreviations (States, Provinces, DX, NJ Counties)
+Power
+Scoring
+The same station may be contacted on CW, Digital and Phone on each band.
+Rover stations may be contacted in each county, state, province, or country.
+Contact Multiplier
+NJ Stations
+: add up contacted NJ Counties (21) + States (49 not NJ) + Canadian Provinces (13) + DX (1) for a
+maximum of 84x
+contact multiplier.
+Non-NJ Stations
+: count up contacted NJ Counties (21) for a
+maximum of 21x
+multiplier.  Add total unique counties for contact multiplier.
+Power Multiplier
+High power =
+1x
+,  Low power =
+2x
+,  QRP =
+4x
+Note the power multiplier is for the
+highest power
+used for any NJQP QSO. QRP station must be QRP at
+all
+times during the NJQP.  Low Power must not be exceeded anytime during the event if claiming low power.
+Final Score Calculation
+QSO score total
+= each contact will score two points if a valid CW / Digital contact OR one point if a valid phone contact.  Add all of these together to get your QSO score total.
+Final Score = QSO score total   X   Contact Multiplier   X   Power Multiplier
+Note: The same station may be contacted on CW, Digital and Phone on each band.  Rover stations may be contacted in each county, state, province, or country.
+Examples:
+Non-NJ Station
+completed QSO with 9 NJ Counties.  Low Power or less for all contacts.  13 Phone, 10 CW and 3 Digital contacts.  Contact multiplier 9x.  Power multiplier 2x.
+QSO Score:  (13 Phone x 1) + (10 CW x 2) + (3 Digital x 2) = 39 QSO Score.
+Final Score:  39 x 9 (=contact multiplier) x 2 (=power multiplier)  = 702 final score.
+NJ Station
+completed QSO with 6 NJ Counties and 5 USA states, 2 in Canada and 1 DX.  QRP for all contacts, 5 Phone, 5 CW and 4 Digital contacts.  Contact multiplier 14x.  Power multiplier 4x.
+QSO Score: (5 Phone x 1) + (5 CW x 2) + (4 Digital x 2) = 23 QSO Score.
+Final Score:  23 x 14 (=contact multiplier) x 4 (=power multiplier) =  1288  final score.
+Rover/mobile/portable Station -
+One combined log for W2xxxx BURL - 5 contacts in PA, DE, UNIO, ATLA, PE, then moves to OCEA to make 6 contacts in PA, MD, SALE, CUMB, DX, UNIO, All low power SSB:  11 QSO points X 2 power multiplier X 9 unique multipliers = 198 final score.
+NJ Club
+Awards - 3 stations all located in NJ during transmissions in the contest score 1000 points each per the scoring rules above.  All 3 operators are members of the same NJ club.  Final club score = 3000 as long the club is a NJ club, has at least 3 logs submitted and at least 75 total contacts. (Only 1 club per operator may be submitted)
+Awards
+Award
+for the highest scoring
+SO
+station in
+SNJ
+(minimum 50 contacts).  (SNJ sponsor)
+Award
+for the highest scoring
+SO
+station in
+NNJ
+(minimum 50 contacts). (NNJ sponsor)
+Award
+for the highest scoring station in NJ
+( MO).  (minimum 100 contacts)
+Award
+to the highest scoring non-NJ station (minimum 25 contacts). (W2ZQ spo
+nsor)
+Award
+for club aggregate high score. (Use full club name)
+Award for the highest scoring QRP station in NJ
+Award for the highest scoring QRP station outside NJ
+Certificates will be awarded to the highest scoring station in each NJ county, and in each state and province and DX. Certificates sent via email.
+Additional awards for significant achievement may be awarded at our discretion.
+Logs
+Only electronic Cabrillo logs will be accepted. All logs must be emailed to
+NewJerseyQSOParty@gmail.com
+by
+October 1
+of the contest year.
+Paper logs may be converted to Cabrillo format using the NJQP application on
+www.b4h.net/cabforms
+website. It is strongly encouraged to use logging program.
+Cabrillo format
+: (latest standard format – see internet for more info -
+https://wwrof.org/cabrillo
+/
+)  or check examples
+HERE
+Logs should be named using your callsign:  'callsign.log' as ordinary text file.
+Logging Programs: N1MM and N3FJP work well.
+Other Info
+ALL decisions made by the sponsor are final
+2026rev0.5
+(c) 2026 Burlington County Radio Club
+Google Sites
+Report abuse
+Page details
+Page updated
+Google Sites
+Report abuse

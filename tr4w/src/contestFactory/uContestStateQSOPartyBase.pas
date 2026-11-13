@@ -169,6 +169,16 @@ type
       FReportedNoTableForYear: boolean;
       FReportedNoTableYear: integer;
    protected
+      (* A resolved host county's state key, when the leaf elects to award
+         separate county and host-state credits. No multiplier scope or
+         eligibility policy: those remain the leaf's decisions. The caller's
+         table must use county keys longer than two characters and canonical
+         two-letter state/province keys (Alabama and West Virginia). *)
+      function CountyStateMultiplierKey(const aQso: ContestExchange): string;
+      (* Strip only trailing county keys verified by the session table.
+         Preserve portable and district suffixes, including W1AW/5. *)
+      function CallWithoutRoverCounty(const aCall: string): string;
+      function BonusCallMatches(const aLoggedCall, aBonusCall: string): boolean; override;
       (* IT IS ONE, AND THE CLASS SAYS SO RATHER THAN THE TABLE SAYING SO.
 
          The inherited answer read ContestsArray[c].P <> 0 until M10 S6, and P
@@ -428,6 +438,67 @@ uses
    uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
    uADIF;           (* ADIFStateOfPartyQSO -- Q76/Q89 *)
+
+function TContestStateQSOPartyBase.CallWithoutRoverCounty(const aCall: string): string;
+var
+   slash: integer;
+   county: string;
+begin
+   Result := Trim(aCall);
+   if not Assigned(Station.IsDomesticQTH) then
+      begin
+      Exit;
+      end;
+   while True do
+      begin
+      slash := Length(Result);
+      while slash > 0 do
+         begin
+         if Result[slash] = '/' then
+            begin
+            Break;
+            end;
+         Dec(slash);
+         end;
+      if slash = 0 then
+         begin
+         Exit;
+         end;
+      county := UpperCase(Copy(Result, slash + 1, Length(Result) - slash));
+      if (Length(county) <= 2) or (county = 'XXX') or
+         not Station.IsDomesticQTH(county) then
+         begin
+         Exit;
+         end;
+      Result := Copy(Result, 1, slash - 1);
+      end;
+end;
+
+function TContestStateQSOPartyBase.BonusCallMatches(
+   const aLoggedCall, aBonusCall: string): boolean;
+begin
+   Result := UnicodeSameText(CallWithoutRoverCounty(aLoggedCall), aBonusCall);
+end;
+
+function TContestStateQSOPartyBase.CountyStateMultiplierKey(
+   const aQso: ContestExchange): string;
+var
+   county: string;
+begin
+   Result := '';
+   county := UpperCase(Trim(string(aQso.DomesticQTH)));
+   if county = '' then
+      begin
+      county := UpperCase(Trim(string(aQso.QTHString)));
+      end;
+   (* XXX is the engine's unknown QTH placeholder, not a county. *)
+   if (Length(county) > 2) and (county <> 'XXX') and
+      Assigned(Station.IsDomesticQTH) and
+      Station.IsDomesticQTH(county) then
+      begin
+      Result := HostState;
+      end;
+end;
 
 function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
                                                          const aSession: TReceivedExchangeSession;

@@ -1228,33 +1228,7 @@ var
    (* ONE QSO, AS AN OPERATOR ENTERS IT: ParametersOkay, then what
       LogContact does with the record it accepts -- the dupe question, the
       dupe's zero points, the sheets. Returns whether it was a dupe. *)
-   function Enter(const aCall: string; const aExch: string; aBand: BandType;
-                  aMode: ModeType; aExtMode: ExtendedModeType;
-                  out aAccepted: boolean; var aRX: ContestExchange): boolean;
-   begin
-      aRX := Default(ContestExchange);
-      aRX.ExtMode := aExtMode;
-      ActiveMode := aMode;
-      CallWindowString := CallString(aCall);
-      ExchangeErrorMessage := '';
-      aAccepted := ParametersOkay(CallString(aCall), Str40(aExch), aBand, aMode,
-                                  14025000, aRX);
-      aRX.ceRecordKind := rkQSO;
-      aRX.ceContest := Contest;
-      Result := False;
-      if aAccepted then
-         begin
-         Result := VisibleLog.QSOIsADupe(aRX);
-         if Result then
-            begin
-            aRX.ceDupe := True;
-            aRX.QSOPoints := 0;
-            end;
-         Sheet.SetMultFlags(aRX);
-         Sheet.AddQSOToSheets(@aRX, False);
-         AddQSOToDupeSheets(aRX, False);
-         end;
-   end;
+
 
    (* THE ENGINE'S FLAGS FOR THIS ENTRANT, as ApplyContestTraits and then
       ApplySessionDefaults write them: the identity's, then what the
@@ -1329,7 +1303,7 @@ begin
       mo.ClearAllMults;
 
       (* BELKNAP, 20 m CW. *)
-      dupe := Enter('W1BEL', '599 BEL', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1BEL', '599 BEL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 BEL is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, 'and is not a dupe');
       CheckEquals('BEL', UpperCase(string(rx.DomMultQTH)), 'the multiplier is the county');
@@ -1337,20 +1311,20 @@ begin
       CheckEquals(2, Integer(rx.QSOPoints), '"2 points per CW QSO"');
 
       (* "Each NH county once per band": Belknap again on 40 m IS new. *)
-      dupe := Enter('W1BEL', '599 BEL', Band40, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1BEL', '599 BEL', Band40, CW, eCW, accepted, rx);
       CheckFalse(dupe, 'the same station on 40 m CW is not a dupe');
       CheckEquals(2, Integer(rx.QSOPoints), 'and scores 2');
       CheckTrue(rx.DomesticMult, 'and Belknap IS a new multiplier on another band');
 
       (* "Once per band per mode" for the QSO; the multiplier is per band
          only, not per mode. *)
-      dupe := Enter('W1BEL', '59 BEL', Band20, Phone, eUSB, accepted, rx);
+      dupe := EnterPartyQSO('W1BEL', '59 BEL', Band20, Phone, eUSB, accepted, rx);
       CheckTrue(accepted, '59 BEL on SSB is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, 'the same station on 20 m SSB is not a dupe');
       CheckEquals(1, Integer(rx.QSOPoints), '"1 Point per phone QSO"');
       CheckFalse(rx.DomesticMult, 'but Belknap is NOT a new multiplier in another mode');
 
-      dupe := Enter('W1BEL', '599 BEL', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1BEL', '599 BEL', Band20, CW, eCW, accepted, rx);
       CheckTrue(dupe, 'Belknap again on 20 m CW IS a dupe');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
 
@@ -1359,22 +1333,22 @@ begin
          the score reads. *)
       CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic],
                   'Belknap on 20 and 40 m: two multipliers in the total');
-      dupe := Enter('W1SUL', '599 SUL', Band15, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1SUL', '599 SUL', Band15, CW, eCW, accepted, rx);
       CheckTrue(rx.DomesticMult, 'Sullivan on 15 m is new');
       CheckEquals(3, mo.MTotals[AllBands, Both, rmDomestic], 'three (county, band) pairs');
 
       (* FM is phone: on one band it is the same dupe mode as SSB. *)
-      dupe := Enter('W1FM', '59 ROC', Band10, Phone, eUSB, accepted, rx);
+      dupe := EnterPartyQSO('W1FM', '59 ROC', Band10, Phone, eUSB, accepted, rx);
       CheckTrue(accepted, '10 m SSB is taken: ' + string(ExchangeErrorMessage));
       CheckTrue(rx.DomesticMult, 'Rockingham on 10 m is new');
-      dupe := Enter('W1FM', '59 ROC', Band10, FM, eFM, accepted, rx);
+      dupe := EnterPartyQSO('W1FM', '59 ROC', Band10, FM, eFM, accepted, rx);
       CheckTrue(accepted, '10 m FM is taken: ' + string(ExchangeErrorMessage));
       CheckTrue(dupe, 'the same station on 10 m FM after SSB IS a dupe: FM is phone');
 
       (* Off band and off mode: logged, automatic X-QSOs -- through scoring,
          the multiplier sheet, the totals and the Cabrillo export alike. *)
       ActiveContest(Contest);
-      dupe := Enter('W1TOP', '599 STR', Band160, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1TOP', '599 STR', Band160, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a 160 m QSO is logged');
       CheckTrue(QSOIsXQSO(ContestIdentity(h), rx), 'as an X-QSO ("80m through 10m")');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
@@ -1382,12 +1356,12 @@ begin
       CheckEquals('X-QSO:', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 6),
                   'its Cabrillo line is an X-QSO: line');
       CheckFalse(QSOCountsTowardTotals(LoggedQSOContest(Contest), rx), 'and it counts toward no total');
-      dupe := Enter('W1WRC', '599 STR', Band17, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1WRC', '599 STR', Band17, CW, eCW, accepted, rx);
       CheckTrue(QSOIsXQSO(ContestIdentity(h), rx), 'a 17 m QSO is an X-QSO ("except WARC")');
       CheckEquals('X-QSO:', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 6),
                   'the 17 m QSO''s Cabrillo line is an X-QSO: line');
       CheckFalse(QSOCountsTowardTotals(LoggedQSOContest(Contest), rx), 'and it counts toward no total');
-      dupe := Enter('W1DIG', '599 STR', Band20, Digital, eRTTY, accepted, rx);
+      dupe := EnterPartyQSO('W1DIG', '599 STR', Band20, Digital, eRTTY, accepted, rx);
       CheckTrue(accepted, 'an RTTY QSO is logged');
       CheckTrue(QSOIsXQSO(ContestIdentity(h), rx), 'as an X-QSO ("CW/Phone")');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
@@ -1395,7 +1369,7 @@ begin
       CheckEquals('X-QSO:', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 6),
                   'the RTTY QSO''s Cabrillo line is an X-QSO: line');
       CheckFalse(QSOCountsTowardTotals(LoggedQSOContest(Contest), rx), 'and it counts toward no total');
-      dupe := Enter('W1BEL', '599 BEL', Band15, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1BEL', '599 BEL', Band15, CW, eCW, accepted, rx);
       CheckFalse(QSOIsXQSO(ContestIdentity(h), rx), 'a 15 m CW QSO with Belknap is no X-QSO');
       CheckTrue(Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 4) = 'QSO:',
                 'its Cabrillo line is an ordinary QSO: line');
@@ -1407,28 +1381,28 @@ begin
       Settings.Contest.DomesticFilename := 'newhampshire_cty.dom';
 
       accepted := True;
-      Enter('W2NY', '599 NY', Band20, CW, eCW, accepted, rx);
+      EnterPartyQSO('W2NY', '599 NY', Band20, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'a New York station is refused');
       CheckEquals('Improper domestic QTH!! (NY: work NH stations only)',
                   string(ExchangeErrorMessage),
                   'as an improper QTH, with the host-area reason');
 
       accepted := True;
-      Enter('W1ABC', '599 HLL', Band20, CW, eCW, accepted, rx);
+      EnterPartyQSO('W1ABC', '599 HLL', Band20, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'a misspelt county is refused');
       CheckEquals('Improper domestic QTH!! (HLL not in newhampshire_cty.dom)',
                   string(ExchangeErrorMessage),
                   'as not in the county file');
 
       accepted := True;
-      Enter('DL1AAA', '599 DX', Band20, CW, eCW, accepted, rx);
+      EnterPartyQSO('DL1AAA', '599 DX', Band20, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'a DX station is refused');
       CheckEquals(Format(SExchangeOutOfStateWorksHostOnly, ['NH']), string(ExchangeErrorMessage),
                   'with the host-area reason');
 
       (* A county line of two (a QUESTION on #112). *)
       ClearPendingCounties;
-      dupe := Enter('W1LINE', '599 GRA/COO', Band15, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1LINE', '599 GRA/COO', Band15, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a two-county line is taken: ' + string(ExchangeErrorMessage));
       CheckFalse(dupe, 'and is not a dupe');
       CheckEquals('GRA', UpperCase(string(rx.QTHString)), 'the first county is this QSO');
@@ -1437,7 +1411,7 @@ begin
       CheckEquals('COO', UpperCase(DequeuePendingCounty), 'Coos, as its own QSO');
       ClearPendingCounties;
       accepted := True;
-      Enter('W1LINE', '599 GRA/COO/CAR', Band15, CW, eCW, accepted, rx);
+      EnterPartyQSO('W1LINE', '599 GRA/COO/CAR', Band15, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'three counties are refused');
       CheckEquals(Format(TC_TOOMANYCOUNTIES, [2]), string(ExchangeErrorMessage),
                   'with the county-count message');
@@ -1483,63 +1457,63 @@ begin
       ActiveContest(Contest);
       mo.ClearAllMults;
 
-      dupe := Enter('W2AAA', '599 NY', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W2AAA', '599 NY', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'in NH, 599 NY is taken: ' + string(ExchangeErrorMessage));
       CheckEquals(2, Integer(rx.QSOPoints), 'and scores 2');
       CheckTrue(rx.DomesticMult, 'New York is a new multiplier');
-      dupe := Enter('W2BBB', '599 NY', Band40, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W2BBB', '599 NY', Band40, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'New York on 40 m is no new multiplier: "once"');
-      dupe := Enter('W2AAA', '59 NY', Band20, Phone, eUSB, accepted, rx);
+      dupe := EnterPartyQSO('W2AAA', '59 NY', Band20, Phone, eUSB, accepted, rx);
       CheckFalse(dupe, 'New York on 20 m SSB is not a dupe');
       CheckEquals(1, Integer(rx.QSOPoints), 'and scores 1');
       CheckFalse(rx.DomesticMult, 'and is no new multiplier in another mode: "once"');
 
-      dupe := Enter('W1BBB', '599 BEL', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1BBB', '599 BEL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a Belknap station is taken: ' + string(ExchangeErrorMessage));
       CheckEquals('BEL', UpperCase(string(rx.DomMultQTH)), 'its multiplier is the county');
       CheckTrue(rx.DomesticMult, 'and Belknap is a new multiplier: "Each NH county"');
-      dupe := Enter('W1CCC', '599 BEL', Band40, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1CCC', '599 BEL', Band40, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'Belknap on 40 m is no new multiplier in NH: "once"');
       CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'New York and Belknap: two multipliers');
 
       (* RULING: an NH station sends its county, never NH -- logged, scored,
          no multiplier. *)
-      dupe := Enter('W1NHS', '599 NH', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W1NHS', '599 NH', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 NH is taken: ' + string(ExchangeErrorMessage));
       CheckEquals(2, Integer(rx.QSOPoints), 'and keeps its points');
       CheckFalse(rx.DomesticMult, 'but NH is no multiplier for an NH entrant');
 
       (* QUESTION (#112): DC as Maryland. *)
-      dupe := Enter('W3DC', '599 DC', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W3DC', '599 DC', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 DC is taken: ' + string(ExchangeErrorMessage));
       CheckEquals('MD', UpperCase(string(rx.DomMultQTH)), 'DC counts as Maryland');
       CheckTrue(rx.DomesticMult, 'a new multiplier, Maryland');
-      dupe := Enter('W3MD', '599 MD', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('W3MD', '599 MD', Band20, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'Maryland itself is then no new multiplier');
 
-      dupe := Enter('VO1AAA', '599 NL', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('VO1AAA', '599 NL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 NL is taken: ' + string(ExchangeErrorMessage));
       CheckEquals('NL', UpperCase(string(rx.DomMultQTH)), 'NL is Newfoundland and Labrador');
       CheckTrue(rx.DomesticMult, '"each Canadian province": a new multiplier');
 
-      dupe := Enter('KH6AAA', '599 HI', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('KH6AAA', '599 HI', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 HI is taken: ' + string(ExchangeErrorMessage));
       CheckTrue(rx.DomesticMult, 'Hawaii is a state multiplier');
       CheckFalse(rx.DXMult, 'and not a DX one');
 
       (* "DX: RS(T) + "DX"" -- the DXCC country is the multiplier. *)
-      dupe := Enter('DL1AAA', '599 DX', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('DL1AAA', '599 DX', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'in NH, 599 DX from a German station is taken: ' + string(ExchangeErrorMessage));
       CheckEquals(2, Integer(rx.QSOPoints), 'for 2 points');
       CheckFalse(rx.DomesticMult, 'no domestic multiplier');
       CheckTrue(rx.DXMult, 'and Germany is a new DX multiplier');
       CheckEquals('DL', string(rx.DXQTH), 'keyed by its DXCC country');
       CheckFalse(LoggedQSOIsXQSO(rx), 'and in state it is no X-QSO');
-      dupe := Enter('DL2BBB', '59 DX', Band40, Phone, eUSB, accepted, rx);
+      dupe := EnterPartyQSO('DL2BBB', '59 DX', Band40, Phone, eUSB, accepted, rx);
       CheckTrue(accepted, 'a German station on SSB: ' + string(ExchangeErrorMessage));
       CheckFalse(rx.DXMult, 'Germany is NOT new on phone: "once"');
 
-      dupe := Enter('KP4AA', '599 DX', Band20, CW, eCW, accepted, rx);
+      dupe := EnterPartyQSO('KP4AA', '599 DX', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a KP4 station is taken: ' + string(ExchangeErrorMessage));
       CheckTrue(rx.DXMult, 'Puerto Rico is a DX multiplier');
    finally

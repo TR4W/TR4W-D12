@@ -1,0 +1,46 @@
+Source: https://sites.google.com/view/k2td-bcrc/nj-qp/nj-mults
+Power source: https://sites.google.com/view/k2td-bcrc/nj-qp/rules
+Fetched: 2026-11-13
+Transcription of States.png, CountiesAndProvinces.png and PowerCategories.png.
+County codes/names are separately transcribed in NJ-QSO-PARTY-Counties.txt.
+
+US states: AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA
+MI MN MS MO MT NE NV NH NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA
+WV WI WY.
+The table's final cell says: "NJ: use counties". DC is not listed.
+NY4I ruling on #124, 2026-11-13: "You will never receive DC", citing the
+rules' maximum of 84 multipliers. Do not add DC or a Maryland alias for it.
+
+Canadian provinces/territories:
+AB Alberta
+BC British Columbia
+MB Manitoba
+NB New Brunswick
+NF Newfoundland & Labrador
+NS Nova Scotia
+NT Northwest Territories
+NU Nunavut
+ON Ontario
+PE Prince Edward Island
+QC Quebec
+SK Saskatchewan
+YT Yukon Territories
+
+Foreign stations: DX Station / DX.
+
+Power categories (verbatim values from the image):
+High Power: 150W or more
+Low Power: >10W (>5W CW, Dig.) to <150W
+QRP: <=10W (SSB), <=5W (CW, Dig.)
+
+Implementation uses the operator's declared CATEGORY-POWER rather than
+inferring a category from watts. Factors in the rule text: HIGH 1, LOW 2,
+QRP 4. The power table and Cabrillo CATEGORY-POWER retain the distinction
+between phone QRP and CW/digital QRP thresholds.
+
+Independent identifiers:
+WA7BNM ref 92: https://www.contestcalendar.com/contestdetails.php?ref=92
+WA7BNM prefers Cabrillo NJQP and explicitly accepts alias NJ-QSO-PARTY.
+The sponsor's Cabrillo page uses NJ-QSO-Party as its example CONTEST value.
+ADIF 3.1.7 independently enumerates NJ-QSO-PARTY:
+https://www.adif.org/317/ADIF_317_annotated.htm

@@ -1,0 +1,69 @@
+New Jersey QSO Party, in-state multipliers, sponsor 2026 rev0.5
+21 counties, 49 other states, 13 provinces and one DX: 84 total.
+NJ and DC are absent from the sponsor table. NF is its Newfoundland code; NL is an alias.
+States and provinces are explicit to keep the sponsor codes and avoid call-area aliases.
+
+INCLUDE FILE newjersey_cty.dom
+Al = AL,^Alabama
+Ar = AR,^Arkansas
+Az = AZ, ARI,^Arizona
+Ca = CA,^California
+Co = CO,^Colorado
+Ct = CT, CON,^Connecticut
+De = DE,^Delaware
+Fl = F,FL,^Florida
+Ga = G,GA,^Georgia
+Ia = IA, IO,^Iowa
+Id = ID,^Idaho
+Il = IL,^Illinois
+In = IN,^Indiana
+Ks = KA, KS,^Kansas
+Ky = KE, KY,^Kentucky
+La = L,LA,^Louisiana
+Ma = MA,^Massachusetts
+Md = MD, MARY,^Maryland
+Me = ME,^Maine
+Mi = MI,^Michigan
+Mn = MN, MIN,^Minnesota
+Mo = MO, MISSO,^Missouri
+Ms = MS, MIS,^Mississippi
+Mt = MT, ^Montana
+Nc = NC,^North Carolina
+Nd = ND,^North Dakota
+Ne = NE,^Nebraska
+Nh = NH,^New Hampshire
+Nm = NM,^New Mexico
+Nv = NV, NEV,^Nevada
+Ny = NY,^New York
+Oh = OH,^Ohio
+Ok = OK,^Oklahoma
+Or = OR,^Oregon
+Pa = PA,^Pennsylvania
+Ri = RI,^Rhode Island
+Sc = SC,^South Carolina
+Sd = SD,^South Dakota
+Tn = TN, ^Tennessee
+Tx = TX,^Texas
+Ut = UT,^Utah
+Va = VA, ^Virginia
+Vt = VT,^Vermont
+Wa = WA,^Washington
+Wi = WI,^Wisconsin
+Wv = WV,^West Virginia
+Wy = WY,^Wyoming
+Ak = AK,^Alaska
+Hi = HI,^Hawaii
+AB = AB,^Alberta
+BC = BC,^British Columbia
+MB = MB,^Manitoba
+NB = NB,^New Brunswick
+NF = NF,NL,^Newfoundland and Labrador
+NS = NS,^Nova Scotia
+NT = NT,^Northwest Territories
+NU = NU,^Nunavut
+ON = ON,^Ontario
+PE = PE,^Prince Edward Island
+QC = QC,^Quebec
+SK = SK,^Saskatchewan
+YT = YT,^Yukon
+Dx = DX,^DX

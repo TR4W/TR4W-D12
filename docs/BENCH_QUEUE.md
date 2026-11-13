@@ -1,5 +1,17 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] New QSO parties #114/#124/#131: create Alabama, New Jersey and West Virginia logs for
+  in-state, out-of-state and DX entrants; check setup prompts and typed
+  county-line refusal on screen. Alabama's first county must show county
+  plus AL state credit per mode, with the extra totals row labelled AL.
+  WV's first county must show county plus WV state credit once overall;
+  a second band/mode must not repeat either multiplier. Check two-county
+  entry creates two separate records and W8WVA pays once per band/mode.
+  County-suffixed bonus-call matching is fixed by the shared state-party matcher (#111); confirm on screen.
+- [ ] Export 3830 reports for Alabama, New Jersey and West Virginia and compare multiplier
+  columns with the events' real 3830 forms. Direct form retrieval was refused;
+  the classes currently use the base combined Mults column.
+
 A **living list**, not a log. An item goes in when a change lands that no
 automated gate can check, and comes **out** when NY4I confirms it. Items that
 pass are deleted from here; if the result is interesting it goes into the
@@ -1915,8 +1927,8 @@ multiplier windows or a written file.
   is `5NN LY` (what goes on the air), the ADIF `STX_STRING` carries `LY`,
   and the Cabrillo sent column is `DX`.
 - [ ] **W1AW/5.** Work `W1AW/5` from two counties on one band and mode: two
-  QSOs, the bonus 250 once. Logged as `W1AW/5/BER` it is NOT paid today --
-  the base matches the bare call only (South Carolina's #111 fixes it).
+  QSOs, the bonus 250 once. Logged as `W1AW/5/BER` it now pays through the
+  shared county matcher (#111), preserving the district `/5`.
 - [ ] **A county line of two.** `599 SOC/SIE` logs two QSOs; three counties
   are refused.
 

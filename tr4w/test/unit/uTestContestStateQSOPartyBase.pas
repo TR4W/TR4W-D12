@@ -55,6 +55,7 @@ type
       procedure Test_ADXEntrantSendsItsOwnCountry;
       procedure Test_AYearWithNoTableIsReportedOncePerYear;
       procedure Test_ADIFStateNeedsAQTHTheTableResolved;
+      procedure Test_CountyKeysAndBonusCallSuffixes;
    end;
 
 implementation
@@ -82,7 +83,25 @@ type
       function Location(const aLocation: string; const aCountry: CallString): string;
       function Sent(const aMy: TMyStationExchange): TMyStationExchange;
       procedure Report(aLogger: TLogLogger; aYear: integer);
+      function ExtraState(const aQso: ContestExchange): string;
+      function RoverCall(const aCall: string): string;
+      function Matches(const aCall, aBonus: string): boolean;
    end;
+
+function TSentLocationProbe.ExtraState(const aQso: ContestExchange): string;
+begin
+   Result := CountyStateMultiplierKey(aQso);
+end;
+
+function TSentLocationProbe.RoverCall(const aCall: string): string;
+begin
+   Result := CallWithoutRoverCounty(aCall);
+end;
+
+function TSentLocationProbe.Matches(const aCall, aBonus: string): boolean;
+begin
+   Result := BonusCallMatches(aCall, aBonus);
+end;
 
 function TSentLocationProbe.GetHostState: string;
 begin
@@ -293,11 +312,50 @@ begin
    end;
 end;
 
+procedure TContestStateQSOPartyBaseTests.Test_CountyKeysAndBonusCallSuffixes;
+var
+   probe: TSentLocationProbe;
+   station: TStationContext;
+   qso: ContestExchange;
+begin
+   BeginTest('Test_CountyKeysAndBonusCallSuffixes');
+   probe := TSentLocationProbe.Create(NoContest);
+   try
+      qso := Default(ContestExchange);
+      qso.DomesticQTH := 'MON';
+      CheckEquals('', probe.ExtraState(qso), 'no county table means no extra state');
+      CheckEquals('W1AW/5/MON', probe.RoverCall('W1AW/5/MON'), 'no table means no strip');
+      station := NoStation;
+      station.IsDomesticQTH := @StubKnowsMON;
+      probe.SetStation(station);
+      CheckEquals('XX', probe.ExtraState(qso), 'resolved county earns host state key');
+      qso.DomesticQTH := '';
+      qso.QTHString := 'mon';
+      CheckEquals('XX', probe.ExtraState(qso), 'typed county fallback is verified');
+      qso.DomesticQTH := 'ON';
+      CheckEquals('', probe.ExtraState(qso), 'stored province wins over typed county');
+      qso.DomesticQTH := 'XXX';
+      CheckEquals('', probe.ExtraState(qso), 'unknown placeholder is not a county');
+      qso.DomesticQTH := 'KP4';
+      CheckEquals('', probe.ExtraState(qso), 'unrecognized DX prefix is not a county');
+      CheckEquals('W1AW/5', probe.RoverCall('W1AW/5/MON'), 'last county suffix only; preserve /5');
+      CheckEquals('W1AW/5', probe.RoverCall('W1AW/5/MON/MON'), 'multiple verified county suffixes');
+      CheckEquals('W1AW/5/M', probe.RoverCall('W1AW/5/M'), 'portable suffix preserved');
+      CheckEquals('W1AW/5/XYZ', probe.RoverCall('W1AW/5/XYZ'), 'unknown suffix preserved');
+      CheckTrue(probe.Matches('w1aw/5/mon', 'W1AW/5'), 'bonus matches after verified county strip');
+      CheckFalse(probe.Matches('W1AW/5X/MON', 'W1AW/5'), 'longer call is not the bonus station');
+      CheckFalse(probe.Matches('W1AW/5/P', 'W1AW/5'), 'portable is not silently stripped');
+   finally
+      probe.Free;
+   end;
+end;
+
 procedure TContestStateQSOPartyBaseTests.RunAllTests;
 begin
    Test_ADXEntrantSendsItsOwnCountry;
    Test_AYearWithNoTableIsReportedOncePerYear;
    Test_ADIFStateNeedsAQTHTheTableResolved;
+   Test_CountyKeysAndBonusCallSuffixes;
 end;
 
 end.

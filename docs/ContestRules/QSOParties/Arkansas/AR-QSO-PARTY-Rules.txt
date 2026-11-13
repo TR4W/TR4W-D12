@@ -1,0 +1,191 @@
+Arkansas QSO Party rules, retrieved 2026-11-13
+Source: https://arkqp.com/arkansas-qso-party-rules/
+Page states new live-stream bonus for 2026; no revision date stated.
+Cabrillo: AR-QSO-PARTY (DXLog ARQP.txt; WA7BNM confirms).
+ADIF Contest_ID: AR-QSO-PARTY (ADIF 3.1.7 enumeration).
+WA7BNM: 132, https://www.contestcalendar.com/contestdetails.php?ref=132
+
+Implementation notes:
+- Sponsor permits any digital mode if the full exchange can be accomplished
+  and properly logged; the calendar's no-FT8 shorthand is not substituted
+  for that condition. No grid-to-county inference or abbreviated exchange.
+- WR5P pays 200 for EACH valid QSO, including different rover counties.
+  DXLog's per-band/mode bonus is not the current sponsor rule.
+- Fixed categories score one per QSO. Mobile/portable/rover category scoring
+  (two per QSO), own-county reworks and county-activation bonus depend on
+  the existing category/own-mobile engine work #133/#87. Not implemented here.
+- The live-stream bonus requires eligibility/proof not stored by the logger;
+  it remains an explicit adjudication adjustment.
+- Only web log submission is accepted; the contact email is not a submission address.
+- AR is explicitly excluded from state multipliers, so #317 is not needed.
+
+SPONSOR TEXT
+Pro tip: The abbreviation for Arkansas is AR. Arizona is AZ. Alaska is AK. This is the AR QSO Party.
+Contest Period
+The third Saturday in May.
+Click here to submit your log and points
+, watch real-time scores as they are uploaded, and track/sort point leaders by location. Logs are due by June 1.
+Spotting is allowed, and we recommend the
+QSO Party Hub
+to look for stations in Arkansas.
+Objective
+Stations outside Arkansas work as many Arkansas stations in as many Arkansas counties as possible.
+Stations inside Arkansas work everyone and spread good cheer from The Natural State.
+Bands
+160, 80, 40, 20, 15, 10, 6, and 2 meter bands only.
+No repeaters may be used for contest QSOs.
+Modes
+CW
+PHONE
+DIGITAL (Any digital mode is acceptable
+if the proper exchange can be accomplished and properly logged
+.
+This is not possible with some digital modes. Accomplishing this is the responsibility of the operator
+.)
+All contacts must be an RF path.
+Suggested Frequencies
+Please use frequencies that are customary for the mode you are using. These are only suggestions:
+CW: (plus or minus) 1.830, 3.540, 7.040, 14.040, 21.040, 28.040
+PHONE/SSB: (plus or minus) 1.870, 3.820, 7.200, 14.260, 21.360, 28.360, 50.360, 144.200
+Digital: the typical portion of the band for the digital mode you chose to operate.
+Exchange
+Arkansas stations send signal report and three-letter county abbreviation (see
+Arkansas County Abbreviations
+).
+Non-Arkansas stations send signal report and U.S. State or Canadian Province, or “DX” if in another country.
+Exchange example of a PHONE QSO with the Arkansas station being in Benton County:
+AR Station
+: “CQ Arkansas QSO Party, CQ Arkansas QSO Party. This is Whiskey Romeo Five Papa (WR5P)”
+Other station
+: “W1AW”
+AR Station
+: “W1AW from WR5P, you’re 59 in Benton Co, or Bravo Echo November (BEN)”
+Other station
+: “Thanks, you’re 59 Charlie Tango (CT)”
+AR Station
+: “Thanks, and 73! QRZ?”
+Entry Categories
+Single Operator SSB High Power
+: more than 150 watts, any/all bands
+Single Operator SSB Low Power
+: less than 150 watts, any/all bands
+Single Operator QRP, Mixed modes
+: 5 watts or less, any/all bands
+Single Operator CW High Power
+: more than 150 watts, any/all bands
+Single Operator CW Low Power
+:  less than 150 watts, any/all bands
+Single Operator Mixed Modes, High Power
+: more than 150 watts, any/all bands
+Single Operator Mixed Modes, Low Power
+: less than 150 watts, any/all bands
+Digital
+: All digital, any number of ops,  any power level, any/all bands, any digital mode or combination of digital modes
+Multi Operator
+: Non-mobile/portable, any power level, any/all bands, any mode(s), any number of transmitters. (Example: informal group at a home or club station.)
+Portable Inside Arkansas
+: Non-permanent station at a temporary, single location. Any power level, any/all bands, any mode(s), any number of transmitters, any number of operators. (Example: a “Field Day-style” station)
+Portable Outside Arkansas
+: Non-permanent station at a temporary, single location for the entire contest. Any power level, any/all bands, any mode(s), any number of transmitters, any number of operators. (Example: a “Field Day-style” station.)
+Rover
+: Temporary station setup, activating Arkansas counties from at least
+two
+locations while stationary. Any power level, any/all bands, any mode(s), any number of transmitters, any number of operators.
+Mobile Inside Arkansas
+: Vehicle-based operation
+entirely inside the state of Arkansas
+. (Can be moving, or stationary at
+one
+location.) Any power level, any/all bands, any mode(s), any number of transmitters, any number of operators.
+Mobile Outside Arkansas
+: Vehicle-based operation
+outside of Arkansas
+. (Can be moving, or stationary at
+one
+location.) Any power level, any/all bands, any mode(s), any number of transmitters, any number of operators.
+DX
+: Any station outside of the 50 states.
+Multipliers
+For Arkansas Stations:
+Click here for a handy list of multipliers for Arkansas stations
+.
+Arkansas counties: 75 multipliers possible
+U.S. States EXCEPT Arkansas: 49 multipliers possible
+Canadian Provinces: Alberta (AB), British Columbia (BC), Newfoundland and Labrador (NL), Manitoba (MB), New Brunswick (NB), Northwest Territory (NT), Nova Scotia (NS), Nunavut (NU), Ontario (ON), Prince Edward Island (PE), Quebec (QC), Saskatchewan (SK), and Yukon Territory (YT).
+[A maximum of 13 multipliers]
+DX: Regardless of number of DX QSOs made, only count 1 DX multiplier.
+For Stations Outside of Arkansas:
+75 Arkansas counties.
+See map of counties here
+.
+[A maximum of 75 multipliers]
+Scoring
+Mobile, Portable, and Rover stations claim
+2 points per QSO
+for any band, any mode.
+(Please note that some logging software may not accurately account for 2 points per QSO, so it’s vital that you submit your claimed score with the correct information.)
+All other categories claim
+1 point per QSO
+on any band, any mode.
+A separate QSO should be logged for each Arkansas county sent/received. (This is important for Rover or Portable stations near multiple county lines and those who contact them.)
+Stations can be worked once per band and mode (and per each county from which you operate if you are Mobile, Portable or Rover category.)
+Contacts made by outside-Arkansas stations with other outside-Arkansas stations will not be counted for the Arkansas QSO Party.
+The TOTAL SCORE is the total QSO points multiplied by the total number of multipliers worked, plus any bonus points.
+Please note: your logging software may not automatically apply points for working the bonus station or Rover/Portable stations. Therefore, it is critical that you submit your claimed score with the correct information on the
+ARQP log submission form
+.
+Bonus points:
+All stations claim
+200 points
+for each valid QSO with bonus station
+WR5P
+.
+Mobile, Portable, or Rover stations that activate multiple counties can claim
+200 points
+for each Arkansas county from which they make a QSO.
+New for 2026: Any station live streaming a portion or all of their operation on social media such as YouTube, Twitch, Facebook, etc. may claim
+500 points
+. Proof of live stream may be requested at the discretion of the ARQP organizers.
+Information for Rover and Portable Stations
+We love stations that are on the move! They activate multiple Arkansas counties to help county and grid hunters, as well as promote additional areas of the state.
+These stations are incentivized by the ability to rack up more points by working stations while they are in/near multiple counties. When a Mobile or Rover changes locations, they are basically a new station! Get ready for the pileups and think strategically to find locations that will allow for multiple counties per QSO and more points for you!
+Mobile and Rover stations can work other stations once per band and mode each time they change counties. Logs must clearly show county changes.
+Mobile, Rover or Portable stations that are within three miles of a county line or within a
+three-mile radius
+of a multiple county line, can transmit county abbreviations for all of the applicable counties.
+Note: this may not conform to official County Hunter rules for their awards credit.
+The county abbreviations can all be sent in the same transmission. But, this option is at the operator’s discretion. If multiple counties are used in the contact, both the sending and receiving stations must ensure that the multiple counties are properly logged for QSO and point credit.
+Logging Requirements and Tips
+All stations must log each Arkansas-based station’s three-letter county abbreviation (see
+Arkansas County Abbreviations
+).
+Arkansas stations should log all U.S. states and Canadian Providences as the standard two-character U.S.P.S. abbreviation. Use “DX” for all stations outside of the U.S. and Canada.
+Stations outside of Arkansas
+in the 49 states and Canada should send their standard two-letter state/providence abbreviation (i.e. TX, FL, QC, ON, etc.) and log the Arkansas station’s three-letter county designation.
+Stations in the District of Columbia
+should use Maryland (MD) for this event.
+Logging software specific to the Arkansas QSO Party and many other contests include
+N3FJP
+,
+CQ/X de NO5W
+(for mobile operators),
+N1MM
+and more.
+The Arkansas QSO Party is an approved contest of the
+State QSO Party Challenge
+. Logs must be submitted to
+3830Scores.com
+to be included in the Challenge.
+Please note: your logging software may not automatically apply points for working a bonus station or Rover/Portable stations. Therefore, it is critical that you submit your claimed score with the correct information on the
+ARQP log submission form
+.
+Self spotting is allowed. We recommend
+QSO Party Hub to spot and find Arkansas stations
+.
+Submitting Your ARQP Log
+All logs must be submitted through the ARQP Online Submission Form.
+Logs are due by June 1.
+Only electronic logs submitted through the ARQP website are accepted.
+Click here to submit your log and points
+, watch real-time scores as they are uploaded, and track/sort point leaders by location.
+Questions? We might not have the answers, but we’ll try! Email us: arkansasqsoparty@gmail.com

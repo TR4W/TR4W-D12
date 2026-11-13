@@ -1,0 +1,205 @@
+West Virginia QSO Party, sponsor 2026 rules, retrieved 2026-11-13
+Source: https://www.qsl.net/wvqp/2026rules.pdf
+Cabrillo: WV-QSO-PARTY (DXLog WVQP.txt; NY4I naming direction, #131)
+ADIF: WV-QSO-PARTY; WA7BNM reference 49
+NY4I #131, comment 6857387343: all multipliers once per contest, never by mode.
+The sponsor summary counts the WV state as well as the worked county.
+Own-mobile activated-county bonus and reworks remain engine gap #133.
+
+2026
+WEST VIRGINIA QSO PARTY
+Sponsored by the West Virginia State Amateur Radio Council.
+
+Saturday June 20, 2026 noon til midnight Eastern time
+(1600Z Saturday June 20, 2026 through 0400Z Sunday June 20, 2026)
+
+
+The Annual WV QSO party is held each year to celebrate West Virginia’s admission to the Union on
+June 20 1863. If June 20th is not a Saturday, the QSO Party is held the Saturday immediately prior.
+MAIN CATEGORIES
+You may submit an entry for only one category. As an example, if you are operating as mobile using
+QRP power limitations, you can be either Mobile or QRP.
+Remote operating is permitted and the use of spotting nets is allowed to encourage contest
+participation.
+Single Op (Fixed)
+No more than one signal on the air, one person operating and logging.  Operate high or
+low power.
+Multi/Multi (Fixed)
+Unlimited number of signals and operators from one QTH.  No contest power limits.
+QRP (Fixed or Mobile)
+No more than one signal on the air, one person operating and logging.
+Max Power 10W output Voice and 5W output CW.
+Mobile Operations
+Mobile station must be capable of operation while in motion but motion is not necessary.
+Mobile stations may work and may be worked by other stations upon changing counties.
+Mobile stations may operate from a county line if the definition* of a county line is met
+and receive bonus points for each county. Stations on a WV county line may be claimed
+as both a QSO and a multiplier from each county. (2 QSO’s and 2 multipliers).  No
+contest power limits for mobiles.
+*County line definition: County lines are defined as where two counties meet as long as
+the line is not “wet”. “Wet” is defined as two counties that are separated by water, i.e.,
+creek, river, lake, etc. You may not operate from a bridge connecting two counties.
+
+        Mobiles: Indicate in your log the county (or counties) you’re operating from.
+
+Power Categories (output)
+QRP:              10 watts Voice and 5 watts CW or less at all times.
+Low Power:   100 watts or less
+High Power:  101 watts and above
+
+Modes
+CW
+SSB
+Digital (non CW)
+
+Bands
+80m through 10m, no WARC bands.  Suggested frequencies:
+CW (khz):   3545   7045   14045   21045   28045
+SSB (khz):   3825   7185   14250   21300   28450
+Digital (PSK/RTTY/etc.) (khz): 3580 7080 14080 21080 28080 or normally accepted sub-bands
+
+Multipliers
+
+To be used for credit, the multiplier (county, state, province, or country) must be included in log.
+Out-of-State Stations - Multipliers are West Virginia counties (55 max).
+
+West Virginia Stations - Multipliers are:
+West Virginia counties (55 max)
+U.S. states (50 max - West Virginia counts as a state, District of Columbia counts as Maryland)
+and Canadian Provinces (13 max/band).
+DXCC entities (see ARRL DXCC list) – USA, Alaska, Hawaii, and Canada are NOT counted as
+DXCC entities.
+
+Points
+                   All Phone QSOs = 1 point                    All CW and Digital QSOs = 2 points
+Latest Summary Sheet, N3FJP and N1MM software have been updated with new QSO
+points count.
+On all HF bands, CW and other digital modes count separately. For example, you can work W1AW
+on 80 CW; 80 RTTY; and 80 SSB, for three contacts on 80 meters. All digital modes (non CW) are
+equivalent. If you work W1AW on 80 RTTY you cannot work him again on 80 PSK31.
+
+Exchange
+WV stations send RST and county.  All others send RST and State/Province/or DXCC country.
+Find WV county list with abbreviations at; https://www.qsl.net/wvqp/ .
+
+
+Bonus Points
+Bonus Points: Work W8WVA once per band per mode and receive 100 points for each
+contact (to be added to final score).
+
+West Virginia mobiles receive a bonus of 100 points for each West Virginia County
+activated from which they log at least one (1) valid contact.  Please see Summary Sheet
+on last page.
+QSL Cards/LOTW
+The W8WVA QSL manager is Mike, W8SI. Logs will be uploaded to LOTW for state
+only confirmations. If you need a county confirmation send QSL Card per QRZ page
+instructions.
+Final Score
+Multiply QSO points by the number of multipliers. Then add in the W8WVA and/or
+mobile bonus points for the final score.  Fill out a Summary Sheet or submit Cabrillo file
+showing your claimed score.  See last page for the Summary Sheet.
+Reporting
+Log and summary sheet or Cabrillo file must be e-mailed or sent by regular mail no
+later than July 8, 2026 to: Randy Goff  KD8G, 1289 Washington Gardens Cir,
+Washington, WV 26181.
+
+Email logs to wvqplogs@gmail.com.  Computer logs should be submitted in Cabrillo
+format if possible.
+
+Do not send logs on any media such as floppy disks, DVD, CD or thumb drives as only
+printed or electronic logs will be accepted.
+
+Email confirmation will be sent to all entrants who send electronic logs.  If log is
+submitted by US Mail and a confirmation is requested please provide a Self Addressed
+Stamped Post Card or envelope.  Results available Aug 5, 2026 at www.qsl.net/wvqp.
+
+AWARDS
+Certificates will be sent to high score in each category in and out of state.
+Categories:
+WV Single Operator High Power
+
+Out of State Single Operator High Power
+WV Single Operator Low Power
+
+Out of State Single Operator Low Power
+WV Mobile
+
+
+
+
+Out of State QRP
+WV Multi/Multi
+
+
+
+
+Canadian High Score
+WV QRP
+
+
+
+
+
+DX High Score
+
+
+We hope to CU in the 2026 WVQP. Please Join Us!             73 from West Virginia
+
+2026 WV QSO Party Summary Sheet
+
+Call used:___________________State/Province/Country/County:_____________________
+
+Operator Call:____________________ Operator Name ______________________________
+
+CATEGORIES:   Check one    (Please check ONE so that your entry isn’t added as a check log.)
+
+           SO -- Low Power WV                           MOBILE -- Mobile - may be assisted (no contest power limits)
+           SO -- High Power WV                          QRP SO -- Single Operator–(Max pwr out: 10 watts phone & 5 watts CW)
+           SO -- Low Power Non-WV                   M/M -- Multi Operators/Multi stations (no contest power limits)
+           SO -- High Power Non-WV
+
+SCORING:
+QSOs:     Phone: ________ x  1 = ________
+              CW: ________ x  2 = ________
+          Digital: ________ x  2 = ________
+
+    Phone + CW + Digital points  ________  =======➔ Total QSO points:
+_________
+
+Multipliers:  To be used for credit, the multiplier (county, state, or province, country) must be included in log.
+Total number of WV counties worked:
+_____ (All Stations)
+Total number of States & Provinces worked:
+_____ (WV Stations Only) (WV counts as a Multiplier)
+Total number of DXCC entities worked:
+_____ (WV Stations Only)
+        Total Counties+States+Provinces+Countries________===➔Total multipliers:
+
+
+
+Total QSO points: _____ x Total Multipliers: _____ ====➔Total QSO_Score: _________
+
+Bonus Points:
+       All Stations:
+       Contacts with W8WVA. Limit once per band per mode.     _____ x 100    =   _________
+
+For mobile stations operating in WV:
+Number of counties activated. At least one contact             _____ x 100   =    _________
+      per county.
+
+
+Bonus point total:____________
+
+
+Total QSO score __________ + Bonus points ________ ===➔Final Claimed Score:__________
+
+"I have observed all competition rules as well as all regulations for Amateur Radio in my country. My report is
+correct and true to the best of my knowledge. I agree to be bound by the decisions of QSO Party Contest
+Committee."
+
+Signature: _____________________________________________________
+Date: __________
+
+If submitting Entry Log via US Mail and you want a confirmation please send self addressed and stamped post card.
+If submitting Entry Log via E-MAIL, a confirming return e-mail will be sent.
+LOGS must be submitted by July 8th, 2026. See rules for details.
