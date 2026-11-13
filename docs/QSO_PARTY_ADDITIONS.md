@@ -187,7 +187,9 @@ suites 7,097 passed; full app build passed at existing 3/3 range and
 were generated with the sponsor-rule and #317-deferral reason. Both new
 ADIF files have zero compliance errors. The partial validator reports four
 stale WAG pins because WAG is not in that two-file subset; pins are unchanged.
-Full matrix and corpus checks are being finalized for turnover.
+The full matrix was deliberately interrupted at NY4I's quiet-stop request
+after 59 record files were created; full comparison/ADIF and corpus gates
+remain for the integrating agent. No final full-matrix or corpus pass is claimed.
 
 NY4I requested this stop point; do not start further parties until the
 session resumes. Integration instructions and remaining punchlist:
