@@ -798,6 +798,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* Issue 292: a second Enter in CQ mode on an empty exchange says why
       nothing was logged. *)
    uTestEmptyExchangeNotice in 'uTestEmptyExchangeNotice.pas',
+   (* Issue 296: the received exchange, in words, from the contest's own
+      field list. *)
+   uExchangeHint in '..\..\src\uExchangeHint.pas',
+   uTestExchangeHint in 'uTestExchangeHint.pas',
    (* M11 S9a: every contest's received-exchange field list, at stations
       the matrix does not run, frozen against the old
       SetUpExchangeInformation before it moved into the classes. *)
@@ -1067,6 +1071,7 @@ begin
    RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
    RegisterSuite(TEmptyExchangeNoticeTests.Create('EmptyExchangeNotice'));
+   RegisterSuite(TExchangeHintTests.Create('ExchangeHint'));
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
    RegisterSuite(TADIFReceivedFieldsTests.Create('ADIFReceivedFields'));

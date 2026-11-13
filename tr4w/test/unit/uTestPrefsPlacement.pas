@@ -46,6 +46,7 @@ type
       procedure CheckEmptyLeavesSaySo(const aForm: TPrefsForm);
       procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
       procedure CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
+      procedure CheckBoundControlsAreNamed(const aForm: TPrefsForm);
       function CheckGeneratedLabelsFit(const aRoot: TWinControl): integer;
    public
       procedure RunAllTests; override;
@@ -387,6 +388,40 @@ begin
          begin
          Result := True;
          Exit;
+         end;
+      end;
+end;
+
+(* The first label anywhere inside aRoot paired (FocusControl) with an
+  enabled GENERATED control of class aClass -- a bound generated row, for the
+  issue 278 checks. Enabled, because a row the contest sets is a disabled
+  edit that is not bound. *)
+function FirstPairedLabel(const aRoot: TWinControl; const aClass: TControlClass): TLabel;
+var
+   i: integer;
+   paired: TWinControl;
+begin
+   Result := nil;
+   for i := 0 to aRoot.ControlCount - 1 do
+      begin
+      paired := nil;
+      if aRoot.Controls[i] is TLabel then
+         begin
+         paired := TLabel(aRoot.Controls[i]).FocusControl;
+         end;
+      if (paired <> nil) and (paired is aClass) and paired.Enabled and
+         (Pos('gen_', paired.Name) = 1) then
+         begin
+         Result := TLabel(aRoot.Controls[i]);
+         Exit;
+         end;
+      if aRoot.Controls[i] is TWinControl then
+         begin
+         Result := FirstPairedLabel(TWinControl(aRoot.Controls[i]), aClass);
+         if Result <> nil then
+            begin
+            Exit;
+            end;
          end;
       end;
 end;
@@ -734,6 +769,45 @@ begin
    end;
 end;
 
+(* ISSUE 278: A BOUND CONTROL IS NAMED, by the binding route.  A designed
+  check box by its own caption; a generated row's edit and check box by the
+  label beside it (the registered caption, which is what that label shows).
+
+  THIS PROVES THE LCL PROPERTIES ONLY.  Whether an accessibility client SEES
+  AccessibleName is the widget set's business, and on Lazarus 4.8 win32, gtk2
+  and cocoa register no accessible object -- a running program answers that,
+  not this test. *)
+procedure TPrefsPlacementTests.CheckBoundControlsAreNamed(const aForm: TPrefsForm);
+var
+   lbl: TLabel;
+   expected: string;
+begin
+   CheckEquals('Send a greeting to stations worked before',
+               string(aForm.chkSayHiEnable.AccessibleName),
+               'a designed check box is named by its own caption');
+
+   lbl := FirstPairedLabel(aForm, TEdit);
+   CheckTrue(lbl <> nil, 'a generated edit row was found');
+   if lbl <> nil then
+      begin
+      expected := Trim(string(lbl.Caption));
+      CheckTrue(expected <> '', 'the generated edit''s label has a caption');
+      CheckEquals(expected, string(lbl.FocusControl.AccessibleName),
+                  lbl.FocusControl.Name + ': a generated edit is named by its label');
+      end;
+
+   lbl := FirstPairedLabel(aForm, TCheckBox);
+   CheckTrue(lbl <> nil, 'a generated check box row was found');
+   if lbl <> nil then
+      begin
+      expected := Trim(string(lbl.Caption));
+      CheckTrue(expected <> '', 'the generated check box''s label has a caption');
+      CheckEquals(expected, string(lbl.FocusControl.AccessibleName),
+                  lbl.FocusControl.Name + ': a generated check box (blank caption) '
+                  + 'is named by its label');
+      end;
+end;
+
 (* ISSUE 280: THE STATION BOXES CARRY THEIR SETTING'S HELP AS A TOOLTIP.  A GUI
   run found no tooltip on Grid square with help_en.po loaded.  This pins the
   half a unit test can see: the real form, finding the shipped English
@@ -752,6 +826,7 @@ type
    TBox = record
       Command: string;
       Edit: TEdit;
+      Name: string;
    end;
 var
    oldIni, oldDir, dir, fn, source, besideHelp: string;
@@ -832,9 +907,13 @@ begin
 
       SetLength(boxes, 4);
       boxes[0].Command := 'MY GRID';         boxes[0].Edit := form.edtMyGrid;
+      boxes[0].Name    := 'Grid square';
       boxes[1].Command := 'MY CALL';         boxes[1].Edit := form.edtMyCall;
+      boxes[1].Name    := 'Callsign';
       boxes[2].Command := 'MY ZONE';         boxes[2].Edit := form.edtMyZone;
+      boxes[2].Name    := 'CQ zone';
       boxes[3].Command := 'MY LICENSE YEAR'; boxes[3].Edit := form.edtMyLicenseYear;
+      boxes[3].Name    := 'License year';
 
       for i := Low(boxes) to High(boxes) do
          begin
@@ -843,7 +922,17 @@ begin
          CheckEquals(string(expected), string(boxes[i].Edit.Hint),
                      boxes[i].Command + ': the box''s tooltip is its help');
          CheckTrue(boxes[i].Edit.ShowHint, boxes[i].Command + ': ShowHint is on');
+
+         (* ISSUE 278: the accessible name is the visible label (its ':'
+           dropped), the description the whole help text, unwrapped. *)
+         CheckEquals(boxes[i].Name, string(boxes[i].Edit.AccessibleName),
+                     boxes[i].Command + ': the box''s accessible name is its label');
+         expected := UTF8Encode(Trim(help.Describe(boxes[i].Command)));
+         CheckEquals(string(expected), string(boxes[i].Edit.AccessibleDescription),
+                     boxes[i].Command + ': the box''s accessible description is its help');
          end;
+
+      CheckBoundControlsAreNamed(form);
    finally
       form.Free;
       help.Free;

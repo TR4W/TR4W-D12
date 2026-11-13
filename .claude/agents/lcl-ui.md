@@ -579,6 +579,19 @@ handlers (`chkHamScoreVerifyChange`, `chkScoreVerifyChange`, `edtScorePostURLCha
 themselves. The external logger editor gained a check row (`lfkCheck`, `row.Check`, `FieldCheck`) and
 `lblVerifyNote`, laid out by `FitLayout` only while shown. Captions are resourcestrings set in code.
 
+## The exchange field's single space is a keying state; Win32 UIA ignores AccessibleName (issues 296, 278, 2026-11-13)
+
+- **The received-exchange field opens holding `' '`, not `''`, and search-and-pounce reads that as "the exchange has
+  been offered".** `MainUnit.ReturnInSAPOpMode`: the first Enter on `''` sends DE and primes the field (`tSetExchWindInitExchangeEntry`),
+  the second Enter sees `' '` and moves on. Open it empty and every Enter re-sends DE. About ten other tests for `''`
+  (MainUnit, logsubs2, LogSend, `LOGEDIT.InitialExchangeEntry`, the matrix's `ProbeInitialExchange`) rely on it. So a
+  placeholder (`TextHint`) in that field needs an explicit "exchange offered" state first. Win32 shows the hint while the
+  field has focus; gtk2 hides it on focus. `uExchangeHint.pas` builds the wording from `ReceivedExchangeFields`.
+- **`AccessibleName`/`AccessibleDescription` reach nothing on win32**: `RegisterLazAccessibleObject` returns False
+  (`win32wsfactory.pas`), gtk2 and cocoa are the same stub. Preferences sets them anyway (`uSettingsBinding`,
+  label `FocusControl`); making UI Automation see them needs a windowed label before the input or a deliberate
+  `IAccPropServices` call, which is NY4I's decision (issue 278).
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

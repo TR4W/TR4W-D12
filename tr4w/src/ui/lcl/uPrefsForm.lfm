@@ -1181,6 +1181,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'Callsign:'
+        FocusControl = edtMyCall
       end
       object edtMyCall: TEdit
         Left = 140
@@ -1197,6 +1198,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'First name:'
+        FocusControl = edtMyName
       end
       object edtMyName: TEdit
         Left = 140
@@ -1213,6 +1215,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'Grid square:'
+        FocusControl = edtMyGrid
       end
       object edtMyGrid: TEdit
         Left = 140
@@ -1246,6 +1249,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'CQ zone:'
+        FocusControl = edtMyZone
       end
       object edtMyZone: TEdit
         Left = 140
@@ -1262,6 +1266,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'ITU zone:'
+        FocusControl = edtMyITUZone
       end
       object edtMyITUZone: TEdit
         Left = 140
@@ -1278,6 +1283,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'State/Province:'
+        FocusControl = edtMyState
       end
       object edtMyState: TEdit
         Left = 140
@@ -1294,6 +1300,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'ARRL section:'
+        FocusControl = edtMySection
       end
       object edtMySection: TEdit
         Left = 140
@@ -1310,6 +1317,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'Country:'
+        FocusControl = edtMyCountry
       end
       object edtMyCountry: TEdit
         Left = 140
@@ -1326,6 +1334,7 @@ object PrefsForm: TPrefsForm
         Width = 120
         AutoSize = False
         Caption = 'Postal code:'
+        FocusControl = edtMyPostalCode
       end
       object edtMyPostalCode: TEdit
         Left = 140
@@ -1353,6 +1362,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'Check:'
+        FocusControl = edtMyCheck
       end
       object edtMyCheck: TEdit
         Left = 496
@@ -1369,6 +1379,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'Precedence:'
+        FocusControl = edtMyPrec
       end
       object edtMyPrec: TEdit
         Left = 496
@@ -1385,6 +1396,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'FD class:'
+        FocusControl = edtMyFDClass
       end
       object edtMyFDClass: TEdit
         Left = 496
@@ -1401,6 +1413,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'FOC number:'
+        FocusControl = edtMyFOCNumber
       end
       object edtMyFOCNumber: TEdit
         Left = 496
@@ -1417,6 +1430,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'IOTA:'
+        FocusControl = edtMyIOTA
       end
       object edtMyIOTA: TEdit
         Left = 496
@@ -1433,6 +1447,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'Park:'
+        FocusControl = edtMyPark
       end
       object edtMyPark: TEdit
         Left = 496
@@ -1449,6 +1464,7 @@ object PrefsForm: TPrefsForm
         Width = 110
         AutoSize = False
         Caption = 'License year:'
+        FocusControl = edtMyLicenseYear
       end
       object edtMyLicenseYear: TEdit
         Left = 496

@@ -72,6 +72,7 @@ type
       procedure Test_AContestCfgKeepsALongValueAndANonAsciiName;
       procedure Test_AContestLogKeepsThemThroughOpenAndClose;
       procedure Test_TheWireAndTheMessageEditorSayWhatTheyHold;
+      procedure Test_AMessageIsMeasuredAsItIsStored;
    end;
 
 implementation
@@ -85,6 +86,9 @@ uses
    uCFG,
    uNet,
    uEditMessageForm,
+   uEditMessage,         (* DeleteEscapeChars -- the stored spelling *)
+   Tree,                 (* AltF12 *)
+   LogCW,                (* SetCQMemoryString / GetCQMemoryString / CQMemory *)
    uKeychain,
    uSettingsModel,
    uTR4WConfigFile,
@@ -513,6 +517,53 @@ begin
                MessageEditRefusalText(AnsiString(StringOfChar('c', 300)), True), 'caption: the refusal text');
 end;
 
+procedure TSettingValueWidthTests.Test_AMessageIsMeasuredAsItIsStored;
+var
+   fits, tooLong, stored, saved: AnsiString;
+begin
+   BeginTest('the message editor measures the STORED spelling, where a control ' +
+             'character is four bytes, and a message that fits round-trips whole');
+   fits := AnsiString(StringOfChar('a', 251)) + AnsiChar(3);              (* 252 typed *)
+   tooLong := AnsiString(StringOfChar('a', 250)) + AnsiChar(3) + AnsiChar(4); (* 252 typed *)
+
+   (* 251 + '<03>' is exactly the limit. *)
+   stored := DeleteEscapeChars(fits);
+   CheckEquals(MESSAGE_EDIT_MAX_BYTES, Length(stored), 'one control character expands to 255');
+   CheckEquals('<03>', string(Copy(stored, Length(stored) - 3, 4)), 'and ends in its escape');
+   CheckTrue(MessageEditFits(stored), 'so it fits');
+   CheckEquals('', MessageEditRefusalText(stored, False), 'and nothing is said');
+
+   (* The memory gets it back as typed: SniffOutControlCharacters turns the
+     escape at the very end of a full ShortString back into #3. *)
+   saved := CQMemory[CW, AltF12];
+   try
+      SetCQMemoryString(CW, AltF12, ShortString(stored));
+      CheckTrue(string(GetCQMemoryString(CW, AltF12)) = string(fits),
+                'the memory reads back the 252 typed bytes');
+      CheckEquals(252, Length(GetCQMemoryString(CW, AltF12)), 'all 252 of them');
+   finally
+      CQMemory[CW, AltF12] := saved;
+   end;
+
+   (* The same 252 typed bytes with two control characters store as 258: refused,
+     and the refusal names the stored size. *)
+   stored := DeleteEscapeChars(tooLong);
+   CheckEquals(258, Length(stored), 'two control characters expand to 258');
+   CheckFalse(MessageEditFits(stored), 'so it does not fit');
+   CheckEquals('The message is 258 bytes long and a message holds 255. ' +
+               'Shorten it and press OK again.',
+               MessageEditRefusalText(stored, False), 'the refusal counts the escapes');
+
+   (* One byte over: 252 letters and one control character store as 256. *)
+   stored := DeleteEscapeChars(AnsiString(StringOfChar('a', 252)) + AnsiChar(3));
+   CheckEquals(256, Length(stored), 'one byte past the limit');
+   CheckFalse(MessageEditFits(stored), 'is refused');
+
+   (* Text with no control character is stored as typed. *)
+   CheckEquals('CQ TEST', string(DeleteEscapeChars(AnsiString('CQ TEST'))), 'plain text unchanged');
+   CheckEquals('', string(DeleteEscapeChars(AnsiString(''))), 'empty stays empty');
+end;
+
 procedure TSettingValueWidthTests.RunAllTests;
 begin
    Test_TheTestProgramDecodesAsUTF8;
@@ -523,6 +574,7 @@ begin
    Test_AContestCfgKeepsALongValueAndANonAsciiName;
    Test_AContestLogKeepsThemThroughOpenAndClose;
    Test_TheWireAndTheMessageEditorSayWhatTheyHold;
+   Test_AMessageIsMeasuredAsItIsStored;
 end;
 
 end.

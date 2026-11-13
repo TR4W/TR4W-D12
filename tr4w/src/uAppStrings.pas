@@ -1231,6 +1231,31 @@ resourcestring
       is still changed on this station. *)
    SNetParameterTooLong       = '%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d.';
 
+   (* WHAT THE RECEIVED EXCHANGE HOLDS, IN WORDS (issue 296) -- one phrase per
+      field the open contest marks (TContestBase.ReceivedExchangeFields), put
+      together by uExchangeHint.ExchangeHintText into, for example, "serial
+      number and name". Lower case: they are read as part of one phrase.
+      SExchangeHintAnd joins the last two: %0:s is everything before the last
+      field (already separated by commas), %1:s the last field. *)
+   SExchangeHintSignalReport   = 'signal report';
+   SExchangeHintSerialNumber   = 'serial number';
+   SExchangeHintPrecedence     = 'precedence';
+   SExchangeHintCheck          = 'check';
+   SExchangeHintName           = 'name';
+   SExchangeHintAge            = 'age';
+   SExchangeHintClass          = 'class';
+   SExchangeHintChapter        = 'chapter';
+   SExchangeHintPower          = 'power';
+   SExchangeHintZone           = 'zone';
+   SExchangeHintLicenseYear    = 'license year';
+   SExchangeHintYearsLicensed  = 'years licensed';
+   SExchangeHintZoneOrSociety  = 'zone or society';
+   SExchangeHintQTH            = 'QTH';
+   SExchangeHintTenTenNumber   = '10-10 number';
+   SExchangeHintFOCNumber      = 'FOC number';
+   SExchangeHintRandomChars    = 'random characters';
+   SExchangeHintAnd            = '%0:s and %1:s';
+
 implementation
 
 end.

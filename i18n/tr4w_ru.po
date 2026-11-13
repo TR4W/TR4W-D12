@@ -10630,3 +10630,88 @@ msgstr ""
 #, fuzzy
 msgid "%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d."
 msgstr ""
+
+#: uappstrings.sexchangehintage
+#, fuzzy
+msgid "age"
+msgstr ""
+
+#: uappstrings.sexchangehintand
+#, fuzzy
+msgid "%0:s and %1:s"
+msgstr ""
+
+#: uappstrings.sexchangehintchapter
+#, fuzzy
+msgid "chapter"
+msgstr ""
+
+#: uappstrings.sexchangehintcheck
+#, fuzzy
+msgid "check"
+msgstr ""
+
+#: uappstrings.sexchangehintclass
+#, fuzzy
+msgid "class"
+msgstr ""
+
+#: uappstrings.sexchangehintfocnumber
+#, fuzzy
+msgid "FOC number"
+msgstr ""
+
+#: uappstrings.sexchangehintlicenseyear
+#, fuzzy
+msgid "license year"
+msgstr ""
+
+#: uappstrings.sexchangehintname
+#, fuzzy
+msgid "name"
+msgstr ""
+
+#: uappstrings.sexchangehintpower
+#, fuzzy
+msgid "power"
+msgstr ""
+
+#: uappstrings.sexchangehintprecedence
+#, fuzzy
+msgid "precedence"
+msgstr ""
+
+#: uappstrings.sexchangehintrandomchars
+#, fuzzy
+msgid "random characters"
+msgstr ""
+
+#: uappstrings.sexchangehintserialnumber
+#, fuzzy
+msgid "serial number"
+msgstr ""
+
+#: uappstrings.sexchangehintsignalreport
+#, fuzzy
+msgid "signal report"
+msgstr ""
+
+#: uappstrings.sexchangehinttentennumber
+#, fuzzy
+msgid "10-10 number"
+msgstr ""
+
+#: uappstrings.sexchangehintyearslicensed
+#, fuzzy
+msgid "years licensed"
+msgstr ""
+
+#: uappstrings.sexchangehintzone
+#, fuzzy
+msgid "zone"
+msgstr ""
+
+#: uappstrings.sexchangehintzoneorsociety
+#, fuzzy
+msgid "zone or society"
+msgstr ""

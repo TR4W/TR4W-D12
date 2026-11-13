@@ -4925,6 +4925,14 @@ begin
      keeps it complete), so it is where those controls get their help. *)
    ApplyCommandHelpHint(target, FCommandHelp, aCommand);
 
+   (* AND THE SAME ACCESSIBLE NAME (issue 278), from the label paired with the
+     control in the .lfm. Not on a redirected target: the Add button is not
+     named after the logger field it stands in for. *)
+   if target = aControl then
+      begin
+      ApplyAccessibleName(aControl, CaptionOfLabelFor(aControl));
+      end;
+
    panel := SectionPanelFor(target);
    if panel = nil then
       begin

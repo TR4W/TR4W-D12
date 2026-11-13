@@ -113,12 +113,14 @@ type
       FItems: TObjectList<TSettingBinding>;
       FHelp: TCommandHelp;
 
-      (* THE HOVER TEXT, set here because every bound control passes through
-        Bind -- the designed panels' hand-written lines and the generated
-        rows alike -- so this is the one place a tooltip can be given to all
-        of them. The setting's config command names its help; a control with
-        no help text keeps whatever Hint it had. *)
-      procedure ApplyHelp(const aControl: TControl; const aKey: string);
+      (* THE HOVER TEXT AND THE ACCESSIBLE NAME, set here because every bound
+        control passes through Bind -- the designed panels' hand-written
+        lines and the generated rows alike -- so this is the one place they
+        can be given to all of them. The setting's config command names its
+        help; a control with no help text keeps whatever Hint it had. The
+        name does NOT depend on the help: a setting with no help text is
+        still named (issue 278). *)
+      procedure ApplyCaptionAndHelp(const aControl: TControl; const aKey: string);
    public
       (* aHelp is NOT owned and may be nil (no tooltips). The form that owns
         the bindings owns the help too, and outlives both. *)
@@ -147,18 +149,39 @@ type
 (* A CONTROL'S TOOLTIP FROM ITS CONFIG COMMAND'S HELP.
 
   Hint and ShowHint from aHelp.Describe(aCommand), formatted by
-  FormatHelpHint; a nil help, a nil control or a command with no help leaves
-  the control as it was. Public for the hand-wired Preferences controls, which
-  have a command name but no binding -- TSettingBindings uses it for the rest,
-  so there is one rule for both. *)
+  FormatHelpHint; AccessibleDescription from the same text, whole and
+  unwrapped (a description is read, not laid out in a hover box, so it is not
+  cut to the tooltip's length). A nil help, a nil control or a command with
+  no help leaves the control as it was. Public for the hand-wired Preferences
+  controls, which have a command name but no binding -- TSettingBindings uses
+  it for the rest, so there is one rule for both. *)
 procedure ApplyCommandHelpHint(const aControl: TControl;
                                const aHelp: TCommandHelp;
                                const aCommand: string);
 
+(* THE ACCESSIBLE NAME OF A SETTING'S CONTROL (issue 278): the caption the
+  operator sees beside it, as an accessibility client should read it -- any
+  '&' markup removed and a trailing ':' dropped.
+
+  A check box that shows its own caption is named by THAT, and aCaption is
+  ignored: the visible text is the name. Otherwise (any other control, or a
+  generated check box, whose caption is blank beside its label) aCaption is
+  the label's text; an empty one leaves the control as it was.
+
+  Both Preferences routes use it: TSettingBindings with the registered
+  setting's caption, the hand-wired controls with CaptionOfLabelFor. *)
+procedure ApplyAccessibleName(const aControl: TControl; const aCaption: TCaption);
+
+(* THE CAPTION OF THE LABEL THAT NAMES aControl: the sibling TLabel whose
+  FocusControl is aControl -- the LCL's own label-to-input link, the same one
+  TPrefsForm.HighlightSearchedRow follows. '' when there is none. *)
+function CaptionOfLabelFor(const aControl: TControl): TCaption;
+
 implementation
 
 uses
-   MainUnit;   // logger
+   uCaptionText,   // DisplayedText -- the caption as it is drawn
+   MainUnit;       // logger
 
 procedure ApplyCommandHelpHint(const aControl: TControl;
                                const aHelp: TCommandHelp;
@@ -179,6 +202,77 @@ begin
      strings are UTF-16. *)
    aControl.Hint     := UTF8Encode(FormatHelpHint(text));
    aControl.ShowHint := True;
+   aControl.AccessibleDescription := UTF8Encode(Trim(text));
+end;
+
+(* The caption as an accessible name. Byte-wise on the UTF-8 text, which is
+  safe: ' ' and ':' are ASCII and never occur inside a multi-byte sequence. *)
+function AccessibleNameFromCaption(const aCaption: TCaption): TCaption;
+var
+   first, last: integer;
+   shown: TCaption;
+begin
+   shown := DisplayedText(aCaption);
+   first := 1;
+   last  := Length(shown);
+   while (first <= last) and (shown[first] = ' ') do
+      begin
+      Inc(first);
+      end;
+   while (last >= first) and ((shown[last] = ' ') or (shown[last] = ':')) do
+      begin
+      Dec(last);
+      end;
+   Result := Copy(shown, first, last - first + 1);
+end;
+
+procedure ApplyAccessibleName(const aControl: TControl; const aCaption: TCaption);
+var
+   name: TCaption;
+begin
+   if aControl = nil then
+      begin
+      Exit;
+      end;
+   name := '';
+   if aControl is TCustomCheckBox then
+      begin
+      name := AccessibleNameFromCaption(aControl.Caption);
+      end;
+   if Length(name) = 0 then
+      begin
+      (* Not a check box, or a generated one: its caption is blank and the
+        label to its left says what it is. *)
+      name := AccessibleNameFromCaption(aCaption);
+      end;
+   if Length(name) = 0 then
+      begin
+      Exit;
+      end;
+   aControl.AccessibleName := name;
+end;
+
+function CaptionOfLabelFor(const aControl: TControl): TCaption;
+var
+   i: integer;
+   sibling: TControl;
+begin
+   Result := '';
+   if (aControl = nil) or (aControl.Parent = nil) then
+      begin
+      Exit;
+      end;
+   for i := 0 to aControl.Parent.ControlCount - 1 do
+      begin
+      sibling := aControl.Parent.Controls[i];
+      (* TLabel, not TCustomLabel: FocusControl is protected on the latter. *)
+      if (sibling is TLabel) and
+         (TLabel(sibling).FocusControl = aControl) then
+         begin
+         Result := sibling.Caption;
+         Exit;
+         end;
+      end;
 end;
 
 { --------------------------------------------------------- TSettingBinding - }
@@ -399,18 +493,30 @@ begin
    FHelp  := aHelp;
 end;
 
-procedure TSettingBindings.ApplyHelp(const aControl: TControl; const aKey: string);
+procedure TSettingBindings.ApplyCaptionAndHelp(const aControl: TControl; const aKey: string);
 var
    s: TSettingBase;
+   caption: TCaption;
 begin
-   if FHelp = nil then
-      begin
-      Exit;
-      end;
    s := FindSetting(aKey);
    if s = nil then
       begin
       Exit;   // Load reports an unknown key; nothing to describe here
+      end;
+
+   (* A label already paired with the control (FocusControl) is what the
+     operator sees, so it wins; otherwise the registered caption, which is
+     what a generated row's label shows. *)
+   caption := CaptionOfLabelFor(aControl);
+   if Length(caption) = 0 then
+      begin
+      caption := UTF8Encode(s.Caption);
+      end;
+   ApplyAccessibleName(aControl, caption);
+
+   if FHelp = nil then
+      begin
+      Exit;
       end;
    (* The name the setting is REGISTERED under, which is its primary name --
      no registration uses a second name since 2026-11-02 (the two QUICK QSL
@@ -431,7 +537,7 @@ begin
    b := TSettingBinding.Create(aKey);
    b.FCheck := aControl;
    FItems.Add(b);
-   ApplyHelp(aControl, aKey);
+   ApplyCaptionAndHelp(aControl, aKey);
 end;
 
 procedure TSettingBindings.Bind(const aControl: TEdit; const aKey: string);
@@ -441,7 +547,7 @@ begin
    b := TSettingBinding.Create(aKey);
    b.FEdit := aControl;
    FItems.Add(b);
-   ApplyHelp(aControl, aKey);
+   ApplyCaptionAndHelp(aControl, aKey);
 end;
 
 procedure TSettingBindings.Bind(const aControl: TComboBox; const aKey: string);
@@ -451,7 +557,7 @@ begin
    b := TSettingBinding.Create(aKey);
    b.FCombo := aControl;
    FItems.Add(b);
-   ApplyHelp(aControl, aKey);
+   ApplyCaptionAndHelp(aControl, aKey);
 end;
 
 procedure TSettingBindings.LoadAll;

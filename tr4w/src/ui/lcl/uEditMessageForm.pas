@@ -132,8 +132,10 @@ function ApplyAcceptedMessageEdit(const aKeyName: AnsiString;
   resolver, LogCW's memories), so they hold 255 BYTES of the control's text
   -- fewer characters than that when the text is not ASCII. OK used to cut
   a longer one in silence; it is refused instead, and the dialog stays open.
-  aText is the control's own text (TCaption, its bytes as the LCL holds
-  them). A plain function so the test program can ask it. *)
+  aText is the text AS IT WILL BE STORED, in bytes as the LCL holds them: for
+  the caption that is the control's own text; for the message it is
+  DeleteEscapeChars of it, where each control character is four bytes
+  ('<03>'). A plain function so the test program can ask it. *)
 const
    MESSAGE_EDIT_MAX_BYTES = 255;
 
@@ -518,22 +520,29 @@ end;
 
 function TfrmEditMessage.SaveToConfig: boolean;
 var
-  cmdShort: ShortString;
+  stored: AnsiString;
   refusal: string;
 begin
    (* REFUSED, NOT CUT (issue 302). The conversion below keeps 255 bytes and
      drops the rest without a word. The operator is told why in a warning
      box; then the field that is too long gets the focus, and the dialog
-     stays open, so nothing typed is lost. The log line stays too. *)
+     stays open, so nothing typed is lost. The log line stays too.
+
+     WHAT MUST FIT IS THE STORED SPELLING, not what was typed: each control
+     character is stored as four bytes ('<03>'), so the message is expanded
+     FIRST and the expansion is what is checked and saved. Checked on the
+     typed text, 250 letters and two control characters passed at 252 and
+     expanded to 258. *)
    Result := False;
-   refusal := MessageEditRefusalText(edtMessage.Text, False);
+   stored := DeleteEscapeChars(edtMessage.Text);
+   refusal := MessageEditRefusalText(stored, False);
    if refusal <> '' then
       begin
       logger.Warn('[EditMessage] %s: the message is %d bytes and a message ' +
                   'holds %d -- not saved, the dialog stays open',
-                  [lblKeyName.Caption, Length(edtMessage.Text),
+                  [lblKeyName.Caption, Length(stored),
                    MESSAGE_EDIT_MAX_BYTES]);
-      MessageDlg(AnsiString(refusal), mtWarning, [mbOK], 0);
+      MessageDlg(LclText(refusal), mtWarning, [mbOK], 0);
       edtMessage.SetFocus;
       Exit;
       end;
@@ -544,7 +553,7 @@ begin
                   'holds %d -- not saved, the dialog stays open',
                   [lblKeyName.Caption, Length(edtCaption.Text),
                    MESSAGE_EDIT_MAX_BYTES]);
-      MessageDlg(AnsiString(refusal), mtWarning, [mbOK], 0);
+      MessageDlg(LclText(refusal), mtWarning, [mbOK], 0);
       edtCaption.SetFocus;
       Exit;
       end;
@@ -552,9 +561,8 @@ begin
 
    (* NO FILE IS WRITTEN HERE -- neither the contest .cfg nor tr4w.ini. The
      edit is applied, and committed to the contest log
-     (ApplyAcceptedMessageEdit). *)
-   cmdShort := ShortString(edtMessage.Text);
-   DeleteEscapeChars(cmdShort);
+     (ApplyAcceptedMessageEdit). The stored text fits 255 bytes (checked
+     above), so the ShortString conversion below cuts nothing. *)
 
    (* NO CAPTION FOR AN "OTHER" MESSAGE: it has no function-key button.
 
@@ -567,7 +575,7 @@ begin
      second dialog here would repeat the first on every later edit. False is
      also the ordinary answer for a message template the operator has not
      stated, which is no failure at all. *)
-   ApplyAcceptedMessageEdit(AnsiString(lblKeyName.Caption), cmdShort,
+   ApplyAcceptedMessageEdit(AnsiString(lblKeyName.Caption), ShortString(stored),
                             MesWindow <> OtherMsgWin,
                             ShortString(AnsiString(edtCaption.Text)));
 end;
@@ -601,8 +609,6 @@ begin
 
       frmEditMessage.FRow := aRow;
 
-      // The parent is uAltP's window, which is still a raw Win32 dialog, so it
-      // needs the explicit disable -- LCL ShowModal only disables LCL forms.
       ShowModalOverWin32Parent(frmEditMessage);
    except
       on E: Exception do

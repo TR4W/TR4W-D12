@@ -49,7 +49,14 @@ uses
 
 // DeleteEscapeChars is NOT dialog code: it turns the editor's control
 // characters back into the on-disk escape spelling, and the form calls it.
-procedure DeleteEscapeChars(var s: ShortString);
+//
+// FULL LENGTH IN AND OUT (2026-11-13). Each control character becomes FOUR
+// bytes ('<03>'), so the result can be longer than 255 even when s is not.
+// It used to build its result in a ShortString and ran past the end of it,
+// then stored the length modulo 256: 252 letters plus one control character
+// made 256 bytes and saved the memory EMPTY; 258 kept two letters. The
+// caller now checks the RESULT against what it can hold (uEditMessageForm).
+function DeleteEscapeChars(const s: AnsiString): AnsiString;
 
 // the single-message editor.  Parent and message index both come from the
 // caller (uAltP passes its own window and the selected message).
@@ -67,33 +74,44 @@ implementation
 uses
   uEditMessageForm;
 
-procedure DeleteEscapeChars(var s: ShortString);
+function DeleteEscapeChars(const s: AnsiString): AnsiString;
 const
-  HexChars                              : array[0..$F] of AnsiChar = '0123456789ABCDEF';
+   HexChars: array[0..$F] of AnsiChar = '0123456789ABCDEF';
 var
-  TempString                            : ShortString;
-  i                                     : integer;
-  l                                     : integer;
+   i: integer;
+   l: integer;
+   controls: integer;
 begin
-  l := 0;
-  for i := 1 to length(s) do
-     begin
-     inc(l);
-     if s[i] > CHR(31) then
-        begin
-        TempString[l] := s[i];
-        end
-     else
-        begin
-        TempString[l] := '<';
-        TempString[l + 1] := HexChars[Ord(s[i]) shr $4];
-        TempString[l + 2] := HexChars[Ord(s[i]) and $F];
-        TempString[l + 3] := '>';
-        inc(l, 3);
-        end;
-     end;
-  TempString[0] := AnsiChar(l);
-  s := TempString;
+   (* Size the result once: every control character adds three bytes. A UTF-8
+     continuation byte is $80 or above, so the test below never splits a
+     multibyte character. *)
+   controls := 0;
+   for i := 1 to Length(s) do
+      begin
+      if s[i] < AnsiChar(32) then
+         begin
+         inc(controls);
+         end;
+      end;
+   SetLength(Result, Length(s) + 3 * controls);
+
+   l := 0;
+   for i := 1 to Length(s) do
+      begin
+      inc(l);
+      if s[i] >= AnsiChar(32) then
+         begin
+         Result[l] := s[i];
+         end
+      else
+         begin
+         Result[l] := '<';
+         Result[l + 1] := HexChars[Ord(s[i]) shr $4];
+         Result[l + 2] := HexChars[Ord(s[i]) and $F];
+         Result[l + 3] := '>';
+         inc(l, 3);
+         end;
+      end;
 end;
 
 procedure ShowEditMessage(const aRow: integer);
