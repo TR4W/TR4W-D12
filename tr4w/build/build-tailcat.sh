@@ -81,10 +81,10 @@ sha256_of() {
 case "$(uname -s)-$(uname -m)" in
    Linux-x86_64)
       TARGET=x86_64-linux;   GO_PLATFORM=linux-amd64;  PIN_KEY=GO_SHA256_LINUX_AMD64
-      GOOS=linux;  GOARCH=amd64; LIB=libtailcat.so ;;
+      GOOS=linux;  GOARCH=amd64; LIB=libtailcat.so; MACOS_MIN= ;;
    Darwin-arm64)
       TARGET=aarch64-darwin; GO_PLATFORM=darwin-arm64; PIN_KEY=GO_SHA256_DARWIN_ARM64
-      GOOS=darwin; GOARCH=arm64; LIB=libtailcat.dylib ;;
+      GOOS=darwin; GOARCH=arm64; LIB=libtailcat.dylib; MACOS_MIN=${TAILCAT_MACOS_MIN:-11.0} ;;
    *)
       fail "no pinned Go toolchain for $(uname -s) $(uname -m); add its sha256 to tailcat.pin and a case here" ;;
 esac
@@ -126,6 +126,7 @@ stamp_value() {
 if [ "$FORCE" = 0 ] && [ -f "$STAMP" ] && [ -f "$OUT" ] && [ -f "$NOTICES" ]; then
    if [ "$(stamp_value commit)" = "$COMMIT" ] &&
       [ "$(stamp_value go)" = "$GO_VERSION" ] &&
+      [ "$(stamp_value macos_min)" = "$MACOS_MIN" ] &&
       [ "$(stamp_value sha256)" = "$(sha256_of "$OUT")" ]; then
       echo 'build-tailcat: up to date, nothing built.'
       show_result
@@ -207,6 +208,18 @@ export GOTOOLCHAIN=local          # never fetch a different Go behind our back
 export GOFLAGS=-mod=readonly      # go.sum decides; the build may not edit it
 export GOPATH="$WORK/gopath"
 export GOCACHE="$WORK/gocache"
+
+# THE OLDEST macOS THE LIBRARY MAY ASK FOR.  Left alone, cgo targets the
+# macOS of the machine that builds (the first CI run produced a dylib that
+# declared minos 27.0), and dyld refuses to load it on any older Mac while the
+# app's Info.plist promises 11.0.  The three variables cover cgo's compile, its
+# link and Go's own linker.
+if [ "$GOOS" = darwin ]; then
+   export MACOSX_DEPLOYMENT_TARGET="$MACOS_MIN"
+   export CGO_CFLAGS="-mmacosx-version-min=$MACOS_MIN ${CGO_CFLAGS:-}"
+   export CGO_LDFLAGS="-mmacosx-version-min=$MACOS_MIN ${CGO_LDFLAGS:-}"
+   echo "   macOS    minimum $MACOS_MIN"
+fi
 
 STARTED=$(date +%s)
 if [ "$JOBS" -gt 0 ]; then
@@ -312,6 +325,7 @@ write_notices "$OUT" "$GOPATH/pkg/mod" "$("$GO" env GOROOT)" "$SRC"
    echo "commit=$COMMIT"
    echo "repo=$REPO"
    echo "go=$GO_VERSION"
+   echo "macos_min=$MACOS_MIN"
    echo "target=$TARGET"
    echo "sha256=$(sha256_of "$OUT")"
 } > "$STAMP"
