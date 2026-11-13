@@ -86,10 +86,13 @@ NY4I answered the three queued issues in comments on 2026-11-13:
   resolved and `Agent Question` is removed.
 - South Dakota #129, comment 6857555807: score FT4/FT8 as total digital
   contacts times total grids worked digitally; calculate the CW/phone
-  geographic component separately and add the components. The scoring
-  formula is resolved. Grid precision, establishing an out-of-state FT
-  contact's SD eligibility, and DX digital eligibility still need answers;
-  `Agent Question` remains for those original questions.
+  geographic component separately and add the components. Follow-up
+  comment 6858796866 resolves the remaining questions: FT4/FT8 grids are
+  **four characters**; digital contacts do not require a county or earn
+  county multipliers, and no grid-center-to-county inference is required;
+  **DX entrants may work SD digital stations**. All current SD questions
+  are resolved and `Agent Question` is removed. Preserve the distinct
+  digital and geographic scoring components when implementing the class.
 - West Virginia #131, comment 6857387343: all multiplier kinds count once
   per contest, with **no repetition by mode**. The scope question is
   resolved. NY4I subsequently directed use of DXLog's name: the installed
