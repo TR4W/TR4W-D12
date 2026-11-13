@@ -791,6 +791,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       state, the park lookup, the FISTS score -- frozen against the old
       compares before they moved. *)
    uTestExchangeRules   in 'uTestExchangeRules.pas',
+   (* Issue 292: a second Enter in CQ mode on an empty exchange says why
+      nothing was logged. *)
+   uTestEmptyExchangeNotice in 'uTestEmptyExchangeNotice.pas',
    (* M11 S9a: every contest's received-exchange field list, at stations
       the matrix does not run, frozen against the old
       SetUpExchangeInformation before it moved into the classes. *)
@@ -1056,6 +1059,7 @@ begin
    RegisterSuite(TITUZoneContestTests.Create('ITUZoneContests'));
    RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
+   RegisterSuite(TEmptyExchangeNoticeTests.Create('EmptyExchangeNotice'));
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
    RegisterSuite(TADIFReceivedFieldsTests.Create('ADIFReceivedFields'));

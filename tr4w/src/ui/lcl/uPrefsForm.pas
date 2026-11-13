@@ -5811,9 +5811,10 @@ begin
       end
    else
       begin
-      lblPlaceholder.Caption :=
-         'This section has not been migrated yet.' + #13#10 +
-         'Use the existing configuration screens for it.';
+      (* A LEAF WITH NO PANEL (issue 279). It used to say "Use the existing
+        configuration screens for it", which named no screen; the one leaf
+        that lands here, Web Server, has no settings anywhere. *)
+      lblPlaceholder.Caption := UTF8Encode(SPrefsPageHasNoSettingsYet);
       if FParentOverview <> nil then
          begin
          FParentOverview.Visible := False;

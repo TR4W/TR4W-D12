@@ -40,6 +40,25 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-12 -- ENTER ON AN EMPTY EXCHANGE, AND THE STATION TOOLTIPS (issues 292, 280, 279)
+
+Unit-tested (`uTestEmptyExchangeNotice`, `uTestPrefsPlacement`); none of it seen
+on a screen.
+
+- [ ] **CW Open, CQ mode: type a call, Enter (call and exchange go out), clear
+      the exchange box if it was pre-filled, Enter again.** The notice line says
+      "Not enough info in exchange!!" with the warning beep, and nothing is
+      logged. The FIRST Enter is silent as before, and with LOG WITH SINGLE ENTER
+      on, the first Enter is still silent. Search and pounce is unchanged.
+- [ ] **General QSO (or POTA / BWQP), the same two Enters** with an empty
+      exchange: no message -- the QSO logs, as before.
+- [ ] **Preferences > Station, hover over Grid square** with help\help_en.po
+      installed: the setting's help appears as a tooltip. The unit test proves
+      the Hint is assigned; if nothing appears on screen, the defect is in the
+      display, not the assignment -- say which other Preferences boxes show one.
+- [ ] **Preferences > Web Server** reads "There are no settings on this page
+      yet." and no longer points at "existing configuration screens".
+
 ## Added 2026-11-12 -- MY LICENSE YEAR: THE SENT YEAR HAS ITS OWN SETTING, BOX AND ROW (issue 298)
 
 Unit-tested (`uTestLicenseYearSetting`, `uTestStationFactOverrides`); nothing
@@ -6626,3 +6645,12 @@ The forwarder is measured outside TR4W (`tools/netprobe` through it, same result
 - [ ] **Net > Disconnect, then exit:** no long wait at exit.
 - [ ] **Two separate networks** (station on a phone hotspot, server at home).
 - [ ] **The checkbox** sits right of the Tailcat address on the same row and does not overlap the reveal button; Tab goes address, Use Tailcat, This station.
+
+## Added 2026-11-12 -- NEW CONTEST PROMPTS, LOG NAME, RST/NUMBER/QTH PARSER (issues 290, 287, 284, 282)
+
+- [ ] **Locust QSO Party and NCCC Sprint prompt (290).** New Contest, Show inactive contests, choose Locust QSO Party; then NCCC Sprint. Beside the second row the prompt reads `Enter your name and QTH (US state, Canadian Province or DX country):` with no "or member number"; the row reads MY STATE. CWops Test (CWT) still says "... or member number:" beside MY QTH OR MEMBER NO.
+- [ ] **Jock White Field Day branch row (287).** New Contest, Jock White Memorial Field Day. The row beside "Enter your Branch number:" reads **MY BRANCH NUMBER**, not MY ZONE. Type `27`, OK: the new log's MY ZONE is 27. Windows and Linux (gtk2): the 16-character label fits the label column.
+- [ ] **A new log is named by the UTC date (284).** On a US evening after 00:00 UTC (e.g. 20:00 EST), create any new contest. The default file name carries the UTC date (tomorrow's local date), e.g. `CWOPEN 2026-11-13 NY4I.db` at 20:00 EST on 2026-11-12. An existing log keeps its name when opened.
+- [ ] **RSGB IOTA, reference first with RS(T) (282).** Type `EU5 599 12` for a G station: logged with island EU-005, RST 599, number 12 (it logged number 599 before).
+- [ ] **RSGB IOTA, unknown reference in the standard order (282).** Type `599 123 XYZ`: refused, the status line says `Improper domestic QTH!! (XYZ not known)` (it was refused with no message before), and the QSO keeps no QTH or number. `123 JOE CT`: refused with `No QSO number found!!`.
+- [ ] **UK/EI, same (282).** As a G station, `599 123 ZZZ` is refused naming uk-ei.dom; `AB 599 12` logs district AB, number 12.

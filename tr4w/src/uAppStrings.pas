@@ -673,6 +673,24 @@ resourcestring
      to the width of CATEGORY-TRANSMITTER, the longest label the same
      160-pixel column already shows. *)
    SNewContestQTHOrMemberLabel = 'MY QTH OR MEMBER NO';
+
+   (* THE NAME-AND-QTH PROMPT WITHOUT A MEMBER NUMBER (issue 290,
+     2026-11-12): the Locust QSO Party and the NCCC Sprint showed the CWT's
+     TC_ENTERYOURNAMEANDQTH, which ends 'or member number', and neither
+     exchanges one. LQP 2015 rules (K6VVA, archived): "Operator NAME ... and
+     QTH (U.S. Mainland State, Canadian Province, KH6 (HI), KL7 (AK) or KP2
+     (VI) / KP4 (PR) or "DX" for non W/K/VE North American Countries)".
+     NCCC Sprint rules (ncccsprint.com): "Exchange: Serial Number, Name,
+     QTH". The CWT keeps TC_ENTERYOURNAMEANDQTH. *)
+   SNewContestEnterNameAndQTH =
+      'Enter your name and QTH (US state, Canadian Province or DX country):';
+
+   (* THE JOCK WHITE FIELD DAY'S BRANCH ROW'S LABEL (issue 287, 2026-11-12):
+     the prompt asks for the NZART branch number and the row beside it read
+     MY ZONE, a D7 artifact. NZART rule 8: "plus an NZART Branch number".
+     The value is still kept in MY ZONE and the command queued is MY ZONE;
+     this is only what the operator reads (TNewContestPrompt.RowLabel). *)
+   SNewContestBranchNumberLabel = 'MY BRANCH NUMBER';
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
    SNewContestHostAreaOutsideNotice =
@@ -877,6 +895,10 @@ resourcestring
      is translated, so an operator's search for it finds the list. *)
    SPrefsSearchWinKeyerSettings =
       'Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles';
+   (* A Preferences page that holds nothing yet (issue 279: Web Server -- TR4W
+     has no web server).  It replaced "Use the existing configuration screens
+     for it", which pointed at no screen. *)
+   SPrefsPageHasNoSettingsYet = 'There are no settings on this page yet.';
 
    (* Issue 235, stage 2: the rest of More settings.  New navigation entries
      (each is also its page's heading)... *)

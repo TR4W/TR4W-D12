@@ -41,7 +41,9 @@ type
       procedure Test_TheContestLeavesHoldTheirRows;
       procedure Test_PlaceRefusesASecondHome;
       procedure Test_TheBuiltFormHasOneEditorPerSetting;
+      procedure Test_StationBoxesCarryTheirHelpTooltips;
       procedure CheckHeadingOverviews(const aForm: TPrefsForm);
+      procedure CheckEmptyLeavesSaySo(const aForm: TPrefsForm);
       procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
       procedure CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
       function CheckGeneratedLabelsFit(const aRoot: TWinControl): integer;
@@ -65,6 +67,8 @@ uses
    uFileText,             (* TempDirectory, CombinePath, DeleteFileIfExists *)
    utils_text,            (* CharBufferText, SetCharBuffer *)
    uCommandHelp,          (* TCommandHelp -- the License year command's own help *)
+   uAppStrings,           (* SPrefsPageHasNoSettingsYet -- issue 279 *)
+   FileUtil,              (* CopyFile, DeleteDirectory -- the staged help, issue 280 *)
    VC;                    (* TR4W_INI_FILENAME *)
 
 const
@@ -533,6 +537,43 @@ begin
    CheckTrue(headings > 0, 'no heading without a panel was found -- External Software has none');
 end;
 
+(* ISSUE 279: A LEAF WITH NO PAGE SAYS SO, AND POINTS NOWHERE.  It read "Use the
+  existing configuration screens for it", which named no screen; Web Server --
+  TR4W has no web server -- is the leaf that showed it.  Every panel-less leaf
+  in the real tree is opened, so a new one is covered unasked. *)
+procedure TPrefsPlacementTests.CheckEmptyLeavesSaySo(const aForm: TPrefsForm);
+var
+   i, leaves: integer;
+   node: TTreeNode;
+   shown: string;
+begin
+   leaves := 0;
+   for i := 0 to aForm.tvNav.Items.Count - 1 do
+      begin
+      node := aForm.tvNav.Items[i];
+      if node.HasChildren or HasSectionPanel(aForm, TNavNode(node).Tag) then
+         begin
+         Continue;
+         end;
+      Inc(leaves);
+
+      node.Selected := True;
+      aForm.tvNavChange(aForm.tvNav);
+
+      shown := string(aForm.lblPlaceholder.Caption);
+      CheckTrue(aForm.lblPlaceholder.Visible,
+                node.Text + ': a leaf with no page shows the placeholder');
+      CheckEquals(SPrefsPageHasNoSettingsYet, shown,
+                  node.Text + ': the placeholder says the page holds nothing');
+      CheckEquals(0, Pos('existing configuration', shown),
+                  node.Text + ': and names no other screen');
+      end;
+
+   (* Web Server is such a leaf today; when it gains a page, this count may
+     fall to zero, and that is the right time to revisit this check. *)
+   CheckTrue(leaves > 0, 'no leaf without a page was found -- Web Server had none');
+end;
+
 (* ISSUE 264: THE KEYER LIBRARY IS HARDWARE, AND SEARCH FINDS IT.  NY4I typed
   "winkey" and got nothing, and looked for a WinKeyer under Hardware.  So: the
   library's page is a child of Hardware, its list is on that page, CW Settings
@@ -674,6 +715,7 @@ begin
                 'the band plan Edit... button is on the Bands page');
 
       CheckHeadingOverviews(form);
+      CheckEmptyLeavesSaySo(form);
       CheckKeyersUnderHardware(form);
 
       CheckLicenseYearHasItsOwnBox(form);
@@ -692,6 +734,108 @@ begin
    end;
 end;
 
+(* ISSUE 280: THE STATION BOXES CARRY THEIR SETTING'S HELP AS A TOOLTIP.  A GUI
+  run found no tooltip on Grid square with help_en.po loaded.  This pins the
+  half a unit test can see: the real form, finding the shipped English
+  catalogue the way the program does (HelpDir: help\ under the working
+  directory), gives each hand-wired Station box exactly the text the catalogue
+  holds for its command, with ShowHint on.  Whether Windows then DISPLAYS it on
+  hover is a running program's question (BENCH_QUEUE / the GUI suite).
+
+  The working directory is moved to a temp folder holding help\help_en.po,
+  copied from the repository's i18n directory, and put back afterwards; the
+  settings file is redirected into the same folder, as in the test above.  It
+  fails closed: no catalogue, or one the form did not load, is a failure, never
+  a vacuous pass. *)
+procedure TPrefsPlacementTests.Test_StationBoxesCarryTheirHelpTooltips;
+type
+   TBox = record
+      Command: string;
+      Edit: TEdit;
+   end;
+var
+   oldIni, oldDir, dir, fn, source: string;
+   oldProvider: TActiveStoreProvider;
+   form: TPrefsForm;
+   help: TCommandHelp;
+   boxes: array of TBox;
+   expected: RawByteString;
+   i: integer;
+begin
+   BeginTest('the Station boxes carry their setting''s help as a tooltip (issue 280)');
+   if Application <> nil then
+      begin
+      Application.Initialize;
+      end;
+
+   source := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim +
+             '..' + PathDelim + '..' + PathDelim + 'i18n' + PathDelim + 'help_en.po');
+   if not FileExists(source) then
+      begin
+      CheckTrue(False, 'i18n/help_en.po is not found from the test binary: ' + source);
+      Exit;
+      end;
+
+   oldIni      := CharBufferText(TR4W_INI_FILENAME);
+   oldProvider := uSettingsLegacy.ActiveStoreProvider;
+   oldDir      := GetCurrentDir;
+   dir  := CombinePath(TempDirectory, 'tr4wprefshelp_' + TGUID.NewGuid.ToString);
+   form := nil;
+   help := nil;
+   try
+      if (not ForceDirectories(CombinePath(dir, 'help'))) or
+         (not CopyFile(source, CombinePath(CombinePath(dir, 'help'), 'help_en.po'))) then
+         begin
+         CheckTrue(False, 'the English help catalogue could not be staged in ' + dir);
+         Exit;
+         end;
+      if not SetCurrentDir(dir) then
+         begin
+         CheckTrue(False, 'could not make ' + dir + ' the working directory');
+         Exit;
+         end;
+
+      SetCharBuffer(TR4W_INI_FILENAME, CombinePath(dir, 'tr4w.ini'));
+      fn := TR4WConfigFileName;
+      if Pos(dir, fn) <> 1 then
+         begin
+         CheckTrue(False, 'the settings file was not redirected (' + fn +
+                          ') -- a --settings switch? The form is not built');
+         Exit;
+         end;
+
+      help := TCommandHelp.Create(CombinePath(dir, 'help'), 'en');
+      CheckTrue(help.EnglishFile <> '', 'the staged English catalogue loads');
+
+      form := TPrefsForm.Create(nil);
+
+      SetLength(boxes, 4);
+      boxes[0].Command := 'MY GRID';         boxes[0].Edit := form.edtMyGrid;
+      boxes[1].Command := 'MY CALL';         boxes[1].Edit := form.edtMyCall;
+      boxes[2].Command := 'MY ZONE';         boxes[2].Edit := form.edtMyZone;
+      boxes[3].Command := 'MY LICENSE YEAR'; boxes[3].Edit := form.edtMyLicenseYear;
+
+      for i := Low(boxes) to High(boxes) do
+         begin
+         expected := UTF8Encode(FormatHelpHint(help.Describe(boxes[i].Command)));
+         CheckTrue(expected <> '', boxes[i].Command + ' has help in help_en.po');
+         CheckEquals(string(expected), string(boxes[i].Edit.Hint),
+                     boxes[i].Command + ': the box''s tooltip is its help');
+         CheckTrue(boxes[i].Edit.ShowHint, boxes[i].Command + ': ShowHint is on');
+         end;
+   finally
+      form.Free;
+      help.Free;
+      SetCurrentDir(oldDir);
+      uSettingsLegacy.ActiveStoreProvider := oldProvider;
+      SetCharBuffer(TR4W_INI_FILENAME, oldIni);
+      if DirectoryExists(dir) then
+         begin
+         DeleteDirectory(dir, False);
+         end;
+   end;
+end;
+
 procedure TPrefsPlacementTests.RunAllTests;
 begin
    Test_EveryPlacedKeyIsARegisteredSetting;
@@ -704,6 +848,7 @@ begin
    Test_TheContestLeavesHoldTheirRows;
    Test_PlaceRefusesASecondHome;
    Test_TheBuiltFormHasOneEditorPerSetting;
+   Test_StationBoxesCarryTheirHelpTooltips;
 end;
 
 end.

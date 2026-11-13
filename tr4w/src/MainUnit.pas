@@ -657,6 +657,18 @@ function ParametersOkay(Call: CallString;
   Freq: LONGINT;
   var RData: ContestExchange): boolean;
 
+(* ENTER IN CQ MODE ON AN EMPTY EXCHANGE: SAY SO? (issue 292)  True only for a
+   SECOND Enter -- the call and the exchange were both already sent when this
+   Enter arrived -- with the exchange still empty (spaces count as empty) in a
+   contest that does not accept a blank one.  The first Enter, and LOG WITH
+   SINGLE ENTER's logging attempt on it, stay silent: both reach ParametersOkay
+   with an empty exchange as ordinary flow, as does the first Enter after CW
+   auto-send has sent the call. *)
+function EmptyExchangeEnterNeedsNotice(aCallSentBefore: boolean;
+                                       aExchangeSentBefore: boolean;
+                                       const aExchange: string;
+                                       aContestAcceptsBlank: boolean): boolean;
+
 //procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);
 
 procedure EditableLogWindowDblClick;
@@ -1825,8 +1837,17 @@ begin
 end;
 
 procedure ReturnInCQOpMode;
+var
+  (* THIS ENTER IS A SECOND ONE (issue 292): an earlier Enter for this QSO
+     already sent the call AND the exchange.  Taken before anything below
+     can change either flag. *)
+  callSentOnEntry: boolean;
+  exchangeSentOnEntry: boolean;
 begin
-  if InactiveRigCallingCQ and 
+  callSentOnEntry     := CallAlreadySent;
+  exchangeSentOnEntry := ExchangeHasBeenSent;
+
+  if InactiveRigCallingCQ and
      Switch               then // n4af 4.44.10
      begin
      Switch := False;
@@ -2021,6 +2042,23 @@ begin
            PutCallToCallWindow(OnDeckCall);
            end;
         Exit;
+        end;
+     end
+  else
+     begin
+     (* NOT LOGGED, AND SAY WHY (issue 292).  ParametersOkay refuses an empty
+        exchange silently, because the first Enter -- and LOG WITH SINGLE
+        ENTER -- reach it empty by design.  A second Enter on an exchange
+        that is still empty is the operator asking to log, so it gets the
+        partial exchange's message and beep.  A message ParametersOkay has
+        already shown (no log, a refused call) is left standing. *)
+     if EmptyExchangeEnterNeedsNotice(callSentOnEntry, exchangeSentOnEntry,
+                                      string(ExchangeWindowString),
+                                      ContestAcceptsBlankExchange(ActiveContest(Contest))) and
+        (ExchangeErrorMessage = '') and
+        (not Settings.Log.Disabled) then
+        begin
+        QuickDisplayError(TC_NOTENOUGHINFOINEXCHANGE);
         end;
      end;
 end;
@@ -7576,6 +7614,17 @@ begin
      p := (p - 1) + Length(ExchangeErrorToken);   // 0-based caret just past the token
      SetEntrySel(TR4WExchangeEdit, p, 0);
      end;
+end;
+
+function EmptyExchangeEnterNeedsNotice(aCallSentBefore: boolean;
+                                       aExchangeSentBefore: boolean;
+                                       const aExchange: string;
+                                       aContestAcceptsBlank: boolean): boolean;
+begin
+  Result := aCallSentBefore and
+            aExchangeSentBefore and
+            (Trim(aExchange) = '') and
+            (not aContestAcceptsBlank);
 end;
 
 function ParametersOkay(Call: CallString;
