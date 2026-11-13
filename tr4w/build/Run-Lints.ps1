@@ -274,6 +274,12 @@ $lints = @(
    # replacement; the ratchet holds the one file still waiting for it.
    @{ Name = 'Lint-BareVal'; Arg = $Tr4wDir; NeedsFpc = $false }
 
+   # THE STDIN-BLOCKING HOOK STAYS BLOCKING (issue 289, 2026-11-12).
+   # .claude/hooks/block-stdin-readers.py failed open on `python - --version`
+   # and nothing tested it. Runs the hook's own test file; fails closed without
+   # python. Arg is null: the script finds the repository from its own location.
+   @{ Name = 'Lint-StdinHook'; Arg = $null; NeedsFpc = $false }
+
    # NO HAND-WRITTEN NUL AFTER A STRING (NY4I, 2026-11-02: "we are supposed to
    # be out of the business of terminating our own strings"). `s[Length(s) + 1]
    # := #0` was a Win32-era habit; nothing downstream read it, and on a
