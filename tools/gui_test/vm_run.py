@@ -62,6 +62,8 @@ def main():
        str(source / "bench_online.py"),
        str(source / "bench_radio_editor.py"),
        str(source / "bench_loggers.py"),
+       str(source / "bench_k4.py"),
+       str(source / "bench_tailcat.py"),
        str(source / "fixture_data.py"), str(source / "adif_fixtures.py"), str(source / "bench_import.py"),
        str(source / "bench_locked.py"),
        str(source / "bench_search.py"), str(source / "visual_assert.py"),

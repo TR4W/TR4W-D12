@@ -1,0 +1,10 @@
+{
+   "scenario": "bench-k4-cw",
+   "run": "suite-20261113T034535-5f2d2b-k4cw",
+   "root": "C:\\TR4W-Test\\bench-main-b05fb564f88e",
+   "passed": true,
+   "captures": [],
+   "phase": "bench-k4-cw",
+   "note": "Live K4 observations in k4-observations.json; exit timing is in steps.jsonl",
+   "pid": 8016
+}

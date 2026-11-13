@@ -1,0 +1,18 @@
+{"utc": "2026-11-13T03:43:46.479729+00:00", "action": "launch isolated current-main build", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:43:48.237237+00:00", "action": "launch isolated current-main build", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:43:50.322102+00:00", "action": "wait for K4 network connect in tr4w.log", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:43:51.247073+00:00", "action": "wait for K4 network connect in tr4w.log", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:43:51.412689+00:00", "action": "wait for the K4's own TX test report (TS1)", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:43:51.485584+00:00", "action": "wait for the K4's own TX test report (TS1)", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:44:01.728506+00:00", "action": "menu Windows->Radio 1\tShift+Ctrl+5", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:44:01.893446+00:00", "action": "menu Windows->Radio 1\tShift+Ctrl+5", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:44:01.895929+00:00", "action": "wait for Radio 1 window", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:44:01.902617+00:00", "action": "wait for Radio 1 window", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:44:04.140803+00:00", "action": "request normal close to save messages", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:44:04.158923+00:00", "action": "request normal close to save messages", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:44:04.167389+00:00", "action": "wait for exit confirmation", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:44:04.265293+00:00", "action": "wait for exit confirmation", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:44:04.390102+00:00", "action": "confirm normal exit", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:44:04.604334+00:00", "action": "confirm normal exit", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:44:04.605955+00:00", "action": "wait for owned application exit", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:44:05.628124+00:00", "action": "wait for owned application exit", "state": "after", "detail": null}

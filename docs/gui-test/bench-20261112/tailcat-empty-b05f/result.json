@@ -1,0 +1,10 @@
+{
+   "scenario": "bench-tailcat-empty",
+   "run": "suite-20261113T035103-ad6222-tailcat",
+   "root": "C:\\TR4W-Test\\bench-main-742b5d0ac245",
+   "passed": true,
+   "captures": [],
+   "phase": "bench-tailcat-empty",
+   "warning_count": 1,
+   "pid": 480
+}

@@ -1,0 +1,56 @@
+{
+   "menus": [
+      "Net->Connect",
+      "Net->Disconnect",
+      "Net->Reconnect",
+      "Net->Show Network window",
+      "Net->Send message\tShift+'",
+      "Net->Synchronize with the server...\tCtrl+Alt+S",
+      "Net->Clear all logs in network",
+      "Net->Clear dupesheet in all logs",
+      "Net->Clear multsheet in all logs"
+   ],
+   "windows_before_connect": [
+      "Function keys"
+   ],
+   "warnings": [
+      {
+         "seconds_after_connect": 3.41,
+         "title": "TR4W",
+         "class": "#32770",
+         "body": [
+            "&OK"
+         ]
+      }
+   ],
+   "tailcat_log_lines": [
+      "12 Nov 2026 22:52:10.863 4856 [4828] error TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:15.863 9856 [7344] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:20.857 14850 [7944] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:25.867 19860 [8480] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:30.854 24847 [2384] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:35.867 29860 [8064] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:40.860 34853 [7712] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:45.867 39860 [6288] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty"
+   ],
+   "fallback_lines": [],
+   "net_lines": [
+      "12 Nov 2026 22:52:06.939 932 [9384] info TR4WDebugLog  - [Net] not connecting at startup (NETWORK AUTO CONNECT is off, COMPUTER ID is \"T\"); Connect on the Net menu does it",
+      "12 Nov 2026 22:52:10.863 4856 [4828] error TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:15.863 9856 [7344] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:20.857 14850 [7944] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:25.867 19860 [8480] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:30.854 24847 [2384] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:35.867 29860 [8064] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:40.860 34853 [7712] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty",
+      "12 Nov 2026 22:52:45.867 39860 [6288] debug TR4WDebugLog  - [Net] Tailcat: Use Tailcat is ticked and the Tailcat address is empty"
+   ],
+   "windows_after_disconnect": [
+      {
+         "title": "Function keys",
+         "body": [
+            "Close"
+         ]
+      }
+   ]
+}

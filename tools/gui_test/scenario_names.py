@@ -40,5 +40,7 @@ SCENARIOS = (
    "bench-prefs-station-restore",
    "bench-prefs-overview",
    "bench-entry-errors",
+   "bench-k4-observe", "bench-k4-cw",
+   "bench-tailcat-empty",
    "bench-lognames", "bench-lognames-close",
 )

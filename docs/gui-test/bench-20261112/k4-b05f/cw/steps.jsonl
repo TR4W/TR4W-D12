@@ -1,0 +1,24 @@
+{"utc": "2026-11-13T03:46:21.065639+00:00", "action": "launch isolated current-main build", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:22.380044+00:00", "action": "launch isolated current-main build", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:23.763581+00:00", "action": "wait for K4 network connect in tr4w.log", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:24.833208+00:00", "action": "wait for K4 network connect in tr4w.log", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:24.835039+00:00", "action": "wait for the K4's own TX test report (TS1)", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:24.838761+00:00", "action": "wait for the K4's own TX test report (TS1)", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:35.120564+00:00", "action": "menu Windows->Radio 1\tShift+Ctrl+5", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:35.273145+00:00", "action": "menu Windows->Radio 1\tShift+Ctrl+5", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:35.275152+00:00", "action": "wait for Radio 1 window", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:35.281196+00:00", "action": "wait for Radio 1 window", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:37.482110+00:00", "action": "focus main window", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:37.483875+00:00", "action": "focus main window", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:37.485328+00:00", "action": "press F1 (CQ memory) in CQ mode", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:37.499686+00:00", "action": "press F1 (CQ memory) in CQ mode", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:51.457498+00:00", "action": "menu Tools->Reset Radio Ports", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:52.079273+00:00", "action": "menu Tools->Reset Radio Ports", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:56.999905+00:00", "action": "request normal close to save messages", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:57.004507+00:00", "action": "request normal close to save messages", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:57.007740+00:00", "action": "wait for exit confirmation", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:57.112306+00:00", "action": "wait for exit confirmation", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:57.225280+00:00", "action": "confirm normal exit", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:57.347844+00:00", "action": "confirm normal exit", "state": "after", "detail": null}
+{"utc": "2026-11-13T03:46:57.349466+00:00", "action": "wait for owned application exit", "state": "before", "detail": null}
+{"utc": "2026-11-13T03:46:58.157077+00:00", "action": "wait for owned application exit", "state": "after", "detail": null}

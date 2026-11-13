@@ -1,0 +1,1162 @@
+{
+   "connected": true,
+   "connect_seconds_after_main": 1.07,
+   "tx_test_reported_by_radio": true,
+   "tx_test_display_idle": [],
+   "display_samples": [
+      {
+         "t": 2.19,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 3.22,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 4.25,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 5.29,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 6.32,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 7.34,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 8.38,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      },
+      {
+         "t": 9.4,
+         "cells": [
+            {
+               "text": "7044.61",
+               "class": "Window",
+               "rect": [
+                  257,
+                  412,
+                  325,
+                  429
+               ]
+            },
+            {
+               "text": " 40CW",
+               "class": "Window",
+               "rect": [
+                  257,
+                  395,
+                  325,
+                  412
+               ]
+            }
+         ]
+      }
+   ],
+   "radio_window_title": "Radio 1 K4D-278",
+   "radio_window_texts": [
+      {
+         "text": "Spectrum",
+         "class": "Button",
+         "rect": [
+            193,
+            587,
+            282,
+            629
+         ]
+      },
+      {
+         "text": "SPLIT",
+         "class": "Window",
+         "rect": [
+            344,
+            541,
+            400,
+            581
+         ]
+      },
+      {
+         "text": "XIT",
+         "class": "Window",
+         "rect": [
+            294,
+            541,
+            344,
+            581
+         ]
+      },
+      {
+         "text": "RIT",
+         "class": "Window",
+         "rect": [
+            244,
+            541,
+            294,
+            581
+         ]
+      },
+      {
+         "text": "CW",
+         "class": "Window",
+         "rect": [
+            356,
+            491,
+            400,
+            537
+         ]
+      },
+      {
+         "text": "CW",
+         "class": "Window",
+         "rect": [
+            356,
+            441,
+            400,
+            487
+         ]
+      },
+      {
+         "text": "7073.13",
+         "class": "Window",
+         "rect": [
+            244,
+            491,
+            356,
+            537
+         ]
+      },
+      {
+         "text": "7044.61",
+         "class": "Window",
+         "rect": [
+            244,
+            441,
+            356,
+            487
+         ]
+      },
+      {
+         "text": "VFO B",
+         "class": "Window",
+         "rect": [
+            193,
+            491,
+            243,
+            537
+         ]
+      },
+      {
+         "text": "VFO A",
+         "class": "Window",
+         "rect": [
+            193,
+            441,
+            243,
+            487
+         ]
+      }
+   ],
+   "main_texts_final": [
+      {
+         "text": "All",
+         "class": "Window",
+         "rect": [
+            594,
+            151,
+            645,
+            185
+         ]
+      },
+      {
+         "text": "10",
+         "class": "Window",
+         "rect": [
+            552,
+            151,
+            594,
+            185
+         ]
+      },
+      {
+         "text": "15",
+         "class": "Window",
+         "rect": [
+            510,
+            151,
+            552,
+            185
+         ]
+      },
+      {
+         "text": "20",
+         "class": "Window",
+         "rect": [
+            468,
+            151,
+            510,
+            185
+         ]
+      },
+      {
+         "text": "40",
+         "class": "Window",
+         "rect": [
+            426,
+            151,
+            468,
+            185
+         ]
+      },
+      {
+         "text": "80",
+         "class": "Window",
+         "rect": [
+            384,
+            151,
+            426,
+            185
+         ]
+      },
+      {
+         "text": "160",
+         "class": "Window",
+         "rect": [
+            342,
+            151,
+            384,
+            185
+         ]
+      },
+      {
+         "text": "2",
+         "class": "Window",
+         "rect": [
+            594,
+            202,
+            645,
+            219
+         ]
+      },
+      {
+         "text": "3",
+         "class": "Window",
+         "rect": [
+            594,
+            185,
+            645,
+            202
+         ]
+      },
+      {
+         "text": "2",
+         "class": "Window",
+         "rect": [
+            468,
+            185,
+            510,
+            202
+         ]
+      },
+      {
+         "text": "1",
+         "class": "Window",
+         "rect": [
+            426,
+            185,
+            468,
+            202
+         ]
+      },
+      {
+         "text": "Calls",
+         "class": "Window",
+         "rect": [
+            257,
+            202,
+            342,
+            219
+         ]
+      },
+      {
+         "text": "QSOs",
+         "class": "Window",
+         "rect": [
+            257,
+            185,
+            342,
+            202
+         ]
+      },
+      {
+         "text": "WSJTX",
+         "class": "Window",
+         "rect": [
+            393,
+            429,
+            444,
+            446
+         ]
+      },
+      {
+         "text": "WK",
+         "class": "Window",
+         "rect": [
+            903,
+            463,
+            971,
+            480
+         ]
+      },
+      {
+         "text": "6 Pts",
+         "class": "Window",
+         "rect": [
+            648,
+            151,
+            801,
+            168
+         ]
+      },
+      {
+         "text": " SP: 0",
+         "class": "Window",
+         "rect": [
+            971,
+            412,
+            1039,
+            429
+         ]
+      },
+      {
+         "text": "Rate = 0",
+         "class": "Window",
+         "rect": [
+            818,
+            429,
+            903,
+            446
+         ]
+      },
+      {
+         "text": "K4D-278",
+         "class": "Window",
+         "rect": [
+            257,
+            429,
+            325,
+            446
+         ]
+      },
+      {
+         "text": "7044.61",
+         "class": "Window",
+         "rect": [
+            257,
+            412,
+            325,
+            429
+         ]
+      },
+      {
+         "text": "Newer CTY.DAT available (dated 20261107). Press Alt-O to download.",
+         "class": "Window",
+         "rect": [
+            257,
+            480,
+            1039,
+            497
+         ]
+      },
+      {
+         "text": "4",
+         "class": "Window",
+         "rect": [
+            444,
+            395,
+            512,
+            429
+         ]
+      },
+      {
+         "text": "OFF",
+         "class": "Window",
+         "rect": [
+            682,
+            463,
+            733,
+            480
+         ]
+      },
+      {
+         "text": "Paddle",
+         "class": "Window",
+         "rect": [
+            903,
+            446,
+            971,
+            463
+         ]
+      },
+      {
+         "text": "CQ",
+         "class": "Window",
+         "rect": [
+            733,
+            463,
+            818,
+            480
+         ]
+      },
+      {
+         "text": "00:00:00",
+         "class": "Window",
+         "rect": [
+            733,
+            412,
+            818,
+            429
+         ]
+      },
+      {
+         "text": "INSERT",
+         "class": "Window",
+         "rect": [
+            971,
+            395,
+            1039,
+            412
+         ]
+      },
+      {
+         "text": "This hr = 0",
+         "class": "Window",
+         "rect": [
+            733,
+            429,
+            818,
+            446
+         ]
+      },
+      {
+         "text": "03:46:36",
+         "class": "Window",
+         "rect": [
+            257,
+            151,
+            342,
+            168
+         ]
+      },
+      {
+         "text": "Footsw.",
+         "class": "Window",
+         "rect": [
+            971,
+            446,
+            1039,
+            463
+         ]
+      },
+      {
+         "text": "13-11-26",
+         "class": "Window",
+         "rect": [
+            325,
+            395,
+            393,
+            412
+         ]
+      },
+      {
+         "text": "W1AW",
+         "class": "Window",
+         "rect": [
+            971,
+            463,
+            1039,
+            480
+         ]
+      },
+      {
+         "text": "CQ total: 0",
+         "class": "Window",
+         "rect": [
+            903,
+            429,
+            1039,
+            446
+         ]
+      },
+      {
+         "text": " CQ: 3",
+         "class": "Window",
+         "rect": [
+            903,
+            412,
+            971,
+            429
+         ]
+      },
+      {
+         "text": "35 WPM",
+         "class": "Window",
+         "rect": [
+            257,
+            446,
+            325,
+            463
+         ]
+      },
+      {
+         "text": "03:46",
+         "class": "Window",
+         "rect": [
+            393,
+            395,
+            444,
+            412
+         ]
+      },
+      {
+         "text": " 40CW",
+         "class": "Window",
+         "rect": [
+            257,
+            395,
+            325,
+            412
+         ]
+      }
+   ],
+   "split_or_vfo_cells": [
+      {
+         "text": "SPLIT",
+         "class": "Window",
+         "rect": [
+            344,
+            541,
+            400,
+            581
+         ]
+      },
+      {
+         "text": "XIT",
+         "class": "Window",
+         "rect": [
+            294,
+            541,
+            344,
+            581
+         ]
+      },
+      {
+         "text": "RIT",
+         "class": "Window",
+         "rect": [
+            244,
+            541,
+            294,
+            581
+         ]
+      },
+      {
+         "text": "VFO B",
+         "class": "Window",
+         "rect": [
+            193,
+            491,
+            243,
+            537
+         ]
+      },
+      {
+         "text": "VFO A",
+         "class": "Window",
+         "rect": [
+            193,
+            441,
+            243,
+            487
+         ]
+      }
+   ],
+   "band_mode_cells": [
+      " 40CW"
+   ],
+   "texts_while_sending": [
+      {
+         "text": "All",
+         "class": "Window",
+         "rect": [
+            594,
+            151,
+            645,
+            185
+         ]
+      },
+      {
+         "text": "10",
+         "class": "Window",
+         "rect": [
+            552,
+            151,
+            594,
+            185
+         ]
+      },
+      {
+         "text": "15",
+         "class": "Window",
+         "rect": [
+            510,
+            151,
+            552,
+            185
+         ]
+      },
+      {
+         "text": "20",
+         "class": "Window",
+         "rect": [
+            468,
+            151,
+            510,
+            185
+         ]
+      },
+      {
+         "text": "40",
+         "class": "Window",
+         "rect": [
+            426,
+            151,
+            468,
+            185
+         ]
+      },
+      {
+         "text": "80",
+         "class": "Window",
+         "rect": [
+            384,
+            151,
+            426,
+            185
+         ]
+      },
+      {
+         "text": "160",
+         "class": "Window",
+         "rect": [
+            342,
+            151,
+            384,
+            185
+         ]
+      },
+      {
+         "text": "2",
+         "class": "Window",
+         "rect": [
+            594,
+            202,
+            645,
+            219
+         ]
+      },
+      {
+         "text": "3",
+         "class": "Window",
+         "rect": [
+            594,
+            185,
+            645,
+            202
+         ]
+      },
+      {
+         "text": "2",
+         "class": "Window",
+         "rect": [
+            468,
+            185,
+            510,
+            202
+         ]
+      },
+      {
+         "text": "1",
+         "class": "Window",
+         "rect": [
+            426,
+            185,
+            468,
+            202
+         ]
+      },
+      {
+         "text": "Calls",
+         "class": "Window",
+         "rect": [
+            257,
+            202,
+            342,
+            219
+         ]
+      },
+      {
+         "text": "QSOs",
+         "class": "Window",
+         "rect": [
+            257,
+            185,
+            342,
+            202
+         ]
+      },
+      {
+         "text": "WSJTX",
+         "class": "Window",
+         "rect": [
+            393,
+            429,
+            444,
+            446
+         ]
+      },
+      {
+         "text": "WK",
+         "class": "Window",
+         "rect": [
+            903,
+            463,
+            971,
+            480
+         ]
+      },
+      {
+         "text": "6 Pts",
+         "class": "Window",
+         "rect": [
+            648,
+            151,
+            801,
+            168
+         ]
+      },
+      {
+         "text": " SP: 0",
+         "class": "Window",
+         "rect": [
+            971,
+            412,
+            1039,
+            429
+         ]
+      },
+      {
+         "text": "Rate = 0",
+         "class": "Window",
+         "rect": [
+            818,
+            429,
+            903,
+            446
+         ]
+      },
+      {
+         "text": "K4D-278",
+         "class": "Window",
+         "rect": [
+            257,
+            429,
+            325,
+            446
+         ]
+      },
+      {
+         "text": "7044.61",
+         "class": "Window",
+         "rect": [
+            257,
+            412,
+            325,
+            429
+         ]
+      },
+      {
+         "text": "Newer CTY.DAT available (dated 20261107). Press Alt-O to download.",
+         "class": "Window",
+         "rect": [
+            257,
+            480,
+            1039,
+            497
+         ]
+      },
+      {
+         "text": "4",
+         "class": "Window",
+         "rect": [
+            444,
+            395,
+            512,
+            429
+         ]
+      },
+      {
+         "text": "INH",
+         "class": "Window",
+         "rect": [
+            682,
+            463,
+            733,
+            480
+         ]
+      },
+      {
+         "text": "Paddle",
+         "class": "Window",
+         "rect": [
+            903,
+            446,
+            971,
+            463
+         ]
+      },
+      {
+         "text": "CQ",
+         "class": "Window",
+         "rect": [
+            733,
+            463,
+            818,
+            480
+         ]
+      },
+      {
+         "text": "00:00:00",
+         "class": "Window",
+         "rect": [
+            733,
+            412,
+            818,
+            429
+         ]
+      },
+      {
+         "text": "INSERT",
+         "class": "Window",
+         "rect": [
+            971,
+            395,
+            1039,
+            412
+         ]
+      },
+      {
+         "text": "This hr = 0",
+         "class": "Window",
+         "rect": [
+            733,
+            429,
+            818,
+            446
+         ]
+      },
+      {
+         "text": "03:46:38",
+         "class": "Window",
+         "rect": [
+            257,
+            151,
+            342,
+            168
+         ]
+      },
+      {
+         "text": "Footsw.",
+         "class": "Window",
+         "rect": [
+            971,
+            446,
+            1039,
+            463
+         ]
+      },
+      {
+         "text": "13-11-26",
+         "class": "Window",
+         "rect": [
+            325,
+            395,
+            393,
+            412
+         ]
+      },
+      {
+         "text": "W1AW",
+         "class": "Window",
+         "rect": [
+            971,
+            463,
+            1039,
+            480
+         ]
+      },
+      {
+         "text": "CQ total: 1",
+         "class": "Window",
+         "rect": [
+            903,
+            429,
+            1039,
+            446
+         ]
+      },
+      {
+         "text": " CQ: 3",
+         "class": "Window",
+         "rect": [
+            903,
+            412,
+            971,
+            429
+         ]
+      },
+      {
+         "text": "35 WPM",
+         "class": "Window",
+         "rect": [
+            257,
+            446,
+            325,
+            463
+         ]
+      },
+      {
+         "text": "03:46",
+         "class": "Window",
+         "rect": [
+            393,
+            395,
+            444,
+            412
+         ]
+      },
+      {
+         "text": " 40CW",
+         "class": "Window",
+         "rect": [
+            257,
+            395,
+            325,
+            412
+         ]
+      },
+      {
+         "text": "TX INHIBITED: TX test mode",
+         "class": "msctls_statusbar32",
+         "rect": [
+            257,
+            520,
+            1039,
+            543
+         ]
+      }
+   ],
+   "inhibit_cells_while_sending": [
+      {
+         "text": "INH",
+         "class": "Window",
+         "rect": [
+            682,
+            463,
+            733,
+            480
+         ]
+      },
+      {
+         "text": "TX INHIBITED: TX test mode",
+         "class": "msctls_statusbar32",
+         "rect": [
+            257,
+            520,
+            1039,
+            543
+         ]
+      }
+   ],
+   "log_after_f1": [
+      "12 Nov 2026 22:46:37.489 15068 [4020] warn TR4WDebugLog  - [TX inhibit] K4D-278 is keyed and reports TX inhibited (TX test mode) -- no RF is going out",
+      "12 Nov 2026 22:46:37.490 15069 [4020] trace TR4WDebugLog  - Setting tmrCWByCAT timer to 7646 ms",
+      "12 Nov 2026 22:46:37.490 15069 [4020] trace TR4WDebugLog  - Self.CWByCAT_Sending set to TRUE",
+      "12 Nov 2026 22:46:37.490 15069 [4020] info TR4WDebugLog.K4-K4D-278  - [Elecraft K4.SendCW] Sending CW: \"CQ CQ W1AW  W1AW TEST \"",
+      "12 Nov 2026 22:46:37.490 15069 [4020] trace TR4WDebugLog.K4-K4D-278  - [K4D-278 Elecraft K4 TX] (KY CQ CQ W1AW  W1AW TEST ;) Hex:[4B 59 20 43 51 20 43 51 20 57 31 41 57 20 20 57 31 41 57 20 54 45 53 54 20 3B ]",
+      "12 Nov 2026 22:46:44.752 22331 [280] trace TR4WDebugLog  - rig.CWByCAT_Sending set to FALSE - K4D-278 (K4)",
+      "12 Nov 2026 22:46:44.752 22331 [280] trace TR4WDebugLog  - [Active] CWByCAT_Sending set to FALSE - K4D-278 (K4)"
+   ],
+   "keyed_inhibited_logged": true,
+   "seconds_observed_after_f1": 13.87,
+   "reset_radio_ports": {
+      "menu": "Tools->Reset Radio Ports",
+      "reconnected": true,
+      "seconds": 1.93
+   },
+   "display_after_reset": [
+      "7044.61",
+      " 40CW"
+   ]
+}

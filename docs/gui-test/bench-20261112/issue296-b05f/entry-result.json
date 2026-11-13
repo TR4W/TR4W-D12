@@ -1,0 +1,24 @@
+{
+   "passed": true,
+   "pid": 4656,
+   "refusals": [
+      {
+         "input": "WOODY",
+         "message": "No QSO number found!!",
+         "qso_count": 0,
+         "focus_retained": true,
+         "notice_controls": 1
+      },
+      {
+         "input": "234",
+         "message": "No name found!!",
+         "qso_count": 0,
+         "focus_retained": true,
+         "notice_controls": 1
+      }
+   ],
+   "valid_qso_count": 1,
+   "empty_enter_qso_count": 1,
+   "close_to_exit_seconds_no_radio": 0.94,
+   "note": "Notice strings, counts and focus passed; colour, placeholder and format observations are in notice-observations.json"
+}
