@@ -15,6 +15,14 @@ registered implementation in this build. Thus the current release is
 missing 15 of these events; it is premature to claim all 46 are supported.
 Alabama/NJ were committed locally as `bad18048`; WV as `ae586527`.
 
+**Round scope versus implementation status:** the 12 missing entries below
+are queued within the current new-QSO-party round, not additional work
+excluded from it. Kentucky and South Dakota are in that queue and their
+rule questions have been answered. They do not yet have classes/data/tests
+in this build. The three new completed implementations so far are Alabama,
+New Jersey and West Virginia. "Missing" in the table means not implemented
+yet, not outside the round's scope.
+
 ## Complete mapping
 
 | Challenge event | Runtime contest ID | v5.0.40 | Development worktree | Request |
