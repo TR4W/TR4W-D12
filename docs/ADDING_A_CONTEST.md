@@ -77,6 +77,15 @@ Then the edits to shared files listed in [A4](#a4-every-place-outside-the-class-
 
 ### The rules folder
 
+For a PDF, use the configured local `pdftomarkdown` MCP tool
+`convert_to_markdown` and retain the Markdown beside the original PDF.
+On NY4I's machine this is the checkout at `C:\projects\pdftomarkdown`;
+the CLI fallback is `bun <checkout>/bin/cli.js <input.pdf> -o <output.md>`.
+Use that explicit local path, not an unqualified `npx pdftomarkdown` which
+can resolve a different npm product. This converter needs no API key and
+processes local PDFs on box. Check the full page range and independently
+verify any county/table extraction before building DOM data from it.
+
 One folder per contest. It holds:
 
 - **the sponsor's own document** -- the PDF, or whatever the sponsor
