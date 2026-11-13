@@ -4302,6 +4302,12 @@ function RSTAndReceivedYearText(const aRST: string; aKind: TReceivedYearKind;
    two-digit year or a count). A four-digit year leaves Zone at DUMMYZONE: no
    contest of that kind exists yet, and its multiplier needs stage 4. *)
 procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
+(* THE ONE WRITER of the year a QSO's sender SENT -- issue 300, protocol 4:
+   YearSent and YearSentKnown, the pair the multi-op packet carries. aKnown
+   False, or a year outside 0..65535, clears both (none: a record is never left
+   with a year and Known False, or the reverse). *)
+procedure StoreSentLicenceYear(var aQso: ContestExchange; aKnown: boolean;
+                               aYear: integer);
 (* No year: the field cleared and the zone slot DUMMYZONE. *)
 procedure ClearLicenceYear(var aQso: ContestExchange);
 
@@ -4547,17 +4553,21 @@ function QSOCountsTowardTotals(aContest: TContestBase;
    sends a year (aYearKind not rykNone) the zone slot carries the year THIS
    QSO SENT, formatted by the kind (SentYearTextOfFacts), and never the
    contest's current year:
-      the row holds a year (year_sent)          that year
+      the row holds a year (year_sent)          that year -- a PEER'S row
+                                                holds the year THE PEER sent
+                                                (protocol 4 carries it), so
+                                                it exports the peer's year
       a row logged, edited or imported here     '' -- it sent none
       that holds none
       a PEER'S row ('assumed') that holds none  the session's, as before
-                                                schema 8: the protocol-3
-                                                packet does not carry the
-                                                peer's year, so the column
-                                                stays NULL (nothing invented)
-                                                and the export keeps sending
-                                                what it always did -- ruling
-                                                D's assumption, at read time
+                                                schema 8: a row caught up from
+                                                a protocol-3 era server log,
+                                                or received from a station
+                                                that sent none, stores NULL
+                                                (nothing invented) and the
+                                                export keeps sending what it
+                                                always did -- ruling D's
+                                                assumption, at read time
       a row that never captured a station       the session's, as ruling A
    aYearKind defaults to rykNone: a caller that asks only for the grid, or a
    contest that sends no year, sees no change. *)
@@ -5480,6 +5490,23 @@ begin
    else
       begin
       aQso.Zone := DUMMYZONE;
+      end;
+end;
+
+procedure StoreSentLicenceYear(var aQso: ContestExchange; aKnown: boolean;
+                               aYear: integer);
+begin
+   (* See the declaration. The range is checked, not cast: Word(70000) would
+      wrap into a plausible-looking year. *)
+   if aKnown and (aYear >= 0) and (aYear <= High(Word)) then
+      begin
+      aQso.YearSent := Word(aYear);
+      aQso.YearSentKnown := True;
+      end
+   else
+      begin
+      aQso.YearSent := 0;
+      aQso.YearSentKnown := False;
       end;
 end;
 

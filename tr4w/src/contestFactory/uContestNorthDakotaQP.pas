@@ -23,9 +23,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   ITS ID IS ND-QSO-PARTY AND IT IS STORED DATA FROM THE FIRST LOG MADE WITH
   IT: never give it to another contest. There is no ContestType member -- the
-  enum is frozen (Lint-FrozenContestNumbers) -- so, like Georgia, the contest
-  is refused on the multi-op network and its UDP contest number is derived
-  from its id.
+  enum is frozen (Lint-FrozenContestNumbers) -- so, like Georgia, its UDP
+  contest number is derived from its id, and on the multi-op network it is
+  announced by its id string in the HELLO (network protocol 2; it was refused
+  there before 2026-10-27).
 
   ON THE STATE-PARTY BASE, BECAUSE IT IS ONE: one host state, county
   multipliers for everyone outside it, and an out-of-state station may work

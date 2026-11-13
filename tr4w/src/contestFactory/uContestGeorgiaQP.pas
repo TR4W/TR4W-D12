@@ -29,8 +29,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   A NEW CONTEST, SO IT REGISTERS BY ITS ID (Q108 S3/S4): no ContestType
   member, no legacy number, no VC.pas entry. Its id 'GA-QSO-PARTY' is STORED
   DATA from today (every log's contest row) and is never given to another
-  contest. The multi-op network refuses it and its UDP <contestnr> is
-  derived from the id -- both the registry's, nothing here.
+  contest. The multi-op network announces it by its id string (protocol 2) and
+  its UDP <contestnr> is derived from the id -- both the registry's, nothing
+  here.
 
   ON THE STATE-PARTY BASE, BECAUSE IT IS ONE: one host state, county
   multipliers for everyone outside it, and an out-of-state station may work

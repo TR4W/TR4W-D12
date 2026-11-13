@@ -74,6 +74,14 @@
 > protocol-2 station would send those bytes as zero. TR4WServerPy must move
 > its version to 3.
 >
+> **PROTOCOL 4 (2026-11-13, issue 300)** is protocol 3 with the same kind of
+> change: `ContestExchange` also carries the licence year the QSO's SENDER sent
+> (`YearSentKnown` Boolean at offset 327, `YearSent` Word at 328, taken from
+> `sReserved`, now `string[43]` from 330). The Boolean comes first so the Word
+> is aligned without a pad byte. Sizes unchanged (record 376, QSO packet 384);
+> servers store and relay it unread; every older record reads "no year" (byte
+> 327 was a zero length byte). TR4WServerPy moves its version to 4.
+>
 > The sizes in section 2 of this document are therefore **not** to be used to
 > write a protocol 2 peer; `tr4w/test/unit/uTestNetWireSizes.pas` pins what this
 > tree sends and `tools/netprobe/netprobe.py` is an independent client that

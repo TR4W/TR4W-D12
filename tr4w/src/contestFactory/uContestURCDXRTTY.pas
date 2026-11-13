@@ -30,9 +30,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   A NEW CONTEST, SO IT REGISTERS BY ITS ID (Q108 S3/S4): it has no
   ContestType member, no legacy number, no VC.pas entry. Its id
   'URC-DX-RTTY' is STORED DATA from today (every log's contest row) and is
-  never given to another contest. The multi-op network refuses it and its
-  UDP <contestnr> is derived from the id -- both the registry's, nothing
-  here.
+  never given to another contest. The multi-op network announces it by its
+  id string (protocol 2) and its UDP <contestnr> is derived from the id --
+  both the registry's, nothing here.
 
   THE CONTEST, rule by rule, and where each lives:
     * schedule -- the 1st Friday of October, 00:00-23:59 UTC. TR4W has no

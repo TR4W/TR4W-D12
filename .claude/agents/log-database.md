@@ -722,8 +722,9 @@ section 12m-bis.
   never-captured exit) -- a backfilled row's year is its own.
 - **Where it comes from: `uQsoMyFacts.SentYearSourceOf`.** Ours when logged
   here; **NEVER OURS ON A PEER'S ROW** (`assumed`, live or caught up --
-  `CaptureMyFactsNow` and `uGetServerLog` clear it; the protocol-3 packet does
-  not carry the peer's year); an import's STX_STRING, else the contest's
+  `CaptureMyFactsNow` and `uGetServerLog` take the year THE PEER sent from the
+  record's `YearSent` / `YearSentKnown`, which the protocol-4 packet carries
+  (2026-11-13), and none when it carries none); an import's STX_STRING, else the contest's
   (`ApplyImportedSentYear`; `MyFactsForImport` keeps the record's year
   whichever station the operator picks).
 - **Readers:** `MyStationExchangeOfQSO(..., aYearKind)` (default `rykNone`, so
@@ -747,9 +748,12 @@ section 12m-bis.
   `uPrefsForm.SaveStationPanel` asks it (issue 300 step 7) after the
   two-answer question, gated by `uLicenseYearChange.LicenseYearCorrectionAsks`;
   "This contest and its existing QSOs" and `lysContestAndQSOs` are retired.
-- **OPEN, NY4I's decision: the peer's year on the wire** (a pair carved from
-  `ContestExchange.sReserved`, protocol 3 -> 4, TR4WServerPy to match). Not
-  built.
+- **THE PEER'S YEAR IS ON THE WIRE (2026-11-13, protocol 4)**: a pair carved
+  from `ContestExchange.sReserved` (`YearSentKnown` at 327, `YearSent` at 328).
+  No schema change. `ReadRecord` now fills the pair from `year_sent` (every
+  stored row read back for a resend, restock or edit carries it);
+  `BindRecord` does not write it (the my_* tier does, once, at insert). See
+  multi-op-network.md.
 - Schema 7 shipped in 5.0.40: a log this build opens is refused by it.
 
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)

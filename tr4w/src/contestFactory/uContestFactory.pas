@@ -137,6 +137,16 @@ function SessionZoneTextSent(aContest: TContestBase): string;
   capture (uLogStore.LogStoreCurrentMyFacts) and the schema-8 backfill. *)
 function SessionLicenseYearSent(aContest: TContestBase; out aValue: integer): boolean;
 
+(* THE YEAR THIS STATION SENDS, STAMPED ON A QSO IT IS ABOUT TO LOG AND POST --
+  issue 300, protocol 4. aQso.YearSent / YearSentKnown are set from
+  SessionLicenseYearSent over aContest (cleared where the contest sends none),
+  so the packet carries the year THIS station sent and a peer's row records it.
+  Called by the two sites that send a QSO this station has just made
+  (LogContact, AddRecordToLogAndSendToNetwork) and NOWHERE ELSE: an edit or a
+  resend of a stored row carries the row's own year (the repository reader),
+  and stamping it again would put this station's year on a peer's QSO. *)
+procedure StampSessionSentYear(aContest: TContestBase; var aQso: ContestExchange);
+
 (* A LOG OR .cfg THAT STATED THE LICENCE YEAR AS MY ZONE -- issue 298. Before
   MY LICENSE YEAR existed the European HF Championship and KVP kept the year in
   the zone slot, so a contest the operator set up then holds it as a MY ZONE
@@ -275,6 +285,15 @@ begin
    Result := SentLicenseYearValue(ContestReceivedYearKind(aContest),
                                   Settings.My.ResolvedLicenseYear,
                                   CalendarYear, aValue);
+end;
+
+procedure StampSessionSentYear(aContest: TContestBase; var aQso: ContestExchange);
+var
+   year: integer;
+begin
+   (* See the declaration. *)
+   year := 0;
+   StoreSentLicenceYear(aQso, SessionLicenseYearSent(aContest, year), year);
 end;
 
 procedure AdoptLegacyLicenseYear(aKind: TReceivedYearKind);

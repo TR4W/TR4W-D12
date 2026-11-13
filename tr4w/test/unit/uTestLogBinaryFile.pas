@@ -448,7 +448,13 @@ begin
    CheckEquals(324, Off(r.RcvdYear),        'RcvdYear, a Word, sits at 324');
    CheckEquals(2,   SizeOf(r.RcvdYear),     'and is two bytes');
    CheckEquals(326, Off(r.RcvdYearKnown),   'RcvdYearKnown sits at 326');
-   CheckEquals(327, Off(r.sReserved),       'sReserved, now a string[46], from 327');
+   (* THE SENT YEAR (issue 300, protocol 4): the Boolean first, so the Word is
+     aligned without a pad byte; byte 327 was sReserved's always-zero length
+     byte, so every older record reads "no year". *)
+   CheckEquals(327, Off(r.YearSentKnown),   'YearSentKnown sits at 327');
+   CheckEquals(328, Off(r.YearSent),        'YearSent, a Word, sits at 328');
+   CheckEquals(2,   SizeOf(r.YearSent),     'and is two bytes');
+   CheckEquals(330, Off(r.sReserved),       'sReserved, now a string[43], from 330');
    CheckEquals(374, Off(r.sReserved) + SizeOf(r.sReserved),
                'and ends at 374, where it always did; 374..375 are padding');
 

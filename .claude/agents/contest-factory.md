@@ -67,8 +67,9 @@ CONTEST plus a class -- and **since Q108 S3 (2026-10-17) it is NOT a new
 member added -- appended included -- removed, reordered or renamed, because a
 member's position is the persisted number in the `.TRW` record and the
 multi-op packet). A new contest registers by its id (`RegisterContestById`),
-and **a real contest may since Q108 S4** (2026-10-17, below): it is refused on
-the multi-op network and its `<contestnr>` is derived. **The worked examples of a
+and **a real contest may since Q108 S4** (2026-10-17, below): its `<contestnr>`
+is derived, and since network protocol 2 (2026-10-27) it WORKS on the multi-op
+network, announced by its id string in the HELLO. **The worked examples of a
 by-id addition are the Georgia QSO Party (`uContestGeorgiaQP`, a state party)
 and URC (`uContestURCDXRTTY`, anything else).** Copy Georgia's CLASS but
 NOT its test, which lacks the shipped county table and the in-state
@@ -315,22 +316,21 @@ the target shape, the M-step migration order and the open questions.
   contest adds rows to `<PIN>`" in the bullets below describes a LEGACY
   addition**: a by-id contest adds no pin row -- the registry walks hold it.
 - **Q108 S4 IS BUILT (2026-10-17, design 8.2u): A CONTEST WITH NO LEGACY
-  NUMBER IS REFUSED ON THE MULTI-OP NETWORK, AND HAS A DERIVED `<contestnr>`;
-  A REAL CONTEST MAY NOW REGISTER BY ID.** You write neither. ONE predicate,
-  `uContestRegistry.ContestCanUseMultiOp(h)` (= has a legacy number; `NoContest`
-  can), ONE message, `uAppStrings.SContestNotOnMultiOp` via
-  `MultiOpRefusalText(h)`, ONE logging wrapper `uNet.NetCarriesContest(h,
-  door)`; the doors are `TryConnectToNetwork` / `ConnectToTR4WServer`,
-  `NetContestChanged` (from `uSettingsEffects`' CONTEST arm -- the only live
-  caller of `FoundContest`), `PeerContestRefusal` (the `NET_PARAMETER` arm),
-  `SendRecordToServer`, and the `NET_QSOINFO` / `NET_EDITEDQSO` arms. The V1
-  packet is NOT being converted (NY4I, P14) -- guards only. `<contestnr>` is
+  NUMBER HAS A DERIVED `<contestnr>`; A REAL CONTEST MAY REGISTER BY ID. IT
+  WAS REFUSED ON THE MULTI-OP NETWORK UNTIL NETWORK PROTOCOL 2 (2026-10-27),
+  AND IS NOT NOW.** (Verified 2026-11-13 against `uContestRegistry.pas`'s own
+  header: a by-id handle "never crosses the multi-op wire as a contest";
+  protocol 2 announces the contest by its ID STRING in the HELLO and the
+  receiver stamps its own handle on a record it accepts.) S4's six doors --
+  `ContestCanUseMultiOp`, `MultiOpRefusalText`, `SContestNotOnMultiOp`,
+  `NetCarriesContest`, `PeerContestRefusal`, `Test_EveryMultiOpDoorIsWired` --
+  are GONE; `uNetHello.JudgePeerContest` and `uNet.PeerRecordInOurContest`
+  replaced them (see multi-op-network.md). `<contestnr>` is
   `ContestBroadcastNumber`: the legacy number, else `256 + CRC32(id) mod (2^31
   - 256)`; N1MM defines it as local to a log (no range), the fixture's is
-  1862707066 and a legacy contest's did not move. `Test_EveryMultiOpDoorIsWired`
-  reads `uNet.pas` for each door because four need a socket. `model.py`
-  still REFUSES a by-id contest (S5 extends it with the first real one).
-  A contest class never tests multi-op; do not add one.
+  1862707066 and a legacy contest's did not move. `model.py` still REFUSES a
+  by-id contest (S5 extends it with the first real one). A contest class never
+  tests multi-op; do not add one.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO

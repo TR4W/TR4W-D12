@@ -34,8 +34,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   tr4w.lpr ever lists it, uTestContestById.Test_TheFixtureIsNotInTheApplication
   reads tr4w.lpr for it, and the contest matrix refuses a run whose
   application lists its id. IT IS ALSO THE SUBJECT OF S4's TESTS: a contest
-  with no legacy number is refused at every multi-op door and gets a derived
-  <contestnr> (uTestContestById, uTestUDPDatagrams). A real contest may
+  with no legacy number gets a derived <contestnr> (uTestUDPDatagrams) and
+  travels the multi-op network by its id string (uTestContestById). A real contest may
   register by id since S4 (2026-10-17).
 
   ITS RULES ARE A SIMPLE SERIAL-NUMBER CONTEST'S (RST + serial, one point a

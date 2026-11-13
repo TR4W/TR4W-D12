@@ -98,10 +98,10 @@ type
                           MY LICENSE YEAR, the contest's statement or the
                           station's (uContestFactory.SessionLicenseYearSent)
          sysPeer          a multi-op PEER's QSO: the year THE PEER sent. The
-                          protocol-3 QSO packet does not carry it, so until the
-                          wire does the row stores NONE -- never this
-                          station's year, which my_source 'assumed' would
-                          otherwise stamp on it
+                          protocol-4 QSO packet carries it
+                          (ContestExchange.YearSent / YearSentKnown); a packet
+                          with none stores NONE -- never this station's year,
+                          which my_source 'assumed' would otherwise stamp on it
          sysFile          imported: the year the file's STX_STRING sent *)
    TSentYearSource = (sysNone, sysThisStation, sysPeer, sysFile);
 

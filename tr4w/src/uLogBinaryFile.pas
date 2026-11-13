@@ -329,6 +329,11 @@ begin
      this reader does not. *)
    aRecord.RcvdYear      := 0;
    aRecord.RcvdYearKnown := False;
+   (* AND NO .TRW CARRIES A SENT YEAR (issue 300, protocol 4): the same bytes of
+     sReserved, cleared for the same reason. The importer stamps the file's
+     STX_STRING year itself (ApplyImportedSentYear). *)
+   aRecord.YearSent      := 0;
+   aRecord.YearSentKnown := False;
 
    Inc(FRecordsRead);
    Result := True;

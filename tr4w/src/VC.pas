@@ -2128,7 +2128,22 @@ type
    Write both through uContestBase.StoreLicenceYear. *)
 {02}  RcvdYear:            Word;
 {01}  RcvdYearKnown:       Boolean;
-{47} sReserved:               string[46]
+(* THE YEAR THIS QSO'S SENDER SENT -- issue 300, protocol 4 (2026-11-13). The
+   licence year the station that LOGGED the QSO sent, as the contest sends it
+   (uContestBase.SentLicenseYearValue): the number qso.year_sent stores. It
+   travels so a multi-op peer's row records the year THE PEER sent, not this
+   station's. Same two-field reason as RcvdYear: 0 is a real year.
+
+   TAKEN FROM sReserved AGAIN (string[46] -> string[43]): the RECORD STAYS 376
+   BYTES and nothing before 327 moved. THE BOOLEAN COMES FIRST ON PURPOSE:
+   sReserved began at 327, an odd offset, so a Word there would be aligned to
+   328 and leave an uninitialised pad byte at 327. Boolean at 327, Word at 328,
+   sReserved at 330 and still ending at 374. Byte 327 was sReserved's length
+   byte, always zero, so every older record, .TRW or SERVERLOG.TRW, reads
+   YearSentKnown False. Write both through uContestBase.StoreSentLicenceYear. *)
+{01}  YearSentKnown:       Boolean;
+{02}  YearSent:            Word;
+{44} sReserved:               string[43]
    end;
 {*)}
 

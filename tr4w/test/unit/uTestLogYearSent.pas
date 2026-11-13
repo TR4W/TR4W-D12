@@ -43,6 +43,7 @@ type
       procedure Test_TheValueIsTheTextsNumber;
       procedure Test_WhereANewRowsYearComesFrom;
       procedure Test_TheExportSendsTheRowsYear;
+      procedure Test_TheRecordCarriesTheSentYear;
       procedure Test_TheColumnKeepsZeroApartFromNone;
       procedure Test_ASchema7LogGainsTheColumnInOneCommit;
       procedure Test_TheBackfillFillsOnlyRebuiltRowsOnce;
@@ -166,6 +167,12 @@ begin
                'a peer''s row with no year (the packet carries none): the session''s, ' +
                'as before schema 8 -- the column stays NULL, nothing is invented');
 
+   my := MyStationExchangeOfQSO(session, Facts(mfsAssumed, 85), False,
+                                szkStatedMyZone, rykTwoDigitYear);
+   CheckEquals('85', my.MyZone,
+               'a peer''s row holding the year the PEER sent (protocol 4): that year, ' +
+               'not the session''s 90');
+
    my := MyStationExchangeOfQSO(session, Facts(mfsLogged, -1), False,
                                 szkStatedMyZone, rykTwoDigitYear);
    CheckEquals('', my.MyZone, 'a row logged here that sent none: none');
@@ -186,6 +193,67 @@ begin
    my := MyStationExchangeOfQSO(session, Facts(mfsLogged, 64), False, szkCQZone);
    CheckEquals('', my.MyZone,
                'a zone contest (the default kind) is untouched by a year: zone 0 is unknown');
+end;
+
+(* THE RECORD'S SENT YEAR (protocol 4): one writer, a pair that is never half
+  set, a range that is checked rather than wrapped, and a repository reader
+  that gives a stored row's year back on the record. *)
+procedure TLogYearSentTests.Test_TheRecordCarriesTheSentYear;
+var
+   rec, back: ContestExchange;
+   fn: string;
+   db: TLogDatabase;
+   repo: TLogRepository;
+begin
+   BeginTest('the record''s sent year: written by one routine, read back from year_sent');
+   rec := MakeRow(1, 255);
+   CheckFalse(rec.YearSentKnown, 'a new record has none');
+   StoreSentLicenceYear(rec, True, 85);
+   CheckTrue(rec.YearSentKnown and (rec.YearSent = 85), 'set');
+   StoreSentLicenceYear(rec, True, 0);
+   CheckTrue(rec.YearSentKnown and (rec.YearSent = 0), '00 is a year');
+   StoreSentLicenceYear(rec, True, 1964);
+   CheckEquals(1964, integer(rec.YearSent), 'four digits fit the Word');
+   StoreSentLicenceYear(rec, True, 70000);
+   CheckFalse(rec.YearSentKnown, 'out of range: none, not wrapped');
+   CheckEquals(0, integer(rec.YearSent), 'and the value cleared');
+   StoreSentLicenceYear(rec, True, -1);
+   CheckFalse(rec.YearSentKnown, 'negative: none');
+   StoreSentLicenceYear(rec, True, 85);
+   StoreSentLicenceYear(rec, False, 85);
+   CheckFalse(rec.YearSentKnown, 'not known: cleared');
+   CheckEquals(0, integer(rec.YearSent), 'with the value');
+
+   fn := TempLogName('recordyear.db');
+   MakeTestContestLog(fn, ContestHandleOf(EUROPEANHFC), '');
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         SaveRow(repo, 1, Facts(mfsAssumed, 85), '');   (* a peer's year *)
+         SaveRow(repo, 2, Facts(mfsLogged, 0), '');     (* ours, the year 00 *)
+         SaveRow(repo, 3, Facts(mfsAssumed, -1), '');   (* a peer's, none *)
+         repo.Commit;
+         repo.OpenSequentialRead;
+         try
+            CheckTrue(repo.ReadNext(back), 'row 1');
+            CheckTrue(back.YearSentKnown and (back.YearSent = 85), 'a peer''s 85 on the record');
+            CheckTrue(repo.ReadNext(back), 'row 2');
+            CheckTrue(back.YearSentKnown and (back.YearSent = 0), 'the year 00 on the record');
+            CheckTrue(repo.ReadNext(back), 'row 3');
+            CheckFalse(back.YearSentKnown, 'NULL is none on the record');
+            CheckEquals(0, integer(back.YearSent), 'with the value cleared');
+         finally
+            repo.CloseSequentialRead;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   ScrubTestLog(fn);
 end;
 
 procedure TLogYearSentTests.Test_TheColumnKeepsZeroApartFromNone;
@@ -444,6 +512,7 @@ begin
    Test_TheValueIsTheTextsNumber;
    Test_WhereANewRowsYearComesFrom;
    Test_TheExportSendsTheRowsYear;
+   Test_TheRecordCarriesTheSentYear;
    Test_TheColumnKeepsZeroApartFromNone;
    Test_ASchema7LogGainsTheColumnInOneCommit;
    Test_TheBackfillFillsOnlyRebuiltRowsOnce;

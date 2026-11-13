@@ -144,27 +144,79 @@ unchanged** (QSO packet 384, record 376, `SERVERLOG.TRW` stride 376) and the
 server stores and relays the record without knowing. The bump is for MEANING: a
 protocol-2 station sends those bytes as zero, so its QSOs would arrive with no
 year. NY4I ruled no compatibility with a released server is needed.
-**TR4WServerPy (other repository, the pi400 bench rig) judges versions EQUAL and
-must move to 3**, or it refuses every station of this build;
-`tools/netprobe/netprobe.py` is at 3. Pins: `uTestNetHello` (the version),
+(Superseded by protocol 4 below, which keeps this layout; TR4WServerPy and
+netprobe are at 4 now.) Pins: `uTestNetHello` (the version),
 `uTestLogReceivedYear` (`TNetReceivedYearTests`: the packet carries the year
 and the year 00; a QSO caught up from the server's log keeps it; and since
 stage 2 a QSO received LIVE through the real NET_QSOINFO arm stores it).
 
-**THE SENT YEAR IS NOT ON THE WIRE (issue 300, log schema 8, 2026-11-13).** A
-QSO row stores the licence year it SENT (`qso.year_sent`); NY4I wants a peer's
-QSO to carry the year THE PEER sent. Protocol 3 carries only the RECEIVED year,
-so the store records NONE for a peer's row -- live (`uLogStore.
-CaptureMyFactsNow`) and caught up (`uGetServerLog`) -- and never this
-station's (`assumed` would otherwise stamp ours on it). The EXPORT of such a
-row falls back to this session's year (`MyStationExchangeOfQSO`), which is
-what it sent before schema 8. The smallest compatible
-change, **NOT BUILT, a decision for NY4I**: a `YearSent: Word` +
-`YearSentKnown: Boolean` pair carved from `sReserved` (string[46] -> [43]),
-sizes unchanged, the `.TRW` reader clearing it, protocol 3 -> 4 and
-TR4WServerPy to match (protocol 3 stations could not join). Note the EUHFC
-rules are single-operator only; a networked SO2R pair sends one operator's
-year.
+## Network protocol 4: the QSO record carries the year its SENDER sent (issue 300, 2026-11-13)
+
+`NET_PROTOCOL_VERSION` = **4**. A QSO row stores the licence year it SENT
+(`qso.year_sent`, log schema 8, unchanged: **no schema 9, no migration**); NY4I
+(2026-11-13: *"Server wire formats can be done at will. Just update the Python
+tr4wserver and FPC/Laz version."*) wanted a peer's row to hold the year THE PEER
+sent. `ContestExchange` gained `YearSentKnown` (Boolean, offset **327**) and
+`YearSent` (Word, **328**), carved from `sReserved` (now `string[43]`, 330..373,
+still ending at 374; bytes 374..375 are padding). **THE BOOLEAN IS FIRST ON
+PURPOSE**: `sReserved` began at the odd offset 327, so a Word there would have
+been aligned to 328 leaving an uninitialised pad byte at 327. Byte 327 was
+`sReserved`'s length byte (always zero), so every older record -- `.TRW`,
+`SERVERLOG.TRW`, a protocol-3 packet -- reads "no year" with no conversion.
+**Every size is unchanged** (record 376, QSO packet 384, `SERVERLOG.TRW` stride
+376); both servers store and relay the record whole and read none of it.
+Pinned in `uTestLogBinaryFile` (offsets 327/328/330, end 374, total 376).
+
+- **Filled on the sender in ONE place per path.** A QSO this station has just
+  made is stamped by `uContestFactory.StampSessionSentYear` (over
+  `SessionLicenseYearSent`; cleared where the contest sends none) in the two
+  sites that make and post one: `logsubs2.LogContact` (MyComputer branch) and
+  `MainUnit.AddRecordToLogAndSendToNetwork`, **before** `SendRecordToServer`
+  (the packet goes before `tAddQSOToLog`). **DO NOT STAMP IN `PostQsoPacket`**:
+  it also sends edits, resends and restocks of PEER rows, and stamping there
+  would put this station's year on a peer's QSO. A STORED row read back
+  (`uLogRepository.ReadRecord`, the one reader behind the resend, the restock,
+  Edit QSO, delete/undelete and the QTC edits) carries the row's own
+  `year_sent` (NULL = none, 0 = the year 00), so a resend or edit of a peer's
+  row sends the PEER's year. The one writer of the pair is
+  `uContestBase.StoreSentLicenceYear` (range-checked: a year over 65535 is none,
+  not wrapped).
+- **Stored on the receiver** by `uLogStore.CaptureMyFactsNow` (`sysPeer`:
+  `SetFactsYearSent(.., aQso.YearSentKnown, aQso.YearSent)`; was cleared) and,
+  per record, by `uGetServerLog.MergeServerLog` (the catch-up; gated on the
+  contest sending a year, as `SentYearSourceOf` is). A record with none stores
+  NULL, never ours. `uNetCatchUp.StampCaughtUp` and the push plan do not touch
+  the bytes. The `.TRW` reader clears them (a D7 log carries none).
+- **An edit does not refill `year_sent`**: it is insert-only in the my_* tier,
+  so a peer's EDIT of a QSO this station already stored does not change the
+  stored year (a row stored with none before the edit stays none). Not a
+  regression; say so if asked.
+- **The EXPORT** (`MyStationExchangeOfQSO`) already preferred a row's year when
+  known; a peer's row now holds the peer's year and so exports it. A peer's row
+  with none (a protocol-3 era server log, a sender whose contest sends none)
+  still falls back to the session's, as before schema 8.
+- **What an older party does on meeting protocol 4:** a protocol-3 station
+  HELLOing a protocol-4 server gets `SM_PROTOCOL_MISMATCH` (8330, param 4) and
+  "server newer"; a protocol-4 station meeting a protocol-3 server (TR4WServerPy
+  deployed before this change, the pi400 rig) is refused with "server older".
+  Both are the ordinary `JudgeProtocol` refusal, once per address/port.
+- **Servers:** the in-tree `tr4wserver` takes the constant from `uNetHello` and
+  needed no other change. TR4WServerPy (other repository, master) moved to 4
+  (`NET_PROTOCOL_VERSION`, `CHANGES.md`, `README.md`, `CLAUDE.md`); it never
+  reads the bytes. `tools/netprobe/netprobe.py` is at 4.
+- **Tests:** `uTestNetHello` (the 4), `uTestLogBinaryFile` (layout),
+  `uTestLogYearSent.Test_TheRecordCarriesTheSentYear` (the writer, the range, the
+  repository reader), `uTestLogReceivedYear.Test_APeersSentYearTravelsAndIsStored`
+  (the packet bytes, the catch-up storing 91 / 00 / none, a stored row's resend
+  carrying it), `uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent` (the
+  live store: ours 64, a peer's 85, a peer's none), `uTestLogYearSent.
+  Test_TheExportSendsTheRowsYear` (a peer's 85 exports 85 while the session
+  sends 90) and `Test_TheCorrectionTouchesOnlyOurOldYear` (a peer's 64
+  survives the year correction: the predicate is by `my_source`). **Not
+  driven:** the live `NET_QSOINFO` arm with a sent year (it reaches the same
+  `CaptureMyFactsNow`), the real two-station check (BENCH_QUEUE). Note the EUHFC
+  rules are single-operator only; a networked SO2R pair sends one operator's
+  year.
 
 **A UNIT TEST CAN DRIVE THE NET_QSOINFO ARM WITH A NEW QSO -- IF IT STREAMS THE
 MAIN FORM** (diagnosed 2026-11-12, issue 298 stage 2). The access violation

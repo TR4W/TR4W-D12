@@ -76,7 +76,14 @@ const
      would arrive with no year. NY4I ruled no compatibility with a released
      server or station is required. TR4WServerPy (another repository) judges
      the version as EQUAL and must move to 3 with this build. *)
-   NET_PROTOCOL_VERSION = 3;
+   (* 4 SINCE 2026-11-13 (issue 300): the QSO record carries the year its
+     SENDER sent (ContestExchange.YearSent / YearSentKnown), taken from
+     sReserved again (string[46] -> [43]); still 376 / 384 bytes and still
+     stored and relayed as it comes. A protocol-3 station sends those bytes as
+     zero, so its QSOs would arrive with no sent year. NY4I (2026-11-13):
+     server wire formats are changed at will; TR4WServerPy moves to 4 with
+     this build. *)
+   NET_PROTOCOL_VERSION = 4;
 
    HELLO_VERSION_CHARS  = 16;
    HELLO_CONTEST_CHARS  = 48;

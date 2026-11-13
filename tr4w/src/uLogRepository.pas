@@ -2324,6 +2324,21 @@ begin
       begin
       aQso.RcvdYear := 0;
       end;
+   (* THE YEAR THE QSO SENT, for the packet (issue 300, protocol 4): the row's
+     year_sent, whatever its my_source -- the same read TQsoMyFacts makes. A
+     stored row that is resent, restocked or edited therefore carries the year
+     its SENDER sent, a peer's included. NULL is none; 0 is the year 00. The
+     record is the packet; BindRecord does not write it (the my_* tier does,
+     once, at insert). *)
+   aQso.YearSentKnown := not F(qc_year_sent).IsNull;
+   if aQso.YearSentKnown then
+      begin
+      aQso.YearSent := word(F(qc_year_sent).AsInteger);
+      end
+   else
+      begin
+      aQso.YearSent := 0;
+      end;
    aQso.Name := S(qc_rcvd_name);
    aQso.Age := byte(F(qc_rcvd_age).AsInteger);
    aQso.Check := byte(F(qc_rcvd_check).AsInteger);

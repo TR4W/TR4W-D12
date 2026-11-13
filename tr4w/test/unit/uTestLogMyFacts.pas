@@ -1658,8 +1658,8 @@ end;
 
 (* THE STORE, AS A QSO IS LOGGED IN A CONTEST THAT SENDS THE YEAR -- issue
   300, log schema 8: our QSO records the year it sent, as the contest sends
-  it; a peer's QSO records none, never ours (the protocol-3 packet does not
-  carry the peer's year); and the sent exchange captured with it is built
+  it; a peer's QSO records the year THE PEER sent when its packet carries one
+  (protocol 4) and none otherwise, never ours; and the sent exchange captured with it is built
   from the QSO's RST and that year, not the CW template. *)
 procedure TLogMyFactsTests.TestTheStoreRecordsTheYearOurQSOSent;
 var
@@ -1699,6 +1699,19 @@ begin
          end;
       CheckTrue(LogStoreAppendQSO(qso), 'a peer''s QSO is logged');
 
+      (* PROTOCOL 4 (issue 300): a peer's packet that CARRIES its sent year
+        stores that year -- the peer's 85, not our 64 -- and a peer's record
+        with none (above) still stores none. *)
+      MakeQSO(qso, 3);
+      qso.ceContest := Contest;
+      qso.ceComputerID := 'C';
+      if Settings.Computer.Id = 'C' then
+         begin
+         qso.ceComputerID := 'B';
+         end;
+      StoreSentLicenceYear(qso, True, 85);
+      CheckTrue(LogStoreAppendQSO(qso), 'a peer''s QSO carrying its year is logged');
+
       (* THE CONTEST'S YEAR CHANGES -- which no logged QSO may follow. *)
       Settings.My.SetContestOverride(sfLicenseYear, '1990');
       LogStoreClose;
@@ -1711,9 +1724,11 @@ begin
             q.DataBase := logDb.Connection;
             q.UsePrimaryKeyAsKey := False;
             q.SQL.Text := 'SELECT IFNULL(year_sent, -1), IFNULL(exchange_sent, ''<null>'') ' +
-                          'FROM qso ORDER BY id DESC LIMIT 2';
+                          'FROM qso ORDER BY id DESC LIMIT 3';
             q.Open;
-            CheckEquals(-1, q.Fields[0].AsInteger, 'a peer''s QSO: no year -- never ours');
+            CheckEquals(85, q.Fields[0].AsInteger, 'a peer''s QSO carrying a year: the PEER''s 85');
+            q.Next;
+            CheckEquals(-1, q.Fields[0].AsInteger, 'a peer''s QSO with none: none -- never ours');
             q.Next;
             CheckEquals(64, q.Fields[0].AsInteger, 'our QSO: the 64 it sent, not today''s 90');
             CheckEquals('59 64', q.Fields[1].AsString,

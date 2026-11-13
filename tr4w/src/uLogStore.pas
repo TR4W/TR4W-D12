@@ -2371,8 +2371,10 @@ end;
 
   THE SENT YEAR FOLLOWS uQsoMyFacts.SentYearSourceOf (issue 300): ours for a
   QSO logged here; for a PEER'S QSO the year THE PEER sent, which the
-  protocol-3 packet does not carry -- so none, never ours (my_source
-  'assumed' would otherwise stamp this station's year on the peer's row). *)
+  protocol-4 packet carries (ContestExchange.YearSent / YearSentKnown) -- never
+  ours (my_source 'assumed' would otherwise stamp this station's year on the
+  peer's row). A packet that carries none (a record from a protocol-3 era
+  SERVERLOG.TRW, a contest that sends no year) stores NONE. *)
 function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
 begin
    Result := LogStoreCurrentMyFacts;
@@ -2385,6 +2387,10 @@ begin
       sysThisStation:
          begin
          (* LogStoreCurrentMyFacts read it. *)
+         end;
+      sysPeer:
+         begin
+         SetFactsYearSent(Result, aQso.YearSentKnown, aQso.YearSent);
          end;
    else
       begin

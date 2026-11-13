@@ -10165,6 +10165,8 @@ begin
   SetExtendedModeFromMode(CE);
   tGetQSOSystemTime(CE.tSysTime);
   CE.ceOperator := CurrentOperator;
+  (* THE YEAR THIS STATION SENT travels with the QSO (issue 300, protocol 4). *)
+  StampSessionSentYear(ContestIdentity(Contest), CE);
   (* NOT SENT YET, and the log is told so: the flag is set when the packet has
     been written to the socket (uNet.SettleServerProgress), never because it was
     merely posted. *)

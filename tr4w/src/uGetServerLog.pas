@@ -201,6 +201,7 @@ uses SysUtils,
    uTR4WStrings,     (* TC_FAILEDTORECEIVESERVERLOG *)
    uAppPaths,        (* BackupDir *)
    uContestRegistry,
+   uContestBase,     (* ContestReceivedYearKind -- does the contest send a year *)
    uLogStore,
    uQsoMyFacts,
    uServerQsoIndex;
@@ -578,6 +579,7 @@ var
    facts: TQsoMyFacts;
    rec: ContestExchange;
    i, failedIndex: integer;
+   sendsYear: boolean;
    backupPath, backupReport, failure: string;
 begin
    Result := False;
@@ -618,10 +620,13 @@ begin
         exchange: we do not know what the author sent. *)
       facts := LogStoreCurrentMyFacts;
       facts.Source := mfsAssumed;
-      (* AND NO SENT LICENCE YEAR (issue 300): the author's QSO sent the
-        AUTHOR's year, which the protocol-3 record does not carry; ours would
-        be invented (uQsoMyFacts.TSentYearSource, sysPeer). *)
+      (* THE SENT LICENCE YEAR IS THE RECORD'S, row by row (issue 300, protocol
+        4): the author's QSO sent the AUTHOR's year and the record carries it
+        (uQsoMyFacts.TSentYearSource, sysPeer); ours would be invented. A
+        record with none (an older server log) stores none. Set per row in the
+        loop below; cleared here so no row inherits another's. *)
       SetFactsYearSent(facts, False, 0);
+      sendsYear := ContestReceivedYearKind(ContestIdentity(Contest)) <> rykNone;
 
       appends := TLogQsoAppends.Create;
       try
@@ -629,6 +634,14 @@ begin
             begin
             aImage.Row(plan.RowIndex(i), rec);
             StampCaughtUp(rec, Contest);
+            if sendsYear then
+               begin
+               SetFactsYearSent(facts, rec.YearSentKnown, rec.YearSent);
+               end
+            else
+               begin
+               SetFactsYearSent(facts, False, 0);
+               end;
             appends.Add(rec, facts, '');
             end;
 

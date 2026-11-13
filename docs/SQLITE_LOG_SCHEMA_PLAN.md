@@ -2855,18 +2855,18 @@ through `TryLicenceYearOf`'s zone-slot fallback.)
   says**: a backfilled never-captured row holds its own year.
 - **Where a new row's year comes from: `uQsoMyFacts.SentYearSourceOf`**
   (`TSentYearSource`) -- ours for a QSO logged here (`LogStoreCurrentMyFacts`
-  over `uContestFactory.SessionLicenseYearSent`); **NONE for a peer's QSO**
-  (`assumed`), live (`CaptureMyFactsNow`) or caught up (`uGetServerLog`) --
-  the protocol-3 packet does not carry the peer's year, and `assumed` would
-  otherwise stamp ours on it; an ADIF import's STX_STRING year, else the
+  over `uContestFactory.SessionLicenseYearSent`); **the PEER's year for a
+  peer's QSO** (`assumed`), live (`CaptureMyFactsNow`) or caught up
+  (`uGetServerLog`) -- from the protocol-4 record (NULL when it carries none),
+  never ours, which `assumed` would otherwise stamp on it; an ADIF import's STX_STRING year, else the
   contest's (`ApplyImportedSentYear`; the station question never moves it).
 - **The readers read the row.** `MyStationExchangeOfQSO(..., aYearKind)` puts
   the row's year in the zone slot (STX_STRING, the Cabrillo sent column);
   a row logged/edited/imported here with none sends none; a never-captured
   row with none is the session's (ruling A); **a peer's (`assumed`) row with
   none is the session's too** -- the column stays NULL (nothing invented) and
-  the export sends what it sent before schema 8, until the wire carries the
-  peer's year. `TContestBase.CanonicalSentExchange` for a year
+  the export sends what it sent before schema 8 (a row holding the peer's year
+  exports THAT year). `TContestBase.CanonicalSentExchange` for a year
   contest is the QSO's sent RST and the year (`TCanonicalExchangeContext.
   SentYearText`), not the CW template -- so `exchange_sent` and HamScore's line
   say `59 64` on phone.
@@ -2895,9 +2895,15 @@ through `TryLicenceYearOf`'s zone-slot fallback.)
   three-button dialog's "This contest and its existing QSOs" is retired.
 - **Consequence:** schema 7 shipped in 5.0.40, so a log this build opens is
   refused by 5.0.40 and earlier.
-- **Open:** the peer's year needs the wire (a `YearSent`/`YearSentKnown` pair
-  carved from `ContestExchange.sReserved`, protocol 3 -> 4, TR4WServerPy to
-  match) -- NOT built, a decision for NY4I.
+- **The peer's year is on the wire (2026-11-13, network protocol 4; NY4I: server
+  wire formats are changed at will).** `ContestExchange.YearSentKnown` (offset
+  327) and `YearSent` (328) are carved from `sReserved` (string[43]); the record
+  stays 376 bytes. A peer's row therefore stores the year THE PEER sent
+  (`sysPeer`: `CaptureMyFactsNow`, and `MergeServerLog` per record), NULL when
+  the packet carries none. No schema 9: the column and its meaning are unchanged;
+  `ReadRecord` fills the record's pair from `year_sent` so a stored row's
+  resend/edit carries it. The two statements above that say a peer's row stores
+  NONE hold only for a record that carries none (a protocol-3 era server log).
 - Tests: `uTestLogYearSent` (the rule, the reader, the column, the migration's
   one commit and mark, the backfill's row set and once-only, the correction,
   Edit and import), `uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent`

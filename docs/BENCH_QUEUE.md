@@ -218,6 +218,21 @@ screen. **Keep a copy of the log first: a log this build opens is refused by
       see stage 1 below): a QSO logged on one shows the right year on the
       other, in the grid and in its Edit QSO.
 
+## Added 2026-11-13 -- NETWORK PROTOCOL 4: THE PEER'S SENT YEAR (issue 300)
+
+The QSO record also carries the year its SENDER sent (bytes 327..329, from the
+same reserved bytes); sizes unchanged, no schema change. What only a real run can
+judge:
+- **TR4WServerPy (the pi400) must be on protocol 4**, or every station of this
+  build is refused ("server older"); a protocol-3 station meeting a protocol-4
+  server is refused ("server newer"). Deploy the master change first.
+- Two stations on EUHFC with DIFFERENT MY LICENSE YEARs (say 64 and 85): log a
+  QSO on each; the OTHER station's log row holds the logger's year in `year_sent`
+  (not its own), and its ADIF/Cabrillo export shows that year in the sent
+  exchange. A catch-up after a restart keeps it. Restock an empty server and
+  catch up from it: the years survive. A record logged before this change
+  (year none) exports the session's year, as before.
+
 ## Added 2026-11-12 -- NETWORK PROTOCOL 3 AND LOG SCHEMA 6: THE RECEIVED YEAR (issue 298, stage 1)
 
 The QSO record carries the received year in bytes that were reserved; packet and
@@ -6715,7 +6730,7 @@ Unit-tested (`uTestLogMyFacts.TestALicenceYearIsNeverReplacedByACapturedZone`, t
 
 ## Added 2026-11-12 -- THE LINK THROUGH A TAILCAT TUNNEL (issue 293)
 
-The forwarder is measured outside TR4W (`tools/netprobe` through it, same result as the plain port). The link INSIDE a running TR4W has not been seen. Needs the 64-bit build with `libtailcat.dll` beside the executable, and a TR4WServerPy on network protocol 3 started with `--tailcat`.
+The forwarder is measured outside TR4W (`tools/netprobe` through it, same result as the plain port). The link INSIDE a running TR4W has not been seen. Needs the 64-bit build with `libtailcat.dll` beside the executable, and a TR4WServerPy on network protocol 4 started with `--tailcat`.
 
 - [ ] **Connects.** Preferences > Network: paste the address, tick Use Tailcat, leave Server as it is, Save. Net > Connect. The status line reads connected to `Tailcat:1061`; `tr4w.log` has `the Tailcat tunnel is up: the server answered in N ms` and never the address.
 - [ ] **Catch-up.** With QSOs in the server log that this log lacks, the catch-up runs through the tunnel (the server log shows a second connection, on the sync port).

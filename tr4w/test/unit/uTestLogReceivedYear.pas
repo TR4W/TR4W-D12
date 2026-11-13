@@ -84,6 +84,7 @@ type
       procedure Test_AQSOPacketCarriesTheYear;
       procedure Test_AServerLogQSOStoresTheYear;
       procedure Test_AQSOReceivedLiveStoresTheYear;
+      procedure Test_APeersSentYearTravelsAndIsStored;
    public
       procedure RunAllTests; override;
    end;
@@ -1205,11 +1206,121 @@ begin
    end;
 end;
 
+(* THE SENT YEAR TRAVELS (issue 300, protocol 4). Three links, in a contest that
+  sends a year (EUHFC):
+
+    the PACKET    carries YearSent / YearSentKnown at offsets 328 / 327 of the
+                  record (inside the 384-byte packet, which did not grow)
+    the CATCH-UP  a peer's record in the server's log stores ITS year in
+                  year_sent -- 91, the year 00, and none for a record that
+                  carries none (an older server log) -- never ours
+    the RESEND    a STORED row read back carries the year it holds, so the
+                  resend, the restock and an edit send the SENDER's year and
+                  not this station's
+
+  The live NET_QSOINFO arm reaches the store through CaptureMyFactsNow, which
+  uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent drives. *)
+procedure TNetReceivedYearTests.Test_APeersSentYearTravelsAndIsStored;
+var
+   link: TStubLink;
+   image: TServerLogImage;
+   rec, stored: ContestExchange;
+   one, two, three: ContestExchange;
+   added, skipped: integer;
+   why, backups: string;
+
+   function PeerRecord(const aCall: string; aId2: Cardinal): ContestExchange;
+   begin
+      Result := Default(ContestExchange);
+      Result.ceRecordKind := rkQSO;
+      Result.ceContest := Contest;
+      Result.ceComputerID := 'B';      (* station 2, who announced our contest *)
+      Result.Callsign := ShortString(aCall);
+      Result.ceQSOID1 := 814;
+      Result.ceQSOID2 := aId2;
+      Result.ceSendToServer := True;
+      Result.Band := Band20;
+      Result.Mode := CW;
+      Result.Frequency := 14025000;
+      Result.tSysTime.qtYear := 26;
+      Result.tSysTime.qtMonth := 6;
+      Result.tSysTime.qtDay := 1;
+      Result.tSysTime.qtHour := 12;
+      Result.tSysTime.qtMinute := aId2;
+   end;
+
+begin
+   BeginTest('a peer''s sent year rides the packet, the catch-up and the resend');
+   OpenScratchStore;
+   Contest := ContestHandleOf(EUROPEANHFC);
+   backups := IncludeTrailingPathDelimiter(FDir) + 'backup';
+   ForceDirectories(backups);
+   link := TStubLink.Create;
+   try
+      NetClient := TNetClient.CreateWithWriter(link.Write);
+      AttachNetClient(NetClient);
+      try
+         NetBeginLinkSession;
+         FeedHello(PEER, ContestId(Contest));
+
+         (* THE PACKET *)
+         rec := PeerRecord('S56YS', 9);
+         StoreSentLicenceYear(rec, True, 77);
+         CheckEquals(327, PtrUInt(@rec.YearSentKnown) - PtrUInt(@rec), 'Known at 327');
+         CheckEquals(328, PtrUInt(@rec.YearSent) - PtrUInt(@rec), 'the year at 328');
+         CheckTrue(SendRecordToServer(NET_QSOINFO_ID, rec), 'posted');
+         CheckTrue(WaitWrites(link, 1), 'written');
+         CheckTrue(link.Last.qiInformation.YearSentKnown, 'the packet says there is a year');
+         CheckEquals(77, integer(link.Last.qiInformation.YearSent), 'and it is 77');
+
+         (* THE CATCH-UP *)
+         one := PeerRecord('S57YS', 1);
+         StoreSentLicenceYear(one, True, 91);
+         two := PeerRecord('S58YS', 2);
+         StoreSentLicenceYear(two, True, 0);
+         three := PeerRecord('S59NY', 3);
+         image := NewImage([one, two, three]);
+         try
+            CheckTrue(MergeServerLog(image, backups, added, skipped, why),
+                      'the merge succeeds: ' + why);
+            CheckEquals(3, added, 'all three were added');
+         finally
+            image.Free;
+         end;
+
+         CheckTrue(ReadRow(814, 1, stored), 'the first is in the log');
+         CheckTrue(stored.YearSentKnown, 'it holds the year the peer sent');
+         CheckEquals(91, integer(stored.YearSent), 'the peer''s 91');
+         CheckTrue(ReadRow(814, 2, stored), 'the second is in the log');
+         CheckTrue(stored.YearSentKnown, 'the year 00 is a year');
+         CheckEquals(0, integer(stored.YearSent), 'held as 0');
+         CheckTrue(ReadRow(814, 3, stored), 'the third is in the log');
+         CheckFalse(stored.YearSentKnown, 'a record with none stores none');
+
+         (* THE RESEND OF A STORED ROW carries the year it holds *)
+         CheckTrue(ReadRow(814, 1, stored), 'read back for the resend');
+         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, stored), 'an edit is posted');
+         CheckTrue(WaitWrites(link, 2), 'and written');
+         CheckTrue(link.Last.qiInformation.YearSentKnown, 'the edit has the year');
+         CheckEquals(91, integer(link.Last.qiInformation.YearSent),
+                     'the peer''s, not this station''s');
+         SettleServerProgress;
+      finally
+         NetClient.Free;
+         NetClient := nil;
+      end;
+   finally
+      link.Free;
+      CloseScratchStore;
+   end;
+end;
+
 procedure TNetReceivedYearTests.RunAllTests;
 begin
    Test_AQSOPacketCarriesTheYear;
    Test_AServerLogQSOStoresTheYear;
    Test_AQSOReceivedLiveStoresTheYear;
+   Test_APeersSentYearTravelsAndIsStored;
 end;
 
 end.

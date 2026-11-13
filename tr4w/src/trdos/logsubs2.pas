@@ -1763,6 +1763,10 @@ begin
     not ours to widen. *)
   RXData.ceQSOID2 := NextQsoSequence(Cardinal(GetTickCount64));
      RXData.ceOperator := CurrentOperator;
+     (* THE YEAR THIS STATION SENT travels with the QSO (issue 300, protocol 4),
+       so a multi-op peer's row records it. Only a QSO made HERE: a peer's
+       arrives carrying its own. *)
+     StampSessionSentYear(ContestIdentity(Contest), RXData);
      (* NOT SENT YET, whatever this record held before: the flag is set when the
        packet has been written to the socket (uNet.SettleServerProgress), and
        it is stored as it stands here. *)
