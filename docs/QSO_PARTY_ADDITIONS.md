@@ -92,9 +92,13 @@ NY4I answered the three queued issues in comments on 2026-11-13:
   `Agent Question` remains for those original questions.
 - West Virginia #131, comment 6857387343: all multiplier kinds count once
   per contest, with **no repetition by mode**. The scope question is
-  resolved. The older Cabrillo-name question (comment 6429514855, WVQP
-  versus WV-QSO-PARTY) remains unanswered, so `Agent Question` remains
-  for that question alone.
+  resolved. NY4I subsequently directed use of DXLog's name: the installed
+  `WVQP.txt` explicitly states `CABRILLO_CONTEST_NAME=WV-QSO-PARTY`,
+  verified through the existing cross-check parser. Use `WV-QSO-PARTY`
+  for Cabrillo, replacing the earlier proposed `WVQP`; the planned ADIF
+  and stored identifier remains `WV-QSO-PARTY`. All current WV questions
+  are resolved and `Agent Question` is removed. The naming lookup strategy
+  is retained in `ADDING_A_CONTEST.md`.
 
 #114's state-credit ruling is resolved and its question label has been
 removed. #124's DC question is also resolved: NY4I confirmed that DC will

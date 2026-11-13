@@ -94,6 +94,24 @@ One folder per contest. It holds:
 A table the class or its `.dom` is built from (counties, multipliers) may be
 its own transcription beside the rules (`OK-QSO-PARTY-Counties.txt`).
 
+### Contest names when the sponsor is silent
+
+NY4I's naming strategy (2026-11-13, #131): consult the installed DXLog
+definitions in `C:\Program Files (x86)\DXLog.net\Contest\`. Search their
+`CONTESTNAME` fields with `rg -i` to identify the event, then use the file's
+`CABRILLO_CONTEST_NAME` as the default Cabrillo name. Do not infer it from
+the filename or ask merely because another calendar prefers an alias.
+For example, `WVQP.txt` identifies West Virginia and explicitly states
+`CABRILLO_CONTEST_NAME=WV-QSO-PARTY`.
+
+Reuse `DXLogFile` in `tools/dom-crosscheck/crosscheck_dom_dxlog.py` to read
+definitions; it already exposes `contestname` and `cabrillo`. Consult
+`docs/DXLOG_CONTEST_FIELD_DEFINITIONS_REFERENCE.md` for field meanings.
+The file also helps cross-check ADIF export fields, but `ADIF_KEYS` describes
+exported tags, not the ADIF contest identifier. Verify the ADIF identifier
+against the ADIF enumeration separately; a Cabrillo name does not imply it.
+Retain the chosen names and their sources in the rules transcription.
+
 ### The `.dom` format
 
 A `.dom` file maps what the operator TYPES to the MULTIPLIER it counts as.
