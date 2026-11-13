@@ -44,6 +44,7 @@ type
    protected
       procedure Test_TheDeclarationsRun;
       procedure Test_EverySettingRendersItsValue;
+      procedure Test_ARealSettingShowsItsValue;
       procedure Test_AnAllowListContainsTheCurrentValue;
       procedure Test_KeysAreUniqueAndWellFormed;
       procedure Test_NoTwoSettingsShareAProperty;
@@ -223,6 +224,39 @@ begin
       end;
 
    Check(True, 'all ' + IntToStr(Length(all)) + ' settings rendered');
+end;
+
+procedure TAllSettingsTests.Test_ARealSettingShowsItsValue;
+var
+   radius, weight: TSettingBase;
+   savedRadius, savedWeight: double;
+begin
+   (* ISSUE 295, AT THE CALL THE PREFERENCES BOX MAKES. TSettingBinding.Load
+     puts AsText into the edit; for RADIUS OF EARTH that was '' whatever the
+     settings file held, because the model could not read a real by name.
+     The test above only asks that AsText does not raise, so '' passed. *)
+   BeginTest('a real setting shows its value, not a blank');
+   Declared;
+   radius := FindSetting('operating.ctrlj.radiusOfEarth');
+   weight := FindSetting('operating.cw.serial.weight');
+   CheckTrue(radius <> nil, 'RADIUS OF EARTH is registered');
+   CheckTrue(weight <> nil, 'WEIGHT is registered');
+   if (radius = nil) or (weight = nil) then
+      begin
+      Exit;
+      end;
+
+   savedRadius := Settings.GridMap.RadiusOfEarth;
+   savedWeight := Settings.Cw.Weight;
+   try
+      Settings.GridMap.RadiusOfEarth := 6371;
+      CheckEquals('6371', radius.AsText, 'the saved radius, as the box shows it');
+      Settings.Cw.Weight := 1.5;
+      CheckEquals('1.5', weight.AsText, 'the saved weight, as the box shows it');
+   finally
+      Settings.GridMap.RadiusOfEarth := savedRadius;
+      Settings.Cw.Weight := savedWeight;
+   end;
 end;
 
 procedure TAllSettingsTests.Test_AnAllowListContainsTheCurrentValue;
@@ -671,6 +705,7 @@ procedure TAllSettingsTests.RunAllTests;
 begin
    Test_TheDeclarationsRun;
    Test_EverySettingRendersItsValue;
+   Test_ARealSettingShowsItsValue;
    Test_AnAllowListContainsTheCurrentValue;
    Test_KeysAreUniqueAndWellFormed;
    Test_NoTwoSettingsShareAProperty;

@@ -51,6 +51,8 @@ type
       procedure Test_AYearContestSendsTheYearNotTheZone;
       procedure Test_TheExportSendsTheYearForAYearContest;
       procedure Test_ALegacyYearStatedAsMyZoneMoves;
+      procedure Test_AYearContestCapturesTheZoneNotTheYear;
+      procedure Test_TheStationPageEditsTheStationsYear;
    public
       procedure RunAllTests; override;
    end;
@@ -62,7 +64,8 @@ uses
    VC,
    uSettingsModel,
    uContestBase,
-   uContestFactory,       (* SessionZoneTextSent, AdoptLegacyLicenseYear *)
+   uContestFactory,       (* SessionZoneTextSent, SessionMyCQZone, AdoptLegacyLicenseYear *)
+   uCFG,                  (* CFGCommandValueAsString -- what the Station page loads *)
    uContestRegistry,      (* ContestIdentity, ContestHandleOf *)
    uQsoMyFacts;           (* TQsoMyFacts, NotCapturedMyFacts *)
 
@@ -315,6 +318,124 @@ begin
    end;
 end;
 
+(* ONE CONTEST OVERRIDE OF THE GLOBAL SETTINGS, saved so a test can put it
+   back exactly as it found it -- stated or not. *)
+type
+   TSavedOverride = class
+   private
+      FFact: TStationFact;
+      FStated: boolean;
+      FValue: string;
+   public
+      constructor Create(aFact: TStationFact);
+      procedure Restore;
+   end;
+
+constructor TSavedOverride.Create(aFact: TStationFact);
+begin
+   inherited Create;
+   FFact := aFact;
+   FStated := Settings.My.HasContestOverride(aFact);
+   FValue := Settings.My.ContestOverride(aFact);
+end;
+
+procedure TSavedOverride.Restore;
+begin
+   if FStated then
+      begin
+      Settings.My.SetContestOverride(FFact, FValue);
+      end
+   else
+      begin
+      Settings.My.ClearContestOverride(FFact);
+      end;
+end;
+
+procedure TLicenseYearSettingTests.Test_AYearContestCapturesTheZoneNotTheYear;
+var
+   savedZone, savedYear: TSavedOverride;
+   euhfcRules, kvpRules: TContestBase;
+   baseline: integer;
+begin
+   (* ISSUE 305: a European HF Championship log created with year 64 captured
+     my_cq_zone = 64 on every QSO (Edit QSO's CQ zone showed 64), and the ADIF
+     export then left MY_CQ_ZONE out because 64 is not a CQ zone. The year was
+     the contest's MY ZONE statement then, and the capture reads MY ZONE.
+
+     The capture (uLogStore.LogStoreCurrentMyFacts) asks SessionMyCQZone. With
+     the year in MY LICENSE YEAR it must answer the same zone as with no year
+     at all; and an old log's MY ZONE = 64 row, arriving by the route the log
+     replay takes (TryOverrideForContest), must stop being read as a zone once
+     the contest is known (AdoptLegacyLicenseYear). *)
+   BeginTest('a year contest captures the station''s CQ zone, never the year');
+   euhfcRules := ContestIdentity(EUROPEANHFC);
+   kvpRules := ContestIdentity(KVP);
+   savedZone := TSavedOverride.Create(sfZone);
+   savedYear := TSavedOverride.Create(sfLicenseYear);
+   try
+      Settings.My.ClearContestOverride(sfZone);
+      Settings.My.ClearContestOverride(sfLicenseYear);
+      baseline := SessionMyCQZone(euhfcRules);
+      CheckTrue(baseline <> 64, 'the station''s zone is not the test''s year');
+
+      Settings.My.SetContestOverride(sfLicenseYear, '64');
+      CheckEquals(baseline, SessionMyCQZone(euhfcRules), 'EUHFC: the year leaves the CQ zone alone');
+      CheckEquals(baseline, SessionMyCQZone(kvpRules), 'KVP: the same');
+
+      (* AN OLD LOG: the year was stated as MY ZONE. *)
+      Settings.My.ClearContestOverride(sfLicenseYear);
+      CheckTrue(Settings.TryOverrideForContest('MY ZONE', '64'),
+                'the old row is accepted by the replay''s route');
+      CheckEquals(64, SessionMyCQZone(euhfcRules),
+                  'before the move it reads as a zone -- the capture issue 305 saw');
+      AdoptLegacyLicenseYear(euhfcRules.ReceivedYearKind);
+      CheckEquals('64', Settings.My.ResolvedLicenseYear, 'the year moved to MY LICENSE YEAR');
+      CheckEquals(baseline, SessionMyCQZone(euhfcRules), 'and the CQ zone is the station''s again');
+   finally
+      savedZone.Restore;
+      savedYear.Restore;
+      savedYear.Free;
+      savedZone.Free;
+   end;
+end;
+
+procedure TLicenseYearSettingTests.Test_TheStationPageEditsTheStationsYear;
+var
+   savedYear: TSavedOverride;
+   savedStation: string;
+   euhfcRules: TContestBase;
+begin
+   (* DESIGN 7.12 AS IT STANDS -- pinned because issue 300 asks for something
+     else, and the answer is NY4I's to give, not this test's.
+
+     The New Contest dialog's year is the CONTEST's statement (an override).
+     The Preferences Station page shows and edits the STATION's value: it
+     loads CFGCommandValueAsString, and saves through ApplyAndStoreCommand
+     to the published property. So with the contest stating 64 and the
+     station holding nothing, the License year box shows '' -- and typing 05
+     there changes the station's default while this contest still sends 64.
+     If the ruling changes, this test changes with it. *)
+   BeginTest('the Station page edits the station''s year; a contest''s stated year still sends');
+   euhfcRules := ContestIdentity(EUROPEANHFC);
+   savedYear := TSavedOverride.Create(sfLicenseYear);
+   savedStation := Settings.My.LicenseYear;
+   try
+      Settings.My.LicenseYear := '';
+      Settings.My.SetContestOverride(sfLicenseYear, '64');
+      CheckEquals('', CFGCommandValueAsString('MY LICENSE YEAR'),
+                  'the Station page reads the station''s value, not the contest''s 64');
+
+      CheckTrue(Settings.TrySetByCommand('MY LICENSE YEAR', '05'), 'a Station-page edit is taken');
+      CheckEquals('05', Settings.My.LicenseYear, 'as the station''s year');
+      CheckEquals('64', Settings.My.ResolvedLicenseYear, 'the contest''s statement still resolves');
+      CheckEquals('64', SessionZoneTextSent(euhfcRules), 'and is what EUHFC sends');
+   finally
+      Settings.My.LicenseYear := savedStation;
+      savedYear.Restore;
+      savedYear.Free;
+   end;
+end;
+
 procedure TLicenseYearSettingTests.RunAllTests;
 begin
    Test_TheYearAsTyped;
@@ -323,6 +444,8 @@ begin
    Test_AYearContestSendsTheYearNotTheZone;
    Test_TheExportSendsTheYearForAYearContest;
    Test_ALegacyYearStatedAsMyZoneMoves;
+   Test_AYearContestCapturesTheZoneNotTheYear;
+   Test_TheStationPageEditsTheStationsYear;
 end;
 
 end.

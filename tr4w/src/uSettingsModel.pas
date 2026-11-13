@@ -7171,6 +7171,7 @@ var
    info: PPropInfo;
    spellings: TArray<string>;
    n: integer;
+   pointFormat: TFormatSettings;
 begin
    Result := False;
    aValue := '';
@@ -7190,6 +7191,27 @@ begin
          aValue := string(IntToStr(GetOrdProp(owner, info)));
          Result := True;
          end;
+
+      (* A REAL -- issue 295. This arm was missing, so RADIUS OF EARTH and
+        WEIGHT answered False: Preferences showed a blank box for a value the
+        settings file held, and every other reader (a peer, the log's
+        captured configuration) skipped them.
+
+        THE SPELLING THE SETTER READS BACK, whatever the locale. The setter
+        parses with Val, which takes '.' and nothing else, so the decimal
+        separator is fixed here rather than taken from the operator's
+        Windows settings: a comma-decimal locale would otherwise render
+        "6371,5" and the next save would refuse its own value. FloatToStr's
+        general format writes no thousands separator and drops a zero
+        fraction ("6371", not "6371.0"). *)
+      tkFloat:
+         begin
+         pointFormat := DefaultFormatSettings;
+         pointFormat.DecimalSeparator := '.';
+         aValue := string(FloatToStr(GetFloatProp(owner, info), pointFormat));
+         Result := True;
+         end;
+
       tkBool:
          begin
          // The spelling BA uses, so a rendered value is one CheckCommand and

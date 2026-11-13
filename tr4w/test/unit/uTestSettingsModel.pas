@@ -46,6 +46,8 @@ type
       procedure Test_LegacyImportKeepsWhatItCannotRead;
       procedure Test_CommandNamesDeriveFromThePropertyPaths;
       procedure Test_SetAndGetByCommandName;
+      procedure Test_ARealReadsBackInTheSpellingItIsSetBy;
+      procedure Test_EveryCommandReadsByName;
       procedure Test_AnUnknownCommandIsRefused;
       procedure Test_BandDefaultsAreTheOnesTheGlobalsHad;
       procedure Test_TheElevenRetiredRowsStillResolveByName;
@@ -567,6 +569,90 @@ begin
       CheckTrue(s.TryGetByCommand('EXTERNAL LOGGER ADDRESS', value), 'read a string');
       CheckEquals('10.1.2.3', value, 'string');
    finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_ARealReadsBackInTheSpellingItIsSetBy;
+var
+   s: TR4WSettings;
+   value: string;
+   savedSeparator: Char;
+begin
+   (* ISSUE 295: RADIUS OF EARTH RELOADED BLANK. TryGetByCommand had no arm
+     for a real, so it answered False for both real settings (RADIUS OF
+     EARTH, WEIGHT) and Preferences filled the box with ''. The value was in
+     the settings file all along; only the read was missing.
+
+     The rendered text must be what the setter takes back -- Val, '.' only --
+     so it is checked again under a comma-decimal locale. *)
+   BeginTest('a real setting reads back in the spelling its setter takes');
+   s := TR4WSettings.Create;
+   savedSeparator := DefaultFormatSettings.DecimalSeparator;
+   try
+      CheckTrue(s.TryGetByCommand('RADIUS OF EARTH', value), 'the default reads');
+      CheckEquals('0', value, 'zero, "use the built-in radius"');
+
+      CheckTrue(s.TrySetByCommand('RADIUS OF EARTH', '6371'), 'a radius is taken');
+      CheckTrue(s.TryGetByCommand('RADIUS OF EARTH', value), 'and reads back');
+      CheckEquals('6371', value, 'as typed, with no ".0"');
+
+      CheckTrue(s.TrySetByCommand('RADIUS OF EARTH', '6371.5'), 'a fraction is taken');
+      CheckTrue(s.TryGetByCommand('RADIUS OF EARTH', value), 'and reads back');
+      CheckEquals('6371.5', value, 'with its fraction');
+      CheckTrue(s.TrySetByCommand('RADIUS OF EARTH', value), 'the rendered text is accepted again');
+      CheckTrue(Abs(s.GridMap.RadiusOfEarth - 6371.5) < 1e-9, 'unchanged by the round trip');
+
+      DefaultFormatSettings.DecimalSeparator := ',';
+      CheckTrue(s.TryGetByCommand('RADIUS OF EARTH', value), 'reads under a comma locale');
+      CheckEquals('6371.5', value, 'still with a point, which Val reads');
+      CheckTrue(s.TrySetByCommand('RADIUS OF EARTH', value), 'and the setter still takes it');
+      DefaultFormatSettings.DecimalSeparator := savedSeparator;
+
+      CheckTrue(s.TryGetByCommand('WEIGHT', value), 'WEIGHT, the other real, reads');
+      CheckEquals('1', value, 'its default');
+      CheckTrue(s.TrySetByCommand('WEIGHT', '1.25'), 'a weight is taken');
+      CheckTrue(s.TryGetByCommand('WEIGHT', value), 'and reads back');
+      CheckEquals('1.25', value, 'as typed');
+   finally
+      DefaultFormatSettings.DecimalSeparator := savedSeparator;
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_EveryCommandReadsByName;
+var
+   s: TR4WSettings;
+   names: TStringList;
+   i: integer;
+   value: string;
+   unreadable: string;
+begin
+   (* EVERY NAME THE SETTINGS OBJECT OWNS CAN BE READ BY NAME. A property
+     kind TryGetByCommand has no arm for answers False, and the readers
+     treat that as "nothing to show": Preferences fills the box with '',
+     a peer is sent nothing, the log captures nothing. That is how the two
+     real settings read blank (issue 295), and the uTestAllSettings round
+     trip could not see it: it skips every model setting, because each
+     one's TrySetText saves the settings file. *)
+   BeginTest('every command the settings object owns reads back by name');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   names := s.CommandNames;
+   try
+      unreadable := '';
+      for i := 0 to names.Count - 1 do
+         begin
+         if not s.TryGetByCommand(names[i], value) then
+            begin
+            unreadable := unreadable + ' [' + names[i] + ']';
+            end;
+         end;
+      CheckEquals('', unreadable, 'commands TryGetByCommand cannot read');
+      CheckTrue(names.Count > 100, 'the walk saw the vocabulary (' +
+                IntToStr(names.Count) + ' names)');
+   finally
+      names.Free;
       s.Free;
    end;
 end;
@@ -2450,6 +2536,8 @@ begin
    Test_LegacyImportKeepsWhatItCannotRead;
    Test_CommandNamesDeriveFromThePropertyPaths;
    Test_SetAndGetByCommandName;
+   Test_ARealReadsBackInTheSpellingItIsSetBy;
+   Test_EveryCommandReadsByName;
    Test_AnUnknownCommandIsRefused;
    Test_BandDefaultsAreTheOnesTheGlobalsHad;
    Test_TheElevenRetiredRowsStillResolveByName;
