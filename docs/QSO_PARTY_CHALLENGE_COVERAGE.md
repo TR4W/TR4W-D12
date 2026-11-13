@@ -4,23 +4,24 @@ Dated audit: 2026-11-13. Scope: NY4I's supplied list of **46 events**.
 This is an inventory of registered implementations, not a certification
 that every sponsor rule or operating category has completed the #88 audit.
 
-Checked the rebuilt application's `/MATRIXLIST` output (199 contests),
+Checked the rebuilt application's `/MATRIXLIST` output (201 contests),
 application imports and source files; compared the release tag `v5.0.40`
 and committed main at `8706893b5b02b7fbe5c275588e432dff96d325d0`.
 
-**Published v5.0.40: 31/46. Local development build: 34/46.**
-Alabama, New Jersey and West Virginia are additions on the unmerged
-`codex/new-qso-parties` worktree. The remaining **12 events** have no
+**Published v5.0.40: 31/46. Local development build: 36/46.**
+Alabama, New Jersey, West Virginia, Arkansas and Kentucky are additions
+on the unmerged `codex/new-qso-parties` worktree. The remaining **10 events** have no
 registered implementation in this build. Thus the current release is
 missing 15 of these events; it is premature to claim all 46 are supported.
 Alabama/NJ were committed locally as `bad18048`; WV as `ae586527`.
 
-**Round scope versus implementation status:** the 12 missing entries below
+**Round scope versus implementation status:** the remaining missing entries below
 are queued within the current new-QSO-party round, not additional work
-excluded from it. Kentucky and South Dakota are in that queue and their
-rule questions have been answered. They do not yet have classes/data/tests
-in this build. The three new completed implementations so far are Alabama,
-New Jersey and West Virginia. "Missing" in the table means not implemented
+excluded from it. South Dakota remains in that queue with its rule questions answered.
+Kentucky now has its class/data/tests; its additional KY state credit is
+explicitly deferred to specialist engine work #317. AL/WV also need migration
+from their interim prefix-sheet state credit under #317. The five new
+registrations do not establish complete category or report support. "Missing" in the table means not implemented
 yet, not outside the round's scope.
 
 ## Complete mapping
@@ -31,7 +32,7 @@ yet, not outside the round's scope.
 | Atlantic Canada QSO Party | None | Absent | Missing | #116 |
 | Alabama QSO Party | `AL-QSO-PARTY` | Absent | Present | #114 |
 | Arizona QSO Party | `ARIZONA QSO PARTY` | Present | Present |  |
-| Arkansas QSO Party | None | Absent | Missing | #115 |
+| Arkansas QSO Party | `AR-QSO-PARTY` | Absent | Present | #115; mobile/category gaps #133/#87 |
 | British Columbia QSO Party | `BCQP` | Present | Present |  |
 | California QSO Party | `CALIFORNIA QSO PARTY` | Present | Present |  |
 | Canadian Prairies QSO Party | None | Absent | Missing | #117 |
@@ -45,7 +46,7 @@ yet, not outside the round's scope.
 | Indiana QSO Party | `IN QSO PARTY` | Present | Present |  |
 | Iowa QSO Party | None | Absent | Missing | #120 |
 | Kansas QSO Party | None | Absent | Missing | #121 |
-| Kentucky QSO Party | None | Absent | Missing | #110 |
+| Kentucky QSO Party | `KY-QSO-PARTY` | Absent | Present | #110; extra KY credit deferred to #317 |
 | Louisiana QSO Party | None | Absent | Missing | #122 |
 | Michigan QSO Party | `MICHIGAN QSO PARTY` | Present | Present |  |
 | Minnesota QSO Party | `MINNESOTA QSO PARTY` | Present | Present |  |
@@ -84,17 +85,19 @@ The Challenge website calls this four-event workflow IN7QPNEDE.
 
 ## Conditions before an all-events submission
 
-- Implement and validate the 12 missing events using their existing issues;
+- Implement and validate the 10 missing events using their existing issues;
   #111/#113 refer to one South Carolina event, not two.
 - Merge the local additions and ship a release containing all 46 modules
   and their DOM data. Verify that actual release build against this list.
 - Complete the relevant #88 rule-correctness and bench follow-ups. Known
   shared limitations include own-mobile/category rules (#133/#87),
-  county-suffixed bonus-call matching (#111), and pending screen/3830 checks.
+  double domestic multipliers (#317), and pending screen/3830 checks.
   Registered presence alone must not hide those limits in an external claim.
   A concrete existing #88 gap is Wisconsin: its class still records the
-  low-power x1.5 and QRP x2 factors as not built pending the fractional-score
-  rounding ruling, and typed DX exchanges are still refused. These are
+  typed DX exchanges as refused. NY4I resolved the power-factor rounding
+  question in #88 comment 6861756129: use standard Free Pascal `Round`.
+  LOW x1.5 and QRP x2 now pass the unit suite. County-suffixed bonus-call
+  matching (#111) is fixed in the shared party helper, pending final gates. These are
   correctness gaps in an existing module, not missing-contest entries.
 - Test the combined four-party log and the per-party totals/exports needed
   for submission. The Challenge uses 3830 submissions, so report correctness

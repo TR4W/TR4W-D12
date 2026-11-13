@@ -1,0 +1,290 @@
+Kentucky QSO Party, 2027 DRAFT rules, retrieved 2026-11-13
+Source: https://kyqsoparty.org/rules/
+NY4I approved this draft in #110 comment 6857618922 and will update after finalization.
+Cabrillo: KY-QSO-PARTY, DXLog KYQP.txt CABRILLO_CONTEST_NAME, per NY4I naming strategy.
+WA7BNM 371 lists KYQP with KY-QSO-PARTY as alias:
+https://www.contestcalendar.com/contestdetails.php?ref=371
+ADIF Contest_ID: KY-QSO-PARTY, ADIF 3.1.7 contest enumeration.
+Bonus source: https://kyqsoparty.org/bonus-stations-2/
+Province source: https://kyqsoparty.org/canadianprovinces/
+
+Implementation notes:
+- NY4I #110 comment 6862605577 confirms county + KY state credit for a KY
+  entrant. Correct two-domestic-multiplier support belongs to specialist
+  engine work #317. Additional KY credit is NOT BUILT in this leaf; do not
+  fake it with prefix or bonus points. 183 current keys versus 184 with KY.
+- No 160 m or digital: this approved draft supersedes old DXLog rules.
+- Received mobile/expedition county lines are allowed, with no numeric
+  cap stated. Fixed sending stations choose one county. Own-mobile and
+  sent-category enforcement remain existing #133/#87 engine dependencies.
+- K4KCG 100 once per band/mode is included in the displayed final score;
+  adjudication recalculates it rather than adding it twice.
+- The successful online-submission 100-point bonus is an adjudication
+  adjustment: this logger has no verified submission-success fact.
+
+SPONSOR TEXT (DRAFT)
+2027 Kentucky QSO Party Rules
+(
+Draft, we welcome your
+comments
+!)
+Work KY Stations
+Once per band, per mode, per county.  QSOs between non-KY stations do not count for credit.
+Date/Time
+Saturday, June 5, 2027:
+EDT: 9AM – 9PM
+UTC: 13Z – 01Z June 6
+NOTE:  we are considering moving the start to 10am or 11am EDT, running 12 hours
+Modes
+CW
+Phone (SSB/FM)
+All simplex QSOs, no repeaters, NO digital QSOs.
+Bands / Suggested Frequencies
+80, 40, 20, 15, 10, 6, 2
+CW:
+3.540, 7.040, 14.040, 21.040, 28.040, 50.095 and 144.060
+SSB
+: 3,810, 7.190, 14.250, 21.300, 28.450, 50.135 and 144.250
+Exchange Sent
+KY stations: RS(T) +
+County Abbreviation
+USA stations (non-KY):  RS(T) + State
+Canada:  RS(T) +
+Province
+DX:  RS(T) + “DX”
+Categories
+KY Fixed Station
+Single Op
+(CW, Phone, Mixed – High and Low power, 6 total categories)
+QRP
+(5w or less, any modes)
+Multi-Op
+(more than one operator, any power level, any modes.  Includes club, school, EOC stations, or any ad-hoc group.
+KY Mobile
+Unassisted
+(single operator also drives)
+Single-Op, CW
+Single-Op, Phone
+Single-Op, Mixed
+KY Mobile
+Assisted
+(single operator has a driver)
+Single-Op, CW
+Single-Op, Phone
+Single-Op, Mixed
+KY Mobile
+Multi-Op
+(two or more operators, any modes, any drivers)
+Mobile stations have antennas that are usable while in motion.
+KY Expedition
+Single-Op, Single-County
+(one operator in a single county)
+Single-Op, Multi-County
+(one operator in two or more counties)
+Multi-Op, Single-County
+(two or more operators in a single county)
+Multi-Op, Multi-County
+(two or more operators in two or more counties)
+KY Expeditions m
+ay use larger antennas that cannot be used mobile.
+Mobiles and Expeditions see
+County Line Operations
+below
+Power Multiplier
+High Power: More than 100 watts,
+Power Multiplier = 1
+.
+Low Power: 100 watts or less,
+Power Multiplier = 2
+.
+QRP: 5 watts or less,
+Power Multiplier = 3
+.
+QSO Points
+1 point per completed Phone QSO.
+2 points per completed CW QSO.
+QSO Multipliers
+Kentucky Station operators (including Mobiles and Expeditions):
+Each Kentucky station is a multiplier when worked in each of the 120 counties.
+When logging Kentucky stations, enter the
+County
+as the exchange (
+not
+KY).
+KY stations log USA
+state
+(not ARRL section), including DC, and
+Canadian Provinces
+.
+KY stations log DX contacts for QSO points only, and enter “DX” for the exchange.
+Non-Kentucky Station operators (USA, Canada, and DX):
+Each Kentucky station is a multiplier based on their county.
+When logging Kentucky stations, enter the
+County
+as the exchange (
+not
+KY).
+ALL operators:
+KY Mobiles or Expeditions traveling to a new
+County
+may be contacted again for QSO Point and County Multiplier credit.
+Score Calculation
+Total score = QSO Points x QSO M
+ultipliers
+x Power Multiplier + Bonus Station points.
+An additional 100 points is added to your final score as a bonus for submitting your Cabrillo log file
+online
+.
+County Line Operations
+KY
+Fixed
+stations on a county line
+must
+choose a KY county, and exchange that county during the QSO Party.  No multiple county exchanges.
+KY
+Mobiles
+and
+Expeditions
+that move to a new county are considered a new station, and can be contacted again for QSO point credit.
+KY
+Mobile
+and
+Expedition
+stations may setup on a county line, and each QSO and Multiplier gets credit:  For example, N4TY sets up on the Scott and Fayette county line & exchanges multiple counties at once:
+Spot yourself
+and enter SCO/FAY in the comments.
+Call CQ as:
+CQ KYQP de N4TY/SCO/FAY
+And send the exchange as:
+599 SCO/FAY
+Operators must log you
+twice
+, but
+some logger programs like N1MM
+will log 2 QSOs at once.
+Bonus Station K4KCG
+K4KCG
+may be worked once per BAND and MODE for 100 bonus points per QSO.  For example, a station working K4KCG on 20M CW and SSB would earn 200 bonus points.  Logging programs need not track earned bonus points — after your Cabrillo log is submitted, the KYQP committee will add bonus points to your posted score.  Bonus stations may change each year, without needing logging program updates.
+NOTE: The K4KCG
+Bonus will be added to your score total automatically.
+Miscellaneous
+There are no Assisted (spotting) vs Unassisted classes.
+Spotting Assistance
+is always allowed and encouraged!
+N1MM has no Expedition or Mobile category, so KY stations operating in multiple counties configure N1MM as Rover, but submit their log as either Mobile or Expedition (there are 4 Expedition categories).
+Awards
+Plaques
+are awarded for the
+highest score
+in these categories based on merit.
+NOTE: a MINIMUM of 50 logged QSOs is required to be eligible to win a plaque.
+Kentucky
+Fixed Station
+:
+Single-Op
+CW
+(
+High & Low power)
+Single-Op
+Phone
+(
+High & Low power)
+Single-Op
+Mixed
+(
+High & Low power)
+QRP
+(any modes)
+Multi-Op (any power, any modes)
+Kentucky
+Expedition:
+Single-Op, Single-County
+Single-Op, Multi-County
+Multi-Op, Single-County
+Multi-Op, Multi-County
+K
+entucky
+Mobile:
+Single-op Unassisted,
+CW
+Single-op Unassisted,
+Phone
+Single-op Unassisted,
+Mixed
+Single-op Assisted (with driver),
+CW
+Single-op Assisted (with driver),
+Phone
+Single-op Assisted (with driver),
+Mixed
+Multi-op (any modes)
+K
+entucky
+Special effort:
+Unbridled Spirit – for exceptional efforts in KY
+Goin’ Mobile – for exceptional
+mobile
+efforts in KY
+Total of
+21
+possible plaques to be awarded.
+USA:
+Single-Op
+CW
+(
+High power, Low power, QRP)
+Single-Op
+Phone
+(
+High power, Low power, QRP)
+Single-Op
+Mixed
+(
+High power, Low power, QRP)
+Multi-op (any power, any modes)
+“Best of the West” – highest score from the W6/W7 Call Area
+Total of
+11
+possible plaques to be awarded.
+Canada
+:
+Single-Op
+CW
+(
+High power, Low power, QRP)
+Single-Op
+Phone
+(
+High power, Low power, QRP)
+Single-Op
+Mixed
+(
+High power, Low power, QRP)
+Multi-op (any power, any modes)
+Total of
+10
+possible plaques to be awarded.
+DX:
+Single-Op
+CW
+(any
+power)
+Single-Op
+Phone
+(any
+power)
+Single-Op
+Mixed
+(
+any
+power)
+Multi-op (any power, any modes)
+Total of
+4
+possible plaques to be awarded
+Log Submission Deadline
+Visit the
+Log Submission
+page to upload your Cabrillo log file.
+Deadline for submissions is 2 weeks after the KYQP:
+June 20th, 2359Z

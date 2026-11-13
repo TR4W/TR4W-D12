@@ -418,27 +418,13 @@ begin
    Result := True;
 end;
 
-(* THE CALL, EXACTLY, AFTER THE ROVER STRIP (NY4I). The strip is the
-   engine's (MainUnit.LocateCallStrippingRoverCounty): a /suffix that the
-   session's domestic table knows is a rover's county and comes off; any
-   other suffix (/M, /P) stays, as it does there. The table is
-   Station.IsDomesticQTH -- the same session table that strip and the
-   host-area rule ask; with none (a station-less object) nothing is
-   stripped. *)
+(* Shared state-party mechanism removes verified county suffixes only. *)
 function TContestOntarioQP.IsClubStationCall(const aCall: string): boolean;
 var
    call: string;
-   slash: integer;
    i: integer;
 begin
-   call := Trim(aCall);
-   slash := Pos('/', call);
-   if (slash > 0) and
-      Assigned(Station.IsDomesticQTH) and
-      Station.IsDomesticQTH(Copy(call, slash + 1, Length(call) - slash)) then
-      begin
-      call := Copy(call, 1, slash - 1);
-      end;
+   call := CallWithoutRoverCounty(aCall);
 
    Result := False;
    for i := Low(ON_CLUB_STATIONS) to High(ON_CLUB_STATIONS) do

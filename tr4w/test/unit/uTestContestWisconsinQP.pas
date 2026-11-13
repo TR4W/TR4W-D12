@@ -54,6 +54,7 @@ type
       procedure Test_WisconsinW9FKOncePerBandAndModeBelow50MHz;
       procedure Test_WisconsinCabrilloIsTheLocationAlone;
       procedure Test_WisconsinEntrantsDXQSO;
+      procedure Test_WisconsinPowerMultiplier;
    end;
 
 implementation
@@ -61,6 +62,7 @@ implementation
 uses
    Classes,
    SysUtils,
+   uSettingsModel,
    VC,
    uMults,
    uContestBase,
@@ -404,6 +406,43 @@ begin
    end;
 end;
 
+procedure TContestWisconsinQPTests.Test_WisconsinPowerMultiplier;
+var
+   party: TContestBase;
+   station: TStationContext;
+   totals: TScoreTotals;
+   view: TLoggedQSOList;
+begin
+   BeginTest('Test_WisconsinPowerMultiplier');
+   station := Entrant(False);
+   party := Make(WISCONSINQSOPARTY, station);
+   view := TLoggedQSOList.Create;
+   try
+      totals := Default(TScoreTotals);
+      totals.QSOPoints := 101;
+      totals.ScoredBand := AllBands;
+      totals.SessionCountsMultipliers := True;
+      totals.Mults[AllBands, Both, rmDomestic] := 11;
+      view.Add(WisconsinQso('W9FK', Band20, CW, eCW));
+      station.MyPower := cpHIGH;
+      party.SetStation(station);
+      CheckEquals(1211, party.FinalScore(totals, view), 'HIGH x1, then bonus');
+      station.MyPower := cpLOW;
+      party.SetStation(station);
+      CheckEquals(Round(1666.5) + 100, party.FinalScore(totals, view),
+         'LOW x1.5 uses standard FPC Round, then adds the bonus');
+      totals.QSOPoints := 103;
+      CheckEquals(Round(1699.5) + 100, party.FinalScore(totals, view),
+         'opposite half-integer rounding case');
+      station.MyPower := cpQRP;
+      party.SetStation(station);
+      CheckEquals(2366, party.FinalScore(totals, view), 'QRP x2, then bonus');
+   finally
+      view.Free;
+      party.Free;
+   end;
+end;
+
 procedure TContestWisconsinQPTests.RunAllTests;
 begin
    Test_WisconsinPoints;
@@ -413,6 +452,7 @@ begin
    Test_WisconsinW9FKOncePerBandAndModeBelow50MHz;
    Test_WisconsinCabrilloIsTheLocationAlone;
    Test_WisconsinEntrantsDXQSO;
+   Test_WisconsinPowerMultiplier;
 end;
 
 end.

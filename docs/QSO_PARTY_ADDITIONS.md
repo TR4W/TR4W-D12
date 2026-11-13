@@ -42,8 +42,12 @@ returns the host-state key. Both leaf parsers finalize the key after their
 inherited validation, and rescore uses the same leaf key policy. Alabama's
 policy is unchanged. WV's W8WVA bonus uses the existing declared bonus-station
 mechanism, filtered by `IsCreditedContact`, with no new engine path.
-Its existing exact-call matcher does not pay county-suffixed W8WVA calls;
-this is the shared bonus-matcher gap #111 also recorded by New Mexico.
+Shared bonus counting now scans the view once for any declared scope,
+including `bsPerQSO` for Arkansas's WR5P. Each leaf still owns contact and
+mode eligibility. State-party matching removes trailing county suffixes
+verified by the session table, preserving district and portable suffixes.
+Ontario club-station points reuse the same stripping helper; New Mexico's
+W1AW/5/BER and WV's W8WVA/BAR now earn their declared bonuses (#111).
 
 The new tests share `uTestQSOPartyEngine`: it owns isolated domestic,
 multiplier and dupe sheets, configures the entrant from the class and shipped
@@ -76,6 +80,18 @@ remain bench work in `BENCH_QUEUE.md`.
 
 ## Issue workflow
 
+### Two domestic multipliers: specialist handoff #317
+
+NY4I confirmed on #110 (comment 6862605577) that a Kentucky entrant's
+county QSO also earns KY as a state. All such engine work belongs to the
+Claude specialist agents on #317. Kentucky documents the missing extra state credit in its new leaf and
+rules transcription, without adding another prefix-sheet solution. Alabama and WV are already added locally with that
+interim string-sheet implementation; #317 now names both leaves, their
+tests and scopes (AL per mode, WV overall) for migration. Their passing
+tests do not establish correct domestic totals/needs UI. South Carolina is
+also tracked there. Arkansas explicitly excludes AR from its states, and
+New Jersey excludes NJ, so neither should gain an additional host-state key.
+
 Post rule questions on the relevant issue and apply `Agent Question`.
 Read answers directly, retain the ruling in the source/rules transcription,
 and remove the label once every question on that issue is resolved. Keep
@@ -84,7 +100,7 @@ requests merely because a class compiles.
 
 ## Remaining queue
 
-Kentucky #110; South Carolina #111/#113; Arkansas #115; Atlantic Canada
+South Carolina #111/#113; Atlantic Canada
 #116; Canadian Prairies #117; Hawaii #118; Illinois #119; Iowa #120; Kansas
 #121; Louisiana #122; Mississippi #123; South Dakota #129.
 
@@ -147,4 +163,32 @@ Screen setup/totals and real 3830 form comparison remain in BENCH_QUEUE.md. Own-
 - Corpus rescore: all 13 logs identical to their frozen legacy baseline.
 - Sponsor and DXLog county codes match exactly: 55 versus 55. All shipped county codes and names are checked against the saved sponsor transcription.
 
-Screen/3830 bench work remains queued. Existing own-mobile gaps #133/#87 and county-suffixed bonus-call matching gap #111 remain explicitly documented in the class and cross-check notes.
+Screen/3830 bench work remains queued. Existing own-mobile gaps #133/#87 remain documented. The shared county-suffixed bonus-call gap #111 is fixed in the AR/KY batch below.
+
+## Arkansas/Kentucky and shared bonus batch, 2026-11-13
+
+Arkansas and Kentucky now have registered leaves, application/test links,
+own DOMs and saved primary rules/tables. AR uses current sponsor rules;
+KY uses the approved 2027 draft. AR has 138 in-state multipliers, excluding
+AR state; its WR5P bonus pays 200 for each valid QSO. KY scores CW 2/phone 1,
+HP/LP/QRP 1/2/3, DX points only, K4KCG 100 per band/mode; extra KY domestic
+state credit is documented for specialist issue #317. Their class headers
+identify own-mobile/category and adjudication dependencies explicitly.
+
+The shared bonus scan preserves the existing scopes, adds per-contact
+payment, and uses the state-party county-strip helper. Ontario club points
+reuse that helper; NM district suffixes remain intact. The protected
+county-state helper now has its own probe tests. Wisconsin's power factors
+use standard Free Pascal Round as ruled in #88, before bonuses.
+
+Validation: full unit suite 480,898 passed, zero failures; focused affected
+suites 7,097 passed; full app build passed at existing 3/3 range and
+1187/1187 narrowing ceilings; all 58 lints passed. AR/KY frozen records
+were generated with the sponsor-rule and #317-deferral reason. Both new
+ADIF files have zero compliance errors. The partial validator reports four
+stale WAG pins because WAG is not in that two-file subset; pins are unchanged.
+Full matrix and corpus checks are being finalized for turnover.
+
+NY4I requested this stop point; do not start further parties until the
+session resumes. Integration instructions and remaining punchlist:
+[QSO_PARTY_TURNOVER.md](QSO_PARTY_TURNOVER.md).

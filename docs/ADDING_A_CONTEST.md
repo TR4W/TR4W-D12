@@ -30,10 +30,13 @@ real-engine sessions and exact county-file comparison with sponsor data.
 Use that fixture for a new party rather than copying the session save/restore
 and QSO-entry routines. See `docs/QSO_PARTY_ADDITIONS.md` for its ownership and
 the exchange-dependent string-key timing found while adding Alabama (#114).
-When a party awards its host state in addition to a received county, reuse
-the party base's `CountyStateMultiplierKey` computation (Alabama and WV).
-The leaf still owns key availability, multiplier scope and finalization
-after inherited parsing; this helper introduces no default scoring rule.
+When a party awards its host state in addition to a received county,
+document its dependency on #317 and update that issue with the new leaf.
+NY4I assigned the correct two-domestic-key engine support to specialist
+agents. Alabama and WV currently use an interim prefix/string-sheet key;
+do not introduce another such implementation. Their shared protected
+`CountyStateMultiplierKey` computes the county's host key but does not
+solve domestic scope, totals or needs displays.
 
 The design behind all of this is `docs/CONTEST_OWNERSHIP_DESIGN.md`: **a
 contest class owns its rules outright**, through virtuals on `TContestBase`.

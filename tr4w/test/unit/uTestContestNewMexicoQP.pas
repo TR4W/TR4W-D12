@@ -53,11 +53,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * THROUGH THE REAL ENGINE (ParametersOkay and the multiplier sheet): an
       out-of-state entrant, then an in-state one.
 
-  NOT PINNED, ON PURPOSE: a county-suffixed W1AW/5/BER paying the bonus.
-  The base pays a bonus station by an exact call comparison, so it does
-  not today; the fix is the base's, owned by the South Carolina QSO Party
-  (#111). A test for it belongs with that change, not here as a pinned
-  defect. *)
+  County-suffixed W1AW/5/BER pays through shared state-party matching;
+  the district /5 and unknown/portable suffixes are preserved (#111). *)
 unit uTestContestNewMexicoQP;
 
 {$I ..\..\src\tr4w.inc}
@@ -918,6 +915,15 @@ begin
       view.Clear;
       view.Add(LoggedQSO('W1AW', Band20, CW, eCW, False, 2026));
       CheckEquals(0, contestObject.BonusPoints(Totals(0, 0), view), 'W1AW in CT is not W1AW/5');
+
+      view.Clear;
+      view.Add(LoggedQSO('W1AW/5/BER', Band20, CW, eCW, False, 2026));
+      CheckEquals(250, contestObject.BonusPoints(Totals(0, 0), view),
+         'verified county suffix pays while preserving the district /5');
+      view.Clear;
+      view.Add(LoggedQSO('W1AW/5/P', Band20, CW, eCW, False, 2026));
+      CheckEquals(0, contestObject.BonusPoints(Totals(0, 0), view),
+         'portable suffix is not a county');
 
       (* AN OUT-OF-STATE ENTRANT earns it too, from an NM county. *)
       view.Clear;

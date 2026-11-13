@@ -64,9 +64,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     The Cabrillo name is write-only; the stored id (WISCONSIN QSO PARTY) and
     the ADIF id (WI-QSO-PARTY) do not move.
 
+  POWER MULTIPLIER, resolved #88 comment 6861756129: HIGH x1, LOW x1.5,
+    QRP x2. NY4I directs the standard Free Pascal Round function. It applies
+    to points times multipliers, before the separately added W9FK bonus.
+
   NOT BUILT, listed on #88:
-    * THE POWER MULTIPLIER (QRP x2, LOW x1.5): NY4I has not ruled how a
-      fractional score rounds.
     * THE MOBILE/PORTABLE 500-POINT COUNTY BONUS: it needs the entrant's
       CATEGORY-STATION and home county, which do not reach scoring.
     * A WISCONSIN ENTRANT'S DX QSO: "DX countries worked count for QSO points
@@ -151,6 +153,7 @@ type
          below 50 MHz -- the header. *)
       function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
    public
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
       (* Every band but WARC -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
 
@@ -170,6 +173,7 @@ type
 implementation
 
 uses
+   uSettingsModel,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -314,6 +318,27 @@ begin
    (* "Mobiles or portables may not sit on a county line." Zero, so the
       derived CountyLineAllowed reads False, as Michigan's. *)
    Result := 0;
+end;
+
+function TContestWisconsinQP.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+var
+   factor: double;
+begin
+   case Station.MyPower of
+      cpLOW:
+         begin
+         factor := 1.5;
+         end;
+      cpQRP:
+         begin
+         factor := 2;
+         end;
+      else
+         begin
+         factor := 1;
+         end;
+      end;
+   Result := Round(inherited CombineWithMultipliers(aTotals) * factor);
 end;
 
 function TContestWisconsinQP.GetBonusStations: TBonusStationList;

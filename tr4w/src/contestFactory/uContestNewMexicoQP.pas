@@ -151,12 +151,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     publishes one, so it pays nothing and logs ONE Error per year (the party
     base's ReportNoTableForYear). The yearly pin test reads the clock and
     fails on the first run of a year with no ruling.
-    NOT MATCHED: a county-suffixed W1AW/5/BER. The base pays a bonus
-    station by an exact comparison with the logged call
-    (TContestBase.BonusStationWorked), and the logged call keeps its
-    suffix. The base fix -- strip a suffix that is a county of the contest
-    -- is South Carolina's (#111, "A bonus station logged with a county
-    suffix ... pays"); not built here.
+    Shared state-party bonus matching strips only county suffixes verified
+    by the session table (#111). W1AW/5/BER matches W1AW/5; the district /5
+    remains part of the call. Unknown, /M and /P suffixes remain untouched.
 
   COUNTY LINES -- "only one County Line at a time can be run ... only two
     counties at a time may be counted for the same contact" (an Expedition

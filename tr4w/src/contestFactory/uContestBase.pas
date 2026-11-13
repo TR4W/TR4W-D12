@@ -1019,7 +1019,9 @@ type
          QSO with ... VA7ODX will be worth an additional 20 points", where
          "the same station may be worked ... on each band on CW and Phone"
          (#88, 2026-10-26) -- and Wisconsin's W9FK below 50 MHz. *)
-      bsOncePerBandAndMode
+      bsOncePerBandAndMode,
+      (* EACH CONTACT accepted by CountsTowardBonus -- Arkansas's WR5P. *)
+      bsPerQSO
    );
 
    TBonusStation = record
@@ -3796,9 +3798,19 @@ type
          every mode. *)
       function CreditsBonusMode(aMode: ModeType): boolean; virtual;
 
+      (* Default exact call matching. State parties may remove a verified
+         county suffix using their own session's county table. *)
+      function BonusCallMatches(const aLoggedCall, aBonusCall: string): boolean; virtual;
+
+      (* One view scan for every declared payment scope. bsOnce preserves
+         its early exit and optional mode filter for existing callers. *)
+      function CountBonusStationContacts(aView: TLoggedQSOView;
+         const aCall: string; aScope: TBonusStationScope;
+         aAnyMode: boolean; aMode: ModeType): integer;
+
       (* MECHANISM: was aCall worked in the view, in aMode (CW, Digital or
          Phone) or in any mode when aAnyMode, by a contact CountsTowardBonus
-         accepts? An exact comparison with the logged callsign. *)
+         accepts? Matching is owned by BonusCallMatches. *)
       function BonusStationWorked(aView: TLoggedQSOView;
                                   const aCall: string;
                                   aAnyMode: boolean;
@@ -6204,102 +6216,91 @@ begin
    Result := True;
 end;
 
-function TContestBase.BonusStationWorked(aView: TLoggedQSOView;
-                                         const aCall: string;
-                                         aAnyMode: boolean;
-                                         aMode: ModeType): boolean;
-var
-   i: integer;
-   qso: ContestExchange;
+function TContestBase.BonusCallMatches(const aLoggedCall, aBonusCall: string): boolean;
 begin
-   Result := False;
-   for i := 0 to aView.Count - 1 do
-      begin
-      qso := aView.QSO(i);
-      if (string(qso.Callsign) = aCall)                       and
-         (aAnyMode or (BonusModeOf(qso.Mode) = aMode))        and
-         CountsTowardBonus(qso)                               then
-         begin
-         Result := True;
-         Exit;
-         end;
-      end;
+   Result := aLoggedCall = aBonusCall;
 end;
 
-const
-   (* THE THREE MODES A PER-MODE BONUS CAN BE PAID IN. FM counts as phone
-      (BonusModeOf), so it is not a fourth. *)
-   BONUS_MODES: array[0..2] of ModeType = (CW, Digital, Phone);
-
-type
-   (* WHICH (band, mode) PAIRS A bsOncePerBandAndMode STATION HAS PAID --
-      indexed by ModeType, not BONUS_MODES' position, because BonusModeOf
-      answers a ModeType. *)
-   TBonusPaidGrid = array[BandType, ModeType] of boolean;
-
-function TContestBase.BonusStationBandModesWorked(aView: TLoggedQSOView;
-                                                  const aCall: string): integer;
+function TContestBase.CountBonusStationContacts(aView: TLoggedQSOView;
+   const aCall: string; aScope: TBonusStationScope;
+   aAnyMode: boolean; aMode: ModeType): integer;
 var
-   paid: TBonusPaidGrid;
+   paidPairs: array[BandType, ModeType] of boolean;
+   paidModes: array[ModeType] of boolean;
    i: integer;
    qso: ContestExchange;
    mode: ModeType;
 begin
    Result := 0;
-   paid := Default(TBonusPaidGrid);
+   FillChar(paidPairs, SizeOf(paidPairs), 0);
+   FillChar(paidModes, SizeOf(paidModes), 0);
    for i := 0 to aView.Count - 1 do
       begin
       qso := aView.QSO(i);
-      mode := BonusModeOf(qso.Mode);
-      if (string(qso.Callsign) = aCall)        and
-         (mode in [CW, Digital, Phone])        and
-         (not paid[qso.Band, mode])            and
-         CreditsBonusMode(mode)                and
-         CountsTowardBonus(qso)                then
+      if not BonusCallMatches(string(qso.Callsign), aCall) then
          begin
-         paid[qso.Band, mode] := True;
-         inc(Result);
+         Continue;
          end;
+      mode := BonusModeOf(qso.Mode);
+      if aScope = bsOnce then
+         begin
+         if not (aAnyMode or (mode = aMode)) then
+            begin
+            Continue;
+            end;
+         end
+      else
+         begin
+         if not (mode in [CW, Digital, Phone]) or
+            not CreditsBonusMode(mode) then
+            begin
+            Continue;
+            end;
+         if ((aScope = bsOncePerMode) and paidModes[mode]) or
+            ((aScope = bsOncePerBandAndMode) and paidPairs[qso.Band, mode]) then
+            begin
+            Continue;
+            end;
+         end;
+      if not CountsTowardBonus(qso) then
+         begin
+         Continue;
+         end;
+      Inc(Result);
+      if aScope = bsOnce then
+         begin
+         Exit;
+         end;
+      paidModes[mode] := True;
+      paidPairs[qso.Band, mode] := True;
       end;
 end;
 
+function TContestBase.BonusStationWorked(aView: TLoggedQSOView;
+   const aCall: string; aAnyMode: boolean; aMode: ModeType): boolean;
+begin
+   Result := CountBonusStationContacts(aView, aCall, bsOnce, aAnyMode, aMode) > 0;
+end;
+
+function TContestBase.BonusStationBandModesWorked(aView: TLoggedQSOView;
+   const aCall: string): integer;
+begin
+   Result := CountBonusStationContacts(aView, aCall, bsOncePerBandAndMode, True, CW);
+end;
+
 function TContestBase.BonusPoints(const aTotals: TScoreTotals;
-                                  aView: TLoggedQSOView): longint;
+   aView: TLoggedQSOView): longint;
 var
    stations: TBonusStationList;
-   i, m: integer;
+   i: integer;
 begin
    Result := 0;
    stations := BonusStations;
-   (* A CONTEST WITH NO BONUS STATION NEVER TOUCHES THE VIEW. *)
+   (* A contest with no bonus station never touches the view. *)
    for i := 0 to High(stations) do
       begin
-      case stations[i].Scope of
-         bsOncePerMode:
-            begin
-            for m := Low(BONUS_MODES) to High(BONUS_MODES) do
-               begin
-               if CreditsBonusMode(BONUS_MODES[m])                                    and
-                  BonusStationWorked(aView, stations[i].Call, False, BONUS_MODES[m])  then
-                  begin
-                  Result := Result + stations[i].Points;
-                  end;
-               end;
-            end;
-         bsOncePerBandAndMode:
-            begin
-            Result := Result + stations[i].Points *
-                      BonusStationBandModesWorked(aView, stations[i].Call);
-            end;
-         else
-            begin
-            (* bsOnce. *)
-            if BonusStationWorked(aView, stations[i].Call, True, CW) then
-               begin
-               Result := Result + stations[i].Points;
-               end;
-            end;
-         end;
+      Result := Result + stations[i].Points * CountBonusStationContacts(
+         aView, stations[i].Call, stations[i].Scope, True, CW);
       end;
 end;
 

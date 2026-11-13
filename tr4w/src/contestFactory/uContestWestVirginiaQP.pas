@@ -34,12 +34,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   state key uses the existing string sheet and CountyStateMultiplierKey,
   also used by Alabama. This class finalizes it after inherited parsing;
   rescore calls the same PrefixMultiplierKey policy. Shared entry unchanged.
+  INTERIM: #317 owns migration of this prefix-sheet state credit to a
+  second domestic key and correct domestic totals/needs displays. NY4I
+  assigned that broader engine work to specialist agents.
 
   W8WVA earns 100 once per band/mode, after multiplying; dupes and X-QSOs
-  excluded. The existing bonus helper matches the logged call exactly:
-  a county-suffixed W8WVA call is not paid (shared gap #111, also recorded
-  by New Mexico). Fix that in the shared bonus-call matcher, not by copying
-  a bonus scanner into each new party. No power factor.
+  excluded. Shared bonus matching removes only county suffixes verified by
+  the session table; W8WVA/BAR pays, W8WVAX and W8WVA/M do not (#111).
+  No power factor.
   Entrant-mobile reworks, own county-line sending
   and the mobile activated-county bonus remain engine gaps #133/#87;
   received rover county reworks and county-line records are supported.

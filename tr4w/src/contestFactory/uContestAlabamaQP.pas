@@ -42,6 +42,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   predicate works for an imported county or a received rover suffix.
   DXCC and prefix keys are still subject to the engine's ordinary dupe and
   X-QSO exclusion and are rebuilt on rescore, just like every multiplier.
+  INTERIM: #317 owns replacement of the prefix-sheet state credit with a
+  second domestic key, including totals/needs displays. NY4I assigned that
+  broader engine work to specialist agents; this leaf must migrate with it.
 
   Cabrillo AL-QSO-PARTY verified at WA7BNM ref 134; ADIF independently
   verified in ADIF 3.1.7. No sponsor Cabrillo example: tests pin required

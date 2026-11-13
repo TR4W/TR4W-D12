@@ -773,6 +773,7 @@ begin
       CheckEquals(0, PaidAt(bsOnce), 'an empty log pays nothing once');
       CheckEquals(0, PaidAt(bsOncePerMode), 'nor per mode');
       CheckEquals(0, PaidAt(bsOncePerBandAndMode), 'nor per band and mode');
+      CheckEquals(0, PaidAt(bsPerQSO), 'nor per contact');
 
       view.Add(LoggedQSO('K1BON', Band20, CW));
       view.Add(LoggedQSO('K1BON', Band20, CW));
@@ -789,6 +790,7 @@ begin
       (* 20 CW, 40 CW, 15 CW (a dupe), 20 phone (and FM), 20 digital. *)
       CheckEquals(50, PaidAt(bsOncePerBandAndMode),
                   'per band and mode: five pairs, 20 m CW and 20 m phone once each');
+      CheckEquals(70, PaidAt(bsPerQSO), 'all seven matching contacts; eligibility belongs to the leaf');
    finally
       view.Free;
    end;
@@ -1314,7 +1316,7 @@ begin
          at round 2: "Add 100 points for each time you work W9FK on each band
          and mode below 50Mhz." West Virginia joined at #131: W8WVA pays
          100 points once per band and mode, after multiplying. *)
-      CheckEquals('BCQP|MISSOURI QSO PARTY|SALMON RUN|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
+      CheckEquals('AR-QSO-PARTY|BCQP|KY-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
                   'the contests that declare bonus stations');
    finally
       declaring.Free;

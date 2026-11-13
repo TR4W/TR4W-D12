@@ -228,6 +228,15 @@ begin
       view.Add(WVQSO('W8WVA', Band6, CW, eCW));
       view.Add(WVQSO('W8WVAX', Band15, CW, eCW));
       CheckEquals(400, party.BonusPoints(totals, view), 'dupes, explicit/automatic X-QSOs and other calls excluded');
+      view.Clear;
+      view.Add(WVQSO('W8WVA/BAR', Band20, CW, eCW));
+      view.Add(WVQSO('W8WVA/MIN', Band20, CW, eCW));
+      CheckEquals(100, party.BonusPoints(totals, view), 'county rework still one band/mode bonus');
+      view.Add(WVQSO('W8WVA/MIN', Band40, CW, eCW));
+      view.Add(WVQSO('W8WVA/M', Band15, CW, eCW));
+      CheckEquals(200, party.BonusPoints(totals, view), 'county suffix pays; portable suffix stays');
+      view.Add(WVQSO('W8WVA', Band20, Phone, eUSB));
+      view.Add(WVQSO('W8WVA', Band20, Digital, eRTTY));
       totals.QSOPoints := 100;
       totals.ScoredBand := AllBands;
       totals.SessionCountsMultipliers := True;
