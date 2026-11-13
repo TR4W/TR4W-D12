@@ -205,9 +205,16 @@ export CGO_ENABLED=1
 export GOOS GOARCH
 export CC="$CC_BIN"
 export GOTOOLCHAIN=local          # never fetch a different Go behind our back
-export GOFLAGS=-mod=readonly      # go.sum decides; the build may not edit it
+export GOFLAGS="-mod=readonly -modcacherw"   # go.sum decides; the build may not edit it
 export GOPATH="$WORK/gopath"
 export GOCACHE="$WORK/gocache"
+
+# THE MODULE CACHE MUST STAY WRITABLE.  Go makes it read-only by default, and it
+# lives in the workspace, so the NEXT job's actions/checkout on a persistent
+# runner cannot delete it (EACCES on build-out/tailcat/gopath/pkg/mod/...) and the
+# job fails before it builds anything.  -modcacherw covers what this run downloads;
+# the chmod repairs a cache an earlier run left read-only.
+chmod -R u+w "$GOPATH" 2>/dev/null || true
 
 # THE OLDEST macOS THE LIBRARY MAY ASK FOR.  Left alone, cgo targets the
 # macOS of the machine that builds (the first CI run produced a dylib that
