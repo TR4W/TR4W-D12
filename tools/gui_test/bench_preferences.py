@@ -27,9 +27,11 @@ def station_values(root, run_name):
    settings = json.loads((root / "runs" / run_name / "tr4w.json").read_text(encoding="utf-8-sig"))
    result = {}
    for term, path in STATION_PATHS.items():
+      # A setting never saved is absent from tr4w.json (the program uses its
+      # default), so a missing key reads as None rather than failing.
       value = settings
       for key in path:
-         value = value[key]
+         value = value.get(key) if isinstance(value, dict) else None
       result[term] = value
    return result
 
@@ -211,6 +213,18 @@ def check(app, main, output, journal, phase, root, run_name):
          "operating_page": "NOT RUN: requires verified page selection"}, indent=3), encoding="utf-8")
       return {"passed": all(item["navigated"] for item in navigation), "navigation": navigation,
          "note": "Overview navigation outcomes recorded individually; screenshots need review"}
+   if phase == "bench-prefs-captions":
+      # Issue 304: long generated captions wrap and their rows grow. A TLabel
+      # is not a window, so the wrap is judged from the reviewed capture of
+      # each searched row (search scrolls it into view), not asserted here.
+      observations = []
+      for term in ("NETWORK HTTP TRANSPORT", "ALLOW AUTO UPDATE"):
+         control, observation = search_control(prefs, term, output, journal)
+         observations.append(observation)
+      (output / "caption-rows.json").write_text(json.dumps(observations, indent=3), encoding="utf-8")
+      journal.perform("cancel caption captures", lambda: prefs.child_window(title="Cancel").click_input())
+      prefs.wait_not("visible", timeout=10)
+      return {"passed": True, "note": "Searched rows captured for caption review; the verdict is the reviewed image"}
    observations = []
    station = "station" in phase
    terms = tuple(STATION_PATHS) if station else ("QTC MINUTES", "CATEGORY-POWER", "SPRINT QSY RULE", "CALL HISTORY FILENAME")

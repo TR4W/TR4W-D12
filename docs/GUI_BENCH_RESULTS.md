@@ -174,3 +174,66 @@ Application source was consulted only to understand the multiplier menu routing 
 ## New main build: 4d244c6f3d26
 
 Main changed during final validation. A new immutable executable/symbol snapshot was staged: SHA256 4d244c6f3d26f682f250e8a7cc00b84afbddf86630f9caaf03776ab44bfeaffa, debug CRC F964CC0E, VM root C:/TR4W-Test/bench-main-4d244c6f3d26. Build-time source revision is unknown. Only the EUHFC creation/reopen probe was rerun: MY ZONE saves 64, but the Preferences License year control still reopens at 8. [Saved value](gui-test/bench-20261112/year-roundtrip-4d24/saved-year.json), [reopened control](gui-test/bench-20261112/year-roundtrip-4d24/reopened-year.json), [result](gui-test/bench-20261112/year-roundtrip-4d24/result.json). Issue #300 was updated. All broader export, contact-edit and IARU passes above remain scoped to e1e4; they have not silently carried forward to this build.
+
+
+## First x64 attempt, 2026-11-12: BLOCKED by the guest Python, no verdict
+
+Build under test: `build-out\app-x86_64-win64\tr4w_fpc.exe` from main `87cd9ff9`, copied before staging; SHA256 `e5fcd70dddba696760c6e0f22c2ad6dfb26b488fcf229db0b21e7a1ead60a214`, staged to `C:\TR4W-Test\bench-main-e5fcd70dddba`. Portable harness tests: 11 passed. VM preflight: GUI-TEST console session 1 active, 1280x800, 96 DPI, no TR4W process, no scenario task.
+
+`run_suite.py --case import` never reached the application. The seed worker (`pythonw.exe` from `C:\TR4W-Test\.venv`, started 19:19:54 guest time) stayed alive with no artifacts directory, no TR4W process, and `readiness\scenario-runner.log` not even reopened. Cause, read from the guest: the x64 venv's `pyvenv.cfg` has `home = C:\Users\toms\AppData\Local\Programs\Python\Python315`, and that folder's ACL grants only SYSTEM, Administrators and toms. The interactive worker runs as gui-test, so the venv launcher cannot reach its base interpreter. This is the failure the README already describes for a venv built from a private profile; the x86 venv works because its base is the shared `C:\TR4W-Test\runtimes\python315-x86`. No shared x64 runtime exists under `runtimes`. The x86 venv cannot be substituted: `evidence.require_matching_bitness` refuses it against an x64 exe, as it should.
+
+Required before any x64 GUI verdict: a shared x64 Python 3.15.2 runtime gui-test can execute (for example `C:\TR4W-Test\runtimes\python315-x64`), `.venv` recreated from it with pywinauto 0.6.9, Pillow, pywin32 and comtypes, and the `import` case run alone first. Consequently every suite case, every fix verification (#295, #297, #300, #301, #304, #305, #306) and every BENCH_QUEUE item for this build is **NOT RUN**. Host evidence: `build-out/gui-regression/20261113T001934-27bf77` (its `summary.json` still says RUNNING because the host runner was killed by a tool timeout, not by a verdict). The hung worker and the registered `TR4W-GuiScenario` task were left on the guest; the next `vm_run.py` will refuse to start ("Scenario task already exists") until they are removed.
+
+
+## Second x64 attempt, 2026-11-12 21:13 EST: BLOCKED again by the guest Python, no verdict
+
+**Superseded the same evening:** the working environment was a separate `C:\TR4W-Test\.venv-x64`, which already existed, not a repaired `.venv`. No administrator action was needed; see "First x64 results" below.
+
+Build under test: `build-out\app-x86_64-win64\tr4w_fpc.exe` (built 19:44, after 7f231e18 and 2c755fa6), SHA256 `af52e1445acb4cc8b6bd1c096f67de1aa763f48c19c8d5615484eb6fe555e266`, debug CRC `99C94B0C`, staged to `C:\TR4W-Test\bench-main-af52e1445acb`. Portable harness tests: 11 passed. Preflight: the stale `TR4W-GuiScenario` task had been removed by the user; no TR4W or Python process on the guest.
+
+`run_suite.py --case import` exited 2: the seed worker returned task result 103 with no artifacts, the same signature as the first attempt. Read from the guest afterwards: `C:\TR4W-Test\runtimes` holds only `python315-x86`; `C:\TR4W-Test\.venv` was last written 2026-11-10 and its `pyvenv.cfg` still has `home = C:\Users\toms\AppData\Local\Programs\Python\Python315`, whose ACL still grants only SYSTEM, Administrators and toms. The shared x64 runtime and rebuilt venv described as done are not present. Installing them needs administrator rights and was not attempted.
+
+Every suite case, the fix verifications (#280, #295, #297, #301, #304, #306) and the BENCH_QUEUE items for this build are **NOT RUN**. Host evidence: `build-out/gui-regression/20261113T021319-3ef71f` (`summary.json` status ERROR, `seed/runner.log`). The harness removed its task; the guest was left with no scenario task and no test process.
+
+
+## First x64 results, 2026-11-12 21:23-21:45 EST: af52e1445acb
+
+The guest Python was repaired as `C:\TR4W-Test\.venv-x64` (GUI-TEST's own Python 3.15.2 x64; proof `C:\TR4W-Test\readiness\gui-python-preflight.json`), and `stage_main_build.GUEST_PYTHON` now names it. Every run below drove x64 exe `build-out\app-x86_64-win64\tr4w_fpc.exe`, SHA256 `af52e1445acb4cc8b6bd1c096f67de1aa763f48c19c8d5615484eb6fe555e266`, debug CRC `99C94B0C`, VM root `C:\TR4W-Test\bench-main-af52e1445acb`. It was built at 19:44, after 7f231e18 and 2c755fa6; the working tree held other uncommitted source changes, so the build-time source revision is **unknown**. Windows 1280x800, 96 DPI, fresh disposable fixtures, no radio, keyer, cluster or external delivery. Portable harness tests: 11 passed after the driver edits below.
+
+| Case / item | Result | Evidence under `build-out/gui-regression/` |
+| --- | --- | --- |
+| import alone (harness proof) | PASS (seed PASS) | `20261113T022346-7e86bc` |
+| Full suite: seed, hints, focus, online, loggers, radio, locked, import, messages | PASS (9) | `20261113T022504-c9da52` |
+| search | FAIL, **driver error, not an app result**: K3GUI was logged on 20 m (`Band = 20` in tr4w.log), not the intended 10 m. This is the known 40 m-start assumption; the driver is not fixed yet | `20261113T022504-c9da52/search` |
+| #306 switch: Open Log refuses a text file named .db | **PASS** after a driver correction. The app logs `[OpenLog] ... not-a-log.db is not a contest TR4W can open -- not switching`, closes the dialog, shows "Not a TR4W contest log, so it was not opened: ..." on the status line, keeps the same PID and the three contacts/6 points. The numbered-new-log/back round trip passes. In the full suite the old driver timed out waiting for the dialog to stay open (ERROR, not FAIL) | `20261113T023624-d9c56d/switch` (`invalid-file-refused.png`, `invalid-file-refusal.json`) |
+| #297 Enter on a focused overview button | **PASS**: Enter and click both navigate for WSJT-X, External Logger, DXLab and MMTTY; Tab reaches all four; no duplicate buttons | `20261113T023739-x2ce34/overview` |
+| #301 Ontario QSO Party notice | **PASS** (reviewed screenshot): the four-line notice is fully visible, its box has grown and MY STATE sits below it. The rest of the county case also passes | `20261113T023739-x2ce34/county/bench-county-check/ontario-unchanged.png` |
+| #304 long Preferences captions | **PASS** (reviewed screenshot): Band Map > Window and tuning wraps "Color of the M on a spot whose multiplier wants a backup" onto two lines and its row grows. Nothing is clipped on the Network page | `20261113T022504-c9da52/focus/bench-prefs-focus/preferences-38.png`, `preferences-6.png` |
+| #295 Radius Of Earth reads back | **PASS**: 6371 saved, read back as 6371 after restart; Cancel restores; baseline restored. Driver correction: an unsaved key is absent from the fresh `tr4w.json` | `20261113T024045-xbf9a4/station-verify` |
+| #280 Grid square tooltip | **PASS**: searching MY GRID lands on Grid square (FN31). A HintWindow shows "Values: Four- or six-character grid identifier. ..." inside the screen, wrapped at 70 columns or fewer, and it dismisses. This was added to the hints case | `20261113T022504-c9da52/hints/bench-prefs-hints/hint-observations.json` |
+| EUHFC / KVP licence year (issue 298) | **PASS** for storage: New Contest row reads MY LICENSE YEAR, `64` is stored as contest-scoped `MY LICENSE YEAR` and survives a reopen, `MY ZONE` stays the station's 8. Preferences search lands on the License year box, which shows the station default (empty), as the queue says. The CQ zone box keeps its label in EUHFC | `20261113T023739-x2ce34/year-euhfc`, `year-kvp` |
+
+BENCH_QUEUE items established on Windows x64 by the runs above (NY4I ticks; none were ticked here):
+
+- 2026-11-12 "Enter on an empty exchange": **Preferences > Station Grid square tooltip** PASS; **Preferences > Web Server** reads "There are no settings on this page yet." PASS (`focus/.../preferences-12.png`). The two Enter-on-empty-exchange items are NOT RUN; the harness logs with Ctrl+Enter to avoid CW.
+- 2026-11-12 "MY LICENSE YEAR": the Station page has a License year box under Park in the Contest exchange column (`focus/.../preferences-1.png`, CW Open log). The CQ zone label is unchanged in EUHFC; CQ WW was not opened. The EUHFC/KVP New Contest row reads MY LICENSE YEAR. The sent `85` in the default CQ message, Cabrillo and ADIF is NOT RUN, and so are the pre-298 log migration and the empty-year startup warning.
+- 2026-11-12 "64-bit build": it starts and opens a log with no error box; Preferences walks all 47 pages forward and back, and a change survives a restart (station pair above). Each is a Windows PASS. ADIF re-export (import case) passes; Cabrillo, QSO edit/delete, radios, CW, cluster, WSJT-X, external loggers, multi-op, SO2R and the installer are not covered.
+
+Driver corrections made in this session (harness defects, not application defects): `bench_switch.py` compares the seed log name against the UTC date (issue 284 names new logs by UTC) and accepts the 306 refusal path where the dialog closes; `bench_years.py` asserts `MY LICENSE YEAR` (issue 298) instead of the year under `MY ZONE`; `bench_remaining.inspect_hints` adds MY GRID and matches help text with line breaks folded; `bench_preferences.station_values` reads an absent key as None. No application source changed. The guest was left with no scenario task and no test process.
+
+
+### Follow-up runs on the same exe (af52e1445acb), 21:46-21:50 EST
+
+All five earlier evidence directories and the two below record the same SHA256 `af52e144...`. The non-suite phases (`overview`, `station-save`/`-verify`, `county`, `year-*`, `captions`, `prompts`, `export-*`) were run through `run_suite`'s own `stage`/`install`/`prepare`/`run_case` helpers, with `CASES` extended by those phase names. Each step got a fresh disposable fixture; the station pair and each year-then-export chain share one. The full suite (`20261113T022504-c9da52`) exited **2**: switch ERROR (driver) and search FAIL (driver). Switch passed only on a rerun with the corrected driver (`20261113T023624-d9c56d`).
+
+| Item | Result | Evidence under `build-out/gui-regression/` |
+| --- | --- | --- |
+| #305 / 298 ADIF and Cabrillo, EUHFC and KVP | **PASS**: ADIF `STX_STRING` `599 64`, `SRX_STRING` `599 85`, `MY_CQ_ZONE` `5` (W1AW's CQ zone, not the year), `MY_ITU_ZONE` 8. Cabrillo sends `599 64` and receives `599 85`. The export driver now asserts `MY_CQ_ZONE` is present and differs from the year | `20261113T024626-x7b241/export-*` (EUHFC), `20261113T024847-xfe20b/export-*` (KVP) |
+| 287 Jock White branch row | **PASS on Windows**: the row reads MY BRANCH NUMBER (reviewed `jockwhite.png`); `27` is stored as contest `MY ZONE` 27. Linux not run | `20261113T024626-x7b241/prompts/bench-prompts-check` |
+| 290 NCCC / CWT prompts | **PASS on Windows** (reviewed screenshots): NCCC Sprint reads "Enter your name and QTH (US state, Canadian Province or DX country):" with no member number, beside MY STATE; CWT keeps "... or member number:" beside MY QTH OR MEMBER NO. UIA did not expose the prompt text, so the wording was judged from the images | same, `nccc.png`, `cwt.png` |
+| 290 Locust | **NOT RUNNABLE as written**: with Show inactive contests ticked, "Locust QSO Party (inactive)" shows an empty prompt box and no rows (as on 2026-11-11) | same, `locust.png` |
+| 284 new log named by UTC date | **PASS on Windows**: every seed log created after 19:00 EST on 2026-11-12 is named `CWOPEN 2026-11-13 W1AW.db` (for example `20261113T022504-c9da52/switch`, created 21:32 EST), the UTC date | the suite run directories |
+| 282 RSGB IOTA / UK-EI parser | NOT RUN: `logstuff.pas` changed at 21:43, after this exe was built (19:44) | n/a |
+| #304 Network page caption | **NOT VERIFIED**: searching NETWORK HTTP TRANSPORT and ALLOW AUTO UPDATE focused the controls (screen y 747 and 687), but the page did not scroll, so neither row is in the capture. Whether search should scroll its target into view is an open question, not a filed defect | `20261113T024626-x7b241/captions` |
+
+Two more driver corrections: `bench_switch.py` accepts either the visible status-line refusal or the logged refusal and records both (both were seen); a new `bench-prompts-check` phase was added to `bench_years.py`, and a `bench-prefs-captions` capture phase to `bench_preferences.py`.

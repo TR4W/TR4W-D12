@@ -17,7 +17,7 @@ from evidence import file_digest, pe_info
 # guard that refuses a mismatch before any UI action; this repo builds no 32-bit
 # exe, so one can only arrive through --exe or --python.
 DEFAULT_EXE = Path(r"C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe")
-GUEST_PYTHON = r"C:\TR4W-Test\.venv\Scripts\python.exe"
+GUEST_PYTHON = r"C:\TR4W-Test\.venv-x64\Scripts\python.exe"
 
 
 def stage(exe, output):

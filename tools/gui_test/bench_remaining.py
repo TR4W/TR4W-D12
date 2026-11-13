@@ -68,7 +68,9 @@ def inspect_editors(app, prefs, root, run_name, output, journal):
 def inspect_hints(app, prefs, output, journal, validate=False):
    from bench_preferences import search_control
    observations = []
-   for term in ("CW TONE", "SAY HI ENABLE", "BAND MAP DECAY TIME", "ALWAYS CALL BLIND CQ", "NO BORDER", "SHOW GRIDLINES"):
+   # MY GRID is Preferences > Station > Grid square, issue 280.
+   for term in ("CW TONE", "SAY HI ENABLE", "BAND MAP DECAY TIME", "ALWAYS CALL BLIND CQ", "MY GRID",
+         "NO BORDER", "SHOW GRIDLINES"):
       control, observation = search_control(prefs, term, output, journal)
       bounds = prefs.rectangle()
       mouse.move(coords=(bounds.left + 10, bounds.top + 10))
@@ -97,7 +99,8 @@ def inspect_hints(app, prefs, output, journal, validate=False):
    if validate:
       failures = []
       words = {"CW TONE": ("pitch", "speaker"), "SAY HI ENABLE": ("names", "SAY HI ENABLE"),
-         "BAND MAP DECAY TIME": ("minutes", "bandmap"), "ALWAYS CALL BLIND CQ": ("Sprint", " ...")}
+         "BAND MAP DECAY TIME": ("minutes", "bandmap"), "ALWAYS CALL BLIND CQ": ("Sprint", " ..."),
+         "MY GRID": ("Four- or six-character grid identifier",)}
       import win32api
       width, height = win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1)
       for item in observations:
@@ -111,7 +114,10 @@ def inspect_hints(app, prefs, output, journal, validate=False):
             continue
          hint = hints[0]
          text = hint["title"]
-         if not all(word in text for word in words[item["term"]]):
+         # The tooltip wraps its text; compare against it with the line breaks
+         # folded so a phrase split across two lines still matches.
+         flat = " ".join(text.split())
+         if not all(word in flat for word in words[item["term"]]):
             failures.append(item["term"] + " shows incorrect help text")
          if max(map(len, text.splitlines()), default=0) > 70 or len(text.replace("\r\n", " ")) > 604:
             failures.append(item["term"] + " exceeds wrapping/length bounds")

@@ -144,6 +144,17 @@ def check(app, main, root, run_name, output, journal, phase, expected_records=No
          raise AssertionError("CW Open ADIF must contain three contacts and no CQZ tag")
       if year and not re.search(r"<STX_STRING:6>599 " + expected_year, text, re.I):
          raise AssertionError("Year ADIF does not send expected license year " + expected_year)
+      if year:
+         # Issues 298/305: MY_CQ_ZONE is the station call's CQ zone, present,
+         # and never the licence year this contest sends.
+         my_cq = re.search(r"<MY_CQ_ZONE:\d+>(\d+)", text, re.I)
+         received = re.search(r"<SRX_STRING:\d+>([^<]*)", text, re.I)
+         (output / "year-adif-fields.json").write_text(json.dumps({
+            "MY_CQ_ZONE": my_cq.group(1) if my_cq else None,
+            "SRX_STRING": received.group(1).strip() if received else None}, indent=3), encoding="utf-8")
+         if not my_cq or int(my_cq.group(1)) == int(expected_year):
+            raise AssertionError("Year ADIF MY_CQ_ZONE missing or equal to the licence year: "
+               + (my_cq.group(0) if my_cq else "absent"))
       if zone and not re.search(r"<STX_STRING:\d+>599 " + expected_sent + r"\b", text, re.I):
          raise AssertionError("Zone-contest ADIF does not send expected ITU zone " + expected_sent)
       if "edit42" in phase and not re.search(r"<MY_ITU_ZONE:2>42", text, re.I):

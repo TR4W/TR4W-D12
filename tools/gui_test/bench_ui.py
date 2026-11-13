@@ -70,7 +70,7 @@ def run(root, run_name, phase):
       if phase in {"bench-county-check", "bench-county-texas"}:
          from bench_county import check
          return check(app, startup, root, run_name, output, journal, phase)
-      if phase.startswith("bench-year-") or phase == "bench-zone-create":
+      if phase.startswith("bench-year-") or phase in {"bench-zone-create", "bench-prompts-check"}:
          from bench_years import check
          return check(app, startup, root, run_name, output, journal, phase)
       if phase == "bench-entry-errors":

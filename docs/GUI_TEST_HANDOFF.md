@@ -4,10 +4,20 @@ Prepared November 12, 2026 for the agent continuing on `main`. This covers the `
 
 Integration completed locally: work committed as `795ce663`, current main merged into the handoff as `595ed469`, and main fast-forwarded to that merge. The worktree and its merged local branch were removed after evidence preservation. Nothing was pushed. The final SSH check reported no TR4W processes and no `TR4W-GuiScenario` task. Main's unrelated working changes were preserved.
 
+## Follow-up: 64-bit guest Python launcher repaired
+
+After the harness default moved to the x64 application, `.venv` failed under GUI-TEST: its `pyvenv.cfg` still referenced `C:\Users\toms\AppData\Local\Programs\Python\Python315`, whose ACL did not grant GUI-TEST access. The earlier `.venv-x86` remains the historical x86 environment and must not drive the new x64 application.
+
+A separate **`C:\TR4W-Test\.venv-x64`** was created from GUI-TEST's own working Python 3.15.2 x64 installation. An interactive, limited GUI-TEST scheduled-task preflight successfully ran its `Scripts\pythonw.exe` and imported pywinauto 0.6.9, Pillow 13.0.0, pywin32 312 and comtypes 1.5.0 (six 1.17.0 also installed). Task exit code was 0; the diagnostic task was removed. Guest proof: `C:\TR4W-Test\readiness\gui-python-preflight.json`. No TR4W test was launched during this repair.
+
+The central `GUEST_PYTHON` default in `tools/gui_test/stage_main_build.py` now names `C:\TR4W-Test\.venv-x64\Scripts\python.exe` (2026-11-12), so no `--python` override is needed. The first x64 run through it passed: suite `20261113T022346-7e86bc`, `--case import` (seed PASS, import PASS) against x64 exe SHA256 `af52e1445acb4cc8b6bd1c096f67de1aa763f48c19c8d5615484eb6fe555e266`, debug CRC `99C94B0C`.
+
+The old `.venv` (broken under GUI-TEST) and `.venv-x86` (the historical x86 environment) were left on the guest unchanged. The per-case results table below records the original x86 turnover and remains historical evidence; [GUI_BENCH_RESULTS.md](GUI_BENCH_RESULTS.md) holds the x64 results.
+
 ## Start here
 
 1. Read this document, [the results ledger](GUI_REMAINING_TESTS.md), [detailed bench results](GUI_BENCH_RESULTS.md) and [the test plan](GUI_BENCH_TEST_PLAN.md).
-2. Use the executable Tom selected: `C:\tr4w-d12\build-out\app-i386-win32\tr4w_fpc.exe`. The suite snapshots that executable, its matching `.dbg` and runtime assets before running. Main changes frequently; an old passing result does not certify a new executable.
+2. Use the executable Tom selected: `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe` (64-bit; Windows TR4W is x64 only since 2026-11-12, and the i386 build no longer exists). The suite snapshots that executable, its matching `.dbg` and runtime assets before running. Main changes frequently; an old passing result does not certify a new executable.
 3. Continue Search Log first. Its script is implemented but has a known fixture error and no approved result baselines. Do not describe the suite as fully passing.
 4. Run selected cases before a full suite. Fix confirmed application defects in a separate application worktree; do not weaken assertions to obtain green results. File reproducible defects as GitHub issues, as Tom requested.
 
@@ -30,7 +40,7 @@ python tools/gui_test/run_suite.py
 python -m unittest discover -s tools/gui_test -p "test_*.py"
 ```
 
-The host runner uses Python's standard library plus the existing SSH/SCP commands. Defaults are the main executable above, SSH alias `tr4w-gui-test`, guest Python `C:\TR4W-Test\.venv-x86\Scripts\python.exe`, and local `build-out/gui-regression/<UTC timestamp>-<unique id>/`. `--exe`, `--data-root`, `--host`, `--python`, `--output` and repeatable `--case` are available. The country-data default is main's `tr4w/target` (`CTY.DAT` and `dom`).
+The host runner uses Python's standard library plus the existing SSH/SCP commands. Defaults are the main executable above, SSH alias `tr4w-gui-test`, guest Python `C:\TR4W-Test\.venv-x64\Scripts\python.exe`, and local `build-out/gui-regression/<UTC timestamp>-<unique id>/`. `--exe`, `--data-root`, `--host`, `--python`, `--output` and repeatable `--case` are available. The country-data default is main's `tr4w/target` (`CTY.DAT` and `dom`).
 
 The runner always creates a fresh three-contact CW Open seed, validates 4 then 6 points and backs up the closed SQLite seed into each fresh case. Repository-owned settings start with no radios, profiles, keyers, clusters or active external loggers. Online tests contact only their own loopback HTTP server; radio/editor tests create an inactive definition. No historical VM fixture is needed for the suite.
 
@@ -68,7 +78,7 @@ The last snapshot above is SHA256 `363a9b550b17f8b93ac815fa894c706e9853620c8862b
 
 The Proxmox Windows guest is reachable with `ssh tr4w-gui-test` as `toms`. The **GUI-TEST** console session must already be logged in, unlocked, at **1280×800, 96 DPI**. SSH runs scheduling/staging commands; the actual UI worker runs in that interactive desktop through limited Scheduled Task `TR4W-GuiScenario`, using `pythonw.exe` and `bootstrap.py`. RDP or the Proxmox console is not required by the driver. Do not operate the console or run another GUI job while it is testing. Use sequential SSH calls and `ConnectTimeout=60`.
 
-Guest environment: Python **3.15.2 x86**, pywinauto **0.6.9**, Pillow **13**, pywin32 and comtypes. **Match interpreter and application bitness.** The initial radio-editor AV in [#283](https://github.com/TR4W/TR4W-D12/issues/283) exposed a concrete x64-Python/x86-common-controls structure mismatch; three matching-x86 retries worked. Do not use the old x64 Python environment to drive this x86 build. A future x64 app needs a matching environment and separate verification.
+Guest environment: Python **3.15.2 x64** in `C:\TR4W-Test\.venv-x64` (based on GUI-TEST's own installation), pywinauto **0.6.9**, Pillow **13**, pywin32 and comtypes. **Match interpreter and application bitness.** The initial radio-editor AV in [#283](https://github.com/TR4W/TR4W-D12/issues/283) exposed a concrete x64-Python/x86-common-controls structure mismatch; three matching-x86 retries worked. The app is now x64 only, so drive it with `.venv-x64`; `.venv-x86` only drove the retired x86 builds, and `.venv` is broken under GUI-TEST (its base interpreter is in another user's profile). `evidence.require_matching_bitness` refuses a mismatch.
 
 Available hardware is limited to the Elecraft K4 at `192.168.73.108:9200` and cluster `dxc.nc7j.com:7373`, login `NY4I-2`. Earlier guide captures show the connected K4 and populated bandmap. Tom said the radio was in text mode and would not key. Do not tune/key it or assume any other hardware exists. The current suite does not use either endpoint. Existing incremental `radio-*` scenarios require their documented earlier fixture/state; they are not a fresh, unattended radio suite.
 

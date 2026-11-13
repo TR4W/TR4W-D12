@@ -54,7 +54,7 @@ def check(app, main, output, journal, phase, root=None, run_name=None):
 
 
 def regression(app, main, root, run_name, output, journal):
-   from datetime import datetime
+   from datetime import datetime, timezone
    from bench_log_names import cw_open, ask
    from fixture_data import contact_digest, log_state
    import time
@@ -62,8 +62,10 @@ def regression(app, main, root, run_name, output, journal):
    from pywinauto.timings import wait_until
    directory = root / "runs" / run_name
    original = list(directory.glob("*.db"))[0]
-   if datetime.now().strftime("%Y-%m-%d") not in original.name:
-      raise RuntimeError("Switch fixture date changed; prepare a fresh suite after midnight")
+   # A new log is named by the UTC date (issue 284), so the default New Contest
+   # name only collides with the seed while the UTC date is unchanged.
+   if datetime.now(timezone.utc).strftime("%Y-%m-%d") not in original.name:
+      raise RuntimeError("Switch fixture UTC date changed; prepare a fresh suite after 00:00 UTC")
    before = contact_digest(original)
    original_pid = app.process
    failures = []
@@ -75,7 +77,11 @@ def regression(app, main, root, run_name, output, journal):
    dialog.child_window(title="Browse...").click_input()
    choose_file(app, invalid, journal)
    time.sleep(0.5)
-   wait_until(30, 0.1, lambda: not app.is_process_running() or dialog.exists(timeout=0) and dialog.is_enabled())
+   # Three outcomes: the process restarts (issue 306's defect), the dialog
+   # stays open, or the dialog closes and the refusal goes to the main
+   # window's status line (the 306 fix: "Not a TR4W contest log ...").
+   wait_until(30, 0.1, lambda: not app.is_process_running() or not dialog.exists(timeout=0)
+      or dialog.is_enabled())
    if not app.is_process_running():
       app, unused = adopt_restarted_app(app, root, run_name, invalid, output / "unexpected-invalid-handoff.json", wait_main=False)
       time.sleep(0.5)
@@ -90,11 +96,26 @@ def regression(app, main, root, run_name, output, journal):
       main = app.window(title_re=r"TR4W v.*CWOPEN.*")
       main.wait("visible enabled", timeout=30)
    else:
-      capture(dialog, output / "invalid-file-refused.png")
       if app.process != original_pid or contact_digest(original) != before:
          raise AssertionError("Invalid-file browse changed the current contest")
-      dialog.child_window(title="Cancel").click_input()
-      dialog.wait_not("visible", timeout=10)
+      if dialog.exists(timeout=0):
+         capture(dialog, output / "invalid-file-refused.png")
+         dialog.child_window(title="Cancel").click_input()
+         dialog.wait_not("visible", timeout=10)
+      else:
+         # The status line is transient, so either the visible refusal or the
+         # program's own refusal line in tr4w.log satisfies this; both are
+         # recorded so the evidence says which one matched.
+         refusal_visible = any(c.is_visible() and "Not a TR4W contest log" in c.window_text()
+            for c in main.descendants())
+         capture(main, output / "invalid-file-refused.png")
+         log_text = (directory / "tr4w.log").read_text(encoding="utf-8", errors="replace")
+         refusal_logged = "not-a-log.db is not a contest TR4W can open" in log_text
+         if not (refusal_visible or refusal_logged):
+            raise AssertionError("Dialog closed without any refusal for the invalid file")
+         (output / "invalid-file-refusal.json").write_text(json.dumps({"dialog_closed": True,
+            "status_line_seen": refusal_visible, "refusal_logged": refusal_logged,
+            "same_pid": True, "contacts_unchanged": True}, indent=3), encoding="utf-8")
    main.menu_select("File->Open Log...")
    dialog = app.window(title_re=r".*Switch to another contest.*")
    dialog.wait("visible enabled", timeout=10)
