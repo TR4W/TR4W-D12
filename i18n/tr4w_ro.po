@@ -4709,6 +4709,7 @@ msgid "Which bands TR4W offers when you change band, and which appear in the mul
 msgstr "Care benzi TR4W oferă atunci când schimbați banda, și care apar în multiplicator și banda-map ecrane. Benzile WARC sunt oprite implicit deoarece majoritatea concursurilor nu le permit."
 
 #: tprefsform.lblclustercommand.caption
+#: uappstrings.swizclustercommand
 #, fuzzy
 msgid "After connecting:"
 msgstr "După conectare:"
@@ -4997,6 +4998,7 @@ msgid "MP3 player program"
 msgstr "Programul MP3 player"
 
 #: tprefsform.lblmycall.caption
+#: uappstrings.swizcallsign
 #, fuzzy
 msgid "Callsign:"
 msgstr "Indicativ:"
@@ -5007,11 +5009,13 @@ msgid "Check:"
 msgstr "Verificare:"
 
 #: tprefsform.lblmycontinent.caption
+#: uappstrings.swizcontinent
 #, fuzzy
 msgid "Continent:"
 msgstr "Continent:"
 
 #: tprefsform.lblmycountry.caption
+#: uappstrings.swizcountry
 #, fuzzy
 msgid "Country:"
 msgstr "Țara:"
@@ -5027,11 +5031,13 @@ msgid "FOC number:"
 msgstr "Numărul FOC:"
 
 #: tprefsform.lblmygrid.caption
+#: uappstrings.swizgrid
 #, fuzzy
 msgid "Grid square:"
 msgstr "Pătrat grilă:"
 
 #: tprefsform.lblmyituzone.caption
+#: uappstrings.swizituzone
 #, fuzzy
 msgid "ITU zone:"
 msgstr "Zona UIT:"
@@ -5042,6 +5048,7 @@ msgid "CW keying devices"
 msgstr "Dispozitive de cheie CW"
 
 #: tprefsform.lblmyname.caption
+#: uappstrings.swizname
 #, fuzzy
 msgid "First name:"
 msgstr "Prenume:"
@@ -5052,6 +5059,7 @@ msgid "Park:"
 msgstr "Park:"
 
 #: tprefsform.lblmypostalcode.caption
+#: uappstrings.swizpostal
 #, fuzzy
 msgid "Postal code:"
 msgstr "Codul poștal:"
@@ -5074,16 +5082,19 @@ msgid "My rotators"
 msgstr "Rotatoarele mele"
 
 #: tprefsform.lblmysection.caption
+#: uappstrings.swizsection
 #, fuzzy
 msgid "ARRL section:"
 msgstr "Secţiunea ARRL:"
 
 #: tprefsform.lblmystate.caption
+#: uappstrings.swizstate
 #, fuzzy
 msgid "State/Province:"
 msgstr "Stat/Provincie:"
 
 #: tprefsform.lblmyzone.caption
+#: uappstrings.swizcqzone
 #, fuzzy
 msgid "CQ zone:"
 msgstr "Zona CQ:"
@@ -10684,4 +10695,264 @@ msgid ""
 "Change them to %2:s?\n"
 "\n"
 "Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the air sent %1:s, and its log should say so."
+msgstr ""
+
+#: uappstrings.swizback
+#, fuzzy
+msgid "< Back"
+msgstr ""
+
+#: uappstrings.swizcallodd
+#, fuzzy
+msgid ""
+"\"%s\" does not look like a regular callsign.\n"
+"\n"
+"Use it anyway?"
+msgstr ""
+
+#: uappstrings.swizcallrequired
+#, fuzzy
+msgid "Enter your callsign to continue."
+msgstr ""
+
+#: uappstrings.swizcancel
+#, fuzzy
+msgid "Cancel"
+msgstr ""
+
+#: uappstrings.swizchecklistheading
+#, fuzzy
+msgid "What else would you like to set up now?"
+msgstr ""
+
+#: uappstrings.swizchecklistintro
+#, fuzzy
+msgid "Tick what you have. Anything left unticked can be set up later in Preferences."
+msgstr ""
+
+#: uappstrings.swizclose
+#, fuzzy
+msgid "Close"
+msgstr ""
+
+#: uappstrings.swizclusterheading
+#, fuzzy
+msgid "DX cluster"
+msgstr ""
+
+#: uappstrings.swizclusterintro
+#, fuzzy
+msgid "Pick a cluster from the list or type host:port. Leave the login blank to log in with your callsign."
+msgstr ""
+
+#: uappstrings.swizclusterlogin
+#, fuzzy
+msgid "Login callsign:"
+msgstr ""
+
+#: uappstrings.swizclusterneeded
+#, fuzzy
+msgid "Enter a cluster server, or go back and untick it."
+msgstr ""
+
+#: uappstrings.swizclusterpassword
+#, fuzzy
+msgid "Password:"
+msgstr ""
+
+#: uappstrings.swizclusterserver
+#, fuzzy
+msgid "Server:"
+msgstr ""
+
+#: uappstrings.swizcreate
+#, fuzzy
+msgid "Create configuration"
+msgstr ""
+
+#: uappstrings.swizderivednote
+#, fuzzy
+msgid "CQ zone, ITU zone, country and continent are filled in from the callsign. Correct any that are wrong."
+msgstr ""
+
+#: uappstrings.swizitemcluster
+#, fuzzy
+msgid "A DX cluster"
+msgstr ""
+
+#: uappstrings.swizitemclusterhint
+#, fuzzy
+msgid "DX spots in the band map."
+msgstr ""
+
+#: uappstrings.swizitemkeyer
+#, fuzzy
+msgid "A WinKeyer"
+msgstr ""
+
+#: uappstrings.swizitemkeyerhint
+#, fuzzy
+msgid "A WinKeyer CW keyer on its own port."
+msgstr ""
+
+#: uappstrings.swizitemradio
+#, fuzzy
+msgid "A radio (rig control)"
+msgstr ""
+
+#: uappstrings.swizitemradiohint
+#, fuzzy
+msgid "TR4W reads and sets the frequency and mode."
+msgstr ""
+
+#: uappstrings.swizkeyerbutton
+#, fuzzy
+msgid "Set up the WinKeyer..."
+msgstr ""
+
+#: uappstrings.swizkeyerheading
+#, fuzzy
+msgid "WinKeyer"
+msgstr ""
+
+#: uappstrings.swizkeyerintro
+#, fuzzy
+msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
+msgstr ""
+
+#: uappstrings.swizkeyerneeded
+#, fuzzy
+msgid "Set up the WinKeyer, or go back and untick it."
+msgstr ""
+
+#: uappstrings.swizmenu
+#, fuzzy
+msgid "Setup Wizard..."
+msgstr ""
+
+#: uappstrings.swiznext
+#, fuzzy
+msgid "Next >"
+msgstr ""
+
+#: uappstrings.swiznocountry
+#, fuzzy
+msgid "The country file does not know this callsign, so nothing was filled in from it."
+msgstr ""
+
+#: uappstrings.swiznotsetup
+#, fuzzy
+msgid "Not set up yet."
+msgstr ""
+
+#: uappstrings.swizprefsopen
+#, fuzzy
+msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
+msgstr ""
+
+#: uappstrings.swizradiobutton
+#, fuzzy
+msgid "Set up the radio..."
+msgstr ""
+
+#: uappstrings.swizradioheading
+#, fuzzy
+msgid "Radio"
+msgstr ""
+
+#: uappstrings.swizradiointro
+#, fuzzy
+msgid "Choose your radio and how it is connected. This opens the same radio editor Preferences uses. TR4W connects to it when you create the configuration."
+msgstr ""
+
+#: uappstrings.swizradioneeded
+#, fuzzy
+msgid "Set up the radio, or go back and untick it."
+msgstr ""
+
+#: uappstrings.swizresapplyfailed
+#, fuzzy
+msgid "Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences."
+msgstr ""
+
+#: uappstrings.swizrescluster
+#, fuzzy
+msgid "DX cluster \"%s\" saved as the cluster to connect to."
+msgstr ""
+
+#: uappstrings.swizresclusterfailed
+#, fuzzy
+msgid "The DX cluster was not saved. Set it up in Preferences > DX Cluster."
+msgstr ""
+
+#: uappstrings.swizreskeyer
+#, fuzzy
+msgid "WinKeyer \"%s\" saved and used for CW on radio 1."
+msgstr ""
+
+#: uappstrings.swizreskeyerfailed
+#, fuzzy
+msgid "The WinKeyer was not saved: %s. Set it up in Preferences."
+msgstr ""
+
+#: uappstrings.swizresnotsaved
+#, fuzzy
+msgid "The radio, keyer and cluster were not saved: %s"
+msgstr ""
+
+#: uappstrings.swizresportwarning
+#, fuzzy
+msgid ""
+"Check these ports:\n"
+"%s"
+msgstr ""
+
+#: uappstrings.swizresradio
+#, fuzzy
+msgid "Radio \"%s\" saved as radio 1."
+msgstr ""
+
+#: uappstrings.swizresradiofailed
+#, fuzzy
+msgid "The radio was not saved: %s. Set it up in Preferences > Radios."
+msgstr ""
+
+#: uappstrings.swizresrefused
+#, fuzzy
+msgid "%0:s \"%1:s\" was not accepted. Set it in Preferences > Station."
+msgstr ""
+
+#: uappstrings.swizresstation
+#, fuzzy
+msgid "Station %s saved."
+msgstr ""
+
+#: uappstrings.swizresultheading
+#, fuzzy
+msgid "Done"
+msgstr ""
+
+#: uappstrings.swizresultintro
+#, fuzzy
+msgid "This is what was saved. All of it can be changed later in Preferences."
+msgstr ""
+
+#: uappstrings.swizstationheading
+#, fuzzy
+msgid "Your station"
+msgstr ""
+
+#: uappstrings.swizstationintro
+#, fuzzy
+msgid "Who you are and where you are. Only the callsign is required, and all of this can be changed later in Preferences > Station."
+msgstr ""
+
+#: uappstrings.swizstepof
+#, fuzzy
+msgid "Step %0:d of %1:d"
+msgstr ""
+
+#: uappstrings.swiztitle
+#, fuzzy
+msgid "TR4W setup"
 msgstr ""

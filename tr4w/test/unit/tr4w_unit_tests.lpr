@@ -679,6 +679,10 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uSetupWizard         in '..\..\src\uSetupWizard.pas',
+   uTestSetupWizard     in 'uTestSetupWizard.pas',
+   uSetupWizardForm     in '..\..\src\ui\lcl\uSetupWizardForm.pas',
+   uTestSetupWizardForm in 'uTestSetupWizardForm.pas',
    uContestTimeLeft     in '..\..\src\uContestTimeLeft.pas',
    uTestContestTimeLeft in 'uTestContestTimeLeft.pas',
    uCaptionText         in '..\..\src\ui\lcl\uCaptionText.pas',
@@ -1272,6 +1276,8 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TSetupWizardTests.Create('SetupWizard'));
+   RegisterSuite(TSetupWizardFormTests.Create('SetupWizardForm'));
    RegisterSuite(TContestTimeLeftTests.Create('ContestTimeLeft'));
    RegisterSuite(TCaptionTextTests.Create('CaptionText'));
    RegisterSuite(TOpenLogRelaunchTests.Create('OpenLogRelaunch'));

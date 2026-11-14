@@ -1271,6 +1271,90 @@ resourcestring
    SExchangeHintRandomChars    = 'random characters';
    SExchangeHintAnd            = '%0:s and %1:s';
 
+   { ------------------------------------------------------- setup wizard --- }
+
+   (* The setup wizard (uSetupWizardForm): opens by itself on a brand-new
+     install and from Tools -> Setup Wizard.  Every caption on the form comes
+     from here; the .lfm text is a designer placeholder. *)
+   SWizMenu              = 'Setup Wizard...';
+   SWizTitle             = 'TR4W setup';
+   (* %0:d is this page's number, %1:d how many pages the wizard has now --
+     the count changes as items are ticked on the checklist. *)
+   SWizStepOf            = 'Step %0:d of %1:d';
+   SWizBack              = '< Back';
+   SWizNext              = 'Next >';
+   SWizCreate            = 'Create configuration';
+   SWizCancel            = 'Cancel';
+   SWizClose             = 'Close';
+
+   SWizStationHeading    = 'Your station';
+   SWizStationIntro      = 'Who you are and where you are. Only the callsign is required, and all of this can be changed later in Preferences > Station.';
+   SWizDerivedNote       = 'CQ zone, ITU zone, country and continent are filled in from the callsign. Correct any that are wrong.';
+   SWizNoCountry         = 'The country file does not know this callsign, so nothing was filled in from it.';
+   SWizCallsign          = 'Callsign:';
+   SWizName              = 'First name:';
+   SWizGrid              = 'Grid square:';
+   SWizCQZone            = 'CQ zone:';
+   SWizITUZone           = 'ITU zone:';
+   SWizState             = 'State/Province:';
+   SWizSection           = 'ARRL section:';
+   SWizCountry           = 'Country:';
+   SWizContinent         = 'Continent:';
+   SWizPostal            = 'Postal code:';
+   SWizCallRequired      = 'Enter your callsign to continue.';
+   (* %s is the callsign as typed.  Queried, never refused: special-event and
+     unusual calls are real (the Preferences Station page asks the same). *)
+   SWizCallOdd           = '"%s" does not look like a regular callsign.'#13#10#13#10'Use it anyway?';
+
+   SWizChecklistHeading  = 'What else would you like to set up now?';
+   SWizChecklistIntro    = 'Tick what you have. Anything left unticked can be set up later in Preferences.';
+   SWizItemRadio         = 'A radio (rig control)';
+   SWizItemRadioHint     = 'TR4W reads and sets the frequency and mode.';
+   SWizItemKeyer         = 'A WinKeyer';
+   SWizItemKeyerHint     = 'A WinKeyer CW keyer on its own port.';
+   SWizItemCluster       = 'A DX cluster';
+   SWizItemClusterHint   = 'DX spots in the band map.';
+
+   SWizRadioHeading      = 'Radio';
+   SWizRadioIntro        = 'Choose your radio and how it is connected. This opens the same radio editor Preferences uses. TR4W connects to it when you create the configuration.';
+   SWizRadioButton       = 'Set up the radio...';
+   SWizKeyerHeading      = 'WinKeyer';
+   SWizKeyerIntro        = 'Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio''s.';
+   SWizKeyerButton       = 'Set up the WinKeyer...';
+   SWizNotSetUp          = 'Not set up yet.';
+   SWizRadioNeeded       = 'Set up the radio, or go back and untick it.';
+   SWizKeyerNeeded       = 'Set up the WinKeyer, or go back and untick it.';
+
+   SWizClusterHeading    = 'DX cluster';
+   SWizClusterIntro      = 'Pick a cluster from the list or type host:port. Leave the login blank to log in with your callsign.';
+   SWizClusterServer     = 'Server:';
+   SWizClusterLogin      = 'Login callsign:';
+   SWizClusterPassword   = 'Password:';
+   SWizClusterCommand    = 'After connecting:';
+   SWizClusterNeeded     = 'Enter a cluster server, or go back and untick it.';
+
+   SWizResultHeading     = 'Done';
+   SWizResultIntro       = 'This is what was saved. All of it can be changed later in Preferences.';
+   (* %s is the callsign. *)
+   SWizResStation        = 'Station %s saved.';
+   (* %0:s is the setting's name, %1:s the value that was refused. *)
+   SWizResRefused        = '%0:s "%1:s" was not accepted. Set it in Preferences > Station.';
+   (* %s is the radio's name. *)
+   SWizResRadio          = 'Radio "%s" saved as radio 1.';
+   SWizResRadioFailed    = 'The radio was not saved: %s. Set it up in Preferences > Radios.';
+   (* %s is the keyer's name. *)
+   SWizResKeyer          = 'WinKeyer "%s" saved and used for CW on radio 1.';
+   SWizResKeyerFailed    = 'The WinKeyer was not saved: %s. Set it up in Preferences.';
+   (* %s is the cluster's name. *)
+   SWizResCluster        = 'DX cluster "%s" saved as the cluster to connect to.';
+   SWizResClusterFailed  = 'The DX cluster was not saved. Set it up in Preferences > DX Cluster.';
+   (* %s lists the ports that collide, one per line. *)
+   SWizResPortWarning    = 'Check these ports:'#13#10'%s';
+   (* %s is the reason. *)
+   SWizResApplyFailed    = 'Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences.';
+   SWizResNotSaved       = 'The radio, keyer and cluster were not saved: %s';
+   SWizPrefsOpen         = 'Close Preferences first, so the setup wizard and Preferences do not overwrite each other''s changes.';
+
 implementation
 
 end.

@@ -1,0 +1,533 @@
+object frmSetupWizard: TfrmSetupWizard
+  Left = 0
+  Height = 470
+  Top = 0
+  Width = 620
+  BorderStyle = bsDialog
+  Caption = 'frmSetupWizard'
+  ClientHeight = 470
+  ClientWidth = 620
+  Position = poMainFormCenter
+  LCLVersion = '4.8.0.0'
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object pnlHeader: TPanel
+    Left = 0
+    Height = 88
+    Top = 0
+    Width = 620
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 88
+    ClientWidth = 620
+    TabOrder = 0
+    object lblHeading: TLabel
+      Left = 16
+      Height = 20
+      Top = 12
+      Width = 440
+      AutoSize = False
+      Caption = 'lblHeading'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lblStep: TLabel
+      Left = 464
+      Height = 20
+      Top = 12
+      Width = 140
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'lblStep'
+    end
+    object lblIntro: TLabel
+      Left = 16
+      Height = 46
+      Top = 38
+      Width = 588
+      AutoSize = False
+      Caption = 'lblIntro'
+      WordWrap = True
+    end
+  end
+  object pgPages: TPageControl
+    Left = 0
+    Height = 334
+    Top = 88
+    Width = 620
+    ActivePage = tsStation
+    Align = alClient
+    ShowTabs = False
+    TabIndex = 0
+    TabOrder = 1
+    object tsStation: TTabSheet
+      Caption = 'tsStation'
+      ClientHeight = 306
+      ClientWidth = 612
+      object edtCall: TEdit
+        Left = 140
+        Height = 23
+        Top = 8
+        Width = 140
+        CharCase = ecUppercase
+        TabOrder = 0
+        OnChange = edtCallChange
+      end
+      object lblCall: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 11
+        Width = 120
+        AutoSize = False
+        Caption = 'lblCall'
+        FocusControl = edtCall
+        TabOrder = 10
+      end
+      object edtName: TEdit
+        Left = 140
+        Height = 23
+        Top = 34
+        Width = 140
+        TabOrder = 1
+      end
+      object lblName: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 37
+        Width = 120
+        AutoSize = False
+        Caption = 'lblName'
+        FocusControl = edtName
+        TabOrder = 11
+      end
+      object edtGrid: TEdit
+        Left = 140
+        Height = 23
+        Top = 60
+        Width = 140
+        CharCase = ecUppercase
+        TabOrder = 2
+      end
+      object lblGrid: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 63
+        Width = 120
+        AutoSize = False
+        Caption = 'lblGrid'
+        FocusControl = edtGrid
+        TabOrder = 12
+      end
+      object edtState: TEdit
+        Left = 140
+        Height = 23
+        Top = 86
+        Width = 140
+        CharCase = ecUppercase
+        TabOrder = 3
+      end
+      object lblState: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 89
+        Width = 120
+        AutoSize = False
+        Caption = 'lblState'
+        FocusControl = edtState
+        TabOrder = 13
+      end
+      object edtSection: TEdit
+        Left = 140
+        Height = 23
+        Top = 112
+        Width = 140
+        CharCase = ecUppercase
+        TabOrder = 4
+      end
+      object lblSection: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 115
+        Width = 120
+        AutoSize = False
+        Caption = 'lblSection'
+        FocusControl = edtSection
+        TabOrder = 14
+      end
+      object edtPostal: TEdit
+        Left = 140
+        Height = 23
+        Top = 138
+        Width = 140
+        CharCase = ecUppercase
+        TabOrder = 5
+      end
+      object lblPostal: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 141
+        Width = 120
+        AutoSize = False
+        Caption = 'lblPostal'
+        FocusControl = edtPostal
+        TabOrder = 15
+      end
+      object edtZone: TEdit
+        Left = 140
+        Height = 23
+        Top = 164
+        Width = 140
+        TabOrder = 6
+        OnChange = DerivedFieldChange
+      end
+      object lblZone: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 167
+        Width = 120
+        AutoSize = False
+        Caption = 'lblZone'
+        FocusControl = edtZone
+        TabOrder = 16
+      end
+      object edtITUZone: TEdit
+        Left = 140
+        Height = 23
+        Top = 190
+        Width = 140
+        TabOrder = 7
+        OnChange = DerivedFieldChange
+      end
+      object lblITUZone: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 193
+        Width = 120
+        AutoSize = False
+        Caption = 'lblITUZone'
+        FocusControl = edtITUZone
+        TabOrder = 17
+      end
+      object edtCountry: TEdit
+        Left = 140
+        Height = 23
+        Top = 216
+        Width = 140
+        CharCase = ecUppercase
+        TabOrder = 8
+        OnChange = DerivedFieldChange
+      end
+      object lblCountry: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 219
+        Width = 120
+        AutoSize = False
+        Caption = 'lblCountry'
+        FocusControl = edtCountry
+        TabOrder = 18
+      end
+      object cbxContinent: TComboBox
+        Left = 140
+        Height = 23
+        Top = 242
+        Width = 140
+        ItemHeight = 15
+        Style = csDropDownList
+        TabOrder = 9
+        OnChange = DerivedFieldChange
+      end
+      object lblContinent: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 245
+        Width = 120
+        AutoSize = False
+        Caption = 'lblContinent'
+        FocusControl = cbxContinent
+        TabOrder = 19
+      end
+      object lblLookup: TLabel
+        Left = 300
+        Height = 46
+        Top = 11
+        Width = 296
+        AutoSize = False
+        Caption = 'lblLookup'
+        WordWrap = True
+      end
+      object lblDerived: TLabel
+        Left = 300
+        Height = 76
+        Top = 167
+        Width = 296
+        AutoSize = False
+        Caption = 'lblDerived'
+        WordWrap = True
+      end
+    end
+    object tsChecklist: TTabSheet
+      Caption = 'tsChecklist'
+      ClientHeight = 306
+      ClientWidth = 612
+      object chkRadio: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 12
+        Width = 560
+        Caption = 'chkRadio'
+        TabOrder = 0
+        OnChange = ChecklistChange
+      end
+      object lblRadioHint: TLabel
+        Left = 40
+        Height = 17
+        Top = 34
+        Width = 556
+        AutoSize = False
+        Caption = 'lblRadioHint'
+      end
+      object chkKeyer: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 66
+        Width = 560
+        Caption = 'chkKeyer'
+        TabOrder = 1
+        OnChange = ChecklistChange
+      end
+      object lblKeyerHint: TLabel
+        Left = 40
+        Height = 17
+        Top = 88
+        Width = 556
+        AutoSize = False
+        Caption = 'lblKeyerHint'
+      end
+      object chkCluster: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 120
+        Width = 560
+        Caption = 'chkCluster'
+        TabOrder = 2
+        OnChange = ChecklistChange
+      end
+      object lblClusterHint: TLabel
+        Left = 40
+        Height = 17
+        Top = 142
+        Width = 556
+        AutoSize = False
+        Caption = 'lblClusterHint'
+      end
+    end
+    object tsRadio: TTabSheet
+      Caption = 'tsRadio'
+      ClientHeight = 306
+      ClientWidth = 612
+      object btnRadio: TButton
+        Left = 16
+        Height = 28
+        Top = 12
+        Width = 220
+        AutoSize = True
+        Caption = 'btnRadio'
+        Constraints.MinWidth = 220
+        TabOrder = 0
+        OnClick = btnRadioClick
+      end
+      object lblRadioSummary: TLabel
+        Left = 16
+        Height = 60
+        Top = 52
+        Width = 580
+        AutoSize = False
+        Caption = 'lblRadioSummary'
+        WordWrap = True
+      end
+    end
+    object tsKeyer: TTabSheet
+      Caption = 'tsKeyer'
+      ClientHeight = 306
+      ClientWidth = 612
+      object btnKeyer: TButton
+        Left = 16
+        Height = 28
+        Top = 12
+        Width = 220
+        AutoSize = True
+        Caption = 'btnKeyer'
+        Constraints.MinWidth = 220
+        TabOrder = 0
+        OnClick = btnKeyerClick
+      end
+      object lblKeyerSummary: TLabel
+        Left = 16
+        Height = 60
+        Top = 52
+        Width = 580
+        AutoSize = False
+        Caption = 'lblKeyerSummary'
+        WordWrap = True
+      end
+    end
+    object tsCluster: TTabSheet
+      Caption = 'tsCluster'
+      ClientHeight = 306
+      ClientWidth = 612
+      object cbxServer: TComboBox
+        Left = 160
+        Height = 23
+        Top = 8
+        Width = 300
+        ItemHeight = 15
+        TabOrder = 0
+      end
+      object lblServer: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 11
+        Width = 140
+        AutoSize = False
+        Caption = 'lblServer'
+        FocusControl = cbxServer
+        TabOrder = 4
+      end
+      object edtLogin: TEdit
+        Left = 160
+        Height = 23
+        Top = 34
+        Width = 160
+        CharCase = ecUppercase
+        TabOrder = 1
+      end
+      object lblLogin: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 37
+        Width = 140
+        AutoSize = False
+        Caption = 'lblLogin'
+        FocusControl = edtLogin
+        TabOrder = 5
+      end
+      object edtPassword: TEdit
+        Left = 160
+        Height = 23
+        Top = 60
+        Width = 160
+        EchoMode = emPassword
+        PasswordChar = '*'
+        TabOrder = 2
+      end
+      object lblPassword: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 63
+        Width = 140
+        AutoSize = False
+        Caption = 'lblPassword'
+        FocusControl = edtPassword
+        TabOrder = 6
+      end
+      object edtCommand: TEdit
+        Left = 160
+        Height = 23
+        Top = 86
+        Width = 300
+        TabOrder = 3
+      end
+      object lblCommand: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 89
+        Width = 140
+        AutoSize = False
+        Caption = 'lblCommand'
+        FocusControl = edtCommand
+        TabOrder = 7
+      end
+    end
+    object tsResult: TTabSheet
+      Caption = 'tsResult'
+      ClientHeight = 306
+      ClientWidth = 612
+      object memResult: TMemo
+        Left = 16
+        Height = 282
+        Top = 12
+        Width = 580
+        Align = alClient
+        BorderSpacing.Around = 12
+        ReadOnly = True
+        ScrollBars = ssAutoVertical
+        TabOrder = 0
+        WordWrap = True
+      end
+    end
+  end
+  object pnlButtons: TPanel
+    Left = 0
+    Height = 48
+    Top = 422
+    Width = 620
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 48
+    ClientWidth = 620
+    TabOrder = 2
+    object btnBack: TButton
+      AnchorSideRight.Control = btnNext
+      AnchorSideRight.Side = asrTop
+      Left = 264
+      Height = 28
+      Top = 10
+      Width = 90
+      Anchors = [akTop, akRight]
+      AutoSize = True
+      BorderSpacing.Right = 8
+      Caption = 'btnBack'
+      Constraints.MinWidth = 90
+      TabOrder = 0
+      OnClick = btnBackClick
+    end
+    object btnNext: TButton
+      AnchorSideRight.Control = btnCancel
+      AnchorSideRight.Side = asrTop
+      Left = 362
+      Height = 28
+      Top = 10
+      Width = 156
+      Anchors = [akTop, akRight]
+      AutoSize = True
+      BorderSpacing.Right = 8
+      Caption = 'btnNext'
+      Constraints.MinWidth = 156
+      Default = True
+      TabOrder = 1
+      OnClick = btnNextClick
+    end
+    object btnCancel: TButton
+      AnchorSideRight.Control = pnlButtons
+      AnchorSideRight.Side = asrBottom
+      Left = 526
+      Height = 28
+      Top = 10
+      Width = 80
+      Anchors = [akTop, akRight]
+      AutoSize = True
+      BorderSpacing.Right = 14
+      Cancel = True
+      Caption = 'btnCancel'
+      Constraints.MinWidth = 80
+      TabOrder = 2
+      OnClick = btnCancelClick
+    end
+  end
+  object tmrLookup: TTimer
+    Enabled = False
+    Interval = 400
+    OnTimer = tmrLookupTimer
+  end
+end

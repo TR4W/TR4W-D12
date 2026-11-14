@@ -622,6 +622,18 @@ themselves. The external logger editor gained a check row (`lfkCheck`, `row.Chec
   (only the accelerator / `LM_ACTIVATE` path, which win32 raises for menus). Whether a click on a Preferences
   caption focuses its box is unmeasured -- a GUI-suite question, not an assumption.
 
+## The setup wizard is OWNED by the main window, on purpose (2026-11-14)
+
+`uSetupWizardForm` is modeless (it hosts the modeless radio and keyer editors)
+but, unlike a tool window (issue #1), it calls `OwnFormByMainWindow`: a wizard
+must stay in front of the window it is setting up, and at startup the main
+window is promoted after the wizard is shown. One instance (`gSetupWizard`),
+`caFree` on close. Every caption is a `uAppStrings` resourcestring assigned in
+code; resourcestrings are 8-bit, so they go onto a caption directly and
+through `Format`, not `LclText`/`UnicodeFormat` (that is two needless
+conversions). The page control hides its tabs; the page ORDER lives in
+`uSetupWizard.SetupPagePlan`, never in tab indexes.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

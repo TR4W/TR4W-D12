@@ -199,6 +199,14 @@ procedure ApplyActiveCluster(const aStore: TRadioConfigStore);
 function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
                               const aCommand, aValue: string): boolean;
 
+(* THE VALUE A SETTINGS SCREEN SHOWS FOR ONE COMMAND: the store's, falling
+  back to the live one -- which covers a command the store has never held,
+  and every command the settings object owns.  ONE spelling for Preferences
+  and the setup wizard, so the two cannot show a station different values.
+  aStore may be nil: then it is the live value. *)
+function StationCommandValue(const aStore: TRadioConfigStore;
+                             const aCommand: string): string;
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
 (* WHAT IS ON THE AIR.  Written by ApplyRadioToSlot -- see the note there --
@@ -267,6 +275,13 @@ procedure SetLatestConfigFile(const aFileName: string);
 // than once per start -- see the store's GridPromptShown.
 function  GridPromptAlreadyShown: boolean;
 procedure MarkGridPromptShown;
+
+(* Has the setup wizard already opened by itself?  The same once-per-
+  installation rule, and the same refusal to write over a store that could not
+  be read.  MARKING THE WIZARD ALSO MARKS THE GRID PROMPT: the wizard's Station
+  page asks for the grid, so the one-off MY GRID question would ask it twice. *)
+function  SetupWizardAlreadyShown: boolean;
+procedure MarkSetupWizardShown;
 
 (* ~~ApplyStoredCommand~~ -- DELETED 2026-09-19 with its only caller.
 
@@ -1302,14 +1317,32 @@ begin
       end;
 end;
 
-function GridPromptAlreadyShown: boolean;
+function StationCommandValue(const aStore: TRadioConfigStore;
+                             const aCommand: string): string;
+begin
+   if aStore = nil then
+      begin
+      Result := CFGCommandValueAsString(aCommand);
+      Exit;
+      end;
+   Result := aStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
+end;
+
+(* THE ONCE-ONLY STARTUP FLAGS, read and recorded in ONE place.
+
+  The grid prompt had this pair to itself; the setup wizard needs the same two
+  operations on the flag beside it, and a second copy of a load-refuse-save
+  routine is exactly the kind of thing that drifts.  So both public pairs are
+  one line each over these. *)
+procedure ReadStartupPromptFlags(out aGridShown, aWizardShown: boolean);
 var
    store: TRadioConfigStore;
    keyers: TKeyerConfigStore;
    udp: TUDPBroadcastConfig;
    loadErr: string;
 begin
-   Result := False;
+   aGridShown   := False;
+   aWizardShown := False;
    if not FileExists(RadioStoreFileName) then
       begin
       Exit;   // first run: nothing asked yet
@@ -1321,7 +1354,8 @@ begin
    try
       if LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
          begin
-         Result := store.GridPromptShown;
+         aGridShown   := store.GridPromptShown;
+         aWizardShown := store.SetupWizardShown;
          end;
    finally
       udp.Free;
@@ -1330,12 +1364,15 @@ begin
    end;
 end;
 
-procedure MarkGridPromptShown;
+(* Sets each flag that is asked for and not yet set.  Never clears one. *)
+procedure RecordStartupPromptFlags(const aGridShown, aWizardShown: boolean;
+                                   const aWhat: string);
 var
    store: TRadioConfigStore;
    keyers: TKeyerConfigStore;
    udp: TUDPBroadcastConfig;
    loadErr: string;
+   changed: boolean;
 begin
    store  := TRadioConfigStore.Create;
    keyers := TKeyerConfigStore.Create;
@@ -1347,24 +1384,59 @@ begin
             begin
             // REFUSE rather than write over a file we could not read.  The cost
             // is being asked again next start, which is the old behaviour.
-            logger.Error('[Startup] not recording the grid prompt: %s could not be read (%s)',
-                         [RadioStoreFileName, loadErr]);
+            logger.Error('[Startup] not recording the %s: %s could not be read (%s)',
+                         [aWhat, RadioStoreFileName, loadErr]);
             Exit;
             end;
          end;
 
-      if store.GridPromptShown then
+      changed := False;
+      if aGridShown and (not store.GridPromptShown) then
+         begin
+         store.GridPromptShown := True;
+         changed := True;
+         end;
+      if aWizardShown and (not store.SetupWizardShown) then
+         begin
+         store.SetupWizardShown := True;
+         changed := True;
+         end;
+
+      if not changed then
          begin
          Exit;   // already recorded -- do not rewrite the file every start
          end;
 
-      store.GridPromptShown := True;
       SaveConfig(RadioStoreFileName, store, keyers, udp);
    finally
       udp.Free;
       keyers.Free;
       store.Free;
    end;
+end;
+
+function GridPromptAlreadyShown: boolean;
+var
+   wizardShown: boolean;
+begin
+   ReadStartupPromptFlags(Result, wizardShown);
+end;
+
+procedure MarkGridPromptShown;
+begin
+   RecordStartupPromptFlags(True, False, 'grid prompt');
+end;
+
+function SetupWizardAlreadyShown: boolean;
+var
+   gridShown: boolean;
+begin
+   ReadStartupPromptFlags(gridShown, Result);
+end;
+
+procedure MarkSetupWizardShown;
+begin
+   RecordStartupPromptFlags(True, True, 'setup wizard');
 end;
 
 function GetLatestConfigFile: string;

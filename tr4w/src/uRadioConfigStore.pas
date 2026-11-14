@@ -566,6 +566,11 @@ type
         should not be asked again every time they open the program, and one who
         does can set it in Preferences > Station, where it is also searchable. }
       FGridPromptShown: boolean;
+      (* Whether the setup wizard has opened by itself at startup.  The same
+        once-per-installation rule as the grid prompt above, for the same
+        reason; the Tools menu runs it again on request.  See
+        uSetupWizard.SetupWizardDueAtStartup. *)
+      FSetupWizardShown: boolean;
       { The export headers -- tr4w.ini's [REPORT] and [ERMAKREPORT] sections,
         moved here. One Name=Value list per section, using the same _TAG
         spellings the ini used, so the tag table in uCbrSum stays the single
@@ -887,6 +892,7 @@ type
       property  ActiveRotatorId: string read FActiveRotatorId write FActiveRotatorId;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
       property  GridPromptShown: boolean read FGridPromptShown write FGridPromptShown;
+      property  SetupWizardShown: boolean read FSetupWizardShown write FSetupWizardShown;
       { The Name=Value list for one export header section ('REPORT',
         'ERMAKREPORT'). Created on demand, so a caller never has to test for
         nil and an unknown section is an empty header rather than a crash. }
@@ -3180,6 +3186,7 @@ begin
    general.AddPair('activeRotator',   FActiveRotatorName);
    general.AddPair('latestConfigFile', FLatestConfigFile);
    general.AddPair('gridPromptShown', TJSONBool.Create(FGridPromptShown));
+   general.AddPair('setupWizardShown', TJSONBool.Create(FSetupWizardShown));
 
    // The export headers, each as its own object rather than inside `commands`:
    // these are not CFGCA commands and ApplyStoredCommands must not try to
@@ -3326,6 +3333,7 @@ begin
       ['activeProfile', 'keepLegacyIni', 'activeCluster',
        'activeRotatorId', 'activeRotator', 'latestConfigFile',
        'gridPromptShown',
+       'setupWizardShown',
        (* NOT written by SaveToJSON since issue 286 -- the retired
           station-wide "connect radios at startup", which an older file
           carries. Known so it is dropped quietly, not reported. *)
@@ -3351,6 +3359,7 @@ begin
    FActiveRotatorId   := JSONStr(general, 'activeRotatorId', '');
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
    FGridPromptShown   := JSONBool(general, 'gridPromptShown', False);
+   FSetupWizardShown  := JSONBool(general, 'setupWizardShown', False);
 
    // Clear (above) has already emptied the headers.
    for s := Low(HEADER_SECTIONS) to High(HEADER_SECTIONS) do

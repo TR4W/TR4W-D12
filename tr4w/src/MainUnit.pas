@@ -784,6 +784,7 @@ uses
   uPostScoresForm,         // CreateTR4WPostScoresWindow
   uHamScoreForm,           // CreateTR4WHamScoreWindow
   uVerificationForm,       // ShowVerificationChecks -- Tools menu
+  uSetupWizardForm,        // ShowSetupWizard -- Tools menu
   uIntercomForm,           // CreateTR4WIntercomWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uNetworkForm,            // CreateTR4WNetworkWindow
@@ -5987,6 +5988,9 @@ begin
       The checks are read-only and the window runs them itself, so there is
       nothing to set up here. *)
     menu_run_verification_checks: ShowVerificationChecks;
+    (* THE SETUP WIZARD ON REQUEST -- it opens by itself only on a brand-new
+      install (uProgramMain); this is every later time. *)
+    menu_setup_wizard: ShowSetupWizard;
     menu_export_edi: OpenStationInformationWindow(ExportToEDI);
 
     menu_scorebyhour: ScoreByHour;

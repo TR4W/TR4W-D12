@@ -1,8 +1,33 @@
 # The first-run setup wizard
 
-**Status (checked 2026-11-01):** DESIGN ONLY. The wizard is not built: no wizard unit exists under `tr4w/src`. The only first-run code found is `src/ui/lcl/uFirstRunConvert.pas`, a one-time offer to convert a legacy `tr4w.ini`. Agreed with NY4I 2026-09-11; the
-page shape below is the part that was argued about and settled, so change it
-deliberately rather than in passing.
+**Status (2026-11-14): BUILT -- Station, Radio, WinKeyer and DX cluster.** The
+page shape below is the part that was argued about and settled (NY4I,
+2026-09-11), so change it deliberately rather than in passing. What exists:
+
+| piece | where |
+|---|---|
+| the rules: page plan, startup gate, staging into the stores | `tr4w/src/uSetupWizard.pas` (no LCL; pinned by `test/unit/uTestSetupWizard.pas`) |
+| the window | `tr4w/src/ui/lcl/uSetupWizardForm.pas` + `.lfm` (driven off screen by `test/unit/uTestSetupWizardForm.pas`) |
+| the once-only flag | `general.setupWizardShown` in `settings\tr4w.json`; `uRadioConfigApply.SetupWizardAlreadyShown` / `MarkSetupWizardShown` |
+| startup | `uProgramMain.RunTR4W`, in place of the MY GRID prompt -- see [section 6](#6-when-it-runs) |
+| on request | **Tools -> Setup Wizard...** (`menu_setup_wizard`, NY4I 2026-11-14: "also selectable under Tools menu") |
+| where a radio and keyer go | slot 1 and CW output 1 of the **active** profile, or of a new profile `Default` when none is active; a name already used is made unique the store's way, so a second run adds rather than fails |
+| Preferences open | the wizard refuses to open, and "Create configuration" refuses while Preferences shows (both edit the libraries from their own copies); after a commit a hidden Preferences re-reads the file (`PreferencesReloadAfterExternalSave`) |
+| colliding ports | asked BEFORE anything is written, with Preferences' own question and its default of No (`PortsAcceptable`); a later start would otherwise put a saved, active profile on the air regardless |
+
+**One known gap against section 5's "each item independently":** the radio
+and keyer libraries are validated as a whole before they are saved, so a
+`Validate` refusal keeps the station but drops all three items, not only the
+one at fault. The editors validate what they accept, so this needs a library
+that was already invalid on disk; it is reported on the result page.
+
+**NOT BUILT: the External logger and Rotator pages** (sections 4 and 2 list
+them). The request that built this named station, radio, WinKeyer and cluster;
+adding a page is a new `TSetupItem` member (its ordinal is its canonical place),
+a sheet, and a branch in `StageSetupItems`.
+
+**Section 6's gate was wrong when this was built, and was replaced** -- read
+the correction there before reasoning from the table.
 
 **Reviewed 2026-09-11** against an external critique, written from this document
 alone by an agent with no access to the tree. Its accepted points are folded into
@@ -306,6 +331,34 @@ Section 6 says what does instead.
 ---
 
 ## 6. When it runs
+
+> **CORRECTED 2026-11-14, when it was built. The gate below never fires.**
+> The table's "first run, and `MyCall` is empty" row assumes the callsign can
+> still be empty at `ConfigurationOkay`. It cannot: on a brand-new install the
+> first window is **New Contest**, which keeps OK disabled until a callsign
+> passes `IsAGoodCall` (`uNewContest.BeginNewContest`), and
+> `ApplyNewContestChoices` puts it in `MY CALL` and `MainCallsign` before
+> `ConfigurationOkay` runs. This document predates that dialog asking.
+>
+> **What was built instead** (`uSetupWizard.SetupWizardDueAtStartup`):
+>
+> | condition | wizard |
+> |---|---|
+> | headless (`tSilentExport`) | never |
+> | `settings\tr4w.json` existed when startup began | no -- an existing station |
+> | `general.setupWizardShown` already set | no -- Tools -> Setup Wizard reopens it |
+> | otherwise | **yes** |
+>
+> "Existed when startup began" is **captured** in `RunTR4W` right after the
+> legacy-ini conversion offer (an operator who converts has a file and is not
+> new) and before New Contest and `LoadSettingsForStartup` (which saves the
+> file, after which the answer is always yes). The wizard opens where the MY
+> GRID prompt did -- after the main window exists, with settings and CTY.DAT
+> loaded -- with the callsign New Contest took already filled in, and
+> **modeless**, so startup carries on into the message loop. The flag is set
+> **before** it shows, and setting it sets `gridPromptShown` too: the Station
+> page asks for the grid. The original reasoning follows, kept because its
+> points about capture, cancel and `.bad` files still hold.
 
 **The first-run condition is already computed and the wizard uses that one.**
 `uProgramMain.ReportConfigurationSources` (`:857`, called at `:1673`) logs

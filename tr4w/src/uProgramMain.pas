@@ -301,6 +301,8 @@ uses
   uProgramMessageForm,
   uKeyerEditForm,
   uRadioEditForm,
+  uSetupWizard,       (* SetupWizardDueAtStartup -- the first-run rule *)
+  uSetupWizardForm,   (* ShowSetupWizard *)
   uMainForm,
   uMainGrids,   { the totals grid and the two need strips }
   uPrefsForm,
@@ -1233,6 +1235,10 @@ var
   yearContest                           : boolean;
   // What /IMPORT tells the operator, for the headless run's own trace.
   importReport                          : string;
+  (* Whether settings\tr4w.json was on disk when startup began -- the setup
+    wizard's "brand-new install" test.  CAPTURED, because the settings load
+    below saves the file on a first run and every later look says yes. *)
+  settingsFileExisted                   : boolean;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -1820,6 +1826,16 @@ begin
      OfferFirstRunConversion(CharBufferText(TR4W_INI_FILENAME),
                              TR4WConfigFileName);
      end;
+
+  (* IS THIS A BRAND-NEW INSTALL -- asked HERE, for the setup wizard.
+
+    AFTER the conversion offer: an operator who converts an old tr4w.ini now
+    has a settings file, and is not a new station.  BEFORE
+    LoadSettingsForStartup, which saves the file on a first run -- one step
+    later the answer is always yes -- and before the New Contest window too,
+    so nothing it records can change the answer.  The wizard itself opens far
+    below, once the main window exists. *)
+  settingsFileExisted := SysUtils.FileExists(TR4WConfigFileName);
 
   (* THE PLATFORM GATE MOVED INTO uPlatformFonts, which already owns every
     per-platform font question this program asks. LuconSZLoadded staying False
@@ -2804,7 +2820,28 @@ begin
   // they open TR4W, and one who does can set it in Preferences > Station --
   // where it is now also findable by search.  The flag is recorded whatever the
   // answer, because being asked and saying no IS an answer.
-  if (not tSilentExport) and (Trim(Settings.My.ResolvedGrid) = '') then
+  (* THE SETUP WIZARD, ON A BRAND-NEW INSTALL -- in place of the grid prompt,
+    because its Station page asks for the grid (docs/SETUP_WIZARD_DESIGN.md).
+
+    HERE for the grid prompt's reasons: the settings are loaded, the country
+    file is loaded (the wizard fills zone and country from the callsign), and
+    the main window exists to own it.  Modeless, so startup carries on into
+    the message loop underneath it.
+
+    MARKED BEFORE IT OPENS, as the grid prompt is: a crash or a Cancel must
+    not bring it back at every start.  The Tools menu runs it again on
+    request.  Marking it marks the grid prompt too. *)
+  (* The leading test only spares every ordinary start a second read of the
+    settings file for the flag; the rule itself is SetupWizardDueAtStartup. *)
+  if (not settingsFileExisted) and
+     SetupWizardDueAtStartup(tSilentExport, settingsFileExisted,
+                             SetupWizardAlreadyShown) then
+     begin
+     logger.Info('[Startup] brand-new install: opening the setup wizard');
+     MarkSetupWizardShown;
+     ShowSetupWizard;
+     end
+  else if (not tSilentExport) and (Trim(Settings.My.ResolvedGrid) = '') then
      begin
      if GridPromptAlreadyShown then
         begin

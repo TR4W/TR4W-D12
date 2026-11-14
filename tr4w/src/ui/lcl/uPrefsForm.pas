@@ -1479,6 +1479,24 @@ procedure SizeColorsGridColumns(const aGrid: TStringGrid);
 // call-window command.
 procedure ShowPreferences;
 
+(* WHETHER PREFERENCES IS ON SCREEN.  The setup wizard asks before it opens:
+  both edit the same libraries, each from its own copy, and the second to save
+  would overwrite the first. *)
+function PreferencesIsShowing: boolean;
+
+(* SOMETHING ELSE HAS JUST WRITTEN settings\tr4w.json -- the setup wizard.
+  A HIDDEN Preferences keeps its copy of the libraries between openings, so it
+  re-reads them here; otherwise its next save would put back what it held and
+  delete what the wizard added.  Hidden means clean: closing with unsaved
+  changes asks first.  Nothing to do when Preferences was never opened. *)
+procedure PreferencesReloadAfterExternalSave;
+
+(* THE PUBLIC DX CLUSTER DIRECTORY (TRCLUSTER.DAT) into aInto, one host:port
+  per line, blanks and comment lines skipped.  False when the file is not
+  there, which is logged with the path that was tried.  Shared by Preferences'
+  server picker and the setup wizard's. *)
+function LoadClusterDirectory(const aInto: TStrings): boolean;
+
 // Opens Preferences AT a specific setting: the section that owns aCommand is
 // selected and the control that edits it is focused, so the operator lands on
 // the field rather than on a page to go hunting through.
@@ -2025,6 +2043,25 @@ begin
                             [phase, E.ClassName, E.Message]));
          end;
       end;
+end;
+
+function PreferencesIsShowing: boolean;
+begin
+   Result := (gPrefsForm <> nil) and gPrefsForm.Visible;
+end;
+
+procedure PreferencesReloadAfterExternalSave;
+begin
+   if (gPrefsForm = nil) or gPrefsForm.Visible then
+      begin
+      (* VISIBLE IS THE CALLER'S BUG, not something to paper over here: a
+        reload would throw away what the operator is editing.  The wizard
+        refuses to open while Preferences shows (PreferencesIsShowing). *)
+      Exit;
+      end;
+   (* DiscardChanges is exactly "throw the working copy away and reload from
+     disk" -- the Cancel path -- and a hidden form has nothing unsaved. *)
+   gPrefsForm.DiscardChanges;
 end;
 
 function ShowPreferencesAtPage(const aTag: NativeInt): boolean;
@@ -6621,7 +6658,7 @@ end;
   with no single global to render) has nowhere else to come from. }
 function TPrefsForm.CommandText(const aCommand: string): string;
 begin
-   Result := FStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
+   Result := StationCommandValue(FStore, aCommand);
 
    // THE SNAPSHOT, taken here because this is what every hand-written panel
    // loads through -- one place rather than twenty-eight call sites.
@@ -6918,6 +6955,58 @@ begin
    Result := ExistingDataFile(DataFilePath('TRCLUSTER.DAT'));
 end;
 
+function LoadClusterDirectory(const aInto: TStrings): boolean;
+var
+   fileName: string;
+   lines: TStringList;
+   i: integer;
+   line: string;
+begin
+   Result := False;
+   fileName := ClusterDirectoryPath;
+   if not FileTextExists(fileName) then
+      begin
+      { SAY THE FILE WAS NOT THERE, and say WHERE we looked.
+
+        Without this the operator gets an empty picker and a log line reading
+        "0 entries", which is what an EMPTY file would also produce -- so the
+        one number that could have explained it says the same thing for two
+        different causes.
+
+        It is not hypothetical. NY4I hit exactly this on 2026-08-30 running
+        the binary from build-out\ while the data sits in tr4w\target\:
+        this routine resolves TRCLUSTER.DAT beside the BINARY, and the DX
+        Cluster window resolves it against the WORKING DIRECTORY, so the
+        window listed servers and the picker did not. Two rules, one
+        filename, and nothing said so. See
+        docs\OWED_BEFORE_CROSS_PLATFORM.md item 3 for the fix to the rules
+        themselves; this line is what makes the NEXT instance self-
+        diagnosing rather than a conversation. }
+      logger.Warn('[Prefs] cluster directory not found at %s -- the server '
+                  + 'picker will be empty. It is read from beside the '
+                  + 'program, not from the working directory.', [fileName]);
+      Exit;
+      end;
+
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(fileName);
+      for i := 0 to lines.Count - 1 do
+         begin
+         line := Trim(lines[i]);
+         // Skip blanks and anything that looks like a comment.  The file
+         // is hand-maintained and has picked up both over the years.
+         if (line <> '') and (line[1] <> ';') and (line[1] <> '#') then
+            begin
+            aInto.Add(line);
+            end;
+         end;
+   finally
+      lines.Free;
+   end;
+   Result := True;
+end;
+
 { Say beside the drop-down whether there is a directory to drop down.
 
   CHEAP, so it can run when the page loads rather than waiting for the combo to
@@ -6944,10 +7033,6 @@ end;
 
 procedure TPrefsForm.LoadClusterServerList;
 var
-   fileName: string;
-   lines: TStringList;
-   i: integer;
-   line: string;
    sw: TStopwatch;
 begin
    // THE PUBLIC DIRECTORY, offered as a picker.  TRCLUSTER.DAT is ~15 KB of
@@ -6998,49 +7083,7 @@ begin
    cbxClusterServer.Items.BeginUpdate;
    try
       cbxClusterServer.Clear;
-
-      fileName := ClusterDirectoryPath;
-      if FileTextExists(fileName) then
-         begin
-         lines := TStringList.Create;
-         try
-            lines.LoadFromFile(fileName);
-            for i := 0 to lines.Count - 1 do
-               begin
-               line := Trim(lines[i]);
-               // Skip blanks and anything that looks like a comment.  The file
-               // is hand-maintained and has picked up both over the years.
-               if (line <> '') and (line[1] <> ';') and (line[1] <> '#') then
-                  begin
-                  cbxClusterServer.Items.Add(line);
-                  end;
-               end;
-         finally
-            lines.Free;
-         end;
-         end
-      else
-         begin
-         { SAY THE FILE WAS NOT THERE, and say WHERE we looked.
-
-           Without this the operator gets an empty picker and a log line reading
-           "0 entries", which is what an EMPTY file would also produce -- so the
-           one number that could have explained it says the same thing for two
-           different causes.
-
-           It is not hypothetical. NY4I hit exactly this on 2026-08-30 running
-           the binary from build-out\ while the data sits in tr4w\target\:
-           this routine resolves TRCLUSTER.DAT beside the BINARY, and the DX
-           Cluster window resolves it against the WORKING DIRECTORY, so the
-           window listed servers and the picker did not. Two rules, one
-           filename, and nothing said so. See
-           docs\OWED_BEFORE_CROSS_PLATFORM.md item 3 for the fix to the rules
-           themselves; this line is what makes the NEXT instance self-
-           diagnosing rather than a conversation. }
-         logger.Warn('[Prefs] cluster directory not found at %s -- the server '
-                     + 'picker will be empty. It is read from beside the '
-                     + 'program, not from the working directory.', [fileName]);
-         end;
+      LoadClusterDirectory(cbxClusterServer.Items);
    finally
       cbxClusterServer.Items.EndUpdate;
       // In the finally: a directory file that throws mid-load must not leave the
@@ -8437,8 +8480,7 @@ begin
       // The STORE is the record now; CFGCA is where the value is applied.
       // Falling back to the live global covers the first run after upgrade,
       // when the store has nothing yet and the ini seeded the globals.
-      f.Edit.Text := FStore.CommandValue(f.Command,
-                                         CFGCommandValueAsString(f.Command));
+      f.Edit.Text := StationCommandValue(FStore, f.Command);
       end;
 
    // Continent is a ckList: the value is a SPELLING in ContinentTypeSA, and the
@@ -8457,8 +8499,7 @@ begin
    end;
    cbxMyContinent.ItemIndex :=
       cbxMyContinent.Items.IndexOf(UpperCase(Trim(
-         FStore.CommandValue('MY CONTINENT',
-                             CFGCommandValueAsString('MY CONTINENT')))));
+         StationCommandValue(FStore, 'MY CONTINENT'))));
 end;
 
 (* A license year as the two license-year questions show it: trimmed, or

@@ -568,6 +568,21 @@ pinned in `uTestPlainHttpUrl` -- one position must not switch another's certific
 Vocabulary count 306 (derived names: group `Hamscore`/`Score` + `VerifyServer`). Help text is not
 written (both are in `KNOWN_HELP_GAPS`). An external logger's choice is a definition field, not a setting.
 
+## The setup wizard writes through the same doors (2026-11-14)
+
+`uSetupWizardForm` (Tools > Setup Wizard, and once by itself on a brand-new
+install) declares no setting. Station values go through
+`ApplyAndStoreCommand`, as the Preferences Station page does; the value it
+shows comes from `uRadioConfigApply.StationCommandValue`, which Preferences
+now uses too -- one spelling of "the store's value, else the live one". A
+derived station fact (zone, ITU zone, country, continent) that the operator
+did not change is NOT written, so it goes on following the callsign. Its
+once-only flag is `general.setupWizardShown`, beside `gridPromptShown`, and
+both are read and recorded by one pair of routines in `uRadioConfigApply`
+(marking the wizard marks the grid prompt). A hidden Preferences re-reads the
+libraries after the wizard saves (`PreferencesReloadAfterExternalSave`), or
+its next save would delete what the wizard added.
+
 ## Open
 
 **The startup precedence defect is NARROWER, NOT CLOSED.** The
