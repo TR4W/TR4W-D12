@@ -1,0 +1,113 @@
+{
+   "pid": 6456,
+   "variants": [
+      {
+         "name": "native",
+         "top": 853148,
+         "panel": 0,
+         "label": 853040,
+         "edit": 853048,
+         "static_code_forced": null,
+         "edit_code_forced": null,
+         "in_panel": false,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "static_answers_wantallkeys",
+         "top": 1639402,
+         "panel": 0,
+         "label": 853014,
+         "edit": 853142,
+         "static_code_forced": 4,
+         "edit_code_forced": null,
+         "in_panel": false,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "static_answers_static_explicit",
+         "top": 1049770,
+         "panel": 0,
+         "label": 2032734,
+         "edit": 853056,
+         "static_code_forced": 256,
+         "edit_code_forced": null,
+         "in_panel": false,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "static_answers_static_or_wantallkeys",
+         "top": 853010,
+         "panel": 0,
+         "label": 3146702,
+         "edit": 1770494,
+         "static_code_forced": 260,
+         "edit_code_forced": null,
+         "in_panel": false,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "edit_answers_wantallkeys",
+         "top": 2032736,
+         "panel": 0,
+         "label": 1246338,
+         "edit": 984198,
+         "static_code_forced": null,
+         "edit_code_forced": 4,
+         "in_panel": false,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "in_panel",
+         "top": 1573880,
+         "panel": 721940,
+         "label": 853060,
+         "edit": 918712,
+         "static_code_forced": null,
+         "edit_code_forced": null,
+         "in_panel": true,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "in_panel_static_answers_wantallkeys",
+         "top": 2032616,
+         "panel": 918588,
+         "label": 2294896,
+         "edit": 2032738,
+         "static_code_forced": 4,
+         "edit_code_forced": null,
+         "in_panel": true,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "in_panel_static_answers_static",
+         "top": 2229362,
+         "panel": 1705052,
+         "label": 722058,
+         "edit": 722068,
+         "static_code_forced": 256,
+         "edit_code_forced": null,
+         "in_panel": true,
+         "with_static": true,
+         "cue": null
+      },
+      {
+         "name": "cue_banner_no_static",
+         "top": 2360430,
+         "panel": 0,
+         "label": 0,
+         "edit": 721952,
+         "static_code_forced": null,
+         "edit_code_forced": null,
+         "in_panel": false,
+         "with_static": false,
+         "cue": "Cue name"
+      }
+   ]
+}

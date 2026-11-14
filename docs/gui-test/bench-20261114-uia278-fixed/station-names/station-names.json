@@ -1,0 +1,4312 @@
+{
+   "method_positive_control": {
+      "uia": {
+         "name": "Probe label:",
+         "control_type": "edit",
+         "class": "Edit",
+         "automation_id": "",
+         "help_text": "",
+         "labeled_by": null
+      },
+      "neighbours": {
+         "self": {
+            "handle": 1049784,
+            "class": "Edit",
+            "text": "value",
+            "style": "0x50010000",
+            "exstyle": "0x200",
+            "id": 0
+         },
+         "previous": {
+            "handle": 853012,
+            "class": "Static",
+            "text": "Probe label:",
+            "style": "0x50000000",
+            "exstyle": "0x0",
+            "id": 0
+         },
+         "next": {
+            "handle": 0,
+            "class": null,
+            "text": null
+         }
+      },
+      "wm_getobject": 0,
+      "msaa_name": "Probe label:"
+   },
+   "style_replays": {
+      "tr4w_static_style": {
+         "static_style": "0x56000100",
+         "edit_style": "0x50010000",
+         "uia_name": "Probe label:",
+         "msaa_name": "Probe label:"
+      },
+      "tr4w_static_and_edit_styles": {
+         "static_style": "0x56000100",
+         "edit_style": "0x56010080",
+         "uia_name": "Probe label:",
+         "msaa_name": "Probe label:"
+      },
+      "ss_notify_only": {
+         "static_style": "0x50000100",
+         "edit_style": "0x50010000",
+         "uia_name": "Probe label:",
+         "msaa_name": "Probe label:"
+      },
+      "clip_flags_only": {
+         "static_style": "0x56000000",
+         "edit_style": "0x50010000",
+         "uia_name": "Probe label:",
+         "msaa_name": "Probe label:"
+      }
+   },
+   "names": [
+      {
+         "caption": "Callsign:",
+         "initial": [
+            "Callsign:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Callsign:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Callsign:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "First name:",
+         "initial": [
+            "First name:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "First name:",
+            "edit"
+         ],
+         "after_reopen": [
+            "First name:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Grid square:",
+         "initial": [
+            "Grid square:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Grid square:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Grid square:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Continent:",
+         "initial": [
+            "Continent:",
+            "combo box"
+         ],
+         "after_page_switch": [
+            "Continent:",
+            "combo box"
+         ],
+         "after_reopen": [
+            "Continent:",
+            "combo box"
+         ]
+      },
+      {
+         "caption": "CQ zone:",
+         "initial": [
+            "CQ zone:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "CQ zone:",
+            "edit"
+         ],
+         "after_reopen": [
+            "CQ zone:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "ITU zone:",
+         "initial": [
+            "ITU zone:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "ITU zone:",
+            "edit"
+         ],
+         "after_reopen": [
+            "ITU zone:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "State/Province:",
+         "initial": [
+            "State/Province:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "State/Province:",
+            "edit"
+         ],
+         "after_reopen": [
+            "State/Province:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "ARRL section:",
+         "initial": [
+            "ARRL section:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "ARRL section:",
+            "edit"
+         ],
+         "after_reopen": [
+            "ARRL section:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Country:",
+         "initial": [
+            "Country:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Country:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Country:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Postal code:",
+         "initial": [
+            "Postal code:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Postal code:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Postal code:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Check:",
+         "initial": [
+            "Check:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Check:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Check:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Precedence:",
+         "initial": [
+            "Precedence:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Precedence:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Precedence:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "FD class:",
+         "initial": [
+            "FD class:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "FD class:",
+            "edit"
+         ],
+         "after_reopen": [
+            "FD class:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "FOC number:",
+         "initial": [
+            "FOC number:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "FOC number:",
+            "edit"
+         ],
+         "after_reopen": [
+            "FOC number:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "IOTA:",
+         "initial": [
+            "IOTA:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "IOTA:",
+            "edit"
+         ],
+         "after_reopen": [
+            "IOTA:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Park:",
+         "initial": [
+            "Park:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Park:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Park:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "License year:",
+         "initial": [
+            "License year:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "License year:",
+            "edit"
+         ],
+         "after_reopen": [
+            "License year:",
+            "edit"
+         ]
+      }
+   ],
+   "end_rows": [
+      {
+         "caption": "Callsign:",
+         "initial": [
+            "Callsign:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Callsign:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Callsign:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Postal code:",
+         "initial": [
+            "Postal code:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Postal code:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Postal code:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "Check:",
+         "initial": [
+            "Check:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "Check:",
+            "edit"
+         ],
+         "after_reopen": [
+            "Check:",
+            "edit"
+         ]
+      },
+      {
+         "caption": "License year:",
+         "initial": [
+            "License year:",
+            "edit"
+         ],
+         "after_page_switch": [
+            "License year:",
+            "edit"
+         ],
+         "after_reopen": [
+            "License year:",
+            "edit"
+         ]
+      }
+   ],
+   "main_callsign_names": [
+      "",
+      "",
+      ""
+   ],
+   "tab_stops": [
+      {
+         "handle": 2884458,
+         "text": "W1AW",
+         "class": "Edit",
+         "rect": [
+            525,
+            135,
+            725,
+            157
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Callsign:"
+      },
+      {
+         "handle": 2425716,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            525,
+            165,
+            725,
+            187
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "First name:",
+         "is_caption": false
+      },
+      {
+         "handle": 2556784,
+         "text": "FN31",
+         "class": "Edit",
+         "rect": [
+            525,
+            195,
+            725,
+            217
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Grid square:",
+         "is_caption": false
+      },
+      {
+         "handle": 2229116,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            528,
+            228,
+            705,
+            245
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Continent:",
+         "is_caption": false
+      },
+      {
+         "handle": 4457276,
+         "text": "8",
+         "class": "Edit",
+         "rect": [
+            525,
+            255,
+            725,
+            277
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "CQ zone:",
+         "is_caption": false
+      },
+      {
+         "handle": 2753414,
+         "text": "0",
+         "class": "Edit",
+         "rect": [
+            525,
+            285,
+            725,
+            307
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "ITU zone:",
+         "is_caption": false
+      },
+      {
+         "handle": 2556780,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            525,
+            315,
+            725,
+            337
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "State/Province:",
+         "is_caption": false
+      },
+      {
+         "handle": 2360216,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            525,
+            345,
+            725,
+            367
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "ARRL section:",
+         "is_caption": false
+      },
+      {
+         "handle": 2491292,
+         "text": "K",
+         "class": "Edit",
+         "rect": [
+            525,
+            375,
+            725,
+            397
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Country:",
+         "is_caption": false
+      },
+      {
+         "handle": 2491296,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            525,
+            405,
+            725,
+            427
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Postal code:",
+         "is_caption": false
+      },
+      {
+         "handle": 2491300,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            135,
+            1031,
+            157
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Check:",
+         "is_caption": false
+      },
+      {
+         "handle": 2753448,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            165,
+            1031,
+            187
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Precedence:",
+         "is_caption": false
+      },
+      {
+         "handle": 2818988,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            195,
+            1031,
+            217
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "FD class:",
+         "is_caption": false
+      },
+      {
+         "handle": 2556848,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            225,
+            1031,
+            247
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "FOC number:",
+         "is_caption": false
+      },
+      {
+         "handle": 2294708,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            255,
+            1031,
+            277
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "IOTA:",
+         "is_caption": false
+      },
+      {
+         "handle": 2622392,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            285,
+            1031,
+            307
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Park:",
+         "is_caption": false
+      },
+      {
+         "handle": 3146598,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            881,
+            315,
+            1031,
+            337
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "License year:",
+         "is_caption": false
+      },
+      {
+         "handle": 3146688,
+         "text": "W1AW",
+         "class": "Edit",
+         "rect": [
+            715,
+            559,
+            995,
+            582
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "MAIN CALLSIGN",
+         "is_caption": false
+      },
+      {
+         "handle": 4260662,
+         "text": "Save and close",
+         "class": "Button",
+         "rect": [
+            762,
+            683,
+            865,
+            708
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": null,
+         "is_caption": false
+      },
+      {
+         "handle": 4588360,
+         "text": "Cancel",
+         "class": "Button",
+         "rect": [
+            875,
+            683,
+            960,
+            708
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": null,
+         "is_caption": false
+      },
+      {
+         "handle": 4784936,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            214,
+            105,
+            376,
+            128
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": null,
+         "is_caption": false
+      },
+      {
+         "handle": 4129588,
+         "text": "",
+         "class": "Window",
+         "rect": [
+            210,
+            132,
+            380,
+            673
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": null,
+         "is_caption": false
+      },
+      {
+         "handle": 2884458,
+         "text": "W1AW",
+         "class": "Edit",
+         "rect": [
+            525,
+            135,
+            725,
+            157
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Callsign:",
+         "is_caption": false
+      },
+      {
+         "handle": 2425716,
+         "text": "",
+         "class": "Edit",
+         "rect": [
+            525,
+            165,
+            725,
+            187
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "First name:",
+         "is_caption": false
+      },
+      {
+         "handle": 2556784,
+         "text": "FN31",
+         "class": "Edit",
+         "rect": [
+            525,
+            195,
+            725,
+            217
+         ],
+         "visible": true,
+         "enabled": true,
+         "field": "Grid square:",
+         "is_caption": false
+      }
+   ],
+   "tab_order": [
+      "Callsign:",
+      "First name:",
+      "Grid square:",
+      "Continent:",
+      "CQ zone:",
+      "ITU zone:",
+      "State/Province:",
+      "ARRL section:",
+      "Country:",
+      "Postal code:",
+      "Check:",
+      "Precedence:",
+      "FD class:",
+      "FOC number:",
+      "IOTA:",
+      "Park:",
+      "License year:"
+   ],
+   "caption_clicks": [
+      {
+         "caption": "Callsign:",
+         "clicked_at": [
+            457,
+            147
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "First name:",
+         "clicked_at": [
+            457,
+            177
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Grid square:",
+         "clicked_at": [
+            457,
+            207
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Continent:",
+         "clicked_at": [
+            457,
+            237
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "CQ zone:",
+         "clicked_at": [
+            457,
+            267
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "ITU zone:",
+         "clicked_at": [
+            457,
+            297
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "State/Province:",
+         "clicked_at": [
+            457,
+            327
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "ARRL section:",
+         "clicked_at": [
+            457,
+            357
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Country:",
+         "clicked_at": [
+            457,
+            387
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Postal code:",
+         "clicked_at": [
+            457,
+            417
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Check:",
+         "clicked_at": [
+            820,
+            147
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Precedence:",
+         "clicked_at": [
+            820,
+            177
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "FD class:",
+         "clicked_at": [
+            820,
+            207
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "FOC number:",
+         "clicked_at": [
+            820,
+            237
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "IOTA:",
+         "clicked_at": [
+            820,
+            267
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "Park:",
+         "clicked_at": [
+            820,
+            297
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      },
+      {
+         "caption": "License year:",
+         "clicked_at": [
+            820,
+            327
+         ],
+         "focus_before": {
+            "handle": 4784936,
+            "class": "Edit"
+         },
+         "focus_after": {
+            "handle": 4784936,
+            "class": "Edit",
+            "field": null,
+            "is_caption": false,
+            "is_search": true
+         }
+      }
+   ],
+   "passes": [
+      {
+         "label": "initial",
+         "rows": [
+            {
+               "caption": "Callsign:",
+               "caption_windowed": true,
+               "input_handle": 2884458,
+               "input_class": "Edit",
+               "input_rect": "(L525, T135, R725, B157)",
+               "input_value": "W1AW",
+               "input_uia": {
+                  "name": "Callsign:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2884458",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2884458,
+                     "class": "Edit",
+                     "text": "W1AW",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2884458
+                  },
+                  "previous": {
+                     "handle": 2818942,
+                     "class": "Static",
+                     "text": "Callsign:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2818942
+                  },
+                  "next": {
+                     "handle": 0,
+                     "class": null,
+                     "text": null
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Callsign:",
+               "caption_handle": 2818942,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T139, R517, B156)",
+               "caption_uia": {
+                  "name": "Callsign:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2818942",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "First name:",
+               "caption_windowed": true,
+               "input_handle": 2425716,
+               "input_class": "Edit",
+               "input_rect": "(L525, T165, R725, B187)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "First name:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2425716",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2425716,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2425716
+                  },
+                  "previous": {
+                     "handle": 2622322,
+                     "class": "Static",
+                     "text": "First name:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622322
+                  },
+                  "next": {
+                     "handle": 2818942,
+                     "class": "Static",
+                     "text": "Callsign:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2818942
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "First name:",
+               "caption_handle": 2622322,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T169, R517, B186)",
+               "caption_uia": {
+                  "name": "First name:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622322",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Grid square:",
+               "caption_windowed": true,
+               "input_handle": 2556784,
+               "input_class": "Edit",
+               "input_rect": "(L525, T195, R725, B217)",
+               "input_value": "FN31",
+               "input_uia": {
+                  "name": "Grid square:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556784",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556784,
+                     "class": "Edit",
+                     "text": "FN31",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556784
+                  },
+                  "previous": {
+                     "handle": 2556812,
+                     "class": "Static",
+                     "text": "Grid square:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556812
+                  },
+                  "next": {
+                     "handle": 2622322,
+                     "class": "Static",
+                     "text": "First name:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622322
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Grid square:",
+               "caption_handle": 2556812,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T199, R517, B216)",
+               "caption_uia": {
+                  "name": "Grid square:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556812",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Continent:",
+               "caption_windowed": true,
+               "input_handle": 4260692,
+               "input_class": "LCLComboBox",
+               "input_rect": "(L525, T225, R725, B248)",
+               "input_value": "NONE",
+               "input_uia": {
+                  "name": "Continent:",
+                  "control_type": "combo box",
+                  "class": "LCLComboBox",
+                  "automation_id": "4260692",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 4260692,
+                     "class": "LCLComboBox",
+                     "text": "",
+                     "style": "0x56010242",
+                     "exstyle": "0x0",
+                     "id": 4260692
+                  },
+                  "previous": {
+                     "handle": 2294666,
+                     "class": "Static",
+                     "text": "Continent:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294666
+                  },
+                  "next": {
+                     "handle": 2556812,
+                     "class": "Static",
+                     "text": "Grid square:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556812
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Continent:",
+               "caption_handle": 2294666,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T229, R517, B246)",
+               "caption_uia": {
+                  "name": "Continent:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2294666",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               },
+               "inner_edit_handle": 2229116,
+               "inner_edit_uia": {
+                  "name": "Continent:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "1001",
+                  "help_text": "",
+                  "labeled_by": null
+               }
+            },
+            {
+               "caption": "CQ zone:",
+               "caption_windowed": true,
+               "input_handle": 4457276,
+               "input_class": "Edit",
+               "input_rect": "(L525, T255, R725, B277)",
+               "input_value": "8",
+               "input_uia": {
+                  "name": "CQ zone:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "4457276",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 4457276,
+                     "class": "Edit",
+                     "text": "8",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 4457276
+                  },
+                  "previous": {
+                     "handle": 4195152,
+                     "class": "Static",
+                     "text": "CQ zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4195152
+                  },
+                  "next": {
+                     "handle": 2294666,
+                     "class": "Static",
+                     "text": "Continent:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294666
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "CQ zone:",
+               "caption_handle": 4195152,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T259, R517, B276)",
+               "caption_uia": {
+                  "name": "CQ zone:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "4195152",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "ITU zone:",
+               "caption_windowed": true,
+               "input_handle": 2753414,
+               "input_class": "Edit",
+               "input_rect": "(L525, T285, R725, B307)",
+               "input_value": "0",
+               "input_uia": {
+                  "name": "ITU zone:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2753414",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2753414,
+                     "class": "Edit",
+                     "text": "0",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2753414
+                  },
+                  "previous": {
+                     "handle": 2753308,
+                     "class": "Static",
+                     "text": "ITU zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2753308
+                  },
+                  "next": {
+                     "handle": 4195152,
+                     "class": "Static",
+                     "text": "CQ zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4195152
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "ITU zone:",
+               "caption_handle": 2753308,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T289, R517, B306)",
+               "caption_uia": {
+                  "name": "ITU zone:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2753308",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "State/Province:",
+               "caption_windowed": true,
+               "input_handle": 2556780,
+               "input_class": "Edit",
+               "input_rect": "(L525, T315, R725, B337)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "State/Province:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556780",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556780,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556780
+                  },
+                  "previous": {
+                     "handle": 4588352,
+                     "class": "Static",
+                     "text": "State/Province:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4588352
+                  },
+                  "next": {
+                     "handle": 2753308,
+                     "class": "Static",
+                     "text": "ITU zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2753308
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "State/Province:",
+               "caption_handle": 4588352,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T319, R517, B336)",
+               "caption_uia": {
+                  "name": "State/Province:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "4588352",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "ARRL section:",
+               "caption_windowed": true,
+               "input_handle": 2360216,
+               "input_class": "Edit",
+               "input_rect": "(L525, T345, R725, B367)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "ARRL section:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2360216",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2360216,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2360216
+                  },
+                  "previous": {
+                     "handle": 2622362,
+                     "class": "Static",
+                     "text": "ARRL section:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622362
+                  },
+                  "next": {
+                     "handle": 4588352,
+                     "class": "Static",
+                     "text": "State/Province:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4588352
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "ARRL section:",
+               "caption_handle": 2622362,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T349, R517, B366)",
+               "caption_uia": {
+                  "name": "ARRL section:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622362",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Country:",
+               "caption_windowed": true,
+               "input_handle": 2491292,
+               "input_class": "Edit",
+               "input_rect": "(L525, T375, R725, B397)",
+               "input_value": "K",
+               "input_uia": {
+                  "name": "Country:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491292",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491292,
+                     "class": "Edit",
+                     "text": "K",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491292
+                  },
+                  "previous": {
+                     "handle": 2687902,
+                     "class": "Static",
+                     "text": "Country:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2687902
+                  },
+                  "next": {
+                     "handle": 2622362,
+                     "class": "Static",
+                     "text": "ARRL section:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622362
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Country:",
+               "caption_handle": 2687902,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T379, R517, B396)",
+               "caption_uia": {
+                  "name": "Country:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2687902",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Postal code:",
+               "caption_windowed": true,
+               "input_handle": 2491296,
+               "input_class": "Edit",
+               "input_rect": "(L525, T405, R725, B427)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Postal code:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491296",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491296,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491296
+                  },
+                  "previous": {
+                     "handle": 2425762,
+                     "class": "Static",
+                     "text": "Postal code:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425762
+                  },
+                  "next": {
+                     "handle": 2687902,
+                     "class": "Static",
+                     "text": "Country:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2687902
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Postal code:",
+               "caption_handle": 2425762,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T409, R517, B426)",
+               "caption_uia": {
+                  "name": "Postal code:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2425762",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Check:",
+               "caption_windowed": true,
+               "input_handle": 2491300,
+               "input_class": "Edit",
+               "input_rect": "(L881, T135, R1031, B157)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Check:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491300",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491300,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491300
+                  },
+                  "previous": {
+                     "handle": 2556838,
+                     "class": "Static",
+                     "text": "Check:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556838
+                  },
+                  "next": {
+                     "handle": 2425762,
+                     "class": "Static",
+                     "text": "Postal code:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425762
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Check:",
+               "caption_handle": 2556838,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T139, R875, B156)",
+               "caption_uia": {
+                  "name": "Check:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556838",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Precedence:",
+               "caption_windowed": true,
+               "input_handle": 2753448,
+               "input_class": "Edit",
+               "input_rect": "(L881, T165, R1031, B187)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Precedence:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2753448",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2753448,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2753448
+                  },
+                  "previous": {
+                     "handle": 2884522,
+                     "class": "Static",
+                     "text": "Precedence:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2884522
+                  },
+                  "next": {
+                     "handle": 2556838,
+                     "class": "Static",
+                     "text": "Check:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556838
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Precedence:",
+               "caption_handle": 2884522,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T169, R875, B186)",
+               "caption_uia": {
+                  "name": "Precedence:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2884522",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "FD class:",
+               "caption_windowed": true,
+               "input_handle": 2818988,
+               "input_class": "Edit",
+               "input_rect": "(L881, T195, R1031, B217)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "FD class:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2818988",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2818988,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2818988
+                  },
+                  "previous": {
+                     "handle": 2556846,
+                     "class": "Static",
+                     "text": "FD class:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556846
+                  },
+                  "next": {
+                     "handle": 2884522,
+                     "class": "Static",
+                     "text": "Precedence:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2884522
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "FD class:",
+               "caption_handle": 2556846,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T199, R875, B216)",
+               "caption_uia": {
+                  "name": "FD class:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556846",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "FOC number:",
+               "caption_windowed": true,
+               "input_handle": 2556848,
+               "input_class": "Edit",
+               "input_rect": "(L881, T225, R1031, B247)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "FOC number:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556848",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556848,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556848
+                  },
+                  "previous": {
+                     "handle": 2556850,
+                     "class": "Static",
+                     "text": "FOC number:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556850
+                  },
+                  "next": {
+                     "handle": 2556846,
+                     "class": "Static",
+                     "text": "FD class:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556846
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "FOC number:",
+               "caption_handle": 2556850,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T229, R875, B246)",
+               "caption_uia": {
+                  "name": "FOC number:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556850",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "IOTA:",
+               "caption_windowed": true,
+               "input_handle": 2294708,
+               "input_class": "Edit",
+               "input_rect": "(L881, T255, R1031, B277)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "IOTA:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2294708",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2294708,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2294708
+                  },
+                  "previous": {
+                     "handle": 2294710,
+                     "class": "Static",
+                     "text": "IOTA:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294710
+                  },
+                  "next": {
+                     "handle": 2556850,
+                     "class": "Static",
+                     "text": "FOC number:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556850
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "IOTA:",
+               "caption_handle": 2294710,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T259, R875, B276)",
+               "caption_uia": {
+                  "name": "IOTA:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2294710",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Park:",
+               "caption_windowed": true,
+               "input_handle": 2622392,
+               "input_class": "Edit",
+               "input_rect": "(L881, T285, R1031, B307)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Park:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2622392",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2622392,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2622392
+                  },
+                  "previous": {
+                     "handle": 2425786,
+                     "class": "Static",
+                     "text": "Park:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425786
+                  },
+                  "next": {
+                     "handle": 2294710,
+                     "class": "Static",
+                     "text": "IOTA:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294710
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Park:",
+               "caption_handle": 2425786,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T289, R875, B306)",
+               "caption_uia": {
+                  "name": "Park:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2425786",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "License year:",
+               "caption_windowed": true,
+               "input_handle": 3146598,
+               "input_class": "Edit",
+               "input_rect": "(L881, T315, R1031, B337)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "License year:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "3146598",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 3146598,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 3146598
+                  },
+                  "previous": {
+                     "handle": 2622396,
+                     "class": "Static",
+                     "text": "License year:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622396
+                  },
+                  "next": {
+                     "handle": 2425786,
+                     "class": "Static",
+                     "text": "Park:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425786
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "License year:",
+               "caption_handle": 2622396,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T319, R875, B336)",
+               "caption_uia": {
+                  "name": "License year:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622396",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            }
+         ],
+         "main_callsign_uia": {
+            "name": "",
+            "control_type": "edit",
+            "class": "Edit",
+            "automation_id": "3146688",
+            "help_text": "",
+            "labeled_by": null
+         }
+      },
+      {
+         "label": "after-page-switch",
+         "rows": [
+            {
+               "caption": "Callsign:",
+               "caption_windowed": true,
+               "input_handle": 2884458,
+               "input_class": "Edit",
+               "input_rect": "(L525, T135, R725, B157)",
+               "input_value": "W1AW",
+               "input_uia": {
+                  "name": "Callsign:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2884458",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2884458,
+                     "class": "Edit",
+                     "text": "W1AW",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2884458
+                  },
+                  "previous": {
+                     "handle": 2818942,
+                     "class": "Static",
+                     "text": "Callsign:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2818942
+                  },
+                  "next": {
+                     "handle": 0,
+                     "class": null,
+                     "text": null
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Callsign:",
+               "caption_handle": 2818942,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T139, R517, B156)",
+               "caption_uia": {
+                  "name": "Callsign:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2818942",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "First name:",
+               "caption_windowed": true,
+               "input_handle": 2425716,
+               "input_class": "Edit",
+               "input_rect": "(L525, T165, R725, B187)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "First name:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2425716",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2425716,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2425716
+                  },
+                  "previous": {
+                     "handle": 2622322,
+                     "class": "Static",
+                     "text": "First name:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622322
+                  },
+                  "next": {
+                     "handle": 2818942,
+                     "class": "Static",
+                     "text": "Callsign:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2818942
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "First name:",
+               "caption_handle": 2622322,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T169, R517, B186)",
+               "caption_uia": {
+                  "name": "First name:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622322",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Grid square:",
+               "caption_windowed": true,
+               "input_handle": 2556784,
+               "input_class": "Edit",
+               "input_rect": "(L525, T195, R725, B217)",
+               "input_value": "FN31",
+               "input_uia": {
+                  "name": "Grid square:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556784",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556784,
+                     "class": "Edit",
+                     "text": "FN31",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556784
+                  },
+                  "previous": {
+                     "handle": 2556812,
+                     "class": "Static",
+                     "text": "Grid square:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556812
+                  },
+                  "next": {
+                     "handle": 2622322,
+                     "class": "Static",
+                     "text": "First name:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622322
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Grid square:",
+               "caption_handle": 2556812,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T199, R517, B216)",
+               "caption_uia": {
+                  "name": "Grid square:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556812",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Continent:",
+               "caption_windowed": true,
+               "input_handle": 4260692,
+               "input_class": "LCLComboBox",
+               "input_rect": "(L525, T225, R725, B248)",
+               "input_value": "NONE",
+               "input_uia": {
+                  "name": "Continent:",
+                  "control_type": "combo box",
+                  "class": "LCLComboBox",
+                  "automation_id": "4260692",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 4260692,
+                     "class": "LCLComboBox",
+                     "text": "",
+                     "style": "0x56010242",
+                     "exstyle": "0x0",
+                     "id": 4260692
+                  },
+                  "previous": {
+                     "handle": 2294666,
+                     "class": "Static",
+                     "text": "Continent:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294666
+                  },
+                  "next": {
+                     "handle": 2556812,
+                     "class": "Static",
+                     "text": "Grid square:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556812
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Continent:",
+               "caption_handle": 2294666,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T229, R517, B246)",
+               "caption_uia": {
+                  "name": "Continent:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2294666",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               },
+               "inner_edit_handle": 2229116,
+               "inner_edit_uia": {
+                  "name": "Continent:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "1001",
+                  "help_text": "",
+                  "labeled_by": null
+               }
+            },
+            {
+               "caption": "CQ zone:",
+               "caption_windowed": true,
+               "input_handle": 4457276,
+               "input_class": "Edit",
+               "input_rect": "(L525, T255, R725, B277)",
+               "input_value": "8",
+               "input_uia": {
+                  "name": "CQ zone:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "4457276",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 4457276,
+                     "class": "Edit",
+                     "text": "8",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 4457276
+                  },
+                  "previous": {
+                     "handle": 4195152,
+                     "class": "Static",
+                     "text": "CQ zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4195152
+                  },
+                  "next": {
+                     "handle": 2294666,
+                     "class": "Static",
+                     "text": "Continent:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294666
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "CQ zone:",
+               "caption_handle": 4195152,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T259, R517, B276)",
+               "caption_uia": {
+                  "name": "CQ zone:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "4195152",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "ITU zone:",
+               "caption_windowed": true,
+               "input_handle": 2753414,
+               "input_class": "Edit",
+               "input_rect": "(L525, T285, R725, B307)",
+               "input_value": "0",
+               "input_uia": {
+                  "name": "ITU zone:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2753414",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2753414,
+                     "class": "Edit",
+                     "text": "0",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2753414
+                  },
+                  "previous": {
+                     "handle": 2753308,
+                     "class": "Static",
+                     "text": "ITU zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2753308
+                  },
+                  "next": {
+                     "handle": 4195152,
+                     "class": "Static",
+                     "text": "CQ zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4195152
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "ITU zone:",
+               "caption_handle": 2753308,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T289, R517, B306)",
+               "caption_uia": {
+                  "name": "ITU zone:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2753308",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "State/Province:",
+               "caption_windowed": true,
+               "input_handle": 2556780,
+               "input_class": "Edit",
+               "input_rect": "(L525, T315, R725, B337)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "State/Province:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556780",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556780,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556780
+                  },
+                  "previous": {
+                     "handle": 4588352,
+                     "class": "Static",
+                     "text": "State/Province:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4588352
+                  },
+                  "next": {
+                     "handle": 2753308,
+                     "class": "Static",
+                     "text": "ITU zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2753308
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "State/Province:",
+               "caption_handle": 4588352,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T319, R517, B336)",
+               "caption_uia": {
+                  "name": "State/Province:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "4588352",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "ARRL section:",
+               "caption_windowed": true,
+               "input_handle": 2360216,
+               "input_class": "Edit",
+               "input_rect": "(L525, T345, R725, B367)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "ARRL section:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2360216",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2360216,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2360216
+                  },
+                  "previous": {
+                     "handle": 2622362,
+                     "class": "Static",
+                     "text": "ARRL section:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622362
+                  },
+                  "next": {
+                     "handle": 4588352,
+                     "class": "Static",
+                     "text": "State/Province:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4588352
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "ARRL section:",
+               "caption_handle": 2622362,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T349, R517, B366)",
+               "caption_uia": {
+                  "name": "ARRL section:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622362",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Country:",
+               "caption_windowed": true,
+               "input_handle": 2491292,
+               "input_class": "Edit",
+               "input_rect": "(L525, T375, R725, B397)",
+               "input_value": "K",
+               "input_uia": {
+                  "name": "Country:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491292",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491292,
+                     "class": "Edit",
+                     "text": "K",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491292
+                  },
+                  "previous": {
+                     "handle": 2687902,
+                     "class": "Static",
+                     "text": "Country:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2687902
+                  },
+                  "next": {
+                     "handle": 2622362,
+                     "class": "Static",
+                     "text": "ARRL section:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622362
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Country:",
+               "caption_handle": 2687902,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T379, R517, B396)",
+               "caption_uia": {
+                  "name": "Country:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2687902",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Postal code:",
+               "caption_windowed": true,
+               "input_handle": 2491296,
+               "input_class": "Edit",
+               "input_rect": "(L525, T405, R725, B427)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Postal code:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491296",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491296,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491296
+                  },
+                  "previous": {
+                     "handle": 2425762,
+                     "class": "Static",
+                     "text": "Postal code:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425762
+                  },
+                  "next": {
+                     "handle": 2687902,
+                     "class": "Static",
+                     "text": "Country:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2687902
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Postal code:",
+               "caption_handle": 2425762,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T409, R517, B426)",
+               "caption_uia": {
+                  "name": "Postal code:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2425762",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Check:",
+               "caption_windowed": true,
+               "input_handle": 2491300,
+               "input_class": "Edit",
+               "input_rect": "(L881, T135, R1031, B157)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Check:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491300",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491300,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491300
+                  },
+                  "previous": {
+                     "handle": 2556838,
+                     "class": "Static",
+                     "text": "Check:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556838
+                  },
+                  "next": {
+                     "handle": 2425762,
+                     "class": "Static",
+                     "text": "Postal code:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425762
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Check:",
+               "caption_handle": 2556838,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T139, R875, B156)",
+               "caption_uia": {
+                  "name": "Check:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556838",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Precedence:",
+               "caption_windowed": true,
+               "input_handle": 2753448,
+               "input_class": "Edit",
+               "input_rect": "(L881, T165, R1031, B187)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Precedence:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2753448",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2753448,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2753448
+                  },
+                  "previous": {
+                     "handle": 2884522,
+                     "class": "Static",
+                     "text": "Precedence:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2884522
+                  },
+                  "next": {
+                     "handle": 2556838,
+                     "class": "Static",
+                     "text": "Check:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556838
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Precedence:",
+               "caption_handle": 2884522,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T169, R875, B186)",
+               "caption_uia": {
+                  "name": "Precedence:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2884522",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "FD class:",
+               "caption_windowed": true,
+               "input_handle": 2818988,
+               "input_class": "Edit",
+               "input_rect": "(L881, T195, R1031, B217)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "FD class:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2818988",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2818988,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2818988
+                  },
+                  "previous": {
+                     "handle": 2556846,
+                     "class": "Static",
+                     "text": "FD class:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556846
+                  },
+                  "next": {
+                     "handle": 2884522,
+                     "class": "Static",
+                     "text": "Precedence:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2884522
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "FD class:",
+               "caption_handle": 2556846,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T199, R875, B216)",
+               "caption_uia": {
+                  "name": "FD class:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556846",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "FOC number:",
+               "caption_windowed": true,
+               "input_handle": 2556848,
+               "input_class": "Edit",
+               "input_rect": "(L881, T225, R1031, B247)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "FOC number:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556848",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556848,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556848
+                  },
+                  "previous": {
+                     "handle": 2556850,
+                     "class": "Static",
+                     "text": "FOC number:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556850
+                  },
+                  "next": {
+                     "handle": 2556846,
+                     "class": "Static",
+                     "text": "FD class:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556846
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "FOC number:",
+               "caption_handle": 2556850,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T229, R875, B246)",
+               "caption_uia": {
+                  "name": "FOC number:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556850",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "IOTA:",
+               "caption_windowed": true,
+               "input_handle": 2294708,
+               "input_class": "Edit",
+               "input_rect": "(L881, T255, R1031, B277)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "IOTA:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2294708",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2294708,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2294708
+                  },
+                  "previous": {
+                     "handle": 2294710,
+                     "class": "Static",
+                     "text": "IOTA:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294710
+                  },
+                  "next": {
+                     "handle": 2556850,
+                     "class": "Static",
+                     "text": "FOC number:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556850
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "IOTA:",
+               "caption_handle": 2294710,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T259, R875, B276)",
+               "caption_uia": {
+                  "name": "IOTA:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2294710",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Park:",
+               "caption_windowed": true,
+               "input_handle": 2622392,
+               "input_class": "Edit",
+               "input_rect": "(L881, T285, R1031, B307)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Park:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2622392",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2622392,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2622392
+                  },
+                  "previous": {
+                     "handle": 2425786,
+                     "class": "Static",
+                     "text": "Park:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425786
+                  },
+                  "next": {
+                     "handle": 2294710,
+                     "class": "Static",
+                     "text": "IOTA:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294710
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Park:",
+               "caption_handle": 2425786,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T289, R875, B306)",
+               "caption_uia": {
+                  "name": "Park:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2425786",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "License year:",
+               "caption_windowed": true,
+               "input_handle": 3146598,
+               "input_class": "Edit",
+               "input_rect": "(L881, T315, R1031, B337)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "License year:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "3146598",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 3146598,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 3146598
+                  },
+                  "previous": {
+                     "handle": 2622396,
+                     "class": "Static",
+                     "text": "License year:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622396
+                  },
+                  "next": {
+                     "handle": 2425786,
+                     "class": "Static",
+                     "text": "Park:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425786
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "License year:",
+               "caption_handle": 2622396,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T319, R875, B336)",
+               "caption_uia": {
+                  "name": "License year:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622396",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            }
+         ],
+         "main_callsign_uia": {
+            "name": "",
+            "control_type": "edit",
+            "class": "Edit",
+            "automation_id": "3146688",
+            "help_text": "",
+            "labeled_by": null
+         }
+      },
+      {
+         "label": "after-reopen",
+         "rows": [
+            {
+               "caption": "Callsign:",
+               "caption_windowed": true,
+               "input_handle": 2884458,
+               "input_class": "Edit",
+               "input_rect": "(L525, T135, R725, B157)",
+               "input_value": "W1AW",
+               "input_uia": {
+                  "name": "Callsign:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2884458",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2884458,
+                     "class": "Edit",
+                     "text": "W1AW",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2884458
+                  },
+                  "previous": {
+                     "handle": 2818942,
+                     "class": "Static",
+                     "text": "Callsign:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2818942
+                  },
+                  "next": {
+                     "handle": 0,
+                     "class": null,
+                     "text": null
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Callsign:",
+               "caption_handle": 2818942,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T139, R517, B156)",
+               "caption_uia": {
+                  "name": "Callsign:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2818942",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "First name:",
+               "caption_windowed": true,
+               "input_handle": 2425716,
+               "input_class": "Edit",
+               "input_rect": "(L525, T165, R725, B187)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "First name:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2425716",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2425716,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2425716
+                  },
+                  "previous": {
+                     "handle": 2622322,
+                     "class": "Static",
+                     "text": "First name:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622322
+                  },
+                  "next": {
+                     "handle": 2818942,
+                     "class": "Static",
+                     "text": "Callsign:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2818942
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "First name:",
+               "caption_handle": 2622322,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T169, R517, B186)",
+               "caption_uia": {
+                  "name": "First name:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622322",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Grid square:",
+               "caption_windowed": true,
+               "input_handle": 2556784,
+               "input_class": "Edit",
+               "input_rect": "(L525, T195, R725, B217)",
+               "input_value": "FN31",
+               "input_uia": {
+                  "name": "Grid square:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556784",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556784,
+                     "class": "Edit",
+                     "text": "FN31",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556784
+                  },
+                  "previous": {
+                     "handle": 2556812,
+                     "class": "Static",
+                     "text": "Grid square:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556812
+                  },
+                  "next": {
+                     "handle": 2622322,
+                     "class": "Static",
+                     "text": "First name:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622322
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Grid square:",
+               "caption_handle": 2556812,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T199, R517, B216)",
+               "caption_uia": {
+                  "name": "Grid square:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556812",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Continent:",
+               "caption_windowed": true,
+               "input_handle": 4260692,
+               "input_class": "LCLComboBox",
+               "input_rect": "(L525, T225, R725, B248)",
+               "input_value": "NONE",
+               "input_uia": {
+                  "name": "Continent:",
+                  "control_type": "combo box",
+                  "class": "LCLComboBox",
+                  "automation_id": "4260692",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 4260692,
+                     "class": "LCLComboBox",
+                     "text": "",
+                     "style": "0x56010242",
+                     "exstyle": "0x0",
+                     "id": 4260692
+                  },
+                  "previous": {
+                     "handle": 2294666,
+                     "class": "Static",
+                     "text": "Continent:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294666
+                  },
+                  "next": {
+                     "handle": 2556812,
+                     "class": "Static",
+                     "text": "Grid square:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556812
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Continent:",
+               "caption_handle": 2294666,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T229, R517, B246)",
+               "caption_uia": {
+                  "name": "Continent:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2294666",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               },
+               "inner_edit_handle": 2229116,
+               "inner_edit_uia": {
+                  "name": "Continent:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "1001",
+                  "help_text": "",
+                  "labeled_by": null
+               }
+            },
+            {
+               "caption": "CQ zone:",
+               "caption_windowed": true,
+               "input_handle": 4457276,
+               "input_class": "Edit",
+               "input_rect": "(L525, T255, R725, B277)",
+               "input_value": "8",
+               "input_uia": {
+                  "name": "CQ zone:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "4457276",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 4457276,
+                     "class": "Edit",
+                     "text": "8",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 4457276
+                  },
+                  "previous": {
+                     "handle": 4195152,
+                     "class": "Static",
+                     "text": "CQ zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4195152
+                  },
+                  "next": {
+                     "handle": 2294666,
+                     "class": "Static",
+                     "text": "Continent:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294666
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "CQ zone:",
+               "caption_handle": 4195152,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T259, R517, B276)",
+               "caption_uia": {
+                  "name": "CQ zone:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "4195152",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "ITU zone:",
+               "caption_windowed": true,
+               "input_handle": 2753414,
+               "input_class": "Edit",
+               "input_rect": "(L525, T285, R725, B307)",
+               "input_value": "0",
+               "input_uia": {
+                  "name": "ITU zone:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2753414",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2753414,
+                     "class": "Edit",
+                     "text": "0",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2753414
+                  },
+                  "previous": {
+                     "handle": 2753308,
+                     "class": "Static",
+                     "text": "ITU zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2753308
+                  },
+                  "next": {
+                     "handle": 4195152,
+                     "class": "Static",
+                     "text": "CQ zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4195152
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "ITU zone:",
+               "caption_handle": 2753308,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T289, R517, B306)",
+               "caption_uia": {
+                  "name": "ITU zone:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2753308",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "State/Province:",
+               "caption_windowed": true,
+               "input_handle": 2556780,
+               "input_class": "Edit",
+               "input_rect": "(L525, T315, R725, B337)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "State/Province:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556780",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556780,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556780
+                  },
+                  "previous": {
+                     "handle": 4588352,
+                     "class": "Static",
+                     "text": "State/Province:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4588352
+                  },
+                  "next": {
+                     "handle": 2753308,
+                     "class": "Static",
+                     "text": "ITU zone:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2753308
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "State/Province:",
+               "caption_handle": 4588352,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T319, R517, B336)",
+               "caption_uia": {
+                  "name": "State/Province:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "4588352",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "ARRL section:",
+               "caption_windowed": true,
+               "input_handle": 2360216,
+               "input_class": "Edit",
+               "input_rect": "(L525, T345, R725, B367)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "ARRL section:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2360216",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2360216,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2360216
+                  },
+                  "previous": {
+                     "handle": 2622362,
+                     "class": "Static",
+                     "text": "ARRL section:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622362
+                  },
+                  "next": {
+                     "handle": 4588352,
+                     "class": "Static",
+                     "text": "State/Province:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 4588352
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "ARRL section:",
+               "caption_handle": 2622362,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T349, R517, B366)",
+               "caption_uia": {
+                  "name": "ARRL section:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622362",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Country:",
+               "caption_windowed": true,
+               "input_handle": 2491292,
+               "input_class": "Edit",
+               "input_rect": "(L525, T375, R725, B397)",
+               "input_value": "K",
+               "input_uia": {
+                  "name": "Country:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491292",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491292,
+                     "class": "Edit",
+                     "text": "K",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491292
+                  },
+                  "previous": {
+                     "handle": 2687902,
+                     "class": "Static",
+                     "text": "Country:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2687902
+                  },
+                  "next": {
+                     "handle": 2622362,
+                     "class": "Static",
+                     "text": "ARRL section:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622362
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Country:",
+               "caption_handle": 2687902,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T379, R517, B396)",
+               "caption_uia": {
+                  "name": "Country:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2687902",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Postal code:",
+               "caption_windowed": true,
+               "input_handle": 2491296,
+               "input_class": "Edit",
+               "input_rect": "(L525, T405, R725, B427)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Postal code:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491296",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491296,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491296
+                  },
+                  "previous": {
+                     "handle": 2425762,
+                     "class": "Static",
+                     "text": "Postal code:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425762
+                  },
+                  "next": {
+                     "handle": 2687902,
+                     "class": "Static",
+                     "text": "Country:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2687902
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Postal code:",
+               "caption_handle": 2425762,
+               "caption_class": "Static",
+               "caption_rect": "(L397, T409, R517, B426)",
+               "caption_uia": {
+                  "name": "Postal code:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2425762",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Check:",
+               "caption_windowed": true,
+               "input_handle": 2491300,
+               "input_class": "Edit",
+               "input_rect": "(L881, T135, R1031, B157)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Check:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2491300",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2491300,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2491300
+                  },
+                  "previous": {
+                     "handle": 2556838,
+                     "class": "Static",
+                     "text": "Check:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556838
+                  },
+                  "next": {
+                     "handle": 2425762,
+                     "class": "Static",
+                     "text": "Postal code:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425762
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Check:",
+               "caption_handle": 2556838,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T139, R875, B156)",
+               "caption_uia": {
+                  "name": "Check:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556838",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Precedence:",
+               "caption_windowed": true,
+               "input_handle": 2753448,
+               "input_class": "Edit",
+               "input_rect": "(L881, T165, R1031, B187)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Precedence:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2753448",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2753448,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2753448
+                  },
+                  "previous": {
+                     "handle": 2884522,
+                     "class": "Static",
+                     "text": "Precedence:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2884522
+                  },
+                  "next": {
+                     "handle": 2556838,
+                     "class": "Static",
+                     "text": "Check:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556838
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Precedence:",
+               "caption_handle": 2884522,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T169, R875, B186)",
+               "caption_uia": {
+                  "name": "Precedence:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2884522",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "FD class:",
+               "caption_windowed": true,
+               "input_handle": 2818988,
+               "input_class": "Edit",
+               "input_rect": "(L881, T195, R1031, B217)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "FD class:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2818988",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2818988,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2818988
+                  },
+                  "previous": {
+                     "handle": 2556846,
+                     "class": "Static",
+                     "text": "FD class:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556846
+                  },
+                  "next": {
+                     "handle": 2884522,
+                     "class": "Static",
+                     "text": "Precedence:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2884522
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "FD class:",
+               "caption_handle": 2556846,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T199, R875, B216)",
+               "caption_uia": {
+                  "name": "FD class:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556846",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "FOC number:",
+               "caption_windowed": true,
+               "input_handle": 2556848,
+               "input_class": "Edit",
+               "input_rect": "(L881, T225, R1031, B247)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "FOC number:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2556848",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2556848,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2556848
+                  },
+                  "previous": {
+                     "handle": 2556850,
+                     "class": "Static",
+                     "text": "FOC number:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556850
+                  },
+                  "next": {
+                     "handle": 2556846,
+                     "class": "Static",
+                     "text": "FD class:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556846
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "FOC number:",
+               "caption_handle": 2556850,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T229, R875, B246)",
+               "caption_uia": {
+                  "name": "FOC number:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2556850",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "IOTA:",
+               "caption_windowed": true,
+               "input_handle": 2294708,
+               "input_class": "Edit",
+               "input_rect": "(L881, T255, R1031, B277)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "IOTA:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2294708",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2294708,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2294708
+                  },
+                  "previous": {
+                     "handle": 2294710,
+                     "class": "Static",
+                     "text": "IOTA:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294710
+                  },
+                  "next": {
+                     "handle": 2556850,
+                     "class": "Static",
+                     "text": "FOC number:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2556850
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "IOTA:",
+               "caption_handle": 2294710,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T259, R875, B276)",
+               "caption_uia": {
+                  "name": "IOTA:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2294710",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "Park:",
+               "caption_windowed": true,
+               "input_handle": 2622392,
+               "input_class": "Edit",
+               "input_rect": "(L881, T285, R1031, B307)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "Park:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "2622392",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 2622392,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 2622392
+                  },
+                  "previous": {
+                     "handle": 2425786,
+                     "class": "Static",
+                     "text": "Park:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425786
+                  },
+                  "next": {
+                     "handle": 2294710,
+                     "class": "Static",
+                     "text": "IOTA:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2294710
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "Park:",
+               "caption_handle": 2425786,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T289, R875, B306)",
+               "caption_uia": {
+                  "name": "Park:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2425786",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            },
+            {
+               "caption": "License year:",
+               "caption_windowed": true,
+               "input_handle": 3146598,
+               "input_class": "Edit",
+               "input_rect": "(L881, T315, R1031, B337)",
+               "input_value": "",
+               "input_uia": {
+                  "name": "License year:",
+                  "control_type": "edit",
+                  "class": "Edit",
+                  "automation_id": "3146598",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "input_neighbours": {
+                  "self": {
+                     "handle": 3146598,
+                     "class": "Edit",
+                     "text": "",
+                     "style": "0x56010080",
+                     "exstyle": "0x200",
+                     "id": 3146598
+                  },
+                  "previous": {
+                     "handle": 2622396,
+                     "class": "Static",
+                     "text": "License year:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2622396
+                  },
+                  "next": {
+                     "handle": 2425786,
+                     "class": "Static",
+                     "text": "Park:",
+                     "style": "0x56000100",
+                     "exstyle": "0x0",
+                     "id": 2425786
+                  }
+               },
+               "input_wm_getobject": 0,
+               "input_msaa_name": "License year:",
+               "caption_handle": 2622396,
+               "caption_class": "Static",
+               "caption_rect": "(L765, T319, R875, B336)",
+               "caption_uia": {
+                  "name": "License year:",
+                  "control_type": "text",
+                  "class": "Static",
+                  "automation_id": "2622396",
+                  "help_text": "",
+                  "labeled_by": null
+               },
+               "caption_dlgcode": {
+                  "value": "0x104",
+                  "flags": [
+                     "WANTALLKEYS",
+                     "STATIC"
+                  ]
+               }
+            }
+         ],
+         "main_callsign_uia": {
+            "name": "",
+            "control_type": "edit",
+            "class": "Edit",
+            "automation_id": "1901554",
+            "help_text": "",
+            "labeled_by": null
+         }
+      }
+   ],
+   "failures": []
+}

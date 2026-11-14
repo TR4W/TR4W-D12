@@ -1,0 +1,168 @@
+{"utc": "2026-11-14T02:26:41.377380+00:00", "action": "launch isolated current-main build", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:42.540000+00:00", "action": "launch isolated current-main build", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:43.691467+00:00", "action": "open Preferences with Ctrl+J", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:43.917797+00:00", "action": "open Preferences with Ctrl+J", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:44.552170+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:44.728773+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:44.731367+00:00", "action": "search MAIN CALLSIGN", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:44.759242+00:00", "action": "search MAIN CALLSIGN", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:44.766585+00:00", "action": "click first visible result for MAIN CALLSIGN", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:45.254892+00:00", "action": "click first visible result for MAIN CALLSIGN", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:45.375778+00:00", "action": "capture searched page MAIN CALLSIGN", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:45.927732+00:00", "action": "capture searched page MAIN CALLSIGN", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:45.938421+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:46.113561+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:46.115999+00:00", "action": "search MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:46.143896+00:00", "action": "search MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:46.152096+00:00", "action": "click first visible result for MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:46.657258+00:00", "action": "click first visible result for MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:46.668612+00:00", "action": "capture searched page MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:47.223387+00:00", "action": "capture searched page MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:47.230486+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:47.406421+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:47.413558+00:00", "action": "search MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:47.440468+00:00", "action": "search MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:47.446656+00:00", "action": "click first visible result for MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:47.927893+00:00", "action": "click first visible result for MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:47.939838+00:00", "action": "capture searched page MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:48.481177+00:00", "action": "capture searched page MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:48.696176+00:00", "action": "capture Station page initial", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:48.984026+00:00", "action": "capture Station page initial", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:48.996240+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:49.170360+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:49.177189+00:00", "action": "search DE ENABLE", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:49.203263+00:00", "action": "search DE ENABLE", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:49.209692+00:00", "action": "click first visible result for DE ENABLE", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:49.697871+00:00", "action": "click first visible result for DE ENABLE", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:49.710363+00:00", "action": "capture searched page DE ENABLE", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:50.248836+00:00", "action": "capture searched page DE ENABLE", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:50.254690+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:50.430433+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:50.437529+00:00", "action": "search MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:50.463212+00:00", "action": "search MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:50.470238+00:00", "action": "click first visible result for MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:50.957896+00:00", "action": "click first visible result for MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:50.965517+00:00", "action": "capture searched page MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:51.487944+00:00", "action": "capture searched page MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:51.498709+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:51.672912+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:51.676222+00:00", "action": "search MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:51.703825+00:00", "action": "search MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:51.710708+00:00", "action": "click first visible result for MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:52.199222+00:00", "action": "click first visible result for MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:52.208082+00:00", "action": "capture searched page MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:52.762237+00:00", "action": "capture searched page MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:52.948420+00:00", "action": "capture Station page after-page-switch", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:53.239565+00:00", "action": "capture Station page after-page-switch", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:53.251292+00:00", "action": "focus Callsign", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:53.425833+00:00", "action": "focus Callsign", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:56.189941+00:00", "action": "neutral focus before clicking Callsign:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:56.369005+00:00", "action": "neutral focus before clicking Callsign:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:56.529279+00:00", "action": "click caption Callsign:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:56.839287+00:00", "action": "click caption Callsign:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:57.144589+00:00", "action": "neutral focus before clicking First name:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:57.319311+00:00", "action": "neutral focus before clicking First name:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:57.479350+00:00", "action": "click caption First name:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:57.796594+00:00", "action": "click caption First name:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:58.106081+00:00", "action": "neutral focus before clicking Grid square:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:58.280592+00:00", "action": "neutral focus before clicking Grid square:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:58.440677+00:00", "action": "click caption Grid square:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:58.847147+00:00", "action": "click caption Grid square:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:59.157689+00:00", "action": "neutral focus before clicking Continent:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:59.337710+00:00", "action": "neutral focus before clicking Continent:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:59.497111+00:00", "action": "click caption Continent:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:59.802713+00:00", "action": "click caption Continent:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:00.108763+00:00", "action": "neutral focus before clicking CQ zone:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:00.288105+00:00", "action": "neutral focus before clicking CQ zone:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:00.448107+00:00", "action": "click caption CQ zone:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:00.740228+00:00", "action": "click caption CQ zone:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:01.050314+00:00", "action": "neutral focus before clicking ITU zone:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:01.229149+00:00", "action": "neutral focus before clicking ITU zone:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:01.385285+00:00", "action": "click caption ITU zone:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:01.681431+00:00", "action": "click caption ITU zone:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:01.991263+00:00", "action": "neutral focus before clicking State/Province:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:02.170204+00:00", "action": "neutral focus before clicking State/Province:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:02.330079+00:00", "action": "click caption State/Province:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:02.639929+00:00", "action": "click caption State/Province:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:02.953478+00:00", "action": "neutral focus before clicking ARRL section:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:03.129098+00:00", "action": "neutral focus before clicking ARRL section:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:03.285595+00:00", "action": "click caption ARRL section:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:03.610210+00:00", "action": "click caption ARRL section:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:03.920507+00:00", "action": "neutral focus before clicking Country:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:04.095079+00:00", "action": "neutral focus before clicking Country:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:04.255066+00:00", "action": "click caption Country:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:04.566273+00:00", "action": "click caption Country:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:04.876484+00:00", "action": "neutral focus before clicking Postal code:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:05.055596+00:00", "action": "neutral focus before clicking Postal code:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:05.215812+00:00", "action": "click caption Postal code:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:05.524952+00:00", "action": "click caption Postal code:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:05.835339+00:00", "action": "neutral focus before clicking Check:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:06.013891+00:00", "action": "neutral focus before clicking Check:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:06.170584+00:00", "action": "click caption Check:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:06.563912+00:00", "action": "click caption Check:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:06.870856+00:00", "action": "neutral focus before clicking Precedence:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:07.049180+00:00", "action": "neutral focus before clicking Precedence:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:07.209316+00:00", "action": "click caption Precedence:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:07.520862+00:00", "action": "click caption Precedence:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:07.831739+00:00", "action": "neutral focus before clicking FD class:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:08.011748+00:00", "action": "neutral focus before clicking FD class:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:08.167399+00:00", "action": "click caption FD class:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:08.568724+00:00", "action": "click caption FD class:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:08.874107+00:00", "action": "neutral focus before clicking FOC number:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:09.053288+00:00", "action": "neutral focus before clicking FOC number:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:09.214138+00:00", "action": "click caption FOC number:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:09.510226+00:00", "action": "click caption FOC number:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:09.815658+00:00", "action": "neutral focus before clicking IOTA:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:09.995673+00:00", "action": "neutral focus before clicking IOTA:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:10.156086+00:00", "action": "click caption IOTA:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:10.467266+00:00", "action": "click caption IOTA:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:10.777392+00:00", "action": "neutral focus before clicking Park:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:10.951667+00:00", "action": "neutral focus before clicking Park:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:11.111902+00:00", "action": "click caption Park:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:11.420554+00:00", "action": "click caption Park:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:11.725859+00:00", "action": "neutral focus before clicking License year:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:11.905468+00:00", "action": "neutral focus before clicking License year:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:12.061075+00:00", "action": "click caption License year:", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:12.472419+00:00", "action": "click caption License year:", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:12.783138+00:00", "action": "capture Station page after clicks", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:13.324864+00:00", "action": "capture Station page after clicks", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:13.332138+00:00", "action": "cancel Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:13.462912+00:00", "action": "cancel Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:13.958271+00:00", "action": "reopen Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:14.172297+00:00", "action": "reopen Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:14.227111+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:14.401404+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:14.408178+00:00", "action": "search MAIN CALLSIGN", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:14.434914+00:00", "action": "search MAIN CALLSIGN", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:14.442706+00:00", "action": "click first visible result for MAIN CALLSIGN", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:14.941724+00:00", "action": "click first visible result for MAIN CALLSIGN", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:14.952019+00:00", "action": "capture searched page MAIN CALLSIGN", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:15.503853+00:00", "action": "capture searched page MAIN CALLSIGN", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:15.516362+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:15.692690+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:15.700502+00:00", "action": "search MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:15.730159+00:00", "action": "search MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:15.737854+00:00", "action": "click first visible result for MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:16.216122+00:00", "action": "click first visible result for MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:16.225563+00:00", "action": "capture searched page MY LICENSE YEAR", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:16.795694+00:00", "action": "capture searched page MY LICENSE YEAR", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:16.807818+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:16.984268+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:16.995307+00:00", "action": "search MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:17.026034+00:00", "action": "search MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:17.033226+00:00", "action": "click first visible result for MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:17.522237+00:00", "action": "click first visible result for MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:17.529642+00:00", "action": "capture searched page MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:18.055472+00:00", "action": "capture searched page MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:18.243015+00:00", "action": "capture Station page after-reopen", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:18.548381+00:00", "action": "capture Station page after-reopen", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:18.724855+00:00", "action": "cancel Preferences after the name checks", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:18.896470+00:00", "action": "cancel Preferences after the name checks", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:19.484257+00:00", "action": "request normal close to save messages", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:19.495854+00:00", "action": "request normal close to save messages", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:19.501784+00:00", "action": "wait for exit confirmation", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:19.602540+00:00", "action": "wait for exit confirmation", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:19.705356+00:00", "action": "confirm normal exit", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:19.831567+00:00", "action": "confirm normal exit", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:27:19.834242+00:00", "action": "wait for owned application exit", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:27:20.138089+00:00", "action": "wait for owned application exit", "state": "after", "detail": null}

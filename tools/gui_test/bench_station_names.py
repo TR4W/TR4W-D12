@@ -17,6 +17,7 @@ from pywinauto.uia_element_info import UIAElementInfo
 from session import capture
 from preferences_audit import focus_info
 from bench_preferences import search_control
+from bench_uia278 import dlgcode
 
 # The 17 Station captions in their designed Tab order (uPrefsForm.lfm). The
 # left column is the first ten, the right column the last seven.
@@ -168,7 +169,11 @@ def station_rows(prefs, left_anchor, right_anchor):
          if not field.rectangle().top <= middle <= field.rectangle().bottom:
             raise AssertionError("Caption " + text + " is not on the row of its input")
          row.update({"caption_handle": caption.handle, "caption_class": caption.class_name(),
-            "caption_rect": str(caption.rectangle()), "caption_uia": uia_facts(caption.handle)})
+            "caption_rect": str(caption.rectangle()), "caption_uia": uia_facts(caption.handle),
+            # Diagnostic (issue 278): the caption's own WM_GETDLGCODE answer.
+            # The accessibility proxy names an edit from its z-order
+            # predecessor only when that window answers DLGC_STATIC.
+            "caption_dlgcode": dlgcode(caption.handle)})
       if field.class_name() == "LCLComboBox":
          inner = win32gui.FindWindowEx(field.handle, 0, "Edit", None)
          row["inner_edit_handle"] = inner

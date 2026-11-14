@@ -1,0 +1,10 @@
+{
+   "scenario": "bench-prefs-station-names",
+   "run": "x-20261114T022452-d58365-station-names",
+   "root": "C:\\TR4W-Test\\bench-main-76fee2d45a02",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "note": "UIA Names read from CurrentName; caption-click focus recorded, not asserted",
+   "pid": 5408
+}

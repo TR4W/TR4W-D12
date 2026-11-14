@@ -1,0 +1,30 @@
+{"utc": "2026-11-14T02:26:13.502249+00:00", "action": "launch isolated current-main build", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:14.816801+00:00", "action": "launch isolated current-main build", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:16.045819+00:00", "action": "open Preferences with Ctrl+J", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:16.265787+00:00", "action": "open Preferences with Ctrl+J", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:16.907716+00:00", "action": "focus Preferences search", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:17.085234+00:00", "action": "focus Preferences search", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:17.088793+00:00", "action": "search MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:17.119534+00:00", "action": "search MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:17.125937+00:00", "action": "click first visible result for MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:17.603283+00:00", "action": "click first visible result for MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:17.721232+00:00", "action": "capture searched page MY CALL", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:18.295649+00:00", "action": "capture searched page MY CALL", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:18.303852+00:00", "action": "capture Station page", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:18.855874+00:00", "action": "capture Station page", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:19.495365+00:00", "action": "cancel Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:19.640500+00:00", "action": "cancel Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:20.342348+00:00", "action": "menu File->Import->ADIF", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:21.636773+00:00", "action": "menu File->Import->ADIF", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:22.143440+00:00", "action": "capture native file picker", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:22.437843+00:00", "action": "capture native file picker", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:22.492925+00:00", "action": "cancel native file picker", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:22.617956+00:00", "action": "cancel native file picker", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:27.494328+00:00", "action": "request normal close to save messages", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:27.500366+00:00", "action": "request normal close to save messages", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:27.503729+00:00", "action": "wait for exit confirmation", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:27.614794+00:00", "action": "wait for exit confirmation", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:27.710955+00:00", "action": "confirm normal exit", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:27.834966+00:00", "action": "confirm normal exit", "state": "after", "detail": null}
+{"utc": "2026-11-14T02:26:27.837558+00:00", "action": "wait for owned application exit", "state": "before", "detail": null}
+{"utc": "2026-11-14T02:26:28.146634+00:00", "action": "wait for owned application exit", "state": "after", "detail": null}
