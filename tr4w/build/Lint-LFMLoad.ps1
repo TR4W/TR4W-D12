@@ -95,6 +95,10 @@ if ($needBuild)
       Join-Path $Laz "packager\units\$Cpu-$Os"
       Join-Path $Laz "components\datetimectrls"
       Join-Path $PSScriptRoot "..\src\ui\lcl"
+      # AFTER ui\lcl, as in Get-SearchPaths: a ui\lcl unit may use a
+      # platform helper kept out of the ui files (uInputCaptionWin32 ->
+      # uStaticDialogCodeWindows, issue 278). Only what is named is compiled.
+      Join-Path $PSScriptRoot "..\src"
    )
 
    $fpcArgs = @("-M`delphi", "-P$Cpu", "-T$Os", '-B', "-FU$toolOut", "-o$toolExe")

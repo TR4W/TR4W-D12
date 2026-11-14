@@ -53,6 +53,7 @@ type
       procedure Test_ALegacyYearStatedAsMyZoneMoves;
       procedure Test_AYearContestCapturesTheZoneNotTheYear;
       procedure Test_TheStationPageEditsTheStationsYear;
+      procedure Test_TheStationBoxStaysTheStationsYearAfterASave;
    public
       procedure RunAllTests; override;
    end;
@@ -66,6 +67,7 @@ uses
    uContestBase,
    uContestFactory,       (* SessionZoneTextSent, SessionMyCQZone, AdoptLegacyLicenseYear *)
    uCFG,                  (* CFGCommandValueAsString -- what the Station page loads *)
+   uLicenseYearChange,    (* ApplyLicenseYearScope -- the question's answer *)
    uContestRegistry,      (* ContestIdentity, ContestHandleOf *)
    uQsoMyFacts;           (* TQsoMyFacts, NotCapturedMyFacts *)
 
@@ -438,6 +440,53 @@ begin
    end;
 end;
 
+procedure TLicenseYearSettingTests.Test_TheStationBoxStaysTheStationsYearAfterASave;
+var
+   savedYear: TSavedOverride;
+   savedStation: string;
+   scope: TLicenseYearScope;
+   resolvedBefore: string;
+begin
+   (* ISSUE 300, NY4I's ruling: the Station page's License year box is STABLE --
+     it always shows the station's stored default, whatever the contest states
+     and whichever answer the question got. The box loads
+     CFGCommandValueAsString (TPrefsForm.LoadStationPanel), so that is what is
+     pinned here, after the Station-page write and ApplyLicenseYearScope, for
+     both answers. Not ApplyAndStoreCommand: it saves to TR4WConfigFileName. *)
+   BeginTest('after a save, the Station page shows the station''s year under either answer');
+   savedYear := TSavedOverride.Create(sfLicenseYear);
+   savedStation := Settings.My.LicenseYear;
+   try
+      for scope := Low(TLicenseYearScope) to High(TLicenseYearScope) do
+         begin
+         Settings.My.LicenseYear := '';
+         Settings.My.SetContestOverride(sfLicenseYear, '64');
+         resolvedBefore := Settings.My.ResolvedLicenseYear;
+
+         CheckTrue(Settings.TrySetByCommand('MY LICENSE YEAR', '05'), 'the Station-page edit is taken');
+         ApplyLicenseYearScope(Settings, scope, resolvedBefore);
+
+         CheckEquals('05', Settings.My.LicenseYear, 'the station''s year is what was typed');
+         CheckEquals('05', CFGCommandValueAsString('MY LICENSE YEAR'),
+                     'and the Station page reads it back, not the contest''s value');
+         if scope = lysAlsoContest then
+            begin
+            CheckEquals('05', Settings.My.ContestOverride(sfLicenseYear),
+                        '"Also this contest" states the new year for the contest');
+            end
+         else
+            begin
+            CheckEquals('64', Settings.My.ContestOverride(sfLicenseYear),
+                        '"Station default only" leaves the contest''s stated 64');
+            end;
+         end;
+   finally
+      Settings.My.LicenseYear := savedStation;
+      savedYear.Restore;
+      savedYear.Free;
+   end;
+end;
+
 procedure TLicenseYearSettingTests.RunAllTests;
 begin
    Test_TheYearAsTyped;
@@ -448,6 +497,7 @@ begin
    Test_ALegacyYearStatedAsMyZoneMoves;
    Test_AYearContestCapturesTheZoneNotTheYear;
    Test_TheStationPageEditsTheStationsYear;
+   Test_TheStationBoxStaysTheStationsYearAfterASave;
 end;
 
 end.

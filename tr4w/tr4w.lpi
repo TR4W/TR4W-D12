@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="411">
+    <Units Count="414">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1806,6 +1806,18 @@
         <Filename Value="src/uCallHistoryDownload.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit410>
+      <Unit411>
+        <Filename Value="src/ui/lcl/uInputCaption.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit411>
+      <Unit412>
+        <Filename Value="src/ui/lcl/uInputCaptionWin32.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit412>
+      <Unit413>
+        <Filename Value="src/uStaticDialogCodeWindows.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit413>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

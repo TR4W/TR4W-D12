@@ -1,0 +1,118 @@
+{
+   "scenario": "bench-prefs-uia278",
+   "run": "x-20261114T0040-uia278",
+   "root": "C:\\TR4W-Test\\bench-main-16e39d97aa32",
+   "passed": true,
+   "captures": [],
+   "failures": [],
+   "summary": {
+      "station_edit_uia_name": "",
+      "station_edit_msaa_name": null,
+      "station_caption_dlgcode": {
+         "value": "0x4",
+         "flags": [
+            "WANTALLKEYS"
+         ]
+      },
+      "station_edit_provider": "[pid:1836,providerId:0x380330 Main:Nested [pid:8704,providerId:0x380330 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+      "probe": [
+         {
+            "variant": "native",
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "variant": "static_answers_wantallkeys",
+            "label_dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            },
+            "uia_name": "",
+            "msaa_name": null
+         },
+         {
+            "variant": "static_answers_static_explicit",
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "variant": "static_answers_static_or_wantallkeys",
+            "label_dlgcode": {
+               "value": "0x104",
+               "flags": [
+                  "WANTALLKEYS",
+                  "STATIC"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "variant": "edit_answers_wantallkeys",
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "variant": "in_panel",
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "variant": "in_panel_static_answers_wantallkeys",
+            "label_dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            },
+            "uia_name": "",
+            "msaa_name": null
+         },
+         {
+            "variant": "in_panel_static_answers_static",
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "variant": "cue_banner_no_static",
+            "label_dlgcode": null,
+            "uia_name": "",
+            "msaa_name": null
+         }
+      ]
+   },
+   "note": "Probe: measurements recorded, no assertion on TR4W names",
+   "pid": 8704
+}

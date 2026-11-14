@@ -1182,7 +1182,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 1
       end
-      object lblMyCall: TStaticText
+      object lblMyCall: TInputCaption
         Left = 12
         Height = 17
         Top = 38
@@ -1200,7 +1200,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 3
       end
-      object lblMyName: TStaticText
+      object lblMyName: TInputCaption
         Left = 12
         Height = 17
         Top = 68
@@ -1218,7 +1218,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 5
       end
-      object lblMyGrid: TStaticText
+      object lblMyGrid: TInputCaption
         Left = 12
         Height = 17
         Top = 98
@@ -1237,7 +1237,7 @@ object PrefsForm: TPrefsForm
         ItemHeight = 0
         TabOrder = 7
       end
-      object lblMyContinent: TStaticText
+      object lblMyContinent: TInputCaption
         Left = 12
         Height = 17
         Top = 128
@@ -1255,7 +1255,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 9
       end
-      object lblMyZone: TStaticText
+      object lblMyZone: TInputCaption
         Left = 12
         Height = 17
         Top = 158
@@ -1273,7 +1273,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 11
       end
-      object lblMyITUZone: TStaticText
+      object lblMyITUZone: TInputCaption
         Left = 12
         Height = 17
         Top = 188
@@ -1291,7 +1291,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 13
       end
-      object lblMyState: TStaticText
+      object lblMyState: TInputCaption
         Left = 12
         Height = 17
         Top = 218
@@ -1309,7 +1309,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 15
       end
-      object lblMySection: TStaticText
+      object lblMySection: TInputCaption
         Left = 12
         Height = 17
         Top = 248
@@ -1327,7 +1327,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 17
       end
-      object lblMyCountry: TStaticText
+      object lblMyCountry: TInputCaption
         Left = 12
         Height = 17
         Top = 278
@@ -1345,7 +1345,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 19
       end
-      object lblMyPostalCode: TStaticText
+      object lblMyPostalCode: TInputCaption
         Left = 12
         Height = 17
         Top = 308
@@ -1374,7 +1374,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 21
       end
-      object lblMyCheck: TStaticText
+      object lblMyCheck: TInputCaption
         Left = 380
         Height = 17
         Top = 38
@@ -1392,7 +1392,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 23
       end
-      object lblMyPrec: TStaticText
+      object lblMyPrec: TInputCaption
         Left = 380
         Height = 17
         Top = 68
@@ -1410,7 +1410,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 25
       end
-      object lblMyFDClass: TStaticText
+      object lblMyFDClass: TInputCaption
         Left = 380
         Height = 17
         Top = 98
@@ -1428,7 +1428,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 27
       end
-      object lblMyFOCNumber: TStaticText
+      object lblMyFOCNumber: TInputCaption
         Left = 380
         Height = 17
         Top = 128
@@ -1446,7 +1446,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 29
       end
-      object lblMyIOTA: TStaticText
+      object lblMyIOTA: TInputCaption
         Left = 380
         Height = 17
         Top = 158
@@ -1464,7 +1464,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 31
       end
-      object lblMyPark: TStaticText
+      object lblMyPark: TInputCaption
         Left = 380
         Height = 17
         Top = 188
@@ -1483,7 +1483,7 @@ object PrefsForm: TPrefsForm
         MaxLength = 4
         TabOrder = 33
       end
-      object lblMyLicenseYear: TStaticText
+      object lblMyLicenseYear: TInputCaption
         Left = 380
         Height = 17
         Top = 218

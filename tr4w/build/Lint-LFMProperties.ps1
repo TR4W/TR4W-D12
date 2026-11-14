@@ -136,6 +136,10 @@ if ($needBuild)
       # the checker cannot resolve a class it cannot link.  Source, not units:
       # these are compiled here, the same way datetimectrls above is.
       Join-Path $PSScriptRoot "..\src\ui\lcl"
+      # AFTER ui\lcl, as in Get-SearchPaths: a ui\lcl unit may use a
+      # platform helper kept out of the ui files (uInputCaptionWin32 ->
+      # uStaticDialogCodeWindows, issue 278). Only what is named is compiled.
+      Join-Path $PSScriptRoot "..\src"
    )
 
    $args = @("-M`delphi", "-P$Cpu", "-T$Os", '-B', "-FU$toolOut", "-o$toolExe")

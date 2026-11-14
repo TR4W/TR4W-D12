@@ -60,7 +60,7 @@ uses
    (* FIRST, so it shadows nothing below (it declares its own CopyFile).
      GetWindow, GW_HWNDPREV/NEXT: see the z-order check. *)
    Windows,
-   Win32WSStdCtrls,       (* TWin32WSCustomStaticText -- the z-order check *)
+   uInputCaptionWin32,    (* TWin32WSInputCaption -- the z-order check, issue 278 *)
 {$ENDIF}
    SysUtils,
    Forms,
@@ -80,6 +80,7 @@ uses
    FileUtil,              (* CopyFile, DeleteDirectory -- the staged help, issue 280 *)
    Classes,               (* TFPList -- the Station page's tab order *)
    uTestShowOffScreen,    (* ShowOffScreen -- handles exist only once shown *)
+   uInputCaption,         (* TInputCaption -- the Station captions, issue 278 *)
    VC;                    (* TR4W_INI_FILENAME *)
 
 const
@@ -943,6 +944,18 @@ var
       k: integer;
       above: TWinControl;
       wsName: string;
+      plain: TStaticText;
+
+   (* WHAT WINDOWS ASKS before it takes a window as an edit's caption, asked
+     the way Windows asks it: a raw message to the real window, through the
+     widget set's window procedure. Perform would skip that procedure -- and
+     the DLGC_WANTALLKEYS it writes -- so it could not see the defect. A
+     test-side measurement at the Win32 boundary; the program sends nothing. *)
+   function AnswersAsStatic(const aControl: TWinControl): boolean;
+   begin
+      Result := (Windows.SendMessage(aControl.Handle, WM_GETDLGCODE, 0, 0)
+                 and Windows.DLGC_STATIC) <> 0;   (* winuser.h's, not ours *)
+   end;
 {$ENDIF}
    begin
 {$IFDEF WINDOWS}
@@ -975,12 +988,36 @@ var
            of its widget-set class's VMT, named '(V)' + that class's name and
            re-parented past it (wslclclasses.pp, CreateVClass), so it does not
            inherit from the class it copies. The name is taken from the class
-           reference, so a rename is still the compiler's to catch. *)
-         CheckTrue((wsName = TWin32WSCustomStaticText.ClassName) or
-                   (wsName = '(V)' + TWin32WSCustomStaticText.ClassName),
-                   aWhen + ': ' + rows[k].Caption.Name + ' was built by the win32 STATIC class (found '
-                   + wsName + ')');
+           reference, so a rename is still the compiler's to catch.
+           TR4W's class, not the LCL's TWin32WSCustomStaticText it descends
+           from: this is the proof that TInputCaption's registration took
+           precedence over the one it inherits (uInputCaption). *)
+         CheckTrue((wsName = TWin32WSInputCaption.ClassName) or
+                   (wsName = '(V)' + TWin32WSInputCaption.ClassName),
+                   aWhen + ': ' + rows[k].Caption.Name + ' was built by TWin32WSInputCaption, '
+                   + 'a win32 STATIC (found ' + wsName + ')');
+         CheckTrue(rows[k].Caption is TInputCaption,
+                   aWhen + ': ' + rows[k].Caption.Name + ' is a TInputCaption (found '
+                   + rows[k].Caption.ClassName + ')');
+         CheckTrue(AnswersAsStatic(rows[k].Caption),
+                   aWhen + ': ' + rows[k].Caption.Name + ' answers WM_GETDLGCODE with DLGC_STATIC');
          end;
+
+      (* THE CONTROL CASE: a plain TStaticText through the same window
+        procedure does NOT answer as a static (the LCL says DLGC_WANTALLKEYS
+        for every window). Without it the check above could pass because the
+        question never reached the widget set's callback at all. Parented on
+        the form, not the page, so it is no sibling of the rows above. *)
+      plain := TStaticText.Create(nil);
+      try
+         plain.Parent := aForm;
+         plain.HandleNeeded;
+         CheckFalse(AnswersAsStatic(plain),
+                    aWhen + ': a plain TStaticText does not answer as a static -- '
+                    + 'if this fails the LCL now does, and TInputCaption can go');
+      finally
+         plain.Free;
+      end;
 {$ELSE}
       (* The rule checked here is Win32's. How the gtk2 and cocoa
         accessibility layers name a field is not measured. *)

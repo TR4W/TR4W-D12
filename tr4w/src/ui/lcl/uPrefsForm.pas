@@ -79,6 +79,7 @@ uses
    Controls,
    Forms,
    StdCtrls,
+   uInputCaption,  // TInputCaption -- the Station page's captions (issue 278)
    Grids,          // TStringGrid -- the colors page is one grid, not 100 combos
    // TComboBox -- the cluster server picker is editable
    ComCtrls,
@@ -322,11 +323,14 @@ type
       // docs/Settings Design Proposal.md.  ONE control for MY STATE: 'MY QTH'
       // is the same global (@MyState), a back-compat alias.
       //
-      // THE ROW CAPTIONS ARE TStaticText, NOT TLabel (issue 278). A TLabel
+      // THE ROW CAPTIONS ARE WINDOWED (TInputCaption), NOT TLabel (issue 278). A TLabel
       // has no window, so Windows UI Automation reported every box here as
       // unnamed. A TStaticText is a Win32 STATIC, and UIA names an edit from
       // the static immediately ABOVE it in z-order (measured on plain Win32
-      // windows, 2026-11-13).
+      // windows, 2026-11-13) -- but only a window that ANSWERS as a static,
+      // which the LCL's own STATIC does not (it says DLGC_WANTALLKEYS like
+      // every LCL window). So they are TInputCaption, a TStaticText that adds
+      // the static bit (uInputCaption, which says why).
       //
       // SO EACH CAPTION COMES AFTER ITS INPUT IN THE .lfm. The LCL keeps a
       // parent's children in the REVERSE of window z-order -- the last child
@@ -343,39 +347,39 @@ type
       lblStationHeading: TLabel;
       lblContestHeading: TLabel;
       lblStationHint: TLabel;
-      lblMyContinent: TStaticText;
+      lblMyContinent: TInputCaption;
       cbxMyContinent: TComboBox;
-      lblMyCall: TStaticText;
+      lblMyCall: TInputCaption;
       edtMyCall: TEdit;
-      lblMyName: TStaticText;
+      lblMyName: TInputCaption;
       edtMyName: TEdit;
-      lblMyGrid: TStaticText;
+      lblMyGrid: TInputCaption;
       edtMyGrid: TEdit;
-      lblMyZone: TStaticText;
+      lblMyZone: TInputCaption;
       edtMyZone: TEdit;
-      lblMyITUZone: TStaticText;
+      lblMyITUZone: TInputCaption;
       edtMyITUZone: TEdit;
-      lblMyState: TStaticText;
+      lblMyState: TInputCaption;
       edtMyState: TEdit;
-      lblMySection: TStaticText;
+      lblMySection: TInputCaption;
       edtMySection: TEdit;
-      lblMyCountry: TStaticText;
+      lblMyCountry: TInputCaption;
       edtMyCountry: TEdit;
-      lblMyPostalCode: TStaticText;
+      lblMyPostalCode: TInputCaption;
       edtMyPostalCode: TEdit;
-      lblMyCheck: TStaticText;
+      lblMyCheck: TInputCaption;
       edtMyCheck: TEdit;
-      lblMyPrec: TStaticText;
+      lblMyPrec: TInputCaption;
       edtMyPrec: TEdit;
-      lblMyFDClass: TStaticText;
+      lblMyFDClass: TInputCaption;
       edtMyFDClass: TEdit;
-      lblMyFOCNumber: TStaticText;
+      lblMyFOCNumber: TInputCaption;
       edtMyFOCNumber: TEdit;
-      lblMyIOTA: TStaticText;
+      lblMyIOTA: TInputCaption;
       edtMyIOTA: TEdit;
-      lblMyPark: TStaticText;
+      lblMyPark: TInputCaption;
       edtMyPark: TEdit;
-      lblMyLicenseYear: TStaticText;
+      lblMyLicenseYear: TInputCaption;
       edtMyLicenseYear: TEdit;
 
       // --- External Software (Tags 16..19) ------------------------------------

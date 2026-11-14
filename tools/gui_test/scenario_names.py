@@ -43,7 +43,7 @@ SCENARIOS = (
    "bench-k4-observe", "bench-k4-cw",
    "bench-tailcat-empty",
    "bench-lognames", "bench-lognames-close",
-   "bench-prefs-station-names",
+   "bench-prefs-station-names", "bench-prefs-uia278",
    "bench-yearsent-create-euhfc", "bench-yearsent-create-kvp",
    "bench-yearsent-check-euhfc-no", "bench-yearsent-check-euhfc-yes",
    "bench-yearsent-check-kvp-no", "bench-yearsent-check-kvp-yes",

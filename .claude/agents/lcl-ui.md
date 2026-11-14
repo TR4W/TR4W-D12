@@ -595,6 +595,18 @@ themselves. The external logger editor gained a check row (`lfkCheck`, `row.Chec
   label `FocusControl`). NY4I chose the windowed-caption route (issue 278): **UIA names an edit from the STATIC
   immediately ABOVE it in z-order** (`GW_HWNDPREV`; measured on plain Win32 windows), so the caption is a
   `TStaticText`, not a `TLabel` (no window).
+- **...AND ONLY IF THAT WINDOW ANSWERS `WM_GETDLGCODE` WITH `DLGC_STATIC` ($100)**, which the LCL's STATIC does not:
+  the win32 widget set answers `DLGC_WANTALLKEYS` for every window ITSELF (`win32callback.inc`) and never delivers
+  `LM_GETDLGCODE`, so a `message` handler on the control is dead code. A caption that names an input is therefore
+  `uInputCaption.TInputCaption` (a `TStaticText`), whose `WSRegisterClass` registers `TWin32WSInputCaption`
+  (`uInputCaptionWin32`, Windows only): its `CreateHandle` calls inherited, then hands the window to
+  `TStaticDialogCode.AnswerAsStatic` (`uStaticDialogCodeWindows`), which chains the window procedure and ORs
+  `DLGC_STATIC` into that one answer. The three `type.HWND` sites are the LCL signature's own, and the `ui` baseline
+  is 14 for exactly that reason (NY4I, issue 278; the reasoning sits beside the pattern in `Lint-Win32Dialogs.ps1`);
+  the lint counts every Pascal file whatever its folder, so moving them into a helper does not lower it. A NEW CAPTION CLASS
+  in an `.lfm` must also be added to `build/lintlfm` and `build/lfmload`. `uTestPrefsPlacement` sends the real
+  message (and a plain `TStaticText` as the control case); without the bit it fails for every Station caption on
+  every show.
 - **THE LCL'S CHILD LIST IS THE REVERSE OF WIN32 Z-ORDER**: the last child is the top window
   (`win32wscontrols.pp`, `SetChildZPosition`). So a caption meant to be "before" its input in z-order is streamed
   AFTER it in the `.lfm`. Streamed before it, the window above each Station box was the next row's caption --

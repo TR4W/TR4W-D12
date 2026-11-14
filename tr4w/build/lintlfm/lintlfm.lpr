@@ -44,7 +44,8 @@ uses
    Menus,      // TPopupMenu / TMenuItem -- the band map's context menu
    Dialogs,         // TOpenDialog -- the New Contest file picker
    DateTimePicker,  // TDateTimePicker -- the Edit QSO date/time field
-   uElementPanel;   // TElementPanel -- the main window's status readouts
+   uElementPanel,   // TElementPanel -- the main window's status readouts
+   uInputCaption;   // TInputCaption -- the Preferences Station page's captions
 
 const
    { Stands in for a collection item's unnamed class -- see the parser. Not a
@@ -453,6 +454,9 @@ begin
                     // arrived with the main window's 43 status readouts and
                     // failed every property on all of them.
                     TElementPanel,
+                    // TInputCaption: a TStaticText that answers Windows as a
+                    // static, so UIA names the input after it (issue 278).
+                    TInputCaption,
                     // Grids
                     TStringGrid, TDrawGrid,
                     // Buttons

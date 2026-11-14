@@ -1,0 +1,4602 @@
+{
+   "station": {
+      "edit": {
+         "hwnd": {
+            "handle": 3670832,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "W1AW",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 3670832,
+            "visible": true,
+            "rect": [
+               525,
+               135,
+               725,
+               157
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "uia": {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "3670832",
+            "NativeWindowHandle": 3670832,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x380330 Main:Nested [pid:8704,providerId:0x380330 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         "msaa_client": {
+            "accName": null,
+            "accRole": 42,
+            "accValue": "W1AW",
+            "accChildCount": 0,
+            "accRoleText": "editable text"
+         },
+         "msaa_window": {
+            "accName": null,
+            "accRole": 9,
+            "accValue": null,
+            "accChildCount": 7,
+            "accRoleText": "window"
+         },
+         "previous_sibling": {
+            "handle": 2163588,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Callsign:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163588,
+            "visible": true,
+            "rect": [
+               397,
+               139,
+               517,
+               156
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "next_sibling": null
+      },
+      "caption": {
+         "hwnd": {
+            "handle": 2163588,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Callsign:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163588,
+            "visible": true,
+            "rect": [
+               397,
+               139,
+               517,
+               156
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "uia": {
+            "Name": "Callsign:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163588",
+            "NativeWindowHandle": 2163588,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x210384 Main:Nested [pid:8704,providerId:0x210384 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Callsign:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         "msaa_client": {
+            "accName": "Callsign:",
+            "accRole": 41,
+            "accValue": null,
+            "accChildCount": 0,
+            "accRoleText": "text"
+         },
+         "msaa_window": {
+            "accName": "Callsign:",
+            "accRole": 9,
+            "accValue": null,
+            "accChildCount": 7,
+            "accRoleText": "window"
+         },
+         "previous_sibling": {
+            "handle": 3605246,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 3605246,
+            "visible": true,
+            "rect": [
+               525,
+               165,
+               725,
+               187
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "next_sibling": {
+            "handle": 3670832,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "W1AW",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 3670832,
+            "visible": true,
+            "rect": [
+               525,
+               135,
+               725,
+               157
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      "panel": {
+         "hwnd": {
+            "handle": 4260644,
+            "class": "Window",
+            "real_class": "Window",
+            "text": "",
+            "style": "0x56000000",
+            "exstyle": "0x10000",
+            "id": 4260644,
+            "visible": true,
+            "rect": [
+               385,
+               101,
+               1060,
+               673
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "uia": {
+            "Name": "",
+            "ControlType": 50033,
+            "LocalizedControlType": "pane",
+            "ClassName": "Window",
+            "AutomationId": "4260644",
+            "NativeWindowHandle": 4260644,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x410324 Main:Nested [pid:8704,providerId:0x410324 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 10,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         "msaa_client": {
+            "accName": null,
+            "accRole": 10,
+            "accValue": null,
+            "accChildCount": 35,
+            "accRoleText": "client"
+         },
+         "msaa_window": {
+            "accName": null,
+            "accRole": 9,
+            "accValue": null,
+            "accChildCount": 7,
+            "accRoleText": "window"
+         },
+         "previous_sibling": null,
+         "next_sibling": {
+            "handle": 2163566,
+            "class": "Window",
+            "real_class": "Window",
+            "text": "",
+            "style": "0x46000000",
+            "exstyle": "0x10000",
+            "id": 2163566,
+            "visible": false,
+            "rect": [
+               385,
+               101,
+               1060,
+               673
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      "continent_combo": {
+         "hwnd": {
+            "handle": 2294636,
+            "class": "LCLComboBox",
+            "real_class": "LCLComboBox",
+            "text": "",
+            "style": "0x56010242",
+            "exstyle": "0x0",
+            "id": 2294636,
+            "visible": true,
+            "rect": [
+               525,
+               225,
+               725,
+               248
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "uia": {
+            "Name": "",
+            "ControlType": 50003,
+            "LocalizedControlType": "combo box",
+            "ClassName": "LCLComboBox",
+            "AutomationId": "2294636",
+            "NativeWindowHandle": 2294636,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x23036C Main:Nested [pid:8704,providerId:0x23036C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 46,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         "msaa_client": {
+            "accName": null,
+            "accRole": 46,
+            "accValue": "NONE",
+            "accChildCount": 3,
+            "accRoleText": "combo box"
+         },
+         "msaa_window": {
+            "accName": null,
+            "accRole": 9,
+            "accValue": null,
+            "accChildCount": 7,
+            "accRoleText": "window"
+         },
+         "previous_sibling": {
+            "handle": 2294668,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Continent:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2294668,
+            "visible": true,
+            "rect": [
+               397,
+               229,
+               517,
+               246
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         "next_sibling": {
+            "handle": 3474254,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Grid square:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 3474254,
+            "visible": true,
+            "rect": [
+               397,
+               199,
+               517,
+               216
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      "continent_inner_edit": {
+         "hwnd": {
+            "handle": 4391730,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x50000380",
+            "exstyle": "0x0",
+            "id": 1001,
+            "visible": true,
+            "rect": [
+               528,
+               228,
+               705,
+               245
+            ],
+            "dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            }
+         },
+         "uia": {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "1001",
+            "NativeWindowHandle": 4391730,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x430332 Main:Nested [pid:8704,providerId:0x430332 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": false,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         "msaa_client": {
+            "accName": null,
+            "accRole": 42,
+            "accValue": "NONE",
+            "accChildCount": 0,
+            "accRoleText": "editable text"
+         },
+         "msaa_window": {
+            "accName": null,
+            "accRole": 9,
+            "accValue": null,
+            "accChildCount": 7,
+            "accRoleText": "window"
+         },
+         "previous_sibling": null,
+         "next_sibling": null
+      },
+      "continent_label_walk": [
+         {
+            "handle": 2294668,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Continent:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2294668,
+            "visible": true,
+            "rect": [
+               397,
+               229,
+               517,
+               246
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163568,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "8",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2163568,
+            "visible": true,
+            "rect": [
+               525,
+               255,
+               725,
+               277
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2491270,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "CQ zone:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2491270,
+            "visible": true,
+            "rect": [
+               397,
+               259,
+               517,
+               276
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 1835922,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "0",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 1835922,
+            "visible": true,
+            "rect": [
+               525,
+               285,
+               725,
+               307
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 1835924,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "ITU zone:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 1835924,
+            "visible": true,
+            "rect": [
+               397,
+               289,
+               517,
+               306
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2818884,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2818884,
+            "visible": true,
+            "rect": [
+               525,
+               315,
+               725,
+               337
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      ],
+      "edit_label_walk": [
+         {
+            "handle": 2163588,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Callsign:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163588,
+            "visible": true,
+            "rect": [
+               397,
+               139,
+               517,
+               156
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 3605246,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 3605246,
+            "visible": true,
+            "rect": [
+               525,
+               165,
+               725,
+               187
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2229088,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "First name:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2229088,
+            "visible": true,
+            "rect": [
+               397,
+               169,
+               517,
+               186
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2425726,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "FN31",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2425726,
+            "visible": true,
+            "rect": [
+               525,
+               195,
+               725,
+               217
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 3474254,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Grid square:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 3474254,
+            "visible": true,
+            "rect": [
+               397,
+               199,
+               517,
+               216
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2294636,
+            "class": "LCLComboBox",
+            "real_class": "LCLComboBox",
+            "text": "",
+            "style": "0x56010242",
+            "exstyle": "0x0",
+            "id": 2294636,
+            "visible": true,
+            "rect": [
+               525,
+               225,
+               725,
+               248
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      ],
+      "hwnd_parent_chain": [
+         {
+            "handle": 4260644,
+            "class": "Window",
+            "real_class": "Window",
+            "text": "",
+            "style": "0x56000000",
+            "exstyle": "0x10000",
+            "id": 4260644,
+            "visible": true,
+            "rect": [
+               385,
+               101,
+               1060,
+               673
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 4522752,
+            "class": "Window",
+            "real_class": "Window",
+            "text": "",
+            "style": "0x56000000",
+            "exstyle": "0x10000",
+            "id": 4522752,
+            "visible": true,
+            "rect": [
+               385,
+               101,
+               1060,
+               673
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 4391706,
+            "class": "Window",
+            "real_class": "Window",
+            "text": "TR4W Preferences",
+            "style": "0x16ca0000",
+            "exstyle": "0x10100",
+            "id": 0,
+            "visible": true,
+            "rect": [
+               207,
+               75,
+               1073,
+               724
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      ],
+      "panel_children_zorder": [
+         {
+            "handle": 2753472,
+            "class": "Window",
+            "real_class": "Window",
+            "text": "",
+            "style": "0x56000000",
+            "exstyle": "0x10000",
+            "id": 2753472,
+            "visible": true,
+            "rect": [
+               385,
+               533,
+               1060,
+               589
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2950078,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "License year:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2950078,
+            "visible": true,
+            "rect": [
+               765,
+               319,
+               875,
+               336
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2360252,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2360252,
+            "visible": true,
+            "rect": [
+               881,
+               315,
+               1031,
+               337
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163642,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Park:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163642,
+            "visible": true,
+            "rect": [
+               765,
+               289,
+               875,
+               306
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2360248,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2360248,
+            "visible": true,
+            "rect": [
+               881,
+               285,
+               1031,
+               307
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2032566,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "IOTA:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2032566,
+            "visible": true,
+            "rect": [
+               765,
+               259,
+               875,
+               276
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2032564,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2032564,
+            "visible": true,
+            "rect": [
+               881,
+               255,
+               1031,
+               277
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163634,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "FOC number:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163634,
+            "visible": true,
+            "rect": [
+               765,
+               229,
+               875,
+               246
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163632,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2163632,
+            "visible": true,
+            "rect": [
+               881,
+               225,
+               1031,
+               247
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163630,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "FD class:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163630,
+            "visible": true,
+            "rect": [
+               765,
+               199,
+               875,
+               216
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2360236,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2360236,
+            "visible": true,
+            "rect": [
+               881,
+               195,
+               1031,
+               217
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2491306,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Precedence:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2491306,
+            "visible": true,
+            "rect": [
+               765,
+               169,
+               875,
+               186
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2360232,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2360232,
+            "visible": true,
+            "rect": [
+               881,
+               165,
+               1031,
+               187
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163622,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Check:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163622,
+            "visible": true,
+            "rect": [
+               765,
+               139,
+               875,
+               156
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2229156,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2229156,
+            "visible": true,
+            "rect": [
+               881,
+               135,
+               1031,
+               157
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163618,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Postal code:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163618,
+            "visible": true,
+            "rect": [
+               397,
+               409,
+               517,
+               426
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2229152,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2229152,
+            "visible": true,
+            "rect": [
+               525,
+               405,
+               725,
+               427
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2425758,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Country:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2425758,
+            "visible": true,
+            "rect": [
+               397,
+               379,
+               517,
+               396
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2229148,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "K",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2229148,
+            "visible": true,
+            "rect": [
+               525,
+               375,
+               725,
+               397
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163610,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "ARRL section:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163610,
+            "visible": true,
+            "rect": [
+               397,
+               349,
+               517,
+               366
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2098072,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2098072,
+            "visible": true,
+            "rect": [
+               525,
+               345,
+               725,
+               367
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 1835926,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "State/Province:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 1835926,
+            "visible": true,
+            "rect": [
+               397,
+               319,
+               517,
+               336
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2818884,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2818884,
+            "visible": true,
+            "rect": [
+               525,
+               315,
+               725,
+               337
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 1835924,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "ITU zone:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 1835924,
+            "visible": true,
+            "rect": [
+               397,
+               289,
+               517,
+               306
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 1835922,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "0",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 1835922,
+            "visible": true,
+            "rect": [
+               525,
+               285,
+               725,
+               307
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2491270,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "CQ zone:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2491270,
+            "visible": true,
+            "rect": [
+               397,
+               259,
+               517,
+               276
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163568,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "8",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2163568,
+            "visible": true,
+            "rect": [
+               525,
+               255,
+               725,
+               277
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2294668,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Continent:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2294668,
+            "visible": true,
+            "rect": [
+               397,
+               229,
+               517,
+               246
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2294636,
+            "class": "LCLComboBox",
+            "real_class": "LCLComboBox",
+            "text": "",
+            "style": "0x56010242",
+            "exstyle": "0x0",
+            "id": 2294636,
+            "visible": true,
+            "rect": [
+               525,
+               225,
+               725,
+               248
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 3474254,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Grid square:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 3474254,
+            "visible": true,
+            "rect": [
+               397,
+               199,
+               517,
+               216
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2425726,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "FN31",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 2425726,
+            "visible": true,
+            "rect": [
+               525,
+               195,
+               725,
+               217
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2229088,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "First name:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2229088,
+            "visible": true,
+            "rect": [
+               397,
+               169,
+               517,
+               186
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 3605246,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 3605246,
+            "visible": true,
+            "rect": [
+               525,
+               165,
+               725,
+               187
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 2163588,
+            "class": "Static",
+            "real_class": "Static",
+            "text": "Callsign:",
+            "style": "0x56000100",
+            "exstyle": "0x0",
+            "id": 2163588,
+            "visible": true,
+            "rect": [
+               397,
+               139,
+               517,
+               156
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         },
+         {
+            "handle": 3670832,
+            "class": "Edit",
+            "real_class": "Edit",
+            "text": "W1AW",
+            "style": "0x56010080",
+            "exstyle": "0x200",
+            "id": 3670832,
+            "visible": true,
+            "rect": [
+               525,
+               135,
+               725,
+               157
+            ],
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      ],
+      "uia_parent_chain_of_edit": [
+         {
+            "Name": "",
+            "ControlType": 50033,
+            "LocalizedControlType": "pane",
+            "ClassName": "Window",
+            "AutomationId": "4260644",
+            "NativeWindowHandle": 4260644,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x410324 Main:Nested [pid:8704,providerId:0x410324 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 10,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50033,
+            "LocalizedControlType": "pane",
+            "ClassName": "Window",
+            "AutomationId": "4522752",
+            "NativeWindowHandle": 4522752,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x450300 Main:Nested [pid:8704,providerId:0x450300 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 10,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "TR4W Preferences",
+            "ControlType": 50032,
+            "LocalizedControlType": "window",
+            "ClassName": "Window",
+            "AutomationId": "",
+            "NativeWindowHandle": 4391706,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x43031A Main:Nested [pid:8704,providerId:0x43031A Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "TR4W Preferences",
+            "LegacyRole": 10,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Desktop 1",
+            "ControlType": 50033,
+            "LocalizedControlType": "pane",
+            "ClassName": "#32769",
+            "AutomationId": "",
+            "NativeWindowHandle": 65548,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x1000C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:uiautomationcore.dll); Main:Microsoft: MSAA Proxy (unmanaged:uiautomationcore.dll); Hwnd:Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": null,
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Desktop 1",
+            "LegacyRole": 10,
+            "LegacyDescription": null,
+            "LabeledBy": null
+         }
+      ],
+      "uia_panel_children_raw": [
+         {
+            "Name": "",
+            "ControlType": 50033,
+            "LocalizedControlType": "pane",
+            "ClassName": "Window",
+            "AutomationId": "2753472",
+            "NativeWindowHandle": 2753472,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2A03C0 Main:Nested [pid:8704,providerId:0x2A03C0 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 10,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "License year:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2950078",
+            "NativeWindowHandle": 2950078,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2D03BE Main:Nested [pid:8704,providerId:0x2D03BE Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "License year:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2360252",
+            "NativeWindowHandle": 2360252,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2403BC Main:Nested [pid:8704,providerId:0x2403BC Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Park:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163642",
+            "NativeWindowHandle": 2163642,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2103BA Main:Nested [pid:8704,providerId:0x2103BA Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Park:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2360248",
+            "NativeWindowHandle": 2360248,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2403B8 Main:Nested [pid:8704,providerId:0x2403B8 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "IOTA:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2032566",
+            "NativeWindowHandle": 2032566,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x1F03B6 Main:Nested [pid:8704,providerId:0x1F03B6 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "IOTA:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2032564",
+            "NativeWindowHandle": 2032564,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x1F03B4 Main:Nested [pid:8704,providerId:0x1F03B4 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "FOC number:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163634",
+            "NativeWindowHandle": 2163634,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2103B2 Main:Nested [pid:8704,providerId:0x2103B2 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "FOC number:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2163632",
+            "NativeWindowHandle": 2163632,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2103B0 Main:Nested [pid:8704,providerId:0x2103B0 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "FD class:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163630",
+            "NativeWindowHandle": 2163630,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2103AE Main:Nested [pid:8704,providerId:0x2103AE Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "FD class:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2360236",
+            "NativeWindowHandle": 2360236,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2403AC Main:Nested [pid:8704,providerId:0x2403AC Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Precedence:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2491306",
+            "NativeWindowHandle": 2491306,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2603AA Main:Nested [pid:8704,providerId:0x2603AA Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Precedence:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2360232",
+            "NativeWindowHandle": 2360232,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2403A8 Main:Nested [pid:8704,providerId:0x2403A8 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Check:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163622",
+            "NativeWindowHandle": 2163622,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2103A6 Main:Nested [pid:8704,providerId:0x2103A6 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Check:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2229156",
+            "NativeWindowHandle": 2229156,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2203A4 Main:Nested [pid:8704,providerId:0x2203A4 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Postal code:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163618",
+            "NativeWindowHandle": 2163618,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2103A2 Main:Nested [pid:8704,providerId:0x2103A2 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Postal code:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2229152",
+            "NativeWindowHandle": 2229152,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2203A0 Main:Nested [pid:8704,providerId:0x2203A0 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Country:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2425758",
+            "NativeWindowHandle": 2425758,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x25039E Main:Nested [pid:8704,providerId:0x25039E Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Country:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2229148",
+            "NativeWindowHandle": 2229148,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x22039C Main:Nested [pid:8704,providerId:0x22039C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "ARRL section:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163610",
+            "NativeWindowHandle": 2163610,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x21039A Main:Nested [pid:8704,providerId:0x21039A Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "ARRL section:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2098072",
+            "NativeWindowHandle": 2098072,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x200398 Main:Nested [pid:8704,providerId:0x200398 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "State/Province:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "1835926",
+            "NativeWindowHandle": 1835926,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x1C0396 Main:Nested [pid:8704,providerId:0x1C0396 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "State/Province:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2818884",
+            "NativeWindowHandle": 2818884,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x2B0344 Main:Nested [pid:8704,providerId:0x2B0344 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "ITU zone:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "1835924",
+            "NativeWindowHandle": 1835924,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x1C0394 Main:Nested [pid:8704,providerId:0x1C0394 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "ITU zone:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "1835922",
+            "NativeWindowHandle": 1835922,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x1C0392 Main:Nested [pid:8704,providerId:0x1C0392 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "CQ zone:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2491270",
+            "NativeWindowHandle": 2491270,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x260386 Main:Nested [pid:8704,providerId:0x260386 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "CQ zone:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2163568",
+            "NativeWindowHandle": 2163568,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x210370 Main:Nested [pid:8704,providerId:0x210370 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Continent:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2294668",
+            "NativeWindowHandle": 2294668,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x23038C Main:Nested [pid:8704,providerId:0x23038C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Continent:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50003,
+            "LocalizedControlType": "combo box",
+            "ClassName": "LCLComboBox",
+            "AutomationId": "2294636",
+            "NativeWindowHandle": 2294636,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x23036C Main:Nested [pid:8704,providerId:0x23036C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 46,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Grid square:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "3474254",
+            "NativeWindowHandle": 3474254,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x35034E Main:Nested [pid:8704,providerId:0x35034E Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Grid square:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "2425726",
+            "NativeWindowHandle": 2425726,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x25037E Main:Nested [pid:8704,providerId:0x25037E Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "First name:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2229088",
+            "NativeWindowHandle": 2229088,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x220360 Main:Nested [pid:8704,providerId:0x220360 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "First name:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "3605246",
+            "NativeWindowHandle": 3605246,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x3702FE Main:Nested [pid:8704,providerId:0x3702FE Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "Callsign:",
+            "ControlType": 50020,
+            "LocalizedControlType": "text",
+            "ClassName": "Static",
+            "AutomationId": "2163588",
+            "NativeWindowHandle": 2163588,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x210384 Main:Nested [pid:8704,providerId:0x210384 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": false,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "Callsign:",
+            "LegacyRole": 41,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         },
+         {
+            "Name": "",
+            "ControlType": 50004,
+            "LocalizedControlType": "edit",
+            "ClassName": "Edit",
+            "AutomationId": "3670832",
+            "NativeWindowHandle": 3670832,
+            "FrameworkId": "Win32",
+            "ProviderDescription": "[pid:1836,providerId:0x380330 Main:Nested [pid:8704,providerId:0x380330 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+            "IsKeyboardFocusable": true,
+            "HelpText": "",
+            "IsControlElement": true,
+            "IsContentElement": true,
+            "LegacyName": "",
+            "LegacyRole": 42,
+            "LegacyDescription": "",
+            "LabeledBy": null
+         }
+      ]
+   },
+   "preferences_survey": [
+      {
+         "handle": 3867458,
+         "class": "LCLListBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x3B0342 Main:Nested [pid:8704,providerId:0x3B0342 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": null
+      },
+      {
+         "handle": 2753384,
+         "class": "Button",
+         "text": "Save",
+         "visible": true,
+         "uia_name": "Save",
+         "provider": "[pid:1836,providerId:0x2A0368 Main:Nested [pid:8704,providerId:0x2A0368 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "LCLListBox",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2556772,
+         "class": "Button",
+         "text": "Cancel",
+         "visible": true,
+         "uia_name": "Cancel",
+         "provider": "[pid:1836,providerId:0x270364 Main:Nested [pid:8704,providerId:0x270364 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Save",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3212124,
+         "class": "Button",
+         "text": "Save and close",
+         "visible": true,
+         "uia_name": "Save and close",
+         "provider": "[pid:1836,providerId:0x31035C Main:Nested [pid:8704,providerId:0x31035C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Cancel",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3343298,
+         "class": "Edit",
+         "text": "W1AW",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x3303C2 Main:Nested [pid:8704,providerId:0x3303C2 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": null
+      },
+      {
+         "handle": 2360252,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2403BC Main:Nested [pid:8704,providerId:0x2403BC Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "License year:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2360248,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2403B8 Main:Nested [pid:8704,providerId:0x2403B8 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Park:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2032564,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x1F03B4 Main:Nested [pid:8704,providerId:0x1F03B4 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "IOTA:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2163632,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2103B0 Main:Nested [pid:8704,providerId:0x2103B0 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "FOC number:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2360236,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2403AC Main:Nested [pid:8704,providerId:0x2403AC Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "FD class:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2360232,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2403A8 Main:Nested [pid:8704,providerId:0x2403A8 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Precedence:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2229156,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2203A4 Main:Nested [pid:8704,providerId:0x2203A4 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Check:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2229152,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2203A0 Main:Nested [pid:8704,providerId:0x2203A0 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Postal code:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2229148,
+         "class": "Edit",
+         "text": "K",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x22039C Main:Nested [pid:8704,providerId:0x22039C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Country:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2098072,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x200398 Main:Nested [pid:8704,providerId:0x200398 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "ARRL section:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2818884,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2B0344 Main:Nested [pid:8704,providerId:0x2B0344 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "State/Province:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 1835922,
+         "class": "Edit",
+         "text": "0",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x1C0392 Main:Nested [pid:8704,providerId:0x1C0392 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "ITU zone:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2163568,
+         "class": "Edit",
+         "text": "8",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x210370 Main:Nested [pid:8704,providerId:0x210370 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "CQ zone:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2294636,
+         "class": "LCLComboBox",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x23036C Main:Nested [pid:8704,providerId:0x23036C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Continent:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4391730,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x430332 Main:Nested [pid:8704,providerId:0x430332 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "LCLComboBox",
+         "previous": null
+      },
+      {
+         "handle": 2425726,
+         "class": "Edit",
+         "text": "FN31",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x25037E Main:Nested [pid:8704,providerId:0x25037E Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Grid square:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3605246,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x3702FE Main:Nested [pid:8704,providerId:0x3702FE Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "First name:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3670832,
+         "class": "Edit",
+         "text": "W1AW",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x380330 Main:Nested [pid:8704,providerId:0x380330 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Static",
+            "text": "Callsign:",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 1901442,
+         "class": "Button",
+         "text": "Station profile",
+         "visible": false,
+         "uia_name": "Station profile",
+         "provider": "[pid:1836,providerId:0x1D0382 Main:Nested [pid:8704,providerId:0x1D0382 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": null
+      },
+      {
+         "handle": 3998550,
+         "class": "Button",
+         "text": "Connect radios at startup",
+         "visible": false,
+         "uia_name": "Connect radios at startup",
+         "provider": "[pid:1836,providerId:0x3D0356 Main:Nested [pid:8704,providerId:0x3D0356 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": null
+      },
+      {
+         "handle": 5242932,
+         "class": "Button",
+         "text": "Activate this profile now",
+         "visible": false,
+         "uia_name": "Activate this profile now",
+         "provider": "[pid:1836,providerId:0x500034 Main:Nested [pid:8704,providerId:0x500034 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "Connect radios at startup",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4195132,
+         "class": "Button",
+         "text": "SO2R enabled",
+         "visible": false,
+         "uia_name": "SO2R enabled",
+         "provider": "[pid:1836,providerId:0x40033C Main:Nested [pid:8704,providerId:0x40033C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "Activate this profile now",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3998548,
+         "class": "Button",
+         "text": "Speed sync",
+         "visible": false,
+         "uia_name": "Speed sync",
+         "provider": "[pid:1836,providerId:0x3D0354 Main:Nested [pid:8704,providerId:0x3D0354 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "SO2R enabled",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2884342,
+         "class": "LCLComboBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2C02F6 Main:Nested [pid:8704,providerId:0x2C02F6 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "Speed sync",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3933008,
+         "class": "Edit",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x3C0350 Main:Nested [pid:8704,providerId:0x3C0350 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "LCLComboBox",
+         "previous": null
+      },
+      {
+         "handle": 4195102,
+         "class": "LCLComboBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x40031E Main:Nested [pid:8704,providerId:0x40031E Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "LCLComboBox",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2098064,
+         "class": "Edit",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x200390 Main:Nested [pid:8704,providerId:0x200390 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "LCLComboBox",
+         "previous": null
+      },
+      {
+         "handle": 2884454,
+         "class": "Button",
+         "text": "Speed sync",
+         "visible": false,
+         "uia_name": "Speed sync",
+         "provider": "[pid:1836,providerId:0x2C0366 Main:Nested [pid:8704,providerId:0x2C0366 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "LCLComboBox",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3146590,
+         "class": "LCLComboBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x30035E Main:Nested [pid:8704,providerId:0x30035E Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "Speed sync",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4653894,
+         "class": "Edit",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x470346 Main:Nested [pid:8704,providerId:0x470346 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "LCLComboBox",
+         "previous": null
+      },
+      {
+         "handle": 4260646,
+         "class": "LCLComboBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x410326 Main:Nested [pid:8704,providerId:0x410326 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "LCLComboBox",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2032506,
+         "class": "Edit",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x1F037A Main:Nested [pid:8704,providerId:0x1F037A Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "LCLComboBox",
+         "previous": null
+      },
+      {
+         "handle": 3605330,
+         "class": "Button",
+         "text": "Delete",
+         "visible": false,
+         "uia_name": "Delete",
+         "provider": "[pid:1836,providerId:0x370352 Main:Nested [pid:8704,providerId:0x370352 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "LCLComboBox",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2491242,
+         "class": "Button",
+         "text": "Rename...",
+         "visible": false,
+         "uia_name": "Rename...",
+         "provider": "[pid:1836,providerId:0x26036A Main:Nested [pid:8704,providerId:0x26036A Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "Delete",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2491164,
+         "class": "Button",
+         "text": "New...",
+         "visible": false,
+         "uia_name": "New...",
+         "provider": "[pid:1836,providerId:0x26031C Main:Nested [pid:8704,providerId:0x26031C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "Rename...",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2818952,
+         "class": "LCLComboBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x2B0388 Main:Nested [pid:8704,providerId:0x2B0388 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Button",
+         "previous": {
+            "class": "Button",
+            "text": "New...",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 1966972,
+         "class": "Edit",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x1E037C Main:Nested [pid:8704,providerId:0x1E037C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "LCLComboBox",
+         "previous": null
+      },
+      {
+         "handle": 2294656,
+         "class": "Button",
+         "text": "Remove",
+         "visible": false,
+         "uia_name": "Remove",
+         "provider": "[pid:1836,providerId:0x230380 Main:Nested [pid:8704,providerId:0x230380 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Station profile",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2032504,
+         "class": "Button",
+         "text": "Duplicate",
+         "visible": false,
+         "uia_name": "Duplicate",
+         "provider": "[pid:1836,providerId:0x1F0378 Main:Nested [pid:8704,providerId:0x1F0378 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Remove",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2032502,
+         "class": "Button",
+         "text": "Edit...",
+         "visible": false,
+         "uia_name": "Edit...",
+         "provider": "[pid:1836,providerId:0x1F0376 Main:Nested [pid:8704,providerId:0x1F0376 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Duplicate",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2032500,
+         "class": "Button",
+         "text": "Add...",
+         "visible": false,
+         "uia_name": "Add...",
+         "provider": "[pid:1836,providerId:0x1F0374 Main:Nested [pid:8704,providerId:0x1F0374 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Edit...",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2229106,
+         "class": "LCLListBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x220372 Main:Nested [pid:8704,providerId:0x220372 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Add...",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 2622298,
+         "class": "Button",
+         "text": "Also broadcast edited and previously logged QSOs",
+         "visible": false,
+         "uia_name": "Also broadcast edited and previously logged QSOs",
+         "provider": "[pid:1836,providerId:0x28035A Main:Nested [pid:8704,providerId:0x28035A Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": null
+      },
+      {
+         "handle": 4129624,
+         "class": "Button",
+         "text": "Test",
+         "visible": false,
+         "uia_name": "Test",
+         "provider": "[pid:1836,providerId:0x3F0358 Main:Nested [pid:8704,providerId:0x3F0358 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Also broadcast edited and previously logged QSOs",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3801932,
+         "class": "Button",
+         "text": "Remove",
+         "visible": false,
+         "uia_name": "Remove",
+         "provider": "[pid:1836,providerId:0x3A034C Main:Nested [pid:8704,providerId:0x3A034C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Test",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3539786,
+         "class": "Button",
+         "text": "Edit...",
+         "visible": false,
+         "uia_name": "Edit...",
+         "provider": "[pid:1836,providerId:0x36034A Main:Nested [pid:8704,providerId:0x36034A Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Remove",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4195136,
+         "class": "Button",
+         "text": "Add...",
+         "visible": false,
+         "uia_name": "Add...",
+         "provider": "[pid:1836,providerId:0x400340 Main:Nested [pid:8704,providerId:0x400340 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Edit...",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 3998472,
+         "class": "LCLListBox",
+         "text": "",
+         "visible": false,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x3D0308 Main:Nested [pid:8704,providerId:0x3D0308 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Button",
+            "text": "Add...",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4064006,
+         "class": "Button",
+         "text": "Broadcast UDP data",
+         "visible": false,
+         "uia_name": "Broadcast UDP data",
+         "provider": "[pid:1836,providerId:0x3E0306 Main:Nested [pid:8704,providerId:0x3E0306 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "LCLListBox",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4784888,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x4902F8 Main:Nested [pid:8704,providerId:0x4902F8 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Window",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      }
+   ],
+   "preferences_survey_summary": {
+      "by_class": {
+         "LCLListBox": {
+            "total": 3,
+            "named": 0,
+            "named_equals_own_text": 0
+         },
+         "Button": {
+            "total": 22,
+            "named": 22,
+            "named_equals_own_text": 22
+         },
+         "Edit": {
+            "total": 24,
+            "named": 0,
+            "named_equals_own_text": 0
+         },
+         "LCLComboBox": {
+            "total": 6,
+            "named": 0,
+            "named_equals_own_text": 0
+         }
+      },
+      "named_by_something_other_than_own_text": []
+   },
+   "main_survey": [
+      {
+         "handle": 4260540,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x4102BC Main:Nested [pid:8704,providerId:0x4102BC Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Window",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      },
+      {
+         "handle": 4195002,
+         "class": "Edit",
+         "text": "",
+         "visible": true,
+         "uia_name": "",
+         "provider": "[pid:1836,providerId:0x4002BA Main:Nested [pid:8704,providerId:0x4002BA Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+         "parent_class": "Window",
+         "previous": {
+            "class": "Edit",
+            "text": "",
+            "dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            }
+         }
+      }
+   ],
+   "main_survey_summary": {
+      "by_class": {
+         "Edit": {
+            "total": 2,
+            "named": 0,
+            "named_equals_own_text": 0
+         }
+      },
+      "named_by_something_other_than_own_text": []
+   },
+   "file_picker": {
+      "dialog_handle": 2884558,
+      "edits": [
+         {
+            "full": {
+               "hwnd": {
+                  "handle": 918540,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "",
+                  "style": "0x54000080",
+                  "exstyle": "0x0",
+                  "id": 1148,
+                  "visible": true,
+                  "rect": [
+                     458,
+                     556,
+                     652,
+                     571
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "File name:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "1148",
+                  "NativeWindowHandle": 918540,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xE040C Main:Nested [pid:8704,providerId:0xE040C Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": false,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "File name:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "File name:",
+                  "accRole": 42,
+                  "accValue": "",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "File name:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": null,
+               "next_sibling": null
+            },
+            "label_walk": [],
+            "parent_chain": [
+               {
+                  "handle": 591000,
+                  "class": "ComboBox",
+                  "real_class": "ComboBox",
+                  "text": "",
+                  "style": "0x56000413",
+                  "exstyle": "0x0",
+                  "id": 1148,
+                  "visible": true,
+                  "rect": [
+                     454,
+                     551,
+                     672,
+                     575
+                  ],
+                  "dlgcode": {
+                     "value": "0x81",
+                     "flags": [
+                        "WANTARROWS",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               {
+                  "handle": 984074,
+                  "class": "ComboBoxEx32",
+                  "real_class": "ComboBoxEx32",
+                  "text": "",
+                  "style": "0x50010042",
+                  "exstyle": "0x4",
+                  "id": 1148,
+                  "visible": true,
+                  "rect": [
+                     454,
+                     551,
+                     672,
+                     575
+                  ],
+                  "dlgcode": {
+                     "value": "0x81",
+                     "flags": [
+                        "WANTARROWS",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               {
+                  "handle": 2884558,
+                  "class": "#32770",
+                  "real_class": "#32770",
+                  "text": "Open",
+                  "style": "0x96cc02c4",
+                  "exstyle": "0x10101",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     257,
+                     151,
+                     897,
+                     631
+                  ],
+                  "dlgcode": {
+                     "value": "0x0",
+                     "flags": []
+                  }
+               },
+               {
+                  "handle": 6094878,
+                  "class": "Window",
+                  "real_class": "Window",
+                  "text": "TR4W v.5.0.40 - 2026 CWOPEN W1AW",
+                  "style": "0x1ece0000",
+                  "exstyle": "0x50100",
+                  "id": 4456755,
+                  "visible": true,
+                  "rect": [
+                     249,
+                     100,
+                     1047,
+                     551
+                  ],
+                  "dlgcode": {
+                     "value": "0x4",
+                     "flags": [
+                        "WANTALLKEYS"
+                     ]
+                  }
+               }
+            ],
+            "combo": {
+               "hwnd": {
+                  "handle": 591000,
+                  "class": "ComboBox",
+                  "real_class": "ComboBox",
+                  "text": "",
+                  "style": "0x56000413",
+                  "exstyle": "0x0",
+                  "id": 1148,
+                  "visible": true,
+                  "rect": [
+                     454,
+                     551,
+                     672,
+                     575
+                  ],
+                  "dlgcode": {
+                     "value": "0x81",
+                     "flags": [
+                        "WANTARROWS",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "File name:",
+                  "ControlType": 50003,
+                  "LocalizedControlType": "combo box",
+                  "ClassName": "ComboBox",
+                  "AutomationId": "1148",
+                  "NativeWindowHandle": 591000,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0x90498 Main:Nested [pid:8704,providerId:0x90498 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "File name:",
+                  "LegacyRole": 46,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "File name:",
+                  "accRole": 46,
+                  "accValue": null,
+                  "accChildCount": 3,
+                  "accRoleText": "combo box"
+               },
+               "msaa_window": {
+                  "accName": "File name:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": null,
+               "next_sibling": null
+            },
+            "combo_label_walk": [],
+            "comboex": {
+               "hwnd": {
+                  "handle": 984074,
+                  "class": "ComboBoxEx32",
+                  "real_class": "ComboBoxEx32",
+                  "text": "",
+                  "style": "0x50010042",
+                  "exstyle": "0x4",
+                  "id": 1148,
+                  "visible": true,
+                  "rect": [
+                     454,
+                     551,
+                     672,
+                     575
+                  ],
+                  "dlgcode": {
+                     "value": "0x81",
+                     "flags": [
+                        "WANTARROWS",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "",
+                  "ControlType": 50033,
+                  "LocalizedControlType": "pane",
+                  "ClassName": "ComboBoxEx32",
+                  "AutomationId": "1148",
+                  "NativeWindowHandle": 984074,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xF040A Main:Microsoft: Non-Control Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": false,
+                  "HelpText": "",
+                  "IsControlElement": false,
+                  "IsContentElement": false,
+                  "LegacyName": "File name:",
+                  "LegacyRole": 10,
+                  "LegacyDescription": null,
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "File name:",
+                  "accRole": 10,
+                  "accValue": null,
+                  "accChildCount": 1,
+                  "accRoleText": "client"
+               },
+               "msaa_window": {
+                  "accName": "File name:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 1377258,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "File &name:",
+                  "style": "0x50020102",
+                  "exstyle": "0x4",
+                  "id": 1090,
+                  "visible": true,
+                  "rect": [
+                     395,
+                     555,
+                     449,
+                     570
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": {
+                  "handle": 1770234,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Files of &type:",
+                  "style": "0x50020102",
+                  "exstyle": "0x4",
+                  "id": 1089,
+                  "visible": true,
+                  "rect": [
+                     265,
+                     182,
+                     265,
+                     182
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               }
+            },
+            "comboex_label_walk": [
+               {
+                  "handle": 1377258,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "File &name:",
+                  "style": "0x50020102",
+                  "exstyle": "0x4",
+                  "id": 1090,
+                  "visible": true,
+                  "rect": [
+                     395,
+                     555,
+                     449,
+                     570
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               {
+                  "handle": 590912,
+                  "class": "DUIViewWndClassName",
+                  "real_class": "DUIViewWndClassName",
+                  "text": "",
+                  "style": "0x52000000",
+                  "exstyle": "0x10000",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     265,
+                     237,
+                     889,
+                     542
+                  ],
+                  "dlgcode": {
+                     "value": "0x0",
+                     "flags": []
+                  }
+               }
+            ]
+         }
+      ],
+      "visible_statics": [
+         {
+            "text": "File &name:",
+            "handle": 1377258,
+            "dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            }
+         },
+         {
+            "text": "Files of &type:",
+            "handle": 1770234,
+            "dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            }
+         }
+      ]
+   },
+   "probe": {
+      "probe_pid": 4620,
+      "variants": [
+         {
+            "name": "native",
+            "top": 656412,
+            "panel": 0,
+            "label": 1442804,
+            "edit": 1049616,
+            "static_code_forced": null,
+            "edit_code_forced": null,
+            "in_panel": false,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 1049616,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     148,
+                     511,
+                     298,
+                     535
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "Probe label:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 1049616,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0x100410 Main:Nested [pid:4620,providerId:0x100410 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "Probe label:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "Probe label:",
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "Probe label:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 1442804,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     38,
+                     515,
+                     138,
+                     535
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "name": "static_answers_wantallkeys",
+            "top": 2753488,
+            "panel": 0,
+            "label": 1180676,
+            "edit": 1508346,
+            "static_code_forced": 4,
+            "edit_code_forced": null,
+            "in_panel": false,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 1508346,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     160,
+                     523,
+                     310,
+                     547
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 1508346,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0x1703FA Main:Nested [pid:4620,providerId:0x1703FA Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": null,
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": null,
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 1180676,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     50,
+                     527,
+                     150,
+                     547
+                  ],
+                  "dlgcode": {
+                     "value": "0x4",
+                     "flags": [
+                        "WANTALLKEYS"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "",
+            "msaa_name": null
+         },
+         {
+            "name": "static_answers_static_explicit",
+            "top": 1639426,
+            "panel": 0,
+            "label": 1442816,
+            "edit": 1835770,
+            "static_code_forced": 256,
+            "edit_code_forced": null,
+            "in_panel": false,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 1835770,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     172,
+                     535,
+                     322,
+                     559
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "Probe label:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 1835770,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0x1C02FA Main:Nested [pid:4620,providerId:0x1C02FA Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "Probe label:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "Probe label:",
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "Probe label:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 1442816,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     62,
+                     539,
+                     162,
+                     559
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "name": "static_answers_static_or_wantallkeys",
+            "top": 656408,
+            "panel": 0,
+            "label": 1049610,
+            "edit": 656536,
+            "static_code_forced": 260,
+            "edit_code_forced": null,
+            "in_panel": false,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 656536,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     184,
+                     547,
+                     334,
+                     571
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "Probe label:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 656536,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xA0498 Main:Nested [pid:4620,providerId:0xA0498 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "Probe label:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "Probe label:",
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "Probe label:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 1049610,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     74,
+                     551,
+                     174,
+                     571
+                  ],
+                  "dlgcode": {
+                     "value": "0x104",
+                     "flags": [
+                        "WANTALLKEYS",
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x104",
+               "flags": [
+                  "WANTALLKEYS",
+                  "STATIC"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "name": "edit_answers_wantallkeys",
+            "top": 656406,
+            "panel": 0,
+            "label": 1901544,
+            "edit": 656434,
+            "static_code_forced": null,
+            "edit_code_forced": 4,
+            "in_panel": false,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 656434,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     196,
+                     559,
+                     346,
+                     583
+                  ],
+                  "dlgcode": {
+                     "value": "0x4",
+                     "flags": [
+                        "WANTALLKEYS"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "Probe label:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 656434,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xA0432 Main:Nested [pid:4620,providerId:0xA0432 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "Probe label:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "Probe label:",
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "Probe label:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 1901544,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     86,
+                     563,
+                     186,
+                     583
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "name": "in_panel",
+            "top": 984076,
+            "panel": 1442794,
+            "label": 721946,
+            "edit": 656440,
+            "static_code_forced": null,
+            "edit_code_forced": null,
+            "in_panel": true,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 656440,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     208,
+                     571,
+                     358,
+                     595
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "Probe label:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 656440,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xA0438 Main:Nested [pid:4620,providerId:0xA0438 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "Probe label:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "Probe label:",
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "Probe label:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 721946,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     98,
+                     575,
+                     198,
+                     595
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "name": "in_panel_static_answers_wantallkeys",
+            "top": 1573886,
+            "panel": 1180678,
+            "label": 656432,
+            "edit": 656452,
+            "static_code_forced": 4,
+            "edit_code_forced": null,
+            "in_panel": true,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 656452,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     220,
+                     583,
+                     370,
+                     607
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 656452,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xA0444 Main:Nested [pid:4620,providerId:0xA0444 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": null,
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": null,
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 656432,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     110,
+                     587,
+                     210,
+                     607
+                  ],
+                  "dlgcode": {
+                     "value": "0x4",
+                     "flags": [
+                        "WANTALLKEYS"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x4",
+               "flags": [
+                  "WANTALLKEYS"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "",
+            "msaa_name": null
+         },
+         {
+            "name": "in_panel_static_answers_static",
+            "top": 656444,
+            "panel": 1049730,
+            "label": 984196,
+            "edit": 787590,
+            "static_code_forced": 256,
+            "edit_code_forced": null,
+            "in_panel": true,
+            "with_static": true,
+            "cue": null,
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 787590,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     232,
+                     595,
+                     382,
+                     619
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "Probe label:",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 787590,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xC0486 Main:Nested [pid:4620,providerId:0xC0486 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "Probe label:",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": "Probe label:",
+                  "accRole": 42,
+                  "accValue": "value",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": "Probe label:",
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": {
+                  "handle": 984196,
+                  "class": "Static",
+                  "real_class": "Static",
+                  "text": "Probe label:",
+                  "style": "0x56000100",
+                  "exstyle": "0x0",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     122,
+                     599,
+                     222,
+                     619
+                  ],
+                  "dlgcode": {
+                     "value": "0x100",
+                     "flags": [
+                        "STATIC"
+                     ]
+                  }
+               },
+               "next_sibling": null
+            },
+            "label_dlgcode": {
+               "value": "0x100",
+               "flags": [
+                  "STATIC"
+               ]
+            },
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "Probe label:",
+            "msaa_name": "Probe label:"
+         },
+         {
+            "name": "cue_banner_no_static",
+            "top": 722056,
+            "panel": 0,
+            "label": 0,
+            "edit": 656448,
+            "static_code_forced": null,
+            "edit_code_forced": null,
+            "in_panel": false,
+            "with_static": false,
+            "cue": "Cue name",
+            "edit_facts": {
+               "hwnd": {
+                  "handle": 656448,
+                  "class": "Edit",
+                  "real_class": "Edit",
+                  "text": "value",
+                  "style": "0x56010080",
+                  "exstyle": "0x200",
+                  "id": 0,
+                  "visible": true,
+                  "rect": [
+                     244,
+                     607,
+                     394,
+                     631
+                  ],
+                  "dlgcode": {
+                     "value": "0x89",
+                     "flags": [
+                        "WANTARROWS",
+                        "WANTMESSAGE",
+                        "RADIOBUTTON"
+                     ]
+                  }
+               },
+               "uia": {
+                  "Name": "",
+                  "ControlType": 50004,
+                  "LocalizedControlType": "edit",
+                  "ClassName": "Edit",
+                  "AutomationId": "",
+                  "NativeWindowHandle": 656448,
+                  "FrameworkId": "Win32",
+                  "ProviderDescription": "[pid:1836,providerId:0xA0440 Main:Nested [pid:4620,providerId:0xA0440 Annotation(parent link):Microsoft: Annotation Proxy (unmanaged:UIAutomationCore.dll); Main:Microsoft: MSAA Proxy (unmanaged:UIAutomationCore.dll)]; Nonclient:Microsoft: Non-Client Proxy (unmanaged:uiautomationcore.dll); Hwnd(parent link):Microsoft: HWND Proxy (unmanaged:uiautomationcore.dll)]",
+                  "IsKeyboardFocusable": true,
+                  "HelpText": "Cue name",
+                  "IsControlElement": true,
+                  "IsContentElement": true,
+                  "LegacyName": "",
+                  "LegacyRole": 42,
+                  "LegacyDescription": "",
+                  "LabeledBy": null
+               },
+               "msaa_client": {
+                  "accName": null,
+                  "accRole": 42,
+                  "accValue": "",
+                  "accChildCount": 0,
+                  "accRoleText": "editable text"
+               },
+               "msaa_window": {
+                  "accName": null,
+                  "accRole": 9,
+                  "accValue": null,
+                  "accChildCount": 7,
+                  "accRoleText": "window"
+               },
+               "previous_sibling": null,
+               "next_sibling": null
+            },
+            "label_dlgcode": null,
+            "edit_dlgcode": {
+               "value": "0x89",
+               "flags": [
+                  "WANTARROWS",
+                  "WANTMESSAGE",
+                  "RADIOBUTTON"
+               ]
+            },
+            "uia_name": "",
+            "msaa_name": null
+         }
+      ]
+   }
+}

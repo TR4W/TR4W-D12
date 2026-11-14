@@ -209,6 +209,21 @@ $platformPatterns = [ordered]@{
 #
 # Removing it is a no-op by measurement, not by argument: type.HWND counted 11
 # with the exclusion and 11 without it.
+#
+# WHY type.HWND IS 14 AND NOT 11 (2026-11-14, NY4I's decision, issue 278): three
+# sites are the LCL's OWN signatures and cannot be spelled any other way. The
+# Windows widget set names an edit box from the STATIC before it only if that
+# STATIC answers WM_GETDLGCODE with DLGC_STATIC, and the LCL win32 widget set
+# answers that message itself (win32callback.inc) and never asks the control, so
+# the answer can only be changed by a widget-set class (uInputCaptionWin32.pas:
+# CreateHandle's result type, declaration and implementation) that chains the
+# window procedure (uStaticDialogCodeWindows.pas: the procedure's Window
+# parameter). Everything else about it is behind {$IFDEF WINDOWS} in those two
+# files. The count was raised, not the rule: respelling HWND through an alias
+# would slip under the count and hide the use, and excluding the files would
+# leave a rule naming two files that a reader has to ask about. Do not lower
+# this by moving the code; lower it by deleting the files once Lazarus' win32
+# widget set lets a STATIC answer DLGC_STATIC (an upstream report, issue 278).
 $patternFileExclusions = @{ }
 
 $patternGroups = [ordered]@{

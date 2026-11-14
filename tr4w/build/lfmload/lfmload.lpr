@@ -58,7 +58,8 @@ uses
    Menus,
    Dialogs,
    DateTimePicker,
-   uElementPanel;
+   uElementPanel,
+   uInputCaption;   (* TInputCaption -- the Preferences Station page's captions *)
 
 var
    gFiles: integer = 0;
@@ -190,7 +191,7 @@ begin
                     TListView, TProgressBar, TTrackBar, TStatusBar, TToolBar,
                     TUpDown,
                     TSpinEdit, TFloatSpinEdit,
-                    TElementPanel,
+                    TElementPanel, TInputCaption,
                     TStringGrid, TDrawGrid,
                     TSpeedButton, TBitBtn,
                     TPopupMenu, TMenuItem, TMainMenu,
