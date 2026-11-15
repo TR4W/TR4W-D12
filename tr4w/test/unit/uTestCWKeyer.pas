@@ -44,6 +44,7 @@ type
       procedure Test_NoKeyUpIsNotedWhenCATKeysNothing;
       procedure Test_AFaultInTheReviewNeverReachesKeying;
       procedure Test_AutoSendKeysNoPossibleCallKey;
+      procedure Test_CallWindowCWOffAndOnGoThroughSetCWState;
    public
       procedure RunAllTests; override;
    end;
@@ -61,7 +62,11 @@ uses
    uRadioState,         (* TXInhibitAlert -- what the PTT indicator paints from *)
    uTXInhibitView,      (* TXInhibitAlertOf, ResetTXInhibitAlerts *)
    uTestLogCapture,     (* TCaptureAppender *)
-   uTestTXInhibitAlert; (* SetSettledTXState *)
+   uTestTXInhibitAlert, (* SetSettledTXState *)
+   uTestMainFormHarness, (* EnsureTestMainForm -- the quick-command panel *)
+   uMainForm,           (* MainElement *)
+   uTR4WStrings,        (* TC_CWOFF *)
+   LogStuff;            (* CallWindowString, CallString *)
 
 type
    // Records what the facade routed where.  Installed by swapping the KeyerXXX
@@ -1107,6 +1112,112 @@ begin
    end;
 end;
 
+(* ISSUE 324.  The call window's CWOFF / CWON commands were a drifted copy of
+  LogCW.SetCWState; they call it now.  Pinned through the real command arm
+  (CheckCommandInCallsignWindow), on spy keyers and the streamed main form:
+  both flags move together, the flush is the full broadcast and is TAGGED,
+  the speed is re-broadcast, CWOFF while already off does nothing, and each
+  command says what it did on the quick-command panel. *)
+procedure TCWKeyerTests.Test_CallWindowCWOffAndOnGoThroughSetCWState;
+var
+   saved: TSavedKeyers;
+   spyCAT, spyWK, spyYCCC, spyCPU: TSpyKeyer;
+   capture: TCaptureAppender;
+   keep: ILogAppender;
+   savedLevel: TLogLevel;
+   savedCall: CallString;
+   savedEnabled, savedEnable, savedAutoSend, savedPtt, savedSync: boolean;
+   savedCode, savedDisplayed: integer;
+   i: integer;
+   tagged, untagged: integer;
+const
+   FLUSH_BROADCAST = 'CAT.Flush;CPU.Flush;WK.Flush;YCCC.Flush;';
+   SPEED_BROADCAST = 'CPU.SetSpeed(27);WK.SetSpeed(27);YCCC.SetSpeed(27);';
+begin
+   BeginTest('call window CWOFF / CWON go through SetCWState (issue 324)');
+   savedCall := CallWindowString;
+   savedEnabled := CWEnabled;
+   savedEnable := Config.CWEnable;
+   savedAutoSend := tAutoSendMode;
+   savedPtt := Settings.Ptt.Enable;
+   savedSync := Radio1.CWSpeedSync;
+   savedCode := CodeSpeed;
+   savedDisplayed := DisplayedCodeSpeed;
+   savedLevel := logger.Level;
+   capture := TCaptureAppender.Create('cw-on-off');
+   keep := capture;
+   saved := InstallSpies(spyCAT, spyWK, spyYCCC, spyCPU);
+   try
+      EnsureTestMainForm;
+      Settings.Ptt.Enable := False;    (* PTTOff exits before any port *)
+      Radio1.CWSpeedSync := False;     (* keep the radio out of SetSpeed *)
+      CodeSpeed := 27;
+      logger.Level := Log4D.Debug;
+      logger.AddAppender(keep);
+
+      (* CWOFF while CW is on. *)
+      CWEnabled := True;
+      Config.CWEnable := True;
+      tAutoSendMode := True;
+      CallWindowString := 'CWOFF';
+      SpyLog := '';
+      CheckTrue(CheckCommandInCallsignWindow, 'CWOFF is a call-window command');
+      CheckFalse(CWEnabled, 'CWOFF clears the transmit gate');
+      CheckFalse(Config.CWEnable, 'CWOFF clears the configured flag with it');
+      CheckFalse(tAutoSendMode, 'the flush ended autosend');
+      CheckEquals(FLUSH_BROADCAST + SPEED_BROADCAST, SpyLog,
+                  'CWOFF flushes every keyer, then re-broadcasts the speed');
+      CheckEquals(string(TC_CWOFF), string(MainElement(mweQuickCommand).Caption),
+                  'CWOFF says CW Off');
+
+      tagged := 0;
+      untagged := 0;
+      for i := 0 to capture.Lines.Count - 1 do
+         begin
+         if Pos('LogCW.SetCWState: CW turned Off', capture.Lines[i]) > 0 then
+            begin
+            Inc(tagged);
+            end;
+         if Pos('UNTAGGED', capture.Lines[i]) > 0 then
+            begin
+            Inc(untagged);
+            end;
+         end;
+      CheckEquals(1, tagged, 'the flush names SetCWState as its caller');
+      CheckEquals(0, untagged, 'and no flush is logged as untagged');
+
+      (* CWOFF while CW is already off: the call window's own guard. *)
+      SpyLog := '';
+      CheckTrue(CheckCommandInCallsignWindow, 'CWOFF is still consumed');
+      CheckEquals('', SpyLog, 'CWOFF while off flushes nothing and sets no speed');
+      CheckFalse(CWEnabled or Config.CWEnable, 'and CW stays off');
+
+      (* CWON. *)
+      CallWindowString := 'CWON';
+      SpyLog := '';
+      CheckTrue(CheckCommandInCallsignWindow, 'CWON is a call-window command');
+      CheckTrue(CWEnabled, 'CWON sets the transmit gate');
+      CheckTrue(Config.CWEnable, 'CWON sets the configured flag with it');
+      CheckEquals(SPEED_BROADCAST, SpyLog, 'CWON flushes nothing and re-broadcasts the speed');
+      CheckEquals('CW On', string(MainElement(mweQuickCommand).Caption),
+                  'CWON says CW On');
+   finally
+      logger.RemoveAppender(keep);
+      logger.Level := savedLevel;
+      keep := nil;
+      ReleaseTestMainForm;
+      RestoreKeyers(saved, spyCAT, spyWK, spyYCCC, spyCPU);
+      CallWindowString := savedCall;
+      CWEnabled := savedEnabled;
+      Config.CWEnable := savedEnable;
+      tAutoSendMode := savedAutoSend;
+      Settings.Ptt.Enable := savedPtt;
+      Radio1.CWSpeedSync := savedSync;
+      CodeSpeed := savedCode;
+      DisplayedCodeSpeed := savedDisplayed;
+   end;
+end;
+
 procedure TCWKeyerTests.RunAllTests;
 begin
    Test_SelectionPrecedence;
@@ -1125,6 +1236,7 @@ begin
    Test_NoKeyUpIsNotedWhenCATKeysNothing;
    Test_AFaultInTheReviewNeverReachesKeying;
    Test_AutoSendKeysNoPossibleCallKey;
+   Test_CallWindowCWOffAndOnGoThroughSetCWState;
 end;
 
 end.

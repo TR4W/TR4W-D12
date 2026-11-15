@@ -47,9 +47,15 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING, transcribed from UkrainianQSOPointMethod: 10 for Ukraine (UR), 1 for
   the station's own country, 2 for its own continent, 3 otherwise. A Ukrainian
   station scores 1 for another Ukrainian and earns no domestic multiplier.
-  ITS IMPORT: an alphabetic SRX_STRING is a domestic QTH and anything else is
-  stored as the QTH string. (The arm it came from named three contests,
-  Ukrainian DX, OK/OM DX and LZ DX; each owns its own copy -- design 1.4.) *)
+  ITS IMPORT: a received word that is not a number is the domestic QTH,
+  resolved through the domestic table; numbers alone (the serial) are stored
+  as the QTH string. The received text is the QTH tag, else SRX_STRING less
+  the received RST -- uContestBase.ImportDomesticQTHWords (issue 328,
+  2026-11-15). Until then the alphabetic test ran on the RAW SRX_STRING,
+  which TR4W writes with the RST first, so it never passed: '599 KI' came
+  back as the QTH string, and an RST-only SRX_STRING overwrote the QTH tag
+  with '599'. (The arm it came from named three contests, Ukrainian DX,
+  OK/OM DX and LZ DX; each still owns its own call -- design 1.4.) *)
 unit uContestUkrainianDX;
 
 {$I tr4w.inc}
@@ -129,7 +135,7 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   SysUtils, uContestRegistry, uADIF,
+   SysUtils, uContestRegistry,
    uTR4WStrings;
 
 procedure TContestUkrainianDX.CalculateQSOPoints(var aQso: ContestExchange);
@@ -168,14 +174,16 @@ end;
 procedure TContestUkrainianDX.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                               const aSession: TADIFImportSession;
                                               var aExch: ContestExchange);
+var
+   received: string;
 begin
-   if ADIFTextIsAlphabetic(aTemps.SRX_String) then
+   (* See the header. *)
+   if not ImportDomesticQTHWords(aTemps, aSession, aExch, received) then
       begin
-      aExch.DomesticQTH := ShortString(aTemps.SRX_String);
-      end
-   else
-      begin
-      aExch.QTHString := ShortString(aTemps.SRX_String);
+      if received <> '' then
+         begin
+         aExch.QTHString := ShortString(received);
+         end;
       end;
 end;
 

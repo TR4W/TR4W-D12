@@ -19,7 +19,8 @@ unit uTestOperatorList;
 interface
 
 uses
-   SysUtils, Classes, uTR4WTestFramework, VC, utils_text, uOperatorList;
+   SysUtils, Classes, uTR4WTestFramework, VC, utils_text, uOperatorList,
+   uCbrSum, uContestRegistry;
 
 type
    TOperatorListTests = class(TTestCase)
@@ -45,6 +46,10 @@ type
       procedure Test_Lines_Short_OneLine;
       procedure Test_Lines_Empty_OneBareLine;
       procedure Test_Lines_WinterFD_WrapsAt75;
+
+      procedure Test_Header_OperatorsLine_SingleOp;
+      procedure Test_Header_OperatorsLine_MultiOp;
+      procedure Test_Header_OperatorsLine_ErmakContests;
    public
       procedure RunAllTests; override;
    end;
@@ -355,6 +360,41 @@ begin
    end;
 end;
 
+(* ISSUE 326: the header's OPERATORS line is the same for every contest. An
+  ERMAK leftover in PostUnit once skipped the tag for the contests that offer
+  the ERMAK specification (ALRS UA1DZ Cup, Arktika Spring and the rest), after
+  the roster loop that replaced it was retired. The writer now asks
+  CabrilloHeaderTagLine for the tag with no contest input. *)
+procedure TOperatorListTests.Test_Header_OperatorsLine_SingleOp;
+begin
+   BeginTest('Test_Header_OperatorsLine_SingleOp');
+   CheckEquals('OPERATORS: UA1AAA'#13#10,
+               CabrilloHeaderTagLine(ctOperators, 'UA1AAA'), 'one operator');
+end;
+
+procedure TOperatorListTests.Test_Header_OperatorsLine_MultiOp;
+begin
+   BeginTest('Test_Header_OperatorsLine_MultiOp');
+   CheckEquals('OPERATORS: UA1AAA, RA1BBB, R1CCC'#13#10,
+               CabrilloHeaderTagLine(ctOperators, 'UA1AAA, RA1BBB, R1CCC'),
+               'several operators, one line');
+   CheckEquals('OPERATORS: '#13#10, CabrilloHeaderTagLine(ctOperators, ''),
+               'an empty list is still a bare OPERATORS line');
+end;
+
+procedure TOperatorListTests.Test_Header_OperatorsLine_ErmakContests;
+begin
+   BeginTest('Test_Header_OperatorsLine_ErmakContests');
+   (* The two contests of the issue, and Gagarin Cup, still carry the flag: the
+     line must not depend on it. *)
+   CheckTrue(ContestIdentity(ALRS_UA1DZ_CUP).ErmakSpecification, 'ALRS UA1DZ Cup is an ERMAK contest');
+   CheckTrue(ContestIdentity(ARKTIKA_SPRING).ErmakSpecification, 'Arktika Spring is an ERMAK contest');
+   CheckTrue(ContestIdentity(GAGARINCUP).ErmakSpecification, 'Gagarin Cup is an ERMAK contest');
+   CheckEquals('OPERATORS: UA1AAA, RA1BBB'#13#10,
+               CabrilloHeaderTagLine(ctOperators, 'UA1AAA, RA1BBB'),
+               'OPERATORS is written whatever the contest');
+end;
+
 procedure TOperatorListTests.RunAllTests;
 begin
    Test_Contact_QSO_Counts;
@@ -378,6 +418,10 @@ begin
    Test_Lines_Short_OneLine;
    Test_Lines_Empty_OneBareLine;
    Test_Lines_WinterFD_WrapsAt75;
+
+   Test_Header_OperatorsLine_SingleOp;
+   Test_Header_OperatorsLine_MultiOp;
+   Test_Header_OperatorsLine_ErmakContests;
 end;
 
 end.

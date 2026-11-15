@@ -298,13 +298,16 @@ end;
 (* WAG WRITES ITS DOK AS THE DOK TAG AND READS IT BACK (M5a). Export puts the
    QSO's QTHString in DOK (EmitADIFContestFields), so a record that carries one
    gets it back as the QTH -- the round trip the design asks of every class.
-   A record from another logger has no DOK, and keeps what this arm has always
-   done: SRX_STRING as the QTH. *)
+   A record with no DOK (a non-German station's, or another logger's) takes
+   its QTH tag, else SRX_STRING less the received RST --
+   uContestBase.ImportedReceivedText (issue 328, 2026-11-15). This arm took
+   the RAW SRX_STRING until then, so an RST-only record came back with a QTH
+   of '599' over its QTH tag, and '599 B01' kept the RST. *)
 procedure TContestWAG.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                       const aSession: TADIFImportSession;
                                       var aExch: ContestExchange);
 begin
-   aExch.QTHString := ShortString(aTemps.SRX_String);
+   aExch.QTHString := ShortString(ImportedReceivedText(aTemps, aExch));
    if aTemps.DOK <> '' then
       begin
       aExch.QTHString := ShortString(aTemps.DOK);

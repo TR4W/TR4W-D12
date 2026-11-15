@@ -2505,7 +2505,10 @@ begin
          begin
          QuickDisplay(TC_CWDISABLEDWITHALTK);
          end;
-      FlushCWBufferAndClearPTT;
+      (* TAGGED (issue 324): untagged, every Alt-K and CW DISABLE logged
+        "called from an UNTAGGED site". The call window's CWOFF copy of this
+        routine had the tag; the fix never reached the routine itself. *)
+      FlushCWBufferAndClearPTT('LogCW.SetCWState: CW turned Off');
       Config.CWEnable  := False;
       CWEnabled := False;
       end;

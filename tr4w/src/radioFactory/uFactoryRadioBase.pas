@@ -402,6 +402,12 @@ Type TFactoryRadioBase = class(TObject)
       FTXInhibitLock: TCriticalSection;
       FTXInhibitRefusalLogged: boolean;   // the undeclared-ON error, once per radio
 
+      (* PTTviaCAT's storage (issue 323).  The property reads and writes it
+        directly: the accessor pair it replaced each called the property
+        itself and recursed until the stack ran out.  Nothing sets it from
+        configuration yet. *)
+      FPTTviaCAT: boolean;
+
       function GetRadioPort: integer;
       procedure SetRadioPort(Value: Integer);
       function GetRadioAddress: string;
@@ -424,8 +430,6 @@ Type TFactoryRadioBase = class(TObject)
       function GetSplitEnabled: boolean;
       function GetVFO(whichVFO: TVFO): TRadioVFO;
 
-      procedure SetPTTviaCAT(Value: boolean);
-      function  GetPTTviaCAT: boolean;
       procedure OnRadioConnected(Sender:TObject);
       procedure OnRadioDisconnected(Sender: TObject);
       procedure OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
@@ -1019,7 +1023,7 @@ Type TFactoryRadioBase = class(TObject)
         opening a new one here would put it somewhere a reader does not look
         for it. *)
       property serialPortName: string read localSerialPortName write localSerialPortName;
-      property PTTviaCAT: boolean read GetPTTviaCAT write SetPTTviaCAT;
+      property PTTviaCAT: boolean read FPTTviaCAT write FPTTviaCAT;
       property CWSpeed: integer read GetCWSpeed;
 
       (* THE RADIO HAS REPORTED ITS KEYER SPEED.  Every driver that learns the
@@ -1932,18 +1936,6 @@ begin
    Self.localSerialPort := Value;
    // Since the port was changed, disconnect? Or just wait until next time?
 
-end;
-
-function TFactoryRadioBase.GetPTTviaCAT: boolean;
-begin
-   Result := Self.PTTviaCAT;
-   logger.trace('[GetPTTviaCAT] Returning %s for PTTviaCAT',[BoolToStr(Result)]);
-end;
-
-procedure TFactoryRadioBase.SetPTTviaCAT(Value: boolean);
-begin
-   Self.PTTviaCAT := Value;
-   logger.Debug('[SetPTTviaCAT] Setting PTTviaCAT to %s',[BoolToStr(Value)]);
 end;
 
 function TFactoryRadioBase.GetRadioAddress: string;

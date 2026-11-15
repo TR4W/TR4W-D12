@@ -620,6 +620,12 @@ resourcestring
      logged a QSO with no grid. %s is the word as typed. *)
    SExchangeNotAGridOrReport = '%s is not a grid square or a signal report';
 
+   (* A WORD IN THE RS(T)'S PLACE THAT THE MODE DOES NOT TAKE AS ONE -- issue
+     325, the RSGB RoPoCo's postcode parser
+     (LOGSTUFF.ProcessRSTAndPostalCodeExchange). '699 HA1 1TA' logged a report
+     of 699 and 'HA1 1TA CT' the default report. %s is the word as typed. *)
+   SExchangeNotASignalReport = '%s is not a signal report';
+
    (* A GRID CONTEST'S EXCHANGE WITH NO GRID IN IT -- Q115, NY4I 2026-10-18:
      "The contest class should be stating what is required." Shown when the
      class requires the grid and only a signal report was typed. *)

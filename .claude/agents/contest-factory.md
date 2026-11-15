@@ -1310,6 +1310,19 @@ the target shape, the M-step migration order and the open questions.
   Roundup, CWOPS, NAQP CW/SSB/RTTY, the NCCC Sprint, Ukrainian DX, OK/OM DX and
   LZ DX. `MainUnit.ApplyClasslessADIFImport` is DELETED: ARRL 160's arm
   moved at M7b and POTA's, its last, with POTA's class (2026-10-13).
+  **AN IMPORT NEVER READS THE RAW SRX_STRING (issues 275 and 328,
+  2026-11-15)**: TR4W's own export writes the received RST first (`599 CT`,
+  or just `599`), so a copy of `aTemps.SRX_String` stores the RST as the QTH.
+  The received text is `uContestBase.ImportedReceivedText` (the QTH tag, else
+  SRX_STRING less the RST), and a domestic QTH goes through
+  `ImportDomesticQTH` (resolved as typed entry resolves it, kept as written
+  when unknown). Where the other words are numbers (RST, zone, serial),
+  `ImportDomesticQTHWords` drops them first -- CQ 160, UBA, LZ, OK/OM DX and
+  Ukrainian DX call it; WAG reads `ImportedReceivedText`; ARRL 160 keeps the
+  whole remainder. Note `ImportedReceivedText`'s strip is exact
+  (`IntToStr(RSTReceived)`), so `59 CT` on a 599 record keeps its `59`.
+  **The base's own domestic arm still takes the ALPHA PREFIX of the raw
+  SRX_STRING** (`'599 CT'` gives `''`) when there is no QTH tag -- open.
 - **POTA is a class** (NY4I, 2026-10-13, design Q6 and §8.2o: *"while it is
   not a contest per se, just like with GENERAL QSO, we treat it that way"*).
   `TContestPOTA` sits on `TContestBase`, writes no CONTEST_ID, and owns its

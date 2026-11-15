@@ -283,7 +283,14 @@ begin
      CabrilloTagsArray. *)
    tagName := Copy(CabrilloTagsArray[aTag].ctrTag, 2, MaxInt);
 
-   if aValue <> '' then
+   (* OPERATORS IS ALWAYS WRITTEN, wrapped at the specification's 75 characters
+     and bare when the list is empty (issue 326: an ERMAK leftover once left it
+     out for the Russian contests). *)
+   if aTag = ctOperators then
+      begin
+      Result := CabrilloOperatorLines(aValue);
+      end
+   else if aValue <> '' then
       begin
       Result := tagName + ': ' + aValue + #13#10;
       end

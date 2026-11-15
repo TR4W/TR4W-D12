@@ -63,7 +63,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SRX_STRING less its RST, resolved through the domestic table (issue 275)
   -- the arm MainUnit.ApplyClasslessADIFImport kept for it until M7b copied
   SRX_STRING raw; the arm it came from named CQ 160 and the UBA contests
-  too, and each owns its copy. *)
+  too, whose copies kept the raw copy until issue 328 repointed them to the
+  shared uContestBase helpers. *)
 unit uContestARRL160;
 
 {$I tr4w.inc}
@@ -388,7 +389,11 @@ end;
    writes '599 CT' there, and the raw copy stored '599' as the QTH).
    ImportDomesticQTH then stores what typed entry stores -- an alias (EM) as
    its section (EMA) and the multiplier key beside it -- the helper
-   Sweepstakes and the Field Days call. *)
+   Sweepstakes and the Field Days call. The QTH-tag-else-SRX_STRING step is
+   the shared uContestBase.ImportedReceivedText since issue 328, which lifted
+   it from here for the CQ 160, UBA, LZ, OK/OM, Ukrainian and WAG imports.
+   This contest keeps the WHOLE remainder (an unknown '8' or '2A CT' is kept
+   as written, as before); those contests drop the number words. *)
 procedure TContestARRL160.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                           const aSession: TADIFImportSession;
                                           var aExch: ContestExchange);
@@ -407,13 +412,9 @@ begin
          aExch.QTHString := ShortString(aTemps.ARRL_Sect);
          end;
       end
-   else if aExch.QTHString <> '' then
-      begin
-      received := string(aExch.QTHString);
-      end
    else
       begin
-      received := ExchangeFromSRXString(aTemps.SRX_String, aExch.RSTReceived);
+      received := ImportedReceivedText(aTemps, aExch);
       end;
    if received <> '' then
       begin

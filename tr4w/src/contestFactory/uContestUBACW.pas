@@ -45,9 +45,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   of the world; everyone else scores 10 for ON, 3 for a UBA country and 1
   otherwise. A Belgian station working ON with the QTH 'XXX' earns no
   domestic multiplier. The two country lists are uCallSignRoutines.UBACountry.
-  ITS IMPORT: SRX_STRING is the domestic QTH. (The arm it came from named five
-  contests, CQ 160 CW and SSB, UBA CW and SSB and ARRL 160; each owns its own
-  copy of the body -- design 1.4.) *)
+  ITS IMPORT (issue 328, 2026-11-15): the QTH tag, else SRX_STRING less the
+  received RST, with its number words (the serial) dropped, resolved through
+  the domestic table -- uContestBase.ImportDomesticQTHWords. The exchange is
+  RS(T), serial and a possible QTH (RSTQSONumberAndPossibleDomesticQTH), so
+  the serial is never the QTH. It copied the RAW SRX_STRING into DomesticQTH
+  until then, RST, serial and all. *)
 unit uContestUBACW;
 
 {$I tr4w.inc}
@@ -193,8 +196,11 @@ end;
 procedure TContestUBACW.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                         const aSession: TADIFImportSession;
                                         var aExch: ContestExchange);
+var
+   received: string;
 begin
-   aExch.DomesticQTH := ShortString(aTemps.SRX_String);
+   (* See the header. A record with no QTH word keeps its DomesticQTH. *)
+   ImportDomesticQTHWords(aTemps, aSession, aExch, received);
 end;
 
 function TContestUBACW.GetDisplayName: string;

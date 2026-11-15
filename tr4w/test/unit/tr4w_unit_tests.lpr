@@ -213,6 +213,7 @@ uses
    uTestPossibleDomesticQTHEntry in 'uTestPossibleDomesticQTHEntry.pas',
    uTestLicenceYearEntry in 'uTestLicenceYearEntry.pas',
    uTestQSONumberAndNameEntry in 'uTestQSONumberAndNameEntry.pas',
+   uTestPostalCodeEntry in 'uTestPostalCodeEntry.pas',
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
@@ -301,6 +302,7 @@ uses
    uScoreBreakdown in '..\..\src\uScoreBreakdown.pas',
    uTestScoreBreakdown in 'uTestScoreBreakdown.pas',
    uTestRadioDestructors in 'uTestRadioDestructors.pas',
+   uTestRadioPTTviaCAT in 'uTestRadioPTTviaCAT.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    (* THE CONTEST FACTORY. uContestFactory is deliberately NOT here: it reads
@@ -1218,6 +1220,7 @@ begin
    RegisterSuite(TPossibleDomesticQTHEntryTests.Create('PossibleDomesticQTHEntry'));
    RegisterSuite(TLicenceYearEntryTests.Create('LicenceYearEntry'));
    RegisterSuite(TQSONumberAndNameEntryTests.Create('QSONumberAndNameEntry'));
+   RegisterSuite(TPostalCodeEntryTests.Create('PostalCodeEntry'));
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
@@ -1278,6 +1281,7 @@ begin
    RegisterSuite(TScore3830ReportTests.Create('Score3830Report'));
    RegisterSuite(TScoreBreakdownTests.Create('ScoreBreakdown'));
    RegisterSuite(TRadioDestructorTests.Create('RadioDestructors'));
+   RegisterSuite(TRadioPTTviaCATTests.Create('RadioPTTviaCAT'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));

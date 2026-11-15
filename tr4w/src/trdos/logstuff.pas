@@ -685,6 +685,11 @@ function ProcessRSTQTHNameAndFistsNumberOrPowerExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 function ProcessRSTAndJAPrefectureExchange(Exchange: ShortString; var
   RXData: ContestExchange): boolean;
+(* RS(T) and a postcode (the RSGB RoPoCo, CW and SSB). In the interface for
+  uTestPostalCodeEntry (issue 325): an RS(T) the mode does not take is refused
+  with a message and leaves the QSO as it found it. *)
+function ProcessRSTAndPostalCodeExchange(Exchange: Str80; var RXData:
+  ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
@@ -5273,13 +5278,48 @@ begin
 
 end;
 
+(* ONE WORD READ AS THE MODE'S RS(T) (issue 325): one to three digits that
+  ValidRST takes -- 1..9 (the strength alone), 10..59, and 100..599 on CW and
+  RTTY; 1..9 and 10..59 on Phone. The word is checked BEFORE ValidRST sees it,
+  because ValidRST reads only a leading run of digits (LeadingInt): '5NN'
+  would be 559 and '57X' 57, and a ten-digit word would overflow the integer.
+  aRST is DefaultRST going in, so a report ValidRST takes without writing
+  (10..59 off Phone) leaves the session's default. ValidRST is asked on a copy:
+  it removes the word from the string it is given. *)
+function ReadRSTWord(const aWord: Str10; out aRST: smallInt): boolean;
+var
+  probe: ShortString;
+begin
+  aRST := DefaultRST;
+  Result := False;
+  if (length(aWord) >= 1)                  and
+     (length(aWord) <= 3)                  and
+     StringIsAllNumbers(string(aWord))     then
+     begin
+     probe := aWord;
+     Result := ValidRST(probe, aRST, ActiveMode);
+     end;
+end;
+
 function ProcessRSTAndPostalCodeExchange(Exchange: Str80; var RXData:
   ContestExchange): boolean;
 
-{ Legal entries HA1 1TA, RS(T) HA1 1TA or HA1 1TA RS(T) }
+(* Legal entries HA1 1TA, RS(T) HA1 1TA or HA1 1TA RS(T)
+
+  THE RS(T) IS BOUNDED (issue 325, 2026-11-15). The word in the RS(T)'s place
+  -- the first word when it is all digits, else the third -- was read with
+  StrToIntDef and never checked: '699 HA1 1TA' and '0 HA1 1TA' logged reports
+  of 699 and 0, and a third word that was no number ('HA1 1TA CT') was taken
+  as the default report (D7 had no range check either). It is
+  now ReadRSTWord's: an RS(T) the mode does not take is refused with
+  SExchangeNotASignalReport, and the entry is parsed on a copy that is written
+  only when accepted (the rule of issues 263, 274 and 308). No word in the
+  RS(T)'s place is the default report, as before. *)
 
 var
   FirstString, SecondString, ThirdString: Str10;
+  rstWord: Str10;
+  parsed: ContestExchange;
 
 begin
   Result := False;
@@ -5290,27 +5330,37 @@ begin
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
 
+  parsed := RXData;
   if not StringIsAllNumbers(FirstString) then
      begin
-     RXData.QTHString {PostalCode} := FirstString + ' ' + SecondString;
-     RXData.RSTReceived := StrToIntDef(ThirdString, 0);
+     parsed.QTHString := FirstString + ' ' + SecondString;
+     rstWord := ThirdString;
+     end
+  else
+     begin
+     parsed.QTHString := SecondString + ' ' + ThirdString;
+     rstWord := FirstString;
+     end;
 
-     if RXData.RSTReceived = 0 then
-        begin
-        RXData.RSTReceived := DefaultRST;
-        end;
+  if rstWord = '' then
+     begin
+     parsed.RSTReceived := DefaultRST;
      Result := True;
      end
   else
      begin
-     RXData.QTHString {PostalCode} := SecondString + ' ' + ThirdString;
-     RXData.RSTReceived := StrToIntDef(FirstString, 0);
-     Result := True;
+     Result := ReadRSTWord(rstWord, parsed.RSTReceived);
      end;
 
-  //  RXData.QTHString := Copy(RXData.PostalCode, 1, 2);
-
-  //  ProcessRSTAndPostalCodeExchange := FoundDomesticQTH(RXData);
+  if Result then
+     begin
+     RXData := parsed;
+     ExchangeErrorMessage := '';
+     end
+  else
+     begin
+     ExchangeErrorMessage := UnicodeFormat(SExchangeNotASignalReport, [string(rstWord)]);
+     end;
 end;
 
 function ProcessRSTAndQSONumberOrFrenchDepartmentExchange(Exchange: Str80; var
@@ -5619,10 +5669,9 @@ end;
 (* A WORD WITH THE SHAPE OF THE MODE'S RS(T) THAT ValidRST TAKES: three digits
   on CW and RTTY (599), two on Phone (59). ValidRST is asked on copies, so a
   word that is then read as something else leaves no RS(T) behind; aRST is
-  the report when True. *)
+  the report when True. The reading is ReadRSTWord's; this adds the shape. *)
 function IsAnRSTWord(const aWord: Str10; out aRST: smallInt): boolean;
 var
-  probe: ShortString;
   shapeLength: integer;
 begin
   aRST := 0;
@@ -5637,9 +5686,7 @@ begin
   Result := False;
   if (length(aWord) = shapeLength) and StringIsAllNumbers(string(aWord)) then
      begin
-     probe := aWord;
-     aRST := DefaultRST;
-     Result := ValidRST(probe, aRST, ActiveMode);
+     Result := ReadRSTWord(aWord, aRST);
      end;
 end;
 

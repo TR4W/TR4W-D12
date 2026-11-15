@@ -43,9 +43,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING, transcribed from CQ160QSOPointMethod (4.77.6):
 
       same country 2, else same continent 5, else 10.
-  ITS IMPORT: SRX_STRING is the domestic QTH. (The arm it came from named five
-  contests, CQ 160 CW and SSB, UBA CW and SSB and ARRL 160; each owns its own
-  copy of the body -- design 1.4.) *)
+  ITS IMPORT (issue 328, 2026-11-15): the QTH tag, else SRX_STRING less the
+  received RST, with its number words dropped, resolved through the domestic
+  table -- uContestBase.ImportDomesticQTHWords. A word of digits is the zone
+  a DX station sends (RSTZoneOrDomesticQTH reads it so typed), never a QTH,
+  and an SRX_STRING that is only the RST stores nothing. It copied the RAW
+  SRX_STRING into DomesticQTH until then, so TR4W's own '599 CT' came back
+  as '599 CT' and an RST-only record as '599'. *)
 unit uContestCQ160CW;
 
 {$I tr4w.inc}
@@ -163,8 +167,11 @@ end;
 procedure TContestCQ160CW.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                           const aSession: TADIFImportSession;
                                           var aExch: ContestExchange);
+var
+   received: string;
 begin
-   aExch.DomesticQTH := ShortString(aTemps.SRX_String);
+   (* See the header. A record with no QTH word keeps its DomesticQTH. *)
+   ImportDomesticQTHWords(aTemps, aSession, aExch, received);
 end;
 
 function TContestCQ160CW.GetDisplayName: string;

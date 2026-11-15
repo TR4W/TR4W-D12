@@ -979,12 +979,6 @@ procedure WriteTitleBlockToSummarySheet;
   // for i := 147 to 167 - 2 + 2 do
   for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
      begin
-     if ErmakSpecification then
-       if TempTag = ctOperators then
-          begin
-          Continue;
-          end;
-
      (* ASKED OF uCbrSum, NOT OF A WINDOW HANDLE.  This used to be
         GetDlgItemTextA( CreateCabrilloWindow, Ord( TempTag ) + 200, ... ) --
         this unit reaching into another unit's dialog by an id it computed
@@ -3024,11 +3018,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
          begin
-         if ErmakSpecification and ( TempTag = ctOperators ) then
-            begin
-            Continue;
-            end;
-
+         (* OPERATORS IS WRITTEN FOR EVERY CONTEST, ERMAK ONES INCLUDED (issue
+           326). D7 skipped the tag here because the ERMAK roster loop wrote
+           its own OPERATORS lines; that loop was retired (commented out below)
+           and the skip stayed, so a Russian station's Cabrillo had none. *)
          GetCabrilloTagText( TempTag );
          (* A BLANK TAG IS LEFT OUT -- EXCEPT A CATEGORY, whose bare line is
            written: no CATEGORY-* field is required, and "none" is a choice
@@ -3064,7 +3057,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          if TempTag = ctOperators then
             begin
             sWriteFileFromString( tReportFileWrite,
-               CabrilloOperatorLines( CabrilloTagText( ctOperators ) ) );
+               AnsiString( CabrilloHeaderTagLine( ctOperators,
+                                                  CabrilloTagText( ctOperators ) ) ) );
             end
          else
             begin

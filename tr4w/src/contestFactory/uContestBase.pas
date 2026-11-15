@@ -4444,11 +4444,50 @@ function ContestQTHIsAnARRLSection(aContest: TContestBase): boolean;
    DomMultQTH 'EMA', exactly what a typed EM stores. A text the table does
    not know, or a session with no lookup, keeps the text as written (what
    every import did before). QTHString is not touched: it is the operator's
-   literal value, typed or imported (Q45). The Sweepstakes and both Field
-   Day imports call it. *)
+   literal value, typed or imported (Q45). The Sweepstakes, both Field Day
+   and the ARRL 160 imports call it, the base's domestic arm, and (issue 328)
+   ImportDomesticQTHWords below. *)
 procedure ImportDomesticQTH(const aSession: TADIFImportSession;
                             const aText: string;
                             var aExch: ContestExchange);
+
+(* THE RECEIVED QTH TEXT AN IMPORTED RECORD CARRIES -- issue 328,
+   2026-11-15, lifted from ARRL 160's import (issue 275). The record's QTH
+   tag (aExch.QTHString, as the generic mapping left it) when it has one,
+   else SRX_STRING with the received RST taken off
+   (uADIF.ExchangeFromSRXString): TR4W's own export writes '599 CT' there,
+   and an SRX_STRING that is nothing but the RST gives ''. Read from aTemps
+   and aExch, never from aExch.ExchString, so a contest asked directly (the
+   unit tests' Interpret) gets the same answer as the whole import.
+   THE STRIP IS EXACT: only a leading IntToStr(aExch.RSTReceived) word comes
+   off, so '59 CT' on a record whose RST_RCVD is 599, or any SRX_STRING on a
+   record with no RST_RCVD (RSTReceived 0), keeps its RST here. *)
+function ImportedReceivedText(const aTemps: TADIFRecordTemps;
+                              const aExch: ContestExchange): string;
+
+(* THE WORDS OF aText THAT ARE NOT ALL DIGITS, joined by one blank, in order
+   -- issue 328. A word of digits in a received exchange is an RS(T), a zone
+   or a serial and never a domestic QTH (no key or alias of s48.dom, p14.dom,
+   uba.dom, lz.dom, okom.dom or ukraine.dom is all digits; p14.dom's VO1 and
+   VO2 hold a letter and are kept). A word is cut at blanks only. '59 CT' gives 'CT', '101 CT' gives 'CT', '599 8' gives '', and
+   '2A CT' gives '2A CT' (both words hold a letter). *)
+function NonNumericWords(const aText: string): string;
+
+(* THE IMPORTED DOMESTIC QTH OF AN EXCHANGE WHOSE OTHER WORDS ARE NUMBERS
+   -- issue 328, 2026-11-15. aReceived is ImportedReceivedText; when it has
+   a word that is not all digits, those words (NonNumericWords) go through
+   ImportDomesticQTH -- resolved as typed entry resolves them, kept as
+   written when the table does not know them -- and the answer is True.
+   Otherwise nothing is written and the answer is False, aReceived holding
+   what the record carried (possibly '') for a caller that keeps a number.
+   Called by the CQ 160 (RS(T) and state, province or zone), UBA DX (RS(T),
+   serial and a possible QTH), LZ DX (zone or QTH), OK/OM DX and Ukrainian DX
+   (serial or QTH) imports, each of which stored the RAW SRX_STRING, RST and
+   all, until issue 328. *)
+function ImportDomesticQTHWords(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange;
+                                out aReceived: string): boolean;
 
 (* THREE OF THE EXCHANGE RULES OF aContest -- see TContestBase.
    StripsRoverCountyFromCall, LogsSeveralQTHsFromOneEntry and
@@ -5813,6 +5852,75 @@ begin
       end;
    aExch.DomesticQTH := ShortString(domesticQTH);
    aExch.DomMultQTH := ShortString(multiplier);
+end;
+
+function ImportedReceivedText(const aTemps: TADIFRecordTemps;
+                              const aExch: ContestExchange): string;
+begin
+   if aExch.QTHString <> '' then
+      begin
+      Result := string(aExch.QTHString);
+      end
+   else
+      begin
+      Result := ExchangeFromSRXString(aTemps.SRX_String, aExch.RSTReceived);
+      end;
+end;
+
+function NonNumericWords(const aText: string): string;
+var
+   i: integer;
+   wordStart: integer;
+   word: string;
+   notAllDigits: boolean;
+begin
+   Result := '';
+   i := 1;
+   while i <= Length(aText) do
+      begin
+      while (i <= Length(aText)) and
+            (aText[i] = ' ') do
+         begin
+         Inc(i);
+         end;
+      wordStart := i;
+      notAllDigits := False;
+      while (i <= Length(aText)) and
+            (aText[i] <> ' ') do
+         begin
+         if not (aText[i] in ['0'..'9']) then
+            begin
+            notAllDigits := True;
+            end;
+         Inc(i);
+         end;
+      word := Copy(aText, wordStart, i - wordStart);
+      if (word <> '') and
+         notAllDigits then
+         begin
+         if Result <> '' then
+            begin
+            Result := Result + ' ';
+            end;
+         Result := Result + word;
+         end;
+      end;
+end;
+
+function ImportDomesticQTHWords(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange;
+                                out aReceived: string): boolean;
+var
+   qth: string;
+begin
+   aReceived := ImportedReceivedText(aTemps, aExch);
+   qth := NonNumericWords(aReceived);
+   Result := qth <> '';
+   if Result then
+      begin
+      ImportDomesticQTH(aSession, qth, aExch);
+      end;
 end;
 
 function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;

@@ -245,23 +245,62 @@ begin
       end;
 end;
 
+(* THE CQ 160 AND UBA IMPORTS DROP THE RST AND THE NUMBERS -- issue 328,
+  2026-11-15. Each stored the RAW SRX_STRING as the domestic QTH, so TR4W's
+  own '599 CT' came back as '599 CT' and an RST-only SRX_STRING as '599'.
+  Now: the QTH tag, else SRX_STRING less the received RST, with every word
+  of digits (an RST, a CQ 160 zone, a UBA serial) dropped. The session here
+  has NO lookup (NeutralADIFImportSession), so a QTH is kept as written; the
+  table's spelling is pinned through the real engine in
+  uTestARRLSectionAlias. *)
 procedure TContestImportTests.Test_DomesticQTHFromSRXContests;
 const
    CONTESTS: array[0..3] of ContestType = (CQ160CW, CQ160SSB, UBACW, UBASSB);
 var
    i: integer;
-   x: ContestExchange;
-   t: TADIFRecordTemps;
+   what: string;
+
+   function DomesticQTHOf(aRST: integer; const aQTHTag, aSRX: string): string;
+   var
+      x: ContestExchange;
+      t: TADIFRecordTemps;
+   begin
+      x := NewExch(CONTESTS[i]);
+      x.RSTReceived := aRST;
+      x.QTHString := ShortString(aQTHTag);
+      t := NoTemps;
+      t.SRX_String := aSRX;
+      Interpret(CONTESTS[i], t, x);
+      Result := string(x.DomesticQTH);
+   end;
+
 begin
    BeginTest('Test_DomesticQTHFromSRXContests');
    for i := Low(CONTESTS) to High(CONTESTS) do
       begin
-      x := NewExch(CONTESTS[i]);
-      t := NoTemps;
-      t.SRX_String := '59 MON';
-      Interpret(CONTESTS[i], t, x);
-      (* The RAW SRX_STRING, RST and all, as the arm always took it. *)
-      CheckEquals('59 MON', string(x.DomesticQTH), string(ContestTypeSA[CONTESTS[i]]) + ': domestic QTH');
+      what := string(ContestTypeSA[CONTESTS[i]]);
+      CheckEquals('', DomesticQTHOf(599, '', '599'),
+                  what + ': an RST-only SRX_STRING is no QTH (it stored 599)');
+      CheckEquals('', DomesticQTHOf(59, '', '59'),
+                  what + ': nor on phone (it stored 59)');
+      CheckEquals('CT', DomesticQTHOf(599, '', '599 CT'),
+                  what + ': 599 CT is CT (it stored 599 CT)');
+      CheckEquals('CT', DomesticQTHOf(59, '', '59 CT'),
+                  what + ': 59 CT on a 59 record is CT');
+      CheckEquals('CT', DomesticQTHOf(599, '', '59 CT'),
+                  what + ': 59 CT on a 599 record -- the RST is a number word, dropped');
+      CheckEquals('CT', DomesticQTHOf(599, '', 'CT'),
+                  what + ': a bare QTH, as D7 wrote SRX_STRING');
+      CheckEquals('2A CT', DomesticQTHOf(599, '', '2A CT'),
+                  what + ': 2A CT holds no number word and is kept as written');
+      CheckEquals('DL', DomesticQTHOf(599, '', '599 DL'),
+                  what + ': a DX prefix is kept as written');
+      CheckEquals('', DomesticQTHOf(599, '', '599 14'),
+                  what + ': a number is a zone or a serial, never a QTH');
+      CheckEquals('CT', DomesticQTHOf(599, '', '599 101 CT'),
+                  what + ': RST, serial and QTH give the QTH');
+      CheckEquals('ON', DomesticQTHOf(59, 'ON', '59'),
+                  what + ': the QTH tag wins over an RST-only SRX_STRING');
       end;
 end;
 
@@ -286,12 +325,42 @@ begin
       CheckEquals('KI', string(x.DomesticQTH), what + ': letters are a domestic QTH');
       CheckEquals('', string(x.QTHString), what + ': and not the QTH string');
 
+      (* ISSUE 328: the alphabetic test ran on the RAW SRX_STRING, which
+         TR4W writes RST first, so '599 KI' was the QTH string and
+         '599 123' was stored whole. The received RST comes off first now. *)
       x := NewExch(CONTESTS[i]);
+      x.RSTReceived := 599;
+      t := NoTemps;
+      t.SRX_String := '599 KI';
+      Interpret(CONTESTS[i], t, x);
+      CheckEquals('KI', string(x.DomesticQTH), what + ': 599 KI is the domestic QTH KI');
+      CheckEquals('', string(x.QTHString), what + ': 599 KI is not the QTH string');
+
+      x := NewExch(CONTESTS[i]);
+      x.RSTReceived := 599;
       t := NoTemps;
       t.SRX_String := '599 123';
       Interpret(CONTESTS[i], t, x);
-      CheckEquals('599 123', string(x.QTHString), what + ': anything else is the QTH string');
+      CheckEquals('123', string(x.QTHString), what + ': a number, less the RST, is the QTH string');
       CheckEquals('', string(x.DomesticQTH), what + ': and not a domestic QTH');
+
+      x := NewExch(CONTESTS[i]);
+      x.RSTReceived := 599;
+      x.QTHString := 'KI';
+      t := NoTemps;
+      t.SRX_String := '599';
+      Interpret(CONTESTS[i], t, x);
+      CheckEquals('KI', string(x.DomesticQTH), what + ': the QTH tag is the domestic QTH');
+      CheckEquals('KI', string(x.QTHString),
+                  what + ': and an RST-only SRX_STRING no longer overwrites it (it wrote 599)');
+
+      x := NewExch(CONTESTS[i]);
+      x.RSTReceived := 599;
+      t := NoTemps;
+      t.SRX_String := '599';
+      Interpret(CONTESTS[i], t, x);
+      CheckEquals('', string(x.DomesticQTH), what + ': an RST-only SRX_STRING: no domestic QTH');
+      CheckEquals('', string(x.QTHString), what + ': and no QTH string');
       end;
 end;
 
@@ -471,11 +540,28 @@ begin
    Interpret(WAG, t, x);
    CheckEquals('B01', string(x.QTHString), 'WAG: DOK is the QTH');
 
+   (* ISSUE 328: with no DOK the QTH was the RAW SRX_STRING, RST and all. *)
    x := NewExch(WAG);
+   x.RSTReceived := 599;
    t := NoTemps;
    t.SRX_String := '599 B01';
    Interpret(WAG, t, x);
-   CheckEquals('599 B01', string(x.QTHString), 'WAG with no DOK: SRX_STRING, as it always was');
+   CheckEquals('B01', string(x.QTHString), 'WAG with no DOK: SRX_STRING less the RST (it kept 599 B01)');
+
+   x := NewExch(WAG);
+   x.RSTReceived := 599;
+   x.QTHString := 'CT';
+   t := NoTemps;
+   t.SRX_String := '599';
+   Interpret(WAG, t, x);
+   CheckEquals('CT', string(x.QTHString), 'WAG with no DOK: the QTH tag (an RST-only SRX_STRING wrote 599)');
+
+   x := NewExch(WAG);
+   x.RSTReceived := 599;
+   t := NoTemps;
+   t.SRX_String := '599';
+   Interpret(WAG, t, x);
+   CheckEquals('', string(x.QTHString), 'WAG: an RST-only SRX_STRING is no QTH');
 
    x := NewExch(IOTA);
    t := NoTemps;

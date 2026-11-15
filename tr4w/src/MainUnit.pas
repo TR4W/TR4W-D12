@@ -10516,26 +10516,21 @@ begin
     2: RunWindowsUtility('cmd.exe');
     3: ProcessMenu(menu_colors);
     4:
-      // TODO: candidate for LogCW.SetCWState(False, ...) once the 'CW Off'/'CW On'
-      // quick-display text is parameterized (Issue 380 cleanup). Left inline for now.
+      (* CW ON AND OFF HAVE ONE OWNER, LogCW.SetCWState (issue 324): these two
+        arms were a copy of it that had drifted. What stays here is only what
+        is the call window's own -- CWOFF does nothing when CW is already off,
+        and each arm says what it did. *)
       begin
-        if CWEnabled or Config.CWEnable then
-           begin
-           QuickDisplay(TC_CWOFF);
-           FlushCWBufferAndClearPTT('MainUnit: CW turned Off');
-           CWEnabled := False;
-           Config.CWEnable := false;
-           DisplayCodeSpeed;
-           end;
+      if CWEnabled or Config.CWEnable then
+         begin
+         SetCWState(False, False);
+         QuickDisplay(TC_CWOFF);
+         end;
       end;
     5:
-      // TODO: candidate for LogCW.SetCWState(True, ...) (Issue 380 cleanup). Left inline for now.
       begin
-        CWEnabled := True;
-        Config.CWEnable := true;
-        QuickDisplay('CW On');
-        DisplayCodeSpeed;
-        SetSpeed(CodeSpeed);
+      SetCWState(True, False);
+      QuickDisplay('CW On');
       end;
     6: ProcessMenu(menu_exit);
     7: ProcessMenu(menu_ctrl_note);

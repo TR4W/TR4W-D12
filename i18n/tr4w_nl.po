@@ -11611,3 +11611,8 @@ msgstr "Je bent gezien door %s."
 #, fuzzy
 msgid "MY MEMBER NO"
 msgstr ""
+
+#: uappstrings.sexchangenotasignalreport
+#, fuzzy
+msgid "%s is not a signal report"
+msgstr ""

@@ -59,7 +59,15 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   same day. Field Day and WFD wrote ADIF STATE from the typed text, so 35
   aliases (WF, SN, NY, HA, LOS, KL, CON ...) wrote none
   (uADIF.ADIFSectionStateOf); the DXKeeper message sent ARRL_SECT as typed
-  (EM) or not at all (WF) (uExternalLogger.ExternalLoggerARRLSection). *)
+  (EM) or not at all (WF) (uExternalLogger.ExternalLoggerARRLSection).
+
+  THE SAME IMPORT FOR THE OTHER RAW-SRX COPIES -- issue 328, 2026-11-15. CQ
+  160, UBA DX, LZ DX, OK/OM DX and Ukrainian DX each stored the RAW
+  SRX_STRING (RST and all) where ARRL 160's import, fixed at issue 275,
+  resolves it. They call uContestBase.ImportDomesticQTHWords now, and the
+  Test_*ImportedQTHIsTheFileQTH cases below pin, through the real engine
+  with each contest's shipped .dom, the domestic QTH an imported record
+  stores. *)
 unit uTestARRLSectionAlias;
 
 {$I ..\..\src\tr4w.inc}
@@ -92,6 +100,9 @@ type
       procedure Test_DXKeeperNonSectionContestSendsNoSection;
       procedure Test_ARRL160ImportedAliasIsTheCanonicalSection;
       procedure Test_QSOPartyImportedAliasIsTheFileQTH;
+      procedure Test_CQ160ImportedQTHIsTheFileQTH;
+      procedure Test_UBAImportedQTHIsTheFileQTH;
+      procedure Test_ZoneOrSerialImportedQTHIsTheFileQTH;
    end;
 
 implementation
@@ -1027,6 +1038,154 @@ begin
    end;
 end;
 
+(* ONE IMPORTED RECORD FOR THE SESSION'S CONTEST, through the path
+   ImportFromADIF takes (MainUnit.ParseADIFRecord), and its outputs. The
+   record is 20 m CW with RST_RCVD 599 (AdifRecord); aTags adds the rest. *)
+procedure ImportFor(const aCall, aTags: string; out aDomesticQTH, aKey, aQTH: string);
+var
+   rx: ContestExchange;
+begin
+   ClearContestExchange(rx);
+   aDomesticQTH := '(not parsed)';
+   aKey := '(not parsed)';
+   aQTH := '(not parsed)';
+   if ParseADIFRecord(AdifRecord(aCall, aTags), rx) then
+      begin
+      aDomesticQTH := string(rx.DomesticQTH);
+      aKey := string(rx.DomMultQTH);
+      aQTH := string(rx.QTHString);
+      end;
+end;
+
+(* CQ 160 -- issue 328. s48p14dc.dom (48 states, DC, 14 provinces) is the
+   table; a W/VE station sends RS(T) and a state or province, a DX station
+   RS(T) and its zone (RSTZoneOrDomesticQTH). Before: DomesticQTH was the
+   raw SRX_STRING -- '599 CT', '599', '599 14'. *)
+procedure TARRLSectionAliasTests.Test_CQ160ImportedQTHIsTheFileQTH;
+const
+   CONTESTS: array[0..1] of ContestType = (CQ160CW, CQ160SSB);
+var
+   i: integer;
+   what: string;
+   domesticQTH, key, qth: string;
+begin
+   BeginTest('Test_CQ160ImportedQTHIsTheFileQTH');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   for i := Low(CONTESTS) to High(CONTESTS) do
+      begin
+      what := string(ContestTypeSA[CONTESTS[i]]);
+      SetUpSession(CONTESTS[i], DomesticCountriesKVE, 's48p14dc.dom');
+      try
+         ImportFor('W1AW', AdifTag('SRX_STRING', '599 CT'), domesticQTH, key, qth);
+         CheckEquals('Ct', domesticQTH, what + ' 599 CT: the file''s state (it stored 599 CT)');
+         CheckEquals('Ct', key, what + ' 599 CT: the multiplier key');
+
+         ImportFor('W1AW', AdifTag('SRX_STRING', '59 CT'), domesticQTH, key, qth);
+         CheckEquals('Ct', domesticQTH, what + ' 59 CT on a 599 record: the number word is dropped');
+
+         ImportFor('W1AW', AdifTag('SRX_STRING', '599'), domesticQTH, key, qth);
+         CheckEquals('', domesticQTH, what + ' 599 alone: no QTH (it stored 599)');
+         CheckEquals('', key, what + ' 599 alone: no multiplier');
+
+         ImportFor('VE3ABC', AdifTag('SRX_STRING', '599 VE3'), domesticQTH, key, qth);
+         CheckEquals('On', domesticQTH, what + ' 599 VE3: the alias is the province');
+
+         ImportFor('VE3ABC', AdifTag('QTH', 'ON') + AdifTag('SRX_STRING', '599'),
+                   domesticQTH, key, qth);
+         CheckEquals('On', domesticQTH, what + ' QTH tag ON: the province (it stored 599)');
+         CheckEquals('ON', qth, what + ' QTH tag ON: QTHString as written');
+
+         ImportFor('G3ABC', AdifTag('SRX_STRING', '599 14'), domesticQTH, key, qth);
+         CheckEquals('', domesticQTH, what + ' 599 14: a DX zone is no QTH (it stored 599 14)');
+
+         ImportFor('DL1ABC', AdifTag('SRX_STRING', '599 DL'), domesticQTH, key, qth);
+         CheckEquals('DL', domesticQTH, what + ' 599 DL: a DX prefix, unknown, kept as written');
+         CheckEquals('', key, what + ' 599 DL: the table gives it no key');
+
+         ImportFor('W1AW', AdifTag('SRX_STRING', '2A CT'), domesticQTH, key, qth);
+         CheckEquals('2A CT', domesticQTH, what + ' 2A CT: no number word, unknown, kept as written');
+         CheckEquals('', key, what + ' 2A CT: the table gives it no key');
+      finally
+         RestoreSession;
+      end;
+      end;
+end;
+
+(* UBA DX -- issue 328. RS(T), serial and, from a Belgian station, its
+   section (uba.dom, whose keys are their own aliases, so the multiplier
+   key is what tells a resolved QTH from one kept as written). *)
+procedure TARRLSectionAliasTests.Test_UBAImportedQTHIsTheFileQTH;
+const
+   CONTESTS: array[0..1] of ContestType = (UBACW, UBASSB);
+var
+   i: integer;
+   what: string;
+   domesticQTH, key, qth: string;
+begin
+   BeginTest('Test_UBAImportedQTHIsTheFileQTH');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   for i := Low(CONTESTS) to High(CONTESTS) do
+      begin
+      what := string(ContestTypeSA[CONTESTS[i]]);
+      SetUpSession(CONTESTS[i], ['ON'], 'uba.dom');
+      try
+         ImportFor('ON4ABC', AdifTag('SRX_STRING', '599 101 ACC'), domesticQTH, key, qth);
+         CheckEquals('ACC', domesticQTH, what + ' 599 101 ACC: the section (it stored 599 101 ACC)');
+         CheckEquals('ACC', key, what + ' 599 101 ACC: resolved, so it has its key');
+
+         ImportFor('ON4ABC', AdifTag('SRX_STRING', '599 101'), domesticQTH, key, qth);
+         CheckEquals('', domesticQTH, what + ' 599 101: a serial is no QTH (it stored 599 101)');
+
+         ImportFor('W1AW', AdifTag('SRX_STRING', '599'), domesticQTH, key, qth);
+         CheckEquals('', domesticQTH, what + ' 599 alone: no QTH (it stored 599)');
+      finally
+         RestoreSession;
+      end;
+      end;
+end;
+
+(* LZ DX (zone or district), OK/OM DX and Ukrainian DX (serial or QTH) --
+   issue 328. A word that is not a number is the domestic QTH, resolved
+   through the contest's file; numbers alone go to the QTH string, less the
+   RST. Before: the alphabetic test ran on the raw SRX_STRING, so '599 BU'
+   was the QTH string '599 BU' and no domestic QTH at all. *)
+procedure TARRLSectionAliasTests.Test_ZoneOrSerialImportedQTHIsTheFileQTH;
+
+   procedure CheckOne(aContest: ContestType; const aCountries: array of string;
+                      const aDomFile, aCall, aTyped, aFileSpelling: string);
+   var
+      what: string;
+      domesticQTH, key, qth: string;
+   begin
+      what := string(ContestTypeSA[aContest]);
+      SetUpSession(aContest, aCountries, aDomFile);
+      try
+         ImportFor(aCall, AdifTag('SRX_STRING', '599 ' + aTyped), domesticQTH, key, qth);
+         CheckEquals(aFileSpelling, domesticQTH, what + ' 599 ' + aTyped + ': the file''s QTH');
+         CheckEquals(aFileSpelling, key, what + ' 599 ' + aTyped + ': its multiplier key');
+         CheckEquals('', qth, what + ' 599 ' + aTyped + ': not the QTH string (it was 599 ' + aTyped + ')');
+
+         ImportFor(aCall, AdifTag('SRX_STRING', '599 15'), domesticQTH, key, qth);
+         CheckEquals('', domesticQTH, what + ' 599 15: a number is no domestic QTH');
+         CheckEquals('15', qth, what + ' 599 15: it is the QTH string, less the RST');
+
+         ImportFor(aCall, AdifTag('QTH', aTyped) + AdifTag('SRX_STRING', '599'),
+                   domesticQTH, key, qth);
+         CheckEquals(aFileSpelling, domesticQTH, what + ' QTH tag ' + aTyped + ': the file''s QTH');
+         CheckEquals(aTyped, qth, what + ' QTH tag ' + aTyped + ': kept (an RST-only SRX_STRING wrote 599)');
+      finally
+         RestoreSession;
+      end;
+   end;
+
+begin
+   BeginTest('Test_ZoneOrSerialImportedQTHIsTheFileQTH');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   CheckOne(LZDX, ['LZ'], 'lz.dom', 'LZ1ABC', 'BU', 'Bu');
+   CheckOne(OKDX, ['OK', 'OM'], 'okom.dom', 'OK1ABC', 'APA', 'Apa');
+   CheckOne(UKRAINIAN, ['UR'], 'ukraine.dom', 'UR5ABC', 'CH', 'Ch');
+end;
+
 procedure TARRLSectionAliasTests.RunAllTests;
 begin
    Test_SweepstakesTypedAliasIsTheCanonicalSection;
@@ -1043,6 +1202,9 @@ begin
    Test_DXKeeperNonSectionContestSendsNoSection;
    Test_ARRL160ImportedAliasIsTheCanonicalSection;
    Test_QSOPartyImportedAliasIsTheFileQTH;
+   Test_CQ160ImportedQTHIsTheFileQTH;
+   Test_UBAImportedQTHIsTheFileQTH;
+   Test_ZoneOrSerialImportedQTHIsTheFileQTH;
 end;
 
 end.
