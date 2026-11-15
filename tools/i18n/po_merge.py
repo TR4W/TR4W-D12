@@ -49,6 +49,14 @@ identifier with an existing one. That is the Lazarus convention (LazUtils loads
 each `#:` identifier), and it is what keeps the legacy TC_-keyed entries
 distinct from the new form-keyed ones even when the English is identical.
 
+AND A NEW IDENTIFIER NEVER MAKES A DUPLICATE (msgctxt, msgid) (issue 156,
+2026-11-15). When a template entry is new by its identifiers but a live entry
+already has its msgctxt and msgid -- a new resourcestring 'Connect' beside the
+form caption 'Connect', both with no msgctxt -- its `#:` lines are added to that
+entry instead of appending a twin that msgfmt and Weblate reject. So an
+add-only merge can CHANGE an existing entry, by reference lines only; pinned by
+tools/i18n/test_po_merge.py.
+
 Usage
 -----
   python tools/i18n/po_merge.py --pot <path>            # dry run
@@ -146,6 +154,11 @@ def is_known(entry, seen_ids, seen_sources):
    return entry.source in seen_sources
 
 
+def pair_of(entry):
+   """gettext's identity for an entry: (msgctxt, msgid), an absent msgctxt as ''."""
+   return (entry.key or '', entry.source)
+
+
 def merge(path, template, ours, apply_changes, add_only=False):
    """Add the template's unknown entries to one catalogue.
 
@@ -232,7 +245,13 @@ def merge(path, template, ours, apply_changes, add_only=False):
             retired += 1
       existing = kept
 
-   added = carried = skipped = 0
+   # A LIVE ENTRY BY ITS GETTEXT IDENTITY, (msgctxt, msgid), for the join below.
+   by_pair = {}
+   for e in existing:
+      if not e.obsolete:
+         by_pair.setdefault(pair_of(e), e)
+
+   added = carried = skipped = joined = 0
    for t in template:
       if not t.source.strip():
          continue                      # the header
@@ -242,6 +261,24 @@ def merge(path, template, ours, apply_changes, add_only=False):
          continue                      # already known -- leave it alone
       if is_third_party(t, ours):
          skipped += 1
+         continue
+
+      # NEW BY IDENTIFIER, BUT ITS (msgctxt, msgid) IS ALREADY A LIVE ENTRY
+      # (issue 156). A new resourcestring arrives with an empty msgctxt; when a
+      # form caption with no msgctxt already says the same English ('Connect',
+      # 'Add...'), appending would make a duplicate (msgctxt, msgid) pair, which
+      # msgfmt rejects and Weblate mishandles -- the issue 153 defect, 115 of
+      # them, that po_dedupe removed. So the template's `#:` lines join the
+      # existing entry instead: one entry, both identifiers, its translation
+      # (if any) serving both. Additive: the twin gains reference lines and
+      # nothing else.
+      twin = by_pair.get(pair_of(t))
+      if twin is not None:
+         for ref in (t.refs or []):
+            if ref not in twin.refs:
+               twin.refs.append(ref)
+         seen_ids |= claimed_identifiers(t)
+         joined += 1
          continue
 
       # FUZZY, EVEN WHEN EMPTY. That is this project's convention, not gettext's
@@ -263,8 +300,13 @@ def merge(path, template, ours, apply_changes, add_only=False):
       seen_ids |= ids
       if not ids:
          seen_sources.add(new.source)
+      by_pair.setdefault(pair_of(new), new)
 
-   if apply_changes and (added or retired):
+   if joined:
+      print('  %s: %d new identifier(s) joined an existing entry with the same '
+            '(msgctxt, msgid) instead of duplicating it' % (os.path.basename(path), joined))
+
+   if apply_changes and (added or retired or joined):
       # The code is everything between the 'tr4w_' prefix and '.po'. Splitting
       # on the LAST underscore instead turned tr4w_pt_BR.po into 'BR' and
       # tr4w_zh_CN.po into 'CN' in the written header (found 2026-10-01 by a

@@ -11146,11 +11146,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Diese Kopie von TR4W sieht unvollständig installiert aus.\n"
-"\n"
-"Nicht gefunden in %0:s:\n"
-"%1: s\n"
-"\n"
-"Starten Sie TR4W aus dem Ordner, den das Installationsprogramm eingegeben hat (es enthält CTY.DAT, TRMASTER.DTA und einen Dom-Ordner), oder führen Sie das Installationsprogramm erneut aus.\n"
-"\n"
-"TR4W wird immer noch starten, aber Wettbewerbe, die diese Dateien benötigen, funktionieren nicht richtig."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Die Datei %0:s wurde NICHT geschrieben: %1:s. Eine frühere Datei dieses Namens, wenn es eine gab, ist unverändert."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Nicht an die anderen Stationen gesendet: Der Text ist %0:d Bytes und das Netzwerk trägt %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Kopierstelle"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Austausch von Kommentaren"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Sprache:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Wird wirksam, wenn TR4W das nächste Mal startet."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Sie werden entdeckt von %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

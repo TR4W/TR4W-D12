@@ -432,6 +432,23 @@ function SpectrumHzToPixel(const AFrame: TSpectrumFrame; AHz: Int64;
 function SpectrumDialFrequency(ARfHz: Int64; APitchHz: Integer;
                                ACwNormal, ACwReverse: Boolean): Int64;
 
+(* The SPAN function-key command's argument (issue 192): the text after
+   'SPAN='.  Pure, so the syntax is tested without a radio or a key.
+
+     '+'   widen one detent    AStep = +1, ASpanHz = 0
+     '-'   narrow one detent   AStep = -1, ASpanHz = 0
+     kHz   a total span        AStep =  0, ASpanHz in Hz
+
+   kHz may carry up to three decimals, so an Icom's 2.5 kHz rung can be
+   named.  What a detent is, and what span the rig actually settles on, is
+   the radio's business (StepSpectrumSpan / SetSpectrumSpan).  False -- and
+   both outputs 0 -- for empty text, anything else, zero, or above
+   SPECTRUM_SPAN_COMMAND_MAX_KHZ. *)
+const
+   SPECTRUM_SPAN_COMMAND_MAX_KHZ = 10000;
+
+function SpectrumParseSpanCommand(const AText: string; out AStep, ASpanHz: Integer): Boolean;
+
 implementation
 
 function SpectrumRadioStateUnknown: TSpectrumRadioState;
@@ -898,6 +915,101 @@ begin
       begin
       Result := ARfHz + APitchHz;
       end;
+end;
+
+(* Digits by hand, not Val: no RTL dependency in this leaf, no Win64 range
+   hole, and the integer part is bounded as it is read so nothing overflows. *)
+function SpectrumParseSpanCommand(const AText: string; out AStep, ASpanHz: Integer): Boolean;
+var
+   i: Integer;
+   digit: Integer;
+   intKHz: Integer;
+   fracHz: Integer;
+   fracDigits: Integer;
+   seenDot: Boolean;
+   totalHz: Integer;
+begin
+   Result := False;
+   AStep := 0;
+   ASpanHz := 0;
+
+   if AText = '+' then
+      begin
+      AStep := 1;
+      Result := True;
+      Exit;
+      end;
+
+   if AText = '-' then
+      begin
+      AStep := -1;
+      Result := True;
+      Exit;
+      end;
+
+   if Length(AText) = 0 then
+      begin
+      Exit;
+      end;
+
+   intKHz := 0;
+   fracHz := 0;
+   fracDigits := 0;
+   seenDot := False;
+
+   for i := 1 to Length(AText) do
+      begin
+      if AText[i] = '.' then
+         begin
+         if seenDot then
+            begin
+            Exit;
+            end;
+         seenDot := True;
+         end
+      else if (AText[i] >= '0') and (AText[i] <= '9') then
+         begin
+         digit := Ord(AText[i]) - Ord('0');
+         if seenDot then
+            begin
+            if fracDigits = 3 then
+               begin
+               Exit;
+               end;
+            fracHz := (fracHz * 10) + digit;
+            Inc(fracDigits);
+            end
+         else
+            begin
+            intKHz := (intKHz * 10) + digit;
+            if intKHz > SPECTRUM_SPAN_COMMAND_MAX_KHZ then
+               begin
+               Exit;
+               end;
+            end;
+         end
+      else
+         begin
+         Exit;
+         end;
+      end;
+
+   // '2.5' is 2 kHz and 500 Hz: scale the fraction to three digits.
+   while fracDigits < 3 do
+      begin
+      fracHz := fracHz * 10;
+      Inc(fracDigits);
+      end;
+
+   totalHz := (intKHz * 1000) + fracHz;
+
+   if (totalHz <= 0) or (totalHz > SPECTRUM_SPAN_COMMAND_MAX_KHZ * 1000) then
+      begin
+      Exit;
+      end;
+
+   ASpanHz := totalHz;
+   Result := True;
 end;
 
 end.

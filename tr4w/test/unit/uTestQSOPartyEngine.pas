@@ -44,9 +44,11 @@ type
    end;
 
 (* Empty means exact agreement with the independently transcribed sponsor
-   table: canonical code, display name, count, no repeats or includes. *)
+   table: canonical code, display name, count, no repeats or includes.
+   aMappedTo names the multiplier every county maps to in state (`KEY > Ks`,
+   Kansas); empty means each county is its own multiplier. *)
 function CountyFileDifference(const aParty, aDomName, aSourceName: string;
-   aExpectedCount: integer): string;
+   aExpectedCount: integer; const aMappedTo: string = ''): string;
 
 implementation
 
@@ -56,12 +58,17 @@ uses
    LogStuff, PostUnit, FCONTEST, uPendingCounties, MainUnit, uDomFileKeys;
 
 function CountyFileDifference(const aParty, aDomName, aSourceName: string;
-   aExpectedCount: integer): string;
+   aExpectedCount: integer; const aMappedTo: string): string;
 var
    source, lines, seen: TStringList;
    i: integer;
-   key, root: string;
+   key, root, mapping: string;
 begin
+   mapping := '';
+   if aMappedTo <> '' then
+      begin
+      mapping := ' > ' + aMappedTo;
+      end;
    Result := '';
    source := TStringList.Create;
    lines := TStringList.Create;
@@ -90,7 +97,7 @@ begin
             Exit;
             end;
          seen.Add(AnsiString(key));
-         if string(lines[i]) <> key + ' = ' + key + ',^' + string(source.Values[AnsiString(key)]) then
+         if string(lines[i]) <> key + mapping + ' = ' + key + ',^' + string(source.Values[AnsiString(key)]) then
             begin
             Result := 'county code/name differs: ' + key;
             Exit;

@@ -96,6 +96,11 @@ procedure EnableTelnetToolbatButtons(b: boolean);
 procedure ProcessTelnetLine(const Line: AnsiString);
 function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
+(* THE "YOU ARE SPOTTED" NOTICE, NAMING THE SPOTTER (issue 68): where the
+  station's signal was heard is what the operator wants from it. aSpotter is
+  the spot's source call as the cluster gave it (a skimmer's "-#" kept); an
+  empty one falls back to the old sentence, which names nobody. *)
+function SpottedByAnotherStationText(const aSpotter: AnsiString): AnsiString;
 procedure tCreateAndAddNewSpot(Call: CallString; Dupe: boolean; Radio:
   RadioPtr);
 procedure AppendTelnetPopupMenu(const MenuText: string);
@@ -167,6 +172,7 @@ uses
   uClusterTokens,    // the braced-token parser, a leaf so it can be tested
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
+  uAppStrings,        // SYouAreSpottedBy -- SpottedByAnotherStationText
   uBandmap,
   uPanelUpdate,   // PostStatusText, and StatusSubsystemName -- the Cluster
                   // status panel and the name it states
@@ -1742,6 +1748,18 @@ begin
   TelnetSetConnected(b);
 end;
 
+function SpottedByAnotherStationText(const aSpotter: AnsiString): AnsiString;
+begin
+   if aSpotter = '' then
+      begin
+      Result := AnsiString(TC_YOUARESPOTTEDBYANOTHERSTATION);
+      end
+   else
+      begin
+      Result := SysUtils.Format(AnsiString(SYouAreSpottedBy), [aSpotter]);
+      end;
+end;
+
 // Handle ONE complete cluster line: show it, and if it is a spot, decode it.
 //
 // Was ProcessTelnetString(ByteReceived), which scanned a shared receive buffer
@@ -1915,7 +1933,7 @@ begin
   if TempSpot.FCall = Settings.My.Call then
      begin
      Stringtype := tstAlert;
-     QuickDisplay(TC_YOUARESPOTTEDBYANOTHERSTATION);
+     QuickDisplay(SpottedByAnotherStationText(AnsiString(TempSpot.FSourceCall)));
      QuickBeep;
      end;
   if not TempSpot.FDupe then // 4.93.4

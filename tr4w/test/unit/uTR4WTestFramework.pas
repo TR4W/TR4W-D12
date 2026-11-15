@@ -69,6 +69,17 @@ type
 procedure RegisterSuite(Suite: TTestCase);
 function  RunAllSuites: Boolean;  // Returns True if every test passes.
 
+(* RUNS ONE SUITE, AND AN EXCEPTION THAT ESCAPES IT IS A FAILURE OF THAT SUITE,
+   NOT THE END OF THE RUN (issue 140). The exception is recorded as one failed
+   test (suite, the test that was running, exception class and message), a
+   'CRASHED:' line is written for the Unix gate, and the caller goes on to the
+   next suite. Granularity is the suite: RunAllTests calls its methods in turn,
+   so the tests AFTER the one that raised, in that same suite, do not run --
+   the CRASHED line says so. Quiet suppresses the output only; it exists for
+   the framework's own self-test, whose deliberate crash must not look like a
+   real one in the log. *)
+procedure RunSuite(Suite: TTestCase; Quiet: Boolean = False);
+
 (* A temp file name no OTHER test process can be handed. FPC's GetTempFileName
    only picks the first <prefix>NNNNN.tmp that does not exist yet, so two suites
    running at once both got ...00000.tmp (issue 212). The process id in the
@@ -94,6 +105,8 @@ var
      Found 2026-08-25 when adding a suite made the total FALL by 276. }
    GSuites     : array of TTestCase;
    GSuiteCount : Integer = 0;
+   (* True only while RunSuite is run Quiet; read by RecordPass/RecordFail. *)
+   GQuiet      : Boolean = False;
 
 // ---------------------------------------------------------------------------
 // TTestCase
@@ -126,13 +139,19 @@ end;
 procedure TTestCase.RecordPass(const TestMethod: string);
 begin
    Inc(FPassCount);
-   WriteLn('[PASS] ', FName, ': ', TestMethod);
+   if not GQuiet then
+      begin
+      WriteLn('[PASS] ', FName, ': ', TestMethod);
+      end;
 end;
 
 procedure TTestCase.RecordFail(const TestMethod, Msg: string);
 begin
    Inc(FFailCount);
-   WriteLn('[FAIL] ', FName, ': ', TestMethod, ' — ', Msg);
+   if not GQuiet then
+      begin
+      WriteLn('[FAIL] ', FName, ': ', TestMethod, ' — ', Msg);
+      end;
 end;
 
 procedure TTestCase.Check(Condition: Boolean; const Msg: string);
@@ -207,6 +226,45 @@ begin
    Inc(GSuiteCount);
 end;
 
+procedure RunSuite(Suite: TTestCase; Quiet: Boolean);
+var
+   RunningTest : string;
+   WasQuiet    : Boolean;
+begin
+   WasQuiet := GQuiet;
+   GQuiet   := Quiet;
+   try
+      try
+         Suite.RunAllTests;
+      except
+         on E: Exception do
+            begin
+            RunningTest := Suite.FCurrentMethod;
+            Suite.RecordFail(RunningTest,
+               'CRASHED: ' + E.ClassName + ': ' + E.Message);
+            if not Quiet then
+               begin
+               WriteLn('CRASHED: ', Suite.Name, ': ', RunningTest, ' raised ',
+                  E.ClassName, ': ', E.Message);
+               WriteLn('  The tests after it in this suite did not run.');
+               end;
+            (* The raising test never reached its own TearDown. It is run here,
+               and an exception from it is dropped: the crash is already
+               recorded and a second report would only hide the first. *)
+            try
+               Suite.TearDown;
+            except
+               on Exception do
+                  begin
+                  end;
+            end;
+            end;
+      end;
+   finally
+      GQuiet := WasQuiet;
+   end;
+end;
+
 function RunAllSuites: Boolean;
 var
    i          : Integer;
@@ -221,7 +279,7 @@ begin
       begin
       suite := GSuites[i];
       WriteLn('--- ', suite.Name, ' ---');
-      suite.RunAllTests;
+      RunSuite(suite);
       Inc(totalPass, suite.PassCount);
       Inc(totalFail, suite.FailCount);
       suite.Free;

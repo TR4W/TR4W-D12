@@ -288,8 +288,10 @@ do not have this problem: `updatepofiles` on the `.rsj` is enough (`docs/I18N_TO
   loose override is found through `uAppPaths.DataFilePath`, which on Windows is the working
   directory (section 5).
 * **Never rename an identifier.** It is the translation key; a rename orphans the
-  translation in every language, silently. Rewording the *English* is safe — the entry goes
-  `#, fuzzy` and a translator re-checks it.
+  translation in every language, silently. Rewording the *English* is NOT handled by the
+  tools: `po_merge` matches by identifier and leaves the old msgid and its translation in
+  place, so the old wording's translation ships under the new English (issue 144). Follow
+  the reworded-caption steps in [`I18N_TOOLS.md`](I18N_TOOLS.md).
 * **`src/lang/*.pas` are UTF-8 with a BOM** and per-language codepages. Do not edit them
   with a tool that rewrites the encoding; append ASCII bytes or use `po2pas.py`.
 * **A stale `.rsj` extracts stale strings.** Build before `rstconv`.

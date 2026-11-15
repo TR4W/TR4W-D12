@@ -1,0 +1,377 @@
+Source: https://scqso.com/wp-content/uploads/2026/02/SCQPRULES2024_0126.pdf (rev. 2.2.26, saved beside this file)
+Fetched: 2026-11-15; pdftotext -layout, no wording changed
+
+SOUTH CAROLINA QSO PARTY RULES (rev. 2.2.26)
+
+1. Objective
+
+For radio amateurs outside the state of South Carolina to contact as many South Carolina stations in
+as many of the 46 South Carolina counties as possible.
+
+For radio amateurs within the state of South Carolina to contact as many stations as possible.
+
+2. Contest Period
+
+Begins at 1500Z on the 4th Saturday in February and ends on the following Sunday at 0159Z. (11
+hours total).
+
+3. Bands
+
+The SCQP shall be conducted on the 160, 80, 40, 20, 15, 10, 6 and 2 meter bands only.
+
+4. Modes
+
+4.1. Phone
+Use "PH" as the mode in the log header and on each contact.
+
+4.2. CW
+Use "CW" as the mode in the log header and on each contact.
+
+4.3. Digital
+For purposes of the contest, digital modes shall include RTTY, PSK, FT8, FT4 or other Digital
+modes. You may use "DG" or "RY" as the mode in the log header and on each contact.
+
+4.4. Mixed
+Phone, CW and/or Digital contacts are submitted as a single entry. Use "Mixed" as the mode in the
+log header, but log each contact by the actual mode used (e.g. PH, CW, or RY/DG).
+
+5. Exchange
+5.1. South Carolina Stations
+
+Signal report and county abbreviation (see section 14 for county abbreviations).
+
+5.2. USA Stations Outside South Carolina
+
+Signal report and two-letter state abbreviation. Note that Washington, D.C. is a multiplier for
+contest purposes. Puerto Rico, USVI, Guam, and other US territories are considered DX for contest
+purposes.
+5.3. Canadian Stations
+
+Signal report and two-letter province/territory abbreviation.
+
+5.4. DX Stations
+
+Signal report and "DX" (not country).
+
+6. Categories
+
+6.1. Fixed
+6.1.1. Single Operator
+One person performs all operating and logging functions. Only one (1) transmitted signal on the air at
+any time. There are no limits on band changes.
+
+6.1.2. Multi-Operator
+Those obtaining assistance from another operator or logger. There are no limits on band changes.
+
+6.1.2.1. Multi-Single
+Only one (1) transmitted signal on the air at any time.
+
+6.1.2.2. Multi-Multi
+More than one (1) transmitted signal on the air at any time. Only one (1) transmitted signal per mode
+per band.
+
+6.1.3. Fixed Location Definition
+All logs submitted for scoring in the Fixed categories must originate from a single fixed location.
+
+6.2. Mobile
+6.2.1. Mobile Single
+A single mobile or portable station that operates from at least two (2) different South Carolina
+counties and making at least one (1) contact from each county.
+
+6.2.2. Mobile Multi-Operator
+Same as the Mobile Single category but with multiple operators and/or multiple simultaneously
+operated stations in the vehicle/location.
+
+NOTE: A mobile station may have a non-contest operating driver, for safety, and remain in the Single
+operator category. However, if the driver operates at any time in the contest, then that Mobile station
+shall be classified as Multi-Operator.
+6.2.3. Expedition
+One or more person(s) operating from a temporary, field-day type, stationary location using portable
+antennas and radios operating from one or more than one county. No permanent antenna structures
+may be used. Use of trees, buildings, etc., to raise antennas is allowed as long as it is safe to do so
+and not originally intended for that purpose. Mobile radios, equipment, and antennas installed in, on
+or attached to a vehicle wholly for mobile operation are not permitted to be used in this category. The
+vehicle may be used as part of the setup once stopped in the temporary location. All apparatus are to
+be located in the same location (within a 1000' diameter circle). Expedition stations that choose to
+move to a new county may work everyone again for QSO credit. If returning to a previously activated
+county, only new stations, respective of band and mode, not previously worked from there, may be
+counted as QSO credit. Expedition stations that operate from more than one county will receive a
+multiplier (ONCE PER MODE PER BAND) for each county activated.
+
+EXPEDITION CATEGORY IS ONLY AVAILABLE FOR SOUTH CAROLINA STATIONS
+7. Power
+
+QRP: 5 watts or less.
+Low: 100 watts or less.
+High: Greater than 100 watts.
+
+8. Entry Category
+
+We utilize the Cabrillo v3 standards for Entry Category. It consists of three "header" items:
+CATEGORY-MODE: The category-mode must be one of the following.
+
+    SSB | CW | DIGITAL | MIXED
+CATEGORY-OPERATOR: The category-operator must be one of the following.
+
+    SINGLE-OP | MULTI-OP | CHECKLOG
+CATEGORY-POWER: The category-power must be one of the following.
+
+    HIGH | LOW | QRP
+CATEGORY-STATION: The category-station must be one of the following.
+
+    FIXED | MOBILE (EXPEDITION stations use "MOBILE" in Cabrillo log header.)
+CATEGORY-TRANSMITTER: The category-transmitter is required for multi-operator entries and
+must be one of the following.
+
+    ONE | TWO | UNLIMITED
+
+9. Scoring
+
+Stations may be worked ONCE per MODE per BAND for QSO Points. For QSOs with SC Mobiles,
+also per county. There is no partial contact credit.
+9.1. QSO Points
+9.1.1. PHONE (South Carolina Stations)
+Each completed and valid PHONE contact with other South Carolina stations shall count as two (2)
+points. Each completed and valid phone contact with stations outside of South Carolina shall count
+as four (4) points.
+9.1.2. CW or DIGITAL (South Carolina Stations)
+
+Each completed and valid CW/ Digital contact with other South Carolina stations shall count as two
+(2) points. Each completed and valid CW/DIGITAL contact with stations outside of South Carolina
+shall count as four (4) points. Note that for contest purposes, FT8, FT4, PSK, RTTY, JT65 or other
+digital modes shall be considered equivalent. Thus a FT8/4 and RTTY contact on the same band
+with the same station is considered a dupe.
+
+9.1.3. PHONE (All Out-Of-State Stations)
+
+Each completed and valid PHONE contact with South Carolina stations shall count as two (2) points.
+
+9.1.4. CW or DIGITAL (All Out-Of-State Stations)
+
+Each completed and valid CW or Digital contact with South Carolina stations shall count as two (2)
+points. Note that for contest purposes, FT8. FT4, PSK, RTTY, JT65 or other digital modes shall be
+considered equivalent. Thus a FT8 and RTTY contact on the same band with the same station is
+considered a dupe.
+
+9.2. Multipliers
+
+Multipliers are counted ONCE PER MODE PER BAND.
+
+9.2.1. SC Stations
+
+    1. Each South Carolina county
+    2. Each USA state including South Carolina and Washington, D.C. When logging other SC
+
+         stations, enter the SC County as the exchange (not SC).
+    3. Each Canadian Province/Territory.
+    4. DX contacts count for QSO points only. Enter DX for the exchange.
+
+9.2.2. SC Mobile/Expedition Stations
+
+    1. Each South Carolina county
+    2. Each USA state including South Carolina and Washington, D.C. When logging other SC
+
+         stations, enter the SC County as the exchange (not SC).
+    3. Each SC county activated. At least one (1) QSO must be made from a county in order for it
+
+         to count as activated.
+    4. Each Canadian Province/Territory.
+    5. DX contacts count for QSO points only. Enter DX for the exchange.
+
+9.2.3. Non-SC Stations
+
+    1. Each SC county
+    2. SC Mobile stations, when they change counties, may be worked as a new station.
+9.3. Bonus Stations
+
+Bonus Stations may be worked ONCE per BAND per MODE for bonus points. You may work a
+bonus station more than once per band per mode for additional QSO points and multipliers. You can
+work mobile Bonus Stations when the mobile station changes counties.
+
+Example: You can work WW4SF/CHAR, WW4SF/GVIL, WW4SF/JASP and WW4SF/HORR on 40m
+CW, but only the first contact with WW4SF on 40m CW will qualify for Bonus Station points. Likewise
+for all three modes.
+
+350 points - W4CAE (Columbia Amateur Radio Club)
+250 points - WW4SF (Swamp Fox Contest Group)
+250 points - K4YTZ (York County Amateur Radio Society)
+
+9.4. Final Score
+
+Total QSO Points x Multipliers + Bonus Station Points
+
+9.5. Invalid Contacts
+
+Stations outside of South Carolina may not count contacts with non-South Carolina stations or DX
+stations for contest credit or multipliers.
+
+10. Awards
+
+10.1. Category Awards
+
+A certificate will be issued lieu of a tangible award (plaque, etc) in cases where there is no
+award sponsor. A minimum of 50 valid contacts is required to qualify for a category
+award.
+In-State - Single Op, Single Transmitter  Out-Of-State - Single Op, Single Transmitter
+Mixed - High, Low, QRP                    Mixed - High, Low, QRP
+CW - High, Low, QRP                       CW - High, Low, QRP
+Phone - High, Low, QRP                    Phone - High, Low, QRP
+Digital - High, Low, QRP                  Digital - High, Low, QRP
+
+In-State - Multi-Op, Single Transmitter   Out-Of-State - Multi-Op, Single Transmitter
+Mixed - High, Low, QRP                    Mixed - High, Low, QRP
+CW - High, Low, QRP                       CW - High, Low, QRP
+Phone - High, Low, QRP                    Phone - High, Low, QRP
+Digital - High, Low, QRP                  Digital - High, Low, QRP
+
+In-State - Multi-Op, Multi Transmitter    Out-of-State - Multi-Op, Multi Transmitter
+Mixed - High, Low, QRP                    Mixed - High, Low, QRP
+CW - High, Low, QRP                       CW - High, Low, QRP
+Phone - High, Low, QRP                    Phone - High, Low, QRP
+Digital - High, Low, QRP                  Digital - High, Low, QRP
+
+In-State - Mobile
+Single Operator - No Driver
+Single Operator - With Driver (driver does not participate as an operator)
+Multi-Operator - One Transmitter
+Multi-Operator - Two or more Transmitters
+
+In-State - Expedition (based upon total score regardless of mode/power)
+Single Operator AND Multi-Operator
+
+Additional awards may be awarded at the discretion of the SCQP Team.
+
+11. Suggested Frequencies
+
+SSB: 1.865, 3.750, 7.190, 14.250, 21.300, 28.450, 50.135
+CW: 1.815, 3.540, 7.040, 14.040, 21.040, 28.040, 50.095
+
+12. Miscellaneous
+
+    � A transmitter used to contact one or more stations may not subsequently be used under any
+         other callsign during the contest. There are two exceptions. First is for family stations where
+         more than one callsign is assigned and the operator is changed when the callsign is changed.
+
+    � Out-Of-State stations working from multiple states must submit separate logs for each state.
+         Each state score stands alone and is not consolidated with other state operations.
+
+    � Any stations operated remotely should be entered using the location of the
+         transmitter/antenna, not the operator location.
+
+    � Repeater operation is not allowed.
+    � "County-line" contacts must appear in the log as separate contacts.
+    � Use of spotting assistance including packet clusters, reverse beacon networks, CW Skimmer,
+
+         APRS telemetry, etc. is permitted in all categories. `Self-spotting' is also permitted.
+13. Logs
+
+Entries must be submitted within 14 days of the end of the contest. The SCQP will only accept log
+files submitted via our website. We are no longer accepting paper logs for this contest.
+
+Visit www.scqso.com and click on the "Log Submission" menu item. Log files must be submitted in
+Cabrillo (.log or .cbr) formatted file.
+
+14. Abbreviations
+
+14.1. South Carolina Counties
+
+Abbeville     ABBE             Greenville    GVIL
+Aiken         AIKE             Hampton       HAMP
+Allendale     ALLE             Horry         HORR
+Anderson      ANDE             Jasper        JASP
+Bamberg       BAMB             Kershaw       KERS
+Barnwell      BARN             Laurens       LAUR
+Beaufort      BEAU             Lee           LEE
+Berkeley      BERK             Lexington     LEXI
+Calhoun       CHOU             Lancaster     LNCS
+Charleston    CHAR             Marion        MARI
+Chester       CHES             Marlboro      MARL
+Chesterfield  CHFD
+Cherokee      CKEE             McCormick     MCOR
+Clarendon     CLRN             Newberry      NEWB
+Colleton      COLL             Oconee        OCON
+Darlington    DARL             Orangeburg    ORNG
+Dillon        DILL             Pickens       PICK
+Dorchester    DORC             Richland      RICH
+Edgefield     EDGE             Saluda        SALU
+Fairfield     FAIR             Spartanburg   SPAR
+Florence      FLOR             Sumter        SUMT
+Georgetown    GEOR             Union         UNIO
+Greenwood     GRWD             Williamsburg  WILL
+                               York          YORK
+14.2. US States   Minnesota    MN    Washington, D.C. DC
+
+                  Mississippi  MS    West Virginia     WV
+
+Alabama     AL    Missouri     MO    Wisconsin         WI
+
+Alaska      AK    Montana      MT    Wyoming           WY
+
+Arizona     AZ    Nebraska     NE
+
+Arkansas    AR    Nevada       NV    14.3. Canadian
+                                     Provinces and
+California  CA    New Hampshire NH   Territories
+
+Colorado    CO    New Jersey   NJ
+
+Connecticut CT    New Mexico   NM    Alberta               AB
+
+Delaware    DE    New York     NY    British Columbia      BC
+
+Florida     FL    North Carolina NC  Manitoba              MB
+
+Georgia     GA    North Dakota ND    New Brunswick         NB
+
+Hawaii      HI    Ohio         OH    Newfoundland and Labrador NL
+
+Idaho       ID    Oklahoma     OK
+
+Illinois    IL    Oregon       OR    Nova Scotia           NS
+
+Indiana     IN    Pennsylvania PA    Northwest Territories NT
+
+Iowa        IA    Rhode Island RI    Nunavut               NU
+
+Kansas      KS    South Dakota SD    Ontario               ON
+
+Kentucky    KY    Tennessee    TN    Prince Edward Island PE
+
+Lousiana    LA    Texas        TX    Quebec                QC
+
+Maine       ME    Utah         UT    Saskatchewan          SK
+
+Maryland    MD    Vermont      VT    Yukon                 YT
+
+Massachusetts MA  Virginia     VA
+
+Michigan    MI    Washington   WA
+15. Cabrillo Log File Example
+
+This example uses Cabrillo 3.0 standards
+
+START-OF-LOG: 3.0
+CREATED-BY: Cabrillo Example File
+CALLSIGN: YOURCALL HERE
+CONTEST: SC-QSO-PARTY
+CATEGORY-MODE: SSB
+CATEGORY-OPERATOR: MULTI-OP
+CATEGORY-BAND: ALL
+CATEGORY-STATION: MOBILE
+CATEGORY-TRANSMITTER: ONE
+CLAIMED-SCORE: YOUR SCORE
+CLUB: YOUR CLUB NAME HERE
+EMAIL: YOUR EMAIL ADDRESSS
+LOCATION: YOUR STATE, PROVINCE OR DX
+NAME: YOUR FIRST AND LAST NAMES
+ADDRESS: STREET ADDRESS
+ADDRESS: CITY, STATE, ZIPCODE
+OPERATORS: CALLS OF OPERATORS
+SOAPBOX: Put your comments in lines
+SOAPBOX: like these for publication in the results.
+QSO: 14000 PH 2007-04-14 1813 KN4QD 59 RICH KI4HPX 59 RICH
+QSO: 7000 CW 2007-04-15 2159 KN4QD 599 MARI W8CAR 599 OH
+QSO: 14000 PH 2007-04-15 2234 KN4QD 59 MARI W4GKF 59 CHAR
+QSO: 7000 RY 2007-04-15 2310 KN4QD 599 MARI K5YAA 599 OK
+END-OF-LOG:
+

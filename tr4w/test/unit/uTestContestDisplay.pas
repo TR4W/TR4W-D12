@@ -829,7 +829,9 @@ begin
          end;
       ARKTIKA_SPRING:
          begin
-         Result := StepComment(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+         (* The membership row names what it holds (issue 51). *)
+         Result := StepCommentLabelled(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState,
+                                       SNewContestMemberNumberLabel);
          end;
       ARRL10:
          begin
@@ -953,7 +955,9 @@ begin
          end;
       PCC:
          begin
-         Result := StepComment(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+         (* The membership row names what it holds (issue 51). *)
+         Result := StepCommentLabelled(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState,
+                                       SNewContestMemberNumberLabel);
          end;
       POTA:
          begin
@@ -1100,6 +1104,8 @@ end;
       SNewContestQTHOrMemberLabel.
   The Locust QSO Party and the NCCC Sprint show the same prompt words but
   take no member number (a name and a QTH), so their rows keep MY STATE.
+  PCC and Arktika Spring label the row they ask on TICKING (issue 51) --
+  ExpectedInsideRowLabel below.
   Every other step of every contest gives no label, so its row reads its
   command name as before: a registry walk, so a by-id contest is held too. *)
 
@@ -1140,6 +1146,22 @@ begin
       aField := ncfMyState;
       aComment := '';
       aRowLabel := '';
+      end;
+end;
+
+(* THE ROW LABEL A CONTEST GIVES WHEN ITS "I AM IN" BOX IS TICKED (issue 51):
+  PCC and Arktika Spring ask a club member for its number, kept in MY STATE,
+  and label that row SNewContestMemberNumberLabel. Every other contest's
+  ticked rows give no label. *)
+function ExpectedInsideRowLabel(aContest: TContestBase): string;
+begin
+   if IsLegacyContest(aContest, PCC) or IsLegacyContest(aContest, ARKTIKA_SPRING) then
+      begin
+      Result := SNewContestMemberNumberLabel;
+      end
+   else
+      begin
+      Result := '';
       end;
 end;
 
@@ -1189,7 +1211,8 @@ begin
             end;
          for i := 0 to prompts.InsideCount - 1 do
             begin
-            CheckEquals('', prompts.Inside(i).RowLabel, who + ': no row label on ticking');
+            CheckEquals(ExpectedInsideRowLabel(obj), prompts.Inside(i).RowLabel,
+                        who + ': the row label on ticking');
             end;
       finally
          prompts.Free;

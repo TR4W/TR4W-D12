@@ -2,7 +2,8 @@
    work 2026-11-13).
 
    An in-state entrant's host-county QSO earns the county AND the host state
-   in Alabama, West Virginia, Kentucky and Vermont. The state is a second
+   in Alabama, West Virginia, Kentucky, Iowa (issue 120), South Carolina
+   (issue 111) and Vermont. The state is a second
    key on the DOMESTIC sheet (TContestBase.AdditionalDomesticMultiplierKey,
    asked by LOGDUPE.AddQSOToSheets through
    AdditionalDomesticMultiplierCredited). Nothing is stored, so what this
@@ -50,7 +51,8 @@ implementation
 uses
    Classes, SysUtils, VC, uContestBase, uContestRegistry,
    uContestAlabamaQP, uContestWestVirginiaQP, uContestKentuckyQP,
-   uContestVermontQP, uContestArkansasQP, uContestNewJerseyQP,
+   uContestVermontQP, uContestArkansasQP, uContestNewJerseyQP, uContestIowaQP,
+   uContestSouthCarolinaQP,
    uTestContestObjects, uTestRegisteredContests, uTestQSOPartyEngine,
    uDomFileKeys, uMults, LogDupe, LogStuff, MainUnit;
 
@@ -65,7 +67,7 @@ type
    end;
 
 const
-   PARTY_COUNT = 4;
+   PARTY_COUNT = 6;
 
 function PartyCase(aIndex: integer): TPartyCase;
 begin
@@ -95,6 +97,25 @@ begin
          Result.CountyA := 'FAY';
          Result.CountyB := 'SCO';
          end;
+      3:
+         begin
+         (* Issue 120: "each state (including Iowa)", once overall. *)
+         Result.Id := IA_QSO_PARTY_CONTEST_ID;
+         Result.Host := 'IA';
+         Result.CountyFile := 'iowa_cty.dom';
+         Result.CountyA := 'STR';
+         Result.CountyB := 'POL';
+         end;
+      4:
+         begin
+         (* Issue 111, rules 9.2.1: "Each USA state including South
+            Carolina", once per band per mode. *)
+         Result.Id := SC_QSO_PARTY_CONTEST_ID;
+         Result.Host := 'SC';
+         Result.CountyFile := 'southcarolina_cty.dom';
+         Result.CountyA := 'CHAR';
+         Result.CountyB := 'RICH';
+         end;
       else
          begin
          Result.Id := VT_QSO_PARTY_CONTEST_ID;
@@ -114,7 +135,7 @@ begin
       end;
 end;
 
-function IsOneOfTheFour(const aId: string): boolean;
+function IsAHostStateParty(const aId: string): boolean;
 var
    i: integer;
 begin
@@ -193,7 +214,7 @@ begin
          obj := NewContestLike(contests[i], station);
          try
             key := 'stale';
-            if inHost and IsOneOfTheFour(id) then
+            if inHost and IsAHostStateParty(id) then
                begin
                CheckTrue(obj.AdditionalDomesticMultiplierKey(qso, key), id + ': a county earns the state');
                CheckEquals(obj.HostState, key, id + ': the key is the host state');
@@ -232,7 +253,7 @@ end;
 
 procedure TAdditionalDomesticMultiplierTests.Test_InStateListsHoldTheHostKey;
 const
-   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 77);
+   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 77);
 var
    i: integer;
    party: TPartyCase;

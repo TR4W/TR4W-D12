@@ -905,12 +905,22 @@ type
   TLogStreamAppender = class(TLogCustomAppender)
   private
     FStream: TStream;
+    FWriteFailures: Integer;
+    FLastWriteError: string;
   protected
     procedure DoAppend(const Message: string); override;
   public
     constructor Create(const Name: string; const Stream: TStream;
       const Layout: ILogLayout = nil); reintroduce; virtual;
     destructor Destroy; override;
+    (* A WRITE THAT FAILS IS COUNTED, NOT RAISED (TR4W, issue 312). A full disk
+      made every logger call raise EWriteError from wherever it was made -- out
+      of an exception handler, off a radio thread -- and the operator's notice
+      that the contest log was not being saved never appeared. The line is lost
+      (the file is trimmed back to the end of the last whole one); the count and
+      the last reason are here for whoever wants to say so. *)
+    property WriteFailures: Integer read FWriteFailures;
+    property LastWriteError: string read FLastWriteError;
   end;
 
   { Send log messages to a file.
@@ -3304,6 +3314,7 @@ end;
 procedure TLogStreamAppender.DoAppend(const Message: string);
 var
   StrStream: TStringStream;
+  SizeBefore: Int64;
 begin
   if FStream <> nil then
   begin
@@ -3313,7 +3324,26 @@ begin
     StrStream := TStringStream.Create(Message);
     {$ENDIF}
     try
-      FStream.CopyFrom(StrStream, 0);
+      SizeBefore := FStream.Position;
+      try
+        FStream.CopyFrom(StrStream, 0);
+      except
+        on E: Exception do
+          begin
+          Inc(FWriteFailures);
+          FLastWriteError := E.Message;
+          (* Put the file back at the end of the last whole line. If even that
+            fails there is nothing more a logger can do. *)
+          try
+            FStream.Size := SizeBefore;
+          except
+            on E2: Exception do
+              begin
+              FLastWriteError := FLastWriteError + ' / ' + E2.Message;
+              end;
+          end;
+          end;
+      end;
     finally
       StrStream.Free;
     end;

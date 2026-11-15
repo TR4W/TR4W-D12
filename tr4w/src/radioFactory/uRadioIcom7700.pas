@@ -30,15 +30,28 @@ unit uRadioIcom7700;
   and mode reads, $21 RIT read, $0F split read, $1C TX status -- all the things
   uRadioIcomLegacy has to no-op for the older radios.
 
-  SERIAL ONLY.  These predate Icom's LAN control (the RS-BA generation covered by
-  uIcomNetworkTransport), so unlike the IC-7610/7850/9700/705 there is no network
-  link to register.
+  SERIAL AND NETWORK.  The rig has its own LAN port and is registered
+  [rlSerial, rlNetwork] like every other network Icom (03935174, NY4I: "the 7700
+  is a network radio. That was an oversight.").  An earlier version of this
+  comment said serial only; the registration below is the authority.
 
-  ****  NOT BENCH-VALIDATED -- keep on the tester list  ****
+  ****  NOT BENCH-VALIDATED, on either link -- keep on the tester list  ****
 
-  BENCH NOTES: confirm the four reads above actually answer rather than NAK.  If
-  any of them NAKs, this radio belongs on the read-limited profile for that
-  command instead -- which is a capability change, not a protocol rewrite.
+  BENCH NOTES (issue 31):
+  - Confirm the four reads above actually answer rather than NAK.  If any of
+    them NAKs, this radio belongs on the read-limited profile for that command
+    instead -- which is a capability change, not a protocol rewrite.  Hamlib
+    (rigs/icom/ic7700.c, ic7700_rig_open) starts this model with x25cmdfails and
+    x26cmdfails SET, i.e. it assumes $25/$26 do NOT work until shown otherwise.
+    That is the first thing to watch.
+  - No $07 $D2: Hamlib lists VFO A/B/MEM only, so FSupportsActiveVFOQuery stays
+    at the base default (False).
+  - FTransceiveMenuBytes is NOT set here, so the CI-V transceive read at link-up
+    asks $1A $05 $01 $50 -- the IC-7610/IC-7760 item.  The 7700's own item is
+    unconfirmed: one note suggests $00 $95, but no second source (Hamlib, the D7
+    tree, a manual in docs/) has been found, so it is not written in.  Read the
+    set-mode item from the radio's manual or menu on the bench and set it in the
+    constructor, as the IC-7100/7300MK2/9700/905/705 do.
 }
 
 interface

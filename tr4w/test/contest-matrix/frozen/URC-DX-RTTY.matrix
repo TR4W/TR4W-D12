@@ -135,7 +135,7 @@ imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=26011
 imp section.qth-only | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=EWA domqth=EWA exch=1H EWA class=1H operator=K0AAA cty=K/8/NorthAmerica/W1
 imp section.dx | parsed=TRUE call=DL1ABC band=Band40 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=DX domqth=DX exch=1D DX class=1D operator=K0AAA cty=DL/28/Europe/DL1
 imp province | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eSSB time=260115 121800 rst.sent=59 rst.rcvd=59 exch=ON operator=K0AAA cty=VE/9/NorthAmerica/VE3
-imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=K0AAA cty=K/8/NorthAmerica/W1
+imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON dommultqth=MON exch=59 MON operator=K0AAA cty=K/8/NorthAmerica/W1
 imp grid.srx | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=FN31 operator=K0AAA cty=K/8/NorthAmerica/W1
 imp grid.only | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=-5 rst.rcvd=-5 operator=K0AAA cty=DL/28/Europe/DL1
 imp pota.ref | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=K0AAA cty=K/8/NorthAmerica/W1
@@ -162,7 +162,7 @@ imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=K0AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=K0AAA cty=DL/28/Europe/DL1
-imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=K0AAA cty=G/27/Europe/MON0
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON dommultqth=MON exch=59 MON operator=K0AAA cty=G/27/Europe/MON0
 == parse
 parse.keys = SPY MCO
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
@@ -449,7 +449,7 @@ imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=26011
 imp section.qth-only | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=EWA domqth=EWA exch=1H EWA class=1H operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp section.dx | parsed=TRUE call=DL1ABC band=Band40 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=DX domqth=DX exch=1D DX class=1D operator=VE3AAA cty=DL/28/Europe/DL1
 imp province | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eSSB time=260115 121800 rst.sent=59 rst.rcvd=59 exch=ON operator=VE3AAA cty=VE/9/NorthAmerica/VE3
-imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON dommultqth=MON exch=59 MON operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp grid.srx | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=FN31 operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp grid.only | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=-5 rst.rcvd=-5 operator=VE3AAA cty=DL/28/Europe/DL1
 imp pota.ref | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=VE3AAA cty=K/8/NorthAmerica/W1
@@ -476,7 +476,7 @@ imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=VE3AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=VE3AAA cty=DL/28/Europe/DL1
-imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=VE3AAA cty=G/27/Europe/MON0
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON dommultqth=MON exch=59 MON operator=VE3AAA cty=G/27/Europe/MON0
 == parse
 parse.keys = SPY MCO
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
@@ -761,7 +761,7 @@ imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=26011
 imp section.qth-only | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=EWA domqth=EWA exch=1H EWA class=1H operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp section.dx | parsed=TRUE call=DL1ABC band=Band40 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=DX domqth=DX exch=1D DX class=1D operator=DL1AAA cty=DL/28/Europe/DL1
 imp province | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eSSB time=260115 121800 rst.sent=59 rst.rcvd=59 exch=ON operator=DL1AAA cty=VE/9/NorthAmerica/VE3
-imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON dommultqth=MON exch=59 MON operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp grid.srx | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=FN31 operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp grid.only | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=-5 rst.rcvd=-5 operator=DL1AAA cty=DL/28/Europe/DL1
 imp pota.ref | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=DL1AAA cty=K/8/NorthAmerica/W1
@@ -788,7 +788,7 @@ imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=DL1AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=DL1AAA cty=DL/28/Europe/DL1
-imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=DL1AAA cty=G/27/Europe/MON0
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON dommultqth=MON exch=59 MON operator=DL1AAA cty=G/27/Europe/MON0
 == parse
 parse.keys = SPY MCO
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW

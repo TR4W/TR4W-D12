@@ -48,10 +48,10 @@ unit uCheckLatestVersion;
   whatever arrived is exactly what this removes. The only things that reach the
   screen are the two real answers: you are current, or here is a newer one.
 
-  STILL SYNCHRONOUS ON THE CALLING THREAD, and that is a known debt rather than
-  an oversight -- CLAUDE.md lists moving its socket work off the main thread as
-  a bench-queue item. What is gone is the unconditional two-second sleep; the
-  timeouts below bound the wait instead, and they are short on purpose. *)
+  THE REQUEST RUNS ON A WORKER THREAD (issues 194 and 249, 2026-11-15). It was
+  synchronous on the UI thread; now only the answer -- the "you are current"
+  message or the download question -- is shown on the main thread. The timeouts
+  below still bound the worker, and are short on purpose. *)
 
 interface
 
@@ -176,12 +176,12 @@ begin
    end;
 end;
 
-procedure CheckLatestVersion;
+(* WHAT THE OPERATOR IS TOLD ONCE THE WORKER HAS THE ANSWER. Main thread only:
+  it shows a message or asks a question. *)
+procedure ReportLatestVersion(const latest: string);
 var
-   latest  : string;
    current : string;
 begin
-   latest := VersionFrom(FetchVersionDocument);
    if latest = '' then
       begin
       { Already logged, with the reason. Nothing reaches the screen. }
@@ -216,6 +216,64 @@ begin
       begin
       OpenURL(TR4W_DOWNLOAD_LINK);
       end;
+end;
+
+(* THE FETCH RUNS ON A WORKER, THE ANSWER IS SHOWN ON THE MAIN THREAD (issues 194
+  and 249). Same pattern as uCTYUpdate's DownloadCTYAsync: the thread stores its
+  result during Execute, and OnTerminate -- which the RTL raises through
+  Synchronize -- runs the report on the main thread. *)
+type
+   TVersionCheckThread = class(TThread)
+   private
+      FLatest: string;
+      procedure ReportChecked(Sender: TObject);
+   protected
+      procedure Execute; override;
+   public
+      constructor Create;
+   end;
+
+var
+   (* Main thread only: a second menu click while one check is in flight is
+     ignored rather than stacking a second request. *)
+   GCheckRunning: boolean = False;
+
+constructor TVersionCheckThread.Create;
+begin
+   inherited Create(True);
+   OnTerminate     := ReportChecked;
+   FreeOnTerminate := True;
+end;
+
+procedure TVersionCheckThread.Execute;
+begin
+   FLatest := '';
+   try
+      FLatest := VersionFrom(FetchVersionDocument);
+   except
+      on E: Exception do
+         begin
+         logger.Error('[VersionCheck] the check failed (%s: %s)',
+                      [E.ClassName, E.Message]);
+         FLatest := '';
+         end;
+   end;
+end;
+
+procedure TVersionCheckThread.ReportChecked(Sender: TObject);
+begin
+   GCheckRunning := False;
+   ReportLatestVersion(FLatest);
+end;
+
+procedure CheckLatestVersion;
+begin
+   if GCheckRunning then
+      begin
+      Exit;
+      end;
+   GCheckRunning := True;
+   TVersionCheckThread.Create.Resume;
 end;
 
 end.

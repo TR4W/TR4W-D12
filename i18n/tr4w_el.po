@@ -10593,7 +10593,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "Σμήνος DX \"%0: s\":% 1: s, σύνδεση ως% 2: s."
+msgstr "Σμήνος DX \"%0:s\": %1:s, σύνδεση στο %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10603,7 +10603,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "WinKeyer \"%0: s\" σε% 1: s, χρησιμοποιείται για CW στο radio 1."
+msgstr "WinKeyer \"%0:s\" την %1:s, χρησιμοποιείται για CW στο radio 1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10625,7 +10625,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Ραδιόφωνο 1: %0: s% 1: s. Όνομα: \"% 2: s\"."
+msgstr "Ράδιο 1: %0:s %1:s. Όνομα: \"%2:s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10770,7 +10770,7 @@ msgstr "Εμφάνιση λεπτομερειών"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Σειριακό:%0: s baud,% 1:s, RTS% 2:s, DTR% 3: s"
+msgstr "   Σειριακό: %0:s Βων, %1:s, RTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -10785,7 +10785,7 @@ msgstr "   Κωδικός πρόσβασης δικτύου: set"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Σφυγμομέτρηση συχνότητας: %0: s, κάθε% 1: s ms"
+msgstr "   Σφυγμομέτρηση συχνότητας: %0:s, κάθε %1:s ms"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -10800,7 +10800,7 @@ msgstr "   Εντολή εκκίνησης: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Τρόπος %0: s, πλαϊνός τόνος% 1: s"
+msgstr "   Λειτουργία %0:s, πλαγκτόν %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -10850,11 +10850,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Αυτό το αντίγραφο του TR4W φαίνεται ατελώς εγκατεστημένο.\n"
-"\n"
-"Δε βρέθηκε στο %0:\n"
-"% 1: s\n"
-"\n"
-"Εκκίνηση TR4W από το φάκελο που ο εγκαταστάτης το έβαλε μέσα (κρατεί CTY.DAT, TRMASTER.DTA και έναν φάκελο Dom), ή εκτελέστε τον εγκαταστάτη και πάλι.\n"
-"\n"
-"TR4W θα ξεκινήσει ακόμα, αλλά οι διαγωνισμοί που χρειάζονται αυτά τα αρχεία δεν θα λειτουργήσει σωστά."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Το αρχείο %0:s ΔΕΝ γράφτηκε: %1:sΈνα προηγούμενο αρχείο αυτού του ονόματος, αν υπήρχε, δεν έχει αλλάξει."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Δεν αποστέλλεται στους άλλους σταθμούς: το κείμενο είναι %0:d bytes και το δίκτυο μεταφέρει %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Αντιγραφή σημείου"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d δεζ)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Ανταλλαγή σχολίων"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Γλώσσα:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Αρχίζει να ισχύει όταν αρχίσει το TR4W."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Σε εντόπισα. %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

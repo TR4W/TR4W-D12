@@ -350,7 +350,10 @@ the target shape, the M-step migration order and the open questions.
   (base True) beside `UsesBand`; `eNoMode`/`eData` mean "some submode", so an
   old record is never proven off-mode. ONE predicate,
   `uContestBase.QSOIsXQSO(contest, qso)` = the operator's `ceXQSO` OR
-  `QSOIsOffContest` (band or mode refused, or -- since Q119, 2026-10-23 --
+  `QSOIsOffContest` (band or mode refused; or -- since #269, 2026-11-15 --
+  `UsesBandInMode(band, mode, ext)` refused, the one place a band rule that
+  depends on the mode is stated: Vermont credits 30/17/12 m in `UsesBand`
+  and refuses all but FT8/FT4 there; base True; or -- since Q119, 2026-10-23 --
   `CreditsWorkedStation` refused, asked ONLY of an object that `HasStation`)
   -- **DERIVED, NEVER STORED**: an
   edited band re-classifies, nothing writes `is_xqso`. A reader holding only

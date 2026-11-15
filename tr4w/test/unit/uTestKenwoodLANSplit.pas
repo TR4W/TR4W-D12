@@ -340,8 +340,15 @@ begin
 
    CheckTrue(checked > 0, 'the registry produced no radios to check');
    CheckEquals('', answeredBWithA, 'with A receiving every radio must answer B');
-   CheckEquals('Kenwood TS-890S ', answeredA,
-               'with B receiving only the TS-890S answers A; any other name here changed a radio''s split');
+   (* Issue 259 added the Flex (its registry constructor is the SmartSDR API
+     driver, which tracks the active slice).  Checked by name, not by one
+     concatenated string, so the answer does not depend on registration order. *)
+   CheckTrue(Pos('Kenwood TS-890S ', answeredA) > 0, 'the TS-890S answers A with B receiving');
+   CheckTrue(Pos('Flex 6000+ ', answeredA) > 0, 'the Flex answers A with slice 1 receiving');
+   answeredA := UnicodeStringReplace(answeredA, 'Kenwood TS-890S ', '', []);
+   answeredA := UnicodeStringReplace(answeredA, 'Flex 6000+ ', '', []);
+   CheckEquals('', answeredA,
+               'with B receiving only the TS-890S and the Flex answer A; any other name here changed a radio''s split');
 end;
 
 procedure TKenwoodLANSplitTests.RunAllTests;

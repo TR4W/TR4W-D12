@@ -37,6 +37,7 @@ type
       procedure Test_ATrimKeepsEveryKindWithItsLine;
       procedure Test_AClearThenRefillCarriesTheNewKinds;
       procedure Test_ARowThatIsNotThereIsAStatusLine;
+      procedure Test_TheSpottedNoticeNamesTheSpotter;
    public
       procedure RunAllTests; override;
    end;
@@ -45,7 +46,9 @@ implementation
 
 uses
    Forms,          (* Application *)
-   uTelnet,        (* TelnetStringType *)
+   uTelnet,        (* TelnetStringType, SpottedByAnotherStationText *)
+   uTR4WStrings,   (* TC_YOUARESPOTTEDBYANOTHERSTATION *)
+   uAppStrings,    (* SYouAreSpottedBy *)
    uTelnetForm;
 
 const
@@ -189,12 +192,29 @@ begin
    CheckEquals(Ord(tstTR4W), Ord(TelnetConsoleKind(0)), 'no window at all');
 end;
 
+(* NOT A CONSOLE-KIND TEST, BUT THE SAME UNIT UNDER TEST (issue 68): the alert
+  raised when a spot names this station now names who posted it. Here because
+  this suite already links uTelnet; it needs no form. *)
+procedure TTelnetConsoleKindTests.Test_TheSpottedNoticeNamesTheSpotter;
+begin
+   BeginTest('Telnet: the "you are spotted" notice names the spotter');
+   CheckEquals(string(SysUtils.Format(AnsiString(SYouAreSpottedBy), [AnsiString('W8WTS-#')])),
+               string(SpottedByAnotherStationText('W8WTS-#')),
+               'a spotter is named, as the cluster gave it');
+   CheckTrue(Pos('W8WTS-#', string(SpottedByAnotherStationText('W8WTS-#'))) > 0,
+             'the call is in the notice');
+   CheckEquals(string(AnsiString(TC_YOUARESPOTTEDBYANOTHERSTATION)),
+               string(SpottedByAnotherStationText('')),
+               'no spotter: the old sentence, naming nobody');
+end;
+
 procedure TTelnetConsoleKindTests.RunAllTests;
 begin
    Test_EachKindComesBackWithItsLine;
    Test_ATrimKeepsEveryKindWithItsLine;
    Test_AClearThenRefillCarriesTheNewKinds;
    Test_ARowThatIsNotThereIsAStatusLine;
+   Test_TheSpottedNoticeNamesTheSpotter;
 end;
 
 end.

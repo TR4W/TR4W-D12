@@ -127,6 +127,9 @@ begin
   StationInformationCall := '';
   ShowStationInformation(CallWindowString);
   DisplaySpotComment(SpotCommentForDisplay(SpotNotesText(Spot)));
+  (* AND THE LOOKUP SPACE WOULD BROADCAST (issue 49), so a listener such as
+    DXView loads the clicked call as it does a typed one. *)
+  BroadcastLookupForCall(CallWindowString);
 end;
 
 procedure TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType);

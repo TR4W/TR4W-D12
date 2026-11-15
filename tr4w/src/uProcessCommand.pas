@@ -110,6 +110,7 @@ procedure scLOGIN;
 procedure scSENDTOCLUSTER;
 procedure scDUPECHECK;
 procedure scBOOLSWAP;
+procedure scSPAN;
 
 procedure csMMTTY_GRABLASTCALL;
 procedure csMMTTY_SWITCH_TO_RX_IMMEDIATELY;
@@ -122,7 +123,7 @@ const
 
 
  // sCommands                             =  67  {$IF MMTYMODE} + 5  {$IFEND};
-  sCommands                             =  72 + 2 + 1 + 5 + 1;  // Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP
+  sCommands                             =  72 + 2 + 1 + 5 + 1 + 4;  // Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP + SPAN and its 3 display rows (issue 192)
 
   sCommandsArray                        : array[0..sCommands - 1] of TsCommandsArrayType =
     (
@@ -190,6 +191,10 @@ const
     (caCommand: ' OTRSP=RXA    = Listen to active (TX) radio'; caAddress: OTRSPCommand),
     (caCommand: ' OTRSP=RXI    = Listen to inactive radio'; caAddress: OTRSPCommand),
     (caCommand: ' OTRSP=STEREO = Stereo (hear both radios)'; caAddress: OTRSPCommand),
+    (caCommand: 'SPAN'; caAddress: scSPAN),  // Issue 192 - panadapter span
+    (caCommand: ' SPAN=50 = Panadapter span in kHz (any width)'; caAddress: scSPAN),
+    (caCommand: ' SPAN=+  = Widen the panadapter one step'; caAddress: scSPAN),
+    (caCommand: ' SPAN=-  = Narrow the panadapter one step'; caAddress: scSPAN),
     (caCommand: 'TOGGLECW'; caAddress: scTOGGLECW),
     (caCommand: 'BANDUP'; caAddress: scBANDUP),
     (caCommand: 'BANDDOWN'; caAddress: scBANDDOWN),
@@ -230,7 +235,9 @@ implementation
 
 uses
    uSettingsModel,   // Settings.My.Call
-   uPlatformProcess;   // RunProgram / RunWindowsUtility -- the only launchers
+   uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
+   uFactoryRadioBase,  // SPAN: TFactoryRadioBase, rcSpectrum
+   uSpectrumTypes;     // SPAN: SpectrumParseSpanCommand
 
 function FoundCommand(var SendString: Str160): boolean;
 
@@ -477,6 +484,63 @@ end;
 procedure scSRS2;
 begin
    SendCommandFileToRadio(@Radio2);
+end;
+
+(* SPAN=<kHz>, SPAN=+, SPAN=- (issue 192): the panadapter span of the active
+  radio, or of the inactive one when the command is sent with CTRL-A.
+
+  The radio decides what it can do: SetSpectrumSpan is a REQUEST the rig may
+  clamp or snap (a K4 takes any width, an Icom snaps to its rungs), and a
+  "step" is the radio's own detent (StepSpectrumSpan).  So this asks the
+  model fact (rcSpectrum) and leaves the transport to the driver, which
+  already refuses when it cannot (TIcomRadio.SetSpectrumSpan checks
+  SpectrumAvailable).
+
+  REPORTED IN THE LOG, NOT ON THE STATUS LINE: FoundCommand writes
+  '"SPAN" command is executed.' straight after this returns, so a
+  QuickDisplay here would be overwritten before anyone saw it. *)
+procedure scSPAN;
+var
+   rig: RadioPtr;
+   radio: TFactoryRadioBase;
+   step: Integer;
+   spanHz: Integer;
+begin
+   if CommandUseInactiveRadio then
+      begin
+      rig := InActiveRadioPtr;
+      end
+   else
+      begin
+      rig := ActiveRadioPtr;
+      end;
+
+   if not SpectrumParseSpanCommand(string(scFileName), step, spanHz) then
+      begin
+      logger.Error('[SPAN] "%s" is not a span -- use SPAN=<kHz>, SPAN=+ or SPAN=-',
+                   [string(scFileName)]);
+      Exit;
+      end;
+
+   radio := rig.tFactoryObject;
+
+   if (radio = nil) or (not radio.Supports(rcSpectrum)) then
+      begin
+      logger.Warn('[SPAN] %s has no panadapter span control; SPAN=%s ignored',
+                  [rig.RadioName, string(scFileName)]);
+      Exit;
+      end;
+
+   if step <> 0 then
+      begin
+      logger.Debug('[SPAN] %s: one step %s', [rig.RadioName, string(scFileName)]);
+      radio.StepSpectrumSpan(step);
+      end
+   else
+      begin
+      logger.Debug('[SPAN] %s: request %d Hz', [rig.RadioName, spanHz]);
+      radio.SetSpectrumSpan(spanHz);
+      end;
 end;
 
 procedure scPlayMessageActive;

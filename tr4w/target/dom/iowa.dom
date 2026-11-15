@@ -1,0 +1,70 @@
+Iowa QSO Party in-state received locations (2026 rules, no change from 2025)
+99 counties plus 50 states (Iowa included) plus 13 provinces: 162.
+The class adds IA state credit on a county QSO (issue 317).
+The Ia line has a display name and NO alias: an Iowa station sends its county, never IA.
+Sponsor state list: MD is Maryland and DC. DX is points only, with no multiplier entry.
+
+INCLUDE FILE iowa_cty.dom
+Ia = ^Iowa
+Md = MD,DC,^Maryland and DC
+Al = AL,^Alabama
+Ak = AK,^Alaska
+Az = AZ,^Arizona
+Ar = AR,^Arkansas
+Ca = CA,^California
+Co = CO,^Colorado
+Ct = CT,^Connecticut
+De = DE,^Delaware
+Fl = FL,^Florida
+Ga = GA,^Georgia
+Hi = HI,^Hawaii
+Id = ID,^Idaho
+Il = IL,^Illinois
+In = IN,^Indiana
+Ks = KS,^Kansas
+Ky = KY,^Kentucky
+La = LA,^Louisiana
+Me = ME,^Maine
+Ma = MA,^Massachusetts
+Mi = MI,^Michigan
+Mn = MN,^Minnesota
+Ms = MS,^Mississippi
+Mo = MO,^Missouri
+Mt = MT,^Montana
+Ne = NE,^Nebraska
+Nv = NV,^Nevada
+Nh = NH,^New Hampshire
+Nj = NJ,^New Jersey
+Nm = NM,^New Mexico
+Ny = NY,^New York
+Nc = NC,^North Carolina
+Nd = ND,^North Dakota
+Oh = OH,^Ohio
+Ok = OK,^Oklahoma
+Or = OR,^Oregon
+Pa = PA,^Pennsylvania
+Ri = RI,^Rhode Island
+Sc = SC,^South Carolina
+Sd = SD,^South Dakota
+Tn = TN,^Tennessee
+Tx = TX,^Texas
+Ut = UT,^Utah
+Vt = VT,^Vermont
+Va = VA,^Virginia
+Wa = WA,^Washington
+Wv = WV,^West Virginia
+Wi = WI,^Wisconsin
+Wy = WY,^Wyoming
+AB = AB,^Alberta
+BC = BC,^British Columbia
+MB = MB,^Manitoba
+NB = NB,^New Brunswick
+NL = NL,^Newfoundland and Labrador
+NT = NT,^Northwest Territories
+NS = NS,^Nova Scotia
+NU = NU,^Nunavut
+ON = ON,^Ontario
+PE = PE,^Prince Edward Island
+QC = QC,^Quebec
+SK = SK,^Saskatchewan
+YT = YT,^Yukon

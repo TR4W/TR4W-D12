@@ -10955,3 +10955,48 @@ msgstr ""
 #, fuzzy
 msgid "This copy of TR4W looks incompletely installed.\n\nNot found in %0:s:\n%1:s\n\nStart TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again.\n\nTR4W will still start, but contests that need these files will not work properly."
 msgstr ""
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr ""
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr ""
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr ""
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr ""
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr ""
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr ""
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr ""
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr ""
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

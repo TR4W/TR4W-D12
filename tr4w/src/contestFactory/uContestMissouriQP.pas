@@ -104,7 +104,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   MODES -- "FT4/FT8 or similar modes that do not allow free text sending
     will not be allowed." UsesMode refuses the digital submodes TR4W can
-    name as such -- FT8, FT4 and JT65, the WSJT structured-message modes --
+    name as such -- FT8, FT4, JT65, FST4 and FST4W (issue 260), the WSJT
+    structured-message modes --
     so such a QSO is an automatic X-QSO. Every other digital submode, and a
     digital QSO whose submode is not known (eNoMode, eData), is credited.
 
@@ -195,8 +196,8 @@ type
       (* 160-10 m without WARC, 6 m, 2 m, 1.25 m and 70 cm -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
 
-      (* CW, phone (FM is phone) and digital but FT8, FT4 and JT65 -- the
-         header. *)
+      (* CW, phone (FM is phone) and digital but the WSJT structured-message
+         modes -- the header. *)
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* The bonus stations, plus one point per peak-hour contact in the
@@ -359,7 +360,8 @@ end;
    allowed." The submode is tested only to EXCLUDE the ones named: eNoMode
    and eData mean "some digital submode" and are credited, as the contract
    asks (ADDING_A_CONTEST, UsesMode). An identity fact: no station is
-   asked. *)
+   asked. FST4 and FST4W are WSJT-X structured-message modes like FT8, FT4
+   and JT65 -- "similar modes" -- so they are refused too (issue 260). *)
 function TContestMissouriQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -369,7 +371,7 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4, eJT65]);
+         Result := not (aExtMode in [eFT8, eFT4, eJT65, eFST4, eFST4W]);
          end;
       else
          begin

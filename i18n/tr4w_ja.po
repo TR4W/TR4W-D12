@@ -11603,3 +11603,48 @@ msgstr ""
 "インストーラが置いたフォルダからTR4Wを起動します(CTY.DAT、TRMASTER.DTA、ダムフォルダを保持します)、またはインストーラを再度実行します。\n"
 "\n"
 "TR4W はまだ起動しますが、これらのファイルが必要なコンテストは正常に動作しません。"
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "%0:s は記述されていません: %1:s. その名前の以前のファイル、ある場合は変更されません。"
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "他のステーションに送られない: テキストは %0:d バイトであり、ネットワークは %1:d を運ぶ。"
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "コピースポット"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "コメントの交換"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "言語:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "TR4Wが始まると効果を発揮します。"
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "スポット %sお問い合わせ"
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

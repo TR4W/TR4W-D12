@@ -124,23 +124,105 @@ end.
 """
 
 
-def code_referenced_rc(src_root, lang_dir, names):
-   """Which RC_ names any Pascal source outside the language tables mentions.
+def strip_pascal_comments(text):
+   """The text with every Pascal comment blanked, string literals kept.
+
+   Comments go: `{ }`, `(* *)` and `//` to end of line -- a name mentioned only
+   in a comment, or in code commented out, is not a use. String literals STAY,
+   because a catalogue identifier such as 'utr4wstrings.tc_translation_author'
+   names its constant inside a string and that IS a use. Walked character by
+   character rather than by regex, so `//` inside 'http://...' and a `{` inside
+   a string are not mistaken for comment starts (issue 144, point 5): the
+   pattern below is matched left to right, so a string literal is consumed
+   whole before anything inside it can start a comment.
+   """
+   def keep_strings(match):
+      token = match.group(0)
+      return token if token.startswith("'") else " "
+   return _PASCAL_TOKENS.sub(keep_strings, text)
+
+
+# A string literal, or one of the three comment forms. An unterminated comment
+# runs to the end of the text, which is what the compiler does with it.
+_PASCAL_TOKENS = re.compile(r"'[^'\n]*'?|\{[^}]*\}?|\(\*.*?(?:\*\)|\Z)|//[^\n]*", re.S)
+
+
+def referenced_names(roots, names, skip_dirs=(), skip_files=(), strip_comments=False,
+                     extensions=(".pas", ".inc", ".dpr")):
+   """Which of `names` any Pascal source under `roots` mentions.
 
    Case-insensitive: Pascal is, and TR4W spells the same identifier three ways.
    Walks by extension rather than glob -- src/trdos is UPPERCASE .PAS and a
    case-sensitive pattern silently misses 27 files there.
+
+   skip_dirs  -- directory paths, or bare directory NAMES (e.g. 'backup'),
+                 whose files are not read.
+   skip_files -- lowercase file names not read (the generated unit itself).
    """
-   blob = []
-   for dirpath, _dirnames, filenames in os.walk(src_root):
-      if os.path.normcase(dirpath).startswith(os.path.normcase(lang_dir)):
-         continue
-      for fn in filenames:
-         if fn.lower().endswith((".pas", ".inc", ".dpr")):
+   skip_paths = [os.path.normcase(d) for d in skip_dirs if os.sep in d or "/" in d]
+   skip_names = {d.lower() for d in skip_dirs if not (os.sep in d or "/" in d)}
+   words = set()
+   for root in roots:
+      for dirpath, _dirnames, filenames in os.walk(root):
+         here = os.path.normcase(dirpath)
+         if any(here.startswith(p) for p in skip_paths):
+            continue
+         if skip_names & {part.lower() for part in here.split(os.sep)}:
+            continue
+         for fn in filenames:
+            if not fn.lower().endswith(extensions) or fn.lower() in skip_files:
+               continue
             with open(os.path.join(dirpath, fn), encoding="utf-8", errors="replace") as fh:
-               blob.append(fh.read())
-   text = "\n".join(blob).lower()
-   return {n for n in names if re.search(r"\b" + re.escape(n.lower()) + r"\b", text)}
+               text = fh.read()
+            if strip_comments:
+               text = strip_pascal_comments(text)
+            words.update(w.lower() for w in _WORD.findall(text))
+   # One identifier set and a lookup per name: a regex search per name over the
+   # whole tree took minutes once the tree included tr4w/include.
+   return {n for n in names if n.lower() in words}
+
+
+# A whole word, the unit a \b...\b search for an identifier matches against.
+_WORD = re.compile(r"\w+")
+
+
+def code_referenced_rc(src_root, lang_dir, names):
+   """Which RC_ names any Pascal source outside the language tables mentions.
+
+   THE GENERATOR'S OWN RULE, UNCHANGED, and known to keep too much (issue 144,
+   point 5): it reads uTR4WStrings.pas -- the file this tool writes, so every RC_
+   it ever emitted counts as referenced by its own declaration -- plus the
+   gitignored backup/ folders and every comment. Correcting it changes what a
+   regeneration emits, so it waits for the decision in issue 158;
+   `--unreferenced` reports what the corrected scan would retire.
+   """
+   return referenced_names([src_root], names, skip_dirs=[lang_dir])
+
+
+def unreferenced_report(repo, eng_path):
+   """(tc, rc) names the CORRECTED scan finds no use of.
+
+   The corrected scan: the whole tr4w/ tree (the server, the tests and the
+   .lpr files reference these too, and a test that names a constant breaks if
+   it goes), comments stripped, and neither the language tables, the
+   generated uTR4WStrings.pas nor any backup/ folder read. Report only:
+   nothing is written and the emitted unit is unchanged.
+   """
+   tc, _lines, _form = pasconsts.parse_lang_file(eng_path, prefix="TC_")
+   rc, _lines, _form = pasconsts.parse_lang_file(eng_path, prefix="RC_")
+   tc_names = {d.name for d in tc if d.name}
+   rc_names = {d.name for d in rc if d.name}
+   tree = os.path.join(repo, "tr4w")
+   lang_dir = os.path.join(tree, "src", "lang")
+   used = referenced_names([tree], tc_names | rc_names,
+                           skip_dirs=[lang_dir, "backup"],
+                           skip_files={UNIT_NAME.lower() + ".pas"},
+                           strip_comments=True,
+                           extensions=(".pas", ".inc", ".dpr", ".lpr", ".pp"))
+   # An RC_ that only res/Tr4w.rc names is already left out of the unit, so
+   # the report lists only the ones the unit EMITS today and would stop emitting.
+   emitted_rc = code_referenced_rc(os.path.join(tree, "src"), lang_dir, rc_names)
+   return sorted(tc_names - used), sorted(emitted_rc - used)
 
 
 def build(eng_path, src_root, lang_dir):
@@ -226,6 +308,9 @@ def main():
    ap.add_argument("--out", required=True, help="target .pas, or - for none")
    ap.add_argument("--check", action="store_true", help="counts only, write nothing")
    ap.add_argument("--repo", default=None, help="repo root holding tr4w/src")
+   ap.add_argument("--unreferenced", action="store_true",
+                   help="list the TC_/RC_ the corrected scan finds no use of, "
+                        "and write nothing (issue 158)")
    args = ap.parse_args()
 
    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -236,6 +321,18 @@ def main():
    if not os.path.exists(eng):
       print("no English table at " + eng)
       return 2
+
+   if args.unreferenced:
+      tc_dead, rc_dead = unreferenced_report(repo, eng)
+      print("TC_ with no use (comments, the lang tables, %s.pas and backup/ ignored): %d"
+            % (UNIT_NAME, len(tc_dead)))
+      for name in tc_dead:
+         print("   " + name)
+      print("RC_ emitted today with no use by the same rule: %d" % len(rc_dead))
+      for name in rc_dead:
+         print("   " + name)
+      print("\nReport only -- nothing written.")
+      return 0
 
    tc, rc, dropped, words = build(eng, src_root, lang_dir)
    print("  TC_ emitted            : %4d" % len(tc))

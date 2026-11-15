@@ -652,7 +652,7 @@ msgstr "Steht dieser Parameter auf TRUE, wird das QSO schon nach dem ersten Drue
 #. Config command: LOOK FOR RST SENT   (default: FALSE)
 msgctxt "TC_HELP_LOOK_FOR_RST_SENT"
 msgid "When this parameter is TRUE, a transmitted RST may be entered into the Exchange Window by preceding it with S. For example, typing S57 would place 57 into the log as the transmitted exchange for this QSO."
-msgstr "Steht dieser Parameter auf TRUE, kann ein zu sendendes RST mit einem vorangestellten S eingegeben werden. Z.B. wird ein S57 als ?57? als Rapport fuer dieses QSO eingetragen."
+msgstr "Steht dieser Parameter auf TRUE, kann ein zu sendendes RST mit einem vorangestellten S eingegeben werden. Z.B. wird ein S57 als \"57\" als Rapport fuer dieses QSO eingetragen."
 
 #. Config command: LPT1 BASE ADDRESS   (default: 888)
 msgctxt "TC_HELP_LPT1_BASE_ADDRESS"
@@ -917,7 +917,7 @@ msgstr "Dieses Kommando bestimmt die Gebegeschwindigkeit mit dem Paddle. Steht d
 #. Config command: PARTIAL CALL ENABLE   (default: TRUE)
 msgctxt "TC_HELP_PARTIAL_CALL_ENABLE"
 msgid "This command allows you to control the partial call function. This is a separate feature from the super check partial (which uses the TRMASTER.DTA database). The callsigns used by the partial call function come from the dupesheet and initial exchange file. When this function is enabled, partial calls will be shown on the bottom of the screen after the second character of a call has been typed into the Call Window. A partial call is defined to be any call that starts with the same letters as those in the Call Window. The WILDCARD PARTIALS parameter determines whether the partial call must appear at the start of"
-msgstr "Mit diesem Kommando kann man die \"partielle Call Funktion\" bestimmen. Dies ist ein spezielles Feature der \"super check patrial\" (benutzt wird die TRMASTER.DTA). Die Rufzecihen die hierfuer verwendet werden kommen aus der Dupesheet und der Rappert Datei.Ist diese Funktion aktiv, werden partielle Calls nach der Eingabe von zwei Zeichen unten im Eingabefenster angezeigt.  Ein ?partial call?  ist jedes Call, das mit den identischen zwei ersten Zeichen wie das Call im Eingabefenster beginnt. Der WILDCARD PARTIALS Parameter bestimmt, ob das ?partial call? schon beim Eingabebeginn angezeigt wird."
+msgstr "Mit diesem Kommando kann man die \"partielle Call Funktion\" bestimmen. Dies ist ein spezielles Feature der \"super check patrial\" (benutzt wird die TRMASTER.DTA). Die Rufzecihen die hierfuer verwendet werden kommen aus der Dupesheet und der Rappert Datei.Ist diese Funktion aktiv, werden partielle Calls nach der Eingabe von zwei Zeichen unten im Eingabefenster angezeigt.  Ein \"partial call\"  ist jedes Call, das mit den identischen zwei ersten Zeichen wie das Call im Eingabefenster beginnt. Der WILDCARD PARTIALS Parameter bestimmt, ob das \"partial call\" schon beim Eingabebeginn angezeigt wird."
 
 #. Config command: POLL RADIO ONE   (default: TRUE)
 #, fuzzy
@@ -1690,7 +1690,7 @@ msgstr "Steht dieser Parameter auf TRUE, gestattet TR4W die Auswahl von VHF und 
 #. Config command: WAIT FOR STRENGTH   (default: TRUE)
 msgctxt "TC_HELP_WAIT_FOR_STRENGTH"
 msgid "When you use the [ character in a CW message, TR4W will allow you to enter the strength of an RST report by pressing a single numeric key. If WAIT FOR STRENGTH is TRUE, the program will wait for you to enter the strength before continuing the CW message. If WAIT FOR STRENGTH is FALSE and you havent pressed a key by the time the program is ready to send the strength, it will act as if you had pressed the 9 key and proceed with the message."
-msgstr "When you use the [ character in a CW message, TR4W will allow you to enter the strength of an RST report by pressing a single numeric key. If WAIT FOR STRENGTH is TRUE, the program will wait for you to enter the strength before continuing the CW message. If WAIT FOR STRENGTH is FALSE and you haven?t pressed a key by the time the program is ready to send the strength, it will act as if you had pressed the 9 key and proceed with the message."
+msgstr "When you use the [ character in a CW message, TR4W will allow you to enter the strength of an RST report by pressing a single numeric key. If WAIT FOR STRENGTH is TRUE, the program will wait for you to enter the strength before continuing the CW message. If WAIT FOR STRENGTH is FALSE and you haven't pressed a key by the time the program is ready to send the strength, it will act as if you had pressed the 9 key and proceed with the message."
 
 #. Config command: WAKE UP TIME OUT   (default: 0)
 #, fuzzy

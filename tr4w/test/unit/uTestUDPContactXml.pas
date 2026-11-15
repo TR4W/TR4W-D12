@@ -32,6 +32,7 @@ type
       procedure Test_LoggedQsoCarriesItsOwnFrequencyNotTheRadios;
       procedure Test_RecordWithNoFrequencyGetsTheBandDefault;
       procedure Test_LookupInfoStillFollowsTheRadio;
+      procedure Test_SectionIsTheRulesSectionInASectionContest;
    public
       procedure RunAllTests; override;
    end;
@@ -194,8 +195,50 @@ begin
              'lookupinfo describes the call being typed now: ' + xml);
 end;
 
+(* <section> -- issue 275 item 3 (NY4I, 2026-11-11). N1MM's section means
+   whatever the contest's rules make it, so it is the QTH as logged -- except
+   in a contest whose QTH IS an ARRL section, where the rules' section goes
+   out: a typed EM (DomesticQTH EMA, as typed entry resolves it) sends EMA, a
+   typed WF sends WCF. A DX entry there keeps its text; a contest whose QTH
+   is no section (NAQP) sends what was logged. *)
+function SectionContactXml(aContest: ContestType;
+                           const aQTH, aDomesticQTH: string): string;
+var
+   q: ContestExchange;
+begin
+   q := Default(ContestExchange);
+   q.ceContest := ContestHandleOf(aContest);
+   q.Callsign := 'W1AW';
+   q.Band := Band20;
+   q.Mode := CW;
+   q.Frequency := 14025000;
+   q.QTHString := Str10(aQTH);
+   q.DomesticQTH := Str10(aDomesticQTH);
+   Result := BuildUDPContact(q, udpContactInfo);
+end;
+
+procedure TUDPContactXmlTests.Test_SectionIsTheRulesSectionInASectionContest;
+var
+   xml: string;
+begin
+   BeginTest('Test_SectionIsTheRulesSectionInASectionContest');
+   xml := SectionContactXml(ARRLSSCW, 'EM', 'EMA');
+   CheckTrue(Pos('<section>EMA</section>', xml) > 0, 'SS typed EM: the rules'' section: ' + xml);
+   CheckTrue(Pos('<qth>EM</qth>', xml) > 0, 'SS typed EM: <qth> stays as logged');
+
+   xml := SectionContactXml(ARRLFIELDDAY, 'WF', 'WcF');
+   CheckTrue(Pos('<section>WCF</section>', xml) > 0, 'Field Day typed WF: WCF: ' + xml);
+
+   xml := SectionContactXml(ARRLSSCW, 'DX', '');
+   CheckTrue(Pos('<section>DX</section>', xml) > 0, 'SS DX: the logged text: ' + xml);
+
+   xml := SectionContactXml(NAQSOCW, 'OH', 'OH');
+   CheckTrue(Pos('<section>OH</section>', xml) > 0, 'NAQP OH: the QTH as logged: ' + xml);
+end;
+
 procedure TUDPContactXmlTests.RunAllTests;
 begin
+   Test_SectionIsTheRulesSectionInASectionContest;
    Test_LoggedQsoCarriesItsOwnFrequencyNotTheRadios;
    Test_RecordWithNoFrequencyGetsTheBandDefault;
    Test_LookupInfoStillFollowsTheRadio;

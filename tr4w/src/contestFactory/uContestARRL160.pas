@@ -59,9 +59,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   LogCfg's CQ exchange: 5NN and MY STATE.
 
   EXPORT: a W/VE QSO's QTH is its ARRL_SECT -- PostUnit's tail named this
-  contest until M7b. IMPORT: SRX_STRING is the domestic QTH -- the arm
-  MainUnit.ApplyClasslessADIFImport kept for it until M7b; the arm it came
-  from named CQ 160 and the UBA contests too, and each owns its copy. *)
+  contest until M7b. IMPORT: the section from ARRL_SECT, else QTH, else
+  SRX_STRING less its RST, resolved through the domestic table (issue 275)
+  -- the arm MainUnit.ApplyClasslessADIFImport kept for it until M7b copied
+  SRX_STRING raw; the arm it came from named CQ 160 and the UBA contests
+  too, and each owns its copy. *)
 unit uContestARRL160;
 
 {$I tr4w.inc}
@@ -377,13 +379,46 @@ begin
       end;
 end;
 
-(* MainUnit.ApplyClasslessADIFImport's ARRL160 arm, moved at M7b:
-   SRX_STRING is the domestic QTH. *)
+(* MainUnit.ApplyClasslessADIFImport's ARRL160 arm, moved at M7b, which
+   copied the raw SRX_STRING into DomesticQTH.
+
+   THE SECTION IS RESOLVED, NOT COPIED (issue 275 item 1, the ARRL 160 half
+   of issue 265): ARRL_SECT when the record has one, else the QTH tag, else
+   the exchange inside SRX_STRING with the received RST taken off (TR4W
+   writes '599 CT' there, and the raw copy stored '599' as the QTH).
+   ImportDomesticQTH then stores what typed entry stores -- an alias (EM) as
+   its section (EMA) and the multiplier key beside it -- the helper
+   Sweepstakes and the Field Days call. *)
 procedure TContestARRL160.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                           const aSession: TADIFImportSession;
                                           var aExch: ContestExchange);
+var
+   received: string;
 begin
-   aExch.DomesticQTH := ShortString(aTemps.SRX_String);
+   if aTemps.ARRL_Sect <> '' then
+      begin
+      received := aTemps.ARRL_Sect;
+      (* A record with ARRL_SECT and no QTH tag: the section is its QTH too,
+         as Sweepstakes' import does, so the Cabrillo received column
+         (CabrilloReceivedRSTQTHOrDXQTH reads QTHString) does not print DX
+         for a W station. *)
+      if aExch.QTHString = '' then
+         begin
+         aExch.QTHString := ShortString(aTemps.ARRL_Sect);
+         end;
+      end
+   else if aExch.QTHString <> '' then
+      begin
+      received := string(aExch.QTHString);
+      end
+   else
+      begin
+      received := ExchangeFromSRXString(aTemps.SRX_String, aExch.RSTReceived);
+      end;
+   if received <> '' then
+      begin
+      ImportDomesticQTH(aSession, received, aExch);
+      end;
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as

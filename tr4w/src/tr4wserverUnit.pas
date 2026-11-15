@@ -389,6 +389,18 @@ function ServerHoldsQSO(const CE: ContestExchange): boolean;
 (* The server has just appended CE to the log, which is OPEN. Keeps the set of
   held QSOs in step. Call it after the write and before CloseServerLog. *)
 procedure NoteQsoStored(const CE: ContestExchange);
+(* APPEND ONE RECORD TO THE OPEN SERVER LOG, ALL OR NOTHING (issue 314). A write
+  that fails -- a full disk above all -- raises from deep inside the stream, and
+  a record cut short at the end of the file shifts every later record by the
+  remainder. This trims the file back to the size it had before the write, logs
+  the reason, and answers False; it never raises. The log must be open. *)
+function AppendRecordToOpenServerLog(const CE: ContestExchange): boolean;
+(* OPEN THE LOG, APPEND CE, TELL THE HELD-QSO SET, AND CLOSE -- in a finally, so
+  an exception cannot leave ServerLogOpened set and every later open refused.
+  False when the log could not be opened or the write failed (nothing stored).
+  aFlush False is for a run of OFFLINEQSO packets, flushed once by
+  ReleaseServerLog. *)
+function StoreQsoInServerLog(const CE: ContestExchange; aFlush: boolean): boolean;
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
 procedure WriteContestExchangesBufferToServerLog;
 procedure SendLogFileInformation(s: TClientHandle);
@@ -741,15 +753,12 @@ begin
                 begin
                 SendConfirmMessage(aSocket);
                 end
-              else if OpenServerLog(slOpenExisting) then
+              else if StoreQsoInServerLog(ServerNewQSOPtr^.qiInformation, False) then
               begin
-                ServerLog.Seek(0, soEnd);
-                ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
-                (* NO FLUSH HERE: the log is held open (above) and flushed once,
-                  when the run of OFFLINEQSO packets ends (ReleaseServerLog). *)
-                NoteQsoStored(ServerNewQSOPtr^.qiInformation);
-                DisplayServerLogSize;
-                CloseServerLog;
+                (* NO FLUSH IN THERE: the log is held open (above) and flushed once,
+                  when the run of OFFLINEQSO packets ends (ReleaseServerLog).
+                  No ACK when the QSO was NOT stored (issue 314): the station
+                  keeps it owing and sends it again. *)
                 SendConfirmMessage(aSocket);
               end;
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
@@ -778,18 +787,15 @@ begin
                 end
               else
                 begin
-                SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
-                if OpenServerLog(slOpenExisting) then
-                begin
-                  ServerLog.Seek(0, soEnd);
-                  ServerLog.WriteBuffer(ServerNewQSOPtr.qiInformation, SizeOf(ContestExchange));
-                  FileFlush(ServerLog.Handle);
-                  NoteQsoStored(ServerNewQSOPtr^.qiInformation);
-                  DisplayServerLogSize;
-                  CloseServerLog;
-                end
-                else
+                (* WRITTEN BEFORE IT IS RELAYED (issue 314), so a QSO the stations
+                  have is one the server's log has -- or the Error line says it
+                  does not. A failed write never stops the relay: the stations
+                  must get the QSO either way. *)
+                if not StoreQsoInServerLog(ServerNewQSOPtr^.qiInformation, True) then
+                  begin
                   AddContestExchangeToBuffer(ServerNewQSOPtr.qiInformation);
+                  end;
+                SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
                 end;
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
             end;
@@ -996,35 +1002,72 @@ end;
 
 
 procedure UpdateQSOInServerlog(CE: ContestExchange);
-label
-  1, 2;
 var
   pNumberOfBytesRead                    : Cardinal;
   FilePointer                           : integer;
+  Finished                              : boolean;
 
 begin
-  FilePointer := -1;
-  if OpenServerLog(slOpenExisting) then
+  if not OpenServerLog(slOpenExisting) then
      begin
-     1:
-     ServerLog.Seek(FilePointer * SizeOf(ContestExchange), soEnd);
-     pNumberOfBytesRead := ServerLog.Read(TempCE, SizeOf(ContestExchange));
-     if pNumberOfBytesRead = SizeOf(ContestExchange) then
-        begin
-        if TempCE.ceQSOID1 = CE.ceQSOID1 then
-          if TempCE.ceQSOID2 = CE.ceQSOID2 then
-             begin
-             ServerLog.Seek(FilePointer * SizeOf(ContestExchange), soEnd);
-             ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
-             ServerCRC32Changed := True;
-             goto 2;
-             end;
-        dec(FilePointer);
-        goto 1;
-        end;
-     2:
-     CloseServerLog;
+     Exit;
      end;
+  (* CLOSED IN A FINALLY, AND NEVER RAISING (issue 314): an exception that skipped
+    the close left ServerLogOpened set, and every later open was refused. The
+    walk goes back from the end one record at a time and stops at the start of
+    the file; a record that is rewritten and then fails is put back as it was. *)
+  try
+     try
+        FilePointer := -1;
+        Finished := False;
+        while (not Finished) and
+              (Int64(-FilePointer) * SizeOf(ContestExchange) <= ServerLog.Size) do
+           begin
+           ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
+           pNumberOfBytesRead := ServerLog.Read(TempCE, SizeOf(ContestExchange));
+           if pNumberOfBytesRead <> SizeOf(ContestExchange) then
+              begin
+              Finished := True;
+              end
+           else if (TempCE.ceQSOID1 = CE.ceQSOID1) and
+                   (TempCE.ceQSOID2 = CE.ceQSOID2) then
+              begin
+              ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
+              try
+                 ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
+              except
+                 on E: Exception do
+                    begin
+                    logger.Error('[Log] cannot rewrite the edited QSO %s (%d/%d) in the server log: %s',
+                                 [string(CE.Callsign), CE.ceQSOID1, CE.ceQSOID2, E.Message]);
+                    try
+                       ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
+                       ServerLog.WriteBuffer(TempCE, SizeOf(ContestExchange));
+                    except
+                       on E2: Exception do
+                          begin
+                          logger.Error('[Log] and the old record could not be put back: %s', [E2.Message]);
+                          end;
+                    end;
+                    end;
+              end;
+              ServerCRC32Changed := True;
+              Finished := True;
+              end
+           else
+              begin
+              dec(FilePointer);
+              end;
+           end;
+     except
+        on E: Exception do
+           begin
+           logger.Error('[Log] cannot search the server log for an edited QSO: %s', [E.Message]);
+           end;
+     end;
+  finally
+     CloseServerLog;
+  end;
 end;
 
 
@@ -1178,6 +1221,57 @@ begin
   ServerQsoIndex.NoteLogSize(ServerLog.Size);
 end;
 
+function AppendRecordToOpenServerLog(const CE: ContestExchange): boolean;
+var
+  sizeBefore: Int64;
+begin
+  Result := False;
+  sizeBefore := ServerLog.Size;
+  try
+     ServerLog.Seek(0, soEnd);
+     ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
+     Result := True;
+  except
+     on E: Exception do
+        begin
+        logger.Error('[Log] cannot append to the server log: %s -- the QSO %s (%d/%d) is NOT stored; trimming the file back to %d bytes',
+                     [E.Message, string(CE.Callsign), CE.ceQSOID1, CE.ceQSOID2, sizeBefore]);
+        try
+           ServerLog.Size := sizeBefore;
+        except
+           on E2: Exception do
+              begin
+              logger.Error('[Log] cannot trim the server log back to %d bytes: %s -- it may end in a partial record',
+                           [sizeBefore, E2.Message]);
+              end;
+        end;
+        end;
+  end;
+end;
+
+function StoreQsoInServerLog(const CE: ContestExchange; aFlush: boolean): boolean;
+begin
+  Result := False;
+  if not OpenServerLog(slOpenExisting) then
+     begin
+     Exit;
+     end;
+  try
+     if AppendRecordToOpenServerLog(CE) then
+        begin
+        if aFlush then
+           begin
+           FileFlush(ServerLog.Handle);
+           end;
+        NoteQsoStored(CE);
+        DisplayServerLogSize;
+        Result := True;
+        end;
+  finally
+     CloseServerLog;
+  end;
+end;
+
 procedure AddContestExchangeToBuffer(CE: ContestExchange);
 begin
   if ContestExchangesBufferIndex = MaxContestExchangesBufferSize then Exit;
@@ -1187,7 +1281,7 @@ end;
 
 procedure WriteContestExchangesBufferToServerLog;
 var
-  c, lpNumberOfBytesWritten             : Cardinal;
+  c, done                               : Cardinal;
 begin
   if ContestExchangesBufferIndex = 0 then Exit;
   if not OpenServerLog(slOpenExisting) then
@@ -1195,15 +1289,31 @@ begin
      ContestExchangesBufferIndex := 0;
      Exit;
      end;
-  ServerLog.Seek(0, soEnd);
-  for c := 1 to ContestExchangesBufferIndex do
-     begin
-     ServerLog.WriteBuffer(ContestExchangesBuffer[c], SizeOf(ContestExchange));
-     end;
-  FileFlush(ServerLog.Handle);
-  DisplayServerLogSize;
-  CloseServerLog;
-  ContestExchangesBufferIndex := 0;
+  try
+     (* EACH RECORD ALL OR NOTHING (issue 314). The first one that fails stops
+       the run and the rest, and it, stay in the buffer for the next try. *)
+     c := 1;
+     while c <= ContestExchangesBufferIndex do
+        begin
+        if not AppendRecordToOpenServerLog(ContestExchangesBuffer[c]) then
+           begin
+           Break;
+           end;
+        NoteQsoStored(ContestExchangesBuffer[c]);
+        inc(c);
+        end;
+     FileFlush(ServerLog.Handle);
+     DisplayServerLogSize;
+     (* Slide what was not written to the front; none left means empty. *)
+     done := c - 1;
+     for c := 1 to ContestExchangesBufferIndex - done do
+        begin
+        ContestExchangesBuffer[c] := ContestExchangesBuffer[c + done];
+        end;
+     ContestExchangesBufferIndex := ContestExchangesBufferIndex - done;
+  finally
+     CloseServerLog;
+  end;
 end;
 
 procedure SendLogFileInformation(s: TClientHandle);

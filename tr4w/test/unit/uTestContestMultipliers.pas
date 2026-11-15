@@ -421,8 +421,10 @@ end;
 
 procedure TContestMultipliersTests.Test_EveryOtherContestImpliesNoMultiplierFromACall;
 const
-   STATED: array[0..6] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
-                                         CUPURAL, RDA, YODX, MWC);
+   (* MINNQSOPARTY since issue 211: an in-state entrant's DX call implies
+      the one DX key -- uTestContestMinnesotaQP pins it. *)
+   STATED: array[0..7] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
+                                         CUPURAL, RDA, YODX, MWC, MINNQSOPARTY);
 var
    identities: TContestIdentityList;
    k: integer;

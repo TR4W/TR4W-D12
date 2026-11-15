@@ -1,0 +1,141 @@
+Source: http://www.w0yl.com/IAQP (the 2026 rules on the home page)
+Fetched: 2026-11-15; converted from HTML to text, no wording changed
+
+Iowa QSO Party — 2026 Rules
+There are no rule changes for 2026.
+Date and Time:
+Saturday, September 19, 2026 from 9AM – 9PM US Central Time (1400Z, September 19 – 0200Z, September 20)
+Purpose:
+The purpose of the Iowa QSO Party is to encourage contact with Iowa amateur radio stations by other Iowa hams and hams worldwide.
+Objective:
+Iowa stations work everybody, including other Iowa stations. Stations outside Iowa work as many Iowa stations as possible. See the rules below for further details. Send comments or questions to  iowaqsoparty@hotmail.com 
+Entry Classes:
+Iowa Single-Op Fixed (between 5 Watts and 150 Watts)
+Iowa Multi-Op Fixed (between 5 Watts and 150 Watts)
+Iowa Single-Op Mobile/Rover (between 5 Watts and 150 Watts)
+Iowa Multi-Op Mobile/Rover (between 5 Watts and 150 Watts)
+Iowa Single-Op Portable (between 5 Watts and 150 Watts)
+Iowa Multi-Op Portable (between 5 Watts and 150 Watts)
+Out-of-State (within US and Canada) (between 5 Watts and 150 Watts)
+Iowa QRP (5 Watts or less)
+Out-of-State QRP (5 Watts or less)
+Iowa High Power (more than 150 Watts, any single fixed location)
+Out-of-State High Power (more than 150 Watts, any single fixed location)
+DX (outside US and Canada) (any LEGAL power)
+Mobile/Rover is a station that can operate from one or more physical locations.
+Portable is a station set up at a single temporary location away from any permanent station.
+This table might help clarify the classes:
+Power
+Class
+QRP
+(5 W or less) 
+Iowa QRP
+Out-of-State QRP
+Low
+(more than 5 W
+up to 150 W) 
+Iowa Single-Op Fixed
+Iowa Multi-Op Fixed
+Iowa Single-Op Mobile/Rover
+Iowa Multi-Op Mobile/Rover
+Iowa Single-Op Portable
+Iowa Multi-Op Portable
+Out-of-State
+High
+(more than 150 W) 
+Iowa High Power
+Out-of-State High Power
+Any
+DX
+Modes:
+Phone (includes digital phone)
+CW
+Digital (excludes digital phone but includes other digital modes)
+Satellite QSOs are allowed.
+Repeater or network QSOs are NOT allowed.
+FT modes are allowed as long as the FULL Iowa QSO Party exchange is completed by BOTH parties.
+It appears JS8Call could work, as that allows for free-form text entry QSOs. It looks like WSJT-x (FT8 and FT4) will NOT work at this time, as the software does not allow free-form text QSO, which means passing the FULL EXCHANGE is not possible. Perhaps in the future this may be possible, but as of 2024 it appears not.
+Note especially for digital modes:  All valid QSOs must complete the full contest exchange.
+Exchange:
+Iowa Stations: send RS/T and county (see the  county abbreviation list )
+All Other US/Canada Stations: send RS/T and state/province (see the  state/province abbreviation list )
+DX Stations (outside US and Canada): send RS/T and “DX”
+Bands:
+Contacts may be made on any amateur band EXCEPT the 60m, 30m, 17m, and 12m bands. This table lists some suggested frequencies (plus or minus). Digital stations look around the customary calling frequencies for each mode.
+Band
+CW
+PH/SSB
+PH/FM
+160m
+1.820
+1.855
+80m
+3.540
+3.840
+40m
+7.040
+7.210
+20m
+14.040
+14.285
+15m
+21.040
+21.330
+10m
+28.040
+28.415
+6m
+50.040
+50.150
+52.550
+2m
+144.060
+144.250
+146.550
+1.25m
+222.150
+223.450
+70cm
+432.105
+432.150
+446.550
+Scoring:
+QSO Points: 
+Each phone contact is worth one (1) point.
+Each CW contact is worth two (2) points.
+Each digital mode contact is worth two (2) points.
+Duplicate contacts are worth zero (0) points.
+Non-Iowa stations may be worked ONCE per MODE per BAND.
+Iowa stations may be worked ONCE per MODE per BAND per COUNTY.
+Iowa Mobile/Rover stations may work all stations AGAIN for each county that they operate from.
+Multipliers: 
+Stations Outside Iowa: One multiplier for each Iowa county worked (see the  county list ).
+Iowa Stations: One multiplier for each Iowa county worked, and one multiplier for each state (including Iowa) or Canadian province worked (see the  state/province list ).
+Iowa Stations: No multiplier for working DX stations. DX stations still count as QSOs, so definitely DO work them!
+Multipliers are applied one time only, NOT per Band, and NOT per Mode. This has always been our normal scoring method, we have just added this note for clarification.
+Final Score: 
+Multiply total QSO Points by the total number of Multipliers.
+Note about Claimed Scores: 
+For a variety of reasons, not all claimed scores produced by logging software are accurate. Your official score is the number we arrive at during the scoring process after all logs have been submitted and scored together.
+Club Competition:
+Scores attributed to any amateur radio club will be credited toward that club. All clubs with three or more credited scores will be included in an overall ranking of those scores with a certificate awarded to the club with the highest score.
+General:
+The Iowa QSO Party is included in the State QSO Party Challenge  http://stateqsoparty.com/ .
+Spotting on the packet clusters or via Internet is permissible, including self-spotting.
+Mobile/Rover and Portable stations are encouraged to post your locations via APRS (see:  https://mobiletracker.stateqso.com/IA/ )
+Stations entering the QRP Class are limited to no more than 5 Watts.
+Stations transmitting with more than 150 Watts must enter the High Power Class (except DX stations).
+Stations are not allowed to change their entry class once established.
+The Out-of-State, DX, QRP, and High Power classes include both single-operator and multi-operator stations combined in the same class.
+Iowa Mobile/Rover stations who change counties are considered to be a new station in each new county.
+Iowa Mobile/Rover stations and Portable stations may park/setup on a county line/junction and represent all counties at the intersection simultaneously.
+Some portion of the vehicle or station must physically be in each county being run. For example, if your antenna is in one county, the feedline passes thru a second county, and the transmitter is in a third county, then you may claim all three counties at the same time. All parts of the station must be physically connected.
+All intersecting counties may be worked in a single exchange (JA6DX this is W0YL, you are 59 in Story STR, Marshall MSL, and Hardin HDN counties).
+County-line operations should be prepared to provide proof that their station was physically located in each county claimed.
+Mobile/Rover is a station that can operate from one or more physical locations.
+Portable is a station set up at a single temporary location away from any permanent station.
+Please keep safety in mind and do not cause a traffic hazard where you park your vehicle.
+Single Op is one person performing all operating  and logging  functions.
+Multi-Op vs. Single-Op is determined by the number of operators, not the number of radios used.
+Download the  list of Iowa counties and 3 letter abbreviations . All operators must use these abbreviations in their exchanges and in their logs.
+Download the  state and province list . All operators must use these abbreviations in their exchanges and in their logs.

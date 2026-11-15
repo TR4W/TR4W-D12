@@ -204,5 +204,41 @@ class MergeTests(unittest.TestCase):
       self.assertTrue(read_bytes(self.path).count(b"\r\n") > 0)
 
 
+class EnglishCorrectionTests(unittest.TestCase):
+   """Issue 152: English corrected in help_en.po must not be reverted by a run.
+
+   Reads the real tracked files and writes nothing."""
+
+   def setUp(self):
+      self.paths = pc.repo_paths()
+      self.ini = os.path.join(self.paths["root"], "tr4w", "target",
+                              "commands_help_eng.ini")
+      self.help_en = os.path.join(self.paths["i18n"], "help_en.po")
+
+   def test_the_english_read_from_the_ini_is_the_corrected_text(self):
+      desc = {s: d for s, _, d in ini2po.read_ini(self.ini, pc.SOURCE_LANG)}
+      for section, text in ini2po.ENGLISH_CORRECTIONS.items():
+         self.assertIn(section, desc, "no ini section %r" % section)
+         self.assertEqual(desc[section], text)
+      self.assertNotIn("same effect", desc["QUICK QSL MESSAGE"])
+      self.assertNotIn("###", desc["QUICK QSL SSB MESSAGE"])
+
+   def test_every_correction_matches_help_en(self):
+      by_key = {e.key: e.source for e in pofile.read_po(self.help_en)
+                if e.key and not e.obsolete}
+      for section, text in ini2po.ENGLISH_CORRECTIONS.items():
+         self.assertEqual(by_key.get(ini2po.key_for(section)), text,
+                          "help_en.po and ENGLISH_CORRECTIONS disagree on %r" % section)
+
+   def test_a_translation_ini_is_not_corrected(self):
+      # Only the English is replaced; a language's own text is its own.
+      ger = os.path.join(self.paths["root"], "tr4w", "target", "commands_help_ger.ini")
+      self.assertTrue(os.path.exists(ger))
+      desc = {s: d for s, _, d in ini2po.read_ini(ger, "GER")}
+      for section, text in ini2po.ENGLISH_CORRECTIONS.items():
+         if section in desc:
+            self.assertNotEqual(desc[section], text)
+
+
 if __name__ == "__main__":
    unittest.main()

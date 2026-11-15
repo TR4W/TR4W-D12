@@ -70,6 +70,7 @@ type
     miDupeDisplay: TMenuItem;
     miMultsOnly: TMenuItem;
     miSep1: TMenuItem;
+    miCopySpot: TMenuItem;
     miDeleteSpot: TMenuItem;
     miRemoveAll: TMenuItem;
     miSep2: TMenuItem;
@@ -93,6 +94,7 @@ type
     procedure MenuDisplayCQClick(Sender: TObject);
     procedure MenuDupeDisplayClick(Sender: TObject);
     procedure MenuMultsOnlyClick(Sender: TObject);
+    procedure MenuCopySpotClick(Sender: TObject);
     procedure MenuDeleteSpotClick(Sender: TObject);
     procedure MenuRemoveAllClick(Sender: TObject);
     procedure MenuQSYInactiveClick(Sender: TObject);
@@ -141,6 +143,18 @@ var
   for all twenty tool windows, and both go when the last of them is a form. }
 procedure CreateTR4WBandMapWindow;
 
+(* THE SPOT AS TEXT TO PASTE ELSEWHERE (issue 183): "CALL [entity] freq
+  comment", for sharing a spot in a chat. The entity is left out, brackets and
+  all, when there is none (a CQ or NEW marker); so is an empty comment. *)
+function SpotCopyText(const aCall, aEntity, aFrequency,
+                      aComment: string): string;
+
+(* THE COUNTRY PANEL'S TEXT, WITH THE BEAM HEADING (issue 186). aHeading is
+  GetBeamHeading's answer: -1 means no heading (no station grid, or no grid for
+  the spot), and the panel then shows the country alone. *)
+function CountryWithHeading(const aCountry: AnsiString;
+                            const aHeading: integer): AnsiString;
+
 implementation
 
 {$R *.lfm}
@@ -161,7 +175,11 @@ uses
   LogRadio,
   LogK1EA,           { ActiveRadio / InActiveRadio }
   LogSubs2,          { DupeCheckOnInactiveRadio }
-  LogStuff;
+  LogStuff,
+  LogGrid,           (* GetBeamHeading -- the country panel's heading *)
+  Clipbrd,           (* Clipboard -- Copy spot *)
+  uDXSpotParse,      (* SpotNotesText, SpotCommentForDisplay -- Copy spot *)
+  uAppStrings;       (* SBandMapCopySpot, SBandMapCountryHeading *)
 
 const
   { The status bar: six panels, fixed position, varying content -- the same six
@@ -197,9 +215,10 @@ const
 
 procedure TfrmBandMap.HandleCreate(Sender: TObject);
 begin
-   // The three captions that already exist as resource constants.  The other
+   // The captions that exist as translated strings.  The other
    // items name CFG commands verbatim, so their .lfm captions ARE the
    // identifiers and are left alone.
+   miCopySpot.Caption    := SBandMapCopySpot;
    miDeleteSpot.Caption  := RC_DELETESELSPOT;
    miRemoveAll.Caption   := RC_REMOVEALLSP;
    miQSYInactive.Caption := RC_SENDINRIG;
@@ -404,6 +423,8 @@ procedure TfrmBandMap.ShowSelectedSpotInfo;
 var
    spot: TSpotRecord;
    notes: string;
+   heading: integer;
+   countryId: DXMultiplierString;
 begin
    if not SelectedSpot(spot) then
       begin
@@ -439,8 +460,20 @@ begin
       end
    else
       begin
+      (* THE BEAM HEADING BESIDE THE COUNTRY (issue 186), from the station's
+        grid to the grid CTY.DAT gives the spotted call -- the same pair the
+        main window's heading panel uses. Not DisplayBeamHeading: that writes
+        the main window's panel and its repeat latch. *)
+      heading := -1;
+      if Settings.My.ResolvedGrid <> '' then
+         begin
+         countryId := '';
+         heading := GetBeamHeading(Settings.My.ResolvedGrid,
+                                   ctyGetGrid(string(spot.FCall), countryId));
+         end;
       sbSpot.Panels[SB_COUNTRY].Text :=
-         ctyGetCountryName(ctyGetCountry(spot.FCall));
+         CountryWithHeading(AnsiString(ctyGetCountryName(ctyGetCountry(spot.FCall))),
+                            heading);
       end;
 end;
 
@@ -817,7 +850,10 @@ end;
 { ------------------------------------------------------------------- menu -- }
 
 procedure TfrmBandMap.MenuPopup(Sender: TObject);
+var
+   spot: TSpotRecord;
 begin
+   miCopySpot.Enabled    := SelectedSpot(spot);
    miAllBands.Checked    := Settings.BandMap.AllBands;
    miAllModes.Checked    := Settings.BandMap.AllModes;
    miDisplayCQ.Checked   := Settings.BandMap.DisplayCQ;
@@ -855,6 +891,28 @@ end;
 procedure TfrmBandMap.MenuMultsOnlyClick(Sender: TObject);
 begin
    Settings.BandMap.MultsOnly := not Settings.BandMap.MultsOnly;
+end;
+
+(* COPY THE SELECTED SPOT AS TEXT (issue 183). The entity is CTY.DAT's name for
+  the call, as the country panel shows it; a CQ or NEW marker has none. *)
+procedure TfrmBandMap.MenuCopySpotClick(Sender: TObject);
+var
+   spot: TSpotRecord;
+   entity: AnsiString;
+begin
+   if not SelectedSpot(spot) then
+      begin
+      Exit;
+      end;
+   entity := '';
+   if (spot.FCall <> 'CQ') and (spot.FCall <> 'NEW') then
+      begin
+      entity := AnsiString(ctyGetCountryName(ctyGetCountry(spot.FCall)));
+      end;
+   Clipboard.AsText := SpotCopyText(AnsiString(spot.FCall),
+                                    entity,
+                                    AnsiString(FreqToPChar2(spot.FFrequency)),
+                                    SpotCommentForDisplay(SpotNotesText(spot)));
 end;
 
 procedure TfrmBandMap.MenuDeleteSpotClick(Sender: TObject);
@@ -902,6 +960,34 @@ begin
 end;
 
 { --------------------------------------------------------------- the seam -- }
+
+function SpotCopyText(const aCall, aEntity, aFrequency,
+                      aComment: string): string;
+begin
+   Result := aCall;
+   if aEntity <> '' then
+      begin
+      Result := Result + ' [' + aEntity + ']';
+      end;
+   Result := Result + ' ' + aFrequency;
+   if aComment <> '' then
+      begin
+      Result := Result + ' ' + aComment;
+      end;
+end;
+
+function CountryWithHeading(const aCountry: AnsiString;
+                            const aHeading: integer): AnsiString;
+begin
+   if aHeading < 0 then
+      begin
+      Result := aCountry;
+      end
+   else
+      begin
+      Result := SysUtils.Format(SBandMapCountryHeading, [aCountry, aHeading]);
+      end;
+end;
 
 procedure BandMapSelectTopImpl;
 begin

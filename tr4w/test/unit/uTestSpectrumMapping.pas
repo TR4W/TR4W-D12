@@ -45,6 +45,7 @@ type
       procedure Test_Disagree_MarkerVsTrace;
       procedure Test_Disagree_ClickVsTracePeak;
       procedure Test_Disagree_ClickRoundTrip;
+      procedure Test_SpanCommand_Syntax;
    public
       procedure RunAllTests; override;
    end;
@@ -426,6 +427,62 @@ begin
    CheckEquals(0, moved, '2048/1024: every click round-trips');
 end;
 
+(* Issue 192: the SPAN function-key command's argument.  Accepted forms, and
+  that everything else is refused with both outputs 0. *)
+procedure TSpectrumMappingTests.Test_SpanCommand_Syntax;
+
+   procedure Refused(const AText: string);
+   var
+      step, hz: Integer;
+   begin
+      CheckFalse(SpectrumParseSpanCommand(AText, step, hz), '"' + AText + '" must be refused');
+      CheckEquals(0, step, '"' + AText + '": no step');
+      CheckEquals(0, hz, '"' + AText + '": no span');
+   end;
+
+   procedure Span(const AText: string; AExpectedHz: Integer);
+   var
+      step, hz: Integer;
+   begin
+      CheckTrue(SpectrumParseSpanCommand(AText, step, hz), '"' + AText + '" must be accepted');
+      CheckEquals(0, step, '"' + AText + '" is a width, not a step');
+      CheckEquals(AExpectedHz, hz, '"' + AText + '" in Hz');
+   end;
+
+var
+   step, hz: Integer;
+begin
+   BeginTest('SPAN command: kHz, + and -, and nothing else');
+
+   CheckTrue(SpectrumParseSpanCommand('+', step, hz), '+ accepted');
+   CheckEquals(1, step, '+ widens one step');
+   CheckEquals(0, hz, '+ carries no width');
+   CheckTrue(SpectrumParseSpanCommand('-', step, hz), '- accepted');
+   CheckEquals(-1, step, '- narrows one step');
+
+   Span('50', 50000);
+   Span('2.5', 2500);
+   Span('2.500', 2500);
+   Span('0.5', 500);
+   Span('5.', 5000);
+   Span('368', 368000);
+   Span('10000', 10000000);
+
+   Refused('');
+   Refused('0');
+   Refused('0.000');
+   Refused('.');
+   Refused('10000.001');
+   Refused('10001');
+   Refused('99999999999');
+   Refused('2.5.0');
+   Refused('2.5001');
+   Refused('50k');
+   Refused(' 50');
+   Refused('++');
+   Refused('-5');
+end;
+
 procedure TSpectrumMappingTests.RunAllTests;
 begin
    Test_BinsPerPixel;
@@ -440,6 +497,7 @@ begin
    Test_Disagree_MarkerVsTrace;
    Test_Disagree_ClickVsTracePeak;
    Test_Disagree_ClickRoundTrip;
+   Test_SpanCommand_Syntax;
 end;
 
 end.

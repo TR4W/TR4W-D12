@@ -1304,6 +1304,11 @@ type
         on aControl -- the same search, over the same index, as the box.
         Read by uTestPrefsPlacement (issue 264). *)
       function SearchFinds(const aNeedle: string; const aControl: TWinControl): boolean;
+      (* What the page LOADED for aCommand -- the snapshot ApplyIfChanged
+        compares against. False when the page took no snapshot of it, which
+        means a save writes it whatever the operator did. Read by
+        uTestPrefsPlacement (issue 319: the Station rows had none). *)
+      function LoadedCommandValue(const aCommand: string; out aValue: string): boolean;
    end;
 
 const
@@ -5291,6 +5296,17 @@ begin
    HideSearchResults;
 end;
 
+function TPrefsForm.LoadedCommandValue(const aCommand: string; out aValue: string): boolean;
+begin
+   (* See the declaration. The same test ApplyIfChanged makes. *)
+   aValue := '';
+   Result := (FLoaded <> nil) and (FLoaded.IndexOfName(AnsiString(aCommand)) >= 0);
+   if Result then
+      begin
+      aValue := string(FLoaded.Values[AnsiString(aCommand)]);
+      end;
+end;
+
 // Select the section that owns aControl, then focus aControl itself.
 //
 // Extracted from ActivateSearchHit so the deep link (ControlForCommand, below)
@@ -8499,7 +8515,16 @@ begin
       // The STORE is the record now; CFGCA is where the value is applied.
       // Falling back to the live global covers the first run after upgrade,
       // when the store has nothing yet and the ini seeded the globals.
-      f.Edit.Text := StationCommandValue(FStore, f.Command);
+      //
+      // THROUGH CommandText, SO THE SNAPSHOT HOLDS IT (issue 319). This read
+      // StationCommandValue directly, so no Station row was in FLoaded and
+      // ApplyIfChanged wrote EVERY row on any save. MY ZONE's displayed value
+      // is often DERIVED (FCONTEST.RecalculateMyCountryContinentAndZoneNew,
+      // in the contest's zone mode -- an ITU zone in CW Open and EUHFC), and
+      // writing it back through the MY ZONE command latched it as STATED:
+      // W1AW's QSOs captured my_cq_zone 8 (its ITU zone) after a save that
+      // changed only MY NAME. MY COUNTRY was latched the same way.
+      f.Edit.Text := LclText(CommandText(f.Command));
       end;
 
    // Continent is a ckList: the value is a SPELLING in ContinentTypeSA, and the

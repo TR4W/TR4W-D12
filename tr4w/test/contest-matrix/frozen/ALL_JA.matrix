@@ -151,7 +151,7 @@ imp zone.cqz+ituz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp society | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=59 DARC operator=K0AAA cty=K/8/NorthAmerica/W1
 imp n1mm.hq | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=59 RSGB operator=K0AAA cty=K/8/NorthAmerica/W1
 imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 nr.sent=12 nr.rcvd=45 tenten=1234 qth=XYZ domqth=XYZ exch=45 XYZ check=99 prec=A name=JOE power=100 operator=K0AAA cty=K/8/NorthAmerica/W1
-imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 domqth=45 exch=JOE 45 name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
+imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 domqth=45 dommultqth=45 exch=JOE 45 name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
 imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 domqth=JOE PA exch=JOE PA name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
 imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=FL operator=K0AAA cty=K/8/NorthAmerica/K4
 imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 exch=45 operator=K0AAA cty=DL/28/Europe/DL1
@@ -496,7 +496,7 @@ imp zone.cqz+ituz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp society | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=59 DARC operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp n1mm.hq | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=59 RSGB operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 nr.sent=12 nr.rcvd=45 tenten=1234 qth=XYZ domqth=XYZ exch=45 XYZ check=99 prec=A name=JOE power=100 operator=VE3AAA cty=K/8/NorthAmerica/W1
-imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 domqth=45 exch=JOE 45 name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 domqth=45 dommultqth=45 exch=JOE 45 name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 domqth=JOE PA exch=JOE PA name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=FL operator=VE3AAA cty=K/8/NorthAmerica/K4
 imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 exch=45 operator=VE3AAA cty=DL/28/Europe/DL1
@@ -839,7 +839,7 @@ imp zone.cqz+ituz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp society | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=59 DARC operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp n1mm.hq | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=59 RSGB operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 nr.sent=12 nr.rcvd=45 tenten=1234 qth=XYZ domqth=XYZ exch=45 XYZ check=99 prec=A name=JOE power=100 operator=DL1AAA cty=K/8/NorthAmerica/W1
-imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 domqth=45 exch=JOE 45 name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 domqth=45 dommultqth=45 exch=JOE 45 name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 domqth=JOE PA exch=JOE PA name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=FL operator=DL1AAA cty=K/8/NorthAmerica/K4
 imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 exch=45 operator=DL1AAA cty=DL/28/Europe/DL1

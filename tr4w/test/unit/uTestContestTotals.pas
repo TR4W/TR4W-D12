@@ -77,6 +77,8 @@ type
       procedure Test_IdahoHasATableForTheCurrentYear;
       procedure Test_QSOCountsTowardTotals;
       procedure Test_SummarySheetCountsWhatTheTotalsCount;
+      procedure Test_SummarySheetCountsQTCsByDirection;
+      procedure Test_SummaryTableHeaderEndsOverItsNumbers;
       procedure Test_RescoredXQSOKeepsNoScoring;
       procedure Test_ApplicationViewIsTheLoadersSet;
       procedure Test_NewClassesScoreTheirArms;
@@ -1124,6 +1126,81 @@ begin
    SetLength(GSummaryRecords, 0);
 end;
 
+(* THE SUMMARY SHEET COUNTS QTCs BY DIRECTION (issue 182): one record per QTC,
+   rkQTCS sent and rkQTCR received, a deleted one in neither. None of them is a
+   QSO, so the QSO columns stay as the one real QSO left them. *)
+procedure TContestTotalsTests.Test_SummarySheetCountsQTCsByDirection;
+var
+   savedContest: TContestHandle;
+begin
+   BeginTest('Test_SummarySheetCountsQTCsByDirection');
+
+   SetLength(GSummaryRecords, 6);
+   GSummaryRecords[0] := LoggedQSO('DL1ABC', Band20, CW);
+   GSummaryRecords[1] := LoggedQSO('DL1ABC', Band20, CW);
+   GSummaryRecords[1].ceRecordKind := rkQTCS;
+   GSummaryRecords[2] := LoggedQSO('DL1ABC', Band20, CW);
+   GSummaryRecords[2].ceRecordKind := rkQTCS;
+   GSummaryRecords[3] := LoggedQSO('DL2XYZ', Band20, CW);
+   GSummaryRecords[3].ceRecordKind := rkQTCR;
+   GSummaryRecords[4] := LoggedQSO('DL3DEL', Band20, CW);
+   GSummaryRecords[4].ceRecordKind := rkQTCS;
+   GSummaryRecords[4].ceQSO_Deleted := True;
+   GSummaryRecords[5] := LoggedQSO('DL4DEL', Band20, CW);
+   GSummaryRecords[5].ceRecordKind := rkQTCR;
+   GSummaryRecords[5].ceQSO_Deleted := True;
+
+   savedContest := Contest;
+   try
+      Contest := ContestHandleOf(CQWWCW);
+      GSummaryNext := 0;
+      TallySummaryTotals(@NextSummaryRecord);
+
+      CheckEquals(2, SummaryQTCsSent, 'two QTCs sent; the deleted one is not counted');
+      CheckEquals(1, SummaryQTCsReceived, 'one QTC received; the deleted one is not counted');
+      CheckEquals(1, RawQSOTotals[AllBands, Both], 'the QTC records are not QSOs');
+
+      (* A SECOND TALLY STARTS FROM ZERO, as every other summary count does. *)
+      SetLength(GSummaryRecords, 0);
+      GSummaryNext := 0;
+      TallySummaryTotals(@NextSummaryRecord);
+      CheckEquals(0, SummaryQTCsSent, 'zeroed by the next tally');
+      CheckEquals(0, SummaryQTCsReceived, 'zeroed by the next tally');
+   finally
+      Contest := savedContest;
+      SetLength(GSummaryRecords, 0);
+   end;
+end;
+
+(* THE BAND TABLE'S COLUMN NAMES END OVER THEIR NUMBERS (issue 177). The
+   header ended two and three characters left of the figures under it, which
+   the fixed-pitch preview shows as a ragged table. Pinned by right edges, the
+   way the eye reads a column of numbers. *)
+procedure TContestTotalsTests.Test_SummaryTableHeaderEndsOverItsNumbers;
+var
+   row: string;
+
+   function RightEdge(const aText, aOf: string): integer;
+   begin
+      Result := Pos(aOf, aText) + Length(aOf) - 1;
+   end;
+
+begin
+   BeginTest('Test_SummaryTableHeaderEndsOverItsNumbers');
+
+   row := string(SummaryTableRow('160', 'CW', 123, 4567, 89012));
+   CheckEquals(RightEdge(SUMMARY_TABLE_HEADER, 'Raw QSOs'), RightEdge(row, '123'),
+               'Raw QSOs ends over the raw count');
+   CheckEquals(RightEdge(SUMMARY_TABLE_HEADER, 'Valid QSOs'), RightEdge(row, '4567'),
+               'Valid QSOs ends over the valid count');
+   CheckEquals(RightEdge(SUMMARY_TABLE_HEADER, 'Points'), RightEdge(row, '89012'),
+               'Points ends over the points');
+   CheckEquals(RightEdge(SUMMARY_TABLE_HEADER, 'BAND'), RightEdge(row, '160'),
+               'BAND ends over the band');
+   CheckEquals(Length(SUMMARY_TABLE_HEADER), Length(row),
+               'the header is as wide as a row, so a multiplier column starts at the same place in both');
+end;
+
 (* A RESCORED X-QSO KEEPS NO SCORING (Q51; 8.2v's finding): the rescore's
    X-QSO arm (MainUnit.tUpdateLog) zeroed the points and the dupe and left
    the stored multiplier flags set, so a reader of DXMult/ZoneMult could
@@ -1315,8 +1392,11 @@ begin
          station, VA7ODX, will be worth an additional 20 points." Wisconsin
          at round 2: "Add 100 points for each time you work W9FK on each band
          and mode below 50Mhz." West Virginia joined at #131: W8WVA pays
-         100 points once per band and mode, after multiplying. *)
-      CheckEquals('AR-QSO-PARTY|BCQP|KY-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
+         100 points once per band and mode, after multiplying. Kansas at
+         issue 121: "a one-time bonus of 100 points for contacting KS0KS".
+         South Carolina at issue 111 (rules 9.3): W4CAE 350, WW4SF and K4YTZ
+         250, once per band per mode. *)
+      CheckEquals('AR-QSO-PARTY|BCQP|KS-QSO-PARTY|KY-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
                   'the contests that declare bonus stations');
    finally
       declaring.Free;
@@ -1347,6 +1427,8 @@ begin
    Test_IdahoHasATableForTheCurrentYear;
    Test_QSOCountsTowardTotals;
    Test_SummarySheetCountsWhatTheTotalsCount;
+   Test_SummarySheetCountsQTCsByDirection;
+   Test_SummaryTableHeaderEndsOverItsNumbers;
    Test_RescoredXQSOKeepsNoScoring;
    Test_ApplicationViewIsTheLoadersSet;
    Test_NewClassesScoreTheirArms;

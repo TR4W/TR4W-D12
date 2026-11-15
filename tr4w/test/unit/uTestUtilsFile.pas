@@ -26,6 +26,10 @@ type
    protected
       // Write s via sWriteFileFromString, read the raw file back as a string.
       function RoundTrip(const s: AnsiString): AnsiString;
+      function FileText(const aName: string): AnsiString;
+      procedure Test_ReportFile_KeptOnlyWhenComplete;
+      procedure Test_ReportFile_FailedWriteKeepsTheOldFile;
+      procedure Test_ReportFile_UnopenableFolderSaysWhy;
 
       procedure Test_LongString_NoTruncationOrGarbage;
       procedure Test_BoundaryLengths_255_256_257;
@@ -142,8 +146,102 @@ begin
    CheckEquals(0, Length(got), 'empty string produces a 0-byte file');
 end;
 
+function TUtilsFileTests.FileText(const aName: string): AnsiString;
+var
+   h   : THandle;
+   got : Integer;
+begin
+   Result := '';
+   h := FileOpen(aName, fmOpenRead or fmShareDenyNone);
+   if h = THandle(-1) then
+      begin
+      Exit;
+      end;
+   try
+      SetLength(Result, 4096);
+      got := FileRead(h, Result[1], Length(Result));
+      if got < 0 then
+         begin
+         got := 0;
+         end;
+      SetLength(Result, got);
+   finally
+      FileClose(h);
+   end;
+end;
+
+(* ISSUE 313: a good report is put in place whole, and the previous file is
+  replaced only then. *)
+procedure TUtilsFileTests.Test_ReportFile_KeptOnlyWhenComplete;
+var
+   target : string;
+   h      : THandle;
+begin
+   BeginTest('Test_ReportFile_KeptOnlyWhenComplete');
+   target := UniqueTempFileName('tr4wreport');
+   try
+      CheckTrue(OpenReportFile(h, target), 'the partial file opens');
+      CheckFalse(FileExists(target), 'nothing is at the target until the end');
+      CheckTrue(sWriteFileFromString(h, 'first'), 'the write succeeds');
+      CheckTrue(CloseReportFile(h, True), 'a complete report is kept');
+      CheckEquals('first', string(FileText(target)), 'the target holds it');
+      CheckFalse(FileExists(target + '.partial'), 'and no partial file is left');
+      CheckEquals('', ReportFileProblem, 'no problem was recorded');
+
+      CheckTrue(OpenReportFile(h, target), 'a second report opens');
+      CheckEquals('first', string(FileText(target)), 'the old file is untouched while it is written');
+      sWriteFileFromString(h, 'second');
+      CheckTrue(CloseReportFile(h, True), 'the second is kept');
+      CheckEquals('second', string(FileText(target)), 'and replaces the first');
+   finally
+      SysUtils.DeleteFile(target);
+      SysUtils.DeleteFile(target + '.partial');
+   end;
+end;
+
+(* A write that fails leaves the previous good file alone and says why. The
+  failure is made by writing through a handle that is already closed. *)
+procedure TUtilsFileTests.Test_ReportFile_FailedWriteKeepsTheOldFile;
+var
+   target : string;
+   h      : THandle;
+begin
+   BeginTest('Test_ReportFile_FailedWriteKeepsTheOldFile');
+   target := UniqueTempFileName('tr4wreport');
+   try
+      CheckTrue(OpenReportFile(h, target), 'opens');
+      sWriteFileFromString(h, 'good');
+      CheckTrue(CloseReportFile(h, True), 'the good report is kept');
+
+      CheckTrue(OpenReportFile(h, target), 'opens again');
+      FileClose(h);
+      CheckFalse(sWriteFileFromString(h, 'lost'), 'a write to a closed handle fails');
+      CheckTrue(ReportFileProblem <> '', 'and the reason is recorded');
+      CheckFalse(CloseReportFile(h, True), 'the report is not kept');
+      CheckEquals('good', string(FileText(target)), 'the previous good file is still there');
+      CheckFalse(FileExists(target + '.partial'), 'and the partial file is removed');
+   finally
+      SysUtils.DeleteFile(target);
+      SysUtils.DeleteFile(target + '.partial');
+   end;
+end;
+
+(* A folder that does not exist cannot be opened, and the reason is there. *)
+procedure TUtilsFileTests.Test_ReportFile_UnopenableFolderSaysWhy;
+var
+   h : THandle;
+begin
+   BeginTest('Test_ReportFile_UnopenableFolderSaysWhy');
+   CheckFalse(OpenReportFile(h, UniqueTempFileName('tr4wnone') + '.nodir' +
+                                PathDelim + 'x.adi'), 'a missing folder is refused');
+   CheckTrue(ReportFileProblem <> '', 'with a reason');
+end;
+
 procedure TUtilsFileTests.RunAllTests;
 begin
+   Test_ReportFile_KeptOnlyWhenComplete;
+   Test_ReportFile_FailedWriteKeepsTheOldFile;
+   Test_ReportFile_UnopenableFolderSaysWhy;
    Test_LongString_NoTruncationOrGarbage;
    Test_BoundaryLengths_255_256_257;
    Test_ShortString;

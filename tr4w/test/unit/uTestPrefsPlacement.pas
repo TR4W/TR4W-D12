@@ -46,6 +46,7 @@ type
       procedure CheckEmptyLeavesSaySo(const aForm: TPrefsForm);
       procedure CheckKeyersUnderHardware(const aForm: TPrefsForm);
       procedure CheckLicenseYearHasItsOwnBox(const aForm: TPrefsForm);
+      procedure CheckStationRowsAreSnapshotted(const aForm: TPrefsForm);
       procedure CheckBoundControlsAreNamed(const aForm: TPrefsForm);
       procedure CheckStationCaptionsAreWindowsBeforeTheirInputs(const aForm: TPrefsForm);
       function CheckGeneratedLabelsFit(const aRoot: TWinControl): integer;
@@ -81,6 +82,7 @@ uses
    Classes,               (* TFPList -- the Station page's tab order *)
    uTestShowOffScreen,    (* ShowOffScreen -- handles exist only once shown *)
    uInputCaption,         (* TInputCaption -- the Station captions, issue 278 *)
+   uSettingsModel,        (* Settings.My.Name -- a Station row to judge, issue 319 *)
    VC;                    (* TR4W_INI_FILENAME *)
 
 const
@@ -703,6 +705,51 @@ begin
    end;
 end;
 
+(* ISSUE 319: EVERY STATION ROW THE PAGE SHOWS IS IN THE LOAD SNAPSHOT, so a
+  save writes only the rows the operator edited. LoadStationPanel read the
+  store directly and took no snapshot, so ApplyIfChanged wrote every Station
+  row on any save -- and the MY ZONE box, holding the zone DERIVED from MY CALL
+  in the contest's zone mode, was written back through the MY ZONE command and
+  latched as stated (W1AW's QSOs captured my_cq_zone 8 after a save that only
+  changed MY NAME). An EMPTY box is not judged: TStringList.Values drops a name
+  whose value is '', which is the snapshot's rule for every page, not this
+  defect. *)
+procedure TPrefsPlacementTests.CheckStationRowsAreSnapshotted(const aForm: TPrefsForm);
+const
+   COMMANDS: array[0..5] of string =
+      ('MY CALL', 'MY NAME', 'MY GRID', 'MY ZONE', 'MY STATE', 'MY COUNTRY');
+var
+   edits: array[0..5] of TEdit;
+   loaded: string;
+   i: integer;
+   judged: integer;
+begin
+   edits[0] := aForm.edtMyCall;
+   edits[1] := aForm.edtMyName;
+   edits[2] := aForm.edtMyGrid;
+   edits[3] := aForm.edtMyZone;
+   edits[4] := aForm.edtMyState;
+   edits[5] := aForm.edtMyCountry;
+
+   judged := 0;
+   for i := Low(COMMANDS) to High(COMMANDS) do
+      begin
+      if Trim(string(edits[i].Text)) = '' then
+         begin
+         Continue;
+         end;
+      Inc(judged);
+      CheckTrue(aForm.LoadedCommandValue(COMMANDS[i], loaded),
+                COMMANDS[i] + ' is in the load snapshot, so an unedited save does not write it');
+      CheckEquals(string(edits[i].Text), loaded,
+                  COMMANDS[i] + ': the snapshot is what the box shows');
+      end;
+
+   (* The caller states MY NAME before building the form, so at least that row
+     is judged; a pass that judged nothing would prove nothing. *)
+   CheckTrue(judged > 0, 'at least one Station row had a value to judge');
+end;
+
 (* THE REAL FORM, BUILT: exactly one editor per setting, counted on the
   controls rather than the table.  The settings file is REDIRECTED to an empty
   temp folder first, and the test refuses to build the form unless
@@ -711,6 +758,7 @@ end;
 procedure TPrefsPlacementTests.Test_TheBuiltFormHasOneEditorPerSetting;
 var
    oldIni, dir, fn: string;
+   oldMyName: string;
    oldProvider: TActiveStoreProvider;
    form: TPrefsForm;
    i: integer;
@@ -725,6 +773,7 @@ begin
    oldProvider := uSettingsLegacy.ActiveStoreProvider;
    dir  := CombinePath(TempDirectory, 'tr4wprefs_' + TGUID.NewGuid.ToString);
    form := nil;
+   oldMyName := Settings.My.Name;
    try
       SetCharBuffer(TR4W_INI_FILENAME, CombinePath(dir, 'tr4w.ini'));
       fn := TR4WConfigFileName;
@@ -734,6 +783,10 @@ begin
                           ') -- a --settings switch? The form is not built');
          Exit;
          end;
+
+      (* A STATION VALUE TO JUDGE -- issue 319's snapshot check needs a row
+        that is not empty. Restored in finally. *)
+      Settings.My.Name := 'ROWCHECK';
 
       form := TPrefsForm.Create(nil);
       CheckTrue(form.EditorsChecked > 0,
@@ -765,6 +818,7 @@ begin
       CheckKeyersUnderHardware(form);
 
       CheckLicenseYearHasItsOwnBox(form);
+      CheckStationRowsAreSnapshotted(form);
 
       CheckTrue(CheckGeneratedLabelsFit(form) > 0,
                 'the generated captions were found and judged (issue 304)');
@@ -773,6 +827,7 @@ begin
       CheckStationCaptionsAreWindowsBeforeTheirInputs(form);
    finally
       form.Free;
+      Settings.My.Name := oldMyName;
       uSettingsLegacy.ActiveStoreProvider := oldProvider;
       SetCharBuffer(TR4W_INI_FILENAME, oldIni);
       if DirectoryExists(dir) then

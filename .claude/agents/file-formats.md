@@ -359,6 +359,12 @@ multipliers, CTY.DAT, band lookup and CRC32.
   grid). Never read `Settings.My.State` for a sent exchange.
 - **`StateFromARRLSection` (`uARRLSections`) is the one section-to-state
   table** -- PostUnit's and Tree's layered copies were merged into it at M4.
+  Since issue 275 (2026-11-15) the one-province RAC sections (AB BC MB NB NL
+  NS PE QC SK) answer their province and GH answers ON; TER, NT, NWT, MDC, PR
+  and VI answer none (NY4I: a state only when certain). Field Day / Winter FD
+  ADIF therefore writes STATE for those VE QSOs. The N1MM UDP `<section>` is
+  NOT an ADIF field: it sends the resolved section only where the contest's
+  QTH is an ARRL section (`ExternalLoggerARRLSection`), else the QTH as logged.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 - **OUR STATION'S ADIF TAGS ARE THE RECORD'S, not the session's (log schema 3,

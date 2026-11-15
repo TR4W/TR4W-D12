@@ -10679,7 +10679,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Rádio 1:% 0:s% 1:s. Nome: \"%2:s\"."
+msgstr "Rádio 1: %0:s %1:sNome: \"%2:s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10824,7 +10824,7 @@ msgstr "Mostre os detalhes."
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Serial:% 0:s baud,% 1:s, RTS% 2:s, DTR% 3:s"
+msgstr "   Serial: %0:s Baud, %1:sRTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -10839,7 +10839,7 @@ msgstr "   Senha da rede: definida"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Perspectivas de frequência:"
+msgstr "   Pesquisa de frequência: %0:s, cada %1:s Ms."
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -10854,7 +10854,7 @@ msgstr "   Comando inicial: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Modo% 0:s, sideton% 1:s"
+msgstr "   Modo %0:s, sidetone %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -10904,11 +10904,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Esta cópia do TR4W parece incompletamente instalada.\n"
-"\n"
-"Não encontrado em% 0:\n"
-"% 1:s\n"
-"\n"
-"Iniciar TR4W da pasta que o instalador colocou (ele mantém CTY.DAT, TRMASTER.DTA e uma pasta dom), ou executar o instalador novamente.\n"
-"\n"
-"TR4W ainda vai começar, mas concursos que precisam desses arquivos não funcionarão corretamente."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "O arquivo %0:s NÃO foi escrito: %1:sUm arquivo anterior desse nome, se houvesse, não mudou."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Não enviado para as outras estações: o texto é %0:d bytes e a rede carrega %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Entendido."
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d Deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Troca de comentários."
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Língua:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Faz efeito quando o TR4W começar."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Você é visto por %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

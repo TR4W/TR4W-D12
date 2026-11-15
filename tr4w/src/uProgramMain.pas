@@ -2816,6 +2816,14 @@ begin
      // tSilentExport was set when the logger was created -- see there for why.
      ExportToADIF;
      CreateCabrilloFile;
+     (* THE EXIT CODE SAYS WHETHER THE FILES WERE WRITTEN (issue 313): 2 when
+       either export could not be, /RESCORE's and /IMPORT's convention. It was
+       0 whatever happened. *)
+     if LastExportFailed then
+        begin
+        EarlyTrace('[Export] FAILED: a file could not be written. See tr4w.log.');
+        Halt(2);
+        end;
      Halt(0);
      end;
 

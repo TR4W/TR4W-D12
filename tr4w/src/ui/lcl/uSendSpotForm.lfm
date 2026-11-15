@@ -1,12 +1,12 @@
 object frmSendSpot: TfrmSendSpot
   Left = 0
-  Height = 175
+  Height = 199
   Top = 0
   Width = 300
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Send spot'
-  ClientHeight = 175
+  ClientHeight = 199
   ClientWidth = 300
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
@@ -73,24 +73,35 @@ object frmSendSpot: TfrmSendSpot
     TabOrder = 3
     OnChange = chkContestNameChange
   end
+  object chkExchange: TCheckBox
+    Left = 10
+    Height = 20
+    Top = 128
+    Width = 200
+    AutoSize = True
+    Caption = 'Exchange in comment'
+    Constraints.MinWidth = 200
+    TabOrder = 4
+    OnChange = chkExchangeChange
+  end
   object btnOK: TButton
     Left = 65
     Height = 25
-    Top = 138
+    Top = 162
     Width = 80
     Caption = 'OK'
     Default = True
-    TabOrder = 4
+    TabOrder = 5
     OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 155
     Height = 25
-    Top = 138
+    Top = 162
     Width = 80
     Cancel = True
     Caption = 'Cancel'
-    TabOrder = 5
+    TabOrder = 6
     OnClick = btnCancelClick
   end
 end

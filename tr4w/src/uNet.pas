@@ -1886,7 +1886,10 @@ begin
       if first then
          begin
          logger.Error('[Net] Tailcat: %s', [why]);
-         showwarning(UnicodeFormat(SNetTailcatFailed, [why]));
+         (* A NOTICE ON THE MAIN WINDOW, NOT A MODAL BOX (issue 316): a link that
+           cannot come up is a status, as it is without Tailcat. QuickDisplay
+           defers an off-thread write to the main thread. *)
+         QuickDisplay(UnicodeFormat(SNetTailcatFailed, [why]));
          end
       else
          begin
@@ -2659,6 +2662,14 @@ begin
      leaves no tail of an earlier, longer message behind, and the assignment
      truncates at 80. *)
    packet := Default(TIntercomMessage);
+   if Length(AnsiString(aText)) > SizeOf(packet.imMessage) - 1 then
+      begin
+      (* NEVER CUT SILENTLY, possibly in the middle of a UTF-8 character
+        (issue 315): say so and send nothing. *)
+      QuickDisplayError(UnicodeFormat(SNetTextTooLong,
+                        [Length(AnsiString(aText)), SizeOf(packet.imMessage) - 1]));
+      Exit;
+      end;
    packet.imID := NET_INTERCOMMESSAGE_ID;
    packet.imSender := Settings.Computer.Id;
    packet.imMessage := ShortString(AnsiString(aText));
@@ -2681,12 +2692,15 @@ begin
    packet := Default(TSendSpotViaNetwork);
    packet.vnID := NET_SPOTVIANETWORK_ID;
    text := AnsiString(aSpotText);
+   if Length(text) > SizeOf(packet.vnMessage) - 1 then
+      begin
+      (* NEVER CUT SILENTLY (issue 315): say so and send nothing. *)
+      QuickDisplayError(UnicodeFormat(SNetTextTooLong,
+                        [Length(text), SizeOf(packet.vnMessage) - 1]));
+      Exit;
+      end;
    for i := 1 to Length(text) do
       begin
-      if i > SizeOf(packet.vnMessage) - 1 then
-         begin
-         Break;
-         end;
       packet.vnMessage[i - 1] := text[i];
       end;
    SendToNet(packet, SizeOf(packet));

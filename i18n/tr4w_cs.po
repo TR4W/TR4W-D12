@@ -10811,7 +10811,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "DX cluster \"% 0: s\":% 1: s, přihlášení jako% 2: s."
+msgstr "DX cluster \"%0:s\": %1:s, přihlášení jako %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10821,7 +10821,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "WinKeyer \"%0: s\" na%1: s, používá se pro CW v rádiu1."
+msgstr "WinKeyer \"%0:s\"on %1:s, používané pro CW v rádiu1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10843,7 +10843,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Rádio 1:% 0: s% 1: s. Název: \"% 2: s\"."
+msgstr "Rádio 1: %0:s %1:sJméno: \"%2:s. \""
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10988,7 +10988,7 @@ msgstr "Zobrazit podrobnosti"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Pořadové číslo:% 0: s baud,% 1: s, RTS% 2: s, DTR% 3: s"
+msgstr "   Pořadové: %0:s Baude, %1:s, RTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -11003,7 +11003,7 @@ msgstr "   Síťové heslo: nastaveno"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Četnost hlasování:% 0: s, každý% 1: s ms"
+msgstr "   Frekvenční hlasování: %0:s, every %1:s ms"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -11018,7 +11018,7 @@ msgstr "   Příkaz spuštění: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Režim% 0: s, bočnice% 1: s"
+msgstr "   Režim %0:s, sidtone %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -11068,11 +11068,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Tato kopie TR4W vypadá nekompletně nainstalovaná.\n"
-"\n"
-"Nenalezeno v% 0: s:\n"
-"% 1: s\n"
-"\n"
-"Spustit TR4W ze složky, do které ji instalovatel vložil (drží CTY.DAT, TRMASTER.DTA a domácí složku), nebo jej znovu spustit.\n"
-"\n"
-"TR4W stále začne, ale soutěže, které potřebují tyto soubory nebudou fungovat správně."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Soubor %0:s nebylo psáno: %1:sPředchozí soubor toho jména, pokud nějaký byl, se nemění."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Neodeslané do ostatních stanic: text je %0:d bytes a síť přenáší %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Kopírovat místo"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Výměna informací"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Jazyk:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Nabývá účinku, když TR4W příště začne."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Jste spatřeni %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

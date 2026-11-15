@@ -24,8 +24,15 @@ unit uRadioTenTecOmni6;
   the full modern Icom profile MINUS the unselected-VFO read ($25/$26) and the
   RIT read, because this model is absent from LOGRADIO's
   IcomRadiosThatSupportVFOB and IcomRadiosThatSupportRIT.  Split ($0F), TX status
-  ($1C), the $06 filter byte and the $1A06 data-mode probe all stay -- D7 does
-  all four for every Icom except the IC-718.
+  ($1C) and the $1A06 data-mode probe stay.
+
+  THE $06 FILTER BYTE IS DROPPED IN CW (issue 181).  This header used to say D7
+  sent it for every Icom but the IC-718; it did not.  D7's SetRadioFreq had
+  `if (RadioModel = OMNI6) and (Mode = CW)` -> a frame with no filter byte
+  (n4af 4.43.3), and the D7 report that became issue 181 ("Orion and Omni
+  mode change ALT-M does not work") names the Omni.  FCWModeSetOmitsFilter
+  carries that arm; phone and the other modes keep the filter byte, as in D7.
+  NOT BENCHED: no Omni VI was available.
 
   Legacy default baud: 9600 (the operator sets this in the CAT dialog; recorded
   here because it is easy to lose once RadioParametersArray retires).
@@ -57,6 +64,8 @@ begin
    inherited Create;
    RadioAddress := $04;
    radioModel := 'Ten-Tec Omni VI (CI-V)';
+   // CW mode set is $06 <mode> with no filter byte -- see the unit header.
+   FCWModeSetOmitsFilter := True;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

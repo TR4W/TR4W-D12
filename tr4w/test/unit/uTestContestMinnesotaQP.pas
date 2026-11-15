@@ -62,6 +62,7 @@ type
       procedure Test_MinnesotaCountyLineIsTwoCounties;
       procedure Test_MinnesotaRoverInANewCountyIsANewStation;
       procedure Test_MinnesotaRealEngine;
+      procedure CheckMinnesotaDXHint;
    end;
 
 implementation
@@ -320,6 +321,65 @@ begin
              'outside MN a county counts');
 end;
 
+(* A fixed country for the hint test's calls, so it needs no country file. *)
+function MinnesotaStubCountry(const aCall: string): string;
+begin
+   Result := '';
+   if aCall = 'DL1ABC' then
+      begin
+      Result := 'DL';
+      end
+   else if aCall = 'W1AW' then
+      begin
+      Result := 'K';
+      end
+   else if aCall = 'VE3ABC' then
+      begin
+      Result := 'VE';
+      end;
+end;
+
+(* ISSUE 211: a DX call's remembered exchange maps nothing, so the "Mult
+   needs for" header names the call and the strip asks the class's
+   DomesticMultiplierFromCall -- which answers the one DX key in state, from
+   the same predicate the scoring asks, and nothing outside. *)
+procedure TContestMinnesotaQPTests.CheckMinnesotaDXHint;
+var
+   contestObject: TContestBase;
+   lookups: TMultiplierHintLookups;
+begin
+   lookups := Default(TMultiplierHintLookups);
+   lookups.CountryOfCall := @MinnesotaStubCountry;
+   contestObject := MakeMinnesota(StationAt(True));
+   try
+      CheckEquals(MN_DX_MULTIPLIER_KEY, contestObject.DomesticMultiplierFromCall('DL1ABC', lookups),
+                  'in MN a DX call implies the DX multiplier');
+      CheckEquals('', contestObject.DomesticMultiplierFromCall('W1AW', lookups),
+                  'a US call implies none');
+      CheckEquals('', contestObject.DomesticMultiplierFromCall('VE3ABC', lookups),
+                  'nor a Canadian');
+      CheckEquals('', contestObject.DomesticMultiplierFromCall('ZZ9ZZZ', lookups),
+                  'nor a call never located');
+   finally
+      contestObject.Free;
+   end;
+   contestObject := MakeMinnesota(StationAt(False));
+   try
+      CheckEquals('', contestObject.DomesticMultiplierFromCall('DL1ABC', lookups),
+                  'outside MN there is no DX multiplier to hint');
+   finally
+      contestObject.Free;
+   end;
+   lookups.CountryOfCall := nil;
+   contestObject := MakeMinnesota(StationAt(True));
+   try
+      CheckEquals('', contestObject.DomesticMultiplierFromCall('DL1ABC', lookups),
+                  'no country service, no hint');
+   finally
+      contestObject.Free;
+   end;
+end;
+
 (* "Minnesota stations may work DXCC countries for points and receive 1
    multiplier for working a DX station." ONE DOMESTIC multiplier,
    MN_DX_MULTIPLIER_KEY, written by ScoreQSO as the QSO's DomMultQTH for every
@@ -374,6 +434,7 @@ begin
       crosses it off; a typed DX resolves to it too. *)
    CheckEquals(MN_DX_MULTIPLIER_KEY, InStateMultiplierOf(MinnesotaHandle, 'DX'),
                'minnesota.dom''s DX entry is the class''s key');
+   CheckMinnesotaDXHint;
 end;
 
 (* "MN Stations: First name & county (three letter designator)." The session

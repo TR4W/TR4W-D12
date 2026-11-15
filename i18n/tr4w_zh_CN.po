@@ -10141,7 +10141,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "DX 集群 “% 0: s ” :% 1 : s, 登录为% 2 : s 。"
+msgstr "DX集群 \"%0:s\" : %1:s,登录为 %2:s。 。 。 。"
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10151,7 +10151,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "% 1 上的 WinKeyer \"% 0: s\" : s, 用于无线电 1 中的 CW 。"
+msgstr "温凯尔 \"%0:s\" 打开 %1:s,用于无线电1中的CW."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10173,7 +10173,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "电台1:% 0:s% 1:s. 名称:% 2:s."
+msgstr "电台1: %0:s %1:s名称: \"%2:s\" .."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10318,7 +10318,7 @@ msgstr "显示细节"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   串数 :% 0:s baud,% 1:s, RTS% 2:s, DTR% 3:s"
+msgstr "   串数 : %0:s 鲍德, %1:s,RTS 数据 %2:s, DTR 软件 %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -10333,7 +10333,7 @@ msgstr "   网络密码: 设置"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   投票频率:% 0:s, 每一次% 1:s"
+msgstr "   投票频率: %0:s,每个 %1:s 分钟"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -10348,7 +10348,7 @@ msgstr "   启动命令 : %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   模式% 0:s, 侧式% 1 :s"
+msgstr "   模式 %0:s边音 %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -10398,11 +10398,49 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"TR4W的这个副本看起来安装不全.\n"
-"\n"
-"在% 0: s 中找不到 :\n"
-"% 1 个:\n"
-"\n"
-"从安装器放入的文件夹中启动 TR4W( 它持有 CTY. DAT, TRMASTER. DTA 和一个 dom 文件夹), 或再次运行安装器 。\n"
-"\n"
-"TR4W仍然会开始,但需要这些文件的比赛不会正常进行."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "文件 %0:s 未写入 : %1:s。如果有,则该名称的早期文件保持不变。"
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "未发往其他台站:文本为 %0:d 字节和网络携带 %1:d。 。 。 。"
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "复制点"
+
+# mt-seed: skip -- 2026-11-15 engine inserted unrelated text (thousand USD); translate by hand
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr ""
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "交换评论意见"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "语言 :"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "当TR4W下次开始时生效。"
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "你被发现 %s。 。 。 。"
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

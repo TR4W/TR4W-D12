@@ -39,6 +39,7 @@ type
       procedure Test_UnopenablePathDoesNotRaise;
       procedure Test_LoggingWithNoFileDoesNotRaise;
       procedure Test_ReopensOnceThePathIsUsable;
+      procedure Test_AFailedWriteDoesNotRaise;
    end;
 
 implementation
@@ -164,8 +165,68 @@ begin
    end;
 end;
 
+(* ISSUE 312: A WRITE THAT FAILS -- A FULL DISK -- IS COUNTED, NOT RAISED. The
+  stream here refuses every write the way a full volume does, and a log call
+  over it must come back. *)
+type
+   TRefusingStream = class(TStream)
+   public
+      function Read(var Buffer; Count: Longint): Longint; override;
+      function Write(const Buffer; Count: Longint): Longint; override;
+      function Seek(Offset: Longint; Origin: Word): Longint; override;
+   end;
+
+function TRefusingStream.Read(var Buffer; Count: Longint): Longint;
+begin
+   Result := 0;
+end;
+
+function TRefusingStream.Write(const Buffer; Count: Longint): Longint;
+begin
+   raise EWriteError.Create('There is not enough space on the disk');
+   Result := 0;
+end;
+
+function TRefusingStream.Seek(Offset: Longint; Origin: Word): Longint;
+begin
+   Result := 0;
+end;
+
+procedure TLog4DFileAppenderTests.Test_AFailedWriteDoesNotRaise;
+var
+   appender: TLogStreamAppender;
+   keep:     ILogAppender;
+   lg:       TLogLogger;
+begin
+   appender := TLogStreamAppender.Create('refusing', TRefusingStream.Create,
+                                         TLogSimpleLayout.Create);
+   keep := appender;
+   lg := TLogLogger.GetLogger('Log4DFileAppenderTests.Refusing');
+   try
+      lg.Additive := False;
+      lg.Level := All;
+      lg.AddAppender(keep);
+      try
+         lg.Error('the first line the disk will not take');
+         lg.Error('and a second');
+         Check(True);
+      except
+         on E: Exception do
+            begin
+            Check(False, 'a refused write raised out of the logger: ' + E.ClassName + ': ' + E.Message);
+            end;
+      end;
+      CheckEquals(2, appender.WriteFailures, 'both failures are counted');
+      CheckTrue(appender.LastWriteError <> '', 'and the reason is kept');
+   finally
+      lg.RemoveAllAppenders;
+      keep := nil;
+   end;
+end;
+
 procedure TLog4DFileAppenderTests.RunAllTests;
 begin
+   Test_AFailedWriteDoesNotRaise;
    Test_UnopenablePathDoesNotRaise;
    Test_LoggingWithNoFileDoesNotRaise;
    Test_ReopensOnceThePathIsUsable;

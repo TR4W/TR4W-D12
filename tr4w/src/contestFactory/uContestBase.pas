@@ -1369,6 +1369,12 @@ type
          offered one row with a comment. *)
       procedure AskFieldWithCommentWhenInside(const aComment: string;
                                               aField: TNewContestField);
+      (* The same, with the row labelled aRowLabel -- see
+         TNewContestPrompt.RowLabel (issue 51: a club membership number
+         asked under a MY STATE label). *)
+      procedure AskFieldWithCommentAndLabelWhenInside(const aComment: string;
+                                                      aField: TNewContestField;
+                                                      const aRowLabel: string);
 
       function ChoiceCount: integer;
       function Choice(aIndex: integer): TNewContestPrompt;
@@ -2241,6 +2247,24 @@ type
          TRUE for every mode: "no contest"'s answer, and the start of the
          ratchet in uTestContestStatesItsRules. *)
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; virtual;
+
+      (* DOES THIS CONTEST CREDIT THIS BAND IN THIS MODE? -- issue 269
+         (Vermont, NY4I 2026-11-15: "allow the ft8 and ft4 contacts on the
+         other bands").
+
+         UsesBand and UsesMode are asked apart, so "30 m, but only on FT8"
+         could not be said. A contest whose band rule depends on the mode
+         credits the band in UsesBand and refuses the other modes here.
+         Asked ONCE, by QSOIsOffContest, beside them: a QSO it refuses is an
+         automatic X-QSO, so ScoreQSO, SetMultFlags, the totals and the dupe
+         sheet all follow, as they do for an off-band QSO.
+
+         eNoMode and eData mean "some submode", as for UsesMode. AN IDENTITY
+         FACT. THE BASE ANSWERS TRUE: every band UsesBand credits is credited
+         in every mode UsesMode credits, which is what every contest did
+         before this existed. *)
+      function UsesBandInMode(aBand: BandType; aMode: ModeType;
+                              aExtMode: ExtendedModeType): boolean; virtual;
 
       (* DOES THIS QSO EARN A MULTIPLIER OF THIS KIND AT ALL? -- M8,
          2026-10-02: stage 2 of design 7.7, "the contest DECLARES the rules;
@@ -6303,6 +6327,9 @@ begin
    Result := (not ContestCreditsBand(aContest, aQso.Band))                  or
              (not ContestCreditsMode(aContest, aQso.Mode, aQso.ExtMode))    or
              ((aContest <> nil)                                and
+              (not aContest.UsesBandInMode(aQso.Band, aQso.Mode,
+                                           aQso.ExtMode)))                  or
+             ((aContest <> nil)                                and
               aContest.HasStation                              and
               (not aContest.CreditsWorkedStation(aQso)));
 end;
@@ -6579,6 +6606,13 @@ function TContestBase.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boo
 begin
    (* Every mode, as before -- see the declaration. "No contest"'s answer;
       a contest states its own (Q98). *)
+   Result := True;
+end;
+
+function TContestBase.UsesBandInMode(aBand: BandType; aMode: ModeType;
+                                     aExtMode: ExtendedModeType): boolean;
+begin
+   (* No band rule that depends on the mode -- see the declaration. *)
    Result := True;
 end;
 
@@ -7141,20 +7175,24 @@ begin
             for state QSO parties. Prefer it when present: the alpha-prefix
             of SRX_STRING below was already unreliable, and now fails
             outright because SRX_STRING is normalised to include a leading
-            RST ("59 MON") on export. *)
-         aExch.DomesticQTH := aExch.QTHString;
+            RST ("59 MON") on export.
+            RESOLVED, NOT COPIED (issue 275 item 2, the QSO-party half of
+            issue 265): ImportDomesticQTH stores what typed entry stores --
+            an alias as the file's QTH and its multiplier key -- and keeps
+            the text as written when the table does not know it. *)
+         ImportDomesticQTH(aSession, string(aExch.QTHString), aExch);
          end
       else
          begin
          (* Legacy fallback for an import that lacks a QTH tag: the ALPHA
-            prefix of SRX_STRING. *)
+            prefix of SRX_STRING, resolved the same way. *)
          j := 1;
          while (j <= Length(aTemps.SRX_String)) and
                not (aTemps.SRX_String[j] in ['0'..'9']) do
             begin
             Inc(j);
             end;
-         aExch.DomesticQTH := ShortString(Copy(aTemps.SRX_String, 1, j - 1));
+         ImportDomesticQTH(aSession, Copy(aTemps.SRX_String, 1, j - 1), aExch);
          end;
       end
    else
@@ -7756,6 +7794,13 @@ end;
 
 procedure TNewContestPrompts.AskFieldWithCommentWhenInside(const aComment: string;
                                                            aField: TNewContestField);
+begin
+   AskFieldWithCommentAndLabelWhenInside(aComment, aField, '');
+end;
+
+procedure TNewContestPrompts.AskFieldWithCommentAndLabelWhenInside(const aComment: string;
+                                                                   aField: TNewContestField;
+                                                                   const aRowLabel: string);
 var
    n: integer;
 begin
@@ -7764,7 +7809,7 @@ begin
    FWhenInside[n].Kind := npkFieldWithComment;
    FWhenInside[n].Field := aField;
    FWhenInside[n].Text := aComment;
-   FWhenInside[n].RowLabel := '';
+   FWhenInside[n].RowLabel := aRowLabel;
 end;
 
 function TNewContestPrompts.ChoiceCount: integer;

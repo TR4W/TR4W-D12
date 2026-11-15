@@ -725,6 +725,12 @@ resourcestring
      160-pixel column already shows. *)
    SNewContestQTHOrMemberLabel = 'MY QTH OR MEMBER NO';
 
+   (* THE CLUB MEMBERSHIP-NUMBER ROW'S LABEL (issue 51): PCC and Arktika
+     Spring ask a club member for its number, and the row read MY STATE. The
+     number is still kept in MY STATE and queued as MY STATE; this is only
+     what the operator reads (TNewContestPrompt.RowLabel). *)
+   SNewContestMemberNumberLabel = 'MY MEMBER NO';
+
    (* THE NAME-AND-QTH PROMPT WITHOUT A MEMBER NUMBER (issue 290,
      2026-11-12): the Locust QSO Party and the NCCC Sprint showed the CWT's
      TC_ENTERYOURNAMEANDQTH, which ends 'or member number', and neither
@@ -1262,6 +1268,14 @@ resourcestring
       %0:s is the setting's name, %1:d its length, %2:d the limit. The setting
       is still changed on this station. *)
    SNetParameterTooLong       = '%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d.';
+   (* On the status line when an intercom line or a spot text is too long for its
+      network packet (issue 315): %0:d is its length in bytes, %1:d the limit.
+      Nothing was sent. *)
+   (* An export, report or Cabrillo file could not be written (issue 313): %0:s
+      is the file, %1:s the reason in the system's words. Any earlier file of
+      that name is unchanged. *)
+   SExportNotWritten          = 'The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged.';
+   SNetTextTooLong            ='Not sent to the other stations: the text is %0:d bytes and the network carries %1:d.';
 
    (* WHAT THE RECEIVED EXCHANGE HOLDS, IN WORDS (issue 296) -- one phrase per
       field the open contest marks (TContestBase.ReceivedExchangeFields), put
@@ -1405,6 +1419,19 @@ resourcestring
    SWizResApplyFailed    = 'Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences.';
    SWizResNotSaved       = 'The radio, keyer and cluster were not saved: %s';
    SWizPrefsOpen         = 'Close Preferences first, so the setup wizard and Preferences do not overwrite each other''s changes.';
+
+   (* THE BAND MAP. The right-click item that copies the selected spot as
+      "CALL [entity] freq comment" (issue 183), and the country panel with the
+      beam heading to the spotted call (issue 186): %0:s is the country's
+      name, %1:d the heading in degrees. *)
+   SBandMapCopySpot       = 'Copy spot';
+   SBandMapCountryHeading = '%0:s  (%1:d deg)';
+   (* SEND SPOT: the tick that puts the station's section (or other domestic
+      multiplier) the program knows for the call into the comment (issue 175). *)
+   SSendSpotExchangeInComment = 'Exchange in comment';
+   (* THE DX CLUSTER SPOTTED THIS STATION (issue 68): %s is the call of the
+      station that posted the spot, as the cluster gave it. *)
+   SYouAreSpottedBy = 'You are spotted by %s.';
 
 implementation
 

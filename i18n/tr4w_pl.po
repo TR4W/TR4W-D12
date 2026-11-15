@@ -14265,7 +14265,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "Klaster DX \"% 0: s\":% 1: s, logowanie jako% 2: s."
+msgstr "Klaster DX \"%0:s\": %1:s, logowanie się jako %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -14275,7 +14275,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "WinKeyer \"% 0: s\" na% 1: s, stosowany do CW w radiu 1."
+msgstr "WinKeyer \"%0:s\"on %1:s, używane do CW w radiu 1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -14297,7 +14297,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Radio 1:% 0: s% 1: s. Nazwa: \"% 2: s\"."
+msgstr "Radio 1: %0:s %1:sNazwa: \"%2:s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -14442,7 +14442,7 @@ msgstr "Pokaż szczegóły"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Serial:% 0: s baud,% 1: s, RTS% 2: s, DTR% 3: s"
+msgstr "   Seria: %0:s Baud, %1:s, RTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -14457,7 +14457,7 @@ msgstr "   Hasło sieciowe: ustawione"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Sondaże częstotliwości:% 0: s, co% 1: s ms"
+msgstr "   Sondaże częstotliwości: %0:s- %1:s ms"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -14472,7 +14472,7 @@ msgstr "   Polecenie startowe: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Tryb% 0: s, sidetone% 1: s"
+msgstr "   Tryb %0:s, sideton %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -14522,11 +14522,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Ta kopia TR4W wygląda niecałkowicie zainstalowane.\n"
-"\n"
-"Nie znaleziono w% 0: s:\n"
-"% 1: s\n"
-"\n"
-"Uruchom TR4W z folderu, w którym instalator go umieścił (posiada CTY.DAT, TRMASTER.DTA i folder dom) lub uruchom instalatora ponownie.\n"
-"\n"
-"TR4W nadal się rozpocznie, ale konkursy, które potrzebują tych plików nie będą działać prawidłowo."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Plik %0:s NIE było napisane: %1:s. Wcześniejszy plik tej nazwy, jeśli był, nie zmienia się."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Nie wysłane do innych stacji: tekst jest %0:d bajty i sieć niesie %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Kopiuj punkt"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Wymiana w komentarzu"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Język:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Działa, gdy TR4W rozpoczyna się następny."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Jesteś zauważony przez %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

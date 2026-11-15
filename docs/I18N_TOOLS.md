@@ -399,7 +399,9 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `test_po_dedupe.py` | pins its tie-break and that no catalogue, help catalogue or `tr4w_laz.pot` holds a duplicate |
 | `po_prune.py` | marks entries obsolete when their key leaves the source. **Do not run it on the real catalogues (issue #144):** it knows only `TC_`/`RC_` keys, so it would obsolete 2,168 live `.lfm`/resourcestring entries, and `po_merge --apply` then deletes every `#~` block |
 | `ini2po.py` | help INIs → `help_*.po`: reads the inis, never writes them, and MERGES into every existing help catalogue (the `.po` is the master; `test_ini2po.py`). `--new-lang` creates one |
-| `test_ini2po.py` | pins that merge: nothing lost, fuzzy never cleared, reworded English handled |
+| `test_ini2po.py` | pins that merge: nothing lost, fuzzy never cleared, reworded English handled, and `ENGLISH_CORRECTIONS` (English corrected in `help_en.po` that the frozen ini still has wrong) matching `help_en.po` |
+| `test_po_merge.py` | pins that a new identifier whose `(msgctxt, msgid)` is already live JOINS that entry instead of duplicating it (issue 156) |
+| `test_pas2res.py` | pins the reference scan behind `pas2res --unreferenced` (comments stripped, strings kept, itself and `backup/` skipped) and that the emitting rule is unchanged |
 | `po_defuzz.py` | a copy with the "Needs work" flags removed, for testing only |
 | `salvage_lossy.py` | recovers what it can from a lang file that decodes under no codepage (CHN) |
 | `pofile.py`, `pasconsts.py` | shared readers — not run directly. `pofile` rewrites losslessly |

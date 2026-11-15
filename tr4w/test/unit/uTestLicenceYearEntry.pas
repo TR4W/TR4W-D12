@@ -329,6 +329,19 @@ begin
          CheckFalse(ok, who + ': 599 alone is refused');
          CheckEquals(SExchangeNoLicenseYear, ExchangeErrorMessage, who + ': no year found');
          CheckEquals(SENTINEL_YEAR, LicenceYearOf(rx), who + ': 599 alone, the year untouched');
+
+         (* ISSUE 274'S COMMENT: on Phone '599 00' was refused with an EMPTY
+            message through this path. Phone takes a two-digit RS, so the
+            refusal stands, and it names the year. *)
+         ActiveMode := Phone;
+         rx := Default(ContestExchange);
+         StoreLicenceYear(rx, SENTINEL_YEAR);
+         ExchangeErrorMessage := '';
+         ok := ProcessExchange('599 00', rx);
+         CheckFalse(ok, who + ': 599 00 on Phone is refused');
+         CheckEquals(SExchangeImproperLicenseYear, ExchangeErrorMessage,
+                     who + ': 599 00 on Phone names its reason');
+         CheckEquals(SENTINEL_YEAR, LicenceYearOf(rx), who + ': 599 00 on Phone, the year untouched');
          end;
    finally
       Contest := savedContest;

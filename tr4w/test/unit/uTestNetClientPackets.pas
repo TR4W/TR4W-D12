@@ -504,8 +504,10 @@ begin
    OpenLink(link);
    try
       SendSpotViaNetworkToNet('DX VE7OMT 14267.0 test');
-      (* A text longer than the field is cut one short, so the terminator survives. *)
-      SendSpotViaNetworkToNet(StringOfChar('A', 200));
+      (* The longest text the field holds is one short of it, so the terminator
+        survives. A longer one is REFUSED with a notice, not cut (issue 315);
+        that branch shows a notice on the main window and is not driven here. *)
+      SendSpotViaNetworkToNet(StringOfChar('A', 45));
       CheckTrue(WaitPackets(link, 2), 'both were written');
 
       bytes := link.Packet(0);

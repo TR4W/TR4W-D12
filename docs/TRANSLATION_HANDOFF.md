@@ -183,5 +183,7 @@ See [`ADDING_A_LANGUAGE.md`](ADDING_A_LANGUAGE.md) section 6 and
 [`I18N_PLAN.md`](I18N_PLAN.md), *Open tooling issues*.
 
 **Renaming an identifier orphans its translation in every language.** The key is the
-name, not the English. Rewording the English is safe — the entry goes "Needs work" and
-the translator re-checks it. Renaming is not.
+name, not the English. Rewording the English is not automatic either: `po_merge` keeps the
+old msgid and its translation, which then ships under the new English (issue 144). The
+reworded-caption steps in [`I18N_TOOLS.md`](I18N_TOOLS.md) rewrite the msgid and clear the
+stale draft so the translator re-checks it.

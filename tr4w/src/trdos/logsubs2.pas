@@ -270,7 +270,10 @@ uses
      shared with the HamScore post. *)
   uGetScores,
   uScoreBreakdown,
-  uContestFactory;
+  uContestFactory,
+  (* ExternalLoggerARRLSection -- the resolved section the UDP <section>
+     sends in a contest whose QTH is an ARRL section (issue 275 item 3). *)
+  uExternalLogger;
 procedure ProcessCallWindowCommand(Command: Str80);
 { This procedure gets called if a command in the call window was typed in
   starting with a \ character. }
@@ -2927,6 +2930,7 @@ var
    sMultiplierFields: AnsiString;
    sTimestamp: AnsiString;
    nZone: integer;   (* <zone>: the zone, or a year contest's received year *)
+   sSection: AnsiString;   (* <section>: see where it is set *)
 begin
    // if operator is blank, use Settings.My.Call
    // Add CR to output
@@ -3107,9 +3111,22 @@ begin
       nZone := RxData.Zone;
       end;
 
+   (* <section> IS N1MM'S, NOT ADIF'S ARRL_SECT (issue 275 item 3, NY4I
+      2026-11-11): it "means whatever the rules for the particular contest
+      define it to mean", so it stays the QTH as logged -- except in a
+      contest whose QTH IS an ARRL section (Sweepstakes, the Field Days,
+      ARRL 160), where the rules' section goes out (EMA for a typed EM). The same
+      predicate and resolution the DXKeeper hand-off uses; a QTH that is no
+      section there (DX) keeps the logged text. *)
+   sSection := AnsiString(ExternalLoggerARRLSection(RXData));
+   if sSection = '' then
+      begin
+      sSection := RxData.QTHString;
+      end;
+
    Result := Result + #9 + '<exchange1>' + sExchange + '</exchange1>' + sLineBreak;
    Result := Result +
-            #9 + '<section>' + RxData.QTHString + '</section>' + sLineBreak +    // Issue 262
+            #9 + '<section>' + sSection + '</section>' + sLineBreak +    // Issue 262
             #9 + '<comment></comment>' + sLineBreak +
             #9 + '<qth>' + RxData.QTHString + '</qth>' + sLineBreak +
             #9 + '<name>' + RxData.Name + '</name>' + sLineBreak +

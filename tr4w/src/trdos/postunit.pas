@@ -160,6 +160,14 @@ procedure TallySummaryTotals( aNext: TSummaryRecordReader );
    MinimumOffTimeMinutes counts; a longer gap is off time. *)
 function GapIsOperatingTime( aGapSeconds: integer;
                              aMinimumOffTimeMinutes: integer ): boolean;
+(* ONE LINE OF THE SUMMARY SHEET'S BAND TABLE (issue 177). The header's column
+   names end on the same character as the numbers under them, so the table
+   reads in the fixed-pitch preview; SUMMARY_TABLE_HEADER is laid out against
+   this format and uTestContestTotals pins the two together. *)
+const
+  SUMMARY_TABLE_HEADER = '  BAND     Raw QSOs    Valid QSOs   Points';
+function SummaryTableRow( const aBand, aMode: string;
+                          aRaw, aValid, aPoints: integer ): AnsiString;
 procedure SummarySheet;
 procedure CreateCabrilloFile;
 (* THE RECEIVED QTH A CABRILLO QSO LINE CARRIES -- the text as logged, or the
@@ -209,6 +217,9 @@ var
 
   tReportsFilename: FileNameType;
   tReportFileWrite: TFileHandle;   (* utils_file's -- see TFileHandle *)
+  (* SET WHEN AN EXPORT COULD NOT BE WRITTEN (issue 313), for the headless
+    /EXPORT's exit code. Never cleared by the exporters. *)
+  LastExportFailed: boolean = False;
   (* THE PATH THE PREVIEW WINDOW SHOWS -- a string, not a pointer into
     tReportsFilename. It was a PAnsiChar aimed at that buffer, so the two were
     the same bytes and whoever wrote the buffer next silently changed what the
@@ -231,6 +242,10 @@ var
   QSOPointTotals: array [ BandType, CW .. Both ] of integer;
   RawQSOTotals: array [ BandType, CW .. Both ] of integer;
   PostQSOTotals: array [ BandType, CW .. Both ] of integer;
+  (* THE QTCs THE SUMMARY SHEET REPORTS, BY DIRECTION (issue 182) -- one
+    record per QTC, counted by TallySummaryTotals; a deleted one is not. *)
+  SummaryQTCsSent: integer;
+  SummaryQTCsReceived: integer;
   {
     PrefixTotals                          : array[BandType, CW..Both] of Word;
     ZoneTotals                            : array[BandType, CW..Both] of Word;
@@ -473,9 +488,44 @@ uses
      CQZ/ITUZ choice and ZoneSentForThisContest asked its zone kind from M10
      S9c until M11 S5; they ask the contest now. *)
   uContestSession,
+  uAppStrings,   (* SExportNotWritten *)
   uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
 // interface-section 'uses uMults' clause above.
+
+(* THE EXPORT FILES ARE WRITTEN THROUGH utils_file's OpenReportFile / CloseReportFile
+  (issue 313): the new file is a .partial beside the target and replaces the old
+  one only when every write succeeded. These two say so to the operator, once,
+  and set LastExportFailed for the headless /EXPORT's exit code. A failed open
+  and a failed close both come here. *)
+procedure ReportExportNotWritten;
+begin
+   LastExportFailed := True;
+   showwarning( UnicodeFormat( SExportNotWritten,
+                [ CharBufferText( tReportsFilename ), ReportFileProblem ] ) );
+end;
+
+(* OPEN THE EXPORT'S FILE; False has told the operator why. *)
+function OpenExportFile: boolean;
+begin
+   Result := OpenReportFile( tReportFileWrite, CharBufferText( tReportsFilename ) );
+   if not Result then
+      begin
+      ReportExportNotWritten;
+      end;
+end;
+
+(* FINISH THE EXPORT'S FILE. aKeep False abandons it (the export could not go
+  on) and says nothing; True keeps it, or tells the operator it was not written.
+  The answer is whether the file is in place. *)
+function CloseExportFile( aKeep: boolean ): boolean;
+begin
+   Result := CloseReportFile( tReportFileWrite, aKeep );
+   if aKeep and ( not Result ) then
+      begin
+      ReportExportNotWritten;
+      end;
+end;
 
 (* THE ZONE THIS CONTEST'S EXCHANGE ACTUALLY CARRIES -- step C3.
 
@@ -713,10 +763,17 @@ procedure CreateCabrilloFile;
      end;
   if not tGenerateLogPortionOfCabrilloFile then
      begin
-     FileClose(tReportFileWrite);
+     (* The file is abandoned, not left half written; an earlier good one stays
+       (issue 313). *)
+     CloseExportFile( False );
      Exit;
      end;
-  FileClose(tReportFileWrite);
+  (* NO PREVIEW, AND NO OFFER TO UPLOAD, A FILE THAT IS NOT THERE: CloseExportFile
+    has told the operator. *)
+  if not CloseExportFile( True ) then
+     begin
+     Exit;
+     end;
   PreviewFileNameAddress := CharBufferText(tReportsFilename);
   PreviewFileIsCabrillo  := true;
   FilePreview;
@@ -983,7 +1040,9 @@ procedure WriteScoreInformationToSummarySheet;
       ARRL Field Day's claimed score). *)
     layout: TSummarySheetLayout;
   const
-    h = #13#10'  BAND   Raw QSOs   Valid QSOs   Points';
+    (* Issue 177: the column names used to end two and three characters left
+      of their numbers. Laid out against SummaryTableRow now. *)
+    h = #13#10 + SUMMARY_TABLE_HEADER;
     mn: array [ RemainingMultiplierType ] of string = ( '', 'Mults',
        'Countries', 'Zones', 'Prefixes' );
     breakline =
@@ -1034,14 +1093,14 @@ procedure WriteScoreInformationToSummarySheet;
              end;
 
           SumInteger := QSOPointTotals[ Band, TempMode ];
-          // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
-          // (removes the asm, the custom Format function, and the PChar buffer in one).
-          // Arg order matches the original right-to-left pushes: %5s=BString,
-          // %4s=MString, %8d=RawQSOTotals, %12d=PostQSOTotals, %8d=QSOPointTotals.
+          // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
+          // The Format is SummaryTableRow's since issue 177, beside the header
+          // it is aligned with.
           sWriteFileFromString( tReportFileWrite,
-             sysutils.Format( #13#10' %5s%4s %8d  %12d %8d', [ string( BString ),
-             string( MString ), RawQSOTotals[ Band, TempMode ],
-             PostQSOTotals[ Band, TempMode ], SumInteger ] ) );
+             #13#10 + SummaryTableRow( BString, MString,
+                                       RawQSOTotals[ Band, TempMode ],
+                                       PostQSOTotals[ Band, TempMode ],
+                                       SumInteger ) );
           if layout.MultiplierPerBandModeRow then
              begin
              inc( totalMults );
@@ -1082,6 +1141,11 @@ procedure WriteScoreInformationToSummarySheet;
      sWriteFileFromString( tReportFileWrite,
         sysutils.Format( #13#10#13#10'    There were %d QTC points.',
         [ TotalNumberQTCsProcessed ] ) );
+     (* Issue 182: the sent and received counts, which the WAE entry form asks
+        for (a DX station sends QTCs, a European one receives them). *)
+     sWriteFileFromString( tReportFileWrite,
+        sysutils.Format( #13#10'    QTCs sent: %d.  QTCs received: %d.',
+        [ SummaryQTCsSent, SummaryQTCsReceived ] ) );
      end;
   if not layout.ClaimedScoreIsQSOPoints then
      begin
@@ -1103,12 +1167,23 @@ begin
    Result := aGapSeconds <= aMinimumOffTimeMinutes * 60;
 end;
 
+(* %5s band and %4s mode, then raw (ending at column 19), valid (33) and points
+  (42) -- where SUMMARY_TABLE_HEADER's three names end. *)
+function SummaryTableRow( const aBand, aMode: string;
+                          aRaw, aValid, aPoints: integer ): AnsiString;
+begin
+   Result := sysutils.Format( ' %5s%4s %8d  %12d %8d',
+                              [ aBand, aMode, aRaw, aValid, aPoints ] );
+end;
+
 procedure ZeroSummaryTotals;
   var
     Band: BandType;
     Mode: ModeType;
   begin
   NumberDates := 0;
+  SummaryQTCsSent := 0;
+  SummaryQTCsReceived := 0;
   FillChar(TimeSpentByBand, SizeOf( TimeSpentByBand ), 0);
   for Band   := Band160 to AllBands do
      begin
@@ -1145,6 +1220,21 @@ procedure TallySummaryTotals( aNext: TSummaryRecordReader );
      record, and nothing here needs a second one. *)
   while aNext( TempRXData ) do
      begin
+     (* A QTC IS COUNTED BY DIRECTION FIRST (issue 182): one record per QTC,
+        sent or received, unless deleted. It is never a QSO, so the predicate
+        below then skips it. *)
+     if not TempRXData.ceQSO_Deleted then
+        begin
+        if TempRXData.ceRecordKind = rkQTCS then
+           begin
+           inc( SummaryQTCsSent );
+           end
+        else if TempRXData.ceRecordKind = rkQTCR then
+           begin
+           inc( SummaryQTCsReceived );
+           end;
+        end;
+
      (* WHICH RECORDS THE SUMMARY COUNTS IS THE ONE PREDICATE THE LOADER AND
         THE BONUS VIEW ASK -- uContestBase.QSOCountsTowardTotals: a QSO
         record, not deleted, with a band and a mode, and NOT AN X-QSO (Q51,
@@ -2146,6 +2236,7 @@ procedure ExportToEDIByBand( Band: BandType );
   var
     TempTag: CabrilloTags;
     AddressLine: string;
+    exportKept: boolean;
   const
     EDI_ModeCodes: array [ ModeType ] of integer  = ( 2, 7, 1, 0, 0, 6 );
     EDI_NewArray: array [ boolean ] of string  = ( '', 'N' );
@@ -2162,14 +2253,14 @@ procedure ExportToEDIByBand( Band: BandType );
                  + string( BandStringsArrayWithOutSpaces[ Band ] ) + '.EDI' ) );
 
   DeleteSlashes( tReportsFilename );
-  if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
+  if not OpenExportFile then
      begin
      Exit;
      end;
 
   if not LogSourceOpen then
      begin
-     FileClose(tReportFileWrite);
+     CloseExportFile( False );
      Exit;
      end;
 
@@ -2253,11 +2344,14 @@ procedure ExportToEDIByBand( Band: BandType );
         end;
      goto 1;
      end;
-  FileClose(tReportFileWrite);
+  exportKept := CloseExportFile( True );
   LogSourceClose;
 
-  PreviewFileNameAddress := CharBufferText(tReportsFilename);
-  FilePreview;
+  if exportKept then
+     begin
+     PreviewFileNameAddress := CharBufferText(tReportsFilename);
+     FilePreview;
+     end;
   end;
 
 (* THE MY-STATION HALF OF AN EXCHANGE, AS THIS SESSION SENDS IT -- what every
@@ -2672,11 +2766,12 @@ procedure ExportToADIF;
     dataModeNote: string;
     dtReportTime: TDateTime;
     adifStr: string;
+    exportKept: boolean;
   begin
   dtReportTime := Now;
   (* THE EXPORT'S FILE NAME: the log's name with .adi for its extension. *)
   NameReportsFileAfterLog(lekADIF);
-  if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
+  if not OpenExportFile then
      begin
      Exit;
      end;
@@ -2687,7 +2782,7 @@ procedure ExportToADIF;
      shape is preserved exactly. *)
   if not LogSourceOpen then
      begin
-     FileClose(tReportFileWrite);
+     CloseExportFile( False );
      Exit;
      end;
 
@@ -2762,30 +2857,37 @@ procedure ExportToADIF;
      @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
   sWriteFileFromString( tReportFileWrite, adifStr );
 
-  FileClose(tReportFileWrite);
+  exportKept := CloseExportFile( True );
   LogSourceClose;
   (* ONE WARNING FOR THE RUN, after the file is complete (F25/F26). *)
   ReportExchangeFailures( 'ADIF',
      'STX_STRING was left out of those records, their other fields are written' );
-  PreviewFileNameAddress := CharBufferText(tReportsFilename);
-  FilePreview;
+  (* NO PREVIEW OF A FILE THAT IS NOT THERE (issue 313): CloseExportFile has
+    told the operator. *)
+  if exportKept then
+     begin
+     PreviewFileNameAddress := CharBufferText(tReportsFilename);
+     FilePreview;
+     end;
   end;
 
 procedure ExportToCSV; // n4af 04/18/14 new procedure added
   label
     1;
+  var
+    exportKept: boolean;
   begin
 
   (* THE EXPORT'S FILE NAME: the log's name with .csv for its extension. *)
   NameReportsFileAfterLog(lekCSV);
-  if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
+  if not OpenExportFile then
      begin
      Exit;
      end;
 
   if not LogSourceOpen then
      begin
-     FileClose(tReportFileWrite);
+     CloseExportFile( False );
      Exit;
      end;
 
@@ -2820,10 +2922,13 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
      goto 1;
      end;
 
-  FileClose(tReportFileWrite);
+  exportKept := CloseExportFile( True );
   LogSourceClose;
-  PreviewFileNameAddress := CharBufferText(tReportsFilename);
-  FilePreview;
+  if exportKept then
+     begin
+     PreviewFileNameAddress := CharBufferText(tReportsFilename);
+     FilePreview;
+     end;
   end;
 
 function CabrilloLanguageTag: string;
@@ -2898,7 +3003,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             end;
          end;
 
-      if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
+      if not OpenExportFile then
          begin
          Exit;
          end;
@@ -3537,9 +3642,19 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       label
         1;
+      var
+        LowestZone: integer;
       begin
       GenerateZoneMultiplierTotals := False;
       CountryMultTotals := Default( CountryMultiplierArray );
+      (* ZONE 0 IS A ZONE WHERE THE CONTEST NUMBERS FROM ZERO (issue 274 item
+        5): the European HF Championship's and KVP's licence year 00. In
+        every other contest 0 is "no zone" and is skipped, as it always was. *)
+      LowestZone := 1;
+      if ContestNumbersZonesFromZero( ActiveContest( Contest ) ) then
+         begin
+         LowestZone := 0;
+         end;
       if not LogSourceOpen then
          begin
          Exit;
@@ -3552,7 +3667,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          if GoodLookingQSO then
             begin
             // inc(TotalLogQSOs);
-            if ( TempRXData.Zone > 0 ) and ( TempRXData.Zone <= 100 ) then
+            if ( TempRXData.Zone >= LowestZone ) and ( TempRXData.Zone <= 100 ) then
                begin
                if TempRXData.ZoneMult then
                  if CountryMultTotals[ TempRXData.Band, TempRXData.Zone ]
@@ -3577,12 +3692,22 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       var
         Lines, MaxNumberOfZones, ZoneIndex: integer;
+        LowestZone: integer;
         TempString: Str80;
         FileWrite: Text;
         Band: BandType;
       begin
 
       OpenFileForWrite( FileWrite, ReportsFilename );
+
+      (* From zone 0 where the contest numbers its zones from zero (the
+        licence year 00 -- issue 274 item 5), as GenerateZoneMultiplierTotals
+        counts them. *)
+      LowestZone := 1;
+      if ContestNumbersZonesFromZero( ActiveContest( Contest ) ) then
+         begin
+         LowestZone := 0;
+         end;
 
       Lines := 0;
       {
@@ -3616,7 +3741,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
            MaxNumberOfZones := 100;
            end;
 
-      for ZoneIndex := 1 to MaxNumberOfZones do
+      for ZoneIndex := LowestZone to MaxNumberOfZones do
          begin
          if ( ( Lines >= 55 ) or ( Lines = 0 ) ) then
             begin
@@ -3893,9 +4018,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             Hour    := TempRXData.tSysTime.qtHour;
             // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
             // %s=date, %02u=Hour, %02u=Minutes, %s=Note (%02u -> %.2u zero-pad).
+            // Issue 21: the band, mode, frequency and operator the note was
+            // written at, between the time and the text (uLogNote.NoteContextText).
             sWriteFileFromString( tReportFileWrite,
-               sysutils.Format( '%s %.2u:%.2u: %s'#13#10,
+               sysutils.Format( '%s %.2u:%.2u %s: %s'#13#10,
                [ tGetDateFormat( TempRXData.tSysTime ), Hour, Minutes,
+               string( NoteContextText( TempRXData ) ),
                string( NoteText( TempRXData ) ) ] ) );
             end;
 

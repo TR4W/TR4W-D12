@@ -10853,7 +10853,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "Grupul DX \"% 0:s\":% 1:s, logare ca% 2:s."
+msgstr "Grupul DX \"%0:s\": %1:s, logare ca %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10863,7 +10863,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "WinKeyer \"% 0:s\" pe% 1:s, folosit pentru CW la radio 1."
+msgstr "WinKeyer \"%0:s\" on %1:s, folosit pentru CW la radio 1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10885,7 +10885,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Radio 1:% 0:s% 1:s. Nume: \"% 2:s.\""
+msgstr "Radio 1: %0:s %1:sNumele: \"%2:s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -11030,7 +11030,7 @@ msgstr "Arată detalii"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Serial:% 0:s baud,% 1:s, RTS% 2:s, DTR% 3:s"
+msgstr "   Serial: %0:s Baud, %1:s, RTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -11045,7 +11045,7 @@ msgstr "   Parolă rețea: set"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Sondaj de frecvenţă:% 0:s, fiecare% 1:s ms"
+msgstr "   Sondaj de frecvenţă: %0:s, fiecare %1:s ms"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -11060,7 +11060,7 @@ msgstr "   Comandă pornire: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Mod% 0:s, sidetone% 1:s"
+msgstr "   Mod %0:s, sidetone %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -11110,11 +11110,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Această copie a TR4W pare incomplet instalată.\n"
-"\n"
-"Negăsit în% 0:s:\n"
-"% 1:s\n"
-"\n"
-"Start TR4W din folderul instalatorul a pus-o în (se ține CTY.DAT, TRMASTER.DTA și un dosar dom), sau executați instalatorul din nou.\n"
-"\n"
-"TR4W va începe în continuare, dar concursurile care necesită aceste fișiere nu vor funcționa în mod corespunzător."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Fișierul %0:s NU a fost scris: %1:sUn dosar anterior al acestui nume, dacă a existat unul, este neschimbat."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Netrimis la alte posturi: textul este %0:d octeți și rețeaua transporta %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Copiază locul"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Schimb de observații"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Limba:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Efectuează atunci când TR4W începe următorul."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Sunteți reperat de %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

@@ -148,7 +148,8 @@ uses
    uContestRegistry,
    (* StringIsAllNumbersOrSpaces -- the test the arm made. *)
    utils_text,
-   uTR4WStrings;
+   uTR4WStrings,
+   uAppStrings;      (* SNewContestMemberNumberLabel -- issue 51 *)
 
 procedure TContestArktikaSpring.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -337,7 +338,11 @@ end;
 procedure TContestArktikaSpring.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_ARKTIKACLUB);
-   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+   (* The row names what it holds (issue 51); the command queued is still
+      MY STATE. *)
+   aPrompts.AskFieldWithCommentAndLabelWhenInside(TC_ENTERYOURMEMBERSHIPNUMBER,
+                                                  ncfMyState,
+                                                  SNewContestMemberNumberLabel);
 end;
 
 

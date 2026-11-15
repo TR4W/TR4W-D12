@@ -531,6 +531,11 @@ procedure tClearDupesheet_Ctrl_K;
 procedure tClearDupesheet;
 procedure tr4w_add_note_in_log;
 procedure tr4w_log_qso_without_cw;
+(* THE UDP "lookupinfo" BROADCAST FOR A CALL THE OPERATOR IS LOOKING AT (issue
+  49): Space in the call window, and a band-map click that fills it, ask the
+  same thing of a lookup listener such as DXView. Does nothing when the lookup
+  stream is off. *)
+procedure BroadcastLookupForCall(const aCall: CallString);
 (* THE MAIN WINDOW'S NATIVE HANDLE, derived, never cached.
 
   For the handful of Windows-only APIs that take one -- DWM, HtmlHelp, MAPI
@@ -1525,11 +1530,7 @@ begin
            begin
            WindowDupeCheck;
            end;
-        tempRXData.Callsign := CallWindowString;
-        if UDPBroadcaster.Enabled(usLookup) then
-           begin
-           LookupInfoToUDP(tempRXData);
-           end;
+        BroadcastLookupForCall(CallWindowString);
         end;
      end;
 end;
@@ -2265,7 +2266,14 @@ begin
 
   else
      begin
-     if Settings.Dvk.Enable and Settings.Message.Enable and not BeSilent then
+     (* THE S&P F1 MEMORY, WHATEVER IT HOLDS (issue 66). This was gated on DVK
+       ENABLE too, so a phone F1 holding a radio command (SRS=... to play the
+       rig's own voice keyer) was never sent on Enter, while pressing F1 sent
+       it and the S&P exchange a few lines on (ReturnInSAPOpMode) has never had
+       the gate. With the DVK off SendCrypticMessage still runs the message's
+       commands and plays no WAV, so a plain MYCALL.WAV does nothing, as
+       before. *)
+     if Settings.Message.Enable and not BeSilent then
         begin
         SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
         end;
@@ -4043,7 +4051,37 @@ begin
   FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.ceRecordKind := rkNote;
   SetNoteText(TempRXData, Copy(s, 1, i));
+  (* WHERE THE NOTE WAS WRITTEN (issue 21): the active radio's frequency, read
+    as ParametersOkay reads it for a QSO. The band, mode, operator and time
+    are stamped by AddRecordToLogAndSendToNetwork. Nothing that lies inside
+    the note's text region (ExtMode, ceRadio -- see uLogNote) is set here:
+    the text overwrites it. *)
+  TempRXData.Frequency := ActiveRadioPtr.LastDisplayedFreq;
   AddRecordToLogAndSendToNetwork(TempRXData);
+end;
+
+procedure BroadcastLookupForCall(const aCall: CallString);
+var
+   lookup: ContestExchange;
+begin
+   if not UDPBroadcaster.Enabled(usLookup) then
+      begin
+      Exit;
+      end;
+   (* A FRESH RECORD, NOT TempRXData. The Space path set only the call on that
+     shared global and broadcast whatever else it held -- the last log record
+     LoadinLog read into it, or a note -- and BuildUDPContact reads the band,
+     mode, contest, time and operator too. These are the fields
+     AddRecordToLogAndSendToNetwork stamps on a new record; the frequency is
+     read from the radio by BuildUDPContact for a lookup. *)
+   ClearContestExchange(lookup);
+   lookup.Callsign := aCall;
+   lookup.Band := ActiveBand;
+   lookup.Mode := ActiveMode;
+   lookup.ceContest := Contest;
+   lookup.ceOperator := CurrentOperator;
+   tGetQSOSystemTime(lookup.tSysTime);
+   LookupInfoToUDP(lookup);
 end;
 
 procedure tr4w_log_qso_without_cw;
@@ -6094,12 +6132,8 @@ begin
     // asked for it on the Help menu (2026-08-22), after the bench queue sent him
     // looking for an option that did not exist.
     //
-    // ONE KNOWN DEFECT REMAINS IN WHAT THIS CALLS, flagged rather than silently
-    // shipped and recorded in docs/BENCH_QUEUE.md: it does its socket work ON
-    // THIS THREAD and sleeps 2 seconds waiting for the reply, so the UI freezes
-    // for at least that long.  NY4I's own standing rule is no I/O on the main
-    // thread.  Wiring it up was the request; rewriting it is the follow-up, and
-    // doing both at once would mean a bench failure could not be attributed.
+    // THE REQUEST RUNS ON A WORKER THREAD (issues 194 and 249): this returns at
+    // once and the answer is shown on the main thread when it arrives.
     menu_check_latest_version:
       begin
       CheckLatestVersion;

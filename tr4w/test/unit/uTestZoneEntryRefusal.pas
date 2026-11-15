@@ -50,6 +50,7 @@ type
       procedure Test_RTTYCQZoneModeRefusesAboveForty;
       procedure Test_RTTYITUZoneModeIsNotLimited;
       procedure Test_RSTAndQTHContestTakesTheReportNotAZone;
+      procedure Test_ZoneThenRSTFormIsLimitedAndARefusalKeepsTheRST;
       procedure RunRTTYTests;
    end;
 
@@ -468,8 +469,53 @@ begin
 end;
 
 
+(* ISSUE 274 ITEMS 2 AND 4. The CW zone-then-RST form ('85 599') had no range
+   check, so CQ zone 85 was taken; it is limited like every other form now.
+   And a refused entry leaves the QSO's RS(T) alone -- the word reader wrote
+   it before the zone was judged. ITU zone mode is unchanged. *)
+procedure TZoneEntryRefusalTests.Test_ZoneThenRSTFormIsLimitedAndARefusalKeepsTheRST;
+const
+   SENTINEL_RST = 337;
+var
+   rx: ContestExchange;
+   savedMode: ModeType;
+   savedZoneMode: ZoneModeType;
+begin
+   BeginTest('Test_ZoneThenRSTFormIsLimitedAndARefusalKeepsTheRST');
+   Entry('85 599', CW, CQZoneMode, False, SENTINEL_ZONE);
+   Entry('41 579', CW, CQZoneMode, False, SENTINEL_ZONE);
+   Entry('14 599', CW, CQZoneMode, True, 14);
+   Entry('85 599', CW, ITUZoneMode, True, 85);
+
+   savedMode := ActiveMode;
+   savedZoneMode := CTY.ctyZoneMode;
+   try
+      ActiveMode := CW;
+      CTY.ctyZoneMode := CQZoneMode;
+      rx := Default(ContestExchange);
+      rx.Zone := SENTINEL_ZONE;
+      rx.RSTReceived := SENTINEL_RST;
+      CheckFalse(ProcessRSTAndZoneExchange(ShortString('579 85'), rx), '579 85 is refused');
+      CheckEquals(SENTINEL_RST, Integer(rx.RSTReceived), '579 85: the RS(T) untouched');
+      CheckEquals(TC_IMPROPERZONENUMBER, ExchangeErrorMessage, '579 85: its message');
+
+      rx.RSTReceived := SENTINEL_RST;
+      CheckFalse(ProcessRSTAndZoneExchange(ShortString('85 579'), rx), '85 579 is refused');
+      CheckEquals(SENTINEL_RST, Integer(rx.RSTReceived), '85 579: the RS(T) untouched');
+
+      CheckTrue(ProcessRSTAndZoneExchange(ShortString('579 14'), rx), '579 14 is accepted');
+      CheckEquals(579, Integer(rx.RSTReceived), '579 14: the RS(T) written');
+      CheckEquals(14, Integer(rx.Zone), '579 14: the zone written');
+   finally
+      ActiveMode := savedMode;
+      CTY.ctyZoneMode := savedZoneMode;
+      ExchangeErrorMessage := '';
+      end;
+end;
+
 procedure TZoneEntryRefusalTests.RunAllTests;
 begin
+   Test_ZoneThenRSTFormIsLimitedAndARefusalKeepsTheRST;
    Test_CQZoneModeRefusesAboveFortyAndKeepsTheZone;
    Test_CQZoneModeAcceptsAZoneAndSetsIt;
    Test_ITUZoneModeAcceptsAYearAndSetsIt;

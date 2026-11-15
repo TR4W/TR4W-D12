@@ -11566,3 +11566,48 @@ msgstr ""
 "Start TR4W vanuit de map waarin het installatieprogramma het heeft geplaatst (het bevat CTY.DAT, TRMASTER.DTA en een dom map), of voer het installatieprogramma opnieuw uit.\n"
 "\n"
 "TR4W zal nog steeds starten, maar wedstrijden die deze bestanden nodig hebben zullen niet goed werken."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Het bestand %0:s is NIET geschreven: %1:s. Een eerder bestand van die naam, als er een was, is ongewijzigd."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Niet naar de andere stations verzonden: de tekst is %0:d bytes en het netwerk draagt %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Plaats kopiëren"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d graden)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "In ruil voor commentaar"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Taal:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Wordt van kracht wanneer TR4W de volgende start."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Je bent gezien door %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

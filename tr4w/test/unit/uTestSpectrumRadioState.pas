@@ -67,6 +67,7 @@ type
       procedure Test_Window_RadioScale_ReconnectHolds_SwitchInheritsNothing;
       procedure Test_Window_RadioScale_ClampedAtTheSlider;
       procedure Test_Window_RadioScale_YMiniPanUntouched;
+      procedure Test_Window_SpanChange_EmptiesTheWaterfall;
       procedure CheckScaleShown(AForm: TObject; AScaleDb: Integer; const AWhat: string);
    public
       procedure RunAllTests; override;
@@ -1005,6 +1006,70 @@ begin
    end;
 end;
 
+(* A frame of 512 flat bins on source A, as the radio's producer would hand it
+   to the window. *)
+function FlatFrame(ACentreHz, ASpanHz: Int64): TSpectrumFrame;
+var
+   i: Integer;
+begin
+   Result := Default(TSpectrumFrame);
+   Result.SourceId := 'A';
+   Result.CentreHz := ACentreHz;
+   Result.SpanHz := ASpanHz;
+   Result.NoiseFloorDb := -120;
+   Result.BinCount := 512;
+   SetLength(Result.Bins, Result.BinCount);
+
+   for i := 0 to High(Result.Bins) do
+      begin
+      Result.Bins[i] := -110;
+      end;
+end;
+
+(* Issue 159: a row carries no span, so after the span changes the older rows
+   would be drawn as if they covered the new one.  A span change empties the
+   history; a centre change (the display following the VFO) keeps it. *)
+procedure TSpectrumRadioStateTests.Test_Window_SpanChange_EmptiesTheWaterfall;
+var
+   form: TfrmPanadapter;
+   r: TFactoryRadioBase;
+   feed: TSpectrumFrameProc;
+begin
+   BeginTest('Panadapter: a span change empties the waterfall; a centre change keeps it');
+   r := NewK4;
+   form := TfrmPanadapter.Create(nil);
+
+   try
+      form.AttachRadio(r, r.PrimarySpectrumSourceId);
+      (* The window's own subscription, called as the radio's producer would. *)
+      feed := r.OnSpectrumFrame;
+      CheckTrue(Assigned(feed), 'precondition: AttachRadio subscribed to the radio''s frames');
+
+      feed(FlatFrame(14050000, 48000));
+      Tick(form);
+      feed(FlatFrame(14050000, 48000));
+      Tick(form);
+
+      (* Precondition: an unshown form must still lay out a waterfall, or the
+         checks below pass with nothing pushed. *)
+      CheckTrue(form.RowsPushed > 0, 'precondition: rows were pushed');
+      CheckEquals(2, form.WaterfallRowsHeld, 'two rows at 48 kHz');
+      CheckTrue(form.WaterfallSpanHz = 48000, 'the history is at 48 kHz');
+
+      feed(FlatFrame(14051000, 48000));
+      Tick(form);
+      CheckEquals(3, form.WaterfallRowsHeld, 'a centre change keeps the history');
+
+      feed(FlatFrame(14051000, 24000));
+      Tick(form);
+      CheckEquals(1, form.WaterfallRowsHeld, 'a span change empties it: only the new row remains');
+      CheckTrue(form.WaterfallSpanHz = 24000, 'the history is at 24 kHz now');
+   finally
+      form.Free;
+      r.Free;
+   end;
+end;
+
 procedure TSpectrumRadioStateTests.RunAllTests;
 begin
    Test_K4_NoReports_KnowsNothing;
@@ -1029,6 +1094,7 @@ begin
    Test_Window_RadioScale_ReconnectHolds_SwitchInheritsNothing;
    Test_Window_RadioScale_ClampedAtTheSlider;
    Test_Window_RadioScale_YMiniPanUntouched;
+   Test_Window_SpanChange_EmptiesTheWaterfall;
 end;
 
 end.

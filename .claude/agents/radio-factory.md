@@ -358,8 +358,8 @@ which the untyped thread start never checked. Start it bare,
 **THE SPLIT TX VFO IS THE RADIO'S ANSWER, NOT 'B'** (issue 38, 2026-11-08).
 The `-` entry writes the TX frequency to `RadioObject.SplitTransmitVFOLetter`,
 which asks the virtual `SplitTransmitVFO` (base: `nrVFOB`, the old fixed
-answer). Only `TKenwoodTS890Radio` overrides it, to the VFO it is not receiving
-on (`FR`). The entry then calls `PutRadioIntoSplitTransmittingOn(letter)` ->
+answer). `TKenwoodTS890Radio` overrides it, to the VFO it is not receiving
+on (`FR`), and so does `TFlexAPI` (issue 259, below). The entry then calls `PutRadioIntoSplitTransmittingOn(letter)` ->
 virtual `SplitTransmittingOn` (base: `Split(True)`, refuses anything but B);
 `TKenwoodLAN` sends `FT` for that VFO. **A plain `Split(True)` stays `FT1;`**:
 the band-map QSX, WSJT-X and the TCI server write B then call it, and following
@@ -369,8 +369,27 @@ three callers are still A-centric for a TS-890 receiving on B; routing them is
 follow-up work (TCI: with `tci-interface`). The TS-990 shares the LAN base and
 deliberately keeps B. Pinned over the whole
 registry by `uTestKenwoodLANSplit` (receive VFO set to B first, or the pin
-proves nothing). **Flex still assumes A receives**: `TFlexAPI` never reads a
-slice's `active=`, so its override needs active-slice tracking first.
+proves nothing). **The Flex API tracks the receive slice** (issue 259,
+2026-11-15): `active=1` on slice 0/1 is `SetActiveVFO` (only a 1 moves it --
+the radio's two pushes come in no promised order), split is "TX slice <>
+active slice" (`RecomputeSplit`; with slice 0 active it is the old `not
+FSlice0TX`), `SplitTransmittingOn(A)` sends `slice set 0 tx=1`, `1 tx=0`,
+`1 active=1`, plain `Split(True)` keeps its bytes (and still forces slice 0
+active), `Split(False)` returns TX to the active slice. Pinned by
+`uTestFlexAPISplit`. Because `uRadioPolling` publishes the active VFO, **the
+main window now follows slice 1 when the operator makes it active**.
+`TFlexCAT` (serial/5002) is NOT done. Its key=value parser is
+`uFlexRadioUtils.FlexParseKeyValue` (whole-key match); the driver's own copy
+had drifted to a bare `Pos` and was deleted.
+
+**THE ICOM `$06` FILTER BYTE IS A TRAIT, TWO OF THEM** (issue 181,
+2026-11-15): `FModeSetIncludesFilter := False` drops it in every mode (IC-718,
+the legacy Icoms); `FCWModeSetOmitsFilter := True` drops it in CW/CW-R only --
+the Ten-Tec Omni VI, D7's `(RadioModel = OMNI6) and (Mode = CW)` arm (n4af
+4.43.3), which the Omni's header had wrongly said D7 never had. Pinned by
+`uTestTenTecModeSet` (with an IC-7610 still sending it). The Orion's Alt-M
+sends `*RMM<d>` through `SetFrequency` -> `SetMode`; the D7 defect was in the
+deleted legacy path.
 
 ## Before any "behaviour-preserving" swap
 

@@ -245,6 +245,10 @@ type
       FWfW: Integer;
       FWfH: Integer;
       FWfDirty: Boolean;
+      // The span every stored row was captured at (issue 159).  Its own
+      // field, compared when a row is PUSHED -- not FRenderSpanHz from tick
+      // to tick, which moves while paused with no row pushed.
+      FWfSpanHz: Int64;
 
       // Mouse cursor column, or -1.  Drawn, not a control.
       FCursorX: Integer;
@@ -298,6 +302,7 @@ type
       procedure DisplayRange(out AMinDb, ARangeDb: Single);
       function WaterfallColor(ARelDb: Single): LongWord;
       procedure EnsureWaterfall(AWidth, AHeight: Integer);
+      procedure ClearWaterfallHistory;
       procedure PushWaterfallRow(ABinsPerPixel: Double);
       procedure RenderWaterfall;
    public
@@ -328,6 +333,13 @@ type
         at a given pixel should land. }
       property DisplayedCentreHz: Int64 read FRenderCentreHz;
       property DisplayedSpanHz: Int64 read FRenderSpanHz;
+
+      (* The waterfall's history (issue 159): the span its rows were captured
+        at (0 before the first row), and how many rows hold data.  A span
+        change empties the history, because a row carries no span of its own
+        and would be drawn as if it covered the new one. *)
+      property WaterfallSpanHz: Int64 read FWfSpanHz;
+      function WaterfallRowsHeld: Integer;
 
       { Run counters, for turning a report of sluggishness into measurements.
         FramesIn counts EVERY frame the radio sent, including the pans this
@@ -1302,21 +1314,12 @@ begin
    FWaterfall.PixelFormat := pf32bit;
    FWaterfall.SetSize(AWidth, AHeight);
 
-   // SetSize does not define the contents, and a 32-bit bitmap's padding bytes
-   // are never written by the render loop.  Clearing once here means an
-   // unwritten pixel can only ever be black, not whatever the allocator left.
-   FWaterfall.Canvas.Brush.Color := clBlack;
-   FWaterfall.Canvas.Brush.Style := bsSolid;
-   FWaterfall.Canvas.FillRect(0, 0, AWidth, AHeight);
-
    FWfW := AWidth;
    FWfH := AHeight;
    SetLength(FWfDb, FWfW * FWfH);
 
-   for i := 0 to High(FWfDb) do
-      begin
-      FWfDb[i] := WF_EMPTY_DB;
-      end;
+   // Black bitmap, empty history -- the one routine a span change uses too.
+   ClearWaterfallHistory;
 
    FWfDirty := True;
 
@@ -1330,6 +1333,50 @@ begin
       (* The bitmap is new and black; colour the kept rows into it now, since
          the paint path only blits. *)
       RenderWaterfall;
+      end;
+end;
+
+(* Every row empty and every pixel black.  Used by EnsureWaterfall for a new
+   bitmap and by a span change (issue 159).
+
+   SetSize does not define the contents, and a 32-bit bitmap's padding bytes
+   are never written by the render loop.  Clearing here means an unwritten
+   pixel can only ever be black, not whatever the allocator left.  (An empty
+   row re-rendered later is black too: WF_EMPTY_DB clamps to LUT index 0.) *)
+procedure TfrmPanadapter.ClearWaterfallHistory;
+var
+   i: Integer;
+begin
+   for i := 0 to High(FWfDb) do
+      begin
+      FWfDb[i] := WF_EMPTY_DB;
+      end;
+
+   if FWaterfall <> nil then
+      begin
+      FWaterfall.Canvas.Brush.Color := clBlack;
+      FWaterfall.Canvas.Brush.Style := bsSolid;
+      FWaterfall.Canvas.FillRect(0, 0, FWaterfall.Width, FWaterfall.Height);
+      end;
+end;
+
+function TfrmPanadapter.WaterfallRowsHeld: Integer;
+var
+   y: Integer;
+begin
+   Result := 0;
+
+   if (FWfW <= 0) or (Length(FWfDb) <> FWfW * FWfH) then
+      begin
+      Exit;
+      end;
+
+   for y := 0 to FWfH - 1 do
+      begin
+      if FWfDb[y * FWfW] <> WF_EMPTY_DB then
+         begin
+         Inc(Result);
+         end;
       end;
 end;
 
@@ -1554,6 +1601,19 @@ begin
    if (w > 0) and (wfH > 0) and (Length(FRenderBins) > 0) then
       begin
       EnsureWaterfall(w, wfH);
+
+      (* ISSUE 159: A ROW CARRIES NO SPAN, so rows captured at another span
+         would be drawn as if they covered this one.  Empty the history when
+         the span changes; a CENTRE change is the display following the VFO
+         and keeps it.  Compared here, at the push, so a span change while
+         paused is still seen on resume.  The better fix -- keep each row's
+         span and centre and re-map, as QK4 does -- is larger. *)
+      if FWfSpanHz <> FRenderSpanHz then
+         begin
+         ClearWaterfallHistory;
+         FWfSpanHz := FRenderSpanHz;
+         end;
+
       PushWaterfallRow(SpectrumBinsPerPixel(Length(FRenderBins), w));
       end;
 

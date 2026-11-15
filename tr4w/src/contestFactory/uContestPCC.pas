@@ -154,7 +154,8 @@ uses
    SysUtils, uContestRegistry,
    (* StringIsAllNumbers -- the test the arm asks of MY STATE. *)
    utils_text,
-   uTR4WStrings;
+   uTR4WStrings,
+   uAppStrings;      (* SNewContestMemberNumberLabel -- issue 51 *)
 
 function TContestPCC.CountsAsMultiplier(const aQso: ContestExchange;
                                         aKind: RemainingMultiplierType): boolean;
@@ -368,7 +369,11 @@ end;
 procedure TContestPCC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_ARKTIKACLUB);
-   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+   (* The row names what it holds (issue 51); the command queued is still
+      MY STATE. *)
+   aPrompts.AskFieldWithCommentAndLabelWhenInside(TC_ENTERYOURMEMBERSHIPNUMBER,
+                                                  ncfMyState,
+                                                  SNewContestMemberNumberLabel);
 end;
 
 (* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:

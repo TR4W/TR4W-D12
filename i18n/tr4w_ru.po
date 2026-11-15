@@ -11177,11 +11177,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Эта копия TR4W выглядит не полностью установленной.\n"
-"\n"
-"Не найдено в %0:s:\n"
-"%1:\n"
-"\n"
-"Запустите TR4W из папки, которую инсталлятор положил в нее (она содержит CTY.DAT, TRMASTER.DTA и папку dom), или запустите установщик снова.\n"
-"\n"
-"TR4W все равно будет запущен, но конкурсы, которым нужны эти файлы, не будут работать должным образом."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Файл %0:s Не было написано: %1:sБолее ранний файл с таким именем, если он был, не изменился."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Не отправляется на другие станции: текст %0:d байты и сеть несет %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Место копирования"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s ()%1:d дег"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Обмен в комментарии"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Язык:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Вступает в силу при следующем запуске TR4W."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Вы были замечены %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

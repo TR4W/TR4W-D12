@@ -215,7 +215,9 @@ type
                                              //   IC-7610/IC-7760 use $00 = VFO A active (default False).
     FModeSetIncludesFilter: Boolean;         // True → $06 set-mode carries a trailing filter byte ($06 <mode> <filter>).
                                              //   False → mode byte only ($06 <mode>); old Icoms (IC-718) NAK the filter byte.
-    FCWSpeedMin: Integer;                    // CW keyer speed range (wpm) for the $14 0C 000-255 level encode.
+    FCWModeSetOmitsFilter: Boolean;          // True → as above, but for CW / CW-R only (Ten-Tec Omni VI, issue 181:
+                                             //   D7's `(RadioModel = OMNI6) and (Mode = CW)` arm, n4af 4.43.3). Default False.
+    FCWSpeedMin: Integer;                   // CW keyer speed range (wpm) for the $14 0C 000-255 level encode.
     FCWSpeedMax: Integer;                    //   Default 6..48 (modern Icoms); IC-718 is 6..60.
     FSplitStateReadable: Boolean;            // True → radio reports split back ($0F read or $0F transceive push),
                                              //   so leave localSplitEnabled to the radio (source of truth).
@@ -722,6 +724,7 @@ begin
   FSupportsActiveVFOQuery := False;       // Overridden True by radios that support $07 $D2 (e.g. IC-7760)
   FActiveVFO := nrVFOA;                  // Safe default; updated by $07 $D2 response on connect
   FModeSetIncludesFilter := True;        // Modern Icoms take $06 <mode> <filter>; IC-718 overrides to False
+  FCWModeSetOmitsFilter := False;        // The Omni VI overrides to True (CW only)
 
   // Capabilities: each radio declares its own set in DefineCapabilities (virtual,
   // so it dispatches to the actual subclass even from this base ctor).  The
@@ -2878,7 +2881,8 @@ begin
         SendToRadio(BuildCIVCommand($07, #$01));
         end;
 
-     if FModeSetIncludesFilter then
+     if FModeSetIncludesFilter and
+        (not (FCWModeSetOmitsFilter and (mode in [rmCW, rmCWRev]))) then
         begin
         logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x filterCmd=$%.2x', [radioModel, modeCmd, filterCmd]);
         SendToRadio(BuildCIVCommand($06, CivChr(modeCmd) + CivChr(filterCmd)));
@@ -2886,6 +2890,7 @@ begin
      else
         begin
         // Old Icoms (IC-718) take the mode byte only; a trailing filter byte makes them NAK the frame.
+        // The Omni VI does the same in CW (FCWModeSetOmitsFilter).
         logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x (no filter byte)', [radioModel, modeCmd]);
         SendToRadio(BuildCIVCommand($06, CivChr(modeCmd)));
         end;

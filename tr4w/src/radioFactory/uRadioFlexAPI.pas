@@ -25,6 +25,8 @@ unit uRadioFlexAPI;
   VFO mapping:
     VFO A (nrVFOA) = slice 0 (primary RX slice)
     VFO B (nrVFOB) = slice 1 (split TX slice)
+    The RECEIVE VFO is whichever of the two the radio reports active=1
+    (issue 259) -- see ProcessSliceStatus and SplitTransmitVFO.
 
   Known limitations:
     - CW injection is not supported via TCP; use the radio's hardware keyer jack.
@@ -54,7 +56,6 @@ type TFlexAPI = class(TFactoryRadioBase)
       // sends it, and a stop hands it to SendStopToRadio (issue #99).
       function  FlexCmdLine(const cmd: string): string;
       function  SplitDelimiter(const s: string; delimiter: Char; index: integer): string;
-      function  ParseKeyValue(const s: string; const key: string): string;
       function  FlexModeToRadioMode(const sMode: string): TRadioMode;
       function  RadioModeToFlexMode(mode: TRadioMode): string;
       function  SliceForVFO(whichVFO: TVFO): integer;
@@ -64,6 +65,10 @@ type TFlexAPI = class(TFactoryRadioBase)
       procedure ProcessInterlockStatus(const payload: string);
       procedure ProcessTransmitStatus(const payload: string);
       procedure SendSubscriptions;
+      // Issue 259: the VFO whose slice is transmitting, and split = that VFO
+      // is not the receive (active) VFO.
+      function  TransmitVFO: TVFO;
+      procedure RecomputeSplit;
 
    protected
       function  GetIsOperational: boolean; override;
@@ -94,6 +99,9 @@ type TFlexAPI = class(TFactoryRadioBase)
       procedure XITOn(whichVFO: TVFO); override;
       procedure XITOff(whichVFO: TVFO); override;
       procedure Split(splitOn: boolean); override;
+      // Issue 259: split transmits on the slice the operator is NOT receiving on.
+      function  SplitTransmitVFO: TVFO; override;
+      procedure SplitTransmittingOn(txVFO: TVFO); override;
       procedure SetRITFreq(whichVFO: TVFO; hz: integer); override;
       procedure SetXITFreq(whichVFO: TVFO; hz: integer); override;
       procedure SetBand(band: TRadioBand; vfo: TVFO = nrVFOA); override;
@@ -107,7 +115,8 @@ type TFlexAPI = class(TFactoryRadioBase)
 
 implementation
 
-uses uRadioRegistry, VC;   // not MainUnit: the logger is a field, see uRadioElecraftK4
+uses uRadioRegistry, VC,   // not MainUnit: the logger is a field, see uRadioElecraftK4
+   uFlexRadioUtils;        // FlexParseKeyValue -- the one key=value parser
 
 // ---------------------------------------------------------------------------
 
@@ -150,6 +159,8 @@ begin
    FSlice0Valid        := False;
    FSlice1Exists       := False;
    FCmdSeq             := 0;
+   // A new link has reported no active slice yet: receive on A until it does.
+   Self.SetActiveVFO(nrVFOA);
    Result := inherited Connect;
    // Do NOT send subscriptions here; the radio sends V/H/M lines first and
    // subscriptions are sent from ProcessMsg once the H line arrives.
@@ -204,36 +215,12 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// ParseKeyValue — extracts the value for a given key from a space-separated
-// key=value string.  Returns '' if the key is not present.
-// Example: ParseKeyValue('RF_frequency=14.156400 mode=USB tx=1', 'mode') = 'USB'
-// ---------------------------------------------------------------------------
-function TFlexAPI.ParseKeyValue(const s: string; const key: string): string;
-var
-   searchKey: string;
-   keyPos:    integer;
-   afterEq:   string;
-   spacePos:  integer;
-begin
-   Result    := '';
-   searchKey := key + '=';
-   keyPos    := Pos(searchKey, s);
-   if keyPos = 0 then
-      begin
-      Exit;
-      end;
-   afterEq  := Copy(s, keyPos + Length(searchKey), Length(s));
-   spacePos := Pos(' ', afterEq);
-   if spacePos = 0 then
-      begin
-      Result := afterEq;
-      end
-   else
-      begin
-      Result := Copy(afterEq, 1, spacePos - 1);
-      end;
-end;
-
+// KEY=VALUE PARSING IS uFlexRadioUtils.FlexParseKeyValue (issue 259).  This
+// unit had its own ParseKeyValue, a copy that had DRIFTED: it searched a bare
+// Pos(key + '='), so a key inside a longer one -- 'mode=' inside
+// 'fm_tone_mode=', 'active=' inside any '..._active=' -- was read as the
+// shorter.  The tested utility already matched the key whole ('retx=0 tx=1'
+// is pinned in uTestFlexRadioUtils), so the copy is deleted, not fixed.
 // ---------------------------------------------------------------------------
 
 function TFlexAPI.NextSeq: integer;
@@ -255,7 +242,10 @@ var
 begin
    fullCmd := FlexCmdLine(cmd);
    logger.trace('[FlexAPI TX] %s', [fullCmd]);
-   inherited SendToRadio(fullCmd);
+   // Self, not inherited: TFlexAPI does not override SendToRadio(s), so this
+   // lands on the same base routine -- and a test probe that does override it
+   // captures the lines (uTestFlexAPISplit).
+   Self.SendToRadio(fullCmd);
 end;
 
 function TFlexAPI.SliceForVFO(whichVFO: TVFO): integer;
@@ -435,6 +425,7 @@ var
    xitOnStr:    string;
    xitFreqStr:  string;
    txStr:       string;
+   activeStr:   string;
    panStr:      string;
    mhzInt:      integer;
    mhzFrac:     integer;
@@ -453,7 +444,7 @@ begin
       // Track slice 0 validity — when SmartSDR closes, it pushes in_use=0.
       // IsOperational returns FSlice0Valid; the polling loop uses this to set
       // the alert color even though the TCP connection is still up.
-      if ParseKeyValue(payload, 'in_use') = '0' then
+      if FlexParseKeyValue(payload, 'in_use') = '0' then
          begin
          if FSlice0Valid then
             begin
@@ -473,7 +464,7 @@ begin
       whichVFO := nrVFOB;
       // If slice 1 is being removed (SmartSDR closed it), clear split state and exit.
       // The radio pushes 'in_use=0' when a slice is deallocated.
-      if ParseKeyValue(payload, 'in_use') = '0' then
+      if FlexParseKeyValue(payload, 'in_use') = '0' then
          begin
          if FSlice1Exists then
             begin
@@ -483,6 +474,8 @@ begin
             Self.localSplitEnabled := False;
             Self.vfo[nrVFOB].frequency := 0;
             Self.vfo[nrVFOB].band      := rbNone;
+            // A removed slice cannot be the one receiving (issue 259).
+            Self.SetActiveVFO(nrVFOA);
             logger.trace('[FlexAPI] Slice 1 removed — split cleared, VFO B reset');
             end;
          Exit;
@@ -505,7 +498,7 @@ begin
 
    // Frequency — Flex sends MHz with 6 decimal places, e.g. '14.156400'.
    // Use integer arithmetic to avoid locale decimal separator issues.
-   freqStr := ParseKeyValue(payload, 'RF_frequency');
+   freqStr := FlexParseKeyValue(payload, 'RF_frequency');
    if freqStr <> '' then
       begin
       dotPos := Pos('.', freqStr);
@@ -538,7 +531,7 @@ begin
 
    // Mode — only store if a real mode was returned; OFF/unknown returns rmNone
    // and must not overwrite the last good mode (OFF is a transient slice state)
-   modeStr := ParseKeyValue(payload, 'mode');
+   modeStr := FlexParseKeyValue(payload, 'mode');
    if modeStr <> '' then
       begin
       parsedMode := FlexModeToRadioMode(modeStr);
@@ -549,33 +542,33 @@ begin
       end;
 
    // RIT
-   ritOnStr := ParseKeyValue(payload, 'rit_on');
+   ritOnStr := FlexParseKeyValue(payload, 'rit_on');
    if ritOnStr <> '' then
       begin
       vfoObj.RITState := ritOnStr = '1';
       end;
 
-   ritFreqStr := ParseKeyValue(payload, 'rit_freq');
+   ritFreqStr := FlexParseKeyValue(payload, 'rit_freq');
    if ritFreqStr <> '' then
       begin
       vfoObj.RITOffset := StrToIntDef(ritFreqStr, 0);
       end;
 
    // XIT
-   xitOnStr := ParseKeyValue(payload, 'xit_on');
+   xitOnStr := FlexParseKeyValue(payload, 'xit_on');
    if xitOnStr <> '' then
       begin
       vfoObj.XITState := xitOnStr = '1';
       end;
 
-   xitFreqStr := ParseKeyValue(payload, 'xit_freq');
+   xitFreqStr := FlexParseKeyValue(payload, 'xit_freq');
    if xitFreqStr <> '' then
       begin
       vfoObj.XITOffset := StrToIntDef(xitFreqStr, 0);
       end;
 
    // TX assignment — tracks which slice is transmitting for split detection
-   txStr := ParseKeyValue(payload, 'tx');
+   txStr := FlexParseKeyValue(payload, 'tx');
    if txStr <> '' then
       begin
       if sliceNum = 0 then
@@ -593,13 +586,32 @@ begin
             FSlice0TX := True;
             end;
          end;
-      Self.localSplitEnabled := not FSlice0TX;
+      RecomputeSplit;
+      end;
+
+   // ACTIVE SLICE = THE RECEIVE VFO (issue 259).  SmartSDR marks the slice the
+   // operator is working with active=1 (a real line: Hamlib's
+   // rigs/flexradio/smartsdr.c quotes "slice 0 in_use=1 ... tx=1 active=1").
+   // Only a 1 moves it: the radio clears the old slice and sets the new one in
+   // separate pushes, in no promised order, and acting on a 0 would let the
+   // order decide.  Slices 2+ returned above, so a third slice made active
+   // leaves the last of A/B standing.
+   activeStr := FlexParseKeyValue(payload, 'active');
+   if activeStr = '1' then
+      begin
+      if Self.GetActiveVFO <> whichVFO then
+         begin
+         logger.trace('[FlexAPI] Slice %d active — receive VFO is %s',
+                      [sliceNum, VFOToString(whichVFO)]);
+         end;
+      Self.SetActiveVFO(whichVFO);
+      RecomputeSplit;
       end;
 
    // Pan handle (slice 0 only) — required for SetBand
    if sliceNum = 0 then
       begin
-      panStr := ParseKeyValue(payload, 'pan');
+      panStr := FlexParseKeyValue(payload, 'pan');
       if (panStr <> '') and (panStr <> '0x00000000') then
          begin
          FPanHandle := panStr;
@@ -612,7 +624,7 @@ procedure TFlexAPI.ProcessInterlockStatus(const payload: string);
 var
    stateStr: string;
 begin
-   stateStr := ParseKeyValue(payload, 'state');
+   stateStr := FlexParseKeyValue(payload, 'state');
    if stateStr = 'TRANSMITTING' then
       begin
       Self.radioState := rsTransmit;
@@ -648,7 +660,7 @@ var
    freqHz:   integer;
    txVFO:    TVFO;
 begin
-   freqStr := ParseKeyValue(payload, 'freq');
+   freqStr := FlexParseKeyValue(payload, 'freq');
    if freqStr = '' then
       begin
       Exit;
@@ -1019,14 +1031,91 @@ begin
       end
    else
       begin
-      // Update TX state optimistically (same reason as above)
-      FSlice0TX          := True;
-      FSlice1TX          := False;
+      // OFF PUTS TRANSMIT BACK ON THE RECEIVE SLICE (issue 259).  With slice 0
+      // receiving -- the only case before active-slice tracking -- that is
+      // exactly the old bytes.  With slice 1 receiving, the old "slice 0 tx=1"
+      // would have turned split ON rather than off.
       Self.localSplitEnabled := False;
-      // Return TX to slice 0; leave slice 1 in place (matches DXCommander behaviour)
-      SendFlexCmd('slice set 0 tx=1');
-      SendFlexCmd('slice set 1 tx=0');
+      if (Self.GetActiveVFO = nrVFOB) and FSlice1Exists then
+         begin
+         FSlice0TX := False;
+         FSlice1TX := True;
+         SendFlexCmd('slice set 1 tx=1');
+         SendFlexCmd('slice set 0 tx=0');
+         end
+      else
+         begin
+         // Update TX state optimistically (same reason as above)
+         FSlice0TX := True;
+         FSlice1TX := False;
+         // Return TX to slice 0; leave slice 1 in place (matches DXCommander behaviour)
+         SendFlexCmd('slice set 0 tx=1');
+         SendFlexCmd('slice set 1 tx=0');
+         end;
       end;
+end;
+
+function TFlexAPI.TransmitVFO: TVFO;
+begin
+   if FSlice0TX then
+      begin
+      Result := nrVFOA;
+      end
+   else
+      begin
+      Result := nrVFOB;
+      end;
+end;
+
+// Split = transmitting on a slice other than the one receiving.  With slice 0
+// receiving this is "not FSlice0TX", the rule this replaced, so A-receiving
+// radios report exactly as before.
+procedure TFlexAPI.RecomputeSplit;
+begin
+   Self.localSplitEnabled := (TransmitVFO <> Self.GetActiveVFO);
+end;
+
+(* ISSUE 259, THE FLEX HALF OF ISSUE 38.  The receive VFO is the active slice
+  (ProcessSliceStatus), so the '-' entry's TX frequency belongs on the other
+  one.  With slice 0 active this is B, the base answer, and nothing changes. *)
+function TFlexAPI.SplitTransmitVFO: TVFO;
+begin
+   Result := OtherVFO(Self.GetActiveVFO);
+end;
+
+(* The '-' entry's split, transmitting on the VFO it has just tuned.
+
+  B: Split(True), unchanged -- including creating slice 1 when it does not
+  exist yet and applying the stored B frequency to it.
+
+  A: slice 1 is receiving, so it exists.  TX moves to slice 0 and slice 1
+  STAYS active; Split(True) would have forced slice 0 active, pulling the
+  operator's receive onto the transmit frequency.
+
+  A plain Split(True) -- the band map's QSX, WSJT-X, the TCI server, all of
+  which have written B -- is NOT routed here and keeps its bytes. *)
+procedure TFlexAPI.SplitTransmittingOn(txVFO: TVFO);
+begin
+   if txVFO = nrVFOB then
+      begin
+      Self.Split(True);
+      Exit;
+      end;
+
+   if not FSlice1Exists then
+      begin
+      logger.Error('[FlexAPI.SplitTransmittingOn] split on VFO A refused -- slice 1 does not exist, so slice 0 is the only receive slice');
+      Exit;
+      end;
+
+   // Optimistic, as Split does, so the 'transmit freq=' push that arrives
+   // before the slice tx= confirmation is routed to VFO A.
+   FSlice0TX := True;
+   FSlice1TX := False;
+   Self.localSplitEnabled := True;
+   SendFlexCmd('slice set 0 tx=1');
+   SendFlexCmd('slice set 1 tx=0');
+   SendFlexCmd('slice set 1 active=1');
 end;
 
 // ---------------------------------------------------------------------------

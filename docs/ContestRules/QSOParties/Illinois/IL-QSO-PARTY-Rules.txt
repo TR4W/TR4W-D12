@@ -1,0 +1,197 @@
+Source: https://w9awe.org/download/91/2026/2230/announcing-the-2026-illinois-qso-party (saved beside this file)
+Fetched: 2026-11-15; pdftotext -layout, no wording changed
+
+Announcing the 2026 Illinois QSO Party
+
+Sponsored by the Western Illinois Amateur Radio Club
+
+Date/Time: 1700 UTC October 18, 2026 to 0100 UTC October 19, 2026
+
+Bands: 160 through 2 meters, excluding WARC bands (60, 30, 17 and 12 meters)
+
+Exchange: IL stations give RS/T and county; others give RS/T and state, province or
+country
+
+Scoring: Phone QSO: 1 point; CW/digital QSO 2 points. No repeater QSOs. All stations
+are limited to one transmitted signal at a time. (But see new "Unlimited" category below).
+SO2R operation is permitted. Stations may be worked once per band and mode (phone
+and CW/digital) and once per band/mode/county for IL Mobile and Rover stations. Each
+Mobile or Rover vehicle is considered one station and must use only one call. Contacts
+with/by stations at the border of 2/3/4 counties count as 2/3/4 counties and 2/3/4 QSOs.
+IL stations multiply points by the sum of IL counties, US states, VE provinces and DXCC
+countries (maximum 5) worked. Canada, KH6 and KL7 do not count as DX entities.
+Additional DX contacts count for points but not multipliers. Non-IL stations multiply
+points by the number of IL counties worked.
+
+Note on digital modes: NEW....NOTE!! Due to the complexity of creating a log entry
+conforming to ILQP log submission rules, FT4 and FT8 contacts will receive no contact
+credit. Other digital modes are encouraged.
+
+NEW FOR 2025/2026 BONUS STATIONS!!
+
+The sponsoring club of ILQP is the Western Illinois ARC, which is authorized to use two
+callsigns: W9AWE (the historical call) and W9OAB (the call of a long-time member and
+benefactor). Both of these calls will be used during the 2026 event, and any entrant
+contacting these stations will have a 100 point bonus added to the final score. Total of
+200 points possible. W9AWE TBD, W9OAB will be primarily phone.
+
+Entry Classes:
+
+         IL Fixed Station, High Power. Permanent station location, single county,
+transmitter power exceeding 100 watts PEP. (Note change...was 200 watts PEP)
+
+         IL Fixed Station, Low Power. Permanent station location, single county,
+transmitter power not to exceed 100 watts PEP. (Note change....was 200 watts PEP)
+
+         Illinois Portable: Not a permanent station location; antennas erected for the
+purpose of the contest; may be on a county line or corner. (NOTE: County lines
+established by waterways may not be activated for ILQP).
+
+         Illinois Mobile: Station capable of motion while operating though may be
+stationary. Entrants are encouraged to utilize a separate driver and choose operating
+procedures with safety uppermost in mind! Mobile entrants may operate from only one
+county at a time. Simultaneous operation from multiple counties will result in
+reclassification as a "Rover".
+         Illinois Rover: Station operating from more than one non-permanent location.
+Single-county, county line and county corner operations are permitted. Any type of
+mobile or portable antennas may be used. Any power source may be used (auto,
+generator or commercial mains). Rover stations may operate when moving or stopped.
+
+         Outside Illinois, High Power: Any fixed, portable or mobile station operating from
+outside the state of Illinois with transmitter power exceeding 100 watts PEP (Note
+change: was 200 watts)
+
+         Outside Illinois, Low Power: Any fixed, portable or mobile station operating from
+outside the state of Illinois with a transmitter power not exceeding 100 watts PEP (Note
+change: was 200 watts).
+
+QRP competition: A QRP entrant shall certify that the operation was with transmitter
+power at all times not exceeding 5 watts CW/DIGITAL or 10 watts SSB by indicating QRP
+in the entry class in the Cabrillo file or checking the QRP box on the summary sheet.
+
+Unlimited: (New category) Stations wishing to employ multiple transmitted signals
+simultaneously at a single site may enter as "Unlimited". This class is created as an
+experiment to encourage groups to train new operators and allow several the opportunity
+to participate.
+
+Spotting: Spotting of stations worked, especially mobile and rover stations, is
+encouraged. All categories of entrants are allowed to self-spot. (Change from previous
+years.)
+
+Awards:
+
+         Plaques will be awarded to the highest-scoring IL Fixed Station High Power, IL
+Fixed Station Low Power, IL Mobile, IL Rover, IL Portable, 2-County Line Portable,
+Outside IL High Power and Outside IL Low Power stations and Unlimited. Plaques will
+also be awarded, regardless of entry class or station location, to the stations making the
+highest number of raw phone QSOs, raw cw QSOs and raw mixed-mode QSOs.
+
+         Certificates will be awarded to the 2nd through 5th place IL Fixed Stations High
+Power, the 2nd through 5th place IL Fixed Stations Low Power, 2nd through 5th place IL
+Mobiles, 2nd through 5th place IL Rovers, the top IL and Outside IL QRP entrants, the top 3
+IL single-county portables, 2nd and 3rd place IL 2-county portables, top 3 IL 3-county
+portables, top 3 IL 4-county portables, 2nd and 3rd place Unlimited entries and the highest-
+scoring (reporting at least 25 contacts) stations in each US State, VE province and DXCC
+country.
+
+         As certificates are delivered in electronic format via e-mail, all entrants are
+requested to provide a valid e-mail address in the Cabrillo file or on the summary sheet.
+
+         Illinois Club Competition: Illinois entrants are encouraged to include the name of
+their local club on their entries.
+
+         ILQP Outstanding Achievement Award: Non-IL stations working at least 200
+contacts or 75 IL counties will receive a special certificate.
+Logs: All entrants who use computerized logging are required to submit logs in
+electronic format. Do NOT submit a computer-printed log from a logging program
+without also providing the electronic file (Cabrillo file), as the scoring and verification
+process starts by transferring all log data into a master Excel file. Hand-written paper
+logs accompanied by an official ILQP summary sheet will be accepted for transcription
+by the ILQP committee. Those who submit paper logs absolve the committee of all
+responsibility for miscopied log information. (See below)
+
+         Electronic logs: Cabrillo format is preferred. Those entrants using a program that
+does not provide Cabrillo files for submission should contact the committee concerning
+acceptable formatting. Use of the fill-in Excel file available on the ILQP site
+https://w9awe.org/ilqp/ under Sample_Excel_Log is encouraged for non-Cabrillo logs.
+
+Electronic logs should be sent as attachments to n9jf@arrl.net.
+
+Please do NOT send .adi nor .adif files!
+
+When you attach your log file, check to see that it is the right file. Every year we get a
+few logs for CQWW, NYQP, and other contests.
+
+Logs that do not comply with submission requirements will be classified as Check Logs
+and will not be eligible for awards.
+
+Paper Logs; A paper log shall be hand-written and indicate, for each contact, the
+entrant's QTH, band, mode, UTC, and the call and location of the station worked. Paper
+log submissions must be accompanied by a completed ILQP Summary Sheet (can be
+downloaded from https://w9awe.org/ilqp/ ILQP Summary Sheet, printed from the website
+or requested (with SASE) from the sponsor. Paper logs should be mailed to WIARC,
+POBox 3132, Quincy IL 62305-3132. The committee is not responsible for transcription
+errors.
+
+Submission Deadline: NEW LOG DEADLINE!!! Logs sent by e-mail must be received by
+the sponsor, and paper logs postmarked by midnight Central Time November 4, 2026. A
+list of all logs received will be posted to the ILQP webpage. Electronic logs submitted
+will be acknowledged by return e-mail within 48 hours. Entrants assume responsibility
+for contacting the sponsor if they do not receive confirmation or if their call is not
+included in the "logs received" listing on the website.
+
+Disqualification: Participants are expected to follow good amateur practices, conform to
+the DX Code of Ethics and operate within their license privileges and in accordance with
+ILQP rules. Compelling evidence to the contrary may serve as grounds for
+disqualification. Decisions of the ILQP Committee shall be final.
+
+Rules, summary sheet, and other information are available at https://w9awe.org/ilqp/.
+
+You are invited to join the ILQP reflector at http://mailman.qth.net/mailman/listinfo/ilqso.
+
+Miscellaneous:
+
+County Name Abbreviations: Participants are reminded that a proper log record of a
+contact with an Illinois station in this event requires the name of the Illinois County
+where that station is located be entered as part of each QSO record. It is quite acceptable
+to enter either the complete and correctly spelled county name or the unique abbreviated
+form of the county name.
+
+To facilitate the use of abbreviations, a list of recommended Illinois County name
+abbreviations is included every year as part of the ILQP Summary sheet (and in the list
+on the website). Each Illinois county has an established 4 letter abbreviation (Lee County
+excepted) shown in this list which has been in use in this event for many years. PLEASE
+PRINT OUT THIS LIST OF OFFICIAL ABBREVIATIONS AHEAD OF TIME AND HAVE IT AT
+YOUR OPERATING POSITION!
+
+Unfortunately, logs are submitted every year with all manner of variation and corruption
+of these abbreviations. In the past the ILQP Committee has been very lenient in not
+busting QSO's due to the use of a non-standard abbreviation as long as there is some
+unambiguous clue in the abbreviation used as to the actual county name. In some cases,
+we even find that the wrong county name has been used. This often involves White
+(WHIT) and Whiteside (WTSD) counties as well as Mason (MASN) and Macon (MACN)
+counties. The ILQP Committee asks that each entrant review the list of county name
+abbreviations on the summary sheet and use only these abbreviations in their log entries
+and to make sure the correct abbreviation for a given county is used. This event is now
+generating a master log each year of nearly 50,000 QSO's; manual intervention by
+committee members in the scoring process is becoming tedious and time consuming.
+And so, a word to the wise, in the future, this leniency will not be continued as a part of
+the scoring process.
+
+QSO Record Minimum Data: Each entrant is asked to review their log file prior to
+submission to ensure that every QSO record (i.e. each line) includes the following
+minimum data: operating frequency or band; operating mode; UTC date; UTC time; the
+call sign of your station; the RS(T) sent; the location of your station; the call sign of the
+station contacted; the RS(T) received; and the location of the station contacted. In
+addition, in a Cabrillo log file, each record should include the following data: `QSO:' in
+the first field of each line. Please examine the sample excel spreadsheet generated
+Cabrillo file that is available for download on the WIARC ILQP web page. Also please
+review the sample log file at the end of the document for help in determining compliance
+with the preferred format. Cabrillo File Header Information: Prior to submitting a log file,
+entrants should review the information contained in the header field of their Cabrillo file
+to make sure it is complete and accurate. In particular, make sure entry class, personal
+information, call sign, station location, and club affiliation are correctly shown. The
+header information is automatically pulled and used by the processing software. Please
+examine the sample excel spreadsheet generated Cabrillo file that is available for
+download son the WIARC ILQP web page.
+

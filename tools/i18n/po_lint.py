@@ -61,7 +61,13 @@ import pofile
 #
 # %% is a literal percent and is deliberately not a specifier here: it consumes
 # no argument, so its presence or absence cannot misalign the varargs.
-_FMT = re.compile(r"%[-+#0]*[0-9]*(?:\.[0-9]+)?[sduxXcfgeEp]")
+#
+# AN INDEXED SPECIFIER (%0:s, %1:d) IS A SPECIFIER TOO (2026-11-15). The uAppStrings
+# messages are written for Pascal's Format with argument indexes, and this
+# pattern did not see them at all: a draft of '%0:s  (%1:d deg)' that came back
+# as '(%1:d deg)' -- the country name gone -- passed both mt_seed and po_lint.
+_FMT = re.compile(r"%(?:[0-9]+:)?[-+#0]*[0-9]*(?:\.[0-9]+)?[sduxXcfgeEp]")
+_INDEXED = re.compile(r"^%[0-9]+:")
 
 
 def say(text):
@@ -98,6 +104,18 @@ def specifiers(text):
    return _FMT.findall(text)
 
 
+def same_specifiers(source, target):
+   """Do source and target carry the same format specifiers?
+
+   In the same ORDER, unless every specifier names its argument index: then a
+   translator may legitimately reorder them ('%1:d ... %0:s'), so only the set
+   with its counts must match."""
+   src, tgt = specifiers(source), specifiers(target)
+   if src and all(_INDEXED.match(s) for s in src + tgt):
+      return sorted(src) == sorted(tgt)
+   return src == tgt
+
+
 CONTROL_DEFECT = "CONTROL CHARS differ"
 FORMAT_DEFECT = "FORMAT SPECIFIERS differ"
 
@@ -119,7 +137,7 @@ def draft_defects(source, target, accelerators=False):
    out = []
    if controls(source) != controls(target):
       out.append(CONTROL_DEFECT)
-   if specifiers(source) != specifiers(target):
+   if not same_specifiers(source, target):
       out.append(FORMAT_DEFECT)
    if accelerators:
       out.extend(accelerator_defects(source, target))

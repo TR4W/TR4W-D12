@@ -98,9 +98,19 @@ requests merely because a class compiles.
 
 ## Remaining queue
 
-South Carolina #111/#113; Atlantic Canada
-#116; Canadian Prairies #117; Hawaii #118; Illinois #119; Iowa #120; Kansas
-#121; Louisiana #122; Mississippi #123; South Dakota #129.
+**Built 2026-11-15, uncommitted and not yet compiled** (issues labelled
+Requires Testing): Kansas #121 (`KEY > Ks` county file, the Idaho pattern;
+one domestic `Dx` entry), Iowa #120 (Kentucky's shape plus IA through #317)
+and South Carolina #111 (#113 closed as its duplicate; points 2/4 by who was
+worked through the party base's new `QSOCreditsHostCounty`, lifted out of
+`InStateCountyEarnsHostState`). `CountyFileDifference` takes an optional
+`> Ks`-style mapping. Matrix records are still to be frozen.
+
+Waiting: Atlantic Canada #116 and Hawaii #118 (the sponsor sites answer 403;
+rules requested), Canadian Prairies #117 (district count; shared multi-province
+host change with #116), Illinois #119 (IL-as-state and DC questions), Louisiana
+#122 (the CW+digital multiplier-mode seam), Mississippi #123 (six questions),
+South Dakota #129 (a split-score totals seam).
 
 These remain requests, not claimed implementations. Regional Canadian
 events require their actual multi-province eligibility, not an assumed

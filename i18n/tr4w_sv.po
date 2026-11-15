@@ -10848,3 +10848,48 @@ msgstr ""
 "Starta TR4W från mappen installeraren sätta den i (det håller CTY.DAT, TRMASTER.DTA och en kupol mapp), eller kör installationsprogrammet igen.\n"
 "\n"
 "TR4W kommer fortfarande att starta, men tävlingar som behöver dessa filer fungerar inte korrekt."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Filen %0:s Inte skrivet: %1:sEn tidigare fil av det namnet, om det fanns en, är oförändrad."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Skickas inte till andra stationer: texten är %0:d byte och nätverket bär %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Copy spot"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (b)%1:d Deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Exchange i kommentar"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Språk:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Verkar när TR4W börjar."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Du är spotted av %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

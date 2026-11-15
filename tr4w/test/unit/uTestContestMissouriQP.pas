@@ -183,8 +183,9 @@ begin
 end;
 
 (* "8. FT4/FT8 or similar modes that do not allow free text sending will not
-   be allowed." FT8, FT4 and JT65 -- the WSJT structured-message modes -- are
-   X-QSOs; every other digital submode is credited, and so is a digital QSO
+   be allowed." FT8, FT4, JT65, FST4 and FST4W -- the WSJT structured-message
+   modes (FST4/FST4W since issue 260) -- are X-QSOs; every other digital
+   submode is credited, and so is a digital QSO
    whose submode is not recorded. CW, phone and FM are credited whatever the
    submode. Asked of the station-less identity, as every X-QSO reader asks
    it. *)
@@ -199,9 +200,9 @@ begin
    identity := ContestIdentity(MOQSOPARTY);
    for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
       begin
-      refused := ext in [eFT8, eFT4, eJT65];
+      refused := ext in [eFT8, eFT4, eJT65, eFST4, eFST4W];
       CheckTrue(ContestCreditsMode(identity, Digital, ext) = (not refused),
-                'digital submode ' + IntToStr(Ord(ext)) + ' credited unless FT8, FT4 or JT65');
+                'digital submode ' + IntToStr(Ord(ext)) + ' credited unless FT8, FT4, JT65, FST4 or FST4W');
       qso := MissouriQso(Band20, Digital, ext);
       CheckTrue(QSOIsXQSO(identity, qso) = refused,
                 'digital submode ' + IntToStr(Ord(ext)) + ': an X-QSO exactly when refused');
@@ -212,6 +213,8 @@ begin
    CheckEquals(0, PointsFor(True, Band20, Digital, eFT8), 'an FT8 QSO scores 0');
    CheckEquals(0, PointsFor(True, Band20, Digital, eFT4), 'an FT4 QSO scores 0');
    CheckEquals(0, PointsFor(True, Band20, Digital, eJT65), 'a JT65 QSO scores 0');
+   CheckEquals(0, PointsFor(True, Band20, Digital, eFST4), 'an FST4 QSO scores 0');
+   CheckEquals(0, PointsFor(True, Band20, Digital, eFST4W), 'an FST4W QSO scores 0');
    CheckEquals(2, PointsFor(True, Band20, Digital, eJS8), 'a JS8 QSO (free text) scores 2');
    CheckTrue(ContestCreditsModeKey(identity, Digital),
              'the Digital key is credited: the dupe sheet knows no submode');

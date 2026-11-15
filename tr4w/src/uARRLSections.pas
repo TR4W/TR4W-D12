@@ -186,6 +186,26 @@ begin
       Exit;
       end;
 
+   (* THE RAC SECTIONS THAT ARE ONE PROVINCE (issue 275 item 4). Each is its
+      province's own ADIF code, and Golden Horseshoe lies wholly in Ontario.
+      Left out on purpose, by NY4I's rule that a state is written only when
+      it is known for certain: TER, NT and NWT (more than one territory),
+      MDC (Maryland and DC), and PR and VI, which are their own DXCC
+      entities, not states. *)
+   if (section = 'AB') or (section = 'BC') or (section = 'MB') or
+      (section = 'NB') or (section = 'NL') or (section = 'NS') or
+      (section = 'PE') or (section = 'QC') or (section = 'SK') then
+      begin
+      Result := section;
+      Exit;
+      end;
+
+   if section = 'GH' then
+      begin
+      Result := 'ON';
+      Exit;
+      end;
+
    Result := '';
 end;
 

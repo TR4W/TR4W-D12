@@ -101,7 +101,42 @@ def read_ini(path, lang):
    if section is not None:
       entries.append((section, fields.get("DEFAULT", ""),
                       fields.get("DESCRIPTION", "")))
+   if lang == pc.SOURCE_LANG:
+      entries = [(s, d, ENGLISH_CORRECTIONS.get(s, desc)) for s, d, desc in entries]
    return entries
+
+
+# ENGLISH CORRECTED AFTER THE INI WAS FROZEN (issue 152, 2026-11-15).
+#
+# commands_help_eng.ini is never written (NY4I: a historical artifact that only
+# seeds the .po), so an English correction made in i18n/help_en.po has nowhere
+# to live on the ini side -- and a run would read the OLD English back out of
+# the ini, reword help_en.po to it, and clear the reseeded machine drafts in
+# every language. These four were corrected with the QUICK QSL fix (6e70eb88):
+# the ini still says "same effect" for QUICK QSL MESSAGE and ends QUICK QSL SSB
+# MESSAGE with a stray "### R".
+#
+# Keyed by the ini SECTION as written; the text is copied VERBATIM from
+# help_en.po's msgid. Applied as the ini is read, for the English only, so every
+# path through this tool (the merge, --check, --todo) sees the corrected text.
+# Pinned by test_ini2po.py, which also fails if a correction stops matching
+# help_en.po. Add a row whenever help_en.po's English is corrected by hand.
+ENGLISH_CORRECTIONS = {
+   "QUICK QSL CW MESSAGE":
+      "Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE "
+      "when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends "
+      "QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL "
+      "INTERVAL is active, and when a call is waiting on deck. Programmed via "
+      "Alt+P.",
+   "QUICK QSL CW MESSAGE1":
+      "Short CW acknowledgement message 1. This is another name for QUICK QSL CW "
+      "MESSAGE, and both set the same message. Programmed via Alt+P.",
+   "QUICK QSL MESSAGE":
+      "No longer used. An old configuration file may still contain it; it is "
+      "accepted and ignored. Set QUICK QSL CW MESSAGE instead.",
+   "QUICK QSL SSB MESSAGE":
+      "Short SSB voice acknowledgement message. Programmed via Alt+P.",
+}
 
 
 def _pascal_string_list(source, name):

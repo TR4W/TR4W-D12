@@ -381,8 +381,9 @@ end;
 (* 8): "Use of 30, 17 and 12 meters are prohibited except when operating
    FT8/FT4 on the recognized frequencies ... VHF and UHF frequencies are
    allowed ... Otherwise, operators may use any frequency allowed by their
-   license". Every band but the three WARC bands -- and those in EVERY mode,
-   FT8 included: UsesBand cannot see the mode (a gap, the class header). *)
+   license". Every band; the three WARC bands on FT8/FT4 only (issue 269,
+   NY4I: "allow the ft8 and ft4 contacts on the other bands") -- UsesBand
+   credits them and UsesBandInMode refuses every other mode there. *)
 procedure TContestVermontQPTests.Test_VermontBands;
 var
    identity: TContestBase;
@@ -393,12 +394,18 @@ begin
    identity := ContestIdentity(VermontHandle);
    for b := Low(BandType) to High(BandType) do
       begin
-      expected := not (b in [Band30, Band17, Band12, AllBands, NoBand]);
+      expected := not (b in [AllBands, NoBand]);
       CheckTrue(identity.UsesBand(b) = expected,
-                'band ' + IntToStr(Ord(b)) + ' credited exactly when not WARC');
+                'band ' + IntToStr(Ord(b)) + ' credited');
       CheckTrue(ContestCreditsBand(identity, b) = expected,
                 'band ' + IntToStr(Ord(b)) + ' through the one seam');
       end;
+   CheckTrue(identity.UsesBandInMode(Band30, Digital, eFT8), '30 m FT8 is credited');
+   CheckTrue(identity.UsesBandInMode(Band17, Digital, eFT4), '17 m FT4 is credited');
+   CheckFalse(identity.UsesBandInMode(Band12, CW, eCW), '12 m CW is not');
+   CheckFalse(identity.UsesBandInMode(Band30, Digital, eRTTY), '30 m RTTY is not');
+   CheckFalse(identity.UsesBandInMode(Band30, Digital, eJT65), '30 m JT65 is not: the rule names FT8/FT4');
+   CheckTrue(identity.UsesBandInMode(Band20, CW, eCW), '20 m CW is');
    CheckEquals(3, PointsFor(StationAt(False), Band160, CW, eCW, 'CHI'), '160 m CW scores');
    CheckEquals(3, PointsFor(StationAt(False), Band10, CW, eCW, 'CHI'), '10 m CW scores');
    CheckEquals(1, PointsFor(StationAt(False), Band6, Phone, eUSB, 'CHI'), '6 m scores');
@@ -408,8 +415,12 @@ begin
    CheckEquals(0, PointsFor(StationAt(False), Band30, CW, eCW, 'CHI'), '30 m CW scores nothing');
    CheckEquals(0, PointsFor(StationAt(False), Band17, Phone, eUSB, 'CHI'), '17 m SSB scores nothing');
    CheckEquals(0, PointsFor(StationAt(False), Band12, CW, eCW, 'CHI'), '12 m CW scores nothing');
-   CheckEquals(0, PointsFor(StationAt(False), Band30, Digital, eFT8, 'CHI'),
-               'NOT BUILT: 30 m FT8 scores nothing either (WARC FT8 is a gap)');
+   CheckEquals(2, PointsFor(StationAt(False), Band30, Digital, eFT8, 'CHI'),
+               '30 m FT8 scores 2 (issue 269)');
+   CheckEquals(2, PointsFor(StationAt(False), Band12, Digital, eFT4, 'CHI'),
+               '12 m FT4 scores 2');
+   CheckEquals(0, PointsFor(StationAt(False), Band17, Digital, eRTTY, 'CHI'),
+               '17 m RTTY scores nothing');
 end;
 
 (* 7A): "Each complete non-duplicate Phone contact is worth 1 point, per band.
@@ -1371,12 +1382,18 @@ begin
       dupe := EnterPartyQSO('W1FT2', '599 ORL', Band40, Digital, ePSK31, accepted, rx);
       CheckTrue(rx.DomesticMult, 'so Orleans on 40 m PSK is still a new digital multiplier');
 
-      (* WARC: logged, an automatic X-QSO -- FT8 included (the gap). *)
+      (* WARC: a CW QSO is logged as an automatic X-QSO; FT8 is credited
+         there (issue 269). *)
       dupe := EnterPartyQSO('W1WRC', '599 ESS', Band30, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a 30 m QSO is logged');
       CheckTrue(QSOIsXQSO(ContestIdentity(h), rx), 'as an X-QSO ("30, 17 and 12 meters are prohibited")');
       CheckEquals(0, Integer(rx.QSOPoints), 'and scores 0');
       CheckFalse(rx.DomesticMult, 'and Essex is no multiplier from it');
+      dupe := EnterPartyQSO('W1WR8', '599 ESS', Band30, Digital, eFT8, accepted, rx);
+      CheckTrue(accepted, 'a 30 m FT8 QSO is logged');
+      CheckFalse(QSOIsXQSO(ContestIdentity(h), rx), 'and is no X-QSO ("except when operating FT8/FT4")');
+      CheckEquals(2, Integer(rx.QSOPoints), 'and scores 2');
+      CheckFalse(rx.DomesticMult, 'and, as a WSJT-X QSO, earns no county');
 
       (* "Stations outside Vermont work Vermont stations." *)
       DomesticQTHRefusalDomDir := ShippedDomDir;

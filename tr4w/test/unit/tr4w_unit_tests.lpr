@@ -72,6 +72,8 @@ uses
    // belongs at the uCAT seam, not here, and not in the same change that got
    // the suite building again.
    Interfaces,
+   (* Forms: only for Application.CaptureExceptions below (issue 311). *)
+   Forms,
 {$ENDIF}
    SysUtils,
    Log4D,
@@ -188,6 +190,8 @@ uses
    uWSJTXReport         in '..\..\src\uWSJTXReport.pas',
    uTestWSJTXReport     in 'uTestWSJTXReport.pas',
    uTestN1MMMode        in 'uTestN1MMMode.pas',
+   uN1MMLogEnvelope     in '..\..\src\uN1MMLogEnvelope.pas',
+   uTestN1MMLogEnvelope in 'uTestN1MMLogEnvelope.pas',
    uTestUDPContactXml   in 'uTestUDPContactXml.pas',
    uTestUDPDatagrams    in 'uTestUDPDatagrams.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
@@ -214,6 +218,8 @@ uses
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
    uTestAutomaticXQSO   in 'uTestAutomaticXQSO.pas',
    uTestMalformedGrid   in 'uTestMalformedGrid.pas',
+   uTestSpotText        in 'uTestSpotText.pas',
+   uTestFrameworkIsolation in 'uTestFrameworkIsolation.pas',
    uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
    uTestNYQPRover       in 'uTestNYQPRover.pas',
    uTestOperatorCQMemory in 'uTestOperatorCQMemory.pas',
@@ -360,6 +366,9 @@ uses
    uContestWestVirginiaQP in '..\..\src\contestFactory\uContestWestVirginiaQP.pas',
    uContestArkansasQP in '..\..\src\contestFactory\uContestArkansasQP.pas',
    uContestKentuckyQP in '..\..\src\contestFactory\uContestKentuckyQP.pas',
+   uContestKansasQP in '..\..\src\contestFactory\uContestKansasQP.pas',
+   uContestIowaQP in '..\..\src\contestFactory\uContestIowaQP.pas',
+   uContestSouthCarolinaQP in '..\..\src\contestFactory\uContestSouthCarolinaQP.pas',
    uContestVermontQP in '..\..\src\contestFactory\uContestVermontQP.pas',
    uContestNewHampshireQP in '..\..\src\contestFactory\uContestNewHampshireQP.pas',
    uContestIN7QPNE in '..\..\src\contestFactory\uContestIN7QPNE.pas',
@@ -610,6 +619,8 @@ uses
    uTestFlexDiscovery   in 'uTestFlexDiscovery.pas',
    uTestKenwoodSerial   in 'uTestKenwoodSerial.pas',
    uTestKenwoodLANSplit in 'uTestKenwoodLANSplit.pas',
+   uTestFlexAPISplit    in 'uTestFlexAPISplit.pas',
+   uTestTenTecModeSet   in 'uTestTenTecModeSet.pas',
    uTestRadioTCI        in 'uTestRadioTCI.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
@@ -888,6 +899,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestWestVirginiaQP in 'uTestContestWestVirginiaQP.pas',
    uTestContestArkansasQP in 'uTestContestArkansasQP.pas',
    uTestContestKentuckyQP in 'uTestContestKentuckyQP.pas',
+   uTestContestKansasQP in 'uTestContestKansasQP.pas',
+   uTestContestIowaQP in 'uTestContestIowaQP.pas',
+   uTestContestSouthCarolinaQP in 'uTestContestSouthCarolinaQP.pas',
    (* The Vermont QSO Party, a new contest registered by its id
       (2026-11-10, #130). *)
    uTestContestVermontQP in 'uTestContestVermontQP.pas',
@@ -1045,6 +1059,14 @@ begin
      logged; a test that asserts one captures the log. *)
    WarningsHaveNoOperator := True;
 
+   (* NO EXCEPTION DIALOG IN AN UNATTENDED RUN (issue 311). Once an early suite
+     calls Application.Initialize, the LCL captures an unhandled exception and
+     shows its own box ("Disk Full. Press OK to ignore and risk data
+     corruption") that nobody is there to answer. With the capture off, the
+     exception reaches the try/except around RunAllSuites below and the run
+     ends with the exit code 1 and a named crash. *)
+   Application.CaptureExceptions := False;
+
    WriteLn('=== TR4W Unit Tests ===');
    WriteLn('');
 
@@ -1052,6 +1074,7 @@ begin
    RegisterSuite(TQsoDispatcherTests.Create('QsoDispatcher'));
    RegisterSuite(TNetSendQueueTests.Create('NetSendQueue'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
+   RegisterSuite(TN1MMLogEnvelopeTests.Create('N1MMLogEnvelope'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
@@ -1121,6 +1144,9 @@ begin
    RegisterSuite(TContestWestVirginiaQPTests.Create('ContestWestVirginiaQP'));
    RegisterSuite(TContestArkansasQPTests.Create('ContestArkansasQP'));
    RegisterSuite(TContestKentuckyQPTests.Create('ContestKentuckyQP'));
+   RegisterSuite(TContestKansasQPTests.Create('ContestKansasQP'));
+   RegisterSuite(TContestIowaQPTests.Create('ContestIowaQP'));
+   RegisterSuite(TContestSouthCarolinaQPTests.Create('ContestSouthCarolinaQP'));
    RegisterSuite(TContestVermontQPTests.Create('ContestVermontQP'));
    RegisterSuite(TAdditionalDomesticMultiplierTests.Create('AdditionalDomesticMultiplier'));
    RegisterSuite(TContestNewHampshireQPTests.Create('ContestNewHampshireQP'));
@@ -1211,6 +1237,8 @@ begin
    RegisterSuite(TFlexDiscoveryTests.Create('FlexDiscovery'));
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));
    RegisterSuite(TKenwoodLANSplitTests.Create('KenwoodLANSplit'));
+   RegisterSuite(TFlexAPISplitTests.Create('FlexAPISplit'));
+   RegisterSuite(TTenTecModeSetTests.Create('TenTecModeSet'));
    RegisterSuite(TRadioTCITests.Create('RadioTCI'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
@@ -1254,6 +1282,8 @@ begin
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TAutomaticXQSOTests.Create('AutomaticXQSO'));
    RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
+   RegisterSuite(TSpotTextTests.Create('SpotText'));
+   RegisterSuite(TFrameworkIsolationTests.Create('FrameworkIsolation'));
    RegisterSuite(TRoverDupeKeyTests.Create('RoverDupeKey'));
    RegisterSuite(TNYQPRoverTests.Create('NYQPRover'));
    RegisterSuite(TOperatorCQMemoryTests.Create('OperatorCQMemory'));

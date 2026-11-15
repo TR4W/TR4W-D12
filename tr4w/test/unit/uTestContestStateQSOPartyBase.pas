@@ -84,9 +84,15 @@ type
       function Sent(const aMy: TMyStationExchange): TMyStationExchange;
       procedure Report(aLogger: TLogLogger; aYear: integer);
       function ExtraState(const aQso: ContestExchange): string;
+      function IsHostCounty(const aQso: ContestExchange): boolean;
       function RoverCall(const aCall: string): string;
       function Matches(const aCall, aBonus: string): boolean;
    end;
+
+function TSentLocationProbe.IsHostCounty(const aQso: ContestExchange): boolean;
+begin
+   Result := QSOCreditsHostCounty(aQso);
+end;
 
 (* '' when the helper answers False -- and the helper's aKey must then be ''. *)
 function TSentLocationProbe.ExtraState(const aQso: ContestExchange): string;
@@ -358,6 +364,12 @@ begin
       station.InHostState := False;
       probe.SetStation(station);
       CheckEquals('', probe.ExtraState(qso), 'an out-of-state entrant earns no host state');
+      (* QSOCreditsHostCounty is the county half alone (issue 111: South
+         Carolina's points ask it): it answers for any entrant. *)
+      CheckTrue(probe.IsHostCounty(qso), 'the county test does not ask where the entrant is');
+      qso.DomesticQTH := 'ON';
+      CheckFalse(probe.IsHostCounty(qso), 'a province is not a host county');
+      qso.DomesticQTH := 'MON';
       station.InHostState := True;
       probe.SetStation(station);
       CheckEquals('W1AW/5', probe.RoverCall('W1AW/5/MON'), 'last county suffix only; preserve /5');

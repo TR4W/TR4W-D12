@@ -811,10 +811,15 @@ report-shaped first word as the RS(T) and takes a QTH alone (no registered
 contest does; `uTestZoneEntryRefusal` drives it under ARRL RTTY Roundup).
 **Every refusal names its reason** in `ExchangeErrorMessage`, existing strings
 only: `TC_IMPROPERZONENUMBER`, `TC_NOTENOUGHINFOINEXCHANGE` (zone missing),
-`RefuseDomesticQTH` (unknown QTH), `TC_INVALID` (malformed). The RS(T) is
-still written before a refusal. Open on #274: the CW zone-then-RST arm and
-`ProcessQSONumberAndZoneExchange` have no range check; ValidRST takes
-100..599 on CW/RTTY, so `123 CT` reads as a report.
+`RefuseDomesticQTH` (unknown QTH), `TC_INVALID` (malformed). In this RTTY
+parser the RS(T) is still written before a refusal; ValidRST takes 100..599
+on CW/RTTY, so `123 CT` reads as a report. **`ProcessRSTAndZoneExchange`
+parses on a copy since #274 item 2 (2026-11-15)**, so a refusal leaves the
+RS(T) alone too, and its CW zone-then-RST form (`85 599`) has the 40-zone
+limit (item 4). `ProcessQSONumberAndZoneExchange` has no range check, and
+needs none for the CQ limit: its three users (RF Championship x2, R9W) run
+ITU zone mode. The licence-year parser still writes the RS(T) before a
+refusal.
 
 **`ProcessRSTQSONumberAndPossibleDomesticQTHExchange` (DARC-10M, RSGB-160
 -- the RSGB 1.8 --, RSGB-IOTA, UBA CW/SSB, UK/EI) refuses the same way since issue 282
@@ -838,11 +843,16 @@ Baltic, Ohio QP: QTH required) and `ProcessQSONumberAndPossibleDomesticQTHExchan
 (CQIR), both now parsed on a copy that is written only when accepted. Five
 OLDER sites still pair `FoundDomesticQTH` and `RefuseDomesticQTH` inline (the
 class/section, name, multi-county, SS-name and single-word RST parsers; some
-use another stem) -- not repointed. Still a
-silent refusal (audited, not changed): the tail-shape parsers that end in
-`Result := FoundDomesticQTH(RXData)` after writing (Ten-Ten, FISTS, ARCI,
-JIDX/JA prefecture, French department, the grid parsers), and CQIR's
-unreadable number. **A dashed IOTA reference is accepted** (#282 item 5, the
+use another stem) -- not repointed. **Issue 308 (2026-11-15, unbuilt when
+written) moved three tail-shape parsers onto the helper, parsed on a copy:**
+`ProcessNameQTHAndPossibleTenTenNumberExchange` (Ten-Ten),
+`ProcessRSTQTHNameAndFistsNumberOrPowerExchange` (FISTS) and the ONE-WORD form
+of `ProcessRSTAndJAPrefectureExchange` (JA Long Prefecture), all three in
+LOGSTUFF's interface for `uTestPossibleDomesticQTHEntry`. Still a silent
+refusal (audited, not changed): the multi-word JA prefecture form,
+`ProcessRSTAndPrefectureExchange` (JIDX), ARCI, the French department, Cup RF,
+the grid parsers (check `ClassifyDomesticQTHRefusal`'s wording for a grid
+first), and CQIR's unreadable number. **A dashed IOTA reference is accepted** (#282 item 5, the
 agent's reading of the ruling; NY4I did not answer it in terms):
 `ReadIOTAReference` drops ONE dash straight after the continent, so
 `EU-005`/`EU-5` are `EU-005`. Open: the `IntitialExLoaded` latch (#267).
@@ -948,8 +958,10 @@ one-letter provinces. No class overrides it; do not bring a length test back.
 the same day): a contest that remembers no exchange text (RST + number) gets
 `ShowMultiplierStatus(call)` -- the header NAMES THE CALL, as CQ WW's does --
 and `GetMultArray` asks the class for the key. MWC answered '' until then, so
-its strip was empty for every call; it now answers its scoring letter (seven
-classes answer it: Russian DX, RF Championship x2, Ural Cup, RDA, YO DX, MWC).
+its strip was empty for every call; it now answers its scoring letter (eight
+classes answer it: Russian DX, RF Championship x2, Ural Cup, RDA, YO DX, MWC,
+and Minnesota -- its one `DX` key for an in-state entrant's DX call, #211,
+from the same private predicate its scoring asks).
 LogContact's `RXData.DomesticQTH <> ''` gate and `logsubs2`'s
 `length(WindowString) < 2` were NOT changed. **IARU HF and WRTC take any
 received text as their HQ multiplier**, so a remembered zone alone (`8 ` -- the

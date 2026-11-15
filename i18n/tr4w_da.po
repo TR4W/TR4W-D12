@@ -10579,7 +10579,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "DX klynge \"% 0: s\":% 1: s, logge ind som% 2: s."
+msgstr "DX klynge \"%0:s\": %1:s, logge ind som %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10589,7 +10589,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "WinKeyer \"% 0: s\" på% 1: s, brugt til CW på radio 1."
+msgstr "WinKeyer \"%0:s\"den %1:s, anvendes til CW på radio 1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10611,7 +10611,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Radio 1:% 0: s% 1: s. Navn: \"% 2: s\"."
+msgstr "Radio 1: %0:s %1:sNavn: \"%2:s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10756,7 +10756,7 @@ msgstr "Vis detaljer"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Seriel:% 0: s baud,% 1: s, RTS% 2: s, DTR% 3: s"
+msgstr "   Serie: %0:s baud %1:s, RTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -10771,7 +10771,7 @@ msgstr "   Netværksadgangskode: sæt"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Frekvensmåling:% 0: s, hver% 1: s ms"
+msgstr "   Frekvensmåling: %0:s, hver %1:s ms"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -10786,7 +10786,7 @@ msgstr "   Kommando for opstart: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Tilstand% 0: s, sidetone% 1: s"
+msgstr "   Tilstand %0:s, sidetone %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -10836,11 +10836,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Denne kopi af TR4W ser ufuldstændigt installeret.\n"
-"\n"
-"Ikke fundet i% 0: s:\n"
-"% 1: s\n"
-"\n"
-"Start TR4W fra mappen som installeringsprogrammet puttede den i (den indeholder CTY.DAT, TRMASTER.DTA og en dommedatamappe), eller kør installeringsprogrammet igen.\n"
-"\n"
-"TR4W vil stadig starte, men konkurrencer, der har brug for disse filer vil ikke fungere ordentligt."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Filen %0:s er IKKE skrevet: %1:sEn tidligere fil med dette navn, hvis der var en, er uændret."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Ikke sendt til de andre stationer: teksten er %0:d bytes og netværket bærer %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Kopiér sted"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Udveksling af kommentarer"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Sprog:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Det virker, når TR4W begynder."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Du er set af %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

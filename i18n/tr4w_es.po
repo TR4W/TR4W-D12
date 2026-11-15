@@ -10617,3 +10617,48 @@ msgstr ""
 "Comience TR4W desde la carpeta que el instalador lo puso (tiene CTY.DAT, TRMASTER.DTA y una carpeta de dom), o ejecutar el instalador de nuevo.\n"
 "\n"
 "TR4W todavía comenzará, pero los concursos que necesitan estos archivos no funcionarán correctamente."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "El archivo %0:s NO fue escrito: %1:s. Un archivo anterior de ese nombre, si hubiera uno, no se cambia."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "No se envía a las otras estaciones: el texto es %0:d bytes y la red lleva %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Copiado"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (G)%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Intercambio en comentario"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Idioma:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Efectúa cuando comience el TR4W siguiente."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Usted es visto por %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

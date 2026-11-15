@@ -106,6 +106,10 @@ object frmBandMap: TfrmBandMap
     object miSep1: TMenuItem
       Caption = '-'
     end
+    object miCopySpot: TMenuItem
+      Caption = 'Copy spot'
+      OnClick = MenuCopySpotClick
+    end
     object miDeleteSpot: TMenuItem
       Caption = 'Delete selected spot'
       OnClick = MenuDeleteSpotClick

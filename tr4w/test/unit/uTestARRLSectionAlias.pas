@@ -90,6 +90,8 @@ type
       procedure Test_FieldDayStateKeepsAnUnresolvedRow;
       procedure Test_DXKeeperSendsTheResolvedSection;
       procedure Test_DXKeeperNonSectionContestSendsNoSection;
+      procedure Test_ARRL160ImportedAliasIsTheCanonicalSection;
+      procedure Test_QSOPartyImportedAliasIsTheFileQTH;
    end;
 
 implementation
@@ -782,7 +784,11 @@ begin
             gainedList := gainedList + ' ' + alias + '=' + newState;
             end;
          end;
-      CheckEquals(35, gained, 'aliases that now write a STATE:' + gainedList);
+      (* 35 at issue 266; 50 since issue 275 item 4 gave the one-province
+         RAC sections their province (BR, VE7, ALB, ALT, VE6, MAN, VE4, PEI,
+         VE5, SAS, PQ, QU, VE2, VO, NFLD). Counted by a model of this loop
+         over the shipped arrlsect.dom before the change was made. *)
+      CheckEquals(50, gained, 'aliases that now write a STATE:' + gainedList);
    finally
       aliases.Free;
       table.Free;
@@ -954,6 +960,73 @@ begin
    CheckEquals('', ExternalLoggerARRLSection(qso), 'Wisconsin county MAR: not Maritime');
 end;
 
+(* ARRL 160'S IMPORT -- issue 275 item 1. Its own ApplyADIFImport copied the
+   raw SRX_STRING into DomesticQTH, so TR4W's own '599 CT' imported as a QTH
+   of '599' and a D7 <ARRL_SECT:2>EM as nothing at all. It now resolves the
+   section as typed entry does: ARRL_SECT, else QTH, else SRX_STRING less its
+   RST. *)
+procedure TARRLSectionAliasTests.Test_ARRL160ImportedAliasIsTheCanonicalSection;
+var
+   rx: ContestExchange;
+begin
+   BeginTest('Test_ARRL160ImportedAliasIsTheCanonicalSection');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRL160, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('W1AW', AdifTag('ARRL_SECT', 'EM')), rx),
+                'ARRL_SECT EM: parsed');
+      CheckEquals('EMA', string(rx.DomesticQTH), 'ARRL_SECT EM: DomesticQTH is the file''s section');
+      CheckEquals('EMA', string(rx.DomMultQTH), 'ARRL_SECT EM: the multiplier is the file''s section');
+      CheckEquals('EM', string(rx.QTHString),
+                  'ARRL_SECT EM with no QTH tag: the section is the QTH as written');
+
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K1ABC', AdifTag('QTH', 'WF')), rx), 'QTH WF: parsed');
+      CheckEquals('WcF', string(rx.DomesticQTH), 'QTH WF: DomesticQTH as the file spells it');
+
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('SRX_STRING', '599 CT')), rx),
+                'SRX_STRING 599 CT: parsed');
+      CheckEquals('Ct', string(rx.DomesticQTH),
+                  'SRX_STRING 599 CT: the section, not the RST (it stored 599)');
+
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('ARRL_SECT', 'XYZ')), rx), 'XYZ: parsed');
+      CheckEquals('XYZ', string(rx.DomesticQTH), 'XYZ: unknown, kept as written');
+      CheckEquals('', string(rx.DomMultQTH), 'XYZ: and no multiplier is invented');
+   finally
+      RestoreSession;
+   end;
+end;
+
+(* THE SHARED QSO-PARTY IMPORT -- issue 275 item 2. The base's domestic arm
+   (every party without its own ApplyADIFImport) did DomesticQTH :=
+   QTHString, so an alias came in as written. It resolves through the table
+   now, as typed entry does: michigan_cty.dom's 'Presq = PRES' stores Presq
+   for a QTH of PRES, and an unknown text is kept as written. *)
+procedure TARRLSectionAliasTests.Test_QSOPartyImportedAliasIsTheFileQTH;
+var
+   rx: ContestExchange;
+begin
+   BeginTest('Test_QSOPartyImportedAliasIsTheFileQTH');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(MICHQSOPARTY, DomesticCountriesKVEKH6KL, 'michigan_cty.dom');
+   try
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K8ABC', AdifTag('QTH', 'PRES')), rx), 'QTH PRES: parsed');
+      CheckEquals('PRES', string(rx.QTHString), 'QTH PRES: QTHString as written');
+      CheckEquals('Presq', string(rx.DomesticQTH), 'QTH PRES: DomesticQTH as the file spells it');
+      CheckEquals('Presq', string(rx.DomMultQTH), 'QTH PRES: the multiplier key');
+
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K8XYZ', AdifTag('QTH', 'ZZZZ')), rx), 'QTH ZZZZ: parsed');
+      CheckEquals('ZZZZ', string(rx.DomesticQTH), 'QTH ZZZZ: unknown, kept as written');
+   finally
+      RestoreSession;
+   end;
+end;
+
 procedure TARRLSectionAliasTests.RunAllTests;
 begin
    Test_SweepstakesTypedAliasIsTheCanonicalSection;
@@ -968,6 +1041,8 @@ begin
    Test_FieldDayStateKeepsAnUnresolvedRow;
    Test_DXKeeperSendsTheResolvedSection;
    Test_DXKeeperNonSectionContestSendsNoSection;
+   Test_ARRL160ImportedAliasIsTheCanonicalSection;
+   Test_QSOPartyImportedAliasIsTheFileQTH;
 end;
 
 end.

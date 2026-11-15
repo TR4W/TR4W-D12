@@ -1,0 +1,288 @@
+Source: https://ksqsoparty.org/rules/KSQPRules2026.pdf (saved beside this file)
+Fetched: 2026-11-15; pdftotext -layout, no wording changed
+
+2026 Kansas QSO Party Rules
+
+29 Aug 2026 1400 - 0200 UTC 30 Aug 2026 1400 - 2000 UTC
+
+Saturday 9-9 CDT  Sunday 9-3 CDT
+
+2026 Highlights
+
+      Spell KANSAS, QSOPARTY, SUNFLOWER and YELLOWBRICKROAD as you work our 1x1
+          call operators to earn antique radio stamps and fill your certificate. Plaques, monogrammed
+          sweatshirts, zippered hoodies and T-shirts continue as part of the prize package. Earn a Kansas
+          QSO Party radio stamp T-Shirt monogrammed with your call by collecting all nine of our antique
+          stamps! The Kansas QSO Party continues as part of the State QSO Party Challenge.
+
+      The Rover category is now divided up into Rover CW, Rover SSB, and Rover Mixed
+          categories. Read all the category definitions carefully to see which category fits your operation.
+
+      Border States (CO NE MO OK) is added as an official category as introduced last year.
+
+      Strategy hint: Check out last year's results to find categories with only a few or no entries.
+          Thanks to our extraordinary sponsors, all awards are sponsored, so you'll win the award even if
+          you're the only entry! For example, the Youth category last year had no out-of-state entries.
+
+      Find 1x1 calls to work for the 1x1 Challenge Award on the 1x1 Operators page and on the
+          Kansas QSO Party Hub spotting page. See the KSQP web site home page for links and details.
+
+OBJECT
+
+Stations outside of Kansas work as many Kansas stations in as many Kansas counties as
+possible. Stations in Kansas work everyone.
+
+EXCHANGE
+
+Kansas stations send signal report and county. Stations outside of Kansas send signal
+report and state, Canadian province, or DX. See below for special FT4/8 category rules.
+
+QSO POINTS
+
+Stations may be worked once on Phone, once on CW and once on RTTY per band/mode.
+Complete non-duplicate Phone contacts are worth 2 points, complete non-duplicate CW or
+RTTY contacts are worth 3 points. See below for special FT4/8 category rules.
+
+MULTIPLIERS
+
+Multipliers are counted only once. All stations log Kansas contacts with 3-character county
+abbreviations. Log all other contacts with 2-character abbreviations. Use abbreviation DX
+for stations outside of the United States and Canada. The KS abbreviation is not used.
+
+Kansas Stations - maximum of 64 multipliers including:
+     US states (50) - The first Kansas county logged counts as the Kansas multiplier.
+     Canadian provinces/territories (13) - AB BC MB NB NL NT NS NU ON PE QC SK YT
+     DX (1)
+
+Non-Kansas Stations - maximum of 105 Kansas county multipliers
+SCORE and BONUS STATION
+All stations receive a one-time bonus of 100 points for contacting KS0KS - the club call
+
+of the Santa Fe Trail ARC. All bonus station contacts also count for QSO credit.
+
+Total score = ( QSO points x multipliers ) + bonus points (maximum 100)
+
+FREQUENCIES
+
+Contact stations on 80, 40, 20, 15, 10 and 6 meters. WARC band contacts and contacts
+using repeaters, digipeaters or the internet do not count. All contacts must be simplex.
+
+Suggested frequencies (recommend staying in the General parts of the bands):
+     HF CW - 40 kHz up from band edge (mobile window 35-40)
+     HF Phone - 3840, 7190 for DX/7240, 14240, 21340, 28440
+     HF RTTY/Digital/VHF - around customary calling frequencies
+
+ENTRY CATEGORIES ( Select one plus optional FT4/8 category )
+                               ( * select CW, SSB or MIXED )
+
+     Single-Op High Power * - greater than 100W, one transmitted signal
+     Single-Op Low Power * - 100W max, one transmitted signal
+
+         Single-Op QRP - 5W max, one transmitted signal
+     Multi-Op - not a club, any legal power, multi/multi allowed, one location
+     Youth - any legal power, Single-Op or Multi-Op, one transmitted signal (see below)
+     Kansas Club - club, any legal power, multi/multi distributed ops OK (see below)
+     Kansas Mobile Single-Op * - 100W max, one transmitted signal
+     Kansas Mobile Multi-Op - 100W max, one transmitted signal, any mode
+     Kansas Mobile Unlimited - more than 100W and/or multi/multi, any mode
+     Kansas Portable - any legal power, multi/multi allowed (see below)
+     Kansas Expedition - any legal power, multi/multi allowed (see below)
+     Kansas Rover * - 100W max, Single-Op or Multi-Op (see below)
+     Canada - any legal power, one transmitted signal, Single-Op only
+     DX - any legal power, one transmitted signal, Single-Op only
+      FT4/8 Single-Op, 100W max, one transmitted signal (see below)
+
+MISCELLANEOUS
+
+    1. Kansas stations should call CQ Kansas QSO Party, CQ KQP or CQ KSQP.
+    2. Stations calling Kansas should call CQ Kansas or CQ KS.
+    3. Kansas mobile, rover or portable stations should ID with county (ex: w0bh/MCP).
+    4. 1x1 stations must ID with your actual callsign at least once an hour as per FCC regulations.
+    5. The use of spotting nets using DX clusters, packet nodes, telephone, or other means is
+
+         permissible for all entry categories.
+    6. CW contacts must be made in the CW portion of the band. No cross-mode contacts.
+    7. Kansas Mobile is a station that is self-contained and capable of legal motion while
+
+         operating (road, water, or air), motion optional. County-line operations are allowed.
+    8. Kansas Rover is a low-power fixed operation at more than two locations. Antennas may
+
+         be set up or attached to a vehicle, but operating in motion is not allowed. County-line
+         operations are allowed. This category is for operators who drive from one location to
+         another, then stop and operate.
+    9. All Mobile and Rover categories may use an additional driver. Operator safety is our highest
+         priority. Instead of operating while driving, consider the Rover category.
+    10. Kansas stations that change counties are considered to be a new station and may be
+         contacted again for point and multiplier credit.
+    11. If a Kansas station is on a county line between two or more Kansas counties, a separate
+         QSO must be logged for each county. Don't log multiple-county QSOs on one line.
+
+    12. Mobiles travelling together may log each other only once per county.
+    13. Kansas Portable is a fixed operation at one location per day, no commercial power.
+
+         Kansas Expedition is a fixed operation at one location per day, commercial power.
+         Antennas may be set up for the operation (Field Day style) or attached to a vehicle. The
+         location may be the same each day. County line operations are allowed.
+    14. Kansas Club stations represent a Kansas amateur radio club. Operations may optionally
+         be distributed over multiple member locations. Simultaneous transmissions on the same
+         band/mode are not allowed. Turn in one combined log.
+    15. Youth category is for youth ages 17 and under. One or more youth operators may be
+         assisted by a control operator if they are unlicensed. Please encourage young hams!
+    16.  FT4/8 Log grid square. You may turn in a combination of FT4 and FT8 contacts. The
+         same station may be worked once on FT4 and once on FT8 per band/county. Turn in a
+         separate log (text file, ADIF or Cabrillo format) named YOURCALL_FT.LOG.
+         In-state and out-of-state winners will be determined by counting non-duplicate contacts (no
+         multipliers). Don't include FT4/8 contacts in your regular KSQP log.
+
+ENTRIES
+
+Only one entry per call sign is allowed plus one FT4/8 entry. Be sure to include your
+call sign, name, address, location, entry category and email address. If you qualify as a
+Kansas Rookie, please note that as well. Distributed Club logs and Kansas Mobile,
+Rover, Portable and Expedition logs should be combined into one log file for submittal.
+
+The Kansas QSO Party is part of the State QSO Party Challenge. More information may be
+found at http://stateqsoparty.com. All participants are encouraged to submit your score
+and comments to the 3830 Reflector: www.3830scores.com as part of this Challenge. To
+be eligible for a Kansas QSO Party award, you also need to submit a log to the Kansas
+QSO Party as shown below. Please submit a log regardless of your score!
+
+Incomplete or improperly logged contacts will be removed during log-checking. Please do
+not remove duplicates as they may be used to prove the integrity of other logs. Duplicate
+QSOs are not counted for points and do not result in penalties.
+
+Name your electronic log(s) with your call sign (ex: W0BH.LOG, W0BH_FT.LOG).
+
+Method 1 (preferred) - Upload your Cabrillo format log (except FT4/8) to:
+
+                 https://ksqp.contesting.com/ksqpsubmitlog.php.
+
+        You'll get immediate confirmation and our Logs Received page will be updated.
+
+Method 2 - Attach your (FT4/8) log file to an email with your call sign in the Subject line.
+Send the email to logs@ksqsoparty.org. For a non-FT4/8 Cabrillo log, use Method 1.
+
+Method 3 - Paper logs, or logs on electronic media may be submitted via postal mail to:
+Kansas QSO Party, c/o Bob Harder, W0BH, PO Box 746, Hesston KS 67062.
+
+                            The deadline for log submission is October 1.
+AWARDS (33 categories)
+
+                                                                   Portable
+
+Power Single-Op CW/SSB/Mixed Multi-Op Mobile Expedition Youth Canada DX FT Club
+
+                                                                     Rover
+
+Non- High          1-3
+
+Low                4-6    15  na  27    29 30 31 na
+KS QRP
+                   7
+
+High               8-10
+
+KS Low             11-13  16  17-26 28  na na 32 33
+                     14
+              QRP
+
+First Place - Choice of a plaque or sweatshirt monogrammed with your call will be
+awarded to First-place entries with 50 or more contacts. Multi-Op and Club categories
+receive a plaque. There is no minimum contact requirement for the FT4/8 category.
+
+Second and Third Place - A Kansas QSO Party T-Shirt monogrammed with your call will
+be awarded to all Single-Op Second-place and Third-place entries, sponsors and 1x1 call
+operators who don't already have one. Multi-Op and Club station operators, international
+stations and stations who already have a T-shirt earn our certificate / stamp award.
+
+Kansas QSO Party Sunday Award - This plaque or monogrammed sweatshirt is awarded
+for the highest Sunday (Day 2) score by an out-of-state Single-Op participant who didn't
+win a category. All logs at any power level will be rescored after Saturday (Day 1) contacts
+are removed. You may participate on both days and still be eligible for this award.
+
+Worked All Kansas Award - A plaque or monogrammed sweatshirt will be awarded to any
+station contacting all 105 counties.
+
+Kansas Rookie Award - This plaque or monogrammed sweatshirt is awarded at the
+discretion of the Coordinator to a first-time Kansas QSO Party participant in a Single-Op
+category or operation.
+
+Kansas Sunflower Award Bonus Drawing
+Every non-winning Kansas log (minimum 25 contacts) receives one entry and every non-
+winning non-Kansas log receives one entry for each unique 1x1 call worked in separate
+bonus drawing pools. If you didn't win a category, you might still win one of our plaques,
+monogrammed Kansas QSO Party T-shirts or monogrammed sweatshirts!
+
+1x1 Challenge Award
+Work the most unique 1x1 calls and win a Kansas QSO Party T-shirt or sweatshirt
+monogrammed with your call. Multiple awards will be given out. Eligible stations are non-
+Kanas stations who do not otherwise win an award.
+
+Entry submission implies that the contestant agrees to be bound by the decisions of
+                                   the Kansas QSO Party Coordinator.
+KANSAS QSO PARTY CERTIFICATES and ANTIQUE RADIO STAMPS
+
+Awarded for spelling KANSAS, SUNFLOWER, QSOPARTY or YELLOWBRICKROAD
+                                using suffixes of selected 1x1 calls.
+
+ Duplicate letters in a word require two different 1x1 calls.
+ Letters may be shared between words.
+ KS0KS counts as a wild card and may be used only once in place of one
+
+    missing letter.
+
+Example spelling KANSAS and SUNFLOWER
+
+w0K k0A n0N k0S n0A w0S  w0S n0U w0N w0F k0L w0O w0W n0E KS0KS
+
+(Note two different A and S calls) (Note the use of the wild card for the last letter)
+
+Our Collection Certificate, first issued in 2014, has room for all nine stamps. You only
+need one certificate. We keep track of which stamps you have earned for this certificate,
+not counting previous certificates which also came with some of these stamps. You will be
+able to download your certificate in pdf or jpg format, and your stamp(s) will come by mail.
+
+Until you fill your certificate, you may choose ONE stamp for the first two words you
+spell, ONE stamp for the third word, and ONE stamp if you spell all four words.
+
+To receive your stamps (and certificate if needed):
+     send in a log
+     send an email with your call in the subject line to kansas150@hotmail.com
+     include your name as you'd like it to appear on the certificate
+     include which stamp(s) you'd like in order of preference (in case we run out)
+     you can earn a maximum of 3 stamps
+
+If you prefer, we can print and mail your certificate.
+Send the details above and $3 to cover paper, ink, and mailing expenses to:
+Bob Harder, W0BH, PO Box 746, Hesston KS 67062 (make check to Bob Harder).
+
+Kansas QSO Party Antique Radio Stamp T-Shirts
+Stations who have earned all nine stamps on the Collection Certificate in a previous year,
+who don't already have a T-shirt, and who turn in a 2026 log will receive the Kansas QSO
+Party T-shirt (US only due to high postage costs).
+
+Collect all nine of our original stamps and earn your own Kansas QSO Party antique radio
+stamp T-shirt monogrammed with your call!
+
+                                                  Final Reminder
+
+Out-of-state stations must separately request certificates, stamps and T-shirts
+earned by collecting all nine stamps. We don't automatically send them to out-of-state
+operators. Kansas stations automatically receive these awards.
+                                             Antique Radio Stamps
+
+You can earn these genuine antique radio stamps by working our 1x1 call operators during
+the Kansas QSO Party. Follow the directions above under Kansas QSO Party Certificates
+and Antique Radio Stamps.
+                                Kansas QSO Party Sunflower Certificate
+A number of operators have earned all nine of our stamps and many are getting close.
+Four additional radio-related stamps plus a bonus stamp are available, one per year, as
+our way of thanking you for your participation. A Kansas QSO Party Sunflower Certificate
+is available to hold these stamps.
+You are eligible to collect these stamps once you fill your nine-stamp Collection Certificate.
+Just request yours as described on the previous page.
+The four American Inventors series 20 cent stamps were issued in 1983.
+
+     Email KSQP Coordinator Bob Harder, W0BH, at kansas150@hotmail.com with
+                                 questions, comments or suggestions.
+

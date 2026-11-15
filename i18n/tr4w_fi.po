@@ -10592,7 +10592,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "DX- klusteri \"% 0: s\":% 1: s, kirjautuminen nimellä% 2: s."
+msgstr "DX-klusteri \"%0:s\": %1:s, kirjautuminen %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10602,7 +10602,7 @@ msgstr ""
 #: uappstrings.swizreskeyer
 #, fuzzy
 msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
-msgstr "WinKeyer \"% 0: s\" kohteessa% 1: s, käytetään CW: lle radiossa 1."
+msgstr "WinKeyer \"%0:s\" %1:s, käytetään CW radio 1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10624,7 +10624,7 @@ msgstr ""
 #: uappstrings.swizresradio
 #, fuzzy
 msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
-msgstr "Radio 1:% 0: s% 1: s. Nimi: \"% 2: s.\""
+msgstr "Radio 1: %0:s %1:s. Nimi: \"%2:s\""
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10769,7 +10769,7 @@ msgstr "Näytä yksityiskohdat"
 #: uappstrings.swizdetserial
 #, fuzzy
 msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
-msgstr "   Sarja:% 0: s baud,% 1: s, RTS% 2: s, DTR% 3: s"
+msgstr "   Sarja: %0:s baud %1:s, RTS %2:s, DTR %3:s"
 
 #: uappstrings.swizdetnetworkuser
 #, fuzzy
@@ -10784,7 +10784,7 @@ msgstr "   Verkon salasana: asetettu"
 #: uappstrings.swizdetpolling
 #, fuzzy
 msgid "   Frequency polling: %0:s, every %1:s ms"
-msgstr "   Taajuuskysely:% 0: s, jokainen% 1: s ms"
+msgstr "   Äänestystiheys: %0:s, joka %1:s ms"
 
 #: uappstrings.swizdetkeyerport
 #, fuzzy
@@ -10799,7 +10799,7 @@ msgstr "   Käynnistyskomento: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Tila% 0: s, sivuääni% 1: s"
+msgstr "   Tila %0:s, sidetone %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -10849,11 +10849,48 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"Tämä TR4W-kopio näyttää puutteelliselta.\n"
-"\n"
-"Ei löydy kohteesta% 0: s:\n"
-"% 1:s\n"
-"\n"
-"Käynnistä TR4W kansiosta, johon asentaja sen laittoi (se sisältää CTY.DAT, TRMASTER.DTA ja dom kansio), tai suorita asentaja uudelleen.\n"
-"\n"
-"TR4W käynnistyy edelleen, mutta näitä tiedostoja tarvitsevat kilpailut eivät toimi kunnolla."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "Tiedosto %0:s EI ole kirjoitettu: %1:sJos nimi oli aiemmin, se ei muutu."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "Ei lähetetty muille asemille: teksti on %0:d tavuja ja verkosto kuljettaa %1:d."
+
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr "Kopioi kohta"
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr "Pörssi kommenttina"
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "Kieli:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "Se vaikuttaa, kun TR4W alkaa."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "Sinut on nähty %s."
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

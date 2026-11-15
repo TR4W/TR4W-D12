@@ -190,6 +190,11 @@ type
          and provinces are two letters). Pinned per party. *)
       function InStateCountyEarnsHostState(const aQso: ContestExchange;
                                            out aKey: string): boolean;
+      (* IS THE QSO'S CREDITED DOMESTIC KEY A HOST COUNTY? The test above,
+         without its in-state condition -- one statement, asked by it and by a
+         rule that scores a host-county QSO differently (South Carolina, issue
+         111: an SC entrant scores 2 with an SC county, 4 with anyone else). *)
+      function QSOCreditsHostCounty(const aQso: ContestExchange): boolean;
       (* Strip only trailing county keys verified by the session table.
          Preserve portable and district suffixes, including W1AW/5. *)
       function CallWithoutRoverCounty(const aCall: string): string;
@@ -497,8 +502,6 @@ end;
 
 function TContestStateQSOPartyBase.InStateCountyEarnsHostState(
    const aQso: ContestExchange; out aKey: string): boolean;
-var
-   county: string;
 begin
    aKey := '';
    Result := False;
@@ -507,6 +510,17 @@ begin
       Exit;
       end;
 
+   if QSOCreditsHostCounty(aQso) then
+      begin
+      aKey := HostState;
+      Result := True;
+      end;
+end;
+
+function TContestStateQSOPartyBase.QSOCreditsHostCounty(const aQso: ContestExchange): boolean;
+var
+   county: string;
+begin
    (* The sheet's key: DomMultQTH, filled from DomesticQTH where empty. *)
    county := UpperCase(Trim(string(aQso.DomMultQTH)));
    if county = '' then
@@ -515,13 +529,9 @@ begin
       end;
 
    (* XXX is the engine's unknown QTH placeholder, not a county. *)
-   if (Length(county) > 2) and (county <> 'XXX') and
-      Assigned(Station.IsDomesticQTH) and
-      Station.IsDomesticQTH(county) then
-      begin
-      aKey := HostState;
-      Result := True;
-      end;
+   Result := (Length(county) > 2) and (county <> 'XXX') and
+             Assigned(Station.IsDomesticQTH) and
+             Station.IsDomesticQTH(county);
 end;
 
 function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;

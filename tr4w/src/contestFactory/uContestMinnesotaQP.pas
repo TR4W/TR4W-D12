@@ -167,6 +167,21 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* THE ONE DX MULTIPLIER FOR THE NEED-MULTIPLIER HINT -- issue 211. A
+         Minnesota entrant's remembered exchange for a DX station ('599 001',
+         'HANS DL') maps nothing in minnesota.dom, so the header names the
+         call, and the strip asks this: MN_DX_MULTIPLIER_KEY when the call's
+         country counts as DX for this entrant -- the test CalculateQSOPoints
+         makes (CountryCountsAsDX). No country service, no hint. *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
+   private
+      (* DOES A STATION IN THIS COUNTRY COUNT AS THE ONE DX MULTIPLIER for
+         this entrant -- a Minnesota entrant, a located country, and not the
+         USA, Canada, Hawaii or Alaska. ONE predicate for the scoring and the
+         hint. *)
+      function CountryCountsAsDX(const aCountryID: string): boolean;
    end;
 
 implementation
@@ -309,8 +324,6 @@ end;
    the rescore, the import and the matrix all reach. A QSO whose call was
    never located (no country) is left alone. *)
 procedure TContestMinnesotaQP.CalculateQSOPoints(var aQso: ContestExchange);
-var
-   unusedKey: DXMultiplierString;
 begin
    case aQso.Mode of
       CW:
@@ -327,10 +340,37 @@ begin
          end;
       end;
 
-   if (aQso.QTH.CountryID <> '') and
-      DXCCKeyExceptUSACanadaHawaiiAlaska(Station.InHostState, aQso, unusedKey) then
+   if CountryCountsAsDX(string(aQso.QTH.CountryID)) then
       begin
       aQso.DomMultQTH := MN_DX_MULTIPLIER_KEY;
+      end;
+end;
+
+function TContestMinnesotaQP.CountryCountsAsDX(const aCountryID: string): boolean;
+var
+   probe: ContestExchange;
+   unusedKey: DXMultiplierString;
+begin
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska reads only the country of the QSO it
+      is handed, so a record carrying the country alone asks it exactly. *)
+   Result := False;
+   if aCountryID = '' then
+      begin
+      Exit;
+      end;
+   probe := Default(ContestExchange);
+   probe.QTH.CountryID := DXMultiplierString(aCountryID);
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(Station.InHostState, probe, unusedKey);
+end;
+
+function TContestMinnesotaQP.DomesticMultiplierFromCall(const aCall: string;
+                                                        const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   if Assigned(aLookups.CountryOfCall) and
+      CountryCountsAsDX(aLookups.CountryOfCall(aCall)) then
+      begin
+      Result := MN_DX_MULTIPLIER_KEY;
       end;
 end;
 

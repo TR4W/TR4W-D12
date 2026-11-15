@@ -448,7 +448,14 @@ def repo_paths(start=None):
 # This matters more than it looks: wsprintf is unchecked varargs. A translation
 # that changes %d to %s makes it dereference an integer as a pointer -- an
 # access violation. Nothing in the current Pascal workflow can catch that.
-PLACEHOLDER_RE = re.compile(r"%[-#0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?[cCdisSuxX%]")
+#
+# AND THE INDEXED FORM, %0:s / %1:d (2026-11-15). The uAppStrings messages go
+# through Pascal's Format (UnicodeFormat), which takes an argument index, and
+# this pattern did not match one: the engine received '%0:s' as plain text and
+# the Spanish draft of '%0:s  (%1:d deg)' came back without it -- with nothing
+# to compare, the specifier check passed. The index is optional, so a TC_
+# string's '%s' matches exactly as before.
+PLACEHOLDER_RE = re.compile(r"%(?:\d+:)?[-#0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?[cCdisSuxX%]")
 
 
 # --- XML text with characters XML 1.0 cannot carry -------------------------

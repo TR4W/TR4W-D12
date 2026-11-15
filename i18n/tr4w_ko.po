@@ -11284,7 +11284,7 @@ msgstr ""
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "DX 클러스터 \"%0:s\": %1:s, %2 로깅."
+msgstr "DX 클러스터 \"%0:s\": %1:s, 로 로그인 %2:s·"
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -11541,11 +11541,50 @@ msgid ""
 "\n"
 "TR4W will still start, but contests that need these files will not work properly."
 msgstr ""
-"TR4W의 이 사본은 완전하게 설치됩니다.\n"
-"\n"
-"%0에서 찾을 수 없음:s:\n"
-"%1:s의\n"
-"\n"
-"설치 폴더에서 TR4W를 시작하십시오 (CTY.DAT, TRMASTER.DTA 및 dom 폴더를 보유하고 있습니다), 또는 설치 프로그램을 다시 실행하십시오.\n"
-"\n"
-"TR4W는 여전히 시작되지만이 파일을 필요로하는 대회는 제대로 작동하지 않습니다."
+
+#: uappstrings.sexportnotwritten
+#, fuzzy
+msgid "The file %0:s was NOT written: %1:s. An earlier file of that name, if there was one, is unchanged."
+msgstr "파일 %0:s는 작성되지 않았습니다: %1:s. 그 이름의 이전 파일이 있다면, 하나가 있다면, 변경되지 않습니다."
+
+#: uappstrings.snettexttoolong
+#, fuzzy
+msgid "Not sent to the other stations: the text is %0:d bytes and the network carries %1:d."
+msgstr "다른 역에 보내지 말라: 텍스트는 %0:d 바이트이고 네트워크는 %1:d를 나릅니다."
+
+# mt-seed: skip -- 2026-11-15 engine returned unrelated website text; translate by hand
+#: uappstrings.sbandmapcopyspot
+#, fuzzy
+msgid "Copy spot"
+msgstr ""
+
+#: uappstrings.sbandmapcountryheading
+#, fuzzy
+msgid "%0:s  (%1:d deg)"
+msgstr "%0:s (%1:d deg)"
+
+# mt-seed: skip -- 2026-11-15 engine returned unrelated website text; translate by hand
+#: uappstrings.ssendspotexchangeincomment
+#, fuzzy
+msgid "Exchange in comment"
+msgstr ""
+
+#: tprefsform.lbllanguage.caption
+#, fuzzy
+msgid "Language:"
+msgstr "언어:"
+
+#: tprefsform.lbllanguagehint.caption
+#, fuzzy
+msgid "Takes effect when TR4W next starts."
+msgstr "TR4W가 다음 시작될 때 효과가 발생합니다."
+
+#: uappstrings.syouarespottedby
+#, fuzzy
+msgid "You are spotted by %s."
+msgstr "당신에 의해 훔쳐 %s·"
+
+#: uappstrings.snewcontestmembernumberlabel
+#, fuzzy
+msgid "MY MEMBER NO"
+msgstr ""

@@ -29,6 +29,8 @@ type
       procedure TestLongerNoteIsTruncated;
       procedure TestShorterNoteLeavesNoTail;
       procedure TestEmptyNote;
+      procedure TestContextSurvivesTheText;
+      procedure TestContextWithoutARadioOrOperator;
    public
       procedure RunAllTests; override;
    end;
@@ -36,7 +38,8 @@ type
 implementation
 
 uses
-   SysUtils, VC, uLogNote;
+   SysUtils, VC, uLogNote,
+   utils_text;   (* SetCharBufferBytes, CharBufferBytes -- the operator buffer *)
 
 (* THE ONLY ARITHMETIC ON ADDRESSES ANYWHERE NEAR THIS LAYOUT, AND IT IS IN A
   TEST. It is what proves the Move and FillChar in uLogNote cannot leave the
@@ -143,6 +146,44 @@ begin
    CheckEquals('', string(NoteText(ce)), 'nothing left in the region');
 end;
 
+(* THE NOTE'S CONTEXT SURVIVES ITS TEXT (issue 21). tr4w_add_note_in_log now
+  stores the frequency, and the band, mode and operator were always stamped;
+  the note report prints them. A full-length note must leave all four alone,
+  or the report would print the note's own bytes as a band or an operator. *)
+procedure TLogNoteTests.TestContextSurvivesTheText;
+var
+   ce : ContestExchange;
+begin
+   BeginTest('a full-length note leaves band, mode, frequency and operator alone');
+   ce := Default(ContestExchange);
+   ce.ceRecordKind := rkNote;
+   ce.Band := Band20;
+   ce.Mode := CW;
+   ce.Frequency := 14025370;
+   SetCharBufferBytes(ce.ceOperator, 'NY4I');
+   SetNoteText(ce, AnsiString(StringOfChar('x', NOTE_MAX_LENGTH)));
+   CheckEquals(Ord(Band20), Ord(ce.Band), 'band');
+   CheckEquals(Ord(CW), Ord(ce.Mode), 'mode');
+   CheckEquals(14025370, ce.Frequency, 'frequency');
+   CheckEquals('NY4I', string(CharBufferBytes(ce.ceOperator)), 'operator');
+   CheckEquals('20 CW 14025.3 NY4I', string(NoteContextText(ce)),
+               'the report line''s context: band, mode, kHz to 100 Hz, operator');
+end;
+
+procedure TLogNoteTests.TestContextWithoutARadioOrOperator;
+var
+   ce : ContestExchange;
+begin
+   BeginTest('no radio and no operator: the context is band and mode');
+   ce := Default(ContestExchange);
+   ce.ceRecordKind := rkNote;
+   ce.Band := Band40;
+   ce.Mode := Phone;
+   SetNoteText(ce, 'no rig connected');
+   CheckEquals('40 SSB', string(NoteContextText(ce)),
+               'a zero frequency and an empty operator are left out');
+end;
+
 procedure TLogNoteTests.RunAllTests;
 begin
    TestTheRegionFitsInTheRecord;
@@ -152,6 +193,8 @@ begin
    TestLongerNoteIsTruncated;
    TestShorterNoteLeavesNoTail;
    TestEmptyNote;
+   TestContextSurvivesTheText;
+   TestContextWithoutARadioOrOperator;
 end;
 
 end.

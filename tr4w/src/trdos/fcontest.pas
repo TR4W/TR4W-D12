@@ -956,6 +956,12 @@ begin
      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
 
      StationInHostState := False;
+     (* AND THE COUNTIES-ARE-MULTIPLIERS FLAG WITH IT (issue 196 item 3): only
+       the out-of-state arm below sets it, and nothing cleared it, so a
+       session that switched from an out-of-state party to an in-state one
+       (or to any other contest) kept reading each '>' line's county as its
+       own multiplier. *)
+     MultipliersIsCounties := False;
      if definition.IsUSQSOParty then
         begin
         StationInHostState := FoundMyStateInDomFile;

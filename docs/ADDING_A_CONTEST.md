@@ -1198,6 +1198,15 @@ existing legacy contest differs from adding one in three ways:
   4-character square's centre. A contest whose rules define the distance
   writes its own helper (`LOGGRID.RTCGridDistance`) and pins the rules'
   published example.
+- **A DX key only switches the DX multiplier on; the sheet counts it per DXCC
+  country.** `DXMultiplierKey` / `HasDXMultiplier` give one multiplier per
+  country worked. A rule of "one multiplier for working any DX station"
+  (Minnesota, 2027) is a DOMESTIC key the class writes (`MN_DX_MULTIPLIER_KEY`,
+  listed in the in-state `.dom` so the remaining list crosses it off), not the
+  DX kind (issue 196).
+- **A band allowed in one mode only** (Vermont's 30/17/12 m, FT8/FT4 only) is
+  `UsesBand` crediting the band plus `UsesBandInMode` refusing the other
+  modes there (issue 269); `UsesBand` and `UsesMode` alone cannot say it.
 
 ## B8. Not built yet
 

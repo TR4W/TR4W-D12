@@ -63,6 +63,18 @@ function sFileSize(hFile: TFileHandle): Int64;
 function tOpenFileForWrite(var h: TFileHandle; const FileName: string): boolean;
 function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 
+(* A REPORT OR EXPORT FILE THAT CANNOT LOOK COMPLETE WHEN IT IS NOT (issue 313).
+  OpenReportFile opens FileName + '.partial' -- the previous good file is left
+  alone -- and forgets any earlier failure. Every sWriteFile / sWriteFileFromString
+  after it that fails or writes short is remembered. CloseReportFile flushes and
+  closes, then, only when aKeep is True and nothing failed, puts the new file in
+  place of the old and answers True; otherwise it deletes the partial file and
+  answers False. ReportFileProblem is the first reason, in the OS's words ('' when
+  there was none), valid after either call. *)
+function OpenReportFile(var h: TFileHandle; const FileName: string): boolean;
+function CloseReportFile(h: TFileHandle; aKeep: boolean): boolean;
+function ReportFileProblem: string;
+
 implementation
 
 function tWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
@@ -111,9 +123,40 @@ begin
   Result := FileRead(hFile, Buffer, nNumberOfBytesToRead) >= 0;
 end;
 
+var
+  (* WHY THE LAST REPORT FILE COULD NOT BE WRITTEN, '' while nothing has gone
+    wrong (issue 313). Set by the first failed or SHORT write through sWriteFile
+    / sWriteFileFromString, cleared by OpenReportFile. One report is written at
+    a time, on the main thread. *)
+  GReportWriteFailure: string = '';
+  GReportTarget: string = '';
+  GReportPartial: string = '';
+
+(* THE RESULT OF ONE WRITE: aWritten is what FileWrite returned. A write that
+  returns less than was asked, or -1, did not put the data on the disk -- a full
+  disk gives a short count, not an error -- and is remembered, with the OS's
+  words for it. *)
+function NoteWrite(aWritten, aWanted: LongInt): boolean;
+begin
+  Result := aWritten = aWanted;
+  if (not Result) and (GReportWriteFailure = '') then
+     begin
+     if aWritten < 0 then
+        begin
+        GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+        end
+     else
+        begin
+        GReportWriteFailure := 'only ' + IntToStr(aWritten) + ' of ' + IntToStr(aWanted) +
+                               ' bytes were written (the disk may be full)';
+        end;
+     end;
+end;
+
 function sWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
 begin
-  Result := FileWrite(hFile, Buffer, nNumberOfBytesToWrite) >= 0;
+  Result := NoteWrite(FileWrite(hFile, Buffer, nNumberOfBytesToWrite),
+                      nNumberOfBytesToWrite);
 end;
 
 function sWriteFileFromString(hFile: TFileHandle; sBuffer: AnsiString): boolean;
@@ -131,7 +174,57 @@ begin
       Result := True;
       Exit;
       end;
-   Result := FileWrite(hFile, sBuffer[1], Length(sBuffer)) >= 0;
+   Result := NoteWrite(FileWrite(hFile, sBuffer[1], Length(sBuffer)), Length(sBuffer));
+end;
+
+function OpenReportFile(var h: TFileHandle; const FileName: string): boolean;
+begin
+   GReportTarget := FileName;
+   GReportPartial := FileName + '.partial';
+   GReportWriteFailure := '';
+   Result := tOpenFileForWrite(h, GReportPartial);
+   if not Result then
+      begin
+      GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+      end;
+end;
+
+function CloseReportFile(h: TFileHandle; aKeep: boolean): boolean;
+begin
+   Result := False;
+   if aKeep and (GReportWriteFailure = '') and (not FileFlush(h)) then
+      begin
+      GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+      end;
+   FileClose(h);
+
+   if aKeep and (GReportWriteFailure = '') then
+      begin
+      (* The old file goes only now that the new one is complete and flushed.
+        RenameFile will not replace on Windows, hence the delete. *)
+      if FileExists(GReportTarget) then
+         begin
+         SysUtils.DeleteFile(GReportTarget);
+         end;
+      if RenameFile(GReportPartial, GReportTarget) then
+         begin
+         Result := True;
+         end
+      else
+         begin
+         GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+         end;
+      end;
+
+   if (not Result) and FileExists(GReportPartial) then
+      begin
+      SysUtils.DeleteFile(GReportPartial);
+      end;
+end;
+
+function ReportFileProblem: string;
+begin
+   Result := GReportWriteFailure;
 end;
 
 function tOpenFileForWrite(var h: TFileHandle; const FileName: string): boolean;

@@ -64,5 +64,35 @@ class LineBreaks(unittest.TestCase):
       self.same("one\ttwo", "eins\tzwei")
 
 
+class IndexedSpecifiers(unittest.TestCase):
+   """%0:s / %1:d are specifiers (2026-11-15): machine drafts that came back as
+   '% 0: s', or lost one, passed every check because nothing matched them."""
+
+   def bad(self, english, translated):
+      self.assertIn(po_lint.FORMAT_DEFECT, po_lint.draft_defects(english, translated))
+
+   def good(self, english, translated):
+      self.assertNotIn(po_lint.FORMAT_DEFECT, po_lint.draft_defects(english, translated))
+
+   def test_a_mangled_index_is_a_defect(self):
+      self.bad("Radio 1: %0:s %1:s.", "Radio 1:% 0: s% 1: s.")
+
+   def test_a_lost_index_is_a_defect(self):
+      self.bad("%0:s  (%1:d deg)", "(%1:d deg)")
+
+   def test_a_changed_type_is_a_defect(self):
+      self.bad("%0:d bytes", "%0:s Bytes")
+
+   def test_indexed_specifiers_may_be_reordered(self):
+      self.good("%0:s worked %1:s", "%1:s mit %0:s gearbeitet")
+
+   def test_plain_specifiers_keep_their_order(self):
+      self.bad("%s needs %d", "%d braucht %s")
+      self.good("%s needs %d", "%s braucht %d")
+
+   def test_prose_percent_is_not_a_specifier(self):
+      self.good("Dah 73% of normal duration", "Dah 73 % der normalen Dauer")
+
+
 if __name__ == "__main__":
    unittest.main()

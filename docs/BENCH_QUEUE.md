@@ -1,6 +1,7 @@
 # Bench queue — what is waiting for a real run
 
-- [ ] New QSO parties #114/#124/#131: create Alabama, New Jersey and West Virginia logs for
+- [ ] New QSO parties #114/#124/#131/#115/#110: create Alabama, New Jersey, West Virginia,
+  Arkansas and Kentucky logs for
   in-state, out-of-state and DX entrants; check setup prompts and typed
   county-line refusal on screen. **Since #317 (2026-11-13) the host state is a
   DOMESTIC multiplier, not a separate totals row:** in state, Alabama's first
@@ -11,9 +12,18 @@
   Expected and documented: the UDP `<ismultiplier2>`, the hourly report's
   Mults column and HamScore show one fewer on that first county QSO.
   A second band/mode must not repeat either multiplier. Check two-county
-  entry creates two separate records and W8WVA pays once per band/mode.
+  entry creates two separate records and W8WVA pays once per band/mode,
+  K4KCG (Kentucky) once per band/mode, and WR5P (Arkansas) 200 for every
+  valid QSO.
   County-suffixed bonus-call matching is fixed by the shared state-party matcher (#111); confirm on screen.
-- [ ] Export 3830 reports for Alabama, New Jersey and West Virginia and compare multiplier
+- [ ] New QSO parties Kansas #121, Iowa #120 and South Carolina #111 (built 2026-11-15,
+  matrix records not yet frozen): in-state and out-of-state logs. Kansas: 105 county
+  multipliers out of state, 64 in state with every county counting once as KS, FT8
+  an X-QSO, KS0KS 100 once. Iowa: 99 / 162, the first in-state county adds two
+  (county + IA), DC typed is Maryland, FT8 an X-QSO, JS8 counts. South Carolina:
+  an SC entrant scores 2 with an SC county and 4 with anyone else, county + SC per
+  band and mode, WW4SF/CHAR pays its bonus once per band and mode, Cabrillo PH/CW/RY.
+- [ ] Export 3830 reports for Alabama, New Jersey, West Virginia, Arkansas and Kentucky and compare multiplier
   columns with the events' real 3830 forms. Direct form retrieval was refused;
   the classes currently use the base combined Mults column.
 
@@ -416,7 +426,7 @@ The transmit-frequency entry (the `-` key) always wrote the TX frequency to VFO 
 - [ ] **TS-890S over LAN, VFO B receiving** (press A/B on the radio first). Press `-`, enter a TX frequency. Split comes on, RX stays on B and B's frequency is NOT changed, VFO A shows the entered frequency and transmits there (key briefly into a dummy load, or watch the TX VFO indicator). Press `-` again: split OFF (not on), TX back on B, and the radio reports `TB0`.
 - [ ] **Band-map click with B receiving does not split.** With B receiving and split off, double-click an ordinary (non-QSX) band-map spot: the radio must NOT go into split (it used to, because the tune's split-off sent `FT0;`). Known and unchanged: that tune writes VFO A, not the receive VFO.
 - [ ] **Mode with B receiving.** After the B-receiving entry, say whether VFO A's mode changed. Known, not new: `OM` sets the mode of the receive VFO whatever VFO is named, so TR4W can only set the mode of the receive VFO.
-- [ ] **FlexRadio: unchanged.** Flex was deliberately not touched (it never tracks an active slice). With slice A active, `-` behaves as before. With slice B active the old behaviour is expected: TX goes to slice 1 and RX is forced to slice 0. That is a separate fix, so report it but do not count it as a regression of this change.
+- [ ] ~~**FlexRadio: unchanged.**~~ Superseded 2026-11-15: the Flex now tracks the active slice -- see "SPLIT BY '-' ON A FLEX WITH SLICE B ACTIVE (issue 259)" below.
 - [ ] **TS-990S (if one is to hand): unchanged.** It shares the LAN base but keeps "B transmits" (`FT1;`/`FT0;`) whatever VFO receives, because its split works differently (Hamlib: TB, RX main / TX sub).
 
 ---
@@ -6809,3 +6819,54 @@ The rules and the page order are unit-tested (`uTestSetupWizard`, `uTestSetupWiz
 - [ ] **Preferences open.** With Preferences showing, Tools > Setup Wizard... refuses with a message. Close Preferences, run the wizard and add a radio, then reopen Preferences and Save without changes: the wizard's radio is still there.
 - [ ] **Second run.** Run it again with the same radio name: a second radio "Radio (2)" is added and put in slot 1; nothing fails.
 - [ ] **Layout on Linux (gtk2) and macOS.** Captions and the bottom buttons fit; "Create configuration" is not clipped.
+
+## Added 2026-11-15 -- SPLIT BY '-' ON A FLEX WITH SLICE B ACTIVE (issue 259)
+
+The SmartSDR API driver (Radio Control Port = TCP 4992) now reads each slice's `active=1` and treats that slice as the receive VFO (slice 0 = A, slice 1 = B). The `-` entry puts the TX frequency on the OTHER slice. With slice 0 active the commands are exactly as before. With slice 1 active it tunes slice 0, then sends `slice set 0 tx=1`, `slice set 1 tx=0`, `slice set 1 active=1`. Split OFF returns TX to the active slice. Split is now reported as "TX slice is not the active slice". Unit-pinned in `uTestFlexAPISplit`; nothing has been run against a radio. The serial / TCP 5002 CAT driver (`TFlexCAT`) is NOT changed. Watch `tr4w.log` at TRACE for `[FlexAPI] Slice n active` and `[FlexAPI TX]`.
+
+- [ ] **Slice A active (regression).** Press `-`, enter a TX frequency. Slice B is created if needed and tuned there, TX moves to B, receive stays on A, and TR4W shows split. Press `-` again: split off, TX back on A.
+- [ ] **Slice B active.** Click slice B in SmartSDR so it is active. Press `-`, enter a TX frequency. Slice A is tuned to it, the TX flag moves to A, slice B stays active and its frequency is NOT changed, and TR4W shows split. Press `-` again: split off, TX back on B (not on A).
+- [ ] **The main window follows the active slice.** NEW BEHAVIOUR: with slice B active, TR4W's frequency display shows slice B's frequency (the poller publishes the active VFO). Say whether that is wanted.
+- [ ] **Known, not a regression: with slice B active, a band-map click, a band change or Alt-M still tunes slice A** (they write VFO A, the same "tune writes A" limit as the TS-890 above). Because the display now shows slice B, the displayed frequency will not move on such a click. Report what you see.
+- [ ] **Band-map QSX with slice B active.** Unchanged on purpose: it writes slice B, puts TX on B and makes slice A active (the old commands). Report what the radio does.
+- [ ] **Close slice B in SmartSDR while it is active.** TR4W goes back to receiving on A and reports no split.
+
+## Added 2026-11-15 -- THE SPAN FUNCTION-KEY COMMAND (issue 192)
+
+A function-key message can now carry `SPAN=<kHz>` (decimals allowed, e.g. `SPAN=2.5`), `SPAN=+` or `SPAN=-`, between CTRL-C and CTRL-D like any other command; CTRL-A in front sends it to the inactive radio. A width is a REQUEST (the K4 clamps, an Icom snaps to its nearest rung); `+`/`-` is the radio's own step (1 kHz on a K4, one rung on an Icom). A radio with no panadapter logs a warning and does nothing. The syntax is unit-tested; nothing has been sent to a radio. The status line always reads `"SPAN" command is executed.` -- a refusal is in `tr4w.log`, not on screen.
+
+- [ ] **K4 over the network.** Program F-keys with `SPAN=24`, `SPAN=+`, `SPAN=-`. Each changes the K4's span (on the radio and in the panadapter window).
+- [ ] **IC-7610 / IC-9700 / IC-7760 over LAN.** `SPAN=50` gives 50 kHz; `SPAN=60` snaps to the nearest rung; `SPAN=+` / `SPAN=-` move one rung.
+- [ ] **A radio with no panadapter.** The key does nothing and the log has `[SPAN] ... has no panadapter span control`.
+- [ ] **SO2R.** CTRL-A in front of the command changes the inactive radio's span, not the active one's.
+
+## Added 2026-11-15 -- ALT-M ON A TEN-TEC ORION AND OMNI VI (issue 181)
+
+Orion: no change; Alt-M already sends `*AF..` then `*RMM<d>` (pinned now in `uTestTenTecModeSet`). Omni VI: the CW mode set is now `$06 $03` with NO filter byte, as D7 sent it (`(RadioModel = OMNI6) and (Mode = CW)`); other modes keep `$06 <mode> $01`. Watch `tr4w.log` at DEBUG for `[Orion` and `SetMode] Sending $06`.
+
+- [ ] **Orion.** Alt-M from CW to SSB and back: the radio changes mode each time (USB above 10 MHz, LSB below).
+- [ ] **Omni VI.** Alt-M from SSB to CW: the radio goes to CW (it used to receive a filter byte it rejects in CW). Alt-M back to SSB: it goes to USB/LSB. Note any NAK in the log.
+
+## Added 2026-11-15 -- THE WATERFALL EMPTIES ON A SPAN CHANGE (issue 159)
+
+The panadapter's waterfall used to keep rows captured at the old span and draw them across the new one. A span change now empties it (black) and it refills from the new span; a VFO move (centre change) keeps it. Unit-pinned in `uTestSpectrumRadioState`.
+
+- [ ] **K4.** Press SPAN on the radio (or `#SPN` from TR4W): the waterfall goes black and refills; no band of old rows stretched across the new width. Turn the VFO: the waterfall is kept and scrolls as before.
+- [ ] **Pause, change span, resume.** The waterfall empties on resume, not before.
+- [ ] **Note it if the waterfall blanks twice in quick succession on one SPAN press** (the header-before-bins frames noted in the issue would do that); the cure is the larger fix (keep each row's span and re-map).
+
+## Added 2026-11-15 -- K4 SPLIT WHEN VFO B IS IN A DIFFERENT MODE (issue 34)
+
+No code change: this is the case `6c7580c7` (2026-08-25) was written for and never benched. `TK4Radio.SetFrequency` sends `MD$` only when VFO B's mode differs (`ModeAlreadySet`), and when the K4 then drops split as a late side effect of that mode change, the `FT` arm re-asserts `FT1;` ONCE and logs a WARN (`rcSplitClearedByModeChange`, pinned in `uTestSplitReassert`). The 2026-08-25 bench had B already in CW, so the re-assert never had to fire. Watch `tr4w.log` at DEBUG for `MD$`, `FT1;` and `re-asserting once`.
+
+- [ ] **K4, B in a different mode.** Put VFO A in CW and VFO B in SSB on the radio. In TR4W press `-` and enter a CW transmit frequency. EXPECT: B goes to CW at that frequency, the K4 shows SPLIT and stays in split, TR4W shows split, and no error. Note whether the log shows the re-assert WARN (expected at most once).
+- [ ] **The reverse.** A in SSB, B in CW, enter a phone transmit frequency: same expectations.
+- [ ] **If any error appears, copy its exact text** (screen and `tr4w.log`) into issue 34 -- the original report did not say what the error was.
+
+## Added 2026-11-15 -- IC-7700, EITHER LINK (issue 31)
+
+Registered `[rlSerial, rlNetwork]` since `03935174`; never run. The driver header (`uRadioIcom7700.pas`) lists what to watch.
+
+- [ ] **Connect** over LAN (and serial if to hand). Frequency and mode of VFO A and VFO B follow the radio. If VFO B never updates, or the log shows `$25`/`$26` NAKs, say so: Hamlib assumes those commands fail on this model.
+- [ ] **CI-V transceive item.** Note whether the log says `CI-V Transceive confirmed ON` or `is OFF` while the radio's CI-V Transceive menu is ON. A false OFF (or neither line) means the `$1A $05` menu item is wrong for this model; read the item number from the radio's set-mode menu and report it.
+- [ ] **RIT, split, PTT, CW-by-CAT** each once; note the firmware version shown by the radio (RIT remote control arrived with firmware 2.x).

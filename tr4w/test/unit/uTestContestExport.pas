@@ -494,6 +494,16 @@ begin
    CheckEquals('KS', StateFromARRLSection('KS'), 'a state answers itself');
    CheckEquals('', StateFromARRLSection('DX'), 'DX is no state');
    CheckEquals('', StateFromARRLSection(''), 'nothing is no state');
+   (* Issue 275 item 4: a one-province RAC section is its province; a
+      section that is not one state for certain stays none. *)
+   CheckEquals('QC', StateFromARRLSection('QC'), 'Quebec');
+   CheckEquals('BC', StateFromARRLSection('bc'), 'British Columbia, case folded');
+   CheckEquals('NL', StateFromARRLSection('NL'), 'Newfoundland and Labrador');
+   CheckEquals('ON', StateFromARRLSection('GH'), 'Golden Horseshoe is in Ontario');
+   CheckEquals('', StateFromARRLSection('TER'), 'the Territories: more than one');
+   CheckEquals('', StateFromARRLSection('MDC'), 'Maryland and DC: not one state');
+   CheckEquals('', StateFromARRLSection('PR'), 'Puerto Rico is no state');
+   CheckEquals('', StateFromARRLSection('VI'), 'nor the Virgin Islands');
 end;
 
 procedure TContestExportTests.Test_ContestFieldsOfTheOtherOwners;

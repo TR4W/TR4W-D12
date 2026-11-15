@@ -67,9 +67,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     TR4W has except 30, 17 and 12 m: 160-10 m and every band from 6 m up
     (BandType has no 60 m). UsesBand; cfVHFBandsEnabled. DXLog lists 160-10,
     6 and 2 m only; the rules allow every VHF/UHF band, so the rules win.
-    NOT BUILT -- WARC FOR FT8/FT4 ONLY: UsesBand and UsesMode are separate
-    identity questions, so "30 m only on FT8" cannot be stated; a WARC QSO is
-    an automatic X-QSO in every mode (NY4I: keep WARC out and say why).
+    WARC FOR FT8/FT4 ONLY (issue 269, NY4I 2026-11-15: "allow the ft8 and
+    ft4 contacts on the other bands"): UsesBand credits 30, 17 and 12 m and
+    UsesBandInMode refuses every other mode there, so a WARC CW, SSB, RTTY or
+    JT65 QSO is an automatic X-QSO and a WARC FT8/FT4 QSO scores 2 like any
+    WSJT-X QSO. The frequency windows are not checked.
 
   MODES -- 5): "Entrants may use any combination of modes." CW, phone (SSB,
     AM; FM is phone) and every digital submode. UsesMode credits them all.
@@ -277,8 +279,12 @@ type
       (* POINTS x MULTIPLIERS x THE POWER MULTIPLIER -- the header. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
-      (* Every band but 30, 17 and 12 m -- the header. *)
+      (* Every band -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
+
+      (* 30, 17 and 12 m on FT8/FT4 only -- the header (issue 269). *)
+      function UsesBandInMode(aBand: BandType; aMode: ModeType;
+                              aExtMode: ExtendedModeType): boolean; override;
 
       (* Every mode -- "Entrants may use any combination of modes". *)
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
@@ -527,10 +533,28 @@ end;
 
 function TContestVermontQP.UsesBand(aBand: BandType): boolean;
 begin
-   (* "Use of 30, 17 and 12 meters are prohibited" (their FT8/FT4 exception
-      cannot be stated -- the header); "VHF and UHF frequencies are allowed";
-      "Otherwise, operators may use any frequency allowed by their license". *)
-   Result := not (aBand in [Band30, Band17, Band12, AllBands, NoBand]);
+   (* "VHF and UHF frequencies are allowed"; "Otherwise, operators may use
+      any frequency allowed by their license". 30, 17 and 12 m are credited
+      here for their FT8/FT4 exception, which UsesBandInMode states. *)
+   Result := not (aBand in [AllBands, NoBand]);
+end;
+
+function TContestVermontQP.UsesBandInMode(aBand: BandType; aMode: ModeType;
+                                          aExtMode: ExtendedModeType): boolean;
+begin
+   (* "Use of 30, 17 and 12 meters are prohibited except when operating
+      FT8/FT4" (issue 269). FT8 and FT4 only -- not JT65 or FST4, which the
+      rule does not name. A digital QSO with no recorded submode (eNoMode,
+      eData) is "some digital submode" and is not proven off. *)
+   if aBand in [Band30, Band17, Band12] then
+      begin
+      Result := (aMode = Digital) and
+                (aExtMode in [eFT8, eFT4, eNoMode, eData]);
+      end
+   else
+      begin
+      Result := True;
+      end;
 end;
 
 (* "Entrants may use any combination of modes." An identity fact: no station

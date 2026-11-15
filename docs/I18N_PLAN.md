@@ -46,8 +46,11 @@ msgstr  "Conectar"                     <- the translation
 ```
 
 **Renaming an identifier orphans its translation in every language, silently.** Rewording
-the *English* does not: the key is unchanged, the `hash` no longer matches, and the entry
-is flagged `#, fuzzy` for review. That asymmetry is the whole reason names were kept.
+the *English* keeps the key, so the translation survives -- but nothing flags it: msgmerge
+would mark the entry `#, fuzzy`, and `po_merge` does not (it matches by identifier and
+leaves the old msgid, so the old wording's translation ships under the new English; issue
+144). Use the reworded-caption steps in `I18N_TOOLS.md`. The asymmetry is still the reason
+names were kept: a reworded string can be repaired, a renamed one is simply lost.
 
 So `TC_`/`RC_` names are **kept** as they move to `resourcestring`, even though
 `uAppStrings.pas` states the convention `S<Area><Thing>` and "no TC_ prefix". That

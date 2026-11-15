@@ -673,6 +673,18 @@ function ProcessRSTQSONumberAndDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 function ProcessQSONumberAndPossibleDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
+(* Name, QTH and a possible Ten-Ten number (Ten-Ten); RS(T), QTH, name and a
+  FISTS number or power (FISTS); RS(T) and a JA prefecture (JA Long
+  Prefecture, through ParseRSTLongJAPrefecture).
+  In the interface for uTestPossibleDomesticQTHEntry (issue 308): an unlisted
+  domestic QTH is refused with a message and leaves the QSO as it found it --
+  for the JA parser, in its one-word form only. *)
+function ProcessNameQTHAndPossibleTenTenNumberExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
+function ProcessRSTQTHNameAndFistsNumberOrPowerExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
+function ProcessRSTAndJAPrefectureExchange(Exchange: ShortString; var
+  RXData: ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
@@ -1883,10 +1895,15 @@ end;
 function ProcessNameQTHAndPossibleTenTenNumberExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
+(* PARSED ON A COPY, WRITTEN ONLY WHEN ACCEPTED -- issue 308, the sibling of
+  issue 282: an unlisted QTH from a domestic station is refused through
+  DomesticQTHFoundOrRefused, with its reason, and leaves the QSO as it was. *)
 var
   TempString: ShortString {Str80};
   ThirdString, NumberString: Str10 {Str20};
   Result1: integer;
+  typed: Str80;
+  parsed: ContestExchange;
   //   tempstr20                       : Str20;
 begin
   ProcessNameQTHAndPossibleTenTenNumberExchange := False;
@@ -1896,10 +1913,12 @@ begin
      Exit;
      end;
 
+  typed := Exchange;
+  parsed := RXData;
   TempString := Exchange;
   Exchange := '';
 
-  RXData.TenTenNum := MAXWORD {-1};
+  parsed.TenTenNum := MAXWORD {-1};
 
   while TempString <> '' do
      begin
@@ -1907,7 +1926,7 @@ begin
 
      if StringIsAllNumbers(NumberString) then
         begin
-        ValChecked(NumberString, RXData.TenTenNum, Result1)
+        ValChecked(NumberString, parsed.TenTenNum, Result1)
         end
      else
         begin
@@ -1915,17 +1934,23 @@ begin
         end;
      end;
 
-  ParseExchange(Exchange, RXData.Name, RXData.QTHString, ThirdString);
+  ParseExchange(Exchange, parsed.Name, parsed.QTHString, ThirdString);
 
-  if not DomesticCountryCall(RXData.Callsign) then
+  if not DomesticCountryCall(parsed.Callsign) then
      begin
      ProcessNameQTHAndPossibleTenTenNumberExchange := True
      end
   else
      begin
-     ProcessNameQTHAndPossibleTenTenNumberExchange := FoundDomesticQTH(RXData);
+     ProcessNameQTHAndPossibleTenTenNumberExchange :=
+        DomesticQTHFoundOrRefused('ProcessNameQTHAndPossibleTenTenNumberExchange',
+                                  parsed, string(typed));
      end;
 
+  if Result then
+     begin
+     RXData := parsed;
+     end;
 end;
 
 function ProcessNameAndDomesticOrDXQTHExchange(Exchange: Str80; var RXData:
@@ -4143,6 +4168,7 @@ function ProcessRSTAndJAPrefectureExchange(Exchange: ShortString {Str80}; var
 var
   TempString: Str80;
   QTHFound: boolean;
+  resolved: ContestExchange;
 
 begin
   QTHFound := False;
@@ -4153,9 +4179,19 @@ begin
 
   if not StringHas(Exchange, ' ') then
      begin
-     RXData.RSTReceived := DefaultRST;
-     RXData.QTHString := Exchange;
-     ProcessRSTAndJAPrefectureExchange := FoundDomesticQTH(RXData);
+     (* ONE WORD: the prefecture alone -- issue 308, the sibling of issue
+       282. Parsed on a copy and written only when the lookup accepts it; an
+       unlisted prefecture is refused with its reason. *)
+     resolved := RXData;
+     resolved.RSTReceived := DefaultRST;
+     resolved.QTHString := Exchange;
+     ProcessRSTAndJAPrefectureExchange :=
+        DomesticQTHFoundOrRefused('ProcessRSTAndJAPrefectureExchange',
+                                  resolved, string(Exchange));
+     if Result then
+        begin
+        RXData := resolved;
+        end;
      Exit;
      end;
 
@@ -5062,6 +5098,7 @@ var
   NumberEntries, Address, Result1: integer;
   DX: boolean;
   EntryList: EntryArray;
+  resolved: ContestExchange;
 
 begin
   ProcessRSTQTHNameAndFistsNumberOrPowerExchange := False;
@@ -5072,13 +5109,17 @@ begin
      Exit;
      end;
 
-  DX := not DomesticCountryCall(RXData.Callsign);
+  (* PARSED ON A COPY, WRITTEN ONLY WHEN ACCEPTED -- issue 308, the sibling
+    of issue 282: every exit below that refuses leaves the QSO as it was. *)
+  resolved := RXData;
+
+  DX := not DomesticCountryCall(resolved.Callsign);
 
   ParseExchangeIntoFields(Exchange, EntryList, NumberEntries);
 
   if StringIsAllNumbers(EntryList[1]) then
      begin
-     RXData.RSTReceived := StrToIntDef(EntryList[1], 0);
+     resolved.RSTReceived := StrToIntDef(EntryList[1], 0);
 
      { Remove the RST from the entry list }
 
@@ -5093,7 +5134,7 @@ begin
      end
   else
      begin
-     RXData.RSTReceived := 599; { Use default RST }
+     resolved.RSTReceived := 599; { Use default RST }
      end;
 
   { We have removed the RST if it was there.  Should have QTH, Name
@@ -5106,8 +5147,8 @@ begin
 
   if (NumberEntries = 2) and DX then
      begin
-     RXData.QTHString := RXData.QTH.CountryID;
-     RXData.Name := EntryList[1];
+     resolved.QTHString := resolved.QTH.CountryID;
+     resolved.Name := EntryList[1];
 
      if NumberEntries > 1 then
         begin
@@ -5120,8 +5161,8 @@ begin
      end
   else
      begin
-     RXData.QTHString := EntryList[1];
-     RXData.Name := EntryList[2];
+     resolved.QTHString := EntryList[1];
+     resolved.Name := EntryList[2];
 
      for Address := 1 to NumberEntries - 2 do
         begin
@@ -5139,11 +5180,11 @@ begin
 
   if StringIsAllNumbers(EntryList[1]) then { member number }
      begin
-     ValChecked(EntryList[1], RXData.NumberReceived, Result1)
+     ValChecked(EntryList[1], resolved.NumberReceived, Result1)
      end
   else
      begin
-     RXData.Power := EntryList[1];
+     resolved.Power := EntryList[1];
      end;
 
   if DX then
@@ -5152,7 +5193,15 @@ begin
      end
   else
      begin
-     ProcessRSTQTHNameAndFistsNumberOrPowerExchange := FoundDomesticQTH(RXData);
+     (* An unlisted QTH is refused WITH its reason (issue 308). *)
+     ProcessRSTQTHNameAndFistsNumberOrPowerExchange :=
+        DomesticQTHFoundOrRefused('ProcessRSTQTHNameAndFistsNumberOrPowerExchange',
+                                  resolved, string(Exchange));
+     end;
+
+  if Result then
+     begin
+     RXData := resolved;
      end;
 end;
 
@@ -5955,19 +6004,24 @@ function ProcessRSTAndZoneExchange(Exchange: ShortString {Str80}; var RXData:
 var
   number: integer;
   numberLeads: boolean;
+  parsed: ContestExchange;
 begin
   ExchangeErrorMessage := TC_IMPROPERZONENUMBER;
   Result := False;
-  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, RXData, number, numberLeads) then
+  (* PARSED ON A COPY (issue 274 item 2): the word reader writes the RS(T),
+    and a refused entry now leaves the QSO's RS(T) as it found it too. *)
+  parsed := RXData;
+  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, parsed, number, numberLeads) then
      begin
      Exit;
      end;
 
   (* THERE ARE 40 CQ ZONES: above 40 is refused. This compared the first digit
     with '5', so 50..59 passed (D7 did the same; NY4I ruled it a bug, issue
-    267, 2026-11-10). ITU zone mode is not limited. Not asked of the
-    zone-then-RST form, which never had a range check (issue 274, open). *)
-  if (not numberLeads) and ZoneIsAboveTheCQZones(number) then
+    267, 2026-11-10). ITU zone mode is not limited. Asked of the CW
+    zone-then-RST form ('85 599') too since issue 274 item 4: it had no range
+    check at all. *)
+  if ZoneIsAboveTheCQZones(number) then
      begin
      Exit;
      end;
@@ -5975,7 +6029,8 @@ begin
   (* THE ZONE IS WRITTEN ONLY ONCE THE ENTRY IS ACCEPTED -- issue 267. It was
     written first, so an entry refused for a CQ zone above 40 still carried
     the zone it was refused for (D7 did the same). *)
-  RXData.Zone := number;
+  parsed.Zone := number;
+  RXData := parsed;
   Result := True;
   ExchangeErrorMessage := '';
 end;

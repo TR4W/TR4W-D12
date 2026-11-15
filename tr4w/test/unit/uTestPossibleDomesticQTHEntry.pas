@@ -61,6 +61,7 @@ type
       procedure Test_IOTADashedReferenceThroughProcessExchange;
       procedure Test_NRAURefusesAnUnlistedQTHWithAMessageAndWritesNothing;
       procedure Test_CQIRRefusesAnUnlistedCountyWithAMessageAndWritesNothing;
+      procedure Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing;
       procedure UseDomesticFile(const aFileName: string);
    end;
 
@@ -302,6 +303,44 @@ begin
    Accepted('COR 123', 'COR', 'COR', 123);
 end;
 
+(* ISSUE 308: ProcessRSTAndJAPrefectureExchange's ONE-WORD form (JA Long
+   Prefecture, jacg3.dom, whose class uses the file at every station) ended
+   in a bare FoundDomesticQTH, so an unlisted prefecture was refused
+   with no message and its QTH and RS(T) left written. It goes through
+   DomesticQTHFoundOrRefused on a copy now. Called directly: its exchange is a
+   ShortString, not the Str80 FParser takes. The several-word form is still
+   silent (open on issue 308). *)
+procedure TPossibleDomesticQTHEntryTests.Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing;
+var
+   rx: ContestExchange;
+   ok: boolean;
+begin
+   BeginTest('Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing');
+
+   rx := Default(ContestExchange);
+   rx.QTHString := SENTINEL_QTH;
+   rx.DomesticQTH := SENTINEL_DOMESTIC_QTH;
+   rx.DomMultQTH := SENTINEL_DOMESTIC_MULT;
+   rx.RSTReceived := SENTINEL_RST;
+   ExchangeErrorMessage := '';
+   ok := ProcessRSTAndJAPrefectureExchange('ZZ', rx);
+   CheckFalse(ok, '"ZZ" is refused');
+   CheckEquals(TC_IMPROPERDOMESITCQTH + ' (ZZ not in jacg3.dom)',
+               string(ExchangeErrorMessage), '"ZZ" message');
+   CheckEquals(SENTINEL_QTH, string(rx.QTHString), '"ZZ" QTH untouched');
+   CheckEquals(SENTINEL_DOMESTIC_QTH, string(rx.DomesticQTH), '"ZZ" domestic QTH untouched');
+   CheckEquals(SENTINEL_DOMESTIC_MULT, string(rx.DomMultQTH), '"ZZ" domestic multiplier untouched');
+   CheckEquals(SENTINEL_RST, Integer(rx.RSTReceived), '"ZZ" RS(T) untouched');
+
+   rx := Default(ContestExchange);
+   ExchangeErrorMessage := '';
+   ok := ProcessRSTAndJAPrefectureExchange('1001', rx);
+   CheckTrue(ok, '"1001" is accepted: ' + string(ExchangeErrorMessage));
+   CheckEquals('', string(ExchangeErrorMessage), '"1001" no message');
+   CheckEquals('1001', string(rx.QTHString), '"1001" QTH');
+   CheckEquals('1001', UpperCase(string(rx.DomMultQTH)), '"1001" domestic multiplier');
+end;
+
 procedure TPossibleDomesticQTHEntryTests.UseDomesticFile(const aFileName: string);
 begin
    Settings.Contest.DomesticFilename := aFileName;
@@ -359,6 +398,11 @@ begin
       Contest := ContestHandleOf(CQIR);
       ReleaseActiveContest;
       Test_CQIRRefusesAnUnlistedCountyWithAMessageAndWritesNothing;
+
+      UseDomesticFile('jacg3.dom');
+      Contest := ContestHandleOf(JALONGPREFECT);
+      ReleaseActiveContest;
+      Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing;
    finally
       DomQTHTable.Free;
       DomQTHTable := savedTable;

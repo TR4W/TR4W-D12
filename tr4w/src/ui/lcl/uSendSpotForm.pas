@@ -52,14 +52,25 @@ type
     edtFrequency: TEdit;
     edtComment: TEdit;
     chkContestName: TCheckBox;
+    chkExchange: TCheckBox;
     btnOK: TButton;
     btnCancel: TButton;
     procedure HandleShow(Sender: TObject);
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
     procedure chkContestNameChange(Sender: TObject);
+    procedure chkExchangeChange(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+  private
+    procedure FillComment;
   end;
+
+(* THE SPOT'S COMMENT FROM ITS TWO TICKS (issue 175): the contest's name and
+  after it the station's section or other domestic multiplier (aExchange, ''
+  when the program knows none), one space apart; '' when neither is ticked or
+  known. *)
+function SpotCommentText(const aContestName, aExchange: string;
+                         aWithContest, aWithExchange: boolean): string;
 
 // the Send Spot dialog.
 //
@@ -80,15 +91,56 @@ uses
   uContestRegistry, // ContestId -- the contest's name, for the comment
   TF,           // FreqToPChar
   LogStuff,     // CallWindowString
-  LogEdit,      // VisibleLog.LastEntry
+  LogEdit,      // VisibleLog.LastEntry, DomesticKeyKnownForCall
   LogRadio,     // ActiveRadioPtr
   uNet,         // SendSpotViaNetworkToNet
   uTelnet,      // TelnetIsConnected, SendViaTelnetSocket
   MainUnit,     // logger
-  Log4D;
+  Log4D,
+  uAppStrings;  (* SSendSpotExchangeInComment *)
 
 var
   frmSendSpot: TfrmSendSpot = nil;
+  (* The "exchange in comment" tick, remembered across openings for the session
+    as tContestNameInComment is (issue 175). *)
+  GExchangeInComment: boolean = False;
+
+function SpotCommentText(const aContestName, aExchange: string;
+                         aWithContest, aWithExchange: boolean): string;
+begin
+   Result := '';
+   if aWithContest then
+      begin
+      Result := aContestName;
+      end;
+   if aWithExchange and (aExchange <> '') then
+      begin
+      if Result <> '' then
+         begin
+         Result := Result + ' ';
+         end;
+      Result := Result + aExchange;
+      end;
+end;
+
+(* THE COMMENT IS REBUILT FROM BOTH TICKS whenever either changes, and on
+  every opening, because the call -- and so its section -- changes each time.
+  The section is the one the program already knows for the call: a QSO with it
+  in the log, the call history or INITIAL.EX (LogEdit.DomesticKeyKnownForCall,
+  the cluster hint's lookup). *)
+procedure TfrmSendSpot.FillComment;
+var
+   exchange: string;
+begin
+   exchange := '';
+   if chkExchange.Checked then
+      begin
+      exchange := DomesticKeyKnownForCall(CallString(edtCallsign.Text));
+      end;
+   edtComment.Text := AnsiString(SpotCommentText(ContestId(Contest), exchange,
+                                                 chkContestName.Checked,
+                                                 chkExchange.Checked));
+end;
 
 procedure TfrmSendSpot.HandleShow(Sender: TObject);
 var
@@ -104,6 +156,7 @@ begin
    lblFrequency.Caption  := string(RC_FREQUENCY);
    lblComment.Caption    := string(RC_COMMENT);
    chkContestName.Caption := string(RC_CONTESTNAMEIC);
+   chkExchange.Caption    := SSendSpotExchangeInComment;
 
    // The call being worked, or the last one logged if the entry field is empty.
    if CallWindowString <> '' then
@@ -127,13 +180,13 @@ begin
    edtFrequency.Text := FreqToPChar(freq);
 
    // tContestNameInComment is remembered ACROSS openings, so the tick and the
-   // comment are restored together. Setting Checked fires OnChange, which is
-   // what fills the comment -- the same coupling the WM_COMMAND arm had.
+   // comment are restored together.
+   (* FILLED HERE, NOT BY OnChange: setting Checked to the value it already
+     holds raises no OnChange, and the call -- so the section -- is new on
+     every opening (issue 175). *)
    chkContestName.Checked := tContestNameInComment;
-   if not tContestNameInComment then
-      begin
-      edtComment.Text := '';
-      end;
+   chkExchange.Checked    := GExchangeInComment;
+   FillComment;
 
    edtCallsign.SetFocus;
 end;
@@ -146,15 +199,13 @@ end;
 procedure TfrmSendSpot.chkContestNameChange(Sender: TObject);
 begin
    tContestNameInComment := chkContestName.Checked;
+   FillComment;
+end;
 
-   if tContestNameInComment then
-      begin
-      edtComment.Text := ContestId(Contest);
-      end
-   else
-      begin
-      edtComment.Text := '';
-      end;
+procedure TfrmSendSpot.chkExchangeChange(Sender: TObject);
+begin
+   GExchangeInComment := chkExchange.Checked;
+   FillComment;
 end;
 
 procedure TfrmSendSpot.btnOKClick(Sender: TObject);

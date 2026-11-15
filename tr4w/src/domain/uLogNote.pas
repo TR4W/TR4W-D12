@@ -49,7 +49,17 @@ function NoteText(const aQso: ContestExchange): AnsiString;
   the writer always dropped it. *)
 procedure SetNoteText(var aQso: ContestExchange; const aText: AnsiString);
 
+(* WHERE A NOTE WAS WRITTEN, FOR THE NOTE REPORT (issue 21): band, mode, the
+  frequency in kHz to 100 Hz and the operator -- "20 CW 14025.0 NY4I". All
+  four fields lie OUTSIDE the text region, so SetNoteText never touches them;
+  a frequency of 0 (no radio) and an empty operator are left out. *)
+function NoteContextText(const aQso: ContestExchange): AnsiString;
+
 implementation
+
+uses
+   SysUtils,     (* IntToStr, Trim *)
+   utils_text;   (* CharBufferBytes -- the operator's NUL-padded buffer *)
 
 function NoteText(const aQso: ContestExchange): AnsiString;
 var
@@ -91,6 +101,27 @@ begin
    if n > 0 then
       begin
       Move(aText[1], aQso.Prefix, n);
+      end;
+end;
+
+function NoteContextText(const aQso: ContestExchange): AnsiString;
+var
+   op : AnsiString;
+begin
+   Result := AnsiString(BandStringsArrayWithOutSpaces[aQso.Band]) + ' ' +
+             AnsiString(ModeStringArray[aQso.Mode]);
+
+   if aQso.Frequency > 0 then
+      begin
+      Result := Result + ' ' +
+                AnsiString(IntToStr(aQso.Frequency div 1000)) + '.' +
+                AnsiString(IntToStr((aQso.Frequency mod 1000) div 100));
+      end;
+
+   op := Trim(CharBufferBytes(aQso.ceOperator));
+   if op <> '' then
+      begin
+      Result := Result + ' ' + op;
       end;
 end;
 
