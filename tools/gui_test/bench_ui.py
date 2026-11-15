@@ -22,6 +22,10 @@ def run(root, run_name, phase):
    if phase == "bench-locked-regression":
       from bench_locked import run as check_locked
       return check_locked(root, run_name, output, journal)
+   if phase.startswith(("bench-wizard-", "bench-install-")):
+      # Launches itself: three of its phases start with NO settings file.
+      from bench_setup_wizard import run as check_wizard
+      return check_wizard(root, run_name, output, journal, phase)
    database = ""
    any_log = ("bench-export-year", "bench-export-zone", "bench-yearsent-check")
    if phase.startswith(("bench-prefs", "bench-switch", "bench-export", "bench-messages", "bench-tools", "bench-import", "bench-search", "bench-k4", "bench-tailcat", "bench-yearsent-check", "bench-pending")):

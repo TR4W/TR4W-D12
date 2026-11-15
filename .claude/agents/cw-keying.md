@@ -68,7 +68,7 @@ still stands. Three things to know before extending it:
 
 `CWThreadProc`, `tDoABeep`, `tPaddleFootSwitchThreadProc`,
 `tDVPPlayThreadproc`, `wkReadThreadProc` and `wkOpenThreadProc` (the thread
-entry for `wkOpen`, which `MainUnit` also calls directly) are all
+entry for `wkOpen`, started only by `wkStart`) are all
 `function(aParameter: Pointer): DWORD; stdcall` -- `TF.TTR4WThreadStart`.
 Until pointer audit P1 they were parameterless procedures started through an
 untyped `Pointer`, and on i386 each one's EXIT wrote nil into the thread's
@@ -76,6 +76,42 @@ SEH chain head (`docs/POINTER_AUDIT.md`, D2). **Pass the routine BARE --
 `tCreateThread(CWThreadProc, id)`.** In Delphi mode `@CWThreadProc` is an
 untyped pointer the compiler does not check; `Lint-TypedCodePointers` fails
 the build on it. The bench check for each is in `docs/BENCH_QUEUE.md`.
+
+## The WinKeyer is opened and closed by ONE pair, `wkStart` / `wkStop` (2026-11-14)
+
+Startup, the Alt-menu re-open and `uRadioConfigApply.ApplyProfile` (Preferences
+Activate and Save, the setup wizard) all go through `uWinKey.wkStop` /
+`wkStart`; nothing calls `wkOpen` directly. Until then a profile apply never
+opened or closed the WinKeyer: a new one waited for a restart, and a moved one
+kept its old port and reader thread while `ActiveCWKeyer` fell back to the CPU
+keyer in silence.
+
+- **`wkStop` WAITS, by flag** (`wkOpening`, `wkReaderRunning`: set by the
+  creator before `tCreateThread`, cleared by the thread in a finally; the loop
+  is `TF.WaitForFlagToClear`, shared with the radio poller's stop). Open first,
+  then `wkActive := False`, then the reader, then `wkClose` and
+  **`FreeAndNil(WinKeyPort)`** -- a `TSerialPort`'s name is fixed at Create, so
+  a closed-not-freed port reopened on the OLD port. 3 s each; on a timeout it
+  logs an Error and leaves the port alone, and `wkStart` refuses while either
+  flag is up.
+- **`wkActive` is set by `wkOpen` before it creates the reader**, not by the
+  reader: a stop landing between create and first line was undone by the
+  reader itself, which then looped beside the next one and stole the echo byte.
+- **`wkStart` opens on a worker** (the echo test and HOST OPEN are blocking
+  reads) and does nothing when not enabled, or when `tSilentExport` /
+  `WarningsHaveNoOperator` say there is no station.
+- `ApplyProfile` stops it after phase 1 (before `ApplyKeyersForProfile`
+  rewrites the port) and starts it after phase 3 (`wkOpen` reads
+  `ActiveRadioPtr`); `uTestStatusAndNotice` pins the order.
+  `ActiveRadioSettingsChanged(store, which, keyers)` reports an edited keyer
+  device (`TAppliedRadioSnapshot.KeyerSlotChanged`, by Id plus
+  `TKeyerDefinition.SameDeviceSettingsAs` -- a RENAME is not a change), so
+  Save re-applies.
+- `logsubs2.ExitProgram` stops it with `wkStop` too (bounded; a timeout logs
+  and the exit continues).
+- `DescribePortConflicts(store, profile, keyers)` compares the profile's
+  WinKeyer port with every radio's CAT port and with the keyer port of a slot
+  that names no keyer device. Without `keyers` it is not asked.
 
 ## The CPU keyer's element ring is a FIELD, and it is pinned (2026-10-17)
 

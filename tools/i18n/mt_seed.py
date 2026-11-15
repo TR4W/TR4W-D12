@@ -9,9 +9,11 @@ Usage:
 A STARTING POINT FOR A REVIEWER, never a finished translation. Three properties
 enforce that:
 
-  1. Every seeded string stays FUZZY -- "Needs work" in Poedit. po2pas.py skips
-     fuzzy entries, so machine output cannot reach a .pas or a build until a
-     human clears the flag.
+  1. Every seeded string stays FUZZY -- "Needs work" in Poedit, "Needs editing"
+     in Weblate -- so a reviewer can find it. Fuzzy entries still SHIP in the
+     program (Make-LanguageRes embeds them; NY4I, 2026-09-21 and 2026-11-14:
+     users correct them through Weblate). Only the legacy po2pas.py write-back
+     into .pas files skips them.
   2. Format specifiers are validated against the English and the string is
      DROPPED rather than seeded on mismatch. TR4W formats through wsprintfA --
      unchecked varargs -- so a %d turned into %s dereferences an integer as a

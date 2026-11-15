@@ -15,9 +15,9 @@ language file has its own declaration order, which is not ENG's.
 That makes `--verify` strong: applying an unmodified catalogue must leave every
 .pas BYTE-IDENTICAL.
 
-FUZZY IS THE GATE. A fuzzy entry is never written back, so machine translation
-and unreviewed edits cannot reach a build until a human clears "Needs work" in
-Poedit.
+A fuzzy entry is never written back into a .pas file. That is only this legacy
+path: the program's own build embeds fuzzy entries (Make-LanguageRes.ps1), so
+fuzzy is no longer a gate on what ships.
 """
 
 import argparse

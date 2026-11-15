@@ -5453,8 +5453,12 @@ begin
 
     menu_alt_WkMode: // 4.60.1
       begin
-        wkClose;
-        wkOpen;
+        (* Re-open: wait for the reader to stop, then open on a worker thread.
+          This called wkClose and wkOpen here, which left the old reader
+          running beside the open (wkClose does not wait) and ran the echo
+          test's blocking reads on the main thread. *)
+        wkStop;
+        wkStart;
       end;
 
     //alt

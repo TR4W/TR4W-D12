@@ -10254,8 +10254,8 @@ msgstr ""
 
 #: uappstrings.swizclusterintro
 #, fuzzy
-msgid "Pick a cluster from the list or type host:port. Leave the login blank to log in with your callsign."
-msgstr ""
+msgid "Pick a cluster from the list, or type its host name or IP address and its port. Leave the login blank to log in with your callsign."
+msgstr "Підберіть кластер зі списку, або введіть його ім'я або IP-адресу та його порт. Залиште порожній логін, щоб увійти в систему."
 
 #: uappstrings.swizclusterlogin
 #, fuzzy
@@ -10317,11 +10317,6 @@ msgstr ""
 msgid "TR4W reads and sets the frequency and mode."
 msgstr ""
 
-#: uappstrings.swizkeyerbutton
-#, fuzzy
-msgid "Set up the WinKeyer..."
-msgstr ""
-
 #: uappstrings.swizkeyerheading
 #, fuzzy
 msgid "WinKeyer"
@@ -10330,11 +10325,6 @@ msgstr ""
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr ""
-
-#: uappstrings.swizkeyerneeded
-#, fuzzy
-msgid "Set up the WinKeyer, or go back and untick it."
 msgstr ""
 
 #: uappstrings.swizmenu
@@ -10352,19 +10342,9 @@ msgstr ""
 msgid "The country file does not know this callsign, so nothing was filled in from it."
 msgstr ""
 
-#: uappstrings.swiznotsetup
-#, fuzzy
-msgid "Not set up yet."
-msgstr ""
-
 #: uappstrings.swizprefsopen
 #, fuzzy
 msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
-msgstr ""
-
-#: uappstrings.swizradiobutton
-#, fuzzy
-msgid "Set up the radio..."
 msgstr ""
 
 #: uappstrings.swizradioheading
@@ -10374,12 +10354,7 @@ msgstr ""
 
 #: uappstrings.swizradiointro
 #, fuzzy
-msgid "Choose your radio and how it is connected. This opens the same radio editor Preferences uses. TR4W connects to it when you create the configuration."
-msgstr ""
-
-#: uappstrings.swizradioneeded
-#, fuzzy
-msgid "Set up the radio, or go back and untick it."
+msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
 msgstr ""
 
 #: uappstrings.swizresapplyfailed
@@ -10389,8 +10364,8 @@ msgstr ""
 
 #: uappstrings.swizrescluster
 #, fuzzy
-msgid "DX cluster \"%s\" saved as the cluster to connect to."
-msgstr ""
+msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
+msgstr "DX кластер \"%0:s\": %1:s, журналювання як %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10399,8 +10374,8 @@ msgstr ""
 
 #: uappstrings.swizreskeyer
 #, fuzzy
-msgid "WinKeyer \"%s\" saved and used for CW on radio 1."
-msgstr ""
+msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
+msgstr "WinKeyer \"%0:s\" на %1:s, використовується для CW на радіо 1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10421,8 +10396,8 @@ msgstr ""
 
 #: uappstrings.swizresradio
 #, fuzzy
-msgid "Radio \"%s\" saved as radio 1."
-msgstr ""
+msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
+msgstr "Радіо 1: %0:s %1:s. Name: \"%2:s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10468,3 +10443,190 @@ msgstr ""
 #, fuzzy
 msgid "TR4W setup"
 msgstr ""
+
+#: uappstrings.swizresprofile
+#, fuzzy
+msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
+msgstr ""
+
+#: uappstrings.swizstartupprompt
+#, fuzzy
+msgid "This looks like a new installation. Would you like to run the Setup Wizard first?"
+msgstr ""
+
+#: uappstrings.swizctymissing
+#, fuzzy
+msgid "There is no country file yet, so the zones and country cannot be filled in from the callsign."
+msgstr ""
+
+#: uappstrings.swizctydownload
+#, fuzzy
+msgid "Download country file"
+msgstr ""
+
+#: uappstrings.swizctydownloading
+#, fuzzy
+msgid "Downloading the country file..."
+msgstr ""
+
+#: uappstrings.swizctydone
+#, fuzzy
+msgid "The country file was downloaded."
+msgstr ""
+
+#: uappstrings.swizctyfailed
+#, fuzzy
+msgid "The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it."
+msgstr ""
+
+#: uappstrings.swizradiocwbycat
+#, fuzzy
+msgid "Send CW through the radio (CW by CAT)"
+msgstr "Надіслати CW через радіо (CW by CAT)"
+
+#: uappstrings.swizradiospeedsync
+#, fuzzy
+msgid "Keep the radio's CW speed in step with TR4W"
+msgstr "Зберігати швидкість радіочастотного CW в степу з TR4W"
+
+#: uappstrings.swizclusterserverhint
+#, fuzzy
+msgid "A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23."
+msgstr "Ім'я або IP-адреса, наприклад dxc.nc7j.com або 192.168.1.5. Залиште порожній порт для стандартного порту, 23."
+
+#: uappstrings.swizclusterport
+#, fuzzy
+msgid "Port:"
+msgstr "Порт:"
+
+#: uappstrings.swizclusterportbad
+#, fuzzy
+msgid "The port must be a number from 1 to 65535, or blank."
+msgstr "Порт повинен бути номер від 1 до 65535, або порожній."
+
+#: uappstrings.swizresonport
+#, fuzzy
+msgid "on %s"
+msgstr "на %s"
+
+#: uappstrings.swizresataddress
+#, fuzzy
+msgid "at %s"
+msgstr "Увійти %s"
+
+#: uappstrings.swizresnoport
+#, fuzzy
+msgid "with no port chosen yet"
+msgstr "без вибраного порту"
+
+#: uappstrings.swizrescwbycat
+#, fuzzy
+msgid "CW is sent through the radio (CW by CAT)."
+msgstr "CW направляється через радіо (CW by CAT)."
+
+#: uappstrings.swizresspeedsync
+#, fuzzy
+msgid "The radio's CW speed follows the speed set in TR4W."
+msgstr "Частота радіозв'язку: швидкість, встановлена в TR4W."
+
+#: uappstrings.swizresloginasstation
+#, fuzzy
+msgid "your station callsign"
+msgstr "Станція"
+
+#: uappstrings.swizresshowdetails
+#, fuzzy
+msgid "Show details"
+msgstr "Показати подробиці"
+
+#: uappstrings.swizdetserial
+#, fuzzy
+msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
+msgstr "   Послідовність: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
+
+#: uappstrings.swizdetnetworkuser
+#, fuzzy
+msgid "   Network user: %s"
+msgstr "   Користувач мережі: %s"
+
+#: uappstrings.swizdetnetworkpassword
+#, fuzzy
+msgid "   Network password: set"
+msgstr "   Статус на сервери"
+
+#: uappstrings.swizdetpolling
+#, fuzzy
+msgid "   Frequency polling: %0:s, every %1:s ms"
+msgstr "   Частотний пилок: %0:s, кожен %1:s ms"
+
+#: uappstrings.swizdetkeyerport
+#, fuzzy
+msgid "   The radio's keyer output port: %s"
+msgstr "   Вихідний порт радіостанції: %s"
+
+#: uappstrings.swizdetstartup
+#, fuzzy
+msgid "   Startup command: %s"
+msgstr "   Команда Startup: %s"
+
+#: uappstrings.swizdetkeyermode
+#, fuzzy
+msgid "   Mode %0:s, sidetone %1:s"
+msgstr "   Режим %0:s, sidetone %1:s"
+
+#: uappstrings.swizdetclustercommand
+#, fuzzy
+msgid "   After connecting: %s"
+msgstr "   Після підключення: %s"
+
+#: uappstrings.swizdetclusterpassword
+#, fuzzy
+msgid "   Password: set"
+msgstr "   Пароль: набір"
+
+#: uappstrings.swizdeton
+#, fuzzy
+msgid "on"
+msgstr "на"
+
+#: uappstrings.swizdetoff
+#, fuzzy
+msgid "off"
+msgstr "з"
+
+#: uappstrings.swizcallbookfilled
+#, fuzzy
+msgid "Some details were filled in from the callbook (hamdb.org). Please check them."
+msgstr "Деякі деталі були заповнені з книги (hamdb.org). Будь ласка, перевірте їх."
+
+#: uappstrings.sincompleteinstallhint
+#, fuzzy
+msgid ""
+"The folder is missing too, so this copy of TR4W is probably not completely installed.\n"
+"\n"
+"Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again."
+msgstr ""
+"У папці немає занадто, тому ця копія TR4W, ймовірно, не повністю встановлена.\n"
+"\n"
+"Почати TR4W з папки інсталятор покласти його в (це зберігає CTY.DAT, TRMASTER.DTA і папку dom), або запустити інсталятор знову."
+
+#: uappstrings.sinstallincompletestartup
+#, fuzzy
+msgid ""
+"This copy of TR4W looks incompletely installed.\n"
+"\n"
+"Not found in %0:s:\n"
+"%1:s\n"
+"\n"
+"Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again.\n"
+"\n"
+"TR4W will still start, but contests that need these files will not work properly."
+msgstr ""
+"Ця копія TR4W виглядає неповно встановленою.\n"
+"\n"
+"Не знайдено в %0:\n"
+"%1:\n"
+"\n"
+"Почати TR4W з папки інсталятор покласти його в (це зберігає CTY.DAT, TRMASTER.DTA і папку dom), або запустити інсталятор знову.\n"
+"\n"
+"TR4W все ще почнеться, але конкурси, які потребують цих файлів, не працюють належним чином."

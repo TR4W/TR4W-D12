@@ -99,8 +99,10 @@ python tools/i18n/mt_seed.py --lang FRA --catalog help  # config-command help
 python tools/i18n/mt_seed.py --lang FRA --reseed        # discard machine output, redo
 ```
 
-Everything seeded stays **fuzzy**, and `po2pas.py` refuses fuzzy entries, so
-machine output cannot reach a build until a human clears "Needs work".
+Everything seeded stays **fuzzy** so Weblate / Poedit show it as "Needs work".
+Fuzzy entries SHIP in the program (`Make-LanguageRes.ps1` embeds them, and the
+help reader keeps them), by NY4I's decision; corrections come back through
+Weblate. Only the legacy `po2pas.py` write-back into `.pas` files still skips them.
 Reviewed (non-fuzzy) entries are never touched, including by `--reseed`.
 
 **One string per request by default.** Batching maps results back by position

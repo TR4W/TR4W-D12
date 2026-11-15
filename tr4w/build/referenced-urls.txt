@@ -18,6 +18,7 @@
 # ---- endpoints: the program contacts these --------------------------------------------------
 https://www.country-files.com/cty/cty.dat | endpoint | head | uCTYUpdate
 https://www.country-files.com/feed/ | endpoint | get | uCTYUpdate
+https://api.hamdb.org/v1/ | endpoint | root | uCallbookHamDB
 https://tr4w.net/TRMASTER.DTA | endpoint | head | uTRMasterUpdate
 https://tr4w.net/version.json | endpoint | get | uCheckLatestVersion
 https://pota.app/all_parks_ext.csv | endpoint | head | uPOTAParks

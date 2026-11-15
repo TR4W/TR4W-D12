@@ -10,6 +10,7 @@ object frmSetupWizard: TfrmSetupWizard
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
   OnClose = HandleClose
+  OnCloseQuery = HandleCloseQuery
   OnShow = HandleShow
   object pnlHeader: TPanel
     Left = 0
@@ -70,7 +71,7 @@ object frmSetupWizard: TfrmSetupWizard
         Top = 8
         Width = 140
         CharCase = ecUppercase
-        TabOrder = 0
+        TabOrder = 1
         OnChange = edtCallChange
       end
       object lblCall: TInputCaption
@@ -81,14 +82,14 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblCall'
         FocusControl = edtCall
-        TabOrder = 10
+        TabOrder = 0
       end
       object edtName: TEdit
         Left = 140
         Height = 23
         Top = 34
         Width = 140
-        TabOrder = 1
+        TabOrder = 3
       end
       object lblName: TInputCaption
         Left = 16
@@ -98,15 +99,15 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblName'
         FocusControl = edtName
-        TabOrder = 11
+        TabOrder = 2
       end
       object edtGrid: TEdit
         Left = 140
         Height = 23
         Top = 60
         Width = 140
-        CharCase = ecUppercase
-        TabOrder = 2
+        TabOrder = 5
+        OnExit = GridExit
       end
       object lblGrid: TInputCaption
         Left = 16
@@ -116,7 +117,7 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblGrid'
         FocusControl = edtGrid
-        TabOrder = 12
+        TabOrder = 4
       end
       object edtState: TEdit
         Left = 140
@@ -124,7 +125,7 @@ object frmSetupWizard: TfrmSetupWizard
         Top = 86
         Width = 140
         CharCase = ecUppercase
-        TabOrder = 3
+        TabOrder = 7
       end
       object lblState: TInputCaption
         Left = 16
@@ -134,7 +135,7 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblState'
         FocusControl = edtState
-        TabOrder = 13
+        TabOrder = 6
       end
       object edtSection: TEdit
         Left = 140
@@ -142,7 +143,7 @@ object frmSetupWizard: TfrmSetupWizard
         Top = 112
         Width = 140
         CharCase = ecUppercase
-        TabOrder = 4
+        TabOrder = 9
       end
       object lblSection: TInputCaption
         Left = 16
@@ -152,7 +153,7 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblSection'
         FocusControl = edtSection
-        TabOrder = 14
+        TabOrder = 8
       end
       object edtPostal: TEdit
         Left = 140
@@ -160,7 +161,7 @@ object frmSetupWizard: TfrmSetupWizard
         Top = 138
         Width = 140
         CharCase = ecUppercase
-        TabOrder = 5
+        TabOrder = 12
       end
       object lblPostal: TInputCaption
         Left = 16
@@ -170,14 +171,14 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblPostal'
         FocusControl = edtPostal
-        TabOrder = 15
+        TabOrder = 11
       end
       object edtZone: TEdit
         Left = 140
         Height = 23
         Top = 164
         Width = 140
-        TabOrder = 6
+        TabOrder = 14
         OnChange = DerivedFieldChange
       end
       object lblZone: TInputCaption
@@ -188,14 +189,14 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblZone'
         FocusControl = edtZone
-        TabOrder = 16
+        TabOrder = 13
       end
       object edtITUZone: TEdit
         Left = 140
         Height = 23
         Top = 190
         Width = 140
-        TabOrder = 7
+        TabOrder = 16
         OnChange = DerivedFieldChange
       end
       object lblITUZone: TInputCaption
@@ -206,7 +207,7 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblITUZone'
         FocusControl = edtITUZone
-        TabOrder = 17
+        TabOrder = 15
       end
       object edtCountry: TEdit
         Left = 140
@@ -214,7 +215,7 @@ object frmSetupWizard: TfrmSetupWizard
         Top = 216
         Width = 140
         CharCase = ecUppercase
-        TabOrder = 8
+        TabOrder = 18
         OnChange = DerivedFieldChange
       end
       object lblCountry: TInputCaption
@@ -225,7 +226,7 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblCountry'
         FocusControl = edtCountry
-        TabOrder = 18
+        TabOrder = 17
       end
       object cbxContinent: TComboBox
         Left = 140
@@ -234,7 +235,7 @@ object frmSetupWizard: TfrmSetupWizard
         Width = 140
         ItemHeight = 15
         Style = csDropDownList
-        TabOrder = 9
+        TabOrder = 20
         OnChange = DerivedFieldChange
       end
       object lblContinent: TInputCaption
@@ -255,6 +256,26 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblLookup'
         WordWrap = True
+      end
+      object lblCtyStatus: TLabel
+        Left = 300
+        Height = 46
+        Top = 62
+        Width = 296
+        AutoSize = False
+        Caption = 'lblCtyStatus'
+        WordWrap = True
+      end
+      object btnCtyDownload: TButton
+        Left = 300
+        Height = 25
+        Top = 112
+        Width = 200
+        AutoSize = True
+        Constraints.MinWidth = 200
+        Caption = 'btnCtyDownload'
+        TabOrder = 10
+        OnClick = btnCtyDownloadClick
       end
       object lblDerived: TLabel
         Left = 300
@@ -326,51 +347,37 @@ object frmSetupWizard: TfrmSetupWizard
       Caption = 'tsRadio'
       ClientHeight = 306
       ClientWidth = 612
-      object btnRadio: TButton
-        Left = 16
-        Height = 28
-        Top = 12
-        Width = 220
+      object chkCWByCAT: TCheckBox
+        Left = 70
+        Height = 21
+        Top = 484
+        Width = 250
         AutoSize = True
-        Caption = 'btnRadio'
-        Constraints.MinWidth = 220
+        Constraints.MinWidth = 250
+        Caption = 'chkCWByCAT'
         TabOrder = 0
-        OnClick = btnRadioClick
+        Visible = False
       end
-      object lblRadioSummary: TLabel
-        Left = 16
-        Height = 60
-        Top = 52
-        Width = 580
-        AutoSize = False
-        Caption = 'lblRadioSummary'
-        WordWrap = True
+      object chkSpeedSync: TCheckBox
+        AnchorSideLeft.Control = chkCWByCAT
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = chkCWByCAT
+        Left = 332
+        Height = 21
+        Top = 484
+        Width = 250
+        AutoSize = True
+        BorderSpacing.Left = 12
+        Constraints.MinWidth = 250
+        Caption = 'chkSpeedSync'
+        TabOrder = 1
+        Visible = False
       end
     end
     object tsKeyer: TTabSheet
       Caption = 'tsKeyer'
       ClientHeight = 306
       ClientWidth = 612
-      object btnKeyer: TButton
-        Left = 16
-        Height = 28
-        Top = 12
-        Width = 220
-        AutoSize = True
-        Caption = 'btnKeyer'
-        Constraints.MinWidth = 220
-        TabOrder = 0
-        OnClick = btnKeyerClick
-      end
-      object lblKeyerSummary: TLabel
-        Left = 16
-        Height = 60
-        Top = 52
-        Width = 580
-        AutoSize = False
-        Caption = 'lblKeyerSummary'
-        WordWrap = True
-      end
     end
     object tsCluster: TTabSheet
       Caption = 'tsCluster'
@@ -380,9 +387,11 @@ object frmSetupWizard: TfrmSetupWizard
         Left = 160
         Height = 23
         Top = 8
-        Width = 300
+        Width = 230
         ItemHeight = 15
-        TabOrder = 0
+        TabOrder = 1
+        OnExit = ServerExit
+        OnSelect = ServerSelect
       end
       object lblServer: TInputCaption
         Left = 16
@@ -392,39 +401,66 @@ object frmSetupWizard: TfrmSetupWizard
         AutoSize = False
         Caption = 'lblServer'
         FocusControl = cbxServer
-        TabOrder = 4
+        TabOrder = 0
+      end
+      object edtPort: TEdit
+        Left = 446
+        Height = 23
+        Top = 8
+        Width = 70
+        TabOrder = 3
+        OnExit = ServerExit
+      end
+      object lblPort: TInputCaption
+        Left = 400
+        Height = 17
+        Top = 11
+        Width = 42
+        AutoSize = False
+        Caption = 'lblPort'
+        FocusControl = edtPort
+        TabOrder = 2
+      end
+      object lblServerHint: TLabel
+        Left = 160
+        Height = 34
+        Top = 34
+        Width = 436
+        AutoSize = False
+        Caption = 'lblServerHint'
+        WordWrap = True
       end
       object edtLogin: TEdit
         Left = 160
         Height = 23
-        Top = 34
+        Top = 76
         Width = 160
         CharCase = ecUppercase
-        TabOrder = 1
+        TabOrder = 5
       end
       object lblLogin: TInputCaption
         Left = 16
         Height = 17
-        Top = 37
+        Top = 79
         Width = 140
         AutoSize = False
         Caption = 'lblLogin'
         FocusControl = edtLogin
-        TabOrder = 5
+        TabOrder = 4
       end
       object edtPassword: TEdit
         Left = 160
         Height = 23
-        Top = 60
+        Top = 102
         Width = 160
         EchoMode = emPassword
         PasswordChar = '*'
-        TabOrder = 2
+        TabOrder = 7
       end
       object lblPassword: TInputCaption
         Left = 16
         Height = 17
-        Top = 63
+        Top = 105
         Width = 140
         AutoSize = False
         Caption = 'lblPassword'
@@ -434,28 +470,40 @@ object frmSetupWizard: TfrmSetupWizard
       object edtCommand: TEdit
         Left = 160
         Height = 23
-        Top = 86
+        Top = 128
         Width = 300
-        TabOrder = 3
+        TabOrder = 9
       end
       object lblCommand: TInputCaption
         Left = 16
         Height = 17
-        Top = 89
+        Top = 131
         Width = 140
         AutoSize = False
         Caption = 'lblCommand'
         FocusControl = edtCommand
-        TabOrder = 7
+        TabOrder = 8
       end
     end
     object tsResult: TTabSheet
       Caption = 'tsResult'
       ClientHeight = 306
       ClientWidth = 612
+      object chkDetails: TCheckBox
+        Left = 0
+        Height = 21
+        Top = 285
+        Width = 612
+        Align = alBottom
+        BorderSpacing.Left = 16
+        BorderSpacing.Bottom = 4
+        Caption = 'chkDetails'
+        TabOrder = 1
+        OnChange = DetailsChange
+      end
       object memResult: TMemo
         Left = 16
-        Height = 282
+        Height = 261
         Top = 12
         Width = 580
         Align = alClient

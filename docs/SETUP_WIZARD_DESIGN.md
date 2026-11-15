@@ -8,8 +8,9 @@ page shape below is the part that was argued about and settled (NY4I,
 |---|---|
 | the rules: page plan, startup gate, staging into the stores | `tr4w/src/uSetupWizard.pas` (no LCL; pinned by `test/unit/uTestSetupWizard.pas`) |
 | the window | `tr4w/src/ui/lcl/uSetupWizardForm.pas` + `.lfm` (driven off screen by `test/unit/uTestSetupWizardForm.pas`) |
-| the once-only flag | `general.setupWizardShown` in `settings\tr4w.json`; `uRadioConfigApply.SetupWizardAlreadyShown` / `MarkSetupWizardShown` |
-| startup | `uProgramMain.RunTR4W`, in place of the MY GRID prompt -- see [section 6](#6-when-it-runs) |
+| when startup offers it | `uSetupWizard.SetupWizardDueAtStartup(aHeadless, aStationHasCallsign)`: not headless and **no callsign stored**. There is **no once-only flag** any more -- `general.setupWizardShown` is no longer written (the key stays in the known-keys list so an old file drops it quietly) |
+| startup | `uProgramMain.RunTR4W`, **before New Contest**: a Yes/No question (Yes is the default), then the wizard **modally** -- see [section 6](#6-when-it-runs) |
+| one window | the Radio and WinKeyer pages **host the existing editors' content panels** (`TRadioEditForm.EditRadioIn`, `TfrmKeyerEdit.EditKeyerIn`); there is no second window. The Station page carries its own country-file status line and **Download country file** button |
 | on request | **Tools -> Setup Wizard...** (`menu_setup_wizard`, NY4I 2026-11-14: "also selectable under Tools menu") |
 | where a radio and keyer go | slot 1 and CW output 1 of the **active** profile, or of a new profile `Default` when none is active; a name already used is made unique the store's way, so a second run adds rather than fails |
 | Preferences open | the wizard refuses to open, and "Create configuration" refuses while Preferences shows (both edit the libraries from their own copies); after a commit a hidden Preferences re-reads the file (`PreferencesReloadAfterExternalSave`) |
@@ -332,6 +333,79 @@ Section 6 says what does instead.
 
 ## 6. When it runs
 
+> **CURRENT (2026-11-14, final).** Everything below this block was written
+> earlier the same day and is **history where it differs from this block** --
+> in particular every mention of a `setupWizardShown` / `gridPromptShown` flag
+> for the wizard, and of `EnsureCountryFile` being the wizard's download.
+>
+> - **The rule is "no callsign stored", not "no settings file" and not a flag.**
+>   `SetupWizardDueAtStartup(tSilentExport, StartupMainCallsign(TR4WConfigFileName) <> '')`.
+>   Nothing is written before the operator answers. A Cancel (or a No) configures
+>   nothing, so the next start asks again; the moment a callsign is stored -- by
+>   the wizard or by New Contest, which will not take an empty one -- the question
+>   stops by itself. This is why there is no "do not ask me again" box: an
+>   operator who wants none simply uses New Contest. (An earlier version set a
+>   flag first; a Cancel left a blank `tr4w.json` behind and the next start never
+>   asked again.)
+> - **The question is a Yes/No with Yes as the default** (`AskSetupWizardAtStartup`).
+> - **One window.** Radio and WinKeyer are pages of the wizard, not buttons that
+>   open the editors (NY4I: *"MY idea of a wizard is it steps you through things
+>   in one window with frames."* -- the editor opened behind the wizard and the
+>   operator lost it). Each editor form wraps everything but its footer buttons
+>   in `pnlContent`; the wizard re-parents that panel into its page, calls
+>   `AcceptEdits` on Next (the editor's own validation, shared with its Save
+>   button), and grows the window to fit. Preferences still shows the same
+>   editors as their own windows -- one implementation, two hosts.
+> - **The country file is the wizard's own page business.** At startup the file
+>   is loaded quietly from `fcontest.ResolveCountryFile` (downloaded -> shipped).
+>   If there is none, the Station page says so and offers **Download country
+>   file** (`uCTYUpdate.DownloadCTYAsync` into the downloaded-data directory,
+>   `LoadCountryFileFrom` to adopt it -- also what `EnsureCountryFile` uses).
+>   Back, Next and Cancel are disabled while it runs, and the window refuses to
+>   close, because the completion event is a method of the form. The old
+>   question from outside the wizard ("takes me out of it", NY4I) is gone from
+>   this path; if the operator leaves the file undownloaded, `EnsureCountryFile`
+>   asks a few steps later, as it always has.
+> - **Re-running from Tools -> Setup Wizard** replaces slot 1 of the **active**
+>   profile with the new radio (existing behaviour of `StageSetupItems`); the
+>   Done page names the profile.
+
+> **CHANGED AGAIN 2026-11-14 (NY4I, issue 81): the wizard is OFFERED BEFORE
+> New Contest, not after the main window.** Run on a brand-new install in an
+> empty directory, the first thing seen was New Contest, and the wizard only
+> appeared after the operator had typed their callsign there. Now, just before
+> `ShowNewContest`, a Yes/No asks "This looks like a new installation. Would
+> you like to run the Setup Wizard first?" (No is the default). Yes runs the
+> whole wizard **modally** (`OfferSetupWizardAtStartup`); New Contest then
+> opens with the callsign already filled in, because it reads `My.Call` from
+> the settings file the wizard has just written.
+>
+> What that changed, and why each part is safe:
+>
+> - **Nothing is put into use.** No radio, CW or contest state exists yet, so a
+>   startup-mode run SAVES the station, radio, keyer and cluster and stops;
+>   `ApplyActiveProfileToConfigAtStartup` applies the saved active profile and
+>   cluster a few steps later, the road every start takes.
+> - **Country file.** The callsign lookup needs it and `SetUpFileNames` only
+>   resolves it after a contest is chosen, so the tier rule was extracted as
+>   `fcontest.ResolveCountryFile(aUseContestDir, aSource)` -- downloaded, then
+>   (optionally) the contest directory, then shipped -- and the wizard asks it
+>   without the contest tier. Missing file: the lookup says "unknown call" and
+>   never blocks. Support-file download is deliberately NOT offered by the
+>   wizard: both files ship in the installer and `EnsureCountryFile` already
+>   offers the download.
+> - **Flags.** The offer sets only `setupWizardShown` (`MarkSetupWizardOffered`),
+>   so a No leaves the one-off MY GRID prompt able to ask; a Yes also sets
+>   `gridPromptShown`, because the Station page asks for the grid.
+> - **Profile.** The radio and keyer go into the active profile, or a new one
+>   named `Default` on a new install, and the Done page now says so and points
+>   at Preferences > Hardware (`SWizResProfile`).
+> - **Shared with Preferences, not copied:** the "ports collide, continue?"
+>   question is now `uPrefsForm.ConfirmPortConflicts` for both; Preferences
+>   had a differently-wrapped copy of the same dialog.
+> - The command-line-contest-file start skips the offer (no New Contest), so
+>   the modeless post-main-window open below remains for that case.
+>
 > **CORRECTED 2026-11-14, when it was built. The gate below never fires.**
 > The table's "first run, and `MyCall` is empty" row assumes the callsign can
 > still be empty at `ConfigurationOkay`. It cannot: on a brand-new install the
@@ -480,15 +554,16 @@ And one prohibition, which is not negotiable:
   and it keeps each page a designable surface. The page plan of section 2 is
   what decides which page is shown; the control does not hold the plan.
 - `uNewContestForm` is the precedent in this tree for a task-focused dialog.
-- **The radio and keyer editors are called, not embedded and not copied.** Both
-  are modeless `TForm`s that return through a completion callback --
-  `TRadioEditForm.EditRadio(const aRadio: TRadioDefinition; const aOnDone:
-  TRadioEditDone)` (`uRadioEditForm.pas:255`), and `uKeyerEditForm.pas:30`
-  records that they are modeless on purpose, because `ShowModal` would run a
-  second message loop and stop TR4W's key handling, CW timing and radio
-  servicing for as long as it was up. **The wizard must not use `ShowModal` for
-  the same reason**, and a wizard page that needs the radio editor opens it the
-  way everything else does.
+- **The radio and keyer editors are HOSTED, not copied** (changed 2026-11-14;
+  the first build opened them as second windows and an operator lost one behind
+  the wizard). Each editor form keeps its controls, handlers, translation and
+  Preferences behaviour exactly, but everything except its footer buttons sits in
+  one `pnlContent` panel. `EditRadioIn` / `EditKeyerIn` load the definition and
+  move that panel into the wizard's page; `AcceptEdits` is the validation-and-write
+  that the Save button also calls. The editors are still modeless in Preferences
+  (`ShowModal` would run a second message loop and stop TR4W's key handling, CW
+  timing and radio servicing), and the **wizard's startup run is modal** only
+  because at that point nothing is being serviced yet.
 - Every page independently valid, so Back never unwinds state.
 - `.lfm` components that are not published fields need `RegisterClass` or the
   WHOLE form fails to stream -- see the agent memory
@@ -579,7 +654,7 @@ deliberately -- `uKeyerEditForm.pas:30` states the reason (a `ShowModal` runs a
 second message loop and stops TR4W's CW timing and radio servicing), and
 `uRadioEditForm.pas:255` is the callback signature. There is no
 Apply/Cancel lifecycle to be trapped by, so no three-level ladder is needed:
-section 9 says call the editor.
+section 9 says host the editor's panel.
 
 **"Cancel discards everything and creates no settings file."** Not
 implementable. `uProgramMain.pas:1677` writes `tr4w.json` during startup,

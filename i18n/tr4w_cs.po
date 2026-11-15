@@ -10700,8 +10700,8 @@ msgstr ""
 
 #: uappstrings.swizclusterintro
 #, fuzzy
-msgid "Pick a cluster from the list or type host:port. Leave the login blank to log in with your callsign."
-msgstr ""
+msgid "Pick a cluster from the list, or type its host name or IP address and its port. Leave the login blank to log in with your callsign."
+msgstr "Vyberte cluster ze seznamu, nebo zadejte jeho jméno hostitele nebo IP adresu a jeho port. Přihlašovací údaje ponechte prázdné pro přihlášení s vaší volací značkou."
 
 #: uappstrings.swizclusterlogin
 #, fuzzy
@@ -10763,11 +10763,6 @@ msgstr ""
 msgid "TR4W reads and sets the frequency and mode."
 msgstr ""
 
-#: uappstrings.swizkeyerbutton
-#, fuzzy
-msgid "Set up the WinKeyer..."
-msgstr ""
-
 #: uappstrings.swizkeyerheading
 #, fuzzy
 msgid "WinKeyer"
@@ -10776,11 +10771,6 @@ msgstr ""
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr ""
-
-#: uappstrings.swizkeyerneeded
-#, fuzzy
-msgid "Set up the WinKeyer, or go back and untick it."
 msgstr ""
 
 #: uappstrings.swizmenu
@@ -10798,19 +10788,9 @@ msgstr ""
 msgid "The country file does not know this callsign, so nothing was filled in from it."
 msgstr ""
 
-#: uappstrings.swiznotsetup
-#, fuzzy
-msgid "Not set up yet."
-msgstr ""
-
 #: uappstrings.swizprefsopen
 #, fuzzy
 msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
-msgstr ""
-
-#: uappstrings.swizradiobutton
-#, fuzzy
-msgid "Set up the radio..."
 msgstr ""
 
 #: uappstrings.swizradioheading
@@ -10820,12 +10800,7 @@ msgstr ""
 
 #: uappstrings.swizradiointro
 #, fuzzy
-msgid "Choose your radio and how it is connected. This opens the same radio editor Preferences uses. TR4W connects to it when you create the configuration."
-msgstr ""
-
-#: uappstrings.swizradioneeded
-#, fuzzy
-msgid "Set up the radio, or go back and untick it."
+msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
 msgstr ""
 
 #: uappstrings.swizresapplyfailed
@@ -10835,8 +10810,8 @@ msgstr ""
 
 #: uappstrings.swizrescluster
 #, fuzzy
-msgid "DX cluster \"%s\" saved as the cluster to connect to."
-msgstr ""
+msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
+msgstr "DX cluster \"% 0: s\":% 1: s, přihlášení jako% 2: s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10845,8 +10820,8 @@ msgstr ""
 
 #: uappstrings.swizreskeyer
 #, fuzzy
-msgid "WinKeyer \"%s\" saved and used for CW on radio 1."
-msgstr ""
+msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
+msgstr "WinKeyer \"%0: s\" na%1: s, používá se pro CW v rádiu1."
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10867,8 +10842,8 @@ msgstr ""
 
 #: uappstrings.swizresradio
 #, fuzzy
-msgid "Radio \"%s\" saved as radio 1."
-msgstr ""
+msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
+msgstr "Rádio 1:% 0: s% 1: s. Název: \"% 2: s\"."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10914,3 +10889,190 @@ msgstr ""
 #, fuzzy
 msgid "TR4W setup"
 msgstr ""
+
+#: uappstrings.swizresprofile
+#, fuzzy
+msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
+msgstr ""
+
+#: uappstrings.swizstartupprompt
+#, fuzzy
+msgid "This looks like a new installation. Would you like to run the Setup Wizard first?"
+msgstr ""
+
+#: uappstrings.swizctymissing
+#, fuzzy
+msgid "There is no country file yet, so the zones and country cannot be filled in from the callsign."
+msgstr ""
+
+#: uappstrings.swizctydownload
+#, fuzzy
+msgid "Download country file"
+msgstr ""
+
+#: uappstrings.swizctydownloading
+#, fuzzy
+msgid "Downloading the country file..."
+msgstr ""
+
+#: uappstrings.swizctydone
+#, fuzzy
+msgid "The country file was downloaded."
+msgstr ""
+
+#: uappstrings.swizctyfailed
+#, fuzzy
+msgid "The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it."
+msgstr ""
+
+#: uappstrings.swizradiocwbycat
+#, fuzzy
+msgid "Send CW through the radio (CW by CAT)"
+msgstr "Pošlete CW rádiem (CW podle CAT)"
+
+#: uappstrings.swizradiospeedsync
+#, fuzzy
+msgid "Keep the radio's CW speed in step with TR4W"
+msgstr "Udržujte rychlost CW v krocích s TR4W"
+
+#: uappstrings.swizclusterserverhint
+#, fuzzy
+msgid "A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23."
+msgstr "Jméno hostitele nebo IP adresa, například dxc.nc7j.com nebo 192.168.1.5. Zanechte port prázdný pro standardní port,23."
+
+#: uappstrings.swizclusterport
+#, fuzzy
+msgid "Port:"
+msgstr "Port:"
+
+#: uappstrings.swizclusterportbad
+#, fuzzy
+msgid "The port must be a number from 1 to 65535, or blank."
+msgstr "Port musí být číslo od 1 do 65535, nebo prázdný."
+
+#: uappstrings.swizresonport
+#, fuzzy
+msgid "on %s"
+msgstr "n %s"
+
+#: uappstrings.swizresataddress
+#, fuzzy
+msgid "at %s"
+msgstr "v %s"
+
+#: uappstrings.swizresnoport
+#, fuzzy
+msgid "with no port chosen yet"
+msgstr "bez zvoleného portu"
+
+#: uappstrings.swizrescwbycat
+#, fuzzy
+msgid "CW is sent through the radio (CW by CAT)."
+msgstr "CW se vysílá rádiem (CW podle CAT)."
+
+#: uappstrings.swizresspeedsync
+#, fuzzy
+msgid "The radio's CW speed follows the speed set in TR4W."
+msgstr "Rychlost rádia CW se řídí rychlostí stanovenou v TR4W."
+
+#: uappstrings.swizresloginasstation
+#, fuzzy
+msgid "your station callsign"
+msgstr "vaše stanice volací znak"
+
+#: uappstrings.swizresshowdetails
+#, fuzzy
+msgid "Show details"
+msgstr "Zobrazit podrobnosti"
+
+#: uappstrings.swizdetserial
+#, fuzzy
+msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
+msgstr "   Pořadové číslo:% 0: s baud,% 1: s, RTS% 2: s, DTR% 3: s"
+
+#: uappstrings.swizdetnetworkuser
+#, fuzzy
+msgid "   Network user: %s"
+msgstr "   Uživatel sítě: %s"
+
+#: uappstrings.swizdetnetworkpassword
+#, fuzzy
+msgid "   Network password: set"
+msgstr "   Síťové heslo: nastaveno"
+
+#: uappstrings.swizdetpolling
+#, fuzzy
+msgid "   Frequency polling: %0:s, every %1:s ms"
+msgstr "   Četnost hlasování:% 0: s, každý% 1: s ms"
+
+#: uappstrings.swizdetkeyerport
+#, fuzzy
+msgid "   The radio's keyer output port: %s"
+msgstr "   Výstupní port rádia: %s"
+
+#: uappstrings.swizdetstartup
+#, fuzzy
+msgid "   Startup command: %s"
+msgstr "   Příkaz spuštění: %s"
+
+#: uappstrings.swizdetkeyermode
+#, fuzzy
+msgid "   Mode %0:s, sidetone %1:s"
+msgstr "   Režim% 0: s, bočnice% 1: s"
+
+#: uappstrings.swizdetclustercommand
+#, fuzzy
+msgid "   After connecting: %s"
+msgstr "   Po připojení: %s"
+
+#: uappstrings.swizdetclusterpassword
+#, fuzzy
+msgid "   Password: set"
+msgstr "   Heslo: nastaveno"
+
+#: uappstrings.swizdeton
+#, fuzzy
+msgid "on"
+msgstr "n"
+
+#: uappstrings.swizdetoff
+#, fuzzy
+msgid "off"
+msgstr "vypnuto"
+
+#: uappstrings.swizcallbookfilled
+#, fuzzy
+msgid "Some details were filled in from the callbook (hamdb.org). Please check them."
+msgstr "Některé detaily byly vyplněny z telefonní knihy (hamdb.org). Prosím, zkontrolujte je."
+
+#: uappstrings.sincompleteinstallhint
+#, fuzzy
+msgid ""
+"The folder is missing too, so this copy of TR4W is probably not completely installed.\n"
+"\n"
+"Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again."
+msgstr ""
+"Složka také chybí, takže tato kopie TR4W pravděpodobně není zcela nainstalována.\n"
+"\n"
+"Spustit TR4W ze složky, do které ji instalovatel vložil (drží CTY.DAT, TRMASTER.DTA a domácí složku), nebo jej znovu spustit."
+
+#: uappstrings.sinstallincompletestartup
+#, fuzzy
+msgid ""
+"This copy of TR4W looks incompletely installed.\n"
+"\n"
+"Not found in %0:s:\n"
+"%1:s\n"
+"\n"
+"Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again.\n"
+"\n"
+"TR4W will still start, but contests that need these files will not work properly."
+msgstr ""
+"Tato kopie TR4W vypadá nekompletně nainstalovaná.\n"
+"\n"
+"Nenalezeno v% 0: s:\n"
+"% 1: s\n"
+"\n"
+"Spustit TR4W ze složky, do které ji instalovatel vložil (drží CTY.DAT, TRMASTER.DTA a domácí složku), nebo jej znovu spustit.\n"
+"\n"
+"TR4W stále začne, ale soutěže, které potřebují tyto soubory nebudou fungovat správně."

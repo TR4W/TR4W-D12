@@ -25,7 +25,81 @@ CASES = {
    "locked": "bench-locked-regression",
    "import": "bench-import-regression",
    "messages": "bench-messages-regression",
+   "wizard-no": "bench-wizard-offer-no",
+   "wizard-station": "bench-wizard-station",
+   "wizard-empty": "bench-wizard-station-empty",
+   "wizard-hardware": "bench-wizard-hardware",
+   "wizard-tools": "bench-wizard-tools",
+   "wizard-done-serial": "bench-wizard-done-serial",
+   "wizard-done-network": "bench-wizard-done-network",
+   # Reaches country-files.com over HTTPS from the guest; select it explicitly.
+   "wizard-download": "bench-wizard-cty-download",
+   # Reaches api.hamdb.org over HTTPS (the callsign only); select it explicitly.
+   "wizard-callbook": "bench-wizard-callbook",
+   # OPENS THE GUEST'S LIVE WINKEYER on COM3 (no CW is sent); select it explicitly.
+   "wizard-keyer": "bench-wizard-tools-keyer",
+   # --wizard on a station that already has a callsign, and -h listing it.
+   "wizard-switch": "bench-wizard-switch",
+   # Issue 322: distinctive settings survive --wizard + Create; a start with no
+   # --lang then loads them (the stored language in force).
+   "wizard-preserve": "bench-wizard-preserve",
+   # Issue 322: a settings file with no callsign: the offer, Yes, Create; the
+   # language and CW speed it held survive.
+   "wizard-partial": "bench-wizard-partial",
+   # A stored station in a folder with no dom: the startup install warning
+   # naming dom\ alone, then a dom-using contest's "could not find" message.
+   "install-dom": "bench-install-dom",
 }
+
+# Cases that start as a BRAND-NEW INSTALL: no settings file and no contest log
+# (prepare_fixture --fresh-install), with what an installed copy has in its
+# folder: CTY.DAT, dom, TRMASTER.DTA and TRCLUSTER.DAT.
+FRESH_INSTALL_CASES = {"wizard-no", "wizard-station", "wizard-empty", "wizard-hardware", "wizard-download",
+   "wizard-callbook", "wizard-done-serial", "wizard-done-network"}
+# ...and of those, the ones whose working folder holds no data files at all.
+EMPTY_FOLDER_CASES = {"wizard-empty", "wizard-download"}
+# Ordinary (settings-template) cases that get the full installed data set too.
+INSTALL_DATA_CASES = {"wizard-switch", "wizard-preserve", "wizard-partial", "install-dom"}
+# Cases with no contest log: a contest on the command line skips the startup
+# offer and install check, so these start with no argument.
+NO_DATABASE_CASES = {"wizard-switch", "wizard-preserve", "wizard-partial"}
+# Installed parts deliberately left out, so the startup install check
+# (uProgramMain.WarnIfInstallIncomplete) meets each branch of its rule: a lone
+# missing CTY.DAT and a lone missing TRMASTER.DTA must NOT warn, dom alone must.
+OMIT_PARTS = {"wizard-no": ["CTY.DAT"], "wizard-callbook": ["TRMASTER.DTA"], "install-dom": ["dom"]}
+SCP_MASTER = "TRMASTER.DTA"
+# A contest that loads a domestic (dom\) file, from the golden corpus, copied
+# with SQLite's backup API (the corpus log has -wal/-shm siblings a plain copy
+# would miss). The corpus file itself is only read.
+DOM_CONTEST_LOG = Path(__file__).resolve().parents[2] / "tr4w/test/corpus/michigan_qp_2026_ny4i/log.db"
+DOM_CONTEST_DB = "MIQP-dom.db"
+# Cases that leave the guest for the internet or open real hardware: never part
+# of the default run.
+OPT_IN_CASES = {"wizard-download", "wizard-callbook", "wizard-keyer"}
+# The public cluster list the DX cluster pickers read. On Windows it is found
+# in the WORKING folder (DataFilePath), the shipped tier CTY.DAT and dom come
+# from, so it is staged into each run folder with them (prepare_fixture).
+CLUSTER_LIST = "TRCLUSTER.DAT"
+
+
+def snapshot_corpus_log(source, destination):
+   """A self-contained copy of a corpus log. The three files are copied to a
+   scratch folder first, so the corpus's own -wal/-shm are never written by a
+   reader, then backed up into one file."""
+   import shutil
+   import sqlite3
+   from contextlib import closing
+   scratch = destination.parent / (destination.stem + "-source")
+   scratch.mkdir(parents=True, exist_ok=True)
+   for suffix in ("", "-wal", "-shm"):
+      part = Path(str(source) + suffix)
+      if part.is_file():
+         shutil.copy2(part, scratch / (source.name + suffix))
+   with closing(sqlite3.connect(scratch / source.name)) as reader:
+      with closing(sqlite3.connect(destination)) as writer:
+         reader.backup(writer)
+   shutil.rmtree(scratch)
+   return destination
 
 
 def run_python(args, script, arguments):
@@ -51,6 +125,13 @@ def install(args, metadata, output):
    data_root = args.data_root or args.exe.resolve().parents[2] / "tr4w/target"
    if not (data_root / "CTY.DAT").is_file() or not (data_root / "dom").is_dir():
       raise RuntimeError("--data-root must contain CTY.DAT and dom")
+   cluster_list = next((path for path in data_root.iterdir() if path.name.lower() == CLUSTER_LIST.lower()), None)
+   if cluster_list is None:
+      raise RuntimeError("--data-root lacks " + CLUSTER_LIST)
+   master = next((path for path in data_root.iterdir() if path.name.lower() == SCP_MASTER.lower()), None)
+   if master is None:
+      raise RuntimeError("--data-root lacks " + SCP_MASTER)
+   dom_contest_db = snapshot_corpus_log(DOM_CONTEST_LOG, output / DOM_CONTEST_DB)
    archive = output / "fixtures.zip"
    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=1) as bundle:
       fixture_source = Path(__file__).parent / "fixtures"
@@ -58,6 +139,9 @@ def install(args, metadata, output):
          if path.is_file():
             bundle.write(path, path.relative_to(fixture_source))
       bundle.write(data_root / "CTY.DAT", "CTY.DAT")
+      bundle.write(cluster_list, CLUSTER_LIST)
+      bundle.write(master, SCP_MASTER)
+      bundle.write(dom_contest_db, DOM_CONTEST_DB)
       for path in (data_root / "dom").rglob("*"):
          if path.is_file():
             bundle.write(path, path.relative_to(data_root))
@@ -72,9 +156,19 @@ def install(args, metadata, output):
    return fixture_root
 
 
-def prepare(args, root, fixture_root, run_name, database=None):
-   arguments = ["--root", root, "--run", run_name, "--settings-template", fixture_root + r"\tr4w.json",
-      "--assets-template", fixture_root]
+def prepare(args, root, fixture_root, run_name, database=None, fresh_install=False, no_data=False,
+      install_data=False, omit=()):
+   arguments = ["--root", root, "--run", run_name, "--assets-template", fixture_root]
+   if fresh_install:
+      arguments += ["--fresh-install"]
+      if no_data:
+         arguments += ["--no-data"]
+   else:
+      arguments += ["--settings-template", fixture_root + r"\tr4w.json"]
+      if install_data:
+         arguments += ["--install-data"]
+   for part in omit:
+      arguments += ["--omit", part]
    if database:
       arguments += ["--database-template", database]
    run_python(args, r"C:\TR4W-Test\readiness\prepare_fixture.py", arguments)
@@ -97,6 +191,12 @@ def run_case(args, root, run_name, case, output):
       return {"case": case, "status": "ERROR", "reason": "Result belongs to a different fixture"}
    if result.get("status") == "INSPECTED":
       return {"case": case, "status": "ERROR", "reason": "Inspection is not regression acceptance"}
+   if result.get("incomplete"):
+      # Part of the case could not run here (e.g. no serial port on the guest):
+      # no reliable verdict, so ERROR (exit 2), never PASS.
+      return {"case": case, "status": "ERROR", "exit_code": process.returncode, "result": str(path),
+         "reason": "INCOMPLETE: " + "; ".join(result["incomplete"]),
+         "failures": result.get("failures", []), "note": result.get("note")}
    passed = process.returncode == 0 and result.get("passed") is True
    error = result.get("error")
    status = "PASS" if passed else ("ERROR" if error and "AssertionError:" not in error else "FAIL")
@@ -121,7 +221,7 @@ def main():
    identifier = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:6]
    output = (args.output / identifier).resolve()
    output.mkdir(parents=True)
-   selected = list(dict.fromkeys(args.case or list(CASES)))
+   selected = list(dict.fromkeys(args.case or [case for case in CASES if case not in OPT_IN_CASES]))
    summary = {"suite": identifier, "requested_cases": selected, "cases": [], "status": "RUNNING"}
 
    def save():
@@ -150,7 +250,18 @@ def main():
             continue
          run_name = "suite-" + identifier + "-" + case
          try:
-            prepare(args, root, fixture_root, run_name, databases[0])
+            omit = OMIT_PARTS.get(case, ())
+            if case in FRESH_INSTALL_CASES:
+               prepare(args, root, fixture_root, run_name, fresh_install=True,
+                  no_data=case in EMPTY_FOLDER_CASES, omit=omit)
+            elif case in NO_DATABASE_CASES:
+               prepare(args, root, fixture_root, run_name, install_data=case in INSTALL_DATA_CASES, omit=omit)
+            elif case == "install-dom":
+               # The dom-using contest log instead of the seed's CW Open.
+               prepare(args, root, fixture_root, run_name, fixture_root + "\\" + DOM_CONTEST_DB,
+                  install_data=case in INSTALL_DATA_CASES, omit=omit)
+            else:
+               prepare(args, root, fixture_root, run_name, databases[0])
             result = run_case(args, root, run_name, case, output)
          except Exception as error:
             result = {"case": case, "status": "ERROR", "reason": str(error)}

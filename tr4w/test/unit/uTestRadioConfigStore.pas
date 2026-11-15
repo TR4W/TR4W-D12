@@ -40,7 +40,10 @@ uses
    // For the render-then-seed round trip.  The store and the renderer are two
    // halves of one conversation and were tested only separately, which is how
    // they came to disagree about how a network radio is spelled.
-   uRadioConfigLegacyMap;
+   uRadioConfigLegacyMap,
+   (* The keyer half of the applied snapshot: a WinKeyer edited and saved. *)
+   uKeyerConfigStore,
+   uRadioConfigApply;   (* ActiveRadioSettingsChanged, AppliedRadios *)
 
 type
    TRadioConfigStoreTests = class(TTestCase)
@@ -108,6 +111,12 @@ type
       procedure Test_AppliedSnapshotSeesSlotEmptiedOrFilled;
       procedure Test_AppliedSnapshotSeesADifferentRadioInTheSlot;
       procedure Test_AppliedSnapshotKeepsItsOwnCopy;
+
+      (* A KEYER EDITED AND SAVED IS A CHANGE -- the WinKeyer was never
+        reopened by a profile apply, and Save never re-applied for it. *)
+      procedure Test_AppliedSnapshotSeesAChangedKeyer;
+      procedure Test_ActiveSettingsChangedSeesAMovedWinKeyer;
+      procedure Test_PortConflictsIncludeTheWinKeyer;
 
       // --- JSON persistence (Track F-5a) ---------------------------------
       procedure Test_JSONWithoutIdsMigratesProfileReferences;
@@ -1765,10 +1774,12 @@ end;
   radio kept the credentials it was handed when TR4W started, and every layer
   below reported success for them.
 
-  WHY THE TEST LIVES HERE AND NOT AT THE SEAM THAT BROKE.  uRadioConfigApply
-  needs the whole application -- Radio1/Radio2, CATWTR, CheckCommand -- so it
-  cannot be linked into this binary, and a test of "did the running radio get
-  the new password" needs a radio and a socket.  What CAN be made pure is the
+  WHY THE TEST LIVES HERE AND NOT AT THE SEAM THAT BROKE.  ApplyProfile
+  needs the whole application running -- Radio1/Radio2, CATWTR, CheckCommand,
+  real ports -- and a test of "did the running radio get the new password"
+  needs a radio and a socket.  (The unit is linked into this binary now, and
+  its read-only question ActiveRadioSettingsChanged is tested below; the apply
+  itself is not.)  What CAN be made pure is the
   QUESTION the applier has to answer: has a radio that is currently on the air
   changed since it was applied.  That is TAppliedRadioSnapshot, and it is
   ordinary value comparison, so the rule survives without hardware.
@@ -1901,6 +1912,192 @@ begin
    finally
       radio.Free;
       snap.Free;
+   end;
+end;
+
+(* THE KEYER HALF OF THE SNAPSHOT.  A WinKeyer moved from COM3 to another port
+  and saved changed the library and nothing else: no profile apply ever
+  reopened the WinKeyer, and Save never asked about the keyer at all. *)
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotSeesAChangedKeyer;
+var
+   snap: TAppliedRadioSnapshot;
+   live, edited, other: TKeyerDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotSeesAChangedKeyer');
+   snap   := TAppliedRadioSnapshot.Create;
+   live   := TKeyerDefinition.Create;
+   edited := nil;
+   other  := nil;
+   try
+      live.Name := 'Desk WinKey';
+      live.Port := 'SERIAL 3';
+
+      CheckFalse(snap.KeyerSlotChanged(1, live),
+                 'nothing applied yet, so nothing has changed');
+
+      snap.RecordKeyerSlot(1, live);
+      CheckFalse(snap.KeyerSlotChanged(1, live), 'the applied keyer is not a change');
+
+      (* A RENAME TELLS THE DEVICE NOTHING, so it must not restart the radios. *)
+      edited := live.Clone;
+      edited.Name := 'Shack WinKey';
+      CheckFalse(snap.KeyerSlotChanged(1, edited), 'a renamed keyer is NOT a change');
+
+      edited.Port := 'SERIAL 7';
+      CheckTrue(snap.KeyerSlotChanged(1, edited),
+                'a WinKeyer moved to another port MUST be seen as needing a re-apply');
+
+      edited.Port := live.Port;
+      edited.WKWeight := live.WKWeight + 5;
+      CheckTrue(snap.KeyerSlotChanged(1, edited), 'a changed device setting is a change');
+
+      (* THE SNAPSHOT KEEPS A COPY -- editing the store's object must not move
+        both sides of the comparison. *)
+      live.Port := 'SERIAL 9';
+      CheckTrue(snap.KeyerSlotChanged(1, live),
+                'the snapshot must compare against a COPY taken at apply time');
+
+      (* IDENTITY: SameAs ignores the Id. *)
+      other := TKeyerDefinition.Create;
+      other.Assign(edited);
+      other.WKWeight := edited.WKWeight - 5;
+      other.Port := 'SERIAL 3';
+      other.Id := 'a-different-keyer';
+      CheckTrue(snap.KeyerSlotChanged(1, other), 'a different device is a change');
+
+      (* EMPTY AND OCCUPIED. *)
+      snap.RecordKeyerSlot(2, nil);
+      CheckFalse(snap.KeyerSlotChanged(2, nil), 'no keyer then no keyer is no change');
+      CheckTrue(snap.KeyerSlotChanged(2, live), 'a keyer added to a slot is a change');
+      CheckTrue(snap.KeyerSlotChanged(1, nil), 'a keyer removed from a slot is a change');
+   finally
+      other.Free;
+      edited.Free;
+      live.Free;
+      snap.Free;
+   end;
+end;
+
+(* THE SAVE PATH'S QUESTION, ASKED THE WAY PREFERENCES ASKS IT: the active
+  profile's slot names a WinKeyer, that WinKeyer was applied, and the operator
+  then moved it to another port.  ActiveRadioSettingsChanged must say so, and
+  name the keyer -- that answer is what makes Save re-apply the profile, and
+  the re-apply is what reopens the WinKeyer. *)
+procedure TRadioConfigStoreTests.Test_ActiveSettingsChangedSeesAMovedWinKeyer;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   keyer: TKeyerDefinition;
+   prof: TStationProfile;
+   which, err: string;
+begin
+   BeginTest('Test_ActiveSettingsChangedSeesAMovedWinKeyer');
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   (* The applied snapshot is a process global; start and finish empty. *)
+   AppliedRadios.Clear;
+   try
+      keyer := keyers.AddKeyer('Desk WinKey', kkWinKeyer);
+      keyer.Port := 'SERIAL 3';
+
+      prof := TStationProfile.Create;
+      prof.Name        := 'Home';
+      prof.CWOutput1   := keyer.Name;
+      prof.CWOutput1Id := keyer.Id;
+      CheckTrue(store.AddProfile(prof, err), 'profile added: ' + err);
+      store.ActiveProfileName := 'Home';
+
+      (* What ApplyKeyersForProfile records when the profile goes on the air. *)
+      AppliedRadios.RecordKeyerSlot(1, keyer);
+      CheckFalse(ActiveRadioSettingsChanged(store, which, keyers),
+                 'nothing edited since the apply: no change');
+
+      keyer.Port := 'SERIAL 7';
+      CheckTrue(ActiveRadioSettingsChanged(store, which, keyers),
+                'a WinKeyer in the active profile moved to another port is a change');
+      CheckEquals('Desk WinKey', which, 'the change names the keyer');
+
+      CheckFalse(ActiveRadioSettingsChanged(store, which),
+                 'without the keyer library the keyer is not asked about');
+   finally
+      AppliedRadios.Clear;
+      keyers.Free;
+      store.Free;
+   end;
+end;
+
+(* THE WINKEYER'S PORT IS COMPARED WITH THE RADIOS' -- Activate warned about
+  two radios sharing a port and said nothing when the WinKeyer sat on a
+  radio's CAT port, which fails just as surely: both open it exclusively. *)
+procedure TRadioConfigStoreTests.Test_PortConflictsIncludeTheWinKeyer;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   keyer: TKeyerDefinition;
+   k3, ic: TRadioDefinition;
+   prof: TStationProfile;
+   err: string;
+begin
+   BeginTest('Test_PortConflictsIncludeTheWinKeyer');
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      k3 := TRadioDefinition.Create;
+      k3.Name            := 'K3';
+      k3.Transport       := rtSerial;
+      k3.ControlPort     := 'SERIAL 3';
+      k3.KeyerOutputPort := 'SERIAL 6';
+      CheckTrue(store.AddRadio(k3, err), 'K3 added: ' + err);
+
+      ic := TRadioDefinition.Create;
+      ic.Name            := 'IC-7300';
+      ic.Transport       := rtSerial;
+      ic.ControlPort     := 'SERIAL 4';
+      ic.KeyerOutputPort := 'SERIAL 5';
+      CheckTrue(store.AddRadio(ic, err), 'IC-7300 added: ' + err);
+
+      keyer := keyers.AddKeyer('Desk WinKey', kkWinKeyer);
+      keyer.Port := 'SERIAL 3';
+
+      (* Slot 1 keys through the WinKeyer; slot 2 by CAT, so its own keyer
+        output port is live. *)
+      prof := TStationProfile.Create;
+      prof.Name        := 'Home';
+      prof.CWOutput1   := keyer.Name;
+      prof.CWOutput1Id := keyer.Id;
+      prof.CWOutput2   := CWOUTPUT_CAT;
+      store.SetProfileRadioByName(prof, 1, 'K3');
+      CheckTrue(store.AddProfile(prof, err), 'profile added: ' + err);
+
+      (* ONE RADIO IS ENOUGH: the WinKeyer can collide with it alone. *)
+      CheckEquals('Desk WinKey and K3 CAT both use SERIAL 3',
+                  DescribePortConflicts(store, prof, keyers),
+                  'a WinKeyer on its radio''s CAT port is a conflict');
+      CheckEquals('', DescribePortConflicts(store, prof),
+                  'without the keyer library the WinKeyer is not asked about');
+
+      keyer.Port := 'SERIAL 6';
+      CheckEquals('', DescribePortConflicts(store, prof, keyers),
+                  'the keyer port of a slot that names a keyer DEVICE is not opened, ' +
+                  'so the WinKeyer may sit on it');
+
+      store.SetProfileRadioByName(prof, 2, 'IC-7300');
+      keyer.Port := 'SERIAL 5';
+      CheckEquals('Desk WinKey and IC-7300 keyer both use SERIAL 5',
+                  DescribePortConflicts(store, prof, keyers),
+                  'the other slot''s live keyer port is a conflict');
+
+      keyer.Port := 'SERIAL 4';
+      CheckEquals('Desk WinKey and IC-7300 CAT both use SERIAL 4',
+                  DescribePortConflicts(store, prof, keyers),
+                  'the other radio''s CAT port is a conflict');
+
+      keyer.Port := 'SERIAL 9';
+      CheckEquals('', DescribePortConflicts(store, prof, keyers),
+                  'a WinKeyer on a port of its own is clean');
+   finally
+      keyers.Free;
+      store.Free;
    end;
 end;
 
@@ -3005,6 +3202,9 @@ begin
    Test_AppliedSnapshotSeesSlotEmptiedOrFilled;
    Test_AppliedSnapshotSeesADifferentRadioInTheSlot;
    Test_AppliedSnapshotKeepsItsOwnCopy;
+   Test_AppliedSnapshotSeesAChangedKeyer;
+   Test_ActiveSettingsChangedSeesAMovedWinKeyer;
+   Test_PortConflictsIncludeTheWinKeyer;
 
    Test_PollRateIsCopiedComparedAndCloned;
    Test_AppliedSnapshotSeesAChangedPollRate;

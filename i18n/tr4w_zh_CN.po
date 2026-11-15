@@ -10030,8 +10030,8 @@ msgstr ""
 
 #: uappstrings.swizclusterintro
 #, fuzzy
-msgid "Pick a cluster from the list or type host:port. Leave the login blank to log in with your callsign."
-msgstr ""
+msgid "Pick a cluster from the list, or type its host name or IP address and its port. Leave the login blank to log in with your callsign."
+msgstr "从列表中选择一个集群,或者输入其主机名称或IP地址及其端口. 将登录空白以登录您的呼号 。"
 
 #: uappstrings.swizclusterlogin
 #, fuzzy
@@ -10093,11 +10093,6 @@ msgstr ""
 msgid "TR4W reads and sets the frequency and mode."
 msgstr ""
 
-#: uappstrings.swizkeyerbutton
-#, fuzzy
-msgid "Set up the WinKeyer..."
-msgstr ""
-
 #: uappstrings.swizkeyerheading
 #, fuzzy
 msgid "WinKeyer"
@@ -10106,11 +10101,6 @@ msgstr ""
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr ""
-
-#: uappstrings.swizkeyerneeded
-#, fuzzy
-msgid "Set up the WinKeyer, or go back and untick it."
 msgstr ""
 
 #: uappstrings.swizmenu
@@ -10128,19 +10118,9 @@ msgstr ""
 msgid "The country file does not know this callsign, so nothing was filled in from it."
 msgstr ""
 
-#: uappstrings.swiznotsetup
-#, fuzzy
-msgid "Not set up yet."
-msgstr ""
-
 #: uappstrings.swizprefsopen
 #, fuzzy
 msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
-msgstr ""
-
-#: uappstrings.swizradiobutton
-#, fuzzy
-msgid "Set up the radio..."
 msgstr ""
 
 #: uappstrings.swizradioheading
@@ -10150,12 +10130,7 @@ msgstr ""
 
 #: uappstrings.swizradiointro
 #, fuzzy
-msgid "Choose your radio and how it is connected. This opens the same radio editor Preferences uses. TR4W connects to it when you create the configuration."
-msgstr ""
-
-#: uappstrings.swizradioneeded
-#, fuzzy
-msgid "Set up the radio, or go back and untick it."
+msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
 msgstr ""
 
 #: uappstrings.swizresapplyfailed
@@ -10165,8 +10140,8 @@ msgstr ""
 
 #: uappstrings.swizrescluster
 #, fuzzy
-msgid "DX cluster \"%s\" saved as the cluster to connect to."
-msgstr ""
+msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
+msgstr "DX 集群 “% 0: s ” :% 1 : s, 登录为% 2 : s 。"
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10175,8 +10150,8 @@ msgstr ""
 
 #: uappstrings.swizreskeyer
 #, fuzzy
-msgid "WinKeyer \"%s\" saved and used for CW on radio 1."
-msgstr ""
+msgid "WinKeyer \"%0:s\" on %1:s, used for CW on radio 1."
+msgstr "% 1 上的 WinKeyer \"% 0: s\" : s, 用于无线电 1 中的 CW 。"
 
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
@@ -10197,8 +10172,8 @@ msgstr ""
 
 #: uappstrings.swizresradio
 #, fuzzy
-msgid "Radio \"%s\" saved as radio 1."
-msgstr ""
+msgid "Radio 1: %0:s %1:s. Name: \"%2:s\"."
+msgstr "电台1:% 0:s% 1:s. 名称:% 2:s."
 
 #: uappstrings.swizresradiofailed
 #, fuzzy
@@ -10244,3 +10219,190 @@ msgstr ""
 #, fuzzy
 msgid "TR4W setup"
 msgstr ""
+
+#: uappstrings.swizresprofile
+#, fuzzy
+msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
+msgstr ""
+
+#: uappstrings.swizstartupprompt
+#, fuzzy
+msgid "This looks like a new installation. Would you like to run the Setup Wizard first?"
+msgstr ""
+
+#: uappstrings.swizctymissing
+#, fuzzy
+msgid "There is no country file yet, so the zones and country cannot be filled in from the callsign."
+msgstr ""
+
+#: uappstrings.swizctydownload
+#, fuzzy
+msgid "Download country file"
+msgstr ""
+
+#: uappstrings.swizctydownloading
+#, fuzzy
+msgid "Downloading the country file..."
+msgstr ""
+
+#: uappstrings.swizctydone
+#, fuzzy
+msgid "The country file was downloaded."
+msgstr ""
+
+#: uappstrings.swizctyfailed
+#, fuzzy
+msgid "The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it."
+msgstr ""
+
+#: uappstrings.swizradiocwbycat
+#, fuzzy
+msgid "Send CW through the radio (CW by CAT)"
+msgstr "通过收音机发送CW(由CAT发送CW)"
+
+#: uappstrings.swizradiospeedsync
+#, fuzzy
+msgid "Keep the radio's CW speed in step with TR4W"
+msgstr "保持无线电的CW速度与TR4W同步"
+
+#: uappstrings.swizclusterserverhint
+#, fuzzy
+msgid "A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23."
+msgstr "主机名或IP地址,例如dxc.nc7j.com或192.168.1.5. 离开港口空白 标准港口,23。"
+
+#: uappstrings.swizclusterport
+#, fuzzy
+msgid "Port:"
+msgstr "端口 :"
+
+#: uappstrings.swizclusterportbad
+#, fuzzy
+msgid "The port must be a number from 1 to 65535, or blank."
+msgstr "该端口必须是1至65535的号码或空白."
+
+#: uappstrings.swizresonport
+#, fuzzy
+msgid "on %s"
+msgstr "打开 %s"
+
+#: uappstrings.swizresataddress
+#, fuzzy
+msgid "at %s"
+msgstr "时间 %s"
+
+#: uappstrings.swizresnoport
+#, fuzzy
+msgid "with no port chosen yet"
+msgstr "尚未选择端口"
+
+#: uappstrings.swizrescwbycat
+#, fuzzy
+msgid "CW is sent through the radio (CW by CAT)."
+msgstr "化学武器通过无线电发送(禁止酷刑委员会发送)。"
+
+#: uappstrings.swizresspeedsync
+#, fuzzy
+msgid "The radio's CW speed follows the speed set in TR4W."
+msgstr "无线电的CW速度跟随TR4W中设定的速度."
+
+#: uappstrings.swizresloginasstation
+#, fuzzy
+msgid "your station callsign"
+msgstr "您的站点呼号"
+
+#: uappstrings.swizresshowdetails
+#, fuzzy
+msgid "Show details"
+msgstr "显示细节"
+
+#: uappstrings.swizdetserial
+#, fuzzy
+msgid "   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s"
+msgstr "   串数 :% 0:s baud,% 1:s, RTS% 2:s, DTR% 3:s"
+
+#: uappstrings.swizdetnetworkuser
+#, fuzzy
+msgid "   Network user: %s"
+msgstr "   网络用户 : %s"
+
+#: uappstrings.swizdetnetworkpassword
+#, fuzzy
+msgid "   Network password: set"
+msgstr "   网络密码: 设置"
+
+#: uappstrings.swizdetpolling
+#, fuzzy
+msgid "   Frequency polling: %0:s, every %1:s ms"
+msgstr "   投票频率:% 0:s, 每一次% 1:s"
+
+#: uappstrings.swizdetkeyerport
+#, fuzzy
+msgid "   The radio's keyer output port: %s"
+msgstr "   收音机的按键输出端口 : %s"
+
+#: uappstrings.swizdetstartup
+#, fuzzy
+msgid "   Startup command: %s"
+msgstr "   启动命令 : %s"
+
+#: uappstrings.swizdetkeyermode
+#, fuzzy
+msgid "   Mode %0:s, sidetone %1:s"
+msgstr "   模式% 0:s, 侧式% 1 :s"
+
+#: uappstrings.swizdetclustercommand
+#, fuzzy
+msgid "   After connecting: %s"
+msgstr "   连接后 : %s"
+
+#: uappstrings.swizdetclusterpassword
+#, fuzzy
+msgid "   Password: set"
+msgstr "   密码: 设置"
+
+#: uappstrings.swizdeton
+#, fuzzy
+msgid "on"
+msgstr "打开"
+
+#: uappstrings.swizdetoff
+#, fuzzy
+msgid "off"
+msgstr "关"
+
+#: uappstrings.swizcallbookfilled
+#, fuzzy
+msgid "Some details were filled in from the callbook (hamdb.org). Please check them."
+msgstr "一些细节由电话簿(hamdb.org)填写。 请检查一下"
+
+#: uappstrings.sincompleteinstallhint
+#, fuzzy
+msgid ""
+"The folder is missing too, so this copy of TR4W is probably not completely installed.\n"
+"\n"
+"Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again."
+msgstr ""
+"文件夹也丢失了,因此这本TR4W的拷贝很可能没有完全安装.\n"
+"\n"
+"从安装器放入的文件夹中启动 TR4W( 它持有 CTY. DAT, TRMASTER. DTA 和一个 dom 文件夹), 或再次运行安装器 。"
+
+#: uappstrings.sinstallincompletestartup
+#, fuzzy
+msgid ""
+"This copy of TR4W looks incompletely installed.\n"
+"\n"
+"Not found in %0:s:\n"
+"%1:s\n"
+"\n"
+"Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again.\n"
+"\n"
+"TR4W will still start, but contests that need these files will not work properly."
+msgstr ""
+"TR4W的这个副本看起来安装不全.\n"
+"\n"
+"在% 0: s 中找不到 :\n"
+"% 1 个:\n"
+"\n"
+"从安装器放入的文件夹中启动 TR4W( 它持有 CTY. DAT, TRMASTER. DTA 和一个 dom 文件夹), 或再次运行安装器 。\n"
+"\n"
+"TR4W仍然会开始,但需要这些文件的比赛不会正常进行."

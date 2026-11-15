@@ -114,9 +114,9 @@ var
 //   CW-by-CAT -> WinKeyer -> YCCC -> CPU
 // This pins today's AddStringToBuffer precedence and resolves the two hard
 // correctness points by construction:
-// - WinKeyer async open: wkActive only goes True inside the read thread after
-//   a successful echo test; a WinKeyer that never opens falls through to
-//   YCCC/CPU exactly as today.
+// - WinKeyer async open: wkActive only goes True once wkOpen (on its worker
+//   thread) has passed the echo test and is starting the reader; a WinKeyer
+//   that never opens falls through to YCCC/CPU exactly as today.
 // - Per-radio CW-by-CAT: IsCWByCATActive follows ActiveRadioPtr (config AND
 //   rcCWByCAT capability), so radio swaps and model changes need no
 //   re-selection events.

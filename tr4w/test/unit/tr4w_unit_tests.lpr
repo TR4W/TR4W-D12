@@ -679,6 +679,10 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uCallbookBase       in '..\..\src\uCallbookBase.pas',
+   uCallbookRegistry   in '..\..\src\uCallbookRegistry.pas',
+   uCallbookHamDB       in '..\..\src\uCallbookHamDB.pas',
+   uTestCallbook        in 'uTestCallbook.pas',
    uSetupWizard         in '..\..\src\uSetupWizard.pas',
    uTestSetupWizard     in 'uTestSetupWizard.pas',
    uSetupWizardForm     in '..\..\src\ui\lcl\uSetupWizardForm.pas',
@@ -1276,6 +1280,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TCallbookTests.Create('Callbook'));
    RegisterSuite(TSetupWizardTests.Create('SetupWizard'));
    RegisterSuite(TSetupWizardFormTests.Create('SetupWizardForm'));
    RegisterSuite(TContestTimeLeftTests.Create('ContestTimeLeft'));

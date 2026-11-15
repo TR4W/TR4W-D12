@@ -202,6 +202,13 @@ function PreferredDataFilePath(const aName: string): string;
   not a shipped file and this does not look for it. *)
 function ShippedDomFilePath(const aName: string): string;
 
+(* WHAT A COMPLETE INSTALL HAS THAT THIS COPY DOES NOT, one name per line:
+  'dom' + PathDelim for the domestic-file folder, 'CTY.DAT', 'TRMASTER.DTA'.
+  '' when all three are there.  CTY.DAT and TRMASTER.DTA count as present when
+  a downloaded copy exists (PreferredDataFilePath).  Nothing is created or
+  changed; the caller decides what the answer means. *)
+function MissingInstallParts: string;
+
 (* THE SAME FILE, WHATEVER CASE IT IS SPELLED IN.
 
   Returns aPath when it exists. When it does not, and the platform has a
@@ -820,6 +827,31 @@ end;
 function ShippedDomFilePath(const aName: string): string;
 begin
    Result := ExistingDataFile(DataFilePath('dom' + PathDelim + aName));
+end;
+
+function MissingInstallParts: string;
+   procedure Add(const aName: string);
+   begin
+      if Result <> '' then
+         begin
+         Result := Result + LineEnding;
+         end;
+      Result := Result + aName;
+   end;
+begin
+   Result := '';
+   if not DirectoryExists(DataFilePath('dom')) then
+      begin
+      Add('dom' + PathDelim);
+      end;
+   if not FileExists(PreferredDataFilePath('CTY.DAT')) then
+      begin
+      Add('CTY.DAT');
+      end;
+   if not FileExists(PreferredDataFilePath('TRMASTER.DTA')) then
+      begin
+      Add('TRMASTER.DTA');
+      end;
 end;
 
 function BesideProgramFilePath(const aName: string): string;

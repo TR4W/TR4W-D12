@@ -61,6 +61,12 @@ function DownloadCTYFile(const ATargetFile: string;
 // caller has no log in front of the operator; without this it could only guess,
 // and it guessed wrong.
 
+function LoadCountryFileFrom(const aPath: string): boolean;
+// Makes aPath THE country file -- TR4W_CTY_FILENAME names it from here on --
+// and loads it, replacing any table already held.  True when it parsed.  The
+// one place a freshly downloaded file is adopted, so startup and the setup
+// wizard cannot drift apart on what "adopted" means.
+
 function GetInstalledCTYVersion: integer;
 // Scans the installed CTY.DAT for the embedded =VER\d{8} version marker
 // and returns the date as an integer (e.g. 20260414), or 0 if not found.
@@ -74,6 +80,7 @@ uses
    // The atomic HTTPS fetch used to live in this unit as a private helper.  It
    // moved out when TRMASTER.DTA became a second caller -- see uHTTPDownload.
    uHTTPDownload,
+   uctydat,         // ctyLoadInCountryFile
    utils_text;      // CharBufferText -- the cty.dat name
 
 const
@@ -420,6 +427,12 @@ function DownloadCTYFile(const ATargetFile: string;
                          out AFailReason: string): boolean;
 begin
    Result := DownloadFileToPath(CTY_DOWNLOAD_URL, ATargetFile, AFailReason);
+end;
+
+function LoadCountryFileFrom(const aPath: string): boolean;
+begin
+   SetCharBuffer(TR4W_CTY_FILENAME, aPath);
+   Result := ctyLoadInCountryFile(aPath, False, True, {ReplaceTable} True);
 end;
 
 end.

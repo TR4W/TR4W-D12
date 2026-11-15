@@ -55,6 +55,10 @@ type
    TKeyerEditDone = procedure(const aAccepted: boolean) of object;
 
    TfrmKeyerEdit = class(TForm)
+      (* EVERYTHING BUT THE FOOTER BUTTONS, in one panel another window can
+        take whole -- see EditKeyerIn.  The controls are still this form's
+        components, named as before. *)
+      pnlContent: TPanel;
       lblName: TLabel;
       edtName: TEdit;
       lblKind: TLabel;
@@ -110,9 +114,20 @@ type
       procedure LoadFromKeyer;
       function SaveToKeyer(out aError: string): boolean;
       procedure UpdateEnabledState;
+      procedure LoadKeyer(const aKeyer: TKeyerDefinition;
+                          const aOnDone: TKeyerEditDone);
    public
       constructor Create(AOwner: TComponent); override;
       procedure EditKeyer(const aKeyer: TKeyerDefinition; const aOnDone: TKeyerEditDone);
+      (* THE EDITOR AS PART OF ANOTHER WINDOW: loads aKeyer and moves the
+        editing panel into aHost, centred.  This form is never shown and its
+        buttons are unused; the host collects the result with AcceptEdits. *)
+      procedure EditKeyerIn(const aKeyer: TKeyerDefinition;
+                            const aHost: TWinControl);
+      (* VALIDATE AND WRITE the controls into the keyer -- Save and close
+        without the closing.  False, after telling the operator why, when it
+        was refused. *)
+      function AcceptEdits: boolean;
    end;
 
 implementation
@@ -209,12 +224,31 @@ end;
 procedure TfrmKeyerEdit.EditKeyer(const aKeyer: TKeyerDefinition;
                                   const aOnDone: TKeyerEditDone);
 begin
+   LoadKeyer(aKeyer, aOnDone);
+   Show;
+   BringToFront;
+end;
+
+procedure TfrmKeyerEdit.EditKeyerIn(const aKeyer: TKeyerDefinition;
+                                    const aHost: TWinControl);
+begin
+   LoadKeyer(aKeyer, nil);
+   pnlContent.Parent := aHost;
+   pnlContent.Top    := 0;
+   pnlContent.Left   := (aHost.ClientWidth - pnlContent.Width) div 2;
+   if pnlContent.Left < 0 then
+      begin
+      pnlContent.Left := 0;
+      end;
+end;
+
+procedure TfrmKeyerEdit.LoadKeyer(const aKeyer: TKeyerDefinition;
+                                  const aOnDone: TKeyerEditDone);
+begin
    FKeyer  := aKeyer;
    FOnDone := aOnDone;
    PopulatePortCombo;   // ports may have changed since the form was built
    LoadFromKeyer;
-   Show;
-   BringToFront;
 end;
 
 procedure TfrmKeyerEdit.LoadFromKeyer;
@@ -351,13 +385,21 @@ begin
    UpdateEnabledState;
 end;
 
-procedure TfrmKeyerEdit.HandleOK(Sender: TObject);
+function TfrmKeyerEdit.AcceptEdits: boolean;
 var
    err: string;
 begin
-   if not SaveToKeyer(err) then
+   Result := SaveToKeyer(err);
+   if not Result then
       begin
       ShowMessage(err);
+      end;
+end;
+
+procedure TfrmKeyerEdit.HandleOK(Sender: TObject);
+begin
+   if not AcceptEdits then
+      begin
       Exit;
       end;
    Hide;

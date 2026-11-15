@@ -223,9 +223,14 @@ function AppliedRadios: TAppliedRadioSnapshot;
 
   Answers False when nothing has been applied yet (no profile has gone on the
   air this run), so a station that has never activated anything is never
-  restarted by a save. }
+  restarted by a save.
+
+  aKeyers, when given, adds the keyer DEVICE each slot's CW output names: a
+  WinKeyer whose port or settings were edited and saved is a change too, and
+  only a re-apply reopens it.  nil skips that question. }
 function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
-                                    out aWhich: string): boolean;
+                                    out aWhich: string;
+                                    const aKeyers: TKeyerConfigStore = nil): boolean;
 
 { Put the ACTIVE profile's CW Speed Sync flags on the running radios when they
   differ from what was applied.  One flag per slot on the live radio: no radio
@@ -276,13 +281,6 @@ procedure SetLatestConfigFile(const aFileName: string);
 function  GridPromptAlreadyShown: boolean;
 procedure MarkGridPromptShown;
 
-(* Has the setup wizard already opened by itself?  The same once-per-
-  installation rule, and the same refusal to write over a store that could not
-  be read.  MARKING THE WIZARD ALSO MARKS THE GRID PROMPT: the wizard's Station
-  page asks for the grid, so the one-off MY GRID question would ask it twice. *)
-function  SetupWizardAlreadyShown: boolean;
-procedure MarkSetupWizardShown;
-
 (* ~~ApplyStoredCommand~~ -- DELETED 2026-09-19 with its only caller.
 
   It applied ONE named command out of the legacy `commands` bucket, for the
@@ -295,9 +293,12 @@ procedure MarkSetupWizardShown;
 // UI-free description of the port collisions a profile WOULD cause, '' when
 // clean.  Advisory: unlike TRadioConfigStore.Validate, this also covers the
 // keyer lines and CAT-versus-keyer sharing, which are warnings rather than
-// certain failures.
+// certain failures.  aKeyers, when given, adds the WinKeyer the profile's CW
+// output names: it owns its port outright, so it collides with ANY radio's CAT
+// port, and with the keyer port of a slot that does not use a keyer device.
 function DescribePortConflicts(const aStore: TRadioConfigStore;
-                               const aProfile: TStationProfile): string;
+                               const aProfile: TStationProfile;
+                               const aKeyers: TKeyerConfigStore = nil): string;
 
 implementation
 
@@ -327,6 +328,7 @@ uses
    LOGK1EA,    // ActiveRadio
    uRotatorControl,   // ConfigureRotators -- the rotator library goes live here
    uCWKeyerBase,   // KeyerSelectionIsProfileDriven
+   uWinKey,        // wkStop / wkStart -- a profile apply reopens the WinKeyer
    LogCW,
    LOGWIND,
    uBandLookup,   // CalculateBandMode -- the extracted, unit-tested copy, not tree.pas
@@ -1328,21 +1330,14 @@ begin
    Result := aStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
 end;
 
-(* THE ONCE-ONLY STARTUP FLAGS, read and recorded in ONE place.
-
-  The grid prompt had this pair to itself; the setup wizard needs the same two
-  operations on the flag beside it, and a second copy of a load-refuse-save
-  routine is exactly the kind of thing that drifts.  So both public pairs are
-  one line each over these. *)
-procedure ReadStartupPromptFlags(out aGridShown, aWizardShown: boolean);
+function GridPromptAlreadyShown: boolean;
 var
    store: TRadioConfigStore;
    keyers: TKeyerConfigStore;
    udp: TUDPBroadcastConfig;
    loadErr: string;
 begin
-   aGridShown   := False;
-   aWizardShown := False;
+   Result := False;
    if not FileExists(RadioStoreFileName) then
       begin
       Exit;   // first run: nothing asked yet
@@ -1354,8 +1349,7 @@ begin
    try
       if LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
          begin
-         aGridShown   := store.GridPromptShown;
-         aWizardShown := store.SetupWizardShown;
+         Result := store.GridPromptShown;
          end;
    finally
       udp.Free;
@@ -1364,15 +1358,12 @@ begin
    end;
 end;
 
-(* Sets each flag that is asked for and not yet set.  Never clears one. *)
-procedure RecordStartupPromptFlags(const aGridShown, aWizardShown: boolean;
-                                   const aWhat: string);
+procedure MarkGridPromptShown;
 var
    store: TRadioConfigStore;
    keyers: TKeyerConfigStore;
    udp: TUDPBroadcastConfig;
    loadErr: string;
-   changed: boolean;
 begin
    store  := TRadioConfigStore.Create;
    keyers := TKeyerConfigStore.Create;
@@ -1384,59 +1375,24 @@ begin
             begin
             // REFUSE rather than write over a file we could not read.  The cost
             // is being asked again next start, which is the old behaviour.
-            logger.Error('[Startup] not recording the %s: %s could not be read (%s)',
-                         [aWhat, RadioStoreFileName, loadErr]);
+            logger.Error('[Startup] not recording the grid prompt: %s could not be read (%s)',
+                         [RadioStoreFileName, loadErr]);
             Exit;
             end;
          end;
 
-      changed := False;
-      if aGridShown and (not store.GridPromptShown) then
-         begin
-         store.GridPromptShown := True;
-         changed := True;
-         end;
-      if aWizardShown and (not store.SetupWizardShown) then
-         begin
-         store.SetupWizardShown := True;
-         changed := True;
-         end;
-
-      if not changed then
+      if store.GridPromptShown then
          begin
          Exit;   // already recorded -- do not rewrite the file every start
          end;
 
+      store.GridPromptShown := True;
       SaveConfig(RadioStoreFileName, store, keyers, udp);
    finally
       udp.Free;
       keyers.Free;
       store.Free;
    end;
-end;
-
-function GridPromptAlreadyShown: boolean;
-var
-   wizardShown: boolean;
-begin
-   ReadStartupPromptFlags(Result, wizardShown);
-end;
-
-procedure MarkGridPromptShown;
-begin
-   RecordStartupPromptFlags(True, False, 'grid prompt');
-end;
-
-function SetupWizardAlreadyShown: boolean;
-var
-   gridShown: boolean;
-begin
-   ReadStartupPromptFlags(gridShown, Result);
-end;
-
-procedure MarkSetupWizardShown;
-begin
-   RecordStartupPromptFlags(True, True, 'setup wizard');
 end;
 
 function GetLatestConfigFile: string;
@@ -2429,6 +2385,11 @@ begin
    for slot := 1 to 2 do
       begin
       keyerDef := KeyerDeviceForSlot(aKeyers, aProfile, slot);
+      (* WHAT THIS SLOT WAS APPLIED WITH, device or none, recorded here because
+        this routine is the one every apply passes -- startup and ApplyProfile
+        -- so a keyer edited and saved later is seen by
+        ActiveRadioSettingsChanged. *)
+      AppliedRadios.RecordKeyerSlot(slot, keyerDef);
       if (keyerDef = nil) or (keyerDef.Kind <> kkWinKeyer) then
          begin
          Continue;
@@ -2560,6 +2521,15 @@ begin
          // not released yet.
          CloseCATAndKeyerForThisRadio;
          end;
+
+      (* THE WINKEYER STOPS WITH THE RADIOS -- whether or not the new profile
+        uses one, so a profile moved from a WinKeyer to CAT closes it -- and
+        BEFORE ApplyKeyersForProfile rewrites its port and settings.  It is
+        reopened after phase 3 below.  Until this, a profile apply never
+        opened or closed it: a WinKeyer added in the wizard or Preferences
+        waited for a restart, a moved one kept its old port and reader, and
+        ActiveCWKeyer quietly fell back to the CPU keyer. *)
+      wkStop;
       logger.Info('[ApplyProfile] phase 1 -- both radios stopped: %d ms',
                   [GetTickCount64 - tStart]);
       tPhase := GetTickCount64;
@@ -2623,6 +2593,11 @@ begin
    // Once, at the end: the keyer serves both radios, so re-initialising it per
    // slot would tear down the one just built.
    InitializeKeyer;
+
+   (* AFTER PHASE 3: wkOpen reads ActiveRadioPtr (its speed memory, and the
+     radio its output is pointed at), so the radios come first.  On a worker
+     thread, and only if ApplyKeyersForProfile left the WinKeyer enabled. *)
+   wkStart;
    DisplayRadio(ActiveRadio);
 
    aStore.ActiveProfileName := aProfile.Name;
@@ -2982,9 +2957,12 @@ begin
 end;
 
 function DescribePortConflicts(const aStore: TRadioConfigStore;
-                               const aProfile: TStationProfile): string;
+                               const aProfile: TStationProfile;
+                               const aKeyers: TKeyerConfigStore): string;
 var
    radio1, radio2: TRadioDefinition;
+   winKeyer, slotDevice: TKeyerDefinition;
+   slot: integer;
 
    procedure Note(const aText: string);
    begin
@@ -3006,6 +2984,29 @@ var
          end;
    end;
 
+   (* THE WINKEYER AGAINST ONE SLOT'S RADIO.  Unlike a radio's own keyer line,
+     a WinKeyer sharing its radio's CAT port IS a conflict: both open the port
+     exclusively.  The radio's keyer output port counts only when the slot does
+     not name a keyer device -- naming one leaves that port unopened
+     (uRadioConfigLegacyMap.KeyerPortForSlot). *)
+   procedure CheckWinKeyerAgainst(const aRadio: TRadioDefinition; const aSlot: integer);
+   begin
+      if aRadio = nil then
+         begin
+         Exit;
+         end;
+      if aRadio.Transport = rtSerial then
+         begin
+         CheckAcross(winKeyer.Name, winKeyer.Port,
+                     aRadio.Name + ' CAT', aRadio.ControlPort);
+         end;
+      if KeyerDeviceForSlot(aKeyers, aProfile, aSlot) = nil then
+         begin
+         CheckAcross(winKeyer.Name, winKeyer.Port,
+                     aRadio.Name + ' keyer', aRadio.KeyerOutputPort);
+         end;
+   end;
+
 begin
    Result := '';
    if (aStore = nil) or (aProfile = nil) then
@@ -3015,6 +3016,25 @@ begin
 
    radio1 := aStore.FindRadioById(aProfile.Radio1Id);
    radio2 := aStore.FindRadioById(aProfile.Radio2Id);
+
+   (* THE WINKEYER FIRST, because it can collide with a single radio.  The
+     first one the slots name, as ApplyKeyersForProfile uses: TR4W drives one
+     WinKeyer. *)
+   winKeyer := nil;
+   for slot := 1 to 2 do
+      begin
+      slotDevice := KeyerDeviceForSlot(aKeyers, aProfile, slot);
+      if (slotDevice <> nil) and (slotDevice.Kind = kkWinKeyer) then
+         begin
+         winKeyer := slotDevice;
+         Break;
+         end;
+      end;
+   if winKeyer <> nil then
+      begin
+      CheckWinKeyerAgainst(radio1, 1);
+      CheckWinKeyerAgainst(radio2, 2);
+      end;
 
    if (radio1 = nil) or (radio2 = nil) then
       begin
@@ -3079,11 +3099,13 @@ begin
 end;
 
 function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
-                                    out aWhich: string): boolean;
+                                    out aWhich: string;
+                                    const aKeyers: TKeyerConfigStore): boolean;
 var
    profile: TStationProfile;
    slot: integer;
    stored: TRadioDefinition;
+   keyerDef: TKeyerDefinition;
 begin
    Result := False;
    aWhich := '';
@@ -3128,6 +3150,25 @@ begin
          Result := True;
          aWhich := Format('radio %d CW output', [slot]);
          Exit;
+         end;
+      (* THE DEVICE ITSELF: the same CW output naming a keyer whose port or
+        settings changed.  Resolved the way the applier resolves it. *)
+      if aKeyers <> nil then
+         begin
+         keyerDef := KeyerDeviceForSlot(aKeyers, profile, slot);
+         if AppliedRadios.KeyerSlotChanged(slot, keyerDef) then
+            begin
+            Result := True;
+            if keyerDef <> nil then
+               begin
+               aWhich := keyerDef.Name;
+               end
+            else
+               begin
+               aWhich := Format('radio %d keyer', [slot]);
+               end;
+            Exit;
+            end;
          end;
       end;
 end;

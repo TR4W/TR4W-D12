@@ -468,6 +468,10 @@ uses
   uPOTAParks,
   uPendingCounties,
   uCTYUpdate,
+  uCallbookBase,
+  uCallbookRegistry,
+  uCallbookHamDB,
+  uCallbookFactory,
   uTRMasterUpdate,
   uAppStrings,
   uCabrilloHeader,
@@ -634,14 +638,11 @@ begin
   (* LOAD THE FILE JUST WRITTEN, not the one that was looked for and was not
     there.  TR4W_CTY_FILENAME still names the place TR4W searched, so loading
     it would report the same failure the download has just fixed. *)
-  SetCharBuffer(TR4W_CTY_FILENAME, ctyPath);
-
   // VERIFY, DO NOT ASSUME. A download can report success and still leave a
   // file the parser rejects -- a captive-portal HTML page saved as cty.dat is
   // the obvious way. Say so here, where the cause is still obvious, rather
   // than continuing into a program with no country data.
-  Result := ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True,
-                                 {ReplaceTable} True);
+  Result := LoadCountryFileFrom(ctyPath);
 
   if Result then
      begin
@@ -852,6 +853,70 @@ begin
    Result := 0;
 end;
 
+(* --wizard: run the setup wizard at startup whether or not a callsign is
+  stored, without the Yes/No question -- asking for it IS the answer.  It is how
+  the wizard is tried on a station that is already set up; combine it with
+  --settings <path> to leave the real settings alone. *)
+function WizardRequested: boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := 1 to ParamCount do
+      begin
+      if UnicodeSameText(ParamStr(i), '--wizard') then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* ONE CLEAR MESSAGE for a copy of the program that was not installed -- an exe
+  copied out of a build folder, say -- instead of a terse "could not find this
+  file" for each data file as a contest happens to need it (NY4I, 2026-11-15,
+  from c:\radio\d12fresh).  Said when the dom folder is gone, or when two or
+  more of the three parts are: a lone missing CTY.DAT already has its download
+  offer, and TRMASTER.DTA is optional.  The program still starts. *)
+procedure WarnIfInstallIncomplete;
+const
+   (* What fits a message box on one line without being cut. *)
+   MAX_SHOWN_FOLDER = 60;
+var
+   missing, folder: string;
+   count: integer;
+begin
+   missing := MissingInstallParts;
+   if missing = '' then
+      begin
+      Exit;
+      end;
+
+   (* One name per line; LineEnding is two characters on Windows, so count the
+     separators by what removing them takes away. *)
+   count := 1 + (Length(missing) -
+                 Length(UnicodeStringReplace(missing, LineEnding, '', [rfReplaceAll]))) div
+                Length(LineEnding);
+   if (Pos('dom' + PathDelim, missing) = 0) and (count < 2) then
+      begin
+      Exit;
+      end;
+
+   folder := ExtractFilePath(DataFilePath('x'));
+   logger.Warn('[Startup] the installation looks incomplete in %s; missing: %s',
+               [folder, UnicodeStringReplace(missing, LineEnding, ', ', [rfReplaceAll])]);
+   (* THE DIALOG CUTS A LONG PATH WITH NO SPACE IN IT, and the folder is the
+     point of the message.  Show the END of it -- the folders the operator
+     recognises -- under an explicit "...", with the whole path in tr4w.log. *)
+   if Length(folder) > MAX_SHOWN_FOLDER then
+      begin
+      folder := '...' + Copy(folder, Length(folder) - MAX_SHOWN_FOLDER + 4, MaxInt);
+      end;
+   MessageDlg('TR4W',
+              LclText(UnicodeFormat(SInstallIncompleteStartup, [folder, missing])),
+              mtWarning, [mbOK], 0);
+end;
+
 function ShowCommandLineUsage: boolean;
 var
    i:    integer;
@@ -895,6 +960,7 @@ begin
       '  --lang=<code>      the same' + sLineBreak +
       '  --settings <path>  read and write settings at this path' + sLineBreak +
       '  --settings=<path>  the same' + sLineBreak +
+      '  --wizard           run the setup wizard first, even on a set-up station' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
@@ -1235,10 +1301,8 @@ var
   yearContest                           : boolean;
   // What /IMPORT tells the operator, for the headless run's own trace.
   importReport                          : string;
-  (* Whether settings\tr4w.json was on disk when startup began -- the setup
-    wizard's "brand-new install" test.  CAPTURED, because the settings load
-    below saves the file on a first run and every later look says yes. *)
-  settingsFileExisted                   : boolean;
+  (* Which tier the setup wizard's country file came from, for the log line. *)
+  wizardCtyTier                         : string;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -1827,16 +1891,6 @@ begin
                              TR4WConfigFileName);
      end;
 
-  (* IS THIS A BRAND-NEW INSTALL -- asked HERE, for the setup wizard.
-
-    AFTER the conversion offer: an operator who converts an old tr4w.ini now
-    has a settings file, and is not a new station.  BEFORE
-    LoadSettingsForStartup, which saves the file on a first run -- one step
-    later the answer is always yes -- and before the New Contest window too,
-    so nothing it records can change the answer.  The wizard itself opens far
-    below, once the main window exists. *)
-  settingsFileExisted := SysUtils.FileExists(TR4WConfigFileName);
-
   (* THE PLATFORM GATE MOVED INTO uPlatformFonts, which already owns every
     per-platform font question this program asks. LuconSZLoadded staying False
     off Windows is still the RIGHT answer rather than a degraded one -- the
@@ -1929,6 +1983,79 @@ begin
      EarlyTrace('startup: headless with no contest file -- refusing rather '
                 + 'than opening New Contest, which nobody could answer');
      Halt(EXITCODE_NO_CONTEST_FILE);
+     end;
+
+  (* THE SETUP WIZARD IS OFFERED FIRST ON A BRAND-NEW INSTALL (NY4I, 2026-11-14),
+    before New Contest: a new operator should give their callsign and station
+    once, here, and meet New Contest with the callsign already in it.
+
+    THE TEST IS "NO CALLSIGN IS STORED", NOT "NO SETTINGS FILE", and nothing is
+    written before the operator has answered.  The first version of this asked
+    whether the file existed and set a once-only flag first: a Cancel left a
+    blank tr4w.json behind, and the next start found the file and never asked
+    again (NY4I, 2026-11-14).  A callsign is the real mark of a configured
+    station -- New Contest will not proceed without one -- so the offer repeats
+    until one exists and then stops by itself.  It is read from the file
+    (StartupMainCallsign), never assigned: this runs before the settings load.
+
+    THE COUNTRY FILE FIRST, because the callsign page fills the zone and country
+    from it and startup does not resolve it until a contest has been chosen.
+    Taken from the downloaded copy, else the shipped one, and loaded QUIETLY:
+    when neither is there the wizard's own Station page says so and offers the
+    download in its own window (NY4I, 2026-11-14: a question from outside the
+    wizard "takes me out" of it).  A run from an empty directory is exactly
+    that case.  If the operator leaves it undownloaded, EnsureCountryFile asks
+    a few steps later, as it always has.
+
+    A Yes that ends with a callsign stored also answers the grid question (its
+    Station page asks it), so the one-off MY GRID prompt is spared.
+
+    The wizard SAVES; it does not put anything into use.  The saved active
+    profile and cluster are applied by ApplyActiveProfileToConfigAtStartup a
+    little further down, exactly as on every start. *)
+  if (WizardRequested and (not tSilentExport)) or
+     SetupWizardDueAtStartup(tSilentExport,
+                             StartupMainCallsign(TR4WConfigFileName) <> '') then
+     begin
+     if WizardRequested then
+        begin
+        logger.Info('[Startup] --wizard: running the setup wizard first');
+        end
+     else
+        begin
+        logger.Info('[Startup] no callsign stored: offering the setup wizard first');
+        end;
+
+     (* LOAD WHAT THE STATION ALREADY HOLDS BEFORE THE WIZARD TOUCHES IT.  The
+       wizard shows the stored values (they are read from the live settings) and
+       saves through SaveSettings, which writes the WHOLE settings object over
+       the file's section -- so run on settings that have not been loaded yet,
+       it showed an empty Station page and, on Create, would have written
+       defaults over a configured station (issue 322, --wizard).  A first run
+       that already holds a few settings is the same case.  The load only reads;
+       the full load below reads the file again, now including what the wizard
+       saved. *)
+     LoadSettingsForStartup(TR4WConfigFileName, Settings, True);
+
+     if WizardRequested or AskSetupWizardAtStartup then
+        begin
+        SetCharBuffer(TR4W_CTY_FILENAME, ResolveCountryFile(False, wizardCtyTier));
+        logger.Info('[SetupWizard] country file: %s (%s)',
+                    [CharBufferText(TR4W_CTY_FILENAME), wizardCtyTier]);
+        ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True,
+                             {ReplaceTable} True);
+        RunSetupWizardAtStartup;
+        if StartupMainCallsign(TR4WConfigFileName) <> '' then
+           begin
+           MarkGridPromptShown;
+           end;
+        end;
+     end;
+
+  (* AFTER the wizard, so a first run still gets its own experience first. *)
+  if not tSilentExport then
+     begin
+     WarnIfInstallIncomplete;
      end;
 
   begin
@@ -2820,28 +2947,11 @@ begin
   // they open TR4W, and one who does can set it in Preferences > Station --
   // where it is now also findable by search.  The flag is recorded whatever the
   // answer, because being asked and saying no IS an answer.
-  (* THE SETUP WIZARD, ON A BRAND-NEW INSTALL -- in place of the grid prompt,
-    because its Station page asks for the grid (docs/SETUP_WIZARD_DESIGN.md).
-
-    HERE for the grid prompt's reasons: the settings are loaded, the country
-    file is loaded (the wizard fills zone and country from the callsign), and
-    the main window exists to own it.  Modeless, so startup carries on into
-    the message loop underneath it.
-
-    MARKED BEFORE IT OPENS, as the grid prompt is: a crash or a Cancel must
-    not bring it back at every start.  The Tools menu runs it again on
-    request.  Marking it marks the grid prompt too. *)
-  (* The leading test only spares every ordinary start a second read of the
-    settings file for the flag; the rule itself is SetupWizardDueAtStartup. *)
-  if (not settingsFileExisted) and
-     SetupWizardDueAtStartup(tSilentExport, settingsFileExisted,
-                             SetupWizardAlreadyShown) then
-     begin
-     logger.Info('[Startup] brand-new install: opening the setup wizard');
-     MarkSetupWizardShown;
-     ShowSetupWizard;
-     end
-  else if (not tSilentExport) and (Trim(Settings.My.ResolvedGrid) = '') then
+  (* THE SETUP WIZARD IS NOT OPENED HERE.  It is offered before New Contest
+    (above, near ShowNewContest), where a new station's callsign is asked; a
+    start that skips New Contest -- a contest file named on the command line --
+    has its callsign from that contest, so there is nothing left to offer. *)
+  if (not tSilentExport) and (Trim(Settings.My.ResolvedGrid) = '') then
      begin
      if GridPromptAlreadyShown then
         begin
@@ -3002,12 +3112,9 @@ begin
      end;
 
 //  wkLoadSettings;
-   if WinKeySettings.wksWinKey2Enable then
-      begin
-      logger.Info('Calling tCreateThread from WinKeyer');
-      tCreateThread(wkOpenThreadProc, wkThreadID);
-      logger.Info('Created WinKeyer thread with threadid of %u',[PtrUInt(wkThreadID)] );
-      end;
+   (* On a worker thread, and only when the WinKeyer is enabled -- wkStart
+     owns both rules, and a profile apply opens through it too. *)
+   wkStart;
 
    if Settings.Yccc.So2rEnable then
       begin

@@ -173,6 +173,10 @@ type
       // dirty flag that goes stale the moment someone adds a field. Name is
       // included: renaming IS a change.
       function SameAs(const aOther: TKeyerDefinition): boolean;
+      // Everything that reaches the DEVICE -- kind, port and every setting --
+      // and NOT the name: renaming a keyer changes what the operator sees and
+      // nothing it is told.  SameAs is this plus the name.
+      function SameDeviceSettingsAs(const aOther: TKeyerDefinition): boolean;
       // One line for a list box: 'Desk WinKey [WINKEYER SERIAL 3]'.
       function DisplaySummary: string;
    end;
@@ -304,8 +308,18 @@ begin
       Exit;
       end;
 
+   Result := UnicodeSameText(Name, aOther.Name) and SameDeviceSettingsAs(aOther);
+end;
+
+function TKeyerDefinition.SameDeviceSettingsAs(const aOther: TKeyerDefinition): boolean;
+begin
+   Result := False;
+   if aOther = nil then
+      begin
+      Exit;
+      end;
+
    Result :=
-      SameText(Name, aOther.Name) and
       (Kind = aOther.Kind) and
       SameText(Port, aOther.Port) and
       SameText(WKKeyerMode, aOther.WKKeyerMode) and

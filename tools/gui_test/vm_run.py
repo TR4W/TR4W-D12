@@ -69,6 +69,7 @@ def main():
        str(source / "bench_year_sent.py"),
        str(source / "bench_county_host.py"),
        str(source / "bench_pending.py"),
+       str(source / "bench_setup_wizard.py"),
        str(source / "fixture_data.py"), str(source / "adif_fixtures.py"), str(source / "bench_import.py"),
        str(source / "bench_locked.py"),
        str(source / "bench_search.py"), str(source / "visual_assert.py"),

@@ -80,6 +80,12 @@ type
    // private handler is not written to the resource at all.  That failure is
    // silent -- the form opens looking perfect and does nothing when clicked.
    TRadioEditForm = class(TForm)
+      (* EVERYTHING BUT THE FOOTER BUTTONS lives in this one panel, so another
+        window can take it whole: the setup wizard shows the editor as one of
+        its own pages (EditRadioIn).  Nothing about the controls changed -- they
+        are still this form's components, named as before, and every handler
+        below is still theirs. *)
+      pnlContent: TPanel;
       lblName: TLabel;
       edtName: TEdit;
       lblType: TLabel;
@@ -223,6 +229,7 @@ type
       // in step with the control count.
       FSnapshot: TRadioDefinition;
       FOnDone: TRadioEditDone;
+      FOnTypeChanged: TNotifyEvent;
       // Advanced is a tab but NOT a transport, so the transport is REMEMBERED
       // rather than read from whichever tab happens to be showing.  Without
       // this, looking at Advanced would silently change the radio's connection.
@@ -255,15 +262,35 @@ type
       function SaveToRadio(out aError: string): boolean;
       function SaveTo(const aTarget: TRadioDefinition; out aError: string): boolean;
       function IsModified: boolean;
-      function SelectedRegistryId: string;
       procedure UpdateEnabledState;
       (* The poll-rate box's tooltip: FREQUENCY POLL RATE's help, in the UI
         language, through the one rule Preferences uses. *)
       procedure ApplyPollRateHelp;
+      (* The common start of both ways of showing the editor. *)
+      procedure LoadRadio(const aRadio: TRadioDefinition;
+                          const aOnDone: TRadioEditDone);
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
       procedure EditRadio(const aRadio: TRadioDefinition; const aOnDone: TRadioEditDone);
+      (* THE EDITOR AS PART OF ANOTHER WINDOW.  Loads aRadio and moves the
+        editing panel into aHost, centred; this form itself is never shown and
+        its Save and Cancel buttons are not used.  The host takes the result
+        with AcceptEdits when its own Next is pressed.  The panel goes back to
+        nothing on its own: it is this form's component and dies with it. *)
+      procedure EditRadioIn(const aRadio: TRadioDefinition;
+                            const aHost: TWinControl);
+      (* VALIDATE AND WRITE the controls into the radio given to
+        EditRadio / EditRadioIn -- exactly what Save and close does, minus
+        closing.  False (after telling the operator why) when it was refused. *)
+      function AcceptEdits: boolean;
+      (* The registry id of the radio type chosen in the combo, '' when none
+        is chosen yet -- what a host asks to decide what else to offer. *)
+      function SelectedRegistryId: string;
+      (* Raised after the radio type changes, once the form has adjusted
+        itself to it.  A host that offers choices depending on the radio
+        (the wizard's CW by CAT) listens here instead of polling the combo. *)
+      property OnTypeChanged: TNotifyEvent read FOnTypeChanged write FOnTypeChanged;
    end;
 
 implementation
@@ -731,6 +758,27 @@ end;
 procedure TRadioEditForm.EditRadio(const aRadio: TRadioDefinition;
                                    const aOnDone: TRadioEditDone);
 begin
+   LoadRadio(aRadio, aOnDone);
+   Show;
+   BringToFront;
+end;
+
+procedure TRadioEditForm.EditRadioIn(const aRadio: TRadioDefinition;
+                                     const aHost: TWinControl);
+begin
+   LoadRadio(aRadio, nil);
+   pnlContent.Parent := aHost;
+   pnlContent.Top    := 0;
+   pnlContent.Left   := (aHost.ClientWidth - pnlContent.Width) div 2;
+   if pnlContent.Left < 0 then
+      begin
+      pnlContent.Left := 0;
+      end;
+end;
+
+procedure TRadioEditForm.LoadRadio(const aRadio: TRadioDefinition;
+                                   const aOnDone: TRadioEditDone);
+begin
    FRadio  := aRadio;
    FOnDone := aOnDone;
 
@@ -741,8 +789,6 @@ begin
       end;
    PopulatePortCombos;   // ports may have changed since the form was built
    LoadFromRadio;
-   Show;
-   BringToFront;
 end;
 
 procedure TRadioEditForm.LoadFromRadio;
@@ -1286,6 +1332,10 @@ begin
       end;
 
    UpdateEnabledState;
+   if Assigned(FOnTypeChanged) then
+      begin
+      FOnTypeChanged(Self);
+      end;
 end;
 
 procedure TRadioEditForm.SetTransport(const aValue: TRadioTransport);
@@ -1377,10 +1427,11 @@ begin
       end;
 end;
 
-procedure TRadioEditForm.HandleOK(Sender: TObject);
+function TRadioEditForm.AcceptEdits: boolean;
 var
    err: string;
 begin
+   Result := False;
    // AN AUTO-INFO LEVEL THE OPERATOR TYPED IS A NON-STANDARD CONFIGURATION,
    // AND IT AFFECTS OPERATING (NY4I).
    //
@@ -1402,6 +1453,15 @@ begin
    if not SaveToRadio(err) then
       begin
       ShowMessage(err);
+      Exit;
+      end;
+   Result := True;
+end;
+
+procedure TRadioEditForm.HandleOK(Sender: TObject);
+begin
+   if not AcceptEdits then
+      begin
       Exit;
       end;
    Hide;

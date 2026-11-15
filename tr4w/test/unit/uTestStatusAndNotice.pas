@@ -98,6 +98,7 @@ type
       procedure Test_TheCWThreadLeavesTheAutoCQRepeatToTheMainThread;
       procedure Test_TheDVKPlaybackEndIsDrawnOnTheMainThread;
       procedure Test_NoKeyingThreadBodyNamesTheUIWork;
+      procedure Test_ApplyProfileStopsAndReopensTheWinKeyer;
       procedure HandleRadioMessage(sMessage: string);
    public
       procedure RunAllTests; override;
@@ -3620,6 +3621,52 @@ begin
                          LineEnding + 'label'));
 end;
 
+(* A PROFILE APPLY REOPENS THE WINKEYER, IN THE ORDER THAT WORKS -- a source
+  guard, because ApplyProfile needs real radios and ports to run.  It never
+  opened or closed the WinKeyer: one added in the setup wizard or Preferences
+  waited for a restart, and one moved to another port kept its old port and
+  reader thread.
+
+  The ORDER is the point.  wkStop must come before ApplyKeyersForProfile,
+  which rewrites the port the WinKeyer is open on; wkStart after the last
+  radio is reopened (phase 3), because wkOpen reads ActiveRadioPtr.  And no
+  other caller may open it any way but wkStart. *)
+procedure TStatusAndNoticeTests.Test_ApplyProfileStopsAndReopensTheWinKeyer;
+var
+   body: string;
+   stopAt, keyersAt, lastPortsAt, startAt, p: integer;
+begin
+   BeginTest('Test_ApplyProfileStopsAndReopensTheWinKeyer');
+   (* The IMPLEMENTATION's header: the interface declaration ends at its
+     parameter list, so the body's first local makes it unique. *)
+   body := UpperCase(RoutineBody('uRadioConfigApply.pas',
+                                 'const aKeyers: TKeyerConfigStore = nil): boolean;' +
+                                 LineEnding + 'var' + LineEnding + '   slot: integer;'));
+   CheckTrue(body <> '', 'ApplyProfile is where the guard expects it');
+
+   stopAt   := Pos('WKSTOP;', body);
+   keyersAt := Pos('APPLYKEYERSFORPROFILE(', body);
+   startAt  := Pos('WKSTART;', body);
+   lastPortsAt := 0;
+   p := Pos('CHECKANDINITIALIZEPORTS_FORTHISRADIO', body);
+   while p > 0 do
+      begin
+      lastPortsAt := p;
+      p := Pos('CHECKANDINITIALIZEPORTS_FORTHISRADIO', body, p + 1);
+      end;
+
+   CheckTrue(stopAt > 0, 'ApplyProfile stops the WinKeyer');
+   CheckTrue(keyersAt > 0, 'ApplyProfile applies the keyers');
+   CheckTrue(lastPortsAt > 0, 'ApplyProfile reopens the radios');
+   CheckTrue(startAt > 0, 'ApplyProfile starts the WinKeyer');
+   CheckTrue(stopAt < keyersAt,
+             'the WinKeyer stops BEFORE its port and settings are rewritten');
+   CheckTrue(startAt > lastPortsAt,
+             'the WinKeyer starts AFTER the radios are reopened (phase 3)');
+   CheckEquals(0, Pos('WKOPEN', body), 'ApplyProfile opens only through wkStart');
+   CheckEquals(0, Pos('WKCLOSE', body), 'ApplyProfile closes only through wkStop');
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -3659,6 +3706,7 @@ begin
    Test_TheCWThreadLeavesTheAutoCQRepeatToTheMainThread;
    Test_TheDVKPlaybackEndIsDrawnOnTheMainThread;
    Test_NoKeyingThreadBodyNamesTheUIWork;
+   Test_ApplyProfileStopsAndReopensTheWinKeyer;
    ReleaseMainForm;
 end;
 

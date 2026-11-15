@@ -33,6 +33,10 @@ type
       procedure TestStageTwiceMakesNamesUnique;
       procedure TestStageUsesTheActiveProfile;
       procedure TestClusterBaseName;
+      procedure TestGridSquareCase;
+      procedure TestClusterServerSplit;
+      procedure TestStageCarriesTheCWChoices;
+      procedure TestDetailLinesNeverShowAPassword;
    public
       procedure RunAllTests; override;
    end;
@@ -116,14 +120,13 @@ end;
 procedure TSetupWizardTests.TestDueOnlyOnBrandNewInstall;
 begin
    BeginTest('TestDueOnlyOnBrandNewInstall');
-   CheckTrue(SetupWizardDueAtStartup(False, False, False),
-             'no settings file, never shown, an operator: open it');
-   CheckFalse(SetupWizardDueAtStartup(True, False, False),
+   CheckTrue(SetupWizardDueAtStartup(False, False),
+             'no callsign stored, an operator: offer it -- whether or not a '
+             + 'settings file exists, and however many times it was cancelled');
+   CheckFalse(SetupWizardDueAtStartup(True, False),
               'headless: never -- a window there is a hang');
-   CheckFalse(SetupWizardDueAtStartup(False, True, False),
-              'a settings file existed: an existing station');
-   CheckFalse(SetupWizardDueAtStartup(False, False, True),
-              'already shown once: the Tools menu is the way back');
+   CheckFalse(SetupWizardDueAtStartup(False, True),
+              'a callsign is stored: a configured station');
 end;
 
 procedure TSetupWizardTests.TestStageNothing;
@@ -324,8 +327,106 @@ begin
    CheckEquals('', SetupClusterBaseName(nil), 'nil is empty');
 end;
 
+procedure TSetupWizardTests.TestGridSquareCase;
+begin
+   BeginTest('TestGridSquareCase');
+   CheckEquals('EL88', NormalizeGridSquare('el88'), 'four characters are capitals and digits');
+   CheckEquals('EL88pa', NormalizeGridSquare('EL88PA'), 'the subsquare is lower case');
+   CheckEquals('EL88pa', NormalizeGridSquare(' el88pa '), 'trimmed, standard case');
+   CheckEquals('EL88pa55xx', NormalizeGridSquare('el88pa55XX'), 'extended locator');
+   CheckEquals('', NormalizeGridSquare(''), 'empty stays empty');
+end;
+
+procedure TSetupWizardTests.TestClusterServerSplit;
+var
+   host, port: string;
+begin
+   BeginTest('TestClusterServerSplit');
+   SplitClusterServer('dxc.nc7j.com:7373', host, port);
+   CheckEquals('dxc.nc7j.com', host, 'host:port host');
+   CheckEquals('7373', port, 'host:port port');
+   SplitClusterServer('192.168.1.5', host, port);
+   CheckEquals('192.168.1.5', host, 'bare IP');
+   CheckEquals('', port, 'no port given');
+   SplitClusterServer('  dxc.example.net:23  Some Node', host, port);
+   CheckEquals('dxc.example.net', host, 'a directory line drops the description');
+   CheckEquals('23', port, 'its port');
+   CheckEquals('host:99', JoinClusterServer(' host ', '99'), 'joined');
+   CheckEquals('host', JoinClusterServer('host', ''), 'no port, no colon');
+   CheckTrue(IsValidClusterPort(''), 'blank is the standard port');
+   CheckTrue(IsValidClusterPort('7373'), 'a port');
+   CheckFalse(IsValidClusterPort('0'), 'zero');
+   CheckFalse(IsValidClusterPort('65536'), 'too big');
+   CheckFalse(IsValidClusterPort('12a'), 'not a number');
+   CheckFalse(IsValidClusterPort('99999999999'), 'too long to convert');
+end;
+
+procedure TSetupWizardTests.TestStageCarriesTheCWChoices;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   radio: TRadioDefinition;
+   keyer: TKeyerDefinition;
+   report: string;
+begin
+   BeginTest('TestStageCarriesTheCWChoices');
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   radio  := TRadioDefinition.Create;
+   keyer  := TKeyerDefinition.Create;
+   try
+      radio.Name := 'K4';
+      radio.CWByCAT := True;
+      radio.CWSpeedSync := True;
+      report := '';
+      StageSetupItems(store, keyers, radio, nil, nil, report);
+      CheckEquals(CWOUTPUT_CAT, store.ActiveProfile.CWOutput1, 'CW by CAT is the slot 1 output');
+      CheckTrue(store.ActiveProfile.SpeedSync1, 'speed sync is on');
+      CheckFalse(store.Radio(0).CWByCAT, 'the radio itself does not carry the flag');
+
+      (* A WinKeyer on its own page takes the slot's CW output. *)
+      keyer.Name := 'WinKeyer';
+      keyer.Port := 'COM3';
+      report := '';
+      StageSetupItems(store, keyers, radio, keyer, nil, report);
+      CheckEquals('WinKeyer', store.ActiveProfile.CWOutput1, 'the keyer wins over CAT');
+   finally
+      keyer.Free;
+      radio.Free;
+      keyers.Free;
+      store.Free;
+   end;
+end;
+
+procedure TSetupWizardTests.TestDetailLinesNeverShowAPassword;
+var
+   radio: TRadioDefinition;
+   cluster: TClusterDefinition;
+   text: string;
+begin
+   BeginTest('TestDetailLinesNeverShowAPassword');
+   radio := TRadioDefinition.Create;
+   cluster := TClusterDefinition.Create;
+   try
+      radio.Transport := rtNetwork;
+      radio.NetworkUsername := 'op';
+      radio.NetworkPassword := 'sekret-radio';
+      cluster.Password := 'sekret-cluster';
+      text := SetupDetailLines(radio, nil, cluster);
+      CheckTrue(Pos('op', text) > 0, 'the user name is shown');
+      CheckEquals(0, Pos('sekret', text), 'no password is ever shown');
+   finally
+      cluster.Free;
+      radio.Free;
+   end;
+end;
+
 procedure TSetupWizardTests.RunAllTests;
 begin
+   TestGridSquareCase;
+   TestClusterServerSplit;
+   TestStageCarriesTheCWChoices;
+   TestDetailLinesNeverShowAPassword;
    TestPlanWithNothingTicked;
    TestPlanIsCanonicalOrder;
    TestCommitPageIsBeforeResult;

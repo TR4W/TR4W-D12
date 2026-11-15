@@ -93,7 +93,8 @@ uses
    uFileText,            // whole-file UTF-8 read/write -- see the BOM note in that unit
    IniFiles,
    uJSON,          // the format of record for settings\tr4w.json
-   Generics.Collections, uExternalLoggerConfig, uKeychainJSON;
+   Generics.Collections, uExternalLoggerConfig, uKeychainJSON,
+   uKeyerConfigStore;   (* TKeyerDefinition -- the snapshot records the keyer a slot was applied with *)
 
 const
    // "Let the radio decide."  Distinct from 0, which is the operator saying
@@ -485,6 +486,12 @@ type
       FSpeedSync: array[1..2] of boolean;
       FCWOutput: array[1..2] of string;
       FProfileRecorded: array[1..2] of boolean;
+      { THE KEYER DEVICE A SLOT WAS APPLIED WITH -- a copy, for the reason
+        RecordSlot copies the radio.  The CW-output string above names the
+        device; it cannot see the device's own port or settings change, and
+        a WinKeyer moved to another port and saved has to be reopened. }
+      FKeyer: array[1..2] of TKeyerDefinition;
+      FKeyerRecorded: array[1..2] of boolean;
    public
       destructor Destroy; override;
 
@@ -520,6 +527,19 @@ type
         teardown.  False when nothing was recorded. }
       function SpeedSyncChanged(const aSlot: integer;
                                 const aSpeedSync: boolean): boolean;
+
+      { The keyer device the slot's CW output resolved to when it was applied
+        (nil: none -- CAT, the radio's own port, or NONE).  Written by the
+        applier's keyer step, which runs at startup and on every apply. }
+      procedure RecordKeyerSlot(const aSlot: integer;
+                                const aKeyer: TKeyerDefinition);
+
+      { True if aKeyer would configure the slot's keyer differently from what
+        was applied: a different device (Id), or the same one with a changed
+        kind, port or setting (TKeyerDefinition.SameDeviceSettingsAs).  A
+        RENAME is not a change.  False when nothing was recorded. }
+      function KeyerSlotChanged(const aSlot: integer;
+                                const aKeyer: TKeyerDefinition): boolean;
    end;
 
    { The library itself: radios, profiles, and which profile is active. }
@@ -566,11 +586,6 @@ type
         should not be asked again every time they open the program, and one who
         does can set it in Preferences > Station, where it is also searchable. }
       FGridPromptShown: boolean;
-      (* Whether the setup wizard has opened by itself at startup.  The same
-        once-per-installation rule as the grid prompt above, for the same
-        reason; the Tools menu runs it again on request.  See
-        uSetupWizard.SetupWizardDueAtStartup. *)
-      FSetupWizardShown: boolean;
       { The export headers -- tr4w.ini's [REPORT] and [ERMAKREPORT] sections,
         moved here. One Name=Value list per section, using the same _TAG
         spellings the ini used, so the tag table in uCbrSum stays the single
@@ -892,7 +907,6 @@ type
       property  ActiveRotatorId: string read FActiveRotatorId write FActiveRotatorId;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
       property  GridPromptShown: boolean read FGridPromptShown write FGridPromptShown;
-      property  SetupWizardShown: boolean read FSetupWizardShown write FSetupWizardShown;
       { The Name=Value list for one export header section ('REPORT',
         'ERMAKREPORT'). Created on demand, so a caller never has to test for
         nil and an unknown section is an empty header rather than a crash. }
@@ -1346,7 +1360,49 @@ begin
       FProfileRecorded[slot] := False;
       FSpeedSync[slot] := False;
       FCWOutput[slot] := '';
+      FreeAndNil(FKeyer[slot]);
+      FKeyerRecorded[slot] := False;
       end;
+end;
+
+procedure TAppliedRadioSnapshot.RecordKeyerSlot(const aSlot: integer;
+                                                const aKeyer: TKeyerDefinition);
+begin
+   if (aSlot < 1) or (aSlot > 2) then
+      begin
+      Exit;
+      end;
+   (* A COPY -- see RecordSlot. *)
+   FreeAndNil(FKeyer[aSlot]);
+   if aKeyer <> nil then
+      begin
+      FKeyer[aSlot] := aKeyer.Clone;
+      end;
+   FKeyerRecorded[aSlot] := True;
+end;
+
+function TAppliedRadioSnapshot.KeyerSlotChanged(const aSlot: integer;
+                                                const aKeyer: TKeyerDefinition): boolean;
+begin
+   Result := False;
+   if (aSlot < 1) or (aSlot > 2) or (not FKeyerRecorded[aSlot]) then
+      begin
+      Exit;
+      end;
+
+   if (FKeyer[aSlot] = nil) or (aKeyer = nil) then
+      begin
+      (* One empty and one not is a change; both empty is not. *)
+      Result := (FKeyer[aSlot] <> nil) <> (aKeyer <> nil);
+      Exit;
+      end;
+
+   (* IDENTITY, THEN WHAT REACHES THE DEVICE -- NOT THE NAME.  A rename tells
+     the WinKeyer nothing, so it must not restart the radios; a slot moved to
+     a different keyer is a different Id (and a different CW output, which
+     CWOutputChanged sees). *)
+   Result := (not SameText(FKeyer[aSlot].Id, aKeyer.Id)) or
+             (not FKeyer[aSlot].SameDeviceSettingsAs(aKeyer));
 end;
 
 procedure TAppliedRadioSnapshot.RecordProfileSlot(const aSlot: integer;
@@ -3186,7 +3242,6 @@ begin
    general.AddPair('activeRotator',   FActiveRotatorName);
    general.AddPair('latestConfigFile', FLatestConfigFile);
    general.AddPair('gridPromptShown', TJSONBool.Create(FGridPromptShown));
-   general.AddPair('setupWizardShown', TJSONBool.Create(FSetupWizardShown));
 
    // The export headers, each as its own object rather than inside `commands`:
    // these are not CFGCA commands and ApplyStoredCommands must not try to
@@ -3333,6 +3388,10 @@ begin
       ['activeProfile', 'keepLegacyIni', 'activeCluster',
        'activeRotatorId', 'activeRotator', 'latestConfigFile',
        'gridPromptShown',
+       (* NOT written by SaveToJSON since 2026-11-14 -- the setup wizard's
+          once-only flag, withdrawn when the wizard became "offered until a
+          callsign is stored".  A file written by the build that had it
+          carries it; known so it is dropped quietly, not reported. *)
        'setupWizardShown',
        (* NOT written by SaveToJSON since issue 286 -- the retired
           station-wide "connect radios at startup", which an older file
@@ -3359,7 +3418,6 @@ begin
    FActiveRotatorId   := JSONStr(general, 'activeRotatorId', '');
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
    FGridPromptShown   := JSONBool(general, 'gridPromptShown', False);
-   FSetupWizardShown  := JSONBool(general, 'setupWizardShown', False);
 
    // Clear (above) has already emptied the headers.
    for s := Low(HEADER_SECTIONS) to High(HEADER_SECTIONS) do

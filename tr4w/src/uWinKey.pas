@@ -47,6 +47,26 @@ uses
   ,
   uTR4WStrings;
 
+(* THE ONE WAY TO STOP AND START THE WINKEYER -- startup, the Alt-menu re-open
+  and a profile apply (uRadioConfigApply.ApplyProfile: Preferences Activate or
+  Save, the setup wizard) all go through this pair, and nothing else calls
+  wkOpen.
+
+  wkStop WAITS: for an open in progress to finish, then for the reader thread
+  to leave, and only then closes the port and frees its object, so the next
+  open is made against the port the settings name NOW (a TSerialPort's name is
+  fixed when it is created).  Bounded: if either thread outlives
+  WK_STOP_WAIT_MS it logs an Error and touches nothing -- a port still held
+  is a leak, a port closed under a running thread is a fault -- and wkStart
+  refuses until that thread has gone.
+
+  wkStart OPENS ON A WORKER THREAD, never on the caller's: the echo test and
+  the HOST OPEN reply are blocking reads.  It does nothing when the WinKeyer is
+  not enabled, while an open or an old reader is still running, or in a run
+  with no station (the headless /EXPORT, the unit tests). *)
+procedure wkStop;
+procedure wkStart;
+
 function wkOpen: boolean;
 function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;   (* wkOpen, as a tCreateThread body *)
 function wkOpenPort: boolean;
@@ -354,6 +374,79 @@ uses
 function wkPortOpen: boolean; forward;
 function wkWriteRaw(const aBytes: array of Byte): Cardinal; forward;
 
+const
+  (* The open's worst case is about 1 s at 1200 baud (wkOpenPort's 200 ms
+    settle, two 250 ms reads, the configuration writes); the reader leaves
+    within one 10 ms read.  Three seconds is a generous bound on both. *)
+  WK_STOP_WAIT_MS = 3000;
+
+var
+  (* THE TWO THREADS, BY FLAG -- set by the CREATOR before tCreateThread and
+    cleared by the thread itself in a finally, the PollingThreadRunning rule.
+    wkThreadID cannot answer: both threads have always written it. *)
+  wkOpening       : Boolean = False;
+  wkReaderRunning : Boolean = False;
+
+procedure wkStop;
+begin
+  (* THE OPEN FIRST.  Clearing wkActive while it is still running would be
+    undone: it sets wkActive and starts a reader nobody is waiting for. *)
+  if not WaitForFlagToClear(wkOpening, GetTickCount64 + WK_STOP_WAIT_MS) then
+     begin
+     logger.Error('[WinKey] stop: the open in progress did not finish within %d ms; ' +
+                  'the port is left as it is', [WK_STOP_WAIT_MS]);
+     Exit;
+     end;
+
+  wkActive := False;
+  if not WaitForFlagToClear(wkReaderRunning, GetTickCount64 + WK_STOP_WAIT_MS) then
+     begin
+     logger.Error('[WinKey] stop: the reader thread did not exit within %d ms; ' +
+                  'the port is left as it is', [WK_STOP_WAIT_MS]);
+     Exit;
+     end;
+
+  wkClose;
+  (* FREED, NOT ONLY CLOSED: the port name is fixed at Create, so a keyer moved
+    to another port would otherwise be reopened on the old one.  Safe because
+    no thread of ours can reach it now. *)
+  FreeAndNil(WinKeyPort);
+end;
+
+procedure wkStart;
+begin
+  (* NO STATION, NO PORT.  The headless /EXPORT never reaches startup's open,
+    but this is the one place every open passes, so it says so here too. *)
+  if tSilentExport or WarningsHaveNoOperator then
+     begin
+     Exit;
+     end;
+  if not WinKeySettings.wksWinKey2Enable then
+     begin
+     Exit;
+     end;
+  if wkOpening then
+     begin
+     logger.Warn('[WinKey] not opening: an open is already in progress');
+     Exit;
+     end;
+  if wkReaderRunning then
+     begin
+     logger.Error('[WinKey] not opening: the previous reader thread is still running');
+     Exit;
+     end;
+
+  wkOpening := True;
+  logger.Info('Calling tCreateThread from WinKeyer');
+  if not ThreadStarted(tCreateThread(wkOpenThreadProc, wkThreadID)) then
+     begin
+     wkOpening := False;
+     logger.Error('[WinKey] the open thread could not be started');
+     Exit;
+     end;
+  logger.Info('Created WinKeyer thread with threadid of %u',[PtrUInt(wkThreadID)] );
+end;
+
 function wkOpen: boolean;
 var
   versionByte : Byte;
@@ -470,22 +563,46 @@ begin
   // Nothing above needs the reader: the two synchronous wkRead calls (echo test
   // and HOST OPEN) both run earlier, and the GETPOT response simply waits in the
   // driver's receive buffer until the thread starts.
+  //
+  // wkActive IS SET HERE, BEFORE THE THREAD EXISTS, not by the reader as it
+  // starts: a wkStop landing between the create and the reader's first line
+  // would otherwise be undone by the reader itself, which then loops on with
+  // nobody waiting for it.  wkReaderRunning likewise, so wkStop can wait.
+  wkActive := True;
+  wkReaderRunning := True;
   logger.Info('Calling tCreateThread from WkOpen');
-  tCreateThread(wkReadThreadProc, wkThreadID);
+  if not ThreadStarted(tCreateThread(wkReadThreadProc, wkThreadID)) then
+     begin
+     wkReaderRunning := False;
+     wkActive := False;
+     logger.Error('[WinKey] the reader thread could not be started');
+     Exit;
+     end;
   logger.Info('Created WK thread with id %u',[PtrUInt(wkThreadId)]);
+  Result := True;
 end;
 
 (* wkOpen ON A WORKER THREAD (pointer audit P1, 2026-10-16). uProgramMain
   started wkOpen itself as the thread body, through the untyped thread start,
   although it is a parameterless register-convention function -- the shape
   that, on i386, made the trampoline write nil into the thread's SEH chain
-  head on exit. MainUnit also calls wkOpen directly, so it keeps its own
-  signature and this is the thread's entry. wkOpen's boolean was never read
-  by anything on this path. *)
+  head on exit. wkOpen keeps its own signature and this is the thread's
+  entry; wkStart is its only starter, and nothing calls wkOpen directly any
+  more (MainUnit's Alt-menu re-open did, on the main thread). wkOpen's boolean
+  is not read on this path.
+
+  wkOpening IS CLEARED IN THE FINALLY, whatever wkOpen did -- including
+  raising, which the tCreateThread trampoline logs. By then a successful open
+  has already raised wkReaderRunning, so wkStop never sees both down while a
+  reader is about to start. *)
 function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;
 begin
   Result := 0;
-  wkOpen;
+  try
+     wkOpen;
+  finally
+     wkOpening := False;
+  end;
 end;
 
 procedure wkSendAdminCommand(const aCommand: TwkAdminCommand);
@@ -802,7 +919,10 @@ var
   i                                     : integer;
 begin
   Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
-  wkActive := True;
+  (* wkActive is NOT set here any more: wkOpen sets it before creating this
+    thread, and wkStop's wait depends on that -- see the note there.  The
+    finally at the end clears wkReaderRunning as the thread leaves. *)
+  try
   wkDispayState;
   while wkActive = True do
   begin
@@ -912,6 +1032,9 @@ begin
         end;
 
     end;
+  end;
+  finally
+     wkReaderRunning := False;
   end;
 end;
 

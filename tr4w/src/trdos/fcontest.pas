@@ -119,6 +119,13 @@ function FoundContest(CMD: ShortString): boolean;
 function ContestSetUpStatesDomesticCountries(aContest: TContestBase;
                                              aSession: TSessionDefaults): boolean;
 
+(* WHERE THE COUNTRY FILE IS, as a path: the copy TR4W downloaded, then -- when
+  aUseContestDir -- a copy beside the contest, then the copy that shipped.
+  aSource names the tier that answered, for the log.  ONE definition for
+  SetUpFileNames and for the setup wizard, which runs before any contest is
+  chosen and so has no contest directory to offer (aUseContestDir False). *)
+function ResolveCountryFile(const aUseContestDir: boolean;
+                            out aSource: string): string;
 procedure SetUpFileNames;
 procedure RecalculateMyCountryContinentAndZone;
 procedure RecalculateMyCountryContinentAndZoneNew(Call: CallString);
@@ -149,6 +156,30 @@ uses
   LogStuff,
   MainUnit,
   LogSCP; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section.}
+
+function ResolveCountryFile(const aUseContestDir: boolean;
+                            out aSource: string): string;
+begin
+  (* THE TIER RULE AND ITS REASONS are written at the call in SetUpFileNames
+    (downloaded first, each tier accepted in either spelling of the name).
+    SysUtils.FileExists explicitly: the unqualified name resolves to a legacy
+    PAnsiChar-taking FileExists pulled in from the TRDOS units. *)
+  Result  := ExistingDataFile(DownloadedDataFilePath('CTY.DAT'));
+  aSource := 'downloaded';
+
+  if aUseContestDir and (not SysUtils.FileExists(Result)) then
+     begin
+     Result  := ExistingDataFile(CharBufferText(TR4W_LOG_PATH_NAME) + 'CTY.DAT');
+     aSource := 'contest directory';
+     end;
+
+  if not SysUtils.FileExists(Result) then
+     begin
+       // n4af issue  # 219  & 212
+     Result  := ExistingDataFile(CharBufferText(TR4W_PATH_NAME) + 'CTY.DAT');
+     aSource := 'shipped';
+     end;
+end;
 
 procedure SetUpFileNames;
 var
@@ -256,21 +287,7 @@ begin
 
     SysUtils.FileExists explicitly: the unqualified name resolves to a legacy
     PAnsiChar-taking FileExists pulled in from the TRDOS units. *)
-  candidate := ExistingDataFile(DownloadedDataFilePath('CTY.DAT'));
-  source    := 'downloaded';
-
-  if not SysUtils.FileExists(candidate) then
-     begin
-     candidate := ExistingDataFile(CharBufferText(TR4W_LOG_PATH_NAME) + 'CTY.DAT');
-     source    := 'contest directory';
-     end;
-
-  if not SysUtils.FileExists(candidate) then
-     begin
-       // n4af issue  # 219  & 212
-     candidate := ExistingDataFile(CharBufferText(TR4W_PATH_NAME) + 'CTY.DAT');
-     source    := 'shipped';
-     end;
+  candidate := ResolveCountryFile(True, source);
 
   SetCharBuffer(TR4W_CTY_FILENAME, candidate);
 

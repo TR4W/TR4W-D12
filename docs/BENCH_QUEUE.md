@@ -57,6 +57,39 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-14 -- A PROFILE APPLY OPENS, CLOSES AND MOVES THE WINKEYER (cw-keying)
+
+`uRadioConfigApply.ApplyProfile` never touched the WinKeyer: it opened only at
+startup and from the Alt menu re-open, so one added in the setup wizard or
+Preferences waited for a restart, and one moved to another port kept its old
+port and reader thread while CW silently fell back to the CPU keyer. Now
+`ApplyProfile` calls `uWinKey.wkStop` (waits for the open and the reader, then
+closes and frees the port) before the keyer settings are rewritten, and
+`wkStart` (open on a worker thread) after the radios reopen. Saving an edited
+keyer that an active slot uses now re-applies the profile. Unit-tested
+(`uTestRadioConfigStore.Test_AppliedSnapshotSeesAChangedKeyer` /
+`Test_ActiveSettingsChangedSeesAMovedWinKeyer`) and source-guarded
+(`uTestStatusAndNotice.Test_ApplyProfileStopsAndReopensTheWinKeyer`); the port
+itself has never been opened this way. Oracle: the gui-test case `wizard-keyer`
+on the VM, which has a live WinKeyer on COM3.
+
+- [ ] **Tools > Setup Wizard, add a WinKeyer on COM3, finish -- no restart.**
+      EXPECT: the WK panel shows `WK<n> v<n>` within a second or two, F1 keys
+      through the WinKeyer, and `tr4w.log` shows `Calling tCreateThread from
+      WinKeyer` after `[ApplyProfile] phase 3`.
+- [ ] **Preferences, the profile using that WinKeyer, Activate.** EXPECT: the
+      WinKeyer closes and reopens (the WK panel greys, then comes back) and
+      keys F1; no `[WinKey] stop:` Error in the log.
+- [ ] **Move it: edit the keyer from COM3 to another port, Save (not
+      Activate), with the keyer on the new port.** EXPECT: the log names the
+      keyer as changed and re-applies the profile; the WinKeyer opens on the
+      NEW port and keys. Move it back to COM3 and Save: it opens on COM3.
+- [ ] **Switch the profile's CW output from the WinKeyer to CAT, Activate.**
+      EXPECT: COM3 is released (another program can open it) and CW goes by CAT.
+- [ ] **Alt-menu WinKeyer re-open twice in quick succession.** EXPECT: it
+      reopens once; at most a `[WinKey] not opening: an open is already in
+      progress` warning, never two readers (keying and the speed pot still work).
+
 ## Added 2026-11-13 -- EACH QSO STORES THE LICENSE YEAR IT SENT (issue 300, log schema 8)
 
 Unit-tested (`uTestLogYearSent`, `uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent`,

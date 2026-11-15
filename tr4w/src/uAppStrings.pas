@@ -243,6 +243,23 @@ resourcestring
      in that case. *)
    SFileNotFoundThere = 'TR4W could not find this file:';
 
+   (* Added to that message when the file's FOLDER does not exist either. *)
+   SIncompleteInstallHint =
+      'The folder is missing too, so this copy of TR4W is probably not completely installed.' +
+      sLineBreak + sLineBreak +
+      'Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again.';
+
+   (* Shown once at startup when the program's own data folders look absent.
+     %0:s is the folder it looked in, %1:s the missing names, one per line. *)
+   SInstallIncompleteStartup =
+      'This copy of TR4W looks incompletely installed.' +
+      sLineBreak + sLineBreak +
+      'Not found in %0:s:' + sLineBreak + '%1:s' +
+      sLineBreak + sLineBreak +
+      'Start TR4W from the folder the installer put it in (it holds CTY.DAT, TRMASTER.DTA and a dom folder), or run the installer again.' +
+      sLineBreak + sLineBreak +
+      'TR4W will still start, but contests that need these files will not work properly.';
+
    (* WHICH SETTING BUILT THAT PATH. A wrong path with no attribution sends an
      operator looking at the disk when the answer is in the configuration --
      NY4I, Linux Mint, 2026-09-20. The single %s is the command name, e.g.
@@ -1291,6 +1308,11 @@ resourcestring
    SWizStationIntro      = 'Who you are and where you are. Only the callsign is required, and all of this can be changed later in Preferences > Station.';
    SWizDerivedNote       = 'CQ zone, ITU zone, country and continent are filled in from the callsign. Correct any that are wrong.';
    SWizNoCountry         = 'The country file does not know this callsign, so nothing was filled in from it.';
+   SWizCtyMissing        = 'There is no country file yet, so the zones and country cannot be filled in from the callsign.';
+   SWizCtyDownload       = 'Download country file';
+   SWizCtyDownloading    = 'Downloading the country file...';
+   SWizCtyDone           = 'The country file was downloaded.';
+   SWizCtyFailed         = 'The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it.';
    SWizCallsign          = 'Callsign:';
    SWizName              = 'First name:';
    SWizGrid              = 'Grid square:';
@@ -1301,7 +1323,8 @@ resourcestring
    SWizCountry           = 'Country:';
    SWizContinent         = 'Continent:';
    SWizPostal            = 'Postal code:';
-   SWizCallRequired      = 'Enter your callsign to continue.';
+   SWizCallbookFilled    = 'Some details were filled in from the callbook (hamdb.org). Please check them.';
+   SWizCallRequired      ='Enter your callsign to continue.';
    (* %s is the callsign as typed.  Queried, never refused: special-event and
      unusual calls are real (the Preferences Station page asks the same). *)
    SWizCallOdd           = '"%s" does not look like a regular callsign.'#13#10#13#10'Use it anyway?';
@@ -1316,18 +1339,20 @@ resourcestring
    SWizItemClusterHint   = 'DX spots in the band map.';
 
    SWizRadioHeading      = 'Radio';
-   SWizRadioIntro        = 'Choose your radio and how it is connected. This opens the same radio editor Preferences uses. TR4W connects to it when you create the configuration.';
-   SWizRadioButton       = 'Set up the radio...';
+   SWizRadioIntro        = 'Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration.';
+   (* The two CW choices on the radio page, offered only for a radio that can
+     do them.  Both end up in the station profile, as in Preferences > Hardware. *)
+   SWizRadioCWByCAT      = 'Send CW through the radio (CW by CAT)';
+   SWizRadioSpeedSync    = 'Keep the radio''s CW speed in step with TR4W';
    SWizKeyerHeading      = 'WinKeyer';
    SWizKeyerIntro        = 'Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio''s.';
-   SWizKeyerButton       = 'Set up the WinKeyer...';
-   SWizNotSetUp          = 'Not set up yet.';
-   SWizRadioNeeded       = 'Set up the radio, or go back and untick it.';
-   SWizKeyerNeeded       = 'Set up the WinKeyer, or go back and untick it.';
 
    SWizClusterHeading    = 'DX cluster';
-   SWizClusterIntro      = 'Pick a cluster from the list or type host:port. Leave the login blank to log in with your callsign.';
+   SWizClusterIntro      = 'Pick a cluster from the list, or type its host name or IP address and its port. Leave the login blank to log in with your callsign.';
    SWizClusterServer     = 'Server:';
+   SWizClusterServerHint = 'A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23.';
+   SWizClusterPort       = 'Port:';
+   SWizClusterPortBad    = 'The port must be a number from 1 to 65535, or blank.';
    SWizClusterLogin      = 'Login callsign:';
    SWizClusterPassword   = 'Password:';
    SWizClusterCommand    = 'After connecting:';
@@ -1339,17 +1364,43 @@ resourcestring
    SWizResStation        = 'Station %s saved.';
    (* %0:s is the setting's name, %1:s the value that was refused. *)
    SWizResRefused        = '%0:s "%1:s" was not accepted. Set it in Preferences > Station.';
-   (* %s is the radio's name. *)
-   SWizResRadio          = 'Radio "%s" saved as radio 1.';
+   (* %0:s is the radio type as the radio list names it, %1:s how it is
+     connected (SWizResOnPort or SWizResAtAddress), %2:s the radio's name. *)
+   SWizResRadio          = 'Radio 1: %0:s %1:s. Name: "%2:s".';
+   (* %s is a serial port, such as COM3, or a network address:port. *)
+   SWizResOnPort         = 'on %s';
+   SWizResAtAddress      = 'at %s';
+   SWizResNoPort         = 'with no port chosen yet';
+   SWizResCWByCAT        = 'CW is sent through the radio (CW by CAT).';
+   SWizResSpeedSync      = 'The radio''s CW speed follows the speed set in TR4W.';
    SWizResRadioFailed    = 'The radio was not saved: %s. Set it up in Preferences > Radios.';
-   (* %s is the keyer's name. *)
-   SWizResKeyer          = 'WinKeyer "%s" saved and used for CW on radio 1.';
+   (* %0:s is the keyer's name, %1:s its port. *)
+   SWizResKeyer          = 'WinKeyer "%0:s" on %1:s, used for CW on radio 1.';
    SWizResKeyerFailed    = 'The WinKeyer was not saved: %s. Set it up in Preferences.';
-   (* %s is the cluster's name. *)
-   SWizResCluster        = 'DX cluster "%s" saved as the cluster to connect to.';
+   (* %0:s is the cluster's name, %1:s its server and port, %2:s the login. *)
+   SWizResCluster        = 'DX cluster "%0:s": %1:s, logging in as %2:s.';
+   SWizResLoginAsStation = 'your station callsign';
+   SWizResShowDetails    = 'Show details';
+   (* The detail lines, each indented under the line above.  Never a password:
+     only whether one was set. *)
+   SWizDetSerial         = '   Serial: %0:s baud, %1:s, RTS %2:s, DTR %3:s';
+   SWizDetNetworkUser    = '   Network user: %s';
+   SWizDetNetworkPassword = '   Network password: set';
+   SWizDetPolling        = '   Frequency polling: %0:s, every %1:s ms';
+   SWizDetKeyerPort      = '   The radio''s keyer output port: %s';
+   SWizDetStartup        = '   Startup command: %s';
+   SWizDetKeyerMode      = '   Mode %0:s, sidetone %1:s';
+   SWizDetClusterCommand = '   After connecting: %s';
+   SWizDetClusterPassword = '   Password: set';
+   SWizDetOn             = 'on';
+   SWizDetOff            = 'off';
    SWizResClusterFailed  = 'The DX cluster was not saved. Set it up in Preferences > DX Cluster.';
+   (* %s is the station profile's name -- "Default" on a new install. *)
+   SWizResProfile        = 'The station profile "%s" now holds the hardware you set up. You can refine it in Preferences > Hardware.';
+   (* Asked before the New Contest window, on a brand-new install. *)
+   SWizStartupPrompt     = 'This looks like a new installation. Would you like to run the Setup Wizard first?';
    (* %s lists the ports that collide, one per line. *)
-   SWizResPortWarning    = 'Check these ports:'#13#10'%s';
+   SWizResPortWarning   = 'Check these ports:'#13#10'%s';
    (* %s is the reason. *)
    SWizResApplyFailed    = 'Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences.';
    SWizResNotSaved       = 'The radio, keyer and cluster were not saved: %s';

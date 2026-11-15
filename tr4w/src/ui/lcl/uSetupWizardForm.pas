@@ -31,7 +31,9 @@ unit uSetupWizardForm;
                 page's own path, so CheckCommand's hooks, bounds and the
                 multi-op broadcast all apply exactly as they do there
     radio/keyer edited in the EXISTING editors (TRadioEditForm,
-                TfrmKeyerEdit), on a draft the wizard holds
+                TfrmKeyerEdit), HOSTED as this window's own pages -- their
+                content panels moved in, never a second window -- on a copy
+                the wizard holds
     all three   put in the stores by uSetupWizard.StageSetupItems, then saved
                 and applied with SaveConfig, ApplyProfile and
                 ApplyActiveCluster -- what Preferences' Activate does
@@ -41,11 +43,12 @@ unit uSetupWizardForm;
   only then are the radio, keyer and cluster staged, validated, saved and put
   into use -- so a radio that will not open cannot cost the callsign.
 
-  MODELESS, like the two editors it opens and for their reason: ShowModal runs
+  MODELESS from Tools -> Setup Wizard, for the editors' reason: ShowModal runs
   a second message loop, and TR4W's CW timing and radio servicing would stop
   for as long as the wizard was up.  Owned by the main window so it stays in
   front of it.  One at a time (gSetupWizard), freed on close, so every opening
-  starts from what is on disk. *)
+  starts from what is on disk.  The STARTUP run is modal instead (see
+  RunSetupWizardAtStartup): nothing is being serviced yet. *)
 
 interface
 
@@ -63,6 +66,7 @@ uses
    uKeyerConfigStore,
    uRadioEditForm,
    uKeyerEditForm,
+   uCallbookBase,       // TCallbookRecord
    uSetupWizard;
 
 type
@@ -109,6 +113,8 @@ type
       cbxContinent: TComboBox;
       lblContinent: TInputCaption;
       lblLookup: TLabel;
+      lblCtyStatus: TLabel;
+      btnCtyDownload: TButton;
       lblDerived: TLabel;
 
       tsChecklist: TTabSheet;
@@ -119,17 +125,22 @@ type
       chkCluster: TCheckBox;
       lblClusterHint: TLabel;
 
+      (* The Radio and WinKeyer sheets are empty in the designer: each is the
+        host of the existing editor's panel (EditRadioIn / EditKeyerIn), so the
+        editor is a page of THIS window and not a second one. *)
       tsRadio: TTabSheet;
-      btnRadio: TButton;
-      lblRadioSummary: TLabel;
-
       tsKeyer: TTabSheet;
-      btnKeyer: TButton;
-      lblKeyerSummary: TLabel;
+      (* The wizard's own two choices under the hosted radio editor, shown only
+        for a radio that can do them -- see UpdateCWChoices. *)
+      chkCWByCAT: TCheckBox;
+      chkSpeedSync: TCheckBox;
 
       tsCluster: TTabSheet;
       cbxServer: TComboBox;
       lblServer: TInputCaption;
+      edtPort: TEdit;
+      lblPort: TInputCaption;
+      lblServerHint: TLabel;
       edtLogin: TEdit;
       lblLogin: TInputCaption;
       edtPassword: TEdit;
@@ -139,6 +150,7 @@ type
 
       tsResult: TTabSheet;
       memResult: TMemo;
+      chkDetails: TCheckBox;
 
       pnlButtons: TPanel;
       btnBack: TButton;
@@ -148,15 +160,19 @@ type
 
       procedure HandleShow(Sender: TObject);
       procedure HandleClose(Sender: TObject; var Action: TCloseAction);
+      procedure HandleCloseQuery(Sender: TObject; var CanClose: boolean);
+      procedure btnCtyDownloadClick(Sender: TObject);
       procedure btnBackClick(Sender: TObject);
       procedure btnNextClick(Sender: TObject);
       procedure btnCancelClick(Sender: TObject);
-      procedure btnRadioClick(Sender: TObject);
-      procedure btnKeyerClick(Sender: TObject);
       procedure edtCallChange(Sender: TObject);
       procedure DerivedFieldChange(Sender: TObject);
       procedure ChecklistChange(Sender: TObject);
       procedure tmrLookupTimer(Sender: TObject);
+      procedure GridExit(Sender: TObject);
+      procedure ServerExit(Sender: TObject);
+      procedure ServerSelect(Sender: TObject);
+      procedure DetailsChange(Sender: TObject);
    private
       FFields: TObjectList<TWizStationField>;
       FContinentLoaded: string;
@@ -172,16 +188,47 @@ type
       FConfirmedCall: string;
       FClusterListLoaded: boolean;
 
-      (* A draft is what an editor accepted; the editing copy is what an open
-        editor is working on.  nil until set up.  Unticking frees the draft. *)
+      (* A draft is what an editor accepted when Next was pressed on its page;
+        the editing copy is what the editor's controls write into.  Both nil
+        until the page is first reached.  Unticking frees all three, editor
+        included, so a re-ticked item starts blank. *)
       FRadioDraft: TRadioDefinition;
       FRadioEditing: TRadioDefinition;
       FRadioEditor: TRadioEditForm;
       FKeyerDraft: TKeyerDefinition;
       FKeyerEditing: TKeyerDefinition;
       FKeyerEditor: TfrmKeyerEdit;
-      FEditorOpen: boolean;
+      (* The client height the designer gave the window; pages that host an
+        editor are taller and the others return to this. *)
+      FBaseClientHeight: integer;
+      (* RUN FROM STARTUP, BEFORE THE NEW CONTEST WINDOW (ShowSetupWizardAtStartup).
+        Nothing exists yet to put a radio or a cluster into use on, and startup
+        applies the saved active profile and cluster itself a little later --
+        so this run saves and leaves it there.  See Commit. *)
+      FStartupMode: boolean;
+      (* The country file is being fetched on its own thread, and its done-event
+        is a method of this form -- so the form must not be freed under it. *)
+      FDownloading: boolean;
+      (* The result page's two texts: the brief report, and the same with the
+        detail lines added, which "Show details" switches to. *)
+      FReportBrief: string;
+      FReportDetails: string;
+      (* The callsign the callbook was last asked about, so a settled call is
+        asked once. *)
+      FCallbookCall: string;
 
+      procedure ShowCountryFileState;
+      procedure ShowEditorPage(const aPage: TSetupPage);
+      procedure FitWindowTo(const aHosted: integer);
+      procedure UpdateCWChoices;
+      procedure RadioTypeChanged(Sender: TObject);
+      procedure ShowResult;
+      function ClusterServerText: string;
+      procedure StartCallbookLookup;
+      procedure DropRadioEditor;
+      procedure DropKeyerEditor;
+      function AcceptEditorPage(const aPage: TSetupPage): boolean;
+      procedure CountryFileDownloaded(Sender: TObject; aSucceeded: boolean);
       procedure AddField(const aCommand: string; const aEdit: TEdit;
                          const aDerivable: boolean);
       function FieldForEdit(const aEdit: TObject): TWizStationField;
@@ -193,24 +240,39 @@ type
       function SheetFor(const aPage: TSetupPage): TTabSheet;
       procedure ShowCurrentPage;
       procedure UpdateButtons;
-      procedure RefreshSummaries;
-      procedure SetEditorOpen(const aOpen: boolean);
       function PageIsComplete(const aPage: TSetupPage): boolean;
       function PortsAcceptable: boolean;
-      procedure RadioEditorDone(const aAccepted: boolean);
-      procedure KeyerEditorDone(const aAccepted: boolean);
       procedure CommitStation(const aStore: TRadioConfigStore;
                               var aReport: string);
       procedure Commit;
+      procedure SplitPickedServer(aData: PtrInt);
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
+      (* A callbook reply, on the main thread.  Fills ONLY the boxes that are
+        still empty, and says so. *)
+      procedure ApplyCallbook(const aRec: TCallbookRecord);
    end;
 
 (* Open the wizard, or bring the open one forward.  Refuses, with a message,
   while Preferences is on screen: both edit the same libraries from their own
   copies, and the second to save would undo the first. *)
 procedure ShowSetupWizard;
+
+(* THE FIRST-RUN OFFER, before the New Contest window, in two steps so startup
+  can do its own work between them: AskSetupWizardAtStartup puts the question
+  (True on Yes), then startup makes sure a country file is loaded -- the
+  callsign lookup needs it, and only startup knows how to fetch one -- and
+  RunSetupWizardAtStartup runs the wizard MODALLY and returns when it is
+  closed.  Modal is right here and wrong for ShowSetupWizard: no radio is being
+  serviced and no CW is being timed yet, so a second message loop stops
+  nothing, and the New Contest window that follows must not open over it.
+
+  Nothing is put into use: the radio, keyer and cluster are SAVED, and the
+  startup that follows applies the saved active profile and cluster as it does
+  on every start.  The callsign it saves is what New Contest then offers. *)
+function AskSetupWizardAtStartup: boolean;
+procedure RunSetupWizardAtStartup;
 
 implementation
 
@@ -223,15 +285,47 @@ uses
    uctydat,             // ctyGetCountryID, ctyGetZone, ctyGetITUZone, ctyGetContinent
    uCallSignRoutines,   // IsAGoodCall
    uTR4WConfigFile,     // LoadConfig, SaveConfig
+   uRadioRegistry,      // SupportsForId -- which radios can do CW by CAT
    uRadioConfigApply,   // ApplyAndStoreCommand, StationCommandValue, ApplyProfile ...
    uPrefsForm,          // PreferencesIsShowing, LoadClusterDirectory ...
    uLCLFormHelpers,     // OwnFormByMainWindow
    uAppStrings,
+   uAppPaths,           // DownloadedDataFilePath
+   uCTYUpdate,          // DownloadCTYAsync, LoadCountryFileFrom
+   uCallbookFactory,    // LookupCallsignAsync
+   LCLIntf,             // GetWindowRect -- the LCL's own, not the Windows unit's
    utils_text,          // LclText -- a UTF-16 string onto an LCL property
    MainUnit;            // logger
 
+const
+   (* The row of CW choices under a hosted radio editor, with its gap. *)
+   CW_ROW_HEIGHT = 28;
+
+type
+   (* THE CALLBOOK'S REPLY ARRIVES ON ITS OWN SCHEDULE, possibly after the
+     wizard is gone, and the lookup thread holds a method pointer it cannot be
+     told to drop.  So the pointer is to THIS object, which lives as long as the
+     unit, and the wizard that is open (if any) is looked up when the reply
+     comes. *)
+   TCallbookRelay = class(TObject)
+   public
+      procedure Deliver(const aRec: TCallbookRecord);
+   end;
+
 var
    gSetupWizard: TfrmSetupWizard = nil;
+   (* The wizard a callbook reply goes to: set by its constructor, cleared by
+     its destructor -- not gSetupWizard, which a modal startup run never sets. *)
+   gCallbookTarget: TfrmSetupWizard = nil;
+   gCallbookRelay: TCallbookRelay = nil;
+
+procedure TCallbookRelay.Deliver(const aRec: TCallbookRecord);
+begin
+   if gCallbookTarget <> nil then
+      begin
+      gCallbookTarget.ApplyCallbook(aRec);
+      end;
+end;
 
 procedure ShowSetupWizard;
 begin
@@ -253,6 +347,30 @@ begin
    gSetupWizard.BringToFront;
 end;
 
+function AskSetupWizardAtStartup: boolean;
+begin
+   (* Yes/No with the stock button captions, which the LCL localises.  YES is
+     the default -- the marker applies to the button before it: this question
+     is only ever asked of a station with no callsign, and Enter on it should
+     start the guided setup that issue 81 asked for. *)
+   Result := QuestionDlg('TR4W', LclText(SWizStartupPrompt),
+                         TMsgDlgType.mtConfirmation,
+                         [mrYes, 'IsDefault', mrNo], 0) = mrYes;
+end;
+
+procedure RunSetupWizardAtStartup;
+var
+   wizard: TfrmSetupWizard;
+begin
+   wizard := TfrmSetupWizard.Create(nil);
+   try
+      wizard.FStartupMode := True;
+      wizard.ShowModal;
+   finally
+      wizard.Free;
+   end;
+end;
+
 { TfrmSetupWizard }
 
 constructor TfrmSetupWizard.Create(AOwner: TComponent);
@@ -260,6 +378,7 @@ var
    c: ContinentType;
 begin
    inherited Create(AOwner);
+   gCallbookTarget := Self;
    FFields := TObjectList<TWizStationField>.Create(True);
 
    (* THE CALLSIGN FIRST: it is applied first, and its hook derives what the
@@ -287,8 +406,10 @@ begin
       cbxContinent.Items.EndUpdate;
    end;
 
+   FBaseClientHeight := ClientHeight;
    AssignCaptions;
    LoadStation;
+   ShowCountryFileState;
 
    FPlan := SetupPagePlan([]);
    FIndex := 0;
@@ -297,18 +418,22 @@ end;
 
 destructor TfrmSetupWizard.Destroy;
 begin
-   (* The editors first: they hold the editing copies freed below. *)
-   FreeAndNil(FRadioEditor);
-   FreeAndNil(FKeyerEditor);
-   FreeAndNil(FRadioEditing);
+   (* The editors first: they hold the editing copies freed with them. *)
+   DropRadioEditor;
+   DropKeyerEditor;
    FreeAndNil(FRadioDraft);
-   FreeAndNil(FKeyerEditing);
    FreeAndNil(FKeyerDraft);
    FreeAndNil(FFields);
    if gSetupWizard = Self then
       begin
       gSetupWizard := nil;
       end;
+   if gCallbookTarget = Self then
+      begin
+      gCallbookTarget := nil;
+      end;
+   (* A queued split must not find this form gone. *)
+   Application.RemoveAsyncCalls(Self);
    inherited Destroy;
 end;
 
@@ -355,7 +480,15 @@ begin
    lblCountry.Caption     := SWizCountry;
    lblContinent.Caption   := SWizContinent;
    lblDerived.Caption     := SWizDerivedNote;
+   chkCWByCAT.Caption     := SWizRadioCWByCAT;
+   chkSpeedSync.Caption   := SWizRadioSpeedSync;
+   chkDetails.Caption     := SWizResShowDetails;
+   lblPort.Caption        := SWizClusterPort;
+   lblServerHint.Caption  := SWizClusterServerHint;
+   edtPort.TextHint       := '23';
    lblLookup.Caption      := '';
+   btnCtyDownload.Caption := SWizCtyDownload;
+   lblCtyStatus.Caption   := '';
 
    chkRadio.Caption       := SWizItemRadio;
    lblRadioHint.Caption   := SWizItemRadioHint;
@@ -363,9 +496,6 @@ begin
    lblKeyerHint.Caption   := SWizItemKeyerHint;
    chkCluster.Caption     := SWizItemCluster;
    lblClusterHint.Caption := SWizItemClusterHint;
-
-   btnRadio.Caption       := SWizRadioButton;
-   btnKeyer.Caption       := SWizKeyerButton;
 
    lblServer.Caption      := SWizClusterServer;
    lblLogin.Caption       := SWizClusterLogin;
@@ -402,7 +532,19 @@ begin
       for f in FFields do
          begin
          f.Loaded := Trim(StationCommandValue(readFrom, f.Command));
-         f.Edit.Text := LclText(f.Loaded);
+         (* A zone that has never been set reads "0": a number, but one that
+           means "nothing yet", and a new operator would read it as an answer.
+           Shown BLANK.  f.Loaded keeps the real value, so the comparison at
+           commit is unchanged, and a derived field that is blank is still
+           derived from the callsign. *)
+         if f.Derivable and (f.Loaded = '0') then
+            begin
+            f.Edit.Text := '';
+            end
+         else
+            begin
+            f.Edit.Text := LclText(f.Loaded);
+            end;
          end;
 
       FContinentLoaded := UpperCase(Trim(StationCommandValue(readFrom, 'MY CONTINENT')));
@@ -437,7 +579,11 @@ end;
 function TfrmSetupWizard.DerivedValue(const aCommand, aCall: string): string;
 begin
    Result := '';
-   if (Length(aCall) < 3) or (ctyGetCountryID(aCall) = '') then
+   (* NO TABLE, NO QUESTION: with no country file loaded ctyFindCallsign throws
+     (and logs) on every call it is asked.  Seen 2026-11-14 on a first run from
+     an empty directory -- the wizard asked before any file had been found. *)
+   if (Length(aCall) < 3) or (ctyGetTotalCountries = 0) or
+      (ctyGetCountryID(aCall) = '') then
       begin
       Exit;
       end;
@@ -473,6 +619,13 @@ begin
    call := Trim(edtCall.Text);
    lblLookup.Caption := '';
    if Length(call) < 3 then
+      begin
+      Exit;
+      end;
+
+   (* NO FILE IS NOT "UNKNOWN CALL": the country-file line beside it already
+     says there is none. *)
+   if ctyGetTotalCountries = 0 then
       begin
       Exit;
       end;
@@ -524,6 +677,86 @@ procedure TfrmSetupWizard.tmrLookupTimer(Sender: TObject);
 begin
    tmrLookup.Enabled := False;
    RunLookup;
+   StartCallbookLookup;
+end;
+
+(* ASK THE CALLBOOK ONCE the callsign has settled -- the debounce above -- and
+  only while there is something it could fill.  Only the callsign leaves the
+  machine.  A reply that is late, empty or never comes changes nothing. *)
+procedure TfrmSetupWizard.StartCallbookLookup;
+var
+   call: string;
+begin
+   call := Trim(edtCall.Text);
+   if (Length(call) < 3) or (not IsAGoodCall(call)) or (call = FCallbookCall) then
+      begin
+      Exit;
+      end;
+   if (Trim(edtName.Text) <> '') and (Trim(edtGrid.Text) <> '') and
+      (Trim(edtState.Text) <> '') and (Trim(edtPostal.Text) <> '') then
+      begin
+      Exit;
+      end;
+
+   FCallbookCall := call;
+   if gCallbookRelay = nil then
+      begin
+      gCallbookRelay := TCallbookRelay.Create;
+      end;
+   LookupCallsignAsync(call, gCallbookRelay.Deliver);
+end;
+
+(* "THOMAS" -> "Thomas": a callbook holds names in capitals. *)
+function TitleCaseName(const aName: string): string;
+begin
+   Result := Trim(aName);
+   if Result <> '' then
+      begin
+      Result := UpperCase(Copy(Result, 1, 1)) + LowerCase(Copy(Result, 2, MaxInt));
+      end;
+end;
+
+procedure TfrmSetupWizard.ApplyCallbook(const aRec: TCallbookRecord);
+var
+   filled: boolean;
+begin
+   (* STALE: the operator has typed a different call since the question. *)
+   if (not aRec.Found) or (not UnicodeSameText(aRec.Call, Trim(edtCall.Text))) then
+      begin
+      Exit;
+      end;
+
+   filled := False;
+   FFilling := True;
+   try
+      if (Trim(edtName.Text) = '') and (aRec.FirstName <> '') then
+         begin
+         edtName.Text := LclText(TitleCaseName(aRec.FirstName));
+         filled := True;
+         end;
+      if (Trim(edtGrid.Text) = '') and (aRec.Grid <> '') then
+         begin
+         edtGrid.Text := LclText(NormalizeGridSquare(aRec.Grid));
+         filled := True;
+         end;
+      if (Trim(edtState.Text) = '') and (aRec.State <> '') then
+         begin
+         edtState.Text := LclText(UpperCase(aRec.State));
+         filled := True;
+         end;
+      if (Trim(edtPostal.Text) = '') and (aRec.Zip <> '') then
+         begin
+         edtPostal.Text := LclText(UpperCase(aRec.Zip));
+         filled := True;
+         end;
+   finally
+      FFilling := False;
+   end;
+
+   if filled then
+      begin
+      lblLookup.Caption := LclText(lblLookup.Caption + sLineBreak + SWizCallbookFilled);
+      end;
 end;
 
 (* THE OPERATOR TYPED IN A DERIVED FIELD: from now on it is theirs, and a
@@ -546,6 +779,57 @@ begin
       begin
       f.OperatorOwned := True;
       end;
+end;
+
+(* THE LOCATOR IN ITS STANDARD CASE when the operator leaves the box: EL88pa,
+  not EL88PA.  The box takes what is typed, so a four-character locator and a
+  six-character one are both written the way the standard writes them. *)
+procedure TfrmSetupWizard.GridExit(Sender: TObject);
+begin
+   edtGrid.Text := LclText(NormalizeGridSquare(edtGrid.Text));
+end;
+
+(* ONE SERVER, TWO BOXES.  A cluster picked from the list, or a host:port
+  pasted into the server box, is split so the host and the port each sit in
+  their own box; the store keeps the one 'host:port' spelling. *)
+procedure TfrmSetupWizard.ServerExit(Sender: TObject);
+var
+   host, port: string;
+begin
+   SplitClusterServer(cbxServer.Text, host, port);
+   cbxServer.Text := LclText(host);
+   if port <> '' then
+      begin
+      edtPort.Text := LclText(port);
+      end;
+end;
+
+(* SPLIT AFTER THE SELECTION HAS FINISHED.  Writing the combo's Text from inside
+  its own OnSelect left the Server box empty with no item selected (seen at
+  1280x800, 2026-11-15): the widget sets its text from the chosen item after the
+  event returns.  Queued, the split runs once it is done. *)
+procedure TfrmSetupWizard.ServerSelect(Sender: TObject);
+begin
+   Application.QueueAsyncCall(SplitPickedServer, 0);
+end;
+
+procedure TfrmSetupWizard.SplitPickedServer(aData: PtrInt);
+begin
+   (* A list entry replaces the port, which belongs to the cluster picked. *)
+   edtPort.Text := '';
+   ServerExit(nil);
+end;
+
+function TfrmSetupWizard.ClusterServerText: string;
+var
+   host, port: string;
+begin
+   SplitClusterServer(cbxServer.Text, host, port);
+   if Trim(edtPort.Text) <> '' then
+      begin
+      port := Trim(edtPort.Text);
+      end;
+   Result := JoinClusterServer(host, port);
 end;
 
 function TfrmSetupWizard.TickedItems: TSetupItems;
@@ -576,15 +860,18 @@ begin
       end;
    if not chkRadio.Checked then
       begin
+      DropRadioEditor;
       FreeAndNil(FRadioDraft);
       end;
    if not chkKeyer.Checked then
       begin
+      DropKeyerEditor;
       FreeAndNil(FKeyerDraft);
       end;
    if not chkCluster.Checked then
       begin
       cbxServer.Text      := '';
+      edtPort.Text        := '';
       edtLogin.Text       := '';
       edtPassword.Text    := '';
       edtCommand.Text     := '';
@@ -676,8 +963,8 @@ begin
 
    lblHeading.Caption := heading;
    lblIntro.Caption   := intro;
+   ShowEditorPage(page);
    pgPages.ActivePage := SheetFor(page);
-   RefreshSummaries;
    UpdateButtons;
 end;
 
@@ -704,9 +991,9 @@ begin
       Exit;
       end;
 
-   btnBack.Enabled := (FIndex > 0) and (not FEditorOpen);
-   btnNext.Enabled := not FEditorOpen;
-   btnCancel.Enabled := not FEditorOpen;
+   btnBack.Enabled := (FIndex > 0) and (not FDownloading);
+   btnNext.Enabled := not FDownloading;
+   btnCancel.Enabled := not FDownloading;
    if IsCommitPage(FPlan, FIndex) then
       begin
       btnNext.Caption := SWizCreate;
@@ -717,35 +1004,192 @@ begin
       end;
 end;
 
-procedure TfrmSetupWizard.RefreshSummaries;
-begin
-   if FRadioDraft <> nil then
-      begin
-      lblRadioSummary.Caption := LclText(FRadioDraft.DisplaySummary);
-      end
-   else
-      begin
-      lblRadioSummary.Caption := SWizNotSetUp;
-      end;
+(* THE RADIO AND WINKEYER PAGES ARE THE EXISTING EDITORS, hosted in this
+  window (NY4I, 2026-11-14: a wizard steps you through things in ONE window --
+  the editor used to open as a second one, behind the wizard on the desktop).
 
-   if FKeyerDraft <> nil then
+  An editor is made when its page is first reached and kept while the item stays
+  ticked, so Back and Next keep what was typed.  The window grows to fit a hosted
+  editor and returns to its designed size on every other page.  What the editor
+  holds becomes the draft only when Next is pressed on its page
+  (AcceptEditorPage), which is also where its own validation speaks. *)
+procedure TfrmSetupWizard.ShowEditorPage(const aPage: TSetupPage);
+var
+   hosted: integer;
+begin
+   hosted := 0;
+   case aPage of
+      spRadio:
+         begin
+         if FRadioEditor = nil then
+            begin
+            FRadioEditor := TRadioEditForm.Create(Self);
+            FRadioEditing := TRadioDefinition.Create;
+            FRadioEditing.Name := 'Radio';
+            FRadioEditor.OnTypeChanged := RadioTypeChanged;
+            FRadioEditor.EditRadioIn(FRadioEditing, tsRadio);
+            end;
+         UpdateCWChoices;
+         hosted := FRadioEditor.pnlContent.Height;
+         if chkCWByCAT.Visible or chkSpeedSync.Visible then
+            begin
+            hosted := hosted + CW_ROW_HEIGHT;
+            end;
+         end;
+      spKeyer:
+         begin
+         if FKeyerEditor = nil then
+            begin
+            FKeyerEditor := TfrmKeyerEdit.Create(Self);
+            FKeyerEditing := TKeyerDefinition.Create;   // a WinKeyer, no port yet
+            FKeyerEditing.Name := 'WinKeyer';
+            FKeyerEditor.EditKeyerIn(FKeyerEditing, tsKeyer);
+            end;
+         hosted := FKeyerEditor.pnlContent.Height;
+         end;
+   end;
+
+   FitWindowTo(hosted);
+end;
+
+(* CW BY CAT AND SPEED SYNC, offered only for a radio that can do them -- the
+  same two questions Preferences > Hardware asks (SupportsForId, by registry
+  id, so a radio with no enum member such as TCI is answered too).  They sit
+  in a row under the hosted editor.  A WinKeyer ticked on the checklist makes
+  CW by CAT moot -- a slot has one CW output and the keyer wins -- so the box
+  is disabled while that is ticked. *)
+procedure TfrmSetupWizard.UpdateCWChoices;
+var
+   id: string;
+   canCAT, canSync: boolean;
+begin
+   id := '';
+   if FRadioEditor <> nil then
       begin
-      lblKeyerSummary.Caption := LclText(FKeyerDraft.DisplaySummary);
-      end
-   else
+      id := FRadioEditor.SelectedRegistryId;
+      end;
+   canCAT  := (id <> '') and SupportsForId(id, rcCWByCAT);
+   canSync := (id <> '') and SupportsForId(id, rcCWSpeedSync);
+
+   if not canCAT then
       begin
-      lblKeyerSummary.Caption := SWizNotSetUp;
+      chkCWByCAT.Checked := False;
+      end;
+   if not canSync then
+      begin
+      chkSpeedSync.Checked := False;
+      end;
+   chkCWByCAT.Visible   := canCAT;
+   chkSpeedSync.Visible := canSync;
+   chkCWByCAT.Enabled   := not chkKeyer.Checked;
+
+   if FRadioEditor <> nil then
+      begin
+      (* chkSpeedSync is anchored to chkCWByCAT, so it follows. *)
+      chkCWByCAT.Top := FRadioEditor.pnlContent.Top + FRadioEditor.pnlContent.Height + 4;
       end;
 end;
 
-(* WHILE AN EDITOR IS OPEN THE WIZARD WAITS: moving on would leave the editor
-  writing into a draft whose page is gone. *)
-procedure TfrmSetupWizard.SetEditorOpen(const aOpen: boolean);
+(* The radio type was changed in the hosted editor: the choices and the window
+  height follow it. *)
+procedure TfrmSetupWizard.RadioTypeChanged(Sender: TObject);
 begin
-   FEditorOpen := aOpen;
-   btnRadio.Enabled := not aOpen;
-   btnKeyer.Enabled := not aOpen;
-   UpdateButtons;
+   if (FPlan <> nil) and (FPlan[FIndex] = spRadio) then
+      begin
+      ShowEditorPage(spRadio);
+      end;
+end;
+
+(* Size the window to the header, the hosted editor (and anything under it),
+  the buttons and a little air. *)
+procedure TfrmSetupWizard.FitWindowTo(const aHosted: integer);
+const
+   SLACK = 8;
+var
+   needed: integer;
+   work, outer: TRect;
+begin
+   needed := pnlHeader.Height + aHosted + pnlButtons.Height + SLACK;
+   if needed < FBaseClientHeight then
+      begin
+      needed := FBaseClientHeight;
+      end;
+   ClientHeight := needed;
+
+   (* GROWN DOWNWARDS, so a window placed for its normal height ends with its
+     Back and Next under the taskbar (seen at 1280x800, 2026-11-14).  Pull it
+     up until its bottom is inside the work area, but never above the top. *)
+   work := Monitor.WorkareaRect;
+   (* THE WINDOW'S OUTER RECTANGLE, title bar and frame included: Top + Height
+     leaves out ~30 px of decoration, which is exactly how far Back and Next
+     stayed under the taskbar (measured 2026-11-15).  Not available before the
+     window has a handle, and the designed size always fits. *)
+   if HandleAllocated then
+      begin
+      LCLIntf.GetWindowRect(Handle, outer);
+      if outer.Bottom > work.Bottom then
+         begin
+         Top := Top - (outer.Bottom - work.Bottom);
+         end;
+      end
+   else if Top + Height > work.Bottom then
+      begin
+      Top := work.Bottom - Height;
+      end;
+   if Top < work.Top then
+      begin
+      Top := work.Top;
+      end;
+end;
+
+(* Editor first, then the copy it writes into -- it holds a pointer to it. *)
+procedure TfrmSetupWizard.DropRadioEditor;
+begin
+   FreeAndNil(FRadioEditor);
+   FreeAndNil(FRadioEditing);
+   (* A re-ticked radio starts blank, and its CW choices with it. *)
+   chkCWByCAT.Checked   := False;
+   chkSpeedSync.Checked := False;
+   chkCWByCAT.Visible   := False;
+   chkSpeedSync.Visible := False;
+end;
+
+procedure TfrmSetupWizard.DropKeyerEditor;
+begin
+   FreeAndNil(FKeyerEditor);
+   FreeAndNil(FKeyerEditing);
+end;
+
+(* NEXT ON AN EDITOR PAGE: the editor validates and writes into its editing
+  copy, and the draft becomes a copy of that.  False leaves the operator on the
+  page, the editor having said why. *)
+function TfrmSetupWizard.AcceptEditorPage(const aPage: TSetupPage): boolean;
+begin
+   Result := False;
+   if (aPage = spRadio) and (FRadioEditor <> nil) then
+      begin
+      Result := FRadioEditor.AcceptEdits;
+      if Result then
+         begin
+         (* The editor has no CW fields; the draft carries the two choices in
+           the radio's own CW flags, and StageSetupItems moves them to the
+           profile.  A box that is hidden or disabled counts as unticked. *)
+         FRadioEditing.CWByCAT     := chkCWByCAT.Visible and chkCWByCAT.Enabled and
+                                      chkCWByCAT.Checked;
+         FRadioEditing.CWSpeedSync := chkSpeedSync.Visible and chkSpeedSync.Checked;
+         FreeAndNil(FRadioDraft);
+         FRadioDraft := FRadioEditing.Clone;
+         end;
+      end
+   else if (aPage = spKeyer) and (FKeyerEditor <> nil) then
+      begin
+      Result := FKeyerEditor.AcceptEdits;
+      if Result then
+         begin
+         FreeAndNil(FKeyerDraft);
+         FKeyerDraft := FKeyerEditing.Clone;
+         end;
+      end;
 end;
 
 (* CAN THE OPERATOR LEAVE THIS PAGE FORWARDS?  Says why not, once. *)
@@ -780,28 +1224,23 @@ begin
             FConfirmedCall := call;
             end;
          end;
-      spRadio:
+      spRadio, spKeyer:
          begin
-         if FRadioDraft = nil then
-            begin
-            ShowMessage(SWizRadioNeeded);
-            Result := False;
-            end;
-         end;
-      spKeyer:
-         begin
-         if FKeyerDraft = nil then
-            begin
-            ShowMessage(SWizKeyerNeeded);
-            Result := False;
-            end;
+         Result := AcceptEditorPage(aPage);
          end;
       spCluster:
          begin
+         ServerExit(nil);
          if Trim(cbxServer.Text) = '' then
             begin
             ShowMessage(SWizClusterNeeded);
             cbxServer.SetFocus;
+            Result := False;
+            end
+         else if not IsValidClusterPort(edtPort.Text) then
+            begin
+            ShowMessage(SWizClusterPortBad);
+            edtPort.SetFocus;
             Result := False;
             end;
          end;
@@ -810,7 +1249,7 @@ end;
 
 procedure TfrmSetupWizard.btnNextClick(Sender: TObject);
 begin
-   if FEditorOpen then
+   if FDownloading then
       begin
       Exit;
       end;
@@ -847,7 +1286,7 @@ end;
 
 procedure TfrmSetupWizard.btnBackClick(Sender: TObject);
 begin
-   if (FIndex > 0) and (not FEditorOpen) then
+   if (FIndex > 0) and (not FDownloading) then
       begin
       Dec(FIndex);
       ShowCurrentPage;
@@ -869,90 +1308,83 @@ end;
 
 procedure TfrmSetupWizard.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
-   (* NOT WHILE AN EDITOR IS OPEN: it is working on a copy this form owns. *)
-   if FEditorOpen then
+   (* Freed, not hidden: the next opening starts from what is on disk.
+     Cancel before "Create configuration" has written nothing.
+
+     A MODAL run is freed by the routine that showed it, once ShowModal has
+     returned -- freeing a form from inside its own modal loop is the one
+     order that can fault. *)
+   if FStartupMode then
       begin
-      Action := caNone;
+      Action := caHide;
+      end
+   else
+      begin
+      Action := caFree;
+      end;
+end;
+
+(* NO CLOSING MID-DOWNLOAD: the download's done-event is a method of this form.
+  CloseQuery is also what resets a modal run's ModalResult, so the window's own
+  X cannot end a startup run from under it. *)
+procedure TfrmSetupWizard.HandleCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+   CanClose := not FDownloading;
+end;
+
+{ ------------------------------------------------------------- country file ---- }
+
+(* THE STATION PAGE SAYS WHETHER THERE IS A COUNTRY FILE, and offers the
+  download beside the callsign that needs it -- in the wizard's own window
+  rather than a question from outside it (NY4I, 2026-11-14). *)
+procedure TfrmSetupWizard.ShowCountryFileState;
+var
+   missing: boolean;
+begin
+   missing := ctyGetTotalCountries = 0;
+   lblCtyStatus.Visible := missing;
+   btnCtyDownload.Visible := missing;
+   btnCtyDownload.Enabled := missing and (not FDownloading);
+   if missing and (not FDownloading) then
+      begin
+      lblCtyStatus.Caption := SWizCtyMissing;
+      end;
+end;
+
+procedure TfrmSetupWizard.btnCtyDownloadClick(Sender: TObject);
+begin
+   if FDownloading then
+      begin
       Exit;
       end;
-   (* Freed, not hidden: the next opening starts from what is on disk.
-     Cancel before "Create configuration" has written nothing. *)
-   Action := caFree;
+   FDownloading := True;
+   lblCtyStatus.Caption := SWizCtyDownloading;
+   btnCtyDownload.Enabled := False;
+   UpdateButtons;
+   (* WHERE DOWNLOADED DATA BELONGS, never the shipped copy -- the rule
+     EnsureCountryFile and the menu item follow. *)
+   DownloadCTYAsync(DownloadedDataFilePath('CTY.DAT'), CountryFileDownloaded);
 end;
 
-{ ------------------------------------------------------------- editors ---- }
-
-procedure TfrmSetupWizard.btnRadioClick(Sender: TObject);
+(* ON THE MAIN THREAD (TThread.OnTerminate).  Adopts the file only if it
+  PARSES: a download can succeed and leave something that is not a country
+  file. *)
+procedure TfrmSetupWizard.CountryFileDownloaded(Sender: TObject; aSucceeded: boolean);
 begin
-   if FRadioEditor = nil then
+   FDownloading := False;
+   if aSucceeded and LoadCountryFileFrom(DownloadedDataFilePath('CTY.DAT')) then
       begin
-      FRadioEditor := TRadioEditForm.Create(Self);
-      end;
-   (* The editor works on a COPY, so its Cancel really cancels. *)
-   FreeAndNil(FRadioEditing);
-   if FRadioDraft <> nil then
-      begin
-      FRadioEditing := FRadioDraft.Clone;
+      ShowCountryFileState;
+      lblCtyStatus.Visible := True;
+      lblCtyStatus.Caption := SWizCtyDone;
+      RunLookup;
       end
    else
       begin
-      FRadioEditing := TRadioDefinition.Create;
-      FRadioEditing.Name := 'Radio';
+      ShowCountryFileState;
+      lblCtyStatus.Caption := SWizCtyFailed;
       end;
-   SetEditorOpen(True);
-   FRadioEditor.EditRadio(FRadioEditing, RadioEditorDone);
-end;
-
-procedure TfrmSetupWizard.RadioEditorDone(const aAccepted: boolean);
-begin
-   if aAccepted then
-      begin
-      FreeAndNil(FRadioDraft);
-      FRadioDraft := FRadioEditing;
-      FRadioEditing := nil;
-      end
-   else
-      begin
-      FreeAndNil(FRadioEditing);
-      end;
-   SetEditorOpen(False);
-   RefreshSummaries;
-end;
-
-procedure TfrmSetupWizard.btnKeyerClick(Sender: TObject);
-begin
-   if FKeyerEditor = nil then
-      begin
-      FKeyerEditor := TfrmKeyerEdit.Create(Self);
-      end;
-   FreeAndNil(FKeyerEditing);
-   if FKeyerDraft <> nil then
-      begin
-      FKeyerEditing := FKeyerDraft.Clone;
-      end
-   else
-      begin
-      FKeyerEditing := TKeyerDefinition.Create;   // a WinKeyer, no port yet
-      FKeyerEditing.Name := 'WinKeyer';
-      end;
-   SetEditorOpen(True);
-   FKeyerEditor.EditKeyer(FKeyerEditing, KeyerEditorDone);
-end;
-
-procedure TfrmSetupWizard.KeyerEditorDone(const aAccepted: boolean);
-begin
-   if aAccepted then
-      begin
-      FreeAndNil(FKeyerDraft);
-      FKeyerDraft := FKeyerEditing;
-      FKeyerEditing := nil;
-      end
-   else
-      begin
-      FreeAndNil(FKeyerEditing);
-      end;
-   SetEditorOpen(False);
-   RefreshSummaries;
+   UpdateButtons;
 end;
 
 { -------------------------------------------------------------- commit ---- }
@@ -1010,16 +1442,14 @@ begin
          begin
          Exit;
          end;
-      conflicts := DescribePortConflicts(store, store.ActiveProfile);
+      conflicts := DescribePortConflicts(store, store.ActiveProfile, keyers);
       if conflicts = '' then
          begin
          Exit;
          end;
-      (* The marker sits last, applying to mrNo -- No is the default, the
-        same as Preferences, so a reflexive Enter does not key a radio. *)
-      Result := QuestionDlg('TR4W', Format(TC_PREFS_PORTCONFLICT, [conflicts]),
-                            TMsgDlgType.mtWarning,
-                            [mrYes, mrNo, 'IsDefault'], 0) = mrYes;
+      (* Preferences' own question and default (ConfirmPortConflicts): one
+        definition, so the two cannot disagree about what a collision asks. *)
+      Result := ConfirmPortConflicts(conflicts);
    finally
       keyers.Free;
       store.Free;
@@ -1044,6 +1474,10 @@ begin
          Continue;
          end;
       value := Trim(f.Edit.Text);
+      if f.Command = 'MY GRID' then
+         begin
+         value := NormalizeGridSquare(value);
+         end;
       if value = f.Loaded then
          begin
          Continue;
@@ -1079,7 +1513,7 @@ var
    keyers: TKeyerConfigStore;
    storeRead: boolean;
    loadErr, err, conflicts: string;
-   report: string;
+   report, details: string;
    ticked, staged: TSetupItems;
    radio: TRadioDefinition;
    keyer: TKeyerDefinition;
@@ -1087,6 +1521,7 @@ var
    profile: TStationProfile;
 begin
    report := '';
+   details := '';
    ticked := TickedItems;
    store  := TRadioConfigStore.Create;
    keyers := TKeyerConfigStore.Create;
@@ -1142,7 +1577,7 @@ begin
       if siCluster in ticked then
          begin
          cluster := TClusterDefinition.Create;
-         cluster.Server         := Trim(cbxServer.Text);
+         cluster.Server         := ClusterServerText;
          cluster.LoginCall      := Trim(edtLogin.Text);
          // NOT trimmed -- a password may begin or end with a space.
          cluster.Password       := edtPassword.Text;
@@ -1150,6 +1585,21 @@ begin
          end;
 
       staged := StageSetupItems(store, keyers, radio, keyer, cluster, report);
+
+      (* What "Show details" adds, only for what actually landed. *)
+      if not (siRadio in staged) then
+         begin
+         radio := nil;
+         end;
+      if not (siKeyer in staged) then
+         begin
+         keyer := nil;
+         end;
+      if not (siCluster in staged) then
+         begin
+         FreeAndNil(cluster);
+         end;
+      details := SetupDetailLines(radio, keyer, cluster);
 
       (* THE STORES' OWN VALIDATION decides whether this is saveable.  A
         refusal leaves the file as step 1 wrote it -- the station kept, the
@@ -1168,6 +1618,16 @@ begin
          end;
       SaveConfig(RadioStoreFileName, store, keyers);
 
+      (* AT STARTUP THERE IS NOTHING TO PUT INTO USE ON: saved is as far as this
+        goes.  Startup applies the saved active profile and cluster itself, a
+        few steps after the New Contest window -- the same road every later
+        start takes, so a wizard run and an ordinary start cannot differ. *)
+      if FStartupMode then
+         begin
+         logger.Info('[SetupWizard] configuration saved; startup applies it');
+         Exit;
+         end;
+
       (* 3. PUT IT INTO USE -- what Preferences' Activate does.  An operational
         failure (a port that will not open) is reported, never a reason to
         undo what was saved: the configuration is right even if the radio is
@@ -1179,7 +1639,7 @@ begin
          begin
          (* A collision reaching here was ACCEPTED by the operator on the
            commit page (PortsAcceptable); it is still listed on the result. *)
-         conflicts := DescribePortConflicts(store, profile);
+         conflicts := DescribePortConflicts(store, profile, keyers);
          if conflicts <> '' then
             begin
             AddReportLine(report, UnicodeFormat(SWizResPortWarning, [conflicts]));
@@ -1209,8 +1669,41 @@ begin
       (* A hidden Preferences holds the libraries as they were; it re-reads
         them now, or its next save would undo this. *)
       PreferencesReloadAfterExternalSave;
-      memResult.Text := LclText(report);
+      FReportBrief := report;
+      FReportDetails := report;
+      if details <> '' then
+         begin
+         (* The detail lines follow the brief report as an indented block. *)
+         AddReportLine(FReportDetails, '');
+         AddReportLine(FReportDetails, details);
+         end;
+      ShowResult;
    end;
 end;
+
+procedure TfrmSetupWizard.ShowResult;
+begin
+   if chkDetails.Checked then
+      begin
+      memResult.Text := LclText(FReportDetails);
+      end
+   else
+      begin
+      memResult.Text := LclText(FReportBrief);
+      end;
+   (* Nothing to show beyond the brief report: no box to offer. *)
+   chkDetails.Visible := FReportDetails <> FReportBrief;
+end;
+
+procedure TfrmSetupWizard.DetailsChange(Sender: TObject);
+begin
+   ShowResult;
+end;
+
+initialization
+
+finalization
+   gCallbookTarget := nil;
+   FreeAndNil(gCallbookRelay);
 
 end.

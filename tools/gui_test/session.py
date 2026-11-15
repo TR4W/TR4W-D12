@@ -11,13 +11,29 @@ from window_capture import capture_window
 from evidence import preserve_build
 
 
-def launch(root, run_name="pilot-001", contest="practice.db"):
+def launch(root, run_name="pilot-001", contest="practice.db", fresh_install=False, extra_args=(), lang="en"):
+   """Start the snapshot exe in the run folder, scoped to its own PID.
+
+   fresh_install: the brand-new-install condition -- the settings file named on
+   the command line must NOT exist yet (the program creates it). Still passed
+   with --settings, so the command line carries the run's unique identity that
+   restart adoption and the runner's dump step check, and tr4w.log stays in the
+   run folder where the crash watcher reads it. Fails closed if a settings file
+   is already there, because then the test would not be testing a new install.
+
+   extra_args: further switches after the ones above (e.g. '--wizard', '-h').
+
+   lang: the --lang switch, English by default so every driver reads English
+   captions. None leaves the switch off, so the stored Display.Language (or
+   the OS) decides -- for a start that judges whether that setting is in force."""
    root = Path(root).resolve()
    run = root / "runs" / run_name
    exe = root / "app" / "tr4w_fpc.exe"
    preserve_build(exe, root / "evidence")
    settings = run / "tr4w.json"
-   required = [exe, settings]
+   required = [exe] if fresh_install else [exe, settings]
+   if fresh_install and (settings.exists() or (run / "settings" / "tr4w.json").exists()):
+      raise RuntimeError("Fresh-install launch refused: a settings file already exists in " + str(run))
    if contest:
       required.append(run / contest)
    for path in required:
@@ -26,7 +42,10 @@ def launch(root, run_name="pilot-001", contest="practice.db"):
    arguments = [str(exe)]
    if contest:
       arguments.append(str(run / contest))
-   arguments.extend(["--settings", str(settings), "--lang", "en"])
+   arguments.extend(["--settings", str(settings)])
+   if lang:
+      arguments.extend(["--lang", lang])
+   arguments.extend(extra_args)
    app = Application(backend="win32").start(
       subprocess.list2cmdline(arguments), work_dir=str(run), wait_for_idle=False
    )
@@ -283,7 +302,7 @@ def answer_question(app, expected_text, journal, screenshot=None, timeout=3, ans
    return True
 
 
-def dialog_facts(app, title, timeout=10):
+def dialog_facts(app, title, timeout=10, class_name=None):
    """Read a modal question WITHOUT answering it: its class, body text, every
    button and which one is the default. Works for an LCL QuestionDlg form and
    a native #32770 / TaskDialog alike, because it reads both the win32 buttons
@@ -293,7 +312,12 @@ def dialog_facts(app, title, timeout=10):
    import win32gui
    import win32con
    from pywinauto.uia_defines import IUIA
-   dialog = app.window(title=title, visible_only=True)
+   # class_name narrows the match where the main window shares the title (it
+   # is plain 'TR4W' until a contest is loaded).
+   criteria = {"title": title, "visible_only": True}
+   if class_name:
+      criteria["class_name"] = class_name
+   dialog = app.window(**criteria)
    dialog.wait("visible", timeout=timeout)
    facts = {"title": dialog.window_text(), "class": dialog.class_name(), "handle": dialog.handle,
       "win32_buttons": [], "uia_buttons": [], "uia_texts": [], "win32_texts": []}

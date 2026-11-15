@@ -283,6 +283,20 @@ function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThread
 function ThreadStarted(const aThread: TThreadID): boolean;
 procedure ClearThread(var aThread: TThreadID);
 
+(* WAIT FOR A THREAD'S "RUNNING" FLAG TO DROP, until aDeadline (GetTickCount64).
+  True when it dropped, False when the deadline passed first.
+
+  THE FLAG, NOT THE HANDLE, because the flag is the one answer every platform
+  has: the creator sets it BEFORE tCreateThread and the thread clears it in a
+  finally as it leaves.  20 ms slices; the slice only bounds how late the drop
+  is noticed.  It does NOT pump messages, so a thread that waits on the main
+  thread (SendMessage, Synchronize) holds the caller to the deadline -- a
+  thread that only queues (QueueAsyncCall, RequestMainThreadJob) is safe.
+
+  Shared by the radio poller's stop (logsubs2.WaitForPollingThreadFlag) and the
+  WinKeyer's (uWinKey.wkStop). *)
+function WaitForFlagToClear(var aFlag: Boolean; const aDeadline: QWord): boolean;
+
 //function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 (* tDialogBox IS DELETED (2026-08-31).  Its last live caller went with the
    Cabrillo summary dialog; the one that LOOKS like a caller, in MainUnit's
@@ -909,6 +923,14 @@ begin
 
   if not FileExists(FileName) then
      begin
+     (* THE FOLDER IS MISSING TOO: the file was never going to be there.  That
+       is a copy of the program that was not installed (an exe copied out of a
+       build folder, seen 2026-11-15 from c:\radio\d12fresh with no dom folder),
+       and "could not find this file" leaves a new operator nowhere to go. *)
+     if not DirectoryExists(ExtractFilePath(FileName)) then
+        begin
+        source := source + #13#13 + SIncompleteInstallHint;
+        end;
      showwarning(SysUtils.Format('%s'#13#13'%s%s',
                  [SFileNotFoundThere, FileName, source]));
      end
@@ -992,6 +1014,33 @@ end;
 procedure ClearThread(var aThread: TThreadID);
 begin
    aThread := Default(TThreadID);
+end;
+
+function WaitForFlagToClear(var aFlag: Boolean; const aDeadline: QWord): boolean;
+var
+   nowMs: QWord;
+begin
+   repeat
+      if not aFlag then
+         begin
+         Result := True;
+         Exit;
+         end;
+      nowMs := GetTickCount64;
+      if nowMs >= aDeadline then
+         begin
+         Result := False;
+         Exit;
+         end;
+      if aDeadline - nowMs > 20 then
+         begin
+         Sleep(20);
+         end
+      else
+         begin
+         Sleep(aDeadline - nowMs);
+         end;
+   until False;
 end;
 
 function tCreateThread(lpStartAddress: TTR4WThreadStart; var lpThreadId: TThreadID; Quiet: boolean; aParameter: Pointer): TThreadID;

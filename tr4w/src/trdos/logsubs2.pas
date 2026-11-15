@@ -697,36 +697,19 @@ end;
   FAILS -- which was the x64 exit defect of 2026-11-12, and which used to spin
   the main thread to the deadline and then report a timeout.  20 ms slices: the
   poller re-tests PollingStopRequested every pass, so the slice only bounds how
-  long we take to notice. *)
+  long we take to notice.  The loop itself is TF.WaitForFlagToClear, which the
+  WinKeyer's stop shares. *)
 function WaitForPollingThreadFlag(ARig: RadioPtr; ADeadline: QWord; TimeoutMs: DWORD): boolean;
-var
-   Remaining: DWORD;
 begin
-   repeat
-      if not ARig^.PollingThreadRunning then
-         begin
-         logger.Info('[WaitForPollingThread] Thread exited cleanly');
-         Result := True;
-         Exit;
-         end;
-      Remaining := ADeadline - GetTickCount64;
-      if Remaining > TimeoutMs then
-         begin
-         (* Past the deadline: the QWord subtraction underflowed, so the
-           truncated DWORD is larger than the budget. *)
-         logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
-         Result := False;
-         Exit;
-         end;
-      if Remaining > 20 then
-         begin
-         Sleep(20);
-         end
-      else
-         begin
-         Sleep(Remaining);
-         end;
-   until False;
+   Result := WaitForFlagToClear(ARig^.PollingThreadRunning, ADeadline);
+   if Result then
+      begin
+      logger.Info('[WaitForPollingThread] Thread exited cleanly');
+      end
+   else
+      begin
+      logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
+      end;
 end;
 
 // Wait for a thread handle to signal, pumping Windows messages so that a
@@ -976,7 +959,14 @@ begin
      end;
 
   {if BandMapEnable then }SaveBandMap;
-  wkClose;
+  (* wkStop, NOT wkClose: it waits for an open in progress and for the reader
+    thread before closing, where wkClose closed the port under a reader that
+    might still be reading it.  IT CANNOT HANG THE EXIT: each wait is bounded
+    (3 s), and a timeout logs an Error and returns without closing -- the
+    process is leaving, which releases the port either way.  With no WinKeyer
+    ever opened both flags are down, so it is the old wkClose plus freeing a
+    nil port. *)
+  wkStop;
 
   logger.Info('[ExitProgram] Step SaveRestartFile');
   Sheet.SaveRestartFile;

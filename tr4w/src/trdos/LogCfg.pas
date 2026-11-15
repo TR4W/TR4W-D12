@@ -451,6 +451,13 @@ begin
         end of the statement. It takes a string now. *)
       if not DomQTHTable.LoadInDomQTHFile(domPath) then
          begin
+         (* THE WINDOW SAYING WHY WAS ALREADY SHOWN (UnableToFindFileMessage);
+           the log did not, so a run that simply vanished after OK left nothing
+           to read -- seen by the GUI harness 2026-11-15, exit code 0 and no
+           line.  The contest cannot be opened without its domestic file. *)
+         logger.Error('[LogCfg] the domestic file %s could not be loaded -- ' +
+                      'this contest cannot be opened without it, so the ' +
+                      'program is exiting', [domPath]);
          halt;
          end;
      end;

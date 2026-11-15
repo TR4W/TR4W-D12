@@ -7,11 +7,9 @@ from PIL import ImageGrab
 import win32gui
 
 
-def capture_window(handle, region=None):
-   if not win32gui.IsWindowVisible(handle) or win32gui.IsIconic(handle):
-      raise RuntimeError("Capture requires a visible, restored window")
-   if win32gui.GetForegroundWindow() != handle:
-      raise RuntimeError("Requested window is not foreground; refusing a background capture")
+def visible_frame(handle):
+   """The window's VISIBLE frame (DWMWA_EXTENDED_FRAME_BOUNDS): title bar and
+   border included, the invisible resize margins GetWindowRect adds excluded."""
    visible = wintypes.RECT()
    dwm = ctypes.WinDLL("dwmapi")
    bounds = dwm.DwmGetWindowAttribute
@@ -21,8 +19,16 @@ def capture_window(handle, region=None):
       raise RuntimeError("Cannot obtain visible DWM window frame")
    if visible.right <= visible.left or visible.bottom <= visible.top:
       raise RuntimeError("Window has an empty visible frame")
+   return (visible.left, visible.top, visible.right, visible.bottom)
+
+
+def capture_window(handle, region=None):
+   if not win32gui.IsWindowVisible(handle) or win32gui.IsIconic(handle):
+      raise RuntimeError("Capture requires a visible, restored window")
+   if win32gui.GetForegroundWindow() != handle:
+      raise RuntimeError("Requested window is not foreground; refusing a background capture")
    # Preserve the compositor's actual title/menu styling, unlike PrintWindow.
-   frame = (visible.left, visible.top, visible.right, visible.bottom)
+   frame = visible_frame(handle)
    if region is not None:
       left, top, right, bottom = region
       if not (frame[0] <= left < right <= frame[2] and frame[1] <= top < bottom <= frame[3]):

@@ -1484,6 +1484,14 @@ procedure ShowPreferences;
   would overwrite the first. *)
 function PreferencesIsShowing: boolean;
 
+(* THE QUESTION ASKED WHEN A PROFILE'S PORTS COLLIDE, and its answer: True when
+  the operator says go ahead anyway.  Advisory, not fatal -- some collisions
+  are legitimate on a shared cable -- so the operator decides.  ONE definition
+  for Activate and the setup wizard.  NO is the default, the marker sitting
+  last so it applies to mrNo: a reflexive Enter must not put a profile whose
+  ports collide on the air. *)
+function ConfirmPortConflicts(const aConflicts: string): boolean;
+
 (* SOMETHING ELSE HAS JUST WRITTEN settings\tr4w.json -- the setup wizard.
   A HIDDEN Preferences keeps its copy of the libraries between openings, so it
   re-reads them here; otherwise its next save would put back what it held and
@@ -2048,6 +2056,17 @@ end;
 function PreferencesIsShowing: boolean;
 begin
    Result := (gPrefsForm <> nil) and gPrefsForm.Visible;
+end;
+
+function ConfirmPortConflicts(const aConflicts: string): boolean;
+begin
+   (* MB_DEFBUTTON2 MADE **NO** THE DEFAULT, and that is deliberate -- this
+     asks whether to activate a profile whose ports collide.  The marker
+     therefore sits last, applying to mrNo, exactly as YesOrNo in MainUnit does
+     and the opposite of the remove-radio prompt.  Getting it the wrong way
+     round would put a known-broken profile one reflexive Enter away. *)
+   Result := QuestionDlg('TR4W', LclText(Format(TC_PREFS_PORTCONFLICT, [aConflicts])),
+                         mtWarning, [mrYes, mrNo, 'IsDefault'], 0) = mrYes;
 end;
 
 procedure PreferencesReloadAfterExternalSave;
@@ -9350,7 +9369,7 @@ begin
         are.  So this asks the narrower question -- has a radio the ACTIVE
         profile actually has in a slot changed since it was applied -- and does
         nothing at all otherwise. *)
-      if ActiveRadioSettingsChanged(FStore, changed) then
+      if ActiveRadioSettingsChanged(FStore, changed, FKeyerStore) then
          begin
          active := FStore.ActiveProfile;
          if active <> nil then
@@ -9391,20 +9410,10 @@ begin
    // Advisory, not fatal: some collisions are legitimate on a shared cable, so
    // the operator decides.  Validate has already refused the ones that cannot
    // work at all.
-   conflicts := DescribePortConflicts(FStore, prof);
-   if conflicts <> '' then
+   conflicts := DescribePortConflicts(FStore, prof, FKeyerStore);
+   if (conflicts <> '') and (not ConfirmPortConflicts(conflicts)) then
       begin
-      (* MB_DEFBUTTON2 MADE **NO** THE DEFAULT HERE, and that is deliberate --
-        this asks whether to activate a profile whose ports collide. The marker
-        therefore sits last, applying to mrNo, exactly as YesOrNo in MainUnit
-        does and the opposite of the remove-radio prompt above. Getting it the
-        wrong way round would put a known-broken profile one reflexive Enter
-        away. *)
-      if QuestionDlg('TR4W', LclText(Format(TC_PREFS_PORTCONFLICT, [conflicts])),
-                     mtWarning, [mrYes, mrNo, 'IsDefault'], 0) <> mrYes then
-         begin
-         Exit;
-         end;
+      Exit;
       end;
 
    if not ApplyProfile(FStore, prof, err, FKeyerStore) then

@@ -114,8 +114,10 @@ begin
       frm.btnNextClick(frm.btnNext);
       Check(frm.pgPages.ActivePage = frm.tsRadio,
             'radio before cluster, whatever the click order');
-      CheckEquals(string(SWizNotSetUp), string(frm.lblRadioSummary.Caption),
-                  'no radio set up yet');
+      (* The hosted editor's panel, and the wizard's own two CW choices under
+        it (hidden until a radio that offers them is chosen). *)
+      CheckEquals(3, frm.tsRadio.ControlCount,
+                  'the radio editor is the page itself, not a button to one');
    finally
       frm.Free;
    end;

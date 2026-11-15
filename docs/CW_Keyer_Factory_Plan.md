@@ -122,7 +122,7 @@ This refactor introduces a `TCWKeyer` strategy class with four concrete keyers b
 
 ### D2. Selection is a per-call pure function, not a cached object
 `function ActiveCWKeyer: TCWKeyer` in `uCWKeyerBase` re-evaluates per call: `IsCWByCATActive` → `wkActive` → `ycccActive` → CPU. This resolves the two hard correctness points with zero hook infrastructure:
-- **WinKeyer async open:** `wkActive` only goes True inside the read thread after a successful echo test (`tr4w.lpr:969-974` starts `wkOpen` on a thread). Today a WinKeyer that never opens falls through to YCCC/CPU; a static selection on `wksWinKey2Enable` would break that. Testing `wkActive` live preserves it exactly.
+- **WinKeyer async open:** `wkActive` only goes True after a successful echo test, set by `wkOpen` as it starts the reader (since 2026-11-14 every open -- startup, the Alt-menu re-open, a profile apply -- goes through `uWinKey.wkStart`, which runs `wkOpen` on a thread; `wkStop` waits for it and the reader). Today a WinKeyer that never opens falls through to YCCC/CPU; a static selection on `wksWinKey2Enable` would break that. Testing `wkActive` live preserves it exactly.
 - **Per-radio CW-by-CAT:** `IsCWByCATActive` (`MainUnit.pas:9247-9271`) follows `ActiveRadioPtr` (config AND `rcCWByCAT` capability), so radio swaps/model changes need no re-selection events. The CAT adapter resolves `KeyersSwapped ? InactiveRadioPtr : ActiveRadioPtr` per call, exactly as `LogCW.pas:236-243` does today.
 
 Exclusivity: exactly one keyer handles any call (one documented exception, quirk Q4). `ActiveCWKeyer` logs `logger.Info('Active CW keyer is now %s', ...)` only on change (unit-level `LastLoggedKeyer`; benign race). Config-conflict warnings run once post-config-load (D5).
