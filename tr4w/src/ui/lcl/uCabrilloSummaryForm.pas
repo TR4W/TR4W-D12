@@ -138,7 +138,7 @@ uses
    Log4D,
    (* CATEGORY-POWER, ONE VALUE -- M9b, design 7.6. See CommitCategoryPower. *)
    uCategoryPowerChange,
-   uCFG,                  (* SetCFGCommandValue -- the settings screens' route *)
+   uCFG,                  (* ApplyContestEdit -- the contest-parameter route *)
    LogDupe,               (* QSOTotals -- is anything logged yet *)
    LogWind,               (* QuickDisplay -- the main window's notice *)
    (* LogStoreRecordContestStatement -- a category change is written into the
@@ -484,7 +484,7 @@ begin
       Exit;
       end;
 
-   if not SetCFGCommandValue('CATEGORY-POWER', tCategoryPowerSA[chosen]) then
+   if not ApplyContestEdit('CATEGORY-POWER', tCategoryPowerSA[chosen]) then
       begin
       Exit;
       end;
@@ -505,10 +505,12 @@ end;
   and the other three nowhere, so a change made here was lost on close and a
   headless /EXPORT never saw it.
 
-  SetCFGCommandValue -- the route every settings screen takes: it applies the
-  value, records it as the operator's statement and tells a multi-op peer
-  (all four are SHARED_WITH_PEERS) -- then the statement goes into the contest
-  database at once. NO RESCORE: no contest scores a QSO by these
+  ApplyContestEdit -- the CONTEST-PARAMETER route (NY4I, 2026-11-15): it
+  applies the value, records it as the operator's statement and tells a
+  multi-op peer (all four are SHARED_WITH_PEERS) -- then the statement goes
+  into the contest database at once. It writes NOTHING to settings\tr4w.json;
+  SetCFGCommandValue, used here until that date, also put a copy in the
+  legacy `commands` bucket there, a station default. NO RESCORE: no contest scores a QSO by these
   (uCategoryPowerChange.CategoryChoiceIndex says why MODE's bonus is not an
   exception). An unchanged row, or a value no setting can hold, does nothing. *)
 procedure TfrmCabrilloSummary.CommitCategory(const aTag: CabrilloTags;
@@ -532,7 +534,7 @@ begin
       Exit;
       end;
 
-   if SetCFGCommandValue(aCommand, aSpellings[idx]) then
+   if ApplyContestEdit(aCommand, aSpellings[idx]) then
       begin
       LogStoreRecordContestStatement(aCommand);
       end;

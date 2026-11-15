@@ -76,6 +76,10 @@ const
 procedure TNewContestCommandsTests.WriteStation(const aCall, aFdClass,
    aSection, aMainCallsign: string);
 begin
+   (* NOTHING AN EARLIER TEST'S CONTEST STATED IS HELD: since 2026-11-15 a
+     contest's MY CALL keeps the station's call for every save, and a kept
+     value left over would be written here instead of aCall. *)
+   ClearContestCFGCommands;
    FFile := IncludeTrailingPathDelimiter(GetTempDir) +
             Format('tr4w-newcontest-%d.json', [Random(1000000000)]);
    Settings.My.Call         := aCall;
@@ -89,7 +93,9 @@ end;
 procedure TNewContestCommandsTests.ForgetStationAsBeforeTheLoad;
 begin
    (* The constructor's values -- TMySettings.Create sets every one of these
-     to ''. *)
+     to ''. And nothing held, as in a process that has not started a contest
+     (see WriteStation). *)
+   ClearContestCFGCommands;
    Settings.My.Call         := '';
    Settings.My.FdClass      := '';
    Settings.My.Section      := '';

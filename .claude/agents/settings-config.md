@@ -137,11 +137,16 @@ that in both directions.
 - **The five Cabrillo categories (ASSISTED, BAND, MODE, OPERATOR, POWER) are
   `Settings.Contest.Category*` and nothing else** (Q61, 2026-10-17; 7.6 for
   POWER). Their home is the log's `config` statement row; the summary window
-  writes them through `SetCFGCommandValue` plus
+  (Tools > Edit Cabrillo Summary, the contest-parameter path) writes them
+  through **`uCFG.ApplyContestEdit`** plus
   `uLogStore.LogStoreRecordContestStatement`, and the Cabrillo header reads
   them through `uCbrSum.CabrilloTagText`. A `_CATEGORY-*` key for these five
-  in `tr4w.json`'s Cabrillo header store is inert. `SetCFGCommandValue` still
-  drops a copy in the `commands/contest` bucket (a station default; Q-M2a).
+  in `tr4w.json`'s Cabrillo header store is inert. **`ApplyContestEdit` writes
+  nothing to `tr4w.json`** (NY4I, 2026-11-15: a contest-parameter edit is that
+  contest's only); `SetCFGCommandValue`, used there until then, also dropped a
+  copy in the `commands/contest` bucket. Other `SetCFGCommandValue` callers
+  still do (Q-M2a). The window's free-text header fields still go to the
+  STATION's Cabrillo header store in `tr4w.json` -- open, see below.
 - **Credentials live in the OS vault**, not in settings. **And not in the
   contest log, and not in a log line** (2026-10-29). A `TSecretText`
   property is the mark; `TR4WSettings.CommandIsSecret` is the question. The
@@ -555,6 +560,74 @@ connects to a local door into the tunnel, `uNetTunnel`). Ticked with an empty
 address is a reported failure to connect, never a fall back to the address.
 Hand-wired on Preferences > Network (`chkNetUseTailcat`), pinned by the same
 test.
+
+## A menu or hotkey TOGGLE is saved; the WHOLE object is saved at exit too (2026-11-15)
+
+A UI toggle of a station setting calls
+`uRadioConfigApply.ToggleAndStoreCommand(name)` (Preferences' door:
+`ApplyAndStoreCommand`, saves only on change; does NOT share with peers). The
+band map's names are `uBandMapForm.BANDMAP_TOGGLED_SETTINGS`, pinned in
+`uTestSpotText`. Insert mode saves by hand (`MainUnit`). **Every direct save
+stays** (NY4I, decision B: they protect against an abort before exit).
+
+**AND `ExitProgram` NOW SAVES THE WHOLE `settings` SECTION** (decision C):
+`uTR4WConfigFile.SaveSettingsAtExit`, right after `SaveTR4WPOSFILE` (the
+autosave also calls that one, so the exit save is NOT inside it), one Info line
+with the elapsed ms. It refuses unless `LoadSettingsForStartup(.., True)` ran
+this session (a save from an unloaded object resets the station). Measured on a
+copy of NY4I's 43 KB file: one `SaveSettings` is 4-10 ms. Still unexamined:
+Alt-K's `Settings.Dvk.Enable`, AutoQslInterval and Cq.AutoDelay hotkeys (NY4I
+undecided) -- with the exit save they now persist at exit.
+
+## A STATION-SCOPED VALUE A CONTEST STATES IS KEPT, AND NEVER WRITTEN (2026-11-15)
+
+NY4I: NE4C operates at NY4I's house -- the station stays NY4I, the contest's MY
+CALL is NE4C, and **no save may write a contest's value into the `settings`
+section**. The rule is by HOW A VALUE ARRIVED, not a property list:
+
+- **`TR4WSettings.KeepStationValue(cmd)`** keeps the station's value -- the
+  property's member exactly as the streamer wrote it, by property path, once
+  per property -- before a contest writes it. **`ToJSON` writes the kept value**
+  (`WriteKeptStationValues`, in place, so member order and bytes hold), so
+  EVERY writer of the section -- Preferences, toggles, insert mode,
+  `CollapseLegacySettingHomes`, the exit save -- is covered. Not kept: a
+  contest-scoped setting (ToJSON omits it), a station fact (it has its
+  override), a secret (the vault; `ProtectSecretsInDocument` reads the live
+  object -- a `.cfg`-stated password still reaches the vault, open).
+- **The ONE door that keeps is `uCFG.ApplyContestStatement`** -- the `.cfg`
+  lines (`LogCfg`), the New Contest queue, the log's MY CALL hoist and its
+  stored-row loop (`uLogStore`, both rerouted from `CheckCommand(..,True)`),
+  plus the loop's no-op skip, which keeps too. `ApplyContestEdit` (the
+  contest-parameter edit) goes through it.
+- **A STATION EDIT** (`ApplyAndStoreCommand` -- Station page, wizard, peer --
+  and `TModelSetting.TrySetText`, both through
+  **`TR4WSettings.TrySetStationValue`**) of a kept setting replaces the KEPT
+  value and saves; **the contest's live value is not touched** (decision E,
+  "the company's application template"). Parsed on a scratch object, so no
+  live setter or effect runs. Not kept -> `TrySetByCommand`, unchanged. **The
+  read half is `TryGetStationValue`**: `uRadioConfigApply.StationCommandValue`
+  (Station page, wizard) and `TModelSetting.AsText` show the KEPT value, so a
+  shown value applied back can never make the contest's value the station's.
+- **`ToggleAndStoreCommand` on a kept setting flips LIVE only** and the file
+  keeps the station's value (open question for NY4I).
+- **`ClearContestCFGCommands` REVERTS** kept statements onto their properties
+  (de-streamed into the group) and forgets them -- forgetting alone would leave
+  the contest's value live with nothing kept. `FromJSON` (a load) drops
+  everything kept. A contest's values live until the process ends (File > Open
+  Log relaunches).
+- **A RUN-TIME FORCE uses the same memory with `aForced`**: the three SO2R
+  values `uBandmap` forces off while a radio has no frequency (and
+  QsyInactiveRadio, set per tune). A station edit of a forced entry ALSO
+  applies live; a revert leaves it.
+- **My.Zone / My.Country are written only when stated** (decision F,
+  `WriteUnstatedDerivationAsEmpty` in the stream hook): a derived value is
+  written `""` and so cannot latch `ZoneWasSet`/`CountryWasSet` on the next
+  load. Already-latched files are not repaired.
+- **HamScore's default URL is used, not stored** (`HamScoreInit`; storing it
+  latched the default issue 250 had to migrate).
+- Pinned by `uTestStationValueKept` (NE4C, a `.cfg` LEADING ZEROS through the
+  real reader, the Preferences edit, the zone, the exit save, byte-identity,
+  the contest-parameter edit).
 
 ## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
 

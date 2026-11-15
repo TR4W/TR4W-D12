@@ -43,6 +43,8 @@ type
       procedure Test_TheCountryPanelCarriesTheHeading;
       procedure Test_NoHeadingShowsTheCountryAlone;
       procedure Test_TheSpotCommentFollowsBothTicks;
+      procedure Test_EveryBandMapToggleIsAStationBoolean;
+      procedure Test_ABandMapToggleIsSavedToTheSettingsFile;
    end;
 
 implementation
@@ -52,7 +54,14 @@ uses
    LogGrid,
    uAppStrings,
    uBandMapForm,
-   uSendSpotForm;
+   uSendSpotForm,
+   VC,                (* TR4W_INI_FILENAME -- the settings file is redirected *)
+   utils_text,        (* SetCharBuffer, CharBufferText *)
+   uFileText,         (* TempDirectory, CombinePath *)
+   uKeychain,         (* InstallTestKeychain -- a save stores the secrets *)
+   uSettingsModel,
+   uTR4WConfigFile,   (* TR4WConfigFileName, LoadSettingsSection *)
+   uRadioConfigApply; (* ToggleAndStoreCommand *)
 
 procedure TSpotTextTests.Test_ACopiedSpotIsCallEntityFrequencyComment;
 begin
@@ -122,6 +131,94 @@ begin
                'no section known and no contest name: no comment');
 end;
 
+(* THE BAND MAP'S TOGGLES ARE SAVED (2026-11-15). Its menu and hotkeys assigned
+  the property and nothing wrote settings\tr4w.json, so ALL BANDS, ALL MODES
+  and MULTS ONLY came back at the next start as they were before the session.
+  They now go through ToggleAndStoreCommand, by NAME -- so every name must be
+  one the settings object owns as a boolean, and not contest-scoped, or
+  ApplyAndStoreCommand would apply it and save it nowhere. *)
+procedure TSpotTextTests.Test_EveryBandMapToggleIsAStationBoolean;
+var
+   i: integer;
+   value: string;
+begin
+   BeginTest('Test_EveryBandMapToggleIsAStationBoolean');
+   for i := Low(BANDMAP_TOGGLED_SETTINGS) to High(BANDMAP_TOGGLED_SETTINGS) do
+      begin
+      CheckTrue(Settings.OwnsCommand(BANDMAP_TOGGLED_SETTINGS[i]),
+                BANDMAP_TOGGLED_SETTINGS[i] + ' is owned by the settings object');
+      CheckFalse(Settings.CommandIsContestScoped(BANDMAP_TOGGLED_SETTINGS[i]),
+                 BANDMAP_TOGGLED_SETTINGS[i] + ' is a station setting, saved to the file');
+      CheckTrue(Settings.TryGetByCommand(BANDMAP_TOGGLED_SETTINGS[i], value),
+                BANDMAP_TOGGLED_SETTINGS[i] + ' reads back');
+      CheckTrue((value = 'TRUE') or (value = 'FALSE'),
+                BANDMAP_TOGGLED_SETTINGS[i] + ' is a boolean (read "' + value + '")');
+      end;
+
+   CheckFalse(ToggleAndStoreCommand('BAND MAP DECAY TIME'),
+              'a number is not toggled');
+   CheckFalse(ToggleAndStoreCommand('NO SUCH COMMAND'),
+              'nor is a name nothing owns');
+end;
+
+(* THE SETTINGS FILE IS REDIRECTED FIRST, and the test refuses to toggle unless
+  TR4WConfigFileName really landed in its own temp folder -- the same guard as
+  uTestColumnWidthStore's flush: a --settings switch would win over the
+  redirect, and a save there would write a real file. *)
+procedure TSpotTextTests.Test_ABandMapToggleIsSavedToTheSettingsFile;
+var
+   oldIni, dir, fn: string;
+   savedAllBands, savedMultsOnly: boolean;
+   fresh: TR4WSettings;
+begin
+   BeginTest('Test_ABandMapToggleIsSavedToTheSettingsFile');
+   InstallTestKeychain;
+   fn             := '';
+   oldIni         := CharBufferText(TR4W_INI_FILENAME);
+   savedAllBands  := Settings.BandMap.AllBands;
+   savedMultsOnly := Settings.BandMap.MultsOnly;
+   dir := CombinePath(TempDirectory, 'tr4wbandmap_' + TGUID.NewGuid.ToString);
+   fresh := TR4WSettings.Create;
+   try
+      SetCharBuffer(TR4W_INI_FILENAME, CombinePath(dir, 'tr4w.ini'));
+      fn := TR4WConfigFileName;
+      if Pos(dir, fn) <> 1 then
+         begin
+         CheckTrue(False, 'the settings file was not redirected (' + fn +
+                          ') -- a --settings switch? The toggle is skipped');
+         Exit;
+         end;
+
+      Settings.BandMap.AllBands  := False;
+      Settings.BandMap.MultsOnly := True;
+
+      CheckTrue(ToggleAndStoreCommand(BANDMAP_ALL_BANDS), 'ALL BANDS toggles');
+      CheckTrue(ToggleAndStoreCommand(BANDMAP_MULTS_ONLY), 'MULTS ONLY toggles');
+      CheckTrue(Settings.BandMap.AllBands, 'ALL BANDS is on for the session');
+      CheckFalse(Settings.BandMap.MultsOnly, 'MULTS ONLY is off for the session');
+
+      (* What the next start reads: the file's settings section, into an
+        object that has never seen the toggle. *)
+      fresh.BandMap.AllBands  := False;
+      fresh.BandMap.MultsOnly := True;
+      CheckTrue(LoadSettingsSection(fn, fresh), 'the file holds a settings section');
+      CheckTrue(fresh.BandMap.AllBands, 'ALL BANDS on reaches the file');
+      CheckFalse(fresh.BandMap.MultsOnly, 'MULTS ONLY off reaches the file');
+   finally
+      fresh.Free;
+      (* Put back by property, never by a save: nothing here may write a file
+        but the temp one. *)
+      Settings.BandMap.AllBands  := savedAllBands;
+      Settings.BandMap.MultsOnly := savedMultsOnly;
+      SetCharBuffer(TR4W_INI_FILENAME, oldIni);
+      if (fn <> '') and (Pos(dir, fn) = 1) then
+         begin
+         DeleteFile(fn);
+         RemoveDir(dir);
+         end;
+   end;
+end;
+
 procedure TSpotTextTests.RunAllTests;
 begin
    Test_ACopiedSpotIsCallEntityFrequencyComment;
@@ -129,6 +226,8 @@ begin
    Test_TheCountryPanelCarriesTheHeading;
    Test_NoHeadingShowsTheCountryAlone;
    Test_TheSpotCommentFollowsBothTicks;
+   Test_EveryBandMapToggleIsAStationBoolean;
+   Test_ABandMapToggleIsSavedToTheSettingsFile;
 end;
 
 end.

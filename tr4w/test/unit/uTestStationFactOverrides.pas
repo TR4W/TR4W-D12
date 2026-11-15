@@ -253,8 +253,12 @@ begin
 
       doc := s.ToJSON;
       try
-         CheckEquals('5', doc.FindPath('My.Zone').AsString,
-                     'what settings\tr4w.json would receive is the station''s zone');
+         (* NOT THE CONTEST'S 3, AND SINCE 2026-11-15 NOT THE DERIVED 5 EITHER
+           (NY4I, decision F): a zone the station never stated is written as
+           "", so the next load does not latch a derivation as the
+           operator's. *)
+         CheckEquals('', doc.FindPath('My.Zone').AsString,
+                     'what settings\tr4w.json would receive: no zone, the station never stated one');
       finally
          doc.Free;
       end;

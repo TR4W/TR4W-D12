@@ -133,6 +133,24 @@ type
     function  AgeColor(const aSpot: TSpotRecord): TColor;
   end;
 
+const
+   (* THE SETTINGS THIS WINDOW'S MENU AND HOTKEYS TOGGLE, by the name the
+     settings object answers to. In the interface so uTestSpotText can
+     prove every one is an owned, station-scoped boolean: a mistyped name
+     would otherwise toggle nothing at run time, in silence. *)
+   BANDMAP_ALL_BANDS    = 'BAND MAP ALL BANDS';
+   BANDMAP_ALL_MODES    = 'BAND MAP ALL MODES';
+   BANDMAP_DISPLAY_CQ   = 'BAND MAP DISPLAY CQ';
+   BANDMAP_DUPE_DISPLAY = 'BAND MAP DUPE DISPLAY';
+   BANDMAP_MULTS_ONLY   = 'BAND MAP MULTS ONLY';
+   BANDMAP_SO2R_DISPLAY = 'BAND MAP SO2R DISPLAY';
+   BANDMAP_QSY_INACTIVE = 'QSY INACTIVE RADIO';
+
+   BANDMAP_TOGGLED_SETTINGS: array[0..6] of string = (
+      BANDMAP_ALL_BANDS, BANDMAP_ALL_MODES, BANDMAP_DISPLAY_CQ,
+      BANDMAP_DUPE_DISPLAY, BANDMAP_MULTS_ONLY, BANDMAP_SO2R_DISPLAY,
+      BANDMAP_QSY_INACTIVE);
+
 var
   { The live form, or nil.  MainUnit's OpenTR4WWindow needs its Handle. }
   TR4WBandMapForm: TfrmBandMap = nil;
@@ -179,7 +197,8 @@ uses
   LogGrid,           (* GetBeamHeading -- the country panel's heading *)
   Clipbrd,           (* Clipboard -- Copy spot *)
   uDXSpotParse,      (* SpotNotesText, SpotCommentForDisplay -- Copy spot *)
-  uAppStrings;       (* SBandMapCopySpot, SBandMapCountryHeading *)
+  uAppStrings,       (* SBandMapCopySpot, SBandMapCountryHeading *)
+  uRadioConfigApply; (* ToggleAndStoreCommand -- a toggle here is SAVED *)
 
 const
   { The status bar: six panels, fixed position, varying content -- the same six
@@ -834,15 +853,15 @@ begin
          end;
       VK_B:
          begin
-         Settings.BandMap.AllBands := not Settings.BandMap.AllBands;
+         ToggleAndStoreCommand(BANDMAP_ALL_BANDS);
          end;
       VK_M:
          begin
-         Settings.BandMap.AllModes := not Settings.BandMap.AllModes;
+         ToggleAndStoreCommand(BANDMAP_ALL_MODES);
          end;
       VK_D:
          begin
-         Settings.BandMap.DupeDisplay := not Settings.BandMap.DupeDisplay;
+         ToggleAndStoreCommand(BANDMAP_DUPE_DISPLAY);
          end;
    end;
 end;
@@ -868,29 +887,34 @@ begin
    miSO2RDisplay.Checked := Settings.BandMap.So2rDisplay and Settings.So2r.TwoRadioMode;
 end;
 
+(* EVERY TOGGLE HERE IS SAVED (2026-11-15). Assigning the property applied the
+  filter and its setter repainted the map, but nothing wrote settings\tr4w.json,
+  and nothing saves the settings section at exit -- so the next start came up
+  with the filters as they were before the session. ToggleAndStoreCommand is
+  the Preferences door: the same setter runs, then the section is saved. *)
 procedure TfrmBandMap.MenuAllBandsClick(Sender: TObject);
 begin
-   Settings.BandMap.AllBands := not Settings.BandMap.AllBands;
+   ToggleAndStoreCommand(BANDMAP_ALL_BANDS);
 end;
 
 procedure TfrmBandMap.MenuAllModesClick(Sender: TObject);
 begin
-   Settings.BandMap.AllModes := not Settings.BandMap.AllModes;
+   ToggleAndStoreCommand(BANDMAP_ALL_MODES);
 end;
 
 procedure TfrmBandMap.MenuDisplayCQClick(Sender: TObject);
 begin
-   Settings.BandMap.DisplayCQ := not Settings.BandMap.DisplayCQ;
+   ToggleAndStoreCommand(BANDMAP_DISPLAY_CQ);
 end;
 
 procedure TfrmBandMap.MenuDupeDisplayClick(Sender: TObject);
 begin
-   Settings.BandMap.DupeDisplay := not Settings.BandMap.DupeDisplay;
+   ToggleAndStoreCommand(BANDMAP_DUPE_DISPLAY);
 end;
 
 procedure TfrmBandMap.MenuMultsOnlyClick(Sender: TObject);
 begin
-   Settings.BandMap.MultsOnly := not Settings.BandMap.MultsOnly;
+   ToggleAndStoreCommand(BANDMAP_MULTS_ONLY);
 end;
 
 (* COPY THE SELECTED SPOT AS TEXT (issue 183). The entity is CTY.DAT's name for
@@ -944,9 +968,10 @@ procedure TfrmBandMap.MenuQSYInactiveClick(Sender: TObject);
 begin
    if Settings.So2r.TwoRadioMode then
       begin
-      (* NOT A SETTING -- a field of the Config record, so there is no setter
-        to raise the change and the repaint is asked for explicitly. *)
-      Settings.So2r.QsyInactiveRadio := not Settings.So2r.QsyInactiveRadio;
+      (* A SETTING (So2r.QsyInactiveRadio, QSY INACTIVE RADIO), saved like the
+        others. Its setter already raises BandMapRefresh (uSettingsEffects);
+        the explicit repaint request is kept as it was, not re-examined. *)
+      ToggleAndStoreCommand(BANDMAP_QSY_INACTIVE);
       SpotsList.RequestRepaint;
       end;
 end;
@@ -955,7 +980,7 @@ procedure TfrmBandMap.MenuSO2RDisplayClick(Sender: TObject);
 begin
    if Settings.So2r.TwoRadioMode then
       begin
-      Settings.BandMap.So2rDisplay := not Settings.BandMap.So2rDisplay;
+      ToggleAndStoreCommand(BANDMAP_SO2R_DISPLAY);
       end;
 end;
 

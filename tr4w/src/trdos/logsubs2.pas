@@ -230,7 +230,8 @@ uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uPlatformFonts, // UninstallPrivateFont -- the gate lives there, not here
   uSettingsModel,     // Settings.ExternalLogger -- see the note in logstuff
-  uMainForm,          // the editable log is an LCL virtual list
+  uTR4WConfigFile,    (* SaveSettingsAtExit, TR4WConfigFileName -- ExitProgram *)
+  uMainForm,         // the editable log is an LCL virtual list
   uLogSearchForm,     // LogSearchRefreshIfOpen -- Search is non-modal
   uProcessCommand,
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
@@ -941,6 +942,14 @@ begin
 
   logger.Info('[ExitProgram] SaveTR4WPOSFILE');
   SaveTR4WPOSFILE;
+
+  (* AND THE WHOLE SETTINGS OBJECT (NY4I, 2026-11-15): a change no door saved
+    -- a hotkey toggle, a forced value's station half -- is not lost at exit.
+    Here, beside the layout write, after the radios are down and the autosave
+    is stopped, and before anything below that could fail; nothing below
+    assigns a setting. A contest's value never reaches the file (ToJSON
+    writes the station's kept value). *)
+  SaveSettingsAtExit(TR4WConfigFileName, Settings);
 
   if BackCopyEnable then
      begin

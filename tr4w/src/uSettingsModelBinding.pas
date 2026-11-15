@@ -159,7 +159,9 @@ end;
 
 function TModelSetting.AsText: string;
 begin
-   if not Settings.TryGetByCommand(FCommand, Result) then
+   (* The STATION'S value -- the kept one where the open contest holds the
+     setting (2026-11-15), so the control shows what TrySetText edits. *)
+   if not Settings.TryGetStationValue(FCommand, Result) then
       begin
       (* Cannot happen -- the constructor proved the command resolves and
         nothing unregisters one -- but AsText is documented never to raise,
@@ -199,7 +201,11 @@ begin
      value the property's type refuses must never reach the file.  What is
      different is that there is no separate "apply" step -- assigning the
      property IS the application, and its setter raises the redraw. *)
-   Result := Settings.TrySetByCommand(FCommand, aText);
+   (* TrySetStationValue: a Preferences edit is the STATION'S. Where the open
+     contest holds this setting, the kept station value changes and the
+     contest's live value does not (NY4I, 2026-11-15, decision E); anywhere
+     else it is TrySetByCommand, as it always was. *)
+   Result := Settings.TrySetStationValue(FCommand, aText);
    if not Result then
       begin
       aError := Format('%s does not accept "%s"', [FCommand, aText]);

@@ -2567,8 +2567,10 @@ type
         ORDER the sources are read in: this object is loaded from
         settings\tr4w.json before any contest file, and the contest .cfg --
         whose FIRST line must be MY CALL -- is read after it and wins. The
-        station default is not touched by that, because nothing writes the
-        settings file on exit; the contest's own callsign is captured into
+        station default is not touched by that: the contest's statement
+        keeps the station's call (KeepStationValue), and every save --
+        including the one at exit -- writes the kept call; the contest's own
+        callsign is captured into
         the contest database, where uLogStore already records it as
         contest-scoped.
 
@@ -3876,7 +3878,27 @@ type
       FMessages: TMessageTemplateSettings;
       (* See FormerFrequencyPollRate. Not published, so never streamed. *)
       FFormerFrequencyPollRate: integer;
+      (* THE STATION'S VALUES WHILE SOMETHING ELSE HOLDS THE PROPERTY -- see
+        KeepStationValue. Property path -> the member exactly as the streamer
+        wrote it at the moment it was kept. Created on first use. *)
+      FKept: TJSONObject;
+      (* The kept paths whose live value is a RUN-TIME FORCE rather than a
+        contest's statement (KeepStationValue's aForced). *)
+      FKeptForced: TStringList;
       procedure BuildCommandMap;
+      (* The path KeepStationValue may keep for this command, or '' -- see
+        there for what is excluded and why. *)
+      function KeepablePath(const aCommand: string): string;
+      (* One property's member exactly as ToJSON would write it: its group
+        streamed through the same hook, the member taken out. Caller owns it. *)
+      function StreamedMember(const aOwner: TObject; const aInfo: PPropInfo): TJSONData;
+      (* ToJSON's half: every kept value replaces the live one in the finished
+        document. *)
+      procedure WriteKeptStationValues(const aDoc: TJSONObject);
+      (* F (2026-11-15): My.Zone and My.Country are written only when the
+        operator stated them. See the body. *)
+      procedure WriteUnstatedDerivationAsEmpty(aObject: TObject; aInfo: PPropInfo;
+                                               aResult: TJSONData);
       (* The streamer hook that keeps contest-scoped groups out of the
         file. A method rather than a plain procedure because it has to
         reach IsContestScoped through the property it is asked about. *)
@@ -3928,6 +3950,64 @@ type
         The caller owns the returned object. *)
       function ToJSON: TJSONObject;
       procedure FromJSON(const aObj: TJSONObject);
+
+      (* ---------------------------------------------------------------
+        A STATION VALUE WHILE THE CONTEST HOLDS THE PROPERTY (NY4I,
+        2026-11-15, decisions A, D and E).
+
+        A contest may state a station-scoped setting -- the club call (MY
+        CALL = NE4C at NY4I's station), a .cfg's LEADING ZEROS. The live
+        property then holds the CONTEST'S value, because every reader reads
+        the property. What settings\tr4w.json must hold is the STATION'S.
+
+        SO THE STATION'S VALUE IS KEPT, once per property, the first time
+        anything other than the station writes the property, and ToJSON
+        writes the kept value instead of the live one. Every writer of the
+        settings section goes through ToJSON, so no save -- Preferences, a
+        toggle, insert mode, the exit save -- can carry a contest's value
+        into the file.
+
+        THE GENERALISATION OF THE STATION-FACT OVERRIDE, INVERTED. A fact
+        (TStationFact) keeps the station in the property and the contest
+        beside it, because its readers ask Resolved*. Every other setting has
+        hundreds of plain readers, so here the CONTEST is in the property and
+        the STATION is beside it, and only the file is told. Facts are never
+        kept: they already have their override.
+
+        NOT KEPT: a contest-scoped setting (ToJSON leaves its group out
+        anyway), a station fact, a secret (the vault, not the file, holds a
+        secret, and ProtectSecretsInDocument reads the live object), and a
+        name the object does not own. Keyed by PROPERTY PATH, so every alias
+        shares one entry.
+
+        aForced: the live value is a RUN-TIME FORCE (SO2R off while a radio
+        has no frequency), not a contest's statement. Such an entry follows a
+        station edit live as well (see TrySetStationValue) and survives
+        RevertKeptStationValues. A contest statement over a forced entry
+        makes it a statement. *)
+      procedure KeepStationValue(const aCommand: string; aForced: boolean = False);
+      function StationValueIsKept(const aCommand: string): boolean;
+      (* THE STATION EDIT -- Preferences, the setup wizard, a peer (decision E).
+
+        For a kept setting: the KEPT value is replaced (so the next save writes
+        it) and the live value the open contest uses is NOT touched -- unless
+        the entry is a run-time force, when live follows too. Validated by the
+        same AssignByCommand every channel uses, on a scratch object, so no
+        setter of the live object runs.
+
+        For any other setting: TrySetByCommand, exactly as before. *)
+      function TrySetStationValue(const aCommand, aValue: string): boolean;
+      (* THE READ HALF, for the same doors: what Preferences and the wizard SHOW
+        as the station's value. The kept value for a kept setting, rendered by
+        TryGetByCommand on a scratch object; TryGetByCommand otherwise. Without
+        it the Station page would show the contest's NE4C as the station's call. *)
+      function TryGetStationValue(const aCommand: string; out aValue: string): boolean;
+      (* THE CONTEST'S CONFIGURATION STARTS AFRESH (uCFG.ClearContestCFGCommands):
+        every kept STATEMENT goes back onto the live property and is forgotten,
+        the analogue of ClearContestOverrides. Forced entries stay. Clearing
+        without restoring would leave the contest's value live with nothing
+        kept -- the leak this exists to close. *)
+      procedure RevertKeptStationValues;
 
       (* THE STATION'S FREQUENCY POLL RATE FROM A FILE WRITTEN BEFORE IT
         MOVED TO THE RADIO DEFINITION (issue 235 step 3), or 0 when the
@@ -6071,6 +6151,8 @@ end;
 
 destructor TR4WSettings.Destroy;
 begin
+   FKeptForced.Free;
+   FKept.Free;
    FStated.Free;
    FCommands.Free;
    (* EVERY GROUP THE CONSTRUCTOR CREATES IS FREED HERE, and eleven were not
@@ -7476,6 +7558,42 @@ procedure TR4WSettings.StreamPropertyHook(aSender: TObject; aObject: TObject;
 begin
    SkipContestScoped(aSender, aObject, aInfo, aResult);
    WriteUnsetCharAsEmpty(aObject, aInfo, aResult);
+   WriteUnstatedDerivationAsEmpty(aObject, aInfo, aResult);
+end;
+
+(*
+  A DERIVED ZONE OR COUNTRY IS NOT WRITTEN (NY4I, 2026-11-15, decision F).
+
+  FCONTEST derives My.Zone and My.Country from the callsign through
+  DeriveZone / DeriveCountry, which leave ZoneWasSet / CountryWasSet alone.
+  But the FILE did not know the difference: the derived value was streamed,
+  and the next load assigned it through the setter -- which latches the flag.
+  From then on the derivation declined to override it: a zone derived once
+  was the operator's zone forever.
+
+  So an unstated one is written as "", which loads as "" and latches nothing.
+  A stated one is written as it is. Mutated in place, as WriteUnsetCharAsEmpty
+  does -- see ToJSON for why the value is never REPLACED inside the hook.
+*)
+procedure TR4WSettings.WriteUnstatedDerivationAsEmpty(aObject: TObject; aInfo: PPropInfo;
+                                                      aResult: TJSONData);
+var
+   name: string;
+begin
+   if (aResult = nil) or (not (aResult is TJSONString)) or
+      (not (aObject is TMySettings)) then
+      begin
+      Exit;
+      end;
+   name := string(aInfo^.Name);
+   if UnicodeSameText(name, 'Zone') and (not TMySettings(aObject).ZoneWasSet) then
+      begin
+      aResult.AsString := '';
+      end
+   else if UnicodeSameText(name, 'Country') and (not TMySettings(aObject).CountryWasSet) then
+      begin
+      aResult.AsString := '';
+      end;
 end;
 
 (*
@@ -7570,6 +7688,9 @@ begin
      exists, and editing it is something anyone can read and a test can
      pin -- which is also why the load side has always done its work
      afterwards rather than during (see ClampToDeclaredRanges). *)
+   (* THE STATION'S VALUE WHERE THE CONTEST HOLDS THE PROPERTY -- see
+     KeepStationValue. Before the secrets pass; a secret is never kept. *)
+   WriteKeptStationValues(Result);
    ProtectSecretsInDocument(Result);
 end;
 
@@ -7663,6 +7784,305 @@ begin
    Walk(Self, aDoc, '');
 end;
 
+function TR4WSettings.KeepablePath(const aCommand: string): string;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+   fact: TStationFact;
+begin
+   Result := '';
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+   if (owner is TSettingsGroup) and TSettingsGroup(owner).IsContestScoped then
+      begin
+      Exit;
+      end;
+   if StationFactOfCommand(aCommand, fact) or IsSecretProperty(info) then
+      begin
+      Exit;
+      end;
+   Result := path;
+end;
+
+function TR4WSettings.StreamedMember(const aOwner: TObject; const aInfo: PPropInfo): TJSONData;
+var
+   streamer: TJSONStreamer;
+   doc: TJSONObject;
+   idx: integer;
+begin
+   Result := nil;
+   streamer := TJSONStreamer.Create(nil);
+   try
+      streamer.OnStreamProperty := StreamPropertyHook;
+      streamer.Options := streamer.Options + [jsoStreamChildren];
+      doc := streamer.ObjectToJSON(aOwner);
+   finally
+      streamer.Free;
+   end;
+   try
+      idx := doc.IndexOfName(UTF8Encode(string(aInfo^.Name)));
+      if idx >= 0 then
+         begin
+         Result := doc.Items[idx].Clone;
+         end;
+   finally
+      doc.Free;
+   end;
+end;
+
+procedure TR4WSettings.KeepStationValue(const aCommand: string; aForced: boolean);
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+   value: TJSONData;
+   forcedIdx: integer;
+begin
+   path := KeepablePath(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if FKept = nil then
+      begin
+      FKept := TJSONObject.Create;
+      FKeptForced := TStringList.Create;
+      FKeptForced.Sorted := True;
+      FKeptForced.Duplicates := dupIgnore;
+      FKeptForced.CaseSensitive := True;
+      end;
+
+   if FKept.IndexOfName(UTF8Encode(path)) >= 0 then
+      begin
+      (* ONCE PER PROPERTY: the first keep holds the station's value; a later
+        one would keep the contest's. A STATEMENT over a forced entry makes it
+        a statement, so a station edit then leaves the contest's value live. *)
+      if not aForced then
+         begin
+         forcedIdx := FKeptForced.IndexOf(AnsiString(path));
+         if forcedIdx >= 0 then
+            begin
+            FKeptForced.Delete(forcedIdx);
+            end;
+         end;
+      Exit;
+      end;
+
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+   value := StreamedMember(owner, info);
+   if value = nil then
+      begin
+      Exit;
+      end;
+   FKept.Add(UTF8Encode(path), value);
+   if aForced then
+      begin
+      FKeptForced.Add(AnsiString(path));
+      end;
+end;
+
+function TR4WSettings.StationValueIsKept(const aCommand: string): boolean;
+var
+   path: string;
+begin
+   path := PathForCommand(aCommand);
+   Result := (FKept <> nil) and (path <> '') and
+             (FKept.IndexOfName(UTF8Encode(path)) >= 0);
+end;
+
+function TR4WSettings.TrySetStationValue(const aCommand, aValue: string): boolean;
+var
+   path: string;
+   scratch: TR4WSettings;
+   owner: TObject;
+   info: PPropInfo;
+   value: TJSONData;
+begin
+   if not StationValueIsKept(aCommand) then
+      begin
+      Result := TrySetByCommand(aCommand, aValue);
+      Exit;
+      end;
+
+   (* A SCRATCH OBJECT, so the value is parsed, checked and streamed by the
+     same code as every other assignment while no setter of the live object
+     runs: it has no OnChanged, so no effect fires. Preferences only, and
+     only for a kept setting. *)
+   Result := False;
+   path := PathForCommand(aCommand);
+   scratch := TR4WSettings.Create;
+   try
+      if not scratch.AssignByCommand(aCommand, aValue) then
+         begin
+         Exit;
+         end;
+      if not ResolvePath(scratch, path, owner, info) then
+         begin
+         Exit;
+         end;
+      value := scratch.StreamedMember(owner, info);
+   finally
+      scratch.Free;
+   end;
+   if value = nil then
+      begin
+      Exit;
+      end;
+
+   FKept.Elements[UTF8Encode(path)] := value;
+   Result := True;
+
+   (* A FORCED VALUE FOLLOWS THE STATION'S EDIT: nothing about this contest
+     chose it, and the operator has just said what it should be. *)
+   if FKeptForced.IndexOf(AnsiString(path)) >= 0 then
+      begin
+      AssignByCommand(aCommand, aValue);
+      end;
+end;
+
+function TR4WSettings.TryGetStationValue(const aCommand: string; out aValue: string): boolean;
+var
+   path: string;
+   scratch: TR4WSettings;
+   owner: TObject;
+   info: PPropInfo;
+   one: TJSONObject;
+   destreamer: TJSONDeStreamer;
+begin
+   if not StationValueIsKept(aCommand) then
+      begin
+      Result := TryGetByCommand(aCommand, aValue);
+      Exit;
+      end;
+
+   Result := False;
+   aValue := '';
+   path := PathForCommand(aCommand);
+   scratch := TR4WSettings.Create;
+   try
+      if not ResolvePath(scratch, path, owner, info) then
+         begin
+         Exit;
+         end;
+      one := TJSONObject.Create;
+      destreamer := TJSONDeStreamer.Create(nil);
+      try
+         one.Add(UTF8Encode(string(info^.Name)),
+                 FKept.Elements[UTF8Encode(path)].Clone);
+         destreamer.OnRestoreProperty := scratch.ReadEmptyCharAsUnset;
+         destreamer.JSONToObject(one, owner);
+      finally
+         destreamer.Free;
+         one.Free;
+      end;
+      Result := scratch.TryGetByCommand(aCommand, aValue);
+   finally
+      scratch.Free;
+   end;
+end;
+
+procedure TR4WSettings.RevertKeptStationValues;
+var
+   i: integer;
+   path, member: string;
+   owner: TObject;
+   info: PPropInfo;
+   one: TJSONObject;
+   destreamer: TJSONDeStreamer;
+begin
+   if FKept = nil then
+      begin
+      Exit;
+      end;
+   for i := FKept.Count - 1 downto 0 do
+      begin
+      path := UTF8Decode(FKept.Names[i]);
+      if FKeptForced.IndexOf(AnsiString(path)) >= 0 then
+         begin
+         Continue;
+         end;
+      if ResolvePath(Self, path, owner, info) then
+         begin
+         (* THE DE-STREAMER, on a one-member document, into the group that
+           owns the property: the same read the startup load makes, so the
+           setter runs and the value is back exactly as the file would put
+           it. *)
+         member := string(info^.Name);
+         one := TJSONObject.Create;
+         destreamer := TJSONDeStreamer.Create(nil);
+         try
+            one.Add(UTF8Encode(member), FKept.Items[i].Clone);
+            destreamer.OnRestoreProperty := ReadEmptyCharAsUnset;
+            destreamer.JSONToObject(one, owner);
+         finally
+            destreamer.Free;
+            one.Free;
+         end;
+         end;
+      FKept.Delete(i);
+      end;
+end;
+
+procedure TR4WSettings.WriteKeptStationValues(const aDoc: TJSONObject);
+var
+   i, idx: integer;
+   path, rest, head: string;
+   dot: integer;
+   node: TJSONObject;
+   found: boolean;
+begin
+   if FKept = nil then
+      begin
+      Exit;
+      end;
+   for i := 0 to FKept.Count - 1 do
+      begin
+      path := UTF8Decode(FKept.Names[i]);
+      node := aDoc;
+      rest := path;
+      found := True;
+      dot := Pos('.', rest);
+      while dot > 0 do
+         begin
+         head := Copy(rest, 1, dot - 1);
+         rest := Copy(rest, dot + 1, MaxInt);
+         idx := node.IndexOfName(UTF8Encode(head));
+         if (idx < 0) or (not (node.Items[idx] is TJSONObject)) then
+            begin
+            found := False;
+            Break;
+            end;
+         node := TJSONObject(node.Items[idx]);
+         dot := Pos('.', rest);
+         end;
+      if not found then
+         begin
+         Continue;
+         end;
+      idx := node.IndexOfName(UTF8Encode(rest));
+      if idx < 0 then
+         begin
+         Continue;
+         end;
+      (* REPLACED WHERE IT STANDS -- fpjson's Elements writer frees the old
+        value and keeps the member's position, so a kept value equal to the
+        live one writes a byte-identical file. The document is plain data by
+        now; see ToJSON for why this is not done inside the streamer. *)
+      node.Elements[UTF8Encode(rest)] := FKept.Items[i].Clone;
+      end;
+end;
+
 procedure TR4WSettings.FromJSON(const aObj: TJSONObject);
 var
    destreamer: TJSONDeStreamer;
@@ -7671,6 +8091,12 @@ begin
       begin
       Exit;
       end;
+
+   (* A LOAD OF THE STATION'S SECTION PUTS THE STATION'S VALUES ON THE
+     PROPERTIES, so nothing kept describes anything any more (see
+     KeepStationValue). Startup loads before any contest states anything. *)
+   FreeAndNil(FKept);
+   FreeAndNil(FKeptForced);
 
    destreamer := TJSONDeStreamer.Create(nil);
    try

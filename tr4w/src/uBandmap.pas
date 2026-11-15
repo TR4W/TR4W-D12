@@ -159,8 +159,15 @@ begin
      logger.trace('Exiting TuneRadioToSpot due to NoBand');
      exit;
      end;
+  (* THESE THREE ARE RUN-TIME STATE WRITTEN INTO SETTINGS, so the operator's
+    configured values are kept first, as forced (NY4I, 2026-11-15): the file
+    keeps what the operator chose, not "off because radio 2 was switched off"
+    or the last spot's radio. Once per property; cheap after the first. *)
+  Settings.KeepStationValue('QSY INACTIVE RADIO', True);
   if ((radio1.filteredstatus.freq = 0) or (radio2.filteredstatus.freq = 0)) then
      begin
+     Settings.KeepStationValue('BAND MAP SO2R DISPLAY', True);
+     Settings.KeepStationValue('IN BAND LOCKOUT', True);
      Settings.BandMap.So2rDisplay := False;
      Settings.So2r.QsyInactiveRadio := False;
      Settings.So2r.InBandLockout := False;

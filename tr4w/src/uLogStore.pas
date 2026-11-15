@@ -3442,8 +3442,10 @@ begin
          if idx >= 0 then
             begin
             (* The stored string as it is -- CheckCommand takes strings
-              (issue 302). *)
-            if CheckCommand('MY CALL', rows.ValueFromIndex[idx], True) then
+              (issue 302). Through ApplyContestStatement, which keeps the
+              STATION'S call first, so no save writes this contest's call
+              into settings\tr4w.json (NY4I, 2026-11-15). *)
+            if ApplyContestStatement('MY CALL', rows.ValueFromIndex[idx]) then
                begin
                if logger <> nil then
                   begin
@@ -3821,6 +3823,11 @@ begin
                  delete a statement because it happened to match. A no-op for
                  a setting that is not contest-scoped. *)
                Settings.SetCommandStated(cmd, True);
+               (* AND A STATION-SCOPED ONE IS STILL THE CONTEST'S: its station
+                 value is kept, so a Preferences edit later changes the station
+                 and not this contest (2026-11-15). Equal now, so the kept value
+                 is the station's. *)
+               Settings.KeepStationValue(cmd);
                inc(Result);
                Continue;
                end;
@@ -3830,8 +3837,9 @@ begin
                characters came back cut on every open (reasoned, not measured:
                a later capture would then store the cut copy). CheckCommand takes
                strings, so there is nothing to convert and no buffer to
-               zero-fill. *)
-            if CheckCommand(cmd, val, True) then
+               zero-fill. ApplyContestStatement, the one door that keeps the
+               station's value first (2026-11-15). *)
+            if ApplyContestStatement(cmd, val) then
                begin
                inc(Result);
                end

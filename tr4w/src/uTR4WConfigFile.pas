@@ -130,6 +130,22 @@ procedure SaveConfig(const aFileName: string;
 procedure SaveSettings(const aFileName: string;
                        const aSettings: TR4WSettings);
 
+(* THE WHOLE SETTINGS OBJECT AT PROGRAM EXIT (NY4I, 2026-11-15, decision C).
+
+  A menu or hotkey change that no door saved -- assigned, never written --
+  used to be lost at exit, because nothing wrote the `settings` section then.
+  The direct saves stay (decision B): they protect against an abort before
+  exit. A contest's values never reach the file: ToJSON writes the station's
+  kept value wherever the contest holds the property.
+
+  ONLY AFTER THE INTERACTIVE STARTUP LOAD (LoadSettingsForStartup with
+  aImportLegacy). Before it the object holds constructor defaults, and
+  SaveSettings replaces the whole section -- so an exit that came too early
+  would reset the station. Then it saves nothing and says so. One info line
+  with the elapsed time. *)
+procedure SaveSettingsAtExit(const aFileName: string;
+                             const aSettings: TR4WSettings);
+
 (* THE SETTINGS AS THEY SHOULD STAND AT STARTUP.
 
   Returns True when the file already carried a `settings` section, which is
@@ -540,6 +556,29 @@ begin
    end;
 end;
 
+var
+   (* Set by the interactive startup load; SaveSettingsAtExit asks it. *)
+   gSettingsLoadedForSession: boolean = False;
+
+procedure SaveSettingsAtExit(const aFileName: string;
+                             const aSettings: TR4WSettings);
+var
+   started: QWord;
+begin
+   if (aSettings = nil) or (not gSettingsLoadedForSession) then
+      begin
+      TLogLogger.GetLogger('uTR4WConfigFile').Warn(
+         'Exit: the settings were never loaded this session -- not saved, ' +
+         'so the station''s file is not reset to defaults');
+      Exit;
+      end;
+   started := GetTickCount64;
+   SaveSettings(aFileName, aSettings);
+   TLogLogger.GetLogger('uTR4WConfigFile').Info(
+      'Exit: settings saved to ' + aFileName + ' in ' +
+      IntToStr(GetTickCount64 - started) + ' ms');
+end;
+
 function LoadSettingsForStartup(const aFileName: string;
                                 const aSettings: TR4WSettings;
                                 aImportLegacy: boolean = True): boolean;
@@ -551,6 +590,13 @@ begin
    if aSettings = nil then
       begin
       Exit;
+      end;
+   (* THE EXPORT (aImportLegacy False) never saves at exit; the interactive
+     start does. Marked before the load reads the file: a missing file is a
+     fresh install, and its defaults are what that station has. *)
+   if aImportLegacy then
+      begin
+      gSettingsLoadedForSession := True;
       end;
 
    root := ReadRootOrEmpty(aFileName);

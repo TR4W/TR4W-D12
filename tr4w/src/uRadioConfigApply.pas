@@ -199,6 +199,14 @@ procedure ApplyActiveCluster(const aStore: TRadioConfigStore);
 function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
                               const aCommand, aValue: string): boolean;
 
+(* FLIP ONE BOOLEAN SETTING BY NAME, AND KEEP IT -- a menu item or a hotkey
+  that toggles a setting goes through the same door Preferences does, so the
+  change is saved to settings\tr4w.json. Assigning the property alone applies
+  it for the session and loses it at exit: nothing saves the settings section
+  at shutdown (the band map's filters, 2026-11-15). False when the command is
+  not one the settings object owns as a boolean, or the value is refused. *)
+function ToggleAndStoreCommand(const aCommand: string): boolean;
+
 (* THE VALUE A SETTINGS SCREEN SHOWS FOR ONE COMMAND: the store's, falling
   back to the live one -- which covers a command the store has never held,
   and every command the settings object owns.  ONE spelling for Preferences
@@ -1277,6 +1285,26 @@ begin
       before := '';
       end;
 
+   (* A STATION EDIT OF A SETTING THE OPEN CONTEST HOLDS (NY4I, 2026-11-15,
+     decision E): the STATION'S kept value changes and is saved; the value the
+     contest is using does not. "Like correcting the zip on the company's
+     application template -- it does not change the form already handed to
+     the applicant." TrySetStationValue is the same rule TModelSetting uses. *)
+   if settingsOwned and Settings.StationValueIsKept(aCommand) then
+      begin
+      Result := Settings.TrySetStationValue(aCommand, aValue);
+      if Result then
+         begin
+         SaveSettings(TR4WConfigFileName, Settings);
+         end
+      else if logger <> nil then
+         begin
+         logger.Warn('[Config] "%s" = "%s" refused by the settings object',
+                     [aCommand, Settings.ValueForLog(aCommand, aValue)]);
+         end;
+      Exit;
+      end;
+
    // APPLY FIRST, RECORD SECOND -- the same order as everywhere else here.
    // CheckCommand is what moves the value into the live globals and runs the
    // hook; the store is only what makes it survive a restart.  Recording a
@@ -1319,15 +1347,59 @@ begin
       end;
 end;
 
-function StationCommandValue(const aStore: TRadioConfigStore;
-                             const aCommand: string): string;
+function ToggleAndStoreCommand(const aCommand: string): boolean;
+var
+   current: string;
 begin
-   if aStore = nil then
+   Result := False;
+   if not Settings.TryGetByCommand(aCommand, current) then
       begin
-      Result := CFGCommandValueAsString(aCommand);
       Exit;
       end;
-   Result := aStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
+
+   (* A BOOLEAN READS BACK AS EXACTLY 'TRUE' OR 'FALSE' (TryGetByCommand's
+     tkBool arm, the BA spellings). Anything else is not a boolean, and
+     flipping it would assign a value nobody chose. *)
+   if (current <> string(BA[True])) and (current <> string(BA[False])) then
+      begin
+      Exit;
+      end;
+
+   (* A HOTKEY ACTS ON WHAT IS ON SCREEN. When the open contest holds this
+     setting, the station edit door would change only the kept station value
+     and the key would appear to do nothing, so the live value is flipped for
+     the session and the file keeps the station's value. OPEN for NY4I:
+     should such a toggle also become the station's value? *)
+   if Settings.StationValueIsKept(aCommand) then
+      begin
+      Result := Settings.TrySetByCommand(aCommand,
+                                         string(BA[current <> string(BA[True])]));
+      Exit;
+      end;
+
+   Result := ApplyAndStoreCommand(nil, aCommand,
+                                  string(BA[current <> string(BA[True])]));
+end;
+
+function StationCommandValue(const aStore: TRadioConfigStore;
+                             const aCommand: string): string;
+var
+   live: string;
+begin
+   (* THE STATION'S VALUE, not the open contest's (2026-11-15): where the
+     contest holds a setting, the kept station value is what the Station page
+     and the wizard show and compare against. *)
+   if not (Settings.StationValueIsKept(aCommand) and
+           Settings.TryGetStationValue(aCommand, live)) then
+      begin
+      live := CFGCommandValueAsString(aCommand);
+      end;
+   if aStore = nil then
+      begin
+      Result := live;
+      Exit;
+      end;
+   Result := aStore.CommandValue(aCommand, live);
 end;
 
 function GridPromptAlreadyShown: boolean;

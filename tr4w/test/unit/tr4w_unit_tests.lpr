@@ -776,6 +776,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestNewContestHostArea in 'uTestNewContestHostArea.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
+   uTestStationValueKept in 'uTestStationValueKept.pas',
    (* M9b: the New Contest drop-down's list, and a CATEGORY-POWER change. *)
    uContestChoices      in '..\..\src\uContestChoices.pas',
    (* The New Contest dialog's Last Contest button: the log read without
@@ -1336,6 +1337,7 @@ begin
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TNewContestHostAreaTests.Create('NewContestHostArea'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
+   RegisterSuite(TStationValueKeptTests.Create('StationValueKept'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
    RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));
    RegisterSuite(TUILanguageTests.Create('UILanguage'));

@@ -1033,6 +1033,8 @@ end;
 // ===========================================================================
 
 procedure HamScoreInit;
+var
+  url: string;
 begin
   if Uploader <> nil then Exit;   // already running
   if not Settings.Contest.HamscoreEnable then Exit;
@@ -1043,9 +1045,13 @@ begin
      Exit;
      end;
 
-  if Settings.Hamscore.Url = '' then
+  (* THE DEFAULT IS USED, NOT STORED (2026-11-15). Writing it into the setting
+    let the next save latch today's default into settings\tr4w.json -- the
+    very thing issue 250's migration had to undo. *)
+  url := Settings.Hamscore.Url;
+  if url = '' then
      begin
-     Settings.Hamscore.Url := HAMSCORE_DEFAULT_URL;   // issue 250: hamscore.com over https
+     url := HAMSCORE_DEFAULT_URL;   // issue 250: hamscore.com over https
      end;
 
   (* PLAIN HTTP IS ALLOWED, AND SAID ONCE. The post carries the password, so a
@@ -1054,15 +1060,15 @@ begin
     working -- but the operator who reads the log learns the alternative. The
     URL is logged; the password never is. IsPlainHttpUrl is the same test
     Preferences uses for its note, so the two cannot disagree. *)
-  if IsPlainHttpUrl(Settings.Hamscore.Url) then
+  if IsPlainHttpUrl(url) then
      begin
      GetModuleLogger.Warn('[HamScore] %s is plain http: the HamScore password is sent unencrypted. '
                           + 'Use https://hamscore.com/postxml/ if the server supports it',
-                          [Settings.Hamscore.Url]);
+                          [url]);
      end;
 
   Uploader := THamScoreUploader.Create(
-    Settings.Hamscore.Url,
+    url,
     Settings.Hamscore.Username,
     Settings.Hamscore.Password);
   Uploader.VerifyServer := Settings.Hamscore.VerifyServer;   // issue 256

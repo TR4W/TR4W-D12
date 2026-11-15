@@ -324,6 +324,15 @@ function ApplyOwnedSetting(const aCommand, aValue: string): boolean;
   THE ONE ROUTE FOR ALL THREE CHANNELS, so the rule cannot be applied by one
   and forgotten by another. A refused value is reported here. *)
 function ApplyContestStatement(const aCommand, aValue: string): boolean;
+
+(* THE OPERATOR EDITS THE OPEN CONTEST'S OWN VALUE -- Tools > Edit Cabrillo
+  Summary's category rows (NY4I, 2026-11-15: a contest-parameter edit changes
+  that contest only). ApplyContestStatement, then a peer is told if the
+  setting is shared. NOTHING IS WRITTEN TO settings\tr4w.json -- neither the
+  settings section nor the legacy `commands` bucket, which SetCFGCommandValue
+  writes. The caller records the statement in the contest database
+  (uLogStore.LogStoreRecordContestStatement). *)
+function ApplyContestEdit(const aCommand, aValue: string): boolean;
 (* ~~CommandIsSingleValued~~ -- DELETED 2026-09-19 WITH THE INI READ.
 
   Its one caller was LogCfg's duplicate-key report, which fired for
@@ -404,6 +413,11 @@ begin
      dialog's choices are applied. Two resets kept in step by hand would
      drift; one call cannot. *)
    Settings.My.ClearContestOverrides;
+   (* AND THE STATION'S KEPT VALUES GO BACK ONTO THEIR PROPERTIES, for the
+     same reason: the contest's statements are being withdrawn. Restored, not
+     merely forgotten -- forgetting would leave the contest's value live with
+     nothing to stop the next save writing it. *)
+   Settings.RevertKeptStationValues;
 end;
 
 procedure NoteCommandFromContestCFG(const aCommand: string);
@@ -1607,10 +1621,33 @@ begin
       Exit;
       end;
 
+   (* A STATION-SCOPED SETTING THE CONTEST STATES: THE STATION'S VALUE IS KEPT
+     FIRST (NY4I, 2026-11-15), so no save writes the contest's value into
+     settings\tr4w.json -- the club call NE4C operating at NY4I's station. Once
+     per property; a no-op for anything KeepStationValue does not keep. *)
+   Settings.KeepStationValue(aCommand);
+
    (* THE STRINGS AS GIVEN (issue 302). This narrowed both to ShortString,
      so a contest .cfg line or a stored row longer than 255 characters was
      cut here before CheckCommand saw it. *)
    Result := CheckCommand(aCommand, aValue, True);
+end;
+
+function ApplyContestEdit(const aCommand, aValue: string): boolean;
+begin
+   Result := ApplyContestStatement(aCommand, aValue);
+   (* SAID, as SetCFGCommandValue says what changed (NY4I's bench request). A
+     credential's value is never written to the log. *)
+   if Result and (logger <> nil) then
+      begin
+      logger.Info('[Config] %s = %s for this contest only (a contest-parameter ' +
+                  'edit; settings\tr4w.json is not written)',
+                  [aCommand, Settings.ValueForLog(aCommand, aValue)]);
+      end;
+   if Result and CommandIsSharedWithPeers(aCommand) then
+      begin
+      SendParameterToNetwork(aCommand, aValue);
+      end;
 end;
 
 
