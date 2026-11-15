@@ -62,6 +62,7 @@ type
       procedure Test_TheExitSaveWritesWhatNoDoorSaved;
       procedure Test_ASaveWithNothingHeldIsUnchanged;
       procedure Test_AContestParameterEditLeavesTheFileAlone;
+      procedure Test_AToggleOfAStatedSettingIsTheStations;
    public
       procedure RunAllTests; override;
    end;
@@ -483,6 +484,37 @@ begin
    end;
 end;
 
+(* NY4I, 2026-11-15: a band-map toggle on a setting the contest states changes
+  the live value AND the station's. *)
+procedure TStationValueKeptTests.Test_AToggleOfAStatedSettingIsTheStations;
+var
+   fn, savedAllBands: string;
+begin
+   BeginTest('a band-map toggle of a contest-stated setting changes the live and the station value');
+   if not Redirect then
+      begin
+      Exit;
+      end;
+   savedAllBands := CurrentValue('BAND MAP ALL BANDS');
+   try
+      fn := TR4WConfigFileName;
+      CheckTrue(Settings.TrySetByCommand('BAND MAP ALL BANDS', 'FALSE'), 'the station: off');
+      SaveSettings(fn, Settings);
+      CheckTrue(ApplyContestStatement('BAND MAP ALL BANDS', 'FALSE'), 'the contest states off');
+      CheckTrue(Settings.StationValueIsKept('BAND MAP ALL BANDS'), 'the station value is kept');
+
+      CheckTrue(ToggleAndStoreCommand('BAND MAP ALL BANDS'), 'the B hotkey');
+      CheckEquals('TRUE', CurrentValue('BAND MAP ALL BANDS'), 'live is on');
+      CheckEquals('TRUE', FileValue(fn, 'BAND MAP ALL BANDS'), 'and the file is on');
+
+      SaveSettings(fn, Settings);
+      CheckEquals('TRUE', FileValue(fn, 'BAND MAP ALL BANDS'), 'and stays on at the next save');
+   finally
+      Restore;
+      Settings.TrySetByCommand('BAND MAP ALL BANDS', savedAllBands);
+   end;
+end;
+
 procedure TStationValueKeptTests.RunAllTests;
 begin
    Test_AContestCallNeverReachesTheFile;
@@ -492,6 +524,7 @@ begin
    Test_TheExitSaveWritesWhatNoDoorSaved;
    Test_ASaveWithNothingHeldIsUnchanged;
    Test_AContestParameterEditLeavesTheFileAlone;
+   Test_AToggleOfAStatedSettingIsTheStations;
 end;
 
 end.

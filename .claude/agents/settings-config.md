@@ -608,8 +608,11 @@ section**. The rule is by HOW A VALUE ARRIVED, not a property list:
   read half is `TryGetStationValue`**: `uRadioConfigApply.StationCommandValue`
   (Station page, wizard) and `TModelSetting.AsText` show the KEPT value, so a
   shown value applied back can never make the contest's value the station's.
-- **`ToggleAndStoreCommand` on a kept setting flips LIVE only** and the file
-  keeps the station's value (open question for NY4I).
+- **`ToggleAndStoreCommand` on a kept setting flips LIVE AND the kept station
+  value, and saves** (NY4I, 2026-11-15: a band-map toggle is the station's
+  choice too). Alt-K DVK ENABLE, AUTO QSL INTERVAL and AUTO-CQ DELAY simply
+  persist at exit (NY4I); DisplayGhz, Ptt.ViaCommands, Scp.MinimumLetters and
+  IncrementTimeEnable are ordinary saved settings with no special handling.
 - **`ClearContestCFGCommands` REVERTS** kept statements onto their properties
   (de-streamed into the group) and forgets them -- forgetting alone would leave
   the contest's value live with nothing kept. `FromJSON` (a load) drops

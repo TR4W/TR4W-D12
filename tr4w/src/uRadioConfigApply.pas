@@ -1365,15 +1365,21 @@ begin
       Exit;
       end;
 
-   (* A HOTKEY ACTS ON WHAT IS ON SCREEN. When the open contest holds this
-     setting, the station edit door would change only the kept station value
-     and the key would appear to do nothing, so the live value is flipped for
-     the session and the file keeps the station's value. OPEN for NY4I:
-     should such a toggle also become the station's value? *)
+   (* A HOTKEY ACTS ON WHAT IS ON SCREEN, AND IS THE STATION'S CHOICE TOO
+     (NY4I, 2026-11-15). When the open contest holds this setting, the station
+     edit door alone would change only the kept station value and the key would
+     appear to do nothing. So the LIVE value is flipped, as everywhere else,
+     AND the kept station value becomes the same, and is saved. *)
    if Settings.StationValueIsKept(aCommand) then
       begin
       Result := Settings.TrySetByCommand(aCommand,
-                                         string(BA[current <> string(BA[True])]));
+                                         string(BA[current <> string(BA[True])])) and
+                Settings.TrySetStationValue(aCommand,
+                                            string(BA[current <> string(BA[True])]));
+      if Result then
+         begin
+         SaveSettings(TR4WConfigFileName, Settings);
+         end;
       Exit;
       end;
 
