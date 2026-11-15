@@ -78,6 +78,25 @@ uses
     and nobody noticed. *)
   cwstring,
 {$ENDIF}
+  (* Interfaces IS THE FIRST NON-RTL UNIT, FOR SHUTDOWN (NY4I, 2026-11-15).
+
+    Finalization runs in REVERSE initialization order. Interfaces' finalization
+    frees the Application object and the widget set, so whatever initialises
+    BEFORE it is finalised AFTER the LCL is gone. With Interfaces reached only
+    through uLCLCoexist's implementation section, it initialised in the middle
+    of the graph, and every TR4W UI unit that initialised earlier -- uAppTimers,
+    uPrefsForm, uSetupWizardForm and others -- ran its finalization against a
+    nil Application. On Linux and macOS, where shutdown is Halt and the
+    finalizers run, that was exit 217 (TApplication.RemoveAsyncCalls with
+    Self = nil, from TPrefsForm.Destroy); on Windows ExitProcess skips them and
+    hid it. Listed here, it initialises before every TR4W unit and finalises
+    after all of them, so the LCL is alive for every unit's cleanup. It is the
+    position the Lazarus project template gives it, and tr4wserver.lpr and the
+    unit-test .lpr already list it the same way.
+
+    BELOW cthreads AND cwstring, NOT ABOVE: those install the RTL's thread and
+    string managers and must precede everything, the LCL included. *)
+  Interfaces,
   SysUtils,
   MainUnit in 'src\MainUnit.pas',
   BeepUnit in 'src\trdos\BeepUnit.pas',

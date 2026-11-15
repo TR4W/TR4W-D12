@@ -3367,7 +3367,8 @@ type
          THE BASE IS THE CLASSLESS FALLBACK, which is the arm
          MainUnit.ApplyContestSpecificADIFTail ended in until M5a: a grid
          exchange takes the grid, a contest with domestic multipliers takes
-         the QTH tag (else the letters leading SRX_STRING), anything else
+         the QTH tag (else the non-number words of SRX_STRING less its RST,
+         ImportDomesticQTHWords -- issue 329), anything else
          keeps SRX_STRING as the exchange. It keys on the SESSION's exchange
          and multiplier kind (aSession), for the reason TCabrilloQSOContext
          records: the session's answer is the engine's, and varies per
@@ -4445,7 +4446,8 @@ function ContestQTHIsAnARRLSection(aContest: TContestBase): boolean;
    not know, or a session with no lookup, keeps the text as written (what
    every import did before). QTHString is not touched: it is the operator's
    literal value, typed or imported (Q45). The Sweepstakes, both Field Day
-   and the ARRL 160 imports call it, the base's domestic arm, and (issue 328)
+   and the ARRL 160 imports call it, the base's domestic arm (its QTH-tag
+   branch), and (issue 328)
    ImportDomesticQTHWords below. *)
 procedure ImportDomesticQTH(const aSession: TADIFImportSession;
                             const aText: string;
@@ -4483,7 +4485,10 @@ function NonNumericWords(const aText: string): string;
    Called by the CQ 160 (RS(T) and state, province or zone), UBA DX (RS(T),
    serial and a possible QTH), LZ DX (zone or QTH), OK/OM DX and Ukrainian DX
    (serial or QTH) imports, each of which stored the RAW SRX_STRING, RST and
-   all, until issue 328. *)
+   all, until issue 328; and (issue 329) by TContestBase.ApplyADIFImport's
+   domestic arm for a record with no QTH tag -- every domestic contest
+   without an import of its own, OK/OM DX SSB among them -- which took the
+   alphabetic prefix of the raw SRX_STRING until then. *)
 function ImportDomesticQTHWords(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange;
@@ -7259,7 +7264,7 @@ procedure TContestBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                        const aSession: TADIFImportSession;
                                        var aExch: ContestExchange);
 var
-   j: integer;
+   received: string;
 begin
    (* THE CLASSLESS FALLBACK, transcribed from the `else` of
       MainUnit.ApplyContestSpecificADIFTail. The first test is the open
@@ -7280,10 +7285,9 @@ begin
       if aExch.QTHString <> '' then
          begin
          (* The ADIF QTH tag carries the county or state code unambiguously
-            for state QSO parties. Prefer it when present: the alpha-prefix
-            of SRX_STRING below was already unreliable, and now fails
-            outright because SRX_STRING is normalised to include a leading
-            RST ("59 MON") on export.
+            for state QSO parties. Prefer it when present: it is the
+            operator's literal value, where SRX_STRING below carries the
+            RST and any other field of the exchange ("59 MON").
             RESOLVED, NOT COPIED (issue 275 item 2, the QSO-party half of
             issue 265): ImportDomesticQTH stores what typed entry stores --
             an alias as the file's QTH and its multiplier key -- and keeps
@@ -7292,15 +7296,18 @@ begin
          end
       else
          begin
-         (* Legacy fallback for an import that lacks a QTH tag: the ALPHA
-            prefix of SRX_STRING, resolved the same way. *)
-         j := 1;
-         while (j <= Length(aTemps.SRX_String)) and
-               not (aTemps.SRX_String[j] in ['0'..'9']) do
-            begin
-            Inc(j);
-            end;
-         ImportDomesticQTH(aSession, Copy(aTemps.SRX_String, 1, j - 1), aExch);
+         (* NO QTH TAG: THE WORDS OF SRX_STRING THAT ARE NOT NUMBERS -- issue
+            329, 2026-11-15, through the helper the issue 328 imports share
+            (ImportDomesticQTHWords), resolved the same way. This took the
+            ALPHA PREFIX of the raw SRX_STRING, which TR4W writes RST first,
+            so '599 CT' gave '' and OK/OM DX SSB (which has no import of its
+            own) read differently from OK/OM DX CW. A word of letters and
+            digits is now kept whole ('MO12' is an RDA district, not 'MO').
+            An SRX_STRING of numbers only writes nothing, as before (the
+            prefix was ''). The QTH tag branch above is NOT routed through
+            the helper: a QTH tag of digits ('45') is the operator's literal
+            value and is kept. *)
+         ImportDomesticQTHWords(aTemps, aSession, aExch, received);
          end;
       end
    else

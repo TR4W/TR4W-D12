@@ -4246,12 +4246,25 @@ begin
 
   StartRequestedRelaunch;
 
+  (* THE LOGGER IS NOT FREED HERE, AND NEVER WAS OURS TO FREE (2026-11-15).
+    `logger` comes from TLogLogger.GetLogger, so Log4D's hierarchy OWNS it:
+    TLogHierarchy.Clear frees every logger it holds when Log4D finalises.
+    Freeing it here was a double free on every path that reaches Log4D's
+    finalization (Halt, off Windows), and it left every other reference to the
+    same object dangling -- uRadioHamLibDirect holds its own
+    GetLogger('TR4WDebugLog'), the SAME instance, and its finalization logged
+    through the freed object; each child logger's parent pointer went the same
+    way. Left alone, the logger lives until Log4D's finalization, which runs
+    after every unit that logs (they all depend on Log4D), so no finalizer can
+    log through a freed logger and none needs a guard. The file appender is on
+    the ROOT logger (TLogBasicConfigurator.Configure), so this free never closed
+    or flushed the file either. On Windows nothing changes: ExitProcess below
+    runs no finalization. *)
   if Assigned(logger) then
      begin
      logger.Info('------------------------------Program shutdown----------------------------');
-     FreeAndNil(logger);
      end;
-  // HamScoreShutdown is not here: it must run BEFORE the logger is freed. See above BackupCopyStop.
+  // HamScoreShutdown is not here: it must run while the log is still being written. See above BackupCopyStop.
 
   (* NOTHING TO UNREGISTER. The matching RegisterClass in uProgramMain is gone
     (2026-09-06): it registered a window class that no CreateWindowEx names,
@@ -9181,10 +9194,13 @@ var
 begin
   (* THE NAME ITSELF. nameBytes existed only to give utils_file a PAnsiChar
     that outlived the call; tOpenFileForWrite takes a string now. *)
-  if not tOpenFileForWrite(h, FileName) then
+  (* issue 313: the list is a .partial until every write worked, so a full disk
+    cannot leave the operator's INITIAL.EX truncated. *)
+  if not OpenExportFileNamed(FileName) then
      begin
      Exit;
      end;
+  h := tReportFileWrite;
   sWriteFileFromString(h, ';callsign exchange'#13#10#13#10);
   for i := 0 to CallsignsList.Count - 1 do
      begin
@@ -9216,7 +9232,7 @@ begin
 
         end;
      end;
-  FileClose(h);   { a FILE handle -- sWriteFile above }
+  CloseExportFile(True);
 end;
 
 procedure MakeAllCallsignsList;
@@ -9229,10 +9245,11 @@ var
   TempCall: CallString;
 begin
   MakeReportFileName('ALLCALLSIGNS.TXT');
-  if not tOpenFileForWrite(h, string(ReportsFilename)) then
+  if not OpenExportFileNamed(string(ReportsFilename)) then
      begin
      Exit;
      end;
+  h := tReportFileWrite;
 
   (* Settings.Contest.Title itself -- @Settings.Contest.Title[1] was a bare pointer into a
     ShortString, which has no NUL for the formatter to stop at. *)
@@ -9265,8 +9282,10 @@ begin
         end;
      end;
 
-  FileClose(h);   { a FILE handle -- sWriteFile above }
-  FilePreview;
+  if CloseExportFile(True) then
+     begin
+     FilePreview;
+     end;
 end;
 
 procedure tAltE;

@@ -214,6 +214,7 @@ uses
    uTestLicenceYearEntry in 'uTestLicenceYearEntry.pas',
    uTestQSONumberAndNameEntry in 'uTestQSONumberAndNameEntry.pas',
    uTestPostalCodeEntry in 'uTestPostalCodeEntry.pas',
+   uTestRSTWordReading in 'uTestRSTWordReading.pas',
    uTestSortedStringList in 'uTestSortedStringList.pas',
    uTestCallsignsList   in 'uTestCallsignsList.pas',
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
@@ -1221,6 +1222,7 @@ begin
    RegisterSuite(TLicenceYearEntryTests.Create('LicenceYearEntry'));
    RegisterSuite(TQSONumberAndNameEntryTests.Create('QSONumberAndNameEntry'));
    RegisterSuite(TPostalCodeEntryTests.Create('PostalCodeEntry'));
+   RegisterSuite(TRSTWordReadingTests.Create('RSTWordReading'));
    RegisterSuite(TSortedStringListTests.Create('SortedStringList'));
    RegisterSuite(TCallsignsListTests.Create('CallsignsList'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));

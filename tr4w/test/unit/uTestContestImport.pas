@@ -68,6 +68,7 @@ type
       procedure Test_ZoneAndSocietyContests;
       procedure Test_WAGAndIOTAReadWhatTheyWrite;
       procedure Test_ClasslessDefault;
+      procedure Test_OKOMSSBReadsTheDomesticQTHAsCWDoes;
       procedure Test_CommonStepsRunForEveryContest;
       procedure Test_ImportFromStringAsksTheClass;
       procedure Test_AlphabeticTest;
@@ -618,7 +619,9 @@ begin
       CheckEquals('59 FN31', string(x.ExchString), 'a grid exchange: RST and grid');
 
       (* Domestic multipliers: the QTH tag when the record has one, else the
-         letters leading SRX_STRING. *)
+         words of SRX_STRING (less the received RST) that are not numbers --
+         ImportDomesticQTHWords, issue 329. It took the ALPHA PREFIX of the
+         raw SRX_STRING, so '59 MON12' gave '' and 'MON12' gave 'MON'. *)
       s := NeutralADIFImportSession;
       s.DoingDomesticMults := True;
       x := NewExch(RSGB18);
@@ -627,13 +630,42 @@ begin
       CheckEquals('MON', string(x.DomesticQTH), 'domestic multipliers: the QTH tag');
 
       x := NewExch(RSGB18);
+      x.QTHString := '45';
       base.ApplyADIFImport(t, s, x);
-      CheckEquals('', string(x.DomesticQTH), 'a leading digit leaves no letters');
+      CheckEquals('45', string(x.DomesticQTH),
+                  'a QTH tag of digits is kept: the tag is not routed through the number filter');
+
+      x := NewExch(RSGB18);
+      x.RSTReceived := 59;
+      base.ApplyADIFImport(t, s, x);
+      CheckEquals('MON12', string(x.DomesticQTH),
+                  '59 MON12: the RST comes off and a word of letters and digits is kept whole (it gave '''')');
 
       t.SRX_String := 'MON12';
       x := NewExch(RSGB18);
       base.ApplyADIFImport(t, s, x);
-      CheckEquals('MON', string(x.DomesticQTH), 'domestic multipliers: the alpha prefix of SRX_STRING');
+      CheckEquals('MON12', string(x.DomesticQTH),
+                  'MON12 is one word, not its alpha prefix MON');
+
+      t.SRX_String := '599 CT';
+      x := NewExch(RSGB18);
+      x.RSTReceived := 599;
+      base.ApplyADIFImport(t, s, x);
+      CheckEquals('CT', string(x.DomesticQTH), '599 CT is CT (it gave '''')');
+
+      t.SRX_String := '599';
+      x := NewExch(RSGB18);
+      x.RSTReceived := 599;
+      base.ApplyADIFImport(t, s, x);
+      CheckEquals('', string(x.DomesticQTH), 'an RST-only SRX_STRING writes no domestic QTH');
+
+      t.SRX_String := '599 8';
+      x := NewExch(RSGB18);
+      x.RSTReceived := 599;
+      base.ApplyADIFImport(t, s, x);
+      CheckEquals('', string(x.DomesticQTH), 'numbers only write no domestic QTH');
+
+      t.SRX_String := 'MON12';
 
       (* Neither: the raw SRX_STRING is the exchange. *)
       x := NewExch(RSGB18);
@@ -642,6 +674,48 @@ begin
    finally
       base.Free;
       end;
+end;
+
+(* OK/OM DX SSB HAS NO IMPORT OF ITS OWN, SO IT READS THE BASE'S DOMESTIC
+  ARM -- issue 329, 2026-11-15. OK/OM DX CW (issue 328) reads its domestic
+  QTH through ImportDomesticQTHWords; the base arm took the alphabetic prefix
+  of the raw SRX_STRING, so '599 OL' was '' on SSB and 'OL' on CW. Both now
+  answer through the one helper. The session states domestic multipliers, as
+  the open contest's does (the matrix: doing.domestic TRUE at every station);
+  it has no lookup, so a QTH is kept as written. *)
+procedure TContestImportTests.Test_OKOMSSBReadsTheDomesticQTHAsCWDoes;
+var
+   s: TADIFImportSession;
+
+   function DomesticQTHOf(aContest: ContestType; aRST: integer; const aSRX: string): string;
+   var
+      x: ContestExchange;
+      t: TADIFRecordTemps;
+   begin
+      x := NewExch(aContest);
+      x.RSTReceived := aRST;
+      t := NoTemps;
+      t.SRX_String := aSRX;
+      ContestIdentity(aContest).ApplyADIFImport(t, s, x);
+      Result := string(x.DomesticQTH);
+   end;
+
+   procedure Same(aRST: integer; const aSRX, aExpected: string);
+   begin
+      CheckEquals(aExpected, DomesticQTHOf(OKOMSSB, aRST, aSRX), 'OK/OM DX SSB: ' + aSRX);
+      CheckEquals(aExpected, DomesticQTHOf(OKDX, aRST, aSRX), 'OK/OM DX CW: ' + aSRX);
+   end;
+
+begin
+   BeginTest('Test_OKOMSSBReadsTheDomesticQTHAsCWDoes');
+   s := NeutralADIFImportSession;
+   s.DoingDomesticMults := True;
+   Same(59, '59 OL', 'OL');
+   Same(599, '599 OL', 'OL');
+   Same(59, 'OL', 'OL');
+   Same(59, '59 123 OL', 'OL');
+   Same(59, '59', '');
+   Same(59, '59 123', '');
 end;
 
 procedure TContestImportTests.Test_CommonStepsRunForEveryContest;
@@ -710,6 +784,7 @@ begin
    Test_ZoneAndSocietyContests;
    Test_WAGAndIOTAReadWhatTheyWrite;
    Test_ClasslessDefault;
+   Test_OKOMSSBReadsTheDomesticQTHAsCWDoes;
    Test_CommonStepsRunForEveryContest;
    Test_ImportFromStringAsksTheClass;
    Test_AlphabeticTest;

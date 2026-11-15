@@ -279,6 +279,9 @@ implementation
 {$R *.lfm}
 
 uses
+   (* FIRST, so every unit below wins over it for a shared name: it is here
+     for UnqueueAsyncCalls alone. *)
+   uMainForm,
    Dialogs,
    System.UITypes,
    VC,                  // ContinentTypeSA
@@ -432,8 +435,12 @@ begin
       begin
       gCallbookTarget := nil;
       end;
-   (* A queued split must not find this form gone. *)
-   Application.RemoveAsyncCalls(Self);
+   (* A queued split must not find this form gone. Through UnqueueAsyncCalls,
+     which skips a nil or stopped Application. That guards THIS call only:
+     inherited Destroy (TCustomForm.Destroy) calls Application.RemoveAsyncCalls
+     itself, unguarded. What keeps Application alive for a wizard destroyed at
+     unit finalization is Interfaces being listed first in tr4w.lpr. *)
+   UnqueueAsyncCalls(Self);
    inherited Destroy;
 end;
 

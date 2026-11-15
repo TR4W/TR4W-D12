@@ -540,16 +540,22 @@ finalization
      export -- so a caption gets fitted, and then Halt(0) goes straight to
      FinalizeUnits.
 
-     THE ANSWER IS NOT TO REORDER THE UNITS. Finalization order is reverse
-     initialization order: a property of the entire uses graph, 446 lines of it
-     in tr4w.lpr, with Interfaces reached through one unit's IMPLEMENTATION
-     section. A fix pinned to that ordering holds until somebody adds a unit
-     and then fails exactly as quietly as this did.
+     THE UNIT ORDER IS NOW PINNED, AND THIS CHECK STAYS ANYWAY (2026-11-15).
+     Finalization order is reverse initialization order. When this was written
+     Interfaces was reached through one unit's IMPLEMENTATION section, so the
+     widgetset was freed in the middle of the finalization sequence and this
+     unit's turn could come after it. Since 2026-11-15 tr4w.lpr lists
+     Interfaces first (after only cthreads/cwstring), so it initialises before
+     every TR4W unit and the widgetset outlives all of their finalizations --
+     the fix for exit 217 off Windows, where TPrefsForm.Destroy reached a nil
+     Application. That holds for the app only: another program that links this
+     unit decides its own order, so the check below is kept as the second line
+     of defence rather than deleted.
 
      THE INVARIANT, which is what generalises: A UNIT-LEVEL GLOBAL HOLDING A
-     GDI HANDLE CANNOT ASSUME THE WIDGETSET OUTLIVES IT. So it asks. When the
-     widgetset has gone, the handle is left to Windows, which reclaims every
-     GDI object a process owns as that process exits. *)
+     GDI HANDLE DOES NOT ASSUME THE WIDGETSET OUTLIVES IT. So it asks. When the
+     widgetset has gone, the handle is left to the operating system, which
+     reclaims what a process owns as that process exits. *)
    if WidgetSet <> nil then
       begin
       FreeAndNil(GMeasure);

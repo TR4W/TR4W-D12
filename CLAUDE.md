@@ -506,6 +506,13 @@ are still `.lpr` questions. `uProgramMain`'s own uses clause is a copy of it in 
 this program relies on use-order for name resolution (`SysUtils.SysErrorMessage` vs `TF`'s), so do
 not tidy it as a side effect of something else.
 
+**`Interfaces` is the first non-RTL unit in both lists (after only `cthreads`/`cwstring` on Unix), and
+that position is load-bearing** (2026-11-15): finalization runs in reverse initialization order and
+`Interfaces`' finalization frees `Application` and the widgetset, so listed first it outlives every
+TR4W unit's finalization. Reached only through `uLCLCoexist` it finalized mid-sequence, and
+`uPrefsForm`/`uAppTimers` cleanup ran against a nil `Application` (exit 217; hidden on Windows by
+`ExitProcess`). Do not move it. `tr4w_ShutDown` does not free `logger`: Log4D's hierarchy owns it.
+
 Two facts about that sequence that grep will not tell you: **headless `/EXPORT` mode boots the
 contest, writes the files and `Halt(0)`s before any GUI or network init**, and config load
 (INI → CFG → common messages) plus CTY.DAT load happen before the main window.

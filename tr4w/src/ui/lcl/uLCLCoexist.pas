@@ -116,13 +116,20 @@ implementation
 
 
 uses
-   // Interfaces FIRST, and it is not optional.  It is what links the win32
-   // widgetset, which supplies every WSRegisterXxx symbol the LCL's controls
-   // reference.  Without it the link fails with a wall of
-   //     Undefined symbol: WSRegisterControl, WSRegisterMenu, ...
-   // that names no unit and does not suggest its own cause.  Listing it here
-   // rather than in tr4w.lpr keeps the whole LCL dependency in one place, and
-   // the uses order guarantees it initialises before Forms.
+   (* Interfaces FIRST, and it is not optional.  It is what links the
+     widgetset, which supplies every WSRegisterXxx symbol the LCL's controls
+     reference.  Without it the link fails with a wall of
+         Undefined symbol: WSRegisterControl, WSRegisterMenu, ...
+     that names no unit and does not suggest its own cause.
+
+     IT IS ALSO LISTED FIRST IN tr4w.lpr NOW (2026-11-15), and that listing,
+     not this one, decides WHEN it initialises -- and so when it finalises,
+     freeing Application and the widgetset. Reached only from here it
+     finalised before uAppTimers, uPrefsForm and other UI units did, and their
+     cleanup ran against a nil Application (exit 217 off Windows). This entry
+     stays so the unit names its own dependency, and still puts Interfaces
+     before Forms for any program that reaches the LCL through this unit
+     alone. *)
    Interfaces,
    Forms,
    Dialogs,      (* MessageDlg *)

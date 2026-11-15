@@ -795,6 +795,12 @@ function  StatusText(const aOwner: TStatusOwner): string;
   2026-10-26: uStateBridge's GBridge is its second caller. *)
 procedure FreeDeferralTarget(var aTarget: TObject);
 
+(* UNQUEUE EVERY Application.QueueAsyncCall FOR aTarget, IF THERE IS STILL A
+  QUEUE TO TAKE IT FROM -- the guard FreeDeferralTarget uses, named once so a
+  destructor can use it too (uSetupWizardForm). A nil Application, or one that
+  has stopped its queue, is skipped: nothing queued can run any more. *)
+procedure UnqueueAsyncCalls(const aTarget: TObject);
+
 (* SHARE THE STRIP'S WIDTH OUT BETWEEN ITS PANELS.
 
   A TStatusBar PANEL HAS A FIXED WIDTH AND DOES NOT FOLLOW ITS PARENT.  The
@@ -4917,17 +4923,23 @@ end;
    unqueues them; a write dropped at shutdown is what the shutting-down branches
    above already do. Once the LCL has stopped the queue (AppDoNotCallAsyncQueue)
    RemoveAsyncCalls raises, and nothing can run any more, so it is skipped. *)
+procedure UnqueueAsyncCalls(const aTarget: TObject);
+begin
+   if (aTarget <> nil)        and
+      (Application <> nil)    and
+      not (AppDoNotCallAsyncQueue in Application.Flags) then
+      begin
+      Application.RemoveAsyncCalls(aTarget);
+      end;
+end;
+
 procedure FreeDeferralTarget(var aTarget: TObject);
 begin
    if aTarget = nil then
       begin
       Exit;
       end;
-   if (Application <> nil) and
-      not (AppDoNotCallAsyncQueue in Application.Flags) then
-      begin
-      Application.RemoveAsyncCalls(aTarget);
-      end;
+   UnqueueAsyncCalls(aTarget);
    FreeAndNil(aTarget);
 end;
 

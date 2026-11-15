@@ -650,6 +650,14 @@ function ProcessRSTAndZoneExchange(Exchange: ShortString; var RXData:
   uTestLogReceivedYear. *)
 function ProcessRSTAndLicenceYearExchange(Exchange: ShortString;
   aKind: TReceivedYearKind; var RXData: ContestExchange): boolean;
+(* RS(T) and age (Radio Memory), and RS(T) and serial or French department
+  (REF CW/SSB). In the interface for uTestRSTWordReading (issue 330): their
+  report is ReadRSTWord's reading, the one ValidRST gives every other parser.
+  The second reads the words ParseArray2 left in ParserArray. *)
+function ProcessRSTAgeAndPossibleSK(Exchange: ShortString; var RXData:
+  ContestExchange): boolean;
+function ProcessRSTAndQSONumberOrFrenchDepartmentExchange(Exchange: Str80; var
+  RXData: ContestExchange): boolean;
 (* Serial and name (CW Open and others). In the interface for
   uTestQSONumberAndNameEntry: every refusal names its reason. *)
 function ProcessQSONumberAndNameExchange(Exchange: ShortString; var
@@ -692,7 +700,10 @@ function ProcessRSTAndPostalCodeExchange(Exchange: Str80; var RXData:
   ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
-function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
+(* ONE WORD READ AS THE MODE'S RS(T) -- see the implementation. In the
+  interface since issue 330 (2026-11-15), when LOGSTUFF's second report check
+  (SetRST, which had drifted from tree.ValidRST) was deleted for it. *)
+function ReadRSTWord(const aWord: Str10; out aRST: smallInt): boolean;
 
 function ProperSalutation(Call: CallString): string;
 
@@ -1733,6 +1744,29 @@ begin
   logger.debug('Leaving ProcessClassAndDomesticOrDXQTHExchange with ceClass = (%s) and QTHString = (%s)', [RXData.ceclass, RXData.QTHString]);
 end;
 
+(* THE FIRST WORD ParseArray2 CUT, READ AS THE MODE'S RS(T) -- issue 330,
+  2026-11-15. These sites called LOGSTUFF.SetRST, a second report check that
+  had drifted from tree.ValidRST: on CW a lone strength 5 gave 514 where
+  ValidRST gives 559, the CW floor was 111 (100) and the Phone floor 11 (10),
+  and it had no Digital arm, so every Digital entry was refused. It is
+  deleted; the one reading is ReadRSTWord's (ValidRST's), handed the word as
+  typed so its one-to-three-digit guard applies. The report is written only
+  when the word is one, as SetRST did: a refusal leaves RSTReceived alone. *)
+function ReadReportOfFirstElement(var RXData: ContestExchange): boolean;
+var
+  word: Str10;
+  report: smallInt;
+begin
+  (* An assignment, which truncates a word longer than ten characters; such
+    a word is no report, and ReadRSTWord refuses anything over three. *)
+  word := ParserArray.paElements[0].prString;
+  Result := ReadRSTWord(word, report);
+  if Result then
+     begin
+     RXData.RSTReceived := report;
+     end;
+end;
+
 function ProcessRSTAgeAndPossibleSK(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
 const
@@ -1757,8 +1791,7 @@ begin
        2:
          if Cardinal(ParserArray.paStatus) = Cardinal(exNNUU) then
             begin
-            if not SetRST(ParserArray.paElements[0].prInteger, RXData.RSTReceived)
-              then
+            if not ReadReportOfFirstElement(RXData) then
                begin
                Exit;
                end;
@@ -1786,8 +1819,7 @@ begin
        4:
          if Cardinal(ParserArray.paStatus) = Cardinal(exNNMN) then
             begin
-            if not SetRST(ParserArray.paElements[0].prInteger, RXData.RSTReceived)
-              then
+            if not ReadReportOfFirstElement(RXData) then
                begin
                Exit;
                end;
@@ -5371,7 +5403,7 @@ begin
   if ParserArray.paCount = 2 then
      begin
      if (ParserArray.paElements[0].prType <> eetNumber) or not
-       (sETrst(ParserArray.paElements[0].prInteger, RXData.RSTReceived)) then
+       ReadReportOfFirstElement(RXData) then
         begin
         Exit;
         end;
@@ -5972,8 +6004,8 @@ end;
 
   You can enter just the strength of the RS(T) if you like.
 
-  aNumberLeads is True for the last form (the number, then a CW RST): the zone
-  parser has never applied its 40-zone limit there (issue 274, open). Writes
+  aNumberLeads is True for the last form (the number, then a CW RST); the zone
+  parser applies its 40-zone limit there too since issue 274 item 4. Writes
   RXData.RSTReceived, as the zone parser always did -- before a refusal too --
   and NOTHING ELSE of RXData; the caller writes the number only once it
   accepts the entry. Answers whether the words have the shape.
@@ -5982,18 +6014,25 @@ end;
   zone, a two-digit year or a count; 4..4 for a four-digit year, so '1987
   599' and '599 1987' read as they do for two digits. With 1..2 every test
   below is the one it always was: the lead form asked length < 3 of a word
-  that cannot be empty when a second word follows it. *)
+  that cannot be empty when a second word follows it.
+
+  aRefusedReport IS THE REPORT WORD OF THE LEAD FORM WHEN IT IS NO REPORT
+  (issue 330): '' otherwise. The caller names it in its refusal
+  (SExchangeNotASignalReport) instead of blaming the number. *)
 function ReadRSTAndNumberOfDigits(Exchange: ShortString;
                                   var RXData: ContestExchange;
                                   aFewest, aMost: integer;
                                   out aNumber: integer;
-                                  out aNumberLeads: boolean): boolean;
+                                  out aNumberLeads: boolean;
+                                  out aRefusedReport: Str10): boolean;
 var
   FirstString, SecondString, ThirdString: Str10;
+  report: smallInt;
 begin
   Result := False;
   aNumber := 0;
   aNumberLeads := False;
+  aRefusedReport := '';
   if not StringIsAllNumbersOrSpaces(Exchange) then
      begin
      Exit;
@@ -6010,7 +6049,18 @@ begin
            (length(FirstString) >= aFewest) and
            (length(FirstString) <= aMost)   then
            begin
-           RXData.RSTReceived := StrToIntDef(SecondString, 0);
+           (* THE REPORT IS CHECKED (issue 330, 2026-11-15): it was
+             StrToIntDef after a length test only, so '14 699' stored a
+             report of 699 (D7 did the same, with StrToInt). It is
+             ReadRSTWord's reading now, the one every other RS(T) in the
+             engine gets; a word it refuses ends the parse and is handed
+             back in aRefusedReport for the caller's message. *)
+           if not ReadRSTWord(SecondString, report) then
+              begin
+              aRefusedReport := SecondString;
+              Exit;
+              end;
+           RXData.RSTReceived := report;
            aNumber := StrToIntDef(FirstString, 0);
            aNumberLeads := True;
            Result := True;
@@ -6041,9 +6091,11 @@ end;
 function ReadRSTAndOneOrTwoDigitNumber(Exchange: ShortString;
                                        var RXData: ContestExchange;
                                        out aNumber: integer;
-                                       out aNumberLeads: boolean): boolean;
+                                       out aNumberLeads: boolean;
+                                       out aRefusedReport: Str10): boolean;
 begin
-  Result := ReadRSTAndNumberOfDigits(Exchange, RXData, 1, 2, aNumber, aNumberLeads);
+  Result := ReadRSTAndNumberOfDigits(Exchange, RXData, 1, 2, aNumber, aNumberLeads,
+                                     aRefusedReport);
 end;
 
 function ProcessRSTAndZoneExchange(Exchange: ShortString {Str80}; var RXData:
@@ -6051,6 +6103,7 @@ function ProcessRSTAndZoneExchange(Exchange: ShortString {Str80}; var RXData:
 var
   number: integer;
   numberLeads: boolean;
+  refusedReport: Str10;
   parsed: ContestExchange;
 begin
   ExchangeErrorMessage := TC_IMPROPERZONENUMBER;
@@ -6058,8 +6111,15 @@ begin
   (* PARSED ON A COPY (issue 274 item 2): the word reader writes the RS(T),
     and a refused entry now leaves the QSO's RS(T) as it found it too. *)
   parsed := RXData;
-  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, parsed, number, numberLeads) then
+  if not ReadRSTAndOneOrTwoDigitNumber(Exchange, parsed, number, numberLeads,
+                                       refusedReport) then
      begin
+     (* The CW zone-then-report form with no report in it ('14 699') names
+       the report, not the zone (issue 330). *)
+     if refusedReport <> '' then
+        begin
+        ExchangeErrorMessage := UnicodeFormat(SExchangeNotASignalReport, [string(refusedReport)]);
+        end;
      Exit;
      end;
 
@@ -6129,6 +6189,7 @@ function ProcessRSTAndLicenceYearExchange(Exchange: ShortString;
 var
   year: integer;
   yearLeads: boolean;
+  refusedReport: Str10;
   fewest, most: integer;
   low, high: integer;
 begin
@@ -6141,9 +6202,16 @@ begin
      ExchangeErrorMessage := SExchangeImproperLicenseYear;
      Exit;
      end;
-  if not ReadRSTAndNumberOfDigits(Exchange, RXData, fewest, most, year, yearLeads) then
+  if not ReadRSTAndNumberOfDigits(Exchange, RXData, fewest, most, year, yearLeads,
+                                  refusedReport) then
      begin
-     if LicenceYearEntryHasNoYear(Exchange) then
+     (* The CW year-then-report form with no report in it ('87 699') names
+       the report, not the year (issue 330). *)
+     if refusedReport <> '' then
+        begin
+        ExchangeErrorMessage := UnicodeFormat(SExchangeNotASignalReport, [string(refusedReport)]);
+        end
+     else if LicenceYearEntryHasNoYear(Exchange) then
         begin
         ExchangeErrorMessage := SExchangeNoLicenseYear;
         end
@@ -6954,65 +7022,6 @@ begin
   // and it answers for everything.
   uRotatorControl.TurnRotator(Heading,
     string(BandStringsArrayWithOutSpaces[ActiveBand]));
-end;
-
-{
-}
-
-function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
-begin
-  Result := False;
-
-  case ActiveMode of
-    CW:
-      begin
-        if Ex in [1..9] then
-           begin
-           RST := 509 + Ex;
-           Result := True;
-           end
-        else
-           begin
-           if (Ex >= 111) and (Ex <= 599) then
-              begin
-              RST := Ex;
-              Result := True;
-              end;
-           end;
-      end;
-    Phone:
-      begin
-        if Ex in [1..9] then
-           begin
-           RST := 50 + Ex;
-           Result := True;
-           end
-        else if Ex in [11..59] then
-           begin
-           RST := Ex;
-           Result := True;
-           end
-      end;
-  end;
-  {
-    if Ex in [1..9] then
-    begin
-      case ActiveMode of
-        CW: RST := 509 + Ex;
-        Phone: RST := 5 + Ex;
-      end;
-      Result := True;
-    end;
-
-    if Ex in [111..599] then
-    begin
-      case ActiveMode of
-        CW: RST := 509 + Ex;
-        Phone: RST := 5 + Ex;
-      end;
-      Result := True;
-    end;
-  }
 end;
 
 function ParseArray(e: Str80): boolean;

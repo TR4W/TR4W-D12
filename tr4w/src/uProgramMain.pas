@@ -35,6 +35,10 @@ procedure RunTR4W;
 implementation
 
 uses
+  (* Interfaces FIRST, as in tr4w.lpr -- see the note there. It is the .lpr's
+    position that decides the finalization order; this copy keeps the two
+    lists in the same order, as the header above asks. *)
+  Interfaces,
   (* QuestionDlg / MessageDlg and their results -- the CTY download prompt
     and the --help text, both of which were MessageBoxW. *)
   Dialogs, Controls,

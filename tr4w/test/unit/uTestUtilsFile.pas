@@ -30,6 +30,7 @@ type
       procedure Test_ReportFile_KeptOnlyWhenComplete;
       procedure Test_ReportFile_FailedWriteKeepsTheOldFile;
       procedure Test_ReportFile_UnopenableFolderSaysWhy;
+      procedure Test_ReportFile_AbandonedKeepsTheOldFile;
 
       procedure Test_LongString_NoTruncationOrGarbage;
       procedure Test_BoundaryLengths_255_256_257;
@@ -237,8 +238,34 @@ begin
    CheckTrue(ReportFileProblem <> '', 'with a reason');
 end;
 
+(* An export that cannot go on is abandoned: the partial file goes, the old one
+  stays, and nothing is reported as written. *)
+procedure TUtilsFileTests.Test_ReportFile_AbandonedKeepsTheOldFile;
+var
+   target : string;
+   h      : THandle;
+begin
+   BeginTest('Test_ReportFile_AbandonedKeepsTheOldFile');
+   target := UniqueTempFileName('tr4wreport');
+   try
+      CheckTrue(OpenReportFile(h, target), 'opens');
+      sWriteFileFromString(h, 'good');
+      CheckTrue(CloseReportFile(h, True), 'the good report is kept');
+
+      CheckTrue(OpenReportFile(h, target), 'opens again');
+      sWriteFileFromString(h, 'half');
+      CheckFalse(CloseReportFile(h, False), 'an abandoned report is not kept');
+      CheckEquals('good', string(FileText(target)), 'the previous good file is still there');
+      CheckFalse(FileExists(target + '.partial'), 'and the partial file is removed');
+   finally
+      SysUtils.DeleteFile(target);
+      SysUtils.DeleteFile(target + '.partial');
+   end;
+end;
+
 procedure TUtilsFileTests.RunAllTests;
 begin
+   Test_ReportFile_AbandonedKeepsTheOldFile;
    Test_ReportFile_KeptOnlyWhenComplete;
    Test_ReportFile_FailedWriteKeepsTheOldFile;
    Test_ReportFile_UnopenableFolderSaysWhy;

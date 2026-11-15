@@ -1321,8 +1321,12 @@ the target shape, the M-step migration order and the open questions.
   Ukrainian DX call it; WAG reads `ImportedReceivedText`; ARRL 160 keeps the
   whole remainder. Note `ImportedReceivedText`'s strip is exact
   (`IntToStr(RSTReceived)`), so `59 CT` on a 599 record keeps its `59`.
-  **The base's own domestic arm still takes the ALPHA PREFIX of the raw
-  SRX_STRING** (`'599 CT'` gives `''`) when there is no QTH tag -- open.
+  **The base's own domestic arm calls `ImportDomesticQTHWords` too when
+  there is no QTH tag (issue 329)** -- it took the ALPHA PREFIX of the raw
+  SRX_STRING (`'599 CT'` gave `''`, `'MO12'` gave `MO`). Its QTH-tag branch
+  is deliberately NOT the helper: a QTH tag of digits (`45`) is kept.
+  Still open (NY4I's decision): NAQP CW/SSB/RTTY and the NCCC Sprint copy the
+  STATE tag into DomesticQTH unresolved.
 - **POTA is a class** (NY4I, 2026-10-13, design Q6 and §8.2o: *"while it is
   not a contest per se, just like with GENERAL QSO, we treat it that way"*).
   `TContestPOTA` sits on `TContestBase`, writes no CONTEST_ID, and owns its

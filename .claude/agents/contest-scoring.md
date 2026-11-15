@@ -821,6 +821,20 @@ needs none for the CQ limit: its three users (RF Championship x2, R9W) run
 ITU zone mode. The licence-year parser still writes the RS(T) before a
 refusal.
 
+**A TYPED REPORT HAS ONE READING: `LOGSTUFF.ReadRSTWord` (= `tree.ValidRST`
+behind a one-to-three-digit guard; issue 330, 2026-11-15).** `SetRST`, a
+second check that had drifted (CW `5` was 514, floors 111/11, no Digital arm),
+is DELETED; the age parser (Radio Memory) and the REF parser read the first
+ParseArray2 word through `ReadReportOfFirstElement`. The CW zone-then-report
+form of `ReadRSTAndNumberOfDigits` (`14 599`, zone and licence-year parsers)
+asks it too and hands a refused word back (`aRefusedReport`), so the refusal
+says `SExchangeNotASignalReport`, not the zone or the year. Do not write a
+third report check. **Open (not 330):** ValidRST reads a lone strength on
+Digital as 51..59, not 519..599 (D7 the same); and REF CW/SSB's parser reads
+`ParserArray`, which nothing fills before it (only the age parser calls
+`ParseArray2`), so REF refuses every typed entry (all 222 matrix parse rows,
+D7's code the same).
+
 **`ProcessRSTQSONumberAndPossibleDomesticQTHExchange` (DARC-10M, RSGB-160
 -- the RSGB 1.8 --, RSGB-IOTA, UBA CW/SSB, UK/EI) refuses the same way since issue 282
 (2026-11-12; #263 did the word-first order):** every order is parsed on a

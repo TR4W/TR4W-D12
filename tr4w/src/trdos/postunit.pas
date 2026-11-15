@@ -183,6 +183,13 @@ procedure WriteTitleBlockToSummarySheet;
 
 procedure WriteScoreInformationToSummarySheet;
 
+(* The export writers (issue 313): the new file is a .partial that replaces the
+  old one only when every write worked, and the operator is told when it did not.
+  Between Open and Close, write with utils_file's sWriteFile / sWriteFileFromString
+  to tReportFileWrite. Close(False) abandons the file silently. *)
+function OpenExportFileNamed( const aName: string ): boolean;
+function CloseExportFile( aKeep: boolean ): boolean;
+
 function tGenerateSummaryPortionOfCabrilloFile: boolean;
 function tGenerateLogPortionOfCabrilloFile: boolean;
 procedure tFirstCallInEachCountry;
@@ -498,21 +505,32 @@ uses
   one only when every write succeeded. These two say so to the operator, once,
   and set LastExportFailed for the headless /EXPORT's exit code. A failed open
   and a failed close both come here. *)
+var
+   GExportName: string = '';   (* the file the open export is for -- the warning names it *)
+
 procedure ReportExportNotWritten;
 begin
    LastExportFailed := True;
    showwarning( UnicodeFormat( SExportNotWritten,
-                [ CharBufferText( tReportsFilename ), ReportFileProblem ] ) );
+                [ GExportName, ReportFileProblem ] ) );
+end;
+
+(* OPEN A NAMED EXPORT FILE (a report or list that is not at tReportsFilename,
+  e.g. the callsign lists); False has told the operator why. *)
+function OpenExportFileNamed( const aName: string ): boolean;
+begin
+   GExportName := aName;
+   Result := OpenReportFile( tReportFileWrite, aName );
+   if not Result then
+      begin
+      ReportExportNotWritten;
+      end;
 end;
 
 (* OPEN THE EXPORT'S FILE; False has told the operator why. *)
 function OpenExportFile: boolean;
 begin
-   Result := OpenReportFile( tReportFileWrite, CharBufferText( tReportsFilename ) );
-   if not Result then
-      begin
-      ReportExportNotWritten;
-      end;
+   Result := OpenExportFileNamed( CharBufferText( tReportsFilename ) );
 end;
 
 (* FINISH THE EXPORT'S FILE. aKeep False abandons it (the export could not go
@@ -828,14 +846,16 @@ procedure SummarySheet;
      Exit;
      end;
   MakeReportFileName( 'Summary.txt' );
-  if not tOpenFileForWrite( tReportFileWrite, string( ReportsFilename ) ) then
+  if not OpenExportFileNamed( string( ReportsFilename ) ) then
      begin
      Exit;
      end;
   WriteTitleBlockToSummarySheet;
   WriteScoreInformationToSummarySheet;
-  FileClose(tReportFileWrite);
-  FilePreview;
+  if CloseExportFile( True ) then
+     begin
+     FilePreview;
+     end;
   end;
 
 procedure ExportTo3830Scores;
@@ -863,7 +883,7 @@ procedure ExportTo3830Scores;
      Exit;
      end;
   MakeReportFileName( '3830Score.txt' );
-  if not tOpenFileForWrite( tReportFileWrite, string( ReportsFilename ) ) then
+  if not OpenExportFileNamed( string( ReportsFilename ) ) then
      begin
      Exit;
      end;
@@ -932,8 +952,10 @@ procedure ExportTo3830Scores;
   buf := buf + Render3830Summary( layoutContest, tally );
 
   sWriteFileFromString( tReportFileWrite, buf );
-  FileClose(tReportFileWrite);
-  FilePreview;
+  if CloseExportFile( True ) then
+     begin
+     FilePreview;
+     end;
   end;
 
 function ContestFriendlyParens: string;
@@ -3996,7 +4018,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          Exit;
          end;
 
-      if not tOpenFileForWrite( tReportFileWrite, string( ReportsFilename ) ) then
+      if not OpenExportFileNamed( string( ReportsFilename ) ) then
          begin
          LogSourceClose;
          Exit;
@@ -4024,8 +4046,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          goto 1;
          end;
       LogSourceClose;
-      FileClose(tReportFileWrite);
-      FilePreview;
+      if CloseExportFile( True ) then
+         begin
+         FilePreview;
+         end;
       end;
 
   (* ---------------------------------------------------------------------------- *)
