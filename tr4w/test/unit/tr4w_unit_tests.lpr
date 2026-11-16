@@ -693,6 +693,7 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uTestFunctionKeyBank in 'uTestFunctionKeyBank.pas',
    uCallbookBase       in '..\..\src\uCallbookBase.pas',
    uCallbookRegistry   in '..\..\src\uCallbookRegistry.pas',
    uCallbookHamDB       in '..\..\src\uCallbookHamDB.pas',
@@ -714,6 +715,7 @@ uses
    uAppPaths            in '..\..\src\uAppPaths.pas',
    uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
    uNewContestHostArea  in '..\..\src\uNewContestHostArea.pas',
+   uNewContestHome      in '..\..\src\uNewContestHome.pas',
    uDomInclude          in '..\..\src\uDomInclude.pas',
    uContestNames        in '..\..\src\uContestNames.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
@@ -777,6 +779,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
    uTestNewContestHostArea in 'uTestNewContestHostArea.pas',
+   uTestNewContestHome  in 'uTestNewContestHome.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
    uTestStationValueKept in 'uTestStationValueKept.pas',
@@ -1317,6 +1320,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TFunctionKeyBankTests.Create('FunctionKeyBank'));
    RegisterSuite(TCallbookTests.Create('Callbook'));
    RegisterSuite(TSetupWizardTests.Create('SetupWizard'));
    RegisterSuite(TSetupWizardFormTests.Create('SetupWizardForm'));
@@ -1342,6 +1346,7 @@ begin
    RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TNewContestHostAreaTests.Create('NewContestHostArea'));
+   RegisterSuite(TNewContestHomeTests.Create('NewContestHome'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TStationValueKeptTests.Create('StationValueKept'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));

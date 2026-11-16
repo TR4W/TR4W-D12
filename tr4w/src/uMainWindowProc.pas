@@ -51,10 +51,9 @@ type
      in the input path is one of the things that cannot follow this program to
      macOS or Linux.
 
-     The loop still exists and still owns what is genuinely GLOBAL -- the
-     QuickQSL keys, the numeric-keypad CW memories, and ShowFMessages on the
-     Ctrl/Alt keyup -- because those fire no matter which window has focus and
-     have no control to belong to. }
+     What was genuinely GLOBAL went to LCL application handlers when the loop
+     was deleted (uAppInputHooks): the numeric-keypad CW memories and, since
+     issue #3, the Ctrl/Alt function-key bank. }
    { ON AnsiChar: this tree compiles with char = WideChar, but the LCL's
      TKeyPressEvent is `var Key: char` compiled in the LCL's own mode, where
      char is AnsiChar.  Writing `char` here produced "got (TObject;var
@@ -68,9 +67,7 @@ type
    public
       procedure CallKeyPress(Sender: TObject; var Key: AnsiChar);
       procedure CallKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
-      procedure RestoreBankOnModifierRelease(const aKey: word);
       procedure CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
-      procedure ExchangeKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
       procedure ExchangeKeyPress(Sender: TObject; var Key: AnsiChar);
       procedure ExchangeKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
 
@@ -151,8 +148,7 @@ uses
   MainUnit,
   LogWind,            // QuickDisplay
   uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE + the headless-sync state
-  uFunctionKeys,      // ShowFMessages
-  uPOTAParks,         // WM_POTA_DOWNLOAD_DONE / _LOAD_DONE and the loaders
+  uPOTAParks,        // WM_POTA_DOWNLOAD_DONE / _LOAD_DONE and the loaders
   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
   uAppStrings,       // SCallHistoryOtherFile
   uCallHistory,      // CallHistoryFilePath -- which file CALL HISTORY FILENAME means
@@ -419,15 +415,8 @@ begin
       Key := 0;
       end;
 
-   if {18} Key = VK_MENU then
-      begin
-      ShowFMessages(24);
-      end;
-
-   if {17} Key = VK_CONTROL then
-      begin
-      ShowFMessages(12);
-      end;
+   (* Ctrl and Alt switch the function-key labels in uAppInputHooks.KeyDownBefore
+     now, which every control reaches -- not only these two fields (issue #3). *)
 
    if Key = VK_SHIFT then
       begin
@@ -486,42 +475,13 @@ begin
    EntryKeyDown(Key, efExchange);
 end;
 
-{ The exchange field had no key-up arm at all. It needs this one for the same
-  reason the callsign field does: the operator can be in either when they let
-  go of Ctrl. }
-procedure TTR4WEntryEvents.ExchangeKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
-begin
-   RestoreBankOnModifierRelease(Key);
-end;
-
-{ RELEASING Ctrl OR Alt PUTS THE PLAIN FUNCTION-KEY BANK BACK.
-
-  This lived in uAppInputHooks on Application.OnUserInput, and it never ran.
-  Measured on NY4I's machine, 2026-08-28: with TRACE on, the KeyDownBefore
-  handler logs every key -- `[InputHooks] key $11 ctrl=1` for Ctrl -- while the
-  OnUserInput handler beside it produced NOTHING, so the restore was never
-  reached and the labels stayed on the Ctrl bank ("when I unpress Ctrl, the
-  labels did not change back", reported three times).
-
-  AddOnKeyDownBeforeHandler delivers; AddOnUserInputHandler does not. So the
-  release is handled where the events demonstrably arrive: the entry fields,
-  which have been LCL controls since Phase 3b and raise real key events. That is
-  also where the operator is when they hold Ctrl to look at a bank.
-
-  The old comment here said this line "stays in the loop" because it was global.
-  The loop is gone, and global turned out to mean nowhere. }
-procedure TTR4WEntryEvents.RestoreBankOnModifierRelease(const aKey: word);
-begin
-   if (aKey = VK_CONTROL) or (aKey = VK_MENU) then
-      begin
-      ShowFMessages(0);
-      end;
-end;
-
+(* RELEASING Ctrl OR Alt NO LONGER RESTORES THE BANK HERE (issue #3). This
+  field's OnKeyUp, and an ExchangeKeyUp that did nothing else, only fired while
+  one of the two fields had focus, so released anywhere else the labels stayed
+  on the Ctrl or Alt bank. The function-key window follows the keyboard itself
+  now -- uFunctionKeys.ShowFunctionKeyBank. *)
 procedure TTR4WEntryEvents.CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
 begin
-   RestoreBankOnModifierRelease(Key);
-
    if Key = 222 {apostrophe} then
       begin
       if Settings.Cw.StartSendingNowKey = '''' then

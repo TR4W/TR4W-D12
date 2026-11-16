@@ -127,6 +127,13 @@ type
       call with none. By index too, for the INITIAL.EX flush. *)
     function InitialExchangeIsFromCallHistory(const Call: string): boolean;
     function InitialExchangeIsFromCallHistoryByIndex(Index: integer): boolean;
+    (* FORGETS EVERY REMEMBERED EXCHANGE -- INITIAL.EX's, a call history
+      file's and the log's alike; the stations, their dupe bits, QSO counts
+      and logged zones stay. Issue 267: the contest matrix asks what the entry
+      window offers with NO history after a reload has fed it (every
+      LoadinLog does now). Nothing in the program calls it: a reload must NOT,
+      because it does not re-read INITIAL.EX or the call history file. *)
+    procedure ClearInitialExchanges;
     (* A PRIOR CONTACT'S ZONE -- issue 213: the zone the call was most
       recently logged with, 0 when it has none. Remembered only for a call
       already in the list (AddCallsign put it there). *)
@@ -351,6 +358,17 @@ end;
 function TCallsignsList.InitialExchangeIsFromCallHistoryByIndex(Index: integer): boolean;
 begin
   Result := FItems[Index].FromCallHistoryFile and (Length(FItems[Index].InExchange) > 0);
+end;
+
+procedure TCallsignsList.ClearInitialExchanges;
+var
+  i                                     : integer;
+begin
+  for i := 0 to FItems.Count - 1 do
+     begin
+     FItems[i].InExchange := '';
+     FItems[i].FromCallHistoryFile := False;
+     end;
 end;
 
 function TCallsignsList.GetTotalWorkedStations: integer;

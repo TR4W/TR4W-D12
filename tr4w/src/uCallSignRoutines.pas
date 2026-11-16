@@ -272,12 +272,24 @@ begin
 end;
 function UKEIStation(ID: string): boolean;  // 4.58.2
 begin
+  (* AN EMPTY ID IS NO UK/EI STATION (issue 167). The length test was
+    commented out because 'G' is one character long, and with it went the
+    guard on '' -- which read ID[1] past the end and raised an access
+    violation for a station with no country yet. ID[2] is read only when
+    there is one. *)
   Result := False;
-//  if length(ID) > 1 then
-    if ((ID[1] = 'G') or (ID[1] = 'M') or ((ID[1] = 'E') and (ID[2] = 'I')) or (ID[1] = '2')) then
-       begin
-       Result := True;
-       end;
+  if Length(ID) = 0 then
+     begin
+     Exit;
+     end;
+  if (ID[1] = 'G') or (ID[1] = 'M') or (ID[1] = '2') then
+     begin
+     Result := True;
+     end
+  else if (Length(ID) > 1) and (ID[1] = 'E') and (ID[2] = 'I') then
+     begin
+     Result := True;
+     end;
 end;
 function SpanishStation(ID: string): boolean;
 begin

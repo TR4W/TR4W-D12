@@ -384,12 +384,10 @@ resourcestring
      older end, or this program is. The first %d is the protocol the server
      speaks, the second the one this TR4W speaks. They say what to update and
      on which computer; the operator has nothing else to act on. *)
-   (* THE TAILCAT TUNNEL COULD NOT BE OPENED (issue 293). %s is the reason,
-     which is English today: it comes from uNetTunnel and its two units. Shown
-     once for each reason, not on every retry. *)
-   SNetTailcatFailed =
-      'The link to the multi-op server through Tailcat could not be opened: ' +
-      '%s. TR4W keeps trying.';
+   (* THE MULTI-OP SERVER CANNOT BE REACHED, as ONE short line for the main
+     window's notice area. Shown once, at startup; the reason (Tailcat tunnel
+     or not) is in tr4w.log, never here. *)
+   SNetServerNotAvailable = 'Connection to the TR4WServer is not available';
 
    SNetServerProtocolOlder =
       'The multi-op server speaks network protocol %d, but this TR4W needs ' +
@@ -748,12 +746,6 @@ resourcestring
    SNewContestEnterNameAndQTH =
       'Enter your name and QTH (US state, Canadian Province or DX country):';
 
-   (* THE JOCK WHITE FIELD DAY'S BRANCH ROW'S LABEL (issue 287, 2026-11-12):
-     the prompt asks for the NZART branch number and the row beside it read
-     MY ZONE, a D7 artifact. NZART rule 8: "plus an NZART Branch number".
-     The value is still kept in MY ZONE and the command queued is MY ZONE;
-     this is only what the operator reads (TNewContestPrompt.RowLabel). *)
-   SNewContestBranchNumberLabel = 'MY BRANCH NUMBER';
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
    SNewContestHostAreaOutsideNotice =
@@ -767,6 +759,18 @@ resourcestring
    SNewContestHostAreaEntryNotAState =
       '%s is not a US state, a Canadian province or DX. Enter the two-letter ' +
       'code, e.g. GA or ON, or DX.';
+
+   (* MY CALL AND THE "I AM IN ..." BOX DISAGREE -- issue 167, asked once at
+     OK. %0:s is the box's region (North America, Canada), %1:s MY CALL,
+     %2:s the country the country file puts that call in. Yes creates the
+     contest as entered; No goes back to the New Contest window. *)
+   SNewContestIAmInCheckTitle = 'Check your location';
+   SNewContestIAmInTickedOutside =
+      'You ticked "I am in %0:s", but your callsign %1:s is in %2:s.' + #10#10 +
+      'Create the contest as entered? Choose No to go back and change it.';
+   SNewContestIAmInClearedInside =
+      'You did not tick "I am in %0:s", but your callsign %1:s is in %2:s.' + #10#10 +
+      'Create the contest as entered? Choose No to go back and change it.';
 
    (* --------------------------------------------- the contest UI (M9b) - *)
 

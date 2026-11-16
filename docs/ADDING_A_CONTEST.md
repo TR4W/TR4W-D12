@@ -1031,7 +1031,12 @@ contest's own test (a legacy contest's in `uTestContestTotals`).
 
 Answered as data the UI renders; a class never touches a form.
 `DescribeNewContestPrompts`, `NewContestValueRefusal`,
-`DescribeNewContestHostArea` (a party's in/out box, above), `GetTotalsDisplay`,
+`DescribeNewContestHostArea` (a party's in/out box, above),
+`DescribeNewContestHome` (issue 167: the region of an `OfferIAmIn` box in CTY
+terms -- country IDs, `HomeIsDomesticCountries` to read your own
+`DescribeSession` list, or a continent -- so the dialog asks once when MY CALL
+contradicts the box; the base states nothing, which is right for a box DXCC
+cannot decide; `uTestNewContestHome` walks the registry), `GetTotalsDisplay`,
 `GetSummarySheet`, `GetReportsRunningScore`, `CanonicalReceivedExchange` /
 `CanonicalSentExchange`, `ScorePostingMultiplierType`,
 `GetPermittedOperatingAids`, `GetOffersQTCs`, `GetOffersParkTools`,
@@ -1125,9 +1130,10 @@ NAME...`, for exactly the contests it reaches, with the reason and what moved
 in the commit message. When a change is only a new `contest.class =` line,
 diff the records excluding that line before believing it.
 
-Headless runs cannot see two things: TRMASTER is not loaded for `/MATRIX` and
-`/EXPORT`, and logged initial-exchange history is latched after the first log
-load (`docs/CONTEST_FACTORY_M11_PLAN.md` F17, F18).
+Headless runs cannot see one thing: TRMASTER is not loaded for `/MATRIX` and
+`/EXPORT` (`docs/CONTEST_FACTORY_M11_PLAN.md` F17). The logged initial-exchange
+history is fed by every log load since issue 267 (F18 closed); the matrix's
+`initialexchange` section forgets it before its `none` and `trmaster` probes.
 
 ## B5. Ids, handles and names
 

@@ -869,7 +869,21 @@ the grid parsers (check `ClassifyDomesticQTHRefusal`'s wording for a grid
 first), and CQIR's unreadable number. **A dashed IOTA reference is accepted** (#282 item 5, the
 agent's reading of the ruling; NY4I did not answer it in terms):
 `ReadIOTAReference` drops ONE dash straight after the continent, so
-`EU-005`/`EU-5` are `EU-005`. Open: the `IntitialExLoaded` latch (#267).
+`EU-005`/`EU-5` are `EU-005`.
+
+**EVERY `LoadinLog` FEEDS THE INITIAL-EXCHANGE HISTORY (issue 267 item 3,
+2026-11-15).** D7's `IntitialExLoaded` latch let only start-up's load add a
+QSO's text, so after Edit QSO, an ADIF import, a network edit or any other
+`RescoreLog` the window offered the old text until restart. It is deleted;
+`AddIniitialExchange` overwrites, so a reload leaves each call its latest
+logged QSO's text. A reload must NOT clear the store first: it does not
+re-read INITIAL.EX or the call history file. Residual: a call whose only QSO
+was deleted or X-flagged keeps that text until restart. The matrix forgets
+the history (`CallsignsList.ClearInitialExchanges`) before its `none` probe,
+since its totals reload has filled it. Pinned by
+`uTestCallsignsList.Test_ClearInitialExchangesKeepsStationsAndDupes` and a
+source pin in `uTestAutomaticXQSO`. (Items 1 and 2 of #267 -- the zone
+window's index, a refused zone entry -- were fixed in 33876dfd, above.)
 
 ## The sheet also COUNTS each multiplier's workings (issue 12, 2026-11-07)
 

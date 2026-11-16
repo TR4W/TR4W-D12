@@ -107,6 +107,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -292,6 +293,14 @@ procedure TContestKingOfSpainSSB.DescribeNewContestPrompts(aPrompts: TNewContest
 begin
    aPrompts.OfferIAmIn(TC_SPAIN);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE BOX'S REGION IS THE DOMESTIC COUNTRIES DescribeSession states --
+   issue 167. The New Contest dialog asks once when MY CALL and the box
+   disagree. *)
+function TContestKingOfSpainSSB.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait

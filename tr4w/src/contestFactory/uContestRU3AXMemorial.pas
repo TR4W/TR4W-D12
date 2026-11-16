@@ -117,6 +117,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    protected
       (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
       function GetTotalsDisplay: TTotalsDisplay; override;
@@ -360,6 +361,14 @@ procedure TContestRU3AXMemorial.DescribeNewContestPrompts(aPrompts: TNewContestP
 begin
    aPrompts.OfferIAmIn(TC_RUSSIA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOUROBLASTID, ncfMyState);
+end;
+
+(* THE BOX'S REGION IS THE DOMESTIC COUNTRIES DescribeSession states --
+   issue 167. The New Contest dialog asks once when MY CALL and the box
+   disagree. *)
+function TContestRU3AXMemorial.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS OBLASTS -- uTotal's

@@ -217,6 +217,8 @@ uses
    LogEdit,
    (* THE initialexchange SECTION (M11 S0c): the call-history database. *)
    LogSCP,
+   (* ...and the remembered exchanges it forgets first (issue 267). *)
+   uCallsigns,
    MainUnit;
 
 type
@@ -2255,12 +2257,15 @@ end;
               assignment uProgramMain makes, aimed at a file that changes
               only when someone means it to. Never the shipped file, which
               is refreshed monthly and would move every record.
-    logged    that file AND the logged QSOs' history. LoadinLog adds a QSO's
-              initial exchange to the callsigns list only while
-              IntitialExLoaded is False, and start-up's load of the empty
-              log latched it (plan F18), so the totals reload added none.
-              The latch is cleared and the log loaded again -- what opening
-              a non-empty log does at start-up.
+    logged    that file AND the logged QSOs' history: the log loaded again,
+              what opening a non-empty log does at start-up.
+
+  EVERY LoadinLog FEEDS THE HISTORY since issue 267 (plan F18 closed; it
+  was latched to start-up's load), so the totals section's reloads have
+  filled it before this section runs. It is FORGOTTEN first
+  (CallsignsList.ClearInitialExchanges) so none and trmaster see what they
+  saw when only the first load fed it: no history. The matrix's settings
+  load no INITIAL.EX and no call history file, so nothing else is lost.
     custom    all of that AND a CUSTOM INITIAL EXCHANGE STRING naming every
               command the Custom arm reads (restored afterwards). Only a
               session whose initial exchange is Custom reads the string; for
@@ -2325,6 +2330,7 @@ begin
         describing a file it did not read. *)
       EmitField('initialexchange.trmaster.indexopen', BoolText(CD.TRMasterFileOpen));
 
+      CallsignsList.ClearInitialExchanges;
       CD.MasterFileExists := False;
       Probe(none);
 
@@ -2340,7 +2346,6 @@ begin
       Probe(trm);
 
       try
-         IntitialExLoaded := False;
          LoadinLog;
       except
          on E: Exception do

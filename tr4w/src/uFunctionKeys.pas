@@ -44,6 +44,37 @@ utils_text,
   uTR4WStrings;
 
 procedure ShowFMessages(VirtualKey: Byte);
+
+const
+  (* THE THREE BANKS, as the offset added to a key code (112..123) to reach its
+    memory: F1..F12, CtrlF1..CtrlF12, AltF1..AltF12. *)
+  FKEY_BANK_PLAIN = 0;
+  FKEY_BANK_CTRL  = 12;
+  FKEY_BANK_ALT   = 24;
+
+(* WHICH BANK A FUNCTION KEY SENDS, for the modifiers held. Ctrl wins when both
+  are held, because that is what GetRealVirtualKey has always sent; the labels,
+  the right-click editor row and the send all ask this one rule (issue #3). *)
+function BankForModifiers(const aCtrlDown, aAltDown: boolean): byte;
+
+(* The bank for the modifiers held NOW, asked of the keyboard. *)
+function LiveFunctionKeyBank: byte;
+
+(* SHOW THIS BANK ON THE FUNCTION-KEY WINDOW, AND FOLLOW THE KEYBOARD UNTIL IT IS
+  THE PLAIN ONE AGAIN (issue #3).
+
+  The labels used to switch in the call and exchange fields' own OnKeyDown and
+  switch back in their OnKeyUp, so with focus anywhere else -- the band map, the
+  function-key window itself -- they never moved. The press is now seen by the
+  application-wide key handler (uAppInputHooks), which every control reaches.
+  The RELEASE has no application-wide event in the LCL (there is no key-up
+  counterpart of AddOnKeyDownBeforeHandler), so while a Ctrl or Alt bank is up
+  the window's own timer asks the keyboard and puts the plain bank back. At
+  rest the timer is off.
+
+  Redraws only when the bank changes: a held Ctrl auto-repeats its key-down. *)
+procedure ShowFunctionKeyBank(const aBank: byte);
+
 procedure EditFunctionKeyMessage(const aKey: integer);
 procedure ShowFunctionKeyContextMenu(const aKey: integer);
 
@@ -151,6 +182,13 @@ begin
 
   if not tWindowsExist(tw_FUNCTIONKEYSWINDOW_INDEX) then Exit;
 
+  // THE WINDOW KNOWS WHICH BANK IT SHOWS, so ShowFunctionKeyBank can ask it
+  // rather than keep a copy beside it.
+  if TR4WFunctionKeysForm <> nil then
+     begin
+     TR4WFunctionKeysForm.ShownBank := VirtualKey;
+     end;
+
   // THE COLOURS, applied here rather than at creation.  ButtonsColor is the same
   // table the owner-draw read; setting it on every refresh costs nothing (twelve
   // property writes, and the LCL skips a repaint when the value is unchanged)
@@ -229,6 +267,51 @@ begin
      end;
 end;
 
+function BankForModifiers(const aCtrlDown, aAltDown: boolean): byte;
+begin
+   if aCtrlDown then
+      begin
+      Result := FKEY_BANK_CTRL;
+      end
+   else if aAltDown then
+      begin
+      Result := FKEY_BANK_ALT;
+      end
+   else
+      begin
+      Result := FKEY_BANK_PLAIN;
+      end;
+end;
+
+function LiveFunctionKeyBank: byte;
+begin
+   // GetKeyState is LCLIntf's, which every widget set answers for its own
+   // keyboard; the high bit (a negative SmallInt) means held.
+   Result := BankForModifiers(GetKeyState(VK_CONTROL) < 0,
+                              GetKeyState(VK_MENU) < 0);
+end;
+
+procedure ShowFunctionKeyBank(const aBank: byte);
+begin
+   if TR4WFunctionKeysForm = nil then
+      begin
+      Exit;
+      end;
+
+   if aBank <> TR4WFunctionKeysForm.ShownBank then
+      begin
+      ShowFMessages(aBank);
+      end;
+
+   TR4WFunctionKeysForm.WatchModifiers := (aBank <> FKEY_BANK_PLAIN);
+end;
+
+(* THE WINDOW'S TIMER, while a Ctrl or Alt bank is up: follow the keyboard. *)
+procedure FollowLiveFunctionKeyBank;
+begin
+   ShowFunctionKeyBank(LiveFunctionKeyBank);
+end;
+
 // Resolve which Alt-P editor row the on-screen function-key button `h` maps to,
 // and set the CQ vs S&P target window. The 12 buttons are labelled F1..F12 but
 // display whichever shift bank the window currently shows (plain / Ctrl / Alt),
@@ -260,16 +343,10 @@ begin
 
   // The bank comes from the LIVE modifier state, and the caller must read it
   // BEFORE anything lets the operator release Ctrl/Alt -- popping a menu, for
-  // one.  Issue #1001.
-  plus := 0;
-  if (GetKeyState(VK_MENU) and $8000) <> 0 then
-     begin
-     plus := 24
-     end
-  else if (GetKeyState(VK_CONTROL) and $8000) <> 0 then
-     begin
-     plus := 12;
-     end;
+  // one.  Issue #1001.  The rule is BankForModifiers, the one the send uses:
+  // this asked Alt first while the send asked Ctrl first, so with both held
+  // the editor opened a different row from the one the key sends (issue #3).
+  plus := LiveFunctionKeyBank;
 
   Result := (aKey - 112) + plus;
 end;
@@ -348,10 +425,8 @@ begin
   OpenListOfMessages;
 
   // Right-clicking the button + showing the menu (and the modal editor) leaves
-  // focus off the Call window. Restore it -- the Ctrl/Alt bank-switch handler in
-  // the main loop only fires when focus is the Call/Exchange window, so without
-  // this those keys stop updating the F-key labels. Mirrors the left-click
-  // (BN_CLICKED) handler. Issue #1001.
+  // focus off the Call window; put it back, as the left click does. (The
+  // Ctrl/Alt bank switch no longer depends on that focus -- issue #3.)
   FrmSetFocus;
 end;
 
@@ -369,8 +444,7 @@ begin
   // that follows would flash the labels back to plain (WM_SETFOCUS ->
   // ShowFMessages(0)). Right-click edits the plain F-keys only; edit the
   // Alt-F/Ctrl-F messages via the Alt-P editor.
-  if ((GetKeyState(VK_MENU) and $8000) <> 0)    or
-     ((GetKeyState(VK_CONTROL) and $8000) <> 0) then
+  if LiveFunctionKeyBank <> FKEY_BANK_PLAIN then
      begin
      Exit;
      end;
@@ -422,6 +496,7 @@ initialization
   uFunctionKeysForm.FunctionKeyClicked            := @FKeyClicked;
   uFunctionKeysForm.FunctionKeyRightClicked       := @FKeyRightClicked;
   uFunctionKeysForm.FunctionKeyRightDoubleClicked := @FKeyRightDoubleClicked;
+  uFunctionKeysForm.FunctionKeyBankTick           := @FollowLiveFunctionKeyBank;
 
 
 (* The popup outlives any one right-click -- it is built once and re-captioned

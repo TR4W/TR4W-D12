@@ -132,6 +132,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
          DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
@@ -461,6 +462,17 @@ procedure TContestARRL160.DescribeNewContestPrompts(aPrompts: TNewContestPrompts
 begin
    aPrompts.OfferIAmIn(TC_NORTHAMERICA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
+end;
+
+(* THE "I AM IN NORTH AMERICA" BOX IS THE CONTINENT -- issue 167. The New
+   Contest dialog asks once when MY CALL's continent and the box
+   disagree. *)
+function TContestARRL160.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   aHome.Countries := '';
+   aHome.Continent := NorthAmerica;
+   aHome.HomeIsInside := True;
+   Result := True;
 end;
 
 (* THE STATION TEST -- DescribeSession's (an ARRL section country), asked of

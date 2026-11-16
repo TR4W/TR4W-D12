@@ -139,6 +139,7 @@ uses
   uNewContest in 'src\uNewContest.pas',
   uNewContestCommands in 'src\uNewContestCommands.pas',
   uNewContestHostArea in 'src\uNewContestHostArea.pas',
+  uNewContestHome in 'src\uNewContestHome.pas',
   uContestChoices in 'src\uContestChoices.pas',
   uLatestContest in 'src\uLatestContest.pas',
   uCategoryPowerChange in 'src\uCategoryPowerChange.pas',

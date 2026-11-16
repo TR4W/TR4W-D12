@@ -129,6 +129,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
          DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
@@ -371,6 +372,14 @@ procedure TContestRDA.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_RUSSIA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURRDAID, ncfMyState);
+end;
+
+(* THE BOX'S REGION IS THE DOMESTIC COUNTRIES DescribeSession states --
+   issue 167. The New Contest dialog asks once when MY CALL and the box
+   disagree. *)
+function TContestRDA.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)

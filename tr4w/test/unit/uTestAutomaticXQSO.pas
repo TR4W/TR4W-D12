@@ -454,8 +454,12 @@ begin
              'the rescore''s X arm asks LoggedQSOIsXQSO');
    CheckTrue(Pos('if RescoredRXData.ceXQSO then', text) = 0,
              'and no longer the stored flag alone');
-   CheckTrue(Pos('if QSOCountsTowardTotals(nil, TempRXData) and', text) > 0,
+   CheckTrue(Pos('if QSOCountsTowardTotals(nil, TempRXData) then', text) > 0,
              'the loader feeds the initial-exchange history by the contest-blind test');
+   (* ISSUE 267: on EVERY load, not only start-up's -- D7's latch is gone. *)
+   CheckTrue((Pos('not IntitialExLoaded', text) = 0) and
+             (Pos('IntitialExLoaded :=', text) = 0),
+             'and on every load: no latch keeps a reload from feeding it');
 end;
 
 (* ISSUE 28 -- A MULTI-COUNTY ENTRY LOGS ONE QSO PER COUNTY, ALL WITH THE SAME

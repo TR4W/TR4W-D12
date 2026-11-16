@@ -1,5 +1,16 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] New Contest checks MY CALL against the "I am in ..." box (issue 167, 2026-11-15).
+  At startup, choose ARRL 10 with MY CALL W1AW and the box CLEARED: OK asks once
+  ("You did not tick ..."); Yes (the default, Enter) creates the contest as entered,
+  No, Escape and closing the question each go back to the dialog as it was left,
+  box unchanged. Then Canada Day with a VE call cleared, and New England with a VE
+  call ticked (asked) and a W4 call cleared (NOT asked). tr4w.log shows
+  `[NewContest] country file for the "I am in" check: ... loaded` once at startup and
+  the `asking the operator` line. Repeat one case from File > Open Log (no country-file
+  line: the running table is used). On gtk2, confirm the buttons may be in the other
+  order and Yes still creates. A contest with no stated region (IARU, POTA) never asks.
+
 - [ ] New QSO parties #114/#124/#131/#115/#110: create Alabama, New Jersey, West Virginia,
   Arkansas and Kentucky logs for
   in-state, out-of-state and DX entrants; check setup prompts and typed
@@ -26,6 +37,23 @@
 - [ ] Export 3830 reports for Alabama, New Jersey, West Virginia, Arkansas and Kentucky and compare multiplier
   columns with the events' real 3830 forms. Direct form retrieval was refused;
   the classes currently use the base combined Mults column.
+- [ ] Function-key Ctrl/Alt banks follow the keyboard wherever the focus is (issue #3,
+  2026-11-15). The press is now `uAppInputHooks.KeyDownBefore`; the release is a 75 ms
+  timer on the function-key window that runs only while a Ctrl or Alt bank is shown.
+  With the function-key window open, and focus in turn in the call field, the band
+  map, the function-key window itself and the log grid: hold Ctrl (Ctrl labels
+  appear), release (plain labels back within a blink); same for Alt; hold Ctrl then
+  add Alt (Ctrl labels stay -- Ctrl wins, as the key sends), release Ctrl with Alt
+  still held (Alt labels). Press Ctrl-F1 and Alt-F1 from the band map and confirm the
+  message sent matches the label. Hold Alt and Alt-Tab away and back (plain labels
+  on return, not stuck on Alt). **Open question from the original report:** tap Alt
+  alone (the menu bar arms on Windows), then press Ctrl -- note whether the labels
+  move and whether Fn keys work before Esc/click; and open and close a menu, then
+  repeat. Linux gtk2: the same, plus a bare Alt tap. Right-double-click an F-key with
+  Ctrl and Alt both held now opens the Ctrl row (it opened the Alt row before).
+  AltGr arrives as Ctrl+Alt on Windows, so typing `@` or a euro sign on a European
+  layout now flashes the Ctrl labels in ANY window (the cluster console, a
+  Preferences field), not only in the call and exchange fields; judge if that bothers.
 
 A **living list**, not a log. An item goes in when a change lands that no
 automated gate can check, and comes **out** when NY4I confirms it. Items that
@@ -6700,8 +6728,8 @@ The CWT's row beside "Enter your name and QTH (US state, Canadian Province or DX
 
 Pressing Enter in CW Open with the serial or the name missing used to do nothing. `ProcessQSONumberAndNameExchange` now sets the message (CW Open, the four EU Sprints and MST share it): **No QSO number found!!**, **No name found!!** or **Not enough info in exchange!!**; an all-digit serial too large for the field gives the first. Unit-tested (`uTestQSONumberAndNameEntry`, including the engine path); the contest matrix moved only the `err=` field of 93 parse lines in each of those six contests (re-frozen with the reason recorded). 34 other parsers still refuse silently: not changed (issue to follow).
 
-- [ ] **CW Open, serial missing.** Call W7SP, type only a name (`WOODY`), Enter: the red error line reads **No QSO number found!!** and the caret is left alone. Nothing is logged.
-  - Windows behavior PASS with Ctrl+Enter: exact message, focus retained, zero contacts. Screenshot shows BLACK text rather than the red specified here; color requirement remains open: [#296](https://github.com/TR4W/TR4W-D12/issues/296).
+- [ ] **CW Open, serial missing.** Call W7SP, type only a name (`WOODY`), Enter: the status line under the entry fields (QUICK COMMAND, black by default) reads **No QSO number found!!** and the caret is left alone. Nothing is logged.
+  - Windows behavior PASS with Ctrl+Enter: exact message, focus retained, zero contacts. Screenshot shows BLACK text; this line said red until 2026-11-15, and NY4I agreed black is right ([#296](https://github.com/TR4W/TR4W-D12/issues/296); D7 never drew it red). Its colour is the QUICK COMMAND row of Preferences > Colors.
 - [x] **CW Open, name missing.** Type only `234`, Enter: **No name found!!**. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
 - [x] **CW Open, a good exchange.** `234 WOODY`, Enter: logs as before, no error text left over from the earlier attempts. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
 - [x] **Empty Enter still shows nothing in CW Open** (known gap: it exits before any parser runs; follow-up). — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
@@ -6789,7 +6817,7 @@ The forwarder is measured outside TR4W (`tools/netprobe` through it, same result
 ## Added 2026-11-12 -- NEW CONTEST PROMPTS, LOG NAME, RST/NUMBER/QTH PARSER (issues 290, 287, 284, 282)
 
 - [ ] **Locust QSO Party and NCCC Sprint prompt (290).** New Contest, Show inactive contests, choose Locust QSO Party; then NCCC Sprint. Beside the second row the prompt reads `Enter your name and QTH (US state, Canadian Province or DX country):` with no "or member number"; the row reads MY STATE. CWops Test (CWT) still says "... or member number:" beside MY QTH OR MEMBER NO.
-- [ ] **Jock White Field Day branch row (287).** New Contest, Jock White Memorial Field Day. The row beside "Enter your Branch number:" reads **MY BRANCH NUMBER**, not MY ZONE. Type `27`, OK: the new log's MY ZONE is 27. Windows and Linux (gtk2): the 16-character label fits the label column.
+- [ ] **Jock White Field Day branch row (287).** New Contest, Jock White Memorial Field Day. The row beside "Enter your Branch number:" reads **MY ZONE** (changed 2026-11-15, NY4I's ruling on issue 320: a label over the zone value says Zone; the 2026-11-13 PASS saw the withdrawn MY BRANCH NUMBER label). Type `27`, OK: the new log's MY ZONE is 27. Issue 320 later gives the branch its own MY BRANCH NUMBER setting and this row moves to it.
 - [ ] **A new log is named by the UTC date (284).** On a US evening after 00:00 UTC (e.g. 20:00 EST), create any new contest. The default file name carries the UTC date (tomorrow's local date), e.g. `CWOPEN 2026-11-13 NY4I.db` at 20:00 EST on 2026-11-12. An existing log keeps its name when opened.
 - [ ] **RSGB IOTA, reference first with RS(T) (282).** Type `EU5 599 12` for a G station: logged with island EU-005, RST 599, number 12 (it logged number 599 before).
 - [ ] **RSGB IOTA, unknown reference in the standard order (282).** Type `599 123 XYZ`: refused, the status line says `Improper domestic QTH!! (XYZ not known)` (it was refused with no message before), and the QSO keeps no QTH or number. `123 JOE CT`: refused with `No QSO number found!!`.
@@ -6870,3 +6898,12 @@ Registered `[rlSerial, rlNetwork]` since `03935174`; never run. The driver heade
 - [ ] **Connect** over LAN (and serial if to hand). Frequency and mode of VFO A and VFO B follow the radio. If VFO B never updates, or the log shows `$25`/`$26` NAKs, say so: Hamlib assumes those commands fail on this model.
 - [ ] **CI-V transceive item.** Note whether the log says `CI-V Transceive confirmed ON` or `is OFF` while the radio's CI-V Transceive menu is ON. A false OFF (or neither line) means the `$1A $05` menu item is wrong for this model; read the item number from the radio's set-mode menu and report it.
 - [ ] **RIT, split, PTT, CW-by-CAT** each once; note the firmware version shown by the radio (RIT remote control arrived with firmware 2.x).
+
+## Added 2026-11-15 -- THE PREFILL FOLLOWS AN EDITED OR IMPORTED QSO (issue 267 item 3)
+
+D7's `IntitialExLoaded` latch is deleted: every log reload (`RescoreLog`, Alt-Y, Clear Mult Sheet) now feeds the initial-exchange history, so a call's prefill is its latest logged QSO's text. Nothing headless drives `LoadinLog`; the unit tests pin only the store's overwrite and the latch's absence.
+
+- [ ] **Edit QSO.** In a contest that prefills (NAQP, ARRL SS, CQ WW), log a call with one exchange, open Edit QSO and change the exchange, save. Type the call again: the exchange window offers the EDITED text, not the original, without a restart.
+- [ ] **ADIF import.** Import an ADIF holding a call not yet logged. Type that call: the prefill shows the imported QSO's exchange.
+- [ ] **INITIAL.EX / call history file still win where the log has nothing.** With an INITIAL.EX entry for a call never logged, edit some other QSO (forcing a reload) and type that call: the INITIAL.EX text is still offered.
+- [ ] **Known residual, note only:** delete (Alt-Y) the only QSO with a call and retype it -- the deleted QSO's text is still offered until restart.

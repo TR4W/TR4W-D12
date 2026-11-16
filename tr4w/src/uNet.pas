@@ -1833,6 +1833,8 @@ var
      back every few seconds: the first failure for a reason is shown and is an
      Error, the rest are Debug. *)
    FTunnelFailedFor: string = '';
+   (* The "server not available" notice has been shown this run; never reset. *)
+   GUnavailableNoticeShown: boolean = False;
 
 (* The tunnel's own lines, in the link's log. Any thread. *)
 procedure TunnelLogLine(const aLevel: TTailcatLogLevel; const aText: string);
@@ -1860,6 +1862,7 @@ function OpenServerTunnel(out aAddress: string; out aPort: word): boolean;
 var
    why:   string;
    first: boolean;
+   showNotice: boolean;
 begin
    aAddress := NET_TUNNEL_HOST;
    Result := NetTunnelOpen(string(Settings.Server.TailcatAddress),
@@ -1885,11 +1888,21 @@ begin
       begin
       if first then
          begin
-         logger.Error('[Net] Tailcat: %s', [why]);
-         (* A NOTICE ON THE MAIN WINDOW, NOT A MODAL BOX (issue 316): a link that
-           cannot come up is a status, as it is without Tailcat. QuickDisplay
+         (* THE DETAIL GOES TO THE LOG; THE SCREEN GETS ONE SHORT LINE, ONCE
+           PER RUN (the first failed connect is the one at startup). A notice
+           on the main window, not a modal box (issue 316). QuickDisplay
            defers an off-thread write to the main thread. *)
-         QuickDisplay(UnicodeFormat(SNetTailcatFailed, [why]));
+         logger.Warn('[Net] Tailcat: %s', [why]);
+         GNetLock.Acquire;
+         try
+            showNotice := TakeUnavailableNotice(GUnavailableNoticeShown);
+         finally
+            GNetLock.Release;
+         end;
+         if showNotice then
+            begin
+            QuickDisplay(SNetServerNotAvailable);
+            end;
          end
       else
          begin

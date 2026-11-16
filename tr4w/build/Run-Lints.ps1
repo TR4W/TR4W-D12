@@ -280,6 +280,13 @@ $lints = @(
    # python. Arg is null: the script finds the repository from its own location.
    @{ Name = 'Lint-StdinHook'; Arg = $null; NeedsFpc = $false }
 
+   # EVERY DESIGNED-FORM CAPTION IS IN EVERY CATALOGUE (issue 145, 2026-11-15).
+   # The .lfm half of the catalogues came only from the .lrj the Lazarus IDE
+   # writes on a form save, so 60 captions edited in as text reached no
+   # language. tools/i18n/lfm_harvest.py reads the .lfm files instead; this runs
+   # its tests, then its --check. Fails closed without python. Arg is null.
+   @{ Name = 'Lint-LFMCatalogue'; Arg = $null; NeedsFpc = $false }
+
    # NO HAND-WRITTEN NUL AFTER A STRING (NY4I, 2026-11-02: "we are supposed to
    # be out of the business of terminating our own strings"). `s[Length(s) + 1]
    # := #0` was a Win32-era habit; nothing downstream read it, and on a

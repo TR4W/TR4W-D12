@@ -106,6 +106,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    public
       (* WHERE ON THE BAND THE SPONSOR WANTS NO WAG QSO -- M9b. See the
          body. *)
@@ -343,6 +344,14 @@ procedure TContestWAG.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_GERMANY);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURDOK, ncfMyState);
+end;
+
+(* THE BOX'S REGION IS THE DOMESTIC COUNTRIES DescribeSession states --
+   issue 167. The New Contest dialog asks once when MY CALL and the box
+   disagree. *)
+function TContestWAG.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* MainUnit.WagCheck's seven windows, moved here as they stood at M9b

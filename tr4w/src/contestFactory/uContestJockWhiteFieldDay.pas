@@ -155,8 +155,7 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   uTR4WStrings,
-   uAppStrings;      (* SNewContestBranchNumberLabel *)
+   uTR4WStrings;
 
 function TContestJockWhiteFieldDay.CountsAsMultiplier(const aQso: ContestExchange;
                                                       aKind: RemainingMultiplierType): boolean;
@@ -303,15 +302,18 @@ end;
    ones on ticking its "I am in" box. See
    TContestBase.DescribeNewContestPrompts.
 
-   THE ROW NAMES WHAT IT HOLDS (issue 287, 2026-11-12): it read MY ZONE
-   beside a prompt for the NZART branch number. NZART rule 8: "plus an NZART
-   Branch number". The branch is still kept in MY ZONE and the command queued
-   is still MY ZONE (the zone multiplier and the CQ exchange read it); only
-   the label changes. *)
+   THE ROW SAYS WHAT IT EDITS: MY ZONE (issue 287; NY4I's ruling on issue
+   320, 2026-11-14). The NZART branch number (rule 8: "plus an NZART Branch
+   number") is still KEPT in MY ZONE -- the zone multiplier, the own-branch
+   rule and the CQ exchange read it -- and "every label that shows it says
+   Zone": a "MY BRANCH NUMBER" caption over the zone value (2026-11-12 to
+   2026-11-15) was the wrong half to rename. The prompt beside it still asks
+   for the branch number. Issue 320 gives the branch a setting of its own,
+   MY BRANCH NUMBER; this row then queues that command and its own name is
+   the right caption, so no label is stated here either way. *)
 procedure TContestJockWhiteFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.AskFieldWithCommentAndLabel(TC_ENTERYOURBRANCHNUMBER, ncfMyZone,
-                                        SNewContestBranchNumberLabel);
+   aPrompts.AskFieldWithComment(TC_ENTERYOURBRANCHNUMBER, ncfMyZone);
 end;
 
 (* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the NZART branches, 1 to 99.

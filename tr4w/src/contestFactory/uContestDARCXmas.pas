@@ -122,6 +122,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    public
       (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
@@ -303,6 +304,14 @@ procedure TContestDARCXmas.DescribeNewContestPrompts(aPrompts: TNewContestPrompt
 begin
    aPrompts.OfferIAmIn(TC_GERMANY);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURDOK, ncfMyState);
+end;
+
+(* THE BOX'S REGION IS THE DOMESTIC COUNTRIES DescribeSession states --
+   issue 167. The New Contest dialog asks once when MY CALL and the box
+   disagree. *)
+function TContestDARCXmas.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:

@@ -624,9 +624,8 @@ begin
          end;
       NZFIELDDAY:
          begin
-         (* The branch row names what it holds (issue 287). *)
-         Result := StepCommentLabelled(TC_ENTERYOURBRANCHNUMBER, ncfMyZone,
-                                       SNewContestBranchNumberLabel);
+         (* The branch is kept in MY ZONE and the row says so (issue 287). *)
+         Result := StepComment(TC_ENTERYOURBRANCHNUMBER, ncfMyZone);
          end;
       OKDX:
          begin
@@ -1104,6 +1103,10 @@ end;
       SNewContestQTHOrMemberLabel.
   The Locust QSO Party and the NCCC Sprint show the same prompt words but
   take no member number (a name and a QTH), so their rows keep MY STATE.
+  The Jock White Field Day asks for its NZART branch number, kept in MY
+  ZONE, and its row reads MY ZONE ON PURPOSE (issue 287, NY4I's ruling on
+  issue 320: "every label that shows it says Zone"); issue 320 moves the
+  branch to its own MY BRANCH NUMBER setting.
   PCC and Arktika Spring label the row they ask on TICKING (issue 51) --
   ExpectedInsideRowLabel below.
   Every other step of every contest gives no label, so its row reads its
@@ -1131,13 +1134,6 @@ begin
       aField := ncfMyState;
       aComment := TC_ENTERYOURNAMEANDQTH;
       aRowLabel := SNewContestQTHOrMemberLabel;
-      end
-   else if IsLegacyContest(aContest, NZFIELDDAY) then
-      begin
-      aStep := 0;
-      aField := ncfMyZone;
-      aComment := TC_ENTERYOURBRANCHNUMBER;
-      aRowLabel := SNewContestBranchNumberLabel;
       end
    else
       begin
@@ -1226,11 +1222,12 @@ begin
                                    SNewContestQTHOrMemberLabel),
                RenderedPrompts(CWOPS, False), 'CWT: MY NAME, then the QTH-or-member row');
 
-   (* THE JOCK WHITE FIELD DAY BY NAME (issue 287): the branch-number row is
-      labelled, and still queues MY ZONE. *)
-   CheckEquals(StepCommentLabelled(TC_ENTERYOURBRANCHNUMBER, ncfMyZone,
-                                   SNewContestBranchNumberLabel),
-               RenderedPrompts(NZFIELDDAY, False), 'JWFD: the branch-number row');
+   (* THE JOCK WHITE FIELD DAY BY NAME (issue 287): the branch-number prompt
+      sits beside a row that says what it edits -- MY ZONE, unlabelled, since
+      the branch is kept in the zone until issue 320. *)
+   CheckEquals(StepComment(TC_ENTERYOURBRANCHNUMBER, ncfMyZone),
+               RenderedPrompts(NZFIELDDAY, False),
+               'JWFD: the branch prompt beside the MY ZONE row');
 
    (* ONLY THE CWT ASKS FOR A MEMBER NUMBER (issue 290): the Locust QSO Party
       and the NCCC Sprint take a name and a QTH, so their prompt does not

@@ -111,6 +111,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    public
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
@@ -330,6 +331,17 @@ procedure TContestCQ160CW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts
 begin
    aPrompts.OfferIAmIn(TC_NORTHAMERICA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERSTATEFORUSPROVINCEFORCANADA, ncfMyState);
+end;
+
+(* THE "I AM IN NORTH AMERICA" BOX IS THE CONTINENT -- issue 167. The New
+   Contest dialog asks once when MY CALL's continent and the box
+   disagree. *)
+function TContestCQ160CW.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   aHome.Countries := '';
+   aHome.Continent := NorthAmerica;
+   aHome.HomeIsInside := True;
+   Result := True;
 end;
 
 (* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this

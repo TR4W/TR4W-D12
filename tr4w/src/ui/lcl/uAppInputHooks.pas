@@ -96,6 +96,7 @@ type
   public
     procedure KeyDownBefore(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure AppException(Sender: TObject; E: Exception);
+    procedure AppDeactivate(Sender: TObject);
   end;
 
 var
@@ -164,6 +165,20 @@ procedure TTR4WInputHooks.KeyDownBefore(Sender: TObject; var Key: word;
 var
   id: word;
 begin
+  (* Ctrl OR Alt SWITCHES THE FUNCTION-KEY LABELS, WHEREVER THE FOCUS IS
+    (issue #3). This was the call and exchange fields' OnKeyDown, so in any
+    other window the labels never moved while Alt-Fn and Ctrl-Fn still sent
+    their banks. First, before any guard below can exit, and the key is NOT
+    consumed: Alt still reaches the menu bar and Ctrl its shortcuts.
+
+    The key itself counts as held: gtk2 reports the modifier state from
+    before the event, so a Ctrl press arrives without ssCtrl there. *)
+  if (Key = VK_CONTROL) or (Key = VK_MENU) then
+     begin
+     ShowFunctionKeyBank(BankForModifiers((ssCtrl in Shift) or (Key = VK_CONTROL),
+                                          (ssAlt in Shift)  or (Key = VK_MENU)));
+     end;
+
   // F10 IS SWALLOWED, as the loop swallowed it.  Windows treats it as "activate
   // the menu bar", which steals the keyboard from a contest operator mid-QSO.
   if Key = VK_F10 then
@@ -375,22 +390,23 @@ begin
   Key := VK_UNKNOWN;
 end;
 
-{ THE MODIFIER TRACKING THAT USED TO LIVE HERE IS GONE, AND SO IS THIS
-  HANDLER'S REASON TO EXIST.
+(* THE MODIFIER RELEASE IS NOT AN APPLICATION HANDLER.
 
-  It watched a GetKeyState transition and called ShowFMessages(0) to put the
-  plain function-key bank back when Ctrl or Alt was released. It never ran.
-  Measured on NY4I's machine with TRACE on, 2026-08-28: KeyDownBefore logged
-  every key -- `[InputHooks] key $11 ctrl=1` for Ctrl -- while a log line at the
-  top of this handler produced NOTHING at all.
+  An OnUserInput handler here once watched for Ctrl or Alt being released. It
+  never ran: measured on NY4I's machine with TRACE on, 2026-08-28,
+  KeyDownBefore logged every key while that handler produced nothing. The
+  release then moved to the entry fields' OnKeyUp, which only fires while they
+  have focus (issue #3). It is now the function-key window's own timer, which
+  runs only while a Ctrl or Alt bank is shown -- see
+  uFunctionKeys.ShowFunctionKeyBank. The press is KeyDownBefore above.
 
-  So AddOnKeyDownBeforeHandler delivers and AddOnUserInputHandler does not, in
-  this program. Rather than keep a subscription that answers nothing, the
-  release is handled where the events demonstrably arrive: the entry fields'
-  OnKeyUp, in uMainWindowProc.RestoreBankOnModifierRelease.
-
-  Removed rather than left in place, because a handler that cannot fire is worse
-  than no handler: it reads as the feature being implemented. }
+  LOSING THE APPLICATION PUTS THE PLAIN BANK BACK. A key released in another
+  program never reaches this one, and on Win32 GetKeyState is this thread's
+  view of the keyboard, so after Alt-Tab it can still read Alt as held. *)
+procedure TTR4WInputHooks.AppDeactivate(Sender: TObject);
+begin
+  ShowFunctionKeyBank(FKEY_BANK_PLAIN);
+end;
 
 procedure TTR4WInputHooks.AppException(Sender: TObject; E: Exception);
 begin
@@ -431,14 +447,22 @@ begin
   // the key, which is what TranslateAccelerator's position in the loop meant.
   Application.AddOnKeyDownBeforeHandler(gHooks.KeyDownBefore, True);
   Application.AddOnExceptionHandler(gHooks.AppException, True);
+  Application.AddOnDeactivateHandler(gHooks.AppDeactivate, False);
 
-  logger.Info('[InputHooks] accelerators, keypad CW memories, modifier tracking '
-              + 'and fault recovery are LCL application handlers now');
+  logger.Info('[InputHooks] accelerators, keypad CW memories, the function-key '
+              + 'bank and fault recovery are LCL application handlers now');
 end;
 
 initialization
 
 finalization
+  (* UNHOOKED BEFORE IT IS FREED. Forms finalizes after this unit, so the
+    application outlives gHooks and could otherwise call a freed object --
+    a deactivation while the last windows close is exactly such a call. *)
+  if (gHooks <> nil) and (Application <> nil) then
+     begin
+     Application.RemoveAllHandlersOfObject(gHooks);
+     end;
   FreeAndNil(gHooks);
 
 end.

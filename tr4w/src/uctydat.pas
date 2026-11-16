@@ -639,6 +639,11 @@ begin
      SetLength(CTY.ctyPrefixesTable, 0);
      CTY.ctyPrefixesTableRecords := 0;
      CTY.ctyCustomRemainingCountryListFound := False;
+     (* THE ONE-CALL LOCATE CACHE GOES WITH THE TABLE (issue 167): its record
+       holds an INDEX into the table being replaced, so the same call located
+       again would answer the old file's country. The New Contest dialog loads
+       the table before set-up replaces it. *)
+     CTY.ctyLastLocatedCall := '';
      end;
 
     Size := Length(raw);

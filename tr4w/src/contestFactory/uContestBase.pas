@@ -1414,6 +1414,28 @@ type
       PlacesFile: string;
    end;
 
+   (* WHERE THE "I AM IN <REGION>" BOX IS, IN CTY TERMS -- issue 167. The New
+      Contest dialog locates MY CALL at OK and, when the call and the box
+      disagree, asks the operator once (uNewContestHome.IAmInVerdict).
+
+      Countries     CTY country IDs, blank-separated, exactly as CTY spells
+                    them ('VE CY0 CY9'). Empty: the region is Continent.
+      Continent     the region when it is a whole continent (North America);
+                    UnknownContinent when Countries says it.
+      HomeIsInside  True when EVERY call of the region is inside the box, so
+                    a home call with the box cleared is a contradiction too.
+                    False when the box is only part of the region (New
+                    England is part of K): only a ticked box with a call
+                    outside the region is asked about.
+
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER -- pure data one getter
+      answers, as TNewContestHostArea is. *)
+   TNewContestHome = record
+      Countries: string;
+      Continent: ContinentType;
+      HomeIsInside: boolean;
+   end;
+
    (* WHAT THE TOTALS WINDOW SHOWS DIFFERENTLY FOR THIS CONTEST -- M9a
       (uTotal.UpdateTotals2). A RECORD BECAUSE IT IS AN INTERFACE PARAMETER --
       the answer of one getter, pure data -- as TScoreTotals is.
@@ -1566,6 +1588,15 @@ type
       (* ScoreQSO's steps against whatever FStation holds -- see ScoreQSO. *)
       procedure ScoreQSOWithStation(var aQso: ContestExchange);
    protected
+      (* "MY BOX'S REGION IS MY DOMESTIC COUNTRIES" -- issue 167. For an
+         override of DescribeNewContestHome whose box names exactly the
+         countries its DescribeSession states (Canada, Ireland, Spain ...):
+         the list is read from that one statement, on a station that has no
+         country yet, so it is never typed twice. HomeIsInside is True.
+         False when the session states none for such a station: there is
+         nothing to check against. *)
+      function HomeIsDomesticCountries(out aHome: TNewContestHome): boolean;
+
       (* THE GETTERS BEHIND THE PROPERTIES BELOW.
 
          PROPERTIES RATHER THAN BARE FUNCTIONS, on NY4I's question and to match
@@ -3491,6 +3522,17 @@ type
          (which refuses an in-area station). Asked of ContestIdentity: no
          station. *)
       function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; virtual;
+
+      (* WHERE IS THE "I AM IN <REGION>" BOX, IN CTY TERMS? -- issue 167.
+         True, with the answer in aHome, makes the New Contest dialog check
+         MY CALL against the box at OK and ask once when they disagree; see
+         TNewContestHome.
+
+         THE BASE ANSWERS FALSE: no check. That is not a rule default -- it
+         is what the dialog always did -- and a box whose region DXCC cannot
+         decide (an HQ station, a club member, a city) must keep saying so.
+         A contest that offers no box states nothing here. *)
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; virtual;
 
       (* THE CABRILLO CONTEST: NAME, given the session's contest title and
          name. The base is CabrilloName; General QSO, a log rather than a
@@ -7655,6 +7697,43 @@ begin
       aArea.HostStates := HostState;
       aArea.PlacesFile := DomesticFileName;
       end;
+end;
+
+function TContestBase.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   (* No check -- see the declaration. *)
+   aHome.Countries := '';
+   aHome.Continent := UnknownContinent;
+   aHome.HomeIsInside := True;
+   Result := False;
+end;
+
+function TContestBase.HomeIsDomesticCountries(out aHome: TNewContestHome): boolean;
+var
+   station: TStationContext;
+   session: TSessionDefaults;
+   i: integer;
+begin
+   aHome.Countries := '';
+   aHome.Continent := UnknownContinent;
+   aHome.HomeIsInside := True;
+
+   (* A STATION WITH NO COUNTRY YET -- the dialog has not set one up. A
+      DescribeSession that adds its list only for a station already inside
+      (PACC) answers none here, and that override must say its region
+      itself. *)
+   station := Default(TStationContext);
+   session := TSessionDefaults.Create;
+   try
+      DescribeSession(station, session);
+      for i := 0 to session.DomesticCountryCount - 1 do
+         begin
+         aHome.Countries := Trim(aHome.Countries + ' ' + session.DomesticCountry(i));
+         end;
+   finally
+      session.Free;
+      end;
+   Result := aHome.Countries <> '';
 end;
 
 function TContestBase.CabrilloContestName(const aContestTitle: string;

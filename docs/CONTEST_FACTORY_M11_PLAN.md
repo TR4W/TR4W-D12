@@ -651,6 +651,9 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
     `" Bob "` -> `" JOE FL "`; ARRL SS W1AW `" 14CT "` -> `" 00 "`). Whether
     a live in-session reload loses history (F18's open half) is still not
     measured -- that is production behaviour, recorded, not changed.
+    (Closed by issue 267, 2026-11-15: the latch is deleted, and the section
+    forgets the history with `CallsignsList.ClearInitialExchanges` before
+    `none` instead -- see the F18 row.)
   - **Arms now executed on a call or text they act on**, at the matrix's
     stations (dev runs over 50 contests, below):
     - `SetPrefix` -- `BelgiumPrefixes` (ON4), `SACDistricts` (SM, LA, OH,
@@ -755,7 +758,8 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
       adds nothing; the scoring section bypasses `logsubs2:1740`, the live
       path that does add it. Measured: "empty" equals "logged" for every
       line. Pinning history needs S0c to log through a path that calls
-      `AddIniitialExchange`, or the harness to clear the latch.
+      `AddIniitialExchange`, or the harness to clear the latch. (Closed by
+      issue 267: there is no latch now; see the F18 row.)
   - **ANSWER 2: NO -- they DO diverge (F9).** `Doing*` has one writer,
     `LogCfg:433-436`, one caller, start-up (`uProgramMain:2318`). `CONTEST` is
     in `uCFG.SHARED_WITH_PEERS`, is registered with no restart or read-only
@@ -2871,7 +2875,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F33** | `TREE.LooksLikeAGrid`; commit `e8f70dad` | (S9e part 1) **"Once per log row per repaint" was never true.** The comment, the M10 plan, `uContestSession` and the `contest-scoring` agent all said it, citing `logwind.pas:3042`; that line was `DisplayUserInfo` (once per call shown) at the very commit that wrote the claim, and is now. No caller runs per row: the callers are the call-history displays (LOGWIND, LOGEDIT x3), MainUnit's VHF beam heading, PostUnit's ADIF tail (once per record) and the external logger (three per QSO). So S9f's "read once per paint" had no paint; the answer is read once per call, on the contest's identity. Where NY4I's eighty-lines-per-millisecond log came from was not re-measured -- an export or a full-log send are the candidates |
 | **F34** | `TContestBase.ExchangeTextMayHoldGridSquare` / `ExchangeCarriesGridSquare` / `ReceivesGridSquareExchange` / `HasGridSquareMultiplier` | (S9e part 1, F28 continued) **FOUR grid answers.** Measured from the overrides: TREE's (18) and the readiness check's (20) differ by BWQP, the General QSO and POTA (TREE's only: a name-and-QTH or park exchange whose word may be a grid) and the Cup RF x3, Grid Loc and the UA4W Championship (the readiness check's only); the ADIF import's (9) is a subset of TREE's. Each is transcribed; one sent/received exchange model would answer all of them |
 | **F35** | `CLAUDE.md` (Testing, 1), `contest-scoring` agent header | (S9e part 1) **"The unit-test binary links only leaf `src` units" is stale.** `tr4w_unit_tests.lpr` uses `MainUnit`, and the contest pins use `PostUnit`, `LogEdit` and `FCONTEST` (`uTestContestKindPin`, `uTestContestSession`, `uTestStationFactOverrides`) -- the engine is LINKED. What stays true is that the app's globals are not booted, so `ProcessExchange`, scoring and dupe are not exercised end to end. The agent file is corrected; CLAUDE.md is NY4I's to correct |
-| **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
+| **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured. **CLOSED (issue 267, 2026-11-15):** it did -- Edit QSO, ADIF import, a network edit and every other `RescoreLog` left the old text until restart. The latch is deleted, so every `LoadinLog` feeds the history (overwriting: each call keeps its latest QSO's text); the matrix's `initialexchange` section calls `CallsignsList.ClearInitialExchanges` before its `none` probe instead of clearing the latch |
 
 Open questions to add to the design (next free number Q92):
 

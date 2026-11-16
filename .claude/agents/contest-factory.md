@@ -236,8 +236,9 @@ the target shape, the M-step migration order and the open questions.
     the cross-check: every record must reclassify to its own class.
   - **Headless runs are blind in two ways the matrix cannot report:** no
     TRMASTER (`CD.MasterFileExists` is set at `uProgramMain` after the
-    `/MATRIX` and `/EXPORT` halts, plan F17), and no logged initial-exchange
-    history after the first `LoadinLog` (the `IntitialExLoaded` latch, F18).
+    `/MATRIX` and `/EXPORT` halts, plan F17). (F18, the `IntitialExLoaded`
+    latch that kept every `LoadinLog` after the first from feeding the
+    initial-exchange history, is deleted -- issue 267.)
     And `Doing*` is derived ONCE at start-up while a peer's run-time
     `CONTEST` re-runs `FoundContest` -- measured to diverge (F9).
 - **Q108 S1 IS BUILT (2026-10-16, design 8.2u): A CROSS-CONTEST INVARIANT
@@ -1050,9 +1051,11 @@ the target shape, the M-step migration order and the open questions.
   `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); a step may
   NAME ITS ROW (`AskFieldWithCommentAndLabel`, `TNewContestPrompt.RowLabel`,
   2026-11-11: EUHFC and KVP label their MY ZONE row "MY LICENSE YEAR", the
-  CWT its MY STATE row "MY QTH OR MEMBER NO", the Jock White Field Day its
-  MY ZONE row "MY BRANCH NUMBER" (issue 287, NZART rule 8's words) --
-  `uAppStrings` resourcestrings; Locust and the NCCC Sprint take no member
+  CWT its MY STATE row "MY QTH OR MEMBER NO" -- `uAppStrings`
+  resourcestrings. The Jock White Field Day's branch row reads MY ZONE ON
+  PURPOSE (issue 287, 2026-11-15; NY4I on issue 320: a label over the zone
+  value says Zone -- its 2026-11-12 "MY BRANCH NUMBER" label is withdrawn;
+  the branch gets its own MY BRANCH NUMBER setting under issue 320); Locust and the NCCC Sprint take no member
   number (issue 290, sponsor rules), so they ask `SNewContestEnterNameAndQTH`
   -- the CWT's text without "or member number" -- and keep the MY STATE
   label; the CWT alone keeps `TC_ENTERYOURNAMEANDQTH`; the prompts table
@@ -1068,6 +1071,14 @@ the target shape, the M-step migration order and the open questions.
   the queued command stays MY STATE, the row's FIELD, never its label;
   the base answers for every `IsUSQSOParty`, BC/ON/QC/IN7QPNE state False
   with their reason; `uTestNewContestHostArea` walks the registry);
+  `DescribeNewContestHome(out TNewContestHome)` (issue 167, 2026-11-15: an
+  `OfferIAmIn` box's region in CTY terms -- `Countries`, or `Continent` for
+  the North American boxes; `HomeIsInside` False for a box that is only PART
+  of its countries, New England in K; `HomeIsDomesticCountries` reads the
+  class's own `DescribeSession` list on a country-less station, so PACC
+  states `PA` itself; the base states nothing -- IARU/BSCI HQ-or-member,
+  Arktika/PCC clubs, WWPMC, EU DX, IRTS, REF, RSGB 1.8, UBA, JIDX, Gagarin
+  are not stated yet; `uTestNewContestHome` walks the registry);
   `TotalsDisplay` (uTotal; the domestic and, since issue 277 2026-11-11, the
   PREFIX row's captions -- the CW Open says `Calls`, its key being the whole
   callsign; every other contest `Prefixes`, pinned -- and since 2026-11-11

@@ -3943,6 +3943,7 @@ msgid "Clear all logs"
 msgstr "자주 묻는 질문"
 
 #: tfrmlogcompare.btnexit.caption
+#: tfrmfileview.mnuexit.caption
 #, fuzzy
 msgid "Exit"
 msgstr "오시는 길"
@@ -5257,6 +5258,7 @@ msgid "Address:"
 msgstr "주소:"
 
 #: tprefsform.lblloggerheading.caption
+#: texternalloggersform.caption
 #, fuzzy
 msgid "External logger"
 msgstr "외부 로거"
@@ -8999,6 +9001,7 @@ msgid "Frequency Memory Enable"
 msgstr "빈도 기억 Enable"
 
 #: usettingscaptions.rs_operating_ctrlj_frequencypollrate
+#: tradioeditform.lblpollrate.caption
 #, fuzzy
 msgid "Frequency Poll Rate"
 msgstr "회수율"
@@ -9528,6 +9531,7 @@ msgstr "%d QSO(s)는 우리들의 역을 지명하고 이 대회를 주었다."
 
 # 2026-10-19: machine output said 연락처 (contacts), unrelated to the English. Machine output was: "연락처"
 #: uappstrings.snewcontestshowinactive
+#: tfrmnewcontest.chkshowinactive.caption
 #, fuzzy
 msgid "Show inactive contests"
 msgstr "비활성 콘테스트 표시"
@@ -9543,11 +9547,13 @@ msgid "%0:s %1:d"
 msgstr "%0:s %1:d"
 
 #: uappstrings.snewcontestfilescall
+#: tfrmeditqso.lblmycall.caption
 #, fuzzy
 msgid "Call"
 msgstr "콜사인"
 
 #: uappstrings.snewcontestfilesfile
+#: tfrmfileview.mnufile.caption
 #, fuzzy
 msgid "File"
 msgstr "파일"
@@ -9721,6 +9727,7 @@ msgid "Resent to the server what was logged while disconnected: %d QSO(s), %d ed
 msgstr ""
 
 #: uappstrings.sserverlogadd
+#: tfrmserverlog.btnaddmissing.caption
 #, fuzzy
 msgid "Add missing QSOs"
 msgstr ""
@@ -10261,6 +10268,9 @@ msgstr ""
 
 
 #: uappstrings.surltestbutton
+#: tprefsform.btnhamscoretest.caption
+#: tprefsform.btnscoreposttest.caption
+#: tprefsform.btnscorereadtest.caption
 #, fuzzy
 msgid "Test"
 msgstr ""
@@ -10358,11 +10368,14 @@ msgstr ""
 #: uappstrings.sverifyservercaption
 #: usettingscaptions.rs_scoring_board_verifyserver
 #: usettingscaptions.rs_scoring_hamscore_verifyserver
+#: tprefsform.chkhamscoreverify.caption
+#: tprefsform.chkscoreverify.caption
 #, fuzzy
 msgid "Verify the server's certificate"
 msgstr ""
 
 #: uappstrings.sverifyserveroffwarning
+#: tprefsform.lblscoreverifynote.caption
 #, fuzzy
 msgid "The server's identity is not checked; anyone between you and it can read what you send."
 msgstr ""
@@ -10378,11 +10391,13 @@ msgid "Station-wide hardware. Settings that belong to one radio are under Radios
 msgstr ""
 
 #: uappstrings.sprefscwkeyerspointer
+#: tprefsform.lblcwkeyerspointer.caption
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers."
 msgstr ""
 
 #: uappstrings.sprefskeyerscwpointer
+#: tprefsform.lblkeyerscwpointer.caption
 #, fuzzy
 msgid "The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings."
 msgstr ""
@@ -10569,41 +10584,49 @@ msgid "Call"
 msgstr ""
 
 #: uappstrings.seditqsomycounty
+#: tfrmeditqso.lblmycounty.caption
 #, fuzzy
 msgid "County"
 msgstr ""
 
 #: uappstrings.seditqsomycqzone
+#: tfrmeditqso.lblmycqzone.caption
 #, fuzzy
 msgid "CQ zone"
 msgstr ""
 
 #: uappstrings.seditqsomygrid
+#: tfrmeditqso.lblmygrid.caption
 #, fuzzy
 msgid "Grid"
 msgstr ""
 
 #: uappstrings.seditqsomyituzone
+#: tfrmeditqso.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone"
 msgstr ""
 
 #: uappstrings.seditqsomypark
+#: tfrmeditqso.lblmypark.caption
 #, fuzzy
 msgid "Park"
 msgstr ""
 
 #: uappstrings.seditqsomysection
+#: tfrmeditqso.lblmysection.caption
 #, fuzzy
 msgid "Section"
 msgstr ""
 
 #: uappstrings.seditqsomystate
+#: tfrmeditqso.lblmystate.caption
 #, fuzzy
 msgid "State"
 msgstr ""
 
 #: uappstrings.seditqsomystation
+#: tfrmeditqso.grpmystation.caption
 #, fuzzy
 msgid "Our station for this QSO"
 msgstr ""
@@ -10692,6 +10715,7 @@ msgid "Cloudlog / Wavelog address (https://...)"
 msgstr ""
 
 #: uappstrings.sloggergridadd
+#: tprefsform.btnaddexternallogger.caption
 #, fuzzy
 msgid "Add..."
 msgstr ""
@@ -10743,6 +10767,7 @@ msgid "Order"
 msgstr ""
 
 #: uappstrings.sloggergridprovider
+#: texternalloggersform.lblprovider.caption
 #, fuzzy
 msgid "Provider"
 msgstr ""
@@ -10840,16 +10865,19 @@ msgid "Internet downloads and uploads"
 msgstr ""
 
 #: uappstrings.sprefsnettailcatcaption
+#: tprefsform.lblnettailcat.caption
 #, fuzzy
 msgid "Tailcat address:"
 msgstr ""
 
 #: uappstrings.sprefsnettailcathint
+#: tprefsform.lblnettailcathint.caption
 #, fuzzy
 msgid "To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password."
 msgstr ""
 
 #: uappstrings.sprefsnetusetailcat
+#: tprefsform.chknetusetailcat.caption
 #, fuzzy
 msgid "Use Tailcat"
 msgstr ""
@@ -11092,6 +11120,7 @@ msgid "zone or society"
 msgstr ""
 
 #: uappstrings.seditqsomyyearsent
+#: tfrmeditqso.lblmyyearsent.caption
 #, fuzzy
 msgid "Year sent"
 msgstr ""
@@ -11147,6 +11176,9 @@ msgid "Enter your callsign to continue."
 msgstr ""
 
 #: uappstrings.swizcancel
+#: tfrmcabrillosummary.btncancel.caption
+#: texternalloggersform.btncancel.caption
+#: tfrmqtcreceive.btncancel.caption
 #, fuzzy
 msgid "Cancel"
 msgstr ""
@@ -11162,6 +11194,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr ""
 
 #: uappstrings.swizclose
+#: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
 msgstr ""
@@ -11554,6 +11587,7 @@ msgstr "다른 역에 보내지 말라: 텍스트는 %0:d 바이트이고 네트
 
 # mt-seed: skip -- 2026-11-15 engine returned unrelated website text; translate by hand
 #: uappstrings.sbandmapcopyspot
+#: tfrmbandmap.micopyspot.caption
 #, fuzzy
 msgid "Copy spot"
 msgstr ""
@@ -11565,6 +11599,7 @@ msgstr "%0:s (%1:d deg)"
 
 # mt-seed: skip -- 2026-11-15 engine returned unrelated website text; translate by hand
 #: uappstrings.ssendspotexchangeincomment
+#: tfrmsendspot.chkexchange.caption
 #, fuzzy
 msgid "Exchange in comment"
 msgstr ""
@@ -11592,4 +11627,136 @@ msgstr ""
 #: uappstrings.sexchangenotasignalreport
 #, fuzzy
 msgid "%s is not a signal report"
+msgstr ""
+
+#: uappstrings.snetservernotavailable
+#, fuzzy
+msgid "Connection to the TR4WServer is not available"
+msgstr ""
+
+#: tfrmaltp.btnedit.caption
+#: tfrmfileview.mnuedit.caption
+#, fuzzy
+msgid "Edit"
+msgstr ""
+
+#: tfrmeditqso.lbldelivery.caption
+#, fuzzy
+msgid "External logger delivery"
+msgstr ""
+
+#: texternalloggersform.lblname.caption
+#, fuzzy
+msgid "Name"
+msgstr ""
+
+#: texternalloggersform.chkactive.caption
+#, fuzzy
+msgid "Active (send newly logged QSOs)"
+msgstr ""
+
+#: texternalloggersform.btnok.caption
+#, fuzzy
+msgid "Save to Preferences"
+msgstr ""
+
+#: tfrmfileview.mnuopenineditor.caption
+#, fuzzy
+msgid "Open in text editor"
+msgstr ""
+
+#: tfrmfileview.mnuexplore.caption
+#, fuzzy
+msgid "Explore"
+msgstr ""
+
+#: tfrmfileview.mnucopy.caption
+#, fuzzy
+msgid "Copy"
+msgstr ""
+
+#: tfrmfileview.mnuselectall.caption
+#, fuzzy
+msgid "Select all"
+msgstr ""
+
+#: tfrmlogedit.caption
+#, fuzzy
+msgid "View / Edit Log"
+msgstr ""
+
+#: tfrmlogsearch.caption
+#, fuzzy
+msgid "Search Log"
+msgstr ""
+
+#: tfrmlogsearch.lblcall.caption
+#: tfrmqtcreceive.lblcallsign.caption
+#, fuzzy
+msgid "Callsign"
+msgstr ""
+
+#: tfrmlogsearch.lblmode.caption
+#, fuzzy
+msgid "Mode"
+msgstr ""
+
+#: tfrmlogsearch.lblband.caption
+#, fuzzy
+msgid "Band"
+msgstr ""
+
+#: tfrmlogsearch.lbloperator.caption
+#, fuzzy
+msgid "Operator"
+msgstr ""
+
+#: ttr4wmainform.pnlmasterstatus.caption
+#, fuzzy
+msgid "MASTER"
+msgstr ""
+
+#: ttr4wmainform.pnlnewmultstatus.caption
+#, fuzzy
+msgid "MULT"
+msgstr ""
+
+#: ttr4wmainform.pnlopmode.caption
+#, fuzzy
+msgid "CQ"
+msgstr ""
+
+#: ttr4wmainform.pnlpttstatus.caption
+#, fuzzy
+msgid "OFF"
+msgstr ""
+
+#: ttr4wmainform.pnlqsob4status.caption
+#, fuzzy
+msgid "QSOB4"
+msgstr ""
+
+#: ttr4wmainform.pnlwinkey.caption
+#, fuzzy
+msgid "WK"
+msgstr ""
+
+#: tfrmqtcreceive.lblmaxqtcs.caption
+#, fuzzy
+msgid "Enter QTC"
+msgstr ""
+
+#: uappstrings.snewcontestiaminchecktitle
+#, fuzzy
+msgid "Check your location"
+msgstr ""
+
+#: uappstrings.snewcontestiamintickedoutside
+#, fuzzy
+msgid "You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgstr ""
+
+#: uappstrings.snewcontestiaminclearedinside
+#, fuzzy
+msgid "You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
 msgstr ""

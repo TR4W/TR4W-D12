@@ -269,6 +269,8 @@ begin
 end;
 
 procedure TTestNetLink.Test_TheStartupRule;
+var
+   shown: boolean;
 begin
    BeginTest('uNetLink: the startup rule');
 
@@ -284,6 +286,14 @@ begin
    CheckFalse(Settings.Network.AutoConnect,
               'the shipped default is off: SERVER ADDRESS is LOCALHOST, so on would ' +
               'have every single-operator station retrying against itself');
+
+   shown := False;
+   CheckTrue(TakeUnavailableNotice(shown), 'the first failed connect is announced');
+   CheckFalse(TakeUnavailableNotice(shown), 'a retry is not');
+   CheckFalse(TakeUnavailableNotice(shown), 'nor the one after');
+   CheckTrue(Pos('Tailcat', SNetServerNotAvailable) = 0,
+             'the on-screen line names no tunnel and carries no address');
+   CheckTrue(Length(SNetServerNotAvailable) <= 60, 'one short line');
 end;
 
 procedure TTestNetLink.Test_ObserversAreCalledOnceAndMayRemoveThemselves;

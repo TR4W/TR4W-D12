@@ -828,8 +828,9 @@ door on a port the system picks.
   and a connect through it that FAILED -- so the next attempt pings again,
   which is the only step that can say whether the tunnel or the server is at
   fault.
-- **A tunnel that cannot open is told to the operator once per reason**
-  (`SNetTailcatFailed`, then Debug on the retries) and is never a fall back to
+- **A tunnel that cannot open is told to the operator ONCE PER RUN, as one short
+  line** (`SNetServerNotAvailable`, latched by `uNetLink.TakeUnavailableNotice`;
+  the reason is a Warn in tr4w.log, then Debug on the retries) and is never a fall back to
   `SERVER ADDRESS`. A wrong address and a server that is not running look the
   same: the address is the only thing that names the server.
 - **NOTHING LOGS THE ADDRESS.** Log and status lines call the server `Tailcat`

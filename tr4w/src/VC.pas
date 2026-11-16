@@ -3156,7 +3156,6 @@ var
 
 
   DupeInfoCallWindowState               : DupeInfoState;
-  IntitialExLoaded                      : boolean;
 
 
 var

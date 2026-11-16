@@ -9,6 +9,11 @@
    the Preferences window shipped that way on nearly every page (NY4I,
    2026-11-02), and every value was individually legal, so nothing saw it.
 
+   Every parent with two or more Tab-bearing children is judged, including one
+   whose children are ALIGNED: those are read by the bounds the alignment
+   wrote, which keep their relative order on a resize (issue 151; the skip
+   that used to excuse them hid the Telnet window's hint panel).
+
    The rule, the column declarations and the ratchet for forms not yet fixed
    are in tools/lfm_taborder.py and build/lint-taborder.txt.  To fix a form:
 

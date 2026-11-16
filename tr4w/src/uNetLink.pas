@@ -89,6 +89,12 @@ function LinkNeedsLiveLink(const aState: TNetLinkState): boolean;
 function ShouldConnectAtStartup(const aAutoConnect: boolean;
                                 const aComputerId: AnsiChar): boolean;
 
+(* THE "SERVER NOT AVAILABLE" NOTICE IS SHOWN ONCE PER RUN: the first failed
+  connect, which is the one at startup. aShown is the caller's latch; the first
+  call sets it and answers True, every later one answers False. The detail of
+  every failure goes to the log, never to the screen. *)
+function TakeUnavailableNotice(var aShown: boolean): boolean;
+
 (* The state in words for the log. Not for the operator: it is not translated. *)
 function LinkStateName(const aState: TNetLinkState): string;
 
@@ -171,6 +177,12 @@ function ShouldConnectAtStartup(const aAutoConnect: boolean;
                                 const aComputerId: AnsiChar): boolean;
 begin
    Result := aAutoConnect and (aComputerId >= 'A') and (aComputerId <= 'Z');
+end;
+
+function TakeUnavailableNotice(var aShown: boolean): boolean;
+begin
+   Result := not aShown;
+   aShown := True;
 end;
 
 function LinkStateName(const aState: TNetLinkState): string;

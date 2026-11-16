@@ -190,13 +190,40 @@ into `& &` or a lone `&` (`Mode de recherche & & ponce`). Rewording the `&&` awa
 
 Only needed when forms or strings have changed.
 
-```powershell
-# 1. Regenerate the template -- LAZARUS IDE ONLY, lazbuild cannot do this.
-#    Open tr4w\tr4w.lpi, Project Options -> i18n, tick "Resave forms with
-#    enabled i18n", then Run -> Clean up and Build.
+**New or changed FORM captions? No IDE needed (issue 145, 2026-11-15).**
+`tools\i18n\lfm_harvest.py` reads every `.lfm` under `tr4w\src` (not the IDE's
+`backup\` copies, not `uServerForm` -- `tr4wserver` loads no catalogue) and
+writes the same `t<formclass>.<control>.<property>` entries the IDE's `.lrj`
+gives. Write it to a **scratch** template, then merge additively:
 
-# 2. Add anything new to all catalogues. Never touches an existing translation.
-python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply
+```powershell
+python tools\i18n\lfm_harvest.py --pot <scratch>\lfm.pot
+python tools\i18n\po_merge.py --pot <scratch>\lfm.pot --add-only           # dry run first
+python tools\i18n\po_merge.py --pot <scratch>\lfm.pot --apply --add-only
+```
+
+The template carries no `msgctxt`, so a caption whose English is already a live
+entry with none (`Cancel`, the `SEditQSOMy*` labels) JOINS that entry (issue
+156) and shares its translation, instead of making a duplicate. A caption the
+`.lfm` itself marks as a placeholder -- its own control name (`lblHeading`), or
+`(assigned at run time)` / `(set at run time ...)` -- is not harvested.
+
+**THE GATE: `Lint-LFMCatalogue` (Run-Lints).** It runs
+`test_lfm_harvest.py`, then `lfm_harvest.py --check`, which FAILS when a
+harvested caption has no entry in some `i18n\tr4w_*.po` (an empty fuzzy entry
+counts) and prints the two commands above. It also WARNS, without failing, for
+each caption reworded in the `.lfm` since its entry was written -- see "A
+REWORDED caption" above for the fix. On 2026-11-15 the check found 60 captions
+in no catalogue (nine forms had never been saved in the IDE, so had no `.lrj`)
+and 11 rewordings.
+
+The IDE route still works and is no longer needed for the `.lfm` half:
+
+```powershell
+# Regenerate the template -- LAZARUS IDE ONLY, lazbuild cannot do this.
+# Open tr4w\tr4w.lpi, Project Options -> i18n, tick "Resave forms with
+# enabled i18n", then Run -> Clean up and Build.
+python tools\i18n\po_merge.py --pot tr4w\languages\tr4w_laz.pot --apply --add-only
 ```
 
 **Only new RESOURCESTRINGS? No IDE needed.** FPC writes a `.rsj` for every unit
@@ -237,7 +264,7 @@ every template entry that is not in the files it was given
 (`translations.pas` `UpdatePOFile` -> `RemoveTaggedItems(0)`), and the form
 half of that template comes from `.lrj` files that only the IDE writes when it
 resaves forms -- so it would strip every `.lfm` caption out of the template.
-The `.lfm` half still needs step 1.
+The `.lfm` half comes from `lfm_harvest.py` (above).
 
 **An `--apply` is lossless since 2026-10-18.** Before that, every catalogue
 rewrite -- `po_merge`, `po_lint --fix`, `po_rekey`, `po_prune`, `po_dedupe`,
@@ -391,6 +418,8 @@ is in `i18n\languages.json` and `--lang FIN` is enough.
 | `po_lint.py` | checks placeholders, line breaks and entry state |
 | `po_merge.py` | adds new strings to every catalogue; never edits an existing translation; never adds -- and drops when empty -- an entry that is not language (`F1`, `8`, `...`). `--add-only` adds empty entries and deletes nothing |
 | `po_coverage.py` | the gate: fails when a TR4W resourcestring (read from a compile's `.rsj` files) has no entry in some catalogue; run by `Build-Tests.ps1` |
+| `lfm_harvest.py` | the `.lfm` half without the IDE: `--pot` writes a template of every form caption for `po_merge --add-only`; `--check` is the gate (`Lint-LFMCatalogue`) that fails when a caption has no entry in some catalogue and warns on a reworded one |
+| `test_lfm_harvest.py` | pins the `.lfm` reading behind those identifiers (collection items, `+` continuations, `#13#10`, placeholders, `backup\` skipped) and that `--check` fails closed |
 | `pas2po.py` | creates a new language (`--new-lang`). Never writes English, which has no catalogue |
 | `po2pas.py` | `.po` → language tables; refuses anything still "Needs work" |
 | `pas2res.py` | English tables → `uTR4WStrings.pas` resourcestrings |

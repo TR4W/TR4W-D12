@@ -3221,26 +3221,15 @@ begin
      end;
 end;
 
+(* THE BANK IS uFunctionKeys.BankForModifiers, the rule the labels show
+  (issue #3): Ctrl wins over Alt. Result is 0, 1 or 2 for plain, Ctrl, Alt. *)
 function GetRealVirtualKey(var Key: integer): Byte;
-
+var
+  bank: byte;
 begin
-  Result := 0;
-
-  // if GetKeyState(VK_CONTROL or VK_MENU) < -126 then Exit;
-
-  if GetKeyState(VK_CONTROL) < -126 then
-     begin
-     Key := Key + 12;
-     Result := 1;
-     Exit;
-     end;
-
-  if GetKeyState(VK_MENU) < -126 then
-     begin
-     Key := Key + 24;
-     Result := 2;
-     end;
-
+  bank   := LiveFunctionKeyBank;
+  Key    := Key + bank;
+  Result := bank div FKEY_BANK_CTRL;
 end;
 
 procedure ShowSyserror(ErrorCode: Cardinal);
@@ -8649,9 +8638,19 @@ begin
              bands or modes -- still tells what the station sends, so it
              feeds the history as it did before S1. Only the OPERATOR'S flag
              keeps a QSO out, as it has since #750: hence the contest-blind
-             test (nil), not the record's contest. LogContact matches it. *)
-          if QSOCountsTowardTotals(nil, TempRXData) and
-             (not IntitialExLoaded)                then
+             test (nil), not the record's contest. LogContact matches it.
+
+             EVERY LOAD FEEDS IT, not only the first (issue 267, 2026-11-15).
+             A latch (IntitialExLoaded, D7's) let only start-up's load add a
+             QSO's text, so after an Edit QSO, an ADIF import, a network edit
+             or any other RescoreLog the window offered the OLD text until a
+             restart, and an imported QSO's never. AddIniitialExchange
+             OVERWRITES, so walking the log again leaves each call holding its
+             latest logged QSO's text -- what start-up and live logging give.
+             Not undone by a reload: a call whose only QSO was deleted or
+             X-flagged keeps that QSO's text (the store cannot tell it from
+             INITIAL.EX's, which a reload does not re-read). *)
+          if QSOCountsTowardTotals(nil, TempRXData) then
              begin
              CallsignsList.AddIniitialExchange(TempRXData.Callsign,
                GetInitialExchangeStringFromContestExchange(TempRXData));
@@ -8692,7 +8691,6 @@ begin
      TR4WEditableLogScrollToEnd;
      end;
   // DispalyLoadedQSOs(-1);
-  IntitialExLoaded := True;
   Sheet.SetUpRemainingMultiplierArrays;
   UpdateWindows;
   Sheet.SaveRestartFile;

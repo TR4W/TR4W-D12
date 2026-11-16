@@ -130,6 +130,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -349,6 +350,17 @@ procedure TContestPACC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_NETHERLANDS);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE "I AM IN THE NETHERLANDS" BOX IS PA -- issue 167. Stated here, not
+   read from DescribeSession, which adds PA only for a station already
+   Dutch. *)
+function TContestPACC.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   aHome.Countries := 'PA';
+   aHome.Continent := UnknownContinent;
+   aHome.HomeIsInside := True;
+   Result := True;
 end;
 
 (* THE CALL AREA DIGIT OF A CALL'S PREFIX, '0' FOR A CALL WITH NO DIGIT --

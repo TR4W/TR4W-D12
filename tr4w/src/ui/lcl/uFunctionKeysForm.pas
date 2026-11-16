@@ -34,9 +34,7 @@ unit uFunctionKeysForm;
 interface
 
 uses
-  Forms, Controls, ExtCtrls, StdCtrls, Classes, Graphics,
-  LCLType;   // HWND -- the LCL's own declaration, not the Windows unit's, so
-             // this unit stays free of a Windows uses clause
+  Forms, Controls, ExtCtrls, StdCtrls, Classes, Graphics;
 
 type
   TfrmFunctionKeys = class(TForm)
@@ -74,9 +72,24 @@ type
       property blocks is exactly the shape NY4I flagged as easy to get wrong in
       one of them -- one helper cannot drift from itself. }
     FCaptions: array[112..123] of TLabel;
+
+    (* WHICH BANK THE CAPTIONS SHOW (0, 12 or 24), written by
+      uFunctionKeys.ShowFMessages each time it fills them. *)
+    FShownBank: byte;
+
+    (* RUNS ONLY WHILE A Ctrl OR Alt BANK IS SHOWN, to notice the release
+      (issue #3). The LCL raises no application-wide key-up, so the release
+      is asked of the keyboard rather than waited for. Owned by the form, so
+      it cannot outlive the window it redraws. *)
+    FBankTimer: TTimer;
+    procedure BankTimerTick(Sender: TObject);
+    function  GetWatchModifiers: boolean;
+    procedure SetWatchModifiers(const aWatch: boolean);
     procedure BuildCaptionLabels;
     procedure LayOutKeys;
   public
+    property ShownBank: byte read FShownBank write FShownBank;
+    property WatchModifiers: boolean read GetWatchModifiers write SetWatchModifiers;
     { Caption and colour for one key, addressed the way the rest of the program
       addresses them.  Out-of-range is ignored rather than raising: this is
       called from a repaint path. }
@@ -94,15 +107,20 @@ type
     reference; this is the shape PossibleCallDrawProc already uses for the
     possible-call list's drawing. }
   TFunctionKeyProc = procedure(const aKey: integer);
+  TFunctionKeyBankProc = procedure;
 
 var
   { The live form, or nil.  Exposed because uFunctionKeys drives it and
-    OpenTR4WWindow needs its Handle. }
+    OpenTR4WWindow shows and positions it. }
   TR4WFunctionKeysForm: TfrmFunctionKeys = nil;
 
   FunctionKeyClicked: TFunctionKeyProc = nil;
   FunctionKeyRightClicked: TFunctionKeyProc = nil;
   FunctionKeyRightDoubleClicked: TFunctionKeyProc = nil;
+
+  (* The bank timer's tick: uFunctionKeys asks the keyboard which bank is held
+    and redraws if it changed. *)
+  FunctionKeyBankTick: TFunctionKeyBankProc = nil;
 
 { Create the window and return its handle, for OpenTR4WWindow's seam. }
 procedure CreateTR4WFunctionKeysWindow;
@@ -214,6 +232,41 @@ begin
       Exit;
       end;
    FKeys[aKey].Color := aColor;
+end;
+
+procedure TfrmFunctionKeys.BankTimerTick(Sender: TObject);
+begin
+   if Assigned(FunctionKeyBankTick) then
+      begin
+      FunctionKeyBankTick;
+      end;
+end;
+
+function TfrmFunctionKeys.GetWatchModifiers: boolean;
+begin
+   Result := (FBankTimer <> nil) and FBankTimer.Enabled;
+end;
+
+procedure TfrmFunctionKeys.SetWatchModifiers(const aWatch: boolean);
+begin
+   if FBankTimer = nil then
+      begin
+      if not aWatch then
+         begin
+         Exit;
+         end;
+      FBankTimer          := TTimer.Create(Self);
+      FBankTimer.Enabled  := False;
+      FBankTimer.Interval := 75;   (* well under what an operator notices *)
+      FBankTimer.OnTimer  := BankTimerTick;
+      end;
+
+   (* Only on a change: re-enabling a running TTimer restarts its interval,
+     and a held Ctrl repeats its key-down many times a second. *)
+   if FBankTimer.Enabled <> aWatch then
+      begin
+      FBankTimer.Enabled := aWatch;
+      end;
 end;
 
 procedure TfrmFunctionKeys.KeyPanelClick(Sender: TObject);

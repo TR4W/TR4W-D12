@@ -183,6 +183,7 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
          DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
@@ -537,6 +538,17 @@ procedure TContestNewEnglandQP.DescribeNewContestPrompts(aPrompts: TNewContestPr
 begin
    aPrompts.OfferIAmIn(TC_NEWENGLAND);
    aPrompts.AskFieldWithCommentWhenInside(TC_NEWENGLANDSTATEABREVIATION, ncfMyState);
+end;
+
+(* NEW ENGLAND IS PART OF K -- issue 167. Only a ticked box with a call
+   outside K is a contradiction: a K call with the box cleared is an
+   ordinary station outside New England. *)
+function TContestNewEnglandQP.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   aHome.Countries := 'K';
+   aHome.Continent := UnknownContinent;
+   aHome.HomeIsInside := False;
+   Result := True;
 end;
 
 (* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)

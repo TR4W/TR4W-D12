@@ -24,9 +24,13 @@ then a right one (two headings side by side, or a sidebar beside a content
 area) is named in the config file with the x at which the columns split.  The
 lint still judges it -- column by column -- so a declared page stays gated.
 
-Anchored children are judged by the Left/Top the designer wrote, which the LCL
-writes for every control.  A parent with an ALIGNED child (Align other than
-alNone) is skipped: its written position is not where it is drawn.
+Every child is judged by the Left/Top the designer wrote, which the LCL writes
+for every control -- for an ALIGNED child (Align other than alNone) those are
+the bounds the alignment computed when the form was saved.  A resize moves an
+aligned child but keeps its place relative to its siblings (alTop above
+alClient above alBottom, alLeft left of alRight), so the written positions read
+in the same order the window does.  Aligned parents were once skipped, which
+hid the Telnet window's hint panel tabbing after the console (issue 151).
 
 USAGE
    python tools/lfm_taborder.py report <file.lfm>...     every parent, before/after
@@ -165,8 +169,6 @@ def judged_parents(root, base, columns):
    for node in walk(root):
       kids = tab_children(node)
       if len(kids) < 2:
-         continue
-      if any(c.props.get('Align', 'alNone') != 'alNone' for c in kids):
          continue
       current = sorted(kids, key=lambda c: c.num('TabOrder'))
       splits = columns.get('%s:%s' % (base, node.name), [])

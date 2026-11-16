@@ -118,7 +118,7 @@ object frmTelnet: TfrmTelnet
     BevelOuter = bvNone
     ClientHeight = 22
     ClientWidth = 977
-    TabOrder = 3
+    TabOrder = 1
     Visible = False
     object lblNoClusters: TLabel
       Left = 6
@@ -140,7 +140,7 @@ object frmTelnet: TfrmTelnet
     BevelOuter = bvNone
     ClientHeight = 30
     ClientWidth = 977
-    TabOrder = 1
+    TabOrder = 2
     object cboHost: TComboBox
       Left = 4
       Height = 23
@@ -188,7 +188,7 @@ object frmTelnet: TfrmTelnet
     ParentFont = False
     ScrollWidth = 2000
     Style = lbOwnerDrawFixed
-    TabOrder = 2
+    TabOrder = 3
     OnDblClick = ConsoleDblClick
     OnDrawItem = ConsoleDrawItem
   end

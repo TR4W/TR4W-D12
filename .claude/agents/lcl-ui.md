@@ -135,6 +135,14 @@ and the "I am in" box is `uNewContest.RenderPrompt`.
   `MainUnit.RescoreLog` (the Rescore command, named once) and shows a
   NOTICE (`QuickDisplay`), never a modal question. The decision is
   `uCategoryPowerChange`, unit tested.
+- **OK on a new contest checks MY CALL against the "I am in" box** (issue
+  167): `uNewContest.IAmInAgreesWithMyCall`, asked in `RunNewContestDialog`
+  before `SaveNewContest`, from the contest's `DescribeNewContestHome` and
+  `uNewContestHome.IAmInVerdict` (a leaf, unit tested). One `QuestionDlg`,
+  Yes the default (create as entered), No/Escape back to the dialog; the box
+  is never changed. At startup CTY.DAT is not loaded yet, so
+  `EnsureCountryTableForIAmIn` loads it as the setup wizard does; an
+  unlocated call is never asked about.
 - **Call entry, band stepping, the log columns** ask
   `ShowsContestStatus`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber` and
   `CallEntryFrequencyWarning` (`MainUnit.ShowCallEntryFrequencyWarning`
@@ -633,6 +641,23 @@ code; resourcestrings are 8-bit, so they go onto a caption directly and
 through `Format`, not `LclText`/`UnicodeFormat` (that is two needless
 conversions). The page control hides its tabs; the page ORDER lives in
 `uSetupWizard.SetupPagePlan`, never in tab indexes.
+
+## A key held anywhere: the LCL has a key-DOWN hook and no key-UP one (issue #3, 2026-11-15)
+
+`Application.AddOnKeyDownBeforeHandler` reaches every `TWinControl` (it runs in
+`DoKeyDownBeforeInterface`, for `CN_SYSKEYDOWN` too); `AddOnUserInputHandler`
+never fired here (measured 2026-08-28), and there is no application-wide key-up.
+So the function-key Ctrl/Alt bank switches in `uAppInputHooks.KeyDownBefore`
+(never consuming the key), and the RELEASE is the function-key window's own
+`TTimer`, enabled only while a Ctrl or Alt bank is shown
+(`uFunctionKeys.ShowFunctionKeyBank`; the form owns `ShownBank`). Losing the
+application shows the plain bank (`AppDeactivate`): on Win32 `GetKeyState` is
+the thread's view, so a key released in another program can read as held. Do
+not put the switch back in the entry fields' `OnKeyDown`/`OnKeyUp` -- that is
+the defect. **The bank rule is `BankForModifiers` (Ctrl wins)**, shared by the
+labels, the right-click editor row and `MainUnit.GetRealVirtualKey` (the send).
+On gtk2 a modifier's own press arrives without its `ss` flag, so the caller
+counts the key itself.
 
 ## Coordinate with
 

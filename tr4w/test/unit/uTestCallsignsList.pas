@@ -62,6 +62,7 @@ type
       procedure Test_InitialExchangeAddAndReplace;
       procedure Test_TotalWorkedCountsOnlyStationsWithQSOs;
       procedure Test_ClearDupesKeepsStationsAndExchanges;
+      procedure Test_ClearInitialExchangesKeepsStationsAndDupes;
       procedure Test_FindNumberReverseLookup;
       procedure Test_PartialsListSubstringOrderAndLimit;
       procedure Test_CapacityRefusesTheHundredThousandAndFirst;
@@ -74,6 +75,7 @@ uses
    VC,
    uSettingsModel,
    uCallsigns,
+   uCallHistory,   (* TCallHistoryAddResult -- issue 267's clear *)
    uContestRegistry,
    LogSCP,
    LogStuff,
@@ -389,6 +391,49 @@ begin
       end;
 end;
 
+(* ISSUE 267: every LoadinLog walks the log through AddIniitialExchange now,
+   so a reload after an edit must leave each call holding its LATEST logged
+   text (a second walk overwrites, it does not keep the first), and the
+   matrix's ClearInitialExchanges forgets every remembered text -- the log's,
+   INITIAL.EX's and a call history file's -- and nothing else. *)
+procedure TCallsignsListTests.Test_ClearInitialExchangesKeepsStationsAndDupes;
+var
+   index: integer;
+begin
+   BeginTest('Test_ClearInitialExchangesKeepsStationsAndDupes');
+   SaveGlobals;
+   NewList(list);
+   try
+      (* The first walk: W1AW logged with 5, then the operator edits it to 8
+         and the rescore walks the log again. *)
+      list.AddCallsign('W1AW', CW, Band20, False);
+      list.AddIniitialExchange('W1AW', '05');
+      list.AddIniitialExchange('W1AW', '08');
+      CheckEquals('08', list.GetIniitialExchange('W1AW'),
+                  'a second walk leaves the latest logged text');
+      CheckTrue(list.AddCallHistoryExchange('K1AR', 'JOHN MA') = charAdded,
+                'a call history entry is stored');
+      CheckTrue(list.InitialExchangeIsFromCallHistory('K1AR'), 'as the file''s');
+      list.SetLoggedZone('W1AW', 5);
+
+      list.ClearInitialExchanges;
+
+      CheckEquals('', list.GetIniitialExchange('W1AW'), 'the logged text is forgotten');
+      CheckEquals('', list.GetIniitialExchange('K1AR'), 'and the file''s');
+      CheckFalse(list.InitialExchangeIsFromCallHistory('K1AR'), 'which is no longer the file''s');
+      CheckEquals(2, list.Count, 'the stations stay');
+      CheckTrue(list.FindCallsign('W1AW', index), 'W1AW found');
+      CheckEquals(1, Integer(list.GetQSOs(index)), 'with its QSO count');
+      CheckTrue(list.CallsignIsDupe('W1AW', Band20, CW, index), 'and its dupe bit');
+      CheckEquals(5, Integer(list.GetLoggedZone('W1AW')), 'and its logged zone');
+      CheckTrue(list.AddCallHistoryExchange('K1AR', 'JOHN CT') = charAdded,
+                'a call history file may fill the emptied entry again');
+   finally
+      FreeList(list);
+      RestoreGlobals;
+      end;
+end;
+
 procedure TCallsignsListTests.Test_FindNumberReverseLookup;
 begin
    BeginTest('Test_FindNumberReverseLookup');
@@ -503,6 +548,7 @@ begin
    Test_InitialExchangeAddAndReplace;
    Test_TotalWorkedCountsOnlyStationsWithQSOs;
    Test_ClearDupesKeepsStationsAndExchanges;
+   Test_ClearInitialExchangesKeepsStationsAndDupes;
    Test_FindNumberReverseLookup;
    Test_PartialsListSubstringOrderAndLimit;
    Test_CapacityRefusesTheHundredThousandAndFirst;

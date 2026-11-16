@@ -184,6 +184,9 @@ uses
   uAppStrings,         // SNewContestHostArea* -- issue 217
   uDomFileKeys,        // DOM_EXTENSION -- the county file's name, as set-up builds it
   uNewContestHostArea, // THostAreaPlaces, HostAreaOutsideRefusal -- issue 217
+  uNewContestHome,     (* HomeHoldsCall, IAmInVerdict -- issue 167 *)
+  uCTYDAT,             (* ctyLocateCall, ctyLoadInCountryFile -- issue 167 *)
+  FCONTEST,            (* ResolveCountryFile -- the country file, before set-up *)
   uOpenLogRelaunch;    (* IsSameLogFile -- is the last contest the open one (issue 228) *)
 
 const
@@ -244,6 +247,10 @@ var
   HostAreaPlaces                        : THostAreaPlaces = nil;
   (* Where the county file is read from -- see AttachNewContestForm. *)
   NewContestDomDir                      : string = '';
+  (* THE REGION OF THE CHOSEN CONTEST'S "I AM IN" BOX, as its prompts named
+    it (npkIAmIn); '' when it offers none -- issue 167. The box's own caption
+    carries the accelerator, so the confirmation names the region. *)
+  IAmInRegion                           : string = '';
 
 (* sfFLAG IS DELETED (2026-09-08), AND WITH IT AN EMPTY `const` BLOCK. It was DDL_ARCHIVE or DDL_READWRITE or
     DDL_DIRECTORY -- the flag set for a Win32 DlgDirList -- and NOTHING
@@ -282,6 +289,7 @@ begin
          end;
       npkIAmIn:
          begin
+         IAmInRegion := aPrompt.Text;
          DisplayCheckBox(aPrompt.Text);
          end;
       npkIAmInCaption:
@@ -458,6 +466,7 @@ begin
      GetContestFromString -- the caption is the display name since M9b. *)
    SelectedContest := frmNewContest.SelectedContest;
    ForgetHostArea;
+   IAmInRegion := '';
    ClearFields;
    frmNewContest.SetComment('');
    NewContestPromptComment := '';
@@ -1032,6 +1041,7 @@ begin
    frmNewContest    := aForm;
    SelectedContest  := NoContest;
    ForgetHostArea;
+   IAmInRegion      := '';
    NewContestDisplayedCommands := 0;
    NewContestPromptComment := '';
    OnContestChanged := ApplyContestChoice;
@@ -1045,8 +1055,98 @@ begin
    OnIAmInChanged   := nil;
    OnFieldsChanged  := nil;
    ForgetHostArea;
+   IAmInRegion      := '';
    NewContestDomDir := '';
    frmNewContest    := nil;
+end;
+
+(* THE COUNTRY FILE, FOR THE "I AM IN" CHECK -- issue 167. At startup this
+  dialog runs before set-up loads CTY.DAT, so the table is empty. It is loaded
+  here the way the setup wizard loads it (the downloaded copy, else the
+  shipped one; no contest directory exists yet), and set-up loads it again
+  over this, ReplaceTable, from the contest's own tier. From File > Open Log
+  the table is the running contest's and is left alone. Answers whether a
+  table is loaded; a missing file means no check, never a question. *)
+function EnsureCountryTableForIAmIn: boolean;
+var
+   path: string;
+   tier: string;
+begin
+   Result := ctyGetTotalCountries > 0;
+   if Result then
+      begin
+      Exit;
+      end;
+
+   path := ResolveCountryFile(False, tier);
+   Result := ctyLoadInCountryFile(path, False, True, (* ReplaceTable *) True);
+   logger.Info('[NewContest] country file for the "I am in" check: %s (%s), %s',
+               [path, tier, BoolToStr(Result, 'loaded', 'NOT loaded')]);
+end;
+
+(* DOES MY CALL AGREE WITH THE "I AM IN" BOX? -- issue 167, asked at OK on a
+  new contest. True to go on: the box and the call agree, the contest states
+  no region for its box (DescribeNewContestHome), there is no box, or the call
+  cannot be located. Otherwise the operator is asked ONCE: Yes (the default)
+  creates the contest as entered; No, Escape or closing the question goes
+  back to the dialog as it was left. The box is never changed here. The
+  answer is read by modal result, never by button position (GTK reverses
+  them). *)
+function IAmInAgreesWithMyCall: boolean;
+var
+   home: TNewContestHome;
+   qth: QTHRecord;
+   call: string;
+   located: boolean;
+   verdict: TIAmInVerdict;
+   place: string;
+   body: string;
+begin
+   Result := True;
+   if (IAmInRegion = '') or (SelectedContest = NoContest) then
+      begin
+      Exit;
+      end;
+   if not ContestIdentity(SelectedContest).DescribeNewContestHome(home) then
+      begin
+      Exit;
+      end;
+   if not EnsureCountryTableForIAmIn then
+      begin
+      Exit;
+      end;
+
+   call := UpperCase(Trim(frmNewContest.MyCall));
+   located := ctyLocateCall(CallString(call), qth) and (qth.CountryID <> '');
+   verdict := IAmInVerdict(frmNewContest.IAmIn, located,
+                           HomeHoldsCall(home.Countries, home.Continent,
+                                         string(qth.CountryID), qth.Continent),
+                           home.HomeIsInside);
+   if verdict = iavAgree then
+      begin
+      Exit;
+      end;
+
+   place := ctyGetCountryName(qth.Country);
+   if place = '' then
+      begin
+      place := string(qth.CountryID);
+      end;
+   if verdict = iavTickedOutside then
+      begin
+      body := Format(SNewContestIAmInTickedOutside, [IAmInRegion, call, place]);
+      end
+   else
+      begin
+      body := Format(SNewContestIAmInClearedInside, [IAmInRegion, call, place]);
+      end;
+   logger.Info('[NewContest] %s: MY CALL %s is in %s (%s) and the "I am in %s" ' +
+               'box is %s; asking the operator.',
+               [ContestId(SelectedContest), call, place, string(qth.CountryID),
+                IAmInRegion, BoolToStr(frmNewContest.IAmIn, 'ticked', 'clear')]);
+   Result := QuestionDlg(LclText(SNewContestIAmInCheckTitle), LclText(body),
+                         mtConfirmation,
+                         [mrYes, 'IsDefault', mrNo, 'IsCancel'], 0) = mrYes;
 end;
 
 function RunNewContestDialog(aMode: TNewContestDialogMode;
@@ -1076,6 +1176,13 @@ begin
             Result   := frmNewContest.Choice;
             selected := frmNewContest.SelectedFile;
             created  := '';
+            (* MY CALL AGAINST THE "I AM IN" BOX FIRST (issue 167): No goes
+              back to the dialog as it was left, with nothing queued. *)
+            if (Result = nccCreate) and (not IAmInAgreesWithMyCall) then
+               begin
+               Result    := nccNone;
+               showAgain := True;
+               end;
             if Result = nccCreate then
                begin
                case SaveNewContest(created, aOpenContest) of
