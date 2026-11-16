@@ -17,8 +17,8 @@
 #
 # SCOPE. Get-TR4WPascalFiles over tr4w\ (src, tr4wserver, test, tools, build),
 # which already skips include\ (vendored Indy, Log4D), backup, target,
-# build-out and dcu. Additionally skipped here: graphify-out (a cache) and
-# __history (IDE snapshots). Every match is against Get-PascalCodeOnlyText
+# build-out and dcu. Additionally skipped here: __history
+# (IDE snapshots). Every match is against Get-PascalCodeOnlyText
 # -BlankStrings -- comments removed, string-literal contents blanked, {$...}
 # directives kept as live code -- NEVER the raw text.
 #
@@ -243,7 +243,7 @@ if ($Rule -and -not $script:Rules.Contains($Rule)) {
 
 $Root  = (Resolve-Path -LiteralPath $Root).Path.TrimEnd('\')
 $files = @(Get-TR4WPascalFiles -Root $Root | Where-Object {
-   $_.FullName -notmatch '\\graphify-out\\|\\__history\\' })
+   $_.FullName -notmatch '\\__history\\' })
 
 # The second floor: a wrong -Root scans nothing and reports a clean zero.
 if (-not ($files | Where-Object { $_.FullName -match '\\src\\MainUnit\.pas$' })) {

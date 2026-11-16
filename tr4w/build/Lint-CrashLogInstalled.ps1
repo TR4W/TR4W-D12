@@ -115,9 +115,9 @@ $exemptRx = '\\test\\|\\tools\\|\\build\\|\\docs\\'
 # ---------------------------------------------------------------------------
 # .claude\worktrees holds OTHER CHECKOUTS of this repository -- another agent's
 # working copy, days out of date -- so their program files are not this tree's to
-# judge. CLAUDE.md makes the same point about src\backup and src\graphify-out:
-# a hand-run search finds them and every lint has to exclude them.
-$skipRx = '\\build-out\\|\\backup|\\graphify-out\\|\\dcu|\\\.?worktrees\\'
+# judge. CLAUDE.md makes the same point about src\backup:
+# a hand-run search finds it and every lint has to exclude it.
+$skipRx = '\\build-out\\|\\backup|\\dcu|\\\.?worktrees\\'
 # Match below this checkout: the checkout itself may live inside .worktrees.
 $allLpr = @(Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Filter '*.lpr' `
                -ErrorAction SilentlyContinue |

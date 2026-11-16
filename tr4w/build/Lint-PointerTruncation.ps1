@@ -232,8 +232,7 @@ if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
 }
 
 $files = @(Get-TR4WPascalFiles -Root $SourceDir |
-           Where-Object { (Test-Tr4wScannable $_.FullName) -and
-                          $_.FullName -notmatch '\\graphify-out\\' })
+           Where-Object { (Test-Tr4wScannable $_.FullName) })
 
 if (-not ($files | Where-Object { $_.Name -ieq 'MainUnit.pas' })) {
    Write-Output ("Lint-PointerTruncation: MainUnit.pas is not under '{0}' ({1} file(s)) -- wrong -SourceDir? Refusing to report a pass." -f $SourceDir, $files.Count)

@@ -10,7 +10,7 @@
 # line in the source.
 #
 # The file list is `git ls-files`, not a directory walk, so the gitignored
-# backup/, graphify-out/ and .claude/worktrees/ copies are excluded by
+# backup/ and .claude/worktrees/ copies are excluded by
 # construction.
 #
 # Called by generate.py; not meant to be run by hand.

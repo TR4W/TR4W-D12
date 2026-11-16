@@ -4,8 +4,7 @@
 
 NY4I asked to stop new-party work here, prepare this worktree for another
 agent to bring into main, and resume the remaining parties after the session
-limit resets. Do not start more parties during integration. Do not use Graphify.
-
+limit resets. Do not start more parties during integration.
 - Worktree: `C:\tr4w-d12\.worktrees\new-qso-parties`
 - Branch: `codex/new-qso-parties`
 - Common ancestor with main: `58678f7393312f8f9fded1183f2e1fed7f40ad35`.

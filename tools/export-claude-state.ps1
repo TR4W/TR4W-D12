@@ -16,7 +16,7 @@
                   part: it is not derivable from the source.
      plans\       Design plans written during earlier sessions. CLAUDE.md cites
                   one of them by path.
-     skills\      Any project-relevant skill (graphify).
+     skills\      Any project-relevant skill.
      CLAUDE.md    The GLOBAL instruction file -- coding standards, the 3-space
                   rule, the engineering bar. The repo's own CLAUDE.md clones;
                   this one does not.

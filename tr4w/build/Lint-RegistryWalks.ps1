@@ -144,7 +144,7 @@ if ($SelfTest)
 }
 
 $files = @(Get-TR4WPascalFiles -Root $testRoot |
-           Where-Object { (Test-Tr4wScannable $_.FullName) -and $_.FullName -notmatch '\\graphify-out\\' })
+           Where-Object { (Test-Tr4wScannable $_.FullName) })
 if ($files.Count -eq 0)
 {
    Write-Host "Lint-RegistryWalks: scanned ZERO files under $testRoot -- that is a broken lint, not a pass." -ForegroundColor Red

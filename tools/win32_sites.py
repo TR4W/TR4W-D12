@@ -255,7 +255,7 @@ def main():
     header_count, server_count = [0], [0]
 
     for root, dirs, files in os.walk(SRC):
-        dirs[:] = [d for d in dirs if d not in ('backup', 'graphify-out')]
+        dirs[:] = [d for d in dirs if d != 'backup']
         for f in sorted(files):
             if not f.lower().endswith(('.pas', '.inc')):
                 continue

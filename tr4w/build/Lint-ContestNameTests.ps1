@@ -740,7 +740,6 @@ $files = @(Get-ChildItem -LiteralPath $srcRoot -Recurse -File |
            Where-Object { ($_.Extension -ieq '.pas' -or $_.Extension -ieq '.inc') -and
                           (Test-Tr4wScannable $_.FullName) -and
                           $_.FullName -notmatch '\\contestFactory\\' -and
-                          $_.FullName -notmatch '\\graphify-out\\' -and
                           $_.Name -notmatch '~' })
 
 if ($files.Count -eq 0)

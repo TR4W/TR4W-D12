@@ -364,8 +364,7 @@ for a resend -- so a lossy link is where it would appear. See P13 part 4.
 
 **Scope:** `Get-TR4WPascalFiles -Root tr4w` from `tr4w/build/PascalSource.psm1`
 (which already skips `include\` -- vendored Indy and Log4D --, `backup`,
-`target`, `build-out`, `dcu`), additionally skipping `graphify-out` and
-`__history`. That is `tr4w/src`, `tr4w/tr4wserver`, `tr4w/test`,
+`target`, `build-out`, `dcu`), additionally skipping `__history`. That is `tr4w/src`, `tr4w/tr4wserver`, `tr4w/test`,
 `tr4w/tools` and `tr4w/build`: **817 files**. `.claude/worktrees/` is outside
 `tr4w/` and is never scanned.
 
@@ -1739,7 +1738,7 @@ this tree and was left byte-for-byte as it was; `LookForQSXFrequency`
 ### `Measure-Pointers.ps1` (the C1-C7 table)
 
 Shape: `Import-Module tr4w\build\PascalSource.psm1`; for each file from
-`Get-TR4WPascalFiles -Root tr4w` not under `graphify-out` or `__history`,
+`Get-TR4WPascalFiles -Root tr4w` not under `__history`,
 match each rule below against `Get-PascalCodeOnlyText -Path $f -BlankStrings`,
 map the match index to a line number, and write
 `rule<TAB>file<TAB>line<TAB>match<TAB>source line` to a TSV. Then group by

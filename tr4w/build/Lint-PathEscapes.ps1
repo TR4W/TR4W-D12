@@ -50,7 +50,7 @@ $tab   = [char]9
 $pattern = $tab + '(' + ($tails -join '|') + ')'
 
 $extensions = @('.pas', '.lpr', '.dpr', '.dpk', '.inc', '.lfm', '.md', '.ps1', '.psm1')
-$skipDir    = '\\\.git\\|\\build-out\\|\\graphify-out\\|\\release\\|\\backup|\\dcu'
+$skipDir    = '\\\.git\\|\\build-out\\|\\release\\|\\backup|\\dcu'
 
 if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
    Write-Output "Lint-PathEscapes: source directory not found: $SourceDir"

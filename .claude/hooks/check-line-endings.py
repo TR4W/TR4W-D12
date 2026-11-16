@@ -30,7 +30,7 @@ EXTS = ('.pas', '.lpr', '.dpr', '.dpk', '.inc', '.lfm', '.dfm', '.ps1', '.psm1')
 
 # Deliberately LF, or not ours.
 SKIP = ('/include/', '\\include\\', '/backup/', '\\backup\\',
-        'graphify-out', 'build-out')
+        'build-out')
 
 
 def git(*args):

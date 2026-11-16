@@ -314,7 +314,7 @@ case "$1" in
       reasons="$OUT.reasons"
       : > "$reasons"
       list=$(cd "$SRC" && find . -name '*.pas' \
-              ! -path './backup/*' ! -path './graphify-out/*' \
+              ! -path './backup/*' \
               | sed 's|^\./||' | sort)
       total=$(printf '%s\n' "$list" | wc -l | tr -d ' ')
       n=0

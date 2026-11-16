@@ -129,7 +129,7 @@ if (-not (Test-Path -LiteralPath $src))
    exit 1
    }
 
-# The IDE's backup copies and the graphify cache are stale snapshots of real
+# The IDE's backup copies are stale snapshots of real
 # units; they are gitignored and are not the tree.  Counting them reports work
 # that was finished days ago -- exactly what sent NY4I looking for a
 # CreateQSONeedWindows that had already been deleted.
@@ -138,7 +138,7 @@ if (-not (Test-Path -LiteralPath $src))
 # it finds none, and $files.Count then THROWS -- which is how the floor below
 # came to print an error and still exit 0, the very fail-open it exists to stop.
 $files = @(Get-ChildItem -LiteralPath $src -Recurse -File -Include *.pas, *.PAS, *.lpr, *.inc |
-   Where-Object { $_.FullName -notmatch '\\backup\\' -and $_.FullName -notmatch '\\graphify-out\\' })
+   Where-Object { $_.FullName -notmatch '\\backup\\' })
 
 # A FLOOR, so "clean" can never mean "looked at nothing". This tree has ~440
 # Pascal files; anything under a hundred means the path or the filter is wrong,

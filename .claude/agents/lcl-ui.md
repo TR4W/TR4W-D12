@@ -64,9 +64,8 @@ wrong the next day, four days running. **Ask the tree:**
 .\build\Lint-Win32Dialogs.ps1 -Group platform
 ```
 
-**And do not search `tr4w/src` alone** — `src/backup/` (IDE copies) and
-`src/graphify-out/` (a cache) are gitignored snapshots days out of date. The lints
-exclude both; a hand-run `grep` does not.
+**And do not search `tr4w/src` alone** — `src/backup/` (IDE copies) is a
+gitignored snapshot days out of date. The lints exclude it; a hand-run `grep` does not.
 
 ## Retiring a line
 

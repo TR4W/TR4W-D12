@@ -134,7 +134,7 @@ into 35 comparison-or-arm records --
 **Scope.** `git ls-files 'tr4w/*.pas' 'tr4w/*.inc' 'tr4w/*.lpr'`, minus
 `tr4w/include/` (vendored) and `tr4w/test/`, minus `src/contestFactory/`:
 **451 files**. Using the tracked list excludes the gitignored `backup/`,
-`graphify-out/` and `.claude/worktrees/` copies by construction.
+and `.claude/worktrees/` copies by construction.
 
 **Parsing.** Every file is first reduced to CODE ONLY by
 `tr4w/build/PascalSource.psm1` (`Get-PascalCodeOnlyText`, once with

@@ -114,7 +114,7 @@ function Split-TopLevel([string] $s)
 }
 
 $files = Get-TR4WPascalFiles -Root $root |
-         Where-Object { $_.FullName -notmatch '\\graphify-out\\|\\backup\\' }
+         Where-Object { $_.FullName -notmatch '\\backup\\' }
 
 $bad = New-Object System.Collections.Generic.List[string]
 $scanned = 0

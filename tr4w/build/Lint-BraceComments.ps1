@@ -69,7 +69,7 @@ if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
 }
 
 $extensions = @('.pas', '.lpr', '.dpr', '.dpk', '.inc')
-$skipDir    = '\\\.git\\|\\build-out\\|\\graphify-out\\|\\release\\|\\backup|\\dcu'
+$skipDir    = '\\\.git\\|\\build-out\\|\\release\\|\\backup|\\dcu'
 
 $files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File -ErrorAction SilentlyContinue |
            Where-Object { Test-Tr4wScannable $_.FullName } |

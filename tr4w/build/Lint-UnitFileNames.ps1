@@ -82,7 +82,7 @@ $checked = 0
 Get-ChildItem -Path $SourceDir -Recurse -File -ErrorAction SilentlyContinue |
    Where-Object {
       $exts -contains $_.Extension.ToLower() -and
-      $_.FullName -notmatch '\\(backup|graphify-out|dcu-cache|build-out|lib)\\'
+      $_.FullName -notmatch '\\(backup|dcu-cache|build-out|lib)\\'
    } |
    ForEach-Object {
       $checked++
@@ -120,7 +120,7 @@ foreach ($root in @((Join-Path $SourceDir 'src'),
    if (-not (Test-Path -LiteralPath $root)) { continue }
    Get-ChildItem -LiteralPath $root -Recurse -File -ErrorAction SilentlyContinue |
       Where-Object { @('.pas', '.pp') -contains $_.Extension.ToLowerInvariant() -and
-                     $_.FullName -notmatch '\\(backup|graphify-out|build-out|lib)\\' } |
+                     $_.FullName -notmatch '\\(backup|build-out|lib)\\' } |
       ForEach-Object {
          $stem = [IO.Path]::GetFileNameWithoutExtension($_.Name)
          $key  = $stem.ToLowerInvariant()

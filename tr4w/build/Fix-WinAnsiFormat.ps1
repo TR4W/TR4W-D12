@@ -53,7 +53,7 @@ $files = 0
 Get-ChildItem -Path $SourceDir -Recurse -File |
    Where-Object {
       $_.Extension -match '^\.(pas|lpr)$' -and
-      $_.FullName -notmatch '\\(backup|graphify-out)\\'
+      $_.FullName -notmatch '\\backup\\'
    } |
    ForEach-Object {
       $path = $_.FullName

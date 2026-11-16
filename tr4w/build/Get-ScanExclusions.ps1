@@ -18,7 +18,6 @@
 #                build on an agent's half-finished docs edit (2026-10-17,
 #                Lint-MarkdownTables on a worktree's POINTER_AUDIT.md). Each
 #                worktree is linted from its own root when it is merged.
-#   graphify-out\  a generated cache (CLAUDE.md's snapshot-tree table).
 #
 # THE LAZARUS ONE, MEASURED 2026-08-31. src\ui\lcl\backup held 39 stale .lfm
 # copies, so the form lints reported 78 designed forms against 39 tracked and
@@ -40,7 +39,7 @@
 # Matched against a FULL PATH with backslash separators, case-insensitively
 # (PowerShell -notmatch is case-insensitive by default, which is what we want:
 # the IDEs are inconsistent about case).
-$script:TR4W_SCAN_EXCLUDE = '\\__history\\|\\__recovery\\|\\backup\\|\\\.claude\\worktrees\\|\\graphify-out\\'
+$script:TR4W_SCAN_EXCLUDE = '\\__history\\|\\__recovery\\|\\backup\\|\\\.claude\\worktrees\\'
 
 function Test-Tr4wScannable
 {

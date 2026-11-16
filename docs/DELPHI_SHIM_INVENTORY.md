@@ -269,15 +269,6 @@ Worth recording so the next survey does not re-raise them:
 
 ---
 
-## 5. Not a shim, but it distorts every survey
-
-`tr4w/src/graphify-out/` is untracked local tooling output sitting **inside** the
-source tree. It inflated three separate searches while this survey was being
-taken — cache JSON containing source filenames matches almost any grep for a unit
-name. Move it out of `src/` or exclude it.
-
----
-
 ## Suggested order
 
 0. ~~the ten dead `{$IFDEF LANG_*}` resource links and their `.res` files (§3b)~~

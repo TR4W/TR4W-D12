@@ -240,7 +240,6 @@ foreach ($f in @(Get-TR4WPascalFiles -Root (Join-Path $root 'src')) + @(Get-TR4W
 {
    if ($f.Extension -ine '.pas') { continue }
    if (-not (Test-Tr4wScannable $f.FullName)) { continue }
-   if ($f.FullName -match '\\graphify-out\\') { continue }
    if (-not (Test-RegistersAContest -CodeOnlyText (Get-PascalCodeOnlyText -Path $f.FullName -BlankStrings))) { continue }
 
    $full = [IO.Path]::GetFullPath($f.FullName)

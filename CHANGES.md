@@ -547,7 +547,7 @@ reason stated.
   `FillChar(x, SizeOf(x))` on a virtual old-style object (`SizeOf` goes through the
   VMT).
 - `block-stdin-readers.py` blocks heredocs and a bare `cat`. Corpus scripts no
-  longer delete `target/*.LOG`. Lints skip worktrees and `graphify-out`. The macOS
+  longer delete `target/*.LOG`. Lints skip worktrees. The macOS
   bundle step fails loudly, and release jobs gate the language `.res` (#90). The
   CI runner service runs as LocalSystem.
 - The build regenerates `tr4w_languages.res`; `pofile` round-trips losslessly;
