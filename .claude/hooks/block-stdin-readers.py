@@ -44,8 +44,8 @@ place:
    is accepted there only. Redirect from a REAL file, or pipe a real producer.
 
 LIMITS, said plainly: this is a token walk, not a shell parser. A wrapper this
-file does not know (`timeout 10 python -`, `winpty python`) hides the command
-word and is not seen; `env`, `time`, `nohup`, `exec`, `command`, `sudo` and
+file does not know hides the command word and is not seen; `env`, `time`,
+`nohup`, `exec`, `command`, `sudo`, `winpty`, `setsid`, `timeout [opts] N` and
 `VAR=value` prefixes are skipped. An interpreter reached through `xargs`, a
 function or an alias is not seen either.
 
@@ -69,7 +69,7 @@ COMMAND_START = COMMAND_END | {'(', 'then', 'do', 'else', '{', '!'}
 # A redirection operator token, with an optional leading fd digit or `&`.
 REDIRECTION = re.compile(r'^(?:\d*|&)(?:>>?&?|<<<|<&?)$')
 # Words that run the next word without changing what it reads.
-WRAPPERS = {'env', 'time', 'nohup', 'exec', 'command', 'sudo'}
+WRAPPERS = {'env', 'time', 'nohup', 'exec', 'command', 'sudo', 'winpty', 'setsid', 'timeout'}
 ASSIGNMENT = re.compile(r'^[A-Za-z_]\w*=')
 WINDOWS_PATH = re.compile(r'(?<![\w])[A-Za-z]:\\[^\s"\';|&<>()]*')
 
@@ -133,6 +133,20 @@ def command_name(word):
    return base
 
 
+def skip_timeout_arguments(toks, j):
+   """Index of the command word after `timeout [options] DURATION`, given toks[j] == 'timeout'.
+
+   `timeout 10 python -` still hangs: timeout starts python with the same
+   standard input, and only kills it after the duration.
+   """
+   j += 1
+   while j < len(toks) and toks[j].startswith('-') and toks[j] not in COMMAND_START:
+      if toks[j] in ('-s', '-k', '--signal', '--kill-after'):
+         j += 1                         # the option's value is the next word
+      j += 1
+   return j + 1                         # the duration
+
+
 def commands(toks):
    """Yield (name, args, fed_by_pipe) for every simple command in the token list."""
    n = len(toks)
@@ -144,7 +158,10 @@ def commands(toks):
       fed = s > 0 and toks[s - 1] == '|'
       j = s
       while j < n and (ASSIGNMENT.match(toks[j]) or toks[j] in WRAPPERS):
-         j += 1
+         if toks[j] == 'timeout':
+            j = skip_timeout_arguments(toks, j)
+         else:
+            j += 1
       if j >= n or toks[j] in COMMAND_START:
          continue
       k = j + 1

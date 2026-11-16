@@ -74,6 +74,14 @@ BLOCKED = [
    "python - | tee out.txt",
    "if true; then python -; fi",
    "(python -)",
+   # wrappers that hide the command word (a timeout kills it late, not never)
+   "timeout 10 python -",
+   "timeout -k 5 10 python -",
+   "timeout --signal=KILL 10 python - --version",
+   "timeout 8 python - < /dev/null > /dev/null 2>&1",
+   "winpty python",
+   "setsid python -",
+   "timeout 10 cat",
 ]
 
 # Commands the hook must ALLOW.
@@ -164,6 +172,13 @@ ALLOWED = [
    "gh issue view 289 --comments",
    "echo $((1<<2))",
    "cat <<< 'text'",
+   "timeout 10 python script.py",
+   "timeout -k 5 10 python -c 'print(1)'",
+   "timeout 10 python - < script.py",
+   "timeout 10 ls",
+   "timeout 10 cat file.txt",
+   "echo hi | timeout 10 python -",
+   "winpty python script.py",
 ]
 
 MIN_BLOCKED = 40
