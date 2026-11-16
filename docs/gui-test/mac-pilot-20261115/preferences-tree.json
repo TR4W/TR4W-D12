@@ -1,0 +1,5592 @@
+[
+   {
+      "path": [],
+      "AXRole": "AXApplication",
+      "AXTitle": "TR4W"
+   },
+   {
+      "path": [
+         0
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXStandardWindow",
+      "rectangle": [
+         530,
+         216,
+         860,
+         648
+      ],
+      "AXTitle": "TR4W Preferences",
+      "AXRole": "AXWindow"
+   },
+   {
+      "path": [
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         530,
+         244,
+         860,
+         620
+      ],
+      "AXRole": "AXScrollArea"
+   },
+   {
+      "path": [
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXCloseButton",
+      "rectangle": [
+         540,
+         223,
+         12,
+         14
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXZoomButton",
+      "rectangle": [
+         580,
+         223,
+         12,
+         14
+      ],
+      "AXEnabled": false,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         0,
+         2,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         579,
+         222,
+         14,
+         16
+      ],
+      "AXRole": "AXGroup"
+   },
+   {
+      "path": [
+         0,
+         2,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         579,
+         222,
+         14,
+         16
+      ],
+      "AXRole": "AXGroup"
+   },
+   {
+      "path": [
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXMinimizeButton",
+      "rectangle": [
+         560,
+         223,
+         12,
+         14
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         887,
+         220,
+         18,
+         18
+      ],
+      "AXTitle": "TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXImage"
+   },
+   {
+      "path": [
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "AXValue": "TR4W Preferences",
+      "rectangle": [
+         906,
+         221,
+         125,
+         16
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXStaticText"
+   },
+   {
+      "path": [
+         1
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXStandardWindow",
+      "rectangle": [
+         569,
+         100,
+         782,
+         420
+      ],
+      "AXTitle": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "AXRole": "AXWindow"
+   },
+   {
+      "path": [
+         1,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         569,
+         128,
+         782,
+         392
+      ],
+      "AXRole": "AXScrollArea"
+   },
+   {
+      "path": [
+         1,
+         1
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXCloseButton",
+      "rectangle": [
+         579,
+         107,
+         12,
+         14
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         1,
+         2
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXFullScreenButton",
+      "rectangle": [
+         619,
+         107,
+         12,
+         14
+      ],
+      "AXEnabled": false,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         1,
+         2,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         618,
+         106,
+         14,
+         16
+      ],
+      "AXRole": "AXGroup"
+   },
+   {
+      "path": [
+         1,
+         2,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         618,
+         106,
+         14,
+         16
+      ],
+      "AXRole": "AXGroup"
+   },
+   {
+      "path": [
+         1,
+         3
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXMinimizeButton",
+      "rectangle": [
+         599,
+         107,
+         12,
+         14
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         1,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         816,
+         104,
+         18,
+         18
+      ],
+      "AXTitle": "TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXImage"
+   },
+   {
+      "path": [
+         1,
+         5
+      ],
+      "AXFocused": false,
+      "AXValue": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "rectangle": [
+         835,
+         105,
+         267,
+         16
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXStaticText"
+   },
+   {
+      "path": [
+         2
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXStandardWindow",
+      "rectangle": [
+         569,
+         508,
+         782,
+         98
+      ],
+      "AXTitle": "Function keys",
+      "AXRole": "AXWindow"
+   },
+   {
+      "path": [
+         2,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         569,
+         536,
+         782,
+         70
+      ],
+      "AXRole": "AXScrollArea"
+   },
+   {
+      "path": [
+         2,
+         1
+      ],
+      "AXFocused": false,
+      "AXSubrole": "AXCloseButton",
+      "rectangle": [
+         579,
+         515,
+         12,
+         14
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXButton"
+   },
+   {
+      "path": [
+         2,
+         2
+      ],
+      "AXFocused": false,
+      "AXValue": "Function keys",
+      "rectangle": [
+         913,
+         513,
+         94,
+         16
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXStaticText"
+   },
+   {
+      "path": [
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         0,
+         1920,
+         30
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenuBar"
+   },
+   {
+      "path": [
+         3,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         10,
+         0,
+         34,
+         30
+      ],
+      "AXTitle": "Apple",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "About This Mac",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "System Information",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "System Settings\u2026, 1 update",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "App Store",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Recent Items",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Applications",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Certificate Assistant",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cCertificate Assistant\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Console",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cConsole\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Keychain Access",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cKeychain Access\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Safari",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cSafari\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "System Settings",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cSystem Settings\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TextEdit",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cTextEdit\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cTR4W\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         16
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cTR4W\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         17
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         18
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cTR4W\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         19
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TR4W GUI Pilot",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         20
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cTR4W GUI Pilot\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         21
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         22
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Documents",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         23
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "ARRL-DX-SSB 2026-09-21 NY4I.ADI",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         24
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cARRL-DX-SSB 2026-09-21 NY4I.ADI\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         25
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "cacert.pem",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         26
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201ccacert.pem\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         27
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CertificateSigningRequest.certSigningRequest",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         28
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cCertificateSigningRequest.certSigningRequest\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         29
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "developerID_installer-2.cer",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         30
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cdeveloperID_installer-2.cer\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         31
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "developerID_installer.cer",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         32
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cdeveloperID_installer.cer\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         33
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "fpc-3.2.2-intelarm64-macosx.mpkg",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         34
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201cfpc-3.2.2-intelarm64-macosx.mpkg\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         35
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "tr4w.log",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         36
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show \u201ctr4w.log\u201d in Finder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         37
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         38
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Servers",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         39
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Macintosh HD",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         40
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TimeMachine",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         41
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         6,
+         0,
+         42
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear Menu",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Force Quit\u2026",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Force Quit TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Sleep",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Restart\u2026",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Restart",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Shut Down\u2026",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Shut Down",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         16
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         17
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Lock Screen",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         18
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Log Out Thomas Schaefer\u2026",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         19
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Log Out Thomas Schaefer",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         0,
+         0,
+         20
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         43,
+         0,
+         60,
+         30
+      ],
+      "AXTitle": "TR4W",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Services",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Activity Monitor",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Allocations & Leaks",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "File Activity",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "System Trace",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Time Profile Active Application",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Time Profile App Under Mouse",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Time Profile Entire System",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toggle Instruments Recording",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         1,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Services Settings\u2026",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Hide tr4w",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Hide Others",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show All",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         1,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Quit tr4w",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         102,
+         0,
+         42,
+         30
+      ],
+      "AXTitle": "File",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Open Log...",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear log",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Open log directory",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Import",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         3,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         3,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "ADIF",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Export",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "ADIF",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CSV",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Cabrillo",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "EDI",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Initial exchanges list",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         4,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Notes",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Reports",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "All callsigns",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Band changes",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Continent List",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "First callsign worked in each country",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "First callsign worked in each zone",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "QSOs by country by band",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Score by hour",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Summary",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         5,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "3830 Score",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         2,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Exit",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         143,
+         0,
+         71,
+         30
+      ],
+      "AXTitle": "Settings",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Colors",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Winkeyer",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CAT and CW Keying",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         3,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Program messages",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         213,
+         0,
+         76,
+         30
+      ],
+      "AXTitle": "Windows",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Bandmap",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Dupesheet",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         1,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         1,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Radio 1",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         1,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Radio 2",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Function keys",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "SCP",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Mults",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Default",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "DX",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Domestic",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Zones",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         4,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Prefixes",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Radio 1",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Radio 2",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "DX Cluster",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Network",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Intercom",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Post score",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "HamScore RTC Status",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Stations",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         4,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "MMTTY",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         288,
+         0,
+         43,
+         30
+      ],
+      "AXTitle": "Alt-",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Increment time",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+1",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+2",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+3",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+4",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+5",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+6",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+7",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+8",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+9",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         0,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "+10",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Re-initialize WinKeyer",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Band Up",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Auto-CQ resume",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Dupe check",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "SO1R-Edit or SO2R-SWAP",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Backup Log",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Swap mult view",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Increment number",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toogle multiplier bell",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toggle CW",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Search log",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "SSB/CW mode",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Download the latest CTY.DAT",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Open Fkeys",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Auto-CQ",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         16
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toggle rigs",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         17
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CW speed",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         18
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Set system date/time",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         19
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Band Down",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         20
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Initialize QSO",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         21
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Exit Program",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         22
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Delete the last QSO",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         23
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Initial exchange",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         24
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toggle sidetone",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         25
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toggle autosend",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         5,
+         0,
+         26
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         330,
+         0,
+         50,
+         30
+      ],
+      "AXTitle": "Ctrl-",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Send Keyboard Input",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear multsheet",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Configuration commands",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear dupesheet",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "View / Edit log",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Note",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Rotor control",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "QTC functions",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Recall last entry",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "SH/DX [callsign]",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Execute configuration file",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Refresh bandmap",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Cursor in bandmap window",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "QSO with no CW",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Cursor in DX Cluster window",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Add bandmap place holder",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         16
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CT1BOH info screen",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         17
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Additional information",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         17,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         17,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "QSO number",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         17,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Callsign",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         17,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CW Speed",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         6,
+         0,
+         17,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Band",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         379,
+         0,
+         89,
+         30
+      ],
+      "AXTitle": "Commands",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Set Split Mode Tx",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Focus in main window",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Toggle insert mode",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Escape",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CW Speed Up",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CW Speed Down",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CW Speed Up for the inactive radio",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CW Speed Down for the inactive radio",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "CQ Mode",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Search & pounce mode",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Log in",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         16
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Send spot",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         7,
+         0,
+         17
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Rescore",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         467,
+         0,
+         53,
+         30
+      ],
+      "AXTitle": "Tools",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Beacons monitor",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Windows control",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Set time zone",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Ping [SERVER ADDRESS]",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Run TR4WSERVER",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Rules for CQ-WW-SSB contest at WA7BNM Contest Calendar",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Rules for CQ-WW-SSB contest at QRZ.RU",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Calculator",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         12
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         13
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Reset Radio Ports",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         14
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Re-send Log to HamScore...",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         15
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Edit Cabrillo Summary...",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         16
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Run Verification Checks...",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         17
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Setup Wizard...",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         18
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         19
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "3830 Score posting",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         20
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Submit ARRL Log",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         8,
+         0,
+         21
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         519,
+         0,
+         43,
+         30
+      ],
+      "AXTitle": "Net",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Connect",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Disconnect",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Reconnect",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Show Network window",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Send message",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         6
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Synchronize with the server...",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         7
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         8
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear all logs in network",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         9
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear dupesheet in all logs",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         9,
+         0,
+         11
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Clear multsheet in all logs",
+      "AXEnabled": false,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         10
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         561,
+         0,
+         49,
+         30
+      ],
+      "AXTitle": "Help",
+      "AXEnabled": true,
+      "AXRole": "AXMenuBarItem"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXEnabled": true,
+      "AXRole": "AXMenu"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0,
+         0
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "TR4W Home Page",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0,
+         1
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Download the latest CTY.DAT",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0,
+         2
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Download TRMASTER.DTA",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0,
+         3
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Download call history for this contest",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0,
+         4
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "Download POTA Parks",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   },
+   {
+      "path": [
+         3,
+         10,
+         0,
+         5
+      ],
+      "AXFocused": false,
+      "rectangle": [
+         0,
+         1080,
+         0,
+         0
+      ],
+      "AXTitle": "About",
+      "AXEnabled": true,
+      "AXRole": "AXMenuItem"
+   }
+]

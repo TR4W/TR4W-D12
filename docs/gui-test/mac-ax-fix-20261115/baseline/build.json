@@ -1,0 +1,18 @@
+{
+   "purpose": "Unpatched private-toolchain same-source control; not a release build",
+   "source_revision": "ed126e424ab57c735129234582fc03b597b146d2",
+   "source_tracked_diff": "",
+   "lazarus_revision": "62c14a4d18c81f222127d42ce9b89b922c63fcbf",
+   "lazarus_diff_stat": "",
+   "lazarus_patch": "",
+   "original_lazarus_tracked_status": "",
+   "fpc_version": "3.2.2",
+   "experimental_bundle": "/Users/toms/tr4w-gui-test/app/TR4W-ax-baseline.app",
+   "signing": "ad-hoc; codesign deep/strict verified",
+   "original_release_executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+   "executable_sha256": "d0db09107974bd11b4b3ca8679989cc429a27636db1307e74120b3d01fec7862",
+   "build_logs": [
+      "lcl-ax-baseline-build.log",
+      "tr4w-ax-baseline-build.log"
+   ]
+}

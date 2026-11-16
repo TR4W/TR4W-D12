@@ -1,0 +1,7 @@
+{
+   "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+   "bundle_id": "net.tr4w.gui-pilot",
+   "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
+   "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
+   "signature": "ad-hoc; no private signing identity used"
+}

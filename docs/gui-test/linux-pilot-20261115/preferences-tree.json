@@ -1,0 +1,11734 @@
+[
+   {
+      "path": [],
+      "role": "application",
+      "name": "tr4w",
+      "showing": false,
+      "enabled": false,
+      "focused": false
+   },
+   {
+      "path": [
+         0
+      ],
+      "role": "frame",
+      "name": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         249,
+         100,
+         784,
+         444
+      ]
+   },
+   {
+      "path": [
+         0,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         120,
+         782,
+         419
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         0
+      ],
+      "role": "menu bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         120,
+         782,
+         27
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "menu",
+      "name": "File",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         253,
+         122,
+         37,
+         23
+      ],
+      "text": "File"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "menu item",
+      "name": "Open Log...",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Open Log..."
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "menu item",
+      "name": "Clear log",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Clear log"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "menu item",
+      "name": "Open log directory",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Open log directory"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "menu",
+      "name": "Import",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Import"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "menu item",
+      "name": "ADIF",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "ADIF"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "menu",
+      "name": "Export",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Export"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "menu item",
+      "name": "ADIF",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "ADIF"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4,
+         1
+      ],
+      "role": "menu item",
+      "name": "CSV",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CSV"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4,
+         2
+      ],
+      "role": "menu item",
+      "name": "Cabrillo",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Cabrillo"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4,
+         3
+      ],
+      "role": "menu item",
+      "name": "EDI",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "EDI"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4,
+         4
+      ],
+      "role": "menu item",
+      "name": "Initial exchanges list",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Initial exchanges list"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         4,
+         5
+      ],
+      "role": "menu item",
+      "name": "Notes",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Notes"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "menu",
+      "name": "Reports",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Reports"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "menu item",
+      "name": "All callsigns",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "All callsigns"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         1
+      ],
+      "role": "menu item",
+      "name": "Band changes",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Band changes"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         2
+      ],
+      "role": "menu item",
+      "name": "Continent List",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Continent List"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         3
+      ],
+      "role": "menu item",
+      "name": "First callsign worked in each country",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "First callsign worked in each country"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         4
+      ],
+      "role": "menu item",
+      "name": "First callsign worked in each zone",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "First callsign worked in each zone"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         5
+      ],
+      "role": "menu item",
+      "name": "QSOs by country by band",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "QSOs by country by band"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         6
+      ],
+      "role": "menu item",
+      "name": "Score by hour",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Score by hour"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         7
+      ],
+      "role": "menu item",
+      "name": "Summary",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Summary"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         5,
+         8
+      ],
+      "role": "menu item",
+      "name": "3830 Score",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "3830 Score"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         6
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         0,
+         7
+      ],
+      "role": "menu item",
+      "name": "Exit",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Exit"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "menu",
+      "name": "Settings",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         290,
+         122,
+         67,
+         23
+      ],
+      "text": "Settings"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1,
+         1
+      ],
+      "role": "menu item",
+      "name": "Colors",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Colors"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1,
+         2
+      ],
+      "role": "menu item",
+      "name": "Winkeyer",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Winkeyer"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1,
+         3
+      ],
+      "role": "menu item",
+      "name": "CAT and CW Keying",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CAT and CW Keying"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1,
+         4
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         1,
+         5
+      ],
+      "role": "menu item",
+      "name": "Program messages",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Program messages"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "menu",
+      "name": "Windows",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         357,
+         122,
+         73,
+         23
+      ],
+      "text": "Windows"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "menu item",
+      "name": "Bandmap",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Bandmap"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         1
+      ],
+      "role": "menu",
+      "name": "Dupesheet",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Dupesheet"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         1,
+         0
+      ],
+      "role": "menu item",
+      "name": "Radio 1",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Radio 1"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         1,
+         1
+      ],
+      "role": "menu item",
+      "name": "Radio 2",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Radio 2"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         2
+      ],
+      "role": "check menu item",
+      "name": "Function keys",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Function keys"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         3
+      ],
+      "role": "menu item",
+      "name": "SCP",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "SCP"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4
+      ],
+      "role": "menu",
+      "name": "Mults",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Mults"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4,
+         0
+      ],
+      "role": "menu item",
+      "name": "Default",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Default"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4,
+         1
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4,
+         2
+      ],
+      "role": "menu item",
+      "name": "DX",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "DX"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4,
+         3
+      ],
+      "role": "menu item",
+      "name": "Domestic",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Domestic"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4,
+         4
+      ],
+      "role": "menu item",
+      "name": "Zones",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Zones"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         4,
+         5
+      ],
+      "role": "menu item",
+      "name": "Prefixes",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Prefixes"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         5
+      ],
+      "role": "menu item",
+      "name": "Radio 1",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Radio 1"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         6
+      ],
+      "role": "menu item",
+      "name": "Radio 2",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Radio 2"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         7
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         8
+      ],
+      "role": "menu item",
+      "name": "DX Cluster",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "DX Cluster"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         9
+      ],
+      "role": "menu item",
+      "name": "Network",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Network"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         10
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         11
+      ],
+      "role": "menu item",
+      "name": "Intercom",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Intercom"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         12
+      ],
+      "role": "menu item",
+      "name": "Post score",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Post score"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         13
+      ],
+      "role": "menu item",
+      "name": "HamScore RTC Status",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "HamScore RTC Status"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         14
+      ],
+      "role": "menu item",
+      "name": "Stations",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Stations"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         2,
+         15
+      ],
+      "role": "menu item",
+      "name": "MMTTY",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "MMTTY"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "menu",
+      "name": "Alt-",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         430,
+         122,
+         37,
+         23
+      ],
+      "text": "Alt-"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "menu",
+      "name": "Increment time",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Increment time"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         0
+      ],
+      "role": "menu item",
+      "name": "+1",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+1"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         1
+      ],
+      "role": "menu item",
+      "name": "+2",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+2"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         2
+      ],
+      "role": "menu item",
+      "name": "+3",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+3"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         3
+      ],
+      "role": "menu item",
+      "name": "+4",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+4"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         4
+      ],
+      "role": "menu item",
+      "name": "+5",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+5"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         5
+      ],
+      "role": "menu item",
+      "name": "+6",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+6"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         6
+      ],
+      "role": "menu item",
+      "name": "+7",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+7"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         7
+      ],
+      "role": "menu item",
+      "name": "+8",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+8"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         8
+      ],
+      "role": "menu item",
+      "name": "+9",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+9"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         0,
+         9
+      ],
+      "role": "menu item",
+      "name": "+10",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "+10"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         1
+      ],
+      "role": "menu item",
+      "name": "Re-initialize WinKeyer",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Re-initialize WinKeyer"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         2
+      ],
+      "role": "menu item",
+      "name": "Band Up",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Band Up"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         3
+      ],
+      "role": "menu item",
+      "name": "Auto-CQ resume",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Auto-CQ resume"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         4
+      ],
+      "role": "menu item",
+      "name": "Dupe check",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Dupe check"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         5
+      ],
+      "role": "menu item",
+      "name": "SO1R-Edit or SO2R-SWAP",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "SO1R-Edit or SO2R-SWAP"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         6
+      ],
+      "role": "menu item",
+      "name": "Backup Log",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Backup Log"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         7
+      ],
+      "role": "menu item",
+      "name": "Swap mult view",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Swap mult view"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         8
+      ],
+      "role": "menu item",
+      "name": "Increment number",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Increment number"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         9
+      ],
+      "role": "menu item",
+      "name": "Toogle multiplier bell",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Toogle multiplier bell"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         10
+      ],
+      "role": "menu item",
+      "name": "Toggle CW",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Toggle CW"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         11
+      ],
+      "role": "menu item",
+      "name": "Search log",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Search log"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         12
+      ],
+      "role": "menu item",
+      "name": "SSB/CW mode",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "SSB/CW mode"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         13
+      ],
+      "role": "menu item",
+      "name": "Download the latest CTY.DAT",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Download the latest CTY.DAT"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         14
+      ],
+      "role": "menu item",
+      "name": "Open Fkeys",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Open Fkeys"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         15
+      ],
+      "role": "menu item",
+      "name": "Auto-CQ",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Auto-CQ"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         16
+      ],
+      "role": "menu item",
+      "name": "Toggle rigs",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Toggle rigs"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         17
+      ],
+      "role": "menu item",
+      "name": "CW speed",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CW speed"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         18
+      ],
+      "role": "menu item",
+      "name": "Set system date/time",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Set system date/time"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         19
+      ],
+      "role": "menu item",
+      "name": "Band Down",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Band Down"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         20
+      ],
+      "role": "menu item",
+      "name": "Initialize QSO",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Initialize QSO"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         21
+      ],
+      "role": "menu item",
+      "name": "Exit Program",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Exit Program"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         22
+      ],
+      "role": "menu item",
+      "name": "Delete the last QSO",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Delete the last QSO"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         23
+      ],
+      "role": "menu item",
+      "name": "Initial exchange",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Initial exchange"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         24
+      ],
+      "role": "menu item",
+      "name": "Toggle sidetone",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Toggle sidetone"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         25
+      ],
+      "role": "menu item",
+      "name": "Toggle autosend",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Toggle autosend"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         3,
+         26
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "menu",
+      "name": "Ctrl-",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         467,
+         122,
+         42,
+         23
+      ],
+      "text": "Ctrl-"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "menu item",
+      "name": "Send Keyboard Input",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Send Keyboard Input"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         1
+      ],
+      "role": "menu item",
+      "name": "Clear multsheet",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Clear multsheet"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         2
+      ],
+      "role": "menu item",
+      "name": "Configuration commands",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Configuration commands"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         3
+      ],
+      "role": "menu item",
+      "name": "Clear dupesheet",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Clear dupesheet"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         4
+      ],
+      "role": "menu item",
+      "name": "View / Edit log",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "View / Edit log"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         5
+      ],
+      "role": "menu item",
+      "name": "Note",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Note"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         6
+      ],
+      "role": "menu item",
+      "name": "Rotor control",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Rotor control"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         7
+      ],
+      "role": "menu item",
+      "name": "QTC functions",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "QTC functions"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         8
+      ],
+      "role": "menu item",
+      "name": "Recall last entry",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Recall last entry"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         9
+      ],
+      "role": "menu item",
+      "name": "SH/DX [callsign]",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "SH/DX [callsign]"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         10
+      ],
+      "role": "menu item",
+      "name": "Execute configuration file",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Execute configuration file"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         11
+      ],
+      "role": "menu item",
+      "name": "Refresh bandmap",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Refresh bandmap"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         12
+      ],
+      "role": "menu item",
+      "name": "Cursor in bandmap window",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Cursor in bandmap window"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         13
+      ],
+      "role": "menu item",
+      "name": "QSO with no CW",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "QSO with no CW"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         14
+      ],
+      "role": "menu item",
+      "name": "Cursor in DX Cluster window",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Cursor in DX Cluster window"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         15
+      ],
+      "role": "menu item",
+      "name": "Add bandmap place holder",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Add bandmap place holder"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         16
+      ],
+      "role": "menu item",
+      "name": "CT1BOH info screen",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CT1BOH info screen"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         17
+      ],
+      "role": "menu",
+      "name": "Additional information",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Additional information"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         17,
+         0
+      ],
+      "role": "menu item",
+      "name": "QSO number",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "QSO number"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         17,
+         1
+      ],
+      "role": "menu item",
+      "name": "Callsign",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Callsign"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         17,
+         2
+      ],
+      "role": "menu item",
+      "name": "CW Speed",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CW Speed"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         4,
+         17,
+         3
+      ],
+      "role": "menu item",
+      "name": "Band",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Band"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "menu",
+      "name": "Commands",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         509,
+         122,
+         88,
+         23
+      ],
+      "text": "Commands"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "menu item",
+      "name": "Set Split Mode Tx",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Set Split Mode Tx"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         1
+      ],
+      "role": "menu item",
+      "name": "Focus in main window",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Focus in main window"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         2
+      ],
+      "role": "menu item",
+      "name": "Toggle insert mode",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Toggle insert mode"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         3
+      ],
+      "role": "menu item",
+      "name": "Escape",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Escape"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         4
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         5
+      ],
+      "role": "menu item",
+      "name": "CW Speed Up",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CW Speed Up"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         6
+      ],
+      "role": "menu item",
+      "name": "CW Speed Down",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CW Speed Down"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         7
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         8
+      ],
+      "role": "menu item",
+      "name": "CW Speed Up for the inactive radio",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CW Speed Up for the inactive radio"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         9
+      ],
+      "role": "menu item",
+      "name": "CW Speed Down for the inactive radio",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CW Speed Down for the inactive radio"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         10
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         11
+      ],
+      "role": "menu item",
+      "name": "CQ Mode",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "CQ Mode"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         12
+      ],
+      "role": "menu item",
+      "name": "Search & pounce mode",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Search & pounce mode"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         13
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         14
+      ],
+      "role": "menu item",
+      "name": "Log in",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Log in"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         15
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         16
+      ],
+      "role": "menu item",
+      "name": "Send spot",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Send spot"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         5,
+         17
+      ],
+      "role": "menu item",
+      "name": "Rescore",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Rescore"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6
+      ],
+      "role": "menu",
+      "name": "Tools",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         597,
+         122,
+         47,
+         23
+      ],
+      "text": "Tools"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         0
+      ],
+      "role": "menu item",
+      "name": "Beacons monitor",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Beacons monitor"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         1
+      ],
+      "role": "menu item",
+      "name": "Windows control",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Windows control"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         2
+      ],
+      "role": "menu item",
+      "name": "Set time zone",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Set time zone"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         3
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         4
+      ],
+      "role": "menu item",
+      "name": "Ping [SERVER ADDRESS]",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Ping [SERVER ADDRESS]"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         5
+      ],
+      "role": "menu item",
+      "name": "Run TR4WSERVER",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Run TR4WSERVER"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         6
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         7
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         8
+      ],
+      "role": "menu item",
+      "name": "Rules for CQ-WW-SSB contest at WA7BNM Contest Calendar",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Rules for CQ-WW-SSB contest at WA7BNM Contest Calendar"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         9
+      ],
+      "role": "menu item",
+      "name": "Rules for CQ-WW-SSB contest at QRZ.RU",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Rules for CQ-WW-SSB contest at QRZ.RU"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         10
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         11
+      ],
+      "role": "menu item",
+      "name": "Calculator",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Calculator"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         12
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         13
+      ],
+      "role": "menu item",
+      "name": "Reset Radio Ports",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Reset Radio Ports"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         14
+      ],
+      "role": "menu item",
+      "name": "Re-send Log to HamScore...",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Re-send Log to HamScore..."
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         15
+      ],
+      "role": "menu item",
+      "name": "Edit Cabrillo Summary...",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Edit Cabrillo Summary..."
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         16
+      ],
+      "role": "menu item",
+      "name": "Run Verification Checks...",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Run Verification Checks..."
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         17
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         18
+      ],
+      "role": "menu item",
+      "name": "3830 Score posting",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "3830 Score posting"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         19
+      ],
+      "role": "menu item",
+      "name": "Submit ARRL Log",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Submit ARRL Log"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         6,
+         20
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7
+      ],
+      "role": "menu",
+      "name": "Net",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         644,
+         122,
+         37,
+         23
+      ],
+      "text": "Net"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         0
+      ],
+      "role": "menu item",
+      "name": "Connect",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Connect"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         1
+      ],
+      "role": "menu item",
+      "name": "Disconnect",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Disconnect"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         2
+      ],
+      "role": "menu item",
+      "name": "Reconnect",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Reconnect"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         3
+      ],
+      "role": "menu item",
+      "name": "Show Network window",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Show Network window"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         4
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         5
+      ],
+      "role": "menu item",
+      "name": "Send message",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Send message"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         6
+      ],
+      "role": "menu item",
+      "name": "Synchronize with the server...",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Synchronize with the server..."
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         7
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         8
+      ],
+      "role": "menu item",
+      "name": "Clear all logs in network",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Clear all logs in network"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         9
+      ],
+      "role": "separator",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         10
+      ],
+      "role": "menu item",
+      "name": "Clear dupesheet in all logs",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Clear dupesheet in all logs"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         7,
+         11
+      ],
+      "role": "menu item",
+      "name": "Clear multsheet in all logs",
+      "showing": false,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Clear multsheet in all logs"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8
+      ],
+      "role": "menu",
+      "name": "Help",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         681,
+         122,
+         44,
+         23
+      ],
+      "text": "Help"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8,
+         0
+      ],
+      "role": "menu item",
+      "name": "TR4W Home Page",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "TR4W Home Page"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8,
+         1
+      ],
+      "role": "menu item",
+      "name": "Download the latest CTY.DAT",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Download the latest CTY.DAT"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8,
+         2
+      ],
+      "role": "menu item",
+      "name": "Download TRMASTER.DTA",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Download TRMASTER.DTA"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8,
+         3
+      ],
+      "role": "menu item",
+      "name": "Download call history for this contest",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Download call history for this contest"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8,
+         4
+      ],
+      "role": "menu item",
+      "name": "Download POTA Parks",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "Download POTA Parks"
+   },
+   {
+      "path": [
+         0,
+         0,
+         0,
+         8,
+         5
+      ],
+      "role": "menu item",
+      "name": "About",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": "About"
+   },
+   {
+      "path": [
+         0,
+         0,
+         1
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         147,
+         782,
+         392
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         147,
+         782,
+         392
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         518,
+         782,
+         21
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         518,
+         782,
+         21
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "status bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         518,
+         195,
+         21
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         518,
+         195,
+         21
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         252,
+         520,
+         191,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "label",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         252,
+         520,
+         191,
+         17
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "status bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         445,
+         518,
+         195,
+         21
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         445,
+         518,
+         195,
+         21
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         1,
+         0,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         447,
+         520,
+         191,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         1,
+         0,
+         0,
+         0
+      ],
+      "role": "label",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         447,
+         520,
+         191,
+         17
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "status bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         640,
+         518,
+         195,
+         21
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         640,
+         518,
+         195,
+         21
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         642,
+         520,
+         191,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0
+      ],
+      "role": "label",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         642,
+         520,
+         191,
+         17
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "status bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         835,
+         518,
+         197,
+         21
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         835,
+         518,
+         179,
+         21
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         3,
+         0,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         837,
+         520,
+         175,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0,
+         0,
+         3,
+         0,
+         0,
+         0
+      ],
+      "role": "label",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         837,
+         520,
+         175,
+         17
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         1
+      ],
+      "role": "progress bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         442,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         2
+      ],
+      "role": "progress bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         442,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         17,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         3,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         17,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         4,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         249,
+         238,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         5,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         249,
+         238,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         6
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         391,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         6,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         391,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         7
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         442,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         7,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         442,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         8
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         408,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         8,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         408,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         9
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         391,
+         170,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         9,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         391,
+         170,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         10
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         10,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         11
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         425,
+         136,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         11,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         425,
+         136,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         12
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         459,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         12,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         459,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         13
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         318,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         13,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         318,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         14
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         641,
+         164,
+         153,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         14,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         641,
+         164,
+         153,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         15
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         964,
+         442,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         15,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         964,
+         442,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         16
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         147,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         16,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         147,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         17
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         459,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         17,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         459,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         18
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         425,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         18,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         425,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         19
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         19,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         20
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         408,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         20,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         408,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         21
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         21,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         391,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         22
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         22,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         23
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         23,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         24
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         198,
+         238,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         24,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         198,
+         238,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         25
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         675,
+         391,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         25,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         675,
+         391,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         26
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         408,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         26,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         408,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         27
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         459,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         27,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         726,
+         459,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         28
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         896,
+         442,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         28,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         896,
+         442,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         29
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         641,
+         391,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         29,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         641,
+         391,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         30
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         675,
+         459,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         30,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         675,
+         459,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         31
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         31,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         32
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         147,
+         238,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         32,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         147,
+         238,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         33
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         437,
+         391,
+         68,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         33,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         437,
+         391,
+         68,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         34
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         476,
+         782,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         34,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         476,
+         782,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         35
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         35,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         36
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         425,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         36,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         425,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         37
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         318,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         37,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         318,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         38
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         318,
+         425,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         38,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         318,
+         425,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         39
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         425,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         39,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         811,
+         425,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         40
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         40,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         408,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         41
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         164,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         41,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         164,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         42
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         641,
+         147,
+         153,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         42,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         641,
+         147,
+         153,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         43
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         505,
+         459,
+         170,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         43,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         505,
+         459,
+         170,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         44
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         896,
+         459,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         44,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         896,
+         459,
+         68,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         45
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         45,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         46
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         181,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         46,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         181,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         47
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         198,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         47,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         198,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         48
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         215,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         48,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         215,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         49
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         232,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         49,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         232,
+         85,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         50
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         50,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         51
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         51,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         52
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         52,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         53
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         53,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         54
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         54,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         55
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         55,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         56
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         56,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         57
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         57,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         58
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         58,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         59
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         59,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         60
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         60,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         61
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         61,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         62
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         62,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         63
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         63,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         64
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         64,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         65
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         65,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         66
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         66,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         67
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         67,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         68
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         68,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         69
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         69,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         70
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         70,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         181,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         71
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         71,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         198,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         72
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         72,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         215,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         73
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         73,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         232,
+         42,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         74
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         181,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         74,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         181,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         75
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         198,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         75,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         198,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         76
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         215,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         76,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         215,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         77
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         232,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         77,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         232,
+         51,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         78
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         78,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         335,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         79
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         79,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         377,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         80
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         80,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         419,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         81
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         81,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         461,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         82
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         82,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         503,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         83
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         83,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         545,
+         147,
+         42,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         84
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         147,
+         51,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         84,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         587,
+         147,
+         51,
+         34
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         85
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         164,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         85,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         164,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         86
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         86,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         87
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         215,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         87,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         794,
+         215,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         88
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         88,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         34,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         89
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         89,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         90
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         90,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         91
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         91,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         92
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         92,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         93
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         93,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         94
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         94,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         164,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         95
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         95,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         96
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         96,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         97
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         97,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         98
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         98,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         99
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         99,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         100
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         100,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         181,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         101
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         101,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         102
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         102,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         103
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         103,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         104
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         104,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         105
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         105,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         106
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         106,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         215,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         107
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         107,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         828,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         108
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         108,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         862,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         109
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         109,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         896,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         110
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         110,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         930,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         111
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         111,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         964,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         112
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         112,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         998,
+         232,
+         32,
+         17
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         113
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         266,
+         782,
+         125
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         113,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         252,
+         268,
+         759,
+         121
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         113,
+         1
+      ],
+      "role": "scroll bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         1016,
+         266,
+         16,
+         125
+      ]
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         114
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         505,
+         408,
+         221,
+         24
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         115
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         505,
+         433,
+         221,
+         24
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         1
+      ],
+      "role": "frame",
+      "name": "Function keys",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         249,
+         508,
+         784,
+         95
+      ]
+   },
+   {
+      "path": [
+         1,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         528,
+         782,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         528,
+         782,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         528,
+         782,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         250,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         313,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         313,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         376,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         376,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         439,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         439,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         512,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         512,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         575,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         575,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         6
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         638,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         6,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         638,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         7
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         701,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         7,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         701,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         8
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         774,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         8,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         774,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         9
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         837,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         9,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         837,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         10
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         900,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         10,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         900,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         11
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         963,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         1,
+         0,
+         0,
+         0,
+         11,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         963,
+         528,
+         62,
+         70
+      ]
+   },
+   {
+      "path": [
+         2
+      ],
+      "role": "frame",
+      "name": "TR4W Preferences",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         210,
+         90,
+         862,
+         641
+      ]
+   },
+   {
+      "path": [
+         2,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         110,
+         860,
+         620
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         110,
+         860,
+         620
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         110,
+         860,
+         620
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": true,
+      "rectangle": [
+         215,
+         114,
+         162,
+         23
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         141,
+         170,
+         541
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         141,
+         151,
+         541
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         1,
+         1
+      ],
+      "role": "scroll bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         365,
+         141,
+         16,
+         541
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "check box",
+      "name": "Broadcast UDP data",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         398,
+         120,
+         300,
+         22
+      ],
+      "text": "Broadcast UDP data"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         398,
+         176,
+         420,
+         150
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "table",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         400,
+         178,
+         416,
+         146
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         1,
+         0,
+         0
+      ],
+      "role": "table column header",
+      "name": "LISTITEMS",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         416,
+         27
+      ],
+      "text": "LISTITEMS"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         176,
+         100,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "button",
+      "name": "Add...",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         176,
+         100,
+         25
+      ],
+      "text": "Add..."
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         208,
+         100,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "button",
+      "name": "Edit...",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         208,
+         100,
+         25
+      ],
+      "text": "Edit..."
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         240,
+         100,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "button",
+      "name": "Remove",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         240,
+         100,
+         25
+      ],
+      "text": "Remove"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         272,
+         100,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "button",
+      "name": "Test",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         272,
+         100,
+         25
+      ],
+      "text": "Test"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         0,
+         0,
+         6
+      ],
+      "role": "check box",
+      "name": "Also broadcast edited and previously logged QSOs",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         398,
+         340,
+         420,
+         22
+      ],
+      "text": "Also broadcast edited and previously logged QSOs"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         0
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         398,
+         140,
+         420,
+         150
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         0,
+         0
+      ],
+      "role": "table",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         400,
+         142,
+         416,
+         146
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "table column header",
+      "name": "LISTITEMS",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         416,
+         27
+      ],
+      "text": "LISTITEMS"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         1
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         140,
+         95,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         1,
+         0
+      ],
+      "role": "button",
+      "name": "Add...",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         140,
+         95,
+         25
+      ],
+      "text": "Add..."
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         2
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         172,
+         95,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         2,
+         0
+      ],
+      "role": "button",
+      "name": "Edit...",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         172,
+         95,
+         25
+      ],
+      "text": "Edit..."
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         204,
+         95,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         3,
+         0
+      ],
+      "role": "button",
+      "name": "Duplicate",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         204,
+         95,
+         25
+      ],
+      "text": "Duplicate"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         236,
+         95,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         4,
+         0
+      ],
+      "role": "button",
+      "name": "Remove",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         831,
+         236,
+         95,
+         25
+      ],
+      "text": "Remove"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         398,
+         305,
+         540,
+         260
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0
+      ],
+      "role": "panel",
+      "name": "Station profile",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         398,
+         305,
+         540,
+         260
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         400,
+         320,
+         536,
+         243
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         400,
+         320,
+         536,
+         243
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         412,
+         346,
+         200,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "combo box",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         412,
+         346,
+         200,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "menu",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         412,
+         346,
+         175,
+         22
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         620,
+         346,
+         80,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "button",
+      "name": "New...",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         620,
+         346,
+         80,
+         25
+      ],
+      "text": "New..."
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         705,
+         346,
+         90,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "button",
+      "name": "Rename...",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         705,
+         346,
+         90,
+         25
+      ],
+      "text": "Rename..."
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         800,
+         346,
+         80,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "button",
+      "name": "Delete",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         800,
+         346,
+         80,
+         25
+      ],
+      "text": "Delete"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         490,
+         382,
+         190,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "combo box",
+      "name": "(none)",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         490,
+         382,
+         190,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         4,
+         0,
+         0
+      ],
+      "role": "menu",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         4,
+         0,
+         0,
+         0
+      ],
+      "role": "menu item",
+      "name": "(none)",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         4,
+         0,
+         1
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         490,
+         382,
+         165,
+         22
+      ],
+      "text": "(none)"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         382,
+         140,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "combo box",
+      "name": "(none)",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         382,
+         140,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         5,
+         0,
+         0
+      ],
+      "role": "menu",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         5,
+         0,
+         0,
+         0
+      ],
+      "role": "menu item",
+      "name": "(none)",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         5,
+         0,
+         1
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         382,
+         115,
+         22
+      ],
+      "text": "(none)"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         6
+      ],
+      "role": "check box",
+      "name": "Speed sync",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         412,
+         140,
+         19
+      ],
+      "text": "Speed sync"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         7
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         490,
+         442,
+         190,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         7,
+         0
+      ],
+      "role": "combo box",
+      "name": "(none)",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         490,
+         442,
+         190,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         7,
+         0,
+         0
+      ],
+      "role": "menu",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         7,
+         0,
+         0,
+         0
+      ],
+      "role": "menu item",
+      "name": "(none)",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         7,
+         0,
+         1
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         490,
+         442,
+         165,
+         22
+      ],
+      "text": "(none)"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         8
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         442,
+         140,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         8,
+         0
+      ],
+      "role": "combo box",
+      "name": "(none)",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         442,
+         140,
+         22
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         8,
+         0,
+         0
+      ],
+      "role": "menu",
+      "name": "",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         8,
+         0,
+         0,
+         0
+      ],
+      "role": "menu item",
+      "name": "(none)",
+      "showing": false,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         -2147483648,
+         -2147483648,
+         1,
+         1
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         8,
+         0,
+         1
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         442,
+         115,
+         22
+      ],
+      "text": "(none)"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         9
+      ],
+      "role": "check box",
+      "name": "Speed sync",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         785,
+         472,
+         140,
+         19
+      ],
+      "text": "Speed sync"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         10
+      ],
+      "role": "check box",
+      "name": "SO2R enabled",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         412,
+         502,
+         200,
+         19
+      ],
+      "text": "SO2R enabled"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         11
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         700,
+         532,
+         225,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         11,
+         0
+      ],
+      "role": "button",
+      "name": "Activate this profile now",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         700,
+         532,
+         225,
+         25
+      ],
+      "text": "Activate this profile now"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         0,
+         0,
+         12
+      ],
+      "role": "check box",
+      "name": "Connect radios at startup",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         620,
+         502,
+         300,
+         19
+      ],
+      "text": "Connect radios at startup"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         1,
+         0,
+         5,
+         0,
+         1
+      ],
+      "role": "label",
+      "name": "Station profile",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         403,
+         305,
+         76,
+         15
+      ],
+      "text": "Station profile"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         777,
+         692,
+         89,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "button",
+      "name": "Save and close",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         777,
+         692,
+         89,
+         25
+      ],
+      "text": "Save and close"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         876,
+         692,
+         85,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "button",
+      "name": "Cancel",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         876,
+         692,
+         85,
+         25
+      ],
+      "text": "Cancel"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         971,
+         692,
+         85,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "button",
+      "name": "Save",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         971,
+         692,
+         85,
+         25
+      ],
+      "text": "Save"
+   }
+]

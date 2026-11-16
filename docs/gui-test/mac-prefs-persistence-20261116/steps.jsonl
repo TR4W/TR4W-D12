@@ -1,0 +1,56 @@
+{"utc": "2026-11-16T05:17:39.531718+00:00", "action": "launch owned Cocoa application", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:39.538342+00:00", "action": "launch owned Cocoa application", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:40.607501+00:00", "action": "capture Cocoa main window", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:41.269864+00:00", "action": "capture Cocoa main window", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:41.747504+00:00", "action": "open Preferences with Control+J", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:41.931947+00:00", "action": "open Preferences with Control+J", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:42.362003+00:00", "action": "capture Cocoa Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:43.022930+00:00", "action": "capture Cocoa Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:43.336166+00:00", "action": "dismiss Preferences with Escape", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:43.459281+00:00", "action": "dismiss Preferences with Escape", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:44.392398+00:00", "action": "open Cocoa Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:44.544529+00:00", "action": "open Cocoa Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:52.422973+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:52.685949+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:53.691642+00:00", "action": "edit preference for Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:56.559582+00:00", "action": "edit preference for Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:56.818624+00:00", "action": "activate Cocoa Preferences Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:57.064662+00:00", "action": "activate Cocoa Preferences Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:17:57.990337+00:00", "action": "open Cocoa Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:17:58.124138+00:00", "action": "open Cocoa Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:05.812896+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:06.057153+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:07.061444+00:00", "action": "edit preference for Save", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:09.960099+00:00", "action": "edit preference for Save", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:10.228951+00:00", "action": "activate Cocoa Preferences Save", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:10.593768+00:00", "action": "activate Cocoa Preferences Save", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:11.385862+00:00", "action": "activate Cocoa Preferences Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:11.655981+00:00", "action": "activate Cocoa Preferences Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:12.476787+00:00", "action": "normal exit and restart after Save", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:12.898548+00:00", "action": "request quit with Command+Q", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:13.090728+00:00", "action": "request quit with Command+Q", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:13.605073+00:00", "action": "launch owned Cocoa application", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:13.610278+00:00", "action": "launch owned Cocoa application", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:14.301893+00:00", "action": "normal exit and restart after Save", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:14.424850+00:00", "action": "open Cocoa Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:14.562288+00:00", "action": "open Cocoa Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:22.706399+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:22.962005+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:23.993343+00:00", "action": "restore baseline preference", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:25.685008+00:00", "action": "restore baseline preference", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:25.934079+00:00", "action": "activate Cocoa Preferences Save and close", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:26.243441+00:00", "action": "activate Cocoa Preferences Save and close", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:26.920284+00:00", "action": "normal exit and restart after baseline restoration", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:27.328634+00:00", "action": "request quit with Command+Q", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:27.511091+00:00", "action": "request quit with Command+Q", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:28.020647+00:00", "action": "launch owned Cocoa application", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:28.025507+00:00", "action": "launch owned Cocoa application", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:28.699935+00:00", "action": "normal exit and restart after baseline restoration", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:28.825362+00:00", "action": "open Cocoa Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:28.960043+00:00", "action": "open Cocoa Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:36.896934+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:37.162895+00:00", "action": "click single Cocoa search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:38.184415+00:00", "action": "activate Cocoa Preferences Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:38.431833+00:00", "action": "activate Cocoa Preferences Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T05:18:39.681481+00:00", "action": "request quit with Command+Q", "state": "before", "detail": null}
+{"utc": "2026-11-16T05:18:39.844648+00:00", "action": "request quit with Command+Q", "state": "after", "detail": null}

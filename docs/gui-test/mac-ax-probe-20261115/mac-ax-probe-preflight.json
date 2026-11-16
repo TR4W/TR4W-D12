@@ -1,0 +1,8 @@
+{
+  "accessibility" : 0,
+  "probe_only" : 1,
+  "bundle_id" : "net.tr4w.gui-pilot.ax-probe",
+  "screen_recording" : 0,
+  "executable" : "\/Users\/toms\/Applications\/TR4W AX Probe.app\/Contents\/MacOS\/tr4w-gui-pilot",
+  "pid" : 29400
+}

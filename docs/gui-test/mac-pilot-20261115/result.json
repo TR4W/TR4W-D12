@@ -1,0 +1,75 @@
+{
+   "passed": false,
+   "checks": [
+      "Practice log opened and main window captured",
+      "Escape dismissed Preferences",
+      "Original contact fields unchanged on exit"
+   ],
+   "failures": [
+      "Cocoa AX did not expose the expected clean Preferences footer state: Save and close",
+      "Cocoa AX did not expose the expected clean Preferences footer state: Save",
+      "Cocoa AX did not expose the expected clean Preferences footer state: Cancel"
+   ],
+   "run": "/Users/toms/tr4w-gui-test/runs/mac-pilot-004",
+   "source_revision": null,
+   "provenance": "user-staged-release-binary",
+   "executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+   "permissions": {
+      "accessibility": 1,
+      "bundle_id": "net.tr4w.gui-pilot",
+      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "screen_recording": true,
+      "pid": 29083
+   },
+   "runner_identity": {
+      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "bundle_id": "net.tr4w.gui-pilot",
+      "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
+      "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "pid": 29085,
+   "main_window": {
+      "kCGWindowName": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "kCGWindowLayer": 0,
+      "kCGWindowMemoryUsage": 2432,
+      "kCGWindowIsOnscreen": true,
+      "kCGWindowSharingState": 1,
+      "kCGWindowOwnerPID": 29085,
+      "kCGWindowOwnerName": "TR4W",
+      "kCGWindowNumber": 1038,
+      "kCGWindowStoreType": 1,
+      "kCGWindowBounds": {
+         "X": 569,
+         "Height": 420,
+         "Y": 100,
+         "Width": 782
+      },
+      "kCGWindowAlpha": 1
+   },
+   "footer": [],
+   "footer_assertion_passed": false,
+   "navigation_passed": true,
+   "quit_confirmation_seen": false,
+   "application_exit_code": 217,
+   "contact_count": 101,
+   "added_contact_columns": [
+      "my_call",
+      "my_continent",
+      "my_country",
+      "my_cq_zone",
+      "my_iota",
+      "my_itu_zone",
+      "my_park",
+      "my_section",
+      "my_source",
+      "rcvd_year",
+      "year_sent"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/Users/toms/tr4w-gui-test/run_mac_pilot.py\", line 213, in main\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
+   "original_contacts_unchanged": true,
+   "default_settings_unchanged": true,
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true,
+   "cleanup": "Only the owned TR4W process was stopped; bridge jobs exit individually"
+}

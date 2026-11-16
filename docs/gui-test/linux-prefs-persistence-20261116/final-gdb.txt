@@ -1,0 +1,415 @@
+Openbox-Message: Unable to find a valid menu file "/var/lib/openbox/debian-menu.xml"
+Breakpoint 1 at 0x432030
+Catchpoint 2 (signal SIGSEGV)
+
+Program stopped.
+0x00007ffff7fe42c0 in ?? () from /lib64/ld-linux-x86-64.so.2
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+GTK Accessibility Module initialized
+
+=== Pascal exception raised ===
+0x7ffff68946a0:	0xeb3108 <VMT_$SYSUTILS_$$_EXCEPTION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000061283e in PROBESYMBOLLINE (ARESOLVED=0x0) at src/uCrashLog.pas:1497
+        result = 0
+        PROBESYMBOLLINE = 0
+        RESULT = 0
+        N = -7560
+        P = 0
+#2  0x0000000000612b52 in REPORTSYMBOLSTATE () at src/uCrashLog.pas:1562
+        RESOLVED = 0x0
+        DBG = 0x0
+        LINE = 32767
+#3  0x0000000000612dc8 in INSTALLCRASHLOG () at src/uCrashLog.pas:1630
+No locals.
+#4  0x0000000000612ee2 in INSTALLCRASHLOGLCL () at src/ui/lcl/uCrashLogLCL.pas:95
+No locals.
+#5  0x000000000081662d in RUNTR4W () at src/uProgramMain.pas:1649
+        C = 14481696
+        TEMPSTRING = 'çÿÿÿ'#127#0#0' æÿÿÿ'#127#0#0'X'#134#127#0#0#0#0#0'@hê'#0#0#0#0#0#128'_û÷ÿ'#127#0#0#0#0#0#0#0#0#0#0'Xçÿÿÿ'#127#0#0'Ðæÿÿÿ'#127#0#0#22'`D'#0#0#0#0#0'P/'#147'õÿ'#127#0#0'Y'#2#0#0#0#0#0#0'@'
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 32767
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x1
+        GAPINDEX = 0
+        READINESSCONTEST = 0x1039500
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        WIZARDCTYTIER = 0x0
+        S = 0x0
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0x0
+#6  0x000000000041f12e in main () at tr4w.lpr:865
+No locals.
+
+=== Pascal exception raised ===
+0x7ffff6894720:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff5928898 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6894700 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffdfd0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe130 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe288 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe1e0 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6896060:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff40b60f8 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6895820 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffded0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe030 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe268 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe0e0 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6895840:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff40b6378 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff68957e0 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffddf0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffdf50 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe188 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe000 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+[Inferior 1 (process 131847) exited normally]
+Breakpoint 1 at 0x432030
+Catchpoint 2 (signal SIGSEGV)
+
+Program stopped.
+0x00007ffff7fe42c0 in ?? () from /lib64/ld-linux-x86-64.so.2
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+GTK Accessibility Module initialized
+
+=== Pascal exception raised ===
+0x7ffff68946a0:	0xeb3108 <VMT_$SYSUTILS_$$_EXCEPTION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000061283e in PROBESYMBOLLINE (ARESOLVED=0x0) at src/uCrashLog.pas:1497
+        result = 0
+        PROBESYMBOLLINE = 0
+        RESULT = 0
+        N = -7560
+        P = 0
+#2  0x0000000000612b52 in REPORTSYMBOLSTATE () at src/uCrashLog.pas:1562
+        RESOLVED = 0x0
+        DBG = 0x0
+        LINE = 32767
+#3  0x0000000000612dc8 in INSTALLCRASHLOG () at src/uCrashLog.pas:1630
+No locals.
+#4  0x0000000000612ee2 in INSTALLCRASHLOGLCL () at src/ui/lcl/uCrashLogLCL.pas:95
+No locals.
+#5  0x000000000081662d in RUNTR4W () at src/uProgramMain.pas:1649
+        C = 14481696
+        TEMPSTRING = 'çÿÿÿ'#127#0#0' æÿÿÿ'#127#0#0'X'#134#127#0#0#0#0#0'@hê'#0#0#0#0#0#128'_û÷ÿ'#127#0#0#0#0#0#0#0#0#0#0'Xçÿÿÿ'#127#0#0'Ðæÿÿÿ'#127#0#0#22'`D'#0#0#0#0#0'P/'#147'õÿ'#127#0#0'Y'#2#0#0#0#0#0#0'@'
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 32767
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x1
+        GAPINDEX = 0
+        READINESSCONTEST = 0x1039500
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        WIZARDCTYTIER = 0x0
+        S = 0x0
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0x0
+#6  0x000000000041f12e in main () at tr4w.lpr:865
+No locals.
+
+=== Pascal exception raised ===
+0x7ffff57851c0:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff5928898 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6894700 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffdfd0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe130 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe288 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe1e0 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff689a060:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff40e6238 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6899f80 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffded0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe030 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe268 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe0e0 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff689a080:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff40e6378 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6899c20 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffddf0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffdf50 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe188 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe000 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+[Inferior 1 (process 131985) exited normally]
+Breakpoint 1 at 0x432030
+Catchpoint 2 (signal SIGSEGV)
+
+Program stopped.
+0x00007ffff7fe42c0 in ?? () from /lib64/ld-linux-x86-64.so.2
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+GTK Accessibility Module initialized
+
+=== Pascal exception raised ===
+0x7ffff68946a0:	0xeb3108 <VMT_$SYSUTILS_$$_EXCEPTION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000061283e in PROBESYMBOLLINE (ARESOLVED=0x0) at src/uCrashLog.pas:1497
+        result = 0
+        PROBESYMBOLLINE = 0
+        RESULT = 0
+        N = -7560
+        P = 0
+#2  0x0000000000612b52 in REPORTSYMBOLSTATE () at src/uCrashLog.pas:1562
+        RESOLVED = 0x0
+        DBG = 0x0
+        LINE = 32767
+#3  0x0000000000612dc8 in INSTALLCRASHLOG () at src/uCrashLog.pas:1630
+No locals.
+#4  0x0000000000612ee2 in INSTALLCRASHLOGLCL () at src/ui/lcl/uCrashLogLCL.pas:95
+No locals.
+#5  0x000000000081662d in RUNTR4W () at src/uProgramMain.pas:1649
+        C = 14481696
+        TEMPSTRING = 'çÿÿÿ'#127#0#0' æÿÿÿ'#127#0#0'X'#134#127#0#0#0#0#0'@hê'#0#0#0#0#0#128'_û÷ÿ'#127#0#0#0#0#0#0#0#0#0#0'Xçÿÿÿ'#127#0#0'Ðæÿÿÿ'#127#0#0#22'`D'#0#0#0#0#0'P/'#147'õÿ'#127#0#0'Y'#2#0#0#0#0#0#0'@'
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 32767
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x1
+        GAPINDEX = 0
+        READINESSCONTEST = 0x1039500
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        WIZARDCTYTIER = 0x0
+        S = 0x0
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0x0
+#6  0x000000000041f12e in main () at tr4w.lpr:865
+No locals.
+
+=== Pascal exception raised ===
+0x7ffff57851c0:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff5928898 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6894700 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffdfd0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe130 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe288 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe1e0 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff689a060:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff40e6238 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6899f80 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffded0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe030 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe268 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe0e0 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff689a080:	0x1058260 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000086a146 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000869e63 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff40e6378 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6899c20 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffddf0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffdf50 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007fffffffe188 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe000 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+[Inferior 1 (process 132050) exited normally]

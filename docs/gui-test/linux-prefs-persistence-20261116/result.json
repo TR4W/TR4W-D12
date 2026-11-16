@@ -1,0 +1,101 @@
+{
+   "passed": true,
+   "checks": [
+      "Isolated practice log opened and AT-SPI application identified by PID",
+      "AT-SPI exposes clean Preferences footer: Save disabled, Save and close/Cancel enabled",
+      "Escape dismissed Preferences",
+      "Cancel discarded the edit in UI and storage",
+      "Save persisted to disk and a fresh application process",
+      "Save and close restored the baseline across restart",
+      "All original contact fields unchanged after application exit; migration columns recorded separately",
+      "Normal application exit"
+   ],
+   "executable_sha256": "04bc8e10e7ae24df1256b653260bc0fa09750db27af6d23bdaf7c65d797514f1",
+   "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
+   "provenance": "private-source-patch-build",
+   "build_record": {
+      "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
+      "provenance": "private-source-patch-build",
+      "source_patch_sha256": "01a9caf49d22dcc951ee672eef55b7f3dcebf724572e5d54266d65eeeb1b84ec",
+      "source_diff": "uPrefsForm: generated dirty hooks; cancel pending focus; restore selected page; nil-safe focus warning",
+      "build_host": "linux-ci-build",
+      "fpc_version": "3.2.2",
+      "executable_sha256": "04bc8e10e7ae24df1256b653260bc0fa09750db27af6d23bdaf7c65d797514f1"
+   },
+   "display": ":99",
+   "run": "/home/toms/tr4w-gui-test/runs/linux-prefs-persistence-006",
+   "executable_archive": "/home/toms/tr4w-gui-test/evidence/04bc8e10e7ae24df1256b653260bc0fa09750db27af6d23bdaf7c65d797514f1/tr4w",
+   "window_manager": "Name: Openbox\nClass: \nPID: N/A\nWindow manager's \"showing the desktop\" mode: OFF\n",
+   "pid": 129791,
+   "application_pids": [
+      129635,
+      129736,
+      129791
+   ],
+   "main_window": {
+      "id": "0x0040004b",
+      "pid": 129635,
+      "title": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "rectangle": [
+         251,
+         140,
+         782,
+         419
+      ]
+   },
+   "footer": [
+      {
+         "name": "Save and close",
+         "enabled": true
+      },
+      {
+         "name": "Cancel",
+         "enabled": true
+      },
+      {
+         "name": "Save",
+         "enabled": false
+      }
+   ],
+   "navigation_passed": true,
+   "preferences_persistence": {
+      "setting": "RADIUS OF EARTH",
+      "storage_path": [
+         "settings",
+         "GridMap",
+         "RadiusOfEarth"
+      ],
+      "checks": [
+         "Cancel discarded the edit in UI and storage",
+         "Save persisted to disk and a fresh application process",
+         "Save and close restored the baseline across restart"
+      ],
+      "passed": true,
+      "baseline": "0",
+      "cancelled": "6371",
+      "saved": "6372"
+   },
+   "application_exit_code": 0,
+   "application_exit_codes": [
+      0,
+      0,
+      0
+   ],
+   "contact_count": 101,
+   "added_contact_columns": [
+      "my_call",
+      "my_continent",
+      "my_country",
+      "my_cq_zone",
+      "my_iota",
+      "my_itu_zone",
+      "my_park",
+      "my_section",
+      "my_source",
+      "rcvd_year",
+      "year_sent"
+   ],
+   "cleanup": "Only owned application/window-manager PIDs stopped",
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true
+}

@@ -1,0 +1,36 @@
+{
+   "passed": false,
+   "checks": [],
+   "failures": [],
+   "run": "/Users/toms/tr4w-gui-test/runs/mac-ax-preflight-001",
+   "source_revision": null,
+   "provenance": "user-staged-release-binary",
+   "executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+   "permissions": {
+      "accessibility": 1,
+      "bundle_id": "net.tr4w.gui-pilot",
+      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "screen_recording": true,
+      "pid": 29431
+   },
+   "runner_identity": {
+      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "bundle_id": "net.tr4w.gui-pilot",
+      "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
+      "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "probe_permissions": {
+      "accessibility": 0,
+      "probe_only": 1,
+      "bundle_id": "net.tr4w.gui-pilot.ax-probe",
+      "screen_recording": 0,
+      "executable": "/Users/toms/Applications/TR4W AX Probe.app/Contents/MacOS/tr4w-gui-pilot",
+      "pid": 29433
+   },
+   "error": "Traceback (most recent call last):\n  File \"/Users/toms/tr4w-gui-test/run_mac_pilot.py\", line 140, in main\n    raise RuntimeError(\"TR4W AX Probe requires Accessibility approval; the original runner remains unchanged\")\nRuntimeError: TR4W AX Probe requires Accessibility approval; the original runner remains unchanged\n",
+   "default_settings_unchanged": true,
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true,
+   "cleanup": "Only the owned TR4W process was stopped; bridge jobs exit individually"
+}

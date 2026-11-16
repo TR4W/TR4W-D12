@@ -1,0 +1,61 @@
+{
+   "passed": false,
+   "checks": [
+      "Isolated practice log opened and AT-SPI application identified by PID",
+      "AT-SPI exposes clean Preferences footer: Save disabled, Save and close/Cancel enabled",
+      "Escape dismissed Preferences",
+      "All original contact fields unchanged after application exit; migration columns recorded separately"
+   ],
+   "executable_sha256": "f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806",
+   "source_revision": null,
+   "provenance": "user-staged-release-binary",
+   "display": ":99",
+   "run": "/home/toms/tr4w-gui-test/runs/linux-pilot-009",
+   "executable_archive": "/home/toms/tr4w-gui-test/evidence/f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806/tr4w",
+   "window_manager": "Name: Openbox\nClass: \nPID: N/A\nWindow manager's \"showing the desktop\" mode: OFF\n",
+   "pid": 106469,
+   "main_window": {
+      "id": "0x0040004b",
+      "pid": 106469,
+      "title": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "rectangle": [
+         251,
+         140,
+         782,
+         419
+      ]
+   },
+   "footer": [
+      {
+         "name": "Save and close",
+         "enabled": true
+      },
+      {
+         "name": "Cancel",
+         "enabled": true
+      },
+      {
+         "name": "Save",
+         "enabled": false
+      }
+   ],
+   "navigation_passed": true,
+   "application_exit_code": 217,
+   "contact_count": 101,
+   "added_contact_columns": [
+      "my_call",
+      "my_continent",
+      "my_country",
+      "my_cq_zone",
+      "my_iota",
+      "my_itu_zone",
+      "my_park",
+      "my_section",
+      "my_source",
+      "rcvd_year"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/home/toms/tr4w-gui-test/linux_pilot.py\", line 252, in worker\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
+   "cleanup": "Only owned application/window-manager PIDs stopped",
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true
+}

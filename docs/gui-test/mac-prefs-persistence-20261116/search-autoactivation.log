@@ -1,0 +1,314 @@
+16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.Startup  - ******************** PROGRAM STARTUP ************************
+16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] crash reporting ready (RTL hook installed)
+16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] TR4W 5.0.40 built 2026/11/15 23:42:40
+16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] executable: /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/MacOS/tr4w
+16 Nov 2026 00:08:31.992 41 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] no tr4w.dbg -- backtraces will show raw addresses. That is normal; the addresses can still be resolved from the .dbg archived for TR4W 5.0.40.
+16 Nov 2026 00:08:31.992 41 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] crash reporting ready (LCL hook installed)
+16 Nov 2026 00:08:32.044 93 [8688384] info TR4WDebugLog  - DecimalSeparator = .
+16 Nov 2026 00:08:32.044 93 [8688384] info TR4WDebugLog  - UI language: "en" from the --lang command-line switch; that is the compiled-in language, so no catalogue is loaded
+16 Nov 2026 00:08:32.044 93 [8688384] info TR4WDebugLog  - UI language: none loaded; using the compiled-in English
+16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - Contest configuration file: /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db
+16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - [FCONTEST] Country file: /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/CTY.DAT (shipped)
+16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - [FCONTEST] Call history file: /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/TRMASTER.DTA (shipped)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert] --- configuration sources ---
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   settings JSON : /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/tr4w.json (present)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   legacy ini    : /Users/toms/Library/Application Support/TR4W/tr4w.ini (absent)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   contest .cfg  : /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db (present)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   secret store  : keychain1 (available)
+16 Nov 2026 00:08:32.055 104 [8688384] warn TR4WDebugLog.Keychain  - [Keychain] ExternalLogger.ApiKey could not be read back: the secret store holds no such secret. The setting reads empty and the value will have to be entered again.
+16 Nov 2026 00:08:32.058 107 [8688384] warn TR4WDebugLog.Keychain  - [Keychain] Server.TailcatAddress could not be read back: the secret store holds no such secret. The setting reads empty and the value will have to be entered again.
+16 Nov 2026 00:08:32.060 109 [8688384] warn TR4WDebugLog.Keychain  - [Keychain] Hamscore.Password could not be read back: the secret store holds no such secret. The setting reads empty and the value will have to be entered again.
+16 Nov 2026 00:08:32.060 109 [8688384] info TR4WDebugLog  - [Convert] settings\tr4w.json already holds a settings section -- it is the source of record
+16 Nov 2026 00:08:32.060 109 [8688384] info LogCfg  - [Config] /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db is a log database, not a text .cfg -- the contest configuration comes from the log itself
+16 Nov 2026 00:08:32.061 110 [8688384] info LogCfg  - [Config] Loading /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/COMMONMESSAGES.INI
+16 Nov 2026 00:08:32.061 110 [8688384] info TR4WDebugLog  - [Convert]   contest database: /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db (present) -- the contest configuration comes from the log, the .cfg is not reconverted
+16 Nov 2026 00:08:32.068 117 [8688384] info TR4WDebugLog  - [LogStore] log database: /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db
+16 Nov 2026 00:08:32.124 173 [8688384] info TR4WDebugLog  - [LogStore] 65 stored contest setting(s) hold the built-in default and were written before the log stored only what the operator stated -- not applied, the contest decides: "WARC BAND ENABLE","VHF BAND ENABLE","SPRINT QSY RULE","SINGLE BAND SCORE","S&P SSB EXCHANGE","RFOBL MODE","REPEAT S&P SSB EXCHANGE","R150S MODE","QUICK QSL SSB MESSAGE","QUICK QSL MESSAGE 2","QUICK QSL MESSAGE 1","QUICK QSL CW MESSAGE1","QUICK QSL CW MESSAGE","QTC QRS","QTC MINUTES","QTC EXTRA SPACE","QTC ENABLE","QSO POINTS DX PHONE","QSO POINTS DX CW","QSO POINTS DOMESTIC PHONE","QSO POINTS DOMESTIC CW","QSO NUMBER BY BAND","QSO BY MODE","QSO BEFORE SSB MESSAGE","QSO BEFORE MESSAGE","QSO BEFORE CW MESSAGE","QSL SSB MESSAGE","QSL MODE","QSL MESSAGE","QSL CW MESSAGE","MY CONTINENT","MULTIPLE MODES","MULTIPLE BANDS","MULT SHEET AUTO RESET","MULT REPORT MINIMUM BANDS","MULT BY MODE",MODE,"MINITOUR DURATION","LITERAL DOMESTIC QTH","INITIAL EXCHANGE OVERWRITE","INITIAL EXCHANGE FILENAME","INITIAL EXCHANGE CURSOR POS","HF BAND ENABLE","HAMSCORE ENABLE","EXCHANGE MEMORY ENABLE","DOMESTIC FILENAME","DIGITAL MODE ENABLE","CUSTOM INITIAL EXCHANGE STRING","CQ SSB EXCHANGE NAME KNOWN","CQ SSB EXCHANGE","CQ EXCHANGE NAME KNOWN","CQ CW EXCHANGE NAME KNOWN","COUNT DOMESTIC COUNTRIES","CONTACTS PER PAGE",CATEGORY-TRANSMITTER,CATEGORY-POWER,CATEGORY-OVERLAY,CATEGORY-OPERATOR,CATEGORY-BAND,"CALL OK NOW SSB MESSAGE","CALL OK NOW MESSAGE","CALL OK NOW CW MESSAGE",BAND,"AUTO DUPE ENABLE S AND P","AUTO DUPE ENABLE CQ"
+16 Nov 2026 00:08:32.124 173 [8688384] info TR4WDebugLog  - [LogStore] 7 stored contest setting(s) are retired commands -- not applied, the contest's class decides; deleted from the log at its next capture: "ZONE MULTIPLIER=NONE","QSO POINT METHOD=NONE","PREFIX MULTIPLIER=NONE","INITIAL EXCHANGE=NONE","EXCHANGE RECEIVED=UNKNOWN","DX MULTIPLIER=NONE","DOMESTIC MULTIPLIER=NONE"
+16 Nov 2026 00:08:32.125 174 [8688384] info TR4WDebugLog  - [LogStore] MY CALL = NY4I applied before the contest, so the country and zone derived from it are settled before FCONTEST reads them
+16 Nov 2026 00:08:32.126 175 [8688384] info TR4WDebugLog  - [FCONTEST] MY COUNTRY = K, derived from MY CALL = NY4I through CTY.DAT. The operator has not stated one; a value typed in Preferences > Station overrides it.
+16 Nov 2026 00:08:32.126 175 [8688384] info TR4WDebugLog  - [LogStore] contest: CQ-WW-SSB (from the log)
+16 Nov 2026 00:08:32.129 178 [8688384] info TR4WDebugLog  - [FCONTEST] MY COUNTRY = K, derived from MY CALL = NY4I through CTY.DAT. The operator has not stated one; a value typed in Preferences > Station overrides it.
+16 Nov 2026 00:08:32.129 178 [8688384] info TR4WDebugLog  - [LogStore] schema 8: 0 QSO(s) given the licence year this contest sends (-1), once
+16 Nov 2026 00:08:32.129 178 [8688384] info TR4WDebugLog  - [Startup] the log applied 13 contest setting(s)
+16 Nov 2026 00:08:32.129 178 [8688384] info TR4WDebugLog  - [SeedLoggingFromIni] logging settings migrated from tr4w.ini (level )
+16 Nov 2026 00:08:32.129 178 [8688384] info TR4WDebugLog  - [Convert] nothing carried over from tr4w.ini -- either it holds no migrated settings, or the store already has them
+16 Nov 2026 00:08:32.130 179 [8688384] info TR4WDebugLog  - [Colors] seeded 50 element(s) from the loaded configuration
+16 Nov 2026 00:08:32.130 179 [8688384] info TR4WDebugLog  - [uRotatorControl] 0 rotator(s) live
+16 Nov 2026 00:08:32.130 179 [8688384] debug TR4WDebugLog  - [Startup] radio library has no active profile -- leaving the [Radio] keys alone
+16 Nov 2026 00:08:32.130 179 [8688384] debug TR4WDebugLog  - [tr4w] SpotCollectorEnabled = FALSE
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - DecimalSeparator = .
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - [Startup] settings registry: 220 declared
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - Current program version = TR4W v.5.0.40
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - Current TR4W Server version = 1.41
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - Current log version = v1.7
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - HamLib DLL = libhamlib.4.dylib not found (no HamLib radio can be used)
+16 Nov 2026 00:08:32.131 180 [8688384] info TR4WDebugLog  - OS = Darwin aarch64
+16 Nov 2026 00:08:32.133 182 [8688384] info TR4WDebugLog  - [Layout] status strip font: Arial 11 px for a 782 px strip; widest status "** DISCONNECTED from DX Cluster" is 181 px, panel room 187 px
+16 Nov 2026 00:08:32.171 220 [8688384] warn TR4WDebugLog  - [Layout] pnlMasterStatus had to shrink to fit: wants 72px at full size, has 64px, font "Arial", text "MASTER"
+16 Nov 2026 00:08:32.173 222 [8688384] info TR4WDebugLog  - [Layout] main window: client 782x392, outer 782x392, layout asked for 782 wide
+16 Nov 2026 00:08:32.173 222 [8688384] warn TR4WDebugLog  - [Layout] TStatusBar "sbStatus" is outside the client area: right 806 of 782, bottom 393 of 392
+16 Nov 2026 00:08:32.173 222 [8688384] info TR4WDebugLog  - [Layout] 1 of 119 child control(s) extend past the client area (782x392)
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout] --- main window children, client 782x392 ---
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TStatusBar         sbStatus               L=   0 T= 370 W= 806 H=  23 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TProgressBar       pbLastHour             L= 476 T= 295 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TProgressBar       pbRate                 L= 561 T= 295 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TProgressBar       pbTourDuration         L= 561 T= 329 W=  85 H=  17 vis=False
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTourDuration        L= 646 T= 329 W= 136 H=  17 vis=False
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TStringGrid        lstPossibleCall        L=   0 T= 346 W= 782 H=  17 vis=False
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlAutoSendCount       L= 272 T= 244 W=  17 H=  17 vis=False
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlBandMode            L=   0 T= 244 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlBeamHeading         L= 544 T= 102 W= 238 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlClock               L= 136 T= 244 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlCodeSpeed           L=   0 T= 295 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlComputerID          L= 136 T= 261 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlCountryName         L= 476 T= 244 W= 170 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlCQQSOCounter        L= 646 T= 261 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlCQTotal             L= 646 T= 278 W= 136 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlCurrentOperator     L= 714 T= 312 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlDate                L=  68 T= 244 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlDupeInfoCall        L= 391 T=  17 W= 153 H=  34 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlFootSwitch          L= 714 T= 295 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlFullTime            L=   0 T=   0 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlLocator             L= 561 T= 312 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlHourRate            L= 476 T= 278 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlInsert              L= 714 T= 244 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.173 222 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlLastQSOTime         L= 561 T= 261 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlLocalTime           L= 646 T= 244 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMasterStatus        L= 187 T= 295 W=  68 H=  17 vis=False
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlNewMultStatus       L= 187 T= 312 W=  68 H=  17 vis=False
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedsHeader     L= 544 T=  51 W= 238 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlName                L= 425 T= 244 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlOnAirTimeCounter    L= 476 T= 261 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlOpMode              L= 476 T= 312 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlPaddle              L= 646 T= 295 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSOsWithThisStation L= 391 T= 244 W=  34 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlPTTStatus           L= 425 T= 312 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSOB4Status         L= 187 T= 278 W=  68 H=  17 vis=False
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedsHeader      L= 544 T=   0 W= 238 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONumber           L= 187 T= 244 W=  68 H=  34 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQuickCommand        L=   0 T= 329 W= 782 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlRadioOneFreq        L=   0 T= 261 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlRadioOne            L=   0 T= 278 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlRadioTwoFreq        L=  68 T= 261 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlRadioTwo            L=  68 T= 278 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlRate                L= 561 T= 278 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlSPQSOCounter        L= 714 T= 261 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTenMinuts           L=   0 T=  17 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalScore          L= 391 T=   0 W= 153 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlUserInfo            L= 255 T= 312 W= 170 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlWinKey              L= 646 T= 312 W=  68 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlWSJTX               L= 136 T= 278 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_0_0       L=   0 T=  34 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_0_1       L=   0 T=  51 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_0_2       L=   0 T=  68 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_0_3       L=   0 T=  85 W=  85 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_1_0       L=  85 T=  34 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_1_1       L=  85 T=  51 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_1_2       L=  85 T=  68 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_1_3       L=  85 T=  85 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_2_0       L= 127 T=  34 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_2_1       L= 127 T=  51 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_2_2       L= 127 T=  68 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_2_3       L= 127 T=  85 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_3_0       L= 169 T=  34 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_3_1       L= 169 T=  51 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_3_2       L= 169 T=  68 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_3_3       L= 169 T=  85 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_4_0       L= 211 T=  34 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_4_1       L= 211 T=  51 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_4_2       L= 211 T=  68 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_4_3       L= 211 T=  85 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_5_0       L= 253 T=  34 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_5_1       L= 253 T=  51 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_5_2       L= 253 T=  68 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_5_3       L= 253 T=  85 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_6_0       L= 295 T=  34 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_6_1       L= 295 T=  51 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_6_2       L= 295 T=  68 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_6_3       L= 295 T=  85 W=  42 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_7_0       L= 337 T=  34 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_7_1       L= 337 T=  51 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_7_2       L= 337 T=  68 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.174 223 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalCell_7_3       L= 337 T=  85 W=  51 H=  17 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_1         L=  85 T=   0 W=  42 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_2         L= 127 T=   0 W=  42 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_3         L= 169 T=   0 W=  42 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_4         L= 211 T=   0 W=  42 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_5         L= 253 T=   0 W=  42 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_6         L= 295 T=   0 W=  42 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlTotalHead_7         L= 337 T=   0 W=  51 H=  34 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1Label      L= 544 T=  17 W=  34 H=  17 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1_160       L= 578 T=  17 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1_80        L= 612 T=  17 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1_40        L= 646 T=  17 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1_20        L= 680 T=  17 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1_15        L= 714 T=  17 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR1_10        L= 748 T=  17 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2Label      L= 544 T=  34 W=  34 H=  17 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2_160       L= 578 T=  34 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2_80        L= 612 T=  34 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2_40        L= 646 T=  34 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2_20        L= 680 T=  34 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2_15        L= 714 T=  34 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlQSONeedR2_10        L= 748 T=  34 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1Label     L= 544 T=  68 W=  34 H=  17 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1_160      L= 578 T=  68 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1_80       L= 612 T=  68 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1_40       L= 646 T=  68 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1_20       L= 680 T=  68 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1_15       L= 714 T=  68 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR1_10       L= 748 T=  68 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2Label     L= 544 T=  85 W=  34 H=  17 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2_160      L= 578 T=  85 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2_80       L= 612 T=  85 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2_40       L= 646 T=  85 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2_20       L= 680 T=  85 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2_15       L= 714 T=  85 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TElementPanel      pnlMultNeedR2_10       L= 748 T=  85 W=  32 H=  17 vis=False
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TLogGrid                                  L=   0 T= 119 W= 782 H= 125 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TEdit                                     L= 255 T= 261 W= 221 H=  24 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   TEdit                                     L= 255 T= 286 W= 221 H=  24 vis=True
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout]   editable log: H=125 client=125 rowH=19 rows=1 fixed=1 -> content=19, leftover=106
+16 Nov 2026 00:08:32.175 224 [8688384] debug TR4WDebugLog  - [Layout] --- end children ---
+16 Nov 2026 00:08:32.175 224 [8688384] info TR4WDebugLog  - [Layout] status strip font: Arial 11 px for a 782 px strip; widest status "** DISCONNECTED from DX Cluster" is 181 px, panel room 187 px
+16 Nov 2026 00:08:32.181 230 [8688384] debug TR4WDebugLog  - [EditableLog] refresh: log has 101 record(s), grid had 0
+16 Nov 2026 00:08:32.181 230 [8688384] debug TR4WDebugLog  - [EditableLog] scrolled: rows=102 selected=101 topRow=97 visible=4
+16 Nov 2026 00:08:32.181 230 [8688384] warn TR4WDebugLog  - [Layout] pnlSPQSOCounter had to shrink to fit: wants 66px at full size, has 64px, font "Arial", text " SP: 101"
+16 Nov 2026 00:08:32.186 235 [8688384] warn TR4WDebugLog  - [Layout] pnlHourRate had to shrink to fit: wants 85px at full size, has 81px, font "Arial", text "This hr = 0"
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [Radio 1 config] radio=NONE (no RADIO n TYPE and no RADIO n FACTORY ID configured)  connection=NO PORT SET
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [Radio 1 config] polling=True  CW-speed-sync=False  serial-format=(radio default)  startup-command=(none)
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [Radio 1 config] network-username=(none)  Icom-data-mode=D0
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - Entered ClearRadioStatus
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [Radio 2 config] radio=NONE (no RADIO n TYPE and no RADIO n FACTORY ID configured)  connection=NO PORT SET
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [Radio 2 config] polling=True  CW-speed-sync=False  serial-format=(radio default)  startup-command=(none)
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [Radio 2 config] network-username=(none)  Icom-data-mode=D0
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - Entered ClearRadioStatus
+16 Nov 2026 00:08:32.187 236 [8688384] warn TR4WDebugLog  - [Layout] pnlCodeSpeed had to shrink to fit: wants 65px at full size, has 64px, font "Arial", text "35 WPM"
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [FlushCWBufferAndClearPTT] called from LogCW: SetUpToSendOn*Radio - clear CW on the radio being left (CW-by-CAT sending: active=False inactive=False)
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - [CWThreadProc] CWBufferStart := CWBuferEnd
+16 Nov 2026 00:08:32.187 236 [8688384] debug TR4WDebugLog  - Enter MainUnit.PTTOff
+16 Nov 2026 00:08:32.187 236 [8688384] warn TR4WDebugLog  - [tPTTVIACAT] No radio driver -- PTT False not sent
+16 Nov 2026 00:08:32.187 236 [8688384] warn TR4WDebugLog  - [Layout] pnlDate had to shrink to fit: wants 67px at full size, has 64px, font "Arial", text "16-11-26"
+16 Nov 2026 00:08:32.211 260 [8688384] info TR4WDebugLog  - [Net] not connecting at startup (NETWORK AUTO CONNECT is off, COMPUTER ID is " "); Connect on the Net menu does it
+16 Nov 2026 00:08:32.211 260 [8688384] info TR4WDebugLog  - [NTP] Scheduling startup NTP time check
+16 Nov 2026 00:08:32.211 260 [8688384] debug TR4WDebugLog.TF  - [tCreateThread] Created thread 6170079232
+16 Nov 2026 00:08:32.211 260 [8688384] info TR4WDebugLog  - [BackupCopy] backup destination: none (local backups only)
+16 Nov 2026 00:08:32.211 260 [8688384] warn TR4WDebugLog  - [Timing] CW element, paddle and DVP events are Windows-only in this build. CW timing falls back to plain Sleep and WILL NOT key a contest -- see docs/PLATFORM_CLOCK_ABSTRACTION.md.
+16 Nov 2026 00:08:32.217 266 [8688384] info TR4WDebugLog  - [InputHooks] accelerators, keypad CW memories, modifier tracking and fault recovery are LCL application handlers now
+16 Nov 2026 00:08:32.273 322 [8688384] debug TR4WDebugLog  - [Windows] activation raise armed, after the tool-window restore
+16 Nov 2026 00:08:32.548 597 [8688384] info TR4WDebugLog  - [MacMenu] start-up redraw, bar before: mainMenu items=10 titles=|File|Settings|Windows|Alt-|Ctrl-|Commands|Tools|Net|Help| NSApp.active=True key=True
+16 Nov 2026 00:08:32.550 599 [8688384] info TR4WDebugLog  - [MacMenu] start-up redraw, bar after:  mainMenu items=10 titles=|File|Settings|Windows|Alt-|Ctrl-|Commands|Tools|Net|Help| NSApp.active=True key=True
+16 Nov 2026 00:08:33.876 1925 [8688384] debug TR4WDebugLog  - [Menu] ProcessMenu(10100)
+16 Nov 2026 00:08:33.876 1925 [8688384] info TR4WDebugLog  - [Options] Ctrl-J -> Preferences
+16 Nov 2026 00:08:33.895 1944 [8688384] debug TR4WDebugLog  - [Prefs] stream .lfm               19 ms
+16 Nov 2026 00:08:33.895 1944 [8688384] debug TR4WDebugLog  - [Prefs] TranslateForm              0 ms
+16 Nov 2026 00:08:33.895 1944 [8688384] debug TR4WDebugLog  - [Prefs] BuildNavTree               0 ms
+16 Nov 2026 00:08:33.895 1944 [8688384] debug TR4WDebugLog  - [Prefs] SearchOverlay              0 ms
+16 Nov 2026 00:08:33.896 1945 [8688384] debug TR4WDebugLog  - [Prefs] SelectFirstSection         0 ms
+16 Nov 2026 00:08:33.896 1945 [8688384] debug TR4WDebugLog  - [Prefs] LoadStore                  0 ms
+16 Nov 2026 00:08:33.896 1945 [8688384] debug TR4WDebugLog  - [Prefs] profile combo rebuilt: 0 profile(s), keep="" -> ItemIndex=-1, SelectedTag=""
+16 Nov 2026 00:08:33.896 1945 [8688384] debug TR4WDebugLog  - [Prefs] CW output combo: offering [(none)]
+16 Nov 2026 00:08:33.896 1945 [8688384] debug TR4WDebugLog  - [Prefs] CW output combo: offering [(none)]
+16 Nov 2026 00:08:33.896 1945 [8688384] debug TR4WDebugLog  - [Prefs]   profile combos           0 ms
+16 Nov 2026 00:08:33.964 2013 [8688384] debug TR4WDebugLog  - [Prefs]   Station                 68 ms
+16 Nov 2026 00:08:33.966 2015 [8688384] debug TR4WDebugLog  - [Prefs]   External software        2 ms
+16 Nov 2026 00:08:33.967 2016 [8688384] debug TR4WDebugLog  - [Prefs]   Cluster panels           1 ms
+16 Nov 2026 00:08:33.968 2017 [8688384] debug TR4WDebugLog  - [Prefs]   Remaining panels         1 ms
+16 Nov 2026 00:08:33.969 2018 [8688384] debug TR4WDebugLog  - [Prefs]   Rotators (COM enum)      0 ms
+16 Nov 2026 00:08:33.969 2018 [8688384] debug TR4WDebugLog  - [Prefs]   Cluster list (DAT)       0 ms
+16 Nov 2026 00:08:33.972 2021 [8688384] info TR4WDebugLog  - [Prefs] Setting tooltips: "" over English "/Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/help/help_en.po" (UI language "")
+16 Nov 2026 00:08:33.973 2022 [8688384] debug TR4WDebugLog  - [Prefs] BuildGeneratedSections: freeing 0 previous root(s)
+16 Nov 2026 00:08:33.977 2026 [8688384] debug TR4WDebugLog  - [Prefs] generated page tag=10 -> 12 setting(s)
+16 Nov 2026 00:08:33.977 2026 [8688384] debug TR4WDebugLog  - [Prefs] generated page tag=14 -> 3 setting(s)
+16 Nov 2026 00:08:33.977 2026 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=32 -> 1 setting(s)
+16 Nov 2026 00:08:33.978 2027 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=35 -> 13 setting(s)
+16 Nov 2026 00:08:33.980 2029 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=33 -> 11 setting(s)
+16 Nov 2026 00:08:33.981 2030 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=34 -> 2 setting(s)
+16 Nov 2026 00:08:33.981 2030 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=40 -> 4 setting(s)
+16 Nov 2026 00:08:33.982 2031 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=41 -> 7 setting(s)
+16 Nov 2026 00:08:33.983 2032 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=42 -> 7 setting(s)
+16 Nov 2026 00:08:33.983 2032 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=43 -> 2 setting(s)
+16 Nov 2026 00:08:33.984 2033 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=44 -> 8 setting(s)
+16 Nov 2026 00:08:33.985 2034 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=45 -> 9 setting(s)
+16 Nov 2026 00:08:33.986 2035 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=46 -> 7 setting(s)
+16 Nov 2026 00:08:33.986 2035 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=47 -> 7 setting(s)
+16 Nov 2026 00:08:33.987 2036 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=36 -> 7 setting(s)
+16 Nov 2026 00:08:33.988 2037 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=37 -> 3 setting(s)
+16 Nov 2026 00:08:33.988 2037 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=38 -> 7 setting(s)
+16 Nov 2026 00:08:33.989 2038 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=39 -> 5 setting(s)
+16 Nov 2026 00:08:33.989 2038 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layBandMap (page 20) -> 1 setting(s)
+16 Nov 2026 00:08:33.989 2038 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layHardware (page 2) -> 1 setting(s)
+16 Nov 2026 00:08:33.989 2038 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layStation (page 1) -> 1 setting(s)
+16 Nov 2026 00:08:33.990 2039 [8688384] debug TR4WDebugLog  - [Prefs] placed block on laySCP (page 4) -> 4 setting(s)
+16 Nov 2026 00:08:33.991 2040 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layNetwork (page 6) -> 6 setting(s)
+16 Nov 2026 00:08:33.992 2041 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layAudio (page 29) -> 4 setting(s)
+16 Nov 2026 00:08:33.992 2041 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layTwoRadio (page 25) -> 1 setting(s)
+16 Nov 2026 00:08:33.992 2041 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layBands (page 24) -> 3 setting(s)
+16 Nov 2026 00:08:33.992 2041 [8688384] debug TR4WDebugLog  - [Prefs] generated block on layAppearance -> 2 setting(s)
+16 Nov 2026 00:08:33.994 2043 [8688384] debug TR4WDebugLog  - [Prefs] colors page: 50 element(s) in one grid
+16 Nov 2026 00:08:34.003 2052 [8688384] debug TR4WDebugLog  - [Prefs] placement check: 122 setting(s), 0 fault(s)
+16 Nov 2026 00:08:34.003 2052 [8688384] debug TR4WDebugLog  - [Prefs] section tag=26 -> panel
+16 Nov 2026 00:08:34.003 2052 [8688384] info TR4WDebugLog  - [Prefs] generated sections: 186 control(s) built
+16 Nov 2026 00:08:34.004 2053 [8688384] info TR4WDebugLog  - [Prefs] search index: 295 entries (220 registered setting(s) exist)
+16 Nov 2026 00:08:34.087 2136 [8688384] debug TR4WDebugLog  - [Prefs]   Bindings               118 ms
+16 Nov 2026 00:08:34.088 2137 [8688384] debug TR4WDebugLog  - [Prefs]   TCI + Logging            1 ms
+16 Nov 2026 00:08:34.088 2137 [8688384] debug TR4WDebugLog  - [Prefs] RefreshAll                 0 ms
+16 Nov 2026 00:08:34.088 2137 [8688384] debug TR4WDebugLog  - [Prefs] HookDirtyMarkers           0 ms
+16 Nov 2026 00:08:34.088 2137 [8688384] info TR4WDebugLog  - [Prefs] CONSTRUCT first open     212 ms
+16 Nov 2026 00:08:34.110 2159 [8688384] debug TR4WDebugLog  - [Prefs] Show + BringToFront       22 ms
+16 Nov 2026 00:08:34.131 2180 [8688384] debug TR4WDebugLog  - [Prefs] section tag=26 -> panel
+16 Nov 2026 00:08:35.216 3265 [1875111936] info TR4WDebugLog  - [NTP] Startup time check against pool.ntp.org
+16 Nov 2026 00:08:35.286 3335 [1875111936] info TR4WDebugLog  - [NTP] Clock OK: offset=2 ms from pool.ntp.org
+16 Nov 2026 00:08:35.429 3478 [8688384] debug TR4WDebugLog  - [Prefs] profile combo rebuilt: 0 profile(s), keep="" -> ItemIndex=-1, SelectedTag=""
+16 Nov 2026 00:08:35.429 3478 [8688384] debug TR4WDebugLog  - [Prefs] CW output combo: offering [(none)]
+16 Nov 2026 00:08:35.429 3478 [8688384] debug TR4WDebugLog  - [Prefs] CW output combo: offering [(none)]
+16 Nov 2026 00:08:35.429 3478 [8688384] debug TR4WDebugLog  - [Prefs]   profile combos           0 ms
+16 Nov 2026 00:08:35.481 3530 [8688384] debug TR4WDebugLog  - [Prefs]   Station                 52 ms
+16 Nov 2026 00:08:35.483 3532 [8688384] debug TR4WDebugLog  - [Prefs]   External software        2 ms
+16 Nov 2026 00:08:35.484 3533 [8688384] debug TR4WDebugLog  - [Prefs]   Cluster panels           1 ms
+16 Nov 2026 00:08:35.485 3534 [8688384] debug TR4WDebugLog  - [Prefs]   Remaining panels         1 ms
+16 Nov 2026 00:08:35.486 3535 [8688384] debug TR4WDebugLog  - [Prefs]   Rotators (COM enum)      1 ms
+16 Nov 2026 00:08:35.486 3535 [8688384] debug TR4WDebugLog  - [Prefs]   Cluster list (DAT)       0 ms
+16 Nov 2026 00:08:35.486 3535 [8688384] debug TR4WDebugLog  - [Prefs] BuildGeneratedSections: freeing 28 previous root(s)
+16 Nov 2026 00:08:35.491 3540 [8688384] debug TR4WDebugLog  - [Prefs] generated page tag=10 -> 12 setting(s)
+16 Nov 2026 00:08:35.492 3541 [8688384] debug TR4WDebugLog  - [Prefs] generated page tag=14 -> 3 setting(s)
+16 Nov 2026 00:08:35.493 3542 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=32 -> 1 setting(s)
+16 Nov 2026 00:08:35.496 3545 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=35 -> 13 setting(s)
+16 Nov 2026 00:08:35.499 3548 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=33 -> 11 setting(s)
+16 Nov 2026 00:08:35.500 3549 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=34 -> 2 setting(s)
+16 Nov 2026 00:08:35.502 3551 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=40 -> 4 setting(s)
+16 Nov 2026 00:08:35.504 3553 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=41 -> 7 setting(s)
+16 Nov 2026 00:08:35.506 3555 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=42 -> 7 setting(s)
+16 Nov 2026 00:08:35.507 3556 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=43 -> 2 setting(s)
+16 Nov 2026 00:08:35.509 3558 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=44 -> 8 setting(s)
+16 Nov 2026 00:08:35.511 3560 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=45 -> 9 setting(s)
+16 Nov 2026 00:08:35.519 3568 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=46 -> 7 setting(s)
+16 Nov 2026 00:08:35.521 3570 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=47 -> 7 setting(s)
+16 Nov 2026 00:08:35.523 3572 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=36 -> 7 setting(s)
+16 Nov 2026 00:08:35.524 3573 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=37 -> 3 setting(s)
+16 Nov 2026 00:08:35.525 3574 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=38 -> 7 setting(s)
+16 Nov 2026 00:08:35.527 3576 [8688384] debug TR4WDebugLog  - [Prefs] placed page tag=39 -> 5 setting(s)
+16 Nov 2026 00:08:35.527 3576 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layBandMap (page 20) -> 1 setting(s)
+16 Nov 2026 00:08:35.527 3576 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layHardware (page 2) -> 1 setting(s)
+16 Nov 2026 00:08:35.528 3577 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layStation (page 1) -> 1 setting(s)
+16 Nov 2026 00:08:35.529 3578 [8688384] debug TR4WDebugLog  - [Prefs] placed block on laySCP (page 4) -> 4 setting(s)
+16 Nov 2026 00:08:35.531 3580 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layNetwork (page 6) -> 6 setting(s)
+16 Nov 2026 00:08:35.531 3580 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layAudio (page 29) -> 4 setting(s)
+16 Nov 2026 00:08:35.532 3581 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layTwoRadio (page 25) -> 1 setting(s)
+16 Nov 2026 00:08:35.532 3581 [8688384] debug TR4WDebugLog  - [Prefs] placed block on layBands (page 24) -> 3 setting(s)
+16 Nov 2026 00:08:35.533 3582 [8688384] debug TR4WDebugLog  - [Prefs] generated block on layAppearance -> 2 setting(s)
+16 Nov 2026 00:08:35.535 3584 [8688384] debug TR4WDebugLog  - [Prefs] colors page: 50 element(s) in one grid
+16 Nov 2026 00:08:35.543 3592 [8688384] debug TR4WDebugLog  - [Prefs] placement check: 122 setting(s), 0 fault(s)
+16 Nov 2026 00:08:35.543 3592 [8688384] debug TR4WDebugLog  - [Prefs] section tag=26 -> panel
+16 Nov 2026 00:08:35.543 3592 [8688384] info TR4WDebugLog  - [Prefs] generated sections: 186 control(s) built
+16 Nov 2026 00:08:35.544 3593 [8688384] info TR4WDebugLog  - [Prefs] search index: 295 entries (220 registered setting(s) exist)
+16 Nov 2026 00:08:35.567 3616 [8688384] debug TR4WDebugLog  - [Prefs]   Bindings                81 ms
+16 Nov 2026 00:08:35.567 3616 [8688384] debug TR4WDebugLog  - [Prefs]   TCI + Logging            0 ms
+16 Nov 2026 00:08:35.567 3616 [8688384] info TR4WDebugLog  - [Prefs] CANCEL: reload           139 ms
+16 Nov 2026 00:08:36.491 4540 [8688384] debug TR4WDebugLog  - [Menu] ProcessMenu(10100)
+16 Nov 2026 00:08:36.491 4540 [8688384] info TR4WDebugLog  - [Options] Ctrl-J -> Preferences
+16 Nov 2026 00:08:36.499 4548 [8688384] debug TR4WDebugLog  - [Prefs] Show + BringToFront        8 ms
+16 Nov 2026 00:08:38.628 6677 [8688384] debug TR4WDebugLog  - [Prefs] search -> Radius Of Earth (RADIUS OF EARTH), section tag=14
+16 Nov 2026 00:08:38.641 6690 [8688384] debug TR4WDebugLog  - [Prefs] section tag=14 -> panel
+16 Nov 2026 00:08:38.646 6695 [8688384] debug TR4WDebugLog  - [Prefs] focus -> gen_operating_ctrlj_radiusOfEarth after 1 attempt(s)

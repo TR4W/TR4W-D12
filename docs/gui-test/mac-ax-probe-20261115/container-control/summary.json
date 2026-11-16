@@ -1,0 +1,50 @@
+{
+   "fixture": "standalone Cocoa NSScrollView/container/NSButton reproduction",
+   "original_executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+   "cases": [
+      {
+         "mode": "control",
+         "buttons": []
+      },
+      {
+         "mode": "view",
+         "buttons": [
+            {
+               "title": "Save and close",
+               "enabled": true
+            },
+            {
+               "title": "Cancel",
+               "enabled": true
+            },
+            {
+               "title": "Save",
+               "enabled": false
+            }
+         ]
+      },
+      {
+         "mode": "ignored",
+         "buttons": []
+      },
+      {
+         "mode": "children",
+         "buttons": [
+            {
+               "title": "Save and close",
+               "enabled": true
+            },
+            {
+               "title": "Cancel",
+               "enabled": true
+            },
+            {
+               "title": "Save",
+               "enabled": false
+            }
+         ]
+      }
+   ],
+   "fixture_executable_sha256": "a6b590dcbd8a00955fe64e66fdf36d4d5fefc77dcc9cec748d0f576e895ead73",
+   "original_restored": true
+}

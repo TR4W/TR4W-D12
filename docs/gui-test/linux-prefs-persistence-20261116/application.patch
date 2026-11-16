@@ -1,0 +1,67 @@
+diff --git a/tr4w/src/ui/lcl/uPrefsForm.pas b/tr4w/src/ui/lcl/uPrefsForm.pas
+index 94028b8c..e1054b37 100644
+--- a/tr4w/src/ui/lcl/uPrefsForm.pas
++++ b/tr4w/src/ui/lcl/uPrefsForm.pas
+@@ -3699,6 +3699,13 @@ var
+    total, i: integer;
+    host: TPanel;
+ begin
++   // A pending search focus must not outlive the controls it names.
++   if FFocusTimer <> nil then
++      begin
++      FFocusTimer.Enabled := False;
++      end;
++   FPendingFocus := nil;
++
+    // IDEMPOTENT, because BuildBindings runs again every time the form reloads --
+    // Cancel is the obvious one. Without this the second pass tried to create
+    // `gen_contest_autoQslInterval` a second time and the LCL raised
+@@ -3787,6 +3794,10 @@ begin
+ 
+    CheckEveryInventoriedSettingHasOneEditor;
+ 
++   // Rebuilt pages start hidden. The selected tree node did not change, so
++   // reapply the existing navigation rule to show its replacement page.
++   tvNavChange(tvNav);
++
+    logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
+ end;
+ 
+@@ -4743,6 +4754,9 @@ begin
+       // "this label belongs to that control" -- no parallel array, and a click
+       // on the caption now lands in the field as it does everywhere else.
+       lbl.FocusControl := ctl;
++      // Cancel rebuilds these controls after the constructor's blanket walk.
++      // Attach the shared dirty hook to each new control, on every rebuild.
++      HookDirtyMarker(ctl);
+ 
+       if ro then
+          begin
+@@ -5494,6 +5508,7 @@ end;
+ procedure TPrefsForm.FocusTimerTick(Sender: TObject);
+ var
+    ctl: TWinControl;
++   activeName: string;
+ begin
+    ctl := FPendingFocus;
+ 
+@@ -5545,13 +5560,18 @@ begin
+       begin
+       FFocusTimer.Enabled := False;
+       FPendingFocus       := nil;
++      activeName := '<none>';
++      if ActiveControl <> nil then
++         begin
++         activeName := ActiveControl.Name;
++         end;
+       // NOT silent.  A setting the operator searched for and cannot type into
+       // is exactly the failure this whole mechanism exists to prevent.
+       logger.Warn('[Prefs] gave up focusing %s after %d attempts ' +
+                   '(canfocus=%s, active=%s)',
+                   [ctl.Name, FFocusTries,
+                    BoolToStr(ctl.CanFocus, True),
+-                   IfThen(ActiveControl <> nil, ActiveControl.Name, '<none>')]);
++                   activeName]);
+       end;
+ end;
+ 

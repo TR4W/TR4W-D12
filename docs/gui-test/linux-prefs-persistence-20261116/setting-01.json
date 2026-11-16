@@ -1,0 +1,465 @@
+[
+   {
+      "path": [
+         2
+      ],
+      "role": "frame",
+      "name": "TR4W Preferences",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         210,
+         90,
+         862,
+         641
+      ]
+   },
+   {
+      "path": [
+         2,
+         0
+      ],
+      "role": "filler",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         110,
+         860,
+         620
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         110,
+         860,
+         620
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         110,
+         860,
+         620
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         0
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         215,
+         114,
+         162,
+         23
+      ],
+      "text": "RADIUS OF EARTH"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         1
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         141,
+         170,
+         541
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         1,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         211,
+         141,
+         151,
+         541
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         1,
+         1
+      ],
+      "role": "scroll bar",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         365,
+         141,
+         16,
+         541
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         2
+      ],
+      "role": "scroll pane",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         2,
+         0
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         386,
+         110,
+         675,
+         572
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         2,
+         0,
+         0
+      ],
+      "role": "check box",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         716,
+         176,
+         21,
+         21
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         2,
+         0,
+         1
+      ],
+      "role": "check box",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         716,
+         206,
+         21,
+         21
+      ],
+      "text": ""
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         2,
+         0,
+         2,
+         0,
+         2
+      ],
+      "role": "text",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": true,
+      "rectangle": [
+         716,
+         234,
+         280,
+         23
+      ],
+      "text": "0"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         3
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         777,
+         692,
+         89,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         3,
+         0
+      ],
+      "role": "button",
+      "name": "Save and close",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         777,
+         692,
+         89,
+         25
+      ],
+      "text": "Save and close"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         4
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         876,
+         692,
+         85,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         4,
+         0
+      ],
+      "role": "button",
+      "name": "Cancel",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         876,
+         692,
+         85,
+         25
+      ],
+      "text": "Cancel"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         5
+      ],
+      "role": "panel",
+      "name": "",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         971,
+         692,
+         85,
+         25
+      ]
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         5,
+         0
+      ],
+      "role": "button",
+      "name": "Save",
+      "showing": true,
+      "enabled": false,
+      "focused": false,
+      "rectangle": [
+         971,
+         692,
+         85,
+         25
+      ],
+      "text": "Save"
+   },
+   {
+      "path": [
+         2,
+         0,
+         0,
+         0,
+         6,
+         0,
+         1
+      ],
+      "role": "table cell",
+      "name": "Radius Of Earth",
+      "showing": true,
+      "enabled": true,
+      "focused": false,
+      "rectangle": [
+         219,
+         141,
+         422,
+         28
+      ],
+      "text": "Radius Of Earth"
+   }
+]

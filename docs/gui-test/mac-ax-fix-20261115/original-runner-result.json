@@ -1,0 +1,144 @@
+{
+   "passed": false,
+   "checks": [
+      "Practice log opened and main window captured",
+      "Cocoa AX exposes clean Preferences footer with disabled Save",
+      "Escape dismissed Preferences",
+      "Original contact fields unchanged on exit"
+   ],
+   "failures": [],
+   "run": "/Users/toms/tr4w-gui-test/runs/mac-ax-visible-original-runner-001",
+   "source_revision": "ed126e424ab57c735129234582fc03b597b146d2",
+   "provenance": "experimental-private-toolchain-build",
+   "executable_sha256": "23ef2627830b13d02a346e0a58dcadb3155b10e194edcb24e1ce4405c3c8a654",
+   "build_record": {
+      "purpose": "Cocoa container enumeration with hidden-view filtering; not a release build",
+      "source_revision": "ed126e424ab57c735129234582fc03b597b146d2",
+      "source_tracked_diff": "",
+      "lazarus_revision": "62c14a4d18c81f222127d42ce9b89b922c63fcbf",
+      "lazarus_diff_stat": "lcl/interfaces/cocoa/cocoacustomcontrol.pas | 23 +++++++++++++++++++++++\n 1 file changed, 23 insertions(+)",
+      "lazarus_patch": "diff --git a/lcl/interfaces/cocoa/cocoacustomcontrol.pas b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\nindex 5d00ca54..fb0fa201 100644\n--- a/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n+++ b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n@@ -24,6 +24,7 @@ type\n   public\n     callback: ICommonCallback;\n     auxMouseByParent: Boolean;\n+   function accessibilityChildren: NSArray; override;\n     procedure dealloc; override;\n     function acceptsFirstResponder: LCLObjCBoolean; override;\n     procedure drawRect(dirtyRect: NSRect); override;\n@@ -91,6 +92,28 @@ implementation\n \n { TCocoaCustomControl }\n \n+function TCocoaCustomControl.accessibilityChildren: NSArray;\n+var\n+   ChildViews: NSArray;\n+   VisibleChildren: NSMutableArray;\n+   Child: NSView;\n+   I: NSInteger;\n+begin\n+   // NSControl does not enumerate child views by default. LCL uses this\n+   // class as a container. Preserve native hidden-view filtering.\n+   ChildViews := subviews;\n+   VisibleChildren := NSMutableArray.arrayWithCapacity(ChildViews.count);\n+   for I := 0 to NSInteger(ChildViews.count) - 1 do\n+      begin\n+      Child := NSView(ChildViews.objectAtIndex(I));\n+      if not Child.isHiddenOrHasHiddenAncestor then\n+         begin\n+         VisibleChildren.addObject(Child);\n+         end;\n+      end;\n+   Result := NSAccessibilityUnignoredChildren(VisibleChildren);\n+end;\n+\n procedure TCocoaCustomControl.setStringValue(avalue: NSString);\n begin\n   if Assigned(fstr) then fstr.release;\n",
+      "original_lazarus_tracked_status": "",
+      "fpc_version": "3.2.2",
+      "experimental_bundle": "/Users/toms/tr4w-gui-test/app/TR4W-ax-visible.app",
+      "signing": "ad-hoc; codesign deep/strict verified",
+      "original_release_executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+      "executable_sha256": "23ef2627830b13d02a346e0a58dcadb3155b10e194edcb24e1ce4405c3c8a654",
+      "build_logs": [
+         "lcl-ax-visible-build.log",
+         "tr4w-ax-visible-build.log"
+      ],
+      "patch_sha256": "fd25f3d00b289996134462fe4e14ab593126479a0010b10eb03af9577fdcaa30"
+   },
+   "permissions": {
+      "accessibility": 1,
+      "bundle_id": "net.tr4w.gui-pilot",
+      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "screen_recording": true,
+      "pid": 38351
+   },
+   "runner_identity": {
+      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "bundle_id": "net.tr4w.gui-pilot",
+      "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
+      "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "pid": 38354,
+   "main_window": {
+      "kCGWindowName": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "kCGWindowLayer": 0,
+      "kCGWindowMemoryUsage": 2432,
+      "kCGWindowIsOnscreen": true,
+      "kCGWindowSharingState": 1,
+      "kCGWindowOwnerPID": 38354,
+      "kCGWindowOwnerName": "TR4W",
+      "kCGWindowNumber": 1368,
+      "kCGWindowStoreType": 1,
+      "kCGWindowBounds": {
+         "X": 569,
+         "Height": 420,
+         "Y": 100,
+         "Width": 782
+      },
+      "kCGWindowAlpha": 1
+   },
+   "footer": [
+      {
+         "path": [
+            0,
+            0,
+            3
+         ],
+         "AXFocused": false,
+         "rectangle": [
+            1077,
+            823,
+            109,
+            30
+         ],
+         "AXTitle": "Save and close",
+         "AXEnabled": true,
+         "AXRole": "AXButton"
+      },
+      {
+         "path": [
+            0,
+            0,
+            4
+         ],
+         "AXFocused": false,
+         "rectangle": [
+            1194,
+            823,
+            87,
+            30
+         ],
+         "AXTitle": "Cancel",
+         "AXEnabled": true,
+         "AXRole": "AXButton"
+      },
+      {
+         "path": [
+            0,
+            0,
+            5
+         ],
+         "AXFocused": false,
+         "rectangle": [
+            1289,
+            823,
+            87,
+            30
+         ],
+         "AXTitle": "Save",
+         "AXEnabled": false,
+         "AXRole": "AXButton"
+      }
+   ],
+   "footer_assertion_passed": true,
+   "navigation_passed": true,
+   "quit_confirmation_seen": false,
+   "application_exit_code": 217,
+   "contact_count": 101,
+   "added_contact_columns": [
+      "my_call",
+      "my_continent",
+      "my_country",
+      "my_cq_zone",
+      "my_iota",
+      "my_itu_zone",
+      "my_park",
+      "my_section",
+      "my_source",
+      "rcvd_year",
+      "year_sent"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/Users/toms/tr4w-gui-test/run_mac_pilot.py\", line 257, in main\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
+   "original_contacts_unchanged": true,
+   "default_settings_unchanged": true,
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true,
+   "cleanup": "Only the owned TR4W process was stopped; bridge jobs exit individually",
+   "staged_release_restored": true
+}

@@ -1,0 +1,7 @@
+{
+   "app": "/Users/toms/Applications/TR4W GUI Runner.app",
+   "bundle_id": "net.tr4w.gui-pilot.runner",
+   "source_sha256": "cf1ac881ae3564afc9e63f025ad12e6852ba46be50d6396cf69d713a824117e1",
+   "executable_sha256": "4acfd4985e9480556b162ed309879d7b55c82c6161a927eb830af8d6ce541133",
+   "signature": "ad-hoc; no private signing identity used"
+}

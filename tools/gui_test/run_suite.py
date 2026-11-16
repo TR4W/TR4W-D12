@@ -11,6 +11,7 @@ import zipfile
 
 from stage_main_build import DEFAULT_EXE, GUEST_PYTHON, stage
 from vm_run import remote, ps_quote
+from fixture_data import snapshot_corpus_log
 
 
 CASES = {
@@ -80,26 +81,6 @@ OPT_IN_CASES = {"wizard-download", "wizard-callbook", "wizard-keyer"}
 # in the WORKING folder (DataFilePath), the shipped tier CTY.DAT and dom come
 # from, so it is staged into each run folder with them (prepare_fixture).
 CLUSTER_LIST = "TRCLUSTER.DAT"
-
-
-def snapshot_corpus_log(source, destination):
-   """A self-contained copy of a corpus log. The three files are copied to a
-   scratch folder first, so the corpus's own -wal/-shm are never written by a
-   reader, then backed up into one file."""
-   import shutil
-   import sqlite3
-   from contextlib import closing
-   scratch = destination.parent / (destination.stem + "-source")
-   scratch.mkdir(parents=True, exist_ok=True)
-   for suffix in ("", "-wal", "-shm"):
-      part = Path(str(source) + suffix)
-      if part.is_file():
-         shutil.copy2(part, scratch / (source.name + suffix))
-   with closing(sqlite3.connect(scratch / source.name)) as reader:
-      with closing(sqlite3.connect(destination)) as writer:
-         reader.backup(writer)
-   shutil.rmtree(scratch)
-   return destination
 
 
 def run_python(args, script, arguments):

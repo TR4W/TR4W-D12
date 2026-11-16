@@ -1,0 +1,19 @@
+{
+   "purpose": "Cocoa container enumeration with hidden-view filtering; not a release build",
+   "source_revision": "ed126e424ab57c735129234582fc03b597b146d2",
+   "source_tracked_diff": "",
+   "lazarus_revision": "62c14a4d18c81f222127d42ce9b89b922c63fcbf",
+   "lazarus_diff_stat": "lcl/interfaces/cocoa/cocoacustomcontrol.pas | 23 +++++++++++++++++++++++\n 1 file changed, 23 insertions(+)",
+   "lazarus_patch": "diff --git a/lcl/interfaces/cocoa/cocoacustomcontrol.pas b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\nindex 5d00ca54..fb0fa201 100644\n--- a/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n+++ b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n@@ -24,6 +24,7 @@ type\n   public\n     callback: ICommonCallback;\n     auxMouseByParent: Boolean;\n+   function accessibilityChildren: NSArray; override;\n     procedure dealloc; override;\n     function acceptsFirstResponder: LCLObjCBoolean; override;\n     procedure drawRect(dirtyRect: NSRect); override;\n@@ -91,6 +92,28 @@ implementation\n \n { TCocoaCustomControl }\n \n+function TCocoaCustomControl.accessibilityChildren: NSArray;\n+var\n+   ChildViews: NSArray;\n+   VisibleChildren: NSMutableArray;\n+   Child: NSView;\n+   I: NSInteger;\n+begin\n+   // NSControl does not enumerate child views by default. LCL uses this\n+   // class as a container. Preserve native hidden-view filtering.\n+   ChildViews := subviews;\n+   VisibleChildren := NSMutableArray.arrayWithCapacity(ChildViews.count);\n+   for I := 0 to NSInteger(ChildViews.count) - 1 do\n+      begin\n+      Child := NSView(ChildViews.objectAtIndex(I));\n+      if not Child.isHiddenOrHasHiddenAncestor then\n+         begin\n+         VisibleChildren.addObject(Child);\n+         end;\n+      end;\n+   Result := NSAccessibilityUnignoredChildren(VisibleChildren);\n+end;\n+\n procedure TCocoaCustomControl.setStringValue(avalue: NSString);\n begin\n   if Assigned(fstr) then fstr.release;\n",
+   "original_lazarus_tracked_status": "",
+   "fpc_version": "3.2.2",
+   "experimental_bundle": "/Users/toms/tr4w-gui-test/app/TR4W-ax-visible.app",
+   "signing": "ad-hoc; codesign deep/strict verified",
+   "original_release_executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+   "executable_sha256": "23ef2627830b13d02a346e0a58dcadb3155b10e194edcb24e1ce4405c3c8a654",
+   "build_logs": [
+      "lcl-ax-visible-build.log",
+      "tr4w-ax-visible-build.log"
+   ],
+   "patch_sha256": "fd25f3d00b289996134462fe4e14ab593126479a0010b10eb03af9577fdcaa30"
+}

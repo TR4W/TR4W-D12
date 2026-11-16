@@ -1,8 +1,21 @@
 # Windows GUI pilot
 
+For the native Linux GTK2 pilot, Debian setup, architecture and measured
+limitations, see [LINUX.md](LINUX.md). The Windows suite below remains Windows-only.
+For the mac-ci native bridge and required macOS permission setup, see
+[MACOS.md](MACOS.md).
+
+November 16 native milestone: Linux and Mac both pass the same isolated
+Preferences Cancel/Save/restart/restoration scenario, with three normal exits
+and unchanged original contacts. Linux also passes under GDB with no SIGSEGV
+stops. This uses identified private builds containing the small Preferences
+reload/search correction; Mac additionally uses the private Cocoa accessibility
+patch. It is one shared case, not parity with the Windows catalog below.
+See the platform guides for exact build identities, commands and evidence.
+
 ## Repeatable regression suite and turnover
 
-Read [GUI_TEST_HANDOFF.md](../../docs/GUI_TEST_HANDOFF.md) for the current coverage, known failures, VM setup, architecture, evidence archive and continuation tasks. From the repository root run `python tools/gui_test/run_suite.py --list`, select cases with repeatable `--case`, or omit it for all cases. The runner creates fresh fixtures and snapshots the user-selected main executable; it returns 0 for PASS, 1 for assertions, 2 for setup/driver errors and writes a per-suite JSON summary. Search remains unfinished and invalid-log switching currently fails (#306); the suite is not yet fully green. Eleven portable guards pass with `python -m unittest discover -s tools/gui_test -p "test_*.py"`.
+Read [GUI_TEST_HANDOFF.md](../../docs/GUI_TEST_HANDOFF.md) for the current coverage, known failures, VM setup, architecture, evidence archive and continuation tasks. From the repository root run `python tools/gui_test/run_suite.py --list`, select cases with repeatable `--case`, or omit it for all cases. The runner creates fresh fixtures and snapshots the user-selected main executable; it returns 0 for PASS, 1 for assertions, 2 for setup/driver errors and writes a per-suite JSON summary. Search remains unfinished and invalid-log switching currently fails (#306); the suite is not yet fully green. Nineteen portable guards pass with `python -m unittest discover -s tools/gui_test -p "test_*.py"`.
 
 The setup-wizard cases (`bench_setup_wizard.py`, its docstring is the detail) are `wizard-no`, `wizard-station`, `wizard-empty`, `wizard-hardware`, `wizard-tools`, `wizard-done-serial` and `wizard-done-network`, all offline (the last two save a radio on COM3 / at a dummy address in startup mode, where nothing is opened). Three more are **opt-in and never part of the default run** (`run_suite.OPT_IN_CASES`): `wizard-download` and `wizard-callbook` reach country-files.com and api.hamdb.org from the guest, and `wizard-keyer` **opens the guest's live WinKeyer on COM3** (host open and configuration only; no CW is sent). It requires the keyer to open in the same session as Create (one `Created WK thread` after the wizard opened, no keyer warn/error, main window status `WK3`), then runs Tools > Setup Wizard a **second** time with that keyer still open, creating `WinKeyer 2` on the same COM3: exactly one reopen, none of wkStop/wkStart's complaints (`already in progress`, `did not finish`, `did not exit`, `still running`), the first reader thread silent afterwards, two keyers stored with the Default profile on the second, and WK3 again after a restart. Second-pass evidence is in `second-pass/`. The WK status alone does not prove a reopen (the identity is not cleared on stop); the log lines do. Brand-new-install run folders also receive `TRCLUSTER.DAT`, which TR4W reads from the working folder beside `CTY.DAT`, so the cluster page's list can be picked from. Every hosted-page measurement records the window's `GetWindowRect` (judged) and DWM visible frame, the Back and Next/Create rectangles, and requires the work area to be `[0,0,1280,752]`; `wizard-tools` measures the modeless Radio page with no type, K4, FT-817 and FT-991 and then cancels; `wizard-hardware` presses Next after a mouse list pick (with port `abc`, so the server check is proven first and nothing is committed); `wizard-done-network` commits a mouse-picked list entry and checks the Done page and `clusters[]`.
 
@@ -14,7 +27,7 @@ For BENCH_QUEUE triage, use [GUI_BENCH_TEST_PLAN.md](../../docs/GUI_BENCH_TEST_P
 
 An explicitly selected existing binary may lack build-time source provenance. Its sidecar must say user-selected-existing-binary, match the executable SHA256, name the original executable path and explicitly leave SourceRevision null and SourceClean false. That is accepted as identified binary evidence; it is not a claim of certified source. Bitness, debug-link CRC and immutable archive checks still apply. Unknown source without this explicit identification remains rejected. Do not silently assign the current main commit to a binary built earlier.
 
-Screenshots use session.capture → window_capture.capture_window. The shared routine focuses the requested HWND, verifies it is foreground, obtains DWMWA_EXTENDED_FRAME_BOUNDS and captures that visible screen frame. This excludes the invisible resize margins included by pywinauto's GetWindowRect-based capture. The title bar, menus and actual compositor styling are retained. A foreground change fails the capture rather than accepting an obscured window. This is a visible-screen capture, not an off-screen renderer; keep the test desktop exclusive and the window restored. The VM's 96-DPI single-screen main window and message chooser were checked side by side against the old method. Mixed-DPI/multiple-screen operation is not certified.
+Screenshots use session.capture Ã¢â€ â€™ window_capture.capture_window. The shared routine focuses the requested HWND, verifies it is foreground, obtains DWMWA_EXTENDED_FRAME_BOUNDS and captures that visible screen frame. This excludes the invisible resize margins included by pywinauto's GetWindowRect-based capture. The title bar, menus and actual compositor styling are retained. A foreground change fails the capture rather than accepting an obscured window. This is a visible-screen capture, not an off-screen renderer; keep the test desktop exclusive and the window restored. The VM's 96-DPI single-screen main window and message chooser were checked side by side against the old method. Mixed-DPI/multiple-screen operation is not certified.
 
 Pillow's direct HWND capture was tested but omitted the title/menu in the installed version; a full PrintWindow trial changed title-bar styling. Neither is used for documentation. The chosen frame bounds follow [Microsoft's GetWindowRect guidance](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect). The diagnostic capture-check scenario saves old/new main and dialog images without changing message memories, then closes normally. Earlier screenshots are historical captures and are not automatically repaired by this change.
 
@@ -45,7 +58,7 @@ The older `tr4w/test/ui/Test-PreferencesSections.ps1` explicitly documents its o
 - Python 3.15.2 x64 installed for GUI-TEST, with a virtual environment at `%LOCALAPPDATA%\TR4W-Test\.venv`.
 - pywinauto 0.6.9, Pillow 13.0.0, pytest 9.2.0, comtypes 1.5.0, pywin32 312.
 - Official Microsoft Visual C++ x64 runtime. Without it, `import win32ui` failed because native runtime DLLs were missing. The Microsoft-signed redistributable fixed this; no arbitrary DLL copying or package patching was used.
-- Desktop 1280 × 800, 96 DPI. The homelab agent will address the larger documentation baseline separately.
+- Desktop 1280 Ãƒâ€” 800, 96 DPI. The homelab agent will address the larger documentation baseline separately.
 
 A virtual environment created from Python inside toms's private profile failed under GUI-TEST. Use the test account's interpreter or a properly installed shared runtime. Do not grant the worker access to another user's profile as a workaround.
 

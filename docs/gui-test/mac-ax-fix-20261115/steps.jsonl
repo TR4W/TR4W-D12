@@ -1,0 +1,12 @@
+{"utc": "2026-11-15T19:29:55.201912+00:00", "action": "launch owned Cocoa application", "state": "before", "detail": null}
+{"utc": "2026-11-15T19:29:55.208343+00:00", "action": "launch owned Cocoa application", "state": "after", "detail": null}
+{"utc": "2026-11-15T19:29:56.361795+00:00", "action": "capture Cocoa main window", "state": "before", "detail": null}
+{"utc": "2026-11-15T19:29:57.011619+00:00", "action": "capture Cocoa main window", "state": "after", "detail": null}
+{"utc": "2026-11-15T19:29:57.463797+00:00", "action": "open Preferences with Control+J", "state": "before", "detail": null}
+{"utc": "2026-11-15T19:29:57.633278+00:00", "action": "open Preferences with Control+J", "state": "after", "detail": null}
+{"utc": "2026-11-15T19:29:58.136042+00:00", "action": "capture Cocoa Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-15T19:29:58.782432+00:00", "action": "capture Cocoa Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-15T19:29:59.654237+00:00", "action": "dismiss Preferences with Escape", "state": "before", "detail": null}
+{"utc": "2026-11-15T19:29:59.771105+00:00", "action": "dismiss Preferences with Escape", "state": "after", "detail": null}
+{"utc": "2026-11-15T19:30:00.962911+00:00", "action": "request quit with Command+Q", "state": "before", "detail": null}
+{"utc": "2026-11-15T19:30:01.124829+00:00", "action": "request quit with Command+Q", "state": "after", "detail": null}

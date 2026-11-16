@@ -56,6 +56,18 @@ def file_digest(path, crc=False):
    return value & 0xFFFFFFFF if crc else value.hexdigest()
 
 
+def native_build_identity(executable, record_path=None):
+   identity = {"executable_sha256": file_digest(executable), "source_revision": None,
+      "provenance": "user-staged-release-binary"}
+   if record_path is not None:
+      record = json.loads(Path(record_path).read_text(encoding="utf-8"))
+      if record["executable_sha256"] != identity["executable_sha256"]:
+         raise RuntimeError("Build record does not match the staged executable")
+      identity.update(build_record=record, source_revision=record["source_revision"],
+         provenance=record.get("provenance", "experimental-private-toolchain-build"))
+   return identity
+
+
 def preserve_generated_file(source, destination, previous_mtime_ns):
    source = Path(source)
    before = source.stat()

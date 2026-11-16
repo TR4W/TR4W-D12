@@ -1,0 +1,37 @@
+TR4W darwin build -- aarch64-darwin
+repo: /Users/toms/tr4w-gui-test/source/tr4w-prefs-4547b911
+
+=== Toolchain ===
+  FPC       : /Users/toms/fpcupdeluxe/fpc/bin/aarch64-darwin/fpc (3.2.2)
+  Lazarus   : /Users/toms/tr4w-gui-test/toolchain/lazarus-ax-fix
+  widgetset : cocoa
+
+=== Version ===
+  TR4W 5.0.40 (from src/Version.pas)
+
+=== Language catalogues ===
+  check-language-res: tr4w_languages.res is current (21 catalogues).
+
+=== Application ===
+  log      : /Users/toms/tr4w-gui-test/source/tr4w-prefs-4547b911/build-out/app-build.log
+  errors   : 0
+  OK -> /Users/toms/tr4w-gui-test/source/tr4w-prefs-4547b911/build-out/app-aarch64-darwin/tr4w (38853 KB)
+
+=== Gates NOT run on Linux ===
+  build/Run-Lints.ps1        no pwsh on this machine (10 lints)
+  test/ui/Invoke-FieldCheck  drives the Windows binary
+  version stamp check        no PE version resource on ELF
+  manifest verification      no side-by-side assemblies on Linux
+  DLL architecture check     no bundled DLLs; ELF loader reports this
+  server LCL/sqlite guard    /etc/fpc.cfg supplies the package units to
+                             every compile via its -Fu wildcard, so the
+                             Windows search-path guard has no effect
+                             here.  Do not read a green server build as
+                             evidence the boundary held.
+
+=== Summary -- TR4W 5.0.40 for aarch64-darwin ===
+  PASS  languages               tr4w_languages.res matches the catalogues
+  PASS  app                     /Users/toms/tr4w-gui-test/source/tr4w-prefs-4547b911/build-out/app-aarch64-darwin/tr4w
+
+ALL STAGES PASSED.
+Note the gates listed above did NOT run -- this is not a shippable build.

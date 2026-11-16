@@ -1,0 +1,77 @@
+diff --git a/tr4w/src/ui/lcl/uPrefsForm.pas b/tr4w/src/ui/lcl/uPrefsForm.pas
+index 94028b8c..8cb56aef 100644
+--- a/tr4w/src/ui/lcl/uPrefsForm.pas
++++ b/tr4w/src/ui/lcl/uPrefsForm.pas
+@@ -2259,6 +2259,9 @@ begin
+    FSearchList.Parent   := Self;
+    FSearchList.Visible  := False;
+    FSearchList.TabStop  := False;   // Tab must skip it: focus belongs to the box
++   // Highlighting a result while typing is not an activation. Cocoa reports
++   // programmatic selections too; only a real click or Return may choose it.
++   FSearchList.ClickOnSelChange := False;
+    FSearchList.SetBounds(4, 28, 430, 200);
+    FSearchList.Style       := lbOwnerDrawFixed;   // ItemHeight is only honoured here
+    FSearchList.ItemHeight  := 26;                 // room to breathe; the default is font-tall
+@@ -3699,6 +3702,13 @@ var
+    total, i: integer;
+    host: TPanel;
+ begin
++   // A pending search focus must not outlive the controls it names.
++   if FFocusTimer <> nil then
++      begin
++      FFocusTimer.Enabled := False;
++      end;
++   FPendingFocus := nil;
++
+    // IDEMPOTENT, because BuildBindings runs again every time the form reloads --
+    // Cancel is the obvious one. Without this the second pass tried to create
+    // `gen_contest_autoQslInterval` a second time and the LCL raised
+@@ -3787,6 +3797,10 @@ begin
+ 
+    CheckEveryInventoriedSettingHasOneEditor;
+ 
++   // Rebuilt pages start hidden. The selected tree node did not change, so
++   // reapply the existing navigation rule to show its replacement page.
++   tvNavChange(tvNav);
++
+    logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
+ end;
+ 
+@@ -4743,6 +4757,9 @@ begin
+       // "this label belongs to that control" -- no parallel array, and a click
+       // on the caption now lands in the field as it does everywhere else.
+       lbl.FocusControl := ctl;
++      // Cancel rebuilds these controls after the constructor's blanket walk.
++      // Attach the shared dirty hook to each new control, on every rebuild.
++      HookDirtyMarker(ctl);
+ 
+       if ro then
+          begin
+@@ -5494,6 +5511,7 @@ end;
+ procedure TPrefsForm.FocusTimerTick(Sender: TObject);
+ var
+    ctl: TWinControl;
++   activeName: string;
+ begin
+    ctl := FPendingFocus;
+ 
+@@ -5545,13 +5563,18 @@ begin
+       begin
+       FFocusTimer.Enabled := False;
+       FPendingFocus       := nil;
++      activeName := '<none>';
++      if ActiveControl <> nil then
++         begin
++         activeName := ActiveControl.Name;
++         end;
+       // NOT silent.  A setting the operator searched for and cannot type into
+       // is exactly the failure this whole mechanism exists to prevent.
+       logger.Warn('[Prefs] gave up focusing %s after %d attempts ' +
+                   '(canfocus=%s, active=%s)',
+                   [ctl.Name, FFocusTries,
+                    BoolToStr(ctl.CanFocus, True),
+-                   IfThen(ActiveControl <> nil, ActiveControl.Name, '<none>')]);
++                   activeName]);
+       end;
+ end;
+ 

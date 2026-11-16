@@ -1,0 +1,873 @@
+{
+   "passed": true,
+   "checks": [
+      "Practice log opened and main window captured",
+      "Cocoa AX exposes clean Preferences footer with disabled Save",
+      "Escape dismissed Preferences",
+      "Keyboard activated clean Cancel and dismissed Preferences",
+      "Keyboard activated clean Save and close and dismissed Preferences",
+      "Original contact fields unchanged on exit",
+      "Normal application exit"
+   ],
+   "failures": [],
+   "run": "/Users/toms/tr4w-gui-test/runs/mac-fixed-smoke-001",
+   "case": "smoke",
+   "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
+   "provenance": "private-source-patch-build",
+   "executable_sha256": "6ec80b837e2c9f2a9643ef69308cdea93a5f751caa041ae39ba2a9cb803aafc6",
+   "build_record": {
+      "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
+      "provenance": "private-source-patch-build",
+      "source_patch_sha256": "01a9caf49d22dcc951ee672eef55b7f3dcebf724572e5d54266d65eeeb1b84ec",
+      "source_diff": "tr4w/src/ui/lcl/uPrefsForm.pas | 22 +++++++++++++++++++++-\n 1 file changed, 21 insertions(+), 1 deletion(-)",
+      "lazarus_revision": "62c14a4d18c81f222127d42ce9b89b922c63fcbf",
+      "lazarus_diff": "diff --git a/lcl/interfaces/cocoa/cocoacustomcontrol.pas b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\nindex 5d00ca54..fb0fa201 100644\n--- a/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n+++ b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n@@ -24,6 +24,7 @@ type\n   public\n     callback: ICommonCallback;\n     auxMouseByParent: Boolean;\n+   function accessibilityChildren: NSArray; override;\n     procedure dealloc; override;\n     function acceptsFirstResponder: LCLObjCBoolean; override;\n     procedure drawRect(dirtyRect: NSRect); override;\n@@ -91,6 +92,28 @@ implementation\n \n { TCocoaCustomControl }\n \n+function TCocoaCustomControl.accessibilityChildren: NSArray;\n+var\n+   ChildViews: NSArray;\n+   VisibleChildren: NSMutableArray;\n+   Child: NSView;\n+   I: NSInteger;\n+begin\n+   // NSControl does not enumerate child views by default. LCL uses this\n+   // class as a container. Preserve native hidden-view filtering.\n+   ChildViews := subviews;\n+   VisibleChildren := NSMutableArray.arrayWithCapacity(ChildViews.count);\n+   for I := 0 to NSInteger(ChildViews.count) - 1 do\n+      begin\n+      Child := NSView(ChildViews.objectAtIndex(I));\n+      if not Child.isHiddenOrHasHiddenAncestor then\n+         begin\n+         VisibleChildren.addObject(Child);\n+         end;\n+      end;\n+   Result := NSAccessibilityUnignoredChildren(VisibleChildren);\n+end;\n+\n procedure TCocoaCustomControl.setStringValue(avalue: NSString);\n begin\n   if Assigned(fstr) then fstr.release;\n",
+      "fpc_version": "3.2.2",
+      "resource_artifact_run": 43776700899,
+      "executable_sha256": "6ec80b837e2c9f2a9643ef69308cdea93a5f751caa041ae39ba2a9cb803aafc6",
+      "bundle": "/Users/toms/tr4w-gui-test/app/TR4W-prefs-4547.app",
+      "signature": "ad-hoc; deep/strict verified"
+   },
+   "console": {
+      "on_console": true,
+      "login_done": true,
+      "screen_locked": false,
+      "ready": true
+   },
+   "runner_identity": {
+      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "bundle_id": "net.tr4w.gui-pilot",
+      "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
+      "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "permissions": {
+      "accessibility": 1,
+      "bundle_id": "net.tr4w.gui-pilot",
+      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "screen_recording": true,
+      "pid": 26268
+   },
+   "probe_identity": {
+      "app": "/Users/toms/Applications/TR4W AX Probe.app",
+      "bundle_id": "net.tr4w.gui-pilot.ax-probe",
+      "source_sha256": "8c8a2637bdded928456796a2a4ddbed2c1a34ef90e41ed508d5327f8d6797c58",
+      "executable_sha256": "ce2b843ccf00eb9fbd158fd1eef9a04eec8f7cbd0ebfc58123f4afa15a738dc0",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "probe_permissions": {
+      "accessibility": 1,
+      "probe_only": 1,
+      "bundle_id": "net.tr4w.gui-pilot.ax-probe",
+      "screen_recording": 0,
+      "executable": "/Users/toms/Applications/TR4W AX Probe.app/Contents/MacOS/tr4w-gui-pilot",
+      "pid": 26270
+   },
+   "pid": 26272,
+   "application_pids": [
+      26272
+   ],
+   "main_window": {
+      "kCGWindowName": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "kCGWindowLayer": 0,
+      "kCGWindowMemoryUsage": 2432,
+      "kCGWindowIsOnscreen": true,
+      "kCGWindowSharingState": 1,
+      "kCGWindowOwnerPID": 26272,
+      "kCGWindowOwnerName": "TR4W",
+      "kCGWindowNumber": 221,
+      "kCGWindowStoreType": 1,
+      "kCGWindowBounds": {
+         "X": 569,
+         "Height": 420,
+         "Y": 100,
+         "Width": 782
+      },
+      "kCGWindowAlpha": 1
+   },
+   "ax_hit_tests": [
+      {
+         "point": [
+            1131,
+            838
+         ],
+         "status": 0,
+         "ancestors": [
+            {
+               "id": 0,
+               "action_names_status": 0,
+               "supported_actions": [
+                  "AXPress"
+               ],
+               "AXEnabled": true,
+               "AXFocused": false,
+               "attribute_errors": {
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXDescription": -25205
+               },
+               "AXRole": "AXButton",
+               "supported_attributes": [
+                  "AXEnabled",
+                  "AXFrame",
+                  "AXParent",
+                  "AXSize",
+                  "AXFocused",
+                  "AXRole",
+                  "AXTopLevelUIElement",
+                  "AXHelp",
+                  "AXPosition",
+                  "AXTitle",
+                  "AXWindow",
+                  "AXRoleDescription"
+               ],
+               "path": [],
+               "rectangle": [
+                  1077,
+                  823,
+                  109,
+                  30
+               ],
+               "AXTitle": "Save and close",
+               "attribute_names_status": 0
+            },
+            {
+               "AXRole": "AXScrollArea",
+               "attribute_names_status": 0,
+               "action_names_status": 0,
+               "id": 1,
+               "attribute_errors": {
+                  "AXDescription": -25205,
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXTitle": -25205,
+                  "AXEnabled": -25205
+               },
+               "supported_actions": [
+                  "AXScrollLeftByPage",
+                  "AXScrollRightByPage",
+                  "AXScrollUpByPage",
+                  "AXScrollDownByPage"
+               ],
+               "supported_attributes": [
+                  "AXHorizontalScrollBar",
+                  "AXFrame",
+                  "AXMakeScreenRectVisible",
+                  "AXParent",
+                  "AXChildren",
+                  "AXFocused",
+                  "AXSize",
+                  "AXRole",
+                  "AXTopLevelUIElement",
+                  "AXContentSize",
+                  "AXHelp",
+                  "AXChildrenInNavigationOrder",
+                  "AXPosition",
+                  "AXWindow",
+                  "AXRoleDescription",
+                  "AXVerticalScrollBar",
+                  "AXContents"
+               ],
+               "rectangle": [
+                  530,
+                  244,
+                  860,
+                  620
+               ],
+               "AXFocused": false,
+               "path": []
+            },
+            {
+               "id": 2,
+               "action_names_status": 0,
+               "supported_actions": [
+                  "AXRaise"
+               ],
+               "AXFocused": false,
+               "attribute_errors": {
+                  "AXValue": -25205,
+                  "AXEnabled": -25205,
+                  "AXDescription": -25205
+               },
+               "AXRole": "AXWindow",
+               "supported_attributes": [
+                  "AXFocused",
+                  "AXFullScreen",
+                  "AXTitle",
+                  "AXChildrenInNavigationOrder",
+                  "AXFrame",
+                  "AXPosition",
+                  "AXGrowArea",
+                  "AXMinimizeButton",
+                  "AXDocument",
+                  "AXSections",
+                  "AXCloseButton",
+                  "AXMain",
+                  "AXActivationPoint",
+                  "AXFullScreenButton",
+                  "AXProxy",
+                  "AXDefaultButton",
+                  "AXMinimized",
+                  "AXChildren",
+                  "AXRole",
+                  "AXParent",
+                  "AXTitleUIElement",
+                  "AXCancelButton",
+                  "AXModal",
+                  "AXSubrole",
+                  "AXZoomButton",
+                  "AXRoleDescription",
+                  "AXSize",
+                  "AXToolbarButton"
+               ],
+               "path": [],
+               "rectangle": [
+                  530,
+                  216,
+                  860,
+                  648
+               ],
+               "AXTitle": "TR4W Preferences",
+               "AXSubrole": "AXStandardWindow",
+               "attribute_names_status": 0
+            },
+            {
+               "AXRole": "AXApplication",
+               "attribute_names_status": 0,
+               "action_names_status": 0,
+               "id": 3,
+               "attribute_errors": {
+                  "AXSize": -25205,
+                  "AXEnabled": -25205,
+                  "AXDescription": -25205,
+                  "AXFocused": -25205,
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXParent": -25205,
+                  "AXPosition": -25205
+               },
+               "supported_actions": [],
+               "supported_attributes": [
+                  "AXFunctionRowTopLevelElements",
+                  "AXFrame",
+                  "AXChildren",
+                  "AXFocusedUIElement",
+                  "AXFrontmost",
+                  "AXRole",
+                  "AXExtrasMenuBar",
+                  "AXMainWindow",
+                  "AXFocusedWindow",
+                  "AXTitle",
+                  "AXChildrenInNavigationOrder",
+                  "AXEnhancedUserInterface",
+                  "AXPreferredLanguage",
+                  "AXRoleDescription",
+                  "AXHidden",
+                  "AXMenuBar",
+                  "AXWindows",
+                  "AXSize",
+                  "AXPosition"
+               ],
+               "AXTitle": "TR4W",
+               "path": []
+            }
+         ]
+      },
+      {
+         "point": [
+            1238,
+            838
+         ],
+         "status": 0,
+         "ancestors": [
+            {
+               "id": 0,
+               "action_names_status": 0,
+               "supported_actions": [
+                  "AXPress"
+               ],
+               "AXEnabled": true,
+               "AXFocused": false,
+               "attribute_errors": {
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXDescription": -25205
+               },
+               "AXRole": "AXButton",
+               "supported_attributes": [
+                  "AXEnabled",
+                  "AXFrame",
+                  "AXParent",
+                  "AXSize",
+                  "AXFocused",
+                  "AXRole",
+                  "AXTopLevelUIElement",
+                  "AXHelp",
+                  "AXPosition",
+                  "AXTitle",
+                  "AXWindow",
+                  "AXRoleDescription"
+               ],
+               "path": [],
+               "rectangle": [
+                  1194,
+                  823,
+                  87,
+                  30
+               ],
+               "AXTitle": "Cancel",
+               "attribute_names_status": 0
+            },
+            {
+               "AXRole": "AXScrollArea",
+               "attribute_names_status": 0,
+               "action_names_status": 0,
+               "id": 1,
+               "attribute_errors": {
+                  "AXDescription": -25205,
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXTitle": -25205,
+                  "AXEnabled": -25205
+               },
+               "supported_actions": [
+                  "AXScrollLeftByPage",
+                  "AXScrollRightByPage",
+                  "AXScrollUpByPage",
+                  "AXScrollDownByPage"
+               ],
+               "supported_attributes": [
+                  "AXHorizontalScrollBar",
+                  "AXFrame",
+                  "AXMakeScreenRectVisible",
+                  "AXParent",
+                  "AXChildren",
+                  "AXFocused",
+                  "AXSize",
+                  "AXRole",
+                  "AXTopLevelUIElement",
+                  "AXContentSize",
+                  "AXHelp",
+                  "AXChildrenInNavigationOrder",
+                  "AXPosition",
+                  "AXWindow",
+                  "AXRoleDescription",
+                  "AXVerticalScrollBar",
+                  "AXContents"
+               ],
+               "rectangle": [
+                  530,
+                  244,
+                  860,
+                  620
+               ],
+               "AXFocused": false,
+               "path": []
+            },
+            {
+               "id": 2,
+               "action_names_status": 0,
+               "supported_actions": [
+                  "AXRaise"
+               ],
+               "AXFocused": false,
+               "attribute_errors": {
+                  "AXValue": -25205,
+                  "AXEnabled": -25205,
+                  "AXDescription": -25205
+               },
+               "AXRole": "AXWindow",
+               "supported_attributes": [
+                  "AXFocused",
+                  "AXFullScreen",
+                  "AXTitle",
+                  "AXChildrenInNavigationOrder",
+                  "AXFrame",
+                  "AXPosition",
+                  "AXGrowArea",
+                  "AXMinimizeButton",
+                  "AXDocument",
+                  "AXSections",
+                  "AXCloseButton",
+                  "AXMain",
+                  "AXActivationPoint",
+                  "AXFullScreenButton",
+                  "AXProxy",
+                  "AXDefaultButton",
+                  "AXMinimized",
+                  "AXChildren",
+                  "AXRole",
+                  "AXParent",
+                  "AXTitleUIElement",
+                  "AXCancelButton",
+                  "AXModal",
+                  "AXSubrole",
+                  "AXZoomButton",
+                  "AXRoleDescription",
+                  "AXSize",
+                  "AXToolbarButton"
+               ],
+               "path": [],
+               "rectangle": [
+                  530,
+                  216,
+                  860,
+                  648
+               ],
+               "AXTitle": "TR4W Preferences",
+               "AXSubrole": "AXStandardWindow",
+               "attribute_names_status": 0
+            },
+            {
+               "AXRole": "AXApplication",
+               "attribute_names_status": 0,
+               "action_names_status": 0,
+               "id": 3,
+               "attribute_errors": {
+                  "AXSize": -25205,
+                  "AXEnabled": -25205,
+                  "AXDescription": -25205,
+                  "AXFocused": -25205,
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXParent": -25205,
+                  "AXPosition": -25205
+               },
+               "supported_actions": [],
+               "supported_attributes": [
+                  "AXFunctionRowTopLevelElements",
+                  "AXFrame",
+                  "AXChildren",
+                  "AXFocusedUIElement",
+                  "AXFrontmost",
+                  "AXRole",
+                  "AXExtrasMenuBar",
+                  "AXMainWindow",
+                  "AXFocusedWindow",
+                  "AXTitle",
+                  "AXChildrenInNavigationOrder",
+                  "AXEnhancedUserInterface",
+                  "AXPreferredLanguage",
+                  "AXRoleDescription",
+                  "AXHidden",
+                  "AXMenuBar",
+                  "AXWindows",
+                  "AXSize",
+                  "AXPosition"
+               ],
+               "AXTitle": "TR4W",
+               "path": []
+            }
+         ]
+      },
+      {
+         "point": [
+            1332,
+            838
+         ],
+         "status": 0,
+         "ancestors": [
+            {
+               "id": 0,
+               "action_names_status": 0,
+               "supported_actions": [
+                  "AXPress"
+               ],
+               "AXEnabled": false,
+               "AXFocused": false,
+               "attribute_errors": {
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXDescription": -25205
+               },
+               "AXRole": "AXButton",
+               "supported_attributes": [
+                  "AXEnabled",
+                  "AXFrame",
+                  "AXParent",
+                  "AXSize",
+                  "AXFocused",
+                  "AXRole",
+                  "AXTopLevelUIElement",
+                  "AXHelp",
+                  "AXPosition",
+                  "AXTitle",
+                  "AXWindow",
+                  "AXRoleDescription"
+               ],
+               "path": [],
+               "rectangle": [
+                  1289,
+                  823,
+                  87,
+                  30
+               ],
+               "AXTitle": "Save",
+               "attribute_names_status": 0
+            },
+            {
+               "AXRole": "AXScrollArea",
+               "attribute_names_status": 0,
+               "action_names_status": 0,
+               "id": 1,
+               "attribute_errors": {
+                  "AXDescription": -25205,
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXTitle": -25205,
+                  "AXEnabled": -25205
+               },
+               "supported_actions": [
+                  "AXScrollLeftByPage",
+                  "AXScrollRightByPage",
+                  "AXScrollUpByPage",
+                  "AXScrollDownByPage"
+               ],
+               "supported_attributes": [
+                  "AXHorizontalScrollBar",
+                  "AXFrame",
+                  "AXMakeScreenRectVisible",
+                  "AXParent",
+                  "AXChildren",
+                  "AXFocused",
+                  "AXSize",
+                  "AXRole",
+                  "AXTopLevelUIElement",
+                  "AXContentSize",
+                  "AXHelp",
+                  "AXChildrenInNavigationOrder",
+                  "AXPosition",
+                  "AXWindow",
+                  "AXRoleDescription",
+                  "AXVerticalScrollBar",
+                  "AXContents"
+               ],
+               "rectangle": [
+                  530,
+                  244,
+                  860,
+                  620
+               ],
+               "AXFocused": false,
+               "path": []
+            },
+            {
+               "id": 2,
+               "action_names_status": 0,
+               "supported_actions": [
+                  "AXRaise"
+               ],
+               "AXFocused": false,
+               "attribute_errors": {
+                  "AXValue": -25205,
+                  "AXEnabled": -25205,
+                  "AXDescription": -25205
+               },
+               "AXRole": "AXWindow",
+               "supported_attributes": [
+                  "AXFocused",
+                  "AXFullScreen",
+                  "AXTitle",
+                  "AXChildrenInNavigationOrder",
+                  "AXFrame",
+                  "AXPosition",
+                  "AXGrowArea",
+                  "AXMinimizeButton",
+                  "AXDocument",
+                  "AXSections",
+                  "AXCloseButton",
+                  "AXMain",
+                  "AXActivationPoint",
+                  "AXFullScreenButton",
+                  "AXProxy",
+                  "AXDefaultButton",
+                  "AXMinimized",
+                  "AXChildren",
+                  "AXRole",
+                  "AXParent",
+                  "AXTitleUIElement",
+                  "AXCancelButton",
+                  "AXModal",
+                  "AXSubrole",
+                  "AXZoomButton",
+                  "AXRoleDescription",
+                  "AXSize",
+                  "AXToolbarButton"
+               ],
+               "path": [],
+               "rectangle": [
+                  530,
+                  216,
+                  860,
+                  648
+               ],
+               "AXTitle": "TR4W Preferences",
+               "AXSubrole": "AXStandardWindow",
+               "attribute_names_status": 0
+            },
+            {
+               "AXRole": "AXApplication",
+               "attribute_names_status": 0,
+               "action_names_status": 0,
+               "id": 3,
+               "attribute_errors": {
+                  "AXSize": -25205,
+                  "AXEnabled": -25205,
+                  "AXDescription": -25205,
+                  "AXFocused": -25205,
+                  "AXSubrole": -25205,
+                  "AXValue": -25205,
+                  "AXParent": -25205,
+                  "AXPosition": -25205
+               },
+               "supported_actions": [],
+               "supported_attributes": [
+                  "AXFunctionRowTopLevelElements",
+                  "AXFrame",
+                  "AXChildren",
+                  "AXFocusedUIElement",
+                  "AXFrontmost",
+                  "AXRole",
+                  "AXExtrasMenuBar",
+                  "AXMainWindow",
+                  "AXFocusedWindow",
+                  "AXTitle",
+                  "AXChildrenInNavigationOrder",
+                  "AXEnhancedUserInterface",
+                  "AXPreferredLanguage",
+                  "AXRoleDescription",
+                  "AXHidden",
+                  "AXMenuBar",
+                  "AXWindows",
+                  "AXSize",
+                  "AXPosition"
+               ],
+               "AXTitle": "TR4W",
+               "path": []
+            }
+         ]
+      }
+   ],
+   "post_hit_button_titles": [
+      "Save and close",
+      "Cancel",
+      "Save"
+   ],
+   "footer": [
+      {
+         "id": 40,
+         "action_names_status": 0,
+         "supported_actions": [
+            "AXPress"
+         ],
+         "AXEnabled": true,
+         "AXFocused": false,
+         "attribute_errors": {
+            "AXChildrenInNavigationOrder": -25205,
+            "AXChildren": -25212,
+            "AXDescription": -25205,
+            "AXVisibleChildren": -25205,
+            "AXContents": -25205,
+            "AXSubrole": -25205,
+            "AXWindows": -25205,
+            "AXValue": -25205
+         },
+         "AXRole": "AXButton",
+         "supported_attributes": [
+            "AXEnabled",
+            "AXFrame",
+            "AXParent",
+            "AXSize",
+            "AXFocused",
+            "AXRole",
+            "AXTopLevelUIElement",
+            "AXHelp",
+            "AXPosition",
+            "AXTitle",
+            "AXWindow",
+            "AXRoleDescription"
+         ],
+         "path": [
+            0,
+            0,
+            3
+         ],
+         "rectangle": [
+            1077,
+            823,
+            109,
+            30
+         ],
+         "AXTitle": "Save and close",
+         "links": [],
+         "attribute_names_status": 0
+      },
+      {
+         "id": 41,
+         "action_names_status": 0,
+         "supported_actions": [
+            "AXPress"
+         ],
+         "AXEnabled": true,
+         "AXFocused": false,
+         "attribute_errors": {
+            "AXChildrenInNavigationOrder": -25205,
+            "AXChildren": -25212,
+            "AXDescription": -25205,
+            "AXVisibleChildren": -25205,
+            "AXContents": -25205,
+            "AXSubrole": -25205,
+            "AXWindows": -25205,
+            "AXValue": -25205
+         },
+         "AXRole": "AXButton",
+         "supported_attributes": [
+            "AXEnabled",
+            "AXFrame",
+            "AXParent",
+            "AXSize",
+            "AXFocused",
+            "AXRole",
+            "AXTopLevelUIElement",
+            "AXHelp",
+            "AXPosition",
+            "AXTitle",
+            "AXWindow",
+            "AXRoleDescription"
+         ],
+         "path": [
+            0,
+            0,
+            4
+         ],
+         "rectangle": [
+            1194,
+            823,
+            87,
+            30
+         ],
+         "AXTitle": "Cancel",
+         "links": [],
+         "attribute_names_status": 0
+      },
+      {
+         "id": 42,
+         "action_names_status": 0,
+         "supported_actions": [
+            "AXPress"
+         ],
+         "AXEnabled": false,
+         "AXFocused": false,
+         "attribute_errors": {
+            "AXChildrenInNavigationOrder": -25205,
+            "AXChildren": -25212,
+            "AXDescription": -25205,
+            "AXVisibleChildren": -25205,
+            "AXContents": -25205,
+            "AXSubrole": -25205,
+            "AXWindows": -25205,
+            "AXValue": -25205
+         },
+         "AXRole": "AXButton",
+         "supported_attributes": [
+            "AXEnabled",
+            "AXFrame",
+            "AXParent",
+            "AXSize",
+            "AXFocused",
+            "AXRole",
+            "AXTopLevelUIElement",
+            "AXHelp",
+            "AXPosition",
+            "AXTitle",
+            "AXWindow",
+            "AXRoleDescription"
+         ],
+         "path": [
+            0,
+            0,
+            5
+         ],
+         "rectangle": [
+            1289,
+            823,
+            87,
+            30
+         ],
+         "AXTitle": "Save",
+         "links": [],
+         "attribute_names_status": 0
+      }
+   ],
+   "footer_assertion_passed": true,
+   "footer_actions": [
+      {
+         "caption": "Cancel",
+         "focus": {
+            "path": [
+               0,
+               0,
+               4
+            ],
+            "AXFocused": true,
+            "rectangle": [
+               1194,
+               823,
+               87,
+               30
+            ],
+            "AXTitle": "Cancel",
+            "AXEnabled": true,
+            "AXRole": "AXButton"
+         },
+         "tabs": 1
+      },
+      {
+         "caption": "Save and close",
+         "focus": {
+            "path": [
+               0,
+               0,
+               3
+            ],
+            "AXFocused": true,
+            "rectangle": [
+               1077,
+               823,
+               109,
+               30
+            ],
+            "AXTitle": "Save and close",
+            "AXEnabled": true,
+            "AXRole": "AXButton"
+         },
+         "tabs": 2
+      }
+   ],
+   "navigation_passed": true,
+   "quit_confirmation_seen": false,
+   "application_exit_code": 0,
+   "application_exit_codes": [
+      0
+   ],
+   "contact_count": 101,
+   "added_contact_columns": [
+      "my_call",
+      "my_continent",
+      "my_country",
+      "my_cq_zone",
+      "my_iota",
+      "my_itu_zone",
+      "my_park",
+      "my_section",
+      "my_source",
+      "rcvd_year",
+      "year_sent"
+   ],
+   "original_contacts_unchanged": true,
+   "default_settings_unchanged": true,
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true,
+   "cleanup": "Only the owned TR4W process was stopped; bridge jobs exit individually",
+   "staged_release_restored": true
+}

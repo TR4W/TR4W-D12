@@ -1,0 +1,2 @@
+# Preserve the archived patches' native line endings when checked out.
+*.patch text eol=lf

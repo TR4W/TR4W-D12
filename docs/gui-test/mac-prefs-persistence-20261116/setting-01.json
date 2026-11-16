@@ -1,0 +1,1548 @@
+[
+   {
+      "id": 1,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXRaise"
+      ],
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXDescription": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205,
+         "AXEnabled": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXWindow",
+      "supported_attributes": [
+         "AXFocused",
+         "AXFullScreen",
+         "AXTitle",
+         "AXChildrenInNavigationOrder",
+         "AXFrame",
+         "AXPosition",
+         "AXGrowArea",
+         "AXMinimizeButton",
+         "AXDocument",
+         "AXSections",
+         "AXCloseButton",
+         "AXMain",
+         "AXActivationPoint",
+         "AXFullScreenButton",
+         "AXProxy",
+         "AXDefaultButton",
+         "AXMinimized",
+         "AXChildren",
+         "AXRole",
+         "AXParent",
+         "AXTitleUIElement",
+         "AXCancelButton",
+         "AXModal",
+         "AXSubrole",
+         "AXZoomButton",
+         "AXRoleDescription",
+         "AXSize",
+         "AXToolbarButton"
+      ],
+      "path": [
+         0
+      ],
+      "rectangle": [
+         530,
+         216,
+         860,
+         648
+      ],
+      "AXTitle": "TR4W Preferences",
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 2
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildren",
+            "target": 19
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildren",
+            "target": 20
+         },
+         {
+            "index": 3,
+            "attribute": "AXChildren",
+            "target": 23
+         },
+         {
+            "index": 4,
+            "attribute": "AXChildren",
+            "target": 24
+         },
+         {
+            "index": 5,
+            "attribute": "AXChildren",
+            "target": 25
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 19
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 23
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 20
+         },
+         {
+            "index": 3,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 24
+         },
+         {
+            "index": 4,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 25
+         },
+         {
+            "index": 5,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 2
+         }
+      ],
+      "AXSubrole": "AXStandardWindow",
+      "attribute_names_status": 0
+   },
+   {
+      "AXRole": "AXScrollArea",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 2,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXValue": -25205
+      },
+      "supported_actions": [
+         "AXScrollLeftByPage",
+         "AXScrollRightByPage",
+         "AXScrollUpByPage",
+         "AXScrollDownByPage"
+      ],
+      "supported_attributes": [
+         "AXHorizontalScrollBar",
+         "AXFrame",
+         "AXMakeScreenRectVisible",
+         "AXParent",
+         "AXChildren",
+         "AXFocused",
+         "AXSize",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXContentSize",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXVerticalScrollBar",
+         "AXContents"
+      ],
+      "rectangle": [
+         530,
+         244,
+         860,
+         620
+      ],
+      "AXFocused": false,
+      "path": [
+         0,
+         0
+      ],
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 3
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildren",
+            "target": 4
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildren",
+            "target": 11
+         },
+         {
+            "index": 3,
+            "attribute": "AXChildren",
+            "target": 16
+         },
+         {
+            "index": 4,
+            "attribute": "AXChildren",
+            "target": 17
+         },
+         {
+            "index": 5,
+            "attribute": "AXChildren",
+            "target": 18
+         },
+         {
+            "index": 0,
+            "attribute": "AXContents",
+            "target": 3
+         },
+         {
+            "index": 1,
+            "attribute": "AXContents",
+            "target": 4
+         },
+         {
+            "index": 2,
+            "attribute": "AXContents",
+            "target": 11
+         },
+         {
+            "index": 3,
+            "attribute": "AXContents",
+            "target": 16
+         },
+         {
+            "index": 4,
+            "attribute": "AXContents",
+            "target": 17
+         },
+         {
+            "index": 5,
+            "attribute": "AXContents",
+            "target": 18
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 3
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 4
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 11
+         },
+         {
+            "index": 3,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 16
+         },
+         {
+            "index": 4,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 17
+         },
+         {
+            "index": 5,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 18
+         }
+      ]
+   },
+   {
+      "id": 3,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXShowMenu",
+         "AXConfirm"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXDescription": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXTitle": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXTextField",
+      "supported_attributes": [
+         "AXFocused",
+         "AXFrame",
+         "AXChildrenInNavigationOrder",
+         "AXSelectedText",
+         "AXInsertionPointLineNumber",
+         "AXPosition",
+         "AXNumberOfCharacters",
+         "AXEnabled",
+         "AXPlaceholderValue",
+         "AXSelectedTextRange",
+         "AXHelp",
+         "AXChildren",
+         "AXRole",
+         "AXParent",
+         "AXTopLevelUIElement",
+         "AXVisibleCharacterRange",
+         "AXValue",
+         "AXSize",
+         "AXRoleDescription",
+         "AXWindow"
+      ],
+      "path": [
+         0,
+         0,
+         0
+      ],
+      "rectangle": [
+         533,
+         247,
+         164,
+         22
+      ],
+      "AXValue": "RADIUS OF EARTH",
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "AXRole": "AXScrollArea",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 4,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXValue": -25205
+      },
+      "supported_actions": [
+         "AXScrollLeftByPage",
+         "AXScrollRightByPage",
+         "AXScrollUpByPage",
+         "AXScrollDownByPage"
+      ],
+      "supported_attributes": [
+         "AXHorizontalScrollBar",
+         "AXFrame",
+         "AXMakeScreenRectVisible",
+         "AXParent",
+         "AXChildren",
+         "AXFocused",
+         "AXSize",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXContentSize",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXVerticalScrollBar",
+         "AXContents"
+      ],
+      "rectangle": [
+         530,
+         275,
+         170,
+         541
+      ],
+      "AXFocused": false,
+      "path": [
+         0,
+         0,
+         1
+      ],
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 5
+         },
+         {
+            "index": 0,
+            "attribute": "AXContents",
+            "target": 5
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 5
+         }
+      ]
+   },
+   {
+      "id": 5,
+      "action_names_status": 0,
+      "supported_actions": [],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXDescription": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXTitle": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXScrollBar",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXOrientation",
+         "AXFrame",
+         "AXParent",
+         "AXChildren",
+         "AXFocused",
+         "AXSize",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXValue"
+      ],
+      "path": [
+         0,
+         0,
+         1,
+         0
+      ],
+      "rectangle": [
+         684,
+         274,
+         17,
+         543
+      ],
+      "AXValue": 1,
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 6
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildren",
+            "target": 7
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildren",
+            "target": 8
+         },
+         {
+            "index": 3,
+            "attribute": "AXChildren",
+            "target": 9
+         },
+         {
+            "index": 4,
+            "attribute": "AXChildren",
+            "target": 10
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 7
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 8
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 10
+         },
+         {
+            "index": 3,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 6
+         },
+         {
+            "index": 4,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 9
+         }
+      ],
+      "attribute_names_status": 0
+   },
+   {
+      "AXRole": "AXValueIndicator",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 6,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXContents": -25205,
+         "AXVisibleChildren": -25205,
+         "AXFocused": -25205,
+         "AXSubrole": -25205,
+         "AXChildrenInNavigationOrder": -25205,
+         "AXWindows": -25205
+      },
+      "supported_actions": [],
+      "supported_attributes": [
+         "AXRole",
+         "AXWindow",
+         "AXPosition",
+         "AXSize",
+         "AXRoleDescription",
+         "AXFrame",
+         "AXValue",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         685,
+         282.5,
+         15,
+         531.5
+      ],
+      "links": [],
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         0
+      ],
+      "AXValue": 1
+   },
+   {
+      "AXRole": "AXButton",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 7,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXContents": -25205,
+         "AXVisibleChildren": -25205,
+         "AXFocused": -25205,
+         "AXChildrenInNavigationOrder": -25205,
+         "AXValue": -25205,
+         "AXWindows": -25205
+      },
+      "supported_actions": [
+         "AXPress"
+      ],
+      "supported_attributes": [
+         "AXRole",
+         "AXWindow",
+         "AXPosition",
+         "AXSize",
+         "AXRoleDescription",
+         "AXFrame",
+         "AXSubrole",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         685,
+         275,
+         0,
+         0
+      ],
+      "AXSubrole": "AXIncrementArrow",
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         1
+      ],
+      "links": []
+   },
+   {
+      "AXRole": "AXButton",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 8,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXContents": -25205,
+         "AXVisibleChildren": -25205,
+         "AXFocused": -25205,
+         "AXChildrenInNavigationOrder": -25205,
+         "AXValue": -25205,
+         "AXWindows": -25205
+      },
+      "supported_actions": [
+         "AXPress"
+      ],
+      "supported_attributes": [
+         "AXRole",
+         "AXWindow",
+         "AXPosition",
+         "AXSize",
+         "AXRoleDescription",
+         "AXFrame",
+         "AXSubrole",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         685,
+         275,
+         0,
+         0
+      ],
+      "AXSubrole": "AXDecrementArrow",
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         2
+      ],
+      "links": []
+   },
+   {
+      "AXRole": "AXButton",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 9,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXContents": -25205,
+         "AXVisibleChildren": -25205,
+         "AXFocused": -25205,
+         "AXChildrenInNavigationOrder": -25205,
+         "AXValue": -25205,
+         "AXWindows": -25205
+      },
+      "supported_actions": [
+         "AXPress"
+      ],
+      "supported_attributes": [
+         "AXRole",
+         "AXWindow",
+         "AXPosition",
+         "AXSize",
+         "AXRoleDescription",
+         "AXFrame",
+         "AXSubrole",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         685,
+         814,
+         15,
+         2
+      ],
+      "AXSubrole": "AXIncrementPage",
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         3
+      ],
+      "links": []
+   },
+   {
+      "AXRole": "AXButton",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 10,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXContents": -25205,
+         "AXVisibleChildren": -25205,
+         "AXFocused": -25205,
+         "AXChildrenInNavigationOrder": -25205,
+         "AXValue": -25205,
+         "AXWindows": -25205
+      },
+      "supported_actions": [
+         "AXPress"
+      ],
+      "supported_attributes": [
+         "AXRole",
+         "AXWindow",
+         "AXPosition",
+         "AXSize",
+         "AXRoleDescription",
+         "AXFrame",
+         "AXSubrole",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         685,
+         275,
+         15,
+         7
+      ],
+      "AXSubrole": "AXDecrementPage",
+      "path": [
+         0,
+         0,
+         1,
+         0,
+         4
+      ],
+      "links": []
+   },
+   {
+      "AXRole": "AXScrollArea",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 11,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXValue": -25205
+      },
+      "supported_actions": [
+         "AXScrollLeftByPage",
+         "AXScrollRightByPage",
+         "AXScrollUpByPage",
+         "AXScrollDownByPage"
+      ],
+      "supported_attributes": [
+         "AXHorizontalScrollBar",
+         "AXFrame",
+         "AXMakeScreenRectVisible",
+         "AXParent",
+         "AXChildren",
+         "AXFocused",
+         "AXSize",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXContentSize",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXVerticalScrollBar",
+         "AXContents"
+      ],
+      "rectangle": [
+         705,
+         244,
+         675,
+         572
+      ],
+      "AXFocused": false,
+      "path": [
+         0,
+         0,
+         2
+      ],
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 12
+         },
+         {
+            "index": 0,
+            "attribute": "AXContents",
+            "target": 12
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 12
+         }
+      ]
+   },
+   {
+      "AXRole": "AXScrollArea",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 12,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXValue": -25205
+      },
+      "supported_actions": [
+         "AXScrollLeftByPage",
+         "AXScrollRightByPage",
+         "AXScrollUpByPage",
+         "AXScrollDownByPage"
+      ],
+      "supported_attributes": [
+         "AXHorizontalScrollBar",
+         "AXFrame",
+         "AXMakeScreenRectVisible",
+         "AXParent",
+         "AXChildren",
+         "AXFocused",
+         "AXSize",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXContentSize",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXVerticalScrollBar",
+         "AXContents"
+      ],
+      "rectangle": [
+         705,
+         244,
+         675,
+         572
+      ],
+      "AXFocused": false,
+      "path": [
+         0,
+         0,
+         2,
+         0
+      ],
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 13
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildren",
+            "target": 14
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildren",
+            "target": 15
+         },
+         {
+            "index": 0,
+            "attribute": "AXContents",
+            "target": 13
+         },
+         {
+            "index": 1,
+            "attribute": "AXContents",
+            "target": 14
+         },
+         {
+            "index": 2,
+            "attribute": "AXContents",
+            "target": 15
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 13
+         },
+         {
+            "index": 1,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 14
+         },
+         {
+            "index": 2,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 15
+         }
+      ]
+   },
+   {
+      "id": 13,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXCheckBox",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXActivationPoint",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXValue",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXTitle"
+      ],
+      "path": [
+         0,
+         0,
+         2,
+         0,
+         0
+      ],
+      "rectangle": [
+         1036,
+         311,
+         16,
+         16
+      ],
+      "AXTitle": "",
+      "AXValue": 0,
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 14,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXCheckBox",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXActivationPoint",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXValue",
+         "AXPosition",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXTitle"
+      ],
+      "path": [
+         0,
+         0,
+         2,
+         0,
+         1
+      ],
+      "rectangle": [
+         1036,
+         341,
+         16,
+         16
+      ],
+      "AXTitle": "",
+      "AXValue": 0,
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 15,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXShowMenu",
+         "AXConfirm"
+      ],
+      "AXEnabled": true,
+      "AXFocused": true,
+      "attribute_errors": {
+         "AXDescription": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXTitle": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXTextField",
+      "supported_attributes": [
+         "AXFocused",
+         "AXFrame",
+         "AXChildrenInNavigationOrder",
+         "AXSelectedText",
+         "AXInsertionPointLineNumber",
+         "AXPosition",
+         "AXNumberOfCharacters",
+         "AXEnabled",
+         "AXPlaceholderValue",
+         "AXSelectedTextRange",
+         "AXHelp",
+         "AXChildren",
+         "AXRole",
+         "AXParent",
+         "AXTopLevelUIElement",
+         "AXVisibleCharacterRange",
+         "AXValue",
+         "AXSize",
+         "AXRoleDescription",
+         "AXWindow"
+      ],
+      "path": [
+         0,
+         0,
+         2,
+         0,
+         2
+      ],
+      "rectangle": [
+         1034,
+         367,
+         282,
+         22
+      ],
+      "AXValue": "0",
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 16,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXSubrole": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "AXRole": "AXButton",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription"
+      ],
+      "path": [
+         0,
+         0,
+         3
+      ],
+      "rectangle": [
+         1077,
+         823,
+         109,
+         30
+      ],
+      "AXTitle": "Save and close",
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 17,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXSubrole": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "AXRole": "AXButton",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription"
+      ],
+      "path": [
+         0,
+         0,
+         4
+      ],
+      "rectangle": [
+         1194,
+         823,
+         87,
+         30
+      ],
+      "AXTitle": "Cancel",
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 18,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": false,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXSubrole": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "AXRole": "AXButton",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription"
+      ],
+      "path": [
+         0,
+         0,
+         5
+      ],
+      "rectangle": [
+         1289,
+         823,
+         87,
+         30
+      ],
+      "AXTitle": "Save",
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 19,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXTitle": -25212,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "AXRole": "AXButton",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXSubrole",
+         "AXEdited"
+      ],
+      "path": [
+         0,
+         1
+      ],
+      "rectangle": [
+         540,
+         223,
+         12,
+         14
+      ],
+      "links": [],
+      "AXSubrole": "AXCloseButton",
+      "attribute_names_status": 0
+   },
+   {
+      "id": 20,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress",
+         "AXShowMenu"
+      ],
+      "AXEnabled": false,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXDescription": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205,
+         "AXTitle": -25212,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXButton",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXChildren",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXSubrole"
+      ],
+      "path": [
+         0,
+         2
+      ],
+      "rectangle": [
+         580,
+         223,
+         12,
+         14
+      ],
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 21
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 21
+         }
+      ],
+      "AXSubrole": "AXZoomButton",
+      "attribute_names_status": 0
+   },
+   {
+      "AXRole": "AXGroup",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 21,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXSubrole": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "supported_actions": [],
+      "supported_attributes": [
+         "AXRole",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXChildren",
+         "AXWindow",
+         "AXPosition",
+         "AXRoleDescription",
+         "AXSize",
+         "AXFocused",
+         "AXFrame",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         579,
+         222,
+         14,
+         16
+      ],
+      "AXFocused": false,
+      "path": [
+         0,
+         2,
+         0
+      ],
+      "links": [
+         {
+            "index": 0,
+            "attribute": "AXChildren",
+            "target": 22
+         },
+         {
+            "index": 0,
+            "attribute": "AXChildrenInNavigationOrder",
+            "target": 22
+         }
+      ]
+   },
+   {
+      "AXRole": "AXGroup",
+      "attribute_names_status": 0,
+      "action_names_status": 0,
+      "id": 22,
+      "attribute_errors": {
+         "AXEnabled": -25205,
+         "AXTitle": -25205,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXSubrole": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "supported_actions": [],
+      "supported_attributes": [
+         "AXRole",
+         "AXHelp",
+         "AXChildrenInNavigationOrder",
+         "AXChildren",
+         "AXWindow",
+         "AXPosition",
+         "AXRoleDescription",
+         "AXSize",
+         "AXFocused",
+         "AXFrame",
+         "AXParent",
+         "AXTopLevelUIElement"
+      ],
+      "rectangle": [
+         579,
+         222,
+         14,
+         16
+      ],
+      "AXFocused": false,
+      "path": [
+         0,
+         2,
+         0,
+         0
+      ],
+      "links": []
+   },
+   {
+      "id": 23,
+      "action_names_status": 0,
+      "supported_actions": [
+         "AXPress"
+      ],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXTitle": -25212,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "AXRole": "AXButton",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription",
+         "AXSubrole"
+      ],
+      "path": [
+         0,
+         3
+      ],
+      "rectangle": [
+         560,
+         223,
+         12,
+         14
+      ],
+      "links": [],
+      "AXSubrole": "AXMinimizeButton",
+      "attribute_names_status": 0
+   },
+   {
+      "id": 24,
+      "action_names_status": 0,
+      "supported_actions": [],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXChildrenInNavigationOrder": -25205,
+         "AXChildren": -25212,
+         "AXDescription": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205,
+         "AXSubrole": -25205,
+         "AXWindows": -25205,
+         "AXValue": -25205
+      },
+      "AXRole": "AXImage",
+      "supported_attributes": [
+         "AXEnabled",
+         "AXFrame",
+         "AXParent",
+         "AXSize",
+         "AXFocused",
+         "AXRole",
+         "AXTopLevelUIElement",
+         "AXHelp",
+         "AXPosition",
+         "AXTitle",
+         "AXWindow",
+         "AXRoleDescription"
+      ],
+      "path": [
+         0,
+         4
+      ],
+      "rectangle": [
+         887,
+         220,
+         18,
+         18
+      ],
+      "AXTitle": "TR4W",
+      "links": [],
+      "attribute_names_status": 0
+   },
+   {
+      "id": 25,
+      "action_names_status": 0,
+      "supported_actions": [],
+      "AXEnabled": true,
+      "AXFocused": false,
+      "attribute_errors": {
+         "AXDescription": -25205,
+         "AXWindows": -25205,
+         "AXSubrole": -25205,
+         "AXTitle": -25205,
+         "AXVisibleChildren": -25205,
+         "AXContents": -25205
+      },
+      "AXRole": "AXStaticText",
+      "supported_attributes": [
+         "AXFocused",
+         "AXFrame",
+         "AXChildrenInNavigationOrder",
+         "AXSelectedText",
+         "AXInsertionPointLineNumber",
+         "AXPosition",
+         "AXNumberOfCharacters",
+         "AXEnabled",
+         "AXPlaceholderValue",
+         "AXSelectedTextRange",
+         "AXHelp",
+         "AXChildren",
+         "AXRole",
+         "AXParent",
+         "AXTopLevelUIElement",
+         "AXVisibleCharacterRange",
+         "AXValue",
+         "AXSize",
+         "AXRoleDescription",
+         "AXWindow"
+      ],
+      "path": [
+         0,
+         5
+      ],
+      "rectangle": [
+         906,
+         221,
+         125,
+         16
+      ],
+      "AXValue": "TR4W Preferences",
+      "links": [],
+      "attribute_names_status": 0
+   }
+]

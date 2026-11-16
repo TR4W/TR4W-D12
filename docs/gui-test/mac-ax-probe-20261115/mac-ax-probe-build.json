@@ -1,0 +1,7 @@
+{
+   "app": "/Users/toms/Applications/TR4W AX Probe.app",
+   "bundle_id": "net.tr4w.gui-pilot.ax-probe",
+   "source_sha256": "8c8a2637bdded928456796a2a4ddbed2c1a34ef90e41ed508d5327f8d6797c58",
+   "executable_sha256": "ce2b843ccf00eb9fbd158fd1eef9a04eec8f7cbd0ebfc58123f4afa15a738dc0",
+   "signature": "ad-hoc; no private signing identity used"
+}

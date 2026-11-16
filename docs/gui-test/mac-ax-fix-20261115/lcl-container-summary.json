@@ -1,0 +1,55 @@
+{
+   "fixture": "Lazarus Cocoa container/subclass regression",
+   "artifact_directory": "/Users/toms/tr4w-gui-test/artifacts/ax-control-20261115T193917-a1954b",
+   "cases": [
+      {
+         "mode": "first",
+         "buttons": [
+            {
+               "title": "Status action",
+               "enabled": true
+            },
+            {
+               "title": "Panel action",
+               "enabled": true
+            },
+            {
+               "title": "First page action",
+               "enabled": true
+            }
+         ],
+         "hidden_sentinels": [],
+         "passed": true
+      },
+      {
+         "mode": "second",
+         "buttons": [
+            {
+               "title": "Status action",
+               "enabled": true
+            },
+            {
+               "title": "Panel action",
+               "enabled": true
+            },
+            {
+               "title": "Second page action",
+               "enabled": true
+            }
+         ],
+         "hidden_sentinels": [],
+         "passed": true
+      }
+   ],
+   "original_executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
+   "probe_identity": {
+      "app": "/Users/toms/Applications/TR4W AX Probe.app",
+      "bundle_id": "net.tr4w.gui-pilot.ax-probe",
+      "source_sha256": "8c8a2637bdded928456796a2a4ddbed2c1a34ef90e41ed508d5327f8d6797c58",
+      "executable_sha256": "ce2b843ccf00eb9fbd158fd1eef9a04eec8f7cbd0ebfc58123f4afa15a738dc0",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "fixture_executable_sha256": "4e9c48b5f688b83f984aaade9e4f143a4f401631c9af4038d206737afff3cb4e",
+   "original_restored": true,
+   "passed": true
+}

@@ -1,0 +1,2 @@
+# git apply on native hosts requires LF patch files.
+*.patch text eol=lf

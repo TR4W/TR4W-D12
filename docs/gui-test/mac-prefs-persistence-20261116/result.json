@@ -1,0 +1,283 @@
+{
+   "passed": true,
+   "checks": [
+      "Practice log opened and main window captured",
+      "Cocoa AX exposes clean Preferences footer with disabled Save",
+      "Escape dismissed Preferences",
+      "Cancel discarded the edit in UI and storage",
+      "Save persisted to disk and a fresh application process",
+      "Save and close restored the baseline across restart",
+      "Original contact fields unchanged on exit",
+      "Normal application exit"
+   ],
+   "failures": [],
+   "run": "/Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-010",
+   "case": "preferences-persistence",
+   "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
+   "provenance": "private-source-patch-build",
+   "executable_sha256": "c4fa935a3ecab7be5cf0642e8894a1758ddcae9693e4161604320a62717dbae2",
+   "build_record": {
+      "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
+      "provenance": "private-source-patch-build",
+      "source_patch_sha256": "c6e9acbb7f8dd2eaa15353638711abf01fc0976dfe898ea21f1080c8b1d4d0d2",
+      "source_diff": "tr4w/src/ui/lcl/uPrefsForm.pas | 25 ++++++++++++++++++++++++-\n 1 file changed, 24 insertions(+), 1 deletion(-)",
+      "lazarus_revision": "62c14a4d18c81f222127d42ce9b89b922c63fcbf",
+      "lazarus_diff": "diff --git a/lcl/interfaces/cocoa/cocoacustomcontrol.pas b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\nindex 5d00ca54..fb0fa201 100644\n--- a/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n+++ b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n@@ -24,6 +24,7 @@ type\n   public\n     callback: ICommonCallback;\n     auxMouseByParent: Boolean;\n+   function accessibilityChildren: NSArray; override;\n     procedure dealloc; override;\n     function acceptsFirstResponder: LCLObjCBoolean; override;\n     procedure drawRect(dirtyRect: NSRect); override;\n@@ -91,6 +92,28 @@ implementation\n \n { TCocoaCustomControl }\n \n+function TCocoaCustomControl.accessibilityChildren: NSArray;\n+var\n+   ChildViews: NSArray;\n+   VisibleChildren: NSMutableArray;\n+   Child: NSView;\n+   I: NSInteger;\n+begin\n+   // NSControl does not enumerate child views by default. LCL uses this\n+   // class as a container. Preserve native hidden-view filtering.\n+   ChildViews := subviews;\n+   VisibleChildren := NSMutableArray.arrayWithCapacity(ChildViews.count);\n+   for I := 0 to NSInteger(ChildViews.count) - 1 do\n+      begin\n+      Child := NSView(ChildViews.objectAtIndex(I));\n+      if not Child.isHiddenOrHasHiddenAncestor then\n+         begin\n+         VisibleChildren.addObject(Child);\n+         end;\n+      end;\n+   Result := NSAccessibilityUnignoredChildren(VisibleChildren);\n+end;\n+\n procedure TCocoaCustomControl.setStringValue(avalue: NSString);\n begin\n   if Assigned(fstr) then fstr.release;\n",
+      "fpc_version": "3.2.2",
+      "resource_artifact_run": 43776700899,
+      "executable_sha256": "c4fa935a3ecab7be5cf0642e8894a1758ddcae9693e4161604320a62717dbae2",
+      "bundle": "/Users/toms/tr4w-gui-test/app/TR4W-prefs-search-4547.app",
+      "signature": "ad-hoc; deep/strict verified"
+   },
+   "console": {
+      "on_console": true,
+      "login_done": true,
+      "screen_locked": false,
+      "ready": true
+   },
+   "runner_identity": {
+      "app": "/Users/toms/Applications/TR4W GUI Runner.app",
+      "bundle_id": "net.tr4w.gui-pilot.runner",
+      "source_sha256": "cf1ac881ae3564afc9e63f025ad12e6852ba46be50d6396cf69d713a824117e1",
+      "executable_sha256": "4acfd4985e9480556b162ed309879d7b55c82c6161a927eb830af8d6ce541133",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "permissions": {
+      "accessibility": 1,
+      "probe_only": 0,
+      "bundle_id": "net.tr4w.gui-pilot.runner",
+      "screen_recording": 0,
+      "executable": "/Users/toms/Applications/TR4W GUI Runner.app/Contents/MacOS/tr4w-gui-pilot",
+      "pid": 29840
+   },
+   "capture_runner_identity": {
+      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "bundle_id": "net.tr4w.gui-pilot",
+      "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
+      "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
+      "signature": "ad-hoc; no private signing identity used"
+   },
+   "capture_permissions": {
+      "accessibility": 1,
+      "bundle_id": "net.tr4w.gui-pilot",
+      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "screen_recording": true,
+      "pid": 29842
+   },
+   "pid": 30273,
+   "application_pids": [
+      29844,
+      30145,
+      30273
+   ],
+   "main_window": {
+      "kCGWindowName": "TR4W v.5.0.40 - 2026 CQ-WW-SSB NY4I",
+      "kCGWindowLayer": 0,
+      "kCGWindowMemoryUsage": 2432,
+      "kCGWindowIsOnscreen": true,
+      "kCGWindowSharingState": 1,
+      "kCGWindowOwnerPID": 29844,
+      "kCGWindowOwnerName": "TR4W",
+      "kCGWindowNumber": 546,
+      "kCGWindowStoreType": 1,
+      "kCGWindowBounds": {
+         "X": 569,
+         "Height": 420,
+         "Y": 100,
+         "Width": 782
+      },
+      "kCGWindowAlpha": 1
+   },
+   "footer": [
+      {
+         "id": 40,
+         "action_names_status": 0,
+         "supported_actions": [
+            "AXPress"
+         ],
+         "AXEnabled": true,
+         "AXFocused": false,
+         "attribute_errors": {
+            "AXChildrenInNavigationOrder": -25205,
+            "AXChildren": -25212,
+            "AXDescription": -25205,
+            "AXVisibleChildren": -25205,
+            "AXContents": -25205,
+            "AXSubrole": -25205,
+            "AXWindows": -25205,
+            "AXValue": -25205
+         },
+         "AXRole": "AXButton",
+         "supported_attributes": [
+            "AXEnabled",
+            "AXFrame",
+            "AXParent",
+            "AXSize",
+            "AXFocused",
+            "AXRole",
+            "AXTopLevelUIElement",
+            "AXHelp",
+            "AXPosition",
+            "AXTitle",
+            "AXWindow",
+            "AXRoleDescription"
+         ],
+         "path": [
+            0,
+            0,
+            3
+         ],
+         "rectangle": [
+            1077,
+            823,
+            109,
+            30
+         ],
+         "AXTitle": "Save and close",
+         "links": [],
+         "attribute_names_status": 0
+      },
+      {
+         "id": 41,
+         "action_names_status": 0,
+         "supported_actions": [
+            "AXPress"
+         ],
+         "AXEnabled": true,
+         "AXFocused": false,
+         "attribute_errors": {
+            "AXChildrenInNavigationOrder": -25205,
+            "AXChildren": -25212,
+            "AXDescription": -25205,
+            "AXVisibleChildren": -25205,
+            "AXContents": -25205,
+            "AXSubrole": -25205,
+            "AXWindows": -25205,
+            "AXValue": -25205
+         },
+         "AXRole": "AXButton",
+         "supported_attributes": [
+            "AXEnabled",
+            "AXFrame",
+            "AXParent",
+            "AXSize",
+            "AXFocused",
+            "AXRole",
+            "AXTopLevelUIElement",
+            "AXHelp",
+            "AXPosition",
+            "AXTitle",
+            "AXWindow",
+            "AXRoleDescription"
+         ],
+         "path": [
+            0,
+            0,
+            4
+         ],
+         "rectangle": [
+            1194,
+            823,
+            87,
+            30
+         ],
+         "AXTitle": "Cancel",
+         "links": [],
+         "attribute_names_status": 0
+      },
+      {
+         "id": 42,
+         "action_names_status": 0,
+         "supported_actions": [
+            "AXPress"
+         ],
+         "AXEnabled": false,
+         "AXFocused": false,
+         "attribute_errors": {
+            "AXChildrenInNavigationOrder": -25205,
+            "AXChildren": -25212,
+            "AXDescription": -25205,
+            "AXVisibleChildren": -25205,
+            "AXContents": -25205,
+            "AXSubrole": -25205,
+            "AXWindows": -25205,
+            "AXValue": -25205
+         },
+         "AXRole": "AXButton",
+         "supported_attributes": [
+            "AXEnabled",
+            "AXFrame",
+            "AXParent",
+            "AXSize",
+            "AXFocused",
+            "AXRole",
+            "AXTopLevelUIElement",
+            "AXHelp",
+            "AXPosition",
+            "AXTitle",
+            "AXWindow",
+            "AXRoleDescription"
+         ],
+         "path": [
+            0,
+            0,
+            5
+         ],
+         "rectangle": [
+            1289,
+            823,
+            87,
+            30
+         ],
+         "AXTitle": "Save",
+         "links": [],
+         "attribute_names_status": 0
+      }
+   ],
+   "footer_assertion_passed": true,
+   "navigation_passed": true,
+   "preferences_persistence": {
+      "setting": "RADIUS OF EARTH",
+      "storage_path": [
+         "settings",
+         "GridMap",
+         "RadiusOfEarth"
+      ],
+      "checks": [
+         "Cancel discarded the edit in UI and storage",
+         "Save persisted to disk and a fresh application process",
+         "Save and close restored the baseline across restart"
+      ],
+      "passed": true,
+      "baseline": "0",
+      "cancelled": "6371",
+      "saved": "6372"
+   },
+   "quit_confirmation_seen": false,
+   "application_exit_code": 0,
+   "application_exit_codes": [
+      0,
+      0,
+      0
+   ],
+   "contact_count": 101,
+   "added_contact_columns": [
+      "my_call",
+      "my_continent",
+      "my_country",
+      "my_cq_zone",
+      "my_iota",
+      "my_itu_zone",
+      "my_park",
+      "my_section",
+      "my_source",
+      "rcvd_year",
+      "year_sent"
+   ],
+   "original_contacts_unchanged": true,
+   "default_settings_unchanged": true,
+   "default_contest_files_unchanged": true,
+   "executable_unchanged": true,
+   "cleanup": "Only the owned TR4W process was stopped; bridge jobs exit individually",
+   "staged_release_restored": true
+}

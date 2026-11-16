@@ -1,0 +1,62 @@
+{"utc": "2026-11-16T04:35:09.298570+00:00", "action": "launch owned application", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:09.300925+00:00", "action": "launch owned application", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:09.919578+00:00", "action": "capture main window", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:10.330130+00:00", "action": "capture main window", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:10.827246+00:00", "action": "open Preferences with Ctrl+J", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:10.858403+00:00", "action": "open Preferences with Ctrl+J", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:11.480211+00:00", "action": "capture Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:11.716707+00:00", "action": "capture Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:12.180778+00:00", "action": "close Preferences with Escape", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:12.198563+00:00", "action": "close Preferences with Escape", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:12.662209+00:00", "action": "open Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:12.694002+00:00", "action": "open Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:13.851986+00:00", "action": "select named search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:14.007845+00:00", "action": "select named search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:16.173438+00:00", "action": "edit preference for Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:17.321909+00:00", "action": "edit preference for Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:18.369951+00:00", "action": "activate Preferences Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:18.576793+00:00", "action": "activate Preferences Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:19.054443+00:00", "action": "open Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:19.087130+00:00", "action": "open Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:20.547856+00:00", "action": "select named search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:20.703587+00:00", "action": "select named search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:22.748357+00:00", "action": "edit preference for Save", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:23.839837+00:00", "action": "edit preference for Save", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:24.880209+00:00", "action": "activate Preferences Save", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:25.086514+00:00", "action": "activate Preferences Save", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:27.198543+00:00", "action": "activate Preferences Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:27.404555+00:00", "action": "activate Preferences Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:27.838350+00:00", "action": "normal exit and restart after Save", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:27.844356+00:00", "action": "request normal close", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:27.849630+00:00", "action": "request normal close", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:28.300790+00:00", "action": "confirm observed exit question", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:28.331879+00:00", "action": "confirm observed exit question", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:28.760014+00:00", "action": "launch owned application", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:28.762425+00:00", "action": "launch owned application", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:29.380770+00:00", "action": "normal exit and restart after Save", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:29.694399+00:00", "action": "open Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:29.725940+00:00", "action": "open Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:31.478807+00:00", "action": "select named search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:31.633763+00:00", "action": "select named search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:33.554591+00:00", "action": "restore baseline preference", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:34.573387+00:00", "action": "restore baseline preference", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:35.550276+00:00", "action": "activate Preferences Save and close", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:35.756822+00:00", "action": "activate Preferences Save and close", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:35.986657+00:00", "action": "normal exit and restart after baseline restoration", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:35.993151+00:00", "action": "request normal close", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:35.998267+00:00", "action": "request normal close", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:36.426046+00:00", "action": "confirm observed exit question", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:36.460398+00:00", "action": "confirm observed exit question", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:36.889278+00:00", "action": "launch owned application", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:36.891578+00:00", "action": "launch owned application", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:37.517373+00:00", "action": "normal exit and restart after baseline restoration", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:37.591549+00:00", "action": "open Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:37.622573+00:00", "action": "open Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:39.418769+00:00", "action": "select named search result RADIUS OF EARTH", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:39.573512+00:00", "action": "select named search result RADIUS OF EARTH", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:41.991556+00:00", "action": "activate Preferences Cancel", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:42.197800+00:00", "action": "activate Preferences Cancel", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:42.638440+00:00", "action": "request normal close", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:42.644242+00:00", "action": "request normal close", "state": "after", "detail": null}
+{"utc": "2026-11-16T04:35:43.118493+00:00", "action": "confirm observed exit question", "state": "before", "detail": null}
+{"utc": "2026-11-16T04:35:43.152936+00:00", "action": "confirm observed exit question", "state": "after", "detail": null}

@@ -8,7 +8,7 @@ import unittest
 import zlib
 from pathlib import Path
 
-from evidence import StepLog, file_digest, pe_info, preserve_build, require_matching_bitness, preserve_generated_file
+from evidence import StepLog, file_digest, pe_info, preserve_build, require_matching_bitness, preserve_generated_file, native_build_identity
 
 
 def make_pair(directory):
@@ -37,6 +37,25 @@ def make_pair(directory):
 
 
 class EvidenceTests(unittest.TestCase):
+   def test_native_build_record_cannot_certify_another_executable(self):
+      with tempfile.TemporaryDirectory() as temporary:
+         directory = Path(temporary)
+         executable = directory / "tr4w"
+         executable.write_bytes(b"native executable")
+         record = directory / "build.json"
+         record.write_text(json.dumps({"source_revision": "a" * 40,
+            "provenance": "github-actions-artifact", "executable_sha256": "0" * 64}))
+         with self.assertRaisesRegex(RuntimeError, "does not match"):
+            native_build_identity(executable, record)
+
+   def test_native_binary_without_build_record_keeps_revision_unknown(self):
+      with tempfile.TemporaryDirectory() as temporary:
+         executable = Path(temporary) / "tr4w"
+         executable.write_bytes(b"native executable")
+         identity = native_build_identity(executable)
+         self.assertIsNone(identity["source_revision"])
+         self.assertEqual(identity["executable_sha256"], file_digest(executable))
+
    def test_wrong_bitness_is_refused(self):
       native = struct.calcsize("P") * 8
       self.assertEqual(require_matching_bitness(native), native)

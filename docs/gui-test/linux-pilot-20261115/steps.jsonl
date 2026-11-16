@@ -1,0 +1,14 @@
+{"utc": "2026-11-15T17:46:12.481471+00:00", "action": "launch owned application", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:12.483966+00:00", "action": "launch owned application", "state": "after", "detail": null}
+{"utc": "2026-11-15T17:46:13.103039+00:00", "action": "capture main window", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:13.422364+00:00", "action": "capture main window", "state": "after", "detail": null}
+{"utc": "2026-11-15T17:46:13.942486+00:00", "action": "open Preferences with Ctrl+J", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:13.974540+00:00", "action": "open Preferences with Ctrl+J", "state": "after", "detail": null}
+{"utc": "2026-11-15T17:46:14.392516+00:00", "action": "capture Preferences", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:14.635888+00:00", "action": "capture Preferences", "state": "after", "detail": null}
+{"utc": "2026-11-15T17:46:15.181126+00:00", "action": "close Preferences with Escape", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:15.199753+00:00", "action": "close Preferences with Escape", "state": "after", "detail": null}
+{"utc": "2026-11-15T17:46:15.411427+00:00", "action": "request normal close", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:15.416549+00:00", "action": "request normal close", "state": "after", "detail": null}
+{"utc": "2026-11-15T17:46:15.844523+00:00", "action": "confirm observed exit question", "state": "before", "detail": null}
+{"utc": "2026-11-15T17:46:15.876081+00:00", "action": "confirm observed exit question", "state": "after", "detail": null}

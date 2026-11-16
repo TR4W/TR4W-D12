@@ -1,0 +1,1415 @@
+Openbox-Message: Unable to find a valid menu file "/var/lib/openbox/debian-menu.xml"
+Breakpoint 1 at 0x432030
+Catchpoint 2 (signal SIGSEGV)
+
+Program stopped.
+0x00007ffff7fe42c0 in ?? () from /lib64/ld-linux-x86-64.so.2
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+GTK Accessibility Module initialized
+
+=== Pascal exception raised ===
+0x7ffff6894580:	0xe8b018 <VMT_$SYSUTILS_$$_EXCEPTION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x000000000060df7e in PROBESYMBOLLINE (ARESOLVED=0x0) at src/uCrashLog.pas:1497
+        result = 0
+        PROBESYMBOLLINE = 0
+        RESULT = 0
+        N = -7416
+        P = 0
+#2  0x000000000060e292 in REPORTSYMBOLSTATE () at src/uCrashLog.pas:1562
+        RESOLVED = 0x0
+        DBG = 0x0
+        LINE = 32767
+#3  0x000000000060e508 in INSTALLCRASHLOG () at src/uCrashLog.pas:1630
+No locals.
+#4  0x000000000060e622 in INSTALLCRASHLOGLCL () at src/ui/lcl/uCrashLogLCL.pas:95
+No locals.
+#5  0x00000000007f7672 in RUNTR4W () at src/uProgramMain.pas:1575
+        C = 4707
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x200
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7d17f6
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x0
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0x0
+#6  0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== Pascal exception raised ===
+0x7ffff6894600:	0x1058bc8 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x0000000000898f56 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000898c73 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff654e358 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff68945e0 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffe000 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe168 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007ffff6556040 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe340 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff68960e0:	0x1058bc8 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x0000000000898f56 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000898c73 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff4120198 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff68958a0 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffdff0 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe158 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007ffff4358180 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe330 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6895840:	0x1058bc8 <VMT_$CLASSES_$$_EFOPENERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x0000000000898f56 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$LONGWORD$$TFILESTREAM ()
+No symbol table info available.
+#2  0x0000000000898c73 in CLASSES$_$TFILESTREAM_$__$$_CREATE$ANSISTRING$WORD$$TFILESTREAM ()
+No symbol table info available.
+#3  0x00007ffff41204b8 in ?? ()
+No symbol table info available.
+#4  0x0000000000430040 in ?? ()
+No symbol table info available.
+#5  0x0000000000000001 in ?? ()
+No symbol table info available.
+#6  0x00007ffff6895860 in ?? ()
+No symbol table info available.
+#7  0xffffffffffffffff in ?? ()
+No symbol table info available.
+#8  0x00007fffffffdf10 in ?? ()
+No symbol table info available.
+#9  0x00007fffffffe078 in ?? ()
+No symbol table info available.
+#10 0x0000000000000001 in ?? ()
+No symbol table info available.
+#11 0x00007ffff4358180 in ?? ()
+No symbol table info available.
+#12 0x00007fffffffe250 in ?? ()
+No symbol table info available.
+#13 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== SIGSEGV before Pascal handling ===
+
+Thread 6 (Thread 0x7fffe77fe6c0 (LWP 107533) "gdbus"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775b11f in g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff727ae1a in ?? () from /lib/x86_64-linux-gnu/libgio-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 5 (Thread 0x7fffe7fff6c0 (LWP 107532) "pool-0"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b930 in g_cond_wait_until () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff7721753 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721d85 in g_async_queue_timeout_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778c1cd in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0x7ffff4d4e6c0 (LWP 107531) "gmain"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff775ae71 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0x7ffff554f6c0 (LWP 107530) "pool-spawner"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff778be40 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#6  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0x7ffff62be6c0 (LWP 107528) "[pango] fontcon"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721c2b in g_async_queue_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff708b2a7 in ?? () from /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0x7ffff68db9c0 (LWP 107515) "tr4w"):
+#0  0x000000000086f395 in REMOVEASYNCCALLS (this=0x0, ANOBJECT=0x7ffff40a1990) at include/application.inc:2345
+No locals.
+#1  0x000000000085b163 in DESTROY (this=0x7ffff40a1990, vmt=0x0) at include/customform.inc:128
+        HANDLERTYPE = FHTFIRSTSHOW
+#2  0x000000000068e3ba in DESTROY (this=0x7ffff40a1990, vmt=0x1) at src/ui/lcl/uPrefsForm.pas:2321
+No locals.
+#3  0x0000000000430a7b in SYSTEM$_$TOBJECT_$__$$_FREE ()
+No symbol table info available.
+#4  0x000000000126fc28 in RTTI_$IDMULTIPARTFORMDATA_$$_def000000A6$indirect ()
+No symbol table info available.
+#5  0x0000000000472117 in SYSUTILS_$$_FREEANDNIL$formal ()
+No symbol table info available.
+#6  0x0000000000e7e840 in ?? ()
+No symbol table info available.
+#7  0x00000000006a8916 in UPREFSFORM_$$_finalize$ () at src/ui/lcl/uPrefsForm.pas:9383
+No locals.
+#8  0x0000000000435307 in SYSTEM_$$_FINALIZEUNITS ()
+No symbol table info available.
+#9  0x00007ffff7fa8e10 in ?? ()
+No symbol table info available.
+#10 0x0000000000435646 in SYSTEM_$$_INTERNALEXIT ()
+No symbol table info available.
+#11 0x000000000102dcc8 in .Ld92 ()
+No symbol table info available.
+#12 0x0000000000446016 in CTHREADS_$$_CRELOCATETHREADVAR$LONGWORD$$POINTER ()
+No symbol table info available.
+#13 0x00007ffff7fa9230 in ?? ()
+No symbol table info available.
+#14 0x00007ffff7fb09b8 in ?? ()
+No symbol table info available.
+#15 0x00007ffff7fb09c0 in ?? ()
+No symbol table info available.
+#16 0x0000000000437546 in SYSTEM_$$_SYSFREEMEM$POINTER$$QWORD ()
+No symbol table info available.
+#17 0x0000000000e82f80 in RTTI_$SYSTEM_$$_longstring$indirect ()
+No symbol table info available.
+#18 0x00000000004344d0 in ?? ()
+No symbol table info available.
+#19 0x0000000000000001 in ?? ()
+No symbol table info available.
+#20 0x0000000000000001 in ?? ()
+No symbol table info available.
+#21 0x00007ffff7fb09c0 in ?? ()
+No symbol table info available.
+#22 0x000000000043648b in SYSTEM_$$_FREEMEM$POINTER$$QWORD ()
+No symbol table info available.
+#23 0x0000000001061520 in RTTI_$CLASSES_$$_ISTRINGSADAPTER$indirect ()
+No symbol table info available.
+#24 0x000000000042b011 in fpc_unicodestr_decr_ref ()
+No symbol table info available.
+#25 0x00007ffff658f0c8 in ?? ()
+No symbol table info available.
+#26 0x000000000043452d in fpc_finalize ()
+No symbol table info available.
+#27 0x0000000000e82fb0 in RTTI_$SYSTEM_$$_WIDESTRING$indirect ()
+No symbol table info available.
+#28 0x0000000000446016 in CTHREADS_$$_CRELOCATETHREADVAR$LONGWORD$$POINTER ()
+No symbol table info available.
+#29 0x00007ffff7fa9230 in ?? ()
+No symbol table info available.
+#30 0x00007ffff658f078 in ?? ()
+No symbol table info available.
+#31 0x00007ffff658f080 in ?? ()
+No symbol table info available.
+#32 0x0000000000437546 in SYSTEM_$$_SYSFREEMEM$POINTER$$QWORD ()
+No symbol table info available.
+#33 0x0000000000f75e28 in RTTI_$LOG4D_$$_TLOGNDC$indirect ()
+No symbol table info available.
+#34 0x00007ffff5813370 in ?? ()
+No symbol table info available.
+#35 0x000000000102dcc8 in .Ld92 ()
+No symbol table info available.
+#36 0x0000000000000012 in ?? ()
+No symbol table info available.
+#37 0x00007ffff658f080 in ?? ()
+No symbol table info available.
+#38 0x000000000043648b in SYSTEM_$$_FREEMEM$POINTER$$QWORD ()
+No symbol table info available.
+#39 0x00007ffff658f080 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7fffe5d314e0:	0xe8c078 <VMT_$SYSUTILS_$$_EACCESSVIOLATION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== SIGSEGV before Pascal handling ===
+
+Thread 6 (Thread 0x7fffe77fe6c0 (LWP 107533) "gdbus"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775b11f in g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff727ae1a in ?? () from /lib/x86_64-linux-gnu/libgio-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 5 (Thread 0x7fffe7fff6c0 (LWP 107532) "pool-0"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b930 in g_cond_wait_until () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff7721753 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721d85 in g_async_queue_timeout_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778c1cd in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0x7ffff4d4e6c0 (LWP 107531) "gmain"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff775ae71 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0x7ffff554f6c0 (LWP 107530) "pool-spawner"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff778be40 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#6  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0x7ffff62be6c0 (LWP 107528) "[pango] fontcon"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721c2b in g_async_queue_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff708b2a7 in ?? () from /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0x7ffff68db9c0 (LWP 107515) "tr4w"):
+#0  0x0000000000ca54c9 in DELIVERMESSAGE (TARGET=0x7ffff5813370, AMESSAGE=0) at lclmessageglue.pas:118
+        result = 140737488345432
+        DELIVERMESSAGE = 140737488345432
+        RESULT = 140737488345432
+        REFCOUNTED = true
+#1  0x0000000000c84c45 in DELIVERMESSAGE (TARGET=0x7ffff5813370, AMESSAGE=0) at gtk2proc.inc:3776
+        result = 0
+        DELIVERMESSAGE = 0
+        RESULT = 0
+#2  0x0000000000c927e1 in GTKDELETECB (WIDGET=0x1ac8150, EVENT=0x21af7d0, DATA=0x7ffff5813370) at gtk2callback.inc:1277
+        result = false
+        GTKDELETECB = false
+        RESULT = false
+        MESS = {MSG = 66622, UNUSEDMSG = 0, WPARAM = 0, LPARAM = 0, RESULT = 0}
+#3  0x00007ffff7b40faa in ?? () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff786c950 in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff7880d43 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff7882032 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff78885a6 in g_signal_emit_valist () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff7888663 in g_signal_emit () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#9  0x00007ffff7c65dcc in ?? () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#10 0x00007ffff7b3fd13 in gtk_main_do_event () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#11 0x00007ffff7f4aa60 in ?? () from /lib/x86_64-linux-gnu/libgdk-x11-2.0.so.0
+No symbol table info available.
+#12 0x00007ffff7758485 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#13 0x00007ffff775a6b7 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#14 0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#15 0x0000000000c42580 in APPPROCESSMESSAGES (this=0x7ffff68a2390) at gtk2widgetset.inc:2503
+        VLITEM = 0x0
+        VLMSG = 0x0
+        I = 32
+#16 0x000000000086c373 in HANDLEMESSAGE (this=0x7ffff689be90) at include/application.inc:1284
+        CONTEXT = 0
+#17 0x000000000086ca20 in RUNLOOP (this=0x7ffff689be90) at include/application.inc:1427
+No locals.
+#18 0x00000000008d7488 in APPRUN (this=0x7ffff68a2390, ALOOP=...) at include/interfacebase.inc:54
+No locals.
+#19 0x000000000086c9bc in RUN (this=0x7ffff689be90) at include/application.inc:1415
+No locals.
+#20 0x000000000063b2d2 in RUNLCLAPPLICATION () at src/ui/lcl/uLCLCoexist.pas:183
+No locals.
+#21 0x00000000007f97c5 in RUNTR4W () at src/uProgramMain.pas:3176
+        C = 10336
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x7ffff4120720
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7ffff6586460
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0xda0e88 'DEBUG'
+#22 0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== Pascal exception raised ===
+0x7fffe5d314c0:	0xe8c078 <VMT_$SYSUTILS_$$_EACCESSVIOLATION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007ffff7b4d530 in ?? () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#3  0x0000000001a4dfd0 in ?? ()
+No symbol table info available.
+#4  0x00007fffffffd850 in ?? ()
+No symbol table info available.
+#5  0x0000000001ac8150 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffd9b0 in ?? ()
+No symbol table info available.
+#7  0x0000000000ca54c9 in DELIVERMESSAGE (TARGET=0x7ffff5813370, AMESSAGE=0) at lclmessageglue.pas:118
+        result = 140737488345432
+        DELIVERMESSAGE = 140737488345432
+        RESULT = 140737488345432
+        REFCOUNTED = true
+#8  0x0000000000c84c45 in DELIVERMESSAGE (TARGET=0x7ffff5813370, AMESSAGE=0) at gtk2proc.inc:3776
+        result = 0
+        DELIVERMESSAGE = 0
+        RESULT = 0
+#9  0x0000000000c927e1 in GTKDELETECB (WIDGET=0x1ac8150, EVENT=0x21af7d0, DATA=0x7ffff5813370) at gtk2callback.inc:1277
+        result = false
+        GTKDELETECB = false
+        RESULT = false
+        MESS = {MSG = 66622, UNUSEDMSG = 0, WPARAM = 0, LPARAM = 0, RESULT = 0}
+#10 0x00007ffff7b40faa in ?? () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#11 0x00007ffff786c950 in g_closure_invoke () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#12 0x00007ffff7880d43 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#13 0x00007ffff7882032 in ?? () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#14 0x00007ffff78885a6 in g_signal_emit_valist () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#15 0x00007ffff7888663 in g_signal_emit () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+No symbol table info available.
+#16 0x00007ffff7c65dcc in ?? () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#17 0x00007ffff7b3fd13 in gtk_main_do_event () from /lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0
+No symbol table info available.
+#18 0x00007ffff7f4aa60 in ?? () from /lib/x86_64-linux-gnu/libgdk-x11-2.0.so.0
+No symbol table info available.
+#19 0x00007ffff7758485 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#20 0x00007ffff775a6b7 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#21 0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#22 0x0000000000c42580 in APPPROCESSMESSAGES (this=0x7ffff68a2390) at gtk2widgetset.inc:2503
+        VLITEM = 0x0
+        VLMSG = 0x0
+        I = 32
+#23 0x000000000086c373 in HANDLEMESSAGE (this=0x7ffff689be90) at include/application.inc:1284
+        CONTEXT = 0
+#24 0x000000000086ca20 in RUNLOOP (this=0x7ffff689be90) at include/application.inc:1427
+No locals.
+#25 0x00000000008d7488 in APPRUN (this=0x7ffff68a2390, ALOOP=...) at include/interfacebase.inc:54
+No locals.
+#26 0x000000000086c9bc in RUN (this=0x7ffff689be90) at include/application.inc:1415
+No locals.
+#27 0x000000000063b2d2 in RUNLCLAPPLICATION () at src/ui/lcl/uLCLCoexist.pas:183
+No locals.
+#28 0x00000000007f97c5 in RUNTR4W () at src/uProgramMain.pas:3176
+        C = 10336
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x7ffff4120720
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7ffff6586460
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0xda0e88 'DEBUG'
+#29 0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== SIGSEGV before Pascal handling ===
+
+Thread 6 (Thread 0x7fffe77fe6c0 (LWP 107533) "gdbus"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775b11f in g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff727ae1a in ?? () from /lib/x86_64-linux-gnu/libgio-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 5 (Thread 0x7fffe7fff6c0 (LWP 107532) "pool-0"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b930 in g_cond_wait_until () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff7721753 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721d85 in g_async_queue_timeout_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778c1cd in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0x7ffff4d4e6c0 (LWP 107531) "gmain"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff775ae71 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0x7ffff554f6c0 (LWP 107530) "pool-spawner"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff778be40 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#6  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0x7ffff62be6c0 (LWP 107528) "[pango] fontcon"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721c2b in g_async_queue_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff708b2a7 in ?? () from /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0x7ffff68db9c0 (LWP 107515) "tr4w"):
+#0  0x000000000086c3ab in HANDLEMESSAGE (this=0x7ffff689be90) at include/application.inc:1287
+        CONTEXT = 0
+#1  0x000000000086ca20 in RUNLOOP (this=0x7ffff689be90) at include/application.inc:1427
+No locals.
+#2  0x00000000008d7488 in APPRUN (this=0x7ffff68a2390, ALOOP=...) at include/interfacebase.inc:54
+No locals.
+#3  0x000000000086c9bc in RUN (this=0x7ffff689be90) at include/application.inc:1415
+No locals.
+#4  0x000000000063b2d2 in RUNLCLAPPLICATION () at src/ui/lcl/uLCLCoexist.pas:183
+No locals.
+#5  0x00000000007f97c5 in RUNTR4W () at src/uProgramMain.pas:3176
+        C = 10336
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x7ffff4120720
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7ffff6586460
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0xda0e88 'DEBUG'
+#6  0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== Pascal exception raised ===
+0x7fffe5d314e0:	0xe8c078 <VMT_$SYSUTILS_$$_EACCESSVIOLATION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007ffff4546dd8 in ?? ()
+No symbol table info available.
+#3  0x00007fffffffe180 in ?? ()
+No symbol table info available.
+#4  0x0000000000c425e7 in APPPROCESSMESSAGES (this=0x7ffff689be90) at gtk2widgetset.inc:2517
+        VLITEM = 0x0
+        VLMSG = 0x1
+        I = 32767
+#5  0x000000000086ca20 in RUNLOOP (this=0x7ffff689be90) at include/application.inc:1427
+No locals.
+#6  0x00000000008d7488 in APPRUN (this=0x7ffff68a2390, ALOOP=...) at include/interfacebase.inc:54
+No locals.
+#7  0x000000000086c9bc in RUN (this=0x7ffff689be90) at include/application.inc:1415
+No locals.
+#8  0x000000000063b2d2 in RUNLCLAPPLICATION () at src/ui/lcl/uLCLCoexist.pas:183
+No locals.
+#9  0x00000000007f97c5 in RUNTR4W () at src/uProgramMain.pas:3176
+        C = 10336
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x7ffff4120720
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7ffff6586460
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0xda0e88 'DEBUG'
+#10 0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== SIGSEGV before Pascal handling ===
+
+Thread 6 (Thread 0x7fffe77fe6c0 (LWP 107533) "gdbus"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775b11f in g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff727ae1a in ?? () from /lib/x86_64-linux-gnu/libgio-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 5 (Thread 0x7fffe7fff6c0 (LWP 107532) "pool-0"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b930 in g_cond_wait_until () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff7721753 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721d85 in g_async_queue_timeout_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778c1cd in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0x7ffff4d4e6c0 (LWP 107531) "gmain"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff775ae71 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0x7ffff554f6c0 (LWP 107530) "pool-spawner"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff778be40 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#6  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0x7ffff62be6c0 (LWP 107528) "[pango] fontcon"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721c2b in g_async_queue_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff708b2a7 in ?? () from /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0x7ffff68db9c0 (LWP 107515) "tr4w"):
+#0  0x000000000086ca68 in RUNLOOP (this=0x7ffff689be90) at include/application.inc:1429
+No locals.
+#1  0x00000000008d7488 in APPRUN (this=0x7ffff68a2390, ALOOP=...) at include/interfacebase.inc:54
+No locals.
+#2  0x000000000086c9bc in RUN (this=0x7ffff689be90) at include/application.inc:1415
+No locals.
+#3  0x000000000063b2d2 in RUNLCLAPPLICATION () at src/ui/lcl/uLCLCoexist.pas:183
+No locals.
+#4  0x00000000007f97c5 in RUNTR4W () at src/uProgramMain.pas:3176
+        C = 10336
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x7ffff4120720
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7ffff6586460
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0xda0e88 'DEBUG'
+#5  0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== Pascal exception raised ===
+0x7fffe5d32740:	0xe8c078 <VMT_$SYSUTILS_$$_EACCESSVIOLATION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007fffffffe900 in ?? ()
+No symbol table info available.
+#3  0x00007ffff7ffd000 in ?? ()
+No symbol table info available.
+#4  0x00007ffff4546dd8 in ?? ()
+No symbol table info available.
+#5  0x00007ffff7ffd000 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffe370 in ?? ()
+No symbol table info available.
+#7  0x000000000086ca68 in RUNLOOP (this=0x7ffff689be90) at include/application.inc:1429
+No locals.
+#8  0x00000000008d7488 in APPRUN (this=0x7ffff68a2390, ALOOP=...) at include/interfacebase.inc:54
+No locals.
+#9  0x000000000086c9bc in RUN (this=0x7ffff689be90) at include/application.inc:1415
+No locals.
+#10 0x000000000063b2d2 in RUNLCLAPPLICATION () at src/ui/lcl/uLCLCoexist.pas:183
+No locals.
+#11 0x00000000007f97c5 in RUNTR4W () at src/uProgramMain.pas:3176
+        C = 10336
+        TEMPSTRING = 'gl'#0#0#0#0#0'pæÿÿÿ'#127#0 <repeats 26 times>, '@èç'#0#0#0#0#0#128'çÿÿÿ'#127#0#0'J'#2#0#0#0#0#0#0'K'#2#0#0#0#0#0#0#0'Ðÿ÷ÿ'#127#0#0#0#0#0#0#0#0#0#0#128'æÿÿÿ'#127#0#0'V'#23'}'#0#0#0#0#0'Ðæÿÿÿ'#127#0#0#0#0#0#0#0#0#0#0#1#0 <repeats 19 times>, 'ÿ'#127#0#0#1'áYöÿ'#127#0#0#152'·Ú'#0#0#0#0#0'Ð'#131'}'#0#0#0#0#0#19'çÿÿÿ'#127#0#0'À'#18#0#0#8#0#2#0#2'4Yöÿ'#127#0#0#0'/÷'#0
+        TRADIOLIBRARYERROR = 0x0
+        CONVERTEDHOMES = 0
+        STOREDCOMPUTERID = 0x0
+        READINESSGAPS = 0x7ffff4120720
+        GAPINDEX = 0
+        READINESSCONTEST = 0x7ffff6586460
+        YEARCONTEST = false
+        IMPORTREPORT = 0x0
+        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        LOADEDLANG = 0x0
+        SDEBUGLEVEL = 0xda0e88 'DEBUG'
+#12 0x000000000041f12e in main () at tr4w.lpr:827
+No locals.
+
+=== Pascal exception raised ===
+0x7fffe5d314e0:	0xe8ca78 <VMT_$SYSUTILS_$$_ETHREADERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007fffffffdd40 in ?? ()
+No symbol table info available.
+#3  0x00000000004378bc in SYSTEM_$$_SYSREALLOCMEM$POINTER$QWORD$$POINTER ()
+No symbol table info available.
+#4  0x0000000000000010 in ?? ()
+No symbol table info available.
+#5  0x00007ffff7ffd000 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffde50 in ?? ()
+No symbol table info available.
+#7  0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#8  0x00000000000000ec in ?? ()
+No symbol table info available.
+#9  0x000000000043580b in SYSTEM_$$_HANDLEERRORADDRFRAME$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#10 0x00007fffffffe970 in ?? ()
+No symbol table info available.
+#11 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== SIGSEGV before Pascal handling ===
+
+Thread 6 (Thread 0x7fffe77fe6c0 (LWP 107533) "gdbus"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775b11f in g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff727ae1a in ?? () from /lib/x86_64-linux-gnu/libgio-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 5 (Thread 0x7fffe7fff6c0 (LWP 107532) "pool-0"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b930 in g_cond_wait_until () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff7721753 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721d85 in g_async_queue_timeout_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778c1cd in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0x7ffff4d4e6c0 (LWP 107531) "gmain"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff775ae71 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0x7ffff554f6c0 (LWP 107530) "pool-spawner"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff778be40 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#6  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0x7ffff62be6c0 (LWP 107528) "[pango] fontcon"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721c2b in g_async_queue_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff708b2a7 in ?? () from /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0x7ffff68db9c0 (LWP 107515) "tr4w"):
+#0  0x0000000000a24eec in KILLTIMER (this=0x7ffff422e500) at customtimer.pas:103
+No locals.
+#1  0x0000000000a24e7a in DESTROY (this=0x7ffff422e500, vmt=0x1) at customtimer.pas:88
+No locals.
+#2  0x0000000000430a7b in SYSTEM$_$TOBJECT_$__$$_FREE ()
+No symbol table info available.
+#3  0x00000000011ea8d8 in RTTI_$COMCTRLS_$$_def00001423$indirect ()
+No symbol table info available.
+#4  0x0000000000472117 in SYSUTILS_$$_FREEANDNIL$formal ()
+No symbol table info available.
+#5  0x0000000000e7e840 in ?? ()
+No symbol table info available.
+#6  0x000000000068a229 in UAPPTIMERS_$$_finalize$ () at src/ui/lcl/uAppTimers.pas:188
+No locals.
+#7  0x0000000000435307 in SYSTEM_$$_FINALIZEUNITS ()
+No symbol table info available.
+#8  0x00007ffff7fa8e10 in ?? ()
+No symbol table info available.
+#9  0x0000000000435646 in SYSTEM_$$_INTERNALEXIT ()
+No symbol table info available.
+#10 0x00007fffffffe380 in ?? ()
+No symbol table info available.
+#11 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6893980:	0xe8c078 <VMT_$SYSUTILS_$$_EACCESSVIOLATION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00000000012038bb in INIT_$HTMLDEFS_$$_THTMLELEMENTPROPS ()
+No symbol table info available.
+#3  0x0000000000434347 in SYSTEM_$$_RECORDRTTI$POINTER$POINTER$TRTTIPROC ()
+No symbol table info available.
+#4  0x00000000004344d0 in ?? ()
+No symbol table info available.
+#5  0x00007ffff7ffd000 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffe210 in ?? ()
+No symbol table info available.
+#7  0x0000000000a24eec in KILLTIMER (this=0x7ffff422e500) at customtimer.pas:103
+No locals.
+#8  0x0000000000a24e7a in DESTROY (this=0x7ffff422e500, vmt=0x1) at customtimer.pas:88
+No locals.
+#9  0x0000000000430a7b in SYSTEM$_$TOBJECT_$__$$_FREE ()
+No symbol table info available.
+#10 0x00000000011ea8d8 in RTTI_$COMCTRLS_$$_def00001423$indirect ()
+No symbol table info available.
+#11 0x0000000000472117 in SYSUTILS_$$_FREEANDNIL$formal ()
+No symbol table info available.
+#12 0x0000000000e7e840 in ?? ()
+No symbol table info available.
+#13 0x000000000068a229 in UAPPTIMERS_$$_finalize$ () at src/ui/lcl/uAppTimers.pas:188
+No locals.
+#14 0x0000000000435307 in SYSTEM_$$_FINALIZEUNITS ()
+No symbol table info available.
+#15 0x00007ffff7fa8e10 in ?? ()
+No symbol table info available.
+#16 0x0000000000435646 in SYSTEM_$$_INTERNALEXIT ()
+No symbol table info available.
+#17 0x00007fffffffe380 in ?? ()
+No symbol table info available.
+#18 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff68973c0:	0xe8ca78 <VMT_$SYSUTILS_$$_ETHREADERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007fffffffdb28 in ?? ()
+No symbol table info available.
+#3  0x0000000000446016 in CTHREADS_$$_CRELOCATETHREADVAR$LONGWORD$$POINTER ()
+No symbol table info available.
+#4  0x0000000000d428d0 in .Ld2$strlab ()
+No symbol table info available.
+#5  0x00007ffff6893980 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffdc00 in ?? ()
+No symbol table info available.
+#7  0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#8  0x00000000000000ec in ?? ()
+No symbol table info available.
+#9  0x000000000043580b in SYSTEM_$$_HANDLEERRORADDRFRAME$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#10 0x00007fffffffe210 in ?? ()
+No symbol table info available.
+#11 0x0000000000a24eec in KILLTIMER (this=0x435069) at customtimer.pas:103
+No locals.
+#12 0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#13 0x00007fffffffdc1c in ?? ()
+No symbol table info available.
+#14 0x000000000043807b in SYSTEM_$$_ENTERCRITICALSECTION$TRTLCRITICALSECTION ()
+No symbol table info available.
+#15 0x00007ffff6543000 in ?? ()
+No symbol table info available.
+#16 0x00000000008a108e in CLASSES$_$TTHREADLIST_$__$$_LOCKLIST$$TLIST ()
+No symbol table info available.
+#17 0x00007ffff6593ae0 in ?? ()
+No symbol table info available.
+#18 0x00000000008af065 in CLASSES$_$TINTERFACELIST_$__$$_GETCOUNT$$LONGINT ()
+No symbol table info available.
+#19 0x00007ffff7fb0a40 in ?? ()
+No symbol table info available.
+#20 0x00000000008a1131 in CLASSES$_$TTHREADLIST_$__$$_UNLOCKLIST ()
+No symbol table info available.
+#21 0x00007ffff6593ae0 in ?? ()
+No symbol table info available.
+#22 0x00000000008af0b4 in CLASSES$_$TINTERFACELIST_$__$$_GETCOUNT$$LONGINT ()
+No symbol table info available.
+#23 0x00007ffff6543080 in ?? ()
+No symbol table info available.
+#24 0x00007fff00000000 in ?? ()
+No symbol table info available.
+#25 0x00007fffffffdbb8 in ?? ()
+No symbol table info available.
+#26 0x00007fffffffdcb0 in ?? ()
+No symbol table info available.
+#27 0x8a6afa7900000001 in ?? ()
+No symbol table info available.
+#28 0x00007ffff6593ae0 in ?? ()
+No symbol table info available.
+#29 0x00007fffffffdc20 in ?? ()
+No symbol table info available.
+
+=== SIGSEGV before Pascal handling ===
+
+Thread 6 (Thread 0x7fffe77fe6c0 (LWP 107533) "gdbus"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775b11f in g_main_loop_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff727ae1a in ?? () from /lib/x86_64-linux-gnu/libgio-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 5 (Thread 0x7fffe7fff6c0 (LWP 107532) "pool-0"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b930 in g_cond_wait_until () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff7721753 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721d85 in g_async_queue_timeout_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778c1cd in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 4 (Thread 0x7ffff4d4e6c0 (LWP 107531) "gmain"):
+#0  0x00007ffff73e372e in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff73d8388 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#2  0x00007ffff73d83cd in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#3  0x00007ffff744cbee in ppoll () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#4  0x00007ffff775a78c in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff775ae20 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff775ae71 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#7  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#8  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#9  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 3 (Thread 0x7ffff554f6c0 (LWP 107530) "pool-spawner"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff778be40 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#5  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#6  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 2 (Thread 0x7ffff62be6c0 (LWP 107528) "[pango] fontcon"):
+#0  0x00007ffff74574f9 in syscall () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#1  0x00007ffff778b484 in g_cond_wait () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#2  0x00007ffff772177b in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#3  0x00007ffff7721c2b in g_async_queue_pop () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#4  0x00007ffff708b2a7 in ?? () from /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
+No symbol table info available.
+#5  0x00007ffff778bb83 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+No symbol table info available.
+#6  0x00007ffff73db8bb in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+#7  0x00007ffff7459538 in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+No symbol table info available.
+
+Thread 1 (Thread 0x7ffff68db9c0 (LWP 107515) "tr4w"):
+#0  0x0000000000000000 in ?? ()
+No symbol table info available.
+#1  0x000000000078d243 in URADIOHAMLIBDIRECT_$$_finalize$ () at src/radioFactory/uRadioHamLibDirect.pas:1572
+No locals.
+#2  0x0000000000435307 in SYSTEM_$$_FINALIZEUNITS ()
+No symbol table info available.
+#3  0x00007ffff7fa8e10 in ?? ()
+No symbol table info available.
+#4  0x0000000000435646 in SYSTEM_$$_INTERNALEXIT ()
+No symbol table info available.
+#5  0x00007fffffffe130 in ?? ()
+No symbol table info available.
+#6  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff68973c0:	0xe8c078 <VMT_$SYSUTILS_$$_EACCESSVIOLATION>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00000000006c54ac in LOG (this=0xa24eec, LOGLEVEL=0x78d243, MESSAGE=0x0, ERR=0xe7e840) at include/Log4D.pas:1965
+No locals.
+#3  0x0000000000435307 in SYSTEM_$$_FINALIZEUNITS ()
+No symbol table info available.
+#4  0x00007ffff7fa8e10 in ?? ()
+No symbol table info available.
+#5  0x0000000000435646 in SYSTEM_$$_INTERNALEXIT ()
+No symbol table info available.
+#6  0x00007fffffffe130 in ?? ()
+No symbol table info available.
+#7  0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6897360:	0xe8ca78 <VMT_$SYSUTILS_$$_ETHREADERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007fffffffd930 in ?? ()
+No symbol table info available.
+#3  0x0000000000446016 in CTHREADS_$$_CRELOCATETHREADVAR$LONGWORD$$POINTER ()
+No symbol table info available.
+#4  0x0000000000d428d0 in .Ld2$strlab ()
+No symbol table info available.
+#5  0x00007ffff68973c0 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffda08 in ?? ()
+No symbol table info available.
+#7  0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#8  0x00000000000000ec in ?? ()
+No symbol table info available.
+#9  0x000000000043580b in SYSTEM_$$_HANDLEERRORADDRFRAME$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#10 0x00007fffffffe010 in ?? ()
+No symbol table info available.
+#11 0x0000000000000000 in ?? ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6894500:	0xe8ca78 <VMT_$SYSUTILS_$$_ETHREADERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007ffff7fa9230 in ?? ()
+No symbol table info available.
+#3  0x0000000000446016 in CTHREADS_$$_CRELOCATETHREADVAR$LONGWORD$$POINTER ()
+No symbol table info available.
+#4  0x00007ffff7fb0980 in ?? ()
+No symbol table info available.
+#5  0x00007ffff68973c0 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffdc38 in ?? ()
+No symbol table info available.
+#7  0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#8  0x00000000000000ec in ?? ()
+No symbol table info available.
+#9  0x000000000043580b in SYSTEM_$$_HANDLEERRORADDRFRAME$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#10 0x00007ffff658f080 in ?? ()
+No symbol table info available.
+#11 0x00007ffff658f080 in ?? ()
+No symbol table info available.
+#12 0x00000000000000ec in ?? ()
+No symbol table info available.
+#13 0x00000000004358ae in SYSTEM_$$_HANDLEERRORADDRFRAMEIND$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#14 0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#15 0x00007fffffffdc38 in ?? ()
+No symbol table info available.
+#16 0x0000000000000031 in ?? ()
+No symbol table info available.
+#17 0x0000000000435069 in SYSTEM_$$_FPC_THREADERROR ()
+No symbol table info available.
+#18 0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#19 0x00007ffff658ef40 in ?? ()
+No symbol table info available.
+#20 0x000000000043807b in SYSTEM_$$_ENTERCRITICALSECTION$TRTLCRITICALSECTION ()
+No symbol table info available.
+#21 0x0000000000000001 in ?? ()
+No symbol table info available.
+#22 0x00000000006c532a in LOCKLOGGER (this=0x7ffff658f080) at include/Log4D.pas:1948
+No locals.
+#23 0x00000000006c47cf in CLOSEALLAPPENDERS (this=0x7ffff658f080) at include/Log4D.pas:1743
+        INDEX = 0
+#24 0x00000000006c6e24 in SHUTDOWN (this=0x7ffff659e1c0) at include/Log4D.pas:2396
+        INDEX = 1
+#25 0x00000000006c5ff7 in DESTROY (this=0x7ffff659e1c0, vmt=0x1) at include/Log4D.pas:2131
+No locals.
+#26 0x0000000000430a7b in SYSTEM$_$TOBJECT_$__$$_FREE ()
+No symbol table info available.
+#27 0x0000000000e7e840 in ?? ()
+No symbol table info available.
+#28 0x00000000006d0de0 in LOG4D_$$_finalize$ () at include/Log4D.pas:4558
+No locals.
+#29 0x0000000000435307 in SYSTEM_$$_FINALIZEUNITS ()
+No symbol table info available.
+
+=== Pascal exception raised ===
+0x7ffff6894520:	0xe8ca78 <VMT_$SYSUTILS_$$_ETHREADERROR>
+#0  0x0000000000432030 in fpc_raiseexception ()
+No symbol table info available.
+#1  0x00000000004740f5 in SYSUTILS_$$_RUNERRORTOEXCEPT$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#2  0x00007fffffffd6e0 in ?? ()
+No symbol table info available.
+#3  0x0000000000446016 in CTHREADS_$$_CRELOCATETHREADVAR$LONGWORD$$POINTER ()
+No symbol table info available.
+#4  0x0000000000d428d0 in .Ld2$strlab ()
+No symbol table info available.
+#5  0x00007ffff68973c0 in ?? ()
+No symbol table info available.
+#6  0x00007fffffffd7b8 in ?? ()
+No symbol table info available.
+#7  0x0000000000446554 in CTHREADS_$$_CENTERCRITICALSECTION$formal ()
+No symbol table info available.
+#8  0x00000000000000ec in ?? ()
+No symbol table info available.
+#9  0x000000000043580b in SYSTEM_$$_HANDLEERRORADDRFRAME$LONGINT$POINTER$POINTER ()
+No symbol table info available.
+#10 0x00007fffffffe010 in ?? ()
+No symbol table info available.
+#11 0x0000000000000000 in ?? ()
+No symbol table info available.
+[Inferior 1 (process 107515) exited with code 0331]

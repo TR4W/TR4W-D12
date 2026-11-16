@@ -1,0 +1,39 @@
+--- a/lcl/interfaces/cocoa/cocoacustomcontrol.pas
++++ b/lcl/interfaces/cocoa/cocoacustomcontrol.pas
+@@ -24,6 +24,7 @@
+   public
+     callback: ICommonCallback;
+     auxMouseByParent: Boolean;
++   function accessibilityChildren: NSArray; override;
+     procedure dealloc; override;
+     function acceptsFirstResponder: LCLObjCBoolean; override;
+     procedure drawRect(dirtyRect: NSRect); override;
+@@ -91,6 +92,28 @@
+ 
+ { TCocoaCustomControl }
+ 
++function TCocoaCustomControl.accessibilityChildren: NSArray;
++var
++   ChildViews: NSArray;
++   VisibleChildren: NSMutableArray;
++   Child: NSView;
++   I: NSInteger;
++begin
++   // NSControl does not enumerate child views by default. LCL uses this
++   // class as a container. Preserve native hidden-view filtering.
++   ChildViews := subviews;
++   VisibleChildren := NSMutableArray.arrayWithCapacity(ChildViews.count);
++   for I := 0 to NSInteger(ChildViews.count) - 1 do
++      begin
++      Child := NSView(ChildViews.objectAtIndex(I));
++      if not Child.isHiddenOrHasHiddenAncestor then
++         begin
++         VisibleChildren.addObject(Child);
++         end;
++      end;
++   Result := NSAccessibilityUnignoredChildren(VisibleChildren);
++end;
++
+ procedure TCocoaCustomControl.setStringValue(avalue: NSString);
+ begin
+   if Assigned(fstr) then fstr.release;
