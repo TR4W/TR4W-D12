@@ -603,7 +603,9 @@ uses
    (* IsADIFARRLSection -- the one list of ADIF's section codes. *)
    uARRLSections,
    (* IsValidPOTAPark -- the one shape test for a park reference. *)
-   uPOTAReference;
+   uPOTAReference,
+   (* IsIOTAReference -- the one shape test for an IOTA reference. *)
+   uStationFieldCheck;
 
 var
    logger : TLogLogger;
@@ -1164,29 +1166,11 @@ begin
    Result := True;
 end;
 
+(* The rule is uStationFieldCheck.IsIOTAReference, lifted there 2026-11-16
+  when the Preferences Station page became its second user. *)
 function IsADIFIOTARef(const aText: string): Boolean;
-var
-   v : string;
-   i : Integer;
 begin
-   Result := False;
-   v := UpperCase(aText);
-   if (Length(v) <> 6) or (v[3] <> '-') then
-      begin
-      Exit;
-      end;
-   if not ((v[1] >= 'A') and (v[1] <= 'Z') and (v[2] >= 'A') and (v[2] <= 'Z')) then
-      begin
-      Exit;
-      end;
-   for i := 4 to 6 do
-      begin
-      if not IsADIFDigit(v[i]) then
-         begin
-         Exit;
-         end;
-      end;
-   Result := True;
+   Result := IsIOTAReference(aText);
 end;
 
 function ADIFZoneInRange(aZone, aMaxZone: Integer): Boolean;

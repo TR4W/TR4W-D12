@@ -97,6 +97,8 @@ uses
    uSettingsBinding,          // TSettingBindings -- a field on the form below
    uCommandHelp,              // TCommandHelp -- the bound controls' tooltips
    uSettingsRegistry,         (* TSettingBase -- the generated-row builders' parameter *)
+   uStationFieldCheck,        (* StationFieldProblem; TStationFocusDestination, a
+                                 method parameter type below *)
   uTR4WStrings,
   utils_text;
 
@@ -347,6 +349,10 @@ type
       lblStationHeading: TLabel;
       lblContestHeading: TLabel;
       lblStationHint: TLabel;
+      (* THE ONE LINE THAT SAYS WHICH STATION FIELD IS WRONG AND WHY -- no
+        dialog (NY4I, 2026-11-16: a modal is "a very old school way to alert a
+        user"). Empty when every field is right. *)
+      lblStationProblem: TLabel;
       lblMyContinent: TInputCaption;
       cbxMyContinent: TComboBox;
       lblMyCall: TInputCaption;
@@ -883,6 +889,18 @@ type
         absent from here was never loaded through CommandText, and ApplyIfChanged
         then writes it unconditionally -- the old behaviour. }
       FLoaded: TStringList;
+
+      (* EACH STATION FIELD'S CURRENT PROBLEM, at StationFields' index ('' for
+        none) -- what its red mark means, and what lblStationProblem says. *)
+      FStationProblems: array of string;
+      (* THE FOCUS HOLD (see HoldStationFocusAsync). FHoldPending: one hold
+        is queued, so a second exit does not queue another. FRestoringFocus:
+        focus is being put back into field FHoldIndex, so the exit that move
+        causes in the field being left is not the operator's and holds
+        nothing -- two wrong fields cannot bounce focus between them. *)
+      FHoldPending: boolean;
+      FRestoringFocus: boolean;
+      FHoldIndex: integer;
       // The keyer library, sharing settings\tr4w.json with the radios.
       // uTR4WConfigFile owns the root; neither store knows about the other.
       //
@@ -1097,6 +1115,27 @@ type
 
       { Apply and store, but ONLY if this differs from what the page loaded. }
       function  ApplyIfChanged(const aCommand, aValue: string): boolean;
+      (* Is aValue what the page LOADED for aCommand? The question
+        ApplyIfChanged asks before writing; the Station check asks it to
+        leave a derived MY ZONE / MY COUNTRY unjudged. *)
+      function  LoadedValueIs(const aCommand, aValue: string): boolean;
+      (* THE STATION FIELDS' FORMAT CHECK, inline -- see the block above
+        StationFieldExit. *)
+      function  StationFieldProblemOf(const aField: TStationField): string;
+      procedure SetStationProblem(const aFields: TArray<TStationField>;
+                                  aIndex: integer; const aProblem: string);
+      procedure ShowStationProblem(const aFields: TArray<TStationField>;
+                                   aPreferred: integer; aRefusedSave: boolean);
+      function  CheckAllStationFields(const aFields: TArray<TStationField>): integer;
+      function  StationPageReadyToSave: boolean;
+      function  StationFieldIndex(const aFields: TArray<TStationField>;
+                                  Sender: TObject): integer;
+      procedure StationFieldExit(Sender: TObject);
+      procedure StationFieldEnter(Sender: TObject);
+      procedure StationFieldChange(Sender: TObject);
+      function  StationFocusDestination: TStationFocusDestination;
+      procedure HoldStationFocusAsync(aIndex: PtrInt);
+      procedure WireStationFieldEvents;
       function  SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
       procedure LoadStationPanel;
       function  SaveStationPanel: boolean;
@@ -2187,6 +2226,12 @@ begin
      revealed exactly like the password above it (issue 293). *)
    AttachPasswordReveal(edtNetTailcat);
    AttachPasswordReveal(edtHamScorePass);
+
+   (* EACH STATION FIELD IS CHECKED WHEN IT LOSES FOCUS AND AS IT IS EDITED
+     (NY4I, 2026-11-16: "Why not do the edit when focus leaves the field").
+     One pair of handlers for the list, assigned here so the list in
+     StationFields is the only place that names the fields. *)
+   WireStationFieldEvents;
    LogPhase(FTiming, 'stream .lfm');
 
    // English lives in the .fmx; TranslateForm overrides only what a language
@@ -2400,6 +2445,9 @@ begin
    // Before FStore goes: a provider still pointing here would hand a freed
    // store to the next setting that tried to save.
    uSettingsLegacy.ActiveStoreProvider := nil;
+
+   (* A focus hold still queued must not run on a freed form. *)
+   Application.RemoveAsyncCalls(Self);
 
    FreeAndNil(FBindings);
    FreeAndNil(FCommandHelp);   // after the bindings, which point at it
@@ -6705,6 +6753,345 @@ begin
    Result.Edit    := aEdit;
 end;
 
+(* THE STATION FIELDS ARE CHECKED INLINE (NY4I, 2026-11-16).
+
+  The rule is uStationFieldCheck.StationFieldProblem. NO DIALOG -- a modal at
+  focus loss was "a very old school way to alert a user". A field that is
+  wrong turns red and lblStationProblem, ONE line under the fields, names it
+  and says why. Nothing takes focus while the operator works and nothing
+  blocks tabbing.
+
+    focus leaves a field   that field is judged, marked, and named
+    a field is edited      its mark clears the moment it is right or empty
+                           (it is not marked while being typed: "5" on the
+                           way to "50" is not an error)
+    the page loads/shows   EVERY field is judged, so a bad value stored in
+                           the file is marked before anyone touches it
+    Save, OK, Apply,       EVERY field is judged again; one still wrong
+    Activate, the X        refuses the whole Station page (nothing on it is
+                           written), the dialog stays open, the page is
+                           shown and focus goes to the first wrong field
+
+  EVERY FIELD, NOT ONLY THE EDITED ONES: NY4I fixed his section, pressed
+  Save, and the park 'abcdedf' that had been LOADED from the file was saved
+  with it, because it never lost focus.
+
+  THE ONE EXCEPTION IS A DERIVATION. MY ZONE and MY COUNTRY show what TR4W
+  worked out from the callsign when the operator stated none -- MY ZONE is an
+  ITU zone (up to 90) in CW Open's and EUHFC's zone mode, see
+  LoadStationPanel. That text is the program's, not the operator's, so it is
+  not judged while it is still what the page loaded. *)
+procedure TPrefsForm.WireStationFieldEvents;
+var
+   f: TStationField;
+begin
+   for f in StationFields do
+      begin
+      f.Edit.OnExit   := StationFieldExit;
+      f.Edit.OnEnter  := StationFieldEnter;
+      f.Edit.OnChange := StationFieldChange;
+      end;
+end;
+
+function TPrefsForm.StationFieldProblemOf(const aField: TStationField): string;
+var
+   text: string;
+begin
+   Result := '';
+   text := Trim(aField.Edit.Text);
+   if LoadedValueIs(aField.Command, text) then
+      begin
+      if UnicodeSameText(aField.Command, 'MY ZONE') and (not Settings.My.ZoneWasSet) then
+         begin
+         Exit;
+         end;
+      if UnicodeSameText(aField.Command, 'MY COUNTRY') and (not Settings.My.CountryWasSet) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := StationFieldProblem(aField.Command, text);
+end;
+
+(* MARKED BY ITS TEXT COLOUR, red as lblClusterServerHint's warning is, and
+  put back to the theme's own when fixed. Not the Hint: that carries the
+  command's help (uSettingsBinding). *)
+procedure TPrefsForm.SetStationProblem(const aFields: TArray<TStationField>;
+                                       aIndex: integer; const aProblem: string);
+begin
+   if Length(FStationProblems) <> Length(aFields) then
+      begin
+      SetLength(FStationProblems, Length(aFields));
+      end;
+   FStationProblems[aIndex] := aProblem;
+   if aProblem <> '' then
+      begin
+      aFields[aIndex].Edit.Font.Color := clRed;
+      end
+   else
+      begin
+      aFields[aIndex].Edit.Font.Color := clDefault;
+      end;
+end;
+
+(* THE LINE UNDER THE FIELDS: the field at aPreferred if it is wrong, else the
+  first wrong one, named by its own caption (the designed TInputCaption whose
+  FocusControl it is, so it is translated as the page is). Empty when every
+  field is right. aRefusedSave says the Station page was not saved. *)
+procedure TPrefsForm.ShowStationProblem(const aFields: TArray<TStationField>;
+                                        aPreferred: integer; aRefusedSave: boolean);
+var
+   i: integer;
+   shown: integer;
+   caption: string;
+   text: string;
+   parent: TWinControl;
+begin
+   shown := -1;
+   if (aPreferred >= 0) and (aPreferred <= High(FStationProblems)) and
+      (FStationProblems[aPreferred] <> '') then
+      begin
+      shown := aPreferred;
+      end
+   else
+      begin
+      for i := 0 to High(FStationProblems) do
+         begin
+         if FStationProblems[i] <> '' then
+            begin
+            shown := i;
+            Break;
+            end;
+         end;
+      end;
+
+   if shown < 0 then
+      begin
+      lblStationProblem.Caption := '';
+      Exit;
+      end;
+
+   caption := aFields[shown].Command;
+   parent := aFields[shown].Edit.Parent;
+   for i := 0 to parent.ControlCount - 1 do
+      begin
+      if (parent.Controls[i] is TStaticText) and
+         (TStaticText(parent.Controls[i]).FocusControl = aFields[shown].Edit) then
+         begin
+         caption := Trim(UTF8Decode(TStaticText(parent.Controls[i]).Caption));
+         Break;
+         end;
+      end;
+
+   text := caption + ' ' + FStationProblems[shown];
+   if aRefusedSave then
+      begin
+      text := UnicodeFormat(SStationPageNotSaved, [text]);
+      end;
+   lblStationProblem.Caption := LclText(text);
+end;
+
+(* EVERY FIELD JUDGED AND MARKED; the index of the first wrong one, or -1.
+  The page-order answer is uStationFieldCheck.FirstStationFieldProblem's
+  (pinned there); this adds the marks and the derivation exception. *)
+function TPrefsForm.CheckAllStationFields(const aFields: TArray<TStationField>): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to High(aFields) do
+      begin
+      SetStationProblem(aFields, i, StationFieldProblemOf(aFields[i]));
+      if (Result < 0) and (FStationProblems[i] <> '') then
+         begin
+         Result := i;
+         end;
+      end;
+end;
+
+(* THE SAVE GATE, asked by ApplyNow before anything is captured or written.
+  A wrong field refuses the save: the Station page is shown, focus goes to
+  that field, and the line says the page was not saved and why. *)
+function TPrefsForm.StationPageReadyToSave: boolean;
+var
+   fields: TArray<TStationField>;
+   first: integer;
+begin
+   fields := StationFields;
+   first := CheckAllStationFields(fields);
+   ShowStationProblem(fields, first, first >= 0);
+   Result := first < 0;
+   if not Result then
+      begin
+      FocusControlOnItsSection(fields[first].Edit);
+      end;
+end;
+
+function TPrefsForm.StationFieldIndex(const aFields: TArray<TStationField>;
+                                      Sender: TObject): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to High(aFields) do
+      begin
+      if aFields[i].Edit = Sender then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+(* FOCUS LEFT A FIELD: judge it, mark it, name it -- and, when it is wrong,
+  queue the question whether focus goes back into it (HoldStationFocusAsync).
+  Queued, not done here: changing focus inside the control's own OnExit
+  fights the focus change still in progress, and only after it has finished
+  is it known WHERE focus went. *)
+procedure TPrefsForm.StationFieldExit(Sender: TObject);
+var
+   fields: TArray<TStationField>;
+   i: integer;
+begin
+   if Loading then
+      begin
+      Exit;
+      end;
+   fields := StationFields;
+   i := StationFieldIndex(fields, Sender);
+   if i < 0 then
+      begin
+      Exit;
+      end;
+   SetStationProblem(fields, i, StationFieldProblemOf(fields[i]));
+   ShowStationProblem(fields, i, False);
+
+   if (FStationProblems[i] <> '') and (not FRestoringFocus) and
+      (not FHoldPending) then
+      begin
+      FHoldPending := True;
+      Application.QueueAsyncCall(HoldStationFocusAsync, i);
+      end;
+end;
+
+(* The field focus was being put back into has it: the restore is over. *)
+procedure TPrefsForm.StationFieldEnter(Sender: TObject);
+var
+   fields: TArray<TStationField>;
+begin
+   fields := StationFields;
+   if FRestoringFocus and (StationFieldIndex(fields, Sender) = FHoldIndex) then
+      begin
+      FRestoringFocus := False;
+      end;
+end;
+
+(* WHERE FOCUS IS NOW, in ShouldHoldFocus's terms. Anything that is not the
+  Station page lets the operator go; see uStationFieldCheck.ShouldHoldFocus. *)
+function TPrefsForm.StationFocusDestination: TStationFocusDestination;
+var
+   c: TWinControl;
+begin
+   if (not Visible) or (Screen.ActiveForm <> Self) then
+      begin
+      Result := sfdOutsideForm;
+      Exit;
+      end;
+   c := ActiveControl;
+   if c = nil then
+      begin
+      Result := sfdOtherControl;
+      end
+   else if c is TCustomButton then
+      begin
+      Result := sfdDialogButton;
+      end
+   else if c = tvNav then
+      begin
+      Result := sfdNavigation;
+      end
+   else if layStation.Visible and layStation.ContainsControl(c) then
+      begin
+      Result := sfdStationPage;
+      end
+   else
+      begin
+      Result := sfdOtherControl;
+      end;
+end;
+
+(* THE CURSOR STAYS IN A WRONG FIELD (NY4I, 2026-11-16: "when there is an
+  error, shouldn't the cursor be left in that field even if I hit tab?").
+  Runs once the focus change that left the field is over. Focus goes back,
+  text selected, only when ShouldHoldFocus says so -- a Tab or click within
+  the Station page. Cancel, OK, Apply, another page, another window, a
+  closing form and an emptied field are never held. When two fields are
+  wrong, the one just left is the one held; the exit the restore causes in
+  the other is ignored (FRestoringFocus).
+
+  QueueAsyncCall, now that the program runs Application.Run (the timer note
+  in FocusControlOnItsSection predates that). Removed in the destructor. *)
+procedure TPrefsForm.HoldStationFocusAsync(aIndex: PtrInt);
+var
+   fields: TArray<TStationField>;
+   edit: TEdit;
+begin
+   FHoldPending := False;
+   if Loading then
+      begin
+      Exit;
+      end;
+   fields := StationFields;
+   if (aIndex < 0) or (aIndex > High(fields)) or
+      (aIndex > High(FStationProblems)) then
+      begin
+      Exit;
+      end;
+   edit := fields[aIndex].Edit;
+   if not ShouldHoldFocus(FStationProblems[aIndex], Trim(edit.Text),
+                          StationFocusDestination) then
+      begin
+      Exit;
+      end;
+   if not edit.CanFocus then
+      begin
+      Exit;
+      end;
+
+   FHoldIndex := aIndex;
+   FRestoringFocus := True;
+   edit.SetFocus;
+   edit.SelectAll;
+   (* Where focus moves at once, OnEnter has already cleared the flag; where
+     it arrives later (gtk2), OnEnter clears it then. *)
+   if edit.Focused then
+      begin
+      FRestoringFocus := False;
+      end;
+end;
+
+(* A FIELD WAS EDITED: clear its mark the moment it is right or empty, and let
+  the line move on to the next wrong field. A field still wrong keeps its
+  mark until focus leaves it. *)
+procedure TPrefsForm.StationFieldChange(Sender: TObject);
+var
+   fields: TArray<TStationField>;
+   i: integer;
+begin
+   if Loading then
+      begin
+      Exit;
+      end;
+   fields := StationFields;
+   i := StationFieldIndex(fields, Sender);
+   if (i < 0) or (StationFieldProblemOf(fields[i]) <> '') then
+      begin
+      Exit;
+      end;
+   SetStationProblem(fields, i, '');
+   ShowStationProblem(fields, -1, False);
+end;
+
 
 { ---------------------------------------------------- External Software ---- }
 
@@ -6736,14 +7123,21 @@ begin
       end;
 end;
 
+(* Is aValue what the page loaded for aCommand -- the snapshot CommandText
+  took? ApplyIfChanged's test, and the Station field check's. *)
+function TPrefsForm.LoadedValueIs(const aCommand, aValue: string): boolean;
+begin
+   Result := (FLoaded <> nil) and (FLoaded.IndexOfName(aCommand) >= 0) and
+             (FLoaded.Values[aCommand] = aValue);
+end;
+
 { WRITE WHAT CHANGED.  See the long note on TSettingBinding.Save for why an
   untouched control must not be written: the same Preferences save that raised
   NY4I's band map display limit switched his All bands and All modes filters
   back on, because Save wrote every control on the page. }
 function TPrefsForm.ApplyIfChanged(const aCommand, aValue: string): boolean;
 begin
-   if (FLoaded <> nil) and (FLoaded.IndexOfName(aCommand) >= 0) and
-      (FLoaded.Values[aCommand] = aValue) then
+   if LoadedValueIs(aCommand, aValue) then
       begin
       Result := True;
       Exit;
@@ -8568,6 +8962,11 @@ begin
       f.Edit.Text := LclText(CommandText(f.Command));
       end;
 
+   (* EVERY FIELD JUDGED AS LOADED, so a bad value the file holds is marked
+     and named before anyone touches it (see the block above
+     StationFieldExit). *)
+   ShowStationProblem(StationFields, CheckAllStationFields(StationFields), False);
+
    // Continent is a ckList: the value is a SPELLING in ContinentTypeSA, and the
    // combo is filled from that array rather than typed into the designer, for
    // the same reason the log level is -- one vocabulary, no drift, and a new
@@ -8650,6 +9049,8 @@ end;
 function TPrefsForm.SaveStationPanel: boolean;
 var
    f: TStationField;
+   fields: TArray<TStationField>;
+   first: integer;
    bad: string;
    callText: string;
    (* Issue 300: the license year before the write -- the station's, what the
@@ -8666,6 +9067,20 @@ var
 begin
    Result := True;
    bad := '';
+
+   (* NOTHING ON THE PAGE IS WRITTEN WHILE ANY FIELD IS WRONG -- every field,
+     touched or not (see the block above StationFieldExit). Said on the line
+     under the fields, no dialog. This runs from CaptureProfileFields on any
+     change elsewhere in Preferences too, which is why it never moves focus;
+     the explicit save's gate (StationPageReadyToSave) does. *)
+   fields := StationFields;
+   first := CheckAllStationFields(fields);
+   if first >= 0 then
+      begin
+      ShowStationProblem(fields, first, True);
+      Result := False;
+      Exit;
+      end;
 
    // A CALLSIGN THAT DOES NOT LOOK LIKE ONE IS QUERIED, NOT REFUSED (NY4I: "if
    // it looks wrong ask the user to confirm... but accept it if they confirm").
@@ -8729,11 +9144,11 @@ begin
    contestSentBefore := SessionZoneTextSent(ContestIdentity(Contest));
    contestSendsYear := ContestReceivedYearKind(ContestIdentity(Contest)) <> rykNone;
 
-   for f in StationFields do
+   for f in fields do
       begin
       if not ApplyIfChanged(f.Command, Trim(f.Edit.Text)) then
          begin
-         bad := bad + f.Command + ' = "' + Trim(f.Edit.Text) + '"' + sLineBreak;
+         bad := bad + ' ' + f.Command + ' = "' + Trim(f.Edit.Text) + '"';
          Result := False;
          end;
       end;
@@ -8743,7 +9158,7 @@ begin
       if not ApplyIfChanged('MY CONTINENT',
                                   cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
          begin
-         bad := bad + 'MY CONTINENT' + sLineBreak;
+         bad := bad + ' MY CONTINENT';
          Result := False;
          end;
       end;
@@ -8797,8 +9212,10 @@ begin
       // REPORTED, not swallowed.  A refused value means the operator's typing
       // did not take, and the only thing worse than a rejection is a silent
       // one -- they would close Preferences believing the station was set.
-      ShowMessage(TC_THESEENTRIESWEREACCEPTEDBEENSAVED
-                  + sLineBreak + sLineBreak + bad);
+      (* ON THE LINE UNDER THE FIELDS, like every other Station refusal (NY4I,
+        2026-11-16: no dialog). The format check above refuses first, so this
+        is only what the settings model refuses beyond it. *)
+      lblStationProblem.Caption := LclText(string(TC_THESEENTRIESWEREACCEPTEDBEENSAVED) + bad);
       end;
 end;
 
@@ -9405,6 +9822,16 @@ var
    err, conflicts, changed: string;
 begin
    Result := False;
+
+   (* A STATION FIELD STILL WRONG REFUSES THE SAVE before anything is
+     captured: the page is shown, focus goes to the field and the line under
+     the fields says why. False keeps the dialog open for OK and for the X's
+     "save" answer. *)
+   if not StationPageReadyToSave then
+      begin
+      Exit;
+      end;
+
    CaptureProfileFields;
 
    if not SaveStore(err) then
@@ -9618,6 +10045,10 @@ begin
    // query is still a single action. Clearing there would mean retyping the
    // whole query to check the second match, which is the common case.
    edtSearch.Text := '';
+
+   (* EVERY STATION FIELD JUDGED ON EACH OPENING, so a bad stored value is
+     marked whichever way the page was reached. No focus is moved. *)
+   ShowStationProblem(StationFields, CheckAllStationFields(StationFields), False);
 end;
 
 procedure TPrefsForm.FormClose(Sender: TObject; var Action: TCloseAction);

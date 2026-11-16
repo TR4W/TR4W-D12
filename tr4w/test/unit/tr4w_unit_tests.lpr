@@ -116,6 +116,7 @@ uses
    uARRLSections        in '..\..\src\uARRLSections.pas',
    uPOTAReference       in '..\..\src\uPOTAReference.pas',
    uGridShape           in '..\..\src\uGridShape.pas',
+   uStationFieldCheck   in '..\..\src\uStationFieldCheck.pas',
    uDXCCEntities        in '..\..\src\uDXCCEntities.pas',
    uTestADIFExchange    in 'uTestADIFExchange.pas',
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
@@ -220,6 +221,7 @@ uses
    uTestOffBandCredit   in 'uTestOffBandCredit.pas',
    uTestAutomaticXQSO   in 'uTestAutomaticXQSO.pas',
    uTestMalformedGrid   in 'uTestMalformedGrid.pas',
+   uTestStationFieldCheck in 'uTestStationFieldCheck.pas',
    uTestSpotText        in 'uTestSpotText.pas',
    uTestCrashLogGone    in 'uTestCrashLogGone.pas',
    uTestFrameworkIsolation in 'uTestFrameworkIsolation.pas',
@@ -1307,6 +1309,7 @@ begin
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TAutomaticXQSOTests.Create('AutomaticXQSO'));
    RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
+   RegisterSuite(TStationFieldCheckTests.Create('StationFieldCheck'));
    RegisterSuite(TSpotTextTests.Create('SpotText'));
    RegisterSuite(TCrashLogGoneTests.Create('CrashLogGone'));
    RegisterSuite(TFrameworkIsolationTests.Create('FrameworkIsolation'));

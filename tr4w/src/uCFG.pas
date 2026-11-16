@@ -449,7 +449,8 @@ uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to
      uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names
      uContestRegistry,     // KnownContests, ContestId -- CONTEST's vocabulary
      uColumnWidthStore,    (* ContestColumnWidths -- where a COLUMN WIDTH line goes *)
-     uStateBridge;         // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
+     uStationFieldCheck,   (* LicenseYearIsDigits; the Station page's country hook *)
+     uStateBridge;      // RefreshWSJTXIndicator -- the box tracks WSJT-X ENABLED
 
 var
    { Commands the CURRENT contest .cfg set explicitly. Single digits in every
@@ -1915,26 +1916,13 @@ begin
    Result := (Length(aValue) = 1) and (aValue[1] >= 'A') and (aValue[1] <= 'Z');
 end;
 
-(* MY LICENSE YEAR: NOTHING, OR ONE TO FOUR DIGITS -- a year ('1985'), a
-  year's last two digits ('85') or a count of years ('9'). A value that is not
-  digits would send nothing and say nothing, so it is refused where it is
-  typed. Whether the number suits the open contest's kind is the contest's
-  question (uContestBase.SentLicenseYearText), not this check's. *)
-function MyLicenseYearIsDigits(const aValue: string): boolean;
-var
-   value: string;
-   i: integer;
-begin
-   value := Trim(aValue);
-   Result := Length(value) <= 4;
-   for i := 1 to Length(value) do
-      begin
-      if (value[i] < '0') or (value[i] > '9') then
-         begin
-         Result := False;
-         end;
-      end;
-end;
+(* MY LICENSE YEAR: NOTHING, OR ONE TO FOUR DIGITS -- the rule is
+  uStationFieldCheck.LicenseYearIsDigits (lifted there 2026-11-16 so the
+  Preferences Station page asks the same function at focus loss), registered
+  below. A value that is not digits would send nothing and say nothing, so it
+  is refused where it is typed. Whether the number suits the open contest's
+  kind is the contest's question (uContestBase.SentLicenseYearText), not this
+  check's. *)
 
 function MyCountryIsAKnownPrefix(const aValue: string): boolean;
 var
@@ -2073,7 +2061,10 @@ end;
   first MY COUNTRY line of the first file. *)
 initialization
    RegisterSettingValueCheck('My.Country', @MyCountryIsAKnownPrefix);
-   RegisterSettingValueCheck('My.LicenseYear', @MyLicenseYearIsDigits);
+   RegisterSettingValueCheck('My.LicenseYear', @LicenseYearIsDigits);
+   (* AND THE SAME COUNTRY RULE FOR THE STATION PAGE'S FOCUS-LOSS CHECK,
+     which is a leaf and cannot read CTY.DAT itself. *)
+   RegisterStationCountryCheck(@MyCountryIsAKnownPrefix);
    (* AND THE ONE THAT USED TO BE A crType. COMPUTER ID was ctAlphaChar,
      whose whole difference from ctChar is `if CustomCMD[1] in ['A'..'Z']`
      and Exit otherwise -- a REFUSAL, which is what a registered check does

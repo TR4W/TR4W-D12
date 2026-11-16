@@ -714,6 +714,38 @@ both are read and recorded by one pair of routines in `uRadioConfigApply`
 libraries after the wizard saves (`PreferencesReloadAfterExternalSave`), or
 its next save would delete what the wizard added.
 
+## The Station page checks each field's FORMAT, inline (2026-11-16)
+
+`uStationFieldCheck.StationFieldProblem(cmd, text)` (a leaf; '' = fine, else a
+translated reason, `SStationField*` in uAppStrings; `FirstStationFieldProblem`
+is the all-fields pass) drives the Station page. **NO DIALOG** (NY4I: a modal
+is "a very old school way to alert a user"): a wrong field's text turns red
+and ONE designed label, `lblStationProblem`, names it by its caption and says
+why. OnExit judges that field; OnChange clears its mark once right or empty;
+load and show judge EVERY field; `ApplyNow` asks `StationPageReadyToSave`
+first, which judges every field and REFUSES the whole Station page (dialog
+stays open, page shown, focus on the first wrong field) -- **every field, not
+only touched ones**: a bad park LOADED from the file was saved once because it
+never lost focus. Exempt: MY ZONE / MY COUNTRY still showing an unstated
+derivation (`ZoneWasSet`/`CountryWasSet` False). **A wrong field HOLDS the
+cursor** (NY4I): OnExit queues `HoldStationFocusAsync` (QueueAsyncCall), which
+refocuses and selects it only when `ShouldHoldFocus` says the destination is
+the Station page itself -- never a button, the nav tree, another window, a
+closing form, or an emptied field. **MY STATE is judged only when exactly two
+letters** (LooksLikeAState + PR VI GU AS MP); anything else is a polymorphic
+QTH and is accepted. **It is Preferences'
+question, NOT a registered value check** -- registering would refuse old
+`.cfg` lines with the modal. Rules reuse the one copy:
+`IsGoodLookingGrid` (4/6 only), `IsADIFARRLSection` + `DX`, `IsValidPOTAPark`
+per comma-separated park, and three predicates LIFTED into the leaf --
+`IsIOTAReference` (uADIF delegates), `CheckCountAndLetterClass`
+(`TContestBase.ValidateCountAndLetterClass` maps it to its message; the
+letters are `FIELD_DAY_CLASS_LETTERS` / `WINTER_FIELD_DAY_CLASS_LETTERS`), and
+`LicenseYearIsDigits` (uCFG registers it). MY COUNTRY reaches CTY.DAT through
+`RegisterStationCountryCheck`, which uCFG fills with `MyCountryIsAKnownPrefix`.
+Not checked: MY STATE, MY POSTAL CODE, MY NAME, MY CALL. Pinned by
+`uTestStationFieldCheck`.
+
 ## Open
 
 **The startup precedence defect is NARROWER, NOT CLOSED.** The

@@ -11871,3 +11871,73 @@ msgstr ""
 #, fuzzy
 msgid "Cluster"
 msgstr ""
+
+#: uappstrings.sstationfieldgrid
+#, fuzzy
+msgid "A grid square is two letters A to R and two digits, optionally followed by two letters: EL88 or EL88PA."
+msgstr ""
+
+#: uappstrings.sstationfieldzone
+#, fuzzy
+msgid "A CQ zone is a number from 1 to 40."
+msgstr ""
+
+#: uappstrings.sstationfieldituzone
+#, fuzzy
+msgid "An ITU zone is a number from 1 to 90, or 0 to use the zone CTY.DAT gives."
+msgstr ""
+
+#: uappstrings.sstationfieldsection
+#, fuzzy
+msgid "This is not an ARRL or RAC section. A station outside the US and Canada enters DX."
+msgstr ""
+
+#: uappstrings.sstationfieldcountry
+#, fuzzy
+msgid "This is not a CTY.DAT country prefix. The United States is K."
+msgstr ""
+
+#: uappstrings.sstationfieldpark
+#, fuzzy
+msgid "A park reference is two letters, a hyphen and four or five digits: US-1234. Separate several parks with commas."
+msgstr ""
+
+#: uappstrings.sstationfieldiota
+#, fuzzy
+msgid "An IOTA reference is two letters, a hyphen and three digits: NA-001."
+msgstr ""
+
+#: uappstrings.sstationfieldfdclass
+#, fuzzy
+msgid "A Field Day class is the number of transmitters and one letter: 2A, or 2H for Winter Field Day."
+msgstr ""
+
+#: uappstrings.sstationfieldcheck
+#, fuzzy
+msgid "The check is two digits, the last two of the year first licensed: 85."
+msgstr ""
+
+#: uappstrings.sstationfieldprec
+#, fuzzy
+msgid "The precedence is one letter: Q, A, B, U, M or S."
+msgstr ""
+
+#: uappstrings.sstationfieldfocnumber
+#, fuzzy
+msgid "The FOC number is digits only."
+msgstr ""
+
+#: uappstrings.sstationfieldlicenseyear
+#, fuzzy
+msgid "The license year is up to four digits: 1985, 85, or a number of years."
+msgstr ""
+
+#: uappstrings.sstationpagenotsaved
+#, fuzzy
+msgid "Station settings not saved. %s"
+msgstr ""
+
+#: uappstrings.sstationfieldstate
+#, fuzzy
+msgid "Two letters must be a US state, DC, a US territory or a Canadian province or territory. A county, grid or other QTH may be longer."
+msgstr ""

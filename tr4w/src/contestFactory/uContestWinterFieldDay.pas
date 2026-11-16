@@ -178,7 +178,9 @@ uses
    (* EmitADIFField -- the tag spellings are ADIF's; ADIFSectionStateOf,
       STATE from the worked station's resolved section (issue 266). *)
    uADIF,
-   uCanonicalExchange;
+   uCanonicalExchange,
+   (* WINTER_FIELD_DAY_CLASS_LETTERS -- named once, the Station page reads it too. *)
+   uStationFieldCheck;
 
 (* ONE POINT FOR PHONE (FM INCLUDED), TWO OTHERWISE.
 
@@ -244,7 +246,7 @@ end;
 function TContestWinterFieldDay.ValidateClass(const aClass: string;
                           out aErrorMessage: string): boolean;
 begin
-   Result := ValidateCountAndLetterClass(aClass, 'IOHM',
+   Result := ValidateCountAndLetterClass(aClass, WINTER_FIELD_DAY_CLASS_LETTERS,
                                          TC_IMPROPERWINTERFIELDDAYCLASS, aErrorMessage);
 end;
 

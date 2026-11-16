@@ -193,7 +193,9 @@ uses
    (* EmitADIFField -- the tag spellings are ADIF's; ADIFSectionStateOf,
       STATE from the worked station's resolved section (issue 266). *)
    uADIF,
-   uCanonicalExchange;
+   uCanonicalExchange,
+   (* FIELD_DAY_CLASS_LETTERS -- named once, the Station page reads it too. *)
+   uStationFieldCheck;
 
 procedure TContestARRLFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -220,7 +222,7 @@ end;
 function TContestARRLFieldDay.ValidateClass(const aClass: string;
                           out aErrorMessage: string): boolean;
 begin
-   Result := ValidateCountAndLetterClass(aClass, 'ABCDEF',
+   Result := ValidateCountAndLetterClass(aClass, FIELD_DAY_CLASS_LETTERS,
                                          TC_IMPROPERARRLFIELDDAYCLASS, aErrorMessage);
 end;
 

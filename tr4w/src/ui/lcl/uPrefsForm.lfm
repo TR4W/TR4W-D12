@@ -1493,10 +1493,21 @@ object PrefsForm: TPrefsForm
         FocusControl = edtMyLicenseYear
         TabOrder = 32
       end
+      object lblStationProblem: TLabel
+        Left = 12
+        Height = 34
+        Top = 332
+        Width = 640
+        AutoSize = False
+        Caption = ''
+        Font.Color = clRed
+        ParentFont = False
+        WordWrap = True
+      end
       object lblStationHint: TLabel
         Left = 12
         Height = 68
-        Top = 352
+        Top = 370
         Width = 640
         AutoSize = False
         Caption = 'These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.'#13#10'Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign.'

@@ -1431,6 +1431,15 @@ exactly. Ten legacy upper-case class names (`S48P14DC`, `EUDX`, `GC`, `JIDX`,
 pinned, because changing a class literal changes a value saved settings and tests pin.
 **A new file in `target\dom` is lower case, always.**
 
+## The Field Day class rule is a leaf's (2026-11-16)
+
+`TContestBase.ValidateCountAndLetterClass` maps
+`uStationFieldCheck.CheckCountAndLetterClass` (lifted line for line, so the
+Preferences Station page can check MY FD CLASS with the same rule) to the
+contest's message; the letters are `FIELD_DAY_CLASS_LETTERS` /
+`WINTER_FIELD_DAY_CLASS_LETTERS` there. A new class-carrying contest passes
+its own letters, as before.
+
 ## Coordinate with
 
 `contest-scoring` (the engine side of the same seam) · `log-database` (contest

@@ -727,6 +727,43 @@ resourcestring
       'Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the ' +
       'air sent %1:s, and its log should say so.';
 
+   (* WHY A STATION FIELD'S TEXT IS NOT THAT FIELD'S SHAPE (2026-11-16) --
+     uStationFieldCheck.StationFieldProblem's answers, shown by Preferences >
+     Station when the field loses focus and listed at Save. The line above
+     each names the setting and the text, so these carry no %s. *)
+   SStationFieldGrid =
+      'A grid square is two letters A to R and two digits, optionally ' +
+      'followed by two letters: EL88 or EL88PA.';
+   SStationFieldZone = 'A CQ zone is a number from 1 to 40.';
+   SStationFieldState =
+      'Two letters must be a US state, DC, a US territory or a Canadian ' +
+      'province or territory. A county, grid or other QTH may be longer.';
+   SStationFieldItuZone =
+      'An ITU zone is a number from 1 to 90, or 0 to use the zone CTY.DAT gives.';
+   SStationFieldSection =
+      'This is not an ARRL or RAC section. A station outside the US and ' +
+      'Canada enters DX.';
+   SStationFieldCountry =
+      'This is not a CTY.DAT country prefix. The United States is K.';
+   SStationFieldPark =
+      'A park reference is two letters, a hyphen and four or five digits: ' +
+      'US-1234. Separate several parks with commas.';
+   SStationFieldIota =
+      'An IOTA reference is two letters, a hyphen and three digits: NA-001.';
+   SStationFieldFDClass =
+      'A Field Day class is the number of transmitters and one letter: 2A, ' +
+      'or 2H for Winter Field Day.';
+   SStationFieldCheck =
+      'The check is two digits, the last two of the year first licensed: 85.';
+   SStationFieldPrec = 'The precedence is one letter: Q, A, B, U, M or S.';
+   SStationFieldFOCNumber = 'The FOC number is digits only.';
+   SStationFieldLicenseYear =
+      'The license year is up to four digits: 1985, 85, or a number of years.';
+   (* The line under the Station fields when a save is refused because a field
+     is still wrong: %s is that field's caption and its reason. Nothing on the
+     Station page is written until every field is right. *)
+   SStationPageNotSaved = 'Station settings not saved. %s';
+
    (* THE CWT'S QTH-OR-MEMBER-NUMBER ROW'S LABEL (2026-11-11): the prompt asks
      for a QTH or a CWops member number, and the row beside it read MY STATE.
      What is typed is kept in MY STATE and the command queued is MY STATE;

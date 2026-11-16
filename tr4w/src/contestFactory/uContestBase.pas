@@ -4781,6 +4781,9 @@ uses
    uTR4WStrings,
    (* SExchangeGridRequired -- RequireReceivedGrid's refusal (Q115). *)
    uAppStrings,
+   (* CheckCountAndLetterClass -- the class rule ValidateCountAndLetterClass
+      reports. A leaf. *)
+   uStationFieldCheck,
    (* THE SHARED EXCHANGE ARMS the base's export defaults call -- M4. Both
       units name this one in their interface for the record types, so the
       reference back is from the implementation, which Pascal allows. They
@@ -7628,83 +7631,26 @@ function TContestBase.ValidateCountAndLetterClass(const aClass: string;
                                                   const aValidLetters: string;
                                                   const aBadClassMessage: string;
                                                   out aErrorMessage: string): boolean;
-var
-   i: integer;
-   (* THE COUNT AS A NUMBER, not a string to convert back.
-
-      The legacy loop builds "2" as text and then StrToIntDefs it, which is a
-      round trip through a string for a value it just read a digit at a time --
-      and a narrowing conversion at the end, because the RTL's StrToIntDef here
-      takes an AnsiString. Accumulating is shorter, has no conversion, and the
-      digit COUNT is kept separately so an empty class can still be told from
-      a class of "0". *)
-   count: integer;
-   countDigits: integer;
-   category: string;
-   categorySet: boolean;
 begin
+   (* THE RULE IS uStationFieldCheck.CheckCountAndLetterClass, lifted there
+     line for line on 2026-11-16 when the Preferences Station page became its
+     second user (MY FD CLASS). What stays here is the contest's message. *)
    Result := False;
    aErrorMessage := '';
-   count := 0;
-   countDigits := 0;
-   category := '';
-   categorySet := False;
-
-   for i := 1 to Length(aClass) do
-      begin
-      if aClass[i] in ['0'..'9'] then
+   case CheckCountAndLetterClass(aClass, aValidLetters) of
+      calcBadCount:
          begin
-         inc(countDigits);
-         (* Capped so a long run of digits cannot overflow into a value that
-            happens to land back inside 1..99. Anything past two digits is
-            already invalid. *)
-         if countDigits <= 3 then
-            begin
-            count := count * 10 + (Ord(aClass[i]) - Ord('0'));
-            end
-         else
-            begin
-            count := 1000;
-            end;
-         end
-      else if Pos(UpCase(aClass[i]), aValidLetters) > 0 then
+         aErrorMessage := TC_IMPROPERTRANSMITTERCOUNT;
+         end;
+      calcBadLetter:
          begin
-         (* A SECOND letter empties the category rather than appending, so "2AB"
-            fails on the length test below. Reproduced from the legacy loop,
-            where it reads as a break with sCategory cleared. *)
-         if categorySet then
-            begin
-            category := '';
-            Break;
-            end
-         else
-            begin
-            categorySet := True;
-            category := category + aClass[i];
-            end;
-         end
+         aErrorMessage := aBadClassMessage;
+         end;
       else
          begin
-         (* Anything else at all -- a letter this contest does not use, or
-            punctuation. Empties the category so the message below is the
-            contest's own, rather than a generic one. *)
-         category := '';
-         Break;
+         Result := True;
          end;
-      end;
-
-   if (countDigits = 0) or (not (count in [1..99])) then
-      begin
-      aErrorMessage := TC_IMPROPERTRANSMITTERCOUNT;
-      end
-   else if Length(category) <> 1 then
-      begin
-      aErrorMessage := aBadClassMessage;
-      end
-   else
-      begin
-      Result := True;
-      end;
+   end;
 end;
 
 (* ------------------------------------------------------------------------ *)
