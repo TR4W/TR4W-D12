@@ -1777,34 +1777,18 @@ end;
   ReadRSTWord, which refuses anything over three; the message names it as
   typed. *)
 
-(* THE TYPED REPORT OF THESE TWELVE PARSERS: ReadRSTWord, WITH ONE EXCEPTION
-  KEPT FROM D7 (coordinator's ruling, 2026-11-16: no refusal D7 did not have,
-  beyond words that are no report at all). An RST typed on Phone -- three
-  digits, 100..599, '599' above all -- is no Phone report to ValidRST, but
-  every one of these parsers took it in D7 (C:\TR4W LOGSTUFF.PAS 1495, 2173,
-  2303, 3679, 3740, 3783, 3795, 3940, 3963, 4593, 8855: StrToInt of the word,
-  no range check; POTA 4943, 4949: StrToIntDef), and operators type 599 on
-  SSB. It is accepted and
-  the session's DEFAULT report is stored -- 59 on Phone -- where D7 stored the
-  digits as typed (599 on a Phone QSO). The zone and postcode parsers, which
-  refused it before this review (issues 274, 325), do not ask this. *)
+(* THE TYPED REPORT OF THESE TWELVE PARSERS: ReadRSTWord, WITH NO EXCEPTION.
+  NY4I, 2026-11-16: "a three digit rst would never be acceptable in a phone
+  contest regardless of the bug in D7". D7 took any number here (StrToInt of
+  the word, no range check: C:\TR4W LOGSTUFF.PAS 1495, 2173, 2303, 3679, 3740,
+  3783, 3795, 3940, 3963, 4593, 8855; POTA 4943, 4949), so a '599' typed on
+  SSB was stored. That was a defect, not a behaviour to keep: on Phone a
+  three-digit word is refused with the 'is not a signal report' message. An
+  earlier version of this routine accepted 100..599 and stored the default 59;
+  it is gone. *)
 function ReadTypedReportWord(const aWord: string; out aRST: smallInt): boolean;
-var
-  number: integer;
 begin
   Result := ReadRSTWord(Str10(aWord), aRST);
-  if (not Result)                     and
-     (not (ActiveMode in [CW, Digital])) and
-     (length(aWord) = 3)              and
-     StringIsAllNumbers(aWord)        then
-     begin
-     number := StrToIntDef(aWord, 0);
-     if (number >= 100) and (number <= 599) then
-        begin
-        aRST := DefaultRST;
-        Result := True;
-        end;
-     end;
 end;
 
 function ReadReportWordOrRefuse(const aWord: string; var aRST: smallInt): boolean;

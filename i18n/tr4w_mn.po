@@ -11012,10 +11012,11 @@ msgstr ""
 msgid "%0:s  (%1:d deg)"
 msgstr ""
 
-#: uappstrings.ssendspotexchangeincomment
-#: tfrmsendspot.chkexchange.caption
+#: uappstrings.ssendspotlocationincomment
+#: tfrmsendspot.chklocation.caption
 #, fuzzy
-msgid "Exchange in comment"
+#| msgid "Exchange in comment"
+msgid "Section/state/county in comment"
 msgstr ""
 
 #: tprefsform.lbllanguage.caption

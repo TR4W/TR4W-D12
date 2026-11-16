@@ -183,7 +183,8 @@ implementation
 uses
    uCaptionText,   // DisplayedText -- the caption as it is drawn
    uLCLFormHelpers, // CaptionFocusControl -- a TLabel's or a TStaticText's input
-   MainUnit;       // logger
+   MainUnit,       // logger
+   uCFG;           // NoteSharedPreferenceChange -- an edit the peers are told of
 
 procedure ApplyCommandHelpHint(const aControl: TControl;
                                const aHelp: TCommandHelp;
@@ -452,6 +453,12 @@ begin
       logger.Error('[SettingBinding] no setting called "%s"', [FKey]);
       Exit;
       end;
+
+   (* AN EDIT, so the other positions are told of it if the setting is shared
+     -- noted here, BEFORE the apply, and sent once at the explicit save
+     (uCFG.ShareNotedPreferenceChanges, issue 315). This runs on every
+     keystroke; the note keeps the value from before the first one. *)
+   NoteSharedPreferenceChange(s.LegacyCommand);
 
    if FCheck <> nil then
       begin

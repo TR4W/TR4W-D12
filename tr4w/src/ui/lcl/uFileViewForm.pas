@@ -105,6 +105,7 @@ uses
    PostUnit,              { PreviewFileNameAddress, PreviewFileIsCabrillo }
    uFileView,             { SendMail -- the MAPI half, which is not a window }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
+   uPlatformFonts,        { MonospaceFontName }
    MainUnit,              { logger }
    Log4D;
 
@@ -192,8 +193,12 @@ begin
    { The window is titled with the file it is showing, as SetWindowTextA did. }
    Caption := PreviewFileName;
 
-   { Cabrillo is a column format; a proportional face makes it unreadable. }
+   { Cabrillo is a column format; a proportional face makes it unreadable.
+     fpFixed alone is a hint the widget set may ignore -- on Windows the memo
+     stayed proportional (issue 177, NY4I 2026-11-16), so the name is asked of
+     the machine as the DX terminal does. }
    memView.Font.Pitch := fpFixed;
+   memView.Font.Name  := MonospaceFontName;
 
    LoadPreviewFile;
 

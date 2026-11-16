@@ -555,12 +555,20 @@ WIDTH rows, the row loop).
   `uCFG.SharedSettingNotSentText` (pure: shared AND over 255 UTF-8 bytes; never
   asks `NetIsConnected`) is not `''`, keeps the local value whole, then calls
   `SendParameterToNetwork`, which refuses and logs but **no longer speaks to the
-  operator itself** (so a connected station is told once). **PREFERENCES DOES NOT
-  SHARE AT ALL** (measured 2026-11-16): `TModelSetting.TrySetText` and
-  `ApplyAndStoreCommand` apply and save and send nothing, so a Preferences edit of
-  TAIL END CW MESSAGE, CONTEST TITLE etc. never reaches a peer at any length, and no
-  route that does share can carry a value near 255 today. The notice is a latent
-  guard until that is decided (multi-op-network / NY4I).
+  operator itself** (so a connected station is told once). **PREFERENCES SHARES
+  AT ITS SAVE (2026-11-16, NY4I: "If no settings are sent to the network, that is
+  an oversight").** The doors NOTE a shared command before applying it
+  (`TSettingBinding.Save`, `TPrefsForm.ApplyIfChanged` ->
+  `uCFG.NoteSharedPreferenceChange`, keeping the live value of the first note),
+  and `TPrefsForm.SaveStore` calls `uCFG.ShareNotedPreferenceChanges`, which sends
+  each LIVE value that differs -- once per save, not per keystroke (Preferences
+  applies on every keystroke). A kept-station-value edit does not change the live
+  value, so it sends nothing. `TModelSetting.TrySetText` and `ApplyAndStoreCommand`
+  still send nothing, because a PEER's value comes through `ApplyAndStoreCommand`
+  too; `ApplyPeerCommand` FORGETS a pending note (never echoed). No re-send on
+  link-up (not ruled). The wizard does not share. **13 of the list's names resolve
+  to nothing** (TAIL END x4 among them -- the issue's example could never be sent);
+  BAND, MODE and the five CW keying values LEFT the list that day (per-position).
 - **Left on purpose:** CfgCmd's Ctrl-V executed file and `ProcessConfigInstruction`
   (untrusted -- an owned name is accepted and inert there, so no setting value is
   lost); `SetUpContestByCommand` (a contest id). The eight other

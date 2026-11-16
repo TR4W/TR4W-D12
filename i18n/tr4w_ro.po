@@ -11167,10 +11167,12 @@ msgstr "Copiază locul"
 msgid "%0:s  (%1:d deg)"
 msgstr "%0:s (%1:d deg)"
 
-#: uappstrings.ssendspotexchangeincomment
-#: tfrmsendspot.chkexchange.caption
+# 2026-11-16 issue 175: English reworded from "Exchange in comment" (the tick sends only the section/state/county); this text translates the old wording -- review it
+#: uappstrings.ssendspotlocationincomment
+#: tfrmsendspot.chklocation.caption
 #, fuzzy
-msgid "Exchange in comment"
+#| msgid "Exchange in comment"
+msgid "Section/state/county in comment"
 msgstr "Schimb de observații"
 
 #: tprefsform.lbllanguage.caption

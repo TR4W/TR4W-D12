@@ -74,13 +74,20 @@ type
 
       procedure Test_TheAnnouncedStationCarriesTheTypedCallsign;
       procedure Test_TheConnectThreadDoesNotReadTheEntryField;
+
+      procedure Test_ANotedSharedEditIsSentOnceAtTheSave;
+      procedure Test_AnUnsharedEditIsNotSent;
+      procedure Test_AnEditTypedBackIsNotSent;
+      procedure Test_AnOverLongSharedEditIsToldAndNotSent;
+      procedure Test_OnePositionsSettingsAreNotShared;
    end;
 
 implementation
 
 uses
    SysUtils, Forms, StdCtrls, uNet, uNetClient, uNetFraming, uSpots,
-   uSettingsModel, uMainForm, uCrashLog, TF;
+   uSettingsModel, uMainForm, uCrashLog, TF,
+   uCFG;   (* the noted Preferences edits, issue 315 *)
 
 type
    (* A WRITER WITH NO SOCKET that keeps every packet's bytes. Runs on the
@@ -846,6 +853,200 @@ begin
    CheckTrue(Pos('GNetDrainer.AnnounceStation', body) > 0, 'it hands the announcement to the main thread');
 end;
 
+(* --------------------------------------------------------------------------- *)
+(* a Preferences edit of a shared setting (issue 315)                            *)
+(* --------------------------------------------------------------------------- *)
+
+const
+   (* Shared, owned by the settings object, contest-scoped: what Preferences
+     edits and the peers apply live. *)
+   SHARED_EDIT   = 'CONTEST TITLE';
+   (* A station's own: never sent. *)
+   UNSHARED_EDIT = 'MY NAME';
+   (* Sent straight after the flush, so "nothing was sent" is a packet that
+     arrives FIRST rather than a wait that times out. *)
+   SENTINEL      = 'TEST SENTINEL';
+
+(* The command and the value a parameter packet carries. *)
+function ParameterOf(const aBytes: TBytes; out aCommand, aValue: string): boolean;
+var
+   rec: TParameterToNetwork;
+begin
+   aCommand := '';
+   aValue := '';
+   Result := Length(aBytes) = SizeOf(TParameterToNetwork);
+   if not Result then
+      begin
+      Exit;
+      end;
+   rec := TParameterToNetworkPtr(@aBytes[0])^;
+   aCommand := string(rec.pnCommand);
+   aValue := string(rec.pnValue);
+end;
+
+function LiveValue(const aCommand: string): string;
+begin
+   if not Settings.TryGetByCommand(aCommand, Result) then
+      begin
+      Result := '';
+      end;
+end;
+
+(* The setting put back as the test found it -- its value, and whether it was
+  stated, because TrySetByCommand states a contest-scoped setting. *)
+procedure RestoreSetting(const aCommand, aValue: string; aStated: boolean);
+begin
+   Settings.TrySetByCommand(aCommand, aValue);
+   Settings.SetCommandStated(aCommand, aStated);
+   ForgetSharedPreferenceChange(aCommand);
+end;
+
+(* The first packet after a flush: the sentinel when the flush sent nothing. *)
+function FirstCommandAfterFlush(aLink: TCaptureLink; out aValue: string): string;
+begin
+   SendParameterToNetwork(SENTINEL, 'END');
+   Result := '';
+   aValue := '';
+   if WaitPackets(aLink, 1) then
+      begin
+      ParameterOf(aLink.Packet(0), Result, aValue);
+      end;
+end;
+
+procedure TNetClientPacketTests.Test_ANotedSharedEditIsSentOnceAtTheSave;
+var
+   link: TCaptureLink;
+   savedValue, command, value: string;
+   savedStated: boolean;
+begin
+   BeginTest('a shared Preferences edit is sent once, with its live value, at the save');
+   savedValue := LiveValue(SHARED_EDIT);
+   savedStated := Settings.CommandIsStated(SHARED_EDIT);
+   OpenLink(link);
+   try
+      CheckTrue(CommandIsSharedWithPeers(SHARED_EDIT), 'the premise: it is shared');
+
+      (* What a bound control does: note, then apply, as each keystroke does. *)
+      NoteSharedPreferenceChange(SHARED_EDIT);
+      CheckTrue(Settings.TrySetByCommand(SHARED_EDIT, 'MULTI'), 'a first keystroke');
+      NoteSharedPreferenceChange(SHARED_EDIT);
+      CheckTrue(Settings.TrySetByCommand(SHARED_EDIT, 'MULTI OP TITLE'), 'the last one');
+      CheckTrue(SharedPreferenceChangePending(SHARED_EDIT), 'noted, not yet sent');
+      CheckEquals(0, link.Count, 'nothing goes while the operator types');
+
+      ShareNotedPreferenceChanges;
+      CheckTrue(WaitPackets(link, 1), 'the save sends it');
+      CheckTrue(ParameterOf(link.Packet(0), command, value), 'a parameter packet');
+      CheckEquals(NET_PARAMETER_ID, IdOf(link.Packet(0)), 'with the parameter id');
+      CheckEquals(SHARED_EDIT, command, 'naming the setting');
+      CheckEquals('MULTI OP TITLE', value, 'carrying the final value, not a keystroke');
+      CheckFalse(SharedPreferenceChangePending(SHARED_EDIT), 'and the note is gone');
+
+      (* A second save with nothing new sends nothing. *)
+      ShareNotedPreferenceChanges;
+      SendParameterToNetwork(SENTINEL, 'END');
+      CheckTrue(WaitPackets(link, 2), 'the sentinel arrives');
+      ParameterOf(link.Packet(1), command, value);
+      CheckEquals(SENTINEL, command, 'a second save sent nothing before it');
+   finally
+      CloseLink(link);
+      RestoreSetting(SHARED_EDIT, savedValue, savedStated);
+   end;
+end;
+
+procedure TNetClientPacketTests.Test_AnUnsharedEditIsNotSent;
+var
+   link: TCaptureLink;
+   savedValue, value: string;
+   savedStated: boolean;
+begin
+   BeginTest('a Preferences edit of a station''s own setting is not sent');
+   savedValue := LiveValue(UNSHARED_EDIT);
+   savedStated := Settings.CommandIsStated(UNSHARED_EDIT);
+   OpenLink(link);
+   try
+      CheckFalse(CommandIsSharedWithPeers(UNSHARED_EDIT), 'the premise: not shared');
+      NoteSharedPreferenceChange(UNSHARED_EDIT);
+      CheckFalse(SharedPreferenceChangePending(UNSHARED_EDIT), 'an unshared name is not noted');
+      CheckTrue(Settings.TrySetByCommand(UNSHARED_EDIT, savedValue + 'X'), 'the edit');
+      ShareNotedPreferenceChanges;
+      CheckEquals(SENTINEL, FirstCommandAfterFlush(link, value), 'nothing was sent');
+   finally
+      CloseLink(link);
+      RestoreSetting(UNSHARED_EDIT, savedValue, savedStated);
+   end;
+end;
+
+procedure TNetClientPacketTests.Test_AnEditTypedBackIsNotSent;
+var
+   link: TCaptureLink;
+   savedValue, value: string;
+   savedStated: boolean;
+begin
+   BeginTest('a shared edit typed back to what it was sends nothing');
+   savedValue := LiveValue(SHARED_EDIT);
+   savedStated := Settings.CommandIsStated(SHARED_EDIT);
+   OpenLink(link);
+   try
+      NoteSharedPreferenceChange(SHARED_EDIT);
+      CheckTrue(Settings.TrySetByCommand(SHARED_EDIT, savedValue + 'X'), 'typed');
+      NoteSharedPreferenceChange(SHARED_EDIT);
+      CheckTrue(Settings.TrySetByCommand(SHARED_EDIT, savedValue), 'and typed back');
+      ShareNotedPreferenceChanges;
+      CheckEquals(SENTINEL, FirstCommandAfterFlush(link, value), 'nothing was sent');
+   finally
+      CloseLink(link);
+      RestoreSetting(SHARED_EDIT, savedValue, savedStated);
+   end;
+end;
+
+procedure TNetClientPacketTests.Test_AnOverLongSharedEditIsToldAndNotSent;
+var
+   link: TCaptureLink;
+   savedValue, longValue, value: string;
+   savedStated, beep: boolean;
+begin
+   BeginTest('a shared edit over 255 bytes is told and not sent; the value stays whole');
+   savedValue := LiveValue(SHARED_EDIT);
+   savedStated := Settings.CommandIsStated(SHARED_EDIT);
+   beep := Settings.Operating.BeepEnable;
+   Settings.Operating.BeepEnable := False;   (* the notice beeps *)
+   longValue := StringOfChar('T', 300);
+   OpenLink(link);
+   try
+      NoteSharedPreferenceChange(SHARED_EDIT);
+      CheckTrue(Settings.TrySetByCommand(SHARED_EDIT, longValue), 'the long value is taken here');
+      CheckTrue(SharedSettingNotSentText(SHARED_EDIT, longValue) <> '',
+                'the operator is told it will not be sent');
+      ShareNotedPreferenceChanges;
+      CheckEquals(SENTINEL, FirstCommandAfterFlush(link, value), 'and it was not sent');
+      CheckEquals(longValue, LiveValue(SHARED_EDIT), 'kept whole here, not cut');
+   finally
+      CloseLink(link);
+      RestoreSetting(SHARED_EDIT, savedValue, savedStated);
+      Settings.Operating.BeepEnable := beep;
+   end;
+end;
+
+(* ONE POSITION'S SETTINGS ARE NOT SHARED (issue 315). BAND and MODE assign
+  this position's ActiveBand and ActiveMode; the five CW values are its
+  operator's keying. Each resolves, and Preferences edits each, so a name
+  coming back onto the list would move or re-key every other position. *)
+procedure TNetClientPacketTests.Test_OnePositionsSettingsAreNotShared;
+const
+   OWN: array[0..6] of string = ('BAND', 'MODE', 'CODE SPEED', 'CW TONE',
+      'WEIGHT', 'FARNSWORTH ENABLE', 'FARNSWORTH SPEED');
+var
+   i: integer;
+begin
+   BeginTest('a position''s band, mode and CW keying are not shared with peers');
+   for i := Low(OWN) to High(OWN) do
+      begin
+      CheckTrue(Settings.OwnsCommand(OWN[i]), OWN[i] + ' resolves (the premise)');
+      CheckFalse(CommandIsSharedWithPeers(OWN[i]), OWN[i] + ' is not shared');
+      end;
+end;
+
 procedure TNetClientPacketTests.RunAllTests;
 begin
    Test_TheAnnouncedStationCarriesTheTypedCallsign;
@@ -866,6 +1067,12 @@ begin
    Test_TheGuardReportsEachBadPairOncePerLink;
 
    Test_EverySenderGoesThroughItsHelper;
+
+   Test_ANotedSharedEditIsSentOnceAtTheSave;
+   Test_AnUnsharedEditIsNotSent;
+   Test_AnEditTypedBackIsNotSent;
+   Test_AnOverLongSharedEditIsToldAndNotSent;
+   Test_OnePositionsSettingsAreNotShared;
 end;
 
 end.

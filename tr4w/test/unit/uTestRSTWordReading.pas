@@ -487,21 +487,24 @@ begin
       LeaveMode;
       end;
 
-   (* AN RST TYPED ON PHONE IS KEPT, AS D7 KEPT IT (coordinator's ruling,
-      2026-11-16: no refusal D7 did not have): '599' is accepted and the
-      Phone default, 59, is stored -- D7 stored 599 as typed. A three-digit
-      word that is no report at all is still refused. *)
+   (* A THREE-DIGIT RST ON PHONE IS REFUSED (NY4I, 2026-11-16: "a three digit
+      rst would never be acceptable in a phone contest regardless of the bug in
+      D7"). D7 stored it; that was a defect. *)
    EnterMode(Phone);
    try
       rx := Default(ContestExchange);
+      ExchangeErrorMessage := 'stale';
       accepted := ProcessRSTAndQTHExchange('599 DL', rx);
-      CheckTrue(accepted, '"599 DL" Phone is accepted, as in D7');
-      CheckEquals(59, Integer(rx.RSTReceived), '"599 DL" Phone: the Phone default report');
+      CheckFalse(accepted, '"599 DL" Phone is refused');
+      CheckEquals(UnicodeFormat(SExchangeNotASignalReport, ['599']), ExchangeErrorMessage,
+                  '"599 DL" Phone: the message names the report');
 
       rx := Default(ContestExchange);
+      ExchangeErrorMessage := 'stale';
       accepted := ProcessRSTAndContinentExchange('NA NA 599', rx);
-      CheckTrue(accepted, '"NA NA 599" Phone is accepted');
-      CheckEquals(59, Integer(rx.RSTReceived), '"NA NA 599" Phone: the Phone default report');
+      CheckFalse(accepted, '"NA NA 599" Phone is refused');
+      CheckEquals(UnicodeFormat(SExchangeNotASignalReport, ['599']), ExchangeErrorMessage,
+                  '"NA NA 599" Phone: the message names the report');
 
       rx := Default(ContestExchange);
       ExchangeErrorMessage := 'stale';

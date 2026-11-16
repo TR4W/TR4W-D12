@@ -186,10 +186,12 @@ var
   Was the row's crNetwork byte, and it is a list of names here -- the question
   belongs to the MULTI-OP PROTOCOL ("do the desks have to agree about this")
   rather than to the setting. SetCFGCommandValue and ApplyContestEdit announce
-  a change to peers when the answer is yes, through ShareWithPeers.
-  PREFERENCES DOES NOT (measured 2026-11-16, issue 315): TModelSetting and
-  ApplyAndStoreCommand apply and save, and send nothing to the other
-  positions. TSettingBase.Broadcast, which this used to name, is gone. *)
+  a change to peers when the answer is yes, through ShareWithPeers, and so does
+  PREFERENCES since issue 315 (2026-11-16) -- through the noted-change pair
+  below, once per explicit save. TModelSetting and ApplyAndStoreCommand
+  themselves still send nothing: a multi-op peer's value comes through
+  ApplyAndStoreCommand too. TSettingBase.Broadcast, which this used to name,
+  is gone. *)
 function CommandIsSharedWithPeers(const aCommand: string): boolean;
 
 (* WHAT THE OPERATOR IS TOLD WHEN A SHARED VALUE CANNOT GO ON THE WIRE (issue
@@ -205,6 +207,39 @@ function SharedSettingNotSentText(const aCommand, aValue: string): string;
   then refused (and logged) by SendParameterToNetwork. The one place this is
   decided, for SetCFGCommandValue and ApplyContestEdit. *)
 procedure ShareWithPeers(const aCommand, aValue: string);
+
+(* A PREFERENCES EDIT REACHES THE OTHER POSITIONS -- issue 315, 2026-11-16.
+
+  NY4I: "If no settings are sent to the network, that is an oversight. D7 had
+  the concept of sending settings to the network." D7 did it with a "Send to
+  network" button in its options dialog; this does it on the explicit save.
+
+  WHY NOTED, NOT SENT AS IT IS SET. Preferences applies a value on every
+  keystroke (TPrefsForm.CaptureProfileFields), so sending there would hand
+  the peers "5" on the way to "50", and say the 255-byte notice once per
+  character. So the Preferences doors (a bound control's save, and
+  TPrefsForm.ApplyIfChanged for a hand-wired one) NOTE a shared command just
+  BEFORE they apply it, and TPrefsForm.SaveStore sends what was noted.
+
+  WHAT IS SENT is the LIVE value at the save, and only when it differs from
+  the live value at the first note. So an edit typed and typed back sends
+  nothing, and a station edit of a setting the open contest holds
+  (TR4WSettings.StationValueIsKept: the kept station value changes, the live
+  one does not) sends nothing -- the peers apply a shared value LIVE, and this
+  position is not using the new one.
+
+  NEVER ECHOED. A peer's value arrives through ApplyPeerCommand, which never
+  notes and which FORGETS a pending note for the same command: the peer's
+  value is now the live one here, and sending it back is noise at best.
+  ApplyAndStoreCommand (which ApplyPeerCommand also calls) does not note.
+
+  NOT RE-SENT ON LINK-UP: an edit saved while the link is down is told (the
+  notice, if too long) and then lost to the peers, as every other share is.
+  Main thread only: Preferences and the network parse both run there. *)
+procedure NoteSharedPreferenceChange(const aCommand: string);
+function SharedPreferenceChangePending(const aCommand: string): boolean;
+procedure ForgetSharedPreferenceChange(const aCommand: string);
+procedure ShareNotedPreferenceChanges;
 
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 
@@ -409,7 +444,8 @@ procedure InitializeStrings;
 
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
-     uSettingsModel,       // Settings -- the commands that have left this array
+     Classes,              // TStringList -- the noted Preferences edits (issue 315)
+     uSettingsModel,      // Settings -- the commands that have left this array
      uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names
      uContestRegistry,     // KnownContests, ContestId -- CONTEST's vocabulary
      uColumnWidthStore,    (* ContestColumnWidths -- where a COLUMN WIDTH line goes *)
@@ -795,10 +831,27 @@ var
   BACKUP LOG FILE NAME LEFT ON 2026-10-25 (issue #98 step 2). It is a second
   name of BACKUP DESTINATION now, a folder on THIS machine -- a Mac path means
   nothing on a Windows peer -- and sending a folder under the old name would
-  make an older peer write its backup to a FILE called after the folder. *)
+  make an older peer write its backup to a FILE called after the folder.
+
+  SEVEN LEFT ON 2026-11-16 (issue 315), when Preferences began to send: BAND,
+  MODE, CODE SPEED, CW TONE, WEIGHT, FARNSWORTH ENABLE and FARNSWORTH SPEED.
+  NY4I: D7 shared "settings that affect the entire operation", and "some
+  settings were shared to the network that should not have been". These are
+  one POSITION'S: BAND and MODE are its operating band and mode (the effects
+  assign ActiveBand and ActiveMode), so sending one would move every other
+  position; the five CW values are the operator's own keying. No window sent
+  them before Preferences could (a BOOLSWAP function key on FARNSWORTH ENABLE,
+  through SetCFGCommandValue, was the one route). A peer running an older build may still
+  send them, and the receive side still applies what it is sent.
+
+  THIRTEEN NAMES HERE RESOLVE TO NOTHING (measured 2026-11-16, issue 315):
+  COPY FILES, CQ MENU, DISPLAY REFRESH, DVK PORT, HOUR OFFSET, ICOM COMMAND
+  PAUSE, INPUT CONFIG FILE, MULTIPLIER ITEM WIDTH, PADDLE PORT and the four
+  TAIL END names -- neither the settings object nor a store owns them, so no
+  door can send them. CONNECTION COMMAND is the cluster library's and is
+  inert as a command. Left for NY4I's ruling with the rest of the audit. *)
 const
-   SHARED_WITH_PEERS: array[0..36] of string = (
-      'BAND',
+   SHARED_WITH_PEERS: array[0..29] of string = (
       'CATEGORY-ASSISTED',
       'CATEGORY-BAND',
       'CATEGORY-MODE',
@@ -806,24 +859,19 @@ const
       'CATEGORY-OVERLAY',
       'CATEGORY-POWER',
       'CATEGORY-TRANSMITTER',
-      'CODE SPEED',
       'CONNECTION COMMAND',
       'CONTEST',
       'CONTEST NAME',
       'CONTEST TITLE',
       'COPY FILES',
       'CQ MENU',
-      'CW TONE',
       'DISPLAY REFRESH',
       'DVK PORT',
-      'FARNSWORTH ENABLE',
-      'FARNSWORTH SPEED',
       'HOUR OFFSET',
       'ICOM COMMAND PAUSE',
       'INITIAL EXCHANGE CURSOR POS',
       'INITIAL EXCHANGE FILENAME',
       'INPUT CONFIG FILE',
-      'MODE',
       'MULT REPORT MINIMUM BANDS',
       'MULTIPLIER ITEM WIDTH',
       'MY CONTINENT',
@@ -833,8 +881,7 @@ const
       'TAIL END CW MESSAGE',
       'TAIL END KEY',
       'TAIL END MESSAGE',
-      'TAIL END SSB MESSAGE',
-      'WEIGHT');
+      'TAIL END SSB MESSAGE');
 
 function CommandIsSharedWithPeers(const aCommand: string): boolean;
 var
@@ -887,6 +934,85 @@ begin
       end;
 
    SendParameterToNetwork(aCommand, aValue);
+end;
+
+var
+   (* THE PREFERENCES EDITS NOT YET SENT: one entry per shared command,
+     'COMMAND=<live value at its first note>', added with Add and read with
+     Names/ValueFromIndex -- never the Values[] setter, which deletes an entry
+     whose value is ''. Created on the first note; freed at finalization. *)
+   gNotedSharedChanges: TStringList = nil;
+
+procedure NoteSharedPreferenceChange(const aCommand: string);
+begin
+   if not CommandIsSharedWithPeers(aCommand) then
+      begin
+      Exit;
+      end;
+   if gNotedSharedChanges = nil then
+      begin
+      gNotedSharedChanges := TStringList.Create;
+      end;
+   (* THE FIRST NOTE'S VALUE IS THE ONE COMPARED: a later keystroke must not
+     move the baseline, or "50" typed over "5" would compare against "5". *)
+   (* THE LIST HOLDS UTF-8, as a TStringList does: a value with a letter outside
+     the ANSI page (a contest title) must survive the round trip. *)
+   if gNotedSharedChanges.IndexOfName(UTF8Encode(aCommand)) >= 0 then
+      begin
+      Exit;
+      end;
+   gNotedSharedChanges.Add(UTF8Encode(aCommand + '=' + CFGCommandValueAsString(aCommand)));
+end;
+
+function SharedPreferenceChangePending(const aCommand: string): boolean;
+begin
+   Result := (gNotedSharedChanges <> nil) and
+             (gNotedSharedChanges.IndexOfName(UTF8Encode(aCommand)) >= 0);
+end;
+
+procedure ForgetSharedPreferenceChange(const aCommand: string);
+var
+   i: integer;
+begin
+   if gNotedSharedChanges = nil then
+      begin
+      Exit;
+      end;
+   i := gNotedSharedChanges.IndexOfName(UTF8Encode(aCommand));
+   if i >= 0 then
+      begin
+      gNotedSharedChanges.Delete(i);
+      end;
+end;
+
+procedure ShareNotedPreferenceChanges;
+var
+   noted: TStringList;
+   i: integer;
+   command, live: string;
+begin
+   if (gNotedSharedChanges = nil) or (gNotedSharedChanges.Count = 0) then
+      begin
+      Exit;
+      end;
+
+   (* TAKEN BEFORE SENDING, so the set is empty whatever a send does -- a
+     notice cannot be shown twice for one save. *)
+   noted := gNotedSharedChanges;
+   gNotedSharedChanges := nil;
+   try
+      for i := 0 to noted.Count - 1 do
+         begin
+         command := UTF8Decode(noted.Names[i]);
+         live := CFGCommandValueAsString(command);
+         if live <> UTF8Decode(noted.ValueFromIndex[i]) then
+            begin
+            ShareWithPeers(command, live);
+            end;
+         end;
+   finally
+      noted.Free;
+   end;
 end;
 
 (*
@@ -2015,5 +2141,8 @@ initialization
    RegisterSettingAllowedValues('MainWindow.AlertColor', tr4wColorsSA);
    (* AND THE WORKED-MULTIPLIER COLOUR, from the same table (issue 12). *)
    RegisterSettingAllowedValues('BandMap.WorkedMultColor', tr4wColorsSA);
+
+finalization
+   FreeAndNil(gNotedSharedChanges);
 
 end.

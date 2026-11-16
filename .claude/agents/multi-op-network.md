@@ -898,12 +898,22 @@ door on a port the system picks.
   LINK STATE -- the issue's complaint was that an offline edit was never reported
   -- and keeps the local value whole. MainUnit's INSERT MODE still calls
   `SendParameterToNetwork` directly (not a shared-list name; always fits).
-- **PREFERENCES SENDS NOTHING TO PEERS** (measured 2026-11-16). `TModelSetting`
-  and `ApplyAndStoreCommand` apply and save only; `uPrefsForm`'s comment claiming
-  "every MY row is crNetwork:1 -- pushed to the other stations" is stale. The
-  only live senders are Auto-CQ's delay, a macro's boolean TOGGLE and the
-  Cabrillo summary's CATEGORY-* values. Whether Preferences should share
-  (and re-send on link-up, the issue's option c) is open for NY4I.
+- **PREFERENCES SENDS SHARED EDITS AT ITS SAVE** (2026-11-16, NY4I ruled the
+  silence an oversight). Noted per command before the apply
+  (`uCFG.NoteSharedPreferenceChange`, from `TSettingBinding.Save` and
+  `TPrefsForm.ApplyIfChanged`), sent once by `uCFG.ShareNotedPreferenceChanges`
+  in `TPrefsForm.SaveStore` through `ShareWithPeers` -- the LIVE value, and only
+  when it differs from the first note's. **No echo:** `ApplyPeerCommand` forgets
+  a pending note and never notes; `ApplyAndStoreCommand` (which it calls) does
+  not note either. The receive side is unchanged: it applies ANY name it is sent
+  (a secret excepted), so an older peer still sending BAND/MODE/CODE SPEED is
+  obeyed. **Re-send on link-up (option c) is NOT built** -- not ruled.
+- **The list was audited against D7's intent ("settings that affect the entire
+  operation") the same day.** BAND, MODE, CODE SPEED, CW TONE, WEIGHT,
+  FARNSWORTH ENABLE/SPEED left it (BAND/MODE assign ActiveBand/ActiveMode -- one
+  position's). D7 4.x had crNetwork=1 on 355 rows by DEFAULT, so it is not a
+  statement of intent. 13 remaining names resolve to nothing; the rest of the
+  audit is NY4I's to rule on.
 
 ## Coordinate with
 

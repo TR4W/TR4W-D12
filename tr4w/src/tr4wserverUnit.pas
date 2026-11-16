@@ -69,7 +69,8 @@ uses
   Dialogs,       // MessageDlg -- was MessageBoxW
   LCLType,       // MB_YESNO, IDYES, IDNO, IDOK -- was the Windows unit
   Controls,      // mrYes -- the modal results MessageDlg answers with
-  utils_text,    // SetCharBuffer -- a fixed AnsiChar field through its own bounds
+  Forms,         // Application.QueueAsyncCall -- the full-disk dialog (issue 314)
+  utils_text,   // SetCharBuffer -- a fixed AnsiChar field through its own bounds
   uAppPaths,     // LogFilePath -- where a written file goes, per platform
   uLogConfig,    // CreateTR4WLogLayout -- the same timestamps the client writes
   uServerForm;   // the readouts, by name instead of by control number
@@ -1354,6 +1355,29 @@ begin
   SetServerLogProblem(text);
 end;
 
+(* THE OPERATOR IS TOLD WITH A MODAL ERROR (NY4I on issue 314, 2026-11-16: the
+  relay stays, "it is a modal error to have the user resolve the disk space
+  issue"). Queued, not shown in place: NoteServerLogFailure runs inside the
+  handling of a station's QSO, and a modal loop there would hold that packet
+  half-processed. *)
+type
+  TServerLogDialogRelay = class
+     Reason: string;
+     procedure Show(aData: PtrInt);
+  end;
+
+var
+  ServerLogDialogRelay: TServerLogDialogRelay = nil;
+
+procedure TServerLogDialogRelay.Show(aData: PtrInt);
+begin
+  ServerMessageBox('The server log cannot be saved: ' + Reason +
+                   #13#10#13#10 +
+                   'QSOs are still relayed to the stations, but they are NOT being stored here. ' +
+                   'Free some disk space; the stations will be told when saving works again.',
+                   MB_ICONWARNING);
+end;
+
 procedure NoteServerLogFailure(const aReason: string);
 var
   first: boolean;
@@ -1368,6 +1392,12 @@ begin
      logger.Error('[Log] the server log is NOT SAVING: ' + aReason +
                   ' -- QSOs are still relayed to the stations and are not stored');
      SendNoticeToStations(ServerLogFailureNotice(aReason));
+     if ServerLogDialogRelay = nil then
+        begin
+        ServerLogDialogRelay := TServerLogDialogRelay.Create;
+        end;
+     ServerLogDialogRelay.Reason := aReason;
+     Application.QueueAsyncCall(ServerLogDialogRelay.Show, 0);
      end;
 end;
 

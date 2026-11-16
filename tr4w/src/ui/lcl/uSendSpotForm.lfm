@@ -75,16 +75,16 @@ object frmSendSpot: TfrmSendSpot
     TabOrder = 3
     OnChange = chkContestNameChange
   end
-  object chkExchange: TCheckBox
+  object chkLocation: TCheckBox
     Left = 10
     Height = 20
     Top = 128
     Width = 200
     AutoSize = True
-    Caption = 'Exchange in comment'
+    Caption = 'Section/state/county in comment'
     Constraints.MinWidth = 200
     TabOrder = 4
-    OnChange = chkExchangeChange
+    OnChange = chkLocationChange
   end
   object btnOK: TButton
     Left = 65

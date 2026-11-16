@@ -1412,7 +1412,7 @@ begin
       ClearPendingCounties;
 
       accepted := True;
-      EnterPartyQSO('VE2LINE', '599 MTL/LVL/LNS', Band10, Phone, eUSB, accepted, rx);
+      EnterPartyQSO('VE2LINE', '59 MTL/LVL/LNS', Band10, Phone, eUSB, accepted, rx);
       CheckFalse(accepted, 'three regions are refused');
       CheckEquals(Format(TC_TOOMANYCOUNTIES, [2]), string(ExchangeErrorMessage),
                   'with the county-count message');

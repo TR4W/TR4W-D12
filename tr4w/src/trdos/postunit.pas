@@ -1096,7 +1096,10 @@ procedure WriteScoreInformationToSummarySheet;
   layout     := ContestIdentity( Contest ).SummarySheet;
   TotalLine  := False;
   totalMults := -1; // To accomodate the totals line that will add one too many
-  sWriteFile( tReportFileWrite, h, length( h ) ); // QSO part of header
+  (* THE TEXT, NOT THE VARIABLE (issue 177, NY4I 2026-11-16: the sheet ended in
+    random characters and no QSO table). sWriteFile takes an untyped buffer, so
+    a string constant handed to it wrote the bytes of its POINTER. *)
+  sWriteFileFromString( tReportFileWrite, h ); // QSO part of header
 
   for m := Low( RemainingMultiplierType ) to High( RemainingMultiplierType ) do
      begin
@@ -1108,7 +1111,7 @@ procedure WriteScoreInformationToSummarySheet;
         [ string( mn[ m ] ) ] ) );
      end;
 
-  sWriteFile( tReportFileWrite, breakline, length( breakline ) );
+  sWriteFileFromString( tReportFileWrite, breakline );
 
   for Band   := Band160 to AllBands do
      begin
@@ -1126,7 +1129,7 @@ procedure WriteScoreInformationToSummarySheet;
                 begin
                 Continue;
                 end;
-             sWriteFile( tReportFileWrite, breakline, length( breakline ) );
+             sWriteFileFromString( tReportFileWrite, breakline );
              sWriteFileFromString( tReportFileWrite, #13#10 );
              TempMode  := Both;
              TotalLine := true;
@@ -3167,7 +3170,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                      begin
                      Break;
                      end;
-                  sWriteFile( tReportFileWrite, op, length( op ) );
+                  sWriteFileFromString( tReportFileWrite, op );
                   Continue;
                   end;
 

@@ -2526,6 +2526,12 @@ begin
          end;
       end;
 
+   (* AND TELL THE OTHER POSITIONS what changed among the shared settings
+     (issue 315) -- HERE, once per explicit save, because the values were
+     applied as they were typed and are live now whatever follows. The
+     hand-wired panels were captured by ApplyNow before this was called. *)
+   ShareNotedPreferenceChanges;
+
    // The UDP settings are validated on the SAME footing as the radio library,
    // and before anything is written: a duplicated endpoint or a row carrying
    // nothing is refused here rather than discovered as silence on the wire.
@@ -6743,6 +6749,10 @@ begin
       Exit;
       end;
 
+   (* NOTED FOR THE OTHER POSITIONS, before the apply, and sent at SaveStore
+     (issue 315) -- the hand-wired half of what TSettingBinding.Save does. *)
+   NoteSharedPreferenceChange(aCommand);
+
    // THE REAL WRITE.  Not ApplyIfChanged -- calling itself here is what a
    // careless global rename did on 2026-08-25, and it recursed until the stack
    // gave out the first time NY4I changed CW speed.
@@ -8699,6 +8709,8 @@ begin
    //      INBOUND change by calling CheckCommand.  csJSON makes CheckCommand
    //      inert, so a change made at another position would be accepted,
    //      written to the ini, and never reach the program.
+   //      (STALE since CFGCA went: of these rows only MY CONTINENT is in
+   //      uCFG.SHARED_WITH_PEERS, and it is sent at SaveStore -- issue 315.)
    //   2. MY CALL, MY CONTINENT, MY COUNTRY and MY ZONE carry crA hooks
    //      (F_MY_CALL, F_MY_CONTINENT, F_MY_COUNTRY, F_MY_ZONE) which derive
    //      dependent state.  A value copied past them leaves that state stale.

@@ -1456,9 +1456,11 @@ resourcestring
       spots by the beam heading (issue 82). *)
    SBandMapCenterOnRadio  = 'Center on radio frequency';
    SBandMapSortByBeam     = 'Sort by beam heading';
-   (* SEND SPOT: the tick that puts the station's section (or other domestic
-      multiplier) the program knows for the call into the comment (issue 175). *)
-   SSendSpotExchangeInComment = 'Exchange in comment';
+   (* SEND SPOT: the tick that puts the station's section, state or county
+      (its domestic multiplier) the program knows for the call into the
+      comment -- never a serial number, RST or the rest of the exchange
+      (issue 175; "Exchange in comment" until 2026-11-16). *)
+   SSendSpotLocationInComment = 'Section/state/county in comment';
    (* THE DX CLUSTER SPOTTED THIS STATION (issue 68): %s is the call of the
       station that posted the spot, as the cluster gave it. *)
    SYouAreSpottedBy = 'You are spotted by %s.';

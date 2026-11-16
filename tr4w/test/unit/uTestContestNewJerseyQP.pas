@@ -349,7 +349,7 @@ begin
       CheckTrue(accepted, 'typed DX accepted');
       CheckTrue(rx.DomesticMult, 'one DX domestic multiplier');
       CheckFalse(rx.DXMult, 'no country multiplier');
-      engine.Enter('JA1AAA', '599 DX', Band40, Phone, eUSB, accepted, rx);
+      engine.Enter('JA1AAA', '59 DX', Band40, Phone, eUSB, accepted, rx);
       CheckTrue(accepted, 'second DX country');
       CheckFalse(rx.DomesticMult, 'still the same one DX multiplier');
       CheckEquals(1, Integer(rx.QSOPoints), 'DX phone scores');

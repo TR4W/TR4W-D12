@@ -157,8 +157,8 @@ begin
 end;
 
 (* THE SEND SPOT COMMENT (issue 175): the contest's name, the station's
-  section, both one space apart, or nothing; a section the program does not
-  know adds nothing even when its tick is on. *)
+  section, state or county, both one space apart, or nothing; a location the
+  program does not know adds nothing even when its tick is on. *)
 procedure TSpotTextTests.Test_TheSpotCommentFollowsBothTicks;
 begin
    BeginTest('Test_TheSpotCommentFollowsBothTicks');
@@ -167,13 +167,13 @@ begin
    CheckEquals('ARRL-SS-CW', SpotCommentText('ARRL-SS-CW', 'NFL', True, False),
                'the contest name alone, as before');
    CheckEquals('NFL', SpotCommentText('ARRL-SS-CW', 'NFL', False, True),
-               'the section alone');
+               'the section/state/county alone');
    CheckEquals('ARRL-SS-CW NFL', SpotCommentText('ARRL-SS-CW', 'NFL', True, True),
                'both, one space apart');
    CheckEquals('ARRL-SS-CW', SpotCommentText('ARRL-SS-CW', '', True, True),
-               'no section known: no trailing space');
+               'no location known: no trailing space');
    CheckEquals('', SpotCommentText('ARRL-SS-CW', '', False, True),
-               'no section known and no contest name: no comment');
+               'no location known and no contest name: no comment');
 end;
 
 (* A COMMENT THE OPERATOR TYPED IS THEIRS (issue 175, review). Ticking either
@@ -194,6 +194,11 @@ begin
       frm.chkContestName.Checked := not frm.chkContestName.Checked;
       CheckEquals('UP 2 LOUD', string(frm.edtComment.Text),
                   'a tick leaves a typed comment alone');
+      (* Toggled twice, so the session's remembered tick is as it was. *)
+      frm.chkLocation.Checked := not frm.chkLocation.Checked;
+      CheckEquals('UP 2 LOUD', string(frm.edtComment.Text),
+                  'so does the section/state/county tick');
+      frm.chkLocation.Checked := not frm.chkLocation.Checked;
       frm.edtCallsign.Text := 'K1ABC';
       CheckEquals('UP 2 LOUD', string(frm.edtComment.Text),
                   'so does a new callsign');

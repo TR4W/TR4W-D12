@@ -1597,6 +1597,12 @@ var
 begin
    Result := False;
 
+   (* A PEER'S VALUE IS NEVER ECHOED BACK (issue 315). Preferences notes a
+     shared command it is changing and sends it at its save; a peer's value
+     for the same command arriving in between replaces that edit here, so the
+     note goes and nothing is sent for it. This routine itself never notes. *)
+   ForgetSharedPreferenceChange(aCommand);
+
    (*
      A CREDENTIAL IS NEVER TAKEN FROM A PEER, and this is first because it
      has to refuse before anything else has a chance to apply it.

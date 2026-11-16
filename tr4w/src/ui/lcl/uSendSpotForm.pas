@@ -52,13 +52,13 @@ type
     edtFrequency: TEdit;
     edtComment: TEdit;
     chkContestName: TCheckBox;
-    chkExchange: TCheckBox;
+    chkLocation: TCheckBox;
     btnOK: TButton;
     btnCancel: TButton;
     procedure HandleShow(Sender: TObject);
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
     procedure chkContestNameChange(Sender: TObject);
-    procedure chkExchangeChange(Sender: TObject);
+    procedure chkLocationChange(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
     procedure edtCallsignChange(Sender: TObject);
@@ -73,11 +73,12 @@ type
   end;
 
 (* THE SPOT'S COMMENT FROM ITS TWO TICKS (issue 175): the contest's name and
-  after it the station's section or other domestic multiplier (aExchange, ''
-  when the program knows none), one space apart; '' when neither is ticked or
-  known. *)
-function SpotCommentText(const aContestName, aExchange: string;
-                         aWithContest, aWithExchange: boolean): string;
+  after it the station's section, state or county -- its domestic multiplier
+  (aLocation, '' when the program knows none), one space apart; '' when
+  neither is ticked or known. Never a serial number, an RST or the rest of the
+  exchange. *)
+function SpotCommentText(const aContestName, aLocation: string;
+                         aWithContest, aWithLocation: boolean): string;
 
 // the Send Spot dialog.
 //
@@ -104,29 +105,29 @@ uses
   uTelnet,      // TelnetIsConnected, SendViaTelnetSocket
   MainUnit,     // logger
   Log4D,
-  uAppStrings;  (* SSendSpotExchangeInComment *)
+  uAppStrings;  (* SSendSpotLocationInComment *)
 
 var
   frmSendSpot: TfrmSendSpot = nil;
-  (* The "exchange in comment" tick, remembered across openings for the session
+  (* The "section/state/county in comment" tick, remembered across openings for the session
     as tContestNameInComment is (issue 175). *)
-  GExchangeInComment: boolean = False;
+  GLocationInComment: boolean = False;
 
-function SpotCommentText(const aContestName, aExchange: string;
-                         aWithContest, aWithExchange: boolean): string;
+function SpotCommentText(const aContestName, aLocation: string;
+                         aWithContest, aWithLocation: boolean): string;
 begin
    Result := '';
    if aWithContest then
       begin
       Result := aContestName;
       end;
-   if aWithExchange and (aExchange <> '') then
+   if aWithLocation and (aLocation <> '') then
       begin
       if Result <> '' then
          begin
          Result := Result + ' ';
          end;
-      Result := Result + aExchange;
+      Result := Result + aLocation;
       end;
 end;
 
@@ -137,7 +138,7 @@ end;
   the cluster hint's lookup). *)
 procedure TfrmSendSpot.FillComment;
 var
-   exchange: string;
+   location: string;
 begin
    (* A COMMENT THE OPERATOR TYPED IS NOT OVERWRITTEN (review, issue 175): a
      tick or a callsign edit after typing used to replace it whole. *)
@@ -146,16 +147,16 @@ begin
       Exit;
       end;
 
-   exchange := '';
-   if chkExchange.Checked then
+   location := '';
+   if chkLocation.Checked then
       begin
-      exchange := DomesticKeyKnownForCall(CallString(edtCallsign.Text));
+      location := DomesticKeyKnownForCall(CallString(edtCallsign.Text));
       end;
    FFillingComment := True;
    try
-      edtComment.Text := AnsiString(SpotCommentText(ContestId(Contest), exchange,
+      edtComment.Text := AnsiString(SpotCommentText(ContestId(Contest), location,
                                                     chkContestName.Checked,
-                                                    chkExchange.Checked));
+                                                    chkLocation.Checked));
    finally
       FFillingComment := False;
    end;
@@ -190,7 +191,7 @@ begin
    lblFrequency.Caption  := string(RC_FREQUENCY);
    lblComment.Caption    := string(RC_COMMENT);
    chkContestName.Caption := string(RC_CONTESTNAMEIC);
-   chkExchange.Caption    := SSendSpotExchangeInComment;
+   chkLocation.Caption    := SSendSpotLocationInComment;
 
    (* A NEW OPENING: the comment is the program's to fill again. Before the
      callsign is set, whose OnChange fills it. *)
@@ -223,7 +224,7 @@ begin
      holds raises no OnChange, and the call -- so the section -- is new on
      every opening (issue 175). *)
    chkContestName.Checked := tContestNameInComment;
-   chkExchange.Checked    := GExchangeInComment;
+   chkLocation.Checked    := GLocationInComment;
    FillComment;
 
    edtCallsign.SetFocus;
@@ -240,9 +241,9 @@ begin
    FillComment;
 end;
 
-procedure TfrmSendSpot.chkExchangeChange(Sender: TObject);
+procedure TfrmSendSpot.chkLocationChange(Sender: TObject);
 begin
-   GExchangeInComment := chkExchange.Checked;
+   GLocationInComment := chkLocation.Checked;
    FillComment;
 end;
 

@@ -65,6 +65,7 @@ type
       procedure Test_AToggleOfAStatedSettingIsTheStations;
       procedure Test_AFunctionKeyOfAStatedSettingIsTheStations;
       procedure Test_APeerEditOfAStatedSettingIsTheContests;
+      procedure Test_APeerValueIsNeverEchoedToThePeers;
       procedure Test_ARefusedStatementKeepsNothing;
       procedure Test_AnUnloadedSettingsObjectIsNeverSaved;
    public
@@ -598,6 +599,45 @@ begin
    end;
 end;
 
+(* ISSUE 315: Preferences notes a shared command it is changing and sends the
+  live value at its save. A peer's value for the same command arriving in
+  between is now the live one here, and must not be echoed back: the peer's
+  apply drops the note, and the save then has nothing to send for it. *)
+procedure TStationValueKeptTests.Test_APeerValueIsNeverEchoedToThePeers;
+const
+   CMD = 'CONTEST TITLE';
+var
+   saved: string;
+   wasStated: boolean;
+begin
+   BeginTest('a peer''s value replaces a pending Preferences edit and is not sent back');
+   if not Redirect then
+      begin
+      Exit;
+      end;
+   saved := CurrentValue(CMD);
+   wasStated := Settings.CommandIsStated(CMD);
+   try
+      CheckTrue(CommandIsSharedWithPeers(CMD), 'the premise: it is shared');
+      NoteSharedPreferenceChange(CMD);
+      CheckTrue(Settings.TrySetByCommand(CMD, 'OPERATOR TYPED THIS'), 'the operator''s edit');
+      CheckTrue(SharedPreferenceChangePending(CMD), 'noted for the save');
+
+      CheckTrue(ApplyPeerCommand(CMD, 'THE PEER SENT THIS'), 'the peer''s value is applied');
+      CheckEquals('THE PEER SENT THIS', CurrentValue(CMD), 'live follows the peer');
+      CheckFalse(SharedPreferenceChangePending(CMD), 'and the note is dropped: nothing to echo');
+
+      (* And a peer's value never creates one. *)
+      CheckTrue(ApplyPeerCommand(CMD, 'A SECOND PEER VALUE'), 'a second peer value');
+      CheckFalse(SharedPreferenceChangePending(CMD), 'a peer''s apply notes nothing');
+   finally
+      ForgetSharedPreferenceChange(CMD);
+      Restore;
+      Settings.TrySetByCommand(CMD, saved);
+      Settings.SetCommandStated(CMD, wasStated);
+   end;
+end;
+
 (* REVIEW M3: a statement that is REFUSED leaves nothing kept, and does not
   disturb a keep that was already there -- forced or not. *)
 procedure TStationValueKeptTests.Test_ARefusedStatementKeepsNothing;
@@ -690,6 +730,7 @@ begin
    Test_AToggleOfAStatedSettingIsTheStations;
    Test_AFunctionKeyOfAStatedSettingIsTheStations;
    Test_APeerEditOfAStatedSettingIsTheContests;
+   Test_APeerValueIsNeverEchoedToThePeers;
    Test_ARefusedStatementKeepsNothing;
    Test_AnUnloadedSettingsObjectIsNeverSaved;
 end;
