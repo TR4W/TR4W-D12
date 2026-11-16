@@ -1,4 +1,4 @@
-﻿{
+﻿(*
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -13,11 +13,11 @@
      Public License along with TR4W in  GPL_License.TXT.
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
-}
+*)
 unit uRadioIcom7700;
 {$I ..\tr4w.inc}
 
-{
+(*
   Icom IC-7700 -- CI-V address $74.
 
   One of only TWO radios in this migration batch that get the FULL Icom profile
@@ -41,9 +41,14 @@ unit uRadioIcom7700;
   - Confirm the four reads above actually answer rather than NAK.  If any of
     them NAKs, this radio belongs on the read-limited profile for that command
     instead -- which is a capability change, not a protocol rewrite.  Hamlib
-    (rigs/icom/ic7700.c, ic7700_rig_open) starts this model with x25cmdfails and
-    x26cmdfails SET, i.e. it assumes $25/$26 do NOT work until shown otherwise.
-    That is the first thing to watch.
+    (rigs/icom/ic7700.c, ic7700_rig_open) sets x25cmdfails and x26cmdfails to
+    1 for this model, and with x25x26_always = 0 that means it NEVER sends
+    $25/$26 here and never re-probes them (its generic probe runs only while
+    the flags are -1; icom_rig_open does not reset them, and only a SATMODE
+    change does, which this rig has not got), so Hamlib always takes its
+    non-$25/$26 path on this model.  TR4W has no such fallback: a refused $25/$26 is not demoted at
+    run time (review 2026-11-16, reported to NY4I).  That is the first thing
+    to watch.
   - No $07 $D2: Hamlib lists VFO A/B/MEM only, so FSupportsActiveVFOQuery stays
     at the base default (False).
   - FTransceiveMenuBytes is NOT set here, so the CI-V transceive read at link-up
@@ -52,7 +57,7 @@ unit uRadioIcom7700;
     tree, a manual in docs/) has been found, so it is not written in.  Read the
     set-mode item from the radio's manual or menu on the bench and set it in the
     constructor, as the IC-7100/7300MK2/9700/905/705 do.
-}
+*)
 
 interface
 
@@ -82,7 +87,7 @@ begin
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
 
-   { NO rcSpectrum, AND THAT IS A FINDING RATHER THAN AN OMISSION.
+   (* NO rcSpectrum, AND THAT IS A FINDING RATHER THAN AN OMISSION.
 
      This radio has a spectrum scope on its own front panel.  What no source
      says is that it streams one over CI-V: HamLib carries spectrum caps for
@@ -98,7 +103,7 @@ begin
      without words.
 
      If someone shows this rig answering $27 $00, the change is two lines:
-     rcSpectrum above and a DeclareScopeGeometry with the measured numbers. }
+     rcSpectrum above and a DeclareScopeGeometry with the measured numbers. *)
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

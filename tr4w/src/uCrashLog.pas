@@ -217,6 +217,22 @@ procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
   from InstallCrashLog on, because before it no thread can be judged. }
 function OffMainThreadReportCount: LongInt;
 
+(* THE LOG IS GONE: NOTHING HERE WRITES THROUGH Log4D FROM NOW ON (review M14).
+
+  Called by this unit's own finalization, which runs BEFORE Log4D's (this unit
+  uses Log4D). Since Interfaces is listed first in tr4w.lpr, the LCL is torn
+  down LAST -- after Log4D has freed every logger, this unit's cached
+  CrashLogger among them -- while the RTL hook stays installed and the LCL hook
+  can still fire. A fault in that teardown would have been reported through a
+  freed logger. From here on a crash report is one line in tr4w-early.log
+  (EarlyTrace, which needs no logger), the context dumpers are skipped (their
+  subsystems are finalized too), and an off-main-thread report is dropped.
+  Idempotent. Exported for the test, which undoes it with ReopenCrashLog. *)
+procedure MarkCrashLogGone;
+
+(* FOR A TEST ONLY: undo MarkCrashLogGone while Log4D is still alive. *)
+procedure ReopenCrashLog;
+
 implementation
 
 uses
@@ -273,6 +289,8 @@ uses
   can happen before startup has configured anything. }
 var
    GCrashLogger: TLogLogger = nil;
+   (* See MarkCrashLogGone. Main thread writes it once, at finalization. *)
+   GLogGone: boolean = False;
 
 function CrashLogger: TLogLogger;
 begin
@@ -1179,10 +1197,45 @@ var
                                 [PtrUInt(p), Int64(GetTickCount64 - startTick)]);
    end;
 
+var
+   rawFrames: string;
 begin
    // NEVER let the reporter raise.  It runs while the program is already dying,
    // and a fault in here would replace a diagnosable crash with a silent one --
    // precisely the failure this unit exists to remove.
+   if GLogGone then
+      begin
+      (* AFTER Log4D'S FINALIZATION (see MarkCrashLogGone): one line in
+        tr4w-early.log, raw addresses only -- resolving a frame and the context
+        dumpers both need what is already finalized. *)
+      try
+         cls := 'unknown';
+         msg := '';
+         if aObj <> nil then
+            begin
+            cls := aObj.ClassName;
+            if aObj is Exception then
+               begin
+               msg := Exception(aObj).Message;
+               end;
+            end;
+         rawFrames := '';
+         for i := 0 to aFrameCount - 1 do
+            begin
+            rawFrames := rawFrames + SysUtils.Format(' $%.8x', [PtrUInt(aFrames[i])]);
+            end;
+         EarlyTrace(SysUtils.Format('[CRASH] %s: unhandled %s in thread %d after '
+                                    + 'the log closed (TR4W %s) -- %s at $%.8x;'
+                                    + ' frames%s',
+                                    [aSource, cls, GetCurrentThreadId,
+                                     TR4W_CURRENTVERSION_NUMBER, msg,
+                                     PtrUInt(aAddr), rawFrames]));
+      except
+         // Deliberately empty: there is nothing left to report it to.
+      end;
+      Exit;
+      end;
+
    try
       startTick   := GetTickCount64;
       budgetSpent := False;
@@ -1276,7 +1329,8 @@ procedure WriteCrashContext(const aReason: string);
 var
    i: integer;
 begin
-   if GContextCount = 0 then
+   (* No log to write to, and the dumpers' subsystems are finalized too. *)
+   if (GContextCount = 0) or GLogGone then
       begin
       Exit;
       end;
@@ -1410,6 +1464,12 @@ begin
    // Before InstallCrashLog there is no main thread on record, so every thread
    // would look wrong.  Say nothing rather than say something false.
    if GMainThreadId = 0 then
+      begin
+      Exit;
+      end;
+
+   (* After finalization: no logger, and the lock below is destroyed. *)
+   if GLogGone then
       begin
       Exit;
       end;
@@ -1630,10 +1690,26 @@ begin
    ReportSymbolState;
 end;
 
+procedure MarkCrashLogGone;
+begin
+   GLogGone     := True;
+   GCrashLogger := nil;
+end;
+
+procedure ReopenCrashLog;
+begin
+   GLogGone := False;
+   (* CrashLogger fetches it again by name: the hierarchy returns the same
+     instance, with the level InstallCrashLog gave it. *)
+end;
+
 initialization
    InitCriticalSection(GOffThreadLock);
 
 finalization
+   (* FIRST: anything below, and everything the LCL tears down after Log4D,
+     must not reach the cached logger. *)
+   MarkCrashLogGone;
    DoneCriticalSection(GOffThreadLock);
 
 end.

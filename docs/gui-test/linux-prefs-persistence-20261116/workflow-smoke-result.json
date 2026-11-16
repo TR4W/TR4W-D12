@@ -22,8 +22,8 @@
       "previous_executable_sha256": "f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806"
    },
    "display": ":99",
-   "run": "/home/toms/tr4w-gui-test/runs/linux-fixed-smoke-001",
-   "executable_archive": "/home/toms/tr4w-gui-test/evidence/c405fc3bf0e5388446af7a0aae1ab4cc9ca8ba51a68dd741cfceb9959d8a5d5f/tr4w",
+   "run": "/home/<user>/tr4w-gui-test/runs/linux-fixed-smoke-001",
+   "executable_archive": "/home/<user>/tr4w-gui-test/evidence/c405fc3bf0e5388446af7a0aae1ab4cc9ca8ba51a68dd741cfceb9959d8a5d5f/tr4w",
    "window_manager": "Name: Openbox\nClass: \nPID: N/A\nWindow manager's \"showing the desktop\" mode: OFF\n",
    "pid": 128096,
    "main_window": {

@@ -55,6 +55,7 @@ type
       procedure Test_RSTDomesticQTH_Else;
       procedure Test_RSTDomesticOrDXQTH;
       procedure Test_RSTDomesticQTHOrDX;
+      procedure Test_RSTDomesticQTHOrDXQTH;
       procedure Test_QSONumberAndZone;
       procedure Test_RSTZone;
       procedure Test_PreviousQSONumber_PnrCarry;
@@ -407,6 +408,30 @@ begin
    CheckEquals('599        ', HisEx, 'the control: the QTHString test leaves a typed DX QTH blank');
 end;
 
+(* CabrilloReceivedRSTDomesticQTHOrDXQTH (issue 333, 2026-11-16, ARRL 160):
+   the exporter's HisQTH when the record carries a DomesticQTH -- also with NO
+   QTHString, the imported W/VE record the QTHString helper printed as DX --
+   else the record's DX QTH, else DX. *)
+procedure TCabrilloExchangeTests.Test_RSTDomesticQTHOrDXQTH;
+var rx: ContestExchange; my: TMyStationExchange; pnr: integer; MyEx, HisEx: string;
+begin
+   BeginTest('Test_RSTDomesticQTHOrDXQTH');
+   rx := EmptyRx;  rx.QTHString := '';  rx.DomesticQTH := 'Ut';  my := EmptyMy;  my.MyState := 'WCF';  pnr := 0;
+   Fmt(CabrilloSentRSTState, CabrilloReceivedRSTDomesticQTHOrDXQTH, rx, my, '599', '599', 'Ut', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 Ut     ', HisEx, 'a section imported with no QTH string is the section');
+   Fmt(CabrilloSentRSTState, CabrilloReceivedRSTQTHOrDXQTH, rx, my, '599', '599', 'Ut', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DX     ', HisEx, 'the control: the QTHString test printed DX (issue 333)');
+   rx.QTHString := 'DL';  rx.DomesticQTH := '';  rx.DXQTH := 'DL';
+   Fmt(CabrilloSentRSTState, CabrilloReceivedRSTDomesticQTHOrDXQTH, rx, my, '599', '599', '', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DL     ', HisEx, 'a DX station: its DX QTH');
+   rx.DXQTH := '';
+   Fmt(CabrilloSentRSTState, CabrilloReceivedRSTDomesticQTHOrDXQTH, rx, my, '599', '599', '', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DL     ', HisEx, 'a DX station with no DX QTH keyed: what it sent');
+   rx.QTHString := '';  rx.DXQTH := '';
+   Fmt(CabrilloSentRSTState, CabrilloReceivedRSTDomesticQTHOrDXQTH, rx, my, '599', '599', '', '', 1, pnr, MyEx, HisEx);
+   CheckEquals('599 DX     ', HisEx, 'nothing known: DX');
+end;
+
 procedure TCabrilloExchangeTests.Test_QSONumberAndZone;
 var rx: ContestExchange; my: TMyStationExchange; pnr: integer; MyEx, HisEx: string;
 begin
@@ -509,6 +534,7 @@ begin
    Test_RSTDomesticQTH_Else;
    Test_RSTDomesticOrDXQTH;
    Test_RSTDomesticQTHOrDX;
+   Test_RSTDomesticQTHOrDXQTH;
    Test_QSONumberAndZone;
    Test_RSTZone;
    Test_PreviousQSONumber_PnrCarry;

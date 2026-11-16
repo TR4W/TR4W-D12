@@ -57,8 +57,29 @@ const
   the right-click editor row and the send all ask this one rule (issue #3). *)
 function BankForModifiers(const aCtrlDown, aAltDown: boolean): byte;
 
-(* The bank for the modifiers held NOW, asked of the keyboard. *)
+(* THE BANK FOR THE MODIFIERS THE KEYBOARD REPORTS, UNLESS THAT REPORT IS
+  STALE: then the plain bank (review M11, issue #3). Pure, so it is pinned. *)
+function EffectiveFunctionKeyBank(const aCtrlDown, aAltDown, aStale: boolean): byte;
+
+(* The bank for the modifiers held NOW, asked of the keyboard -- what the labels,
+  the editor row and EVERY send (a key, a click, a keypad memory) use.
+
+  AFTER THE APPLICATION LOSES THE KEYBOARD, A HELD MODIFIER IS NOT BELIEVED until
+  this program sees it pressed again (NoteFunctionKeyModifierPressed) or the
+  keyboard reports none held. A key released in another program never reaches
+  this one, and on Win32 GetKeyState is this thread's view, so after Alt-Tab it
+  can still read Alt as held -- the labels were already put back to the plain
+  bank then (uAppInputHooks.AppDeactivate), and the send now agrees with them.
+  The cost, stated: a modifier held THROUGH the switch back is ignored until it
+  is pressed again (on Windows a held Alt or Ctrl repeats its own key-down,
+  which counts). Main thread only. *)
 function LiveFunctionKeyBank: byte;
+
+(* The application lost the keyboard: held modifiers are stale from now on. *)
+procedure NoteFunctionKeyModifiersStale;
+
+(* This program saw Ctrl or Alt pressed: the keyboard's report is fresh again. *)
+procedure NoteFunctionKeyModifierPressed;
 
 (* SHOW THIS BANK ON THE FUNCTION-KEY WINDOW, AND FOLLOW THE KEYBOARD UNTIL IT IS
   THE PLAIN ONE AGAIN (issue #3).
@@ -283,12 +304,47 @@ begin
       end;
 end;
 
+function EffectiveFunctionKeyBank(const aCtrlDown, aAltDown, aStale: boolean): byte;
+begin
+   if aStale then
+      begin
+      Result := FKEY_BANK_PLAIN;
+      end
+   else
+      begin
+      Result := BankForModifiers(aCtrlDown, aAltDown);
+      end;
+end;
+
+var
+   (* Set when the application loses the keyboard, cleared by a modifier press
+     this program sees or by the keyboard reporting none held. Main thread. *)
+   GModifiersStale: boolean = False;
+
+procedure NoteFunctionKeyModifiersStale;
+begin
+   GModifiersStale := True;
+end;
+
+procedure NoteFunctionKeyModifierPressed;
+begin
+   GModifiersStale := False;
+end;
+
 function LiveFunctionKeyBank: byte;
+var
+   ctrlDown, altDown: boolean;
 begin
    // GetKeyState is LCLIntf's, which every widget set answers for its own
    // keyboard; the high bit (a negative SmallInt) means held.
-   Result := BankForModifiers(GetKeyState(VK_CONTROL) < 0,
-                              GetKeyState(VK_MENU) < 0);
+   ctrlDown := GetKeyState(VK_CONTROL) < 0;
+   altDown  := GetKeyState(VK_MENU) < 0;
+   if (not ctrlDown) and (not altDown) then
+      begin
+      (* The keyboard has caught up: nothing held is nothing stale. *)
+      GModifiersStale := False;
+      end;
+   Result := EffectiveFunctionKeyBank(ctrlDown, altDown, GModifiersStale);
 end;
 
 procedure ShowFunctionKeyBank(const aBank: byte);

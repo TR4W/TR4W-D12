@@ -744,7 +744,8 @@ uses
   uLogStore,
   uBackupCopyService, (* BackupCopyStop -- the backup destination's copier,
                         stopped before the log closes *)
-  uLogEditForm,       // View / Edit Log -- an LCL virtual list now; also
+  uCallbookFactory,   (* CallbookLookupsShutdown -- no late reply at exit *)
+  uLogEditForm,      // View / Edit Log -- an LCL virtual list now; also
                       // SaveLogEditLayout, see SaveTR4WPOSFILE
   uContestFileKind,   // ClassifyContestFile -- File > Open Log's plan
   uOpenLogRelaunch,   (* File > Open Log: the refusal, the child's arguments, the
@@ -2266,14 +2267,17 @@ begin
 
   else
      begin
-     (* THE S&P F1 MEMORY, WHATEVER IT HOLDS (issue 66). This was gated on DVK
-       ENABLE too, so a phone F1 holding a radio command (SRS=... to play the
-       rig's own voice keyer) was never sent on Enter, while pressing F1 sent
-       it and the S&P exchange a few lines on (ReturnInSAPOpMode) has never had
-       the gate. With the DVK off SendCrypticMessage still runs the message's
-       commands and plays no WAV, so a plain MYCALL.WAV does nothing, as
-       before. *)
-     if Settings.Message.Enable and not BeSilent then
+     (* GATED ON DVK ENABLE, AS IN D7 (C:\TR4W MainUnit.Send_DE:
+       `if DVKEnable and MessageEnable and not BeSilent`).  With the DVK off,
+       Enter on a phone S&P call sends NOTHING.  Issue 66 dropped the gate so
+       an F1 holding a radio command (SRS=...) would go out on Enter, but that
+       also ran SendFunctionKeyMessage on every phone Enter with the DVK off --
+       and it clears SwitchNext / Switch and InactiveRigCallingCQ, so a pending
+       SO2R switch was lost (review M10).  Restored; pinned by
+       uTestCWKeyer.Test_PhoneEnterWithTheDVKOffSendsNothing.  What issue 66
+       asked for -- a separate S&P CALL message an operator can set to a
+       radio command -- is not built. *)
+     if Settings.Dvk.Enable and Settings.Message.Enable and not BeSilent then
         begin
         SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
         end;
@@ -4225,6 +4229,12 @@ begin
     ThemeServices and TApplication.ReleaseComponents, reported only by Windows
     because the logger was already gone). With HAMSCORE off the routine exited
     before logging, which is why nothing happened until it was enabled. *)
+  (* THE FIRE-AND-FORGET WORKERS DELIVER NOTHING FROM HERE ON (review M15): a
+    callbook reply or a version answer arriving during the exit would otherwise
+    fill a wizard or open a question box over a closing program. Neither is
+    joined -- see each routine for why and what that leaves. *)
+  CallbookLookupsShutdown;
+  VersionCheckShutdown;
   HamScoreShutdown;
   (* THE BACKUP COPIER FIRST, BOUNDED (issue #98 step 2): it waits at most
     BACKUP_COPY_SHUTDOWN_MS for a copy to a share, and holds no SQLite object,

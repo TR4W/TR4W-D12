@@ -1,0 +1,35 @@
+   1.  Band change from  20SSB to  10SSB at 18:41.
+   2.  Band change from  10SSB to  15SSB at 19:02.
+   3.  Band change from  15SSB to  10SSB at 19:07.  *
+   4.  Band change from  10SSB to  15SSB at 16:31.
+   5.  Band change from  15SSB to  10SSB at 16:33.  *
+   6.  Band change from  10SSB to  15SSB at 17:08.
+   7.  Band change from  15SSB to  10SSB at 17:11.
+   8.  Band change from  10SSB to  20SSB at 17:20.
+   9.  Band change from  20SSB to  10SSB at 17:25.  *
+  10.  Band change from  10SSB to  15SSB at 17:55.
+  11.  Band change from  15SSB to  10SSB at 17:58.  *
+  12.  Band change from  10SSB to  15SSB at 19:10.
+  13.  Band change from  15SSB to  10SSB at 19:14.  *
+  14.  Band change from  10SSB to  15SSB at 19:16.  *
+  15.  Band change from  15SSB to  20SSB at 22:36.
+  16.  Band change from  20SSB to  10SSB at 22:38.
+  17.  Band change from  10SSB to  20SSB at 22:39.  *
+  18.  Band change from  20SSB to  15SSB at 22:41.  *
+  19.  Band change from  15SSB to  20SSB at 22:42.  *
+  20.  Band change from  20SSB to  10SSB at 22:47.  *
+  21.  Band change from  10SSB to  40SSB at 22:49.  *
+  22.  Band change from  40SSB to  10SSB at 22:52.  *
+  23.  Band change from  10SSB to  20SSB at 22:54.  *
+  24.  Band change from  20SSB to  40SSB at 22:57.
+  25.  Band change from  40SSB to  20SSB at 23:02.  *
+  26.  Band change from  20SSB to  40SSB at 23:16.
+  27.  Band change from  40SSB to  20SSB at 23:19.
+  28.  Band change from  20SSB to  40SSB at 23:19.
+  29.  Band change from  40SSB to  20SSB at 23:20.  *
+  30.  Band change from  20SSB to  40SSB at 23:25.
+  31.  Band change from  40SSB to  20SSB at 23:32.
+  32.  Band change from  20SSB to  40SSB at 23:36.
+  33.  Band change from  40SSB to  20SSB at 23:44.
+
+There were 15 second radio QSOs made.

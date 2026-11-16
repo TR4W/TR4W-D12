@@ -1349,6 +1349,12 @@ begin
       CheckFalse(rx.DomesticMult, 'and no domestic multiplier');
       CheckFalse(rx.DXMult, 'and no DX multiplier');
       CheckFalse(LoggedQSOIsXQSO(rx), 'and in state it is no X-QSO');
+      (* THE LOGGED RECORD EXPORTED (review H4 follow-up, 2026-11-16): the
+         writer's own HisQTH, never a hand-set one. "DX Stations give RST and
+         DX country": the column is the country. *)
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(Contest, rx),
+                  'a typed DX country exports as the country: QTH ' + string(rx.QTHString) +
+                  ', domestic ' + string(rx.DomesticQTH) + ', DX ' + string(rx.DXQTH));
    finally
       DomesticCountries.Clear;
       for i := 0 to savedCountries.Count - 1 do

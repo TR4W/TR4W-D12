@@ -36,6 +36,7 @@ type
    protected
       function RequestUrl(const aEncodedCall: string): string; override;
       function ParseReply(const aReply: string): TCallbookRecord; override;
+      function CanHold(const aCall: string; out aWhy: string): boolean; override;
    end;
 
 (* The JSON text of one hamdb reply into a NEW record the caller frees.  PURE:
@@ -143,6 +144,22 @@ end;
 function THamDBProvider.ParseReply(const aReply: string): TCallbookRecord;
 begin
    Result := ParseHamDBReply(aReply);
+end;
+
+(* A CALL WITH A SLASH IS NEVER FOUND HERE (see the unit header: an HTML 404
+  encoded, an empty 200 literal), so it is not sent -- the 404 used to reach
+  tr4w.log as an Error from the transport. *)
+function THamDBProvider.CanHold(const aCall: string; out aWhy: string): boolean;
+begin
+   Result := Pos('/', aCall) = 0;
+   if Result then
+      begin
+      aWhy := '';
+      end
+   else
+      begin
+      aWhy := 'hamdb holds no portable (slashed) calls';
+      end;
 end;
 
 initialization

@@ -1512,6 +1512,12 @@ begin
       CheckFalse(rx.DomesticMult, 'no domestic multiplier');
       CheckTrue(rx.DXMult, 'and Germany is a new DX multiplier');
       CheckFalse(LoggedQSOIsXQSO(rx), 'and in province it is no X-QSO');
+      (* THE LOGGED RECORD EXPORTED (review H4 follow-up, 2026-11-16): the
+         writer's own HisQTH, never a hand-set one. A DX station's column is
+         the country it sent. *)
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(Contest, rx),
+                  'a typed DX country exports as the country: QTH ' + string(rx.QTHString) +
+                  ', domestic ' + string(rx.DomesticQTH) + ', DX ' + string(rx.DXQTH));
       dupe := EnterPartyQSO('DL2BBB', '59 DL', Band20, Phone, eUSB, accepted, rx);
       CheckFalse(rx.DXMult, 'Germany on 20 m SSB is no new multiplier');
       dupe := EnterPartyQSO('DL2BBB', '599 DL', Band40, CW, eCW, accepted, rx);

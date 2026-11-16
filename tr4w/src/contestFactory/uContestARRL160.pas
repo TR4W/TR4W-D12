@@ -338,13 +338,19 @@ function TContestARRL160.GetCabrilloReceivedExchange(const aMy: TMyStationExchan
                                                      const aQso: ContestExchange;
                                                      const aCtx: TCabrilloQSOContext): string;
 begin
+   (* DOMESTIC IS THE DomesticQTH FIELD, NOT QTHString (issue 333, NY4I on
+      #275: QTHString is a D7 artifact). A W/VE record imported without
+      ARRL_SECT resolves its section into DomesticQTH and leaves QTHString
+      empty; the QTHString helpers (RSTQTHOrDXQTH, RSTQTHDX) printed DX for
+      it. A DX station is its DX QTH where this entrant counts DXCC, else
+      DX. *)
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
       end
    else
       begin
-      Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+      Result := CabrilloReceivedRSTDomesticQTHOrDX(aMy, aQso, aCtx);
       end;
 end;
 
@@ -393,8 +399,11 @@ end;
    Sweepstakes and the Field Days call. The QTH-tag-else-SRX_STRING step is
    the shared uContestBase.ImportedReceivedText since issue 328, which lifted
    it from here for the CQ 160, UBA, LZ, OK/OM, Ukrainian and WAG imports.
-   This contest keeps the WHOLE remainder (an unknown '8' or '2A CT' is kept
-   as written, as before); those contests drop the number words. *)
+   An explicit ARRL_SECT or QTH tag is kept as written when the table does
+   not know it; the WHOLE remainder of SRX_STRING goes, since review M5, to
+   ImportDerivedDomesticQTH, which takes the first word the table knows and
+   skips number words ('2A CT' stores CT; an unknown '8' stores no domestic
+   QTH, where it was kept as written). *)
 procedure TContestARRL160.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                           const aSession: TADIFImportSession;
                                           var aExch: ContestExchange);
@@ -405,9 +414,10 @@ begin
       begin
       received := aTemps.ARRL_Sect;
       (* A record with ARRL_SECT and no QTH tag: the section is its QTH too,
-         as Sweepstakes' import does, so the Cabrillo received column
-         (CabrilloReceivedRSTQTHOrDXQTH reads QTHString) does not print DX
-         for a W station. *)
+         as Sweepstakes' import does. The Cabrillo received column no longer
+         depends on it -- it reads DomesticQTH since issue 333 -- so a record
+         with no ARRL_SECT, which never got this copy, exports its section
+         too. Kept for what reads the literal QTH (the log's QTH column). *)
       if aExch.QTHString = '' then
          begin
          aExch.QTHString := ShortString(aTemps.ARRL_Sect);
@@ -417,9 +427,20 @@ begin
       begin
       received := ImportedReceivedText(aTemps, aExch);
       end;
-   if received <> '' then
+   (* ARRL_SECT or a QTH tag is explicit (both leave QTHString set here):
+      kept as written when unknown. Text from SRX_STRING is derived: typed
+      entry's word rule (review M5). *)
+   if received = '' then
+      begin
+      Exit;
+      end;
+   if aExch.QTHString <> '' then
       begin
       ImportDomesticQTH(aSession, received, aExch);
+      end
+   else
+      begin
+      ImportDerivedDomesticQTH(aSession, received, aExch);
       end;
 end;
 
@@ -464,15 +485,13 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THE CONTINENT -- issue 167. The New
-   Contest dialog asks once when MY CALL's continent and the box
-   disagree. *)
+(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+   167; the continent until review M16 (2026-11-16). Ticking it asks for the
+   QTH to send, which an ARRL-section country sends (DescribeSession's list:
+   KH6, KL and KP4 are in it, XE is not). *)
 function TContestARRL160.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
 begin
-   aHome.Countries := '';
-   aHome.Continent := NorthAmerica;
-   aHome.HomeIsInside := True;
-   Result := True;
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* THE STATION TEST -- DescribeSession's (an ARRL section country), asked of

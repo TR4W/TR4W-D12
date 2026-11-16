@@ -329,6 +329,12 @@ procedure CentreOverMainWindow(const aForm: TCustomForm);
   ShowModalOverWin32Parent. *)
 procedure LeaveFormUnowned(const aForm: TCustomForm);
 
+(* AN EDITOR'S CONTENT PANEL, HOSTED IN ANOTHER WINDOW: reparented into aHost,
+  at its top and centred across it (left-aligned if wider). The setup wizard
+  hosts the radio and keyer editors this way (EditRadioIn / EditKeyerIn), and
+  each used to carry this body. *)
+procedure HostPanelIn(const aPanel, aHost: TWinControl);
+
 (* WHERE A FORM WAS LAST TIME.
 
   EXTRACTED FROM uPanadapterForm ON 2026-09-04, when the Search window needed
@@ -748,6 +754,17 @@ begin
 
    aForm.PopupParent := TR4WMainForm;
    aForm.PopupMode   := pmExplicit;
+end;
+
+procedure HostPanelIn(const aPanel, aHost: TWinControl);
+begin
+   aPanel.Parent := aHost;
+   aPanel.Top    := 0;
+   aPanel.Left   := (aHost.ClientWidth - aPanel.Width) div 2;
+   if aPanel.Left < 0 then
+      begin
+      aPanel.Left := 0;
+      end;
 end;
 
 procedure LeaveFormUnowned(const aForm: TCustomForm);

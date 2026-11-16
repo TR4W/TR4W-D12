@@ -86,6 +86,7 @@ type
    private
       procedure CheckOutputs(const aRX: ContestExchange; const aWho: string;
                              const aSection: string);
+      procedure CheckReceivedColumn(const aRX: ContestExchange; const aWho: string);
       procedure Test_SweepstakesTypedAliasIsTheCanonicalSection;
       procedure Test_SweepstakesAliasAndSectionAreOneMultiplier;
       procedure Test_ARRL160TypedAliasIsTheCanonicalSection;
@@ -141,6 +142,8 @@ uses
    uTestExternalLoggerLookup,
    (* TQsoMyFacts -- what ParseADIFRecord reads of OUR station. *)
    uQsoMyFacts,
+   (* PartyReceivedCabrilloColumn -- the writer's received column. *)
+   uTestQSOPartyRules,
    (* Enter, SetUpSession, RestoreSession, LoadCountryFile. LAST, so its
       names win. *)
    uTestEngineEntry;
@@ -467,7 +470,8 @@ begin
       CheckEquals('WcF', string(rx.DomesticQTH), 'QTH WF: DomesticQTH as the file spells it');
       CheckOutputs(rx, 'QTH WF', 'WCF');
 
-      (* A TEXT THE TABLE DOES NOT KNOW STAYS AS WRITTEN -- as before. *)
+      (* A TEXT THE TABLE DOES NOT KNOW STAYS AS WRITTEN -- as before: an
+         explicit ARRL_SECT is the record's own statement (review M5). *)
       ClearContestExchange(rx);
       CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('ARRL_SECT', 'XYZ')), rx), 'XYZ: parsed');
       CheckEquals('XYZ', string(rx.DomesticQTH), 'XYZ: unknown, kept as written');
@@ -1007,8 +1011,23 @@ begin
 
       ClearContestExchange(rx);
       CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('ARRL_SECT', 'XYZ')), rx), 'XYZ: parsed');
-      CheckEquals('XYZ', string(rx.DomesticQTH), 'XYZ: unknown, kept as written');
+      CheckEquals('XYZ', string(rx.DomesticQTH), 'XYZ: an explicit ARRL_SECT, kept as written');
       CheckEquals('', string(rx.DomMultQTH), 'XYZ: and no multiplier is invented');
+
+      (* REVIEW M5: A QTH DERIVED FROM SRX_STRING follows typed entry's word
+         rule. A number word is never the QTH, and the first word the table
+         knows is. The matrix's own rows: '599 8' and '123' stored 8 and
+         123, '59 DARC' itself. *)
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('SRX_STRING', '599 8')), rx), '599 8: parsed');
+      CheckEquals('', string(rx.DomesticQTH), '599 8: a number is no QTH (it stored 8)');
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('SRX_STRING', '59 DARC')), rx), '59 DARC: parsed');
+      CheckEquals('', string(rx.DomesticQTH), '59 DARC: no word the table knows (it stored 59 DARC)');
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K1XYZ', AdifTag('SRX_STRING', '2A CT')), rx), '2A CT: parsed');
+      CheckEquals('Ct', string(rx.DomesticQTH), '2A CT: the word the table knows (it stored 2A CT)');
+      CheckEquals('Ct', string(rx.DomMultQTH), '2A CT: and its multiplier');
    finally
       RestoreSession;
    end;
@@ -1106,9 +1125,49 @@ begin
       noSectionTag := StringReplace(DXLOG_RECORD, '<ARRL_SECT:2>UT ', '', []);
       CheckEquals(0, Pos('<ARRL_SECT:', noSectionTag), 'the variant carries no ARRL_SECT');
       CheckReceived('DXLog less ARRL_SECT', noSectionTag);
+      CheckReceivedColumn(rx, 'DXLog less ARRL_SECT');
    finally
       RestoreSession;
    end;
+end;
+
+(* ISSUE 333 -- THE CABRILLO RECEIVED COLUMN OF THE RECORD JUST READ, at both
+   kinds of entrant. A record with no ARRL_SECT resolves UT into DomesticQTH
+   and leaves QTHString empty; the column read QTHString and printed DX for
+   W7SP. It reads DomesticQTH now (NY4I: QTHString is a D7 artifact). The
+   column as the writer puts it on the line: CabrilloReceivedQTH for HisQTH,
+   then UpperCase of the whole column (PostUnit's CABRILLO_HISEX). *)
+procedure TARRLSectionAliasTests.CheckReceivedColumn(const aRX: ContestExchange;
+                                                     const aWho: string);
+var
+   station: TStationContext;
+   entrant: TContestBase;
+   my: TMyStationExchange;
+   ctx: TCabrilloQSOContext;
+   country: integer;
+const
+   COUNTRIES: array[0..1] of string = ('K', 'DL');
+begin
+   CheckEquals('', string(aRX.QTHString), aWho + ': the shape of issue 333 -- no QTH string');
+   CheckEquals('Ut', string(aRX.DomesticQTH), aWho + ': and the section in DomesticQTH');
+   my := Default(TMyStationExchange);
+   ctx := Default(TCabrilloQSOContext);
+   ctx.RSTSent := '599';
+   ctx.RSTReceived := '599';
+   ctx.HisQTH := CabrilloReceivedQTH(True, aRX);
+   for country := Low(COUNTRIES) to High(COUNTRIES) do
+      begin
+      station := NoStation;
+      station.MyCountry := CallString(COUNTRIES[country]);
+      entrant := Make(ContestHandleOf(ARRL160), station);
+      try
+         CheckEquals('599 UT     ',
+                     UpperCase(entrant.FormatCabrilloReceivedExchange(my, aRX, ctx)),
+                     aWho + ': a ' + COUNTRIES[country] + ' entrant''s received column is UT, not DX');
+      finally
+         entrant.Free;
+      end;
+      end;
 end;
 
 (* THE SHARED QSO-PARTY IMPORT -- issue 275 item 2. The base's domestic arm
@@ -1116,6 +1175,12 @@ end;
    QTHString, so an alias came in as written. It resolves through the table
    now, as typed entry does: michigan_cty.dom's 'Presq = PRES' stores Presq
    for a QTH of PRES, and an unknown text is kept as written. *)
+(* MICHIGAN'S CABRILLO RECEIVED COLUMN FOR aRX, as the writer builds it. *)
+function MichiganReceivedColumn(const aRX: ContestExchange): string;
+begin
+   Result := PartyReceivedCabrilloColumn(ContestHandleOf(MICHQSOPARTY), aRX);
+end;
+
 procedure TARRLSectionAliasTests.Test_QSOPartyImportedAliasIsTheFileQTH;
 var
    rx: ContestExchange;
@@ -1133,6 +1198,22 @@ begin
       ClearContestExchange(rx);
       CheckTrue(ParseADIFRecord(AdifRecord('K8XYZ', AdifTag('QTH', 'ZZZZ')), rx), 'QTH ZZZZ: parsed');
       CheckEquals('ZZZZ', string(rx.DomesticQTH), 'QTH ZZZZ: unknown, kept as written');
+      (* AN EXPLICIT QTH TAG IS KEPT, so the Cabrillo line says what was
+         received (review M5 follow-up, 2026-11-16: dropping it printed an
+         EMPTY column). *)
+      CheckEquals('599 ZZZZ   ', MichiganReceivedColumn(rx),
+                  'QTH ZZZZ: the received column is what the tag said');
+
+      (* THE SAME UNKNOWN COUNTY DERIVED FROM SRX_STRING: no domestic QTH
+         since review M5 (it stored ZZZZ); no QTH string, so the column says
+         DX -- as it did before, when the stored ZZZZ was not read because
+         the QTH string was empty. *)
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(AdifRecord('K8XYZ', AdifTag('SRX_STRING', '599 ZZZZ')), rx),
+                'SRX 599 ZZZZ: parsed');
+      CheckEquals('', string(rx.DomesticQTH), 'SRX 599 ZZZZ: no domestic QTH (it stored ZZZZ)');
+      CheckEquals('599 DX     ', MichiganReceivedColumn(rx),
+                  'SRX 599 ZZZZ: the received column is DX, unchanged');
    finally
       RestoreSession;
    end;
@@ -1199,12 +1280,14 @@ begin
          CheckEquals('', domesticQTH, what + ' 599 14: a DX zone is no QTH (it stored 599 14)');
 
          ImportFor('DL1ABC', AdifTag('SRX_STRING', '599 DL'), domesticQTH, key, qth);
-         CheckEquals('DL', domesticQTH, what + ' 599 DL: a DX prefix, unknown, kept as written');
+         CheckEquals('', domesticQTH, what + ' 599 DL: a DX prefix the table does not know, ' +
+                     'no domestic QTH (review M5; it was kept as written)');
          CheckEquals('', key, what + ' 599 DL: the table gives it no key');
 
          ImportFor('W1AW', AdifTag('SRX_STRING', '2A CT'), domesticQTH, key, qth);
-         CheckEquals('2A CT', domesticQTH, what + ' 2A CT: no number word, unknown, kept as written');
-         CheckEquals('', key, what + ' 2A CT: the table gives it no key');
+         CheckEquals('Ct', domesticQTH, what + ' 2A CT: the word the table knows (review M5; ' +
+                     'the whole text was kept as written)');
+         CheckEquals('Ct', key, what + ' 2A CT: and its key');
       finally
          RestoreSession;
       end;

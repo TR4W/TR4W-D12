@@ -89,10 +89,12 @@ function LinkNeedsLiveLink(const aState: TNetLinkState): boolean;
 function ShouldConnectAtStartup(const aAutoConnect: boolean;
                                 const aComputerId: AnsiChar): boolean;
 
-(* THE "SERVER NOT AVAILABLE" NOTICE IS SHOWN ONCE PER RUN: the first failed
-  connect, which is the one at startup. aShown is the caller's latch; the first
-  call sets it and answers True, every later one answers False. The detail of
-  every failure goes to the log, never to the screen. *)
+(* THE "SERVER NOT AVAILABLE" NOTICE IS SHOWN ONCE PER DELIBERATE CONNECT: the
+  first failure after startup's attempt or the operator's own Net > Connect or
+  Reconnect, which clear the latch (uNet.ForgetServerRefusal). aShown is the
+  caller's latch; the first call sets it and answers True, every later one
+  answers False, so the retry timer's attempts say nothing. The detail of every
+  failure goes to the log, never to the screen. *)
 function TakeUnavailableNotice(var aShown: boolean): boolean;
 
 (* The state in words for the log. Not for the operator: it is not translated. *)

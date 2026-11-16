@@ -287,6 +287,14 @@ $lints = @(
    # its tests, then its --check. Fails closed without python. Arg is null.
    @{ Name = 'Lint-LFMCatalogue'; Arg = $null; NeedsFpc = $false }
 
+   # A TRANSLATION KEEPS EVERY FORMAT SPECIFIER OF ITS ENGLISH (review 2026-11-16, M19).
+   # TR4W formats through unchecked varargs, and four reviewed entries had lost one
+   # (two Ukrainian entries, two Mongolian entries an argument short) so the
+   # operator saw no number. tools/i18n/po_lint.py had caught them for months but
+   # was in no gate. Ceiling 0, floor on catalogues and entries compared; fails
+   # closed without python. Arg is null.
+   @{ Name = 'Lint-PoSpecifiers'; Arg = $null; NeedsFpc = $false }
+
    # NO HAND-WRITTEN NUL AFTER A STRING (NY4I, 2026-11-02: "we are supposed to
    # be out of the business of terminating our own strings"). `s[Length(s) + 1]
    # := #0` was a Win32-era habit; nothing downstream read it, and on a

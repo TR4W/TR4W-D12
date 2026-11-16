@@ -43,17 +43,34 @@ place:
    EOF. The same redirect is fine for `cat` (measured: returns at once), so it
    is accepted there only. Redirect from a REAL file, or pipe a real producer.
 
-LIMITS, said plainly: this is a token walk, not a shell parser. A wrapper this
-file does not know hides the command word and is not seen; `env`, `time`,
-`nohup`, `exec`, `command`, `sudo`, `winpty`, `setsid`, `timeout [opts] N` and
-`VAR=value` prefixes are skipped. An interpreter reached through `xargs`, a
-function or an alias is not seen either.
+4. (2026-11-16, review finding H8) THE HOOK NOW FAILS CLOSED AND LOOKS THROUGH:
+   - A command it cannot parse (unbalanced quote, unterminated `$(`, or an
+     internal hook error) is REFUSED, not allowed. A guard that allows what it
+     cannot read is open exactly where the risk is.
+   - `$( )`, backticks and `<( )` / `>( )` bodies are judged as commands of
+     their own, including inside double quotes (never inside single quotes).
+   - Wrappers are skipped WITH their options: `env -i -u X`, `sudo -u x`,
+     `time -p`, `nice -n 5`, `stdbuf -oL`, `nohup`, `exec`, `command`, `ionice`,
+     `doas`, `winpty`, `setsid`, `timeout [opts] N` and `VAR=value` prefixes.
+     `command -v x` only asks a question and is left alone.
+   - A command string handed to another shell is judged: `bash -c "..."`,
+     `cmd /c ...`, `ssh host ...` (a remote command inherits our stdin, so
+     `ssh host python -` waits; `ssh -n` does not).
+   - `python -i` / `node -i` keep the REPL open and read stdin after the script.
+   - A newline outside quotes ends a command (it used to be plain whitespace, so
+     `echo hi<newline>python -` hid the second command), and a `#` comment is
+     removed the way a shell does it (shlex's own comment rule also fired in the
+     MIDDLE of a word and swallowed the rest of the command).
+
+LIMITS, said plainly: this is a token walk, not a shell parser. An interpreter
+reached through `xargs`, a function, an alias, a `case` statement inside `$( )`,
+or a `powershell -Command "..."` string is not seen.
 
 Write a file with the Write tool, edit one with the Edit tool or
 tools/srcfile.py, and pass a script to Python as a file in the scratchpad.
 
-Exit 0 always; a block is reported as a PreToolUse "deny" decision, so a parse
-hiccup in this hook never breaks tool use.
+Exit 0 always; a block is reported as a PreToolUse "deny" decision. Input that is
+not the expected PreToolUse JSON, or is not a Bash call, is not judged at all.
 """
 import sys, json, re, shlex
 
@@ -69,7 +86,33 @@ COMMAND_START = COMMAND_END | {'(', 'then', 'do', 'else', '{', '!'}
 # A redirection operator token, with an optional leading fd digit or `&`.
 REDIRECTION = re.compile(r'^(?:\d*|&)(?:>>?&?|<<<|<&?)$')
 # Words that run the next word without changing what it reads.
-WRAPPERS = {'env', 'time', 'nohup', 'exec', 'command', 'sudo', 'winpty', 'setsid', 'timeout'}
+#
+# name -> the options that take the NEXT word as their value (so that word is not
+# mistaken for the command). Any other `-x` option is skipped on its own, which
+# covers `env -i`, `time -p`, `nice -5` and the attached `stdbuf -oL`. `timeout`
+# has its own routine because its DURATION is a positional argument.
+WRAPPERS = {
+   'env': {'-u', '-C', '-S', '--unset', '--chdir', '--split-string'},
+   'sudo': {'-u', '-g', '-C', '-h', '-p', '-r', '-t', '-U', '-D', '-R', '-T'},
+   'doas': {'-u', '-C'},
+   'time': {'-f', '-o', '--format', '--output'},
+   'nice': {'-n', '--adjustment'},
+   'ionice': {'-c', '-n', '-p', '-P', '-u', '-t'},
+   'stdbuf': {'-i', '-o', '-e', '--input', '--output', '--error'},
+   'nohup': set(),
+   'exec': {'-a'},
+   'command': set(),
+   'winpty': set(),
+   'setsid': set(),
+   'timeout': set(),
+}
+# Shells that take their program as a string after `-c`.
+SHELLS = {'bash', 'sh', 'zsh', 'dash'}
+# `ssh` options that take a value (the host is the first word that is not one).
+SSH_VALUED = {'-B', '-b', '-c', '-D', '-E', '-e', '-F', '-I', '-i', '-J', '-L', '-l', '-m', '-O', '-o',
+              '-p', '-Q', '-R', '-S', '-W', '-w'}
+# How deep `$( $( ) )` and `bash -c "bash -c ..."` may nest before we give up (and refuse).
+MAX_DEPTH = 6
 ASSIGNMENT = re.compile(r'^[A-Za-z_]\w*=')
 WINDOWS_PATH = re.compile(r'(?<![\w])[A-Za-z]:\\[^\s"\';|&<>()]*')
 
@@ -86,7 +129,7 @@ NULL_DEVICES = {'/dev/null', 'nul', 'NUL', '/dev/tty', '/dev/stdin', '/dev/zero'
 #   ci      : option names are case-insensitive (PowerShell)
 #   dash_after_program : `-Command -` means stdin (PowerShell only)
 PYTHON = {'program': {'-c', '-m'}, 'letters': 'cm', 'info': {'-V', '-VV', '--version', '-h', '-?', '--help'},
-          'stdin': set(), 'valopts': {'-W', '-X', '--check-hash-based-pycs'}}
+          'stdin': set(), 'valopts': {'-W', '-X', '--check-hash-based-pycs'}, 'iletters': 'i'}
 NODE = {'program': {'-e', '--eval', '-p', '--print'}, 'letters': '', 'info': {'-v', '--version', '-h', '--help'},
         'stdin': set(), 'valopts': {'-r', '--require', '--import', '--loader', '--experimental-loader'}}
 SHELL = {'program': {'-c'}, 'letters': 'c', 'info': {'--version', '--help', '-h'},
@@ -109,17 +152,133 @@ INTERPRETERS = {
 }
 
 
+def normalise_windows_paths(cmd):
+   """POSIX shlex reads a backslash as an escape and would eat the separators of
+   `C:\\Python312\\python.exe`; write a Windows drive path with slashes first."""
+   return WINDOWS_PATH.sub(lambda m: m.group(0).replace('\\', '/'), cmd)
+
+
 def tokenize(cmd):
    """The command as shell-ish tokens, or None when the quoting is unbalanced."""
-   # POSIX shlex reads a backslash as an escape and would eat the separators of
-   # `C:\Python312\python.exe`; write a Windows drive path with slashes first.
-   cmd = WINDOWS_PATH.sub(lambda m: m.group(0).replace('\\', '/'), cmd)
+   cmd = normalise_windows_paths(cmd)
    try:
       lexer = shlex.shlex(cmd, posix=True, punctuation_chars=';&|()<>')
       lexer.whitespace_split = True
+      # shlex would treat a `#` ANYWHERE as the start of a comment and drop the rest
+      # of the command; extract_substitutions has already removed real comments.
+      lexer.commenters = ''
       return list(lexer)
    except ValueError:
-      return None                       # unbalanced quotes: let the shell report it
+      return None                       # unbalanced quotes: the caller refuses the command
+
+
+def find_closing_paren(cmd, start):
+   """Index of the `)` that closes a `(` already consumed, starting at `start`; -1 if none.
+
+   Quotes inside the body are honoured, so `$(echo ")")` closes where the shell closes it.
+   """
+   depth = 1
+   i = start
+   n = len(cmd)
+   while i < n:
+      c = cmd[i]
+      if c == '\\':
+         i += 2
+         continue
+      if c == "'":
+         end = cmd.find("'", i + 1)
+         if end < 0:
+            return -1
+         i = end + 1
+         continue
+      if c == '"':
+         i += 1
+         while i < n and cmd[i] != '"':
+            i += 2 if cmd[i] == '\\' else 1
+         i += 1
+         continue
+      if c == '(':
+         depth += 1
+      elif c == ')':
+         depth -= 1
+         if depth == 0:
+            return i
+      i += 1
+   return -1
+
+
+def extract_substitutions(cmd):
+   """(text, bodies), or None when a quote or substitution is never closed.
+
+   `text` is the command with every `$( )`, backtick and `<( )` / `>( )` replaced
+   by the word SUBST, every comment removed and every unquoted newline turned
+   into `;`; `bodies` are the substituted command lines, to be judged on their
+   own. A substitution is live inside double quotes and dead inside single ones.
+   """
+   out = []
+   bodies = []
+   i = 0
+   n = len(cmd)
+   in_single = False
+   in_double = False
+   while i < n:
+      c = cmd[i]
+      nxt = cmd[i + 1] if i + 1 < n else ''
+      if in_single:
+         out.append(c)
+         if c == "'":
+            in_single = False
+         i += 1
+         continue
+      if c == '\\':
+         if nxt == '\n':
+            out.append(' ')             # a line continuation
+         else:
+            out.append(cmd[i:i + 2])
+         i += 2
+         continue
+      if c == "'" and not in_double:
+         in_single = True
+         out.append(c)
+         i += 1
+         continue
+      if c == '"':
+         in_double = not in_double
+         out.append(c)
+         i += 1
+         continue
+      if c == '`':
+         j = i + 1
+         while j < n and cmd[j] != '`':
+            j += 2 if cmd[j] == '\\' else 1
+         if j >= n:
+            return None
+         bodies.append(cmd[i + 1:j])
+         out.append('SUBST')
+         i = j + 1
+         continue
+      if nxt == '(' and (c == '$' or (c in '<>' and not in_double)):
+         close = find_closing_paren(cmd, i + 2)
+         if close < 0:
+            return None
+         bodies.append(cmd[i + 2:close])
+         out.append('SUBST')
+         i = close + 1
+         continue
+      if not in_double:
+         if c == '\n':
+            out.append(' ; ')
+            i += 1
+            continue
+         if c == '#' and (i == 0 or cmd[i - 1] in ' \t\n;&|()'):
+            while i < n and cmd[i] != '\n':
+               i += 1
+            continue
+      out.append(c)
+      i += 1
+   if in_single or in_double:
+      return None
+   return ''.join(out), bodies
 
 
 def command_name(word):
@@ -147,6 +306,26 @@ def skip_timeout_arguments(toks, j):
    return j + 1                         # the duration
 
 
+def skip_wrapper(toks, j):
+   """(index of the word after `wrapper [options]`, True when it only asks a question).
+
+   `command -v python` prints a path and exits; it does not run python.
+   """
+   name = command_name(toks[j])
+   valued = WRAPPERS[name]
+   asks_only = False
+   j += 1
+   while j < len(toks) and toks[j].startswith('-') and toks[j] not in COMMAND_START:
+      option = toks[j]
+      if option == '--':
+         j += 1
+         break
+      if name == 'command' and option in ('-v', '-V'):
+         asks_only = True
+      j += 2 if option in valued else 1
+   return j, asks_only
+
+
 def commands(toks):
    """Yield (name, args, fed_by_pipe) for every simple command in the token list."""
    n = len(toks)
@@ -157,12 +336,19 @@ def commands(toks):
          continue
       fed = s > 0 and toks[s - 1] == '|'
       j = s
-      while j < n and (ASSIGNMENT.match(toks[j]) or toks[j] in WRAPPERS):
-         if toks[j] == 'timeout':
-            j = skip_timeout_arguments(toks, j)
-         else:
+      asks_only = False
+      while j < n:
+         wrapper = command_name(toks[j])
+         if ASSIGNMENT.match(toks[j]):
             j += 1
-      if j >= n or toks[j] in COMMAND_START:
+         elif wrapper == 'timeout':
+            j = skip_timeout_arguments(toks, j)
+         elif wrapper in WRAPPERS:
+            j, asked = skip_wrapper(toks, j)
+            asks_only = asks_only or asked
+         else:
+            break
+      if asks_only or j >= n or toks[j] in COMMAND_START:
          continue
       k = j + 1
       while k < n and toks[k] not in COMMAND_END and toks[k] != '(':
@@ -210,21 +396,10 @@ def supplies_stdin(stdin_target, here_string, null_is_input):
    return True
 
 
-def cat_reads_stdin(cmd):
-   """True when some `cat` in the command has no file operand and is not fed by a pipe."""
-   toks = tokenize(cmd)
-   if toks is None:
-      return False
-   for name, args, fed in commands(toks):
-      if name != 'cat' or fed:
-         continue
-      operands, stdin_target, here_string = split_redirections(args)
-      if supplies_stdin(stdin_target, here_string, True):
-         continue
-      # `cat -` IS standard input, so `-` is not a file; any other word is.
-      if not any(o != '-' and not o.startswith('-') for o in operands) or '-' in operands:
-         return True
-   return False
+def cat_reads_stdin(operands):
+   """True when a `cat` with these operands (redirections removed) reads standard input."""
+   # `cat -` IS standard input, so `-` is not a file; any other word is.
+   return not any(o != '-' and not o.startswith('-') for o in operands) or '-' in operands
 
 
 def interpreter_reads_stdin(name, operands, spec):
@@ -236,6 +411,17 @@ def interpreter_reads_stdin(name, operands, spec):
       tok = raw.lower() if ci else raw
       if tok == '-' or tok in spec['stdin']:
          return True
+      # `node -i` is a REPL (bun's and deno's `-i` mean something else, so name-keyed).
+      if name == 'node' and tok in ('-i', '--interactive'):
+         return True
+      # `python -i script.py` runs the script and then reads the REPL from stdin.
+      # Only letters BEFORE one that takes a value count: `-Wignore` and `-mpip` end in text.
+      if tok.startswith('-') and not tok.startswith('--') and len(tok) > 1 and not ci:
+         for ch in tok[1:]:
+            if ch in 'cmWX':
+               break
+            if ch in spec.get('iletters', ''):
+               return True
       if tok in spec['program']:
          if spec.get('dash_after_program') and i + 1 < len(operands) and operands[i + 1] == '-':
             return True
@@ -260,20 +446,103 @@ def interpreter_reads_stdin(name, operands, spec):
    return True                          # no program anywhere: it reads standard input
 
 
-def interpreter_waits(cmd):
-   """The name of the first bare interpreter that would wait on stdin, or None."""
-   toks = tokenize(cmd)
-   if toks is None:
+def shell_command_string(operands):
+   """The program text given to `bash -c TEXT` (also `-lc`), or None when there is none."""
+   i = 0
+   while i < len(operands):
+      tok = operands[i]
+      if tok in SHELL['valopts']:
+         i += 2
+         continue
+      if tok == '-c' or (tok.startswith('-') and not tok.startswith('--') and 'c' in tok[1:]):
+         return operands[i + 1] if i + 1 < len(operands) else None
+      if tok.startswith('-') or tok.startswith('+'):
+         i += 1
+         continue
+      return None                       # the first plain word is a script file
+   return None
+
+
+def ssh_remote_command(operands):
+   """The remote command line given to ssh ('' when none); None when `-n` closes its stdin."""
+   i = 0
+   host_seen = False
+   while i < len(operands):
+      tok = operands[i]
+      if not host_seen and tok.startswith('-') and len(tok) > 1:
+         if not tok.startswith('--') and 'n' in tok[1:] and tok not in SSH_VALUED:
+            return None                 # `ssh -n`: the remote command reads /dev/null
+         i += 2 if tok in SSH_VALUED else 1
+         continue
+      if not host_seen:
+         host_seen = True
+         i += 1
+         continue
+      return ' '.join(operands[i:])
+   return ''
+
+
+def cmd_command_line(operands):
+   """The command line given to `cmd /c ...` (or /k), or None when there is none."""
+   for i, tok in enumerate(operands):
+      if tok.lower() in ('/c', '/k', '/r'):
+         return ' '.join(operands[i + 1:])
+   return None
+
+
+def judge(name, args, fed, depth):
+   """One simple command: None when it may run, else ('cat', name) / ('interp', name) / ('unparseable', '')."""
+   operands, stdin_target, here_string = split_redirections(args)
+   if name == 'cat':
+      if fed or supplies_stdin(stdin_target, here_string, True):
+         return None
+      if cat_reads_stdin(operands):
+         return ('cat', name)
       return None
+   if fed or supplies_stdin(stdin_target, here_string, False):
+      return None                       # something real feeds it, and an inner command inherits that
+   nested = None
+   if name in SHELLS:
+      nested = shell_command_string(operands)
+   elif name == 'ssh':
+      nested = ssh_remote_command(operands)
+   elif name == 'cmd':
+      nested = cmd_command_line(operands)
+   if nested:
+      found = scan(nested, depth + 1)
+      if found:
+         return found
+   spec = INTERPRETERS.get(name)
+   if spec is not None and interpreter_reads_stdin(name, operands, spec):
+      return ('interp', name)
+   return None
+
+
+def scan(cmd, depth=0):
+   """The first finding in a command line, or None.
+
+   A finding is ('cat', name), ('interp', name), or ('unparseable', '') when the
+   command cannot be read -- which is refused, because a guard that allows what
+   it cannot read is open exactly where the danger is.
+   """
+   if depth > MAX_DEPTH:
+      return ('unparseable', '')
+   cmd = normalise_windows_paths(cmd)
+   split = extract_substitutions(cmd)
+   if split is None:
+      return ('unparseable', '')
+   text, bodies = split
+   for body in bodies:
+      found = scan(body, depth + 1)
+      if found:
+         return found
+   toks = tokenize(text)
+   if toks is None:
+      return ('unparseable', '')
    for name, args, fed in commands(toks):
-      spec = INTERPRETERS.get(name)
-      if spec is None or fed:
-         continue
-      operands, stdin_target, here_string = split_redirections(args)
-      if supplies_stdin(stdin_target, here_string, False):
-         continue
-      if interpreter_reads_stdin(name, operands, spec):
-         return name
+      found = judge(name, args, fed, depth)
+      if found:
+         return found
    return None
 
 
@@ -292,12 +561,24 @@ def verdict(cmd):
               "Heredocs are forbidden here -- a 2026-10-14 shell waited on standard "
               "input for over a day. Write the content with the Write tool (into the "
               "scratchpad if it is temporary) and pass the FILE to the command instead.")
-   if cat_reads_stdin(cmd):
+   try:
+      found = scan(cmd)
+   except Exception:
+      found = ('unparseable', '')       # a hook bug must not turn into "allowed"
+   if found is None:
+      return None
+   kind, waiting = found
+   if kind == 'unparseable':
+      return ("BLOCKED (block-stdin-readers hook): this command cannot be parsed (an "
+              "unbalanced quote, an unterminated `$(` or backtick, or nesting too deep), "
+              "so the hook cannot tell whether it waits on standard input and refuses it "
+              "(issue 289). Fix the quoting, or write the text to a file with the Write "
+              "tool and pass the FILE.")
+   if kind == 'cat':
       return ("BLOCKED (block-stdin-readers hook): `cat` has no input file here, so it "
               "reads standard input and waits for ever -- a 2026-10-14 shell sat for "
               "over a day on `cat > /dev/null`. Give `cat` a file, or write the file "
               "with the Write tool.")
-   waiting = interpreter_waits(cmd)
    if waiting:
       return ("BLOCKED (block-stdin-readers hook): `" + waiting + "` is given no script, "
               "or is given `-`, so it reads its program from standard input and waits "

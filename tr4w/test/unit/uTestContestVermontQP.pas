@@ -1541,6 +1541,17 @@ begin
       ctx.HisQTH := '';
       CheckEquals('599 DL     ', ActiveContest(Contest).FormatCabrilloReceivedExchange(my, rx, ctx),
                   'the Cabrillo received column is the DXCC prefix');
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(Contest, rx),
+                  'and through the writer''s own HisQTH');
+
+      (* A DX STATION THAT ALSO SENT ITS PREFIX ("599 DL"), exported with the
+         writer's own HisQTH (review H4 follow-up, 2026-11-16): the column is
+         still the DXCC prefix. *)
+      dupe := EnterPartyQSO('DL4DDD', '599 DL', Band10, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'in VT, 599 DL from a DX station is taken: ' + string(ExchangeErrorMessage));
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(Contest, rx),
+                  'a typed DX prefix exports as the prefix: QTH ' + string(rx.QTHString) +
+                  ', domestic ' + string(rx.DomesticQTH) + ', DX ' + string(rx.DXQTH));
 
       (* AN EMPTY EXCHANGE from a DX call is refused today (the engine's RST
          and QTH parser takes nothing from nothing): the operator types the

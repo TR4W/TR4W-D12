@@ -12,12 +12,13 @@ unit uTestNewContestHome;
                     asked only when every call of the region is inside the box
                     (Canada), never for a box that is part of one (New
                     England); an unlocated call is never asked about;
-    the classes     the North American boxes are the continent, a country box
-                    reads its contest's own domestic list, New England is a
-                    one-way K, and a box DXCC cannot decide (IARU's HQ or
-                    member) states nothing;
+    the classes     a box reads its contest's own domestic list -- the North
+                    American boxes too since review M16 (they were the
+                    continent) -- New England is a one-way K, and a box DXCC
+                    cannot decide (IARU's HQ or member) states nothing;
     the walk        every contest that states a region offers the box, so the
-                    check never fires for a box the operator cannot see;
+                    check never fires for a box the operator cannot see; and
+                    every box states a region or is exempt with its reason;
     the real file   the shipped cty.dat puts real calls where the lists say,
                     so a list spelled differently from CTY cannot pass. *)
 
@@ -104,11 +105,42 @@ var
 begin
    BeginTest('Test_TheClassesStateTheirRegions');
 
+   (* THE NORTH AMERICAN BOXES ARE EACH CONTEST'S OWN DOMESTIC LIST, not the
+      continent (review M16, 2026-11-16). *)
    CheckTrue(ContestIdentity(ContestHandleOf(ARRL10)).DescribeNewContestHome(home),
              'ARRL 10 states its box''s region');
-   CheckTrue(home.Continent = NorthAmerica, 'ARRL 10: North America is the continent');
-   CheckEquals('', home.Countries, 'ARRL 10: by continent, no country list');
-   CheckTrue(home.HomeIsInside, 'ARRL 10: every North American call is inside');
+   CheckEquals('K VE KH6 KL XE', home.Countries,
+               'ARRL 10: the stations that send a state or province, from DescribeSession');
+   CheckTrue(home.Continent = UnknownContinent, 'ARRL 10: not the continent');
+   CheckTrue(home.HomeIsInside, 'ARRL 10: every listed call is inside');
+   CheckTrue(ContestIdentity(ContestHandleOf(CQ160CW)).DescribeNewContestHome(home),
+             'CQ 160 CW states its box''s region');
+   CheckEquals('K VE', home.Countries, 'CQ 160 CW: W/VE');
+   CheckTrue(ContestIdentity(ContestHandleOf(CQ160SSB)).DescribeNewContestHome(home),
+             'CQ 160 SSB states its box''s region');
+   CheckEquals('K VE', home.Countries, 'CQ 160 SSB: W/VE');
+   CheckTrue(ContestIdentity(ContestHandleOf(ARRL_RTTY_ROUNDUP)).DescribeNewContestHome(home),
+             'RTTY Roundup states its box''s region');
+   CheckEquals('K VE', home.Countries, 'RTTY Roundup: W/VE');
+   CheckTrue(ContestIdentity(ContestHandleOf(CQWWRTTY)).DescribeNewContestHome(home),
+             'CQ WW RTTY states its box''s region');
+   CheckEquals('K VE', home.Countries, 'CQ WW RTTY: W/VE, stated (its set-up lists none)');
+   CheckTrue(ContestIdentity(ContestHandleOf(ARRL160)).DescribeNewContestHome(home),
+             'ARRL 160 states its box''s region');
+   CheckTrue(Pos(' KH6 ', ' ' + home.Countries + ' ') > 0, 'ARRL 160: an ARRL-section country (KH6)');
+   CheckTrue(Pos(' XE ', ' ' + home.Countries + ' ') = 0, 'ARRL 160: XE is no ARRL-section country');
+   CheckTrue(ContestIdentity(ContestHandleOf(JIDXCW)).DescribeNewContestHome(home),
+             'JIDX CW states its box''s region');
+   CheckEquals('JA', home.Countries, 'JIDX CW: Japan');
+   CheckTrue(ContestIdentity(ContestHandleOf(JIDXSSB)).DescribeNewContestHome(home),
+             'JIDX SSB states its box''s region');
+   CheckEquals('JA', home.Countries, 'JIDX SSB: Japan');
+   CheckTrue(ContestIdentity(ContestHandleOf(UBACW)).DescribeNewContestHome(home),
+             'UBA CW states its box''s region');
+   CheckEquals('ON', home.Countries, 'UBA CW: Belgium');
+   CheckTrue(ContestIdentity(ContestHandleOf(UBASSB)).DescribeNewContestHome(home),
+             'UBA SSB states its box''s region');
+   CheckEquals('ON', home.Countries, 'UBA SSB: Belgium');
 
    CheckTrue(ContestIdentity(ContestHandleOf(CANADA_DAY)).DescribeNewContestHome(home),
              'Canada Day states its box''s region');
@@ -158,6 +190,40 @@ begin
    end;
 end;
 
+(* THE CONTESTS THAT OFFER THE "I AM IN" BOX AND STATE NO REGION, ON PURPOSE
+   (review M16, 2026-11-16). A ratchet: Test_EveryStatedRegionHasABox fails
+   a box with no region that is not here, and an entry here that now states
+   one. Each with its reason:
+     IARU, BSCI           "HQ or member" -- a society station, which DXCC
+                          cannot decide;
+     ARKTIKA_SPRING, PCC  a club member;
+     GAGARINCUP           a station with a special designator, not a place;
+     WWPMC                a PMC city, which DXCC cannot decide;
+     REFCW, REFSSB        France: REF's own test is FrenchID (any ID starting
+                          F, TM, TK), a rule over IDs that a whole-ID list
+                          would copy and let drift;
+     RSGB18               "UK": no station test in its class names the UK
+                          countries, and no sponsor text is in the tree;
+     IRTS, EUDX           the entrant is decided by the four-character code
+                          sent (MY STATE), not by a country -- EUDX's box is
+                          any EU country. *)
+function OffersABoxWithNoRegionOnPurpose(aContest: TContestBase): boolean;
+const
+   EXEMPT: array[0..10] of ContestType = (IARU, BSCI, ARKTIKA_SPRING, PCC, GAGARINCUP,
+                                          WWPMC, REFCW, REFSSB, RSGB18, IRTS, EUDX);
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(EXEMPT) to High(EXEMPT) do
+      begin
+      if IsLegacyContest(aContest, EXEMPT[i]) then
+         begin
+         Result := True;
+         end;
+      end;
+end;
+
 procedure TNewContestHomeTests.Test_EveryStatedRegionHasABox;
 var
    contests: TContestIdentityList;
@@ -179,8 +245,26 @@ begin
    stating := 0;
    for i := 0 to High(contests) do
       begin
-      if not contests[i].DescribeNewContestHome(home) then
+      (* THE OTHER DIRECTION (review M16, 2026-11-16): a contest that offers
+         the box states its region, or is on the exemption list below with
+         its reason -- so a new contest with a box and no region fails here.
+         An exempt contest that states one fails too: the list only
+         shrinks. *)
+      if contests[i].DescribeNewContestHome(home) then
          begin
+         CheckFalse(OffersABoxWithNoRegionOnPurpose(contests[i]), ContestWho(contests[i]) +
+                    ': states a region, so take it off the exemption list');
+         end
+      else
+         begin
+         CheckTrue(not OffersIAmInBox(contests[i]) or
+                   OffersABoxWithNoRegionOnPurpose(contests[i]),
+                   ContestWho(contests[i]) + ': offers the "I am in" box and states ' +
+                   'no region -- state one (DescribeNewContestHome) or exempt it ' +
+                   'with its reason');
+         CheckTrue(OffersIAmInBox(contests[i]) or
+                   not OffersABoxWithNoRegionOnPurpose(contests[i]),
+                   ContestWho(contests[i]) + ': exempt, but offers no box');
          Continue;
          end;
       inc(stating);
@@ -217,6 +301,12 @@ begin
    CheckTrue(IsHome('W1AW'), 'ARRL 10: W1AW is in North America');
    CheckTrue(IsHome('VE3EJ'), 'ARRL 10: VE3EJ is in North America');
    CheckFalse(IsHome('DL1ABC'), 'ARRL 10: DL1ABC is not');
+   CheckTrue(IsHome('KH6ABC'), 'ARRL 10: KH6ABC sends a state, though in Oceania (review M16)');
+   CheckFalse(IsHome('KP4ABC'), 'ARRL 10: KP4ABC is in North America but sends a serial');
+
+   ContestIdentity(ContestHandleOf(CQ160CW)).DescribeNewContestHome(home);
+   CheckTrue(IsHome('VE3EJ'), 'CQ 160: VE3EJ sends a province');
+   CheckFalse(IsHome('XE1ABC'), 'CQ 160: XE1ABC is in North America but is DX (review M16)');
 
    ContestIdentity(ContestHandleOf(CANADA_DAY)).DescribeNewContestHome(home);
    CheckTrue(IsHome('VE3EJ'), 'Canada Day: VE3EJ is in Canada');

@@ -24,8 +24,8 @@
       "executable_sha256": "04bc8e10e7ae24df1256b653260bc0fa09750db27af6d23bdaf7c65d797514f1"
    },
    "display": ":99",
-   "run": "/home/toms/tr4w-gui-test/runs/linux-prefs-persistence-gdb-002",
-   "executable_archive": "/home/toms/tr4w-gui-test/evidence/04bc8e10e7ae24df1256b653260bc0fa09750db27af6d23bdaf7c65d797514f1/tr4w",
+   "run": "/home/<user>/tr4w-gui-test/runs/linux-prefs-persistence-gdb-002",
+   "executable_archive": "/home/<user>/tr4w-gui-test/evidence/04bc8e10e7ae24df1256b653260bc0fa09750db27af6d23bdaf7c65d797514f1/tr4w",
    "window_manager": "Name: Openbox\nClass: \nPID: N/A\nWindow manager's \"showing the desktop\" mode: OFF\n",
    "pid": 130690,
    "application_pids": [

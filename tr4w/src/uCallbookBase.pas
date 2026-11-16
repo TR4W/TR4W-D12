@@ -62,6 +62,10 @@ type
       (* Reads the reply body into a NEW record the caller frees.  Never raises:
          a body that is not what the provider documents is Found=False. *)
       function ParseReply(const aReply: string): TCallbookRecord; virtual; abstract;
+      (* Whether the provider can hold aCall at all (upper-cased, trimmed). A
+         call it cannot hold is not sent: Lookup answers Found=False and logs
+         aWhy at Info. The default is every call. *)
+      function CanHold(const aCall: string; out aWhy: string): boolean; virtual;
    public
       (* Always returns a record the caller frees; never raises and never shows
          anything.  A transport failure and an unknown call both give
@@ -108,6 +112,12 @@ begin
    Result := UTF8Decode(EncodeURLElement(UTF8Encode(UpperCase(Trim(aCall)))));
 end;
 
+function TCallbookProvider.CanHold(const aCall: string; out aWhy: string): boolean;
+begin
+   aWhy   := '';
+   Result := True;
+end;
+
 function TCallbookProvider.Lookup(const aCall: string): TCallbookRecord;
 var
    call:   string;
@@ -121,6 +131,17 @@ begin
       if call = '' then
          begin
          Result := TCallbookRecord.Create;
+         Exit;
+         end;
+
+      (* NOT ASKED: an answer known in advance is not a failed request. The
+         transport logs every non-2xx at Error (a 404 for a portable call was
+         one), and this is no error. *)
+      if not CanHold(call, why) then
+         begin
+         CallbookLogger.Info('[Callbook] %s not asked about %s: %s', [FId, call, why]);
+         Result := TCallbookRecord.Create;
+         Result.Call := call;   (* the Exit skips the stamp below *)
          Exit;
          end;
 

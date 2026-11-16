@@ -116,6 +116,7 @@ type
         reopened by a profile apply, and Save never re-applied for it. *)
       procedure Test_AppliedSnapshotSeesAChangedKeyer;
       procedure Test_ActiveSettingsChangedSeesAMovedWinKeyer;
+      procedure Test_ActiveSettingsChangedIgnoresAKeyerRename;
       procedure Test_PortConflictsIncludeTheWinKeyer;
 
       // --- JSON persistence (Track F-5a) ---------------------------------
@@ -2026,6 +2027,73 @@ begin
    end;
 end;
 
+(* A RENAMED KEYER IS NOT A CHANGE -- ASKED THE WAY SAVE ASKS IT, WITH THE
+  PROFILE SLOT RECORDED AS THE APPLIER RECORDS IT.  A rename rewrites the
+  profile's CW output NAME (uPrefsForm.RenameKeyerInProfiles) and leaves its
+  Id alone, so the slot still names the same device.  The CW output was
+  compared by name, before the device comparison, and a rename during a
+  contest tore down and rebuilt both radio links and reopened the WinKeyer.
+  The moved-WinKeyer test above records no profile slot, so it could not see
+  it.  The real changes must still be seen: another keyer, and CAT. *)
+procedure TRadioConfigStoreTests.Test_ActiveSettingsChangedIgnoresAKeyerRename;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   keyer, other: TKeyerDefinition;
+   prof: TStationProfile;
+   which, err: string;
+   changed: boolean;
+begin
+   BeginTest('Test_ActiveSettingsChangedIgnoresAKeyerRename');
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   AppliedRadios.Clear;
+   try
+      keyer := keyers.AddKeyer('Desk WinKey', kkWinKeyer);
+      keyer.Port := 'SERIAL 3';
+
+      prof := TStationProfile.Create;
+      prof.Name        := 'Home';
+      prof.CWOutput1   := keyer.Name;
+      prof.CWOutput1Id := keyer.Id;
+      CheckTrue(store.AddProfile(prof, err), 'profile added: ' + err);
+      store.ActiveProfileName := 'Home';
+      prof := store.ActiveProfile;
+      CheckTrue(prof <> nil, 'the active profile');
+
+      (* What ApplyRadioToSlot and ApplyKeyersForProfile record. *)
+      AppliedRadios.RecordProfileSlot(1, prof.SpeedSync1, prof.CWOutput1, prof.CWOutput1Id);
+      AppliedRadios.RecordKeyerSlot(1, keyer);
+      CheckFalse(ActiveRadioSettingsChanged(store, which, keyers),
+                 'nothing edited since the apply: no change');
+
+      (* THE RENAME, as Preferences makes it. *)
+      CheckTrue(keyers.RenameKeyer('Desk WinKey', 'Shack WinKey', err), 'renamed: ' + err);
+      prof.CWOutput1 := 'Shack WinKey';
+      (* Asked first, so the message carries what it named. *)
+      changed := ActiveRadioSettingsChanged(store, which, keyers);
+      CheckFalse(changed, 'a renamed keyer is NOT a change; it named: ' + which);
+
+      (* ANOTHER KEYER IS. *)
+      other := keyers.AddKeyer('Spare WinKey', kkWinKeyer);
+      other.Port := 'SERIAL 3';
+      prof.CWOutput1   := other.Name;
+      prof.CWOutput1Id := other.Id;
+      CheckTrue(ActiveRadioSettingsChanged(store, which, keyers),
+                'the slot moved to a different keyer is a change');
+
+      (* AND CAT IS: no device, so no Id, so the names decide. *)
+      prof.CWOutput1   := CWOUTPUT_CAT;
+      prof.CWOutput1Id := '';
+      CheckTrue(ActiveRadioSettingsChanged(store, which, keyers),
+                'a keyer replaced by CW by CAT is a change');
+   finally
+      AppliedRadios.Clear;
+      keyers.Free;
+      store.Free;
+   end;
+end;
+
 (* THE WINKEYER'S PORT IS COMPARED WITH THE RADIOS' -- Activate warned about
   two radios sharing a port and said nothing when the WinKeyer sat on a
   radio's CAT port, which fails just as surely: both open it exclusively. *)
@@ -3006,24 +3074,38 @@ begin
    snap := TAppliedRadioSnapshot.Create;
    try
       CheckFalse(snap.SpeedSyncChanged(1, True),     'nothing applied: no sync change');
-      CheckFalse(snap.CWOutputChanged(1, 'NONE'),    'nothing applied: no output change');
+      CheckFalse(snap.CWOutputChanged(1, 'NONE', ''), 'nothing applied: no output change');
 
-      snap.RecordProfileSlot(1, False, 'CAT');
+      snap.RecordProfileSlot(1, False, 'CAT', '');
       CheckTrue(snap.SpeedSyncChanged(1, True),      'sync ticked after the apply');
       CheckFalse(snap.SpeedSyncChanged(1, False),    'sync unchanged');
-      CheckTrue(snap.CWOutputChanged(1, 'NONE'),     'output changed');
-      CheckFalse(snap.CWOutputChanged(1, 'CAT'),     'output unchanged');
+      CheckTrue(snap.CWOutputChanged(1, 'NONE', ''), 'output changed (CAT -> NONE)');
+      CheckFalse(snap.CWOutputChanged(1, 'CAT', ''), 'output unchanged');
+      CheckTrue(snap.CWOutputChanged(1, 'Desk WinKey', 'k-1'),
+                'CAT -> a keyer is a change');
 
       CheckFalse(snap.SpeedSyncChanged(2, True),     'slot 2 was never applied');
-      CheckFalse(snap.CWOutputChanged(2, 'NONE'),    'slot 2 was never applied');
+      CheckFalse(snap.CWOutputChanged(2, 'NONE', ''), 'slot 2 was never applied');
 
-      snap.RecordProfileSlot(2, True, 'SERIAL 4');
+      snap.RecordProfileSlot(2, True, 'SERIAL 4', '');
       CheckFalse(snap.SpeedSyncChanged(2, True),     'slot 2 recorded on, still on');
       CheckTrue(snap.SpeedSyncChanged(2, False),     'slot 2 unticked');
 
+      (* A KEYER, BY ID (review H6). *)
+      snap.RecordProfileSlot(1, False, 'Desk WinKey', 'k-1');
+      CheckFalse(snap.CWOutputChanged(1, 'Shack WinKey', 'k-1'),
+                 'the same keyer renamed is NOT a change');
+      CheckTrue(snap.CWOutputChanged(1, 'Desk WinKey', 'k-2'),
+                'another keyer (even one given the old name) is a change');
+      CheckTrue(snap.CWOutputChanged(1, 'CAT', ''), 'a keyer -> CAT is a change');
+      CheckFalse(snap.CWOutputChanged(1, 'Desk WinKey', ''),
+                 'no Id on one side: the name decides, and it is the same');
+      CheckTrue(snap.CWOutputChanged(1, 'Shack WinKey', ''),
+                'no Id on one side: the name decides (a pre-id profile renamed)');
+
       snap.Clear;
       CheckFalse(snap.SpeedSyncChanged(1, True),     'cleared: nothing to change from');
-      CheckFalse(snap.CWOutputChanged(1, 'NONE'),    'cleared: nothing to change from');
+      CheckFalse(snap.CWOutputChanged(1, 'NONE', ''), 'cleared: nothing to change from');
    finally
       snap.Free;
    end;
@@ -3204,6 +3286,7 @@ begin
    Test_AppliedSnapshotKeepsItsOwnCopy;
    Test_AppliedSnapshotSeesAChangedKeyer;
    Test_ActiveSettingsChangedSeesAMovedWinKeyer;
+   Test_ActiveSettingsChangedIgnoresAKeyerRename;
    Test_PortConflictsIncludeTheWinKeyer;
 
    Test_PollRateIsCopiedComparedAndCloned;

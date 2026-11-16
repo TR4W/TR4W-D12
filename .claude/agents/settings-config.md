@@ -272,7 +272,9 @@ file never receives the contest's values. `uTestNewContestCommands` pins it with
 a first-run, a fresh and a configured station.
 
 **The rule for any future pre-load code:** read the file if you must, never
-assign `Settings` and never call `SaveSettings`. Known leftover:
+assign `Settings` and never call `SaveSettings` (the second half is enforced
+since 2026-11-16: `SaveSettings` refuses an object still
+`AwaitingStartupLoad`, see the exit-save section). Known leftover:
 `uNewContest.PrepareForm` pre-fills the callsign from `Settings.My.MainCallsign`,
 which is always empty at that point, so the pre-fill never fires. The one
 deliberate exception is the early `DEBUG LOG LEVEL` assignment in `uProgramMain`
@@ -586,11 +588,28 @@ stays** (NY4I, decision B: they protect against an abort before exit).
 **AND `ExitProgram` NOW SAVES THE WHOLE `settings` SECTION** (decision C):
 `uTR4WConfigFile.SaveSettingsAtExit`, right after `SaveTR4WPOSFILE` (the
 autosave also calls that one, so the exit save is NOT inside it), one Info line
-with the elapsed ms. It refuses unless `LoadSettingsForStartup(.., True)` ran
-this session (a save from an unloaded object resets the station). Measured on a
-copy of NY4I's 43 KB file: one `SaveSettings` is 4-10 ms. Still unexamined:
-Alt-K's `Settings.Dvk.Enable`, AutoQslInterval and Cq.AutoDelay hotkeys (NY4I
-undecided) -- with the exit save they now persist at exit.
+with the elapsed ms. It refuses unless `LoadSettingsForStartup(.., True)`
+SUCCEEDED this session (a save from an unloaded object resets the station).
+Measured on a copy of NY4I's 43 KB file: one `SaveSettings` is 4-10 ms.
+
+**WHAT PERSISTS AT EXIT IS DECIDED (NY4I), not open:** Alt-K's
+`Settings.Dvk.Enable`, AUTO QSL INTERVAL and AUTO-CQ DELAY simply persist at
+exit; `DisplayGhz` (derived from the contest's bands in `uProgramMain`),
+`Ptt.ViaCommands` (set True by `uWSJTX`), `Scp.MinimumLetters` (set 3 by
+`uMaster`) and `IncrementTimeEnable` are ordinary saved settings with NO special
+handling -- a run-time write to them reaching the file is accepted. Do not
+"fix" them with a keep (review M2, 2026-11-16, confirmed and left as ruled).
+
+**`SaveSettings` ITSELF REFUSES AN OBJECT AWAITING ITS LOAD** (review M1,
+2026-11-16). `TR4WSettings.AwaitingStartupLoad` is armed on the program's
+object at the top of `RunTR4W`; `LoadSettingsForStartup` clears it only when
+the load SUCCEEDED -- an absent or blank file is a fresh install and succeeds,
+a file present but not JSON does not (it is copied aside as `.bad`, the
+session runs on defaults and saves nothing). Off by default, so the converter's
+and the tests' own objects save as before. `ReadRootReporting` is the
+read that tells unreadable from absent. Under `/EXPORT` the load succeeds on a
+readable fixture, so its behaviour is unchanged. Pinned in
+`uTestStationValueKept.Test_AnUnloadedSettingsObjectIsNeverSaved`.
 
 ## A STATION-SCOPED VALUE A CONTEST STATES IS KEPT, AND NEVER WRITTEN (2026-11-15)
 
@@ -611,8 +630,12 @@ section**. The rule is by HOW A VALUE ARRIVED, not a property list:
   lines (`LogCfg`), the New Contest queue, the log's MY CALL hoist and its
   stored-row loop (`uLogStore`, both rerouted from `CheckCommand(..,True)`),
   plus the loop's no-op skip, which keeps too. `ApplyContestEdit` (the
-  contest-parameter edit) goes through it.
-- **A STATION EDIT** (`ApplyAndStoreCommand` -- Station page, wizard, peer --
+  contest-parameter edit) goes through it. **A REFUSED statement keeps
+  nothing** (review M3, 2026-11-16): the keep must precede the apply (it
+  streams the value before the change), so a keep this call made is undone by
+  `TR4WSettings.ForgetKeptStationValue`, and an existing entry -- forced or
+  not -- is only touched once the statement takes.
+- **A STATION EDIT** (`ApplyAndStoreCommand` -- Station page, wizard --
   and `TModelSetting.TrySetText`, both through
   **`TR4WSettings.TrySetStationValue`**) of a kept setting replaces the KEPT
   value and saves; **the contest's live value is not touched** (decision E,
@@ -621,11 +644,21 @@ section**. The rule is by HOW A VALUE ARRIVED, not a property list:
   read half is `TryGetStationValue`**: `uRadioConfigApply.StationCommandValue`
   (Station page, wizard) and `TModelSetting.AsText` show the KEPT value, so a
   shown value applied back can never make the contest's value the station's.
-- **`ToggleAndStoreCommand` on a kept setting flips LIVE AND the kept station
-  value, and saves** (NY4I, 2026-11-15: a band-map toggle is the station's
-  choice too). Alt-K DVK ENABLE, AUTO QSL INTERVAL and AUTO-CQ DELAY simply
-  persist at exit (NY4I); DisplayGhz, Ptt.ViaCommands, Scp.MinimumLetters and
-  IncrementTimeEnable are ordinary saved settings with no special handling.
+- **EVERY OTHER CHANGE OF A KEPT SETTING GOES THROUGH ONE ROUTINE,
+  `uRadioConfigApply.ApplyToContestHeldSetting(cmd, value, aStationFollows)`**
+  (review H3, 2026-11-16). `aStationFollows` True -- an operator's action on
+  what is on screen: `ToggleAndStoreCommand` (band map, NY4I 2026-11-15) and
+  `SetCFGCommandValue` (BOOLSWAP function keys, the Auto-CQ dialog, via
+  `PersistCommandThroughStore`) -- flips LIVE AND the kept station value, and
+  saves. False -- a multi-op PEER's edit (`ApplyPeerCommand`) -- changes it
+  live only and writes nothing: a shared setting is one the desks agree on for
+  THIS contest, so it is the contest's value, like `ApplyContestEdit`. (The
+  b138db69 message had grouped the peer with the station edit; that left a
+  peer's change with no effect here. Agent's reasoning, not yet NY4I's ruling;
+  a peer edit of an UNKEPT setting still applies and saves, unchanged.)
+  `SetCFGCommandValue` now answers the store's verdict for an owned name and
+  tells peers only when it took -- `CheckCommand` without `aApplyJSONOwned`
+  merely ACCEPTS an owned name.
 - **`ClearContestCFGCommands` REVERTS** kept statements onto their properties
   (de-streamed into the group) and forgets them -- forgetting alone would leave
   the contest's value live with nothing kept. `FromJSON` (a load) drops
@@ -643,7 +676,8 @@ section**. The rule is by HOW A VALUE ARRIVED, not a property list:
   latched the default issue 250 had to migrate).
 - Pinned by `uTestStationValueKept` (NE4C, a `.cfg` LEADING ZEROS through the
   real reader, the Preferences edit, the zone, the exit save, byte-identity,
-  the contest-parameter edit).
+  the contest-parameter edit, the band-map toggle, the function key, the peer
+  edit, the refused statement, the unloaded-object save).
 
 ## Two settings that LOWER a master, and are never shared (issue 256, 2026-11-09)
 

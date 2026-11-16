@@ -559,10 +559,52 @@ def check(path, fix):
            + len(author_copied) + len(not_language))
 
 
+def format_defects(path):
+   """(entries compared, the entries whose format specifiers differ from their
+   English) for one catalogue. The same rule as check()'s FORMAT_DEFECT, nothing else.
+   The first number is what lets a gate refuse a run that compared nothing.
+
+   Used by --specifiers, which Lint-PoSpecifiers runs as a build gate: the full
+   check() also reports accelerator and English-in-translation findings that are
+   a translator's backlog, not a crash. A specifier is different in kind -- the
+   program formats through unchecked varargs, and a missing one shows no number.
+   """
+   bad = []
+   checked = 0
+   for e in pofile.read_po(path):
+      if e.obsolete or not e.source.strip() or not e.target.strip():
+         continue
+      checked += 1
+      if not same_specifiers(e.source, e.target):
+         bad.append(e)
+   return checked, bad
+
+
+def main_specifiers(paths):
+   """Print every format-specifier mismatch; the exit code is 1 when there is any."""
+   total = 0
+   checked = 0
+   for p in paths:
+      name = os.path.basename(p)
+      compared, bad = format_defects(p)
+      checked += compared
+      for e in bad:
+         total += 1
+         say("  %s: FORMAT SPECIFIERS differ -- %s vs %s"
+             % (name, specifiers(e.source), specifiers(e.target)))
+         say("     english    %r" % e.source[:70])
+         say("     translated %r" % e.target[:70])
+   say("po_lint --specifiers: %d catalogue(s), %d entries compared, %d mismatch(es)"
+       % (len(paths), checked, total))
+   return 1 if total else 0
+
+
 def main():
    ap = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
    ap.add_argument("catalogue", nargs="*", help="the .po file(s) to check")
+   ap.add_argument("--specifiers", action="store_true",
+                   help="only the format-specifier check (the build gate); implies every tr4w_*.po")
    ap.add_argument("--all", action="store_true", help="every tr4w_*.po in i18n/")
    ap.add_argument("--fix", action="store_true",
                    help="re-flag empty entries that lost their fuzzy marker")
@@ -570,12 +612,16 @@ def main():
 
    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
    paths = list(args.catalogue)
+   if args.specifiers and not paths:
+      args.all = True
    if args.all:
       i18n = os.path.join(here, "i18n")
       paths += [os.path.join(i18n, f) for f in sorted(os.listdir(i18n))
                 if f.startswith("tr4w_") and f.endswith(".po")]
    if not paths:
       ap.error("give a catalogue, or --all")
+   if args.specifiers:
+      return main_specifiers(paths)
 
    bad = 0
    for p in paths:

@@ -1317,7 +1317,7 @@ msgstr "%u хв."
 #: utr4wstrings.tc_cqtotal
 msgctxt "TC_CQTOTAL"
 msgid "CQ total: %u"
-msgstr "Всього CQ: %"
+msgstr "Всього CQ: %u"
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_repeating tr4w/src/lang/tr4w_consts_eng.pas:234
@@ -1373,7 +1373,7 @@ msgstr "Година = %d"
 #: utr4wstrings.tc_band_changes
 msgctxt "TC_BAND_CHANGES"
 msgid "Bn. ch. = %d"
-msgstr "Див. діап. = % d "
+msgstr "Див. діап. = %d "
 
 #. Section: LOGWIND
 #: utr4wstrings:tc_haveqtcs tr4w/src/lang/tr4w_consts_eng.pas:243
@@ -10351,6 +10351,7 @@ msgid "TR4W reads and sets the frequency and mode."
 msgstr ""
 
 #: uappstrings.swizkeyerheading
+#: uappstrings.sdefaultkeyername
 #, fuzzy
 msgid "WinKeyer"
 msgstr ""
@@ -10381,6 +10382,7 @@ msgid "Close Preferences first, so the setup wizard and Preferences do not overw
 msgstr ""
 
 #: uappstrings.swizradioheading
+#: uappstrings.sdefaultradioname
 #, fuzzy
 msgid "Radio"
 msgstr ""
@@ -10870,4 +10872,19 @@ msgstr ""
 #: tprefsform.chkbandmapsortbybeam.caption
 #, fuzzy
 msgid "Sort the band map by beam heading, nearest the beam first"
+msgstr ""
+
+#: utr4wstrings.tc_winkeyerdidnotopen
+msgctxt "TC_WINKEYERDIDNOTOPEN"
+msgid "WinKeyer on %s did not open (see tr4w.log)"
+msgstr ""
+
+#: uappstrings.sexchangenopostcode
+#, fuzzy
+msgid "No postcode in the exchange"
+msgstr ""
+
+#: uappstrings.sdefaultclustername
+#, fuzzy
+msgid "Cluster"
 msgstr ""

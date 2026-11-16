@@ -112,6 +112,9 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* THE "I AM IN JAPAN" BOX'S REGION -- see
+         TContestBase.DescribeNewContestHome (issue 167, review M16). *)
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    private
       (* IS THE ENTRANT IN JAPAN? -- DescribeSession's station test, asked of
          Station. It chose the DX kind and the zone kind, both deleted
@@ -399,6 +402,17 @@ procedure TContestJIDXSSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts
 begin
    aPrompts.OfferIAmIn(TC_JAPAN);
    aPrompts.AskFieldWithCommentWhenInside(TC_PREFECTURE, ncfMyState);
+end;
+
+(* THE "I AM IN JAPAN" BOX IS JA -- issue 167, review M16 (2026-11-16): the
+   country IsJapaneseEntrant asks, so the box and the rules that follow from
+   it (a prefecture sent, a DX multiplier counted) name one region. *)
+function TContestJIDXSSB.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   aHome.Countries := 'JA';
+   aHome.Continent := UnknownContinent;
+   aHome.HomeIsInside := True;
+   Result := True;
 end;
 
 (* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)

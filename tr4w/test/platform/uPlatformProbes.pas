@@ -182,11 +182,11 @@ begin
      is none, so the loop never stopped, chewed through the whole path
      truncating at every dot, and
 
-         /home/toms/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/ARRL-FD ... .db
+         /home/<user>/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/ARRL-FD ... .db
 
      became
 
-         /home/toms/Desktop/TR4W/tr4w-5
+         /home/<user>/Desktop/TR4W/tr4w-5
 
      The log database then opened as the wrong file, so the contest never
      loaded, so the domestic country list was never built, so every K station

@@ -1146,7 +1146,7 @@ begin
     a directory prepended. On Windows that is right. On Linux there is no
     backslash in any path, so a fully-qualified name such as
 
-        /home/toms/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/dom/arrlsect.dom
+        /home/<user>/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/dom/arrlsect.dom
 
     was treated as a bare filename and had another directory glued to the
     front of it, producing a path that cannot exist (NY4I, 2026-09-09).

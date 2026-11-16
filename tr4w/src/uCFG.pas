@@ -702,8 +702,18 @@ begin
          begin
          if not PersistCommandValue(aCommand, aValue) then
             begin
-            logger.Error('[SetCFGCommandValue] "%s" applied but NOT saved -- the ' +
-                         'configuration store refused it.', [aCommand]);
+            logger.Error('[SetCFGCommandValue] "%s" NOT applied or NOT saved -- ' +
+                         'the configuration store refused it.', [aCommand]);
+            (* A NAME THE SETTINGS OBJECT OWNS WAS NOT APPLIED AT ALL (review
+              H3, 2026-11-16). CheckCommand, called above without
+              aApplyJSONOwned, only ACCEPTS such a name; the store route is
+              what applies it. So its refusal is this call's answer, and a
+              caller must not report, nor a peer be told, a change that did
+              not happen. *)
+            if Settings.OwnsCommand(aCommand) then
+               begin
+               Result := False;
+               end;
             end;
          end
       else
@@ -711,7 +721,10 @@ begin
          logger.Warn('[SetCFGCommandValue] "%s" applied but not saved: no ' +
                      'configuration store is available yet.', [aCommand]);
          end;
+      end;
 
+   if Result then
+      begin
       (* AND TELL THE OTHER POSITIONS, if this setting is shared.
 
         AFTER the apply and the save, deliberately: a value that was refused,
@@ -1652,6 +1665,8 @@ begin
 end;
 
 function ApplyContestStatement(const aCommand, aValue: string): boolean;
+var
+   wasKept: boolean;
 begin
    if Settings.CommandIsContestOverridable(aCommand) then
       begin
@@ -1676,13 +1691,35 @@ begin
    (* A STATION-SCOPED SETTING THE CONTEST STATES: THE STATION'S VALUE IS KEPT
      FIRST (NY4I, 2026-11-15), so no save writes the contest's value into
      settings\tr4w.json -- the club call NE4C operating at NY4I's station. Once
-     per property; a no-op for anything KeepStationValue does not keep. *)
-   Settings.KeepStationValue(aCommand);
+     per property; a no-op for anything KeepStationValue does not keep.
+
+     AND ONLY FOR A STATEMENT THAT TAKES (review M3, 2026-11-16). The keep has
+     to come BEFORE the apply -- it streams the value as it stands, and after
+     the apply that is the contest's -- so a refused line used to leave the
+     setting kept for the rest of the session, and every later toggle or
+     function key of it then took the kept-setting route. A keep this call
+     made is undone on a refusal. An entry already kept is not touched until
+     the statement takes: only then does a statement over a run-time force
+     make it a statement (KeepStationValue again). *)
+   wasKept := Settings.StationValueIsKept(aCommand);
+   if not wasKept then
+      begin
+      Settings.KeepStationValue(aCommand);
+      end;
 
    (* THE STRINGS AS GIVEN (issue 302). This narrowed both to ShortString,
      so a contest .cfg line or a stored row longer than 255 characters was
      cut here before CheckCommand saw it. *)
    Result := CheckCommand(aCommand, aValue, True);
+
+   if Result then
+      begin
+      Settings.KeepStationValue(aCommand);
+      end
+   else if not wasKept then
+      begin
+      Settings.ForgetKeptStationValue(aCommand);
+      end;
 end;
 
 function ApplyContestEdit(const aCommand, aValue: string): boolean;

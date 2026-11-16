@@ -36,6 +36,7 @@ type
       procedure Test_CWRefusesAReportOutOfRange;
       procedure Test_PhoneAcceptsAnRSAndRefusesAnRST;
       procedure Test_ThirdWordThatIsNoReportIsRefused;
+      procedure Test_MissingPostcodeIsRefused;
       procedure Test_EmptyEntryIsRefusedWithNoMessage;
    end;
 
@@ -180,6 +181,36 @@ begin
    Refused('CT 99 A 123', CW, 'A 123');
 end;
 
+(* A REPORT OR A NUMBER ALONE CARRIES NO POSTCODE (review M6, 2026-11-16).
+   The parser's own header lists the legal entries -- HA1 1TA, RS(T) HA1 1TA,
+   HA1 1TA RS(T) -- and every one carries the postcode, but an all-digit first
+   word made the QTH the blank between two missing words, so '5' logged a QSO
+   with QTH ' ' (frozen in the matrix as RSGB-ROPOCO-CW 'parse zone'). The
+   postcode is checked first: '699' alone is missing its postcode before its
+   report is wrong. *)
+procedure TPostalCodeEntryTests.Test_MissingPostcodeIsRefused;
+
+   procedure NoPostcode(const aText: string; aMode: ModeType);
+   var
+      rx: ContestExchange;
+      what: string;
+   begin
+      what := '"' + aText + '" mode ' + IntToStr(Ord(aMode));
+      CheckFalse(Entry(aText, aMode, rx), what + ' is refused');
+      CheckEquals(SENTINEL_QTH, string(rx.QTHString), what + ' QTH untouched');
+      CheckEquals(SENTINEL_RST, Integer(rx.RSTReceived), what + ' RS(T) untouched');
+      CheckEquals(SExchangeNoPostcode, ExchangeErrorMessage, what + ' message');
+   end;
+
+begin
+   BeginTest('Test_MissingPostcodeIsRefused');
+   NoPostcode('5', CW);
+   NoPostcode('599', CW);
+   NoPostcode('123', CW);
+   NoPostcode('699', CW);
+   NoPostcode('59', Phone);
+end;
+
 (* Nothing typed is refused with no message, as it always was. *)
 procedure TPostalCodeEntryTests.Test_EmptyEntryIsRefusedWithNoMessage;
 var
@@ -199,6 +230,7 @@ begin
    Test_CWRefusesAReportOutOfRange;
    Test_PhoneAcceptsAnRSAndRefusesAnRST;
    Test_ThirdWordThatIsNoReportIsRefused;
+   Test_MissingPostcodeIsRefused;
    Test_EmptyEntryIsRefusedWithNoMessage;
 end;
 

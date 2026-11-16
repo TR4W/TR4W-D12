@@ -767,13 +767,7 @@ procedure TRadioEditForm.EditRadioIn(const aRadio: TRadioDefinition;
                                      const aHost: TWinControl);
 begin
    LoadRadio(aRadio, nil);
-   pnlContent.Parent := aHost;
-   pnlContent.Top    := 0;
-   pnlContent.Left   := (aHost.ClientWidth - pnlContent.Width) div 2;
-   if pnlContent.Left < 0 then
-      begin
-      pnlContent.Left := 0;
-      end;
+   HostPanelIn(pnlContent, aHost);
 end;
 
 procedure TRadioEditForm.LoadRadio(const aRadio: TRadioDefinition;

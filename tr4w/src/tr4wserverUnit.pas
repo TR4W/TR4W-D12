@@ -57,6 +57,7 @@ uses
   uNetFraming,  // NetMessageSize -- the one size table the client parses with
   uNetHello,    // THelloMessage, JudgeProtocol -- the first message on every link
   uServerQsoIndex,  // which QSOs the log already holds -- a resend is stored once
+  uServerLogHealth, // what the operator and the stations are told when the log cannot be written
   Log4D,       // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
@@ -195,7 +196,6 @@ const
   tsCLIENTS                             = 110;
   MAXCLIENTS                            = 26;
   FullServerVersion                     = _TR4WSERVER + ' ' + TR4WSERVER_CURRENTVERSION;
-  MaxContestExchangesBufferSize         = 30;
 //  MAXSERIALNUMBER                       = 20000;
 var
 //  SerialsNumber                         : array[1..MAXSERIALNUMBER] of TSerialNumberType;
@@ -228,8 +228,6 @@ var
 
   SENDTR4W                              : array[0..3] of AnsiChar = 'TR4W';
   PASSTR4W                              : array[0..3] of AnsiChar = 'PASS';
-
-  ContestExchangesBuffer                : array[1..MaxContestExchangesBufferSize] of ContestExchange;
 
   ServerSyncMode                        : boolean;
   (* SET BY ProcessClientBuffer WHEN THE CONNECTION IT WAS PARSING MUST BE
@@ -299,7 +297,15 @@ var
     -- a dependency held by an expression that is evaluated once, at compile
     time, for a variable nothing looks at. *)
   PortNumber                            : Cardinal;
-  ContestExchangesBufferIndex           : Cardinal = 0;
+  (* THE LOG'S WRITE HEALTH (issue 314, review H9). ServerLogFailures counts the
+    stores and edits that failed since the server started; ServerLogFailing is
+    True from a failed write to the next one that succeeds. The window and the
+    stations are told on the TRANSITIONS, and the window shows the count. *)
+  ServerLogFailures                     : integer = 0;
+  ServerLogFailing                      : boolean = False;
+  ServerLogLastError                    : string = '';
+  (* appender.WriteFailures as last shown (issue 312). *)
+  LogFileFailuresShown                  : integer = 0;
 //  SetPointerEvent                       : Cardinal;
   BytesWritten                          : Cardinal;
 
@@ -367,7 +373,10 @@ procedure DisplaySENDBytes;
 procedure DisplayClients;
 procedure DisplayServerLogSize;
 //procedure SetServerIcon(Icon: PChar);
-procedure UpdateQSOInServerlog(CE: ContestExchange);
+(* False when the log could not be read or the edited record not written back
+  (reported through NoteServerLogFailure); True otherwise, including when the
+  QSO is not in the log. *)
+function UpdateQSOInServerlog(CE: ContestExchange): boolean;
 function OpenServerLog(aMode: TServerLogOpenMode): boolean;
 { Open the log, creating it if it is not there -- see the body. }
 function OpenOrCreateServerLog: boolean;
@@ -383,8 +392,8 @@ procedure ReleaseServerLog;
 (* DOES THE SERVER LOG ALREADY HOLD THIS QSO -- the same (ceQSOID1, ceQSOID2)?
   Phase 1, C5: a station that was disconnected sends again what it logged
   meanwhile, and one that crashed sends some twice. False for the pair (0, 0),
-  and for a log that cannot be opened (the QSO is then kept in memory, as it
-  always was). Opens and closes the log itself; call it with the log CLOSED. *)
+  and for a log that cannot be opened (the QSO is then not stored; see
+  NoteServerLogFailure). Opens and closes the log itself; call it with the log CLOSED. *)
 function ServerHoldsQSO(const CE: ContestExchange): boolean;
 (* The server has just appended CE to the log, which is OPEN. Keeps the set of
   held QSOs in step. Call it after the write and before CloseServerLog. *)
@@ -401,8 +410,27 @@ function AppendRecordToOpenServerLog(const CE: ContestExchange): boolean;
   aFlush False is for a run of OFFLINEQSO packets, flushed once by
   ReleaseServerLog. *)
 function StoreQsoInServerLog(const CE: ContestExchange; aFlush: boolean): boolean;
-procedure AddContestExchangeToBuffer(CE: ContestExchange);
-procedure WriteContestExchangesBufferToServerLog;
+(* THE LOG COULD NOT BE WRITTEN (issue 314, review H9), or can be again.
+  NoteServerLogFailure counts it, keeps the reason, shows it in the server
+  window and, on the FIRST failure of a run, tells every connected station once
+  (an intercom line -- the protocol's existing text message, so nothing new on
+  the wire and an older station shows it too). NoteServerLogWritten clears the
+  state after a success and tells the stations once. A QSO the log could not
+  store is still RELAYED: the stations have it, and a station that reconnects
+  pushes what the server lacks (the restock), so refusing to relay would only
+  take the QSO from the others' dupe and multiplier checks. *)
+procedure NoteServerLogFailure(const aReason: string);
+procedure NoteServerLogWritten;
+(* Compose the window's problem line from the log's write state and from
+  tr4wserver.log's own (issue 312: Log4D counts a failed write, it does not
+  raise, and this is what reads the count). *)
+procedure ShowServerProblems;
+(* SAY SO TO EVERY CONNECTED STATION, as the intercom's own line. *)
+procedure SendNoticeToStations(const aText: string);
+(* A LOG THAT ENDS IN PART OF A RECORD, at start-up, before it is opened. If its
+  header is the current one it asks the operator, then copies it whole and trims
+  the tail; any other file is left for the existing refusal. *)
+procedure OfferTornLogRepair;
 procedure SendLogFileInformation(s: TClientHandle);
 function ClearServerLog: boolean;
 procedure SendDisconnectMessage(Client: AnsiChar);
@@ -737,8 +765,12 @@ begin
                 ' band=' + IntToStr(Ord(EditedQSOPtr^.qiInformation.Band)) +
                 ' mode=' + IntToStr(Ord(EditedQSOPtr^.qiInformation.Mode)) +
                 ' exch=' + string(EditedQSOPtr^.qiInformation.ExchString));
-              UpdateQSOInServerlog(EditedQSOPtr^.qiInformation);
-              SendConfirmMessage(aSocket);
+              (* RELAYED EITHER WAY, like a new QSO (see NET_QSOINFO_ID); the
+                confirmation only when the edit reached the log. *)
+              if UpdateQSOInServerlog(EditedQSOPtr^.qiInformation) then
+                 begin
+                 SendConfirmMessage(aSocket);
+                 end;
 
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
             end;
@@ -757,8 +789,10 @@ begin
               begin
                 (* NO FLUSH IN THERE: the log is held open (above) and flushed once,
                   when the run of OFFLINEQSO packets ends (ReleaseServerLog).
-                  No ACK when the QSO was NOT stored (issue 314): the station
-                  keeps it owing and sends it again. *)
+                  No ACK when the QSO was NOT stored (issue 314). Nothing on a
+                  station waits for the ACK; what puts a QSO the server missed
+                  back is the next link, which plans a push from the server's
+                  own log. *)
                 SendConfirmMessage(aSocket);
               end;
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
@@ -788,13 +822,15 @@ begin
               else
                 begin
                 (* WRITTEN BEFORE IT IS RELAYED (issue 314), so a QSO the stations
-                  have is one the server's log has -- or the Error line says it
-                  does not. A failed write never stops the relay: the stations
-                  must get the QSO either way. *)
-                if not StoreQsoInServerLog(ServerNewQSOPtr^.qiInformation, True) then
-                  begin
-                  AddContestExchangeToBuffer(ServerNewQSOPtr.qiInformation);
-                  end;
+                  have is one the server's log has -- or the window and the
+                  stations have been told it does not (NoteServerLogFailure).
+                  A failed write does NOT stop the relay: no packet on the wire
+                  acknowledges a QSO, so the sender has already marked it sent
+                  and would never offer it again, and withholding it would take
+                  it from the other stations' dupe and multiplier checks. The
+                  copy the server lacks is pushed back by the next station to
+                  link (the restock). *)
+                StoreQsoInServerLog(ServerNewQSOPtr^.qiInformation, True);
                 SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
                 end;
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
@@ -930,6 +966,14 @@ end;
 
 procedure DisplayRCVDBytes;
 begin
+  (* tr4wserver.log's own write failures (issue 312): Log4D counts them instead
+    of raising, and this fires on every receive, so it is the cheap place to
+    notice the count has moved. *)
+  if (appender <> nil) and (appender.WriteFailures <> LogFileFailuresShown) then
+     begin
+     LogFileFailuresShown := appender.WriteFailures;
+     ShowServerProblems;
+     end;
   { Still throttled to whole kilobytes. This fires on EVERY recv, so the guard
     is not cosmetic -- it is why a busy multi-op does not repaint per packet. }
   if (BytesRCVD - LastDisplayedBytesRCVD) < 1024 then Exit;
@@ -1001,15 +1045,18 @@ end;
 }
 
 
-procedure UpdateQSOInServerlog(CE: ContestExchange);
+function UpdateQSOInServerlog(CE: ContestExchange): boolean;
 var
   pNumberOfBytesRead                    : Cardinal;
   FilePointer                           : integer;
   Finished                              : boolean;
 
 begin
+  Result := True;
   if not OpenServerLog(slOpenExisting) then
      begin
+     Result := False;
+     NoteServerLogFailure('cannot open the log');
      Exit;
      end;
   (* CLOSED IN A FINALLY, AND NEVER RAISING (issue 314): an exception that skipped
@@ -1035,11 +1082,14 @@ begin
               ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
               try
                  ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
+                 NoteServerLogWritten;
               except
                  on E: Exception do
                     begin
+                    Result := False;
                     logger.Error('[Log] cannot rewrite the edited QSO %s (%d/%d) in the server log: %s',
                                  [string(CE.Callsign), CE.ceQSOID1, CE.ceQSOID2, E.Message]);
+                    NoteServerLogFailure(E.Message);
                     try
                        ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
                        ServerLog.WriteBuffer(TempCE, SizeOf(ContestExchange));
@@ -1062,7 +1112,9 @@ begin
      except
         on E: Exception do
            begin
+           Result := False;
            logger.Error('[Log] cannot search the server log for an edited QSO: %s', [E.Message]);
+           NoteServerLogFailure(E.Message);
            end;
      end;
   finally
@@ -1231,11 +1283,13 @@ begin
      ServerLog.Seek(0, soEnd);
      ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
      Result := True;
+     NoteServerLogWritten;
   except
      on E: Exception do
         begin
         logger.Error('[Log] cannot append to the server log: %s -- the QSO %s (%d/%d) is NOT stored; trimming the file back to %d bytes',
                      [E.Message, string(CE.Callsign), CE.ceQSOID1, CE.ceQSOID2, sizeBefore]);
+        NoteServerLogFailure(E.Message);
         try
            ServerLog.Size := sizeBefore;
         except
@@ -1254,6 +1308,7 @@ begin
   Result := False;
   if not OpenServerLog(slOpenExisting) then
      begin
+     NoteServerLogFailure('cannot open the log');
      Exit;
      end;
   try
@@ -1272,48 +1327,124 @@ begin
   end;
 end;
 
-procedure AddContestExchangeToBuffer(CE: ContestExchange);
+(* THE IN-MEMORY BUFFER IS GONE (review H9). It held at most 30 QSOs the log
+  could not take, nothing ever wrote it out (WriteContestExchangesBufferToServerLog
+  had no caller), and it was lost when the server stopped -- a promise of
+  durability that was never kept. A QSO the log cannot take is now reported
+  (NoteServerLogFailure) and recovered by the next station to link. *)
+
+procedure ShowServerProblems;
+var
+  text: string;
 begin
-  if ContestExchangesBufferIndex = MaxContestExchangesBufferSize then Exit;
-  inc(ContestExchangesBufferIndex);
-  ContestExchangesBuffer[ContestExchangesBufferIndex] := CE;
+  text := '';
+  if ServerLogFailing then
+     begin
+     text := ServerLogProblemText(ServerLogFailures, ServerLogLastError);
+     end;
+  if (appender <> nil) and (appender.WriteFailures > 0) then
+     begin
+     if text <> '' then
+        begin
+        text := text + #13#10;
+        end;
+     text := text + 'tr4wserver.log not writable (' + IntToStr(appender.WriteFailures) +
+             ' lost): ' + ClipReason(appender.LastWriteError, 40);
+     end;
+  SetServerLogProblem(text);
 end;
 
-procedure WriteContestExchangesBufferToServerLog;
+procedure NoteServerLogFailure(const aReason: string);
 var
-  c, done                               : Cardinal;
+  first: boolean;
 begin
-  if ContestExchangesBufferIndex = 0 then Exit;
-  if not OpenServerLog(slOpenExisting) then
+  inc(ServerLogFailures);
+  ServerLogLastError := aReason;
+  first := not ServerLogFailing;
+  ServerLogFailing := True;
+  ShowServerProblems;
+  if first then
      begin
-     ContestExchangesBufferIndex := 0;
+     logger.Error('[Log] the server log is NOT SAVING: ' + aReason +
+                  ' -- QSOs are still relayed to the stations and are not stored');
+     SendNoticeToStations(ServerLogFailureNotice(aReason));
+     end;
+end;
+
+procedure NoteServerLogWritten;
+begin
+  if not ServerLogFailing then
+     begin
      Exit;
      end;
-  try
-     (* EACH RECORD ALL OR NOTHING (issue 314). The first one that fails stops
-       the run and the rest, and it, stay in the buffer for the next try. *)
-     c := 1;
-     while c <= ContestExchangesBufferIndex do
+  ServerLogFailing := False;
+  ShowServerProblems;
+  logger.Warn('[Log] the server log is saving again after ' + IntToStr(ServerLogFailures) +
+              ' failed write(s); the QSOs it missed are not in it until a station links and pushes them');
+  SendNoticeToStations(ServerLogRecoveredNotice);
+end;
+
+procedure SendNoticeToStations(const aText: string);
+var
+  packet: TIntercomMessage;
+  i: integer;
+begin
+  (* An intercom line holds 79 characters; the texts are built to fit
+    (uServerLogHealth) and a longer one is dropped, never cut. *)
+  if Length(aText) > SERVER_NOTICE_MAX then
+     begin
+     logger.Error('[Net] server notice too long (' + IntToStr(Length(aText)) + '), not sent: ' + aText);
+     Exit;
+     end;
+  packet := Default(TIntercomMessage);
+  packet.imID := NET_INTERCOMMESSAGE_ID;
+  packet.imSender := '#';
+  packet.imMessage := ShortString(AnsiString(aText));
+  for i := 1 to maxclients do
+     begin
+     if ClientsSoocketsArray[i].clSocket <> 0 then
         begin
-        if not AppendRecordToOpenServerLog(ContestExchangesBuffer[c]) then
-           begin
-           Break;
-           end;
-        NoteQsoStored(ContestExchangesBuffer[c]);
-        inc(c);
+        sSend(ClientsSoocketsArray[i].clSocket, packet, SizeOf(packet), dmIntercom);
         end;
-     FileFlush(ServerLog.Handle);
-     DisplayServerLogSize;
-     (* Slide what was not written to the front; none left means empty. *)
-     done := c - 1;
-     for c := 1 to ContestExchangesBufferIndex - done do
-        begin
-        ContestExchangesBuffer[c] := ContestExchangesBuffer[c + done];
-        end;
-     ContestExchangesBufferIndex := ContestExchangesBufferIndex - done;
-  finally
-     CloseServerLog;
-  end;
+     end;
+end;
+
+procedure OfferTornLogRepair;
+var
+  name, backup, error: string;
+  size, keep: Int64;
+  verdict: TTornTailVerdict;
+begin
+  name := string(CharBufferBytes(ServerLogFileName));
+  if not FileExists(name) then
+     begin
+     Exit;
+     end;
+  if (not PlanServerLogRepair(name, size, keep, verdict)) or (verdict <> ttTrim) then
+     begin
+     Exit;
+     end;
+  if ServerMessageBox(
+        'serverlog.trw ends in part of a QSO record (' + IntToStr(size - keep) +
+        ' bytes), usually from a write cut short by a full disk.' + #13#10 + #13#10 +
+        'Its header is the current one, so every whole record before the end is good.' + #13#10 +
+        'Press Yes to copy the whole file beside itself and then remove the partial record, ' +
+        'or No to leave it alone (the server will not start).',
+        MB_YESNO or MB_ICONWARNING) <> IDYES then
+     begin
+     Exit;
+     end;
+  if BackupAndTrimServerLog(name, FormatDateTime('yyyymmdd"T"hhnnss', Now), keep, backup, error) then
+     begin
+     logger.Warn('[Log] trimmed ' + IntToStr(size - keep) + ' bytes of a partial record from ' +
+                 name + '; the whole file is kept as ' + backup);
+     end
+  else
+     begin
+     logger.Error('[Log] could not repair ' + name + ': ' + error + ' -- the file is unchanged');
+     ServerMessageBox('serverlog.trw could not be repaired (' + error + '). It has not been changed.',
+                      MB_OK or MB_ICONWARNING);
+     end;
 end;
 
 procedure SendLogFileInformation(s: TClientHandle);

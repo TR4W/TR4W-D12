@@ -197,6 +197,9 @@ begin
         Windows.lstrcat(@MultsFrequenciesFileName, 'MULTS_FREQ.BIN');
         LoadinMultsFrequencies;
 }
+        (* A LOG THAT ENDS IN PART OF A RECORD is offered a repair first (issue
+          314); the refusal below stays for any other file whose size is wrong. *)
+        OfferTornLogRepair;
         if OpenOrCreateServerLog then
           begin
             if (ServerLog.Size mod SizeOf(ContestExchange)) <> 0 then

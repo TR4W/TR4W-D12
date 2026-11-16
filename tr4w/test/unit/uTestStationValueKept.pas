@@ -63,6 +63,10 @@ type
       procedure Test_ASaveWithNothingHeldIsUnchanged;
       procedure Test_AContestParameterEditLeavesTheFileAlone;
       procedure Test_AToggleOfAStatedSettingIsTheStations;
+      procedure Test_AFunctionKeyOfAStatedSettingIsTheStations;
+      procedure Test_APeerEditOfAStatedSettingIsTheContests;
+      procedure Test_ARefusedStatementKeepsNothing;
+      procedure Test_AnUnloadedSettingsObjectIsNeverSaved;
    public
       procedure RunAllTests; override;
    end;
@@ -515,6 +519,165 @@ begin
    end;
 end;
 
+(* REVIEW H3 (2026-11-16): a BOOLSWAP function key and the Auto-CQ dialog go
+  through SetCFGCommandValue, and on a setting the contest states they now
+  take the band map's rule -- live AND station. They used to change only the
+  kept station value while the status line reported a live change. *)
+procedure TStationValueKeptTests.Test_AFunctionKeyOfAStatedSettingIsTheStations;
+const
+   CMD = 'BAND MAP ALL MODES';   (* a station boolean not shared with peers *)
+var
+   fn, saved: string;
+begin
+   BeginTest('a function key (SetCFGCommandValue) of a contest-stated setting changes live and station');
+   if not Redirect then
+      begin
+      Exit;
+      end;
+   saved := CurrentValue(CMD);
+   try
+      fn := TR4WConfigFileName;
+      CheckFalse(CommandIsSharedWithPeers(CMD), 'the setting is not shared (no peer send)');
+      CheckTrue(Settings.TrySetByCommand(CMD, 'FALSE'), 'the station: off');
+      SaveSettings(fn, Settings);
+      CheckTrue(ApplyContestStatement(CMD, 'FALSE'), 'the contest states off');
+      CheckTrue(Settings.StationValueIsKept(CMD), 'the station value is kept');
+
+      (* What scBOOLSWAP calls. *)
+      CheckTrue(SetCFGCommandValue(CMD, 'TRUE'), 'the function key is taken');
+      CheckEquals('TRUE', CurrentValue(CMD), 'live is on');
+      CheckEquals('TRUE', FileValue(fn, CMD), 'and the file is on');
+
+      SaveSettings(fn, Settings);
+      CheckEquals('TRUE', FileValue(fn, CMD), 'and stays on at the next save');
+
+      (* A refused value is reported as refused, and changes nothing. *)
+      CheckFalse(SetCFGCommandValue(CMD, 'MAYBE'), 'a value the setting refuses');
+      CheckEquals('TRUE', CurrentValue(CMD), 'live unchanged');
+      CheckEquals('TRUE', FileValue(fn, CMD), 'file unchanged');
+   finally
+      Restore;
+      Settings.TrySetByCommand(CMD, saved);
+   end;
+end;
+
+(* REVIEW H3: a multi-op peer's edit of a setting the contest states is the
+  CONTEST'S, as a contest-parameter edit is -- live here, file untouched. It
+  used to change only the kept station value, so it took no effect. *)
+procedure TStationValueKeptTests.Test_APeerEditOfAStatedSettingIsTheContests;
+const
+   CMD = 'BAND MAP ALL MODES';
+var
+   fn, saved, station: string;
+   before: RawByteString;
+begin
+   BeginTest('a peer''s edit of a contest-stated setting changes it live and leaves tr4w.json alone');
+   if not Redirect then
+      begin
+      Exit;
+      end;
+   saved := CurrentValue(CMD);
+   try
+      fn := TR4WConfigFileName;
+      CheckTrue(Settings.TrySetByCommand(CMD, 'FALSE'), 'the station: off');
+      SaveSettings(fn, Settings);
+      CheckTrue(ApplyContestStatement(CMD, 'FALSE'), 'the contest states off');
+      before := FileBytes(fn);
+
+      CheckTrue(ApplyPeerCommand(CMD, 'TRUE'), 'the peer''s edit is taken');
+      CheckEquals('TRUE', CurrentValue(CMD), 'live follows the peer');
+      CheckTrue(before = FileBytes(fn), 'nothing was written to tr4w.json');
+      CheckTrue(Settings.TryGetStationValue(CMD, station), 'the station value reads');
+      CheckEquals('FALSE', station, 'and is still the station''s');
+
+      SaveSettings(fn, Settings);
+      CheckEquals('FALSE', FileValue(fn, CMD), 'a later save writes the station''s value');
+   finally
+      Restore;
+      Settings.TrySetByCommand(CMD, saved);
+   end;
+end;
+
+(* REVIEW M3: a statement that is REFUSED leaves nothing kept, and does not
+  disturb a keep that was already there -- forced or not. *)
+procedure TStationValueKeptTests.Test_ARefusedStatementKeepsNothing;
+const
+   FORCED = 'BAND MAP SO2R DISPLAY';
+var
+   savedForced: string;
+begin
+   BeginTest('a refused contest statement keeps nothing, and leaves an earlier keep as it was');
+   if not Redirect then
+      begin
+      Exit;
+      end;
+   savedForced := CurrentValue(FORCED);
+   try
+      CheckFalse(Settings.StationValueIsKept('LEADING ZEROS'), 'nothing kept to begin with');
+      CheckFalse(ApplyContestStatement('LEADING ZEROS', '99'), 'an out-of-range .cfg line');
+      CheckFalse(Settings.StationValueIsKept('LEADING ZEROS'), 'the refusal keeps nothing');
+
+      CheckTrue(ApplyContestStatement('LEADING ZEROS', '2'), 'a good statement');
+      CheckTrue(Settings.StationValueIsKept('LEADING ZEROS'), 'is kept');
+      CheckFalse(ApplyContestStatement('LEADING ZEROS', '99'), 'then a refused one');
+      CheckTrue(Settings.StationValueIsKept('LEADING ZEROS'), 'the earlier keep stands');
+      CheckEquals('2', CurrentValue('LEADING ZEROS'), 'and so does the stated value');
+
+      (* A RUN-TIME FORCE survives the contest's fresh start; a refused
+        statement over it must not have turned it into a statement. *)
+      Settings.KeepStationValue(FORCED, True);
+      CheckFalse(ApplyContestStatement(FORCED, 'MAYBE'), 'a refused statement over a force');
+      ClearContestCFGCommands;
+      CheckTrue(Settings.StationValueIsKept(FORCED), 'still forced: the revert leaves it');
+   finally
+      Settings.ForgetKeptStationValue(FORCED);
+      CheckFalse(Settings.StationValueIsKept(FORCED), 'ForgetKeptStationValue drops a forced entry');
+      Restore;
+      Settings.TrySetByCommand(FORCED, savedForced);
+   end;
+end;
+
+(* REVIEW M1: the writer refuses an object awaiting its startup load, and a
+  load that could not read the file does not release it. *)
+procedure TStationValueKeptTests.Test_AnUnloadedSettingsObjectIsNeverSaved;
+var
+   s: TR4WSettings;
+   fn: string;
+   before: RawByteString;
+begin
+   BeginTest('SaveSettings refuses until LoadSettingsForStartup has succeeded');
+   fn := IncludeTrailingPathDelimiter(GetTempDir(False)) + 'tr4wkept_unloaded_' +
+         IntToStr(GetProcessID) + '.json';
+   DeleteFile(fn);
+   DeleteFile(fn + '.bad');
+   s := TR4WSettings.Create;
+   try
+      CheckFalse(s.AwaitingStartupLoad, 'an object is not armed by default (a converter, a test)');
+      s.AwaitingStartupLoad := True;
+      SaveSettings(fn, s);
+      CheckFalse(FileExists(fn), 'an armed object writes nothing');
+
+      (* A file that is there and is not JSON: the load cannot read it. *)
+      WriteBytes(fn, 'this is not JSON {');
+      before := FileBytes(fn);
+      LoadSettingsForStartup(fn, s, True);
+      CheckTrue(s.AwaitingStartupLoad, 'an unreadable file does not count as a load');
+      SaveSettings(fn, s);
+      CheckTrue(before = FileBytes(fn), 'and the file is left as it was');
+
+      (* An absent file is a fresh install, and loads. *)
+      DeleteFile(fn);
+      LoadSettingsForStartup(fn, s, True);
+      CheckFalse(s.AwaitingStartupLoad, 'an absent file is a successful load');
+      SaveSettings(fn, s);
+      CheckTrue(FileExists(fn), 'and the save writes');
+   finally
+      s.Free;
+      DeleteFile(fn);
+      DeleteFile(fn + '.bad');
+   end;
+end;
+
 procedure TStationValueKeptTests.RunAllTests;
 begin
    Test_AContestCallNeverReachesTheFile;
@@ -525,6 +688,10 @@ begin
    Test_ASaveWithNothingHeldIsUnchanged;
    Test_AContestParameterEditLeavesTheFileAlone;
    Test_AToggleOfAStatedSettingIsTheStations;
+   Test_AFunctionKeyOfAStatedSettingIsTheStations;
+   Test_APeerEditOfAStatedSettingIsTheContests;
+   Test_ARefusedStatementKeepsNothing;
+   Test_AnUnloadedSettingsObjectIsNeverSaved;
 end;
 
 end.

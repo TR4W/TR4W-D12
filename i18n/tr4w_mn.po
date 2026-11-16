@@ -902,7 +902,7 @@ msgstr "Оорийн байгаа тивээ боломжтой мэдээлли
 #: utr4wstrings.tc_enteryourcountyorstateporovincedx
 msgctxt "TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX"
 msgid "Enter your county if you are in %s state. Enter your state, Canadian Province or \"DX\" if outside of %s:"
-msgstr "%s -ийн гадна байгаа бол DX гэж бичнэ:"
+msgstr "%s: %s -ийн гадна байгаа бол DX гэж бичнэ:"
 
 #. Section: NEW CONTEST
 #. 4.97.6
@@ -2154,7 +2154,7 @@ msgstr "Та одоо пакетийн портоор харьцаж байна.
 #: utr4wstrings.tc_youalreadyworkedin
 msgctxt "TC_YOUALREADYWORKEDIN"
 msgid "You already worked %s in %s!!"
-msgstr "Та %s-тай урьд нь холбоо барьсан байна!!"
+msgstr "Та %s-тай (%s) урьд нь холбоо барьсан байна!!"
 
 #. Section: LOGSUBS2
 #: utr4wstrings:tc_isadupeandwillbeloggedwithzero
@@ -10698,6 +10698,7 @@ msgid "TR4W reads and sets the frequency and mode."
 msgstr ""
 
 #: uappstrings.swizkeyerheading
+#: uappstrings.sdefaultkeyername
 #, fuzzy
 msgid "WinKeyer"
 msgstr ""
@@ -10728,6 +10729,7 @@ msgid "Close Preferences first, so the setup wizard and Preferences do not overw
 msgstr ""
 
 #: uappstrings.swizradioheading
+#: uappstrings.sdefaultradioname
 #, fuzzy
 msgid "Radio"
 msgstr ""
@@ -11203,4 +11205,19 @@ msgstr ""
 #: tprefsform.chkbandmapsortbybeam.caption
 #, fuzzy
 msgid "Sort the band map by beam heading, nearest the beam first"
+msgstr ""
+
+#: utr4wstrings.tc_winkeyerdidnotopen
+msgctxt "TC_WINKEYERDIDNOTOPEN"
+msgid "WinKeyer on %s did not open (see tr4w.log)"
+msgstr ""
+
+#: uappstrings.sexchangenopostcode
+#, fuzzy
+msgid "No postcode in the exchange"
+msgstr ""
+
+#: uappstrings.sdefaultclustername
+#, fuzzy
+msgid "Cluster"
 msgstr ""

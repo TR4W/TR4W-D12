@@ -61,7 +61,14 @@ type
     procedure chkExchangeChange(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+    procedure edtCallsignChange(Sender: TObject);
+    procedure edtCommentChange(Sender: TObject);
   private
+    (* THE OPERATOR HAS TYPED IN THE COMMENT since the window opened. It is
+      theirs after that, and neither a tick nor a new callsign rewrites it. *)
+    FCommentEdited: boolean;
+    (* FillComment is writing the comment, so its OnChange is not the operator. *)
+    FFillingComment: boolean;
     procedure FillComment;
   end;
 
@@ -132,14 +139,41 @@ procedure TfrmSendSpot.FillComment;
 var
    exchange: string;
 begin
+   (* A COMMENT THE OPERATOR TYPED IS NOT OVERWRITTEN (review, issue 175): a
+     tick or a callsign edit after typing used to replace it whole. *)
+   if FCommentEdited then
+      begin
+      Exit;
+      end;
+
    exchange := '';
    if chkExchange.Checked then
       begin
       exchange := DomesticKeyKnownForCall(CallString(edtCallsign.Text));
       end;
-   edtComment.Text := AnsiString(SpotCommentText(ContestId(Contest), exchange,
-                                                 chkContestName.Checked,
-                                                 chkExchange.Checked));
+   FFillingComment := True;
+   try
+      edtComment.Text := AnsiString(SpotCommentText(ContestId(Contest), exchange,
+                                                    chkContestName.Checked,
+                                                    chkExchange.Checked));
+   finally
+      FFillingComment := False;
+   end;
+end;
+
+(* THE SECTION FOLLOWS THE CALLSIGN BOX (issue 175): editing the call used to
+  leave the previous call's section in the comment. *)
+procedure TfrmSendSpot.edtCallsignChange(Sender: TObject);
+begin
+   FillComment;
+end;
+
+procedure TfrmSendSpot.edtCommentChange(Sender: TObject);
+begin
+   if not FFillingComment then
+      begin
+      FCommentEdited := True;
+      end;
 end;
 
 procedure TfrmSendSpot.HandleShow(Sender: TObject);
@@ -157,6 +191,10 @@ begin
    lblComment.Caption    := string(RC_COMMENT);
    chkContestName.Caption := string(RC_CONTESTNAMEIC);
    chkExchange.Caption    := SSendSpotExchangeInComment;
+
+   (* A NEW OPENING: the comment is the program's to fill again. Before the
+     callsign is set, whose OnChange fills it. *)
+   FCommentEdited := False;
 
    // The call being worked, or the last one logged if the entry field is empty.
    if CallWindowString <> '' then

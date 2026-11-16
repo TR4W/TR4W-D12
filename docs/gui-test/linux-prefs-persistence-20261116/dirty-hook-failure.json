@@ -20,8 +20,8 @@
       "previous_executable_sha256": "f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806"
    },
    "display": ":99",
-   "run": "/home/toms/tr4w-gui-test/runs/linux-prefs-persistence-002",
-   "executable_archive": "/home/toms/tr4w-gui-test/evidence/c405fc3bf0e5388446af7a0aae1ab4cc9ca8ba51a68dd741cfceb9959d8a5d5f/tr4w",
+   "run": "/home/<user>/tr4w-gui-test/runs/linux-prefs-persistence-002",
+   "executable_archive": "/home/<user>/tr4w-gui-test/evidence/c405fc3bf0e5388446af7a0aae1ab4cc9ca8ba51a68dd741cfceb9959d8a5d5f/tr4w",
    "window_manager": "Name: Openbox\nClass: \nPID: N/A\nWindow manager's \"showing the desktop\" mode: OFF\n",
    "pid": 128404,
    "application_pids": [
@@ -53,7 +53,7 @@
       }
    ],
    "navigation_passed": true,
-   "error": "Traceback (most recent call last):\n  File \"/home/toms/tr4w-gui-test/linux_pilot.py\", line 424, in worker\n    result[\"preferences_persistence\"] = run_preferences_roundtrip(driver, run / \"tr4w.json\", restart, journal)\n                                        ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/toms/tr4w-gui-test/preferences_roundtrip.py\", line 54, in run_preferences_roundtrip\n    footer(True)\n    ~~~~~~^^^^^^\n  File \"/home/toms/tr4w-gui-test/preferences_roundtrip.py\", line 40, in footer\n    raise AssertionError(\"Unexpected Preferences footer: \" + repr(states))\nAssertionError: Unexpected Preferences footer: {'Save': False, 'Save and close': True, 'Cancel': True}\n",
+   "error": "Traceback (most recent call last):\n  File \"/home/<user>/tr4w-gui-test/linux_pilot.py\", line 424, in worker\n    result[\"preferences_persistence\"] = run_preferences_roundtrip(driver, run / \"tr4w.json\", restart, journal)\n                                        ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/<user>/tr4w-gui-test/preferences_roundtrip.py\", line 54, in run_preferences_roundtrip\n    footer(True)\n    ~~~~~~^^^^^^\n  File \"/home/<user>/tr4w-gui-test/preferences_roundtrip.py\", line 40, in footer\n    raise AssertionError(\"Unexpected Preferences footer: \" + repr(states))\nAssertionError: Unexpected Preferences footer: {'Save': False, 'Save and close': True, 'Cancel': True}\n",
    "cleanup": "Only owned application/window-manager PIDs stopped",
    "default_contest_files_unchanged": true,
    "executable_unchanged": true

@@ -1246,6 +1246,12 @@ var
      forty, and something in it redeclares TCriticalSection as a RECORD --
      FPC then reads `= nil` as a record initialiser and asks for a '('. }
    GNetLock: SyncObjs.TCriticalSection = nil;
+   (* MyStationState IS WRITTEN FROM FOUR THREADS -- the main thread, the
+     WinKeyer reader (its busy bit), the CPU keyer's CW thread and the paddle
+     thread (PTTOn / PTTOff -> PTTStatusChanged).  SendStationStatus fills
+     part of the record and sends all of it, so two at once could send a torn
+     one.  Held across the fill and the send; nothing inside takes it again. *)
+   GStationStateLock: SyncObjs.TCriticalSection = nil;
    GNetDrainer: TNetDrainer = nil;
    GNetPending: TBytes;   { nil to begin with -- a dynamic array is }
 
@@ -1541,7 +1547,8 @@ begin
 //  DisplayMultsFrequencies;
 end;
 
-procedure SendStationStatus(ssType: StationStatusType);
+(* THE BODY OF SendStationStatus, which holds GStationStateLock around it. *)
+procedure FillAndSendStationStatus(ssType: StationStatusType);
 var
   callAnsi: AnsiString;   { sstCallsign -- see the byte-exact note below }
   callLen: integer;
@@ -1625,6 +1632,21 @@ begin
   MyStationState.ssType := ssType;
 
   SendToNet(MyStationState, SizeOf(MyStationState));
+end;
+
+procedure SendStationStatus(ssType: StationStatusType);
+begin
+  (* nil only after finalization, when nothing is sending. *)
+  if GStationStateLock = nil then
+     begin
+     Exit;
+     end;
+  GStationStateLock.Acquire;
+  try
+     FillAndSendStationStatus(ssType);
+  finally
+     GStationStateLock.Release;
+  end;
 end;
 
 procedure SetStatusByte;
@@ -1835,8 +1857,34 @@ var
      back every few seconds: the first failure for a reason is shown and is an
      Error, the rest are Debug. *)
    FTunnelFailedFor: string = '';
-   (* The "server not available" notice has been shown this run; never reset. *)
+   (* The "server not available" notice has been shown since the last
+     deliberate connect -- startup's, or the operator's Net > Connect or
+     Reconnect (ForgetServerRefusal clears it). Under GNetLock. *)
    GUnavailableNoticeShown: boolean = False;
+
+(* THE ONE SHORT "SERVER NOT AVAILABLE" NOTICE (issue 316). The detail goes to
+  the log; the screen gets one line on the main window, never a modal box, and
+  only for the first failure after a deliberate connect: the startup attempt,
+  or the operator's own Connect or Reconnect -- a deliberate retry that fails
+  must not be silent. The retry timer's attempts after that say nothing. Any
+  failure to reach the server counts (the Tailcat tunnel, a name that does not
+  resolve, a refused connection); a wrong password has its own message.
+  Connect thread; QuickDisplay defers an off-thread write to the main thread. *)
+procedure AnnounceServerNotAvailable;
+var
+   showNotice: boolean;
+begin
+   GNetLock.Acquire;
+   try
+      showNotice := TakeUnavailableNotice(GUnavailableNoticeShown);
+   finally
+      GNetLock.Release;
+   end;
+   if showNotice then
+      begin
+      QuickDisplay(SNetServerNotAvailable);
+      end;
+end;
 
 (* The tunnel's own lines, in the link's log. Any thread. *)
 procedure TunnelLogLine(const aLevel: TTailcatLogLevel; const aText: string);
@@ -1864,7 +1912,6 @@ function OpenServerTunnel(out aAddress: string; out aPort: word): boolean;
 var
    why:   string;
    first: boolean;
-   showNotice: boolean;
 begin
    aAddress := NET_TUNNEL_HOST;
    Result := NetTunnelOpen(string(Settings.Server.TailcatAddress),
@@ -1890,21 +1937,9 @@ begin
       begin
       if first then
          begin
-         (* THE DETAIL GOES TO THE LOG; THE SCREEN GETS ONE SHORT LINE, ONCE
-           PER RUN (the first failed connect is the one at startup). A notice
-           on the main window, not a modal box (issue 316). QuickDisplay
-           defers an off-thread write to the main thread. *)
+         (* THE DETAIL GOES TO THE LOG; THE SCREEN GETS THE ONE SHORT LINE. *)
          logger.Warn('[Net] Tailcat: %s', [why]);
-         GNetLock.Acquire;
-         try
-            showNotice := TakeUnavailableNotice(GUnavailableNoticeShown);
-         finally
-            GNetLock.Release;
-         end;
-         if showNotice then
-            begin
-            QuickDisplay(SNetServerNotAvailable);
-            end;
+         AnnounceServerNotAvailable;
          end
       else
          begin
@@ -1948,6 +1983,7 @@ begin
         log lines that follow still print the name as typed. *)
       if not ResolveServerAddress(serverAddress) then
          begin
+         AnnounceServerNotAvailable;
          Result := False;
          Exit;
          end;
@@ -1977,6 +2013,7 @@ begin
       begin
       logger.Debug('[Net] connect to %s:%d failed: %s',
                    [ServerNameForLog, Settings.Server.Port, err]);
+      AnnounceServerNotAvailable;
       end;
 end;
 
@@ -2862,6 +2899,8 @@ begin
    GNetLock.Acquire;
    try
       FTunnelFailedFor := '';
+      (* A DELIBERATE CONNECT: its failure is told on screen again (issue 316). *)
+      GUnavailableNoticeShown := False;
    finally
       GNetLock.Release;
    end;
@@ -3384,6 +3423,7 @@ initialization
 //GetDiskFreeSpace(nil,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W,STARTTIMEOFTHETR4W);
 
   GNetLock    := SyncObjs.TCriticalSection.Create;
+  GStationStateLock := SyncObjs.TCriticalSection.Create;
   NetTunnelLog := TunnelLogLine;
   GNetDrainer := TNetDrainer.Create;
   GPeers      := TNetPeers.Create;
@@ -3410,6 +3450,7 @@ finalization
   FreeAndNil(GNetDelivery);
   FreeAndNil(GResentKeys);
   FreeAndNil(GNetLock);
+  FreeAndNil(GStationStateLock);
   FreeAndNil(tNet_Event);
 
 end.

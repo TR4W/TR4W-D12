@@ -487,7 +487,7 @@ No locals.
         READINESSCONTEST = 0x7ffff6586460
         YEARCONTEST = false
         IMPORTREPORT = 0x0
-        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        S = 0x7ffff6595358 '/home/<user>/tr4w-gui-test/runs/linux-gdb-002/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xda0e88 'DEBUG'
 #22 0x000000000041f12e in main () at tr4w.lpr:827
@@ -572,7 +572,7 @@ No locals.
         READINESSCONTEST = 0x7ffff6586460
         YEARCONTEST = false
         IMPORTREPORT = 0x0
-        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        S = 0x7ffff6595358 '/home/<user>/tr4w-gui-test/runs/linux-gdb-002/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xda0e88 'DEBUG'
 #29 0x000000000041f12e in main () at tr4w.lpr:827
@@ -698,7 +698,7 @@ No locals.
         READINESSCONTEST = 0x7ffff6586460
         YEARCONTEST = false
         IMPORTREPORT = 0x0
-        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        S = 0x7ffff6595358 '/home/<user>/tr4w-gui-test/runs/linux-gdb-002/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xda0e88 'DEBUG'
 #6  0x000000000041f12e in main () at tr4w.lpr:827
@@ -737,7 +737,7 @@ No locals.
         READINESSCONTEST = 0x7ffff6586460
         YEARCONTEST = false
         IMPORTREPORT = 0x0
-        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        S = 0x7ffff6595358 '/home/<user>/tr4w-gui-test/runs/linux-gdb-002/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xda0e88 'DEBUG'
 #10 0x000000000041f12e in main () at tr4w.lpr:827
@@ -861,7 +861,7 @@ No locals.
         READINESSCONTEST = 0x7ffff6586460
         YEARCONTEST = false
         IMPORTREPORT = 0x0
-        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        S = 0x7ffff6595358 '/home/<user>/tr4w-gui-test/runs/linux-gdb-002/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xda0e88 'DEBUG'
 #5  0x000000000041f12e in main () at tr4w.lpr:827
@@ -902,7 +902,7 @@ No locals.
         READINESSCONTEST = 0x7ffff6586460
         YEARCONTEST = false
         IMPORTREPORT = 0x0
-        S = 0x7ffff6595358 '/home/toms/tr4w-gui-test/runs/linux-gdb-002/practice.db'
+        S = 0x7ffff6595358 '/home/<user>/tr4w-gui-test/runs/linux-gdb-002/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xda0e88 'DEBUG'
 #12 0x000000000041f12e in main () at tr4w.lpr:827

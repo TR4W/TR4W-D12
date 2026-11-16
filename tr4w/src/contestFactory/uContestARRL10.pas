@@ -292,15 +292,14 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THE CONTINENT -- issue 167. The New
-   Contest dialog asks once when MY CALL's continent and the box
-   disagree. *)
+(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+   167; the continent until review M16 (2026-11-16). Ticking it asks for the
+   QTH to send, which the stations of DescribeSession's list send (K, VE,
+   KH6, KL, XE): a KH6 entrant (Oceania) was questioned for ticking it and a
+   KP4 (North America, a DX station here) was not. *)
 function TContestARRL10.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
 begin
-   aHome.Countries := '';
-   aHome.Continent := NorthAmerica;
-   aHome.HomeIsInside := True;
-   Result := True;
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* THE CABRILLO FILE IS NOT STARTED WITHOUT A LOCATION -- PostUnit's guard,

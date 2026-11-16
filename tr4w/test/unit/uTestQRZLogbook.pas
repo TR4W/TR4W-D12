@@ -42,6 +42,8 @@ type
       procedure Test_Edit_IsDeleteThenInsert;
       procedure Test_Delete;
       procedure Test_FailedDelete_NeverInserts;
+      procedure Test_DuplicateRefusal_IsDeliveredWithAnUnknownLogId;
+      procedure Test_AMarkedContact_IsNeverDeletedOrReplaced;
       procedure Test_FailedInsertAfterDelete_IsUncertain;
       procedure Test_RecoverUpdatesAsUncertain;
       procedure Test_SetupRequired;
@@ -259,7 +261,7 @@ var
 begin
    BeginTest('QRZ: RESULT=FAIL is a failure of this contact that leaves the destination running');
    DeclareCertificateChecking;
-   r := Answer(200, 'RESULT=FAIL&REASON=Unable to add QSO to database: duplicate');
+   r := Answer(200, 'RESULT=FAIL&REASON=Unable to add QSO to database');
    CheckTrue(r.Outcome = doFailed, 'failed');
    CheckFalse(r.Pause, 'not paused');
    CheckEquals('QRZ_REJECTED', r.ErrorCode, 'a fixed code, never the server''s words');
@@ -484,6 +486,50 @@ begin
    end;
 end;
 
+(* ASSUMED FROM THE GUIDE, never observed: the duplicate refusal text, and that a
+   duplicate is a FAIL. The bench item in docs/BENCH_QUEUE.md confirms both. *)
+procedure TQRZLogbookTests.Test_DuplicateRefusal_IsDeliveredWithAnUnknownLogId;
+var
+   r: TExternalDeliveryResult;
+begin
+   BeginTest('QRZ: a plain insert refused as a duplicate is delivered with an unknown LOGID; any other FAIL is not');
+   DeclareCertificateChecking;
+   r := Answer(200, 'RESULT=FAIL&REASON=Unable to add QSO to database: duplicate');
+   CheckTrue(r.Outcome = doConfirmed, 'the QSO is already on QRZ');
+   CheckFalse(r.Pause, 'not paused');
+   CheckEquals('', r.ErrorCode);
+   CheckEquals(QRZ_DUPLICATE_MARKER, r.RemoteId, 'a marker, not an invented LOGID');
+   r := Answer(200, 'RESULT=FAIL&REASON=invalid call');
+   CheckTrue(r.Outcome = doFailed, 'another refusal still fails');
+   CheckEquals('QRZ_REJECTED', r.ErrorCode);
+end;
+
+procedure TQRZLogbookTests.Test_AMarkedContact_IsNeverDeletedOrReplaced;
+var
+   fake: TFakeHttpTransport;
+   job: TDeliveryJob;
+   r: TExternalDeliveryResult;
+begin
+   BeginTest('QRZ: an edit or delete of a contact whose LOGID is unknown sends nothing and fails visibly without pausing');
+   DeclareCertificateChecking;
+   fake := Scripted(200, OK_ANSWER);
+   try
+      job := NewJob;
+      job.RemoteId := QRZ_DUPLICATE_MARKER;
+      r := Deliver(fake, job);
+      CheckEquals(0, fake.Calls, 'edit: nothing sent');
+      CheckTrue(r.Outcome = doFailed);
+      CheckFalse(r.Pause);
+      CheckEquals('QRZ_LOGID_UNKNOWN', r.ErrorCode);
+      job.Deleted := True;
+      r := Deliver(fake, job);
+      CheckEquals(0, fake.Calls, 'delete: nothing sent');
+      CheckEquals('QRZ_LOGID_UNKNOWN', r.ErrorCode);
+   finally
+      fake.Free;
+   end;
+end;
+
 procedure TQRZLogbookTests.Test_FailedInsertAfterDelete_IsUncertain;
 var
    fake: TFakeHttpTransport;
@@ -614,6 +660,8 @@ begin
    Test_Edit_IsDeleteThenInsert;
    Test_Delete;
    Test_FailedDelete_NeverInserts;
+   Test_DuplicateRefusal_IsDeliveredWithAnUnknownLogId;
+   Test_AMarkedContact_IsNeverDeletedOrReplaced;
    Test_FailedInsertAfterDelete_IsUncertain;
    Test_RecoverUpdatesAsUncertain;
    Test_SetupRequired;

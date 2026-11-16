@@ -402,6 +402,23 @@ function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;
                                             const aQso: ContestExchange;
                                             const aCtx: TCabrilloQSOContext): string;
 
+(* RST and his-QTH when the record holds a DOMESTIC QTH, else its DX QTH (the
+   country the call resolved to), else 'DX': '%-3s %-7s'. Issue 333
+   (2026-11-16): the domestic-or-DX decision reads the distinct DomesticQTH
+   field, never QTHString (a D7 artifact, NY4I on #275) -- an ADIF record
+   imported with no ARRL_SECT carries DomesticQTH and no QTHString, and
+   CabrilloReceivedRSTQTHOrDXQTH printed 'DX' for that W/VE station. A DX
+   station whose country was typed ("599 DL") resolves no DomesticQTH and
+   gets its DX QTH, where the QTHString test printed an empty column. A DX
+   station whose contest keys no DX QTH (North Dakota: no DX multiplier)
+   gets what it SENT -- the typed text, the only record of it -- and only
+   when nothing was sent, 'DX'. Ontario, Oklahoma, North Dakota and Vermont
+   use it too (review H4 follow-up, 2026-11-16: their typed "599 DL"
+   exported an empty column, measured through the real engine). *)
+function CabrilloReceivedRSTDomesticQTHOrDXQTH(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange;
+                                               const aCtx: TCabrilloQSOContext): string;
+
 (* Zone, serial (the zone-and-serial shape): '  %-4u   %.3d'. *)
 function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
@@ -990,20 +1007,50 @@ begin
   Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, qth]);
 end;
 
-function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aCtx: TCabrilloQSOContext): string;
+(* RST and HisQTH when the record holds a DomesticQTH, else aNotDomestic --
+   the one statement of "domestic is the DomesticQTH field" the two helpers
+   below share (issue 333). *)
+function RSTAndDomesticQTHOr(const aQso: ContestExchange;
+                             const aCtx: TCabrilloQSOContext;
+                             const aNotDomestic: string): string;
 var
   qth: string;
 begin
   qth := aCtx.HisQTH;
   if aQso.DomesticQTH = '' then
      begin
-     qth := 'DX';
+     qth := aNotDomestic;
      end;
   (* UnicodeFormat: FPC 3.2.2's SysUtils.Format takes AnsiString, and this
      unit's strings are UnicodeString -- no narrowing added. *)
   Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, qth]);
+end;
+
+function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                            const aQso: ContestExchange;
+                                            const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := RSTAndDomesticQTHOr(aQso, aCtx, 'DX');
+end;
+
+function CabrilloReceivedRSTDomesticQTHOrDXQTH(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange;
+                                               const aCtx: TCabrilloQSOContext): string;
+var
+  notDomestic: string;
+begin
+  (* Not domestic: the DX QTH, else what was sent, else 'DX' -- see the
+     declaration. *)
+  notDomestic := string(aQso.DXQTH);
+  if notDomestic = '' then
+     begin
+     notDomestic := string(aQso.QTHString);
+     end;
+  if notDomestic = '' then
+     begin
+     notDomestic := 'DX';
+     end;
+  Result := RSTAndDomesticQTHOr(aQso, aCtx, notDomestic);
 end;
 
 function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;

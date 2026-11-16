@@ -221,6 +221,7 @@ uses
    uTestAutomaticXQSO   in 'uTestAutomaticXQSO.pas',
    uTestMalformedGrid   in 'uTestMalformedGrid.pas',
    uTestSpotText        in 'uTestSpotText.pas',
+   uTestCrashLogGone    in 'uTestCrashLogGone.pas',
    uTestFrameworkIsolation in 'uTestFrameworkIsolation.pas',
    uTestRoverDupeKey    in 'uTestRoverDupeKey.pas',
    uTestNYQPRover       in 'uTestNYQPRover.pas',
@@ -303,7 +304,7 @@ uses
    uScoreBreakdown in '..\..\src\uScoreBreakdown.pas',
    uTestScoreBreakdown in 'uTestScoreBreakdown.pas',
    uTestRadioDestructors in 'uTestRadioDestructors.pas',
-   uTestRadioPTTviaCAT in 'uTestRadioPTTviaCAT.pas',
+   uTestCommandArgument in 'uTestCommandArgument.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    (* THE CONTEST FACTORY. uContestFactory is deliberately NOT here: it reads
@@ -670,6 +671,8 @@ uses
    uNetFraming in '..\..\src\uNetFraming.pas',
    uNetResend in '..\..\src\uNetResend.pas',
    uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
+   uServerLogHealth in '..\..\src\uServerLogHealth.pas',
+   uTestServerLogHealth in 'uTestServerLogHealth.pas',
    uNetCatchUp in '..\..\src\uNetCatchUp.pas',
    uTestNetSupport in 'uTestNetSupport.pas',
    uTestMainFormHarness in 'uTestMainFormHarness.pas',
@@ -702,6 +705,7 @@ uses
    uCallbookBase       in '..\..\src\uCallbookBase.pas',
    uCallbookRegistry   in '..\..\src\uCallbookRegistry.pas',
    uCallbookHamDB       in '..\..\src\uCallbookHamDB.pas',
+   uCallbookFactory     in '..\..\src\uCallbookFactory.pas',
    uTestCallbook        in 'uTestCallbook.pas',
    uSetupWizard         in '..\..\src\uSetupWizard.pas',
    uTestSetupWizard     in 'uTestSetupWizard.pas',
@@ -1089,6 +1093,7 @@ begin
    RegisterSuite(TNetSendQueueTests.Create('NetSendQueue'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
    RegisterSuite(TN1MMLogEnvelopeTests.Create('N1MMLogEnvelope'));
+   RegisterSuite(TServerLogHealthTests.Create('ServerLogHealth'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
@@ -1296,13 +1301,14 @@ begin
    RegisterSuite(TScore3830ReportTests.Create('Score3830Report'));
    RegisterSuite(TScoreBreakdownTests.Create('ScoreBreakdown'));
    RegisterSuite(TRadioDestructorTests.Create('RadioDestructors'));
-   RegisterSuite(TRadioPTTviaCATTests.Create('RadioPTTviaCAT'));
+   RegisterSuite(TCommandArgumentTests.Create('CommandArgument'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TAutomaticXQSOTests.Create('AutomaticXQSO'));
    RegisterSuite(TMalformedGridTests.Create('MalformedGrid'));
    RegisterSuite(TSpotTextTests.Create('SpotText'));
+   RegisterSuite(TCrashLogGoneTests.Create('CrashLogGone'));
    RegisterSuite(TFrameworkIsolationTests.Create('FrameworkIsolation'));
    RegisterSuite(TRoverDupeKeyTests.Create('RoverDupeKey'));
    RegisterSuite(TNYQPRoverTests.Create('NYQPRover'));

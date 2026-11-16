@@ -25,6 +25,7 @@ type
       procedure Test_Utf8CountsBytesNotCharacters;
       procedure Test_AnotherCommandIsIgnoredAndTheStreamStaysInStep;
       procedure Test_TwoRecordsInOneEnvelopeAreRefused;
+      procedure Test_AFieldValueHoldingEorIsNotARecordEnd;
       procedure Test_GarbageIsMalformed;
       procedure Test_OversizeLengthIsRefused;
       procedure Test_TcpFragmentsAreReassembled;
@@ -175,6 +176,30 @@ begin
    finally
       framer.Free;
    end;
+end;
+
+procedure TN1MMLogEnvelopeTests.Test_AFieldValueHoldingEorIsNotARecordEnd;
+var
+   pos: integer;
+   adif: string;
+   why: string;
+   payload: RawByteString;
+begin
+   BeginTest('Test_AFieldValueHoldingEorIsNotARecordEnd');
+   (* A comment whose text is "<eor>" is the field's VALUE; it must not count as
+     a second record. The one real marker is the last tag. *)
+   payload := '<Call:5>K1ABC<Comment:5><eor><Mode:3>FT8<EOR>';
+   pos := 1;
+   CheckEquals(Ord(esLog),
+      Ord(N1MMReadEnvelope(Envelope('Log', payload), pos, adif, why)),
+      'a value containing the text of an end-of-record tag is one record: ' + why);
+   CheckEquals(string(payload), adif, 'payload kept whole');
+   (* Two real markers are still refused, whatever the values hold. *)
+   pos := 1;
+   CheckEquals(Ord(esMalformed),
+      Ord(N1MMReadEnvelope(Envelope('Log',
+         '<Comment:5><eor><EOR><Call:5>K1ABC<EOR>'), pos, adif, why)),
+      'two real markers');
 end;
 
 procedure TN1MMLogEnvelopeTests.Test_GarbageIsMalformed;
@@ -351,6 +376,7 @@ begin
    Test_Utf8CountsBytesNotCharacters;
    Test_AnotherCommandIsIgnoredAndTheStreamStaysInStep;
    Test_TwoRecordsInOneEnvelopeAreRefused;
+   Test_AFieldValueHoldingEorIsNotARecordEnd;
    Test_GarbageIsMalformed;
    Test_OversizeLengthIsRefused;
    Test_TcpFragmentsAreReassembled;

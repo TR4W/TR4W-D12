@@ -93,6 +93,40 @@ class IndexedSpecifiers(unittest.TestCase):
    def test_prose_percent_is_not_a_specifier(self):
       self.good("Dah 73% of normal duration", "Dah 73 % der normalen Dauer")
 
+   def test_the_2026_11_16_review_shapes(self):
+      # M19: Ukrainian lost the conversion character / put a space in it, and
+      # Mongolian dropped one of two arguments. All four shipped.
+      self.bad("CQ total: %u", "Всього CQ: %")
+      self.bad("Bn. ch. = %d", "Див. діап. = % d ")
+      self.bad("You already worked %s in %s!!", "Та %s-тай урьд нь холбоо барьсан байна!!")
+      self.good("CQ total: %u", "Всього CQ: %u")
+      self.good("Bn. ch. = %d", "Див. діап. = %d ")
+
+   def test_format_defects_reads_a_catalogue(self):
+      import tempfile
+      body = ('msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n\n'
+              'msgid "Total %u"\nmsgstr "Gesamt %"\n\n'
+              'msgid "Count %d"\nmsgstr "Anzahl %d"\n\n'
+              'msgid "Empty %d"\nmsgstr ""\n')
+      with tempfile.TemporaryDirectory() as d:
+         path = os.path.join(d, "tr4w_xx.po")
+         with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(body)
+         checked, found = po_lint.format_defects(path)
+      self.assertEqual(checked, 2)
+      self.assertEqual([e.source for e in found], ["Total %u"])
+
+   def test_the_shipped_catalogues_have_no_specifier_mismatch(self):
+      # The gate itself (Lint-PoSpecifiers) counts these; this is the same fact
+      # as a unit test, so the mismatch cannot return unnoticed.
+      i18n = os.path.join(os.path.dirname(os.path.dirname(HERE)), "i18n")
+      names = [n for n in os.listdir(i18n) if n.startswith("tr4w_") and n.endswith(".po")]
+      self.assertGreater(len(names), 10)
+      for n in names:
+         checked, found = po_lint.format_defects(os.path.join(i18n, n))
+         self.assertGreater(checked, 100, n)
+         self.assertEqual(found, [], n)
+
 
 if __name__ == "__main__":
    unittest.main()

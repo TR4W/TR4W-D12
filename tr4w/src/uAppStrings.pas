@@ -624,6 +624,12 @@ resourcestring
      of 699 and 'HA1 1TA CT' the default report. %s is the word as typed. *)
    SExchangeNotASignalReport = '%s is not a signal report';
 
+   (* THE RSGB RoPoCo's ENTRY WITH NO POSTCODE IN IT -- review M6, 2026-11-16
+     (LOGSTUFF.ProcessRSTAndPostalCodeExchange). Every legal entry carries the
+     postcode; a report or a number alone ('5', '599') logged a QSO with a
+     blank QTH. *)
+   SExchangeNoPostcode = 'No postcode in the exchange';
+
    (* A GRID CONTEST'S EXCHANGE WITH NO GRID IN IT -- Q115, NY4I 2026-10-18:
      "The contest class should be stating what is required." Shown when the
      class requires the grid and only a signal report was typed. *)
@@ -1372,7 +1378,13 @@ resourcestring
    SWizRadioCWByCAT      = 'Send CW through the radio (CW by CAT)';
    SWizRadioSpeedSync    = 'Keep the radio''s CW speed in step with TR4W';
    SWizKeyerHeading      = 'WinKeyer';
-   SWizKeyerIntro        = 'Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio''s.';
+   (* THE NAME A NEW LIBRARY ENTRY STARTS WITH, in the setup wizard and in
+     Preferences' New buttons alike, so the two agree. A display name the
+     operator can change, never a key: the store makes it unique ('Radio 2'). *)
+   SDefaultRadioName     = 'Radio';
+   SDefaultKeyerName     = 'WinKeyer';
+   SDefaultClusterName   = 'Cluster';
+   SWizKeyerIntro       = 'Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio''s.';
 
    SWizClusterHeading    = 'DX cluster';
    SWizClusterIntro      = 'Pick a cluster from the list, or type its host name or IP address and its port. Leave the login blank to log in with your callsign.';

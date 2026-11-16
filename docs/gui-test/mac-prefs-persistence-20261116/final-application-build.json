@@ -8,6 +8,6 @@
    "fpc_version": "3.2.2",
    "resource_artifact_run": 43776700899,
    "executable_sha256": "c4fa935a3ecab7be5cf0642e8894a1758ddcae9693e4161604320a62717dbae2",
-   "bundle": "/Users/toms/tr4w-gui-test/app/TR4W-prefs-search-4547.app",
+   "bundle": "/Users/<user>/tr4w-gui-test/app/TR4W-prefs-search-4547.app",
    "signature": "ad-hoc; deep/strict verified"
 }

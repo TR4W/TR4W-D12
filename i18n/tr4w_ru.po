@@ -10906,6 +10906,7 @@ msgid "TR4W reads and sets the frequency and mode."
 msgstr ""
 
 #: uappstrings.swizkeyerheading
+#: uappstrings.sdefaultkeyername
 #, fuzzy
 msgid "WinKeyer"
 msgstr ""
@@ -10936,6 +10937,7 @@ msgid "Close Preferences first, so the setup wizard and Preferences do not overw
 msgstr ""
 
 #: uappstrings.swizradioheading
+#: uappstrings.sdefaultradioname
 #, fuzzy
 msgid "Radio"
 msgstr ""
@@ -11425,4 +11427,19 @@ msgstr ""
 #: tprefsform.chkbandmapsortbybeam.caption
 #, fuzzy
 msgid "Sort the band map by beam heading, nearest the beam first"
+msgstr ""
+
+#: utr4wstrings.tc_winkeyerdidnotopen
+msgctxt "TC_WINKEYERDIDNOTOPEN"
+msgid "WinKeyer on %s did not open (see tr4w.log)"
+msgstr ""
+
+#: uappstrings.sexchangenopostcode
+#, fuzzy
+msgid "No postcode in the exchange"
+msgstr ""
+
+#: uappstrings.sdefaultclustername
+#, fuzzy
+msgid "Cluster"
 msgstr ""

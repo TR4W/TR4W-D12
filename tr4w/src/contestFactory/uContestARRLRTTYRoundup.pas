@@ -286,15 +286,14 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THE CONTINENT -- issue 167. The New
-   Contest dialog asks once when MY CALL's continent and the box
-   disagree. *)
+(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+   167; the continent until review M16 (2026-11-16). Ticking it asks for the
+   QTH to send, which the stations of DescribeSession's list (K, VE) send;
+   an XE or KP4 entrant sends a serial. Whether KH6/KL7 send a state is not
+   settled here: the list says no, and no sponsor text is in the tree. *)
 function TContestARRLRTTYRoundup.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
 begin
-   aHome.Countries := '';
-   aHome.Continent := NorthAmerica;
-   aHome.HomeIsInside := True;
-   Result := True;
+   Result := HomeIsDomesticCountries(aHome);
 end;
 
 (* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait

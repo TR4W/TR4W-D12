@@ -93,7 +93,26 @@ keyer in silence.
   **`FreeAndNil(WinKeyPort)`** -- a `TSerialPort`'s name is fixed at Create, so
   a closed-not-freed port reopened on the OLD port. 3 s each; on a timeout it
   logs an Error and leaves the port alone, and `wkStart` refuses while either
-  flag is up.
+  flag is up. **Once both are down, `wkStart` frees any `WinKeyPort` a
+  timed-out stop left behind** (`wkReleasePort`, shared with `wkStop`) --
+  otherwise the next open reused the old object on the OLD port (review M12,
+  2026-11-16).
+- **A failed open is REPORTED, every time** (review H5, 2026-11-16). `wkOpen`
+  and `wkOpenPort` return a reason for every False (not enabled, not a serial
+  port, the port would not open, no echo, wrong echo byte, reader not
+  started); `wkOpenThreadProc` hands it to `wkReportNotOpened`: one Error
+  naming the port, the reason and the keyer CW now goes to, and one notice
+  (`TC_WINKEYERDIDNOTOPEN`, through `QuickDisplay`, any thread). The modal
+  `showwarning` for an unopenable port is gone -- one report, not two.
+  `ActiveCWKeyer`'s precedence is NOT changed; refusing the fallback is the
+  open CW INTERFACE question below. The old `wksWinKey2Port = NoPort` guard is
+  gone too: it refused every device node (`/dev/ttyUSB0` has no ordinal).
+- **The handshake is the open thread's alone** (review M12). `wkPortOpen` is
+  True from the port open, before the echo test, and the main-thread entry
+  points (`wkSetSpeed`, `wkSetKeyerOutput`, `wkTurnPTT`) guard on it alone.
+  `wkWriteRaw` -- the one write path -- refuses (Warn) any other thread while
+  `wkHandshaking`; `wkOpen` raises it and drops it just before the reader
+  starts.
 - **`wkActive` is set by `wkOpen` before it creates the reader**, not by the
   reader: a stop landing between create and first line was undone by the
   reader itself, which then looped beside the next one and stole the echo byte.
@@ -106,7 +125,12 @@ keyer in silence.
   `ActiveRadioSettingsChanged(store, which, keyers)` reports an edited keyer
   device (`TAppliedRadioSnapshot.KeyerSlotChanged`, by Id plus
   `TKeyerDefinition.SameDeviceSettingsAs` -- a RENAME is not a change), so
-  Save re-applies.
+  Save re-applies. **The CW output itself is compared by Id too**
+  (`RecordProfileSlot` / `CWOutputChanged` carry `CWOutputNId`; the names
+  decide only when either Id is empty -- CAT, NONE, a pre-id profile). Until
+  review H6 (2026-11-16) it compared the NAME first, so a rename rebuilt both
+  radio links; `Test_ActiveSettingsChangedIgnoresAKeyerRename` records the
+  profile slot, which the moved-WinKeyer test never did.
 - `logsubs2.ExitProgram` stops it with `wkStop` too (bounded; a timeout logs
   and the exit continues).
 - `DescribePortConflicts(store, profile, keyers)` compares the profile's
@@ -299,9 +323,17 @@ reach the field substituted but the keyer RAW.
 **Open (NY4I — design, not refactor):** `ActiveCWKeyer`'s precedence chain
 CAT → WinKeyer → YCCC → CPU is an *artifact of the original if/else ordering*,
 not a decision. An explicit `CW INTERFACE` setting would make it a lookup,
-delete `WarnIfKeyerConfigsConflict`, and turn today's silent
-WinKeyer-failed-to-open downgrade into a reported error. TR4QT is the likely
-reference.
+delete `WarnIfKeyerConfigsConflict`, and turn today's WinKeyer-failed-to-open
+downgrade into a refusal. (Since review H5, 2026-11-16, the downgrade is no
+longer silent -- a log Error and a notice say it happened -- but CW still
+falls through to the next keyer.) TR4QT is the likely reference.
+
+**Phone S&P Enter with the DVK off sends nothing** (`MainUnit.Send_DE`, gated
+on DVK ENABLE as in D7; review M10, 2026-11-16, pinned by
+`uTestCWKeyer.Test_PhoneEnterWithTheDVKOffSendsNothing`). Issue 66 dropped
+the gate and that ran `SendFunctionKeyMessage` on every phone Enter, which
+clears `SwitchNext`/`Switch`/`InactiveRigCallingCQ`. Issue 66's actual ask --
+a separate S&P CALL message settable to a radio command -- is NOT built.
 
 **Decided — do not re-propose:** Yaesu CW-by-CAT is out of scope. Yaesu's
 `KY <n>;` plays a preset memory slot, not free text, so it cannot serve contest CW.

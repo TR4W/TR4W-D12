@@ -3011,7 +3011,7 @@ begin
    FKeyerEditTarget := nil;
    FreeAndNil(FKeyerEditClone);
    FKeyerEditClone := TKeyerDefinition.Create;
-   FKeyerEditClone.Name := FKeyerStore.UniqueKeyerName('WinKeyer');
+   FKeyerEditClone.Name := FKeyerStore.UniqueKeyerName(SDefaultKeyerName);
    FKeyerEditor.EditKeyer(FKeyerEditClone, KeyerEditorDone);
 end;
 
@@ -6056,7 +6056,7 @@ begin
    FEditTarget := nil;
    FreeAndNil(FEditClone);
    FEditClone := TRadioDefinition.Create;
-   FEditClone.Name := FStore.UniqueRadioName('Radio');
+   FEditClone.Name := FStore.UniqueRadioName(SDefaultRadioName);
 
    FEditor.EditRadio(FEditClone, EditorDone);
 end;
@@ -7450,7 +7450,7 @@ var
    c: TClusterDefinition;
 begin
    c := TClusterDefinition.Create;
-   c.Name := FStore.UniqueClusterName('Cluster');
+   c.Name := FStore.UniqueClusterName(SDefaultClusterName);
 
    if not FStore.AddCluster(c) then
       begin

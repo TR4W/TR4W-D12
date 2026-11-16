@@ -288,8 +288,11 @@ function TContestNorthDakotaQP.GetCabrilloReceivedExchange(const aMy: TMyStation
                                                            const aCtx: TCabrilloQSOContext): string;
 begin
    (* "DX Stations give RST and DX country": the received column is the
-      country a DX station sent. *)
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      country a DX station sent. The record's DomesticQTH decides domestic;
+      a DX station (no DX QTH here -- no DX multiplier) is what it sent.
+      CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column for a typed
+      "599 DL" (review H4 follow-up, 2026-11-16). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
 end;
 
 function TContestNorthDakotaQP.GetInStateDomesticFileName: string;

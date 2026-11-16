@@ -106,6 +106,16 @@ function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
    aMode: ModeType; out aAccepted: boolean;
    var aRX: ContestExchange): boolean; overload;
 
+(* THE CABRILLO RECEIVED COLUMN OF aRX AS THE WRITER BUILDS IT -- review H4
+   and M5 follow-up, 2026-11-16: HisQTH from PostUnit.CabrilloReceivedQTH
+   (LITERAL DOMESTIC QTH off, restored after), RST 599, the column of
+   ActiveContest(aContest) -- the object that holds the session's station --
+   upper-cased as PostUnit upper-cases it. A party test asks this rather than
+   hand-setting HisQTH: a hand-set HisQTH hid the empty column of a typed DX
+   country. *)
+function PartyReceivedCabrilloColumn(aContest: TContestHandle;
+   const aRX: ContestExchange): string;
+
 implementation
 
 uses
@@ -115,6 +125,8 @@ uses
    uCallsigns,
    uContestBase,
    uContestRegistry,
+   (* ActiveContest -- PartyReceivedCabrilloColumn's object with the station. *)
+   uContestFactory,
    LogEdit,
    (* Contest, the session's contest. *)
    PostUnit,
@@ -340,6 +352,27 @@ function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
    var aRX: ContestExchange): boolean;
 begin
    Result := EnterPartyQSO(aCall, aExch, aBand, aMode, eNoMode, aAccepted, aRX);
+end;
+
+function PartyReceivedCabrilloColumn(aContest: TContestHandle;
+   const aRX: ContestExchange): string;
+var
+   my: TMyStationExchange;
+   ctx: TCabrilloQSOContext;
+   savedLiteral: boolean;
+begin
+   savedLiteral := Settings.Contest.LiteralDomesticQth;
+   try
+      Settings.Contest.LiteralDomesticQth := False;
+      my := Default(TMyStationExchange);
+      ctx := Default(TCabrilloQSOContext);
+      ctx.RSTSent := '599';
+      ctx.RSTReceived := '599';
+      ctx.HisQTH := CabrilloReceivedQTH(True, aRX);
+      Result := UpperCase(ActiveContest(aContest).FormatCabrilloReceivedExchange(my, aRX, ctx));
+   finally
+      Settings.Contest.LiteralDomesticQth := savedLiteral;
+   end;
 end;
 
 end.

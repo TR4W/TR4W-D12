@@ -207,6 +207,26 @@ function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
   not one the settings object owns as a boolean, or the value is refused. *)
 function ToggleAndStoreCommand(const aCommand: string): boolean;
 
+(* A CHANGE TO A SETTING THE OPEN CONTEST HOLDS, from anything but Preferences
+  (review H3, 2026-11-16). The caller has asked Settings.StationValueIsKept.
+
+  THE ONE RULE, so three doors cannot disagree again:
+    aStationFollows True  -- an operator's action on what is on screen: a
+      band-map toggle or hotkey (NY4I, 2026-11-15), a BOOLSWAP function key,
+      the Auto-CQ dialog (every SetCFGCommandValue). The LIVE value changes
+      and the kept STATION value becomes the same and is saved.
+    aStationFollows False -- a multi-op PEER's edit. A shared setting is one
+      the desks agree on for THIS contest, so it is the contest's value, as a
+      contest-parameter edit is (ApplyContestEdit): live only, and the
+      station's kept value -- what the file holds -- is left alone.
+  Preferences and the wizard are the third door and NOT this one (decision E:
+  the station value only; ApplyAndStoreCommand's kept arm).
+
+  The station half is validated first on a scratch object
+  (TrySetStationValue), so a refused value changes neither. *)
+function ApplyToContestHeldSetting(const aCommand, aValue: string;
+                                   aStationFollows: boolean): boolean;
+
 (* THE VALUE A SETTINGS SCREEN SHOWS FOR ONE COMMAND: the store's, falling
   back to the live one -- which covers a command the store has never held,
   and every command the settings object owns.  ONE spelling for Preferences
@@ -1372,19 +1392,40 @@ begin
      AND the kept station value becomes the same, and is saved. *)
    if Settings.StationValueIsKept(aCommand) then
       begin
-      Result := Settings.TrySetByCommand(aCommand,
-                                         string(BA[current <> string(BA[True])])) and
-                Settings.TrySetStationValue(aCommand,
-                                            string(BA[current <> string(BA[True])]));
-      if Result then
-         begin
-         SaveSettings(TR4WConfigFileName, Settings);
-         end;
+      Result := ApplyToContestHeldSetting(aCommand,
+                                          string(BA[current <> string(BA[True])]),
+                                          True);
       Exit;
       end;
 
    Result := ApplyAndStoreCommand(nil, aCommand,
                                   string(BA[current <> string(BA[True])]));
+end;
+
+function ApplyToContestHeldSetting(const aCommand, aValue: string;
+                                   aStationFollows: boolean): boolean;
+begin
+   if not aStationFollows then
+      begin
+      (* THE FILE IS NOT WRITTEN: it holds the kept station value, which this
+        does not change, so a save would write the same bytes. *)
+      Result := Settings.TrySetByCommand(aCommand, aValue);
+      end
+   else
+      begin
+      Result := Settings.TrySetStationValue(aCommand, aValue) and
+                Settings.TrySetByCommand(aCommand, aValue);
+      if Result then
+         begin
+         SaveSettings(TR4WConfigFileName, Settings);
+         end;
+      end;
+
+   if (not Result) and (logger <> nil) then
+      begin
+      logger.Warn('[Config] "%s" = "%s" refused by the settings object',
+                  [aCommand, Settings.ValueForLog(aCommand, aValue)]);
+      end;
 end;
 
 function StationCommandValue(const aStore: TRadioConfigStore;
@@ -1626,7 +1667,19 @@ begin
    if Settings.OwnsCommand(aCommand) and
       (not Settings.CommandIsContestScoped(aCommand)) then
       begin
-      Result := ApplyAndStoreCommand(nil, aCommand, aValue);
+      (* A SETTING THE OPEN CONTEST HOLDS is the contest's to change, and a
+        peer's edit of it changes it here LIVE and leaves the station's kept
+        value alone (review H3, 2026-11-16). It used to take the Preferences
+        door, which changed only the kept station value: the peer's change
+        took no effect on this station while QuickDisplay said it had. *)
+      if Settings.StationValueIsKept(aCommand) then
+         begin
+         Result := ApplyToContestHeldSetting(aCommand, aValue, False);
+         end
+      else
+         begin
+         Result := ApplyAndStoreCommand(nil, aCommand, aValue);
+         end;
       if (not Result) and (logger <> nil) then
          begin
          // A value the property's type refuses. Reported, not swallowed: the
@@ -2176,11 +2229,13 @@ begin
       begin
       if aSlot = 2 then
          begin
-         AppliedRadios.RecordProfileSlot(aSlot, aProfile.SpeedSync2, aProfile.CWOutput2);
+         AppliedRadios.RecordProfileSlot(aSlot, aProfile.SpeedSync2, aProfile.CWOutput2,
+                                         aProfile.CWOutput2Id);
          end
       else
          begin
-         AppliedRadios.RecordProfileSlot(aSlot, aProfile.SpeedSync1, aProfile.CWOutput1);
+         AppliedRadios.RecordProfileSlot(aSlot, aProfile.SpeedSync1, aProfile.CWOutput1,
+                                         aProfile.CWOutput1Id);
          end;
       end;
 
@@ -3151,9 +3206,20 @@ end;
 
   ApplyPeerCommand is reused rather than reimplemented: it already loads the
   store, applies through CheckCommand with aApplyJSONOwned, saves, and does it
-  per call because these arrive when a human changes something. *)
+  per call because these arrive when a human changes something.
+
+  EXCEPT A SETTING THE OPEN CONTEST HOLDS (review H3, 2026-11-16). This is an
+  operator's own action -- a BOOLSWAP function key, the Auto-CQ dialog -- so
+  it takes the band map's rule, live AND station, not the peer's (live only).
+  Through ApplyPeerCommand it took the Preferences door, which changed the
+  station value alone while the status line reported a live change. *)
 function PersistCommandThroughStore(const aCommand, aValue: string): boolean;
 begin
+   if Settings.StationValueIsKept(aCommand) then
+      begin
+      Result := ApplyToContestHeldSetting(aCommand, aValue, True);
+      Exit;
+      end;
    Result := ApplyPeerCommand(aCommand, aValue);
 end;
 
@@ -3216,14 +3282,17 @@ begin
          Exit;
          end;
       (* HOW CW REACHES THE SLOT is the profile's, not the radio's: changing it
-        rebuilds the keyer, which only a full re-apply does. *)
-      if (slot = 1) and AppliedRadios.CWOutputChanged(slot, profile.CWOutput1) then
+        rebuilds the keyer, which only a full re-apply does.  BY KEYER ID, so a
+        rename is not a change (review H6) -- see CWOutputChanged. *)
+      if (slot = 1) and
+         AppliedRadios.CWOutputChanged(slot, profile.CWOutput1, profile.CWOutput1Id) then
          begin
          Result := True;
          aWhich := Format('radio %d CW output', [slot]);
          Exit;
          end;
-      if (slot = 2) and AppliedRadios.CWOutputChanged(slot, profile.CWOutput2) then
+      if (slot = 2) and
+         AppliedRadios.CWOutputChanged(slot, profile.CWOutput2, profile.CWOutput2Id) then
          begin
          Result := True;
          aWhich := Format('radio %d CW output', [slot]);
@@ -3300,11 +3369,13 @@ begin
          begin
          if slot = 1 then
             begin
-            AppliedRadios.RecordProfileSlot(slot, wanted, profile.CWOutput1);
+            AppliedRadios.RecordProfileSlot(slot, wanted, profile.CWOutput1,
+                                            profile.CWOutput1Id);
             end
          else
             begin
-            AppliedRadios.RecordProfileSlot(slot, wanted, profile.CWOutput2);
+            AppliedRadios.RecordProfileSlot(slot, wanted, profile.CWOutput2,
+                                            profile.CWOutput2Id);
             end;
          logger.Info('[ApplyActiveSpeedSync] radio %d CW speed sync is now %s',
                      [slot, value]);

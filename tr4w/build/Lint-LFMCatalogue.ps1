@@ -80,4 +80,46 @@ if (($code -ne 0) -or ($text -notmatch 'lfm_harvest: OK'))
    exit 1
    }
 
+# THE REWORDED-CAPTION WARNING HAS A CEILING (review 2026-11-16, M19). A caption
+# whose English changed keeps its old translation until somebody rewrites it, so
+# each one ships OLD MEANING under NEW English, and Weblate shows translators the
+# old English. A warning with no ceiling only ever grows. The ceiling ratchets
+# DOWN ONLY: fix an entry (docs/I18N_TOOLS.md), then lower it here.
+#
+# Measured 2026-11-16: 11. Three of them change the MEANING, not just the
+# spelling, and are the ones to fix first:
+#    tprefsform.chkspotcollector.caption  'Collect spots from the cluster' ->
+#                                         'Integrate with DXLab SpotCollector'
+#    tprefsform.lbldxlabinfo.caption      'DXLab needs no settings of its own. ...'
+#                                         was reworded (that sentence is gone)
+#    tfrmhamscore.btnresync.caption       'Resync from log' ->
+#                                         'Re-send Log to HamScore...'
+# Two more shift the sense a little (tfrmserverlog.caption 'Synchronize log' ->
+# 'Synchronize with the server'; tradioeditform.lbltcpport.caption 'TCP port' ->
+# 'IP port'). The rest are a URL, a double space and '80 dB' -> '-- dB', and three
+# Preferences hints whose rewording lies past the 70 characters the tool prints.
+$REWORDED_CEILING = 11
+
+$reworded = 0
+if ($text -match 'lfm_harvest: WARNING -- (\d+) caption')
+   {
+   $reworded = [int] $Matches[1]
+   }
+elseif ($text -match 'reworded')
+   {
+   Write-Host 'Lint-LFMCatalogue: the reworded-caption warning is present but its count cannot be read. Failing closed.' -ForegroundColor Red
+   exit 1
+   }
+
+if ($reworded -gt $REWORDED_CEILING)
+   {
+   Write-Host "Lint-LFMCatalogue: FAILED -- $reworded reworded captions, ceiling $REWORDED_CEILING. Update the catalogue entry for the caption you reworded (docs/I18N_TOOLS.md), never raise the ceiling." -ForegroundColor Red
+   exit 1
+   }
+
+if ($reworded -lt $REWORDED_CEILING)
+   {
+   Write-Host "Lint-LFMCatalogue: $reworded reworded captions, below the ceiling of $REWORDED_CEILING -- lower `$REWORDED_CEILING in this script to $reworded." -ForegroundColor Yellow
+   }
+
 exit 0

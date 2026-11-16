@@ -66,6 +66,9 @@ type
       procedure Test_PeerDownThenBackUp_Reconnects;
       procedure Test_QueuedTXDoesNotSurviveADroppedLink;
       procedure Test_ReceiveJumpsTheQueue;
+      procedure Test_TransmitThenReceiveBeforeTheDrain_NeverKeys;
+      procedure Test_UnkeyLostWithTheLink_IsSentOnReconnect;
+      procedure Test_ConnectWithNothingKeyed_SendsNoUnkey;
       procedure Test_PeerThatClosesAfterEveryMessage_SetsKeepTheirOrder;
       procedure Test_UnansweredTXQueryStopsBeingAsked;
       procedure Test_StopAndUnkeyWithNoLink_QueueNothing;
@@ -592,6 +595,103 @@ begin
    end;
 end;
 
+(* REVIEW H1, 2026-11-16.  A key and an un-key both pressed before the polling
+  thread drains: CmdTX was queued at the end and CmdRX jumped to the front, so
+  the queue read [CmdRX, CmdTX] and the last thing Commander heard was
+  "transmit".  An un-key now removes the pending key.
+
+  THE POLL IS THE FENCE.  The fake records each message before it answers, and
+  a kept connection is served in order, so once CmdGetFreq has been answered
+  every message written before it has been recorded -- a CmdTX that went out
+  after the CmdRX cannot still be in flight when the counts are read. *)
+procedure TRadioDXLabCommanderTests.Test_TransmitThenReceiveBeforeTheDrain_NeverKeys;
+var
+   r: TCommanderProbe;
+begin
+   BeginTest('Test_TransmitThenReceiveBeforeTheDrain_NeverKeys');
+   r := TCommanderProbe.CreateFor(StartServer);
+   try
+      CheckEquals(0, r.Connect, '');
+      ClearReceived;
+      r.Transmit;
+      r.Receive;
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckTrue(r.IsConnected, 'the fence poll was answered');
+      CheckEquals(1, CountOf('CmdRX'), 'the un-key went: ' + ReceivedSnapshot);
+      CheckEquals(0, CountOf('CmdTX'), 'and the key it cancelled never did: ' + ReceivedSnapshot);
+
+      (* Paired: a key with no un-key behind it is still sent. *)
+      ClearReceived;
+      r.Transmit;
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckEquals(1, CountOf('CmdTX'), 'a lone key is sent');
+   finally
+      r.Free;
+      StopServer;
+   end;
+end;
+
+(* REVIEW H2, 2026-11-16.  The rig was keyed, then the TR4W-to-Commander link
+  dropped.  The operator's un-key is a no-op on a link that is down
+  (SendStopToRadio), and Connect empties the queue -- but only TR4W's link
+  failed, so Commander may still be holding the rig in transmit.  Once a CmdTX
+  has gone out and no CmdRX has followed it, Connect sends one.  Re-sending RX
+  is always safe; a second reconnect does not send another. *)
+procedure TRadioDXLabCommanderTests.Test_UnkeyLostWithTheLink_IsSentOnReconnect;
+var
+   r: TCommanderProbe;
+begin
+   BeginTest('Test_UnkeyLostWithTheLink_IsSentOnReconnect');
+   r := TCommanderProbe.CreateFor(StartServer);
+   try
+      CheckEquals(0, r.Connect, '');
+      r.Transmit;
+      r.DrainUrgentQueue;
+      CheckTrue(WaitForCount('CmdTX', 1, WAIT_MS), 'the rig was keyed');
+
+      FRefuse := True;
+      r.PollRadioState;
+      CheckFalse(r.IsConnected, 'link dropped');
+      r.Receive;                        // a no-op: no link to send it on
+      ClearReceived;
+
+      FRefuse := False;
+      CheckEquals(0, r.Connect, 'Commander is back');
+      r.PollRadioState;                 // the fence
+      CheckEquals(1, CountOf('CmdRX'), 'the lost un-key is sent on reconnect: ' + ReceivedSnapshot);
+      CheckEquals(0, CountOf('CmdTX'), 'and nothing keys');
+
+      ClearReceived;
+      CheckEquals(0, r.Connect, 'a second reconnect');
+      r.PollRadioState;
+      CheckEquals(0, CountOf('CmdRX'), 'owes nothing: the un-key was delivered');
+   finally
+      r.Free;
+      StopServer;
+   end;
+end;
+
+(* Paired with the above: a Connect on a radio TR4W never keyed says nothing
+  about PTT -- it must not un-key a rig another Commander client is using. *)
+procedure TRadioDXLabCommanderTests.Test_ConnectWithNothingKeyed_SendsNoUnkey;
+var
+   r: TCommanderProbe;
+begin
+   BeginTest('Test_ConnectWithNothingKeyed_SendsNoUnkey');
+   r := TCommanderProbe.CreateFor(StartServer);
+   try
+      CheckEquals(0, r.Connect, '');
+      r.PollRadioState;
+      CheckTrue(r.IsConnected, 'the fence poll was answered');
+      CheckEquals(0, CountOf('CmdRX'), 'no un-key: nothing was keyed');
+   finally
+      r.Free;
+      StopServer;
+   end;
+end;
+
 (* A peer that hangs up after every message serves each on its own connection,
   and a server may serve connections side by side.  The driver waits for each
   hang-up before the next message, so the peer still sees them in order, as
@@ -904,6 +1004,9 @@ begin
       Test_PeerDownThenBackUp_Reconnects;
       Test_QueuedTXDoesNotSurviveADroppedLink;
       Test_ReceiveJumpsTheQueue;
+      Test_TransmitThenReceiveBeforeTheDrain_NeverKeys;
+      Test_UnkeyLostWithTheLink_IsSentOnReconnect;
+      Test_ConnectWithNothingKeyed_SendsNoUnkey;
       Test_PeerThatClosesAfterEveryMessage_SetsKeepTheirOrder;
       Test_UnansweredTXQueryStopsBeingAsked;
       Test_StopAndUnkeyWithNoLink_QueueNothing;

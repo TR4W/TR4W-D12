@@ -67,9 +67,10 @@ uses
 procedure wkStop;
 procedure wkStart;
 
-function wkOpen: boolean;
+(* False with aReason saying why -- for the log; wkOpenThreadProc reports it. *)
+function wkOpen(out aReason: string): boolean;
 function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;   (* wkOpen, as a tCreateThread body *)
-function wkOpenPort: boolean;
+function wkOpenPort(out aReason: string): boolean;
 function wkSendByte(b: Byte): Cardinal;
 function wkSendTwoBytes(B1, B2: Byte): Cardinal;
 procedure wkSetSpeed(Speed: integer);
@@ -366,6 +367,7 @@ uses
   LogCW,
   LogK1EA,
   CfgCmd,
+  uCWKeyerBase,   (* ActiveCWKeyer -- where CW goes when the open fails (H5) *)
   MainUnit;
 
 (* FORWARD, because the port helpers are defined beside wkOpenPort at the
@@ -387,6 +389,61 @@ var
   wkOpening       : Boolean = False;
   wkReaderRunning : Boolean = False;
 
+  (* THE HANDSHAKE IS THE OPEN THREAD'S ALONE (review M12).  wkPortOpen goes
+    True when the port opens, before the settle delay, the echo test and the
+    configuration writes -- and wkSetSpeed, wkSetKeyerOutput and wkTurnPTT
+    guard on wkPortOpen alone, so a byte from the main thread could land
+    between ECHO TEST and its echo byte and fail the open.  wkWriteRaw, the
+    one write path, refuses every other thread while this is up.  Set and
+    cleared by wkOpen; cleared BEFORE the reader starts, so the reader and the
+    main thread write freely from then on. *)
+  wkHandshaking      : Boolean = False;
+  wkHandshakeThread  : TThreadID;
+
+(* CLOSE THE PORT AND FREE ITS OBJECT -- the second half of a stop, and what a
+  start does first with a port a timed-out stop left behind. Only when no
+  thread of ours can reach it: the caller has seen both flags down. *)
+procedure wkReleasePort;
+begin
+  wkClose;
+  (* FREED, NOT ONLY CLOSED: the port name is fixed at Create, so a keyer moved
+    to another port would otherwise be reopened on the old one. *)
+  FreeAndNil(WinKeyPort);
+end;
+
+(* A WINKEYER THAT DID NOT OPEN IS REPORTED, EVERY TIME (review H5).  It used
+  to fail in silence -- no echo, no log line -- and ActiveCWKeyer then fell
+  through to the next keyer, so a keyer that was off or on the wrong port
+  keyed CW through DTR/RTS with nothing said.  The precedence itself is not
+  changed here (that is the open CW INTERFACE question); what changes is that
+  the operator is told, once, and the log says why and where CW goes now.
+  Any thread: the open runs on a worker, and the notice marshals itself. *)
+procedure wkReportNotOpened(const aReason: string);
+var
+  portName: string;
+  keyer: TCWKeyer;
+  keyerName: string;
+begin
+  portName := EffectiveDeviceName(WinKeySettings.wksWinKey2PortName,
+                                  WinKeySettings.wksWinKey2Port);
+  if portName = '' then
+     begin
+     portName := 'NONE';
+     end;
+  keyer := ActiveCWKeyer;
+  if keyer <> nil then
+     begin
+     keyerName := keyer.Name;
+     end
+  else
+     begin
+     keyerName := 'no keyer';
+     end;
+  logger.Error('[WinKey] the WinKeyer on %s did not open: %s. CW now goes to the %s',
+               [portName, aReason, keyerName]);
+  QuickDisplay(UnicodeFormat(TC_WINKEYERDIDNOTOPEN, [portName]));
+end;
+
 procedure wkStop;
 begin
   (* THE OPEN FIRST.  Clearing wkActive while it is still running would be
@@ -406,11 +463,8 @@ begin
      Exit;
      end;
 
-  wkClose;
-  (* FREED, NOT ONLY CLOSED: the port name is fixed at Create, so a keyer moved
-    to another port would otherwise be reopened on the old one.  Safe because
-    no thread of ours can reach it now. *)
-  FreeAndNil(WinKeyPort);
+  (* Safe because no thread of ours can reach the port now. *)
+  wkReleasePort;
 end;
 
 procedure wkStart;
@@ -432,8 +486,20 @@ begin
      end;
   if wkReaderRunning then
      begin
-     logger.Error('[WinKey] not opening: the previous reader thread is still running');
+     wkReportNotOpened('the previous reader thread is still running');
      Exit;
+     end;
+
+  (* A PORT A TIMED-OUT STOP LEFT BEHIND (review M12).  wkStop leaves the port
+    alone when a thread outlives its wait, and a profile apply carries on and
+    rewrites the keyer's port.  Once that thread has gone -- both flags are
+    down here -- the next start found the old object and wkOpenPort reopened
+    it, on the OLD port, whatever the settings now say.  Finish the stop. *)
+  if WinKeyPort <> nil then
+     begin
+     logger.Warn('[WinKey] releasing the port object a previous stop did not free, ' +
+                 'so the open uses the port the settings name now');
+     wkReleasePort;
      end;
 
   wkOpening := True;
@@ -447,17 +513,29 @@ begin
   logger.Info('Created WinKeyer thread with threadid of %u',[PtrUInt(wkThreadID)] );
 end;
 
-function wkOpen: boolean;
+(* THE OPEN ITSELF; wkOpen wraps it in the handshake gate.  Every False comes
+  with a reason, which wkOpenThreadProc reports. *)
+function wkOpenAndConfigure(out aReason: string): boolean;
 var
   versionByte : Byte;
   family      : Byte;
 begin
   Result := False;
+  aReason := '';
 
-  if WinKeySettings.wksWinKey2Enable = False then Exit;
-  if WinKeySettings.wksWinKey2Port = NoPort then Exit;
-
-  if not wkOpenPort then Exit;
+  if WinKeySettings.wksWinKey2Enable = False then
+     begin
+     aReason := 'WINKEYER ENABLE is off';
+     Exit;
+     end;
+  (* NO ORDINAL GUARD HERE ANY MORE.  `wksWinKey2Port = NoPort` exited before
+    wkOpenPort could apply its name-first rule, and a device node such as
+    '/dev/ttyUSB0' has no ordinal -- so a WinKeyer on Linux or macOS was never
+    opened, in silence.  wkOpenPort decides, and says why when it refuses. *)
+  if not wkOpenPort(aReason) then
+     begin
+     Exit;
+     end;
 
   // Send three null commands to resync host to WK2
   wkSendByte(wkCMD_NULLIMM);
@@ -468,8 +546,16 @@ begin
   wkSendByte(wkECHOTESTBYTE);
 //  Sleep(150);
 
-  if ((not wkRead(1)) or (wkREADBuffer[0] <> wkECHOTESTBYTE)) then
+  if not wkRead(1) then
      begin
+     aReason := 'no reply to the echo test (is the keyer powered, and on this port?)';
+     wkClose;
+     Exit;
+     end;
+  if wkREADBuffer[0] <> wkECHOTESTBYTE then
+     begin
+     aReason := UnicodeFormat('the echo test returned $%s, not $%s (is this port a WinKeyer?)',
+                       [IntToHex(wkREADBuffer[0], 2), IntToHex(wkECHOTESTBYTE, 2)]);
      wkClose;
      Exit;
      end;
@@ -568,18 +654,34 @@ begin
   // starts: a wkStop landing between the create and the reader's first line
   // would otherwise be undone by the reader itself, which then loops on with
   // nobody waiting for it.  wkReaderRunning likewise, so wkStop can wait.
+  //
+  // THE HANDSHAKE GATE COMES DOWN FIRST: from here the reader sends the host
+  // buffer, and the main thread may change the speed or the output.
+  wkHandshaking := False;
   wkActive := True;
   wkReaderRunning := True;
   logger.Info('Calling tCreateThread from WkOpen');
   if not ThreadStarted(tCreateThread(wkReadThreadProc, wkThreadID)) then
      begin
      wkReaderRunning := False;
-     wkActive := False;
-     logger.Error('[WinKey] the reader thread could not be started');
+     aReason := 'the reader thread could not be started';
+     (* Closed, not left open with nothing reading it. *)
+     wkClose;
      Exit;
      end;
   logger.Info('Created WK thread with id %u',[PtrUInt(wkThreadId)]);
   Result := True;
+end;
+
+function wkOpen(out aReason: string): boolean;
+begin
+  wkHandshakeThread := System.GetCurrentThreadID;
+  wkHandshaking := True;
+  try
+     Result := wkOpenAndConfigure(aReason);
+  finally
+     wkHandshaking := False;
+  end;
 end;
 
 (* wkOpen ON A WORKER THREAD (pointer audit P1, 2026-10-16). uProgramMain
@@ -588,18 +690,25 @@ end;
   that, on i386, made the trampoline write nil into the thread's SEH chain
   head on exit. wkOpen keeps its own signature and this is the thread's
   entry; wkStart is its only starter, and nothing calls wkOpen directly any
-  more (MainUnit's Alt-menu re-open did, on the main thread). wkOpen's boolean
-  is not read on this path.
+  more (MainUnit's Alt-menu re-open did, on the main thread).
+
+  A FAILED OPEN IS REPORTED HERE, with wkOpen's reason (review H5): this is
+  the one path every open takes.  It used to discard the result.
 
   wkOpening IS CLEARED IN THE FINALLY, whatever wkOpen did -- including
   raising, which the tCreateThread trampoline logs. By then a successful open
   has already raised wkReaderRunning, so wkStop never sees both down while a
   reader is about to start. *)
 function wkOpenThreadProc(aParameter: Pointer): DWORD; stdcall;
+var
+  reason: string;
 begin
   Result := 0;
   try
-     wkOpen;
+     if not wkOpen(reason) then
+        begin
+        wkReportNotOpened(reason);
+        end;
   finally
      wkOpening := False;
   end;
@@ -705,10 +814,12 @@ function wkSendByte(b: Byte): Cardinal;
 var
   t0: Int64;
 begin
+  (* THE COUNT WRITTEN, 0 when nothing went out -- it was left unassigned. *)
+  Result := 0;
   logger.Trace('[wkSendByte] b=%s ($%s)', [string(Char(b)), IntToHex(b, 2)]);
   if not wkPortOpen then Exit;
   t0 := wkPerfNow;
-  wkWriteRaw([b]);
+  Result := wkWriteRaw([b]);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 
 //  wkBuffer[0] := b;
@@ -720,6 +831,8 @@ function wkSendTwoBytes(B1, B2: Byte): Cardinal;
 var
   t0                                    : Int64;
 begin
+  (* 0 when nothing went out -- the not-open exit left it unassigned. *)
+  Result := 0;
   logger.Trace('[wkSendTwoBytes] B1=%s ($%s) B2=%s ($%s)',
                [string(Char(B1)), IntToHex(B1, 2), string(Char(B2)), IntToHex(B2, 2)]);
   if not wkPortOpen then Exit;
@@ -752,8 +865,13 @@ end;
 procedure wkSetSpeed(Speed: integer);
 begin
   if not wkPortOpen then Exit;
-  wkSendTwoBytes(wkCMD_SETWPMSPEED, Speed);
-  wkCWSpeed := Speed;
+  (* RECORDED ONLY WHEN IT WENT OUT: a write refused during the open (the
+    handshake gate) or one that failed must not leave wkCWSpeed claiming a
+    speed the keyer was never given. *)
+  if wkSendTwoBytes(wkCMD_SETWPMSPEED, Speed) = 2 then
+     begin
+     wkCWSpeed := Speed;
+     end;
 end;
 
 
@@ -1274,8 +1392,14 @@ begin
 
   wkWriteMsAccum := 0;
   t0 := wkPerfNow;
-  wkSendTwoBytes(wkCMD_SETPINCONFIG, TempByte);
-  wkLastPinConfig := TempByte;
+  (* CACHED ONLY WHEN IT WENT OUT.  A main-thread call refused by the
+    handshake gate used to cache the byte anyway, and wkOpen's own call a
+    moment later then found it cached and wrote nothing -- a keyer never told
+    its output or sidetone. *)
+  if wkSendTwoBytes(wkCMD_SETPINCONFIG, TempByte) = 2 then
+     begin
+     wkLastPinConfig := TempByte;
+     end;
   logger.Debug('[wkSetKeyerOutput] pin config $%s: total %.1f ms, of which WriteFile %.1f ms',
                [IntToHex(TempByte, 2), wkPerfMs(t0), wkWriteMsAccum]);
 end;
@@ -1308,6 +1432,15 @@ begin
      begin
      Exit;
      end;
+  (* THE HANDSHAKE GATE -- see wkHandshaking.  Refused, and said: a speed or
+    output change made in the second the keyer is opening reaches it only
+    through the value list wkOpen sends. *)
+  if wkHandshaking and (System.GetCurrentThreadID <> wkHandshakeThread) then
+     begin
+     logger.Warn('[WinKey] %d byte(s) from another thread not sent: the keyer is being opened',
+                 [Length(aBytes)]);
+     Exit;
+     end;
   (* TSerialPort.WriteBytes takes a TBytes; an open array is not one, so the
     bytes are copied -- at most sixteen. *)
   SetLength(bytes, Length(aBytes));
@@ -1326,16 +1459,16 @@ begin
   end;
 end;
 
-function wkOpenPort: boolean;
+function wkOpenPort(out aReason: string): boolean;
 var
-  msg: string;
   portName: string;
 begin
   Result := False;
+  aReason := '';
 
-  (* A WINKEYER IS A SERIAL DEVICE.  The caller's guard is `= NoPort`, which
-    a port configured as NETWORK passes, and the name formatter would then
-    have produced 'COM65'.
+  (* A WINKEYER IS A SERIAL DEVICE.  The caller's guard was `= NoPort` (gone:
+    it refused every device node), which a port configured as NETWORK
+    passed, and the name formatter would then have produced 'COM65'.
 
     ASKED OF THE NAME FIRST, which is what makes a device node work: a
     configured '/dev/ttyUSB0' has no ordinal, so `in SerialPorts` is False for
@@ -1354,8 +1487,8 @@ begin
         begin
         portName := 'NONE';
         end;
-     logger.Error('[WinKey] the keyer needs a serial port and is configured for %s',
-                  [portName]);
+     aReason := UnicodeFormat('the keyer needs a serial port and is configured for %s',
+                       [portName]);
      Exit;
      end;
 
@@ -1381,9 +1514,12 @@ begin
         begin
         (* THE NAME WE ACTUALLY TRIED TO OPEN.  'COM%d' off the ordinal was
           wrong twice over: it printed COM0 for an unconfigured keyer, and it
-          could not name a device node at all. *)
-        msg := Format('Winkeyer port %s: %s', [portName, E.Message]);
-        showwarning(msg);
+          could not name a device node at all.
+
+          REPORTED ONCE, by wkOpenThreadProc, like every other failed open --
+          not by a modal from here as well (review H5: one notice, one log
+          line with the reason). *)
+        aReason := UnicodeFormat('the port %s could not be opened: %s', [portName, E.Message]);
         Exit;
         end;
   end;

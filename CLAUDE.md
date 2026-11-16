@@ -882,7 +882,8 @@ memory slot, not free text, so it cannot serve contest CW.
 **Genuinely open (NY4I, design not refactor):** `ActiveCWKeyer`'s precedence chain
 (CAT → WinKeyer → YCCC → CPU) is an *artifact* of the original if/else ordering, not a decision. An
 explicit "CW INTERFACE" config command would make it a lookup, delete `WarnIfKeyerConfigsConflict`,
-and turn today's silent WinKeyer-failed-to-open downgrade into a reported error. TR4QT is the likely
+and turn today's WinKeyer-failed-to-open downgrade into a refusal (it is REPORTED since 2026-11-16 --
+a log Error with the reason and one notice -- but CW still falls through). TR4QT is the likely
 reference.
 
 ### 11. Logging framework

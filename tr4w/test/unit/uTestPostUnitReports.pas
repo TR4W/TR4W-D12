@@ -62,7 +62,11 @@ type
       procedure TestQSOsByCountryByBand;
       procedure TestFirstCallInEachCountry;
       procedure TestFirstCallInEachZone;
+      procedure TestContinentReport;
+      procedure TestZoneReport;
+      procedure TestBandChangeReport;
       procedure TestTheReportsDoNotLeakIntoEachOther;
+      procedure TestEveryReportRefusesAFolderItCannotWrite;
    public
       procedure RunAllTests; override;
    end;
@@ -184,6 +188,9 @@ begin
       DeleteFile(FDir + 'qsosbycountry.txt');
       DeleteFile(FDir + 'firstcallineachcountry.txt');
       DeleteFile(FDir + 'FirstCallInEachZone.txt');
+      DeleteFile(FDir + 'Continent List.txt');
+      DeleteFile(FDir + 'PossibleBadZone.txt');
+      DeleteFile(FDir + 'BandChange.txt');
       RemoveDir(FDir);
       end;
 end;
@@ -279,6 +286,95 @@ begin
    end;
 end;
 
+(* THE THREE REPORTS THAT HAD NO TEST (issue 313's M13 conversion). Their
+  goldens were made by the code that wrote them through a Text file straight
+  to the report's name, BEFORE it was routed through the checked report-file
+  helper, and are not to be regenerated to clear a red. *)
+procedure TPostUnitReportsTests.TestContinentReport;
+begin
+   BeginTest('Continent list is the text the unchecked Text-file code wrote');
+   StartLog;
+   try
+      Contest := ContestHandleOf(CQWWSSB);
+      ActiveContest(Contest);
+      ContinentReport;
+      CheckReport('Continent List.txt', 'Continent List.txt');
+   finally
+      StopLog;
+   end;
+end;
+
+procedure TPostUnitReportsTests.TestZoneReport;
+begin
+   BeginTest('Possible bad zone report is the text the unchecked Text-file code wrote');
+   StartLog;
+   try
+      Contest := ContestHandleOf(CQWWSSB);
+      ActiveContest(Contest);
+      ZoneReport;
+      CheckReport('PossibleBadZone.txt', 'PossibleBadZone.txt');
+   finally
+      StopLog;
+   end;
+end;
+
+procedure TPostUnitReportsTests.TestBandChangeReport;
+begin
+   BeginTest('Band change report is the text the unchecked file-handle code wrote');
+   StartLog;
+   try
+      Contest := ContestHandleOf(CQWWSSB);
+      ActiveContest(Contest);
+      BandChangeReport;
+      CheckReport('BandChange.txt', 'BandChange.txt');
+   finally
+      StopLog;
+   end;
+end;
+
+(* A FOLDER THAT DOES NOT EXIST: every report says it was not written
+  (LastExportFailed, which is the headless /EXPORT's exit code) and leaves no
+  file behind. Before issue 313 these seven ignored the failed open and wrote
+  into a dead Text file. *)
+procedure TPostUnitReportsTests.TestEveryReportRefusesAFolderItCannotWrite;
+type
+   TReportProc = procedure;
+const
+   NAMES: array[0..6] of string = ('hour totals', 'continent list',
+      'qsos by country', 'first call in each country',
+      'first call in each zone', 'possible bad zone', 'band change');
+   PROCS: array[0..6] of TReportProc = (@ScoreByHour, @ContinentReport,
+      @QSOsByCountryByBand, @tFirstCallInEachCountry, @tFirstCallInEachZone,
+      @ZoneReport, @BandChangeReport);
+   FILES: array[0..6] of string = ('HourTotals.txt', 'Continent List.txt',
+      'qsosbycountry.txt', 'firstcallineachcountry.txt',
+      'FirstCallInEachZone.txt', 'PossibleBadZone.txt', 'BandChange.txt');
+var
+   i: integer;
+   missing: string;
+begin
+   BeginTest('every report refuses a folder it cannot write');
+   StartLog;
+   try
+      Contest := ContestHandleOf(CQWWSSB);
+      ActiveContest(Contest);
+      missing := FDir + 'no_such_folder' + PathDelim;
+      SetCharBuffer(TR4W_LOG_PATH_NAME, missing);
+      for i := Low(PROCS) to High(PROCS) do
+         begin
+         LastExportFailed := False;
+         PROCS[i];
+         CheckTrue(LastExportFailed, NAMES[i] + ' reports that it was not written');
+         CheckFalse(FileExists(missing + FILES[i]), NAMES[i] + ' leaves no file');
+         CheckFalse(FileExists(missing + FILES[i] + '.partial'),
+                    NAMES[i] + ' leaves no partial file');
+         end;
+      LastExportFailed := False;
+   finally
+      StopLog;
+   end;
+end;
+
 (* THE COUNTRY AND ZONE REPORTS SHARE ONE TALLY, and each starts it from zero:
   a report run after another must give the text it gives alone. *)
 procedure TPostUnitReportsTests.TestTheReportsDoNotLeakIntoEachOther;
@@ -310,7 +406,11 @@ begin
    TestQSOsByCountryByBand;
    TestFirstCallInEachCountry;
    TestFirstCallInEachZone;
+   TestContinentReport;
+   TestZoneReport;
+   TestBandChangeReport;
    TestTheReportsDoNotLeakIntoEachOther;
+   TestEveryReportRefusesAFolderItCannotWrite;
 end;
 
 end.

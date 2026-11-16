@@ -19,8 +19,10 @@ unit uTestOperatorList;
 interface
 
 uses
-   SysUtils, Classes, uTR4WTestFramework, VC, utils_text, uOperatorList,
-   uCbrSum, uContestRegistry;
+   SysUtils, Classes, StrUtils, uTR4WTestFramework, VC, utils_text, uOperatorList,
+   uCbrSum, uContestRegistry,
+   (* SourceText -- a file under tr4w/src, as text (the issue 326 pin). *)
+   uTestAutomaticXQSO;
 
 type
    TOperatorListTests = class(TTestCase)
@@ -50,6 +52,7 @@ type
       procedure Test_Header_OperatorsLine_SingleOp;
       procedure Test_Header_OperatorsLine_MultiOp;
       procedure Test_Header_OperatorsLine_ErmakContests;
+      procedure Test_Header_WriterHasNoErmakSkip;
    public
       procedure RunAllTests; override;
    end;
@@ -422,6 +425,145 @@ begin
    Test_Header_OperatorsLine_SingleOp;
    Test_Header_OperatorsLine_MultiOp;
    Test_Header_OperatorsLine_ErmakContests;
+   Test_Header_WriterHasNoErmakSkip;
+end;
+
+(* THE TEXT A COMPILER READS: block comments of both kinds and line comments
+   removed, string literals kept (a quote toggles them, so a comment opener
+   inside a string is not one). Enough for a pin that asks whether an
+   identifier is used in CODE; it is not a parser. *)
+function PascalCodeOnly(const aText: string): string;
+var
+   i: integer;
+   n: integer;
+   inString: boolean;
+   code: string;
+
+   procedure Keep(aChar: char);
+   begin
+      Inc(n);
+      code[n] := aChar;
+   end;
+
+begin
+   (* Written into a buffer of the source's length and cut to size: a file
+      of PostUnit's size, a character at a time, is otherwise a reallocation
+      per character. *)
+   SetLength(code, Length(aText));
+   n := 0;
+   inString := False;
+   i := 1;
+   while i <= Length(aText) do
+      begin
+      if inString then
+         begin
+         Keep(aText[i]);
+         if aText[i] = '''' then
+            begin
+            inString := False;
+            end;
+         Inc(i);
+         end
+      else if aText[i] = '''' then
+         begin
+         Keep(aText[i]);
+         inString := True;
+         Inc(i);
+         end
+      else if Copy(aText, i, 2) = '(*' then
+         begin
+         i := PosEx('*)', aText, i + 2);
+         if i = 0 then
+            begin
+            Break;
+            end;
+         Inc(i, 2);
+         end
+      else if aText[i] = '{' then
+         begin
+         i := PosEx('}', aText, i + 1);
+         if i = 0 then
+            begin
+            Break;
+            end;
+         Inc(i);
+         end
+      else if Copy(aText, i, 2) = '//' then
+         begin
+         while (i <= Length(aText)) and (aText[i] <> #10) do
+            begin
+            Inc(i);
+            end;
+         end
+      else
+         begin
+         Keep(aText[i]);
+         Inc(i);
+         end;
+      end;
+   SetLength(code, n);
+   Result := code;
+end;
+
+(* DOES THE CABRILLO HEADER WRITER TEST ErmakSpecification? Its code from the
+   START-OF-LOG line to the GRID-LOCATOR line -- the tag loop between them is
+   where D7 wrote `if ErmakSpecification then if TempTag = ctOperators then
+   Continue;`. False when either anchor is missing, so a renamed anchor fails
+   the pin rather than passing it. *)
+function HeaderWriterTestsErmak(const aSource: string; out aAnchorsFound: boolean): boolean;
+var
+   code: string;
+   first: integer;
+   last: integer;
+begin
+   Result := False;
+   code := PascalCodeOnly(aSource);
+   first := Pos('START-OF-LOG', code);
+   last := 0;
+   if first > 0 then
+      begin
+      last := PosEx('GRID-LOCATOR', code, first);
+      end;
+   aAnchorsFound := (first > 0) and (last > 0);
+   if aAnchorsFound then
+      begin
+      Result := Pos('ERMAKSPECIFICATION', UpperCase(Copy(code, first, last - first))) > 0;
+      end;
+end;
+
+(* ISSUE 326, AND A PIN THAT CAN FAIL (review, 2026-11-16). The three tests
+   above call CabrilloHeaderTagLine, which takes no contest input, so
+   restoring the removed skip in PostUnit's header writer would fail none of
+   them. This reads the writer itself (PostUnit's Cabrillo export, which no
+   headless test can drive) and fails if its tag loop asks
+   ErmakSpecification again. It is first run on D7's own lines, to prove it
+   sees the skip, and on them commented out, to prove a comment does not
+   trip it. *)
+procedure TOperatorListTests.Test_Header_WriterHasNoErmakSkip;
+const
+   D7_SHAPE =
+      '      sWriteFileFromString( tReportFileWrite, ''START-OF-LOG: 3.0'' );'#13#10 +
+      '      for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do'#13#10 +
+      '         begin'#13#10 +
+      '         if ErmakSpecification then if TempTag = ctOperators then Continue;'#13#10 +
+      '         end;'#13#10 +
+      '      sWriteFileFromString( tReportFileWrite, ''GRID-LOCATOR: '' );'#13#10;
+   COMMENTED_SHAPE =
+      '      sWriteFileFromString( tReportFileWrite, ''START-OF-LOG: 3.0'' );'#13#10 +
+      '      (* if ErmakSpecification then if TempTag = ctOperators then Continue; *)'#13#10 +
+      '      // ErmakSpecification'#13#10 +
+      '      sWriteFileFromString( tReportFileWrite, ''GRID-LOCATOR: '' );'#13#10;
+var
+   anchors: boolean;
+begin
+   BeginTest('Test_Header_WriterHasNoErmakSkip');
+   CheckTrue(HeaderWriterTestsErmak(D7_SHAPE, anchors), 'the pin sees D7''s skip');
+   CheckTrue(anchors, 'the pin finds its anchors in D7''s shape');
+   CheckFalse(HeaderWriterTestsErmak(COMMENTED_SHAPE, anchors), 'a commented-out skip is not one');
+
+   CheckFalse(HeaderWriterTestsErmak(SourceText('trdos' + PathDelim + 'postunit.pas'), anchors),
+              'PostUnit''s Cabrillo header writer does not ask ErmakSpecification (issue 326)');
+   CheckTrue(anchors, 'PostUnit''s header writer has its START-OF-LOG and GRID-LOCATOR lines');
 end;
 
 end.

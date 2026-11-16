@@ -40,6 +40,9 @@ interface
 uses uExternalDeliveryClient, uExternalDelivery, uHTTPDownload;
 const
    QRZ_LOGBOOK_URL = 'https://logbook.qrz.com/api';
+   (* The remote id of a contact QRZ said it already holds (a duplicate refusal of
+      a plain insert): delivered, LOGID unknown. Not numeric, so never sent. *)
+   QRZ_DUPLICATE_MARKER = 'qrz:duplicate';
 type
    (* What a QRZ answer said. Valid is False when no RESULT= was found. *)
    TQRZReply = record
@@ -66,8 +69,17 @@ type
 function QRZUserAgent(const aCall: string): string;
 (* Parse the ampersand-separated NAME=value answer. Names are case-insensitive. *)
 function QRZParseReply(const aText: string): TQRZReply;
+(* True when a FAIL's REASON calls the record a duplicate. *)
+function QRZReasonIsDuplicate(const aReason: string): boolean;
 implementation
 uses SysUtils, fphttpclient, Version;
+
+function QRZReasonIsDuplicate(const aReason: string): boolean;
+begin
+   (* ASSUMED FROM THE GUIDE, never observed: 'Unable to add QSO to database:
+      duplicate'. Only the word is matched, so a rewording keeps working. *)
+   Result := Pos('DUPLICATE', UpperCase(aReason)) > 0;
+end;
 
 function QRZUserAgent(const aCall: string): string;
 begin
@@ -273,11 +285,26 @@ begin
       end
    else if reply.Result = 'FAIL' then
       begin
-      (* This contact was refused (a duplicate, a bad record). Settled once and
-         visible; the destination keeps working. *)
-      Result.Outcome := doFailed;
-      Result.Pause := False;
-      Result.ErrorCode := 'QRZ_REJECTED';
+      if (not aReplace) and QRZReasonIsDuplicate(reply.Reason) then
+         begin
+         (* A plain insert that QRZ calls a duplicate: the QSO is ALREADY on QRZ,
+            most likely from an earlier attempt whose reply was lost. It is
+            delivered, only its LOGID is unknown, so a marker stands in (the
+            outbox refuses a confirmed create with an empty id). The reason text
+            is read, never kept or shown. *)
+         Result.Outcome := doConfirmed;
+         Result.Pause := False;
+         Result.ErrorCode := '';
+         Result.RemoteId := QRZ_DUPLICATE_MARKER;
+         end
+      else
+         begin
+         (* This contact was refused (a bad record). Settled once and visible;
+            the destination keeps working. *)
+         Result.Outcome := doFailed;
+         Result.Pause := False;
+         Result.ErrorCode := 'QRZ_REJECTED';
+         end;
       end;
 end;
 
@@ -331,6 +358,14 @@ begin
    edit := aJob.RemoteId <> '';
    if edit then
       begin
+      if aJob.RemoteId = QRZ_DUPLICATE_MARKER then
+         begin
+         (* Delivered, but QRZ never told us the LOGID, so there is nothing to
+            delete or replace. Visible, nothing sent, the destination keeps going. *)
+         Result.Pause := False;
+         Result.ErrorCode := 'QRZ_LOGID_UNKNOWN';
+         Exit;
+         end;
       if not IsPositiveNumericId(aJob.RemoteId) then
          begin
          Result.ErrorCode := 'QRZ_INVALID_LOGID';

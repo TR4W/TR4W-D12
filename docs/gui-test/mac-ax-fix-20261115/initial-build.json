@@ -7,7 +7,7 @@
    "lazarus_patch": "diff --git a/lcl/interfaces/cocoa/cocoacustomcontrol.pas b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\nindex 5d00ca54..0032bc10 100644\n--- a/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n+++ b/lcl/interfaces/cocoa/cocoacustomcontrol.pas\n@@ -24,6 +24,7 @@ type\n   public\n     callback: ICommonCallback;\n     auxMouseByParent: Boolean;\n+   function accessibilityChildren: NSArray; override;\n     procedure dealloc; override;\n     function acceptsFirstResponder: LCLObjCBoolean; override;\n     procedure drawRect(dirtyRect: NSRect); override;\n@@ -91,6 +92,13 @@ implementation\n \n { TCocoaCustomControl }\n \n+function TCocoaCustomControl.accessibilityChildren: NSArray;\n+begin\n+   // NSControl does not enumerate child views by default. LCL uses this\n+   // class as the document/panel container, so expose its unignored children.\n+   Result := NSAccessibilityUnignoredChildren(subviews);\n+end;\n+\n procedure TCocoaCustomControl.setStringValue(avalue: NSString);\n begin\n   if Assigned(fstr) then fstr.release;",
    "original_lazarus_tracked_status": "",
    "fpc_version": "3.2.2",
-   "experimental_bundle": "/Users/toms/tr4w-gui-test/app/TR4W-ax-fix.app",
+   "experimental_bundle": "/Users/<user>/tr4w-gui-test/app/TR4W-ax-fix.app",
    "signing": "ad-hoc; codesign deep/strict verified",
    "original_release_executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
    "executable_sha256": "66a4c4a52465aed72fabb812c6543ab96e4171d8eb00eb5d90285b5d4f73a4a9",

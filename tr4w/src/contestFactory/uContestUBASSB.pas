@@ -109,6 +109,9 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* THE "I AM IN BELGIUM" BOX'S REGION -- see
+         TContestBase.DescribeNewContestHome (issue 167, review M16). *)
+      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    public
       (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
@@ -343,6 +346,17 @@ procedure TContestUBASSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts)
 begin
    aPrompts.OfferIAmIn(TC_BELGIUM);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE "I AM IN BELGIUM" BOX IS ON -- issue 167, review M16 (2026-11-16): the
+   country this class's own station tests ask (Station.MyCountry = 'ON'), so
+   the box and the scoring that follows from it name one region. *)
+function TContestUBASSB.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
+begin
+   aHome.Countries := 'ON';
+   aHome.Continent := UnknownContinent;
+   aHome.HomeIsInside := True;
+   Result := True;
 end;
 
 (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,

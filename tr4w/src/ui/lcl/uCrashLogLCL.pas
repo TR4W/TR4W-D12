@@ -69,15 +69,21 @@ uses
 type
    { A class only because Application.OnException is a method pointer. It holds
      no state. }
+   (* A CLASS METHOD, SO THERE IS NO INSTANCE TO FREE (review M14). This unit's
+     finalization used to free the reporter object while Application.OnException
+     still pointed at it -- and Application outlives this unit (Interfaces is
+     finalized last), so a fault during the LCL's teardown called a method of a
+     freed object. Now the hook stays valid to the end and reaches
+     WriteCrashReport, which writes to tr4w-early.log once the log is gone. *)
    TLCLCrashReporter = class(TObject)
    public
-      procedure HandleException(Sender: TObject; E: Exception);
+      class procedure HandleException(Sender: TObject; E: Exception);
    end;
 
 var
-   GReporter: TLCLCrashReporter = nil;
+   GHookInstalled: boolean = False;
 
-procedure TLCLCrashReporter.HandleException(Sender: TObject; E: Exception);
+class procedure TLCLCrashReporter.HandleException(Sender: TObject; E: Exception);
 begin
    // ExceptAddr/ExceptFrames rather than the exception object alone: the LCL
    // hands over only E, and an exception without a location is barely more
@@ -94,22 +100,19 @@ procedure InstallCrashLogLCL;
 begin
    InstallCrashLog;
 
-   if GReporter <> nil then
+   if GHookInstalled then
       begin
       Exit;
       end;
 
-   GReporter := TLCLCrashReporter.Create;
+   GHookInstalled := True;
    // NO @ on the method reference: tr4w.inc compiles every unit in
    // {$MODE Delphi}, where a method is assigned directly. The ObjFPC spelling
    // with @, which the FreePascal wiki example uses, does not compile here.
-   Application.OnException := GReporter.HandleException;
+   Application.OnException := TLCLCrashReporter.HandleException;
 
    TLogLogger.GetLogger('TR4WDebugLog.CrashLog').Info(
       CRASH_SETUP_TAG + ' crash reporting ready (LCL hook installed)');
 end;
-
-finalization
-   FreeAndNil(GReporter);
 
 end.

@@ -47,6 +47,7 @@ object frmSendSpot: TfrmSendSpot
     AutoSize = False
     CharCase = ecUppercase
     TabOrder = 0
+    OnChange = edtCallsignChange
   end
   object edtFrequency: TEdit
     Left = 120
@@ -63,6 +64,7 @@ object frmSendSpot: TfrmSendSpot
     Width = 160
     AutoSize = False
     TabOrder = 2
+    OnChange = edtCommentChange
   end
   object chkContestName: TCheckBox
     Left = 10

@@ -40,9 +40,11 @@ type
    private
       procedure Test_ACopiedSpotIsCallEntityFrequencyComment;
       procedure Test_ACopiedSpotLeavesOutWhatItLacks;
+      procedure Test_ACopiedMarkerRowHasNoEntity;
       procedure Test_TheCountryPanelCarriesTheHeading;
       procedure Test_NoHeadingShowsTheCountryAlone;
       procedure Test_TheSpotCommentFollowsBothTicks;
+      procedure Test_ATypedSpotCommentIsNotOverwritten;
       procedure Test_EveryBandMapToggleIsAStationBoolean;
       procedure Test_ABandMapToggleIsSavedToTheSettingsFile;
    end;
@@ -51,6 +53,7 @@ implementation
 
 uses
    SysUtils,
+   Forms,             (* Application -- the Send Spot form is streamed *)
    LogGrid,
    uAppStrings,
    uBandMapForm,
@@ -59,6 +62,7 @@ uses
    utils_text,        (* SetCharBuffer, CharBufferText *)
    uFileText,         (* TempDirectory, CombinePath *)
    uKeychain,         (* InstallTestKeychain -- a save stores the secrets *)
+   uCTYDAT,           (* ctyLoadInCountryFile -- the entity of a copied spot *)
    uSettingsModel,
    uTR4WConfigFile,   (* TR4WConfigFileName, LoadSettingsSection *)
    uRadioConfigApply; (* ToggleAndStoreCommand *)
@@ -80,6 +84,47 @@ begin
    CheckEquals('K1ABC [United States] 3525.1',
                string(SpotCopyText('K1ABC', 'United States', '3525.1', '')),
                'no comment: no trailing space');
+end;
+
+(* THE MENU'S OWN TEXT FOR A MARKER ROW (issue 183, review M9). The markers are
+  stored as 'CQ/ <qso number>' and 'NEW <hhmm>'; the menu compared the call
+  with the bare words 'CQ' and 'NEW', which never matched, so a marker was
+  looked up in CTY.DAT as a callsign. This goes through SpotCopyTextFor -- what
+  the menu item assigns to the clipboard -- with the country file loaded, so a
+  marker the lookup resolves would show up as brackets. *)
+procedure TSpotTextTests.Test_ACopiedMarkerRowHasNoEntity;
+
+   function SpotWith(const aCall: string): TSpotRecord;
+   begin
+      Result := Default(TSpotRecord);
+      Result.FCall := ShortString(aCall);
+      Result.FFrequency := 7012000;
+   end;
+
+var
+   ctyPath, text: string;
+begin
+   BeginTest('Test_ACopiedMarkerRowHasNoEntity');
+   ctyPath := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+              PathDelim + 'target' + PathDelim + 'cty.dat';
+   CheckTrue(ctyLoadInCountryFile(ctyPath, False, False, True), 'cty.dat loads');
+
+   (* The control case first: a real call does get its entity, so an empty
+     bracket below means "a marker", not "no country file". *)
+   text := SpotCopyTextFor(SpotWith('VP8LP'));
+   CheckTrue(Pos(' [', text) > 0, 'a real call carries its entity: ' + text);
+
+   (* WHY THIS CAN FAIL: CTY.DAT does name a country for the marker text, so
+     the old code -- which looked the marker up -- printed it in brackets. *)
+   CheckTrue(ctyGetCountryName(ctyGetCountry('CQ/ 17')) <> '',
+             'the marker, looked up as a call, does resolve -- the defect was visible');
+
+   text := SpotCopyTextFor(SpotWith('CQ/ 17'));
+   CheckEquals(0, Pos('[', text), 'a CQ marker row has no entity: ' + text);
+   CheckEquals(1, Pos('CQ/ 17 ', text), 'and starts with the marker as stored: ' + text);
+
+   text := SpotCopyTextFor(SpotWith('NEW 0703'));
+   CheckEquals(0, Pos('[', text), 'a NEW marker row has no entity: ' + text);
 end;
 
 procedure TSpotTextTests.Test_TheCountryPanelCarriesTheHeading;
@@ -129,6 +174,33 @@ begin
                'no section known: no trailing space');
    CheckEquals('', SpotCommentText('ARRL-SS-CW', '', False, True),
                'no section known and no contest name: no comment');
+end;
+
+(* A COMMENT THE OPERATOR TYPED IS THEIRS (issue 175, review). Ticking either
+  box, or editing the callsign, used to rebuild the comment and throw away
+  what was typed. On the streamed form, never shown: the edits' and ticks'
+  OnChange handlers come from the .lfm, so this also fails if those are lost. *)
+procedure TSpotTextTests.Test_ATypedSpotCommentIsNotOverwritten;
+var
+   frm: TfrmSendSpot;
+   savedContestTick: boolean;
+begin
+   BeginTest('Test_ATypedSpotCommentIsNotOverwritten');
+   Application.Initialize;
+   savedContestTick := tContestNameInComment;
+   frm := TfrmSendSpot.Create(nil);
+   try
+      frm.edtComment.Text := 'UP 2 LOUD';
+      frm.chkContestName.Checked := not frm.chkContestName.Checked;
+      CheckEquals('UP 2 LOUD', string(frm.edtComment.Text),
+                  'a tick leaves a typed comment alone');
+      frm.edtCallsign.Text := 'K1ABC';
+      CheckEquals('UP 2 LOUD', string(frm.edtComment.Text),
+                  'so does a new callsign');
+   finally
+      frm.Free;
+      tContestNameInComment := savedContestTick;
+   end;
 end;
 
 (* THE BAND MAP'S TOGGLES ARE SAVED (2026-11-15). Its menu and hotkeys assigned
@@ -223,9 +295,11 @@ procedure TSpotTextTests.RunAllTests;
 begin
    Test_ACopiedSpotIsCallEntityFrequencyComment;
    Test_ACopiedSpotLeavesOutWhatItLacks;
+   Test_ACopiedMarkerRowHasNoEntity;
    Test_TheCountryPanelCarriesTheHeading;
    Test_NoHeadingShowsTheCountryAlone;
    Test_TheSpotCommentFollowsBothTicks;
+   Test_ATypedSpotCommentIsNotOverwritten;
    Test_EveryBandMapToggleIsAStationBoolean;
    Test_ABandMapToggleIsSavedToTheSettingsFile;
 end;

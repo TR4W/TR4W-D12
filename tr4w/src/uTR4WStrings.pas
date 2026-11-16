@@ -379,6 +379,9 @@ resourcestring
    TC_IGNORESPEEDPOT                     = '&Ignore speed pot';
    TC_PADDLEONLYSIDETONE                 = 'Paddle &only sidetone';
    TC_WINKEYERPORT                       = 'Winkeyer port';
+   (* The one notice for a WinKeyer that did not open (review H5): the port,
+     and where the reason is.  CW then goes to whichever keyer remains. *)
+   TC_WINKEYERDIDNOTOPEN                 = 'WinKeyer on %s did not open (see tr4w.log)';
    TC_KEYERMODE                          = 'Keyer mode';
    TC_SIDETONEFREQ                       = 'Sidetone freq.';
    TC_HANGTIME                           = 'Hang time';

@@ -10,8 +10,8 @@
    "source_revision": null,
    "provenance": "user-staged-release-binary",
    "display": ":99",
-   "run": "/home/toms/tr4w-gui-test/runs/linux-gdb-002",
-   "executable_archive": "/home/toms/tr4w-gui-test/evidence/f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806/tr4w",
+   "run": "/home/<user>/tr4w-gui-test/runs/linux-gdb-002",
+   "executable_archive": "/home/<user>/tr4w-gui-test/evidence/f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806/tr4w",
    "window_manager": "Name: Openbox\nClass: \nPID: N/A\nWindow manager's \"showing the desktop\" mode: OFF\n",
    "pid": 107515,
    "main_window": {
@@ -54,7 +54,7 @@
       "my_source",
       "rcvd_year"
    ],
-   "error": "Traceback (most recent call last):\n  File \"/home/toms/tr4w-gui-test/linux_pilot.py\", line 317, in worker\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
+   "error": "Traceback (most recent call last):\n  File \"/home/<user>/tr4w-gui-test/linux_pilot.py\", line 317, in worker\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
    "cleanup": "Only owned application/window-manager PIDs stopped",
    "default_contest_files_unchanged": true,
    "executable_unchanged": true

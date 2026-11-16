@@ -335,13 +335,15 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERSTATEFORUSPROVINCEFORCANADA, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THE CONTINENT -- issue 167. The New
-   Contest dialog asks once when MY CALL's continent and the box
-   disagree. *)
+(* THE "I AM IN NORTH AMERICA" BOX IS W/VE -- issue 167; the continent until
+   review M16 (2026-11-16). Ticking it asks for "state for US, province for
+   Canada", the domestic multiplier of s48p14dc (48 states, DC, the
+   provinces: KH6 and KL7 are not in it). STATED, not read from
+   DescribeSession: this contest's set-up adds no domestic country list. *)
 function TContestCQWWRTTY.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
 begin
-   aHome.Countries := '';
-   aHome.Continent := NorthAmerica;
+   aHome.Countries := 'K VE';
+   aHome.Continent := UnknownContinent;
    aHome.HomeIsInside := True;
    Result := True;
 end;

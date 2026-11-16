@@ -32,6 +32,7 @@ type
       procedure TestCtrlWinsWhenBothAreHeld;
       procedure TestBanksAreTheMemoryOffsets;
       procedure TestTheReleaseTimerRunsOnlyWhileABankIsUp;
+      procedure TestAStaleModifierSendsThePlainBank;
    public
       procedure RunAllTests; override;
    end;
@@ -122,6 +123,31 @@ begin
    end;
 end;
 
+(* AFTER A SWITCH AWAY THE LABELS SHOW THE PLAIN BANK, AND THE SEND MUST AGREE
+  (review M11). The keyboard can still report Alt held after Alt-Tab on Win32,
+  so while the report is stale every caller -- labels, editor row, key, click,
+  keypad -- gets the plain bank. Pinned on the pure rule: a test cannot hold a
+  key down. *)
+procedure TFunctionKeyBankTests.TestAStaleModifierSendsThePlainBank;
+begin
+   BeginTest('TestAStaleModifierSendsThePlainBank');
+   CheckEquals(FKEY_BANK_PLAIN, EffectiveFunctionKeyBank(False, True, True),
+               'a stale Alt sends the plain bank the labels show');
+   CheckEquals(FKEY_BANK_PLAIN, EffectiveFunctionKeyBank(True, False, True),
+               'a stale Ctrl sends the plain bank');
+   CheckEquals(FKEY_BANK_ALT, EffectiveFunctionKeyBank(False, True, False),
+               'a fresh Alt sends the Alt bank');
+   CheckEquals(FKEY_BANK_CTRL, EffectiveFunctionKeyBank(True, True, False),
+               'fresh, the one rule still applies: Ctrl wins');
+
+   (* The latch is cleared by a modifier press this program sees; with no key
+     held in a test run, the live answer is plain either way. *)
+   NoteFunctionKeyModifiersStale;
+   CheckEquals(FKEY_BANK_PLAIN, LiveFunctionKeyBank, 'stale: plain');
+   NoteFunctionKeyModifierPressed;
+   CheckEquals(FKEY_BANK_PLAIN, LiveFunctionKeyBank, 'nothing held: plain');
+end;
+
 procedure TFunctionKeyBankTests.RunAllTests;
 begin
    TestNoModifierIsThePlainBank;
@@ -130,6 +156,7 @@ begin
    TestCtrlWinsWhenBothAreHeld;
    TestBanksAreTheMemoryOffsets;
    TestTheReleaseTimerRunsOnlyWhileABankIsUp;
+   TestAStaleModifierSendsThePlainBank;
 end;
 
 end.

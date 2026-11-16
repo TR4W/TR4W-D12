@@ -1307,7 +1307,8 @@ var
   importReport                          : string;
   (* Which tier the setup wizard's country file came from, for the log line. *)
   wizardCtyTier                         : string;
-   //  P                                   : Pchar; //n4af
+  wizardCtyPath                         : string;
+   //  P                                  : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
 {$IF not tDebugMode}
@@ -1772,6 +1773,13 @@ begin
      that rule this unit carries: the load assigns the same value from the
      same file a few steps later, so nothing it writes here can survive
      that disagrees with the file. Nothing is saved. *)
+   (* NO SAVE OF THE SETTINGS UNTIL THEY ARE LOADED (review M1, 2026-11-16).
+     SaveSettings refuses while this is set and LoadSettingsForStartup clears
+     it when the load succeeds -- so the New Contest dialog, the wizard or
+     anything added before the load cannot write defaults over the station.
+     HERE, at this routine's first use of the settings object, so arming it
+     does not construct the object any earlier than before. *)
+   Settings.AwaitingStartupLoad := True;
    if (sDebugLevel <> '') and
       (not Settings.TrySetByCommand('DEBUG LOG LEVEL', sDebugLevel)) then
       begin
@@ -2043,11 +2051,12 @@ begin
 
      if WizardRequested or AskSetupWizardAtStartup then
         begin
-        SetCharBuffer(TR4W_CTY_FILENAME, ResolveCountryFile(False, wizardCtyTier));
+        (* LoadCountryFileFrom names the file (TR4W_CTY_FILENAME) and loads it:
+          the one place a country file is adopted (uCTYUpdate). *)
+        wizardCtyPath := ResolveCountryFile(False, wizardCtyTier);
         logger.Info('[SetupWizard] country file: %s (%s)',
-                    [CharBufferText(TR4W_CTY_FILENAME), wizardCtyTier]);
-        ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True,
-                             {ReplaceTable} True);
+                    [wizardCtyPath, wizardCtyTier]);
+        LoadCountryFileFrom(wizardCtyPath);
         RunSetupWizardAtStartup;
         if StartupMainCallsign(TR4WConfigFileName) <> '' then
            begin

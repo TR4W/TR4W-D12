@@ -68,7 +68,24 @@ unit uRadioDXLabCommander;
       once more on a fresh one.
     - A queued command does not survive a dropped link.  Connect and
       Disconnect empty the queue: a CmdTX typed while Commander was away must
-      never key the radio when it comes back.
+      never key the radio when it comes back.  ONE EXCEPTION, the un-key --
+      see PTT below.
+
+  PTT, AND WHY AN UN-KEY IS NEVER LOST (review H1/H2, 2026-11-16).
+    - An un-key REMOVES any CmdTX still queued.  CmdRX jumps the queue and
+      CmdTX joins its end, so a key and an un-key pressed inside one poll
+      would otherwise reach Commander as RX-then-TX and leave the rig keyed.
+    - Once a CmdTX has been written (or a write was attempted -- a failed
+      write may still have arrived), an un-key is OWED until a CmdRX write
+      succeeds.  When TR4W's link to Commander drops, only that link failed:
+      Commander may still hold the rig in transmit, the operator's un-key was
+      a no-op on the dead link, and Connect emptied the queue.  So Connect,
+      once Commander answers, sends the owed CmdRX.  Re-sending RX is always
+      safe; a radio TR4W never keyed is never sent one.
+    - NOT covered: a Receive pressed just before Disconnect (a profile change,
+      exit).  Disconnect runs on the main thread and empties the queue;
+      writing from there would put a socket connect, with its timeout, on the
+      main thread at exit.
 
   SPLIT, AND TWO TRAPS IN COMMANDER'S OWN SEMANTICS.
     - CmdSetTXFreq with split OFF sets the SELECTED VFO.  TR4W's split callers
@@ -112,8 +129,13 @@ type
       FPeerClosesAfterReply: boolean; // learned: open a connection per query
       FTXQueryMisses: integer;        // CmdSendTX asked and not answered, in a row
       FTXQueryRefused: boolean;       // ... often enough to stop asking this session
+      (* A CmdTX may have reached Commander and no CmdRX has since been
+        written.  Polling thread only.  Outlives a dropped link on purpose:
+        Connect pays it (see the unit header, PTT). *)
+      FUnkeyOwed: boolean;
 
       procedure ClearQueue;
+      function  DiscardQueued(const aMessage: string): integer;
       procedure CloseLink;
       function  OpenLink: boolean;
       function  ReadReplyField(out aName, aValue: string): boolean;
@@ -278,10 +300,9 @@ function TDXLabCommanderRadio.Connect: integer;
 begin
    Result := -1;
 
-   (* What TFactoryRadioBase.Connect does for every radio, which this one does
-     not call: a fresh hearing on speed sync, and no TX inhibit carried over. *)
-   ResetCWSpeedSync;
-   SetTXInhibited(False, '');
+   (* What TFactoryRadioBase.Connect does for every radio first; this one does
+     not call it, because the base would open a transport of its own. *)
+   ResetPerLinkState;
 
    ClearQueue;
    FLinkUp := False;
@@ -313,6 +334,24 @@ begin
          begin
          logger.Info('[Commander] answering at %s:%d; it keeps the connection -- one connection for everything',
                      [radioAddress, radioPort]);
+         end;
+
+      (* AFTER the hang-up probe: SendSet behaves differently for a peer that
+        closes per message, and that is only known now. *)
+      if FUnkeyOwed then
+         begin
+         logger.Info('[Commander] the rig was keyed when the link was lost -- sending CmdRX');
+         if SendSet(CommanderMessage('CmdRX', '')) then
+            begin
+            FUnkeyOwed := False;
+            end
+         else
+            begin
+            (* Gone again.  Not connected, so the next attempt pays it first. *)
+            logger.Warn('[Commander] CmdRX not sent -- link lost again; retried on the next connect');
+            FLinkUp := False;
+            Result := -1;
+            end;
          end;
       end
    else
@@ -386,6 +425,28 @@ begin
       begin
       logger.Info('[Commander] %d queued command(s) discarded -- the link is new or gone', [dropped]);
       end;
+end;
+
+(* ANY THREAD.  Removes every queued message EXACTLY equal to aMessage (a
+  whole message, never a substring) and answers how many went. *)
+function TDXLabCommanderRadio.DiscardQueued(const aMessage: string): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   FQueueLock.Enter;
+   try
+      for i := FQueue.Count - 1 downto 0 do
+         begin
+         if FQueue[i] = AnsiString(aMessage) then   // as queued: wire text, ASCII
+            begin
+            FQueue.Delete(i);
+            Inc(Result);
+            end;
+         end;
+   finally
+      FQueueLock.Leave;
+   end;
 end;
 
 (* Polling thread (or after it has stopped).  Also empties what Indy has
@@ -725,6 +786,12 @@ begin
 
       for i := 0 to pending.Count - 1 do
          begin
+         (* OWED BEFORE the write: a write that fails may still have reached
+           Commander.  Paid only by a CmdRX write that succeeds. *)
+         if pending[i] = AnsiString(CommanderMessage('CmdTX', '')) then
+            begin
+            FUnkeyOwed := True;
+            end;
          if not SendSet(pending[i]) then
             begin
             (* Commander is gone.  What is left is dropped, not kept: it was
@@ -732,6 +799,10 @@ begin
             FLinkUp := False;
             logger.Warn('[Commander] link lost while sending; %d command(s) not sent', [pending.Count - i]);
             Exit;
+            end;
+         if pending[i] = AnsiString(CommanderMessage('CmdRX', '')) then
+            begin
+            FUnkeyOwed := False;
             end;
          end;
    finally
@@ -749,8 +820,17 @@ begin
    SendToRadio(CommanderMessage('CmdTX', ''));
 end;
 
+(* An un-key first CANCELS any key still queued -- always safe, link or no
+  link -- then goes to the front of the queue (unit header, PTT). *)
 procedure TDXLabCommanderRadio.Receive;
+var
+   cancelled: integer;
 begin
+   cancelled := DiscardQueued(CommanderMessage('CmdTX', ''));
+   if cancelled > 0 then
+      begin
+      logger.Debug('[Commander] un-key cancelled %d queued CmdTX', [cancelled]);
+      end;
    SendStopToRadio(CommanderMessage('CmdRX', ''));
 end;
 

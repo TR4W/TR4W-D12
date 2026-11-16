@@ -107,7 +107,7 @@ are in [SHUTDOWN_LIFECYCLE_REVIEW.md](../../docs/SHUTDOWN_LIFECYCLE_REVIEW.md).
 
 ## Established result
 
-Host: SSH alias `debian`, `toms@findaclub-staging`, Debian 13 x86_64.
+Host: SSH alias `debian`, `<user>@<staging-host>`, Debian 13 x86_64.
 Application: user-staged v5.0.40 Linux release, SHA256
 `f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806`.
 The exact build-time source revision is unknown; the current local checkout
@@ -300,7 +300,7 @@ default folder's files are unchanged; this is an observation, not enforcement.
 ## Startup path defect and remaining work
 
 The release's `uProgramMain.FirstNonSwitchArgument` treats every argument
-starting with `/` as a switch, including `/home/toms/.../practice.db`. Runs 001
+starting with `/` as a switch, including `/home/<user>/.../practice.db`. Runs 001
 and 002 therefore opened New Contest. The pilot uses `./practice.db` with its
 unique run directory as the working directory as an explicit **workaround**.
 It rejects the New Contest title instead of reporting that screen as a log.

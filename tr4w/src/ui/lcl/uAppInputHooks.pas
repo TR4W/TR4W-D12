@@ -175,6 +175,9 @@ begin
     before the event, so a Ctrl press arrives without ssCtrl there. *)
   if (Key = VK_CONTROL) or (Key = VK_MENU) then
      begin
+     (* A press this program saw: the keyboard's report is fresh again after a
+       switch away (uFunctionKeys.LiveFunctionKeyBank). *)
+     NoteFunctionKeyModifierPressed;
      ShowFunctionKeyBank(BankForModifiers((ssCtrl in Shift) or (Key = VK_CONTROL),
                                           (ssAlt in Shift)  or (Key = VK_MENU)));
      end;
@@ -402,9 +405,13 @@ end;
 
   LOSING THE APPLICATION PUTS THE PLAIN BANK BACK. A key released in another
   program never reaches this one, and on Win32 GetKeyState is this thread's
-  view of the keyboard, so after Alt-Tab it can still read Alt as held. *)
+  view of the keyboard, so after Alt-Tab it can still read Alt as held. THE SEND
+  AGREES (review M11): a held modifier is not believed again until this program
+  sees it pressed, so a key or a click after the switch back sends the plain
+  bank the labels show. *)
 procedure TTR4WInputHooks.AppDeactivate(Sender: TObject);
 begin
+  NoteFunctionKeyModifiersStale;
   ShowFunctionKeyBank(FKEY_BANK_PLAIN);
 end;
 

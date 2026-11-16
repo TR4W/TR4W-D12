@@ -211,11 +211,20 @@ entry with none (`Cancel`, the `SEditQSOMy*` labels) JOINS that entry (issue
 **THE GATE: `Lint-LFMCatalogue` (Run-Lints).** It runs
 `test_lfm_harvest.py`, then `lfm_harvest.py --check`, which FAILS when a
 harvested caption has no entry in some `i18n\tr4w_*.po` (an empty fuzzy entry
-counts) and prints the two commands above. It also WARNS, without failing, for
-each caption reworded in the `.lfm` since its entry was written -- see "A
-REWORDED caption" above for the fix. On 2026-11-15 the check found 60 captions
+counts) and prints the two commands above. It also WARNS for each caption
+reworded in the `.lfm` since its entry was written -- see "A REWORDED caption"
+above for the fix -- and since 2026-11-16 the COUNT of those warnings has a
+ceiling (`$REWORDED_CEILING` in the script, 11, ratchets down only; the script
+names the three whose meaning changed). On 2026-11-15 the check found 60 captions
 in no catalogue (nine forms had never been saved in the IDE, so had no `.lrj`)
 and 11 rewordings.
+
+**`Lint-PoSpecifiers` (Run-Lints, 2026-11-16)** runs `po_lint.py --specifiers`:
+only the format-specifier rule, over every `i18n\tr4w_*.po`, ceiling 0, with a
+floor on catalogues and entries compared. Four entries had lost a specifier
+(two Ukrainian, two Mongolian) and the check existed but gated nothing. The
+Mongolian fixes added the missing `%s` as a parenthetical and want a Mongolian
+reader.
 
 The IDE route still works and is no longer needed for the `.lfm` half:
 

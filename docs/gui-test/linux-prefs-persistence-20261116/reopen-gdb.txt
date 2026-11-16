@@ -399,7 +399,7 @@ No locals.
         YEARCONTEST = false
         IMPORTREPORT = 0x0
         WIZARDCTYTIER = 0x0
-        S = 0x7ffff5928898 '/home/toms/tr4w-gui-test/runs/linux-prefs-persistence-gdb-001/practice.db'
+        S = 0x7ffff5928898 '/home/<user>/tr4w-gui-test/runs/linux-prefs-persistence-gdb-001/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xdc3428 'DEBUG'
 #16 0x000000000041f12e in main () at tr4w.lpr:865
@@ -466,7 +466,7 @@ No locals.
         YEARCONTEST = false
         IMPORTREPORT = 0x0
         WIZARDCTYTIER = 0x0
-        S = 0x7ffff5928898 '/home/toms/tr4w-gui-test/runs/linux-prefs-persistence-gdb-001/practice.db'
+        S = 0x7ffff5928898 '/home/<user>/tr4w-gui-test/runs/linux-prefs-persistence-gdb-001/practice.db'
         LOADEDLANG = 0x0
         SDEBUGLEVEL = 0xdc3428 'DEBUG'
 #23 0x000000000041f12e in main () at tr4w.lpr:865

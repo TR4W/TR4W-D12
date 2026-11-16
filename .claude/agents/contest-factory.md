@@ -188,7 +188,19 @@ the target shape, the M-step migration order and the open questions.
   `QTHString`, so under `RSTDomesticOrDXQTHExchange` a DX station whose entity
   was TYPED exports an empty QTH column** (non-literal `HisQTH` is
   `DomesticQTH`); Georgia used it until 2026-10-27 and now states
-  `CabrilloReceivedRSTDomesticQTHOrDX`. Under `RSTDomesticQTHExchange` (NC,
+  `CabrilloReceivedRSTDomesticQTHOrDX`, as do Kentucky, Iowa and South
+  Carolina since review H4 (2026-11-16) -- they were the only classes left
+  pairing `ParseRSTDomesticOrDXQTH` with `RSTQTHDX` (the conditional
+  classes pair the OrDX parse with an OrDXQTH export). `ARRL 160` reads
+  `DomesticQTH` too (issue 333): `CabrilloReceivedRSTDomesticQTHOrDXQTH`
+  (domestic, else its DX QTH, else what was sent, else DX) for a W/VE
+  entrant, `...DomesticQTHOrDX` for the others. North Dakota, Oklahoma,
+  Ontario and Vermont use `...DomesticQTHOrDXQTH` too since the H4
+  follow-up: through the real engine their typed `599 DL` exported an EMPTY
+  column under `CabrilloReceivedRSTQTHOrDXQTH` (their tests hand-set
+  `HisQTH` and hid it). That helper still tests `QTHString`; its remaining
+  users (Alabama, Arizona in state, Delaware, Idaho, LABRE, Nebraska, New
+  England, 7QP, Texas, Salmon Run, West Virginia) are unaudited. Under `RSTDomesticQTHExchange` (NC,
   Missouri, Quebec ...) a DX station is looked up in the `.dom`, so the
   record carries a `DomesticQTH` and the helper is right. **A DX entrant's
   ADIF `STX_STRING` says what was sent (2026-10-27):**
@@ -1072,13 +1084,18 @@ the target shape, the M-step migration order and the open questions.
   the base answers for every `IsUSQSOParty`, BC/ON/QC/IN7QPNE state False
   with their reason; `uTestNewContestHostArea` walks the registry);
   `DescribeNewContestHome(out TNewContestHome)` (issue 167, 2026-11-15: an
-  `OfferIAmIn` box's region in CTY terms -- `Countries`, or `Continent` for
-  the North American boxes; `HomeIsInside` False for a box that is only PART
-  of its countries, New England in K; `HomeIsDomesticCountries` reads the
-  class's own `DescribeSession` list on a country-less station, so PACC
-  states `PA` itself; the base states nothing -- IARU/BSCI HQ-or-member,
-  Arktika/PCC clubs, WWPMC, EU DX, IRTS, REF, RSGB 1.8, UBA, JIDX, Gagarin
-  are not stated yet; `uTestNewContestHome` walks the registry);
+  `OfferIAmIn` box's region in CTY terms -- `Countries`, or `Continent`
+  (no class states a continent since review M16, 2026-11-16: the North
+  American boxes of ARRL 10, ARRL 160, RTTY Roundup and CQ 160 read their own
+  domestic list, CQ WW RTTY states `K VE`); `HomeIsInside` False for a box
+  that is only PART of its countries, New England in K;
+  `HomeIsDomesticCountries` reads the class's own `DescribeSession` list on a
+  country-less station, so PACC states `PA` itself, JIDX `JA` and UBA `ON`
+  (their own station tests); the base states nothing. A box with no region
+  is an EXEMPTION with its reason in `uTestNewContestHome.
+  OffersABoxWithNoRegionOnPurpose` (IARU/BSCI HQ-or-member, Arktika/PCC
+  clubs, Gagarin, WWPMC, REF, RSGB 1.8, IRTS, EU DX) -- the walk fails a box
+  with no region that is not listed, and a listed contest that states one);
   `TotalsDisplay` (uTotal; the domestic and, since issue 277 2026-11-11, the
   PREFIX row's captions -- the CW Open says `Calls`, its key being the whole
   callsign; every other contest `Prefixes`, pinned -- and since 2026-11-11
@@ -1326,16 +1343,28 @@ the target shape, the M-step migration order and the open questions.
   or just `599`), so a copy of `aTemps.SRX_String` stores the RST as the QTH.
   The received text is `uContestBase.ImportedReceivedText` (the QTH tag, else
   SRX_STRING less the RST), and a domestic QTH goes through
-  `ImportDomesticQTH` (resolved as typed entry resolves it, kept as written
-  when unknown). Where the other words are numbers (RST, zone, serial),
+  `ImportDomesticQTH` for an EXPLICIT field (QTH tag, ARRL_SECT): resolved
+  when the lookup knows it, else KEPT AS WRITTEN -- an explicit ADIF field is
+  authoritative (review M5 follow-up, 2026-11-16). A QTH DERIVED from
+  SRX_STRING goes through `ImportDerivedDomesticQTH`, **TYPED ENTRY'S WORD
+  RULE (review M5)**: the words that are not all digits, asked whole, else
+  the FIRST of them the lookup (`FoundDomesticQTH`, the probe typed entry's
+  word split asks) knows; a text it knows no word of stores NO `DomesticQTH`
+  (it stored `8`, `123`, `FN31`, `59 DARC`). No lookup
+  (`NeutralADIFImportSession`) keeps the text as written in both. The
+  received text stays in `ExchString`. A party test that exports a column
+  asks `uTestQSOPartyRules.PartyReceivedCabrilloColumn` (the writer's own
+  HisQTH), never a hand-set `HisQTH`. Where the other words are numbers (RST, zone, serial),
   `ImportDomesticQTHWords` drops them first -- CQ 160, UBA, LZ, OK/OM DX and
-  Ukrainian DX call it; WAG reads `ImportedReceivedText`; ARRL 160 keeps the
-  whole remainder. Note `ImportedReceivedText`'s strip is exact
+  Ukrainian DX call it; WAG reads `ImportedReceivedText`; ARRL 160 hands
+  over the whole remainder. Note `ImportedReceivedText`'s strip is exact
   (`IntToStr(RSTReceived)`), so `59 CT` on a 599 record keeps its `59`.
   **The base's own domestic arm calls `ImportDomesticQTHWords` too when
   there is no QTH tag (issue 329)** -- it took the ALPHA PREFIX of the raw
   SRX_STRING (`'599 CT'` gave `''`, `'MO12'` gave `MO`). Its QTH-tag branch
   is deliberately NOT the helper: a QTH tag of digits (`45`) is kept.
+  `DupeKeyQualifier` reads `DomesticQTH`, else `QTHString`, so an unknown
+  QTH TAG still enters a party's dupe key (unchanged, by decision).
   Still open (NY4I's decision): NAQP CW/SSB/RTTY and the NCCC Sprint copy the
   STATE tag into DomesticQTH unresolved.
 - **POTA is a class** (NY4I, 2026-10-13, design Q6 and §8.2o: *"while it is

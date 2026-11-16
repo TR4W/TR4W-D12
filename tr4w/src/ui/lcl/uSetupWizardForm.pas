@@ -307,12 +307,13 @@ const
 type
    (* THE CALLBOOK'S REPLY ARRIVES ON ITS OWN SCHEDULE, possibly after the
      wizard is gone, and the lookup thread holds a method pointer it cannot be
-     told to drop.  So the pointer is to THIS object, which lives as long as the
-     unit, and the wizard that is open (if any) is looked up when the reply
-     comes. *)
+     told to drop.  So the pointer is to a CLASS method -- there is no
+     instance to free while a lookup is in flight, which the unit-finalization
+     free of the old relay object was (review M15) -- and the wizard that is
+     open (if any) is looked up when the reply comes. *)
    TCallbookRelay = class(TObject)
    public
-      procedure Deliver(const aRec: TCallbookRecord);
+      class procedure Deliver(const aRec: TCallbookRecord);
    end;
 
 var
@@ -320,9 +321,8 @@ var
    (* The wizard a callbook reply goes to: set by its constructor, cleared by
      its destructor -- not gSetupWizard, which a modal startup run never sets. *)
    gCallbookTarget: TfrmSetupWizard = nil;
-   gCallbookRelay: TCallbookRelay = nil;
 
-procedure TCallbookRelay.Deliver(const aRec: TCallbookRecord);
+class procedure TCallbookRelay.Deliver(const aRec: TCallbookRecord);
 begin
    if gCallbookTarget <> nil then
       begin
@@ -706,11 +706,7 @@ begin
       end;
 
    FCallbookCall := call;
-   if gCallbookRelay = nil then
-      begin
-      gCallbookRelay := TCallbookRelay.Create;
-      end;
-   LookupCallsignAsync(call, gCallbookRelay.Deliver);
+   LookupCallsignAsync(call, TCallbookRelay.Deliver);
 end;
 
 (* "THOMAS" -> "Thomas": a callbook holds names in capitals. *)
@@ -730,6 +726,17 @@ begin
    (* STALE: the operator has typed a different call since the question. *)
    if (not aRec.Found) or (not UnicodeSameText(aRec.Call, Trim(edtCall.Text))) then
       begin
+      Exit;
+      end;
+
+   (* NOT ON THE STATION PAGE ANY MORE (review M15): a reply can arrive many
+     seconds after the question, and filling boxes the operator has left would
+     have CommitStation save four values nobody saw -- not "offered as
+     defaults". Forgotten, so the next settled callsign is asked about even
+     when it is this same one. *)
+   if (FPlan = nil) or (FPlan[FIndex] <> spStation) then
+      begin
+      FCallbookCall := '';
       Exit;
       end;
 
@@ -1032,7 +1039,7 @@ begin
             begin
             FRadioEditor := TRadioEditForm.Create(Self);
             FRadioEditing := TRadioDefinition.Create;
-            FRadioEditing.Name := 'Radio';
+            FRadioEditing.Name := SDefaultRadioName;
             FRadioEditor.OnTypeChanged := RadioTypeChanged;
             FRadioEditor.EditRadioIn(FRadioEditing, tsRadio);
             end;
@@ -1049,7 +1056,7 @@ begin
             begin
             FKeyerEditor := TfrmKeyerEdit.Create(Self);
             FKeyerEditing := TKeyerDefinition.Create;   // a WinKeyer, no port yet
-            FKeyerEditing.Name := 'WinKeyer';
+            FKeyerEditing.Name := SDefaultKeyerName;
             FKeyerEditor.EditKeyerIn(FKeyerEditing, tsKeyer);
             end;
          hosted := FKeyerEditor.pnlContent.Height;
@@ -1711,6 +1718,5 @@ initialization
 
 finalization
    gCallbookTarget := nil;
-   FreeAndNil(gCallbookRelay);
 
 end.

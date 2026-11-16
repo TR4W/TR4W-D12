@@ -839,11 +839,29 @@ ParseArray2 word through `ReadReportOfFirstElement`. The CW zone-then-report
 form of `ReadRSTAndNumberOfDigits` (`14 599`, zone and licence-year parsers)
 asks it too and hands a refused word back (`aRefusedReport`), so the refusal
 says `SExchangeNotASignalReport`, not the zone or the year. Do not write a
-third report check. **Open (not 330):** ValidRST reads a lone strength on
+third report check. **THE INLINE READS ARE GONE TOO (review H7, 2026-11-16):**
+twelve parsers read the report themselves (a 1-digit table -- continent and
+JA prefecture had Phone `5 + n`, so `5` was 10 -- and `StrToIntDef` for the
+rest); each asks `LOGSTUFF.ReadReportWordOrRefuse` now (ReadRSTWord, and a
+refusal names the word): continent, RST-and-grid, RST-grid-or-RDA, JA
+prefecture, RST-and-domestic-QTH (rightmost number), RST-and-QTH, RST-name-
+and-QTH, FISTS; the or-grid parser's pre-scan refuses any number that is no
+report; POTA keeps a non-report number as a note (it always logs). **No
+refusal D7 did not have, beyond words that are no report at all** (coordinator,
+2026-11-16): an RST typed on Phone (100..599, `599`) is accepted and the Phone
+default 59 stored -- `ReadTypedReportWord`, the one exception, documented
+there; D7 stored the digits. `0`, CW 60..99, 600+ and 4+ digits are refused
+(NY4I #282). CW 10..59 reads as the session default, `001` as 519. `LooksLikeRST` (the
+LOOK FOR RST SENT detector) is a separate, older shape test and was NOT
+touched. **Open (not 330):** ValidRST reads a lone strength on
 Digital as 51..59, not 519..599 (D7 the same); and REF CW/SSB's parser reads
 `ParserArray`, which nothing fills before it (only the age parser calls
 `ParseArray2`), so REF refuses every typed entry (all 222 matrix parse rows,
-D7's code the same).
+D7's code the same; issue 332). Its empty-array read of `paElements[-1]` is
+guarded (M8), and `uTestRSTWordReading` pins TODAY's refusal with the
+intended test parked, not run. The continent parser reads the continent from
+the words BEFORE the one it is on (`Copy(Exchange, ...)`, D7 the same), so
+`599 NA` is refused in CQMM and the SA WW -- not fixed.
 
 **`ProcessRSTQSONumberAndPossibleDomesticQTHExchange` (DARC-10M, RSGB-160
 -- the RSGB 1.8 --, RSGB-IOTA, UBA CW/SSB, UK/EI) refuses the same way since issue 282

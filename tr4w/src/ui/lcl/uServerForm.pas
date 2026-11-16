@@ -83,6 +83,7 @@ type
       lblQSOsCaption:    TLabel;
       lblQSOs:           TLabel;
       chkSerialLockout:  TCheckBox;
+      lblProblem:        TLabel;
 
       procedure HandleShow(Sender: TObject);
       procedure HandleClose(Sender: TObject; var Action: TCloseAction);
@@ -135,6 +136,10 @@ procedure SetClientList(const aLines: TStrings);
 procedure SetBytesReceivedKB(const aKB: integer);
 procedure SetBytesSentKB(const aKB: integer);
 procedure SetServerLogQSOs(const aCount: integer);
+(* THE LOG CANNOT BE WRITTEN (issue 314, review H9): a line in red under the
+  controls and a suffix on the title, so it is seen from the taskbar. Empty
+  clears both. *)
+procedure SetServerLogProblem(const aText: string);
 
 implementation
 
@@ -142,6 +147,29 @@ implementation
 
 uses
    LCLType;
+
+var
+   (* WHAT THE TITLE IS BUILT FROM. The client count and the log problem both
+     write the title, so each is kept here and one routine composes it; a
+     setter that wrote its own half would erase the other. *)
+   GTitleClients: integer = 0;
+   GTitleProblem: boolean = False;
+
+procedure ShowTitle;
+begin
+   if frmServer = nil then
+      begin
+      Exit;
+      end;
+   if GTitleProblem then
+      begin
+      frmServer.Caption := TCaption(Format('TR4WSERVER [%d] - LOG NOT SAVING', [GTitleClients]));
+      end
+   else
+      begin
+      frmServer.Caption := TCaption(Format('TR4WSERVER [%d]', [GTitleClients]));
+      end;
+end;
 
 { ---------------------------------------------------------------- setters }
 
@@ -259,7 +287,8 @@ begin
       { The old DisplayClients also wrote the count into the TITLE BAR, with
         SetWindowTextA(ApplicationHandle, 'TR4WSERVER [n]').  Kept: at a
         multi-op it is read from the taskbar without raising the window. }
-      frmServer.Caption := TCaption(Format('TR4WSERVER [%d]', [aCount]));
+      GTitleClients := aCount;
+      ShowTitle;
       end;
 end;
 
@@ -302,6 +331,16 @@ begin
    if frmServer <> nil then
       begin
       frmServer.lblQSOs.Caption := TCaption(IntToStr(aCount));
+      end;
+end;
+
+procedure SetServerLogProblem(const aText: string);
+begin
+   if frmServer <> nil then
+      begin
+      frmServer.lblProblem.Caption := TCaption(aText);
+      GTitleProblem := aText <> '';
+      ShowTitle;
       end;
 end;
 

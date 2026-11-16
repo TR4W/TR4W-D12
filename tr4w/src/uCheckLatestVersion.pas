@@ -57,6 +57,14 @@ interface
 
 procedure CheckLatestVersion;
 
+(* THE PROGRAM IS EXITING (review M15): a check still in flight shows nothing
+  when it finishes -- no "you are current" box and no download question over a
+  closing program -- and no new check starts. Main thread, from
+  MainUnit.tr4w_ShutDown. NOT A JOIN: the worker is not waited for (up to 5 s
+  to connect and 5 s to read); off Windows it may still be in the request, and
+  log, after Log4D's finalization. *)
+procedure VersionCheckShutdown;
+
 implementation
 
 uses
@@ -237,6 +245,8 @@ var
    (* Main thread only: a second menu click while one check is in flight is
      ignored rather than stacking a second request. *)
    GCheckRunning: boolean = False;
+   (* Main thread only: set by VersionCheckShutdown. *)
+   GShuttingDown: boolean = False;
 
 constructor TVersionCheckThread.Create;
 begin
@@ -263,17 +273,26 @@ end;
 procedure TVersionCheckThread.ReportChecked(Sender: TObject);
 begin
    GCheckRunning := False;
+   if GShuttingDown then
+      begin
+      Exit;
+      end;
    ReportLatestVersion(FLatest);
 end;
 
 procedure CheckLatestVersion;
 begin
-   if GCheckRunning then
+   if GCheckRunning or GShuttingDown then
       begin
       Exit;
       end;
    GCheckRunning := True;
    TVersionCheckThread.Create.Resume;
+end;
+
+procedure VersionCheckShutdown;
+begin
+   GShuttingDown := True;
 end;
 
 end.

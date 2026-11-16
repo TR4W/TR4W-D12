@@ -23,6 +23,7 @@ type
       procedure TestParseEmptyAndWrongShape;
       procedure TestEncodeCall;
       procedure TestRegistryHasHamDB;
+      procedure TestAPortableCallIsNotSentToHamDB;
    public
       procedure RunAllTests; override;
    end;
@@ -157,6 +158,27 @@ begin
    end;
 end;
 
+(* A PORTABLE CALL IS NOT SENT TO hamdb, which never holds one: the request
+  ended in a 404 the transport logged as an Error. Lookup answers Found=False
+  before any network, so this runs offline. *)
+procedure TCallbookTests.TestAPortableCallIsNotSentToHamDB;
+var
+   provider: TCallbookProvider;
+   rec:      TCallbookRecord;
+begin
+   BeginTest('TestAPortableCallIsNotSentToHamDB');
+   provider := CreateCallbookProvider('hamdb');
+   rec := nil;
+   try
+      rec := provider.Lookup('w1aw/4');
+      CheckFalse(rec.Found, 'not found, without asking');
+      CheckEquals('W1AW/4', rec.Call, 'the call asked about, as the record says');
+   finally
+      rec.Free;
+      provider.Free;
+   end;
+end;
+
 procedure TCallbookTests.RunAllTests;
 begin
    TestParseFoundReply;
@@ -165,6 +187,7 @@ begin
    TestParseEmptyAndWrongShape;
    TestEncodeCall;
    TestRegistryHasHamDB;
+   TestAPortableCallIsNotSentToHamDB;
 end;
 
 end.

@@ -126,7 +126,11 @@ procedure SaveConfig(const aFileName: string;
   mattered.
 
   It goes through SaveConfig, so the one-writer rule is intact -- every other
-  section is preserved. *)
+  section is preserved.
+
+  REFUSED, with an Error line, for an object still AwaitingStartupLoad (see
+  TR4WSettings): the section is replaced whole, so that save would reset the
+  station to defaults. *)
 procedure SaveSettings(const aFileName: string;
                        const aSettings: TR4WSettings);
 
@@ -395,12 +399,17 @@ function StoredSettingValue(const aRoot: TJSONObject;
 // unreadable file is not fatal either: falling through to a fresh document
 // keeps the operator able to write settings at all, which refusing to save
 // would not.
-function ReadRootOrEmpty(const aFileName: string): TJSONObject;
+(* aUnreadable: the file is THERE and is not a JSON object -- the empty
+  document handed back stands in for a station's settings it could not read.
+  An absent or blank file is not unreadable; it is a fresh install. *)
+function ReadRootReporting(const aFileName: string;
+                           out aUnreadable: boolean): TJSONObject;
 var
    text: string;
    value: TJSONValue;
 begin
    Result := nil;
+   aUnreadable := False;
 
    if FileTextExists(aFileName) then
       begin
@@ -418,11 +427,13 @@ begin
             // object at the root".
             value.Free;
             WriteAllTextUTF8(aFileName + BAD_SUFFIX, text);
+            aUnreadable := Trim(text) <> '';
             end;
       except
          on E: Exception do
             begin
             Result := nil;
+            aUnreadable := True;
             end;
       end;
       end;
@@ -431,6 +442,13 @@ begin
       begin
       Result := TJSONObject.Create;
       end;
+end;
+
+function ReadRootOrEmpty(const aFileName: string): TJSONObject;
+var
+   unreadable: boolean;
+begin
+   Result := ReadRootReporting(aFileName, unreadable);
 end;
 
 procedure SaveConfig(const aFileName: string;
@@ -539,6 +557,20 @@ begin
       Exit;
       end;
 
+   (* NEVER BEFORE THE LOAD (review M1, 2026-11-16). The section below is
+     REPLACED from the object, so an object that has not been loaded would
+     write constructor defaults over a configured station. Asked HERE, in the
+     writer, so no path added later can do it -- issue 322 was prevented only
+     by the order of two calls in uProgramMain. See
+     TR4WSettings.AwaitingStartupLoad. *)
+   if aSettings.AwaitingStartupLoad then
+      begin
+      TLogLogger.GetLogger('uTR4WConfigFile').Error(
+         '[Config] not saving the settings to ' + aFileName + ': they have ' +
+         'not been loaded this session, and the save would reset the station');
+      Exit;
+      end;
+
    dir := ExtractFilePath(aFileName);
    if (dir <> '') and (not DirectoryExists(dir)) then
       begin
@@ -585,21 +617,14 @@ function LoadSettingsForStartup(const aFileName: string;
 var
    root: TJSONObject;
    commands: TJSONValue;
+   unreadable: boolean;
 begin
    Result := False;
    if aSettings = nil then
       begin
       Exit;
       end;
-   (* THE EXPORT (aImportLegacy False) never saves at exit; the interactive
-     start does. Marked before the load reads the file: a missing file is a
-     fresh install, and its defaults are what that station has. *)
-   if aImportLegacy then
-      begin
-      gSettingsLoadedForSession := True;
-      end;
-
-   root := ReadRootOrEmpty(aFileName);
+   root := ReadRootReporting(aFileName, unreadable);
    try
       (* THE LEGACY BUCKET FIRST, THE SETTINGS SECTION SECOND, AND THAT ORDER
         IS THE WHOLE FIX (2026-09-19).
@@ -637,6 +662,28 @@ begin
 
    (* AND THE SECTION OVER THE TOP, through the one routine that reads it. *)
    Result := LoadSettingsSection(aFileName, aSettings);
+
+   (* WHAT THE SAVES ASK, set only once the load has SUCCEEDED (review M1,
+     2026-11-16; it was set before the file was read). A missing or blank
+     file is a fresh install, and its defaults are what that station has. A
+     file that is there and is not JSON is not a load: the object holds
+     defaults in place of the station's settings (the file was copied aside
+     as .bad), so every save stays refused and the file is left as it is.
+
+     THE EXPORT (aImportLegacy False) never saves at exit; the interactive
+     start does. *)
+   if unreadable then
+      begin
+      TLogLogger.GetLogger('uTR4WConfigFile').Error(
+         '[Config] ' + aFileName + ' could not be read as JSON -- running on ' +
+         'defaults, and the settings will not be saved this session');
+      Exit;
+      end;
+   aSettings.AwaitingStartupLoad := False;
+   if aImportLegacy then
+      begin
+      gSettingsLoadedForSession := True;
+      end;
 end;
 
 function LoadSettingsSection(const aFileName: string;

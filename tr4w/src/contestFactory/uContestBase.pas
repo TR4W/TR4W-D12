@@ -4479,21 +4479,37 @@ function ContestHasDomesticMultiplier(aContest: TContestBase): boolean;
    answers False. *)
 function ContestQTHIsAnARRLSection(aContest: TContestBase): boolean;
 
-(* THE IMPORTED DOMESTIC QTH, RESOLVED AS TYPED ENTRY RESOLVES IT -- issue
-   265, 2026-11-10. Writes aText into aExch.DomesticQTH; then, when the
-   session hands in the engine's lookup (aSession.ResolveDomesticQTH) and it
-   knows aText as a QTH with a name, the file's section and multiplier
-   replace it -- an ARRL_SECT of 'EM' is stored as DomesticQTH 'EMA',
-   DomMultQTH 'EMA', exactly what a typed EM stores. A text the table does
-   not know, or a session with no lookup, keeps the text as written (what
-   every import did before). QTHString is not touched: it is the operator's
-   literal value, typed or imported (Q45). The Sweepstakes, both Field Day
-   and the ARRL 160 imports call it, the base's domestic arm (its QTH-tag
-   branch), and (issue 328)
-   ImportDomesticQTHWords below. *)
+(* THE IMPORTED DOMESTIC QTH OF AN EXPLICIT ADIF FIELD -- the QTH tag or
+   ARRL_SECT -- RESOLVED AS TYPED ENTRY RESOLVES IT, issue 265, 2026-11-10.
+   Writes aText into aExch.DomesticQTH; then, when the session hands in the
+   engine's lookup (aSession.ResolveDomesticQTH) and it knows aText as a QTH
+   with a name, the file's section and multiplier replace it -- an ARRL_SECT
+   of 'EM' is stored as DomesticQTH 'EMA', DomMultQTH 'EMA', exactly what a
+   typed EM stores. A text the table does not know, or a session with no
+   lookup, keeps the text AS WRITTEN: an explicit ADIF field is the record's
+   own statement (NY4I's standing principle; review M5 follow-up,
+   2026-11-16). A domestic QTH DERIVED from SRX_STRING goes through
+   ImportDerivedDomesticQTH instead. QTHString is not touched: it is the
+   operator's literal value, typed or imported (Q45). The Sweepstakes, both
+   Field Day and the ARRL 160 imports call it, the base's domestic arm (its
+   QTH-tag branch), and (issue 328) ImportDomesticQTHWords for a QTH tag. *)
 procedure ImportDomesticQTH(const aSession: TADIFImportSession;
                             const aText: string;
                             var aExch: ContestExchange);
+
+(* THE IMPORTED DOMESTIC QTH DERIVED FROM SRX_STRING -- review M5,
+   2026-11-16: typed entry's word rule. With the engine's lookup
+   (FoundDomesticQTH, the probe typed entry's word split asks), the words of
+   aText that are not all digits are asked whole, then one by one; the first
+   the lookup knows with a name is stored. A text it knows no word of stores
+   NO DomesticQTH -- it stored the text itself until M5, so a serial, a zone,
+   'DARC' or 'FN31' became a QTH (and, in a QSO party, part of the dupe key).
+   The received text stays in ExchString. A session with no lookup keeps
+   aText as written, as ImportDomesticQTH does. Called where no QTH tag or
+   ARRL_SECT names the QTH: ImportDomesticQTHWords and ARRL 160's import. *)
+procedure ImportDerivedDomesticQTH(const aSession: TADIFImportSession;
+                                   const aText: string;
+                                   var aExch: ContestExchange);
 
 (* THE RECEIVED QTH TEXT AN IMPORTED RECORD CARRIES -- issue 328,
    2026-11-15, lifted from ARRL 160's import (issue 275). The record's QTH
@@ -4520,8 +4536,9 @@ function NonNumericWords(const aText: string): string;
 (* THE IMPORTED DOMESTIC QTH OF AN EXCHANGE WHOSE OTHER WORDS ARE NUMBERS
    -- issue 328, 2026-11-15. aReceived is ImportedReceivedText; when it has
    a word that is not all digits, those words (NonNumericWords) go through
-   ImportDomesticQTH -- resolved as typed entry resolves them, kept as
-   written when the table does not know them -- and the answer is True.
+   ImportDomesticQTH when the record has a QTH tag (explicit, kept as written
+   when unknown), else ImportDerivedDomesticQTH (NOTHING stored when the
+   lookup knows none of them, review M5) -- and the answer is True.
    Otherwise nothing is written and the answer is False, aReceived holding
    what the record carried (possibly '') for a caller that keeps a number.
    Called by the CQ 160 (RS(T) and state, province or zone), UBA DX (RS(T),
@@ -5876,29 +5893,101 @@ begin
       end;
 end;
 
-procedure ImportDomesticQTH(const aSession: TADIFImportSession;
-                            const aText: string;
-                            var aExch: ContestExchange);
+(* THE NEXT WORD OF aText FROM aPos, cut at blanks; '' when none is left.
+   aPos moves past it. The one word cutter of an imported received text,
+   shared by NonNumericWords and ImportDomesticQTH. *)
+function NextBlankSeparatedWord(const aText: string; var aPos: integer): string;
+var
+   wordStart: integer;
+begin
+   while (aPos <= Length(aText)) and
+         (aText[aPos] = ' ') do
+      begin
+      Inc(aPos);
+      end;
+   wordStart := aPos;
+   while (aPos <= Length(aText)) and
+         (aText[aPos] <> ' ') do
+      begin
+      Inc(aPos);
+      end;
+   Result := Copy(aText, wordStart, aPos - wordStart);
+end;
+
+(* STORE aCandidate's ENTRY when the session's lookup knows it WITH A NAME --
+   known with no name, the 'XXX' wildcard, is no QTH to store. The one
+   resolving step of ImportDomesticQTH and ImportDerivedDomesticQTH. The
+   caller has checked that the lookup is assigned. *)
+function StoredResolvedDomesticQTH(const aSession: TADIFImportSession;
+                                   const aCandidate: string;
+                                   var aExch: ContestExchange): boolean;
 var
    domesticQTH: string;
    multiplier: string;
 begin
+   Result := aSession.ResolveDomesticQTH(aCandidate, domesticQTH, multiplier) and
+             (domesticQTH <> '');
+   if Result then
+      begin
+      aExch.DomesticQTH := ShortString(domesticQTH);
+      aExch.DomMultQTH := ShortString(multiplier);
+      end;
+end;
+
+procedure ImportDomesticQTH(const aSession: TADIFImportSession;
+                            const aText: string;
+                            var aExch: ContestExchange);
+begin
+   (* AN EXPLICIT FIELD: as written, unless the lookup knows it -- see the
+      declaration. *)
    aExch.DomesticQTH := ShortString(aText);
+   if Assigned(aSession.ResolveDomesticQTH) then
+      begin
+      StoredResolvedDomesticQTH(aSession, aText, aExch);
+      end;
+end;
+
+procedure ImportDerivedDomesticQTH(const aSession: TADIFImportSession;
+                                   const aText: string;
+                                   var aExch: ContestExchange);
+var
+   candidates: string;
+   word: string;
+   position: integer;
+begin
+   (* NO LOOKUP, NO JUDGE: the text as written -- see the declaration. *)
    if not Assigned(aSession.ResolveDomesticQTH) then
       begin
+      aExch.DomesticQTH := ShortString(aText);
       Exit;
       end;
-   if not aSession.ResolveDomesticQTH(aText, domesticQTH, multiplier) then
+
+   (* TYPED ENTRY'S RULE (review M5, 2026-11-16): a word of digits is never
+      the QTH, and the QTH is the FIRST other word the lookup knows, in the
+      order written. The words that are not numbers are asked WHOLE first,
+      as the text was before M5, so a lookup that takes any text (a contest
+      with no domestic multiplier) or a multi-word entry answers as it did.
+      A text the lookup knows nothing of stores NO domestic QTH. *)
+   aExch.DomesticQTH := '';
+   candidates := NonNumericWords(aText);
+   if candidates = '' then
       begin
       Exit;
       end;
-   (* Known with no name -- the 'XXX' wildcard -- is no section to store. *)
-   if domesticQTH = '' then
+   if StoredResolvedDomesticQTH(aSession, candidates, aExch) then
       begin
       Exit;
       end;
-   aExch.DomesticQTH := ShortString(domesticQTH);
-   aExch.DomMultQTH := ShortString(multiplier);
+   position := 1;
+   word := NextBlankSeparatedWord(candidates, position);
+   while word <> '' do
+      begin
+      if StoredResolvedDomesticQTH(aSession, word, aExch) then
+         begin
+         Exit;
+         end;
+      word := NextBlankSeparatedWord(candidates, position);
+      end;
 end;
 
 function ImportedReceivedText(const aTemps: TADIFRecordTemps;
@@ -5916,34 +6005,15 @@ end;
 
 function NonNumericWords(const aText: string): string;
 var
-   i: integer;
-   wordStart: integer;
+   position: integer;
    word: string;
-   notAllDigits: boolean;
 begin
    Result := '';
-   i := 1;
-   while i <= Length(aText) do
+   position := 1;
+   word := NextBlankSeparatedWord(aText, position);
+   while word <> '' do
       begin
-      while (i <= Length(aText)) and
-            (aText[i] = ' ') do
-         begin
-         Inc(i);
-         end;
-      wordStart := i;
-      notAllDigits := False;
-      while (i <= Length(aText)) and
-            (aText[i] <> ' ') do
-         begin
-         if not (aText[i] in ['0'..'9']) then
-            begin
-            notAllDigits := True;
-            end;
-         Inc(i);
-         end;
-      word := Copy(aText, wordStart, i - wordStart);
-      if (word <> '') and
-         notAllDigits then
+      if not StringIsAllNumbers(word) then
          begin
          if Result <> '' then
             begin
@@ -5951,6 +6021,7 @@ begin
             end;
          Result := Result + word;
          end;
+      word := NextBlankSeparatedWord(aText, position);
       end;
 end;
 
@@ -5966,7 +6037,16 @@ begin
    Result := qth <> '';
    if Result then
       begin
-      ImportDomesticQTH(aSession, qth, aExch);
+      (* A QTH TAG is explicit; text from SRX_STRING is derived -- see the
+         declaration. *)
+      if aExch.QTHString <> '' then
+         begin
+         ImportDomesticQTH(aSession, qth, aExch);
+         end
+      else
+         begin
+         ImportDerivedDomesticQTH(aSession, qth, aExch);
+         end;
       end;
 end;
 
@@ -7333,7 +7413,8 @@ begin
             RESOLVED, NOT COPIED (issue 275 item 2, the QSO-party half of
             issue 265): ImportDomesticQTH stores what typed entry stores --
             an alias as the file's QTH and its multiplier key -- and keeps
-            the text as written when the table does not know it. *)
+            the text as written when the table does not know it: an explicit
+            QTH tag is the record's own statement (review M5 follow-up). *)
          ImportDomesticQTH(aSession, string(aExch.QTHString), aExch);
          end
       else
@@ -7348,7 +7429,8 @@ begin
             An SRX_STRING of numbers only writes nothing, as before (the
             prefix was ''). The QTH tag branch above is NOT routed through
             the helper: a QTH tag of digits ('45') is the operator's literal
-            value and is kept. *)
+            value and is kept. Text DERIVED from SRX_STRING follows typed
+            entry's word rule since review M5 (ImportDerivedDomesticQTH). *)
          ImportDomesticQTHWords(aTemps, aSession, aExch, received);
          end;
       end

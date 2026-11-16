@@ -218,8 +218,8 @@ begin
     backslash, so it NEVER STOPPED: it chewed backwards through the whole
     path, truncating at every dot it met, and the leftmost one won.
 
-        chosen  /home/toms/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/ARRL-FD ... .db
-        became  /home/toms/Desktop/TR4W/tr4w-5
+        chosen  /home/<user>/Desktop/TR4W/tr4w-5.0.2-x86_64-linux/ARRL-FD ... .db
+        became  /home/<user>/Desktop/TR4W/tr4w-5
 
     Everything downstream followed it off a cliff. The log database opened as
     tr4w-5.db instead of the contest the operator picked, so the contest was

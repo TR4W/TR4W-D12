@@ -201,7 +201,11 @@ end;
 function TContestKentuckyQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
    const aQso: ContestExchange; const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+   (* "DX: RS(T) + DX". A typed "599 DX" keeps its text in QTHString and
+      resolves no DomesticQTH, so CabrilloReceivedRSTQTHDX (which tests
+      QTHString) printed an EMPTY column; this helper prints DX whenever the
+      record holds no domestic QTH -- Georgia's (review H4, 2026-11-16). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDX(aMy, aQso, aCtx);
 end;
 
 procedure TContestKentuckyQP.CalculateQSOPoints(var aQso: ContestExchange);

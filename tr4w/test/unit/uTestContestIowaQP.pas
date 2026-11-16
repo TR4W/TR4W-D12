@@ -234,6 +234,23 @@ begin
       CheckEquals(2, Integer(rx.QSOPoints), 'DX CW 2 points');
       CheckFalse(rx.DomesticMult, 'no multiplier for DX');
       CheckFalse(rx.DXMult, 'no DXCC multiplier');
+      (* THE DX ROW EXPORTED (review H4): the record the engine logged, the
+         exporter's own HisQTH. "DX Stations ... send RS/T and DX" -- the
+         column was EMPTY while the class used CabrilloReceivedRSTQTHDX. *)
+      CheckEquals('DX', string(rx.QTHString), 'the trap''s shape: the typed text is kept');
+      CheckEquals('', string(rx.DomesticQTH), 'and no domestic QTH is resolved');
+      my := Default(TMyStationExchange);
+      my.MyState := 'STR';
+      ctx := Default(TCabrilloQSOContext);
+      ctx.RSTSent := '599';
+      ctx.RSTReceived := '599';
+      ctx.HisQTH := CabrilloReceivedQTH(True, rx);
+      party := ContestIdentity(PartyHandle);
+      line := 'QSO: 14000 CW 2026-09-19 1400 W0AAA ' +
+         party.FormatCabrilloSentExchange(my, rx, ctx) + 'DL1AAA ' +
+         party.FormatCabrilloReceivedExchange(my, rx, ctx);
+      CheckEquals('QSO: 14000 CW 2026-09-19 1400 W0AAA 599 STR    DL1AAA 599 DX     ',
+         line, 'a DX station''s received column is DX, typed ' + string(rx.QTHString));
 
       party := ContestIdentity(PartyHandle);
       rx := IAQSO('W0YL', Band20, CW, eCW);

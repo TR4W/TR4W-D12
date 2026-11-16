@@ -402,12 +402,6 @@ Type TFactoryRadioBase = class(TObject)
       FTXInhibitLock: TCriticalSection;
       FTXInhibitRefusalLogged: boolean;   // the undeclared-ON error, once per radio
 
-      (* PTTviaCAT's storage (issue 323).  The property reads and writes it
-        directly: the accessor pair it replaced each called the property
-        itself and recursed until the stack ran out.  Nothing sets it from
-        configuration yet. *)
-      FPTTviaCAT: boolean;
-
       function GetRadioPort: integer;
       procedure SetRadioPort(Value: Integer);
       function GetRadioAddress: string;
@@ -681,6 +675,11 @@ Type TFactoryRadioBase = class(TObject)
         allowed.  Logged at INFO when the state actually changes, which is the
         line to watch on the bench. *)
       procedure SetTXInhibited(aOn: boolean; const aReason: string);
+
+      (* WHAT EVERY NEW LINK FORGETS, ONCE.  The first thing Connect does; a
+        driver whose Connect does not call inherited (it owns its transport)
+        calls this instead, so the list is never repeated per driver. *)
+      procedure ResetPerLinkState;
 
 
    public
@@ -1023,7 +1022,6 @@ Type TFactoryRadioBase = class(TObject)
         opening a new one here would put it somewhere a reader does not look
         for it. *)
       property serialPortName: string read localSerialPortName write localSerialPortName;
-      property PTTviaCAT: boolean read FPTTviaCAT write FPTTviaCAT;
       property CWSpeed: integer read GetCWSpeed;
 
       (* THE RADIO HAS REPORTED ITS KEYER SPEED.  Every driver that learns the
@@ -1968,14 +1966,7 @@ begin
      a PBoolean, deliberately.  Here Self is the radio, and both transports
      come through this one function, so serial and network are covered by one
      line instead of two. *)
-   Self.ResetCWSpeedSync;
-
-   (* AND ON TX INHIBIT (issue #97).  What the last session reported is not a
-     fact about the radio on the end of THIS link -- it may have been switched
-     off, or taken out of test mode, while the link was down.  A radio that
-     reports the condition asks again once connected (the K4 does, in its
-     Connect), so the gap is one round trip. *)
-   Self.SetTXInhibited(False, '');
+   Self.ResetPerLinkState;
 
    (* IN SerialPorts, NOT merely <> NoPort.  The old test let a port
      configured as NETWORK -- ordinal 65 -- through to a name formatter that
@@ -2695,6 +2686,20 @@ begin
    (* The log line too: a new session that refuses again is worth saying once
      more, and a reader of tr4w.log needs it against THIS connection. *)
    Self.FCWSpeedSyncReported := False;
+end;
+
+procedure TFactoryRadioBase.ResetPerLinkState;
+begin
+   (* A fresh hearing on CW speed sync -- see the comment at the top of
+     Connect for why this lives on the radio and not in TReadingThread. *)
+   Self.ResetCWSpeedSync;
+
+   (* AND ON TX INHIBIT (issue #97).  What the last session reported is not a
+     fact about the radio on the end of THIS link -- it may have been switched
+     off, or taken out of test mode, while the link was down.  A radio that
+     reports the condition asks again once connected (the K4 does, in its
+     Connect), so the gap is one round trip. *)
+   Self.SetTXInhibited(False, '');
 end;
 
 procedure TFactoryRadioBase.NoteCWSpeedFromRadio(aSpeed: integer);

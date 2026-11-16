@@ -267,6 +267,13 @@ begin
         Delete(CommandString, 1, 1);
         end;
 
+     (* EVERY COMMAND STARTS WITH NO ARGUMENT (issue 192).  scFileName is a
+       unit variable set only when the command carries '=', so a bare SPAN,
+       SRS, WINEXEC or OTRSP used to run with the PREVIOUS command's argument.
+       D7 heritage, not a port regression.  Every reader is a handler called
+       synchronously below, so nothing reads it after this command is done. *)
+     scFileName := '';
+
      if StringHas(CommandString, '=') then
         begin
         scFileName := PostcedingString(CommandString, '=');

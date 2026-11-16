@@ -3900,6 +3900,8 @@ type
       (* The kept paths whose live value is a RUN-TIME FORCE rather than a
         contest's statement (KeepStationValue's aForced). *)
       FKeptForced: TStringList;
+      (* See AwaitingStartupLoad. *)
+      FAwaitingStartupLoad: boolean;
       procedure BuildCommandMap;
       (* The path KeepStationValue may keep for this command, or '' -- see
         there for what is excluded and why. *)
@@ -4002,7 +4004,16 @@ type
         makes it a statement. *)
       procedure KeepStationValue(const aCommand: string; aForced: boolean = False);
       function StationValueIsKept(const aCommand: string): boolean;
-      (* THE STATION EDIT -- Preferences, the setup wizard, a peer (decision E).
+      (* A KEEP UNDONE, for a statement that was then REFUSED
+        (uCFG.ApplyContestStatement keeps before it applies, because the keep
+        must see the value before the change). The entry, forced or not, is
+        dropped and the live value is not touched -- the refusal left it as it
+        was. A no-op for a command with nothing kept. *)
+      procedure ForgetKeptStationValue(const aCommand: string);
+      (* THE STATION EDIT -- Preferences and the setup wizard (decision E);
+        also the station half of an operator toggle or function key
+        (uRadioConfigApply.ApplyToContestHeldSetting), which applies live as
+        well. A peer's edit does not come here.
 
         For a kept setting: the KEPT value is replaced (so the next save writes
         it) and the live value the open contest uses is NOT touched -- unless
@@ -4037,6 +4048,21 @@ type
         TRadioConfigStore.SeedUnstatedFrequencyPollRates. Read-only: nothing
         but FromJSON may set it, and nothing persists it. *)
       property FormerFrequencyPollRate: integer read FFormerFrequencyPollRate;
+
+      (* THIS OBJECT HOLDS CONSTRUCTOR DEFAULTS IN PLACE OF A STATION'S FILE,
+        so it must not be saved (review M1, 2026-11-16).
+
+        SaveSettings REPLACES the whole `settings` section from the object, so
+        a save before the load resets a configured station -- issue 322 and
+        the New Contest defect both did exactly that. The program arms this on
+        its own object at the top of RunTR4W; uTR4WConfigFile.
+        LoadSettingsForStartup releases it when the load SUCCEEDED (an absent
+        file is a fresh install and succeeds; a file that is not JSON does
+        not); SaveSettings refuses while it is set. Off by default, so a
+        converter's or a test's own object saves as before. Not published, so
+        never streamed. *)
+      property AwaitingStartupLoad: boolean read FAwaitingStartupLoad
+                                            write FAwaitingStartupLoad;
 
       (* SEED FROM THE OLD KEYS, ONCE.  aCommands is the legacy `commands`
         section: flat keys spelled the way a config command is spelled,
@@ -7928,6 +7954,28 @@ begin
              (FKept.IndexOfName(UTF8Encode(path)) >= 0);
 end;
 
+procedure TR4WSettings.ForgetKeptStationValue(const aCommand: string);
+var
+   path: string;
+   idx: integer;
+begin
+   path := PathForCommand(aCommand);
+   if (FKept = nil) or (path = '') then
+      begin
+      Exit;
+      end;
+   idx := FKept.IndexOfName(UTF8Encode(path));
+   if idx >= 0 then
+      begin
+      FKept.Delete(idx);
+      end;
+   idx := FKeptForced.IndexOf(AnsiString(path));
+   if idx >= 0 then
+      begin
+      FKeptForced.Delete(idx);
+      end;
+end;
+
 function TR4WSettings.TrySetStationValue(const aCommand, aValue: string): boolean;
 var
    path: string;
@@ -7944,8 +7992,9 @@ begin
 
    (* A SCRATCH OBJECT, so the value is parsed, checked and streamed by the
      same code as every other assignment while no setter of the live object
-     runs: it has no OnChanged, so no effect fires. Preferences only, and
-     only for a kept setting. *)
+     runs: it has no OnChanged, so no effect fires. Preferences, and the
+     station half of uRadioConfigApply.ApplyToContestHeldSetting; only for a
+     kept setting. *)
    Result := False;
    path := PathForCommand(aCommand);
    scratch := TR4WSettings.Create;

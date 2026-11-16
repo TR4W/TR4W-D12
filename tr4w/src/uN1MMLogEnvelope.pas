@@ -76,8 +76,7 @@ type
 implementation
 
 uses
-   SysUtils,
-   StrUtils;
+   SysUtils;
 
 const
    MAX_TAG_NAME = 32;
@@ -216,18 +215,66 @@ begin
    Result := trOk;
 end;
 
-function CountEndOfRecords(const aAdif: string): integer;
+(* HOW MANY <EOR> MARKERS THE PAYLOAD HOLDS, reading it as ADIF: a field's value
+  is exactly its stated number of bytes and is SKIPPED, so a comment or a name
+  that happens to contain the text "<eor>" is not a record end (review of issue
+  45: searching the whole text for it made a valid record malformed). The walk
+  is over the raw bytes because the lengths are byte counts. Text between tags
+  is ignored; a tag that does not close ends the walk. *)
+function CountEndOfRecords(const aPayload: RawByteString): integer;
 var
-   lower: string;
+   len: integer;
    p: integer;
+   q: integer;
+   n: integer;
+   name: string;
 begin
    Result := 0;
-   lower := UnicodeLowerCase(aAdif);
-   p := PosEx('<eor>', lower, 1);
-   while p > 0 do
+   len := Length(aPayload);
+   p := 1;
+   while p <= len do
       begin
-      Inc(Result);
-      p := PosEx('<eor>', lower, p + 5);
+      if aPayload[p] <> '<' then
+         begin
+         Inc(p);
+         Continue;
+         end;
+      q := p + 1;
+      while (q <= len) and (aPayload[q] <> ':') and (aPayload[q] <> '>') do
+         begin
+         Inc(q);
+         end;
+      if q > len then
+         begin
+         Exit;
+         end;
+      name := LowerCase(string(Copy(aPayload, p + 1, q - p - 1)));
+      if aPayload[q] = '>' then
+         begin
+         if name = 'eor' then
+            begin
+            Inc(Result);
+            end;
+         p := q + 1;
+         Continue;
+         end;
+      (* <name:length> or <name:length:type> -- the value follows the '>'. *)
+      Inc(q);
+      n := 0;
+      while (q <= len) and (aPayload[q] in ['0'..'9']) and (n < N1MM_LOG_MAX_PAYLOAD) do
+         begin
+         n := n * 10 + (Ord(aPayload[q]) - Ord('0'));
+         Inc(q);
+         end;
+      while (q <= len) and (aPayload[q] <> '>') do
+         begin
+         Inc(q);
+         end;
+      if q > len then
+         begin
+         Exit;
+         end;
+      p := q + 1 + n;
       end;
 end;
 
@@ -303,14 +350,13 @@ begin
       Exit;
       end;
 
-   aAdif := UTF8Decode(payload);
-   if CountEndOfRecords(aAdif) > 1 then
+   if CountEndOfRecords(payload) > 1 then
       begin
-      aAdif := '';
       aWhy := 'more than one record in one envelope';
       Result := esMalformed;
       Exit;
       end;
+   aAdif := UTF8Decode(payload);
    Result := esLog;
 end;
 

@@ -1,12 +1,12 @@
 object frmServer: TfrmServer
   Left = 0
-  Height = 372
+  Height = 404
   Top = 0
   Width = 420
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'TR4WSERVER'
-  ClientHeight = 372
+  ClientHeight = 404
   ClientWidth = 420
   KeyPreview = True
   OnClose = HandleClose
@@ -173,5 +173,17 @@ object frmServer: TfrmServer
     Caption = 'Serial number lockout'
     Enabled = False
     TabOrder = 5
+  end
+  object lblProblem: TLabel
+    Left = 16
+    Height = 32
+    Top = 364
+    Width = 380
+    AutoSize = False
+    Font.Color = clRed
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+    WordWrap = True
   end
 end

@@ -287,7 +287,7 @@ Tom authorized work to resolve the missing-button issue. The updated reader
 is built as a **separate** app so the original approved runner and its grants
 remain intact:
 
-- App: `/Users/toms/Applications/TR4W AX Probe.app`.
+- App: `/Users/<user>/Applications/TR4W AX Probe.app`.
 - Bundle ID: `net.tr4w.gui-pilot.ax-probe`.
 - Executable SHA256:
   `ce2b843ccf00eb9fbd158fd1eef9a04eec8f7cbd0ebfc58123f4afa15a738dc0`.
@@ -440,7 +440,7 @@ not turn the live pilot green or certify every Cocoa control.
 
 ## Installed identity and user approval
 
-App: `/Users/toms/Applications/TR4W GUI Pilot.app`.
+App: `/Users/<user>/Applications/TR4W GUI Pilot.app`.
 Bundle ID: `net.tr4w.gui-pilot`.
 Executable SHA256:
 `95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6`.

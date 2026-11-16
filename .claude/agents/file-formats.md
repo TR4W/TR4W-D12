@@ -135,6 +135,23 @@ multipliers, CTY.DAT, band lookup and CRC32.
   process inherited the first one's counters.
 - **Ignored read results.** `logscp.pas` had three `sReadFile` calls whose result
   was discarded.
+- **EVERY FILE WE WRITE FOR THE OPERATOR GOES THROUGH `utils_file.OpenReportFile` /
+  `CloseReportFile` (issue 313, M13 -- 2026-11-16).** The new file is `<name>.partial`
+  and REPLACES the old one in one operation only when every write succeeded
+  (`MoveFileExW` + `MOVEFILE_REPLACE_EXISTING` on Windows, because the RTL's `RenameFile`
+  is `MoveFileW` and refuses to replace; `rename(2)` elsewhere). **The failure is kept
+  PER HANDLE** (a slot table in `utils_file`, `ReportFileProblem(h)`): a failed write to
+  any other file neither fails a report nor masks one. A report written with
+  `Write`/`WriteLn` uses `OpenReportText` / `CloseReportText` -- a Text bound to the same
+  checked handle, so the RTL still formats the bytes -- and PostUnit wraps both as
+  `OpenExportTextNamed` / `CloseExportText` (which warn once and set `LastExportFailed`).
+  **A `Text` report is closed with `CloseExportText`, NEVER `Close(t)`, and an early
+  `Exit` after the open must abandon it (`CloseExportText(t, False)`).** Preview a
+  report only when the close kept it. The hour, continent, country, first-call (two),
+  zone and band-change reports, both `logscp` ASCII dumps and the band-map file are on
+  it; `uTestPostUnitReports` pins seven reports' exact text (goldens made by the code
+  before the move) and `uTestUtilsFile` the helper. A new `OpenFileForWrite` /
+  `tOpenFileForWrite` for an export is the defect this bullet exists to prevent.
 - **WHERE A DOWNLOADED DATA FILE GOES — and it is NOT where the shipped one is.** Alt-O
   (CTY.DAT), the TRMASTER.DTA download and the POTA park list all write to
   `uAppPaths.DownloadedDataFilePath`, the **settings** directory, and the lookup prefers that copy

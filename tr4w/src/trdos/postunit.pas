@@ -508,11 +508,14 @@ uses
 var
    GExportName: string = '';   (* the file the open export is for -- the warning names it *)
 
-procedure ReportExportNotWritten;
+(* aProblem is the report's own reason (ReportFileProblem / ReportTextProblem of
+  ITS handle), so another file's failed write can neither be blamed on it nor
+  hide its own. *)
+procedure ReportExportNotWritten( const aProblem: string );
 begin
    LastExportFailed := True;
    showwarning( UnicodeFormat( SExportNotWritten,
-                [ GExportName, ReportFileProblem ] ) );
+                [ GExportName, aProblem ] ) );
 end;
 
 (* OPEN A NAMED EXPORT FILE (a report or list that is not at tReportsFilename,
@@ -523,7 +526,33 @@ begin
    Result := OpenReportFile( tReportFileWrite, aName );
    if not Result then
       begin
-      ReportExportNotWritten;
+      ReportExportNotWritten( ReportFileProblem( tReportFileWrite ) );
+      end;
+end;
+
+(* THE SAME FOR A REPORT WRITTEN WITH Write / WriteLn: aText is bound to the
+  checked report file, so the report's own code is unchanged. Close it with
+  CloseExportText -- not Close(aText) -- which also abandons it (aKeep False)
+  on an early Exit. False from the open has told the operator why. *)
+function OpenExportTextNamed( var aText: Text; const aName: string ): boolean;
+begin
+   GExportName := aName;
+   Result := OpenReportText( aText, aName );
+   if not Result then
+      begin
+      ReportExportNotWritten( ReportTextProblem( aText ) );
+      end;
+end;
+
+(* FINISH A TEXT REPORT: aKeep False abandons it silently, True keeps it or
+  tells the operator it was not written. The answer is whether it is in place,
+  so a caller shows the preview only when it is. *)
+function CloseExportText( var aText: Text; aKeep: boolean ): boolean;
+begin
+   Result := CloseReportText( aText, aKeep );
+   if aKeep and ( not Result ) then
+      begin
+      ReportExportNotWritten( ReportTextProblem( aText ) );
       end;
 end;
 
@@ -541,7 +570,7 @@ begin
    Result := CloseReportFile( tReportFileWrite, aKeep );
    if aKeep and ( not Result ) then
       begin
-      ReportExportNotWritten;
+      ReportExportNotWritten( ReportFileProblem( tReportFileWrite ) );
       end;
 end;
 
@@ -1540,7 +1569,10 @@ procedure PrintHourTotals;
   (* THE CONTEST SAYS WHETHER ITS HOURS CARRY A RUNNING SCORE -- M9a; this
     named the seven that do not (the Russian cups and championships). *)
   ShowScore := ContestIdentity( Contest ).ReportsRunningScore;
-  OpenFileForWrite( FileWrite, ReportsFilename );
+  if not OpenExportTextNamed( FileWrite, string( ReportsFilename ) ) then
+     begin
+     Exit;
+     end;
 
   // if Header = '' then
   // Header := GetResponse('Enter contest name and callsign : ');
@@ -1804,8 +1836,12 @@ procedure PrintHourTotals;
      TotalDay1Mults + TotalDay2Mults );
 
   Write( FileWrite, ' ' );
-  Close( FileWrite );
-  FilePreview;
+  (* NO PREVIEW OF A FILE THAT IS NOT THERE: CloseExportText has told the
+    operator (issue 313). *)
+  if CloseExportText( FileWrite, True ) then
+     begin
+     FilePreview;
+     end;
   end;
 
 procedure FinishOutLastHour;
@@ -1908,13 +1944,15 @@ procedure ContinentReport;
   MakeReportFileName( 'Continent List.txt' );
   FillChar(TempQSOTotals, SizeOf( TempQSOTotals ), 0);
   FillChar(ContTotals, SizeOf( ContTotals ), 0);
-  if not OpenFileForWrite( FileWrite, ReportsFilename ) then
+  if not OpenExportTextNamed( FileWrite, string( ReportsFilename ) ) then
      begin
      Exit;
      end;
 
   if not LogSourceOpen then
      begin
+     (* An abandoned report leaves no file, and an earlier good one stays. *)
+     CloseExportText( FileWrite, False );
      Exit;
      end;
 
@@ -2057,8 +2095,10 @@ procedure ContinentReport;
        WriteLn( FileWrite );
        end;
 
-  Close( FileWrite );
-  FilePreview;
+  if CloseExportText( FileWrite, True ) then
+     begin
+     FilePreview;
+     end;
   end;
 
 procedure QSOsByCountryByBand;
@@ -2136,7 +2176,10 @@ procedure PrintQSOsByCountry;
   begin
 
   MakeReportFileName( 'qsosbycountry.txt' );
-  OpenFileForWrite( FileWrite, ReportsFilename );
+  if not OpenExportTextNamed( FileWrite, string( ReportsFilename ) ) then
+     begin
+     Exit;
+     end;
 
   WriteLn( FileWrite );
   WriteLnVarCenter( FileWrite, Settings.Contest.Title );
@@ -2200,8 +2243,10 @@ procedure PrintQSOsByCountry;
      end;
 
   // Write(FileWrite, ' ');
-  Close( FileWrite );
-  FilePreview;
+  if CloseExportText( FileWrite, True ) then
+     begin
+     FilePreview;
+     end;
 
   end;
 
@@ -3550,7 +3595,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
 
       MakeReportFileName( 'firstcallineachcountry.txt' );
-      OpenFileForWrite( FileWrite, ReportsFilename );
+      if not OpenExportTextNamed( FileWrite, string( ReportsFilename ) ) then
+         begin
+         Exit;
+         end;
 
       Lines := 0;
 
@@ -3626,8 +3674,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          end;
 
       Write( FileWrite, ' ' );
-      Close( FileWrite );
-      FilePreview;
+      if CloseExportText( FileWrite, True ) then
+         begin
+         FilePreview;
+         end;
 
       end;
 
@@ -3707,7 +3757,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         Band: BandType;
       begin
 
-      OpenFileForWrite( FileWrite, ReportsFilename );
+      if not OpenExportTextNamed( FileWrite, string( ReportsFilename ) ) then
+         begin
+         Exit;
+         end;
 
       (* From zone 0 where the contest numbers its zones from zero (the
         licence year 00 -- issue 274 item 5), as GenerateZoneMultiplierTotals
@@ -3785,8 +3838,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          end;
 
       // Write(FileWrite, ' ');
-      Close( FileWrite );
-      FilePreview;
+      if CloseExportText( FileWrite, True ) then
+         begin
+         FilePreview;
+         end;
       end;
 
     procedure ZoneReport;
@@ -3812,7 +3867,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          Exit;
          end;
 
-      if not OpenFileForWrite( FileWrite, ReportsFilename ) then
+      if not OpenExportTextNamed( FileWrite, string( ReportsFilename ) ) then
          begin
          LogSourceClose;
          Exit;
@@ -3844,8 +3899,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       WriteLn( FileWrite, 'There were ', NumberBadZones,
          ' questionable zones found.' );
       WriteLn( FileWrite );
-      Close( FileWrite );
-      FilePreview;
+      if CloseExportText( FileWrite, True ) then
+         begin
+         FilePreview;
+         end;
       end;
   {
     function CorrectContestExchange: boolean;
@@ -3872,7 +3929,6 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         FirstQSO: boolean;
         QSONumber, NumberBandChanges, NumberTwoXmtrQSOs,
            LastBandChangeQSO: integer;
-        FileWrite: TFileHandle;   (* utils_file's -- see TFileHandle *)
         sr: string;
       begin
       if not LogSourceOpen then
@@ -3880,7 +3936,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          Exit;
          end;
       MakeReportFileName( 'BandChange.txt' );
-      if not tOpenFileForWrite( FileWrite, string( ReportsFilename ) ) then
+      if not OpenExportFileNamed( string( ReportsFilename ) ) then
          begin
          LogSourceClose;
          Exit;
@@ -3932,7 +3988,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
                // NumberBandChanges, fromBand, fromMode, toBand, toMode, Hour, Minute, sr
                // (%02d -> %.2d zero-pad).
-               sWriteFileFromString( FileWrite,
+               sWriteFileFromString( tReportFileWrite,
                   sysutils.Format
                   ( '%4d.  Band change from %s%s to %s%s at %.2d:%.2d.%s'#13#10,
                   [ NumberBandChanges, string( BandStringsArray[ LastBand ] ),
@@ -3953,14 +4009,16 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       if NumberTwoXmtrQSOs > 0 then
          begin
 
-         sWriteFileFromString( FileWrite,
+         sWriteFileFromString( tReportFileWrite,
             sysutils.Format( #13#10'There were %d second radio QSOs made.',
             [ NumberTwoXmtrQSOs ] ) );
          end;
 
       LogSourceClose;
-      FileClose(FileWrite);
-      FilePreview;
+      if CloseExportFile( True ) then
+         begin
+         FilePreview;
+         end;
       end;
 
 

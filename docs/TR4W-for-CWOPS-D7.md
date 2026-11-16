@@ -10,15 +10,15 @@ By: Marvin Bloomquist, N5AW
 
  NOTE: Windows frequently gives a false warning that the TR4W download contains a virus and may  not allow installation. If you get a warning, first try clicking on “More info” and then “Run anyway”. If  it still won’t run you will need to temporarily disable the virus protection (Windows Defender in my  case).  The dwonload is on the TR4W homepage at: https://tr4w.net/. Click on “Download Release   #.###.#” (4.103.0 at the time this was written) and save when prompted. Clicking on  “tr4w_setup_#.###.#.exe” will initiate installation of the program. You should see a window like this:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/4bc95840af1b0c465f9278fa146df39a81b3b189.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/4bc95840af1b0c465f9278fa146df39a81b3b189.png" title="" alt="" data-align="center" />
 
 I recommend installing the program in the C folder, not the Program folder which creates problems  accessing your logs. Click on Next and the program will install. When the installation is completed a  TR4W icon will appear on your desktop. Clicking on the icon starts the program, bringing up this  screen:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/dd08db4c620687a4869c1538a1a7b8eef4acfeff.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/dd08db4c620687a4869c1538a1a7b8eef4acfeff.png" title="" alt="" data-align="center" />
 
 Fill in your call and select CWOPEN in the pull down CONTEST menu. You are then asked to fill in your name. Next select your CATEGORYs and click OK. The program opens with two windows:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/9765a41658b72ef313d325fbe66c731e75de04b2.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/9765a41658b72ef313d325fbe66c731e75de04b2.png" title="" alt="" data-align="center" />
 
 
 
@@ -28,19 +28,19 @@ The lower window is a function key template. More about programming these later.
 
 Next you will need to configure your CW keying and radio interfaces. A Winkeyer is recommended but some radios, such as the K3, can be keyed through the serial port.  If you are using a Winkeyer you need to know the port it is assigned to. Go to the “Tools” pull down menu and select “Device Manager”. In Device Manager select “Ports” and make note of the serial ports to which your Winkeyer and radios are connected. Close Device Manager and return to TR4W.  On the pull down menu “Settings” select “Winkeyer” to bring up this menu:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/654b786144d8624041a237a46c3b0017c1a1ff25.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/654b786144d8624041a237a46c3b0017c1a1ff25.png" title="" alt="" data-align="center" />
 
 Note the context-sensitive “help” on the right side explaining in this case what “WK AUTOSPACE” does. Set WK ENABLE to TRUE and WK PORT to the proper port for your Winkeyer.  Select “Save All” before exiting the setup menu.
 
 Returning to the main logging window, from the Settings pull down menu select “CAT and CW Keying”, then “Radio 1” or “Radio 2” to open this window:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/77106b182dc442ce4a9ee189854a22fe713004c0.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/77106b182dc442ce4a9ee189854a22fe713004c0.png" title="" alt="" data-align="center" />
 
 The CAT portion of the menu is straightforward. The values shown are for my K3. The CW/PTT options should be NONE and OFF if you are using a Winkeyer. RADIO ONE NAME will appear on the logging screen to identify the radio. If you are SO2R you will need to do this for both radios.
 
 Now go to the Windows pull down menu on the main logging screen and select Radio1 to open a window for the radio. If your radio has been properly interfaced it should look something like this:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/dd30949981281e9ed679b6f4072195769229e99a.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/dd30949981281e9ed679b6f4072195769229e99a.png" title="" alt="" data-align="center" />
 
 You can drag the window to a convenient place on your computer screen.
 
@@ -54,15 +54,15 @@ The program now is ready to go with a set of default messages but you will likel
 
 and Pounce”. To program them press “Alt P” on the keyboard to bring up this menu:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/d23a69d33cfe4e5de834e71555785674544a864d.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/d23a69d33cfe4e5de834e71555785674544a864d.png" title="" alt="" data-align="center" />
 
 Select the first option, either with your mouse or C on the keyboard to get the CQ keys. This is how I have them programmed for the CW Open:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/9ffc85e392f288288563c9e0cd22effa3785695c.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/9ffc85e392f288288563c9e0cd22effa3785695c.png" title="" alt="" data-align="center" />
 
 F10 is reserved for toggling keyboard CW off and on (keyboard CW “on” disables the other function keys) but all the other keys are individually programmable including Ctrl Fn and Alt Fn for a total of 35 possible messages (assuming your keyboard has 12 function keys). Normally F1 is the primary CQ message. To program F1 double click on “CQ CW MEMORY F1” to get this menu (default CQ message shown):
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/7511a5634c5034946bbf6e8eaec077b0900f3b90.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/7511a5634c5034946bbf6e8eaec077b0900f3b90.png" title="" alt="" data-align="center" />
 
 You can edit the message just like any text. The back slash (\\) is shorthand for your call. Fill in the
 
@@ -86,7 +86,7 @@ The CALL OK NOW CW MESSAGE automatically sends the corrected portion of a call (
 
 When you quit the program and open it again you will see a screen like this:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/610101417e6010a1eb28a45da469487f25a7f4f2.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/610101417e6010a1eb28a45da469487f25a7f4f2.png" title="" alt="" data-align="center" />
 
 It is the same screen you saw at the start of the set up except now \[2011 CWOPEN N5AW\] is one of the program files. Clicking on it will open up the contest file you just set up. However, if you are going to operate more than one session you will either need to create separate unique folders for each one or move all the files except CWOPS.CFG before the next session. If you choose to set up separate folders ahead of time, open the program folder for TR4W and rename the 2011 CWOPEN
 
@@ -176,7 +176,7 @@ As you gain familiarity with the program you will find you can handle most fills
 
 The last five QSOs are displayed above the CALL WINDOW. To edit one of them either double click on the call with your mouse or arrow up from the CALL WINDOW and hit Enter to bring up a window to edit the QSO information. Here is what the QSO edit window looks like:
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/5640dfc57fa7394bc780763fb0cb9d67df067adb.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/5640dfc57fa7394bc780763fb0cb9d67df067adb.png" title="" alt="" data-align="center" />
 
 If the QSO is no longer in the log window use the Alt-L function described earlier to search for the call. When the QSOs with that station are displayed double click on the one you want to edit. While you can scroll around in the window, I find it easier to use a mouse
 
@@ -184,7 +184,7 @@ If the QSO is no longer in the log window use the Alt-L function described earli
 
 One of the advantages of interfacing your radio with a logging program is the ability to generate a bandmap. The bandmap window is activated by selecting it from the pull-down Windows menu. Several commands (Ctrl-J) are available to set the display parameters (bands, modes, decay time, etc). Unless you connect to the DX cluster the bandmap is populated entirely by stations you enter in the CALL WINDOW while in S&P mode. Below is an example from the IARU contest.
 
-<img src="file:///C:/Users/toms/AppData/Roaming/marktext/images/889c0bb2bd8e17c934b2400760569f0dd142784a.png" title="" alt="" data-align="center" />
+<img src="file:///C:/Users/<user>/AppData/Roaming/marktext/images/889c0bb2bd8e17c934b2400760569f0dd142784a.png" title="" alt="" data-align="center" />
 
 To have the band map filled from a DX cluster select “DX Cluster” under TR4W’s  Windows pull down menu. This brings up the DX Cluster window. The upper left box is used to select the cluster you want to connect to. The rest should be familiar if you have ever used a cluster.
 

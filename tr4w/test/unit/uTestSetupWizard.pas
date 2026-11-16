@@ -47,6 +47,7 @@ uses
    SysUtils,
    uRadioConfigStore,
    uKeyerConfigStore,
+   uAppStrings,    (* SDefaultClusterName -- the default is translatable *)
    uSetupWizard;
 
 function PlanText(const aPlan: TSetupPagePlan): string;
@@ -318,7 +319,7 @@ begin
       c.Server := 'node.example.org';
       CheckEquals('node.example.org', SetupClusterBaseName(c), 'no port');
       c.Server := '';
-      CheckEquals('Cluster', SetupClusterBaseName(c), 'nothing to go on');
+      CheckEquals(string(SDefaultClusterName), SetupClusterBaseName(c), 'nothing to go on');
       c.Name := 'Club node';
       CheckEquals('Club node', SetupClusterBaseName(c), 'a given name wins');
    finally

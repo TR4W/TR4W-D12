@@ -486,6 +486,15 @@ begin
          end;
       ARRL160:
          begin
+         (* THE RECEIVED COLUMN MOVED ON PURPOSE -- issue 333, 2026-11-16:
+            ARRL 160 decides domestic-or-DX by the record's DomesticQTH, not
+            its QTHString (NY4I on #275). These eight QSOs carry a QTHString
+            and NO DomesticQTH -- no table resolved them -- so each is now a
+            DX record: its DX QTH (DL, ZZ, and ABCDE -- the record's DXQTH
+            holds five characters of the input's ABCDEF) for an entrant who counts
+            DXCC, DX for the others. The old column printed the QTHString
+            through the exporter's HisQTH, and BLANK for variant 6 (a QTH
+            typed, none resolved). The sent column is unchanged. *)
          if aStation in [psUS, psVE, psHost, psKH6] then
             begin
             Take(aVariant,
@@ -497,13 +506,13 @@ begin
                   '599 99     ',
                   '599        ',
                   '599 FL     '],
-                 ['579 GA     ',
+                 ['579 DL     ',
                   '58  DX     ',
-                  '579 ABCDEFGHIJ',
-                  '579 TRC    ',
-                  '579 GA     ',
-                  '579 GA     ',
-                  '579        ',
+                  '579 ABCDE  ',
+                  '579 DL     ',
+                  '579 DL     ',
+                  '579 DL     ',
+                  '579 ZZ     ',
                   '579 ZZ     '],
                  aSent, aRec);
             end
@@ -518,13 +527,13 @@ begin
                   '599 99     ',
                   '599 DX     ',
                   '599 FL     '],
-                 ['579 GA     ',
+                 ['579 DX     ',
                   '58  DX     ',
-                  '579 ABCDEFGHIJ',
-                  '579 TRC    ',
-                  '579 GA     ',
-                  '579 GA     ',
-                  '579        ',
+                  '579 DX     ',
+                  '579 DX     ',
+                  '579 DX     ',
+                  '579 DX     ',
+                  '579 DX     ',
                   '579 DX     '],
                  aSent, aRec);
             end;

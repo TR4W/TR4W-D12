@@ -132,7 +132,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     ITS COUNTRY PREFIX (NY4I) -- the party base's SentLocation /
     LocationOrOwnCountry, in the CQ exchange, the Cabrillo and the ADIF;
     the received column is what the DX station sent
-    (CabrilloReceivedRSTQTHOrDXQTH).
+    (CabrilloReceivedRSTDomesticQTHOrDXQTH since review H4).
 
   CABRILLO -- CONTEST: ON-QSO-PARTY (WA7BNM 357; the sponsor states none).
     The rules give no example line: the fields are RST and the sent QTH, RST
@@ -385,8 +385,10 @@ function TContestOntarioQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
    (* "county, province, state, or DXCC country abbreviation": what the
-      station sent; a DX station's DX QTH when nothing was typed. *)
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      station sent; a DX station's DX QTH, else what it sent.
+      CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column for a typed
+      "599 DL" (review H4 follow-up, 2026-11-16). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
 end;
 
 function TContestOntarioQP.GetInStateDomesticFileName: string;

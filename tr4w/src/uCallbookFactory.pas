@@ -28,6 +28,16 @@ const
    receiver destroyed before it fires must not be the one that is called. *)
 procedure LookupCallsignAsync(const aCall: string; aOnDone: TCallbookDoneEvent);
 
+(* THE PROGRAM IS EXITING (review M15): no reply is delivered from now on, and
+  no new lookup starts. Main thread, from MainUnit.tr4w_ShutDown.
+
+  NOT A JOIN, AND THAT IS STATED: a lookup in flight is not waited for -- it
+  could hold the exit for its whole timeout (8 s to connect, 10 s to read).
+  On Windows ExitProcess ends it; off Windows the process ends while it may
+  still be inside the HTTP request, and its last log line can reach Log4D after
+  Log4D's finalization. *)
+procedure CallbookLookupsShutdown;
+
 implementation
 
 uses
@@ -89,10 +99,15 @@ begin
       end;
 end;
 
+var
+   (* Main thread only: set by CallbookLookupsShutdown, read by ReportDone
+     (which the RTL runs on the main thread) and LookupCallsignAsync. *)
+   GStopped: boolean = False;
+
 procedure TCallbookLookupThread.ReportDone(Sender: TObject);
 begin
    try
-      if Assigned(FOnDone) then
+      if Assigned(FOnDone) and (not GStopped) then
          begin
          FOnDone(FRec);
          end;
@@ -105,8 +120,17 @@ procedure LookupCallsignAsync(const aCall: string; aOnDone: TCallbookDoneEvent);
 var
    thread: TCallbookLookupThread;
 begin
+   if GStopped then
+      begin
+      Exit;
+      end;
    thread := TCallbookLookupThread.Create(aCall, aOnDone);
    thread.Start;
+end;
+
+procedure CallbookLookupsShutdown;
+begin
+   GStopped := True;
 end;
 
 end.

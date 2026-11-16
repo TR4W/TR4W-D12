@@ -107,7 +107,7 @@ function StageSetupItems(const aStore: TRadioConfigStore;
 procedure AddReportLine(var aReport: string; const aLine: string);
 
 (* The name a new cluster is stored under when the operator gave none: the
-  host part of 'host:port', or 'Cluster'. *)
+  host part of 'host:port', or SDefaultClusterName. *)
 function SetupClusterBaseName(const aCluster: TClusterDefinition): string;
 
 (* A MAIDENHEAD LOCATOR IN ITS STANDARD CASE.  The field letters are capitals
@@ -229,7 +229,7 @@ begin
 
    if Result = '' then
       begin
-      Result := 'Cluster';
+      Result := SDefaultClusterName;
       end;
 end;
 

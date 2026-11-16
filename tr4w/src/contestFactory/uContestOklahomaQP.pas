@@ -74,7 +74,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     party base's SentLocation / LocationOrOwnCountry, used by the CQ
     exchange, Cabrillo and ADIF -- lifted there from the North Dakota QSO
     Party, its first user. A DX station's received column is its prefix as
-    sent (CabrilloReceivedRSTQTHOrDXQTH).
+    sent (CabrilloReceivedRSTDomesticQTHOrDXQTH since review H4).
 
   QSO POINTS -- "Count two points per phone QSO ... Count three points per
     CW QSO ... Count three points per Digital QSO (No FT8/FT4)", the same for
@@ -349,8 +349,11 @@ function TContestOklahomaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExc
                                                         const aQso: ContestExchange;
                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   (* A DX station sent its DXCC prefix: the received column is that. *)
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+   (* A DX station sent its DXCC prefix: the received column is its DX QTH
+      (the country the call resolved to), else what it sent.
+      CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column for a typed
+      "599 DL" (review H4 follow-up, 2026-11-16). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
 end;
 
 function TContestOklahomaQP.GetInStateDomesticFileName: string;

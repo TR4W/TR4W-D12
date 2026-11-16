@@ -174,6 +174,12 @@ procedure CreateTR4WBandMapWindow;
 function SpotCopyText(const aCall, aEntity, aFrequency,
                       aComment: string): string;
 
+(* WHAT Copy Spot PUTS ON THE CLIPBOARD for aSpot: SpotCopyText over the spot's
+  own fields, with the entity CTY.DAT gives its call -- none for a CQ or NEW
+  marker row. The menu item assigns this and nothing else, so a test of this
+  is a test of the menu. *)
+function SpotCopyTextFor(const aSpot: TSpotRecord): string;
+
 (* THE COUNTRY PANEL'S TEXT, WITH THE BEAM HEADING (issue 186). aHeading is
   GetBeamHeading's answer: -1 means no heading (no station grid, or no grid for
   the spot), and the panel then shows the country alone. *)
@@ -207,6 +213,16 @@ uses
   uAppStrings,       (* SBandMapCopySpot, SBandMapCountryHeading *)
   uBandMapOrder,     (* FirstSpotAbove, CentreLeftCol -- the pure arithmetic *)
   uRadioConfigApply; (* ToggleAndStoreCommand -- a toggle here is SAVED *)
+
+(* A SPOT HAS A COUNTRY UNLESS ITS ROW IS A CQ OR NEW MARKER (issue 183). The
+  markers are stored as 'CQ/ <qso number>' and 'NEW ...', so a comparison with
+  the bare words 'CQ' and 'NEW' never matched and a marker was looked up in
+  CTY.DAT as if it were a callsign. *)
+function SpotHasCountry(const aSpot: TSpotRecord): boolean;
+begin
+   Result := (not SpotCallIsCQMarker(aSpot.FCall)) and
+             (not SpotCallIsNewMarker(aSpot.FCall));
+end;
 
 const
   { The status bar: six panels, fixed position, varying content -- the same six
@@ -546,9 +562,9 @@ begin
    sbSpot.Panels[SB_NOTES].Text := notes;
 
    // CQ and NEW are placeholders in the callsign field, not callsigns, and have
-   // no country.  The old code reached the same conclusion by comparing the
-   // first four bytes as an integer.
-   if (spot.FCall = 'CQ') or (spot.FCall = 'NEW') then
+   // no country.  SpotHasCountry asks the marker predicates, which match what
+   // is stored ('CQ/ 17', 'NEW ...'), never the bare words.
+   if not SpotHasCountry(spot) then
       begin
       sbSpot.Panels[SB_COUNTRY].Text := '';
       end
@@ -1005,21 +1021,12 @@ end;
 procedure TfrmBandMap.MenuCopySpotClick(Sender: TObject);
 var
    spot: TSpotRecord;
-   entity: AnsiString;
 begin
    if not SelectedSpot(spot) then
       begin
       Exit;
       end;
-   entity := '';
-   if (spot.FCall <> 'CQ') and (spot.FCall <> 'NEW') then
-      begin
-      entity := AnsiString(ctyGetCountryName(ctyGetCountry(spot.FCall)));
-      end;
-   Clipboard.AsText := SpotCopyText(AnsiString(spot.FCall),
-                                    entity,
-                                    AnsiString(FreqToPChar2(spot.FFrequency)),
-                                    SpotCommentForDisplay(SpotNotesText(spot)));
+   Clipboard.AsText := SpotCopyTextFor(spot);
 end;
 
 procedure TfrmBandMap.MenuDeleteSpotClick(Sender: TObject);
@@ -1082,6 +1089,21 @@ begin
       begin
       Result := Result + ' ' + aComment;
       end;
+end;
+
+function SpotCopyTextFor(const aSpot: TSpotRecord): string;
+var
+   entity: AnsiString;
+begin
+   entity := '';
+   if SpotHasCountry(aSpot) then
+      begin
+      entity := AnsiString(ctyGetCountryName(ctyGetCountry(aSpot.FCall)));
+      end;
+   Result := SpotCopyText(AnsiString(aSpot.FCall),
+                          entity,
+                          AnsiString(FreqToPChar2(aSpot.FFrequency)),
+                          SpotCommentForDisplay(SpotNotesText(aSpot)));
 end;
 
 function CountryWithHeading(const aCountry: AnsiString;

@@ -485,6 +485,7 @@ type
         definition comparison above cannot see a change to either. }
       FSpeedSync: array[1..2] of boolean;
       FCWOutput: array[1..2] of string;
+      FCWOutputId: array[1..2] of string;
       FProfileRecorded: array[1..2] of boolean;
       { THE KEYER DEVICE A SLOT WAS APPLIED WITH -- a copy, for the reason
         RecordSlot copies the radio.  The CW-output string above names the
@@ -510,17 +511,27 @@ type
       function SlotChanged(const aSlot: integer;
                            const aRadio: TRadioDefinition): boolean;
 
-      { What the profile put on the air for this slot: its CW output and its
+      { What the profile put on the air for this slot: its CW output (the
+        name, and the keyer Id when it names a keyer -- CWOutputNId) and its
         speed-sync flag.  Written by the applier beside RecordSlot. }
       procedure RecordProfileSlot(const aSlot: integer;
                                   const aSpeedSync: boolean;
-                                  const aCWOutput: string);
+                                  const aCWOutput: string;
+                                  const aCWOutputId: string);
 
       { True if the profile's CW output for the slot differs from what was
         applied.  A change here needs the keyer rebuilt, which only a full
-        profile re-apply does.  False when nothing was recorded. }
+        profile re-apply does.  False when nothing was recorded.
+
+        BY ID WHEN BOTH SIDES HAVE ONE, the name otherwise (review H6).  A
+        keyer RENAME rewrites the profile's CW output name and keeps its Id,
+        so by name it was a change, and Save tore down and rebuilt both radio
+        links mid-contest.  CAT, NONE and a profile written before keyer ids
+        carry no Id, so for them -- and for a keyer swapped for CAT -- the name
+        still decides.  Residual: a pre-id profile renamed rebuilds once. }
       function CWOutputChanged(const aSlot: integer;
-                               const aCWOutput: string): boolean;
+                               const aCWOutput: string;
+                               const aCWOutputId: string): boolean;
 
       { True if the profile's speed-sync flag differs from what was applied.
         A single flag on the running radio: it can be set live, with no
@@ -1360,6 +1371,7 @@ begin
       FProfileRecorded[slot] := False;
       FSpeedSync[slot] := False;
       FCWOutput[slot] := '';
+      FCWOutputId[slot] := '';
       FreeAndNil(FKeyer[slot]);
       FKeyerRecorded[slot] := False;
       end;
@@ -1407,7 +1419,8 @@ end;
 
 procedure TAppliedRadioSnapshot.RecordProfileSlot(const aSlot: integer;
                                                   const aSpeedSync: boolean;
-                                                  const aCWOutput: string);
+                                                  const aCWOutput: string;
+                                                  const aCWOutputId: string);
 begin
    if (aSlot < 1) or (aSlot > 2) then
       begin
@@ -1415,14 +1428,32 @@ begin
       end;
    FSpeedSync[aSlot] := aSpeedSync;
    FCWOutput[aSlot] := aCWOutput;
+   FCWOutputId[aSlot] := Trim(aCWOutputId);
    FProfileRecorded[aSlot] := True;
 end;
 
 function TAppliedRadioSnapshot.CWOutputChanged(const aSlot: integer;
-                                               const aCWOutput: string): boolean;
+                                               const aCWOutput: string;
+                                               const aCWOutputId: string): boolean;
+var
+   id: string;
 begin
-   Result := (aSlot >= 1) and (aSlot <= 2) and FProfileRecorded[aSlot] and
-             (FCWOutput[aSlot] <> aCWOutput);
+   Result := False;
+   if (aSlot < 1) or (aSlot > 2) or (not FProfileRecorded[aSlot]) then
+      begin
+      Exit;
+      end;
+
+   (* THE KEYER BY IDENTITY, NOT BY NAME -- see the declaration. *)
+   id := Trim(aCWOutputId);
+   if (FCWOutputId[aSlot] <> '') and (id <> '') then
+      begin
+      (* UnicodeSameText: SameText narrows both sides to AnsiString here. *)
+      Result := not UnicodeSameText(FCWOutputId[aSlot], id);
+      Exit;
+      end;
+
+   Result := FCWOutput[aSlot] <> aCWOutput;
 end;
 
 function TAppliedRadioSnapshot.SpeedSyncChanged(const aSlot: integer;

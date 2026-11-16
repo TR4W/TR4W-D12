@@ -291,6 +291,10 @@ begin
    CheckTrue(TakeUnavailableNotice(shown), 'the first failed connect is announced');
    CheckFalse(TakeUnavailableNotice(shown), 'a retry is not');
    CheckFalse(TakeUnavailableNotice(shown), 'nor the one after');
+   (* Net > Connect clears the latch (uNet.ForgetServerRefusal): a deliberate
+     retry that fails is told, not silent (issue 316). *)
+   shown := False;
+   CheckTrue(TakeUnavailableNotice(shown), 'a failure after a deliberate Connect is announced');
    CheckTrue(Pos('Tailcat', SNetServerNotAvailable) = 0,
              'the on-screen line names no tunnel and carries no address');
    CheckTrue(Length(SNetServerNotAvailable) <= 60, 'one short line');

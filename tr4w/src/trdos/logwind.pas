@@ -2302,7 +2302,17 @@ var
   Spot                                  : TSpotRecord;
   h                                     : TFileHandle;   (* utils_file's -- see TFileHandle *)
 begin
-  if not tOpenFileForWrite(h, CharBufferText(TR4W_BANDMAPBIN_FILENAME)) then Exit;
+  (* THROUGH THE CHECKED REPORT FILE (issue 313): the file is written beside the
+    saved one and replaces it only when every byte went out, so a full disk
+    cannot leave a truncated band map for LoadBandMap to read back as spots.
+    There is no operator to tell at the point this runs (it is the window
+    closing), so a failure is an Error in the log. *)
+  if not OpenReportFile(h, CharBufferText(TR4W_BANDMAPBIN_FILENAME)) then
+     begin
+     logger.Error('[BandMap] %s was not saved: %s',
+                  [CharBufferText(TR4W_BANDMAPBIN_FILENAME), ReportFileProblem(h)]);
+     Exit;
+     end;
   if SpotsList.Count > 0 then
      begin
      sWriteFile(h, BandMapFileVersion, SizeOf(BandMapFileVersion));
@@ -2313,7 +2323,11 @@ begin
         sWriteFile(h, Spot, SizeOf(TSpotRecord));
         end;
      end;
-  FileClose(h);
+  if not CloseReportFile(h, True) then
+     begin
+     logger.Error('[BandMap] %s was not saved: %s; the previous file is unchanged',
+                  [CharBufferText(TR4W_BANDMAPBIN_FILENAME), ReportFileProblem(h)]);
+     end;
 
 end;
 

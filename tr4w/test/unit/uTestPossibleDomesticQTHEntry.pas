@@ -43,6 +43,9 @@ type
       procedure RunAllTests; override;
    private
       FParser: TExchangeEntryParser;
+      (* The worked station's call: the Ten-Ten and FISTS parsers ask
+         DomesticCountryCall of it. Empty for the others. *)
+      FCallsign: string;
       function Entry(const aText: string; out aRX: ContestExchange): boolean;
       procedure Accepted(const aText: string; const aExpectQTH: string;
                          const aExpectDomMult: string; aExpectNumber: integer);
@@ -62,6 +65,10 @@ type
       procedure Test_NRAURefusesAnUnlistedQTHWithAMessageAndWritesNothing;
       procedure Test_CQIRRefusesAnUnlistedCountyWithAMessageAndWritesNothing;
       procedure Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing;
+      procedure Test_JAPrefectureSeveralWordsReadsTheReportAsValidRSTDoes;
+      procedure Test_TenTenRefusesADomesticEntryWithNoQTHAndWritesNothing;
+      procedure Test_FISTSRefusesAnUnlistedQTHWithAMessageAndWritesNothing;
+      procedure Test_FISTSReadsTheReportAsValidRSTDoes;
       procedure UseDomesticFile(const aFileName: string);
    end;
 
@@ -72,7 +79,14 @@ uses
       RefuseDomesticQTH reads. *)
    uSettingsModel,
    SysUtils,
+   Classes,
    uTR4WStrings,
+   (* SExchangeNotASignalReport -- the report refusal (review H7). *)
+   uAppStrings,
+   (* ActiveMode, DefaultRST -- the session's mode and report. *)
+   LogWind,
+   (* DomesticCountries -- Ten-Ten and FISTS ask DomesticCountryCall. *)
+   ZoneCont,
    uContestFactory,
    uContestRegistry,
    uTestContestObjects,
@@ -94,6 +108,7 @@ function TPossibleDomesticQTHEntryTests.Entry(const aText: string;
    out aRX: ContestExchange): boolean;
 begin
    aRX := Default(ContestExchange);
+   aRX.Callsign := CallString(FCallsign);
    aRX.QTHString := SENTINEL_QTH;
    aRX.DomesticQTH := SENTINEL_DOMESTIC_QTH;
    aRX.DomMultQTH := SENTINEL_DOMESTIC_MULT;
@@ -341,6 +356,126 @@ begin
    CheckEquals('1001', UpperCase(string(rx.DomMultQTH)), '"1001" domestic multiplier');
 end;
 
+(* REVIEW H7, 2026-11-16: the several-word form read a lone strength as
+   5 + n on Phone, so '5' was a report of 10 (D7 the same, LOGSTUFF.PAS
+   3736); it is ReadRSTWord's reading now, 55, as every other parser's. A
+   word in the report's place that is no report is refused, naming it. This
+   form still writes as it goes (open on issue 308), so only the report and
+   the answer are asserted. *)
+procedure TPossibleDomesticQTHEntryTests.Test_JAPrefectureSeveralWordsReadsTheReportAsValidRSTDoes;
+var
+   rx: ContestExchange;
+   ok: boolean;
+   savedMode: ModeType;
+   savedDefault: Word;
+begin
+   BeginTest('Test_JAPrefectureSeveralWordsReadsTheReportAsValidRSTDoes');
+   savedMode := ActiveMode;
+   savedDefault := DefaultRST;
+   try
+      ActiveMode := Phone;
+      DefaultRST := 59;
+      rx := Default(ContestExchange);
+      ExchangeErrorMessage := '';
+      ok := ProcessRSTAndJAPrefectureExchange('5 1001', rx);
+      CheckTrue(ok, '"5 1001" Phone is accepted: ' + string(ExchangeErrorMessage));
+      CheckEquals(55, Integer(rx.RSTReceived), '"5 1001" Phone: the strength alone is 55 (was 10)');
+
+      ActiveMode := CW;
+      DefaultRST := 599;
+      rx := Default(ContestExchange);
+      ok := ProcessRSTAndJAPrefectureExchange('5 1001', rx);
+      CheckTrue(ok, '"5 1001" CW is accepted');
+      CheckEquals(559, Integer(rx.RSTReceived), '"5 1001" CW: the strength alone is 559');
+
+      rx := Default(ContestExchange);
+      ExchangeErrorMessage := '';
+      ok := ProcessRSTAndJAPrefectureExchange('699 1001', rx);
+      CheckFalse(ok, '"699 1001" CW is refused (it stored a report of 699)');
+      CheckEquals(UnicodeFormat(SExchangeNotASignalReport, ['699']),
+                  string(ExchangeErrorMessage), '"699 1001": the message names the report');
+   finally
+      ActiveMode := savedMode;
+      DefaultRST := savedDefault;
+      end;
+end;
+
+(* ISSUE 308: ProcessNameQTHAndPossibleTenTenNumberExchange (Ten-Ten) parses
+   on a copy and refuses a DOMESTIC station's entry through
+   DomesticQTHFoundOrRefused. Ten-Ten has no domestic file, so any QTH is
+   known; what is refused is an entry with none. The refusal is the proof
+   that the domestic path ran: a DX call takes any entry. *)
+procedure TPossibleDomesticQTHEntryTests.Test_TenTenRefusesADomesticEntryWithNoQTHAndWritesNothing;
+var
+   rx: ContestExchange;
+   ok: boolean;
+begin
+   BeginTest('Test_TenTenRefusesADomesticEntryWithNoQTHAndWritesNothing');
+   FCallsign := 'W1AW';
+   Refused('JOE 1234', TC_IMPROPERDOMESITCQTH + ' (no QTH)');
+   Refused('1234', TC_IMPROPERDOMESITCQTH + ' (no QTH)');
+
+   ok := Entry('JOE CT 1234', rx);
+   CheckTrue(ok, '"JOE CT 1234" from W1AW is accepted: ' + string(ExchangeErrorMessage));
+   CheckEquals('JOE', string(rx.Name), '"JOE CT 1234": the name');
+   CheckEquals('CT', string(rx.QTHString), '"JOE CT 1234": the QTH');
+   CheckEquals(1234, Integer(rx.TenTenNum), '"JOE CT 1234": the Ten-Ten number');
+
+   FCallsign := 'DL1ABC';
+   ok := Entry('HANS 1234', rx);
+   CheckTrue(ok, '"HANS 1234" from DL1ABC is accepted: a DX entry needs no QTH');
+   CheckEquals('HANS', string(rx.Name), '"HANS 1234": the name');
+   CheckEquals(1234, Integer(rx.TenTenNum), '"HANS 1234": the Ten-Ten number');
+   FCallsign := '';
+end;
+
+(* ISSUE 308: ProcessRSTQTHNameAndFistsNumberOrPowerExchange (FISTS,
+   s49p8.dom) parses on a copy and refuses an unlisted QTH from a domestic
+   station with its reason. A DX station's QTH is not looked up. *)
+procedure TPossibleDomesticQTHEntryTests.Test_FISTSRefusesAnUnlistedQTHWithAMessageAndWritesNothing;
+var
+   rx: ContestExchange;
+   ok: boolean;
+begin
+   BeginTest('Test_FISTSRefusesAnUnlistedQTHWithAMessageAndWritesNothing');
+   FCallsign := 'W1AW';
+   Refused('599 ZZ JOE 1234', TC_IMPROPERDOMESITCQTH + ' (ZZ not in s49p8.dom)');
+   Refused('ZZ JOE 1234', TC_IMPROPERDOMESITCQTH + ' (ZZ not in s49p8.dom)');
+   AcceptedWithRST('579 CT JOE 1234', 'CT', 'CT', 1234, 579);
+   Accepted('CT JOE 1234', 'CT', 'CT', 1234);
+
+   FCallsign := 'DL1ABC';
+   ok := Entry('599 ZZ HANS 1234', rx);
+   CheckTrue(ok, '"599 ZZ HANS 1234" from DL1ABC is accepted: a DX QTH is not looked up');
+   CheckEquals('HANS', string(rx.Name), '"599 ZZ HANS 1234": the name');
+   CheckEquals(1234, Integer(rx.NumberReceived), '"599 ZZ HANS 1234": the member number');
+   FCallsign := '';
+end;
+
+(* REVIEW H7, 2026-11-16: the FISTS report was StrToIntDef of the first word,
+   so '699' was stored and '5' was a report of 5. ReadRSTWord's reading now;
+   a word it refuses is named and nothing is written. *)
+procedure TPossibleDomesticQTHEntryTests.Test_FISTSReadsTheReportAsValidRSTDoes;
+var
+   savedMode: ModeType;
+   savedDefault: Word;
+begin
+   BeginTest('Test_FISTSReadsTheReportAsValidRSTDoes');
+   savedMode := ActiveMode;
+   savedDefault := DefaultRST;
+   FCallsign := 'W1AW';
+   try
+      ActiveMode := CW;
+      DefaultRST := 599;
+      Refused('699 CT JOE 1234', UnicodeFormat(SExchangeNotASignalReport, ['699']));
+      AcceptedWithRST('5 CT JOE 1234', 'CT', 'CT', 1234, 559);
+   finally
+      ActiveMode := savedMode;
+      DefaultRST := savedDefault;
+      FCallsign := '';
+      end;
+end;
+
 procedure TPossibleDomesticQTHEntryTests.UseDomesticFile(const aFileName: string);
 begin
    Settings.Contest.DomesticFilename := aFileName;
@@ -360,11 +495,18 @@ var
    savedTable: TDomQTHTable;
    savedMyCountry: string;
    savedDomesticFilename: string;
+   savedCountries: TStringList;
+   i: integer;
 begin
    savedContest := Contest;
    savedTable := DomQTHTable;
    savedMyCountry := Settings.My.Country;
    savedDomesticFilename := Settings.Contest.DomesticFilename;
+   savedCountries := TStringList.Create;
+   for i := 0 to DomesticCountries.Count - 1 do
+      begin
+      savedCountries.Add(DomesticCountries.IDs[i]);
+      end;
    DomQTHTable := TDomQTHTable.Create;
    try
       Settings.My.DeriveCountry('G');
@@ -403,7 +545,35 @@ begin
       Contest := ContestHandleOf(JALONGPREFECT);
       ReleaseActiveContest;
       Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing;
+      Test_JAPrefectureSeveralWordsReadsTheReportAsValidRSTDoes;
+
+      (* TEN-TEN AND FISTS ASK DomesticCountryCall: a K call is domestic, as
+         FoundContest sets it up for both. The list is restored. *)
+      DomesticCountries.Clear;
+      DomesticCountries.Add('K');
+
+      FParser := ProcessNameQTHAndPossibleTenTenNumberExchange;
+      Settings.Contest.DomesticFilename := '';
+      DomQTHTable.Free;
+      DomQTHTable := TDomQTHTable.Create;
+      Contest := ContestHandleOf(TENTEN);
+      ReleaseActiveContest;
+      Test_TenTenRefusesADomesticEntryWithNoQTHAndWritesNothing;
+
+      FParser := ProcessRSTQTHNameAndFistsNumberOrPowerExchange;
+      UseDomesticFile('s49p8.dom');
+      Contest := ContestHandleOf(FISTS);
+      ReleaseActiveContest;
+      Test_FISTSRefusesAnUnlistedQTHWithAMessageAndWritesNothing;
+      Test_FISTSReadsTheReportAsValidRSTDoes;
    finally
+      DomesticCountries.Clear;
+      for i := 0 to savedCountries.Count - 1 do
+         begin
+         DomesticCountries.Add(CallString(savedCountries[i]));
+         end;
+      savedCountries.Free;
+      FCallsign := '';
       DomQTHTable.Free;
       DomQTHTable := savedTable;
       Settings.Contest.DomesticFilename := savedDomesticFilename;

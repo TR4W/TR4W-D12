@@ -45,6 +45,8 @@ type
       procedure Test_AFaultInTheReviewNeverReachesKeying;
       procedure Test_AutoSendKeysNoPossibleCallKey;
       procedure Test_CallWindowCWOffAndOnGoThroughSetCWState;
+      procedure Test_PhoneEnterWithTheDVKOffSendsNothing;
+      procedure Test_AWinKeyerThatCannotOpenSaysWhy;
    public
       procedure RunAllTests; override;
    end;
@@ -1237,6 +1239,93 @@ begin
    Test_AFaultInTheReviewNeverReachesKeying;
    Test_AutoSendKeysNoPossibleCallKey;
    Test_CallWindowCWOffAndOnGoThroughSetCWState;
+   Test_PhoneEnterWithTheDVKOffSendsNothing;
+   Test_AWinKeyerThatCannotOpenSaysWhy;
+end;
+
+(* A WINKEYER THAT CANNOT OPEN SAYS WHY (review H5).  wkOpen returned False
+  with nothing said, and the thread that ran it discarded even that.  No
+  keyer is needed for the two failures that happen before a byte is sent: no
+  serial port configured, and a port that does not exist.  What the thread
+  then does with the reason (one log Error, one notice) is bench work. *)
+procedure TCWKeyerTests.Test_AWinKeyerThatCannotOpenSaysWhy;
+var
+   savedEnable: boolean;
+   savedPort: PortType;
+   savedName: string;
+   reason: string;
+begin
+   BeginTest('Test_AWinKeyerThatCannotOpenSaysWhy');
+   savedEnable := WinKeySettings.wksWinKey2Enable;
+   savedPort := WinKeySettings.wksWinKey2Port;
+   savedName := WinKeySettings.wksWinKey2PortName;
+   try
+      WinKeySettings.wksWinKey2Enable := True;
+
+      WinKeySettings.wksWinKey2Port := NoPort;
+      WinKeySettings.wksWinKey2PortName := '';
+      CheckFalse(wkOpen(reason), 'no port: the open fails');
+      CheckTrue(Pos('needs a serial port', reason) > 0,
+                'no port: the reason says so; got: ' + reason);
+
+      WinKeySettings.wksWinKey2PortName := 'COM250';
+      CheckFalse(wkOpen(reason), 'a port that does not exist: the open fails');
+      CheckTrue(Pos('COM250', reason) > 0,
+                'a port that does not exist: the reason names it; got: ' + reason);
+      CheckFalse(wkActive, 'a failed open leaves the keyer inactive');
+   finally
+      (* The open creates the port object before it fails; nothing else
+        will free it here. *)
+      FreeAndNil(WinKeyPort);
+      WinKeySettings.wksWinKey2Enable := savedEnable;
+      WinKeySettings.wksWinKey2Port := savedPort;
+      WinKeySettings.wksWinKey2PortName := savedName;
+   end;
+end;
+
+(* ENTER ON A PHONE S&P CALL WITH THE DVK OFF SENDS NOTHING, AS IN D7 (review
+  M10).  D7's Send_DE: `if DVKEnable and MessageEnable and not BeSilent then
+  SendFunctionKeyMessage(F1, SearchAndPounceOpMode)`.  Issue 66 dropped the
+  DVK gate, so every phone Enter ran SendFunctionKeyMessage, which clears the
+  SO2R pending-switch flags (SwitchNext, Switch) and InactiveRigCallingCQ
+  before it even looks at the memory.  Pinned through those flags: they are
+  what the operator loses. *)
+procedure TCWKeyerTests.Test_PhoneEnterWithTheDVKOffSendsNothing;
+var
+   savedMode: ModeType;
+   savedDvk, savedMsg, savedSilent: boolean;
+   savedSwitchNext, savedSwitch, savedInactiveCQ: boolean;
+begin
+   BeginTest('Test_PhoneEnterWithTheDVKOffSendsNothing');
+   savedMode := ActiveMode;
+   savedDvk := Settings.Dvk.Enable;
+   savedMsg := Settings.Message.Enable;
+   savedSilent := BeSilent;
+   savedSwitchNext := SwitchNext;
+   savedSwitch := Switch;
+   savedInactiveCQ := InactiveRigCallingCQ;
+   try
+      ActiveMode := Phone;
+      Settings.Dvk.Enable := False;
+      Settings.Message.Enable := True;
+      BeSilent := False;
+      SwitchNext := True;
+      Switch := True;
+      InactiveRigCallingCQ := True;
+
+      CheckTrue(Send_DE, 'Send_DE answers True on phone');
+      CheckTrue(SwitchNext, 'a pending SO2R switch survives Enter with the DVK off');
+      CheckTrue(Switch, 'the switch flag survives Enter with the DVK off');
+      CheckTrue(InactiveRigCallingCQ, 'the inactive-rig CQ survives Enter with the DVK off');
+   finally
+      ActiveMode := savedMode;
+      Settings.Dvk.Enable := savedDvk;
+      Settings.Message.Enable := savedMsg;
+      BeSilent := savedSilent;
+      SwitchNext := savedSwitchNext;
+      Switch := savedSwitch;
+      InactiveRigCallingCQ := savedInactiveCQ;
+   end;
 end;
 
 end.

@@ -563,6 +563,32 @@ resend at the start of the download had got it to the server first.
   caught. `tools/netprobe` `--case catchup` against both servers. **The real
   two-station reboot check is BENCH_QUEUE.**
 
+## The server log that cannot be written (issues 314, 312; review H9, 2026-11-16)
+
+- **No in-memory buffer.** `AddContestExchangeToBuffer` / `WriteContestExchangesBufferToServerLog`
+  had no caller (30 slots, lost on exit) and are deleted. A QSO the log cannot take is
+  **still relayed**: no packet acknowledges a QSO, the sender marks it sent when its
+  writer wrote it and never offers it again, so withholding it would only take it from
+  the others' dupe and mult checks. The next station to link pushes what the server's
+  log lacks (the restock). Nothing on a station waits for the 8300 ACK (it only sets
+  `tNet_Event`), so "no ACK" does NOT make a station resend.
+- **The notice channel is the intercom** (`NET_INTERCOMMESSAGE_ID`, sender `#`, a Str80,
+  <= 79 chars): `tr4wserverUnit.SendNoticeToStations`. No new wire field; an older station
+  shows it too. Sent on the TRANSITIONS only (first failure of a run, first success
+  after), by `NoteServerLogFailure` / `NoteServerLogWritten`; the window shows the count.
+  Texts and the clip of the OS reason live in `uServerLogHealth` (a leaf, tested).
+- **The window:** `uServerForm.SetServerLogProblem` (red label + `LOG NOT SAVING` title
+  suffix; one title builder, because `SetClientCount` also writes the title). Issue 312:
+  `ShowServerProblems` also reads `appender.WriteFailures` (Log4D counts instead of
+  raising), checked in `DisplayRCVDBytes`. The tr4w APP's own tr4w.log counter is not
+  yet shown anywhere.
+- **Torn tail at start:** `OfferTornLogRepair` (before `OpenOrCreateServerLog`) -> only a
+  file whose first record is the CURRENT header is offered a backup-then-trim
+  (`BackupAndTrimServerLog`: copy, size check, then truncate; `<file>.torn-<stamp>.bak`).
+  Size alone cannot tell a torn tail from an older record size, the header can. Any other
+  wrong-size log is still refused, untouched.
+- TR4WServerPy (other repository) has none of this; parity is open.
+
 ## A server that lost its log: the catch-up is TWO-WAY (the restock, 2026-10-28)
 
 NY4I moved TR4WServerPy to another machine with no log. His Windows station held 83
@@ -719,9 +745,14 @@ forget; (2) `SendToNet` refuses a packet whose first Word is not an id
 (id, length) per link (`TNetSendRefusals`, reset by `NetBeginLinkSession`). There is no
 bypass: the only raw send that existed, `LogNet.SendMultiMessage` (K1EA text), has no live
 caller, and the 4-byte log-info sentinel is not sent through `SendToNet`. **A new record
-type needs an entry in `NetMessageSize` before it can be sent at all.** Out of scope but
-real: `MyStationState` is one global written from the main and the radio polling thread, so
-the record can tear (the id is fine); `SendMessageStatus`'s local record is not zeroed.
+type needs an entry in `NetMessageSize` before it can be sent at all.**
+**`MyStationState` is one global written from FOUR threads** -- the main thread, the
+WinKeyer reader (`uWinKey`, its busy bit), the CPU keyer's CW thread and the paddle thread
+(both through `PTTOn`/`PTTOff` -> `PTTStatusChanged`). Not the radio poller (its
+`PTTStatusChanged` calls are commented out). Issue 132's audit said all callers were main
+thread; that was wrong (review M12, 2026-11-16). `SendStationStatus` now holds
+`GStationStateLock` across the fill and the send, so the record cannot tear.
+`SendMessageStatus`'s local record is still not zeroed.
 
 `tr4wserver.ini` belongs to a different program and is out of scope for the JSON
 settings work.

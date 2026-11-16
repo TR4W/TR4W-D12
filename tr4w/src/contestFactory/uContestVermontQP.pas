@@ -90,8 +90,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
         MY STATE is empty OR 'DX', which the New Contest dialog takes for a
         station outside every area (StatesNoLocation; without it the 'DX'
         went on the air and into both columns).
-      * A DX STATION'S RECEIVED COLUMN is its DXCC prefix: as typed, else the
-        DX QTH TR4W resolved from the call (CabrilloReceivedRSTQTHOrDXQTH) --
+      * A DX STATION'S RECEIVED COLUMN is its DXCC prefix: the DX QTH TR4W
+        resolved from the call, else as typed
+        (CabrilloReceivedRSTDomesticQTHOrDXQTH since review H4) --
         not DXLog's literal "DX" (NY4I).
 
   QSO POINTS -- 7A): "Each complete non-duplicate Phone contact is worth 1
@@ -468,9 +469,10 @@ function TContestVermontQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
    (* "Properly configured contest software will determine the DXCC country
-      and list the official prefix": what was typed, else the DX QTH the
-      call resolved to. *)
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      and list the official prefix": the DX QTH the call resolved to, else
+      what was typed. CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column
+      for a typed "599 DL" (review H4 follow-up, 2026-11-16). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
 end;
 
 function TContestVermontQP.GetInStateDomesticFileName: string;

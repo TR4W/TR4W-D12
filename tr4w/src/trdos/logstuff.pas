@@ -698,6 +698,24 @@ function ProcessRSTAndJAPrefectureExchange(Exchange: ShortString; var
   with a message and leaves the QSO as it found it. *)
 function ProcessRSTAndPostalCodeExchange(Exchange: Str80; var RXData:
   ContestExchange): boolean;
+(* The parsers whose typed report was read inline until review H7
+  (2026-11-16): RS(T) and continent (CQMM, the South American WW), RS(T) and
+  or grid (the ARRL VHF contests, CQ VHF, Stew Perry), RS(T) and grid or RDA
+  (the UA4W Championship), RS(T) and QTH (the DX half of a state party's
+  exchange), RS(T), name and QTH, and POTA. In the interface for
+  uTestRSTWordReading: their report is ReadRSTWord's reading. *)
+function ProcessRSTAndContinentExchange(Exchange: ShortString; var
+  RXData: ContestExchange): boolean;
+function ProcessRSTAndOrGridSquareExchange(Exchange: ShortString; var
+  RXData: ContestExchange): boolean;
+function ProcessRSTAndGridSquareOrRDAExchange(Exchange: ShortString; var
+  RXData: ContestExchange): boolean;
+function ProcessRSTAndQTHExchange(Exchange: ShortString; var RXData:
+  ContestExchange): boolean;
+function ProcessRSTNameAndQTHExchange(Exchange: Str80; var RXData:
+  ContestExchange): boolean;
+function ProcessRSTAndPOTAPark(Exchange: ShortString; var RXData:
+  ContestExchange): boolean;
 function ParseArray(e: Str80): boolean;
 function ParseArray2(ExchangeString: Str80): boolean;
 (* ONE WORD READ AS THE MODE'S RS(T) -- see the implementation. In the
@@ -1744,6 +1762,66 @@ begin
   logger.debug('Leaving ProcessClassAndDomesticOrDXQTHExchange with ceClass = (%s) and QTHString = (%s)', [RXData.ceclass, RXData.QTHString]);
 end;
 
+(* A TYPED WORD IN THE RS(T)'S PLACE, READ AS EVERY REPORT IS -- review H7,
+  2026-11-16. Twelve parsers read the report inline: the strength alone
+  through a table of their own (CW 509 + 10n, Phone 50 + n -- or 5 + n in the
+  continent and JA prefecture parsers, so a Phone '5' was a report of 10, D7
+  the same) and anything longer with StrToIntDef, unchecked, so '699' and
+  '1234' were stored. They ask ReadRSTWord (tree.ValidRST behind its
+  one-to-three-digit guard), the reading issue 330 made the only one.
+
+  True: aRST is the report. False: the word is no report, ExchangeErrorMessage
+  names it (SExchangeNotASignalReport, NY4I on issue 282: "If the operator
+  entered an invalid code anywhere and we know it to be invalid, we should
+  tell them"), and aRST is left alone. The word is cut to ten characters for
+  ReadRSTWord, which refuses anything over three; the message names it as
+  typed. *)
+
+(* THE TYPED REPORT OF THESE TWELVE PARSERS: ReadRSTWord, WITH ONE EXCEPTION
+  KEPT FROM D7 (coordinator's ruling, 2026-11-16: no refusal D7 did not have,
+  beyond words that are no report at all). An RST typed on Phone -- three
+  digits, 100..599, '599' above all -- is no Phone report to ValidRST, but
+  every one of these parsers took it in D7 (C:\TR4W LOGSTUFF.PAS 1495, 2173,
+  2303, 3679, 3740, 3783, 3795, 3940, 3963, 4593, 8855: StrToInt of the word,
+  no range check; POTA 4943, 4949: StrToIntDef), and operators type 599 on
+  SSB. It is accepted and
+  the session's DEFAULT report is stored -- 59 on Phone -- where D7 stored the
+  digits as typed (599 on a Phone QSO). The zone and postcode parsers, which
+  refused it before this review (issues 274, 325), do not ask this. *)
+function ReadTypedReportWord(const aWord: string; out aRST: smallInt): boolean;
+var
+  number: integer;
+begin
+  Result := ReadRSTWord(Str10(aWord), aRST);
+  if (not Result)                     and
+     (not (ActiveMode in [CW, Digital])) and
+     (length(aWord) = 3)              and
+     StringIsAllNumbers(aWord)        then
+     begin
+     number := StrToIntDef(aWord, 0);
+     if (number >= 100) and (number <= 599) then
+        begin
+        aRST := DefaultRST;
+        Result := True;
+        end;
+     end;
+end;
+
+function ReadReportWordOrRefuse(const aWord: string; var aRST: smallInt): boolean;
+var
+  report: smallInt;
+begin
+  Result := ReadTypedReportWord(aWord, report);
+  if Result then
+     begin
+     aRST := report;
+     end
+  else
+     begin
+     ExchangeErrorMessage := UnicodeFormat(SExchangeNotASignalReport, [aWord]);
+     end;
+end;
+
 (* THE FIRST WORD ParseArray2 CUT, READ AS THE MODE'S RS(T) -- issue 330,
   2026-11-15. These sites called LOGSTUFF.SetRST, a second report check that
   had drifted from tree.ValidRST: on CW a lone strength 5 gave 514 where
@@ -1776,33 +1854,39 @@ const
     eetUnknown);
   exNNMN: array[0..3] of ExchangeElementType = (eetNumber, eetNumber, eetMixed,
     eetNumber);
+var
+  parsed: ContestExchange;
 begin
   Result := False;
+  (* PARSED ON A COPY, WRITTEN ONLY WHEN ACCEPTED (review M7, 2026-11-16):
+    forms 3 and 4 wrote the age, and form 4 the report, before their last
+    two exits, so an entry refused there left them in the QSO. *)
+  parsed := RXData;
   if ParseArray2(Exchange) then // 4.66.2
      begin
      case ParserArray.paCount of
        1:
          if ParserArray.paElements[0].prType = eetNumber then
             begin
-            RXData.Age := ParserArray.paElements[0].prInteger;
+            parsed.Age := ParserArray.paElements[0].prInteger;
             Result := True;
             end;
 
        2:
          if Cardinal(ParserArray.paStatus) = Cardinal(exNNUU) then
             begin
-            if not ReadReportOfFirstElement(RXData) then
+            if not ReadReportOfFirstElement(parsed) then
                begin
                Exit;
                end;
-            RXData.Age := ParserArray.paElements[1].prInteger;
+            parsed.Age := ParserArray.paElements[1].prInteger;
             Result := True;
             end;
 
        3:
          if Cardinal(ParserArray.paStatus) = Cardinal(exNMNU) then
             begin
-            RXData.Age := ParserArray.paElements[0].prInteger;
+            parsed.Age := ParserArray.paElements[0].prInteger;
             if not IsAGoodCall(ParserArray.paElements[1].prString) then
                begin
                Exit;
@@ -1811,7 +1895,7 @@ begin
                begin
                Exit;
                end;
-            RXData.QTHString := ParserArray.paElements[1].prString + ' ' +
+            parsed.QTHString := ParserArray.paElements[1].prString + ' ' +
               IntToStr(ParserArray.paElements[2].prInteger);
             Result := True;
             end;
@@ -1819,11 +1903,11 @@ begin
        4:
          if Cardinal(ParserArray.paStatus) = Cardinal(exNNMN) then
             begin
-            if not ReadReportOfFirstElement(RXData) then
+            if not ReadReportOfFirstElement(parsed) then
                begin
                Exit;
                end;
-            RXData.Age := ParserArray.paElements[1].prInteger;
+            parsed.Age := ParserArray.paElements[1].prInteger;
             if not IsAGoodCall(ParserArray.paElements[2].prString) then
                begin
                Exit;
@@ -1832,11 +1916,16 @@ begin
                begin
                Exit;
                end;
-            RXData.QTHString := ParserArray.paElements[2].prString + ' ' +
+            parsed.QTHString := ParserArray.paElements[2].prString + ' ' +
               IntToStr(ParserArray.paElements[3].prInteger);
             Result := True;
             end;
      end;
+     end;
+
+  if Result then
+     begin
+     RXData := parsed;
      end;
 end;
 
@@ -1884,17 +1973,12 @@ begin
 
      if StringIsAllNumbers(TempString) and (RXData.RSTReceived = 0) then
         begin
-        if length(TempString) = 1 then
+        (* ReadRSTWord's reading (review H7): the Phone strength alone was
+          5 + n here, so '5' was 10. *)
+        if not ReadReportWordOrRefuse(string(TempString), RXData.RSTReceived) then
            begin
-           case ActiveMode of
-             CW: RXData.RSTReceived := 509 + (Ord(TempString[1]) - 48) * 10;
-             Phone: RXData.RSTReceived := 5 + (Ord(TempString[1]) - 48);
+           Exit;
            end;
-           end
-        else
-           begin
-           RXData.RSTReceived := StrToIntDef(TempString, 0)
-           end
         end
      else if not QTHFound then
         begin
@@ -2712,6 +2796,7 @@ var
   TestString: Str20;
   Words: ShortString;
   BadWord: Str20;
+  probeRST: smallInt;
 
 begin
   ProcessRSTAndOrGridSquareExchange := False;
@@ -2730,7 +2815,9 @@ begin
   while Words <> '' do
      begin
      TestString := RemoveLastString(Words);
-     if (not GoodLookingGrid(TestString)) and (not StringIsAllNumbers(TestString)) then
+     (* A NUMBER MUST BE A REPORT (review H7, 2026-11-16): ReadRSTWord's
+       reading, not "all digits" -- '699' and '1234' were stored as reports. *)
+     if (not GoodLookingGrid(TestString)) and (not ReadTypedReportWord(string(TestString), probeRST)) then
         begin
         BadWord := TestString;
         end;
@@ -2756,21 +2843,11 @@ begin
            ProcessRSTAndOrGridSquareExchange := True;
            end;
         end
-     else if (RXData.RSTReceived = 0) and StringIsAllNumbers(TestString) then
+     else if (RXData.RSTReceived = 0) and ReadTypedReportWord(string(TestString), probeRST) then
         begin
-        if length(TestString) = 1 then
-           begin
-
-           case ActiveMode of
-             CW: RXData.RSTReceived := 509 + (Ord(TestString[1]) - 48) * 10;
-             Phone: RXData.RSTReceived := 50 + (Ord(TestString[1]) - 48);
-           end;
-           end
-        else
-           begin
-           RXData.RSTReceived := StrToIntDef(TestString, 0);
-           end;
-
+        (* Every word that is no grid is a report by now -- the pre-scan
+          refused any other. *)
+        RXData.RSTReceived := probeRST;
         ProcessRSTAndOrGridSquareExchange := True;
         end;
      end;
@@ -2863,18 +2940,11 @@ begin
         end
      else if (RXData.RSTReceived = 0) and StringIsAllNumbers(TestString) then
         begin
-        if length(TestString) = 1 then
+        (* ReadRSTWord's reading (review H7). *)
+        if not ReadReportWordOrRefuse(string(TestString), RXData.RSTReceived) then
            begin
-           case ActiveMode of
-             CW: RXData.RSTReceived := 509 + (Ord(TestString[1]) - 48) * 10;
-             Phone: RXData.RSTReceived := 50 + (Ord(TestString[1]) - 48);
+           Exit;
            end;
-           end
-        else
-           begin
-           RXData.RSTReceived := StrToIntDef(TestString, 0);
-           end;
-
         end;
      end;
 
@@ -4162,16 +4232,11 @@ begin
         begin
         TempString := NumericTokens[NumericTokens.Count - 1];
 
-        if Length(TempString) = 1 then
+        (* ReadRSTWord's reading (review H7): any number was stored. The
+          finally below frees the lists. *)
+        if not ReadReportWordOrRefuse(string(TempString), RXData.RSTReceived) then
            begin
-           case ActiveMode of
-             CW    : RXData.RSTReceived := 509 + (Ord(TempString[1]) - 48) * 10;
-             Phone : RXData.RSTReceived := 50  + (Ord(TempString[1]) - 48);
-           end;
-           end
-        else
-           begin
-           RXData.RSTReceived := StrToIntDef(TempString, 0);
+           Exit;
            end;
         end;
 
@@ -4239,18 +4304,12 @@ begin
      if StringIsAllNumbers(TempString) and (RXData.RSTReceived = 0) and
        (length(TempString) < 4) then
         begin
-        if length(TempString) = 1 then
+        (* ReadRSTWord's reading (review H7): the Phone strength alone was
+          5 + n here, so '5' was 10 (D7 the same). *)
+        if not ReadReportWordOrRefuse(string(TempString), RXData.RSTReceived) then
            begin
-           case ActiveMode of
-             CW: RXData.RSTReceived := 509 + (Ord(TempString[1]) - 48) * 10;
-             Phone: RXData.RSTReceived := 5 + (Ord(TempString[1]) - 48);
+           Exit;
            end;
-           end
-        else
-           begin
-           RXData.RSTReceived := StrToIntDef(TempString, 0)
-           end
-
         end
      else if not QTHFound then
         begin
@@ -4292,11 +4351,19 @@ begin
 
   ProcessRSTAndQTHExchange := True;
 
+  (* THE REPORT IS ReadRSTWord's READING (review H7, 2026-11-16): any number
+    in the first or the last place was stored. A word in that place that is
+    no report refuses the entry, naming it, before anything is written. The
+    word holds no blank -- it is cut at one -- and is never empty here. *)
   RSTString := PrecedingString(Exchange, ' ');
 
   if StringIsAllNumbersOrSpaces(RSTString) then
      begin
-     RXData.RSTReceived := StrToIntDef(RSTString, 0);
+     if not ReadReportWordOrRefuse(string(RSTString), RXData.RSTReceived) then
+        begin
+        ProcessRSTAndQTHExchange := False;
+        Exit;
+        end;
      RXData.QTHString := PostcedingString(Exchange, ' ');
      end
   else
@@ -4310,7 +4377,11 @@ begin
 
      if StringIsAllNumbersOrSpaces(RSTString) then
         begin
-        RXData.RSTReceived := StrToIntDef(RSTString, 0);
+        if not ReadReportWordOrRefuse(string(RSTString), RXData.RSTReceived) then
+           begin
+           ProcessRSTAndQTHExchange := False;
+           Exit;
+           end;
         RXData.QTHString := Copy(Exchange, 1, length(Exchange) - length(RSTString)
           - 1);
         end
@@ -4403,9 +4474,16 @@ begin
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
 
+  (* THE REPORT IS ReadRSTWord's READING (review H7, 2026-11-16): the first or
+    the third word, when all digits, was stored as typed. One that is no
+    report refuses the entry, naming it, before anything is written. *)
   if StringIsAllNumbers(FirstString) then
      begin
-     RXData.RSTReceived := StrToIntDef(FirstString, 0);
+     if not ReadReportWordOrRefuse(string(FirstString), RXData.RSTReceived) then
+        begin
+        ProcessRSTNameAndQTHExchange := False;
+        Exit;
+        end;
      if ThirdString <> '' then
         begin
         RXData.QTHString := ThirdString;
@@ -4428,9 +4506,13 @@ begin
 
   if StringIsAllNumbers(ThirdString) then
      begin
+     if not ReadReportWordOrRefuse(string(ThirdString), RXData.RSTReceived) then
+        begin
+        ProcessRSTNameAndQTHExchange := False;
+        Exit;
+        end;
      RXData.Name := FirstString;
      RXData.QTHString := SecondString;
-     RXData.RSTReceived := StrToIntDef(ThirdString, 0);
      Exit;
      end;
 
@@ -5127,9 +5209,9 @@ end;
 function ProcessRSTQTHNameAndFistsNumberOrPowerExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
-{ 599 QTH NAME FISTS# or 599 QTH NAME POWER.  Assumed to be FISTS # unless
+(* 599 QTH NAME FISTS# or 599 QTH NAME POWER.  Assumed to be FISTS # unless
   the number has a W at the end of it.  RST is optional.  QTH is required
-  even for DX.  Name can only be one word.  Spaces required for each entry. }
+  even for DX.  Name can only be one word.  Spaces required for each entry. *)
 
 var
   NumberEntries, Address, Result1: integer;
@@ -5156,9 +5238,15 @@ begin
 
   if StringIsAllNumbers(EntryList[1]) then
      begin
-     resolved.RSTReceived := StrToIntDef(EntryList[1], 0);
+     (* ReadRSTWord's reading (review H7): it was StrToIntDef, so '699' was
+       stored and '5' was a report of 5. A word that is no report is named;
+       the copy keeps the QSO as it was. *)
+     if not ReadReportWordOrRefuse(string(EntryList[1]), resolved.RSTReceived) then
+        begin
+        Exit;
+        end;
 
-     { Remove the RST from the entry list }
+     (* Remove the RST from the entry list *)
 
      if NumberEntries > 1 then
         begin
@@ -5171,15 +5259,15 @@ begin
      end
   else
      begin
-     resolved.RSTReceived := 599; { Use default RST }
+     resolved.RSTReceived := 599; (* Use default RST *)
      end;
 
-  { We have removed the RST if it was there.  Should have QTH, Name
-    and power or member # }
+  (* We have removed the RST if it was there.  Should have QTH, Name
+    and power or member # *)
 
   if NumberEntries < 2 then
      begin
-     Exit; { Not enough data }
+     Exit; (* Not enough data *)
      end;
 
   if (NumberEntries = 2) and DX then
@@ -5208,14 +5296,14 @@ begin
      NumberEntries := NumberEntries - 2;
      end;
 
-  { We should now just have the power or member number left }
+  (* We should now just have the power or member number left *)
 
   if NumberEntries <> 1 then
      begin
      Exit;
      end;
 
-  if StringIsAllNumbers(EntryList[1]) then { member number }
+  if StringIsAllNumbers(EntryList[1]) then (* member number *)
      begin
      ValChecked(EntryList[1], resolved.NumberReceived, Result1)
      end
@@ -5374,6 +5462,18 @@ begin
      rstWord := FirstString;
      end;
 
+  (* THE POSTCODE IS REQUIRED (review M6, 2026-11-16): every legal entry
+    above carries it, but an all-digit first word alone ('5', '599') made
+    the QTH the blank between two missing words, and the QSO was logged with
+    no postcode. Asked before the report, so '699' alone says what is
+    missing. The sponsor's rules are not in the tree (docs/ContestRules has
+    none); the header's legal entries are the statement this follows. *)
+  if Trim(string(parsed.QTHString)) = '' then
+     begin
+     ExchangeErrorMessage := SExchangeNoPostcode;
+     Exit;
+     end;
+
   if rstWord = '' then
      begin
      parsed.RSTReceived := DefaultRST;
@@ -5424,6 +5524,16 @@ begin
      end
   else
      begin
+     (* NOTHING CUT, NOTHING READ (review M8, 2026-11-16): nothing in the
+       engine fills ParserArray before this parser (issue 332), so in a REF
+       session paCount is 0, and paElements[paCount - 1] read the element
+       BEFORE the array. An empty array is refused without reading it; that
+       is what the garbage read answered in practice -- every typed entry is
+       refused today, which issue 332 must fix with NY4I's ruling. *)
+     if ParserArray.paCount <= 0 then
+        begin
+        Exit;
+        end;
      if ParserArray.paElements[ParserArray.paCount - 1].prType = eetNumber then
         begin
         RXData.NumberReceived := ParserArray.paElements[ParserArray.paCount -
@@ -5490,6 +5600,7 @@ var
   Normalized : string;    // Token after NormalizePOTAPark()
   SpacePos   : Integer;   // Index of the next space delimiter
   RSTFound   : Boolean;   // True once we have consumed the RST token
+  report     : smallInt;  // A numeric token's reading as a report (ReadRSTWord)
   AllParks   : string;    // Space-separated list of all parks (for SetLastPOTAExchange)
 begin
   // POTA is free-form — any exchange (including empty) is valid. Always True.
@@ -5585,20 +5696,22 @@ begin
            AllParks := AllParks + ' ' + Normalized;
            end;
         end
-     else if StringIsAllNumbers(Token) then
+     else if ReadTypedReportWord(Token, report) then
         begin
-        // Numeric token — treat as signal report.
+        // Numeric token that is a report — ReadRSTWord's reading (review H7,
+        // 2026-11-16; it was StrToIntDef, any number). A number that is NO
+        // report falls through to the free-form note below: POTA always logs.
         // POTA operators give one RST for the contact regardless of how many
         // parks the station is activating.
         if not RSTFound then
            begin
-           RXData.RSTSent := StrToIntDef(Token, DefaultRST);
+           RXData.RSTSent := report;
            RSTFound := True;
            end
         else
            begin
            // A second numeric token is RSTReceived (uncommon in POTA but valid).
-           RXData.RSTReceived := StrToIntDef(Token, DefaultRST);
+           RXData.RSTReceived := report;
            end;
         end
      else if LooksLikeAState(UpperCase(Token)) then
@@ -6008,7 +6121,9 @@ end;
   parser applies its 40-zone limit there too since issue 274 item 4. Writes
   RXData.RSTReceived, as the zone parser always did -- before a refusal too --
   and NOTHING ELSE of RXData; the caller writes the number only once it
-  accepts the entry. Answers whether the words have the shape.
+  accepts the entry. Answers whether the words have the shape. SO BOTH CALLERS
+  HAND IT A COPY of the QSO and write the copy back only on acceptance (the
+  zone parser since issue 274, the year parser since review M7).
 
   aFewest..aMost IS THE NUMBER'S WORD LENGTH (issue 298, stage 2): 1..2 for a
   zone, a two-digit year or a count; 4..4 for a four-digit year, so '1987
@@ -6192,6 +6307,7 @@ var
   refusedReport: Str10;
   fewest, most: integer;
   low, high: integer;
+  parsed: ContestExchange;
 begin
   Result := False;
   (* THE KIND SAYS HOW MANY DIGITS AND WHICH RANGE (issue 298, stage 2):
@@ -6202,7 +6318,12 @@ begin
      ExchangeErrorMessage := SExchangeImproperLicenseYear;
      Exit;
      end;
-  if not ReadRSTAndNumberOfDigits(Exchange, RXData, fewest, most, year, yearLeads,
+  (* PARSED ON A COPY (review M7, 2026-11-16), as the zone parser is since
+    issue 274: the word reader writes the RS(T) -- the session default first,
+    before any check -- so a refused '87 699' or '599 1850' left a report in
+    the QSO. The copy is written back only once the year is accepted. *)
+  parsed := RXData;
+  if not ReadRSTAndNumberOfDigits(Exchange, parsed, fewest, most, year, yearLeads,
                                   refusedReport) then
      begin
      (* The CW year-then-report form with no report in it ('87 699') names
@@ -6224,14 +6345,15 @@ begin
 
   (* THE RANGE: 00..99 for a two-digit year or a count, which its digits
     always are; 1900 to the QSO's own year for a four-digit one. *)
-  if (not ReceivedYearRange(aKind, ReferenceYearOfQSO(RXData), low, high)) or
+  if (not ReceivedYearRange(aKind, ReferenceYearOfQSO(parsed), low, high)) or
      (year < low) or (year > high) then
      begin
      ExchangeErrorMessage := SExchangeImproperLicenseYear;
      Exit;
      end;
 
-  StoreLicenceYear(RXData, year);
+  StoreLicenceYear(parsed, year);
+  RXData := parsed;
   Result := True;
   ExchangeErrorMessage := '';
 end;
@@ -7209,18 +7331,11 @@ begin
         end
      else if (RXData.RSTReceived = 0) and StringIsAllNumbers(TestString) then
         begin
-        if length(TestString) = 1 then
+        (* ReadRSTWord's reading (review H7). *)
+        if not ReadReportWordOrRefuse(string(TestString), RXData.RSTReceived) then
            begin
-           case ActiveMode of
-             CW: RXData.RSTReceived := 509 + (Ord(TestString[1]) - 48) * 10;
-             Phone: RXData.RSTReceived := 50 + (Ord(TestString[1]) - 48);
+           Exit;
            end;
-           end
-        else
-           begin
-           RXData.RSTReceived := StrToIntDef(TestString, 0);
-           end;
-
         end;
      end;
 

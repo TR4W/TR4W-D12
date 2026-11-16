@@ -5,6 +5,36 @@ reply. Tom reports approval of the Interfaces-order correction and the other
 agent is implementing it. Application ownership changes remain separate.
 The original investigation below is retained with its validation boundaries.
 
+## Status on main, November 16 (read this first)
+
+Brought up to date after the agent-work review of November 16 (finding M14).
+Where a later section disagrees with this one, this one is current; the stale
+passages below are marked in place.
+
+- **Fixed in source, on main since `4547b911`:** `Interfaces` is listed first in
+  `tr4w.lpr` (after the Unix manager units), so the LCL is finalized last and
+  `Application` is alive for every form freed in a unit finalization. The
+  logger is no longer freed by `MainUnit.tr4w_ShutDown`; Log4D's hierarchy owns
+  it (see the comment there, dated 2026-11-15).
+- **Consequence handled since this update:** with the LCL finalized last, its
+  teardown runs after Log4D's finalization, while `uCrashLog` held a cached
+  logger and an installed `ExceptProc`. `uCrashLog`'s own finalization now calls
+  `MarkCrashLogGone` first: from then on a crash report goes to
+  `tr4w-early.log` (no logger needed), the context dumpers are skipped and an
+  off-main-thread report is dropped (`uTestCrashLogGone`). Other unit
+  finalizers and LCL destructors that log through `MainUnit.logger` after
+  Log4D's finalization are **not** covered by that guard.
+- **STILL OPEN:** the receiving agent's reported **main-form repaint after
+  themes teardown** on Windows (see the concurrence section). Nothing on main
+  addresses it. Do not mark shutdown fixed while it stands.
+- **Evidence limits:** every macOS pass used a Lazarus build carrying the
+  private Cocoa accessibility patch, so the fix has not run on the shipping
+  macOS toolchain. The unmodified `4547b911` ran once, on the Linux CI smoke
+  (exit 0). `23962d86` then changed `uPrefsForm.pas` and its `.lfm` after
+  every GUI run, so no run covers exactly what HEAD ships. Windows still exits
+  through `ExitProcess`, which runs no finalization, so a Windows exit proves
+  nothing about finalizers.
+
 ## Native verification after the ordering correction, November 16
 
 The Linux workflow artifact from run `43776700899`, checked out at
@@ -70,7 +100,7 @@ cached globals and destruction order require their own reviewed change.
 
 The Linux first crash site differs from the reported Windows opened/hidden
 case, but is consistent with the shared ordering defect. On `debian`
-(toms@findaclub-staging, Debian 13 x86_64), run `linux-gdb-002` opened
+(<user>@<staging-host>, Debian 13 x86_64), run `linux-gdb-002` opened
 Preferences, hid it with Escape, then closed the main window and confirmed
 the observed exit question. GDB caught the first shutdown SIGSEGV before
 Pascal handling:
@@ -104,8 +134,10 @@ Exact evidence: [first SIGSEGV/main-thread stack](gui-test/linux-pilot-20261115/
 The archived executable SHA256 is
 `f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806`;
 its source revision is unknown. The embedded line numbers above belong to
-that binary, not necessarily today's checkout. No corrected-order Linux
-build has been exercised by this investigation yet.
+that binary, not necessarily today's checkout. ~~No corrected-order Linux
+build has been exercised by this investigation yet.~~ Superseded: the
+corrected order (`4547b911`) passed the Linux workflow smoke, run
+`43776700899`; see "Native verification" at the top.
 
 The receiving agent owns the application fix and release-workflow validation,
 including corpus /EXPORT and tr4wserver. Our Mac Cocoa accessibility patch
@@ -139,7 +171,7 @@ logging infrastructure. Removing a callback must precede freeing its target.
 - Main has unrelated work in progress. Inspect its current state before
   implementing or integrating anything; do not overwrite another agent's work.
 - The original live pilot and GDB runs used `debian`.
-  It connects as `toms@findaclub-staging`, Debian 13 x86_64. A subsequent native
+  It connects as `<user>@<staging-host>`, Debian 13 x86_64. A subsequent native
   mac-ci pilot also reproduced the shutdown failure; see the follow-up below.
 - Binary: user-staged v5.0.40 Linux release, SHA256
   `f775c35156cc45bda4c4fa5b2ce7a60d2215fda17a99ea37830f12fb0f48d806`.
@@ -239,15 +271,17 @@ fault; logging cannot be assumed reliable during the failing teardown.
 ## Why a shared audit is warranted
 
 [MainUnit.tr4w_ShutDown](../tr4w/src/MainUnit.pas) explicitly stops services,
-closes the database, logs shutdown and calls `FreeAndNil(logger)`. It then
-uses `ExitProcess(0)` on Windows and `Halt(0)` elsewhere. The source explicitly
+closes the database and logs shutdown. (When this was written it also called
+`FreeAndNil(logger)`; that call was removed on 2026-11-15 -- Log4D's hierarchy
+owns the logger.) It then uses `ExitProcess(0)` on Windows and `Halt(0)` elsewhere. The source explicitly
 documents that Windows bypasses unit finalization whereas the Unix path runs
 it. Therefore an ordinary Windows exit can conceal a finalization defect that
 Linux exposes. The same Unix source branch covers macOS; the subsequent Mac
 pilot now also reproduces the Preferences destruction failure.
 
-The logger ordering also warrants review: some unit finalizers still log
-after `tr4w_ShutDown` frees its logger reference. For example,
+The logger ordering also warrants review (since resolved for the free itself,
+see the status at the top): some unit finalizers logged after `tr4w_ShutDown`
+freed its logger reference. For example,
 [uRadioHamLibDirect.pas](../tr4w/src/radioFactory/uRadioHamLibDirect.pas)
 logs its finalization. Inspect the actual ownership and lifetime contracts in
 [Log4D.pas](../tr4w/include/Log4D.pas) before changing logger destruction;
@@ -342,8 +376,10 @@ with Tom.
   from source review and build-only checks. Windows still using ExitProcess
   does not prove that its finalizers are correct.
 
-Current validation is 15 passing portable harness tests and the established
+~~Current validation is 15 passing portable harness tests and the established
 Linux navigation/accessibility observations. The application's shutdown test
-still fails in the archived runs. This investigation has not applied or
-certified an application fix; the receiving agent's current work and reported
-approval are described in the concurrence section above.
+still fails in the archived runs.~~ Superseded on November 16: the ordering
+fix is on main and its native results are in the two sections at the top. The
+archived runs above are of builds before it. This investigation did not itself
+apply or certify the application fix, and the open themes-teardown repaint
+fault means the acceptance criteria above are not yet met.

@@ -10,19 +10,19 @@
       "Cocoa AX did not expose the expected clean Preferences footer state: Save",
       "Cocoa AX did not expose the expected clean Preferences footer state: Cancel"
    ],
-   "run": "/Users/toms/tr4w-gui-test/runs/mac-ax-probe-004",
+   "run": "/Users/<user>/tr4w-gui-test/runs/mac-ax-probe-004",
    "source_revision": null,
    "provenance": "user-staged-release-binary",
    "executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
    "permissions": {
       "accessibility": 1,
       "bundle_id": "net.tr4w.gui-pilot",
-      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "executable": "/Users/<user>/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
       "screen_recording": true,
       "pid": 29925
    },
    "runner_identity": {
-      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "app": "/Users/<user>/Applications/TR4W GUI Pilot.app",
       "bundle_id": "net.tr4w.gui-pilot",
       "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
       "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
@@ -33,11 +33,11 @@
       "probe_only": 1,
       "bundle_id": "net.tr4w.gui-pilot.ax-probe",
       "screen_recording": 0,
-      "executable": "/Users/toms/Applications/TR4W AX Probe.app/Contents/MacOS/tr4w-gui-pilot",
+      "executable": "/Users/<user>/Applications/TR4W AX Probe.app/Contents/MacOS/tr4w-gui-pilot",
       "pid": 29927
    },
    "probe_identity": {
-      "app": "/Users/toms/Applications/TR4W AX Probe.app",
+      "app": "/Users/<user>/Applications/TR4W AX Probe.app",
       "bundle_id": "net.tr4w.gui-pilot.ax-probe",
       "source_sha256": "8c8a2637bdded928456796a2a4ddbed2c1a34ef90e41ed508d5327f8d6797c58",
       "executable_sha256": "ce2b843ccf00eb9fbd158fd1eef9a04eec8f7cbd0ebfc58123f4afa15a738dc0",
@@ -645,7 +645,7 @@
       "rcvd_year",
       "year_sent"
    ],
-   "error": "Traceback (most recent call last):\n  File \"/Users/toms/tr4w-gui-test/run_mac_pilot.py\", line 241, in main\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
+   "error": "Traceback (most recent call last):\n  File \"/Users/<user>/tr4w-gui-test/run_mac_pilot.py\", line 241, in main\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
    "original_contacts_unchanged": true,
    "default_settings_unchanged": true,
    "default_contest_files_unchanged": true,

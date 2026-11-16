@@ -233,13 +233,7 @@ procedure TfrmKeyerEdit.EditKeyerIn(const aKeyer: TKeyerDefinition;
                                     const aHost: TWinControl);
 begin
    LoadKeyer(aKeyer, nil);
-   pnlContent.Parent := aHost;
-   pnlContent.Top    := 0;
-   pnlContent.Left   := (aHost.ClientWidth - pnlContent.Width) div 2;
-   if pnlContent.Left < 0 then
-      begin
-      pnlContent.Left := 0;
-      end;
+   HostPanelIn(pnlContent, aHost);
 end;
 
 procedure TfrmKeyerEdit.LoadKeyer(const aKeyer: TKeyerDefinition;

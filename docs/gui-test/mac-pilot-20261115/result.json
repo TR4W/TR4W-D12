@@ -10,19 +10,19 @@
       "Cocoa AX did not expose the expected clean Preferences footer state: Save",
       "Cocoa AX did not expose the expected clean Preferences footer state: Cancel"
    ],
-   "run": "/Users/toms/tr4w-gui-test/runs/mac-pilot-004",
+   "run": "/Users/<user>/tr4w-gui-test/runs/mac-pilot-004",
    "source_revision": null,
    "provenance": "user-staged-release-binary",
    "executable_sha256": "6be86420d44ebfde4b00336418f4ece3c2c53ce80126c963b01896e9eb3ef321",
    "permissions": {
       "accessibility": 1,
       "bundle_id": "net.tr4w.gui-pilot",
-      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "executable": "/Users/<user>/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
       "screen_recording": true,
       "pid": 29083
    },
    "runner_identity": {
-      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "app": "/Users/<user>/Applications/TR4W GUI Pilot.app",
       "bundle_id": "net.tr4w.gui-pilot",
       "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
       "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
@@ -66,7 +66,7 @@
       "rcvd_year",
       "year_sent"
    ],
-   "error": "Traceback (most recent call last):\n  File \"/Users/toms/tr4w-gui-test/run_mac_pilot.py\", line 213, in main\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
+   "error": "Traceback (most recent call last):\n  File \"/Users/<user>/tr4w-gui-test/run_mac_pilot.py\", line 213, in main\n    raise AssertionError(\"Application exit status: \" + str(app.returncode))\nAssertionError: Application exit status: 217\n",
    "original_contacts_unchanged": true,
    "default_settings_unchanged": true,
    "default_contest_files_unchanged": true,

@@ -11,7 +11,7 @@
       "Normal application exit"
    ],
    "failures": [],
-   "run": "/Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-010",
+   "run": "/Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-010",
    "case": "preferences-persistence",
    "source_revision": "4547b9117f4d5c23a3606bd4de9477d5eb4b5019",
    "provenance": "private-source-patch-build",
@@ -26,7 +26,7 @@
       "fpc_version": "3.2.2",
       "resource_artifact_run": 43776700899,
       "executable_sha256": "c4fa935a3ecab7be5cf0642e8894a1758ddcae9693e4161604320a62717dbae2",
-      "bundle": "/Users/toms/tr4w-gui-test/app/TR4W-prefs-search-4547.app",
+      "bundle": "/Users/<user>/tr4w-gui-test/app/TR4W-prefs-search-4547.app",
       "signature": "ad-hoc; deep/strict verified"
    },
    "console": {
@@ -36,7 +36,7 @@
       "ready": true
    },
    "runner_identity": {
-      "app": "/Users/toms/Applications/TR4W GUI Runner.app",
+      "app": "/Users/<user>/Applications/TR4W GUI Runner.app",
       "bundle_id": "net.tr4w.gui-pilot.runner",
       "source_sha256": "cf1ac881ae3564afc9e63f025ad12e6852ba46be50d6396cf69d713a824117e1",
       "executable_sha256": "4acfd4985e9480556b162ed309879d7b55c82c6161a927eb830af8d6ce541133",
@@ -47,11 +47,11 @@
       "probe_only": 0,
       "bundle_id": "net.tr4w.gui-pilot.runner",
       "screen_recording": 0,
-      "executable": "/Users/toms/Applications/TR4W GUI Runner.app/Contents/MacOS/tr4w-gui-pilot",
+      "executable": "/Users/<user>/Applications/TR4W GUI Runner.app/Contents/MacOS/tr4w-gui-pilot",
       "pid": 29840
    },
    "capture_runner_identity": {
-      "app": "/Users/toms/Applications/TR4W GUI Pilot.app",
+      "app": "/Users/<user>/Applications/TR4W GUI Pilot.app",
       "bundle_id": "net.tr4w.gui-pilot",
       "source_sha256": "8249ddff2d0def82106b7e240495976d03a35f26e60336887a51ff91de81076f",
       "executable_sha256": "95b23ad52400eb84543517455e79a0812f6ab739ffecb71c21aa69631c3a5ff6",
@@ -60,7 +60,7 @@
    "capture_permissions": {
       "accessibility": 1,
       "bundle_id": "net.tr4w.gui-pilot",
-      "executable": "/Users/toms/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
+      "executable": "/Users/<user>/Applications/TR4W GUI Pilot.app/Contents/MacOS/tr4w-gui-pilot",
       "screen_recording": true,
       "pid": 29842
    },

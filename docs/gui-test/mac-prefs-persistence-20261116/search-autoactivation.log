@@ -1,28 +1,28 @@
 16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.Startup  - ******************** PROGRAM STARTUP ************************
 16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] crash reporting ready (RTL hook installed)
 16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] TR4W 5.0.40 built 2026/11/15 23:42:40
-16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] executable: /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/MacOS/tr4w
+16 Nov 2026 00:08:31.989 38 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] executable: /Users/<user>/tr4w-gui-test/app/TR4W.app/Contents/MacOS/tr4w
 16 Nov 2026 00:08:31.992 41 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] no tr4w.dbg -- backtraces will show raw addresses. That is normal; the addresses can still be resolved from the .dbg archived for TR4W 5.0.40.
 16 Nov 2026 00:08:31.992 41 [8688384] info TR4WDebugLog.CrashLog  - [CrashLog] crash reporting ready (LCL hook installed)
 16 Nov 2026 00:08:32.044 93 [8688384] info TR4WDebugLog  - DecimalSeparator = .
 16 Nov 2026 00:08:32.044 93 [8688384] info TR4WDebugLog  - UI language: "en" from the --lang command-line switch; that is the compiled-in language, so no catalogue is loaded
 16 Nov 2026 00:08:32.044 93 [8688384] info TR4WDebugLog  - UI language: none loaded; using the compiled-in English
-16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - Contest configuration file: /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db
-16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - [FCONTEST] Country file: /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/CTY.DAT (shipped)
-16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - [FCONTEST] Call history file: /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/TRMASTER.DTA (shipped)
+16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - Contest configuration file: /Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db
+16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - [FCONTEST] Country file: /Users/<user>/tr4w-gui-test/app/TR4W.app/Contents/Resources/CTY.DAT (shipped)
+16 Nov 2026 00:08:32.045 94 [8688384] info TR4WDebugLog  - [FCONTEST] Call history file: /Users/<user>/tr4w-gui-test/app/TR4W.app/Contents/Resources/TRMASTER.DTA (shipped)
 16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert] --- configuration sources ---
-16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   settings JSON : /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/tr4w.json (present)
-16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   legacy ini    : /Users/toms/Library/Application Support/TR4W/tr4w.ini (absent)
-16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   contest .cfg  : /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db (present)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   settings JSON : /Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-005/tr4w.json (present)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   legacy ini    : /Users/<user>/Library/Application Support/TR4W/tr4w.ini (absent)
+16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   contest .cfg  : /Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db (present)
 16 Nov 2026 00:08:32.048 97 [8688384] info TR4WDebugLog  - [Convert]   secret store  : keychain1 (available)
 16 Nov 2026 00:08:32.055 104 [8688384] warn TR4WDebugLog.Keychain  - [Keychain] ExternalLogger.ApiKey could not be read back: the secret store holds no such secret. The setting reads empty and the value will have to be entered again.
 16 Nov 2026 00:08:32.058 107 [8688384] warn TR4WDebugLog.Keychain  - [Keychain] Server.TailcatAddress could not be read back: the secret store holds no such secret. The setting reads empty and the value will have to be entered again.
 16 Nov 2026 00:08:32.060 109 [8688384] warn TR4WDebugLog.Keychain  - [Keychain] Hamscore.Password could not be read back: the secret store holds no such secret. The setting reads empty and the value will have to be entered again.
 16 Nov 2026 00:08:32.060 109 [8688384] info TR4WDebugLog  - [Convert] settings\tr4w.json already holds a settings section -- it is the source of record
-16 Nov 2026 00:08:32.060 109 [8688384] info LogCfg  - [Config] /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db is a log database, not a text .cfg -- the contest configuration comes from the log itself
-16 Nov 2026 00:08:32.061 110 [8688384] info LogCfg  - [Config] Loading /Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/COMMONMESSAGES.INI
-16 Nov 2026 00:08:32.061 110 [8688384] info TR4WDebugLog  - [Convert]   contest database: /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db (present) -- the contest configuration comes from the log, the .cfg is not reconverted
-16 Nov 2026 00:08:32.068 117 [8688384] info TR4WDebugLog  - [LogStore] log database: /Users/toms/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db
+16 Nov 2026 00:08:32.060 109 [8688384] info LogCfg  - [Config] /Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db is a log database, not a text .cfg -- the contest configuration comes from the log itself
+16 Nov 2026 00:08:32.061 110 [8688384] info LogCfg  - [Config] Loading /Users/<user>/tr4w-gui-test/app/TR4W.app/Contents/Resources/COMMONMESSAGES.INI
+16 Nov 2026 00:08:32.061 110 [8688384] info TR4WDebugLog  - [Convert]   contest database: /Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db (present) -- the contest configuration comes from the log, the .cfg is not reconverted
+16 Nov 2026 00:08:32.068 117 [8688384] info TR4WDebugLog  - [LogStore] log database: /Users/<user>/tr4w-gui-test/runs/mac-prefs-persistence-005/practice.db
 16 Nov 2026 00:08:32.124 173 [8688384] info TR4WDebugLog  - [LogStore] 65 stored contest setting(s) hold the built-in default and were written before the log stored only what the operator stated -- not applied, the contest decides: "WARC BAND ENABLE","VHF BAND ENABLE","SPRINT QSY RULE","SINGLE BAND SCORE","S&P SSB EXCHANGE","RFOBL MODE","REPEAT S&P SSB EXCHANGE","R150S MODE","QUICK QSL SSB MESSAGE","QUICK QSL MESSAGE 2","QUICK QSL MESSAGE 1","QUICK QSL CW MESSAGE1","QUICK QSL CW MESSAGE","QTC QRS","QTC MINUTES","QTC EXTRA SPACE","QTC ENABLE","QSO POINTS DX PHONE","QSO POINTS DX CW","QSO POINTS DOMESTIC PHONE","QSO POINTS DOMESTIC CW","QSO NUMBER BY BAND","QSO BY MODE","QSO BEFORE SSB MESSAGE","QSO BEFORE MESSAGE","QSO BEFORE CW MESSAGE","QSL SSB MESSAGE","QSL MODE","QSL MESSAGE","QSL CW MESSAGE","MY CONTINENT","MULTIPLE MODES","MULTIPLE BANDS","MULT SHEET AUTO RESET","MULT REPORT MINIMUM BANDS","MULT BY MODE",MODE,"MINITOUR DURATION","LITERAL DOMESTIC QTH","INITIAL EXCHANGE OVERWRITE","INITIAL EXCHANGE FILENAME","INITIAL EXCHANGE CURSOR POS","HF BAND ENABLE","HAMSCORE ENABLE","EXCHANGE MEMORY ENABLE","DOMESTIC FILENAME","DIGITAL MODE ENABLE","CUSTOM INITIAL EXCHANGE STRING","CQ SSB EXCHANGE NAME KNOWN","CQ SSB EXCHANGE","CQ EXCHANGE NAME KNOWN","CQ CW EXCHANGE NAME KNOWN","COUNT DOMESTIC COUNTRIES","CONTACTS PER PAGE",CATEGORY-TRANSMITTER,CATEGORY-POWER,CATEGORY-OVERLAY,CATEGORY-OPERATOR,CATEGORY-BAND,"CALL OK NOW SSB MESSAGE","CALL OK NOW MESSAGE","CALL OK NOW CW MESSAGE",BAND,"AUTO DUPE ENABLE S AND P","AUTO DUPE ENABLE CQ"
 16 Nov 2026 00:08:32.124 173 [8688384] info TR4WDebugLog  - [LogStore] 7 stored contest setting(s) are retired commands -- not applied, the contest's class decides; deleted from the log at its next capture: "ZONE MULTIPLIER=NONE","QSO POINT METHOD=NONE","PREFIX MULTIPLIER=NONE","INITIAL EXCHANGE=NONE","EXCHANGE RECEIVED=UNKNOWN","DX MULTIPLIER=NONE","DOMESTIC MULTIPLIER=NONE"
 16 Nov 2026 00:08:32.125 174 [8688384] info TR4WDebugLog  - [LogStore] MY CALL = NY4I applied before the contest, so the country and zone derived from it are settled before FCONTEST reads them
@@ -217,7 +217,7 @@
 16 Nov 2026 00:08:33.968 2017 [8688384] debug TR4WDebugLog  - [Prefs]   Remaining panels         1 ms
 16 Nov 2026 00:08:33.969 2018 [8688384] debug TR4WDebugLog  - [Prefs]   Rotators (COM enum)      0 ms
 16 Nov 2026 00:08:33.969 2018 [8688384] debug TR4WDebugLog  - [Prefs]   Cluster list (DAT)       0 ms
-16 Nov 2026 00:08:33.972 2021 [8688384] info TR4WDebugLog  - [Prefs] Setting tooltips: "" over English "/Users/toms/tr4w-gui-test/app/TR4W.app/Contents/Resources/help/help_en.po" (UI language "")
+16 Nov 2026 00:08:33.972 2021 [8688384] info TR4WDebugLog  - [Prefs] Setting tooltips: "" over English "/Users/<user>/tr4w-gui-test/app/TR4W.app/Contents/Resources/help/help_en.po" (UI language "")
 16 Nov 2026 00:08:33.973 2022 [8688384] debug TR4WDebugLog  - [Prefs] BuildGeneratedSections: freeing 0 previous root(s)
 16 Nov 2026 00:08:33.977 2026 [8688384] debug TR4WDebugLog  - [Prefs] generated page tag=10 -> 12 setting(s)
 16 Nov 2026 00:08:33.977 2026 [8688384] debug TR4WDebugLog  - [Prefs] generated page tag=14 -> 3 setting(s)

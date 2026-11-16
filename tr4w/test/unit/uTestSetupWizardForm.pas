@@ -30,6 +30,7 @@ type
       procedure TestTickedPagesFollowTheCanonicalOrder;
       procedure TestUntickingRemovesThePage;
       procedure TestShowsOffScreen;
+      procedure TestACallbookReplyFillsOnlyTheStationPage;
    public
       procedure RunAllTests; override;
    end;
@@ -38,6 +39,7 @@ implementation
 
 uses
    Forms,
+   uCallbookBase,        (* TCallbookRecord -- a reply, handed in by hand *)
    uAppStrings,
    uTestShowOffScreen;   (* ShowOffScreen *)
 
@@ -173,6 +175,46 @@ begin
    end;
 end;
 
+(* A LATE CALLBOOK REPLY (review M15). The reply can arrive many seconds after
+  the question; if the operator has gone on, the boxes it would fill are on a
+  page they have left, and Create would save them unseen. ApplyCallbook is the
+  main-thread end of the real lookup -- the relay calls exactly this -- so a
+  reply is handed to it directly, with no network. *)
+procedure TSetupWizardFormTests.TestACallbookReplyFillsOnlyTheStationPage;
+var
+   frm: TfrmSetupWizard;
+   rec: TCallbookRecord;
+begin
+   BeginTest('TestACallbookReplyFillsOnlyTheStationPage');
+   rec := TCallbookRecord.Create;
+   frm := NewForm;
+   try
+      rec.Found     := True;
+      rec.Call      := 'W1AW';
+      rec.FirstName := 'HIRAM';
+      rec.Grid      := 'FN31pr';
+
+      frm.edtName.Text := '';
+      frm.edtGrid.Text := '';
+      frm.btnNextClick(frm.btnNext);
+      Check(frm.pgPages.ActivePage = frm.tsChecklist, 'gone on to the checklist');
+      frm.ApplyCallbook(rec);
+      CheckEquals('', string(frm.edtName.Text),
+                  'a reply after the Station page is left fills nothing');
+      CheckEquals('', string(frm.edtGrid.Text), 'nor the grid');
+
+      frm.btnBackClick(frm.btnBack);
+      Check(frm.pgPages.ActivePage = frm.tsStation, 'back on the Station page');
+      frm.ApplyCallbook(rec);
+      CheckEquals('Hiram', string(frm.edtName.Text),
+                  'on the Station page the empty name is filled');
+      CheckEquals('FN31pr', string(frm.edtGrid.Text), 'and the grid');
+   finally
+      frm.Free;
+      rec.Free;
+   end;
+end;
+
 procedure TSetupWizardFormTests.RunAllTests;
 begin
    TestStartsOnStation;
@@ -180,6 +222,7 @@ begin
    TestTickedPagesFollowTheCanonicalOrder;
    TestUntickingRemovesThePage;
    TestShowsOffScreen;
+   TestACallbookReplyFillsOnlyTheStationPage;
 end;
 
 end.

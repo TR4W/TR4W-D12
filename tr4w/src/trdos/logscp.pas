@@ -255,6 +255,7 @@ uses LogWind,
   MainUnit,
   uSettingsModel,   (* Settings.Scp.PossibleCallMode, and the enum members --
                       the type moved there with the setting *)
+  uAppStrings,      (* SExportNotWritten *)
   SysUtils;
 
 function DoubleIndexCall(Call: CallString): boolean;
@@ -938,7 +939,14 @@ begin
   if not LoadInIndexArray then Exit;
   if FileName = '' then Exit;
 
-  OpenFileForWrite(FileWrite, FileName);
+  (* THE ASCII DUMP GOES THROUGH THE CHECKED REPORT FILE (issue 313): a file
+    that could not be opened or written is reported, an earlier one is kept,
+    and ASCIIFileIsCurrent is not claimed for a dump that is not there. *)
+  if not OpenReportText(FileWrite, FileName) then
+     begin
+     ShowMessage(UnicodeFormat(SExportNotWritten, [FileName, ReportTextProblem(FileWrite)]));
+     Exit;
+     end;
 
   //{WLI}    GoToXY (1, WhereY);
   //{WLI}    Write ('Saving .DTA file to ASCII file.  Processing cell   ');
@@ -1053,8 +1061,14 @@ begin
   CellBuffer.GoAway;
   Dispose(CallsAlreadySaved);
 
-  Close(FileWrite);
-  ASCIIFileIsCurrent := True;
+  if CloseReportText(FileWrite, True) then
+     begin
+     ASCIIFileIsCurrent := True;
+     end
+  else
+     begin
+     ShowMessage(UnicodeFormat(SExportNotWritten, [FileName, ReportTextProblem(FileWrite)]));
+     end;
   //{WLI}    GoToXY (1, WhereY);
   //{WLI}    ClrEol;
   //{WLI}    TextColor (Cyan);
@@ -2137,7 +2151,12 @@ begin
      Exit;
      end;
 
-  OpenFileForWrite(FileWrite, { WorkingDirectory + } ActiveASCIIFileName);
+  if not OpenReportText(FileWrite, { WorkingDirectory + } string(ActiveASCIIFileName)) then
+     begin
+     ShowMessage(UnicodeFormat(SExportNotWritten,
+        [string(ActiveASCIIFileName), ReportTextProblem(FileWrite)]));
+     Exit;
+     end;
 
   //{WLI}    GoToXY (1, WhereY);
   ShowMessage(TC_SAVINGDTAFILEASCIIFILEPROCESSINGCE);
@@ -2232,11 +2251,18 @@ begin
   Dispose(CallsAlreadySaved);
   CellBuffer.GoAway;
 
-  Closefile(FileWrite);
   Closefile(FileRead);
 
-  ASCIIFileIsCurrent := True;
-  ShowMessage(TC_DATASUCCESSFULLYSAVEDASCIIFILE);
+  if CloseReportText(FileWrite, True) then
+     begin
+     ASCIIFileIsCurrent := True;
+     ShowMessage(TC_DATASUCCESSFULLYSAVEDASCIIFILE);
+     end
+  else
+     begin
+     ShowMessage(UnicodeFormat(SExportNotWritten,
+        [string(ActiveASCIIFileName), ReportTextProblem(FileWrite)]));
+     end;
 
 end;
 

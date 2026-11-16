@@ -65,17 +65,46 @@ function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 
 (* A REPORT OR EXPORT FILE THAT CANNOT LOOK COMPLETE WHEN IT IS NOT (issue 313).
   OpenReportFile opens FileName + '.partial' -- the previous good file is left
-  alone -- and forgets any earlier failure. Every sWriteFile / sWriteFileFromString
-  after it that fails or writes short is remembered. CloseReportFile flushes and
-  closes, then, only when aKeep is True and nothing failed, puts the new file in
-  place of the old and answers True; otherwise it deletes the partial file and
-  answers False. ReportFileProblem is the first reason, in the OS's words ('' when
-  there was none), valid after either call. *)
+  alone. Every sWriteFile / sWriteFileFromString TO THAT HANDLE after it that
+  fails or writes short is remembered AGAINST THAT HANDLE: a write to any other
+  file, anywhere in the program, neither fails this report nor hides its
+  failure. CloseReportFile flushes and closes, then, only when aKeep is True and
+  nothing failed, REPLACES the old file with the new one in one operation (the
+  old file survives if that fails -- there is no moment with neither) and
+  answers True; otherwise it deletes the partial file and answers False.
+  ReportFileProblem(h) is the first reason, in the OS's words ('' when there was
+  none), valid after either call, and after a FAILED open too (h is then -1).
+
+  A report is told apart by its handle, so at most REPORT_FILE_SLOTS may be open
+  at once; the one after that is refused, with the reason. *)
+const
+   REPORT_FILE_SLOTS = 8;
+
 function OpenReportFile(var h: TFileHandle; const FileName: string): boolean;
 function CloseReportFile(h: TFileHandle; aKeep: boolean): boolean;
-function ReportFileProblem: string;
+function ReportFileProblem(h: TFileHandle): string;
+
+(* THE SAME, FOR A REPORT WRITTEN WITH Write / WriteLn -- the post-contest
+  reports, the SCP ASCII dumps. OpenReportText makes t a Text file whose bytes
+  go through the checked handle above, so the report's own code is unchanged
+  and its output is byte for byte what a Text file to the target gave (the RTL
+  formats it; this is only the device under it). Close it with CloseReportText,
+  NOT Close(t): that flushes t, closes the handle and replaces the target, with
+  the same answers as CloseReportFile. ReportTextProblem is its
+  ReportFileProblem. *)
+function OpenReportText(var t: Text; const FileName: string): boolean;
+function CloseReportText(var t: Text; aKeep: boolean): boolean;
+function ReportTextProblem(var t: Text): string;
+function TextReportHandle(var t: Text): TFileHandle;
 
 implementation
+
+(* Windows ONLY for MoveFileExW in ReplaceReportFile, and only by qualified
+  name: its DeleteFile, CreateFile ... would otherwise shadow SysUtils' here. *)
+{$IFDEF WINDOWS}
+uses
+   Windows;
+{$ENDIF}
 
 function tWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
 var
@@ -123,39 +152,131 @@ begin
   Result := FileRead(hFile, Buffer, nNumberOfBytesToRead) >= 0;
 end;
 
+(* THE REPORT FILES THAT ARE OPEN (issue 313), ONE SLOT EACH, KEYED BY HANDLE.
+  A slot holds a report's target, its partial file and the FIRST reason a write
+  to ITS handle failed -- so the failure belongs to the report, where it used
+  to be one unit-level string that every sWriteFile in the program could set
+  (an unrelated log write could fail an export, and a later open cleared a
+  failure the export had not yet reported). A slot stays, Active False, after
+  its report is closed so that ReportFileProblem can still say why; it is
+  reused by the next open. A private record: nothing outside this unit sees it.
+
+  The slots are guarded by a critical section because sWriteFile is called from
+  any thread; only a FAILED write, an open and a close take it. *)
+type
+   (* The text device keeps its handle in the RTL's TextRec.UserData bytes;
+     reading and writing that slot goes through a typed pointer, not Move. *)
+   PReportHandle = ^TFileHandle;
+
+   TReportSlot = record
+      Used: boolean;
+      Active: boolean;
+      Handle: TFileHandle;
+      Target: string;
+      Partial: string;
+      Failure: string;
+   end;
+
 var
-  (* WHY THE LAST REPORT FILE COULD NOT BE WRITTEN, '' while nothing has gone
-    wrong (issue 313). Set by the first failed or SHORT write through sWriteFile
-    / sWriteFileFromString, cleared by OpenReportFile. One report is written at
-    a time, on the main thread. *)
-  GReportWriteFailure: string = '';
-  GReportTarget: string = '';
-  GReportPartial: string = '';
+   (* ONE MORE THAN REPORT_FILE_SLOTS: the last is reserved for the reason a
+     report was refused because every other slot was an open report. *)
+   GReportSlots: array[0..REPORT_FILE_SLOTS] of TReportSlot;
+   GReportLock: TRTLCriticalSection;
+
+(* The slot holding aHandle, or -1. The caller holds GReportLock. *)
+function FindReportSlot(aHandle: TFileHandle): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := Low(GReportSlots) to High(GReportSlots) do
+      begin
+      if GReportSlots[i].Used and (GReportSlots[i].Handle = aHandle) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE SLOT A NEW REPORT GOES IN, or -1 when every one is an open report: the
+  one already holding this handle (a report closed behind our back, its number
+  reused, or a second failed open, whose handle is -1), else a never-used one,
+  else one whose report is finished. The caller holds GReportLock. *)
+function ClaimReportSlot(aHandle: TFileHandle): integer;
+var
+   i: integer;
+begin
+   Result := FindReportSlot(aHandle);
+   if Result >= 0 then
+      begin
+      Exit;
+      end;
+   for i := 0 to REPORT_FILE_SLOTS - 1 do
+      begin
+      if not GReportSlots[i].Used then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+   for i := 0 to REPORT_FILE_SLOTS - 1 do
+      begin
+      if not GReportSlots[i].Active then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+(* The first reason a report's file could not be written; later ones are
+  consequences. A handle that is no open report's is not a report: nothing is
+  recorded. *)
+procedure NoteReportFailure(aHandle: TFileHandle; const aReason: string);
+var
+   i: integer;
+begin
+   EnterCriticalSection(GReportLock);
+   try
+      i := FindReportSlot(aHandle);
+      if (i >= 0) and GReportSlots[i].Active and (GReportSlots[i].Failure = '') then
+         begin
+         GReportSlots[i].Failure := aReason;
+         end;
+   finally
+      LeaveCriticalSection(GReportLock);
+   end;
+end;
 
 (* THE RESULT OF ONE WRITE: aWritten is what FileWrite returned. A write that
   returns less than was asked, or -1, did not put the data on the disk -- a full
   disk gives a short count, not an error -- and is remembered, with the OS's
-  words for it. *)
-function NoteWrite(aWritten, aWanted: LongInt): boolean;
+  words for it, against aHandle if that is an open report. *)
+function NoteWrite(aHandle: TFileHandle; aWritten, aWanted: LongInt): boolean;
+var
+   reason: string;
 begin
   Result := aWritten = aWanted;
-  if (not Result) and (GReportWriteFailure = '') then
+  if not Result then
      begin
+     (* GetLastOSError FIRST: nothing between FileWrite and here may disturb it. *)
      if aWritten < 0 then
         begin
-        GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+        reason := SysUtils.SysErrorMessage(GetLastOSError);
         end
      else
         begin
-        GReportWriteFailure := 'only ' + IntToStr(aWritten) + ' of ' + IntToStr(aWanted) +
-                               ' bytes were written (the disk may be full)';
+        reason := 'only ' + IntToStr(aWritten) + ' of ' + IntToStr(aWanted) +
+                  ' bytes were written (the disk may be full)';
         end;
+     NoteReportFailure(aHandle, reason);
      end;
 end;
 
 function sWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
 begin
-  Result := NoteWrite(FileWrite(hFile, Buffer, nNumberOfBytesToWrite),
+  Result := NoteWrite(hFile, FileWrite(hFile, Buffer, nNumberOfBytesToWrite),
                       nNumberOfBytesToWrite);
 end;
 
@@ -174,57 +295,242 @@ begin
       Result := True;
       Exit;
       end;
-   Result := NoteWrite(FileWrite(hFile, sBuffer[1], Length(sBuffer)), Length(sBuffer));
+   Result := NoteWrite(hFile, FileWrite(hFile, sBuffer[1], Length(sBuffer)), Length(sBuffer));
+end;
+
+(* PUT A COMPLETE FILE IN PLACE OF THE OLD ONE IN A SINGLE OPERATION, so a
+  failure leaves the old file as it was and there is no moment with neither
+  (the earlier delete-then-rename had one: a crash or a sharing violation
+  between the two lost the previous good report).
+
+  Unix: RenameFile is rename(2), which replaces the target atomically.
+  Windows: the RTL's RenameFile is MoveFileW, which REFUSES to replace -- that
+  is why the old code deleted first -- so this asks for MoveFileExW with
+  MOVEFILE_REPLACE_EXISTING, the OS's own replace. It is a raw call because the
+  RTL has no replacing rename on Windows (verified in rtl/win/sysutils.pp), and
+  it is one the FPC Windows unit already declares; no new external is added.
+  On NTFS the replace is atomic; on a file system without that guarantee
+  (FAT) it is still one call, and still never leaves neither file when it
+  fails. *)
+function ReplaceReportFile(const aPartial, aTarget: string): boolean;
+begin
+{$IFDEF WINDOWS}
+   Result := Windows.MoveFileExW(PWideChar(UnicodeString(aPartial)),
+                                 PWideChar(UnicodeString(aTarget)),
+                                 Windows.MOVEFILE_REPLACE_EXISTING);
+{$ELSE}
+   Result := RenameFile(aPartial, aTarget);
+{$ENDIF}
 end;
 
 function OpenReportFile(var h: TFileHandle; const FileName: string): boolean;
+var
+   partial: string;
+   reason: string;
+   i: integer;
 begin
-   GReportTarget := FileName;
-   GReportPartial := FileName + '.partial';
-   GReportWriteFailure := '';
-   Result := tOpenFileForWrite(h, GReportPartial);
+   partial := FileName + '.partial';
+   Result := tOpenFileForWrite(h, partial);
+   reason := '';
    if not Result then
       begin
-      GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+      reason := SysUtils.SysErrorMessage(GetLastOSError);
       end;
+
+   EnterCriticalSection(GReportLock);
+   try
+      i := ClaimReportSlot(h);
+      if i < 0 then
+         begin
+         (* Every slot is an open report: refuse rather than lose track of one.
+           The reason is kept in the slot reserved for it, under handle -1. *)
+         if Result then
+            begin
+            FileClose(h);
+            SysUtils.DeleteFile(partial);
+            h := TFileHandle(feInvalidHandle);
+            Result := False;
+            end;
+         i := REPORT_FILE_SLOTS;
+         reason := 'too many report files are open at once';
+         end;
+
+      GReportSlots[i].Used := True;
+      GReportSlots[i].Active := Result;
+      GReportSlots[i].Handle := h;
+      GReportSlots[i].Target := FileName;
+      GReportSlots[i].Partial := partial;
+      GReportSlots[i].Failure := reason;
+   finally
+      LeaveCriticalSection(GReportLock);
+   end;
 end;
 
 function CloseReportFile(h: TFileHandle; aKeep: boolean): boolean;
+var
+   i: integer;
+   target: string;
+   partial: string;
+   failure: string;
 begin
    Result := False;
-   if aKeep and (GReportWriteFailure = '') and (not FileFlush(h)) then
+   EnterCriticalSection(GReportLock);
+   try
+      i := FindReportSlot(h);
+      if (i < 0) or (not GReportSlots[i].Active) then
+         begin
+         (* Not an open report: all there is to do is close what was handed in. *)
+         if h <> TFileHandle(feInvalidHandle) then
+            begin
+            FileClose(h);
+            end;
+         Exit;
+         end;
+      target := GReportSlots[i].Target;
+      partial := GReportSlots[i].Partial;
+      failure := GReportSlots[i].Failure;
+   finally
+      LeaveCriticalSection(GReportLock);
+   end;
+
+   if aKeep and (failure = '') and (not FileFlush(h)) then
       begin
-      GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+      failure := SysUtils.SysErrorMessage(GetLastOSError);
       end;
    FileClose(h);
 
-   if aKeep and (GReportWriteFailure = '') then
+   if aKeep and (failure = '') then
       begin
-      (* The old file goes only now that the new one is complete and flushed.
-        RenameFile will not replace on Windows, hence the delete. *)
-      if FileExists(GReportTarget) then
-         begin
-         SysUtils.DeleteFile(GReportTarget);
-         end;
-      if RenameFile(GReportPartial, GReportTarget) then
+      (* The old file is replaced only now that the new one is complete and
+        flushed, and in one operation -- see ReplaceReportFile. *)
+      if ReplaceReportFile(partial, target) then
          begin
          Result := True;
          end
       else
          begin
-         GReportWriteFailure := SysUtils.SysErrorMessage(GetLastOSError);
+         failure := SysUtils.SysErrorMessage(GetLastOSError);
          end;
       end;
 
-   if (not Result) and FileExists(GReportPartial) then
+   if (not Result) and FileExists(partial) then
       begin
-      SysUtils.DeleteFile(GReportPartial);
+      SysUtils.DeleteFile(partial);
+      end;
+
+   EnterCriticalSection(GReportLock);
+   try
+      i := FindReportSlot(h);
+      if i >= 0 then
+         begin
+         GReportSlots[i].Active := False;
+         GReportSlots[i].Failure := failure;
+         end;
+   finally
+      LeaveCriticalSection(GReportLock);
+   end;
+end;
+
+function ReportFileProblem(h: TFileHandle): string;
+var
+   i: integer;
+begin
+   Result := '';
+   EnterCriticalSection(GReportLock);
+   try
+      i := FindReportSlot(h);
+      if i >= 0 then
+         begin
+         Result := GReportSlots[i].Failure;
+         end;
+   finally
+      LeaveCriticalSection(GReportLock);
+   end;
+end;
+
+(* A TEXT FILE WHOSE DEVICE IS THE CHECKED HANDLE. FPC lets a Text be bound to
+  any device by giving it its own open / write / close functions (the Text file
+  reference's "assigning a text device"); the RTL still does all the
+  formatting, buffering and line endings, so what Write and WriteLn produce is
+  unchanged -- only where the bytes go is. The device keeps the report's
+  handle in the TextRec's UserData. TextRec is the RTL's record, and reaching
+  into it is how the RTL documents a custom device. *)
+function TextReportHandle(var t: Text): TFileHandle;
+begin
+   Result := PReportHandle(@TextRec(t).UserData)^;
+end;
+
+function ReportTextWrite(var t: TextRec): LongInt;
+var
+   h: TFileHandle;
+begin
+   h := PReportHandle(@t.UserData)^;
+   if t.BufPos > 0 then
+      begin
+      (* The result is remembered against h by sWriteFile; the RTL is told
+        nothing, so a failing report does not raise in the middle of it. *)
+      sWriteFile(h, t.BufPtr^, t.BufPos);
+      end;
+   t.BufPos := 0;
+   Result := 0;
+end;
+
+function ReportTextClose(var t: TextRec): LongInt;
+begin
+   (* The handle is closed by CloseReportFile, which knows whether to keep. *)
+   Result := 0;
+end;
+
+function ReportTextOpen(var t: TextRec): LongInt;
+begin
+   t.InOutFunc := @ReportTextWrite;
+   t.FlushFunc := @ReportTextWrite;
+   t.CloseFunc := @ReportTextClose;
+   Result := 0;
+end;
+
+function OpenReportText(var t: Text; const FileName: string): boolean;
+var
+   h: TFileHandle;
+begin
+   Result := OpenReportFile(h, FileName);
+   Assign(t, EmptyStr);
+   PReportHandle(@TextRec(t).UserData)^ := h;
+   if not Result then
+      begin
+      Exit;
+      end;
+   TextRec(t).OpenFunc := @ReportTextOpen;
+{$I-}
+   Rewrite(t);
+{$I+}
+   if IOResult <> 0 then
+      begin
+      NoteReportFailure(h, 'the report could not be started');
+      CloseReportFile(h, False);
+      Result := False;
       end;
 end;
 
-function ReportFileProblem: string;
+function CloseReportText(var t: Text; aKeep: boolean): boolean;
+var
+   h: TFileHandle;
 begin
-   Result := GReportWriteFailure;
+   h := TextReportHandle(t);
+   if TextRec(t).Mode = fmOutput then
+      begin
+      (* Flush the RTL's buffer through the device, then let it go. *)
+{$I-}
+      Close(t);
+{$I+}
+      IOResult;
+      end;
+   Result := CloseReportFile(h, aKeep);
+end;
+
+function ReportTextProblem(var t: Text): string;
+begin
+   Result := ReportFileProblem(TextReportHandle(t));
 end;
 
 function tOpenFileForWrite(var h: TFileHandle; const FileName: string): boolean;
@@ -246,6 +552,11 @@ begin
   OpenFileForWrite := IORESULT = 0;
 end;
 
+initialization
+   InitCriticalSection(GReportLock);
+
+finalization
+   DoneCriticalSection(GReportLock);
 
 end.
 

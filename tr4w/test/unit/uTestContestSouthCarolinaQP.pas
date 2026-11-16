@@ -268,6 +268,21 @@ begin
       CheckEquals(4, Integer(rx.QSOPoints), 'DX outside SC, 4');
       CheckFalse(rx.DomesticMult, 'DX is QSO points only');
       CheckFalse(rx.DXMult, 'no DXCC multiplier');
+      (* THE DX ROW EXPORTED (review H4): the record the engine logged, the
+         exporter's own HisQTH. 5.4: DX sends "Signal report and DX" -- the
+         column was EMPTY while the class used CabrilloReceivedRSTQTHDX. *)
+      my := Default(TMyStationExchange);
+      my.MyState := 'MARI';
+      ctx := Default(TCabrilloQSOContext);
+      ctx.RSTSent := '599';
+      ctx.RSTReceived := '599';
+      ctx.HisQTH := CabrilloReceivedQTH(True, rx);
+      party := ContestIdentity(PartyHandle);
+      line := 'QSO: 14000 CW 2026-02-28 1813 KN4QD ' +
+         party.FormatCabrilloSentExchange(my, rx, ctx) + 'DL1AAA ' +
+         party.FormatCabrilloReceivedExchange(my, rx, ctx);
+      CheckEquals('QSO: 14000 CW 2026-02-28 1813 KN4QD 599 MARI   DL1AAA 599 DX     ',
+         line, 'a DX station''s received column is DX, typed ' + string(rx.QTHString));
 
       party := ContestIdentity(PartyHandle);
       rx := SCQSO('KI4HPX', 'RICH', Band20, CW, eCW);
