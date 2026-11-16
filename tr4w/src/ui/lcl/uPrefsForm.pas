@@ -469,6 +469,8 @@ type
       chkBandMapSO2R: TCheckBox;
       chkBandMapGHz: TCheckBox;
       chkBandMapFilterDigital: TCheckBox;
+      chkBandMapCenterOnRadio: TCheckBox;
+      chkBandMapSortByBeam: TCheckBox;
 
       // --- SCP (4), Network (6), Appearance (7), Backup (9) -------------------
       laySCP: TPanel;
@@ -5135,6 +5137,8 @@ begin
    AddHandWiredToSearchIndex(aN, 'BAND MAP DUPE DISPLAY',             chkBandMapDupes);
    AddHandWiredToSearchIndex(aN, 'BAND MAP DISPLAY GHZ',              chkBandMapGHz);
    AddHandWiredToSearchIndex(aN, 'BAND MAP FILTER OUT DIGITAL',       chkBandMapFilterDigital);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP CENTER ON RADIO',          chkBandMapCenterOnRadio);
+   AddHandWiredToSearchIndex(aN, 'BAND MAP SORT BY BEAM HEADING',     chkBandMapSortByBeam);
    AddHandWiredToSearchIndex(aN, 'BAND MAP MULTS ONLY',               chkBandMapMultsOnly);
    AddHandWiredToSearchIndex(aN, 'BAND MAP SO2R DISPLAY',             chkBandMapSO2R);
    AddHandWiredToSearchIndex(aN, 'BAND MAP DECAY TIME',               edtBandMapDecay);
@@ -8099,6 +8103,8 @@ begin
    chkBandMapSO2R.Checked       := CommandBool('BAND MAP SO2R DISPLAY');
    chkBandMapGHz.Checked        := CommandBool('BAND MAP DISPLAY GHZ');
    chkBandMapFilterDigital.Checked := CommandBool('BAND MAP FILTER OUT DIGITAL');
+   chkBandMapCenterOnRadio.Checked := CommandBool('BAND MAP CENTER ON RADIO');
+   chkBandMapSortByBeam.Checked    := CommandBool('BAND MAP SORT BY BEAM HEADING');
 end;
 
 procedure TPrefsForm.SaveClusterPanels;
@@ -8146,6 +8152,8 @@ begin
    SetCommandBool('BAND MAP SO2R DISPLAY',       chkBandMapSO2R.Checked);
    SetCommandBool('BAND MAP DISPLAY GHZ',        chkBandMapGHz.Checked);
    SetCommandBool('BAND MAP FILTER OUT DIGITAL', chkBandMapFilterDigital.Checked);
+   SetCommandBool('BAND MAP CENTER ON RADIO',    chkBandMapCenterOnRadio.Checked);
+   SetCommandBool('BAND MAP SORT BY BEAM HEADING', chkBandMapSortByBeam.Checked);
 end;
 
 procedure TPrefsForm.ExternalLoggersChanged(Sender: TObject);

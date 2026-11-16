@@ -103,6 +103,14 @@ object frmBandMap: TfrmBandMap
       Caption = 'BAND MAP MULTS ONLY'
       OnClick = MenuMultsOnlyClick
     end
+    object miCenterOnRadio: TMenuItem
+      Caption = 'Center on radio frequency'
+      OnClick = MenuCenterOnRadioClick
+    end
+    object miSortByBeam: TMenuItem
+      Caption = 'Sort by beam heading'
+      OnClick = MenuSortByBeamClick
+    end
     object miSep1: TMenuItem
       Caption = '-'
     end

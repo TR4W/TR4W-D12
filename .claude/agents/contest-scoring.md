@@ -87,9 +87,19 @@ scope (`uTestAdditionalDomesticMultiplier.Test_EqualScopeInvariant`). The
 in-state `.dom` lists the key with a display name and NO alias (`Ky = ^Kentucky`)
 so it is on the remaining list but never received instead of a county: KY 184,
 AL 130, WV 118, VT 77 (VT's `Vt` is S50.DOM's). No stored field, schema or wire
-change. **Known undercount, not fixed:** readers of a QSO's stored flags (UDP
-`<ismultiplier2>`, the hourly report's Mults column, `uHamScore.CountMultipliers`) show one fewer on that
-QSO. Every other contest answers False (pinned over the registry walk;
+change. **Per-QSO readers ask the engine (issue #318, NY4I option 2,
+2026-11-16):** the UDP `<ismultiplierN>` fields and the hourly report's Mults
+column are `LOGDUPE.StoredMultiplierFlagCount` (the ONE stored-flag count; the
+dead `uHamScore.CountMultipliers` copy is deleted) PLUS the second key as the
+sheet stood when the QSO was logged -- `AdditionalDomesticMultipliersBeforeSheet`
+(asked of `mo` BEFORE the QSO is added: LogContact, Alt-Y's undelete),
+`TAdditionalDomesticMultiplierReplay` (a private sheet fed every record in log
+order through the loader's test: the hourly report, the full-log UDP resend) and
+`AdditionalDomesticMultipliersOfLoggedQSO` (Edit QSO: the rows before it, then
+the edited record). All three ask ONE question,
+`AdditionalDomesticMultiplierNewOnSheet`, which `AddQSOToSheets` asks too. The
+count reaches `BuildUDPContact`/`PostQsoEvent` as an explicit parameter.
+Every other contest answers False (pinned over the registry walk;
 Florida, Arkansas and New Jersey named). The AL/WV prefix-sheet stand-in is
 deleted -- never put a second key on the prefix sheet again.
 

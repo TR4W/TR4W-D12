@@ -234,6 +234,23 @@ manufactured a false failure in a TR4W driver that is in fact correct. The port
 was kept (`tools/radiosim/hamlib/simts450.py`, faithful, quirks and all) but the
 GROUNDING above comes from `rigs/kenwood/*.c`.
 
+## H. DXLab Commander (issue 172, 2026-11-16, not bench-tested)
+
+The only source is DXLab's "Commander TCP/IP Messages" (2019-07-11). HamLib has no Commander
+backend, and the D7 tree has no Commander driver. The bench steps are in `docs/BENCH_QUEUE.md`.
+
+| # | Assumption | Basis | Risk if wrong | Status |
+|---|---|---|---|---|
+| H1 | A message needs no terminator | The document shows none, and ADIF fields carry their own length | Commander never answers; the "no answer from" log line shows it | OPEN |
+| H2 | Commander may keep a connection open after it answers, or close it | Not stated. DXKeeper closes after one command (AA6YQ, uExternalLogger). The driver detects which at connect and handles both | None known; both are tested against a fake peer | OPEN |
+| H3 | Set commands draw no reply | The document lists replies only for the Send/Get queries | A stray reply is read and dispatched by field name; nothing is lost | OPEN |
+| H4 | "Locally-defined decimal separator" means the Windows locale of the PC that runs TR4W | The document; Commander normally runs on the same PC | A non-whole-kHz tune lands on the wrong frequency when Commander is on a PC with a different locale. Whole-kHz tunes carry no separator, so they are immune | OPEN |
+| H5 | `CmdGetFreq`/`CmdGetTXFreq` always answer with ',' and '.', whatever the locale | The document, items 10 and 11 | Frequencies misread on a comma locale | OPEN |
+| H6 | `CmdQSXSplit` with `SuppressDual:Y`/`SuppressModeChange:Y` sets the TX frequency without moving RX | The document, item 2 | A QSX click retunes the receiver | OPEN |
+| H7 | `CmdSetFreq` does not reset split (only `CmdSetFreqMode` says it does) | The document, items 1 and 3 | A band-map click while split drops split | OPEN |
+| H8 | `WBFM` is read as FM, and TR4W's PSK/AFSK are written as `DATA-U`/`DATA-L` | Choices made here; the document lists the modes only. The data mapping follows HamLib (PSK as PKTUSB) | A wrong mode is shown or set | OPEN |
+| H9 | `CmdQSXSplit` with split already on changes nothing but the TX frequency, so every VFO B write can use it | The document, item 2 ("set TX frequency and set Split"). `CmdSetTXFreq` is never sent, because with split off it retunes the receiver and TR4W learns split a poll late | Every TX-frequency change disturbs something on the rig | OPEN |
+
 ## Corrected assumptions (kept as a record of failure modes)
 
 | Was assumed | Reality | Root cause |

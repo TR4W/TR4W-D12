@@ -156,6 +156,16 @@ You own how spots reach TR4W and how they are shown.
   resourcestring. A dedicated field would mean a new main-window element
   (positions are per-element settings): not done. Needs a screen to judge.
 
+- **TWO VIEW SETTINGS, BOTH DEFAULT OFF** (issues 246 and 82, 2026-11-16): BAND MAP
+  CENTER ON RADIO (a sideways `LeftCol` scroll in `uBandMapForm.CenterOnRadio`, once
+  per refresh tick, never while the grid has focus) and BAND MAP SORT BY BEAM HEADING
+  (`TDXSpotsList.BeamOrderedWindow`: angular distance from where the beam was last
+  COMMANDED, `uRotatorControl.RotatorBeamHeading`; no driver reads the azimuth back;
+  no reference = absolute heading; no heading = last; stepping stays in frequency
+  order). The arithmetic is the leaf `uBandMapOrder` (pins: `uTestBandMapOrder`).
+  `SpotBeamHeading` is the one spot-to-heading routine, shared with the country
+  panel. Details: `docs/BANDMAP_LCL_DESIGN.md` section 8.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`

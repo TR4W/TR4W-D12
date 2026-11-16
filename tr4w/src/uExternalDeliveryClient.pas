@@ -68,8 +68,28 @@ function ApplyNothingSent(aRequest: THttpRequest; const aCodePrefix, aService: s
   request WAS refused by the server before it did anything, so a retry is safe. *)
 function ApplyRateLimited(aRequest: THttpRequest; const aCodePrefix: string;
                           var aResult: TExternalDeliveryResult): boolean;
+(* A remote identity that is a positive decimal number (Club Log's qsoid, QRZ's
+  LOGID): digits only, greater than zero. Such an id is put into a request
+  path or body, so anything else is refused rather than sent. *)
+function IsPositiveNumericId(const aValue: string): boolean;
 implementation
 uses SysUtils, uHttpTransport, uTLSTrust;
+
+function IsPositiveNumericId(const aValue: string): boolean;
+var
+   i: integer;
+   number: Int64;
+begin
+   Result := False;
+   for i := 1 to Length(aValue) do
+      begin
+      if not (aValue[i] in ['0'..'9']) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := TryStrToInt64(UTF8Encode(aValue), number) and (number > 0);
+end;
 
 function ApplyRateLimited(aRequest: THttpRequest; const aCodePrefix: string;
                           var aResult: TExternalDeliveryResult): boolean;

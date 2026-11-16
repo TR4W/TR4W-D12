@@ -21,19 +21,8 @@ const
    CLUBLOG_TEST_DELIVERY = 'clublog:test-mode';
 
 function ValidQsoId(const aValue: string): boolean;
-var
-   i: integer;
-   number: Int64;
 begin
-   Result := False;
-   for i := 1 to Length(aValue) do
-      begin
-      if not (aValue[i] in ['0'..'9']) then
-         begin
-         Exit;
-         end;
-      end;
-   Result := TryStrToInt64(UTF8Encode(aValue), number) and (number > 0);
+   Result := IsPositiveNumericId(aValue);
 end;
 
 function TClubLogClient.RecoverUpdatesAsUncertain: boolean;

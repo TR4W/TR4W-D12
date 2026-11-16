@@ -84,6 +84,7 @@ type
       procedure Test_Count_SpotStoreClearsAtTheLimit;
       procedure Test_Count_MultsOnlyKeepsTheOrangeM;
       procedure Test_Count_FilterOutDigital;
+      procedure Test_Count_SortByBeamHeading;
       procedure Test_Count_LoaderPathFromStoredRows;
       procedure Test_Count_ScopeChangeWithoutReload;
    end;
@@ -1392,6 +1393,103 @@ begin
    end;
 end;
 
+(* SORT BY BEAM HEADING (issue 82) through the real spot store. With no rotator
+  commanded the reference is none, so the order is the ABSOLUTE heading, 0 to
+  359, a spot with no heading last, and the display limit takes the first N of
+  that order. The arithmetic itself (wraparound, ties) is pinned in
+  uTestBandMapOrder; this proves the store applies it and that it is OFF by
+  default. *)
+procedure TSpotCommentMultiplierTests.Test_Count_SortByBeamHeading;
+var
+   spot: TSpotRecord;
+   index: array[0..9] of integer;
+   cursorRow: integer;
+   n, i, previous, h: integer;
+   fresh: TBandMapSettings;
+   savedSort, savedAllBands, savedAllModes, savedDisplayCQ, savedMultsOnly,
+   savedDupes: boolean;
+   savedGrid: string;
+
+   procedure AddOne(const aLine: string);
+   begin
+      CheckTrue(ParseDXSpotLine(aLine, spot), 'the spot decodes');
+      spot.FBand := Band20;
+      spot.FMode := CW;
+      spot.FSysTime := Now;
+      SpotsList.AddSpot(spot, False);
+   end;
+
+begin
+   BeginTest('Test_Count_SortByBeamHeading');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   savedSort      := Settings.BandMap.SortByBeamHeading;
+   savedAllBands  := Settings.BandMap.AllBands;
+   savedAllModes  := Settings.BandMap.AllModes;
+   savedDisplayCQ := Settings.BandMap.DisplayCQ;
+   savedMultsOnly := Settings.BandMap.MultsOnly;
+   savedDupes     := Settings.BandMap.DupeDisplay;
+   savedGrid      := Settings.My.Grid;
+   try
+      fresh := TBandMapSettings.Create;
+      try
+         CheckFalse(fresh.SortByBeamHeading, 'sort by beam heading is off by default');
+         CheckFalse(fresh.CenterOnRadio, 'centring on the radio is off by default');
+      finally
+         fresh.Free;
+      end;
+
+      Settings.My.Grid := 'EM17';
+      CheckTrue(Settings.My.ResolvedGrid <> '', 'precondition: the station has a grid');
+      Settings.BandMap.AllBands := True;
+      Settings.BandMap.AllModes := True;
+      Settings.BandMap.DisplayCQ := True;
+      Settings.BandMap.MultsOnly := False;
+      Settings.BandMap.DupeDisplay := True;
+      SpotsList.Clear;
+      (* Frequency order is JA, K5, DL, VK, then a bare marker with no heading. *)
+      AddOne('DX de W3LPL-#:    14010.0  JA1XYZ       CW 24 dB 25 WPM CQ                1801Z');
+      AddOne('DX de W3LPL-#:    14020.0  K5ABC        CW 24 dB 25 WPM CQ                1802Z');
+      AddOne('DX de W3LPL-#:    14030.0  DL1ABC       CW 24 dB 25 WPM CQ                1803Z');
+      AddOne('DX de W3LPL-#:    14040.0  VK2ABC       CW 24 dB 25 WPM CQ                1804Z');
+      AddOne('DX de W3LPL-#:    14050.0  QQ9QQQ       CW 24 dB 25 WPM CQ                1805Z');
+
+      Settings.BandMap.SortByBeamHeading := False;
+      cursorRow := 0;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow);
+      CheckEquals(5, n, 'off: every spot shows');
+      CheckTrue(SpotsList.Get(index[0]).FFrequency <
+                SpotsList.Get(index[1]).FFrequency,
+                'off: frequency order, the first spot is the lowest');
+
+      Settings.BandMap.SortByBeamHeading := True;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow);
+      CheckEquals(5, n, 'on: every spot still shows');
+      previous := -1;
+      for i := 0 to n - 1 do
+         begin
+         h := SpotBeamHeading(SpotsList.Get(index[i]));
+         if h >= 0 then
+            begin
+            CheckTrue(h >= previous, 'on: headings ascend (no rotator, absolute order)');
+            previous := h;
+            end
+         else
+            begin
+            CheckEquals(n - 1, i, 'on: a spot with no heading is last');
+            end;
+         end;
+   finally
+      Settings.BandMap.SortByBeamHeading := savedSort;
+      Settings.BandMap.AllBands  := savedAllBands;
+      Settings.BandMap.AllModes  := savedAllModes;
+      Settings.BandMap.DisplayCQ := savedDisplayCQ;
+      Settings.BandMap.MultsOnly := savedMultsOnly;
+      Settings.BandMap.DupeDisplay := savedDupes;
+      Settings.My.Grid := savedGrid;
+      SpotsList.Clear;
+   end;
+end;
+
 procedure TSpotCommentMultiplierTests.Test_Worked_ColourToken;
 begin
    BeginTest('Test_Worked_ColourToken');
@@ -1424,6 +1522,7 @@ begin
    Test_Mult_CallHistoryOverridesADifferingComment;
    Test_Cost_HintForAWholeBandMapIsCheap;
    Test_Count_FilterOutDigital;
+   Test_Count_SortByBeamHeading;
    Test_Worked_PerBandMultiplier;
    Test_Worked_SweepstakesCountsOnceAcrossBands;
    Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;

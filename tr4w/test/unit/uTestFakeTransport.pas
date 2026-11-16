@@ -62,7 +62,27 @@ type
                         aResult: THttpWireResult); override;
    end;
 
+(* Certificate checking ON, as an operator's default, so an https request reaches
+  the scripted transport instead of being decided by this machine. Several older
+  suites carry a private copy of this; new suites call this one. *)
+procedure DeclareCertificateChecking;
+
 implementation
+
+uses
+   uSettingsRegistry, uSettingsDeclarations;
+
+procedure DeclareCertificateChecking;
+var
+   setting: TSettingBase;
+begin
+   DeclareAllSettings;
+   setting := FindSetting('network.verifyServerCertificates');
+   if setting is TBoolSetting then
+      begin
+      TBoolSetting(setting).SetValue(True);
+      end;
+end;
 
 constructor TFakeHttpTransport.Create;
 begin

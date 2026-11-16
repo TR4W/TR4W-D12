@@ -69,6 +69,8 @@ type
     miDisplayCQ: TMenuItem;
     miDupeDisplay: TMenuItem;
     miMultsOnly: TMenuItem;
+    miCenterOnRadio: TMenuItem;
+    miSortByBeam: TMenuItem;
     miSep1: TMenuItem;
     miCopySpot: TMenuItem;
     miDeleteSpot: TMenuItem;
@@ -94,6 +96,8 @@ type
     procedure MenuDisplayCQClick(Sender: TObject);
     procedure MenuDupeDisplayClick(Sender: TObject);
     procedure MenuMultsOnlyClick(Sender: TObject);
+    procedure MenuCenterOnRadioClick(Sender: TObject);
+    procedure MenuSortByBeamClick(Sender: TObject);
     procedure MenuCopySpotClick(Sender: TObject);
     procedure MenuDeleteSpotClick(Sender: TObject);
     procedure MenuRemoveAllClick(Sender: TObject);
@@ -123,6 +127,7 @@ type
     procedure SelectTopSpot;
   private
     procedure LayOutGrid;
+    procedure CenterOnRadio;
     procedure RebuildSnapshot;
     procedure RestoreSelection;
     procedure RememberSelection;
@@ -145,11 +150,13 @@ const
    BANDMAP_MULTS_ONLY   = 'BAND MAP MULTS ONLY';
    BANDMAP_SO2R_DISPLAY = 'BAND MAP SO2R DISPLAY';
    BANDMAP_QSY_INACTIVE = 'QSY INACTIVE RADIO';
+   BANDMAP_CENTER_ON_RADIO = 'BAND MAP CENTER ON RADIO';
+   BANDMAP_SORT_BY_BEAM    = 'BAND MAP SORT BY BEAM HEADING';
 
-   BANDMAP_TOGGLED_SETTINGS: array[0..6] of string = (
+   BANDMAP_TOGGLED_SETTINGS: array[0..8] of string = (
       BANDMAP_ALL_BANDS, BANDMAP_ALL_MODES, BANDMAP_DISPLAY_CQ,
       BANDMAP_DUPE_DISPLAY, BANDMAP_MULTS_ONLY, BANDMAP_SO2R_DISPLAY,
-      BANDMAP_QSY_INACTIVE);
+      BANDMAP_QSY_INACTIVE, BANDMAP_CENTER_ON_RADIO, BANDMAP_SORT_BY_BEAM);
 
 var
   { The live form, or nil.  MainUnit's OpenTR4WWindow needs its Handle. }
@@ -198,6 +205,7 @@ uses
   Clipbrd,           (* Clipboard -- Copy spot *)
   uDXSpotParse,      (* SpotNotesText, SpotCommentForDisplay -- Copy spot *)
   uAppStrings,       (* SBandMapCopySpot, SBandMapCountryHeading *)
+  uBandMapOrder,     (* FirstSpotAbove, CentreLeftCol -- the pure arithmetic *)
   uRadioConfigApply; (* ToggleAndStoreCommand -- a toggle here is SAVED *)
 
 const
@@ -241,6 +249,8 @@ begin
    miDeleteSpot.Caption  := RC_DELETESELSPOT;
    miRemoveAll.Caption   := RC_REMOVEALLSP;
    miQSYInactive.Caption := RC_SENDINRIG;
+   miCenterOnRadio.Caption := SBandMapCenterOnRadio;
+   miSortByBeam.Caption    := SBandMapSortByBeam;
 
    if sbSpot.Panels.Count <> SB_PANELS then
       begin
@@ -353,6 +363,71 @@ begin
       end;
 end;
 
+(* KEEP THE RADIO'S FREQUENCY IN THE MIDDLE OF THE VIEW (issue 246).
+
+  The newspaper layout means "centred" is a SIDEWAYS scroll: LeftCol is set so
+  that the column holding the first displayed spot above the cursor is the
+  middle of the columns that fit. BuildVisibleSpots already chooses WHICH spots
+  show round the cursor when there are more than the display limit; this moves
+  the view over what it chose.
+
+  Three rules, NY4I's (the issue's decisions A, B and C):
+    A. It runs from RebuildSnapshot, which the refresh tick calls at most once
+       per tick however fast the VFO is turned -- never per frequency poll.
+    B. It does nothing while the grid has focus (FFrozen), the same rule that
+       freezes the selection: the operator scrolling by hand is not fought.
+       It resumes when focus returns to the entry window.
+    C. The cursor is BandMapCursorFrequency, the radio the map is showing.
+
+  In beam-heading order the rows are not in frequency order, so there is no
+  "above the radio": the view goes to the first column, where the best spots
+  are. *)
+procedure TfrmBandMap.CenterOnRadio;
+var
+   freqs: array of integer;
+   i, target, visibleCols: integer;
+begin
+   if FFrozen then
+      begin
+      Exit;
+      end;
+
+   if Settings.BandMap.SortByBeamHeading then
+      begin
+      if grdSpots.LeftCol <> 0 then
+         begin
+         grdSpots.LeftCol := 0;
+         end;
+      Exit;
+      end;
+
+   if (not Settings.BandMap.CenterOnRadio) or (FRowCount < 1) or
+      (grdSpots.RowCount < 1) then
+      begin
+      Exit;
+      end;
+
+   SetLength(freqs, FRowCount);
+   for i := 0 to FRowCount - 1 do
+      begin
+      freqs[i] := FRows[i].FFrequency;
+      end;
+   target := FirstSpotAbove(freqs, BandMapCursorFrequency);
+
+   visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
+   if visibleCols < 1 then
+      begin
+      visibleCols := 1;
+      end;
+
+   i := CentreLeftCol(target div grdSpots.RowCount, visibleCols,
+                      grdSpots.ColCount);
+   if grdSpots.LeftCol <> i then
+      begin
+      grdSpots.LeftCol := i;
+      end;
+end;
+
 { -------------------------------------------------------------- the model -- }
 
 procedure TfrmBandMap.RebuildSnapshot;
@@ -377,6 +452,7 @@ begin
 
    LayOutGrid;
    RestoreSelection;
+   CenterOnRadio;
 
    sbSpot.Panels[SB_COUNT].Text := SysUtils.Format(TC_SPOTS, [n]);
    ShowSelectedSpotInfo;
@@ -443,7 +519,6 @@ var
    spot: TSpotRecord;
    notes: string;
    heading: integer;
-   countryId: DXMultiplierString;
 begin
    if not SelectedSpot(spot) then
       begin
@@ -483,13 +558,7 @@ begin
         grid to the grid CTY.DAT gives the spotted call -- the same pair the
         main window's heading panel uses. Not DisplayBeamHeading: that writes
         the main window's panel and its repeat latch. *)
-      heading := -1;
-      if Settings.My.ResolvedGrid <> '' then
-         begin
-         countryId := '';
-         heading := GetBeamHeading(Settings.My.ResolvedGrid,
-                                   ctyGetGrid(string(spot.FCall), countryId));
-         end;
+      heading := SpotBeamHeading(spot);
       sbSpot.Panels[SB_COUNTRY].Text :=
          CountryWithHeading(AnsiString(ctyGetCountryName(ctyGetCountry(spot.FCall))),
                             heading);
@@ -878,6 +947,10 @@ begin
    miDisplayCQ.Checked   := Settings.BandMap.DisplayCQ;
    miDupeDisplay.Checked := Settings.BandMap.DupeDisplay;
    miMultsOnly.Checked   := Settings.BandMap.MultsOnly;
+   miCenterOnRadio.Checked := Settings.BandMap.CenterOnRadio;
+   miSortByBeam.Checked    := Settings.BandMap.SortByBeamHeading;
+   // In beam order there is no frequency to centre on.
+   miCenterOnRadio.Enabled := not Settings.BandMap.SortByBeamHeading;
 
    // Both SO2R items were only ever meaningful with two radios; the old window
    // expressed that by not ticking them, which is not the same as saying why.
@@ -915,6 +988,16 @@ end;
 procedure TfrmBandMap.MenuMultsOnlyClick(Sender: TObject);
 begin
    ToggleAndStoreCommand(BANDMAP_MULTS_ONLY);
+end;
+
+procedure TfrmBandMap.MenuCenterOnRadioClick(Sender: TObject);
+begin
+   ToggleAndStoreCommand(BANDMAP_CENTER_ON_RADIO);
+end;
+
+procedure TfrmBandMap.MenuSortByBeamClick(Sender: TObject);
+begin
+   ToggleAndStoreCommand(BANDMAP_SORT_BY_BEAM);
 end;
 
 (* COPY THE SELECTED SPOT AS TEXT (issue 183). The entity is CTY.DAT's name for

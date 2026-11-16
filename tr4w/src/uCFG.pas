@@ -185,9 +185,26 @@ var
 
   Was the row's crNetwork byte, and it is a list of names here -- the question
   belongs to the MULTI-OP PROTOCOL ("do the desks have to agree about this")
-  rather than to the setting. SetCFGCommandValue announces a change to peers
-  when the answer is yes; Preferences reads it as TSettingBase.Broadcast. *)
+  rather than to the setting. SetCFGCommandValue and ApplyContestEdit announce
+  a change to peers when the answer is yes, through ShareWithPeers.
+  PREFERENCES DOES NOT (measured 2026-11-16, issue 315): TModelSetting and
+  ApplyAndStoreCommand apply and save, and send nothing to the other
+  positions. TSettingBase.Broadcast, which this used to name, is gone. *)
 function CommandIsSharedWithPeers(const aCommand: string): boolean;
+
+(* WHAT THE OPERATOR IS TOLD WHEN A SHARED VALUE CANNOT GO ON THE WIRE (issue
+  315). '' unless aCommand is shared with peers AND the value is more BYTES
+  than a parameter packet carries (uNet.ParameterFitsTheWire). It does not
+  ask whether the link is up -- a value entered offline is told at entry, not
+  never. Pure: no status line, no log, so a test reads it. *)
+function SharedSettingNotSentText(const aCommand, aValue: string): string;
+
+(* ANNOUNCE A CHANGED VALUE TO THE OTHER POSITIONS, if the setting is shared.
+  A value too long for the packet is kept here as it was typed, and the
+  operator is told on the status line whatever the link state; the packet is
+  then refused (and logged) by SendParameterToNetwork. The one place this is
+  decided, for SetCFGCommandValue and ApplyContestEdit. *)
+procedure ShareWithPeers(const aCommand, aValue: string);
 
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 
@@ -701,10 +718,7 @@ begin
         or that the store would not keep, must not be announced to a peer as
         though it had taken.  SendParameterToNetwork is a no-op when the link
         is down, which is every single-operator station. *)
-      if CommandIsSharedWithPeers(aCommand) then
-         begin
-         SendParameterToNetwork(aCommand, aValue);
-         end;
+      ShareWithPeers(aCommand, aValue);
       end;
 
    { SAY WHAT CHANGED.  NY4I asked for this (bench queue): a configuration
@@ -822,6 +836,44 @@ begin
          Exit;
          end;
       end;
+end;
+
+function SharedSettingNotSentText(const aCommand, aValue: string): string;
+begin
+   Result := '';
+   if not CommandIsSharedWithPeers(aCommand) then
+      begin
+      Exit;
+      end;
+   Result := ParameterNotSentText(aCommand, aValue);
+end;
+
+procedure ShareWithPeers(const aCommand, aValue: string);
+var
+   notice: string;
+begin
+   if not CommandIsSharedWithPeers(aCommand) then
+      begin
+      Exit;
+      end;
+
+   (* TOLD AT ENTRY, LINK UP OR DOWN (issue 315; NY4I: "Shouldn't we give an
+     indication when a 255 setting is entered"). Nothing is cut: the value
+     stays here whole, and the other positions keep theirs. This is the only
+     operator notice for it -- SendParameterToNetwork refuses and logs, and
+     no longer speaks to the operator itself, so a connected station is not
+     told twice. *)
+   notice := SharedSettingNotSentText(aCommand, aValue);
+   if notice <> '' then
+      begin
+      if logger <> nil then
+         begin
+         logger.Warn('[Config] %s', [notice]);
+         end;
+      QuickDisplayError(notice);
+      end;
+
+   SendParameterToNetwork(aCommand, aValue);
 end;
 
 (*
@@ -1644,9 +1696,9 @@ begin
                   'edit; settings\tr4w.json is not written)',
                   [aCommand, Settings.ValueForLog(aCommand, aValue)]);
       end;
-   if Result and CommandIsSharedWithPeers(aCommand) then
+   if Result then
       begin
-      SendParameterToNetwork(aCommand, aValue);
+      ShareWithPeers(aCommand, aValue);
       end;
 end;
 

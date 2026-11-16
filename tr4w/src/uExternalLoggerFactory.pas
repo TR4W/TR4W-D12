@@ -72,7 +72,7 @@ implementation
 
 uses
    Log4D, uWRLExternalLogger, uClubLogExternalLogger, uCloudlogExternalLogger,
-   uACLogExternalLogger, uLogStore,
+   uQRZExternalLogger, uACLogExternalLogger, uLogStore,
    uExternalLoggerRegistry, uExternalLoggers, uExternalLoggerMigration,
    uRadioConfigStore, uTR4WConfigFile,
    MainUnit,          (* externalLogger -- the process-wide instance *)

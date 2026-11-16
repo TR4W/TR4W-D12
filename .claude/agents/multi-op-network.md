@@ -856,6 +856,24 @@ door on a port the system picks.
   `mac-sign.sh`), the in-tree `tr4wserver` as a tunnel server, a link status
   that says "tunnel up" apart from "admitted".
 
+## A shared setting: who sends it, and what is said when it cannot go (issue 315, 2026-11-16)
+
+- **The parameter packet (`TParameterToNetwork`) carries 255 BYTES per field**;
+  `uNet.ParameterFitsTheWire` decides, `SendParameterToNetwork` refuses an
+  over-long value and logs a Warn. **It no longer shows the operator anything.**
+- **`uCFG.ShareWithPeers` is the one sender for `SHARED_WITH_PEERS` names**
+  (`SetCFGCommandValue`, `ApplyContestEdit`). It tells the operator
+  (`SNetParameterTooLong`, status line) when the value is too long WHATEVER THE
+  LINK STATE -- the issue's complaint was that an offline edit was never reported
+  -- and keeps the local value whole. MainUnit's INSERT MODE still calls
+  `SendParameterToNetwork` directly (not a shared-list name; always fits).
+- **PREFERENCES SENDS NOTHING TO PEERS** (measured 2026-11-16). `TModelSetting`
+  and `ApplyAndStoreCommand` apply and save only; `uPrefsForm`'s comment claiming
+  "every MY row is crNetwork:1 -- pushed to the other stations" is stale. The
+  only live senders are Auto-CQ's delay, a macro's boolean TOGGLE and the
+  Cabrillo summary's CATEGORY-* values. Whether Preferences should share
+  (and re-send on link-up, the issue's option c) is open for NY4I.
+
 ## Coordinate with
 
 `log-database` (row-level sync is the destination) · `contest-scoring` (dupes,

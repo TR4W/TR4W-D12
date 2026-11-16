@@ -11067,3 +11067,35 @@ msgstr ""
 #, fuzzy
 msgid "You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
 msgstr ""
+
+#: uappstrings.sloggerfieldqrzcall
+#, fuzzy
+msgid "QRZ logbook callsign"
+msgstr ""
+
+#: uappstrings.sloggerfieldqrzkey
+#, fuzzy
+msgid "QRZ logbook API key"
+msgstr ""
+
+#: uappstrings.sbandmapcenteronradio
+#: tfrmbandmap.micenteronradio.caption
+#, fuzzy
+msgid "Center on radio frequency"
+msgstr ""
+
+#: uappstrings.sbandmapsortbybeam
+#: tfrmbandmap.misortbybeam.caption
+#, fuzzy
+msgid "Sort by beam heading"
+msgstr ""
+
+#: tprefsform.chkbandmapcenteronradio.caption
+#, fuzzy
+msgid "Keep the band map centered on the radio frequency"
+msgstr ""
+
+#: tprefsform.chkbandmapsortbybeam.caption
+#, fuzzy
+msgid "Sort the band map by beam heading, nearest the beam first"
+msgstr ""

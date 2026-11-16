@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(310, names.Count,
+         CheckEquals(312, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -529,7 +529,9 @@ begin
                      + ' secret (new, no CFGCA row, issue 293), 2026-11-12;'
                      + ' 310 with SERVER USE TAILCAT, the box that sends the'
                      + ' link through that tunnel (new, no CFGCA row, issue'
-                     + ' 293), 2026-11-12');
+                     + ' 293), 2026-11-12; 312 with BAND MAP CENTER ON RADIO'
+                     + ' (issue 246) and BAND MAP SORT BY BEAM HEADING (issue'
+                     + ' 82), new, no CFGCA row, 2026-11-16');
       finally
          names.Free;
       end;
@@ -1779,6 +1781,7 @@ const
       + '"BAND MAP ALL BANDS",'
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'
+      + '"BAND MAP CENTER ON RADIO",'
       + '"BAND MAP DECAY TIME",'
       + '"BAND MAP DISPLAY CQ",'
       + '"BAND MAP DISPLAY GHZ",'
@@ -1791,6 +1794,7 @@ const
       + '"BAND MAP MULTS ONLY",'
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
+      + '"BAND MAP SORT BY BEAM HEADING",'
       + '"BAND MAP SPLIT MODE",'
       + '"BAND MAP WORKED MULT COLOR",'
       + '"BAND MAP WORKED MULT LIMIT",'

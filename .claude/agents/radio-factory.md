@@ -391,6 +391,28 @@ the Ten-Tec Omni VI, D7's `(RadioModel = OMNI6) and (Mode = CW)` arm (n4af
 sends `*RMM<d>` through `SetFrequency` -> `SetMode`; the D7 defect was in the
 deleted legacy path.
 
+**DXLAB COMMANDER IS A RADIO WITH NO READING THREAD** (issue 172, 2026-11-16,
+NOT bench-tested). `uRadioDXLabCommander` + the pure leaf
+`uDXLabCommanderProtocol`. Its source is DXLab's "Commander TCP/IP Messages"
+PDF, attached to the issue. Commander pushes nothing, so all of its I/O
+runs on the polling thread, in the HamLib Direct shape: `SendToRadio` only
+queues, `DrainUrgentQueue` writes, `PollRadioState` asks and reads one ADIF
+field by its length. It owns a private `TIdTCPClient` whose only reader is the
+polling thread. `Connect` finds out whether the peer keeps the connection
+(one connection, ordered) or hangs up per message, as DXKeeper does. For a
+peer that hangs up, it waits for the hang-up after each set so sets stay in
+order. Two Commander semantics are pinned and must not be "simplified" away:
+- every VFO B write is `CmdQSXSplit`, never `CmdSetTXFreq`. With split off,
+  `CmdSetTXFreq` retunes RX, and TR4W learns split a poll late;
+- `CmdSetFreqMode` is never sent, because it resets split.
+
+The queue is emptied on `Connect`/`Disconnect`, so a stale `CmdTX` cannot key
+the rig on reconnect.
+
+**`RegisterRadioById`'s id must be a quoted LITERAL.** `Lint-RadioRegistry`
+silently skips a call with fewer than two literals. A constant id once hid
+this radio from the count and from the duplicate-name check.
+
 ## Before any "behaviour-preserving" swap
 
 Prove equivalence **in both directions**, and expect the first check to say no.

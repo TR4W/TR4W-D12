@@ -1,5 +1,55 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] DXLab Commander as a radio (issue 172, 2026-11-16). `uRadioDXLabCommander` is written from
+  DXLab's "Commander TCP/IP Messages" (2019-07-11) and tested only against a fake peer. Set up
+  Commander driving a real rig, then pick "DXLab Commander" with host 127.0.0.1 and port 52002 (the
+  third port of the Net Serv block). Set `DEBUG LOG LEVEL = TRACE` so `[Commander TX]` and
+  `[Commander RX]` are logged. The document leaves these open, and the driver was built to survive
+  either answer to each:
+  (1) **Does Commander keep a connection open after it answers?** The log says so once per connect:
+  "keeps the connection" or "closes after each reply". DXKeeper closes after every command.
+  (2) **Does a message need a terminator?** None is sent (`COMMANDER_MESSAGE_TERMINATOR = ''`). If
+  Commander never answers the first `CmdGetFreq` (the log shows "no answer from"), try CR/LF there.
+  (3) **Does a set command draw a reply?** Any reply would show as a `[Commander RX]` line for a field
+  nobody asked for.
+  (4) **CmdSendTX on your rig.** After three unanswered queries the driver stops asking for the
+  session, and the log says "this rig does not report TX". Key from the radio and check the TX
+  indicator follows.
+  Then check the program's behaviour. Frequency and mode follow the rig, including a VFO knob turn,
+  within about 250 ms. A band-map click tunes the RX VFO, and it does not reset split
+  (`CmdSetFreq`/`CmdSetMode`, never `CmdSetFreqMode`). A QSX click puts the TX on VFO B and turns
+  split on, and the RX frequency must NOT move: this is `CmdQSXSplit` with Dual and the TX mode left
+  alone. Split shows on and off. PTT works (`CmdTX`/`CmdRX`), and Escape unkeys. Close Commander:
+  the callsign goes to the alert colour, and it recovers when Commander is restarted. Switch the rig
+  off while Commander runs: Commander should then answer `.000`, and the alert colour stays on.
+  On a machine whose Windows decimal separator is a comma, tune to a non-whole-kHz frequency
+  (14025.5): it is sent as "14025,500". Confirm Commander puts the rig on 14.025.500 and not
+  somewhere else.
+
+- [ ] Bundled HamLib 4.7.0 -> 4.7.2 (issue 46, 2026-11-16). Only libhamlib-4.dll changed; the other
+  three DLLs are byte-identical. Unit tests pass and all 36 symbols uHamLibDirect binds are exported,
+  but nothing has talked to a radio. With a HamLib-backed radio (not a native driver), serial AND
+  network (rigctld-style host:port) if one is available: connect, confirm the log shows version
+  "Hamlib 4.7.2", frequency/mode follow the radio, set frequency and mode, PTT if used, split if the
+  radio has it, and a clean disconnect/reconnect (Reset Radio Ports). Check the CI-V address,
+  serial speed and timeout still take effect (rig_set_conf paths in uRadioHamLibDirect). Confirm the
+  model numbers of the radios you use still match the list (4.7.x renumbers nothing known, unverified).
+  Also launch from the 64-bit installer build and confirm the DLL resolves with the three support DLLs.
+
+- [ ] A shared setting too long for the network is told at entry, link up or down
+  (issue 315, 2026-11-16). `uCFG.ShareWithPeers` now shows the existing notice
+  ("<NAME> was not sent to the other stations: it is N bytes and the network carries
+  255.") on the status line with a beep whenever a SHARED setting's value is over 255
+  UTF-8 bytes, whether or not the multi-op link is up; `SendParameterToNetwork` no
+  longer shows it (it still refuses and logs). **No ordinary window reaches it today:**
+  the only routes that share are `SetCFGCommandValue` (Auto-CQ delay, a function-key
+  macro's boolean toggle in `uProcessCommand`) and the Cabrillo summary's CATEGORY-* values, none of which can be that
+  long, and Preferences does not share at all (see the issue). So the check is a
+  regression check: with two stations linked, change CATEGORY-POWER in Tools > Edit
+  Cabrillo Summary and confirm the peer still receives it and NO notice appears; and
+  toggle a shared boolean (FARNSWORTH ENABLE) from a function-key macro with the link
+  down and confirm only the usual `NAME=TRUE` line is shown.
+
 - [ ] New Contest checks MY CALL against the "I am in ..." box (issue 167, 2026-11-15).
   At startup, choose ARRL 10 with MY CALL W1AW and the box CLEARED: OK asks once
   ("You did not tick ..."); Yes (the default, Enter) creates the contest as entered,
@@ -20,8 +70,10 @@
   Kentucky's two once overall, Vermont's two per mode; the state must show as
   worked on the remaining-multipliers list, no "AL"/"WV" prefix row may
   appear, and reopening the log (and a /RESCORE) must give the same totals.
-  Expected and documented: the UDP `<ismultiplier2>`, the hourly report's
-  Mults column and HamScore show one fewer on that first county QSO.
+  Since #318 the UDP `<ismultiplier2>` (live, after Edit QSO, and after the
+  full-log resend) and the hourly report's Mults column must show TWO on that
+  first county QSO of each scope, and the hourly Mults column must add up to
+  the totals window's domestic count.
   A second band/mode must not repeat either multiplier. Check two-county
   entry creates two separate records and W8WVA pays once per band/mode,
   K4KCG (Kentucky) once per band/mode, and WR5P (Arkansas) 200 for every
@@ -92,6 +144,39 @@ swallowed menu, invisible entry fields, a double caret, a window collapsed to
 named `K3S`, Escape not closing a dialog, a settings field accepting letters, and
 a message key written with four bytes of garbage on the end. The gates are good
 at what they cover; this is the list of what they cannot see.
+
+---
+
+## Added 2026-11-16 -- BAND MAP: CENTER ON THE RADIO, AND SORT BY BEAM HEADING (issues 246, 82)
+
+Two settings in `Settings.BandMap`, both default OFF, each a Preferences > Band Map check box AND a right-click item on the band map: BAND MAP CENTER ON RADIO and BAND MAP SORT BY BEAM HEADING. The arithmetic (wrap at 0/360, ties, the centring column) and the spot store's ordering are unit-tested; the scroll itself and the beam source are not.
+
+- [ ] **Centring, the scroll.** Fill the map with more spots than fit across (shrink the window, or a busy band). Turn CENTER ON RADIO on. Tune the radio: the column holding the first spot above the radio frequency should sit in the middle of the visible columns, and the view should follow at the refresh tick (about 4 a second), not jitter on every poll. At the low or high end of the band it should stop at the first or last column rather than leave blank space. Turn it off: the view stays where it is.
+- [ ] **Centring is held while the map has focus.** Click in the band map: tuning must NOT move the view while it has focus (the selection is frozen the same way). Press back into the callsign window: centring resumes. NOTE the menu toggle itself is made with the map focused, so the first re-centre after ticking it comes when focus returns to the entry window.
+- [ ] **The grid's own scroll bar and `LeftCol`.** `grdSpots.LeftCol` was set from code for the first time. Check the horizontal scroll bar thumb follows, a hand scroll is not undone while focused, and the selected spot stays selected after a re-centre. goSmoothScroll is on: confirm it lands on a column boundary, not between two.
+- [ ] **SO2R.** With two radios, centring follows `BandMapCursorFrequency`, the radio the map is showing: swap radios (and the map's band) and the view follows that radio, not the other.
+- [ ] **Sort by beam heading, with a rotator.** Set MY GRID, define a rotator (Preferences, Rotator) and turn it toward a spot the usual way. With SORT BY BEAM HEADING on, the spots nearest where the beam was last TOLD to point come first, with the country panel's headings (issue 186) rising away from it on both sides, wrapping through north (beam on 350: a spot at 10 is nearer than one at 100). The map must re-sort when the rotator is turned again. A spot with no grid, and the CQ / NEW markers, go to the end.
+- [ ] **Sort by beam heading, with NO rotator command yet.** Nothing was ever commanded, so the order is the absolute heading, 0 to 359 (the issue's option a). Same after a restart until the first turn: TR4W does not read the rotator's own azimuth back (no driver implements it), so a rotator moved by hand or from its own controller is not seen -- confirm that is acceptable.
+- [ ] **Display limit in beam order.** Set BAND MAP DISPLAY LIMIT to the minimum (30) with more than 30 spots: the map shows the 30 nearest the beam, not a frequency window. NEXTBM / spot stepping stays in FREQUENCY order (unchanged on purpose); confirm it still steps sensibly.
+- [ ] **The two items together.** With SORT BY BEAM HEADING on, the CENTER ON RADIO menu item is greyed and the view stays at the first column. Turn the sort off: frequency order returns and, with centring on, the view re-centres.
+- [ ] **Persistence.** Tick both from the menu, quit, restart: both still ticked (and still ticked in Preferences). Untick from Preferences, Save: the menu follows.
+- [ ] **Captions.** Switch language: the two menu items and the two Preferences check boxes show their translation (the catalogue entries are empty fuzzy entries until reviewed, so English is expected until then).
+
+---
+
+## Added 2026-11-16 -- QRZ LOGBOOK EXTERNAL LOGGER (issue 310)
+
+New, changed and deleted QSOs go to a QRZ logbook through `POST https://logbook.qrz.com/api` (`uQRZLogbookClient`, provider `QRZ`). The unit tests (`uTestQRZLogbook`) run the real request path against a scripted transport with a made-up key; **nothing here has talked to QRZ**. The reply shapes (`RESULT=OK|REPLACE|FAIL|AUTH`, `LOGID`, `COUNT`, `REASON`) are from QRZ's API guide, not observed. Needs a QRZ logbook API access key (QRZ XML/logbook subscription); never put the key in a ticket, log or screenshot.
+
+- [ ] **Editor and vault.** Preferences > External Software > External Logger > Add > QRZ Logbook: callsign, API key (masked, eye works), certificate box. Save, restart: the key is still there (OS vault) and `tr4w.json` does not contain it.
+- [ ] **A new QSO.** Log one: it appears in the QRZ logbook, the row reads Idle, no failures. `tr4w.log` (DEBUG) shows `POST https://logbook.qrz.com/api` with `KEY=********` and the key nowhere else.
+- [ ] **The wire.** QRZ accepts the form body and the User-Agent `TR4W/<version> (CALL)`. Confirm QRZ returns `LOGID` for an insert and that the `COUNT` / `RESULT` spellings match what `QRZParseReply` expects (a `RESULT=OK` with no `LOGID` pauses the logger as QRZ_LOGID_REQUIRED).
+- [ ] **A duplicate.** Log the same call/band/mode/time twice: what does QRZ answer (`FAIL` expected)? The row should show "Failed: QRZ_REJECTED" and the next QSO must still go.
+- [ ] **Edit a delivered QSO** (change the call, then the band): the old row is gone from QRZ and one new row exists, no duplicate. Check the real `ACTION=DELETE` reply is `RESULT=OK`, and what QRZ answers when the LOGID is already gone (the code treats FAIL as QRZ_DELETE_REJECTED, the edit does not insert).
+- [ ] **Delete a delivered QSO**: it leaves the QRZ logbook.
+- [ ] **A wrong key**, and **a key without a QRZ subscription**: `RESULT=AUTH` pauses the logger (Paused, QRZ_AUTH_REQUIRED) and the QSO stays queued; fixing the key and restarting delivers it.
+- [ ] **STATION_CALLSIGN.** QRZ ties a key to one logbook. Log as a different operator (TR4W writes STATION_CALLSIGN only then) and see whether QRZ refuses it.
+- [ ] **Rate limit / outage.** Whether QRZ answers HTTP 429 and with what Retry-After is unknown; a 5xx is treated as uncertain and pauses.
 
 ---
 

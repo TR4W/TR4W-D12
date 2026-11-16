@@ -528,3 +528,11 @@ issue 12; N = 2 gives "orange after the first, gone after the second".
   `TSpotRecord`, so `SizeOf(TNetDXSpot)` (pinned at 106 by `uTestNetWireSizes`)
   and `bandmap.bin` are unchanged. It is LOCAL knowledge: the network receiver and
   the band map file reader clear it, and the next multiplier re-ask sets it.
+
+## 8. CENTRING ON THE RADIO AND SORTING BY BEAM HEADING (issues 246 and 82, 2026-11-16)
+
+Two view settings, both default off, each on Preferences > Band Map and the right-click menu (saved by `ToggleAndStoreCommand`). The arithmetic is the leaf `uBandMapOrder`, pinned by `uTestBandMapOrder`.
+
+- **BAND MAP CENTER ON RADIO** scrolls the grid sideways (`CenterOnRadio` in `uBandMapForm`, after `RestoreSelection`): `FirstSpotAbove` finds the first displayed spot above `BandMapCursorFrequency`, `CentreLeftCol` puts its column in the middle. It runs from `RebuildSnapshot`, so at most once per refresh tick; not while the grid has focus (`FFrozen`); the cursor is the radio the map shows (SO2R).
+- **BAND MAP SORT BY BEAM HEADING** is applied in `TDXSpotsList.BeamOrderedWindow` (from `BuildVisibleSpots`): spots ordered by `BeamRank` -- angular distance from the beam, wrapping at 0/360, equal ranks in frequency order, no heading (`SpotBeamHeading` = -1: CQ/NEW marker, no grid) last -- and the display limit takes the first N. Centring is off in this mode (the view returns to column 0), and spot stepping (`uBandmap`) stays in frequency order.
+- **Where the beam points** is `uRotatorControl.RotatorBeamHeading(band)`: the heading the rotator was last COMMANDED to (`TLiveRotator.LastHeading`, -1 until the first turn). No driver reads the azimuth back (`rcReadAzimuth` is declared, implemented nowhere), so a rotator moved by hand is not seen. With no reference the order is the absolute heading, 0 to 359. `TurnRotator` asks for a band map repaint when the sort is on.

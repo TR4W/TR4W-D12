@@ -255,7 +255,7 @@ begin
    BeginTest('an edited contact is a contactreplace on the contact stream');
    ConfigureAllStreams(True);
    ResetCapture;
-   LogEditedContactToUDP(SampleQSO);
+   LogEditedContactToUDP(SampleQSO, 0);
 
    CheckEquals(1, Length(gSent), 'exactly one datagram');
    CheckEquals(CONTACT_ADDRESS, gSent[0].Address, 'to the contact listener');
@@ -310,22 +310,22 @@ begin
    facts := NotCapturedMyFacts;
 
    ResetCapture;
-   PostQsoEvent(qmNew, SampleQSO, facts, '', True, False);
+   PostQsoEvent(qmNew, SampleQSO, facts, '', 0, True, False);
    CheckEquals(1, Length(gSent), 'a new QSO is one datagram');
    CheckEquals('contactinfo', RootOf(string(gSent[0].Payload)), 'contactinfo');
 
    ResetCapture;
-   PostQsoEvent(qmEdited, SampleQSO, facts, '', True, False);
+   PostQsoEvent(qmEdited, SampleQSO, facts, '', 0, True, False);
    CheckEquals(1, Length(gSent), 'an edit is one datagram');
    CheckEquals('contactreplace', RootOf(string(gSent[0].Payload)), 'contactreplace');
 
    ResetCapture;
-   PostQsoEvent(qmDeleted, SampleQSO, facts, '', True, True);
+   PostQsoEvent(qmDeleted, SampleQSO, facts, '', 0, True, True);
    CheckEquals(1, Length(gSent), 'a delete is one datagram');
    CheckEquals('contactdelete', RootOf(string(gSent[0].Payload)), 'contactdelete');
 
    ResetCapture;
-   PostQsoEvent(qmNew, SampleQSO, facts, '', False, False);
+   PostQsoEvent(qmNew, SampleQSO, facts, '', 0, False, False);
    CheckEquals(0, Length(gSent), 'with UDP not wanted for the event, nothing is sent');
 end;
 
@@ -357,7 +357,7 @@ begin
    CheckEquals(FIXTURE_CONTESTNR, TagValue(xml, 'contestnr'), 'contactinfo');
 
    ResetCapture;
-   LogEditedContactToUDP(q);
+   LogEditedContactToUDP(q, 0);
    CheckEquals(1, Length(gSent), 'a contactreplace');
    CheckEquals(FIXTURE_CONTESTNR, TagValue(string(gSent[0].Payload), 'contestnr'),
                'contactreplace');
@@ -620,7 +620,7 @@ begin
    SetScoreGlobals;
    ResetCapture;
    LogContactToUDP(SampleQSO);
-   LogEditedContactToUDP(SampleQSO);
+   LogEditedContactToUDP(SampleQSO, 0);
    SendDeletedContactToUDP(SampleQSO);
    LookupInfoToUDP(SampleQSO);
    PostScoreToUDP(1);

@@ -32,6 +32,7 @@ https://www.supercheckpartial.com/api/v1/cabsubmit | endpoint | root | uSuperChe
 https://www.supercheckpartial.com/api/v1/testcabsubmit | endpoint | root | uSuperCheckPartialFileUpload | POST only (SCP upload, test)
 https://clublog.org/api/v1/qso | endpoint | root | uClubLogClient | POST only
 https://clublog.org/api/v1 | endpoint | root | uClubLogClient | API base
+https://logbook.qrz.com/api | endpoint | root | uQRZLogbookClient | POST only
 https://api.worldradioleague.com/v1 | endpoint | root | uWRLClient | API base, POST only
 # ---- links: opened in the operator's browser -------------------------------------------------
 https://tr4w.net | link | head | uAboutForm

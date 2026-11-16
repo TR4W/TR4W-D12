@@ -83,10 +83,10 @@ county QSO also earns KY as a state. **Built at #317** for Alabama (per
 mode), West Virginia (overall), Kentucky (overall) and Vermont (per mode):
 see the paragraph above and `.claude/agents/contest-scoring.md`. The
 in-state lists are KY 184, AL 130, WV 118, VT 77 (VT's `Vt` already came
-from S50.DOM). Pinned by `uTestAdditionalDomesticMultiplier`. Known
-undercount, not fixed: a reader of a QSO's STORED flags (the UDP
-`<ismultiplier2>`, the hourly report's Mults column, `uHamScore.CountMultipliers`) shows one fewer
-multiplier on the first county QSO of each scope. South Carolina, when
+from S50.DOM). Pinned by `uTestAdditionalDomesticMultiplier`. The per-QSO
+readers (the UDP `<ismultiplier2>`, the hourly report's Mults column) ask the
+engine for the second key since issue #318, so the first county QSO of each
+scope shows two. South Carolina, when
 built, uses the same one-line override. Arkansas explicitly excludes AR from
 its states, and New Jersey excludes NJ, so neither gains a host-state key.
 

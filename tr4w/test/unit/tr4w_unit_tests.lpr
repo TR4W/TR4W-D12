@@ -625,6 +625,8 @@ uses
    uTestFlexAPISplit    in 'uTestFlexAPISplit.pas',
    uTestTenTecModeSet   in 'uTestTenTecModeSet.pas',
    uTestRadioTCI        in 'uTestRadioTCI.pas',
+   uTestDXLabCommanderProtocol in 'uTestDXLabCommanderProtocol.pas',
+   uTestRadioDXLabCommander in 'uTestRadioDXLabCommander.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
@@ -637,6 +639,7 @@ uses
    uTestHttpSecrets in 'uTestHttpSecrets.pas',
    uTestFakeTransport in 'uTestFakeTransport.pas',
    uTestCloudlog in 'uTestCloudlog.pas',
+   uTestQRZLogbook in 'uTestQRZLogbook.pas',
    uTestACLog in 'uTestACLog.pas',
    uTestHttpTransport in 'uTestHttpTransport.pas',
    uTestUrlTest in 'uTestUrlTest.pas',
@@ -683,6 +686,8 @@ uses
    uCallHistory         in '..\..\src\uCallHistory.pas',
    uCallHistoryDownload in '..\..\src\uCallHistoryDownload.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
+   uBandMapOrder        in '..\..\src\uBandMapOrder.pas',
+   uTestBandMapOrder    in 'uTestBandMapOrder.pas',
    uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
    uCrashLog            in '..\..\src\uCrashLog.pas',
    Version              in '..\..\src\Version.pas',
@@ -1020,6 +1025,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTCIProtocol         in '..\..\src\uTCIProtocol.pas',
    uTCIServer           in '..\..\src\uTCIServer.pas',
    uRadioTCI            in '..\..\src\radioFactory\uRadioTCI.pas',
+   uDXLabCommanderProtocol in '..\..\src\radioFactory\uDXLabCommanderProtocol.pas',
+   uRadioDXLabCommander in '..\..\src\radioFactory\uRadioDXLabCommander.pas',
    uRadioKenwoodTS890   in '..\..\src\radioFactory\uRadioKenwoodTS890.pas',
    uRadioKenwoodTS990   in '..\..\src\radioFactory\uRadioKenwoodTS990.pas',
    uRadioKenwoodTS570   in '..\..\src\radioFactory\uRadioKenwoodTS570.pas',
@@ -1249,6 +1256,8 @@ begin
    RegisterSuite(TFlexAPISplitTests.Create('FlexAPISplit'));
    RegisterSuite(TTenTecModeSetTests.Create('TenTecModeSet'));
    RegisterSuite(TRadioTCITests.Create('RadioTCI'));
+   RegisterSuite(TDXLabCommanderProtocolTests.Create('DXLabCommanderProtocol'));
+   RegisterSuite(TRadioDXLabCommanderTests.Create('RadioDXLabCommander'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
    RegisterSuite(TRadioSocketProbeTests.Create('RadioSocketProbe'));
@@ -1264,6 +1273,7 @@ begin
    RegisterSuite(THttpTransportTests.Create('HttpTransport'));
    RegisterSuite(TNothingSentTests.Create('NothingSent'));
    RegisterSuite(TCloudlogTests.Create('Cloudlog'));
+   RegisterSuite(TQRZLogbookTests.Create('QRZLogbook'));
    RegisterSuite(TACLogTests.Create('ACLog'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TUrlTestTests.Create('UrlTest'));
@@ -1320,6 +1330,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TBandMapOrderTests.Create('BandMapOrder'));
    RegisterSuite(TFunctionKeyBankTests.Create('FunctionKeyBank'));
    RegisterSuite(TCallbookTests.Create('Callbook'));
    RegisterSuite(TSetupWizardTests.Create('SetupWizard'));

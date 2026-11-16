@@ -164,14 +164,22 @@ procedure SendFullLogToHamScore;  // Issue #783 -- enqueue every QSO for RTC res
   callers differ: a network-received QSO is broadcast only when BROADCAST ALL
   QSOS is on, and never goes to the external logger). HamScore is asked of the
   uploader itself. aFacts and aRecordedSent are the station the QSO recorded
-  (Q13); PostLoggedQso captures the session's own for a QSO being logged now. *)
+  (Q13); PostLoggedQso captures the session's own for a QSO being logged now.
+
+  aAdditionalDomesticMults is the QSO's second domestic multiplier (issue
+  #318; 0 or 1), which no stored flag carries: the caller asks LOGDUPE as
+  the sheet stood when the QSO was logged -- AdditionalDomesticMultipliersBeforeSheet
+  for a QSO not yet on the sheet, AdditionalDomesticMultipliersOfLoggedQSO for
+  an edit. A delete sends no multiplier field and passes 0. *)
 procedure PostQsoEvent(const aKind: TQsoMessageKind;
                        const RXData: ContestExchange;
                        const aFacts: TQsoMyFacts;
                        const aRecordedSent: AnsiString;
+                       const aAdditionalDomesticMults: integer;
                        const aUDP: boolean;
                        const aExternal: boolean);
 procedure PostLoggedQso(const RXData: ContestExchange;
+                        const aAdditionalDomesticMults: integer;
                         const aUDP: boolean;
                         const aExternal: boolean);
 
@@ -186,9 +194,13 @@ type
   aSink WITH THE STATION AND SENT EXCHANGE ITS ROW RECORDED, never today's.
   Returns how many were delivered, -1 when the log would not open. *)
 function DeliverLogToHamScore(aSink: THamScoreRowSink): integer;
-procedure LogEditedContactToUDP(RXData: ContestExchange); // ny4i
+procedure LogEditedContactToUDP(RXData: ContestExchange; aAdditionalDomesticMults: integer); // ny4i
 procedure LookupInfoToUDP(RXData: ContestExchange); // Issue 612 ny4i
-function BuildUDPContact(RXData: ContestExchange; whichUDP: UDPType): string; // Issue 612 ny4i
+(* aAdditionalDomesticMults: the QSO's second domestic multiplier, added to
+  its stored flags for <ismultiplierN> (issue #318) -- see PostQsoEvent. A
+  lookup is no logged QSO and passes 0. *)
+function BuildUDPContact(RXData: ContestExchange; whichUDP: UDPType;
+                         aAdditionalDomesticMults: integer): string; // Issue 612 ny4i
 procedure SendFullLogToUDP;
 procedure SendDeletedContactToUDP(RXData: ContestExchange);
 procedure ToggleModes;
@@ -662,7 +674,10 @@ begin
      (* A STORED QSO COMING BACK: it describes the station it recorded, not
        today's settings (issue 95, Q13). It is the newest row. *)
      LogSourceReadNewestStation(restoredFacts, restoredSent);
+     (* NOT ON THE SHEET: the LoadinLog after its delete took it off, so the
+        sheet as it stands IS the sheet as it stood (issue #318). *)
      PostQsoEvent(qmNew, TempRXData, restoredFacts, restoredSent,
+                  AdditionalDomesticMultipliersBeforeSheet(ActiveContest(Contest), TempRXData),
                   UDPBroadcaster.Enabled(usContact), True);
      end
   else
@@ -673,7 +688,7 @@ begin
      // Previously only LogContact had a HamScore hook; ALT-Y deletes
      // dropped silently from the server's view.
      restoredFacts := NotCapturedMyFacts;
-     PostQsoEvent(qmDeleted, TempRXData, restoredFacts, '',
+     PostQsoEvent(qmDeleted, TempRXData, restoredFacts, '', 0,
                   UDPBroadcaster.Enabled(usContact), True);
      end;
   InvertBoolean(tLastLogEntryIsDeleted);
@@ -1623,6 +1638,19 @@ begin
    ShowNeedsForCall(aCall);
 end;
 
+(* THE SECOND DOMESTIC KEY FOR A QSO'S UDP MESSAGE -- issue #318: LOGDUPE's
+  live answer when the message is wanted, else 0. Only <ismultiplierN> reads
+  it, so a QSO whose message is not sent pays nothing for it. *)
+function SecondDomesticKeyForUDP(aWanted: boolean; aContest: TContestBase;
+                                 const aRX: ContestExchange): integer;
+begin
+   Result := 0;
+   if aWanted then
+      begin
+      Result := AdditionalDomesticMultipliersBeforeSheet(aContest, aRX);
+      end;
+end;
+
 procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
 { This procedure will log the contact just completed.  It will be
   pushed onto the editable log and the log entry popped off the editable
@@ -1639,6 +1667,9 @@ var
     once, below. *)
   contestRules                          : TContestBase;
   countsGridSquares                     : boolean;
+  (* Whether this QSO's UDP message is wanted -- the second domestic key
+     (issue #318) is asked only then. *)
+  udpWanted                             : boolean;
 begin
   logger.trace('>>>Entering LogContact');
 
@@ -1792,8 +1823,12 @@ begin
        delivers, in that order. The timing line stays: it measures the build
        and the post, which is what the main thread still pays. *)
      perfTimeStart := Now;
+     (* THE SECOND DOMESTIC KEY (#317) IS ASKED HERE, BEFORE the sheets
+        below have the QSO, so `mo` is the sheet as it stood (issue #318). *)
+     udpWanted := UDPBroadcaster.Enabled(usContact);
      PostLoggedQso(RXData,
-                   UDPBroadcaster.Enabled(usContact),
+                   SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
+                   udpWanted,
                    Assigned(externalLogger));
      perfTimeStop := Now;
      logger.Debug('Milliseconds to build and post the QSO to the dispatcher = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
@@ -1801,7 +1836,10 @@ begin
   else
      begin     // ny4i issue 82 - If the option is set, broadcast contacts received from the Network
      // Issue #783 -- network-received QSOs also feed RTC if multi-op uplink is enabled.
-     PostLoggedQso(RXData, UDPBroadcaster.BroadcastAllQSOs, False);
+     udpWanted := UDPBroadcaster.BroadcastAllQSOs;
+     PostLoggedQso(RXData,
+                   SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
+                   udpWanted, False);
      end;
   if not tAddQSOToLog(RXData) then Exit;
   TempMode := RXData.Mode;
@@ -2922,7 +2960,8 @@ begin
       end;
 end;
 
-function BuildUDPContact(RXData: ContestExchange; whichUDP: UDPType): string;
+function BuildUDPContact(RXData: ContestExchange; whichUDP: UDPType;
+                         aAdditionalDomesticMults: integer): string;
 var
   // msg: TIdBytes;
   // sBuf: AnsiString;
@@ -3007,27 +3046,9 @@ begin
        sComputerID := RxData.ceComputerID;
        end;
 
-   (* COUNTED FROM ZERO, WHICH IT WAS NOT.  The first touch of nMultCount was
-     the Inc below, so it counted up from whatever was on the stack, and the
-     case that follows selects behaviour on the total.  FPC reports it. *)
-   nMultCount := 0;
-
-   if RxData.DXMult then
-      begin
-      Inc(nMultCount);
-      end;
-   if RxData.DomesticMult then
-      begin
-      Inc(nMultCount);
-      end;
-   if RxData.PrefixMult then
-      begin
-      Inc(nMultCount);
-      end;
-   if RxData.ZoneMult then
-      begin
-      Inc(nMultCount);
-      end;
+   (* THE STORED FLAGS, AND THE SECOND DOMESTIC KEY THAT HAS NONE (issue
+     #318): an in-state county QSO that also earned the host state shows two. *)
+   nMultCount := StoredMultiplierFlagCount(RxData) + aAdditionalDomesticMults;
    case nMultCount of
       0:
          begin
@@ -3184,17 +3205,19 @@ var
    sBuf: AnsiString;
 begin
 
-   sBuf := BuildUDPContact(RXData, udpContactInfo);
+   (* A QSO ABOUT TO BE LOGGED: asked before the sheet has it (issue #318). *)
+   sBuf := BuildUDPContact(RXData, udpContactInfo,
+                           AdditionalDomesticMultipliersBeforeSheet(ActiveContest(Contest), RXData));
    logger.Trace('Queueing UDP Broadcast data: ' + sBuf);
    QsoDispatcher.PostUDP(usContact, sBuf, 'contact ' + string(RXData.Callsign));
 end;
 
-procedure LogEditedContactToUDP(RXData: ContestExchange);
+procedure LogEditedContactToUDP(RXData: ContestExchange; aAdditionalDomesticMults: integer);
 var
    sBuf: AnsiString;
 begin
 
-   sBuf := BuildUDPContact(RXData, udpContactReplace);
+   sBuf := BuildUDPContact(RXData, udpContactReplace, aAdditionalDomesticMults);
    logger.Trace('Queueing UDP Broadcast data: ' + sBuf);
    QsoDispatcher.PostUDP(usContact, sBuf, 'replace ' + string(RXData.Callsign));
 end;
@@ -3204,7 +3227,7 @@ var
    sBuf: AnsiString;
 begin
 
-   sBuf := BuildUDPContact(RXData, udpLookupInfo);
+   sBuf := BuildUDPContact(RXData, udpLookupInfo, 0);
    logger.Trace('Queueing UDP Broadcast data: ' + sBuf);
    QsoDispatcher.PostUDP(usLookup, sBuf, 'lookup ' + string(RXData.Callsign));
 end;
@@ -3213,6 +3236,7 @@ procedure PostQsoEvent(const aKind: TQsoMessageKind;
                        const RXData: ContestExchange;
                        const aFacts: TQsoMyFacts;
                        const aRecordedSent: AnsiString;
+                       const aAdditionalDomesticMults: integer;
                        const aUDP: boolean;
                        const aExternal: boolean);
 var
@@ -3226,11 +3250,13 @@ begin
          case aKind of
             qmNew:
                begin
-               msg.UDPPayload := AnsiString(BuildUDPContact(RXData, udpContactInfo));
+               msg.UDPPayload := AnsiString(BuildUDPContact(RXData, udpContactInfo,
+                                                            aAdditionalDomesticMults));
                end;
             qmEdited:
                begin
-               msg.UDPPayload := AnsiString(BuildUDPContact(RXData, udpContactReplace));
+               msg.UDPPayload := AnsiString(BuildUDPContact(RXData, udpContactReplace,
+                                                            aAdditionalDomesticMults));
                end;
             qmDeleted:
                begin
@@ -3266,6 +3292,7 @@ begin
 end;
 
 procedure PostLoggedQso(const RXData: ContestExchange;
+                        const aAdditionalDomesticMults: integer;
                         const aUDP: boolean;
                         const aExternal: boolean);
 var
@@ -3281,7 +3308,7 @@ begin
       begin
       facts := NotCapturedMyFacts;
       end;
-   PostQsoEvent(qmNew, RXData, facts, '', aUDP, aExternal);
+   PostQsoEvent(qmNew, RXData, facts, '', aAdditionalDomesticMults, aUDP, aExternal);
 end;
 
 
@@ -3336,6 +3363,8 @@ end;
 procedure SendFullLogToUDP;
 var nCount: integer;
    saveDecimalSeparator: char;
+   replay: TAdditionalDomesticMultiplierReplay;
+   additionalDomesticMults: integer;
 begin
    nCount := 0;
    if not LogSourceOpen then
@@ -3346,18 +3375,22 @@ begin
       end;
 
    saveDecimalSeparator := FormatSettings.DecimalSeparator;
+   (* THE SHEET AS IT STOOD WHEN EACH QSO WAS LOGGED (issue #318): every
+      record read is fed, in log order, whether it is sent or not. *)
+   replay := TAdditionalDomesticMultiplierReplay.Create;
    try
       //DecimalSeparator := '.'; // Set this so we use . as reqired by ADIF and not localized separator ny4i
 
       LogSourceRewind;
       while LogSourceNext( TempRXData ) do  // fills the TempRXData global
          begin
+         additionalDomesticMults := replay.Feed(TempRXData);
          if GoodLookingQSO then
             begin
             inc(nCount);
             logger.Debug('[SendFullLogToUDP] (%d) Read contact for callsign %s',[nCount,TempRXData.Callsign]);
             //SendDeletedContactToUDP(TempRXData);
-            LogEditedContactToUDP(TempRXData);
+            LogEditedContactToUDP(TempRXData, additionalDomesticMults);
             end
          else
             begin
@@ -3375,6 +3408,7 @@ begin
       Logger.Info('%d records sent to UDP',[nCount]);
       QuickDisplay(SysUtils.Format(AnsiString('%d log records sent to UDP'), [nCount]));
    finally
+      replay.Free;
       FormatSettings.DecimalSeparator := SaveDecimalSeparator;
    end;
 end;

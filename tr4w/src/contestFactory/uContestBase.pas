@@ -2479,12 +2479,12 @@ type
          through a credited county, it is new exactly on the first credited
          county QSO of each scope.
 
-         KNOWN UNDERCOUNT, NOT FIXED HERE: readers that count a QSO's STORED
-         multiplier flags (the UDP <ismultiplier2>, the hourly report's Mults
-         column, HamScore's per-QSO CountMultipliers) see the county's flag
-         only, so they show one fewer
-         multiplier on the first county QSO of each scope. The totals
-         (MTotals) and the score are right. *)
+         PER-QSO READERS ASK THE ENGINE (issue #318, NY4I's option 2): the
+         UDP <ismultiplierN> fields and the hourly report's Mults column add
+         LOGDUPE's answer for this key (the sheet as it stood when the QSO was
+         logged -- AdditionalDomesticMultipliersBeforeSheet live, a
+         TAdditionalDomesticMultiplierReplay over the log) to the stored-flag
+         count, so the first county QSO of each scope shows two. *)
       function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
                                                out aKey: string): boolean; virtual;
 
@@ -4722,8 +4722,8 @@ procedure ClearMultiplierFlags(var aQso: ContestExchange);
 
    THE FLAGS ARE THE FINDING (CONTEST_OWNERSHIP_DESIGN.md 8.2v): the rescore
    zeroed the points and the dupe and left the stored flags as they were, so
-   every reader of a record's DXMult/ZoneMult -- HamScore's CountMultipliers,
-   the UDP and score-posting multiplier fields -- could report a multiplier
+   every reader of a record's DXMult/ZoneMult -- LOGDUPE.StoredMultiplierFlagCount
+   (the UDP fields, the hourly report), the score-posting fields -- could report a multiplier
    for a flagged X-QSO. The record keeps everything else, the QTH it was
    worked with included. *)
 procedure ClearXQSOScoring(var aQso: ContestExchange);

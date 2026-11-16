@@ -1352,6 +1352,8 @@ type
       FDisplayGhz: boolean;
       FDupeDisplay: boolean;
       FFilterOutDigital: boolean;
+      FCenterOnRadio: boolean;
+      FSortByBeamHeading: boolean;
       FMultsOnly: boolean;
       FSo2rDisplay: boolean;
       FDisplayLimit: TBandMapDisplayLimit;
@@ -1371,6 +1373,8 @@ type
       procedure SetDisplayGhz(aValue: boolean);
       procedure SetDupeDisplay(aValue: boolean);
       procedure SetFilterOutDigital(aValue: boolean);
+      procedure SetCenterOnRadio(aValue: boolean);
+      procedure SetSortByBeamHeading(aValue: boolean);
       procedure SetMultsOnly(aValue: boolean);
       procedure SetSo2rDisplay(aValue: boolean);
       procedure SetDisplayLimit(aValue: TBandMapDisplayLimit);
@@ -1396,6 +1400,17 @@ type
         digital, so CW and phone remain. Default False -- every spot shows, as
         before. Whether a spot IS digital is uDXSpotParse.SpotIsDigital. *)
       property FilterOutDigital: boolean read FFilterOutDigital write SetFilterOutDigital;
+      (* BAND MAP CENTER ON RADIO (issue 246): keep the view scrolled so the
+        column holding the first spot above the radio's frequency is in the
+        middle. Default False. The view is not moved while the band map has
+        focus, and the setting does nothing in beam-heading order. *)
+      property CenterOnRadio: boolean read FCenterOnRadio write SetCenterOnRadio;
+      (* BAND MAP SORT BY BEAM HEADING (issue 82, NY4I option 1b): order the map
+        by angular distance from where the beam points now, nearest first,
+        spots with no heading last. Default False. While on, the display limit
+        takes the first N in that order and centring on the radio is off;
+        spot stepping stays in frequency order. *)
+      property SortByBeamHeading: boolean read FSortByBeamHeading write SetSortByBeamHeading;
       // Was BandMapMultsOnly.
       property MultsOnly: boolean read FMultsOnly write SetMultsOnly;
       // Was BandMapSO2RDisplay.
@@ -4931,6 +4946,8 @@ begin
    FDisplayGhz       := False;
    FDupeDisplay      := True;
    FFilterOutDigital := False;
+   FCenterOnRadio    := False;
+   FSortByBeamHeading := False;
    FMultsOnly        := False;
    FSo2rDisplay      := False;
    (* The values the globals carried: logwind.pas 164 (GAV, for the centred
@@ -4990,6 +5007,16 @@ end;
 procedure TBandMapSettings.SetFilterOutDigital(aValue: boolean);
 begin
    SetBool(FFilterOutDigital, aValue, 'FilterOutDigital');
+end;
+
+procedure TBandMapSettings.SetCenterOnRadio(aValue: boolean);
+begin
+   SetBool(FCenterOnRadio, aValue, 'CenterOnRadio');
+end;
+
+procedure TBandMapSettings.SetSortByBeamHeading(aValue: boolean);
+begin
+   SetBool(FSortByBeamHeading, aValue, 'SortByBeamHeading');
 end;
 
 procedure TBandMapSettings.SetMultsOnly(aValue: boolean);

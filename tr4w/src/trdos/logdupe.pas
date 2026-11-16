@@ -452,12 +452,82 @@ function DomesticMultiplierCountKey(aContest: TContestBase; const aKey: string):
   marked in the DOMESTIC scope (MultiplierSheetBand(rmDomestic) /
   MultiplierSheetMode) -- the county's -- which is load-bearing: the key is
   reached only through a credited county, so it is new exactly on the first
-  credited county QSO of its scope. KNOWN UNDERCOUNT: a reader of the QSO's
-  stored flags (UDP <ismultiplier2>, the hourly report's Mults column,
-  uHamScore.CountMultipliers) shows one fewer multiplier on that QSO; MTotals
-  and the score are right. *)
+  credited county QSO of its scope. A reader of ONE QSO's multipliers (the
+  UDP <ismultiplier2>, the hourly report's Mults column) adds what
+  AdditionalDomesticMultipliersBeforeSheet or a
+  TAdditionalDomesticMultiplierReplay answers to StoredMultiplierFlagCount
+  (issue #318). *)
 function AdditionalDomesticMultiplierCredited(aContest: TContestBase;
   const aRX: ContestExchange; aKinds: TMultiplierKinds; out aKey: string): boolean;
+
+(* A QSO AS THE SHEET CREDITS IT: aRX with SetMultFlags' DomMultQTH fill
+  (DomesticQTH when DomMultQTH is empty). A row read back from the log
+  carries what SetMultFlags stored, but a peer's or an imported one may hold
+  only DomesticQTH. AddQSOToSheets, the replay and the live answer each take
+  their copy here (issue #318 lifted it out of AddQSOToSheets). *)
+function CreditedSheetCopy(const aRX: ContestExchange): ContestExchange;
+
+(* IS THE QSO'S SECOND DOMESTIC KEY NEW ON aSheet -- issue #318. True when
+  AdditionalDomesticMultiplierCredited credits a key (aKey, written whether
+  or not it is new) AND aSheet has not worked it in the county's scope
+  (MultiplierSheetBand(rmDomestic) / MultiplierSheetMode). A QUESTION ONLY:
+  it marks nothing. ONE test for AddQSOToSheets (on mo), the live UDP answer
+  (on mo, before the QSO is added) and the replay (on its own sheet). aRX
+  is the credited copy (CreditedSheetCopy). *)
+function AdditionalDomesticMultiplierNewOnSheet(aSheet: TMultsObject; aContest: TContestBase;
+  const aCredited: ContestExchange; aKinds: TMultiplierKinds; out aKey: string): boolean;
+
+(* THE FOUR STORED MULTIPLIER FLAGS OF ONE QSO, COUNTED -- DXMult,
+  DomesticMult, PrefixMult, ZoneMult. The ONE count behind the UDP
+  <ismultiplierN> fields and the hourly report's Mults column (issue #318;
+  they and uHamScore.CountMultipliers were three copies). It cannot see the
+  second domestic key (#317), which has no flag: add what the engine
+  answers for it. *)
+function StoredMultiplierFlagCount(const aRX: ContestExchange): integer;
+
+(* THE SECOND DOMESTIC KEY OF A QSO ABOUT TO REACH THE SHEET -- issue #318:
+  1 when the QSO earns it and it is new on `mo` AS IT STANDS NOW, else 0.
+  Right only BEFORE the QSO is added (LogContact asks it for the live UDP
+  message, ahead of SetMultFlags / AddQSOToSheets; Alt-Y's undelete asks it
+  for a QSO the reload after the delete took off the sheet) -- after that
+  the key is on the sheet and this answers 0. aContest is the caller's
+  ActiveContest(Contest), the object LogContact's own QSOCountsTowardTotals
+  test and AddQSOToSheets judge by. *)
+function AdditionalDomesticMultipliersBeforeSheet(aContest: TContestBase;
+  const aRX: ContestExchange): integer;
+
+type
+  (* THE SHEET AS IT STOOD WHEN EACH QSO WAS LOGGED -- issue #318 (NY4I chose
+    option 2: the readers ask the engine; nothing is stored). A reader that
+    walks the log hands EVERY record it reads, in log order, to Feed, which
+    builds a private sheet exactly as the loader builds `mo` (the loader's
+    QSOCountsTowardTotals of the record's own contest, then AddQSOToSheets'
+    domestic half: the stored county flag, then the second key through
+    AdditionalDomesticMultiplierNewOnSheet) and answers 1 when that record's
+    second domestic key was new, else 0. Only domestic keys are kept: the
+    second key's question reads nothing else.
+
+    The contest is ActiveContest(Contest), fetched ONCE at Create (the sheet
+    is the session's: AddQSOToSheets judges every record by it). Main thread
+    only, like the sheet. A contest that names no second key answers 0 for
+    every record. *)
+  TAdditionalDomesticMultiplierReplay = class
+  private
+    FSheet: TMultsObject;
+    FContest: TContestBase;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Feed(const aRX: ContestExchange): integer;
+  end;
+
+(* THE SECOND DOMESTIC KEY OF THE LOGGED QSO AT aIndex (0-based, log order),
+  as aRX now reads -- issue #318, for Edit QSO's contactreplace: the rows
+  before aIndex as stored, then aRX, through a TAdditionalDomesticMultiplierReplay.
+  Reads the log only when aRX credits a second key at all (an in-state
+  county QSO in a party that gives the host state); 0 otherwise. *)
+function AdditionalDomesticMultipliersOfLoggedQSO(aIndex: Int64;
+  const aRX: ContestExchange): integer;
 
 (* ADD ONE QSO TO THE WORKED COUNTS -- issue 12. Every kind the QSO earns
   (aKinds, MultiplierKindsCredited of aRX) counts once, new or not, and so
@@ -538,6 +608,9 @@ uses
   uLogStore,
   uLogDatabase,     // SQLiteIsBusy -- SaveRestartFile's retry on a busy log
   uLogRepository,   // AnsiToCharArray -- NUL-padded, not a cast
+  (* LogSourceReadRange -- AdditionalDomesticMultipliersOfLoggedQSO replays
+    the rows before an edited QSO (issue #318). *)
+  uLogSource,
   TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
   uGetScores,
@@ -1061,15 +1134,7 @@ begin
         all reach this routine, each in log order. One ActiveContest and one
         credit chain per QSO. *)
      contestRules := ActiveContest(Contest);
-
-     (* SetMultFlags' DomMultQTH fill, on a copy: a row read back from the
-        log carries what SetMultFlags stored, but a peer's or an imported one
-        may hold only DomesticQTH. *)
-     credited := RXData^;
-     if (credited.DomMultQTH = '') and (credited.DomesticQTH <> '') then
-        begin
-        credited.DomMultQTH := credited.DomesticQTH;
-        end;
+     credited := CreditedSheetCopy(RXData^);
      kinds := MultiplierKindsCredited(contestRules, credited);
 
      (* A DUPE IS NOT EXCLUDED HERE, on purpose: SetMultFlags does not ask
@@ -1078,17 +1143,12 @@ begin
         in RTTY is a dupe of it) still marks its county above -- and the
         state rides on the county exactly. For every other dupe the county,
         so the state, is already on the sheet and this marks nothing. *)
-     if AdditionalDomesticMultiplierCredited(contestRules, credited, kinds, additionalKey) then
+     (* NEW in the county's scope -> marked and totalled, exactly as a
+        stored DomesticMult flag is above. additionalKey is written whenever
+        the key is credited, new or not: the worked count below needs it. *)
+     if AdditionalDomesticMultiplierNewOnSheet(mo, contestRules, credited, kinds, additionalKey) then
         begin
-        (* NEW in the county's scope -> marked and totalled, exactly as a
-           stored DomesticMult flag is above. *)
-        if mo.IsDmMult(additionalKey,
-                       MultiplierSheetBand(rmDomestic, credited.Band),
-                       MultiplierSheetMode(credited.Mode),
-                       ContestHasGridFieldMultiplier(contestRules)) then
-           begin
-           mo.SetDmMult(additionalKey, credited.Band, credited.Mode);
-           end;
+        mo.SetDmMult(additionalKey, credited.Band, credited.Mode);
         end;
 
      (* A dupe counts nothing (CountWorkedMultipliers). *)
@@ -1561,6 +1621,187 @@ begin
      begin
      aKey := '';
      end;
+end;
+
+function CreditedSheetCopy(const aRX: ContestExchange): ContestExchange;
+begin
+  Result := aRX;
+  if (Result.DomMultQTH = '') and (Result.DomesticQTH <> '') then
+     begin
+     Result.DomMultQTH := Result.DomesticQTH;
+     end;
+end;
+
+function AdditionalDomesticMultiplierNewOnSheet(aSheet: TMultsObject; aContest: TContestBase;
+  const aCredited: ContestExchange; aKinds: TMultiplierKinds; out aKey: string): boolean;
+begin
+  Result := False;
+  if not AdditionalDomesticMultiplierCredited(aContest, aCredited, aKinds, aKey) then
+     begin
+     Exit;
+     end;
+  Result := aSheet.IsDmMult(aKey,
+                            MultiplierSheetBand(rmDomestic, aCredited.Band),
+                            MultiplierSheetMode(aCredited.Mode),
+                            ContestHasGridFieldMultiplier(aContest));
+end;
+
+function StoredMultiplierFlagCount(const aRX: ContestExchange): integer;
+begin
+  Result := 0;
+  if aRX.DXMult then
+     begin
+     Inc(Result);
+     end;
+  if aRX.DomesticMult then
+     begin
+     Inc(Result);
+     end;
+  if aRX.PrefixMult then
+     begin
+     Inc(Result);
+     end;
+  if aRX.ZoneMult then
+     begin
+     Inc(Result);
+     end;
+end;
+
+function AdditionalDomesticMultipliersBeforeSheet(aContest: TContestBase;
+  const aRX: ContestExchange): integer;
+var
+  credited: ContestExchange;
+  key: string;
+begin
+  Result := 0;
+  (* WHAT LogContact ASKS BEFORE IT ADDS THE QSO (QSOCountsTowardTotals of
+     the same object), and AddQSOToSheets' own ceClearMultSheet test. *)
+  if (not QSOCountsTowardTotals(aContest, aRX)) or
+     aRX.ceClearMultSheet then
+     begin
+     Exit;
+     end;
+  credited := CreditedSheetCopy(aRX);
+  if AdditionalDomesticMultiplierNewOnSheet(mo, aContest, credited,
+                                            MultiplierKindsCredited(aContest, credited),
+                                            key) then
+     begin
+     Result := 1;
+     end;
+end;
+
+constructor TAdditionalDomesticMultiplierReplay.Create;
+begin
+  inherited Create;
+  FSheet := TMultsObject.Create;
+  FContest := ActiveContest(Contest);
+end;
+
+destructor TAdditionalDomesticMultiplierReplay.Destroy;
+begin
+  FSheet.Free;
+  inherited Destroy;
+end;
+
+function TAdditionalDomesticMultiplierReplay.Feed(const aRX: ContestExchange): integer;
+var
+  credited: ContestExchange;
+  key: string;
+begin
+  Result := 0;
+  (* THE LOADER'S TEST (MainUnit.LoadinLog): what reaches AddQSOToSheets
+     there reaches this sheet here, and nothing else. *)
+  if not QSOCountsTowardTotals(LoggedQSOContest(aRX.ceContest), aRX) then
+     begin
+     Exit;
+     end;
+  if aRX.ceClearMultSheet then
+     begin
+     Exit;
+     end;
+
+  (* AddQSOToSheets' DOMESTIC HALF, IN ITS ORDER: the stored county first
+     (Vermont's VT can be received as itself, so the host key can reach the
+     sheet without a second key), then the second key. *)
+  if aRX.DomesticMult then
+     begin
+     FSheet.SetDmMult(aRX.DomMultQTH, aRX.Band, aRX.Mode);
+     end;
+  credited := CreditedSheetCopy(aRX);
+  if AdditionalDomesticMultiplierNewOnSheet(FSheet, FContest, credited,
+                                            MultiplierKindsCredited(FContest, credited),
+                                            key) then
+     begin
+     FSheet.SetDmMult(key, credited.Band, credited.Mode);
+     Result := 1;
+     end;
+end;
+
+function AdditionalDomesticMultipliersOfLoggedQSO(aIndex: Int64;
+  const aRX: ContestExchange): integer;
+const
+  (* Rows read per statement: LogSourceReadRange reads a run in one query. *)
+  CHUNK = 256;
+var
+  contestRules: TContestBase;
+  credited: ContestExchange;
+  key: string;
+  replay: TAdditionalDomesticMultiplierReplay;
+  rows: array of ContestExchange;
+  first: Int64;
+  wanted, got, i: integer;
+begin
+  Result := 0;
+
+  (* NO SECOND KEY AT ALL -> nothing to replay. Every contest but the
+     host-state parties stops here, and so does every QSO that is not an
+     in-state county QSO. *)
+  contestRules := ActiveContest(Contest);
+  credited := CreditedSheetCopy(aRX);
+  if not AdditionalDomesticMultiplierCredited(contestRules, credited,
+                                              MultiplierKindsCredited(contestRules, credited),
+                                              key) then
+     begin
+     Exit;
+     end;
+
+  replay := TAdditionalDomesticMultiplierReplay.Create;
+  try
+     first := 0;
+     while first < aIndex do
+        begin
+        wanted := CHUNK;
+        if aIndex - first < wanted then
+           begin
+           wanted := integer(aIndex - first);
+           end;
+        SetLength(rows, wanted);
+        got := LogSourceReadRange(first, rows);
+        for i := 0 to got - 1 do
+           begin
+           replay.Feed(rows[i]);
+           end;
+        first := first + got;
+        if got < wanted then
+           begin
+           Break;
+           end;
+        end;
+
+     (* A SHORT READ IS NO ANSWER: against a partial sheet a county seen
+        earlier would look new and the QSO would claim the state. Say so,
+        and send the stored flags alone, as before #318. *)
+     if first < aIndex then
+        begin
+        logger.Error('[#318] Edit QSO: read %d of the %d rows before row %d; ' +
+                     'its second domestic multiplier is not sent',
+                     [first, aIndex, aIndex]);
+        Exit;
+        end;
+     Result := replay.Feed(aRX);
+  finally
+     replay.Free;
+  end;
 end;
 
 procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange;

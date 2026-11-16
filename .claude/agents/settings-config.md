@@ -546,6 +546,19 @@ WIDTH rows, the row loop).
   `SNetParameterTooLong` through `QuickDisplayError`) as well as logging a
   Warn. The texts are `MessageEditRefusalText` / `ParameterNotSentText`, pure,
   so a test reads them without a modal.
+- **THE SHARED-SETTING NOTICE IS SHOWN AT ENTRY, LINK UP OR DOWN (issue 315,
+  2026-11-16).** `uCFG.ShareWithPeers` is the one "if shared, tell the peers"
+  block (`SetCFGCommandValue` and `ApplyContestEdit` both call it). It shows
+  `SNetParameterTooLong` via `QuickDisplayError` whenever
+  `uCFG.SharedSettingNotSentText` (pure: shared AND over 255 UTF-8 bytes; never
+  asks `NetIsConnected`) is not `''`, keeps the local value whole, then calls
+  `SendParameterToNetwork`, which refuses and logs but **no longer speaks to the
+  operator itself** (so a connected station is told once). **PREFERENCES DOES NOT
+  SHARE AT ALL** (measured 2026-11-16): `TModelSetting.TrySetText` and
+  `ApplyAndStoreCommand` apply and save and send nothing, so a Preferences edit of
+  TAIL END CW MESSAGE, CONTEST TITLE etc. never reaches a peer at any length, and no
+  route that does share can carry a value near 255 today. The notice is a latent
+  guard until that is decided (multi-op-network / NY4I).
 - **Left on purpose:** CfgCmd's Ctrl-V executed file and `ProcessConfigInstruction`
   (untrusted -- an owned name is accepted and inert there, so no setting value is
   lost); `SetUpContestByCommand` (a contest id). The eight other

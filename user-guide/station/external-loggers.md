@@ -19,6 +19,7 @@ Order controls dispatch order, not the order in which independent remote service
 | DXKeeper | Receiving TCP host/IP and port | Supported; replacement can involve deleting and re-sending the QSO. Check the receiving log after an interrupted replacement. |
 | World Radio League | API key; choose the logbook from the retrieved list | Supported, with persistent delivery/retry state. Create logbooks in WRL before selecting one here. |
 | Club Log | Club Log callsign and API token | Supported through the bearer-token QSO API. An edit deletes the old remote QSO then creates its replacement; a failure between these steps requires review. No Club Log email/password is needed. |
+| QRZ Logbook — **Unreleased source** | Logbook callsign and API access key (from your QRZ logbook settings; needs a QRZ logbook subscription) | Supported. An edit deletes the old QRZ entry then inserts its replacement; a failure between these steps requires review. One definition per callsign. Not yet tried against a live QRZ logbook. |
 | Cloudlog / Wavelog — **Unreleased source** | Server URL, API key, station profile ID | New QSOs only. Editing or deleting a previously sent QSO produces a failed delivery row; correct the remote log manually. |
 | ACLog — **Unreleased source** | Host/IP and port; defaults 127.0.0.1:1100. Enable **TCP API Enabled** in ACLog. | New QSOs only. Changes/deletes of sent QSOs fail explicitly; correct the remote log manually. Live ACLog verification remains outstanding. Direct logging does not perform ACLog contest scoring. |
 

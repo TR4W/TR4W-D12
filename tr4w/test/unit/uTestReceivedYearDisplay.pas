@@ -149,7 +149,7 @@ var
    xml: string;
    first, last: integer;
 begin
-   xml := BuildUDPContact(aQso, udpContactInfo);
+   xml := BuildUDPContact(aQso, udpContactInfo, 0);
    first := Pos('<zone>', xml);
    last := Pos('</zone>', xml);
    if (first = 0) or (last < first) then

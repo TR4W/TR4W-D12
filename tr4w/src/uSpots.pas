@@ -96,6 +96,11 @@ type
     FRepaintToken: cardinal;
     FPaintedToken: cardinal;
     function GetCount: integer;
+    (* The first DisplayLimit of the filtered spots aIndex[0..aFilteredCount-1],
+      in beam order (issue 82), written back to aIndex; returns how many. *)
+    function BeamOrderedWindow(var aIndex: array of integer;
+                               const aFilteredCount: integer;
+                               var aCursorRow: integer): integer;
 
   protected
     function CompareStrings(const s1, s2: CallString): integer;
@@ -184,6 +189,12 @@ function SpotPassesMultsOnly(const aSpot: TSpotRecord): boolean;
   tested first so that, off, no spot's comment is ever tokenized. *)
 function SpotPassesDigitalFilter(const aSpot: TSpotRecord): boolean;
 
+(* THE BEAM HEADING TO A SPOT (issues 82 and 186): from the station's grid to
+  the grid CTY.DAT gives the spotted call, in degrees, or NO_HEADING (-1) for a
+  CQ or NEW marker, no station grid, or no grid for the call. The band map's
+  sort and its status-bar country panel both ask THIS. *)
+function SpotBeamHeading(const aSpot: TSpotRecord): integer;
+
 var
   SpotsList: TDXSpotsList;
   SpotsDisplayed: integer;
@@ -201,6 +212,10 @@ uses
   uNet,
   uBandMapView,   // BandMapSelected -- ask the view, do not reach into it
   uBandmap,
+  uBandMapOrder,  // OrderByBeam, NO_HEADING -- the pure arithmetic
+  uRotatorControl, // RotatorBeamHeading -- where the beam points
+  uCTYDAT,        // ctyGetGrid
+  LogGrid,        // GetBeamHeading
   LogWind;
 
 function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
@@ -506,6 +521,15 @@ begin
 
   FilteredSpotCount := k;
 
+  (* BEAM HEADING ORDER (issue 82): the window is not a stretch of the
+    frequency-ordered list round the cursor, so the centring below does not
+    apply. The display limit takes the first N in beam order instead. *)
+  if Settings.BandMap.SortByBeamHeading then
+     begin
+     Result := BeamOrderedWindow(aIndex, FilteredSpotCount, aCursorRow);
+     Exit;
+     end;
+
   if FilteredSpotCount > Settings.BandMap.DisplayLimit then
      begin
      // Every endpoint test below must go through aIndex.  The window
@@ -624,6 +648,78 @@ begin
      end;
   logger.Trace('[BuildVisibleSpots] window: bottom=%d, top=%d, rows=%d, cursorRow=%d, limit=%d',
     [bottom, top, Result, aCursorRow, Settings.BandMap.DisplayLimit]);
+end;
+
+function TDXSpotsList.BeamOrderedWindow(var aIndex: array of integer;
+                                        const aFilteredCount: integer;
+                                        var aCursorRow: integer): integer;
+var
+  headings: array of integer;
+  order: array of integer;
+  passed: array of integer;
+  reference: integer;
+  i: integer;
+begin
+  Result := 0;
+  if aFilteredCount <= 0 then
+     begin
+     Exit;
+     end;
+
+  // Where the beam points, for the band the map is showing (SO2R: the map's
+  // radio, as for centring -- BandmapBand is the one the cursor tracks).
+  reference := RotatorBeamHeading(string(BandStringsArrayWithOutSpaces[BandmapBand]));
+
+  SetLength(headings, aFilteredCount);
+  SetLength(order, aFilteredCount);
+  SetLength(passed, aFilteredCount);
+  for i := 0 to aFilteredCount - 1 do
+     begin
+     passed[i]   := aIndex[i];
+     headings[i] := SpotBeamHeading(FList[aIndex[i]]);
+     end;
+
+  OrderByBeam(headings, reference, order);
+
+  Result := aFilteredCount;
+  if Result > Settings.BandMap.DisplayLimit then
+     begin
+     Result := Settings.BandMap.DisplayLimit;
+     end;
+  for i := 0 to Result - 1 do
+     begin
+     aIndex[i] := passed[order[i]];
+     if FList[aIndex[i]].FFrequency = FCurrentCursorFreq then
+        begin
+        aCursorRow := i;
+        end;
+     end;
+  logger.Trace('[BuildVisibleSpots] beam order: reference=%d, rows=%d, limit=%d',
+    [reference, Result, Settings.BandMap.DisplayLimit]);
+end;
+
+function SpotBeamHeading(const aSpot: TSpotRecord): integer;
+var
+  countryId: DXMultiplierString;
+begin
+  Result := NO_HEADING;
+  (* A CQ or NEW marker is not a station and has no country. *)
+  if aSpot.FCQ or SpotCallIsCQMarker(aSpot.FCall) or
+     SpotCallIsNewMarker(aSpot.FCall) then
+     begin
+     Exit;
+     end;
+  if Settings.My.ResolvedGrid = '' then
+     begin
+     Exit;
+     end;
+  countryId := '';
+  Result := GetBeamHeading(Settings.My.ResolvedGrid,
+                           ctyGetGrid(string(aSpot.FCall), countryId));
+  if Result < 0 then
+     begin
+     Result := NO_HEADING;
+     end;
 end;
 
 procedure TDXSpotsList.Clear;

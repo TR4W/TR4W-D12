@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="414">
+    <Units Count="415">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1818,6 +1818,10 @@
         <Filename Value="src/uStaticDialogCodeWindows.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit413>
+      <Unit414>
+        <Filename Value="src/uBandMapOrder.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit414>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

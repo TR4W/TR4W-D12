@@ -75,6 +75,16 @@ procedure OpenRotatorPorts;
 { How many rotators are live.  For the log and for a test. }
 function LiveRotatorCount: integer;
 
+(* WHERE THE BEAM POINTS NOW, for the band map's sort by beam heading (issue 82):
+  the heading the first rotator serving aBandName was last TOLD to reach, or -1
+  when there is none (no rotator serves the band, or none has been turned yet).
+
+  It is the commanded heading, not the rotator's own report: no driver reads the
+  azimuth back (rcReadAzimuth is declared and no driver implements it), so
+  there is nothing truer to ask. A rotator turned by hand or by its own
+  controller after TR4W's last command is not seen. *)
+function RotatorBeamHeading(const aBandName: string): integer;
+
 implementation
 
 uses
@@ -89,6 +99,7 @@ uses
                    goes with the port slice *)
    uRotatorRegistry,
    uSettingsModel, // Settings.Rotator -- the PstRotator endpoint
+   uSpots,         // SpotsList.RequestRepaint -- the band map's beam order
    MainUnit;     // logger
 
 type
@@ -326,6 +337,9 @@ begin
    live.Name  := aName;
    live.Port  := PortFromName(aPortName);
    live.Bands := aBands;
+   // Not turned yet. An object's fields start at zero, which would read as
+   // "pointing north" to RotatorBeamHeading.
+   live.LastHeading := -1;
 
    // FALL BACK TO THE LEGACY GLOBALS RATHER THAN TO NOTHING. A definition made
    // before the library carried an endpoint has neither field set, and sending
@@ -639,6 +653,30 @@ begin
       begin
       logger.Debug('[uRotatorControl] no rotator serves band "%s" -- nothing turned',
                    [aBandName]);
+      end
+   else if (Settings.BandMap.SortByBeamHeading) and (SpotsList <> nil) then
+      begin
+      // The band map is ordered by where the beam points, and it has just moved.
+      SpotsList.RequestRepaint;
+      end;
+end;
+
+function RotatorBeamHeading(const aBandName: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   if GLive = nil then
+      begin
+      Exit;
+      end;
+   for i := 0 to GLive.Count - 1 do
+      begin
+      if ServesBand(GLive[i].Bands, aBandName) and (GLive[i].LastHeading >= 0) then
+         begin
+         Result := GLive[i].LastHeading;
+         Exit;
+         end;
       end;
 end;
 

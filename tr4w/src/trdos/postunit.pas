@@ -1405,13 +1405,14 @@ procedure ScoreByHour;
 function GenerateAllTotalsPerHour: boolean;
 
   { This routine will fill up the global variable LogHourTotals with data. }
-  label
-    1;
   var
     LineNumber, CurrentHourIndex: integer;
     TotalLogQSOs: LONGINT;
     LastHourProcessed: Word;
     TempMults: integer;
+    (* The sheet as it stood when each QSO was logged -- issue #318. *)
+    replay: TAdditionalDomesticMultiplierReplay;
+    additionalDomesticMults: integer;
   begin
   Result := False;
   LogHourTotals := Default( LogHourTotalArray );
@@ -1442,83 +1443,75 @@ function GenerateAllTotalsPerHour: boolean;
   TotalLogQSOs      := 0;
   LineNumber        := 0;
 
-  LogSourceRewind;
-1:
-
-  if LogSourceNext( TempRXData ) then
-     begin
-     if GoodLookingQSO then
+  (* THE goto LOOP THAT STOOD HERE is a while loop now, so the replay
+     (issue #318) is freed by one finally on every way out. *)
+  replay := TAdditionalDomesticMultiplierReplay.Create;
+  try
+     LogSourceRewind;
+     while LogSourceNext( TempRXData ) do
         begin
-        if LastHourProcessed <> TempRXData.tSysTime.qtHour then
+        (* EVERY RECORD READ, IN LOG ORDER, counted here or not -- the
+           replay's sheet must see what the loader's did. *)
+        additionalDomesticMults := replay.Feed( TempRXData );
+        if GoodLookingQSO then
            begin
-           if CurrentHourIndex = 49 then
+           if LastHourProcessed <> TempRXData.tSysTime.qtHour then
               begin
-              ShowMessage( TC_MORETHAN50DIFFERENTHOURSINTHISLOG );
-              Exit;
+              if CurrentHourIndex = 49 then
+                 begin
+                 ShowMessage( TC_MORETHAN50DIFFERENTHOURSINTHISLOG );
+                 Exit;
+                 end;
+
+              if LastHourProcessed <> UNKNOWN_COUNTRY then
+                 begin
+                 inc( CurrentHourIndex );
+                 end;
+
+              LogHourTotals[ CurrentHourIndex ].HourName :=
+                 IntToStr( TempRXData.tSysTime.qtHour );
+              LastHourProcessed := TempRXData.tSysTime.qtHour;
               end;
 
-           if LastHourProcessed <> UNKNOWN_COUNTRY then
+           inc( TotalLogQSOs );
+
+           inc( LogHourTotals[ CurrentHourIndex ].QSOs[ TempRXData.Band,
+              TempRXData.Mode ] );
+           inc( LogHourTotals[ CurrentHourIndex ].QSOs[ AllBands,
+              TempRXData.Mode ] );
+           inc( LogHourTotals[ CurrentHourIndex ].QSOs[ TempRXData.Band, Both ] );
+           inc( LogHourTotals[ CurrentHourIndex ].QSOs[ AllBands, Both ] );
+
+           inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
+              TempRXData.Mode ], TempRXData.QSOPoints );
+           inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ AllBands,
+              TempRXData.Mode ], TempRXData.QSOPoints );
+           inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
+              Both ], TempRXData.QSOPoints );
+           inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ AllBands, Both ],
+              TempRXData.QSOPoints );
+
+           (* THE STORED FLAGS AND THE SECOND DOMESTIC KEY THAT HAS NONE
+              (issue #318). *)
+           TempMults := StoredMultiplierFlagCount( TempRXData ) + additionalDomesticMults;
+
+           if TempMults <> 0 then
               begin
-              inc( CurrentHourIndex );
+              inc( LogHourTotals[ CurrentHourIndex ].Mults[ TempRXData.Band,
+                 TempRXData.Mode ], TempMults );
+              inc( LogHourTotals[ CurrentHourIndex ].Mults[ AllBands,
+                 TempRXData.Mode ], TempMults );
+              inc( LogHourTotals[ CurrentHourIndex ].Mults[ TempRXData.Band, Both ],
+                 TempMults );
+              inc( LogHourTotals[ CurrentHourIndex ].Mults[ AllBands, Both ],
+                 TempMults );
               end;
 
-           LogHourTotals[ CurrentHourIndex ].HourName :=
-              IntToStr( TempRXData.tSysTime.qtHour );
-           LastHourProcessed := TempRXData.tSysTime.qtHour;
            end;
-
-        inc( TotalLogQSOs );
-
-        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ TempRXData.Band,
-           TempRXData.Mode ] );
-        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ AllBands,
-           TempRXData.Mode ] );
-        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ TempRXData.Band, Both ] );
-        inc( LogHourTotals[ CurrentHourIndex ].QSOs[ AllBands, Both ] );
-
-        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
-           TempRXData.Mode ], TempRXData.QSOPoints );
-        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ AllBands,
-           TempRXData.Mode ], TempRXData.QSOPoints );
-        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
-           Both ], TempRXData.QSOPoints );
-        inc( LogHourTotals[ CurrentHourIndex ].QSOPoints[ AllBands, Both ],
-           TempRXData.QSOPoints );
-
-        TempMults := 0;
-        if TempRXData.DXMult then
-           begin
-           inc( TempMults );
-           end;
-        if TempRXData.DomesticMult then
-           begin
-           inc( TempMults );
-           end;
-        if TempRXData.ZoneMult then
-           begin
-           inc( TempMults );
-           end;
-        if TempRXData.PrefixMult then
-           begin
-           inc( TempMults );
-           end;
-
-        if TempMults <> 0 then
-          // if (TempRXData.DXMult or TempRXData.DomesticMult or TempRXData.ZoneMult or TempRXData.PrefixMult) then
-           begin
-           inc( LogHourTotals[ CurrentHourIndex ].Mults[ TempRXData.Band,
-              TempRXData.Mode ], TempMults );
-           inc( LogHourTotals[ CurrentHourIndex ].Mults[ AllBands,
-              TempRXData.Mode ], TempMults );
-           inc( LogHourTotals[ CurrentHourIndex ].Mults[ TempRXData.Band, Both ],
-              TempMults );
-           inc( LogHourTotals[ CurrentHourIndex ].Mults[ AllBands, Both ],
-              TempMults );
-           end;
-
         end;
-     goto 1;
-     end;
+  finally
+     replay.Free;
+  end;
 
   FinishOutLastHour;
   CheckTimeOnByBand( CurrentHourIndex );

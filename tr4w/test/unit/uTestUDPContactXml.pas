@@ -57,7 +57,7 @@ begin
    q.Band := Band20;
    q.Mode := CW;
    q.Frequency := 14025000;
-   Result := BuildUDPContact(q, aWhich);
+   Result := BuildUDPContact(q, aWhich, 0);
 end;
 
 procedure TUDPContactXmlTests.Test_ContactCarriesTheStationCallUnderMyCall;
@@ -109,7 +109,7 @@ begin
    q.Band := aBand;
    q.Mode := aMode;
    q.ExtMode := aExtMode;
-   Result := BuildUDPContact(q, udpContactInfo);
+   Result := BuildUDPContact(q, udpContactInfo, 0);
 end;
 
 procedure TUDPContactXmlTests.Test_ModeIsAnN1MMNameNotATR4WName;
@@ -153,7 +153,7 @@ begin
       rig^.RadioModel := K3;
       rig^.CurrentStatus.Freq := 14311500;
       rig^.CurrentStatus.Split := False;
-      Result := BuildUDPContact(q, aWhich);
+      Result := BuildUDPContact(q, aWhich, 0);
    finally
       rig^.RadioModel := savedModel;
       rig^.CurrentStatus := savedStatus;
@@ -214,7 +214,7 @@ begin
    q.Frequency := 14025000;
    q.QTHString := Str10(aQTH);
    q.DomesticQTH := Str10(aDomesticQTH);
-   Result := BuildUDPContact(q, udpContactInfo);
+   Result := BuildUDPContact(q, udpContactInfo, 0);
 end;
 
 procedure TUDPContactXmlTests.Test_SectionIsTheRulesSectionInASectionContest;

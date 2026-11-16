@@ -24,7 +24,7 @@ operating system's own message points the wrong way.
 
 | directory | holds | PE machine |
 |---|---|---|
-| `x86_64-win64/` | `libeay32`, `ssleay32` (OpenSSL 1.0.2), `sqlite3` (3.53.4) + `sqlite3.def`, `libhamlib-4`, `libusb-1.0`, `libwinpthread-1`, `libgcc_s_seh-1` (the x64 unwinder) | `0x8664` |
+| `x86_64-win64/` | `libeay32`, `ssleay32` (OpenSSL 1.0.2), `sqlite3` (3.53.4) + `sqlite3.def`, `libhamlib-4` (4.7.2), `libusb-1.0`, `libwinpthread-1`, `libgcc_s_seh-1` (the x64 unwinder) | `0x8664` |
 
 **`tr4w/target/` holds a COPY of this set**, so the program runs from the tree and `full.nsi`
 finds the DLLs where it always did. It is NOT a source: `Build-App.ps1` and `Build-Tests.ps1`

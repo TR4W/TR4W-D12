@@ -386,26 +386,9 @@ begin
   end;
 end;
 
-function CountMultipliers(const RXData: ContestExchange): Integer;
-begin
-  Result := 0;
-  if RXData.DXMult       then
-     begin
-     Inc(Result);
-     end;
-  if RXData.DomesticMult then
-     begin
-     Inc(Result);
-     end;
-  if RXData.PrefixMult   then
-     begin
-     Inc(Result);
-     end;
-  if RXData.ZoneMult     then
-     begin
-     Inc(Result);
-     end;
-end;
+(* CountMultipliers STOOD HERE, called by nothing -- the third copy of the
+  stored-flag count; LOGDUPE.StoredMultiplierFlagCount is the one (issue
+  #318). *)
 
 function FormatTimestamp(const tSysTime: TQSOTime): AnsiString;
 begin

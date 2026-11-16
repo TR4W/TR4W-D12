@@ -845,7 +845,7 @@ begin
      begin
      // Issue #783 -- HamScore RTC: send <contactdelete> next cycle.
      // ONE MESSAGE to the QSO dispatcher: UDP, external logger, HamScore.
-     PostQsoEvent(qmDeleted, EditableQSORXData, NotCapturedMyFacts, '',
+     PostQsoEvent(qmDeleted, EditableQSORXData, NotCapturedMyFacts, '', 0,
                   UDPBroadcaster.Enabled(usContact), True);
      end
   else if EditableQSORXData.ceXQSO then
@@ -858,7 +858,7 @@ begin
      // the next serial is the high-water mark of numbers actually sent, not a
      // QSO count -- the X-QSO record stays in the log so it still counts toward
      // that mark.  See NextSerialToSend / MaxSerialSent, Issue #954.)
-     PostQsoEvent(qmDeleted, EditableQSORXData, NotCapturedMyFacts, '',
+     PostQsoEvent(qmDeleted, EditableQSORXData, NotCapturedMyFacts, '', 0,
                   UDPBroadcaster.Enabled(usContact), False);
      end
   else
@@ -874,7 +874,10 @@ begin
        what the save will leave -- the recorded one, or the operator's own
        correction -- and the sent exchange is the row's exchange_sent. *)
      LogSourceReadStationAtIndex(IndexInMap, storedFacts, storedSent);
+     (* ITS SECOND DOMESTIC KEY (issue #318) as the sheet stood when it was
+        logged: the rows before it replayed, then the record as edited. *)
      PostQsoEvent(qmEdited, EditableQSORxData, MyFactsAsSaved, storedSent,
+                  AdditionalDomesticMultipliersOfLoggedQSO(IndexInMap, EditableQSORxData),
                   UDPBroadcaster.Enabled(usContact), True);
      end;
 

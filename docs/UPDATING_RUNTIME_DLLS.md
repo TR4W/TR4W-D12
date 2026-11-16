@@ -28,7 +28,7 @@ All are **64-bit** (PE machine `0x8664`).
 
 | File | Source | Purpose |
 |---|---|---|
-| `libhamlib-4.dll` | [HamLib](https://hamlib.github.io/) Windows 64-bit build (`hamlib-w64-X.Y.Z.zip`) | Radio control via the HamLib library (used by `uRadioHamLibDirect.pas`). **The version is read out of the DLL itself** -- it carries NO Windows version resource, so Explorer and `Get-ChildItem .VersionInfo` both show blank. |
+| `libhamlib-4.dll` | [HamLib](https://hamlib.github.io/) Windows 64-bit build (`hamlib-w64-X.Y.Z.zip`) | Radio control via the HamLib library (used by `uRadioHamLibDirect.pas`). **Currently 4.7.2** (2026-11-16, issue 46; `hamlib-w64-4.7.2.zip` sha256 `8553bc6c...e3304c7`, DLL sha256 `72f09e0b...0d60d28e`; of the four DLLs only `libhamlib-4.dll` differs from 4.7.0, the other three are byte-identical). **The version is read out of the DLL itself** -- it carries NO Windows version resource, so Explorer and `Get-ChildItem .VersionInfo` both show blank. |
 | `libgcc_s_seh-1.dll` | Ships in the HamLib Windows zip | MinGW runtime — required by `libhamlib-4.dll` |
 | `libusb-1.0.dll` | Ships in the HamLib Windows zip | USB transport — required by `libhamlib-4.dll` for USB-attached radios |
 | `libwinpthread-1.dll` | Ships in the HamLib Windows zip | POSIX-threads runtime — required by `libhamlib-4.dll` |

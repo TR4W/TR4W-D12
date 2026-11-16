@@ -73,6 +73,7 @@ type
       procedure Test_AContestLogKeepsThemThroughOpenAndClose;
       procedure Test_TheWireAndTheMessageEditorSayWhatTheyHold;
       procedure Test_AMessageIsMeasuredAsItIsStored;
+      procedure Test_ASharedValueTooLongForTheWireIsToldAtEntry;
    end;
 
 implementation
@@ -517,6 +518,48 @@ begin
                MessageEditRefusalText(AnsiString(StringOfChar('c', 300)), True), 'caption: the refusal text');
 end;
 
+(* ISSUE 315: a SHARED setting whose value is more bytes than the parameter
+  packet carries is told to the operator when it is entered -- the decision is
+  SharedSettingNotSentText, which does not ask whether the link is up. The
+  limit is in BYTES, so a multi-byte character can cross it by itself. *)
+procedure TSettingValueWidthTests.Test_ASharedValueTooLongForTheWireIsToldAtEntry;
+const
+   SHARED = 'TAIL END CW MESSAGE';
+var
+   eAcute, euro: string;
+begin
+   BeginTest('a shared value over 255 bytes is reported at entry; a fitting or ' +
+             'unshared one is not; the count is in bytes');
+   eAcute := WideChar($00E9);   (* 2 bytes in UTF-8 *)
+   euro := WideChar($20AC);     (* 3 bytes in UTF-8 *)
+
+   CheckTrue(CommandIsSharedWithPeers(SHARED), 'the premise: this name is shared');
+   CheckFalse(CommandIsSharedWithPeers(MY_NAME), 'the premise: this one is not');
+
+   CheckEquals('', SharedSettingNotSentText(SHARED, StringOfChar('a', 255)),
+               '255 ASCII bytes fit: nothing to say');
+   CheckEquals(SHARED + ' was not sent to the other stations: it is 256 bytes ' +
+               'and the network carries 255.',
+               SharedSettingNotSentText(SHARED, StringOfChar('a', 256)),
+               '256 ASCII bytes: the notice names the setting, the bytes and the limit');
+
+   CheckEquals('', SharedSettingNotSentText(SHARED, StringOfChar('a', 253) + eAcute),
+               '253 ASCII + a 2-byte character is 255 bytes: fits');
+   CheckEquals(SHARED + ' was not sent to the other stations: it is 256 bytes ' +
+               'and the network carries 255.',
+               SharedSettingNotSentText(SHARED, StringOfChar('a', 254) + eAcute),
+               '254 characters, 256 bytes: the 2-byte character crosses the limit');
+   CheckEquals('', SharedSettingNotSentText(SHARED, StringOfChar('a', 252) + euro),
+               '252 ASCII + a 3-byte character is 255 bytes: fits');
+   CheckEquals(SHARED + ' was not sent to the other stations: it is 256 bytes ' +
+               'and the network carries 255.',
+               SharedSettingNotSentText(SHARED, StringOfChar('a', 253) + euro),
+               '254 characters, 256 bytes: the 3-byte character crosses the limit');
+
+   CheckEquals('', SharedSettingNotSentText(MY_NAME, StringOfChar('a', 300)),
+               'a setting that is not shared is never told about the wire');
+end;
+
 procedure TSettingValueWidthTests.Test_AMessageIsMeasuredAsItIsStored;
 var
    fits, tooLong, stored, saved: AnsiString;
@@ -575,6 +618,7 @@ begin
    Test_AContestLogKeepsThemThroughOpenAndClose;
    Test_TheWireAndTheMessageEditorSayWhatTheyHold;
    Test_AMessageIsMeasuredAsItIsStored;
+   Test_ASharedValueTooLongForTheWireIsToldAtEntry;
 end;
 
 end.

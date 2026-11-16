@@ -99,6 +99,7 @@ type
       procedure Test_DXKeeperSendsTheResolvedSection;
       procedure Test_DXKeeperNonSectionContestSendsNoSection;
       procedure Test_ARRL160ImportedAliasIsTheCanonicalSection;
+      procedure Test_ARRL160RealN1MMAndDXLogRecords;
       procedure Test_QSOPartyImportedAliasIsTheFileQTH;
       procedure Test_CQ160ImportedQTHIsTheFileQTH;
       procedure Test_UBAImportedQTHIsTheFileQTH;
@@ -138,6 +139,8 @@ uses
    uExternalLogger,
    uQsoDispatcher,
    uTestExternalLoggerLookup,
+   (* TQsoMyFacts -- what ParseADIFRecord reads of OUR station. *)
+   uQsoMyFacts,
    (* Enter, SetUpSession, RestoreSession, LoadCountryFile. LAST, so its
       names win. *)
    uTestEngineEntry;
@@ -1011,6 +1014,103 @@ begin
    end;
 end;
 
+(* TWO REAL RECORDS OF ONE QSO, W7SP in Utah worked by NY4I (WCF) -- issue
+   275, NY4I 2026-11-16. Byte for byte as N1MM and DXLog.net exported them;
+   not rebuilt through AdifRecord, because being real is the point.
+
+   WHAT EACH MUST IMPORT AS: the received section UT (DomesticQTH and the
+   multiplier key 'Ut', the left side of arrlsect.dom's `Ut = UT`), RST 599
+   received, and the QTH string UT -- the ARRL_SECT branch fills it when the
+   record has no QTH tag. Our own section WCF is SENT (STX_STRING, and
+   DXLog's MY_ARRL_SECT), never anything received; and no '599' is stored as
+   a QTH (the defect issue 275 item 1 fixed). The outputs follow: ADIF and
+   Cabrillo say UT, and so does the section the external loggers and the
+   N1MM UDP <section> send (ExternalLoggerARRLSection -- the
+   ContestQTHIsAnARRLSection predicate, item 3a).
+
+   THE TWO LOGGERS DIFFER IN WHAT THEY SAY OF OUR STATION: N1MM writes no
+   MY_ field (STATION_CALLSIGN alone is not one), so its record captures no
+   station facts; DXLog states MY_ARRL_SECT WCF. Only DXLog writes
+   SRX_STRING, so only it leaves an ExchString.
+
+   THEN THE DXLog RECORD LESS ITS ARRL_SECT -- NY4I: "an import missing
+   ARRL_SECT looks in SRX_STRING". Its QTH string is NOT pinned here: that
+   branch leaves it as the record left it (no QTH tag, so empty), which is
+   reported to NY4I as open, not frozen. *)
+procedure TARRLSectionAliasTests.Test_ARRL160RealN1MMAndDXLogRecords;
+const
+   N1MM_RECORD =
+      '<CALL:4>W7SP <QSO_DATE:8>20261116 <TIME_ON:6>054319 <TIME_OFF:6>054319 ' +
+      '<ARRL_SECT:2>UT <BAND:4>160M <STATION_CALLSIGN:4>NY4I <FREQ:7>1.80000 ' +
+      '<CONTEST_ID:8>ARRL-160 <FREQ_RX:7>1.80000 <MODE:2>CW <RST_RCVD:3>599 ' +
+      '<RST_SENT:3>599 <OPERATOR:4>NY4I <CQZ:1>3 <STX_STRING:3>WCF ' +
+      '<APP_N1MM_EXCHANGE1:2>UT <APP_N1MM_POINTS:1>2 <PFX:2>W7 <EOR>';
+   DXLOG_RECORD =
+      '<QSO_DATE:8>20261116 <TIME_ON:6>054750 <TIME_OFF:6>054750 ' +
+      '<STATION_CALLSIGN:4>NY4I <FREQ:6>1.8000 <BAND:4>160M <CONTEST_ID:8>ARRL-160 ' +
+      '<MODE:2>CW <CALL:4>W7SP <RST_SENT:3>599 <RST_RCVD:3>599 <OPERATOR:4>NY4I ' +
+      '<APP_DXLOG_RCVD:2>UT <APP_DXLOG_POINTS:1>2 <MY_GRIDSQUARE:6>EL88PA ' +
+      '<MY_NAME:3>TOM <MY_ITU_ZONE:1>8 <MY_CQ_ZONE:1>5 <PFX:2>W7 ' +
+      '<MY_ARRL_SECT:3>WCF <ARRL_SECT:2>UT <STX_STRING:3>WCF <SRX_STRING:2>UT <EOR>';
+var
+   rx: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   noSectionTag: string;
+
+   (* What every reading of this QSO must say, whichever logger wrote it. *)
+   procedure CheckReceived(const aWho, aRecord: string);
+   begin
+      ClearContestExchange(rx);
+      CheckTrue(ParseADIFRecord(aRecord, rx, facts, sent), aWho + ': parsed');
+      CheckTrue(rx.ceContest = ContestHandleOf(ARRL160), aWho + ': CONTEST_ID ARRL-160 is ARRL 160');
+      CheckEquals('W7SP', string(rx.Callsign), aWho + ': the call');
+      CheckTrue(rx.Band = Band160, aWho + ': 160 m');
+      CheckTrue(rx.Mode = CW, aWho + ': CW');
+      CheckEquals('K', string(rx.QTH.CountryID), aWho + ': W7SP is a K QSO');
+      CheckEquals(599, integer(rx.RSTReceived), aWho + ': RST received');
+      CheckEquals('Ut', string(rx.DomesticQTH), aWho + ': DomesticQTH is the file''s section');
+      CheckEquals('Ut', string(rx.DomMultQTH), aWho + ': the multiplier key');
+      CheckEquals('UT', ADIFSectionOf(rx), aWho + ': ADIF ARRL_SECT');
+      CheckEquals('UT', ExternalLoggerARRLSection(rx),
+                  aWho + ': the section the external loggers and N1MM <section> send');
+      CheckEquals('WCF', string(sent), aWho + ': WCF is the SENT exchange');
+      (* Neither our section nor the report is anything received. *)
+      CheckEquals(0, Pos('WCF', UpperCase(string(rx.QTHString) + '|' + string(rx.DomesticQTH) + '|' +
+                                          string(rx.DomMultQTH) + '|' + string(rx.ExchString))),
+                  aWho + ': WCF is in no received field');
+      CheckEquals(0, Pos('599', string(rx.QTHString) + '|' + string(rx.DomesticQTH) + '|' +
+                               string(rx.DomMultQTH) + '|' + string(rx.ExchString)),
+                  aWho + ': 599 is stored as no QTH');
+   end;
+
+begin
+   BeginTest('Test_ARRL160RealN1MMAndDXLogRecords');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   SetUpSession(ARRL160, DomesticCountriesARRLSections, 'arrlsect.dom');
+   try
+      CheckReceived('N1MM', N1MM_RECORD);
+      CheckEquals('UT', string(rx.QTHString), 'N1MM: ARRL_SECT and no QTH tag, so the QTH string is UT');
+      CheckEquals('', string(rx.ExchString), 'N1MM: no SRX_STRING, so no received exchange text');
+      CheckTrue(facts.Source = mfsNotCaptured, 'N1MM: no MY_ field, so no station facts captured');
+      CheckOutputs(rx, 'N1MM', 'UT');
+
+      CheckReceived('DXLog', DXLOG_RECORD);
+      CheckEquals('UT', string(rx.QTHString), 'DXLog: ARRL_SECT and no QTH tag, so the QTH string is UT');
+      CheckEquals('UT', string(rx.ExchString), 'DXLog: SRX_STRING less nothing (no RST in it)');
+      CheckTrue(facts.Source = mfsImported, 'DXLog: its MY_ fields are captured');
+      CheckEquals('WCF', string(facts.Section), 'DXLog: MY_ARRL_SECT WCF is OUR section');
+      CheckOutputs(rx, 'DXLog', 'UT');
+
+      (* NO ARRL_SECT: the section from SRX_STRING. *)
+      noSectionTag := StringReplace(DXLOG_RECORD, '<ARRL_SECT:2>UT ', '', []);
+      CheckEquals(0, Pos('<ARRL_SECT:', noSectionTag), 'the variant carries no ARRL_SECT');
+      CheckReceived('DXLog less ARRL_SECT', noSectionTag);
+   finally
+      RestoreSession;
+   end;
+end;
+
 (* THE SHARED QSO-PARTY IMPORT -- issue 275 item 2. The base's domestic arm
    (every party without its own ApplyADIFImport) did DomesticQTH :=
    QTHString, so an alias came in as written. It resolves through the table
@@ -1201,6 +1301,7 @@ begin
    Test_DXKeeperSendsTheResolvedSection;
    Test_DXKeeperNonSectionContestSendsNoSection;
    Test_ARRL160ImportedAliasIsTheCanonicalSection;
+   Test_ARRL160RealN1MMAndDXLogRecords;
    Test_QSOPartyImportedAliasIsTheFileQTH;
    Test_CQ160ImportedQTHIsTheFileQTH;
    Test_UBAImportedQTHIsTheFileQTH;

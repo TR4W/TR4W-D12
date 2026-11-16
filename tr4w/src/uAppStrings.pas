@@ -1195,6 +1195,9 @@ resourcestring
    SLoggerFieldCloudlogUrl     = 'Cloudlog / Wavelog address (https://...)';
    SLoggerFieldCloudlogKey     = 'Cloudlog / Wavelog API key';
    SLoggerFieldCloudlogProfile = 'Station profile ID';
+   (* QRZ Logbook (issue 310): the logbook's callsign and its API access key. *)
+   SLoggerFieldQRZCall         = 'QRZ logbook callsign';
+   SLoggerFieldQRZKey          = 'QRZ logbook API key';
    (* %s is a field caption. *)
    SLoggerFieldRequired      = 'Enter %s';
    SLoggerChoiceRequired     = 'Choose %s from the list';
@@ -1436,6 +1439,11 @@ resourcestring
       name, %1:d the heading in degrees. *)
    SBandMapCopySpot       = 'Copy spot';
    SBandMapCountryHeading = '%0:s  (%1:d deg)';
+   (* THE BAND MAP'S TWO VIEW TOGGLES on its right-click menu: scroll the map
+      to keep the radio's frequency in the middle (issue 246), and order the
+      spots by the beam heading (issue 82). *)
+   SBandMapCenterOnRadio  = 'Center on radio frequency';
+   SBandMapSortByBeam     = 'Sort by beam heading';
    (* SEND SPOT: the tick that puts the station's section (or other domestic
       multiplier) the program knows for the call into the comment (issue 175). *)
    SSendSpotExchangeInComment = 'Exchange in comment';

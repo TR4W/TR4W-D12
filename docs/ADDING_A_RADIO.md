@@ -510,6 +510,13 @@ Notes:
 - [ ] Only flags set; no model test added to any base class
 - [ ] `RegisterRadioById` with a unique display name — **not** the enum-keyed
       `RegisterRadio`, which would also need a `VC.pas` member
+- [ ] The id and the display name are both **quoted literals** in that call.
+      `Lint-RadioRegistry` and `tools/bench-status` take them as the first
+      two quoted strings. A call with only one literal (the id passed as a
+      constant) is **skipped without a word**: the radio drops out of the
+      count and out of the duplicate-name check. Found with DXLab Commander
+      (2026-11-16): the lint's count left it out until the id became a
+      literal.
 - [ ] **Nothing edited in `VC.pas` or `logradio.pas`.** If you touched either,
       something is wrong with the design, not with your radio
 - [ ] Unit listed explicitly in `tr4w.lpr` **and** `tr4w_unit_tests.lpr`

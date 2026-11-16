@@ -165,9 +165,11 @@ procedure SendParameterToNetwork(const aCommand, aValue: string);
   TParameterToNetwork carries the command and the value as two ShortStrings,
   255 BYTES each as AnsiString renders them. That is the deployed encoding
   older positions and the server read, so it does not change here; a
-  setting that does not fit is NOT SENT -- a Warn in the log and a notice on
-  the status line -- where it used to be cut and sent as a value the
-  operator never chose. *)
+  setting that does not fit is NOT SENT -- a Warn in the log -- where it used
+  to be cut and sent as a value the operator never chose. The OPERATOR is
+  told by uCFG.ShareWithPeers, at entry and whatever the link state (issue
+  315); this send no longer shows the notice itself, so it is not shown
+  twice. *)
 function ParameterFitsTheWire(const aCommand, aValue: string): boolean;
 
 (* THE STATUS-LINE NOTICE when a parameter does not fit: '' when it does,
@@ -2619,9 +2621,9 @@ begin
                      '-- NOT sent; the other positions keep their value',
                      [aCommand, Length(AnsiString(aValue))]);
          end;
-      (* AND THE OPERATOR WHO MADE THE CHANGE IS TOLD, on the status line
-        with a warning beep -- the setting has changed here and not there. *)
-      QuickDisplayError(ParameterNotSentText(aCommand, aValue));
+      (* THE OPERATOR IS NOT TOLD HERE (issue 315): uCFG.ShareWithPeers told
+        them when the value was entered, link up or down. A notice here as
+        well would say the same thing twice on a connected station. *)
       Exit;
       end;
 
