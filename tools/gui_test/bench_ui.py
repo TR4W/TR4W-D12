@@ -76,6 +76,10 @@ def run(root, run_name, phase):
          if isinstance(result, tuple):
             result, app, main = result
          close_normally(app, main, journal)
+         if phase == "bench-prefs-station-check":
+            # Its last save is judged in tr4w.json once the program has closed.
+            from bench_station_check import verify_after_exit
+            result = verify_after_exit(root, run_name, output, result)
          if phase.endswith(("-save", "-verify", "-restore")):
             verify_storage(root, run_name, output, phase)
          return dict(result, pid=app.process)

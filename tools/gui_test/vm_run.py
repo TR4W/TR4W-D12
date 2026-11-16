@@ -65,6 +65,8 @@ def main():
        str(source / "bench_k4.py"),
        str(source / "bench_tailcat.py"),
        str(source / "bench_station_names.py"),
+       str(source / "bench_station_check.py"), str(source / "bench_invalid_sweep.py"),
+       str(source / "input_checks.py"), str(source / "input_ui.py"), str(source / "ocr_text.ps1"),
        str(source / "bench_uia278.py"), str(source / "uia278_probe_window.py"),
        str(source / "bench_year_sent.py"),
        str(source / "bench_county_host.py"),

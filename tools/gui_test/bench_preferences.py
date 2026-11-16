@@ -132,6 +132,12 @@ def check(app, main, output, journal, phase, root, run_name):
    if phase == "bench-prefs-online":
       from bench_online import check as check_online
       return check_online(app, main, prefs, root, run_name, output, journal)
+   if phase == "bench-prefs-station-check":
+      from bench_station_check import check as check_station
+      return check_station(app, main, prefs, root, run_name, output, journal)
+   if phase.startswith("bench-prefs-invalid-sweep-"):
+      from bench_invalid_sweep import sweep
+      return sweep(app, main, prefs, root, run_name, output, journal, phase)
    if phase == "bench-prefs-station-names":
       from bench_station_names import check as check_names
       return check_names(app, main, prefs, root, run_name, output, journal)

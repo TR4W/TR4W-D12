@@ -26,6 +26,14 @@ CASES = {
    "locked": "bench-locked-regression",
    "import": "bench-import-regression",
    "messages": "bench-messages-regression",
+   # Preferences > Station checks each field inline: red mark, the line under
+   # the fields, focus held, no window, refused and good saves (be4dc5a6).
+   "station-check": "bench-prefs-station-check",
+   # The invalid-input sweep of the other Preferences pages, by tag range: a
+   # REPORT (sweep_report.py makes the table), passing unless it crashes.
+   "sweep-a": "bench-prefs-invalid-sweep-a",
+   "sweep-b": "bench-prefs-invalid-sweep-b",
+   "sweep-c": "bench-prefs-invalid-sweep-c",
    "wizard-no": "bench-wizard-offer-no",
    "wizard-station": "bench-wizard-station",
    "wizard-empty": "bench-wizard-station-empty",

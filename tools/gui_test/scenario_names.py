@@ -44,6 +44,8 @@ SCENARIOS = (
    "bench-tailcat-empty",
    "bench-lognames", "bench-lognames-close",
    "bench-prefs-station-names", "bench-prefs-uia278",
+   "bench-prefs-station-check",
+   "bench-prefs-invalid-sweep-a", "bench-prefs-invalid-sweep-b", "bench-prefs-invalid-sweep-c",
    "bench-yearsent-create-euhfc", "bench-yearsent-create-kvp",
    "bench-yearsent-check-euhfc-no", "bench-yearsent-check-euhfc-yes",
    "bench-yearsent-check-kvp-no", "bench-yearsent-check-kvp-yes",

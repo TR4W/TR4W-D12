@@ -19,10 +19,10 @@ a GitHub issue (reproducible, with the evidence path) and to the owning agent (l
 ## How it is driven
 
 ```powershell
-python tools/gui_test/run_suite.py --list                      # cases: seed hints focus online loggers radio search switch locked import messages
+python tools/gui_test/run_suite.py --list                      # cases include station-check and sweep-a/b/c (2026-11-16)
 python tools/gui_test/run_suite.py --case import --case locked # selected cases first, never the whole suite first
 python tools/gui_test/run_suite.py                             # everything, only after the selected cases pass
-python -m unittest discover -s tools/gui_test -p "test_*.py"   # portable tests, 11, no VM needed
+python -m unittest discover -s tools/gui_test -p "test_*.py"   # portable tests, 40, no VM needed
 ```
 
 `run_suite.py` stages an identified build (default `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe`,
@@ -66,7 +66,11 @@ Pass: seed, hints, focus, online, loggers, radio, import, messages, locked. FAIL
 invalid `.db` restarts the app). INCOMPLETE: search (driver assumes a 40 m start; fixture starts at 160 m,
 so the K3GUI entry lands on 20 m -- select the band by observing the window). One unexplained startup
 stall (suite 20261112T144518-a17473) is not a confirmed crash. Nothing in the suite covers the new
-MY LICENSE YEAR setting or the schema-7 received year yet; issues 300 and 305 need a rerun on a current build.
+schema-7 received year yet; issues 300 and 305 need a rerun on a current build.
+
+2026-11-16, exe 75be905f: `station-check` PASS (Preferences > Station inline validation of 13 fields incl.
+MY LICENSE YEAR; the problem line is a windowless TLabel read by Windows OCR, `ocr_text.ps1`).
+`sweep-a/b/c` PASS (suite 20261116T221335-5122c9; report only; table in `docs/gui-test/preferences-invalid-input-sweep-20261116.md`).
 
 ## Reporting
 

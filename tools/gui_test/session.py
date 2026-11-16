@@ -94,9 +94,14 @@ def adopt_restarted_app(previous, root, run_name, database, output, wait_main=Tr
    return app, main
 
 
-def capture(window, path, region=None):
+def capture(window, path, region=None, focus=True):
    # Use this HWND's visible foreground frame, excluding invisible resize borders.
-   window.set_focus()
+   # focus=False captures a window that must ALREADY be foreground without
+   # touching focus, for checks where moving the keyboard focus would fire the
+   # very OnExit/OnEnter under test (capture_window still refuses a background
+   # window).
+   if focus:
+      window.set_focus()
    # Visible does not mean painted: capture only after the opening animation settles.
    previous = None
    deadline = time.monotonic() + 3

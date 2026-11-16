@@ -7082,6 +7082,12 @@ begin
       begin
       Exit;
       end;
+   (* THE BLANKET DIRTY MARKER IS NOT HOOKED ON AN EDIT THAT ALREADY HAS AN
+     OnChange (HookDirtyMarker never replaces one), so this handler owns the
+     Dirty flag for these fields. Without it, typing in a Station field left
+     Save greyed and only Save and close worked (found by the GUI case
+     station-check, 2026-11-16; introduced by the inline validation). *)
+   MarkDirty(Sender);
    fields := StationFields;
    i := StationFieldIndex(fields, Sender);
    if (i < 0) or (StationFieldProblemOf(fields[i]) <> '') then
