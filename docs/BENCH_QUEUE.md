@@ -147,6 +147,19 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-16 -- NEW CONTEST: "UPCOMING CONTESTS FIRST" (Q99 step B)
+
+A check box under the New Contest list, default unticked. Ticked, the list shows a contest on the air first (`running now`), then the soonest to start, each with its next start after the name (`2027-03-28 00:00 UTC`, or just the date for a date-only schedule). After those come the contests with no date, alphabetically. The order, the hints and keeping the selection are unit-tested on a streamed form; nothing below is.
+
+- [ ] **It worked.** Tick the box: the first rows are this weekend's and next weekend's contests, and the dates read right against the sponsors' calendars. Scroll to the end: undated contests, alphabetical.
+- [ ] **The choice is kept.** Pick a contest and type into its rows, then tick and untick: the same contest stays highlighted (it moves) and the typed rows are not cleared. OK creates the same contest as before.
+- [ ] **No clipping.** The list is now measured WITH the hints, so the dialog may open a little wider than before even unticked; check that is acceptable. Shrink the dialog to its minimum: the two check boxes under the list are not cut off, and the longest hinted name scrolls sideways rather than clipping.
+- [ ] **Search with the box ticked.** Typing still matches the NAME only; the dates are not searched.
+- [ ] **Remembered for the session only.** It is remembered from the startup dialog to File > Open Log. A restart opens it unticked, because the dialog runs before the settings load. Say whether that is enough.
+- [ ] **gtk2 / cocoa / a translated UI.** The two check boxes stack correctly and the hint's spacing reads cleanly. The caption is an empty fuzzy entry, so English is expected for now.
+
+---
+
 ## Added 2026-11-16 -- BAND MAP: CENTER ON THE RADIO, AND SORT BY BEAM HEADING (issues 246, 82)
 
 Two settings in `Settings.BandMap`, both default OFF, each a Preferences > Band Map check box AND a right-click item on the band map: BAND MAP CENTER ON RADIO and BAND MAP SORT BY BEAM HEADING. The arithmetic (wrap at 0/360, ties, the centring column) and the spot store's ordering are unit-tested; the scroll itself and the beam source are not.

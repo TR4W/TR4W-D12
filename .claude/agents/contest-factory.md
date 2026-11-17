@@ -1199,6 +1199,28 @@ the target shape, the M-step migration order and the open questions.
   `uTestCallHistory` (registry walk: only the two SS runnings answer),
   `uTestSpotCommentMultiplier.Test_Hint_ACommentOutranksTheCallHistoryFile`
   and `uTestStatusAndNotice.Test_ACallHistoryEntryPrefillsAndYieldsToASpot`.
+- **A CONTEST STATES WHEN IT RUNS: `GetSchedule` / `Schedule` (Q99 step A,
+  2026-11-16).** One string of UTC operating periods (`;`-separated clauses)
+  or the deliberate `'unscheduled'`; the base's `''` is NOT YET STATED. Data
+  only -- the class never reads a clock, parses or refuses a QSO by it. The
+  grammar and resolver are the leaf `src/uContestSchedule.pas` over the leaf
+  `src/uContestDates.pas` (calendar arithmetic, `SortContestDates`); the key is
+  "now" for a running period, else the next period start (a QSO party's
+  overnight gap keys on the Sunday start), else undated -- an ISO-date list
+  runs out and never repeats. `+Nd` is the day after the SAME anchor (Florida
+  2029: the 29th, not the 4th Sunday the 22nd); there is no `-Nd`, so
+  ARRL-160's candidate string (kept on instruction) reads from SATURDAY 2200Z
+  where the ARRL is believed to start Friday -- its comment says so. State
+  it on the LEAF class (`uTestContestSchedule` asks `ClassStatesItself`).
+  `SCHEDULE_NOT_YET_STATED` there is the ratchet, only ever down; the intake
+  is `docs/CONTEST_SCHEDULES.csv` (never read at run time) with its
+  sponsor-style `until` cells converted by
+  `tools/contest-schedules/convert_sponsor_times.py`; a candidate row's class
+  comment says CANDIDATE. **Step B, the New Contest list's "Upcoming
+  contests first" box, READS IT** (`uContestChoices.SoonestFirstOrder`). A
+  string that does not parse there is listed undated and logged as a Warn
+  naming the contest. So a typo in a class's `GetSchedule` is caught by
+  `uTestContestSchedule`, not by the dialog.
 - **THE 3830SCORES REPORT'S TABLE IS THE CONTEST'S (2026-10-25, design
   §8.2x).** Rows = the bands `UsesBand` credits (the form's standard 160-10/6/2
   always, any other credited band only with QSOs -- so WARC QSOs now reach the

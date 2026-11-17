@@ -196,6 +196,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE PROVINCE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. *)
       function GetHostState: string; override;
@@ -284,6 +285,15 @@ uses
 function TContestOntarioQP.GetDisplayName: string;
 begin
    Result := 'Ontario QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ON-QSO-PARTY: status verified; rules
+   https://www.va3cco.com/oqp/index.htm; rules year 2027. *)
+function TContestOntarioQP.GetSchedule: string;
+begin
+   Result := '3rd full weekend of April at 18:00 UTC for 9h; ' +
+             '3rd full weekend of April +1d at 12:00 UTC for 8h';
 end;
 
 function TContestOntarioQP.GetHostState: string;

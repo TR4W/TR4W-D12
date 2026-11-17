@@ -64,6 +64,7 @@ type
          X.GetHostState callable. Callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
@@ -144,6 +145,14 @@ uses
 function TContestMichiganQP.GetDisplayName: string;
 begin
    Result := 'Michigan QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row MICHIGAN QSO PARTY: status verified; rules
+   https://miqp.org/index.php/rules/; rules year 2026. *)
+function TContestMichiganQP.GetSchedule: string;
+begin
+   Result := '3rd full weekend of April at 16:00 UTC for 12h';
 end;
 
 (* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its

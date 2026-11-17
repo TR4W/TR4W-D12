@@ -69,6 +69,7 @@ type
       function CountsDXMultiplier: boolean;
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -117,6 +118,15 @@ uses
 function TContestWestVirginiaQP.GetDisplayName: string;
 begin
    Result := 'West Virginia QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row WV-QSO-PARTY: status verified; rules
+   https://www.qsl.net/wvqp/2026rules.pdf; rules year 2026/2027. *)
+function TContestWestVirginiaQP.GetSchedule: string;
+begin
+   Result := '2026-06-20 at 16:00 UTC for 12h; ' +
+             '2027-06-19 at 16:00 UTC for 12h';
 end;
 
 function TContestWestVirginiaQP.GetFriendlyName: string;

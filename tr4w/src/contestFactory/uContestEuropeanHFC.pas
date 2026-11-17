@@ -113,6 +113,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFormerADIFContestIds: TContestIdList; override;
@@ -199,6 +200,16 @@ end;
 function TContestEuropeanHFC.GetDisplayName: string;
 begin
    Result := 'European HF Championship';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row EUROPEAN HFC: status candidate; rules
+   https://euhf.s5cc.eu/rules/euhfc_rules_latest.pdf; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestEuropeanHFC.GetSchedule: string;
+begin
+   Result := '1st Saturday of August at 12:00 UTC for 12h';
 end;
 
 function TContestEuropeanHFC.GetCabrilloName: string;

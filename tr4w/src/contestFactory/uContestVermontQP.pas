@@ -240,6 +240,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. *)
       function GetHostState: string; override;
@@ -367,6 +368,14 @@ end;
 function TContestVermontQP.GetDisplayName: string;
 begin
    Result := 'Vermont QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row VT-QSO-PARTY: status verified; rules https://www.ranv.org/vtqso.html;
+   rules year 2027. *)
+function TContestVermontQP.GetSchedule: string;
+begin
+   Result := '1st full weekend of February at 00:00 UTC for 48h';
 end;
 
 function TContestVermontQP.GetHostState: string;

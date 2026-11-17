@@ -67,6 +67,7 @@ type
          X.GetHostState callable. Callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES.
 
@@ -167,6 +168,14 @@ end;
 function TContestIndianaQP.GetDisplayName: string;
 begin
    Result := 'Indiana QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row IN QSO PARTY: status verified; rules
+   http://hdxcc.org/inqp/rules.html; rules year 2026. *)
+function TContestIndianaQP.GetSchedule: string;
+begin
+   Result := '1st full weekend of May at 15:00 UTC for 12h';
 end;
 
 function TContestIndianaQP.GetHostState: string;

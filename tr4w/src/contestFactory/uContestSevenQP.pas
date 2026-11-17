@@ -96,6 +96,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -291,6 +292,14 @@ end;
 function TContestSevenQP.GetDisplayName: string;
 begin
    Result := '7th Call Area QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row 7QP: status verified; rules
+   http://7qp.org/new/Page.asp?content=rules; rules year 2026. *)
+function TContestSevenQP.GetSchedule: string;
+begin
+   Result := '1st Saturday of May at 13:00 UTC for 18h';
 end;
 
 function TContestSevenQP.GetCabrilloName: string;

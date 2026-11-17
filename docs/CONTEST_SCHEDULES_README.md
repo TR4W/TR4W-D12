@@ -1,8 +1,84 @@
 # CONTEST_SCHEDULES.csv -- schedule intake for agents
 
+## How do I enter...
+
+Type the left-hand form into the `schedule` cell -- start and end the way the
+sponsor's page shows them. An agent converts it
+(`tools/contest-schedules/convert_sponsor_times.py`) into the right-hand form,
+which is what the contest class carries. Where the two are the same, type
+either. `;` ALWAYS means "another period": each period is listed on its own,
+and the New Contest sort uses the soonest one that is running or still to
+come. Nothing here stops a contest being opened or a QSO being logged.
+
+The table is checked by the unit tests (`uTestContestSchedule` parses every
+right-hand cell) and by `tools/contest-schedules/test_convert_sponsor_times.py`
+(every left-hand cell must convert to its right-hand cell), so it cannot drift
+from the grammar.
+
+<!-- schedule-examples-begin -->
+| I want to enter | Type this (sponsor style) | The class carries |
+|---|---|---|
+| one period on one weekend (California) | `1st full weekend of October at 16:00 UTC until Sunday 21:59 UTC` | `1st full weekend of October at 16:00 UTC for 30h` |
+| a 48-hour weekend (CQ WPX SSB) | `last full weekend of March at 00:00 UTC until Sunday 23:59 UTC` | `last full weekend of March at 00:00 UTC for 48h` |
+| two periods in one weekend (Florida) | `4th Saturday of April at 16:00 UTC until Sunday 01:59 UTC; 4th Saturday of April +1d at 12:00 UTC until 21:59 UTC` | `4th Saturday of April at 16:00 UTC for 10h; 4th Saturday of April +1d at 12:00 UTC for 10h` |
+| two periods, full-weekend anchor (Georgia) | `2nd full weekend of April at 18:00 UTC until Sunday 03:59 UTC; 2nd full weekend of April +1d at 14:00 UTC until 23:59 UTC` | `2nd full weekend of April at 18:00 UTC for 10h; 2nd full weekend of April +1d at 14:00 UTC for 10h` |
+| three periods (Makrothen) | `2nd Saturday of October at 00:00 UTC until 07:59 UTC; 2nd Saturday of October at 16:00 UTC until 23:59 UTC; 2nd Saturday of October +1d at 08:00 UTC until 15:59 UTC` | `2nd Saturday of October at 00:00 UTC for 8h; 2nd Saturday of October at 16:00 UTC for 8h; 2nd Saturday of October +1d at 08:00 UTC for 8h` |
+| the same contest twice a year (NAQP SSB) | `3rd full weekend of January at 18:00 UTC until 05:59 UTC; 3rd full weekend of August at 18:00 UTC until 05:59 UTC` | `3rd full weekend of January at 18:00 UTC for 12h; 3rd full weekend of August at 18:00 UTC for 12h` |
+| weekly, on one day | `every Wednesday at 02:30 UTC until 03:00 UTC` | `every Wednesday at 02:30 UTC for 30m` |
+| several sessions a week, two on one day (CWT) | `every Wednesday at 13:00 UTC until 14:00 UTC; every Wednesday at 19:00 UTC until 20:00 UTC; every Thursday at 03:00 UTC until 04:00 UTC; every Thursday at 07:00 UTC until 08:00 UTC` | `every Wednesday at 13:00 UTC for 1h; every Wednesday at 19:00 UTC for 1h; every Thursday at 03:00 UTC for 1h; every Thursday at 07:00 UTC for 1h` |
+| monthly (no contest in the CSV uses it yet) | `1st Sunday of every month at 18:00 UTC until 19:59 UTC` | `1st Sunday of every month at 18:00 UTC for 2h` |
+| monthly, the last one | `last Thursday of every month at 19:00 UTC until 20:30 UTC` | `last Thursday of every month at 19:00 UTC for 90m` |
+| every day (none in the CSV yet) | `every day at 12:00 UTC until 13:00 UTC` | `every day at 12:00 UTC for 1h` |
+| the same calendar date every year (Canada Day) | `07-01 at 00:00 UTC until 23:59 UTC` | `07-01 at 00:00 UTC for 24h` |
+| published dates with no rule (SSB Sprint) | `2026-11-01 at 00:00 UTC until 03:59 UTC; 2027-03-21 at 00:00 UTC until 03:59 UTC` | `2026-11-01 at 00:00 UTC for 4h; 2027-03-21 at 00:00 UTC for 4h` |
+| only the date is known, not the times | `4th Saturday of April` | `4th Saturday of April` |
+| no schedule at all (General QSO, POTA) | `unscheduled` | `unscheduled` |
+| I do not know yet | leave `schedule` empty; status `pending` or `hold` | (nothing: the class states no schedule) |
+<!-- schedule-examples-end -->
+
+Notes on the table:
+
+- **`+1d` is the day after the SAME anchor.** `4th Saturday of April +1d` is the
+  Sunday after that Saturday -- in 2029 that is April 29, while "4th Sunday of
+  April" would be April 22. Use `+2d` for a third day. Write each period as its
+  own clause; never one long period across the overnight break.
+- **A `:59` end is the last included minute.** Type what the sponsor shows:
+  `until 01:59 UTC` means the period ends at 02:00, `until Sunday 23:59 UTC`
+  at Monday 00:00.
+- **The end** is the first moment after the start that matches `until`. With
+  no weekday it is the next time the clock reads that time (16:00 until 02:00
+  crosses midnight). With a weekday it is that weekday on or after the start
+  day. A weekday end needs an anchor that fixes the start's weekday, so
+  `07-01` and `every day` take only the plain `until HH:MM UTC`.
+- **Published dates run out.** An ISO-date list (`2026-11-01 ...`) is never
+  repeated: after its last date the contest has no upcoming date and sorts
+  last until someone adds the next year's dates.
+- Without `at ...` a clause is a date-only hint: the whole UTC day.
+
+### Not supported yet
+
+Say so in `notes` and leave the row `pending` rather than bending a rule to
+fit. None of these has syntax today:
+
+- every other week, or "the 1st and 3rd Wednesday" (write two monthly clauses
+  for the second: `1st Wednesday of every month ...; 3rd Wednesday of every
+  month ...`);
+- a weekday relative to a fixed date: "the Saturday on or before June 20"
+  (West Virginia; today ISO dates). (North Carolina's "Sunday after
+  February's 4th Saturday" IS expressible: `4th Saturday of February +1d`.);
+- a day BEFORE the anchor: "the Friday before the first full weekend" (ARRL
+  160, 2200Z Friday) -- there is `+Nd` but no `-Nd`. ARRL-160's row keeps
+  `First full weekend in December at 22:00 UTC for 42h`, which reads from
+  SATURDAY 2200Z; its notes say so;
+- a date range or season ("all of January", "every Monday from October to
+  March", a contest that runs all month);
+- "third or fourth" or any other either-or rule (ARRL January VHF);
+- a weekly series with known gaps (a cancelled week is still listed).
+
 `CONTEST_SCHEDULES.csv` is an **intake file only**. NY4I edits it in a
 spreadsheet to hand contest schedule updates to agents. The contest classes keep
-owning the schedule string (`GetSchedule`, see the schedule-helper handoff);
+owning the schedule string (`GetSchedule`; the parser is `tr4w/src/uContestSchedule.pas`,
+the class step is `docs/ADDING_A_CONTEST.md` A3);
 nothing reads the CSV at run time and it is not shipped.
 
 ## Columns
@@ -28,15 +104,38 @@ Rows are sorted by `contest_id`.
 - `pending` -- no data yet.
 - `unscheduled` -- deliberately undated (General QSO, POTA); `schedule` says `unscheduled`. Never use it for an unresearched contest.
 
-## Grammar (still "awaiting approval" in the harvest)
+## Grammar
 
-- One string per row; `;` separates independent occurrences.
-- Date: `4th full weekend of June`, `last Saturday of February`, `every Wednesday`, `06-27`, `2027-03-21`; `+1d` after a full weekend anchors Sunday.
-- Optional window: `at HH:MM UTC for Nh` (or `for Nm`); without it the clause is a date-only hint.
-- Ordinals `1st`-`5th` (or `first`-`fifth`) and `last`; keywords and English names are case insensitive.
-- Parsing is strict: one bad clause rejects the whole string. Example: `last full weekend of March at 00:00 UTC for 48h`.
+The program's parser is `tr4w/src/uContestSchedule.pas`; its header is the
+authoritative statement. In short:
 
-The authoritative statement is `CONTEST_SCHEDULE_HARVEST.md` ("Proposed grammar").
+- One string per row; `;` separates periods (clauses).
+- Date anchor: `4th full weekend of June`, `last Saturday of February`
+  (`of` or `in`), `1st Sunday of every month`, `last full weekend of every
+  month`, `every Wednesday`, `every day`, `06-27` (every year), `2027-03-21`
+  (that day only).
+- `+Nd` after ANY anchor (1 to 31): N days after that same anchor date.
+- Optional window, in the class: `at HH:MM UTC for Nh` or `for Nm` (at most
+  168h); without it the clause is a date-only hint covering the UTC day. In
+  the CSV cell you may instead type `at HH:MM UTC until [Weekday] HH:MM UTC`
+  (sponsor style, see the table above); the converter turns it into `for`.
+- Ordinals `1st`-`5th` (or `first`-`fifth`) and `last`; keywords and English
+  month and day names are case insensitive, written in full.
+- `unscheduled` is a whole-string value (no other clause beside it).
+- Parsing is strict: one bad clause rejects the whole string, and the message
+  names the clause.
+
+## Converting sponsor-style cells
+
+```
+python -I tools/contest-schedules/convert_sponsor_times.py --check
+python -I tools/contest-schedules/convert_sponsor_times.py --write
+```
+
+`--check` lists every row whose cell holds `until`, with its converted form or
+an error naming the contest id and clause; `--write` rewrites those cells in
+place (BOM, CRLF and the 8 columns kept). A cell with no `until` is never
+changed. The classes always carry the converted form.
 
 ## Editing it in a spreadsheet
 
@@ -46,9 +145,15 @@ The authoritative statement is `CONTEST_SCHEDULE_HARVEST.md` ("Proposed grammar"
 
 ## What agents do with it
 
-Agents apply `verified` rows to the classes' `GetSchedule` overrides, with the
-rules URL, year and section beside each declaration. The CSV is then regenerated
-from the classes, or retired once every class states its schedule.
+Agents convert any `until` cell first (above), then apply `verified` and
+`candidate` rows (and `unscheduled`) to the classes' `GetSchedule` overrides,
+with the status, rules URL and rules year beside each declaration; a
+candidate's comment says it is a calendar date not yet checked against the
+sponsor's rules. `pending` and `hold` rows are not applied, even when their
+cell holds text. The contests still pending are listed, by id, in
+`tr4w/test/unit/uTestContestSchedule.pas` (`SCHEDULE_NOT_YET_STATED`), which
+only shrinks. The CSV is then regenerated from the classes, or retired once
+every class states its schedule.
 
 ## Harvest performed 2026-11-16
 
@@ -94,7 +199,7 @@ rules take precedence over it. This was a ONE-TIME harvest: see
 `tools/contest-schedule-harvest/WARNING.md`, which forbids any automatic lookup
 of that site.
 
-## Multiple operating periods: handoff to the contest agent
+## Multiple operating periods
 
 ### What was changed in the intake
 
@@ -130,51 +235,33 @@ Florida's example is:
 4th Saturday of April at 16:00 UTC for 10h; 4th Saturday of April +1d at 12:00 UTC for 10h
 ```
 
-This is 20 operating hours across a 30-hour envelope. It must not become a
-30-hour continuous period. `+1d` refers to the day AFTER THE SAME anchor date;
-do not calculate an independent fourth Sunday, which can land a week earlier
-when the month starts Sunday. Some rows therefore need the parser to accept
-day offsets on weekday anchors as well as full-weekend anchors. This extends
-the proposed grammar; it is not implemented in the current typed helper.
+This is 20 operating hours across a 30-hour envelope, and it stays two
+periods. `+1d` is the day AFTER THE SAME anchor date (built: the parser takes
+`+Nd` after any anchor), never an independent fourth Sunday, which lands a
+week earlier when the month starts on a Sunday (2029).
 
 Where sponsors say an end is 0159Z or 2359Z, the last minute is included:
 normalize the exclusive end to 0200Z or next-day 0000Z. Do not subtract a minute
 from the advertised duration. Imported calendar boundaries ending in :59 were
 normalized as candidates and explicitly flagged for rules review in the notes.
 
-### What the implementation still needs
+### Settled by the implementation (2026-11-16, step A)
 
-- A contest running needs a list of UTC operating periods, not only one
-  `start/end`. Keep `[start,end)` per period. Its overall calendar envelope
-  may be useful for display, but membership in that envelope does NOT mean a
-  QSO falls within an operating period. Existing `uContestTimeLeft` represents
-  only one window and cannot describe a multi-period event on its own.
-- Preserve ONE contest/dropdown entry for a multi-period QSO party. During
-  its overnight gap, retain the same running and find its next period instead
-  of jumping to next year's contest. Distinguish "between periods" from
-  "currently operating" and "finished"; the final end determines when that
-  running is over. A countdown must target the next start during the gap.
-- Semicolons currently separate windows in the intake; they do not encode
-  whether the windows belong to one log. A QSO party's Saturday and Sunday
-  periods belong to the same running; CWT's same-day sessions are separate
-  runnings. NAQP's seasonal dates are also separate runnings. Add an explicit
-  grouping contract in the string/parsed model or class metadata before
-  integration. Do not infer grouping merely from the separator or proximity.
-- Makrothen's three periods, and other non-QSO-party candidates harvested
-  from multiple API periods, must retain their offsets and grouping too.
-  Treat explicit published-date lists as finite data; never repeat them next
-  year automatically. A missing week in a weekly series may be intentional.
-- `IN7QPNE` is a separate combined-entry candidate. Its 35-hour envelope is
-  derived from the union of 7QP, Indiana, New England and Delaware windows,
-  which overlap to cover Sat 1300Z-Sun 2400Z. Confirm that class's combined
-  semantics; it does not replace any constituent contest's own periods.
-- North Carolina and West Virginia illustrate recurrence grammar limits.
-  North Carolina is the Sunday after February's fourth Saturday, sometimes
-  March 1. West Virginia is Saturday ON OR BEFORE June 20, not always June's
-  third Saturday. Their rows use explicit 2026/2027 dates with the true rule
-  in notes until the helper can express those rules correctly.
-- Add tests for the first end, the overnight gap, the second start, the final
-  end, month/year crossings and multiple sessions on the same UTC day.
-  Test that grouping and sorting never create a new operating window or
-  duplicate a multi-period contest in the dropdown. Schedule display must
-  continue to permit historical logging; QSO rejection was not authorized.
+- **No grouping model** (NY4I): each clause is a UTC period `[start, end)`,
+  and a contest is ONE dropdown entry. Its sort key is its earliest period
+  that is running now (key = now) or still to come (key = its start); in a
+  QSO party's overnight gap that is the Sunday start, not next year's; after
+  the last period of a published-date list there is no date (sorted last).
+  `uContestSchedule` does this; `uTestContestSchedule` tests the first end,
+  the gap, the second start, the final end, month/year crossings and sessions
+  on one UTC day.
+- Published-date lists are finite: never repeated next year. A missing week in
+  a weekly series is not representable (see "Not supported yet").
+- Nothing restricts opening a contest or logging a QSO by its schedule.
+- Still open: Idaho's candidate windows need the sponsor's correction;
+  `IN7QPNE`'s 35-hour envelope is the union of the 7QP, Indiana, New England
+  and Delaware periods (they overlap to Sat 1300Z-Sun 2400Z) and was applied as
+  a candidate; West Virginia ("the Saturday on or before June 20") is still
+  ISO dates. North Carolina's rule ("the Sunday after February's 4th
+  Saturday") is `4th Saturday of February +1d`, which parses now; its row
+  keeps the 2026/2027 ISO dates until NY4I moves it to that form.

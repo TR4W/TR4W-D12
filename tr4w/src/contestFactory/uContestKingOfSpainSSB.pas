@@ -70,6 +70,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -163,6 +164,16 @@ end;
 function TContestKingOfSpainSSB.GetDisplayName: string;
 begin
    Result := 'His Maj. King of Spain Contest, SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row KING-OF-SPAIN-SSB: status candidate; rules
+   https://concursos.ure.es/en/s-m-el-rey-de-espana-ssb/bases/; rules year
+   2026/2027. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestKingOfSpainSSB.GetSchedule: string;
+begin
+   Result := '4th Saturday of June at 12:00 UTC for 24h';
 end;
 
 function TContestKingOfSpainSSB.GetCabrilloName: string;

@@ -190,6 +190,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. Stated; the
          base makes it abstract so it is never an accident. *)
@@ -369,6 +370,16 @@ end;
 function TContestIdahoQP.GetDisplayName: string;
 begin
    Result := 'Idaho QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row IDAHO QSO PARTY: status candidate; rules
+   https://idahoqsoparty.org/rules.htm; rules year 2026. CANDIDATE: date
+   from a calendar, not yet checked against the sponsor's rules. *)
+function TContestIdahoQP.GetSchedule: string;
+begin
+   Result := '2nd full weekend of March at 16:00 UTC for 12h; ' +
+             '2nd full weekend of March +1d at 14:00 UTC for 12h';
 end;
 
 function TContestIdahoQP.GetHostState: string;

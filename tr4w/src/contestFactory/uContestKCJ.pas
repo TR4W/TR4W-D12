@@ -61,6 +61,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -151,6 +152,17 @@ end;
 function TContestKCJ.GetDisplayName: string;
 begin
    Result := 'Keymans Club of Japan Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row KCJ: status candidate; rules
+   https://kcj-cw.com/contest/rule/2026_47_kcj_dx_t.pdf; rules year
+   2026/2027. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestKCJ.GetSchedule: string;
+begin
+   Result := '2026-08-15 at 12:00 UTC for 24h; ' +
+             '2027-08-14 at 12:00 UTC for 24h';
 end;
 
 function TContestKCJ.GetCabrilloName: string;

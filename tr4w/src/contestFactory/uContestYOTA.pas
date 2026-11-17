@@ -61,6 +61,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -156,6 +157,19 @@ end;
 function TContestYOTA.GetDisplayName: string;
 begin
    Result := 'YOTA Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row YOTA: status candidate; rules
+   https://yotacontest.mrasz.org/rules-2026/english; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestYOTA.GetSchedule: string;
+begin
+   Result := '2026-03-15 at 10:00 UTC for 12h; ' +
+             '2027-03-14 at 10:00 UTC for 12h; ' +
+             '3rd Sunday of July at 10:00 UTC for 12h; ' +
+             '4th Monday of December at 10:00 UTC for 12h';
 end;
 
 function TContestYOTA.GetCabrilloName: string;

@@ -265,6 +265,7 @@ public seams in `public`. Copy the declaration layout of your template.
 | `GetFlags` | e.g. `[cfQSOByBand, cfQSOByMode, cfMultByMode, cfVHFBandsEnabled]`; `[]` if none applies. `cfVHFBandsEnabled` if 6 m or up is credited | `uTestContestStatesItsRules` |
 | `CalculateQSOPoints` (protected) | the sponsor's points per QSO | `uTestContestStatesItsRules` -- the base scores 0 |
 | `UsesBand` | `Result := aBand in [...]`, the rules' band list | **policy (NY4I), not yet gated**: the base still credits every band (Q98). Never omit it |
+| `GetSchedule` | the schedule string, on the LEAF class ([below](#state-when-it-runs----getschedule)); `'unscheduled'` for a log with no calendar | `uTestContestSchedule.Test_EveryContestStatesItsSchedule` -- the base answers `''` (not yet stated) |
 | `HasDXMultiplier`, `HasZoneMultiplier`, `HasPrefixMultiplier` | `False` unless the contest has one; if True, also the key/count virtuals ([B2](#b2-the-base-class-reference)). **A DX multiplier only some entrants have** (a party's in-state entrants): one private predicate (`CountsDXMultiplier`, reading `Station.InHostState`) answers `HasDXMultiplier`, `DXMultiplierKey` AND `CountryMode`, so they cannot disagree -- `uContestNebraskaQP`, `uContestOklahomaQP`. State `CountryMode` too: the base answers the CQ list, and a sponsor's "DXCC countries" is the ARRL list | the multiplier pin tests' registry walks |
 | `ExchangeCarriesDomesticQTH` / `ExchangeCarriesZone` / `ExchangeCarriesGridSquare` | `True` for what the exchange carries | none; omitted, the readiness check does not ask for MY STATE / MY ZONE / MY GRID |
 | `UsesDomesticFile` | `True` if the received QTH is looked up in your `.dom` (a state party inherits it) | `uTestDomesticMultiplier` (a domestic multiplier exactly where a QTH is read) |
@@ -538,6 +539,47 @@ you name. Both answers are identity facts -- never ask the station
 (`Test_BandsAndModesAreAnIdentityFact`). A family base may state the bands its
 whole family shares (CQ WW does); `TContestStateQSOPartyBase` never does.
 `RunsInMode` is NOT this rule. Design doc 8.2v.
+
+### State when it runs -- `GetSchedule`
+
+The New Contest list can sort by "coming up soonest" (Q99). Your class states
+its UTC operating periods as ONE string, in its own `protected` section, beside
+the sponsor's rules URL, the rule year it was checked against and the section:
+
+```pascal
+function GetSchedule: string; override;
+...
+(* WHEN IT RUNS -- <rules URL>, <rule year>, section <n>. *)
+function TContest<Name>.GetSchedule: string;
+begin
+   Result := '2nd full weekend of April at 18:00 UTC for 10h; ' +
+             '2nd full weekend of April +1d at 14:00 UTC for 10h';
+end;
+```
+
+- The grammar is `uContestSchedule`'s (header) and
+  [CONTEST_SCHEDULES_README.md](CONTEST_SCHEDULES_README.md) ("How do I
+  enter..."). A sponsor's "1600Z to 0159Z" is typed in that README's `until`
+  form and converted to `for` by `tools/contest-schedules/convert_sponsor_times.py`;
+  the class always carries the `for` form.
+- **One clause per operating period**, joined by `;`. A QSO party's Saturday and
+  Sunday are two clauses; never one period across the overnight break. `+1d` is
+  the day after the SAME anchor, never an independent "4th Sunday".
+- **A contest with no calendar states `'unscheduled'`** (General QSO, POTA). The
+  base's `''` means NOT YET STATED, which a new contest never is.
+- State it on the LEAF class even when a sibling runs on the same days -- a
+  family base's schedule would hand a held sibling its neighbour's dates.
+- Data only: never read a clock, parse, sort or refuse a QSO by it.
+
+`uTestContestSchedule.Test_EveryContestStatesItsSchedule` fails a contest that
+states nothing unless it is in `SCHEDULE_NOT_YET_STATED` (the contests that
+predate the rule -- only ever shrinks), a stated string that does not parse
+(naming the contest and clause), and a listed id that now states one. Add
+known-date tests that read your class's RETURNED string (`FindContestById('<ID>', h)`
+then `ContestIdentity(h).Schedule`, parsed with `TryParseContestSchedule` and
+resolved with `TryScheduleSortKey` against an explicit UTC "now"),
+one per period, in a year that tells "4th" from "last" and a Saturday from a
+full weekend.
 
 ### Your 3830scores report -- `Get3830Summary`
 

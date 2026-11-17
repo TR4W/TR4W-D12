@@ -55,6 +55,7 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
@@ -122,6 +123,17 @@ end;
 function TContestNASprintCW.GetDisplayName: string;
 begin
    Result := 'North American Sprint, CW';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NA-SPRINT-CW: status candidate; rules
+   https://ncjweb.com/Sprint-Rules.pdf; rules year 2026/2027. CANDIDATE:
+   date from a calendar, not yet checked against the sponsor's rules. *)
+function TContestNASprintCW.GetSchedule: string;
+begin
+   Result := '2026-02-08 at 00:00 UTC for 4h; ' +
+             '2027-02-07 at 00:00 UTC for 4h; ' +
+             '2nd Sunday of September at 00:00 UTC for 4h';
 end;
 
 (* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its

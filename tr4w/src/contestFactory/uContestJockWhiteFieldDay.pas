@@ -96,6 +96,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFormerADIFContestIds: TContestIdList; override;
@@ -191,6 +192,17 @@ end;
 function TContestJockWhiteFieldDay.GetDisplayName: string;
 begin
    Result := 'Jock White Memorial Field Day';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NZ FIELD DAY: status candidate; rules
+   https://nzart.org.nz/activities/contests/jwfd/; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestJockWhiteFieldDay.GetSchedule: string;
+begin
+   Result := '4th Saturday of February at 02:00 UTC for 9h; ' +
+             '4th Saturday of February at 17:00 UTC for 9h';
 end;
 
 function TContestJockWhiteFieldDay.GetCabrilloName: string;

@@ -62,6 +62,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -253,6 +254,16 @@ end;
 function TContestLABRE.GetDisplayName: string;
 begin
    Result := 'LABRE DX Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row LABRE: status candidate; rules
+   https://www.labre.org.br/contest/wp-content/uploads/2026/01/Regulamento-Contest-LABRE-DX-2026-Ingles.pdf;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestLABRE.GetSchedule: string;
+begin
+   Result := '3rd Saturday of July at 00:00 UTC for 48h';
 end;
 
 function TContestLABRE.GetCabrilloName: string;

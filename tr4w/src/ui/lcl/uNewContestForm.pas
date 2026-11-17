@@ -102,6 +102,7 @@ type
     lblContest: TLabel;
     edtContestFilter: TEdit;
     lstContests: TListBox;
+    chkSoonestFirst: TCheckBox;
     chkShowInactive: TCheckBox;
     pnlDetails: TPanel;
     chkIAmIn: TCheckBox;
@@ -128,6 +129,7 @@ type
                                       Shift: TShiftState);
     procedure lstContestsSelectionChange(Sender: TObject; User: boolean);
     procedure chkShowInactiveChange(Sender: TObject);
+    procedure chkSoonestFirstChange(Sender: TObject);
     procedure chkIAmInChange(Sender: TObject);
     procedure FieldChanged(Sender: TObject);
   private
@@ -315,6 +317,16 @@ uses
                        SNewContestShowInactive *)
   uContestRegistry; (* ContestId -- the chosen contest's token, Q108 S2 *)
 
+var
+  (* "UPCOMING CONTESTS FIRST", REMEMBERED ACROSS OPENINGS FOR THE SESSION --
+    as uSendSpotForm's GLocationInComment is. Not a setting: this dialog runs
+    BEFORE LoadSettingsForStartup (uNewContest, the MY CALL pre-fill), when the
+    settings object holds its constructor defaults and SaveSettings refuses
+    to write, so a setting would need its own read-from-the-file and
+    write-before-the-load path. Within a run it carries from the start-up
+    dialog to File > Open Log; a restart starts unticked. *)
+  GSoonestFirst: boolean = False;
+
 function GrowWithinRoom(aWanted, aRoom: integer): integer;
 begin
    Result := aWanted;
@@ -456,6 +468,9 @@ begin
    SetFileGridHeaders;
    edtMyCall.OnChange := FieldChanged;
    FNotified := NoContest;
+   (* Before the fill, so the first list is already in the remembered order;
+      its OnChange finds no list yet and only records the value. *)
+   chkSoonestFirst.Checked := GSoonestFirst;
    FillContests;
    SizeContestList;
    FillCategories;
@@ -479,6 +494,7 @@ begin
    lblContest.Caption := SNewContestContestLabel;
    edtContestFilter.TextHint := SNewContestSearchHint;
    chkShowInactive.Caption := SNewContestShowInactive;
+   chkSoonestFirst.Caption := SNewContestSoonestFirst;
    btnOK.Caption    := rsMbOK;
    btnCancel.Caption := rsMbCancel;
 
@@ -827,9 +843,26 @@ end;
   THE LIST IS NOT Sorted (.lfm), and must not be: a sorted list reorders its
   Items behind FShown's back, and row i would stop being FShown[i]. *)
 procedure TfrmNewContest.FillContests;
+var
+   i: integer;
 begin
    FreeAndNil(FChoices);
+   (* ONE "now" for the whole list: TContestChoices reads UTCNow once. *)
    FChoices := TContestChoices.Create;
+
+   (* A SCHEDULE THAT DOES NOT PARSE IS LISTED UNDATED, and said here once
+      per build of the list -- a contest class's data error, not the
+      operator's, so the log and never a dialog. *)
+   for i := 0 to FChoices.Count - 1 do
+      begin
+      if FChoices.ScheduleError[i] <> '' then
+         begin
+         logger.Warn('[NewContest] %s: its schedule does not parse, so it is ' +
+                     'listed undated: %s',
+                     [ContestId(FChoices.Contest[i]), FChoices.ScheduleError[i]]);
+         end;
+      end;
+
    ShowMatchingContests;
 end;
 
@@ -866,7 +899,8 @@ begin
 
    was  := SelectedContest;
    rows := FChoices.Matching(UTF8Decode(edtContestFilter.Text),
-                             chkShowInactive.Checked);
+                             chkShowInactive.Checked,
+                             chkSoonestFirst.Checked);
    keep := -1;
 
    captions := TStringList.Create;
@@ -876,8 +910,11 @@ begin
          begin
          FShown[i] := FChoices.Contest[rows[i]];
          (* UTF-8, stated: the LCL's strings are UTF-8 AnsiStrings and a
-            display name is the sponsor's, not necessarily ASCII. *)
-         captions.Add(UTF8Encode(FChoices.Caption[rows[i]]));
+            display name is the sponsor's, not necessarily ASCII. The date
+            hint rides on the row text only while the box asks for the
+            upcoming order; the identity is FShown, never this text. *)
+         captions.Add(UTF8Encode(FChoices.DisplayText(rows[i],
+                                                      chkSoonestFirst.Checked)));
          if FShown[i] = was then
             begin
             keep := i;
@@ -955,9 +992,11 @@ begin
 
    captions := TStringList.Create;
    try
+      (* WITH ITS DATE HINT, the longer of the two texts a row can show, so
+         ticking "Upcoming contests first" never clips a name. *)
       for i := 0 to FChoices.Count - 1 do
          begin
-         captions.Add(UTF8Encode(FChoices.Caption[i]));
+         captions.Add(UTF8Encode(FChoices.DisplayText(i, True)));
          end;
       widest := WidestText(lstContests.Font, captions);
    finally
@@ -1958,6 +1997,16 @@ end;
   an active contest that was chosen stays chosen, found by its identity. *)
 procedure TfrmNewContest.chkShowInactiveChange(Sender: TObject);
 begin
+   ShowMatchingContests;
+end;
+
+(* "UPCOMING CONTESTS FIRST" CHANGED -- NY4I 2026-11-16. The same refill in
+  the other order, so the chosen contest stays chosen, found again by its
+  identity, wherever it now sits; and the choice is remembered for the next
+  opening (GSoonestFirst). *)
+procedure TfrmNewContest.chkSoonestFirstChange(Sender: TObject);
+begin
+   GSoonestFirst := chkSoonestFirst.Checked;
    ShowMatchingContests;
 end;
 

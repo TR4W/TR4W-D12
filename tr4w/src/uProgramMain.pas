@@ -227,6 +227,8 @@ uses
   uCallsigns,
   uSpots,
   uSpotAge,
+  uContestDates,
+  uContestSchedule,
   uClusterTokens,
   uGetScores,
   uStations,

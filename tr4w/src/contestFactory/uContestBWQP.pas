@@ -60,6 +60,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -124,6 +125,16 @@ begin
    (* The contest's human name: WA7BNM, accepted (design Q53,
       docs/Q53_CONTEST_NAMES.csv). *)
    Result := 'Bill Windle QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row BWQP: status candidate; rules
+   https://www.g4foc.org/bill-windle-qso-party/; rules year 2026. CANDIDATE:
+   date from a calendar, not yet checked against the sponsor's rules. *)
+function TContestBWQP.GetSchedule: string;
+begin
+   Result := '2026-03-28 at 00:00 UTC for 24h; ' +
+             '2026-09-26 at 00:00 UTC for 24h';
 end;
 
 function TContestBWQP.GetCabrilloName: string;

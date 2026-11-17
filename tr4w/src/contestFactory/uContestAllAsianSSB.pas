@@ -76,6 +76,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFormerADIFContestIds: TContestIdList; override;
@@ -241,6 +242,16 @@ end;
 function TContestAllAsianSSB.GetDisplayName: string;
 begin
    Result := 'All Asian DX Contest, SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ALL-ASIAN-DX-SSB: status candidate; rules
+   https://www.jarl.org/English/4_Library/A-4-3_Contests/aadx_eng.html;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestAllAsianSSB.GetSchedule: string;
+begin
+   Result := '1st Saturday of September at 00:00 UTC for 48h';
 end;
 
 function TContestAllAsianSSB.GetCabrilloName: string;

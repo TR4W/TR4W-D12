@@ -72,6 +72,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -159,6 +160,18 @@ end;
 function TContestMakrothen.GetDisplayName: string;
 begin
    Result := 'Makrothen RTTY Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row MAKROTHEN-RTTY: status candidate; rules
+   https://www.pl259.org/makrothen/makrothen-rules/; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestMakrothen.GetSchedule: string;
+begin
+   Result := '2nd Saturday of October at 00:00 UTC for 8h; ' +
+             '2nd Saturday of October at 16:00 UTC for 8h; ' +
+             '2nd Saturday of October +1d at 08:00 UTC for 8h';
 end;
 
 function TContestMakrothen.GetCabrilloName: string;

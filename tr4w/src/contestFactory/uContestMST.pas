@@ -81,6 +81,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFormerADIFContestIds: TContestIdList; override;
@@ -141,6 +142,18 @@ end;
 function TContestMST.GetDisplayName: string;
 begin
    Result := 'ICWC Medium Speed Test';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row MST: status candidate; rules
+   https://internationalcwcouncil.org/mst-contest/; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestMST.GetSchedule: string;
+begin
+   Result := 'every Monday at 13:00 UTC for 1h; ' +
+             'every Monday at 19:00 UTC for 1h; ' +
+             'every Tuesday at 03:00 UTC for 1h';
 end;
 
 function TContestMST.GetCabrilloName: string;

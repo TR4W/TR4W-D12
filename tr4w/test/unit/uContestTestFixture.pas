@@ -59,6 +59,7 @@ type
    TContestTestFixture = class(TContestBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -108,6 +109,13 @@ end;
 function TContestTestFixture.GetDisplayName: string;
 begin
    Result := 'TR4W Test Fixture (unit tests only)';
+end;
+
+(* A FIXTURE HAS NO CALENDAR, and says so deliberately -- it is walked by
+   uTestContestSchedule like any registered contest, and is no pending id. *)
+function TContestTestFixture.GetSchedule: string;
+begin
+   Result := 'unscheduled';
 end;
 
 function TContestTestFixture.GetCabrilloName: string;

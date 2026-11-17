@@ -128,6 +128,13 @@ and the "I am in" box is `uNewContest.RenderPrompt`.
   width is measured from the widest name at run time. `SelectedContest` is the
   identity; `ContestName` is still the TOKEN (`ContestTypeSA`) -- it names
   the log file and the `CONTEST` command, so it must not become the caption.
+  **"Upcoming contests first"** (`chkSoonestFirst`, 2026-11-16) is the same
+  refill in `TContestChoices`' second order (`Matching(..., aSoonestFirst)`,
+  `SoonestFirstOrder`, pure). Each dated row gets a date hint
+  (`DisplayText`); the search still reads `Caption`. The tick is a SESSION
+  variable (`GSoonestFirst`), not a setting: the dialog runs before
+  `LoadSettingsForStartup`, so a restart opens it unticked. The list's width
+  is measured WITH the hints.
 - **CATEGORY-POWER is one value**: the Cabrillo summary window writes
   `Settings.Contest.CategoryPower` through `SetCFGCommandValue`, before the
   export runs and on close; a change with QSOs logged calls

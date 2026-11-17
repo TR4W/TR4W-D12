@@ -75,6 +75,7 @@ type
    TContestSouthCarolinaQP = class(TContestStateQSOPartyBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -124,6 +125,15 @@ uses
 function TContestSouthCarolinaQP.GetDisplayName: string;
 begin
    Result := 'South Carolina QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row SC-QSO-PARTY: status verified; rules
+   https://scqso.com/wp-content/uploads/2026/02/SCQPRULES2024_0126.pdf;
+   rules year 2026. *)
+function TContestSouthCarolinaQP.GetSchedule: string;
+begin
+   Result := '4th Saturday of February at 15:00 UTC for 11h';
 end;
 
 function TContestSouthCarolinaQP.GetFriendlyName: string;

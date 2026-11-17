@@ -67,6 +67,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -180,6 +181,16 @@ end;
 function TContestCQM.GetDisplayName: string;
 begin
    Result := 'CQ-M International DX Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row CQ-M: status candidate; rules
+   https://srr.ru/wp-content/uploads/2026/05/Reglament_MS_KV_CQ-M_2026.pdf;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestCQM.GetSchedule: string;
+begin
+   Result := '2nd Saturday of May at 12:00 UTC for 24h';
 end;
 
 function TContestCQM.GetCabrilloName: string;

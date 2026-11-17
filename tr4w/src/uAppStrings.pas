@@ -855,6 +855,17 @@ resourcestring
      SContestInactive, and still cannot be chosen for a new contest. *)
    SNewContestShowInactive = 'Show inactive contests';
 
+   (* THE BOX THAT ORDERS THE NEW CONTEST LIST BY DATE -- NY4I 2026-11-16:
+     "show me the contests coming up soonest". Ticked, a contest on the air
+     now lists first, then the soonest to start; contests with no date follow
+     alphabetically. Unticked (the default) the list is alphabetical. *)
+   SNewContestSoonestFirst = 'Upcoming contests first';
+
+   (* THE HINT AFTER A CONTEST THAT IS ON THE AIR NOW, in that ordering. The
+     other hints are a date and a UTC time in ISO form, which need no
+     translation. *)
+   SNewContestRunningNow = 'running now';
+
    (* THE "LAST CONTEST" BUTTON'S SECOND LINE -- NY4I 2026-10-19: "make the
      contest and year more obvious". %0:s is the contest's display name (a
      sponsor's proper name, not translated), %1:d the year it was run. Reorder

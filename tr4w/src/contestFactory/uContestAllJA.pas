@@ -68,6 +68,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -123,6 +124,16 @@ begin
    (* The contest's human name: NY4I, the DXLog name (design Q53,
       docs/Q53_CONTEST_NAMES.csv). *)
    Result := 'All JA Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ALL JA: status candidate; rules
+   https://www.jarl.org/Japanese/1_Tanoshimo/1-1_Contest/allja_rules.html;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestAllJA.GetSchedule: string;
+begin
+   Result := '4th Saturday of April at 12:00 UTC for 24h';
 end;
 
 function TContestAllJA.GetCabrilloName: string;

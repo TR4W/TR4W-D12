@@ -118,6 +118,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. *)
       function GetHostState: string; override;
@@ -187,6 +188,15 @@ uses
 function TContestGeorgiaQP.GetDisplayName: string;
 begin
    Result := 'Georgia QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row GA-QSO-PARTY: status verified; rules https://gaqsoparty.com/; rules
+   year 2026. *)
+function TContestGeorgiaQP.GetSchedule: string;
+begin
+   Result := '2nd full weekend of April at 18:00 UTC for 10h; ' +
+             '2nd full weekend of April +1d at 14:00 UTC for 10h';
 end;
 
 function TContestGeorgiaQP.GetHostState: string;

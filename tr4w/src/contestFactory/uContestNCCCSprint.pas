@@ -62,6 +62,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -139,6 +140,23 @@ end;
 function TContestNCCCSprint.GetDisplayName: string;
 begin
    Result := 'NCCC Sprint';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NCCC-SPRINT: status candidate; rules
+   https://www.ncccsprint.com/rules.html; rules year 2026. CANDIDATE: date
+   from a calendar, not yet checked against the sponsor's rules. *)
+function TContestNCCCSprint.GetSchedule: string;
+begin
+   Result := '2026-01-16 at 02:30 UTC for 30m; ' +
+             '2026-01-23 at 02:30 UTC for 30m; ' +
+             '2026-01-30 at 02:30 UTC for 30m; ' +
+             '2026-02-06 at 02:30 UTC for 30m; ' +
+             '2026-08-14 at 02:30 UTC for 30m; ' +
+             '2026-08-21 at 02:30 UTC for 30m; ' +
+             '2026-08-28 at 02:30 UTC for 30m; ' +
+             '2026-09-04 at 02:30 UTC for 30m; ' +
+             '2026-09-11 at 02:30 UTC for 30m';
 end;
 
 function TContestNCCCSprint.GetCabrilloName: string;

@@ -61,6 +61,7 @@ type
    TContestKentuckyQP = class(TContestStateQSOPartyBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -108,6 +109,14 @@ uses
 function TContestKentuckyQP.GetDisplayName: string;
 begin
    Result := 'Kentucky QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row KY-QSO-PARTY: status verified; rules https://kyqsoparty.org/; rules
+   year 2027. *)
+function TContestKentuckyQP.GetSchedule: string;
+begin
+   Result := '1st Saturday of June at 13:00 UTC for 12h';
 end;
 
 function TContestKentuckyQP.GetFriendlyName: string;

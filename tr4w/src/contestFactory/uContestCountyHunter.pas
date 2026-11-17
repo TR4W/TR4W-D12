@@ -74,6 +74,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -125,6 +126,14 @@ end;
 function TContestCountyHunter.GetDisplayName: string;
 begin
    Result := 'General County Hunting Log';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row COUNTY HUNTER: status unscheduled; rules none recorded; rules year
+   none recorded. *)
+function TContestCountyHunter.GetSchedule: string;
+begin
+   Result := 'unscheduled';
 end;
 
 function TContestCountyHunter.GetCabrilloName: string;

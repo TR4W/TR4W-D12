@@ -61,6 +61,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -145,6 +146,16 @@ end;
 function TContestBaltic.GetDisplayName: string;
 begin
    Result := 'Baltic Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row BALTIC: status candidate; rules
+   https://www.lrsf.lt/en/balticcontestrules/; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestBaltic.GetSchedule: string;
+begin
+   Result := '3rd Saturday of May at 21:00 UTC for 5h';
 end;
 
 function TContestBaltic.GetCabrilloName: string;

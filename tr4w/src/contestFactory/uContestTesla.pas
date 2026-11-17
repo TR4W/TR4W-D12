@@ -68,6 +68,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -174,6 +175,16 @@ end;
 function TContestTesla.GetDisplayName: string;
 begin
    Result := 'TESLA Memorial HF CW Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row HF-TESLA: status candidate; rules
+   https://www.radiosport.yu1srs.org.rs/HFTeslaMemorial/index.php/rules;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestTesla.GetSchedule: string;
+begin
+   Result := '2nd Saturday of March at 18:00 UTC for 12h';
 end;
 
 function TContestTesla.GetCabrilloName: string;

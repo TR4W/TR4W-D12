@@ -57,6 +57,7 @@ type
    TContestArkansasQP = class(TContestStateQSOPartyBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -101,6 +102,15 @@ uses
 function TContestArkansasQP.GetDisplayName: string;
 begin
    Result := 'Arkansas QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row AR-QSO-PARTY: status candidate; rules
+   https://arkqp.com/arkansas-qso-party-rules/; rules year 2026. CANDIDATE:
+   date from a calendar, not yet checked against the sponsor's rules. *)
+function TContestArkansasQP.GetSchedule: string;
+begin
+   Result := '3rd Saturday of May at 14:00 UTC for 12h';
 end;
 
 function TContestArkansasQP.GetFriendlyName: string;

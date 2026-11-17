@@ -134,6 +134,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. Stated; the
          base makes it abstract so it is never an accident. *)
@@ -260,6 +261,15 @@ end;
 function TContestDelawareQP.GetDisplayName: string;
 begin
    Result := 'Delaware QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row DELAWARE QSO PARTY: status candidate; rules
+   https://www.fsarc.org/qsoparty/qsohome.htm; rules year 2026. CANDIDATE:
+   date from a calendar, not yet checked against the sponsor's rules. *)
+function TContestDelawareQP.GetSchedule: string;
+begin
+   Result := '1st full weekend of May at 17:00 UTC for 31h';
 end;
 
 function TContestDelawareQP.GetHostState: string;

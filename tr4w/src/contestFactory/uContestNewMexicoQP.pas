@@ -218,6 +218,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. *)
       function GetHostState: string; override;
@@ -376,6 +377,16 @@ end;
 function TContestNewMexicoQP.GetDisplayName: string;
 begin
    Result := 'New Mexico QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NM-QSO-PARTY: status candidate; rules
+   https://www.newmexicoqsoparty.org/wp/details/rules/; rules year 2026.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestNewMexicoQP.GetSchedule: string;
+begin
+   Result := '2nd Saturday of April at 14:00 UTC for 12h';
 end;
 
 function TContestNewMexicoQP.GetHostState: string;

@@ -62,6 +62,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -151,6 +152,16 @@ end;
 function TContestNAQPSSB.GetDisplayName: string;
 begin
    Result := 'North American QSO Party, SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NAQP-SSB: status candidate; rules none recorded; rules year none
+   recorded. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestNAQPSSB.GetSchedule: string;
+begin
+   Result := '3rd full weekend of January at 18:00 UTC for 12h; ' +
+             '3rd full weekend of August at 18:00 UTC for 12h';
 end;
 
 function TContestNAQPSSB.GetCabrilloName: string;

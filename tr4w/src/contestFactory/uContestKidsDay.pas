@@ -68,6 +68,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -118,6 +119,18 @@ end;
 function TContestKidsDay.GetDisplayName: string;
 begin
    Result := 'ARRL Kids Day';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row KIDS DAY: status candidate; rules none recorded; rules year none
+   recorded. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. DATE ONLY: the times are not known, so each clause is a
+   whole UTC day (NY4I's intake text: "first Saturday in January, and the
+   third Saturday in June"). *)
+function TContestKidsDay.GetSchedule: string;
+begin
+   Result := '1st Saturday of January; ' +
+             '3rd Saturday of June';
 end;
 
 function TContestKidsDay.GetCabrilloName: string;

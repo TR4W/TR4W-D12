@@ -81,6 +81,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -243,6 +244,14 @@ function TContestPOTA.GetDisplayName: string;
 begin
    (* The human name, the row's FriendlyName (M9a). *)
    Result := 'Parks on the Air(r) Logging';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row POTA: status unscheduled; rules none recorded; rules year none
+   recorded. *)
+function TContestPOTA.GetSchedule: string;
+begin
+   Result := 'unscheduled';
 end;
 
 function TContestPOTA.GetCabrilloName: string;

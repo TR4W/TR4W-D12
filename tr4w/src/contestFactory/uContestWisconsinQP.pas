@@ -94,6 +94,7 @@ type
          X.GetHostState callable. Callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES.
 
@@ -182,6 +183,15 @@ uses
 function TContestWisconsinQP.GetDisplayName: string;
 begin
    Result := 'Wisconsin QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row WISCONSIN QSO PARTY: status candidate; rules
+   https://www.warac.org/wqp/wiqp_rules.htm; rules year 2026. CANDIDATE:
+   date from a calendar, not yet checked against the sponsor's rules. *)
+function TContestWisconsinQP.GetSchedule: string;
+begin
+   Result := '3rd Sunday of March at 18:00 UTC for 7h';
 end;
 
 function TContestWisconsinQP.GetHostState: string;

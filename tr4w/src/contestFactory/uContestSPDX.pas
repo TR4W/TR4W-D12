@@ -60,6 +60,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -128,6 +129,16 @@ end;
 function TContestSPDX.GetDisplayName: string;
 begin
    Result := 'SP DX Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row SP DX: status candidate; rules
+   https://spdxcontest.pzk.org.pl/2026/rules.php; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestSPDX.GetSchedule: string;
+begin
+   Result := '1st Saturday of April at 15:00 UTC for 24h';
 end;
 
 function TContestSPDX.GetCabrilloName: string;

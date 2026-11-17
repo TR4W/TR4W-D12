@@ -92,6 +92,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -220,6 +221,16 @@ end;
 function TContestPACC.GetDisplayName: string;
 begin
    Result := 'Dutch PACC Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row PACC: status candidate; rules
+   https://veron.nl/vereniging/commissies-en-werkgroepen/traffic-bureau/hf-contesten/pacc-rules/;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestPACC.GetSchedule: string;
+begin
+   Result := '2nd Saturday of February at 12:00 UTC for 24h';
 end;
 
 function TContestPACC.GetCabrilloName: string;

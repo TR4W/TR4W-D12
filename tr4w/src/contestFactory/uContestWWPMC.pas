@@ -62,6 +62,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -141,6 +142,16 @@ end;
 function TContestWWPMC.GetDisplayName: string;
 begin
    Result := 'WW PMC Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row WW PMC: status candidate; rules
+   https://www.s59dcd.si/index.php/sl/ww-pmc/ww-pmc-contest-rules; rules
+   year 2026/2027. CANDIDATE: date from a calendar, not yet checked against
+   the sponsor's rules. *)
+function TContestWWPMC.GetSchedule: string;
+begin
+   Result := '1st Saturday of January at 12:00 UTC for 24h';
 end;
 
 function TContestWWPMC.GetCabrilloName: string;

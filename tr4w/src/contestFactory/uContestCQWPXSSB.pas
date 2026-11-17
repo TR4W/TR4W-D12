@@ -48,6 +48,7 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
@@ -75,6 +76,14 @@ uses
 function TContestCQWPXSSB.GetDisplayName: string;
 begin
    Result := 'CQ WW WPX Contest, SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row CQ-WPX-SSB: status verified; rules none recorded; rules year none
+   recorded. *)
+function TContestCQWPXSSB.GetSchedule: string;
+begin
+   Result := 'last full weekend of March at 00:00 UTC for 48h';
 end;
 
 (* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its

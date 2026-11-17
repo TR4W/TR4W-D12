@@ -75,6 +75,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -277,6 +278,19 @@ end;
 function TContestRegion1FieldDay.GetDisplayName: string;
 begin
    Result := 'REGION 1 FIELD DAY';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row REGION 1 FIELD DAY (CW running): status candidate; rules none
+   recorded; rules year none recorded. CSV row REGION 1 FIELD DAY (SSB
+   running): status candidate; rules none recorded; rules year none
+   recorded. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. One class covers both runnings, so it states both
+   clauses. *)
+function TContestRegion1FieldDay.GetSchedule: string;
+begin
+   Result := '1st full weekend of June at 15:00 UTC for 24h; ' +
+             '1st full weekend of September at 13:00 UTC for 24h';
 end;
 
 function TContestRegion1FieldDay.GetCabrilloName: string;

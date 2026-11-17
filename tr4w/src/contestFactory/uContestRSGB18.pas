@@ -71,6 +71,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -170,6 +171,17 @@ begin
    (* The contest's human name: WA7BNM, accepted (design Q53,
       docs/Q53_CONTEST_NAMES.csv). *)
    Result := 'RSGB 1.8 MHz Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row RSGB-160: status candidate; rules
+   https://www.rsgbcc.org/hf/rules/2026/r160m.shtml; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestRSGB18.GetSchedule: string;
+begin
+   Result := '2nd Saturday of February at 20:00 UTC for 3h; ' +
+             '3rd Saturday of November at 20:00 UTC for 3h';
 end;
 
 function TContestRSGB18.GetCabrilloName: string;

@@ -543,6 +543,10 @@ uses
    uTestLogCapture in 'uTestLogCapture.pas',
    uTestRegisteredContests in 'uTestRegisteredContests.pas',
    uTestContestStatesItsRules in 'uTestContestStatesItsRules.pas',
+   uContestDates in '..\..\src\uContestDates.pas',
+   uTestContestDates in 'uTestContestDates.pas',
+   uContestSchedule in '..\..\src\uContestSchedule.pas',
+   uTestContestSchedule in 'uTestContestSchedule.pas',
    (* A CONTEST REGISTERED BY ITS STRING ID, AND ONLY HERE (Q108 S3). The
       fixture has no ContestType member; it must never be in tr4w.lpr --
       Lint-ContestUnitsLinked fails the build if it is. *)
@@ -1128,6 +1132,8 @@ begin
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
    RegisterSuite(TContestStatesItsRulesTests.Create('ContestStatesItsRules'));
+   RegisterSuite(TContestDatesTests.Create('ContestDates'));
+   RegisterSuite(TContestScheduleTests.Create('ContestSchedule'));
    RegisterSuite(TContestByIdTests.Create('ContestById'));
    RegisterSuite(TContestUITests.Create('ContestUI'));
    RegisterSuite(TContestIdentityPinTests.Create('ContestIdentityPin'));

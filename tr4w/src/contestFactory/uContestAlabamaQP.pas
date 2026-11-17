@@ -63,6 +63,7 @@ type
       function CountsDXMultiplier: boolean;
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -109,6 +110,15 @@ uses
 function TContestAlabamaQP.GetDisplayName: string;
 begin
    Result := 'Alabama QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row AL-QSO-PARTY: status candidate; rules
+   https://alabamacontestgroup.org/aqp/rules/; rules year 2026. CANDIDATE:
+   date from a calendar, not yet checked against the sponsor's rules. *)
+function TContestAlabamaQP.GetSchedule: string;
+begin
+   Result := '4th Saturday of July at 15:00 UTC for 12h';
 end;
 
 function TContestAlabamaQP.GetFriendlyName: string;

@@ -81,6 +81,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -207,6 +208,20 @@ end;
 function TContestARRL160.GetDisplayName: string;
 begin
    Result := 'ARRL 160-Meter Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ARRL-160: status candidate; rules none recorded; rules year none
+   recorded. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules.
+   CHECK: a full weekend anchors SATURDAY, so this reads Sat 2200Z to Mon
+   1600Z. The 42h fits Fri 2200Z to Sun 1600Z, the period the ARRL is
+   believed to use -- the Friday BEFORE the first full weekend (Nov 30 in
+   2029), which needs a -1d offset the grammar does not have. Kept as the
+   intake cell on the coordinator's instruction. *)
+function TContestARRL160.GetSchedule: string;
+begin
+   Result := 'First full weekend in December at 22:00 UTC for 42h';
 end;
 
 function TContestARRL160.GetCabrilloName: string;

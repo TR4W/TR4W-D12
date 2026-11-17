@@ -116,7 +116,7 @@ object frmNewContest: TfrmNewContest
       end
       object lstContests: TListBox
         Left = 8
-        Height = 355
+        Height = 328
         Top = 62
         Width = 252
         Align = alClient
@@ -127,6 +127,18 @@ object frmNewContest: TfrmNewContest
         TabOrder = 1
         OnSelectionChange = lstContestsSelectionChange
       end
+      object chkSoonestFirst: TCheckBox
+        Left = 8
+        Height = 23
+        Top = 394
+        Width = 252
+        Align = alBottom
+        BorderSpacing.Left = 8
+        BorderSpacing.Bottom = 4
+        Caption = '(assigned at run time)'
+        TabOrder = 2
+        OnChange = chkSoonestFirstChange
+      end
       object chkShowInactive: TCheckBox
         Left = 8
         Height = 23
@@ -136,7 +148,7 @@ object frmNewContest: TfrmNewContest
         BorderSpacing.Left = 8
         BorderSpacing.Bottom = 4
         Caption = 'Show inactive contests'
-        TabOrder = 2
+        TabOrder = 3
         OnChange = chkShowInactiveChange
       end
     end

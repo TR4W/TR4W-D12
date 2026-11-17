@@ -64,6 +64,7 @@ type
    TContestNewJerseyQP = class(TContestStateQSOPartyBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -108,6 +109,16 @@ uses
 function TContestNewJerseyQP.GetDisplayName: string;
 begin
    Result := 'New Jersey QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NJ-QSO-PARTY: status candidate; rules
+   https://sites.google.com/view/k2td-bcrc/nj-qp; rules year 2026.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestNewJerseyQP.GetSchedule: string;
+begin
+   Result := '2nd Saturday of September at 14:00 UTC for 12h';
 end;
 
 function TContestNewJerseyQP.GetFriendlyName: string;

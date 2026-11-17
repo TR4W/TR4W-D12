@@ -21,6 +21,7 @@ interface
 
 uses
    SysUtils, Classes, Forms, Controls, Graphics,
+   DateUtils,         (* EncodeDateTime -- the ordering tests' fixed "now" *)
    StdCtrls,          (* TScrollStyle -- the file grid scrolls when it cannot grow *)
    Grids,             (* goRowSelect, goCellHints -- the file grid's options *)
    LCLType,           (* VK_DOWN *)
@@ -44,7 +45,14 @@ type
       procedure Search(aForm: TfrmNewContest; const aText: string);
       procedure ChooseRow(aForm: TfrmNewContest; aRow: integer);
       procedure ShowInactive(aForm: TfrmNewContest; aShow: boolean);
+      procedure SoonestFirst(aForm: TfrmNewContest; aOn: boolean);
    protected
+      (* NY4I 2026-11-16: upcoming contests first. *)
+      procedure Test_SoonestFirstOrdersAMixedList;
+      procedure Test_SoonestFirstTiesKeepTheirOrder;
+      procedure Test_TheHintIsDisplayOnly;
+      procedure Test_TheUpcomingBoxReordersAndKeepsTheChoice;
+      procedure Test_TheUpcomingBoxIsRemembered;
       procedure Test_TheCaptionFunctionNamesTheBuild;
       procedure Test_TheShownFormNamesTheBuild;
       (* Issue 228: File > Open Log shows this dialog in its own mode. *)
@@ -807,6 +815,7 @@ begin
       (* The .lfm's placeholder IS the English text, so blank it first: what
         is read back after OnShow must have been written by OnShow. *)
       frm.chkShowInactive.Caption := '';
+      frm.chkSoonestFirst.Caption := '';
       if Assigned(frm.OnShow) then
          begin
          frm.OnShow(frm);
@@ -820,6 +829,9 @@ begin
       CheckEquals(SNewContestShowInactive, frm.chkShowInactive.Caption,
                   'after OnShow the show-inactive box is captioned from the ' +
                   'resourcestring, not the .lfm');
+      CheckEquals(SNewContestSoonestFirst, frm.chkSoonestFirst.Caption,
+                  'after OnShow the upcoming-first box is captioned from the ' +
+                  'resourcestring; the .lfm holds only a placeholder');
    finally
       frm.Free;
    end;
@@ -1744,8 +1756,258 @@ begin
    end;
 end;
 
+(* ----------------------------------------------------------------------- *)
+(* UPCOMING CONTESTS FIRST -- NY4I 2026-11-16 *)
+
+(* The "now" every ordering test resolves against: Wednesday 2027-03-10,
+  12:00 UTC. Explicit, so no test depends on the clock. *)
+function SoonestNow: TDateTime;
+begin
+   Result := EncodeDateTime(2027, 3, 10, 12, 0, 0, 0);
+end;
+
+procedure TNewContestFormTests.SoonestFirst(aForm: TfrmNewContest; aOn: boolean);
+begin
+   aForm.chkSoonestFirst.Checked := aOn;
+   CheckTrue(Assigned(aForm.chkSoonestFirst.OnChange),
+             'uNewContestForm.lfm must wire the upcoming-first box''s OnChange');
+   if Assigned(aForm.chkSoonestFirst.OnChange) then
+      begin
+      aForm.chkSoonestFirst.OnChange(aForm.chkSoonestFirst);
+      end;
+end;
+
+procedure TNewContestFormTests.Test_SoonestFirstOrdersAMixedList;
+var
+   order: TContestChoiceIndexes;
+   hints, errors: TContestChoiceTexts;
+   i: integer;
+begin
+   BeginTest('Test_SoonestFirstOrdersAMixedList');
+
+   (* In the list's alphabetical order, as TContestChoices passes them. *)
+   order := SoonestFirstOrder(
+      ['',                                     (* 0 nothing stated yet *)
+       '2027-03-20 at 00:00 UTC for 24h',      (* 1 in ten days *)
+       '2027-03-10 at 00:00 UTC for 48h',      (* 2 on the air now *)
+       'unscheduled',                          (* 3 no calendar *)
+       '2027-03-15 at 12:00 UTC for 12h',      (* 4 in five days *)
+       '2026-01-01 at 00:00 UTC for 24h',      (* 5 ran out of dates *)
+       'every blursday',                       (* 6 does not parse *)
+       '2027-03-11'],                          (* 7 inactive *)
+      [True, True, True, True, True, True, True, False],
+      SoonestNow, hints, errors);
+
+   CheckEquals(8, Length(order), 'every entry is ordered');
+   CheckEquals(2, order[0], 'the contest on the air is first');
+   CheckEquals(4, order[1], 'then the soonest to start');
+   CheckEquals(1, order[2], 'then the next');
+   (* The undated tail keeps the alphabetical input order, the inactive
+      entry included, so it stays last as it always has. *)
+   CheckEquals(0, order[3], 'undated: nothing stated');
+   CheckEquals(3, order[4], 'undated: unscheduled');
+   CheckEquals(5, order[5], 'undated: run out of dates');
+   CheckEquals(6, order[6], 'undated: does not parse');
+   CheckEquals(7, order[7], 'undated: inactive, last');
+
+   CheckEquals(SNewContestRunningNow, hints[2], 'a running contest says so');
+   CheckEquals('2027-03-15 12:00 UTC', hints[4], 'a timed start, ISO, in UTC');
+   CheckEquals('2027-03-20 00:00 UTC', hints[1], 'midnight is a stated start');
+   for i := 0 to High(hints) do
+      begin
+      if (i <> 1) and (i <> 2) and (i <> 4) then
+         begin
+         CheckEquals('', hints[i], 'an undated entry has no hint: ' + IntToStr(i));
+         end;
+      end;
+
+   for i := 0 to High(errors) do
+      begin
+      if i = 6 then
+         begin
+         CheckTrue(errors[i] <> '', 'a schedule that does not parse is reported');
+         end
+      else
+         begin
+         CheckEquals('', errors[i],
+                     'nothing stated, unscheduled and run out are not errors: ' +
+                     IntToStr(i));
+         end;
+      end;
+end;
+
+procedure TNewContestFormTests.Test_SoonestFirstTiesKeepTheirOrder;
+var
+   order: TContestChoiceIndexes;
+   hints, errors: TContestChoiceTexts;
+begin
+   BeginTest('Test_SoonestFirstTiesKeepTheirOrder');
+
+   order := SoonestFirstOrder(
+      ['2nd Saturday of March at 18:00 UTC for 24h',
+       '2nd Saturday of March at 18:00 UTC for 24h',
+       '2027-03-12',
+       '2nd Saturday of March at 18:00 UTC for 24h'],
+      [True, True, True, True],
+      SoonestNow, hints, errors);
+
+   CheckEquals(2, order[0], 'the date-only Friday comes before the Saturday');
+   CheckEquals(0, order[1], 'equal starts keep their alphabetical order');
+   CheckEquals(1, order[2], 'equal starts keep their alphabetical order');
+   CheckEquals(3, order[3], 'equal starts keep their alphabetical order');
+   CheckEquals('2027-03-12', hints[2], 'a date-only clause shows no time');
+   CheckEquals('2027-03-13 18:00 UTC', hints[0], 'the 2nd Saturday of March 2027');
+
+   order := SoonestFirstOrder([], [], SoonestNow, hints, errors);
+   CheckEquals(0, Length(order), 'an empty list orders to nothing');
+end;
+
+procedure TNewContestFormTests.Test_TheHintIsDisplayOnly;
+var
+   choices: TContestChoices;
+   i: integer;
+begin
+   BeginTest('Test_TheHintIsDisplayOnly');
+
+   CheckEquals('X', ContestChoiceDisplay('X', ''), 'no hint, the caption alone');
+   CheckEquals('X   (2027-03-12)', ContestChoiceDisplay('X', '2027-03-12'),
+               'a hint follows the caption in brackets');
+   CheckEquals(SNewContestRunningNow,
+               ContestDateHint(SoonestNow, True, True), 'running wins over the date');
+
+   choices := TContestChoices.Create(SoonestNow);
+   try
+      for i := 0 to choices.Count - 1 do
+         begin
+         CheckEquals(choices.Caption[i], choices.DisplayText(i, False),
+                     'unticked, a row is its caption');
+         end;
+      (* The search reads the caption, never the hint: no contest's name
+         holds ':00 UTC', which nearly every hint does. *)
+      CheckEquals(0, Length(choices.Matching(':00 UTC', False, True)),
+                  'the search does not match the date hint');
+      CheckEquals(Length(choices.Matching('', False)),
+                  Length(choices.Matching('', False, True)),
+                  'the upcoming order keeps the same rows');
+   finally
+      choices.Free;
+   end;
+end;
+
+procedure TNewContestFormTests.Test_TheUpcomingBoxReordersAndKeepsTheChoice;
+var
+   frm: TfrmNewContest;
+   alphabetical: TStringList;
+   chosen: TContestHandle;
+   chosenName: string;
+   firstUndated, i, walk: integer;
+   text: string;
+begin
+   BeginTest('Test_TheUpcomingBoxReordersAndKeepsTheChoice');
+
+   OnContestChanged := CountContestChange;
+   frm := NewForm;
+   alphabetical := TStringList.Create;
+   try
+      CheckFalse(frm.chkSoonestFirst.Checked, 'the box starts unticked');
+      alphabetical.Assign(frm.lstContests.Items);
+
+      ChooseRow(frm, 1);
+      chosen := frm.SelectedContest;
+      chosenName := frm.ContestName;
+      GContestChanges := 0;
+
+      SoonestFirst(frm, True);
+      CheckEquals(alphabetical.Count, frm.lstContests.Items.Count,
+                  'the same contests, in another order');
+      CheckTrue(frm.SelectedContest = chosen, 'ticking keeps the chosen contest');
+      CheckEquals(chosenName, frm.ContestName, 'and the same contest id');
+      CheckEquals(0, GContestChanges, 'and its prompts are not cleared');
+
+      (* DATED ROWS FIRST, then the undated ones, alphabetical. *)
+      CheckTrue(Pos('   (', frm.lstContests.Items[0]) > 0,
+                'the first row is a dated contest');
+      firstUndated := -1;
+      for i := 0 to frm.lstContests.Items.Count - 1 do
+         begin
+         text := frm.lstContests.Items[i];
+         if Pos('   (', text) = 0 then
+            begin
+            if firstUndated < 0 then
+               begin
+               firstUndated := i;
+               end;
+            end
+         else
+            begin
+            CheckTrue(firstUndated < 0,
+                      'no dated row after an undated one: ' + text);
+            end;
+         end;
+      if firstUndated >= 0 then
+         begin
+         walk := 0;
+         for i := firstUndated to frm.lstContests.Items.Count - 1 do
+            begin
+            while (walk < alphabetical.Count) and
+                  (alphabetical[walk] <> frm.lstContests.Items[i]) do
+               begin
+               inc(walk);
+               end;
+            CheckTrue(walk < alphabetical.Count,
+                      'the undated rows keep the alphabetical order: ' +
+                      frm.lstContests.Items[i]);
+            end;
+         end;
+
+      SoonestFirst(frm, False);
+      CheckTrue(frm.SelectedContest = chosen, 'un-ticking keeps it too');
+      CheckEquals(1, frm.lstContests.ItemIndex, 'on its alphabetical row');
+      for i := 0 to alphabetical.Count - 1 do
+         begin
+         CheckEquals(alphabetical[i], frm.lstContests.Items[i],
+                     'un-ticked, the list is alphabetical again with no hints');
+         end;
+   finally
+      OnContestChanged := nil;
+      alphabetical.Free;
+      frm.Free;
+   end;
+end;
+
+procedure TNewContestFormTests.Test_TheUpcomingBoxIsRemembered;
+var
+   frm: TfrmNewContest;
+begin
+   BeginTest('Test_TheUpcomingBoxIsRemembered');
+
+   frm := NewForm;
+   try
+      SoonestFirst(frm, True);
+   finally
+      frm.Free;
+   end;
+
+   frm := NewForm;
+   try
+      CheckTrue(frm.chkSoonestFirst.Checked, 'the next opening remembers the tick');
+      CheckTrue(Pos('   (', frm.lstContests.Items[0]) > 0,
+                'and opens in the upcoming order');
+   finally
+      (* Back to the default whatever happened, so no later test inherits
+         the order: the remembered tick is process-wide. *)
+      SoonestFirst(frm, False);
+      frm.Free;
+   end;
+end;
+
 procedure TNewContestFormTests.RunAllTests;
 begin
+   Test_SoonestFirstOrdersAMixedList;
+   Test_SoonestFirstTiesKeepTheirOrder;
+   Test_TheHintIsDisplayOnly;
+   Test_TheUpcomingBoxReordersAndKeepsTheChoice;
+   Test_TheUpcomingBoxIsRemembered;
    Test_TheCaptionFunctionNamesTheBuild;
    Test_TheShownFormNamesTheBuild;
    Test_TheModeOnlyChangesTheTitle;

@@ -179,6 +179,7 @@ type
          identity, and Test_MovedRowValuesStillMatchTheArray holds the rest
          to the row. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -542,6 +543,15 @@ end;
 function TContestIN7QPNE.GetDisplayName: string;
 begin
    Result := 'Combined Indiana, 7th Call Area, New England and Delaware QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row IN7QPNE: status candidate; rules
+   https://qsoparty.eqth.net/index.html; rules year 2026. CANDIDATE: date
+   from a calendar, not yet checked against the sponsor's rules. *)
+function TContestIN7QPNE.GetSchedule: string;
+begin
+   Result := '1st full weekend of May at 13:00 UTC for 35h';
 end;
 
 function TContestIN7QPNE.GetCabrilloName: string;

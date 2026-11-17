@@ -89,6 +89,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -217,6 +218,18 @@ begin
    (* The contest's human name: WA7BNM, accepted (design Q53,
       docs/Q53_CONTEST_NAMES.csv). *)
    Result := 'IRTS 80m Counties Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row IRTS: status candidate; rules
+   https://www.irts.ie/cgi/st.cgi?r_hfcrules.html; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestIRTS.GetSchedule: string;
+begin
+   Result := '1st Thursday of January at 17:00 UTC for 1h; ' +
+             '3rd Wednesday of March at 20:00 UTC for 1h; ' +
+             '3rd Wednesday of October at 20:00 UTC for 1h';
 end;
 
 function TContestIRTS.GetCabrilloName: string;

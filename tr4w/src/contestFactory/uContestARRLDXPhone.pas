@@ -57,6 +57,7 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
@@ -83,6 +84,15 @@ uses
 function TContestARRLDXPhone.GetDisplayName: string;
 begin
    Result := 'ARRL Inter. DX Contest, SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ARRL-DX-SSB: status candidate; rules none recorded; rules year none
+   recorded. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestARRLDXPhone.GetSchedule: string;
+begin
+   Result := '1st full weekend of March at 00:00 UTC for 48h';
 end;
 
 (* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its

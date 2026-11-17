@@ -67,6 +67,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -161,6 +162,16 @@ end;
 function TContestDARC10M.GetDisplayName: string;
 begin
    Result := 'DARC 10-Meter Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row DARC-10M: status candidate; rules
+   https://www.darc.de/der-club/referate/conteste/darc-10m-contest/rules/;
+   rules year 2026/2027. CANDIDATE: date from a calendar, not yet checked
+   against the sponsor's rules. *)
+function TContestDARC10M.GetSchedule: string;
+begin
+   Result := '2nd Sunday of January at 09:00 UTC for 2h';
 end;
 
 function TContestDARC10M.GetCabrilloName: string;

@@ -69,6 +69,7 @@ type
    TContestKansasQP = class(TContestStateQSOPartyBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -112,6 +113,17 @@ uses
 function TContestKansasQP.GetDisplayName: string;
 begin
    Result := 'Kansas QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row KS-QSO-PARTY: status candidate; rules
+   https://www.ksqsoparty.org/rules/KSQPRules2026.pdf?1=; rules year 2026.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestKansasQP.GetSchedule: string;
+begin
+   Result := 'last full weekend of August at 14:00 UTC for 12h; ' +
+             'last full weekend of August +1d at 14:00 UTC for 6h';
 end;
 
 function TContestKansasQP.GetFriendlyName: string;

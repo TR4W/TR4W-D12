@@ -68,6 +68,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -127,6 +128,14 @@ end;
 function TContestGridLoc.GetDisplayName: string;
 begin
    Result := 'GRID LOC';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row GRID LOC: status unscheduled; rules none recorded; rules year none
+   recorded. *)
+function TContestGridLoc.GetSchedule: string;
+begin
+   Result := 'unscheduled';
 end;
 
 function TContestGridLoc.GetCabrilloName: string;

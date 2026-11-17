@@ -63,6 +63,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -261,6 +262,16 @@ begin
    (* The contest's human name: WA7BNM, accepted (design Q53,
       docs/Q53_CONTEST_NAMES.csv). *)
    Result := 'UA1DZ Memorial Cup';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ALRS-UA1DZ-CUP: status candidate; rules
+   https://ua1dz.ru/articles.php?article_id=83; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestALRSUA1DZCup.GetSchedule: string;
+begin
+   Result := '4th Sunday of April at 13:00 UTC for 6h';
 end;
 
 function TContestALRSUA1DZCup.GetCabrilloName: string;

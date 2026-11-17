@@ -150,6 +150,7 @@ type
          X.GetHostState callable. Callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES.
 
@@ -259,6 +260,15 @@ uses
 function TContestWashingtonSalmonRun.GetDisplayName: string;
 begin
    Result := 'Washington State Salmon Run';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row SALMON RUN: status verified; rules
+   https://salmonrun.wwdxc.org/rules/; rules year 2026. *)
+function TContestWashingtonSalmonRun.GetSchedule: string;
+begin
+   Result := '3rd full weekend of September at 16:00 UTC for 15h; ' +
+             '3rd full weekend of September +1d at 16:00 UTC for 8h';
 end;
 
 function TContestWashingtonSalmonRun.GetHostState: string;

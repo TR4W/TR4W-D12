@@ -74,6 +74,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -172,6 +173,19 @@ end;
 function TContestStewPerry.GetDisplayName: string;
 begin
    Result := 'Stew Perry Topband Challenge';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row STEW-PERRY: status candidate; rules
+   https://www.kkn.net/stew/stew_rules.html; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestStewPerry.GetSchedule: string;
+begin
+   Result := '2nd Saturday of March at 15:00 UTC for 24h; ' +
+             '3rd Saturday of June at 15:00 UTC for 24h; ' +
+             '3rd Saturday of October at 15:00 UTC for 24h; ' +
+             '4th Saturday of December at 15:00 UTC for 24h';
 end;
 
 function TContestStewPerry.GetCabrilloName: string;

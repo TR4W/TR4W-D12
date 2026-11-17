@@ -48,6 +48,7 @@ type
    TContestNRAUBalticCW = class(TContestNRAUBalticBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -62,6 +63,15 @@ uses
 function TContestNRAUBalticCW.GetDisplayName: string;
 begin
    Result := 'NRAU-Baltic Contest, CW';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NRAU-BALTIC-CW: status candidate; rules
+   https://www.nraubaltic.eu/rules; rules year 2026/2027. CANDIDATE: date
+   from a calendar, not yet checked against the sponsor's rules. *)
+function TContestNRAUBalticCW.GetSchedule: string;
+begin
+   Result := '2nd Sunday of January at 08:30 UTC for 2h';
 end;
 
 function TContestNRAUBalticCW.GetCabrilloName: string;

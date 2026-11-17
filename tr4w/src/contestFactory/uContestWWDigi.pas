@@ -73,6 +73,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -188,6 +189,15 @@ end;
 function TContestWWDigi.GetDisplayName: string;
 begin
    Result := 'World Wide Digi DX Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row WWDIGI: status candidate; rules https://ww-digi.com/rules/; rules
+   year 2026/2027. CANDIDATE: date from a calendar, not yet checked against
+   the sponsor's rules. *)
+function TContestWWDigi.GetSchedule: string;
+begin
+   Result := 'last Saturday of August at 12:00 UTC for 24h';
 end;
 
 function TContestWWDigi.GetCabrilloName: string;

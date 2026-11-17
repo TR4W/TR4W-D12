@@ -130,6 +130,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -349,6 +350,15 @@ end;
 function TContestNewEnglandQP.GetDisplayName: string;
 begin
    Result := 'New England QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row NEWEQP: status verified; rules https://neqp.org/rules/; rules year
+   2026. *)
+function TContestNewEnglandQP.GetSchedule: string;
+begin
+   Result := '1st full weekend of May at 20:00 UTC for 9h; ' +
+             '1st full weekend of May +1d at 13:00 UTC for 11h';
 end;
 
 function TContestNewEnglandQP.GetCabrilloName: string;

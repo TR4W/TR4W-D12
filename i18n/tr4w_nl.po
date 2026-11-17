@@ -11904,3 +11904,13 @@ msgstr ""
 #, fuzzy
 msgid "Two letters must be a US state, DC, a US territory or a Canadian province or territory. A county, grid or other QTH may be longer."
 msgstr ""
+
+#: uappstrings.snewcontestsoonestfirst
+#, fuzzy
+msgid "Upcoming contests first"
+msgstr ""
+
+#: uappstrings.snewcontestrunningnow
+#, fuzzy
+msgid "running now"
+msgstr ""

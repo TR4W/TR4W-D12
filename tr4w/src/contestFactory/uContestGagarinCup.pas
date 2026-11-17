@@ -64,6 +64,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -185,6 +186,15 @@ end;
 function TContestGagarinCup.GetDisplayName: string;
 begin
    Result := 'Yuri Gagarin International DX Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row GAGARIN-CUP: status candidate; rules
+   https://gccontest.ru/en/rules-gc-2026/; rules year 2026. CANDIDATE: date
+   from a calendar, not yet checked against the sponsor's rules. *)
+function TContestGagarinCup.GetSchedule: string;
+begin
+   Result := '2026-04-11 at 12:00 UTC for 24h';
 end;
 
 function TContestGagarinCup.GetCabrilloName: string;

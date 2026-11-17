@@ -92,6 +92,7 @@ type
    TContestURCDXRTTY = class(TContestBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -369,6 +370,16 @@ end;
 function TContestURCDXRTTY.GetDisplayName: string;
 begin
    Result := 'URC DX RTTY Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row URC-DX-RTTY: status candidate; rules
+   https://unicomradio.com/urc-dx-rtty-contest/; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestURCDXRTTY.GetSchedule: string;
+begin
+   Result := '1st Friday of October at 00:00 UTC for 24h';
 end;
 
 function TContestURCDXRTTY.GetCabrilloName: string;

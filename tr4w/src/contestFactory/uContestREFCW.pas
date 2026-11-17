@@ -70,6 +70,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -141,6 +142,15 @@ end;
 function TContestREFCW.GetDisplayName: string;
 begin
    Result := 'REF Contest, CW';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row REF-CW: status candidate; rules https://concours.r-e-f.org/; rules
+   year 2026/2027. CANDIDATE: date from a calendar, not yet checked against
+   the sponsor's rules. *)
+function TContestREFCW.GetSchedule: string;
+begin
+   Result := '4th Saturday of January at 06:00 UTC for 36h';
 end;
 
 function TContestREFCW.GetCabrilloName: string;

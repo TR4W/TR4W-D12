@@ -70,6 +70,7 @@ type
    TContestIowaQP = class(TContestStateQSOPartyBase)
    protected
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetFriendlyName: string; override;
       function GetHostState: string; override;
       function GetCabrilloName: string; override;
@@ -113,6 +114,15 @@ uses
 function TContestIowaQP.GetDisplayName: string;
 begin
    Result := 'Iowa QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row IA-QSO-PARTY: status candidate; rules https://w0yl.com/IAQP/; rules
+   year 2026. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestIowaQP.GetSchedule: string;
+begin
+   Result := '3rd Saturday of September at 14:00 UTC for 12h';
 end;
 
 function TContestIowaQP.GetFriendlyName: string;

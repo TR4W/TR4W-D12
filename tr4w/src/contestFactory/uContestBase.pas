@@ -1625,6 +1625,21 @@ type
       function GetInitialExchangeKind: InitialExchangeType; virtual;
       function GetExchangeKind: ExchangeType; virtual;
 
+      (* WHEN THE CONTEST RUNS -- Q99 step A, 2026-11-16. A string in the
+         grammar of uContestSchedule (docs/CONTEST_SCHEDULES_README.md):
+         UTC operating periods as ';'-separated clauses, or the deliberate
+         'unscheduled' (General QSO, POTA). DATA ONLY: the class never reads
+         a clock, parses, sorts or touches a control; the caller parses it
+         once and resolves it against one UTC "now" it captured itself.
+
+         THE BASE ANSWERS '' -- NOT YET STATED, undated and sorted last. That
+         is never 'unscheduled', and it is not a default a class may lean on:
+         uTestContestSchedule keeps the contests still pending in a visible
+         list that only shrinks, and a new contest states its own from its
+         first commit (ADDING_A_CONTEST.md A3). Nothing restricts opening a
+         contest or logging a QSO by it. *)
+      function GetSchedule: string; virtual;
+
       (* WHICH FIELDS THE RECEIVED EXCHANGE CARRIES -- M11 S9a, 2026-10-14
          (docs/CONTEST_FACTORY_M11_PLAN.md S9a). Start-up puts the answer
          in LOGDUPE.ExchangeInformation, which the log-string parses
@@ -1967,6 +1982,7 @@ type
       property DisplayName: string read GetDisplayName;
       property CabrilloName: string read GetCabrilloName;
       property ADIFContestId: string read GetADIFContestId;
+      property Schedule: string read GetSchedule;
 
       (* EVERY ADIF CONTEST_ID THIS CONTEST HAS BEEN EXPORTED UNDER BEFORE, AND
          IS NO LONGER. Import accepts them; export never writes them.
@@ -4844,6 +4860,12 @@ end;
 function TContestBase.GetDisplayName: string;
 begin
    Result := FId;
+end;
+
+(* NOT YET STATED -- see the declaration. *)
+function TContestBase.GetSchedule: string;
+begin
+   Result := '';
 end;
 
 (* THE NEUTRAL DEFAULTS -- M10 S6, 2026-10-14.

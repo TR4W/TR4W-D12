@@ -113,6 +113,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. *)
       function GetHostState: string; override;
@@ -185,6 +186,16 @@ uses
 function TContestNorthDakotaQP.GetDisplayName: string;
 begin
    Result := 'North Dakota QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row ND-QSO-PARTY: status candidate; rules
+   https://ndarrlsection.com/2026/2026_nd_qsp_party_rules.pdf; rules year
+   2026. CANDIDATE: date from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestNorthDakotaQP.GetSchedule: string;
+begin
+   Result := '2nd Saturday of April at 18:00 UTC for 24h';
 end;
 
 function TContestNorthDakotaQP.GetHostState: string;

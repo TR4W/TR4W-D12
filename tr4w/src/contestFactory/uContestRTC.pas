@@ -101,6 +101,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -230,6 +231,17 @@ end;
 function TContestRTC.GetDisplayName: string;
 begin
    Result := 'Real Time Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
+   row RTC: status candidate; rules
+   https://blog.contestonlinescore.com/2026/01/07/; rules year 2026/2027.
+   CANDIDATE: date from a calendar, not yet checked against the sponsor's
+   rules. *)
+function TContestRTC.GetSchedule: string;
+begin
+   Result := '4th Sunday of May at 16:00 UTC for 4h; ' +
+             '2026-11-01 at 16:00 UTC for 4h';
 end;
 
 function TContestRTC.GetCabrilloName: string;
