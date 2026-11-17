@@ -961,7 +961,8 @@ uses
    // this unit and a cycle back to here is legal.
    //
    LOGSUBS2,           // ExitProgram -- the close path, see MainFormCloseQuery
-   uWindowSnap,        // SnapWindowToEdges -- shared by both drag paths
+   uLCLCoexist,        // ApplyStartupTaskBarBehavior -- the button, at the show
+   uWindowSnap,       // SnapWindowToEdges -- shared by both drag paths
    uFunctionKeys,      // ShowFMessages -- the F-key strip, on activate
    uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
    Menus,              // TMenuItem -- the menu is a TMainMenu now
@@ -4024,6 +4025,12 @@ begin
      number the framework can improve on. *)
    want := TR4WMainForm.BoundsRect;
 
+   (* THE BUTTON PASSES TO THE MAIN WINDOW (see uLCLCoexist's note on
+     StartupTaskBarBehavior). BEFORE Visible := True, because that assignment
+     is what runs Application.UpdateVisible, which hides the Application
+     window's button under tbDefault; TaskBarBehavior's own setter does not. *)
+   ApplyStartupTaskBarBehavior(True);
+
    TR4WMainForm.Visible := True;
 
    (* FIELD BY FIELD, not EqualRect: `Windows` is first in this unit's uses
@@ -4397,9 +4404,10 @@ begin
    //          top-level window.  An LCL form is owned by the hidden Application
    //          window, and an owned window is not a taskbar candidate unless it
    //          says so.  stDefault would only work for Application.MainForm, and
-   //          TR4W has none: Application.CreateForm is never called because
-   //          Application.Run is never called (the hand-rolled loop still owns
-   //          the program).
+   //          TR4W has none: Application.CreateForm is never called (the main
+   //          form is built here, and Application.Run is told not to show one).
+   //          Until this form shows, the Application window carries the button
+   //          instead -- uLCLCoexist.StartupTaskBarBehavior.
    //   Position poDesigned and the bounds
    //       -- placeholders.  CreateMainWindow calls SetWindowPos immediately
    //          afterwards with the real geometry, which it can only compute once

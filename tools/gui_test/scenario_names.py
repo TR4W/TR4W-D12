@@ -2,6 +2,7 @@
 
 SCENARIOS = (
    "bench-seed",
+   "bench-taskbar",
    "bench-search-regression", "bench-locked-regression",
    "bench-switch-regression",
    "bench-import-regression",

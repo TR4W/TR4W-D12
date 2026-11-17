@@ -721,7 +721,8 @@ uses
    uTestContestTimeLeft in 'uTestContestTimeLeft.pas',
    uCaptionText         in '..\..\src\ui\lcl\uCaptionText.pas',
    uTestCaptionText     in 'uTestCaptionText.pas',
-   uTestSpotStore       in 'uTestSpotStore.pas',
+   uTestStartupTaskBar  in 'uTestStartupTaskBar.pas',
+   uTestSpotStore      in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',
    uTestTelnetConsoleKinds in 'uTestTelnetConsoleKinds.pas',
    uTestCrashContext    in 'uTestCrashContext.pas',
@@ -1352,6 +1353,7 @@ begin
    RegisterSuite(TSetupWizardFormTests.Create('SetupWizardForm'));
    RegisterSuite(TContestTimeLeftTests.Create('ContestTimeLeft'));
    RegisterSuite(TCaptionTextTests.Create('CaptionText'));
+   RegisterSuite(TStartupTaskBarTests.Create('StartupTaskBar'));
    RegisterSuite(TOpenLogRelaunchTests.Create('OpenLogRelaunch'));
    RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));

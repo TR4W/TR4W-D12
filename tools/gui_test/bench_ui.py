@@ -85,6 +85,9 @@ def run(root, run_name, phase):
          return dict(result, pid=app.process)
       startup = app.window(title_re=r".*Open configuration file or start a new contest")
       journal.perform("wait for New Contest", lambda: startup.wait("visible", timeout=30))
+      if phase == "bench-taskbar":
+         from bench_taskbar import check as check_taskbar
+         return check_taskbar(app, startup, root, run_name, output, journal)
       if phase == "bench-county-inspect":
          from bench_county import inspect
          return inspect(app, startup, output, journal)

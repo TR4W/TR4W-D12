@@ -294,6 +294,11 @@ procedure ShowWithoutTakingFocus(const aForm: TCustomForm);
 procedure OwnFormByMainWindow(const aForm: TCustomForm);
 procedure CentreOverMainWindow(const aForm: TCustomForm);
 
+(* THE MAIN WINDOW EXISTS AND IS ON SCREEN. Before that -- startup, up to
+  ShowTR4WMainForm -- a dialog has nothing to be owned by, and the taskbar
+  button is the Application window's (uLCLCoexist.StartupTaskBarBehavior). *)
+function MainWindowShowing: boolean;
+
 (* A NON-MODAL TOOL WINDOW HAS NO OWNER FORM -- issue #1 (2026-10-29).
 
   Windows keeps an owned window above its owner at all times. While the tool
@@ -310,10 +315,13 @@ procedure CentreOverMainWindow(const aForm: TCustomForm);
 
   With PopupMode pmNone a non-modal form's real owner is the hidden
   Application window (win32wsforms.pp, CreateHandle, stDefault with
-  MainFormOnTaskBar False). That window is never shown, because TR4W has no
-  Application.MainForm, so a tool window gets NO taskbar button of its own and
-  ShowInTaskBar needs no setting. gtk2 is different: there stDefault gives
-  every form a taskbar entry already, owned or not.
+  MainFormOnTaskBar False). Once the main window shows, that window is hidden
+  (TR4W has no Application.MainForm and TaskBarBehavior is tbDefault), so a
+  tool window gets NO taskbar button of its own and ShowInTaskBar needs no
+  setting. BEFORE the main window shows it is the Application window that
+  carries TR4W's one button -- uLCLCoexist.StartupTaskBarBehavior (2026-11-16).
+  gtk2 is different: there stDefault gives every form a taskbar entry
+  already, owned or not.
 
   SWITCHING BACK FROM ANOTHER PROGRAM (2026-11-01). The LCL still gives every
   such form the hidden Application window as its Win32 owner, so Windows
@@ -740,7 +748,13 @@ end;
 
 procedure OwnFormByMainWindow(const aForm: TCustomForm);
 begin
-   if (aForm = nil) or (TR4WMainForm = nil) then
+   (* NOT BY A MAIN WINDOW THAT IS NOT SHOWING (2026-11-16). CreateMainWindow
+     builds the form hidden, and modals still open before ShowTR4WMainForm --
+     the legacy-ini question among them. Owned by a hidden window, such a
+     dialog is cut off from the taskbar button the Application window carries
+     until then (uLCLCoexist.StartupTaskBarBehavior). Left unowned it is owned
+     by that Application window, like every other startup dialog. *)
+   if (aForm = nil) or (not MainWindowShowing) then
       begin
       Exit;
       end;
@@ -754,6 +768,11 @@ begin
 
    aForm.PopupParent := TR4WMainForm;
    aForm.PopupMode   := pmExplicit;
+end;
+
+function MainWindowShowing: boolean;
+begin
+   Result := (TR4WMainForm <> nil) and TR4WMainForm.Showing;
 end;
 
 procedure HostPanelIn(const aPanel, aHost: TWinControl);

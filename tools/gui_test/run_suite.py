@@ -26,6 +26,9 @@ CASES = {
    "locked": "bench-locked-regression",
    "import": "bench-import-regression",
    "messages": "bench-messages-regression",
+   # A taskbar button while New Contest is up, and only the main window's once
+   # it shows (bench_taskbar.py; NY4I 2026-11-16).
+   "taskbar": "bench-taskbar",
    # Preferences > Station checks each field inline: red mark, the line under
    # the fields, focus held, no window, refused and good saves (be4dc5a6).
    "station-check": "bench-prefs-station-check",

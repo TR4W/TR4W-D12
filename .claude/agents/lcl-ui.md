@@ -339,6 +339,29 @@ decided whether stations could talk. Now it connects nothing and stops nothing:
   `ShowWithoutTakingFocus` is `Show` plus a `BringToFront` back, two
   activations, not zero.
 
+**Before the main window shows, the Application window carries the taskbar
+button** (2026-11-16). Every startup dialog (New Contest, the wizard, the
+legacy-ini question, any `MessageDlg`) is stDefault and owned by the hidden
+`AppHandle`, so TR4W had NO button there: the pinned icon showed nothing, and a
+click started a second copy. `uLCLCoexist.ApplyStartupTaskBarBehavior` sets
+`Application.TaskBarBehavior := tbSingleButton` (and `Title := 'TR4W'`) in
+`InitLCLApplication`, which shows `AppHandle` through `UpdateVisible`;
+`ShowTR4WMainForm` puts `tbDefault` back BEFORE `Visible := True` (that
+assignment's `UpdateVisible` hides it; the setter does not). Windows only:
+on gtk2 `tbSingleButton` makes stDefault stNever (skip-taskbar). That button
+can MINIMIZE the Application window, and the LCL re-shows its owned windows on
+restore only when `Application.MainForm` is set, so the startup modal stayed
+hidden (measured on the VM). `TStartupRestorer` answers
+`Application.AddOnRestoreHandler` with `Application.Restore`, which is guarded
+by `ModalLevel > 0` because without a modal it would re-send SC_RESTORE to
+itself.
+`OwnFormByMainWindow` owns by the main window only while it is ON SCREEN
+(`uLCLFormHelpers.MainWindowShowing`): `CreateMainWindow` builds it hidden, and
+a modal owned by a hidden window is cut off from the button. Do not "fix" this
+with per-form `ShowInTaskBar := stAlways`: it cannot reach the LCL's own
+dialogs, and a window created unowned keeps a button after `WS_EX_APPWINDOW` is
+cleared. GUI case `taskbar` pins the window structure.
+
 **Mnemonics were tried and dropped by NY4I 2026-11-03**: accelerators are
 ShortCut keystrokes only (`uAccelerators`, `TMenuItem.ShortCut`). A caption put
 where `&` is not markup (a window title from a menu row) goes through

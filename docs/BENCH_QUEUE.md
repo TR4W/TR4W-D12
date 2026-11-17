@@ -147,6 +147,18 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-16 -- A TASKBAR BUTTON BEFORE THE MAIN WINDOW (startup dialogs)
+
+Until the main window shows, the LCL's Application window is shown and carries TR4W's one taskbar button (`uLCLCoexist.StartupTaskBarBehavior`, `Application.TaskBarBehavior = tbSingleButton`); the main window takes it back when it shows. The GUI case `taskbar` checks the window structure on the VM: with New Contest up the process has one taskbar-candidate window, titled `TR4W`; with the main window up the main window is the only one. The pre-fix build fails that case. The checks below need a real desktop with TR4W pinned to the taskbar.
+
+- [ ] **The pinned icon shows running.** Pin TR4W to the taskbar and start it to the New Contest dialog. The icon has its "running" underline, and there is no second TR4W button beside it.
+- [ ] **A click raises the dialog, not a second copy.** Put another program in front, then click the pinned icon. The New Contest dialog comes forward and no "already running" warning appears. Repeat with the setup wizard and the legacy-ini question if either can be reached.
+- [ ] **Minimize and restore.** Click the icon twice with the dialog active (minimize, then restore). The dialog comes back and still takes typing. A modal that stays hidden would block the operator. The VM case approximates this by posting SC_MINIMIZE and SC_RESTORE; that failed until `uLCLCoexist.TStartupRestorer` was added, because the LCL re-shows the windows only when `Application.MainForm` is set. The real taskbar click has not been tried.
+- [ ] **One button after.** Create or open a contest. Exactly one TR4W button remains (the main window's), and a click on it raises the main window as before.
+- [ ] **Hover thumbnail.** Hovering the icon while the dialog is up probably shows an empty thumbnail, because the Application window has no size. Note whether that is acceptable.
+
+---
+
 ## Added 2026-11-16 -- NEW CONTEST: "UPCOMING CONTESTS FIRST" (Q99 step B)
 
 A check box under the New Contest list, default unticked. Ticked, the list shows a contest on the air first (`running now`), then the soonest to start, each with its next start after the name (`2027-03-28 00:00 UTC`, or just the date for a date-only schedule). After those come the contests with no date, alphabetically. The order, the hints and keeping the selection are unit-tested on a streamed form; nothing below is.

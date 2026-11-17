@@ -22,7 +22,7 @@ a GitHub issue (reproducible, with the evidence path) and to the owning agent (l
 python tools/gui_test/run_suite.py --list                      # cases include station-check and sweep-a/b/c (2026-11-16)
 python tools/gui_test/run_suite.py --case import --case locked # selected cases first, never the whole suite first
 python tools/gui_test/run_suite.py                             # everything, only after the selected cases pass
-python -m unittest discover -s tools/gui_test -p "test_*.py"   # portable tests, 40, no VM needed
+python -m unittest discover -s tools/gui_test -p "test_*.py"   # portable tests, no VM needed
 ```
 
 `run_suite.py` stages an identified build (default `C:\tr4w-d12\build-out\app-x86_64-win64\tr4w_fpc.exe`,
@@ -71,6 +71,12 @@ schema-7 received year yet; issues 300 and 305 need a rerun on a current build.
 2026-11-16, exe 75be905f: `station-check` PASS (Preferences > Station inline validation of 13 fields incl.
 MY LICENSE YEAR; the problem line is a windowless TLabel read by Windows OCR, `ocr_text.ps1`).
 `sweep-a/b/c` PASS (suite 20261116T221335-5122c9; report only; table in `docs/gui-test/preferences-invalid-input-sweep-20261116.md`).
+
+2026-11-17, exe 2e7b40b7 (incremental build): `taskbar` PASS (suite 20261117T022433-321970); the
+pre-fix exe 75be905f FAILS it (20261117T021749-4e2743). It reuses the seed's CW Open log ("Open
+existing log"). It asserts window structure and that New Contest comes back after SC_MINIMIZE /
+SC_RESTORE to the button's window (that failed on an intermediate build, 20261117T022155-a988f3),
+a proxy: the real pinned-icon click is on BENCH_QUEUE.
 
 ## Reporting
 
