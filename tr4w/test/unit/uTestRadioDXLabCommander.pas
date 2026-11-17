@@ -71,6 +71,9 @@ type
       procedure Test_ConnectWithNothingKeyed_SendsNoUnkey;
       procedure Test_PeerThatClosesAfterEveryMessage_SetsKeepTheirOrder;
       procedure Test_UnansweredTXQueryStopsBeingAsked;
+      procedure Test_CWReachesTheWireAsRawText;
+      procedure Test_StopCWBeforeTheDrain_NeverSends;
+      procedure Test_CWToAPeerThatClosesAfterEveryMessage;
       procedure Test_StopAndUnkeyWithNoLink_QueueNothing;
       procedure Test_VFOBWrite_IsAlwaysQSXSplitNeverSetTXFreq;
       procedure Test_StartupCommandMustBeOneMessage;
@@ -762,6 +765,102 @@ begin
    end;
 end;
 
+(* CW BY CAT, END TO END THROUGH THE QUEUE.  The fake records the parameters
+  exactly as read by their length, so the raw text arriving intact is what the
+  'cwchars|<text>' entry proves.  The poll after the drain is the fence (see
+  Test_TransmitThenReceiveBeforeTheDrain_NeverKeys). *)
+procedure TRadioDXLabCommanderTests.Test_CWReachesTheWireAsRawText;
+var
+   r: TCommanderProbe;
+begin
+   BeginTest('Test_CWReachesTheWireAsRawText');
+   r := TCommanderProbe.CreateFor(StartServer);
+   try
+      CheckEquals(0, r.Connect, '');
+      ClearReceived;
+
+      r.SendCW;   // nothing buffered
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckEquals(0, CountOf('cwchars'), 'an empty buffer sends nothing: ' + ReceivedSnapshot);
+
+      r.BufferCW('K1ABC/4 ');
+      r.BufferCW('5NN 05');
+      r.SendCW;
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckEquals(1, CountOf('cwchars'), 'one message for the buffered text: ' + ReceivedSnapshot);
+      CheckTrue(Pos('cwchars|K1ABC/4 5NN 05', ReceivedSnapshot) > 0,
+                'the text, byte for byte, as the parameters: ' + ReceivedSnapshot);
+
+      ClearReceived;
+      r.SendCW;   // SendCW emptied the buffer
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckEquals(0, CountOf('cwchars'), 'a second SendCW does not resend: ' + ReceivedSnapshot);
+   finally
+      r.Free;
+      StopServer;
+   end;
+end;
+
+(* THE ONLY ABORT COMMANDER ALLOWS: a cwchars not yet written is withdrawn.
+  Paired with the positive, so a StopCW that withdrew everything (or a queue
+  that never sent CW) cannot pass. *)
+procedure TRadioDXLabCommanderTests.Test_StopCWBeforeTheDrain_NeverSends;
+var
+   r: TCommanderProbe;
+begin
+   BeginTest('Test_StopCWBeforeTheDrain_NeverSends');
+   r := TCommanderProbe.CreateFor(StartServer);
+   try
+      CheckEquals(0, r.Connect, '');
+      CheckTrue(r.CWIsFactoryOwned, 'StopSendingCW must reach StopCW');
+      ClearReceived;
+      r.SetFrequency(14025000, nrVFOA, rmNone);
+      r.BufferCW('CQ TEST');
+      r.SendCW;
+      r.StopCW;
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckEquals(0, CountOf('cwchars'), 'the withdrawn CW never went: ' + ReceivedSnapshot);
+      CheckEquals(1, CountOf('CmdSetFreq'), 'and nothing else was withdrawn: ' + ReceivedSnapshot);
+
+      ClearReceived;
+      r.BufferCW('CQ TEST');
+      r.SendCW;
+      r.DrainUrgentQueue;
+      r.PollRadioState;
+      CheckEquals(1, CountOf('cwchars'), 'with no stop it goes: ' + ReceivedSnapshot);
+   finally
+      r.Free;
+      StopServer;
+   end;
+end;
+
+(* A peer that hangs up after every message, as DXKeeper does, still gets it. *)
+procedure TRadioDXLabCommanderTests.Test_CWToAPeerThatClosesAfterEveryMessage;
+var
+   r: TCommanderProbe;
+begin
+   BeginTest('Test_CWToAPeerThatClosesAfterEveryMessage');
+   r := TCommanderProbe.CreateFor(StartServer);
+   try
+      FCloseAfterEvery := True;
+      CheckEquals(0, r.Connect, 'probe answered');
+      ClearReceived;
+      r.BufferCW('TU NY4I');
+      r.SendCW;
+      r.DrainUrgentQueue;
+      CheckTrue(WaitForCount('cwchars', 1, WAIT_MS), 'CW arrived: ' + ReceivedSnapshot);
+      CheckTrue(Pos('cwchars|TU NY4I', ReceivedSnapshot) > 0, 'intact: ' + ReceivedSnapshot);
+      CheckTrue(r.IsConnected, 'a hang-up after the CW is not a lost link');
+   finally
+      r.Free;
+      StopServer;
+   end;
+end;
+
 (* ---- no transport -------------------------------------------------------- *)
 
 procedure TRadioDXLabCommanderTests.Test_StopAndUnkeyWithNoLink_QueueNothing;
@@ -958,7 +1057,7 @@ end;
   losing ANY flag fails here and has to be argued for. *)
 procedure TRadioDXLabCommanderTests.Test_CapabilitiesAndRegistrationAreExactly;
 const
-   EXPECTED: TRadioCapabilitySet = [rcReadSplit, rcReadTXStatus];
+   EXPECTED: TRadioCapabilitySet = [rcReadSplit, rcReadTXStatus, rcCWByCAT];
 var
    r: TFactoryRadioBase;
    cap: TRadioCapability;
@@ -972,7 +1071,8 @@ begin
                      'capability ordinal ' + IntToStr(Ord(cap)));
          end;
       CheckFalse(r.Capabilities.HasXIT, 'no XIT message');
-      CheckFalse(r.SupportsCWByCAT, 'CW is the keyer factory''s, not Commander''s');
+      CheckTrue(r.SupportsCWByCAT, 'cwchars: CW by CAT is offered for Commander');
+      CheckTrue(r.CWIsFactoryOwned, 'and the driver keys it, so Escape reaches StopCW');
    finally
       r.Free;
    end;
@@ -984,6 +1084,10 @@ begin
    CheckEquals(52002, RegisteredNetworkPortId(DXLAB_COMMANDER_ID), 'the document''s default port');
    CheckFalse(RegisteredDiscoverableId(DXLAB_COMMANDER_ID), 'no discovery');
    CheckTrue(CapabilitiesForId(DXLAB_COMMANDER_ID) = EXPECTED, 'the registry answers the same set');
+   (* THE PREFERENCES GATE, asked exactly as FillCWOutputCombo and the setup
+     wizard ask it.  False here is why "CW by CAT" was missing from the
+     profile's CW output for Commander (2026-11-17). *)
+   CheckTrue(SupportsForId(DXLAB_COMMANDER_ID, rcCWByCAT), 'the CW output combo offers CW by CAT');
 
    r := CreateInstanceForLinkId(DXLAB_COMMANDER_ID, rlNetwork);
    try
@@ -1009,6 +1113,9 @@ begin
       Test_ConnectWithNothingKeyed_SendsNoUnkey;
       Test_PeerThatClosesAfterEveryMessage_SetsKeepTheirOrder;
       Test_UnansweredTXQueryStopsBeingAsked;
+      Test_CWReachesTheWireAsRawText;
+      Test_StopCWBeforeTheDrain_NeverSends;
+      Test_CWToAPeerThatClosesAfterEveryMessage;
       Test_StopAndUnkeyWithNoLink_QueueNothing;
       Test_VFOBWrite_IsAlwaysQSXSplitNeverSetTXFreq;
       Test_StartupCommandMustBeOneMessage;

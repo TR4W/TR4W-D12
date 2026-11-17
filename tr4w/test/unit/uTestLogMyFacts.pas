@@ -93,6 +93,8 @@ type
       procedure TestTheExportCallFollowsTheRecord;
       procedure TestAnImportedQSOSentWhatItsFileSays;
       procedure TestTheSentExchangeIsBuiltFromTheRecord;
+      procedure TestAnEditOfANeverCapturedRowKeepsWhatItExported;
+      procedure TestAnEditOfACapturedRowIsWhatWasTyped;
       procedure TestALicenceYearIsNeverReplacedByACapturedZone;
       procedure TestAStationZoneContestSendsTheCapturedZone;
       procedure TestOnlyTheLicenceYearContestsSayMyZoneIsNoStationZone;
@@ -360,10 +362,16 @@ begin
    tail := tail + '|' + string(LOG_V6_QSO_YEAR_COLUMN.Name);
    (* And schema 8's sent year (issue 300), after that. *)
    tail := tail + '|' + string(LOG_V8_QSO_YEAR_SENT_COLUMN.Name);
+   (* And schema 9's station facts, after that. *)
+   for i := Low(LOG_V9_QSO_COLUMNS) to High(LOG_V9_QSO_COLUMNS) do
+      begin
+      tail := tail + '|' + string(LOG_V9_QSO_COLUMNS[i].Name);
+      end;
    (* LAST, IN THIS ORDER -- the order ALTER TABLE ADD COLUMN gives a
      migrated log, so the two cannot differ. *)
    CheckEquals(tail, Copy(names, Length(names) - Length(tail) + 1, MaxInt),
-               'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, rcvd_year, then year_sent, in order');
+               'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, rcvd_year, year_sent, ' +
+               'then LOG_V9_QSO_COLUMNS, in order');
    CheckTrue(Pos('|my_grid|', names) > 0, 'my_grid, from schema 1, is still there');
    Scrub(fn);
 end;
@@ -1327,8 +1335,20 @@ begin
    CheckEquals('NE', got.MySection, 'the QSO''s section');
    CheckEquals('US-1234', got.MyPark, 'the QSO''s park');
    CheckEquals('4', got.MyZone, 'the QSO''s CQ zone');
-   CheckEquals('TOM', got.MyName, 'the name the record holds no column for: the session''s');
-   CheckEquals('72', got.MyCheck, 'and the check');
+   (* FLIPPED AT SCHEMA 9 (NY4I, 2026-11-17: all MY_ values are written to
+     the QSO record). This pinned the name and check as the SESSION's, "the
+     record holds no column for them" -- the defect: a precedence changed
+     after logging rewrote every earlier Sweepstakes QSO. SampleFacts
+     captured none, so they are unknown, never today's. *)
+   CheckEquals('', got.MyName, 'a captured row with no name: unknown, not the session''s');
+   CheckEquals('', got.MyCheck, 'and the check');
+   facts.Name := 'BOB';
+   facts.Check := '64';
+   got := MyStationExchangeOfQSO(session, facts, True, szkCQZone);
+   CheckEquals('BOB', got.MyName, 'the name the row recorded');
+   CheckEquals('64', got.MyCheck, 'and the check');
+   facts.Name := '';
+   facts.Check := '';
 
    got := MyStationExchangeOfQSO(session, facts, False, szkITUZone);
    CheckEquals('FL', got.MyState,
@@ -1356,6 +1376,87 @@ begin
    facts.ITUZone := 0;
    got := MyStationExchangeOfQSO(session, facts, True, szkStatedMyZone);
    CheckEquals('05', got.MyZone, 'an unknown captured zone does not blank the year');
+end;
+
+(* THE HAZARD SCHEMA 9 EXPOSED (phase 2, 2026-11-17). An old Sweepstakes row
+  never captured its station (my_source NULL), so it exported the session's
+  precedence and check. Edit QSO showed its station fields blank, the operator
+  corrected the grid, and the save took the blanks as typed and marked the row
+  edited -- a captured row, whose empty precedence and check are UNKNOWN. The
+  export went blank. Before uQsoMyFacts.MyFactsAfterEdit the save's answer was
+  "aTyped, marked edited", and both checks below on the precedence and the
+  check failed against it. *)
+procedure TLogMyFactsTests.TestAnEditOfANeverCapturedRowKeepsWhatItExported;
+var
+   session: TMyStationExchange;
+   sessionFacts, shown, typed, saved: TQsoMyFacts;
+   before, after: TMyStationExchange;
+begin
+   BeginTest('an edit of a never-captured row keeps what the row exported');
+   session := Default(TMyStationExchange);
+   session.MyPrec := 'A';
+   session.MyCheck := '07';
+   session.MySection := 'WCF';
+   session.MyGrid := 'EL88';
+
+   (* This station now, as the store captures it. *)
+   sessionFacts := NotCapturedMyFacts;
+   sessionFacts.Source := mfsLogged;
+   sessionFacts.Prec := 'A';
+   sessionFacts.Check := '07';
+   sessionFacts.Section := 'WCF';
+   sessionFacts.Grid := 'EL88';
+
+   shown := NotCapturedMyFacts;
+   before := MyStationExchangeOfQSO(session, shown, True, szkCQZone);
+   CheckEquals('A', before.MyPrec, 'before the edit: the session''s precedence');
+   CheckEquals('07', before.MyCheck, 'and check');
+
+   typed := shown;
+   typed.Grid := 'EL87';
+   saved := MyFactsAfterEdit(shown, typed, sessionFacts);
+   CheckTrue(saved.Source = mfsEdited, 'the edit marks the row edited');
+   CheckEquals('EL87', string(saved.Grid), 'the corrected grid is the operator''s');
+
+   after := MyStationExchangeOfQSO(session, saved, True, szkCQZone);
+   CheckEquals('A', after.MyPrec, 'after a grid edit the precedence is still exported');
+   CheckEquals('07', after.MyCheck, 'and the check');
+   CheckEquals('WCF', after.MySection, 'and the section');
+   CheckEquals('EL87', after.MyGrid, 'and the grid is the corrected one');
+
+   (* Nothing changed: the row stays never captured, so it goes on following
+      the session -- no write of our station at all. *)
+   saved := MyFactsAfterEdit(shown, shown, sessionFacts);
+   CheckTrue(saved.Source = mfsNotCaptured, 'an untouched never-captured row stays so');
+
+   (* The year is an edit of its own and always aTyped's. *)
+   typed := shown;
+   SetFactsYearSent(typed, True, 64);
+   saved := MyFactsAfterEdit(shown, typed, sessionFacts);
+   CheckTrue(saved.Source = mfsNotCaptured, 'a year-only edit does not capture the station');
+   CheckTrue(saved.YearSentKnown and (saved.YearSent = 64), 'and carries the typed year');
+end;
+
+procedure TLogMyFactsTests.TestAnEditOfACapturedRowIsWhatWasTyped;
+var
+   sessionFacts, shown, typed, saved: TQsoMyFacts;
+begin
+   BeginTest('an edit of a captured row is exactly what was typed');
+   sessionFacts := NotCapturedMyFacts;
+   sessionFacts.Source := mfsLogged;
+   sessionFacts.Prec := 'A';
+
+   shown := SampleFacts;
+   shown.Prec := 'B';
+   typed := shown;
+   typed.Prec := '';
+   saved := MyFactsAfterEdit(shown, typed, sessionFacts);
+   CheckTrue(saved.Source = mfsEdited, 'marked edited');
+   CheckEquals('', string(saved.Prec),
+               'a cleared value on a captured row is cleared, never the session''s');
+
+   saved := MyFactsAfterEdit(shown, shown, sessionFacts);
+   CheckTrue(saved.Source = shown.Source, 'untouched keeps its source');
 end;
 
 procedure TLogMyFactsTests.SentZoneWords(aContest: ContestType;
@@ -1545,8 +1646,8 @@ end;
   arrived from a multi-op peer, beside 101 migrated rows. *)
 procedure TLogMyFactsTests.TestTheStoreCapturesOurStationAtTheMomentOfTheQSO;
 var
-   savedGrid, savedOverride: string;
-   savedStated: boolean;
+   savedGrid, savedOverride, savedPrec: string;
+   savedStated, savedPrecStated: boolean;
    qso: ContestExchange;
    facts: TQsoMyFacts;
    logDb: TLogDatabase;
@@ -1561,10 +1662,14 @@ begin
    savedGrid := Settings.My.Grid;
    savedStated := Settings.My.HasContestOverride(sfGrid);
    savedOverride := Settings.My.ContestOverride(sfGrid);
+   savedPrecStated := Settings.My.HasContestOverride(sfPrec);
+   savedPrec := Settings.My.ContestOverride(sfPrec);
    try
       (* THE STATION'S GRID, with no contest override in the way. *)
       Settings.My.ClearContestOverride(sfGrid);
       Settings.My.Grid := 'EN01AB';
+      (* AND A PRECEDENCE (schema 9), changed after each QSO below. *)
+      Settings.My.SetContestOverride(sfPrec, 'A');
       ourGrid := UTF8Encode(Settings.My.ResolvedGrid);
 
       MakeQSO(qso, 1);
@@ -1576,6 +1681,7 @@ begin
 
       (* THE ROVER MOVES -- and the next QSO is a peer's. *)
       Settings.My.Grid := 'EN02AB';
+      Settings.My.SetContestOverride(sfPrec, 'M');
       MakeQSO(qso, 2);
       (* THE PEER'S SERIAL, which only the packet's record knows. *)
       qso.NumberSent := 4321;
@@ -1593,6 +1699,7 @@ begin
 
       (* AND THE SETTING MOVES AGAIN, which no stored QSO may follow. *)
       Settings.My.Grid := 'EN03AB';
+      Settings.My.SetContestOverride(sfPrec, 'U');
       LogStoreClose;
 
       logDb := TLogDatabase.Create;
@@ -1611,12 +1718,16 @@ begin
             CheckEquals(string(ourGrid), string(facts.Grid),
                         'and holds the grid in effect WHEN IT WAS LOGGED');
             CheckEquals(Settings.My.Call, string(facts.Call), 'and our call as signed');
+            CheckEquals('A', string(facts.Prec),
+                        'and the precedence in effect WHEN IT WAS LOGGED (schema 9)');
 
             CheckTrue(repo.LoadQSOMyFacts(repo.RowIdAtIndex(102), facts), 'the peer''s QSO');
             CheckEquals(Ord(mfsAssumed), Ord(facts.Source),
                         'a peer''s QSO carries this station''s values, MARKED assumed');
             CheckEquals('EN02AB', string(facts.Grid),
                         'the values in effect here when it arrived');
+            CheckEquals('M', string(facts.Prec),
+                        'the precedence too: ruling D, this station''s, assumed');
          finally
             repo.Free;
          end;
@@ -1651,6 +1762,14 @@ begin
       if savedStated then
          begin
          Settings.My.SetContestOverride(sfGrid, savedOverride);
+         end;
+      if savedPrecStated then
+         begin
+         Settings.My.SetContestOverride(sfPrec, savedPrec);
+         end
+      else
+         begin
+         Settings.My.ClearContestOverride(sfPrec);
          end;
       StopStore;
    end;
@@ -2242,6 +2361,8 @@ begin
    TestTheExportCallFollowsTheRecord;
    TestAnImportedQSOSentWhatItsFileSays;
    TestTheSentExchangeIsBuiltFromTheRecord;
+   TestAnEditOfANeverCapturedRowKeepsWhatItExported;
+   TestAnEditOfACapturedRowIsWhatWasTyped;
    TestALicenceYearIsNeverReplacedByACapturedZone;
    TestAStationZoneContestSendsTheCapturedZone;
    TestOnlyTheLicenceYearContestsSayMyZoneIsNoStationZone;

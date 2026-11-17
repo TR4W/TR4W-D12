@@ -55,6 +55,7 @@ type
          X.GetDisplayName callable -- two ways to ask one question is exactly
          the ambiguity a property removes. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -186,6 +187,14 @@ end;
 function TContestARRLDigi.GetDisplayName: string;
 begin
    Result := 'ARRL Inter. Digital Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
+   CANDIDATE: date taken from a calendar, not yet checked against the
+   sponsor's rules. *)
+function TContestARRLDigi.GetSchedule: string;
+begin
+   Result := 'first full weekend of June at 18:00 UTC for 30h';
 end;
 
 function TContestARRLDigi.GetCabrilloName: string;

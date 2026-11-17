@@ -53,6 +53,10 @@ uses
    VC,
    uLogRepository,   (* TLogRepository -- see LogStoreRepository *)
    uQsoMyFacts,      (* TQsoMyFacts -- the editor's read and write below *)
+   (* STATION_FACT_IN_RECORD -- where each station fact lives on a QSO (log
+     schema 9): LogStoreCurrentMyFacts captures by it, and
+     TStationFactCorrections is the station-value correction's argument. *)
+   uStationFactRecord,
    uExternalDelivery; (* TDeliveryStatus -- LogStoreReadDeliveryAtIndex *)
 
 (* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
@@ -252,6 +256,25 @@ function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 function LogStoreCountQSOsSentYear(aKnown: boolean; aYear: integer): integer;
 function LogStoreCorrectSentYear(aOldKnown: boolean; aOld: integer;
                                  aNewKnown: boolean; aNew: integer): integer;
+
+(* THE SAME CORRECTION FOR ANY STATION VALUE A QSO KEEPS AS TYPED -- log schema
+  9 phase 2 (uStationFactChange decides whether one is offered). The rows are
+  this station's captured QSOs (TLogRepository.CountQSOsSentStationValue).
+
+  Count: how many sent aCorrection.OldText for aCorrection.Fact (as the
+  column stores it, '' for none); -1 when the log cannot be read or the fact
+  is not kept as typed, which a caller treats as "do not ask".
+
+  Correct: EVERY correction of one Preferences Save in ONE transaction -- the
+  license year (when aCorrectYear; the arguments are LogStoreCorrectSentYear's)
+  and each of aFacts, whose rows are also marked 'edited'. Commits once.
+  Answers the rows changed; -1 when nothing was written (no store,
+  read-only, or a failure, which is logged and disables the store). *)
+function LogStoreCountQSOsSentStationValue(const aCorrection: TStationFactCorrection): integer;
+function LogStoreCorrectSentStation(aCorrectYear: boolean;
+                                    aOldYearKnown: boolean; aOldYear: integer;
+                                    aNewYearKnown: boolean; aNewYear: integer;
+                                    const aFacts: TStationFactCorrections): integer;
 
 (* EMPTY THE LOG. False if there was no usable store to empty, so a caller can
   tell "cleared" from "could not".
@@ -2325,6 +2348,7 @@ end;
 function LogStoreCurrentMyFacts: TQsoMyFacts;
 var
    station: uContestBase.TStationContext;
+   fact: TStationFact;
 begin
    station := uContestFactory.CurrentStation;
 
@@ -2334,12 +2358,18 @@ begin
    (* UTF8Encode, as ReadEntryDeclaration: the settings are UTF-16 and the
      fields AnsiString; callsigns, grids and references are ASCII. *)
    Result.Call := UTF8Encode(Settings.My.Call);
-   Result.Grid := UTF8Encode(Settings.My.ResolvedGrid);
-   Result.State := UTF8Encode(Settings.My.ResolvedState);
    Result.County := '';
-   Result.Section := UTF8Encode(Settings.My.ResolvedSection);
-   Result.Park := UTF8Encode(Settings.My.ResolvedPark);
-   Result.Iota := UTF8Encode(Settings.My.ResolvedIota);
+   (* EVERY STATION FACT KEPT AS TYPED -- MY STATE, SECTION, GRID, PARK, IOTA
+     and, since schema 9, NAME, FD CLASS, CHECK, PREC, POSTAL CODE and FOC
+     NUMBER -- the contest's override if it stated one, else the station's.
+     The table says which; the three kept as SENT follow by name below. *)
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      if STATION_FACT_IN_RECORD[fact].Keeping = sfkAsTyped then
+         begin
+         RecordStationFactAsTyped(Result, fact, Settings.My.Resolved(fact));
+         end;
+      end;
    Result.Country := AnsiString(station.MyCountry);
    (* The stable two-letter token cty_continent stores, and only for a real
      continent -- see the guard on cty_continent in uLogRepository. *)
@@ -3166,6 +3196,91 @@ begin
    end;
 end;
 
+function LogStoreCountQSOsSentStationValue(const aCorrection: TStationFactCorrection): integer;
+var
+   rebuilt: boolean;
+begin
+   (* See the declaration. *)
+   Result := -1;
+   if GDisabled or
+      (STATION_FACT_IN_RECORD[aCorrection.Fact].Keeping <> sfkAsTyped) then
+      begin
+      Exit;
+      end;
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      Result := GRepository.CountQSOsSentStationValue(
+                   AnsiString(STATION_FACT_IN_RECORD[aCorrection.Fact].Column),
+                   aCorrection.OldText);
+   except
+      on E: Exception do
+         begin
+         Result := -1;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not count the QSOs that sent a station ' +
+                         'value: %s', [E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreCorrectSentStation(aCorrectYear: boolean;
+                                    aOldYearKnown: boolean; aOldYear: integer;
+                                    aNewYearKnown: boolean; aNewYear: integer;
+                                    const aFacts: TStationFactCorrections): integer;
+var
+   rebuilt: boolean;
+   i: integer;
+begin
+   (* See the declaration. ONE transaction for the whole answer: a crash
+      leaves either every correction the operator said Yes to, or none. *)
+   Result := -1;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if RefuseReadOnly('correcting what logged QSOs sent') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
+      Result := 0;
+      if aCorrectYear then
+         begin
+         Result := Result + GRepository.CorrectSentYear(aOldYearKnown, aOldYear,
+                                                        aNewYearKnown, aNewYear);
+         end;
+      for i := 0 to High(aFacts) do
+         begin
+         Result := Result + GRepository.CorrectSentStationValue(
+                               AnsiString(STATION_FACT_IN_RECORD[aFacts[i].Fact].Column),
+                               aFacts[i].OldText, aFacts[i].NewText);
+         end;
+      GRepository.Commit;
+      if logger <> nil then
+         begin
+         logger.Info('[LogStore] %d logged QSO value(s) corrected to what this contest ' +
+                     'uses now (%d station value(s), license year: %s)',
+                     [Result, Length(aFacts), BoolToStr(aCorrectYear, True)]);
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := -1;
+         Disable('correcting what logged QSOs sent', E);
+         end;
+   end;
+end;
+
 function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 var
    rebuilt: boolean;
@@ -3942,6 +4057,24 @@ begin
                begin
                logger.Info('[LogStore] schema 8: %d QSO(s) given the licence year ' +
                            'this contest sends (%d), once', [i, year]);
+               end;
+            end;
+
+         (* AND THE SCHEMA-9 COLUMNS OF THE ROWS THAT HAD ALREADY CAPTURED A
+           STATION, for the same reason and in the same place: those rows
+           exported the contest's name, class, check, precedence, postal code
+           and FOC number as they stand now, and the fill freezes exactly
+           that. Without it a captured row reads NULL there -- unknown -- and
+           exports a blank. Once: the mark goes with the fill. *)
+         i := GRepository.BackfillStationFacts(LogStoreCurrentMyFacts);
+         if i >= 0 then
+            begin
+            GRepository.Commit;
+            if logger <> nil then
+               begin
+               logger.Info('[LogStore] schema 9: %d QSO(s) that recorded their station ' +
+                           'given this contest''s name, class, check, precedence, ' +
+                           'postal code and FOC number, once', [i]);
                end;
             end;
          end;

@@ -94,7 +94,7 @@ design-time placeholder the operator never sees.
 - [SHIPS] `lblMyName` = `First name:`
 - [SHIPS] `lblMyGrid` = `Grid square:`
 - [SHIPS] `lblMyContinent` = `Continent:`
-- [SHIPS] `lblMyZone` = `CQ zone:`
+- [wired] `lblMyZone` = `CQ zone:` (the open contest's `MyZoneLabel`, 2026-11-11)
 - [SHIPS] `lblMyITUZone` = `ITU zone:`
 - [SHIPS] `lblMyState` = `State/Province:`
 - [SHIPS] `lblMySection` = `ARRL section:`

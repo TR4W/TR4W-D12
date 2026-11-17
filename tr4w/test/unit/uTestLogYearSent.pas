@@ -333,7 +333,9 @@ begin
    try
       db.Open(fn);
       CheckEquals(1, CommitFramesInWal(fn + '-wal'), 'the column, the mark and the stamp: ONE commit');
-      CheckEquals(8, db.SchemaVersion, 'stamped 8');
+      (* Current, not 8: a schema-7 log is carried to the newest schema in
+        the same one commit. *)
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
       CheckTrue(TestLogHasColumn(db, 'qso', 'year_sent'), 'the column');
       CheckEquals('1', QueryText(db, 'SELECT value FROM session_state WHERE key = ''' +
                                      LOG_YEAR_SENT_BACKFILL_KEY + ''''),

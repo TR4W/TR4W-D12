@@ -53,6 +53,7 @@ type
       procedure Test_DefaultFont_Fits;
       procedure Test_LargerFont_Fits;
       procedure Test_Reopen_ListsAreReplacedNotAppended;
+      procedure Test_OurStationShowsAndReadsBack;
    public
       procedure RunAllTests; override;
    end;
@@ -61,7 +62,9 @@ implementation
 
 uses
    Classes, SysUtils, Types, Forms, StdCtrls, DateTimePicker, VC,
-   uLCLFormHelpers, uTestShowOffScreen;
+   uLCLFormHelpers, uTestShowOffScreen,
+   uQsoMyFacts,        (* TQsoMyFacts -- the our-station group's values *)
+   uContestRegistry;   (* ContestIdentity -- which values a contest uses *)
 
 const
    (* The simulated wider-font platform. *)
@@ -312,11 +315,61 @@ begin
    end;
 end;
 
+(* SCHEMA 9 PHASE 2: the six values the QSO sent beside its grid. Shown for
+   every contest, editable where the QSO's contest uses them, a Cyrillic name
+   kept byte for byte through the box -- and a greyed box is never read back,
+   so an untouched save cannot erase what it holds. *)
+procedure TEditQSOLayoutTests.Test_OurStationShowsAndReadsBack;
+const
+   (* "Ivan", as UTF-16 code points, so this file stays ASCII. *)
+   CYRILLIC_NAME = #$0418#$0432#$0430#$043D;
+var
+   form: TfrmEditQSO;
+   facts, back: TQsoMyFacts;
+begin
+   InitWidgetSet;
+   BeginTest('EditQSO our station: the schema-9 values show, edit where used, and read back');
+   facts := NotCapturedMyFacts;
+   facts.Source := mfsLogged;
+   facts.Prec := 'B';
+   facts.Check := '07';
+   facts.Name := UTF8Encode(CYRILLIC_NAME);
+   facts.FdClass := '2A';
+
+   form := MakeForm(0);
+   try
+      form.ShowMyFactsFor(ContestIdentity(ARRLSSCW), facts);
+      CheckTrue(form.edtMyPrec.Enabled and form.edtMyCheck.Enabled,
+                'Sweepstakes: precedence and check are editable');
+      CheckFalse(form.edtMyName.Enabled or form.edtMyFdClass.Enabled,
+                 'its name and class are shown greyed');
+      CheckEquals('B', form.edtMyPrec.Text, 'the row''s precedence is shown');
+      back := form.ReadMyFacts(facts);
+      CheckFalse(MyFactsValuesDiffer(back, facts), 'untouched reads back unchanged');
+
+      form.edtMyPrec.Text := 'A';
+      form.edtMyName.Text := '';   (* a greyed box is not read *)
+      back := form.ReadMyFacts(facts);
+      CheckEquals('A', string(back.Prec), 'the typed precedence');
+      CheckTrue(back.Name = facts.Name, 'the greyed name is the row''s, not the box''s');
+
+      form.ShowMyFactsFor(ContestIdentity(NAQSOCW), facts);
+      CheckTrue(form.edtMyName.Enabled, 'NAQP: the name is editable');
+      CheckFalse(form.edtMyPrec.Enabled, 'and the precedence greyed, both ways on a reload');
+      back := form.ReadMyFacts(facts);
+      CheckTrue(back.Name = facts.Name, 'a Cyrillic name round-trips byte for byte');
+      CheckEquals(CYRILLIC_NAME, UTF8Decode(back.Name), 'and decodes to the name');
+   finally
+      form.Free;
+   end;
+end;
+
 procedure TEditQSOLayoutTests.RunAllTests;
 begin
    Test_DefaultFont_Fits;
    Test_LargerFont_Fits;
    Test_Reopen_ListsAreReplacedNotAppended;
+   Test_OurStationShowsAndReadsBack;
 end;
 
 end.

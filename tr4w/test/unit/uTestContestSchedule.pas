@@ -85,24 +85,15 @@ const
       contests docs/CONTEST_SCHEDULES.csv had no verified or candidate row
       for (pending and hold rows); edited by hand from then on, only ever
       DOWN. *)
-   SCHEDULE_NOT_YET_STATED: array[0..64] of string = (
-      'AP-SPRINT', 'ARCI', 'ARKTIKA-SPRING', 'ARRL-10',
-      'ARRL-DIGI', 'ARRL-VHF-JAN', 'AS-CHAMP', 'BATAVIA-FT8',
-      'BLACK SEA CUP', 'CIS', 'CQ-VHF', 'CQ-WW-SSB',
-      'CQIR', 'DARC-XMAS', 'EU-SPRINT-AUTUMN-CW', 'EU-SPRINT-AUTUMN-SSB',
-      'EU-SPRINT-SPRING-CW', 'EU-SPRINT-SPRING-SSB', 'EUROPEAN VHF', 'FISTS',
-      'INTERNET SPRINT', 'JA LONG PREFECT', 'KVP', 'LOCUST QSO PARTY',
-      'MINI40', 'MINI80', 'MINITEST', 'MONGOLIAN DX',
-      'NAQP-CW', 'NAQP-RTTY', 'OK-QSO-PARTY', 'OZCHR',
-      'OZCHR-TEAMS', 'OZHCR-VHF', 'QCWA', 'QCWA GOLDEN',
+   SCHEDULE_NOT_YET_STATED: array[0..31] of string = (
+      'AP-SPRINT', 'ARKTIKA-SPRING', 'AS-CHAMP', 'BATAVIA-FT8',
+      'BLACK SEA CUP', 'CIS', 'EU-SPRINT-SPRING-CW', 'EU-SPRINT-SPRING-SSB',
+      'EUROPEAN VHF', 'INTERNET SPRINT', 'JA LONG PREFECT', 'KVP',
+      'MONGOLIAN DX', 'OZCHR', 'OZCHR-TEAMS', 'OZHCR-VHF',
       'R4W-CHAMP', 'R9W-UW9WK-MEMORIAL', 'RADIO-MEMORY', 'RADIO-YOC',
-      'REGION 1 FIELD DAY-RCC-CW', 'REGION 1 FIELD DAY-RCC-SSB', 'RF-CHAMP-CW', 'RF-CHAMP-SSB',
-      'RF-CUP-CW', 'RF-CUP-DIG', 'RF-CUP-SSB', 'RF-VHF-FD',
-      'RSGB-ROPOCO-CW', 'RSGB-ROPOCO-SSB', 'RU3AX MEMORIAL', 'SA-SPRINT',
-      'SOUTH AMERICAN WW', 'SRR-JR', 'TEN TEN', 'TOEC',
-      'UCG', 'UKEI', 'UKRAINE CHAMPIONSHIP', 'UKRAINIAN',
-      'WINTER FIELD DAY', 'WRTC', 'WWIH', 'WWL',
-      'XMAS'
+      'RF-CHAMP-CW', 'RF-CHAMP-SSB', 'RF-VHF-FD', 'SOUTH AMERICAN WW',
+      'SRR-JR', 'TEN TEN', 'TOEC', 'UCG',
+      'UKEI', 'WRTC', 'WWL', 'XMAS'
       );
 
 type
@@ -551,7 +542,7 @@ end;
 procedure TContestScheduleTests.Test_OrderingOfRealContests;
 const
    IDS: array[0..6] of string = (
-      'ARRL-10', 'CQ-WPX-SSB', 'CWOPS', 'GA-QSO-PARTY', 'GENERAL QSO',
+      'AP-SPRINT', 'CQ-WPX-SSB', 'CWOPS', 'GA-QSO-PARTY', 'GENERAL QSO',
       'MICHIGAN QSO PARTY', 'MISSOURI QSO PARTY');
 var
    entries: TContestDateEntries;
@@ -601,17 +592,17 @@ begin
       overnight gap and both resume at 1400 -- a tie that keeps the
       alphabetical order. The CWT is next Wednesday, Michigan the next
       Saturday, CQ WPX SSB next March; General QSO (unscheduled) and
-      ARRL-10 (not yet stated) last, alphabetical. *)
+      AP-SPRINT (not yet stated) last, alphabetical. *)
    Build(At(2027, 4, 11, 5, 0));
    CheckEquals('GA-QSO-PARTY | MISSOURI QSO PARTY | CWOPS | MICHIGAN QSO PARTY | ' +
-               'CQ-WPX-SSB | ARRL-10 | GENERAL QSO', Order, 'in the gap');
+               'CQ-WPX-SSB | AP-SPRINT | GENERAL QSO', Order, 'in the gap');
    CheckEquals(Length(IDS), Length(entries), 'one entry per contest');
 
    (* SATURDAY 2027-04-10 2000: Georgia is ON THE AIR (since 1800) and sorts
       first; Missouri is in its gap until Sunday 1400. *)
    Build(At(2027, 4, 10, 20, 0));
    CheckEquals('GA-QSO-PARTY | MISSOURI QSO PARTY | CWOPS | MICHIGAN QSO PARTY | ' +
-               'CQ-WPX-SSB | ARRL-10 | GENERAL QSO', Order, 'Georgia running');
+               'CQ-WPX-SSB | AP-SPRINT | GENERAL QSO', Order, 'Georgia running');
    CheckEquals(Stamp(At(2027, 4, 10, 20, 0)), Stamp(entries[0].DateUTC), 'the running key is now');
 
    (* WEDNESDAY 2027-04-14 1330: the CWT is on the air. *)

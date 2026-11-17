@@ -655,6 +655,14 @@ the target shape, the M-step migration order and the open questions.
   - **Only the grid is overlaid.** `Station.MyState` is the SENT state, not
     `my_state`; country and call would go unknown for every imported row that
     names no MY_DXCC or STATION_CALLSIGN. Each wants its own ruling.
+  - **The SENT exchange is the row's for every my-value (log schema 9,
+    2026-11-17).** `aMy.MyName/MyFDClass/MyCheck/MyPrec/MyPostalCode/
+    MyFOCNumber`, which the Cabrillo/ADIF sent formatters read, now come from
+    the row through `MyStationExchangeOfQSO` (they were today's settings, so
+    a Sweepstakes precedence changed after logging rewrote the sent line). A
+    formatter keeps reading `aMy`; it never reads `Settings` itself.
+    `CanonicalSentExchange` (HamScore's line) still rebuilds from today's CQ
+    template -- not yet the row's.
   - **Never call `ActiveContest` inside a rule**: it runs `SetStation` and
     would wipe the overlay (the engine already avoids it, see
     `EngineIsNewMultiplierAnywhere`).

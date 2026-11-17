@@ -40,6 +40,10 @@ You own how TR4W turns text into keyed CW.
   (uninitialised `maxLen`) and all fourteen keying Icoms (a `DefineCapabilities`
   override replacing its parent wholesale). Write the exhaustive pin test in the
   **same commit** as any data move onto a type.
+- **A CAT keyer may have no abort and no speed.** DXLab Commander (`cwchars`,
+  2026-11-17) is the case: Escape withdraws only text still in its queue, the
+  rig keys at Commander's own speed, and the busy window is TR4W's speed
+  estimate x 1.25. Do not invent a stop command to make Escape look complete.
 
 ## Say this plainly when it comes up
 

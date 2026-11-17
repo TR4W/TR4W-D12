@@ -1,12 +1,12 @@
 object frmEditQSO: TfrmEditQSO
   Left = 0
-  Height = 519
+  Height = 575
   Top = 0
   Width = 584
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Edit QSO'
-  ClientHeight = 519
+  ClientHeight = 575
   ClientWidth = 584
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
@@ -653,11 +653,11 @@ object frmEditQSO: TfrmEditQSO
   end
   object grpMyStation: TGroupBox
     Left = 8
-    Height = 80
+    Height = 136
     Top = 410
     Width = 568
     Caption = 'Our station for this QSO'
-    ClientHeight = 62
+    ClientHeight = 118
     ClientWidth = 564
     TabOrder = 27
     object lblMyCall: TLabel
@@ -826,11 +826,121 @@ object frmEditQSO: TfrmEditQSO
       TabOrder = 8
       OnChange = FieldChanged
     end
+    object lblMyCheck: TLabel
+      Left = 146
+      Height = 17
+      Top = 58
+      Width = 52
+      AutoSize = False
+      Caption = 'Check'
+      Layout = tlCenter
+    end
+    object edtMyCheck: TEdit
+      Left = 200
+      Height = 21
+      Top = 56
+      Width = 76
+      MaxLength = 2
+      NumbersOnly = True
+      TabOrder = 9
+      OnChange = FieldChanged
+    end
+    object lblMyPrec: TLabel
+      Left = 286
+      Height = 17
+      Top = 58
+      Width = 52
+      AutoSize = False
+      Caption = 'Precedence'
+      Layout = tlCenter
+    end
+    object edtMyPrec: TEdit
+      Left = 340
+      Height = 21
+      Top = 56
+      Width = 76
+      CharCase = ecUppercase
+      MaxLength = 1
+      TabOrder = 10
+      OnChange = FieldChanged
+    end
+    object lblMyFdClass: TLabel
+      Left = 426
+      Height = 17
+      Top = 58
+      Width = 52
+      AutoSize = False
+      Caption = 'FD class'
+      Layout = tlCenter
+    end
+    object edtMyFdClass: TEdit
+      Left = 480
+      Height = 21
+      Top = 56
+      Width = 76
+      CharCase = ecUppercase
+      MaxLength = 3
+      TabOrder = 11
+      OnChange = FieldChanged
+    end
+    object lblMyName: TLabel
+      Left = 6
+      Height = 17
+      Top = 86
+      Width = 52
+      AutoSize = False
+      Caption = 'Name'
+      Layout = tlCenter
+    end
+    object edtMyName: TEdit
+      Left = 60
+      Height = 21
+      Top = 84
+      Width = 76
+      TabOrder = 12
+      OnChange = FieldChanged
+    end
+    object lblMyPostalCode: TLabel
+      Left = 146
+      Height = 17
+      Top = 86
+      Width = 52
+      AutoSize = False
+      Caption = 'Postal code'
+      Layout = tlCenter
+    end
+    object edtMyPostalCode: TEdit
+      Left = 200
+      Height = 21
+      Top = 84
+      Width = 76
+      TabOrder = 13
+      OnChange = FieldChanged
+    end
+    object lblMyFocNumber: TLabel
+      Left = 286
+      Height = 17
+      Top = 86
+      Width = 52
+      AutoSize = False
+      Caption = 'FOC number'
+      Layout = tlCenter
+    end
+    object edtMyFocNumber: TEdit
+      Left = 340
+      Height = 21
+      Top = 84
+      Width = 76
+      MaxLength = 5
+      NumbersOnly = True
+      TabOrder = 14
+      OnChange = FieldChanged
+    end
   end
   object lblDelivery: TLabel
     Left = 8
     Height = 17
-    Top = 494
+    Top = 550
     Width = 568
     AutoSize = False
     Caption = 'External logger delivery'

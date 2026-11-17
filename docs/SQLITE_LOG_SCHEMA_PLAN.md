@@ -2464,8 +2464,11 @@ a migration that adds nothing.
     the grid). `my_state` is the place, not the slot.
   - **A zone that is the same number keeps the session's text** (`05`, not
     `5`), so a QSO whose station did not move writes what it always did.
-  - **Name, FD class, check, precedence, FOC number and postal code stay the
-    session's:** no per-QSO column, and they do not change within a log.
+  - ~~**Name, FD class, check, precedence, FOC number and postal code stay the
+    session's:** no per-QSO column, and they do not change within a log.~~
+    **Wrong, and fixed at schema 9 (section 12n):** they do change -- a
+    Sweepstakes precedence corrected after logging rewrote every earlier
+    QSO's sent line. They are the row's now.
 - **`exchange_sent` IS the source for one case, and only one.** An imported or
   stamped row's `exchange_sent` is its file's STX_STRING verbatim (stage 2's
   D3 fix), and the ADIF export writes it back unchanged
@@ -2910,6 +2913,176 @@ through `TryLicenceYearOf`'s zone-slot fallback.)
   (the live capture through the store: ours 64 and `59 64`, a peer's NULL),
   `uTestLicenseYearScope.Test_ALoggedQSOKeepsTheYearItSent` (flipped: the
   same row exports 64 after the contest moves to 90).
+
+#### 12n. Schema 9 — every station fact is on the QSO (2026-11-17)
+
+NY4I: *"ALL MY_ VALUES GET WRITTEN TO THE QSO RECORD."* Found on the bench:
+in ARRL Sweepstakes the Cabrillo sent line took `NumberSent` from the QSO but
+precedence and check from `Settings.My.Resolved*` at export
+(`postunit.CurrentMyStationExchange`), so a precedence changed after logging
+rewrote every earlier QSO's sent line. Root cause: schema 3 stored the facts
+it needed for scoring and the ADIF MY_ tags, and `MyStationExchangeOfQSO` kept
+the rest the session's on the stated premise that they "do not change within
+a log". Nothing tied `uSettingsModel.TStationFact` to the my_* columns, so the
+gap was invisible.
+
+- **Six TEXT columns, last in the table** (`LOG_V9_QSO_COLUMNS`): `my_name`,
+  `my_fd_class`, `my_check`, `my_prec`, `my_postal_code`, `my_foc_number`;
+  `TQsoMyFacts.Name/FdClass/Check/Prec/PostalCode/FocNumber`. In
+  `QSO_MY_COLUMNS` (insert-only, plus Edit QSO's `UpdateQSOMyFacts`). They
+  follow `my_source` like the schema-3 values: never captured, the reader
+  falls back to the session; captured and empty, unknown. Name and postal code
+  are UTF-8 and decoded with `UTF8Decode` (a Cyrillic name round-trips).
+- **`my_check` is not `year_sent`.** Both are "the year first licensed" in
+  most cases, but MY CHECK is what Sweepstakes sends (as typed, '07'), and MY
+  LICENSE YEAR is what a contest with a `ReceivedYearKind` sends. Folding the
+  check into `year_sent` would need Sweepstakes to state a kind, and that
+  would trip the v6/v7 `rcvd_year := rcvd_zone` carry on Sweepstakes logs, the
+  schema-8 backfill and the Preferences correction, all of which read MY
+  LICENSE YEAR. A row never holds both.
+- **The pin is structural**: `uStationFactRecord.STATION_FACT_IN_RECORD`,
+  `array[TStationFact]`, names each fact's column and how it is kept
+  (`sfkAsTyped`, `sfkAsSent` for MY ZONE / MY ITU ZONE / MY LICENSE YEAR, or
+  `sfkNotPerQso` with a reason -- none today). A new fact does not compile
+  without a row; `uTestLogStationFacts` checks every column exists and every
+  typed fact is captured. `LogStoreCurrentMyFacts` captures by the table.
+- **The migration** adds the columns, and when a QSO row has `my_source` not
+  NULL writes the mark `LOG_STATION_FACTS_BACKFILL_KEY` -- one commit. Those
+  rows exported the contest's current values for the six, so the store's
+  one-shot backfill (`TLogRepository.BackfillStationFacts`, after set-up,
+  beside `BackfillYearSent`) fills their NULLs with exactly that, `assumed`
+  rows included, and deletes the mark in the same commit. Without it every
+  Sweepstakes/Field Day QSO logged since schema 3 would export a blank. It is
+  the 20th write path in `TestEveryWriteWaitsForItsCommit` (fingerprint gains
+  `my_prec`).
+- **Readers**: `MyStationExchangeOfQSO` overlays the six from the row, so
+  every Cabrillo and ADIF sent column (`aMy.*`) reads the row. Rescore needs
+  nothing: no scoring rule reads name, class, check, precedence, postal code
+  or FOC number (grep 2026-11-17: they are read only by the sent-exchange
+  formatters and by `DescribeSession`'s CW messages).
+- **Import**: `MY_NAME` and `MY_POSTAL_CODE` are read (`mffName`,
+  `mffPostalCode`); `MY_NAME` alone does not count as naming our station (it
+  names the operator, like `STATION_CALLSIGN`). ADIF has no tag for FD class,
+  check, precedence or FOC number, so `MyFactsForImport` gives those the
+  contest's even when the file's station is kept.
+- **Not written to ADIF export** (MY_NAME / MY_POSTAL_CODE tags): the contest
+  matrix captures live, so every matrix export would change and need NY4I's
+  re-freeze. A follow-up.
+- **Multi-op**: no packet change. A peer's QSO is stamped with this station's
+  six values, marked `assumed` (ruling D), through `LogStoreCurrentMyFacts`
+  (live) and `uGetServerLog` (catch-up).
+- **Consequence:** schema 8 shipped; a log this build opens is refused by
+  every earlier build.
+
+##### 12n, phase 2 -- editing the six, and correcting them (2026-11-17)
+
+No schema change. Three pieces, each a decision recorded where it lives.
+
+- **Edit QSO shows and edits the six** (`uEditQSOForm`, the our-station
+  group: Check, Precedence and FD class beside Year sent, then a row of Name,
+  Postal code and FOC number; the measured layout grows the group one row).
+  A box is **editable only where the QSO's contest uses the value** and is
+  otherwise shown greyed with the row's value -- Year sent's pattern. A greyed
+  box is **never read back** (`TfrmEditQSO.ReadMyFacts`), so a save cannot
+  erase a value the operator could not edit: every capture records every
+  as-typed fact, so a CQWW row holds a name. "Uses" is
+  `uContestBase.ContestUsesStationFact`: the fields the contest's New Contest
+  prompts ask for (both lists), and for the licence year its
+  `ReceivedYearKind`. No contest states its SENT exchange as data, so the
+  prompts are the nearest statement; a value a contest sends only through a
+  CW message is not covered. Name and postal code cross the LCL boundary as
+  `UTF8Decode` + `LclText` and back as `UTF8Encode(UTF8Decode(...))`.
+- **A changed value is checked** by the Station page's rule
+  (`uStationFactRecord.EditedStationFactProblem` over
+  `uStationFieldCheck.StationFieldProblem`; the zones too). **Only a changed
+  value**, unlike the Station page's every-field rule: an old row holding a
+  value today's rule refuses (a one-digit check) must not stop a grid
+  correction. Refused as a bad call is: `showwarning`, nothing saved.
+- **The never-captured hazard** (phase 1's finding): editing any station value
+  of a row with `my_source` NULL marked it `edited`, and the blanks the dialog
+  showed became UNKNOWN -- an old Sweepstakes row exported a blank precedence
+  and check after a grid edit. The rule is now one pure function,
+  `uQsoMyFacts.MyFactsAfterEdit`, which `uEditQSO.MyFactsAsSaved` calls: for
+  such a row the untouched values are frozen at the SESSION's
+  (`LogStoreCurrentMyFacts`) -- exactly what the row exported until that
+  save -- and only the values the operator changed are his. The dialog still
+  shows such a row's fields blank under "(not recorded)". One approximation:
+  the frozen call is the session's `MY CALL`, while `ExportCallOf` preferred
+  the log's declared call for the uncaptured row; they differ only when the
+  two calls differ. Pinned by `uTestLogMyFacts.
+  TestAnEditOfANeverCapturedRowKeepsWhatItExported`.
+- **Preferences: "Also this contest" for every value the open contest uses**
+  (`uStationFactChange`; issue 300's rule generalised -- `uLicenseYearChange`
+  now calls it and keeps only the year's command and its as-sent correction).
+  The bench finding: a contest's statement (design 7.12) wins over the
+  station's, so a wrong MY PREC stated at New Contest could not be corrected
+  from the UI. Now a Save that changes a station value the open contest uses
+  asks **once**, listing every such value (`SStationScope*`; the licence year
+  alone keeps its own wording). Station only (the default for Enter and
+  Escape) pins a value the contest followed; "Also this contest" states the
+  new one through `TryOverrideForContest` and records it in the log
+  (`LogStoreRecordContestStatement`). A value the contest does not use asks
+  nothing and follows the station.
+- **The Station page shows the CONTEST's value where it states one** (NY4I's
+  bench, same day). ARRL-SS-SSB stated MY PREC = U and MY CHECK = 80 at New
+  Contest; an earlier Preferences save had made the station's default B. The
+  page loaded the station's B and empty check, OK changed nothing and asked
+  nothing, so the contest's U could be neither seen nor changed -- under a
+  heading reading "Contest exchange". NY4I: *"after the initial New Contest
+  screen we should still set the values in the contest section of Station to
+  the values we entered."* The rule (`uStationFactChange.TStationFactsShown`):
+  every station value the open contest states (`HasContestOverride`) is SHOWN
+  as the contest's; Save compares the box against what was SHOWN. Left as
+  shown it writes nothing (writing would copy the contest's value into the
+  station's default); changed, it writes the default as before AND is asked
+  about even when the default did not move (typing B over a shown U with a
+  default of B). A value the contest does not state shows the station's, so
+  with no contest stating anything nothing changes. A note under the
+  contest column names the contest and lists the station defaults that
+  differ (`lblStationContestNote`). After a Save the boxes show what is in
+  force: after "Station default only" the contest's own value comes back,
+  which the question now says beforehand (`SStationScopeStationOnlyNote`).
+  The page is a cached singleton loaded at construction and after each
+  Apply; it also reloads the Station page on each opening while nothing is
+  unsaved, so a contest opened since shows its own. Opening another contest
+  is a relaunch, which rebuilds Preferences anyway. Creating a contest writes
+  nothing into the station's defaults.
+- **The correction**, after "Also this contest" only, default No for Enter
+  AND Escape (NY4I, 2026-11-13): one question listing each value and how many
+  logged QSOs sent the old one (`SStationCorrect*`), offered for a value kept
+  AS TYPED (`sfkAsTyped`) and for the licence year by its own rule -- not for
+  the zones, which are kept as scored. Yes runs `LogStoreCorrectSentStation`:
+  the year (`CorrectSentYear`) and every value
+  (`TLogRepository.CorrectSentStationValue`) in **one transaction**. The rows
+  are this station's CAPTURED QSOs (`my_source` 'logged' or 'edited'; never a
+  peer's, an imported or a never-captured row), matched on the exact old text
+  ('' is NULL), set to the new and **marked `edited`**. The column name comes
+  from `STATION_FACT_IN_RECORD` and the repository refuses any name that is not
+  a station value of `QSO_MY_COLUMNS`. A correction of a value scoring may read
+  (state, section, grid, park, IOTA -- `StationFactFeedsScoring`) is followed
+  by a rescore; the six and the year are not.
+- **Open, for NY4I: imported and stamped rows are not corrected.** The row set
+  copies the year's (whose imported rows hold their file's year). For name
+  and postal code that is right -- an imported row holds its file's. But FD
+  class, check, precedence and FOC number have no ADIF tag, so
+  `MyFactsForImport` gave those rows the CONTEST's value -- the same wrong
+  precedence a "Yes" corrects on logged rows stays on them, and the count
+  leaves them out. It matters only for an imported row WITHOUT an
+  `STX_STRING`: one with it exports its sent text verbatim
+  (`RecordedSentExchange`). Widening the row set for those four is a
+  one-clause change in `uLogRepository` and its test.
+- **Open: the bulk correction notifies nobody** -- no `qmEdited` to HamScore,
+  UDP or the external loggers, though the corrected precedence is in the
+  Cabrillo line HamScore was sent. The year's correction has the same gap.
+- **Open, for NY4I:** a never-captured row still falls back to the session for
+  the six, so "Also this contest" changes what such a row exports even when
+  the correction is answered No. The schema-9 backfill skipped those rows on
+  purpose (they fall back anyway); freezing them would be a second backfill.
+- Tests: `uTestStationFactChange` (the use, the command names, the question's
+  list, both answers, the correction's offer, the repository's row set and
+  marking, Edit QSO's check), `uTestEditQSOLayout.
+  Test_OurStationShowsAndReadsBack` (enabled per contest, greyed not read, a
+  Cyrillic name byte for byte), and the hazard test above.
 
 ---
 

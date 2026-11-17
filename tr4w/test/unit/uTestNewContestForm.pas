@@ -389,9 +389,9 @@ begin
                  'the list must not sort itself -- row i is the form''s FShown[i]');
       for i := 0 to High(rows) do
          begin
-         if frm.lstContests.Items[i] <> UTF8Encode(choices.Caption[rows[i]]) then
+         if frm.lstContests.Items[i] <> UTF8Encode(choices.DisplayText(rows[i], True)) then
             begin
-            CheckEquals(UTF8Encode(choices.Caption[rows[i]]), frm.lstContests.Items[i],
+            CheckEquals(UTF8Encode(choices.DisplayText(rows[i], True)), frm.lstContests.Items[i],
                         'row ' + IntToStr(i) + ' shows the contest''s caption, in order');
             Break;
             end;
@@ -428,7 +428,7 @@ begin
       (* The identity follows the row: the contest row 0 names is the one
         whose caption row 0 shows. *)
       ChooseRow(frm, 0);
-      CheckEquals(frm.lstContests.Items[0],
+      CheckEquals(Copy(frm.lstContests.Items[0], 1, Length(UTF8Encode(ContestChoiceCaption(frm.SelectedContest)))),
                   UTF8Encode(ContestChoiceCaption(frm.SelectedContest)),
                   'the chosen contest is the one its row names');
 
@@ -489,7 +489,7 @@ begin
       CheckTrue(frm.lstContests.ItemIndex >= 0,
                 'its row is selected in the narrowed list');
       CheckEquals(UTF8Encode(ContestChoiceCaption(chosen)),
-                  frm.lstContests.Items[frm.lstContests.ItemIndex],
+                  Copy(frm.lstContests.Items[frm.lstContests.ItemIndex], 1, Length(UTF8Encode(ContestChoiceCaption(chosen)))),
                   'the selected row is the chosen contest''s row');
       CheckEquals(1, GContestChanges,
                   'narrowing around the chosen contest is not a change');
@@ -596,9 +596,9 @@ begin
                   'ticked, the list holds every contest');
       for i := 0 to choices.Count - 1 do
          begin
-         if frm.lstContests.Items[i] <> UTF8Encode(choices.Caption[i]) then
+         if frm.lstContests.Items[i] <> UTF8Encode(choices.DisplayText(i, True)) then
             begin
-            CheckEquals(UTF8Encode(choices.Caption[i]), frm.lstContests.Items[i],
+            CheckEquals(UTF8Encode(choices.DisplayText(i, True)), frm.lstContests.Items[i],
                         'ticked, row ' + IntToStr(i) + ' is the list''s own order');
             Break;
             end;

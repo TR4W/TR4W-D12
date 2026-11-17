@@ -386,7 +386,13 @@ multipliers, CTY.DAT, band lookup and CRC32.
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 - **OUR STATION'S ADIF TAGS ARE THE RECORD'S, not the session's (log schema 3,
   stage 2, 2026-10-18).** Import reads STATION_CALLSIGN and the MY_* tags into
-  the row's my_* columns (`uADIF.MyFactsFromADIF`). A record naming no MY_ tag
+  the row's my_* columns (`uADIF.MyFactsFromADIF`); since log schema 9
+  (2026-11-17) also MY_NAME and MY_POSTAL_CODE -- but MY_NAME ALONE does not
+  count as naming our station (it names the operator), and the four schema-9
+  facts ADIF has no tag for (FD class, check, precedence, FOC number) take the
+  contest's even when the file's station is kept. Export does NOT yet write
+  MY_NAME / MY_POSTAL_CODE (it would re-freeze the contest matrix). A record
+  naming no MY_ tag
   is STAMPED with this contest's values, as a new QSO would be; a file that
   names some is reported, and the operator chooses (NY4I, 2026-10-18; headless
   keeps the file's). STX_STRING is the row's `exchange_sent`

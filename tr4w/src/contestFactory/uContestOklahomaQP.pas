@@ -174,6 +174,7 @@ type
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES. *)
       function GetHostState: string; override;
@@ -248,6 +249,14 @@ uses
 function TContestOklahomaQP.GetDisplayName: string;
 begin
    Result := 'Oklahoma QSO Party';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
+   CSV row OK-QSO-PARTY: status candidate. CANDIDATE: dates from NY4I's intake (2026-11-17), the recurrence rule inferred
+   from them; not yet checked against the sponsor's rules. *)
+function TContestOklahomaQP.GetSchedule: string;
+begin
+   Result := '2nd full weekend of March at 14:00 UTC for 32h';
 end;
 
 function TContestOklahomaQP.GetHostState: string;

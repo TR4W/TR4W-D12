@@ -72,6 +72,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -219,6 +220,15 @@ end;
 function TContestARRLVHFJan.GetDisplayName: string;
 begin
    Result := 'ARRL January VHF Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
+   CSV row ARRL-VHF-JAN: status verified. VERIFIED by NY4I (2026-11-17) against ARRL's
+   six-year calendar: 2026-2031 are all the 3rd full weekend, Saturday 19:00 UTC
+   to Monday 03:59. The rule text says "third or fourth ... as announced". *)
+function TContestARRLVHFJan.GetSchedule: string;
+begin
+   Result := '3rd full weekend of January at 19:00 UTC for 33h';
 end;
 
 function TContestARRLVHFJan.GetCabrilloName: string;

@@ -409,6 +409,15 @@ order. Two Commander semantics are pinned and must not be "simplified" away:
 The queue is emptied on `Connect`/`Disconnect`, so a stale `CmdTX` cannot key
 the rig on reconnect.
 
+**It keys CW by CAT** (2026-11-17): `rcCWByCAT`, `CWIsFactoryOwned` True, one
+`cwchars` per message (`CommanderCWCharsMessage` -- the parameters field is the
+RAW text, not a sub-field), queued like every set. The document has no speed,
+no stop, no prosigns and no length limit, so: no `rcCWSpeedSync`; `StopCW`
+withdraws only a `cwchars` still queued (`DiscardQueuedCommand`) and logs that
+the rest is keyed to the end -- never invent an abort; prosigns undeclared
+(literal); `CWFrameRule(0, False, 1.25)`. In SO2R, `EnsureSoleTransmitter`
+cannot silence a Commander radio mid-message.
+
 **`RegisterRadioById`'s id must be a quoted LITERAL.** `Lint-RadioRegistry`
 silently skips a call with fewer than two literals. A constant id once hid
 this radio from the count and from the duplicate-name check.

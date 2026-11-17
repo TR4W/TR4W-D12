@@ -3281,6 +3281,7 @@ msgstr "Kapitola"
 
 #: tfrmeditqso.lblcheck.caption
 #: uappstrings.sverifycolumncheck
+#: tfrmeditqso.lblmycheck.caption
 #, fuzzy
 msgid "Check"
 msgstr "Kontrola"
@@ -3366,6 +3367,8 @@ msgid "Power"
 msgstr "Výkon"
 
 #: tfrmeditqso.lblprecedence.caption
+#: uappstrings.seditqsomyprec
+#: tfrmeditqso.lblmyprec.caption
 #, fuzzy
 msgid "Precedence"
 msgstr "Přesnost"
@@ -10587,6 +10590,7 @@ msgid "class"
 msgstr ""
 
 #: uappstrings.sexchangehintfocnumber
+#: tfrmeditqso.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number"
 msgstr ""
@@ -11175,6 +11179,8 @@ msgid "External logger delivery"
 msgstr ""
 
 #: texternalloggersform.lblname.caption
+#: uappstrings.seditqsomyname
+#: tfrmeditqso.lblmyname.caption
 #, fuzzy
 msgid "Name"
 msgstr ""
@@ -11415,4 +11421,101 @@ msgstr ""
 #: uappstrings.snewcontestrunningnow
 #, fuzzy
 msgid "running now"
+msgstr ""
+
+#: uappstrings.seditqsomycheck
+#, fuzzy
+msgctxt "uappstrings.seditqsomycheck"
+msgid "Check"
+msgstr ""
+
+#: uappstrings.seditqsomyfdclass
+#: tfrmeditqso.lblmyfdclass.caption
+#, fuzzy
+msgid "FD class"
+msgstr ""
+
+#: uappstrings.seditqsomyfocnumber
+#, fuzzy
+msgctxt "uappstrings.seditqsomyfocnumber"
+msgid "FOC number"
+msgstr ""
+
+#: uappstrings.seditqsomypostalcode
+#: tfrmeditqso.lblmypostalcode.caption
+#, fuzzy
+msgid "Postal code"
+msgstr ""
+
+#: uappstrings.seditqsostationvaluerefused
+#, fuzzy
+msgid ""
+"%0:s \"%1:s\" cannot be saved.\n"
+"\n"
+"%2:s"
+msgstr ""
+
+#: uappstrings.sstationcorrectbody
+#, fuzzy
+msgid ""
+"QSOs already logged in this contest sent the old values:\n"
+"\n"
+"%0:s\n"
+"\n"
+"Change them to the new values?\n"
+"\n"
+"Answer Yes only if the old values were a mistake. A QSO sent what it sent on the air, and its log should say so."
+msgstr ""
+
+#: uappstrings.sstationcorrectline
+#, fuzzy
+msgid "%0:s: %1:d QSO(s) sent %2:s, now %3:s"
+msgstr ""
+
+#: uappstrings.sstationfactlicenseyear
+#, fuzzy
+msgctxt "uappstrings.sstationfactlicenseyear"
+msgid "License year"
+msgstr ""
+
+#: uappstrings.sstationscopebody
+#, fuzzy
+msgid ""
+"You changed the station's default:\n"
+"\n"
+"%0:s\n"
+"\n"
+"%1:s uses these. Should this contest use the new values too?\n"
+"\n"
+"QSOs already logged keep what they sent."
+msgstr ""
+
+#: uappstrings.sstationscopeline
+#, fuzzy
+msgid "%0:s: %1:s (this contest: %2:s)"
+msgstr ""
+
+#: uappstrings.sstationscopetitle
+#, fuzzy
+msgid "Station values"
+msgstr ""
+
+#: uappstrings.sstationcontestnote
+#, fuzzy
+msgid "Shown as %0:s uses them: this contest states its own value for some of these. Station defaults: %1:s."
+msgstr ""
+
+#: uappstrings.sstationcontestnoteitem
+#, fuzzy
+msgid "%0:s %1:s"
+msgstr ""
+
+#: uappstrings.sstationscopestationonlynote
+#, fuzzy
+msgid "\"Station default only\" keeps this contest's own value, and the page shows it again."
+msgstr ""
+
+#: tprefsform.lblstationcontestnote.caption
+#, fuzzy
+msgid "Shown as this contest uses them"
 msgstr ""

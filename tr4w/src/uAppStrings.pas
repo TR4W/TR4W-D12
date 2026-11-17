@@ -727,6 +727,58 @@ resourcestring
       'Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the ' +
       'air sent %1:s, and its log should say so.';
 
+   (* THE SAME TWO QUESTIONS FOR ANY STATION VALUE THE OPEN CONTEST USES --
+     schema 9 phase 2 (2026-11-17; uStationFactChange is the rule). Asked
+     ONCE per Save, listing every value that changed; when the only one is
+     the license year, the license-year text above is asked instead. The
+     buttons are SLicenseYearScopeAlsoContest and SLicenseYearScopeStationOnly
+     (the default for Enter and Escape); the correction is Yes/No, default
+     No.
+
+     SStationScopeLine is one line of the list: %0:s the value's name
+     (StationFactCaption), %1:s the new station default, %2:s what the
+     contest uses now (SLicenseYearNone for none). SStationScopeBody: %0:s
+     the lines, %1:s the contest's name.
+
+     SStationCorrectLine: %0:s the name, %1:d how many logged QSOs, %2:s the
+     old value, %3:s the new one. SStationCorrectBody: %0:s the lines. *)
+   SStationScopeTitle = 'Station values';
+   SStationScopeLine = '%0:s: %1:s (this contest: %2:s)';
+   SStationScopeBody =
+      'You changed the station''s default:' + sLineBreak +
+      sLineBreak +
+      '%0:s' + sLineBreak +
+      sLineBreak +
+      '%1:s uses these. Should this contest use the new values too?' +
+      sLineBreak + sLineBreak +
+      'QSOs already logged keep what they sent.';
+   (* APPENDED TO BOTH SCOPE QUESTIONS (the list's and the license year's):
+     the Station page shows the contest's own value where it states one, so
+     "Station default only" puts that value back in the box -- said before
+     it happens, not discovered after. *)
+   SStationScopeStationOnlyNote =
+      '"Station default only" keeps this contest''s own value, and the page ' +
+      'shows it again.';
+   (* THE NOTE ON THE STATION PAGE while a value it shows is the open
+     contest's and differs from the station's default (NY4I's bench,
+     2026-11-17: the page showed the station's B while the contest sent U).
+     %0:s the contest's name, %1:s the station defaults, each an
+     SStationContestNoteItem (%0:s the value's name, %1:s the default,
+     SLicenseYearNone for none) joined by '; '. *)
+   SStationContestNote =
+      'Shown as %0:s uses them: this contest states its own value for some ' +
+      'of these. Station defaults: %1:s.';
+   SStationContestNoteItem = '%0:s %1:s';
+   SStationCorrectLine = '%0:s: %1:d QSO(s) sent %2:s, now %3:s';
+   SStationCorrectBody =
+      'QSOs already logged in this contest sent the old values:' + sLineBreak +
+      sLineBreak +
+      '%0:s' + sLineBreak +
+      sLineBreak +
+      'Change them to the new values?' + sLineBreak + sLineBreak +
+      'Answer Yes only if the old values were a mistake. A QSO sent what it ' +
+      'sent on the air, and its log should say so.';
+
    (* WHY A STATION FIELD'S TEXT IS NOT THAT FIELD'S SHAPE (2026-11-16) --
      uStationFieldCheck.StationFieldProblem's answers, shown by Preferences >
      Station when the field loses focus and listed at Save. The line above
@@ -1211,6 +1263,25 @@ resourcestring
      refusal of one the contest's kind cannot send. *)
    SEditQSOMyYearSent           = 'Year sent';
    SEditQSOImproperSentYear     = 'Improper license year sent!!';
+   (* THE REST OF WHAT THE QSO SENT OF OUR STATION -- log schema 9 (phase 2,
+     2026-11-17). Also the names uStationFactRecord.StationFactCaption gives
+     every station fact, which Preferences lists in its two questions below,
+     so IOTA and the license year are here though Edit QSO shows neither
+     under these words. *)
+   SEditQSOMyName               = 'Name';
+   SEditQSOMyFdClass            = 'FD class';
+   SEditQSOMyCheck              = 'Check';
+   SEditQSOMyPrec               = 'Precedence';
+   SEditQSOMyPostalCode         = 'Postal code';
+   SEditQSOMyFocNumber          = 'FOC number';
+   SEditQSOMyIota               = 'IOTA';
+   SStationFactLicenseYear      = 'License year';
+   (* A changed value of our station that its field's rule refuses
+     (uStationFactRecord.EditedStationFactProblem): %0:s the field's name,
+     %1:s the text typed, %2:s the rule's reason. Shown as a bad call is,
+     and nothing is saved. *)
+   SEditQSOStationValueRefused  = '%0:s "%1:s" cannot be saved.' + sLineBreak +
+                                  sLineBreak + '%2:s';
 
    (* FILE > OPEN LOG... (issue 218, S0; the New Contest dialog since issue
      228). TR4W closes the open contest the way File > Exit does and starts

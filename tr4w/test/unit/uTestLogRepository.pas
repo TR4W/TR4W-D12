@@ -1963,6 +1963,7 @@ begin
          '|| '':'' || IFNULL(my_grid, '''') || '':'' || IFNULL(my_source, '''') ' +
          '|| '':'' || IFNULL(sent_to_server, '''') || '':'' || ' +
          'IFNULL(server_dirty, '''') || '':'' || IFNULL(year_sent, '''') ' +
+         '|| '':'' || IFNULL(my_prec, '''') ' +
          'AS c FROM qso ORDER BY id)), ' +
          '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
@@ -2005,7 +2006,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 19;
+   STEPS = 20;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -2025,7 +2026,8 @@ const
       'UpdateQSOMyFacts',
       'MarkServerProgress',
       'BackfillYearSent',
-      'CorrectSentYear');
+      'CorrectSentYear',
+      'BackfillStationFacts');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -2167,6 +2169,19 @@ begin
                   begin
                   (* The seed sent no year: the correction gives it one. *)
                   repo.CorrectSentYear(False, 0, True, 64);
+                  end;
+               19:
+                  begin
+                  (* Log schema 9: the seed captures a station with no
+                    precedence, then the mark and the fill -- none of it
+                    committed. A fill that committed itself would take the
+                    capture with it, and the reopened log would show both. *)
+                  facts := NotCapturedMyFacts;
+                  facts.Source := mfsLogged;
+                  repo.UpdateQSOMyFacts(seedId, facts);
+                  repo.SaveSessionValue(LOG_STATION_FACTS_BACKFILL_KEY, '1');
+                  facts.Prec := 'A';
+                  repo.BackfillStationFacts(facts);
                   end;
             end;
 

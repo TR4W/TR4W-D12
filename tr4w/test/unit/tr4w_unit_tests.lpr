@@ -779,6 +779,16 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       the rule, the reader, the column, the migration, the backfill and the
       correction. *)
    uTestLogYearSent     in 'uTestLogYearSent.pas',
+   (* Log schema 9: every station fact is kept on the QSO or named as not
+      per-QSO -- the table, the capture, the column, the migration, the
+      backfill, the import and the Sweepstakes sent line. *)
+   uStationFactRecord   in '..\..\src\uStationFactRecord.pas',
+   uTestLogStationFacts in 'uTestLogStationFacts.pas',
+   (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
+      uses (the generalised issue 300 rule), the contest's use of a value,
+      Edit QSO's check of a changed value, and the station-value correction. *)
+   uStationFactChange   in '..\..\src\uStationFactChange.pas',
+   uTestStationFactChange in 'uTestStationFactChange.pas',
    (* A locked log: the busy classifier, the lock probe, the stale-snapshot
       write, the WRL worker's rollback and the watchdog (2026-10-31). *)
    uLogConnectionWatch  in '..\..\src\domain\uLogConnectionWatch.pas',
@@ -1391,6 +1401,8 @@ begin
    RegisterSuite(TLicenseYearSettingTests.Create('LicenseYearSetting'));
    RegisterSuite(TLicenseYearScopeTests.Create('LicenseYearScope'));
    RegisterSuite(TLogYearSentTests.Create('LogYearSent'));
+   RegisterSuite(TLogStationFactsTests.Create('LogStationFacts'));
+   RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));

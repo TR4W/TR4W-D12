@@ -123,6 +123,15 @@ type
     // four digits, or a count), and uContestBase.ApplyEditedSentYear reads it.
     lblMyYearSent: TLabel;
     edtMyYearSent: TEdit;
+    // THE REST OF WHAT THE QSO SENT OF OUR STATION -- log schema 9 (phase 2,
+    // 2026-11-17). By name, through ShowMyFactsFor / ReadMyFacts. Each is
+    // enabled only where the QSO's contest uses it
+    // (uContestBase.ContestUsesStationFact), as Year sent is; a greyed box
+    // still SHOWS the row's value and is never read back.
+    lblMyCheck, lblMyPrec, lblMyFdClass, lblMyName, lblMyPostalCode,
+      lblMyFocNumber: TLabel;
+    edtMyCheck, edtMyPrec, edtMyFdClass, edtMyName, edtMyPostalCode,
+      edtMyFocNumber: TEdit;
 
     // WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, by name,
     // through EditQSOShowDelivery. A label: it raises no OnChange, so it can
@@ -161,6 +170,15 @@ type
        directions are set on every load. Public for the test, which calls it
        on a form it built and never showed. *)
     procedure ShowZoneBoxFor(aContest: TContestBase);
+    (* OUR STATION AS RECORDED FOR THE QSO, shown -- the group's caption says
+       where the values came from; the six schema-9 boxes are enabled where
+       aContest uses them (nil: none). Set both ways on every load: the form
+       is reused. Public for the test, as ShowZoneBoxFor. *)
+    procedure ShowMyFactsFor(aContest: TContestBase; const aFacts: TQsoMyFacts);
+    (* aShown with the typed values in place of the shown ones. A DISABLED box
+       is not read: its value stays aShown's, so a greyed box can never turn
+       an untouched save into an erase. *)
+    function ReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
   private
     (* The .lfm's label (as translated) and length of the zone box, taken the
        first time ShowZoneBoxFor runs, before anything changed them. *)
@@ -278,8 +296,9 @@ procedure EditQSOCloseForm;
 // OUR STATION AS RECORDED -- shown, and read back. A no-op (and aShown back)
 // when the form is not up. The read returns aShown with the typed values in
 // place of the shown ones: the fields the form does not show (IOTA, country,
-// continent) and the source are carried through untouched.
-procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
+// continent), the ones aContest does not use, and the source are carried
+// through untouched.
+procedure EditQSOShowMyFacts(aContest: TContestBase; const aFacts: TQsoMyFacts);
 function  EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
 
 // THE LICENCE YEAR THE QSO SENT (issue 300). Show: the box holds the row's
@@ -345,6 +364,7 @@ uses
   uDialogs,           // YesOrNo
   VC,                 // TC_SAVECHANGES
   utils_text,         // LclText -- the year heading, converted for the LCL once
+  uStationFactRecord, // StationFactCaption -- the schema-9 labels
   Log4D;
 
 var
@@ -649,13 +669,40 @@ begin
       end;
 end;
 
-procedure EditQSOShowMyFacts(const aFacts: TQsoMyFacts);
+(* A SCHEMA-9 VALUE INTO ITS BOX AND BACK. The record holds UTF-8 (a name may
+  be Cyrillic): decoded to the program's string, then LclText at the LCL
+  boundary -- never a string() cast, which would read the bytes as ANSI. The
+  read is the inverse, trimmed. *)
+function ShownStationText(const aUtf8: AnsiString): TCaption;
 begin
-   if frmEditQSO = nil then
-      begin
-      Exit;
-      end;
+   Result := LclText(UTF8Decode(aUtf8));
+end;
 
+function TypedStationText(const aText: TCaption): AnsiString;
+begin
+   Result := UTF8Encode(Trim(UTF8Decode(aText)));
+end;
+
+(* One schema-9 box: the row's value, enabled where the contest uses it. *)
+procedure ShowStationBox(aEdit: TEdit; aContest: TContestBase;
+                         aFact: TStationFact; const aUtf8: AnsiString);
+begin
+   aEdit.Text := ShownStationText(aUtf8);
+   aEdit.Enabled := ContestUsesStationFact(aContest, aFact);
+end;
+
+(* One schema-9 box read back: its text if enabled, else aShown's value. *)
+function ReadStationBox(aEdit: TEdit; const aShownValue: AnsiString): AnsiString;
+begin
+   Result := aShownValue;
+   if aEdit.Enabled then
+      begin
+      Result := TypedStationText(aEdit.Text);
+      end;
+end;
+
+procedure TfrmEditQSO.ShowMyFactsFor(aContest: TContestBase; const aFacts: TQsoMyFacts);
+begin
    // WHERE THE VALUES CAME FROM IS SAID IN THE CAPTION, because an empty
    // field means two different things: on a row recorded before log schema 3
    // nothing was recorded at all, and on any other it is unknown. A peer's
@@ -663,26 +710,64 @@ begin
    case aFacts.Source of
       mfsNotCaptured:
          begin
-         frmEditQSO.grpMyStation.Caption := SEditQSOMyStationNotRecorded;
+         grpMyStation.Caption := SEditQSOMyStationNotRecorded;
          end;
       mfsAssumed:
          begin
-         frmEditQSO.grpMyStation.Caption := SEditQSOMyStationAssumed;
+         grpMyStation.Caption := SEditQSOMyStationAssumed;
          end;
       else
          begin
-         frmEditQSO.grpMyStation.Caption := SEditQSOMyStation;
+         grpMyStation.Caption := SEditQSOMyStation;
          end;
    end;
 
-   frmEditQSO.edtMyCall.Text := aFacts.Call;
-   frmEditQSO.edtMyGrid.Text := aFacts.Grid;
-   frmEditQSO.edtMyState.Text := aFacts.State;
-   frmEditQSO.edtMyCounty.Text := aFacts.County;
-   frmEditQSO.edtMySection.Text := aFacts.Section;
-   frmEditQSO.edtMyPark.Text := aFacts.Park;
-   frmEditQSO.edtMyCQZone.Text := ZoneText(aFacts.CQZone);
-   frmEditQSO.edtMyITUZone.Text := ZoneText(aFacts.ITUZone);
+   edtMyCall.Text := aFacts.Call;
+   edtMyGrid.Text := aFacts.Grid;
+   edtMyState.Text := aFacts.State;
+   edtMyCounty.Text := aFacts.County;
+   edtMySection.Text := aFacts.Section;
+   edtMyPark.Text := aFacts.Park;
+   edtMyCQZone.Text := ZoneText(aFacts.CQZone);
+   edtMyITUZone.Text := ZoneText(aFacts.ITUZone);
+
+   (* SCHEMA 9: shown always (a CQWW row records a name too), editable only
+      where the QSO's contest uses the value -- Year sent's pattern. *)
+   ShowStationBox(edtMyCheck,      aContest, sfCheck,      aFacts.Check);
+   ShowStationBox(edtMyPrec,       aContest, sfPrec,       aFacts.Prec);
+   ShowStationBox(edtMyFdClass,    aContest, sfFdClass,    aFacts.FdClass);
+   ShowStationBox(edtMyName,       aContest, sfName,       aFacts.Name);
+   ShowStationBox(edtMyPostalCode, aContest, sfPostalCode, aFacts.PostalCode);
+   ShowStationBox(edtMyFocNumber,  aContest, sfFocNumber,  aFacts.FocNumber);
+end;
+
+function TfrmEditQSO.ReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
+begin
+   Result := aShown;
+   Result.Call := Trim(edtMyCall.Text);
+   Result.Grid := Trim(edtMyGrid.Text);
+   Result.State := Trim(edtMyState.Text);
+   Result.County := Trim(edtMyCounty.Text);
+   Result.Section := Trim(edtMySection.Text);
+   Result.Park := Trim(edtMyPark.Text);
+   // An empty or unreadable zone is unknown, 0 -- never a guess.
+   Result.CQZone := StrToIntDef(Trim(edtMyCQZone.Text), 0);
+   Result.ITUZone := StrToIntDef(Trim(edtMyITUZone.Text), 0);
+
+   Result.Check := ReadStationBox(edtMyCheck, aShown.Check);
+   Result.Prec := ReadStationBox(edtMyPrec, aShown.Prec);
+   Result.FdClass := ReadStationBox(edtMyFdClass, aShown.FdClass);
+   Result.Name := ReadStationBox(edtMyName, aShown.Name);
+   Result.PostalCode := ReadStationBox(edtMyPostalCode, aShown.PostalCode);
+   Result.FocNumber := ReadStationBox(edtMyFocNumber, aShown.FocNumber);
+end;
+
+procedure EditQSOShowMyFacts(aContest: TContestBase; const aFacts: TQsoMyFacts);
+begin
+   if frmEditQSO <> nil then
+      begin
+      frmEditQSO.ShowMyFactsFor(aContest, aFacts);
+      end;
 end;
 
 // ------------------------------------------------- the zone box, or the year
@@ -724,20 +809,10 @@ end;
 function EditQSOReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
 begin
    Result := aShown;
-   if frmEditQSO = nil then
+   if frmEditQSO <> nil then
       begin
-      Exit;
+      Result := frmEditQSO.ReadMyFacts(aShown);
       end;
-
-   Result.Call := Trim(frmEditQSO.edtMyCall.Text);
-   Result.Grid := Trim(frmEditQSO.edtMyGrid.Text);
-   Result.State := Trim(frmEditQSO.edtMyState.Text);
-   Result.County := Trim(frmEditQSO.edtMyCounty.Text);
-   Result.Section := Trim(frmEditQSO.edtMySection.Text);
-   Result.Park := Trim(frmEditQSO.edtMyPark.Text);
-   // An empty or unreadable zone is unknown, 0 -- never a guess.
-   Result.CQZone := StrToIntDef(Trim(frmEditQSO.edtMyCQZone.Text), 0);
-   Result.ITUZone := StrToIntDef(Trim(frmEditQSO.edtMyITUZone.Text), 0);
 end;
 
 procedure EditQSOShowSentYear(aContest: TContestBase; const aFacts: TQsoMyFacts);
@@ -1132,8 +1207,13 @@ begin
                    lblMyState,   edtMyState,   lblMyCounty, edtMyCounty]);
       mine.AddRow([lblMySection, edtMySection, lblMyPark, edtMyPark,
                    lblMyCQZone,  edtMyCQZone,  lblMyITUZone, edtMyITUZone]);
-      mine.AddRow([lblMyYearSent, edtMyYearSent, nil, nil,
-                   nil,          nil,          nil, nil]);
+      (* Schema 9: the rest of what the QSO sent, in the year's row and one
+         more -- the group grows a row, the window does not grow wider than
+         its widest label column needs. *)
+      mine.AddRow([lblMyYearSent, edtMyYearSent, lblMyCheck, edtMyCheck,
+                   lblMyPrec,     edtMyPrec,     lblMyFdClass, edtMyFdClass]);
+      mine.AddRow([lblMyName,     edtMyName,     lblMyPostalCode, edtMyPostalCode,
+                   lblMyFocNumber, edtMyFocNumber, nil, nil]);
       mine.Measure(Px(6), [Px(52), Px(76), Px(52), Px(76), Px(52), Px(76), Px(52), Px(76)],
                    [0, Px(2), Px(10), Px(2), Px(10), Px(2), Px(10), Px(2)],
                    Px(2), Px(DROPDOWN_CHROME_96));
@@ -1197,6 +1277,13 @@ begin
    aForm.lblMyCQZone.Caption := SEditQSOMyCQZone;
    aForm.lblMyITUZone.Caption := SEditQSOMyITUZone;
    aForm.lblMyYearSent.Caption := SEditQSOMyYearSent;
+   (* Schema 9: named as Preferences names them (StationFactCaption). *)
+   aForm.lblMyCheck.Caption := LclText(StationFactCaption(sfCheck));
+   aForm.lblMyPrec.Caption := LclText(StationFactCaption(sfPrec));
+   aForm.lblMyFdClass.Caption := LclText(StationFactCaption(sfFdClass));
+   aForm.lblMyName.Caption := LclText(StationFactCaption(sfName));
+   aForm.lblMyPostalCode.Caption := LclText(StationFactCaption(sfPostalCode));
+   aForm.lblMyFocNumber.Caption := LclText(StationFactCaption(sfFocNumber));
 end;
 
 procedure TfrmEditQSO.HandleShow(Sender: TObject);

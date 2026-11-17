@@ -593,6 +593,24 @@ type
         mark's removal together. *)
       function BackfillYearSent(aKnown: boolean; aYear: integer): integer;
 
+      (* THE ONE-SHOT BACKFILL OF THE SCHEMA-9 COLUMNS OF A LOG THE MIGRATION
+        MARKED (uLogSchema.LOG_STATION_FACTS_BACKFILL_KEY). The caller hands
+        in the contest's values NOW (uLogStore.LogStoreCurrentMyFacts),
+        because that is what every captured row exported for these six until
+        it had a column for them -- the export overlaid only the schema-3
+        fields and took the rest from the session.
+
+        FILLED: every QSO row that CAPTURED its station (my_source not NULL,
+        'assumed' included -- a peer's row exported the session's values
+        too), each column only where it is still NULL. A never-captured row
+        is left alone: it falls back to the session anyway. An empty value
+        fills nothing, which is what that row exported: nothing.
+
+        Then the mark is deleted. -1: no mark, nothing done; else the rows
+        the UPDATE touched. DOES NOT COMMIT: the caller commits the fill and
+        the mark's removal together. *)
+      function BackfillStationFacts(const aFacts: TQsoMyFacts): integer;
+
       (* THE QSOs THIS STATION LOGGED THAT SENT A GIVEN LICENCE YEAR -- issue
         300, the correction Preferences offers after the contest's year
         changes. "This station's": a QSO row whose my_source is NULL,
@@ -604,6 +622,25 @@ type
       function CountQSOsSentYear(aKnown: boolean; aYear: integer): integer;
       function CorrectSentYear(aOldKnown: boolean; aOld: integer;
                                aNewKnown: boolean; aNew: integer): integer;
+
+      (* THE QSOs THIS STATION LOGGED THAT SENT A GIVEN STATION VALUE -- log
+        schema 9 phase 2: the correction Preferences offers after a contest's
+        MY PREC, MY CHECK, ... changes (uStationFactChange). aColumn is the
+        qso column the value is kept in, as uStationFactRecord.
+        STATION_FACT_IN_RECORD names it -- never operator text; a name that is
+        not one of QSO_MY_COLUMNS' station values raises.
+
+        THE ROWS: record_kind 'QSO' and my_source 'logged' or 'edited' --
+        this station's captured QSOs. NOT a never-captured row (it holds no
+        value and follows the session; an old value of '' would otherwise
+        match its NULL), not a peer's ('assumed') and not an imported one.
+        aOld '' matches the column NULL (BindText stores '' as NULL).
+
+        Count reads. Correct sets the column to aNew (NULL for '') and marks
+        each row 'edited' -- the operator changed what it records -- and
+        answers how many. DOES NOT COMMIT. *)
+      function CountQSOsSentStationValue(const aColumn, aOld: AnsiString): integer;
+      function CorrectSentStationValue(const aColumn, aOld, aNew: AnsiString): integer;
       (* aEdited is the row's edited flag (schema 4, Q113): True for a memory
          the OPERATOR edited, which LoadEditedMessages hands back at open.
          Every other row records the contest's default as it stood. *)
@@ -1336,7 +1373,9 @@ const
      them. *)
    QSO_MY_COLUMNS =
       'my_county, my_grid, my_state, my_call, my_section, my_park, my_iota, ' +
-      'my_country, my_continent, my_cq_zone, my_itu_zone, my_source, year_sent';
+      'my_country, my_continent, my_cq_zone, my_itu_zone, my_source, year_sent, ' +
+      (* Schema 9 -- uLogSchema.LOG_V9_QSO_COLUMNS, in its order. *)
+      'my_name, my_fd_class, my_check, my_prec, my_postal_code, my_foc_number';
 
    (* Named once. Adding a column means adding it here, in BindRecord and in
      ReadRecord, and the round-trip test fails if the three disagree. *)
@@ -1414,7 +1453,8 @@ const
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
       ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
-      ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source, :year_sent';
+      ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source, :year_sent, ' +
+      ':my_name, :my_fd_class, :my_check, :my_prec, :my_postal_code, :my_foc_number';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -1550,8 +1590,11 @@ type
       qc_my_county, qc_my_grid, qc_my_state, qc_my_call, qc_my_section,
       qc_my_park, qc_my_iota, qc_my_country, qc_my_continent, qc_my_cq_zone,
       qc_my_itu_zone, qc_my_source,
-      (* year_sent, schema 8 (issue 300) -- the last of QSO_MY_COLUMNS. *)
-      qc_year_sent);
+      (* year_sent, schema 8 (issue 300). *)
+      qc_year_sent,
+      (* Schema 9 -- the last of QSO_MY_COLUMNS. *)
+      qc_my_name, qc_my_fd_class, qc_my_check, qc_my_prec, qc_my_postal_code,
+      qc_my_foc_number);
 
 const
    QC_PREFIX: AnsiString = 'qc_';
@@ -2155,6 +2198,13 @@ begin
    BindText(P('my_continent'), aFacts.Continent);
    BindZone(P('my_cq_zone'), aFacts.CQZone);
    BindZone(P('my_itu_zone'), aFacts.ITUZone);
+   (* Schema 9: as typed; '' is NULL, unknown. *)
+   BindText(P('my_name'), aFacts.Name);
+   BindText(P('my_fd_class'), aFacts.FdClass);
+   BindText(P('my_check'), aFacts.Check);
+   BindText(P('my_prec'), aFacts.Prec);
+   BindText(P('my_postal_code'), aFacts.PostalCode);
+   BindText(P('my_foc_number'), aFacts.FocNumber);
    (* '' for mfsNotCaptured, which BindText stores as NULL. *)
    BindText(P('my_source'), MyFactsSourceToken(aFacts.Source));
    (* THE SENT YEAR (schema 8): NULL when none was sent; 0 is the year 00. *)
@@ -2227,6 +2277,12 @@ begin
    aFacts.Continent := S(qc_my_continent);
    aFacts.CQZone := Z(qc_my_cq_zone);
    aFacts.ITUZone := Z(qc_my_itu_zone);
+   aFacts.Name := S(qc_my_name);
+   aFacts.FdClass := S(qc_my_fd_class);
+   aFacts.Check := S(qc_my_check);
+   aFacts.Prec := S(qc_my_prec);
+   aFacts.PostalCode := S(qc_my_postal_code);
+   aFacts.FocNumber := S(qc_my_foc_number);
 end;
 
 (* PRECONDITION: aQuery was opened by OpenQsoReader, so its fields are
@@ -2672,6 +2728,49 @@ begin
    end;
 end;
 
+function TLogRepository.BackfillStationFacts(const aFacts: TQsoMyFacts): integer;
+var
+   q: TSQLQuery;
+begin
+   (* See the declaration. *)
+   Result := -1;
+   if SessionValue(LOG_STATION_FACTS_BACKFILL_KEY) = '' then
+      begin
+      Exit;
+      end;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      (* COALESCE, so a column already holding a value keeps it, and a NULL
+        bound for an empty value leaves the column NULL. A per-call statement
+        (prepared here), so it begins its own transaction -- see
+        ExecuteKeptWrite for why that matters. *)
+      q.SQL.Text :=
+         'UPDATE qso SET ' +
+         '  my_name        = COALESCE(my_name, :name), ' +
+         '  my_fd_class    = COALESCE(my_fd_class, :fd_class), ' +
+         '  my_check       = COALESCE(my_check, :check_), ' +
+         '  my_prec        = COALESCE(my_prec, :prec), ' +
+         '  my_postal_code = COALESCE(my_postal_code, :postal_code), ' +
+         '  my_foc_number  = COALESCE(my_foc_number, :foc_number) ' +
+         'WHERE my_source IS NOT NULL AND record_kind = ''QSO''';
+      BindText(q.ParamByName('name'), aFacts.Name);
+      BindText(q.ParamByName('fd_class'), aFacts.FdClass);
+      BindText(q.ParamByName('check_'), aFacts.Check);
+      BindText(q.ParamByName('prec'), aFacts.Prec);
+      BindText(q.ParamByName('postal_code'), aFacts.PostalCode);
+      BindText(q.ParamByName('foc_number'), aFacts.FocNumber);
+      q.ExecSQL;
+      Result := q.RowsAffected;
+      q.SQL.Text := 'DELETE FROM session_state WHERE key = :key';
+      q.ParamByName('key').AsString := LOG_STATION_FACTS_BACKFILL_KEY;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
 const
    (* THE ROWS WHOSE SENT YEAR IS THIS STATION'S -- see CountQSOsSentYear. *)
    OUR_SENT_YEAR_ROWS =
@@ -2740,6 +2839,99 @@ begin
       if aOldKnown then
          begin
          q.ParamByName('old').AsInteger := aOld;
+         end;
+      q.ExecSQL;
+      Result := q.RowsAffected;
+   finally
+      q.Free;
+   end;
+end;
+
+const
+   (* THE ROWS WHOSE STATION VALUES ARE THIS STATION'S AND CAPTURED -- see
+     CountQSOsSentStationValue. *)
+   OUR_CAPTURED_ROWS: AnsiString =
+      'record_kind = ''QSO'' AND my_source IN (''logged'', ''edited'') ';
+
+   (* The statements' fixed pieces, typed AnsiString so that joining the
+     column name at run time stays AnsiString + AnsiString (see the note on
+     COUNT_OUR_SENT_YEAR_ROWS). *)
+   MY_COLUMN_LIST: AnsiString = ', ' + QSO_MY_COLUMNS + ',';
+   SQL_COMMA_SPACE: AnsiString = ', ';
+   SQL_COMMA: AnsiString = ',';
+   SQL_AND: AnsiString = 'AND ';
+   SQL_IS_NULL: AnsiString = ' IS NULL';
+   SQL_EQUALS_OLD: AnsiString = ' = :old';
+   SQL_COUNT_HEAD: AnsiString = 'SELECT count(id) FROM qso WHERE ';
+   SQL_UPDATE_HEAD: AnsiString = 'UPDATE qso SET ';
+   SQL_SET_NEW_EDITED: AnsiString = ' = :new, my_source = ''edited'' WHERE ';
+
+(* IS aColumn ONE OF THE STATION VALUES A QSO ROW KEEPS? A word of
+  QSO_MY_COLUMNS other than the provenance and the sent year. Checked because
+  the name is put into the statement as text: a column cannot be a bound
+  parameter. *)
+procedure RequireStationValueColumn(const aColumn: AnsiString);
+begin
+   if (aColumn = '') or
+      (aColumn = 'my_source') or
+      (aColumn = 'year_sent') or
+      (Pos(SQL_COMMA_SPACE + aColumn + SQL_COMMA, MY_COLUMN_LIST) = 0) then
+      begin
+      raise Exception.CreateFmt('not a station value column: "%s"', [aColumn]);
+      end;
+end;
+
+(* The match on the old value: '' is NULL, as BindText stores it. *)
+function StationValueMatch(const aColumn, aOld: AnsiString): AnsiString;
+begin
+   if aOld = '' then
+      begin
+      Result := SQL_AND + aColumn + SQL_IS_NULL;
+      end
+   else
+      begin
+      Result := SQL_AND + aColumn + SQL_EQUALS_OLD;
+      end;
+end;
+
+function TLogRepository.CountQSOsSentStationValue(const aColumn, aOld: AnsiString): integer;
+var
+   q: TSQLQuery;
+begin
+   (* See the declaration. *)
+   RequireStationValueColumn(aColumn);
+   q := NewReadQuery;
+   try
+      q.SQL.Text := SQL_COUNT_HEAD + OUR_CAPTURED_ROWS +
+                    StationValueMatch(aColumn, aOld);
+      if aOld <> '' then
+         begin
+         BindText(q.ParamByName('old'), aOld);
+         end;
+      q.Open;
+      Result := q.Fields[0].AsInteger;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.CorrectSentStationValue(const aColumn, aOld,
+                                                aNew: AnsiString): integer;
+var
+   q: TSQLQuery;
+begin
+   (* See the declaration. *)
+   RequireStationValueColumn(aColumn);
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := SQL_UPDATE_HEAD + aColumn + SQL_SET_NEW_EDITED +
+                    OUR_CAPTURED_ROWS + StationValueMatch(aColumn, aOld);
+      BindText(q.ParamByName('new'), aNew);
+      if aOld <> '' then
+         begin
+         BindText(q.ParamByName('old'), aOld);
          end;
       q.ExecSQL;
       Result := q.RowsAffected;

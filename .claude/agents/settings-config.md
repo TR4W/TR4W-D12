@@ -744,7 +744,28 @@ letters are `FIELD_DAY_CLASS_LETTERS` / `WINTER_FIELD_DAY_CLASS_LETTERS`), and
 `LicenseYearIsDigits` (uCFG registers it). MY COUNTRY reaches CTY.DAT through
 `RegisterStationCountryCheck`, which uCFG fills with `MyCountryIsAKnownPrefix`.
 Not checked: MY STATE, MY POSTAL CODE, MY NAME, MY CALL. Pinned by
-`uTestStationFieldCheck`.
+`uTestStationFieldCheck`. **Edit QSO asks the same rule** for the station
+values a save CHANGED (`uStationFactRecord.EditedStationFactProblem`), never
+for an unchanged old value.
+
+**A STATION-PAGE EDIT OF ANY VALUE THE OPEN CONTEST USES ASKS "ALSO THIS
+CONTEST"** (log schema 9 phase 2, 2026-11-17). Issue 300 did this for MY
+LICENSE YEAR only, so a wrong MY PREC stated at New Contest (design 7.12: the
+contest's override wins) could not be corrected from the UI. The rule is
+`uStationFactChange` (`uLicenseYearChange` calls it): ask once per Save,
+listing each changed value the contest uses (`ContestUsesStationFact`: its New
+Contest prompts; the year by `ReceivedYearKind`); station-only pins a followed
+value; also-this-contest goes through `TryOverrideForContest` and
+`LogStoreRecordContestStatement(StationFactCommand(f))`. A fact's command name
+is `uSettingsModel.StationFactCommand` (derived, not tabled);
+`TMySettings.StationValue` is public for it. **The Station page SHOWS the
+contest's value where it states one** (`TStationFactsShown`, NY4I's bench
+2026-11-17: the page showed the station's B while the contest sent U, and OK
+asked nothing). Save compares each box with what was SHOWN: unchanged writes
+nothing (it would copy the contest's value into the default), changed is
+asked about even if the default did not move. `lblStationContestNote` lists
+the differing station defaults. The page reloads on each opening while not
+dirty (the form is a cached singleton).
 
 ## Open
 

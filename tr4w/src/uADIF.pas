@@ -112,7 +112,10 @@ type
         APP_TR4W_FOC_NUM the FOC Marathon's membership number. The old names
         (tAdifDOK, tAdifFOC_NUM) are still READ, so files TR4W wrote before
         then import. *)
-      tAdifDARC_DOK, tAdifAPP_TR4W_FOC_NUM);
+      tAdifDARC_DOK, tAdifAPP_TR4W_FOC_NUM,
+      (* OUR NAME AND POSTAL CODE, AS THE RECORD STATES THEM -- log schema 9.
+        Read into the row's my_name and my_postal_code (MyFactsFromADIF). *)
+      tAdifMY_NAME, tAdifMY_POSTAL_CODE);
 
 // =========================================================================
 // Lexer
@@ -330,6 +333,12 @@ function NeutralADIFImportSession: TADIFImportSession;
     MY_DXCC                     my_country -- CTYEntityOfADIFDXCC, so only
                                 a code ONE plain CTY entity carries
     MY_CQ_ZONE / MY_ITU_ZONE    my_cq_zone / my_itu_zone
+    MY_NAME                     my_name (schema 9) -- read, but on its own
+                                it does not count as naming our station
+    MY_POSTAL_CODE              my_postal_code (schema 9)
+
+  The other schema-9 facts (FD class, check, precedence, FOC number) have no
+  ADIF tag; MyFactsForImport gives them the contest's.
 
   MY_COUNTRY (an entity NAME) is not read: nothing here maps a name to a CTY
   entity, and a guessed country is worse than an unknown one. my_continent is
@@ -1422,13 +1431,15 @@ begin
    temps.MyDXCC       := '';
    temps.MyCQZone     := '';
    temps.MyITUZone    := '';
+   temps.MyName       := '';
+   temps.MyPostalCode := '';
    temps.FromWSJTX  := False;
 end;
 
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..62] of string = (
+   ADIF_FIELD_NAMES : array[0..64] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -1453,7 +1464,9 @@ const
       'MY_SIG', 'MY_SIG_INFO', 'MY_POTA_REF', 'MY_IOTA',
       'MY_DXCC', 'MY_CQ_ZONE', 'MY_ITU_ZONE',
       'APP_TR4W_MODE_ASSUMED',
-      'DARC_DOK', 'APP_TR4W_FOC_NUM');
+      'DARC_DOK', 'APP_TR4W_FOC_NUM',
+      // Our name and postal code (schema 9) -- order must match the enum
+      'MY_NAME', 'MY_POSTAL_CODE');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1622,6 +1635,10 @@ begin
                temps.MyCQZone := fieldValue;
             tAdifMY_ITU_ZONE:
                temps.MyITUZone := fieldValue;
+            tAdifMY_NAME:
+               temps.MyName := fieldValue;
+            tAdifMY_POSTAL_CODE:
+               temps.MyPostalCode := fieldValue;
 
             tAdifFREQ:
                begin
@@ -2584,8 +2601,15 @@ begin
       (Length(TagText(temps.MyIOTA)) = 0) and
       (Length(TagText(temps.MyDXCC)) = 0) and
       (Length(TagText(temps.MyCQZone)) = 0) and
-      (Length(TagText(temps.MyITUZone)) = 0) then
+      (Length(TagText(temps.MyITUZone)) = 0) and
+      (Length(TagText(temps.MyPostalCode)) = 0) then
       begin
+      (* MY_NAME IS NOT IN THIS LIST, ON PURPOSE (schema 9): like
+        STATION_CALLSIGN it names the OPERATOR, and a general logger writes it
+        on every record whoever and wherever the station was. On its own it
+        would turn "the file said nothing about our station" into "every
+        place it left out is unknown". With another MY_ field it is read
+        below. MY_POSTAL_CODE is a place, and counts. *)
       Exit;
       end;
 
@@ -2610,6 +2634,9 @@ begin
    Result.Country := CTYEntityOfADIFDXCC(TagZone(temps.MyDXCC));
    Result.CQZone := TagZone(temps.MyCQZone);
    Result.ITUZone := TagZone(temps.MyITUZone);
+   (* Schema 9: as written -- a name is not upper-cased. *)
+   Result.Name := TagText(temps.MyName);
+   Result.PostalCode := TagUpper(temps.MyPostalCode);
 end;
 
 function SentExchangeFromADIF(const temps: TADIFRecordTemps): AnsiString;

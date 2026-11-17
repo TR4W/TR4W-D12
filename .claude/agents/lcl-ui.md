@@ -431,7 +431,14 @@ measurement (issue 232, next section).
   `BENCH_QUEUE.md`. The our-station group has a THIRD row since issue 300 (log
   schema 8): `lblMyYearSent` / `edtMyYearSent`, the licence year the QSO sent,
   set both ways on every load by `EditQSOShowSentYear` (enabled only in a
-  contest that sends a year) and read by `EditQSOSentYearText`.
+  contest that sends a year) and read by `EditQSOSentYearText`. Since log
+  schema 9 phase 2 (2026-11-17) that row also holds Check, Precedence and FD
+  class, and a FOURTH holds Name, Postal code and FOC number:
+  `TfrmEditQSO.ShowMyFactsFor` enables each only where the QSO's contest uses it
+  (`uContestBase.ContestUsesStationFact`) and `ReadMyFacts` NEVER reads a
+  disabled box (it would erase a value the operator could not edit). Their
+  labels come from `uStationFactRecord.StationFactCaption`, which Preferences
+  shares.
 - **A caption or limit that depends on the QSO is set by the LOAD, both ways, before
   `FitLayout`.** The form is created once and hidden, so a value set for one QSO stays
   for the next. `TfrmEditQSO.ShowZoneBoxFor(contest)` (issue 298 stage 3) captures the

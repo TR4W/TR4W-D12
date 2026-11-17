@@ -35,7 +35,30 @@ unit uQsoMyFacts;
   as assumed).
 
   A LEAF: no database, no settings, no program state -- the repository, the
-  store and the editor all speak it, and the rules below are unit-tested. *)
+  store and the editor all speak it, and the rules below are unit-tested.
+
+  SCHEMA 9 (2026-11-17, NY4I: "ALL MY_ VALUES GET WRITTEN TO THE QSO
+  RECORD"): NAME, FD CLASS, CHECK, PRECEDENCE, POSTAL CODE AND FOC NUMBER
+  joined the record. Until then the exporter took them from TODAY's settings
+  for every QSO, on the premise that "they do not change within a log" -- and
+  a Sweepstakes precedence corrected after logging rewrote what every earlier
+  QSO claimed to have sent. Every station fact (uSettingsModel.TStationFact)
+  is now either kept here or listed, with its reason, in
+  uLogStore.STATION_FACT_IN_RECORD; the compiler demands a row for a new one.
+
+  CHECK IS NOT A SECOND COPY OF THE SENT LICENCE YEAR, though both are
+  usually "the year first licensed". They are two settings sent by two
+  different sets of contests: MY CHECK is the Sweepstakes check (the operator's
+  or the club station's first-licence year, two digits, sent as typed), MY
+  LICENSE YEAR is what a contest stating a ReceivedYearKind sends (EUHFC, KVP
+  ...), formatted by that kind. Folding Check into YearSent would need
+  Sweepstakes to state a ReceivedYearKind, and that would set off the
+  machinery built for those contests: the v6/v7 migration's
+  rcvd_year := rcvd_zone carry on Sweepstakes logs (whose received check is in
+  rcvd_check, not the zone), the schema-8 backfill, and Preferences' licence
+  year correction, all reading MY LICENSE YEAR. No row ever holds both: a
+  contest sends one or the other. So Check is a field of its own, TEXT, so
+  '07' survives. *)
 
 interface
 
@@ -55,7 +78,11 @@ type
    (* ONE STATION FACT, for the import's report: which a file names, and
       which differ from the contest's. *)
    TMyFactField = (mffCall, mffGrid, mffState, mffCounty, mffSection, mffPark,
-                   mffIota, mffCountry, mffCQZone, mffITUZone);
+                   mffIota, mffCountry, mffCQZone, mffITUZone,
+                   (* schema 9: the two of the six that ADIF 3.1.6 has a tag
+                      for. FD class, check, precedence and FOC number have
+                      none -- see MyFactsForImport. *)
+                   mffName, mffPostalCode);
    TMyFactFields = set of TMyFactField;
 
    TQsoMyFacts = record
@@ -86,6 +113,22 @@ type
          source; see TSentYearSource for where a new row's year comes from. *)
       YearSent: integer;
       YearSentKnown: boolean;
+
+      (* SCHEMA 9 -- the rest of what this QSO sent of our station, AS TYPED
+         (the contest's override if it stated one, else the station's, at the
+         moment of logging). They FOLLOW Source, like the schema-3 fields: on
+         a never-captured row they are empty and a reader falls back to the
+         session; on a captured row empty means UNKNOWN.
+
+         Name and PostalCode are UTF-8 (UTF8Encode of the setting): a name
+         may be Cyrillic. A reader turns them back with UTF8Decode, never a
+         string() cast. The other four are ASCII by construction. *)
+      Name: AnsiString;        (* MY NAME -- ADIF MY_NAME *)
+      FdClass: AnsiString;     (* MY FD CLASS -- the Field Day class, '2A' *)
+      Check: AnsiString;       (* MY CHECK -- the Sweepstakes check, '07' *)
+      Prec: AnsiString;        (* MY PREC -- the Sweepstakes precedence *)
+      PostalCode: AnsiString;  (* MY POSTAL CODE -- ADIF MY_POSTAL_CODE *)
+      FocNumber: AnsiString;   (* MY FOC NUMBER -- the FOC Marathon's *)
    end;
 
    (* WHERE A NEW ROW'S year_sent COMES FROM -- issue 300 (NY4I, 2026-11-13: a
@@ -124,6 +167,30 @@ function MyFactsValuesDiffer(const a, b: TQsoMyFacts): boolean;
    never-captured row's station as edited -- that would turn its empty
    columns from "fall back to the session" into "unknown". *)
 function MyFactsYearSentDiffers(const a, b: TQsoMyFacts): boolean;
+
+(* OUR STATION AS AN EDIT QSO SAVE LEAVES IT -- the one rule behind
+   uEditQSO.MyFactsAsSaved (phase 2 of schema 9, 2026-11-17).
+
+     aShown    what the dialog showed: the row's facts as recorded
+     aTyped    aShown with the operator's text in place of each shown value
+     aSession  this station's values now (uLogStore.LogStoreCurrentMyFacts)
+
+   NOTHING CHANGED: aShown, its source included -- an edit changes only what
+   was edited (Q13) -- carrying aTyped's sent year, which is an edit of its
+   own (MyFactsYearSentDiffers).
+
+   SOMETHING CHANGED: marked mfsEdited. On a CAPTURED row that is aTyped. On a
+   NEVER-CAPTURED row (my_source NULL) it is aSession with the changed values
+   laid over it, and that is the fix for the hazard schema 9 exposed: a
+   never-captured row FALLS BACK to the session for every value it lacks,
+   while a captured one reads an empty value as UNKNOWN. Taking aTyped as it
+   stood -- the shown blanks plus one corrected grid -- turned a Sweepstakes
+   row's precedence and check, which exported the session's, into blanks. The
+   untouched values are therefore frozen at exactly what the row exported
+   before the edit: the session's. A value the operator did change wins; a
+   blank cannot be "changed to blank" on such a row, because it was shown
+   blank. The sent year is aTyped's in both cases. *)
+function MyFactsAfterEdit(const aShown, aTyped, aSession: TQsoMyFacts): TQsoMyFacts;
 
 (* DID THIS STATION LOG THE QSO, or did it arrive from a multi-op peer?
 
@@ -180,6 +247,11 @@ function MyFactFieldTag(aField: TMyFactField): string;
    aContest is this station's values at import time (uLogStore.
    LogStoreCurrentMyFacts) -- what a QSO logged now would record.
 
+   THE FOUR FACTS ADIF HAS NO TAG FOR (FD class, check, precedence, FOC
+   number) ARE aContest's IN EVERY CASE: a file cannot name what the standard
+   gives it no field for, so keeping "the file's" of them would only make
+   them unknown.
+
    THE SENT YEAR IS aFile's IN EVERY CASE (issue 300): the year a record sent
    comes from its STX_STRING (uContestBase.ApplyImportedSentYear), not from a
    MY_ tag, so the station answer does not move it. *)
@@ -218,7 +290,7 @@ const
    FIELD_TAGS: array[TMyFactField] of string = (
       'STATION_CALLSIGN', 'MY_GRIDSQUARE', 'MY_STATE', 'MY_CNTY',
       'MY_ARRL_SECT', 'MY_POTA_REF', 'MY_IOTA', 'MY_DXCC', 'MY_CQ_ZONE',
-      'MY_ITU_ZONE');
+      'MY_ITU_ZONE', 'MY_NAME', 'MY_POSTAL_CODE');
 
 function NotCapturedMyFacts: TQsoMyFacts;
 begin
@@ -272,13 +344,77 @@ begin
              (a.Country <> b.Country)     or
              (a.Continent <> b.Continent) or
              (a.CQZone <> b.CQZone)       or
-             (a.ITUZone <> b.ITUZone);
+             (a.ITUZone <> b.ITUZone)     or
+             (a.Name <> b.Name)           or
+             (a.FdClass <> b.FdClass)     or
+             (a.Check <> b.Check)         or
+             (a.Prec <> b.Prec)           or
+             (a.PostalCode <> b.PostalCode) or
+             (a.FocNumber <> b.FocNumber);
 end;
 
 function MyFactsYearSentDiffers(const a, b: TQsoMyFacts): boolean;
 begin
    Result := (a.YearSentKnown <> b.YearSentKnown) or
              (a.YearSentKnown and (a.YearSent <> b.YearSent));
+end;
+
+(* aBase with every value aTyped changed from aShown laid over it. *)
+function OverlayChangedFacts(const aBase, aShown, aTyped: TQsoMyFacts): TQsoMyFacts;
+
+   procedure Take(var aInto: AnsiString; const aWas, aNow: AnsiString);
+   begin
+      if aNow <> aWas then
+         begin
+         aInto := aNow;
+         end;
+   end;
+
+begin
+   Result := aBase;
+   Take(Result.Call, aShown.Call, aTyped.Call);
+   Take(Result.Grid, aShown.Grid, aTyped.Grid);
+   Take(Result.State, aShown.State, aTyped.State);
+   Take(Result.County, aShown.County, aTyped.County);
+   Take(Result.Section, aShown.Section, aTyped.Section);
+   Take(Result.Park, aShown.Park, aTyped.Park);
+   Take(Result.Iota, aShown.Iota, aTyped.Iota);
+   Take(Result.Country, aShown.Country, aTyped.Country);
+   Take(Result.Continent, aShown.Continent, aTyped.Continent);
+   Take(Result.Name, aShown.Name, aTyped.Name);
+   Take(Result.FdClass, aShown.FdClass, aTyped.FdClass);
+   Take(Result.Check, aShown.Check, aTyped.Check);
+   Take(Result.Prec, aShown.Prec, aTyped.Prec);
+   Take(Result.PostalCode, aShown.PostalCode, aTyped.PostalCode);
+   Take(Result.FocNumber, aShown.FocNumber, aTyped.FocNumber);
+   if aTyped.CQZone <> aShown.CQZone then
+      begin
+      Result.CQZone := aTyped.CQZone;
+      end;
+   if aTyped.ITUZone <> aShown.ITUZone then
+      begin
+      Result.ITUZone := aTyped.ITUZone;
+      end;
+end;
+
+function MyFactsAfterEdit(const aShown, aTyped, aSession: TQsoMyFacts): TQsoMyFacts;
+begin
+   (* See the declaration. *)
+   if not MyFactsValuesDiffer(aTyped, aShown) then
+      begin
+      Result := aShown;
+      end
+   else if aShown.Source = mfsNotCaptured then
+      begin
+      Result := OverlayChangedFacts(aSession, aShown, aTyped);
+      Result.Source := mfsEdited;
+      end
+   else
+      begin
+      Result := aTyped;
+      Result.Source := mfsEdited;
+      end;
+   SetFactsYearSent(Result, aTyped.YearSentKnown, aTyped.YearSent);
 end;
 
 function QsoWasLoggedHere(aQsoComputerID, aOurComputerID: AnsiChar): boolean;
@@ -350,6 +486,8 @@ begin
       mffCountry: Result := aFacts.Country;
       mffCQZone:  Result := Zone(aFacts.CQZone);
       mffITUZone: Result := Zone(aFacts.ITUZone);
+      mffName:    Result := aFacts.Name;
+      mffPostalCode: Result := aFacts.PostalCode;
    else
       Result := '';
    end;
@@ -427,6 +565,17 @@ begin
       begin
       Result := aFile;
       Result.Source := mfsImported;
+      (* A FIELD NO ADIF TAG CAN NAME IS NOT ONE THE FILE LEFT UNSAID. ADIF
+         3.1.6 has no MY_ tag for the Field Day class, the Sweepstakes check
+         and precedence or the FOC number, so "the file's, as named" has
+         nothing to say about them; leaving them unknown would make every
+         imported Sweepstakes QSO without an STX_STRING export a blank
+         precedence and check. They are the contest's, as for a QSO logged
+         now. *)
+      Result.FdClass := aContest.FdClass;
+      Result.Check := aContest.Check;
+      Result.Prec := aContest.Prec;
+      Result.FocNumber := aContest.FocNumber;
       end
    else
       begin

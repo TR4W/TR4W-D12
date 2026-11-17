@@ -238,7 +238,20 @@ const
      migration adds the column and MARKS the log for the one-shot backfill
      (LOG_YEAR_SENT_BACKFILL_KEY); the store runs it once the contest is set
      up, because only then is the contest's year known. *)
-   LOG_SCHEMA_VERSION = 8;
+   (* 9 SINCE 2026-11-17 (NY4I: "ALL MY_ VALUES GET WRITTEN TO THE QSO
+     RECORD"): the six station facts the my_* columns did not yet hold --
+     my_name, my_fd_class, my_check, my_prec, my_postal_code, my_foc_number
+     (LOG_V9_QSO_COLUMNS). Until now the export rebuilt them from TODAY's
+     settings for every QSO, so a Sweepstakes precedence changed after
+     logging rewrote what every past QSO claimed to have sent. Schema 8
+     SHIPPED (issue 300), so a log this build has opened is refused by every
+     earlier build. The migration adds the columns and, when the log holds a
+     row that already CAPTURED its station (my_source not NULL), marks it for
+     the store's one-shot backfill (LOG_STATION_FACTS_BACKFILL_KEY): those
+     rows exported the contest's current value for these six, and the
+     backfill freezes exactly that. A never-captured row needs nothing -- it
+     falls back to the session, as ever. *)
+   LOG_SCHEMA_VERSION = 9;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -296,6 +309,30 @@ const
      migrated log, and a crash between the two runs it again: it touches only
      rows whose year_sent is still NULL. *)
    LOG_YEAR_SENT_BACKFILL_KEY = 'yearSentBackfillPending';
+
+   (* THE qso COLUMNS SCHEMA 9 ADDED -- the rest of our station as it was for
+     the QSO (uQsoMyFacts: Name, FdClass, Check, Prec, PostalCode,
+     FocNumber), in the order the CREATE TABLE above ends with them, after
+     year_sent. TEXT, every one: they are sent as typed, and a Sweepstakes
+     check of '07' must not come back '7'. NULLABLE: on a captured row NULL is
+     UNKNOWN, and on a never-captured row (my_source NULL) nothing is read.
+     INSERT-ONLY like every my_* column (uLogRepository.QSO_MY_COLUMNS). *)
+   LOG_V9_QSO_COLUMNS: array[0..5] of TLogAddedColumn = (
+      (Name: 'my_name';        Declaration: 'TEXT'),
+      (Name: 'my_fd_class';    Declaration: 'TEXT'),
+      (Name: 'my_check';       Declaration: 'TEXT'),
+      (Name: 'my_prec';        Declaration: 'TEXT'),
+      (Name: 'my_postal_code'; Declaration: 'TEXT'),
+      (Name: 'my_foc_number';  Declaration: 'TEXT'));
+
+   (* THE session_state KEY THAT SAYS "BACKFILL THE SCHEMA-9 COLUMNS ONCE" --
+     written by the schema-9 migration, in its one transaction, when it added
+     the columns to a log holding a row that had captured its station; read
+     and deleted by the store (uLogStore) once the contest is set up and its
+     values are known, in the backfill's own transaction. NULL-only, so a
+     crash between the two runs it again harmlessly. The same shape as
+     LOG_YEAR_SENT_BACKFILL_KEY. *)
+   LOG_STATION_FACTS_BACKFILL_KEY = 'stationFactsBackfillPending';
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -621,10 +658,22 @@ const
       '    my_itu_zone       INTEGER,'#10 +
       '    my_source         TEXT,'#10 +
       '    rcvd_year         INTEGER,'#10 +
-      '    year_sent         INTEGER'#10 +
+      '    year_sent         INTEGER,'#10 +
+      '    my_name           TEXT,'#10 +
+      '    my_fd_class       TEXT,'#10 +
+      '    my_check          TEXT,'#10 +
+      '    my_prec           TEXT,'#10 +
+      '    my_postal_code    TEXT,'#10 +
+      '    my_foc_number     TEXT'#10 +
+      '    -- SCHEMA 9: my_name .. my_foc_number, THE REST OF OUR STATION AS IT'#10 +
+      '    -- WAS FOR THIS QSO -- the name, Field Day class, Sweepstakes check'#10 +
+      '    -- and precedence, postal code and FOC number this QSO sent, as'#10 +
+      '    -- typed. Read only when my_source is not NULL; NULL there means'#10 +
+      '    -- unknown. LAST. See LOG_V9_QSO_COLUMNS.'#10 +
       '    -- SCHEMA 8: year_sent, THE LICENCE YEAR THIS QSO SENT (issue 300),'#10 +
       '    -- as the contest sends it (85, 1985, a count). NULL: sent none;'#10 +
-      '    -- 0 is the year 00. LAST. See LOG_V8_QSO_YEAR_SENT_COLUMN.'#10 +
+      '    -- 0 is the year 00. Added at the end then, as the schema-9'#10 +
+      '    -- columns were after it. See LOG_V8_QSO_YEAR_SENT_COLUMN.'#10 +
       '    -- SCHEMA 6: rcvd_year, THE RECEIVED YEAR (issue 298) -- the year'#10 +
       '    -- first licensed, or years licensed, as the contest asks. NULL: no'#10 +
       '    -- year; 0 is a real one. Added at the end then, as year_sent was.'#10 +

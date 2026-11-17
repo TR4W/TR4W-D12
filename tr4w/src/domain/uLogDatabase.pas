@@ -1877,6 +1877,8 @@ var
    contestType: string;
    yearSentMissing: boolean;
    markYearSentBackfill: boolean;
+   v9Missing: array of integer;
+   markStationFactsBackfill: boolean;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
 
@@ -1955,6 +1957,39 @@ begin
                         '''')) = '';
       markYearSentBackfill := yearSentMissing and
                               (PragmaAsString('SELECT 1 FROM qso LIMIT 1') <> '');
+      end;
+
+   (* v8 -> v9: WHICH OF THE SCHEMA-9 my_* COLUMNS ARE MISSING, AND DOES THE
+     LOG HOLD A ROW THAT CAPTURED ITS STATION -- asked here, before anything
+     changes, for the one-transaction reason. Such a row (my_source not NULL,
+     so it is read as captured) would otherwise read NULL -- UNKNOWN -- in the
+     new columns, and every Sweepstakes or Field Day QSO logged since schema 3
+     would export a blank precedence, check or class. It is marked for the
+     store's one-shot backfill (LOG_STATION_FACTS_BACKFILL_KEY), which gives
+     those rows the contest's value: what they exported until now. A log
+     whose rows never captured a station needs nothing. my_source is asked
+     only when it exists: below 3 it is added further down, and every row is
+     then never captured. *)
+   SetLength(v9Missing, 0);
+   markStationFactsBackfill := False;
+   if version < 9 then
+      begin
+      for i := Low(LOG_V9_QSO_COLUMNS) to High(LOG_V9_QSO_COLUMNS) do
+         begin
+         if PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                           'WHERE name = ''' + string(LOG_V9_QSO_COLUMNS[i].Name) +
+                           '''')) = '' then
+            begin
+            SetLength(v9Missing, Length(v9Missing) + 1);
+            v9Missing[High(v9Missing)] := i;
+            end;
+         end;
+      markStationFactsBackfill :=
+         (Length(v9Missing) > 0) and
+         (PragmaAsString('SELECT name FROM pragma_table_info(''qso'') ' +
+                         'WHERE name = ''my_source''') <> '') and
+         (PragmaAsString('SELECT 1 FROM qso WHERE my_source IS NOT NULL ' +
+                         'AND record_kind = ''QSO'' LIMIT 1') <> '');
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -2084,6 +2119,22 @@ begin
       FConnection.ExecuteDirect(UTF8Encode(
          'INSERT OR REPLACE INTO session_state (key, value, saved_at) VALUES (''' +
          string(LOG_YEAR_SENT_BACKFILL_KEY) + ''', ''1'', NULL)'));
+      end;
+
+   (* v8 -> v9: the rest of our station's my_* columns, NULL in every existing
+     row, appended in the CREATE TABLE's order after year_sent -- and the mark
+     that asks for the backfill, in this same transaction. *)
+   for i := 0 to High(v9Missing) do
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V9_QSO_COLUMNS[v9Missing[i]].Name) +
+         ' ' + string(LOG_V9_QSO_COLUMNS[v9Missing[i]].Declaration)));
+      end;
+   if markStationFactsBackfill then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'INSERT OR REPLACE INTO session_state (key, value, saved_at) VALUES (''' +
+         string(LOG_STATION_FACTS_BACKFILL_KEY) + ''', ''1'', NULL)'));
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

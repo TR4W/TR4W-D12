@@ -2462,9 +2462,10 @@ end;
                                 whose set-up sends something else there (the
                                 Cup of the RF sends the grid) keeps it -- my_state
                                 is the place, not that slot
-  and keeps the session's for the rest -- name, FD class, check, precedence,
-  FOC number, postal code -- which the record holds no column for: they do not
-  change within a log.
+    MyName, MyFDClass, MyCheck, the row's (log schema 9, 2026-11-17 -- they
+    MyPrec, MyPostalCode,       were the session's until then, and a
+    MyFOCNumber                 precedence corrected after logging rewrote
+                                every earlier QSO's sent line)
 
   A VALUE THAT HAS NOT CHANGED KEEPS THE SESSION'S TEXT. The record holds a
   zone as a number, so a stated '05' would come back '5'; asking "is it the

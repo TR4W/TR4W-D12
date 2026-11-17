@@ -163,7 +163,7 @@ type
    end;
 
 const
-   ID_CW_PINS: array[0..1] of TCWPinId = (
+   ID_CW_PINS: array[0..2] of TCWPinId = (
       // IC-7110: an IC-705 clone, so the Icom family rule -- 28 per send and the
       // 1.25 busy factor for the rate-limited CI-V queue.  It reaches this radio
       // by INHERITANCE, which is exactly what needs proving: the same value was
@@ -178,7 +178,14 @@ const
       // undeclared -- |SN| is not in the K4's table and an unknown prosign is
       // keyed as bare letters, so emitting it would key S-N audibly.
       (id: 'TCI';    name: 'TCI';     maxLen: 0;  pad: False; busyPct: 100;
-       prosigns: True;  skText: '|SK|'; snText: '')
+       prosigns: True;  skText: '|SK|'; snText: ''),
+      // DXLab Commander: cwchars, whose document states no limit and no
+      // prosigns.  One message whole; 1.25 because the text is queued for the
+      // polling thread and then relayed by Commander, so it reaches the air
+      // later than the busy window starts.  Prosigns deliberately undeclared
+      // -- pass-through until a bench run says what the rig keys for them.
+      (id: 'DXLABCOMMANDER'; name: 'DXLab Commander'; maxLen: 0; pad: False; busyPct: 125;
+       prosigns: False; skText: ''; snText: '')
    );
 
 procedure TCWFramingTests.Test_DeclaredRulesArePinned;

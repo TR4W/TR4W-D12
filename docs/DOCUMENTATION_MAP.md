@@ -8,6 +8,7 @@ Read the specific doc before acting in its area — these are current and this f
 
 | Topic | Document |
 |-------|----------|
+| Windows GUI testing and documentation screenshots on Proxmox (proposal) | [WINDOWS_GUI_TEST_VM_PROPOSAL.md](WINDOWS_GUI_TEST_VM_PROPOSAL.md) — VM sizing, interactive desktop, existing harness reuse, screenshot workflow and homelab acceptance checklist |
 | Windows GUI testing turnover and repeatable Python suite | [GUI_TEST_HANDOFF.md](GUI_TEST_HANDOFF.md) — VM, architecture, completed checks, known failures, evidence archive and next-agent steps |
 | CW Open/CWT walkthrough and GUI evidence | [TR4W-for-CWOPS.md](TR4W-for-CWOPS.md), [GUI_DOCUMENTATION_TEST_REPORT.md](GUI_DOCUMENTATION_TEST_REPORT.md) — Python scenarios, screenshots, limits and filed issues |
 | Operator guide website: build, preview and publish | [DOCS.md](../DOCS.md) — source in user-guide/ on main, generated Pages site on gh-pages; pinned MkDocs/Material and content-review baseline |

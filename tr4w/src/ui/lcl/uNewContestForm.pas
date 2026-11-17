@@ -911,10 +911,9 @@ begin
          FShown[i] := FChoices.Contest[rows[i]];
          (* UTF-8, stated: the LCL's strings are UTF-8 AnsiStrings and a
             display name is the sponsor's, not necessarily ASCII. The date
-            hint rides on the row text only while the box asks for the
-            upcoming order; the identity is FShown, never this text. *)
-         captions.Add(UTF8Encode(FChoices.DisplayText(rows[i],
-                                                      chkSoonestFirst.Checked)));
+            hint rides on every row, sorted by date or not (NY4I,
+            2026-11-17); the identity is FShown, never this text. *)
+         captions.Add(UTF8Encode(FChoices.DisplayText(rows[i], True)));
          if FShown[i] = was then
             begin
             keep := i;

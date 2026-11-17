@@ -25,6 +25,20 @@
   On a machine whose Windows decimal separator is a comma, tune to a non-whole-kHz frequency
   (14025.5): it is sent as "14025,500". Confirm Commander puts the rig on 14.025.500 and not
   somewhere else.
+  **CW by CAT through Commander (2026-11-17).** Pick "CW by CAT" as the profile's CW output for the
+  Commander radio, then send CW from TR4W on a real rig. Each message goes out as one
+  `<command:7>cwchars<parameters:N><text>` (look for it in the `[Commander TX]` lines). Confirm:
+  (a) the text keyed is the text sent; (b) a long message (a full function-key memory, well past 30
+  characters) is not cut short -- TR4W sends it whole because the document states no limit; (c)
+  Commander's own keyer speed is used -- TR4W cannot set it (there is no speed message), so moving
+  TR4W's WPM changes nothing on the rig; (d) there is no way to abort -- Escape withdraws a message
+  only if it has not left TR4W's queue yet (the log says "withdrawn" or "keyed to the end"); (e)
+  press a second function key in the middle of a message: TR4W cannot interrupt the first, so expect
+  the second to be keyed after it, not instead of it -- say which it is. Also
+  note what the rig keys for the prosign tokens (`+ < = ! ^`, sent as literal characters because
+  the document says nothing about prosigns), and whether a `<` inside the text upsets Commander.
+  Check that TR4W's "sending" state does not end long before the rig stops keying (the busy window
+  is estimated from TR4W's speed, not Commander's).
 
 - [ ] Bundled HamLib 4.7.0 -> 4.7.2 (issue 46, 2026-11-16). Only libhamlib-4.dll changed; the other
   three DLLs are byte-identical. Unit tests pass and all 36 symbols uHamLibDirect binds are exported,
@@ -144,6 +158,23 @@ swallowed menu, invisible entry fields, a double caret, a window collapsed to
 named `K3S`, Escape not closing a dialog, a settings field accepting letters, and
 a message key written with four bytes of garbage on the end. The gates are good
 at what they cover; this is the list of what they cannot see.
+
+---
+
+## Added 2026-11-17 -- EDIT QSO SHOWS THE SIX NEW STATION VALUES; PREFERENCES CORRECTS A CONTEST'S (log schema 9, phase 2)
+
+Edit QSO's "Our station for this QSO" group has two more rows' worth of boxes: Check, Precedence and FD class beside Year sent, then Name, Postal code and FOC number. A box can be edited only when the QSO's contest uses that value (its New Contest dialog asks for it). Otherwise it is greyed and shows what the row holds. Preferences > Station now asks "Also this contest / Station default only" for every station value the open contest uses, not only the license year. It asks once per Save, listing the values. The rules, the repository write and the form's show/read are unit-tested (`uTestStationFactChange`, `uTestEditQSOLayout.Test_OurStationShowsAndReadsBack`, `uTestLogMyFacts`). Nothing below has run on a screen. **A GUI case (gui-test agent) should be written** for the first two items.
+
+- [ ] **The group fits.** Open Edit QSO on any QSO. Nothing overlaps or is clipped, the window is not much wider than before, and the delivery line (if shown) sits under the group. Repeat at a larger font, and on the Mac if you can.
+- [ ] **An old Sweepstakes log.** Open a Sweepstakes log, then Edit QSO on a QSO logged since schema 3. Check and Precedence show the row's values and are editable; Name, FD class, Postal code and FOC number are greyed. Change the precedence and save. The Cabrillo line for that QSO shows the new precedence, and every other QSO keeps its own.
+- [ ] **A never-recorded QSO keeps its sent line.** On a QSO whose group says "(not recorded)" (a log from before schema 3, or a migrated .TRW), change only the grid and save. Export Cabrillo: that QSO still shows the precedence and check it showed before the edit, not blanks.
+- [ ] **A bad value is refused.** In Edit QSO type `X` into Precedence (Sweepstakes) and save. A warning names Precedence and the reason, and nothing is saved. An old one-digit check on a QSO does not stop you saving a grid change.
+- [ ] **A Cyrillic name round-trips.** In a contest that sends a name (NAQP, a Sprint), with a Cyrillic MY NAME, log a QSO, open Edit QSO: the name reads correctly; save without touching it and reopen: unchanged.
+- [ ] **Correcting a precedence stated at New Contest.** Start a Sweepstakes contest stating precedence B at New Contest; log three QSOs. In Preferences > Station change MY PREC to A and Save. One question lists "Precedence: A (this contest: B)". Answer **Station default only**: new QSOs still send B. Repeat, answer **Also this contest**: a second question says 3 QSOs sent B; answer **No** -- new QSOs send A, the three old ones still show B in Cabrillo. Repeat with **Yes** -- all show A. Check that Enter and Escape on each question give the default (station only; No).
+- [ ] **NY4I's ARRL-SS-SSB scenario, step by step.** In the contest created with MY PREC U and MY CHECK 80 (station default precedence B, no check): (1) open Preferences > Station -- Precedence shows **U** and Check **80**, and a note under the contest column says these are the contest's and lists "Precedence B; Check (none)" as the station defaults. (2) Press OK without touching anything: no question, and the station default is still B (reopen Preferences: still U/80 with the note). (3) Change Precedence to **B**, OK: one question appears listing "Precedence: B (this contest: U)" and saying "Station default only" keeps the contest's value. (4) Answer **Also this contest**. (5) The correction question lists the QSOs that sent U; answer **Yes**. (6) Edit QSO on an old QSO shows Precedence **B**; a new QSO sends B; the Cabrillo export shows B on all. (7) Repeat (3) with **Station default only**: the box goes back to U and the note stays. (8) Escape on each question gives the default.
+- [ ] **Another contest shows its own.** Open a contest that stated nothing: the Station page shows the station defaults and no note. Go back to the Sweepstakes contest: U/80 again.
+- [ ] **One question for two values.** Change MY PREC and MY CHECK in one Save during Sweepstakes: a single question lists both. Change MY NAME during Sweepstakes: no question at all (Sweepstakes does not use a name).
+- [ ] **The license year alone still reads as before.** In the European HF Championship, change only MY LICENSE YEAR: the question keeps its license-year wording (issue 300).
 
 ---
 

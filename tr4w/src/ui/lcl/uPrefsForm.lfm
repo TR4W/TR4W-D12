@@ -1493,6 +1493,17 @@ object PrefsForm: TPrefsForm
         FocusControl = edtMyLicenseYear
         TabOrder = 32
       end
+      object lblStationContestNote: TLabel
+        Left = 380
+        Height = 80
+        Top = 246
+        Width = 280
+        AutoSize = False
+        Caption = 'Shown as this contest uses them'
+        ShowAccelChar = False
+        Visible = False
+        WordWrap = True
+      end
       object lblStationProblem: TLabel
         Left = 12
         Height = 34

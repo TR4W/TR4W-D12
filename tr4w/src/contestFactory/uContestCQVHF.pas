@@ -64,6 +64,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -164,6 +165,14 @@ end;
 function TContestCQVHF.GetDisplayName: string;
 begin
    Result := 'CQ Worldwide VHF SSB/CW Contest';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
+   CSV row CQ-VHF: status candidate. CANDIDATE: dates from NY4I's intake (2026-11-17), the recurrence rule inferred
+   from them; not yet checked against the sponsor's rules. *)
+function TContestCQVHF.GetSchedule: string;
+begin
+   Result := '1st full weekend of July at 14:00 UTC for 24h';
 end;
 
 function TContestCQVHF.GetCabrilloName: string;

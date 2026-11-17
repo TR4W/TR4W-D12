@@ -134,6 +134,8 @@ uses
   uLogStore,
   (* TQsoMyFacts -- our station as recorded for the QSO being edited. *)
   uQsoMyFacts,
+  (* EditedStationFactRefusal -- the save's check of our station's values. *)
+  uStationFactRecord,
   (* TDeliveryStatus -- the read-only external-logger delivery line. *)
   uExternalDelivery,
   (* Which store a log READ comes from -- step B4/B5. *)
@@ -169,9 +171,14 @@ var
   the session for the rest (uQsoMyFacts.MyFactsYearSentDiffers). A year the
   contest's kind refuses is refused by the save before this is asked
   (SentYearIsValid); here it leaves the recorded year. *)
+(* THE RULE IS uQsoMyFacts.MyFactsAfterEdit (schema 9 phase 2): on a row that
+  never captured its station, an edit freezes the untouched values at the
+  session's -- what the row exported until now -- rather than at the blanks
+  the dialog showed. The session is asked only for such a row. *)
 function MyFactsAsSaved: TQsoMyFacts;
 var
   typed: TQsoMyFacts;
+  session: TQsoMyFacts;
 begin
   typed := EditQSOReadMyFacts(EditableMyFacts);
   if not ApplyEditedSentYear(ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind,
@@ -180,16 +187,12 @@ begin
      SetFactsYearSent(typed, EditableMyFacts.YearSentKnown, EditableMyFacts.YearSent);
      end;
 
-  if MyFactsValuesDiffer(typed, EditableMyFacts) then
+  session := NotCapturedMyFacts;
+  if EditableMyFacts.Source = mfsNotCaptured then
      begin
-     Result := typed;
-     Result.Source := mfsEdited;
-     end
-  else
-     begin
-     Result := EditableMyFacts;
-     SetFactsYearSent(Result, typed.YearSentKnown, typed.YearSent);
+     session := LogStoreCurrentMyFacts;
      end;
+  Result := MyFactsAfterEdit(EditableMyFacts, typed, session);
 end;
 
 (* DOES THE SAVE WRITE OUR STATION'S COLUMNS? When the operator changed the
@@ -198,6 +201,23 @@ function MyFactsNeedWriting(const aSaved: TQsoMyFacts): boolean;
 begin
   Result := (aSaved.Source = mfsEdited) or
             MyFactsYearSentDiffers(aSaved, EditableMyFacts);
+end;
+
+(* ARE OUR STATION'S CHANGED VALUES ONES THEIR FIELDS TAKE? The Station page's
+  rules (uStationFactRecord.EditedStationFactProblem), asked of the values
+  the operator CHANGED only -- an old row's value is what it sent. A refusal
+  is shown as a bad call is, and the save stops. *)
+function StationValuesAreValid: boolean;
+var
+  refusal: string;
+begin
+  refusal := EditedStationFactRefusal(EditableMyFacts,
+                                      EditQSOReadMyFacts(EditableMyFacts));
+  Result := refusal = '';
+  if not Result then
+     begin
+     showwarning(refusal);
+     end;
 end;
 
 (* IS THE TYPED SENT YEAR ONE THE QSO'S CONTEST CAN SEND? Empty is (no year). *)
@@ -443,7 +463,7 @@ begin
      a row written before schema 3 shows as not recorded, with empty
      fields, not as today's values. *)
    LogStoreReadMyFactsAtIndex(IndexOfItemInLogForEdit, EditableMyFacts);
-   EditQSOShowMyFacts(EditableMyFacts);
+   EditQSOShowMyFacts(ContestIdentity(EditableQSORXData.ceContest), EditableMyFacts);
    (* AND THE LICENCE YEAR IT SENT, from the row (issue 300) -- where a
      mistaken year is corrected. *)
    EditQSOShowSentYear(ContestIdentity(EditableQSORXData.ceContest), EditableMyFacts);
@@ -721,6 +741,13 @@ begin
            EditableQSORXData.Zone := DUMMYZONE;
            end;
         end;
+     end;
+
+  (* OUR STATION'S CHANGED VALUES, refused the same way (schema 9 phase 2). *)
+  if not StationValuesAreValid then
+     begin
+     Result := False;
+     Exit;
      end;
 
   {Name}

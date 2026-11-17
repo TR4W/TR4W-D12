@@ -88,6 +88,15 @@ function CommanderField(const aName, aValue: string): string;
   which the document writes <parameters:0>). *)
 function CommanderMessage(const aCommand, aParameters: string): string;
 
+(* THE CW MESSAGE, item 20: "Direct the primary transceiver to transmit
+  specified text in CW".  The document's example is
+      <command:7>cwchars<parameters:16>testing de aa6yq
+  -- the parameters field carries the RAW TEXT, not an ADIF sub-field as every
+  other set does (<1:2>CW, <xcvrfreq:5>21230).  Named here so that exception is
+  stated once and pinned by uTestDXLabCommanderProtocol.  The document states
+  no maximum length, no speed, no prosigns and no way to stop. *)
+function CommanderCWCharsMessage(const aText: string): string;
+
 (* The text between '<' and '>' of a field header -- "CmdFreq:10", or with an
   ADIF type indicator "CmdFreq:10:N".  Anything before the LAST '<' is ignored,
   so a stray CR/LF or a partial line ahead of a header does not hide it.
@@ -149,6 +158,11 @@ function CommanderMessage(const aCommand, aParameters: string): string;
 begin
    Result := CommanderField('command', aCommand) +
              CommanderField('parameters', aParameters);
+end;
+
+function CommanderCWCharsMessage(const aText: string): string;
+begin
+   Result := CommanderMessage('cwchars', aText);
 end;
 
 function AllDigits(const s: string): boolean;

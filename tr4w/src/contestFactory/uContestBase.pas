@@ -614,6 +614,9 @@ type
       MyDXCC: string;
       MyCQZone: string;
       MyITUZone: string;
+      (* MY_NAME and MY_POSTAL_CODE -- log schema 9. *)
+      MyName: string;
+      MyPostalCode: string;
 
       FromWSJTX: boolean;
    end;
@@ -4440,6 +4443,23 @@ function ApplyEditedSentYear(aKind: TReceivedYearKind; const aText: string;
    nil answers rykNone. *)
 function ContestReceivedYearKind(aContest: TContestBase): TReceivedYearKind;
 
+(* DOES aContest USE THIS STATION FACT? -- schema 9 phase 2 (2026-11-17). Asked
+   by Edit QSO (which of our station's values a QSO of this contest can be
+   corrected in) and by Preferences (which Station-page edits ask whether they
+   are the contest's too).
+
+   THE CONTEST'S OWN STATEMENT, NOT A LIST KEPT HERE: the fields its New
+   Contest prompts ask for (DescribeNewContestPrompts, both lists -- on
+   choice and when "I am in" is ticked), and for MY LICENSE YEAR the
+   ReceivedYearKind issue 300 already keys on. The prompts are what a contest
+   says it needs from the station at set-up; no class states what its SENT
+   exchange is made of in data, so this is the nearest statement that exists.
+   MY QTH and MY STATE are one fact. nil answers False. *)
+function ContestUsesStationFact(aContest: TContestBase; aFact: TStationFact): boolean;
+
+(* THE STATION FACT A NEW CONTEST FIELD IS. *)
+function StationFactOfNewContestField(aField: TNewContestField): TStationFact;
+
 (* WHAT A RECEIVED DOMESTIC QTH MEANS IN aContest -- see
    TContestBase.DomesticMultiplierFromQTH. nil answers dqaLookUpDomesticFile
    and writes nothing: the classless DUMMYCONTEST runs NoDomesticMults, which
@@ -4685,9 +4705,11 @@ function QSOCountsTowardTotals(aContest: TContestBase;
    ITU zone, the CQ zone, or -- szkStatedMyZone, a licence year -- none: the
    session's sent text, the year, stays); and its state ONLY when aSessionSendsMyState -- the session sends MY
    STATE itself in that slot, where a contest that sends something else there
-   (the Cup of the RF sends the grid) keeps it. Name, FD class, check,
-   precedence, FOC number and postal code stay the session's: the record holds
-   no column for them, and they do not change within a log.
+   (the Cup of the RF sends the grid) keeps it. Since log schema 9 it also
+   takes its name, FD class, check, precedence, FOC number and postal code --
+   they were the session's until then, on the premise that they "do not
+   change within a log", and a precedence corrected after logging rewrote
+   every earlier Sweepstakes QSO's sent line.
 
    A ZONE THAT IS THE SAME NUMBER KEEPS THE SESSION'S TEXT: the record holds a
    number, so a stated '05' would otherwise come back '5'.
@@ -5782,6 +5804,76 @@ begin
       end;
 end;
 
+const
+   NEW_CONTEST_FIELD_FACT: array[TNewContestField] of TStationFact = (
+      sfCheck,        (* ncfMyCheck *)
+      sfFdClass,      (* ncfMyFDClass *)
+      sfGrid,         (* ncfMyGrid *)
+      sfFocNumber,    (* ncfMyFOC *)
+      sfIota,         (* ncfMyIOTA *)
+      sfName,         (* ncfMyName *)
+      sfPark,         (* ncfMyPark *)
+      sfPrec,         (* ncfMyPrec *)
+      sfState,        (* ncfMyQTH -- MY QTH is MY STATE's second name *)
+      sfSection,      (* ncfMySection *)
+      sfState,        (* ncfMyState *)
+      sfZone,         (* ncfMyZone *)
+      sfPostalCode,   (* ncfMyPostalCode *)
+      sfLicenseYear); (* ncfMyLicenseYear *)
+
+function StationFactOfNewContestField(aField: TNewContestField): TStationFact;
+begin
+   Result := NEW_CONTEST_FIELD_FACT[aField];
+end;
+
+function ContestUsesStationFact(aContest: TContestBase; aFact: TStationFact): boolean;
+var
+   prompts: TNewContestPrompts;
+   i: integer;
+
+   function Asks(const aPrompt: TNewContestPrompt): boolean;
+   begin
+      Result := (aPrompt.Kind in [npkField, npkFieldWithComment]) and
+                (NEW_CONTEST_FIELD_FACT[aPrompt.Field] = aFact);
+   end;
+
+begin
+   (* See the declaration. *)
+   Result := False;
+   if aContest = nil then
+      begin
+      Exit;
+      end;
+   if (aFact = sfLicenseYear) and (aContest.ReceivedYearKind <> rykNone) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   prompts := TNewContestPrompts.Create;
+   try
+      aContest.DescribeNewContestPrompts(prompts);
+      for i := 0 to prompts.ChoiceCount - 1 do
+         begin
+         if Asks(prompts.Choice(i)) then
+            begin
+            Result := True;
+            Exit;
+            end;
+         end;
+      for i := 0 to prompts.InsideCount - 1 do
+         begin
+         if Asks(prompts.Inside(i)) then
+            begin
+            Result := True;
+            Exit;
+            end;
+         end;
+   finally
+      prompts.Free;
+   end;
+end;
+
 function ContestDomesticMultiplierFromQTH(aContest: TContestBase;
                                           const aText: Str20;
                                           var aMultiplier: Str10;
@@ -6504,6 +6596,16 @@ begin
    Result.MyGrid := string(aFacts.Grid);
    Result.MySection := string(aFacts.Section);
    Result.MyPark := string(aFacts.Park);
+   (* SCHEMA 9 -- the rest of what this QSO sent, as typed when it was logged
+      (NY4I, 2026-11-17: all MY_ values are written to the QSO record). Empty
+      is UNKNOWN on a captured row, never today's value. UTF8Decode: the name
+      may be Cyrillic, and a string() cast would read the bytes as ANSI. *)
+   Result.MyName := UTF8Decode(aFacts.Name);
+   Result.MyFDClass := UTF8Decode(aFacts.FdClass);
+   Result.MyCheck := UTF8Decode(aFacts.Check);
+   Result.MyPrec := UTF8Decode(aFacts.Prec);
+   Result.MyPostalCode := UTF8Decode(aFacts.PostalCode);
+   Result.MyFOCNumber := UTF8Decode(aFacts.FocNumber);
 
    (* A LICENCE YEAR IS NOT A STATION ZONE: the record captured none of it,
       so the session's MY ZONE is sent as stated. *)

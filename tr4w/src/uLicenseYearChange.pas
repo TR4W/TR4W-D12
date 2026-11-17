@@ -54,7 +54,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   move to two (issue 300 step 7).
 
   A LEAF ABOVE uSettingsModel and uContestBase's year rule: no form, no log
-  write. *)
+  write.
+
+  GENERALISED AT SCHEMA 9 PHASE 2 (2026-11-17): the scope rule -- when to ask,
+  what each answer does, when the correction is asked -- holds for EVERY
+  station value a contest uses, and lives in uStationFactChange. What stays
+  here is the year's own: its command, and its correction, compared AS SENT.
+  The scope type and the three scope functions are the general ones under
+  the year's names, so the year's callers and tests read as before. *)
 unit uLicenseYearChange;
 
 {$I tr4w.inc}
@@ -62,16 +69,23 @@ unit uLicenseYearChange;
 interface
 
 uses
-   uSettingsModel,   (* TR4WSettings -- the station's year and the contest's *)
-   VC,               (* TReceivedYearKind *)
-   uContestBase;     (* SentLicenseYearValue -- the year sent *)
+   uSettingsModel,     (* TR4WSettings -- the station's year and the contest's *)
+   VC,                 (* TReceivedYearKind *)
+   uContestBase,       (* SentLicenseYearValue -- the year sent *)
+   uStationFactChange; (* TStationFactScope and the general rule *)
 
 const
    (* The command the Station page edits and the log records. *)
    LICENSE_YEAR_COMMAND = 'MY LICENSE YEAR';
 
 type
-   TLicenseYearScope = (lysStationOnly, lysAlsoContest);
+   TLicenseYearScope = TStationFactScope;
+
+const
+   lysStationOnly = sfsStationOnly;
+   lysAlsoContest = sfsAlsoContest;
+
+type
 
    (* THE CORRECTION OF LOGGED QSOs THE SECOND QUESTION OFFERS -- the year they
       sent (Old) and the year the contest sends now (New), each as the row
@@ -132,48 +146,14 @@ uses
 function LicenseYearEditAsks(aContestSendsYear: boolean;
                              const aOldStation, aNewStation: string): boolean;
 begin
-   Result := aContestSendsYear and (Trim(aOldStation) <> Trim(aNewStation));
-end;
-
-(* State aValue as the contest's year unless it already is exactly that. *)
-function StateContestYear(aSettings: TR4WSettings; const aValue: string): boolean;
-begin
-   if aSettings.My.HasContestOverride(sfLicenseYear) and
-      (aSettings.My.ContestOverride(sfLicenseYear) = aValue) then
-      begin
-      Result := False;
-      Exit;
-      end;
-   Result := aSettings.TryOverrideForContest(LICENSE_YEAR_COMMAND, aValue);
+   Result := StationFactEditAsks(aContestSendsYear, aOldStation, aNewStation);
 end;
 
 function ApplyLicenseYearScope(aSettings: TR4WSettings;
                                aScope: TLicenseYearScope;
                                const aOldResolved: string): boolean;
 begin
-   Result := False;
-   if aSettings = nil then
-      begin
-      Exit;
-      end;
-
-   case aScope of
-      lysStationOnly:
-         begin
-         (* A contest that stated its year is untouched by a station edit.
-            One that followed the station keeps what it was following. *)
-         if not aSettings.My.HasContestOverride(sfLicenseYear) then
-            begin
-            Result := StateContestYear(aSettings, Trim(aOldResolved));
-            end;
-         end;
-      lysAlsoContest:
-         begin
-         (* The contest only. Its logged QSOs keep the year each sent; the
-            correction question is the caller's (see the header). *)
-         Result := StateContestYear(aSettings, Trim(aSettings.My.LicenseYear));
-         end;
-   end;
+   Result := ApplyStationFactScope(aSettings, sfLicenseYear, aScope, aOldResolved);
 end;
 
 function LicenseYearCorrectionOf(aKind: TReceivedYearKind;
@@ -195,7 +175,7 @@ function LicenseYearCorrectionAsks(aScope: TLicenseYearScope; aOffered: boolean;
                                    aCount: integer): boolean;
 begin
    (* See the declaration. *)
-   Result := (aScope = lysAlsoContest) and aOffered and (aCount > 0);
+   Result := StationCorrectionAsks(aScope, aOffered, aCount);
 end;
 
 end.

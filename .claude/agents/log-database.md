@@ -273,9 +273,10 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 19 write paths** (17 until issue 300 added
+- **The pin covers 20 write paths** (17 until issue 300 added
   `BackfillYearSent` and `CorrectSentYear`, 2026-11-13; the fingerprint now
-  includes `year_sent`). `SetSentExchange` joined it and left
+  includes `year_sent`; schema 9 added `BackfillStationFacts`, 2026-11-17,
+  and `my_prec`). `SetSentExchange` joined it and left
   again the same day (2026-10-17) when its only caller was deleted; the
   fingerprint still includes `exchange_sent`. `UpdateQSOMyFacts` (the Edit
   QSO write of the my_* columns) joined on 2026-10-18, and the fingerprint
@@ -417,7 +418,7 @@ program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
 NY4I: *"The QSO record should have all the MY_ values (such as MY_GRID)."*
 Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h.
 
-- **`LOG_SCHEMA_VERSION` WAS 3 HERE (8 since issue 300; each later schema
+- **`LOG_SCHEMA_VERSION` WAS 3 HERE (9 since 2026-11-17; each later schema
   has its section below). ONCE A
   SCHEMA-3 BUILD HAS OPENED A LOG, NO EARLIER 5.0.x BUILD CAN OPEN IT**
   (accepted by NY4I). `Open` migrates;
@@ -755,6 +756,42 @@ section 12m-bis.
   `BindRecord` does not write it (the my_* tier does, once, at insert). See
   multi-op-network.md.
 - Schema 7 shipped in 5.0.40: a log this build opens is refused by it.
+
+## SCHEMA 9: EVERY STATION FACT IS ON THE QSO (2026-11-17)
+
+NY4I: *"ALL MY_ VALUES GET WRITTEN TO THE QSO RECORD."* Six TEXT columns after
+`year_sent` (`LOG_V9_QSO_COLUMNS`: `my_name`, `my_fd_class`, `my_check`,
+`my_prec`, `my_postal_code`, `my_foc_number`; `TQsoMyFacts.Name` ..
+`FocNumber`), in `QSO_MY_COLUMNS`, following `my_source` like the v3 values.
+`MyStationExchangeOfQSO` overlays them, so a Sweepstakes precedence changed
+after logging no longer rewrites earlier sent lines (it did: export read
+`Settings.My.Resolved*`). **`uStationFactRecord.STATION_FACT_IN_RECORD` is
+`array[TStationFact]`: a new station fact does not compile until it names its
+column or a reason it is not per-QSO**, and `LogStoreCurrentMyFacts` captures
+by it. `my_check` is NOT `year_sent` (Sweepstakes stating a
+`ReceivedYearKind` would trip the v6/v7 carry, the v8 backfill and the
+Preferences correction). The migration marks a log whose rows captured a
+station (`LOG_STATION_FACTS_BACKFILL_KEY`); the store's
+`BackfillStationFacts` (after set-up, beside `BackfillYearSent`) gives those
+rows' NULLs the contest's current values -- what they exported -- once.
+Import reads `MY_NAME` (alone it names no station) and `MY_POSTAL_CODE`; the
+four with no ADIF tag take the contest's even when the file's station is
+kept. ADIF export does NOT yet write MY_NAME/MY_POSTAL_CODE (matrix re-freeze).
+No packet change: a peer's row is stamped `assumed`. Schema 8
+shipped: a log this build opens is refused by earlier builds. Detail: plan
+section 12n; tests `uTestLogStationFacts`.
+
+**Phase 2 (2026-11-17, plan 12n "phase 2"):** Edit QSO shows and edits the
+six (enabled per contest; a greyed box is never read back). An edit of a
+NEVER-CAPTURED row freezes the untouched values at the session's
+(`uQsoMyFacts.MyFactsAfterEdit`), not at the blanks shown. Preferences'
+correction of logged QSOs for any as-typed value is
+`TLogRepository.CountQSOsSentStationValue` / `CorrectSentStationValue`: rows
+`record_kind = 'QSO'` and `my_source IN ('logged','edited')` (never a peer's,
+an imported/stamped or a never-captured row), exact old text ('' = NULL), the
+column name checked against `QSO_MY_COLUMNS` (never operator text), and each
+corrected row marked `edited`. `LogStoreCorrectSentStation` does the year and
+every value in ONE transaction. Tests `uTestStationFactChange`.
 
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 

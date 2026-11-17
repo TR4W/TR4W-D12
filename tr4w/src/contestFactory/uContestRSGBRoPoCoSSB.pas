@@ -77,6 +77,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -139,6 +140,13 @@ end;
 function TContestRSGBRoPoCoSSB.GetDisplayName: string;
 begin
    Result := 'RSGB RoLo SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
+   CSV row RSGB-ROPOCO-SSB: status unscheduled. UNSCHEDULED: no dated events (inactive or not a contest); NY4I intake 2026-11-17. *)
+function TContestRSGBRoPoCoSSB.GetSchedule: string;
+begin
+   Result := 'unscheduled';
 end;
 
 function TContestRSGBRoPoCoSSB.GetCabrilloName: string;

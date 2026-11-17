@@ -48,6 +48,41 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — November 2026
 
+### 5.0.41 (2026-11-17) - NY4I
+
+#### Logging and the QSO record
+
+- Every QSO now records the station facts it was sent with: name, FD class, check, precedence,
+  postal code and FOC number join the grid, section and zone it already kept. Correcting a value
+  later (for example a Sweepstakes precedence entered wrongly at New Contest) no longer rewrites the
+  sent exchange of every earlier QSO. Edit QSO shows and edits these values per QSO.
+- Changing a station value that the open contest also states now asks once: "Station default only" or
+  "Also this contest", and offers to correct the QSOs already logged. This was only the licence year
+  before.
+- The Station page shows the open contest's own values (including right after New Contest), and
+  says so when they differ from your station defaults.
+- Logs move to schema 9. Back up a contest log before opening it with this version; earlier
+  versions will refuse a schema 9 log.
+
+#### New Contest
+
+- "Upcoming contests first" sorts the list by when each contest runs next, and every row shows its
+  next date and time. Many more contests now state their schedule (Winter Field Day, ARRL 10 m,
+  ARRL Digital, ARRL January VHF, CQ WW SSB and about thirty others).
+- The Preferences Station page checks each field against its own format when it loses focus.
+
+#### Radios
+
+- DXLab Commander can send CW by CAT (not yet tried on a real rig).
+- The bundled HamLib is 4.7.2.
+
+#### Fixes
+
+- The pinned taskbar icon now shows the program as running, and a click activates it.
+- Many backlog fixes: QSO parties (Alabama, New Jersey, West Virginia, Arkansas, Kentucky), a QSO
+  credits a county and its host state, Phone refuses a 3-digit RST, the first-run setup wizard,
+  shutdown order, export write failures, and settings persistence.
+
 ### 5.0.40 (2026-11-12) - NY4I
 
 #### Windows

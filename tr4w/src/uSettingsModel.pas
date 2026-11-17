@@ -2408,7 +2408,6 @@ type
       procedure SetCall(const aValue: string);
       procedure SetCountry(const aValue: string);
       procedure SetZone(const aValue: string);
-      function StationValue(aFact: TStationFact): string;
       function GetResolvedText(aIndex: integer): string;
       function GetResolvedItuZone: integer;
    public
@@ -2445,6 +2444,11 @@ type
       (* THE ONE RESOLVER. The contest's override if stated, else the
         station's value, as text (MY ITU ZONE as its number). *)
       function Resolved(aFact: TStationFact): string;
+      (* THE STATION'S OWN VALUE of a fact, as text, whatever the contest
+        stated -- public since schema 9 phase 2, for the Station page's
+        "also this contest" question (uStationFactChange), which compares the
+        station's value before and after a Save for every fact. *)
+      function StationValue(aFact: TStationFact): string;
 
       (* The resolver, by name, for the readers. ResolvedZone is MY CQ ZONE,
         as text -- see Zone below for why it is text. *)
@@ -4562,6 +4566,11 @@ const
   can ask it directly. *)
 function TailcatAddressLengthIsAllowed(const aValue: string): boolean;
 
+(* A STATION FACT'S COMMAND NAME -- 'MY PREC' for sfPrec -- derived from its
+  property path by the one rule every command name follows (CommandNameOf),
+  so no second table names them. *)
+function StationFactCommand(aFact: TStationFact): string;
+
 implementation
 
 uses
@@ -6307,6 +6316,12 @@ begin
       Result := Result + c;
       end;
    Result := UpperCase(Result);
+end;
+
+function StationFactCommand(aFact: TStationFact): string;
+begin
+   (* See the declaration. 'My.FdClass' -> 'MY FD CLASS'. *)
+   Result := CommandNameOf('My.' + STATION_FACT_PROPERTY[aFact]);
 end;
 
 (* EXPLICIT AT THE RTTI BOUNDARY, EVERY CROSSING.

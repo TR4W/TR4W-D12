@@ -26,6 +26,7 @@ type
    TDXLabCommanderProtocolTests = class(TTestCase)
    protected
       procedure Test_EncoderMatchesTheDocumentExamples;
+      procedure Test_CWCharsCarriesTheRawText;
       procedure Test_DocumentMiscountIsNotCopied;
       procedure Test_HeaderParse;
       procedure Test_HeaderParseRejectsWhatIsNotAHeader;
@@ -74,6 +75,30 @@ begin
                                 CommanderField('SuppressDual', 'N') +
                                 CommanderField('SuppressModeChange', 'N')),
                'item 2, QSX split');
+end;
+
+(* ITEM 20: the parameters field of cwchars is the RAW TEXT, not a sub-field.
+  The first string is the document's own example; the rest are counted by
+  hand, never with Length(), or the test would only repeat the encoder. *)
+procedure TDXLabCommanderProtocolTests.Test_CWCharsCarriesTheRawText;
+begin
+   BeginTest('Test_CWCharsCarriesTheRawText');
+   CheckEquals('<command:7>cwchars<parameters:16>testing de aa6yq',
+               CommanderCWCharsMessage('testing de aa6yq'),
+               'item 20, the document''s example');
+   (* K1ABC/4 = 7, space, 5NN = 11, space, 05 = 14 *)
+   CheckEquals('<command:7>cwchars<parameters:14>K1ABC/4 5NN 05',
+               CommanderCWCharsMessage('K1ABC/4 5NN 05'),
+               'digits, a slash and spaces are text');
+   (* An undeclared prosign token goes through as text; the length still
+     counts it, so a '<' inside cannot be read as a field header by a peer
+     that parses by length.  TU = 2, space, < = 4. *)
+   CheckEquals('<command:7>cwchars<parameters:4>TU <',
+               CommanderCWCharsMessage('TU <'),
+               'an angle bracket inside the text is inside the length');
+   CheckEquals('<command:7>cwchars<parameters:100>' + StringOfChar('E', 100),
+               CommanderCWCharsMessage(StringOfChar('E', 100)),
+               'a three-digit length');
 end;
 
 procedure TDXLabCommanderProtocolTests.Test_DocumentMiscountIsNotCopied;
@@ -266,6 +291,7 @@ end;
 procedure TDXLabCommanderProtocolTests.RunAllTests;
 begin
    Test_EncoderMatchesTheDocumentExamples;
+   Test_CWCharsCarriesTheRawText;
    Test_DocumentMiscountIsNotCopied;
    Test_HeaderParse;
    Test_HeaderParseRejectsWhatIsNotAHeader;

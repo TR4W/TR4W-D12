@@ -99,6 +99,8 @@ uses
    uSettingsRegistry,         (* TSettingBase -- the generated-row builders' parameter *)
    uStationFieldCheck,        (* StationFieldProblem; TStationFocusDestination, a
                                  method parameter type below *)
+   uStationFactChange,        (* TStationFactsShown -- a field below; and the
+                                 Station page's "also this contest" rule *)
   uTR4WStrings,
   utils_text;
 
@@ -353,6 +355,11 @@ type
         dialog (NY4I, 2026-11-16: a modal is "a very old school way to alert a
         user"). Empty when every field is right. *)
       lblStationProblem: TLabel;
+      (* WHICH VALUES ARE THE OPEN CONTEST'S, AND THE STATION'S DEFAULT FOR
+        EACH -- shown only while one the page shows differs from the default
+        (uStationFactChange.TStationFactsShown; NY4I's bench, 2026-11-17).
+        The text is set in code from uAppStrings. *)
+      lblStationContestNote: TLabel;
       lblMyContinent: TInputCaption;
       cbxMyContinent: TComboBox;
       lblMyCall: TInputCaption;
@@ -893,6 +900,10 @@ type
       (* EACH STATION FIELD'S CURRENT PROBLEM, at StationFields' index ('' for
         none) -- what its red mark means, and what lblStationProblem says. *)
       FStationProblems: array of string;
+      (* WHAT THE STATION PAGE SHOWS FOR EACH VALUE -- the contest's where it
+        states one -- taken at load, kept current by each save, and what
+        Save compares the boxes against (uStationFactChange). *)
+      FStationShown: TStationFactsShown;
       (* THE FOCUS HOLD (see HoldStationFocusAsync). FHoldPending: one hold
         is queued, so a second exit does not queue another. FRestoringFocus:
         focus is being put back into field FHoldIndex, so the exit that move
@@ -1139,6 +1150,14 @@ type
       function  SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
       procedure LoadStationPanel;
       function  SaveStationPanel: boolean;
+      (* lblStationContestNote, from FStationShown: visible while a value the
+        page shows is the contest's and differs from the station's default. *)
+      procedure ShowStationContestNote;
+      (* AFTER A STATION SAVE: each box shows what is now in force -- the
+        contest's value where it states one (so "Station default only" puts
+        the contest's value back), else what was typed -- and FStationShown
+        is retaken, without marking the page dirty. *)
+      procedure ShowStationValuesInForce;
       function  StationFields: TArray<TStationField>;
       function  MakeStationField(const aCommand: string; const aEdit: TEdit): TStationField;
 
@@ -1626,6 +1645,8 @@ uses
    uCallHistory,        (* CallHistoryNameToStore -- the call history file's Browse *)
    LogDupe,             (* ContestCallHistoryFileName -- that box's hint *)
    uLicenseYearChange,  (* issue 300 -- what a Station-page year edit does to the contest *)
+   (* uStationFactChange is in the INTERFACE uses now -- FStationShown. *)
+   uStationFactRecord,  (* StationFactCaption, TStationFactCorrections *)
    uContestBase,        (* ContestReceivedYearKind -- does the open contest send the year *)
    uContestRegistry,    (* ContestIdentity -- the open contest *)
    uContestFactory,     (* SessionZoneTextSent -- the year the open contest sends;
@@ -2452,6 +2473,7 @@ begin
    FreeAndNil(FBindings);
    FreeAndNil(FCommandHelp);   // after the bindings, which point at it
    FreeAndNil(FLoaded);
+   FreeAndNil(FStationShown);
    FreeAndNil(FColorElements);
    FreeAndNil(FPalette);
    FreeAndNil(FEditClone);
@@ -8950,7 +8972,14 @@ procedure TPrefsForm.LoadStationPanel;
 var
    f: TStationField;
    c: ContinentType;
+   fact: TStationFact;
+   text: string;
 begin
+   if FStationShown = nil then
+      begin
+      FStationShown := TStationFactsShown.Create;
+      end;
+
    for f in StationFields do
       begin
       // The STORE is the record now; CFGCA is where the value is applied.
@@ -8965,8 +8994,18 @@ begin
       // writing it back through the MY ZONE command latched it as STATED:
       // W1AW's QSOs captured my_cq_zone 8 (its ITU zone) after a save that
       // changed only MY NAME. MY COUNTRY was latched the same way.
-      f.Edit.Text := LclText(CommandText(f.Command));
+      text := CommandText(f.Command);
+      (* THE CONTEST'S VALUE WHERE IT STATES ONE (NY4I's bench, 2026-11-17):
+        what the box shows is what the contest sends; FLoaded still holds the
+        station's default, which is what ApplyIfChanged writes against. See
+        uStationFactChange.TStationFactsShown. *)
+      if Settings.StationFactOfCommand(f.Command, fact) then
+         begin
+         text := FStationShown.Take(Settings, fact, text);
+         end;
+      f.Edit.Text := LclText(text);
       end;
+   ShowStationContestNote;
 
    (* EVERY FIELD JUDGED AS LOADED, so a bad value the file holds is marked
      and named before anyone touches it (see the block above
@@ -8994,6 +9033,74 @@ end;
 
 (* A license year as the two license-year questions show it: trimmed, or
   SLicenseYearNone for none. *)
+function ShownLicenseYear(const aYear: string): string; forward;
+
+procedure TPrefsForm.ShowStationContestNote;
+var
+   differing: TStationFacts;
+   fact: TStationFact;
+   defaults: string;
+begin
+   differing := [];
+   if FStationShown <> nil then
+      begin
+      differing := FStationShown.DifferingFromStation(Settings);
+      end;
+   lblStationContestNote.Visible := differing <> [];
+   if differing = [] then
+      begin
+      Exit;
+      end;
+
+   defaults := '';
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      if fact in differing then
+         begin
+         if defaults <> '' then
+            begin
+            defaults := defaults + '; ';
+            end;
+         defaults := defaults + UnicodeFormat(SStationContestNoteItem,
+                        [StationFactCaption(fact),
+                         ShownLicenseYear(Settings.My.StationValue(fact))]);
+         end;
+      end;
+   lblStationContestNote.Caption :=
+      LclText(UnicodeFormat(SStationContestNote,
+                            [ContestIdentity(Contest).DisplayName, defaults]));
+end;
+
+procedure TPrefsForm.ShowStationValuesInForce;
+var
+   f: TStationField;
+   fact: TStationFact;
+   typed, inForce: string;
+begin
+   if FStationShown = nil then
+      begin
+      Exit;
+      end;
+   BeginLoading;
+   try
+      for f in StationFields do
+         begin
+         if Settings.StationFactOfCommand(f.Command, fact) then
+            begin
+            typed := Trim(f.Edit.Text);
+            inForce := FStationShown.Take(Settings, fact, typed);
+            if inForce <> typed then
+               begin
+               f.Edit.Text := LclText(inForce);
+               end;
+            end;
+         end;
+   finally
+      EndLoading;
+   end;
+   ShowStationContestNote;
+end;
+
 function ShownLicenseYear(const aYear: string): string;
 begin
    if Trim(aYear) = '' then
@@ -9006,50 +9113,205 @@ begin
       end;
 end;
 
-(* THE LICENSE-YEAR QUESTION -- issue 300; the rule is uLicenseYearChange.
-  TWO answers since log schema 8 (a logged QSO keeps the year it sent).
-  Read by MODAL RESULT, never by button position (GTK orders the buttons
-  differently; see uLogStore.AskAboutALockedLog). The station-only answer is
-  the default for Enter AND Escape, and closing the box counts as it too. *)
-function AskLicenseYearScope(const aNewYear, aContestName,
-                             aContestYear: string): TLicenseYearScope;
+(* THE SCOPE QUESTION -- issue 300 for the license year, every station value
+  the open contest uses since schema 9 phase 2 (the rule is
+  uStationFactChange). ONE question per Save. Read by MODAL RESULT, never by
+  button position (GTK orders the buttons differently; see
+  uLogStore.AskAboutALockedLog). The station-only answer is the default for
+  Enter AND Escape, and closing the box counts as it too. *)
+function AskStationScope(const aTitle, aBody: string): TStationFactScope;
 var
    answer: TModalResult;
 begin
-   answer := QuestionDlg(LclText(SLicenseYearScopeTitle),
-                         LclText(UnicodeFormat(SLicenseYearScopeBodyStored,
-                                        [ShownLicenseYear(aNewYear), aContestName,
-                                         ShownLicenseYear(aContestYear)])),
-                         mtConfirmation,
+   answer := QuestionDlg(LclText(aTitle), LclText(aBody), mtConfirmation,
                          [mrYes, LclText(SLicenseYearScopeAlsoContest),
                           mrNo,  LclText(SLicenseYearScopeStationOnly),
                           'IsDefault', 'IsCancel'], 0);
    if answer = mrYes then
       begin
-      Result := lysAlsoContest;
+      Result := sfsAlsoContest;
       end
    else
       begin
-      Result := lysStationOnly;
+      Result := sfsStationOnly;
       end;
 end;
 
-(* THE CORRECTION QUESTION -- issue 300, asked after "Also this contest" when
-  logged QSOs sent the old year (LicenseYearCorrectionAsks). aCount is how
-  many; the years are as the contest SENDS them, the text the first question
-  showed. No is the default for Enter AND Escape: a QSO logged with a year
-  sent that year, so correcting is for a mistake only (NY4I, 2026-11-13).
-  Plain Yes and No, so the LCL's own (translated) buttons and its default-
-  button overload; anything but Yes, closing the box included, is No. *)
-function AskLicenseYearCorrection(aCount: integer;
-                                  const aOldSent, aNewSent: string): boolean;
+(* THE CORRECTION QUESTION -- asked after "Also this contest" when logged QSOs
+  sent the old value(s) (StationCorrectionAsks). No is the default for Enter
+  AND Escape: a QSO sent what it sent, so correcting is for a mistake only
+  (NY4I, 2026-11-13). Plain Yes and No, so the LCL's own (translated) buttons
+  and its default-button overload; anything but Yes, closing the box
+  included, is No. *)
+function AskStationCorrection(const aTitle, aBody: string): boolean;
 begin
-   Result := MessageDlg(LclText(SLicenseYearCorrectTitle),
-                        LclText(UnicodeFormat(SLicenseYearCorrectBody,
-                                       [aCount, ShownLicenseYear(aOldSent),
-                                        ShownLicenseYear(aNewSent)])),
+   Result := MessageDlg(LclText(aTitle), LclText(aBody),
                         mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
                         TMsgDlgBtn.mbNo) = mrYes;
+end;
+
+(* What the open contest uses of aFact now, as the questions show it: the
+  license year AS SENT (aContestSentYear, 64 for a stated 1964); any other
+  value as resolved. *)
+function ContestShownValue(aBefore: TStationFactsBefore; aFact: TStationFact;
+                           const aContestSentYear: string): string;
+begin
+   if aFact = sfLicenseYear then
+      begin
+      Result := ShownLicenseYear(aContestSentYear);
+      end
+   else
+      begin
+      Result := ShownLicenseYear(aBefore.Resolved(aFact));
+      end;
+end;
+
+(* ASK WHICH, ONCE, FOR EVERY VALUE IN aAsked. The license year alone keeps
+  its own words (issue 300); anything else is listed, one line each. *)
+function AskScopeFor(aAsked: TStationFacts; aBefore: TStationFactsBefore;
+                     const aContestName, aContestSentYear: string): TStationFactScope;
+var
+   fact: TStationFact;
+   lines: string;
+begin
+   if aAsked = [sfLicenseYear] then
+      begin
+      Result := AskStationScope(SLicenseYearScopeTitle,
+                                UnicodeFormat(SLicenseYearScopeBodyStored,
+                                   [ShownLicenseYear(Settings.My.LicenseYear), aContestName,
+                                    ShownLicenseYear(aContestSentYear)]) +
+                                sLineBreak + sLineBreak + SStationScopeStationOnlyNote);
+      Exit;
+      end;
+
+   lines := '';
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      if fact in aAsked then
+         begin
+         if lines <> '' then
+            begin
+            lines := lines + sLineBreak;
+            end;
+         lines := lines + UnicodeFormat(SStationScopeLine,
+                     [StationFactCaption(fact),
+                      ShownLicenseYear(Settings.My.StationValue(fact)),
+                      ContestShownValue(aBefore, fact, aContestSentYear)]);
+         end;
+      end;
+   Result := AskStationScope(SStationScopeTitle,
+                             UnicodeFormat(SStationScopeBody, [lines, aContestName]) +
+                             sLineBreak + sLineBreak + SStationScopeStationOnlyNote);
+end;
+
+(* AFTER "ALSO THIS CONTEST": THE CORRECTION OF LOGGED QSOs, offered once for
+  every value in aAsked whose old value logged QSOs sent -- the license year
+  by its own rule (compared AS SENT), the rest by uStationFactChange. One
+  question, one transaction (uLogStore.LogStoreCorrectSentStation). A failed
+  write is logged and disables the store; nothing more is said here.
+
+  A correction of a value scoring may read (state, section, grid, park,
+  IOTA) changes what the rows score with, so the log is rescored after one,
+  as Edit QSO rescores after every edit. The six schema-9 values feed no
+  scoring rule, and the year never did; neither rescores. *)
+procedure OfferStationCorrections(aAsked: TStationFacts; aBefore: TStationFactsBefore;
+                                  const aContestSentBefore: string);
+var
+   fact: TStationFact;
+   year: TLicenseYearCorrection;
+   correctYear: boolean;
+   yearCount: integer;
+   one: TStationFactCorrection;
+   corrections: TStationFactCorrections;
+   lines: string;
+   rescore: boolean;
+   answered: boolean;
+begin
+   correctYear := False;
+   yearCount := 0;
+   year := Default(TLicenseYearCorrection);
+   if sfLicenseYear in aAsked then
+      begin
+      if LicenseYearCorrectionOf(ContestReceivedYearKind(ContestIdentity(Contest)),
+                                 aBefore.Resolved(sfLicenseYear),
+                                 Settings.My.ResolvedLicenseYear,
+                                 CurrentStation.CurrentYear, year) then
+         begin
+         yearCount := LogStoreCountQSOsSentYear(year.OldKnown, year.OldValue);
+         correctYear := LicenseYearCorrectionAsks(lysAlsoContest, True, yearCount);
+         end;
+      end;
+
+   corrections := nil;
+   rescore := False;
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      if (fact in aAsked) and
+         StationFactCorrectionOf(fact, aBefore.Resolved(fact),
+                                 Settings.My.Resolved(fact), one) then
+         begin
+         one.Count := LogStoreCountQSOsSentStationValue(one);
+         if StationCorrectionAsks(sfsAlsoContest, True, one.Count) then
+            begin
+            SetLength(corrections, Length(corrections) + 1);
+            corrections[High(corrections)] := one;
+            if StationFactFeedsScoring(fact) then
+               begin
+               rescore := True;
+               end;
+            end;
+         end;
+      end;
+
+   if (not correctYear) and (Length(corrections) = 0) then
+      begin
+      Exit;
+      end;
+
+   if Length(corrections) = 0 then
+      begin
+      (* The license year alone: its own words, as before. *)
+      answered := AskStationCorrection(SLicenseYearCorrectTitle,
+                     UnicodeFormat(SLicenseYearCorrectBody,
+                        [yearCount, ShownLicenseYear(aContestSentBefore),
+                         ShownLicenseYear(SessionZoneTextSent(ContestIdentity(Contest)))]));
+      end
+   else
+      begin
+      lines := '';
+      if correctYear then
+         begin
+         lines := UnicodeFormat(SStationCorrectLine,
+                     [StationFactCaption(sfLicenseYear), yearCount,
+                      ShownLicenseYear(aContestSentBefore),
+                      ShownLicenseYear(SessionZoneTextSent(ContestIdentity(Contest)))]);
+         end;
+      for one in corrections do
+         begin
+         if lines <> '' then
+            begin
+            lines := lines + sLineBreak;
+            end;
+         lines := lines + UnicodeFormat(SStationCorrectLine,
+                     [StationFactCaption(one.Fact), one.Count,
+                      ShownLicenseYear(UTF8Decode(one.OldText)),
+                      ShownLicenseYear(UTF8Decode(one.NewText))]);
+         end;
+      answered := AskStationCorrection(SLicenseYearCorrectTitle,
+                     UnicodeFormat(SStationCorrectBody, [lines]));
+      end;
+
+   if not answered then
+      begin
+      Exit;
+      end;
+
+   if (LogStoreCorrectSentStation(correctYear, year.OldKnown, year.OldValue,
+                                  year.NewKnown, year.NewValue, corrections) > 0) and
+      rescore then
+      begin
+      RescoreLog;
+      end;
 end;
 
 function TPrefsForm.SaveStationPanel: boolean;
@@ -9059,17 +9321,15 @@ var
    first: integer;
    bad: string;
    callText: string;
-   (* Issue 300: the license year before the write -- the station's, what the
-     open contest resolved to and what it sent -- and the answer. *)
-   stationYearBefore: string;
-   contestYearBefore: string;
+   (* Issue 300, every station value since schema 9 phase 2: each value as it
+     stood before the write -- the station's and what the open contest
+     resolved to -- the license year the contest SENT, and the answer. *)
+   before: TStationFactsBefore;
    contestSentBefore: string;
-   contestSendsYear: boolean;
-   yearScope: TLicenseYearScope;
-   (* ...and the correction of logged QSOs it may lead to. *)
-   correction: TLicenseYearCorrection;
-   correctionOffered: boolean;
-   qsosSentOld: integer;
+   asked: TStationFacts;
+   shownChanged: TStationFacts;
+   fact: TStationFact;
+   scope: TStationFactScope;
 begin
    Result := True;
    bad := '';
@@ -9141,77 +9401,89 @@ begin
    // csOwned -- hidden from Ctrl-J so there is ONE editor -- but stay applied.
    // Moving them to JSON needs the multi-op receive path to have somewhere else
    // to land, which is its own piece of work.
-   (* THE LICENSE YEAR AS IT WAS, READ BEFORE ANY WRITE (issue 300): once the
-     station's year is written, a contest with no year of its own already
-     resolves to it. contestSentBefore is what the contest SENDS (64 for a
-     stated 1964), the text the export uses. *)
-   stationYearBefore := Settings.My.LicenseYear;
-   contestYearBefore := Settings.My.ResolvedLicenseYear;
-   contestSentBefore := SessionZoneTextSent(ContestIdentity(Contest));
-   contestSendsYear := ContestReceivedYearKind(ContestIdentity(Contest)) <> rykNone;
+   (* EVERY STATION VALUE AS IT WAS, READ BEFORE ANY WRITE (issue 300; every
+     value since schema 9 phase 2): once the station's value is written, a
+     contest with no value of its own already resolves to it.
+     contestSentBefore is the license year the contest SENDS (64 for a stated
+     1964), the text the export uses. *)
+   before := TStationFactsBefore.Create(Settings);
+   try
+      contestSentBefore := SessionZoneTextSent(ContestIdentity(Contest));
 
-   for f in fields do
-      begin
-      if not ApplyIfChanged(f.Command, Trim(f.Edit.Text)) then
+      shownChanged := [];
+      for f in fields do
          begin
-         bad := bad + ' ' + f.Command + ' = "' + Trim(f.Edit.Text) + '"';
-         Result := False;
-         end;
-      end;
-
-   if cbxMyContinent.ItemIndex >= 0 then
-      begin
-      if not ApplyIfChanged('MY CONTINENT',
-                                  cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
-         begin
-         bad := bad + ' MY CONTINENT';
-         Result := False;
-         end;
-      end;
-
-   (* THE QUESTION, ONLY WHEN THE STATION'S YEAR REALLY CHANGED -- asked after
-     the write, so a refused year asks nothing and leaves the contest exactly
-     as it was. A changed statement is written into the log now, not at the
-     next clean close (Q61). *)
-   if LicenseYearEditAsks(contestSendsYear, stationYearBefore,
-                          Settings.My.LicenseYear) then
-      begin
-      yearScope := AskLicenseYearScope(Settings.My.LicenseYear,
-                                       ContestIdentity(Contest).DisplayName,
-                                       contestSentBefore);
-      if ApplyLicenseYearScope(Settings, yearScope, contestYearBefore) then
-         begin
-         LogStoreRecordContestStatement(LICENSE_YEAR_COMMAND);
-         end;
-
-      (* THEN THE CORRECTION, after "Also this contest" only: the contest's
-        logged QSOs keep the year each sent (log schema 8) unless the operator
-        says the old year was a mistake. Default No. A failed write is logged
-        and disables the store (uLogStore); nothing more is said here. *)
-      if yearScope = lysAlsoContest then
-         begin
-         correctionOffered :=
-            LicenseYearCorrectionOf(ContestReceivedYearKind(ContestIdentity(Contest)),
-                                    contestYearBefore,
-                                    Settings.My.ResolvedLicenseYear,
-                                    CurrentStation.CurrentYear, correction);
-         qsosSentOld := 0;
-         if correctionOffered then
+         (* A BOX SHOWING THE CONTEST'S VALUE (TStationFactsShown): left as
+           loaded it writes nothing -- writing would copy the contest's value
+           into the station's default; changed, it writes the default and is
+           asked about below even if the default did not move. *)
+         if (FStationShown <> nil) and
+            Settings.StationFactOfCommand(f.Command, fact) then
             begin
-            qsosSentOld := LogStoreCountQSOsSentYear(correction.OldKnown,
-                                                     correction.OldValue);
-            end;
-         if LicenseYearCorrectionAsks(yearScope, correctionOffered, qsosSentOld) then
-            begin
-            if AskLicenseYearCorrection(qsosSentOld, contestSentBefore,
-                                        SessionZoneTextSent(ContestIdentity(Contest))) then
+            if not FStationShown.WritesStation(fact, f.Edit.Text) then
                begin
-               LogStoreCorrectSentYear(correction.OldKnown, correction.OldValue,
-                                       correction.NewKnown, correction.NewValue);
+               Continue;
+               end;
+            if FStationShown.ShowsContest(fact) then
+               begin
+               Include(shownChanged, fact);
                end;
             end;
+         if not ApplyIfChanged(f.Command, Trim(f.Edit.Text)) then
+            begin
+            bad := bad + ' ' + f.Command + ' = "' + Trim(f.Edit.Text) + '"';
+            Result := False;
+            end;
          end;
-      end;
+
+      if cbxMyContinent.ItemIndex >= 0 then
+         begin
+         if not ApplyIfChanged('MY CONTINENT',
+                               cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
+            begin
+            bad := bad + ' MY CONTINENT';
+            Result := False;
+            end;
+         end;
+
+      (* THE QUESTION, ONLY FOR THE VALUES THAT REALLY CHANGED AND THAT THE
+        OPEN CONTEST USES (uStationFactChange.StationFactsToAsk) -- asked
+        after the write, so a refused value asks nothing and leaves the
+        contest exactly as it was. ONE question for all of them. A changed
+        statement is written into the log now, not at the next clean close
+        (Q61). *)
+      asked := StationFactsToAskOnPage(before, Settings, ContestIdentity(Contest),
+                                       shownChanged);
+      if asked <> [] then
+         begin
+         scope := AskScopeFor(asked, before, ContestIdentity(Contest).DisplayName,
+                              contestSentBefore);
+         for fact := Low(TStationFact) to High(TStationFact) do
+            begin
+            if (fact in asked) and
+               ApplyStationFactScope(Settings, fact, scope, before.Resolved(fact)) then
+               begin
+               LogStoreRecordContestStatement(StationFactCommand(fact));
+               end;
+            end;
+
+         (* THEN THE CORRECTION, after "Also this contest" only: the
+           contest's logged QSOs keep what each sent (log schemas 8 and 9)
+           unless the operator says the old value was a mistake. Default
+           No. *)
+         if scope = sfsAlsoContest then
+            begin
+            OfferStationCorrections(asked, before, contestSentBefore);
+            end;
+         end;
+
+      (* WHAT IS NOW IN FORCE, in the boxes: the contest's value where it
+        states one -- after "Station default only" that is the contest's own
+        again, which the question said it would be. *)
+      ShowStationValuesInForce;
+   finally
+      before.Free;
+   end;
 
    if not Result then
       begin
@@ -10051,6 +10323,21 @@ begin
    // query is still a single action. Clearing there would mean retyping the
    // whole query to check the second match, which is the common case.
    edtSearch.Text := '';
+
+   (* THE STATION PAGE SHOWS WHAT THE CONTEST USES NOW (NY4I, 2026-11-17).
+     This form is a cached singleton, loaded once at construction and again
+     after each Apply; a contest's own values can change while it is closed,
+     so an untouched page is reloaded on every opening. A page with unsaved
+     edits is left as the operator left it. *)
+   if not FDirty then
+      begin
+      BeginLoading;
+      try
+         LoadStationPanel;
+      finally
+         EndLoading;
+      end;
+      end;
 
    (* EVERY STATION FIELD JUDGED ON EACH OPENING, so a bad stored value is
      marked whichever way the page was reached. No focus is moved. *)

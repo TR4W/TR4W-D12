@@ -30,14 +30,30 @@ unit uRadioDXLabCommander;
   real Commander has answered this code.  docs/BENCH_QUEUE.md lists what a
   bench run has to settle.
 
-  WHAT TR4W DOES WITH IT (the minimum set issue 172 proposed):
+  WHAT TR4W DOES WITH IT (issue 172's minimum set, plus CW by CAT, 2026-11-17):
     read   RX frequency (CmdGetFreq), mode (CmdSendMode), split (CmdSendSplit),
            TX/RX (CmdSendTX), and the TX frequency while split (CmdGetTXFreq);
     set    RX frequency (CmdSetFreq), mode (CmdSetMode), split (CmdSplit),
-           the TX frequency (CmdQSXSplit), PTT (CmdTX / CmdRX).
-  NOT DONE, deliberately: CW (cwchars -- TR4W keys CW through its keyer
-  factory, and the issue left it out), RIT/XIT (the document has no command),
-  the user-defined sequences (seqindex / seqname), CmdSyncIcom.
+           the TX frequency (CmdQSXSplit), PTT (CmdTX / CmdRX);
+    CW     text by CAT (cwchars, item 20) -- see CW below.
+  NOT DONE, deliberately: RIT/XIT (the document has no command), the
+  user-defined sequences (seqindex / seqname), CmdSyncIcom.
+
+  CW BY CAT (cwchars), AND WHAT THE DOCUMENT DOES NOT GIVE IT.
+    - One message per CW message: <command:7>cwchars<parameters:N><text>, the
+      parameters field being the raw text (CommanderCWCharsMessage).  Queued
+      like every other set, so the main thread that keys it never waits on a
+      socket.
+    - NO SPEED MESSAGE.  Commander's (or the rig's) own keyer speed is what is
+      sent at, so rcCWSpeedSync is not declared and TR4W's WPM display does
+      not drive the rig.  The CW-busy window is still estimated from TR4W's
+      displayed speed, so it is only as right as the two speeds agree.
+    - NO STOP MESSAGE.  Escape withdraws a cwchars still in the queue; text
+      already written to Commander is keyed to the end.  Logged, never
+      pretended.
+    - NO PROSIGNS, NO LENGTH LIMIT stated.  Tokens pass through as literal
+      text, and a whole message goes in one cwchars.  Both are bench
+      questions (docs/BENCH_QUEUE.md).
 
   THE TRANSPORT IS ONE QUESTION AT A TIME, ON THE POLLING THREAD.
     - Commander PUSHES NOTHING: every reply answers a query.  So there is no
@@ -133,9 +149,12 @@ type
         written.  Polling thread only.  Outlives a dropped link on purpose:
         Connect pays it (see the unit header, PTT). *)
       FUnkeyOwed: boolean;
+      (* CW text between BufferCW and SendCW.  Main thread only: the CW-by-CAT
+        keyer calls the pair, and StopCW, from there. *)
+      FCWBuffer: string;
 
       procedure ClearQueue;
-      function  DiscardQueued(const aMessage: string): integer;
+      function  DiscardQueuedCommand(const aCommand: string): integer;
       procedure CloseLink;
       function  OpenLink: boolean;
       function  ReadReplyField(out aName, aValue: string): boolean;
@@ -177,6 +196,7 @@ type
       procedure Transmit; override;
       procedure Receive; override;
 
+      function  CWIsFactoryOwned: Boolean; override;
       procedure BufferCW(msg: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
@@ -216,7 +236,7 @@ implementation
 
 uses
    IdGlobal, IdException, IdExceptionCore,
-   uHostResolve, uIndyLink;
+   uCWFraming, uHostResolve, uIndyLink;
 
 const
    COMMANDER_REPLY_TIMEOUT_MS = 500;
@@ -257,22 +277,43 @@ begin
    FReplyTimeoutMs := COMMANDER_REPLY_TIMEOUT_MS;
    FDecimalSeparator := FormatSettings.DecimalSeparator;
 
-   (* WHAT TR4W READS FROM COMMANDER, AND NOTHING ELSE.
+   (* WHAT TR4W ASKS OF COMMANDER, AND NOTHING ELSE.
        rcReadSplit     CmdSendSplit
        rcReadTXStatus  CmdSendTX -- "not all transceivers respond", so a rig
                        that never answers is stopped being asked (see
                        COMMANDER_TX_QUERY_MAX_MISSES); the flag says TR4W
                        reads it, not that every rig answers.
+       rcCWByCAT       cwchars (item 20).  This is what offers "CW by CAT" in
+                       the profile's CW output and the setup wizard: both ask
+                       the registry, which asks this constructor.
      NOT declared:
        rcReadVFOB      CmdGetTXFreq is the TX frequency, not the unselected
                        VFO's frequency and mode; it fills VFO B only in split.
        rcReadRIT       no RIT/XIT message exists.
-       rcCWByCAT       cwchars exists; TR4W does not use it (issue 172).
        rcCWSpeedSync   no speed message exists.
        rcDataMode      DATA-U/DATA-L arrive as modes, not as a sub-mode.
      Pinned, as a whole set, by uTestRadioDXLabCommander. *)
-   FCapabilities.Flags := FCapabilities.Flags + [rcReadSplit, rcReadTXStatus];
+   FCapabilities.Flags := FCapabilities.Flags + [rcReadSplit, rcReadTXStatus, rcCWByCAT];
    FCapabilities.HasXIT := False;
+
+   (* THE CW FRAME RULE, A DECISION (the document states no limit):
+       maxLen 0, no pad -- one cwchars carries the whole message.  Commander,
+         not TR4W, turns the text into the rig's own CW command, so any chunking
+         the rig needs is Commander's.  The keyer's message is a Str160, so
+         "whole" is bounded anyway.  If a real rig cuts long messages short,
+         give this a maxLen and the keyer splits with no other change.
+       busyFactor 1.25 -- the Icom family's figure, for the same reason: the
+         busy window starts when the text is QUEUED, but it reaches the air
+         only after the polling thread writes it (possibly behind a poll in
+         progress) and Commander relays it to the rig.  The estimate is
+         elements x TR4W's dot time, and nothing here can make it Commander's
+         speed; a rig that reports TX (CmdSendTX) ends the window on its own
+         TX-off.
+     PROSIGNS: none declared.  The document says nothing about them, so the
+     tokens (^ ! + < =) go through as literal text -- which is what
+     "grammar not established" means (TCWProsignSet).  What the rig keys for
+     them is a bench question.  Pinned by uTestCWFraming. *)
+   FCapabilities.CWFrame := CWFrameRule(0, False, 1.25);
 
    FLink := TIdTCPClient.Create(nil);
    FQueue := TStringList.Create;
@@ -427,18 +468,22 @@ begin
       end;
 end;
 
-(* ANY THREAD.  Removes every queued message EXACTLY equal to aMessage (a
-  whole message, never a substring) and answers how many went. *)
-function TDXLabCommanderRadio.DiscardQueued(const aMessage: string): integer;
+(* ANY THREAD.  Removes every queued message whose COMMAND is aCommand --
+  matched on the whole command field and the start of the parameters field
+  that follows it, so 'CmdTX' never matches 'CmdTXSomething' -- and answers how
+  many went.  A message already taken by DrainUrgentQueue is past reach. *)
+function TDXLabCommanderRadio.DiscardQueuedCommand(const aCommand: string): integer;
 var
    i: integer;
+   prefix: AnsiString;   // as queued: wire text, ASCII
 begin
    Result := 0;
+   prefix := AnsiString(CommanderField('command', aCommand) + '<parameters:');
    FQueueLock.Enter;
    try
       for i := FQueue.Count - 1 downto 0 do
          begin
-         if FQueue[i] = AnsiString(aMessage) then   // as queued: wire text, ASCII
+         if Copy(FQueue[i], 1, Length(prefix)) = prefix then
             begin
             FQueue.Delete(i);
             Inc(Result);
@@ -826,7 +871,7 @@ procedure TDXLabCommanderRadio.Receive;
 var
    cancelled: integer;
 begin
-   cancelled := DiscardQueued(CommanderMessage('CmdTX', ''));
+   cancelled := DiscardQueuedCommand('CmdTX');
    if cancelled > 0 then
       begin
       logger.Debug('[Commander] un-key cancelled %d queued CmdTX', [cancelled]);
@@ -1030,22 +1075,61 @@ begin
    Result := True;
 end;
 
-(* No rcCWByCAT, so the keyer never sends CW here; these only say so. *)
+(* ------------------------------------------------------------ CW by CAT -- *)
+
+(* THIS DRIVER KEYS CW ITSELF (cwchars), so RadioObject.StopSendingCW must
+  reach StopCW -- the base's False would skip it, and Escape would not even
+  withdraw a message still queued. *)
+function TDXLabCommanderRadio.CWIsFactoryOwned: Boolean;
+begin
+   Result := True;
+end;
+
+(* Main thread, from uCWKeyerCAT.CWByCATSend, one chunk per call -- with
+  maxLen 0, one chunk is the whole message. *)
 procedure TDXLabCommanderRadio.BufferCW(msg: string);
 begin
-   logger.Debug('[Commander] CW by CAT is not supported -- text discarded');
+   FCWBuffer := FCWBuffer + msg;
 end;
 
+(* QUEUED, NOT WRITTEN: the polling thread's DrainUrgentQueue writes it, as it
+  does every set, so the main thread never waits on Commander. *)
 procedure TDXLabCommanderRadio.SendCW;
 begin
-   logger.Debug('[Commander] CW by CAT is not supported -- nothing to send');
+   if FCWBuffer = '' then
+      begin
+      Exit;
+      end;
+   SendToRadio(CommanderCWCharsMessage(FCWBuffer));
+   logger.Trace('[Commander] CW queued: "%s"', [FCWBuffer]);
+   FCWBuffer := '';
 end;
 
+(* THE DOCUMENT HAS NO STOP MESSAGE, and none is invented.  What can honestly
+  be done is done: the buffer is emptied and any cwchars still in the queue is
+  withdrawn.  Text already written to Commander is keyed to the end, and the
+  log says so.  Never an ERROR: Escape on a radio that cannot abort is not a
+  fault, and the registry-wide no-link test fails on one. *)
 procedure TDXLabCommanderRadio.StopCW;
+var
+   withdrawn: integer;
 begin
-   logger.Debug('[Commander] CW by CAT is not supported -- nothing to stop');
+   FCWBuffer := '';
+   withdrawn := DiscardQueuedCommand('cwchars');
+   if withdrawn > 0 then
+      begin
+      logger.Info('[Commander] CW stop: %d cwchars message(s) withdrawn before sending', [withdrawn]);
+      end
+   else
+      begin
+      (* Debug, and worded so it claims nothing: StopSendingCW also reaches an
+        idle radio (MainUnit's dupe-info path stops both). *)
+      logger.Debug('[Commander] CW stop: nothing queued; Commander has no stop message, so any CW already sent to it is keyed to the end');
+      end;
 end;
 
+(* Unreachable in practice: no rcCWSpeedSync, so RadioObject.SetRadioCWSpeed
+  stops before it.  Here only because the base declares it abstract. *)
 procedure TDXLabCommanderRadio.SetCWSpeed(speed: integer);
 begin
    logger.Debug('[Commander] no CW speed message -- %d wpm not sent', [speed]);

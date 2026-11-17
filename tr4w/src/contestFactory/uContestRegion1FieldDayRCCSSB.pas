@@ -72,6 +72,7 @@ type
          descendants override the getters. Every getter below states
          the ContestsArray row quoted above. *)
       function GetDisplayName: string; override;
+      function GetSchedule: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetWA7BNMId: integer; override;
@@ -154,6 +155,14 @@ end;
 function TContestRegion1FieldDayRCCSSB.GetDisplayName: string;
 begin
    Result := 'REGION 1 FIELD DAY-RCC-SSB';
+end;
+
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
+   CSV row REGION 1 FIELD DAY-RCC-SSB: status candidate. CANDIDATE: dates from NY4I's intake (2026-11-17), the recurrence rule inferred
+   from them; not yet checked against the sponsor's rules. *)
+function TContestRegion1FieldDayRCCSSB.GetSchedule: string;
+begin
+   Result := '1st full weekend of September at 13:00 UTC for 24h';
 end;
 
 function TContestRegion1FieldDayRCCSSB.GetCabrilloName: string;
