@@ -41,6 +41,39 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Per-QSO station facts, contest schedules, Commander CW, backlog sweeps (5.0.41) - NY4I
+
+#### Per-QSO station facts, log schema 9 (`domain/uLogSchema`, `domain/uQsoMyFacts`, `uLogRepository`, `uLogStore`, `uStationFactRecord`, `uStationFactChange`, `uEditQSO`, `ui/lcl/uEditQSOForm`, `ui/lcl/uPrefsForm`, `contestFactory/uContestBase`)
+
+- **Six more `my_*` columns**: `my_name`, `my_fd_class`, `my_check`, `my_prec`, `my_postal_code`, `my_foc_number` join the grid, section and zone already kept per QSO (schema 8 added `year_sent`). Ruling: all MY_ values are written to the QSO record. A never-captured row (`my_source` NULL) still reads the session; a captured-but-empty value means unknown and never borrows today's value.
+- **Why**: a precedence corrected after logging rewrote every earlier QSO's sent exchange, because `MyStationExchangeOfQSO` reconstructed those six from the session. It now overlays them from the row.
+- **Migration**: `LOG_STATION_FACTS_BACKFILL_KEY` stamps existing rows once. An older build refuses a schema 9 log, so back up first.
+- **`uStationFactRecord`** states, per `TStationFact`, whether the fact is in the QSO record; **`uStationFactChange`** is the generalised "Station default only / Also this contest" scope rule (the licence-year unit now delegates to it).
+- **Edit QSO** shows and edits the six (`MyFactsAfterEdit`); Preferences asks the scope question for every contest-used fact and offers `CorrectSentStationValue` for logged QSOs. The Station page loads the open contest's resolved values (`TStationFactsShown`) and notes differences from the station defaults.
+- **Not done**: ADIF export does not write `MY_NAME`/`MY_POSTAL_CODE` (it would re-freeze the matrix); `BuildSentExchangeTextOf` and the `ScoreQSO` rescore still read live values; imported rows are not corrected by "Also this contest" for facts with no ADIF tag.
+
+#### Contest schedules (`contestFactory/uContest*`, `docs/CONTEST_SCHEDULES.csv`, `uContestSchedule`, `uNewContestForm`) - Q99
+
+- **`GetSchedule`** is stated by about 35 more contest classes (ARRL 10, ARRL Digital, Winter Field Day, ARRL Jan VHF, CQ WW SSB, CQ VHF, NAQP CW/RTTY, Oklahoma QP, Mini 40/80, Region 1 Field Day and others); inactive contests state `unscheduled`. `SCHEDULE_NOT_YET_STATED` in `uTestContestSchedule` shrank from 65 to 32.
+- **New Contest** puts the date and time hint on every row, not only under "Upcoming contests first".
+- **Open**: ARRL 160's `first full weekend of December` is a day late (needs a `-1d` form); ARRL RTTY Roundup and Kids Day use `1st Saturday of January`, wrong for 2028.
+
+#### DXLab Commander: CW by CAT (`radioFactory/uRadioDXLabCommander`, `uDXLabCommanderProtocol`)
+
+- Declares `rcCWByCAT` with `CWFrameRule(0, False, 1.25)` and `CWIsFactoryOwned`; text goes out as `<command:7>cwchars` through the polling thread's urgent queue (`CommanderCWCharsMessage`). The document has no abort, so `StopCW` withdraws unsent text only. Bench-unverified.
+
+#### Fixes and sweeps since 5.0.40
+
+- **Taskbar**: a startup window gives the program a taskbar button, so the pinned icon shows running and a click activates it.
+- **Preferences Station page**: every field is checked against its own format on focus loss and at Save; typing leaves Save enabled again; captions name all inputs for screen readers (issue 278).
+- **Setup wizard**: first-run station, radio, WinKeyer and DX cluster pages in one window (`--wizard`).
+- **Settings persistence**: band-map toggles save, a contest's values never reach `tr4w.json`, and a band-map toggle of a contest-stated setting also changes the station value.
+- **QSO parties and parsers**: Alabama, New Jersey, West Virginia, Arkansas and Kentucky QSO parties; one QSO credits a county and its host state (issue 317); a known-invalid domestic QTH is refused with a message; Phone refuses a 3-digit RST.
+- **Backlog sweeps** (issues 145, 151, 167, 172, 175, 177, 246, 267, 275, 287, 296, 310, 313-315, 318, 323-326, 328-330): shutdown order (`Interfaces` first), export write failures, PTT-via-CAT recursion, CWOFF/CWON, DXLab Commander radio, QRZ logbook, band map centre and beam sort, HamLib 4.7.2, per-QSO second multiplier.
+- **Network protocol 4**: a QSO packet carries the licence year its station sent, and a peer's row stores it (issue 300).
+- **Tooling**: native Linux/Mac GUI persistence tests, the stdin hook looks through `timeout`, `winpty` and `setsid` (issue 289), graphify removed.
+- **Contest matrix**: `POTA.matrix` refrozen; it already differed on a clean 8ba2df19 build (RST received keeps its 599 default instead of taking the age or zone).
+
 ### Year first licensed, Win64 as the only Windows target, Tailcat link, online-URL work - NY4I
 
 #### Year first licensed (`uLogSchema`, `uContestExchange`, `uContestBase`, `uSettingsModel`, `fcontest`) - Issue #298
