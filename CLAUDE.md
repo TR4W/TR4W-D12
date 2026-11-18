@@ -56,29 +56,6 @@ unsigned commits broke nothing; rewriting did.
 
 Forensics and the reset recipe for a stale clone: **`git-history-recovery` skill**.
 
-## MANDATORY: No `Claude-Session:` trailer in commit messages
-
-**TR4W/TR4W-D12 IS PUBLIC.** A `Claude-Session: https://claude.ai/code/session_…` trailer is a link
-to a private transcript. Do not put one in a commit message or a PR body. `Co-Authored-By` is fine.
-
-If one still reaches the remote, the fix is **forward-only**: stop emitting it, and leave the
-published commit alone. Removing it means rewriting published history, which is the thing that cost
-a day. Rotate the session if the link matters.
-
-### Optional belt-and-braces
-
-`.githooks/commit-msg` is tracked and strips the trailer if one appears, reporting what it removed.
-It is **not** required and nothing depends on it:
-
-```powershell
-git -C /c/tr4w-d12 config core.hooksPath .githooks    # opt-in, once per clone
-```
-
-`core.hooksPath` is per-clone local config and does not travel, so an uninstalled hook is inert —
-which is why the rule above, not the hook, is the control. `.gitattributes` pins `.githooks/*` to
-**LF**: a CRLF shebang gives `bad interpreter: /bin/sh^M` and a hook that silently never runs, the
-one place in this tree where CRLF is the wrong answer.
-
 ## MANDATORY: IF YOU TOUCH IT, IT LEAVES NATIVE
 
 NY4I, 2026-09-10, after a week of Win32 artifacts surfacing one at a time on
@@ -181,6 +158,17 @@ the app -- in that order, so a failing test stops the build *before* it produces
 could ship. It derives the version from `src/Version.pas` and **fails** (rather than defaulting to
 0.0.0) if it cannot parse it, then checks the linked `tr4w.exe` actually reports that version.
 `full.nsi` refuses to build without `/DTR4WVERSION`.
+
+### `FullBuild.ps1` runs ON DEMAND ONLY
+
+NY4I, 2026-11-18, after watching the whole 13-minute run on the Framework laptop: **do not run
+`FullBuild.ps1` on your own initiative.** It is a pre-release, pre-push gate that NY4I asks for --
+typically at the end of the day's session, and often (not always) before a push. Wait to be told.
+
+While working, use the quick loop below (`Build-App.ps1 -Incremental`, `Build-Tests.ps1 -Run`, or
+the one lint the change can reach). The cost is accepted: a late full run may not say which change
+broke what, and the history here shows that is the smaller problem than a 13-minute wait on every
+change. The tag-time CI run (`release.yml`) is unaffected.
 
 ### Iterating
 
