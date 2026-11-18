@@ -52,6 +52,12 @@ https://go.dev/dl/$archive | template | sample | build\Build-Tailcat.ps1 | https
 https://supercheckpartial.com/downloads/MASTER.DTA | tooling | head | tools\trmaster\trmaster_build.py
 https://supercheckpartial.com/downloads/SCP.DB | tooling | head | tools\trmaster\trmaster_build.py
 https://xmldata.qrz.com/xml/current/ | tooling | head | tools\trmaster\trmaster_names_qrz.py | the real use is credentialed; a check sends none
+https://data.fcc.gov/download/pub/uls/complete/l_amat.zip | tooling | head | tools\trmaster\fcc_import.py | FCC amateur licence database, input of the callsign lookup build
+https://apc-cap.ic.gc.ca/datafiles/amateur_delim.zip | tooling | head | tools\trmaster\lookup_build.py | ISED amateur file, input of the callsign lookup build
+https://download.geonames.org/export/zip/US.zip | tooling | head | tools\trmaster\lookup_build.py | GeoNames US postal codes, input of the callsign lookup build
+https://download.geonames.org/export/zip/CA_full.csv.zip | tooling | head | tools\trmaster\lookup_build.py | GeoNames Canadian postal codes, input of the callsign lookup build
+https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt | tooling | head | tools\trmaster\lookup_build.py | Census ZIP-to-county crosswalk, input of the callsign lookup build
+https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt | tooling | head | tools\trmaster\lookup_build.py | Census county codes, input of the callsign lookup build
 https://docs.google.com/spreadsheets/d/1Ew8b1WAorFRCixGRsr031atxmS0SsycvmOczS_fDqzc/export?format=csv | tooling | head | tools\trmaster\build_trmaster.cmd | CWops member sheet | docs.google.com,googleusercontent.com
 http://www.dxcluster.info/telnet/TRCLUSTER.DAT | tooling | head | build\Invoke-Release.ps1
 https://github.com/ | doc | head | build\Invoke-Release.ps1 | a repository's actions page is built from the runner's slug

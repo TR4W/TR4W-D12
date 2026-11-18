@@ -123,6 +123,24 @@ if (-not $tc) { Fail 'no FPC + Lazarus able to target this platform (see above)'
 $FPCRES = $tc.FpcRes
 if (-not (Test-Path $FPCRES)) { Fail "fpcres not found at $FPCRES" }
 
+# Python is a build prerequisite: the lints (stdin hook, LFM catalogue, PO
+# specifiers, tab order, main elements) and the unit-test build run it, and each
+# fails closed without it -- so without this check a missing Python surfaces as
+# a lint failure partway through. 'python' is the name those scripts all look
+# up. The probe RUNS it because a fresh Windows 11 has a Microsoft Store alias
+# named python.exe that is found on PATH and does nothing.
+$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+$pythonOk  = $false
+if ($pythonCmd)
+   {
+   & python -c "import sys" 2>&1 | Out-Null
+   $pythonOk = ($LASTEXITCODE -eq 0)
+   }
+if (-not $pythonOk)
+   {
+   Fail 'python is not installed or not runnable (the lints need it). Install Python 3 and make sure "python" works in this shell; on Windows 11 also turn off the Store alias under Settings > Apps > Advanced app settings > App execution aliases.'
+   }
+
 # ---------------------------------------------------------------------------
 # Version. src\Version.pas is the single source of truth -- the installer
 # refuses to build without it, so a mis-versioned release cannot be produced by
