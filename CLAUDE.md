@@ -170,6 +170,11 @@ the one lint the change can reach). The cost is accepted: a late full run may no
 broke what, and the history here shows that is the smaller problem than a 13-minute wait on every
 change. The tag-time CI run (`release.yml`) is unaffected.
 
+**It is a hard lock, not only a rule:** `.claude/hooks/ask-before-fullbuild.py` (a tracked
+`PreToolUse` hook on Bash and PowerShell, tests in `test-ask-before-fullbuild.py`) makes the
+harness ASK before any command that runs `FullBuild.ps1` or its `.cmd` twin. Reads of the file
+(`rg`, `git add`, `cat`) do not prompt. Approve the prompt only when NY4I asked for the run.
+
 ### Iterating
 
 `.\build\Build-App.ps1` (full rebuild, the safe default; `-Incremental` for seconds instead of
