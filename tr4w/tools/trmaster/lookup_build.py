@@ -408,7 +408,11 @@ def build_slim_db(scratch_db, slim_db, table, zip_county, counties, meta,
 
 def gzip_file(src, dest):
    part = dest.with_name(dest.name + ".part")
-   with open(src, "rb") as fin, gzip.GzipFile(part, "wb", compresslevel=9, mtime=0) as fout:
+   # The name stored in the gzip header is what 7-Zip/Explorer use when
+   # extracting, so give it the real DB name rather than the .part name.
+   with open(src, "rb") as fin, open(part, "wb") as raw, \
+         gzip.GzipFile(filename=src.name, mode="wb", fileobj=raw,
+                       compresslevel=9, mtime=0) as fout:
       shutil.copyfileobj(fin, fout, 1024 * 1024)
    os.replace(part, dest)
 
