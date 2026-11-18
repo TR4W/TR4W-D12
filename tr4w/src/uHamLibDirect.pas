@@ -607,8 +607,19 @@ function RigModeToString(mode: rmode_t): string;
 // Convert VFO constant to readable string
 function RigVFOToString(vfo: vfo_t): string;
 
-// Get HamLib version string from DLL
+// Get HamLib version string from DLL ('unknown' when it cannot be read)
 function GetHamLibVersion: string;
+
+(* THE LIBRARY'S OWN VERSION STRING (hamlib_version2), or '' when the library
+  cannot be loaded or does not export it -- so a caller showing it to an
+  operator supplies its own translated "not available" instead of an English
+  'unknown'. LOADS THE LIBRARY on first use, through EnsureHamLib (a
+  wrong-architecture file is refused before any load is attempted), so call
+  it only when HamLib is actually wanted. The version cannot be had without
+  loading: the shipped Windows DLL carries no version resource (checked
+  2026-11-17), and off Windows the system's libhamlib is used, whose version
+  no build-time constant could know. *)
+function HamLibVersionText: string;
 
 // Direct structure access helper for setting pathname
 // This bypasses rig_set_conf which may not work for all backends
@@ -1130,11 +1141,11 @@ begin
       end;
 end;
 
-function GetHamLibVersion: string;
+function HamLibVersionText: string;
 var
   pVersion: ^PAnsiChar;
 begin
-   Result := 'unknown';
+   Result := '';
    if not EnsureHamLib then
       begin
       Exit;
@@ -1142,9 +1153,18 @@ begin
    // hamlib_version2 is exported DATA, not a function -- the address is of a
    // PAnsiChar, so it is dereferenced once.
    pVersion := GetProcedureAddress(GHamLibModule, 'hamlib_version2');
-   if pVersion <> nil then
+   if (pVersion <> nil) and (pVersion^ <> nil) then
       begin
       Result := string(pVersion^);
+      end;
+end;
+
+function GetHamLibVersion: string;
+begin
+   Result := HamLibVersionText;
+   if Result = '' then
+      begin
+      Result := 'unknown';
       end;
 end;
 

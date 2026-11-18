@@ -272,9 +272,24 @@ function SerialParamsForId(const id: string): TSerialParams;
 function IsHamLibOnly(model: InterfacedRadioType): Boolean;
 function IsHamLibOnlyId(const id: string): Boolean;
 
+(* IS THIS RADIO DRIVEN THROUGH HAMLIB: the operator ticked "Drive through
+  HamLib", or the model has no native driver and HamLib is forced
+  (logradio.SetUpRadioInterface does the forcing). One predicate, because the
+  radio editor gates two fields on it (the HamLib model ID and the poll rate)
+  and a second copy of the expression is how the two would drift. *)
+function RadioDrivenThroughHamLib(const id: string; aUseHamLib: Boolean): Boolean;
+
+(* THE HAMLIB rig_model A RADIO IS OPENED WITH (2026-11-17, NY4I). The
+  operator's value when there is one (> 0), for ANY radio driven through
+  HamLib -- not only HAMLIBANY -- because a registered model's default can be
+  the wrong backend for a particular rig or HamLib release, and the operator
+  had a field for it that nothing read. 0 (a blank box) means the model's
+  registered default, RegisteredHamLibIDId. *)
+function HamLibModelFor(const id: string; aOperatorModel: Integer): Integer;
+
 // The registration's default HamLib rig_model (riglist.h numbering).  0 when
-// the model is not registered or carries no ID; for HAMLIBANY the meaningful
-// ID always comes from the RADIO n HAMLIB ID config command instead.
+// the model is not registered or carries no ID.  The operator can override it
+// for any radio driven through HamLib -- see HamLibModelFor.
 function RegisteredHamLibID(model: InterfacedRadioType): Integer;
 
 // The model's default Icom CI-V receiver address; 0 for anything that is not a
@@ -911,6 +926,23 @@ begin
    if RegById(id, reg) then
       begin
       Result := reg.hamlibID;
+      end;
+end;
+
+function RadioDrivenThroughHamLib(const id: string; aUseHamLib: Boolean): Boolean;
+begin
+   Result := aUseHamLib or ((id <> '') and IsHamLibOnlyId(id));
+end;
+
+function HamLibModelFor(const id: string; aOperatorModel: Integer): Integer;
+begin
+   if aOperatorModel > 0 then
+      begin
+      Result := aOperatorModel;
+      end
+   else
+      begin
+      Result := RegisteredHamLibIDId(id);
       end;
 end;
 

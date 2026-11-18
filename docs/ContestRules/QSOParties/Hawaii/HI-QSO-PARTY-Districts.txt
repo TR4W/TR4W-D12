@@ -1,0 +1,18 @@
+Hawaii QSO Party multiplier districts, transcribed 2026-11-17
+Source: the sponsor's multiplier map (hawaiiqsoparty.org/mult-map/, an image NY4I pasted into issue 118) and DXLog.net HIQP.txt / HIQPHI.txt [MULTIPLIERS] (updated 2026-09-05).
+14 district codes; the codes match DXLog exactly. Names are DXLog's in ASCII: Pearl Harbor Area (DXLog spells it Perl), Lanai (no okina or backtick).
+The districts are NOT counties: ADIF's Hawaii counties are Hawaii, Honolulu, Kalawao, Kauai and Maui.
+HIL=Hilo
+HON=Honolulu
+KAL=Kalawao
+KAU=Kauai
+KOH=Kohala
+KON=Kona
+LHN=Leeward
+LNI=Lanai
+MAU=Maui
+MOL=Molokai
+NII=Niihau
+PRL=Pearl Harbor Area
+VOL=Volcano Park
+WHN=Windward

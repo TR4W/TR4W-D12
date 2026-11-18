@@ -266,6 +266,13 @@ type
       (* The poll-rate box's tooltip: FREQUENCY POLL RATE's help, in the UI
         language, through the one rule Preferences uses. *)
       procedure ApplyPollRateHelp;
+      (* The "Drive through HamLib" box's tooltip, written as the LCL is
+        about to show it (TControl.OnShowHint, public, not published for a
+        TCheckBox -- so assigned in the constructor, not in the .lfm). It is
+        the moment the operator asks about HamLib, which is what makes
+        loading the library for its version acceptable here and not when the
+        editor opens. *)
+      procedure HandleUseHamLibShowHint(Sender: TObject; HintInfo: PHintInfo);
       (* The common start of both ways of showing the editor. *)
       procedure LoadRadio(const aRadio: TRadioDefinition;
                           const aOnDone: TRadioEditDone);
@@ -292,6 +299,12 @@ type
         (the wizard's CW by CAT) listens here instead of polling the combo. *)
       property OnTypeChanged: TNotifyEvent read FOnTypeChanged write FOnTypeChanged;
    end;
+
+(* THE "DRIVE THROUGH HAMLIB" TOOLTIP for a HamLib version string, '' meaning
+  the library cannot be loaded. Pure, so a test can read it without HamLib.
+  TCaption, the type of a control's Hint: resourcestrings are 8-bit,
+  so the text is built 8-bit and reaches the control with no conversion. *)
+function UseHamLibHintText(const aVersion: string): TCaption;
 
 implementation
 
@@ -320,8 +333,21 @@ uses
    uCommandHelp,           // TCommandHelp -- the poll rate's tooltip
    uSettingsBinding,       // ApplyCommandHelpHint -- the one tooltip rule
    uSettingsCaptions,      // RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE -- its label
-   uAppStrings,            // SRadioEditBadPollRate
+   uAppStrings,            // SRadioEditBadPollRate, SRadioEditUseHamLibHint
+   uHamLibDirect,          // HamLibVersionText -- the tooltip's version
    uPasswordReveal   (* AttachPasswordReveal *);
+
+function UseHamLibHintText(const aVersion: string): TCaption;
+begin
+   if Trim(aVersion) = '' then
+      begin
+      Result := Format(SRadioEditUseHamLibHint, [SRadioEditHamLibNotAvailable]);
+      end
+   else
+      begin
+      Result := Format(SRadioEditUseHamLibHint, [Trim(aVersion)]);
+      end;
+end;
 
 { ---------------------------------------------------------------------------
   TDiscoverThread -- network radio discovery, off the UI thread.
@@ -564,6 +590,16 @@ begin
      help, the same text Preferences showed. *)
    lblPollRate.Caption := RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE;
    ApplyPollRateHelp;
+
+   (* THE HAMLIB BOX'S TOOLTIP CARRIES THE LIBRARY'S VERSION, read when the
+     tooltip is about to show (HandleUseHamLibShowHint) -- never here, because
+     the version can only be had by loading the library, and opening the
+     editor must not load HamLib on a station that never uses it. The Hint
+     set now is what makes the LCL decide there IS a tooltip; its version
+     part is rewritten before anyone sees it. *)
+   chkUseHamLib.ShowHint   := True;
+   chkUseHamLib.Hint       := UseHamLibHintText('');
+   chkUseHamLib.OnShowHint := HandleUseHamLibShowHint;
 
    // ASSIGNED HERE AS WELL AS IN THE RESOURCE, deliberately.  Both are bound by
    // name in the .fmx, but losing them is not a visible fault: the form would
@@ -1110,11 +1146,25 @@ begin
       edtPassword.Text := '';
       end;
 
-   // HamLib ID is the operator's value ONLY for HamLib-any; for every other
-   // radio the registry supplies it and typing one here would pin a model the
-   // operator never chose.  Same rule the legacy dialog applies.
-   edtHamLibID.Enabled := SameText(id, 'HAMLIBANY');
+   (* THE HAMLIB MODEL ID IS OFFERED WHENEVER THE RADIO IS DRIVEN THROUGH
+     HAMLIB (2026-11-17, NY4I) -- ticked, or a HamLib-only type -- not for
+     HAMLIBANY alone: a registered model's default rig_model can be the wrong
+     backend for a given rig. Blank means the model's registered id
+     (uRadioRegistry.HamLibModelFor), shown as greyed prompt text exactly as
+     the CI-V default is. GREYED, NOT BLANKED, when the box is cleared: the
+     value is read only for a HamLib-driven radio, and ticking the box again
+     brings it back. A value left from another radio TYPE is blanked in
+     HandleTypeChange instead, where it would otherwise pin the wrong rig. *)
+   edtHamLibID.Enabled := RadioDrivenThroughHamLib(id, chkUseHamLib.Checked);
    lblHamLibID.Enabled := edtHamLibID.Enabled;
+   // The prompt only while the box can be edited, as the CI-V box does: a
+   // greyed box showing a number reads as "set, but locked".
+   edtHamLibID.TextHint := '';
+   if edtHamLibID.Enabled and (id <> '') and (RegisteredHamLibIDId(id) > 0) then
+      begin
+      edtHamLibID.TextHint := Format(TC_RADIOEDIT_DEFAULTHINT,
+                                     [IntToStr(RegisteredHamLibIDId(id))]);
+      end;
 
    // Model-specific settings are enabled only for the models they mean anything
    // to (NY4I).  An Icom filter byte on a Kenwood is not a harmless spare
@@ -1219,8 +1269,7 @@ begin
      can be cleared again, and the rate then applies. HamLib-only types force
      HamLib on (logradio.SetUpRadioInterface), so the registry's answer counts
      as well as the box. *)
-   edtPollRate.Enabled := not (chkUseHamLib.Checked or
-                               ((id <> '') and IsHamLibOnlyId(id)));
+   edtPollRate.Enabled := not RadioDrivenThroughHamLib(id, chkUseHamLib.Checked);
    lblPollRate.Enabled := edtPollRate.Enabled;
    edtPollRate.TextHint := IntToStr(FREQUENCY_POLL_RATE_DEFAULT);
 
@@ -1244,6 +1293,15 @@ end;
 procedure TRadioEditForm.HandleUseHamLibClick(Sender: TObject);
 begin
    UpdateEnabledState;
+end;
+
+procedure TRadioEditForm.HandleUseHamLibShowHint(Sender: TObject; HintInfo: PHintInfo);
+begin
+   (* Asked on every show: HamLibVersionText loads the library once and
+     answers from memory after that. Hint is kept in step so the property
+     says what was last shown. *)
+   chkUseHamLib.Hint := UseHamLibHintText(HamLibVersionText);
+   HintInfo^.HintStr := chkUseHamLib.Hint;
 end;
 
 procedure TRadioEditForm.ApplyPollRateHelp;
@@ -1303,6 +1361,18 @@ begin
    if (Trim(edtTCPPort.Text) = '') and (RegisteredNetworkPortId(id) > 0) then
       begin
       edtTCPPort.Text := IntToStr(RegisteredNetworkPortId(id));
+      end;
+
+   (* A HAMLIB MODEL ID BELONGS TO THE TYPE IT WAS TYPED FOR. Unlike the baud
+     rate it is not kept across a change of type: HamLib rig_model 2043 typed
+     for one rig, left behind when the operator picks an IC-7100, would open
+     the IC-7100 as that other rig. Blank is "the new model's own id", which
+     UpdateEnabledState then shows as the prompt text. Compared with the radio
+     as loaded, so selecting the loaded type during LoadFromRadio keeps its
+     value. *)
+   if id <> FRadio.RegistryId then
+      begin
+      edtHamLibID.Text := '';
       end;
 
    // The CI-V address is deliberately NOT prefilled.  Writing the model default

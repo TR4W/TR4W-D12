@@ -371,9 +371,25 @@ var
 begin
    if frmNewContest.IAmIn then
       begin
-      frmNewContest.ShowRowPick(HostAreaRow, SNewContestHostAreaCountyLabel,
-                                HostAreaPlaces.Displays, HostAreaPlaces.Keys);
-      notice := Format(SNewContestHostAreaInsideNotice, [HostArea.Area]);
+      (* The party names its places when they are not counties (#118). *)
+      if HostArea.PlaceLabel <> '' then
+         begin
+         frmNewContest.ShowRowPick(HostAreaRow, HostArea.PlaceLabel,
+                                   HostAreaPlaces.Displays, HostAreaPlaces.Keys);
+         end
+      else
+         begin
+         frmNewContest.ShowRowPick(HostAreaRow, SNewContestHostAreaCountyLabel,
+                                   HostAreaPlaces.Displays, HostAreaPlaces.Keys);
+         end;
+      if HostArea.InsideNotice <> '' then
+         begin
+         notice := Format(HostArea.InsideNotice, [HostArea.Area]);
+         end
+      else
+         begin
+         notice := Format(SNewContestHostAreaInsideNotice, [HostArea.Area]);
+         end;
       end
    else
       begin

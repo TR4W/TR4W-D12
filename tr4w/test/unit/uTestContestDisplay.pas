@@ -1530,9 +1530,17 @@ begin
             CheckEquals(obj.CabrilloName, obj.CabrilloContestName('A TITLE', 'A NAME'),
                         who + ': the CONTEST: name is the Cabrillo name');
             end;
-         (* The base column, every contest: digital RY or DG, CW, phone. *)
-         CheckEquals('RY', obj.CabrilloModeString(Digital, eRTTY), who + ' RTTY');
-         CheckEquals('RY', obj.CabrilloModeString(Digital, eNoMode), who + ' digital');
+         (* The base column, every contest: digital RY or DG, CW, phone.
+            RTTY as RY holds for every legacy contest and every by-id contest
+            that does not state its own column; one that does pins it in its
+            own test (the Hawaii QSO Party writes DG for every digital mode,
+            NY4I 2026-11-17, uTestContestHawaiiQP). *)
+         if isLegacy or
+            (not ClassOverridesTheBase(identities[k], CabrilloModeStringCode)) then
+            begin
+            CheckEquals('RY', obj.CabrilloModeString(Digital, eRTTY), who + ' RTTY');
+            CheckEquals('RY', obj.CabrilloModeString(Digital, eNoMode), who + ' digital');
+            end;
          CheckEquals('CW', obj.CabrilloModeString(CW, eCW), who + ' CW');
          CheckEquals('PH', obj.CabrilloModeString(Phone, eUSB), who + ' phone');
       finally

@@ -1,0 +1,15 @@
+Entries for the Hawaii QSO Party used by in-state (Hawaii) stations
+The 14 Hawaii districts (each its own multiplier), the US states but Hawaii, DC on its own, and the 13 Canadian provinces and territories.
+DXCC entities other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier, not entries here.
+The district file comes FIRST, so a district code wins over any state or province alias spelled the same.
+Hawaii is no state multiplier (a Hawaii station sends its district), so s48.dom and alaska.dom are included and s50.dom (which adds hawaii.dom) is not.
+The rules count "US states (including DC)": dc.dom is included and DC is a multiplier of its own.
+s48.dom comes before p13.dom so LA stays Louisiana. NF and LB are read as NL (the last line).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE hawaiiqp_cty.dom
+INCLUDE FILE s48.dom
+INCLUDE FILE alaska.dom
+INCLUDE FILE dc.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

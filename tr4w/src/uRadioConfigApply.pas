@@ -388,18 +388,20 @@ begin
    // "never set" and keeps the PREVIOUS radio's value.
    Result.DefaultBaudRate := 0;
    Result.DefaultTCPPort  := 0;
+   // ASKED BY ID, so a string-id radio (no enum member) gets its registered
+   // rig_model too; through ModelForId it rendered 0.
+   Result.DefaultHamLibID := 0;
    if aRegistryId <> '' then
       begin
       Result.DefaultBaudRate := SerialParamsForId(aRegistryId).baud;
       Result.DefaultTCPPort  := RegisteredNetworkPortId(aRegistryId);
+      Result.DefaultHamLibID := RegisteredHamLibIDId(aRegistryId);
       end;
 
    Result.DefaultCIVAddress := 0;
-   Result.DefaultHamLibID   := 0;
    if model <> NoInterfacedRadio then
       begin
       Result.DefaultCIVAddress := RegisteredCIVAddress(model);
-      Result.DefaultHamLibID   := RegisteredHamLibID(model);
       end;
 end;
 

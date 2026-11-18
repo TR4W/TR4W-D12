@@ -12,7 +12,8 @@ unit uContestSchedule;
    and uTestContestSchedule parses every example in it):
 
       schedule := 'unscheduled' | clause { ';' clause }
-      clause   := anchor [ '+' N 'd' ] [ 'at' HH:MM 'UTC' 'for' DURATION ]
+      clause   := [ 'the' WEEKDAY 'before' ['the'] ] anchor [ '+' N 'd' ]
+                  [ 'at' HH:MM 'UTC' 'for' DURATION ]
       anchor   := ORDINAL WEEKDAY ('of'|'in') MONTH
                 | ORDINAL 'full' 'weekend' ('of'|'in') MONTH
                 | ORDINAL WEEKDAY ('of'|'in') 'every' 'month'
@@ -30,6 +31,13 @@ unit uContestSchedule;
    'unscheduled' beside a clause are errors -- 'unscheduled' is a deliberate
    whole-string statement, never what a missing value falls back to.
 
+   'the WEEKDAY before ANCHOR' IS THE LAST SUCH WEEKDAY STRICTLY BEFORE THE
+   ANCHOR DATE (NY4I, 2026-11-17): "the Friday before the first full weekend
+   of December" is Friday Nov 30 in 2029, when that weekend is Dec 1-2; "the
+   Saturday before the 4th Sunday of August" is the day before that Sunday.
+   It is the readable form of a NEGATIVE offset whose size the anchor's own
+   weekday decides, so it works for an MM-DD anchor too. A '+Nd' after it
+   counts from the moved day.
    '+Nd' MOVES THE PERIOD N DAYS AFTER THE SAME ANCHOR DATE. "4th Saturday of
    April +1d" is the Sunday after that Saturday -- never an independent
    "4th Sunday", which is a week earlier when April starts on a Sunday (2029).
@@ -81,6 +89,8 @@ type
       Rule: TContestDateRule;       (* sakAnnual, sakMonthly (Month ignored) *)
       Weekday: TContestDateWeekday; (* sakWeekly *)
       Date: TDateTime;              (* sakDate, midnight UTC *)
+      HasBefore: boolean;           (* 'the WEEKDAY before' leads the anchor *)
+      BeforeWeekday: TContestDateWeekday; (* that weekday, when HasBefore *)
       DayOffset: integer;           (* the '+Nd', 0 when absent *)
       HasWindow: boolean;           (* False: a date-only hint, the whole day *)
       StartMinute: integer;         (* minutes after 00:00 UTC *)
@@ -380,8 +390,36 @@ begin
       Exit;
       end;
 
-   (* THE ANCHOR *)
+   (* 'the WEEKDAY before [the]' -- see the header. *)
    w := Next;
+   if w = 'the' then
+      begin
+      w := Next;
+      if not TryWeekday(w, aClause.BeforeWeekday) then
+         begin
+         aReason := 'expected a weekday after "the", found "' + w + '"';
+         Exit;
+         end;
+      w := Next;
+      if w <> 'before' then
+         begin
+         aReason := 'expected "before" after "the ' + words[p - 2] + '", found "' + w + '"';
+         Exit;
+         end;
+      aClause.HasBefore := True;
+      w := Next;
+      if w = 'the' then
+         begin
+         w := Next;
+         end;
+      if w = '' then
+         begin
+         aReason := 'expected an anchor after "before"';
+         Exit;
+         end;
+      end;
+
+   (* THE ANCHOR *)
    if w = 'every' then
       begin
       w := Next;
@@ -593,8 +631,21 @@ procedure PeriodOf(const aClause: TScheduleClause; aAnchorDay: TDateTime;
 var
    endMinute: integer;
    day: TDateTime;
+   back: integer;
 begin
-   day := aAnchorDay + aClause.DayOffset;
+   day := aAnchorDay;
+   if aClause.HasBefore then
+      begin
+      (* THE LAST BeforeWeekday STRICTLY BEFORE THE ANCHOR -- one to seven
+         days back (DateUtils.DayOfTheWeek: Monday = 1). *)
+      back := (DayOfTheWeek(day) - (Ord(aClause.BeforeWeekday) + 1) + 7) mod 7;
+      if back = 0 then
+         begin
+         back := 7;
+         end;
+      day := day - back;
+      end;
+   day := day + aClause.DayOffset;
    if not aClause.HasWindow then
       begin
       aStartUTC := day;

@@ -622,22 +622,16 @@ begin
 
    // --- model particulars ---------------------------------------------------
    Emit(Result, 'RADIO ' + slot + ' USE HAMLIB', BoolValue(aRadio.UseHamLib));
-   // HAMLIB ID is the operator's number only for the HamLib-any selection; for
-   // every other radio the legacy dialog shows a greyed informational value
-   // that must not be written back.  Same rule here, one layer up.
-   if SameText(aRadio.RegistryId, 'HAMLIBANY') then
-      begin
-      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID',
-           NumericValue(aRadio.HamLibID, aTypeRendering.DefaultHamLibID));
-      end
-   else
-      begin
-      // The registry's id for the chosen model.  Not blank: a blank numeric
-      // would leave the PREVIOUS radio's HamLib id in place, which is exactly
-      // the wrong rig to drive through HamLib.
-      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID',
-           NumericValue(aTypeRendering.DefaultHamLibID, 0));
-      end;
+   // HAMLIB ID: the operator's number when there is one, for ANY radio
+   // (2026-11-17; it used to be written for HAMLIBANY alone, so an IC-7100
+   // driven through HamLib could not be given a rig_model). 0 renders the
+   // model's registered id -- never blank: a blank numeric would leave the
+   // PREVIOUS radio's HamLib id in place, the wrong rig to drive. The same
+   // rule as uRadioRegistry.HamLibModelFor, which logradio applies; this unit
+   // has no registry, so the default arrives in aTypeRendering. The number is
+   // only READ when the radio is driven through HamLib.
+   Emit(Result, 'RADIO ' + slot + ' HAMLIB ID',
+        NumericValue(aRadio.HamLibID, aTypeRendering.DefaultHamLibID));
 
    Emit(Result, 'RADIO ' + slot + ' RECEIVER ADDRESS',
         NumericValue(aRadio.ReceiverAddress, aTypeRendering.DefaultCIVAddress));

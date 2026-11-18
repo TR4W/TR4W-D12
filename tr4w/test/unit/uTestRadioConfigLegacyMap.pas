@@ -57,7 +57,7 @@ type
       procedure Test_ProfileCWOutputPortOverridesTheRadio;
       procedure Test_ProfileCWOutputNoneTurnsBothOff;
       procedure Test_NoProfileFallsBackToTheRadiosOwnCWFields;
-      procedure Test_HamLibIdOnlyForHamLibAny;
+      procedure Test_HamLibIdIsTheOperatorsElseTheModels;
       procedure Test_EmptySlotClearsEverything;
       procedure Test_NilRadioRendersAnEmptySlot;
       procedure Test_BandOutputPortIsNotRadioScoped;
@@ -701,31 +701,42 @@ begin
    end;
 end;
 
-procedure TRadioConfigLegacyMapTests.Test_HamLibIdOnlyForHamLibAny;
+procedure TRadioConfigLegacyMapTests.Test_HamLibIdIsTheOperatorsElseTheModels;
 var
    radio: TRadioDefinition;
    rendered: TConfigKeyValues;
+   typeRendering: TRadioTypeRendering;
 begin
-   BeginTest('Test_HamLibIdOnlyForHamLibAny');
-   // The legacy dialog shows a greyed, informational HamLib number for every
-   // radio and only saves it for the HamLib-any selection.  Same rule here:
-   // writing the informational number back would pin a model id the operator
-   // never chose.
+   BeginTest('Test_HamLibIdIsTheOperatorsElseTheModels');
+   (* THE RULE SINCE 2026-11-17 (NY4I): the operator's HamLib model is written
+     for ANY radio -- an IC-7100 driven through HamLib must be able to name
+     its rig_model -- and 0 renders the model's registered id. It used to be
+     written for HamLib-any alone, so a typed id for a real model was thrown
+     away here. Same rule as uRadioRegistry.HamLibModelFor. *)
    radio := MakeSerialRadio;
    try
-      radio.HamLibID   := 2043;
+      typeRendering := Default(TRadioTypeRendering);
+      typeRendering.DefaultHamLibID := 2029;
+
       radio.RegistryId := 'K3';
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
-      // The operator's 2043 is NOT written for a specific model -- but the key
-      // still gets a number, because a blank one would leave the PREVIOUS
-      // radio's HamLib id in place, which is the wrong rig to drive.
-      CheckEquals('0', ValueOf(rendered, 'RADIO ONE HAMLIB ID'),
-                  'the operator value is not written for a specific model');
+      radio.UseHamLib  := True;
+      radio.HamLibID   := 2043;
+      rendered := RenderRadioKeys(1, radio, typeRendering, nil);
+      CheckEquals('2043', ValueOf(rendered, 'RADIO ONE HAMLIB ID'),
+                  'the operator''s value is written for a specific model');
+
+      radio.HamLibID := 0;
+      rendered := RenderRadioKeys(1, radio, typeRendering, nil);
+      // Never blank: a blank numeric would leave the PREVIOUS radio's HamLib
+      // id in place, which is the wrong rig to drive.
+      CheckEquals('2029', ValueOf(rendered, 'RADIO ONE HAMLIB ID'),
+                  'blank renders the model''s registered id');
 
       radio.RegistryId := 'HAMLIBANY';
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
+      radio.HamLibID   := 2043;
+      rendered := RenderRadioKeys(1, radio, typeRendering, nil);
       CheckEquals('2043', ValueOf(rendered, 'RADIO ONE HAMLIB ID'),
-                  'written for HamLib-any, where it IS the operator''s value');
+                  'written for HamLib-any, as it always was');
    finally
       radio.Free;
    end;
@@ -918,7 +929,7 @@ begin
    Test_ProfileCWOutputPortOverridesTheRadio;
    Test_ProfileCWOutputNoneTurnsBothOff;
    Test_NoProfileFallsBackToTheRadiosOwnCWFields;
-   Test_HamLibIdOnlyForHamLibAny;
+   Test_HamLibIdIsTheOperatorsElseTheModels;
 
    Test_EmptySlotClearsEverything;
    Test_NilRadioRendersAnEmptySlot;

@@ -843,6 +843,16 @@ resourcestring
 
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
+   (* THE HAWAII QSO PARTY'S PLACES ARE DISTRICTS, NOT COUNTIES -- #118, NY4I
+     2026-11-17: "The New Contest prompt must say district". The row label
+     and the inside notice the party states (TNewContestHostArea.PlaceLabel,
+     .InsideNotice), and its prompt. %s is the area. *)
+   SNewContestHostAreaDistrictLabel = 'MY DISTRICT';
+   SNewContestHostAreaInsideDistrictNotice =
+      'You are in %s: choose your district from the list.';
+   SNewContestHawaiiQPDistrictOrLocation =
+      'Enter your Hawaii district (e.g. HON) if you are in Hawaii. Enter your ' +
+      'state or Canadian province if outside Hawaii, or DX:';
    SNewContestHostAreaOutsideNotice =
       'You are outside %0:s: enter your US state or Canadian province ' +
       '(two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s.';
@@ -1348,6 +1358,12 @@ resourcestring
    (* The radio editor refusing a FREQUENCY POLL RATE (issue 235 step 3).
      The two %d are the bounds, 10 and 1000. *)
    SRadioEditBadPollRate     = 'The frequency poll rate must be a whole number of milliseconds from %d to %d.';
+
+   (* The tooltip of the radio editor's "Drive through HamLib" box. The %s
+     is the HamLib library's own version string (e.g. 4.7.2), or
+     SRadioEditHamLibNotAvailable when the library cannot be loaded. *)
+   SRadioEditUseHamLibHint      = 'Drive this radio through the HamLib library instead of TR4W''s own driver. HamLib version: %s';
+   SRadioEditHamLibNotAvailable = 'not available';
 
    (* THE URL TEST BUTTON (issue 251, Preferences > Online scoring). NY4I's
       rule: report what came back and let the operator decide. A 200 is

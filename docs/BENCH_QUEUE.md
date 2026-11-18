@@ -1,5 +1,16 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] Radio editor, HamLib model ID and the HamLib version tooltip (2026-11-17). (1) Edit an
+  IC-7100, Advanced tab: with "Drive through HamLib" clear the HamLib model ID box is greyed; tick
+  it and the box enables, empty, with greyed prompt text naming the registered id ("3070 (default)"
+  or similar) -- confirm the prompt is not clipped in the widened 90 px box, also in a non-English
+  UI. (2) Type a different rig_model, save, and connect: `tr4w.log` should say
+  `HamLib rig_model <n> (operator override)`; clear the box and reconnect: `(per-model default)`.
+  (3) Change the type to another radio: the typed id is cleared. (4) Hover "Drive through HamLib":
+  the tooltip names the HamLib version (e.g. 4.7.2). On a station that never used HamLib this is
+  the first load of libhamlib-4.dll -- note whether the first hover is noticeably slow. Rename or
+  remove the DLL and hover in a fresh run: the tooltip says the version is "not available".
+
 - [ ] DXLab Commander as a radio (issue 172, 2026-11-16). `uRadioDXLabCommander` is written from
   DXLab's "Commander TCP/IP Messages" (2019-07-11) and tested only against a fake peer. Set up
   Commander driving a real rig, then pick "DXLab Commander" with host 127.0.0.1 and port 52002 (the
@@ -7089,3 +7100,35 @@ Losing the application now marks held modifiers STALE (`uFunctionKeys.NoteFuncti
 - [ ] **Send Spot.** Open it, type `UP 2` in the comment, tick and untick both boxes, edit the callsign. EXPECT: `UP 2` stays. Reopen (fresh comment) in Sweepstakes with Exchange ticked, then change the callsign to another logged station: the section in the comment follows the new call.
 - [ ] **Hosted editors still centred** (shared `HostPanelIn`): the wizard's Radio and WinKeyer pages show the editor at the top, centred, as before.
 - [ ] **Default names in another language** (Preferences > Language, e.g. German): a new radio, keyer or cluster from Preferences' New button and from the wizard starts with the same translated name once a translation exists (until then, English in both).
+
+## Added 2026-11-17 -- THE HAWAII QSO PARTY (issue 118)
+
+A new by-id contest (`HI-QSO-PARTY`), built from the sponsor's rules NY4I
+saved in `docs/ContestRules/QSOParties/Hawaii/`. Unit-tested
+(`uTestContestHawaiiQP`, including a real-engine run for an out-of-state and
+an in-state entrant, each with its own MultByBand); nothing sees the screen,
+the multiplier windows or a written file.
+
+- [ ] **Outside Hawaii** (New Contest, MY STATE `CA`). Type `599 HON` on 20 m
+  CW, then on 40 m CW, then `59 HON` on 20 m SSB: EXPECT Honolulu is a new
+  multiplier on 20 and on 40 m (per band), the SSB QSO is no dupe and no new
+  multiplier. `599 CT` from W1AW is refused ("work HI stations only").
+- [ ] **In Hawaii** (New Contest, tick "I am in HI", district `KON`). Work
+  W1AW `599 CT` on 20 and 40 m, KH6AA `599 HON`, DL1AAA `599 DX`, VO1AA
+  `599 NF`: EXPECT CT, HON, DL (DXCC) and NL each count ONCE, on any band;
+  `599 HI` is refused. The New Contest box reads MY DISTRICT and "choose your
+  district from the list".
+- [ ] **An FT8 QSO from WSJT-X** (both entrants). EXPECT the received grid
+  (or a typed `ZZ00`) is logged as the QTH, scores 3 points, earns no
+  multiplier and is no X-QSO; outside Hawaii only with a KH6 station. A
+  QSO logged with a blank QTH scores 0.
+- [ ] **FM.** A 10 m FM QSO is an X-QSO (0 points); SSB is the only phone.
+- [ ] **The Cabrillo file.** `CONTEST: HI-QSO-PARTY` (DXLog's name), digital
+  QSOs written `DG`, a grid QSO's grid in the received QTH column, NF/LB as
+  NL. The report columns are numeric (an FT8 SNR converted to an RST, not
+  the sponsor example's raw -04) -- check hqp.contesting.com accepts that.
+- [ ] **The ADIF file.** A district QSO writes `STATE:HI` and `CNTY` with its
+  county (`HI,Honolulu` for HON/LHN/PRL/WHN, `HI,Hawaii` for HIL ...).
+- [ ] **WA7BNM and 3830.** The class states WA7BNM 0. Look the contest up on
+  the calendar and on 3830scores.com; if 3830's form breaks the multipliers
+  out, the class needs a `Get3830Summary`.

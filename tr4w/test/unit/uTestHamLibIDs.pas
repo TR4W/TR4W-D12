@@ -66,6 +66,10 @@ type
       procedure Test_UnregisteredIsZero;
       procedure Test_IcomCIVAddresses;
       procedure Test_ScalarWidthsMatchTheCABI;
+      (* WHICH RIG_MODEL A RADIO IS OPENED WITH (2026-11-17): the operator's
+        value for any HamLib-driven radio, the registry's when blank. *)
+      procedure Test_DrivenThroughHamLibIsTheBoxOrAHamLibOnlyType;
+      procedure Test_TheOperatorsModelWinsAndBlankIsTheRegistrys;
       (* WHICH libhamlib-4.dll -- 2026-11-12, the x64 build refusing HamLib *)
       procedure Test_ResolverTakesTheBinarysOwnCopyFirst;
       procedure Test_ResolverPassesOverTheOtherBitness;
@@ -412,6 +416,53 @@ begin
       end;
 end;
 
+procedure THamLibIDTests.Test_DrivenThroughHamLibIsTheBoxOrAHamLibOnlyType;
+begin
+   BeginTest('a radio is HamLib-driven when the box is ticked or its type has no native driver');
+
+   // The ids are checked first, so a misspelt one fails here and not as a
+   // wrong answer below.
+   CheckTrue(ModelForId('IC7100') = IC7100, 'IC7100 is the IC-7100''s registry id');
+   CheckTrue(ModelForId('HAMLIBANY') = HAMLIBANY, 'HAMLIBANY is HamLib-any''s registry id');
+   CheckFalse(IsHamLibOnlyId('IC7100'), 'the IC-7100 has a native driver');
+   CheckTrue(IsHamLibOnlyId('HAMLIBANY'), 'HamLib-any has none');
+
+   CheckFalse(RadioDrivenThroughHamLib('IC7100', False),
+              'an IC-7100 with the box clear is driven natively');
+   CheckTrue(RadioDrivenThroughHamLib('IC7100', True),
+             'an IC-7100 with the box ticked is driven through HamLib');
+   CheckTrue(RadioDrivenThroughHamLib('HAMLIBANY', False),
+             'a HamLib-only type is HamLib-driven whatever the box says');
+   CheckFalse(RadioDrivenThroughHamLib('', False), 'no type, box clear: not HamLib');
+   CheckTrue(RadioDrivenThroughHamLib('', True), 'no type, box ticked: the box decides');
+end;
+
+procedure THamLibIDTests.Test_TheOperatorsModelWinsAndBlankIsTheRegistrys;
+var
+   registered: Integer;
+   registeredAny: Integer;
+begin
+   BeginTest('the operator''s HamLib model wins for any radio; 0 means the registered one');
+
+   registered    := RegisteredHamLibIDId('IC7100');
+   registeredAny := RegisteredHamLibIDId('HAMLIBANY');
+   CheckTrue(registered > 0, 'the IC-7100 registers a rig_model');
+   CheckEquals(RegisteredHamLibID(IC7100), registered,
+               'the id-keyed and enum-keyed lookups agree for the IC-7100');
+
+   CheckEquals(registered, HamLibModelFor('IC7100', 0),
+               'IC-7100, blank: the registered rig_model');
+   CheckEquals(9999, HamLibModelFor('IC7100', 9999),
+               'IC-7100, operator typed 9999: 9999 (was ignored before 2026-11-17)');
+   CheckEquals(registeredAny, HamLibModelFor('HAMLIBANY', 0),
+               'HamLib-any, blank: its registered placeholder');
+   CheckEquals(2043, HamLibModelFor('HAMLIBANY', 2043),
+               'HamLib-any, operator typed 2043: 2043');
+   CheckEquals(registered, HamLibModelFor('IC7100', -5),
+               'a negative value is not a model; the registered one is used');
+   CheckEquals(0, HamLibModelFor('', 0), 'no type and no value: nothing to open');
+end;
+
 procedure THamLibIDTests.RunAllTests;
 begin
    Test_EnumRadiosCarryTheirHamLibID;
@@ -419,6 +470,8 @@ begin
    Test_UnregisteredIsZero;
    Test_IcomCIVAddresses;
    Test_ScalarWidthsMatchTheCABI;
+   Test_DrivenThroughHamLibIsTheBoxOrAHamLibOnlyType;
+   Test_TheOperatorsModelWinsAndBlankIsTheRegistrys;
    Test_ResolverTakesTheBinarysOwnCopyFirst;
    Test_ResolverPassesOverTheOtherBitness;
    Test_ResolverReportsAWrongBitnessCopyWhenNothingFits;

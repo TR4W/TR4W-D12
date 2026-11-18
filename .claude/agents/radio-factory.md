@@ -78,6 +78,15 @@ here was wrong within a day, twice.
   driver's trait, because the tick reaches every native driver. There is no
   `Settings.Operating.FrequencyPollRate` any more; the command name is in
   `uCFG.OWNED_BY_A_STORE`.
+- **The HamLib rig_model is `uRadioRegistry.HamLibModelFor`** (2026-11-17): the
+  operator's `TRadioDefinition.HamLibID` when > 0, for ANY radio driven through
+  HamLib (`RadioDrivenThroughHamLib`: the box ticked, or a HamLib-only type),
+  else `RegisteredHamLibIDId`. It used to be honoured for HAMLIBANY alone, and
+  an IC-7100 driven through HamLib could not be given one. The renderer
+  (`RenderRadioKeys`) passes the value through with the registered id as the
+  default, logradio applies the rule, and the editor enables the box on the same
+  predicate and blanks it when the radio TYPE changes (a stale id would open the
+  new type as the old rig).
 - **Read the D7 tree at `C:\TR4W` as the authority on old behaviour. Never mirror
   a fix back into it.**
 

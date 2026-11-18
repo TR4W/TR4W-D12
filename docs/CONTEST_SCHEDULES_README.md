@@ -23,6 +23,7 @@ from the grammar.
 | two periods in one weekend (Florida) | `4th Saturday of April at 16:00 UTC until Sunday 01:59 UTC; 4th Saturday of April +1d at 12:00 UTC until 21:59 UTC` | `4th Saturday of April at 16:00 UTC for 10h; 4th Saturday of April +1d at 12:00 UTC for 10h` |
 | two periods, full-weekend anchor (Georgia) | `2nd full weekend of April at 18:00 UTC until Sunday 03:59 UTC; 2nd full weekend of April +1d at 14:00 UTC until 23:59 UTC` | `2nd full weekend of April at 18:00 UTC for 10h; 2nd full weekend of April +1d at 14:00 UTC for 10h` |
 | three periods (Makrothen) | `2nd Saturday of October at 00:00 UTC until 07:59 UTC; 2nd Saturday of October at 16:00 UTC until 23:59 UTC; 2nd Saturday of October +1d at 08:00 UTC until 15:59 UTC` | `2nd Saturday of October at 00:00 UTC for 8h; 2nd Saturday of October at 16:00 UTC for 8h; 2nd Saturday of October +1d at 08:00 UTC for 8h` |
+| a day before the anchor (ARRL 160) | `the Friday before the first full weekend of December at 22:00 UTC until Sunday 15:59 UTC` | `the Friday before the first full weekend of December at 22:00 UTC for 42h` |
 | the same contest twice a year (NAQP SSB) | `3rd full weekend of January at 18:00 UTC until 05:59 UTC; 3rd full weekend of August at 18:00 UTC until 05:59 UTC` | `3rd full weekend of January at 18:00 UTC for 12h; 3rd full weekend of August at 18:00 UTC for 12h` |
 | weekly, on one day | `every Wednesday at 02:30 UTC until 03:00 UTC` | `every Wednesday at 02:30 UTC for 30m` |
 | several sessions a week, two on one day (CWT) | `every Wednesday at 13:00 UTC until 14:00 UTC; every Wednesday at 19:00 UTC until 20:00 UTC; every Thursday at 03:00 UTC until 04:00 UTC; every Thursday at 07:00 UTC until 08:00 UTC` | `every Wednesday at 13:00 UTC for 1h; every Wednesday at 19:00 UTC for 1h; every Thursday at 03:00 UTC for 1h; every Thursday at 07:00 UTC for 1h` |
@@ -54,6 +55,17 @@ Notes on the table:
   repeated: after its last date the contest has no upcoming date and sorts
   last until someone adds the next year's dates.
 - Without `at ...` a clause is a date-only hint: the whole UTC day.
+- **`the <Weekday> before <anchor>`** is the last such weekday STRICTLY before
+  the anchor's date (NY4I, 2026-11-17). ARRL 160 starts on the Friday before
+  the first full weekend of December -- Friday Nov 30 in 2029, when that
+  weekend is Dec 1-2. The Hawaii QSO Party starts on the Saturday before the
+  4th Sunday of August. A `+Nd` after it counts from the moved day.
+  `the Saturday before 01-09` is "the first Saturday on or after Jan 2" --
+  never New Year's Day (ARRL RTTY Roundup and Kids Day; Jan 8 in 2028).
+  The ARRL's own 2026-2031 calendar is in
+  `docs/ContestRules/ARRL/arrl-calendar-2026-2031.md`, and
+  `uTestContestSchedule.Test_ARRLClassesAgreeWithTheARRLCalendar` holds every
+  ARRL class to it.
 
 ### Not supported yet
 
@@ -63,13 +75,10 @@ fit. None of these has syntax today:
 - every other week, or "the 1st and 3rd Wednesday" (write two monthly clauses
   for the second: `1st Wednesday of every month ...; 3rd Wednesday of every
   month ...`);
-- a weekday relative to a fixed date: "the Saturday on or before June 20"
-  (West Virginia; today ISO dates). (North Carolina's "Sunday after
-  February's 4th Saturday" IS expressible: `4th Saturday of February +1d`.);
-- a day BEFORE the anchor: "the Friday before the first full weekend" (ARRL
-  160, 2200Z Friday) -- there is `+Nd` but no `-Nd`. ARRL-160's row keeps
-  `First full weekend in December at 22:00 UTC for 42h`, which reads from
-  SATURDAY 2200Z; its notes say so;
+- (no longer: a weekday relative to a fixed date. "The Saturday on or before
+  June 20" (West Virginia, today ISO dates) is `the Saturday before 06-21`
+  since 2026-11-17; its class is unchanged. North Carolina's "Sunday after
+  February's 4th Saturday" is `4th Saturday of February +1d`.);
 - a date range or season ("all of January", "every Monday from October to
   March", a contest that runs all month);
 - "third or fourth" or any other either-or rule (ARRL January VHF);

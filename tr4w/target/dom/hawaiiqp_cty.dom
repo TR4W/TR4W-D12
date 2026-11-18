@@ -1,0 +1,21 @@
+Hawaii QSO Party -- the 14 Hawaii multiplier districts, each its own multiplier.
+Three-letter codes from the sponsor's multiplier map (issue 118) and DXLog.net HIQP.txt (docs/ContestRules/QSOParties/Hawaii/HI-QSO-PARTY-Districts.txt).
+No district maps to the state: every entrant counts each district as a multiplier of its own.
+The districts are not ADIF counties, so the class writes no ADIF CNTY.
+No INCLUDE here: an out-of-state entrant's table holds only the districts (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+HIL = HIL,^Hilo
+HON = HON,^Honolulu
+KAL = KAL,^Kalawao
+KAU = KAU,^Kauai
+KOH = KOH,^Kohala
+KON = KON,^Kona
+LHN = LHN,^Leeward
+LNI = LNI,^Lanai
+MAU = MAU,^Maui
+MOL = MOL,^Molokai
+NII = NII,^Niihau
+PRL = PRL,^Pearl Harbor Area
+VOL = VOL,^Volcano Park
+WHN = WHN,^Windward

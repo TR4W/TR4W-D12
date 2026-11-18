@@ -211,17 +211,13 @@ begin
 end;
 
 (* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row ARRL-160: status candidate; rules none recorded; rules year none
-   recorded. CANDIDATE: date from a calendar, not yet checked against the
-   sponsor's rules.
-   CHECK: a full weekend anchors SATURDAY, so this reads Sat 2200Z to Mon
-   1600Z. The 42h fits Fri 2200Z to Sun 1600Z, the period the ARRL is
-   believed to use -- the Friday BEFORE the first full weekend (Nov 30 in
-   2029), which needs a -1d offset the grammar does not have. Kept as the
-   intake cell on the coordinator's instruction. *)
+   row ARRL-160: status VERIFIED (NY4I, 2026-11-17, from the ARRL rules):
+   Friday 2200Z to Sunday 1559Z, beginning the Friday before the first full
+   weekend of December -- Friday Nov 30 in 2029, when that weekend is Dec
+   1-2. The grammar's 'the <weekday> before <anchor>' form was added for it. *)
 function TContestARRL160.GetSchedule: string;
 begin
-   Result := 'First full weekend in December at 22:00 UTC for 42h';
+   Result := 'the Friday before the first full weekend of December at 22:00 UTC for 42h';
 end;
 
 function TContestARRL160.GetCabrilloName: string;

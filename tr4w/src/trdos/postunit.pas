@@ -2624,6 +2624,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
     stxString: string;
     cntyIdx: integer;
     stateCode: string;
+    countyName: string;
     qthForGrid: ShortString;
     (* THE ACTIVE CONTEST, FETCHED ONCE PER RECORD -- M11 S5. The zone sent
       (STX_STRING and the contest's exchange fields) and the CQZ/ITUZ tag ask
@@ -2694,11 +2695,17 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
      ( rec.QTHString <> '' ) and
      ( length( rec.QTHString ) <> 2 ) then
      begin
-     if mo.DomList.FindMult( rec.QTHString, cntyIdx ) and
-        ( mo.DomList.AltName[ cntyIdx ] <> '' ) then
+     (* THE COUNTY NAME IS THE PARTY'S (ADIFCountyName, #118): the list's
+       display name for a party whose multipliers are counties, the county a
+       Hawaii district lies in, '' for none. *)
+     if mo.DomList.FindMult( rec.QTHString, cntyIdx ) then
         begin
-        Result := Result + EmitADIFField( 'CNTY',
-           stateCode + ',' + mo.DomList.AltName[ cntyIdx ] );
+        countyName := ContestForRecord( rec, contestRules ).ADIFCountyName(
+           rec, string( mo.DomList.AltName[ cntyIdx ] ) );
+        if countyName <> '' then
+           begin
+           Result := Result + EmitADIFField( 'CNTY', stateCode + ',' + countyName );
+           end;
         end;
      end;
 

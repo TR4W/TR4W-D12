@@ -308,6 +308,27 @@ state:**
 - **A Canadian host states `WritesADIFCounty` False** -- ADIF's `CNTY`
   enumeration defines nothing for Canada (British Columbia, Ontario,
   Quebec). The party base still writes `STATE`.
+- **A US party whose multipliers are not ADIF counties maps them:
+  `TContestBase.ADIFCountyName(aQso, aDomesticName)`** (#118, 2026-11-17).
+  PostUnit's CNTY block writes `<state>,<ADIFCountyName>`; the base answers
+  the `.dom` display name, which is the county for a party whose
+  multipliers are counties, and `''` writes no CNTY. Hawaii's districts
+  would otherwise write `HI,Hilo`, a value ADIF's enumeration does not hold
+  (its Hawaii counties are Hawaii, Honolulu, Kalawao, Kauai, Maui), so
+  `uContestHawaiiQP` maps each district to its county. Check your codes'
+  names against ADIF's county list (the validator's `adiftags.py`).
+- **A received grid in place of the QTH** (a sponsor that lets FT8 log one)
+  is the class's: `uContestHawaiiQP` is the worked example -- a Digital QSO
+  whose received QTH has grid shape takes the grid in its own
+  `ParseReceivedExchange` before `inherited`, scores its points, earns no
+  multiplier (`CountsAsMultiplier`), keeps the host-area rule
+  (`CreditsWorkedStation`), takes WSJT-X's GRIDSQUARE in `ApplyADIFImport`,
+  and writes the grid in its Cabrillo and SRX columns. WSJT-X's hand-off
+  copies the received QTH into `DomesticQTH`, so test the QTH's shape, not
+  "no DomesticQTH".
+- **Your base name may not be free.** `hawaii.dom` is the Hawaii-state line
+  `s50.dom` includes, so the Hawaii party's files are `hawaiiqp.dom` and
+  `hawaiiqp_cty.dom`. `ls tr4w/target/dom` before you name yours.
 - **A host that is not a US state gives its own New Contest prompt.** The
   base's prompt for a party reads *"Enter your county if you are in ON
   state"*, and an entrant who answers `ON` instead of a county code is set up

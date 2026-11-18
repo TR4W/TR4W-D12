@@ -1407,6 +1407,11 @@ type
                     station up out of the area it is in.
       PlacesFile    the .dom, without its extension, whose KEYS are the
                     in-area QTHs -- the in-state test's own file.
+      PlaceLabel    the row's label while the box is ticked; '' is the
+                    dialog's MY COUNTY. A party whose places are not counties
+                    names them (the Hawaii QSO Party's districts, #118).
+      InsideNotice  the notice while the box is ticked, %s the Area; '' is
+                    the dialog's "choose your county" notice.
 
       A RECORD BECAUSE IT IS AN INTERFACE PARAMETER -- pure data one getter
       answers, as TTotalsDisplay is. *)
@@ -1415,6 +1420,8 @@ type
       Area: string;
       HostStates: string;
       PlacesFile: string;
+      PlaceLabel: string;
+      InsideNotice: string;
    end;
 
    (* WHERE THE "I AM IN <REGION>" BOX IS, IN CTY TERMS -- issue 167. The New
@@ -2967,6 +2974,16 @@ type
          sponsor in the Cabrillo exchange only. True on
          TContestStateQSOPartyBase; base False. *)
       function WritesADIFCounty: boolean; virtual;
+
+      (* THE COUNTY NAME CNTY WRITES after the state and a comma -- PostUnit's
+         CNTY block, asked only where WritesADIFCounty is True and the QTH is
+         in the multiplier list. aDomesticName is that list's display name
+         (the .dom's ^Name), which IS the ADIF county for a party whose
+         multipliers are counties: the base answers it. A party whose
+         multipliers are parts of counties maps them (the Hawaii QSO Party's
+         districts, #118); '' writes no CNTY. *)
+      function ADIFCountyName(const aQso: ContestExchange;
+                              const aDomesticName: string): string; virtual;
 
       (* DOES ONE SEARCH-AND-POUNCE ENTRY CARRY SEVERAL QTHs? --
          MainUnit.ReturnInSAPOpMode, after logging, re-enters the first QTH of
@@ -7243,6 +7260,13 @@ begin
    Result := False;
 end;
 
+function TContestBase.ADIFCountyName(const aQso: ContestExchange;
+                                     const aDomesticName: string): string;
+begin
+   (* The multiplier list's display name -- see the declaration. *)
+   Result := aDomesticName;
+end;
+
 function TContestBase.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    (* One QTH an entry -- see the declaration. *)
@@ -7840,6 +7864,8 @@ begin
    aArea.Area := '';
    aArea.HostStates := '';
    aArea.PlacesFile := '';
+   aArea.PlaceLabel := '';
+   aArea.InsideNotice := '';
    Result := IsUSQSOParty;
    if Result then
       begin

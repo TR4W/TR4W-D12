@@ -168,14 +168,16 @@ begin
    Result := 'ARRL RTTY Roundup';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row ARRL-RTTY: status candidate; rules
-   https://contests.arrl.org/ContestRules/RTTY-RU-Rules.pdf; rules year
-   2026/2027. CANDIDATE: date from a calendar, not yet checked against the
-   sponsor's rules. *)
+(* WHEN IT RUNS -- the ARRL's own calendar for 2026-2031
+   (docs/ContestRules/ARRL/arrl-calendar-2026-2031.md, NY4I 2026-11-17):
+   the first Saturday on or after Jan 2, so New Year's Day is never the
+   start -- Jan 3 2026, Jan 2 2027, Jan 8 2028 (Jan 1 is a Saturday), Jan 6
+   2029, Jan 5 2030, Jan 4 2031. 'the Saturday before 01-09' is that
+   Saturday. CSV row ARRL-RTTY: verified; rules https://contests.arrl.org/ContestRules/RTTY-RU-Rules.pdf . The 1800Z start and 30 hours are
+   the calendar row's, kept. *)
 function TContestARRLRTTYRoundup.GetSchedule: string;
 begin
-   Result := '1st Saturday of January at 18:00 UTC for 30h';
+   Result := 'the Saturday before 01-09 at 18:00 UTC for 30h';
 end;
 
 function TContestARRLRTTYRoundup.GetCabrilloName: string;

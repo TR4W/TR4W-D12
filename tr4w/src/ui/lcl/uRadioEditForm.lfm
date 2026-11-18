@@ -431,15 +431,15 @@ object RadioEditForm: TRadioEditForm
           Left = 150
           Height = 22
           Top = 72
-          Width = 70
+          Width = 90
           AutoSize = False
           TabOrder = 3
         end
         object chkUseHamLib: TCheckBox
-          Left = 240
+          Left = 250
           Height = 19
           Top = 76
-          Width = 220
+          Width = 210
           AutoSize = False
           Caption = 'Drive through HamLib'
           TabOrder = 4

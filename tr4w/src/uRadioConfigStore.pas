@@ -340,7 +340,7 @@ type
 
       // --- model particulars ------------------------------------------------
       UseHamLib: boolean;
-      HamLibID: integer;          // meaningful only when RegistryId='HAMLIBANY'
+      HamLibID: integer;          // HamLib rig_model; 0 = the model's default (uRadioRegistry.HamLibModelFor)
       ReceiverAddress: integer;   // CI-V address; 0 = the model's default
       IcomDataModeID: integer;
       IcomFilterByte: integer;

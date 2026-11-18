@@ -121,15 +121,16 @@ begin
    Result := 'ARRL Kids Day';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row KIDS DAY: status candidate; rules none recorded; rules year none
-   recorded. CANDIDATE: date from a calendar, not yet checked against the
-   sponsor's rules. DATE ONLY: the times are not known, so each clause is a
-   whole UTC day (NY4I's intake text: "first Saturday in January, and the
-   third Saturday in June"). *)
+(* WHEN IT RUNS -- the ARRL's own calendar for 2026-2031
+   (docs/ContestRules/ARRL/arrl-calendar-2026-2031.md, NY4I 2026-11-17).
+   January: the first Saturday on or after Jan 2 -- Jan 3 2026, Jan 2 2027,
+   Jan 8 2028 (Jan 1 is a Saturday), Jan 6 2029, Jan 5 2030, Jan 4 2031 --
+   which 'the Saturday before 01-09' is. June: the 3rd Saturday (Jun 20 2026
+   ... Jun 21 2031). CSV row KIDS DAY: verified. DATE ONLY: the calendar
+   gives no times, so each clause is a whole UTC day. *)
 function TContestKidsDay.GetSchedule: string;
 begin
-   Result := '1st Saturday of January; ' +
+   Result := 'the Saturday before 01-09; ' +
              '3rd Saturday of June';
 end;
 

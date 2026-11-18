@@ -86,6 +86,18 @@ uses
    (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
    uTestRegisteredContests;
 
+type
+   TBooleanAnswer = function: boolean of object;
+
+(* THE CODE OF aObj's WritesADIFCounty, for ClassStatesItself. *)
+function WritesADIFCountyCode(aObj: TContestBase): CodePointer;
+var
+   m: TBooleanAnswer;
+begin
+   m := aObj.WritesADIFCounty;
+   Result := TMethod(m).Code;
+end;
+
 function EmptyQso(aContest: TContestHandle): ContestExchange; overload;
 begin
    FillChar(Result, SizeOf(Result), 0);
@@ -1015,10 +1027,26 @@ begin
                      ContestWho(identity) + ': not a QSO party, no STATE');
          end;
 
-      CheckEquals(Ord(isStateParty and
-                      not IsADIFPrimarySubdivision('VE', identity.HostState)),
-                  Ord(identity.WritesADIFCounty),
-                  ContestWho(identity) + ': CNTY exactly for the state parties with a US host');
+      (* CNTY ONLY FOR A STATE PARTY WITH A US HOST, always. And EXACTLY
+         there for every contest whose own class does not state the answer:
+         a class that states WritesADIFCounty itself is taken at its word
+         (the Canadian hosts: no Canadian CNTY), and pins its answer in its
+         own test (NY4I confirmed the rule, issue 118, 2026-11-17). An
+         inheriting party is held to True here. A party whose multipliers
+         are not counties maps them through ADIFCountyName instead (the
+         Hawaii QSO Party's districts). *)
+      CheckTrue(not identity.WritesADIFCounty or
+                (isStateParty and
+                 not IsADIFPrimarySubdivision('VE', identity.HostState)),
+                ContestWho(identity) + ': CNTY only for a state party with a US host');
+      if not ClassStatesItself(identity, WritesADIFCountyCode) then
+         begin
+         CheckEquals(Ord(isStateParty and
+                         not IsADIFPrimarySubdivision('VE', identity.HostState)),
+                     Ord(identity.WritesADIFCounty),
+                     ContestWho(identity) + ': CNTY exactly for the state parties with a US host, ' +
+                     'unless the class states otherwise');
+         end;
 
       if isStateParty then
          begin

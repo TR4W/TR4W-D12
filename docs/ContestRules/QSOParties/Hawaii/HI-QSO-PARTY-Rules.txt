@@ -1,0 +1,53 @@
+Source: https://www.hawaiiqsoparty.org/rules-page/ and /mult-map/ -- the site refuses automated fetches (403); NY4I pasted the page text into GitHub issue 118
+Fetched: 2026-11-17 (the issue 118 paste); no wording changed below. NY4I's own copy with notes: hawaii-qso-party-rules.md beside this file
+Cabrillo CONTEST: HI-QSO-PARTY -- the rules state none; DXLog.net HIQP.txt / HIQPHI.txt CABRILLO_CONTEST_NAME (updated 2026-09-05)
+ADIF CONTEST_ID: HI-QSO-PARTY -- in the ADIF Contest_ID enumeration (checked with adifmt v0.1.23, ADIF 3.1.8, 2026-11-17)
+WA7BNM: not looked up (the calendar's terms bar automated access)
+Districts: HI-QSO-PARTY-Districts.txt beside this file
+Revision: the page gives no revision or last-modified date
+Dates: rule 1's "Aug 21 ... 2026" is a sponsor typo (NY4I, 2026-11-17): 2026 is Sat Aug 22 1600Z to Mon Aug 24 0400Z; 2027 is Sat Aug 21
+Grid squares and contacts: the sponsor rules NY4I added on 2026-11-17 are in hawaii-qso-party-rules.md beside this file
+
+1. Operating period is 36 hours from 1600 UTC Aug 21 through 0359 UTC Aug 23, 2026.
+
+    Note: That's 6am Saturday Aug 21 to start and end at 6pm Sunday in Hawaii.
+
+2. Stations must be worked only on the 10, 15, 20, 40, 80, and 160 meter bands.
+
+3. Stations can be worked only once per band-mode (CW, SSB, digital).
+
+4. Digital mode includes ALL digital modes (https://www.hawaiiqsoparty.org/digital-definition/) (RTTY, PSK, QPSK, FT-x, VarAC, etc) as "digital"
+
+5. Use of spotting networks is permitted and encouraged.
+
+6. Operation must conform to home country regulations.
+
+7. Logs must be submitted electronically no later than 14 days following the event.
+
+8.
+Exchanges
+Hawai'i stations send signal report plus Hawai'i Multiplier (https://www.hawaiiqsoparty.org/mult-map/)
+
+Non-Hawai'i stations send signal report plus State or Province as appropriate.
+
+Non-USA / Canada stations send "DX"
+
+NOTE: If you're mode cannot send the proper QTH name, then a Grid Square (4 characters) is allowed. DETAILS (https://www.hawaiiqsoparty.org/grid-squares/)
+
+POINTS
+SSB: 2 points       CW: 3 points       digital: 3 points
+
+MULTIPLIERS
+Non-Hawaiian stations: 14 Hawai'i districts per band. Maximum of 84 (6 bands x 14 districts)
+
+See a map and list of Hawai'i multipliers (https://www.hawaiiqsoparty.org/mult-map/) here.
+
+Hawai'i stations: 14 Hawai'i districts plus US states (including DC), plus Canadian provinces, plus DXCC entities. ONCE ONLY - NOT PER BAND -
+
+Note: Grid Squares are allowed if a Muliplier name is not possible for the mode (ex: FT8). Log checking will determine the most likely multiplier and apply it to the final score.
+
+FINAL SCORE
+Final Score is the total number of QSO points times the number of earned multipliers.
+
+MULTIPLIER MAP
+(an image in issue 118; its district codes and names are transcribed in HI-QSO-PARTY-Districts.txt)

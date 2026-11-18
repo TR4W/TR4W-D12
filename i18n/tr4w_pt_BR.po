@@ -11355,3 +11355,28 @@ msgstr ""
 #, fuzzy
 msgid "Shown as this contest uses them"
 msgstr ""
+
+#: uappstrings.sradioeditusehamlibhint
+#, fuzzy
+msgid "Drive this radio through the HamLib library instead of TR4W's own driver. HamLib version: %s"
+msgstr ""
+
+#: uappstrings.sradioedithamlibnotavailable
+#, fuzzy
+msgid "not available"
+msgstr ""
+
+#: uappstrings.snewcontesthawaiiqpdistrictorlocation
+#, fuzzy
+msgid "Enter your Hawaii district (e.g. HON) if you are in Hawaii. Enter your state or Canadian province if outside Hawaii, or DX:"
+msgstr ""
+
+#: uappstrings.snewcontesthostareadistrictlabel
+#, fuzzy
+msgid "MY DISTRICT"
+msgstr ""
+
+#: uappstrings.snewcontesthostareainsidedistrictnotice
+#, fuzzy
+msgid "You are in %s: choose your district from the list."
+msgstr ""

@@ -55,6 +55,8 @@ type
       procedure Test_ResolverRepeatingForms;
       procedure Test_ResolverExhaustedListLeapAndRollover;
       procedure Test_VerifiedClassesKnownDates;
+      procedure Test_TheWeekdayBeforeAnAnchor;
+      procedure Test_ARRLClassesAgreeWithTheARRLCalendar;
       procedure Test_OrderingOfRealContests;
       procedure Test_EveryContestStatesItsSchedule;
       procedure Test_ReadmeExamplesParse;
@@ -735,6 +737,133 @@ begin
    CheckTrue(count >= 10, 'the README table was read (' + IntToStr(count) + ' examples)');
 end;
 
+(* 'the <weekday> before <anchor>' -- NY4I, 2026-11-17: the last such weekday
+   STRICTLY before the anchor's date. ARRL 160's start dates are NY4I's, read
+   from the class's RETURNED string; the others were computed independently
+   (Python's calendar). *)
+procedure TContestScheduleTests.Test_TheWeekdayBeforeAnAnchor;
+const
+   (* ARRL 160: Friday 2200Z, the Friday before the first full weekend of
+      December; 2029 starts in NOVEMBER (that weekend is Dec 1-2). *)
+   ARRL160_YEAR: array[0..5] of word = (2026, 2027, 2028, 2029, 2030, 2031);
+   ARRL160_MONTH: array[0..5] of word = (12, 12, 12, 11, 12, 12);
+   ARRL160_DAY: array[0..5] of word = (4, 3, 1, 30, 6, 5);
+var
+   s: TContestSchedule;
+   startUTC, endUTC: TDateTime;
+   err: string;
+   i: integer;
+begin
+   BeginTest('Test_TheWeekdayBeforeAnAnchor');
+   s := Parsed(ScheduleOf('ARRL-160'));
+   CheckEquals(1, Length(s.Clauses), 'ARRL 160 states one period');
+   for i := 0 to High(ARRL160_YEAR) do
+      begin
+      CheckTrue(TryNextSchedulePeriod(s.Clauses[0], At(ARRL160_YEAR[i], 1, 1, 0, 0),
+                                      startUTC, endUTC),
+                'ARRL 160 has a period in ' + IntToStr(ARRL160_YEAR[i]));
+      CheckEquals(Stamp(At(ARRL160_YEAR[i], ARRL160_MONTH[i], ARRL160_DAY[i], 22, 0)),
+                  Stamp(startUTC), 'ARRL 160 starts Friday 2200Z');
+      CheckEquals(Stamp(At(ARRL160_YEAR[i], ARRL160_MONTH[i], ARRL160_DAY[i], 22, 0) + 42 / 24),
+                  Stamp(endUTC), 'and ends Sunday 1600Z, 42 hours on');
+      end;
+
+   (* STRICTLY BEFORE: June 20 2026 is a Saturday, so the Saturday before it
+      is June 13; the Saturday before June 21 2026 (a Sunday) is June 20 --
+      West Virginia's "the Saturday on or before June 20". *)
+   s := Parsed('the Saturday before 06-20');
+   CheckTrue(TryNextSchedulePeriod(s.Clauses[0], At(2026, 1, 1, 0, 0), startUTC, endUTC), '06-20');
+   CheckEquals(Stamp(At(2026, 6, 13, 0, 0)), Stamp(startUTC), 'strictly before: never the anchor day itself');
+   s := Parsed('the Saturday before 06-21');
+   CheckTrue(TryNextSchedulePeriod(s.Clauses[0], At(2026, 1, 1, 0, 0), startUTC, endUTC), '06-21 2026');
+   CheckEquals(Stamp(At(2026, 6, 20, 0, 0)), Stamp(startUTC), 'June 21 2026 is a Sunday: Sat June 20');
+   CheckTrue(TryNextSchedulePeriod(s.Clauses[0], At(2027, 1, 1, 0, 0), startUTC, endUTC), '06-21 2027');
+   CheckEquals(Stamp(At(2027, 6, 19, 0, 0)), Stamp(startUTC), 'June 21 2027 is a Monday: Sat June 19');
+
+   (* '+Nd' COUNTS FROM THE MOVED DAY: the Sunday after that Saturday. *)
+   s := Parsed('the Saturday before the 4th Sunday of August +1d at 12:00 UTC for 1h');
+   CheckTrue(TryNextSchedulePeriod(s.Clauses[0], At(2027, 1, 1, 0, 0), startUTC, endUTC), '+1d');
+   CheckEquals(Stamp(At(2027, 8, 22, 12, 0)), Stamp(startUTC), 'Sat Aug 21 2027 +1d is Sun Aug 22');
+
+   (* A PERIOD RUNNING ACROSS ITS ANCHOR is still found running: ARRL 160 at
+      Saturday noon of the 2029 weekend, after its Friday Nov 30 start. *)
+   s := Parsed(ScheduleOf('ARRL-160'));
+   CheckTrue(TryNextSchedulePeriod(s.Clauses[0], At(2029, 12, 1, 12, 0), startUTC, endUTC), 'running');
+   CheckEquals(Stamp(At(2029, 11, 30, 22, 0)), Stamp(startUTC), 'the running period is the Nov 30 one');
+
+   (* THE FORM IS STRICT. *)
+   CheckFalse(TryParseContestSchedule('the Funday before the 4th Sunday of August', s, err),
+              'an unknown weekday is refused');
+   CheckTrue(Pos('weekday', err) > 0, 'naming what was expected: ' + err);
+   CheckFalse(TryParseContestSchedule('the Friday after the first full weekend of December', s, err),
+              '"after" is no form');
+   CheckFalse(TryParseContestSchedule('the Friday before', s, err), 'an anchor is needed');
+   CheckFalse(TryParseContestSchedule('the Friday before the', s, err), 'still no anchor');
+   CheckTrue(TryParseContestSchedule('THE friday BEFORE first full weekend of December', s, err),
+             'case-insensitive, and the second "the" is optional (' + err + ')');
+end;
+
+(* EVERY ARRL CLASS THAT STATES A SCHEDULE, AGAINST THE ARRL'S OWN CALENDAR
+   for 2026-2031 (docs/ContestRules/ARRL/arrl-calendar-2026-2031.md, NY4I
+   2026-11-17 -- a sponsor source). Each class's RETURNED string through the
+   real parser: the start DATE of the clause's period in that year must be
+   the calendar cell's first date. Contests with no class (Rookie Roundup,
+   School Club Roundup, 222 MHz, 10 GHz, EME, Straight Key Night) are not
+   here. *)
+type
+   TARRLCalendarRow = record
+      Id: string;
+      Clause: integer;
+      Months: array[0..5] of word;
+      Days: array[0..5] of word;
+   end;
+
+const
+   ARRL_CALENDAR: array[0..14] of TARRLCalendarRow = (
+      (Id: 'ARRL-10';      Clause: 0; Months: (12, 12, 12, 12, 12, 12); Days: (12, 11, 9, 8, 14, 13)),
+      (Id: 'ARRL-160';     Clause: 0; Months: (12, 12, 12, 11, 12, 12); Days: (4, 3, 1, 30, 6, 5)),
+      (Id: 'ARRL-DIGI';    Clause: 0; Months: (6, 6, 6, 6, 6, 6);       Days: (6, 5, 3, 2, 1, 7)),
+      (Id: 'ARRL-DX-CW';   Clause: 0; Months: (2, 2, 2, 2, 2, 2);       Days: (21, 20, 19, 17, 16, 15)),
+      (Id: 'ARRL-DX-SSB';  Clause: 0; Months: (3, 3, 3, 3, 3, 3);       Days: (7, 6, 4, 3, 2, 1)),
+      (Id: 'ARRL-FD';      Clause: 0; Months: (6, 6, 6, 6, 6, 6);       Days: (27, 26, 24, 23, 22, 28)),
+      (Id: 'IARU-HF';      Clause: 0; Months: (7, 7, 7, 7, 7, 7);       Days: (11, 10, 8, 14, 13, 12)),
+      (Id: 'ARRL-VHF-JAN'; Clause: 0; Months: (1, 1, 1, 1, 1, 1);       Days: (17, 16, 15, 20, 19, 18)),
+      (Id: 'ARRL-VHF-JUN'; Clause: 0; Months: (6, 6, 6, 6, 6, 6);       Days: (13, 12, 10, 9, 8, 14)),
+      (Id: 'ARRL-VHF-SEP'; Clause: 0; Months: (9, 9, 9, 9, 9, 9);       Days: (12, 11, 9, 8, 14, 13)),
+      (Id: 'KIDS DAY';     Clause: 0; Months: (1, 1, 1, 1, 1, 1);       Days: (3, 2, 8, 6, 5, 4)),
+      (Id: 'KIDS DAY';     Clause: 1; Months: (6, 6, 6, 6, 6, 6);       Days: (20, 19, 17, 16, 15, 21)),
+      (Id: 'ARRL-RTTY';    Clause: 0; Months: (1, 1, 1, 1, 1, 1);       Days: (3, 2, 8, 6, 5, 4)),
+      (Id: 'ARRL-SS-CW';   Clause: 0; Months: (11, 11, 11, 11, 11, 11); Days: (7, 6, 4, 3, 2, 1)),
+      (Id: 'ARRL-SS-SSB';  Clause: 0; Months: (11, 11, 11, 11, 11, 11); Days: (21, 20, 18, 17, 16, 15))
+      );
+
+procedure TContestScheduleTests.Test_ARRLClassesAgreeWithTheARRLCalendar;
+var
+   i, k: integer;
+   s: TContestSchedule;
+   startUTC, endUTC: TDateTime;
+   year: word;
+begin
+   BeginTest('Test_ARRLClassesAgreeWithTheARRLCalendar');
+   for i := 0 to High(ARRL_CALENDAR) do
+      begin
+      s := Parsed(ScheduleOf(ARRL_CALENDAR[i].Id));
+      CheckTrue(ARRL_CALENDAR[i].Clause <= High(s.Clauses),
+                ARRL_CALENDAR[i].Id + ' states the clause');
+      for k := 0 to 5 do
+         begin
+         year := 2026 + k;
+         CheckTrue(TryNextSchedulePeriod(s.Clauses[ARRL_CALENDAR[i].Clause],
+                                         At(year, 1, 1, 0, 0), startUTC, endUTC),
+                   ARRL_CALENDAR[i].Id + ' has a period in ' + IntToStr(year));
+         CheckEquals(FormatDateTime('yyyy-mm-dd',
+                        EncodeDate(year, ARRL_CALENDAR[i].Months[k], ARRL_CALENDAR[i].Days[k])),
+                     FormatDateTime('yyyy-mm-dd', startUTC),
+                     ARRL_CALENDAR[i].Id + ' ' + IntToStr(year) + ' starts on the ARRL calendar''s date');
+         end;
+      end;
+end;
+
 procedure TContestScheduleTests.RunAllTests;
 begin
    Test_ParsesEveryClauseShape;
@@ -744,6 +873,8 @@ begin
    Test_ResolverRepeatingForms;
    Test_ResolverExhaustedListLeapAndRollover;
    Test_VerifiedClassesKnownDates;
+   Test_TheWeekdayBeforeAnAnchor;
+   Test_ARRLClassesAgreeWithTheARRLCalendar;
    Test_OrderingOfRealContests;
    Test_EveryContestStatesItsSchedule;
    Test_ReadmeExamplesParse;

@@ -213,6 +213,8 @@ procedure TQSOPartyEngine.Activate(aInHostState: boolean);
 var
    identity: TContestBase;
    filename: string;
+   station: TStationContext;
+   session: TSessionDefaults;
 begin
    identity := ContestIdentity(FHandle);
    Contest := FHandle;
@@ -222,6 +224,25 @@ begin
    Settings.Qso.ByMode := identity.QSOByMode;
    Settings.Mult.ByBand := identity.MultByBand;
    Settings.Mult.ByMode := identity.MultByMode;
+   (* THEN WHAT THE CONTEST STATES FOR THIS ENTRANT, as
+      FCONTEST.ApplySessionDefaults writes it after the identity's flags. A
+      party whose multiplier scope differs by entrant (the Hawaii QSO Party:
+      once in state, per band outside) states MultByBand both ways in
+      DescribeSession; the identity's flag alone would test one entrant with
+      the other's rule (ADDING_A_CONTEST A5). A party that states nothing
+      keeps the identity's flag. *)
+   station := NoStation;
+   station.InHostState := aInHostState;
+   session := TSessionDefaults.Create;
+   try
+      identity.DescribeSession(station, session);
+      if session.IsStated(svMultByBand) then
+         begin
+         Settings.Mult.ByBand := session.MultByBand;
+         end;
+   finally
+      session.Free;
+   end;
    DomesticMultByBand := dmbbDefauld;
    DomesticCountries.Clear;
    Add_KVEKH6KL;

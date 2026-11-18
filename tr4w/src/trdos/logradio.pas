@@ -2020,35 +2020,26 @@ begin
                // typing a rig number for a generic HamLib radio was silently
                // ignored and HAMLIBANY always came up as rig_model 1.
                //
-               // Honoured only for HAMLIBANY, matching the dialog, which enables
-               // the field for that model alone and shows a read-only registry
-               // value otherwise.  A stale HamLibID left in the config from an
-               // earlier setup must not be allowed to beat a real model's ID.
-               // EXACT COMPARE, not SameText. Every SameText visible here --
-               // qualified or not -- takes AnsiString, so it narrows the id and
-               // costs a data-loss warning for nothing. Exact case is also the
-               // right semantics: gById is a default-comparer dictionary, so
-               // every other id lookup in the program is already case-sensitive.
-               if (Self.RadioId = 'HAMLIBANY') and (Self.HamLibID > 0) then
+               // Honoured for EVERY radio driven through HamLib since
+               // 2026-11-17 (NY4I: an IC-7100 driven through HamLib must be
+               // able to name its rig_model), not for HAMLIBANY alone. The
+               // rule is uRadioRegistry.HamLibModelFor: the operator's value
+               // when > 0, else the REGISTRY's per-model default -- every enum
+               // registration carries its own, pinned by
+               // test/unit/uTestHamLibIDs, because a wrong number does not fail
+               // to connect, it makes the rig behave as some OTHER radio. A
+               // stale value from an earlier model choice is guarded in the
+               // editor, which blanks the box when the radio type changes and
+               // shows it whenever the radio is HamLib-driven.
+               HamLibModelID := uRadioRegistry.HamLibModelFor(Self.RadioId, Self.HamLibID);
+               if (Self.HamLibID > 0) and
+                  (Self.HamLibID <> uRadioRegistry.RegisteredHamLibIDId(Self.RadioId)) then
                   begin
-                  HamLibModelID := Self.HamLibID;
                   logger.Info('[%s] HamLib rig_model %d (operator override)',
                               [Self.RadioName, HamLibModelID]);
                   end
                else
                   begin
-                  // The REGISTRY owns the HamLib rig_model now.  Every enum
-                  // registration carries its own, transcribed from the legacy
-                  // table and pinned by test/unit/uTestHamLibIDs -- because a
-                  // wrong number here does not fail to compile or to connect,
-                  // it just makes the rig behave as some OTHER radio.
-                  //
-                  // RadioParametersArray keeps the values for historic
-                  // reference; nothing reads them for this any more.  That
-                  // matters: two live sources for one fact is what put three
-                  // WRONG hamlibIDs in the table (TS-590, TS-2000, FLEX) until
-                  // task #16 went looking for them.
-                  HamLibModelID := uRadioRegistry.RegisteredHamLibIDId(Self.RadioId);
                   logger.Info('[%s] HamLib rig_model %d (per-model default)',
                               [Self.RadioName, HamLibModelID]);
                   end;

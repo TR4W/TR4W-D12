@@ -374,6 +374,7 @@ uses
    uContestKentuckyQP in '..\..\src\contestFactory\uContestKentuckyQP.pas',
    uContestKansasQP in '..\..\src\contestFactory\uContestKansasQP.pas',
    uContestIowaQP in '..\..\src\contestFactory\uContestIowaQP.pas',
+   uContestHawaiiQP in '..\..\src\contestFactory\uContestHawaiiQP.pas',
    uContestSouthCarolinaQP in '..\..\src\contestFactory\uContestSouthCarolinaQP.pas',
    uContestVermontQP in '..\..\src\contestFactory\uContestVermontQP.pas',
    uContestNewHampshireQP in '..\..\src\contestFactory\uContestNewHampshireQP.pas',
@@ -660,6 +661,7 @@ uses
    uTestColumnWidthStore in 'uTestColumnWidthStore.pas',
    uTestExternalLoggerFields in 'uTestExternalLoggerFields.pas',
    uTestPasswordRevealLayout in 'uTestPasswordRevealLayout.pas',
+   uTestRadioEditHamLib in 'uTestRadioEditHamLib.pas',
    uTestEditQSOLayout in 'uTestEditQSOLayout.pas',
    uTestExternalLoggerEditorLayout in 'uTestExternalLoggerEditorLayout.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
@@ -934,6 +936,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestKentuckyQP in 'uTestContestKentuckyQP.pas',
    uTestContestKansasQP in 'uTestContestKansasQP.pas',
    uTestContestIowaQP in 'uTestContestIowaQP.pas',
+   uTestContestHawaiiQP in 'uTestContestHawaiiQP.pas',
    uTestContestSouthCarolinaQP in 'uTestContestSouthCarolinaQP.pas',
    (* The Vermont QSO Party, a new contest registered by its id
       (2026-11-10, #130). *)
@@ -1184,6 +1187,7 @@ begin
    RegisterSuite(TContestKentuckyQPTests.Create('ContestKentuckyQP'));
    RegisterSuite(TContestKansasQPTests.Create('ContestKansasQP'));
    RegisterSuite(TContestIowaQPTests.Create('ContestIowaQP'));
+   RegisterSuite(TContestHawaiiQPTests.Create('ContestHawaiiQP'));
    RegisterSuite(TContestSouthCarolinaQPTests.Create('ContestSouthCarolinaQP'));
    RegisterSuite(TContestVermontQPTests.Create('ContestVermontQP'));
    RegisterSuite(TAdditionalDomesticMultiplierTests.Create('AdditionalDomesticMultiplier'));
@@ -1307,6 +1311,7 @@ begin
    RegisterSuite(TColumnWidthStoreTests.Create('ColumnWidthStore'));
    RegisterSuite(TExternalLoggerFieldsTests.Create('ExternalLoggerFields'));
    RegisterSuite(TPasswordRevealLayoutTests.Create('PasswordRevealLayout'));
+   RegisterSuite(TRadioEditHamLibTests.Create('RadioEditHamLib'));
    RegisterSuite(TEditQSOLayoutTests.Create('EditQSOLayout'));
    RegisterSuite(TExternalLoggerEditorLayoutTests.Create('ExternalLoggerEditorLayout'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));

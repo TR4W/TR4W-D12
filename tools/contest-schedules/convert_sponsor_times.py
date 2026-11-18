@@ -73,6 +73,12 @@ def anchor_weekday(anchor_words):
    w = anchor_words
    if not w:
       raise ConvertError('empty anchor')
+   # 'the <weekday> before <anchor>' starts on that weekday, whatever the
+   # anchor (uContestSchedule's header).
+   if w[0] == 'the':
+      if len(w) >= 4 and w[1] in WEEKDAYS and w[2] == 'before':
+         return WEEKDAYS.index(w[1])
+      return None
    if w[0] == 'every':
       if len(w) == 2 and w[1] in WEEKDAYS:
          return WEEKDAYS.index(w[1])

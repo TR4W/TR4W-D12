@@ -922,8 +922,26 @@ the target shape, the M-step migration order and the open questions.
   it for the station's country, DX gets none (`uADIF.ADIFStateOfPartyQSO`
   composes it). CNTY: `WritesADIFCounty`, every state party with a US host;
   a Canadian host (BC, Ontario since #127) states False -- ADIF has no
-  Canadian CNTY -- and `Test_EveryPartyAndOnlyAPartyWritesAState` judges the
-  host by `IsADIFPrimarySubdivision('VE', HostState)`, not by name. **A
+  Canadian CNTY. **The county NAME is `TContestBase.ADIFCountyName(aQso,
+  aDomesticName)`** (#118, 2026-11-17, the PostUnit seam): base = the
+  `.dom` display name; Hawaii maps its 14 DISTRICTS to ADIF's five Hawaii
+  counties (`HI,Honolulu`); `''` writes none. A party whose multipliers are
+  not counties maps them there, never by `WritesADIFCounty` False.
+  **A RECEIVED GRID IN PLACE OF THE QTH is Hawaii's worked example** (its
+  header): Digital + grid shape (two letters A-Z, two digits, ZZ00 a fake)
+  parsed before `inherited`, points but no multiplier, WSJT-X's GRIDSQUARE
+  through `ApplyADIFImport`; uWSJTX copies the QTH into `DomesticQTH`, so
+  test the QTH's SHAPE. `Test_EveryPartyAndOnlyAPartyWritesAState`
+  holds CNTY only for a US-host state party (judged by
+  `IsADIFPrimarySubdivision('VE', HostState)`, not by name) and, for every
+  contest whose OWN class does not state `WritesADIFCounty`
+  (`ClassStatesItself`), exactly there -- a class that states it is taken
+  at its word and pins it in its own test. **A party base name is not
+  always the state's name**: `hawaii.dom` is the Hawaii-STATE line `s50.dom`
+  includes, so Hawaii's files are `hawaiiqp.dom` / `hawaiiqp_cty.dom` --
+  check `ls tr4w/target/dom` before naming. `uTestQSOPartyEngine.Activate`
+  applies a `DescribeSession`-stated `MultByBand` per entrant since Hawaii
+  (lifted from New Hampshire's `ApplyFlagsFor`). **A
   `ADIFCountyState` KEY IS A HOST COUNTY ONLY WHEN THE PARTY'S TABLE
   RESOLVED IT** (issue 134, fixed 2026-10-27): the record's `DomesticQTH`,
   else the typed `QTHString` when `Station.IsDomesticQTH` knows it (a rover
@@ -1216,9 +1234,11 @@ the target shape, the M-step migration order and the open questions.
   "now" for a running period, else the next period start (a QSO party's
   overnight gap keys on the Sunday start), else undated -- an ISO-date list
   runs out and never repeats. `+Nd` is the day after the SAME anchor (Florida
-  2029: the 29th, not the 4th Sunday the 22nd); there is no `-Nd`, so
-  ARRL-160's candidate string (kept on instruction) reads from SATURDAY 2200Z
-  where the ARRL is believed to start Friday -- its comment says so. State
+  2029: the 29th, not the 4th Sunday the 22nd). There is no `-Nd`; the
+  readable form is `the <Weekday> before <anchor>` (NY4I, 2026-11-17): the
+  last such weekday STRICTLY before the anchor's date -- ARRL-160 (Friday
+  before the first full weekend of December, Nov 30 in 2029), Hawaii
+  (Saturday before the 4th Sunday of August). State
   it on the LEAF class (`uTestContestSchedule` asks `ClassStatesItself`).
   `SCHEDULE_NOT_YET_STATED` there is the ratchet, only ever down; the intake
   is `docs/CONTEST_SCHEDULES.csv` (never read at run time) with its
