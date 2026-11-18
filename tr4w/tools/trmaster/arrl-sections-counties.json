@@ -3,6 +3,7 @@
   "AK": "AK",
   "AL": "AL",
   "AR": "AR",
+  "AS": "PAC",
   "AZ": "AZ",
   "BC": "BC",
   "CA": {
@@ -170,6 +171,7 @@
   "MI": "MI",
   "MN": "MN",
   "MO": "MO",
+  "MP": "PAC",
   "MS": "MS",
   "MT": "MT",
   "NB": "NB",
@@ -664,6 +666,7 @@
     "Zapata": "STX",
     "Zavala": "STX"
   },
+  "UM": "PAC",
   "UT": "UT",
   "VA": "VA",
   "VI": "VI",

@@ -38,6 +38,15 @@ changes).
 - **`check_dta_names.py`** — read-only scan of a `.dta` for names that fail the name
   rule below. `python check_dta_names.py ../../target/TRMASTER.DTA` prints the
   offenders and a count; exit 1 if any. Tests: `python -I test_name_validator.py`.
+- **`lookup_build.py`** -- the *daily* build of `fcc_lookup.sqlite.gz`, the downloadable
+  call -> name/ZIP/county/ARRL-or-RAC-section database for the TR4W website (all active
+  US licences from FCC ULS plus every Canadian licence from ISED). Unrelated to the
+  monthly `.dta` flow above; it shares only `arrl-sections-counties.json` /
+  `county_section.py`. Uses `fcc_import.py` (FCC reader) and `ca_divisions.py`
+  (Ontario postal code -> census division). **See [LOOKUP_DB.md](LOOKUP_DB.md)** for the
+  schema, the one-time Statistics Canada download, scheduling and accuracy limits.
+  Run with `python` (not `-I`). Tests: `python -I test_lookup_build.py`,
+  `python -I test_ca_divisions.py`.
 
 ## Quick start (monthly)
 

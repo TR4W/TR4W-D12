@@ -7,3 +7,4 @@ seed/
 *.DTA
 *.xlsx
 *.csv
+dist/

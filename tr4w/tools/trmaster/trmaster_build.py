@@ -39,6 +39,7 @@ import csv
 import glob as globmod
 import os
 import re
+import shutil
 import sqlite3
 import sys
 import urllib.request
@@ -64,15 +65,18 @@ def log(msg):
     print(msg, flush=True)
 
 
-def download(url, dest, force=False):
+def download(url, dest, force=False, user_agent="tr4w-trmaster-build"):
     if os.path.exists(dest) and not force:
         log(f"  cached: {dest} ({os.path.getsize(dest)} bytes)")
         return dest
     log(f"  downloading {url} -> {dest}")
     os.makedirs(os.path.dirname(dest) or ".", exist_ok=True)
-    req = urllib.request.Request(url, headers={"User-Agent": "tr4w-trmaster-build"})
-    with urllib.request.urlopen(req, timeout=120) as r, open(dest, "wb") as f:
-        f.write(r.read())
+    # user_agent=None sends urllib's default: data.fcc.gov answers 403 to a custom one.
+    req = urllib.request.Request(url, headers={"User-Agent": user_agent} if user_agent else {})
+    part = dest + ".part"   # stream to a side file: big downloads, and a failed one leaves dest alone
+    with urllib.request.urlopen(req, timeout=120) as r, open(part, "wb") as f:
+        shutil.copyfileobj(r, f, 1024 * 1024)
+    os.replace(part, dest)
     log(f"  saved {os.path.getsize(dest)} bytes")
     return dest
 
