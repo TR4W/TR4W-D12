@@ -518,7 +518,7 @@ procedure PutCallToCallWindow(Call: CallString);
 procedure SetColumnsWidth;
 procedure ExecuteConfigurationFile(const f: AnsiString);
 procedure CheckEditableWindowHeight;
-function CheckCommandInCallsignWindow: boolean;
+function CheckCommandInCallsignWindow(const aCommand: string): boolean;
 procedure ClearMultSheet_CtrlC;
 procedure tClearMultSheet;
 procedure ReCalculateHourDisplay;
@@ -3394,7 +3394,7 @@ const
 begin
   Result := False;
   logger.debug('[TuneOnFreq] Enter: CallWindowString="%s"', [CallWindowString]);
-  if CheckCommandInCallsignWindow then
+  if CheckCommandInCallsignWindow(CallWindowString) then
      begin
      tCleareCallWindow;
      Result := True;
@@ -6102,6 +6102,13 @@ begin
     (* THE SETUP WIZARD ON REQUEST -- it opens by itself only on a brand-new
       install (uProgramMain); this is every later time. *)
     menu_setup_wizard: ShowSetupWizard;
+    (* TOOLS -> COMMANDS (issue 87 step 0): the routine the call window runs,
+      handed the item's own command word. The call window is not cleared --
+      only the typed path, which put the word there, clears it. *)
+    menu_cmd_adif..menu_cmd_pref:
+      begin
+      CheckCommandInCallsignWindow(CallWindowCommandOfMenu(LowordWparam));
+      end;
     menu_export_edi: OpenStationInformationWindow(ExportToEDI);
 
     menu_scorebyhour: ScoreByHour;
@@ -10602,27 +10609,23 @@ begin
   TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
 end;
 
-function CheckCommandInCallsignWindow: boolean;
+(* ONE CALL-WINDOW COMMAND, FROM THE CALL WINDOW OR FROM TOOLS -> COMMANDS
+  (issue 87 step 0). aCommand is the whole text: the call window passes what
+  was typed, a menu item its own command word. True when aCommand was a
+  command (the call window then clears itself).
+
+  THE ARMS ARE NAMED MENU IDS, found by uMenu.CallWindowCommandMenuId, not
+  positions in a word list: the AnsiIndexText list this replaced numbered its
+  arms 0..14, and an insertion renumbered them and fired the wrong command. *)
+function CheckCommandInCallsignWindow(const aCommand: string): boolean;
 begin
   Result := true;
-  case AnsiIndexText(AnsiUpperCase(CallWindowString),
-    ['ADIF', 'CAB', 'CMD', 'COL', 'CWOFF', 'CWON', 'EXIT', 'NOTE', 'OPON',
-    'SCORE',
-      'SUM', 'UDP', 'WCY', 'WWV',
-    // Opens the radio Preferences window.  Appended out of alphabetical order
-    // deliberately: AnsiIndexText does not care about order, and slotting it
-    // after 'EXIT' would renumber the case arms below, where an off-by-one
-    // silently fires the WRONG command.
-    //
-    // 'FMXTEST' (was 14) and 'FMXDESIGN' (was 16) were removed with the FMX
-    // twins on 2026-08-17, which is why PREF and CATLEGACY renumbered here --
-    // the one edit this array's ordering rule was written to make deliberate.
-    'PREF']) of
-    0: ProcessMenu(menu_adif);
-    1: ProcessMenu(menu_cabrillo);
-    2: RunWindowsUtility('cmd.exe');
-    3: ProcessMenu(menu_colors);
-    4:
+  case CallWindowCommandMenuId(aCommand) of
+    menu_cmd_adif: ProcessMenu(menu_adif);
+    menu_cmd_cab: ProcessMenu(menu_cabrillo);
+    menu_cmd_cmd: RunWindowsUtility('cmd.exe');
+    menu_cmd_col: ProcessMenu(menu_colors);
+    menu_cmd_cwoff:
       (* CW ON AND OFF HAVE ONE OWNER, LogCW.SetCWState (issue 324): these two
         arms were a copy of it that had drifted. What stays here is only what
         is the call window's own -- CWOFF does nothing when CW is already off,
@@ -10634,20 +10637,20 @@ begin
          QuickDisplay(TC_CWOFF);
          end;
       end;
-    5:
+    menu_cmd_cwon:
       begin
       SetCWState(True, False);
       QuickDisplay('CW On');
       end;
-    6: ProcessMenu(menu_exit);
-    7: ProcessMenu(menu_ctrl_note);
-    8: ProcessMenu(menu_login);
-    9: SendScoreToUDP;
-    10: ProcessMenu(menu_summary);
-    11: SendFullLogToUDP;
-    12: SendViaTelnetSocket('SH/WCY');
-    13: SendViaTelnetSocket('SH/WWV');
-    14: ShowPreferences;
+    menu_cmd_exit: ProcessMenu(menu_exit);
+    menu_cmd_note: ProcessMenu(menu_ctrl_note);
+    menu_cmd_opon: ProcessMenu(menu_login);
+    menu_cmd_score: SendScoreToUDP;
+    menu_cmd_sum: ProcessMenu(menu_summary);
+    menu_cmd_udp: SendFullLogToUDP;
+    menu_cmd_wcy: SendViaTelnetSocket('SH/WCY');
+    menu_cmd_wwv: SendViaTelnetSocket('SH/WWV');
+    menu_cmd_pref: ShowPreferences;
   else
     Result := false; // False result does not clear call window
   end; // case

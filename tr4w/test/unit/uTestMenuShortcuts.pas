@@ -29,7 +29,9 @@ unit uTestMenuShortcuts;
 interface
 
 uses
-   SysUtils, Classes, Menus, LCLType, uTR4WTestFramework, uAccelerators, uMenu;
+   SysUtils, Classes, Menus, LCLType, uTR4WTestFramework, uAccelerators,
+   VC,      (* menu_setup_wizard -- the Tools anchor for the Commands submenu *)
+   uMenu;
 
 type
    TMenuShortcutTests = class(TTestCase)
@@ -44,6 +46,7 @@ type
       procedure Test_TheNamedDisplayOnlyRowsAreBound;
       procedure Test_TheCaptionIsJustTheCaption;
       procedure Test_MenuCommandExistsFindsAndMisses;
+      procedure Test_EveryCallWindowCommandHasOneMenuItem;
    public
       procedure RunAllTests; override;
    end;
@@ -540,6 +543,87 @@ begin
                'Band Up owns Alt+B');
 end;
 
+(* TOOLS -> COMMANDS (issue 87 step 0, NY4I 2026-10-26): every call-window
+  command has exactly one menu item, under one Commands submenu of Tools, and
+  every item there is a command -- in both directions, as Lint-MenuDispatch
+  pins rows against handlers. The commands are not RUN here (EXIT, CMD). *)
+procedure TMenuShortcutTests.Test_EveryCallWindowCommandHasOneMenuItem;
+var
+   i, j:     integer;
+   item:     TMenuItem;
+   commands: TMenuItem;
+   rows:     integer;
+begin
+   BeginTest('Test_EveryCallWindowCommandHasOneMenuItem');
+
+   commands := nil;
+   for i := Low(CALL_WINDOW_COMMANDS) to High(CALL_WINDOW_COMMANDS) do
+      begin
+      CheckEquals(UpperCase(Trim(CALL_WINDOW_COMMANDS[i].cwcName)),
+                  CALL_WINDOW_COMMANDS[i].cwcName,
+                  'a command word is upper-case and trimmed: ' +
+                  CALL_WINDOW_COMMANDS[i].cwcName);
+
+      for j := i + 1 to High(CALL_WINDOW_COMMANDS) do
+         begin
+         CheckFalse(SameText(CALL_WINDOW_COMMANDS[i].cwcName,
+                             CALL_WINDOW_COMMANDS[j].cwcName),
+                    'no two rows share a word: ' + CALL_WINDOW_COMMANDS[i].cwcName);
+         CheckTrue(CALL_WINDOW_COMMANDS[i].cwcMenuId <>
+                   CALL_WINDOW_COMMANDS[j].cwcMenuId,
+                   'no two rows share a menu id: ' + CALL_WINDOW_COMMANDS[i].cwcName);
+         end;
+
+      (* Both lookups answer for the row, in any case. *)
+      CheckEquals(integer(CALL_WINDOW_COMMANDS[i].cwcMenuId),
+                  integer(CallWindowCommandMenuId(LowerCase(CALL_WINDOW_COMMANDS[i].cwcName))),
+                  'the typed word finds its item: ' + CALL_WINDOW_COMMANDS[i].cwcName);
+      CheckEquals(CALL_WINDOW_COMMANDS[i].cwcName,
+                  CallWindowCommandOfMenu(CALL_WINDOW_COMMANDS[i].cwcMenuId),
+                  'the item names its word: ' + CALL_WINDOW_COMMANDS[i].cwcName);
+
+      (* The built menu has the item, under Tools -> Commands. *)
+      item := BuiltMenuItem(CALL_WINDOW_COMMANDS[i].cwcMenuId);
+      CheckTrue(item <> nil, 'the menu has an item for ' + CALL_WINDOW_COMMANDS[i].cwcName);
+      if item = nil then
+         begin
+         Continue;
+         end;
+      CheckTrue(Pos(CALL_WINDOW_COMMANDS[i].cwcName + ' ', item.Caption) = 1,
+                'the caption leads with the word (captions in step with rows): ' +
+                item.Caption);
+      if commands = nil then
+         begin
+         commands := item.Parent;
+         end;
+      CheckTrue(item.Parent = commands, 'every command is in one submenu');
+      end;
+
+   CheckTrue(commands <> nil, 'there is a Commands submenu');
+   if commands = nil then
+      begin
+      Exit;
+      end;
+   CheckEquals('Commands', commands.Caption, 'the submenu is called Commands');
+   CheckTrue(commands.Parent = BuiltMenuItem(menu_setup_wizard).Parent,
+             'and it sits in Tools, beside the Setup Wizard');
+
+   (* THE REVERSE: nothing in the submenu but the commands. *)
+   rows := 0;
+   for j := 0 to commands.Count - 1 do
+      begin
+      CheckTrue(CallWindowCommandOfMenu(word(commands.Items[j].Tag)) <> '',
+                'every item in Commands is a call-window command: ' +
+                commands.Items[j].Caption);
+      Inc(rows);
+      end;
+   CheckEquals(Length(CALL_WINDOW_COMMANDS), rows, 'one item per command');
+
+   CheckEquals(0, integer(CallWindowCommandMenuId('W1AW')), 'a call is no command');
+   CheckEquals(0, integer(CallWindowCommandMenuId('')), 'nor is an empty window');
+   CheckEquals('', CallWindowCommandOfMenu(menu_setup_wizard), 'nor is another menu id');
+end;
+
 procedure TMenuShortcutTests.RunAllTests;
 begin
    Test_TheSplitIsWhatItSaysItIs;
@@ -552,6 +636,7 @@ begin
    Test_TheNamedDisplayOnlyRowsAreBound;
    Test_TheCaptionIsJustTheCaption;
    Test_MenuCommandExistsFindsAndMisses;
+   Test_EveryCallWindowCommandHasOneMenuItem;
 end;
 
 initialization

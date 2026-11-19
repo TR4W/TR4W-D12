@@ -2947,6 +2947,27 @@ const
   menu_run_verification_checks          = 10023;  // Tools -> Run Verification Checks
   menu_open_log                         = 10024;  // File -> Open Log..., issue 218
   menu_setup_wizard                     = 10025;  // Tools -> Setup Wizard...
+  (* TOOLS -> COMMANDS (issue 87 step 0): one item per call-window command.
+    uMenu.CALL_WINDOW_COMMANDS pairs each id with the word the call window
+    accepts, and MainUnit.CheckCommandInCallsignWindow dispatches on the id, so
+    a typed word and a menu click run the same arm. A contiguous block, kept
+    in this order, because ProcessMenu hands the whole block over as one
+    subrange (menu_cmd_adif..menu_cmd_pref). Ids 10045..10099 are free. *)
+  menu_cmd_adif                         = 10030;
+  menu_cmd_cab                          = 10031;
+  menu_cmd_cmd                          = 10032;
+  menu_cmd_col                          = 10033;
+  menu_cmd_cwoff                        = 10034;
+  menu_cmd_cwon                         = 10035;
+  menu_cmd_exit                         = 10036;
+  menu_cmd_note                         = 10037;
+  menu_cmd_opon                         = 10038;
+  menu_cmd_score                        = 10039;
+  menu_cmd_sum                          = 10040;
+  menu_cmd_udp                          = 10041;
+  menu_cmd_wcy                          = 10042;
+  menu_cmd_wwv                          = 10043;
+  menu_cmd_pref                         = 10044;
   menu_options                          = 10100;
   menu_messages                         = 10101;
   menu_other_messages                   = 10102;

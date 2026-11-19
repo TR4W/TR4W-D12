@@ -56,6 +56,52 @@ type
     mrId: Word;
   end;
 
+  (* ONE CALL-WINDOW COMMAND: the word the call window accepts and the
+    Tools -> Commands item that runs it (issue 87 step 0). *)
+  TCallWindowCommand = record
+    cwcName: string;
+    cwcMenuId: Word;
+  end;
+
+const
+  (* EVERY CALL-WINDOW COMMAND, AND ITS MENU ITEM.
+
+    The call window and the Tools -> Commands menu run the SAME routine,
+    MainUnit.CheckCommandInCallsignWindow, which takes the command as text and
+    dispatches on the menu id this table pairs it with. So a typed word and a
+    menu click cannot run different arms, and the dispatch is keyed by a NAMED
+    id, not by a position in a word list -- the position-numbered case this
+    replaced warned that an insertion "silently fires the WRONG command".
+
+    Adding a command: a menu_cmd_ id in VC.pas (inside the block ProcessMenu
+    hands over), a row here, a menu row and a caption in this unit, and an arm
+    in CheckCommandInCallsignWindow. uTestMenuShortcuts pins that every row has
+    exactly one menu item under Tools -> Commands and the reverse. *)
+  CALL_WINDOW_COMMANDS: array[0..14] of TCallWindowCommand = (
+    (cwcName: 'ADIF';  cwcMenuId: menu_cmd_adif),
+    (cwcName: 'CAB';   cwcMenuId: menu_cmd_cab),
+    (cwcName: 'CMD';   cwcMenuId: menu_cmd_cmd),
+    (cwcName: 'COL';   cwcMenuId: menu_cmd_col),
+    (cwcName: 'CWOFF'; cwcMenuId: menu_cmd_cwoff),
+    (cwcName: 'CWON';  cwcMenuId: menu_cmd_cwon),
+    (cwcName: 'EXIT';  cwcMenuId: menu_cmd_exit),
+    (cwcName: 'NOTE';  cwcMenuId: menu_cmd_note),
+    (cwcName: 'OPON';  cwcMenuId: menu_cmd_opon),
+    (cwcName: 'SCORE'; cwcMenuId: menu_cmd_score),
+    (cwcName: 'SUM';   cwcMenuId: menu_cmd_sum),
+    (cwcName: 'UDP';   cwcMenuId: menu_cmd_udp),
+    (cwcName: 'WCY';   cwcMenuId: menu_cmd_wcy),
+    (cwcName: 'WWV';   cwcMenuId: menu_cmd_wwv),
+    (cwcName: 'PREF';  cwcMenuId: menu_cmd_pref));
+
+(* The menu id of the call-window command spelled aText -- the whole text,
+  any case, as the call window has always matched it -- or 0 when aText is no
+  command. *)
+function CallWindowCommandMenuId(const aText: string): Word;
+
+(* The command word a Tools -> Commands item runs, or '' when aId is not one. *)
+function CallWindowCommandOfMenu(const aId: Word): string;
+
 { Fill the menu captions from the resourcestrings. See the implementation. }
 procedure InitializeMenuText;
 
@@ -215,7 +261,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27} - 1 {Synchronize time on all computers removed, 2026-11-03 -- a station may not set another's clock} + 1 (* File -> Open Log..., issue 218 *) + 1 (* Help -> Download call history for this contest, 2026-11-08 *) + 1 (* Tools -> Setup Wizard, 2026-11-14 *)
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27} - 1 {Synchronize time on all computers removed, 2026-11-03 -- a station may not set another's clock} + 1 (* File -> Open Log..., issue 218 *) + 1 (* Help -> Download call history for this contest, 2026-11-08 *) + 1 (* Tools -> Setup Wizard, 2026-11-14 *) + 17 (* Tools -> Commands: the submenu, its 15 commands and the back-out row, issue 87 *)
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
 var
@@ -468,6 +514,25 @@ var
     (mrText: ''; mrId: menu_edit_cabrillo_summary),     // Issue #914
     (mrText: ''; mrId: menu_run_verification_checks),
     (mrText: ''; mrId: menu_setup_wizard),
+    (* TOOLS -> COMMANDS (issue 87 step 0): the call-window commands, in the
+      order of CALL_WINDOW_COMMANDS below. *)
+    (mrText: ''; mrId: MAXWORD - 1),
+    (mrText: ''; mrId: menu_cmd_adif),
+    (mrText: ''; mrId: menu_cmd_cab),
+    (mrText: ''; mrId: menu_cmd_cmd),
+    (mrText: ''; mrId: menu_cmd_col),
+    (mrText: ''; mrId: menu_cmd_cwoff),
+    (mrText: ''; mrId: menu_cmd_cwon),
+    (mrText: ''; mrId: menu_cmd_exit),
+    (mrText: ''; mrId: menu_cmd_note),
+    (mrText: ''; mrId: menu_cmd_opon),
+    (mrText: ''; mrId: menu_cmd_score),
+    (mrText: ''; mrId: menu_cmd_sum),
+    (mrText: ''; mrId: menu_cmd_udp),
+    (mrText: ''; mrId: menu_cmd_wcy),
+    (mrText: ''; mrId: menu_cmd_wwv),
+    (mrText: ''; mrId: menu_cmd_pref),
+    (mrText: ''; mrId: MAXWORD - 2),
  //}
     (mrText: ''; mrId: 0),
     (mrText: ''; mrId: menu_3830_scores_posting),
@@ -568,7 +633,40 @@ var
 implementation
 
 uses
+  SysUtils,        // UnicodeSameText -- the call-window command match
   uAppStrings;     // SNetMenuConnect... -- new UI text does not go in uTR4WStrings
+
+function CallWindowCommandMenuId(const aText: string): Word;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := Low(CALL_WINDOW_COMMANDS) to High(CALL_WINDOW_COMMANDS) do
+      begin
+      (* UnicodeSameText, not SameText: FPC 3.2.2's SameText takes AnsiString,
+        and the narrowing count is a ratcheted gate. *)
+      if SysUtils.UnicodeSameText(aText, CALL_WINDOW_COMMANDS[i].cwcName) then
+         begin
+         Result := CALL_WINDOW_COMMANDS[i].cwcMenuId;
+         Exit;
+         end;
+      end;
+end;
+
+function CallWindowCommandOfMenu(const aId: Word): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(CALL_WINDOW_COMMANDS) to High(CALL_WINDOW_COMMANDS) do
+      begin
+      if CALL_WINDOW_COMMANDS[i].cwcMenuId = aId then
+         begin
+         Result := CALL_WINDOW_COMMANDS[i].cwcName;
+         Exit;
+         end;
+      end;
+end;
 
 procedure InitializeMenuText;
 { Menu captions, assigned at RUN time so a translated resourcestring reaches
@@ -750,6 +848,23 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := 'Edit Cabrillo Summary...';
    Inc(i); T_MENU_ARRAY[i].mrText := 'Run Verification Checks...';
    Inc(i); T_MENU_ARRAY[i].mrText := SWizMenu;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuCommands;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuADIF;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuCAB;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuCMD;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuCOL;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuCWOFF;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuCWON;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuEXIT;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuNOTE;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuOPON;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuSCORE;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuSUM;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuUDP;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuWCY;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuWWV;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuPREF;
+   Inc(i); T_MENU_ARRAY[i].mrText := '';
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_3830;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_3830_arrl;
