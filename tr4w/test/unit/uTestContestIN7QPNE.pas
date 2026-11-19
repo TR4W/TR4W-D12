@@ -59,12 +59,18 @@ type
       procedure Test_ParseIsThePartysOwn;
       procedure Test_CabrilloAndADIFNameIN7QPNE;
       procedure Test_NoScorePosting;
+      procedure Test_EachPartyScoresItsOwnQSOs;
+      procedure Test_AnEntrantInAPartyClaimsItsOwnParty;
+      procedure Test_AContestScoredAsOneHasNoParts;
    end;
 
 implementation
 
 uses
-   Classes, SysUtils, VC, uContestBase, uContestRegistry,
+   Classes, SysUtils,
+   uSettingsModel,   (* cpLOW -- Delaware's power factor, issue 86. First, so
+                        every unit below wins a shared name. *)
+   VC, uContestBase, uContestRegistry,
    uContestIN7QPNE, uDomFileKeys, uAppStrings,
    uTestContestObjects,
    uTestExchangeParserStub,
@@ -692,6 +698,225 @@ begin
       end;
 end;
 
+(* ---------------------------------------------------------------------------
+   THE SCORE OF EACH PARTY -- issue 86 (NY4I, 2026-11-15: option 1)
+   --------------------------------------------------------------------------- *)
+
+(* A LOGGED QSO, as live entry stores it: scored by the composite at
+   aStation, with the domestic-multiplier flag the sheet would have set. *)
+function Logged(const aStation: TStationContext; const aQTH: string;
+                aBand: BandType; aMode: ModeType; aMult: boolean): ContestExchange;
+begin
+   Result := QsoAt(aQTH, aBand, aMode);
+   Result.QSOPoints := ScoreWith(IN7QPNE, aStation, Result);
+   Result.DomesticMult := aMult;
+end;
+
+(* THE TOTALS THE SESSION WOULD HOLD FOR aView: every QSO's points, every
+   flagged multiplier, all bands, multipliers counted. Built here, not by the
+   class under test. *)
+function TotalsOf(aView: TLoggedQSOList): TScoreTotals;
+var
+   i: integer;
+   qso: ContestExchange;
+begin
+   FillChar(Result, SizeOf(TScoreTotals), 0);
+   Result.ScoredBand := AllBands;
+   Result.SessionCountsMultipliers := True;
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      Result.QSOPoints := Result.QSOPoints + qso.QSOPoints;
+      if qso.DomesticMult then
+         begin
+         Inc(Result.Mults[AllBands, Both, rmDomestic]);
+         end;
+      end;
+end;
+
+(* A LOG FOR AN ENTRANT AT aStation: two Indiana counties and a dupe, one
+   7QP county, one New England county, two Delaware counties. *)
+procedure FillMixedLog(const aStation: TStationContext; aLog: TLoggedQSOList);
+var
+   dupe: ContestExchange;
+begin
+   aLog.Add(Logged(aStation, 'INADA', Band20, Phone, True));
+   aLog.Add(Logged(aStation, 'INALL', Band40, CW, True));
+   dupe := Logged(aStation, 'INADA', Band20, Phone, False);
+   dupe.ceDupe := True;
+   dupe.QSOPoints := 0;
+   aLog.Add(dupe);
+   aLog.Add(Logged(aStation, 'Azaph', Band40, CW, True));
+   aLog.Add(Logged(aStation, 'MEAnd', Band80, CW, True));
+   aLog.Add(Logged(aStation, 'NDE', Band20, CW, True));
+   aLog.Add(Logged(aStation, 'SDE', Band40, Phone, True));
+end;
+
+(* EACH PARTY'S LINE IS THAT PARTY'S OWN CLASS SCORING ITS OWN QSOs ALONE,
+   and the four lines add up to the session's points and multipliers. The
+   expected score is asked of the party's class over the QSOs this test
+   routes by their county (the shipped key spelling), never of the
+   composite. Power LOW, so Delaware's x2 shows, and its +50. *)
+procedure TContestIN7QPNETests.Test_EachPartyScoresItsOwnQSOs;
+var
+   station: TStationContext;
+   log, alone: TLoggedQSOList;
+   combined: TContestIN7QPNE;
+   partyAlone: TContestBase;
+   totals: TScoreTotals;
+   parts: TScoreParts;
+   p, routed: TIN7QPNEParty;
+   i: integer;
+   qsos, points, mults, score: longint;
+   sumPoints, sumMults: longint;
+begin
+   BeginTest('Test_EachPartyScoresItsOwnQSOs');
+   station := OutOfArea;
+   station.MyPower := cpLOW;
+
+   log := TLoggedQSOList.Create;
+   combined := Composite(station);
+   parts := TScoreParts.Create;
+   try
+      FillMixedLog(station, log);
+      totals := TotalsOf(log);
+
+      (* INDIANA BY NUMBER: two QSOs (the dupe is not one), 2 + 2 points,
+         two counties -- 4 x 2. *)
+      score := combined.PartyScore(ipIndiana, totals, log, qsos, points, mults);
+      CheckEquals(2, qsos, 'Indiana: two QSOs, the dupe not counted');
+      CheckEquals(4, points, 'Indiana: 2 + 2 points');
+      CheckEquals(2, mults, 'Indiana: two counties');
+      CheckEquals(8, score, 'Indiana: 4 x 2');
+
+      (* DELAWARE BY NUMBER: 20 (CW) + 10 (phone) from outside, two
+         counties, x2 for LOW power, +50 for the electronic log. *)
+      score := combined.PartyScore(ipDelaware, totals, log, qsos, points, mults);
+      CheckEquals(2, qsos, 'Delaware: two QSOs');
+      CheckEquals(30, points, 'Delaware: 20 + 10 points');
+      CheckEquals(2, mults, 'Delaware: two counties');
+      CheckEquals(30 * 2 * 2 + 50, score, 'Delaware: its power factor and its +50');
+
+      sumPoints := 0;
+      sumMults := 0;
+      for p := Low(TIN7QPNEParty) to High(TIN7QPNEParty) do
+         begin
+         score := combined.PartyScore(p, totals, log, qsos, points, mults);
+         sumPoints := sumPoints + points;
+         sumMults := sumMults + mults;
+
+         (* THE PARTY'S OWN CLASS, OVER ITS OWN QSOs ALONE. *)
+         alone := TLoggedQSOList.Create;
+         partyAlone := Make(IN7QPNEPartyContest[p], station);
+         try
+            for i := 0 to log.Count - 1 do
+               begin
+               if IN7QPNEPartyOfQTH(string(log.QSO(i).DomesticQTH), routed) and
+                  (routed = p) then
+                  begin
+                  alone.Add(log.QSO(i));
+                  end;
+               end;
+            CheckEquals(partyAlone.FinalScore(TotalsOf(alone), alone), score,
+                        string(ContestTypeSA[IN7QPNEPartyContest[p]]) + ': the party''s own class');
+         finally
+            partyAlone.Free;
+            alone.Free;
+         end;
+         end;
+      CheckEquals(totals.QSOPoints, sumPoints, 'the parties'' points add up to the session''s');
+      CheckEquals(totals.Mults[AllBands, Both, rmDomestic], sumMults,
+                  'the parties'' multipliers add up to the session''s');
+
+      (* THE HINT'S DATA: one part per party, in the name's order, named by
+         the party's contest. *)
+      combined.DescribeScoreParts(totals, log, parts);
+      CheckEquals(4, parts.Count, 'one part per party');
+      partyAlone := Make(INQSOPARTY);
+      try
+         CheckEquals(partyAlone.DisplayName, parts.Part(0).Caption, 'Indiana first');
+      finally
+         partyAlone.Free;
+      end;
+      CheckEquals(8, parts.Part(0).Score, 'Indiana''s score');
+      CheckEquals(30 * 2 * 2 + 50, parts.Part(3).Score, 'Delaware last');
+
+      (* OUTSIDE ALL FOUR, THE CLAIM IS THE SUM, as before. *)
+      CheckEquals(combined.FinalScore(totals, log), combined.ClaimedScore(totals, log),
+                  'an entrant in no party claims the combined score');
+   finally
+      parts.Free;
+      combined.Free;
+      log.Free;
+   end;
+end;
+
+(* AN ENTRANT INSIDE A PARTY CLAIMS THAT PARTY'S SCORE -- the number its own
+   sponsor checks. New Contest refuses such an entrant since Q104, so this is
+   a log made before that, or imported. A party never worked scores 0, even
+   Delaware with its unconditional +50. *)
+procedure TContestIN7QPNETests.Test_AnEntrantInAPartyClaimsItsOwnParty;
+var
+   station: TStationContext;
+   log: TLoggedQSOList;
+   combined: TContestIN7QPNE;
+   totals: TScoreTotals;
+   qsos, points, mults, own: longint;
+begin
+   BeginTest('Test_AnEntrantInAPartyClaimsItsOwnParty');
+   station := Entrant('INADA', True);
+
+   log := TLoggedQSOList.Create;
+   combined := Composite(station);
+   try
+      log.Add(Logged(station, 'INALL', Band20, CW, True));
+      log.Add(Logged(station, 'Azaph', Band40, CW, True));
+      log.Add(Logged(station, 'MEAnd', Band80, CW, True));
+      totals := TotalsOf(log);
+
+      own := combined.PartyScore(ipIndiana, totals, log, qsos, points, mults);
+      CheckTrue(own > 0, 'the Indiana entrant has an Indiana score');
+      CheckEquals(own, combined.ClaimedScore(totals, log), 'it claims its own party''s score');
+      CheckTrue(combined.ClaimedScore(totals, log) <> combined.FinalScore(totals, log),
+                'which is not the combined score on screen');
+
+      CheckEquals(0, combined.PartyScore(ipDelaware, totals, log, qsos, points, mults),
+                  'Delaware never worked: 0, not its +50');
+      CheckEquals(0, qsos, 'Delaware never worked: no QSOs');
+   finally
+      combined.Free;
+      log.Free;
+   end;
+end;
+
+(* EVERY OTHER CONTEST: no parts, and it claims the score it shows. *)
+procedure TContestIN7QPNETests.Test_AContestScoredAsOneHasNoParts;
+var
+   station: TStationContext;
+   log: TLoggedQSOList;
+   indiana: TContestBase;
+   totals: TScoreTotals;
+   parts: TScoreParts;
+begin
+   BeginTest('Test_AContestScoredAsOneHasNoParts');
+   station := OutOfArea;
+   log := TLoggedQSOList.Create;
+   indiana := Make(INQSOPARTY, station);
+   parts := TScoreParts.Create;
+   try
+      log.Add(Logged(station, 'INADA', Band20, Phone, True));
+      totals := TotalsOf(log);
+      indiana.DescribeScoreParts(totals, log, parts);
+      CheckEquals(0, parts.Count, 'no parts');
+      CheckEquals(indiana.FinalScore(totals, log), indiana.ClaimedScore(totals, log),
+                  'it claims the score it shows');
+   finally
+      parts.Free;
+      indiana.Free;
+      log.Free;
+   end;
+end;
+
 procedure TContestIN7QPNETests.RunAllTests;
 begin
    Test_IN7QPNEIsACompositeOnTheBase;
@@ -705,6 +930,9 @@ begin
    Test_ParseIsThePartysOwn;
    Test_CabrilloAndADIFNameIN7QPNE;
    Test_NoScorePosting;
+   Test_EachPartyScoresItsOwnQSOs;
+   Test_AnEntrantInAPartyClaimsItsOwnParty;
+   Test_AContestScoredAsOneHasNoParts;
 end;
 
 end.

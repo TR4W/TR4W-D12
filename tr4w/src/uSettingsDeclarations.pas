@@ -370,6 +370,21 @@ begin
      before its spot shows no M; fewer, but at least one, is the orange M. *)
    RegisterModelSetting( 'bandmap.workedMultLimit',           'BAND MAP WORKED MULT LIMIT',
                          RS_BANDMAP_WORKEDMULTLIMIT);
+   (* ISSUE 59: the band map's colour roles, each defaulting to the colour it
+     was drawn in. Their vocabulary is tr4wColorsSA, registered from uCFG;
+     Preferences shows them on the Colors page. *)
+   RegisterModelSetting( 'bandmap.selectionColor',            'BAND MAP SELECTION COLOR',
+                         RS_BANDMAP_SELECTIONCOLOR);
+   RegisterModelSetting( 'bandmap.dupeColor',                 'BAND MAP DUPE COLOR',
+                         RS_BANDMAP_DUPECOLOR);
+   RegisterModelSetting( 'bandmap.multColor',                 'BAND MAP MULT COLOR',
+                         RS_BANDMAP_MULTCOLOR);
+   RegisterModelSetting( 'bandmap.activeBandColor',           'BAND MAP ACTIVE BAND COLOR',
+                         RS_BANDMAP_ACTIVEBANDCOLOR);
+   RegisterModelSetting( 'bandmap.otherBandColor',            'BAND MAP OTHER BAND COLOR',
+                         RS_BANDMAP_OTHERBANDCOLOR);
+   RegisterModelSetting( 'bandmap.vfoMarkerColor',            'BAND MAP VFO MARKER COLOR',
+                         RS_BANDMAP_VFOMARKERCOLOR);
    RegisterModelSetting( 'logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
                          RS_LOGGING_CHECKLOGFILESIZE);
    RegisterModelSetting( 'logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',

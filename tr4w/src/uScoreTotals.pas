@@ -92,6 +92,15 @@ function LoggedQSOView: TLoggedQSOView;
 function ContestFinalScore(aContest: TContestHandle;
                            const aTotals: TScoreTotals): longint;
 
+(* THE SCORE THE CABRILLO FILE CLAIMS, and THE PARTS OF THE SCORE -- issue 86.
+   The same contest object and view as ContestFinalScore; see
+   TContestBase.ClaimedScore and DescribeScoreParts. Main thread only. *)
+function ContestClaimedScore(aContest: TContestHandle;
+                             const aTotals: TScoreTotals): longint;
+procedure DescribeContestScoreParts(aContest: TContestHandle;
+                                    const aTotals: TScoreTotals;
+                                    aParts: TScoreParts);
+
 implementation
 
 uses
@@ -189,21 +198,36 @@ begin
       end;
 end;
 
+(* THE OBJECT THAT SCORES aContest -- THE ACTIVE OBJECT FIRST, because it
+   carries the station (Winter Field Day's power, Idaho's county, the Salmon
+   Run's mode category); a classless contest has none and its identity needs
+   none. *)
+function ScoringContest(aContest: TContestHandle): TContestBase;
+begin
+   Result := ActiveContest(aContest);
+   if Result = nil then
+      begin
+      Result := ContestIdentity(aContest);
+      end;
+end;
+
 function ContestFinalScore(aContest: TContestHandle;
                            const aTotals: TScoreTotals): longint;
-var
-   scorer: TContestBase;
 begin
-   (* THE ACTIVE OBJECT FIRST, because it carries the station (Winter Field
-      Day's power, Idaho's county, the Salmon Run's mode category); a
-      classless contest has none and its identity needs none. *)
-   scorer := ActiveContest(aContest);
-   if scorer = nil then
-      begin
-      scorer := ContestIdentity(aContest);
-      end;
+   Result := ScoringContest(aContest).FinalScore(aTotals, LoggedQSOs);
+end;
 
-   Result := scorer.FinalScore(aTotals, LoggedQSOs);
+function ContestClaimedScore(aContest: TContestHandle;
+                             const aTotals: TScoreTotals): longint;
+begin
+   Result := ScoringContest(aContest).ClaimedScore(aTotals, LoggedQSOs);
+end;
+
+procedure DescribeContestScoreParts(aContest: TContestHandle;
+                                    const aTotals: TScoreTotals;
+                                    aParts: TScoreParts);
+begin
+   ScoringContest(aContest).DescribeScoreParts(aTotals, LoggedQSOs, aParts);
 end;
 
 finalization

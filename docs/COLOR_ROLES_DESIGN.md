@@ -1,9 +1,22 @@
 # Colour roles: a themeable palette that the operator still owns
 
-**Status: DESIGN NOTE, nothing built.** Written 2026-08-31 after a UI critique of
-the radio panel suggested replacing its cyan background with a dark neutral. That
-suggestion is wrong in a way worth recording, and chasing down why exposed real
-defects in the palette.
+**Status: DESIGN NOTE; the band map's roles are built.** Written 2026-08-31 after
+a UI critique of the radio panel suggested replacing its cyan background with a
+dark neutral. That suggestion is wrong in a way worth recording, and chasing down
+why exposed real defects in the palette.
+
+**Built 2026-11-19 (issue 59): the band map's six roles.** Selection, dupe fill,
+multiplier fill, active-band frequency, other-band frequency and the VFO marker
+are settings in `Settings.BandMap` (`BAND MAP SELECTION COLOR` and so on), each a
+swatch name defaulting to the colour the band map drew before.
+`uSpots.BandMapRoleColor` resolves them; `uBandMapForm.DrawSpotCell` draws with
+them; Preferences > Colors shows them under the grid. Two swatches were appended
+so the defaults are exact: `SILVER` (clSilver) and `HIGHLIGHT` (the system
+selection colour, as `BTNFACE` is the system button face). The VFO marker has a
+colour and no drawing: how it is drawn is issue 65. The text colours (the white
+frequency text, the black flag letter, the selection's highlight text) and the
+call's age ramp are still literals. Roles for the rest of the program, and
+themes, remain the proposal below.
 
 NY4I's constraint governs everything below: **we can suggest a default, but the
 user gets to pick.**

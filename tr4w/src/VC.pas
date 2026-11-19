@@ -722,7 +722,14 @@ type
     (* ADDED AT THE END, 2026-11-07 (issue 12), the way trBtnFace and trAlert
       were: every store keeps a colour by its SPELLING, so a new tail member
       re-points nothing. It is the default of BAND MAP WORKED MULT COLOR. *)
-    trOrange
+    trOrange,
+    (* ADDED AT THE END, 2026-11-19 (issue 59), for the band map's colour
+      roles, each of which defaults to the colour it was drawn in: SILVER is
+      the other band's frequency field (clSilver, which LIGHT GRAY is not),
+      and HIGHLIGHT the selected spot -- the system's selection colour, as
+      BTNFACE is the system's button face. *)
+    trSilver,
+    trHighlight
     );
   Ptr4wColors = ^tr4wColors;
 //http://code.google.com/p/doctype/wiki/CSSColors
@@ -758,7 +765,9 @@ const
 
     'BTNFACE',
     'ALERT',
-    'ORANGE'
+    'ORANGE',
+    'SILVER',
+    'HIGHLIGHT'
     );
 
 var
@@ -789,7 +798,9 @@ var
 
     clbtnface,
     $0000FF, //ALERT (RED)
-    $00A5FF  //ORANGE (BGR of RGB 255,165,0)
+    $00A5FF, //ORANGE (BGR of RGB 255,165,0)
+    $C0C0C0, //SILVER (clSilver)
+    clHighlight
     );
 type
   TMainWindowElementInfo = record

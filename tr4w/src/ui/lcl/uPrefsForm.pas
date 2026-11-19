@@ -1817,6 +1817,15 @@ begin
    aTable.Place('bandmap.workedMultLimit',                NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('operating.ctrlj.qzbRandomOffsetEnable',  NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
 
+   (* Appearance > Colors: the band map's colour roles (issue 59, NY4I
+     2026-11-15), in a block under the main window's grid. *)
+   aTable.Place('bandmap.selectionColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
+   aTable.Place('bandmap.dupeColor',                      NAV_COLORS, SPrefsGroupBandMapColors);
+   aTable.Place('bandmap.multColor',                      NAV_COLORS, SPrefsGroupBandMapColors);
+   aTable.Place('bandmap.activeBandColor',                NAV_COLORS, SPrefsGroupBandMapColors);
+   aTable.Place('bandmap.otherBandColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
+   aTable.Place('bandmap.vfoMarkerColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
+
    (* ------------------------------------------------------ CW Settings *)
 
    (* Answer 1: CW lives in ONE place, under CW Settings.  Speed, the cut
@@ -3999,6 +4008,8 @@ var
    palette: TArray<string>;
    v, name: string;
    row: integer;
+   rolesHost: TPanel;
+   rolesY, roles: integer;
 begin
    // A PANEL, NOT A SCROLL BOX, and the GRID does the scrolling.
    //
@@ -4032,6 +4043,23 @@ begin
    head.Height     := 52;
    head.BorderSpacing.Around := 12;
    head.Font.Style := [fsBold];
+
+   (* THE BAND MAP'S COLOUR ROLES (issue 59): the settings PrefsPlacements puts
+     on this page, in a block BELOW the grid. Aligned to the bottom, so the
+     grid (alClient) takes what is left and keeps its own scrolling; as tall
+     as its rows. The host is a child of this page, so search finds its rows
+     here (SectionPanelFor), and it goes with the page on a rebuild. *)
+   rolesHost := TPanel.Create(box);
+   rolesHost.Parent      := box;
+   rolesHost.BevelOuter  := bvNone;
+   rolesHost.Caption     := '';
+   rolesHost.Color       := clWindow;
+   rolesHost.ParentColor := False;
+   rolesHost.Align       := alBottom;
+   rolesY := 0;
+   roles := AddPlacedRows(rolesHost, NAV_COLORS, rolesY);
+   rolesHost.Height  := rolesY + 12;
+   rolesHost.Visible := roles > 0;
 
    // FROM THE ENUM, through uRadioConfigApply.PaletteSpellings -- not a list
    // typed in here.  A hand-kept copy would offer a color this build does not
@@ -4099,8 +4127,9 @@ begin
    FColorGrid.RowCount := FColorElements.Count + 1;
    LoadColorRows;
 
-   Result := FColorElements.Count;
-   logger.Debug('[Prefs] colors page: %d element(s) in one grid', [Result]);
+   Result := FColorElements.Count + roles;
+   logger.Debug('[Prefs] colors page: %d element(s) in one grid, %d band map role(s)',
+                [FColorElements.Count, roles]);
 end;
 
 procedure TPrefsForm.ColorGridSelectEditor(Sender: TObject; aCol, aRow: integer;

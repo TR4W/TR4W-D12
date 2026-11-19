@@ -1365,6 +1365,12 @@ type
       FSplitMode: BandMapSplitModeType;
       FWorkedMultColor: string;
       FWorkedMultLimit: TBandMapWorkedMultLimit;
+      FSelectionColor: string;
+      FDupeColor: string;
+      FMultColor: string;
+      FActiveBandColor: string;
+      FOtherBandColor: string;
+      FVfoMarkerColor: string;
       procedure SetSplitMode(aValue: BandMapSplitModeType);
       procedure SetAllBands(aValue: boolean);
       procedure SetAllModes(aValue: boolean);
@@ -1443,6 +1449,27 @@ type
         mode where it does. Default 1: the M goes at the first working, as it
         always has; 2 shows an orange M after the first. *)
       property WorkedMultLimit: TBandMapWorkedMultLimit read FWorkedMultLimit write FWorkedMultLimit;
+
+      (* THE BAND MAP'S COLOUR ROLES -- issue 59 (NY4I, 2026-11-15: "This list
+        is correct"). Each names what it colours, not a colour, and defaults
+        to the colour the band map drew it in before, so nothing changes until
+        the operator picks: the selected spot (the system highlight), the dupe
+        fill (yellow), the multiplier fill (red, fading to white), the
+        frequency field on the active band (blue) and on another band
+        (silver), and the VFO marker (red). Tokens on WorkedMultColor's
+        pattern -- VC's tr4wColorsSA, registered from uCFG as the allowed
+        values, so each default is written out here rather than reaching VC.
+        The roles' defaults and their resolution are uSpots.BandMapRoleColor.
+
+        THE VFO MARKER'S COLOUR ONLY. How the marker is drawn (a red guard
+        band, an outline on the nearest spot, a line between spots -- issues
+        59 and 65) is not decided, so no new marker is drawn. *)
+      property SelectionColor: string read FSelectionColor write FSelectionColor;
+      property DupeColor: string read FDupeColor write FDupeColor;
+      property MultColor: string read FMultColor write FMultColor;
+      property ActiveBandColor: string read FActiveBandColor write FActiveBandColor;
+      property OtherBandColor: string read FOtherBandColor write FOtherBandColor;
+      property VfoMarkerColor: string read FVfoMarkerColor write FVfoMarkerColor;
 
       (* THE THREE BELOW CARRIED crP: 0 AND crJ: 1 -- no redraw, restart
         required -- so they are plain field writes with no notification.
@@ -5002,6 +5029,14 @@ begin
    FSplitMode        := ByCutoffFrequency;
    FWorkedMultColor  := 'ORANGE';
    FWorkedMultLimit  := 1;
+   (* Issue 59: the colour each role was drawn in before it was a role.
+     uTestSpotCommentMultiplier pins each to uSpots' role default. *)
+   FSelectionColor   := 'HIGHLIGHT';
+   FDupeColor        := 'YELLOW';
+   FMultColor        := 'RED';
+   FActiveBandColor  := 'BLUE';
+   FOtherBandColor   := 'SILVER';
+   FVfoMarkerColor   := 'RED';
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.

@@ -1032,6 +1032,42 @@ type
       function QSO(aIndex: integer): ContestExchange; override;
    end;
 
+   (* ONE PART OF A SCORE -- issue 86 (NY4I, 2026-11-15: option 1). A
+      contest that is several contests scored at once (IN7QPNE: four QSO
+      parties) states each part's numbers; the score display renders them as
+      its hint. DATA ONLY: the wording is the display's. *)
+   TScorePart = class
+   private
+      FCaption: string;
+      FQSOs: longint;
+      FPoints: longint;
+      FMultipliers: longint;
+      FScore: longint;
+   public
+      constructor Create(const aCaption: string;
+                         aQSOs, aPoints, aMultipliers, aScore: longint);
+      (* The part's name as the operator knows it -- a contest's DisplayName. *)
+      property Caption: string read FCaption;
+      property QSOs: longint read FQSOs;
+      property Points: longint read FPoints;
+      property Multipliers: longint read FMultipliers;
+      property Score: longint read FScore;
+   end;
+
+   (* THE PARTS, IN THE CONTEST'S ORDER -- what DescribeScoreParts fills. Owns
+      its parts. Empty for every contest scored as one. *)
+   TScoreParts = class
+   private
+      FParts: array of TScorePart;
+   public
+      destructor Destroy; override;
+      procedure Add(const aCaption: string;
+                    aQSOs, aPoints, aMultipliers, aScore: longint);
+      procedure Clear;
+      function Count: integer;
+      function Part(aIndex: integer): TScorePart;
+   end;
+
    (* A STATION WHOSE CONTACT EARNS A BONUS -- DECLARED DATA (M6).
 
       The contest LISTS its bonus stations; the base counts them over the view
@@ -3944,6 +3980,24 @@ type
       function FinalScore(const aTotals: TScoreTotals;
                           aView: TLoggedQSOView): longint;
 
+      (* THE SCORE THE CABRILLO FILE CLAIMS -- issue 86. FinalScore for every
+         contest but one that is several contests at once: IN7QPNE's entrant
+         inside one of its parties claims that party's score, the number its
+         own sponsor checks. The on-screen score stays FinalScore. Read by
+         the Cabrillo CLAIMED-SCORE line and the summary sheet's Claimed
+         Score, through LogEdit.ClaimedScore. *)
+      function ClaimedScore(const aTotals: TScoreTotals;
+                            aView: TLoggedQSOView): longint; virtual;
+
+      (* THE PARTS OF THE SCORE, ONE PER CONTEST SCORED AT ONCE -- issue 86.
+         Adds nothing for a contest scored as one (the default). IN7QPNE adds
+         one part per party: its QSOs, points, multipliers and score, as that
+         party's own class scores them. The score display shows them as its
+         hint. Same totals and view as FinalScore. *)
+      procedure DescribeScoreParts(const aTotals: TScoreTotals;
+                                   aView: TLoggedQSOView;
+                                   aParts: TScoreParts); virtual;
+
       (* THE SPONSOR'S FORMULA, AS A TEMPLATE -- not virtual.
 
          A SESSION THAT COUNTS NO MULTIPLIER SCORES ITS POINTS. That was the
@@ -6770,6 +6824,67 @@ end;
 function TLoggedQSOList.QSO(aIndex: integer): ContestExchange;
 begin
    Result := FQSOs[aIndex];
+end;
+
+constructor TScorePart.Create(const aCaption: string;
+                              aQSOs, aPoints, aMultipliers, aScore: longint);
+begin
+   inherited Create;
+   FCaption     := aCaption;
+   FQSOs        := aQSOs;
+   FPoints      := aPoints;
+   FMultipliers := aMultipliers;
+   FScore       := aScore;
+end;
+
+destructor TScoreParts.Destroy;
+begin
+   Clear;
+   inherited Destroy;
+end;
+
+procedure TScoreParts.Add(const aCaption: string;
+                          aQSOs, aPoints, aMultipliers, aScore: longint);
+var
+   n: integer;
+begin
+   n := Length(FParts);
+   SetLength(FParts, n + 1);
+   FParts[n] := TScorePart.Create(aCaption, aQSOs, aPoints, aMultipliers, aScore);
+end;
+
+procedure TScoreParts.Clear;
+var
+   i: integer;
+begin
+   for i := 0 to High(FParts) do
+      begin
+      FParts[i].Free;
+      end;
+   FParts := nil;
+end;
+
+function TScoreParts.Count: integer;
+begin
+   Result := Length(FParts);
+end;
+
+function TScoreParts.Part(aIndex: integer): TScorePart;
+begin
+   Result := FParts[aIndex];
+end;
+
+procedure TContestBase.DescribeScoreParts(const aTotals: TScoreTotals;
+                                          aView: TLoggedQSOView;
+                                          aParts: TScoreParts);
+begin
+   (* One score, no parts. *)
+end;
+
+function TContestBase.ClaimedScore(const aTotals: TScoreTotals;
+                                   aView: TLoggedQSOView): longint;
+begin
+   Result := FinalScore(aTotals, aView);
 end;
 
 function MyStationExchangeOfQSO(const aSession: TMyStationExchange;

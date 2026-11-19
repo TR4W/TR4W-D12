@@ -178,6 +178,7 @@ begin
                 (page = NAV_AUDIO)         or
                 (page = NAV_TWORADIO)      or
                 (page = NAV_BANDS)         or
+                (page = NAV_COLORS)        or
                 (page = NAV_CONTEST)       or
                 (page = NAV_ADVANCED),
                 '"' + PrefsPlacements.Key(i) + '" is placed on page ' + IntToStr(page)

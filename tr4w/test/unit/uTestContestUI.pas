@@ -71,6 +71,7 @@ type
       procedure Test_OnlyNamedContestsAddCabrilloOverlays;
       procedure Test_OverlayListComposition;
       procedure Test_TheOverlayIsAContestSetting;
+      procedure Test_CategoryAssistedChoosesTheOpeningWindow;
    end;
 
 implementation
@@ -82,6 +83,8 @@ uses
    uContestRegistry,
    uContestChoices,
    uCategoryPowerChange,
+   (* CategoryOpeningWindow -- issue 201 *)
+   uCategoryWindow,
    (* CabrilloTagText -- what a closed summary window answers, Q61 *)
    uCbrSum,
    uSettingsModel,
@@ -1023,6 +1026,37 @@ begin
    CheckFalse(OverlayChoiceToCommit(True, ' WIRES ', 'WIRES', value), 'blanks are trimmed');
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* THE WINDOW A CONTEST OPENS WITH -- issue 201                              *)
+(* ------------------------------------------------------------------------ *)
+
+(* NON-ASSISTED opens the dupe sheet (radio 1's), ASSISTED the band map, and a
+  blank category opens nothing: the saved layout stands. Every member is
+  asked, so a category added later must be decided here too. *)
+procedure TContestUITests.Test_CategoryAssistedChoosesTheOpeningWindow;
+var
+   a: tCategoryAssisted;
+   window: WindowsType;
+begin
+   BeginTest('Test_CategoryAssistedChoosesTheOpeningWindow');
+   CheckTrue(CategoryOpeningWindow(caNONASSISTED, window), 'NON-ASSISTED chooses a window');
+   CheckTrue(window = tw_DUPESHEETWINDOW1_INDEX, 'NON-ASSISTED: the dupe sheet, radio 1''s');
+
+   CheckTrue(CategoryOpeningWindow(caASSISTED, window), 'ASSISTED chooses a window');
+   CheckTrue(window = tw_BANDMAPWINDOW_INDEX, 'ASSISTED: the band map');
+
+   CheckFalse(CategoryOpeningWindow(caUNSET, window), 'a blank category chooses nothing');
+
+   for a := Low(tCategoryAssisted) to High(tCategoryAssisted) do
+      begin
+      if CategoryOpeningWindow(a, window) then
+         begin
+         CheckTrue(window in [tw_BANDMAPWINDOW_INDEX, tw_DUPESHEETWINDOW1_INDEX],
+                   tCategoryAssistedSA[a] + ': only ever the band map or the dupe sheet');
+         end;
+      end;
+end;
+
 procedure TContestUITests.RunAllTests;
 begin
    Test_ChoicesListEveryContestOnce;
@@ -1043,6 +1077,7 @@ begin
    Test_OnlyNamedContestsAddCabrilloOverlays;
    Test_TheOverlayIsAContestSetting;
    Test_OverlayListComposition;
+   Test_CategoryAssistedChoosesTheOpeningWindow;
 end;
 
 end.

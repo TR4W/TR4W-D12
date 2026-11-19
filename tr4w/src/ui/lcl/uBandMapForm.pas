@@ -723,19 +723,24 @@ begin
    // makes any difference impossible to attribute, and this window is watched
    // constantly during a contest.  Correcting the order is one line once NY4I
    // has decided the red is wanted.
+   //
+   // THE COLOURS ARE ROLES SINCE ISSUE 59 (uSpots.BandMapRoleColor), each
+   // defaulting to the literal it replaced. The guard-band line reads the VFO
+   // MARKER role and is still overwritten: how the marker is drawn is the open
+   // question of issues 59 and 65, so the role is stored and nothing new draws.
    if Abs(aSpot.FFrequency - BandMapCursorFrequency) <= Settings.BandMap.GuardBand then
       begin
-      bandColor := clRed;
+      bandColor := tr4wColorsArray[BandMapRoleColor(bmcVFOMarker)];
       end;
 
    if ((aSpot.FBand = InactiveRadioPtr.BandMemory) and Settings.So2r.TwoRadioMode) or
       ((aSpot.FBand = BandmapBand) and (not Settings.So2r.TwoRadioMode)) then
       begin
-      bandColor := clBlue;
+      bandColor := tr4wColorsArray[BandMapRoleColor(bmcActiveBand)];
       end
    else
       begin
-      bandColor := clSilver;
+      bandColor := tr4wColorsArray[BandMapRoleColor(bmcOtherBand)];
       end;
 
    grdSpots.Canvas.Brush.Color := bandColor;
@@ -782,7 +787,9 @@ begin
         the interface's, so pulling it in here silently redefined TColor for the
         whole unit and AgeColor's header stopped matching its declaration.
         TCanvas.GradientFill is native, needs no HDC, and has no type to clash. }
-      grdSpots.Canvas.GradientFill(flagRect, clRed, clWhite, gdHorizontal);
+      grdSpots.Canvas.GradientFill(flagRect,
+                                   tr4wColorsArray[BandMapRoleColor(bmcMultiplier)],
+                                   clWhite, gdHorizontal);
       flagText := 'M';
       end
    else if aSpot.FWorkedMult then
@@ -804,7 +811,7 @@ begin
 
    if aSpot.FDupe then
       begin
-      grdSpots.Canvas.Brush.Color := clYellow;
+      grdSpots.Canvas.Brush.Color := tr4wColorsArray[BandMapRoleColor(bmcDupe)];
       grdSpots.Canvas.FillRect(flagRect);
       flagText := 'D';
       end;
@@ -821,7 +828,10 @@ begin
    // --- the callsign, ramped by age -------------------------------------
    if aSelected then
       begin
-      grdSpots.Canvas.Brush.Color := clHighlight;
+      (* THE SELECTION ROLE (issue 59); its text stays the system's
+         highlight text, which a light selection colour can make hard to
+         read -- there is no text role for it yet. *)
+      grdSpots.Canvas.Brush.Color := tr4wColorsArray[BandMapRoleColor(bmcSelection)];
       callColor := clHighlightText;
       end
    else if aSpot.FAgeSeconds <= 120 then

@@ -144,6 +144,7 @@ uses
   uContestChoices in 'src\uContestChoices.pas',
   uLatestContest in 'src\uLatestContest.pas',
   uCategoryPowerChange in 'src\uCategoryPowerChange.pas',
+  uCategoryWindow in 'src\uCategoryWindow.pas',
   uLicenseYearChange in 'src\uLicenseYearChange.pas',
   uStationFactRecord in 'src\uStationFactRecord.pas',
   uStationFactChange in 'src\uStationFactChange.pas',

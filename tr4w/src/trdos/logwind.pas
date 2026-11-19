@@ -954,6 +954,9 @@ uses
   uBandMapView,
   (* ContestIdentity -- what call entry shows, asked of the contest (M9b). *)
   uContestRegistry,
+  (* TScoreParts and SScorePartHint -- the score's hint (issue 86). *)
+  uContestBase,
+  uAppStrings,
   (* mtCodeSpeedDisplay -- the readout a worker thread asks for (issue #108). *)
   uMainThreadWork;
 
@@ -1615,6 +1618,39 @@ begin
   SetTextInQuickCommandWindow(SysUtils.Format(AnsiString('AUTO QSL INTERVAL = %u'), [Settings.Message.AutoQslInterval]));
 end;
 
+(* THE SCORE'S HINT: ONE LINE PER PART OF THE SCORE -- issue 86 (NY4I,
+  2026-11-15, option 1). The contest says what the parts are
+  (TContestBase.DescribeScoreParts, through LogEdit.GatherScoreParts); this
+  only words them. A contest scored as one has no parts, and no hint. *)
+procedure ShowScorePartsHint;
+var
+  parts: TScoreParts;
+  lines: string;
+  i: integer;
+  part: TScorePart;
+begin
+  lines := '';
+  parts := TScoreParts.Create;
+  try
+     GatherScoreParts(parts);
+     for i := 0 to parts.Count - 1 do
+        begin
+        part := parts.Part(i);
+        if lines <> '' then
+           begin
+           lines := lines + LineEnding;
+           end;
+        lines := lines + SysUtils.Format(SScorePartHint,
+                                         [part.Caption, part.QSOs, part.Points,
+                                          part.Multipliers, part.Score]);
+        end;
+  finally
+     parts.Free;
+  end;
+  TR4WMainForm.pnlTotalScore.Hint := LclText(lines);
+  TR4WMainForm.pnlTotalScore.ShowHint := lines <> '';
+end;
+
 procedure DisplayTotalScore {(Score: LONGINT)};
 
 var
@@ -1629,6 +1665,7 @@ begin
   // in EAX for the `push eax` -- a fragile Delphi-7 codegen assumption that 64-bit
   // would break.  TC_PTS = '%d Pts'.
   TR4WMainForm.pnlTotalScore.Caption := SysUtils.Format(AnsiString(LclText(TC_PTS)), [Score]);
+  ShowScorePartsHint;
 
 
   if NumberTotalScoreMessages > 0 then
