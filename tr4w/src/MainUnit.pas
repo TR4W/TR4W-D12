@@ -7928,7 +7928,9 @@ begin
         NY4I's option (b), 2026-11-19: "we never want to write suspect data
         to the qso table". This mode logs whatever the parse left, and a
         refusing parser writes nothing (an invalid zone stays out of the
-        QSO), so the raw entry is what survives for a later Edit QSO. Until
+        QSO), so the raw entry is what survives for a later correction --
+        stored as the row's exchange_received (Edit QSO has no field for
+        it). Until
         then this branch never wrote ExchString at all; the Standard path
         below writes it only after an accepted parse. *)
      RData.ExchString := ExchangeString;

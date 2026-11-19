@@ -12,9 +12,9 @@ Mobile/rover bonuses remain a documented limitation for affected QSO parties. Do
 
 ## Entering the exchange
 
-Type the exchange as it is sent on the air, words separated by spaces. When TR4W knows a typed code is not valid for the contest, for example a district, state or section the contest does not list, or a CQ zone above 40, it refuses the entry and says why on the status line. Correct the word and press Enter again. Not every contest's parser names its reason yet; a refusal without a message still means the entry was not logged.
+Type the exchange as it is sent on the air, words separated by spaces. When TR4W knows a typed code is not valid for the contest, for example a district, state or section the contest does not list, or a CQ zone above 40, it refuses the entry and says why on the status line. Correct the word and press Enter again. Not every contest's parser names its reason yet; with the standard QSL mode, a refusal without a message still means the entry was not logged.
 
-With [QSL MODE](../reference/commands/q-s.md#qsl-mode) set to QSL AND LOG, a refused entry is still logged. A refused zone is not written to the contact; the exchange is kept as typed, so it can be corrected later in Edit QSO.
+With [QSL MODE](../reference/commands/q-s.md#qsl-mode) set to QSL AND LOG, a refused entry is still logged. A refused zone is not written to the contact, but the exchange text is stored with the contact as typed, so the zone can be corrected afterwards.
 
 RSGB IOTA references may be typed with or without the dash: `EU-005`, `EU005` and `EU-5` are all logged as `EU-005`. Only a dash straight after the continent is accepted.
 

@@ -252,7 +252,8 @@ inherited parse so `aExch` is filled as before (QSL MODE = QSL AND LOG logs
 whatever the parse wrote, ignoring the answer). **QSL AND LOG KEEPS THE TYPED
 TEXT (issue 274 item 7, NY4I option (b), 2026-11-19):** that branch of
 `ParametersOkay` writes `ExchString` from the entry, accepted or refused, so
-the raw text survives for Edit QSO -- and a parser that refuses must write
+the raw text survives in the row's `exchange_received` (Edit QSO has no field
+for it) -- and a parser that refuses must write
 NOTHING into the QSO ("never write suspect data"), which is why the parsers
 parse on a copy. Pinned by `uTestQSLAndLogEntry`. Still writing before a
 refusal: the licence-year parser's and CQ WW RTTY's RS(T).

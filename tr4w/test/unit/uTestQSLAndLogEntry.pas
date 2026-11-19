@@ -27,7 +27,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   the parse said, so the QSO is logged with what the parse left. The zone
   parsers refuse on a copy (items 1-2), so a refused CQ WW '599 45' leaves
   the zone out of the QSO. What (b) adds: the TYPED TEXT is kept in
-  ExchString, so the raw entry survives for a later Edit QSO. Before it this
+  ExchString (the row's exchange_received), so the raw entry survives for a
+  later correction. Before it this
   branch never wrote ExchString at all, accepted or refused.
 
   Driven through the real engine (uTestEngineEntry), CQ WW CW in CQ zone
