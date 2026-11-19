@@ -1,7 +1,8 @@
 (* THE ILLINOIS QSO PARTY -- issue #119 (2026-11-18). The sponsor's 2026 rules
    (docs/ContestRules/QSOParties/Illinois) and NY4I's rulings: an Illinois
-   entrant's county QSO also earns IL as a state (#317), and a station
-   logged as IL is IL; DC counts as Maryland; the third full weekend of
+   entrant's county QSO earns the county only, NOT IL as a state (2026-11-19,
+   reversing 2026-11-18's #317 opt-in), and a station logged as IL is IL;
+   DC counts as Maryland; the third full weekend of
    October; FM is phone. Each test names the rule it holds; the class header
    says where each landed. *)
 unit uTestContestIllinoisQP;
@@ -307,17 +308,13 @@ begin
          CheckTrue(party.CountsAsMultiplier(ILQSO('W9IL', 'IL', Band20, CW, eCW), rmDomestic),
                    'IL counts');
 
-         (* NY4I's ruling (#317): an Illinois entrant's county QSO also
-            earns IL; a state earns nothing more, nor does anything outside. *)
+         (* NY4I's ruling of 2026-11-19 (issue 119, reversing 2026-11-18's
+            #317 opt-in): a county QSO earns NO second key, in state or out --
+            "assume no for now as to not inflate the score". *)
          extra := 'stale';
-         CheckTrue(party.AdditionalDomesticMultiplierKey(ILQSO('W9AAA', 'COOK', Band20, CW, eCW), extra)
-                   = inHost, 'a county earns IL in state only');
-         if inHost then
-            begin
-            CheckEquals('IL', extra, 'the second key is IL');
-            CheckTrue(party.AdditionalDomesticMultiplierKey(ILQSO('W9AAA', 'LEE', Band20, CW, eCW), extra),
-                      'Lee too');
-            end;
+         CheckFalse(party.AdditionalDomesticMultiplierKey(ILQSO('W9AAA', 'COOK', Band20, CW, eCW), extra),
+                    'a county does not also earn IL');
+         CheckEquals('', extra, 'and writes no key');
          CheckFalse(party.AdditionalDomesticMultiplierKey(ILQSO('W1AW', 'CT', Band20, CW, eCW), extra),
                     'a state earns no second key');
          CheckFalse(party.AdditionalDomesticMultiplierKey(ILQSO('W9IL', 'IL', Band20, CW, eCW), extra),
@@ -492,17 +489,18 @@ begin
       CheckEquals(1, mo.MTotals[AllBands, Both, rmDomestic], 'a state alone earns no IL');
       engine.Enter('W1AW', '599 CT', Band40, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'CT once');
-      (* NY4I's ruling (issue 119, #317): an Illinois entrant's QSO with an
-         Illinois county also earns IL as a state. *)
+      (* NY4I's ruling (issue 119, 2026-11-19, reversing 2026-11-18): an
+         Illinois entrant's QSO with an Illinois county earns the county
+         ONLY, not IL as a state. *)
       engine.Enter('W9AAA', '599 COOK', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'an Illinois county is a multiplier in state too');
-      CheckEquals(3, mo.MTotals[AllBands, Both, rmDomestic], 'Cook AND IL');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'Cook alone, no IL');
       engine.Enter('W9BBB', '59 PEOR', Band40, Phone, eLSB, accepted, rx);
-      CheckEquals(4, mo.MTotals[AllBands, Both, rmDomestic], 'Peoria; IL once overall');
+      CheckEquals(3, mo.MTotals[AllBands, Both, rmDomestic], 'Peoria alone');
       engine.Enter('W9IL', '599 IL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a station may send IL itself');
-      CheckFalse(rx.DomesticMult, 'IL is already worked through Cook');
-      CheckEquals(4, mo.MTotals[AllBands, Both, rmDomestic], 'IL is not counted twice');
+      CheckTrue(rx.DomesticMult, 'IL is NEW: no county earned it');
+      CheckEquals(4, mo.MTotals[AllBands, Both, rmDomestic], 'IL once');
       engine.Enter('VE3AA', '599 ON', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'a province');
       engine.Enter('W3AA', '599 DC', Band20, CW, eCW, accepted, rx);
@@ -525,14 +523,14 @@ begin
       CheckFalse(rx.DXMult, '"KL7 do not count as DX entities"');
 
       (* IL SENT FIRST: the station's IL is the multiplier, and a county
-         after it earns the county alone. *)
+         after it earns the county alone (as any county does, 2026-11-19). *)
       engine.Activate(True);
       engine.Enter('W9IL', '599 IL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'IL is a state multiplier for an Illinois station (NY4I)');
       CheckEquals(1, mo.MTotals[AllBands, Both, rmDomestic], 'IL');
       engine.Enter('W9AAA', '599 LEE', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'Lee, the three-letter code, is a county');
-      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'Lee; IL already worked');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'IL and Lee');
 
       (* OUTSIDE ILLINOIS a county earns the county only. *)
       engine.Activate(False);

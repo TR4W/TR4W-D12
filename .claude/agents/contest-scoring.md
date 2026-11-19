@@ -68,10 +68,12 @@ the record on every load, rescore and live QSO.**
 ## A QSO CAN EARN TWO DOMESTIC KEYS (issue #317, 2026-11-13)
 
 An in-state entrant's host-county QSO earns the county AND the host state in
-Alabama (per mode), West Virginia (overall), Kentucky (overall), Vermont
-(per mode) and Illinois (overall; like Vermont, a station may also send IL
-itself) -- the closed list is `uTestAdditionalDomesticMultiplier`'s
-`PartyCase`. The record carries ONE domestic key; the state is
+Alabama (per mode), West Virginia (overall), Kentucky (overall), Iowa,
+South Carolina and Vermont (per mode) -- the closed list is
+`uTestAdditionalDomesticMultiplier`'s `PartyCase`. NOT Illinois: NY4I
+withdrew it 2026-11-19 (issue 119, "assume no for now as to not inflate the
+score"; the rules are silent), and it is pinned among that test's named
+parties that give no second key. The record carries ONE domestic key; the state is
 `TContestBase.AdditionalDomesticMultiplierKey` (base False, nil-safe
 `ContestAdditionalDomesticMultiplierKey`), each leaf one line calling
 `TContestStateQSOPartyBase.InStateCountyEarnsHostState` (in host state, the
