@@ -1532,7 +1532,7 @@ object PrefsForm: TPrefsForm
         Top = 450
         Width = 640
         AutoSize = False
-        Caption = '(set in code)'
+        Caption = '(set at run time)'
         Font.Style = [fsBold]
         ParentFont = False
       end
@@ -1550,7 +1550,7 @@ object PrefsForm: TPrefsForm
         Top = 480
         Width = 120
         AutoSize = False
-        Caption = '(set in code)'
+        Caption = '(set at run time)'
         FocusControl = edtMainCallsign
         TabOrder = 20
       end

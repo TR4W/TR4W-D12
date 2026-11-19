@@ -10498,6 +10498,7 @@ msgstr ""
 #: tfrmcabrillosummary.btncancel.caption
 #: texternalloggersform.btncancel.caption
 #: tfrmqtcreceive.btncancel.caption
+#: tfrmrover.btncancel.caption
 #, fuzzy
 msgid "Cancel"
 msgstr ""
@@ -11637,4 +11638,309 @@ msgstr ""
 #: uappstrings.swizreswsjtxmulticast
 #, fuzzy
 msgid "WSJT-X: TR4W joins multicast group %s."
+msgstr ""
+
+#: uappstrings.scmdmenuadif
+#, fuzzy
+msgid "ADIF - export the log as ADIF"
+msgstr ""
+
+#: uappstrings.scmdmenucab
+#, fuzzy
+msgid "CAB - export the log as Cabrillo"
+msgstr ""
+
+#: uappstrings.scmdmenucmd
+#, fuzzy
+msgid "CMD - open a command prompt"
+msgstr ""
+
+#: uappstrings.scmdmenucol
+#, fuzzy
+msgid "COL - colours"
+msgstr ""
+
+#: uappstrings.scmdmenucommands
+#, fuzzy
+msgid "Commands"
+msgstr ""
+
+#: uappstrings.scmdmenucwoff
+#, fuzzy
+msgid "CWOFF - turn CW off"
+msgstr ""
+
+#: uappstrings.scmdmenucwon
+#, fuzzy
+msgid "CWON - turn CW on"
+msgstr ""
+
+#: uappstrings.scmdmenuexit
+#, fuzzy
+msgid "EXIT - exit TR4W"
+msgstr ""
+
+#: uappstrings.scmdmenunote
+#, fuzzy
+msgid "NOTE - add a note to the log"
+msgstr ""
+
+#: uappstrings.scmdmenuopon
+#, fuzzy
+msgid "OPON - operator log-in"
+msgstr ""
+
+#: uappstrings.scmdmenupref
+#, fuzzy
+msgid "PREF - Preferences"
+msgstr ""
+
+#: uappstrings.scmdmenurover
+#, fuzzy
+msgid "ROVER - where this station is roving"
+msgstr ""
+
+#: uappstrings.scmdmenuscore
+#, fuzzy
+msgid "SCORE - send the score by UDP"
+msgstr ""
+
+#: uappstrings.scmdmenusum
+#, fuzzy
+msgid "SUM - summary sheet"
+msgstr ""
+
+#: uappstrings.scmdmenuudp
+#, fuzzy
+msgid "UDP - send the whole log by UDP"
+msgstr ""
+
+#: uappstrings.scmdmenuwcy
+#, fuzzy
+msgid "WCY - ask the cluster for SH/WCY"
+msgstr ""
+
+#: uappstrings.scmdmenuwwv
+#, fuzzy
+msgid "WWV - ask the cluster for SH/WWV"
+msgstr ""
+
+#: uappstrings.smenuselfspot
+#, fuzzy
+msgid "Self-spot"
+msgstr ""
+
+#: uappstrings.snewcontestboxclearedinside
+#, fuzzy
+msgid ""
+"You did not tick \"%0:s\", but your callsign %1:s is in %2:s, and stations there send that in this contest.\n"
+"\n"
+"If you are operating from somewhere else, choose Yes. Choose No to go back and change it."
+msgstr ""
+
+#: uappstrings.snewcontestboxsendsarrlorracsection
+#, fuzzy
+msgid "&I send an ARRL/RAC section"
+msgstr ""
+
+#: uappstrings.snewcontestboxsendsstateorprovince
+#, fuzzy
+msgid "&I send a state or province"
+msgstr ""
+
+#: uappstrings.snewcontestboxtickedoutside
+#, fuzzy
+msgid ""
+"You ticked \"%0:s\", but your callsign %1:s is in %2:s, and stations there do not send that in this contest.\n"
+"\n"
+"If you are operating from a place that does, choose Yes. Choose No to go back and change it."
+msgstr ""
+
+#: uappstrings.speeronanotherversion
+#, fuzzy
+msgid "Station %s runs TR4W %s, this station runs %s. All stations should run the same version."
+msgstr ""
+
+#: uappstrings.spostredirected
+#, fuzzy
+msgid "the server answered the upload with a redirect (status %d) to %s. TR4W does not follow a redirect on an upload, and the upload was not repeated. This is unexpected: please file an issue at %s and include this message."
+msgstr ""
+
+#: uappstrings.sprefsgroupbandmapcolors
+#, fuzzy
+msgid "Band map colors"
+msgstr ""
+
+#: uappstrings.sroverdialogcancel
+#, fuzzy
+msgctxt "uappstrings.sroverdialogcancel"
+msgid "Cancel"
+msgstr ""
+
+#: uappstrings.sroverdialogoff
+#, fuzzy
+msgctxt "uappstrings.sroverdialogoff"
+msgid "Rover off"
+msgstr ""
+
+#: uappstrings.sroverdialogprompt
+#, fuzzy
+msgid "Where this station operates now (one place, or several at a county line, separated by a space, a comma or a dash)"
+msgstr ""
+
+#: uappstrings.sroverdialogtitle
+#: tfrmrover.caption
+#, fuzzy
+msgid "Rover"
+msgstr ""
+
+#: uappstrings.srovernoplaces
+#, fuzzy
+msgid "This contest has no places to rove"
+msgstr ""
+
+#: uappstrings.srovernounit
+#, fuzzy
+msgid "No place was given"
+msgstr ""
+
+#: uappstrings.sroverstatus
+#, fuzzy
+msgid "ROVER %0:s"
+msgstr ""
+
+#: uappstrings.srovertoomanyunits
+#, fuzzy
+msgid "This contest allows at most %0:d places at once"
+msgstr ""
+
+#: uappstrings.sroverturnedoff
+#, fuzzy
+msgctxt "uappstrings.sroverturnedoff"
+msgid "Rover off"
+msgstr ""
+
+#: uappstrings.sroverunknownunit
+#, fuzzy
+msgid "%0:s is not one of this contest's places"
+msgstr ""
+
+#: uappstrings.sscoreparthint
+#, fuzzy
+msgid "%0:s: %1:d QSOs, %2:d points, %3:d mults, score %4:d"
+msgstr ""
+
+#: uappstrings.sselfspotnocall
+#, fuzzy
+msgid "Self-spot refused: there is no station call set. Nothing sent."
+msgstr ""
+
+#: uappstrings.sselfspotnofrequency
+#, fuzzy
+msgid "Self-spot refused: the radio has not reported a frequency. Nothing sent."
+msgstr ""
+
+#: uappstrings.sselfspotnolink
+#, fuzzy
+msgid "Self-spot refused: neither the DX cluster nor the network is connected. Nothing sent."
+msgstr ""
+
+#: uappstrings.sselfspotnotallowed
+#, fuzzy
+msgid "Self-spot refused: this contest's rules do not allow spotting yourself. Nothing sent."
+msgstr ""
+
+#: uappstrings.sselfspotnotmoved
+#, fuzzy
+msgid "Self-spot refused: the VFO has not moved %d Hz since the last self-spot. Nothing sent."
+msgstr ""
+
+#: uappstrings.sselfspotsearchandpounce
+#, fuzzy
+msgid "Self-spot refused: not in Search & Pounce mode. Nothing sent."
+msgstr ""
+
+#: uappstrings.sselfspotsent
+#, fuzzy
+msgid "Self-spot sent: %0:s on %1:s."
+msgstr ""
+
+#: uappstrings.sselfspottoosoon
+#, fuzzy
+msgid "Self-spot refused: the last one was sent less than %d minutes ago. Nothing sent."
+msgstr ""
+
+#: uappstrings.stotalsclubstationmults
+#, fuzzy
+msgid "Clubs"
+msgstr ""
+
+#: uappstrings.svermontclubfilenoyear
+#, fuzzy
+msgid "%0:s states no contest year (a line YEAR 2027), so its Vermont QSO Party club stations will not count. Get a current list from %1:s"
+msgstr ""
+
+#: uappstrings.svermontclubfilestale
+#, fuzzy
+msgid "%0:s is the Vermont QSO Party club-station list for %1:d: it appears to be last year's. Club stations will not count until you get a current list from %2:s"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_activebandcolor
+#, fuzzy
+msgid "Band map frequency on the active band"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_dupecolor
+#, fuzzy
+msgid "Band map fill behind a dupe's D"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_multcolor
+#, fuzzy
+msgid "Band map fill behind a multiplier's M"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_otherbandcolor
+#, fuzzy
+msgid "Band map frequency on another band"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_selectioncolor
+#, fuzzy
+msgid "Band map selected spot"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_vfomarkercolor
+#, fuzzy
+msgid "Band map VFO marker (not drawn yet)"
+msgstr ""
+
+#: usettingscaptions.rs_cluster_ctrlj_autoselfspot
+#, fuzzy
+msgid "Auto Self Spot"
+msgstr ""
+
+#: usettingscaptions.rs_cluster_ctrlj_selfspotinterval
+#, fuzzy
+msgid "Self Spot Interval (minutes)"
+msgstr ""
+
+#: utr4wstrings.tc_distinctadifnotincabrillo
+#, fuzzy
+msgid "The Cabrillo leaves out %d %s QSO(s): this contest takes them as an ADIF file of their own, written by the ADIF export (%s)."
+msgstr ""
+
+#: utr4wstrings.tc_distinctadifprompt
+#, fuzzy
+msgid "This contest takes its %s QSOs as an ADIF file of their own, and its Cabrillo leaves them out. Also write the %d such QSO(s) to %s?"
+msgstr ""
+
+#: tfrmrover.lblunits.caption
+#, fuzzy
+msgid "Where this station operates now"
+msgstr ""
+
+#: tfrmrover.btnoff.caption
+#, fuzzy
+msgid "Rover off"
 msgstr ""

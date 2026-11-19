@@ -101,6 +101,12 @@ msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
 msgid ""
 msgstr "Parametru care stabileste pauza în milisecunde dintre doua CQ-uri automate."
 
+#. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
+#, fuzzy
+msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
+msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
+msgstr ""
+
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 msgctxt "TC_HELP_BAND_MAP_ALL_BANDS"
 msgid "If TRUE, the bandmap displays entries from all bands. If FALSE, the bandmap displays entries on the current band only. When the cursor is in the bandmap, the value of this flag may be toggled with the B key."
@@ -131,6 +137,12 @@ msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
 msgstr "Acest parametru limiteaza numarul de indicative care pot fi afisate pe BANDMAP. La depasirea limitei SPOT-urile afisate vor fi centrate pe frecventa de lucru. Parametrul trebuie sa fie un numar par"
 
+#. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
+#, fuzzy
+msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
+msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
+msgstr ""
+
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 msgctxt "TC_HELP_BAND_MAP_DUPE_DISPLAY"
 msgid "Controls whether the bandmap will dispay [D]upes."
@@ -158,10 +170,28 @@ msgctxt "TC_HELP_BAND_MAP_ITEM_WIDTH"
 msgid "Band Map item width. Change this in accordance with BAND MAP SIZE. Range = 100-200."
 msgstr "Band Map lăţime element. Schimbă acest lucru în conformitate cu dimensiunea MAP BAND. Distanţa = 100-200."
 
+#. Config command: BAND MAP MULT COLOR   (default: RED)
+#, fuzzy
+msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
+msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
+msgstr ""
+
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 msgctxt "TC_HELP_BAND_MAP_MULTS_ONLY"
 msgid "Only display multipliers."
 msgstr "Cu TRUE afiseaza numai indicativele care sunt multiplicator."
+
+#. Config command: BAND MAP OTHER BAND COLOR   (default: SILVER)
+#, fuzzy
+msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
+msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
+msgstr ""
+
+#. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
+#, fuzzy
+msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
+msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
+msgstr ""
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -178,6 +208,12 @@ msgstr "Acest parametru permite sa tratezi corespunzator modul statiilor care ap
 msgctxt "TC_HELP_BAND"
 msgid "You can select the band on which TR4W will start if no contacts have yet been made. After the program is running, use alt-B or alt-V to change band. Some contests are single-band contests and may not let you change bands after a QSO has been made."
 msgstr "Stabileste înaltimea rubricii în fereastra BANDMAP."
+
+#. Config command: BAND MAP VFO MARKER COLOR   (default: RED)
+#, fuzzy
+msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
+msgid "The colour of the band map's VFO marker. The marker itself is not drawn yet, so this setting has no visible effect today. Set it on the Colors page of Preferences."
+msgstr ""
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 msgctxt "TC_HELP_BEEP_ENABLE"
@@ -244,6 +280,18 @@ msgstr "Daca este TRUE, TR4W va verifica marimea fisierului de log *.TRW ca sa s
 msgctxt "TC_HELP_CLEAR_DUPE_SHEET"
 msgid "Program will clear the dupesheet when this parameter is set to TRUE in a *.CFG file that is executed with the ctrl-V command. TR4W does nothing if the command is found in the *.CFG file during the start-up process."
 msgstr "Programul va sterge fisierul cu dublele daca acest parametru este setat TRUE în fisierul de configurare *.CFG  si a fost apelat cu comanda CTRL/V. TR4W nu va reactiona în timpul lansarii programului daca comanda se afla în fisierul de configurare."
+
+#. Config command: CLUSTER AUTO SELF SPOT   (default: FALSE)
+#, fuzzy
+msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
+msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
+msgstr ""
+
+#. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
+#, fuzzy
+msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
+msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
+msgstr ""
 
 #. Config command: CODE SPEED   (default: 35)
 msgctxt "TC_HELP_CODE_SPEED"

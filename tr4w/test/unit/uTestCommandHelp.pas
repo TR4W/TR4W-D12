@@ -49,21 +49,9 @@ const
      command. This is a measurement, not a decision: writing the text is
      NY4I's (docs/HELP_TEXT_GAPS.md is the work-list). Exact in both
      directions -- remove a name the day its help lands. *)
-   KNOWN_HELP_GAPS: array[0..40] of string = (
+   KNOWN_HELP_GAPS: array[0..32] of string = (
       (* No section in help_en.po. *)
       'ALERT COLOR',
-      (* 2026-11-19, issue 188: the self-spot settings. Their help text is in
-        the properties' comments (uSettingsModel, TClusterSettings), waiting
-        for the catalogue batch; remove both names the day it lands. *)
-      'CLUSTER AUTO SELF SPOT',
-      'CLUSTER SELF SPOT INTERVAL',
-      (* 2026-11-19, issue 59: the band map's colour roles. *)
-      'BAND MAP ACTIVE BAND COLOR',
-      'BAND MAP DUPE COLOR',
-      'BAND MAP MULT COLOR',
-      'BAND MAP OTHER BAND COLOR',
-      'BAND MAP SELECTION COLOR',
-      'BAND MAP VFO MARKER COLOR',
       'BAND MAP WORKED MULT COLOR',
       'BAND MAP WORKED MULT LIMIT',
       'CALL HISTORY FILENAME',
