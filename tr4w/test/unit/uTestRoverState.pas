@@ -33,6 +33,7 @@ type
       procedure Test_TheCallOnTheAirAndTheRoverQTHToken;
       procedure Test_ARoverFromANewPlaceIsNoDupe;
       procedure Test_ABoundaryEntryLogsOneQSOPerPlace;
+      procedure Test_MyCountyOfARoverPlaceIsItsADIFCounty;
    public
       procedure RunAllTests; override;
    end;
@@ -54,6 +55,7 @@ uses
    uCallsigns,           (* TCallsignsList, TQualifiedDupeSheet, the two sheets *)
    PostUnit,             (* Contest -- the active contest's handle *)
    LogEdit,              (* VisibleLog.QSOIsADupe, AddQSOToDupeSheets *)
+   uMults,               (* mo.DomList -- the session's multiplier list *)
    uAppPaths,            (* ShippedDomDirOverride *)
    uTestContestObjects,  (* ShippedDomDir -- the tree's target\dom *)
    uNewContestHostArea,  (* THostAreaPlaces *)
@@ -522,6 +524,12 @@ begin
       CheckEquals('W1AW', string(legs[0].Callsign), 'with the same station');
       CheckEquals('ENTRY1', string(legs[0].id), 'and the entry''s id, so one set');
 
+      (* A DUPE FROM KOH IS NOT A DUPE FROM KON BY INHERITANCE. *)
+      logged[0].ceDupe := True;
+      legs := RoverBoundaryLegs(logged, state);
+      CheckFalse(legs[0].ceDupe, 'the copy carries no dupe mark from the first place');
+      logged[0].ceDupe := False;
+
       (* The worked station on a county line too: CT and RI received. *)
       SetLength(logged, 2);
       logged[1] := logged[0];
@@ -550,6 +558,58 @@ begin
    end;
 end;
 
+(* my_county OF A ROVER'S QSO, THROUGH THE REAL ROUTINE
+  (PostUnit.RoverPlaceADIFCounty -- the worked station's CNTY rule): a Hawaii
+  district gives the county it lies in, a county party's county its list
+  name. Both need the place on the session's multiplier list (mo.DomList),
+  as the export's CNTY does; a place the list lacks gives none. *)
+procedure TRoverStateTests.Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+var
+   handle: TContestHandle;
+   savedContest: TContestHandle;
+   index: integer;
+
+   procedure Seed(const aKey, aName: string);
+   begin
+      index := mo.DomList.AddString(aKey, AllBands, Both, True);
+      mo.DomList.AltName[index] := Str30(aName);
+   end;
+
+   procedure Unseed(const aKey: string);
+   begin
+      if mo.DomList.FindMult(aKey, index) then
+         begin
+         mo.DomList.Delete(index);
+         end;
+   end;
+
+begin
+   BeginTest('Test_MyCountyOfARoverPlaceIsItsADIFCounty');
+   savedContest := Contest;
+   try
+      CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+      Contest := handle;
+      Seed('KOH', 'Kohala');
+      CheckEquals('HI,Hawaii', RoverPlaceADIFCounty('KOH'),
+                  'KOH lies in Hawaii county: my_county is the county, not the district');
+      CheckEquals('', RoverPlaceADIFCounty(''), 'no place, no county');
+      Unseed('KOH');
+      CheckEquals('', RoverPlaceADIFCounty('KOH'),
+                  'a place the session''s list lacks gives none');
+
+      CheckTrue(FindContestById('GA-QSO-PARTY', handle), 'Georgia is registered');
+      Contest := handle;
+      Seed('APPL', 'Appling');
+      CheckEquals('GA,Appling', RoverPlaceADIFCounty('APPL'),
+                  'a county party''s county is its list name');
+      Unseed('APPL');
+   finally
+      Unseed('KOH');
+      Unseed('APPL');
+      Contest := savedContest;
+   end;
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -563,6 +623,7 @@ begin
    Test_TheCallOnTheAirAndTheRoverQTHToken;
    Test_ARoverFromANewPlaceIsNoDupe;
    Test_ABoundaryEntryLogsOneQSOPerPlace;
+   Test_MyCountyOfARoverPlaceIsItsADIFCounty;
 end;
 
 end.

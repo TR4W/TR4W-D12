@@ -263,6 +263,11 @@ begin
          begin
          Result[n] := aLogged[leg];
          Result[n].ceRoverQTH := ShortString(aState.UnitAt(place));
+         (* NOT THE FIRST PLACE'S DUPE: LogContact marks a copy a dupe only
+           when ITS key is one, and never clears the mark. Its points are the
+           caller's to work out again (a dupe's were zeroed); its multiplier
+           flags SetMultFlags clears and decides afresh. *)
+         Result[n].ceDupe := False;
          Inc(n);
          end;
       end;

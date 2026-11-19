@@ -1019,6 +1019,10 @@ begin
   roverLegs := RoverBoundaryLegs(logged, RoverState);
   for i := 0 to High(roverLegs) do
      begin
+     (* ITS OWN POINTS: a copy of a leg that was a dupe from the first place
+       carries 0, and from this place it may be new. LogContact zeroes it
+       again if it is a dupe here. *)
+     CalculateQSOPoints(roverLegs[i]);
      if not LogContact(roverLegs[i], True) then
         begin
         Result := False;

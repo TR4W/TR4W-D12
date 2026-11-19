@@ -429,6 +429,19 @@ multipliers, CTY.DAT, band lookup and CRC32.
   are gone and `corpus_cleanup_on_exit` (corpus-lib.sh) removes `$WORK.*`, `$WORK-*` and `$EXE` on any
   exit. Pinned by `uTestLogDatabase.TestExportNames*`.
 
+## A rover's QSO in the exports (issues 133/87, 2026-11-19)
+
+- The sent exchange of a row with `my_rover_qth` sends THAT place in the
+  state slot (`PostUnit.CurrentMyStationExchange(contest, facts, rec.ceRoverQTH)`
+  -> `uContestBase.MyStationExchangeWithRoverPlace`): ADIF STX_STRING and the
+  Cabrillo sent column. A row without one exports byte-for-byte as before.
+- `my_county` (MY_CNTY) of such a row is the ADIF county the place lies in
+  (`RoverPlaceADIFCounty`, the worked side's CNTY rule `ADIFCountyOfQSO`, lifted
+  once); `my_call` is the call as signed (NY4I/KOH), so the Cabrillo QSO-line
+  call follows it. The header's CALLSIGN is still MY CALL: the split by place
+  (one Cabrillo per activation) is NOT built -- waiting on NY4I (claimed score).
+- ADIF stays one file, one record per row (qso_set_id merging is issue 338).
+
 ## Coordinate with
 
 `contest-scoring` (Cabrillo is scored output) · `log-database` (import lands in
