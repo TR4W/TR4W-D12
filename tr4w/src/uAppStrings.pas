@@ -1595,8 +1595,9 @@ resourcestring
    SRoverDialogOK        = 'OK';
    SRoverDialogOff       = 'Rover off';
    SRoverDialogCancel    = 'Cancel';
-   (* The main window's ROVER panel and the notice. %0:s is the places joined
-     by '/', as a boundary station signs them: KOH/KON. *)
+   (* The main window's ROVER panel and the notice. %0:s is the call on the
+     air: MY CALL and the places, as a boundary station signs them --
+     NY4I/KOH/KON. *)
    SRoverStatus          = 'ROVER %0:s';
    SRoverTurnedOff       = 'Rover off';
    SRoverNoPlaces        = 'This contest has no places to rove';

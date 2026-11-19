@@ -761,6 +761,7 @@ uses
   uNewContest,        (* RunNewContestDialog -- the startup dialog, reused (issue 228) *)
   uNewContestCommands, (* Save/ClearNewContestChoices -- a new contest's hand-off *)
   uRoverForm,         (* ShowRoverDialog -- the ROVER command, issues 133 and 87 *)
+  uRoverState,        (* RovingCall -- the call on the air while roving *)
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -1491,7 +1492,7 @@ begin
   if (DupeInfoCall = '') and (CallWindowString = '') and (OpMode = SearchAndPounceOpMode) then // 4.102.3
     if not Settings.Message.DeEnable then
        begin
-       SendStringAndStop(UTF8Encode(Settings.My.Call))
+       SendStringAndStop(UTF8Encode(RovingCall(Settings.My.Call)))
        end
     else
        begin
@@ -1553,12 +1554,12 @@ begin
                  end
               else
                  begin
-                 SendStringAndStop(UTF8Encode(Settings.My.Call));
+                 SendStringAndStop(UTF8Encode(RovingCall(Settings.My.Call)));
                  end;
               end
            else if ActiveMode = Digital then
               begin
-              SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
+              SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + RovingCall(Settings.My.Call) + ' KK'))
               end
            else
            end;
@@ -1650,12 +1651,12 @@ begin
               end
            else
               begin
-              SendStringAndStop(UTF8Encode(Settings.My.Call));
+              SendStringAndStop(UTF8Encode(RovingCall(Settings.My.Call)));
               end;
            end
         else if ActiveMode = Digital then
            begin
-           SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
+           SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + RovingCall(Settings.My.Call) + ' KK'))
            end
         else
           //wli SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
@@ -2316,7 +2317,7 @@ begin
            end
         else
            begin
-           Result := SendCrypticMessage(UTF8Encode(Settings.My.Call));
+           Result := SendCrypticMessage(UTF8Encode(RovingCall(Settings.My.Call)));
            end;
         // DebugMsg('<<<<SendCrypticMessage(Settings.My.Call)');
         KeyStamp(F1);
@@ -2326,8 +2327,10 @@ begin
 
   if ActiveMode = Digital then
      begin
-     SendCrypticMessage(#13#10 + CallWindowString + ' DE ' + Settings.My.Call + ' ' +
-       Settings.My.Call)
+     (* UTF8Encode STATED, as the other sends of MY CALL here: the text is
+       UnicodeString and the sender's parameter a ShortString. *)
+     SendCrypticMessage(UTF8Encode(#13#10 + CallWindowString + ' DE ' +
+       RovingCall(Settings.My.Call) + ' ' + RovingCall(Settings.My.Call)))
      end
 
   else

@@ -78,6 +78,7 @@ uses
    uContestFactory,   (* ActiveContest *)
    uMainForm,         (* SetElementText, ShowElement *)
    uRoverSession,     (* ContestRoverPlaces *)
+   uSettingsModel,    (* Settings.My.Call -- the call the panel shows *)
    uAppStrings,       (* SRover* *)
    utils_text,        (* LclText -- a string into an LCL caption, stated *)
    MainUnit;          (* logger *)
@@ -216,7 +217,9 @@ procedure ShowRoverStatus;
 begin
    if RoverState.Active then
       begin
-      SetElementText(mweRover, Format(SRoverStatus, [RoverState.Joined('/')]));
+      (* THE CALL ON THE AIR, so the operator sees the station is roving AND
+        what it signs: ROVER NY4I/KOH (NY4I: "we have to make that clear"). *)
+      SetElementText(mweRover, Format(SRoverStatus, [RovingCall(Settings.My.Call)]));
       end
    else
       begin
@@ -257,7 +260,7 @@ begin
             begin
             RoverState.SetUnits(form.Chosen);
             logger.Info('[Rover] roving from %s', [RoverState.Joined('/')]);
-            QuickDisplay(Format(SRoverStatus, [RoverState.Joined('/')]));
+            QuickDisplay(Format(SRoverStatus, [RovingCall(Settings.My.Call)]));
             end;
          ShowRoverStatus;
       finally

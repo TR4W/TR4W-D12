@@ -930,6 +930,7 @@ procedure UpadateAutoSend;
 implementation
 
 uses
+   uRoverState,        // RovingCall -- DEPlusMyCall while roving (issues 133, 87)
    uSettingsModel,     // Settings.BandMap -- the eight display filters
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uMainForm,   { the call field, named -- wh[] round 3 }
@@ -961,7 +962,8 @@ uses
 function DEPlusMyCall: Str160;
 begin
    (* Encoded once, at the assignment to the ShortString result. *)
-   Result := UTF8Encode('DE ' + Settings.My.Call);
+   (* The call on the air: NY4I/KOH while roving (issues 133 and 87). *)
+   Result := UTF8Encode('DE ' + RovingCall(Settings.My.Call));
 end;
 
 

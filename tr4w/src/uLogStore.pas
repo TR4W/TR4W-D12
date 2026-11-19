@@ -738,6 +738,7 @@ uses
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
    MainUnit, uLogDatabase, uLogImport,
+   uRoverState,        (* RoverState, RovingCall -- my_call as signed while roving *)
    uContestRegistry,   (* ContestId -- a contest's stored name *)
    uContestNames,      (* ContestFromName -- the schema 6 migration's contest *)
    uLogBinaryFile,
@@ -2775,6 +2776,15 @@ begin
    if not QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
       begin
       Result.Source := mfsAssumed;
+      end;
+   (* AND OUR CALL AS SIGNED (NY4I, 2026-11-17: while roving MYCALL is the
+     roving call): my_call is ADIF STATION_CALLSIGN, "as signed, rover suffix
+     and all" -- NY4I/KOH, or NY4I/KOH/KON at a boundary, as keyed. Only for a
+     QSO logged HERE while roving; a peer's row keeps this station's plain
+     call, marked assumed, as every peer row is. *)
+   if (Result.Source = mfsLogged) and (aQso.ceRoverQTH <> '') and RoverState.Active then
+      begin
+      Result.Call := UTF8Encode(RovingCall(Settings.My.Call));
       end;
    case SentYearSourceOf(ContestReceivedYearKind(ContestIdentity(aQso.ceContest)) <> rykNone,
                          Result.Source) of

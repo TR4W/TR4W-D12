@@ -30,6 +30,7 @@ type
       procedure Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
       procedure Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
       procedure Test_ASchema11LogGainsTheRoverColumnInOneCommit;
+      procedure Test_TheCallOnTheAirAndTheRoverQTHToken;
    public
       procedure RunAllTests; override;
    end;
@@ -355,6 +356,43 @@ begin
    ScrubTestLog(fn);
 end;
 
+(* NY4I, 2026-11-17 and 2026-11-19: while roving MYCALL is the roving call --
+  NY4I/KOH, NY4I/KOH/KON at a boundary -- and a fixed station never sends a
+  /KOH; {ROVERQTH} is a named token read whole, in any case. *)
+procedure TRoverStateTests.Test_TheCallOnTheAirAndTheRoverQTHToken;
+var
+   units: TStringList;
+begin
+   BeginTest('Test_TheCallOnTheAirAndTheRoverQTHToken');
+   units := TStringList.Create;
+   try
+      RoverState.TurnOff;
+      CheckEquals('NY4I', RovingCall('NY4I'), 'not roving: the plain call');
+      CheckEquals('', RovingCall(''), 'no call: nothing to suffix');
+
+      SplitRoverUnitsText('KOH', units);
+      RoverState.SetUnits(units);
+      CheckEquals('NY4I/KOH', RovingCall('NY4I'), 'roving: the call gains its place');
+
+      SplitRoverUnitsText('KON KOH', units);
+      RoverState.SetUnits(units);
+      CheckEquals('NY4I/KON/KOH', RovingCall('NY4I'),
+                  'a boundary: both places, in the order chosen');
+
+      RoverState.TurnOff;
+      CheckEquals('NY4I', RovingCall('NY4I'), 'off again: the plain call');
+
+      CheckTrue(RoverQTHTokenAt('599 {ROVERQTH}', 5), 'the token after 599');
+      CheckTrue(RoverQTHTokenAt('{roverqth}', 1), 'in any case');
+      CheckFalse(RoverQTHTokenAt('599 {ROVERQT', 5), 'cut short is no token');
+      CheckFalse(RoverQTHTokenAt('{ TU', 1), 'a bare { is the worked call''s, as ever');
+      CheckFalse(RoverQTHTokenAt('{ROVERQTH}', 0), 'no index 0');
+   finally
+      RoverState.TurnOff;
+      units.Free;
+      end;
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -365,6 +403,7 @@ begin
    Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
    Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
    Test_ASchema11LogGainsTheRoverColumnInOneCommit;
+   Test_TheCallOnTheAirAndTheRoverQTHToken;
 end;
 
 end.
