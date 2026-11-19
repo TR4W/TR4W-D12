@@ -41,6 +41,31 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Read-only log on a full disk, JTTY, new QSO parties, Sweepstakes modes (5.0.42) - NY4I
+
+#### Full disk: the log goes read-only, keeps the entry, recovers (`domain/uLogDatabase`, `uLogStore`, `trdos/logsubs2`, `MainUnit`, `uEditQSO`, `ui/lcl/uEditQSOForm`)
+
+- **Root cause of the old behaviour**: `Disable` freed the repository on the first failed write, so `LogSourceOpen` failed and the double-click handler exited silently; `LogContact` was a procedure, so `TryLogContact` cleared the entry windows and `ClearQuickDisplayText` erased the refusal line.
+- **`uLogDatabase`**: `BEGIN`/`COMMIT`/`ROLLBACK` re-raise as `ESQLDatabaseError` with SQLite's extended code (a full disk at COMMIT was a plain `EDatabaseError`, code 0). `SQLiteWriteFailure` classifies `SQLITE_FULL` and write I/O errors; corruption, busy and constraints are unchanged.
+- **`uLogStore`**: a write failure rolls back and sets `GReadOnly` with a cause instead of disabling; one modal per log (`GWriteFailureNoticeShown`). `LogStoreTryRecoverWrites` runs one probe (a 4096-byte `zeroblob` row under `session_state`, deleted, committed) on the next save and clears read-only when it commits. A locked-at-open read-only log never recovers. `LOG_DISK_FULL_FREE_MB = 10` and `DiskFullPlace` build the "free 10 MB on D:" text.
+- **`LogContact` is a function**: refuses an own-station QSO before `PostLoggedQso`/`SendRecordToServer` when the log is read-only; `TryLogContact` sets `QSOSaveRefused`, clears the pending park/county queues and exits without touching the windows or the status line. Edit QSO and Alt-Y refuse before posting.
+- **Known gaps**: a full disk at startup still disables the store; the first failure is still discovered after the network post (issue 340); WAL-file reuse can let a probe succeed while a large commit still fails.
+
+#### Backup failure message (`domain/uBackupCopier`, `uBackupCopyService`)
+
+- **`TBackupFileOps.CopyFile`/`WriteFile`** write the target with `FileCreate`/`FileWrite`/`FileFlush` and raise `EOSError` with the OS code (`TStream` turned a full volume into "Stream write error" and lost it). `TBackupCopyFailure` maps codes to disk full, folder missing, access denied, other. The status line never carries exception text; `tr4w.log` keeps it.
+- Four resourcestrings replace `SBackupCopyFailed` (`SBackupCopyFailedDiskFull`/`FolderMissing`/`NoAccess`/`Other`).
+
+#### JTTY and the contest classes (`VC`, `uADIF`, `uN1MMMode`, `uWSJTXReport`, `contestFactory/*`)
+
+- **`eJTTY`** appended to `ExtendedModeType` (the ordinal is stored in `.TRW`, the multi-op packet and Edit QSO). ADIF 3.1.6 has no JTTY submode, so export is `MODE MFSK` plus `APP_TR4W_SUBMODE=JTTY`; WSJT-X's `SUBMODE JTTY` imports. An older multi-op peer receiving extended mode 28 reads past its mode tables (needs a protocol guard).
+- **New classes**: Illinois, Louisiana, Mississippi, South Dakota, Canadian Prairies, Atlantic Canada, with `.dom` data and tests; multi-province host base (`uDomFileKeys`); `CabrilloOverlayCategories` seam on the contest base (`uCbrSum.OverlayValuesWith`, `uCabrilloSummaryForm.FillOverlayItems`).
+- **Sweepstakes (`uContestARRLSSCW`/`SSSSB`)**: `UsesMode` states CW / Phone (rule 2.4), so off-mode QSOs are automatic X-QSOs. The frozen D7 corpus log has one CW QSO (N0TST): pinned in `known.cbr.diff`/`known.adi.diff` (CLAIMED-SCORE 30192 to 30044). Matrix re-frozen for SS-CW, SS-SSB and IA-QSO-PARTY; AC, CP, IL, LA, MS, SD frozen for the first time.
+
+#### Setup wizard (`uSetupWizard`, `ui/lcl/uSetupWizardForm`, `uExternalLoggersForm`)
+
+- External logger, Rotator and WSJT-X pages, each unticked by default and in the plan only when ticked; secrets stay in memory until Create, then go to the OS keychain.
+
 ### Per-QSO station facts, contest schedules, Commander CW, backlog sweeps (5.0.41) - NY4I
 
 #### Per-QSO station facts, log schema 9 (`domain/uLogSchema`, `domain/uQsoMyFacts`, `uLogRepository`, `uLogStore`, `uStationFactRecord`, `uStationFactChange`, `uEditQSO`, `ui/lcl/uEditQSOForm`, `ui/lcl/uPrefsForm`, `contestFactory/uContestBase`)

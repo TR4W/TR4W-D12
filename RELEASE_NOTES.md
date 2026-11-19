@@ -48,6 +48,45 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — November 2026
 
+### 5.0.42 (2026-11-18) - NY4I
+
+#### A full disk no longer loses your log
+
+- If the disk fills while you are logging, TR4W keeps the log open for viewing instead of shutting it
+  down. You can still open and read any QSO. The QSO you were typing stays in the call and exchange
+  fields, and you are told once, plainly, that the log is not being saved.
+- The message says how much to free and where, for example "free 10 MB on D:". After you free the
+  space, press Enter: the QSO logs and "The log is writable again" appears. No restart.
+- A failed save no longer clears your entry, and the "not saved" line stays on the status line.
+  Edit QSO refuses to save while the log is read-only, and says why.
+- A failing backup now says it in one short line with the reason, for example "Backup to d:\... FAILED:
+  the disk is full." The technical detail goes to tr4w.log.
+- Known limit: if the disk is already full when TR4W starts, the log cannot be opened at all.
+- On a multi-op network, QSOs a station could not save are still held by the other stations, and the
+  station catches them up when it next starts.
+
+#### Contests
+
+- New QSO parties: Illinois, Louisiana, Mississippi, South Dakota, Canadian Prairies and Atlantic Canada.
+- Iowa QSO Party accepts only JTTY among the digital modes. JTTY (WSJT-X 3.3's keyboard mode) is now a
+  mode TR4W knows. In an ADIF file it is written as MFSK with a TR4W-specific tag, because ADIF has no
+  JTTY yet.
+- ARRL Sweepstakes: a QSO in the wrong mode (CW in the phone weekend, phone in the CW weekend) is now
+  an automatic X-QSO: logged, with no points and no multiplier. FM is not counted as phone, and
+  digital is not counted in either, until the sponsor's wording is settled.
+- Louisiana offers its own Cabrillo overlay categories (WIRES, TB-WIRES, POTA).
+- Mississippi: an FT8 or FT4 QSO with no grid is logged at zero points. The Illinois county LEE is
+  accepted as a three-letter code.
+
+#### Setup wizard
+
+- The first-run wizard can now set up an external logger, a rotator and WSJT-X. Each page is optional.
+
+#### macOS
+
+- The macOS package carries the Tailcat library. The 5.0.40 package did not, so Use Tailcat could not
+  connect there.
+
 ### 5.0.41 (2026-11-17) - NY4I
 
 #### Logging and the QSO record
