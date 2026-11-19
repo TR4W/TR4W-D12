@@ -1433,8 +1433,9 @@ begin
    try
       CheckEquals(2, PointsFor(obj, CW), 'New York CW');
       CheckEquals(1, PointsFor(obj, Phone), 'New York phone');
-      CheckEquals(1, PointsFor(obj, Digital),
-                  'New York digital -- takes the phone value');
+      CheckEquals(3, PointsFor(obj, Digital),
+                  'New York digital -- 3 under the 2026 rules (#88; uTestContestNewYorkQP)');
+      CheckEquals(1, PointsFor(obj, FM), 'New York FM is phone');
 
       CheckTrue(obj is TContestStateQSOPartyBase,
                 'New York is not on the state-party base');

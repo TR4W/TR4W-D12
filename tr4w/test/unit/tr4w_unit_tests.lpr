@@ -1001,6 +1001,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestMissouriQP in 'uTestContestMissouriQP.pas',
    uTestContestCaliforniaQP in 'uTestContestCaliforniaQP.pas',
    uTestContestBritishColumbiaQP in 'uTestContestBritishColumbiaQP.pas',
+   (* The New York QSO Party's 2026 sponsor rules (#88, 2026-11-19). *)
+   uTestContestNewYorkQP in 'uTestContestNewYorkQP.pas',
    (* The Florida and Wisconsin QSO parties' 2026 sponsor rules (#88 round
       2, 2026-10-26). *)
    uTestContestFloridaQP in 'uTestContestFloridaQP.pas',
@@ -1247,6 +1249,7 @@ begin
    RegisterSuite(TContestMissouriQPTests.Create('ContestMissouriQP'));
    RegisterSuite(TContestCaliforniaQPTests.Create('ContestCaliforniaQP'));
    RegisterSuite(TContestBritishColumbiaQPTests.Create('ContestBritishColumbiaQP'));
+   RegisterSuite(TContestNewYorkQPTests.Create('ContestNewYorkQP'));
    RegisterSuite(TContestFloridaQPTests.Create('ContestFloridaQP'));
    RegisterSuite(TContestWisconsinQPTests.Create('ContestWisconsinQP'));
    RegisterSuite(TContestSevenQPTests.Create('ContestSevenQP'));
