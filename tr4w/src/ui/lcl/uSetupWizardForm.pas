@@ -47,7 +47,11 @@ unit uSetupWizardForm;
                 them (FillRotatorTypeCombo, RotatorUsesSerialPort,
                 FillSerialPortCombo), staged by StageSetupRotator and made
                 live with ConfigureRotators -- what Preferences' save does
-    WSJT-X      three settings, through ApplyAndStoreCommand like the station
+    WSJT-X      the five Settings.Wsjtx settings Preferences' WSJT-X page
+                offers (switch, UDP port, highlights, radio control and its
+                DX Commander interface, multicast group), each written only
+                if changed (SetupWsjtxChanges), through ApplyAndStoreCommand
+                like the station
 
   ORDER SO THAT FAILURE COSTS NOTHING (design 3.2).  Nothing is written until
   "Create configuration".  Then the station is applied and SAVED FIRST, and
@@ -181,10 +185,20 @@ type
       edtRotatorUDP: TEdit;
       lblRotatorUDP: TInputCaption;
 
+      (* Every Settings.Wsjtx setting Preferences' WSJT-X page offers.  The
+        rows below the port hang from the row above (AnchorSideTop), so a
+        wrapped hint pushes what follows down by itself on every widget set. *)
       tsWSJTX: TTabSheet;
       chkWSJTXEnable: TCheckBox;
       edtWSJTXPort: TEdit;
       lblWSJTXPort: TInputCaption;
+      chkWSJTXHighlights: TCheckBox;
+      lblWSJTXHighlightsHint: TLabel;
+      chkWSJTXRadioControl: TCheckBox;
+      lblWSJTXRadioControlHint: TLabel;
+      edtWSJTXMulticast: TEdit;
+      lblWSJTXMulticast: TInputCaption;
+      lblWSJTXMulticastHint: TLabel;
 
       tsResult: TTabSheet;
       memResult: TMemo;
@@ -212,6 +226,7 @@ type
       procedure ServerSelect(Sender: TObject);
       procedure DetailsChange(Sender: TObject);
       procedure RotatorTypeChange(Sender: TObject);
+      procedure WSJTXEnableChange(Sender: TObject);
    private
       FFields: TObjectList<TWizStationField>;
       FContinentLoaded: string;
@@ -246,9 +261,9 @@ type
       (* The rotator page's two lists are filled when it is first reached. *)
       FRotatorListsLoaded: boolean;
       (* What the WSJT-X settings held when the wizard opened: only a change
-        is written (CommitStation's rule). *)
-      FWSJTXLoadedEnabled: boolean;
-      FWSJTXLoadedPort: string;
+        is written (CommitStation's rule, decided by SetupWsjtxChanges).
+        Owned; made in the constructor, before the first LoadWSJTX. *)
+      FWSJTXLoaded: TSetupWsjtxValues;
       (* The client height and width the designer gave the window; pages that
         host an editor are taller (and the logger editor wider), and the
         others return to these. *)
@@ -281,6 +296,8 @@ type
       function RotatorIsSerial: boolean;
       function RotatorDraft: TRotatorDefinition;
       procedure LoadWSJTX;
+      procedure ShowWSJTXSwitch;
+      function ShownWSJTX: TSetupWsjtxValues;
       procedure CommitWSJTX(const aStore: TRadioConfigStore; var aReport: string);
       procedure UpdateCWChoices;
       procedure RadioTypeChanged(Sender: TObject);
@@ -357,6 +374,7 @@ uses
    uCallSignRoutines,   // IsAGoodCall
    uTR4WConfigFile,     // LoadConfig, SaveConfig
    uRadioRegistry,      // SupportsForId -- which radios can do CW by CAT
+   uDXLabCommanderProtocol,   // COMMANDER_DEFAULT_PORT -- the port WSJT-X's radio control connects to
    uRadioConfigApply,   // ApplyAndStoreCommand, StationCommandValue, ApplyProfile ...
    uPrefsForm,          // PreferencesIsShowing, LoadClusterDirectory ...
    uLCLFormHelpers,     // OwnFormByMainWindow
@@ -451,6 +469,7 @@ begin
    inherited Create(AOwner);
    gCallbookTarget := Self;
    FFields := TObjectList<TWizStationField>.Create(True);
+   FWSJTXLoaded := TSetupWsjtxValues.Create;
 
    (* THE CALLSIGN FIRST: it is applied first, and its hook derives what the
      later rows have not stated. *)
@@ -499,6 +518,7 @@ begin
    FreeAndNil(FKeyerDraft);
    FreeAndNil(FLoggerDraft);
    FreeAndNil(FFields);
+   FreeAndNil(FWSJTXLoaded);
    if gSetupWizard = Self then
       begin
       gSetupWizard := nil;
@@ -588,6 +608,15 @@ begin
    lblRotatorUDP.Caption  := SWizRotatorUDPPort;
    chkWSJTXEnable.Caption := SWizWSJTXEnable;
    lblWSJTXPort.Caption   := SWizWSJTXPort;
+   chkWSJTXHighlights.Caption       := SWizWSJTXHighlights;
+   lblWSJTXHighlightsHint.Caption   := SWizWSJTXHighlightsHint;
+   chkWSJTXRadioControl.Caption     := SWizWSJTXRadioControl;
+   (* The port is the protocol unit's constant, the one uWSJTX's listener
+     uses; the caption must not state a second copy of it. *)
+   lblWSJTXRadioControlHint.Caption := Format(SWizWSJTXRadioControlHint,
+                                              [COMMANDER_DEFAULT_PORT]);
+   lblWSJTXMulticast.Caption        := SWizWSJTXMulticast;
+   lblWSJTXMulticastHint.Caption    := SWizWSJTXMulticastHint;
 
    lblServer.Caption      := SWizClusterServer;
    lblLogin.Caption       := SWizClusterLogin;
@@ -1493,72 +1522,180 @@ end;
 
 { -------------------------------------------------------------- WSJT-X ---- }
 
-(* WHAT THE WSJT-X SETTINGS HOLD NOW, through the same function the Station
-  page uses (StationCommandValue).  On a new install that is the model's
-  default: switched ON, port 2237. *)
-procedure TfrmSetupWizard.LoadWSJTX;
+(* THE COMMANDS, NAMED ONCE for the load and the commit.  The settings object
+  owns all five (uSettingsModel's aliases); Preferences' WSJT-X page reads
+  and writes the same names. *)
+const
+   WSJTX_CMD_ENABLED       = 'WSJT-X ENABLED';
+   WSJTX_CMD_RADIO_CONTROL = 'WSJT-X RADIO CONTROL ENABLED';
+   WSJTX_CMD_HIGHLIGHTS    = 'WSJT-X SEND HIGHLIGHTS';
+   WSJTX_CMD_PORT          = 'WSJT-X BROADCAST PORT';
+   WSJTX_CMD_MULTICAST     = 'WSJT-X MULTICAST GROUP';
+
+(* A boolean command's stored value as a boolean: BA's spelling, the one
+  Preferences' CommandBool compares with. *)
+function WSJTXCommandBool(const aCommand: string): boolean;
 begin
-   FWSJTXLoadedEnabled := UpperCase(Trim(StationCommandValue(nil, 'WSJT-X ENABLED'))) = 'TRUE';
-   FWSJTXLoadedPort    := Trim(StationCommandValue(nil, 'WSJT-X BROADCAST PORT'));
-   chkWSJTXEnable.Checked := FWSJTXLoadedEnabled;
-   edtWSJTXPort.Text      := LclText(FWSJTXLoadedPort);
+   (* UnicodeSameText, not SameText: SysUtils' SameText takes the 8-bit
+     string, and the call would be a narrowing the build counts. *)
+   Result := UnicodeSameText(Trim(StationCommandValue(nil, aCommand)), string(BA[True]));
 end;
 
-(* ONLY WHAT CHANGED IS WRITTEN, through Preferences' own path.  A refused
-  value is reported.  From the Tools menu, turning WSJT-X on when its server
-  was never made, or moving its port, waits for a restart -- the server is
-  made, and bound, at startup -- and the result says so. *)
+(* WHAT THE WSJT-X SETTINGS HOLD NOW, through the same function the Station
+  page uses (StationCommandValue).  On a new install that is the model's
+  default: switched ON, port 2237, highlights on, radio control off, no
+  multicast group. *)
+procedure TfrmSetupWizard.LoadWSJTX;
+begin
+   FWSJTXLoaded.Enabled        := WSJTXCommandBool(WSJTX_CMD_ENABLED);
+   FWSJTXLoaded.RadioControl   := WSJTXCommandBool(WSJTX_CMD_RADIO_CONTROL);
+   FWSJTXLoaded.Highlights     := WSJTXCommandBool(WSJTX_CMD_HIGHLIGHTS);
+   FWSJTXLoaded.Port           := Trim(StationCommandValue(nil, WSJTX_CMD_PORT));
+   FWSJTXLoaded.MulticastGroup := Trim(StationCommandValue(nil, WSJTX_CMD_MULTICAST));
+
+   chkWSJTXEnable.Checked       := FWSJTXLoaded.Enabled;
+   chkWSJTXRadioControl.Checked := FWSJTXLoaded.RadioControl;
+   chkWSJTXHighlights.Checked   := FWSJTXLoaded.Highlights;
+   edtWSJTXPort.Text            := LclText(FWSJTXLoaded.Port);
+   edtWSJTXMulticast.Text       := LclText(FWSJTXLoaded.MulticastGroup);
+   (* Checked raises OnChange only when the value moves, so the greying is
+     stated here as well. *)
+   ShowWSJTXSwitch;
+end;
+
+(* SWITCHED OFF, THE REST OF THE PAGE IS GREYED: nothing below the switch is
+  written while it is off (SetupWsjtxChanges), and a box that is not written
+  must not look editable. *)
+procedure TfrmSetupWizard.ShowWSJTXSwitch;
+var
+   switchedOn: boolean;
+begin
+   switchedOn := chkWSJTXEnable.Checked;
+   edtWSJTXPort.Enabled             := switchedOn;
+   lblWSJTXPort.Enabled             := switchedOn;
+   chkWSJTXHighlights.Enabled       := switchedOn;
+   lblWSJTXHighlightsHint.Enabled   := switchedOn;
+   chkWSJTXRadioControl.Enabled     := switchedOn;
+   lblWSJTXRadioControlHint.Enabled := switchedOn;
+   edtWSJTXMulticast.Enabled        := switchedOn;
+   lblWSJTXMulticast.Enabled        := switchedOn;
+   lblWSJTXMulticastHint.Enabled    := switchedOn;
+end;
+
+procedure TfrmSetupWizard.WSJTXEnableChange(Sender: TObject);
+begin
+   ShowWSJTXSwitch;
+end;
+
+(* WHAT THE PAGE SHOWS NOW, trimmed as it would be written.  The caller owns
+  the result. *)
+function TfrmSetupWizard.ShownWSJTX: TSetupWsjtxValues;
+begin
+   Result := TSetupWsjtxValues.Create;
+   Result.Enabled        := chkWSJTXEnable.Checked;
+   Result.RadioControl   := chkWSJTXRadioControl.Checked;
+   Result.Highlights     := chkWSJTXHighlights.Checked;
+   Result.Port           := Trim(edtWSJTXPort.Text);
+   Result.MulticastGroup := Trim(edtWSJTXMulticast.Text);
+end;
+
+(* ONLY WHAT CHANGED IS WRITTEN (SetupWsjtxChanges), through Preferences' own
+  path.  A refused value is reported.  From the Tools menu, some changes wait
+  for a restart, and the result says so:
+    switching WSJT-X on   when its server was never made -- it is made at
+                          startup only while the switch is on (uProgramMain)
+    the UDP port          bound when the server starts
+    radio control         the DX Commander listener is made with the server,
+                          and only when radio control is on (TWSJTXServer.Create)
+    a multicast group     replaced or cleared: a new group is joined at once
+                          (uSettingsEffects), but nothing leaves the old one
+  Highlights apply at once (uSettingsEffects sets SendColorization). *)
 procedure TfrmSetupWizard.CommitWSJTX(const aStore: TRadioConfigStore;
                                       var aReport: string);
 var
-   enabled: string;
-   port: string;
+   shown: TSetupWsjtxValues;
+   changes: TSetupWsjtxFields;
    needsRestart: boolean;
+
+   (* One command through Preferences' path; a refusal is reported. *)
+   function WriteCommand(const aCommand, aValue: string): boolean;
+   begin
+      Result := ApplyAndStoreCommand(aStore, aCommand, aValue);
+      if not Result then
+         begin
+         AddReportLine(aReport, UnicodeFormat(SWizResRefused, [aCommand, aValue]));
+         end;
+   end;
+
 begin
    needsRestart := False;
-   port := Trim(edtWSJTXPort.Text);
+   shown := ShownWSJTX;
+   try
+      changes := SetupWsjtxChanges(FWSJTXLoaded, shown);
 
-   if chkWSJTXEnable.Checked <> FWSJTXLoadedEnabled then
-      begin
-      if chkWSJTXEnable.Checked then
+      if swfEnabled in changes then
          begin
-         enabled := 'TRUE';
-         needsRestart := wsjtx = nil;
+         if WriteCommand(WSJTX_CMD_ENABLED, string(BA[shown.Enabled])) and shown.Enabled then
+            begin
+            needsRestart := wsjtx = nil;
+            end;
+         end;
+      if swfPort in changes then
+         begin
+         if WriteCommand(WSJTX_CMD_PORT, shown.Port) then
+            begin
+            needsRestart := True;
+            end;
+         end;
+      if swfRadioControl in changes then
+         begin
+         if WriteCommand(WSJTX_CMD_RADIO_CONTROL, string(BA[shown.RadioControl])) then
+            begin
+            needsRestart := True;
+            end;
+         end;
+      if swfHighlights in changes then
+         begin
+         WriteCommand(WSJTX_CMD_HIGHLIGHTS, string(BA[shown.Highlights]));
+         end;
+      if swfMulticastGroup in changes then
+         begin
+         if WriteCommand(WSJTX_CMD_MULTICAST, shown.MulticastGroup) and
+            (FWSJTXLoaded.MulticastGroup <> '') then
+            begin
+            needsRestart := True;
+            end;
+         end;
+
+      if shown.Enabled then
+         begin
+         AddReportLine(aReport, UnicodeFormat(SWizResWSJTXOn, [shown.Port]));
+         if shown.Highlights then
+            begin
+            AddReportLine(aReport, SWizResWSJTXHighlights);
+            end;
+         if shown.RadioControl then
+            begin
+            AddReportLine(aReport, UnicodeFormat(SWizResWSJTXRadioControl,
+                                                 [COMMANDER_DEFAULT_PORT]));
+            end;
+         if shown.MulticastGroup <> '' then
+            begin
+            AddReportLine(aReport, UnicodeFormat(SWizResWSJTXMulticast,
+                                                 [shown.MulticastGroup]));
+            end;
          end
       else
          begin
-         enabled := 'FALSE';
+         AddReportLine(aReport, SWizResWSJTXOff);
          end;
-      if not ApplyAndStoreCommand(aStore, 'WSJT-X ENABLED', enabled) then
+      if needsRestart and (not FStartupMode) then
          begin
-         AddReportLine(aReport, UnicodeFormat(SWizResRefused, ['WSJT-X ENABLED', enabled]));
+         AddReportLine(aReport, SWizResWSJTXRestart);
          end;
-      end;
-
-   if chkWSJTXEnable.Checked and (port <> FWSJTXLoadedPort) then
-      begin
-      if ApplyAndStoreCommand(aStore, 'WSJT-X BROADCAST PORT', port) then
-         begin
-         needsRestart := True;
-         end
-      else
-         begin
-         AddReportLine(aReport, UnicodeFormat(SWizResRefused, ['WSJT-X BROADCAST PORT', port]));
-         end;
-      end;
-
-   if chkWSJTXEnable.Checked then
-      begin
-      AddReportLine(aReport, UnicodeFormat(SWizResWSJTXOn, [port]));
-      end
-   else
-      begin
-      AddReportLine(aReport, SWizResWSJTXOff);
-      end;
-   if needsRestart and (not FStartupMode) then
-      begin
-      AddReportLine(aReport, SWizResWSJTXRestart);
-      end;
+   finally
+      shown.Free;
+   end;
 end;
 
 (* Editor first, then the copy it writes into -- it holds a pointer to it. *)

@@ -45,6 +45,7 @@ type
       procedure TestStageLoggerRefusesAnUnseededLibrary;
       procedure TestStageLoggerTakesBackAnInvalidDefinition;
       procedure TestStageLoggerKeepsTheSecretOutOfTheFile;
+      procedure TestWsjtxWritesOnlyWhatChanged;
    public
       procedure RunAllTests; override;
    end;
@@ -637,8 +638,83 @@ begin
    end;
 end;
 
+(* THE WSJT-X PAGE WRITES ONLY WHAT THE OPERATOR CHANGED (issue 334, NY4I's
+  bench: the page now offers all five Settings.Wsjtx settings).  Untouched
+  writes nothing; each single change is that one setting; switching off
+  writes the switch and nothing below it, because the page greys the rest. *)
+procedure TSetupWizardTests.TestWsjtxWritesOnlyWhatChanged;
+var
+   loaded, shown: TSetupWsjtxValues;
+
+   procedure Reset;
+   begin
+      shown.Enabled        := loaded.Enabled;
+      shown.RadioControl   := loaded.RadioControl;
+      shown.Highlights     := loaded.Highlights;
+      shown.Port           := loaded.Port;
+      shown.MulticastGroup := loaded.MulticastGroup;
+   end;
+
+begin
+   BeginTest('TestWsjtxWritesOnlyWhatChanged');
+   loaded := TSetupWsjtxValues.Create;
+   shown  := TSetupWsjtxValues.Create;
+   try
+      (* A new install's defaults (TWsjtxSettings.Create). *)
+      loaded.Enabled        := True;
+      loaded.RadioControl   := False;
+      loaded.Highlights     := True;
+      loaded.Port           := '2237';
+      loaded.MulticastGroup := '';
+
+      Reset;
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [], 'untouched: nothing is written');
+
+      Reset;
+      shown.RadioControl := True;
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [swfRadioControl], 'radio control alone');
+
+      Reset;
+      shown.Highlights := False;
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [swfHighlights], 'highlights alone');
+
+      Reset;
+      shown.Port := '2238';
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [swfPort], 'the port alone');
+
+      Reset;
+      shown.MulticastGroup := '224.0.0.1';
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [swfMulticastGroup], 'the multicast group alone');
+
+      (* Switched off, with everything below it changed as well: only the
+        switch, because the rest was greyed. *)
+      Reset;
+      shown.Enabled        := False;
+      shown.RadioControl   := True;
+      shown.Highlights     := False;
+      shown.Port           := '9999';
+      shown.MulticastGroup := '224.0.0.1';
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [swfEnabled], 'switched off: only the switch');
+
+      (* Stored off and left off: nothing, whatever the greyed boxes hold. *)
+      loaded.Enabled := False;
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [], 'off and left off: nothing');
+
+      (* Switched on together with a change below it: both. *)
+      Reset;
+      shown.Enabled      := True;
+      shown.RadioControl := True;
+      CheckTrue(SetupWsjtxChanges(loaded, shown) = [swfEnabled, swfRadioControl],
+                'switched on with radio control: both');
+   finally
+      shown.Free;
+      loaded.Free;
+   end;
+end;
+
 procedure TSetupWizardTests.RunAllTests;
 begin
+   TestWsjtxWritesOnlyWhatChanged;
    TestPlanWithEveryItem;
    TestStageRotatorIsActiveAndUnique;
    TestStageNetworkRotatorSaysDefaultAddress;

@@ -1685,6 +1685,17 @@ resourcestring
    SWizWSJTXEnable       = 'Use WSJT-X with TR4W';
    SWizWSJTXPort         = 'UDP port:';
    SWizWSJTXPortBad      = 'The port must be a number from 1 to 65535.';
+   (* The rest of Settings.Wsjtx, worded as Preferences' WSJT-X page words
+     them.  Highlights: the colours are TR4W's own dupe and new-multiplier
+     colours (uProgramMain sends them to the WSJT-X server). *)
+   SWizWSJTXHighlights   = 'Send callsign highlighting to WSJT-X';
+   SWizWSJTXHighlightsHint = 'WSJT-X colours the calls in its decode list that are dupes or new multipliers, in TR4W''s colours.';
+   SWizWSJTXRadioControl = 'Let WSJT-X control the radio';
+   (* %d is the TCP port of TR4W's DX Commander compatible interface, which
+     exists only while this box is ticked. *)
+   SWizWSJTXRadioControlHint = 'TR4W then offers a DX Commander compatible interface on TCP port %d, and that is what WSJT-X connects to when DX Commander is chosen as its radio.';
+   SWizWSJTXMulticast    = 'Multicast group:';
+   SWizWSJTXMulticastHint = 'Advanced. Leave it blank unless WSJT-X is configured to use a multicast group.';
    (* %0:s is the rotator's name, %1:s its type, %2:s how it is reached
      (SWizResOnPort, SWizResAtAddress, SWizResNoPort or SWizResDefaultAddress). *)
    SWizResRotator        = 'Rotator "%0:s": %1:s %2:s, turning for every band.';
@@ -1699,6 +1710,11 @@ resourcestring
    (* %s is the UDP port. *)
    SWizResWSJTXOn        = 'WSJT-X: TR4W listens on UDP port %s.';
    SWizResWSJTXOff       = 'WSJT-X: the integration is off.';
+   (* %d is the DX Commander compatible interface's TCP port. *)
+   SWizResWSJTXRadioControl = 'WSJT-X can control the radio through TCP port %d.';
+   SWizResWSJTXHighlights = 'WSJT-X: TR4W sends it callsign highlighting.';
+   (* %s is the multicast group, for example 224.0.0.1. *)
+   SWizResWSJTXMulticast = 'WSJT-X: TR4W joins multicast group %s.';
    SWizResWSJTXRestart   = 'The WSJT-X change takes effect the next time TR4W starts.';
 
    (* THE BAND MAP. The right-click item that copies the selected spot as

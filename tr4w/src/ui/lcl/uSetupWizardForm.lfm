@@ -630,6 +630,7 @@ object frmSetupWizard: TfrmSetupWizard
         Width = 560
         Caption = 'chkWSJTXEnable'
         TabOrder = 0
+        OnChange = WSJTXEnableChange
       end
       object edtWSJTXPort: TEdit
         Left = 160
@@ -647,6 +648,100 @@ object frmSetupWizard: TfrmSetupWizard
         Caption = 'lblWSJTXPort'
         FocusControl = edtWSJTXPort
         TabOrder = 1
+      end
+      object chkWSJTXHighlights: TCheckBox
+        AnchorSideTop.Control = edtWSJTXPort
+        AnchorSideTop.Side = asrBottom
+        Left = 16
+        Height = 21
+        Top = 79
+        Width = 560
+        BorderSpacing.Top = 12
+        Caption = 'chkWSJTXHighlights'
+        TabOrder = 3
+      end
+      object lblWSJTXHighlightsHint: TLabel
+        AnchorSideLeft.Control = tsWSJTX
+        AnchorSideTop.Control = chkWSJTXHighlights
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsWSJTX
+        AnchorSideRight.Side = asrBottom
+        Left = 40
+        Height = 17
+        Top = 102
+        Width = 556
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 40
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 16
+        Caption = 'lblWSJTXHighlightsHint'
+        WordWrap = True
+      end
+      object chkWSJTXRadioControl: TCheckBox
+        AnchorSideTop.Control = lblWSJTXHighlightsHint
+        AnchorSideTop.Side = asrBottom
+        Left = 16
+        Height = 21
+        Top = 129
+        Width = 560
+        BorderSpacing.Top = 10
+        Caption = 'chkWSJTXRadioControl'
+        TabOrder = 4
+      end
+      object lblWSJTXRadioControlHint: TLabel
+        AnchorSideLeft.Control = tsWSJTX
+        AnchorSideTop.Control = chkWSJTXRadioControl
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsWSJTX
+        AnchorSideRight.Side = asrBottom
+        Left = 40
+        Height = 34
+        Top = 152
+        Width = 556
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 40
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 16
+        Caption = 'lblWSJTXRadioControlHint'
+        WordWrap = True
+      end
+      object edtWSJTXMulticast: TEdit
+        AnchorSideTop.Control = lblWSJTXRadioControlHint
+        AnchorSideTop.Side = asrBottom
+        Left = 160
+        Height = 23
+        Top = 198
+        Width = 200
+        BorderSpacing.Top = 12
+        TabOrder = 6
+      end
+      object lblWSJTXMulticast: TInputCaption
+        AnchorSideTop.Control = edtWSJTXMulticast
+        AnchorSideTop.Side = asrCenter
+        Left = 16
+        Height = 17
+        Top = 201
+        Width = 140
+        AutoSize = False
+        Caption = 'lblWSJTXMulticast'
+        FocusControl = edtWSJTXMulticast
+        TabOrder = 5
+      end
+      object lblWSJTXMulticastHint: TLabel
+        AnchorSideLeft.Control = edtWSJTXMulticast
+        AnchorSideTop.Control = edtWSJTXMulticast
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsWSJTX
+        AnchorSideRight.Side = asrBottom
+        Left = 160
+        Height = 17
+        Top = 223
+        Width = 436
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 16
+        Caption = 'lblWSJTXMulticastHint'
+        WordWrap = True
       end
     end
     object tsResult: TTabSheet

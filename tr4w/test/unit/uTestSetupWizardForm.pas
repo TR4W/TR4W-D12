@@ -37,6 +37,7 @@ type
       procedure TestShownLoggerPageFitsItsNote;
       procedure TestRotatorPageAsksTheDriver;
       procedure TestWSJTXPageShowsWhatIsStored;
+      procedure TestShownWSJTXPageFitsItsNotes;
    public
       procedure RunAllTests; override;
    end;
@@ -388,14 +389,119 @@ begin
       CheckEquals(IntToStr(Settings.Wsjtx.BroadcastPort), string(frm.edtWSJTXPort.Text),
                   'the box shows the stored port');
 
+      (* NY4I's bench (issue 334): the page offers every Settings.Wsjtx
+        setting Preferences does, on the page itself. *)
+      CheckTrue(frm.chkWSJTXHighlights.Parent = frm.tsWSJTX, 'highlights is on the WSJT-X page');
+      CheckTrue(frm.chkWSJTXRadioControl.Parent = frm.tsWSJTX, 'radio control is on the WSJT-X page');
+      CheckTrue(frm.edtWSJTXMulticast.Parent = frm.tsWSJTX, 'the multicast group is on the WSJT-X page');
+      CheckTrue(frm.lblWSJTXRadioControlHint.Parent = frm.tsWSJTX, 'and the radio control note');
+      CheckTrue(Settings.Wsjtx.SendHighlights = frm.chkWSJTXHighlights.Checked,
+                'the box shows the stored highlights switch');
+      CheckTrue(Settings.Wsjtx.RadioControlEnabled = frm.chkWSJTXRadioControl.Checked,
+                'the box shows the stored radio control switch');
+      CheckEquals(Settings.Wsjtx.MulticastGroup, string(frm.edtWSJTXMulticast.Text),
+                  'the box shows the stored multicast group');
+      CheckEquals(string(SWizWSJTXRadioControl), string(frm.chkWSJTXRadioControl.Caption),
+                  'the caption is the catalogue''s, not the .lfm placeholder');
+      (* The literal on purpose: the note must state 52002.  The caption reads
+        COMMANDER_DEFAULT_PORT, so this fails if that constant moves; it
+        CANNOT see uWSJTX's listener, which binds its own unlinked literal
+        52002 (TWSJTXServer.Create) -- that copy is the integrations agent's
+        to fold onto the constant. *)
+      CheckTrue(Pos('52002', string(frm.lblWSJTXRadioControlHint.Caption)) > 0,
+                'the note names the DX Commander interface''s port');
+
+      (* Switched off, the rest is greyed -- it would not be written. *)
+      frm.chkWSJTXEnable.Checked := True;
+      CheckTrue(frm.chkWSJTXRadioControl.Enabled and frm.edtWSJTXMulticast.Enabled,
+                'switched on: the rest can be edited');
+      frm.chkWSJTXEnable.Checked := False;
+      CheckFalse(frm.chkWSJTXRadioControl.Enabled, 'switched off: radio control is greyed');
+      CheckFalse(frm.chkWSJTXHighlights.Enabled, 'and highlights');
+      CheckFalse(frm.edtWSJTXPort.Enabled, 'and the port');
+      CheckFalse(frm.edtWSJTXMulticast.Enabled, 'and the multicast group');
+
       frm.chkWSJTXEnable.Checked := not Settings.Wsjtx.Enabled;
       frm.edtWSJTXPort.Text := '9999';
+      frm.chkWSJTXHighlights.Checked := not Settings.Wsjtx.SendHighlights;
+      frm.chkWSJTXRadioControl.Checked := not Settings.Wsjtx.RadioControlEnabled;
+      frm.edtWSJTXMulticast.Text := '224.0.0.99';
       frm.btnBackClick(frm.btnBack);
       frm.chkWSJTX.Checked := False;
       CheckTrue(Settings.Wsjtx.Enabled = frm.chkWSJTXEnable.Checked,
                 'unticked: back to what is stored');
       CheckEquals(IntToStr(Settings.Wsjtx.BroadcastPort), string(frm.edtWSJTXPort.Text),
                   'the port too');
+      CheckTrue(Settings.Wsjtx.SendHighlights = frm.chkWSJTXHighlights.Checked,
+                'highlights too');
+      CheckTrue(Settings.Wsjtx.RadioControlEnabled = frm.chkWSJTXRadioControl.Checked,
+                'radio control too');
+      CheckEquals(Settings.Wsjtx.MulticastGroup, string(frm.edtWSJTXMulticast.Text),
+                  'the multicast group too');
+      CheckTrue(frm.chkWSJTXRadioControl.Enabled = Settings.Wsjtx.Enabled,
+                'and the greying follows the stored switch');
+   finally
+      frm.Free;
+   end;
+end;
+
+(* SHOWN, THE WSJT-X PAGE'S NOTES WRAP AND PUSH THE ROWS BELOW THEM DOWN.
+  The rows hang from the row above (AnchorSideTop) and the notes are
+  auto-sized labels anchored on both sides, so the widget set measures the
+  wrap; nothing places a pixel by hand.  This is the Linux layout trap's test:
+  only a shown form lays out, and gtk2 does it in two passes. *)
+procedure TSetupWizardFormTests.TestShownWSJTXPageFitsItsNotes;
+var
+   frm: TfrmSetupWizard;
+
+   procedure CheckNote(const aNote: TControl; const aAbove, aBelow: TControl;
+                       const aWhat: string);
+   var
+      pw, ph: integer;
+   begin
+      ControlPreferredSize(aNote, pw, ph);
+      CheckTrue(aNote.Height >= ph,
+                aWhat + ' is as tall as it wraps: ' + IntToStr(aNote.Height)
+                + ' < ' + IntToStr(ph));
+      CheckTrue(aNote.Top >= aAbove.Top + aAbove.Height,
+                aWhat + ' starts below the row above it');
+      CheckTrue(aNote.Left + aNote.Width <= frm.tsWSJTX.ClientWidth,
+                aWhat + ' is not cut off on the right');
+      if aBelow <> nil then
+         begin
+         CheckTrue(aNote.Top + aNote.Height <= aBelow.Top,
+                   aWhat + ' ends above the row below it');
+         end;
+   end;
+
+begin
+   BeginTest('TestShownWSJTXPageFitsItsNotes');
+   frm := NewForm;
+   try
+      ShowOffScreen(frm);
+      frm.btnNextClick(frm.btnNext);
+      frm.chkWSJTX.Checked := True;
+      frm.btnNextClick(frm.btnNext);
+      Application.ProcessMessages;
+      Check(frm.pgPages.ActivePage = frm.tsWSJTX, 'the WSJT-X page shows');
+
+      CheckTrue(frm.chkWSJTXHighlights.Top >= frm.edtWSJTXPort.Top + frm.edtWSJTXPort.Height,
+                'highlights is below the port');
+      CheckNote(frm.lblWSJTXHighlightsHint, frm.chkWSJTXHighlights,
+                frm.chkWSJTXRadioControl, 'the highlights note');
+      CheckNote(frm.lblWSJTXRadioControlHint, frm.chkWSJTXRadioControl,
+                frm.edtWSJTXMulticast, 'the radio control note');
+      CheckNote(frm.lblWSJTXMulticastHint, frm.edtWSJTXMulticast, nil,
+                'the multicast note');
+      CheckTrue(frm.lblWSJTXMulticastHint.Top + frm.lblWSJTXMulticastHint.Height
+                <= frm.tsWSJTX.ClientHeight,
+                'the last row lies inside the page: '
+                + IntToStr(frm.lblWSJTXMulticastHint.Top + frm.lblWSJTXMulticastHint.Height)
+                + ' in ' + IntToStr(frm.tsWSJTX.ClientHeight));
+      CheckTrue(Abs((frm.lblWSJTXMulticast.Top + frm.lblWSJTXMulticast.Height div 2)
+                    - (frm.edtWSJTXMulticast.Top + frm.edtWSJTXMulticast.Height div 2)) <= 2,
+                'the multicast caption sits beside its box');
+      frm.Hide;
    finally
       frm.Free;
    end;
@@ -408,6 +514,7 @@ begin
    TestShownLoggerPageFitsItsNote;
    TestRotatorPageAsksTheDriver;
    TestWSJTXPageShowsWhatIsStored;
+   TestShownWSJTXPageFitsItsNotes;
    TestStartsOnStation;
    TestNothingTickedCommitsFromTheChecklist;
    TestTickedPagesFollowTheCanonicalOrder;

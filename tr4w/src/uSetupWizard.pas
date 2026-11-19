@@ -24,7 +24,8 @@ unit uSetupWizard;
     the rotator library and the external logger definitions (issue 334) --
     through each store's own API, so the wizard declares no field of its own
     (design 3.1).  A test reads the stores back.  WSJT-X is not a store: it
-    is three settings, written by the form through ApplyAndStoreCommand.
+    is the five Settings.Wsjtx settings, written by the form through
+    ApplyAndStoreCommand; SetupWsjtxChanges decides which of them changed.
 
   NEARLY A LEAF: no LCL, no settings object, no live radio.  The stores it
   stages into are RTL-only units.  The window (uSetupWizardForm) and startup
@@ -170,6 +171,32 @@ function JoinClusterServer(const aHost, aPort: string): string;
 
 (* '' (the standard port) or a whole number from 1 to 65535. *)
 function IsValidClusterPort(const aPort: string): boolean;
+
+type
+   (* THE FIVE WSJT-X SETTINGS THE WIZARD'S PAGE SHOWS (Settings.Wsjtx, the
+     same five Preferences' WSJT-X page offers), as the page loaded them or
+     as it shows them now.  Text as the operator sees it, already trimmed.
+     Nothing here knows a command name or how a boolean is spelled: the form
+     writes each changed field through ApplyAndStoreCommand. *)
+   TSetupWsjtxValues = class(TObject)
+   public
+      Enabled: boolean;
+      RadioControl: boolean;
+      Highlights: boolean;
+      Port: string;
+      MulticastGroup: string;
+   end;
+
+   TSetupWsjtxField  = (swfEnabled, swfRadioControl, swfHighlights,
+                        swfPort, swfMulticastGroup);
+   TSetupWsjtxFields = set of TSetupWsjtxField;
+
+(* WHICH WSJT-X SETTINGS TO WRITE: only a field the operator changed (the
+  Station page's rule, and Preferences' ApplyIfChanged).  The switch is
+  written whenever it changed.  The other four only while the switch is ON as
+  shown: switched off, the page greys them, and a greyed box is never read --
+  what the operator could not edit must not be written. *)
+function SetupWsjtxChanges(const aLoaded, aShown: TSetupWsjtxValues): TSetupWsjtxFields;
 
 (* THE LINES THE RESULT PAGE SHOWS ON REQUEST: what the brief lines leave out
   of the radio, the keyer and the cluster just staged.  Never a password, only
@@ -736,6 +763,36 @@ begin
    if (Result <> '') and (Trim(aPort) <> '') then
       begin
       Result := Result + ':' + Trim(aPort);
+      end;
+end;
+
+function SetupWsjtxChanges(const aLoaded, aShown: TSetupWsjtxValues): TSetupWsjtxFields;
+begin
+   Result := [];
+   if aShown.Enabled <> aLoaded.Enabled then
+      begin
+      Include(Result, swfEnabled);
+      end;
+   if not aShown.Enabled then
+      begin
+      Exit;
+      end;
+
+   if aShown.RadioControl <> aLoaded.RadioControl then
+      begin
+      Include(Result, swfRadioControl);
+      end;
+   if aShown.Highlights <> aLoaded.Highlights then
+      begin
+      Include(Result, swfHighlights);
+      end;
+   if aShown.Port <> aLoaded.Port then
+      begin
+      Include(Result, swfPort);
+      end;
+   if aShown.MulticastGroup <> aLoaded.MulticastGroup then
+      begin
+      Include(Result, swfMulticastGroup);
       end;
 end;
 

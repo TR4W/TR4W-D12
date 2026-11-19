@@ -4909,11 +4909,13 @@ msgstr "Échange de données avec WSJT-X"
 
 # 2026-10-19: term from the EU DX Contest rules, French edition (EUDXCC, https://www.eudx-contest.com/rules-2/): 'Envoyer un signal d'appel en surbrillance vers' -> 'Envoyer la surbrillance des indicatifs vers', s.10 'indicatif'. Previous text: "Envoyer un signal d'appel en surbrillance vers WSJT-X"
 #: tprefsform.chkwsjtxhighlights.caption
+#: uappstrings.swizwsjtxhighlights
 #, fuzzy
 msgid "Send callsign highlighting to WSJT-X"
 msgstr "Envoyer la surbrillance des indicatifs vers WSJT-X"
 
 #: tprefsform.chkwsjtxradiocontrol.caption
+#: uappstrings.swizwsjtxradiocontrol
 #, fuzzy
 msgid "Let WSJT-X control the radio"
 msgstr "Laissez WSJT-X contrôler la radio"
@@ -5807,6 +5809,7 @@ msgid "WSJT-X / JTDX"
 msgstr "WSJT-X / JTDX"
 
 #: tprefsform.lblwsjtxmulticast.caption
+#: uappstrings.swizwsjtxmulticast
 #, fuzzy
 msgid "Multicast group:"
 msgstr "Groupe multicast:"
@@ -12369,4 +12372,34 @@ msgstr ""
 #: uappstrings.slogreadonlynotsaveddiskfull
 #, fuzzy
 msgid "Log is read-only (disk full): free %d MB on %s, then Enter."
+msgstr ""
+
+#: uappstrings.swizwsjtxhighlightshint
+#, fuzzy
+msgid "WSJT-X colours the calls in its decode list that are dupes or new multipliers, in TR4W's colours."
+msgstr ""
+
+#: uappstrings.swizwsjtxradiocontrolhint
+#, fuzzy
+msgid "TR4W then offers a DX Commander compatible interface on TCP port %d, and that is what WSJT-X connects to when DX Commander is chosen as its radio."
+msgstr ""
+
+#: uappstrings.swizwsjtxmulticasthint
+#, fuzzy
+msgid "Advanced. Leave it blank unless WSJT-X is configured to use a multicast group."
+msgstr ""
+
+#: uappstrings.swizreswsjtxradiocontrol
+#, fuzzy
+msgid "WSJT-X can control the radio through TCP port %d."
+msgstr ""
+
+#: uappstrings.swizreswsjtxhighlights
+#, fuzzy
+msgid "WSJT-X: TR4W sends it callsign highlighting."
+msgstr ""
+
+#: uappstrings.swizreswsjtxmulticast
+#, fuzzy
+msgid "WSJT-X: TR4W joins multicast group %s."
 msgstr ""

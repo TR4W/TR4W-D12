@@ -31,7 +31,12 @@ with `StageSetupLogger` after `SeedExternalLoggers`, and `SaveConfig` hands its
 secrets to the OS keychain. The rotator page offers the type and port the way
 Preferences > Rotators does (`FillRotatorTypeCombo`, `RotatorUsesSerialPort`);
 `StageSetupRotator` makes it the active rotator. WSJT-X is settings, written
-with the station through `ApplyAndStoreCommand`, only where changed. **Not
+with the station through `ApplyAndStoreCommand`, only where changed. Since
+2026-11-19 (NY4I's bench) the page offers all five `Settings.Wsjtx` settings
+Preferences offers: the switch, the UDP port, callsign highlighting, radio
+control (the DX Commander compatible listener on TCP 52002) and the multicast
+group. `SetupWsjtxChanges` decides what changed, and with the switch off
+nothing below it is written (the page greys it). **Not
 built: running `tr4wconvert` from the wizard** (NY4I's comment on issue 334),
 because the converter writes the settings file from its own settings object
 while the wizard saves the live one over it -- the question is on the issue.

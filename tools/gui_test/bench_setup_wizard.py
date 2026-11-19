@@ -83,7 +83,9 @@ restart once the callsign is stored and require that the offer is NOT made.)
                             (one window, its Save button not shown, measured like
                             the radio page, Active ticked); DXKeeper as it opens;
                             a PstRotator at 127.0.0.1:12000 (the port list greyed);
-                            WSJT-X shown ON at 2237 and moved to 2238; Create. The
+                            WSJT-X shown ON at 2237, highlighting on, radio
+                            control off, no multicast group; moved to 2238, radio
+                            control ticked, highlighting unticked; Create. The
                             Done page's three lines and tr4w.json are judged, and
                             every page is captured (checklist-extras, logger-page,
                             logger-filled, rotator-empty, rotator-page, wsjtx-page).
@@ -2776,6 +2778,8 @@ PST_TYPE = "PstRotator (UDP)"
 PST_ADDRESS = "127.0.0.1"
 PST_PORT = "12000"
 WSJTX_PORT = "2238"
+WSJTX_HIGHLIGHTS = "Send callsign highlighting to WSJT-X"
+WSJTX_RADIO_CONTROL = "Let WSJT-X control the radio"
 QRZ_PROVIDER = "QRZ"
 QRZ_CALL = "NY4I"
 DUMMY_QRZ_KEY = "qrz-dummy-key-334"
@@ -2852,18 +2856,32 @@ def rotator_page(wizard, output, journal, facts, failures):
 
 
 def wsjtx_page(wizard, output, journal, facts, failures):
-   """The WSJT-X page: on a new install the model's default -- switched ON,
-   port 2237 -- then the port is moved. Screenshot: wsjtx-page.png."""
+   """The WSJT-X page: on a new install the model's defaults -- switched ON,
+   port 2237, highlighting ON, radio control OFF, no multicast group (NY4I's
+   bench, issue 334: the page offers every WSJT-X setting Preferences does).
+   Then the port is moved, radio control ticked and highlighting unticked.
+   Screenshot: wsjtx-page.png."""
    enable = [control for control in wizard.descendants(class_name="Button")
       if control.window_text() == "Use WSJT-X with TR4W" and control.is_visible()]
    facts["wsjtx_enabled_shown"] = bool(enable) and bool(enable[0].get_check_state())
-   port = edits_by_top(wizard)[0]
+   edits = edits_by_top(wizard)
+   port = edits[0]
    facts["wsjtx_port_shown"] = port.window_text()
    if not facts["wsjtx_enabled_shown"] or facts["wsjtx_port_shown"] != "2237":
       failures.append("wsjtx: a new install should show it ON at port 2237, saw "
          + repr((facts["wsjtx_enabled_shown"], facts["wsjtx_port_shown"])))
+   facts["wsjtx_highlights_shown"] = bool(button(wizard, WSJTX_HIGHLIGHTS).get_check_state())
+   facts["wsjtx_radio_control_shown"] = bool(button(wizard, WSJTX_RADIO_CONTROL).get_check_state())
+   facts["wsjtx_multicast_shown"] = edits[1].window_text() if len(edits) > 1 else None
+   if (not facts["wsjtx_highlights_shown"] or facts["wsjtx_radio_control_shown"]
+         or facts["wsjtx_multicast_shown"] != ""):
+      failures.append("wsjtx: a new install should show highlighting ON, radio control OFF and "
+         + "no multicast group, saw " + repr((facts["wsjtx_highlights_shown"],
+         facts["wsjtx_radio_control_shown"], facts["wsjtx_multicast_shown"])))
    journal.perform("capture WSJT-X page", lambda: capture(wizard, output / "wsjtx-page.png"))
    set_box(port, WSJTX_PORT, journal, "WSJT-X port")
+   tick(wizard, WSJTX_RADIO_CONTROL, journal, True)
+   tick(wizard, WSJTX_HIGHLIGHTS, journal, False)
 
 
 def extras(root, run_name, output, journal, facts, failures, incomplete, owned):
@@ -2871,10 +2889,12 @@ def extras(root, run_name, output, journal, facts, failures, incomplete, owned):
    ROTATOR, WSJT-X'). A brand-new install, Yes, the Station page, then the
    three new items ticked: the hosted external logger editor (DXKeeper, its
    defaults, switched on), a PstRotator at 127.0.0.1:12000, and WSJT-X moved
-   to port 2238; Create configuration. Judged: the Done page's three lines,
-   and tr4w.json -- one DXKEEPER definition that is the only active one, one
-   PSTROTATOR rotator that is the active one, Wsjtx.BroadcastPort 2238. Every
-   page is captured for the user guide."""
+   to port 2238 with radio control ticked and highlighting unticked; Create
+   configuration. Judged: the Done page's lines, and tr4w.json -- one DXKEEPER
+   definition that is the only active one, one PSTROTATOR rotator that is the
+   active one, Wsjtx.BroadcastPort 2238, RadioControlEnabled true,
+   SendHighlights false and MulticastGroup still empty. Every page is captured
+   for the user guide."""
    app = fresh_start(root, run_name, journal)
    owned.append(app)
    answer_offer(app, "Yes", output, journal, facts, failures)
@@ -2896,9 +2916,12 @@ def extras(root, run_name, output, journal, facts, failures, incomplete, owned):
       facts["result_text"] = text
       if not re.search(r'External logger "Logger \d+" \(DXKeeper\) receives each new QSO\.', text):
          failures.append("Done page lacks the external logger line")
-      for expected in (rotator_line, "WSJT-X: TR4W listens on UDP port " + WSJTX_PORT + "."):
+      for expected in (rotator_line, "WSJT-X: TR4W listens on UDP port " + WSJTX_PORT + ".",
+            "WSJT-X can control the radio through TCP port 52002."):
          if expected not in text:
             failures.append("Done page lacks " + repr(expected))
+      if "sends it callsign highlighting" in text:
+         failures.append("Done page reports highlighting, which was unticked")
       if "next time TR4W starts" in text:
          failures.append("Done page asks for a restart, but this run is at startup, before anything started")
 
@@ -2927,6 +2950,13 @@ def extras(root, run_name, output, journal, facts, failures, incomplete, owned):
             failures.append("general.activeRotatorId is not the wizard's rotator")
       if wsjtx.get("BroadcastPort") != int(WSJTX_PORT):
          failures.append("settings.Wsjtx.BroadcastPort is " + repr(wsjtx.get("BroadcastPort")))
+      if wsjtx.get("RadioControlEnabled") is not True:
+         failures.append("settings.Wsjtx.RadioControlEnabled is " + repr(wsjtx.get("RadioControlEnabled")))
+      if wsjtx.get("SendHighlights") is not False:
+         failures.append("settings.Wsjtx.SendHighlights is " + repr(wsjtx.get("SendHighlights")))
+      if wsjtx.get("MulticastGroup", "") != "":
+         failures.append("settings.Wsjtx.MulticastGroup is not empty though untouched: "
+            + repr(wsjtx.get("MulticastGroup")))
    common_log_checks(root, run_name, facts, failures, 1)
 
 
