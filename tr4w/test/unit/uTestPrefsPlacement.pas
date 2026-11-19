@@ -90,6 +90,27 @@ const
      literal on purpose: the constant is gone, and that is what is pinned. *)
    RETIRED_MORE_SETTINGS_TAG = 30;
 
+   (* Former More settings keys that a DESIGNED control edits rather than a
+     placement: MAIN CALLSIGN is a Station row since issue 278 (its caption
+     must be a window). That it has exactly one editor is proved on the built
+     form by CheckEveryInventoriedSettingHasOneEditor, not here. *)
+   DESIGNED_HOLDING_KEYS: array[0..0] of string = ('operating.ctrlj.mainCallsign');
+
+function IsDesignedHoldingKey(const aKey: string): boolean;
+var
+   k: string;
+begin
+   Result := False;
+   for k in DESIGNED_HOLDING_KEYS do
+      begin
+      if SameText(k, aKey) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 (* The page a key is placed on, as an integer for CheckEquals: NativeInt is
   64-bit on the Unix targets. *)
 function PlacedPage(const aKey: string): integer;
@@ -208,7 +229,7 @@ begin
          Continue;
          end;
       Inc(inventory);
-      if PlacedPage(s.Key) <> NAV_NONE then
+      if (PlacedPage(s.Key) <> NAV_NONE) or IsDesignedHoldingKey(s.Key) then
          begin
          Inc(placed);
          end
@@ -911,9 +932,10 @@ end;
   the check asks the caption which widget-set class built it.
 
   What is NOT proved: that UIA then reports the name. That is the GUI suite's
-  question (pywinauto, the UIA backend). The Main callsign row placed on this
-  page is generated (a TLabel, shared with every page) and is deliberately
-  not converted yet. *)
+  question (pywinauto, the UIA backend). The Main callsign row was the one
+  GENERATED row on this page (a TLabel caption, so no window and no name);
+  it is designed since issue 278 and is the last row checked here. Every
+  other page's generated rows still have TLabel captions. *)
 {$IFDEF WINDOWS}
 (* The LCL control whose window is next to aControl's in z-order, in the
   direction GW_HWNDPREV (above) or GW_HWNDNEXT (below); nil when there is no
@@ -1092,6 +1114,11 @@ begin
    AddRow(aForm.lblMySection,     aForm.edtMySection,     'ARRL section:');
    AddRow(aForm.lblMyCountry,     aForm.edtMyCountry,     'Country:');
    AddRow(aForm.lblMyPostalCode,  aForm.edtMyPostalCode,  'Postal code:');
+   (* Main callsign sits below both columns at x=12, so the page's declared
+     column reading (build/lint-taborder.txt) puts it at the end of the LEFT
+     column. Its caption is the registered setting's plus the page's ':' --
+     set in code, not in the .lfm (ApplyMainCallsignCaptions). *)
+   AddRow(aForm.lblMainCallsign,  aForm.edtMainCallsign,  'Main Callsign:');
    AddRow(aForm.lblMyCheck,       aForm.edtMyCheck,       'Check:');
    AddRow(aForm.lblMyPrec,        aForm.edtMyPrec,        'Precedence:');
    AddRow(aForm.lblMyFDClass,     aForm.edtMyFDClass,     'FD class:');

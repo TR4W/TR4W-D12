@@ -394,6 +394,16 @@ type
       edtMyPark: TEdit;
       lblMyLicenseYear: TInputCaption;
       edtMyLicenseYear: TEdit;
+      (* MAIN CALLSIGN, DESIGNED HERE (issue 278). It was the one generated row
+        on this page, and a generated row's caption is a TLabel -- no window,
+        so UI Automation named the box nothing. Designed, it gets the same
+        windowed caption as the rows above, streamed after its input. The
+        heading and the caption are set in code (BindMainCallsign) from the
+        registered setting and the group's resourcestring, so a language
+        reaches them; the .lfm text is a placeholder. *)
+      lblMainCallHeading: TLabel;
+      edtMainCallsign: TEdit;
+      lblMainCallsign: TInputCaption;
 
       // --- External Software (Tags 16..19) ------------------------------------
       // Four children of the External Software node.  DXLab has no settings of
@@ -1147,6 +1157,7 @@ type
       function  StationFocusDestination: TStationFocusDestination;
       procedure HoldStationFocusAsync(aIndex: PtrInt);
       procedure WireStationFieldEvents;
+      procedure ApplyMainCallsignCaptions;
       function  SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
       procedure LoadStationPanel;
       function  SaveStationPanel: boolean;
@@ -1859,8 +1870,9 @@ begin
 
    (* Station (proposal).  MAIN CALLSIGN is the station's own callsign,
      remembered across contests for the New Contest dialog -- NOT the call
-     being operated, which a contest may override.  The group says so. *)
-   aTable.Place('operating.ctrlj.mainCallsign',           NAV_STATION, SPrefsGroupStationCallsign);
+     being operated, which a contest may override.  It is a DESIGNED row on
+     the Station page since issue 278 (edtMainCallsign, bound in
+     BuildBindings), so it is not placed here. *)
 
    (* --------------------------------------------------------------- SCP *)
 
@@ -2299,6 +2311,7 @@ begin
    lblHardwareInfo.Caption    := SPrefsHardwareInfo;
    lblCWKeyersPointer.Caption := SPrefsCWKeyersPointer;
    lblKeyersCWPointer.Caption := SPrefsKeyersCWPointer;
+   ApplyMainCallsignCaptions;
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -3868,7 +3881,7 @@ begin
 
    total := total + BuildPlacedBlock(layBandMap,  chkSwapPacketSpotRadios, NAV_BANDMAP,  host);
    total := total + BuildPlacedBlock(layHardware, lblYCCCInfo,             NAV_HARDWARE, host);
-   total := total + BuildPlacedBlock(layStation,  lblStationHint,          NAV_STATION,  host);
+   total := total + BuildPlacedBlock(layStation,  edtMainCallsign,         NAV_STATION,  host);
    total := total + BuildPlacedBlock(laySCP,      chkNameFlag,             NAV_SCP,      host);
    total := total + BuildPlacedBlock(layNetwork,  lblNetHint,              NAV_NETWORK,  host);
    total := total + BuildPlacedBlock(layAudio,    cardDVK,                 NAV_AUDIO,    host);
@@ -6837,6 +6850,25 @@ end;
   ITU zone (up to 90) in CW Open's and EUHFC's zone mode, see
   LoadStationPanel. That text is the program's, not the operator's, so it is
   not judged while it is still what the page loaded. *)
+(* THE MAIN CALLSIGN ROW'S TEXT (issue 278): the heading from the group's
+  resourcestring and the caption from the registered setting's own caption --
+  the same two strings the generated row showed, so a language that reached
+  them still does. The caption gains the ':' every other Station caption has. *)
+procedure TPrefsForm.ApplyMainCallsignCaptions;
+var
+   s: TSettingBase;
+begin
+   lblMainCallHeading.Caption := SPrefsGroupStationCallsign;
+   s := FindSetting('operating.ctrlj.mainCallsign');
+   if s = nil then
+      begin
+      logger.Error('[Prefs] operating.ctrlj.mainCallsign is not a registered setting');
+      lblMainCallsign.Caption := '';
+      Exit;
+      end;
+   lblMainCallsign.Caption := LclText(s.Caption + ':');
+end;
+
 procedure TPrefsForm.WireStationFieldEvents;
 var
    f: TStationField;
@@ -7305,6 +7337,9 @@ begin
 
    FreeAndNil(FBindings);
    FBindings := TSettingBindings.Create(FCommandHelp);
+
+   // Station: the station's own callsign, remembered for New Contest (issue 278)
+   FBindings.Bind(edtMainCallsign,      'operating.ctrlj.mainCallsign');
 
    // Operating - CW
    FBindings.Bind(chkSayHiEnable,       'operating.cw.sayHi');
