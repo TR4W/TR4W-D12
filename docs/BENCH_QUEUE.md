@@ -172,6 +172,15 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-19 -- NEW CONTEST "I SEND A STATE OR PROVINCE"; QSL AND LOG KEEPS THE TYPED TEXT (issues 167, 274; contest-scoring)
+
+The rules are unit-tested (`uTestNewContestHome.Test_TheSendingBoxesNameWhatIsSent`, `uTestARRL10MexicanStates`, `uTestQSLAndLogEntry`); the dialog and the logged QSO have not been seen.
+
+- [ ] **Issue 167: the caption fits.** New Contest, choose ARRL 10, RTTY Roundup, CQ 160 CW/SSB and CQ WW RTTY: the box reads "I send a state or province"; ARRL 160 "I send an ARRL/RAC section". The box is 180 px wide at design size, anchored left and right, and the new captions are 27 characters where "I am in North America" was 21: check neither is clipped at the default size and at 14 pt, and that Alt+I still ticks it.
+- [ ] **Issue 167: the question.** ARRL 10 with MY CALL KP4ABC and the box ticked: OK asks once, quoting "I send a state or province" and naming Puerto Rico, with Yes the default (creates the contest) and No back to the dialog. Nothing about North America. XE1ABC ticked in ARRL 10: no question (XE sends a state). XE1ABC ticked in CQ 160: asked. W1AW with the box cleared in RTTY Roundup: asked (the cleared wording). The RSGB IOTA and POTA boxes: never asked.
+- [ ] **Issue 167: Mexico City.** In ARRL 10, an XE1 station sending `599 CMX` logs; `DF` and `DFE` log as the same multiplier, CMX; the Cabrillo received column says CMX. An existing ARRL 10 log holding a `DFE` QSO keeps DFE (the rescore does not re-derive the domestic QTH), so a new CMX QSO in that log counts Mexico City twice -- expected for an old log, not for a new one.
+- [ ] **Issue 274 item 7: QSL AND LOG.** Set QSL MODE = QSL AND LOG, CQ WW CW, work a station and type `599 45`: the QSO is logged with NO zone (blank, not 45 and not an earlier zone), and the typed text `599 45` is stored with it -- the log row's `exchange_received`, and the ADIF export's SRX_STRING. Edit QSO does NOT show that text (it has no field for it), so the correction is made from the export or the row. No message is shown when the zone is dropped (asked of NY4I). With `599 5` the zone is 5 and the text kept.
+
 ## Added 2026-11-19 -- DUPE SHEET OR BAND MAP BY CATEGORY, IN7QPNE'S PARTY HINT, BAND MAP COLOUR ROLES (issues 201, 86, 59; lcl-ui)
 
 The rules are unit-tested (`uCategoryWindow`, `TContestIN7QPNE.PartyScore`, `uSpots.BandMapRoleColor`); nothing here has been seen on screen.

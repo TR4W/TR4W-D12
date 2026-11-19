@@ -136,6 +136,8 @@ uses
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
    uContestFixedPoints,
+   (* SNewContestBox* -- the box names what is sent (issue 167). *)
+   uAppStrings,
    uTR4WStrings;
 
 procedure TContestARRL10.CalculateQSOPoints(var aQso: ContestExchange);
@@ -297,11 +299,11 @@ end;
    changing one changes one. *)
 procedure TContestARRL10.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.OfferIAmInCaption(SNewContestBoxSendsStateOrProvince);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+(* THE "I SEND A STATE OR PROVINCE" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
    167; the continent until review M16 (2026-11-16). Ticking it asks for the
    QTH to send, which the stations of DescribeSession's list send (K, VE,
    KH6, KL, XE): a KH6 entrant (Oceania) was questioned for ticking it and a

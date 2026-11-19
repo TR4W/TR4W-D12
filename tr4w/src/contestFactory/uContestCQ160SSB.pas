@@ -138,6 +138,8 @@ uses
    uADIFExchange,
    uDXMultiplierKey,
    SysUtils, uContestRegistry,
+   (* SNewContestBox* -- the box names what is sent (issue 167). *)
+   uAppStrings,
    uTR4WStrings;
 
 procedure TContestCQ160SSB.CalculateQSOPoints(var aQso: ContestExchange);
@@ -335,11 +337,11 @@ end;
    changing one changes one. *)
 procedure TContestCQ160SSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.OfferIAmInCaption(SNewContestBoxSendsStateOrProvince);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERSTATEFORUSPROVINCEFORCANADA, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+(* THE "I SEND A STATE OR PROVINCE" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
    167; the continent until review M16 (2026-11-16). Ticking it asks for a
    US state or Canadian province, which only the stations of
    DescribeSession's list (K, VE) send: an XE entrant ticking it was not

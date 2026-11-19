@@ -175,6 +175,8 @@ uses
    uCallSignRoutines,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
+   (* SNewContestBox* -- the box names what is sent (issue 167). *)
+   uAppStrings,
    uTR4WStrings;
 
 procedure TContestARRL160.CalculateQSOPoints(var aQso: ContestExchange);
@@ -492,11 +494,11 @@ end;
    changing one changes one. *)
 procedure TContestARRL160.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.OfferIAmInCaption(SNewContestBoxSendsARRLOrRACSection);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+(* THE "I SEND AN ARRL OR RAC SECTION" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
    167; the continent until review M16 (2026-11-16). Ticking it asks for the
    QTH to send, which an ARRL-section country sends (DescribeSession's list:
    KH6, KL and KP4 are in it, XE is not). *)

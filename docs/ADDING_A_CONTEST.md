@@ -1145,7 +1145,11 @@ Answered as data the UI renders; a class never touches a form.
 terms -- country IDs, `HomeIsDomesticCountries` to read your own
 `DescribeSession` list, or a continent -- so the dialog asks once when MY CALL
 contradicts the box; the base states nothing, which is right for a box DXCC
-cannot decide; `uTestNewContestHome` walks the registry), `GetTotalsDisplay`,
+cannot decide; `uTestNewContestHome` walks the registry. Where the box is
+really "the stations that send a state" -- a country list, not a place --
+offer it as `OfferIAmInCaption(SNewContestBoxSendsStateOrProvince)` (or
+`...ARRLOrRACSection`), NY4I 2026-11-19: the check still asks, in the
+caption's words), `GetTotalsDisplay`,
 `GetSummarySheet`, `GetReportsRunningScore`, `CanonicalReceivedExchange` /
 `CanonicalSentExchange`, `ScorePostingMultiplierType`,
 `GetPermittedOperatingAids`, `GetOffersQTCs`, `GetOffersParkTools`,

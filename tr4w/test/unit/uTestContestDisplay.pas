@@ -345,11 +345,13 @@ begin
          end;
       ARRL10:
          begin
-         Result := StepBox(TC_NORTHAMERICA);
+         (* issue 167, NY4I 2026-11-19: the box names what is sent. *)
+         Result := StepCaption(SNewContestBoxSendsStateOrProvince);
          end;
       ARRL160:
          begin
-         Result := StepBox(TC_NORTHAMERICA);
+         (* issue 167, NY4I 2026-11-19: the box names what is sent. *)
+         Result := StepCaption(SNewContestBoxSendsARRLOrRACSection);
          end;
       ARRLDIGI:
          begin
@@ -389,7 +391,8 @@ begin
          end;
       ARRL_RTTY_ROUNDUP:
          begin
-         Result := StepBox(TC_NORTHAMERICA);
+         (* issue 167, NY4I 2026-11-19: the box names what is sent. *)
+         Result := StepCaption(SNewContestBoxSendsStateOrProvince);
          end;
       BATAVIA_FT8:
          begin
@@ -421,11 +424,13 @@ begin
          end;
       CQ160CW:
          begin
-         Result := StepBox(TC_NORTHAMERICA);
+         (* issue 167, NY4I 2026-11-19: the box names what is sent. *)
+         Result := StepCaption(SNewContestBoxSendsStateOrProvince);
          end;
       CQ160SSB:
          begin
-         Result := StepBox(TC_NORTHAMERICA);
+         (* issue 167, NY4I 2026-11-19: the box names what is sent. *)
+         Result := StepCaption(SNewContestBoxSendsStateOrProvince);
          end;
       CQIR:
          begin
@@ -441,7 +446,8 @@ begin
          end;
       CQWWRTTY:
          begin
-         Result := StepBox(TC_NORTHAMERICA);
+         (* issue 167, NY4I 2026-11-19: the box names what is sent. *)
+         Result := StepCaption(SNewContestBoxSendsStateOrProvince);
          end;
       CUPRFCW:
          begin

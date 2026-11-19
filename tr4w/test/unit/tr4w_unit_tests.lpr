@@ -1045,6 +1045,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* QSL AND LOG keeps the typed text, never a refused zone (issue 274
       item 7, 2026-11-19). *)
    uTestQSLAndLogEntry  in 'uTestQSLAndLogEntry.pas',
+   (* ARRL 10's Mexican states, CMX for Mexico City (issue 167,
+      2026-11-19). *)
+   uTestARRL10MexicanStates in 'uTestARRL10MexicanStates.pas',
    (* A spot's section from its comment (issue 83, 2026-11-05). *)
    uTestSpotCommentMultiplier in 'uTestSpotCommentMultiplier.pas',
    (* Clear Mult Sheet and the score already earned (issue 164, 2026-11-11). *)
@@ -1319,6 +1322,7 @@ begin
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TZoneEntryRefusalTests.Create('ZoneEntryRefusal'));
    RegisterSuite(TQSLAndLogEntryTests.Create('QSLAndLogEntry'));
+   RegisterSuite(TARRL10MexicanStatesTests.Create('ARRL10MexicanStates'));
    RegisterSuite(TPossibleDomesticQTHEntryTests.Create('PossibleDomesticQTHEntry'));
    RegisterSuite(TLicenceYearEntryTests.Create('LicenceYearEntry'));
    RegisterSuite(TQSONumberAndNameEntryTests.Create('QSONumberAndNameEntry'));

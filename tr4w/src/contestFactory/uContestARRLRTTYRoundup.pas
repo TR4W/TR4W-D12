@@ -139,6 +139,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    SysUtils, uContestRegistry, uContestFixedPoints,
+   (* SNewContestBox* -- the box names what is sent (issue 167). *)
+   uAppStrings,
    uTR4WStrings;
 
 procedure TContestARRLRTTYRoundup.CalculateQSOPoints(var aQso: ContestExchange);
@@ -295,11 +297,11 @@ end;
    changing one changes one. *)
 procedure TContestARRLRTTYRoundup.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.OfferIAmInCaption(SNewContestBoxSendsStateOrProvince);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
+(* THE "I SEND A STATE OR PROVINCE" BOX IS THIS CONTEST'S DOMESTIC LIST -- issue
    167; the continent until review M16 (2026-11-16). Ticking it asks for the
    QTH to send, which the stations of DescribeSession's list (K, VE) send;
    an XE or KP4 entrant sends a serial. Whether KH6/KL7 send a state is not
