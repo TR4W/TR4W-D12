@@ -30,15 +30,21 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   RemainingMultDisplay, which the operator swaps at run time; the other four are
   pinned to one type each.  MultTypeFor is the one place that says so.
 
-  THE CELLS CARRY NO TEXT, AND THAT IS FAITHFUL.  The Win32 list box was
-  LBS_OWNERDRAWFIXED without strings, and ShowRemMultsInWindow passed
-  MakeLong(Ord(rmt), i) as LB_ADDSTRING's lParam -- A PACKED PAIR, NEVER A
-  STRING POINTER.  Its draw handler unpacked that and asked mo.PrfList,
-  mo.DomList, CTY.ctyTable or a %02u format for the text on every paint.
+  THE CELLS CARRY THEIR TEXT, WRITTEN AT THE REBUILD (issue 216, decision A).
+  The Win32 list box was LBS_OWNERDRAWFIXED without strings: each item was a
+  packed (kind, index) pair and the draw handler looked the text and the
+  worked state up on every paint, from mo.PrfList, mo.DomList, CTY.ctyTable
+  or a %.2u format. Those answers change as the contest runs, which is why
+  they were looked up late.
 
-  That is kept exactly, and not out of caution: those answers CHANGE AS THE
-  CONTEST RUNS.  A multiplier worked between two rebuilds must fade on the next
-  paint, and text or dupe state copied at rebuild time would not. }
+  NY4I chose to write them at the rebuild instead (issue 216): the builder,
+  LOGEDIT.ShowRemMultsInWindow, resolves each multiplier as it adds it
+  (uRemMults.ResolveRemainingMult) and the text goes into the grid's own
+  Cells; the grid paints itself. So the window is right exactly when it has
+  been rebuilt since the multiplier state changed -- a stale cell is a missing
+  VisibleLog.ShowRemainingMultipliers call, never a repaint problem. The
+  places that change that state and rebuild it are listed at
+  ShowRemMultsInWindow. }
 unit uRemMultsForm;
 
 {$I ..\..\tr4w.inc}
@@ -47,8 +53,7 @@ interface
 
 uses
    Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics,
-   VC, LogWind, LogDom, LogDupe, uFlowGrid,
-  uTR4WStrings;
+   VC, LogWind, LogDom, LogDupe, uFlowGrid;
 
 type
    (* A REMAINING MULTIPLIER, AS A TYPE: the pair (kind, index into that
@@ -61,14 +66,19 @@ type
    private
       FKind: RemainingMultiplierType;
       FIndex: integer;
+      FWorked: boolean;
    public
-      constructor Create(const aKind: RemainingMultiplierType; const aIndex: integer);
+      constructor Create(const aKind: RemainingMultiplierType; const aIndex: integer;
+                         const aWorked: boolean);
       property Kind: RemainingMultiplierType read FKind;
       property Index: integer read FIndex;
+      (* Whether it had been worked WHEN THE WINDOW WAS REBUILT -- the text
+        beside it is the grid's Cells, written then too (issue 216). *)
+      property Worked: boolean read FWorked;
    end;
 
    TfrmRemMults = class(TForm)
-      grdMults: TDrawGrid;
+      grdMults: TStringGrid;
       procedure HandleCreate(Sender: TObject);
       procedure HandleDestroy(Sender: TObject);
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -83,16 +93,21 @@ type
       Mults: TFlowGrid;
 
       (* ONE CELL: a multiplier, which IS the pair (kind, index into that
-        kind's table). Its text is resolved at paint time (RemMultsResolve),
-        because it changes as the contest runs. Between Mults.BeginRebuild
-        and Mults.EndRebuild. *)
-      procedure AddMult(const aKind: RemainingMultiplierType; const aIndex: integer);
+        kind's table), with its text and whether it has been worked, as
+        they stand at this rebuild (the builder resolves them). Between
+        Mults.BeginRebuild and Mults.EndRebuild. *)
+      procedure AddMult(const aKind: RemainingMultiplierType; const aIndex: integer;
+                        const aText: string; const aWorked: boolean);
 
       (* The multiplier in cell aCellIndex; False for a cell past the end --
         the paint handler asks for every cell and the last column is rarely
         full. *)
       function  MultAt(const aCellIndex: integer; out aKind: RemainingMultiplierType;
                        out aIndex: integer): boolean;
+
+      (* Whether the multiplier in cell aCellIndex had been worked at the
+        rebuild; False for a cell past the end. *)
+      function  WorkedAt(const aCellIndex: integer): boolean;
    end;
 
 var
@@ -100,12 +115,10 @@ var
      uRemMults assigns it, because filling means knowing what a multiplier is. }
    RemMultsOnShow: procedure = nil;
 
-   { Resolves one cell to its text and to whether it has been worked.  The form
-     can answer neither -- both need the multiplier tables -- so uRemMults
-     supplies this at initialization. }
-   RemMultsResolve: procedure(const aKind: RemainingMultiplierType;
-                              const aIndex: integer; out aText: string;
-                              out aWorked: boolean) = nil;
+   (* RemMultsResolve, THE PAINT-TIME LOOKUP, IS GONE (issue 216): the builder
+     resolves each multiplier when it adds it -- uRemMults.ResolveRemainingMult,
+     called from LOGEDIT.ShowRemMultsInWindow -- so this form still never
+     learns what a multiplier is. *)
 
 procedure CreateTR4WRemMultsWindow(const aIndex: WindowsType);
 function RemMultsForm(const aIndex: WindowsType): TfrmRemMults;
@@ -120,7 +133,6 @@ implementation
 
 uses
    MainUnit,          { CloseTR4WWindow }
-   LogEdit,           { CleanSweep }
    uSettingsModel,    (* Settings.RemainingMults.DisplayMode, and HiLight --
                         the type moved here with the setting *)
    uLCLFormHelpers;   // LeaveFormUnowned
@@ -167,23 +179,46 @@ begin
 end;
 
 procedure TfrmRemMults.HandleDestroy(Sender: TObject);
+var
+   slot: integer;
 begin
    FreeAndNil(Mults);
+
+   (* A FREED FORM LEAVES NO SLOT POINTING AT IT. The program never frees
+     these, but a test that opens one through CreateTR4WRemMultsWindow does,
+     and the next CreateTR4WRemMultsWindow would hand back freed memory. *)
+   for slot := Low(GForms) to High(GForms) do
+      begin
+      if GForms[slot] = Self then
+         begin
+         GForms[slot] := nil;
+         end;
+      end;
 end;
 
 constructor TRemainingMult.Create(const aKind: RemainingMultiplierType;
-                                  const aIndex: integer);
+                                  const aIndex: integer; const aWorked: boolean);
 begin
    inherited Create;
    FKind := aKind;
    FIndex := aIndex;
+   FWorked := aWorked;
 end;
 
-(* No text: the cell's text is resolved at paint time -- see RemMultsResolve. *)
+(* The text goes into the grid's Cells at EndRebuild (TFlowGrid.LayOut). *)
 procedure TfrmRemMults.AddMult(const aKind: RemainingMultiplierType;
-                               const aIndex: integer);
+                               const aIndex: integer; const aText: string;
+                               const aWorked: boolean);
 begin
-   Mults.AddCell('', TRemainingMult.Create(aKind, aIndex));
+   Mults.AddCell(aText, TRemainingMult.Create(aKind, aIndex, aWorked));
+end;
+
+function TfrmRemMults.WorkedAt(const aCellIndex: integer): boolean;
+var
+   cell: TObject;
+begin
+   cell := Mults.CellAt(aCellIndex);
+   Result := (cell is TRemainingMult) and TRemainingMult(cell).Worked;
 end;
 
 function TfrmRemMults.MultAt(const aCellIndex: integer;
@@ -242,7 +277,7 @@ begin
       end;
 end;
 
-{ THE PAINTING IS REPRODUCED AS IT WAS, INCLUDING A COLOUR THAT LOOKS LIKE AN
+(* THE PAINTING IS REPRODUCED AS IT WAS, INCLUDING A COLOUR THAT LOOKS LIKE AN
   ACCIDENT.
 
   A worked entry is gradiented to white with white text on top, and the colour
@@ -262,14 +297,23 @@ end;
   looked like -- black is what it is now, which is the same picture with the
   undefined part defined.
 
-  CLEAN SWEEP takes the window.  It was drawn at 0,0 over whatever was there. }
+  STILL A DRAW HANDLER, FOR THE GRADIENT ALONE (issue 216). The text and the
+  worked state are the cell's, written at the rebuild: the text is the grid's
+  Cells, so the grid knows when it changed and no Invalidate is forced. What
+  OnPrepareCanvas cannot express is a gradient -- it sets a brush, and a flat
+  fill would be a visible change -- so this handler stays until NY4I rules on
+  the fade (issue 216). With a flat fill it becomes the
+  dupe sheet's OnPrepareCanvas and DefaultDrawing goes back on.
+
+  CLEAN SWEEP IS GONE. Its message was drawn when LOGEDIT.CleanSweep was True,
+  and nothing ever set it: the D7 routine that did (LOGWIND
+  DisplayRemainingMults) sat inside a REMOVECANDIDATE comment there too. *)
 procedure TfrmRemMults.MultsDrawCell(Sender: TObject; aCol, aRow: integer;
                                      aRect: TRect; aState: TGridDrawState);
 var
    idx: integer;
    multIndex: integer;
    cellText: string;
-   worked: boolean;
    rmt: RemainingMultiplierType;
 begin
    grdMults.Canvas.Brush.Style := bsSolid;
@@ -277,34 +321,19 @@ begin
    grdMults.Canvas.FillRect(aRect);
    grdMults.Canvas.Font.Color := tr4wColorsArray[trBlack];
 
-   if CleanSweep then
-      begin
-      if (aCol = 0) and (aRow = 0) then
-         begin
-         grdMults.Canvas.Brush.Style := bsClear;
-         grdMults.Canvas.TextOut(aRect.Left, aRect.Top,
-                                 string(TC_CLEANSWEEPCONGRATULATIONS));
-         end;
-      Exit;
-      end;
-
    idx := Mults.IndexAt(aCol, aRow);
-   if (idx < 0) or (not Assigned(RemMultsResolve)) then
-      begin
-      Exit;
-      end;
-   if not MultAt(idx, rmt, multIndex) then
+   if (idx < 0) or (not MultAt(idx, rmt, multIndex)) then
       begin
       Exit;
       end;
 
-   RemMultsResolve(rmt, multIndex, cellText, worked);
+   cellText := grdMults.Cells[aCol, aRow];
    if cellText = '' then
       begin
       Exit;
       end;
 
-   if (Settings.RemainingMults.DisplayMode = HiLight) and worked then
+   if (Settings.RemainingMults.DisplayMode = HiLight) and WorkedAt(idx) then
       begin
       // THE LCL'S OWN GRADIENT, as the band map's mult flag uses: the same
       // two stops and the same left-to-right direction the WM_DRAWITEM arm

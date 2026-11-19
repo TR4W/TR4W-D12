@@ -36,19 +36,21 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   for two windows and wrong for the third is worth changing while it costs four
   files.
 
-  AND THE TEXT IS OPTIONAL, which is what the third caller needed.  Remaining
-  mults store only the CELL -- a (multiplier type, index) pair, TRemainingMult
-  -- and resolve the text in their own OnDrawCell from mo.PrfList, mo.DomList or
-  CTY.ctyTable, because those answers change as the contest runs and a copy
-  taken at rebuild time would go stale between rebuilds.  That was the Win32
-  behaviour too: LB_ADDSTRING's lParam carried the pair, never a string.
+  EVERY CELL HOLDS ITS TEXT, IN A TStringGrid (issue 216). LayOut writes each
+  entry into the grid's own Cells, so the grid paints itself and knows when to
+  repaint; the forced Invalidate that a text-less TDrawGrid needed is gone.
+  The remaining-mults windows used to store only a (kind, index) pair and look
+  the text up at paint time; NY4I chose to resolve it at the rebuild instead,
+  so their builder (LOGEDIT.ShowRemMultsInWindow) hands the text in like the
+  other two.
 
   WHAT IS SHARED IS THE MODEL AND THE ARITHMETIC.  What is NOT shared is the
-  PAINTING, deliberately: the dupe sheet fills each cell with its district
-  colour, and the SCP list gradients only the dupes and inverts their text.
-  Those are different windows saying different things, and folding them into
-  one parameterised painter would make both harder to read than either.  Each
-  form keeps its own OnDrawCell and asks this object what is in the cell.
+  COLOUR, deliberately: the dupe sheet fills each cell with its district
+  colour, SCP fills only the dupes and inverts their text, and a worked
+  remaining multiplier fades to white.  Those are different windows saying
+  different things; each form sets its own colours (OnPrepareCanvas, or for the
+  remaining-mults fade still a draw handler -- see uRemMultsForm) and asks this
+  object which entry is in the cell.
 
   THE DOWN-THEN-ACROSS RULE IS THE BAND MAP'S, deliberately: three windows now
   lay callsigns out in columns and an operator moving between them should not
@@ -60,16 +62,15 @@ unit uFlowGrid;
 interface
 
 uses
-   Classes, SysUtils, Grids;
+   Classes, SysUtils, Grids,
+   utils_text;   (* LclText -- the model's text into the grid's UTF-8 Cells *)
 
 type
    TFlowGrid = class
    private
       (* A TStringGrid (issue 216): LayOut writes each cell's text into the
-        grid's own Cells, so the grid paints and repaints itself. A grid that
-        is still a TDrawGrid holds no text and is invalidated by EndRebuild
-        instead -- the transitional arm, deleted with the last such window. *)
-      FGrid: TCustomDrawGrid;
+        grid's own Cells, so the grid paints and repaints itself. *)
+      FGrid: TStringGrid;
       (* Each cell's text, with the window's own typed cell in Objects[] --
         see AddCell. OwnsObjects is set, so the list frees the cells.
 
@@ -89,7 +90,7 @@ type
         cell. *)
       procedure WriteCells;
    public
-      constructor Create(const aGrid: TCustomDrawGrid;
+      constructor Create(const aGrid: TStringGrid;
                          const aCellWidth, aCellHeight: integer);
       destructor Destroy; override;
 
@@ -144,7 +145,7 @@ type
 
 implementation
 
-constructor TFlowGrid.Create(const aGrid: TCustomDrawGrid;
+constructor TFlowGrid.Create(const aGrid: TStringGrid;
                              const aCellWidth, aCellHeight: integer);
 begin
    inherited Create;
@@ -244,38 +245,30 @@ begin
    // The cell count changed, so the shape is recomputed and the text written
    // into the grid's Cells, which repaints what changed.
    LayOut;
-
-   // TRANSITIONAL (issue 216): a TDrawGrid's cells carry no text of their
-   // own, so it has no way to know its model moved and is told. Goes with the
-   // last TDrawGrid window.
-   if (FGrid <> nil) and not (FGrid is TCustomStringGrid) then
-      begin
-      FGrid.Invalidate;
-      end;
 end;
 
 procedure TFlowGrid.WriteCells;
 var
-   sg: TCustomStringGrid;
    c, r: integer;
 begin
-   if not (FGrid is TCustomStringGrid) then
+   if FGrid = nil then
       begin
       Exit;
       end;
-   sg := TCustomStringGrid(FGrid);
 
-   sg.BeginUpdate;
+   (* EndUpdate repaints the grid (VisualChange) -- the grid's own repaint,
+     once per rebuild, where EndRebuild used to force one. *)
+   FGrid.BeginUpdate;
    try
-      for c := 0 to sg.ColCount - 1 do
+      for c := 0 to FGrid.ColCount - 1 do
          begin
-         for r := 0 to sg.RowCount - 1 do
+         for r := 0 to FGrid.RowCount - 1 do
             begin
-            sg.Cells[c, r] := TextAt(IndexAt(c, r));   // '' past the end
+            FGrid.Cells[c, r] := LclText(TextAt(IndexAt(c, r)));   // '' past the end
             end;
          end;
    finally
-      sg.EndUpdate;
+      FGrid.EndUpdate;
    end;
 end;
 
