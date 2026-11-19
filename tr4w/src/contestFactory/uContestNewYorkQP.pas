@@ -82,7 +82,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     station, DX earns points but no multiplier (CountsAsMultiplier), the 62
     county codes of newyork_cty.dom, the schedule, NY-QSO-PARTY.
 
-  NOT BUILT, REPORTED ON #88:
+  NOT BUILT, OPEN FOR NY4I ON #88:
     * "The first valid New York county logged will count as the multiplier
       for New York" -- the county is one multiplier and the state of New York
       a second, from one QSO. A QSO carries one domestic key, so an in-state
@@ -200,9 +200,9 @@ begin
 end;
 
 (* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row NY-QSO-PARTY: status candidate; rules https://nyqp.org/wordpress/;
-   rules year 2026. CHECKED 2026-11-19 against the sponsor's 2026 rules
-   (header): "Third Saturday in October ... 1400 UTC ... 12 Hours". *)
+   row NY-QSO-PARTY: status verified (2026-11-19) against the sponsor's
+   2026 rules (header): "Third Saturday in October: October 17, 2026 1400
+   UTC ... 12 Hours", "from 14:00 UTC through 01:59 UTC". *)
 function TContestNewYorkQP.GetSchedule: string;
 begin
    Result := '3rd Saturday of October at 14:00 UTC for 12h';
