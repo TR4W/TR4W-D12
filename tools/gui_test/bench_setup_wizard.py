@@ -75,6 +75,23 @@ restart once the callsign is stored and require that the offer is NOT made.)
                             configuration at once: no message, the Done page and
                             clusters[] name the picked host:port.
 
+(added 2026-11-18, issue 334 -- NOT RUN YET, see BENCH_QUEUE)
+   bench-wizard-extras      brand-new install, Yes: the three new checklist items
+                            (external logger, rotator, WSJT-X) start unticked;
+                            ticked last-first they still come in canonical order.
+                            The external logger page is the EXISTING editor hosted
+                            (one window, its Save button not shown, measured like
+                            the radio page, Active ticked); DXKeeper as it opens;
+                            a PstRotator at 127.0.0.1:12000 (the port list greyed);
+                            WSJT-X shown ON at 2237 and moved to 2238; Create. The
+                            Done page's three lines and tr4w.json are judged, and
+                            every page is captured (checklist-extras, logger-page,
+                            logger-filled, rotator-empty, rotator-page, wsjtx-page).
+   bench-wizard-extras-secret  the external logger alone, as QRZ Logbook with a
+                            dummy API key: tr4w.json holds apiKeyRef and never the
+                            key. Writes a credential to the guest's Windows
+                            Credential Manager; opt-in.
+
 A "brand-new install" run folder holds CTY.DAT and dom only -- what an installed
 copy has in its folder -- and NO settings file (prepare_fixture --fresh-install).
 The program is started with --settings naming that absent file; tr4w.log must
@@ -2749,7 +2766,204 @@ def install_dom(root, run_name, output, journal, facts, failures, incomplete, ow
 
 
 
+# ------------------------------------------------- issue 334: three more items ----
+
+LOGGER_ITEM = "An external logger"
+ROTATOR_ITEM = "An antenna rotator"
+WSJTX_ITEM = "WSJT-X"
+EXTRA_ITEMS = (LOGGER_ITEM, ROTATOR_ITEM, WSJTX_ITEM)
+PST_TYPE = "PstRotator (UDP)"
+PST_ADDRESS = "127.0.0.1"
+PST_PORT = "12000"
+WSJTX_PORT = "2238"
+QRZ_PROVIDER = "QRZ"
+QRZ_CALL = "NY4I"
+DUMMY_QRZ_KEY = "qrz-dummy-key-334"
+
+
+def extras_checklist(wizard, output, journal, facts, failures, ticked):
+   """The checklist: the three new boxes start UNTICKED, then the ones in
+   TICKED are ticked last-first (the pages must still come in canonical
+   order). Screenshot: checklist-extras.png."""
+   facts["extras_at_start"] = {caption: bool(button(wizard, caption).get_check_state())
+      for caption in EXTRA_ITEMS}
+   for caption, state in facts["extras_at_start"].items():
+      if state:
+         failures.append("'" + caption + "' is ticked before the operator ticked it")
+   for caption in reversed(ticked):
+      tick(wizard, caption, journal, True)
+   journal.perform("capture checklist with the new items",
+      lambda: capture(wizard, output / "checklist-extras.png"))
+
+
+def logger_page(app, wizard, output, journal, facts, failures, provider=None, rows=None,
+      following="Next >"):
+   """The external logger page: the EXISTING editor hosted in the wizard (one
+   window, its own Save/Cancel not shown), measured like the radio page, and
+   switched on. PROVIDER, when given, is chosen in the hosted Provider list;
+   ROWS are then typed into the provider's boxes, top first, after Name.
+   FOLLOWING is the caption of the button that leaves the page.
+   Screenshots: logger-page.png (as opened), logger-filled.png."""
+   journal.perform("capture external logger page", lambda: capture(wizard, output / "logger-page.png"))
+   one_window(app, wizard, "logger", facts, failures)
+   if has_button(wizard, "Save to Preferences"):
+      failures.append("logger: the editor's own 'Save to Preferences' button is shown inside the wizard")
+   name_box = hosted_name_box(wizard, "External logger")
+   measure_hosted(wizard, name_box, "logger", facts, failures)
+   active = [control for control in wizard.descendants(class_name="Button")
+      if control.window_text().startswith("Active") and control.is_visible()]
+   facts["logger_active_ticked"] = bool(active) and bool(active[0].get_check_state())
+   if not facts["logger_active_ticked"]:
+      failures.append("logger: the hosted editor's Active box is not ticked (ticking the item is the choice to send)")
+   if provider is not None:
+      combo = ComboBoxWrapper(combos_by_top(wizard)[0].handle)
+      journal.perform("choose provider " + provider, lambda: combo.select(provider))
+      time.sleep(0.7)
+      # The rows are rebuilt for the provider: the window must follow them.
+      measure_hosted(wizard, hosted_name_box(wizard, "External logger"), "logger-" + provider, facts, failures)
+      edits = edits_by_top(wizard)[1:]
+      for box, text in zip(edits, rows or ()):
+         set_box(box, text, journal, "logger row")
+   journal.perform("capture external logger filled", lambda: capture(wizard, output / "logger-filled.png"))
+   next_page(wizard, following, journal)
+
+
+def rotator_page(wizard, output, journal, facts, failures):
+   """The rotator page: the registry's types; PstRotator (a UDP rotator, so no
+   COM port is needed on the guest) greys the port and opens the address.
+   Next with no type is refused first. Screenshot: rotator-page.png."""
+   journal.perform("capture rotator page (nothing chosen)", lambda: capture(wizard, output / "rotator-empty.png"))
+   combos = combos_by_top(wizard)
+   rotator_type = ComboBoxWrapper(combos[0].handle)
+   facts["rotator_types"] = rotator_type.item_texts()
+   if PST_TYPE not in facts["rotator_types"]:
+      raise AssertionError("No '" + PST_TYPE + "' in the rotator types: " + repr(facts["rotator_types"]))
+   journal.perform("choose rotator type " + PST_TYPE, lambda: rotator_type.select(PST_TYPE))
+   time.sleep(0.5)
+   port_combo = combos_by_top(wizard)[1]
+   facts["rotator_port_enabled_for_pst"] = enabled(port_combo)
+   if facts["rotator_port_enabled_for_pst"]:
+      failures.append("rotator: the serial port list is enabled for PstRotator")
+   edits = edits_by_top(wizard)
+   set_box(edits[0], PST_ADDRESS, journal, "rotator address")
+   set_box(edits[1], PST_PORT, journal, "rotator UDP port")
+   journal.perform("capture rotator page", lambda: capture(wizard, output / "rotator-page.png"))
+   next_page(wizard, "Next >", journal)
+
+
+def wsjtx_page(wizard, output, journal, facts, failures):
+   """The WSJT-X page: on a new install the model's default -- switched ON,
+   port 2237 -- then the port is moved. Screenshot: wsjtx-page.png."""
+   enable = [control for control in wizard.descendants(class_name="Button")
+      if control.window_text() == "Use WSJT-X with TR4W" and control.is_visible()]
+   facts["wsjtx_enabled_shown"] = bool(enable) and bool(enable[0].get_check_state())
+   port = edits_by_top(wizard)[0]
+   facts["wsjtx_port_shown"] = port.window_text()
+   if not facts["wsjtx_enabled_shown"] or facts["wsjtx_port_shown"] != "2237":
+      failures.append("wsjtx: a new install should show it ON at port 2237, saw "
+         + repr((facts["wsjtx_enabled_shown"], facts["wsjtx_port_shown"])))
+   journal.perform("capture WSJT-X page", lambda: capture(wizard, output / "wsjtx-page.png"))
+   set_box(port, WSJTX_PORT, journal, "WSJT-X port")
+
+
+def extras(root, run_name, output, journal, facts, failures, incomplete, owned):
+   """ISSUE 334, NOT RUN YET (BENCH_QUEUE 'SETUP WIZARD: EXTERNAL LOGGER,
+   ROTATOR, WSJT-X'). A brand-new install, Yes, the Station page, then the
+   three new items ticked: the hosted external logger editor (DXKeeper, its
+   defaults, switched on), a PstRotator at 127.0.0.1:12000, and WSJT-X moved
+   to port 2238; Create configuration. Judged: the Done page's three lines,
+   and tr4w.json -- one DXKEEPER definition that is the only active one, one
+   PSTROTATOR rotator that is the active one, Wsjtx.BroadcastPort 2238. Every
+   page is captured for the user guide."""
+   app = fresh_start(root, run_name, journal)
+   owned.append(app)
+   answer_offer(app, "Yes", output, journal, facts, failures)
+   wizard = wait_wizard(app, journal, output, facts)
+   station_page(wizard, output, journal, facts, failures)
+   next_page(wizard, "Next >", journal)
+   extras_checklist(wizard, output, journal, facts, failures, EXTRA_ITEMS)
+   next_page(wizard, "Next >", journal)
+   logger_page(app, wizard, output, journal, facts, failures)
+   rotator_page(wizard, output, journal, facts, failures)
+   wsjtx_page(wizard, output, journal, facts, failures)
+   next_page(wizard, "Create configuration", journal)
+
+   rotator_line = ('Rotator "Rotator": ' + PST_TYPE + ' at ' + PST_ADDRESS + ':' + PST_PORT
+      + ', turning for every band.')
+
+   def judge(memo):
+      text = memo.window_text()
+      facts["result_text"] = text
+      if not re.search(r'External logger "Logger \d+" \(DXKeeper\) receives each new QSO\.', text):
+         failures.append("Done page lacks the external logger line")
+      for expected in (rotator_line, "WSJT-X: TR4W listens on UDP port " + WSJTX_PORT + "."):
+         if expected not in text:
+            failures.append("Done page lacks " + repr(expected))
+      if "next time TR4W starts" in text:
+         failures.append("Done page asks for a restart, but this run is at startup, before anything started")
+
+   finish_result_page(app, wizard, output, journal, facts, failures, inspect=judge)
+
+   settings = after_wizard(app, root, run_name, output, journal, facts, failures, CALL)
+   check_station_settings(settings, failures, True)
+   if settings is not None:
+      loggers = settings.get("externalLoggers", [])
+      active_loggers = settings.get("activeExternalLoggerIds", [])
+      rotators = settings.get("rotators", [])
+      general = settings.get("general", {})
+      wsjtx = settings.get("settings", {}).get("Wsjtx", {})
+      facts["stored_extras"] = {"externalLoggers": loggers, "activeExternalLoggerIds": active_loggers,
+         "rotators": rotators, "activeRotatorId": general.get("activeRotatorId"), "Wsjtx": wsjtx}
+      if len(loggers) != 1 or loggers[0].get("provider") != "DXKEEPER":
+         failures.append("externalLoggers is not exactly the wizard's DXKeeper: " + repr(loggers))
+      elif active_loggers != [loggers[0].get("id")]:
+         failures.append("activeExternalLoggerIds is not the wizard's logger: " + repr(active_loggers))
+      if len(rotators) != 1 or rotators[0].get("rotatorId") != "PSTROTATOR":
+         failures.append("rotators is not exactly the wizard's PstRotator: " + repr(rotators))
+      else:
+         if rotators[0].get("ipAddress") != PST_ADDRESS or rotators[0].get("udpPort") != int(PST_PORT):
+            failures.append("the rotator's address is not " + PST_ADDRESS + ":" + PST_PORT)
+         if general.get("activeRotatorId") != rotators[0].get("id"):
+            failures.append("general.activeRotatorId is not the wizard's rotator")
+      if wsjtx.get("BroadcastPort") != int(WSJTX_PORT):
+         failures.append("settings.Wsjtx.BroadcastPort is " + repr(wsjtx.get("BroadcastPort")))
+   common_log_checks(root, run_name, facts, failures, 1)
+
+
+def extras_secret(root, run_name, output, journal, facts, failures, incomplete, owned):
+   """ISSUE 334, NOT RUN YET. The external logger alone, as QRZ Logbook with a
+   dummy API key: the key goes to the OS credential store on Create and
+   tr4w.json holds only a reference (apiKeyRef) -- never the key. WRITES A
+   CREDENTIAL to the guest's Windows Credential Manager under
+   ExternalLoggers/<id>/ApiKey; select it explicitly. Screenshots as extras."""
+   app = fresh_start(root, run_name, journal)
+   owned.append(app)
+   answer_offer(app, "Yes", output, journal, facts, failures)
+   wizard = wait_wizard(app, journal, output, facts)
+   station_page(wizard, output, journal, facts, failures)
+   next_page(wizard, "Next >", journal)
+   extras_checklist(wizard, output, journal, facts, failures, (LOGGER_ITEM,))
+   next_page(wizard, "Next >", journal)
+   logger_page(app, wizard, output, journal, facts, failures, provider=QRZ_PROVIDER,
+      rows=(QRZ_CALL, DUMMY_QRZ_KEY), following="Create configuration")
+   finish_result_page(app, wizard, output, journal, facts, failures)
+   settings = after_wizard(app, root, run_name, output, journal, facts, failures, CALL)
+   if settings is not None:
+      dump = json.dumps(settings)
+      loggers = settings.get("externalLoggers", [])
+      facts["stored_logger"] = loggers
+      if DUMMY_QRZ_KEY in dump:
+         failures.append("tr4w.json holds the API key typed into the wizard")
+      if len(loggers) != 1 or "apiKeyRef" not in loggers[0]:
+         failures.append("the QRZ definition has no keychain reference (apiKeyRef): " + repr(loggers))
+   if DUMMY_QRZ_KEY in log_text(root, run_name):
+      failures.append("tr4w.log contains the API key typed into the wizard")
+   common_log_checks(root, run_name, facts, failures, 1)
+
+
 PHASES = {
+   "bench-wizard-extras": extras,
+   "bench-wizard-extras-secret": extras_secret,
    "bench-wizard-switch": wizard_switch,
    "bench-wizard-preserve": wizard_preserve,
    "bench-wizard-partial": wizard_partial,

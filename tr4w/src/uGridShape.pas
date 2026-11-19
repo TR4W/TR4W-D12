@@ -35,7 +35,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   differs -- whether the exchange is asked, and the case fix-up their var
   parameter carries back.
 
-  PURE: no globals, no logging. *)
+  PURE: no globals, no logging. Its implementation uses utils_text (and so
+  VC) since issue 129, for ValChecked in TryParseReportAndGrid -- whose
+  UpperCase is therefore utils_text's ASCII one, which is all a grid needs. *)
 unit uGridShape;
 
 {$I tr4w.inc}
@@ -66,7 +68,108 @@ function LooksLikeGridSquare(const aText: string): boolean;
   this. *)
 function IsGoodLookingGrid(const aText: string): boolean;
 
+type
+   (* Which words a caller takes for a grid -- see TryParseReportAndGrid. *)
+   TGridTextTest = function(const aText: string): boolean;
+
+(* "[report] GRID" -- the received exchange of a digital QSO that logs the
+  other station's grid (the standard FT8/FT4 exchange). One word, the grid;
+  or two, a signed whole-number report that fits a SmallInt, then the grid.
+  aIsGrid decides what a grid is, because the callers differ: the Hawaii QSO
+  Party takes any two letters and two digits (ZZ00 is its sponsor's "no
+  grid"), the South Dakota QSO Party a real square (IsGoodLookingGrid).
+  aGrid is the grid word upper-cased; aHasReport says whether a report was
+  given. Lifted from uContestHawaiiQP when South Dakota became its second
+  user (issue 129, 2026-11-18). *)
+function TryParseReportAndGrid(const aText: string; aIsGrid: TGridTextTest;
+                               out aGrid: string; out aHasReport: boolean;
+                               out aReport: integer): boolean;
+
+(* THE FOUR-CHARACTER GRID SQUARE aText NAMES -- its first four characters,
+  upper case, when aText (blanks trimmed) is a grid IsGoodLookingGrid allows
+  (four or six characters); '' when it is none. Lifted from
+  uContestSouthDakotaQP (SouthDakotaQPGridOf) when the Mississippi QSO Party
+  became its second user (issue 123, 2026-11-18): both key their digital grid
+  multiplier on the four-character square. *)
+function FourCharacterGridSquareOf(const aText: string): string;
+
 implementation
+
+uses
+   SysUtils,
+   (* ValChecked -- the range-checked text-to-number conversion. *)
+   utils_text;
+
+function TryParseReportAndGrid(const aText: string; aIsGrid: TGridTextTest;
+                               out aGrid: string; out aHasReport: boolean;
+                               out aReport: integer): boolean;
+var
+   text, first, rest: string;
+   blank: integer;
+   report: SmallInt;
+   code: integer;
+begin
+   Result := False;
+   aGrid := '';
+   aHasReport := False;
+   aReport := 0;
+
+   text := Trim(aText);
+   blank := Pos(' ', text);
+   if blank = 0 then
+      begin
+      first := '';
+      rest := text;
+      end
+   else
+      begin
+      first := Copy(text, 1, blank - 1);
+      rest := Trim(Copy(text, blank + 1, Length(text)));
+      end;
+
+   (* Nothing, or a third word. *)
+   if (rest = '') or (Pos(' ', rest) > 0) then
+      begin
+      Exit;
+      end;
+   if not aIsGrid(rest) then
+      begin
+      Exit;
+      end;
+
+   if first <> '' then
+      begin
+      (* ValChecked, not TryStrToInt: on Win64 the RTL's conversion is not
+         range-checked (CLAUDE.md), so '4294967297' would read as 1. *)
+      report := 0;
+      code := 0;
+      ValChecked(first, report, code);
+      if code <> 0 then
+         begin
+         Exit;
+         end;
+      aReport := report;
+      aHasReport := True;
+      end;
+
+   aGrid := UpperCase(rest);
+   Result := True;
+end;
+
+function FourCharacterGridSquareOf(const aText: string): string;
+var
+   text: string;
+begin
+   text := Trim(aText);
+   if IsGoodLookingGrid(text) then
+      begin
+      Result := UpperCase(Copy(text, 1, 4));
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
 
 function LooksLikeGridSquare(const aText: string): boolean;
 var

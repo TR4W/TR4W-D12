@@ -7,7 +7,7 @@ TR4W stations connect to TR4WServer to exchange contest activity. This network i
 ## Set up a practice network
 
 1. Choose the server computer and run a compatible TR4WServer build for the clients being tested.
-2. On each client, select the same intended contest and configure **SERVER ADDRESS**, **SERVER PORT**, and **SERVER PASSWORD** in the network settings.
+2. On each client, select the same intended contest and configure **SERVER ADDRESS**, **SERVER PORT**, and **SERVER PASSWORD** in the network settings. You caqn also select if you want to use Tailcat for connection to a remote TR4WServer. Please see below for more information on the Tailcat process.
 3. Give every station a distinct **COMPUTER ID**. The protocol's station-status display uses station letters; duplicate IDs can confuse status even though transport connections are separate.
 4. Make the server's main port and its synchronization port reachable. The conventional main port is `1061`; the synchronization port is **main port + 1**, normally `1062`.
 5. Check the Network/Stations displays, log a practice contact, and confirm that the other clients receive the expected contact and station state.
@@ -35,8 +35,24 @@ The password and bulk-sync transport are not made encrypted by the protocol-2 ha
 
 Database integrity at one client and agreement between several clients are different properties. Verify both [local log protection](../theory/database.md) and network consistency.
 
-## Evidence and review status
+## Tailcat
 
-Current synchronization decision: `uNet.pas`, including the contest guard around automatic synchronization. Form labels: `ui/lcl/uLogCompareForm.lfm`. Network settings: `ui/lcl/uPrefsForm.pas`. Networking analysis and corrections (`docs/TR4W_NETWORKING_ANALYSIS.md`) explains the protocol's history and separates it from the unimplemented V2 proposal.
+Tailcat is a technology offered by Tailscale. From Tailscale's website, "Tailcat connects machines over an encrypted connection, even when they’re on different networks. No accounts, login flow, tailnets, or IP addresses. Just share a tailcat address and connect."
 
-No multi-computer or mixed-version test was run for this documentation update. Compatibility, reconnect recovery, and synchronization should be verified with the actual release pair before a contest.
+For those with some networking exoerience, Tailcat acts similarly to using netcat where one can establish a client/server relationship between two computers. 
+
+You do not need to setup a Tailnet to use Tailcat. All features are built into TR4W and its TR4WServer component.
+
+### How does TR4W use Tailcat
+
+There are several options when it comes to setting up a remote connection. The goal is to allow multiple versions of TR4W to operate in a networked environment to share their log. THis means that each user runs their preferred version of TR4W (WIndows, macOS or Linux) and they can all interoperate with a single TR4W server running at a single location. Thus each remote logger gets the benefit of dupe checking, log backup and other benefits of a remote setup.  The anticipated use case for Tailcat is one where Tom NY4I has at his QTH. 
+
+Tom likes to contest with friends. Tom has a networked Elecraft K4 as well as a networked KPA1500 amplifier, Green Heron Engineering RT-21 rotor controller (with Ethernet control) and an Antenna Genius (also with Ethernet control). 
+
+To allow remote contesting with some members of Tom's radio clubs, he sets up the K4 and other equipment to be accessible to his users via port forwarding (or full-blown Tailscale with a subnet router but that is an differen topic). The remote user with either an Elecraft K4 radio (in client terminal mode), an Elecraft K4/0, KF5O's QK4 software or any of the other remote control solutions available for the K4.  To take the case of QK4, it is setup to connect to Tom's remote DNS name that passes to his K4. TR4W is setup to pass the local network traffic to the Tailcat address on its internal ports (1061 and 1062). 
+
+
+
+### Security
+
+TR4W’s remote connection invitation contains a cryptographically random secret, not just a server location. Tailcat uses it to establish an end-to-end encrypted WireGuard connection. Guessing that secret is not computationally practical. However, anyone who obtains the invitation can access the exposed TR4W service unless additional client authorization is enabled, so treat it like a password and share it privately.[Tailcat Read Me](https://raw.githubusercontent.com/tailscale/tailcat/main/README.md)

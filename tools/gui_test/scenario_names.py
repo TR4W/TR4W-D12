@@ -59,5 +59,6 @@ SCENARIOS = (
    "bench-wizard-hardware", "bench-wizard-tools", "bench-wizard-cty-download",
    "bench-wizard-tools-keyer", "bench-wizard-callbook",
    "bench-wizard-done-serial", "bench-wizard-done-network",
+   "bench-wizard-extras", "bench-wizard-extras-secret",
    "bench-wizard-switch", "bench-wizard-preserve", "bench-wizard-partial", "bench-install-dom",
 )

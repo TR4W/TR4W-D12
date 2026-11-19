@@ -4899,6 +4899,7 @@ msgstr ""
 
 #: tprefsform.lblloggerheading.caption
 #: texternalloggersform.caption
+#: uappstrings.swizloggerheading
 #, fuzzy
 msgid "External logger"
 msgstr ""
@@ -5215,6 +5216,7 @@ msgid "blank or 0 = the default for this type"
 msgstr ""
 
 #: tprefsform.lblrotatorip.caption
+#: uappstrings.swizrotatoraddress
 #, fuzzy
 msgid "IP address:"
 msgstr ""
@@ -5225,6 +5227,7 @@ msgid "PstRotator is reached over UDP and has no serial port; the others use one
 msgstr ""
 
 #: tprefsform.lblrotatortype.caption
+#: uappstrings.swizrotatortype
 #, fuzzy
 msgid "Type:"
 msgstr ""
@@ -11429,4 +11432,280 @@ msgstr ""
 #: uappstrings.snewcontesthostareainsidedistrictnotice
 #, fuzzy
 msgid "You are in %s: choose your district from the list."
+msgstr ""
+
+#: uappstrings.stotalsgridmults
+#, fuzzy
+msgid "Grids"
+msgstr ""
+
+#: uappstrings.snewcontestcpqpdistrictorlocation
+#, fuzzy
+msgid "Enter your federal electoral district (e.g. AIR) if you are in Alberta, Saskatchewan or Manitoba. Enter your state or Canadian province if outside the prairies, or DX:"
+msgstr ""
+
+#: uappstrings.stotalsprovincemults
+#, fuzzy
+msgid "Provinces"
+msgstr ""
+
+#: uappstrings.snewcontestacqpcountyorlocation
+#, fuzzy
+msgid "Enter your five-letter county or division code (e.g. NSHRM) if you are in New Brunswick, Nova Scotia, Prince Edward Island or Newfoundland and Labrador. Enter your state or Canadian province if outside Atlantic Canada, or DX:"
+msgstr ""
+
+#: uappstrings.sdefaultrotatorname
+#, fuzzy
+msgctxt "uappstrings.sdefaultrotatorname"
+msgid "Rotator"
+msgstr ""
+
+#: uappstrings.swizitemlogger
+#, fuzzy
+msgid "An external logger"
+msgstr ""
+
+#: uappstrings.swizitemloggerhint
+#, fuzzy
+msgid "Each QSO also goes to DXKeeper, Club Log, QRZ, Cloudlog/Wavelog or another logbook."
+msgstr ""
+
+#: uappstrings.swizitemrotator
+#, fuzzy
+msgid "An antenna rotator"
+msgstr ""
+
+#: uappstrings.swizitemrotatorhint
+#, fuzzy
+msgid "TR4W turns the antenna toward the station you are working."
+msgstr ""
+
+#: uappstrings.swizitemwsjtx
+#, fuzzy
+msgctxt "uappstrings.swizitemwsjtx"
+msgid "WSJT-X"
+msgstr ""
+
+#: uappstrings.swizitemwsjtxhint
+#, fuzzy
+msgid "Decodes and logged QSOs come in from WSJT-X over UDP."
+msgstr ""
+
+#: uappstrings.swizloggerintro
+#, fuzzy
+msgid "Choose the program or service that should receive your QSOs, and how to reach it. These are the same settings Preferences uses. Keys and passwords are kept in the system's credential store."
+msgstr ""
+
+#: uappstrings.swizloggerloading
+#, fuzzy
+msgid "The logbook list is still loading. Wait for it, then press Next again."
+msgstr ""
+
+#: uappstrings.swizresdefaultaddress
+#, fuzzy
+msgid "at the default address"
+msgstr ""
+
+#: uappstrings.swizresloggeractive
+#, fuzzy
+msgid "External logger \"%0:s\" (%1:s) receives each new QSO."
+msgstr ""
+
+#: uappstrings.swizresloggerfailed
+#, fuzzy
+msgid "The external logger was not saved: %s"
+msgstr ""
+
+#: uappstrings.swizresloggerinactive
+#, fuzzy
+msgid "External logger \"%0:s\" (%1:s) is saved but not switched on. Switch it on in Preferences."
+msgstr ""
+
+#: uappstrings.swizresloggerrestart
+#, fuzzy
+msgid "The external logger starts sending the next time TR4W starts."
+msgstr ""
+
+#: uappstrings.swizresrotator
+#, fuzzy
+msgid "Rotator \"%0:s\": %1:s %2:s, turning for every band."
+msgstr ""
+
+#: uappstrings.swizresrotatorfailed
+#, fuzzy
+msgid "The rotator was not saved. Set it up in Preferences > Rotators."
+msgstr ""
+
+#: uappstrings.swizreswsjtxoff
+#, fuzzy
+msgid "WSJT-X: the integration is off."
+msgstr ""
+
+#: uappstrings.swizreswsjtxon
+#, fuzzy
+msgid "WSJT-X: TR4W listens on UDP port %s."
+msgstr ""
+
+#: uappstrings.swizreswsjtxrestart
+#, fuzzy
+msgid "The WSJT-X change takes effect the next time TR4W starts."
+msgstr ""
+
+#: uappstrings.swizrotatorheading
+#, fuzzy
+msgctxt "uappstrings.swizrotatorheading"
+msgid "Rotator"
+msgstr ""
+
+#: uappstrings.swizrotatorintro
+#, fuzzy
+msgid "Choose your rotator and how it is connected. It turns for every band; Preferences > Rotators can limit it to some."
+msgstr ""
+
+#: uappstrings.swizrotatorneedsport
+#, fuzzy
+msgid "Choose the serial port the rotator is on, or go back and untick it."
+msgstr ""
+
+#: uappstrings.swizrotatorneedstype
+#, fuzzy
+msgid "Choose the rotator type, or go back and untick it."
+msgstr ""
+
+#: uappstrings.swizrotatorport
+#, fuzzy
+msgid "Serial port:"
+msgstr ""
+
+#: uappstrings.swizrotatorudpport
+#, fuzzy
+msgctxt "uappstrings.swizrotatorudpport"
+msgid "UDP port:"
+msgstr ""
+
+#: uappstrings.swizrotatorudpportbad
+#, fuzzy
+msgid "The UDP port must be a number from 1 to 65535, or blank."
+msgstr ""
+
+#: uappstrings.swizwsjtxenable
+#, fuzzy
+msgid "Use WSJT-X with TR4W"
+msgstr ""
+
+#: uappstrings.swizwsjtxheading
+#, fuzzy
+msgctxt "uappstrings.swizwsjtxheading"
+msgid "WSJT-X"
+msgstr ""
+
+#: uappstrings.swizwsjtxintro
+#, fuzzy
+msgid "TR4W can take decodes and logged QSOs from WSJT-X and mark the calls you still need. In WSJT-X, set Settings > Reporting > UDP Server to 127.0.0.1 and the port below."
+msgstr ""
+
+#: uappstrings.swizwsjtxport
+#, fuzzy
+msgctxt "uappstrings.swizwsjtxport"
+msgid "UDP port:"
+msgstr ""
+
+#: uappstrings.swizwsjtxportbad
+#, fuzzy
+msgid "The port must be a number from 1 to 65535."
+msgstr ""
+
+#: uappstrings.sbackupcopyfaileddiskfull
+#, fuzzy
+msgid "Backup to %s FAILED: the disk is full."
+msgstr ""
+
+#: uappstrings.sbackupcopyfailedfoldermissing
+#, fuzzy
+msgid "Backup to %s FAILED: the folder is not there."
+msgstr ""
+
+#: uappstrings.sbackupcopyfailednoaccess
+#, fuzzy
+msgid "Backup to %s FAILED: access denied."
+msgstr ""
+
+#: uappstrings.sbackupcopyfailedother
+#, fuzzy
+msgid "Backup to %s FAILED."
+msgstr ""
+
+#: uappstrings.slognotsavedreadonly
+#, fuzzy
+msgid ""
+"The contest log is not being saved (%s).\n"
+"\n"
+"QSOs can still be viewed but not saved or edited. %s\n"
+"\n"
+"The log written so far is in %s."
+msgstr ""
+
+#: uappstrings.slogreadonlyfixdiskfull
+#, fuzzy
+msgid "Free at least %d MB on %s, then press Enter again."
+msgstr ""
+
+#: uappstrings.slogreadonlyfixwriteerror
+#, fuzzy
+msgid "Check the drive the log is on, then press Enter again. Details are in tr4w.log."
+msgstr ""
+
+#: uappstrings.slogreadonlyreasondiskfull
+#, fuzzy
+msgid "disk full"
+msgstr ""
+
+#: uappstrings.slogreadonlyreasonwriteerror
+#, fuzzy
+msgid "write error"
+msgstr ""
+
+#: uappstrings.slogreadonlyreasonlocked
+#, fuzzy
+msgid "locked"
+msgstr ""
+
+#: uappstrings.slogreadonlynotsaved
+#, fuzzy
+msgid "Log is read-only (%s): not saved."
+msgstr ""
+
+#: uappstrings.seditqsonoqsoselected
+#, fuzzy
+msgid "No QSO selected."
+msgstr ""
+
+#: uappstrings.seditqsologunreadable
+#, fuzzy
+msgid "The contest log cannot be read: see tr4w.log."
+msgstr ""
+
+#: uappstrings.seditqsonosuchqso
+#, fuzzy
+msgid "That QSO is not in the log any more."
+msgstr ""
+
+#: uappstrings.seditqsocannotread
+#, fuzzy
+msgid "That QSO could not be read from the log: see tr4w.log."
+msgstr ""
+
+#: uappstrings.seditqsonoteditable
+#, fuzzy
+msgid "A deleted QSO, or a record that is not a QSO, cannot be edited here."
+msgstr ""
+
+#: uappstrings.slogwritableagain
+#, fuzzy
+msgid "The log is writable again."
+msgstr ""
+
+#: uappstrings.slogreadonlynotsaveddiskfull
+#, fuzzy
+msgid "Log is read-only (disk full): free %d MB on %s, then Enter."
 msgstr ""

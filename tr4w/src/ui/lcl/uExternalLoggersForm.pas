@@ -12,7 +12,14 @@ unit uExternalLoggersForm;
    masked secret, or a drop-down for a choice. A choice shows NAMES; the id
    behind a name, and anything the lookup derives (WRL's account id), is kept
    internally and is never a field. The choices come from the provider's loader
-   on a worker thread, so the form never waits on a network. *)
+   on a worker thread, so the form never waits on a network.
+
+   HOSTED BY THE SETUP WIZARD (issue 334), the way the radio and keyer editors
+   are: everything but Save and Cancel sits in pnlContent, which EditLoggerIn
+   moves into the wizard's page. The form itself is then never shown; the host
+   collects the result with AcceptEdits, re-lays it out when the provider
+   changes (OnLayoutChanged), and the timer that polls a logbook load still
+   runs on the hidden form. *)
 {$I ..\..\tr4w.inc}
 interface
 uses Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs, SyncObjs,
@@ -66,6 +73,8 @@ type
 
    TExternalLoggersForm = class(TForm)
    published
+      (* Everything but Save and Cancel: what a host takes (EditLoggerIn). *)
+      pnlContent: TPanel;
       edtName: TEdit;
       cbProvider: TComboBox;
       chkActive: TCheckBox;
@@ -90,6 +99,11 @@ type
       FBuilding: integer;
       FCloseRequested: boolean;
       FAutoLoadChoices: boolean;
+      (* pnlContent is in another window (EditLoggerIn): this form is never
+         shown, so "lay out when visible" means "lay out when hosted" too. *)
+      FHosted: boolean;
+      FOnLayoutChanged: TNotifyEvent;
+      procedure LayoutChanged;
       procedure ClearCredentials;
       function BuildRow(const aDescriptor: TLoggerFieldDescriptor;
          aIndex: integer): TFieldRow;
@@ -127,7 +141,24 @@ type
       function FieldCheck(const aKey: string): TCheckBox;
       function FieldRefreshButton(const aKey: string): TButton;
       function LoadRunning: boolean;
+      (* THE EDITOR AS PART OF ANOTHER WINDOW (the setup wizard, issue 334):
+         a copy of aConfig gains a new definition -- the defaults Add gives it
+         (NewExternalLoggerDefinition), switched on when aActive -- and
+         pnlContent moves into aHost.  The host calls FitLayout once its page
+         is showing and whenever OnLayoutChanged fires. *)
+      procedure EditLoggerIn(const aConfig: TExternalLoggerConfig;
+         const aHost: TWinControl; const aActive: boolean);
+      (* VALIDATE AND WRITE the controls into the definition -- Save without
+         the closing, the checks Save makes.  False, silently, while a logbook
+         list is loading (LoadRunning: the host says why); False after telling
+         the operator why when a check refuses. *)
+      function AcceptEdits: boolean;
       property Config: TExternalLoggerConfig read FConfig;
+      (* The definition being edited; owned by Config. *)
+      property Definition: TExternalLoggerDefinition read FDefinition;
+      (* The rows were rebuilt or a note appeared while hosted: pnlContent's
+         size may have changed. *)
+      property OnLayoutChanged: TNotifyEvent read FOnLayoutChanged write FOnLayoutChanged;
       (* Off, a choice list is only loaded by its Refresh button. *)
       property AutoLoadChoices: boolean read FAutoLoadChoices write FAutoLoadChoices;
    end;
@@ -143,6 +174,11 @@ const
    accepted; aConfig then holds the change. *)
 function EditExternalLoggerDefinition(const aConfig: TExternalLoggerConfig;
    const aId: string): boolean;
+
+(* A NEW DEFINITION AS ADD MAKES IT: the next free name, DXKeeper on this
+   machine at its default port, not switched on. Added to aConfig, which owns
+   it. One definition of "new" for the Add dialog and the setup wizard. *)
+function NewExternalLoggerDefinition(const aConfig: TExternalLoggerConfig): TExternalLoggerDefinition;
 
 (* The checks the editor's OK button makes, shared with the grid's Send new
    QSOs toggle so neither can switch on a logger the other would refuse. They
@@ -512,10 +548,20 @@ begin
    UpdateVerifyNote;
    (* A provider changed while the dialog is open. Before it is shown the
       widget set can measure nothing (a label's preferred size needs its
-      parent's handle), so the first layout is the show's. *)
-   if Visible then
+      parent's handle), so the first layout is the show's -- or, hosted, the
+      host's. *)
+   if Visible or FHosted then
       begin
       FitLayout;
+      LayoutChanged;
+      end;
+end;
+
+procedure TExternalLoggersForm.LayoutChanged;
+begin
+   if FHosted and Assigned(FOnLayoutChanged) then
+      begin
+      FOnLayoutChanged(Self);
       end;
 end;
 
@@ -650,6 +696,10 @@ begin
    clientW := Max(clientW, side + btnOK.Width + Px(BUTTON_GAP_96) + btnCancel.Width +
       Px(BUTTON_RIGHT_96));
    ClientWidth := clientW;
+   (* The panel takes the width BEFORE anything inside it is placed: the
+      blocks below the rows are anchored left and right, and a width change
+      after their placement would stretch them. *)
+   pnlContent.Width := clientW;
    rowW := clientW - side - Px(RIGHT_MARGIN_96);
    fieldW := rowW - editLeft;
 
@@ -747,6 +797,15 @@ begin
    lblStatus.Height := WrappedHeight(lblStatus, 1);
    y := y + lblStatus.Height + Px(BUTTONS_GAP_96);
 
+   (* THE CONTENT ENDS WHERE THE BUTTONS BEGIN. It is at 0,0 on this form, so
+      every coordinate above is the form's as well as the panel's; hosted,
+      this is the size the host makes room for. *)
+   pnlContent.SetBounds(0, 0, clientW, y);
+   if FHosted then
+      begin
+      Exit;
+      end;
+
    (* Save and Cancel size themselves to their captions (AutoSize); they are
       placed from the right. *)
    btnCancel.SetBounds(clientW - Px(BUTTON_RIGHT_96) - btnCancel.Width, y,
@@ -820,9 +879,10 @@ begin
          appears or goes does the dialog need laying out again. *)
       noteWasShown := lblVerifyNote.Visible;
       UpdateVerifyNote;
-      if (noteWasShown <> lblVerifyNote.Visible) and Visible then
+      if (noteWasShown <> lblVerifyNote.Visible) and (Visible or FHosted) then
          begin
          FitLayout;
+         LayoutChanged;
          end;
       Exit;
       end;
@@ -1231,8 +1291,9 @@ begin
    Result := True;
 end;
 
-procedure TExternalLoggersForm.Accept(Sender: TObject);
+function TExternalLoggersForm.AcceptEdits: boolean;
 begin
+   Result := False;
    (* A list still arriving would decide the account after the fact. *)
    if FTask <> nil then
       begin
@@ -1244,7 +1305,40 @@ begin
       Exit;
       end;
    FConfig.Present := True;
-   ModalResult := mrOK;
+   Result := True;
+end;
+
+procedure TExternalLoggersForm.Accept(Sender: TObject);
+begin
+   if AcceptEdits then
+      begin
+      ModalResult := mrOK;
+      end;
+end;
+
+procedure TExternalLoggersForm.EditLoggerIn(const aConfig: TExternalLoggerConfig;
+   const aHost: TWinControl; const aActive: boolean);
+var
+   definition: TExternalLoggerDefinition;
+begin
+   FConfig.Assign(aConfig);
+   definition := NewExternalLoggerDefinition(FConfig);
+   FConfig.SetActive(definition.Id, aActive);
+   (* Shown before it is hosted, so the rows are built without a layout; the
+      host lays it out once its page is showing. *)
+   BeginEdit(definition);
+   HostPanelIn(pnlContent, aHost);
+   FHosted := True;
+end;
+
+function NewExternalLoggerDefinition(const aConfig: TExternalLoggerConfig): TExternalLoggerDefinition;
+begin
+   Result := TExternalLoggerDefinition.Create;
+   Result.Name := aConfig.NewDefinitionName;
+   Result.ProviderId := 'DXKEEPER';
+   Result.Address := '127.0.0.1';
+   Result.Port := DXKEEPER_DEFAULT_PORT;
+   aConfig.Definitions.Add(Result);
 end;
 
 function EditExternalLoggerDefinition(const aConfig: TExternalLoggerConfig;
@@ -1265,12 +1359,7 @@ begin
       if aId = '' then
          begin
          (* A new definition starts inactive: the operator chooses to send. *)
-         definition := TExternalLoggerDefinition.Create;
-         definition.Name := dialog.FConfig.NewDefinitionName;
-         definition.ProviderId := 'DXKEEPER';
-         definition.Address := '127.0.0.1';
-         definition.Port := DXKEEPER_DEFAULT_PORT;
-         dialog.FConfig.Definitions.Add(definition);
+         definition := NewExternalLoggerDefinition(dialog.FConfig);
          end
       else
          begin

@@ -44,6 +44,13 @@ CASES = {
    "wizard-tools": "bench-wizard-tools",
    "wizard-done-serial": "bench-wizard-done-serial",
    "wizard-done-network": "bench-wizard-done-network",
+   # Issue 334: the external logger (hosted editor), rotator and WSJT-X pages,
+   # each page captured for the guide. NOT RUN YET (BENCH_QUEUE).
+   "wizard-extras": "bench-wizard-extras",
+   # Issue 334: a QRZ key typed into the hosted logger editor reaches the OS
+   # credential store, never tr4w.json. WRITES A CREDENTIAL on the guest;
+   # select it explicitly.
+   "wizard-extras-secret": "bench-wizard-extras-secret",
    # Reaches country-files.com over HTTPS from the guest; select it explicitly.
    "wizard-download": "bench-wizard-cty-download",
    # Reaches api.hamdb.org over HTTPS (the callsign only); select it explicitly.
@@ -67,7 +74,7 @@ CASES = {
 # (prepare_fixture --fresh-install), with what an installed copy has in its
 # folder: CTY.DAT, dom, TRMASTER.DTA and TRCLUSTER.DAT.
 FRESH_INSTALL_CASES = {"wizard-no", "wizard-station", "wizard-empty", "wizard-hardware", "wizard-download",
-   "wizard-callbook", "wizard-done-serial", "wizard-done-network"}
+   "wizard-callbook", "wizard-done-serial", "wizard-done-network", "wizard-extras", "wizard-extras-secret"}
 # ...and of those, the ones whose working folder holds no data files at all.
 EMPTY_FOLDER_CASES = {"wizard-empty", "wizard-download"}
 # Ordinary (settings-template) cases that get the full installed data set too.
@@ -87,7 +94,7 @@ DOM_CONTEST_LOG = Path(__file__).resolve().parents[2] / "tr4w/test/corpus/michig
 DOM_CONTEST_DB = "MIQP-dom.db"
 # Cases that leave the guest for the internet or open real hardware: never part
 # of the default run.
-OPT_IN_CASES = {"wizard-download", "wizard-callbook", "wizard-keyer"}
+OPT_IN_CASES = {"wizard-download", "wizard-callbook", "wizard-keyer", "wizard-extras-secret"}
 # The public cluster list the DX cluster pickers read. On Windows it is found
 # in the WORKING folder (DataFilePath), the shipped tier CTY.DAT and dom come
 # from, so it is staged into each run folder with them (prepare_fixture).

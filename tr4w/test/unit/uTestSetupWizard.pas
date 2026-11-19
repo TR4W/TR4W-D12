@@ -37,6 +37,14 @@ type
       procedure TestClusterServerSplit;
       procedure TestStageCarriesTheCWChoices;
       procedure TestDetailLinesNeverShowAPassword;
+      (* Issue 334: the external logger, rotator and WSJT-X items. *)
+      procedure TestPlanWithEveryItem;
+      procedure TestStageRotatorIsActiveAndUnique;
+      procedure TestStageNetworkRotatorSaysDefaultAddress;
+      procedure TestStageLoggerAddsAndActivates;
+      procedure TestStageLoggerRefusesAnUnseededLibrary;
+      procedure TestStageLoggerTakesBackAnInvalidDefinition;
+      procedure TestStageLoggerKeepsTheSecretOutOfTheFile;
    public
       procedure RunAllTests; override;
    end;
@@ -45,15 +53,19 @@ implementation
 
 uses
    SysUtils,
+   uJSON,          (* TJSONObject -- what SaveConfig writes the definitions into *)
+   uKeychain,      (* InstallTestKeychain, KEYCHAIN_REF_SUFFIX *)
    uRadioConfigStore,
    uKeyerConfigStore,
+   uExternalLoggerConfig,
    uAppStrings,    (* SDefaultClusterName -- the default is translatable *)
    uSetupWizard;
 
 function PlanText(const aPlan: TSetupPagePlan): string;
 const
    NAMES: array[TSetupPage] of string =
-      ('Station', 'Checklist', 'Radio', 'Keyer', 'Cluster', 'Result');
+      ('Station', 'Checklist', 'Radio', 'Keyer', 'Cluster',
+       'Logger', 'Rotator', 'WSJTX', 'Result');
 var
    i: integer;
 begin
@@ -422,8 +434,218 @@ begin
    end;
 end;
 
+procedure TSetupWizardTests.TestPlanWithEveryItem;
+begin
+   BeginTest('TestPlanWithEveryItem');
+   CheckEquals('Station,Checklist,Radio,Keyer,Cluster,Logger,Rotator,WSJTX,Result',
+               PlanText(SetupPagePlan([siWSJTX, siRotator, siLogger,
+                                       siCluster, siKeyer, siRadio])),
+               'the canonical order: radio, keyer, cluster, logger, rotator, WSJT-X');
+   CheckEquals('Station,Checklist,Logger,WSJTX,Result',
+               PlanText(SetupPagePlan([siWSJTX, siLogger])),
+               'only the ticked pages, still in order');
+   CheckTrue(IsCommitPage(SetupPagePlan([siRotator]), 2),
+             'a lone rotator page is the commit page');
+end;
+
+function NewRotatorDraft(const aId, aPort: string): TRotatorDefinition;
+begin
+   Result := TRotatorDefinition.Create;
+   Result.RotatorId := aId;
+   Result.ControlPort := aPort;
+end;
+
+procedure TSetupWizardTests.TestStageRotatorIsActiveAndUnique;
+var
+   store: TRadioConfigStore;
+   draft: TRotatorDefinition;
+   report: string;
+begin
+   BeginTest('TestStageRotatorIsActiveAndUnique');
+   store := TRadioConfigStore.Create;
+   draft := NewRotatorDraft('YAESU', 'SERIAL 4');
+   try
+      report := '';
+      CheckTrue(StageSetupRotator(store, draft, report), 'the rotator landed');
+      CheckEquals(1, store.RotatorCount, 'one rotator in the library');
+      CheckEquals(string(SDefaultRotatorName), store.Rotator(0).Name,
+                  'named as Preferences'' Add names one');
+      CheckEquals('YAESU', store.Rotator(0).RotatorId, 'the type, by registry id');
+      CheckEquals('SERIAL 4', store.Rotator(0).ControlPort, 'the port as drafted');
+      CheckEquals('', store.Rotator(0).Bands, 'every band');
+      CheckEquals(store.Rotator(0).Id, store.ActiveRotatorId, 'made the active rotator, by id');
+      CheckEquals(store.Rotator(0).Name, store.ActiveRotatorName, 'and the readable mirror');
+      CheckTrue(store.Rotator(0) <> draft, 'a copy, not the draft');
+      CheckTrue(Pos('Yaesu', report) > 0, 'the report names the type');
+
+      (* A second run, from the Tools menu: a second rotator, and it turns. *)
+      CheckTrue(StageSetupRotator(store, draft, report), 'the second landed too');
+      CheckEquals(2, store.RotatorCount, 'two rotators');
+      CheckEquals(string(SDefaultRotatorName) + ' 2', store.Rotator(1).Name,
+                  'the store''s own unique name');
+      CheckEquals(store.Rotator(1).Id, store.ActiveRotatorId, 'the newest is the one that turns');
+      CheckTrue(store.Rotator(0).Id <> store.Rotator(1).Id, 'each its own id');
+   finally
+      draft.Free;
+      store.Free;
+   end;
+end;
+
+procedure TSetupWizardTests.TestStageNetworkRotatorSaysDefaultAddress;
+var
+   store: TRadioConfigStore;
+   draft: TRotatorDefinition;
+   report: string;
+begin
+   BeginTest('TestStageNetworkRotatorSaysDefaultAddress');
+   store := TRadioConfigStore.Create;
+   draft := NewRotatorDraft('PSTROTATOR', 'NONE');
+   try
+      report := '';
+      CheckTrue(StageSetupRotator(store, draft, report), 'a UDP rotator with no address lands');
+      CheckTrue(Pos(string(SWizResDefaultAddress), report) > 0,
+                'blank address and port: the program''s defaults, and the report says so: '
+                + report);
+
+      draft.IPAddress := '192.168.1.9';
+      draft.UDPPort := 12000;
+      report := '';
+      CheckTrue(StageSetupRotator(store, draft, report), 'with an address');
+      CheckTrue(Pos('192.168.1.9:12000', report) > 0, 'the address is reported: ' + report);
+   finally
+      draft.Free;
+      store.Free;
+   end;
+end;
+
+function NewLoggerDraft(const aName, aProvider: string): TExternalLoggerDefinition;
+begin
+   Result := TExternalLoggerDefinition.Create;
+   Result.Name := aName;
+   Result.ProviderId := aProvider;
+   Result.Address := '127.0.0.1';
+   Result.Port := DXKEEPER_DEFAULT_PORT;
+end;
+
+procedure TSetupWizardTests.TestStageLoggerAddsAndActivates;
+var
+   config: TExternalLoggerConfig;
+   draft: TExternalLoggerDefinition;
+   report: string;
+begin
+   BeginTest('TestStageLoggerAddsAndActivates');
+   config := TExternalLoggerConfig.Create;
+   draft := NewLoggerDraft('Logger 1', 'DXKEEPER');
+   try
+      config.Present := True;   // as SeedExternalLoggers leaves it
+      report := '';
+      CheckTrue(StageSetupLogger(config, draft, True, report), 'the logger landed');
+      CheckEquals(1, config.Definitions.Count, 'one definition');
+      CheckEquals(draft.Id, config.Definitions[0].Id, 'with the editor''s id');
+      CheckTrue(config.Definitions[0] <> draft, 'a copy, not the draft');
+      CheckEquals(1, config.ActivePosition(draft.Id), 'switched on, first to deliver');
+      CheckTrue(Pos('DXKeeper', report) > 0, 'the report names the provider: ' + report);
+
+      (* A second one with the same name, not switched on. *)
+      draft.Id := 'second-id';
+      report := '';
+      CheckTrue(StageSetupLogger(config, draft, False, report), 'the second landed');
+      CheckEquals('Logger 1 2', config.Definitions[1].Name, 'a unique name, the store''s way');
+      CheckEquals(0, config.ActivePosition('second-id'), 'not switched on');
+      CheckTrue(Pos('Logger 1 2', report) > 0, 'the report names it: ' + report);
+   finally
+      draft.Free;
+      config.Free;
+   end;
+end;
+
+procedure TSetupWizardTests.TestStageLoggerRefusesAnUnseededLibrary;
+var
+   config: TExternalLoggerConfig;
+   draft: TExternalLoggerDefinition;
+   report: string;
+begin
+   BeginTest('TestStageLoggerRefusesAnUnseededLibrary');
+   config := TExternalLoggerConfig.Create;
+   draft := NewLoggerDraft('Logger 1', 'DXKEEPER');
+   try
+      report := '';
+      CheckFalse(StageSetupLogger(config, draft, True, report),
+                 'a library nobody seeded would hide a legacy logger: refused');
+      CheckEquals(0, config.Definitions.Count, 'nothing added');
+      CheckFalse(config.Present, 'and not marked present behind the seed''s back');
+      CheckTrue(report <> '', 'the refusal is reported');
+   finally
+      draft.Free;
+      config.Free;
+   end;
+end;
+
+procedure TSetupWizardTests.TestStageLoggerTakesBackAnInvalidDefinition;
+var
+   config: TExternalLoggerConfig;
+   draft: TExternalLoggerDefinition;
+   report: string;
+begin
+   BeginTest('TestStageLoggerTakesBackAnInvalidDefinition');
+   config := TExternalLoggerConfig.Create;
+   draft := NewLoggerDraft('Logger 1', '');   // no provider: Validate refuses
+   try
+      config.Present := True;
+      report := '';
+      CheckFalse(StageSetupLogger(config, draft, True, report), 'refused');
+      CheckEquals(0, config.Definitions.Count, 'taken back out');
+      CheckEquals(0, config.ActiveIds.Count, 'and out of the delivery order');
+      CheckTrue(Pos('not saved', report) > 0, 'the reason is reported: ' + report);
+   finally
+      draft.Free;
+      config.Free;
+   end;
+end;
+
+(* WHAT CREATE WRITES: the key goes to the keychain and the file holds only a
+  reference to it -- through the definitions' own SaveJSON, which is what
+  SaveConfig calls.  The in-memory keychain stands in for the OS one. *)
+procedure TSetupWizardTests.TestStageLoggerKeepsTheSecretOutOfTheFile;
+var
+   config: TExternalLoggerConfig;
+   draft: TExternalLoggerDefinition;
+   root: TJSONObject;
+   report, json: string;
+begin
+   BeginTest('TestStageLoggerKeepsTheSecretOutOfTheFile');
+   InstallTestKeychain;
+   config := TExternalLoggerConfig.Create;
+   draft := NewLoggerDraft('Club Log', 'CLUBLOG');
+   root := TJSONObject.Create;
+   try
+      draft.ApiKey := 'wizard-fixture-secret';
+      config.Present := True;
+      report := '';
+      CheckTrue(StageSetupLogger(config, draft, False, report), 'staged');
+      CheckEquals('wizard-fixture-secret', config.Definitions[0].ApiKey,
+                  'held in memory until the save');
+      config.SaveJSON(root);
+      json := root.ToJSON;
+      CheckEquals(0, Pos('wizard-fixture-secret', json), 'the key is not in the file');
+      CheckTrue(Pos('apiKey' + KEYCHAIN_REF_SUFFIX, json) > 0,
+                'the file holds a keychain reference: ' + json);
+   finally
+      root.Free;
+      draft.Free;
+      config.Free;
+   end;
+end;
+
 procedure TSetupWizardTests.RunAllTests;
 begin
+   TestPlanWithEveryItem;
+   TestStageRotatorIsActiveAndUnique;
+   TestStageNetworkRotatorSaysDefaultAddress;
+   TestStageLoggerAddsAndActivates;
+   TestStageLoggerRefusesAnUnseededLibrary;
+   TestStageLoggerTakesBackAnInvalidDefinition;
+   TestStageLoggerKeepsTheSecretOutOfTheFile;
    TestGridSquareCase;
    TestClusterServerSplit;
    TestStageCarriesTheCWChoices;

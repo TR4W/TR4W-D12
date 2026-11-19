@@ -1570,6 +1570,12 @@ procedure PreferencesReloadAfterExternalSave;
   server picker and the setup wizard's. *)
 function LoadClusterDirectory(const aInto: TStrings): boolean;
 
+(* THE ROTATOR TYPES, from the registry, into aCombo: each row shows the
+  display name and CARRIES the registry id (AddComboItem's tag), so a row is
+  read back with SelectedTag and chosen with SelectByTag -- never by index.
+  Shared by Preferences' Rotators page and the setup wizard's (issue 334). *)
+procedure FillRotatorTypeCombo(const aCombo: TComboBox);
+
 // Opens Preferences AT a specific setting: the section that owns aCommand is
 // selected and the control that edits it is focused, so the operator lands on
 // the field rather than on a page to go hunting through.
@@ -1626,9 +1632,8 @@ uses
    uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
    uSettingsDeclarations, // DeclareAllSettings
    ComPortEnumerator,   // the real serial ports, same source as the radio editor
-   uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
    uRotatorControl,     // rebuild the live rotators when the library is saved
-   uRotatorRegistry,    // the rotator type list comes from the registry
+   uRotatorRegistry,    // the type list, and RotatorUsesSerialPort -- asked, not assumed
    uCallSignRoutines,   // IsAGoodCall -- the MY CALL sanity check
    uBandPlanForm,       // ShowBandPlan -- the two ctFreqList rows' Edit button.
                         // Direct, not via uBMCF: that unit is the seam for the
@@ -8058,10 +8063,25 @@ begin
                    RotatorRowText(aRotator, RotatorIsActive(aRotator)));
 end;
 
+procedure FillRotatorTypeCombo(const aCombo: TComboBox);
+var
+   id: string;
+begin
+   aCombo.Items.BeginUpdate;
+   try
+      ClearComboItems(aCombo);
+      for id in RegisteredRotatorIds do
+         begin
+         AddComboItem(aCombo, RotatorDisplayName(id), id);
+         end;
+   finally
+      aCombo.Items.EndUpdate;
+   end;
+end;
+
 procedure TPrefsForm.LoadRotatorList;
 var
    i: integer;
-   id: string;
    keep, active: integer;
    enumerator: TComPortEnumerator;
 begin
@@ -8070,16 +8090,7 @@ begin
    // designer bakes itself into the .fmx and becomes a second copy that keeps
    // working while it drifts.  Add a rotator driver and it appears here with no
    // edit to this form -- which is the whole promise of the factory.
-   cbxRotatorType.Items.BeginUpdate;
-   try
-      cbxRotatorType.Clear;
-      for id in RegisteredRotatorIds do
-         begin
-         cbxRotatorType.Items.Add(RotatorDisplayName(id));
-         end;
-   finally
-      cbxRotatorType.Items.EndUpdate;
-   end;
+   FillRotatorTypeCombo(cbxRotatorType);
 
    // THE PORTS THAT ACTUALLY EXIST, through the same enumerator the radio
    // editor uses -- not a hopeful SERIAL 1..64.  NY4I asked for this and it is
@@ -8153,7 +8164,7 @@ procedure TPrefsForm.ShowSelectedRotator;
 var
    r: TRotatorDefinition;
    serial: boolean;
-   drv: TRotatorBase;
+   baud: integer;
 begin
    if (lstRotators.ItemIndex < 0) or (lstRotators.ItemIndex >= FStore.RotatorCount) then
       begin
@@ -8192,8 +8203,7 @@ begin
    try
       r := FStore.Rotator(lstRotators.ItemIndex);
       edtRotatorName.Text := r.Name;
-      cbxRotatorType.ItemIndex :=
-         cbxRotatorType.Items.IndexOf(RotatorDisplayName(r.RotatorId));
+      SelectByTag(cbxRotatorType, r.RotatorId);
       // A STORED PORT THAT IS NO LONGER PLUGGED IN still has to show.  Adding
       // it back rather than selecting nothing is what stops opening this page
       // on a machine with the interface unplugged from silently clearing the
@@ -8230,19 +8240,18 @@ begin
       // kept here.  Building one and asking it is what stops this form growing
       // the `if type = PSTROTATOR` the factory exists to remove -- and a future
       // networked rotator greys the right fields without touching this unit.
-      serial := True;
-      drv := CreateRotator(r.RotatorId, nil);
-      if drv <> nil then
+      // The registry asks it (RotatorUsesSerialPort), for the wizard too.
+      serial := RotatorUsesSerialPort(r.RotatorId, baud);
+      // The greyed hint shows what this type uses when the box is left
+      // blank, so the default is visible without being typed in and
+      // thereby frozen against a later change.
+      if baud > 0 then
          begin
-         try
-            serial := drv.UsesSerialPort;
-            // The greyed hint shows what this type uses when the box is left
-            // blank, so the default is visible without being typed in and
-            // thereby frozen against a later change.
-            edtRotatorBaud.TextHint := IntToStr(drv.PreferredBaudRate);
-         finally
-            drv.Free;
-         end;
+         edtRotatorBaud.TextHint := IntToStr(baud);
+         end
+      else
+         begin
+         edtRotatorBaud.TextHint := '';
          end;
 
       cbxRotatorPort.Enabled := serial;
@@ -8258,7 +8267,6 @@ procedure TPrefsForm.CaptureSelectedRotator;
 var
    r: TRotatorDefinition;
    n: integer;
-   ids: TArray<string>;
 begin
    if Loading then
       begin
@@ -8281,10 +8289,10 @@ begin
 
    // STORE THE ID, SHOW THE DISPLAY NAME.  The id is what the registry and the
    // JSON use, and it survives a display name being reworded or translated.
-   ids := RegisteredRotatorIds;
-   if (cbxRotatorType.ItemIndex >= 0) and (cbxRotatorType.ItemIndex < Length(ids)) then
+   // The row carries it (FillRotatorTypeCombo).
+   if cbxRotatorType.ItemIndex >= 0 then
       begin
-      r.RotatorId := ids[cbxRotatorType.ItemIndex];
+      r.RotatorId := SelectedTag(cbxRotatorType);
       end;
 
    if cbxRotatorPort.ItemIndex >= 0 then
@@ -8369,7 +8377,8 @@ var
    ids: TArray<string>;
 begin
    r := TRotatorDefinition.Create;
-   r.Name := FStore.UniqueRotatorName('Rotator');
+   // The name the setup wizard starts from too (uAppStrings), so the two agree.
+   r.Name := FStore.UniqueRotatorName(SDefaultRotatorName);
 
    // Defaults to the first registered driver rather than to nothing: a rotator
    // with no type is not something the operator asked for, and an empty combo

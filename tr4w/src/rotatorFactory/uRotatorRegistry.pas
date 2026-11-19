@@ -96,6 +96,14 @@ function RotatorDisplayName(const aId: string): string;
 function RegisteredRotatorIds: TArray<string>;
 function RegisteredCount: integer;
 
+(* WHETHER A ROTATOR OF THIS TYPE IS ON A SERIAL PORT -- the DRIVER'S answer,
+  asked by building one, so no caller keeps a list of type names (a future
+  networked rotator answers for itself).  aPreferredBaud is what it uses when
+  no baud rate is stated, 0 for an id that is not registered.  An unknown id
+  reads as serial, the shape most rotators have.  Preferences' Rotators page
+  and the setup wizard's rotator page both ask this (issue 334). *)
+function RotatorUsesSerialPort(const aId: string; out aPreferredBaud: integer): boolean;
+
 implementation
 
 uses
@@ -199,6 +207,25 @@ begin
       begin
       Result[i] := GEntries[i].Id;
       end;
+end;
+
+function RotatorUsesSerialPort(const aId: string; out aPreferredBaud: integer): boolean;
+var
+   drv: TRotatorBase;
+begin
+   Result := True;
+   aPreferredBaud := 0;
+   drv := CreateRotator(aId, nil);
+   if drv = nil then
+      begin
+      Exit;
+      end;
+   try
+      Result := drv.UsesSerialPort;
+      aPreferredBaud := drv.PreferredBaudRate;
+   finally
+      drv.Free;
+   end;
 end;
 
 function RegisteredCount: integer;

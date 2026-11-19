@@ -19,10 +19,11 @@ unit uSetupWizardForm;
 
 (* THE SETUP WIZARD -- docs/SETUP_WIZARD_DESIGN.md is the design.
 
-  One Station page, one checklist (Radio, WinKeyer, DX cluster), one page per
-  ticked item in canonical order, then "Create configuration" and a result
-  page that says what landed and what did not.  Opens by itself on a
-  brand-new install (uProgramMain) and from Tools -> Setup Wizard.
+  One Station page, one checklist (Radio, WinKeyer, DX cluster, external
+  logger, rotator, WSJT-X), one page per ticked item in canonical order, then
+  "Create configuration" and a result page that says what landed and what did
+  not.  Opens by itself on a brand-new install (uProgramMain) and from
+  Tools -> Setup Wizard.
 
   WHAT THIS UNIT OWNS AND WHAT IT DOES NOT (design 3.1).  The wizard owns
   intent and navigation.  It declares no setting of its own:
@@ -37,6 +38,16 @@ unit uSetupWizardForm;
     all three   put in the stores by uSetupWizard.StageSetupItems, then saved
                 and applied with SaveConfig, ApplyProfile and
                 ApplyActiveCluster -- what Preferences' Activate does
+    logger      edited in the EXISTING editor (TExternalLoggersForm), hosted
+                the same way (EditLoggerIn), on a copy of the definitions;
+                staged by StageSetupLogger after the startup seed
+                (SeedExternalLoggers), its secrets left to SaveConfig's
+                keychain path (issue 334)
+    rotator     the rotator type and port, as Preferences' Rotators page sets
+                them (FillRotatorTypeCombo, RotatorUsesSerialPort,
+                FillSerialPortCombo), staged by StageSetupRotator and made
+                live with ConfigureRotators -- what Preferences' save does
+    WSJT-X      three settings, through ApplyAndStoreCommand like the station
 
   ORDER SO THAT FAILURE COSTS NOTHING (design 3.2).  Nothing is written until
   "Create configuration".  Then the station is applied and SAVED FIRST, and
@@ -66,6 +77,8 @@ uses
    uKeyerConfigStore,
    uRadioEditForm,
    uKeyerEditForm,
+   uExternalLoggerConfig,   // TExternalLoggerDefinition -- the logger draft
+   uExternalLoggersForm,    // TExternalLoggersForm -- hosted on the logger page
    uCallbookBase,       // TCallbookRecord
    uSetupWizard;
 
@@ -124,6 +137,12 @@ type
       lblKeyerHint: TLabel;
       chkCluster: TCheckBox;
       lblClusterHint: TLabel;
+      chkLogger: TCheckBox;
+      lblLoggerHint: TLabel;
+      chkRotator: TCheckBox;
+      lblRotatorHint: TLabel;
+      chkWSJTX: TCheckBox;
+      lblWSJTXHint: TLabel;
 
       (* The Radio and WinKeyer sheets are empty in the designer: each is the
         host of the existing editor's panel (EditRadioIn / EditKeyerIn), so the
@@ -147,6 +166,25 @@ type
       lblPassword: TInputCaption;
       edtCommand: TEdit;
       lblCommand: TInputCaption;
+
+      (* Empty in the designer, like the Radio sheet: the host of the external
+        logger editor's panel (EditLoggerIn). *)
+      tsLogger: TTabSheet;
+
+      tsRotator: TTabSheet;
+      cbxRotatorType: TComboBox;
+      lblRotatorType: TInputCaption;
+      cbxRotatorPort: TComboBox;
+      lblRotatorPort: TInputCaption;
+      edtRotatorIP: TEdit;
+      lblRotatorIP: TInputCaption;
+      edtRotatorUDP: TEdit;
+      lblRotatorUDP: TInputCaption;
+
+      tsWSJTX: TTabSheet;
+      chkWSJTXEnable: TCheckBox;
+      edtWSJTXPort: TEdit;
+      lblWSJTXPort: TInputCaption;
 
       tsResult: TTabSheet;
       memResult: TMemo;
@@ -173,6 +211,7 @@ type
       procedure ServerExit(Sender: TObject);
       procedure ServerSelect(Sender: TObject);
       procedure DetailsChange(Sender: TObject);
+      procedure RotatorTypeChange(Sender: TObject);
    private
       FFields: TObjectList<TWizStationField>;
       FContinentLoaded: string;
@@ -198,9 +237,23 @@ type
       FKeyerDraft: TKeyerDefinition;
       FKeyerEditing: TKeyerDefinition;
       FKeyerEditor: TfrmKeyerEdit;
-      (* The client height the designer gave the window; pages that host an
-        editor are taller and the others return to this. *)
+      (* THE EXTERNAL LOGGER (issue 334): the hosted editor holds its own copy
+        of the definitions; the draft is a copy of the definition it accepted,
+        and whether its Active box was ticked. *)
+      FLoggerEditor: TExternalLoggersForm;
+      FLoggerDraft: TExternalLoggerDefinition;
+      FLoggerDraftActive: boolean;
+      (* The rotator page's two lists are filled when it is first reached. *)
+      FRotatorListsLoaded: boolean;
+      (* What the WSJT-X settings held when the wizard opened: only a change
+        is written (CommitStation's rule). *)
+      FWSJTXLoadedEnabled: boolean;
+      FWSJTXLoadedPort: string;
+      (* The client height and width the designer gave the window; pages that
+        host an editor are taller (and the logger editor wider), and the
+        others return to these. *)
       FBaseClientHeight: integer;
+      FBaseClientWidth: integer;
       (* RUN FROM STARTUP, BEFORE THE NEW CONTEST WINDOW (ShowSetupWizardAtStartup).
         Nothing exists yet to put a radio or a cluster into use on, and startup
         applies the saved active profile and cluster itself a little later --
@@ -219,7 +272,16 @@ type
 
       procedure ShowCountryFileState;
       procedure ShowEditorPage(const aPage: TSetupPage);
-      procedure FitWindowTo(const aHosted: integer);
+      procedure FitWindowTo(const aHosted: integer; const aHostedWidth: integer = 0);
+      procedure LoggerLayoutChanged(Sender: TObject);
+      procedure DropLoggerEditor;
+      procedure LoadRotatorLists;
+      procedure ShowRotatorTransport;
+      procedure ClearRotatorPage;
+      function RotatorIsSerial: boolean;
+      function RotatorDraft: TRotatorDefinition;
+      procedure LoadWSJTX;
+      procedure CommitWSJTX(const aStore: TRadioConfigStore; var aReport: string);
       procedure UpdateCWChoices;
       procedure RadioTypeChanged(Sender: TObject);
       procedure ShowResult;
@@ -284,6 +346,12 @@ uses
    uMainForm,
    Dialogs,
    System.UITypes,
+   ComPortEnumerator,   // the real serial ports, as Preferences' Rotators page lists them
+   uSettingsModel,      // Settings.ExternalLogger, Settings.Rotator, Settings.Wsjtx
+   uExternalLoggerMigration,   // SeedExternalLoggers -- startup's rule, before adding
+   uExternalLoggerFactory,     // ApplyExternalLoggerConfiguration -- what Preferences' save does
+   uRotatorRegistry,    // RotatorUsesSerialPort
+   uRotatorControl,     // ConfigureRotators -- what Preferences' save does
    VC,                  // ContinentTypeSA
    uctydat,             // ctyGetCountryID, ctyGetZone, ctyGetITUZone, ctyGetContinent
    uCallSignRoutines,   // IsAGoodCall
@@ -410,8 +478,10 @@ begin
    end;
 
    FBaseClientHeight := ClientHeight;
+   FBaseClientWidth := ClientWidth;
    AssignCaptions;
    LoadStation;
+   LoadWSJTX;
    ShowCountryFileState;
 
    FPlan := SetupPagePlan([]);
@@ -424,8 +494,10 @@ begin
    (* The editors first: they hold the editing copies freed with them. *)
    DropRadioEditor;
    DropKeyerEditor;
+   DropLoggerEditor;
    FreeAndNil(FRadioDraft);
    FreeAndNil(FKeyerDraft);
+   FreeAndNil(FLoggerDraft);
    FreeAndNil(FFields);
    if gSetupWizard = Self then
       begin
@@ -503,6 +575,19 @@ begin
    lblKeyerHint.Caption   := SWizItemKeyerHint;
    chkCluster.Caption     := SWizItemCluster;
    lblClusterHint.Caption := SWizItemClusterHint;
+   chkLogger.Caption      := SWizItemLogger;
+   lblLoggerHint.Caption  := SWizItemLoggerHint;
+   chkRotator.Caption     := SWizItemRotator;
+   lblRotatorHint.Caption := SWizItemRotatorHint;
+   chkWSJTX.Caption       := SWizItemWSJTX;
+   lblWSJTXHint.Caption   := SWizItemWSJTXHint;
+
+   lblRotatorType.Caption := SWizRotatorType;
+   lblRotatorPort.Caption := SWizRotatorPort;
+   lblRotatorIP.Caption   := SWizRotatorAddress;
+   lblRotatorUDP.Caption  := SWizRotatorUDPPort;
+   chkWSJTXEnable.Caption := SWizWSJTXEnable;
+   lblWSJTXPort.Caption   := SWizWSJTXPort;
 
    lblServer.Caption      := SWizClusterServer;
    lblLogin.Caption       := SWizClusterLogin;
@@ -861,6 +946,18 @@ begin
       begin
       Include(Result, siCluster);
       end;
+   if chkLogger.Checked then
+      begin
+      Include(Result, siLogger);
+      end;
+   if chkRotator.Checked then
+      begin
+      Include(Result, siRotator);
+      end;
+   if chkWSJTX.Checked then
+      begin
+      Include(Result, siWSJTX);
+      end;
 end;
 
 (* THE CHECKLIST CHANGED: recompute the plan.  UNTICKING DESTROYS THE DRAFT
@@ -890,6 +987,20 @@ begin
       edtPassword.Text    := '';
       edtCommand.Text     := '';
       end;
+   if not chkLogger.Checked then
+      begin
+      DropLoggerEditor;
+      FreeAndNil(FLoggerDraft);
+      end;
+   if not chkRotator.Checked then
+      begin
+      ClearRotatorPage;
+      end;
+   if not chkWSJTX.Checked then
+      begin
+      (* Unticked means "leave WSJT-X as it is": back to what is stored. *)
+      LoadWSJTX;
+      end;
    FPlan := SetupPagePlan(TickedItems);
    UpdateButtons;
 end;
@@ -916,6 +1027,18 @@ begin
       spCluster:
          begin
          Result := tsCluster;
+         end;
+      spLogger:
+         begin
+         Result := tsLogger;
+         end;
+      spRotator:
+         begin
+         Result := tsRotator;
+         end;
+      spWSJTX:
+         begin
+         Result := tsWSJTX;
          end;
    else
       begin
@@ -968,6 +1091,22 @@ begin
            box is upper case already (CharCase). *)
          edtLogin.TextHint := edtCall.Text;
          end;
+      spLogger:
+         begin
+         heading := SWizLoggerHeading;
+         intro   := SWizLoggerIntro;
+         end;
+      spRotator:
+         begin
+         heading := SWizRotatorHeading;
+         intro   := SWizRotatorIntro;
+         LoadRotatorLists;
+         end;
+      spWSJTX:
+         begin
+         heading := SWizWSJTXHeading;
+         intro   := SWizWSJTXIntro;
+         end;
       spResult:
          begin
          heading := SWizResultHeading;
@@ -979,6 +1118,15 @@ begin
    lblIntro.Caption   := intro;
    ShowEditorPage(page);
    pgPages.ActivePage := SheetFor(page);
+   (* THE LOGGER EDITOR AGAIN, NOW ITS SHEET IS THE ONE SHOWING: a word-wrapped
+     label reports its wrapped height only once its parent has a window, so
+     the layout made before the sheet was active took the editor's long note
+     for one line. *)
+   if (page = spLogger) and (FLoggerEditor <> nil) then
+      begin
+      FLoggerEditor.FitLayout;
+      LoggerLayoutChanged(FLoggerEditor);
+      end;
    UpdateButtons;
 end;
 
@@ -1029,9 +1177,13 @@ end;
   (AcceptEditorPage), which is also where its own validation speaks. *)
 procedure TfrmSetupWizard.ShowEditorPage(const aPage: TSetupPage);
 var
-   hosted: integer;
+   hosted, hostedWidth: integer;
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   loadErr: string;
 begin
    hosted := 0;
+   hostedWidth := 0;
    case aPage of
       spRadio:
          begin
@@ -1061,9 +1213,59 @@ begin
             end;
          hosted := FKeyerEditor.pnlContent.Height;
          end;
+      spLogger:
+         begin
+         if FLoggerEditor = nil then
+            begin
+            (* THE DEFINITIONS AS STORED, SEEDED THE WAY STARTUP SEEDS THEM, so
+              the editor's own checks (a unique name, two loggers sending to
+              one destination) see exactly what Create will save.  A library
+              that cannot be read leaves the copy empty; Create then says so
+              and writes nothing over it. *)
+            store  := TRadioConfigStore.Create;
+            keyers := TKeyerConfigStore.Create;
+            try
+               if FileExists(RadioStoreFileName) then
+                  begin
+                  LoadConfig(RadioStoreFileName, store, keyers, loadErr);
+                  end;
+               if store.ExternalLoggers.Error = '' then
+                  begin
+                  SeedExternalLoggers(store.ExternalLoggers, Settings.ExternalLogger);
+                  end;
+               FLoggerEditor := TExternalLoggersForm.Create(Self);
+               FLoggerEditor.OnLayoutChanged := LoggerLayoutChanged;
+               (* SWITCHED ON: ticking the item was the choice to send.  The
+                 editor's own checks then ask for what sending needs. *)
+               FLoggerEditor.EditLoggerIn(store.ExternalLoggers, tsLogger, True);
+            finally
+               keyers.Free;
+               store.Free;
+            end;
+            end;
+         FLoggerEditor.FitLayout;
+         hosted := FLoggerEditor.pnlContent.Height;
+         hostedWidth := FLoggerEditor.pnlContent.Width;
+         end;
    end;
 
-   FitWindowTo(hosted);
+   FitWindowTo(hosted, hostedWidth);
+end;
+
+(* The hosted logger editor rebuilt its rows (a provider change) or showed
+  its certificate note: the window follows the panel's new size. *)
+procedure TfrmSetupWizard.LoggerLayoutChanged(Sender: TObject);
+begin
+   if (FPlan <> nil) and (FPlan[FIndex] = spLogger) and (FLoggerEditor <> nil) then
+      begin
+      FitWindowTo(FLoggerEditor.pnlContent.Height, FLoggerEditor.pnlContent.Width);
+      end;
+end;
+
+procedure TfrmSetupWizard.DropLoggerEditor;
+begin
+   (* Its definitions are its own copy, freed with it. *)
+   FreeAndNil(FLoggerEditor);
 end;
 
 (* CW BY CAT AND SPEED SYNC, offered only for a radio that can do them -- the
@@ -1116,11 +1318,11 @@ end;
 
 (* Size the window to the header, the hosted editor (and anything under it),
   the buttons and a little air. *)
-procedure TfrmSetupWizard.FitWindowTo(const aHosted: integer);
+procedure TfrmSetupWizard.FitWindowTo(const aHosted: integer; const aHostedWidth: integer);
 const
    SLACK = 8;
 var
-   needed: integer;
+   needed, neededWidth: integer;
    work, outer: TRect;
 begin
    needed := pnlHeader.Height + aHosted + pnlButtons.Height + SLACK;
@@ -1129,6 +1331,16 @@ begin
       needed := FBaseClientHeight;
       end;
    ClientHeight := needed;
+
+   (* WIDER ONLY FOR AN EDITOR THAT IS: the external logger editor lays out
+     from measurement and can be wider than the designed window.  The page
+     control's frame is SLACK. *)
+   neededWidth := aHostedWidth + SLACK;
+   if neededWidth < FBaseClientWidth then
+      begin
+      neededWidth := FBaseClientWidth;
+      end;
+   ClientWidth := neededWidth;
 
    (* GROWN DOWNWARDS, so a window placed for its normal height ends with its
      Back and Next under the taskbar (seen at 1280x800, 2026-11-14).  Pull it
@@ -1153,6 +1365,199 @@ begin
    if Top < work.Top then
       begin
       Top := work.Top;
+      end;
+   (* Grown to the right, so pulled back in the same way. *)
+   if Left + Width > work.Right then
+      begin
+      Left := work.Right - Width;
+      end;
+   if Left < work.Left then
+      begin
+      Left := work.Left;
+      end;
+end;
+
+{ ------------------------------------------------------------- rotator ---- }
+
+(* THE ROTATOR PAGE'S LISTS, as Preferences' Rotators page fills them: the
+  types from the registry with the id in each row, and the ports that exist.
+  Once, when the page is first reached -- enumerating ports is not free. *)
+procedure TfrmSetupWizard.LoadRotatorLists;
+var
+   enumerator: TComPortEnumerator;
+begin
+   if FRotatorListsLoaded then
+      begin
+      Exit;
+      end;
+   FRotatorListsLoaded := True;
+   FillRotatorTypeCombo(cbxRotatorType);
+   enumerator := TComPortEnumerator.Create;
+   try
+      enumerator.Refresh;
+      FillSerialPortCombo(cbxRotatorPort, enumerator);
+   finally
+      enumerator.Free;
+   end;
+   ShowRotatorTransport;
+end;
+
+(* Whether the chosen type is on a serial port; no type yet reads as serial. *)
+function TfrmSetupWizard.RotatorIsSerial: boolean;
+var
+   baud: integer;
+   id: string;
+begin
+   id := '';
+   if cbxRotatorType.ItemIndex >= 0 then
+      begin
+      id := SelectedTag(cbxRotatorType);
+      end;
+   Result := RotatorUsesSerialPort(id, baud);
+end;
+
+(* SERIAL OR NETWORK IS THE DRIVER'S ANSWER (RotatorUsesSerialPort), the rule
+  Preferences follows: the port for a serial rotator, the address and UDP port
+  for one that is not.  A network rotator left blank uses the program's
+  defaults, shown greyed in the boxes. *)
+procedure TfrmSetupWizard.ShowRotatorTransport;
+var
+   serial: boolean;
+begin
+   serial := RotatorIsSerial;
+   cbxRotatorPort.Enabled := serial;
+   lblRotatorPort.Enabled := serial;
+   edtRotatorIP.Enabled   := not serial;
+   lblRotatorIP.Enabled   := not serial;
+   edtRotatorUDP.Enabled  := not serial;
+   lblRotatorUDP.Enabled  := not serial;
+   edtRotatorIP.TextHint  := LclText(string(Settings.Rotator.IpAddress));
+   edtRotatorUDP.TextHint := LclText(IntToStr(Settings.Rotator.UdpPort));
+end;
+
+procedure TfrmSetupWizard.RotatorTypeChange(Sender: TObject);
+begin
+   ShowRotatorTransport;
+end;
+
+(* UNTICKED: nothing chosen is kept, so a re-ticked rotator starts blank. *)
+procedure TfrmSetupWizard.ClearRotatorPage;
+begin
+   cbxRotatorType.ItemIndex := -1;
+   cbxRotatorPort.ItemIndex := -1;
+   edtRotatorIP.Text  := '';
+   edtRotatorUDP.Text := '';
+   if FRotatorListsLoaded then
+      begin
+      ShowRotatorTransport;
+      end;
+end;
+
+(* WHAT THE PAGE SAYS, as a definition the store can take: the type's id, and
+  either its port or its address.  No name (StageSetupRotator gives it one),
+  no baud rate (the driver's own), no bands (every band).  The caller owns
+  it. *)
+function TfrmSetupWizard.RotatorDraft: TRotatorDefinition;
+var
+   udp: Longint;
+   code: integer;
+begin
+   Result := TRotatorDefinition.Create;
+   if cbxRotatorType.ItemIndex >= 0 then
+      begin
+      Result.RotatorId := SelectedTag(cbxRotatorType);
+      end;
+   Result.ControlPort := PORT_NONE;
+   if RotatorIsSerial then
+      begin
+      if cbxRotatorPort.ItemIndex >= 0 then
+         begin
+         Result.ControlPort := SelectedTag(cbxRotatorPort);
+         end;
+      end
+   else
+      begin
+      Result.IPAddress := Trim(edtRotatorIP.Text);
+      udp := 0;
+      code := 0;
+      if Trim(edtRotatorUDP.Text) <> '' then
+         begin
+         ValChecked(Trim(edtRotatorUDP.Text), udp, code);
+         end;
+      if code = 0 then
+         begin
+         Result.UDPPort := udp;
+         end;
+      end;
+end;
+
+{ -------------------------------------------------------------- WSJT-X ---- }
+
+(* WHAT THE WSJT-X SETTINGS HOLD NOW, through the same function the Station
+  page uses (StationCommandValue).  On a new install that is the model's
+  default: switched ON, port 2237. *)
+procedure TfrmSetupWizard.LoadWSJTX;
+begin
+   FWSJTXLoadedEnabled := UpperCase(Trim(StationCommandValue(nil, 'WSJT-X ENABLED'))) = 'TRUE';
+   FWSJTXLoadedPort    := Trim(StationCommandValue(nil, 'WSJT-X BROADCAST PORT'));
+   chkWSJTXEnable.Checked := FWSJTXLoadedEnabled;
+   edtWSJTXPort.Text      := LclText(FWSJTXLoadedPort);
+end;
+
+(* ONLY WHAT CHANGED IS WRITTEN, through Preferences' own path.  A refused
+  value is reported.  From the Tools menu, turning WSJT-X on when its server
+  was never made, or moving its port, waits for a restart -- the server is
+  made, and bound, at startup -- and the result says so. *)
+procedure TfrmSetupWizard.CommitWSJTX(const aStore: TRadioConfigStore;
+                                      var aReport: string);
+var
+   enabled: string;
+   port: string;
+   needsRestart: boolean;
+begin
+   needsRestart := False;
+   port := Trim(edtWSJTXPort.Text);
+
+   if chkWSJTXEnable.Checked <> FWSJTXLoadedEnabled then
+      begin
+      if chkWSJTXEnable.Checked then
+         begin
+         enabled := 'TRUE';
+         needsRestart := wsjtx = nil;
+         end
+      else
+         begin
+         enabled := 'FALSE';
+         end;
+      if not ApplyAndStoreCommand(aStore, 'WSJT-X ENABLED', enabled) then
+         begin
+         AddReportLine(aReport, UnicodeFormat(SWizResRefused, ['WSJT-X ENABLED', enabled]));
+         end;
+      end;
+
+   if chkWSJTXEnable.Checked and (port <> FWSJTXLoadedPort) then
+      begin
+      if ApplyAndStoreCommand(aStore, 'WSJT-X BROADCAST PORT', port) then
+         begin
+         needsRestart := True;
+         end
+      else
+         begin
+         AddReportLine(aReport, UnicodeFormat(SWizResRefused, ['WSJT-X BROADCAST PORT', port]));
+         end;
+      end;
+
+   if chkWSJTXEnable.Checked then
+      begin
+      AddReportLine(aReport, UnicodeFormat(SWizResWSJTXOn, [port]));
+      end
+   else
+      begin
+      AddReportLine(aReport, SWizResWSJTXOff);
+      end;
+   if needsRestart and (not FStartupMode) then
+      begin
+      AddReportLine(aReport, SWizResWSJTXRestart);
       end;
 end;
 
@@ -1203,6 +1608,25 @@ begin
          FreeAndNil(FKeyerDraft);
          FKeyerDraft := FKeyerEditing.Clone;
          end;
+      end
+   else if (aPage = spLogger) and (FLoggerEditor <> nil) then
+      begin
+      (* A logbook list still arriving would decide the account after the
+        fact: the editor refuses, and the wizard says why. *)
+      if FLoggerEditor.LoadRunning then
+         begin
+         ShowMessage(SWizLoggerLoading);
+         Exit;
+         end;
+      Result := FLoggerEditor.AcceptEdits;
+      if Result then
+         begin
+         FreeAndNil(FLoggerDraft);
+         FLoggerDraft := TExternalLoggerDefinition.Create;
+         FLoggerDraft.Assign(FLoggerEditor.Definition);
+         FLoggerDraftActive :=
+            FLoggerEditor.Config.ActivePosition(FLoggerEditor.Definition.Id) > 0;
+         end;
       end;
 end;
 
@@ -1238,9 +1662,43 @@ begin
             FConfirmedCall := call;
             end;
          end;
-      spRadio, spKeyer:
+      spRadio, spKeyer, spLogger:
          begin
          Result := AcceptEditorPage(aPage);
+         end;
+      spRotator:
+         begin
+         if cbxRotatorType.ItemIndex < 0 then
+            begin
+            ShowMessage(SWizRotatorNeedsType);
+            cbxRotatorType.SetFocus;
+            Result := False;
+            end
+         else if RotatorIsSerial and
+                 ((cbxRotatorPort.ItemIndex < 0) or
+                  UnicodeSameText(SelectedTag(cbxRotatorPort), PORT_NONE)) then
+            begin
+            ShowMessage(SWizRotatorNeedsPort);
+            cbxRotatorPort.SetFocus;
+            Result := False;
+            end
+         else if (not RotatorIsSerial) and (not IsValidClusterPort(edtRotatorUDP.Text)) then
+            begin
+            (* IsValidClusterPort is the general rule: blank, or 1 to 65535. *)
+            ShowMessage(SWizRotatorUDPPortBad);
+            edtRotatorUDP.SetFocus;
+            Result := False;
+            end;
+         end;
+      spWSJTX:
+         begin
+         if chkWSJTXEnable.Checked and
+            ((Trim(edtWSJTXPort.Text) = '') or (not IsValidClusterPort(edtWSJTXPort.Text))) then
+            begin
+            ShowMessage(SWizWSJTXPortBad);
+            edtWSJTXPort.SetFocus;
+            Result := False;
+            end;
          end;
       spCluster:
          begin
@@ -1532,6 +1990,7 @@ var
    radio: TRadioDefinition;
    keyer: TKeyerDefinition;
    cluster: TClusterDefinition;
+   rotator: TRotatorDefinition;
    profile: TStationProfile;
 begin
    report := '';
@@ -1564,7 +2023,21 @@ begin
          end;
       logger.Info('[SetupWizard] station applied: %s', [Trim(edtCall.Text)]);
 
-      if ticked = [] then
+      (* WSJT-X IS SETTINGS, not a library, so it goes with the station: saved
+        by ApplyAndStoreCommand, whether or not the libraries could be read. *)
+      if siWSJTX in ticked then
+         begin
+         if storeRead then
+            begin
+            CommitWSJTX(store, report);
+            end
+         else
+            begin
+            CommitWSJTX(nil, report);
+            end;
+         end;
+
+      if ticked - [siWSJTX] = [] then
          begin
          Exit;
          end;
@@ -1599,6 +2072,35 @@ begin
          end;
 
       staged := StageSetupItems(store, keyers, radio, keyer, cluster, report);
+
+      (* THE ROTATOR AND THE EXTERNAL LOGGER, each on its own (issue 334). *)
+      if siRotator in ticked then
+         begin
+         rotator := RotatorDraft;
+         try
+            if StageSetupRotator(store, rotator, report) then
+               begin
+               Include(staged, siRotator);
+               end;
+         finally
+            rotator.Free;
+         end;
+         end;
+      if (siLogger in ticked) and (FLoggerDraft <> nil) then
+         begin
+         (* STARTUP'S SEED FIRST: on a file that predates the definitions it is
+           what carries a legacy single logger across, and it marks the
+           library present.  A library that could not be read is left to
+           StageSetupLogger to refuse. *)
+         if store.ExternalLoggers.Error = '' then
+            begin
+            SeedExternalLoggers(store.ExternalLoggers, Settings.ExternalLogger);
+            end;
+         if StageSetupLogger(store.ExternalLoggers, FLoggerDraft, FLoggerDraftActive, report) then
+            begin
+            Include(staged, siLogger);
+            end;
+         end;
 
       (* What "Show details" adds, only for what actually landed. *)
       if not (siRadio in staged) then
@@ -1673,6 +2175,22 @@ begin
       if siCluster in staged then
          begin
          ApplyActiveCluster(store);
+         end;
+
+      (* What Preferences' save does with these two libraries. *)
+      if siRotator in staged then
+         begin
+         ConfigureRotators(store);
+         end;
+      if siLogger in staged then
+         begin
+         ApplyExternalLoggerConfiguration(store.ExternalLoggers);
+         (* A definition added since start runs from the next start (issue
+           233): the set of running services is fixed for the session. *)
+         if FLoggerDraftActive then
+            begin
+            AddReportLine(report, SWizResLoggerRestart);
+            end;
          end;
 
       logger.Info('[SetupWizard] configuration created');

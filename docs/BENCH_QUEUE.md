@@ -172,6 +172,40 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-18 -- A FULL DISK: THE LOG GOES READ-ONLY, AND A REFUSED QSO STAYS TYPED (log-database)
+
+When the disk is full, the log now becomes read-only instead of being disabled (`uLogStore.Disable`). After that, a QSO the log refuses keeps its call and exchange on screen (`LogContact` now returns a Boolean, and `TryLogContact` stops when it is False). The unit tests read the Enter path's source. Only a real run can show the windows, the status line and the beep. Put the contest log on a small drive or a nearly full USB stick, not on the system drive. `BEEP ENABLE` must be on, because `DoABeep` does nothing when it is off.
+
+- [ ] **The first failure.** Log QSOs until one fails. Expected: the modal says "The contest log is not being saved (disk full)", that QSOs can still be viewed, "Free at least 10 MB on D:, then press Enter again." (the log's own drive), and the log file. Every refused Enter after that shows "Log is read-only (disk full): free 10 MB on D:, then Enter." Check that this fits the status panel without being clipped. A log on a UNC share names its `\\server\share` instead of a letter. `tr4w.log` should show code 13, the transaction rolled back, and the log READ-ONLY.
+- [ ] **Click OK: the QSO is still typed.** After you click OK, the call window and the exchange window still hold the QSO, and the focus has not moved. The status line reads "Log is read-only (disk full): not saved." and it is not wiped straight away. Try both CQ mode and S&P.
+- [ ] **Enter again.** The short read-only line and a beep, with no modal. Nothing is cleared. `tr4w.log` should say "REFUSING ... before it is posted anywhere". No UDP contact and no external-logger delivery happen for it: watch a UDP listener or the logger.
+- [ ] **A county-line or multi-park entry (a QSO party, POTA).** It is refused as a whole. Press Enter a second time. Each leg is queued once (no doubled legs in the log after the restart below).
+- [ ] **Double-click a QSO in the grid.** Edit QSO opens with the QSO in it. Save is refused with the read-only line and a beep, and the window stays open. Escape closes it without asking "Save changes?". Alt-Y says the read-only line and does not claim the QSO was deleted.
+- [ ] **Free space, press Enter: no restart (`LogStoreTryRecoverWrites`).** With TR4W still running and the QSO still typed, free at least the 10 MB the message names and press Enter. A free of a few KB is expected to fail again (NY4I measured 16 KB): it is refused quietly, with no second modal. The SAME QSO logs. The status line says "The log is writable again." and no modal appears. `tr4w.log` says "a probe write committed: the log is WRITABLE again". The windows clear as after any logged QSO, and the QSO goes to UDP, the loggers and the network once. Do the same with Edit QSO's Save and with Alt-Y. The log holds every QSO acknowledged before the failure, the recovered one, and none that was refused.
+- [ ] **Full again after a recovery.** Fill the drive again and log until a QSO fails. There is no second modal, only the read-only line and a beep, and the entry stays typed.
+- [ ] **A locked log does not recover.** Open a log that another program holds and choose "Open read-only". Pressing Enter on a QSO still gives "Log is read-only (locked): not saved." and never "writable again".
+
+## Added 2026-11-18 -- A CONTEST'S OWN CABRILLO OVERLAYS (issue 122, Louisiana QSO Party)
+
+The Cabrillo summary's CATEGORY-OVERLAY row is refilled each time the window opens, from the open contest's `CabrilloOverlayCategories` (`uCbrSum.OverlayValuesWith`). The composed list is unit-tested; the refill in the running window is not.
+
+- [ ] **Louisiana offers WIRES and POTA.** In a Louisiana QSO Party log, open the Cabrillo summary. The overlay list is CLASSIC, ROOKIE, TB-WIRES, YOUTH, NOVICE-TECH, YL, WIRES, POTA, then the blank. TB-WIRES appears once.
+- [ ] **A saved POTA comes back.** Choose POTA, press OK, and reopen the window: POTA is still selected. The Cabrillo header reads `CATEGORY-OVERLAY: POTA`.
+- [ ] **Another contest does not offer them.** In the same session, open another contest's log (CQ WW, say) and open the summary. WIRES and POTA are gone. The overlay is stored globally, not per contest, so the saved POTA shows unselected here. Pressing OK saves a blank. NY4I to rule on per-contest storage.
+
+## Added 2026-11-18 -- SETUP WIZARD: EXTERNAL LOGGER, ROTATOR, WSJT-X (issue 334)
+
+The setup wizard's checklist has three more items, all unticked at first: **An external logger**, **An antenna rotator** and **WSJT-X**. Each adds its page only when ticked, in that order after the DX cluster. The external logger page hosts the existing editor (`TExternalLoggersForm`, now with a `pnlContent` the way the radio and keyer editors have one), with Active ticked. The rotator page offers the type and the port as Preferences > Rotators does. The WSJT-X page shows the stored switch and UDP port. Create saves the logger after startup's own seed (`SeedExternalLoggers`), with its key handed to the OS credential store. The rotator is made the active one. WSJT-X is written only if it changed. The plan, the staging and the hosted pages are unit-tested (`uTestSetupWizard`, `uTestSetupWizardForm`), and the editor's own layout test still passes with the panel. **The GUI cases `wizard-extras` and `wizard-extras-secret` (opt-in: it writes a credential on the guest) are written and HAVE NOT BEEN RUN.** They capture every page for the user guide: `checklist-extras.png`, `logger-page.png`, `logger-filled.png`, `rotator-empty.png`, `rotator-page.png`, `wsjtx-page.png` and the Done page.
+
+- [ ] **Run `wizard-extras` and review the captures.** The checklist fits six items with nothing clipped. The logger page is one window, wider than the other pages if the editor needs it, and inside a 1280x800 work area. Back and Next stay visible. Changing the provider (try Club Log, then Cloudlog/Wavelog) re-fits the window.
+- [ ] **Run `wizard-extras-secret`.** `tr4w.json` holds `apiKeyRef` for the QRZ definition, never the key. The key is in Windows Credential Manager under `ExternalLoggers/<id>/ApiKey`. Remove it from the guest afterwards.
+- [ ] **An upgrader's legacy logger survives.** On a settings file that has the old single `EXTERNAL LOGGER` (for example DXKeeper, enabled) and no `externalLoggers` section, run Tools > Setup Wizard, tick the external logger, and pick Club Log. After Create, `externalLoggers` holds BOTH the seeded DXKeeper and the new Club Log.
+- [ ] **From the Tools menu.** Run the wizard with TR4W open on a contest and set up a serial rotator. Does it turn on the next heading command without a restart? The wizard calls `ConfigureRotators`, as a Preferences save does, so both should behave the same; the port is opened on demand, which is unverified. The new external logger's Done line says it starts sending at the next start.
+- [ ] **WSJT-X from the Tools menu.** With WSJT-X switched off at startup, tick WSJT-X and switch it on: the Done page says it takes effect at the next start. Restart, and WSJT-X decodes arrive.
+- [ ] **Preferences > Rotators still reads and saves the type.** Its type list now carries the registry id in each row (`FillRotatorTypeCombo`), not an index into the registry. Open an existing rotator: the type shows correctly. Change it and save: `rotatorId` changes in `tr4w.json`.
+
+---
+
 ## Added 2026-11-17 -- EDIT QSO SHOWS THE SIX NEW STATION VALUES; PREFERENCES CORRECTS A CONTEST'S (log schema 9, phase 2)
 
 Edit QSO's "Our station for this QSO" group has two more rows' worth of boxes: Check, Precedence and FD class beside Year sent, then Name, Postal code and FOC number. A box can be edited only when the QSO's contest uses that value (its New Contest dialog asks for it). Otherwise it is greyed and shows what the row holds. Preferences > Station now asks "Also this contest / Station default only" for every station value the open contest uses, not only the license year. It asks once per Save, listing the values. The rules, the repository write and the form's show/read are unit-tested (`uTestStationFactChange`, `uTestEditQSOLayout.Test_OurStationShowsAndReadsBack`, `uTestLogMyFacts`). Nothing below has run on a screen. **A GUI case (gui-test agent) should be written** for the first two items.
@@ -7132,3 +7166,197 @@ the multiplier windows or a written file.
 - [ ] **WA7BNM and 3830.** The class states WA7BNM 0. Look the contest up on
   the calendar and on 3830scores.com; if 3830's form breaks the multipliers
   out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-18 -- THE SOUTH DAKOTA QSO PARTY (issue 129)
+
+A new by-id contest (`SD-QSO-PARTY`) from the sponsor's page saved in
+`docs/ContestRules/QSOParties/SouthDakota/`, with NY4I's split score:
+(CW/phone points x counties, states, provinces, DXCC) + (digital points x
+four-character grids worked digitally) + W0OJY's 100. Unit-tested
+(`uTestContestSouthDakotaQP`, real-engine runs for an out-of-state and an
+in-state entrant; the engine seam, `TScoreTotals.DigitalQSOPoints`, in
+`uTestDigitalQSOPoints`); nothing sees the screen, the totals window or a
+written file, and no matrix record or corpus log covers it yet.
+
+- [ ] **Outside South Dakota** (New Contest, MY STATE `PA`). Type `599 MINN` on
+  20 m CW, then `59 MINN` on 40 m SSB: EXPECT Minnehaha is a new multiplier
+  once (not per band or mode), CW 2 points, phone 1. `599 CT` from W1AW is
+  refused ("work SD stations only").
+- [ ] **FT8 from WSJT-X** (both entrants). EXPECT the received grid is logged
+  as the QTH (four characters), scores 1 point, counts on the totals window's
+  `Grids` row (once overall), earns no county, state or DXCC, and is no
+  X-QSO -- also with a station outside South Dakota (NY4I: no host-area test
+  for digital).
+- [ ] **The score** (Ctrl-? / the status line). With some CW/phone and some
+  FT8 QSOs, EXPECT (CW/phone points x (counties+states+DXCC)) + (digital
+  points x grids) (+100 after W0OJY) -- check against a hand count. Then
+  Rescore (it must not change) and reopen the log (it must not change).
+- [ ] **In South Dakota** (tick "I am in SD", county `MINN`). Work W1AW
+  `599 CT`, DL1AAA `599 DL`, W3AA `599 DC`, VE4AA `599 MB`: EXPECT CT, DL
+  (DXCC), MD (DC is counted as Maryland -- a decision awaiting NY4I) and MB
+  each count once.
+- [ ] **The Cabrillo file.** `CONTEST: SD-QSO-PARTY`, digital QSOs written
+  `DG`, a grid QSO's grid in the received QTH column, the sent column your
+  county/state. The report columns are numeric (an FT8 SNR converted to an
+  RST) -- check the sponsor's checker (w0ej@arrl.net) accepts that.
+- [ ] **The ADIF file.** A county QSO writes `STATE:SD` and `CNTY:SD,<county>`
+  (`SD,Oglala Lakota`, `SD,Bon Homme` ...); a grid QSO writes no STATE.
+- [ ] **WA7BNM and 3830.** The class states WA7BNM 0. Look the contest up on
+  the calendar and on 3830scores.com; the 3830 report's one `Mults` column
+  adds the grids to the geographic multipliers -- if the form breaks them
+  out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-18 -- THE ILLINOIS QSO PARTY (issue 119)
+
+A new by-id contest (`IL-QSO-PARTY`) from the sponsor's 2026 announcement
+saved in `docs/ContestRules/QSOParties/Illinois/`, with NY4I's rulings (an
+Illinois entrant's county QSO also earns IL, and a station sending IL is IL;
+DC is Maryland; third full weekend of October; FM is phone). Unit-tested
+(`uTestContestIllinoisQP`, real-engine runs for an out-of-state and an
+in-state entrant); nothing sees the screen or a written file, and no matrix
+record or corpus log covers it yet.
+
+- [ ] **Outside Illinois** (New Contest, MY STATE `PA`). Type `599 COOK` on
+  20 m CW, then `599 COOK` on 20 m RTTY: EXPECT the RTTY QSO is a dupe
+  ("phone and CW/digital"), `59 COOK` on 20 m SSB is not; Cook is a new
+  multiplier once. `599 CT` from W1AW is refused ("work IL stations only").
+- [ ] **FT8 from WSJT-X.** EXPECT the QSO is logged as an X-QSO (0 points,
+  no multiplier, `X-QSO:` in the Cabrillo): "FT4 and FT8 contacts will
+  receive no contact credit".
+- [ ] **In Illinois** (tick "I am in IL", county `COOK`). Work W9AAA
+  `599 PEOR`, then W9IL `599 IL`, W3AA `599 DC`, W3AB `599 MD`, and six DX
+  entities: EXPECT Peoria earns the county AND IL (NY4I, #317), so W9IL's IL
+  is not new; DC counts as Maryland so MD is not new; the score counts at
+  most 5 DXCC while the multiplier window may show all six. In a fresh log,
+  `599 IL` FIRST is the IL multiplier and a county after it earns only the
+  county.
+- [ ] **The schedule.** New Contest's "Upcoming contests first": EXPECT the
+  Illinois QSO Party dated Sunday October 17, 2027, 1700 UTC (the third full
+  weekend of October).
+- [ ] **The bonus.** Work W9AWE and W9OAB, each twice: EXPECT +200 once.
+- [ ] **The Cabrillo and ADIF files.** `CONTEST: IL-QSO-PARTY`; ADIF
+  `CONTEST_ID:12>IL QSO PARTY` (the enumeration's spelling); a county QSO
+  writes `STATE:IL` and `CNTY:IL,<county>` (`IL,Rock Island`,
+  `IL,St. Clair`) -- check the ADIF validator accepts them.
+- [ ] **WA7BNM and 3830.** The class states WA7BNM 0. Look the contest up on
+  the calendar and on 3830scores.com; if 3830's form breaks the multipliers
+  out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-18 -- THE LOUISIANA QSO PARTY (issue 122)
+
+A new by-id contest (`LA-QSO-PARTY`) from the sponsor's rules page saved in
+`docs/ContestRules/QSOParties/Louisiana/`, and a new engine seam for rule 9.1
+("CW/Digital and Phone contacts count as separate multipliers"):
+`TContestBase.MultiplierModeOf`, applied to every write to and read of the
+multiplier sheet through `LOGDUPE.MultiplierSlotMode`. Unit-tested
+(`uTestContestLouisianaQP`, real-engine runs for both entrants and a
+rescore-style replay; the seam for every contest in `uTestMultiplierMode`);
+nothing sees the screen or a written file, and no matrix record or corpus log
+covers it yet.
+
+- [ ] **Outside Louisiana** (New Contest, MY STATE `PA`). Type `599 ACAD` on
+  20 m CW, then `599 ACAD` from another call on 20 m RTTY: EXPECT the RTTY QSO
+  scores 4 but Acadia is NOT a new multiplier; `59 ACAD` on 20 m SSB IS new,
+  and so is `599 ACAD` on 40 m RTTY. The same call on 20 m RTTY after CW is a
+  dupe. `599 CT` from W1AW is refused ("work LA stations only").
+- [ ] **The remaining-multipliers window and the band map's M** in RTTY:
+  EXPECT a parish worked on 20 m CW shows as worked while the radio is in RTTY
+  on 20 m (the display reads the same slot; `LOGWIND`'s `MultMode`). The
+  totals window's per-mode multiplier rows show digital multipliers under
+  CW -- check that reads sensibly.
+- [ ] **Rescore and reopen** a log with CW, RTTY and phone QSOs: the score and
+  the multiplier count must not change.
+- [ ] **In Louisiana** (tick "I am in LA", parish `ORLE`). Work W5LA `599 LA`
+  (no multiplier, 4 points), W3AA `599 DC` then W3AB `599 MD` (MD not new),
+  VO1AA `599 NF` (NL), DL1AAA `599 DL` on CW and DL2BBB `599 DL` on RTTY on one
+  band (one DXCC multiplier).
+- [ ] **FT8 from WSJT-X.** EXPECT an X-QSO (0 points, no multiplier): FT8
+  cannot send the exchange (rule 3.3).
+- [ ] **The bonus.** Work N5LCC twice: EXPECT +100 once.
+- [ ] **The Cabrillo and ADIF files.** `CONTEST: LA-QSO-PARTY`; ADIF
+  `CONTEST_ID:12>LA-QSO-PARTY`; a parish QSO writes `STATE:LA` and
+  `CNTY:LA,<parish>` -- `LA,St John the Baptist` for SJB; check the ADIF
+  validator accepts them. The summary's CATEGORY-OVERLAY list lacks WIRES and
+  POTA (rule 5.4) -- a question on issue 122.
+- [ ] **3830.** Look the contest up on 3830scores.com; if its form breaks the
+  multipliers out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-18 -- THE MISSISSIPPI QSO PARTY (issue 123)
+
+A new by-id contest (`MS-QSO-PARTY`) from the sponsor's 2026 rules PDF saved in
+`docs/ContestRules/QSOParties/Mississippi/`, with NY4I's rulings on the issue.
+Unit-tested (`uTestContestMississippiQP`, real-engine runs for an out-of-state
+and an in-state entrant, and the four dupe modes); nothing sees the screen, the
+totals window or a written file, and no matrix record or corpus log covers it.
+
+- [ ] **Outside Mississippi** (New Contest, MY STATE `PA`). On 20 m work W5XX
+  `599 HIN` on CW, `59 HIN` on SSB, `599 HIN` on RTTY, then FT8 from WSJT-X
+  with grid EM42: EXPECT four QSOs, none a dupe (the call window may say DUPE
+  before the RTTY and FT8 exchanges -- information only), Hinds a multiplier
+  once, EM42 a multiplier once on the `Grids` row; SSB 1 point, the others 2.
+  An FT8 QSO with a grid outside EM41-44/EM50-54 is refused when typed and an
+  X-QSO from WSJT-X. An FT8 QSO logged with `HIN` and no grid scores 0 points
+  (NY4I: "NO grid is a zero point qso").
+- [ ] **In Mississippi** (tick "I am in MS", county `HIN`, MY GRID set). Work
+  W1AW `599 CT`, DL1AAA `599 DL`, W3AA `599 DC`, a station sending `MS`, and
+  five FT8 grids: EXPECT CT, DL (DXCC), MD (DC as Maryland) count, MS does
+  not, and the score is points x (counties + states + provinces + DXCC +
+  ceil(5/4) = 2). Rescore and reopen: unchanged.
+- [ ] **No FM, no AM.** An FM or AM QSO is logged as an X-QSO.
+- [ ] **The Cabrillo file.** `CONTEST: MS-QSO-PARTY`; RTTY `RY`, FT8 `DG`; an
+  FT QSO sends your four-character grid and shows the received grid in the QTH
+  column; the report columns are numeric.
+- [ ] **The ADIF file.** A county QSO writes `STATE:MS` and `CNTY:MS,<county>`
+  (`MS,DeSoto`, `MS,Jefferson Davis`, `MS,Pearl River`); an FT QSO writes no
+  STATE.
+- [ ] **3830.** Look the contest up on 3830scores.com; if its form breaks the
+  counties and grids out, the class needs a `Get3830Summary`.
+
+## Added 2026-11-18 -- THE CANADIAN PRAIRIES QSO PARTY (issue 117)
+
+A new by-id contest (`CP-QSO-PARTY`) from the sponsor's rules and district
+table saved in `docs/ContestRules/QSOParties/CanadianPrairies/`, and the first
+party whose host is several provinces (`HostState` `AB SK MB`; ADIF STATE per
+district from `cpqp_cty.dom`). Unit-tested (`uTestContestCanadianPrairiesQP`,
+real-engine runs for an outside and a prairie entrant); nothing sees the
+screen or a written file, and no matrix record or corpus log covers it yet.
+
+- [ ] **New Contest, outside** (MY STATE `PA`). EXPECT the prompt names a
+  federal electoral district; typing `AB` with the box unticked is refused.
+  Work VE6AAA `599 AIR` on 20 m CW, then `59 AIR` on 20 m SSB: EXPECT one
+  multiplier (per band, not per mode), 1 point each. W1AW `599 CT` refused.
+- [ ] **New Contest, inside** (tick "I am in AB/SK/MB", district `RGQ`).
+  EXPECT the drop-down lists the 65 districts. Work VE6AAA `599 AIR` then
+  VE6BBB `599 BOW` on 20 m: EXPECT the Alberta multiplier once; VE5 `599 RGW`
+  (own province) counts; W3AA `599 DC` counts as MD; DL1AAA `599 DX` scores 1
+  and no multiplier.
+- [ ] **The ADIF file.** EXPECT `<CONTEST_ID:12>CP-QSO-PARTY`, a district's
+  STATE its province (AIR AB, RGW SK, WPC MB), no CNTY. adifmt warns on the
+  CONTEST_ID (not in ADIF's enumeration) -- expected.
+- [ ] **The Cabrillo file.** `CONTEST: CP-QSO-PARTY`, modes CW/PH (an FM QSO
+  PH), sent RST + district/state/DX, received RST + district/state/province/DX.
+- [ ] **Freeze its matrix record** (`freeze-contest-matrix.sh --reason "new
+  contest CP-QSO-PARTY" CP-QSO-PARTY`) and read the us-host variant's lines.
+
+## Added 2026-11-18 -- ARRL SWEEPSTAKES STATES ITS MODES (off-mode is an automatic X-QSO)
+
+NY4I saw CW QSOs (`160CW`, `40CW`) score 2 points in an ARRL-SS-SSB log on a
+Mac. Each running now states its mode (`UsesMode`): SS CW credits CW only, SS
+Phone credits Phone only (SSB/USB/LSB/AM; FM NOT credited -- the sponsor's
+rules do not define Phone, NY4I to rule). Sponsor rule 2.4, saved in
+`docs/ContestRules/ARRL/ARRL-SS-Rules.txt`. Unit-tested
+(`uTestAutomaticXQSO.Test_SweepstakesCreditsOnlyItsOwnMode`); nothing sees the
+screen.
+
+- [ ] **CW in SS Phone.** In an ARRL-SS-SSB log, log a QSO on 40 m CW.
+  EXPECT it logged and greyed as an X-QSO, 0 points, no section multiplier,
+  not a dupe for a later phone QSO with the same station; Cabrillo `X-QSO:`,
+  ADIF `APP_TR4W_CLAIMEDQSO` 0. Reopen an existing SS-SSB log holding CW
+  QSOs: EXPECT those become X-QSOs at load with the score dropping.
+- [ ] **Phone in SS CW.** The reverse in an ARRL-SS-CW log (20 m USB): the
+  same X-QSO, 0 points, no multiplier.
+- [ ] **FM and digital.** An FM or RTTY QSO in SS Phone is an X-QSO. If NY4I
+  rules FM is Phone, `TContestARRLSSSSB.UsesMode` changes.
+- [ ] **Open follow-up, bands NOT in this change.** Rule 2.3 allows only
+  160/80/40/20/15/10 m; both SS ids are still in `BANDS_NOT_YET_STATED`, so
+  a 30 m, 6 m or 2 m QSO still scores today.

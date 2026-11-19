@@ -853,6 +853,21 @@ resourcestring
    SNewContestHawaiiQPDistrictOrLocation =
       'Enter your Hawaii district (e.g. HON) if you are in Hawaii. Enter your ' +
       'state or Canadian province if outside Hawaii, or DX:';
+   (* THE CANADIAN PRAIRIES QSO PARTY'S PROMPT -- issue 117, 2026-11-18. Its
+     places are federal electoral districts in three provinces; the row label
+     and inside notice are the district texts above. *)
+   SNewContestCPQPDistrictOrLocation =
+      'Enter your federal electoral district (e.g. AIR) if you are in Alberta, ' +
+      'Saskatchewan or Manitoba. Enter your state or Canadian province if ' +
+      'outside the prairies, or DX:';
+   (* THE ATLANTIC CANADA QSO PARTY'S PROMPT -- issue 116, 2026-11-18. Its
+     places are counties (NL: divisions) in four provinces, each sent as a
+     five-letter province + county code. *)
+   SNewContestACQPCountyOrLocation =
+      'Enter your five-letter county or division code (e.g. NSHRM) if you are ' +
+      'in New Brunswick, Nova Scotia, Prince Edward Island or Newfoundland and ' +
+      'Labrador. Enter your state or Canadian province if outside Atlantic ' +
+      'Canada, or DX:';
    SNewContestHostAreaOutsideNotice =
       'You are outside %0:s: enter your US state or Canadian province ' +
       '(two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s.';
@@ -892,6 +907,17 @@ resourcestring
      that session", where the row read 'Prefixes'. Short: it shares the grid's
      left column with 'Prefixes' and 'Dom Mults'. *)
    STotalsCallsignMults = 'Calls';
+
+   (* THE TOTALS GRID'S MULTIPLIER ROW WHEN THE MULTIPLIER IS EACH GRID
+     SQUARE WORKED -- the South Dakota QSO Party's digital grids (issue 129,
+     2026-11-18), kept on the prefix sheet, where the row read 'Prefixes'.
+     Short, as 'Calls' is. *)
+   STotalsGridMults = 'Grids';
+
+   (* THE TOTALS GRID'S MULTIPLIER ROW WHEN THE PREFIX SHEET HOLDS PROVINCES --
+     the Atlantic Canada QSO Party's in-region province per band and mode
+     (issue 116, 2026-11-18), where the row read 'Prefixes'. *)
+   STotalsProvinceMults = 'Provinces';
 
    (* THE TOTALS GRID'S ZONE ROW AND THE LOG'S ZONE COLUMN WHEN THE "ZONE" IS
      THE YEAR OF FIRST LICENSE -- the European HF Championship and KVP
@@ -989,12 +1015,22 @@ resourcestring
    (* ---------------------------------------- the backup destination - *)
 
    (* ISSUE #98 STEP 2: the folder a backup is COPIED to after it is written
-     locally. Each of the first three is shown ONCE per change of state, on
-     the status line; %s is the folder, and in SBackupCopyFailed the second
-     %s is the reason, in English. *)
+     locally. Each is shown ONCE per change of state, on the status line,
+     which is one small panel; %s is the folder.
+
+     A FAILURE IS ONE SHORT SENTENCE PER REASON (NY4I, 2026-11-18: "far too
+     verbose and small. We just need to know the backup failed and a simple
+     reason"). The reason is uBackupCopier.TBackupCopyFailure; the full detail
+     -- the file, the system's own message -- goes to tr4w.log only. Whole
+     sentences, not a reason spliced into one, so a translation can order
+     its words. These replace SBackupCopyFailed ('Backups are NOT reaching
+     %s: %s. ...'), RENAMED rather than reworded so no translation of the
+     old two-%s sentence is ever formatted with one argument. *)
    SBackupDestinationReachable = 'Backup destination %s is reachable.';
-   SBackupCopyFailed =
-      'Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying.';
+   SBackupCopyFailedDiskFull = 'Backup to %s FAILED: the disk is full.';
+   SBackupCopyFailedFolderMissing = 'Backup to %s FAILED: the folder is not there.';
+   SBackupCopyFailedNoAccess = 'Backup to %s FAILED: access denied.';
+   SBackupCopyFailedOther = 'Backup to %s FAILED.';
    SBackupCopyRecovered = 'Backups are reaching %s again.';
    (* Shown when a backup has been written locally and its copy is queued;
      %s is the DESTINATION folder, not the local file. *)
@@ -1253,6 +1289,48 @@ resourcestring
       'was NOT saved. The log itself is not damaged and TR4W keeps it open.' +
       #10#10 + 'If this was a QSO, it is still in the entry window: log it ' +
       'again. If this keeps happening, run Tools > Run Verification Checks.';
+
+   (* A WRITE THE DISK WOULD NOT TAKE -- a full disk, or a write error
+     (uLogStore.Disable, 2026-11-18). The log stays open READ-ONLY: it can
+     be viewed, and nothing is saved until a save finds the disk takes
+     writes again. Shown once per log, at the first failure. The
+     first %s is the reason (one of the SLogReadOnlyReason strings), the
+     second the remedy (an SLogReadOnlyFix string), the third the log's
+     file. *)
+   SLogNotSavedReadOnly =
+      'The contest log is not being saved (%s).' + #10#10 +
+      'QSOs can still be viewed but not saved or edited. %s' + #10#10 +
+      'The log written so far is in %s.';
+   (* NO RESTART (2026-11-18): the next save tries the disk again
+     (uLogStore.LogStoreTryRecoverWrites). *)
+   (* %d is the megabytes to free (uLogStore.LOG_DISK_FULL_FREE_MB), %s the
+     drive ("D:"), or the folder when the log's path has no drive letter. *)
+   SLogReadOnlyFixDiskFull = 'Free at least %d MB on %s, then press Enter again.';
+   SLogReadOnlyFixWriteError =
+      'Check the drive the log is on, then press Enter again. Details are in tr4w.log.';
+   (* The status line, once, when a save finds the disk takes writes again. *)
+   SLogWritableAgain = 'The log is writable again.';
+   (* WHY THE LOG IS READ-ONLY, in a few words: the %s of SLogNotSavedReadOnly
+     and of SLogReadOnlyNotSaved. *)
+   SLogReadOnlyReasonDiskFull = 'disk full';
+   SLogReadOnlyReasonWriteError = 'write error';
+   SLogReadOnlyReasonLocked = 'locked';
+   (* THE STATUS LINE, every time a QSO or an edit is refused because the log
+     is read-only -- no dialog. %s is the reason, an SLogReadOnlyReason
+     string. *)
+   SLogReadOnlyNotSaved = 'Log is read-only (%s): not saved.';
+   (* The same line when the cause is a FULL DISK, saying how much to free and
+     where -- a small free does not work (NY4I, 16 KB). %d megabytes, %s the
+     drive or folder, as SLogReadOnlyFixDiskFull. ONE LINE: keep it short. *)
+   SLogReadOnlyNotSavedDiskFull = 'Log is read-only (disk full): free %d MB on %s, then Enter.';
+
+   (* WHY A DOUBLE CLICK ON THE LOG OPENED NO EDIT QSO WINDOW -- on the status
+     line, because it said nothing at all (2026-11-18). *)
+   SEditQSONoQSOSelected = 'No QSO selected.';
+   SEditQSOLogUnreadable = 'The contest log cannot be read: see tr4w.log.';
+   SEditQSONoSuchQSO = 'That QSO is not in the log any more.';
+   SEditQSOCannotRead = 'That QSO could not be read from the log: see tr4w.log.';
+   SEditQSONotEditable = 'A deleted QSO, or a record that is not a QSO, cannot be edited here.';
 
    (* EDIT QSO -- OUR STATION AS RECORDED FOR THE QSO (log schema 3). The
      group caption says where the values came from; the rest label the
@@ -1579,6 +1657,49 @@ resourcestring
    SWizResApplyFailed    = 'Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences.';
    SWizResNotSaved       = 'The radio, keyer and cluster were not saved: %s';
    SWizPrefsOpen         = 'Close Preferences first, so the setup wizard and Preferences do not overwrite each other''s changes.';
+
+   (* THE SETUP WIZARD'S EXTERNAL LOGGER, ROTATOR AND WSJT-X ITEMS (issue 334).
+     A rotator's first name, in the wizard and in Preferences' Add alike; the
+     store makes it unique ('Rotator 2'). *)
+   SDefaultRotatorName   = 'Rotator';
+   SWizItemLogger        = 'An external logger';
+   SWizItemLoggerHint    = 'Each QSO also goes to DXKeeper, Club Log, QRZ, Cloudlog/Wavelog or another logbook.';
+   SWizItemRotator       = 'An antenna rotator';
+   SWizItemRotatorHint   = 'TR4W turns the antenna toward the station you are working.';
+   SWizItemWSJTX         = 'WSJT-X';
+   SWizItemWSJTXHint     = 'Decodes and logged QSOs come in from WSJT-X over UDP.';
+   SWizLoggerHeading     = 'External logger';
+   SWizLoggerIntro       = 'Choose the program or service that should receive your QSOs, and how to reach it. These are the same settings Preferences uses. Keys and passwords are kept in the system''s credential store.';
+   SWizLoggerLoading     = 'The logbook list is still loading. Wait for it, then press Next again.';
+   SWizRotatorHeading    = 'Rotator';
+   SWizRotatorIntro      = 'Choose your rotator and how it is connected. It turns for every band; Preferences > Rotators can limit it to some.';
+   SWizRotatorType       = 'Type:';
+   SWizRotatorPort       = 'Serial port:';
+   SWizRotatorAddress    = 'IP address:';
+   SWizRotatorUDPPort    = 'UDP port:';
+   SWizRotatorNeedsType  = 'Choose the rotator type, or go back and untick it.';
+   SWizRotatorNeedsPort  = 'Choose the serial port the rotator is on, or go back and untick it.';
+   SWizRotatorUDPPortBad = 'The UDP port must be a number from 1 to 65535, or blank.';
+   SWizWSJTXHeading      = 'WSJT-X';
+   SWizWSJTXIntro        = 'TR4W can take decodes and logged QSOs from WSJT-X and mark the calls you still need. In WSJT-X, set Settings > Reporting > UDP Server to 127.0.0.1 and the port below.';
+   SWizWSJTXEnable       = 'Use WSJT-X with TR4W';
+   SWizWSJTXPort         = 'UDP port:';
+   SWizWSJTXPortBad      = 'The port must be a number from 1 to 65535.';
+   (* %0:s is the rotator's name, %1:s its type, %2:s how it is reached
+     (SWizResOnPort, SWizResAtAddress, SWizResNoPort or SWizResDefaultAddress). *)
+   SWizResRotator        = 'Rotator "%0:s": %1:s %2:s, turning for every band.';
+   SWizResDefaultAddress = 'at the default address';
+   SWizResRotatorFailed  = 'The rotator was not saved. Set it up in Preferences > Rotators.';
+   (* %0:s is the logger's name, %1:s the provider (DXKeeper, Club Log ...). *)
+   SWizResLoggerActive   = 'External logger "%0:s" (%1:s) receives each new QSO.';
+   SWizResLoggerInactive = 'External logger "%0:s" (%1:s) is saved but not switched on. Switch it on in Preferences.';
+   (* %s is the reason. *)
+   SWizResLoggerFailed   = 'The external logger was not saved: %s';
+   SWizResLoggerRestart  = 'The external logger starts sending the next time TR4W starts.';
+   (* %s is the UDP port. *)
+   SWizResWSJTXOn        = 'WSJT-X: TR4W listens on UDP port %s.';
+   SWizResWSJTXOff       = 'WSJT-X: the integration is off.';
+   SWizResWSJTXRestart   = 'The WSJT-X change takes effect the next time TR4W starts.';
 
    (* THE BAND MAP. The right-click item that copies the selected spot as
       "CALL [entity] freq comment" (issue 183), and the country panel with the

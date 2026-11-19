@@ -6,9 +6,10 @@ unit uSetupWizard;
   without streaming a form -- see docs/SETUP_WIZARD_DESIGN.md:
 
     WHICH PAGES, IN WHAT ORDER.  One Station page, one checklist, then one
-    page per ticked item in CANONICAL order (Radio, CW keyer, DX cluster)
-    whatever order the boxes were ticked in, then the result page.  A support
-    instruction such as "the third page" therefore means one thing.
+    page per ticked item in CANONICAL order (Radio, CW keyer, DX cluster,
+    external logger, rotator, WSJT-X) whatever order the boxes were ticked
+    in, then the result page.  A support instruction such as "the third page"
+    therefore means one thing.
 
     WHETHER IT IS OFFERED AT STARTUP.  While the station has no callsign
     stored, and never in a headless run, where there is no operator and a
@@ -19,8 +20,11 @@ unit uSetupWizard;
 
     WHAT THE OPTIONAL ITEMS PUT IN THE STORES.  StageSetupItems copies the
     wizard's drafts into the radio, keyer and cluster libraries and points a
-    profile at them -- through each store's own API, so the wizard declares
-    no field of its own (design 3.1).  A test reads the stores back.
+    profile at them; StageSetupRotator and StageSetupLogger do the same for
+    the rotator library and the external logger definitions (issue 334) --
+    through each store's own API, so the wizard declares no field of its own
+    (design 3.1).  A test reads the stores back.  WSJT-X is not a store: it
+    is three settings, written by the form through ApplyAndStoreCommand.
 
   NEARLY A LEAF: no LCL, no settings object, no live radio.  The stores it
   stages into are RTL-only units.  The window (uSetupWizardForm) and startup
@@ -32,7 +36,8 @@ interface
 
 uses
    uRadioConfigStore,
-   uKeyerConfigStore;
+   uKeyerConfigStore,
+   uExternalLoggerConfig;
 
 const
    (* The profile the wizard creates when the station has none active.  A
@@ -43,12 +48,13 @@ const
 type
    (* THE OPTIONAL ITEMS, in their canonical order.  The ordinal order IS the
      page order, so adding an item means choosing where it goes here. *)
-   TSetupItem  = (siRadio, siKeyer, siCluster);
+   TSetupItem  = (siRadio, siKeyer, siCluster, siLogger, siRotator, siWSJTX);
    TSetupItems = set of TSetupItem;
 
    (* Every page the wizard has.  spResult is shown after "Create
      configuration" and says what landed and what did not. *)
-   TSetupPage  = (spStation, spChecklist, spRadio, spKeyer, spCluster, spResult);
+   TSetupPage  = (spStation, spChecklist, spRadio, spKeyer, spCluster,
+                  spLogger, spRotator, spWSJTX, spResult);
 
    TSetupPagePlan = array of TSetupPage;
 
@@ -103,6 +109,44 @@ function StageSetupItems(const aStore: TRadioConfigStore;
                          const aCluster: TClusterDefinition;
                          var aReport: string): TSetupItems;
 
+(* COPY THE ROTATOR DRAFT INTO THE ROTATOR LIBRARY (issue 334).
+
+  aRotator is copied, never consumed.  Its name is made unique the store's
+  way (a blank name starts from SDefaultRotatorName, as Preferences' Add
+  does), and it is made THE ACTIVE ROTATOR -- by id, with the name as the
+  readable mirror, which is what Preferences' "Use this" writes -- because
+  only the active rotator turns, and an operator who set up one rotator
+  means that one.  Its band claim is left as drafted: blank is every band.
+
+  True when it landed.  One line is added to aReport either way. *)
+function StageSetupRotator(const aStore: TRadioConfigStore;
+                           const aRotator: TRotatorDefinition;
+                           var aReport: string): boolean;
+
+(* COPY THE EXTERNAL LOGGER DRAFT INTO THE DEFINITIONS (issue 334).
+
+  aDefinition is the hosted editor's accepted definition, copied with its id
+  and never consumed.  aActive puts it LAST in the delivery order, the rule
+  of the editor's own Active box.
+
+  THE CALLER SEEDS aConfig FIRST, the way startup does
+  (uExternalLoggerMigration.SeedExternalLoggers): on a file that predates
+  the definitions, that is what carries an upgrader's single legacy logger
+  across, and adding to an unseeded library would mark it Present with that
+  logger missing.  So a library that is not Present is refused here rather
+  than silently made so.  Refused, too, when it could not be read
+  (aConfig.Error) -- its file section is preserved, never written over --
+  and when it does not validate with the definition added, which is then
+  taken back out.  A name already in use is made unique the way the store
+  makes a rotator's or a cluster's: "Logger 1 2".
+
+  Secrets stay in the definition; SaveConfig hands them to the OS keychain
+  (TExternalLoggerDefinition.ToJSON).  Nothing is written here. *)
+function StageSetupLogger(const aConfig: TExternalLoggerConfig;
+                          const aDefinition: TExternalLoggerDefinition;
+                          const aActive: boolean;
+                          var aReport: string): boolean;
+
 (* Appends one line to a result-page report. *)
 procedure AddReportLine(var aReport: string; const aLine: string);
 
@@ -140,13 +184,16 @@ uses
    SysUtils,
    uPortAddress,        // DeviceNameFromStoredPort
    uRadioRegistry,      // DisplayNameId
+   uRotatorRegistry,    // RotatorDisplayName, RotatorUsesSerialPort
+   uExternalLoggerRegistry,   // FindExternalLoggerRegistration -- the display name
    uAppStrings;
 
 function SetupPagePlan(const aTicked: TSetupItems): TSetupPagePlan;
 const
    (* The item's page.  A case would do as well; a table keeps the canonical
      order in ONE place -- the enum's own. *)
-   PAGE_OF_ITEM: array[TSetupItem] of TSetupPage = (spRadio, spKeyer, spCluster);
+   PAGE_OF_ITEM: array[TSetupItem] of TSetupPage =
+      (spRadio, spKeyer, spCluster, spLogger, spRotator, spWSJTX);
 var
    item: TSetupItem;
    n: integer;
@@ -455,6 +502,174 @@ begin
          cluster.Free;
          AddReportLine(aReport, SWizResClusterFailed);
          end;
+      end;
+end;
+
+(* "on COM3" or "at 127.0.0.1:12000": how the rotator is reached, asked of the
+  DRIVER (serial or not), never of a list of type names here.  A network
+  rotator left blank uses the program's defaults (uRotatorControl), so blank
+  says nothing rather than a wrong address. *)
+function RotatorConnectionPhrase(const aRotator: TRotatorDefinition): string;
+var
+   addr, portName: string;
+   baud: integer;
+begin
+   if not RotatorUsesSerialPort(aRotator.RotatorId, baud) then
+      begin
+      addr := Trim(aRotator.IPAddress);
+      if aRotator.UDPPort > 0 then
+         begin
+         addr := addr + ':' + IntToStr(aRotator.UDPPort);
+         end;
+      if addr = '' then
+         begin
+         Result := SWizResDefaultAddress;
+         end
+      else
+         begin
+         Result := UnicodeFormat(SWizResAtAddress, [addr]);
+         end;
+      Exit;
+      end;
+
+   portName := DeviceNameFromStoredPort(Trim(aRotator.ControlPort));
+   if (portName = '') or UnicodeSameText(portName, PORT_NONE) then
+      begin
+      Result := SWizResNoPort;
+      end
+   else
+      begin
+      Result := UnicodeFormat(SWizResOnPort, [portName]);
+      end;
+end;
+
+function StageSetupRotator(const aStore: TRadioConfigStore;
+                           const aRotator: TRotatorDefinition;
+                           var aReport: string): boolean;
+var
+   rotator: TRotatorDefinition;
+   base: string;
+begin
+   Result := False;
+   if (aStore = nil) or (aRotator = nil) then
+      begin
+      Exit;
+      end;
+
+   rotator := TRotatorDefinition.Create;   // its own id, born with it
+   rotator.Assign(aRotator);
+   base := Trim(aRotator.Name);
+   if base = '' then
+      begin
+      base := SDefaultRotatorName;
+      end;
+   rotator.Name := aStore.UniqueRotatorName(base);
+
+   if not aStore.AddRotator(rotator) then
+      begin
+      // AddRotator frees nothing on refusal -- this still owns it.
+      rotator.Free;
+      AddReportLine(aReport, SWizResRotatorFailed);
+      Exit;
+      end;
+
+   aStore.ActiveRotatorId   := rotator.Id;
+   aStore.ActiveRotatorName := rotator.Name;
+   Result := True;
+   AddReportLine(aReport, UnicodeFormat(SWizResRotator,
+                                        [rotator.Name,
+                                         RotatorDisplayName(rotator.RotatorId),
+                                         RotatorConnectionPhrase(rotator)]));
+end;
+
+(* aBase, or aBase 2, aBase 3 ... -- the store's own spelling of a second name
+  (TRadioConfigStore.UniqueRotatorName and its siblings), compared without
+  case as the definitions' Validate compares them. *)
+function UniqueLoggerName(const aConfig: TExternalLoggerConfig;
+                          const aBase: string): string;
+
+   function Taken(const aName: string): boolean;
+   var
+      d: TExternalLoggerDefinition;
+   begin
+      Result := False;
+      for d in aConfig.Definitions do
+         begin
+         if UnicodeSameText(d.Name, aName) then
+            begin
+            Result := True;
+            Exit;
+            end;
+         end;
+   end;
+
+var
+   n: integer;
+begin
+   Result := aBase;
+   n := 2;
+   while Taken(Result) do
+      begin
+      Result := aBase + ' ' + IntToStr(n);
+      Inc(n);
+      end;
+end;
+
+function StageSetupLogger(const aConfig: TExternalLoggerConfig;
+                          const aDefinition: TExternalLoggerDefinition;
+                          const aActive: boolean;
+                          var aReport: string): boolean;
+var
+   definition: TExternalLoggerDefinition;
+   registration: TExternalLoggerRegistration;
+   provider, err: string;
+begin
+   Result := False;
+   if (aConfig = nil) or (aDefinition = nil) then
+      begin
+      Exit;
+      end;
+
+   if aConfig.Error <> '' then
+      begin
+      AddReportLine(aReport, UnicodeFormat(SWizResLoggerFailed, [aConfig.Error]));
+      Exit;
+      end;
+   if not aConfig.Present then
+      begin
+      (* The caller's mistake, not the operator's: say so in the same words. *)
+      AddReportLine(aReport, UnicodeFormat(SWizResLoggerFailed,
+                                           ['the external logger library was not loaded']));
+      Exit;
+      end;
+
+   definition := TExternalLoggerDefinition.Create;
+   definition.Assign(aDefinition);
+   definition.Name := UniqueLoggerName(aConfig, Trim(definition.Name));
+   aConfig.Definitions.Add(definition);   // owned by the list from here
+   aConfig.SetActive(definition.Id, aActive);
+
+   if not aConfig.Validate(err) then
+      begin
+      aConfig.SetActive(definition.Id, False);
+      aConfig.Definitions.Remove(definition);   // frees it
+      AddReportLine(aReport, UnicodeFormat(SWizResLoggerFailed, [err]));
+      Exit;
+      end;
+
+   Result := True;
+   provider := definition.ProviderId;
+   if FindExternalLoggerRegistration(definition.ProviderId, registration) then
+      begin
+      provider := registration.DisplayName;
+      end;
+   if aActive then
+      begin
+      AddReportLine(aReport, UnicodeFormat(SWizResLoggerActive, [definition.Name, provider]));
+      end
+   else
+      begin
+      AddReportLine(aReport, UnicodeFormat(SWizResLoggerInactive, [definition.Name, provider]));
       end;
 end;
 

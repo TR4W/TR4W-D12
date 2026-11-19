@@ -22,10 +22,21 @@ and keyer libraries are validated as a whole before they are saved, so a
 one at fault. The editors validate what they accept, so this needs a library
 that was already invalid on disk; it is reported on the result page.
 
-**NOT BUILT: the External logger and Rotator pages** (sections 4 and 2 list
-them). The request that built this named station, radio, WinKeyer and cluster;
-adding a page is a new `TSetupItem` member (its ordinal is its canonical place),
-a sheet, and a branch in `StageSetupItems`.
+**BUILT 2026-11-18 (issue 334): the External logger, Rotator and WSJT-X
+pages**, after the DX cluster in that order (`TSetupItem`'s ordinals), each
+unticked at first. The external logger page HOSTS the existing editor
+(`TExternalLoggersForm.EditLoggerIn`, its `pnlContent`), switched on, on a
+copy of the definitions seeded the way startup seeds them; Create stages it
+with `StageSetupLogger` after `SeedExternalLoggers`, and `SaveConfig` hands its
+secrets to the OS keychain. The rotator page offers the type and port the way
+Preferences > Rotators does (`FillRotatorTypeCombo`, `RotatorUsesSerialPort`);
+`StageSetupRotator` makes it the active rotator. WSJT-X is settings, written
+with the station through `ApplyAndStoreCommand`, only where changed. **Not
+built: running `tr4wconvert` from the wizard** (NY4I's comment on issue 334),
+because the converter writes the settings file from its own settings object
+while the wizard saves the live one over it -- the question is on the issue.
+**Known gap:** `DescribePortConflicts` looks at the profile only, so a serial
+rotator given the radio's or the WinKeyer's port is not asked about.
 
 **Section 6's gate was wrong when this was built, and was replaced** -- read
 the correction there before reasoning from the table.
@@ -255,12 +266,11 @@ managed in the regular form afterwards, the same pattern as the radio.
 
 ### Page 6 -- External logger (if ticked)
 
-Type (`elLogType`, `uExternalLoggerBase.pas:159`), address, port, enabled.
-
-**These are already properties of the settings model** --
-`Settings.ExternalLogger.Address` / `.Port` / `.Enabled` in `uSettingsModel`,
-migrated 2026-09-10 -- so this page writes typed properties and needs no
-command names at all.
+~~Type (`elLogType`, `uExternalLoggerBase.pas:159`), address, port, enabled,
+as properties of the settings model.~~ Superseded by the external logger
+DEFINITIONS (issue 220 onward): as built (issue 334) this page is the existing
+definition editor, hosted, and Create adds one definition to
+`externalLoggers` -- see the BUILT note at the top.
 
 ### Page 7 -- Rotator (if ticked)
 

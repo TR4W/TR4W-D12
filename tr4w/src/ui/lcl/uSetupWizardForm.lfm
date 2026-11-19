@@ -294,7 +294,7 @@ object frmSetupWizard: TfrmSetupWizard
       object chkRadio: TCheckBox
         Left = 16
         Height = 21
-        Top = 12
+        Top = 8
         Width = 560
         Caption = 'chkRadio'
         TabOrder = 0
@@ -303,7 +303,7 @@ object frmSetupWizard: TfrmSetupWizard
       object lblRadioHint: TLabel
         Left = 40
         Height = 17
-        Top = 34
+        Top = 30
         Width = 556
         AutoSize = False
         Caption = 'lblRadioHint'
@@ -311,7 +311,7 @@ object frmSetupWizard: TfrmSetupWizard
       object chkKeyer: TCheckBox
         Left = 16
         Height = 21
-        Top = 66
+        Top = 56
         Width = 560
         Caption = 'chkKeyer'
         TabOrder = 1
@@ -320,7 +320,7 @@ object frmSetupWizard: TfrmSetupWizard
       object lblKeyerHint: TLabel
         Left = 40
         Height = 17
-        Top = 88
+        Top = 78
         Width = 556
         AutoSize = False
         Caption = 'lblKeyerHint'
@@ -328,7 +328,7 @@ object frmSetupWizard: TfrmSetupWizard
       object chkCluster: TCheckBox
         Left = 16
         Height = 21
-        Top = 120
+        Top = 104
         Width = 560
         Caption = 'chkCluster'
         TabOrder = 2
@@ -337,10 +337,61 @@ object frmSetupWizard: TfrmSetupWizard
       object lblClusterHint: TLabel
         Left = 40
         Height = 17
-        Top = 142
+        Top = 126
         Width = 556
         AutoSize = False
         Caption = 'lblClusterHint'
+      end
+      object chkLogger: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 152
+        Width = 560
+        Caption = 'chkLogger'
+        TabOrder = 3
+        OnChange = ChecklistChange
+      end
+      object lblLoggerHint: TLabel
+        Left = 40
+        Height = 17
+        Top = 174
+        Width = 556
+        AutoSize = False
+        Caption = 'lblLoggerHint'
+      end
+      object chkRotator: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 200
+        Width = 560
+        Caption = 'chkRotator'
+        TabOrder = 4
+        OnChange = ChecklistChange
+      end
+      object lblRotatorHint: TLabel
+        Left = 40
+        Height = 17
+        Top = 222
+        Width = 556
+        AutoSize = False
+        Caption = 'lblRotatorHint'
+      end
+      object chkWSJTX: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 248
+        Width = 560
+        Caption = 'chkWSJTX'
+        TabOrder = 5
+        OnChange = ChecklistChange
+      end
+      object lblWSJTXHint: TLabel
+        Left = 40
+        Height = 17
+        Top = 270
+        Width = 556
+        AutoSize = False
+        Caption = 'lblWSJTXHint'
       end
     end
     object tsRadio: TTabSheet
@@ -483,6 +534,119 @@ object frmSetupWizard: TfrmSetupWizard
         Caption = 'lblCommand'
         FocusControl = edtCommand
         TabOrder = 8
+      end
+    end
+    object tsLogger: TTabSheet
+      Caption = 'tsLogger'
+      ClientHeight = 306
+      ClientWidth = 612
+    end
+    object tsRotator: TTabSheet
+      Caption = 'tsRotator'
+      ClientHeight = 306
+      ClientWidth = 612
+      object cbxRotatorType: TComboBox
+        Left = 160
+        Height = 23
+        Top = 8
+        Width = 300
+        ItemHeight = 15
+        Style = csDropDownList
+        TabOrder = 1
+        OnChange = RotatorTypeChange
+      end
+      object lblRotatorType: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 11
+        Width = 140
+        AutoSize = False
+        Caption = 'lblRotatorType'
+        FocusControl = cbxRotatorType
+        TabOrder = 0
+      end
+      object cbxRotatorPort: TComboBox
+        Left = 160
+        Height = 23
+        Top = 34
+        Width = 300
+        ItemHeight = 15
+        Style = csDropDownList
+        TabOrder = 3
+      end
+      object lblRotatorPort: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 37
+        Width = 140
+        AutoSize = False
+        Caption = 'lblRotatorPort'
+        FocusControl = cbxRotatorPort
+        TabOrder = 2
+      end
+      object edtRotatorIP: TEdit
+        Left = 160
+        Height = 23
+        Top = 60
+        Width = 160
+        TabOrder = 5
+      end
+      object lblRotatorIP: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 63
+        Width = 140
+        AutoSize = False
+        Caption = 'lblRotatorIP'
+        FocusControl = edtRotatorIP
+        TabOrder = 4
+      end
+      object edtRotatorUDP: TEdit
+        Left = 160
+        Height = 23
+        Top = 86
+        Width = 70
+        TabOrder = 7
+      end
+      object lblRotatorUDP: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 89
+        Width = 140
+        AutoSize = False
+        Caption = 'lblRotatorUDP'
+        FocusControl = edtRotatorUDP
+        TabOrder = 6
+      end
+    end
+    object tsWSJTX: TTabSheet
+      Caption = 'tsWSJTX'
+      ClientHeight = 306
+      ClientWidth = 612
+      object chkWSJTXEnable: TCheckBox
+        Left = 16
+        Height = 21
+        Top = 12
+        Width = 560
+        Caption = 'chkWSJTXEnable'
+        TabOrder = 0
+      end
+      object edtWSJTXPort: TEdit
+        Left = 160
+        Height = 23
+        Top = 44
+        Width = 70
+        TabOrder = 2
+      end
+      object lblWSJTXPort: TInputCaption
+        Left = 16
+        Height = 17
+        Top = 47
+        Width = 140
+        AutoSize = False
+        Caption = 'lblWSJTXPort'
+        FocusControl = edtWSJTXPort
+        TabOrder = 1
       end
     end
     object tsResult: TTabSheet

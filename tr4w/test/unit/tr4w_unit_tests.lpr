@@ -375,6 +375,12 @@ uses
    uContestKansasQP in '..\..\src\contestFactory\uContestKansasQP.pas',
    uContestIowaQP in '..\..\src\contestFactory\uContestIowaQP.pas',
    uContestHawaiiQP in '..\..\src\contestFactory\uContestHawaiiQP.pas',
+   uContestSouthDakotaQP in '..\..\src\contestFactory\uContestSouthDakotaQP.pas',
+   uContestIllinoisQP in '..\..\src\contestFactory\uContestIllinoisQP.pas',
+   uContestLouisianaQP in '..\..\src\contestFactory\uContestLouisianaQP.pas',
+   uContestMississippiQP in '..\..\src\contestFactory\uContestMississippiQP.pas',
+   uContestCanadianPrairiesQP in '..\..\src\contestFactory\uContestCanadianPrairiesQP.pas',
+   uContestAtlanticCanadaQP in '..\..\src\contestFactory\uContestAtlanticCanadaQP.pas',
    uContestSouthCarolinaQP in '..\..\src\contestFactory\uContestSouthCarolinaQP.pas',
    uContestVermontQP in '..\..\src\contestFactory\uContestVermontQP.pas',
    uContestNewHampshireQP in '..\..\src\contestFactory\uContestNewHampshireQP.pas',
@@ -937,6 +943,30 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestKansasQP in 'uTestContestKansasQP.pas',
    uTestContestIowaQP in 'uTestContestIowaQP.pas',
    uTestContestHawaiiQP in 'uTestContestHawaiiQP.pas',
+   (* The South Dakota QSO Party, a new contest registered by its id, and
+      its split score (2026-11-18, #129). *)
+   uTestContestSouthDakotaQP in 'uTestContestSouthDakotaQP.pas',
+   (* The Illinois QSO Party, a new contest registered by its id
+      (2026-11-18, #119). *)
+   uTestContestIllinoisQP in 'uTestContestIllinoisQP.pas',
+   (* The Louisiana QSO Party, a new contest registered by its id
+      (2026-11-18, #122), and the multiplier-mode seam its rule 9.1 needed
+      (CW and digital are one multiplier mode). *)
+   uTestContestLouisianaQP in 'uTestContestLouisianaQP.pas',
+   uTestMultiplierMode in 'uTestMultiplierMode.pas',
+   (* The Mississippi QSO Party, a new contest registered by its id
+      (2026-11-18, #123): FT4/FT8 grids on the prefix sheet, and an
+      in-state entrant's grids counted divided by four, rounded up. *)
+   uTestContestMississippiQP in 'uTestContestMississippiQP.pas',
+   (* The Canadian Prairies QSO Party, a new contest registered by its id
+      (2026-11-18, #117), and the first party whose host is several
+      provinces (HostState 'AB SK MB'; ADIF STATE per district). *)
+   uTestContestCanadianPrairiesQP in 'uTestContestCanadianPrairiesQP.pas',
+   (* The Atlantic Canada QSO Party, a new contest registered by its id
+      (2026-11-18, #116): the second multi-province party, its in-region
+      province per band and mode on the prefix sheet, and its bonus
+      stations. *)
+   uTestContestAtlanticCanadaQP in 'uTestContestAtlanticCanadaQP.pas',
    uTestContestSouthCarolinaQP in 'uTestContestSouthCarolinaQP.pas',
    (* The Vermont QSO Party, a new contest registered by its id
       (2026-11-10, #130). *)
@@ -944,6 +974,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* A second domestic multiplier key per QSO: the host state a party's
       in-state county QSO also earns (#317, 2026-11-13). *)
    uTestAdditionalDomesticMultiplier in 'uTestAdditionalDomesticMultiplier.pas',
+   (* The digital QSOs' share of the points in the score's totals -- the
+      seam the South Dakota QSO Party's split score reads (#129,
+      2026-11-18). *)
+   uTestDigitalQSOPoints in 'uTestDigitalQSOPoints.pas',
    (* The New Hampshire QSO Party, a new contest registered by its id
       (2026-11-10, #112). *)
    uTestContestNewHampshireQP in 'uTestContestNewHampshireQP.pas',
@@ -1188,9 +1222,17 @@ begin
    RegisterSuite(TContestKansasQPTests.Create('ContestKansasQP'));
    RegisterSuite(TContestIowaQPTests.Create('ContestIowaQP'));
    RegisterSuite(TContestHawaiiQPTests.Create('ContestHawaiiQP'));
+   RegisterSuite(TContestSouthDakotaQPTests.Create('ContestSouthDakotaQP'));
+   RegisterSuite(TContestIllinoisQPTests.Create('ContestIllinoisQP'));
+   RegisterSuite(TContestLouisianaQPTests.Create('ContestLouisianaQP'));
+   RegisterSuite(TMultiplierModeTests.Create('MultiplierMode'));
+   RegisterSuite(TContestMississippiQPTests.Create('ContestMississippiQP'));
+   RegisterSuite(TContestCanadianPrairiesQPTests.Create('ContestCanadianPrairiesQP'));
+   RegisterSuite(TContestAtlanticCanadaQPTests.Create('ContestAtlanticCanadaQP'));
    RegisterSuite(TContestSouthCarolinaQPTests.Create('ContestSouthCarolinaQP'));
    RegisterSuite(TContestVermontQPTests.Create('ContestVermontQP'));
    RegisterSuite(TAdditionalDomesticMultiplierTests.Create('AdditionalDomesticMultiplier'));
+   RegisterSuite(TDigitalQSOPointsTests.Create('DigitalQSOPoints'));
    RegisterSuite(TContestNewHampshireQPTests.Create('ContestNewHampshireQP'));
    RegisterSuite(TContestStateQSOPartyBaseTests.Create('ContestStateQSOPartyBase'));
    RegisterSuite(TContestNewEnglandQPTests.Create('ContestNewEnglandQP'));

@@ -10,99 +10,110 @@ object ExternalLoggersForm: TExternalLoggersForm
   ClientHeight = 530
   OnCloseQuery = EditorCloseQuery
   OnShow = EditorShow
-  object lblName: TLabel
-    Left = 16
-    Top = 24
-    Width = 190
-    Height = 24
-    AutoSize = False
-    Layout = tlCenter
-    Caption = 'Name'
-  end
-  object edtName: TEdit
-    Left = 216
-    Top = 20
-    Width = 470
-    Height = 28
-    TabOrder = 0
-  end
-  object lblProvider: TLabel
-    Left = 16
-    Top = 66
-    Width = 190
-    Height = 24
-    AutoSize = False
-    Layout = tlCenter
-    Caption = 'Provider'
-  end
-  object cbProvider: TComboBox
-    Left = 216
-    Top = 62
-    Width = 470
-    Height = 28
-    TabOrder = 1
-    Style = csDropDownList
-    OnChange = ProviderChanged
-  end
-  object pnlFields: TPanel
-    Left = 16
-    Top = 104
-    Width = 670
-    Height = 168
+  object pnlContent: TPanel
+    Left = 0
+    Height = 480
+    Top = 0
+    Width = 710
     BevelOuter = bvNone
     Caption = ''
-    TabOrder = 2
-  end
-  object lblFieldStatus: TLabel
-    Left = 16
-    Anchors = [akTop, akLeft, akRight]
-    Top = 314
-    Width = 670
-    Height = 20
-    AutoSize = False
-    WordWrap = True
-    Caption = ''
-  end
-  object lblVerifyNote: TLabel
-    Left = 16
-    Anchors = [akTop, akLeft, akRight]
-    Top = 336
-    Width = 670
-    Height = 20
-    AutoSize = False
-    Font.Color = clMaroon
-    Visible = False
-    WordWrap = True
-    Caption = ''
-  end
-  object chkActive: TCheckBox
-    Left = 16
-    Top = 366
-    Width = 300
-    Height = 28
-    AutoSize = True
-    Caption = 'Active (send newly logged QSOs)'
-    TabOrder = 4
-  end
-  object lblNote: TLabel
-    Left = 16
-    Anchors = [akTop, akLeft, akRight]
-    Top = 404
-    Width = 670
-    Height = 40
-    AutoSize = False
-    Caption = '(set at run time from SLoggerEditorNote)'
-    WordWrap = True
-  end
-  object lblStatus: TLabel
-    Left = 16
-    Anchors = [akTop, akLeft, akRight]
-    Top = 452
-    Width = 670
-    Height = 20
-    AutoSize = False
-    WordWrap = True
-    Caption = ''
+    ClientHeight = 480
+    ClientWidth = 710
+    TabOrder = 0
+    object lblName: TLabel
+      Left = 16
+      Top = 24
+      Width = 190
+      Height = 24
+      AutoSize = False
+      Layout = tlCenter
+      Caption = 'Name'
+    end
+    object edtName: TEdit
+      Left = 216
+      Top = 20
+      Width = 470
+      Height = 28
+      TabOrder = 0
+    end
+    object lblProvider: TLabel
+      Left = 16
+      Top = 66
+      Width = 190
+      Height = 24
+      AutoSize = False
+      Layout = tlCenter
+      Caption = 'Provider'
+    end
+    object cbProvider: TComboBox
+      Left = 216
+      Top = 62
+      Width = 470
+      Height = 28
+      TabOrder = 1
+      Style = csDropDownList
+      OnChange = ProviderChanged
+    end
+    object pnlFields: TPanel
+      Left = 16
+      Top = 104
+      Width = 670
+      Height = 168
+      BevelOuter = bvNone
+      Caption = ''
+      TabOrder = 2
+    end
+    object lblFieldStatus: TLabel
+      Left = 16
+      Anchors = [akTop, akLeft, akRight]
+      Top = 314
+      Width = 670
+      Height = 20
+      AutoSize = False
+      WordWrap = True
+      Caption = ''
+    end
+    object lblVerifyNote: TLabel
+      Left = 16
+      Anchors = [akTop, akLeft, akRight]
+      Top = 336
+      Width = 670
+      Height = 20
+      AutoSize = False
+      Font.Color = clMaroon
+      Visible = False
+      WordWrap = True
+      Caption = ''
+    end
+    object chkActive: TCheckBox
+      Left = 16
+      Top = 366
+      Width = 300
+      Height = 28
+      AutoSize = True
+      Caption = 'Active (send newly logged QSOs)'
+      TabOrder = 3
+    end
+    object lblNote: TLabel
+      Left = 16
+      Anchors = [akTop, akLeft, akRight]
+      Top = 404
+      Width = 670
+      Height = 40
+      AutoSize = False
+      Caption = '(set at run time from SLoggerEditorNote)'
+      WordWrap = True
+    end
+    object lblStatus: TLabel
+      Left = 16
+      Anchors = [akTop, akLeft, akRight]
+      Top = 452
+      Width = 670
+      Height = 20
+      AutoSize = False
+      WordWrap = True
+      Caption = ''
+    end
   end
   object btnOK: TButton
     Left = 396
@@ -112,7 +123,7 @@ object ExternalLoggersForm: TExternalLoggersForm
     AutoSize = True
     Constraints.MinWidth = 110
     Caption = 'Save to Preferences'
-    TabOrder = 5
+    TabOrder = 1
     OnClick = Accept
     Default = True
   end
@@ -124,7 +135,7 @@ object ExternalLoggersForm: TExternalLoggersForm
     AutoSize = True
     Constraints.MinWidth = 110
     Caption = 'Cancel'
-    TabOrder = 6
+    TabOrder = 2
     Cancel = True
     ModalResult = 2
   end
