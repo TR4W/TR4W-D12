@@ -39,10 +39,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     is logged. Every entry point still goes through EnsureOpen, so a caller
     that comes first gets the same log.
 
-    A write failure DISABLES the store and is put in front of the operator
-    (see Disable): there is no fallback behind it, so a QSO that did not
-    commit is not acknowledged. docs/SQLITE_MIGRATION_TASKS.md has the
-    history. *)
+    A write failure is put in front of the operator (see Disable): there is
+    no fallback behind it, so a QSO that did not commit is not acknowledged.
+    A DISK THAT WOULD NOT TAKE THE WRITE (full, or a write error) leaves the
+    log open READ-ONLY, so it can still be viewed (2026-11-18); any other
+    failure -- corruption, a failed open -- DISABLES the store.
+    docs/SQLITE_MIGRATION_TASKS.md has the history. *)
 unit uLogStore;
 
 {$I tr4w.inc}
@@ -333,6 +335,13 @@ var
 
 procedure LogStoreForgetFailureForTests;
 
+(* A FULL DISK, FOR A TEST (2026-11-18): the store's own connection may not
+  grow the log by a single page from now on (PRAGMA max_page_count, which is
+  per connection, so no other connection can do it), and the next write that
+  needs a page fails with SQLITE_FULL exactly as a full disk does. Nothing on
+  any real disk is filled. The program never calls it. *)
+procedure LogStoreFillTheDiskForTests;
+
 (* A LOG THAT IS LOCKED WHEN IT IS OPENED (2026-10-31).
 
   NY4I: if at startup the log is locked, that is fatal for that open -- warn,
@@ -365,9 +374,61 @@ var
      milliseconds per attempt rather than seconds. Read at open. *)
    LogStoreBusyTimeoutMs: integer = 0;
 
-(* True when this session's log was opened read-only (the operator's answer to
-  a locked log). Nothing is written to it; LogStoreAppendQSO returns False. *)
+(* True when this session's log is read-only: opened so (the operator's answer
+  to a locked log), or made so by a write the disk would not take -- a full
+  disk or a write error (Disable, 2026-11-18). Either way it can be read and
+  nothing is written to it; LogStoreAppendQSO returns False. *)
 function LogStoreIsReadOnly: boolean;
+
+(* THE STATUS-LINE TEXT FOR A SAVE THAT WAS REFUSED -- one source for the new
+  QSO's "not logged" line (tAddQSOToLog) and Edit QSO's refusal. When the log
+  is read-only it says so and why ("Log is read-only (disk full): not
+  saved."); otherwise it is the general "NOT LOGGED" line. *)
+function LogStoreNotSavedText: string;
+
+const
+   (* HOW MUCH A FULL DISK IS ASKED TO FREE, in MB (2026-11-18). NY4I freed
+     16 KB and the next QSO still failed: the probe's commit grew the -wal,
+     and that space is not given back. The -wal grows up to SQLite's
+     automatic checkpoint (1000 pages, about 4 MB at the 4096-byte page)
+     before it is folded into the .db, and the checkpoint grows the .db by
+     the pages it moves -- up to about 8 MB between them. 10 MB covers that
+     with room for the QSOs themselves. *)
+   LOG_DISK_FULL_FREE_MB = 10;
+
+(* CAN THE LOG TAKE A WRITE NOW? -- 2026-11-18, NY4I: "I would go clear up
+  disk space, then hit enter". No restart.
+
+  True when the log is not read-only. When it is read-only because a WRITE
+  FAILED (a full disk, a write error), this first tries one probe write and
+  commits it; if that commits, the log is writable again, True is answered,
+  and the caller goes on to save -- the same Enter logs the QSO. A log opened
+  read-only because it was LOCKED never recovers here (its connection cannot
+  write), and a stood-down store is not this function's business: both
+  answer as LogStoreIsReadOnly does.
+
+  THE PROBE: one row of a page's size into session_state and out again, in
+  one transaction, committed. The log's content is unchanged. It needs a new
+  page (or a free one) and the commit's write -- what a QSO needs, not more.
+  A probe that fails is rolled back through Disable, which keeps the log
+  read-only and shows NO second modal.
+
+  Called where a save is decided: LogContact (own QSO, before anything is
+  posted), Edit QSO's save, Alt-Y. Once per attempt; nothing polls. *)
+function LogStoreTryRecoverWrites: boolean;
+
+(* "The log is writable again." on the status line, ONCE after a recovery;
+  nothing otherwise. Called where the status line is not about to be cleared
+  (TryLogContact calls it after its own clearing). *)
+procedure LogStoreShowRecoveryNotice;
+
+(* The recovery notice's text, once ('' after, and when there was none). The
+  pure half of LogStoreShowRecoveryNotice, for the tests. *)
+function LogStoreTakeRecoveryNotice: string;
+
+(* FOR A TEST: the space comes back -- the store's connection may grow the log
+  again (see LogStoreFillTheDiskForTests). The program never calls it. *)
+procedure LogStoreFreeTheDiskForTests;
 
 (* BEFORE A WRITE ON THE MAIN CONNECTION FROM OUTSIDE THIS UNIT
   (DupeAndMultSheet.SaveRestartFile writes through LogStoreRepository).
@@ -735,6 +796,21 @@ var
    GReadOnly: boolean = False;
    GReadOnlyRefusalShown: boolean = False;
 
+type
+   (* WHY THE LOG IS READ-ONLY, when GReadOnly is True: the operator chose it
+     for a locked log, or a write the disk would not take made it so. *)
+   TLogReadOnlyCause = (lrcLocked, lrcDiskFull, lrcWriteError);
+
+var
+   GReadOnlyCause: TLogReadOnlyCause = lrcLocked;
+
+   (* The write-failure modal has been shown for this log: a later failure
+     after a recovery is the status line only, never a second modal. *)
+   GWriteFailureNoticeShown: boolean = False;
+
+   (* A recovery is waiting to be said on the status line. *)
+   GRecoveryNoticePending: boolean = False;
+
    (* When the last "the log was locked, not saved" notice was shown
      (GetTickCount64; 0 = never) -- Disable's busy branch shows at most one a
      minute. *)
@@ -811,9 +887,31 @@ begin
    GTriedToOpen := False;
    GReadOnly := False;
    GReadOnlyRefusalShown := False;
+   GReadOnlyCause := lrcLocked;
+   GWriteFailureNoticeShown := False;
+   GRecoveryNoticePending := False;
    GLastBusyNotice := 0;
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
+end;
+
+procedure LogStoreFreeTheDiskForTests;
+begin
+   if (GDatabase <> nil) and GDatabase.IsOpen then
+      begin
+      (* SQLite's own ceiling, so the log may grow as it always could. *)
+      GDatabase.Connection.ExecutePragma('PRAGMA max_page_count = 1073741823');
+      end;
+end;
+
+procedure LogStoreFillTheDiskForTests;
+begin
+   if (GDatabase <> nil) and GDatabase.IsOpen then
+      begin
+      (* SQLite will not set it below the log's present size, so 1 means
+        "exactly as big as it is now". *)
+      GDatabase.Connection.ExecutePragma('PRAGMA max_page_count = 1');
+      end;
 end;
 
 function LogStoreIsReadOnly: boolean;
@@ -821,10 +919,66 @@ begin
    Result := GReadOnly and (GDatabase <> nil);
 end;
 
+(* Why the log is read-only, in the few words the notices carry. *)
+function ReadOnlyReasonText: string;
+begin
+   case GReadOnlyCause of
+      lrcDiskFull:
+         begin
+         Result := SLogReadOnlyReasonDiskFull;
+         end;
+      lrcWriteError:
+         begin
+         Result := SLogReadOnlyReasonWriteError;
+         end;
+      else
+         begin
+         Result := SLogReadOnlyReasonLocked;
+         end;
+   end;
+end;
+
+(* WHERE TO FREE SPACE: the log's drive ("D:"), or -- for a path with no
+  drive letter (Unix, or a UNC name ExtractFileDrive cannot shorten) -- the
+  log's folder, never a made-up letter. *)
+function DiskFullPlace: string;
+begin
+   Result := '';
+   if GDatabase <> nil then
+      begin
+      Result := ExtractFileDrive(GDatabase.FileName);
+      if Result = '' then
+         begin
+         Result := ExtractFileDir(GDatabase.FileName);
+         end;
+      end;
+end;
+
+function LogStoreNotSavedText: string;
+begin
+   if LogStoreIsReadOnly and (GReadOnlyCause = lrcDiskFull) then
+      begin
+      Result := UnicodeFormat(SLogReadOnlyNotSavedDiskFull,
+                              [LOG_DISK_FULL_FREE_MB, DiskFullPlace]);
+      end
+   else if LogStoreIsReadOnly then
+      begin
+      (* UnicodeFormat: SysUtils.Format takes an AnsiString and would narrow
+        the text. *)
+      Result := UnicodeFormat(SLogReadOnlyNotSaved, [ReadOnlyReasonText]);
+      end
+   else
+      begin
+      Result := SQsoNotLogged;
+      end;
+end;
+
 (* A READ-ONLY SESSION REFUSES EVERY WRITE, AND SAYS SO. True when the write
   must not happen. Logged each time; put in front of the operator once,
-  because each refused QSO is already reported by its caller (the "QSO NOT
-  LOGGED" line and the beep). *)
+  because each refused QSO is already reported by its caller (the status
+  line from LogStoreNotSavedText, and the beep). The once is SLogReadOnlyRefused
+  for a log opened read-only because it was locked; a log made read-only by a
+  failed write had its notice from Disable, which marks it shown. *)
 function RefuseReadOnly(const aWhat: string): boolean;
 begin
    Result := LogStoreIsReadOnly;
@@ -834,7 +988,8 @@ begin
       end;
    if logger <> nil then
       begin
-      logger.Warn('[LogStore] the log was opened READ-ONLY; not %s', [aWhat]);
+      logger.Warn('[LogStore] the log is READ-ONLY (%s); not %s',
+                  [ReadOnlyReasonText, aWhat]);
       end;
    if (not GReadOnlyRefusalShown) and (not tSilentExport) then
       begin
@@ -875,7 +1030,13 @@ end;
 (* AFTER A BUSY FAILURE: undo what the attempt began. In WAL mode a busy
   failure can only come before this transaction's first write (holding the
   write lock, a connection is never busy), so nothing committed-to-be is
-  lost; the cached record count is forgotten anyway. Never raises. *)
+  lost; the cached record count is forgotten anyway. Never raises.
+
+  ALSO AFTER A WRITE THE DISK WOULD NOT TAKE (Disable, 2026-11-18): there the
+  transaction's writes ARE discarded -- they never reached the disk, and that
+  is the point. TLogDatabase.Rollback ends it whether SQLite still holds it or
+  has rolled it back itself (it may, on FULL or IOERR). A rollback that failed
+  leaves the transaction active, and the caller looks. *)
 procedure RollBackAfterBusy;
 begin
    try
@@ -966,6 +1127,8 @@ var
 begin
    GReadOnly := False;
    GReadOnlyRefusalShown := False;
+   GWriteFailureNoticeShown := False;
+   GRecoveryNoticePending := False;
    repeat
       probe := ProbeLogWriteLock(aDbName, GDatabase.BusyTimeoutMs, detail);
       if probe <> llpHeld then
@@ -1041,6 +1204,7 @@ begin
          llcReadOnly:
             begin
             GReadOnly := True;
+            GReadOnlyCause := lrcLocked;
             end;
          llcQuit:
             begin
@@ -1075,6 +1239,59 @@ begin
       end;
 end;
 
+(* THE LOG IS READ-ONLY FROM HERE: a write the disk would not take (see
+  Disable). The failed transaction has been rolled back. Said once -- the
+  modal, with the reason, the remedy and the file -- and every later refusal
+  is the caller's status line (LogStoreNotSavedText), never another modal:
+  GReadOnlyRefusalShown is set so RefuseReadOnly does not show the locked-log
+  notice, whose text would be false here. *)
+procedure MakeReadOnlyAfterAFailedWrite(const aWhere: string; E: Exception;
+                                        aFailure: TLogWriteFailure);
+var
+   remedy: string;
+begin
+   if GReadOnly then
+      begin
+      Exit;
+      end;
+   GReadOnly := True;
+   GReadOnlyRefusalShown := True;
+   if aFailure = lwfDiskFull then
+      begin
+      GReadOnlyCause := lrcDiskFull;
+      remedy := UnicodeFormat(SLogReadOnlyFixDiskFull,
+                              [LOG_DISK_FULL_FREE_MB, DiskFullPlace]);
+      end
+   else
+      begin
+      GReadOnlyCause := lrcWriteError;
+      remedy := SLogReadOnlyFixWriteError;
+      end;
+
+   if logger <> nil then
+      begin
+      logger.Error('[LogStore] THE LOG IS NOT BEING SAVED (%s). Failure in %s: ' +
+                   '%s -- %s (SQLite code %d). Rolled back: nothing of it is in ' +
+                   'the log. The log stays open READ-ONLY -- it can be viewed; ' +
+                   'NO QSO OR EDIT IS SAVED until a save finds the disk takes ' +
+                   'writes again.',
+                   [ReadOnlyReasonText, aWhere, E.ClassName, E.Message,
+                    SQLiteErrorCode(E)]);
+      end;
+
+   (* No operator, no modal -- see the same rule in Disable. And ONE modal per
+     log: a write that fails again after LogStoreTryRecoverWrites made the log
+     writable is said by the caller's status line, never by a second modal. *)
+   if (not tSilentExport) and (not GWriteFailureNoticeShown) then
+      begin
+      GWriteFailureNoticeShown := True;
+      (* UnicodeFormat, so the file's name is not pushed through a code
+        page on its way into the notice. *)
+      ShowFailureNotice(LclText(UnicodeFormat(SLogNotSavedReadOnly,
+         [ReadOnlyReasonText, remedy, GDatabase.FileName])));
+      end;
+end;
+
 (* Report once and stand down.  Called from every except block here. *)
 (* A FAILURE HERE IS NOW A LOST QSO, AND MUST BE SAID OUT LOUD.
 
@@ -1094,8 +1311,15 @@ end;
   So the failure is put in front of the operator, once, and the store stays
   disabled so the message is not repeated per QSO. It cannot repair itself and
   pretending otherwise would be worse: what it can do is make sure the person at
-  the radio knows to stop and fix it before working anybody else. *)
+  the radio knows to stop and fix it before working anybody else.
+
+  TWO KINDS OF WRITE FAILURE DO NOT DISABLE IT, and each has its branch below:
+  a BUSY log (another connection held the lock -- nothing is wrong with the
+  log, the store stays writable) and a write the DISK WOULD NOT TAKE (full, or
+  a write error -- the log stays open READ-ONLY, so it can still be viewed). *)
 procedure Disable(const aWhere: string; E: Exception);
+var
+   failure: TLogWriteFailure;
 begin
    (* A BUSY LOG IS NOT A BROKEN ONE (2026-10-31). Another connection held
      the write lock past every retry and wait, so NOTHING of this write
@@ -1135,6 +1359,37 @@ begin
          ShowFailureNotice(LclText(Format(SLogBusyNotSaved, [aWhere])));
          end;
       Exit;
+      end;
+
+   (* A DISK THAT WOULD NOT TAKE THE WRITE IS NOT A DAMAGED LOG (NY4I,
+     2026-11-18, after filling the D: drive under a running TR4W). Disabling
+     freed the database, so the grid went on showing QSOs that a double click
+     could no longer open. The log is as readable as it was a moment ago: what
+     failed is SAVING. So the failed transaction is rolled back -- nothing of
+     it is in the log -- and the store stays OPEN, READ-ONLY: every write
+     entry refuses (RefuseReadOnly), every read works.
+
+     The same conditions as the busy branch, for the same reasons: a write to
+     an open log (a failed OPEN stands down, and EnsureOpen frees the
+     repository before it gets here), not a batch whose own rollback failed,
+     and a rollback here that leaves the transaction ended. Anything else --
+     corruption, a constraint, a failure with no code -- falls through and
+     stands the store down as before. *)
+   failure := SQLiteWriteFailure(E);
+   if (failure <> lwfNone) and (GRepository <> nil) and
+      (not GRepository.InBatch) then
+      begin
+      RollBackAfterBusy;
+      if (GDatabase <> nil) and (not GDatabase.Transaction.Active) then
+         begin
+         MakeReadOnlyAfterAFailedWrite(aWhere, E, failure);
+         Exit;
+         end;
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] the failed write could not be rolled back, so ' +
+                      'what the log holds is not known; standing the store down');
+         end;
       end;
 
    if not GDisabled then
@@ -1180,6 +1435,97 @@ begin
 
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
+end;
+
+(* THE PROBE OF LogStoreTryRecoverWrites -- see its declaration for why this
+  shape. ExecuteDirect begins the transaction on the store's connection (after
+  BeginMainWrite has ended any stale read one); both statements and the
+  commit are one transaction, so the probe either commits whole -- leaving
+  the log's content as it was -- or nothing of it is kept. A failure goes to
+  Disable, as every store write's does: a write the disk still refuses is
+  rolled back and the log STAYS read-only (no second modal -- the log is
+  read-only already); anything worse stands the store down. True when it
+  committed. *)
+function ProbeAWriteCommits: boolean;
+const
+   (* A row of a page's size (4096, SQLite's default page) needs a page the
+     log does not have yet, or a free one -- so a full disk refuses it as it
+     would refuse a QSO. *)
+   PROBE_INSERT: AnsiString =
+      'INSERT OR REPLACE INTO session_state (key, value, saved_at) ' +
+      'VALUES (''tr4w.writeProbe'', zeroblob(4096), 0)';
+   PROBE_DELETE: AnsiString =
+      'DELETE FROM session_state WHERE key = ''tr4w.writeProbe''';
+begin
+   Result := False;
+   try
+      BeginMainWrite;
+      GDatabase.Connection.ExecuteDirect(PROBE_INSERT);
+      GDatabase.Connection.ExecuteDirect(PROBE_DELETE);
+      GDatabase.Transaction.Commit;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         Disable('checking whether the log can be written again', E);
+         end;
+   end;
+end;
+
+function LogStoreTryRecoverWrites: boolean;
+begin
+   Result := not LogStoreIsReadOnly;
+   if Result then
+      begin
+      Exit;
+      end;
+   (* Locked at open: the connection is a read-only one. Only a write that
+     FAILED can recover. *)
+   if GReadOnlyCause = lrcLocked then
+      begin
+      Exit;
+      end;
+
+   if not ProbeAWriteCommits then
+      begin
+      if logger <> nil then
+         begin
+         logger.Warn('[LogStore] the log still cannot be written (%s); it stays ' +
+                     'READ-ONLY', [ReadOnlyReasonText]);
+         end;
+      Exit;
+      end;
+
+   GReadOnly := False;
+   GReadOnlyCause := lrcLocked;
+   GRecoveryNoticePending := True;
+   if logger <> nil then
+      begin
+      logger.Info('[LogStore] a probe write committed: the log is WRITABLE again ' +
+                  'and saving resumes');
+      end;
+   Result := True;
+end;
+
+function LogStoreTakeRecoveryNotice: string;
+begin
+   Result := '';
+   if GRecoveryNoticePending then
+      begin
+      GRecoveryNoticePending := False;
+      Result := SLogWritableAgain;
+      end;
+end;
+
+procedure LogStoreShowRecoveryNotice;
+var
+   notice: string;
+begin
+   notice := LogStoreTakeRecoveryNotice;
+   if (notice <> '') and (not tSilentExport) then
+      begin
+      QuickDisplay(notice);
+      end;
 end;
 
 (* THE ENTRY DECLARATION, READ ONCE, WHEN THE LOG IS MADE.
@@ -2053,6 +2399,13 @@ begin
    except
       on E: Exception do
          begin
+         (* A FAILED OPEN STANDS THE STORE DOWN, whatever the failure. The
+           repository may exist already (the contest stamp and the entry
+           declaration commit after it is made), and with it assigned
+           Disable would treat this as a write to an open log -- leaving a
+           store that answers "usable" behind an open that answered False.
+           So it goes first. *)
+         FreeAndNil(GRepository);
          Disable('opening the log', E);
          Result := False;
          end;
@@ -4293,8 +4646,8 @@ begin
               IntToStr(LogWatchInterventionCount) + '.';
    if LogStoreIsReadOnly then
       begin
-      aReport := aReport + sLineBreak + 'This session opened the log READ-ONLY: ' +
-                 'no QSO can be logged.';
+      aReport := aReport + sLineBreak + 'The log is READ-ONLY this session (' +
+                 ReadOnlyReasonText + '): no QSO can be logged.';
       end;
 end;
 

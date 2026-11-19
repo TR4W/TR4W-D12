@@ -19,7 +19,9 @@ unit uTestLogLocking;
     - the WRL worker rolls its transaction back when a statement inside it
       fails, and the log is not left locked;
     - the watchdog asks, then interrupts, and an interrupted stalled
-      transaction is freed -- no long sleep: the clock is the test's.
+      transaction is freed -- no long sleep: the clock is the test's;
+    - (2026-11-18, a full disk) a failed COMMIT carries SQLite's code, and
+      SQLiteWriteFailure tells a write the disk refused from everything else.
 
   The store-level halves (a QSO and the session state after another
   connection commits, a held lock at open, the verification check) are in
@@ -49,6 +51,10 @@ type
       procedure TestTheProbeSeesAHeldLock;
       procedure TestTheWorkerRollsBackWhenAStatementFails;
       procedure TestTheWatchdogFreesAStalledTransaction;
+      (* A FULL DISK (2026-11-18): the COMMIT's failure carries its code, and
+        the classifier that decides read-only versus stand down. *)
+      procedure TestAFailedCommitCarriesItsCode;
+      procedure TestTheWriteFailureClassifier;
    public
       procedure RunAllTests; override;
    end;
@@ -484,6 +490,117 @@ begin
    end;
 end;
 
+(* A FAILED COMMIT CARRIES SQLite's CODE (2026-11-18). COMMIT goes through
+  sqlite3conn's execsql, which raised a plain EDatabaseError with no code --
+  measured on NY4I's full D: drive, "EDatabaseError -- database or disk is
+  full" -- so nothing could tell a full disk at COMMIT from corruption.
+  TLogConnection.Commit re-raises it with the code. The failure used here is a
+  deferred foreign key, which SQLite checks only AT the commit: on the old
+  code this test reads code 0 and class EDatabaseError. *)
+procedure TLogLockingTests.TestAFailedCommitCarriesItsCode;
+const
+   SQLITE_CONSTRAINT_CODE = 19;
+var
+   db: TLogDatabase;
+   code: integer;
+   failureClass: string;
+   kind: TLogWriteFailure;
+begin
+   BeginTest('a COMMIT that fails raises ESQLDatabaseError carrying SQLite''s code');
+   NewLog;
+   db := TLogDatabase.Create;
+   try
+      db.Open(FFileName);
+      db.Connection.ExecuteDirect('CREATE TABLE commit_trap_parent (id INTEGER PRIMARY KEY)');
+      db.Connection.ExecuteDirect(
+         'CREATE TABLE commit_trap (parent_id INTEGER REFERENCES ' +
+         'commit_trap_parent(id) DEFERRABLE INITIALLY DEFERRED)');
+      db.Transaction.Commit;
+
+      db.Connection.ExecuteDirect('INSERT INTO commit_trap (parent_id) VALUES (-1)');
+      code := -1;
+      failureClass := '';
+      kind := lwfDiskFull;
+      try
+         db.Transaction.Commit;
+      except
+         on E: Exception do
+            begin
+            code := SQLiteErrorCode(E);
+            failureClass := E.ClassName;
+            kind := SQLiteWriteFailure(E);
+            end;
+      end;
+      db.Rollback;
+
+      CheckEquals('ESQLDatabaseError', failureClass, 'the COMMIT failed, as ESQLDatabaseError');
+      CheckEquals(SQLITE_CONSTRAINT_CODE, code and $FF,
+                  'carrying SQLite''s code: SQLITE_CONSTRAINT (' + IntToStr(code) + ')');
+      CheckTrue(kind = lwfNone, 'and a constraint is not a write the disk refused');
+   finally
+      db.Free;
+      DropLog;
+   end;
+end;
+
+(* Which failures leave the log READABLE (read-only) and which stand the
+  store down -- asked of the code alone. *)
+function WriteFailureOfCode(aCode: integer): TLogWriteFailure;
+var
+   e: ESQLDatabaseError;
+begin
+   e := ESQLDatabaseError.CreateFmt('%s', ['test'], nil, aCode, '');
+   try
+      Result := SQLiteWriteFailure(e);
+   finally
+      e.Free;
+   end;
+end;
+
+procedure TLogLockingTests.TestTheWriteFailureClassifier;
+const
+   SQLITE_IOERR_WRITE_CODE     = 778;    (* IOERR | 3 shl 8 *)
+   SQLITE_IOERR_FSYNC_CODE     = 1034;   (* IOERR | 4 shl 8 *)
+   SQLITE_IOERR_READ_CODE      = 266;    (* IOERR | 1 shl 8 *)
+   SQLITE_IOERR_SHORTREAD_CODE = 522;    (* IOERR | 2 shl 8 *)
+   SQLITE_IOERR_CORRUPTFS_CODE = 8458;   (* IOERR | 33 shl 8 *)
+   SQLITE_BUSY_SNAPSHOT_CODE   = 517;
+   SQLITE_FK_CODE              = 787;    (* CONSTRAINT_FOREIGNKEY *)
+var
+   wrapped: ELogDatabaseError;
+   plain: Exception;
+begin
+   BeginTest('a full disk and a write error leave the log readable; corruption and the rest do not');
+
+   CheckTrue(WriteFailureOfCode(13) = lwfDiskFull, 'SQLITE_FULL is a full disk');
+   CheckTrue(WriteFailureOfCode(10) = lwfWriteError, 'SQLITE_IOERR is a write error');
+   CheckTrue(WriteFailureOfCode(SQLITE_IOERR_WRITE_CODE) = lwfWriteError, 'IOERR_WRITE too');
+   CheckTrue(WriteFailureOfCode(SQLITE_IOERR_FSYNC_CODE) = lwfWriteError, 'IOERR_FSYNC too');
+   CheckTrue(WriteFailureOfCode(8) = lwfWriteError, 'SQLITE_READONLY too');
+
+   CheckTrue(WriteFailureOfCode(11) = lwfNone, 'SQLITE_CORRUPT is NOT: the log is damaged');
+   CheckTrue(WriteFailureOfCode(26) = lwfNone, 'SQLITE_NOTADB is NOT');
+   CheckTrue(WriteFailureOfCode(SQLITE_IOERR_READ_CODE) = lwfNone, 'a READ error is NOT');
+   CheckTrue(WriteFailureOfCode(SQLITE_IOERR_SHORTREAD_CODE) = lwfNone, 'a short read is NOT');
+   CheckTrue(WriteFailureOfCode(SQLITE_IOERR_CORRUPTFS_CODE) = lwfNone,
+             'a damaged file system is NOT');
+   CheckTrue(WriteFailureOfCode(5) = lwfNone, 'a busy log is NOT (it has its own branch)');
+   CheckTrue(WriteFailureOfCode(SQLITE_BUSY_SNAPSHOT_CODE) = lwfNone, 'nor a stale snapshot');
+   CheckTrue(WriteFailureOfCode(SQLITE_FK_CODE) = lwfNone, 'a constraint is NOT');
+   CheckTrue(WriteFailureOfCode(0) = lwfNone, 'no code at all is NOT');
+
+   wrapped := ELogDatabaseError.Create('test');
+   plain := Exception.Create('database or disk is full');
+   try
+      wrapped.SQLiteCode := 13;
+      CheckTrue(SQLiteWriteFailure(wrapped) = lwfDiskFull, 'the code is read through a re-wrap');
+      CheckTrue(SQLiteWriteFailure(plain) = lwfNone, 'and never from the message text');
+   finally
+      wrapped.Free;
+      plain.Free;
+   end;
+end;
+
 procedure TLogLockingTests.RunAllTests;
 begin
    TestBusyIsRecognisedOnEveryPath;
@@ -491,6 +608,8 @@ begin
    TestTheProbeSeesAHeldLock;
    TestTheWorkerRollsBackWhenAStatementFails;
    TestTheWatchdogFreesAStalledTransaction;
+   TestAFailedCommitCarriesItsCode;
+   TestTheWriteFailureClassifier;
 end;
 
 end.

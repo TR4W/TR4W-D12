@@ -1452,7 +1452,16 @@ begin
          TempRXData.ceSearchAndPounce := OpMode =
            SearchAndPounceOpMode;
          TempRXData.ceComputerID := Settings.Computer.Id;
-         LogContact(TempRXData, True);
+         (* NOT IN THE LOG (2026-11-18: a full disk, or a read-only log):
+           LogContact has said why on the status line, with a beep. Nothing
+           below runs -- no post-QSO window work that would wipe that line,
+           and no "ready for the next QSO". WSJT-X keeps its own record. *)
+         if not LogContact(TempRXData, True) then
+            begin
+            logger.Error('[uWSJTX] WSJT-X QSO with %s was NOT logged -- the log ' +
+                         'would not take it', [string(TempRXData.Callsign)]);
+            Exit;
+            end;
          (* GetTickCount64, and LCLIntf declares it -- as it did
            GetTickCount, so this was already portable. The point
            is the WIDTH: MainUnit writes the same variable with

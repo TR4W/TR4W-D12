@@ -112,6 +112,30 @@ function SQLiteIsStaleSnapshot(E: Exception): boolean;
 (* The SQLite extended result code an exception carries; 0 when none. *)
 function SQLiteErrorCode(E: Exception): integer;
 
+type
+   (* WHAT KIND OF WRITE FAILURE, IF ANY (2026-11-18, NY4I: a full disk must
+     not make the log unreadable). *)
+   TLogWriteFailure = (
+      lwfNone,        (* not a write-side failure: corruption, a constraint,
+                         a busy log, no code at all -- whatever it is, it is
+                         not "the disk would not take this write" *)
+      lwfDiskFull,    (* SQLITE_FULL: the disk or the database is full *)
+      lwfWriteError); (* the disk refused a write: SQLITE_IOERR on the write
+                         side, or SQLITE_READONLY (the file or the medium
+                         turned read-only under a running program) *)
+
+(* IS THIS A FAILURE OF THE DISK TO TAKE A WRITE, and which? Asked of the
+  CODE, like SQLiteIsBusy, never of the message. A database that failed one
+  of these is still READABLE -- nothing in it is damaged -- so uLogStore
+  makes the log read-only rather than closing it.
+
+  NOT ONE OF THEM, deliberately: SQLITE_CORRUPT, SQLITE_NOTADB, and the IOERR
+  codes that come from READING (IOERR_READ, IOERR_SHORT_READ) or say the file
+  system is damaged (IOERR_CORRUPTFS) -- reading a damaged log is not safe,
+  so those stand the store down as before. And code 0: an exception that
+  carries no code cannot be told apart, so it is not called a write failure. *)
+function SQLiteWriteFailure(E: Exception): TLogWriteFailure;
+
 (* CAN A WRITER TAKE THIS LOG NOW? A throwaway connection, no pragmas but the
   busy wait, BEGIN IMMEDIATE and an immediate ROLLBACK: it holds the write
   lock for no measurable time and writes nothing. llpHeld means another
@@ -238,6 +262,11 @@ type
    private
       FWatch: TLogConnectionWatch;
       procedure SetWatch(aWatch: TLogConnectionWatch);
+      (* THE FAILURE OF AN execsql, AS ESQLDatabaseError WITH SQLite's
+        EXTENDED CODE. execsql raises a plain EDatabaseError carrying the
+        message only; the code is read back from the handle, the way the
+        connector's own checkerror reads it. The message is unchanged. *)
+      function CodedFailure(E: EDatabaseError): ESQLDatabaseError;
    protected
       (* THE WATCHDOG'S EYES (2026-10-31). sqldb's own transaction and
         connection hooks, overridden so a watched connection reports its
@@ -245,7 +274,15 @@ type
         AnsiString, not string: sqldb is compiled without the Unicode
         modeswitch, so its `string` is AnsiString and a UnicodeString here
         would not override. Unwatched (FWatch = nil, the main connection),
-        each is exactly the inherited method. *)
+        each is the inherited method.
+
+        AND A FAILURE OF ANY OF THE THREE CARRIES SQLite's CODE (2026-11-18).
+        BEGIN, COMMIT and ROLLBACK go through execsql, which raises a plain
+        EDatabaseError with no code -- so a COMMIT that met a full disk
+        (measured: NY4I's D: drive, "EDatabaseError -- database or disk is
+        full") could not be told from corruption, and a busy COMMIT could not
+        be told from anything. Re-raised as ESQLDatabaseError, which descends
+        from EDatabaseError, so every existing handler still matches. *)
       procedure DoInternalConnect; override;
       procedure DoInternalDisconnect; override;
       function StartDBTransaction(trans: TSQLHandle; aParams: AnsiString): boolean; override;
@@ -626,19 +663,24 @@ begin
    Result := ChangeFileExt(aLogPath, EXPORT_EXTENSION[aKind]);
 end;
 
+function TLogConnection.CodedFailure(E: EDatabaseError): ESQLDatabaseError;
+begin
+   (* '%s' as the format, never the message itself: SQLite's text may
+     contain a '%'. *)
+   Result := ESQLDatabaseError.CreateFmt('%s', [E.Message], nil,
+      sqlite3_extended_errcode(Handle), '');
+end;
+
 procedure TLogConnection.ExecutePragma(const aSQL: AnsiString);
 begin
    (* `execsql` is protected on the ancestor, which is the whole point of
-     this class. Its failure carries the message only, so the code is read
-     back here the way the connector's own checkerror reads it. '%s' as the
-     format, never the message itself: SQLite's text may contain a '%'. *)
+     this class. Its failure carries the message only -- see CodedFailure. *)
    try
       execsql(aSQL);
    except
       on E: EDatabaseError do
          begin
-         raise ESQLDatabaseError.CreateFmt('%s', [E.Message], nil,
-            sqlite3_extended_errcode(Handle), '');
+         raise CodedFailure(E);
          end;
    end;
 end;
@@ -679,7 +721,18 @@ end;
 function TLogConnection.StartDBTransaction(trans: TSQLHandle;
                                            aParams: AnsiString): boolean;
 begin
-   Result := inherited StartDBTransaction(trans, aParams);
+   try
+      Result := inherited StartDBTransaction(trans, aParams);
+   except
+      on E: EDatabaseError do
+         begin
+         if E is ESQLDatabaseError then
+            begin
+            raise;
+            end;
+         raise CodedFailure(E);
+         end;
+   end;
    if FWatch <> nil then
       begin
       FWatch.TransactionBegan;
@@ -690,7 +743,18 @@ function TLogConnection.Commit(trans: TSQLHandle): boolean;
 begin
    (* Ended only when the COMMIT succeeded: a failed one leaves the
      transaction open, and the watch must go on seeing it. *)
-   Result := inherited Commit(trans);
+   try
+      Result := inherited Commit(trans);
+   except
+      on E: EDatabaseError do
+         begin
+         if E is ESQLDatabaseError then
+            begin
+            raise;
+            end;
+         raise CodedFailure(E);
+         end;
+   end;
    if FWatch <> nil then
       begin
       FWatch.TransactionEnded;
@@ -699,7 +763,18 @@ end;
 
 function TLogConnection.RollBack(trans: TSQLHandle): boolean;
 begin
-   Result := inherited RollBack(trans);
+   try
+      Result := inherited RollBack(trans);
+   except
+      on E: EDatabaseError do
+         begin
+         if E is ESQLDatabaseError then
+            begin
+            raise;
+            end;
+         raise CodedFailure(E);
+         end;
+   end;
    if FWatch <> nil then
       begin
       FWatch.TransactionEnded;
@@ -734,6 +809,34 @@ const
    SQLITE_BUSY_SNAPSHOT = 517;
 begin
    Result := SQLiteErrorCode(E) = SQLITE_BUSY_SNAPSHOT;
+end;
+
+function SQLiteWriteFailure(E: Exception): TLogWriteFailure;
+const
+   (* SQLITE_IOERR (10) | (33 shl 8): this binding does not name it. *)
+   SQLITE_IOERR_CORRUPTFS = 8458;
+var
+   code, primary: integer;
+begin
+   Result := lwfNone;
+   code := SQLiteErrorCode(E);
+   (* The primary code is the low byte of the extended one. *)
+   primary := code and $FF;
+   if primary = SQLITE_FULL then
+      begin
+      Result := lwfDiskFull;
+      end
+   else if primary = SQLITE_READONLY then
+      begin
+      Result := lwfWriteError;
+      end
+   else if (primary = SQLITE_IOERR)             and
+           (code <> SQLITE_IOERR_READ)          and
+           (code <> SQLITE_IOERR_SHORT_READ)    and
+           (code <> SQLITE_IOERR_CORRUPTFS) then
+      begin
+      Result := lwfWriteError;
+      end;
 end;
 
 function ProbeLogWriteLock(const aFileName: string; aWaitMs: integer;

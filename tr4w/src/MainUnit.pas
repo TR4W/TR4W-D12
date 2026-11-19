@@ -925,11 +925,23 @@ begin
      end;
 end;
 
-procedure DrainPendingMultiQSORefs;
+(* TRUE WHEN THE LAST ENTER'S QSO WAS NOT SAVED -- 2026-11-18, NY4I's full D:
+  drive. Set by TryLogContact: True when the exchange was good (ParametersOkay
+  passed) and the log would not take the QSO (LogContact answered False).
+  The Enter paths read it and then do NOTHING more: the call and exchange stay
+  as typed, and the reason stays on the status line. A refused EXCHANGE is not
+  this -- it leaves the flag False and keeps its old path. *)
+var
+  QSOSaveRefused: boolean = False;
+
+(* True when every queued leg is in the log; False at the first that is not
+  (the rest are not tried, and the queues are emptied by the caller). *)
+function DrainPendingMultiQSORefs: boolean;
 var
   TempRX : ContestExchange;
   leadsWithSerial: boolean;
 begin
+  Result := True;
   if (not HasPendingParks)     and
      (not HasPendingCounties) then
      begin
@@ -941,12 +953,18 @@ begin
      begin
      TempRX.QTHString := DequeuePendingPark;
      TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
-     LogContact(TempRX, True);
+     if not LogContact(TempRX, True) then
+        begin
+        Result := False;
+        Exit;
+        end;
      end;
   while HasPendingCounties do
      begin
      TempRX.QTHString := DequeuePendingCounty;
      FoundDomesticQTH(TempRX);  // refresh DomMultQTH/DomesticQTH
+     // and the prefix key a contest reads from that QTH (issue 116: the Atlantic Canada province of THIS leg)
+     SetPrefix(TempRX);
      TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
      // QSO-party rule: a station that changes county is a new station and
      // is NOT a dupe of an earlier QSO with the same call.  The follow-up
@@ -964,7 +982,11 @@ begin
      // serial moves by one, not by the number of legs (issue 28): it is
      // LOGEDIT.NextSerialToSend, the highest serial sent + 1 (Issue #954),
      // not a count of records.  Pinned by uTestAutomaticXQSO.
-     LogContact(TempRX, True);
+     if not LogContact(TempRX, True) then
+        begin
+        Result := False;
+        Exit;
+        end;
      end;
 end;
 
@@ -1156,6 +1178,7 @@ var
   SavedRSTSent : Integer;
 begin
    Result := False;
+   QSOSaveRefused := False;
 
    (* WHY DID ENTER DO NOTHING? -- instrumentation, 2026-09-03.
 
@@ -1195,8 +1218,25 @@ begin
                              ReceivedData);
          end;
 
-      LogContact(ReceivedData, True);
-      DrainPendingMultiQSORefs;
+      (* NOT SAVED: LEAVE EVERYTHING AS THE OPERATOR TYPED IT -- 2026-11-18.
+         LogContact was a procedure, so a QSO the log refused (NY4I filled
+         the D: drive) went on through everything below: the windows were
+         cleared, so the typed QSO was gone, and ClearQuickDisplayText wiped
+         the "not saved" line LogContact had just shown. Now nothing below
+         runs: no further legs, no serial or timer, no ClearContestExchange,
+         no clearing or refocusing of the call and exchange windows, no
+         CleanUpDisplay, and NOTHING THAT TOUCHES THE STATUS LINE -- the
+         reason LogContact put there, with its beep, stays. The parser's
+         queues are emptied, so the next Enter parses the exchange afresh and
+         queues each leg once. *)
+      if (not LogContact(ReceivedData, True)) or
+         (not DrainPendingMultiQSORefs) then
+         begin
+         QSOSaveRefused := True;
+         ClearPendingParks;
+         ClearPendingCounties;
+         Exit;
+         end;
 
     // Capture before ClearContestExchange zeroes out ReceivedData.
     // Needed for 2fer refill below.
@@ -1237,6 +1277,9 @@ begin
     // an error in the QuickCommand window on its own 30s flash timer.  Once a
     // corrected QSO is logged that error is stale, so clear it now.
       ClearQuickDisplayText;
+    // AFTER that clear, or it would wipe it: "the log is writable again",
+    // once, when this QSO is the first saved after a full disk (2026-11-18).
+      LogStoreShowRecoveryNotice;
 
       Result := True;
 
@@ -2028,7 +2071,14 @@ begin
      if not TailEnding then
         begin
         // ReceivedData.ceSearchAndPounce := False;
+        (* NOT SAVED (2026-11-18, a full disk): the call and the exchange
+           stay as typed, and the status line keeps the reason TryLogContact
+           left on it -- nothing below runs. *)
         TryLogContact;
+        if QSOSaveRefused then
+           begin
+           Exit;
+           end;
         ShowStationInformation(ReceivedData.Callsign);
         UpdateTotals2;
 
@@ -2217,6 +2267,13 @@ begin
            SetOpMode(CQOpMode);
            end;
         end;
+     end;
+  (* NOT SAVED (2026-11-18): stop here. The several-QTH loop below would put
+     the first QTH into the exchange and try again -- refused again, and the
+     typed exchange gone. *)
+  if QSOSaveRefused then
+     begin
+     Exit;
      end;
   (* SEVERAL QTHs FROM ONE ENTRY IS THE CONTEST'S ANSWER -- M11 S7
     (TContestBase.LogsSeveralQTHsFromOneEntry); it was a test of the
@@ -8123,9 +8180,14 @@ begin
     That is the same class of defect as the two duplicated facts in the grid
     itself: a translation that was necessary under the old model, left in place
     under the new one, where it is not a no-op but an error. *)
+  (* AND NO EXIT HERE IS SILENT (2026-11-18). After a full disk disabled the
+    store, LogSourceOpen failed and a double click on a QSO the grid still
+    showed did nothing at all (NY4I). Each refusal says why on the status
+    line. *)
   IndexOfItemInLogForEdit := TR4WEditableLogSelectedRecord;
   if IndexOfItemInLogForEdit < 0 then
      begin
+     QuickDisplay(SEditQSONoQSOSelected);
      Exit;
      end;
 
@@ -8134,6 +8196,7 @@ begin
     log holds now -- and the editor addresses a record by index. *)
   if not LogSourceOpen then
      begin
+     QuickDisplay(SEditQSOLogUnreadable);
      Exit;
      end;
   Size := LogSourceRecordCount;
@@ -8141,6 +8204,7 @@ begin
 
   if IndexOfItemInLogForEdit >= Size then
      begin
+     QuickDisplay(SEditQSONoSuchQSO);
      Exit;
      end;
 
@@ -8614,10 +8678,9 @@ begin
              inc(QSOTotals[TempRXData.Band, Both]);
              inc(QSOTotals[AllBands, TempMode]);
 
-             if (SingleBand = TempRXData.Band) or (SingleBand = AllBands) then
-                begin
-                TotalQSOPoints := TotalQSOPoints + TempRXData.QSOPoints;
-                end;
+             (* TotalQSOPoints, and the digital share (issue 129) -- the
+                one statement, LOGDUPE.AddToTotalQSOPoints. *)
+             AddToTotalQSOPoints(TempRXData);
 
              (* MISSOURI'S BONUS-STATION CHECK STOOD HERE. Its stations are the
                 Missouri class's declared data now, counted over the whole log

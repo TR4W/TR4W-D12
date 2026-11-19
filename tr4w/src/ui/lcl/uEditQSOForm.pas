@@ -1358,6 +1358,13 @@ end;
 
 procedure TfrmEditQSO.btnSaveClick(Sender: TObject);
 begin
+   // A read-only log: refused before "Save changes?" is asked, since Yes could
+   // only be refused. The window stays open with the changes in it.
+   if EditRefusedByReadOnlyLog then
+      begin
+      Exit;
+      end;
+
    if not ConfirmSave then
       begin
       Exit;
@@ -1404,6 +1411,15 @@ begin
       end;
 
    if not Settings.Log.ConfirmEditChanges then
+      begin
+      Exit;
+      end;
+
+   // A READ-ONLY LOG (a full disk, a write error, or a locked log opened
+   // read-only) CANNOT TAKE THE EDIT, so "Save changes?" is not asked: Yes
+   // would be refused and, refused, would keep the window from ever closing.
+   // The status line says why, and the window closes.
+   if EditRefusedByReadOnlyLog then
       begin
       Exit;
       end;

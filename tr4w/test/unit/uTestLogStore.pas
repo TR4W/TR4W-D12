@@ -110,6 +110,12 @@ type
       procedure TestALockedLogDegradesWithoutRaising;
       procedure TestALockedLogAtOpenOffersReadOnly;
       procedure TestALockedLogAtOpenHeadlessStandsDown;
+      (* A FULL DISK (2026-11-18, NY4I's D: drive): the log goes READ-ONLY
+        and stays readable; a DAMAGED log still stands the store down. *)
+      procedure TestAFullDiskLeavesTheLogReadable;
+      procedure TestADamagedLogStillStandsTheStoreDown;
+      (* NY4I: free the space, press Enter -- no restart. *)
+      procedure TestAFreedDiskRecoversWithoutARestart;
       (* A raw connection on FDb holding the write lock, and its release. *)
       function HoldWriteLock: TObject;
       procedure ReleaseWriteLock(var aHolder: TObject);
@@ -160,9 +166,14 @@ begin
       end;
 end;
 
+var
+   (* The text of the last notice CountNotice took. *)
+   GLastNotice: string = '';
+
 procedure CountNotice(const aText: RawByteString);
 begin
    Inc(GNotices);
+   GLastNotice := string(aText);
 end;
 
 procedure TLogStoreTests.PrepareMigration(const aSet: string);
@@ -1728,6 +1739,14 @@ begin
       CheckFalse(LogStoreAppendQSO(fresh), 'nor a second');
       CheckEquals(1, GNotices, 'the operator is told once');
       CheckTrue(LogStoreIsUsable, 'the store is open for reading');
+      CheckTrue(Pos('read-only (locked)', LogStoreNotSavedText) > 0,
+                'and the status line says why: ' + LogStoreNotSavedText);
+      (* A LOCKED LOG IS NOT "RECOVERED" by a save attempt: its connection is
+        a read-only one, and only a write that FAILED is tried again. *)
+      CheckFalse(LogStoreTryRecoverWrites, 'a log opened read-only because it was locked does not recover');
+      CheckTrue(LogStoreIsReadOnly, 'it stays read-only');
+      CheckEquals('', LogStoreTakeRecoveryNotice, 'and nothing says it is writable');
+      CheckEquals(1, GNotices, 'and nobody is told anything new');
    finally
       tSilentExport := True;
       LogStoreLockedQuestion := nil;
@@ -1778,6 +1797,275 @@ begin
    end;
 end;
 
+(* A FULL DISK LEAVES THE LOG READABLE (NY4I, 2026-11-18). He filled the D:
+  drive under a running TR4W: the QSO was refused with the "not being saved"
+  modal -- right -- and then the store was disabled and its database freed,
+  so the grid went on showing QSOs that a double click could not open.
+
+  Now: the failed write is rolled back and the log stays open READ-ONLY. One
+  notice, saying why and where; reads work, as a double click does them; a
+  later QSO is refused with no second modal, and the status-line text says
+  why; and the file holds every acknowledged QSO and nothing of the refused
+  one. The disk is "filled" by PRAGMA max_page_count on the store's own
+  connection -- SQLITE_FULL exactly as a full disk gives it, on no real disk. *)
+procedure TLogStoreTests.TestAFullDiskLeavesTheLogReadable;
+var
+   binary, log: TStringList;
+   last, fresh: ContestExchange;
+   rows: array[0..9] of ContestExchange;
+   i, logged: integer;
+   refused: boolean;
+   baseline, count: Int64;
+begin
+   BeginTest('a full disk: the log goes read-only -- one notice, reads work, later writes refused quietly');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   log := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      CheckTrue(LogSourceOpen, 'the log opens for a read');
+      baseline := LogSourceRecordCount;
+      LogSourceClose;
+
+      tSilentExport := False;
+      LogStoreFailureNotice := @CountNotice;
+      GNotices := 0;
+      GLastNotice := '';
+
+      LogStoreFillTheDiskForTests;
+      fresh := last;
+      fresh.Callsign := NEW_CALL;
+      logged := 0;
+      refused := False;
+      (* Room left in the log's last pages takes the first few. Bounded, so a
+        disk that never fills fails the test rather than looping. *)
+      for i := 1 to 2000 do
+         begin
+         fresh.id := ShortString('test-diskfull-' + IntToStr(i));
+         if not LogStoreAppendQSO(fresh) then
+            begin
+            refused := True;
+            Break;
+            end;
+         Inc(logged);
+         end;
+
+      CheckTrue(refused, 'a QSO that needs a new page is refused, not acknowledged');
+      CheckTrue(LogStoreIsReadOnly, 'the log is now READ-ONLY');
+      CheckTrue(LogStoreIsUsable, 'and still open: NOT disabled');
+      CheckEquals(1, GNotices, 'the operator is told, once');
+      CheckTrue(Pos('not being saved (disk full)', GLastNotice) > 0,
+                'that it is not being saved, and why: ' + GLastNotice);
+      CheckTrue(Pos(ExtractFileName(FDb), GLastNotice) > 0,
+                'and where the log is: ' + GLastNotice);
+
+      CheckEquals(Length(rows), LogSourceReadRange(0, rows), 'the log can still be read');
+      (* What a double click on the grid does before it opens Edit QSO. *)
+      CheckTrue(LogSourceOpen, 'and opened for a read');
+      count := LogSourceRecordCount;
+      LogSourceClose;
+      CheckEquals(integer(baseline) + logged, integer(count),
+                  'holding every QSO that was acknowledged, and not the refused one');
+
+      fresh.id := 'test-diskfull-later';
+      CheckFalse(LogStoreAppendQSO(fresh), 'a later QSO is refused');
+      CheckEquals(1, GNotices, 'with no second modal');
+      CheckTrue(Pos('read-only (disk full)', LogStoreNotSavedText) > 0,
+                'the status line says why: ' + LogStoreNotSavedText);
+      (* AND HOW MUCH TO FREE, AND WHERE -- a small free does not work. *)
+      CheckTrue(Pos(IntToStr(LOG_DISK_FULL_FREE_MB) + ' MB on ' + ExtractFileDrive(FDb),
+                    LogStoreNotSavedText) > 0,
+                'the status line names the amount and the drive: ' + LogStoreNotSavedText);
+      CheckTrue(Pos(IntToStr(LOG_DISK_FULL_FREE_MB) + ' MB on ' + ExtractFileDrive(FDb),
+                    GLastNotice) > 0,
+                'and so does the modal: ' + GLastNotice);
+
+      (* What a crash would leave: the store let go of without a commit. *)
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      LogStoreForgetFailureForTests;
+      ReadLogCalls(log);
+      CheckEquals(binary.Count + logged, log.Count,
+                  'on disk: every acknowledged QSO, and nothing of the refused one');
+   finally
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      LogStoreForgetFailureForTests;
+      log.Free;
+      binary.Free;
+      Restore;
+   end;
+end;
+
+(* A DAMAGED LOG STILL STANDS THE STORE DOWN. Reading a damaged log is not
+  safe, so the read-only branch is for a disk that would not take a write and
+  for nothing else: a log whose pages are garbage is refused at open, the
+  store is disabled -- not read-only -- and the operator gets the "NOT BEING
+  SAVED" notice, as before. *)
+procedure TLogStoreTests.TestADamagedLogStillStandsTheStoreDown;
+var
+   f: TFileStream;
+   header: array[0..99] of Byte;
+   garbage: array[0..63] of Byte;
+   pageSize, at: Int64;
+begin
+   BeginTest('a damaged log is not opened read-only: the store stands down, with its notice');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      LogStoreClose;
+      CheckEquals('', SidecarsBeside(FDb), 'closed cleanly: nothing beside the log');
+
+      (* The first 64 bytes of every page but the first overwritten: the file
+        header stays, so it is still a database, and what is inside is not. *)
+      FillChar(garbage, SizeOf(garbage), $FF);
+      f := TFileStream.Create(FDb, fmOpenReadWrite or fmShareExclusive);
+      try
+         f.ReadBuffer(header, SizeOf(header));
+         pageSize := (Int64(header[16]) shl 8) or Int64(header[17]);
+         if pageSize = 1 then
+            begin
+            pageSize := 65536;
+            end;
+         at := pageSize;
+         while at < f.Size do
+            begin
+            f.Position := at;
+            f.WriteBuffer(garbage, SizeOf(garbage));
+            at := at + pageSize;
+            end;
+      finally
+         f.Free;
+      end;
+
+      tSilentExport := False;
+      LogStoreFailureNotice := @CountNotice;
+      GNotices := 0;
+      GLastNotice := '';
+      CheckFalse(LogStoreEnsureOpen, 'the damaged log is not opened');
+      CheckFalse(LogStoreIsUsable, 'the store stands down');
+      CheckFalse(LogStoreIsReadOnly, 'NOT read-only: a damaged log is not read on');
+      CheckEquals(1, GNotices, 'the operator is told, once');
+      CheckTrue(Pos('NOT BEING SAVED', GLastNotice) > 0,
+                'with the store''s own notice: ' + GLastNotice);
+   finally
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      (* The failed open disabled the store; every later suite needs it back. *)
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
+(* NY4I, 2026-11-18: "I would go clear up disk space, then hit enter." A log
+  made read-only by a full disk is tried again by the next save
+  (LogStoreTryRecoverWrites, one probe write): while the disk is still full
+  it stays read-only with NO second modal; once space is freed it is writable
+  again, says so once, and the QSO logs -- no restart. A second fill after
+  the recovery is again a refusal without a second modal. The disk is filled
+  and freed by PRAGMA max_page_count on the store's own connection. *)
+procedure TLogStoreTests.TestAFreedDiskRecoversWithoutARestart;
+var
+   binary, log: TStringList;
+   last, fresh: ContestExchange;
+   rows: array[0..9] of ContestExchange;
+   logged: integer;
+
+   (* Append until the full disk refuses one; the count that went in. *)
+   function AppendUntilRefused(const aPrefix: string): integer;
+   var
+      i: integer;
+   begin
+      Result := 0;
+      for i := 1 to 2000 do
+         begin
+         fresh.id := ShortString(aPrefix + IntToStr(i));
+         if not LogStoreAppendQSO(fresh) then
+            begin
+            Exit;
+            end;
+         Inc(Result);
+         end;
+      Result := -1;   (* never refused: the caller's check fails *)
+   end;
+
+var
+   n: integer;
+begin
+   BeginTest('a full disk freed: the next save tries again and logs -- no restart, no second modal');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   log := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      tSilentExport := False;
+      LogStoreFailureNotice := @CountNotice;
+      GNotices := 0;
+      GLastNotice := '';
+      fresh := last;
+      fresh.Callsign := NEW_CALL;
+
+      LogStoreFillTheDiskForTests;
+      logged := AppendUntilRefused('freed-a-');
+      CheckTrue(logged >= 0, 'the disk fills and a QSO is refused');
+      CheckTrue(LogStoreIsReadOnly, 'the log is read-only');
+      CheckEquals(1, GNotices, 'one modal');
+      CheckTrue(Pos('press Enter again', GLastNotice) > 0,
+                'telling him to free space and press Enter again: ' + GLastNotice);
+
+      (* STILL FULL: the next save's probe is refused, quietly. *)
+      CheckFalse(LogStoreTryRecoverWrites, 'while the disk is full, a save is still refused');
+      CheckTrue(LogStoreIsReadOnly, 'the log stays read-only');
+      CheckTrue(LogStoreIsUsable, 'and open');
+      CheckEquals(1, GNotices, 'with NO second modal');
+      CheckEquals('', LogStoreTakeRecoveryNotice, 'and nothing says it is writable');
+      CheckEquals(Length(rows), LogSourceReadRange(0, rows), 'the log reads while full');
+
+      (* SPACE FREED: the next save finds the log writable, and the QSO logs. *)
+      LogStoreFreeTheDiskForTests;
+      CheckTrue(LogStoreTryRecoverWrites, 'space freed: the next save finds the log writable');
+      CheckFalse(LogStoreIsReadOnly, 'it is no longer read-only');
+      CheckTrue(Pos('writable again', LogStoreTakeRecoveryNotice) > 0, 'the status line says so');
+      CheckEquals('', LogStoreTakeRecoveryNotice, 'once');
+      fresh.id := 'test-freed-after';
+      CheckTrue(LogStoreAppendQSO(fresh), 'and the QSO is logged -- no restart');
+      Inc(logged);
+      CheckEquals(1, GNotices, 'the recovery itself shows no modal');
+      CheckEquals(Length(rows), LogSourceReadRange(0, rows), 'the log reads after it');
+
+      (* FULL AGAIN: refused again, and still no second modal. *)
+      LogStoreFillTheDiskForTests;
+      n := AppendUntilRefused('freed-b-');
+      CheckTrue(n >= 0, 'the disk fills again and a QSO is refused');
+      logged := logged + n;
+      CheckTrue(LogStoreIsReadOnly, 'read-only again');
+      CheckEquals(1, GNotices, 'and STILL one modal for this log');
+      CheckTrue(Pos('read-only (disk full)', LogStoreNotSavedText) > 0,
+                'the status line says why: ' + LogStoreNotSavedText);
+
+      (* What a crash would leave: the store let go of without a commit. *)
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      LogStoreForgetFailureForTests;
+      ReadLogCalls(log);
+      CheckEquals(binary.Count + logged, log.Count,
+                  'on disk: every acknowledged QSO, and nothing of a refused one');
+   finally
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      LogStoreForgetFailureForTests;
+      log.Free;
+      binary.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -1804,6 +2092,9 @@ begin
    TestALockedLogDegradesWithoutRaising;
    TestALockedLogAtOpenOffersReadOnly;
    TestALockedLogAtOpenHeadlessStandsDown;
+   TestAFullDiskLeavesTheLogReadable;
+   TestADamagedLogStillStandsTheStoreDown;
+   TestAFreedDiskRecoversWithoutARestart;
 end;
 
 end.

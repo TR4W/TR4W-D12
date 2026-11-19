@@ -105,8 +105,16 @@ unit uBackupCopier;
   both threads -- Submit's outbox copy on the caller's, everything else on the
   worker -- so an implementation must keep no state between calls.
 
-  NO PLATFORM CALLS: TFileStream, FileFlush, RenameFile, DeleteFile, FindFirst,
-  CreateGUID -- all RTL, on every platform TR4W builds for. *)
+  NO PLATFORM CALLS: TFileStream, FileCreate, FileWrite, FileFlush, FileClose,
+  RenameFile, DeleteFile, FindFirst, CreateGUID -- all RTL, on every platform
+  TR4W builds for. A written file goes through FileCreate/FileWrite rather
+  than a stream so a failure keeps the operating system's code; see
+  CreateTargetFile.
+
+  A FAILURE IS CLASSIFIED (TBackupCopyFailure) where it happens, from facts:
+  the folder's absence, or that code. The status line shows the class; the
+  full sentence (paths, the system's own message) goes to the report's
+  aDetail, for tr4w.log. *)
 
 {$I ..\tr4w.inc}
 
@@ -144,11 +152,29 @@ type
                              final already holding the same bytes, and wrote
                              nothing. A success for the destination's health *)
 
-   (* aDetail is the reason for bceFailed, the file written for bceCopied and
-     the file found identical for bceAlreadyCurrent; empty otherwise. Called
-     on the worker thread. *)
+   (* WHY A COPY OR A PROBE FAILED, in the few words an operator can act on
+     (NY4I, 2026-11-18: "out of space would be better than stream error").
+     Decided HERE, from facts -- the folder's absence, or the operating
+     system's own error code captured at the failing call -- and never from
+     an exception's text. bcfOther is the honest answer when the system gave
+     no code: a short write with no code is NOT called a full disk, because a
+     share that drops mid-copy fails the same way. bcfNone for every event
+     but bceFailed. *)
+   TBackupCopyFailure = (
+      bcfNone,
+      bcfOther,
+      bcfFolderMissing,
+      bcfDiskFull,
+      bcfNoAccess);
+
+   (* aDetail is the reason for bceFailed -- the full technical sentence, for
+     tr4w.log, never for the status line -- the file written for bceCopied
+     and the file found identical for bceAlreadyCurrent; empty otherwise.
+     aFailure is bceFailed's classified reason, bcfNone otherwise. Called on
+     the worker thread. *)
    TBackupCopyReport = procedure(aEvent: TBackupCopyEvent;
-                                 const aDestination, aDetail: string) of object;
+                                 const aDestination, aDetail: string;
+                                 aFailure: TBackupCopyFailure) of object;
 
    TBackupDestinationHealth = (bdhUnknown, bdhWorking, bdhFailing);
 
@@ -176,13 +202,18 @@ type
       FAttempts: integer;
 
       procedure RunWorker;
-      procedure Report(aEvent: TBackupCopyEvent; const aDestination, aDetail: string);
+      procedure Report(aEvent: TBackupCopyEvent; const aDestination, aDetail: string;
+                       aFailure: TBackupCopyFailure);
       function PendingIndexOf(const aFinalName: string): integer;
       procedure DeleteOutboxLeftovers;
-      function ProbeDestination(const aFolder: string; out aWhy: string): boolean;
+      (* This and CopyToDestination: aWhy and aFailure mean something only
+        when the answer is False. *)
+      function ProbeDestination(const aFolder: string; out aWhy: string;
+                                out aFailure: TBackupCopyFailure): boolean;
       function CopyToDestination(const aOutbox, aFinalName, aFolder: string;
                                  aOnlyIfDifferent: boolean;
                                  out aWritten, aWhy: string;
+                                 out aFailure: TBackupCopyFailure;
                                  out aAlreadyCurrent: boolean): boolean;
    public
       (* Takes ownership of aOps. aOutboxDir is created if it is missing, and
@@ -233,12 +264,97 @@ const
    BACKUP_COPY_RETRY_MS = 60000;
    BACKUP_PARTIAL_SUFFIX = '.partial';
    BACKUP_OUTBOX_SUFFIX = '.outbox';
+   (* For tr4w.log, in English; the status line has its own resourcestrings. *)
+   BACKUP_COPY_FAILURE_NAME: array[TBackupCopyFailure] of string = (
+      'none', 'unclassified', 'folder missing', 'disk full', 'access denied');
+
+(* THE OPERATING SYSTEM'S ERROR CODE, CLASSIFIED. aCode is what GetLastOSError
+  answered at the failing call (a Windows error, or a Unix errno). Pure. *)
+function BackupFailureOfOSCode(aCode: integer): TBackupCopyFailure;
+
+(* An exception from a file operation, classified: an EOSError by its code
+  (TBackupFileOps raises those, with the code taken at the failing call),
+  anything else bcfOther. Pure. *)
+function BackupFailureOf(E: Exception): TBackupCopyFailure;
 
 implementation
+
+{$IFDEF UNIX}
+uses
+   BaseUnix;   (* ESysENOSPC and the rest: errno values differ between Linux
+                  and Darwin (EDQUOT does), so they come from the RTL *)
+{$ENDIF}
 
 const
    NOT_DUE = High(QWord);
    COMPARE_CHUNK = 65536;
+   COPY_CHUNK = 65536;
+
+{$IFDEF WINDOWS}
+   (* winerror.h values, the same numbers as FPC's rtl/win/wininc/errors.inc.
+     Named here because a domain unit may not use the Windows unit
+     (Lint-DomainPurity). *)
+   OS_ERROR_PATH_NOT_FOUND        = 3;
+   OS_ERROR_ACCESS_DENIED         = 5;
+   OS_ERROR_WRITE_PROTECT         = 19;
+   OS_ERROR_HANDLE_DISK_FULL      = 39;
+   OS_ERROR_BAD_NETPATH           = 53;
+   OS_ERROR_NETWORK_ACCESS_DENIED = 65;
+   OS_ERROR_BAD_NET_NAME          = 67;
+   OS_ERROR_DISK_FULL             = 112;
+{$ENDIF}
+
+function BackupFailureOfOSCode(aCode: integer): TBackupCopyFailure;
+begin
+   Result := bcfOther;
+{$IFDEF WINDOWS}
+   case aCode of
+      OS_ERROR_DISK_FULL,
+      OS_ERROR_HANDLE_DISK_FULL:
+         begin
+         Result := bcfDiskFull;
+         end;
+      OS_ERROR_ACCESS_DENIED,
+      OS_ERROR_NETWORK_ACCESS_DENIED,
+      OS_ERROR_WRITE_PROTECT:
+         begin
+         Result := bcfNoAccess;
+         end;
+      OS_ERROR_PATH_NOT_FOUND,
+      OS_ERROR_BAD_NETPATH,
+      OS_ERROR_BAD_NET_NAME:
+         begin
+         Result := bcfFolderMissing;
+         end;
+   end;
+{$ENDIF}
+{$IFDEF UNIX}
+   if (aCode = ESysENOSPC) or (aCode = ESysEDQUOT) then
+      begin
+      Result := bcfDiskFull;
+      end
+   else if (aCode = ESysEACCES) or (aCode = ESysEPERM) or (aCode = ESysEROFS) then
+      begin
+      Result := bcfNoAccess;
+      end
+   else if aCode = ESysENOENT then
+      begin
+      Result := bcfFolderMissing;
+      end;
+{$ENDIF}
+end;
+
+function BackupFailureOf(E: Exception): TBackupCopyFailure;
+begin
+   if E is EOSError then
+      begin
+      Result := BackupFailureOfOSCode(EOSError(E).ErrorCode);
+      end
+   else
+      begin
+      Result := bcfOther;
+      end;
+end;
 
 type
    TBackupCopyJob = class(TObject)
@@ -307,6 +423,66 @@ begin
    Result := TFileStream.Create(AnsiString(aPath), aMode);
 end;
 
+(* A FILE WRITTEN AT THE DESTINATION IS WRITTEN WITH THE RTL'S OWN FileCreate,
+  FileWrite AND FileFlush, NOT TFileStream (2026-11-18). The stream loses the
+  operating system's answer: CopyFrom's WriteBuffer raises "Stream write
+  error" with no code on a full disk -- exactly what NY4I saw -- and
+  TFileStream.Create formats the code into its message and drops it. Here
+  the code is taken with GetLastOSError AT THE FAILING CALL, before anything
+  else can run, and raised by RaiseLastOSError as an EOSError carrying it, so
+  BackupFailureOf can tell a full disk from a refused write.
+
+  A failure of the CLOSE is still not seen (FileClose answers nothing); the
+  read-back that follows every copy catches what it would have lost. *)
+function CreateTargetFile(const aPath: string): THandle;
+var
+   code: integer;
+begin
+   Result := FileCreate(aPath);
+   if Result = feInvalidHandle then
+      begin
+      code := GetLastOSError;
+      RaiseLastOSError(code);
+      end;
+end;
+
+(* Write the first aCount bytes of aBytes, all of them, or raise EOSError. *)
+procedure WriteAllOrRaise(aHandle: THandle; const aBytes: TBytes; aCount: integer);
+var
+   done, written, code: integer;
+begin
+   done := 0;
+   while done < aCount do
+      begin
+      written := FileWrite(aHandle, aBytes[done], aCount - done);
+      if written < 0 then
+         begin
+         code := GetLastOSError;
+         RaiseLastOSError(code);
+         end;
+      if written = 0 then
+         begin
+         (* No error and no progress: there is no code to classify. *)
+         raise EInOutError.Create('the operating system accepted none of the bytes');
+         end;
+      done := done + written;
+      end;
+end;
+
+procedure FlushOrRaise(aHandle: THandle);
+var
+   code: integer;
+begin
+   (* THE RTL'S OWN FLUSH: FlushFileBuffers on Windows and fsync on Unix. A
+     share's write-behind can report a full disk here rather than at the
+     write. *)
+   if not FileFlush(aHandle) then
+      begin
+      code := GetLastOSError;
+      RaiseLastOSError(code);
+      end;
+end;
+
 function TBackupFileOps.FolderExists(const aFolder: string): boolean;
 begin
    Result := SysUtils.DirectoryExists(aFolder);
@@ -319,25 +495,37 @@ end;
 
 procedure TBackupFileOps.CopyFile(const aSource, aTarget: string);
 var
-   source, target: TFileStream;
+   source: TFileStream;
+   target: THandle;
+   buffer: TBytes;
+   remaining: Int64;
+   chunk: integer;
 begin
    source := OpenFile(aSource, fmOpenRead or fmShareDenyWrite);
    try
-      target := OpenFile(aTarget, fmCreate);
+      (* The target through the RTL's file routines, so a failure carries the
+        operating system's code -- see CreateTargetFile. *)
+      target := CreateTargetFile(aTarget);
       try
-         if source.Size > 0 then
+         SetLength(buffer, COPY_CHUNK);
+         remaining := source.Size;
+         while remaining > 0 do
             begin
-            target.CopyFrom(source, source.Size);
+            if remaining > COPY_CHUNK then
+               begin
+               chunk := COPY_CHUNK;
+               end
+            else
+               begin
+               chunk := integer(remaining);
+               end;
+            source.ReadBuffer(buffer[0], chunk);
+            WriteAllOrRaise(target, buffer, chunk);
+            remaining := remaining - chunk;
             end;
-         (* THE RTL'S OWN FLUSH, given the stream's handle -- the one place a
-           handle is asked for, because TFileStream has no Flush of its own.
-           FileFlush is FlushFileBuffers on Windows and fsync on Unix. *)
-         if not FileFlush(target.Handle) then
-            begin
-            raise EInOutError.CreateFmt('%s could not be flushed', [aTarget]);
-            end;
+         FlushOrRaise(target);
       finally
-         target.Free;
+         FileClose(target);
       end;
    finally
       source.Free;
@@ -346,20 +534,14 @@ end;
 
 procedure TBackupFileOps.WriteFile(const aTarget: string; const aBytes: TBytes);
 var
-   target: TFileStream;
+   target: THandle;
 begin
-   target := OpenFile(aTarget, fmCreate);
+   target := CreateTargetFile(aTarget);
    try
-      if Length(aBytes) > 0 then
-         begin
-         target.WriteBuffer(aBytes[0], Length(aBytes));
-         end;
-      if not FileFlush(target.Handle) then
-         begin
-         raise EInOutError.CreateFmt('%s could not be flushed', [aTarget]);
-         end;
+      WriteAllOrRaise(target, aBytes, Length(aBytes));
+      FlushOrRaise(target);
    finally
-      target.Free;
+      FileClose(target);
    end;
 end;
 
@@ -526,13 +708,13 @@ begin
 end;
 
 procedure TBackupCopier.Report(aEvent: TBackupCopyEvent;
-   const aDestination, aDetail: string);
+   const aDestination, aDetail: string; aFailure: TBackupCopyFailure);
 begin
    FReportLock.Acquire;
    try
       if Assigned(FOnReport) then
          begin
-         FOnReport(aEvent, aDestination, aDetail);
+         FOnReport(aEvent, aDestination, aDetail, aFailure);
          end;
    finally
       FReportLock.Release;
@@ -835,7 +1017,8 @@ end;
 (* A REAL WRITE, NOT A LOOK: create, write, rename and delete a probe file.
   An existing folder can still refuse a write (read-only share, full volume,
   expired credentials), and only a write says so. *)
-function TBackupCopier.ProbeDestination(const aFolder: string; out aWhy: string): boolean;
+function TBackupCopier.ProbeDestination(const aFolder: string; out aWhy: string;
+   out aFailure: TBackupCopyFailure): boolean;
 var
    probe, renamed: string;
    bytes: TBytes;
@@ -843,9 +1026,11 @@ var
 begin
    Result := False;
    aWhy := '';
+   aFailure := bcfOther;
    if not FOps.FolderExists(aFolder) then
       begin
       aWhy := 'the folder ' + aFolder + ' is not there (is the share connected?)';
+      aFailure := bcfFolderMissing;
       Exit;
       end;
 
@@ -871,10 +1056,12 @@ begin
             Exit;
             end;
          Result := True;
+         aFailure := bcfNone;
       except
          on E: Exception do
             begin
             aWhy := 'a file could not be written in ' + aFolder + ': ' + E.Message;
+            aFailure := BackupFailureOf(E);
             end;
       end;
    finally
@@ -891,7 +1078,7 @@ end;
 
 function TBackupCopier.CopyToDestination(const aOutbox, aFinalName, aFolder: string;
    aOnlyIfDifferent: boolean; out aWritten, aWhy: string;
-   out aAlreadyCurrent: boolean): boolean;
+   out aFailure: TBackupCopyFailure; out aAlreadyCurrent: boolean): boolean;
 var
    final, previous, partial, aside: string;
    hadPrevious: boolean;
@@ -899,6 +1086,9 @@ var
 begin
    Result := False;
    aWhy := '';
+   (* Every failure below that is not an exception -- a read-back that
+     differs, a rename refused -- carries no code, so it is bcfOther. *)
+   aFailure := bcfOther;
    aAlreadyCurrent := False;
    final := IncludeTrailingPathDelimiter(aFolder) + aFinalName;
    aWritten := final;
@@ -907,6 +1097,7 @@ begin
    if not FOps.FolderExists(aFolder) then
       begin
       aWhy := 'the folder ' + aFolder + ' is not there (is the share connected?)';
+      aFailure := bcfFolderMissing;
       Exit;
       end;
 
@@ -980,6 +1171,7 @@ begin
          on E: Exception do
             begin
             aWhy := 'the copy to ' + final + ' failed: ' + E.Message;
+            aFailure := BackupFailureOf(E);
             Result := False;
             end;
       end;
@@ -1005,6 +1197,8 @@ var
    events: array[0..1] of TBackupCopyEvent;
    eventCount: integer;
    eventDetail: array[0..1] of string;
+   eventFailure: array[0..1] of TBackupCopyFailure;
+   failure: TBackupCopyFailure;
 begin
    try
       while True do
@@ -1074,22 +1268,24 @@ begin
          written := '';
          ok := False;
          alreadyCurrent := False;
+         failure := bcfOther;
          try
             if doProbe then
                begin
-               ok := ProbeDestination(folder, why);
+               ok := ProbeDestination(folder, why, failure);
                end
             else
                begin
                ok := CopyToDestination(job.Outbox, job.FinalName, folder,
                                        job.OnlyIfDifferent, written, why,
-                                       alreadyCurrent);
+                                       failure, alreadyCurrent);
                end;
          except
             on E: Exception do
                begin
                ok := False;
                why := E.Message;
+               failure := BackupFailureOf(E);
                end;
          end;
 
@@ -1100,6 +1296,9 @@ begin
            "settled" with the bceCopied report still to come (CI, 2026-11-06,
            TestASkipAfterAFailureIsARecoveryOnce). *)
          eventCount := 0;
+         (* Only bceFailed carries a classified reason. *)
+         eventFailure[0] := bcfNone;
+         eventFailure[1] := bcfNone;
          deleteAfter := '';
          FLock.Acquire;
          try
@@ -1172,6 +1371,7 @@ begin
                      begin
                      events[eventCount] := bceFailed;
                      eventDetail[eventCount] := why;
+                     eventFailure[eventCount] := failure;
                      Inc(eventCount);
                      end;
                   FHealth := bdhFailing;
@@ -1191,7 +1391,7 @@ begin
                end;
             for i := 0 to eventCount - 1 do
                begin
-               Report(events[i], folder, eventDetail[i]);
+               Report(events[i], folder, eventDetail[i], eventFailure[i]);
                end;
          finally
             (* Not held across the reports: the report lock is never taken

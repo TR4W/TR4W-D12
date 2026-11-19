@@ -71,6 +71,12 @@ type
       procedure Test_TheLoaderAndTheRescoreAskThePredicate;
       procedure Test_ASharedSerialAdvancesTheNextByOne;
       procedure Test_TheMultiCountyDrainKeepsOneSerial;
+      (* 2026-11-18: a QSO the log would not take keeps the entry and the
+         status line's reason (read from the source). *)
+      procedure Test_ARefusedSaveKeepsTheEntryAndItsReason;
+      (* 2026-11-18: ARRL Sweepstakes CW and Phone each credit only their own
+         mode (sponsor rule 2.4); NY4I saw CW QSOs scored in SS Phone. *)
+      procedure Test_SweepstakesCreditsOnlyItsOwnMode;
    end;
 
 (* A SOURCE FILE UNDER tr4w/src, as text -- for a test that pins the ORDER of
@@ -217,6 +223,98 @@ begin
       qso.ceXQSO := True;
       obj.ScoreQSO(qso);
       CheckEquals(0, qso.QSOPoints, 'a flagged X-QSO scores 0 through ScoreQSO');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* AN ARRL SWEEPSTAKES QSO: a US entrant working Connecticut on 20 m, in the
+   running given -- 2 points in its own mode. *)
+function SSQSO(aContest: ContestType; aMode: ModeType; aExt: ExtendedModeType): ContestExchange;
+begin
+   FillChar(Result, SizeOf(ContestExchange), 0);
+   Result.ceRecordKind := rkQSO;
+   Result.ceContest := ContestHandleOf(aContest);
+   Result.Callsign := 'W1AW';
+   Result.Band := Band20;
+   Result.Mode := aMode;
+   Result.ExtMode := aExt;
+   Result.QTH.Continent := NorthAmerica;
+   Result.QTH.CountryID := 'K';
+   Result.tSysTime.qtYear := 26;
+   Result.tSysTime.qtMonth := 11;
+   Result.tSysTime.qtDay := 21;
+   Result.tSysTime.qtHour := 22;
+end;
+
+(* ARRL SWEEPSTAKES: "Use only CW during the CW weekend and Phone during the
+   Phone weekend" (rule 2.4, docs/ContestRules/ARRL/ARRL-SS-Rules.txt). Phone
+   is SSB/USB/LSB/AM; FM is not credited until NY4I rules (the rules do not
+   define Phone). Every ModeType through UsesMode for both runnings, then the
+   off-mode QSO through QSOIsXQSO and ScoreQSO, with an on-mode control. *)
+procedure TAutomaticXQSOTests.Test_SweepstakesCreditsOnlyItsOwnMode;
+var
+   cwRules: TContestBase;
+   ssbRules: TContestBase;
+   mode: ModeType;
+   obj: TContestBase;
+   qso: ContestExchange;
+begin
+   BeginTest('Test_SweepstakesCreditsOnlyItsOwnMode');
+   cwRules := ContestIdentity(ContestHandleOf(ARRLSSCW));
+   ssbRules := ContestIdentity(ContestHandleOf(ARRLSSSSB));
+
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      CheckTrue(cwRules.UsesMode(mode, eNoMode) = (mode = CW),
+                'SS CW credits CW only (mode ' + IntToStr(Ord(mode)) + ')');
+      CheckTrue(ssbRules.UsesMode(mode, eNoMode) = (mode = Phone),
+                'SS Phone credits Phone only (mode ' + IntToStr(Ord(mode)) + ')');
+      end;
+
+   (* EVERY PHONE SUBMODE IS PHONE; FM IS ITS OWN ModeType AND IS NOT. *)
+   CheckTrue(ssbRules.UsesMode(Phone, eUSB), 'USB is phone');
+   CheckTrue(ssbRules.UsesMode(Phone, eLSB), 'LSB is phone');
+   CheckTrue(ssbRules.UsesMode(Phone, eSSB), 'SSB is phone');
+   CheckTrue(ssbRules.UsesMode(Phone, eAM), 'AM is phone');
+   CheckFalse(ssbRules.UsesMode(FM, eFM), 'FM is not credited in SS Phone');
+   CheckTrue(cwRules.UsesMode(CW, eCW), 'CW in SS CW');
+   CheckFalse(cwRules.UsesMode(Digital, eRTTY), 'RTTY is not CW');
+
+   (* THE AUTOMATIC X-QSO, both ways round. *)
+   CheckTrue(QSOIsXQSO(ssbRules, SSQSO(ARRLSSSSB, CW, eCW)), 'a CW QSO in SS Phone is an X-QSO');
+   CheckTrue(QSOIsXQSO(ssbRules, SSQSO(ARRLSSSSB, CW, eNoMode)),
+             'so is a CW record with no submode (the corpus''s N0TST shape)');
+   CheckTrue(QSOIsXQSO(ssbRules, SSQSO(ARRLSSSSB, FM, eFM)), 'and FM');
+   CheckTrue(QSOIsXQSO(ssbRules, SSQSO(ARRLSSSSB, Digital, eFT8)), 'and FT8');
+   CheckFalse(QSOIsXQSO(ssbRules, SSQSO(ARRLSSSSB, Phone, eUSB)), 'USB is an SS Phone QSO');
+   CheckFalse(QSOIsXQSO(ssbRules, SSQSO(ARRLSSSSB, Phone, eNoMode)),
+              'a phone record with no submode is never proven off-mode');
+   CheckTrue(QSOIsXQSO(cwRules, SSQSO(ARRLSSCW, Phone, eUSB)), 'a phone QSO in SS CW is an X-QSO');
+   CheckTrue(QSOIsXQSO(cwRules, SSQSO(ARRLSSCW, Digital, eRTTY)), 'and RTTY');
+   CheckFalse(QSOIsXQSO(cwRules, SSQSO(ARRLSSCW, CW, eCW)), 'CW is an SS CW QSO');
+   CheckFalse(QSOIsXQSO(cwRules, SSQSO(ARRLSSCW, NoMode, eNoMode)), 'no mode: not an X-QSO by rule');
+
+   (* SCORING: 2 in its own mode, 0 off it. *)
+   obj := NewContestLike(ssbRules, USStation);
+   try
+      qso := SSQSO(ARRLSSSSB, Phone, eUSB);
+      obj.ScoreQSO(qso);
+      CheckEquals(2, qso.QSOPoints, 'the control: an SS Phone QSO on USB is 2');
+      qso := SSQSO(ARRLSSSSB, CW, eNoMode);
+      obj.ScoreQSO(qso);
+      CheckEquals(0, qso.QSOPoints, 'a CW QSO in SS Phone scores 0');
+   finally
+      obj.Free;
+      end;
+   obj := NewContestLike(cwRules, USStation);
+   try
+      qso := SSQSO(ARRLSSCW, CW, eCW);
+      obj.ScoreQSO(qso);
+      CheckEquals(2, qso.QSOPoints, 'the control: an SS CW QSO is 2');
+      qso := SSQSO(ARRLSSCW, Phone, eLSB);
+      obj.ScoreQSO(qso);
+      CheckEquals(0, qso.QSOPoints, 'a phone QSO in SS CW scores 0');
    finally
       obj.Free;
       end;
@@ -381,6 +479,13 @@ begin
    SetLength(GRecords, 0);
 end;
 
+const
+   (* THE TWO DECLARATIONS THE SOURCE READS FIND THEIR BODIES BY. Both became
+      functions on 2026-11-18 (a refused save answers False). *)
+   LOG_CONTACT_DECLARATION =
+      'function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;';
+   DRAIN_DECLARATION = 'function DrainPendingMultiQSORefs: boolean;';
+
 function SourceText(const aRelative: string): string;
 var
    lines: TStringList;
@@ -410,8 +515,8 @@ begin
    BeginTest('Test_LogContactCountsNoXQSOButAdvancesTheSerial');
    text := SourceText('trdos' + PathDelim + 'logsubs2.pas');
    (* THE SECOND DECLARATION IS THE BODY; the first is the interface's. *)
-   p := Pos('procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);', text);
-   p := PosEx('procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);', text, p + 1);
+   p := Pos(LOG_CONTACT_DECLARATION, text);
+   p := PosEx(LOG_CONTACT_DECLARATION, text, p + 1);
    CheckTrue(p > 0, 'LogContact''s body is found');
    e := PosEx('procedure LogContactToUDP(RXData: ContestExchange);' + sLineBreak, text, p);
    CheckTrue(e > p, 'and its end');
@@ -543,7 +648,7 @@ begin
    BeginTest('Test_TheMultiCountyDrainKeepsOneSerial');
    text := SourceText('MainUnit.pas');
 
-   p := Pos('procedure DrainPendingMultiQSORefs;', text);
+   p := Pos(DRAIN_DECLARATION, text);
    CheckTrue(p > 0, 'DrainPendingMultiQSORefs is found');
    e := PosEx('function LocateCallStrippingRoverCounty(', text, p);
    CheckTrue(e > p, 'and its end');
@@ -566,12 +671,108 @@ begin
    CheckTrue(p > 0, 'the loader feeds every stored serial to the mark');
 end;
 
+(* A QSO THE LOG WOULD NOT TAKE LEAVES THE ENTRY AS TYPED, AND ITS REASON
+   STANDS -- NY4I, 2026-11-18, on a full D: drive. LogContact was a procedure:
+   a refused save went on to clear the call and exchange windows (the typed
+   QSO lost) and to ClearQuickDisplayText (the "not saved" line wiped, so
+   Enter seemed to do nothing). The Enter path cannot be driven headless, so
+   this READS it, and fails if any of that comes back. *)
+procedure TAutomaticXQSOTests.Test_ARefusedSaveKeepsTheEntryAndItsReason;
+var
+   text, body, refusal: string;
+   p, e, r, x, q, t, next: integer;
+begin
+   BeginTest('Test_ARefusedSaveKeepsTheEntryAndItsReason');
+
+   (* LOGSUBS2: a log that cannot take an own QSO is refused BEFORE the QSO
+      is posted anywhere, and the answer is True only once it is in the log. *)
+   text := SourceText('trdos' + PathDelim + 'logsubs2.pas');
+   p := Pos(LOG_CONTACT_DECLARATION, text);
+   p := PosEx(LOG_CONTACT_DECLARATION, text, p + 1);
+   CheckTrue(p > 0, 'LogContact''s body is found');
+   e := PosEx('procedure LogContactToUDP(RXData: ContestExchange);' + sLineBreak, text, p);
+   CheckTrue(e > p, 'and its end');
+   body := Copy(text, p, e - p);
+   r := Pos('LogStoreNotSavedText', body);
+   CheckTrue(r > 0, 'LogContact refuses an unsaveable QSO with the store''s text');
+   CheckTrue(r < Pos('PostLoggedQso(', body), 'before the QSO is posted to UDP and the loggers');
+   CheckTrue(r < Pos('SendRecordToServer(', body), 'and before it is sent to the server');
+   (* A FULL DISK FREED SINCE: the store is tried again right there, before
+      the post too -- so a probe that fails posts nothing (2026-11-18). *)
+   x := Pos('LogStoreTryRecoverWrites', body);
+   CheckTrue(x > 0, 'LogContact tries the log again before refusing');
+   CheckTrue(x < Pos('PostLoggedQso(', body), 'before the QSO is posted');
+   CheckTrue(x < Pos('SendRecordToServer(', body), 'and before it is sent to the server');
+   x := Pos('if not tAddQSOToLog(RXData) then', body);
+   CheckTrue(x > 0, 'LogContact asks the append');
+   CheckTrue(PosEx('Result := True;', body, x) > x, 'and answers True only after it');
+   CheckTrue(Pos('Result := True;', body) > x, 'and nowhere before it');
+
+   (* MAINUNIT.TryLogContact: on False, out -- before anything that clears a
+      window, the exchange or the status line. *)
+   text := SourceText('MainUnit.pas');
+   p := Pos('function TryLogContact: boolean;' + sLineBreak + 'var', text);
+   CheckTrue(p > 0, 'TryLogContact''s body is found');
+   e := PosEx('procedure ResetRadioPorts;', text, p);
+   CheckTrue(e > p, 'and its end');
+   body := Copy(text, p, e - p);
+   r := Pos('if (not LogContact(ReceivedData, True)) or', body);
+   CheckTrue(r > 0, 'TryLogContact acts on LogContact''s answer');
+   CheckEquals(0, Pos('      LogContact(ReceivedData, True);', body),
+               'and never ignores it');
+   x := PosEx('Exit;', body, r);
+   CheckTrue(x > r, 'a refused save leaves at once');
+   refusal := Copy(body, r, x - r);
+   CheckTrue(Pos('QSOSaveRefused := True;', refusal) > 0, 'saying so to the Enter paths');
+   CheckTrue(Pos('ClearPendingParks;', refusal) > 0, 'emptying the park queue');
+   CheckTrue(Pos('ClearPendingCounties;', refusal) > 0, 'and the county queue');
+   CheckEquals(0, Pos('QuickDisplay', refusal), 'and NOT touching the status line');
+   CheckEquals(0, Pos('ClearQuickDisplayText', refusal), 'nor clearing it');
+   CheckEquals(0, Pos('CleanUpDisplay', refusal), 'nor cleaning up the display');
+   CheckEquals(0, Pos('UpdateWindows', refusal), 'nor updating the windows');
+   CheckTrue(x < Pos('ClearQuickDisplayText;', body), 'the status line is cleared only after a save');
+   CheckTrue(x < Pos('ClearContestExchange(ReceivedData);', body), 'and the exchange');
+   CheckTrue(x < Pos('tCleareCallWindow;', body), 'and the call window');
+   CheckTrue(x < Pos('tCleareExchangeWindow;', body), 'and the exchange window');
+   CheckTrue(x < Pos('CleanUpDisplay;', body), 'and the display');
+   CheckTrue(x < Pos('UpdateWindows;', body), 'and the windows');
+   CheckTrue(x < Pos('SendSerialNumberChange(', body), 'and the serial');
+   CheckTrue(Pos('LogStoreShowRecoveryNotice;', body) > Pos('ClearQuickDisplayText;', body),
+             '"writable again" is said AFTER the status line is cleared, not wiped by it');
+
+   (* THE CQ ENTER PATH: TryLogContact, then at once the flag, then out --
+      before its own clearing of the windows. *)
+   q := Pos('if QSOSaveRefused then', text);
+   CheckTrue(q > 0, 'the CQ Enter path asks the flag');
+   t := 0;
+   next := Pos('TryLogContact;', text);
+   while (next > 0) and (next < q) do
+      begin
+      t := next;
+      next := PosEx('TryLogContact;', text, next + 1);
+      end;
+   CheckTrue(t > 0, 'after a TryLogContact');
+   CheckEquals('', Trim(Copy(text, t + Length('TryLogContact;'),
+                             q - t - Length('TryLogContact;'))),
+               'directly after it');
+   CheckTrue(PosEx('Exit;', text, q) < PosEx('tCleareCallWindow;', text, q),
+             'and leaves before clearing the call window');
+
+   (* THE S&P ENTER PATH: out before the several-QTH loop re-enters. *)
+   q := PosEx('if QSOSaveRefused then', text, q + 1);
+   CheckTrue(q > 0, 'the S&P Enter path asks the flag');
+   CheckTrue(PosEx('Exit;', text, q) < PosEx('goto loop;', text, q),
+             'and leaves before the several-QTH loop');
+end;
+
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
+   Test_ARefusedSaveKeepsTheEntryAndItsReason;
    Test_ASharedSerialAdvancesTheNextByOne;
    Test_TheMultiCountyDrainKeepsOneSerial;
    Test_TheContestsRuleMakesAnXQSO;
    Test_AnXQSOScoresNothing;
+   Test_SweepstakesCreditsOnlyItsOwnMode;
    Test_AnEditedBandReclassifiesTheQSO;
    Test_TheRecordsOwnContestDecides;
    Test_ADIFMarksAnAutomaticXQSO;

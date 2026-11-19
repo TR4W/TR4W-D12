@@ -49,6 +49,7 @@ type
       procedure TestTheLocalBackupFolderIsNotADestination;
       procedure TestLeftoverOutboxFilesAreDeletedAtStart;
       procedure TestNotSettledUntilEveryReportIsDelivered;
+      procedure TestACopyFailureIsClassifiedByTheSystemsCode;
    public
       procedure RunAllTests; override;
    end;
@@ -75,6 +76,8 @@ type
       procedure TestNoDestinationKeepsTheLocalReport;
       procedure TestAFailedQueueingSaysWhy;
       procedure TestEveryCopierEventButAlreadyCurrentHasANoticeAndOnlyAFailureBeeps;
+      procedure TestAFailureNeverShowsItsDetail;
+      procedure TestTheSystemsCodesAreClassified;
    public
       procedure RunAllTests; override;
    end;
@@ -82,8 +85,29 @@ type
 implementation
 
 uses
+   {$IFDEF UNIX}
+   BaseUnix,   (* the errno values the classification is checked against *)
+   {$ENDIF}
    SysUtils, Classes, SyncObjs, uJSON, uKeychain, uSettingsModel, uBackupCopier,
    uBackupCopyService, uAppStrings;
+
+const
+   (* THE OPERATING SYSTEM'S CODES, stated here independently of the unit
+     under test -- reusing its constants would prove nothing about their
+     values. Windows: winerror.h. Unix: the RTL's errno. *)
+{$IFDEF WINDOWS}
+   OS_DISK_FULL         = 112;   (* ERROR_DISK_FULL *)
+   OS_SECOND_DISK_FULL  = 39;    (* ERROR_HANDLE_DISK_FULL *)
+   OS_ACCESS_DENIED     = 5;     (* ERROR_ACCESS_DENIED *)
+   OS_PATH_NOT_FOUND    = 3;     (* ERROR_PATH_NOT_FOUND *)
+   OS_UNCLASSIFIED      = 32;    (* ERROR_SHARING_VIOLATION: no class of its own *)
+{$ELSE}
+   OS_DISK_FULL         = ESysENOSPC;
+   OS_SECOND_DISK_FULL  = ESysEDQUOT;
+   OS_ACCESS_DENIED     = ESysEACCES;
+   OS_PATH_NOT_FOUND    = ESysENOENT;
+   OS_UNCLASSIFIED      = ESysEBUSY;
+{$ENDIF}
 
 const
    ABSENT = '<absent>';
@@ -101,6 +125,7 @@ type
       FLock: TCriticalSection;
       FCounts: array[TBackupCopyEvent] of integer;
       FLastDetail: string;
+      FLastFailure: TBackupCopyFailure;
    public
       (* A REPORT THAT TAKES ITS TIME. When HoldCopied is set, a bceCopied
         report signals Entered and waits for Release BEFORE it is counted, so a
@@ -111,9 +136,12 @@ type
       Release: TEvent;
       constructor Create;
       destructor Destroy; override;
-      procedure Received(aEvent: TBackupCopyEvent; const aDestination, aDetail: string);
+      procedure Received(aEvent: TBackupCopyEvent; const aDestination, aDetail: string;
+                         aFailure: TBackupCopyFailure);
       function Count(aEvent: TBackupCopyEvent): integer;
       function LastDetail: string;
+      (* The classified reason of the last bceFailed. *)
+      function LastFailure: TBackupCopyFailure;
    end;
 
    (* FILE OPERATIONS THAT MISBEHAVE ON REQUEST. Only operations aimed at the
@@ -125,6 +153,12 @@ type
       FPartialCopies: integer;
    public
       CorruptPartials: boolean;
+      (* Non-zero: copying to a .partial raises EOSError with this code, as
+        TBackupFileOps does when the system refuses a write. *)
+      PartialOSError: integer;
+      (* Copying to a .partial raises the stream's own code-less "Stream
+        write error" -- what the copier used to see on a full disk. *)
+      PartialStreamWriteError: boolean;
       RefuseRenameOfPartial: boolean;
       BlockPartials: boolean;
       BlockProbes: boolean;
@@ -238,6 +272,7 @@ begin
       FCounts[e] := 0;
       end;
    FLastDetail := '';
+   FLastFailure := bcfNone;
    HoldCopied := False;
    Entered := TEvent.Create(nil, True, False, '');
    Release := TEvent.Create(nil, True, False, '');
@@ -252,7 +287,7 @@ begin
 end;
 
 procedure TReportRecorder.Received(aEvent: TBackupCopyEvent;
-   const aDestination, aDetail: string);
+   const aDestination, aDetail: string; aFailure: TBackupCopyFailure);
 begin
    if HoldCopied and (aEvent = bceCopied) then
       begin
@@ -265,6 +300,7 @@ begin
       if aEvent = bceFailed then
          begin
          FLastDetail := aDetail;
+         FLastFailure := aFailure;
          end;
    finally
       FLock.Release;
@@ -291,6 +327,16 @@ begin
    end;
 end;
 
+function TReportRecorder.LastFailure: TBackupCopyFailure;
+begin
+   FLock.Acquire;
+   try
+      Result := FLastFailure;
+   finally
+      FLock.Release;
+   end;
+end;
+
 (* ---------------------------------------------------------------------------
   TFaultyOps
   --------------------------------------------------------------------------- *)
@@ -301,6 +347,8 @@ begin
    FLock := TCriticalSection.Create;
    FPartialCopies := 0;
    CorruptPartials := False;
+   PartialOSError := 0;
+   PartialStreamWriteError := False;
    RefuseRenameOfPartial := False;
    BlockPartials := False;
    BlockProbes := False;
@@ -338,6 +386,15 @@ begin
       begin
       Entered.SetEvent;
       Release.WaitFor(INFINITE);
+      end;
+
+   if PartialOSError <> 0 then
+      begin
+      RaiseLastOSError(PartialOSError);
+      end;
+   if PartialStreamWriteError then
+      begin
+      raise EWriteError.Create('Stream write error');
       end;
 
    inherited CopyFile(aSource, aTarget);
@@ -523,6 +580,7 @@ begin
       CheckTrue(copier.WaitUntilSettled(SETTLE_MS), 'the failed attempt settles');
       CheckEquals(1, rec.Count(bceFailed), 'the failure is reported');
       CheckTrue(Pos(DestDir, rec.LastDetail) > 0, 'naming the folder: ' + rec.LastDetail);
+      CheckTrue(rec.LastFailure = bcfFolderMissing, 'classified as a missing folder');
       CheckTrue(copier.Health = bdhFailing, 'the destination is failing');
       CheckEquals(1, copier.PendingCount, 'the generation waits to be retried');
 
@@ -586,6 +644,7 @@ begin
       CheckEquals(1, rec.Count(bceFailed), 'the corrupted copy is a failure');
       CheckTrue(Pos('did not read back the same', rec.LastDetail) > 0,
                 'and says why: ' + rec.LastDetail);
+      CheckTrue(rec.LastFailure = bcfOther, 'a read-back mismatch has no system code');
       CheckEquals('generation one', ReadText(final), 'the final still holds the previous copy');
       CheckEquals(ABSENT, ReadText(final + '.bak'), 'and nothing was displaced');
       CheckEquals('', NamesEndingIn(DestDir, BACKUP_PARTIAL_SUFFIX),
@@ -1000,6 +1059,74 @@ begin
    end;
 end;
 
+(* A COPY THE SYSTEM REFUSES IS REPORTED WITH ITS REASON (NY4I, 2026-11-18:
+  the D: drive full showed "Stream write error"). The fault is injected at the
+  .partial copy, as the code TBackupFileOps raises; a code-less stream error
+  must NOT be called a full disk. Each case gets its own copier, because only
+  the first failure of a destination is reported. *)
+procedure TBackupCopierTests.TestACopyFailureIsClassifiedByTheSystemsCode;
+const
+   CASE_COUNT = 4;
+var
+   rec: TReportRecorder;
+   ops: TFaultyOps;
+   copier: TBackupCopier;
+   local, final, why, caseName: string;
+   i: integer;
+   codes: array[0..CASE_COUNT - 1] of integer;
+   expected: array[0..CASE_COUNT - 1] of TBackupCopyFailure;
+begin
+   BeginTest('a refused copy is reported with its reason: full disk, access denied, or unclassified');
+   codes[0] := OS_DISK_FULL;
+   expected[0] := bcfDiskFull;
+   codes[1] := OS_ACCESS_DENIED;
+   expected[1] := bcfNoAccess;
+   codes[2] := OS_UNCLASSIFIED;
+   expected[2] := bcfOther;
+   codes[3] := 0;   (* the stream's own "Stream write error", no code *)
+   expected[3] := bcfOther;
+
+   for i := 0 to CASE_COUNT - 1 do
+      begin
+      caseName := 'case ' + IntToStr(i) + ': ';
+      ScrubAll;
+      local := IncludeTrailingPathDelimiter(LocalDir) + FINAL_NAME;
+      final := IncludeTrailingPathDelimiter(DestDir) + FINAL_NAME;
+      rec := TReportRecorder.Create;
+      ops := TFaultyOps.Create;
+      copier := TBackupCopier.Create(ops, OutboxDir, TEST_RETRY_MS, rec.Received);
+      try
+         copier.SetDestination(DestDir);
+         CheckTrue(copier.WaitUntilSettled(SETTLE_MS), caseName + 'the probe settles');
+         if codes[i] <> 0 then
+            begin
+            ops.PartialOSError := codes[i];
+            end
+         else
+            begin
+            ops.PartialStreamWriteError := True;
+            end;
+
+         WriteText(local, 'generation one');
+         CheckTrue(copier.Submit(local, False, why), caseName + 'queued: ' + why);
+         CheckTrue(copier.WaitUntilSettled(SETTLE_MS), caseName + 'the failed copy settles');
+         CheckEquals(1, rec.Count(bceFailed), caseName + 'the failure is reported');
+         CheckTrue(rec.LastFailure = expected[i],
+                   caseName + 'classified as ' + BACKUP_COPY_FAILURE_NAME[expected[i]]
+                   + ', got ' + BACKUP_COPY_FAILURE_NAME[rec.LastFailure]);
+         (* THE DETAIL IS KEPT FOR tr4w.log: the file, and the words. *)
+         CheckTrue(Pos(final, rec.LastDetail) > 0,
+                   caseName + 'the detail still names the file: ' + rec.LastDetail);
+         CheckEquals(ABSENT, ReadText(final), caseName + 'nothing arrived');
+         CheckEquals('', NamesEndingIn(DestDir, BACKUP_PARTIAL_SUFFIX),
+                     caseName + 'no .partial is left');
+      finally
+         copier.Free;
+         rec.Free;
+      end;
+      end;
+end;
+
 procedure TBackupCopierTests.RunAllTests;
 begin
    TestACopyArrivesAndThePreviousBecomesBak;
@@ -1015,6 +1142,7 @@ begin
    TestTheLocalBackupFolderIsNotADestination;
    TestLeftoverOutboxFilesAreDeletedAtStart;
    TestNotSettledUntilEveryReportIsDelivered;
+   TestACopyFailureIsClassifiedByTheSystemsCode;
 
    Scrub(LocalDir);
    Scrub(OutboxDir);
@@ -1250,29 +1378,122 @@ begin
    BeginTest('every copier report but bceAlreadyCurrent has a status-line notice; bceCopied names the file, no beep');
    finalFile := SHARE_FOLDER + '\' + FINAL_NAME;
 
-   BackupCopyNotice(bceCopied, SHARE_FOLDER, finalFile, text, isFailure);
+   BackupCopyNotice(bceCopied, SHARE_FOLDER, finalFile, bcfNone, text, isFailure);
    CheckEquals(SysUtils.Format(SBackupCopiedTo, [finalFile]), text, 'bceCopied: the sentence');
    CheckTrue(Pos(finalFile, text) > 0, 'bceCopied names the destination file');
    CheckFalse(isFailure, 'bceCopied does not beep');
 
-   BackupCopyNotice(bceReachable, SHARE_FOLDER, '', text, isFailure);
+   BackupCopyNotice(bceReachable, SHARE_FOLDER, '', bcfNone, text, isFailure);
    CheckEquals(SysUtils.Format(SBackupDestinationReachable, [SHARE_FOLDER]), text, 'bceReachable');
    CheckFalse(isFailure, 'bceReachable does not beep');
 
-   BackupCopyNotice(bceFailed, SHARE_FOLDER, 'the share is down', text, isFailure);
-   CheckEquals(SysUtils.Format(SBackupCopyFailed, [SHARE_FOLDER, 'the share is down']), text,
+   BackupCopyNotice(bceFailed, SHARE_FOLDER, 'the share is down', bcfFolderMissing,
+                    text, isFailure);
+   CheckEquals(SysUtils.Format(SBackupCopyFailedFolderMissing, [SHARE_FOLDER]), text,
                'bceFailed');
    CheckTrue(isFailure, 'bceFailed beeps');
 
-   BackupCopyNotice(bceRecovered, SHARE_FOLDER, '', text, isFailure);
+   BackupCopyNotice(bceRecovered, SHARE_FOLDER, '', bcfNone, text, isFailure);
    CheckEquals(SysUtils.Format(SBackupCopyRecovered, [SHARE_FOLDER]), text, 'bceRecovered');
    CheckFalse(isFailure, 'bceRecovered does not beep');
 
    (* THE ONE EXCEPTION (NY4I, 2026-10-25): a destination that already held the
      generation wrote nothing, so the screen says nothing. *)
-   BackupCopyNotice(bceAlreadyCurrent, SHARE_FOLDER, finalFile, text, isFailure);
+   BackupCopyNotice(bceAlreadyCurrent, SHARE_FOLDER, finalFile, bcfNone, text, isFailure);
    CheckEquals('', text, 'bceAlreadyCurrent: no on-screen notice');
    CheckFalse(isFailure, 'bceAlreadyCurrent does not beep');
+end;
+
+(* NY4I, 2026-11-18: "far too verbose and small. We just need to know the
+  backup failed and a simple reason." The detail the copier hands over can be
+  anything -- a path, the system's words -- and none of it reaches the
+  screen; each reason has its own short sentence naming only the folder. *)
+procedure TBackupCopyNoticeTests.TestAFailureNeverShowsItsDetail;
+const
+   DETAIL = 'XYZZY the copy to d:\TR4W-Log-Backups\ARRL-SS-SSB 2026-11-04 NY4I '
+            + 'periodic.db failed: Stream write error';
+var
+   failure: TBackupCopyFailure;
+   text, expected: string;
+   isFailure: boolean;
+begin
+   BeginTest('a failed copy shows the folder and a short reason, never the detail');
+   for failure := Low(TBackupCopyFailure) to High(TBackupCopyFailure) do
+      begin
+      BackupCopyNotice(bceFailed, SHARE_FOLDER, DETAIL, failure, text, isFailure);
+      case failure of
+         bcfDiskFull:
+            begin
+            expected := SysUtils.Format(SBackupCopyFailedDiskFull, [SHARE_FOLDER]);
+            end;
+         bcfFolderMissing:
+            begin
+            expected := SysUtils.Format(SBackupCopyFailedFolderMissing, [SHARE_FOLDER]);
+            end;
+         bcfNoAccess:
+            begin
+            expected := SysUtils.Format(SBackupCopyFailedNoAccess, [SHARE_FOLDER]);
+            end;
+      else
+         begin
+         expected := SysUtils.Format(SBackupCopyFailedOther, [SHARE_FOLDER]);
+         end;
+      end;
+      CheckEquals(expected, text, BACKUP_COPY_FAILURE_NAME[failure] + ': the sentence');
+      CheckEquals(expected, BackupCopyFailedText(SHARE_FOLDER, failure),
+                  BACKUP_COPY_FAILURE_NAME[failure] + ': the same as BackupCopyFailedText');
+      CheckTrue(Pos(SHARE_FOLDER, text) > 0,
+                BACKUP_COPY_FAILURE_NAME[failure] + ': names the folder');
+      CheckEquals(0, Pos('XYZZY', text), BACKUP_COPY_FAILURE_NAME[failure] + ': no detail');
+      CheckEquals(0, Pos('Stream write error', text),
+                  BACKUP_COPY_FAILURE_NAME[failure] + ': no system message');
+      CheckEquals(0, Pos('periodic.db', text),
+                  BACKUP_COPY_FAILURE_NAME[failure] + ': no file name');
+      CheckTrue(isFailure, BACKUP_COPY_FAILURE_NAME[failure] + ': beeps');
+      end;
+
+   CheckEquals('Backup to ' + SHARE_FOLDER + ' FAILED: the disk is full.',
+               BackupCopyFailedText(SHARE_FOLDER, bcfDiskFull),
+               'the full-disk sentence, in English, as NY4I asked');
+end;
+
+(* THE CLASSIFICATION IS BY THE SYSTEM'S CODE, never by an exception's text. *)
+procedure TBackupCopyNoticeTests.TestTheSystemsCodesAreClassified;
+var
+   e: Exception;
+begin
+   BeginTest('an operating-system code is classified; anything without one is unclassified');
+   CheckTrue(BackupFailureOfOSCode(OS_DISK_FULL) = bcfDiskFull, 'disk full');
+   CheckTrue(BackupFailureOfOSCode(OS_SECOND_DISK_FULL) = bcfDiskFull,
+             'the second full-disk code');
+   CheckTrue(BackupFailureOfOSCode(OS_ACCESS_DENIED) = bcfNoAccess, 'access denied');
+   CheckTrue(BackupFailureOfOSCode(OS_PATH_NOT_FOUND) = bcfFolderMissing, 'path not found');
+   CheckTrue(BackupFailureOfOSCode(OS_UNCLASSIFIED) = bcfOther, 'a code with no class');
+   CheckTrue(BackupFailureOfOSCode(0) = bcfOther, 'no code at all');
+
+   e := EOSError.Create('System error');
+   try
+      EOSError(e).ErrorCode := OS_DISK_FULL;
+      CheckTrue(BackupFailureOf(e) = bcfDiskFull, 'an EOSError is classified by its code');
+   finally
+      e.Free;
+   end;
+
+   (* WHAT NY4I SAW: the stream's error carries no code, and a share that
+     drops mid-copy raises the same one, so it is not called a full disk. *)
+   e := EWriteError.Create('Stream write error');
+   try
+      CheckTrue(BackupFailureOf(e) = bcfOther, 'a code-less stream write error is unclassified');
+   finally
+      e.Free;
+   end;
+
+   e := Exception.Create('the disk is full');
+   try
+      CheckTrue(BackupFailureOf(e) = bcfOther, 'the words of a message are never read');
+   finally
+      e.Free;
+   end;
 end;
 
 procedure TBackupCopyNoticeTests.RunAllTests;
@@ -1281,6 +1502,8 @@ begin
    TestNoDestinationKeepsTheLocalReport;
    TestAFailedQueueingSaysWhy;
    TestEveryCopierEventButAlreadyCurrentHasANoticeAndOnlyAFailureBeeps;
+   TestAFailureNeverShowsItsDetail;
+   TestTheSystemsCodesAreClassified;
 end;
 
 end.

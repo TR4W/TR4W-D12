@@ -206,7 +206,11 @@ procedure SendDeletedContactToUDP(RXData: ContestExchange);
 procedure ToggleModes;
 procedure ToggleStereoPin; {KK1L: 6.71}
 procedure OTRSPCommand;
-procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
+(* TRUE WHEN THE QSO IS IN THE LOG (2026-11-18). False when the store refused
+  or failed to save it: the caller must then leave everything as the operator
+  typed it -- see MainUnit.TryLogContact. The refusal has already been put on
+  the status line, with a beep. *)
+function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
 (* THE NEEDS STRIPS, ASKED AGAIN ONCE A QSO HAS REACHED THE SHEETS -- issue
   #100. LogContact calls it after the dupe and multiplier sheets are updated,
   so the band just worked drops out of "QSO needs" and "Mult needs" for that
@@ -651,6 +655,19 @@ var
   restoredSent                          : AnsiString;
 
 begin
+  (* A READ-ONLY LOG TAKES NO DELETE (2026-11-18). Refused HERE, before
+     anything below tells the external loggers, UDP and the multi-op server
+     that the QSO was deleted and says "you have deleted the last log entry":
+     the rewrite further down would be refused by the store, and none of that
+     would be true. A log made read-only by a full disk is tried again first
+     (LogStoreTryRecoverWrites): space freed, the delete goes ahead. *)
+  if not LogStoreTryRecoverWrites then
+     begin
+     QuickDisplay(AnsiString(LogStoreNotSavedText));
+     DoABeep(Warning);
+     Exit;
+     end;
+  LogStoreShowRecoveryNotice;
   (* THE NEWEST QSO, FROM THE LOG -- whichever store that is. The seek to
      -1 record from FILE_END that stood here was the binary spelling of
      "the last one". *)
@@ -1651,7 +1668,7 @@ begin
       end;
 end;
 
-procedure LogContact(var RXData: ContestExchange; MyComputer: boolean);
+function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
 { This procedure will log the contact just completed.  It will be
   pushed onto the editable log and the log entry popped off the editable
   log will be examined and written to the LOG.DAT file.                 }
@@ -1671,7 +1688,35 @@ var
      (issue #318) is asked only then. *)
   udpWanted                             : boolean;
 begin
+  Result := False;
   logger.trace('>>>Entering LogContact');
+
+  (* A LOG THAT CANNOT TAKE THE QSO IS SAID SO FIRST -- 2026-11-18, NY4I's
+     full D: drive. Read-only (a full disk, a write error, a locked log opened
+     read-only) or stood down: refused HERE, before anything below changes
+     the session or tells the network, UDP, the external loggers or HamScore
+     about a QSO that will not be in the log. The QSO stays in the entry
+     windows (TryLogContact keeps them on False).
+
+     A PEER'S QSO (MyComputer False) KEEPS ITS PATH: it is refused at the
+     append as before, and its packet has already arrived.
+
+     THE FIRST FAILURE IS STILL FOUND AT THE APPEND, below: a disk that fills
+     during this QSO is not known until tAddQSOToLog writes, and by then the
+     QSO has been posted above. That order (post before commit) is the one
+     already raised with NY4I and is not changed here. *)
+  (* LogStoreTryRecoverWrites: a log made read-only by a full disk is tried
+     again here, once, by a probe write -- space freed means this same QSO
+     logs (NY4I: free the space, press Enter, no restart). *)
+  if MyComputer and
+     ((not LogStoreEnsureOpen) or (not LogStoreTryRecoverWrites)) then
+     begin
+     QuickDisplay(AnsiString(LogStoreNotSavedText));
+     DoABeep(Warning);
+     logger.Error('[Log] REFUSING %s before it is posted anywhere -- the log cannot take it',
+                  [RXData.Callsign]);
+     Exit;
+     end;
 
   { ONE LINE PER QSO WRITTEN, and the county-line drain comes through here
     too -- DrainPendingMultiQSORefs calls LogContact once per queued county.
@@ -1841,7 +1886,13 @@ begin
                    SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
                    udpWanted, False);
      end;
-  if not tAddQSOToLog(RXData) then Exit;
+  (* False: not in the log. tAddQSOToLog has put the reason on the status line
+     and beeped; the caller keeps what the operator typed. *)
+  if not tAddQSOToLog(RXData) then
+     begin
+     Exit;
+     end;
+  Result := True;
   TempMode := RXData.Mode;
   if TempMode = FM then
      begin
@@ -1882,17 +1933,10 @@ begin
      AddQSOToDupeSheets(RXData, False);
      SendStationStatus(sstQSOs);
      end;
-  if SingleBand <> AllBands then
-     begin
-     if RXData.Band = SingleBand then
-        begin
-        TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
-        end;
-     end
-  else
-     begin
-     TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
-     end;
+  (* TotalQSOPoints, and the digital share (issue 129) -- the one statement,
+     LOGDUPE.AddToTotalQSOPoints, whose band test is the one that stood here.
+     Still OUTSIDE the X-QSO test above, as before: an X-QSO scores 0. *)
+  AddToTotalQSOPoints(RXData);
 
   (* ~~THE CONTEST'S LIVE TALLY~~ stood here -- Missouri's peak-hour count,
      kept only in live entry and so lost on every reopen (M6's preserved
@@ -2791,12 +2835,18 @@ begin
     (Codex review, 2026-09-11). The operator saw a normal, logged QSO and had
     nothing at all.
 
-    FALSE, NOT A RAISE, because the contact is not lost by being refused: it
-    is still in the entry fields and still workable. What must not happen is
-    the program saying it is safe. *)
+    FALSE, NOT A RAISE, because the contact is not lost by being refused --
+    PROVIDED THE CALLER KEEPS IT. Until 2026-11-18 this said "it is still in
+    the entry fields", and it was not: LogContact was a procedure, so the
+    Enter path (MainUnit.TryLogContact) never heard of the refusal and
+    cleared the call and exchange windows (NY4I, a full D: drive). LogContact
+    now returns this answer and TryLogContact keeps the windows on False.
+    What must not happen is the program saying it is safe. *)
   if not LogStoreAppendQSO(RXData) then
      begin
-     QuickDisplay(AnsiString(SQsoNotLogged));
+     (* The store's text: "Log is read-only (disk full): not saved." when the
+        log is read-only, else the general NOT LOGGED line. *)
+     QuickDisplay(AnsiString(LogStoreNotSavedText));
      DoABeep(Warning);
      logger.Error('[Log] REFUSING to acknowledge %s -- the QSO did not commit',
                   [RXData.Callsign]);

@@ -104,10 +104,16 @@ function BackupDoneText(const aLocalReport: string; aQueued: boolean;
   failure (which beeps). Every event has one, bceCopied included, EXCEPT
   bceAlreadyCurrent: an empty aText means nothing is shown (NY4I,
   2026-10-25 -- at open, a destination already holding the backup is not
-  news). Pure; the log lines are the receiver's. *)
+  news). A failure's text names the folder and aFailure's short reason and
+  NEVER aDetail (NY4I, 2026-11-18): the detail is the receiver's log line.
+  Pure; the log lines are the receiver's. *)
 procedure BackupCopyNotice(aEvent: TBackupCopyEvent;
-   const aDestination, aDetail: string;
+   const aDestination, aDetail: string; aFailure: TBackupCopyFailure;
    out aText: string; out aIsFailure: boolean);
+
+(* The status-line sentence for a failed copy or probe to aDestination. *)
+function BackupCopyFailedText(const aDestination: string;
+   aFailure: TBackupCopyFailure): string;
 
 (* Stop the worker, waiting at most BACKUP_COPY_SHUTDOWN_MS. *)
 procedure BackupCopyStop;
@@ -136,7 +142,8 @@ type
    TBackupCopyReceiver = class(TObject)
    public
       (* ON THE WORKER THREAD. *)
-      procedure Received(aEvent: TBackupCopyEvent; const aDestination, aDetail: string);
+      procedure Received(aEvent: TBackupCopyEvent; const aDestination, aDetail: string;
+                         aFailure: TBackupCopyFailure);
       (* ON THE MAIN THREAD, through QueueAsyncCall. *)
       procedure ShowNotices(Data: PtrInt);
    end;
@@ -176,8 +183,32 @@ begin
       end;
 end;
 
+function BackupCopyFailedText(const aDestination: string;
+   aFailure: TBackupCopyFailure): string;
+begin
+   case aFailure of
+      bcfDiskFull:
+         begin
+         Result := SysUtils.Format(SBackupCopyFailedDiskFull, [aDestination]);
+         end;
+      bcfFolderMissing:
+         begin
+         Result := SysUtils.Format(SBackupCopyFailedFolderMissing, [aDestination]);
+         end;
+      bcfNoAccess:
+         begin
+         Result := SysUtils.Format(SBackupCopyFailedNoAccess, [aDestination]);
+         end;
+   else
+      begin
+      (* bcfOther, and bcfNone should a failure ever arrive without one. *)
+      Result := SysUtils.Format(SBackupCopyFailedOther, [aDestination]);
+      end;
+   end;
+end;
+
 procedure BackupCopyNotice(aEvent: TBackupCopyEvent;
-   const aDestination, aDetail: string;
+   const aDestination, aDetail: string; aFailure: TBackupCopyFailure;
    out aText: string; out aIsFailure: boolean);
 begin
    aIsFailure := False;
@@ -188,7 +219,9 @@ begin
          end;
       bceFailed:
          begin
-         aText := SysUtils.Format(SBackupCopyFailed, [aDestination, aDetail]);
+         (* NOT aDetail: it holds a file path and the system's own words, and
+           is the log line's (see Received). *)
+         aText := BackupCopyFailedText(aDestination, aFailure);
          aIsFailure := True;
          end;
       bceRecovered:
@@ -211,7 +244,7 @@ begin
 end;
 
 procedure TBackupCopyReceiver.Received(aEvent: TBackupCopyEvent;
-   const aDestination, aDetail: string);
+   const aDestination, aDetail: string; aFailure: TBackupCopyFailure);
 var
    notice: TBackupNotice;
 begin
@@ -223,9 +256,12 @@ begin
          end;
       bceFailed:
          begin
-         logger.Error('[BackupCopy] backups are NOT reaching %s: %s. Logging '
+         (* THE FULL DETAIL -- the file, the system's own message -- is said
+           here and only here; the status line gets the short reason. *)
+         logger.Error('[BackupCopy] backups are NOT reaching %s (%s): %s. Logging '
                       + 'continues; retrying every %d s.',
-                      [aDestination, aDetail, BACKUP_COPY_RETRY_MS div 1000]);
+                      [aDestination, BACKUP_COPY_FAILURE_NAME[aFailure], aDetail,
+                       BACKUP_COPY_RETRY_MS div 1000]);
          end;
       bceRecovered:
          begin
@@ -242,7 +278,7 @@ begin
    end;
 
    notice := TBackupNotice.Create;
-   BackupCopyNotice(aEvent, aDestination, aDetail, notice.Text, notice.IsFailure);
+   BackupCopyNotice(aEvent, aDestination, aDetail, aFailure, notice.Text, notice.IsFailure);
    if notice.Text = '' then
       begin
       (* No status-line notice for this event. *)

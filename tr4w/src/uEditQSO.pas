@@ -64,6 +64,11 @@ function  LoadQSOIntoEditForm: boolean;
 procedure CallsignChangedInEditForm;
 procedure AfterEditQSOClosed;
 function SaveQSOToEditableLog: boolean;
+// TRUE WHEN THE LOG CANNOT TAKE AN EDIT -- it is read-only (a full disk, a
+// write error, or a locked log opened read-only) -- and the status line and a
+// beep have said so. SaveQSOToEditableLog asks it first; the form asks it
+// before "Save changes?", whose Yes could only be refused.
+function EditRefusedByReadOnlyLog: boolean;
 function CheckSystemTimeRecord(Time: TQSOTime): boolean;
 procedure ShowNote(CE: ContestExchange);
 //procedure ShowSysMonthCal32(show: integer);
@@ -249,14 +254,19 @@ begin
 
    (* A RECORD INDEX NOW, not a byte offset -- see VC.IndexOfItemInLogForEdit.
       Read through the seam, so this reads whichever store the program reads. *)
+   (* EVERY REFUSAL BELOW SAYS WHY, on the status line (2026-11-18): the
+      form closes on False, and closing in silence is what made a double
+      click on a QSO look as if it did nothing at all. *)
    if not LogSourceOpen then
       begin
+      QuickDisplay(SEditQSOLogUnreadable);
       Exit;
       end;
 
    if not LogSourceReadAtIndex(IndexInMap, EditableQSORXData) then
       begin
       LogSourceClose;
+      QuickDisplay(SEditQSOCannotRead);
       Exit;
       end;
    LogSourceClose;
@@ -279,6 +289,7 @@ begin
    if (EditableQSORXData.ceQSO_Deleted) or
       (EditableQSORXData.ceRecordKind <> rkQSO) then
       begin
+      QuickDisplay(SEditQSONotEditable);
       Exit;
       end;
 
@@ -520,6 +531,24 @@ just like when the contact was first entered.
 I will make this a seperate Issue to track it.
  } // ny4i 25 Feb 2016
 
+function EditRefusedByReadOnlyLog: boolean;
+begin
+  (* A log made read-only by a full disk is tried again first, once: space
+     freed, the edit is saved (LogStoreTryRecoverWrites). *)
+  Result := not LogStoreTryRecoverWrites;
+  if Result then
+     begin
+     QuickDisplay(LogStoreNotSavedText);
+     DoABeep(Warning);
+     logger.Warn('[EditQSO] the log is read-only; the edit to record %d was NOT saved',
+                 [IndexOfItemInLogForEdit]);
+     end
+  else
+     begin
+     LogStoreShowRecoveryNotice;
+     end;
+end;
+
 function SaveQSOToEditableLog: boolean;
 label
   1, 2;
@@ -542,6 +571,19 @@ var
   storedSent: AnsiString;
 begin
   Result := True;
+
+  (* A READ-ONLY LOG TAKES NO EDIT, AND THIS IS WHERE IT IS REFUSED -- FIRST
+     (2026-11-18). Below, the edit is posted to the external loggers, UDP and
+     HamScore, and sent to the multi-op server, BEFORE the store is asked to
+     write it -- and the store's write returns nothing. Refused any later,
+     every one of them would hear of an edit the log never got. False, so the
+     window stays open with the operator's changes in it (uEditQSOForm lets it
+     close without asking again). *)
+  if EditRefusedByReadOnlyLog then
+     begin
+     Result := False;
+     Exit;
+     end;
 
   // THE CONFIRMATION USED TO BE HERE, and it has moved to the two places the
   // operator can actually ask for a save -- btnSaveClick and the form's

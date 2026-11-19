@@ -150,6 +150,19 @@ other.
   up to date at <file>". It is still a SUCCESS for the health transitions:
   after a failure it reports `bceRecovered` once, as a write would
   (`TestASkipAfterAFailureIsARecoveryOnce`). `bceCopied` means a real write.
+- **A FAILED COPY SAYS ONE SHORT SENTENCE (NY4I, 2026-11-18, after a full
+  D: showed "... failed: Stream write error. Logging continues, ...").**
+  The report carries `TBackupCopyFailure` (`bcfDiskFull`,
+  `bcfFolderMissing`, `bcfNoAccess`, `bcfOther`); the status line is
+  `BackupCopyFailedText` -- folder + reason, NEVER the detail, which goes to
+  tr4w.log only. The reason comes from the OS CODE, not exception text:
+  `TBackupFileOps` writes with `FileCreate`/`FileWrite`/`FileFlush` (not
+  `TFileStream`, whose `WriteBuffer` raises a code-less `EWriteError`) and
+  raises `RaiseLastOSError(GetLastOSError)` at the failing call;
+  `BackupFailureOfOSCode` maps it. **A code-less write error is
+  `bcfOther`, never "disk full"**: a share dropping mid-copy fails the same
+  way. Tests: `TestACopyFailureIsClassifiedByTheSystemsCode`,
+  `TestAFailureNeverShowsItsDetail`, `TestTheSystemsCodesAreClassified`.
 - **Started in `uProgramMain` after every headless Halt** (so the corpus
   never probes a share), which also offers this log's existing periodic
   backup to the destination, copied only if it differs. Tests:
@@ -873,6 +886,100 @@ ALREADY STOPPED.
   taken between the probe and that write still disables the store as
   "not writable". The worker does not restart itself after a busy failure at
   ITS open (it stops; the next QSO's `AfterLogCommit` only Wakes it).
+
+## A FULL DISK LEAVES THE LOG READ-ONLY, NOT DISABLED (2026-11-18)
+
+NY4I filled the D: drive under a running TR4W: the QSO got the "not being
+saved" modal, then `Disable` freed the database, and a double click on a QSO
+the grid still showed did NOTHING (`EditableLogWindowDblClick`'s bare
+`if not LogSourceOpen then Exit`). Ruling: a write the disk will not take
+must not make the log unreadable.
+
+- **THE MEASURED FAILURE CARRIED NO CODE.** tr4w.log: `EDatabaseError --
+  database or disk is full` -- plain `EDatabaseError`, so it came from
+  `execsql` (COMMIT), not a statement step (`ESQLDatabaseError`). BEGIN,
+  COMMIT and ROLLBACK go through `execsql`, which raises with the message
+  only. **`TLogConnection.StartDBTransaction` / `Commit` / `RollBack` now
+  re-raise it as `ESQLDatabaseError` with `sqlite3_extended_errcode`**
+  (`CodedFailure`, shared with `ExecutePragma`). Side effect: a busy COMMIT
+  is now `SQLiteIsBusy` and takes the busy branch instead of disabling.
+  Pinned: `uTestLogLocking.TestAFailedCommitCarriesItsCode`.
+- **One classifier, by code: `uLogDatabase.SQLiteWriteFailure(E)`** --
+  `lwfDiskFull` for SQLITE_FULL; `lwfWriteError` for SQLITE_READONLY and
+  SQLITE_IOERR except IOERR_READ, IOERR_SHORT_READ and IOERR_CORRUPTFS;
+  `lwfNone` for everything else (CORRUPT, NOTADB, busy, constraints, code 0).
+  Pinned: `TestTheWriteFailureClassifier`.
+- **`Disable`'s second branch** (after the busy one, same conditions: a write
+  to an OPEN log, not a batch whose rollback failed): roll back, and if no
+  transaction is left, `MakeReadOnlyAfterAFailedWrite` -- `GReadOnly`,
+  `GReadOnlyCause` (`lrcDiskFull` / `lrcWriteError`; `lrcLocked` is the
+  startup choice), `GReadOnlyRefusalShown := True` so the locked-log modal
+  never shows, ONE modal `SLogNotSavedReadOnly` (reason, remedy, file). The
+  database and repository stay; every write entry refuses through
+  `RefuseReadOnly`; every read works. A rollback that fails falls through and
+  stands the store down.
+- **A failed OPEN still stands down, whatever the code**: `EnsureOpen`'s
+  handler frees `GRepository` before `Disable`, so a failure after the
+  repository exists (the stamp or declaration commit) is not mistaken for a
+  write to an open log. That also changed a busy failure there from "store
+  left usable behind an open that answered False" to standing down.
+  **Corruption and a failed integrity or writability check are unchanged**:
+  disabled. Pinned: `uTestLogStore.TestADamagedLogStillStandsTheStoreDown`.
+- **Later refusals are the status line, never a modal.** One text,
+  `LogStoreNotSavedText`: `SLogReadOnlyNotSaved` ("Log is read-only (disk
+  full): not saved.") when read-only, else `SQsoNotLogged`. Used by
+  `tAddQSOToLog` (line + beep), `uEditQSO.EditRefusedByReadOnlyLog` (the
+  edit form's Save and close-query) and Alt-Y `DeleteLastContact`.
+- **Edit QSO opens for viewing; the SAVE is refused, FIRST.**
+  `SaveQSOToEditableLog` posts the edit to the external loggers, UDP,
+  HamScore and the server BEFORE the store write, and the store write
+  returns nothing -- so the refusal is at its top. The fields stay editable;
+  Save keeps the window open; closing with changes does not ask "Save
+  changes?" (Yes could only be refused). Alt-Y is refused before its events
+  the same way.
+- **The double-click path says why** on the status line at every exit
+  (`SEditQSONoQSOSelected`, `SEditQSOLogUnreadable`, `SEditQSONoSuchQSO`, and
+  in `LoadQSOIntoEditForm` `SEditQSOCannotRead`, `SEditQSONotEditable`).
+- **A REFUSED QSO STAYS TYPED (NY4I's second and third runs, same day).**
+  `LOGSUBS2.LogContact` is a FUNCTION now (True = in the log), and
+  `MainUnit.TryLogContact` stops on False: no further legs, no clearing of
+  the call/exchange windows or the exchange, no `ClearQuickDisplayText` /
+  `CleanUpDisplay` / `UpdateWindows` (those wiped the "not saved" line),
+  and the park and county queues are emptied. It sets `QSOSaveRefused`, and
+  the CQ and S&P Enter paths leave at once on it. An own QSO is refused at
+  the TOP of `LogContact` when the store is read-only or will not open,
+  before `SendRecordToServer` / `PostLoggedQso`. The FIRST failure is still
+  found at the append, after the post (that order is NY4I's open question).
+  Pinned by source read: `uTestAutomaticXQSO.Test_ARefusedSaveKeepsTheEntryAndItsReason`.
+- **NO RESTART: THE NEXT SAVE TRIES AGAIN (NY4I: "clear up disk space,
+  then hit enter").** `LogStoreTryRecoverWrites` is called where a save is
+  decided: `LogContact`'s own-QSO refusal (before anything is posted),
+  `uEditQSO.EditRefusedByReadOnlyLog`, Alt-Y. If the log is read-only
+  because a WRITE FAILED, it runs `ProbeAWriteCommits` once. That is one
+  transaction that inserts and deletes a page-sized `zeroblob(4096)` row
+  in `session_state` (`tr4w.writeProbe`) and commits; the content is
+  unchanged, but it needs one new or free page plus the commit's write. A
+  failure goes through `Disable` (rolled back, still read-only, no modal).
+  Success clears `GReadOnly` and leaves "The log is writable again."
+  pending: `LogStoreShowRecoveryNotice` shows it. `TryLogContact` calls it
+  AFTER its `ClearQuickDisplayText`. A LOCKED read-only open
+  (`lrcLocked`) never recovers. **One write-failure modal per log**
+  (`GWriteFailureNoticeShown`); a failure after a recovery is the status
+  line only. Not polled: a peer's QSO (`MyComputer = False`) does not try
+  again, so after a recovery peer QSOs log again but before one they are
+  refused at the append. Pinned: `TestAFreedDiskRecoversWithoutARestart`
+  (`LogStoreFreeTheDiskForTests` raises `max_page_count`), and the locked
+  test's "does not recover" checks.
+- **Test seam `LogStoreFillTheDiskForTests`**: `PRAGMA max_page_count = 1`
+  on the store's OWN connection (it is per connection) -- SQLITE_FULL at
+  the next page a write needs, on no real disk. Pinned:
+  `TestAFullDiskLeavesTheLogReadable`.
+- **Not done**: a full disk AT STARTUP (open, migration, `CheckWritable`)
+  still disables -- the log is not viewable then. The ADIF import's batch
+  (`LogStoreAppendQSOs`) rolls back and stays writable; the next write
+  demotes. A running WRL worker fails on its own connection by itself.
+  `uQTCS` marks a QTC through `LogStoreUpdateQSOAtIndex` with no status-line
+  refusal (logged only).
 
 ## A TAKEN NEW-CONTEST LOG NAME GETS A NUMBER, NEVER AN OVERWRITE (issue 276, 2026-11-11)
 
