@@ -934,15 +934,64 @@ door on a port the system picks.
   in `TPrefsForm.SaveStore` through `ShareWithPeers` -- the LIVE value, and only
   when it differs from the first note's. **No echo:** `ApplyPeerCommand` forgets
   a pending note and never notes; `ApplyAndStoreCommand` (which it calls) does
-  not note either. The receive side is unchanged: it applies ANY name it is sent
-  (a secret excepted), so an older peer still sending BAND/MODE/CODE SPEED is
-  obeyed. **Re-send on link-up (option c) is NOT built** -- not ruled.
-- **The list was audited against D7's intent ("settings that affect the entire
-  operation") the same day.** BAND, MODE, CODE SPEED, CW TONE, WEIGHT,
-  FARNSWORTH ENABLE/SPEED left it (BAND/MODE assign ActiveBand/ActiveMode -- one
-  position's). D7 4.x had crNetwork=1 on 355 rows by DEFAULT, so it is not a
-  statement of intent. 13 remaining names resolve to nothing; the rest of the
-  audit is NY4I's to rule on.
+  not note either. **The receive side refuses a POSITION'S OWN settings** (NY4I
+  2026-11-19, "6. Yes"): `uCFG.CommandIsOnePositionsOwn` (BAND, MODE, CODE SPEED,
+  CW TONE, WEIGHT, FARNSWORTH ENABLE/SPEED) is asked by `uNet`'s NET_PARAMETER arm
+  BEFORE `ApplyPeerCommand`, so an older peer still sending one is logged (Info)
+  and ignored. It is in the uNet arm and NOT in `ApplyPeerCommand` on purpose:
+  `PersistCommandThroughStore` reaches `ApplyPeerCommand` for this station's OWN
+  edit (a BOOLSWAP key on FARNSWORTH ENABLE), which must still apply. Every other
+  name is applied as before (a secret excepted).
+- **NO RE-SEND ON LINK-UP** (NY4I 2026-11-19, "7. no. only upon request"). Shared
+  values go only when an operator changes one. **No request path exists:**
+  `SM_GETSTATUS` asks for station status only; a settings request would be a new
+  message (a protocol change) and was not built.
+- **THE SHARED LIST AFTER NY4I'S RULINGS (2026-11-19).** The list was audited
+  against D7's intent ("settings that affect the entire operation"); D7 4.x had
+  crNetwork=1 on 355 rows by DEFAULT, so it is not a statement of intent. Removed:
+  CONTEST (on a peer it would switch the contest mid-session), MY CONTINENT,
+  INITIAL EXCHANGE CURSOR POS, the thirteen names that resolved to nothing, and
+  CONNECTION COMMAND. Added: the contest-wide settings (QSO POINTS x4, MULT BY /
+  QSO BY BAND and MODE, QSO NUMBER BY BAND, COUNT DOMESTIC COUNTRIES, DOMESTIC
+  FILENAME, MULTIPLE BANDS/MODES, HF/VHF/WARC BAND ENABLE, SPRINT QSY RULE,
+  MINITOUR DURATION, R150S/RFOBL MODE, LITERAL DOMESTIC QTH, DIGITAL MODE ENABLE,
+  QTC ENABLE/EXTRA SPACE/MINUTES/QRS, MULT SHEET AUTO RESET, CUSTOM INITIAL
+  EXCHANGE STRING, INITIAL EXCHANGE OVERWRITE, TEN MINUTE RULE). NOT shared, by
+  ruling (operator-specific): the QUICK QSL messages, AUTO DUPE ENABLE CQ / S AND
+  P, EXCHANGE MEMORY ENABLE. Pinned in `uTestNetClientPackets`
+  (`Test_TheSharedListIsTheRuledOne`, `Test_APeersOwnPositionSettingsAreRefused`).
+  The unit tests pin the names that are ON the list and a set of names that are
+  not; they do not count the list, so a name added by mistake that no test names
+  would pass.
+
+## A station on another BUILD is reported, never refused (issue 120 item 4, 2026-11-19)
+
+NY4I: *"Clients should all be same version as server or report it."* The HELLO
+already carries `hmAppVersion` (16 chars), so **no wire change and no protocol
+bump**. `uNetHello.JudgeAppVersion(ours, theirs)` -> `avSame | avDiffers |
+avUnannounced` (text compare, case and blanks ignored; an empty version is
+unannounced, never a difference). A difference is a REPORT and never a refusal:
+`JudgeProtocol` alone decides who may talk.
+
+- **A station** (`uNet.ReportPeerVersion`, from `HandleHelloReceived` after
+  `GPeers.Announce`): one Error line and ONE operator notice (`SPeerOnAnotherVersion`)
+  per (station, version) per link, through `TNetPeers.FirstNotice` with
+  `VersionNoticeKey` (starts with a control character so it cannot equal a contest
+  id). The notice goes to `PeerContestNoticeSink` when set, else `QuickDisplay`.
+  `NetPeers.Clear` at link-up re-arms it.
+- **The server** (`tr4wserverUnit.AcceptHello`): one Error line per ACCEPTED HELLO
+  from a station whose version differs from the program version the server was
+  built from (`TR4W_CURRENTVERSION_NUMBER`). It sends the stations nothing (each
+  reports for itself) and does not latch: a contest change re-sends the HELLO and
+  logs again.
+- **What is NOT compared: the server's own HELLO version** (`TR4WSERVER_CURRENTVERSION`,
+  '1.41', a number series of its own, not the program's) -- so a station cannot
+  tell that the server it joined is another build; only the server's log can.
+  TR4WServerPy has no equivalent. The in-test HELLO feeders (`uTestNetSupport`,
+  `uTestContestById.FeedHello`) announce THIS build's version, or every one would
+  raise the report.
+- Tests: `uTestNetHello.Test_TheBuildJudgement`,
+  `uTestContestById.Test_APeerOnAnotherBuildIsReportedOncePerVersionAndNeverRefused`.
 
 ## Coordinate with
 
