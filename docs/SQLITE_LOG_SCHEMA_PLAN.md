@@ -3221,7 +3221,8 @@ something writes.
 - `DROP COLUMN` needs SQLite 3.35. Windows ships 3.53.4, the AppImage bundles
   the Linux CI host's 3.45.1 (measured: Ubuntu 24.04), and macOS CI has 3.54.0.
   But the Linux tarball and the macOS app use the SYSTEM library, so the
-  version an operator has is not ours to choose: Ubuntu 20.04 has 3.31 and
+  version an operator has is not ours to choose. By the distributions'
+  published package versions (not measured here), Ubuntu 20.04 has 3.31 and
   Debian 11 has 3.34, both too old.
 - Issue #141 measured `DROP COLUMN` failing on 3.42 and later distro builds
   ("incomplete input") around comment-only lines, and the sixteen sit among
@@ -3270,7 +3271,8 @@ CHECK constraint, foreign key, view or trigger names any of the sixteen. So a
 `DROP COLUMN` would have been legal on Windows. The rebuild was chosen for the
 reasons above, not because a restriction applied.
 
-**Consequence, the usual one.** Schema 10 shipped. A log this build has opened is
+**Consequence, the usual one.** Schema 10 is in the v5.0.43 and v5.0.44 tags
+(draft releases on 2026-11-19), so logs stamped 10 exist. A log this build has opened is
 refused by every earlier build, so keep a copy of a log before trying a new build
 on it. **No migration takes a backup first, before or after this one.** Every
 migration relies on being one transaction: either everything lands or nothing

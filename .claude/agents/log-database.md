@@ -867,8 +867,9 @@ consistent, I do not see why we would keep those fields"*. Plan section 12o;
   build (re-verified: src, tools, scripts, Python, `git log -S`); NULL in every
   corpus log. A received QTH of any kind is `rcvd_qth`. **Kept: `rcvd_year`.**
 - **A REMOVAL IS A REBUILD, NEVER `ALTER TABLE DROP COLUMN`.** DROP COLUMN
-  needs 3.35 and the Linux tarball and macOS use the system library (Ubuntu
-  20.04 has 3.31, Debian 11 3.34; measured: linux-ci 3.45.1, which the AppImage
+  needs 3.35 and the Linux tarball and macOS use the system library (published
+  package versions, not measured: Ubuntu 20.04 has 3.31, Debian 11 3.34;
+  measured: linux-ci 3.45.1, which the AppImage
   bundles; mac-ci 3.54.0); it fails on 3.42+ distro builds around comment
   lines (#141); and it cuts the stored CREATE text. `TLogDatabase.RebuildQsoTable`:
   rename the old table to `qso_before_v11` FIRST (a table renamed INTO `qso`

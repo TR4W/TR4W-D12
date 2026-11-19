@@ -283,8 +283,9 @@ const
      column by name, keeps the AUTOINCREMENT high-water mark, drops the old
      table and recreates LOG_QSO_INDEXES -- one transaction, one commit, like
      every migration. So a migrated log's qso table is the new one, byte for
-     byte. Schema 10 SHIPPED, so a log this build has opened is refused by
-     every earlier build. *)
+     byte. Schema 10 is in the v5.0.43 and v5.0.44 tags (draft releases on
+     2026-11-19), so logs stamped 10 exist; a log this build has opened is
+     refused by every earlier build. *)
    LOG_SCHEMA_VERSION = 11;
 
 type
