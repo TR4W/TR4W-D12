@@ -831,6 +831,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uLatestContest       in '..\..\src\uLatestContest.pas',
    uTestLatestContest   in 'uTestLatestContest.pas',
    uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
+   (* Issue 201: the band map or the dupe sheet, by CATEGORY-ASSISTED. *)
+   uCategoryWindow      in '..\..\src\uCategoryWindow.pas',
    uTestContestUI       in 'uTestContestUI.pas',
    (* M10 S8: every contest's identity values, frozen as literals when the
       tables were deleted. *)

@@ -734,7 +734,8 @@ implementation
 
 uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
-  uAppPaths,   // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
+   uCategoryWindow,  (* CategoryOpeningWindow -- issue 201 *)
+  uAppPaths,  // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
    uCaptionText,      (* DisplayedText -- a window title is a menu row without its '&' *)
@@ -5003,8 +5004,22 @@ var
   i: WindowsType;
   startedAt: TDateTime;
   tookMs: Int64;
+  chosen: WindowsType;
 begin
   try
+     (* THE BAND MAP OR THE DUPE SHEET, FROM CATEGORY-ASSISTED -- issue 201.
+       This runs once, when a contest is opened, so the chosen window joins
+       the saved layout and opens in the loop below; a mid-contest change of
+       the category moves nothing. The other window is not closed. The rule
+       is uCategoryWindow's. *)
+     if CategoryOpeningWindow(Settings.Contest.CategoryAssisted, chosen) then
+        begin
+        logger.Info('[Startup] CATEGORY-ASSISTED is %s: opening the %s window',
+                    [tCategoryAssistedSA[Settings.Contest.CategoryAssisted],
+                     WindowNames[chosen]]);
+        tr4w_WindowsArray[chosen].WndVisible := True;
+        end;
+
      for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
        if tr4w_WindowsArray[i].WndVisible then
           begin
