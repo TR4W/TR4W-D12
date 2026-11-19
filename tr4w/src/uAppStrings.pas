@@ -932,6 +932,12 @@ resourcestring
      2026-11-19), keyed on the club's call, where the row read 'Prefixes'. *)
    STotalsClubStationMults = 'Clubs';
 
+   (* ONE LINE OF THE SCORE'S HINT, PER PART OF A SCORE -- issue 86 (NY4I,
+     2026-11-15): IN7QPNE's four parties, each as its own class scores it.
+     %0:s the part (a contest's name), %1:d QSOs, %2:d QSO points, %3:d
+     multipliers, %4:d its score. *)
+   SScorePartHint = '%0:s: %1:d QSOs, %2:d points, %3:d mults, score %4:d';
+
    (* THE VERMONT QSO PARTY'S CLUB-STATION FILE IS NOT THIS YEAR'S -- issue
      270 (NY4I, 2026-11-19: "inform the user we found a file but it appears
      to be for last year's contest and they should renew one at the contest

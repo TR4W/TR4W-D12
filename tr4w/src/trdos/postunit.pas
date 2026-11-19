@@ -1199,7 +1199,7 @@ procedure WriteScoreInformationToSummarySheet;
      begin
      sWriteFileFromString( tReportFileWrite,
         sysutils.Format( #13#10#13#10'    Claimed Score = %d points.',
-        [ TotalScore ] ) ) // 4.108.9
+        [ ClaimedScore ] ) ) // 4.108.9; ClaimedScore since issue 86
      end
   else
      begin
@@ -3080,12 +3080,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                Settings.Contest.Title, Settings.Contest.Name );
 
       // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
-      // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(TotalScore).
+      // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(ClaimedScore, issue 86).
       sWriteFileFromString( tReportFileWrite,
          sysutils.Format( 'START-OF-LOG: 3.0'#13#10'CREATED-BY: ' +
          TR4W_CURRENTVERSION + '-D12' + CabrilloLanguageTag +
          #13#10'CALLSIGN: %s'#13#10'CONTEST: %s'#13#10'CLAIMED-SCORE: %d'#13#10,
-         [ T2, T3, TotalScore ] ) );
+         [ T2, T3, ClaimedScore ] ) );
 
       for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
          begin

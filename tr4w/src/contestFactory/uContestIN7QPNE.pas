@@ -228,6 +228,30 @@ type
       function JudgingParty(const aQso: ContestExchange;
                             out aParty: TIN7QPNEParty): boolean;
 
+      (* ONE PARTY'S SCORE OF THIS LOG -- issue 86. The view's QSOs that
+         party judges (JudgingParty), totalled as the session totals them
+         (points as stored, a multiplier wherever the record's flag is set),
+         and scored by THAT PARTY'S OWN FinalScore: its formula, its caps,
+         its bonuses (Delaware's power factor and +50, the 7QP's DX cap). A
+         party with no QSO scores 0 -- the entrant took no part in it, and
+         Delaware's unconditional +50 would otherwise show a score for a
+         party never worked. Public so the tests ask it directly. *)
+      function PartyScore(aParty: TIN7QPNEParty; const aTotals: TScoreTotals;
+                          aView: TLoggedQSOView;
+                          out aQSOs, aPoints, aMultipliers: longint): longint;
+
+      (* ONE PART PER PARTY, in the contest name's order -- issue 86. *)
+      procedure DescribeScoreParts(const aTotals: TScoreTotals;
+                                   aView: TLoggedQSOView;
+                                   aParts: TScoreParts); override;
+
+      (* THE ENTRANT'S OWN PARTY'S SCORE, when it is in one; otherwise the
+         sum, FinalScore, as before -- issue 86. Since Q104 the New Contest
+         dialog refuses an entrant inside a party, so the first case is a log
+         made before that, or imported. *)
+      function ClaimedScore(const aTotals: TScoreTotals;
+                            aView: TLoggedQSOView): longint; override;
+
       (* THE BANDS ANY OF THE FOUR PARTIES CREDITS -- asked with no QSO (the
          dupe sheet, the hint), so it cannot route; it is the UNION, asked
          of the four party classes rather than copied (NY4I, 2026-10-16).
@@ -425,6 +449,175 @@ begin
    if not Result then
       begin
       Result := EntrantParty(aParty);
+      end;
+end;
+
+(* ONE FLAGGED MULTIPLIER, counted the way the session's sheet counts it
+   (uMults.TMultsObject.IncrementTotals): its band and mode, the Both column
+   and the AllBands row. FM shares Phone's slot; a mode with no slot of its
+   own counts in the Both column only. *)
+procedure CountPartyMultiplier(var aTotals: TScoreTotals; const aQso: ContestExchange;
+                               aKind: RemainingMultiplierType);
+var
+   mode: ModeType;
+begin
+   mode := aQso.Mode;
+   if mode = FM then
+      begin
+      mode := Phone;
+      end;
+   if mode in [CW, Digital, Phone] then
+      begin
+      Inc(aTotals.Mults[aQso.Band, mode, aKind]);
+      if aQso.Band <> AllBands then
+         begin
+         Inc(aTotals.Mults[AllBands, mode, aKind]);
+         end;
+      end;
+   Inc(aTotals.Mults[aQso.Band, Both, aKind]);
+   if aQso.Band <> AllBands then
+      begin
+      Inc(aTotals.Mults[AllBands, Both, aKind]);
+      end;
+end;
+
+function TContestIN7QPNE.PartyScore(aParty: TIN7QPNEParty; const aTotals: TScoreTotals;
+                                    aView: TLoggedQSOView;
+                                    out aQSOs, aPoints, aMultipliers: longint): longint;
+var
+   partyTotals: TScoreTotals;
+   partyView: TLoggedQSOList;
+   qso: ContestExchange;
+   party: TIN7QPNEParty;
+   mode: ModeType;
+   i: integer;
+begin
+   aQSOs := 0;
+   aPoints := 0;
+   aMultipliers := 0;
+   Result := 0;
+
+   (* THE SESSION'S OWN FACTS STAY -- the scored band, whether it counts any
+      multiplier, the log's start; the counts are this party's alone. No
+      QTCs in a QSO party. *)
+   partyTotals := aTotals;
+   partyTotals.QSOPoints := 0;
+   partyTotals.DigitalQSOPoints := 0;
+   partyTotals.QTCPoints := 0;
+   partyTotals.Mults := Default(TScoreMultTotals);
+   partyTotals.QSOs := Default(TScoreQSOTotals);
+
+   partyView := TLoggedQSOList.Create;
+   try
+      for i := 0 to aView.Count - 1 do
+         begin
+         qso := aView.QSO(i);
+         if (not JudgingParty(qso, party)) or
+            (party <> aParty) then
+            begin
+            Continue;
+            end;
+
+         partyView.Add(qso, aView.MyFacts(i));
+
+         (* POINTS AS LOGDUPE.AddToTotalQSOPoints SUMS THEM: the scored band
+            only, dupes included (a dupe stores 0). *)
+         if (aTotals.ScoredBand = AllBands) or
+            (qso.Band = aTotals.ScoredBand) then
+            begin
+            partyTotals.QSOPoints := partyTotals.QSOPoints + qso.QSOPoints;
+            if qso.Mode = Digital then
+               begin
+               partyTotals.DigitalQSOPoints := partyTotals.DigitalQSOPoints + qso.QSOPoints;
+               end;
+            end;
+
+         if not qso.ceDupe then
+            begin
+            Inc(aQSOs);
+            mode := qso.Mode;
+            if mode = FM then
+               begin
+               mode := Phone;
+               end;
+            if mode in [CW, Digital, Phone] then
+               begin
+               Inc(partyTotals.QSOs[qso.Band, mode]);
+               Inc(partyTotals.QSOs[AllBands, mode]);
+               end;
+            Inc(partyTotals.QSOs[qso.Band, Both]);
+            Inc(partyTotals.QSOs[AllBands, Both]);
+            end;
+
+         (* MULTIPLIERS AS THE SHEET COUNTS THEM (LOGDUPE.AddQSOToSheets):
+            every record whose flag is set, a dupe's too, unless it is kept
+            off the multiplier sheet. The four parties' county keys are
+            disjoint, so the parties' counts add up to the session's. *)
+         if not qso.ceClearMultSheet then
+            begin
+            if qso.DomesticMult then
+               begin
+               CountPartyMultiplier(partyTotals, qso, rmDomestic);
+               end;
+            if qso.DXMult then
+               begin
+               CountPartyMultiplier(partyTotals, qso, rmDX);
+               end;
+            if qso.PrefixMult then
+               begin
+               CountPartyMultiplier(partyTotals, qso, rmPrefix);
+               end;
+            if qso.ZoneMult then
+               begin
+               CountPartyMultiplier(partyTotals, qso, rmZone);
+               end;
+            end;
+         end;
+
+      aPoints := partyTotals.QSOPoints;
+      aMultipliers := partyTotals.Mults[partyTotals.ScoredBand, Both, rmDomestic] +
+                      partyTotals.Mults[partyTotals.ScoredBand, Both, rmDX] +
+                      partyTotals.Mults[partyTotals.ScoredBand, Both, rmPrefix] +
+                      partyTotals.Mults[partyTotals.ScoredBand, Both, rmZone];
+
+      if partyView.Count = 0 then
+         begin
+         Exit;
+         end;
+
+      Result := PartyContest(aParty).FinalScore(partyTotals, partyView);
+   finally
+      partyView.Free;
+   end;
+end;
+
+procedure TContestIN7QPNE.DescribeScoreParts(const aTotals: TScoreTotals;
+                                             aView: TLoggedQSOView;
+                                             aParts: TScoreParts);
+var
+   p: TIN7QPNEParty;
+   score, qsos, points, mults: longint;
+begin
+   for p := Low(TIN7QPNEParty) to High(TIN7QPNEParty) do
+      begin
+      score := PartyScore(p, aTotals, aView, qsos, points, mults);
+      aParts.Add(FParties[p].DisplayName, qsos, points, mults, score);
+      end;
+end;
+
+function TContestIN7QPNE.ClaimedScore(const aTotals: TScoreTotals;
+                                      aView: TLoggedQSOView): longint;
+var
+   entrant: TIN7QPNEParty;
+   qsos, points, mults: longint;
+begin
+   if EntrantParty(entrant) then
+      begin
+      Result := PartyScore(entrant, aTotals, aView, qsos, points, mults);
+      end
+   else
+      begin
+      Result := inherited ClaimedScore(aTotals, aView);
       end;
 end;
 

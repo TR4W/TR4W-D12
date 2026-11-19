@@ -293,6 +293,13 @@ procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);  { Issue #954
 function TotalCWContacts: integer;
 function TotalPhoneContacts: integer;
 function TotalScore: LONGINT;
+(* THE SCORE THE CABRILLO FILE CLAIMS -- issue 86: TotalScore for every
+  contest but IN7QPNE at an entrant inside one of its parties. See
+  TContestBase.ClaimedScore. *)
+function ClaimedScore: LONGINT;
+(* THE PARTS OF THE SCORE -- issue 86: aParts is emptied, then filled by the
+  session's contest; empty for a contest scored as one. Main thread only. *)
+procedure GatherScoreParts(aParts: TScoreParts);
 procedure SetPrefix(var RData: ContestExchange); overload;
 (* The same, asking aContest -- ActiveContest(Contest), already fetched by a
   caller that asks it something else for the same QSO (M11 S4). *)
@@ -3374,6 +3381,37 @@ begin
   Result := ContestFinalScore(Contest, totals);
 
   LastMainThreadTotalScore := Result;
+end;
+
+(* OFF THE MAIN THREAD, TotalScore's last value -- the same reason as
+  TotalScore's. Both readers (the Cabrillo export and the summary sheet) run
+  on the main thread. *)
+function ClaimedScore: LONGINT;
+var
+  totals: TScoreTotals;
+begin
+  if not OnMainThread then
+     begin
+     Result := TotalScore;
+     Exit;
+     end;
+
+  GatherScoreTotals(Contest, totals);
+  Result := ContestClaimedScore(Contest, totals);
+end;
+
+procedure GatherScoreParts(aParts: TScoreParts);
+var
+  totals: TScoreTotals;
+begin
+  aParts.Clear;
+  if not OnMainThread then
+     begin
+     Exit;
+     end;
+
+  GatherScoreTotals(Contest, totals);
+  DescribeContestScoreParts(Contest, totals, aParts);
 end;
 
 (* THE PREFIX MULTIPLIER KEY IS THE CONTEST'S -- M11 S3, 2026-10-14.
