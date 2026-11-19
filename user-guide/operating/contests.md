@@ -10,6 +10,14 @@ Rules were also updated for existing events, including Missouri, California, Bri
 
 Mobile/rover bonuses remain a documented limitation for affected QSO parties. Do not assume selecting a mobile category calculates every sponsor bonus. Verify the submitted score and any required manual claim.
 
+## Entering the exchange
+
+Type the exchange as it is sent on the air, words separated by spaces. When TR4W knows a typed code is not valid for the contest, for example a district, state or section the contest does not list, or a CQ zone above 40, it refuses the entry and says why on the status line. Correct the word and press Enter again. Not every contest's parser names its reason yet; a refusal without a message still means the entry was not logged.
+
+With [QSL MODE](../reference/commands/q-s.md#qsl-mode) set to QSL AND LOG, a refused entry is still logged. A refused zone is not written to the contact; the exchange is kept as typed, so it can be corrected later in Edit QSO.
+
+RSGB IOTA references may be typed with or without the dash: `EU-005`, `EU005` and `EU-5` are all logged as `EU-005`. Only a dash straight after the continent is accepted.
+
 ## Check before submission
 
 Confirm the exchange, multiplier totals, eligible bands/modes, and category. An off-contest contact can remain in the log as an X-QSO worth zero points. Grid-based contests require the applicable grid information.
