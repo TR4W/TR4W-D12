@@ -175,7 +175,8 @@ const
    (* PRAGMA user_version in every log we create.  Bump ONLY with a migration
      step, and read docs\SQLITE_LOG_SCHEMA_PLAN.md section 8 first: an added
      column is ALTER TABLE ADD COLUMN guarded by PRAGMA table_info, not a
-     rebuild. *)
+     rebuild. A REMOVED column is the other way round: a rebuild, never
+     DROP COLUMN -- see 11 below. *)
    (* 2 SINCE 2026-09-12: the session_state table arrived with the removal
      of the .RST restart file. TLogDatabase.MigrateSchema creates it in an
      existing log; see there for why an added TABLE is safe to do on open
@@ -265,7 +266,26 @@ const
      holds a QSO, marks it for the store's one-shot stamp
      (LOG_OFF_CONTEST_BACKFILL_KEY): only the set-up contest can judge a row,
      and a domain unit cannot see the contest factory. *)
-   LOG_SCHEMA_VERSION = 10;
+   (* 11 SINCE 2026-11-19 (issue 94, NY4I: my_* is OUR station, rcvd_* the
+     worked one, "as long as that is consistent, I do not see why we would
+     keep those fields"): SIXTEEN qso COLUMNS THAT NO BUILD EVER WROTE OR READ
+     ARE REMOVED (LOG_V11_DROPPED_QSO_COLUMNS) -- the typed received-QTH
+     kinds, which the record never carried (it has one polymorphic QTHString,
+     stored as rcvd_qth), the two WSJT-X dB reports and the CTY.DAT ITU zone.
+
+     THE FIRST REMOVAL, AND IT IS A TABLE REBUILD, NOT ALTER TABLE DROP
+     COLUMN. DROP COLUMN needs SQLite 3.35, and the Linux tarball and macOS
+     use the system library, whose version this program does not choose; it
+     fails on 3.42 and the distro library after it around comment-only lines
+     (issue #141, see the note inside LOG_QSO_TABLE); and where it works it
+     cuts the stored CREATE text mid-comment. The rebuild (MigrateSchema)
+     renames the old table, creates LOG_QSO_TABLE verbatim, copies every kept
+     column by name, keeps the AUTOINCREMENT high-water mark, drops the old
+     table and recreates LOG_QSO_INDEXES -- one transaction, one commit, like
+     every migration. So a migrated log's qso table is the new one, byte for
+     byte. Schema 10 SHIPPED, so a log this build has opened is refused by
+     every earlier build. *)
+   LOG_SCHEMA_VERSION = 11;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -369,6 +389,35 @@ const
      LOG_YEAR_SENT_BACKFILL_KEY. *)
    LOG_OFF_CONTEST_BACKFILL_KEY = 'offContestBackfillPending';
 
+   (* THE qso COLUMNS SCHEMA 11 REMOVED (issue 94). Verified before removal:
+     no SQL, no Pascal, no tool and no script in the tree wrote or read any of
+     them, and every corpus log held NULL in all sixteen. A migration whose
+     log has any of them rebuilds the table without them; the values are not
+     carried anywhere, because there were none to carry.
+
+     IF ONE IS EVER WANTED AGAIN, it is an ADD COLUMN at the end of
+     LOG_QSO_TABLE under a new version, guarded by PRAGMA table_info, like
+     every other added column -- and a writer and a reader land with it. *)
+   (* With the declaration each had, so a test can build the schema-10 shape
+     (uTestLatestContest.DowngradeTestLog); the migration reads only Name. *)
+   LOG_V11_DROPPED_QSO_COLUMNS: array[0..15] of TLogAddedColumn = (
+      (Name: 'snr_sent';         Declaration: 'INTEGER'),
+      (Name: 'snr_received';     Declaration: 'INTEGER'),
+      (Name: 'rcvd_state';       Declaration: 'TEXT'),
+      (Name: 'rcvd_county';      Declaration: 'TEXT'),
+      (Name: 'rcvd_section';     Declaration: 'TEXT'),
+      (Name: 'rcvd_grid';        Declaration: 'TEXT'),
+      (Name: 'rcvd_continent';   Declaration: 'TEXT'),
+      (Name: 'rcvd_postal_code'; Declaration: 'TEXT'),
+      (Name: 'rcvd_society';     Declaration: 'TEXT'),
+      (Name: 'rcvd_department';  Declaration: 'TEXT'),
+      (Name: 'rcvd_rda';         Declaration: 'TEXT'),
+      (Name: 'rcvd_park';        Declaration: 'TEXT'),
+      (Name: 'rcvd_summit';      Declaration: 'TEXT'),
+      (Name: 'rcvd_iota';        Declaration: 'TEXT'),
+      (Name: 'rcvd_coords';      Declaration: 'TEXT'),
+      (Name: 'cty_itu_zone';     Declaration: 'INTEGER'));
+
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
      An array rather than one script split on ';' -- splitting SQL on a
@@ -421,45 +470,12 @@ const
       'CREATE INDEX IF NOT EXISTS idx_external_delivery_contact ' +
       'ON external_delivery(contact, logger)';
 
-   LOG_SCHEMA_STATEMENTS: array[0..14] of AnsiString = (
-
-      (* ONE ROW.  This is the log's own identity and its entry declaration,
-        frozen when the log is created (tier 2). *)
-      'CREATE TABLE contest ('#10 +
-      '    id                INTEGER PRIMARY KEY CHECK (id = 1),'#10 +
-      '    guid              TEXT NOT NULL UNIQUE,'#10 +
-      '    contest_type      TEXT NOT NULL,      -- our ContestType, as a token'#10 +
-      '    contest_name      TEXT NOT NULL,'#10 +
-      '    created_at        INTEGER NOT NULL,   -- unix UTC'#10 +
-      '    start_time        INTEGER,'#10 +
-      '    end_time          INTEGER,'#10 +
-      '    -- tier 2: the entry declaration, as sent in the Cabrillo header.'#10 +
-      '    -- NEVER re-read from configuration at export -- that is issue #2.'#10 +
-      '    my_call           TEXT NOT NULL,'#10 +
-      '    category_operator TEXT,'#10 +
-      '    category_assisted TEXT,'#10 +
-      '    category_power    TEXT,'#10 +
-      '    category_band     TEXT,'#10 +
-      '    category_mode     TEXT,'#10 +
-      '    category_station  TEXT,'#10 +
-      '    category_time     TEXT,'#10 +
-      '    category_transmitter TEXT,'#10 +
-      '    category_overlay  TEXT,'#10 +
-      '    club              TEXT,'#10 +
-      '    my_park           TEXT,               -- POTA: constant for a whole log'#10 +
-      '    soapbox           TEXT,'#10 +
-      '    -- tier 2: station identity AS DECLARED FOR THIS LOG. Copied from the'#10 +
-      '    -- JSON identity at creation; edited here it does not disturb the'#10 +
-      '    -- next contest.'#10 +
-      '    op_name           TEXT,'#10 +
-      '    address           TEXT,'#10 +
-      '    city              TEXT,'#10 +
-      '    state             TEXT,'#10 +
-      '    postcode          TEXT,'#10 +
-      '    country           TEXT,'#10 +
-      '    email             TEXT'#10 +
-      ')',
-
+   (* THE qso TABLE AND ITS INDEXES, NAMED, because two places run them:
+     LOG_SCHEMA_STATEMENTS for a new log, and the schema-11 rebuild
+     (TLogDatabase.MigrateSchema), which recreates the table from exactly this
+     text so a migrated log and a new one are the same, byte for byte, in
+     sqlite_master. One text, two callers -- never a copy. *)
+   LOG_QSO_TABLE =
       'CREATE TABLE qso ('#10 +
       '    id                INTEGER PRIMARY KEY AUTOINCREMENT,'#10 +
       '    -- THIS ROW''S OWN identity, always minted, always unique.'#10 +
@@ -559,21 +575,16 @@ const
       '    -- THE RAW COPY, and it is the event source for everything below it.'#10 +
       '    exchange_sent     TEXT,               -- what we SENT, verbatim'#10 +
       '    exchange_received TEXT,               -- what we COPIED, verbatim'#10 +
-      '    -- Signal report. RST stays NUMERIC; WSJT-X''s dB report gets its own'#10 +
-      '    -- column rather than being shoehorned into it as ''-12''.'#10 +
+      '    -- Signal report. RST stays NUMERIC.'#10 +
       '    rst_sent          INTEGER,'#10 +
       '    rst_received      INTEGER,'#10 +
-      '    snr_sent          INTEGER,            -- dB, WSJT-X modes'#10 +
-      '    snr_received      INTEGER,'#10 +
       '    -- COPIED. Parsed out of exchange_received. These OUTRANK the derived'#10 +
-      '    -- block below wherever both exist.'#10 +
+      '    -- block below wherever both exist. A received QTH of any kind --'#10 +
+      '    -- state, county, section, grid, park -- is rcvd_qth; there is no'#10 +
+      '    -- typed column per kind (schema 11, see the note at the end).'#10 +
       '    serial_sent       INTEGER,'#10 +
       '    serial_received   INTEGER,'#10 +
       '    rcvd_zone         INTEGER,            -- CQ **or** ITU: the contest decides'#10 +
-      '    rcvd_state        TEXT,'#10 +
-      '    rcvd_county       TEXT,'#10 +
-      '    rcvd_section      TEXT,               -- ARRL/RAC section'#10 +
-      '    rcvd_grid         TEXT,'#10 +
       '    rcvd_name         TEXT,'#10 +
       '    rcvd_age          INTEGER,'#10 +
       '    -- NUMERIC, because the record holds these as numbers: Check and'#10 +
@@ -586,15 +597,10 @@ const
       '    rcvd_power        TEXT,               -- ARRL DX'#10 +
       '    rcvd_chapter      TEXT,'#10 +
       '    rcvd_prefecture   INTEGER,            -- JA'#10 +
-      '    rcvd_continent    TEXT,'#10 +
-      '    rcvd_postal_code  TEXT,'#10 +
       '    rcvd_member_no    INTEGER,            -- Ten-Ten and club numbers. The'#10 +
       '                                          -- record field is a Word, so an'#10 +
       '                                          -- alphanumeric membership id'#10 +
       '                                          -- cannot be stored today either.'#10 +
-      '    rcvd_society      TEXT,               -- IARU'#10 +
-      '    rcvd_department   TEXT,               -- French'#10 +
-      '    rcvd_rda          TEXT,               -- Russian district'#10 +
       '    rcvd_qth          TEXT,               -- domestic/DX QTH, the catch-all'#10 +
       '    rcvd_random       TEXT,               -- random-character exchanges'#10 +
       '    random_sent       TEXT,               -- ...and the ones we sent'#10 +
@@ -606,10 +612,6 @@ const
       '    -- written two years from now.'#10 +
       '    rcvd_kids         TEXT,'#10 +
       '    qtc_call          TEXT,'#10 +
-      '    rcvd_park         TEXT,               -- POTA'#10 +
-      '    rcvd_summit       TEXT,               -- SOTA'#10 +
-      '    rcvd_iota         TEXT,'#10 +
-      '    rcvd_coords       TEXT,               -- lat/long exchanges'#10 +
       '    rcvd_extra        TEXT,               -- JSON. THE NARROW ESCAPE HATCH.'#10 +
       '                                          -- Scoring, multipliers and'#10 +
       '                                          -- Cabrillo MAY NOT read it.'#10 +
@@ -627,7 +629,6 @@ const
       '    dxcc_entity       TEXT,'#10 +
       '    dxcc_code         INTEGER,'#10 +
       '    cty_cq_zone       INTEGER,'#10 +
-      '    cty_itu_zone      INTEGER,'#10 +
       '    cty_continent     TEXT,'#10 +
       '    -- THE MULTIPLIER OUTCOME, AS DECIDED AT THE TIME. This is not the'#10 +
       '    -- multipliers TABLE that section 11/3 refused -- there is still no'#10 +
@@ -682,7 +683,8 @@ const
         Windows 3.53.4 copy is fine). The migration tests build a schema-2 log
         by dropping the schema-3 columns in turn, which leaves exactly that
         shape, so the notes on these columns follow the last one. Trailing
-        comments on a column's own line are fine. *)
+        comments on a column's own line are fine. It is also why schema 11
+        REBUILDS the table rather than dropping its columns. *)
       '    my_call           TEXT,               -- as signed, rover suffix included'#10 +
       '    my_section        TEXT,'#10 +
       '    my_park           TEXT,'#10 +
@@ -701,6 +703,14 @@ const
       '    my_postal_code    TEXT,'#10 +
       '    my_foc_number     TEXT,'#10 +
       '    is_off_contest    INTEGER NOT NULL DEFAULT 0'#10 +
+      '    -- SCHEMA 11: SIXTEEN COLUMNS NO BUILD EVER WROTE ARE GONE -- the'#10 +
+      '    -- typed received QTH kinds (rcvd_state, rcvd_county, rcvd_section,'#10 +
+      '    -- rcvd_grid, rcvd_postal_code, rcvd_society, rcvd_department,'#10 +
+      '    -- rcvd_rda, rcvd_park, rcvd_summit, rcvd_iota, rcvd_coords,'#10 +
+      '    -- rcvd_continent), snr_sent, snr_received and cty_itu_zone. The'#10 +
+      '    -- convention: my_* is OUR station, rcvd_* the worked one, and a'#10 +
+      '    -- received QTH is rcvd_qth. A migrated log''s table is rebuilt to'#10 +
+      '    -- this text. See LOG_V11_DROPPED_QSO_COLUMNS.'#10 +
       '    -- SCHEMA 10: is_off_contest, 1 WHEN THE CONTEST''S OWN RULE REFUSES'#10 +
       '    -- THIS QSO -- off its bands or modes, or a worked station its'#10 +
       '    -- host-area rule does not credit: an AUTOMATIC X-QSO. Derived and'#10 +
@@ -730,23 +740,91 @@ const
       '    -- reader falls back to the session. Otherwise logged / assumed (a'#10 +
       '    -- multi-op peer''s QSO, stamped with this station''s values) /'#10 +
       '    -- imported / edited, and an empty my_* value means UNKNOWN.'#10 +
+      ')';
+
+   LOG_QSO_INDEX_AT =
+      'CREATE INDEX idx_qso_at       ON qso(qso_at)';
+   LOG_QSO_INDEX_CALLSIGN =
+      'CREATE INDEX idx_qso_callsign ON qso(callsign)';
+
+   (* "What else was this contact?" -- the query qso_set_id exists to answer,
+     asked once per record by the ADIF exporter. *)
+   LOG_QSO_INDEX_SET =
+      'CREATE INDEX idx_qso_set      ON qso(qso_set_id)';
+
+   (* Finding the set a contact already has, when another QSO of the same
+      exchange arrives -- see SaveQSOGroupingByExchangeId. *)
+   LOG_QSO_INDEX_EXCHANGE =
+      'CREATE INDEX idx_qso_exchange ON qso(exchange_id)';
+   LOG_QSO_INDEX_DUPE =
+      'CREATE INDEX idx_qso_dupe     ON qso(callsign, band, mode) WHERE deleted = 0';
+
+   (* The outbound queues are a WHERE clause, not a data structure. *)
+   LOG_QSO_INDEX_UNSENT =
+      'CREATE INDEX idx_qso_unsent     ON qso(id) WHERE sent_to_server = 0 OR server_dirty = 1';
+   LOG_QSO_INDEX_UNSENT_UDP =
+      'CREATE INDEX idx_qso_unsent_udp ON qso(id) WHERE sent_udp = 0 OR udp_dirty = 1';
+
+   (* EVERY INDEX ON qso, for the rebuild: dropping the old table drops its
+     indexes, and these put them back. uTestLogDroppedColumns pins that this
+     list and the qso indexes in LOG_SCHEMA_STATEMENTS are the same set. *)
+   LOG_QSO_INDEXES: array[0..6] of AnsiString = (
+      LOG_QSO_INDEX_AT,
+      LOG_QSO_INDEX_CALLSIGN,
+      LOG_QSO_INDEX_SET,
+      LOG_QSO_INDEX_EXCHANGE,
+      LOG_QSO_INDEX_DUPE,
+      LOG_QSO_INDEX_UNSENT,
+      LOG_QSO_INDEX_UNSENT_UDP);
+
+   LOG_SCHEMA_STATEMENTS: array[0..14] of AnsiString = (
+
+      (* ONE ROW.  This is the log's own identity and its entry declaration,
+        frozen when the log is created (tier 2). *)
+      'CREATE TABLE contest ('#10 +
+      '    id                INTEGER PRIMARY KEY CHECK (id = 1),'#10 +
+      '    guid              TEXT NOT NULL UNIQUE,'#10 +
+      '    contest_type      TEXT NOT NULL,      -- our ContestType, as a token'#10 +
+      '    contest_name      TEXT NOT NULL,'#10 +
+      '    created_at        INTEGER NOT NULL,   -- unix UTC'#10 +
+      '    start_time        INTEGER,'#10 +
+      '    end_time          INTEGER,'#10 +
+      '    -- tier 2: the entry declaration, as sent in the Cabrillo header.'#10 +
+      '    -- NEVER re-read from configuration at export -- that is issue #2.'#10 +
+      '    my_call           TEXT NOT NULL,'#10 +
+      '    category_operator TEXT,'#10 +
+      '    category_assisted TEXT,'#10 +
+      '    category_power    TEXT,'#10 +
+      '    category_band     TEXT,'#10 +
+      '    category_mode     TEXT,'#10 +
+      '    category_station  TEXT,'#10 +
+      '    category_time     TEXT,'#10 +
+      '    category_transmitter TEXT,'#10 +
+      '    category_overlay  TEXT,'#10 +
+      '    club              TEXT,'#10 +
+      '    my_park           TEXT,               -- POTA: constant for a whole log'#10 +
+      '    soapbox           TEXT,'#10 +
+      '    -- tier 2: station identity AS DECLARED FOR THIS LOG. Copied from the'#10 +
+      '    -- JSON identity at creation; edited here it does not disturb the'#10 +
+      '    -- next contest.'#10 +
+      '    op_name           TEXT,'#10 +
+      '    address           TEXT,'#10 +
+      '    city              TEXT,'#10 +
+      '    state             TEXT,'#10 +
+      '    postcode          TEXT,'#10 +
+      '    country           TEXT,'#10 +
+      '    email             TEXT'#10 +
       ')',
 
-      'CREATE INDEX idx_qso_at       ON qso(qso_at)',
-      'CREATE INDEX idx_qso_callsign ON qso(callsign)',
+      LOG_QSO_TABLE,
 
-      (* "What else was this contact?" -- the query qso_set_id exists to answer,
-        asked once per record by the ADIF exporter. *)
-      'CREATE INDEX idx_qso_set      ON qso(qso_set_id)',
-
-      (* Finding the set a contact already has, when another QSO of the same
-         exchange arrives -- see SaveQSOGroupingByExchangeId. *)
-      'CREATE INDEX idx_qso_exchange ON qso(exchange_id)',
-      'CREATE INDEX idx_qso_dupe     ON qso(callsign, band, mode) WHERE deleted = 0',
-
-      (* The outbound queues are a WHERE clause, not a data structure. *)
-      'CREATE INDEX idx_qso_unsent     ON qso(id) WHERE sent_to_server = 0 OR server_dirty = 1',
-      'CREATE INDEX idx_qso_unsent_udp ON qso(id) WHERE sent_udp = 0 OR udp_dirty = 1',
+      LOG_QSO_INDEX_AT,
+      LOG_QSO_INDEX_CALLSIGN,
+      LOG_QSO_INDEX_SET,
+      LOG_QSO_INDEX_EXCHANGE,
+      LOG_QSO_INDEX_DUPE,
+      LOG_QSO_INDEX_UNSENT,
+      LOG_QSO_INDEX_UNSENT_UDP,
 
       (* WHERE THE OPERATOR LEFT OFF -- the state a restart has to put back.
 

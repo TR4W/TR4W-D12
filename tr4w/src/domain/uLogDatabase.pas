@@ -337,6 +337,9 @@ type
       procedure OpenConnection(const aFileName: string);
       procedure ApplySchema;
       procedure MigrateSchema;
+      (* Schema 11: qso rebuilt without LOG_V11_DROPPED_QSO_COLUMNS, inside
+        MigrateSchema's transaction. aCopyList is every kept column, quoted. *)
+      procedure RebuildQsoTable(const aCopyList: AnsiString);
       procedure ApplyPragmas;
       (* The half of ApplyPragmas that writes to the file. Not run read-only. *)
       procedure ApplyWritePragmas;
@@ -350,6 +353,7 @@ type
         type sqldb and the SQLite C API actually take. *)
       function PragmaAsInteger(const aPragma: AnsiString): integer;
       function PragmaAsString(const aPragma: AnsiString): AnsiString;
+      function PragmaRowsAsText(const aPragma, aSeparator: AnsiString): AnsiString;
       procedure ExecPragma(const aPragma: AnsiString);
 
       (* The connection-level pragmas, executed BENEATH sqldb.  See its
@@ -1294,6 +1298,44 @@ begin
    EndTransaction;
 end;
 
+(* EVERY ROW'S FIRST FIELD, joined by aSeparator -- for a question whose answer
+  is a LIST (the schema-11 rebuild asks for qso's columns).
+
+  NOT group_concat THROUGH PragmaAsString, and that was measured, not assumed:
+  sqlite3conn gives a column with no declared type -- any expression, an
+  aggregate included -- an ftString field of 255, and a longer value is CUT
+  there without a word (sqlite3conn.pp, the ftString arm of AddFieldDefs).
+  qso's column list is over 1,000 characters, and the first rebuild built on
+  group_concat silently left out every column past the cut -- is_off_contest
+  among them, which the copy then reset to 0. Each name read as its own row
+  is short, so nothing is cut. Same transaction handling as PragmaAsString. *)
+function TLogDatabase.PragmaRowsAsText(const aPragma, aSeparator: AnsiString): AnsiString;
+var
+   q: TSQLQuery;
+begin
+   Result := '';
+   EndTransaction;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FConnection;
+      q.SQL.Text := aPragma;
+      q.Open;
+      while not q.EOF do
+         begin
+         if Result <> '' then
+            begin
+            Result := Result + aSeparator;
+            end;
+         Result := Result + q.Fields[0].AsString;
+         q.Next;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+   EndTransaction;
+end;
+
 function TLogDatabase.PragmaAsInteger(const aPragma: AnsiString): integer;
 var
    s: AnsiString;
@@ -1950,6 +1992,57 @@ begin
    Result := Result + IMMUTABLE_QUERY;
 end;
 
+(* THE COLUMNS THE SCHEMA-11 REBUILD COPIES: aOldColumns (comma-separated, as
+  pragma_table_info gave them before the migration changed anything) plus
+  aAdded (what the migration's ADD COLUMNs appended since), less
+  LOG_V11_DROPPED_QSO_COLUMNS -- each double-quoted, comma-separated.
+
+  NOT INTERSECTED WITH THE NEW TABLE, ON PURPOSE. A column in the old table
+  that the new one lacks and that is not one of the sixteen is something
+  this program never made; naming it makes the INSERT fail, and the whole
+  migration with it, rather than dropping someone's data in silence. *)
+function QsoRebuildCopyList(const aOldColumns: AnsiString; aAdded: TStrings): AnsiString;
+const
+   (* TYPED, so the concatenation stays AnsiString: an untyped literal added
+     to one is a UnicodeString expression here, and the build counts the
+     narrowing back. *)
+   COLUMN_SEPARATOR: AnsiString = ', ';
+var
+   names: TStringList;
+   i, j: integer;
+   dropped: boolean;
+begin
+   Result := '';
+   names := TStringList.Create;
+   try
+      names.StrictDelimiter := True;
+      names.Delimiter := ',';
+      names.DelimitedText := aOldColumns;
+      names.AddStrings(aAdded);
+      for i := 0 to names.Count - 1 do
+         begin
+         dropped := False;
+         for j := Low(LOG_V11_DROPPED_QSO_COLUMNS) to High(LOG_V11_DROPPED_QSO_COLUMNS) do
+            begin
+            if SameText(names[i], LOG_V11_DROPPED_QSO_COLUMNS[j].Name) then
+               begin
+               dropped := True;
+               end;
+            end;
+         if (not dropped) and (names[i] <> '') then
+            begin
+            if Result <> '' then
+               begin
+               Result := Result + COLUMN_SEPARATOR;
+               end;
+            Result := Result + '"' + names[i] + '"';
+            end;
+         end;
+   finally
+      names.Free;
+   end;
+end;
+
 (* BRING AN OLDER LOG UP TO THE CURRENT SCHEMA.
 
   VerifyIdentity refuses a log from the FUTURE and says an older one "is
@@ -1984,6 +2077,10 @@ var
    markStationFactsBackfill: boolean;
    offContestMissing: boolean;
    markOffContestBackfill: boolean;
+   rebuildQso: boolean;
+   oldQsoColumns: AnsiString;
+   blockers: string;
+   added: TStringList;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
 
@@ -2117,6 +2214,56 @@ begin
       markOffContestBackfill := offContestMissing and
                                 (PragmaAsString('SELECT 1 FROM qso WHERE ' +
                                                 'record_kind = ''QSO'' LIMIT 1') <> '');
+      end;
+
+   (* v10 -> v11: DOES qso STILL HAVE ANY OF THE COLUMNS SCHEMA 11 REMOVED,
+     WHAT ARE ITS COLUMNS NOW, AND WOULD A REBUILD LOSE ANYTHING ELSE -- all
+     asked here, before anything changes, for the one-transaction reason
+     (issue 94). The rebuild (RebuildQsoTable) drops the old table, and with
+     it every trigger on it; and with foreign keys on, a rename rewrites a
+     child table's reference to follow the OLD table. This schema has no
+     trigger, no view and no foreign key on qso, so one in the file is not
+     ours to destroy: the open is REFUSED before any change. A log with none
+     of the sixteen (one made by this build and stamped back) is only
+     re-stamped. *)
+   rebuildQso := False;
+   oldQsoColumns := '';
+   if version < 11 then
+      begin
+      for i := Low(LOG_V11_DROPPED_QSO_COLUMNS) to High(LOG_V11_DROPPED_QSO_COLUMNS) do
+         begin
+         if PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                           'WHERE name = ''' + string(LOG_V11_DROPPED_QSO_COLUMNS[i].Name) +
+                           '''')) <> '' then
+            begin
+            rebuildQso := True;
+            end;
+         end;
+      if rebuildQso then
+         begin
+         blockers := UTF8Decode(PragmaRowsAsText(
+            'SELECT type || '' '' || name FROM sqlite_master ' +
+            'WHERE (type = ''trigger'' AND tbl_name = ''qso'') OR type = ''view''', ', '));
+         if blockers = '' then
+            begin
+            blockers := UTF8Decode(PragmaRowsAsText(
+               'SELECT ''foreign key from '' || m.name ' +
+               'FROM sqlite_master m, pragma_foreign_key_list(m.name) f ' +
+               'WHERE m.type = ''table'' AND f."table" = ''qso''', ', '));
+            end;
+         if blockers <> '' then
+            begin
+            raise ELogDatabaseError.CreateFmt(
+               'The contest log "%s" is schema %d and must be upgraded to %d, ' +
+               'which rebuilds its qso table. The file holds something this ' +
+               'program never creates and the rebuild would destroy (%s), so ' +
+               'the log was left as it is.',
+               [FFileName, version, LOG_SCHEMA_VERSION, blockers]);
+            end;
+         (* ROW BY ROW, NEVER group_concat: see PragmaRowsAsText. *)
+         oldQsoColumns := PragmaRowsAsText(
+            'SELECT name FROM pragma_table_info(''qso'') ORDER BY cid', ',');
+         end;
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -2280,6 +2427,39 @@ begin
          string(LOG_OFF_CONTEST_BACKFILL_KEY) + ''', ''1'', NULL)'));
       end;
 
+   (* v10 -> v11: THE REBUILD, LAST, so the table it copies already has every
+     column the steps above added. The kept columns are the table's columns
+     as asked above, plus those added since, less the sixteen. *)
+   if rebuildQso then
+      begin
+      added := TStringList.Create;
+      try
+         for i := 0 to High(missing) do
+            begin
+            added.Add(LOG_V3_QSO_COLUMNS[missing[i]].Name);
+            end;
+         if yearMissing then
+            begin
+            added.Add(LOG_V6_QSO_YEAR_COLUMN.Name);
+            end;
+         if yearSentMissing then
+            begin
+            added.Add(LOG_V8_QSO_YEAR_SENT_COLUMN.Name);
+            end;
+         for i := 0 to High(v9Missing) do
+            begin
+            added.Add(LOG_V9_QSO_COLUMNS[v9Missing[i]].Name);
+            end;
+         if offContestMissing then
+            begin
+            added.Add(LOG_V10_QSO_OFF_CONTEST_COLUMN.Name);
+            end;
+         RebuildQsoTable(QsoRebuildCopyList(oldQsoColumns, added));
+      finally
+         added.Free;
+      end;
+      end;
+
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,
      2026-10-23). This committed the ALTERs and then stamped the version
      through ExecPragma, which ends the transaction around itself -- two
@@ -2299,6 +2479,51 @@ begin
    FConnection.ExecuteDirect(UTF8Encode('PRAGMA user_version = '
                                         + IntToStr(LOG_SCHEMA_VERSION)));
    FTransaction.Commit;
+end;
+
+(* THE SCHEMA-11 REBUILD OF qso (issue 94) -- SQLite's own recipe for a change
+  ALTER TABLE cannot make (sqlite.org/lang_altertable.html, "other kinds of
+  table schema changes"), run inside MigrateSchema's transaction, so it
+  commits with the version stamp or not at all.
+
+  RENAME THE OLD TABLE FIRST, THEN CREATE THE NEW ONE UNDER ITS OWN NAME, and
+  not the other way round: a table created as qso_new and renamed has its
+  stored CREATE text rewritten by SQLite, so it would not be LOG_QSO_TABLE.
+  Created as qso, it is -- a migrated log and a new one are the same in
+  sqlite_master.
+
+  THE AUTOINCREMENT HIGH-WATER MARK IS KEPT. The rename carries qso's
+  sqlite_sequence row to the old name; copying the rows gives the new table a
+  row of its own at max(id), which is LOWER than the old mark wherever the
+  newest rows were deleted (Clear Log deletes every row). So the new row is
+  replaced by the old one before the old table, and its row, are dropped: an
+  id is never handed out twice.
+
+  The old table's indexes go with it, and LOG_QSO_INDEXES puts them back --
+  after the drop, because they keep their names through the rename. *)
+procedure TLogDatabase.RebuildQsoTable(const aCopyList: AnsiString);
+const
+   OLD_QSO = 'qso_before_v11';
+   (* TYPED, for the reason COLUMN_SEPARATOR is (QsoRebuildCopyList). *)
+   INSERT_HEAD: AnsiString = 'INSERT INTO qso (';
+   INSERT_SELECT: AnsiString = ') SELECT ';
+   INSERT_FROM: AnsiString = ' FROM ' + OLD_QSO;
+var
+   i: integer;
+begin
+   FConnection.ExecuteDirect('ALTER TABLE qso RENAME TO ' + OLD_QSO);
+   FConnection.ExecuteDirect(LOG_QSO_TABLE);
+   FConnection.ExecuteDirect(INSERT_HEAD + aCopyList + INSERT_SELECT +
+                             aCopyList + INSERT_FROM);
+   FConnection.ExecuteDirect('DELETE FROM sqlite_sequence WHERE name = ''qso''');
+   FConnection.ExecuteDirect('INSERT INTO sqlite_sequence (name, seq) ' +
+                             'SELECT ''qso'', seq FROM sqlite_sequence ' +
+                             'WHERE name = ''' + OLD_QSO + '''');
+   FConnection.ExecuteDirect('DROP TABLE ' + OLD_QSO);
+   for i := Low(LOG_QSO_INDEXES) to High(LOG_QSO_INDEXES) do
+      begin
+      FConnection.ExecuteDirect(LOG_QSO_INDEXES[i]);
+      end;
 end;
 
 procedure TLogDatabase.Close;

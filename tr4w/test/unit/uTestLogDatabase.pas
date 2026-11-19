@@ -386,7 +386,10 @@ begin
      outranks the other has nothing to rank. *)
    CheckTrue(Pos('|rcvd_zone', cols) > 0, 'the zone he SENT');
    CheckTrue(Pos('|cty_cq_zone', cols) > 0, 'and the zone CTY.DAT guessed');
-   CheckTrue(Pos('|cty_itu_zone', cols) > 0, 'both zones, separately');
+   (* NOT cty_itu_zone: CTY.DAT's ITU zone was never written by any build and
+     went in schema 11 (issue 94). The received zone is rcvd_zone, CQ or ITU
+     as the contest decides. *)
+   CheckTrue(Pos('|cty_itu_zone|', cols + '|') = 0, 'no CTY.DAT ITU zone column (schema 11)');
 
    (* Split working is not an edge case in a contest. *)
    CheckTrue(Pos('|freq_rx_hz', cols) > 0, 'a split QSO has two frequencies');

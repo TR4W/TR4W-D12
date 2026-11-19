@@ -1,10 +1,12 @@
 # The contest log: schema definition
 
-This document defines the TR4W contest log as it stands at **schema 10**. A
+This document defines the TR4W contest log as it stands at **schema 11**. A
 contest log is one SQLite file per contest.
 
 **The code is the source.** The DDL lives in
-`tr4w/src/domain/uLogSchema.pas` (`LOG_SCHEMA_STATEMENTS`). The migration is
+`tr4w/src/domain/uLogSchema.pas` (`LOG_SCHEMA_STATEMENTS`; the `qso` table and
+its indexes are the named `LOG_QSO_TABLE` and `LOG_QSO_INDEXES`, which the
+schema-11 rebuild runs too). The migration is
 `TLogDatabase.MigrateSchema` in `tr4w/src/domain/uLogDatabase.pas`. The
 column-to-record mapping is `tr4w/src/uLogRepository.pas` (`QSO_COLUMNS`,
 `TQsoColumn`, `BindRecord`, `ReadRecord`). If this document and the code
@@ -23,7 +25,7 @@ disagree, see "Where the plan document disagrees" at the end of this file.
 | what | value | where |
 | --- | --- | --- |
 | `PRAGMA application_id` | `0x54523457` ('TR4W'). 0 is accepted as "never stamped". Any other value is refused. | `LOG_APPLICATION_ID`, `VerifyIdentity` |
-| `PRAGMA user_version` | `LOG_SCHEMA_VERSION`, currently **10** | `uLogSchema` |
+| `PRAGMA user_version` | `LOG_SCHEMA_VERSION`, currently **11** | `uLogSchema` |
 | `PRAGMA journal_mode` | `WAL`, requested and read back. A network share may refuse WAL and fall back to the rollback journal; the open records which one took effect. | `ApplyWritePragmas` |
 | `PRAGMA synchronous` | `FULL`. This differs from SQLite's WAL default (`NORMAL`) on purpose: the log must survive a power cut. | `ApplyWritePragmas` |
 | `PRAGMA foreign_keys` | `ON`, read back. A connection that cannot enable it is refused. | `ApplyPragmas` |
@@ -45,6 +47,15 @@ Rules that apply to every open:
   (`TestAMigrationIsOneCommit` counts the commit frames). Each added column is
   checked with `pragma_table_info` before it is added. The checks are made
   before the first change, so asking them never commits half a migration.
+- **A removed column is a table REBUILD, never `ALTER TABLE DROP COLUMN`**
+  (schema 11). `DROP COLUMN` needs SQLite 3.35, the Linux tarball and macOS
+  use the system library, and 3.42 and later distro builds fail it around
+  comment-only lines (issue #141). The rebuild renames the old table,
+  creates `LOG_QSO_TABLE` verbatim, copies every kept column by name, keeps
+  the AUTOINCREMENT mark, drops the old table and recreates
+  `LOG_QSO_INDEXES`, inside the migration's one transaction. A trigger or
+  view on `qso`, a foreign key to it, or a column this program never made
+  refuses the migration before any change.
 
 ---
 
@@ -212,7 +223,6 @@ A record is not always a QSO. `record_kind` is `QSO`, `QTCR`, `QTCS` or
 | `deleted` | INTEGER | null | 0 | OPERATOR-STATED | the one delete flag |
 | `notes` | TEXT | null | | OPERATOR-STATED | a NOTE record's text |
 | `sent_to_server`, `server_dirty` | INTEGER | null | 0 | DISTRIBUTION | the multi-op server has it / it was edited since |
-| `snr_sent`, `snr_received`, `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`, `rcvd_continent`, `rcvd_postal_code`, `rcvd_society`, `rcvd_department`, `rcvd_rda`, `rcvd_park`, `rcvd_summit`, `rcvd_iota`, `rcvd_coords`, `cty_itu_zone` | | null | | RESERVED | in the DDL and not in `QSO_COLUMNS`. Nothing writes or reads them. |
 | `sent_udp`, `udp_dirty` | INTEGER | null | 0 | RESERVED | distribution state not yet wired |
 | `rcvd_extra` | TEXT | null | | RESERVED | the JSON escape hatch. **Scoring, multipliers and Cabrillo may NOT read it.** A consumer would need a real column. |
 
@@ -322,7 +332,8 @@ deliberate; see `multi-op-network.md`.
 | 7 | no shape change: the re-carry | a year contest's `rcvd_year := rcvd_zone`, every row |
 | 8 | `qso.year_sent` | marked; **the store fills it once** after set-up |
 | 9 | `my_name` .. `my_foc_number` (`LOG_V9_QSO_COLUMNS`) | marked when a row captured a station; **the store fills it once** |
-| **10** | **`qso.is_off_contest`** (`LOG_V10_QSO_OFF_CONTEST_COLUMN`, `INTEGER NOT NULL DEFAULT 0`) | 0, marked when the log holds a QSO; **the store stamps every QSO row once** |
+| 10 | `qso.is_off_contest` (`LOG_V10_QSO_OFF_CONTEST_COLUMN`, `INTEGER NOT NULL DEFAULT 0`) | 0, marked when the log holds a QSO; **the store stamps every QSO row once** |
+| **11** | **REMOVED** sixteen `qso` columns no build ever wrote or read (`LOG_V11_DROPPED_QSO_COLUMNS`): `snr_sent`, `snr_received`, `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`, `rcvd_continent`, `rcvd_postal_code`, `rcvd_society`, `rcvd_department`, `rcvd_rda`, `rcvd_park`, `rcvd_summit`, `rcvd_iota`, `rcvd_coords`, `cty_itu_zone` (issue 94) | the table is **rebuilt** (section 1); every kept value is copied unchanged. A received QTH of any kind is `rcvd_qth`; `my_*` is our station, `rcvd_*` the worked one. |
 
 ### The stamp-once backfill (schemas 8, 9, 10)
 
@@ -410,6 +421,8 @@ on arrival exactly as one from a newer station.
      the last column.
    - Add a `LOG_V<n>_...` `TLogAddedColumn` constant.
    - Bump `LOG_SCHEMA_VERSION` and write the version's paragraph above it.
+   - REMOVING a column is not this checklist: it is a rebuild of the table
+     (schema 11, `TLogDatabase.RebuildQsoTable`), never `DROP COLUMN`.
    - If existing rows need a contest-computed value, add a `..._BACKFILL_KEY`.
 3. **`uLogDatabase.MigrateSchema`**:
    - Ask `pragma_table_info` (and anything else the step needs) BEFORE the
@@ -459,7 +472,9 @@ code wins in each case.
   `uLogSchema.pas` and nothing else. A later note in the plan itself records
   the departure.
 - **The plan's section 13 ("what is built") is stale.**
-- **Section 4 shows `PRAGMA user_version = 1`.** The schema is 10.
+- **Section 4 shows `PRAGMA user_version = 1`.** The schema is 11.
+- **Section 4's DDL lists `snr_*`, the typed `rcvd_*` QTH kinds and
+  `cty_itu_zone`.** Schema 11 removed all sixteen (issue 94).
 - **`contest.last_opened_at`** is in section 4 and absent from the DDL. It was
   removed in 2026-10-16 with no version bump.
 - **Before schema 10, the plan and the agent files described an automatic

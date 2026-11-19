@@ -464,6 +464,12 @@ different event), so Q123 still needs the SRR digital cup's own rules.
   columns, so filling them is not part of recreating D7/D12. Left as they
   are until contestFactory is complete;
   https://github.com/TR4W/TR4W-D12/issues/94
+  **Answered by NY4I, 2026-11-19 (issue 94): DELETE them.** `my_*` is our
+  station and `rcvd_*` the worked one, and a received QTH is `rcvd_qth`.
+  Schema 11 removed all sixteen by a table rebuild
+  (`docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12o). A query by county or section
+  that is wanted later is a new column with a writer, added under a new
+  version.
 
 - **Q111** (found building Q45, 2026-10-17) **IRTS scores by the EUDX table,
   but its domestic file is `ireland.dom`.** The IRTS class has always used

@@ -48,11 +48,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   1. THE RECORD HAS NO SENT-EXCHANGE FIELD. exchange_sent is left alone by this
      unit -- it is filled at log time (Phase C), and that is issue #2.
 
-  2. ELEVEN rcvd_* COLUMNS HAVE NO RECORD SOURCE, because the record carries one
-     polymorphic QTHString. This unit stores the LITERAL and does not guess which
-     of rcvd_grid / rcvd_state / rcvd_park it was: guessing would mean the mapper
-     knowing the contest, which is the fusion the migration order exists to
-     avoid. The contest factory enriches later.
+  2. THE RECORD CARRIES ONE POLYMORPHIC QTHString, and this unit stores it as
+     the LITERAL in rcvd_qth without guessing whether it was a grid, a state or
+     a park: guessing would mean the mapper knowing the contest. The typed
+     rcvd_* columns that would have held such a guess never had a writer and
+     were removed in schema 11 (issue 94; uLogSchema.LOG_V11_DROPPED_QSO_COLUMNS).
 
   3. A SENTINEL IS NOT A VALUE. ClearContestExchange writes -1, MAXBYTE and
      MAXWORD for "not set", so writing them through would put zone 255 and
@@ -1090,7 +1090,7 @@ end;
 procedure BindText(aParam: TParam; const aValue: AnsiString);
 begin
    (* An empty ShortString and a NULL are the same absence. Storing '' would make
-     `WHERE rcvd_grid IS NULL` and `= ''` disagree about the same QSO. *)
+     `WHERE rcvd_qth IS NULL` and `= ''` disagree about the same QSO. *)
    if aValue = '' then
       begin
       aParam.Clear;

@@ -78,6 +78,13 @@
 >   not by the guid, and there is no per-row edit version or sequence column.
 > - **§13 is still wholesale stale**, as the audit above says. It was not
 >   rewritten; read the audit.
+> - **Schema 11 (2026-11-19, issue 94) REMOVED sixteen `qso` columns that §4
+>   lists**: `snr_sent`, `snr_received`, `rcvd_state`, `rcvd_county`,
+>   `rcvd_section`, `rcvd_grid`, `rcvd_continent`, `rcvd_postal_code`,
+>   `rcvd_society`, `rcvd_department`, `rcvd_rda`, `rcvd_park`, `rcvd_summit`,
+>   `rcvd_iota`, `rcvd_coords` and `cty_itu_zone`. No build ever wrote or read
+>   them. §4 and §4a still show them; they are history. See
+>   [§12o](#12o-schema-11--sixteen-unused-columns-removed-by-a-table-rebuild-issue-94-2026-11-19).
 
 **Schema settled 2026-08-29. STARTED 2026-09-01 — see [§13](#13-what-is-built-so-far)
 for what exists, and [§14](#14-decisions-taken-2026-09-01) for the four decisions
@@ -1094,6 +1101,10 @@ thing being protected is the operator's contest.
 Migrations: `user_version` compared on open, refuse to open a database **newer**
 than the running program understands (TR4QT does this, `Database.cpp:177`), and
 each migration guarded by `PRAGMA table_info` so it is idempotent.
+
+**A removed column is a table REBUILD, not `ALTER TABLE DROP COLUMN`** (schema 11,
+§12o). Every migration is still one transaction and one commit, the rebuild
+included.
 
 ---
 
@@ -3177,6 +3188,113 @@ record has no version and insert-only cannot tell which copy is newer
    that allocates; or ranges with gaps, which the TR4QT document itself flags
    as possibly against contest rules.
 3. Hold `#341` phases P2 and P3 until 1 and 2 are decided; do P0 and P1.
+
+---
+
+### 12o. Schema 11 — sixteen unused columns removed by a table rebuild (issue 94, 2026-11-19)
+
+**The ruling.** NY4I, on issue 94: our station's values are `my_*` and the
+worked station's are `rcvd_*`, and *"as long as that is consistent, I do not see
+why we would keep those fields"*. So the typed received-exchange columns that
+nothing used were removed, at the next schema number.
+
+**What was removed** (`uLogSchema.LOG_V11_DROPPED_QSO_COLUMNS`):
+
+- the typed received-QTH kinds: `rcvd_state`, `rcvd_county`, `rcvd_section`,
+  `rcvd_grid`, `rcvd_postal_code`, `rcvd_society`, `rcvd_department`,
+  `rcvd_rda`, `rcvd_park`, `rcvd_summit`, `rcvd_iota`, `rcvd_coords`,
+  `rcvd_continent`
+- the WSJT-X dB reports: `snr_sent`, `snr_received`
+- CTY.DAT's ITU zone: `cty_itu_zone`
+
+**Why they were removable, verified before the change.** Nothing in `tr4w/src`,
+`tr4w/tools`, `tools/`, the test scripts or the Python names any of them, apart
+from the DDL and comments. The record never carried them: it has one polymorphic
+`QTHString`, stored verbatim as `rcvd_qth`, and one `Zone`, stored as
+`rcvd_zone`. `git log -S` finds them only in the commits that created the
+schema and the mapper's comment. All thirteen corpus logs hold NULL in all
+sixteen. **Kept:** `rcvd_year` (written and read since schema 7) and every column
+something writes.
+
+**Why a rebuild and not `ALTER TABLE DROP COLUMN`.**
+
+- `DROP COLUMN` needs SQLite 3.35. Windows ships 3.53.4, the AppImage bundles
+  the Linux CI host's 3.45.1 (measured: Ubuntu 24.04), and macOS CI has 3.54.0.
+  But the Linux tarball and the macOS app use the SYSTEM library, so the
+  version an operator has is not ours to choose: Ubuntu 20.04 has 3.31 and
+  Debian 11 has 3.34, both too old.
+- Issue #141 measured `DROP COLUMN` failing on 3.42 and later distro builds
+  ("incomplete input") around comment-only lines, and the sixteen sit among
+  exactly such lines.
+- Where it works, it cuts the stored CREATE text from the column's name to the
+  next one, so a comment is lost or orphaned (measured for
+  `contest.last_opened_at`, see `uLogSchema`).
+
+**The rebuild** (`TLogDatabase.RebuildQsoTable`, SQLite's documented recipe
+for a change `ALTER TABLE` cannot make), run last in `MigrateSchema` and inside
+its one transaction:
+
+1. `ALTER TABLE qso RENAME TO qso_before_v11`. The old table is renamed first,
+   so the new one is created under its own name and its stored text is
+   `LOG_QSO_TABLE` verbatim. A table renamed INTO `qso` would have its text
+   rewritten by SQLite.
+2. Create `LOG_QSO_TABLE`, the same constant a new log runs.
+3. Copy every kept column BY NAME: the columns asked of `pragma_table_info`
+   before the migration changed anything, plus those its own `ADD COLUMN`s
+   appended, less the sixteen. Not intersected with the new table: a column
+   this program never made makes the copy fail, and the whole migration rolls
+   back. No data is lost in silence.
+4. Put back the AUTOINCREMENT high-water mark. The copy leaves the new table's
+   `sqlite_sequence` row at `max(id)`. That is lower than the old mark wherever
+   the newest rows were deleted (Clear Log deletes every row), and would hand
+   out an id twice.
+5. Drop the old table, which takes its indexes and its sequence row with it.
+   Then recreate `LOG_QSO_INDEXES`, the same constants `LOG_SCHEMA_STATEMENTS`
+   names.
+
+**What it refuses, before any change.** A trigger on `qso`, any view, or a foreign
+key referencing `qso` would be dropped or misdirected by the rebuild. This program
+creates none of them, so one in the file is not ours to destroy. The open fails
+with a message that names it, and the file is untouched.
+
+**A trap met on the way, measured.** The first version of the rebuild read
+`qso`'s column list as one `group_concat` through `PragmaAsString`. sqlite3conn
+types any expression column (no declared type) as an `ftString` of 255
+characters and silently cuts a longer value. So every column past the cut was
+left out of the copy, and `is_off_contest` came back 0. The fixture test caught
+it. The list is now read one row per column (`TLogDatabase.PragmaRowsAsText`),
+and the tests compare content field by field for the same reason.
+
+**The restrictions `DROP COLUMN` would have had, checked anyway.** No index,
+CHECK constraint, foreign key, view or trigger names any of the sixteen. So a
+`DROP COLUMN` would have been legal on Windows. The rebuild was chosen for the
+reasons above, not because a restriction applied.
+
+**Consequence, the usual one.** Schema 10 shipped. A log this build has opened is
+refused by every earlier build, so keep a copy of a log before trying a new build
+on it. **No migration takes a backup first, before or after this one.** Every
+migration relies on being one transaction: either everything lands or nothing
+does. Issue 94's comment said "a backup first, as the earlier migrations do",
+and that does not match the code. Whether a destructive migration should take a
+verified backup first (the store has `LogStoreBackupBefore`, but `TLogDatabase.Open`
+migrates in the leaf before the store gets control) is a decision left open for
+NY4I.
+
+**Tests** (`uTestLogDroppedColumns`):
+
+- The fixture is a REAL schema-10 file: `test/unit/fixtures/logdb/florida_qp_schema10.db`
+  is the corpus's `florida_qp` log, migrated 2 -> 10 by a headless `/EXPORT` of the
+  schema-10 tree.
+- The rebuild is ONE commit.
+- Every kept column of every row is unchanged.
+- A value written into two of the sixteen does not survive.
+- A raised AUTOINCREMENT mark does survive.
+- `sqlite_master` for `qso` and its indexes equals a new log's.
+- A second open commits nothing.
+- A trigger, or a foreign column, refuses the migration and leaves the file at 10.
+- `DowngradeTestLog` gives an older-schema fixture the sixteen back, at the end of
+  the table, so every older migration test now runs through the rebuild too.
+- The corpus migrates its thirteen schema-2 logs through it on every run.
 
 ---
 
