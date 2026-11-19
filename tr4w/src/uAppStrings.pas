@@ -1561,6 +1561,26 @@ resourcestring
    SExchangeHintRandomChars    = 'random characters';
    SExchangeHintAnd            = '%0:s and %1:s';
 
+   (* Tools -> Commands (issue 87 step 0): one item per call-window command.
+     Each caption leads with the word the call window accepts, so the menu
+     also teaches what can be typed there. *)
+   SCmdMenuCommands      = 'Commands';
+   SCmdMenuADIF          = 'ADIF - export the log as ADIF';
+   SCmdMenuCAB           = 'CAB - export the log as Cabrillo';
+   SCmdMenuCMD           = 'CMD - open a command prompt';
+   SCmdMenuCOL           = 'COL - colours';
+   SCmdMenuCWOFF         = 'CWOFF - turn CW off';
+   SCmdMenuCWON          = 'CWON - turn CW on';
+   SCmdMenuEXIT          = 'EXIT - exit TR4W';
+   SCmdMenuNOTE          = 'NOTE - add a note to the log';
+   SCmdMenuOPON          = 'OPON - operator log-in';
+   SCmdMenuSCORE         = 'SCORE - send the score by UDP';
+   SCmdMenuSUM           = 'SUM - summary sheet';
+   SCmdMenuUDP           = 'UDP - send the whole log by UDP';
+   SCmdMenuWCY           = 'WCY - ask the cluster for SH/WCY';
+   SCmdMenuWWV           = 'WWV - ask the cluster for SH/WWV';
+   SCmdMenuPREF          = 'PREF - Preferences';
+
    { ------------------------------------------------------- setup wizard --- }
 
    (* The setup wizard (uSetupWizardForm): opens by itself on a brand-new

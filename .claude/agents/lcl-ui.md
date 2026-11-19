@@ -313,6 +313,20 @@ decided whether stations could talk. Now it connects nothing and stops nothing:
   not by the window. The top-level popup is never greyed, because it holds the
   way to get started.
 
+## Call-window commands are also menu items (issue 87 step 0, 2026-11-19)
+
+- `MainUnit.CheckCommandInCallsignWindow(aCommand)` takes the command as TEXT:
+  the call window passes what was typed, each Tools -> Commands item its own
+  word (`ProcessMenu`'s `menu_cmd_adif..menu_cmd_pref` arm). One routine, so a
+  typed word and a click cannot run different arms; the menu path does not
+  clear the call window.
+- `uMenu.CALL_WINDOW_COMMANDS` pairs each word with its `menu_cmd_` id, and the
+  routine's `case` is on that NAMED id -- never a position in a word list (the
+  `AnsiIndexText` list it replaced fired the wrong arm on an insertion). A new
+  command is an id in VC's block, a row there, a menu row and caption, and an
+  arm. `uTestMenuShortcuts.Test_EveryCallWindowCommandHasOneMenuItem` pins both
+  directions. `TXON`/`TXOFF` are still a separate `if` in `MainUnit` (not moved).
+
 ## Window z-order: who owns whom (2026-11-01)
 
 - The main form is `ShowInTaskBar = stAlways`, so on Windows it is UNOWNED.

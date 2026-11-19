@@ -1161,9 +1161,11 @@ begin
       CWEnabled := True;
       Config.CWEnable := True;
       tAutoSendMode := True;
-      CallWindowString := 'CWOFF';
+      (* THE COMMAND IS THE PARAMETER, not the call window's text (issue 87
+        step 0): the window holds something else, and CWOFF still runs. *)
+      CallWindowString := 'W1AW';
       SpyLog := '';
-      CheckTrue(CheckCommandInCallsignWindow, 'CWOFF is a call-window command');
+      CheckTrue(CheckCommandInCallsignWindow('CWOFF'), 'CWOFF is a call-window command');
       CheckFalse(CWEnabled, 'CWOFF clears the transmit gate');
       CheckFalse(Config.CWEnable, 'CWOFF clears the configured flag with it');
       CheckFalse(tAutoSendMode, 'the flush ended autosend');
@@ -1190,19 +1192,30 @@ begin
 
       (* CWOFF while CW is already off: the call window's own guard. *)
       SpyLog := '';
-      CheckTrue(CheckCommandInCallsignWindow, 'CWOFF is still consumed');
+      CheckTrue(CheckCommandInCallsignWindow('cwoff'), 'CWOFF is still consumed, in any case');
       CheckEquals('', SpyLog, 'CWOFF while off flushes nothing and sets no speed');
       CheckFalse(CWEnabled or Config.CWEnable, 'and CW stays off');
 
       (* CWON. *)
-      CallWindowString := 'CWON';
       SpyLog := '';
-      CheckTrue(CheckCommandInCallsignWindow, 'CWON is a call-window command');
+      CheckFalse(CheckCommandInCallsignWindow('W1AW'), 'a call is no command');
+      CheckEquals('', SpyLog, 'and runs nothing');
+      CheckTrue(CheckCommandInCallsignWindow('CWON'), 'CWON is a call-window command');
       CheckTrue(CWEnabled, 'CWON sets the transmit gate');
       CheckTrue(Config.CWEnable, 'CWON sets the configured flag with it');
       CheckEquals(SPEED_BROADCAST, SpyLog, 'CWON flushes nothing and re-broadcasts the speed');
       CheckEquals('CW On', string(MainElement(mweQuickCommand).Caption),
                   'CWON says CW On');
+
+      (* TOOLS -> COMMANDS runs the same arm (issue 87 step 0). *)
+      CallWindowString := 'K1ABC';
+      SpyLog := '';
+      ProcessMenu(menu_cmd_cwoff);
+      CheckFalse(CWEnabled or Config.CWEnable, 'the CWOFF menu item turns CW off');
+      CheckEquals(FLUSH_BROADCAST + SPEED_BROADCAST, SpyLog,
+                  'through the same SetCWState call as the typed CWOFF');
+      CheckEquals('K1ABC', string(CallWindowString),
+                  'and the menu leaves the call window alone');
    finally
       logger.RemoveAppender(keep);
       logger.Level := savedLevel;
