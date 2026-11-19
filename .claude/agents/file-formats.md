@@ -120,8 +120,9 @@ runs K1MU's validator, vendored in `tools/adifvalidator/` (`VENDORED.md` holds o
 every local patch -- it is Python with tabs; do not reindent), over the ADIF the corpus, the ADIF
 round trip and the contest matrix produce. A `Compliance error` fails; `Consistency error`
 findings are counted only. The corpus cannot do this job: the D7 references are themselves not
-valid ADIF. `ADIF_SPEC_VERSION` (`uADIF`) is 3.1.6, and `uTestADIF` pins every tag we write against
-that version's field list. A tag we write that the spec lacks is a finding to fix in the exporter, not
+valid ADIF. `ADIF_SPEC_VERSION` (`uADIF`) is 3.1.8 (2026-11-19: it lists the MFSK submode JTTY, which TR4W now
+writes as `MODE MFSK` + `SUBMODE JTTY`; 3.1.7/3.1.8 add no field), and `uTestADIF` pins every tag we write
+against 3.1.6's field list, which is still the field list. The validator's JTTY row is a recorded local patch. A tag we write that the spec lacks is a finding to fix in the exporter, not
 something to patch into the validator (`DOK` became `DARC_DOK` and `FOC_NUM` became
 `APP_TR4W_FOC_NUM` on 2026-10-23; the import still reads the old names). **The export writes a
 field only when its value has ADIF's shape** (`uADIF.IsADIFNumber`, `IsADIFGridSquare`,

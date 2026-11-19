@@ -842,7 +842,7 @@ const
      MODE:SUBMODE pairs. *)
    ADIFSubModeEnumeration =
       ',SSB:USB,SSB:LSB,PSK:PSK31,PSK:PSK63,MFSK:FT4,MFSK:JS8,' +
-      'MFSK:FST4,MFSK:FST4W,' +
+      'MFSK:FST4,MFSK:FST4W,MFSK:JTTY,' +
       'DIGITALVOICE:C4FM,DIGITALVOICE:DSTAR,';
 
 procedure TADIFHelperTests.Test_ExtMode_ExportsAnADIFMode_Exhaustive;
@@ -901,9 +901,8 @@ begin
    // ADIF 3.1.6 Submode enumeration: FST4 and FST4W are submodes of MFSK.
    Pair(eFST4,   'MFSK', 'FST4');
    Pair(eFST4W,  'MFSK', 'FST4W');
-   // Issue 120: JTTY is NOT an ADIF 3.1.6 submode -- MODE MFSK, no
-   // SUBMODE; the name goes in APP_TR4W_SUBMODE (Test_JTTY_...).
-   Pair(eJTTY,   'MFSK', '');
+   // Issue 120: ADIF 3.1.8 added JTTY as a submode of MFSK.
+   Pair(eJTTY,   'MFSK', 'JTTY');
    Pair(eMFSK,   'MFSK', '');
    Pair(eFT8,    'FT8',  '');
    Pair(eJT65,   'JT65', '');
@@ -980,9 +979,12 @@ var
    hdr  : string;
 begin
    BeginTest('Test_EmittedTagsAreADIF316Fields');
-   CheckEquals('3.1.6', ADIF_SPEC_VERSION, 'declared spec version');
+   (* 3.1.7 and 3.1.8 add no QSO or header field (their changes are modes,
+     submodes, contest ids and a region), so the lists below are still the
+     ones to check against. *)
+   CheckEquals('3.1.8', ADIF_SPEC_VERSION, 'declared spec version');
    hdr := EmitADIFHeader('x');
-   CheckTrue(Pos('<ADIF_VER:5>3.1.6', hdr) > 0, 'the header declares 3.1.6');
+   CheckTrue(Pos('<ADIF_VER:5>3.1.8', hdr) > 0, 'the header declares 3.1.8');
    CheckTrue(Pos(',ADIF_VER,', ADIF316HeaderFields) > 0, 'header field ADIF_VER');
    CheckTrue(Pos(',CREATED_TIMESTAMP,', ADIF316HeaderFields) > 0, 'header field');
    CheckTrue(Pos(',PROGRAMID,', ADIF316HeaderFields) > 0, 'header field');
@@ -1237,26 +1239,20 @@ begin
              'header text must hold no "<"');
 end;
 
-(* JTTY, ISSUE 120. WSJT-X 3.3 writes MODE MFSK + SUBMODE JTTY, which ADIF
-  3.1.6 does not list (the validator's compliance error). TR4W reads that
-  form, and WRITES MODE MFSK with the name in APP_TR4W_SUBMODE, which its own
-  import restores. Exhaustive over the enum: only eJTTY names an app
-  submode. *)
+(* JTTY, ISSUE 120. WSJT-X 3.3 writes MODE MFSK + SUBMODE JTTY, and ADIF
+  3.1.8 lists JTTY as a submode of MFSK, so TR4W writes that form too. The
+  5.0.43 draft wrote MODE MFSK with the name in APP_TR4W_SUBMODE (3.1.6 had no
+  JTTY); a file it wrote must still import. *)
 procedure TADIFHelperTests.Test_JTTY_WritesAValidModeAndRoundTrips;
 var
    rec     : ContestExchange;
    s       : string;
    records : TContestExchangeArray;
-   e       : ExtendedModeType;
    m       : ModeAndExtendedModeType;
 begin
    BeginTest('Test_JTTY_WritesAValidModeAndRoundTrips');
-   for e := Low(ExtendedModeType) to High(ExtendedModeType) do
-      begin
-      CheckTrue((e = eJTTY) = (ADIFAppSubModeForExtMode(e) <> ''),
-                  ExtendedModeStringArray[e] + ' names an app submode');
-      end;
-   CheckEquals('JTTY', ADIFAppSubModeForExtMode(eJTTY), 'the name');
+   CheckEquals('MFSK', ADIFModeForExtMode(eJTTY), 'MODE');
+   CheckEquals('JTTY', ADIFSubModeForExtMode(eJTTY), 'SUBMODE');
    CheckEquals('JTTY', ExtendedModeStringArray[eJTTY], 'TR4W''s own token');
 
    // WSJT-X's own record, as LOGGEDADIF hands it over.
@@ -1268,7 +1264,7 @@ begin
       'WSJT-X form read');
    CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'WSJT-X form -> eJTTY');
 
-   // TR4W's export: a valid MODE, no SUBMODE, the app field.
+   // TR4W's export: MODE MFSK, SUBMODE JTTY, and no app field.
    rec := Default(ContestExchange);
    rec.Callsign := 'KG1S';
    rec.Band     := Band20;
@@ -1276,13 +1272,18 @@ begin
    rec.ExtMode  := eJTTY;
    s := EmitADIFRecord(rec);
    CheckTrue(Pos('<MODE:4>MFSK', s) > 0, 'MODE MFSK');
-   CheckTrue(Pos('<SUBMODE:', s) = 0, 'no SUBMODE ADIF 3.1.6 lacks');
-   CheckTrue(Pos('<APP_TR4W_SUBMODE:4>JTTY', s) > 0, 'the name in the app field');
+   CheckTrue(Pos('<SUBMODE:4>JTTY', s) > 0, 'SUBMODE JTTY');
+   CheckTrue(Pos('APP_TR4W_SUBMODE', s) = 0, 'no app field any more');
    CheckEquals(1, ImportADIFFromString(s + '<EOR>', records), 'read back');
    CheckTrue(records[0].Mode = Digital, 'round trip: Digital');
    CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'round trip: eJTTY');
 
-   // The field may precede MODE; it is applied once the record is read.
+   // The draft's form still reads, and the field may precede MODE; it is
+   // applied once the record is read.
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <MODE:4>MFSK <APP_TR4W_SUBMODE:4>JTTY <EOR>', records),
+      'the 5.0.43 draft form');
+   CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'draft form -> eJTTY');
    CheckEquals(1, ImportADIFFromString(
       '<CALL:4>KG1S <APP_TR4W_SUBMODE:4>JTTY <MODE:4>MFSK <EOR>', records),
       'field before MODE');
@@ -1298,9 +1299,9 @@ begin
       'beside SUBMODE FT4');
    CheckEquals(Integer(eFT4), Integer(records[0].ExtMode), 'FT4 stays FT4');
 
-   // No other mode writes the field.
+   // FT4 is its own submode, untouched.
    rec.ExtMode := eFT4;
-   CheckTrue(Pos('APP_TR4W_SUBMODE', EmitADIFRecord(rec)) = 0, 'FT4 writes no app submode');
+   CheckTrue(Pos('<SUBMODE:3>FT4', EmitADIFRecord(rec)) > 0, 'FT4 writes SUBMODE FT4');
 end;
 
 procedure TADIFHelperTests.Test_OldTR4WSpellingsStillImport;
