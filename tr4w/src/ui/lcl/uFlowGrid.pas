@@ -65,15 +65,31 @@ uses
 type
    TFlowGrid = class
    private
-      FGrid: TDrawGrid;
+      (* A TStringGrid (issue 216): LayOut writes each cell's text into the
+        grid's own Cells, so the grid paints and repaints itself. A grid that
+        is still a TDrawGrid holds no text and is invalidated by EndRebuild
+        instead -- the transitional arm, deleted with the last such window. *)
+      FGrid: TCustomDrawGrid;
       (* Each cell's text, with the window's own typed cell in Objects[] --
-        see AddCell. OwnsObjects is set, so the list frees the cells. *)
+        see AddCell. OwnsObjects is set, so the list frees the cells.
+
+        NOT A SECOND COPY OF THE GRID'S CELLS: this is the ORDER, one entry
+        after another, and the grid's Cells are its projection onto the
+        current columns. A resize reflows that projection from this list
+        (LayOut); the cells alone could not say which entry comes next. *)
       FCalls: TStringList;
       FCellWidth: integer;
       FCellHeight: integer;
       FLimitToVisible: boolean;
+
+      (* THE TEXT INTO THE GRID'S OWN CELLS, down then across, '' past the end
+        so a shorter rebuild leaves nothing of the last one behind. One
+        BeginUpdate/EndUpdate around the whole pass: the SCP window rebuilds on
+        every keystroke, and each bare Cells[] write would invalidate its own
+        cell. *)
+      procedure WriteCells;
    public
-      constructor Create(const aGrid: TDrawGrid;
+      constructor Create(const aGrid: TCustomDrawGrid;
                          const aCellWidth, aCellHeight: integer);
       destructor Destroy; override;
 
@@ -128,7 +144,7 @@ type
 
 implementation
 
-constructor TFlowGrid.Create(const aGrid: TDrawGrid;
+constructor TFlowGrid.Create(const aGrid: TCustomDrawGrid;
                              const aCellWidth, aCellHeight: integer);
 begin
    inherited Create;
@@ -225,16 +241,42 @@ end;
 
 procedure TFlowGrid.EndRebuild;
 begin
-   // The cell count changed, so the shape is recomputed -- and then repainted,
-   // because a grid whose cells carry no text of their own has no way to know
-   // its model moved.  That lesson cost an afternoon on the possible-call list
-   // (2026-08-24): the Win32 list box repainted because each item's DATA
-   // differed, which was never a decision anyone made.
+   // The cell count changed, so the shape is recomputed and the text written
+   // into the grid's Cells, which repaints what changed.
    LayOut;
-   if FGrid <> nil then
+
+   // TRANSITIONAL (issue 216): a TDrawGrid's cells carry no text of their
+   // own, so it has no way to know its model moved and is told. Goes with the
+   // last TDrawGrid window.
+   if (FGrid <> nil) and not (FGrid is TCustomStringGrid) then
       begin
       FGrid.Invalidate;
       end;
+end;
+
+procedure TFlowGrid.WriteCells;
+var
+   sg: TCustomStringGrid;
+   c, r: integer;
+begin
+   if not (FGrid is TCustomStringGrid) then
+      begin
+      Exit;
+      end;
+   sg := TCustomStringGrid(FGrid);
+
+   sg.BeginUpdate;
+   try
+      for c := 0 to sg.ColCount - 1 do
+         begin
+         for r := 0 to sg.RowCount - 1 do
+            begin
+            sg.Cells[c, r] := TextAt(IndexAt(c, r));   // '' past the end
+            end;
+         end;
+   finally
+      sg.EndUpdate;
+   end;
 end;
 
 procedure TFlowGrid.LayOut;
@@ -272,6 +314,9 @@ begin
       begin
       FGrid.ColCount := colsAcross;
       end;
+
+   // After the shape, which decides where each entry lands.
+   WriteCells;
 end;
 
 procedure TFlowGrid.SetCellWidth(const aWidth: integer);

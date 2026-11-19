@@ -26,7 +26,8 @@ unit uTestFlowGridCells;
 interface
 
 uses
-   SysUtils, VC, uTR4WTestFramework;
+   SysUtils, VC, uTR4WTestFramework,
+   uDupeSheetForm;   (* TfrmDupeSheet -- CheckFlowCells reads its grid *)
 
 type
    TFlowGridCellTests = class(TTestCase)
@@ -34,6 +35,11 @@ type
       procedure Test_DupeSheet_EveryCallKeepsItsDistrict;
       procedure Test_DupeSheet_ARebuildReplacesTheCells;
       procedure Test_DupeSheet_ACellPastTheEndHasNoDistrict;
+      procedure CheckFlowCells(const aForm: TfrmDupeSheet; const aCount: integer;
+                               const aWhen: string);
+      procedure Test_DupeSheet_TheGridHoldsTheCallsInItsCells;
+      procedure Test_DupeSheet_AShorterRebuildLeavesNoOldText;
+      procedure Test_DupeSheet_AResizeReflowsTheCells;
       procedure Test_SCP_EveryCallKeepsItsDupeFlag;
       procedure Test_SCP_ACallPastCapacityIsRefused;
       procedure Test_RemMults_EveryCellKeepsItsKindAndIndex;
@@ -47,7 +53,7 @@ implementation
 
 uses
    Forms,             (* Application *)
-   uDupeSheetForm,
+   Controls,          (* alNone -- the reflow test sizes the grid itself *)
    uMasterForm,
    uRemMultsForm;
 
@@ -143,6 +149,122 @@ begin
       FillDupeSheet(f);
       CheckEquals(Ord(#0), Ord(f.DistrictAt(Length(DUPE_CALLS))), 'one past the end');
       CheckEquals(Ord(#0), Ord(f.DistrictAt(-1)), 'index -1');
+   finally
+      f.Free;
+   end;
+end;
+
+(* ISSUE 216: THE CALLS ARE IN THE GRID'S OWN CELLS, down then across, so
+  the grid paints them itself. Read from grdDupes.Cells, never from the
+  model, because the model being right is what the tests above prove. *)
+
+(* aCount calls named C0, C1, ... with district '1'. *)
+procedure FillDupeSheetWith(const aForm: TfrmDupeSheet; const aCount: integer);
+var
+   i: integer;
+begin
+   aForm.Calls.BeginRebuild;
+   for i := 0 to aCount - 1 do
+      begin
+      aForm.AddCall('C' + IntToStr(i), '1');
+      end;
+   aForm.Calls.EndRebuild;
+end;
+
+(* Every cell holds the entry the flow puts there, or '' past the end. *)
+procedure TFlowGridCellTests.CheckFlowCells(const aForm: TfrmDupeSheet;
+                                            const aCount: integer; const aWhen: string);
+var
+   c, r, idx: integer;
+   expected: string;
+begin
+   for c := 0 to aForm.grdDupes.ColCount - 1 do
+      begin
+      for r := 0 to aForm.grdDupes.RowCount - 1 do
+         begin
+         idx := c * aForm.grdDupes.RowCount + r;
+         expected := '';
+         if idx < aCount then
+            begin
+            expected := 'C' + IntToStr(idx);
+            end;
+         CheckEquals(expected, aForm.grdDupes.Cells[c, r],
+                     aWhen + ': cell ' + IntToStr(c) + ',' + IntToStr(r));
+         end;
+      end;
+end;
+
+procedure TFlowGridCellTests.Test_DupeSheet_TheGridHoldsTheCallsInItsCells;
+var
+   f: TfrmDupeSheet;
+   rows: integer;
+begin
+   BeginTest('Dupe sheet: the calls are in the grid''s own Cells, down then across');
+   InitWidgetSet;
+   f := TfrmDupeSheet.Create(nil);
+   try
+      rows := f.grdDupes.ClientHeight div f.grdDupes.DefaultRowHeight;
+      CheckTrue(rows > 1, 'the designed grid shows more than one row');
+      (* Two full columns and two cells into a third. *)
+      FillDupeSheetWith(f, 2 * rows + 2);
+      CheckEquals(rows, f.grdDupes.RowCount, 'row count is what fits');
+      CheckEquals(3, f.grdDupes.ColCount, 'column count follows the calls');
+      CheckEquals('C0', f.grdDupes.Cells[0, 0], 'first call at the top left');
+      CheckEquals('C' + IntToStr(rows), f.grdDupes.Cells[1, 0],
+                  'the call after the first column heads the second');
+      CheckFlowCells(f, 2 * rows + 2, 'after a rebuild');
+   finally
+      f.Free;
+   end;
+end;
+
+(* THE LAST COLUMN IS RARELY FULL. A rebuild with fewer calls -- a band
+  change -- must leave no text from the previous one in the cells it no
+  longer fills. *)
+procedure TFlowGridCellTests.Test_DupeSheet_AShorterRebuildLeavesNoOldText;
+var
+   f: TfrmDupeSheet;
+   rows: integer;
+begin
+   BeginTest('Dupe sheet: a shorter rebuild leaves none of the last one in the cells');
+   InitWidgetSet;
+   f := TfrmDupeSheet.Create(nil);
+   try
+      rows := f.grdDupes.ClientHeight div f.grdDupes.DefaultRowHeight;
+      FillDupeSheetWith(f, 2 * rows);
+      FillDupeSheetWith(f, rows + 1);
+      CheckEquals(2, f.grdDupes.ColCount, 'column count after the shorter rebuild');
+      CheckFlowCells(f, rows + 1, 'after a shorter rebuild');
+      CheckEquals('', f.grdDupes.Cells[1, 1], 'the cell after the last call is empty');
+
+      FillDupeSheetWith(f, 0);
+      CheckFlowCells(f, 0, 'after an empty rebuild');
+   finally
+      f.Free;
+   end;
+end;
+
+(* A RESIZE REFLOWS: fewer rows fit, so the same calls take more columns,
+  and every cell is rewritten for the new shape. The grid is taken off
+  alClient so the height is the test's to set; the form is never shown. *)
+procedure TFlowGridCellTests.Test_DupeSheet_AResizeReflowsTheCells;
+var
+   f: TfrmDupeSheet;
+   rows: integer;
+begin
+   BeginTest('Dupe sheet: a resize reflows the calls through the cells');
+   InitWidgetSet;
+   f := TfrmDupeSheet.Create(nil);
+   try
+      FillDupeSheetWith(f, 10);
+      f.grdDupes.Align  := alNone;
+      f.grdDupes.Height := 4 * f.grdDupes.DefaultRowHeight;
+      f.Calls.LayOut;
+      rows := f.grdDupes.ClientHeight div f.grdDupes.DefaultRowHeight;
+      CheckEquals(rows, f.grdDupes.RowCount, 'row count after the resize');
+      CheckEquals((10 + rows - 1) div rows, f.grdDupes.ColCount,
+                  'column count after the resize');
+      CheckFlowCells(f, 10, 'after a resize');
    finally
       f.Free;
    end;
@@ -315,6 +437,9 @@ begin
    Test_DupeSheet_EveryCallKeepsItsDistrict;
    Test_DupeSheet_ARebuildReplacesTheCells;
    Test_DupeSheet_ACellPastTheEndHasNoDistrict;
+   Test_DupeSheet_TheGridHoldsTheCallsInItsCells;
+   Test_DupeSheet_AShorterRebuildLeavesNoOldText;
+   Test_DupeSheet_AResizeReflowsTheCells;
    Test_SCP_EveryCallKeepsItsDupeFlag;
    Test_SCP_ACallPastCapacityIsRefused;
 end;
