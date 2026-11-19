@@ -1070,20 +1070,33 @@ const
       'DIGITAL MODE ENABLE', 'QTC ENABLE', 'QTC EXTRA SPACE', 'QTC MINUTES',
       'QTC QRS', 'MULT SHEET AUTO RESET', 'CUSTOM INITIAL EXCHANGE STRING',
       'INITIAL EXCHANGE OVERWRITE', 'TEN MINUTE RULE');
-   OFF_THE_LIST: array[0..24] of string = (
+   OFF_THE_LIST: array[0..22] of string = (
       'CONTEST', 'MY CONTINENT', 'INITIAL EXCHANGE CURSOR POS',
       'COPY FILES', 'CQ MENU', 'DISPLAY REFRESH', 'DVK PORT', 'HOUR OFFSET',
       'ICOM COMMAND PAUSE', 'INPUT CONFIG FILE', 'MULTIPLIER ITEM WIDTH',
       'PADDLE PORT', 'TAIL END CW MESSAGE', 'TAIL END KEY',
       'TAIL END MESSAGE', 'TAIL END SSB MESSAGE', 'CONNECTION COMMAND',
       (* the contest's messages and the operator's habits: not shared *)
-      'QSL MESSAGE', 'QSO BEFORE MESSAGE', 'CALL OK NOW MESSAGE',
-      'QUICK QSL MESSAGE', 'AUTO DUPE ENABLE CQ', 'AUTO DUPE ENABLE S AND P',
-      'EXCHANGE MEMORY ENABLE', 'BAND');
+      'QUICK QSL CW MESSAGE', 'QUICK QSL SSB MESSAGE', 'AUTO DUPE ENABLE CQ',
+      'AUTO DUPE ENABLE S AND P', 'EXCHANGE MEMORY ENABLE', 'BAND');
 var
    i: integer;
 begin
    BeginTest('the shared list is the one NY4I ruled');
+   for i := Low(OFF_THE_LIST) to High(OFF_THE_LIST) do
+      begin
+      (* a name that resolves to nothing would pass CheckFalse for the wrong
+        reason: the OFF names that are meant to be settings must be settings *)
+      if (OFF_THE_LIST[i] = 'CONTEST') or (OFF_THE_LIST[i] = 'MY CONTINENT') or
+         (OFF_THE_LIST[i] = 'INITIAL EXCHANGE CURSOR POS') or
+         (Pos('QUICK QSL', OFF_THE_LIST[i]) = 1) or
+         (Pos('AUTO DUPE', OFF_THE_LIST[i]) = 1) or
+         (OFF_THE_LIST[i] = 'EXCHANGE MEMORY ENABLE') then
+         begin
+         CheckTrue(Settings.OwnsCommand(OFF_THE_LIST[i]),
+                   OFF_THE_LIST[i] + ' is a setting: its absence from the list means something');
+         end;
+      end;
    for i := Low(ON_THE_LIST) to High(ON_THE_LIST) do
       begin
       CheckTrue(Settings.OwnsCommand(ON_THE_LIST[i]),
@@ -1106,11 +1119,19 @@ procedure TNetClientPacketTests.Test_APeersOwnPositionSettingsAreRefused;
 const
    OWN: array[0..6] of string = ('BAND', 'MODE', 'CODE SPEED', 'CW TONE',
       'WEIGHT', 'FARNSWORTH ENABLE', 'FARNSWORTH SPEED');
+   CANDIDATES: array[0..6] of array[0..3] of string = (
+      ('20', '40', '80', '15'),
+      ('CW', 'SSB', 'RTTY', 'FM'),
+      ('25', '30', '35', '28'),
+      ('600', '700', '500', '800'),
+      ('1.0', '1.1', '0.9', '1.2'),
+      ('TRUE', 'FALSE', 'TRUE', 'FALSE'),
+      ('20', '25', '30', '22'));
 var
    link: TCaptureLink;
-   i: integer;
+   i, k: integer;
    before, sent: string;
-   desync: boolean;
+   stated, desync: boolean;
    rec: TParameterToNetworkPtr;
 begin
    BeginTest('a peer''s band, mode and CW keying are refused on receipt');
@@ -1120,15 +1141,22 @@ begin
          begin
          CheckTrue(CommandIsOnePositionsOwn(OWN[i]), OWN[i] + ' is a position''s own');
          before := LiveValue(OWN[i]);
-         sent := 'NOT ' + before;
-         if before = 'TRUE' then
+         stated := Settings.CommandIsStated(OWN[i]);
+         (* THE PREMISE: a value that differs from the live one and that the
+           settings object would take. Without it the "not applied" check
+           below would pass for a value the object refuses anyway. *)
+         sent := '';
+         for k := Low(CANDIDATES[i]) to High(CANDIDATES[i]) do
             begin
-            sent := 'FALSE';
-            end
-         else if before = 'FALSE' then
-            begin
-            sent := 'TRUE';
+            if (sent = '') and (CANDIDATES[i][k] <> before) and
+               Settings.TrySetByCommand(OWN[i], CANDIDATES[i][k]) then
+               begin
+               sent := CANDIDATES[i][k];
+               end;
             end;
+         RestoreSetting(OWN[i], before, stated);
+         CheckTrue(sent <> '', OWN[i] + ': a differing value the setting accepts was found');
+         CheckEquals(before, LiveValue(OWN[i]), OWN[i] + ' was put back');
          rec := TParameterToNetworkPtr(@NetBuffer[1]);
          rec^ := Default(TParameterToNetwork);
          rec^.pnID := NET_PARAMETER_ID;
