@@ -42,6 +42,7 @@ type
       procedure Test_DupeSheet_AResizeReflowsTheCells;
       procedure Test_SCP_EveryCallKeepsItsDupeFlag;
       procedure Test_SCP_ACallPastCapacityIsRefused;
+      procedure Test_SCP_TheGridHoldsTheCallsInItsCells;
       procedure Test_RemMults_EveryCellKeepsItsKindAndIndex;
       procedure Test_RemMults_ARebuildReplacesTheCells;
       procedure Test_RemMults_ACellPastTheEndIsNotAMultiplier;
@@ -341,6 +342,51 @@ begin
    end;
 end;
 
+(* ISSUE 216: THE PARTIAL MATCHES ARE IN THE GRID'S OWN CELLS, and a shorter
+  match list -- the next keystroke -- leaves nothing of the last one behind. *)
+procedure TFlowGridCellTests.Test_SCP_TheGridHoldsTheCallsInItsCells;
+var
+   f: TfrmMaster;
+   i, c, r, idx: integer;
+begin
+   BeginTest('SCP window: the calls are in the grid''s own Cells, and a shorter list clears the rest');
+   InitWidgetSet;
+   f := TfrmMaster.Create(nil);
+   try
+      f.Calls.BeginRebuild;
+      for i := Low(SCP_CALLS) to High(SCP_CALLS) do
+         begin
+         f.AddCall(SCP_CALLS[i], SCP_DUPES[i]);
+         end;
+      f.Calls.EndRebuild;
+      for i := Low(SCP_CALLS) to High(SCP_CALLS) do
+         begin
+         c := i div f.grdMaster.RowCount;
+         r := i mod f.grdMaster.RowCount;
+         CheckEquals(SCP_CALLS[i], f.grdMaster.Cells[c, r], 'cell of ' + SCP_CALLS[i]);
+         end;
+
+      f.Calls.BeginRebuild;
+      f.AddCall('K1AR', True);
+      f.Calls.EndRebuild;
+      CheckEquals('K1AR', f.grdMaster.Cells[0, 0], 'the one match left');
+      for c := 0 to f.grdMaster.ColCount - 1 do
+         begin
+         for r := 0 to f.grdMaster.RowCount - 1 do
+            begin
+            idx := c * f.grdMaster.RowCount + r;
+            if idx > 0 then
+               begin
+               CheckEquals('', f.grdMaster.Cells[c, r],
+                           'cell ' + IntToStr(c) + ',' + IntToStr(r) + ' is empty');
+               end;
+            end;
+         end;
+   finally
+      f.Free;
+   end;
+end;
+
 (* ----------------------------------------------------------------------- *)
 (* The remaining-multiplier windows: a multiplier's KIND and its INDEX.    *)
 (* ----------------------------------------------------------------------- *)
@@ -442,6 +488,7 @@ begin
    Test_DupeSheet_AResizeReflowsTheCells;
    Test_SCP_EveryCallKeepsItsDupeFlag;
    Test_SCP_ACallPastCapacityIsRefused;
+   Test_SCP_TheGridHoldsTheCallsInItsCells;
 end;
 
 end.
