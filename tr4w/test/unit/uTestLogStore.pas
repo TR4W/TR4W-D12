@@ -1909,6 +1909,7 @@ var
    f: TFileStream;
    header: array[0..99] of Byte;
    garbage: array[0..63] of Byte;
+   garbageIndex: integer;
    pageSize, at: Int64;
 begin
    BeginTest('a damaged log is not opened read-only: the store stands down, with its notice');
@@ -1921,7 +1922,10 @@ begin
 
       (* The first 64 bytes of every page but the first overwritten: the file
         header stays, so it is still a database, and what is inside is not. *)
-      FillChar(garbage, SizeOf(garbage), $FF);
+      for garbageIndex := Low(garbage) to High(garbage) do
+         begin
+         garbage[garbageIndex] := $FF;
+         end;
       f := TFileStream.Create(FDb, fmOpenReadWrite or fmShareExclusive);
       try
          f.ReadBuffer(header, SizeOf(header));

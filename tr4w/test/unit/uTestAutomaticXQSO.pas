@@ -232,7 +232,7 @@ end;
    running given -- 2 points in its own mode. *)
 function SSQSO(aContest: ContestType; aMode: ModeType; aExt: ExtendedModeType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(ContestExchange), 0);
+   Result := Default(ContestExchange);
    Result.ceRecordKind := rkQSO;
    Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'W1AW';

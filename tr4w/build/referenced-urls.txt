@@ -89,6 +89,7 @@ https://blog.contestonlinescore.com/real-time-contest-rtc-rules/ | doc | head | 
 http://www.arrl.org/country-lists-prefixes | doc | head | uContestNewMexicoQP
 https://adif.org.uk/317/ADIF_317.htm#Contest_ID | doc | head | uContestIdahoQP
 https://www.contestcalendar.com/contestdetails.php?ref=305 | doc | skip | uContestIdahoQP | never contacted by a check (WA7BNM Contest Calendar terms forbid automated access)
+https://www.contestcalendar.com/contestdetails.php?ref=308 | doc | skip | uContestMississippiQP | never contacted by a check (WA7BNM Contest Calendar terms forbid automated access)
 https://www.idahoqsoparty.org/rules.htm | doc | head | uContestIdahoQP
 https://www.idahoqsoparty.org/MAPcountylist.htm | doc | head | uContestIdahoQP
 https://www.idahoqsoparty.org/cabrillo.htm | doc | head | uContestIdahoQP
