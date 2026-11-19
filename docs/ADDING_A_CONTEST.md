@@ -31,7 +31,7 @@ Use that fixture for a new party rather than copying the session save/restore
 and QSO-entry routines. See `docs/QSO_PARTY_ADDITIONS.md` for its ownership and
 the exchange-dependent string-key timing found while adding Alabama (#114).
 When a party awards its host state in addition to a received county
-(#317: Alabama, West Virginia, Kentucky, Vermont, Illinois -- the full list
+(#317: Alabama, West Virginia, Kentucky, Iowa, South Carolina, Vermont -- the full list
 is `uTestAdditionalDomesticMultiplier`'s `PartyCase`), override
 `TContestBase.AdditionalDomesticMultiplierKey` with one line,
 `Result := InStateCountyEarnsHostState(aQso, aKey);` (the party base's

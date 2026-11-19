@@ -7229,7 +7229,8 @@ written file, and no matrix record or corpus log covers it yet.
 
 A new by-id contest (`IL-QSO-PARTY`) from the sponsor's 2026 announcement
 saved in `docs/ContestRules/QSOParties/Illinois/`, with NY4I's rulings (an
-Illinois entrant's county QSO also earns IL, and a station sending IL is IL;
+Illinois entrant's county QSO earns the county only -- NOT IL, 2026-11-19,
+reversing 2026-11-18 -- and a station sending IL is IL;
 DC is Maryland; third full weekend of October; FM is phone). Unit-tested
 (`uTestContestIllinoisQP`, real-engine runs for an out-of-state and an
 in-state entrant); nothing sees the screen or a written file, and no matrix
@@ -7244,11 +7245,11 @@ record or corpus log covers it yet.
   receive no contact credit".
 - [ ] **In Illinois** (tick "I am in IL", county `COOK`). Work W9AAA
   `599 PEOR`, then W9IL `599 IL`, W3AA `599 DC`, W3AB `599 MD`, and six DX
-  entities: EXPECT Peoria earns the county AND IL (NY4I, #317), so W9IL's IL
-  is not new; DC counts as Maryland so MD is not new; the score counts at
-  most 5 DXCC while the multiplier window may show all six. In a fresh log,
-  `599 IL` FIRST is the IL multiplier and a county after it earns only the
-  county.
+  entities: EXPECT Peoria earns the county only (NY4I, 2026-11-19: not IL),
+  so W9IL's IL IS a new multiplier; DC counts as Maryland so MD is not new;
+  the score counts at most 5 DXCC while the multiplier window may show all
+  six. In a fresh log, `599 IL` FIRST is the IL multiplier and a county
+  after it earns only the county.
 - [ ] **The schedule.** New Contest's "Upcoming contests first": EXPECT the
   Illinois QSO Party dated Sunday October 17, 2027, 1700 UTC (the third full
   weekend of October).

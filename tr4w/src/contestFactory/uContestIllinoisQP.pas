@@ -46,8 +46,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                   disagrees with the 2026 rules (it counts W/K and VE as
                   DXCC), the 2026 rules govern.
     NY4I          issue 119, first rulings: (1) an Illinois entrant's QSO
-                  with an Illinois county also earns IL as a state (#317);
-                  (2) DC counts as Maryland. Second rulings (2026-11-18, his
+                  with an Illinois county also earns IL as a state (#317) --
+                  WITHDRAWN 2026-11-19, see the RULING below; (2) DC counts
+                  as Maryland. Second rulings (2026-11-18, his
                   numbers 1-7): the third full weekend of October; the
                   names as written; a non-IL station works only IL
                   stations; the W9AWE/W9OAB bonus points every year;
@@ -123,18 +124,22 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                         most 5 (CombineWithMultipliers); the sheet and the
                         display still show every country worked, as DXLog's
                         own note says of its display.
-    RULING (NY4I, issue 119) -- AN ILLINOIS ENTRANT'S QSO WITH AN ILLINOIS
-      COUNTY ALSO EARNS IL AS A STATE: both on the DOMESTIC sheet, once
-      overall (#317, AdditionalDomesticMultiplierKey ->
-      InStateCountyEarnsHostState, Alabama's one line). illinois.dom's only
-      keys longer than two letters are the counties, the helper's table
-      rule. A station that sends IL itself is the IL multiplier too: s50.dom
-      lists it and nothing refuses it (no CountsAsMultiplier override), so
-      IL is worked by whichever comes first -- Vermont's shape. Nothing is
-      stored: the sheet re-derives the key on load and rescore. DXLog counts
-      the county only; NY4I's reading of the sponsor's rule wins (his
-      evidence: the summary sheet lists Illinois among the states for an
-      Illinois station). Outside Illinois a county earns the county only.
+    RULING (NY4I, issue 119, 2026-11-19) -- AN ILLINOIS ENTRANT'S QSO WITH
+      AN ILLINOIS COUNTY EARNS THE COUNTY ONLY, NOT IL AS A STATE: "Unknown
+      so assume no for now as to not inflate the score." The 2026 rules are
+      silent; the only evidence for IL-as-a-state is the 2007 summary sheet
+      (Rev A, June 2006), which lists Illinois among the states for an
+      Illinois station. That reversed his 2026-11-18 ruling, which the
+      5.0.43 build carried (#317's opt-in). DXLog counts the county only, as
+      now. So the class does NOT override AdditionalDomesticMultiplierKey;
+      if the sponsor says IL counts, the restore is the one line Alabama
+      states (Result := InStateCountyEarnsHostState(aQso, aKey)) plus its
+      row in uTestAdditionalDomesticMultiplier's PartyCase --
+      illinois.dom's only keys longer than two letters are the counties,
+      the helper's table rule. A station that sends IL itself IS the IL
+      multiplier: s50.dom lists it and nothing refuses it (no
+      CountsAsMultiplier override); the ruling is about the county QSO
+      only. Outside Illinois a county earns the county only.
 
   COUNTY LINES -- "Contacts with/by stations at the border of 2/3/4 counties
     count as 2/3/4 counties and 2/3/4 QSOs": GetCountyLineCountiesMax 4.
@@ -177,8 +182,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     validator reads as the enumeration's county name for all 102 (it drops
     blanks and spells "St." as Saint: Rock Island, St. Clair, JoDaviess).
     An ADIF file that writes "IL-QSO-PARTY" (DXLog's Cabrillo spelling) does
-    not match on import; NY4I's answer confirmed the names but not this, so
-    it is still open (issue 119).
+    NOT match on import, by NY4I's ruling (issue 119, 2026-11-19): "that
+    would be non-compliant ADIF so ignore it. We could report an invalid
+    contest ID." No FormerADIFContestIds; the record keeps the contest it was
+    given and ImportFromADIF's report names the id (uADIF sets
+    TADIFRecordTemps.UnmatchedContestId for any CONTEST_ID no contest
+    answers to).
 
   SUBMISSION -- "Electronic logs should be sent as attachments to
     n9jf@arrl.net."
@@ -255,9 +264,8 @@ type
       function HasZoneMultiplier: boolean; override;
       function HasPrefixMultiplier: boolean; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
-      (* An Illinois entrant's county QSO also earns IL -- the header (#317). *)
-      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
-         out aKey: string): boolean; override;
+      (* NO AdditionalDomesticMultiplierKey: a county does not also earn IL
+         (NY4I, 2026-11-19) -- the header's RULING. *)
    end;
 
 implementation
@@ -525,13 +533,6 @@ end;
 function TContestIllinoisQP.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
-end;
-
-function TContestIllinoisQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
-   out aKey: string): boolean;
-begin
-   (* A county also earns IL, in state -- the header (#317). *)
-   Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
 initialization

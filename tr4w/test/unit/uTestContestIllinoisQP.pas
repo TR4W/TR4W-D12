@@ -1,7 +1,8 @@
 (* THE ILLINOIS QSO PARTY -- issue #119 (2026-11-18). The sponsor's 2026 rules
    (docs/ContestRules/QSOParties/Illinois) and NY4I's rulings: an Illinois
-   entrant's county QSO also earns IL as a state (#317), and a station
-   logged as IL is IL; DC counts as Maryland; the third full weekend of
+   entrant's county QSO earns the county only, NOT IL as a state (2026-11-19,
+   reversing 2026-11-18's #317 opt-in), and a station logged as IL is IL;
+   DC counts as Maryland; the third full weekend of
    October; FM is phone. Each test names the rule it holds; the class header
    says where each landed. *)
 unit uTestContestIllinoisQP;
@@ -26,6 +27,7 @@ type
       procedure Test_RealEngineOutOfState;
       procedure Test_RealEngineInState;
       procedure Test_ExportColumns;
+      procedure Test_ADIFContestIdWithDashesIsReportedNotMatched;
    end;
 
 implementation
@@ -38,7 +40,10 @@ uses
    (* TC_TOOMANYCOUNTIES *)
    uTR4WStrings,
    (* TryLegacyContestOf -- a by-id contest has no legacy member. *)
-   uTestRegisteredContests;
+   uTestRegisteredContests,
+   (* ParseADIFRecord, ClearContestExchange, TQsoMyFacts -- the import's
+      read of a record (issue 119's CONTEST_ID). *)
+   MainUnit, LogDupe, uQsoMyFacts;
 
 function PartyHandle: TContestHandle;
 begin
@@ -307,17 +312,13 @@ begin
          CheckTrue(party.CountsAsMultiplier(ILQSO('W9IL', 'IL', Band20, CW, eCW), rmDomestic),
                    'IL counts');
 
-         (* NY4I's ruling (#317): an Illinois entrant's county QSO also
-            earns IL; a state earns nothing more, nor does anything outside. *)
+         (* NY4I's ruling of 2026-11-19 (issue 119, reversing 2026-11-18's
+            #317 opt-in): a county QSO earns NO second key, in state or out --
+            "assume no for now as to not inflate the score". *)
          extra := 'stale';
-         CheckTrue(party.AdditionalDomesticMultiplierKey(ILQSO('W9AAA', 'COOK', Band20, CW, eCW), extra)
-                   = inHost, 'a county earns IL in state only');
-         if inHost then
-            begin
-            CheckEquals('IL', extra, 'the second key is IL');
-            CheckTrue(party.AdditionalDomesticMultiplierKey(ILQSO('W9AAA', 'LEE', Band20, CW, eCW), extra),
-                      'Lee too');
-            end;
+         CheckFalse(party.AdditionalDomesticMultiplierKey(ILQSO('W9AAA', 'COOK', Band20, CW, eCW), extra),
+                    'a county does not also earn IL');
+         CheckEquals('', extra, 'and writes no key');
          CheckFalse(party.AdditionalDomesticMultiplierKey(ILQSO('W1AW', 'CT', Band20, CW, eCW), extra),
                     'a state earns no second key');
          CheckFalse(party.AdditionalDomesticMultiplierKey(ILQSO('W9IL', 'IL', Band20, CW, eCW), extra),
@@ -492,17 +493,18 @@ begin
       CheckEquals(1, mo.MTotals[AllBands, Both, rmDomestic], 'a state alone earns no IL');
       engine.Enter('W1AW', '599 CT', Band40, CW, eCW, accepted, rx);
       CheckFalse(rx.DomesticMult, 'CT once');
-      (* NY4I's ruling (issue 119, #317): an Illinois entrant's QSO with an
-         Illinois county also earns IL as a state. *)
+      (* NY4I's ruling (issue 119, 2026-11-19, reversing 2026-11-18): an
+         Illinois entrant's QSO with an Illinois county earns the county
+         ONLY, not IL as a state. *)
       engine.Enter('W9AAA', '599 COOK', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'an Illinois county is a multiplier in state too');
-      CheckEquals(3, mo.MTotals[AllBands, Both, rmDomestic], 'Cook AND IL');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'Cook alone, no IL');
       engine.Enter('W9BBB', '59 PEOR', Band40, Phone, eLSB, accepted, rx);
-      CheckEquals(4, mo.MTotals[AllBands, Both, rmDomestic], 'Peoria; IL once overall');
+      CheckEquals(3, mo.MTotals[AllBands, Both, rmDomestic], 'Peoria alone');
       engine.Enter('W9IL', '599 IL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'a station may send IL itself');
-      CheckFalse(rx.DomesticMult, 'IL is already worked through Cook');
-      CheckEquals(4, mo.MTotals[AllBands, Both, rmDomestic], 'IL is not counted twice');
+      CheckTrue(rx.DomesticMult, 'IL is NEW: no county earned it');
+      CheckEquals(4, mo.MTotals[AllBands, Both, rmDomestic], 'IL once');
       engine.Enter('VE3AA', '599 ON', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'a province');
       engine.Enter('W3AA', '599 DC', Band20, CW, eCW, accepted, rx);
@@ -525,14 +527,14 @@ begin
       CheckFalse(rx.DXMult, '"KL7 do not count as DX entities"');
 
       (* IL SENT FIRST: the station's IL is the multiplier, and a county
-         after it earns the county alone. *)
+         after it earns the county alone (as any county does, 2026-11-19). *)
       engine.Activate(True);
       engine.Enter('W9IL', '599 IL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'IL is a state multiplier for an Illinois station (NY4I)');
       CheckEquals(1, mo.MTotals[AllBands, Both, rmDomestic], 'IL');
       engine.Enter('W9AAA', '599 LEE', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'Lee, the three-letter code, is a county');
-      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'Lee; IL already worked');
+      CheckEquals(2, mo.MTotals[AllBands, Both, rmDomestic], 'IL and Lee');
 
       (* OUTSIDE ILLINOIS a county earns the county only. *)
       engine.Activate(False);
@@ -596,6 +598,77 @@ begin
    CheckTrue(Pos('<STATE:2>IL', text) > 0, 'a county is in Illinois: ' + text);
 end;
 
+(* ONE ADIF RECORD naming aContestId, or no CONTEST_ID when it is ''. *)
+function ILAdifRecord(const aContestId: string): string;
+begin
+   Result := '<CALL:5>W9AAA <BAND:3>20m <MODE:2>CW <QSO_DATE:8>20261018 ' +
+             '<TIME_ON:4>1700 ';
+   if aContestId <> '' then
+      begin
+      Result := Result + '<CONTEST_ID:' + IntToStr(Length(aContestId)) + '>' +
+                aContestId + ' ';
+      end;
+   Result := Result + '<EOR>';
+end;
+
+(* "IL-QSO-PARTY" IS NOT THIS CONTEST'S ADIF ID (issue 119, NY4I
+   2026-11-19): "If we see the ADIF contest ID with dashes, that would be
+   non-compliant ADIF so ignore it. We could report an invalid contest ID."
+   It names no contest, so the record keeps the contest it was given, and
+   the import is told the id (ImportFromADIF's report says it). The ADIF
+   enumeration's "IL QSO PARTY" still matches. *)
+procedure TContestIllinoisQPTests.Test_ADIFContestIdWithDashesIsReportedNotMatched;
+var
+   found: TContestHandle;
+   other: TContestHandle;
+   fields: TADIFFieldList;
+   rx: ContestExchange;
+   temps: TADIFRecordTemps;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   unmatched: string;
+begin
+   BeginTest('Test_IllinoisADIFContestIdWithDashesIsReportedNotMatched');
+   CheckFalse(FindContestByADIFContestId('IL-QSO-PARTY', found),
+              'the Cabrillo spelling is no ADIF id');
+   CheckTrue(FindContestByADIFContestId('IL QSO PARTY', found), 'the enumeration''s spelling is');
+   CheckTrue(found = PartyHandle, 'and it is Illinois');
+
+   (* THE GENERIC READ: a contest the record was given beforehand stays. *)
+   other := ContestHandleOf(FLORIDAQSOPARTY);
+   CheckTrue(ParseADIFFieldsList(ILAdifRecord('IL-QSO-PARTY'), fields), 'dashes: parsed');
+   rx := Default(ContestExchange);
+   rx.ceContest := other;
+   ApplyADIFFieldsToExchange(fields, rx, temps);
+   CheckTrue(rx.ceContest = other, 'dashes: not matched -- the record keeps its contest');
+   CheckEquals('IL-QSO-PARTY', temps.UnmatchedContestId, 'dashes: the id is reported, as written');
+
+   CheckTrue(ParseADIFFieldsList(ILAdifRecord('IL QSO PARTY'), fields), 'blanks: parsed');
+   rx := Default(ContestExchange);
+   rx.ceContest := other;
+   ApplyADIFFieldsToExchange(fields, rx, temps);
+   CheckTrue(rx.ceContest = PartyHandle, 'blanks: Illinois');
+   CheckEquals('', temps.UnmatchedContestId, 'blanks: nothing to report');
+
+   CheckTrue(ParseADIFFieldsList(ILAdifRecord(''), fields), 'no CONTEST_ID: parsed');
+   rx := Default(ContestExchange);
+   rx.ceContest := other;
+   ApplyADIFFieldsToExchange(fields, rx, temps);
+   CheckTrue(rx.ceContest = other, 'no CONTEST_ID: the record keeps its contest');
+   CheckEquals('', temps.UnmatchedContestId, 'no CONTEST_ID: nothing to report');
+
+   (* THE IMPORT'S OWN READ hands the id to ImportFromADIF. *)
+   ClearContestExchange(rx);
+   CheckTrue(ParseADIFRecord(ILAdifRecord('IL-QSO-PARTY'), rx, facts, sent, unmatched),
+             'ParseADIFRecord: parsed');
+   CheckEquals('IL-QSO-PARTY', unmatched, 'ParseADIFRecord reports the id');
+   ClearContestExchange(rx);
+   CheckTrue(ParseADIFRecord(ILAdifRecord('IL QSO PARTY'), rx, facts, sent, unmatched),
+             'ParseADIFRecord: parsed');
+   CheckEquals('', unmatched, 'and not the enumeration''s');
+   CheckTrue(rx.ceContest = PartyHandle, 'which is Illinois');
+end;
+
 procedure TContestIllinoisQPTests.RunAllTests;
 begin
    Test_Identity;
@@ -606,6 +679,7 @@ begin
    Test_RealEngineOutOfState;
    Test_RealEngineInState;
    Test_ExportColumns;
+   Test_ADIFContestIdWithDashesIsReportedNotMatched;
 end;
 
 end.
