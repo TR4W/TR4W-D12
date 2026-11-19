@@ -326,6 +326,13 @@ decided whether stations could talk. Now it connects nothing and stops nothing:
   command is an id in VC's block, a row there, a menu row and caption, and an
   arm. `uTestMenuShortcuts.Test_EveryCallWindowCommandHasOneMenuItem` pins both
   directions. `TXON`/`TXOFF` are still a separate `if` in `MainUnit` (not moved).
+- `ROVER` (issues 133/87) is one of them: it opens `uRoverForm` (a designed
+  form; the box and the check list follow each other, validation is
+  `uRoverState`'s). The `mweRover` panel (row 10, hidden until roving) is set by
+  `uRoverForm.ShowRoverStatus`. Adding a main-window element: the VC enum and
+  `TWindows[]` row (no comment inside the enum -- `gen_main_elements.py` reads
+  it naively), the published field, the HAND-KEPT `ELEMENT_COMPONENTS` map and
+  its bound in `uMainForm.pas`, then `python tools/gen_main_elements.py`.
 
 ## Window z-order: who owns whom (2026-11-01)
 

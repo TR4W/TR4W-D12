@@ -1580,6 +1580,26 @@ resourcestring
    SCmdMenuWCY           = 'WCY - ask the cluster for SH/WCY';
    SCmdMenuWWV           = 'WWV - ask the cluster for SH/WWV';
    SCmdMenuPREF          = 'PREF - Preferences';
+   SCmdMenuROVER         = 'ROVER - where this station is roving';
+
+   (* ROVING (issues 133 and 87): where a roving station operates now. A unit
+     is one of the contest's own places -- a county, a Hawaii district. *)
+   SRoverNoUnit          = 'No place was given';
+   (* %0:s is the unit as typed, upper-cased. *)
+   SRoverUnknownUnit     = '%0:s is not one of this contest''s places';
+   (* %0:d is the contest's county-line limit. *)
+   SRoverTooManyUnits    = 'This contest allows at most %0:d places at once';
+   SRoverDialogTitle     = 'Rover';
+   SRoverDialogPrompt    = 'Where this station operates now (one place, or several ' +
+                           'at a county line, separated by a space, a comma or a dash)';
+   SRoverDialogOK        = 'OK';
+   SRoverDialogOff       = 'Rover off';
+   SRoverDialogCancel    = 'Cancel';
+   (* The main window's ROVER panel and the notice. %0:s is the places joined
+     by '/', as a boundary station signs them: KOH/KON. *)
+   SRoverStatus          = 'ROVER %0:s';
+   SRoverTurnedOff       = 'Rover off';
+   SRoverNoPlaces        = 'This contest has no places to rove';
 
    { ------------------------------------------------------- setup wizard --- }
 

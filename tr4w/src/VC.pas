@@ -917,6 +917,7 @@ type
     mweRadioTwo,
 
     mweRate,
+    mweRover,
     mweSPQSOCounter,
     mweStations,
     mweTenMinuts,
@@ -1057,6 +1058,7 @@ var
 {mweRadioTwoFreq}         (mweName: 'RADIO TWO FREQ';          mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
 {mweRadioTwo}             (mweName: 'RADIO TWO NAME';          mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
 {mweRate}                 (mweName: 'RATE';                    mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 33; mweiY: 09; mweiWidth: 05; mweiHeight: 1 ),
+{mweRover}                (mweName: 'ROVER';                   mweiStyle: uVisStyle;         mweText:''          ; mweColor: trWhite; mweBackG: trBlue;    mweI:0; mweB: 1; mweiX: 15; mweiY: 10; mweiWidth: 10; mweiHeight: 1 ),
 {mweSPQSOCounter}         (mweName: 'S&P COUNTER';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
 {mweStations}             (mweName: 'STATIONS';                mweiStyle: 1;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
 
@@ -2952,7 +2954,7 @@ const
     accepts, and MainUnit.CheckCommandInCallsignWindow dispatches on the id, so
     a typed word and a menu click run the same arm. A contiguous block, kept
     in this order, because ProcessMenu hands the whole block over as one
-    subrange (menu_cmd_adif..menu_cmd_pref). Ids 10045..10099 are free. *)
+    subrange (menu_cmd_adif..menu_cmd_rover). Ids 10046..10099 are free. *)
   menu_cmd_adif                         = 10030;
   menu_cmd_cab                          = 10031;
   menu_cmd_cmd                          = 10032;
@@ -2968,6 +2970,7 @@ const
   menu_cmd_wcy                          = 10042;
   menu_cmd_wwv                          = 10043;
   menu_cmd_pref                         = 10044;
+  menu_cmd_rover                        = 10045;  // ROVER -- the roving dialog, issues 133 and 87
   menu_options                          = 10100;
   menu_messages                         = 10101;
   menu_other_messages                   = 10102;

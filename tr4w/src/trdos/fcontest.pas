@@ -101,6 +101,14 @@ var
   8.2m records why the log's reopen decided it). *)
 function SentMyState: string;
 
+(* THE PLACE SENT NOW -- the CW '&' (issues 133 and 87). While roving, the
+  rover's places joined by '/' as a boundary station signs them (KOH/KON);
+  otherwise SentMyState. SentMyState itself never follows the rover: the
+  station context, the default messages and the exports ask it for the
+  session's sent state, and a joined county-line text is no place a contest's
+  in-area test knows. *)
+function SentPlaceNow: string;
+
 (* WHAT THE APPLIER DOES WITH TSessionDefaults.SentState -- exported so a
   unit test can pin that set-up never writes MY STATE (design 7.11). *)
 procedure ApplyContestSentState(aSession: TSessionDefaults);
@@ -151,6 +159,7 @@ uses
    (* ContestSession -- the one writer of the session's kinds (M10 S9a). *)
    uContestSession,
    uDomFileKeys,       // FoundMyStateInDomFile's reading rule
+   uRoverState,        // RoverState -- SentPlaceNow
    SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
    uConfigValues, LogGrid,
   LogStuff,
@@ -382,6 +391,18 @@ begin
   else
      begin
      Result := Settings.My.ResolvedState;
+     end;
+end;
+
+function SentPlaceNow: string;
+begin
+  if RoverState.Active then
+     begin
+     Result := RoverState.Joined('/');
+     end
+  else
+     begin
+     Result := SentMyState;
      end;
 end;
 

@@ -742,6 +742,8 @@ uses
    uAppPaths            in '..\..\src\uAppPaths.pas',
    uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
    uNewContestHostArea  in '..\..\src\uNewContestHostArea.pas',
+   uRoverState          in '..\..\src\uRoverState.pas',
+   uRoverSession        in '..\..\src\uRoverSession.pas',
    uNewContestHome      in '..\..\src\uNewContestHome.pas',
    uDomInclude          in '..\..\src\uDomInclude.pas',
    uContestNames        in '..\..\src\uContestNames.pas',
@@ -823,6 +825,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
    uTestNewContestHostArea in 'uTestNewContestHostArea.pas',
+   uTestRoverState      in 'uTestRoverState.pas',
    uTestNewContestHome  in 'uTestNewContestHome.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
@@ -1446,6 +1449,7 @@ begin
    RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TNewContestHostAreaTests.Create('NewContestHostArea'));
+   RegisterSuite(TRoverStateTests.Create('RoverState'));
    RegisterSuite(TNewContestHomeTests.Create('NewContestHome'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TStationValueKeptTests.Create('StationValueKept'));

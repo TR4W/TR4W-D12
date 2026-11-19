@@ -166,6 +166,7 @@ type
     pnlRadioTwoFreq: TElementPanel;
     pnlRadioTwo: TElementPanel;
     pnlRate: TElementPanel;
+    pnlRover: TElementPanel;
     pnlSPQSOCounter: TElementPanel;
     pnlTenMinuts: TElementPanel;
     pnlTotalScore: TElementPanel;
@@ -1060,7 +1061,7 @@ var
    { Each element and the component that shows it.  Generated from the same
      table as the .lfm, so a row added to TWindows[] cannot reach one and
      miss the other. }
-   ELEMENT_COMPONENTS: array[0 .. 42] of
+   ELEMENT_COMPONENTS: array[0 .. 43] of
       record
          Element: TMainWindowElement;
          Name:    string;
@@ -1102,6 +1103,7 @@ var
       (Element: mweRadioTwoFreq; Name: 'pnlRadioTwoFreq'),
       (Element: mweRadioTwo; Name: 'pnlRadioTwo'),
       (Element: mweRate; Name: 'pnlRate'),
+      (Element: mweRover; Name: 'pnlRover'),
       (Element: mweSPQSOCounter; Name: 'pnlSPQSOCounter'),
       (Element: mweTenMinuts; Name: 'pnlTenMinuts'),
       (Element: mweTotalScore; Name: 'pnlTotalScore'),

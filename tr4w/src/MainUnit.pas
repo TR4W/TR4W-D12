@@ -760,6 +760,7 @@ uses
   uNewContestForm,    (* TNewContestChoice, ncmSwitchContest -- Open Log's dialog (issue 228) *)
   uNewContest,        (* RunNewContestDialog -- the startup dialog, reused (issue 228) *)
   uNewContestCommands, (* Save/ClearNewContestChoices -- a new contest's hand-off *)
+  uRoverForm,         (* ShowRoverDialog -- the ROVER command, issues 133 and 87 *)
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -6112,7 +6113,7 @@ begin
     (* TOOLS -> COMMANDS (issue 87 step 0): the routine the call window runs,
       handed the item's own command word. The call window is not cleared --
       only the typed path, which put the word there, clears it. *)
-    menu_cmd_adif..menu_cmd_pref:
+    menu_cmd_adif..menu_cmd_rover:
       begin
       CheckCommandInCallsignWindow(CallWindowCommandOfMenu(LowordWparam));
       end;
@@ -10658,6 +10659,12 @@ begin
     menu_cmd_wcy: SendViaTelnetSocket('SH/WCY');
     menu_cmd_wwv: SendViaTelnetSocket('SH/WWV');
     menu_cmd_pref: ShowPreferences;
+    (* A BARE WORD, AS NY4I RULED: the dialog takes the places (issues 133
+      and 87). *)
+    menu_cmd_rover:
+      begin
+      ShowRoverDialog;
+      end;
   else
     Result := false; // False result does not clear call window
   end; // case

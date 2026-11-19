@@ -595,6 +595,19 @@ object TR4WMainForm: TTR4WMainForm
     ParentFont = False
     TabOrder = 36
   end
+  object pnlRover: TElementPanel
+    Left = 255
+    Height = 17
+    Top = 295
+    Width = 170
+    Alignment = taCenter
+    AutoSize = False
+    BevelOuter = bvNone
+    Caption = ''
+    ParentColor = False
+    ParentFont = False
+    TabOrder = 37
+  end
   object pnlSPQSOCounter: TElementPanel
     Left = 714
     Height = 17
@@ -606,7 +619,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 37
+    TabOrder = 38
   end
   object pnlTenMinuts: TElementPanel
     Left = 0
@@ -619,7 +632,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 38
+    TabOrder = 39
   end
   object pnlTotalScore: TElementPanel
     Left = 391
@@ -632,7 +645,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 39
+    TabOrder = 40
   end
   object pnlUserInfo: TElementPanel
     Left = 255
@@ -645,7 +658,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 40
+    TabOrder = 41
   end
   object pnlWinKey: TElementPanel
     Left = 646
@@ -659,7 +672,7 @@ object TR4WMainForm: TTR4WMainForm
     Enabled = False
     ParentColor = False
     ParentFont = False
-    TabOrder = 41
+    TabOrder = 42
   end
   object pnlWSJTX: TElementPanel
     Left = 136
@@ -672,7 +685,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 42
+    TabOrder = 43
   end
   object pnlTotalCell_0_0: TElementPanel
     Left = 0
@@ -685,7 +698,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 43
+    TabOrder = 44
   end
   object pnlTotalCell_0_1: TElementPanel
     Left = 0
@@ -698,7 +711,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 44
+    TabOrder = 45
   end
   object pnlTotalCell_0_2: TElementPanel
     Left = 0
@@ -711,7 +724,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 45
+    TabOrder = 46
   end
   object pnlTotalCell_0_3: TElementPanel
     Left = 0
@@ -724,7 +737,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 46
+    TabOrder = 47
   end
   object pnlTotalCell_1_0: TElementPanel
     Left = 85
@@ -737,7 +750,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 47
+    TabOrder = 48
   end
   object pnlTotalCell_1_1: TElementPanel
     Left = 85
@@ -750,7 +763,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 48
+    TabOrder = 49
   end
   object pnlTotalCell_1_2: TElementPanel
     Left = 85
@@ -763,7 +776,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 49
+    TabOrder = 50
   end
   object pnlTotalCell_1_3: TElementPanel
     Left = 85
@@ -776,7 +789,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 50
+    TabOrder = 51
   end
   object pnlTotalCell_2_0: TElementPanel
     Left = 127
@@ -789,7 +802,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 51
+    TabOrder = 52
   end
   object pnlTotalCell_2_1: TElementPanel
     Left = 127
@@ -802,7 +815,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 52
+    TabOrder = 53
   end
   object pnlTotalCell_2_2: TElementPanel
     Left = 127
@@ -815,7 +828,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 53
+    TabOrder = 54
   end
   object pnlTotalCell_2_3: TElementPanel
     Left = 127
@@ -828,7 +841,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 54
+    TabOrder = 55
   end
   object pnlTotalCell_3_0: TElementPanel
     Left = 169
@@ -841,7 +854,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 55
+    TabOrder = 56
   end
   object pnlTotalCell_3_1: TElementPanel
     Left = 169
@@ -854,7 +867,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 56
+    TabOrder = 57
   end
   object pnlTotalCell_3_2: TElementPanel
     Left = 169
@@ -867,7 +880,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 57
+    TabOrder = 58
   end
   object pnlTotalCell_3_3: TElementPanel
     Left = 169
@@ -880,7 +893,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 58
+    TabOrder = 59
   end
   object pnlTotalCell_4_0: TElementPanel
     Left = 211
@@ -893,7 +906,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 59
+    TabOrder = 60
   end
   object pnlTotalCell_4_1: TElementPanel
     Left = 211
@@ -906,7 +919,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 60
+    TabOrder = 61
   end
   object pnlTotalCell_4_2: TElementPanel
     Left = 211
@@ -919,7 +932,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 61
+    TabOrder = 62
   end
   object pnlTotalCell_4_3: TElementPanel
     Left = 211
@@ -932,7 +945,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 62
+    TabOrder = 63
   end
   object pnlTotalCell_5_0: TElementPanel
     Left = 253
@@ -945,7 +958,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 63
+    TabOrder = 64
   end
   object pnlTotalCell_5_1: TElementPanel
     Left = 253
@@ -958,7 +971,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 64
+    TabOrder = 65
   end
   object pnlTotalCell_5_2: TElementPanel
     Left = 253
@@ -971,7 +984,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 65
+    TabOrder = 66
   end
   object pnlTotalCell_5_3: TElementPanel
     Left = 253
@@ -984,7 +997,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 66
+    TabOrder = 67
   end
   object pnlTotalCell_6_0: TElementPanel
     Left = 295
@@ -997,7 +1010,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 67
+    TabOrder = 68
   end
   object pnlTotalCell_6_1: TElementPanel
     Left = 295
@@ -1010,7 +1023,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 68
+    TabOrder = 69
   end
   object pnlTotalCell_6_2: TElementPanel
     Left = 295
@@ -1023,7 +1036,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 69
+    TabOrder = 70
   end
   object pnlTotalCell_6_3: TElementPanel
     Left = 295
@@ -1036,7 +1049,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 70
+    TabOrder = 71
   end
   object pnlTotalCell_7_0: TElementPanel
     Left = 337
@@ -1049,7 +1062,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 71
+    TabOrder = 72
   end
   object pnlTotalCell_7_1: TElementPanel
     Left = 337
@@ -1062,7 +1075,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 72
+    TabOrder = 73
   end
   object pnlTotalCell_7_2: TElementPanel
     Left = 337
@@ -1075,7 +1088,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 73
+    TabOrder = 74
   end
   object pnlTotalCell_7_3: TElementPanel
     Left = 337
@@ -1088,7 +1101,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 74
+    TabOrder = 75
   end
   object pnlTotalHead_1: TElementPanel
     Left = 85
@@ -1101,7 +1114,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 75
+    TabOrder = 76
   end
   object pnlTotalHead_2: TElementPanel
     Left = 127
@@ -1114,7 +1127,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 76
+    TabOrder = 77
   end
   object pnlTotalHead_3: TElementPanel
     Left = 169
@@ -1127,7 +1140,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 77
+    TabOrder = 78
   end
   object pnlTotalHead_4: TElementPanel
     Left = 211
@@ -1140,7 +1153,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 78
+    TabOrder = 79
   end
   object pnlTotalHead_5: TElementPanel
     Left = 253
@@ -1153,7 +1166,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 79
+    TabOrder = 80
   end
   object pnlTotalHead_6: TElementPanel
     Left = 295
@@ -1166,7 +1179,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 80
+    TabOrder = 81
   end
   object pnlTotalHead_7: TElementPanel
     Left = 337
@@ -1179,7 +1192,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 81
+    TabOrder = 82
   end
   object pnlQSONeedR1Label: TElementPanel
     Left = 544
@@ -1192,7 +1205,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 82
+    TabOrder = 83
   end
   object pnlQSONeedR1_160: TElementPanel
     Left = 578
@@ -1205,7 +1218,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '160'
     ParentColor = False
     ParentFont = False
-    TabOrder = 83
+    TabOrder = 84
     Visible = False
   end
   object pnlQSONeedR1_80: TElementPanel
@@ -1219,7 +1232,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '80'
     ParentColor = False
     ParentFont = False
-    TabOrder = 84
+    TabOrder = 85
     Visible = False
   end
   object pnlQSONeedR1_40: TElementPanel
@@ -1233,7 +1246,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '40'
     ParentColor = False
     ParentFont = False
-    TabOrder = 85
+    TabOrder = 86
     Visible = False
   end
   object pnlQSONeedR1_20: TElementPanel
@@ -1247,7 +1260,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '20'
     ParentColor = False
     ParentFont = False
-    TabOrder = 86
+    TabOrder = 87
     Visible = False
   end
   object pnlQSONeedR1_15: TElementPanel
@@ -1261,7 +1274,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '15'
     ParentColor = False
     ParentFont = False
-    TabOrder = 87
+    TabOrder = 88
     Visible = False
   end
   object pnlQSONeedR1_10: TElementPanel
@@ -1275,7 +1288,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '10'
     ParentColor = False
     ParentFont = False
-    TabOrder = 88
+    TabOrder = 89
     Visible = False
   end
   object pnlQSONeedR2Label: TElementPanel
@@ -1289,7 +1302,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 89
+    TabOrder = 90
   end
   object pnlQSONeedR2_160: TElementPanel
     Left = 578
@@ -1302,7 +1315,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '160'
     ParentColor = False
     ParentFont = False
-    TabOrder = 90
+    TabOrder = 91
     Visible = False
   end
   object pnlQSONeedR2_80: TElementPanel
@@ -1316,7 +1329,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '80'
     ParentColor = False
     ParentFont = False
-    TabOrder = 91
+    TabOrder = 92
     Visible = False
   end
   object pnlQSONeedR2_40: TElementPanel
@@ -1330,7 +1343,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '40'
     ParentColor = False
     ParentFont = False
-    TabOrder = 92
+    TabOrder = 93
     Visible = False
   end
   object pnlQSONeedR2_20: TElementPanel
@@ -1344,7 +1357,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '20'
     ParentColor = False
     ParentFont = False
-    TabOrder = 93
+    TabOrder = 94
     Visible = False
   end
   object pnlQSONeedR2_15: TElementPanel
@@ -1358,7 +1371,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '15'
     ParentColor = False
     ParentFont = False
-    TabOrder = 94
+    TabOrder = 95
     Visible = False
   end
   object pnlQSONeedR2_10: TElementPanel
@@ -1372,7 +1385,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '10'
     ParentColor = False
     ParentFont = False
-    TabOrder = 95
+    TabOrder = 96
     Visible = False
   end
   object pnlMultNeedR1Label: TElementPanel
@@ -1386,7 +1399,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 96
+    TabOrder = 97
   end
   object pnlMultNeedR1_160: TElementPanel
     Left = 578
@@ -1399,7 +1412,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '160'
     ParentColor = False
     ParentFont = False
-    TabOrder = 97
+    TabOrder = 98
     Visible = False
   end
   object pnlMultNeedR1_80: TElementPanel
@@ -1413,7 +1426,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '80'
     ParentColor = False
     ParentFont = False
-    TabOrder = 98
+    TabOrder = 99
     Visible = False
   end
   object pnlMultNeedR1_40: TElementPanel
@@ -1427,7 +1440,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '40'
     ParentColor = False
     ParentFont = False
-    TabOrder = 99
+    TabOrder = 100
     Visible = False
   end
   object pnlMultNeedR1_20: TElementPanel
@@ -1441,7 +1454,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '20'
     ParentColor = False
     ParentFont = False
-    TabOrder = 100
+    TabOrder = 101
     Visible = False
   end
   object pnlMultNeedR1_15: TElementPanel
@@ -1455,7 +1468,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '15'
     ParentColor = False
     ParentFont = False
-    TabOrder = 101
+    TabOrder = 102
     Visible = False
   end
   object pnlMultNeedR1_10: TElementPanel
@@ -1469,7 +1482,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '10'
     ParentColor = False
     ParentFont = False
-    TabOrder = 102
+    TabOrder = 103
     Visible = False
   end
   object pnlMultNeedR2Label: TElementPanel
@@ -1483,7 +1496,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = ''
     ParentColor = False
     ParentFont = False
-    TabOrder = 103
+    TabOrder = 104
   end
   object pnlMultNeedR2_160: TElementPanel
     Left = 578
@@ -1496,7 +1509,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '160'
     ParentColor = False
     ParentFont = False
-    TabOrder = 104
+    TabOrder = 105
     Visible = False
   end
   object pnlMultNeedR2_80: TElementPanel
@@ -1510,7 +1523,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '80'
     ParentColor = False
     ParentFont = False
-    TabOrder = 105
+    TabOrder = 106
     Visible = False
   end
   object pnlMultNeedR2_40: TElementPanel
@@ -1524,7 +1537,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '40'
     ParentColor = False
     ParentFont = False
-    TabOrder = 106
+    TabOrder = 107
     Visible = False
   end
   object pnlMultNeedR2_20: TElementPanel
@@ -1538,7 +1551,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '20'
     ParentColor = False
     ParentFont = False
-    TabOrder = 107
+    TabOrder = 108
     Visible = False
   end
   object pnlMultNeedR2_15: TElementPanel
@@ -1552,7 +1565,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '15'
     ParentColor = False
     ParentFont = False
-    TabOrder = 108
+    TabOrder = 109
     Visible = False
   end
   object pnlMultNeedR2_10: TElementPanel
@@ -1566,7 +1579,7 @@ object TR4WMainForm: TTR4WMainForm
     Caption = '10'
     ParentColor = False
     ParentFont = False
-    TabOrder = 109
+    TabOrder = 110
     Visible = False
   end
 end

@@ -362,8 +362,10 @@ begin
   
         '~': SendSalutation(CallWindowString);
         '\': AddStringToBuffer(UTF8Encode(Settings.My.Call), Config.CWTone);
-        (* The state SENT in this contest, not MY STATE -- design 7.11 (M9a). *)
-        '&': AddStringToBuffer(UTF8Encode(SentMyState), Config.CWTone);
+        (* The state SENT in this contest, not MY STATE -- design 7.11 (M9a);
+          while roving, where the rover is now (NY4I 2026-10-23: "&" keys
+          whatever ROVER selected). *)
+        '&': AddStringToBuffer(UTF8Encode(SentPlaceNow), Config.CWTone);
 
         '|':
           begin
