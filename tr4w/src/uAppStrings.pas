@@ -1173,6 +1173,9 @@ resourcestring
      radio. *)
    SPrefsGroupTuningOtherRadio = 'Tuning the other radio';
    SPrefsGroupBandMapWindow = 'Band map window';
+   (* The Colors page's band map block -- the band map's colour roles
+     (issue 59), under the main window's grid. *)
+   SPrefsGroupBandMapColors = 'Band map colors';
    SPrefsGroupSpotTuning = 'Tuning to a spot';
    (* ~~SPrefsGroupRadioPolling~~ -- gone with its one row: FREQUENCY POLL
      RATE is a field of each radio definition now (issue 235 step 3). *)

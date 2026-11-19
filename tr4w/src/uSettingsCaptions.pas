@@ -117,6 +117,12 @@ resourcestring
    RS_BANDMAP_SWAPPACKETSPOTRADIOS            = 'Send spots to the other radio';
    RS_BANDMAP_WORKEDMULTCOLOR                 = 'Color of the M on a spot whose multiplier wants a backup';
    RS_BANDMAP_WORKEDMULTLIMIT                 = 'Workings of a multiplier before its spot shows no M';
+   RS_BANDMAP_SELECTIONCOLOR                  = 'Band map selected spot';
+   RS_BANDMAP_DUPECOLOR                       = 'Band map fill behind a dupe''s D';
+   RS_BANDMAP_MULTCOLOR                       = 'Band map fill behind a multiplier''s M';
+   RS_BANDMAP_ACTIVEBANDCOLOR                 = 'Band map frequency on the active band';
+   RS_BANDMAP_OTHERBANDCOLOR                  = 'Band map frequency on another band';
+   RS_BANDMAP_VFOMARKERCOLOR                  = 'Band map VFO marker (not drawn yet)';
    RS_LOGGING_CHECKLOGFILESIZE                = 'Warn when the log file grows unexpectedly';
    RS_LOGGING_UNKNOWNCOUNTRYFILE              = 'Record callsigns with no country match';
    RS_LOGGING_UPDATERESTARTFILE               = 'Keep the restart file up to date';

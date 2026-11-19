@@ -2179,6 +2179,13 @@ initialization
    RegisterSettingAllowedValues('MainWindow.AlertColor', tr4wColorsSA);
    (* AND THE WORKED-MULTIPLIER COLOUR, from the same table (issue 12). *)
    RegisterSettingAllowedValues('BandMap.WorkedMultColor', tr4wColorsSA);
+   (* AND THE BAND MAP'S COLOUR ROLES (issue 59). *)
+   RegisterSettingAllowedValues('BandMap.SelectionColor', tr4wColorsSA);
+   RegisterSettingAllowedValues('BandMap.DupeColor', tr4wColorsSA);
+   RegisterSettingAllowedValues('BandMap.MultColor', tr4wColorsSA);
+   RegisterSettingAllowedValues('BandMap.ActiveBandColor', tr4wColorsSA);
+   RegisterSettingAllowedValues('BandMap.OtherBandColor', tr4wColorsSA);
+   RegisterSettingAllowedValues('BandMap.VfoMarkerColor', tr4wColorsSA);
 
 finalization
    FreeAndNil(gNotedSharedChanges);

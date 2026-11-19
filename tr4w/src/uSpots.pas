@@ -178,6 +178,33 @@ function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
 function WorkedMultColorOf(const aToken: string): tr4wColors;
 function WorkedMultColor: tr4wColors;
 
+(* A PALETTE SPELLING AS A PALETTE MEMBER, case and blanks ignored, or
+   aDefault for a spelling the palette does not hold (a hand-edited file).
+   The one lookup WorkedMultColorOf and BandMapRoleColorOf share. *)
+function PaletteColorOf(const aToken: string; aDefault: tr4wColors): tr4wColors;
+
+type
+   (* THE BAND MAP'S COLOUR ROLES -- issue 59. Each is a setting in
+      Settings.BandMap; see TBandMapSettings. *)
+   TBandMapColorRole = (bmcSelection, bmcDupe, bmcMultiplier,
+                        bmcActiveBand, bmcOtherBand, bmcVFOMarker);
+
+const
+   (* EACH ROLE'S DEFAULT: THE COLOUR THE BAND MAP DREW IT IN BEFORE IT WAS A
+      ROLE -- clHighlight, clYellow, clRed, clBlue, clSilver, clRed. The
+      settings' default tokens spell these (uTestSpotCommentMultiplier pins
+      both, and that the palette values are those exact TColors). *)
+   BAND_MAP_ROLE_DEFAULTS: array[TBandMapColorRole] of tr4wColors =
+      (trHighlight, trYellow, trRed, trBlue, trSilver, trRed);
+
+(* aRole's colour for the spelling aToken: the palette member it names, or
+   the role's default. *)
+function BandMapRoleColorOf(aRole: TBandMapColorRole; const aToken: string): tr4wColors;
+
+(* aRole's colour as the operator has set it. The band map draws with
+   tr4wColorsArray[BandMapRoleColor(role)]. *)
+function BandMapRoleColor(aRole: TBandMapColorRole): tr4wColors;
+
 (* WHAT BAND MAP MULTS ONLY KEEPS: A SPOT THAT STILL SHOWS AN M -- the red M
    (FMult) or the orange M (FWorkedMult, issue 12) -- and a CQ spot. The
    navigation scan and BuildVisibleSpots both ask THIS, so they cannot drift. *)
@@ -223,11 +250,11 @@ begin
    Result := AgeSeconds(aSpot.FSysTime, UTCNow);
 end;
 
-function WorkedMultColorOf(const aToken: string): tr4wColors;
+function PaletteColorOf(const aToken: string; aDefault: tr4wColors): tr4wColors;
 var
   c: tr4wColors;
 begin
-  Result := trOrange;
+  Result := aDefault;
   for c := Low(tr4wColors) to High(tr4wColors) do
      begin
      if UnicodeSameText(tr4wColorsSA[c], Trim(aToken)) then
@@ -238,9 +265,53 @@ begin
      end;
 end;
 
+function WorkedMultColorOf(const aToken: string): tr4wColors;
+begin
+  Result := PaletteColorOf(aToken, trOrange);
+end;
+
 function WorkedMultColor: tr4wColors;
 begin
   Result := WorkedMultColorOf(Settings.BandMap.WorkedMultColor);
+end;
+
+function BandMapRoleColorOf(aRole: TBandMapColorRole; const aToken: string): tr4wColors;
+begin
+  Result := PaletteColorOf(aToken, BAND_MAP_ROLE_DEFAULTS[aRole]);
+end;
+
+function BandMapRoleColor(aRole: TBandMapColorRole): tr4wColors;
+var
+  token: string;
+begin
+  token := '';
+  case aRole of
+     bmcSelection:
+        begin
+        token := Settings.BandMap.SelectionColor;
+        end;
+     bmcDupe:
+        begin
+        token := Settings.BandMap.DupeColor;
+        end;
+     bmcMultiplier:
+        begin
+        token := Settings.BandMap.MultColor;
+        end;
+     bmcActiveBand:
+        begin
+        token := Settings.BandMap.ActiveBandColor;
+        end;
+     bmcOtherBand:
+        begin
+        token := Settings.BandMap.OtherBandColor;
+        end;
+     bmcVFOMarker:
+        begin
+        token := Settings.BandMap.VfoMarkerColor;
+        end;
+  end;
+  Result := BandMapRoleColorOf(aRole, token);
 end;
 
 function SpotPassesMultsOnly(const aSpot: TSpotRecord): boolean;

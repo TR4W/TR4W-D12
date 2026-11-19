@@ -156,6 +156,25 @@ and the "I am in" box is `uNewContest.RenderPrompt`.
 
 `BENCH_QUEUE.md` carries what to look at.
 
+**The score panel's hint is the contest's parts** (issue 86, 2026-11-19):
+`LOGWIND.ShowScorePartsHint` words `TContestBase.DescribeScoreParts`
+(through `LogEdit.GatherScoreParts`); only IN7QPNE has parts, so every other
+contest shows no hint. `CLAIMED-SCORE` and the summary sheet's Claimed Score
+read `LogEdit.ClaimedScore`, which can differ from the on-screen score.
+
+**Which of the band map and the dupe sheet a contest opens with** (issue 201)
+is `uCategoryWindow.CategoryOpeningWindow`, asked once at the top of
+`MainUnit.RestoreToolWindows`: NON-ASSISTED the dupe sheet, ASSISTED the band
+map, UNSET nothing. It opens the chosen one and closes nothing.
+
+**The band map draws in ROLES, not literals** (issue 59): selection, dupe
+fill, multiplier fill, active-band and other-band frequency, VFO marker --
+`uSpots.BandMapRoleColor`, settings in `Settings.BandMap`, shown on
+Preferences > Colors under the grid (placements on `NAV_COLORS`). Their
+defaults needed two appended swatches, `SILVER` and `HIGHLIGHT`. The VFO
+marker has a colour and no drawing (issues 59/65). The text colours and the
+age ramp are still literals.
+
 ## Before converting another window
 
 Read `docs/BANDMAP_LCL_DESIGN.md`, `docs/COLOR_ROLES_DESIGN.md` (**the palette

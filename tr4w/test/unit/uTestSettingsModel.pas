@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(312, names.Count,
+         CheckEquals(318, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -531,7 +531,10 @@ begin
                      + ' link through that tunnel (new, no CFGCA row, issue'
                      + ' 293), 2026-11-12; 312 with BAND MAP CENTER ON RADIO'
                      + ' (issue 246) and BAND MAP SORT BY BEAM HEADING (issue'
-                     + ' 82), new, no CFGCA row, 2026-11-16');
+                     + ' 82), new, no CFGCA row, 2026-11-16; 318 with the band'
+                     + ' map''s six colour roles, BAND MAP SELECTION, DUPE,'
+                     + ' MULT, ACTIVE BAND, OTHER BAND and VFO MARKER COLOR'
+                     + ' (new, no CFGCA row, issue 59), 2026-11-19');
       finally
          names.Free;
       end;
@@ -1778,6 +1781,7 @@ const
       + '"BACKUP LOG FILE NAME",'
       + '"BACKUP LOG FREQUENCY",'
       + 'BAND,'
+      + '"BAND MAP ACTIVE BAND COLOR",'
       + '"BAND MAP ALL BANDS",'
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'
@@ -1786,16 +1790,21 @@ const
       + '"BAND MAP DISPLAY CQ",'
       + '"BAND MAP DISPLAY GHZ",'
       + '"BAND MAP DISPLAY LIMIT",'
+      + '"BAND MAP DUPE COLOR",'
       + '"BAND MAP DUPE DISPLAY",'
       + '"BAND MAP FILTER OUT DIGITAL",'
       + '"BAND MAP GUARD BAND",'
       + '"BAND MAP ITEM HEIGHT",'
       + '"BAND MAP ITEM WIDTH",'
+      + '"BAND MAP MULT COLOR",'
       + '"BAND MAP MULTS ONLY",'
+      + '"BAND MAP OTHER BAND COLOR",'
+      + '"BAND MAP SELECTION COLOR",'
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
       + '"BAND MAP SORT BY BEAM HEADING",'
       + '"BAND MAP SPLIT MODE",'
+      + '"BAND MAP VFO MARKER COLOR",'
       + '"BAND MAP WORKED MULT COLOR",'
       + '"BAND MAP WORKED MULT LIMIT",'
       + '"BEEP ENABLE",'

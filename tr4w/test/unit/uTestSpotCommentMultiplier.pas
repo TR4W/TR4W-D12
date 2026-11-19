@@ -75,6 +75,8 @@ type
       procedure Test_Worked_SweepstakesCountsOnceAcrossBands;
       procedure Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
       procedure Test_Worked_ColourToken;
+      procedure Test_BandMapRoles_DefaultsAreTodaysColours;
+      procedure Test_BandMapRoles_SurviveASaveAndALoad;
       procedure Test_Count_ScopeIsTheContestClasss;
       procedure Test_Count_WyomingSequenceAtLimitTwo;
       procedure Test_Count_DefaultLimitOneShowsNoBackup;
@@ -92,6 +94,11 @@ type
 implementation
 
 uses
+   (* Graphics.clHighlight and the rest, qualified -- the band map's colour
+      roles default to exactly these (issue 59); fpjson for their round
+      trip. First, so every later unit wins a shared name. *)
+   Graphics,
+   fpjson,
    (* cpHIGH. Before VC, so VC's names win where they overlap. *)
    uSettingsModel,
    Classes,
@@ -1504,6 +1511,110 @@ begin
    CheckEquals('ORANGE', tr4wColorsSA[trOrange], 'the palette spells it');
 end;
 
+(* THE BAND MAP'S COLOUR ROLES -- issue 59. Each role, as shipped, draws in
+   EXACTLY the colour the band map hard-coded before it was a role, so a
+   station that never touches the Colors page sees no change: the literal is
+   written here, the role's resolution and the setting's default token are
+   asked. An unknown spelling falls back to the role's default. *)
+procedure TSpotCommentMultiplierTests.Test_BandMapRoles_DefaultsAreTodaysColours;
+const
+   TODAY: array[TBandMapColorRole] of TColor =
+      (Graphics.clHighlight, Graphics.clYellow, Graphics.clRed,
+       Graphics.clBlue, Graphics.clSilver, Graphics.clRed);
+var
+   fresh: TBandMapSettings;
+   role: TBandMapColorRole;
+   token: string;
+begin
+   BeginTest('Test_BandMapRoles_DefaultsAreTodaysColours');
+   fresh := TBandMapSettings.Create;
+   try
+      for role := Low(TBandMapColorRole) to High(TBandMapColorRole) do
+         begin
+         token := '';
+         case role of
+            bmcSelection:
+               begin
+               token := fresh.SelectionColor;
+               end;
+            bmcDupe:
+               begin
+               token := fresh.DupeColor;
+               end;
+            bmcMultiplier:
+               begin
+               token := fresh.MultColor;
+               end;
+            bmcActiveBand:
+               begin
+               token := fresh.ActiveBandColor;
+               end;
+            bmcOtherBand:
+               begin
+               token := fresh.OtherBandColor;
+               end;
+            bmcVFOMarker:
+               begin
+               token := fresh.VfoMarkerColor;
+               end;
+         end;
+         CheckEquals(tr4wColorsSA[BAND_MAP_ROLE_DEFAULTS[role]], token,
+                     'role ' + IntToStr(Ord(role)) + ': the setting''s default spells the role''s default');
+         CheckEquals(longint(TODAY[role]),
+                     longint(tr4wColorsArray[BandMapRoleColorOf(role, token)]),
+                     'role ' + IntToStr(Ord(role)) + ': drawn in today''s colour');
+         CheckTrue(BandMapRoleColorOf(role, 'not a colour') = BAND_MAP_ROLE_DEFAULTS[role],
+                   'role ' + IntToStr(Ord(role)) + ': an unknown spelling gives the default');
+         end;
+   finally
+      fresh.Free;
+   end;
+
+   CheckTrue(BandMapRoleColorOf(bmcDupe, ' light green ') = trLightGreen,
+             'a palette spelling, any case and blanks');
+   CheckTrue(WorkedMultColorOf('SILVER') = trSilver, 'the new swatches are in the palette');
+   CheckTrue(WorkedMultColorOf('HIGHLIGHT') = trHighlight, 'the system highlight is a swatch');
+end;
+
+(* A ROLE THE OPERATOR PICKED IS KEPT: through settings\tr4w.json and back,
+   and through its config command. *)
+procedure TSpotCommentMultiplierTests.Test_BandMapRoles_SurviveASaveAndALoad;
+var
+   a, b: TR4WSettings;
+   obj: TJSONObject;
+begin
+   BeginTest('Test_BandMapRoles_SurviveASaveAndALoad');
+   a := TR4WSettings.Create;
+   b := TR4WSettings.Create;
+   try
+      a.BandMap.SelectionColor  := 'CYAN';
+      a.BandMap.DupeColor       := 'LIGHT GREEN';
+      a.BandMap.MultColor       := 'MAGENTA';
+      a.BandMap.ActiveBandColor := 'DARK GRAY';
+      a.BandMap.OtherBandColor  := 'WHITE';
+      a.BandMap.VfoMarkerColor  := 'ORANGE';
+      obj := a.ToJSON;
+      try
+         b.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckEquals('CYAN', b.BandMap.SelectionColor, 'selection');
+      CheckEquals('LIGHT GREEN', b.BandMap.DupeColor, 'dupe');
+      CheckEquals('MAGENTA', b.BandMap.MultColor, 'multiplier');
+      CheckEquals('DARK GRAY', b.BandMap.ActiveBandColor, 'active band');
+      CheckEquals('WHITE', b.BandMap.OtherBandColor, 'other band');
+      CheckEquals('ORANGE', b.BandMap.VfoMarkerColor, 'VFO marker');
+
+      CheckTrue(b.TrySetByCommand('BAND MAP DUPE COLOR', 'BROWN'),
+                'BAND MAP DUPE COLOR is a command');
+      CheckEquals('BROWN', b.BandMap.DupeColor, 'and sets the role');
+   finally
+      b.Free;
+      a.Free;
+   end;
+end;
+
 procedure TSpotCommentMultiplierTests.RunAllTests;
 begin
    Test_Tokens_RealCommentsFromTheIssue;
@@ -1527,6 +1638,8 @@ begin
    Test_Worked_SweepstakesCountsOnceAcrossBands;
    Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;
    Test_Worked_ColourToken;
+   Test_BandMapRoles_DefaultsAreTodaysColours;
+   Test_BandMapRoles_SurviveASaveAndALoad;
    Test_Count_ScopeIsTheContestClasss;
    Test_Count_WyomingSequenceAtLimitTwo;
    Test_Count_DefaultLimitOneShowsNoBackup;

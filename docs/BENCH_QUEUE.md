@@ -172,6 +172,14 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-19 -- DUPE SHEET OR BAND MAP BY CATEGORY, IN7QPNE'S PARTY HINT, BAND MAP COLOUR ROLES (issues 201, 86, 59; lcl-ui)
+
+The rules are unit-tested (`uCategoryWindow`, `TContestIN7QPNE.PartyScore`, `uSpots.BandMapRoleColor`); nothing here has been seen on screen.
+
+- [ ] **Issue 201: the window a contest opens with.** Open a log whose CATEGORY-ASSISTED is NON-ASSISTED with the band map closed and the dupe sheet closed: the dupe sheet (radio 1's) opens with the other restored windows, the call window still has the focus, and `tr4w.log` says `CATEGORY-ASSISTED is NON-ASSISTED: opening the ... window`. Do the same with ASSISTED: the band map opens. A blank category opens neither, and the saved layout stands. Close the chosen window, change CATEGORY-ASSISTED in the Cabrillo summary mid-contest: no window moves. Note that NON-ASSISTED is the default, so a contest whose category was never set opens the dupe sheet; the other window is never closed for you.
+- [ ] **Issue 86: IN7QPNE's score hint.** In an IN7QPNE log with QSOs in several parties, hover the score panel: four lines, Indiana, 7QP, New England, Delaware, each "QSOs, points, mults, score". Check the hint is readable and not clipped, and that another contest's score panel shows no hint. The Cabrillo `CLAIMED-SCORE:` of an out-of-area entrant is unchanged (the combined score).
+- [ ] **Issue 59: the band map's colours.** Preferences > Colors shows a "Band map colors" block under the main-window grid with six drop-downs. With the defaults, the band map must look exactly as before: blue and silver frequency fields, red-to-white M, yellow D, the system highlight on the selected spot. Pick another colour for each of the first five, save, and check the band map repaints with it (the VFO marker role is stored but nothing draws it yet -- issues 59 and 65). Check the grid above still scrolls and the block is not clipped at the default window size and at 14 pt. A light selection colour makes the selected call hard to read: its text is still the system's highlight text.
+
 ## Added 2026-11-18 -- A FULL DISK: THE LOG GOES READ-ONLY, AND A REFUSED QSO STAYS TYPED (log-database)
 
 When the disk is full, the log now becomes read-only instead of being disabled (`uLogStore.Disable`). After that, a QSO the log refuses keeps its call and exchange on screen (`LogContact` now returns a Boolean, and `TryLogContact` stops when it is False). The unit tests read the Enter path's source. Only a real run can show the windows, the status line and the beep. Put the contest log on a small drive or a nearly full USB stick, not on the system drive. `BEEP ENABLE` must be on, because `DoABeep` does nothing when it is off.
