@@ -338,6 +338,8 @@ begin
      sReserved's too. The importer marks the new log for the store's one-shot
      stamp, which judges every row once the contest is set up. *)
    aRecord.ceOffContest  := False;
+   (* NOR WHERE A ROVER SENT IT FROM (log schema 12): sReserved's again. *)
+   aRecord.ceRoverQTH    := '';
 
    Inc(FRecordsRead);
    Result := True;

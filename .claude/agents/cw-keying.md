@@ -371,6 +371,20 @@ record's field order the wire format by accident. Adding or reordering a
 `TwkValueList` field no longer changes what the keyer receives; changing
 `wkValueListBytes` does, and the test says so.
 
+## The rover's call and place in the macros (issues 133/87, 2026-11-19)
+
+- `\` keys `uRoverState.RovingCall(Settings.My.Call)`: NY4I/KOH while roving,
+  NY4I/KOH/KON at a boundary, the plain call otherwise. So do the S&P space
+  bar, `DEPlusMyCall` and the call-window sends in `MainUnit`. Never change
+  `Settings.My.Call` itself for a rover.
+- `&` keys `FCONTEST.SentPlaceNow` (the rover's places joined by '/', else
+  `SentMyState`); `{ROVERQTH}` is a NAMED token read whole in the `'{'` arm
+  (`RoverQTHTokenAt`, the `'#'` arm's look-ahead is the precedent) and keys
+  the same. A bare `{` still keys the worked call.
+- Digital/RTTY messages go through `SendCrypticCWString` too
+  (`LOGSUBS1.SendCrypticMessage`), so all of this follows the rover there.
+  Phone (DVP) does not expand these.
+
 ## Coordinate with
 
 `radio-factory` (capabilities, the `TKYRadio` hierarchy) · `tci-interface`

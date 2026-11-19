@@ -1418,7 +1418,7 @@ const
       'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
       'prefix_mult, dx_mult, domestic_mult, ' +
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
-      'qso_points, is_dupe, is_run, is_xqso, is_off_contest, is_skipped, sent_in_qtc, ' +
+      'qso_points, is_dupe, is_run, is_xqso, is_off_contest, my_rover_qth, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes, ' +
       QSO_MY_COLUMNS;
@@ -1458,7 +1458,7 @@ const
       'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
       'prefix_mult, dx_mult, domestic_mult, ' +
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
-      'qso_points, is_dupe, is_run, is_xqso, is_off_contest, is_skipped, sent_in_qtc, ' +
+      'qso_points, is_dupe, is_run, is_xqso, is_off_contest, my_rover_qth, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
 
@@ -1475,7 +1475,7 @@ const
       ':dxcc_prefix, :dxcc_entity, :dxcc_code, :cty_cq_zone, :cty_continent, ' +
       ':prefix_mult, :dx_mult, :domestic_mult, ' +
       ':mult_domestic, :mult_dx, :mult_prefix, :mult_zone, :inhibit_mults, ' +
-      ':qso_points, :is_dupe, :is_run, :is_xqso, :is_off_contest, :is_skipped, :sent_in_qtc, ' +
+      ':qso_points, :is_dupe, :is_run, :is_xqso, :is_off_contest, :my_rover_qth, :is_skipped, :sent_in_qtc, ' +
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
       ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
@@ -1610,6 +1610,8 @@ type
       qc_qso_points, qc_is_dupe, qc_is_run, qc_is_xqso,
       (* is_off_contest, schema 10 -- beside is_xqso, the operator's half. *)
       qc_is_off_contest,
+      (* my_rover_qth, schema 12 -- where a rover sent it from. *)
+      qc_my_rover_qth,
       qc_is_skipped,
       qc_sent_in_qtc,
       qc_name_sent, qc_mp3_recorded, qc_clear_dupe_sheet, qc_clear_mult_sheet,
@@ -2153,6 +2155,8 @@ begin
      rescored, imported or edited, and every other write carries back what
      ReadRecord read. This unit never judges a QSO. *)
    BindBool(P('is_off_contest'), rec.ceOffContest);
+   (* WHERE A ROVER SENT IT FROM -- schema 12; '' (not roving) is NULL. *)
+   BindText(P('my_rover_qth'), AnsiString(rec.ceRoverQTH));
    (* is_skipped IS WRITTEN AS FALSE AND NEVER READ BACK INTO ITS OWN FIELD.
      The column stays because dropping it is a schema migration for a fact
      nothing consumes; what it MEANT is now ceQSO_Deleted, and the reader folds
@@ -2483,6 +2487,7 @@ begin
    aQso.ceSearchAndPounce := not FieldBool(F(qc_is_run));
    aQso.ceXQSO := FieldBool(F(qc_is_xqso));
    aQso.ceOffContest := FieldBool(F(qc_is_off_contest));
+   aQso.ceRoverQTH := S(qc_my_rover_qth);
    (* NEVER POPULATED FROM THE DATABASE. What this column meant is folded
      into ceQSO_Deleted below -- see ceQSO_Skiped in VC.pas. *)
    aQso.ceQSO_Skiped := False;

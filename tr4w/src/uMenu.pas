@@ -77,7 +77,7 @@ const
     hands over), a row here, a menu row and a caption in this unit, and an arm
     in CheckCommandInCallsignWindow. uTestMenuShortcuts pins that every row has
     exactly one menu item under Tools -> Commands and the reverse. *)
-  CALL_WINDOW_COMMANDS: array[0..14] of TCallWindowCommand = (
+  CALL_WINDOW_COMMANDS: array[0..15] of TCallWindowCommand = (
     (cwcName: 'ADIF';  cwcMenuId: menu_cmd_adif),
     (cwcName: 'CAB';   cwcMenuId: menu_cmd_cab),
     (cwcName: 'CMD';   cwcMenuId: menu_cmd_cmd),
@@ -92,7 +92,8 @@ const
     (cwcName: 'UDP';   cwcMenuId: menu_cmd_udp),
     (cwcName: 'WCY';   cwcMenuId: menu_cmd_wcy),
     (cwcName: 'WWV';   cwcMenuId: menu_cmd_wwv),
-    (cwcName: 'PREF';  cwcMenuId: menu_cmd_pref));
+    (cwcName: 'PREF';  cwcMenuId: menu_cmd_pref),
+    (cwcName: 'ROVER'; cwcMenuId: menu_cmd_rover));
 
 (* The menu id of the call-window command spelled aText -- the whole text,
   any case, as the call window has always matched it -- or 0 when aText is no
@@ -261,7 +262,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27} - 1 {Synchronize time on all computers removed, 2026-11-03 -- a station may not set another's clock} + 1 (* File -> Open Log..., issue 218 *) + 1 (* Help -> Download call history for this contest, 2026-11-08 *) + 1 (* Tools -> Setup Wizard, 2026-11-14 *) + 17 (* Tools -> Commands: the submenu, its 15 commands and the back-out row, issue 87 *)
+    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 1{$ENDIF} {menu_wiki_rus -- was +3 until 2026-09-08, when Help->Contents and its separator had already gone} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16} - 1 {Synchronize PC time removed, 2026-08-25 -- setting the clock needs UAC} - 1 {Device Manager removed, 2026-09-01 -- an application does not shell out to mmc} - 1 {MP3 Recorder removed, 2026-09-07 -- recording moves to QSOCapture} + 1 {Run Verification Checks under Tools, 2026-09-12} - 1 {LPT ports removed, 2026-09-13 -- the parallel port is gone from the program} + 5 {Net menu: Connect, Disconnect, Reconnect, Show Network window and a separator, 2026-10-27} - 1 {Synchronize time on all computers removed, 2026-11-03 -- a station may not set another's clock} + 1 (* File -> Open Log..., issue 218 *) + 1 (* Help -> Download call history for this contest, 2026-11-08 *) + 1 (* Tools -> Setup Wizard, 2026-11-14 *) + 17 (* Tools -> Commands: the submenu, its 15 commands and the back-out row, issue 87 *) + 1 (* Tools -> Commands -> ROVER, issues 133 and 87 *)
                                             + 1 (* Control -> Self-spot, issue 188 *)
                                             - 0 {Check for Updates taken OFF the menu 2026-08-28 -- see the row below};
 
@@ -534,6 +535,7 @@ var
     (mrText: ''; mrId: menu_cmd_wcy),
     (mrText: ''; mrId: menu_cmd_wwv),
     (mrText: ''; mrId: menu_cmd_pref),
+    (mrText: ''; mrId: menu_cmd_rover),
     (mrText: ''; mrId: MAXWORD - 2),
  //}
     (mrText: ''; mrId: 0),
@@ -867,6 +869,7 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuWCY;
    Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuWWV;
    Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuPREF;
+   Inc(i); T_MENU_ARRAY[i].mrText := SCmdMenuROVER;
    Inc(i); T_MENU_ARRAY[i].mrText := '';
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_3830;

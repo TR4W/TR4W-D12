@@ -928,6 +928,7 @@ type
     mweRadioTwo,
 
     mweRate,
+    mweRover,
     mweSPQSOCounter,
     mweStations,
     mweTenMinuts,
@@ -1068,6 +1069,7 @@ var
 {mweRadioTwoFreq}         (mweName: 'RADIO TWO FREQ';          mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
 {mweRadioTwo}             (mweName: 'RADIO TWO NAME';          mweiStyle: DefStyleDis;       mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 04; mweiY: 09; mweiWidth: 04; mweiHeight: 1 ),
 {mweRate}                 (mweName: 'RATE';                    mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 33; mweiY: 09; mweiWidth: 05; mweiHeight: 1 ),
+{mweRover}                (mweName: 'ROVER';                   mweiStyle: uVisStyle;         mweText:''          ; mweColor: trWhite; mweBackG: trBlue;    mweI:0; mweB: 1; mweiX: 15; mweiY: 10; mweiWidth: 10; mweiHeight: 1 ),
 {mweSPQSOCounter}         (mweName: 'S&P COUNTER';             mweiStyle: defStyle;          mweText:''          ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 42; mweiY: 08; mweiWidth: 04; mweiHeight: 1 ),
 {mweStations}             (mweName: 'STATIONS';                mweiStyle: 1;                 mweText:''          ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 0; mweiX: 23; mweiY: 01; mweiWidth: 09; mweiHeight: 2 ),
 
@@ -2177,7 +2179,22 @@ type
    reader of those trusts it anyway: the .TRW reader clears it, and every
    receive path stamps the QSO with THIS station's contest. *)
 {01}  ceOffContest:        Boolean;
-{43} sReserved:               string[42]
+(* WHERE A ROVER SENT THIS QSO FROM -- log schema 12 (issues 133 and 87, NY4I
+   2026-11-19). One of the contest's own places (a county code, a Hawaii
+   district) as its .dom spells the key; EMPTY when the station was not
+   roving, which is every QSO but a rover's. A county-line operation logs one
+   row per place, each with its own. SQLite column my_rover_qth. The export
+   sends it in place of MY STATE (uContestBase.MyStationExchangeWithRoverPlace),
+   the dupe key carries it, and my_county is the ADIF county it lies in.
+
+   TAKEN FROM sReserved LIKE EVERY FIELD BEFORE IT (string[42] -> [31]): THE
+   RECORD STAYS 376 BYTES and nothing before 331 moved. Byte 331 was
+   sReserved's length byte, always zero, so every older record -- a .TRW,
+   SERVERLOG.TRW, a packet from an older station -- reads '' here. A newer
+   peer's packet carries ITS rover place, which is that QSO's own fact, so a
+   receiver keeps it; the .TRW reader clears it. *)
+{11}  ceRoverQTH:          string[10];
+{32} sReserved:               string[31]
    end;
 {*)}
 
@@ -2963,7 +2980,7 @@ const
     accepts, and MainUnit.CheckCommandInCallsignWindow dispatches on the id, so
     a typed word and a menu click run the same arm. A contiguous block, kept
     in this order, because ProcessMenu hands the whole block over as one
-    subrange (menu_cmd_adif..menu_cmd_pref). Ids 10045..10099 are free. *)
+    subrange (menu_cmd_adif..menu_cmd_rover). Ids 10046..10099 are free. *)
   menu_cmd_adif                         = 10030;
   menu_cmd_cab                          = 10031;
   menu_cmd_cmd                          = 10032;
@@ -2979,6 +2996,7 @@ const
   menu_cmd_wcy                          = 10042;
   menu_cmd_wwv                          = 10043;
   menu_cmd_pref                         = 10044;
+  menu_cmd_rover                        = 10045;  // ROVER -- the roving dialog, issues 133 and 87
   menu_options                          = 10100;
   menu_messages                         = 10101;
   menu_other_messages                   = 10102;

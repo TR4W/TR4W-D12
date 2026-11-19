@@ -405,6 +405,11 @@ type
          it. See TContestBase.DupeKeyIncludesReceivedQTH. *)
       function DupeKeyIncludesReceivedQTH: boolean; override;
 
+      (* AND THE PLACE OUR ROVER SENT IT FROM -- every state party (NY4I,
+         2026-11-18, issue 133: "NY4I/PIN is NOT a dupe of NY4I/PAS"). See
+         TContestBase.DupeKeyIncludesSentQTH. *)
+      function DupeKeyIncludesSentQTH: boolean; override;
+
       (* THE WORKED STATION'S ADIF STATE, AND ITS COUNTY AS CNTY -- Q76/Q89
          (NY4I, 2026-10-16). See TContestBase.ADIFCountyState,
          ADIFWorkedStationState and WritesADIFCounty. STATED ONCE, HERE: a
@@ -714,6 +719,12 @@ end;
 function TContestStateQSOPartyBase.DupeKeyIncludesReceivedQTH: boolean;
 begin
    (* Every state party -- see the declaration (Q118, 2026-10-17). *)
+   Result := True;
+end;
+
+function TContestStateQSOPartyBase.DupeKeyIncludesSentQTH: boolean;
+begin
+   (* Every state party -- see the declaration (issue 133, 2026-11-18). *)
    Result := True;
 end;
 

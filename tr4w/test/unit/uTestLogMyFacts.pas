@@ -367,13 +367,15 @@ begin
       begin
       tail := tail + '|' + string(LOG_V9_QSO_COLUMNS[i].Name);
       end;
-   (* And schema 10's rule-derived X-QSO value, last of all. *)
+   (* And schema 10's rule-derived X-QSO value. *)
    tail := tail + '|' + string(LOG_V10_QSO_OFF_CONTEST_COLUMN.Name);
+   (* And schema 12's rover place, last of all. *)
+   tail := tail + '|' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name);
    (* LAST, IN THIS ORDER -- the order ALTER TABLE ADD COLUMN gives a
      migrated log, so the two cannot differ. *)
    CheckEquals(tail, Copy(names, Length(names) - Length(tail) + 1, MaxInt),
                'the CREATE TABLE ends with LOG_V3_QSO_COLUMNS, rcvd_year, year_sent, ' +
-               'then LOG_V9_QSO_COLUMNS, then is_off_contest, in order');
+               'then LOG_V9_QSO_COLUMNS, then is_off_contest, then my_rover_qth, in order');
    CheckTrue(Pos('|my_grid|', names) > 0, 'my_grid, from schema 1, is still there');
    Scrub(fn);
 end;

@@ -286,7 +286,18 @@ const
      byte. Schema 10 is in the v5.0.43 and v5.0.44 tags (draft releases on
      2026-11-19), so logs stamped 10 exist; a log this build has opened is
      refused by every earlier build. *)
-   LOG_SCHEMA_VERSION = 11;
+   (* 12 SINCE 2026-11-19 (issues 133 and 87, NY4I: one log for the whole
+     event, each QSO stamped with the place it was sent from; my_state stays
+     the primary subdivision and a district that is no county goes in the
+     sent exchange only): qso.my_rover_qth (LOG_V12_QSO_ROVER_QTH_COLUMN) --
+     the contest's own place (a county code, a Hawaii district) a ROVER sent
+     this QSO from; NULL when the station was not roving, which is every row
+     an earlier build wrote. Carried on the record (ContestExchange.ceRoverQTH),
+     so the loader, the rescore and the dupe key read it like any other field,
+     and UPDATABLE like it. No backfill: NULL is the truth for every older row.
+     The migration only adds the column (or, from below 11, the rebuild's new
+     table already has it). *)
+   LOG_SCHEMA_VERSION = 12;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -389,6 +400,12 @@ const
      crash between the two runs it again harmlessly. The same shape as
      LOG_YEAR_SENT_BACKFILL_KEY. *)
    LOG_OFF_CONTEST_BACKFILL_KEY = 'offContestBackfillPending';
+
+   (* THE qso COLUMN SCHEMA 12 ADDED (issues 133 and 87): where a rover sent
+     the QSO from. Last in the CREATE TABLE, so ADD COLUMN gives a migrated
+     log the same shape as a new one. TEXT, NULL when not roving. *)
+   LOG_V12_QSO_ROVER_QTH_COLUMN: TLogAddedColumn = (
+      Name: 'my_rover_qth'; Declaration: 'TEXT');
 
    (* THE qso COLUMNS SCHEMA 11 REMOVED (issue 94). Verified before removal:
      no SQL, no Pascal, no tool and no script in the tree wrote or read any of
@@ -703,7 +720,11 @@ const
       '    my_prec           TEXT,'#10 +
       '    my_postal_code    TEXT,'#10 +
       '    my_foc_number     TEXT,'#10 +
-      '    is_off_contest    INTEGER NOT NULL DEFAULT 0'#10 +
+      '    is_off_contest    INTEGER NOT NULL DEFAULT 0,'#10 +
+      '    my_rover_qth      TEXT'#10 +
+      '    -- SCHEMA 12: my_rover_qth, THE PLACE A ROVER SENT THIS QSO FROM --'#10 +
+      '    -- one of the contest''s own (a county code, a Hawaii district); NULL'#10 +
+      '    -- when not roving. See LOG_V12_QSO_ROVER_QTH_COLUMN.'#10 +
       '    -- SCHEMA 11: SIXTEEN COLUMNS NO BUILD EVER WROTE ARE GONE -- the'#10 +
       '    -- typed received QTH kinds (rcvd_state, rcvd_county, rcvd_section,'#10 +
       '    -- rcvd_grid, rcvd_postal_code, rcvd_society, rcvd_department,'#10 +

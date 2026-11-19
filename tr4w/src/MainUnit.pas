@@ -762,6 +762,8 @@ uses
   uNewContestForm,    (* TNewContestChoice, ncmSwitchContest -- Open Log's dialog (issue 228) *)
   uNewContest,        (* RunNewContestDialog -- the startup dialog, reused (issue 228) *)
   uNewContestCommands, (* Save/ClearNewContestChoices -- a new contest's hand-off *)
+  uRoverForm,         (* ShowRoverDialog -- the ROVER command, issues 133 and 87 *)
+  uRoverState,        (* RovingCall -- the call on the air while roving *)
   (* Which store a log READ comes from -- step B4.  Its implementation
      uses this unit back, which is legal: both edges are
      implementation-section. *)
@@ -949,13 +951,21 @@ function DrainPendingMultiQSORefs: boolean;
 var
   TempRX : ContestExchange;
   leadsWithSerial: boolean;
+  (* A ROVER AT A BOUNDARY (issue 133): every QSO this entry logged from the
+    first place, and the copies from each further place. *)
+  logged: TRoverLegs;
+  roverLegs: TRoverLegs;
+  i: integer;
 begin
   Result := True;
   if (not HasPendingParks)     and
-     (not HasPendingCounties) then
+     (not HasPendingCounties) and
+     (RoverState.Count < 2)   then
      begin
      Exit;
      end;
+  SetLength(logged, 1);
+  logged[0] := ReceivedData;
   leadsWithSerial := ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest));
   TempRX := ReceivedData;
   while HasPendingParks do
@@ -992,6 +1002,30 @@ begin
      // LOGEDIT.NextSerialToSend, the highest serial sent + 1 (Issue #954),
      // not a count of records.  Pinned by uTestAutomaticXQSO.
      if not LogContact(TempRX, True) then
+        begin
+        Result := False;
+        Exit;
+        end;
+     SetLength(logged, Length(logged) + 1);
+     logged[High(logged)] := TempRX;
+     end;
+
+  (* A ROVER AT A BOUNDARY LOGS ONE QSO PER PLACE (issue 133; NY4I
+    2026-11-18, the HQP rules: "Log such contacts as TWO contacts, one from
+    each location"). Every QSO above went out from the first place
+    (LogContact stamped it); each further place logs a copy of every one of
+    them, its own place stamped, after them and with nothing in between, so
+    the store files them in the entry's qso_set_id. The dupe question is
+    asked of each copy as of any QSO: its key carries its place (D), so a
+    place the station has not worked this call from is no dupe. *)
+  roverLegs := RoverBoundaryLegs(logged, RoverState);
+  for i := 0 to High(roverLegs) do
+     begin
+     (* ITS OWN POINTS: a copy of a leg that was a dupe from the first place
+       carries 0, and from this place it may be new. LogContact zeroes it
+       again if it is a dupe here. *)
+     CalculateQSOPoints(roverLegs[i]);
+     if not LogContact(roverLegs[i], True) then
         begin
         Result := False;
         Exit;
@@ -1492,7 +1526,7 @@ begin
   if (DupeInfoCall = '') and (CallWindowString = '') and (OpMode = SearchAndPounceOpMode) then // 4.102.3
     if not Settings.Message.DeEnable then
        begin
-       SendStringAndStop(UTF8Encode(Settings.My.Call))
+       SendStringAndStop(UTF8Encode(RovingCall(Settings.My.Call)))
        end
     else
        begin
@@ -1554,12 +1588,12 @@ begin
                  end
               else
                  begin
-                 SendStringAndStop(UTF8Encode(Settings.My.Call));
+                 SendStringAndStop(UTF8Encode(RovingCall(Settings.My.Call)));
                  end;
               end
            else if ActiveMode = Digital then
               begin
-              SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
+              SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + RovingCall(Settings.My.Call) + ' KK'))
               end
            else
            end;
@@ -1651,12 +1685,12 @@ begin
               end
            else
               begin
-              SendStringAndStop(UTF8Encode(Settings.My.Call));
+              SendStringAndStop(UTF8Encode(RovingCall(Settings.My.Call)));
               end;
            end
         else if ActiveMode = Digital then
            begin
-           SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK'))
+           SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + RovingCall(Settings.My.Call) + ' KK'))
            end
         else
           //wli SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
@@ -2317,7 +2351,7 @@ begin
            end
         else
            begin
-           Result := SendCrypticMessage(UTF8Encode(Settings.My.Call));
+           Result := SendCrypticMessage(UTF8Encode(RovingCall(Settings.My.Call)));
            end;
         // DebugMsg('<<<<SendCrypticMessage(Settings.My.Call)');
         KeyStamp(F1);
@@ -2327,8 +2361,10 @@ begin
 
   if ActiveMode = Digital then
      begin
-     SendCrypticMessage(#13#10 + CallWindowString + ' DE ' + Settings.My.Call + ' ' +
-       Settings.My.Call)
+     (* UTF8Encode STATED, as the other sends of MY CALL here: the text is
+       UnicodeString and the sender's parameter a ShortString. *)
+     SendCrypticMessage(UTF8Encode(#13#10 + CallWindowString + ' DE ' +
+       RovingCall(Settings.My.Call) + ' ' + RovingCall(Settings.My.Call)))
      end
 
   else
@@ -6132,7 +6168,7 @@ begin
     (* TOOLS -> COMMANDS (issue 87 step 0): the routine the call window runs,
       handed the item's own command word. The call window is not cleared --
       only the typed path, which put the word there, clears it. *)
-    menu_cmd_adif..menu_cmd_pref:
+    menu_cmd_adif..menu_cmd_rover:
       begin
       CheckCommandInCallsignWindow(CallWindowCommandOfMenu(LowordWparam));
       end;
@@ -10688,6 +10724,12 @@ begin
     menu_cmd_wcy: SendViaTelnetSocket('SH/WCY');
     menu_cmd_wwv: SendViaTelnetSocket('SH/WWV');
     menu_cmd_pref: ShowPreferences;
+    (* A BARE WORD, AS NY4I RULED: the dialog takes the places (issues 133
+      and 87). *)
+    menu_cmd_rover:
+      begin
+      ShowRoverDialog;
+      end;
   else
     Result := false; // False result does not clear call window
   end; // case

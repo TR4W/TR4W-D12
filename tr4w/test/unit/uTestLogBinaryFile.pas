@@ -459,7 +459,12 @@ begin
      older record reads False -- and the reader clears it anyway. *)
    CheckEquals(330, Off(r.ceOffContest),    'ceOffContest sits at 330');
    CheckEquals(1,   SizeOf(r.ceOffContest), 'and is one byte');
-   CheckEquals(331, Off(r.sReserved),       'sReserved, now a string[42], from 331');
+   (* WHERE A ROVER SENT IT FROM (log schema 12), a string[10] carved from
+     sReserved's front: byte 331 was its always-zero length byte, so every
+     older record reads '' -- and the reader clears it anyway. *)
+   CheckEquals(331, Off(r.ceRoverQTH),      'ceRoverQTH sits at 331');
+   CheckEquals(11,  SizeOf(r.ceRoverQTH),   'and is a string[10]');
+   CheckEquals(342, Off(r.sReserved),       'sReserved, now a string[31], from 342');
    CheckEquals(374, Off(r.sReserved) + SizeOf(r.sReserved),
                'and ends at 374, where it always did; 374..375 are padding');
 

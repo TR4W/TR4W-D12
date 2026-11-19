@@ -993,6 +993,16 @@ unannounced, never a difference). A difference is a REPORT and never a refusal:
 - Tests: `uTestNetHello.Test_TheBuildJudgement`,
   `uTestContestById.Test_APeerOnAnotherBuildIsReportedOncePerVersionAndNeverRefused`.
 
+## A peer's QSO carries the place its rover sent it from (issues 133/87, 2026-11-19)
+
+- `ContestExchange.ceRoverQTH` (`string[10]`, offset 331, log schema 12) was
+  carved from `sReserved`; the packet is still 384 bytes, no protocol bump.
+  An older station's byte 331 is 0, so it reads ''. UNLIKE `ceOffContest`,
+  the receiver KEEPS it: it is that QSO's own fact (the place the PEER sent
+  it from), not a rule this station re-judges. The `.TRW` reader clears it.
+- A boundary entry logs one QSO per place (`DrainPendingMultiQSORefs`), so a
+  peer receives one packet per place, each with its own `ceRoverQTH`.
+
 ## Coordinate with
 
 `log-database` (row-level sync is the destination) · `contest-scoring` (dupes,

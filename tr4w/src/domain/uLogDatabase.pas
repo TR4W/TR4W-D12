@@ -2098,6 +2098,7 @@ var
    offContestMissing: boolean;
    markOffContestBackfill: boolean;
    rebuildQso: boolean;
+   roverQTHMissing: boolean;
    oldQsoColumns: AnsiString;
    blockers: string;
    added: TStringList;
@@ -2284,6 +2285,20 @@ begin
          oldQsoColumns := PragmaRowsAsText(
             'SELECT name FROM pragma_table_info(''qso'') ORDER BY cid', ',');
          end;
+      end;
+
+   (* v11 -> v12: IS qso.my_rover_qth MISSING -- asked here, before anything
+     changes, for the one-transaction reason. A log the v10 -> v11 rebuild
+     rebuilds gets it from the new table (LOG_QSO_TABLE ends with it), so it
+     is added by ALTER only to a table that is not rebuilt. NULL in every
+     existing row, which is the truth: no earlier build roved. *)
+   roverQTHMissing := False;
+   if version < 12 then
+      begin
+      roverQTHMissing :=
+         PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                        'WHERE name = ''' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name) +
+                        '''')) = '';
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -2478,6 +2493,15 @@ begin
       finally
          added.Free;
       end;
+      end;
+
+   (* v11 -> v12: qso.my_rover_qth, NULL in every existing row -- after the
+     rebuild, whose new table already ends with it. *)
+   if roverQTHMissing and (not rebuildQso) then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name) +
+         ' ' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Declaration)));
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

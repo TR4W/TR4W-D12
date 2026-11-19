@@ -1,0 +1,629 @@
+unit uTestRoverState;
+{$I ..\..\src\tr4w.inc}
+
+(* WHERE A ROVING STATION IS NOW -- issues 133 and 87 (NY4I, 2026-11-19).
+
+  WHAT IS PINNED, AND WHY EACH:
+
+    the split       a typed entry takes a space, a comma, a dash or a slash
+                    between units, any case, a repeat once: NY4I's three
+                    separators plus the on-air slash;
+    the refusal     a unit that is no place of the contest is named; more
+                    units than the county-line limit are refused; a limit
+                    below one means one;
+    the state       off by default, on with the units in the order chosen,
+                    off again on TurnOff -- and joined for display. *)
+
+interface
+
+uses
+   uTR4WTestFramework;
+
+type
+   TRoverStateTests = class(TTestCase)
+   protected
+      procedure Test_TheThreeSeparatorsAndTheSlashSplitUnits;
+      procedure Test_AnUnknownUnitIsNamed;
+      procedure Test_TheCountyLineLimitHolds;
+      procedure Test_TheStateIsOffUntilSet;
+      procedure Test_HawaiiRovesItsFourteenDistrictsTwoAtATime;
+      procedure Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
+      procedure Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
+      procedure Test_ASchema11LogGainsTheRoverColumnInOneCommit;
+      procedure Test_TheCallOnTheAirAndTheRoverQTHToken;
+      procedure Test_ARoverFromANewPlaceIsNoDupe;
+      procedure Test_ABoundaryEntryLogsOneQSOPerPlace;
+      procedure Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+   public
+      procedure RunAllTests; override;
+   end;
+
+implementation
+
+uses
+   SysUtils, Classes, Controls,
+   uAppStrings,          (* SRover* *)
+   uRoverForm,           (* TfrmRover *)
+   VC,                   (* CQWWCW, TContestHandle *)
+   uContestRegistry,     (* FindContestById, ContestIdentity *)
+   uContestBase,         (* TMyStationExchange, MyStationExchangeWithRoverPlace *)
+   uLogDatabase,         (* TLogDatabase *)
+   uLogSchema,           (* LOG_V12_QSO_ROVER_QTH_COLUMN, LOG_SCHEMA_VERSION *)
+   uTestLatestContest,   (* DowngradeTestLog, TestLogHasColumn, ScrubTestLog *)
+   uTestLogDatabase,     (* CommitFramesInWal *)
+   uSettingsModel,       (* Settings.Qso -- the dupe sheet's scope *)
+   uCallsigns,           (* TCallsignsList, TQualifiedDupeSheet, the two sheets *)
+   PostUnit,             (* Contest -- the active contest's handle *)
+   LogEdit,              (* VisibleLog.QSOIsADupe, AddQSOToDupeSheets *)
+   uMults,               (* mo.DomList -- the session's multiplier list *)
+   uAppPaths,            (* ShippedDomDirOverride *)
+   uTestContestObjects,  (* ShippedDomDir -- the tree's target\dom *)
+   uNewContestHostArea,  (* THostAreaPlaces *)
+   uRoverSession,        (* ContestRoverPlaces *)
+   uRoverState;
+
+(* Three Hawaii districts, as hawaiiqp_cty.dom spells its lines. *)
+function HawaiiPlaces: THostAreaPlaces;
+var
+   lines: TStringList;
+begin
+   Result := THostAreaPlaces.Create;
+   lines := TStringList.Create;
+   try
+      lines.Add('KOH > Hi = KOH,^Kohala');
+      lines.Add('KON > Hi = KON,^Kona');
+      lines.Add('HIL > Hi = HIL,^Hilo');
+      Result.LoadFromLines(lines);
+   finally
+      lines.Free;
+      end;
+end;
+
+procedure TRoverStateTests.Test_TheThreeSeparatorsAndTheSlashSplitUnits;
+var
+   units: TStringList;
+begin
+   BeginTest('Test_TheThreeSeparatorsAndTheSlashSplitUnits');
+   units := TStringList.Create;
+   try
+      CheckTrue(SplitRoverUnitsText('koh', units), 'one unit');
+      CheckEquals('KOH', units.CommaText, 'upper-cased');
+
+      SplitRoverUnitsText('KOH KON', units);
+      CheckEquals('KOH,KON', units.CommaText, 'a space');
+      SplitRoverUnitsText('KOH,KON', units);
+      CheckEquals('KOH,KON', units.CommaText, 'a comma');
+      SplitRoverUnitsText('KOH-KON', units);
+      CheckEquals('KOH,KON', units.CommaText, 'a dash');
+      SplitRoverUnitsText('KOH/KON', units);
+      CheckEquals('KOH,KON', units.CommaText, 'a slash');
+      SplitRoverUnitsText(' KON , - koh  ', units);
+      CheckEquals('KON,KOH', units.CommaText, 'mixed, blanks, order kept');
+      SplitRoverUnitsText('KOH KOH kon', units);
+      CheckEquals('KOH,KON', units.CommaText, 'a repeat counts once');
+
+      CheckFalse(SplitRoverUnitsText(' , - ', units), 'separators alone are nothing');
+      CheckEquals(0, units.Count, 'and leave the list empty');
+   finally
+      units.Free;
+      end;
+end;
+
+procedure TRoverStateTests.Test_AnUnknownUnitIsNamed;
+var
+   units: TStringList;
+   places: THostAreaPlaces;
+begin
+   BeginTest('Test_AnUnknownUnitIsNamed');
+   units := TStringList.Create;
+   places := HawaiiPlaces;
+   try
+      SplitRoverUnitsText('KOH', units);
+      CheckEquals('', RoverUnitsRefusal(units, places, 2), 'a district is a place');
+
+      SplitRoverUnitsText('KOH XYZ', units);
+      CheckEquals(Format(SRoverUnknownUnit, ['XYZ']),
+                  RoverUnitsRefusal(units, places, 2), 'XYZ is named');
+
+      units.Clear;
+      CheckEquals(string(SRoverNoUnit), RoverUnitsRefusal(units, places, 2),
+                  'nothing is refused');
+   finally
+      places.Free;
+      units.Free;
+      end;
+end;
+
+procedure TRoverStateTests.Test_TheCountyLineLimitHolds;
+var
+   units: TStringList;
+   places: THostAreaPlaces;
+begin
+   BeginTest('Test_TheCountyLineLimitHolds');
+   units := TStringList.Create;
+   places := HawaiiPlaces;
+   try
+      SplitRoverUnitsText('KOH KON', units);
+      CheckEquals('', RoverUnitsRefusal(units, places, 2),
+                  'two at Hawaii''s limit of two');
+      SplitRoverUnitsText('KOH KON HIL', units);
+      CheckEquals(Format(SRoverTooManyUnits, [2]),
+                  RoverUnitsRefusal(units, places, 2), 'three past it');
+
+      SplitRoverUnitsText('KOH KON', units);
+      CheckEquals(Format(SRoverTooManyUnits, [1]),
+                  RoverUnitsRefusal(units, places, 0),
+                  'a party with no county line takes one');
+      CheckEquals('', RoverUnitsRefusal(units, places, High(integer)),
+                  'an unlimited party takes any number');
+   finally
+      places.Free;
+      units.Free;
+      end;
+end;
+
+procedure TRoverStateTests.Test_TheStateIsOffUntilSet;
+var
+   state: TRoverState;
+   units: TStringList;
+begin
+   BeginTest('Test_TheStateIsOffUntilSet');
+   state := TRoverState.Create;
+   units := TStringList.Create;
+   try
+      CheckFalse(state.Active, 'off when made');
+      CheckEquals('', state.Joined('/'), 'and joins to nothing');
+
+      SplitRoverUnitsText('KON KOH', units);
+      state.SetUnits(units);
+      CheckTrue(state.Active, 'on with units');
+      CheckEquals(2, state.Count, 'two of them');
+      CheckEquals('KON', state.UnitAt(0), 'in the order chosen');
+      CheckEquals('KON/KOH', state.Joined('/'), 'joined for display');
+
+      state.TurnOff;
+      CheckFalse(state.Active, 'off again');
+
+      CheckFalse(RoverState.Active, 'the program''s state starts off');
+   finally
+      units.Free;
+      state.Free;
+      end;
+end;
+
+(* THE CONTEST'S OWN UNITS: Hawaii's district file (the New Contest box's), at
+  its county-line limit of two; Georgia's counties at its own; CQ WW has none,
+  so ROVER says so. *)
+procedure TRoverStateTests.Test_HawaiiRovesItsFourteenDistrictsTwoAtATime;
+var
+   places: THostAreaPlaces;
+   maxUnits: integer;
+   handle: TContestHandle;
+   savedDomDir: string;
+begin
+   BeginTest('Test_HawaiiRovesItsFourteenDistrictsTwoAtATime');
+   places := THostAreaPlaces.Create;
+   savedDomDir := ShippedDomDirOverride;
+   try
+      ShippedDomDirOverride := ShippedDomDir;
+
+      CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+      CheckTrue(ContestRoverPlaces(ContestIdentity(handle), places, maxUnits),
+                'Hawaii has rover places');
+      CheckEquals(14, places.Count, 'its fourteen districts');
+      CheckTrue(places.IndexOfKey('KOH') >= 0, 'KOH among them');
+      CheckEquals(-1, places.IndexOfKey('HI'), 'and no state');
+      CheckEquals(2, maxUnits, 'two at a district line');
+
+      CheckFalse(ContestRoverPlaces(ContestIdentity(CQWWCW), places, maxUnits),
+                 'CQ WW has no places to rove');
+      CheckEquals(0, places.Count, 'and loads none');
+      CheckEquals(1, maxUnits, 'and its limit reads one');
+
+      CheckFalse(ContestRoverPlaces(nil, places, maxUnits), 'no contest, no places');
+   finally
+      ShippedDomDirOverride := savedDomDir;
+      places.Free;
+      end;
+end;
+
+(* THE DIALOG, NEVER SHOWN: what is typed ticks the list, a tick writes the
+  box, OK refuses past the limit and names why, "Rover off" turns it off. *)
+procedure TRoverStateTests.Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
+var
+   places: THostAreaPlaces;
+   state: TRoverState;
+   form: TfrmRover;
+begin
+   BeginTest('Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit');
+   places := HawaiiPlaces;
+   state := TRoverState.Create;
+   form := TfrmRover.Create(nil);
+   try
+      form.Prepare(places, 2, state);
+      CheckEquals(3, form.clbUnits.Items.Count, 'one row per place');
+      CheckEquals('KOH - Kohala', form.clbUnits.Items[0], 'shown with its name');
+      CheckEquals('', form.edtUnits.Text, 'nothing typed when not roving');
+
+      form.edtUnits.Text := 'KOH-KON';
+      CheckTrue(form.clbUnits.Checked[0], 'KOH ticked from the box');
+      CheckTrue(form.clbUnits.Checked[1], 'KON ticked from the box');
+      CheckFalse(form.clbUnits.Checked[2], 'HIL not');
+
+      form.clbUnits.Checked[1] := False;
+      form.UnitsClickCheck(form.clbUnits);
+      CheckEquals('KOH', form.edtUnits.Text, 'unticking KON takes it out of the box');
+
+      form.edtUnits.Text := 'KOH KON HIL';
+      form.OKClick(form.btnOK);
+      CheckEquals(integer(mrNone), integer(form.ModalResult), 'three at a limit of two stays open');
+      CheckEquals(Format(SRoverTooManyUnits, [2]), form.lblRefusal.Caption, 'and says why');
+
+      form.edtUnits.Text := 'kon, koh';
+      form.OKClick(form.btnOK);
+      CheckEquals(integer(mrOK), integer(form.ModalResult), 'two is accepted');
+      CheckEquals('KON,KOH', form.Chosen.CommaText, 'in the order typed');
+      CheckFalse(form.TurnedOff, 'and is no "off"');
+
+      form.OffClick(form.btnOff);
+      CheckTrue(form.TurnedOff, '"Rover off" turns it off');
+      CheckEquals(0, form.Chosen.Count, 'with nothing chosen');
+   finally
+      form.Free;
+      state.Free;
+      places.Free;
+      end;
+end;
+
+(* LOG SCHEMA 12, AS NY4I RULED IT (2026-11-19): a district goes in the SENT
+  EXCHANGE -- the row's ceRoverQTH replaces MY STATE in what the export says
+  was sent, and a QSO not sent while roving is exactly as before -- and
+  my_county is the REAL county the district lies in, by the crosswalk the
+  worked station's CNTY uses (state 'HI', county 'Hawaii' for KOH). *)
+procedure TRoverStateTests.Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
+var
+   my, sent: TMyStationExchange;
+   qso: ContestExchange;
+   handle: TContestHandle;
+   hawaii: TContestBase;
+begin
+   BeginTest('Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty');
+   my := Default(TMyStationExchange);
+   my.MyState := 'KON';
+
+   sent := MyStationExchangeWithRoverPlace(my, 'KOH');
+   CheckEquals('KOH', sent.MyState, 'a rover''s QSO sent its place');
+   sent := MyStationExchangeWithRoverPlace(my, '');
+   CheckEquals('KON', sent.MyState, 'a QSO not sent while roving is unchanged');
+
+   CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+   hawaii := ContestIdentity(handle);
+   qso := Default(ContestExchange);
+   qso.RSTSent := 599;
+   qso.Mode := CW;
+   CheckTrue(Pos('KOH', hawaii.FormatADIFSentExchange(
+                            MyStationExchangeWithRoverPlace(my, 'KOH'), qso)) > 0,
+             'Hawaii''s STX_STRING carries the rover''s district');
+
+   (* THE CROSSWALK, of a record built as PostUnit.RoverPlaceADIFCounty builds
+     it: the place as its QTH, resolved as itself. *)
+   qso.QTHString := 'KOH';
+   qso.DomesticQTH := 'KOH';
+   CheckEquals('HI', hawaii.ADIFCountyState(qso), 'KOH is a Hawaii county place');
+   CheckEquals('Hawaii', hawaii.ADIFCountyName(qso, 'Kohala'),
+               'KOH lies in Hawaii county, not "Kohala"');
+   qso.QTHString := 'HON';
+   qso.DomesticQTH := 'HON';
+   CheckEquals('Honolulu', hawaii.ADIFCountyName(qso, 'Honolulu'), 'HON in Honolulu');
+end;
+
+(* LOG SCHEMA 12 ON A SCHEMA-11 LOG: the column added by ALTER, NULL in every
+  row (no earlier build roved), the version stamped, ONE commit; a second
+  open changes nothing. A new log has it too. *)
+procedure TRoverStateTests.Test_ASchema11LogGainsTheRoverColumnInOneCommit;
+var
+   fn, dir: string;
+   db: TLogDatabase;
+begin
+   BeginTest('Test_ASchema11LogGainsTheRoverColumnInOneCommit');
+   dir := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_rover_' + IntToStr(GetProcessID);
+   ForceDirectories(dir);
+   fn := IncludeTrailingPathDelimiter(dir) + 'rover11.db';
+   ScrubTestLog(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name)),
+                'a new log has my_rover_qth');
+   finally
+      db.Free;
+   end;
+   DowngradeTestLog(fn, 11, Low(LOG_V3_QSO_COLUMNS));
+   CheckFalse(FileExists(fn + '-wal'), 'precondition: no WAL is left by the fixture');
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(1, CommitFramesInWal(fn + '-wal'), 'the column and the stamp: ONE commit');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
+      CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name)),
+                'the column is there');
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(0, CommitFramesInWal(fn + '-wal'), 'a second open commits nothing');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'still current');
+   finally
+      db.Free;
+   end;
+   ScrubTestLog(fn);
+end;
+
+(* NY4I, 2026-11-17 and 2026-11-19: while roving MYCALL is the roving call --
+  NY4I/KOH, NY4I/KOH/KON at a boundary -- and a fixed station never sends a
+  /KOH; {ROVERQTH} is a named token read whole, in any case. *)
+procedure TRoverStateTests.Test_TheCallOnTheAirAndTheRoverQTHToken;
+var
+   units: TStringList;
+begin
+   BeginTest('Test_TheCallOnTheAirAndTheRoverQTHToken');
+   units := TStringList.Create;
+   try
+      RoverState.TurnOff;
+      CheckEquals('NY4I', RovingCall('NY4I'), 'not roving: the plain call');
+      CheckEquals('', RovingCall(''), 'no call: nothing to suffix');
+
+      SplitRoverUnitsText('KOH', units);
+      RoverState.SetUnits(units);
+      CheckEquals('NY4I/KOH', RovingCall('NY4I'), 'roving: the call gains its place');
+
+      SplitRoverUnitsText('KON KOH', units);
+      RoverState.SetUnits(units);
+      CheckEquals('NY4I/KON/KOH', RovingCall('NY4I'),
+                  'a boundary: both places, in the order chosen');
+
+      RoverState.TurnOff;
+      CheckEquals('NY4I', RovingCall('NY4I'), 'off again: the plain call');
+
+      CheckTrue(RoverQTHTokenAt('599 {ROVERQTH}', 5), 'the token after 599');
+      CheckTrue(RoverQTHTokenAt('{roverqth}', 1), 'in any case');
+      CheckFalse(RoverQTHTokenAt('599 {ROVERQT', 5), 'cut short is no token');
+      CheckFalse(RoverQTHTokenAt('{ TU', 1), 'a bare { is the worked call''s, as ever');
+      CheckFalse(RoverQTHTokenAt('{ROVERQTH}', 0), 'no index 0');
+   finally
+      RoverState.TurnOff;
+      units.Free;
+      end;
+end;
+
+(* NY4I, 2026-11-18 (issue 133): "NY4I/PIN is NOT a dupe of NY4I/PAS" --
+  the dupe key carries the place the ROVER sent the QSO from, read from the
+  record (ceRoverQTH), through the routines LogContact, the loader and the
+  rescore all call (VisibleLog.QSOIsADupe, AddQSOToDupeSheets). A QSO not
+  sent while roving keys exactly as before; a contest that is no state party
+  never reads the place. *)
+procedure TRoverStateTests.Test_ARoverFromANewPlaceIsNoDupe;
+var
+   handle: TContestHandle;
+   hawaii: TContestBase;
+   savedContest: TContestHandle;
+   savedByBand, savedByMode: boolean;
+   savedList: TCallsignsList;
+   savedQualified: TQualifiedDupeSheet;
+   rx: ContestExchange;
+
+   function QSO(const aRover: string): ContestExchange;
+   begin
+      Result := Default(ContestExchange);
+      Result.Callsign := 'W1AW';
+      Result.QTHString := 'CT';
+      Result.DomesticQTH := 'CT';
+      Result.Band := Band20;
+      Result.Mode := CW;
+      Result.ceRecordKind := rkQSO;
+      Result.ceContest := Contest;
+      Result.ceRoverQTH := ShortString(aRover);
+   end;
+
+begin
+   BeginTest('Test_ARoverFromANewPlaceIsNoDupe');
+   CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+   hawaii := ContestIdentity(handle);
+
+   (* THE KEY ITSELF. *)
+   CheckTrue(hawaii.DupeKeyIncludesSentQTH, 'a state party keys the rover''s place');
+   CheckFalse(ContestIdentity(CQWWCW).DupeKeyIncludesSentQTH, 'CQ WW does not');
+   rx := QSO('');
+   CheckEquals('CT', hawaii.DupeKeyQualifier(rx), 'not roving: the key is as before');
+   rx := QSO('KOH');
+   CheckEquals('CT'#2'KOH', hawaii.DupeKeyQualifier(rx), 'from KOH: the place joins it');
+   CheckEquals('', ContestIdentity(CQWWCW).DupeKeyQualifier(rx),
+               'CQ WW''s key never reads the place');
+
+   (* THROUGH THE ENGINE'S SHEETS, as LogContact, the loader and the rescore
+      ask them. *)
+   savedContest := Contest;
+   savedByBand := Settings.Qso.ByBand;
+   savedByMode := Settings.Qso.ByMode;
+   savedList := CallsignsList;
+   savedQualified := QualifiedDupes;
+   CallsignsList := TCallsignsList.Create;
+   QualifiedDupes := TQualifiedDupeSheet.Create;
+   try
+      Contest := handle;
+      Settings.Qso.ByBand := True;
+      Settings.Qso.ByMode := True;
+
+      rx := QSO('KOH');
+      CheckFalse(VisibleLog.QSOIsADupe(rx), 'the first QSO from KOH is new');
+      AddQSOToDupeSheets(rx, False);
+      rx := QSO('KOH');
+      CheckTrue(VisibleLog.QSOIsADupe(rx), 'W1AW again from KOH is a dupe');
+      rx := QSO('KON');
+      CheckFalse(VisibleLog.QSOIsADupe(rx), 'W1AW from KON is NOT a dupe of KOH');
+      AddQSOToDupeSheets(rx, False);
+      rx := QSO('KON');
+      CheckTrue(VisibleLog.QSOIsADupe(rx), 'and from KON again is');
+
+      rx := QSO('');
+      CheckFalse(VisibleLog.QSOIsADupe(rx), 'a fixed station''s key is apart from a rover''s');
+      AddQSOToDupeSheets(rx, False);
+      rx := QSO('');
+      CheckTrue(VisibleLog.QSOIsADupe(rx), 'and a fixed station''s repeat is a dupe, as ever');
+   finally
+      CallsignsList.Free;
+      QualifiedDupes.Free;
+      CallsignsList := savedList;
+      QualifiedDupes := savedQualified;
+      Settings.Qso.ByMode := savedByMode;
+      Settings.Qso.ByBand := savedByBand;
+      Contest := savedContest;
+   end;
+end;
+
+(* A BOUNDARY ENTRY IS ONE QSO PER PLACE (issue 133): the extra rows are
+  copies of every row the entry logged from the first place, one set per
+  further place, each stamped with its place and keeping the entry's id (the
+  store's qso_set_id link); a received county line is crossed with ours.
+  MainUnit.DrainPendingMultiQSORefs logs them (it cannot run headless, so
+  its call is pinned by reading the source). *)
+procedure TRoverStateTests.Test_ABoundaryEntryLogsOneQSOPerPlace;
+var
+   state: TRoverState;
+   units: TStringList;
+   logged, legs: TRoverLegs;
+   source: TStringList;
+   drain: integer;
+begin
+   BeginTest('Test_ABoundaryEntryLogsOneQSOPerPlace');
+   state := TRoverState.Create;
+   units := TStringList.Create;
+   try
+      SetLength(logged, 1);
+      logged[0] := Default(ContestExchange);
+      logged[0].Callsign := 'W1AW';
+      logged[0].QTHString := 'CT';
+      logged[0].id := 'ENTRY1';
+      logged[0].ceRoverQTH := 'KOH';
+
+      CheckEquals(0, Length(RoverBoundaryLegs(logged, state)), 'not roving: no extra QSO');
+      SplitRoverUnitsText('KOH', units);
+      state.SetUnits(units);
+      CheckEquals(0, Length(RoverBoundaryLegs(logged, state)), 'one place: none');
+
+      SplitRoverUnitsText('KOH KON', units);
+      state.SetUnits(units);
+      legs := RoverBoundaryLegs(logged, state);
+      CheckEquals(1, Length(legs), 'two places: one more QSO');
+      CheckEquals('KON', string(legs[0].ceRoverQTH), 'from the second place');
+      CheckEquals('W1AW', string(legs[0].Callsign), 'with the same station');
+      CheckEquals('ENTRY1', string(legs[0].id), 'and the entry''s id, so one set');
+
+      (* A DUPE FROM KOH IS NOT A DUPE FROM KON BY INHERITANCE. *)
+      logged[0].ceDupe := True;
+      legs := RoverBoundaryLegs(logged, state);
+      CheckFalse(legs[0].ceDupe, 'the copy carries no dupe mark from the first place');
+      logged[0].ceDupe := False;
+
+      (* The worked station on a county line too: CT and RI received. *)
+      SetLength(logged, 2);
+      logged[1] := logged[0];
+      logged[1].QTHString := 'RI';
+      legs := RoverBoundaryLegs(logged, state);
+      CheckEquals(2, Length(legs), 'each received leg from the second place');
+      CheckEquals('CT', string(legs[0].QTHString), 'CT from KON');
+      CheckEquals('RI', string(legs[1].QTHString), 'RI from KON');
+      CheckEquals('KON', string(legs[1].ceRoverQTH), 'both from KON');
+   finally
+      units.Free;
+      state.Free;
+      end;
+
+   source := TStringList.Create;
+   try
+      source.LoadFromFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                          PathDelim + 'src' + PathDelim + 'MainUnit.pas');
+      drain := Pos('function DrainPendingMultiQSORefs: boolean;', source.Text);
+      CheckTrue(drain > 0, 'MainUnit has the drain');
+      CheckTrue(Pos('RoverBoundaryLegs(logged, RoverState)',
+                    Copy(source.Text, drain, 6000)) > 0,
+                'and the drain logs the rover''s boundary legs');
+   finally
+      source.Free;
+   end;
+end;
+
+(* my_county OF A ROVER'S QSO, THROUGH THE REAL ROUTINE
+  (PostUnit.RoverPlaceADIFCounty -- the worked station's CNTY rule): a Hawaii
+  district gives the county it lies in, a county party's county its list
+  name. Both need the place on the session's multiplier list (mo.DomList),
+  as the export's CNTY does; a place the list lacks gives none. *)
+procedure TRoverStateTests.Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+var
+   handle: TContestHandle;
+   savedContest: TContestHandle;
+   index: integer;
+
+   procedure Seed(const aKey, aName: string);
+   begin
+      index := mo.DomList.AddString(aKey, AllBands, Both, True);
+      mo.DomList.AltName[index] := Str30(aName);
+   end;
+
+   procedure Unseed(const aKey: string);
+   begin
+      if mo.DomList.FindMult(aKey, index) then
+         begin
+         mo.DomList.Delete(index);
+         end;
+   end;
+
+begin
+   BeginTest('Test_MyCountyOfARoverPlaceIsItsADIFCounty');
+   savedContest := Contest;
+   try
+      CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+      Contest := handle;
+      Seed('KOH', 'Kohala');
+      CheckEquals('HI,Hawaii', RoverPlaceADIFCounty('KOH'),
+                  'KOH lies in Hawaii county: my_county is the county, not the district');
+      CheckEquals('', RoverPlaceADIFCounty(''), 'no place, no county');
+      Unseed('KOH');
+      CheckEquals('', RoverPlaceADIFCounty('KOH'),
+                  'a place the session''s list lacks gives none');
+
+      CheckTrue(FindContestById('GA-QSO-PARTY', handle), 'Georgia is registered');
+      Contest := handle;
+      Seed('APPL', 'Appling');
+      CheckEquals('GA,Appling', RoverPlaceADIFCounty('APPL'),
+                  'a county party''s county is its list name');
+      Unseed('APPL');
+   finally
+      Unseed('KOH');
+      Unseed('APPL');
+      Contest := savedContest;
+   end;
+end;
+
+procedure TRoverStateTests.RunAllTests;
+begin
+   Test_TheThreeSeparatorsAndTheSlashSplitUnits;
+   Test_AnUnknownUnitIsNamed;
+   Test_TheCountyLineLimitHolds;
+   Test_TheStateIsOffUntilSet;
+   Test_HawaiiRovesItsFourteenDistrictsTwoAtATime;
+   Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
+   Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
+   Test_ASchema11LogGainsTheRoverColumnInOneCommit;
+   Test_TheCallOnTheAirAndTheRoverQTHToken;
+   Test_ARoverFromANewPlaceIsNoDupe;
+   Test_ABoundaryEntryLogsOneQSOPerPlace;
+   Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+end;
+
+end.

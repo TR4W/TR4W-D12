@@ -738,6 +738,7 @@ uses
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
    MainUnit, uLogDatabase, uLogImport,
+   uRoverState,        (* RoverState, RovingCall -- my_call as signed while roving *)
    uContestRegistry,   (* ContestId -- a contest's stored name *)
    uContestNames,      (* ContestFromName -- the schema 6 migration's contest *)
    uLogBinaryFile,
@@ -2761,9 +2762,29 @@ end;
 function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
 begin
    Result := LogStoreCurrentMyFacts;
+   (* A ROVER'S QSO KNOWS ITS COUNTY (issues 133 and 87, NY4I 2026-11-19):
+     my_county is ADIF MY_CNTY, the SECONDARY subdivision -- a real county,
+     never a district. The place the record was sent from (ceRoverQTH, the
+     contest's own unit) is turned into the county it lies in by the rule the
+     worked station's CNTY uses (PostUnit.RoverPlaceADIFCounty): KOH ->
+     'HI,Hawaii'. A QSO not sent while roving keeps my_county empty, as
+     before: unknown. *)
+   if aQso.ceRoverQTH <> '' then
+      begin
+      Result.County := AnsiString(RoverPlaceADIFCounty(string(aQso.ceRoverQTH)));
+      end;
    if not QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
       begin
       Result.Source := mfsAssumed;
+      end;
+   (* AND OUR CALL AS SIGNED (NY4I, 2026-11-17: while roving MYCALL is the
+     roving call): my_call is ADIF STATION_CALLSIGN, "as signed, rover suffix
+     and all" -- NY4I/KOH, or NY4I/KOH/KON at a boundary, as keyed. Only for a
+     QSO logged HERE while roving; a peer's row keeps this station's plain
+     call, marked assumed, as every peer row is. *)
+   if (Result.Source = mfsLogged) and (aQso.ceRoverQTH <> '') and RoverState.Active then
+      begin
+      Result.Call := UTF8Encode(RovingCall(Settings.My.Call));
       end;
    case SentYearSourceOf(ContestReceivedYearKind(ContestIdentity(aQso.ceContest)) <> rykNone,
                          Result.Source) of

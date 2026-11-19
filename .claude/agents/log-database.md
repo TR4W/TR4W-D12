@@ -900,6 +900,34 @@ consistent, I do not see why we would keep those fields"*. Plan section 12o;
   `DowngradeTestLog` below 11 ADDS the sixteen back, at the END of the table,
   after its drops, so every older migration test runs through the rebuild.
 
+## SCHEMA 12: WHERE A ROVER SENT THE QSO FROM (issues 133 and 87, 2026-11-19)
+
+NY4I: one log for the whole event, each QSO stamped with the place it was
+sent from; `my_county` is ADIF MY_CNTY (a REAL county) and `my_state` stays
+the primary subdivision -- a district that is no county goes in the sent
+exchange only.
+
+- **`qso.my_rover_qth`** (`LOG_V12_QSO_ROVER_QTH_COLUMN`, TEXT, last column),
+  **on the record**: `ContestExchange.ceRoverQTH` (`string[10]`, offset 331,
+  carved from `sReserved`, now `string[31]` at 342). UPDATABLE through
+  `BindRecord`/`ReadRecord` like any record field -- NOT a `QSO_MY_COLUMNS`
+  member, because the loader, the rescore and the dupe key must read it from
+  the record (`ContestExchange` carries no `my_*`). NULL = not roving.
+- **Migration**: asked before any change; ALTER only on a table the v11
+  rebuild does not rebuild (from below 11 the new `LOG_QSO_TABLE` already ends
+  with it). No backfill, no mark. `DowngradeTestLog` below 12 drops it first.
+- **Written by `LOGSUBS2.LogContact`** for a QSO logged HERE while roving (the
+  first place; a county-line leg arrives with its own). A peer's packet
+  carries ITS place, which is that QSO's fact, so a receiver keeps it; the
+  `.TRW` reader clears it.
+- **`my_county`** of a row with a place: `uLogStore.CaptureMyFactsNow` asks
+  `PostUnit.RoverPlaceADIFCounty` -- the worked station's CNTY rule
+  (`ADIFCountyOfQSO`, lifted out of the export unchanged), KOH -> `HI,Hawaii`.
+- **The export** sends it in place of MY STATE:
+  `PostUnit.CurrentMyStationExchange(contest, facts, rec.ceRoverQTH)` ->
+  `uContestBase.MyStationExchangeWithRoverPlace`. A row with none exports
+  byte-for-byte as before, so no corpus fixture can move.
+
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 
 NY4I: the log belongs to TR4W; the database must never get in the way of
