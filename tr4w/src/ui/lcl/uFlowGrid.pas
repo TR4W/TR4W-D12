@@ -36,19 +36,21 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   for two windows and wrong for the third is worth changing while it costs four
   files.
 
-  AND THE TEXT IS OPTIONAL, which is what the third caller needed.  Remaining
-  mults store only the CELL -- a (multiplier type, index) pair, TRemainingMult
-  -- and resolve the text in their own OnDrawCell from mo.PrfList, mo.DomList or
-  CTY.ctyTable, because those answers change as the contest runs and a copy
-  taken at rebuild time would go stale between rebuilds.  That was the Win32
-  behaviour too: LB_ADDSTRING's lParam carried the pair, never a string.
+  EVERY CELL HOLDS ITS TEXT, IN A TStringGrid (issue 216). LayOut writes each
+  entry into the grid's own Cells, so the grid paints itself and knows when to
+  repaint; the forced Invalidate that a text-less TDrawGrid needed is gone.
+  The remaining-mults windows used to store only a (kind, index) pair and look
+  the text up at paint time; NY4I chose to resolve it at the rebuild instead,
+  so their builder (LOGEDIT.ShowRemMultsInWindow) hands the text in like the
+  other two.
 
   WHAT IS SHARED IS THE MODEL AND THE ARITHMETIC.  What is NOT shared is the
-  PAINTING, deliberately: the dupe sheet fills each cell with its district
-  colour, and the SCP list gradients only the dupes and inverts their text.
-  Those are different windows saying different things, and folding them into
-  one parameterised painter would make both harder to read than either.  Each
-  form keeps its own OnDrawCell and asks this object what is in the cell.
+  COLOUR, deliberately: the dupe sheet fills each cell with its district
+  colour, SCP fills only the dupes and inverts their text, and a worked
+  remaining multiplier fades to white.  Those are different windows saying
+  different things; each form sets its own colours (OnPrepareCanvas, or for the
+  remaining-mults fade still a draw handler -- see uRemMultsForm) and asks this
+  object which entry is in the cell.
 
   THE DOWN-THEN-ACROSS RULE IS THE BAND MAP'S, deliberately: three windows now
   lay callsigns out in columns and an operator moving between them should not
@@ -60,20 +62,35 @@ unit uFlowGrid;
 interface
 
 uses
-   Classes, SysUtils, Grids;
+   Classes, SysUtils, Grids,
+   utils_text;   (* LclText -- the model's text into the grid's UTF-8 Cells *)
 
 type
    TFlowGrid = class
    private
-      FGrid: TDrawGrid;
+      (* A TStringGrid (issue 216): LayOut writes each cell's text into the
+        grid's own Cells, so the grid paints and repaints itself. *)
+      FGrid: TStringGrid;
       (* Each cell's text, with the window's own typed cell in Objects[] --
-        see AddCell. OwnsObjects is set, so the list frees the cells. *)
+        see AddCell. OwnsObjects is set, so the list frees the cells.
+
+        NOT A SECOND COPY OF THE GRID'S CELLS: this is the ORDER, one entry
+        after another, and the grid's Cells are its projection onto the
+        current columns. A resize reflows that projection from this list
+        (LayOut); the cells alone could not say which entry comes next. *)
       FCalls: TStringList;
       FCellWidth: integer;
       FCellHeight: integer;
       FLimitToVisible: boolean;
+
+      (* THE TEXT INTO THE GRID'S OWN CELLS, down then across, '' past the end
+        so a shorter rebuild leaves nothing of the last one behind. One
+        BeginUpdate/EndUpdate around the whole pass: the SCP window rebuilds on
+        every keystroke, and each bare Cells[] write would invalidate its own
+        cell. *)
+      procedure WriteCells;
    public
-      constructor Create(const aGrid: TDrawGrid;
+      constructor Create(const aGrid: TStringGrid;
                          const aCellWidth, aCellHeight: integer);
       destructor Destroy; override;
 
@@ -128,7 +145,7 @@ type
 
 implementation
 
-constructor TFlowGrid.Create(const aGrid: TDrawGrid;
+constructor TFlowGrid.Create(const aGrid: TStringGrid;
                              const aCellWidth, aCellHeight: integer);
 begin
    inherited Create;
@@ -225,16 +242,34 @@ end;
 
 procedure TFlowGrid.EndRebuild;
 begin
-   // The cell count changed, so the shape is recomputed -- and then repainted,
-   // because a grid whose cells carry no text of their own has no way to know
-   // its model moved.  That lesson cost an afternoon on the possible-call list
-   // (2026-08-24): the Win32 list box repainted because each item's DATA
-   // differed, which was never a decision anyone made.
+   // The cell count changed, so the shape is recomputed and the text written
+   // into the grid's Cells, which repaints what changed.
    LayOut;
-   if FGrid <> nil then
+end;
+
+procedure TFlowGrid.WriteCells;
+var
+   c, r: integer;
+begin
+   if FGrid = nil then
       begin
-      FGrid.Invalidate;
+      Exit;
       end;
+
+   (* EndUpdate repaints the grid (VisualChange) -- the grid's own repaint,
+     once per rebuild, where EndRebuild used to force one. *)
+   FGrid.BeginUpdate;
+   try
+      for c := 0 to FGrid.ColCount - 1 do
+         begin
+         for r := 0 to FGrid.RowCount - 1 do
+            begin
+            FGrid.Cells[c, r] := LclText(TextAt(IndexAt(c, r)));   // '' past the end
+            end;
+         end;
+   finally
+      FGrid.EndUpdate;
+   end;
 end;
 
 procedure TFlowGrid.LayOut;
@@ -272,6 +307,9 @@ begin
       begin
       FGrid.ColCount := colsAcross;
       end;
+
+   // After the shape, which decides where each entry lands.
+   WriteCells;
 end;
 
 procedure TFlowGrid.SetCellWidth(const aWidth: integer);

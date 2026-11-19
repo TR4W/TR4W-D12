@@ -29,9 +29,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                      window shows, and RemMultsWindowShown for the fill.  Its
                      per-window tLB_SETCOLUMNWIDTH calls are the grid's cell
                      width; SetRemMultsColumnWidth still decides it.
-    WM_DRAWITEM   -> TfrmRemMults.MultsDrawCell, which asks ResolveMult below
-                     for the text and the worked flag, handing it the
-                     multiplier's (kind, index) pair.
+    WM_DRAWITEM   -> TfrmRemMults.MultsDrawCell, which paints the text and
+                     worked flag the REBUILD stored: LOGEDIT.ShowRemMultsInWindow
+                     asks ResolveRemainingMult below for each cell (issue 216).
     WM_SIZE       -> Align = alClient plus TFlowGrid.LayOut.
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE -> DefTR4WProc.  Not reproduced, as
                      with every converted window before it.
@@ -61,6 +61,14 @@ uses
 
 procedure UpdateRemainingMultsWindows;
 
+(* ONE REMAINING MULTIPLIER'S TEXT, AND WHETHER IT HAS BEEN WORKED, as the
+  multiplier sheets say NOW. LOGEDIT.ShowRemMultsInWindow asks it for each
+  cell as it rebuilds the window, and the text goes into the grid's Cells
+  (issue 216, decision A). It was asked at paint time, through the
+  RemMultsResolve procedure variable, until then. *)
+procedure ResolveRemainingMult(const aKind: RemainingMultiplierType; const aIndex: integer;
+                               out aText: string; out aWorked: boolean);
+
 implementation
 
 uses
@@ -73,14 +81,14 @@ uses
 var
   RemMultsBuf                           : array[0..7] of AnsiChar;
 
-(* ONE CELL, RESOLVED AT PAINT TIME.
+(* ONE CELL, RESOLVED WHEN THE WINDOW IS REBUILT (issue 216).
 
   A multiplier is the pair (kind, index into that kind's table), and it
   arrives as the pair. It used to arrive as MakeLong(Ord(rmt), index), what
   the Win32 list box's one lParam per item forced, and was unpacked here with
   LoWord/HiWord (pointer audit P9, item 5.1). *)
-procedure ResolveMult(const aKind: RemainingMultiplierType; const aIndex: integer;
-                      out aText: string; out aWorked: boolean);
+procedure ResolveRemainingMult(const aKind: RemainingMultiplierType; const aIndex: integer;
+                               out aText: string; out aWorked: boolean);
 var
   rmt      : RemainingMultiplierType;
   Index    : integer;
@@ -149,5 +157,4 @@ end;
 
 begin
   RemMultsOnShow := @RemMultsWindowShown;
-  RemMultsResolve := @ResolveMult;
 end.

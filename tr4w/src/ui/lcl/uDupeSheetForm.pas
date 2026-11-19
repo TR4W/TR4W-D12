@@ -26,11 +26,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   single globals, and this one cannot be.  The instances live in GForms and are
   addressed by their tw_ index.
 
-  A TDrawGrid RATHER THAN THE OWNER-DRAWN LIST BOX, and the same shape the band
+  A GRID RATHER THAN THE OWNER-DRAWN LIST BOX, and the same shape the band
   map already uses: the cells flow DOWN THEN ACROSS, and how many columns that
   needs falls out of how many fit down.  That is exactly what LB_SETCOLUMNWIDTH
   was asking the list box to work out; the LCL wants the counts instead, which
   is the same arithmetic made explicit.
+
+  A TStringGrid, PAINTED BY ITSELF (issue 216). The calls are in its Cells
+  (TFlowGrid.LayOut writes them) and OnPrepareCanvas gives each cell its
+  district colour; there is no draw handler. It was a TDrawGrid with
+  DefaultDrawing off and every pixel ours, told to repaint by a forced
+  Invalidate because its cells held no text.
 
   NOTE WHICH RESIZE BEHAVIOUR THIS IS.  The stations window has FIXED columns,
   so it scales font and columns together (see TfrmStations.HandleResize).  This
@@ -66,15 +72,15 @@ type
    end;
 
    TfrmDupeSheet = class(TForm)
-      grdDupes: TDrawGrid;
+      grdDupes: TStringGrid;
       procedure HandleCreate(Sender: TObject);
       procedure HandleDestroy(Sender: TObject);
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure HandleShow(Sender: TObject);
       procedure HandleResize(Sender: TObject);
       procedure HandleKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-      procedure DupesDrawCell(Sender: TObject; aCol, aRow: integer;
-                              aRect: TRect; aState: TGridDrawState);
+      procedure DupesPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                   aState: TGridDrawState);
    private
       FIndex: WindowsType;
    public
@@ -235,30 +241,29 @@ end;
   SECOND caller, not the third: two copies of the same arithmetic drift, and
   the drift is invisible. }
 
-{ THE GRADIENT WAS A GRADIENT BETWEEN A COLOUR AND ITSELF.
+(* THE DISTRICT COLOUR, AS THE GRID PAINTS ITS OWN CELL (issue 216).
 
-  The Win32 handler called GradientRect with the SAME colour for both stops, so
-  what it produced was a flat fill -- and its `else` arm, which would have
-  filled white and walked VDCurrentCallDistrict, could never run: `Left` was set
-  to 1 at the top of the procedure and never changed, so `if Left <> 0` was
-  always true.  A solid brush is what the operator has always seen; this is not
-  a simplification of the appearance, it is the appearance with the machinery
-  that never did anything taken out. }
-procedure TfrmDupeSheet.DupesDrawCell(Sender: TObject; aCol, aRow: integer;
-                                      aRect: TRect; aState: TGridDrawState);
+  The text is the grid's (Cells, written by TFlowGrid.LayOut); this sets only
+  the colours the grid paints it in: the district's colour behind black text,
+  and the window colour for a cell past the end -- the last column is rarely
+  full. Set for every state, so a selected or focused cell looks like the rest:
+  the owner-draw this replaced never showed a selection either.
+
+  THE GRADIENT WAS A GRADIENT BETWEEN A COLOUR AND ITSELF. The Win32 handler
+  called GradientRect with the SAME colour for both stops, so what it produced
+  was a flat fill -- and its `else` arm could never run. A solid brush is what
+  the operator has always seen. *)
+procedure TfrmDupeSheet.DupesPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                           aState: TGridDrawState);
 var
    idx: integer;
    district: byte;
 begin
    idx := Calls.IndexAt(aCol, aRow);
-
-   grdDupes.Canvas.Brush.Style := bsSolid;
-
    if idx < 0 then
       begin
-      // Past the end of the model -- the last column is rarely full.
       grdDupes.Canvas.Brush.Color := clWindow;
-      grdDupes.Canvas.FillRect(aRect);
+      grdDupes.Canvas.Font.Color  := clBlack;
       Exit;
       end;
 
@@ -269,12 +274,7 @@ begin
       end;
 
    grdDupes.Canvas.Brush.Color := tr4wColorsArray[VDColorsArray[district]];
-   grdDupes.Canvas.FillRect(aRect);
-
-   grdDupes.Canvas.Brush.Style := bsClear;      // SetBkMode(TRANSPARENT)
    grdDupes.Canvas.Font.Color  := clBlack;
-   grdDupes.Canvas.TextRect(aRect, aRect.Left, aRect.Top, Calls.TextAt(idx),
-                            TTextStyle(grdDupes.Canvas.TextStyle));
 end;
 
 procedure CreateTR4WDupeSheetWindow(const aIndex: WindowsType);

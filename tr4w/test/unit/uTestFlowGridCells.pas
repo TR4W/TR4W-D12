@@ -26,7 +26,8 @@ unit uTestFlowGridCells;
 interface
 
 uses
-   SysUtils, VC, uTR4WTestFramework;
+   SysUtils, VC, uTR4WTestFramework,
+   uDupeSheetForm;   (* TfrmDupeSheet -- CheckFlowCells reads its grid *)
 
 type
    TFlowGridCellTests = class(TTestCase)
@@ -34,11 +35,19 @@ type
       procedure Test_DupeSheet_EveryCallKeepsItsDistrict;
       procedure Test_DupeSheet_ARebuildReplacesTheCells;
       procedure Test_DupeSheet_ACellPastTheEndHasNoDistrict;
+      procedure CheckFlowCells(const aForm: TfrmDupeSheet; const aCount: integer;
+                               const aWhen: string);
+      procedure Test_DupeSheet_TheGridHoldsTheCallsInItsCells;
+      procedure Test_DupeSheet_AShorterRebuildLeavesNoOldText;
+      procedure Test_DupeSheet_AResizeReflowsTheCells;
       procedure Test_SCP_EveryCallKeepsItsDupeFlag;
       procedure Test_SCP_ACallPastCapacityIsRefused;
+      procedure Test_SCP_TheGridHoldsTheCallsInItsCells;
       procedure Test_RemMults_EveryCellKeepsItsKindAndIndex;
       procedure Test_RemMults_ARebuildReplacesTheCells;
       procedure Test_RemMults_ACellPastTheEndIsNotAMultiplier;
+      procedure Test_RemMults_TheTextIsInTheCellsWithItsWorkedFlag;
+      procedure Test_RemMults_ARebuildShowsTheSheetAsItStandsThen;
    public
       procedure RunAllTests; override;
    end;
@@ -47,9 +56,18 @@ implementation
 
 uses
    Forms,             (* Application *)
-   uDupeSheetForm,
+   Controls,          (* alNone -- the reflow test sizes the grid itself *)
    uMasterForm,
-   uRemMultsForm;
+   uRemMultsForm,
+   (* The zone-window rebuild, issue 216 -- the builder and the sheet. *)
+   LogEdit,           (* VisibleLog *)
+   LogWind,           (* MaxNumberOfZones, ActiveBand *)
+   uMults,            (* mo *)
+   uWindowTable,      (* tr4w_WindowsArray -- the window is open *)
+   uSettingsModel,    (* Settings.RemainingMults.DisplayMode *)
+   uContestRegistry,  (* ContestHandleOf, TContestHandle *)
+   uContestFactory,   (* ReleaseActiveContest *)
+   PostUnit;          (* Contest *)
 
 procedure InitWidgetSet;
 begin
@@ -148,6 +166,122 @@ begin
    end;
 end;
 
+(* ISSUE 216: THE CALLS ARE IN THE GRID'S OWN CELLS, down then across, so
+  the grid paints them itself. Read from grdDupes.Cells, never from the
+  model, because the model being right is what the tests above prove. *)
+
+(* aCount calls named C0, C1, ... with district '1'. *)
+procedure FillDupeSheetWith(const aForm: TfrmDupeSheet; const aCount: integer);
+var
+   i: integer;
+begin
+   aForm.Calls.BeginRebuild;
+   for i := 0 to aCount - 1 do
+      begin
+      aForm.AddCall('C' + IntToStr(i), '1');
+      end;
+   aForm.Calls.EndRebuild;
+end;
+
+(* Every cell holds the entry the flow puts there, or '' past the end. *)
+procedure TFlowGridCellTests.CheckFlowCells(const aForm: TfrmDupeSheet;
+                                            const aCount: integer; const aWhen: string);
+var
+   c, r, idx: integer;
+   expected: string;
+begin
+   for c := 0 to aForm.grdDupes.ColCount - 1 do
+      begin
+      for r := 0 to aForm.grdDupes.RowCount - 1 do
+         begin
+         idx := c * aForm.grdDupes.RowCount + r;
+         expected := '';
+         if idx < aCount then
+            begin
+            expected := 'C' + IntToStr(idx);
+            end;
+         CheckEquals(expected, aForm.grdDupes.Cells[c, r],
+                     aWhen + ': cell ' + IntToStr(c) + ',' + IntToStr(r));
+         end;
+      end;
+end;
+
+procedure TFlowGridCellTests.Test_DupeSheet_TheGridHoldsTheCallsInItsCells;
+var
+   f: TfrmDupeSheet;
+   rows: integer;
+begin
+   BeginTest('Dupe sheet: the calls are in the grid''s own Cells, down then across');
+   InitWidgetSet;
+   f := TfrmDupeSheet.Create(nil);
+   try
+      rows := f.grdDupes.ClientHeight div f.grdDupes.DefaultRowHeight;
+      CheckTrue(rows > 1, 'the designed grid shows more than one row');
+      (* Two full columns and two cells into a third. *)
+      FillDupeSheetWith(f, 2 * rows + 2);
+      CheckEquals(rows, f.grdDupes.RowCount, 'row count is what fits');
+      CheckEquals(3, f.grdDupes.ColCount, 'column count follows the calls');
+      CheckEquals('C0', f.grdDupes.Cells[0, 0], 'first call at the top left');
+      CheckEquals('C' + IntToStr(rows), f.grdDupes.Cells[1, 0],
+                  'the call after the first column heads the second');
+      CheckFlowCells(f, 2 * rows + 2, 'after a rebuild');
+   finally
+      f.Free;
+   end;
+end;
+
+(* THE LAST COLUMN IS RARELY FULL. A rebuild with fewer calls -- a band
+  change -- must leave no text from the previous one in the cells it no
+  longer fills. *)
+procedure TFlowGridCellTests.Test_DupeSheet_AShorterRebuildLeavesNoOldText;
+var
+   f: TfrmDupeSheet;
+   rows: integer;
+begin
+   BeginTest('Dupe sheet: a shorter rebuild leaves none of the last one in the cells');
+   InitWidgetSet;
+   f := TfrmDupeSheet.Create(nil);
+   try
+      rows := f.grdDupes.ClientHeight div f.grdDupes.DefaultRowHeight;
+      FillDupeSheetWith(f, 2 * rows);
+      FillDupeSheetWith(f, rows + 1);
+      CheckEquals(2, f.grdDupes.ColCount, 'column count after the shorter rebuild');
+      CheckFlowCells(f, rows + 1, 'after a shorter rebuild');
+      CheckEquals('', f.grdDupes.Cells[1, 1], 'the cell after the last call is empty');
+
+      FillDupeSheetWith(f, 0);
+      CheckFlowCells(f, 0, 'after an empty rebuild');
+   finally
+      f.Free;
+   end;
+end;
+
+(* A RESIZE REFLOWS: fewer rows fit, so the same calls take more columns,
+  and every cell is rewritten for the new shape. The grid is taken off
+  alClient so the height is the test's to set; the form is never shown. *)
+procedure TFlowGridCellTests.Test_DupeSheet_AResizeReflowsTheCells;
+var
+   f: TfrmDupeSheet;
+   rows: integer;
+begin
+   BeginTest('Dupe sheet: a resize reflows the calls through the cells');
+   InitWidgetSet;
+   f := TfrmDupeSheet.Create(nil);
+   try
+      FillDupeSheetWith(f, 10);
+      f.grdDupes.Align  := alNone;
+      f.grdDupes.Height := 4 * f.grdDupes.DefaultRowHeight;
+      f.Calls.LayOut;
+      rows := f.grdDupes.ClientHeight div f.grdDupes.DefaultRowHeight;
+      CheckEquals(rows, f.grdDupes.RowCount, 'row count after the resize');
+      CheckEquals((10 + rows - 1) div rows, f.grdDupes.ColCount,
+                  'column count after the resize');
+      CheckFlowCells(f, 10, 'after a resize');
+   finally
+      f.Free;
+   end;
+end;
+
 (* ----------------------------------------------------------------------- *)
 (* The Super Check Partial window: a call and whether it is a dupe.       *)
 (* ----------------------------------------------------------------------- *)
@@ -219,6 +353,51 @@ begin
    end;
 end;
 
+(* ISSUE 216: THE PARTIAL MATCHES ARE IN THE GRID'S OWN CELLS, and a shorter
+  match list -- the next keystroke -- leaves nothing of the last one behind. *)
+procedure TFlowGridCellTests.Test_SCP_TheGridHoldsTheCallsInItsCells;
+var
+   f: TfrmMaster;
+   i, c, r, idx: integer;
+begin
+   BeginTest('SCP window: the calls are in the grid''s own Cells, and a shorter list clears the rest');
+   InitWidgetSet;
+   f := TfrmMaster.Create(nil);
+   try
+      f.Calls.BeginRebuild;
+      for i := Low(SCP_CALLS) to High(SCP_CALLS) do
+         begin
+         f.AddCall(SCP_CALLS[i], SCP_DUPES[i]);
+         end;
+      f.Calls.EndRebuild;
+      for i := Low(SCP_CALLS) to High(SCP_CALLS) do
+         begin
+         c := i div f.grdMaster.RowCount;
+         r := i mod f.grdMaster.RowCount;
+         CheckEquals(SCP_CALLS[i], f.grdMaster.Cells[c, r], 'cell of ' + SCP_CALLS[i]);
+         end;
+
+      f.Calls.BeginRebuild;
+      f.AddCall('K1AR', True);
+      f.Calls.EndRebuild;
+      CheckEquals('K1AR', f.grdMaster.Cells[0, 0], 'the one match left');
+      for c := 0 to f.grdMaster.ColCount - 1 do
+         begin
+         for r := 0 to f.grdMaster.RowCount - 1 do
+            begin
+            idx := c * f.grdMaster.RowCount + r;
+            if idx > 0 then
+               begin
+               CheckEquals('', f.grdMaster.Cells[c, r],
+                           'cell ' + IntToStr(c) + ',' + IntToStr(r) + ' is empty');
+               end;
+            end;
+         end;
+   finally
+      f.Free;
+   end;
+end;
+
 (* ----------------------------------------------------------------------- *)
 (* The remaining-multiplier windows: a multiplier's KIND and its INDEX.    *)
 (* ----------------------------------------------------------------------- *)
@@ -230,6 +409,9 @@ const
    RM_KINDS: array[0..5] of RemainingMultiplierType =
       (rmDX, rmDX, rmZone, rmDomestic, rmPrefix, rmZone);
    RM_INDEXES: array[0..5] of integer = (0, 338, 40, 12, 1234, 0);
+   (* The text and worked flag the builder resolved for each (issue 216). *)
+   RM_TEXTS: array[0..5] of string = ('1A', 'ZS', '40', 'FL', 'W4', '00');
+   RM_WORKED: array[0..5] of boolean = (False, True, False, True, False, True);
 
 procedure FillRemMults(const aForm: TfrmRemMults);
 var
@@ -238,7 +420,7 @@ begin
    aForm.Mults.BeginRebuild;
    for i := Low(RM_KINDS) to High(RM_KINDS) do
       begin
-      aForm.AddMult(RM_KINDS[i], RM_INDEXES[i]);
+      aForm.AddMult(RM_KINDS[i], RM_INDEXES[i], RM_TEXTS[i], RM_WORKED[i]);
       end;
    aForm.Mults.EndRebuild;
 end;
@@ -278,7 +460,7 @@ begin
    try
       FillRemMults(f);
       f.Mults.BeginRebuild;
-      f.AddMult(rmPrefix, 7);
+      f.AddMult(rmPrefix, 7, 'W7', False);
       f.Mults.EndRebuild;
       CheckEquals(1, f.Mults.Count, 'cell count after rebuild');
       CheckTrue(f.MultAt(0, kind, index), 'cell 0 found');
@@ -307,16 +489,163 @@ begin
    end;
 end;
 
+(* ISSUE 216, DECISION A: THE TEXT AND THE WORKED FLAG ARE THE REBUILD'S.
+  The builder hands each cell its text and whether it was worked; the text is
+  in the grid's own Cells and the flag stays with the cell. *)
+procedure TFlowGridCellTests.Test_RemMults_TheTextIsInTheCellsWithItsWorkedFlag;
+var
+   f: TfrmRemMults;
+   i, c, r: integer;
+begin
+   BeginTest('Remaining mults: the text is in the grid''s Cells and the worked flag stays with it');
+   InitWidgetSet;
+   f := TfrmRemMults.Create(nil);
+   try
+      FillRemMults(f);
+      for i := Low(RM_KINDS) to High(RM_KINDS) do
+         begin
+         c := i div f.grdMults.RowCount;
+         r := i mod f.grdMults.RowCount;
+         CheckEquals(RM_TEXTS[i], f.grdMults.Cells[c, r], 'cell ' + IntToStr(i) + ' text');
+         CheckTrue(RM_WORKED[i] = f.WorkedAt(i), 'cell ' + IntToStr(i) + ' worked flag');
+         end;
+      CheckFalse(f.WorkedAt(Length(RM_KINDS)), 'a cell past the end was not worked');
+   finally
+      f.Free;
+   end;
+end;
+
+(* THE WINDOW SHOWS THE SHEET AS IT STOOD AT THE LAST REBUILD, and the
+  rebuild every change point calls -- VisibleLog.ShowRemainingMultipliers --
+  brings it up to date. Driven through the real builder, LOGEDIT's
+  ShowRemMultsInWindow, over the real zone sheet, into the real zone window
+  (tw_STATIONS_RM_ZONE), opened as the program opens it. *)
+procedure TFlowGridCellTests.Test_RemMults_ARebuildShowsTheSheetAsItStandsThen;
+var
+   f: TfrmRemMults;
+   savedContest: TContestHandle;
+   savedMax: integer;
+   savedDisplay: RemainingMultDisplayModeType;
+   savedBand, savedMultBand: BandType;
+   savedMultMode: ModeType;
+   savedWnd: TCustomForm;
+   i, worked: integer;
+
+   function ZoneCellIndex(const aText: string): integer;
+   var
+      k: integer;
+   begin
+      Result := -1;
+      for k := 0 to f.Mults.Count - 1 do
+         begin
+         if f.Mults.TextAt(k) = aText then
+            begin
+            Result := k;
+            Exit;
+            end;
+         end;
+   end;
+
+   function CellText(const aIndex: integer): string;
+   begin
+      Result := f.grdMults.Cells[aIndex div f.grdMults.RowCount,
+                                 aIndex mod f.grdMults.RowCount];
+   end;
+
+begin
+   BeginTest('Remaining mults: a rebuild shows the zone sheet as it stands then');
+   InitWidgetSet;
+   savedContest  := Contest;
+   savedMax      := MaxNumberOfZones;
+   savedDisplay  := Settings.RemainingMults.DisplayMode;
+   savedBand     := ActiveBand;
+   savedMultBand := MultBand;
+   savedMultMode := MultMode;
+   savedWnd      := tr4w_WindowsArray[tw_STATIONS_RM_ZONE].WndForm;
+   f := nil;
+   try
+      Contest := ContestHandleOf(CQWWCW);
+      ReleaseActiveContest;
+      MaxNumberOfZones := 40;
+      ActiveBand := Band20;
+      MultBand   := Band20;
+      MultMode   := CW;
+      mo.ClearAllMults;
+      Settings.RemainingMults.DisplayMode := Erase;
+
+      CreateTR4WRemMultsWindow(tw_STATIONS_RM_ZONE);
+      f := RemMultsForm(tw_STATIONS_RM_ZONE);
+      CheckTrue(f <> nil, 'the zone window was created');
+      if f = nil then
+         begin
+         Exit;
+         end;
+      tr4w_WindowsArray[tw_STATIONS_RM_ZONE].WndForm := f;   (* open, as tWindowsExist asks *)
+
+      (* ERASE: every zone is needed, so all forty are listed, 01 first. *)
+      VisibleLog.ShowRemainingMultipliers;
+      CheckEquals(40, f.Mults.Count, 'nothing worked: forty zones');
+      CheckEquals('01', CellText(0), 'zone 1 in the first cell');
+      CheckTrue(ZoneCellIndex('05') >= 0, 'zone 5 is listed');
+
+      (* Work zone 5. The window still shows what the last rebuild saw --
+        the cells are written at the rebuild, by design -- ... *)
+      mo.SetZnMult(5, Band20, CW);
+      CheckTrue(ZoneCellIndex('05') >= 0, 'before the rebuild zone 5 is still listed');
+
+      (* ... and the rebuild the change points call brings it up to date. *)
+      VisibleLog.ShowRemainingMultipliers;
+      CheckEquals(39, f.Mults.Count, 'zone 5 worked: thirty-nine remain');
+      CheckEquals(-1, ZoneCellIndex('05'), 'zone 5 is gone after the rebuild');
+      for i := 0 to f.Mults.Count - 1 do
+         begin
+         CheckEquals(f.Mults.TextAt(i), CellText(i), 'cell ' + IntToStr(i) + ' holds its zone');
+         end;
+
+      (* HIGHLIGHT: all forty listed again, zone 5 alone marked worked. *)
+      Settings.RemainingMults.DisplayMode := HiLight;
+      VisibleLog.ShowRemainingMultipliers;
+      CheckEquals(40, f.Mults.Count, 'forty zones in highlight mode');
+      worked := 0;
+      for i := 0 to f.Mults.Count - 1 do
+         begin
+         if f.WorkedAt(i) then
+            begin
+            Inc(worked);
+            CheckEquals('05', CellText(i), 'the worked cell is zone 5');
+            end;
+         end;
+      CheckEquals(1, worked, 'one zone is marked worked');
+   finally
+      mo.ClearAllMults;
+      tr4w_WindowsArray[tw_STATIONS_RM_ZONE].WndForm := savedWnd;
+      f.Free;   (* HandleDestroy clears the form's slot *)
+      Settings.RemainingMults.DisplayMode := savedDisplay;
+      MultMode := savedMultMode;
+      MultBand := savedMultBand;
+      ActiveBand := savedBand;
+      MaxNumberOfZones := savedMax;
+      Contest := savedContest;
+      ReleaseActiveContest;
+   end;
+end;
+
 procedure TFlowGridCellTests.RunAllTests;
 begin
    Test_RemMults_EveryCellKeepsItsKindAndIndex;
    Test_RemMults_ARebuildReplacesTheCells;
    Test_RemMults_ACellPastTheEndIsNotAMultiplier;
+   Test_RemMults_TheTextIsInTheCellsWithItsWorkedFlag;
+   Test_RemMults_ARebuildShowsTheSheetAsItStandsThen;
    Test_DupeSheet_EveryCallKeepsItsDistrict;
    Test_DupeSheet_ARebuildReplacesTheCells;
    Test_DupeSheet_ACellPastTheEndHasNoDistrict;
+   Test_DupeSheet_TheGridHoldsTheCallsInItsCells;
+   Test_DupeSheet_AShorterRebuildLeavesNoOldText;
+   Test_DupeSheet_AResizeReflowsTheCells;
    Test_SCP_EveryCallKeepsItsDupeFlag;
    Test_SCP_ACallPastCapacityIsRefused;
+   Test_SCP_TheGridHoldsTheCallsInItsCells;
 end;
 
 end.

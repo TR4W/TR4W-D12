@@ -1372,7 +1372,7 @@ object PrefsForm: TPrefsForm
         Top = 34
         Width = 150
         AutoSize = False
-        TabOrder = 21
+        TabOrder = 23
       end
       object lblMyCheck: TInputCaption
         Left = 380
@@ -1382,7 +1382,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'Check:'
         FocusControl = edtMyCheck
-        TabOrder = 20
+        TabOrder = 22
       end
       object edtMyPrec: TEdit
         Left = 496
@@ -1390,7 +1390,7 @@ object PrefsForm: TPrefsForm
         Top = 64
         Width = 150
         AutoSize = False
-        TabOrder = 23
+        TabOrder = 25
       end
       object lblMyPrec: TInputCaption
         Left = 380
@@ -1400,7 +1400,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'Precedence:'
         FocusControl = edtMyPrec
-        TabOrder = 22
+        TabOrder = 24
       end
       object edtMyFDClass: TEdit
         Left = 496
@@ -1408,7 +1408,7 @@ object PrefsForm: TPrefsForm
         Top = 94
         Width = 150
         AutoSize = False
-        TabOrder = 25
+        TabOrder = 27
       end
       object lblMyFDClass: TInputCaption
         Left = 380
@@ -1418,7 +1418,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'FD class:'
         FocusControl = edtMyFDClass
-        TabOrder = 24
+        TabOrder = 26
       end
       object edtMyFOCNumber: TEdit
         Left = 496
@@ -1426,7 +1426,7 @@ object PrefsForm: TPrefsForm
         Top = 124
         Width = 150
         AutoSize = False
-        TabOrder = 27
+        TabOrder = 29
       end
       object lblMyFOCNumber: TInputCaption
         Left = 380
@@ -1436,7 +1436,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'FOC number:'
         FocusControl = edtMyFOCNumber
-        TabOrder = 26
+        TabOrder = 28
       end
       object edtMyIOTA: TEdit
         Left = 496
@@ -1444,7 +1444,7 @@ object PrefsForm: TPrefsForm
         Top = 154
         Width = 150
         AutoSize = False
-        TabOrder = 29
+        TabOrder = 31
       end
       object lblMyIOTA: TInputCaption
         Left = 380
@@ -1454,7 +1454,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'IOTA:'
         FocusControl = edtMyIOTA
-        TabOrder = 28
+        TabOrder = 30
       end
       object edtMyPark: TEdit
         Left = 496
@@ -1462,7 +1462,7 @@ object PrefsForm: TPrefsForm
         Top = 184
         Width = 150
         AutoSize = False
-        TabOrder = 31
+        TabOrder = 33
       end
       object lblMyPark: TInputCaption
         Left = 380
@@ -1472,7 +1472,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'Park:'
         FocusControl = edtMyPark
-        TabOrder = 30
+        TabOrder = 32
       end
       object edtMyLicenseYear: TEdit
         Left = 496
@@ -1481,7 +1481,7 @@ object PrefsForm: TPrefsForm
         Width = 150
         AutoSize = False
         MaxLength = 4
-        TabOrder = 33
+        TabOrder = 35
       end
       object lblMyLicenseYear: TInputCaption
         Left = 380
@@ -1491,7 +1491,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         Caption = 'License year:'
         FocusControl = edtMyLicenseYear
-        TabOrder = 32
+        TabOrder = 34
       end
       object lblStationContestNote: TLabel
         Left = 380
@@ -1525,6 +1525,34 @@ object PrefsForm: TPrefsForm
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
+      end
+      object lblMainCallHeading: TLabel
+        Left = 12
+        Height = 18
+        Top = 450
+        Width = 640
+        AutoSize = False
+        Caption = '(set in code)'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object edtMainCallsign: TEdit
+        Left = 140
+        Height = 22
+        Top = 476
+        Width = 200
+        AutoSize = False
+        TabOrder = 21
+      end
+      object lblMainCallsign: TInputCaption
+        Left = 12
+        Height = 17
+        Top = 480
+        Width = 120
+        AutoSize = False
+        Caption = '(set in code)'
+        FocusControl = edtMainCallsign
+        TabOrder = 20
       end
     end
     object layWSJTX: TPanel

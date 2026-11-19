@@ -16,7 +16,7 @@ object frmMaster: TfrmMaster
   OnKeyDown = HandleKeyDown
   OnResize = HandleResize
   OnShow = HandleShow
-  object grdMaster: TDrawGrid
+  object grdMaster: TStringGrid
     Left = 0
     Height = 200
     Top = 0
@@ -25,14 +25,14 @@ object frmMaster: TfrmMaster
     BorderStyle = bsNone
     ColCount = 1
     DefaultColWidth = 80
-    DefaultDrawing = False
     DefaultRowHeight = 16
     FixedCols = 0
     FixedRows = 0
+    FocusRectVisible = False
     Options = [goThumbTracking, goSmoothScroll]
     RowCount = 1
     ScrollBars = ssNone
     TabOrder = 0
-    OnDrawCell = MasterDrawCell
+    OnPrepareCanvas = MasterPrepareCanvas
   end
 end

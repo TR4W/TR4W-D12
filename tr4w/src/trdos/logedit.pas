@@ -233,7 +233,6 @@ var
     RemainingMultsDOM                     : RemainingMultListPointer;
     RemainingMultsZone                    : RemainingMultListPointer;
   }
-  CleanSweep: boolean;
 
 procedure AddQTCToQTCBuffer(var QTCBuffer: LogEntryArray; QTCString: Str80;
   Message: integer);
@@ -1774,12 +1773,24 @@ begin
   //  DisplayPossibleCalls{(PossibleCallList)};
 end;
 
-{ FILLS ONE REMAINING-MULTIPLIER WINDOW.
+(* FILLS ONE REMAINING-MULTIPLIER WINDOW.
 
-  The list holds a PACKED (type, index) PAIR and no text -- MakeLong(Ord(rmt),
-  i), exactly what LB_ADDSTRING's lParam carried -- and the window resolves each
-  cell to a string when it paints.  See uRemMults.ResolveMult for why that stays
-  paint-time.
+  EACH CELL IS RESOLVED HERE, AS IT IS ADDED (issue 216, decision A): its
+  text and whether it has been worked come from
+  uRemMults.ResolveRemainingMult and go into the window's grid, whose Cells
+  then hold the text. The window shows the multiplier state AS OF THIS CALL,
+  so every change to that state must be followed by
+  VisibleLog.ShowRemainingMultipliers. Audited 2026-11-19, the changes and
+  the call that follows each:
+    * a QSO logged here, by the network, or from WSJT-X -- UpdateWindows
+      (MainUnit.ReturnInSAPOpMode's log path, uNet NET_QSOINFO, uWSJTX);
+    * a rescore, Edit QSO, a peer's edit or delete, the server-log catch-up
+      and the startup load -- all LoadinLog, which ends in UpdateWindows;
+    * a band or mode change -- RefreshAfterBandChange, logsubs2.ToggleModes,
+      uRadioPolling.RunBandModeDisplay, logsubs1.SwapRadios;
+    * the display mode, the domestic-name setting and the window's type --
+      the settings' setters (uSettingsEffects) and logsubs2.SwapMultDisplay.
+  A cell that is stale is a missing call on that list, never a repaint.
 
   FOUR LABELS AND FOUR GOTOs ARE GONE, and the substitution is exact rather than
   tidy.  Each arm read
@@ -1790,7 +1801,7 @@ end;
   which says: add it if we are highlighting, otherwise add it only if it is
   still needed.  That is `if HiLight or <still needed>`, one condition, same
   set of entries.  The goto existed to jump INTO the other branch's body, which
-  is the shape that makes a filter hard to read. }
+  is the shape that makes a filter hard to read. *)
 procedure EditableLog.ShowRemMultsInWindow(Window: WindowsType; rmt:
   RemainingMultiplierType);
 var
@@ -1801,11 +1812,15 @@ var
   zonesFromZero: boolean;
 
   procedure Add(const aIndex: integer);
+  var
+    cellText: string;
+    worked: boolean;
   begin
     (* The pair, as the pair: the window's cell is (kind, index) -- see
       TfrmRemMults.AddMult. It used to be packed into two 16-bit halves of
       one PtrInt here (pointer audit P9, item 5.1). *)
-    frm.AddMult(rmt, aIndex);
+    ResolveRemainingMult(rmt, aIndex, cellText, worked);
+    frm.AddMult(rmt, aIndex, cellText, worked);
   end;
 
 begin

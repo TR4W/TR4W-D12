@@ -24,7 +24,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   The grid, the model and the down-then-across arithmetic are TFlowGrid, shared
   with the dupe sheet -- see uFlowGrid for why that was extracted rather than
   copied.  What is here is what is DIFFERENT about this window: it shows as many
-  partial matches as fit and drops the rest, and it paints dupes.
+  partial matches as fit and drops the rest, and it colours dupes.
+
+  A TStringGrid, PAINTED BY ITSELF (issue 216): the calls are in its Cells and
+  OnPrepareCanvas colours the dupes. There is no draw handler and no forced
+  Invalidate.
 
   NO SCROLLBAR, AND THAT IS THE OLD BEHAVIOUR.  The Win32 list box was capped at
   MaxItemsInMasterListBox -- how many 80x16 cells the window could show,
@@ -53,20 +57,20 @@ type
    end;
 
    TfrmMaster = class(TForm)
-      grdMaster: TDrawGrid;
+      grdMaster: TStringGrid;
       procedure HandleCreate(Sender: TObject);
       procedure HandleDestroy(Sender: TObject);
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure HandleShow(Sender: TObject);
       procedure HandleResize(Sender: TObject);
       procedure HandleKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-      procedure MasterDrawCell(Sender: TObject; aCol, aRow: integer;
-                               aRect: TRect; aState: TGridDrawState);
+      procedure MasterPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                    aState: TGridDrawState);
    public
       Calls: TFlowGrid;
 
       (* ONE CELL: a partial-match call and whether it is already a dupe,
-        which is what gradients it. Between Calls.BeginRebuild and
+        which is what colours it. Between Calls.BeginRebuild and
         Calls.EndRebuild. False when the window is full -- it shows what
         fits (LimitToVisible) and the call was not added. *)
       function  AddCall(const aCall: string; const aIsDupe: boolean): boolean;
@@ -174,46 +178,35 @@ begin
       end;
 end;
 
-{ A DUPE IS GRADIENTED; EVERYTHING ELSE IS PLAIN.
+(* A DUPE IS FILLED; EVERYTHING ELSE IS PLAIN -- as the grid paints its own
+  cell (issue 216).
 
   This is the one place the SCP window and the dupe sheet genuinely differ, and
-  it is why uFlowGrid does not try to own the painting.  The gradient runs from
-  SCPDupeColor to white and the text goes white on top of it -- an operator
-  scanning partial matches needs the ones already worked to fall away, not to
-  be colour-coded. }
-procedure TfrmMaster.MasterDrawCell(Sender: TObject; aCol, aRow: integer;
-                                    aRect: TRect; aState: TGridDrawState);
+  it is why uFlowGrid does not own the colours. A call already worked sits on
+  SCPDupeColor with white text, so it falls away from the partial matches an
+  operator is scanning; the rest are black on the window colour, as is a cell
+  past the end. The text is the grid's (Cells, written by TFlowGrid.LayOut).
+  Set for every state, so a selected or focused cell looks like the rest: the
+  owner-draw this replaced never showed a selection.
+
+  The old comment said "gradiented"; the handler it described filled flat,
+  and so does this. *)
+procedure TfrmMaster.MasterPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                         aState: TGridDrawState);
 var
    idx: integer;
 begin
    idx := Calls.IndexAt(aCol, aRow);
-
-   grdMaster.Canvas.Brush.Style := bsSolid;
-
-   if idx < 0 then
+   if (idx >= 0) and IsDupeAt(idx) then
       begin
-      grdMaster.Canvas.Brush.Color := clWindow;
-      grdMaster.Canvas.FillRect(aRect);
-      Exit;
-      end;
-
-   if IsDupeAt(idx) then
-      begin
-      // GradientFill rather than the uGradient helper: that one takes an HDC
-      // and this is a TCanvas.  Same two stops, same direction.
       grdMaster.Canvas.Brush.Color := tr4wColorsArray[SCPDupeColor];
-      grdMaster.Canvas.FillRect(aRect);
-      grdMaster.Canvas.Font.Color := tr4wColorsArray[trWhite];
+      grdMaster.Canvas.Font.Color  := tr4wColorsArray[trWhite];
       end
    else
       begin
       grdMaster.Canvas.Brush.Color := clWindow;
-      grdMaster.Canvas.FillRect(aRect);
-      grdMaster.Canvas.Font.Color := tr4wColorsArray[trBlack];
+      grdMaster.Canvas.Font.Color  := tr4wColorsArray[trBlack];
       end;
-
-   grdMaster.Canvas.Brush.Style := bsClear;      // SetBkMode(TRANSPARENT)
-   grdMaster.Canvas.TextOut(aRect.Left + 2, aRect.Top, Calls.TextAt(idx));
 end;
 
 procedure CreateTR4WMasterWindow;
