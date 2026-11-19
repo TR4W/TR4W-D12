@@ -81,6 +81,7 @@ type
       procedure Test_VermontInStateFileIsTheRulesMultipliers;
       procedure Test_VermontCabrilloColumns;
       procedure Test_VermontRealEngine;
+      procedure Test_VermontClubStations;
    end;
 
 implementation
@@ -113,6 +114,8 @@ uses
    uTestShippedDom,
    (* The party questions every party test asks one way. *)
    uTestQSOPartyRules,
+   (* TQSOPartyEngine -- the real sheet, for the club stations (issue 270). *)
+   uTestQSOPartyEngine,
    LogDupe,
    LogDom,
    LogEdit,
@@ -350,7 +353,7 @@ begin
       CheckTrue(ContestCountryMode(contestObject) = ARRLCountryMode,
                 'on the "official ARRL DXCC listing"');
       CheckFalse(contestObject.HasZoneMultiplier, 'in VT: no zone multiplier');
-      CheckFalse(contestObject.HasPrefixMultiplier, 'in VT: no prefix multiplier');
+      CheckTrue(contestObject.HasPrefixMultiplier, 'in VT: the club stations, on the prefix sheet (issue 270)');
       CheckEquals(' 5NN CHI', contestObject.CQExchangeDefault(StationAt(True)),
                   'in VT, the CQ exchange sends the county');
    finally
@@ -361,7 +364,7 @@ begin
       CheckFalse(contestObject.HasDXMultiplier, 'outside VT: no DX multiplier');
       CheckTrue(ContestCountryMode(contestObject) = CQCountryMode, 'and the CQ list');
       CheckFalse(contestObject.HasZoneMultiplier, 'outside VT: no zone multiplier');
-      CheckFalse(contestObject.HasPrefixMultiplier, 'outside VT: no prefix multiplier');
+      CheckTrue(contestObject.HasPrefixMultiplier, 'outside VT: the club stations too');
       CheckEquals(' 5NN NY', contestObject.CQExchangeDefault(StationAt(False)),
                   'outside VT, the state');
       (* "DX stations (including U.S. Territories) send signal report." *)
@@ -1607,6 +1610,157 @@ begin
    end;
 end;
 
+(* THE CLUB-STATION MULTIPLIER -- issue 270 (NY4I, 2026-11-19, option B: an
+   operator-supplied file whose header states the contest year). The file's
+   reading and the stale-file notice as pure functions; the key on an
+   object; then the real sheet: an in-state entrant's first club QSO in a
+   new county earns three (county, VT, club), an out-of-state entrant's two,
+   a WSJT-X QSO none, the same club again in the same mode none and in the
+   other mode one, and a list for another year none. *)
+procedure TContestVermontQPTests.Test_VermontClubStations;
+var
+   lines, calls: TStringList;
+   year: integer;
+   vt: TContestVermontQP;
+   qso: ContestExchange;
+   key: PrefixMultiplierString;
+   engine: TQSOPartyEngine;
+   accepted: boolean;
+   rx: ContestExchange;
+   logYear: integer;
+
+   procedure ListFor(aYear: integer);
+   begin
+      lines.Clear;
+      lines.Add('# Vermont QSO Party approved club stations');
+      lines.Add('YEAR ' + IntToStr(aYear));
+      lines.Add('W1CLB');
+      lines.Add('k1vtc');
+   end;
+
+begin
+   BeginTest('Test_VermontClubStations');
+   lines := TStringList.Create;
+   calls := TStringList.Create;
+   try
+      (* THE FILE, READ. *)
+      lines.Add('# a comment');
+      lines.Add('');
+      lines.Add('year 2027');
+      lines.Add('  w1clb  ');
+      lines.Add('K1VTC');
+      CheckTrue(ParseVermontClubStations(lines, calls, year), 'a YEAR line');
+      CheckEquals(2027, year, 'the year its header states');
+      CheckEquals(2, calls.Count, 'two calls; the comment and the blank are not');
+      CheckEquals('W1CLB', calls[0], 'trimmed and upper cased');
+      lines.Clear;
+      lines.Add('W1CLB');
+      CheckFalse(ParseVermontClubStations(lines, calls, year), 'no YEAR line');
+      CheckEquals(0, year, 'no year');
+      lines.Clear;
+      lines.Add('YEAR 99999999999');
+      CheckFalse(ParseVermontClubStations(lines, calls, year), 'an out-of-range year is none');
+
+      (* WHAT THE OPERATOR IS TOLD. *)
+      CheckEquals('', VermontClubStationNotice(False, 0, 2027, VT_CLUB_STATION_FILE_NAME),
+                  'no file: nothing shown (the log says it)');
+      CheckEquals('', VermontClubStationNotice(True, 2027, 2027, VT_CLUB_STATION_FILE_NAME),
+                  'this year''s file: nothing');
+      CheckEquals('', VermontClubStationNotice(True, 2028, 2027, VT_CLUB_STATION_FILE_NAME),
+                  'next year''s, made early: nothing');
+      CheckEquals(Format(SVermontClubFileStale, [VT_CLUB_STATION_FILE_NAME, 2026, VT_QSO_PARTY_URL]),
+                  VermontClubStationNotice(True, 2026, 2027, VT_CLUB_STATION_FILE_NAME),
+                  'last year''s file: renew it at the contest URL');
+      CheckTrue(Pos(VT_QSO_PARTY_URL, VermontClubStationNotice(True, 2026, 2027,
+                VT_CLUB_STATION_FILE_NAME)) > 0, 'the notice names the URL');
+      CheckEquals(Format(SVermontClubFileNoYear, [VT_CLUB_STATION_FILE_NAME, VT_QSO_PARTY_URL]),
+                  VermontClubStationNotice(True, 0, 2027, VT_CLUB_STATION_FILE_NAME),
+                  'a file with no year cannot be matched');
+      CheckEquals('', ContestOpenNoticeOf(nil, 2027), 'no contest: no notice');
+
+      (* THE KEY, ON AN OBJECT: the QSO's own year against the file's. *)
+      vt := MakeVermont(StationAt(False)) as TContestVermontQP;
+      try
+         ListFor(2027);
+         vt.UseClubStationLines(lines, True);
+         qso := VermontQso(Band20, CW, eCW, 'CHI');
+         qso.Callsign := 'W1CLB';
+         qso.tSysTime.qtYear := 27;
+         qso.tSysTime.qtMonth := 2;
+         qso.tSysTime.qtDay := 6;
+         CheckTrue(vt.PrefixMultiplierKey(qso, key), 'always answers');
+         CheckEquals('W1CLB', string(key), 'a club call is its own key');
+         qso.Callsign := 'K1VTC';
+         vt.PrefixMultiplierKey(qso, key);
+         CheckEquals('K1VTC', string(key), 'the file''s lower case call');
+         qso.Callsign := 'W1XYZ';
+         CheckTrue(vt.PrefixMultiplierKey(qso, key), 'answers for any QSO');
+         CheckEquals('', string(key), 'not a club: the empty key');
+         qso.Callsign := 'W1CLB';
+         qso.tSysTime.qtYear := 26;
+         vt.PrefixMultiplierKey(qso, key);
+         CheckEquals('', string(key), 'a QSO from another year: no club (the QSO''s year, not the clock)');
+         qso.tSysTime := Default(TQSOTime);
+         vt.PrefixMultiplierKey(qso, key);
+         CheckEquals('', string(key), 'an undated QSO: no club');
+         CheckEquals('', vt.ContestOpenNotice(2027), 'a current file: no notice');
+         CheckTrue(vt.ContestOpenNotice(2028) <> '', 'a year on: the notice');
+      finally
+         vt.Free;
+      end;
+   finally
+      calls.Free;
+   end;
+
+   (* THE REAL SHEET. *)
+   engine := TQSOPartyEngine.Create(VermontHandle);
+   try
+      engine.Activate(True);
+      (* The QSO year as ParametersOkay stamps it (the clock, at entry): a
+         first, ordinary QSO says which, and the list is for that year. *)
+      engine.Enter('W1AW', '599 CT', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'an ordinary QSO');
+      CheckEquals('', string(rx.Prefix), 'not a club: no key');
+      logYear := 2000 + rx.tSysTime.qtYear;
+      ListFor(logYear);
+      (ActiveContest(Contest) as TContestVermontQP).UseClubStationLines(lines, True);
+
+      engine.Enter('W1CLB', '599 CHI', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted and rx.DomesticMult, 'in state: the county');
+      CheckTrue(rx.PrefixMult, 'and the club');
+      CheckEquals(3, mo.MTotals[AllBands, CW, rmDomestic], 'CT, CHI and VT (#317) on CW');
+      CheckEquals(1, mo.MTotals[AllBands, CW, rmPrefix], 'and one club');
+
+      engine.Enter('W1CLB', '599 CHI', Band40, CW, eCW, accepted, rx);
+      CheckFalse(rx.PrefixMult, 'the same club on another band, same mode: once per mode');
+      engine.Enter('W1CLB', '59 CHI', Band20, Phone, eUSB, accepted, rx);
+      CheckTrue(rx.PrefixMult, 'on phone: a new club multiplier');
+      engine.Enter('K1VTC', '599 ADD', Band20, Digital, eFT8, accepted, rx);
+      CheckFalse(rx.PrefixMult, 'a WSJT-X QSO earns no club (CountsAsMultiplier)');
+      CheckFalse(rx.DomesticMult, 'nor a county');
+
+      (* A LIST FOR ANOTHER YEAR CREDITS NOTHING. *)
+      ListFor(logYear - 1);
+      (ActiveContest(Contest) as TContestVermontQP).UseClubStationLines(lines, True);
+      engine.Enter('K1VTC', '599 ADD', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted and rx.DomesticMult, 'the county still counts');
+      CheckFalse(rx.PrefixMult, 'last year''s list: no club');
+
+      (* OUT OF STATE: county and club. *)
+      engine.Activate(False);
+      ListFor(logYear);
+      (ActiveContest(Contest) as TContestVermontQP).UseClubStationLines(lines, True);
+      engine.Enter('K1VTC', '599 ADD', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted and rx.DomesticMult, 'out of state: the county');
+      CheckTrue(rx.PrefixMult, 'and the club');
+      CheckEquals(1, mo.MTotals[AllBands, CW, rmDomestic], 'one domestic (no VT outside)');
+      CheckEquals(1, mo.MTotals[AllBands, CW, rmPrefix], 'one club');
+   finally
+      engine.Free;
+      lines.Free;
+   end;
+end;
+
 procedure TContestVermontQPTests.RunAllTests;
 begin
    Test_VermontIdentity;
@@ -1625,6 +1779,7 @@ begin
    Test_VermontInStateFileIsTheRulesMultipliers;
    Test_VermontCabrilloColumns;
    Test_VermontRealEngine;
+   Test_VermontClubStations;
 end;
 
 end.

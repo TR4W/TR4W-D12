@@ -142,9 +142,32 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       list stays 77. Nothing is stored; the sheet re-derives it on load and
       rescore. A WSJT-X QSO earns no county, so no VT either (the credit
       follows the county's, CountsAsMultiplier included).
-    NOT BUILT -- THE VERMONT CLUB-STATION MULTIPLIER, 7B(e): the stations are
-      named by the QSO Party Manager each year, two weeks before the event;
-      there is no list to state. A gap for NY4I.
+    THE VERMONT CLUB-STATION MULTIPLIER, 7B(e) and 7B(1)/(2) -- issue 270.
+      "Approved Vermont club stations" are a multiplier for EVERY entrant,
+      once per mode like the rest. The stations are named by the QSO Party
+      Manager each year, two weeks before the event, and the rules publish
+      no list -- so the list is the OPERATOR'S FILE (NY4I, 2026-11-19, option
+      B: "if we make it clear in a header, the file is for the contest year,
+      that allows us to inform the user we found a file but it appears to be
+      for last year's contest and they should renew one at the contest
+      URL"). The file is VT_CLUB_STATION_FILE_NAME, looked up as every
+      downloaded data file is (uAppPaths.PreferredDataFilePath: the writable
+      data directory, then beside the program); its format is
+      ParseVermontClubStations'. A club call counts only for a QSO MADE IN
+      THE FILE'S YEAR (the QSO's own UTC date, never the clock -- Q35); a
+      file for another year credits nothing, and opening the contest with
+      one older than this year says so (ContestOpenNotice).
+      ON THE PREFIX SHEET, keyed on the club call (CW Open's whole-callsign
+      key; South Dakota's and Atlantic Canada's separate multiplier on that
+      sheet). NOT issue 317's second domestic key, which the issue
+      suggested: that seam carries ONE extra key a QSO and Vermont already
+      uses it for the county's VT, and an in-state entrant's first club QSO
+      in a new county earns three (county, VT, club). The sheet's scope is
+      the county's (per mode, cfMultByMode, not per band); the score's sum
+      includes it (the base's CombineWithMultipliers, under the power
+      factor); the totals row says Clubs. A WSJT-X QSO earns no club either
+      (CountsAsMultiplier refuses every kind for it; 7B(f) names only the
+      county).
 
   FT8 AND OTHER WSJT-X MODES -- 7B(f): "Participants in Vermont may count
     these QSOs for multiplier credit by totaling up the number of grid
@@ -213,11 +236,20 @@ uses
    (* tCategoryPower -- the entrant's CATEGORY-POWER, as TStationContext
       carries it. First, so VC's names win wherever the two overlap. *)
    uSettingsModel,
+   (* TStrings, TStringList -- the club-station list. *)
+   Classes,
    VC, uContestBase, uContestStateQSOPartyBase;
 
 const
    (* ITS ID -- stored data; see the header. *)
    VT_QSO_PARTY_CONTEST_ID = 'VT-QSO-PARTY';
+
+   (* THE OPERATOR'S CLUB-STATION FILE (issue 270) -- lower case, looked up
+      through uAppPaths.PreferredDataFilePath. *)
+   VT_CLUB_STATION_FILE_NAME = 'vtqp_club_stations.txt';
+
+   (* Where the operator gets a current list: the sponsor's contest page. *)
+   VT_QSO_PARTY_URL = 'https://www.ranv.org/vtqso.html';
 
 type
    TContestVermontQP = class(TContestStateQSOPartyBase)
@@ -236,7 +268,27 @@ type
       (* The sent exchange with a DX entrant's 'DX' cleared, so each column
          helper sees the empty location rule 6(C) means. *)
       class function WithoutDXLocation(const aMy: TMyStationExchange): TMyStationExchange;
+   private
+      (* THE CLUB-STATION LIST (issue 270): the calls, upper case and
+         sorted; the contest year its header states (0 when none); whether a
+         file was found; whether it has been read (lazily, on the first
+         question -- MAIN THREAD ONLY, as every rule that asks the session's
+         tables). *)
+      FClubCalls: TStringList;
+      FClubYear: integer;
+      FClubFileFound: boolean;
+      FClubsRead: boolean;
+
+      (* Reads VT_CLUB_STATION_FILE_NAME once, if nothing was handed in. *)
+      procedure EnsureClubStations;
+
+      (* THE CLUB CALL aQso EARNS, or '': the worked call, its rover county
+         stripped, when the list holds it and the QSO was made in the
+         list's year. *)
+      function ClubStationOf(const aQso: ContestExchange): string;
    protected
+      (* The totals row says Clubs -- the prefix sheet's key is a club. *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
       (* PROTECTED, MATCHING THE BASE -- callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
@@ -301,8 +353,8 @@ type
                                   aKind: RemainingMultiplierType): boolean; override;
 
       (* THE MULTIPLIERS -- counties, or counties, states and provinces, from
-         the domestic file; DXCC countries for a Vermont entrant; no zone or
-         prefix multiplier. *)
+         the domestic file; DXCC countries for a Vermont entrant; the club
+         stations on the prefix sheet (issue 270); no zone multiplier. *)
       function HasDXMultiplier: boolean; override;
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -316,7 +368,41 @@ type
 
       (* WHAT THE EXCHANGE CARRIES -- a domestic QTH (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+
+      (* THE CLUB-STATION MULTIPLIER, ON THE PREFIX SHEET -- the header
+         (issue 270). True always: the key is the club call, or '' for any
+         other QSO, so a rescore clears a key a changed list no longer
+         gives. *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
+
+      (* A STALE OR YEARLESS CLUB-STATION FILE IS SAID WHEN THE CONTEST IS
+         OPENED -- VermontClubStationNotice. *)
+      function ContestOpenNotice(aCurrentYear: integer): string; override;
+
+      (* THE CLUB-STATION LIST IS THESE LINES -- the file's, read by
+         EnsureClubStations, or a test's. aFound says whether a file was
+         found (False: no list, and no notice). *)
+      procedure UseClubStationLines(aLines: TStrings; aFound: boolean);
+
+      destructor Destroy; override;
    end;
+
+(* THE CLUB-STATION FILE, READ -- issue 270. One call per line; a line
+   whose first word is YEAR gives the contest year (`YEAR 2027`); blank
+   lines and lines starting '#' are comments. Calls are trimmed and upper
+   cased into aCalls (cleared first). aYear is 0 when no valid YEAR line
+   (2000..2099) is found; the LAST such line wins. True when aYear is set. *)
+function ParseVermontClubStations(aLines: TStrings; aCalls: TStrings;
+                                  out aYear: integer): boolean;
+
+(* WHAT TO TELL THE OPERATOR ABOUT THE FILE -- '' when there is nothing to
+   say: no file (club stations then count nowhere, which the log says), or a
+   file for this year or a later one. A file for an EARLIER year is "last
+   year's"; a file with no YEAR line cannot be matched to any QSO. *)
+function VermontClubStationNotice(aFileFound: boolean; aFileYear: integer;
+                                  aCurrentYear: integer;
+                                  const aFileName: string): string;
 
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER, applied to a score -- QRP x2,
    LOW x1.5 (Round, half to even), HIGH and unset x1. Public so the test can
@@ -337,7 +423,85 @@ uses
    uADIFExchange,
    (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
    uDXMultiplierKey,
-   uContestRegistry;
+   uContestRegistry,
+   (* PreferredDataFilePath -- where the club-station file is (issue 270). *)
+   uAppPaths,
+   (* SVermontClubFile*, STotalsClubStationMults. *)
+   uAppStrings,
+   (* ValChecked -- the YEAR line's number. *)
+   utils_text,
+   Log4D;
+
+var
+   (* THIS UNIT'S LOGGER -- the club-station file, read or missing. *)
+   logger: TLogLogger;
+
+function ParseVermontClubStations(aLines: TStrings; aCalls: TStrings;
+                                  out aYear: integer): boolean;
+var
+   i: integer;
+   line: string;
+   word: string;
+   rest: string;
+   gap: integer;
+   year: Longint;
+   code: integer;
+begin
+   aYear := 0;
+   aCalls.Clear;
+   for i := 0 to aLines.Count - 1 do
+      begin
+      line := Trim(string(aLines[i]));
+      if (line = '') or (line[1] = '#') then
+         begin
+         Continue;
+         end;
+      gap := Pos(' ', line);
+      if gap > 0 then
+         begin
+         word := UpperCase(Copy(line, 1, gap - 1));
+         rest := Trim(Copy(line, gap + 1, MaxInt));
+         end
+      else
+         begin
+         word := UpperCase(line);
+         rest := '';
+         end;
+      if word = 'YEAR' then
+         begin
+         (* ValChecked, never StrToIntDef: Win64's is not range-checked. *)
+         ValChecked(rest, year, code);
+         if (code = 0) and (year >= 2000) and (year <= 2099) then
+            begin
+            aYear := year;
+            end;
+         end
+      else
+         begin
+         aCalls.Add(word);
+         end;
+      end;
+   Result := aYear <> 0;
+end;
+
+function VermontClubStationNotice(aFileFound: boolean; aFileYear: integer;
+                                  aCurrentYear: integer;
+                                  const aFileName: string): string;
+begin
+   Result := '';
+   if not aFileFound then
+      begin
+      Exit;
+      end;
+   if aFileYear = 0 then
+      begin
+      Result := Format(SVermontClubFileNoYear, [aFileName, VT_QSO_PARTY_URL]);
+      end
+   else if aFileYear < aCurrentYear then
+      begin
+      Result := Format(SVermontClubFileStale, [aFileName, aFileYear, VT_QSO_PARTY_URL]);
+      end;
+end;
 
 function VermontScoreWithPower(aScore: longint; aPower: tCategoryPower): longint;
 begin
@@ -648,9 +812,10 @@ begin
    Result := False;
 end;
 
+(* "Vermont Club Stations" -- 7B(1)/(2), every entrant (issue 270). *)
 function TContestVermontQP.HasPrefixMultiplier: boolean;
 begin
-   Result := False;
+   Result := True;
 end;
 
 function TContestVermontQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
@@ -659,7 +824,117 @@ begin
    Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
+destructor TContestVermontQP.Destroy;
+begin
+   FClubCalls.Free;
+   inherited Destroy;
+end;
+
+procedure TContestVermontQP.UseClubStationLines(aLines: TStrings; aFound: boolean);
+begin
+   if FClubCalls = nil then
+      begin
+      FClubCalls := TStringList.Create;
+      FClubCalls.Sorted := True;
+      FClubCalls.Duplicates := dupIgnore;
+      FClubCalls.CaseSensitive := False;
+      end;
+   ParseVermontClubStations(aLines, FClubCalls, FClubYear);
+   FClubFileFound := aFound;
+   FClubsRead := True;
+end;
+
+procedure TContestVermontQP.EnsureClubStations;
+var
+   path: string;
+   lines: TStringList;
+   found: boolean;
+begin
+   if FClubsRead then
+      begin
+      Exit;
+      end;
+   path := PreferredDataFilePath(VT_CLUB_STATION_FILE_NAME);
+   found := FileExists(path);
+   lines := TStringList.Create;
+   try
+      if found then
+         begin
+         try
+            lines.LoadFromFile(path);
+         except
+            on e: Exception do
+               begin
+               logger.Warn('[VTQP] the club-station file %s could not be read: %s',
+                           [path, e.Message]);
+               lines.Clear;
+               end;
+         end;
+         end;
+      UseClubStationLines(lines, found);
+   finally
+      lines.Free;
+   end;
+   if found then
+      begin
+      logger.Info('[VTQP] club stations: %d calls for %d, from %s',
+                  [FClubCalls.Count, FClubYear, path]);
+      end
+   else
+      begin
+      logger.Info('[VTQP] no club-station file (%s): Vermont club stations count as no multiplier',
+                  [VT_CLUB_STATION_FILE_NAME]);
+      end;
+end;
+
+function TContestVermontQP.ClubStationOf(const aQso: ContestExchange): string;
+var
+   call: string;
+begin
+   Result := '';
+   EnsureClubStations;
+   if (FClubYear = 0) or (FClubCalls.Count = 0) then
+      begin
+      Exit;
+      end;
+   (* THE QSO'S OWN UTC DATE, never the clock (Q35). A record with no date
+      is matched to no year. qtYear is the year less 2000. *)
+   if (aQso.tSysTime.qtMonth = 0) or
+      (2000 + integer(aQso.tSysTime.qtYear) <> FClubYear) then
+      begin
+      Exit;
+      end;
+   call := UpperCase(Trim(CallWithoutRoverCounty(Trim(string(aQso.Callsign)))));
+   if FClubCalls.IndexOf(call) >= 0 then
+      begin
+      Result := call;
+      end;
+end;
+
+function TContestVermontQP.PrefixMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := PrefixMultiplierString(ClubStationOf(aQso));
+   Result := True;
+end;
+
+function TContestVermontQP.ContestOpenNotice(aCurrentYear: integer): string;
+begin
+   EnsureClubStations;
+   Result := VermontClubStationNotice(FClubFileFound, FClubYear, aCurrentYear,
+                                      VT_CLUB_STATION_FILE_NAME);
+end;
+
+function TContestVermontQP.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.PrefixMultsCaption := STotalsClubStationMults;
+   Result.PrefixMultsCaptionCW := 'CW Clubs';
+   Result.PrefixMultsCaptionPhone := 'Ph Clubs';
+end;
+
 initialization
+   logger := TLogLogger.GetLogger('uContestVermontQP');
    RegisterContestById(VT_QSO_PARTY_CONTEST_ID, TContestVermontQP);
 
 end.

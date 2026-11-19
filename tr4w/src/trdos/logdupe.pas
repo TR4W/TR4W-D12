@@ -598,6 +598,12 @@ function LoadCallHistoryFile: integer;
    by LoadCallHistoryFile and shown by Preferences as the box's hint. *)
 function ContestCallHistoryFileName: string;
 
+(* THE ACTIVE CONTEST'S OPEN NOTICE, SHOWN -- issue 270
+   (TContestBase.ContestOpenNotice). Asked at the end of SheetInitAndLoad: a
+   non-empty answer is logged as a Warning and shown as a notice (not under
+   a batch /EXPORT). Main thread only. *)
+procedure ShowContestOpenNotice;
+
 function PointsToBigCall(Entry: FourBytes): boolean;
 
 
@@ -633,6 +639,7 @@ implementation
 //{WLI}{$I RemMults}
 uses
   //  OZCHR,
+  DateUtils,        // YearOf -- ShowContestOpenNotice's display-only year
   uConfigValues,
   uSettingsModel,   // Settings.CallWindow
   (* The contest database replaced the .RST restart file -- see
@@ -2230,6 +2237,26 @@ begin
   (* AFTER INITIAL.EX and BEFORE the log -- see LoadCallHistoryFile. *)
   LoadCallHistoryFile;
   LoadinLog;
+  ShowContestOpenNotice;
+end;
+
+procedure ShowContestOpenNotice;
+var
+  notice: string;
+begin
+  (* TContestBase.ContestOpenNotice -- issue 270. The year is the clock's,
+     for display only (the class reads none). A batch /EXPORT shows nothing
+     and the log line still says it. *)
+  notice := ContestOpenNoticeOf(ActiveContest(Contest), YearOf(Now));
+  if notice = '' then
+     begin
+     Exit;
+     end;
+  logger.Warn('[Contest] %s', [notice]);
+  if not tSilentExport then
+     begin
+     QuickDisplay(notice);
+     end;
 end;
 
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;

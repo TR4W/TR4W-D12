@@ -3812,6 +3812,17 @@ type
          translation reaches the screen. *)
       function CallEntryFrequencyWarning(aFreqKHz: integer): string; virtual;
 
+      (* WHAT THE OPERATOR SHOULD BE TOLD WHEN THE CONTEST IS OPENED, or ''
+         for nothing -- issue 270 (NY4I, 2026-11-19: a stale operator-supplied
+         file must not be silent; "inform the user we found a file but it
+         appears to be for last year's contest"). Asked ONCE, by
+         LOGDUPE.SheetInitAndLoad after the log's side files are read, of
+         the active contest (it holds the station); the engine shows the
+         answer as a notice and logs it. aCurrentYear is the calendar year
+         now, from the engine: a class reads no clock, and this answer is
+         display only -- no rule is decided by it. THE BASE SAYS NOTHING. *)
+      function ContestOpenNotice(aCurrentYear: integer): string; virtual;
+
       (* Hands the contest the station it is operating as.
 
          PUSHED IN, NOT READ. An earlier version had the base reach into LOGWIND
@@ -4254,6 +4265,11 @@ const
    change that. Each moves on its own sponsor's word. *)
 function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
                                const aAllowed: TExtendedModeSet): boolean;
+
+(* THE NOTICE aContest GIVES WHEN IT IS OPENED -- see
+   TContestBase.ContestOpenNotice (issue 270). nil (no contest) says
+   nothing. *)
+function ContestOpenNoticeOf(aContest: TContestBase; aCurrentYear: integer): string;
 
 (* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
@@ -5310,6 +5326,18 @@ function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
 begin
    Result := (aExtMode in [eNoMode, eData, eData_R, eData_FM]) or
              (aExtMode in aAllowed);
+end;
+
+function ContestOpenNoticeOf(aContest: TContestBase; aCurrentYear: integer): string;
+begin
+   if aContest = nil then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := aContest.ContestOpenNotice(aCurrentYear);
+      end;
 end;
 
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
@@ -8263,6 +8291,11 @@ begin
 end;
 
 function TContestBase.CallEntryFrequencyWarning(aFreqKHz: integer): string;
+begin
+   Result := '';
+end;
+
+function TContestBase.ContestOpenNotice(aCurrentYear: integer): string;
 begin
    Result := '';
 end;

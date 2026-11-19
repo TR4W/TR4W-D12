@@ -1328,6 +1328,15 @@ begin
          CheckEquals('CW Provs', d.PrefixMultsCaptionCW, who + ' on CW');
          CheckEquals('Ph Provs', d.PrefixMultsCaptionPhone, who + ' on phone');
          end
+      (* THE VERMONT QSO PARTY (issue 270) keeps its approved club stations
+        on the prefix sheet, keyed on the club's call: its row says CLUBS. *)
+      else if ContestId(HandleOf(identities[k])) = 'VT-QSO-PARTY' then
+         begin
+         CheckEquals(STotalsClubStationMults, d.PrefixMultsCaption, who + ': club stations');
+         CheckEquals('Clubs', d.PrefixMultsCaption, who + ': the English caption');
+         CheckEquals('CW Clubs', d.PrefixMultsCaptionCW, who + ' on CW');
+         CheckEquals('Ph Clubs', d.PrefixMultsCaptionPhone, who + ' on phone');
+         end
       else if c <> CWOPEN then
          begin
          CheckEquals(TC_PREFIX, d.PrefixMultsCaption, who + ' prefix label');
