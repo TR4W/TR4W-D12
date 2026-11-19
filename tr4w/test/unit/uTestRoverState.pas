@@ -31,6 +31,7 @@ type
       procedure Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
       procedure Test_ASchema11LogGainsTheRoverColumnInOneCommit;
       procedure Test_TheCallOnTheAirAndTheRoverQTHToken;
+      procedure Test_ARoverFromANewPlaceIsNoDupe;
    public
       procedure RunAllTests; override;
    end;
@@ -48,6 +49,10 @@ uses
    uLogSchema,           (* LOG_V12_QSO_ROVER_QTH_COLUMN, LOG_SCHEMA_VERSION *)
    uTestLatestContest,   (* DowngradeTestLog, TestLogHasColumn, ScrubTestLog *)
    uTestLogDatabase,     (* CommitFramesInWal *)
+   uSettingsModel,       (* Settings.Qso -- the dupe sheet's scope *)
+   uCallsigns,           (* TCallsignsList, TQualifiedDupeSheet, the two sheets *)
+   PostUnit,             (* Contest -- the active contest's handle *)
+   LogEdit,              (* VisibleLog.QSOIsADupe, AddQSOToDupeSheets *)
    uAppPaths,            (* ShippedDomDirOverride *)
    uTestContestObjects,  (* ShippedDomDir -- the tree's target\dom *)
    uNewContestHostArea,  (* THostAreaPlaces *)
@@ -393,6 +398,91 @@ begin
       end;
 end;
 
+(* NY4I, 2026-11-18 (issue 133): "NY4I/PIN is NOT a dupe of NY4I/PAS" --
+  the dupe key carries the place the ROVER sent the QSO from, read from the
+  record (ceRoverQTH), through the routines LogContact, the loader and the
+  rescore all call (VisibleLog.QSOIsADupe, AddQSOToDupeSheets). A QSO not
+  sent while roving keys exactly as before; a contest that is no state party
+  never reads the place. *)
+procedure TRoverStateTests.Test_ARoverFromANewPlaceIsNoDupe;
+var
+   handle: TContestHandle;
+   hawaii: TContestBase;
+   savedContest: TContestHandle;
+   savedByBand, savedByMode: boolean;
+   savedList: TCallsignsList;
+   savedQualified: TQualifiedDupeSheet;
+   rx: ContestExchange;
+
+   function QSO(const aRover: string): ContestExchange;
+   begin
+      Result := Default(ContestExchange);
+      Result.Callsign := 'W1AW';
+      Result.QTHString := 'CT';
+      Result.DomesticQTH := 'CT';
+      Result.Band := Band20;
+      Result.Mode := CW;
+      Result.ceRecordKind := rkQSO;
+      Result.ceContest := Contest;
+      Result.ceRoverQTH := ShortString(aRover);
+   end;
+
+begin
+   BeginTest('Test_ARoverFromANewPlaceIsNoDupe');
+   CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+   hawaii := ContestIdentity(handle);
+
+   (* THE KEY ITSELF. *)
+   CheckTrue(hawaii.DupeKeyIncludesSentQTH, 'a state party keys the rover''s place');
+   CheckFalse(ContestIdentity(CQWWCW).DupeKeyIncludesSentQTH, 'CQ WW does not');
+   rx := QSO('');
+   CheckEquals('CT', hawaii.DupeKeyQualifier(rx), 'not roving: the key is as before');
+   rx := QSO('KOH');
+   CheckEquals('CT'#2'KOH', hawaii.DupeKeyQualifier(rx), 'from KOH: the place joins it');
+   CheckEquals('', ContestIdentity(CQWWCW).DupeKeyQualifier(rx),
+               'CQ WW''s key never reads the place');
+
+   (* THROUGH THE ENGINE'S SHEETS, as LogContact, the loader and the rescore
+      ask them. *)
+   savedContest := Contest;
+   savedByBand := Settings.Qso.ByBand;
+   savedByMode := Settings.Qso.ByMode;
+   savedList := CallsignsList;
+   savedQualified := QualifiedDupes;
+   CallsignsList := TCallsignsList.Create;
+   QualifiedDupes := TQualifiedDupeSheet.Create;
+   try
+      Contest := handle;
+      Settings.Qso.ByBand := True;
+      Settings.Qso.ByMode := True;
+
+      rx := QSO('KOH');
+      CheckFalse(VisibleLog.QSOIsADupe(rx), 'the first QSO from KOH is new');
+      AddQSOToDupeSheets(rx, False);
+      rx := QSO('KOH');
+      CheckTrue(VisibleLog.QSOIsADupe(rx), 'W1AW again from KOH is a dupe');
+      rx := QSO('KON');
+      CheckFalse(VisibleLog.QSOIsADupe(rx), 'W1AW from KON is NOT a dupe of KOH');
+      AddQSOToDupeSheets(rx, False);
+      rx := QSO('KON');
+      CheckTrue(VisibleLog.QSOIsADupe(rx), 'and from KON again is');
+
+      rx := QSO('');
+      CheckFalse(VisibleLog.QSOIsADupe(rx), 'a fixed station''s key is apart from a rover''s');
+      AddQSOToDupeSheets(rx, False);
+      rx := QSO('');
+      CheckTrue(VisibleLog.QSOIsADupe(rx), 'and a fixed station''s repeat is a dupe, as ever');
+   finally
+      CallsignsList.Free;
+      QualifiedDupes.Free;
+      CallsignsList := savedList;
+      QualifiedDupes := savedQualified;
+      Settings.Qso.ByMode := savedByMode;
+      Settings.Qso.ByBand := savedByBand;
+      Contest := savedContest;
+   end;
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -404,6 +494,7 @@ begin
    Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
    Test_ASchema11LogGainsTheRoverColumnInOneCommit;
    Test_TheCallOnTheAirAndTheRoverQTHToken;
+   Test_ARoverFromANewPlaceIsNoDupe;
 end;
 
 end.

@@ -2921,13 +2921,27 @@ type
          Q118). The answer must not depend on the station, as above. *)
       function DupeKeyTour(const aQso: ContestExchange): string; virtual;
 
+      (* DOES THE PLACE A ROVER SENT THE QSO FROM MAKE IT A NEW QSO? -- False
+         (the base). NY4I, 2026-11-18, issue 133: "NY4I/PIN is NOT a dupe of
+         NY4I/PAS. The dupe key must include the rover's own district (the
+         call it sent), as the HQP rules say" ("AH7RF/KOH is a different
+         station than AH7RF/KON and can be worked again on the same band and
+         mode"). TContestStateQSOPartyBase answers True: every state party
+         whose own places a rover may operate from. The place is the record's
+         ceRoverQTH (log schema 12), '' for every QSO not sent while roving,
+         so a fixed station's key is exactly what it was. The answer must not
+         depend on the station, as above. *)
+      function DupeKeyIncludesSentQTH: boolean; virtual;
+
       (* THE TEXT, BESIDES THE CALL, THAT MAKES aQso A NEW QSO FOR DUPES --
          '' when DupeKeyIncludesReceivedQTH is False, else the QSO's own
          received QTH: the domestic QTH the contest's file resolved it to,
          else the text as typed (a DX station's DX), upper case; '' when
          nothing was received, which is the call alone. Then the tour
          (DupeKeyTour), when the contest has tours: '' plus a tour is the
-         tour alone.
+         tour alone. Then, where DupeKeyIncludesSentQTH, the place a rover
+         sent the QSO from (ceRoverQTH): a QSO from KON is not a dupe of one
+         from KOH.
 
          READ FROM THE RECORD, never from live state ("a logged QSO reads its
          record"), so the live check at LogContact, the log loader and the
@@ -7453,6 +7467,19 @@ begin
       begin
       Result := Result + #1 + tour;
       end;
+
+   (* THE ROVER'S OWN PLACE, after a separator of its own (#2), so it can
+      never spell a received QTH or a tour (issue 133, log schema 12). *)
+   if DupeKeyIncludesSentQTH and (Trim(string(aQso.ceRoverQTH)) <> '') then
+      begin
+      Result := Result + #2 + UpperCase(Trim(string(aQso.ceRoverQTH)));
+      end;
+end;
+
+function TContestBase.DupeKeyIncludesSentQTH: boolean;
+begin
+   (* A rover's place is not part of the key -- see the declaration. *)
+   Result := False;
 end;
 
 function TContestBase.DupeModeOf(aMode: ModeType): ModeType;

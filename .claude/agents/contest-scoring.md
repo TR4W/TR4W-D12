@@ -175,7 +175,9 @@ different received QTH is a new QSO. There are two virtuals:
 `TContestStateQSOPartyBase` True) and `DupeKeyTour` (base ''; RADIO-YOC names
 its 30-minute tour from the QSO's logged time, Q136 2026-10-22, so a repeat in
 another tour is a new QSO); the non-virtual `DupeKeyQualifier` derives the
-key text from the record (`DomesticQTH`, else `QTHString`, then #1 + the tour). 7QP, NEQP and IN7QPNE
+key text from the record (`DomesticQTH`, else `QTHString`, then #1 + the tour, then -- where
+`DupeKeyIncludesSentQTH`, the party base's True, issue 133 -- #2 + the place OUR ROVER sent the QSO
+from, the record's `ceRoverQTH`, log schema 12: NY4I/PIN is not a dupe of NY4I/PAS). 7QP, NEQP and IN7QPNE
 are not on that base and are not covered (open). **A logged QSO's dupe question
 is `EditableLog.QSOIsADupe(rx)` and its write is `LOGEDIT.AddQSOToDupeSheets`**
 -- LogContact, the loader and the rescore all go through them; never call
