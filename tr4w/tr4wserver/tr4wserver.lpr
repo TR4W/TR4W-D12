@@ -74,7 +74,8 @@ uses
   SysUtils,
   tr4wserverUnit in '..\src\tr4wserverUnit.pas',
   uCRC32 in '..\src\uCRC32.pas',
-  Log4D,        // the dialog proc logs through tr4wserverUnit's logger
+  uServerLogStore in '..\src\uServerLogStore.pas',
+  Log4D,       // the dialog proc logs through tr4wserverUnit's logger
   VC in '..\src\vc.pas';
 
 (* THE DIALOG RESOURCE IS GONE, AND WITH IT A WHOLE CLASS OF FAILURE.
@@ -108,6 +109,7 @@ procedure ServerShutDown; forward;
 procedure ServerStartUp;
 var
   BytesReceived: integer;
+  LogFileSize: Int64;
   ini: TIniFile;
 begin
 //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, LoadIcon(0, IDI_APPLICATION));
@@ -200,12 +202,15 @@ begin
         (* A LOG THAT ENDS IN PART OF A RECORD is offered a repair first (issue
           314); the refusal below stays for any other file whose size is wrong. *)
         OfferTornLogRepair;
-        if OpenOrCreateServerLog then
-          begin
-            if (ServerLog.Size mod SizeOf(ContestExchange)) <> 0 then
+        (* THE LOG IS THE STORE'S (uServerLogStore): Initialize opens or creates
+          the file, refuses a size that is not whole records, writes the header
+          into an empty one and tells the window the QSO count. *)
+        CreateServerLogStore;
+        case ServerLogStore.Initialize(LogFileSize) of
+          silBadSize:
             begin
               logger.Error('serverlog.trw size mismatch: file size ' +
-                IntToStr(ServerLog.Size) +
+                IntToStr(LogFileSize) +
                 ' is not a multiple of record size ' + IntToStr(SizeOf(ContestExchange)));
               ServerMessageBox(
                 'serverlog.trw cannot be opened: the file size is not a multiple of the ' +
@@ -220,19 +225,12 @@ begin
                 MB_OK or MB_ICONWARNING);
               begin ServerShutDown; Exit; end;
             end;
-            if ServerLog.Size = 0 then
-              begin
-              ServerLog.WriteBuffer(LogHeader, SizeOfTLogHeader);
-              end;
-
-            DisplayServerLogSize;
-            CloseServerLog;
-          end
-          else
-          begin
-            ServerMessageBox('Failed to open/create serverlog.trw', MB_OK or MB_ICONWARNING);
-            begin ServerShutDown; Exit; end;
-          end;
+          silCannotOpen:
+            begin
+              ServerMessageBox('Failed to open/create serverlog.trw', MB_OK or MB_ICONWARNING);
+              begin ServerShutDown; Exit; end;
+            end;
+        end;
         //        SortServerLog;
         ScanLogForSerialsNumbers;
 

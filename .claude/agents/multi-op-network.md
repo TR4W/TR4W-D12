@@ -677,6 +677,22 @@ state follows the server's Clear-server-log or any restart that lost `SERVERLOG.
   `TStubLink`, `WaitWrites` and `NewImage` now live in `uTestNetSupport`. **The real
   two-station check is BENCH_QUEUE ("A SERVER THAT LOST ITS LOG").**
 
+## The server log is behind ONE seam (SQLite plan phase P1, 2026-11-19)
+
+`tr4wserverUnit` no longer touches `SERVERLOG.TRW`. `src/uServerLogStore.pas` (a leaf,
+unit-tested by `uTestServerLogStore`) holds `TServerLogStore` (abstract: `Initialize`,
+`Hold`/`Release`, `Append`, `UpdateNewest`, `Holds(id1,id2)`, `Clear`, `ClearFlags`,
+`MaxNumberSent`, `Describe` = size + first record's contest + CRC, `Count`, `OpenImage`)
+and `TFileServerLogStore`, the only implementation: the old bodies MOVED, open/close/hold
+semantics and the CRC cache included. The global is `tr4wserverUnit.ServerLogStore`,
+made by `CreateServerLogStore` (tr4wserver.lpr, after `ServerLogFileName` is set); the
+server's reactions to a failed or successful write and the window's QSO count are three
+plain callbacks (`NoteServerLogFailure`, `NoteServerLogWritten`, `DisplayServerLogCount`)
+called at the same points in the sequence as before. `uServerNet.SyncExecute` asks
+`OpenImage` and is otherwise unchanged: **the sync-port snapshot hazard (design 6.2) is
+still there on purpose.** Do not add file access to the server unit again; add a method.
+Oracle: `tools/netprobe/Run-SyncBaseline.ps1`, `Run-TrwRoundTrip.ps1`, `--case all`.
+
 ## The transport, and its one sharp edge
 
 The client is **Indy**, not Winsock. `uNet` used to drive a raw socket and have

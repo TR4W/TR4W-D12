@@ -688,6 +688,8 @@ uses
    uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
    uServerLogHealth in '..\..\src\uServerLogHealth.pas',
    uTestServerLogHealth in 'uTestServerLogHealth.pas',
+   uServerLogStore in '..\..\src\uServerLogStore.pas',
+   uTestServerLogStore in 'uTestServerLogStore.pas',
    uNetCatchUp in '..\..\src\uNetCatchUp.pas',
    uTestNetSupport in 'uTestNetSupport.pas',
    uTestMainFormHarness in 'uTestMainFormHarness.pas',
@@ -1152,6 +1154,7 @@ begin
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
    RegisterSuite(TN1MMLogEnvelopeTests.Create('N1MMLogEnvelope'));
    RegisterSuite(TServerLogHealthTests.Create('ServerLogHealth'));
+   RegisterSuite(TServerLogStoreTests.Create('ServerLogStore'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));

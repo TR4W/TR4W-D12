@@ -4,6 +4,16 @@ Design note, 2026-11-19. **Nothing here is built.** It answers the open question
 in issue TR4W/TR4W-D12 #341 from what was read, says what was only inferred, and
 recommends a phased plan. NY4I's rulings are listed at the end; none is assumed.
 
+**Read 2026-11-19 against TR4QT's peer-to-peer document -- see
+[`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md), "The network, deltas
+and the peer-to-peer question".** Phases are in section 9. Short form: a separate server database is
+moot under pure P2P and should reuse the station schema under an elected
+master, and this note's BLOB-per-record store is the form least likely to
+survive either. Phases P0 (byte oracle) and P1 (store seam) and the flat-file
+integrity fixes of section 6 pay off in every case; **P2 and P3 should wait
+for a ruling on the topology and on the wire operation** (a stable id, an
+edit version, a tombstone). Not a ruling; NY4I decides.
+
 Evidence tags used below:
 
 - **[read]** a file or a GitHub clone was opened and the line was read.
@@ -496,6 +506,16 @@ trim), (e) a size-mismatch header (refusal).
 | **Later** | Derived columns, a CRC drop under a protocol bump, row-level protocol, TR4WServerPy parity. | with the row-level protocol |
 
 TR4WServerPy parity is **not** part of P2; it is decision D2.
+
+**Status 2026-11-19: P0 and P1 are built, uncommitted at the time of writing.**
+P0: `tools/netprobe/Run-SyncBaseline.ps1` and `Run-TrwRoundTrip.ps1`, with
+baselines for catchup, restock, edit, dup and serial. **Both servers produce the
+same bytes for all five**, header record included (TR4WServerPy at its
+`c1c6447`, run with `-PyServer`). Two of the five (dup, serial) write no QSOs,
+so they pin only the 376-byte header. P1: `uServerLogStore.pas`
+(`TServerLogStore`, the flat file as its only implementation), proven against
+the P0 baselines, the round trip, `netprobe --case all` and 15 unit tests. The
+sync-port snapshot hazard of section 6.2 is deliberately still there.
 
 ### Tests
 

@@ -56,12 +56,11 @@ uses
   VC,
   uNetFraming,  // NetMessageSize -- the one size table the client parses with
   uNetHello,    // THelloMessage, JudgeProtocol -- the first message on every link
-  uServerQsoIndex,  // which QSOs the log already holds -- a resend is stored once
+  uServerLogStore,  // the server log behind one seam; the flat file is the only implementation
   uServerLogHealth, // what the operator and the stations are told when the log cannot be written
   Log4D,       // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
-  uCRC32,
   uComputerID,   // the station-id rule, kept away from the sockets so it can be tested
   Classes,       // TStringList -- the client list is built and handed over whole
   uServerNet,    // the transport: Indy, not WSAAsyncSelect
@@ -83,20 +82,7 @@ type
      socket in it. *)
    TClientHandle = Cardinal;
 
-   (* HOW OpenServerLog SHOULD BEHAVE WHEN THE LOG IS NOT THERE.
-
-     Was Win32's dwCreationDistribution -- OPEN_EXISTING or OPEN_ALWAYS --
-     which is what kept `uses Windows` alive after the body itself had already
-     moved to TFileStream. Only two of the five Win32 values were ever passed,
-     the routine branched on exactly one of them, and CreateFile has not been
-     called here for some time: a Win32 constant surviving as a homegrown
-     boolean.
-
-     An enum says the same thing, cannot be handed a value the routine does
-     not understand, and takes the Windows unit with it. *)
-   TServerLogOpenMode = (
-      slOpenExisting,   // fail if the log is not there
-      slOpenAlways);    // create it if it is not
+   (* TServerLogOpenMode MOVED to uServerLogStore with the file code (P1, 2026-11-19). *)
 
 (* SIX DECLARATIONS FROM THE PRE-INDY SERVER, ALL UNUSED, DELETED 2026-09-08.
 
@@ -221,9 +207,7 @@ var
 //  AcceptEx                              : TAcceptEx;
 
 //  LogArrayPtr                           : ServerLogArray;
-  TempCE                                : ContestExchange;
-
-  EditedQSOPtr                          : NetQSOInformationPtr;
+  EditedQSOPtr                         : NetQSOInformationPtr;
   ServerNewQSOPtr                       : NetQSOInformationPtr;
   ServerLogFileInformation              : TLogFileInformation = (liID: NET_LOGCOMPARE_ID);
 
@@ -237,12 +221,6 @@ var
     A flag rather than a Disconnect from here: the engine runs on the main
     thread and the connection belongs to its own. *)
   DropRequested                         : boolean = False;
-  ServerLogOpened                       : boolean = False;
-  (* The log is kept open across a run of OFFLINEQSO packets (see
-    HoldServerLog). While True, OpenServerLog answers True and CloseServerLog
-    does nothing. *)
-  ServerLogHeld                         : boolean = False;
-
   NetSynQSOInformation                 : TNetSynQSOInformation = (qsID: NET_TAKESERVERQSO_ID);
 
   TempLongBool                          : LongBool;
@@ -268,16 +246,14 @@ var
     read by NOTHING -- a leftover from when the server WAS a Win32 dialog and
     its socket events were posted to that handle.  It was the last HWND in
     tr4wserver. *)
-  (* THE SERVER LOG, AS A STREAM.
+  (* THE SERVER LOG, BEHIND ONE SEAM (phase P1 of docs/TR4WSERVER_SQLITE_DESIGN.md).
 
-    Was `ServerLogHandle: HWND` and thirty-odd Win32 calls against it. A
-    TFileStream is the RTL's, works on every platform FPC targets, and knows
-    its own size -- which is most of what the old code asked the handle for. *)
-  ServerLog                             : TFileStream = nil;
-  (* THE (ceQSOID1, ceQSOID2) PAIRS THE LOG HOLDS, so a QSO sent twice is stored
-    and relayed once. Created at first use; the log file is the authority --
-    see uServerQsoIndex. *)
-  ServerQsoIndex                        : TServerQsoIndex = nil;
+    Was a TFileStream here, with the held-QSO set and the cached CRC beside it
+    and thirty-odd operations on it in this unit. All of that is uServerLogStore
+    now; this unit only asks. Created by tr4wserver.lpr (CreateServerLogStore)
+    once the file name is known, and never freed while the program runs: the
+    sync port's connection threads may still ask it for the image. *)
+  ServerLogStore                        : TServerLogStore = nil;
   (* ServerTempLogHandle went with them: a THandle initialised to
     INVALID_HANDLE_VALUE and referenced nowhere, which is the last thing in
     this unit that named the Windows unit. *)
@@ -327,8 +303,6 @@ var
   NewClientThreadID                     : Cardinal;
   ThreadID                              : Cardinal;
   SendLogTo                             : Cardinal;
-  ServerCRC32                           : Cardinal;
-  ServerCRC32Changed                    : boolean = True;
 (* The server's own WSAAsyncSelect message ids stood here and are GONE
   (2026-09-07), the same way and for the same reason as VC.pas's -- see the
   note there.  The const block went with them; they were all it held. *)
@@ -336,7 +310,6 @@ var
 //procedure SortServerLog;
 //function SortServerLogArrayShell: boolean;
 
-function tUpdateServerLog(UpdAction: UpadateAction): boolean;
 procedure SendConfirmMessage(s: TClientHandle);
 procedure SerialNumbersChanged;
 procedure UpdateSerialNumbersStatus(s: TClientHandle; Status: TSerialNumberType);
@@ -359,7 +332,6 @@ procedure ShowBindAddresses;
 
 procedure RunServerThread;
 procedure RunServer;
-procedure GetServerLogCRC32;
 function sSend(s: TClientHandle; var buf; Len: integer; mt: DebugMessageType): integer;
 function ServerMessageBox(const Text: string; uType: Cardinal): integer;
 procedure InitServerLogger;
@@ -372,45 +344,14 @@ procedure ProcessClientBuffer(aSocket: Cardinal; aBytes: integer);
 procedure DisplayRCVDBytes;
 procedure DisplaySENDBytes;
 procedure DisplayClients;
-procedure DisplayServerLogSize;
+(* THE WINDOW'S QSO COUNT, called by the log store whenever the count changes. *)
+procedure DisplayServerLogCount(aCount: integer);
+(* MAKE THE LOG STORE for the file named in ServerLogFileName and wire its three
+  notifications (a write failed, a write worked, the count changed) to the
+  routines below. Call once, after the file name is set and before the log is
+  initialised. *)
+procedure CreateServerLogStore;
 //procedure SetServerIcon(Icon: PChar);
-(* False when the log could not be read or the edited record not written back
-  (reported through NoteServerLogFailure); True otherwise, including when the
-  QSO is not in the log. *)
-function UpdateQSOInServerlog(CE: ContestExchange): boolean;
-function OpenServerLog(aMode: TServerLogOpenMode): boolean;
-{ Open the log, creating it if it is not there -- see the body. }
-function OpenOrCreateServerLog: boolean;
-procedure CloseServerLog;
-(* KEEP THE LOG OPEN ACROSS A RUN OF OFFLINEQSO PACKETS (issue 149). A restock
-  is thousands of them in one write; each used to open the log twice and flush
-  it. HoldServerLog opens it once; until ReleaseServerLog, OpenServerLog is
-  satisfied by the open stream and CloseServerLog leaves it open. ReleaseServerLog
-  flushes ONCE and closes; it does nothing when no hold is in force, so it is
-  safe to call at any time. *)
-procedure HoldServerLog;
-procedure ReleaseServerLog;
-(* DOES THE SERVER LOG ALREADY HOLD THIS QSO -- the same (ceQSOID1, ceQSOID2)?
-  Phase 1, C5: a station that was disconnected sends again what it logged
-  meanwhile, and one that crashed sends some twice. False for the pair (0, 0),
-  and for a log that cannot be opened (the QSO is then not stored; see
-  NoteServerLogFailure). Opens and closes the log itself; call it with the log CLOSED. *)
-function ServerHoldsQSO(const CE: ContestExchange): boolean;
-(* The server has just appended CE to the log, which is OPEN. Keeps the set of
-  held QSOs in step. Call it after the write and before CloseServerLog. *)
-procedure NoteQsoStored(const CE: ContestExchange);
-(* APPEND ONE RECORD TO THE OPEN SERVER LOG, ALL OR NOTHING (issue 314). A write
-  that fails -- a full disk above all -- raises from deep inside the stream, and
-  a record cut short at the end of the file shifts every later record by the
-  remainder. This trims the file back to the size it had before the write, logs
-  the reason, and answers False; it never raises. The log must be open. *)
-function AppendRecordToOpenServerLog(const CE: ContestExchange): boolean;
-(* OPEN THE LOG, APPEND CE, TELL THE HELD-QSO SET, AND CLOSE -- in a finally, so
-  an exception cannot leave ServerLogOpened set and every later open refused.
-  False when the log could not be opened or the write failed (nothing stored).
-  aFlush False is for a run of OFFLINEQSO packets, flushed once by
-  ReleaseServerLog. *)
-function StoreQsoInServerLog(const CE: ContestExchange; aFlush: boolean): boolean;
 (* THE LOG COULD NOT BE WRITTEN (issue 314, review H9), or can be again.
   NoteServerLogFailure counts it, keeps the reason, shows it in the server
   window and, on the FIRST failure of a run, tells every connected station once
@@ -433,6 +374,7 @@ procedure SendNoticeToStations(const aText: string);
   the tail; any other file is left for the existing refusal. *)
 procedure OfferTornLogRepair;
 procedure SendLogFileInformation(s: TClientHandle);
+(* True when the log was cleared (the serial numbers are then scanned again). *)
 function ClearServerLog: boolean;
 procedure SendDisconnectMessage(Client: AnsiChar);
 (* True when the id was accepted; False when it was refused (the station has been
@@ -692,7 +634,7 @@ begin
           first pass this also clears a hold an exception left behind. *)
         if PWORD(@ServerBuffer[Bufindex])^ <> NET_OFFLINEQSO_ID then
            begin
-           ReleaseServerLog;
+           ServerLogStore.Release;
            end;
 
         (* NETWORK PROTOCOL 2: UNTIL A CONNECTION HAS SENT ITS HELLO, ANYTHING
@@ -768,7 +710,7 @@ begin
                 ' exch=' + string(EditedQSOPtr^.qiInformation.ExchString));
               (* RELAYED EITHER WAY, like a new QSO (see NET_QSOINFO_ID); the
                 confirmation only when the edit reached the log. *)
-              if UpdateQSOInServerlog(EditedQSOPtr^.qiInformation) then
+              if ServerLogStore.UpdateNewest(EditedQSOPtr^.qiInformation) then
                  begin
                  SendConfirmMessage(aSocket);
                  end;
@@ -779,14 +721,15 @@ begin
           NET_OFFLINEQSO_ID:
             begin
               ServerNewQSOPtr := @ServerBuffer[Bufindex];
-              HoldServerLog;
+              ServerLogStore.Hold;
               (* A QSO THE LOG ALREADY HOLDS IS NOT STORED AGAIN, but it is
                 acknowledged: the sender asked, and it is told the server has it. *)
-              if ServerHoldsQSO(ServerNewQSOPtr^.qiInformation) then
+              if ServerLogStore.Holds(ServerNewQSOPtr^.qiInformation.ceQSOID1,
+                                      ServerNewQSOPtr^.qiInformation.ceQSOID2) then
                 begin
                 SendConfirmMessage(aSocket);
                 end
-              else if StoreQsoInServerLog(ServerNewQSOPtr^.qiInformation, False) then
+              else if ServerLogStore.Append(ServerNewQSOPtr^.qiInformation, False) then
               begin
                 (* NO FLUSH IN THERE: the log is held open (above) and flushed once,
                   when the run of OFFLINEQSO packets ends (ReleaseServerLog).
@@ -813,7 +756,8 @@ begin
                 nothing; storing it would put two of one QSO in the server's
                 log. An edit is different and is always applied and relayed:
                 it is the same change however many times it is sent. *)
-              if ServerHoldsQSO(ServerNewQSOPtr^.qiInformation) then
+              if ServerLogStore.Holds(ServerNewQSOPtr^.qiInformation.ceQSOID1,
+                                      ServerNewQSOPtr^.qiInformation.ceQSOID2) then
                 begin
                 logger.Info('[Net] QSO ' + string(ServerNewQSOPtr^.qiInformation.Callsign) +
                   ' (' + IntToStr(ServerNewQSOPtr^.qiInformation.ceQSOID1) + '/' +
@@ -831,7 +775,7 @@ begin
                   it from the other stations' dupe and multiplier checks. The
                   copy the server lacks is pushed back by the next station to
                   link (the restock). *)
-                StoreQsoInServerLog(ServerNewQSOPtr^.qiInformation, True);
+                ServerLogStore.Append(ServerNewQSOPtr^.qiInformation, True);
                 SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
                 end;
               Bufindex := Bufindex + SizeOf(TNetQSOInformation);
@@ -886,12 +830,12 @@ begin
 
                 SM_CLEAR_DUPESHEET_MESSAGE:
                   begin
-                    if tUpdateServerLog(actSetClearDupesheetBit) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                    if ServerLogStore.ClearFlags(actSetClearDupesheetBit) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
                   end;
 
                 SM_CLEAR_MULTSHEET_MESSAGE:
                   begin
-                    if tUpdateServerLog(actClearMults) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                    if ServerLogStore.ClearFlags(actClearMults) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
                   end;
 {
                 SM_SORTLOG_MESSAGE:
@@ -955,7 +899,7 @@ begin
 
         goto CheckBuffer;
         1:
-        ReleaseServerLog;
+        ServerLogStore.Release;
         DisplayRCVDBytes;
 
 end;
@@ -1016,10 +960,23 @@ begin
   SetClientCount(nclients);
 end;
 
-procedure DisplayServerLogSize;
+procedure DisplayServerLogCount(aCount: integer);
 begin
-  ServerCRC32Changed := True;
-  SetServerLogQSOs((ServerLog.Size - 4) div SizeOf(ContestExchange));
+  SetServerLogQSOs(aCount);
+end;
+
+procedure CreateServerLogStore;
+begin
+  (* CharBufferBytes, NOT CharBufferText. tr4wserver.lpr fills the buffer with
+    SetCharBufferBytes(AnsiString(...)) -- system-codepage bytes, copied
+    unchanged -- so the read is their inverse. CharBufferText would decode
+    them as UTF-8, which is not what was written, and a non-ASCII install
+    path would name a file that does not exist. *)
+  ServerLogStore := TFileServerLogStore.Create(string(CharBufferBytes(ServerLogFileName)));
+  ServerLogStore.Logger := logger;
+  ServerLogStore.OnWriteFailed := NoteServerLogFailure;
+  ServerLogStore.OnWritten := NoteServerLogWritten;
+  ServerLogStore.OnCountChanged := DisplayServerLogCount;
 end;
 {
 procedure SetServerIcon(Icon: PChar);
@@ -1045,288 +1002,6 @@ begin
 end;
 }
 
-
-function UpdateQSOInServerlog(CE: ContestExchange): boolean;
-var
-  pNumberOfBytesRead                    : Cardinal;
-  FilePointer                           : integer;
-  Finished                              : boolean;
-
-begin
-  Result := True;
-  if not OpenServerLog(slOpenExisting) then
-     begin
-     Result := False;
-     NoteServerLogFailure('cannot open the log');
-     Exit;
-     end;
-  (* CLOSED IN A FINALLY, AND NEVER RAISING (issue 314): an exception that skipped
-    the close left ServerLogOpened set, and every later open was refused. The
-    walk goes back from the end one record at a time and stops at the start of
-    the file; a record that is rewritten and then fails is put back as it was. *)
-  try
-     try
-        FilePointer := -1;
-        Finished := False;
-        while (not Finished) and
-              (Int64(-FilePointer) * SizeOf(ContestExchange) <= ServerLog.Size) do
-           begin
-           ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
-           pNumberOfBytesRead := ServerLog.Read(TempCE, SizeOf(ContestExchange));
-           if pNumberOfBytesRead <> SizeOf(ContestExchange) then
-              begin
-              Finished := True;
-              end
-           else if (TempCE.ceQSOID1 = CE.ceQSOID1) and
-                   (TempCE.ceQSOID2 = CE.ceQSOID2) then
-              begin
-              ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
-              try
-                 ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
-                 NoteServerLogWritten;
-              except
-                 on E: Exception do
-                    begin
-                    Result := False;
-                    logger.Error('[Log] cannot rewrite the edited QSO %s (%d/%d) in the server log: %s',
-                                 [string(CE.Callsign), CE.ceQSOID1, CE.ceQSOID2, E.Message]);
-                    NoteServerLogFailure(E.Message);
-                    try
-                       ServerLog.Seek(Int64(FilePointer) * SizeOf(ContestExchange), soEnd);
-                       ServerLog.WriteBuffer(TempCE, SizeOf(ContestExchange));
-                    except
-                       on E2: Exception do
-                          begin
-                          logger.Error('[Log] and the old record could not be put back: %s', [E2.Message]);
-                          end;
-                    end;
-                    end;
-              end;
-              ServerCRC32Changed := True;
-              Finished := True;
-              end
-           else
-              begin
-              dec(FilePointer);
-              end;
-           end;
-     except
-        on E: Exception do
-           begin
-           Result := False;
-           logger.Error('[Log] cannot search the server log for an edited QSO: %s', [E.Message]);
-           NoteServerLogFailure(E.Message);
-           end;
-     end;
-  finally
-     CloseServerLog;
-  end;
-end;
-
-
-(* Load_MSWSOCK AND TransmitServerLog ARE GONE, AND SO IS THE REASON FOR THEM.
-
-  The log-sync listener answered with TransmitFile -- a WinSock EXTENSION that
-  lives in MSWSOCK.DLL rather than ws2_32, so it had to be reached with
-  LoadLibrary and GetProcAddress -- and TransmitServerLog was the fallback for
-  the Windows versions that lacked it, running on a thread of its own from
-  CreateThread.
-
-  Indy writes a stream. uServerNet.SyncExecute opens the log as a TFileStream
-  and hands it to IOHandler.Write, on the connection's own thread, which is
-  what that CreateThread was for. *)
-
-(* OPEN, AND THE PARAMETER IS STILL THE WIN32 DISPOSITION -- deliberately.
-
-  Every caller says OPEN_EXISTING or OPEN_ALWAYS, and those two words carry the
-  intent exactly: "the log must already be there" and "make one if it is not".
-  Renaming them would touch a dozen call sites to say the same thing, so the
-  constants stay as the vocabulary and only the mechanism changed.
-
-  fmShareDenyNone matches the old FILE_SHARE_READ or FILE_SHARE_WRITE: the sync
-  listener reads this file while the server writes it. *)
-(* THE ONE CALLER OUTSIDE THIS UNIT, BY NAME.
-
-  tr4wserver.lpr was the only OPEN_ALWAYS caller in the tree, and that constant
-  was the last thing keeping the Windows unit in the program file -- everything
-  else it wanted is in LCLType. The four OPEN_EXISTING callers are all in here,
-  where the note above still holds and the vocabulary is unchanged. *)
-function OpenOrCreateServerLog: boolean;
-begin
-   Result := OpenServerLog(slOpenAlways);
-end;
-
-function OpenServerLog(aMode: TServerLogOpenMode): boolean;
-var
-   name: string;
-begin
-  Result := False;
-  if ServerLogOpened then
-     begin
-     (* Open because it is held: the caller may use it. Open for any other
-       reason: a re-entrant open, refused as it always was. *)
-     Result := ServerLogHeld;
-     Exit;
-     end;
-
-  (* CharBufferBytes, NOT CharBufferText. tr4wserver.lpr fills this buffer
-    with SetCharBufferBytes(AnsiString(...)) -- system-codepage bytes, copied
-    unchanged -- so the read is their inverse. CharBufferText would decode
-    them as UTF-8, which is not what was written, and a non-ASCII install
-    path would name a file that does not exist. *)
-  name := string(CharBufferBytes(ServerLogFileName));
-  try
-     if (aMode = slOpenAlways) and (not FileExists(name)) then
-        begin
-        ServerLog := TFileStream.Create(name, fmCreate or fmShareDenyNone);
-        end
-     else
-        begin
-        ServerLog := TFileStream.Create(name, fmOpenReadWrite or fmShareDenyNone);
-        end;
-     Result := True;
-  except
-     on E: Exception do
-        begin
-        { REPORTED. The Win32 version returned INVALID_HANDLE_VALUE and the
-          reason was in GetLastError, which nothing read. }
-        logger.Error('[Log] cannot open %s: %s', [name, E.Message]);
-        FreeAndNil(ServerLog);
-        Result := False;
-        end;
-  end;
-
-  ServerLogOpened := Result;
-end;
-
-procedure CloseServerLog;
-begin
-  if ServerLogHeld then
-     begin
-     Exit;
-     end;
-  FreeAndNil(ServerLog);
-  ServerLogOpened := False;
-end;
-
-procedure HoldServerLog;
-begin
-  if ServerLogHeld then
-     begin
-     Exit;
-     end;
-  if OpenServerLog(slOpenExisting) then
-     begin
-     ServerLogHeld := True;
-     end;
-end;
-
-procedure ReleaseServerLog;
-begin
-  if not ServerLogHeld then
-     begin
-     Exit;
-     end;
-  ServerLogHeld := False;
-  try
-     FileFlush(ServerLog.Handle);
-  finally
-     CloseServerLog;
-  end;
-end;
-
-function ServerHoldsQSO(const CE: ContestExchange): boolean;
-begin
-  Result := False;
-  if (CE.ceQSOID1 = 0) and (CE.ceQSOID2 = 0) then
-     begin
-     Exit;
-     end;
-  if not OpenServerLog(slOpenExisting) then
-     begin
-     Exit;
-     end;
-  try
-     if ServerQsoIndex = nil then
-        begin
-        ServerQsoIndex := TServerQsoIndex.Create;
-        end;
-     (* THE FILE IS THE AUTHORITY: a set built from a log of another size is
-       stale -- the file was cleared, replaced or appended to by someone else --
-       and is built again. *)
-     if not ServerQsoIndex.ReflectsLog(ServerLog.Size) then
-        begin
-        ServerQsoIndex.LoadFromLog(ServerLog, SizeOfTLogHeader);
-        end;
-     Result := ServerQsoIndex.Contains(CE.ceQSOID1, CE.ceQSOID2);
-  finally
-     CloseServerLog;
-  end;
-end;
-
-procedure NoteQsoStored(const CE: ContestExchange);
-begin
-  if ServerQsoIndex = nil then
-     begin
-     Exit;
-     end;
-  ServerQsoIndex.Add(CE.ceQSOID1, CE.ceQSOID2);
-  ServerQsoIndex.NoteLogSize(ServerLog.Size);
-end;
-
-function AppendRecordToOpenServerLog(const CE: ContestExchange): boolean;
-var
-  sizeBefore: Int64;
-begin
-  Result := False;
-  sizeBefore := ServerLog.Size;
-  try
-     ServerLog.Seek(0, soEnd);
-     ServerLog.WriteBuffer(CE, SizeOf(ContestExchange));
-     Result := True;
-     NoteServerLogWritten;
-  except
-     on E: Exception do
-        begin
-        logger.Error('[Log] cannot append to the server log: %s -- the QSO %s (%d/%d) is NOT stored; trimming the file back to %d bytes',
-                     [E.Message, string(CE.Callsign), CE.ceQSOID1, CE.ceQSOID2, sizeBefore]);
-        NoteServerLogFailure(E.Message);
-        try
-           ServerLog.Size := sizeBefore;
-        except
-           on E2: Exception do
-              begin
-              logger.Error('[Log] cannot trim the server log back to %d bytes: %s -- it may end in a partial record',
-                           [sizeBefore, E2.Message]);
-              end;
-        end;
-        end;
-  end;
-end;
-
-function StoreQsoInServerLog(const CE: ContestExchange; aFlush: boolean): boolean;
-begin
-  Result := False;
-  if not OpenServerLog(slOpenExisting) then
-     begin
-     NoteServerLogFailure('cannot open the log');
-     Exit;
-     end;
-  try
-     if AppendRecordToOpenServerLog(CE) then
-        begin
-        if aFlush then
-           begin
-           FileFlush(ServerLog.Handle);
-           end;
-        NoteQsoStored(CE);
-        DisplayServerLogSize;
-        Result := True;
-        end;
-  finally
-     CloseServerLog;
-  end;
-end;
 
 (* THE IN-MEMORY BUFFER IS GONE (review H9). It held at most 30 QSOs the log
   could not take, nothing ever wrote it out (WriteContestExchangesBufferToServerLog
@@ -1479,35 +1154,21 @@ end;
 
 procedure SendLogFileInformation(s: TClientHandle);
 var
-  pNumberOfBytesRead                    : Cardinal;
+  size: Int64;
+  contest: TContestHandle;
+  crc: Cardinal;
 begin
-  if not OpenServerLog(slOpenExisting) then Exit;
-  ServerLogFileInformation.liServerLogSize := ServerLog.Size;
-  ServerLogFileInformation.liContest := NoContest;
-  if ServerLogFileInformation.liServerLogSize > SizeOfTLogHeader then
-     begin
-     ServerLog.Seek(SizeOfTLogHeader, soBeginning);
-     pNumberOfBytesRead := ServerLog.Read(TempCE, SizeOf(TempCE));
-     ServerLogFileInformation.liContest := TempCE.ceContest;
-     end;
-  CloseServerLog;
-  GetServerLogCRC32;
-  ServerLogFileInformation.liSeverCRC32 := ServerCRC32;
+  if not ServerLogStore.Describe(size, contest, crc) then Exit;
+  ServerLogFileInformation.liServerLogSize := size;
+  ServerLogFileInformation.liContest := contest;
+  ServerLogFileInformation.liSeverCRC32 := crc;
   sSend(s, ServerLogFileInformation, SizeOf(TLogFileInformation), dmLogInfo);
 end;
 
 function ClearServerLog: boolean;
 begin
   Result := False;
-  if not OpenServerLog(slOpenExisting) then Exit;
-  ServerLog.Seek(SizeOfTLogHeader, soBeginning);
-  ServerLog.Size := ServerLog.Position;
-  if ServerQsoIndex <> nil then
-     begin
-     ServerQsoIndex.Clear;
-     end;
-  DisplayServerLogSize;
-  CloseServerLog;
+  if not ServerLogStore.Clear then Exit;
   ScanLogForSerialsNumbers;
   Result := True;
 end;
@@ -1777,37 +1438,6 @@ begin
   Result := True;
 end;
 
-(* THE LOG'S CRC, READ INTO MEMORY INSTEAD OF MAPPED.
-
-  Was CreateFileMapping + MapViewOfFile over the whole file, for a read-only
-  scan. Memory mapping is a Win32 API with no portable equivalent worth the
-  conditional, and it bought nothing here: the CRC has to touch every byte
-  anyway, so a read is the same work without the mapping.
-
-  A contest log is a few megabytes -- 376 bytes per QSO, so ten thousand QSOs
-  is under four -- which is why holding it is reasonable. If that ever stops
-  being true the answer is a chunked CRC, not a mapping. *)
-procedure GetServerLogCRC32;
-var
-  buf: TBytes;
-begin
-  if not ServerCRC32Changed then Exit;
-  ServerCRC32 := 0;
-  if not OpenServerLog(slOpenExisting) then Exit;
-  try
-     SetLength(buf, ServerLog.Size);
-     if Length(buf) > 0 then
-        begin
-        ServerLog.Position := 0;
-        ServerLog.ReadBuffer(buf[0], Length(buf));
-        ServerCRC32 := uCRC32.GetCRC32(buf);
-        end;
-     ServerCRC32Changed := False;
-  finally
-     CloseServerLog;
-  end;
-end;
-
 (* THE WIRE WRITE, THROUGH INDY. Was WinSock's Send() on a raw handle; the
   handle is still how the engine names a client, and uServerNet turns it back
   into a connection. Everything else here -- the byte accounting and the
@@ -1817,99 +1447,6 @@ begin
   Result := SendToClient(s, buf, Len);
   BytesSEND := BytesSEND + DWORD(Result);
   DisplaySENDBytes;
-end;
-function tUpdateServerLog(UpdAction: UpadateAction): boolean;
-label
-  1, 2, 3;
-var
-  MapFin                                : Cardinal;
-  MapBase                               : Pointer;
-  RescoredRXData                        : ContestExchangePtr;
-  records                               : ContestExchangeArrayPtr;
-  LogSize                               : Cardinal;
-  QSOCounter                            : Cardinal;
-  LogBuf                                : TBytes;
-begin
-  Result := False;
-  if not OpenServerLog(slOpenExisting) then Exit;
-
-  (* READ, MODIFY, WRITE BACK -- instead of mapping the file.
-
-    This was CreateFileMapping + MapViewOfFile over the whole log, walked with
-    pointer arithmetic and flushed with FlushViewOfFile. Memory mapping is
-    Win32 with no portable equivalent worth a conditional, and what it was
-    doing is a read-modify-write of every QSO record.
-
-    The walk below is UNCHANGED -- same pointer arithmetic, same labels, same
-    per-record rules -- it just runs over a buffer this routine owns rather
-    than over a view of the file. The write-back is at the end, and only when
-    something actually changed. *)
-  LogSize := ServerLog.Size;
-
-  if LogSize <= SizeOf(TLogHeader) then
-     begin
-     goto 2;
-     end;
-  LogSize := ((LogSize - SizeOf(TLogHeader)) div SizeOfContestExchange);
-  QSOCounter := 0;
-
-  SetLength(LogBuf, ServerLog.Size);
-  ServerLog.Position := 0;
-  ServerLog.ReadBuffer(LogBuf[0], Length(LogBuf));
-
-  (* AN INDEXED WALK, NOT POINTER ARITHMETIC -- 2026-09-14.
-
-    The step used to be
-
-        RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
-
-    which TRUNCATES THE POINTER TO 32 BITS on every record. On Win64 the first
-    record above this is derived correctly -- PByte(@LogBuf[0]) + header -- and
-    then the second one lands wherever the low 32 bits happen to point. The
-    64-bit plan names it as a P0 and asks for a typed array rather than a
-    NativeUInt cast, because an index encodes the STRIDE and the BOUNDS while a
-    wider cast only stops the truncation.
-
-    THE RECORD RULES BELOW ARE UNCHANGED. What went is the address arithmetic
-    and the `goto 1` that carried it: `records[i]` says what
-    `Pointer(Cardinal(p) + SizeOf)` was trying to say, and the compiler
-    computes the stride. *)
-  records := ContestExchangeArrayPtr(@LogBuf[SizeOfTLogHeader]);
-
-  for QSOCounter := 0 to LogSize - 1 do
-     begin
-     RescoredRXData := @records^[QSOCounter];
-
-     if RescoredRXData^.ceRecordKind = rkQSO then
-        begin
-        if UpdAction = actSetClearDupesheetBit then
-           begin
-           RescoredRXData^.ceClearDupeSheet := True;
-           end;
-
-        if UpdAction = actClearMults then
-           begin
-           RescoredRXData^.ceClearMultSheet := True;
-           RescoredRXData^.DomesticMult := False;
-           RescoredRXData^.DXMult := False;
-           RescoredRXData^.PrefixMult := False;
-           RescoredRXData^.ZoneMult := False;
-           end;
-
-        end;
-     end;
-
-  Result := True;
-  ServerCRC32Changed := True;
-
-  { Back to disk in one write, then flushed -- FlushViewOfFile's job. }
-  ServerLog.Position := 0;
-  ServerLog.WriteBuffer(LogBuf[0], Length(LogBuf));
-  FileFlush(ServerLog.Handle);
-
-  2:
-  CloseServerLog;
-
 end;
 
 procedure SendConfirmMessage(s: TClientHandle);
@@ -1945,30 +1482,15 @@ begin
 end;
 
 procedure ScanLogForSerialsNumbers;
-label
-  Next;
 var
   i                                     : Cardinal;
   NextNumberToSend                      : integer;
+  MaxSent                               : integer;
 begin
   if not SerialNumberLockoutEnable then Exit;
-  if not OpenServerLog(slOpenExisting) then Exit;
-  NextNumberToSend := 0;
+  if not ServerLogStore.MaxNumberSent(MaxSent) then Exit;
 
-  ServerLog.Seek(SizeOf(ContestExchange), soBeginning);
-  Next:
-  i := ServerLog.Read(TempCE, SizeOf(ContestExchange));
-  if i = SizeOf(ContestExchange) then
-     begin
-     if NextNumberToSend < TempCE.NumberSent then
-        begin
-        NextNumberToSend := TempCE.NumberSent;
-        end;
-     goto Next;
-     end;
-  CloseServerLog;
-
-  NextNumberToSend := NextNumberToSend + 1;
+  NextNumberToSend := MaxSent + 1;
 
   for i := 1 to MAXCLIENTS do
      begin

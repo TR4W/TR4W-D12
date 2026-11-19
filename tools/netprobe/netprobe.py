@@ -1265,6 +1265,22 @@ CASES = {
 }
 
 
+def dump_sync_stream(args, report, name):
+   """P0 oracle (docs/TR4WSERVER_SQLITE_DESIGN.md section 9): write the sync-port
+   stream exactly as a station receives it -- the 4-byte native-order size, then
+   that many bytes (the header record and the QSO records) -- to --dump-sync.
+   The caller names a path per case; byte-comparing two of them is the check."""
+   data, why = fetch_server_log(args.host, args.port, args.password,
+                                args.sync_timeout, args.sync_bytes)
+   if data is None:
+      report.add(name, 'sync dump', 'FAIL', why)
+      return
+   with open(args.dump_sync, 'wb') as out:
+      out.write(struct.pack('<I', len(data)) + data)
+   report.add(name, 'sync dump', 'INFO',
+              '%d bytes after the size, written to %s' % (len(data), args.dump_sync))
+
+
 def run_case(name, args, report):
    ctx = Context(args, report)
    try:
@@ -1299,20 +1315,33 @@ def parse_args(argv):
                   help='QSOs in the second, large round of the restock case (0 skips it)')
    p.add_argument('--contest', default='ARRL-DX-CW',
                   help='the contest id the probes announce in their HELLO')
+   p.add_argument('--seed-ids', type=int, default=None,
+                  help='first QSO id the run hands out (default: the clock, so '
+                       'a run is unique; give a number for a repeatable run)')
+   p.add_argument('--dump-sync', default=None, metavar='FILE',
+                  help='after the cases, write the sync-port stream (4-byte '
+                       'size + file) to FILE; use with ONE --case')
    return p.parse_args(argv)
 
 
 def main(argv):
    args = parse_args(argv)
+   # 'none' runs no case: only the --dump-sync download (the .TRW round trip).
    names = list(CASES) if args.case == 'all' else [args.case]
+   if args.case == 'none':
+      names = []
    for name in names:
       if name not in CASES:
          print('unknown case %r; choose from %s' % (name, ', '.join(CASES)))
          return 2
+   if args.seed_ids is not None:
+      _NEXT_ID[0] = args.seed_ids
    report = Report(args.label)
    for name in names:
       run_case(name, args, report)
       time.sleep(1.0)                 # let the server notice the closed sockets
+   if args.dump_sync:
+      dump_sync_stream(args, report, args.case)
    print('SUMMARY %s: %d failed, %d could not run' %
          (args.label, report.failed, report.errored), flush=True)
    if report.errored:

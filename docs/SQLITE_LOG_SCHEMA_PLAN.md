@@ -59,6 +59,26 @@
 > is still the backup), §4a/§4b/§4d/§4f's reasoning, §14.4's pragma trap, and
 > the `application_id` / `user_version` values.
 
+> ## RE-CHECKED 2026-11-19 -- WHAT HAS BEEN CROSSED OFF SINCE THE AUDIT ABOVE
+>
+> Checked against the code, not against this file.
+>
+> - **§6 is no longer "genuinely unbuilt"** -- the audit above said so on
+>   2026-09-08, and it was true that day. `src/domain/uLogBackup.pas` publishes a
+>   verified backup (snapshot to `<dest>.new`, verify on its own connection,
+>   displace to `.bak`, rename), and `uLogStore.LogStoreBackup` drives it.
+>   **Still open from §6/§11 q7: a RESTORE** -- I found none in `uLogStore.pas`.
+>   The §14.2 interval was not re-checked.
+> - **§5 GUIDs: built.** `uLogRepository.NewUUIDv7`; `qso.guid` is `UNIQUE`.
+> - **§4c's four send-state columns: built.** `sent_to_server`, `server_dirty`,
+>   `sent_udp`, `udp_dirty`, with the two partial "unsent" indexes.
+> - **§4c's wire format: NOT built, and the schema cannot yet carry it.** See
+>   ["The network, deltas and the peer-to-peer question"](#the-network-deltas-and-the-peer-to-peer-question-2026-11-19)
+>   below. The network still identifies a QSO by the `(ceQSOID1, ceQSOID2)` PAIR,
+>   not by the guid, and there is no per-row edit version or sequence column.
+> - **§13 is still wholesale stale**, as the audit above says. It was not
+>   rewritten; read the audit.
+
 **Schema settled 2026-08-29. STARTED 2026-09-01 — see [§13](#13-what-is-built-so-far)
 for what exists, and [§14](#14-decisions-taken-2026-09-01) for the four decisions
 NY4I added that day.**
@@ -3083,6 +3103,80 @@ No schema change. Three pieces, each a decision recorded where it lives.
   marking, Edit QSO's check), `uTestEditQSOLayout.
   Test_OurStationShowsAndReadsBack` (enabled per contest, greyed not read, a
   Cyrillic name byte for byte), and the hazard test above.
+
+### The network, deltas and the peer-to-peer question (2026-11-19)
+
+Written after reading TR4QT's `docs/P2P_VS_CLIENT_SERVER_ARCHITECTURE.md`
+(December 2025) against this tree. **It is a recommendation, not a ruling.**
+TR4QT is NY4I's own design, so its agreement with this file proves nothing
+(see the top of this document).
+
+**What is built today [read].** A new QSO crosses the wire as the WHOLE
+376-byte `ContestExchange`; an edit is the whole record again
+(`NET_EDITEDQSO_ID`); a delete is an edit with the deleted flag set -- there is
+no delete message. The identity is the `(ceQSOID1, ceQSOID2)` pair. A station
+logs to its own SQLite first, queues what the server lacks
+(`sent_to_server`, `server_dirty`), resends on reconnect, and catches up
+INSERT-ONLY from the server's log. **Edits are not caught up**, because a
+record has no version and insert-only cannot tell which copy is newer
+(`multi-op-network` agent file; issue 146).
+
+**The three preconditions §4c named are all still unmet.**
+
+| §4c's condition | state |
+| --- | --- |
+| a delta needs a version or a sequence | no column holds one; two racing edits resolve by arrival order |
+| deletion travels as an edit | true on the wire today; the row's `deleted` flag exists, but with no version a delete can lose to an older edit |
+| the guid makes a patch unambiguous | the guid exists in the station's database and does NOT travel; the wire uses the pair |
+
+**What TR4QT's P2P document changes, and what it does not.**
+
+- **It does not change the wire question.** Whatever the topology -- a central
+  server, an elected master, or peers -- the unit exchanged is the same: an
+  idempotent operation carrying a stable id, an origin, an origin sequence or
+  version, the record (or the changed fields), and a deleted flag. Client to
+  server, master to replicas and peer to peer all send that. **Decide the
+  operation first; the topology is the second decision.** That ordering is what
+  keeps either answer from being thrown away.
+- **It does not make the station's SQLite log moot.** Per-peer SQLite with an
+  outbox IS the P2P design's storage; the station schema (guid, send-state
+  columns, the unsent indexes) is its prerequisite, and it is done.
+- **It would make a separate SERVER database moot** under pure P2P, and a
+  server database built as `#341` sketches it (a BLOB per 376-byte record,
+  chosen so the sync port stays byte-exact with `SERVERLOG.TRW`) is the form
+  least likely to survive: it exists to reproduce a flat file that a row-level
+  protocol replaces. Under an elected master the master should store the
+  STATION schema (guid rows), not a second one. See
+  [`TR4WSERVER_SQLITE_DESIGN.md`](TR4WSERVER_SQLITE_DESIGN.md).
+- **Its premises differ from this tree's.** It assumes no backward
+  compatibility; TR4W-D12 has deployed protocol-4 stations, a Python server on
+  NY4I's rig, and 4.x that must never join. It predates the 2026-10 network
+  revival (HELLO, offline resend, catch-up), which already made a station
+  local-first: a server outage no longer stops logging, only shared dupes and
+  serials -- so its "single point of failure" is weaker here than there. It
+  recommends CRDT plus Raft and a 15-month roadmap, and says to avoid P2P for
+  Internet-distributed or 20+ station operations, which TR4W's server serves
+  today. NY4I's own P2P note is narrower (2 to 6 peers, about 10, remote by
+  overlay).
+- **Its decision matrix does not add up.** Recomputing the weighted totals from
+  its own stars and weights gives client-server 93 (it states 79), hybrid 101
+  (it states 96); full P2P 85 matches. The winner is unchanged, but the margin
+  is 8, not 17, on weights its author chose.
+- **Not read in full:** I read the summary, serial numbers and the
+  recommendation, not every section. Its dupe-checking and bandwidth sections
+  are unchecked.
+
+**Recommended, for NY4I to rule on:**
+
+1. Settle the operation (stable id on the wire -- the guid or the pair --,
+   an edit version or origin sequence, a deleted tombstone) before any storage
+   change on the server. Whole row plus a version first; field-level deltas are
+   an optimisation, worthwhile only if conflicts must merge or the link is
+   narrow, and 376 bytes per QSO is small.
+2. Settle serial allocation per topology: today's server lockout; a master
+   that allocates; or ranges with gaps, which the TR4QT document itself flags
+   as possibly against contest rules.
+3. Hold `#341` phases P2 and P3 until 1 and 2 are decided; do P0 and P1.
 
 ---
 

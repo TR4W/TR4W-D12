@@ -23,9 +23,11 @@ this in a multithreaded LCL app starting from scratch?"*
 
 **No.** This document is why, and what the end state is.
 
-Its successor is [`SQLITE_LOG_SCHEMA_PLAN.md`](../SQLITE_LOG_SCHEMA_PLAN.md) --
-**What is deliberately left**, below, hands it the remaining `LogContact`
-layering debt by name.
+Its successor is [`SQLITE_LOG_SCHEMA_PLAN.md`](../SQLITE_LOG_SCHEMA_PLAN.md).
+**What is deliberately left**, below, once said it handed that plan the
+remaining `LogContact` layering debt by name. Re-checked 2026-11-19: that
+plan and `SQLITE_MIGRATION_TASKS.md` do not mention `LogContact`, so the debt
+has no owner. It is recorded below as unscheduled.
 
 ---
 
@@ -182,20 +184,31 @@ and "safe in practice" is what this document exists to stop relying on.
 
 ### What is deliberately left
 
-`LogContact` (`LOGSUBS2:1440`) interleaves model and view: it logs the QSO *and*
-calls `UpdateStationStatus`, `ShowDomesticMultiplierStatus`, `DisplayHour` and
-`DisplayNamePercentage`. That is why a socket thread reaches four display
-routines at all. The remaining reporters all reach the main window through
-accessors that DO defer, so what is left is **layering debt, not races**.
+*Re-checked 2026-11-19, against the code.*
 
-Separating them is contest-engine surgery that wants a corpus run and daylight,
-and it is the same work the SQLite contest-state move
-([`SQLITE_LOG_SCHEMA_PLAN.md`](../SQLITE_LOG_SCHEMA_PLAN.md)) will do properly.
-Doing it twice is the thing to avoid.
+`LogContact` (`logsubs2.pas`; the `LOGSUBS2:1440` once cited here has drifted)
+still interleaves model and view: it logs the QSO *and* calls
+`UpdateStationStatus`, `ShowDomesticMultiplierStatus`, `DisplayHour` and
+`DisplayNamePercentage`. **That is layering debt, not a race, and it is
+still open.** The off-thread callers hand off to the main thread with
+`Application.QueueAsyncCall` before reaching it (`uNet`, and the WSJT-X batch
+in `uWSJTX`) -- read in the source, not measured at run time.
 
-Also open: `tDispalyOnAirTime` (`LOGWIND:3689,3694`) on the radio polling
-thread -- a clock tick, unrelated to any of the above, and a small state object
-when someone wants it.
+**NOBODY OWNS IT.** This section used to say the SQLite contest-state move
+"will do properly" the same work, so doing it separately would be doing it
+twice. A search of `SQLITE_LOG_SCHEMA_PLAN.md` and `SQLITE_MIGRATION_TASKS.md`
+finds no mention of `LogContact`, and the schema work that shipped (the QSO
+row, the config table, the year columns) did not touch it. It is contest-engine
+surgery that wants a corpus run and daylight, and it is unscheduled.
+
+~~Also open: `tDispalyOnAirTime` (`LOGWIND:3689,3694`) on the radio polling
+thread.~~ **DONE.** `uRadioPolling` now calls
+`RequestMainThreadJob(mtOnAirTime)`, and the job is registered as a
+main-thread job, so the clock tick draws on the main thread. The one other
+direct caller, in `uWinKey.pas` (`wkReadThreadProc1`), is DEAD CODE: that
+procedure has no starter -- the live reader is `wkReadThreadProc` -- and its own
+header says so. Stale comments naming this item as open remain in `uWSJTX.pas`
+and `uMainThreadWork.pas`.
 
 **Expected argument against, answered in advance:** this is a port, and the
 existing design is defensible for a port -- it preserves behaviour, every step

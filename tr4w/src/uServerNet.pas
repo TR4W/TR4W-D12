@@ -584,7 +584,7 @@ var
    c:   TServerConn;
    raw: TIdBytes;
    got: integer;
-   fs:  TFileStream;
+   fs:  TStream;
    size: LongInt;
 begin
    c := TServerConn(AContext);
@@ -628,8 +628,12 @@ begin
       end;
 
    try
-      fs := TFileStream.Create(String(CharBufferBytes(ServerLogFileName)),
-                               fmOpenRead or fmShareDenyNone);
+      (* THE STORE'S IMAGE: header, then every record. For the flat file it is a
+        fresh read stream over the LIVE file, so the size below and the bytes
+        written are two separate reads of a file the main thread may be
+        appending to (design note 6.2). Deliberately NOT fixed in the store
+        seam (P1 changes no behaviour); a SQLite store returns a snapshot. *)
+      fs := ServerLogStore.OpenImage;
       try
          { The size FIRST, as a four-byte head -- that is the protocol: the old
            code put it in TRANSMIT_FILE_BUFFERS.Head. }

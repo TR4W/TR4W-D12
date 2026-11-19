@@ -53,6 +53,23 @@ Exit code 0 means no check failed, 1 means one did, 2 means a case could not run
 The log checks read the server's log through the sync port, the only way to see
 it from outside. If that download fails the log checks are reported as SKIP.
 
+## The sync-port byte baseline (P0 oracle, issue 341)
+
+`--seed-ids N` makes a run repeatable (QSO ids start at N instead of the clock);
+`--dump-sync FILE` writes the sync-port stream a station would download (4-byte
+size + header record + records) after the cases; `--case none` runs no case.
+`Run-SyncBaseline.ps1 -PyServer <path to TR4WServerPy's tr4wserver.py>` runs the SAME
+baselines against the Python server (it refuses `-Record`: the baselines are the
+in-tree server's).
+
+`Run-SyncBaseline.ps1 -Exe <built tr4wserver.exe>` runs `catchup restock edit dup
+serial` each against a fresh server in a scratch directory and compares the
+stream's MD5 with `baselines\<case>.sync.md5` (`-Record` rewrites them; the `.bin`
+streams are kept beside them). `Run-TrwRoundTrip.ps1` puts a `.TRW` file in as
+`SERVERLOG.TRW` and requires the stream to equal size + file. Neither touches the
+tree: build the server with `Build-Server.ps1 -OutExe <scratch>`. The recorded
+streams contain no clock or tick, so nothing is normalised.
+
 ## Cautions
 
 - It writes real QSOs into the server's log. Point it at a throwaway server,
