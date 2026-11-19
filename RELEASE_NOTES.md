@@ -48,6 +48,20 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — November 2026
 
+### 5.0.44 (2026-11-19) - NY4I
+
+#### Setup wizard
+
+- The WSJT-X page now offers every WSJT-X setting that Preferences does: send callsign highlighting
+  to WSJT-X (so it colours dupes and new multipliers), let WSJT-X control the radio through the DX
+  Commander interface, and the multicast group (advanced), as well as the on/off switch and the UDP
+  port. Switching WSJT-X off greys the rest. Only the settings you change are written.
+- When you run the wizard from the Tools menu, a "restart needed" line tells you which WSJT-X changes
+  need one.
+- Discover now lists every address of a K4 on its own line with the radio's name, for example
+  "192.168.73.159 (K4Z-SN00199.local)". A K4 Zero with Wi-Fi and Ethernet both connected reports both
+  addresses; they used to be pasted together into the IP field, where neither worked.
+
 ### 5.0.43 (2026-11-19) - NY4I
 
 #### Logs move to schema 10 - back up first

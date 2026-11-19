@@ -41,6 +41,21 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Wizard WSJT-X page, K4 discovery addresses (5.0.44) - NY4I
+
+#### Setup wizard WSJT-X page (`ui/lcl/uSetupWizardForm`, `uSetupWizard`, `uAppStrings`) - issue #334
+
+- **All five `Settings.Wsjtx` properties** are on the page: `Enabled`, `BroadcastPort`, and the new `SendHighlights`, `RadioControlEnabled` and `MulticastGroup` (advanced). Load reads the stored values through `StationCommandValue`; `SetupWsjtxChanges(loaded, shown)` (no LCL dependency, unit-tested) decides what changed and `CommitWSJTX` writes each through `ApplyAndStoreCommand`, the Preferences path. The four besides the switch are written only while the switch is on. `Wsjtx.Enabled`'s default is untouched.
+- **Restart line** for Tools-menu runs only (switching on, port, radio control, replacing a multicast group); never at startup, since `RunSetupWizardAtStartup` runs before `TWSJTXServer.Create`. The Commander note reads `COMMANDER_DEFAULT_PORT` (52002).
+- **Layout** follows the 2026-11-19 gtk2 rule (rows chained with `AnchorSideTop`, auto-sized wrapped labels); `TestShownWSJTXPageFitsItsNotes` shows the form and measures each note.
+- 9 resourcestrings added additively to the 21 catalogues (3 joined the Preferences captions).
+- **Open**: `lblDXLabInfo` in Preferences says the Commander interface runs whenever WSJT-X support runs, but the listener also needs `RadioControlEnabled` at startup; `uWSJTX` binds a literal 52002 beside the constant.
+
+#### K4 discovery (`uK4Discovery`, `uCAT`, `ui/lcl/uRadioEditForm`)
+
+- **Defect**: a K4 Zero with Wi-Fi and Ethernet both up replies `k4z:0:192.168.73.159 192.168.73.110:199` (one address per adapter). `ParseResponse` took the whole third field as one address, so the Found drop-down held one item and the IP field both addresses.
+- **Fix**: `ParseResponse` splits the field (space, comma or semicolon) into `IPAddress` plus `OtherAddresses`; `PreferSender` lists the datagram's own source address first; `AddressCount`/`AddressAt`/`FoundEntry` build one `'<address>=<address> (<hostname>)'` entry per address (K4 only), and the editor puts only the part before `=` in the IP field. `uTestK4Discovery` pins it with the two real replies.
+
 ### Log schema 10: stored X-QSO rule result; Linux logger-editor layout (5.0.43) - NY4I
 
 #### Stored rule-derived X-QSO (`domain/uLogSchema`, `uLogRepository`, `uLogStore`, `contestFactory/uContestRegistry`, `VC`, `uCabrillo`, `uADIF`, `trdos/postunit`, `uEditQSO`) - docs/LOG_SCHEMA.md
