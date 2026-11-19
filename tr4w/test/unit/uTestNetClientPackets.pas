@@ -80,6 +80,8 @@ type
       procedure Test_AnEditTypedBackIsNotSent;
       procedure Test_AnOverLongSharedEditIsToldAndNotSent;
       procedure Test_OnePositionsSettingsAreNotShared;
+      procedure Test_TheSharedListIsTheRuledOne;
+      procedure Test_APeersOwnPositionSettingsAreRefused;
    end;
 
 implementation
@@ -1047,6 +1049,106 @@ begin
       end;
 end;
 
+(* THE SHARED LIST AFTER NY4I'S RULINGS OF 2026-11-19 (issue 315). Pinned both
+  ways: every name on it resolves (a name nothing owns can never be sent), and
+  none of the names he took off, or ruled operator-specific, is on it. *)
+procedure TNetClientPacketTests.Test_TheSharedListIsTheRuledOne;
+const
+   ON_THE_LIST: array[0..42] of string = (
+      'CATEGORY-ASSISTED', 'CATEGORY-BAND', 'CATEGORY-MODE',
+      'CATEGORY-OPERATOR', 'CATEGORY-OVERLAY', 'CATEGORY-POWER',
+      'CATEGORY-TRANSMITTER', 'CONTEST NAME', 'CONTEST TITLE',
+      'INITIAL EXCHANGE FILENAME', 'MULT REPORT MINIMUM BANDS', 'QSL MODE',
+      'SINGLE BAND SCORE',
+      'QSO POINTS DOMESTIC CW', 'QSO POINTS DOMESTIC PHONE',
+      'QSO POINTS DX CW', 'QSO POINTS DX PHONE', 'MULT BY BAND',
+      'MULT BY MODE', 'QSO BY BAND', 'QSO BY MODE', 'QSO NUMBER BY BAND',
+      'COUNT DOMESTIC COUNTRIES', 'DOMESTIC FILENAME', 'MULTIPLE BANDS',
+      'MULTIPLE MODES', 'HF BAND ENABLE', 'VHF BAND ENABLE',
+      'WARC BAND ENABLE', 'SPRINT QSY RULE', 'MINITOUR DURATION',
+      'R150S MODE', 'RFOBL MODE', 'LITERAL DOMESTIC QTH',
+      'DIGITAL MODE ENABLE', 'QTC ENABLE', 'QTC EXTRA SPACE', 'QTC MINUTES',
+      'QTC QRS', 'MULT SHEET AUTO RESET', 'CUSTOM INITIAL EXCHANGE STRING',
+      'INITIAL EXCHANGE OVERWRITE', 'TEN MINUTE RULE');
+   OFF_THE_LIST: array[0..24] of string = (
+      'CONTEST', 'MY CONTINENT', 'INITIAL EXCHANGE CURSOR POS',
+      'COPY FILES', 'CQ MENU', 'DISPLAY REFRESH', 'DVK PORT', 'HOUR OFFSET',
+      'ICOM COMMAND PAUSE', 'INPUT CONFIG FILE', 'MULTIPLIER ITEM WIDTH',
+      'PADDLE PORT', 'TAIL END CW MESSAGE', 'TAIL END KEY',
+      'TAIL END MESSAGE', 'TAIL END SSB MESSAGE', 'CONNECTION COMMAND',
+      (* the contest's messages and the operator's habits: not shared *)
+      'QSL MESSAGE', 'QSO BEFORE MESSAGE', 'CALL OK NOW MESSAGE',
+      'QUICK QSL MESSAGE', 'AUTO DUPE ENABLE CQ', 'AUTO DUPE ENABLE S AND P',
+      'EXCHANGE MEMORY ENABLE', 'BAND');
+var
+   i: integer;
+begin
+   BeginTest('the shared list is the one NY4I ruled');
+   for i := Low(ON_THE_LIST) to High(ON_THE_LIST) do
+      begin
+      CheckTrue(Settings.OwnsCommand(ON_THE_LIST[i]),
+                ON_THE_LIST[i] + ' resolves, so it can be sent');
+      CheckTrue(CommandIsSharedWithPeers(ON_THE_LIST[i]),
+                ON_THE_LIST[i] + ' is shared');
+      end;
+   for i := Low(OFF_THE_LIST) to High(OFF_THE_LIST) do
+      begin
+      CheckFalse(CommandIsSharedWithPeers(OFF_THE_LIST[i]),
+                 OFF_THE_LIST[i] + ' is not shared');
+      end;
+end;
+
+(* THE RECEIVING SIDE REFUSES ONE POSITION'S OWN SETTINGS, even from an older
+  peer that still sends them (issue 315, NY4I 2026-11-19: "6. Yes"). Driven
+  through the real NET_PARAMETER arm: the packet is consumed whole, the stream
+  stays on a boundary, and the live value is the one it was. *)
+procedure TNetClientPacketTests.Test_APeersOwnPositionSettingsAreRefused;
+const
+   OWN: array[0..6] of string = ('BAND', 'MODE', 'CODE SPEED', 'CW TONE',
+      'WEIGHT', 'FARNSWORTH ENABLE', 'FARNSWORTH SPEED');
+var
+   link: TCaptureLink;
+   i: integer;
+   before, sent: string;
+   desync: boolean;
+   rec: TParameterToNetworkPtr;
+begin
+   BeginTest('a peer''s band, mode and CW keying are refused on receipt');
+   OpenLink(link);
+   try
+      for i := Low(OWN) to High(OWN) do
+         begin
+         CheckTrue(CommandIsOnePositionsOwn(OWN[i]), OWN[i] + ' is a position''s own');
+         before := LiveValue(OWN[i]);
+         sent := 'NOT ' + before;
+         if before = 'TRUE' then
+            begin
+            sent := 'FALSE';
+            end
+         else if before = 'FALSE' then
+            begin
+            sent := 'TRUE';
+            end;
+         rec := TParameterToNetworkPtr(@NetBuffer[1]);
+         rec^ := Default(TParameterToNetwork);
+         rec^.pnID := NET_PARAMETER_ID;
+         rec^.pnCommand := ShortString(AnsiString(OWN[i]));
+         rec^.pnValue := ShortString(AnsiString(sent));
+         CheckEquals(SizeOf(TParameterToNetwork),
+                     ConsumeNetBuffer(SizeOf(TParameterToNetwork), desync),
+                     OWN[i] + ': the packet was consumed whole');
+         CheckFalse(desync, OWN[i] + ': the stream stayed on a boundary');
+         CheckEquals(before, LiveValue(OWN[i]), OWN[i] + ' was not applied');
+         end;
+      CheckFalse(CommandIsOnePositionsOwn('CONTEST TITLE'),
+                 'a shared name is not refused');
+      CheckFalse(CommandIsOnePositionsOwn('MY NAME'),
+                 'nor is any other name');
+   finally
+      CloseLink(link);
+   end;
+end;
+
 procedure TNetClientPacketTests.RunAllTests;
 begin
    Test_TheAnnouncedStationCarriesTheTypedCallsign;
@@ -1073,6 +1175,8 @@ begin
    Test_AnEditTypedBackIsNotSent;
    Test_AnOverLongSharedEditIsToldAndNotSent;
    Test_OnePositionsSettingsAreNotShared;
+   Test_TheSharedListIsTheRuledOne;
+   Test_APeersOwnPositionSettingsAreRefused;
 end;
 
 end.

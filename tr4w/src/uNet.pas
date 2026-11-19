@@ -912,7 +912,16 @@ var
               // used to be refused for a contest with no legacy number): the
               // setting's effect re-announces THIS station's contest in a new
               // HELLO (NetContestChanged), which is how the others learn it.
-              if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
+              (* A POSITION'S OWN SETTING IS NEVER TAKEN FROM A PEER (issue 315,
+                NY4I 2026-11-19): BAND, MODE and the CW keying are this
+                operator's, and an older build still sends them. The packet is
+                consumed by the common advance below and not applied. *)
+              if CommandIsOnePositionsOwn(string(ParameterToNetworkPtr^.pnCommand)) then
+                 begin
+                 logger.Info('[Net] %s from another station ignored: it is one position''s own setting',
+                             [string(ParameterToNetworkPtr^.pnCommand)]);
+                 end
+              else if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
                                   string(ParameterToNetworkPtr^.pnValue)) then
                  begin
  //                ShowTrayTips();

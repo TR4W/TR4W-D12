@@ -524,7 +524,7 @@ end;
   limit is in BYTES, so a multi-byte character can cross it by itself. *)
 procedure TSettingValueWidthTests.Test_ASharedValueTooLongForTheWireIsToldAtEntry;
 const
-   SHARED = 'TAIL END CW MESSAGE';
+   SHARED = 'CONTEST TITLE';
 var
    eAcute, euro: string;
 begin

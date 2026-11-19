@@ -194,6 +194,11 @@ var
   is gone. *)
 function CommandIsSharedWithPeers(const aCommand: string): boolean;
 
+(* A SETTING THAT BELONGS TO ONE POSITION (issue 315, NY4I 2026-11-19): its
+  band, its mode, its operator's CW keying. A peer's value for one of these
+  is never applied, even from an older build that still sends it. *)
+function CommandIsOnePositionsOwn(const aCommand: string): boolean;
+
 (* WHAT THE OPERATOR IS TOLD WHEN A SHARED VALUE CANNOT GO ON THE WIRE (issue
   315). '' unless aCommand is shared with peers AND the value is more BYTES
   than a parameter packet carries (uNet.ParameterFitsTheWire). It does not
@@ -843,16 +848,26 @@ var
   position; the five CW values are the operator's own keying. No window sent
   them before Preferences could (a BOOLSWAP function key on FARNSWORTH ENABLE,
   through SetCFGCommandValue, was the one route). A peer running an older build may still
-  send them, and the receive side still applies what it is sent.
+  send them; the receive side refuses them (CommandIsOnePositionsOwn).
 
-  THIRTEEN NAMES HERE RESOLVE TO NOTHING (measured 2026-11-16, issue 315):
-  COPY FILES, CQ MENU, DISPLAY REFRESH, DVK PORT, HOUR OFFSET, ICOM COMMAND
-  PAUSE, INPUT CONFIG FILE, MULTIPLIER ITEM WIDTH, PADDLE PORT and the four
-  TAIL END names -- neither the settings object nor a store owns them, so no
-  door can send them. CONNECTION COMMAND is the cluster library's and is
-  inert as a command. Left for NY4I's ruling with the rest of the audit. *)
+  RULED BY NY4I 2026-11-19 (issue 315), AND DONE:
+    - CONTEST left (on a peer it would switch the contest mid-session), as did
+      MY CONTINENT and INITIAL EXCHANGE CURSOR POS (per station).
+    - The thirteen names that resolved to nothing (COPY FILES, CQ MENU, DISPLAY
+      REFRESH, DVK PORT, HOUR OFFSET, ICOM COMMAND PAUSE, INPUT CONFIG FILE,
+      MULTIPLIER ITEM WIDTH, PADDLE PORT, the four TAIL END names) and
+      CONNECTION COMMAND left.
+    - The contest-wide settings that affect scoring, the log or Cabrillo were
+      ADDED (QSO POINTS .., MULT BY .., QSO BY .., QTC .., TEN MINUTE RULE ..).
+    - NOT shared, on purpose: the contest's messages (QSL, QSO BEFORE, CALL OK
+      NOW, QUICK QSL), AUTO DUPE ENABLE CQ / S AND P and EXCHANGE MEMORY
+      ENABLE. NY4I: operator-specific.
+    - Shared values are sent when an operator CHANGES one, never re-sent when
+      the link comes up (NY4I: only upon request; no request path exists).
+    - The RECEIVING side refuses the seven per-station names above, even from
+      an older peer: CommandIsOnePositionsOwn, asked by uNet's parameter arm. *)
 const
-   SHARED_WITH_PEERS: array[0..29] of string = (
+   SHARED_WITH_PEERS: array[0..42] of string = (
       'CATEGORY-ASSISTED',
       'CATEGORY-BAND',
       'CATEGORY-MODE',
@@ -860,29 +875,42 @@ const
       'CATEGORY-OVERLAY',
       'CATEGORY-POWER',
       'CATEGORY-TRANSMITTER',
-      'CONNECTION COMMAND',
-      'CONTEST',
       'CONTEST NAME',
       'CONTEST TITLE',
-      'COPY FILES',
-      'CQ MENU',
-      'DISPLAY REFRESH',
-      'DVK PORT',
-      'HOUR OFFSET',
-      'ICOM COMMAND PAUSE',
-      'INITIAL EXCHANGE CURSOR POS',
+      'COUNT DOMESTIC COUNTRIES',
+      'CUSTOM INITIAL EXCHANGE STRING',
+      'DIGITAL MODE ENABLE',
+      'DOMESTIC FILENAME',
+      'HF BAND ENABLE',
       'INITIAL EXCHANGE FILENAME',
-      'INPUT CONFIG FILE',
+      'INITIAL EXCHANGE OVERWRITE',
+      'LITERAL DOMESTIC QTH',
+      'MINITOUR DURATION',
+      'MULT BY BAND',
+      'MULT BY MODE',
       'MULT REPORT MINIMUM BANDS',
-      'MULTIPLIER ITEM WIDTH',
-      'MY CONTINENT',
-      'PADDLE PORT',
+      'MULT SHEET AUTO RESET',
+      'MULTIPLE BANDS',
+      'MULTIPLE MODES',
       'QSL MODE',
+      'QSO BY BAND',
+      'QSO BY MODE',
+      'QSO NUMBER BY BAND',
+      'QSO POINTS DOMESTIC CW',
+      'QSO POINTS DOMESTIC PHONE',
+      'QSO POINTS DX CW',
+      'QSO POINTS DX PHONE',
+      'QTC ENABLE',
+      'QTC EXTRA SPACE',
+      'QTC MINUTES',
+      'QTC QRS',
+      'R150S MODE',
+      'RFOBL MODE',
       'SINGLE BAND SCORE',
-      'TAIL END CW MESSAGE',
-      'TAIL END KEY',
-      'TAIL END MESSAGE',
-      'TAIL END SSB MESSAGE');
+      'SPRINT QSY RULE',
+      'TEN MINUTE RULE',
+      'VHF BAND ENABLE',
+      'WARC BAND ENABLE');
 
 function CommandIsSharedWithPeers(const aCommand: string): boolean;
 var
@@ -892,6 +920,25 @@ begin
    for i := Low(SHARED_WITH_PEERS) to High(SHARED_WITH_PEERS) do
       begin
       if SameText(SHARED_WITH_PEERS[i], aCommand) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function CommandIsOnePositionsOwn(const aCommand: string): boolean;
+const
+   OWN: array[0..6] of string = (
+      'BAND', 'MODE', 'CODE SPEED', 'CW TONE', 'WEIGHT',
+      'FARNSWORTH ENABLE', 'FARNSWORTH SPEED');
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(OWN) to High(OWN) do
+      begin
+      if SameText(OWN[i], aCommand) then
          begin
          Result := True;
          Exit;
