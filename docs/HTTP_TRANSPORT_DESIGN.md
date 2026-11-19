@@ -1104,6 +1104,18 @@ transport.
 | 307    | POST, body arrives                                  | POST, body arrives                        |
 | 308    | POST, body arrives                                  | POST, body arrives                        |
 
+**SUPERSEDED BY ISSUE 255 (NY4I, 2026-11-19): A POST IS NEVER FOLLOWED.** The table above is the
+measurement that prompted the decision, kept as history. Both transports now ask
+`THttpWireRequest.MayFollowRedirects`, which is False for a POST whatever `FollowRedirects` says, so a
+POST's 3xx comes back as the answer (`THttpWireResult.Location` carries the target) and the server
+sees exactly one request. `THttpRequest.Send` reports it for a caller that asked to follow
+(`THttpPost`): `Failure = hfPostRedirected`, `StatusCode` kept, not a "nothing sent" failure, and a
+`FailReason` (resourcestring `SPostRedirected`) naming the status and target and asking the operator to
+file an issue at the project's GitHub issues page, because a redirected upload is unexpected. A caller
+that never asked (Club Log, WRL, Cloudlog) is unchanged. `Test_APostAcrossARedirect` and
+`Test_ThePostVerbCarriesItsBodyAcrossA301` now pin this for both transports. GET redirects, and the
+https-to-http refusal, are untouched.
+
 The generic half is also readable from source: `fphttpclient.pp`'s `RedirectForcesGET` is true
 for 303 only, and the loop rewinds `RequestBody` before the repeat (its own comment says "307/308",
 the code says 303). **WinHTTP is the surprise: it turns a POST into a GET on 301 and 302, so with
