@@ -166,6 +166,26 @@ You own how spots reach TR4W and how they are shown.
   `SpotBeamHeading` is the one spot-to-heading routine, shared with the country
   panel. Details: `docs/BANDMAP_LCL_DESIGN.md` section 8.
 
+- **SELF-SPOTTING** (issue 188, NY4I 2026-11-19; the leaf `uSelfSpotRule`, glue
+  `uSelfSpot`, pins `uTestSelfSpot`). Three triggers -- the `SPOTME` command in a
+  function-key memory (`uProcessCommand`), Control -> Self-spot (`menu_self_spot`),
+  and CLUSTER AUTO SELF SPOT (default OFF, once a second from `OneSecondTick`).
+  **The spot leaves by `uSendSpot.SendDXSpot`, the ONE door the Send Spot dialog
+  uses** (cluster link, else the network; False when neither is up); the 100 Hz
+  rounding is `uSelfSpotRule.SpotFrequencyRoundedHz`, shared with the dialog. The
+  contest answers `TContestBase.AllowsSelfSpotting` (default False) and
+  `SelfSpotMinimumMinutes`, **each stated only from the sponsor's text with its
+  source** -- Sweepstakes (CW and SSB, on the family base) is the only one, and its
+  comment says the rules text does NOT state an interval or name self-spotting.
+  The interval in force is `max(CLUSTER SELF SPOT INTERVAL, contest minimum)` for
+  EVERY trigger; the 300 Hz move is asked of the two MANUAL triggers only (the auto
+  trigger exists to repeat on one frequency); never in S&P. **THE TRAP:**
+  `FoundCommand` paints `"X" command is executed.` after every handler returns, so a
+  handler that QuickDisplays a refusal is overwritten; a command's own answer goes
+  in `GCommandNotice` (`uProcessCommand`). The last spot SENT is session state, not
+  saved. The two settings' help text is in `uSettingsModel` comments and
+  `KNOWN_HELP_GAPS` until the `help_en.po` batch.
+
 ## Open
 
 **`uSpots` `ERangeError` is STILL OPEN** — see the `winter-fd-corpus-crash`

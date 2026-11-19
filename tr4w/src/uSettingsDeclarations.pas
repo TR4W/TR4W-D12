@@ -949,6 +949,11 @@ begin
                           RS_CLUSTER_CTRLJ_CONSOLELINES);
    RegisterModelSetting( 'cluster.ctrlj.spotCommentMultiplier', 'CLUSTER SPOT COMMENT MULTIPLIER',
                           RS_CLUSTER_CTRLJ_SPOTCOMMENTMULTIPLIER);
+   (* Issue 188: spot this station automatically, where the contest allows it. *)
+   RegisterModelSetting( 'cluster.ctrlj.autoSelfSpot',          'CLUSTER AUTO SELF SPOT',
+                          RS_CLUSTER_CTRLJ_AUTOSELFSPOT);
+   RegisterModelSetting( 'cluster.ctrlj.selfSpotInterval',      'CLUSTER SELF SPOT INTERVAL',
+                          RS_CLUSTER_CTRLJ_SELFSPOTINTERVAL);
    // Two rows a case-SENSITIVE type scan missed on 2026-08-16: their crType is
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the
    // scan did, and reported Ctrl-J empty while they were still in it.

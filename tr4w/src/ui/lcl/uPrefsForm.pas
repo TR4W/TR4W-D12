@@ -1879,6 +1879,8 @@ begin
    aTable.Place('operating.ctrlj.askForFrequencies',      NAV_CLUSTERSPOTS);
    aTable.Place('operating.ctrlj.qsxEnable',              NAV_CLUSTERSPOTS);
    aTable.Place('cluster.ctrlj.spotCommentMultiplier',    NAV_CLUSTERSPOTS);
+   aTable.Place('cluster.ctrlj.autoSelfSpot',             NAV_CLUSTERSPOTS);
+   aTable.Place('cluster.ctrlj.selfSpotInterval',         NAV_CLUSTERSPOTS);
    aTable.Place('cluster.ctrlj.broadcastAllPacketData',   NAV_CLUSTERSPOTS);
    aTable.Place('cluster.ctrlj.consoleLines',             NAV_CLUSTERSPOTS);
 

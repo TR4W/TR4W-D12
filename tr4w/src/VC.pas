@@ -3104,6 +3104,7 @@ const
   menu_clearserverlog                   = 10511;
   menu_compare_logs                     = 10512;
   menu_login                            = 10517;
+  menu_self_spot                        = 10518;  // Control -> Self-spot, issue 188
 
   (* The Net menu's link commands (2026-10-27): the multi-op link belongs to the
     program, not to the Network window, so the operator is offered its verbs. *)

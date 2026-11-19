@@ -288,6 +288,8 @@ resourcestring
    RS_CLUSTER_CTRLJ_BROADCASTALLPACKETDATA    = 'Broadcast All Packet Data';
    RS_CLUSTER_CTRLJ_CONSOLELINES              = 'Telnet Console Lines';
    RS_CLUSTER_CTRLJ_SPOTCOMMENTMULTIPLIER     = 'Spot Comment Multiplier';
+   RS_CLUSTER_CTRLJ_AUTOSELFSPOT              = 'Auto Self Spot';
+   RS_CLUSTER_CTRLJ_SELFSPOTINTERVAL          = 'Self Spot Interval (minutes)';
    RS_HARDWARE_CTRLJ_STEREOCONTROLPIN         = 'Stereo Control Pin';
    RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME     = 'Initial Exchange Filename';
    RS_FILES_CTRLJ_USECALLHISTORYFILE          = 'Use Call History File';

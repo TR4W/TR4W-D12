@@ -121,6 +121,7 @@ uses
   uRadio12,
   uSendKeyboard,
   uSendSpot,
+  uSelfSpot,   (* SelfSpotFromMenu, SelfSpotTick -- issue 188 *)
   uDupesheet,
   uRemMults,
   // uReminder,
@@ -3271,6 +3272,7 @@ procedure OneSecondTick;
 begin
   UpdateTimeAndRateDisplays(True, True);
   HamScoreScoreTick;   { builds the score the HamScore uploader posts -- see uHamScore }
+  SelfSpotTick;        (* the automatic self-spot, issue 188; a no-op unless CLUSTER AUTO SELF SPOT is on *)
 
 {$IF tDebugMode}
   // Windows.SetWindowTextA(tr4whandle, inttopchar({GetHeapStatus.TotalFree}AllocMemSize));
@@ -5904,6 +5906,9 @@ begin
     menu_ctrl_sendspot:
       // if TelnetSock <> 0 then
       ShowSendSpot;
+
+    menu_self_spot:
+      SelfSpotFromMenu;
 
     menu_ctrl_clearmultsheet:
       begin

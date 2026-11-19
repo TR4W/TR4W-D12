@@ -55,10 +55,48 @@ uses
 // Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
 procedure ShowSendSpot;
 
+(* THE ONE WAY A SPOT LEAVES THE PROGRAM (issue 188): the Send Spot dialog and
+  the self-spot (uSelfSpot) both post through it, so they cannot drift.
+
+  Byte-for-byte as the dialog's pointer version built it: 'DX', then each field
+  with exactly one leading space whether or not the field is empty. Up the
+  cluster link when it is connected, else through the TR4W network's
+  spot-via-network record. Returns False -- and sends nothing -- when neither
+  is up; the dialog ignores that, as it always has, and a self-spot reports it. *)
+function SendDXSpot(const aCall, aFreqText, aComment: string): boolean;
+
 implementation
 
 uses
+  uTelnet,       // TelnetIsConnected, SendViaTelnetSocket
   uSendSpotForm;
+
+function SendDXSpot(const aCall, aFreqText, aComment: string): boolean;
+var
+  spot: AnsiString;
+begin
+   spot := AnsiString('DX' +
+                      ' ' + aCall +
+                      ' ' + aFreqText +
+                      ' ' + aComment);
+
+   if TelnetIsConnected then
+      begin
+      SendViaTelnetSocket(spot);
+      Result := True;
+      end
+   else
+      if NetIsConnected then
+         begin
+         // uNet builds the fixed 46-byte record, sets its id and bounds the copy.
+         SendSpotViaNetworkToNet(spot);
+         Result := True;
+         end
+      else
+         begin
+         Result := False;
+         end;
+end;
 
 procedure ShowSendSpot;
 begin

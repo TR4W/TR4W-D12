@@ -1802,6 +1802,18 @@ resourcestring
       station that posted the spot, as the cluster gave it. *)
    SYouAreSpottedBy = 'You are spotted by %s.';
 
+   (* SELF-SPOT (issue 188): Control -> Self-spot, the SPOTME macro command and
+      the automatic spot. A REFUSAL always says why and that NOTHING was sent. *)
+   SMenuSelfSpot              = 'Self-spot';
+   SSelfSpotSent              = 'Self-spot sent: %0:s on %1:s.';
+   SSelfSpotNotAllowed        = 'Self-spot refused: this contest''s rules do not allow spotting yourself. Nothing sent.';
+   SSelfSpotSearchAndPounce   = 'Self-spot refused: not in Search & Pounce mode. Nothing sent.';
+   SSelfSpotNoCall            = 'Self-spot refused: there is no station call set. Nothing sent.';
+   SSelfSpotNoFrequency       = 'Self-spot refused: the radio has not reported a frequency. Nothing sent.';
+   SSelfSpotNoLink            = 'Self-spot refused: neither the DX cluster nor the network is connected. Nothing sent.';
+   SSelfSpotTooSoon           = 'Self-spot refused: the last one was sent less than %d minutes ago. Nothing sent.';
+   SSelfSpotNotMoved          = 'Self-spot refused: the VFO has not moved %d Hz since the last self-spot. Nothing sent.';
+
 implementation
 
 end.

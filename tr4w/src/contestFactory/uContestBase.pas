@@ -2852,6 +2852,21 @@ type
          domestic kind, or none. *)
       function UsesDomesticFile: boolean; virtual;
 
+      (* MAY THE STATION SPOT ITSELF IN THIS CONTEST? -- issue 188, 2026-11-19.
+         A SPONSOR-RULE FACT, stated per contest with its source, never
+         inferred: the SPOTME macro, Control -> Self-spot and the automatic
+         trigger all refuse and send nothing where this is False. THE BASE
+         ANSWERS FALSE, so a contest whose rules were never read for this does
+         not spot its operator. A contest that says True also states
+         SelfSpotMinimumMinutes. See uSelfSpotRule for what the answers gate. *)
+      function AllowsSelfSpotting: boolean; virtual;
+
+      (* THE LEAST NUMBER OF MINUTES BETWEEN TWO SELF-SPOTS that this contest's
+         stated rule allows; the operator's interval setting is never applied
+         below it. 0 where AllowsSelfSpotting is False (there is nothing to
+         space). *)
+      function SelfSpotMinimumMinutes: integer; virtual;
+
       (* DOES THIS CONTEST HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- M11
          S6 part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S6, F23).
 
@@ -4715,6 +4730,12 @@ function ContestDomesticQTHIsNeverAGrid(aContest: TContestBase): boolean;
    DUMMYCONTEST ran NoDomesticMults. *)
 function ContestUsesDomesticFile(aContest: TContestBase): boolean;
 
+(* MAY THE STATION SPOT ITSELF IN aContest, AND AT WHAT MINIMUM SPACING? -- see
+   TContestBase.AllowsSelfSpotting and SelfSpotMinimumMinutes (issue 188). nil
+   answers False and 0: the classless DUMMYCONTEST states no such rule. *)
+function ContestAllowsSelfSpotting(aContest: TContestBase): boolean;
+function ContestSelfSpotMinimumMinutes(aContest: TContestBase): integer;
+
 (* DOES aContest HAVE A DOMESTIC MULTIPLIER AT ITS STATION? -- see
    TContestBase.HasDomesticMultiplier. nil answers False: the classless
    DUMMYCONTEST ran NoDomesticMults. LOGEDIT.DoingDomesticMults asks it of
@@ -6240,6 +6261,30 @@ begin
       end;
 end;
 
+function ContestAllowsSelfSpotting(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.AllowsSelfSpotting;
+      end;
+end;
+
+function ContestSelfSpotMinimumMinutes(aContest: TContestBase): integer;
+begin
+   if aContest = nil then
+      begin
+      Result := 0;
+      end
+   else
+      begin
+      Result := aContest.SelfSpotMinimumMinutes;
+      end;
+end;
+
 function ContestHasDomesticMultiplier(aContest: TContestBase): boolean;
 begin
    if aContest = nil then
@@ -7492,6 +7537,17 @@ function TContestBase.UsesDomesticFile: boolean;
 begin
    (* No domestic file -- see the declaration. *)
    Result := False;
+end;
+
+function TContestBase.AllowsSelfSpotting: boolean;
+begin
+   (* No stated sponsor rule -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.SelfSpotMinimumMinutes: integer;
+begin
+   Result := 0;
 end;
 
 function TContestBase.HasDomesticMultiplier: boolean;

@@ -101,8 +101,8 @@ uses
   LogStuff,     // CallWindowString
   LogEdit,      // VisibleLog.LastEntry, DomesticKeyKnownForCall
   LogRadio,     // ActiveRadioPtr
-  uNet,         // SendSpotViaNetworkToNet
-  uTelnet,      // TelnetIsConnected, SendViaTelnetSocket
+  uSendSpot,    // SendDXSpot -- the one door a spot leaves by
+  uSelfSpotRule, // SpotFrequencyRoundedHz
   MainUnit,     // logger
   Log4D,
   uAppStrings;  (* SSendSpotLocationInComment *)
@@ -179,7 +179,6 @@ end;
 
 procedure TfrmSendSpot.HandleShow(Sender: TObject);
 var
-  hz100: integer;
   freq: integer;
   lastCall: CallString;
 begin
@@ -209,13 +208,9 @@ begin
       end;
 
    // ROUNDED TO THE NEAREST 100 Hz, not truncated -- a spot is posted in whole
-   // hundreds and the original rounded up at 50.  Preserved exactly.
-   hz100 := ActiveRadioPtr.LastDisplayedFreq mod 100;
-   freq  := ActiveRadioPtr.LastDisplayedFreq - hz100;
-   if hz100 >= 50 then
-      begin
-      freq := freq + 100;
-      end;
+   // hundreds and the original rounded up at 50. uSelfSpotRule owns the rule,
+   // so the self-spot posts the same frequency.
+   freq := SpotFrequencyRoundedHz(ActiveRadioPtr.LastDisplayedFreq);
    edtFrequency.Text := FreqToPChar(freq);
 
    // tContestNameInComment is remembered ACROSS openings, so the tick and the
@@ -248,25 +243,11 @@ begin
 end;
 
 procedure TfrmSendSpot.btnOKClick(Sender: TObject);
-var
-  spot: AnsiString;
 begin
-   // Byte-for-byte as the pointer version built it: 'DX', then each field with
-   // exactly one leading space whether or not the field is empty.
-   spot := AnsiString('DX' +
-                      ' ' + edtCallsign.Text +
-                      ' ' + edtFrequency.Text +
-                      ' ' + edtComment.Text);
-
-   if TelnetIsConnected then
-      begin
-      SendViaTelnetSocket(spot);
-      end
-   else
-      begin
-      // uNet builds the fixed 46-byte record, sets its id and bounds the copy.
-      SendSpotViaNetworkToNet(spot);
-      end;
+   // The spot string and its route are uSendSpot.SendDXSpot -- the one door the
+   // self-spot (issue 188) goes through as well. A refusal (no link up) is
+   // ignored here exactly as it always was.
+   SendDXSpot(edtCallsign.Text, edtFrequency.Text, edtComment.Text);
 
    Close;
 end;

@@ -738,7 +738,11 @@ begin
    CheckEquals(0, Pos('SetSystemTime', net), 'and uNet cannot set the machine clock');
    CheckTrue(Pos('SendIntercomToNet(', mainText) > 0, 'the send-message arm');
    CheckTrue(Pos('SendIntercomToNet(scFileName)', command) > 0, 'the SENDMESSAGE command');
-   CheckTrue(Pos('SendSpotViaNetworkToNet(spot)', form) > 0, 'the spot form');
+   (* The dialog's send moved to uSendSpot.SendDXSpot (issue 188), the one door
+     it and the self-spot share; the network helper is called there. *)
+   CheckTrue(Pos('SendDXSpot(', form) > 0, 'the spot form goes through SendDXSpot');
+   CheckTrue(Pos('SendSpotViaNetworkToNet(spot)', Slurp('uSendSpot.pas')) > 0,
+             'SendDXSpot sends through the helper');
 
    CheckEquals(0, Pos('SendToNet(NetDXSpot', spots + mainText + command + form),
                'no caller sends the old DX spot global');
