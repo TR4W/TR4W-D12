@@ -4242,9 +4242,11 @@ const
    it. eNoMode and eData are ALWAYS allowed: they mean "some submode" (the
    UsesMode contract), so an old or untyped record is never proven off-mode.
 
-   THE CONTRACT IS EXACTLY [eNoMode, eData], as UsesMode's own: eData_R and
-   eData_FM are radio data modes whose real submode was never recorded, and a
-   contest that wants them says so in aAllowed.
+   AND SO ARE eData_R AND eData_FM: radio data modes (DATA-R from CAT,
+   rmDATARev; DATA-FM from ADIF) whose real submode was never recorded --
+   uADIF.IsGenericDataMode's three. A live RTTY QSO on a radio in DATA-R
+   arrives as eData_R, and refusing it would make an X-QSO of a QSO the
+   operator made in an allowed mode.
 
    A deny-list contest (Missouri, Illinois, Nebraska, Wisconsin,
    Mississippi, Vermont) is NOT migrated by this: their lists credit every
@@ -5306,7 +5308,7 @@ end;
 function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
                                const aAllowed: TExtendedModeSet): boolean;
 begin
-   Result := (aExtMode in [eNoMode, eData]) or
+   Result := (aExtMode in [eNoMode, eData, eData_R, eData_FM]) or
              (aExtMode in aAllowed);
 end;
 

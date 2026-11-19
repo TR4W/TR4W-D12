@@ -114,7 +114,7 @@ begin
                   expected := 1;
                   end;
                if (mode = Digital) and
-                  (ext in [eNoMode, eData, eRTTY, eRTTY_R, ePSK31, ePSK63, ePSK_R, eJS8, eJTTY]) then
+                  (ext in [eNoMode, eData, eData_R, eData_FM, eRTTY, eRTTY_R, ePSK31, ePSK63, ePSK_R, eJS8, eJTTY]) then
                   begin
                   expected := 2;
                   end;
@@ -302,7 +302,7 @@ begin
       qso := IAQSO('K0AAA', Band20, Digital, eJTTY);
       party.ScoreQSO(qso);
       CheckEquals(2, Integer(qso.QSOPoints), 'a JTTY QSO is a 2-point digital QSO');
-      for ext in [eFT8, eFT4, eJT65, eFST4, eFST4W, eMFSK, eData_R, eData_FM] do
+      for ext in [eFT8, eFT4, eJT65, eFST4, eFST4W, eMFSK] do
          begin
          CheckFalse(party.UsesMode(Digital, ext),
             ExtendedModeStringArray[ext] + ' is off-mode: of the WSJT-X modes, JTTY only');
@@ -312,7 +312,7 @@ begin
          CheckTrue(party.UsesMode(Digital, ext),
             ExtendedModeStringArray[ext] + ' is a free-form mode the rules allow (NY4I, 2026-11-19)');
          end;
-      for ext in [eNoMode, eData] do
+      for ext in [eNoMode, eData, eData_R, eData_FM] do
          begin
          CheckTrue(party.UsesMode(Digital, ext),
             ExtendedModeStringArray[ext] + ' is "some submode", never proven off-mode');

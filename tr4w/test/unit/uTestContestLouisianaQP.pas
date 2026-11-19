@@ -249,7 +249,7 @@ begin
                begin
                credited := (mode in [CW, Phone, FM]) or
                            ((mode = Digital) and
-                            (ext in [eNoMode, eData, eRTTY, eRTTY_R, eJTTY, ePSK31]));
+                            (ext in [eNoMode, eData, eData_R, eData_FM, eRTTY, eRTTY_R, eJTTY, ePSK31]));
                expected := 0;
                if credited and (mode in [CW, Digital]) then
                   begin
@@ -275,7 +275,7 @@ begin
          CheckFalse(party.UsesMode(Digital, eJS8), 'JS8 is not on NY4I''s list');
          CheckFalse(party.UsesMode(Digital, ePSK63), 'nor PSK63');
          CheckFalse(party.UsesMode(Digital, eMFSK), 'nor MFSK');
-         CheckFalse(party.UsesMode(Digital, eData_R), 'a radio data mode with no recorded submode is not "some submode"');
+         CheckTrue(party.UsesMode(Digital, eData_R), 'a radio data mode with no recorded submode is "some submode"');
          CheckTrue(party.UsesMode(Digital, eNoMode), 'an unknown submode is never proven off-mode');
          CheckEquals('RY', party.CabrilloModeString(Digital, eRTTY), 'RTTY is RY');
          CheckEquals('PH', party.CabrilloModeString(Phone, eUSB), 'PH');
