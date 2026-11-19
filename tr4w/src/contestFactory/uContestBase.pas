@@ -4223,6 +4223,36 @@ function DomesticMultiplierIsDX(const aMultiplier: string): boolean;
 function DomesticMultiplierIsHostState(const aMultiplier: string;
                                        const aHostState: string): boolean;
 
+type
+   (* A SET OF SUBMODES -- what a contest's DigitalSubmodeAllowed list is. *)
+   TExtendedModeSet = set of ExtendedModeType;
+
+const
+   (* RTTY, normal or reversed: one mode to every sponsor that names RTTY. *)
+   RTTY_SUBMODES: TExtendedModeSet = [eRTTY, eRTTY_R];
+
+(* IS THIS DIGITAL SUBMODE ONE THE CONTEST ALLOWS? -- issue 122 (NY4I,
+   2026-11-19: "Rather than a list of excluded modes, the contest class should
+   indicate the allowed modes. Then if the modes is not valid for that
+   contest, it is an X-QSO ... It seems this could be generalized.").
+
+   A contest's UsesMode calls this for its Digital arm with the submodes its
+   sponsor allows; everything else is refused, so a submode added to
+   ExtendedModeType later (JTTY was) is NOT credited until a contest names
+   it. eNoMode and eData are ALWAYS allowed: they mean "some submode" (the
+   UsesMode contract), so an old or untyped record is never proven off-mode.
+
+   THE CONTRACT IS EXACTLY [eNoMode, eData], as UsesMode's own: eData_R and
+   eData_FM are radio data modes whose real submode was never recorded, and a
+   contest that wants them says so in aAllowed.
+
+   A deny-list contest (Missouri, Illinois, Nebraska, Wisconsin,
+   Mississippi, Vermont) is NOT migrated by this: their lists credit every
+   submode they do not name, JTTY and JS8 included, and an allow-list would
+   change that. Each moves on its own sponsor's word. *)
+function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
+                               const aAllowed: TExtendedModeSet): boolean;
+
 (* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
    it was: the classless DUMMYCONTEST runs NoPrefixMults. *)
@@ -5271,6 +5301,13 @@ function DomesticMultiplierIsHostState(const aMultiplier: string;
 begin
    Result := (Trim(aHostState) <> '') and
              UnicodeSameText(Trim(aMultiplier), Trim(aHostState));
+end;
+
+function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
+                               const aAllowed: TExtendedModeSet): boolean;
+begin
+   Result := (aExtMode in [eNoMode, eData]) or
+             (aExtMode in aAllowed);
 end;
 
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;

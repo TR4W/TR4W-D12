@@ -168,7 +168,7 @@ begin
    CheckEquals('EBR', InStateMultiplierOf(PartyHandle, 'EBR'), 'East Baton Rouge, a three-letter code');
    CheckEquals('PCP', InStateMultiplierOf(PartyHandle, 'PCP'), 'Pointe Coupee');
    CheckEquals('SJB', InStateMultiplierOf(PartyHandle, 'SJB'), 'St. John Baptist');
-   CheckEquals('MD', InStateMultiplierOf(PartyHandle, 'DC'), 'DC counts as Maryland (NY4I''s default)');
+   CheckEquals('MD', InStateMultiplierOf(PartyHandle, 'DC'), 'DC counts as Maryland (NY4I, issue 122, 2026-11-19)');
    CheckEquals('MD', InStateMultiplierOf(PartyHandle, 'MD'), 'Maryland');
    CheckEquals('TX', InStateMultiplierOf(PartyHandle, 'TX'), 'a state');
    CheckEquals('AK', InStateMultiplierOf(PartyHandle, 'AK'), 'Alaska is a state');
@@ -249,7 +249,7 @@ begin
                begin
                credited := (mode in [CW, Phone, FM]) or
                            ((mode = Digital) and
-                            not (ext in [eFT8, eFT4, eJT65, eFST4, eFST4W]));
+                            (ext in [eNoMode, eData, eRTTY, eRTTY_R, eJTTY, ePSK31]));
                expected := 0;
                if credited and (mode in [CW, Digital]) then
                   begin
@@ -261,15 +261,21 @@ begin
                   end;
                qso := LAQSO('W5AAA', 'ORLE', Band20, mode, ext);
                party.ScoreQSO(qso);
-               CheckEquals(expected, Integer(qso.QSOPoints), 'CW/digital 4, phone/FM 2, FT8 and kin none');
+               CheckEquals(expected, Integer(qso.QSOPoints), 'CW/digital 4, phone/FM 2, a digital mode not allowed none');
                CheckTrue(party.UsesMode(mode, ext) = credited,
-                         'every submode but those that cannot send the exchange');
+                         'CW, phone, FM; RTTY, JTTY and PSK31 only (NY4I, 2026-11-19)');
                end;
             end;
          CheckFalse(party.UsesMode(Digital, eFT8), 'FT8 cannot send the exchange');
          CheckFalse(party.UsesMode(Digital, eJT65), 'nor JT65');
          CheckTrue(party.UsesMode(Digital, eRTTY), '3.3 "includes RTTY"');
-         CheckTrue(party.UsesMode(Digital, ePSK31), 'PSK can send it');
+         CheckTrue(party.UsesMode(Digital, ePSK31), 'PSK31 can send it');
+         CheckTrue(party.UsesMode(Digital, eJTTY), 'JTTY is on NY4I''s list');
+         CheckTrue(party.UsesMode(Digital, eRTTY_R), 'reversed RTTY is RTTY');
+         CheckFalse(party.UsesMode(Digital, eJS8), 'JS8 is not on NY4I''s list');
+         CheckFalse(party.UsesMode(Digital, ePSK63), 'nor PSK63');
+         CheckFalse(party.UsesMode(Digital, eMFSK), 'nor MFSK');
+         CheckFalse(party.UsesMode(Digital, eData_R), 'a radio data mode with no recorded submode is not "some submode"');
          CheckTrue(party.UsesMode(Digital, eNoMode), 'an unknown submode is never proven off-mode');
          CheckEquals('RY', party.CabrilloModeString(Digital, eRTTY), 'RTTY is RY');
          CheckEquals('PH', party.CabrilloModeString(Phone, eUSB), 'PH');
@@ -516,6 +522,16 @@ begin
       engine.Enter('KL7AA', '599 AK', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted and rx.DomesticMult, 'Alaska is a state');
       CheckFalse(rx.DXMult, 'KL is no DXCC multiplier');
+
+      (* THE ALLOWED DIGITAL MODES (NY4I, 2026-11-19): JTTY is one; JS8 is
+         not on his list, so it is an automatic X-QSO. *)
+      engine.Enter('W5JS', '599 CADD', Band40, Digital, eJS8, accepted, rx);
+      CheckTrue(LoggedQSOIsXQSO(rx), 'JS8 is not an allowed mode: an X-QSO');
+      CheckFalse(rx.DomesticMult, 'and it earns no parish');
+      engine.Enter('W5JT', '599 CADD', Band40, Digital, eJTTY, accepted, rx);
+      CheckFalse(LoggedQSOIsXQSO(rx), 'JTTY is allowed');
+      CheckTrue(accepted and rx.DomesticMult, 'and earns the parish the JS8 QSO did not');
+      CheckEquals(4, Integer(rx.QSOPoints), 'JTTY is digital: 4');
    finally
       engine.Free;
    end;
