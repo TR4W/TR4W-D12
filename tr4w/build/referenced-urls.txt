@@ -82,6 +82,7 @@ https://groups.io/g/N1MMLoggerPlus/message/70623 | doc | head | logsubs2
 https://wwrof.org/cabrillo/cabrillo-qso-data/ | doc | head | uCabrilloFormat, postunit
 https://www.dxlabsuite.com/Interoperation.htm | doc | head | uExternalLogger
 https://www.kenwood.com/i/products/info/amateur/pdf/ts890_pc_command_en_rev1.pdf | doc | head | uRadioKenwoodLAN
+https://github.com/TR4W/TR4W-D12/issues | doc | head | uHTTPDownload | named in the POST-redirect failure message
 https://github.com/ny4i/TR4QT/blob/master/docs/kenwood-direct-connection-flow.md | doc | head | uRadioKenwoodLAN
 https://github.com/dioannidis/HIDAPI.pas | doc | head | uYCCCSO2R
 https://blog.contestonlinescore.com/online-scoring-xml-specification/ | doc | head | uScoreBreakdown
@@ -147,7 +148,6 @@ https://ncjweb.com/Sprint-Rules.pdf | doc | head | uContestNASprintCW | contest 
 https://ndarrlsection.com/2026/2026_nd_qsp_party_rules.pdf | doc | head | uContestNorthDakotaQP | contest schedule source (Q99)
 https://nebraskaqsoparty.com/ | doc | head | uContestNebraskaQP | contest schedule source (Q99)
 https://neqp.org/rules/ | doc | head | uContestNewEnglandQP | contest schedule source (Q99)
-https://nyqp.org/wordpress/ | doc | head | uContestNewYorkQP | contest schedule source (Q99)
 https://nzart.org.nz/activities/contests/jwfd/ | doc | head | uContestJockWhiteFieldDay | contest schedule source (Q99)
 https://paqso.org/ | doc | head | uContestPennsylvaniaQP | contest schedule source (Q99)
 https://proradiocontestclub.com/PCC%20Rules.html | doc | head | uContestPCC | contest schedule source (Q99)

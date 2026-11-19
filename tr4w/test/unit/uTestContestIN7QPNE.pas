@@ -110,7 +110,7 @@ end;
 (* A QSO with the worked station's QTH as the domestic table resolves it. *)
 function QsoAt(const aQTH: string; aBand: BandType; aMode: ModeType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result := Default(ContestExchange);
    Result.Band := aBand;
    Result.Mode := aMode;
    Result.QTHString := ShortString(aQTH);
@@ -217,7 +217,7 @@ end;
 
 function Session: TReceivedExchangeSession;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result := Default(TReceivedExchangeSession);
    Result.Parsers := StubExchangeParsers(@StubParseShape);
    Result.IsDomesticQTH := @StubIsDomesticQTH;
    Result.CallWindowHasCall := True;
@@ -231,7 +231,7 @@ begin
    GShapeSetsQTH := aQTH;
    contestObject := Make(IN7QPNE, aStation);
    try
-      FillChar(aExch, SizeOf(aExch), 0);
+      aExch := Default(ContestExchange);
       aExch.Callsign := 'W1AW';
       Result := contestObject.ParseReceivedExchange('599 ' + aQTH, Session, aExch, aMessage);
    finally
@@ -720,7 +720,7 @@ var
    i: integer;
    qso: ContestExchange;
 begin
-   FillChar(Result, SizeOf(TScoreTotals), 0);
+   Result := Default(TScoreTotals);
    Result.ScoredBand := AllBands;
    Result.SessionCountsMultipliers := True;
    for i := 0 to aView.Count - 1 do

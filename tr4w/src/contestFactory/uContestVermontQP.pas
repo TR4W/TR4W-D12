@@ -493,7 +493,7 @@ begin
          end
       else
          begin
-         aCalls.Add(word);
+         aCalls.Add(AnsiString(word));
          end;
       end;
    Result := aYear <> 0;
@@ -891,7 +891,7 @@ begin
       if found then
          begin
          try
-            lines.LoadFromFile(path);
+            lines.LoadFromFile(AnsiString(path));
          except
             on e: Exception do
                begin
@@ -935,7 +935,7 @@ begin
       Exit;
       end;
    call := UpperCase(Trim(CallWithoutRoverCounty(Trim(string(aQso.Callsign)))));
-   if FClubCalls.IndexOf(call) >= 0 then
+   if FClubCalls.IndexOf(AnsiString(call)) >= 0 then
       begin
       Result := call;
       end;

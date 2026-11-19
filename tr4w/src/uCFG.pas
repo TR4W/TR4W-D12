@@ -919,7 +919,7 @@ begin
    Result := False;
    for i := Low(SHARED_WITH_PEERS) to High(SHARED_WITH_PEERS) do
       begin
-      if SameText(SHARED_WITH_PEERS[i], aCommand) then
+      if UnicodeSameText(SHARED_WITH_PEERS[i], aCommand) then
          begin
          Result := True;
          Exit;
@@ -938,7 +938,7 @@ begin
    Result := False;
    for i := Low(OWN) to High(OWN) do
       begin
-      if SameText(OWN[i], aCommand) then
+      if UnicodeSameText(OWN[i], aCommand) then
          begin
          Result := True;
          Exit;

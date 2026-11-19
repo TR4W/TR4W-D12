@@ -51,27 +51,39 @@ object frmRover: TfrmRover
     Height = 27
     Top = 320
     Width = 106
+    AutoSize = True
     Caption = 'OK'
+    Constraints.MinWidth = 106
     Default = True
     TabOrder = 2
     OnClick = OKClick
   end
   object btnOff: TButton
+    AnchorSideLeft.Control = btnOK
+    AnchorSideLeft.Side = asrBottom
     Left = 127
     Height = 27
     Top = 320
     Width = 106
+    AutoSize = True
+    BorderSpacing.Left = 13
     Caption = 'Rover off'
+    Constraints.MinWidth = 106
     TabOrder = 3
     OnClick = OffClick
   end
   object btnCancel: TButton
+    AnchorSideLeft.Control = btnOff
+    AnchorSideLeft.Side = asrBottom
     Left = 246
     Height = 27
     Top = 320
     Width = 106
+    AutoSize = True
+    BorderSpacing.Left = 13
     Cancel = True
     Caption = 'Cancel'
+    Constraints.MinWidth = 106
     ModalResult = 2
     TabOrder = 4
   end
