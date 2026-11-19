@@ -30,7 +30,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * VA7ODX: +20 after the multiplication, once on each band in each mode,
       never for a dupe or an X-QSO, and the FAQ's two worked examples;
     * "Maryland and DC are lumped together as MD" (ve7.dom, through the real
-      loader). *)
+      loader);
+    * the 43 current districts and none of the 14 retired ones (NY4I,
+      2026-11-19). *)
 unit uTestContestBritishColumbiaQP;
 
 {$I ..\..\src\tr4w.inc}
@@ -51,6 +53,7 @@ type
       procedure Test_BritishColumbiaVA7ODXOncePerBandAndMode;
       procedure Test_BritishColumbiaFAQExamples;
       procedure Test_BritishColumbiaCountsDCAsMaryland;
+      procedure Test_BritishColumbiaHasTheFortyThreeCurrentDistricts;
    end;
 
 implementation
@@ -62,7 +65,9 @@ uses
    uContestBase,
    uContestRegistry,
    LogDom,
-   uTestContestObjects,
+   uAppPaths,           (* ExistingDataFile *)
+   uNewContestHostArea, (* THostAreaPlaces -- the county drop-down's reader *)
+   uTestContestObjects, (* ShippedDomDir *)
    uTestShippedDom;
 
 (* A BC entrant (Delta) or one in Washington; outside the province the
@@ -342,6 +347,56 @@ begin
    end;
 end;
 
+(* THE 43 FEDERAL ELECTORAL DISTRICTS, AND ONLY THOSE (#88, NY4I 2026-11-19:
+   "this is the whole list. Any historical items are now moot."). The codes
+   are the sponsor's Districts.txt, in its order; the 14 the October 2025
+   redistribution retired are gone, so a retired code is no BC district.
+   Read through the same reader the New Contest county drop-down uses. *)
+procedure TContestBritishColumbiaQPTests.Test_BritishColumbiaHasTheFortyThreeCurrentDistricts;
+const
+   CURRENT: array[0..42] of string = (
+      'ASL', 'BNS', 'BUC', 'CHP', 'CKS', 'CLC', 'CML', 'COA', 'CPC', 'CPG',
+      'DEL', 'ESQ', 'FPK', 'KEL', 'KSC', 'KTN', 'LTF', 'MMA', 'NAL', 'NBM',
+      'NPR', 'NVC', 'OSK', 'PMC', 'PMM', 'PPN', 'RCM', 'RES', 'SBV', 'SGI',
+      'SSW', 'SUC', 'SUN', 'SWR', 'VAC', 'VAE', 'VAG', 'VAK', 'VAQ', 'VIC',
+      'VLM', 'VSB', 'WVS');
+   RETIRED: array[0..13] of string = (
+      'ABF', 'BUS', 'CSN', 'KTC', 'KOC', 'LAA', 'MMF', 'NWB', 'NOS', 'NVA',
+      'RIC', 'SWK', 'STR', 'VAS');
+var
+   places: THostAreaPlaces;
+   i: integer;
+begin
+   BeginTest('Test_BritishColumbiaHasTheFortyThreeCurrentDistricts');
+   CheckEquals('ve7_cty', ContestIdentity(BCQP).DomesticFileName,
+               've7_cty.dom is the district file');
+
+   places := THostAreaPlaces.Create;
+   try
+      places.LoadFromFile(ExistingDataFile(ShippedDomDir + 've7_cty.dom'));
+      CheckEquals(Length(CURRENT), places.Count, 'exactly the 43 current districts');
+      for i := Low(CURRENT) to High(CURRENT) do
+         begin
+         CheckTrue(places.IndexOfKey(CURRENT[i]) >= 0, CURRENT[i] + ' is a district');
+         if i < places.Count then
+            begin
+            CheckEquals(CURRENT[i], places.Key(i), 'in the sponsor''s order at ' + IntToStr(i));
+            end;
+         end;
+      for i := Low(RETIRED) to High(RETIRED) do
+         begin
+         CheckTrue(places.IndexOfKey(RETIRED[i]) < 0, RETIRED[i] + ' is retired and no district');
+         end;
+      if places.IndexOfKey('ASL') >= 0 then
+         begin
+         CheckEquals('ASL - Abbotsford-South Langley', places.Display(places.IndexOfKey('ASL')),
+                     'a district shows its name');
+         end;
+   finally
+      places.Free;
+   end;
+end;
+
 procedure TContestBritishColumbiaQPTests.RunAllTests;
 begin
    Test_BritishColumbiaPoints;
@@ -350,6 +405,7 @@ begin
    Test_BritishColumbiaVA7ODXOncePerBandAndMode;
    Test_BritishColumbiaFAQExamples;
    Test_BritishColumbiaCountsDCAsMaryland;
+   Test_BritishColumbiaHasTheFortyThreeCurrentDistricts;
 end;
 
 end.
