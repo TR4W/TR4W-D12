@@ -405,6 +405,16 @@ left the row. Anchor run-time children left/top only when the dialog does not re
 anchor them to a sibling's side (`AnchorSideLeft.Control`), which does not depend on when
 the parent changes size. `uPasswordReveal` anchors the eye to its EDIT for that reason.
 
+**The same trap bites DESIGNED controls on gtk2 during the show** (2026-11-18, 5.0.42 Linux
+CI, measured on linux-ci-build with Lazarus 3.0 gtk2). In OnShow a `TPanel` reports a
+transient client area (706x476 for a 710x480 panel), and a child anchored to its parent's
+sides, `[akTop, akLeft, akRight]`, has its `SetBounds` Top undone by the realign -- it
+snaps back to the `.lfm` Top. Only a SECOND layout held. Windows never shows it. The
+External logger editor's labels below the rows now hang from sibling sides in the `.lfm`
+(top from the block above, left and right from `pnlFields`); a control at the default
+`[akLeft, akTop]` was never affected. A hand layout that places parent-anchored children
+from OnShow is the shape to look for.
+
 **A test that streams a form and never shows it cannot see geometry.** Position, anchors
 and alignment are applied when the form is shown. `uTestPasswordRevealLayout` shows the
 form off screen (as `uTestNewContestForm` does), calls `Application.ProcessMessages` and

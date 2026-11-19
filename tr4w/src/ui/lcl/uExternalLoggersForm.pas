@@ -696,9 +696,9 @@ begin
    clientW := Max(clientW, side + btnOK.Width + Px(BUTTON_GAP_96) + btnCancel.Width +
       Px(BUTTON_RIGHT_96));
    ClientWidth := clientW;
-   (* The panel takes the width BEFORE anything inside it is placed: the
-      blocks below the rows are anchored left and right, and a width change
-      after their placement would stretch them. *)
+   (* The panel takes the width BEFORE anything inside it is placed. The
+      blocks below the rows span pnlFields (their anchors), so they follow
+      its width, which is set below. *)
    pnlContent.Width := clientW;
    rowW := clientW - side - Px(RIGHT_MARGIN_96);
    fieldW := rowW - editLeft;
@@ -772,7 +772,26 @@ begin
       end;
    y := pnlFields.Top + pnlFields.Height + Px(SECTION_GAP_96);
 
-   (* The blocks below the rows, each as tall as it measures. *)
+   (* The blocks below the rows, each as tall as it measures.
+
+      THEIR POSITION IS THE .lfm's ANCHOR CHAIN, not the SetBounds below
+      (2026-11-18, gtk2): each block's top hangs from the bottom of the one
+      above it, and each label's left and right sides from pnlFields'.
+      Anchored to the PARENT's sides instead, the LCL re-derived them from
+      the parent's client size whenever it realigned -- and on gtk2, during
+      the show, the panel reports a transient client area (706x476 for a
+      710x480 panel). The first layout's tops snapped back to the designed
+      ones (lblNote at 404 over a 350-tall panel) and only a second layout
+      held. A sibling's side does not depend on when the parent settles.
+      The SetBounds still set the width and height, and y below is the same
+      sum the chain makes, so the panel is sized to match. The gaps are the
+      chain's spacing, set here so a scaled form uses the scaled gap. *)
+   lblFieldStatus.BorderSpacing.Top := Px(SECTION_GAP_96);
+   lblVerifyNote.BorderSpacing.Top := Px(SECTION_GAP_96);
+   chkActive.BorderSpacing.Top := Px(SECTION_GAP_96);
+   lblNote.BorderSpacing.Top := Px(SECTION_GAP_96);
+   lblStatus.BorderSpacing.Top := Px(SECTION_GAP_96);
+
    lblFieldStatus.SetBounds(side, y, rowW, lblFieldStatus.Height);
    lblFieldStatus.Height := WrappedHeight(lblFieldStatus, STATUS_LINES);
    y := y + lblFieldStatus.Height + Px(SECTION_GAP_96);

@@ -64,53 +64,80 @@ object ExternalLoggersForm: TExternalLoggersForm
       TabOrder = 2
     end
     object lblFieldStatus: TLabel
+      AnchorSideLeft.Control = pnlFields
+      AnchorSideTop.Control = pnlFields
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = pnlFields
+      AnchorSideRight.Side = asrBottom
       Left = 16
       Anchors = [akTop, akLeft, akRight]
-      Top = 314
+      Top = 280
       Width = 670
       Height = 20
       AutoSize = False
+      BorderSpacing.Top = 8
       WordWrap = True
       Caption = ''
     end
     object lblVerifyNote: TLabel
+      AnchorSideLeft.Control = pnlFields
+      AnchorSideTop.Control = lblFieldStatus
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = pnlFields
+      AnchorSideRight.Side = asrBottom
       Left = 16
       Anchors = [akTop, akLeft, akRight]
-      Top = 336
+      Top = 308
       Width = 670
       Height = 20
       AutoSize = False
+      BorderSpacing.Top = 8
       Font.Color = clMaroon
       Visible = False
       WordWrap = True
       Caption = ''
     end
     object chkActive: TCheckBox
+      AnchorSideTop.Control = lblVerifyNote
+      AnchorSideTop.Side = asrBottom
       Left = 16
-      Top = 366
+      Top = 308
       Width = 300
       Height = 28
       AutoSize = True
+      BorderSpacing.Top = 8
       Caption = 'Active (send newly logged QSOs)'
       TabOrder = 3
     end
     object lblNote: TLabel
+      AnchorSideLeft.Control = pnlFields
+      AnchorSideTop.Control = chkActive
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = pnlFields
+      AnchorSideRight.Side = asrBottom
       Left = 16
       Anchors = [akTop, akLeft, akRight]
-      Top = 404
+      Top = 344
       Width = 670
       Height = 40
       AutoSize = False
+      BorderSpacing.Top = 8
       Caption = '(set at run time from SLoggerEditorNote)'
       WordWrap = True
     end
     object lblStatus: TLabel
+      AnchorSideLeft.Control = pnlFields
+      AnchorSideTop.Control = lblNote
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = pnlFields
+      AnchorSideRight.Side = asrBottom
       Left = 16
       Anchors = [akTop, akLeft, akRight]
-      Top = 452
+      Top = 392
       Width = 670
       Height = 20
       AutoSize = False
+      BorderSpacing.Top = 8
       WordWrap = True
       Caption = ''
     end
