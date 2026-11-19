@@ -219,6 +219,19 @@ FORM.** Load the resource.
 **GUI defects need a running program.** The corpus and the unit tests are blind to
 the UI; measure the screen, not the source.
 
+**The flow grids (`uFlowGrid`) are TStringGrids that hold their text**
+(issue 216, 2026-11-19). The dupe sheet, Super Check Partial and the five
+remaining-multiplier windows: `TFlowGrid.LayOut` writes each entry into the
+grid's own `Cells` (one `BeginUpdate`/`EndUpdate`, `''` past the end), and the
+grid repaints itself -- there is no forced `Invalidate`. Colours come from
+`OnPrepareCanvas` (dupe sheet, SCP). **A remaining multiplier's text and worked
+flag are resolved at the REBUILD** (NY4I's decision A): `LOGEDIT.ShowRemMultsInWindow`
+asks `uRemMults.ResolveRemainingMult` per cell and lists, above itself, every
+change point that calls `VisibleLog.ShowRemainingMultipliers`. A stale cell is a
+missing call there, never a repaint. The remaining-mults windows still have a
+draw handler for ONE thing, the highlight-mode fade to white, which
+`OnPrepareCanvas` cannot express; it goes when NY4I accepts a flat fill.
+
 **The needs strips (`uMainGrids`) are written, never polled** (issue #100,
 2026-10-26). Their cells hold the answer in `Caption` and colour; what decides
 WHEN they are rewritten is the engine (`LOGEDIT.ShowNeedsForCall`, asked by

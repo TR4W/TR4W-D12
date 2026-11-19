@@ -172,6 +172,13 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-19 -- THE FLOW GRIDS PAINT THEMSELVES; MAIN CALLSIGN HAS A NAME (issues 216, 278; lcl-ui)
+
+Unit-tested against the grids' own `Cells` and the Station page's windows; nothing here has been seen on screen.
+
+- [ ] **Issue 216: the dupe sheet, Super Check Partial and the remaining-mults windows.** Each is a `TStringGrid` now and draws its own text. Compare with 5.0.x side by side: the dupe sheet's district colours, SCP's dupes (SCP dupe colour, white text), and in the remaining-mults windows a worked multiplier in highlight mode still fading to white. The text may sit a pixel or two lower than before (the grid centres it in the 16 px cell; the old code drew at the top) -- say if it clips or looks wrong. Click a cell: no selection colour and no focus rectangle should appear. Log a QSO that works a zone, a country and a prefix: each remaining-mults window updates at once (erase mode drops it, highlight mode fades it). Resize each window: the cells reflow down then across.
+- [ ] **Issue 278: the Main Callsign box on the Station page.** It now sits under the hint, captioned "Main Callsign:", with the heading above it. Check the layout at the default font and at 14 pt, that Tab goes Postal code -> Main Callsign -> Check, and with the GUI suite or Narrator that the box is named "Main Callsign".
+
 ## Added 2026-11-19 -- DUPE SHEET OR BAND MAP BY CATEGORY, IN7QPNE'S PARTY HINT, BAND MAP COLOUR ROLES (issues 201, 86, 59; lcl-ui)
 
 The rules are unit-tested (`uCategoryWindow`, `TContestIN7QPNE.PartyScore`, `uSpots.BandMapRoleColor`); nothing here has been seen on screen.
