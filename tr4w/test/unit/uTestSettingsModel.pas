@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(318, names.Count,
+         CheckEquals(320, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -534,7 +534,9 @@ begin
                      + ' 82), new, no CFGCA row, 2026-11-16; 318 with the band'
                      + ' map''s six colour roles, BAND MAP SELECTION, DUPE,'
                      + ' MULT, ACTIVE BAND, OTHER BAND and VFO MARKER COLOR'
-                     + ' (new, no CFGCA row, issue 59), 2026-11-19');
+                     + ' (new, no CFGCA row, issue 59), 2026-11-19; 320 with'
+                     + ' CLUSTER AUTO SELF SPOT and CLUSTER SELF SPOT'
+                     + ' INTERVAL (new, no CFGCA row, issue 188), 2026-11-19');
       finally
          names.Free;
       end;
@@ -1825,6 +1827,8 @@ const
       + 'CATEGORY-POWER,'
       + 'CATEGORY-TRANSMITTER,'
       + '"CHECK LOG FILE SIZE",'
+      + '"CLUSTER AUTO SELF SPOT",'
+      + '"CLUSTER SELF SPOT INTERVAL",'
       + '"CLUSTER SPOT COMMENT MULTIPLIER",'
       + '"CODE SPEED",'
       + '"COLUMN AUTOSIZE",'

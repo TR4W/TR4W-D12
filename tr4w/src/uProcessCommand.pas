@@ -108,6 +108,7 @@ procedure scLASTSPFREQ;
 procedure scLASTCQFREQ;
 procedure scLOGIN;
 procedure scSENDTOCLUSTER;
+procedure scSPOTME;
 procedure scDUPECHECK;
 procedure scBOOLSWAP;
 procedure scSPAN;
@@ -123,7 +124,7 @@ const
 
 
  // sCommands                             =  67  {$IF MMTYMODE} + 5  {$IFEND};
-  sCommands                             =  72 + 2 + 1 + 5 + 1 + 4;  // Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP + SPAN and its 3 display rows (issue 192)
+  sCommands                             =  72 + 2 + 1 + 5 + 1 + 4 + 1;  // + SPOTME (issue 188). Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP + SPAN and its 3 display rows (issue 192)
 
   sCommandsArray                        : array[0..sCommands - 1] of TsCommandsArrayType =
     (
@@ -176,6 +177,7 @@ const
     (caCommand: 'NEXTBANDMAP'; caAddress: NEXTBANDMAPENTRY),
  //   (caCommand: 'BMFIRST'; caAddress: BMFIRST),
     (caCommand: 'SENDTOCLUSTER'; caAddress: scSENDTOCLUSTER),
+    (caCommand: 'SPOTME'; caAddress: scSPOTME),   // issue 188
     (caCommand: 'LASTCQFREQ'; caAddress: scLASTCQFREQ),
     (caCommand: 'LASTSPFREQ'; caAddress: scLASTSPFREQ),
     (caCommand: 'LOGIN'; caAddress: scLOGIN),     //ny4i 04.39.4
@@ -237,7 +239,19 @@ uses
    uSettingsModel,   // Settings.My.Call
    uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
    uFactoryRadioBase,  // SPAN: TFactoryRadioBase, rcSpectrum
-   uSpectrumTypes;     // SPAN: SpectrumParseSpanCommand
+   uSpectrumTypes,     // SPAN: SpectrumParseSpanCommand
+   uSelfSpotRule,      // SPOTME: TSelfSpotTrigger
+   uSelfSpot;          // SPOTME: SelfSpotNow
+
+var
+  (* A COMMAND'S OWN ANSWER, shown AFTER the generic '"X" command is executed.'
+    line. That line is painted unconditionally once a handler returns, so a
+    handler that QuickDisplays a refusal itself is overwritten and the operator
+    sees "executed" for a command that sent nothing. A handler that has
+    something to say sets these instead (issue 188, SPOTME). Cleared before
+    every command. *)
+  GCommandNotice                        : string;
+  GCommandNoticeIsError                 : boolean;
 
 function FoundCommand(var SendString: Str160): boolean;
 
@@ -293,6 +307,8 @@ begin
            // Issue #997: asm `call p` -> a typed call, guarded against a nil
            // entry. The row's type is TCommandHandler now (P1), so no cast.
            cmdProc := sCommandsArray[i].caAddress;
+           GCommandNotice := '';
+           GCommandNoticeIsError := False;
            if Assigned(cmdProc) then
               begin
               cmdProc;
@@ -300,6 +316,17 @@ begin
 
            // Issue #997: asm wsprintf-push -> TF.Format.
            QuickDisplay(SysUtils.Format(AnsiString('"%s" command is executed.'), [sCommandsArray[i].caCommand]));
+           if GCommandNotice <> '' then
+              begin
+              if GCommandNoticeIsError then
+                 begin
+                 QuickDisplayError(GCommandNotice);
+                 end
+              else
+                 begin
+                 QuickDisplay(GCommandNotice);
+                 end;
+              end;
 
            Break;
 
@@ -688,6 +715,15 @@ begin
   (* The ShortString itself. @scFileName[1] was a bare pointer into a value
     with no NUL, so the send ran past the end of it. *)
   uTelnet.SendViaTelnetSocket(scFileName);
+end;
+
+(* SPOTME -- the station spots ITSELF (issue 188). Takes no argument: the call,
+  the run frequency and the contest's name are the program's own. Whether it
+  may go is uSelfSpotRule's answer (contest, S&P, 300 Hz, interval); a refusal
+  is the command's notice so it is shown after "executed", and nothing is sent. *)
+procedure scSPOTME;
+begin
+   GCommandNoticeIsError := not SelfSpotNow(sstMacro, GCommandNotice);
 end;
 {
 procedure CheckNumber;

@@ -143,6 +143,8 @@ uses
   uRemMults,
   uDupesheet,
   uSendSpot,
+  uSelfSpotRule,
+  uSelfSpot,
   uSendKeyboard,
   uRadio12,
   uFunctionKeys,

@@ -251,6 +251,11 @@ type
      the ceiling is 100,000 so an operator who wants the old behaviour can
      have it and pay for it. *)
    TTelnetConsoleLines  = 1000..100000;
+   (* MINUTES BETWEEN AUTOMATIC SELF-SPOTS (issue 188). Not a limit the
+     program invents: the contest's own stated minimum is applied beneath
+     whatever is chosen here (uSelfSpotRule.SelfSpotEffectiveMinutes), so the
+     floor of 1 only keeps the number meaningful. The ceiling is four hours. *)
+   TSelfSpotMinutes     = 1..240;
    TContactsPerPage     = 10..100;    // was crMin:10, crMax:100
    (* MINITOUR DURATION, in minutes. THE ROW SAID 5..60 AND THE GLOBAL
      SAT AT 0, which MainUnit tests for -- `if TourDuration <> 0` is how
@@ -974,6 +979,8 @@ type
       FConnectionAtStartup: boolean;
       FBroadcastAllPacketData: boolean;
       FSpotCommentMultiplier: boolean;
+      FAutoSelfSpot: boolean;
+      FSelfSpotInterval: TSelfSpotMinutes;
    public
       constructor Create;
    published
@@ -1000,6 +1007,29 @@ type
         told from one. See LogEdit.SpotSectionHint. *)
       property SpotCommentMultiplier: boolean
          read FSpotCommentMultiplier write FSpotCommentMultiplier;
+      (* New 2026-11-19 (issue 188) -- CLUSTER AUTO SELF SPOT. Spot this
+        station on the cluster by itself, every CLUSTER SELF SPOT INTERVAL
+        minutes, while it is running (CQ mode) in a contest whose rules allow
+        it (TContestBase.AllowsSelfSpotting). OFF by default, and never in S&P.
+
+        HELP TEXT (for help_en.po -- the catalogues are not edited by the
+        change that added this): "Spots your own call on the DX cluster
+        automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while
+        you are running (CQ mode). Only in a contest whose rules allow
+        self-spotting; ignored otherwise. Off by default." *)
+      property AutoSelfSpot: boolean
+         read FAutoSelfSpot write FAutoSelfSpot;
+      (* New 2026-11-19 (issue 188) -- CLUSTER SELF SPOT INTERVAL, minutes
+        between automatic self-spots. Default 10, which is the established
+        minimum. A contest that states a longer minimum overrides a shorter
+        value here.
+
+        HELP TEXT (for help_en.po): "Minutes between automatic self-spots.
+        10 minutes is the established minimum; review the contest's rules
+        before changing it. The contest's own minimum, where it states one, is
+        never undercut." *)
+      property SelfSpotInterval: TSelfSpotMinutes
+         read FSelfSpotInterval write FSelfSpotInterval;
    end;
 
    (*
@@ -5468,6 +5498,8 @@ begin
      there. The record initialiser said False and never won. *)
    FBroadcastAllPacketData := True;
    FSpotCommentMultiplier  := False;
+   FAutoSelfSpot           := False;
+   FSelfSpotInterval       := 10;
 end;
 
 constructor TOperatingSettings.Create;

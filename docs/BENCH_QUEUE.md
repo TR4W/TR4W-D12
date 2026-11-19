@@ -172,6 +172,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-19 -- SELF-SPOTTING (issue 188; dx-cluster)
+
+The decision (contest answer, S&P, interval, 300 Hz) is unit-tested (`uTestSelfSpot`); nothing below has been seen against a real cluster or on screen.
+
+- [ ] **A real cluster accepts the spot.** In an ARRL SS log, in CQ mode, on a connected cluster: Control > Self-spot. EXPECT the status line `Self-spot sent: <call> on <kHz>.` and a `DX de <you>: <freq> <call> <contest id>` line from the cluster. Immediately again: refused, "less than 10 minutes ago", nothing sent. After 10 minutes, with the VFO moved under 300 Hz: refused "has not moved 300 Hz"; moved 300 Hz or more: sent.
+- [ ] **SPOTME in a function key.** Put the SPOTME command (Messages list, the command picker) in a CQ F-key message of an SS log. Press it: the same spot, and the status line must show the spot or the refusal AFTER `"SPOTME" command is executed.` In another contest (any that is not Sweepstakes) it must refuse with "rules do not allow", and the cluster must see nothing.
+- [ ] **S&P.** In Search & Pounce mode the menu, the macro and the automatic trigger all refuse; nothing is sent.
+- [ ] **The automatic trigger.** Turn CLUSTER AUTO SELF SPOT on (Preferences, or a config line), run in SS: the FIRST spot goes about a second after it is on and you are in CQ mode with a frequency, then one every 10 minutes while the radio stays on the frequency. It must stay silent when refused. It is off by default.
+- [ ] **No link.** With the cluster and the network both down: Control > Self-spot says neither is connected and nothing queues.
+- [ ] **Help text.** CLUSTER AUTO SELF SPOT and CLUSTER SELF SPOT INTERVAL have no `help_en.po` entry yet (their text is in the property comments in `uSettingsModel`); they are in `KNOWN_HELP_GAPS`. Add the entries and remove both names there.
+
 ## Added 2026-11-19 -- DUPE SHEET OR BAND MAP BY CATEGORY, IN7QPNE'S PARTY HINT, BAND MAP COLOUR ROLES (issues 201, 86, 59; lcl-ui)
 
 The rules are unit-tested (`uCategoryWindow`, `TContestIN7QPNE.PartyScore`, `uSpots.BandMapRoleColor`); nothing here has been seen on screen.

@@ -168,6 +168,8 @@ uses
   uRemMults in 'src\uRemMults.pas',
   uDupesheet in 'src\uDupesheet.pas',
   uSendSpot in 'src\uSendSpot.pas',
+  uSelfSpotRule in 'src\uSelfSpotRule.pas',
+  uSelfSpot in 'src\uSelfSpot.pas',
   uSendKeyboard in 'src\uSendKeyboard.pas',
   uRadio12 in 'src\uRadio12.pas',
   uFunctionKeys in 'src\uFunctionKeys.pas',
