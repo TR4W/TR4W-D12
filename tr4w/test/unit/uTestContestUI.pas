@@ -70,6 +70,7 @@ type
       procedure Test_OnlyARRLContestsOfferTheARRLLogPortal;
       procedure Test_OnlyNamedContestsAddCabrilloOverlays;
       procedure Test_OverlayListComposition;
+      procedure Test_TheOverlayIsAContestSetting;
    end;
 
 implementation
@@ -981,6 +982,47 @@ begin
       end;
 end;
 
+(* THE OVERLAY IS THIS CONTEST'S SETTING, SEEDED BY THE STATION DEFAULT --
+  issue 122 (NY4I, 2026-11-19). It was a copy in the global header store, so
+  a POTA chosen in a Louisiana log showed in every contest. Now: the header
+  store does not hold it, the header reads the contest-scoped setting, and
+  the window commits a changed choice through the categories' route. *)
+procedure TContestUITests.Test_TheOverlayIsAContestSetting;
+var
+   saved: string;
+   value: string;
+begin
+   BeginTest('Test_TheOverlayIsAContestSetting');
+   CheckFalse(CabrilloTagsArray[ctCategoryOverlay].ctrSave,
+              'the overlay is not a global header-store value');
+   CheckTrue(Settings.CommandIsContestScoped('CATEGORY-OVERLAY'),
+             'CATEGORY-OVERLAY is contest-scoped: recorded in the contest log');
+   CheckFalse(CabrilloSummaryIsOpen, 'the window is closed, so the header reads the store');
+
+   saved := Settings.Contest.CategoryOverlay;
+   try
+      Settings.Contest.CategoryOverlay := 'POTA';
+      CheckEquals('POTA', CabrilloTagText(ctCategoryOverlay), 'the header reads the setting');
+      Settings.Contest.CategoryOverlay := '';
+      CheckEquals('', CabrilloTagText(ctCategoryOverlay), 'none stated: the bare tag');
+      CheckEquals('CATEGORY-OVERLAY:' + #13#10,
+                  CabrilloHeaderTagLine(ctCategoryOverlay, CabrilloTagText(ctCategoryOverlay)),
+                  'and the line is the bare tag');
+   finally
+      Settings.Contest.CategoryOverlay := saved;
+   end;
+
+   (* WHAT THE ROW COMMITS. *)
+   CheckTrue(OverlayChoiceToCommit(True, 'POTA', '', value), 'a new choice commits');
+   CheckEquals('POTA', value, 'the chosen value');
+   CheckFalse(OverlayChoiceToCommit(True, 'POTA', 'POTA', value), 'the same value: nothing');
+   CheckTrue(OverlayChoiceToCommit(True, '', 'POTA', value), 'the blank item is a choice');
+   CheckEquals('', value, 'and clears it');
+   CheckFalse(OverlayChoiceToCommit(False, '', 'POTA', value),
+              'nothing selected changes nothing');
+   CheckFalse(OverlayChoiceToCommit(True, ' WIRES ', 'WIRES', value), 'blanks are trimmed');
+end;
+
 procedure TContestUITests.RunAllTests;
 begin
    Test_ChoicesListEveryContestOnce;
@@ -999,6 +1041,7 @@ begin
    Test_AGapCountsUpToTheBreak;
    Test_OnlyARRLContestsOfferTheARRLLogPortal;
    Test_OnlyNamedContestsAddCabrilloOverlays;
+   Test_TheOverlayIsAContestSetting;
    Test_OverlayListComposition;
 end;
 

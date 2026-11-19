@@ -191,7 +191,9 @@ The Cabrillo summary's CATEGORY-OVERLAY row is refilled each time the window ope
 
 - [ ] **Louisiana offers WIRES and POTA.** In a Louisiana QSO Party log, open the Cabrillo summary. The overlay list is CLASSIC, ROOKIE, TB-WIRES, YOUTH, NOVICE-TECH, YL, WIRES, POTA, then the blank. TB-WIRES appears once.
 - [ ] **A saved POTA comes back.** Choose POTA, press OK, and reopen the window: POTA is still selected. The Cabrillo header reads `CATEGORY-OVERLAY: POTA`.
-- [ ] **Another contest does not offer them.** In the same session, open another contest's log (CQ WW, say) and open the summary. WIRES and POTA are gone. The overlay is stored globally, not per contest, so the saved POTA shows unselected here. Pressing OK saves a blank. NY4I to rule on per-contest storage.
+- [ ] **Another contest does not offer them, and keeps its own overlay.** In the same session, open another contest's log (CQ WW, say) and open the summary. WIRES and POTA are gone. Since 2026-11-19 (NY4I: Cabrillo header fields are "a contest item seeded by the station default") the overlay is the contest-scoped CATEGORY-OVERLAY: this log shows the station default (Preferences > Contest > Cabrillo), not Louisiana's POTA. Choose CLASSIC here and press OK, then reopen the Louisiana log: it still says POTA, and its Cabrillo header reads `CATEGORY-OVERLAY: POTA`. `tr4w.log` shows `CATEGORY-OVERLAY = ... for this contest only`.
+- [ ] **The blank choice sticks across a reopen.** In a log whose station default overlay is not blank, choose the blank item, press OK, close and reopen the log. The header must read `CATEGORY-OVERLAY:` (bare). Unit tests prove the edit takes a blank; whether the stored blank row survives the reopen when the station default is not blank is not tested.
+- [ ] **An old saved overlay is not carried over.** An overlay saved before 2026-11-19 lived in the global header store (`_CATEGORY-OVERLAY` in `settings\tr4w.json`); it is now inert, as `_CATEGORY-MODE` became at Q61. Set the station default once in Preferences.
 
 ## Added 2026-11-19 -- SETUP WIZARD: EVERY WSJT-X SETTING (issue 334, NY4I's bench; lcl-ui)
 

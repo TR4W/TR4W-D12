@@ -262,7 +262,7 @@ var
 // ---------------------------------------------------------------------------
 
 // Issue #930 -- read a Cabrillo-summary field from tr4w.ini [REPORT].
-// Used for <club> (key=_CLUB) and <overlay> (key=_CATEGORY-OVERLAY) which the
+// Used for <club> (key=_CLUB), which the
 // user enters in the Cabrillo summary dialog (uCbrSum) rather than in a CFG.
 function ReadCabrilloSummaryField(const Key: string): string;
 begin
@@ -343,7 +343,9 @@ begin
   // <club> + <overlay> come from the Cabrillo summary stored in tr4w.ini
   // [REPORT] -- single source of truth with the Cabrillo header.
   sClub    := ReadCabrilloSummaryField('_CLUB');
-  sOverlay := ReadCabrilloSummaryField('_CATEGORY-OVERLAY');
+  (* THE CONTEST'S OVERLAY -- a contest-scoped setting since issue 122
+     (2026-11-19), no longer a copy in the header store. *)
+  sOverlay := Trim(Settings.Contest.CategoryOverlay);
   if sOverlay = '' then
      begin
      sOverlay := 'N/A';
