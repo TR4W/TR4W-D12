@@ -41,6 +41,22 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### Log schema 10: stored X-QSO rule result; Linux logger-editor layout (5.0.43) - NY4I
+
+#### Stored rule-derived X-QSO (`domain/uLogSchema`, `uLogRepository`, `uLogStore`, `contestFactory/uContestRegistry`, `VC`, `uCabrillo`, `uADIF`, `trdos/postunit`, `uEditQSO`) - docs/LOG_SCHEMA.md
+
+- **`qso.is_off_contest`** (`INTEGER NOT NULL DEFAULT 0`) is the contest's band/mode/host rule result, a stored derived value like `qso_points`; the operator's `is_xqso` stays separate. `ContestExchange.ceOffContest` sits at offset 330, carved from `sReserved` (43 to 42 bytes): the record stays 376 bytes, the QSO packet 384 and the `SERVERLOG.TRW` stride 376, and older records and packets read False.
+- **One writer**: `StampOffContest` (`uContestRegistry`); readers use `StoredQSOIsXQSO` (`ceXQSO or ceOffContest`). The rule is evaluated only where the value is set: `LogContact`, every insert (`LogStoreAppendQSO`, `LogStoreAppendQSOs` via `TLogQsoList.StampEach`: import, catch-up, QTC), a peer's edit, `tUpdateLog` (rescore), Edit QSO save, the server-log row, and a one-shot backfill.
+- **Migration**: schema 9 to 10 adds the column in one commit and writes `offContestBackfillPending`; `LogStoreApplyContestConfigWith` stamps existing rows once (the schema 8/9 pattern, since the domain layer cannot see the contest factory). An older build refuses a schema 10 log.
+- **`Lint-XQSOReads`** fences both the stored fields and the rule judges (`QSOIsOffContest`, `QSOIsXQSO`, `LoggedQSOIsXQSO`, `QSOCountsTowardTotals`, `StampOffContest`).
+- **Edit QSO**: the box shows `StoredQSOIsXQSO`, greyed when only the rule says so; save never writes the rule result into `ceXQSO`.
+- **Open** (LOG_SCHEMA.md 2a): `CountsTowardBonus`, the undelete post and `MultiplierKindsCredited` inside the replay still judge at read time.
+
+#### Linux gtk2 layout (`ui/lcl/uExternalLoggersForm.lfm`/`.pas`)
+
+- **Root cause**: blocks below the provider rows were anchored `[akTop, akLeft, akRight]` to `pnlContent`, whose client area is transient during `OnShow` on gtk2 (706x476 for a 710x480 panel), so the LCL snapped `SetBounds` back to the design Tops on the first layout; 71 `ExternalLoggerEditorLayout` and 1 `SetupWizardForm` tests failed on Linux only.
+- **Fix**: each block takes its top from the block above (`AnchorSideTop` `asrBottom`, `BorderSpacing.Top`) and its sides from `pnlFields`; `FitLayout` sets the scaled gap each pass.
+
 ### Read-only log on a full disk, JTTY, new QSO parties, Sweepstakes modes (5.0.42) - NY4I
 
 #### Full disk: the log goes read-only, keeps the entry, recovers (`domain/uLogDatabase`, `uLogStore`, `trdos/logsubs2`, `MainUnit`, `uEditQSO`, `ui/lcl/uEditQSOForm`)

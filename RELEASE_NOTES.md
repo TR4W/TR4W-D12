@@ -48,6 +48,26 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — November 2026
 
+### 5.0.43 (2026-11-19) - NY4I
+
+#### Logs move to schema 10 - back up first
+
+- TR4W now records on every QSO whether the contest's own rules refuse it (a band or mode the contest
+  does not count, for example CW in the Sweepstakes phone weekend). Cabrillo, ADIF, the log grids and
+  Edit QSO all read that recorded answer instead of working it out again when they run, so the log
+  window, the Edit QSO window and the exported file always agree.
+- Edit QSO now shows such a QSO as an X-QSO: the box is checked and greyed, because the contest made it
+  one. Your own X-QSO box still works as before and is kept separate.
+- Rescore Log refreshes the answer, so if a contest's rules change, the next rescore releases the old
+  QSOs the new rules count.
+- A contest log is converted the first time this version opens it, and TR4W 5.0.42 and earlier will
+  refuse it afterwards. **Back up your contest log before opening it with this version.**
+
+#### Linux
+
+- The external logger editor and the setup wizard's logger page lay out correctly on Linux. Notes under
+  the provider fields were drawn off the bottom of the page.
+
 ### 5.0.42 (2026-11-18) - NY4I
 
 #### A full disk no longer loses your log
