@@ -6,7 +6,7 @@ contest.class = TContestVermontQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
+doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
 my.continent = NorthAmerica
@@ -99,7 +99,6 @@ X-QSO: 14025 CW 2026-01-15 1201 K0AAA   599 KS     W1AW           599 CT
 X-QSO: 14250 PH 2026-01-15 1202 K0AAA   59  KS     W1AW           59  CT           
 X-QSO:   144 FM 2026-01-15 1203 K0AAA   599 KS     W1AW           599 CT           
 X-QSO:  7080 RY 2026-01-15 1204 K0AAA   599 KS     W1AW           599 CT           
-X-QSO: 14074 DG 2026-01-15 1205 K0AAA   599 KS     W1AW           599 CT           
 X-QSO:  1830 CW 2026-01-15 1206 K0AAA   599 KS     K4ABC          599 FL           
 X-QSO: 21300 PH 2026-01-15 1207 K0AAA   59  KS     VE3ABC         59  ON           
 X-QSO: 28025 CW 2026-01-15 1208 K0AAA   599 KS     XE1ABC         599 DX           
@@ -326,7 +325,7 @@ contest.class = TContestVermontQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
+doing.domestic/dx/prefix/zone = TRUE TRUE TRUE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
 my.continent = NorthAmerica
@@ -417,7 +416,6 @@ QSO: 14025 CW 2026-01-15 1201 K0AAA   599 ADD    W1AW           599 CT
 QSO: 14250 PH 2026-01-15 1202 K0AAA   59  ADD    W1AW           59  CT           
 QSO:   144 FM 2026-01-15 1203 K0AAA   599 ADD    W1AW           599 CT           
 QSO:  7080 RY 2026-01-15 1204 K0AAA   599 ADD    W1AW           599 CT           
-QSO: 14074 DG 2026-01-15 1205 K0AAA   599 ADD    W1AW           599 CT           
 QSO:  1830 CW 2026-01-15 1206 K0AAA   599 ADD    K4ABC          599 FL           
 QSO: 21300 PH 2026-01-15 1207 K0AAA   59  ADD    VE3ABC         59  ON           
 QSO: 28025 CW 2026-01-15 1208 K0AAA   599 ADD    XE1ABC         599 XE           
@@ -679,7 +677,7 @@ contest.class = TContestVermontQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
+doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
 my.continent = NorthAmerica
@@ -772,7 +770,6 @@ X-QSO: 14025 CW 2026-01-15 1201 VE3AAA  599 ON     W1AW           599 CT
 X-QSO: 14250 PH 2026-01-15 1202 VE3AAA  59  ON     W1AW           59  CT           
 X-QSO:   144 FM 2026-01-15 1203 VE3AAA  599 ON     W1AW           599 CT           
 X-QSO:  7080 RY 2026-01-15 1204 VE3AAA  599 ON     W1AW           599 CT           
-X-QSO: 14074 DG 2026-01-15 1205 VE3AAA  599 ON     W1AW           599 CT           
 X-QSO:  1830 CW 2026-01-15 1206 VE3AAA  599 ON     K4ABC          599 FL           
 X-QSO: 21300 PH 2026-01-15 1207 VE3AAA  59  ON     VE3ABC         59  ON           
 X-QSO: 28025 CW 2026-01-15 1208 VE3AAA  599 ON     XE1ABC         599 DX           
@@ -999,7 +996,7 @@ contest.class = TContestVermontQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
+doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
 my.continent = Europe
@@ -1090,7 +1087,6 @@ X-QSO: 14025 CW 2026-01-15 1201 DL1AAA  599 DL     W1AW           599 CT
 X-QSO: 14250 PH 2026-01-15 1202 DL1AAA  59  DL     W1AW           59  CT           
 X-QSO:   144 FM 2026-01-15 1203 DL1AAA  599 DL     W1AW           599 CT           
 X-QSO:  7080 RY 2026-01-15 1204 DL1AAA  599 DL     W1AW           599 CT           
-X-QSO: 14074 DG 2026-01-15 1205 DL1AAA  599 DL     W1AW           599 CT           
 X-QSO:  1830 CW 2026-01-15 1206 DL1AAA  599 DL     K4ABC          599 FL           
 X-QSO: 21300 PH 2026-01-15 1207 DL1AAA  59  DL     VE3ABC         59  ON           
 X-QSO: 28025 CW 2026-01-15 1208 DL1AAA  599 DL     XE1ABC         599 DX           
