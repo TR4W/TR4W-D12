@@ -39,6 +39,11 @@ type
     RigIndex     : Integer;   // radio index, typically 0
     IPAddress    : string;    // the radio's IP, from the reply
     SerialNumber : string;    // radio serial, e.g. '278'
+    (* Any further addresses the reply carried, space separated, or ''.
+      A K4 Zero answers 'k4z:0:192.168.73.159 192.168.73.110:199': its own
+      address and a second one that is NOT the radio (measured on NY4I's LAN,
+      2026-11-19). Only IPAddress is ever offered as the radio's address. *)
+    OtherAddresses : string;
   end;
   (* THE RESULT IS A DYNAMIC ARRAY OF VALUES, NOT A TList OF New'd RECORDS
      (pointer audit 2.7, 2026-11-05): the caller freed every item by hand
@@ -56,6 +61,11 @@ type
     // starts with 'k4' AND has exactly four ':'-separated fields with a
     // non-empty IP.  No Indy / network dependency -- unit-testable.
     class function ParseResponse(const Reply: string; var Radio: TK4DiscoveredRadio): Boolean;
+
+    // The datagram's own source address is the radio that answered, so when a
+    // reply lists several addresses and the sender is one of them, that one is
+    // the radio's and the rest are "other". Pure, no network -- unit-testable.
+    class procedure PreferSender(var Radio: TK4DiscoveredRadio; const aSender: string);
 
     // Friendly mDNS-style host name, e.g. K4 serial 278 -> 'K4-SN00278.local'
     // (serial left-padded with zeros to 5 digits; 'K4Z' prefix for a K4 Zero).
@@ -76,12 +86,15 @@ class function TK4Discovery.ParseResponse(const Reply: string;
                                           var Radio: TK4DiscoveredRadio): Boolean;
 var
   c1, c2, c3: Integer;
+  k: Integer;
+  field, token: string;
 begin
   Result := False;
   Radio.RigType := '';
   Radio.RigIndex := 0;
   Radio.IPAddress := '';
   Radio.SerialNumber := '';
+  Radio.OtherAddresses := '';
 
   if LowerCase(Copy(Reply, 1, Length(K4_RESPONSE_PREFIX))) <> K4_RESPONSE_PREFIX then
      begin
@@ -100,10 +113,76 @@ begin
   // Trim() also strips any trailing #0/CR/LF the datagram may carry.
   Radio.RigType      := LowerCase(Trim(Copy(Reply, 1, c1 - 1)));
   Radio.RigIndex     := StrToIntDef(Trim(Copy(Reply, c1 + 1, c2 - c1 - 1)), 0);
-  Radio.IPAddress    := Trim(Copy(Reply, c2 + 1, c3 - c2 - 1));
   Radio.SerialNumber := Trim(Copy(Reply, c3 + 1, Length(Reply) - c3));
 
+  (* THE ADDRESS FIELD CAN HOLD SEVERAL ADDRESSES, space separated -- a K4
+    Zero sends its own and a second one. The first is the radio's; the rest
+    are kept apart so they are never mistaken for it (a drop-down item
+    reading "192.168.73.159 192.168.73.110" is not an address). *)
+  field := Trim(Copy(Reply, c2 + 1, c3 - c2 - 1));
+  for k := 1 to Length(field) do
+     begin
+     if (field[k] = ',') or (field[k] = ';') then
+        begin
+        field[k] := ' ';
+        end;
+     end;
+  while field <> '' do
+     begin
+     k := Pos(' ', field);
+     if k = 0 then
+        begin
+        token := field;
+        field := '';
+        end
+     else
+        begin
+        token := Copy(field, 1, k - 1);
+        field := Trim(Copy(field, k + 1, Length(field)));
+        end;
+     if Radio.IPAddress = '' then
+        begin
+        Radio.IPAddress := token;
+        end
+     else if Radio.OtherAddresses = '' then
+        begin
+        Radio.OtherAddresses := token;
+        end
+     else
+        begin
+        Radio.OtherAddresses := Radio.OtherAddresses + ' ' + token;
+        end;
+     end;
+
   Result := Radio.IPAddress <> '';
+end;
+
+class procedure TK4Discovery.PreferSender(var Radio: TK4DiscoveredRadio;
+                                          const aSender: string);
+var
+  others: string;
+  k: Integer;
+begin
+  if (aSender = '') or (aSender = Radio.IPAddress) or (Radio.OtherAddresses = '') then
+     begin
+     Exit;
+     end;
+
+  (* The others, padded with a space at each end so ' <sender> ' finds a whole
+    address and never part of a longer one. *)
+  others := ' ' + Radio.OtherAddresses + ' ';
+  k := Pos(' ' + aSender + ' ', others);
+  if k = 0 then
+     begin
+     Exit;   // the sender is not named in the reply: keep the first address
+     end;
+
+  (* The sender is the radio. The address that used to be first takes its
+    place among the others. *)
+  Delete(others, k, Length(aSender) + 2);
+  Insert(' ' + Radio.IPAddress + ' ', others, k);
+  Radio.IPAddress := aSender;
+  Radio.OtherAddresses := Trim(others);
 end;
 
 class function TK4Discovery.Hostname(const Radio: TK4DiscoveredRadio): string;
@@ -218,6 +297,12 @@ begin
 
                if ParseResponse(Reply, Parsed) then
                   begin
+                  PreferSender(Parsed, PeerIP);
+                  if Parsed.OtherAddresses <> '' then
+                     begin
+                     logger.Info('[K4Discovery] the reply from %s also lists %s -- ' +
+                                 'not offered as the radio', [Parsed.IPAddress, Parsed.OtherAddresses]);
+                     end;
                   isDuplicate := False;
                   for i := 0 to High(Result) do
                      begin

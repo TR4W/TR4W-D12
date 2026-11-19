@@ -100,6 +100,7 @@ uses
    uJSON                in '..\..\src\utils\uJSON.pas',
    uTestStringCompare   in 'uTestStringCompare.pas',
    uTestShortStringConversion in 'uTestShortStringConversion.pas',
+   uTestK4Discovery     in 'uTestK4Discovery.pas',
    uTestAudio           in 'uTestAudio.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
    uTestUtilsText       in 'uTestUtilsText.pas',
@@ -1164,6 +1165,7 @@ begin
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TStringCompareTests.Create('StringCompare'));
    RegisterSuite(TShortStringConversionTests.Create('ShortStringConversion'));
+   RegisterSuite(TK4DiscoveryTests.Create('K4Discovery'));
    RegisterSuite(TAudioTests.Create('Audio'));
    RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));
    RegisterSuite(TUtilsTextTests.Create('UtilsText'));
