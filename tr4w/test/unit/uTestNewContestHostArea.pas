@@ -143,7 +143,9 @@ begin
    places := LoadedPlaces('ve7_cty' + string(DOM_EXTENSION));
    try
       CheckTrue(places.Count > 0, 'British Columbia''s districts load the same way');
-      CheckTrue(places.IndexOfKey('ABF') >= 0, 'ABF is a district');
+      CheckTrue(places.IndexOfKey('ASL') >= 0, 'ASL is a district');
+      CheckTrue(places.IndexOfKey('ABF') < 0,
+                'ABF was retired in the 2025 redistribution (#88, NY4I 2026-11-19)');
    finally
       places.Free;
    end;

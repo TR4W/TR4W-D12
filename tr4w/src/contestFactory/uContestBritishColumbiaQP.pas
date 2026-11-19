@@ -125,8 +125,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DC IS MARYLAND -- "Maryland and DC are lumped together as MD." ve7.dom
     (the in-province file, where states are multipliers) maps Dc > Md.
 
-  THE DISTRICT LIST IS NOT CHANGED HERE -- the October 2025 redistribution
-    retired 14 codes; whether to drop them is NY4I's open question on #88. *)
+  THE DISTRICTS ARE THE 43 CURRENT ONES AND NOTHING ELSE -- NY4I on #88,
+    2026-11-19, giving the sponsor's table: "this is the whole list. Any
+    historical items are now moot." ve7_cty.dom holds exactly those 43 codes
+    with their names, in the sponsor's order (Districts.txt: "these
+    districts came into effect in 2025 and are used for the 2026 BCQP and
+    until further notice"). The 14 codes the October 2025 redistribution
+    retired (ABF, BUS, CSN, KTC, KOC, LAA, MMF, NWB, NOS, NVA, RIC, SWK, STR,
+    VAS) are removed, with no alias: a rescored older log loses them. *)
 unit uContestBritishColumbiaQP;
 
 {$I tr4w.inc}

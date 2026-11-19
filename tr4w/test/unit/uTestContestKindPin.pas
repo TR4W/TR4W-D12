@@ -1132,7 +1132,7 @@ const
       (Contest: ArizonaQsoParty; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'APH';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
-      (Contest: BCQP; MyCall: 'VE7AAA'; MyCountry: 'VE'; MyState: 'ABF';
+      (Contest: BCQP; MyCall: 'VE7AAA'; MyCountry: 'VE'; MyState: 'ASL';
        MySection: 'BC'; MyGrid: 'CN89';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
       (Contest: CALQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Alam';

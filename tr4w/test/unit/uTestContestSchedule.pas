@@ -539,6 +539,11 @@ begin
    Add('NC QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 2, 28, 15, 0));
    Add('NEWEQP', At(2027, 1, 1, 0, 0), At(2027, 5, 1, 20, 0));
    Add('NEWEQP', At(2027, 5, 2, 6, 0), At(2027, 5, 2, 13, 0));
+   (* The sponsor's 2026 rules v1.1: the third Saturday of October, October
+      17 2026 from 14:00 UTC through 01:59 UTC. 2027's is October 16. *)
+   Add('NY-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 10, 17, 14, 0));
+   Add('NY-QSO-PARTY', At(2026, 10, 18, 1, 59), At(2026, 10, 18, 1, 59));
+   Add('NY-QSO-PARTY', At(2026, 10, 18, 2, 0), At(2027, 10, 16, 14, 0));
    Add('ON-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 4, 17, 18, 0));
    Add('ON-QSO-PARTY', At(2027, 4, 18, 4, 0), At(2027, 4, 18, 12, 0));
    Add('PA QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 10, 9, 16, 0));

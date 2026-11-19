@@ -111,8 +111,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   BONUSES -- W0MA, K0GQ and the peak-hour bonus are unchanged. The 100-point
     bonus "for successfully submitting a Cabrillo log electronically" is NOT
-    added: TR4W cannot know whether a log was submitted (asked of NY4I on
-    #88).
+    added, and that is NY4I's ruling on #88 (2026-11-19): "we cannot add that
+    as at the time we generate the claimed score, we do not know how it will
+    be filed." The claimed score is made before the log is filed, so the
+    bonus can never be part of it.
 
   HOLT COUNTY STAYS HTL -- the sponsor's Table 1 says "Holt HTL"; DXLog's
     HLT is the error.

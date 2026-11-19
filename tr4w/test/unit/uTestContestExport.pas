@@ -860,7 +860,7 @@ begin
    Pin(MICHQSOPARTY, 'MAR', 'Mar', 'K', 'MI');
 
    (* BRITISH COLUMBIA: a regional district is BC. *)
-   Pin(BCQP, 'ABF', 'Abf', 'VE', 'BC');
+   Pin(BCQP, 'ASL', 'Asl', 'VE', 'BC');
    Pin(BCQP, 'CT', 'Ct', 'K', 'CT');
    Pin(BCQP, 'ON', 'On', 'VE', 'ON');
    Pin(BCQP, 'DX', 'dx', 'DL', '');
@@ -972,7 +972,7 @@ begin
    Pin(FLORIDAQSOPARTY, 'CT', 'Ct', 'K', '291');
    Pin(FLORIDAQSOPARTY, 'AK', 'Ak', 'KL', '6');
    Pin(FLORIDAQSOPARTY, 'HI', 'Hi', 'KH6', '110');
-   Pin(BCQP, 'ABF', 'Abf', 'VE', '1');
+   Pin(BCQP, 'ASL', 'Asl', 'VE', '1');
    Pin(NEWENGLANDQSO, 'VO1', 'Nf', 'VE', '1');
 
    (* NO STATE, NO DXCC. *)
@@ -1137,8 +1137,8 @@ begin
    qso.Band := Band20;
    qso.Mode := CW;
    qso.Callsign := 'VE7ABC';
-   qso.QTHString := 'ABF';
-   qso.DomesticQTH := 'ABF';
+   qso.QTHString := 'ASL';
+   qso.DomesticQTH := 'ASL';
    text := EmitADIFRecord(qso);
    CheckTrue(Pos('<STATE:2>BC ', text) > 0, 'BCQP writes STATE:BC: ' + text);
    CheckTrue(Pos('<CNTY', text) = 0, 'and the body writes no CNTY: ' + text);

@@ -99,7 +99,7 @@ const
       that already had them and the CQ WW three; the modes by the CQ WW three
       alone. Generated once from the frozen contest matrix's ids; edited by
       hand from then on, only ever DOWN. *)
-   BANDS_NOT_YET_STATED: array[0..163] of string = (
+   BANDS_NOT_YET_STATED: array[0..162] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB', 'ALRS-UA1DZ-CUP',
       'AP-SPRINT', 'ARCI', 'ARI-DX', 'ARIZONA QSO PARTY',
       'ARKTIKA-SPRING', 'ARRL-DIGI', 'ARRL-DX-CW',
@@ -124,7 +124,7 @@ const
       'MONGOLIAN DX', 'MST', 'MWC',
       'NA-SPRINT-CW', 'NA-SPRINT-RTTY', 'NAQP-CW', 'NAQP-RTTY',
       'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NRAU-BALTIC-CW',
-      'NRAU-BALTIC-SSB', 'NY-QSO-PARTY', 'NZ FIELD DAY', 'OCEANIA-DX-CW',
+      'NRAU-BALTIC-SSB', 'NZ FIELD DAY', 'OCEANIA-DX-CW',
       'OCEANIA-DX-SSB', 'OHIO QSO PARTY', 'OK-OM DX CW', 'OK-OM DX SSB',
       'OZCHR', 'OZCHR-TEAMS', 'OZHCR-VHF', 'PA QSO PARTY',
       'PACC', 'PCC', 'POTA', 'QCWA',

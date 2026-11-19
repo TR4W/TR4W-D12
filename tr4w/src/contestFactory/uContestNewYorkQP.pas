@@ -53,6 +53,43 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   overwrote a DOMESTIC MULTIPLIER line before CONTEST; that setting retired
   at M10 S2, and the restatement -- the whole of DescribeSession -- went at
   M11 S2 (plan 1.3). The trait is the one statement.
+
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (#88, 2026-11-19). The text is
+  docs/ContestRules/QSOParties/NewYork/NY-QSO-PARTY-Rules-2026-v1.1.md (v1.1,
+  2026-09-25, supplied by NY4I).
+
+  POINTS -- "Phone contact is worth 1 point per band ... CW contact is worth
+    2 points per band ... RTTY (or other valid digital mode) contact is worth
+    3 points per band." Phone is "SSB, FM, AM", so FM is phone. Digital was 1
+    until then: the legacy OnePhoneTwoCW tested CW-versus-not.
+
+  BANDS -- "All FCC allocated amateur frequencies (excluding the 30, 17, and
+    12 meter bands)". UsesBand; a WARC QSO is an automatic X-QSO.
+
+  MULTIPLIERS ONCE, OVERALL -- a New York entrant counts "US states (50), New
+    York Counties (62) and Canadian provinces (13) ... Maximum of 125
+    multipliers"; anyone else counts "New York counties for a maximum of 62
+    multipliers". A maximum equal to the size of the list is a count made once
+    in the contest, so GetFlags states no cfMultByBand or cfMultByMode (both
+    were set until then). A QSO still counts once on each band in each mode.
+
+  THE 13 PROVINCES -- "AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YT".
+    newyork.dom includes prov12.dom, which held twelve (no NT) under a header
+    that lists thirteen; NT is added there. newyork.dom is its only user.
+
+  STATED AS THE RULES SAY, UNCHANGED: two counties on a county line, no bonus
+    station, DX earns points but no multiplier (CountsAsMultiplier), the 62
+    county codes of newyork_cty.dom, the schedule, NY-QSO-PARTY.
+
+  NOT BUILT, OPEN FOR NY4I ON #88:
+    * "The first valid New York county logged will count as the multiplier
+      for New York" -- the county is one multiplier and the state of New York
+      a second, from one QSO. A QSO carries one domestic key, so an in-state
+      entrant's maximum is 124 here, not the sponsor's 125.
+    * MODES -- "Only digital modes that natively support the NYQP exchange
+      are permitted". Which submodes those are is not named, so UsesMode is
+      not stated (MODES_NOT_YET_STATED) and every digital QSO is credited.
  *)
 unit uContestNewYorkQP;
 
@@ -124,6 +161,9 @@ type
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* Every band but 30, 17 and 12 m -- see the body. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
          this contest (4.116.5), moved here at M8: a multiplier QTH of 'DX'
          earns no multiplier of any kind -- in any case since Q84 (NY4I,
@@ -145,7 +185,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
 function TContestNewYorkQP.CountsAsMultiplier(const aQso: ContestExchange;
@@ -161,9 +200,9 @@ begin
 end;
 
 (* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row NY-QSO-PARTY: status candidate; rules https://nyqp.org/wordpress/;
-   rules year 2026. CANDIDATE: date from a calendar, not yet checked against
-   the sponsor's rules. *)
+   row NY-QSO-PARTY: status verified (2026-11-19) against the sponsor's
+   2026 rules (header): "Third Saturday in October: October 17, 2026 1400
+   UTC ... 12 Hours", "from 14:00 UTC through 01:59 UTC". *)
 function TContestNewYorkQP.GetSchedule: string;
 begin
    Result := '3rd Saturday of October at 14:00 UTC for 12h';
@@ -271,20 +310,54 @@ end;
 
 function TContestNewYorkQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfMultByMode];
+   (* A QSO per band and mode; the multipliers ONCE, overall -- the header. *)
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
-(* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE
-   value. That is why the third number is stated rather than left to a
-   CW-versus-not test, which would be wrong here and silent about it. *)
+(* "If the portable or mobile station is operating from the intersection of
+   three or more NY counties, only two counties at a time may be counted for
+   the same contact" -- the 2026 rules agree with NY4I's ruling (header). *)
 function TContestNewYorkQP.GetCountyLineCountiesMax: integer;
 begin
    Result := 2;
 end;
 
+(* PHONE 1, CW 2, RTTY/DIGITAL 3 -- the 2026 rules (header). FM is phone
+   ("Phone only (SSB, FM, AM)"), so it is stated beside Phone: the shared
+   FixedModePoints gives FM the "other" value, which here is digital's 3.
+   An off-band QSO never reaches here (UsesBand). Both and NoMode are not
+   modes a contact is made in. *)
 procedure TContestNewYorkQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+   case aQso.Mode of
+      CW:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 1;
+         end;
+      Digital:
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+(* "All FCC allocated amateur frequencies (excluding the 30, 17, and 12 meter
+   bands) are available for QSO credit." Every band TR4W names but the three
+   WARC bands -- BandLight included, as the text excludes only those three. *)
+function TContestNewYorkQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10,
+                       Band6, Band2, Band222, Band432, Band902, Band1296,
+                       Band2304, Band3456, Band5760, Band10G, Band24G,
+                       BandLight];
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
