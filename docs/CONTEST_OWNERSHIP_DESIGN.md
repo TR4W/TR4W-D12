@@ -3148,7 +3148,7 @@ and the identifiers the arms called) and classified:
 | `Tree.LooksLikeAGrid` (reads `ActiveExchange`) | TRDOS helper | its two halves LIFTED to the leaf `uGridShape` -- `GRID_CARRYING_EXCHANGES` and `LooksLikeGridSquare`; Tree's two grid tests ask both (one copy of the shape where there were two); the class is handed the session's exchange as data |
 | the `RSTAndPOTAPark` exchange SHAPE: LOGSTUFF's parser (`ProcessRSTAndPOTAPark`), `ExchangeInformation`, ParametersOkay's blank-exchange test, the park-name display | engine (shape) | **STAYS** -- shapes name no contest and retire with the shared sets at M10 (Q4). The base's `ParseReceivedExchange` already hands the session's shape to it |
 | the n-fer queue (`uPOTAParks`), `TryLogContact`'s drain, Repeat POTA Parks | engine | **STAYS**, untouched -- one contact, one row per park in one QSO set, exactly as before |
-| the park list, its download, the schema's `my_park`/`rcvd_park` | POTA DATA | **STAYS** |
+| the park list, its download, the schema's `my_park` (`rcvd_park` was never written and went in schema 11) | POTA DATA | **STAYS** |
 
 **WHY LEAVES, NOT SERVICES.** All three helpers are pure functions of their
 text (the grid test once its global is a parameter), so a station-context

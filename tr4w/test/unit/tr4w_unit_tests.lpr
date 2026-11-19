@@ -798,6 +798,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* Log schema 10: the contest's own rule stored on the QSO (is_off_contest)
       -- the migration, the one-shot stamp, and a write that carries it back. *)
    uTestLogOffContest   in 'uTestLogOffContest.pas',
+   (* Log schema 11: sixteen never-written qso columns removed by a table
+      rebuild -- over a real schema-10 file (issue 94). *)
+   uTestLogDroppedColumns in 'uTestLogDroppedColumns.pas',
    (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
       uses (the generalised issue 300 rule), the contest's use of a value,
       Edit QSO's check of a changed value, and the station-value correction. *)
@@ -1458,6 +1461,7 @@ begin
    RegisterSuite(TLogYearSentTests.Create('LogYearSent'));
    RegisterSuite(TLogStationFactsTests.Create('LogStationFacts'));
    RegisterSuite(TLogOffContestTests.Create('LogOffContest'));
+   RegisterSuite(TLogDroppedColumnsTests.Create('LogDroppedColumns'));
    RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));

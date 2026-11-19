@@ -96,9 +96,11 @@ procedure WriteDamagedTestLog(const aFileName: string);
 procedure ScrubTestLog(const aFileName: string);
 
 (* A LOG TAKEN BACK TO AN OLDER SCHEMA, ON DISK -- R4, 2026-10-23. Opened at
-  the current schema, then EVERY addition made after aToVersion is removed
-  and user_version is stamped aToVersion:
+  the current schema, then EVERY addition made after aToVersion is removed,
+  every REMOVAL is put back, and user_version is stamped aToVersion:
 
+    v11 the LOG_V11_DROPPED_QSO_COLUMNS are ADDED back, at the end of the
+        table (see there)
     v10 qso.is_off_contest and its stamp mark (the contest's rule, stored)
     v9  the LOG_V9_QSO_COLUMNS and their backfill mark (all MY_ values)
     v8  qso.year_sent and the session_state backfill mark (issue 300)
@@ -237,6 +239,22 @@ begin
       if aToVersion < 2 then
          begin
          db.Connection.ExecuteDirect('DROP TABLE session_state');
+         end;
+      if aToVersion < 11 then
+         begin
+         (* Schema 11 REMOVED sixteen qso columns; an older log has them. Put
+           back LAST, after every drop above, because each of those drops the
+           table's tail and these would otherwise be it. So they sit at the
+           END here, not mid-table where a real old log has them: the
+           migration copies by name, so that is the same test of it, and the
+           real shape is pinned by uTestLogDroppedColumns' schema-10 fixture
+           and by the corpus logs. *)
+         for i := Low(LOG_V11_DROPPED_QSO_COLUMNS) to High(LOG_V11_DROPPED_QSO_COLUMNS) do
+            begin
+            db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso ADD COLUMN ' +
+                                                   string(LOG_V11_DROPPED_QSO_COLUMNS[i].Name) + ' ' +
+                                                   string(LOG_V11_DROPPED_QSO_COLUMNS[i].Declaration)));
+            end;
          end;
       (* user_version IS settable inside a transaction, so the stamp rides
         with the drops and there is one commit. *)

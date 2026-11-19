@@ -432,7 +432,7 @@ program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
 NY4I: *"The QSO record should have all the MY_ values (such as MY_GRID)."*
 Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h.
 
-- **`LOG_SCHEMA_VERSION` WAS 3 HERE (10 since 2026-11-19; each later schema
+- **`LOG_SCHEMA_VERSION` WAS 3 HERE (11 since 2026-11-19; each later schema
   has its section below). ONCE A
   SCHEMA-3 BUILD HAS OPENED A LOG, NO EARLIER 5.0.x BUILD CAN OPEN IT**
   (accepted by NY4I). `Open` migrates;
@@ -852,6 +852,53 @@ column classes: `docs/LOG_SCHEMA.md`.
   change and the next rescore). Tests: `uTestLogOffContest`,
   `uTestAutomaticXQSO` (the rule flipped under a logged QSO), `uTestLogStore`
   (`TestAnAppendStoresTheContestsRule`), `uTestLogBinaryFile` (offset 330).
+
+## SCHEMA 11: SIXTEEN UNUSED COLUMNS REMOVED BY A TABLE REBUILD (issue 94, 2026-11-19)
+
+NY4I: `my_*` is OUR station, `rcvd_*` the worked one, *"as long as that is
+consistent, I do not see why we would keep those fields"*. Plan section 12o;
+`docs/LOG_SCHEMA.md` section 1 and 4.
+
+- **Removed** (`uLogSchema.LOG_V11_DROPPED_QSO_COLUMNS`, name + old
+  declaration): `snr_sent`, `snr_received`, `rcvd_state`, `rcvd_county`,
+  `rcvd_section`, `rcvd_grid`, `rcvd_continent`, `rcvd_postal_code`,
+  `rcvd_society`, `rcvd_department`, `rcvd_rda`, `rcvd_park`, `rcvd_summit`,
+  `rcvd_iota`, `rcvd_coords`, `cty_itu_zone`. Never written or read by any
+  build (re-verified: src, tools, scripts, Python, `git log -S`); NULL in every
+  corpus log. A received QTH of any kind is `rcvd_qth`. **Kept: `rcvd_year`.**
+- **A REMOVAL IS A REBUILD, NEVER `ALTER TABLE DROP COLUMN`.** DROP COLUMN
+  needs 3.35 and the Linux tarball and macOS use the system library (published
+  package versions, not measured: Ubuntu 20.04 has 3.31, Debian 11 3.34;
+  measured: linux-ci 3.45.1, which the AppImage
+  bundles; mac-ci 3.54.0); it fails on 3.42+ distro builds around comment
+  lines (#141); and it cuts the stored CREATE text. `TLogDatabase.RebuildQsoTable`:
+  rename the old table to `qso_before_v11` FIRST (a table renamed INTO `qso`
+  gets its stored text rewritten), create `LOG_QSO_TABLE`, copy kept columns
+  BY NAME, restore the `sqlite_sequence` mark (the copy leaves it at
+  `max(id)`; Clear Log makes it lower than the old mark), drop the old table,
+  recreate `LOG_QSO_INDEXES`. Last in `MigrateSchema`, same transaction, one
+  commit. A migrated `qso` is a new log's text for text.
+- **`LOG_QSO_TABLE` and `LOG_QSO_INDEX_*` are named constants** that
+  `LOG_SCHEMA_STATEMENTS` lists and the rebuild runs: one text, two callers.
+  A test pins that `LOG_QSO_INDEXES` is exactly the schema's qso indexes.
+- **Refused before any change**: a trigger on `qso`, any view, a foreign key
+  to `qso` (the rebuild would destroy or misdirect it), and a column this
+  program never made (the copy names it and fails; the list is NOT
+  intersected with the new table, so nothing is lost in silence).
+- **NEVER READ A LIST THROUGH `group_concat` + `PragmaAsString`.** MEASURED:
+  sqlite3conn makes an expression column (no declared type) an ftString of
+  255 and CUTS a longer value silently. The first rebuild read qso's column
+  list that way, dropped every column past character 255, and the copy reset
+  `is_off_contest` to 0; the fixture test caught it. Use
+  `TLogDatabase.PragmaRowsAsText` (one row per value). The same trap applies
+  to any test that compares a `group_concat` of long text.
+- **No migration takes a backup first** -- this one neither. Issue 94's comment
+  said "as the earlier migrations do"; they do not. Open for NY4I.
+- **Tests: `uTestLogDroppedColumns`**, over a REAL schema-10 file
+  (`test/unit/fixtures/logdb/florida_qp_schema10.db`: the corpus florida_qp
+  log migrated 2 -> 10 by the schema-10 build's headless `/EXPORT`).
+  `DowngradeTestLog` below 11 ADDS the sixteen back, at the END of the table,
+  after its drops, so every older migration test runs through the rebuild.
 
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 

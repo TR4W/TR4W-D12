@@ -32,6 +32,13 @@ structurally rather than as a complaint.
 
 ### 2. Eleven `rcvd_*` columns have no record source, because the record has ONE polymorphic QTH field
 
+> **SCHEMA 11 (2026-11-19, issue 94) REMOVED THEM.** No contest class ever filled
+> these columns, and NY4I ruled to delete them: `my_*` is our station, `rcvd_*`
+> the worked one, and a received QTH is `rcvd_qth`. The removal covered the
+> eleven named below, plus `rcvd_county`, `rcvd_continent`, `snr_sent`,
+> `snr_received` and `cty_itu_zone`. This finding is the history of why they
+> existed. See `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12o.
+
 The schema names `rcvd_state`, `rcvd_section`, `rcvd_grid`, `rcvd_postal_code`,
 `rcvd_society`, `rcvd_department`, `rcvd_rda`, `rcvd_park`, `rcvd_summit`,
 `rcvd_iota` and `rcvd_coords`. The record has **`QTHString`** — *"QTH received by
@@ -271,9 +278,9 @@ Not omissions — destinations. Listed so nobody looks for a field to fill them.
 | `my_county`, `my_grid`, `my_state` | **Phase C** — tier 3, from the station globals at the moment of the QSO |
 | `freq_rx_hz` | **written as a copy of `freq_tx_hz`**, and `is_split` as 0. The record carries ONE `Frequency` and no split state, so that is the honest limit of a binary log rather than a claim about the contact. NY4I, 2026-09-01: not split means the two ARE the same, and split should be **stated, not inferred from a NULL** — NULL would otherwise mean both "same as tx" and "not known". Live logging can do better (the radio knows) in Phase C |
 | `is_split` | as above — explicit, never inferred |
-| `snr_sent`, `snr_received` | WSJT-X dB reports, which the record squeezes into `RSTReceived` |
-| `cty_itu_zone` | the contest factory. `QTH.Zone` is one byte for both zones |
-| the eleven specific `rcvd_*` | the contest factory. Finding 2 |
+| ~~`snr_sent`, `snr_received`~~ | never filled; **removed in schema 11** (issue 94) |
+| ~~`cty_itu_zone`~~ | never filled; **removed in schema 11** (issue 94) |
+| ~~the eleven specific `rcvd_*`~~ | never filled; **removed in schema 11** (issue 94). Finding 2 |
 | `notes`, `sent_udp`, `udp_dirty` | new state with no predecessor |
 | `contest`.* | the contest row, at log creation (Phase C/E) |
 
