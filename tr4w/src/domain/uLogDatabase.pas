@@ -179,6 +179,14 @@ type
 function LogExportFileName(const aLogPath: string;
                            aKind: TLogExportKind): string;
 
+(* A CONTEST'S SECOND EXPORT FILE (issue 272): the same name with -<aTag>
+  before the extension, so "<log>-ft.adi" sorts beside "<log>.adi". The tag is
+  the contest's (DistinctAdditionalExportFileTag) and is written as given; an
+  empty tag answers the plain name, so the two files can never be one. *)
+function LogExportFileNameTagged(const aLogPath: string;
+                                 aKind: TLogExportKind;
+                                 const aTag: string): string;
+
 (* THE file: URI THAT OPENS aFileName IMMUTABLE -- see OpenToPeek. Public so
   the escaping is pinned by a test, the UNC form included. *)
 function ImmutableURI(const aFileName: string): AnsiString;
@@ -665,6 +673,18 @@ const
       ('.adi', '.log', '.csv');
 begin
    Result := ChangeFileExt(aLogPath, EXPORT_EXTENSION[aKind]);
+end;
+
+function LogExportFileNameTagged(const aLogPath: string;
+                                 aKind: TLogExportKind;
+                                 const aTag: string): string;
+begin
+   if aTag = '' then
+      begin
+      Result := LogExportFileName(aLogPath, aKind);
+      Exit;
+      end;
+   Result := LogExportFileName(ChangeFileExt(aLogPath, '') + '-' + aTag, aKind);
 end;
 
 function TLogConnection.CodedFailure(E: EDatabaseError): ESQLDatabaseError;

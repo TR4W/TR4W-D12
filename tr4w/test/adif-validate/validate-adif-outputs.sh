@@ -218,6 +218,33 @@ if [ "$cons_total" -gt 0 ]; then
    sort "$WORK/cons-kinds.txt" | uniq -c | sort -rn | head -12 | sed 's/^/    /'
 fi
 
+# ---- adifmt (flwyd/adif-multitool), ADVISORY. NY4I, 2026-11-19: adifmt should
+# supersede the vendored validator, and it knows ADIF 3.1.8 (JTTY). It is a Go
+# program installed with `go install`, which a clean clone cannot do without a
+# network fetch, so it is NOT the gate: when it is on PATH (or in ~/go/bin) its
+# WARNING and ERROR lines are counted and the first few shown; when it is not,
+# one line says so. Never a verdict until it can be vendored as a binary.
+ADIFMT=""
+if command -v adifmt >/dev/null 2>&1; then
+   ADIFMT="adifmt"
+elif [ -x "$HOME/go/bin/adifmt.exe" ]; then
+   ADIFMT="$HOME/go/bin/adifmt.exe"
+elif [ -x "$HOME/go/bin/adifmt" ]; then
+   ADIFMT="$HOME/go/bin/adifmt"
+fi
+echo
+if [ -z "$ADIFMT" ]; then
+   echo "adifmt: not installed here -- advisory pass skipped (go install github.com/flwyd/adif-multitool/cmd/adifmt@latest)"
+else
+   : > "$WORK/adifmt-findings.txt"
+   while read -r src f; do
+      "$ADIFMT" validate "$(native "$f")" 2>&1 >/dev/null | grep -E '^(WARNING|ERROR) on ' \
+         | sed "s|^\(WARNING\|ERROR\) on [^ ]* |\1 $src $(basename "$f") |" >> "$WORK/adifmt-findings.txt"
+   done < "$LIST"
+   echo "adifmt $("$ADIFMT" version 2>&1 | head -1): $(grep -c '^ERROR' "$WORK/adifmt-findings.txt") error(s), $(grep -c '^WARNING' "$WORK/adifmt-findings.txt") warning(s) (advisory, NOT a verdict; all in $WORK/adifmt-findings.txt)"
+   sed 's/ record [0-9]*:/:/' "$WORK/adifmt-findings.txt" | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
+fi
+
 echo
 if [ -n "$crashed" ]; then
    echo "=== ADIF validation: FAILED -- the validator crashed on:$crashed ==="

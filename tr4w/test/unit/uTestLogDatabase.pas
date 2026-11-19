@@ -1098,6 +1098,14 @@ begin
    (* The binary log's name, which is what TR4W_LOG_FILENAME still holds. *)
    CheckEquals(LOG + '.log', LogExportFileName(LOG + '.TRW', lekCabrillo),
                'whatever the log''s own extension was, it is replaced');
+   (* A contest's second file (issue 272): the tag goes before the extension. *)
+   CheckEquals(LOG + '-ft.adi', LogExportFileNameTagged(LOG + '.db', lekADIF, 'ft'),
+               'the second ADIF is <log>-<tag>.adi');
+   CheckEquals(LOG + '.adi', LogExportFileNameTagged(LOG + '.db', lekADIF, ''),
+               'no tag, the plain name');
+   CheckTrue(LogExportFileNameTagged(LOG + '.db', lekADIF, 'ft') <>
+             LogExportFileName(LOG + '.db', lekADIF),
+             'the second file never overwrites the first');
 end;
 
 procedure TLogDatabaseTests.TestExportNamesKeepSpacesAndTheDirectory;
