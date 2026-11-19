@@ -481,6 +481,23 @@ function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
                          const aSent: AnsiString; tailEmitter: TContestTailEmitter;
                          aContest: TContestBase): string;
 
+(* THE QSOs A CONTEST SENDS TO ITS SECOND ADIF FILE (issue 272), picked out of
+  the three parallel arrays an export holds -- records[i], aMyFacts[i] and
+  aSentExchanges[i] are one QSO -- TOGETHER, with one index, so they cannot
+  fall out of step. The out arrays hold the picked QSOs in log order; a QSO is
+  picked when aContest.GoesToDistinctAdditionalExport says so (nothing, for a
+  contest that states no second file). aMyFacts and aSentExchanges must be as
+  long as records. pickedNotRecorded counts the picked rows that recorded no
+  station of their own. *)
+procedure PickDistinctExportRecords(aContest: TContestBase;
+                                    const records: TContestExchangeArray;
+                                    const aMyFacts: TQsoMyFactsArray;
+                                    const aSentExchanges: TSentExchangeArray;
+                                    out pickedRecords: TContestExchangeArray;
+                                    out pickedFacts: TQsoMyFactsArray;
+                                    out pickedSent: TSentExchangeArray;
+                                    out pickedNotRecorded: integer);
+
 // THE SAME, WITH EACH RECORD'S OWN STATION -- aMyFacts[i] is records[i]'s,
 // and is what EmitADIFMyStationFields writes after the tail. Shorter than
 // records, or nil, means the records past its end were never captured.
@@ -2803,6 +2820,42 @@ begin
       end;
    Result := Result + EmitADIFMyStationFields(rec, aFacts, Result);
    Result := Result + '<EOR>'#13#10;
+end;
+
+procedure PickDistinctExportRecords(aContest: TContestBase;
+                                    const records: TContestExchangeArray;
+                                    const aMyFacts: TQsoMyFactsArray;
+                                    const aSentExchanges: TSentExchangeArray;
+                                    out pickedRecords: TContestExchangeArray;
+                                    out pickedFacts: TQsoMyFactsArray;
+                                    out pickedSent: TSentExchangeArray;
+                                    out pickedNotRecorded: integer);
+var
+   i : Integer;
+   n : Integer;
+begin
+   SetLength(pickedRecords, 0);
+   SetLength(pickedFacts, 0);
+   SetLength(pickedSent, 0);
+   pickedNotRecorded := 0;
+   n := 0;
+   for i := 0 to High(records) do
+      begin
+      if aContest.GoesToDistinctAdditionalExport(records[i]) then
+         begin
+         Inc(n);
+         SetLength(pickedRecords, n);
+         SetLength(pickedFacts, n);
+         SetLength(pickedSent, n);
+         pickedRecords[n - 1] := records[i];
+         pickedFacts[n - 1]   := aMyFacts[i];
+         pickedSent[n - 1]    := aSentExchanges[i];
+         if pickedFacts[n - 1].Source = mfsNotCaptured then
+            begin
+            Inc(pickedNotRecorded);
+            end;
+         end;
+      end;
 end;
 
 function ExportADIFToString(const records: TContestExchangeArray;

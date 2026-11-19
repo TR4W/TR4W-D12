@@ -2818,6 +2818,155 @@ begin
    end;
 end;
 
+(* ONE ADIF FILE, written to the export file that is OPEN (OpenExportFile or
+  OpenExportFileNamed) and closed here: the banner, the header and every
+  record. The arrays are parallel -- myFacts[i] and sentExchanges[i] are
+  records[i]'s -- and are passed whole so they cannot be filtered apart.
+  True when the file is in place; False has told the operator why.
+
+  THE EXCHANGE-FAILURE REPORT IS PER FILE: it begins and ends here, so a
+  second file of the same export counts and warns on its own. *)
+function WriteADIFDocument( const records: TContestExchangeArray;
+   const myFacts: TQsoMyFactsArray; const sentExchanges: TSentExchangeArray;
+   notRecorded: integer; dtReportTime: TDateTime ): boolean;
+  var
+    dataModeNote: string;
+    adifStr: string;
+  begin
+  (* Banner lines (pre-header, kept for compatibility with older ADIF
+    consumers that expect the "Created by TR4W..." comment). Written HERE,
+    after the records are read, because the free-text header also says how
+    many generic DATA-mode QSOs were exported as RTTY (NY4I, 2026-10-23) --
+    counted over the array already in memory, so the log is walked once. The
+    line is absent when there are none, and holds no '<' (ADI header text). *)
+  sWriteFileFromString( tReportFileWrite, 'ADIF File'#13#10 );
+  sWriteFileFromString( tReportFileWrite, 'Created by TR4W version ' +
+     TR4W_CURRENTVERSION + '-D12' + ' on ' +
+     FormatDateTime( 'mmm-dd-yyyy hh:mm:ss', dtReportTime ) + #13#10 );
+  dataModeNote := uADIF.ADIFGenericDataModeNote(
+     uADIF.CountGenericDataModeQSOs( records ) );
+  if dataModeNote <> '' then
+     begin
+     (* AnsiString(...) is deliberate: the note is ASCII by construction (a
+       count and fixed English), so the narrowing is bounded. *)
+     sWriteFileFromString( tReportFileWrite, AnsiString( dataModeNote + #13#10 ) );
+     end;
+
+  (* RULING A'S LOG LINE, ONCE PER FILE: a row written before schema 3
+    recorded no station, so what is written about ours comes from this
+    session. *)
+  if notRecorded > 0 then
+     begin
+     logger.Info( 'ADIF export: %d QSO(s) recorded no station of their own ' +
+        '(logged before log schema 3); their station call and park are this ' +
+        'session''s, and no other MY_ field is written for them', [ notRecorded ] );
+     end;
+
+  // Build the whole ADIF document (header + records + tail extras) and
+  // write it as one block.  The per-record body lives in
+  // uADIF.EmitADIFRecord; the contest-specific extras come from the
+  // EmitContestSpecificTailForExport callback above.
+  BeginExchangeFailureReport;
+  (* The active contest carries the station, which a contest's field list can
+    depend on (ARRL DX: does the entrant count the DX multiplier). uADIF asks
+    it only for QSOs of its own contest, and nil for a classless one. *)
+  adifStr := uADIF.ExportADIFToString( records, myFacts, sentExchanges, string( TR4W_CURRENTVERSION ),
+     @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
+  sWriteFileFromString( tReportFileWrite, adifStr );
+
+  Result := CloseExportFile( True );
+  (* ONE WARNING FOR THE FILE, after it is complete (F25/F26). *)
+  ReportExchangeFailures( 'ADIF',
+     'STX_STRING was left out of those records, their other fields are written' );
+  end;
+
+(* THE MODES A CONTEST SENDS TO ITS OWN FILE, as the operator reads them
+  ("FT8, FT4"), for the prompt and the Cabrillo notice. *)
+function DistinctADIFModeNames( aContest: TContestBase ): string;
+  var
+    m: ExtendedModeType;
+  begin
+  Result := '';
+  for m := Low( ExtendedModeType ) to High( ExtendedModeType ) do
+     begin
+     if m in aContest.DistinctAdditionalExportModes then
+        begin
+        if Result <> '' then
+           begin
+           Result := Result + ', ';
+           end;
+        Result := Result + string( ExtendedModeStringArray[ m ] );
+        end;
+     end;
+  end;
+
+(* THE NAME OF THE CONTEST'S SECOND ADIF FILE -- the log's, with the contest's
+  tag. ONE PLACE: the ADIF writer and the Cabrillo's notice both name it. *)
+function DistinctADIFFileName( aContest: TContestBase ): string;
+  begin
+  Result := LogExportFileNameTagged( CharBufferText( TR4W_LOG_FILENAME ),
+     lekADIF, aContest.DistinctAdditionalExportFileTag );
+  end;
+
+(* THE CONTEST'S SECOND ADIF FILE (issue 272): when the contest states one
+  (DistinctAdditionalExportFormat = defADIF) and the log has QSOs for it, ask
+  the operator and write "<log>-<tag>.adi" holding ONLY those QSOs. The first
+  file keeps every QSO. A headless export (tSilentExport) does not ask: it
+  writes the file, because the contest's Cabrillo leaves these QSOs out and
+  the run would otherwise lose them. A file that cannot be written has told
+  the operator; the first file is already in place and is not touched. *)
+procedure WriteDistinctAdditionalADIF( const records: TContestExchangeArray;
+   const myFacts: TQsoMyFactsArray; const sentExchanges: TSentExchangeArray;
+   dtReportTime: TDateTime );
+  var
+    rules: TContestBase;
+    pickedRecords: TContestExchangeArray;
+    pickedFacts: TQsoMyFactsArray;
+    pickedSent: TSentExchangeArray;
+    pickedNotRecorded: integer;
+    fileName: string;
+  begin
+  rules := ContestIdentity( Contest );
+  if rules.DistinctAdditionalExportFormat <> defADIF then
+     begin
+     Exit;
+     end;
+  PickDistinctExportRecords( rules, records, myFacts, sentExchanges,
+     pickedRecords, pickedFacts, pickedSent, pickedNotRecorded );
+  if Length( pickedRecords ) = 0 then
+     begin
+     Exit;
+     end;
+  fileName := DistinctADIFFileName( rules );
+  if fileName = CharBufferText( tReportsFilename ) then
+     begin
+     (* A contest that states no tag would overwrite the first file. Both
+       names come from LogExportFileName(Tagged) on the one log name, so the
+       plain comparison is exact. *)
+     logger.Error( 'ADIF export: the contest states a second ADIF file but ' +
+        'no file tag, so it would overwrite ' + fileName + '; not written' );
+     Exit;
+     end;
+  if ( not tSilentExport ) and
+     ( YesOrNo( sysutils.Format( TC_DISTINCTADIFPROMPT,
+        [ DistinctADIFModeNames( rules ), Length( pickedRecords ),
+        ExtractFileName( fileName ) ] ) ) <> IDYES ) then
+     begin
+     logger.Info( 'ADIF export: the second file %s was declined', [ fileName ] );
+     Exit;
+     end;
+  if not OpenExportFileNamed( fileName ) then
+     begin
+     Exit;
+     end;
+  if WriteADIFDocument( pickedRecords, pickedFacts, pickedSent,
+        pickedNotRecorded, dtReportTime ) then
+     begin
+     logger.Info( 'ADIF export: %d %s QSO(s) written to %s',
+        [ Length( pickedRecords ), DistinctADIFModeNames( rules ), fileName ] );
+     end;
+  end;
+
 procedure ExportToADIF;
   var
     records: TContestExchangeArray;
@@ -2828,9 +2977,7 @@ procedure ExportToADIF;
     rowSent: AnsiString;
     rowFacts: TQsoMyFacts;
     notRecorded: integer;
-    dataModeNote: string;
     dtReportTime: TDateTime;
-    adifStr: string;
     exportKept: boolean;
   begin
   dtReportTime := Now;
@@ -2881,52 +3028,13 @@ procedure ExportToADIF;
         end;
      end;
 
-  (* Banner lines (pre-header, kept for compatibility with older ADIF
-    consumers that expect the "Created by TR4W..." comment). Written HERE,
-    after the records are read, because the free-text header also says how
-    many generic DATA-mode QSOs were exported as RTTY (NY4I, 2026-10-23) --
-    counted over the array already in memory, so the log is walked once. The
-    line is absent when there are none, and holds no '<' (ADI header text). *)
-  sWriteFileFromString( tReportFileWrite, 'ADIF File'#13#10 );
-  sWriteFileFromString( tReportFileWrite, 'Created by TR4W version ' +
-     TR4W_CURRENTVERSION + '-D12' + ' on ' +
-     FormatDateTime( 'mmm-dd-yyyy hh:mm:ss', dtReportTime ) + #13#10 );
-  dataModeNote := uADIF.ADIFGenericDataModeNote(
-     uADIF.CountGenericDataModeQSOs( records ) );
-  if dataModeNote <> '' then
-     begin
-     (* AnsiString(...) is deliberate: the note is ASCII by construction (a
-       count and fixed English), so the narrowing is bounded. *)
-     sWriteFileFromString( tReportFileWrite, AnsiString( dataModeNote + #13#10 ) );
-     end;
-
-  (* RULING A'S LOG LINE, ONCE PER EXPORT: a row written before schema 3
-    recorded no station, so what is written about ours comes from this
-    session. *)
-  if notRecorded > 0 then
-     begin
-     logger.Info( 'ADIF export: %d QSO(s) recorded no station of their own ' +
-        '(logged before log schema 3); their station call and park are this ' +
-        'session''s, and no other MY_ field is written for them', [ notRecorded ] );
-     end;
-
-  // Build the whole ADIF document (header + records + tail extras) and
-  // write it as one block.  The per-record body lives in
-  // uADIF.EmitADIFRecord; the contest-specific extras come from the
-  // EmitContestSpecificTailForExport callback above.
-  BeginExchangeFailureReport;
-  (* The active contest carries the station, which a contest's field list can
-    depend on (ARRL DX: does the entrant count the DX multiplier). uADIF asks
-    it only for QSOs of its own contest, and nil for a classless one. *)
-  adifStr := uADIF.ExportADIFToString( records, myFacts, sentExchanges, string( TR4W_CURRENTVERSION ),
-     @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
-  sWriteFileFromString( tReportFileWrite, adifStr );
-
-  exportKept := CloseExportFile( True );
+  exportKept := WriteADIFDocument( records, myFacts, sentExchanges,
+     notRecorded, dtReportTime );
   LogSourceClose;
-  (* ONE WARNING FOR THE RUN, after the file is complete (F25/F26). *)
-  ReportExchangeFailures( 'ADIF',
-     'STX_STRING was left out of those records, their other fields are written' );
+  (* THE CONTEST'S SECOND ADIF FILE, when it states one (issue 272). Written
+    before the preview, which shows the file at tReportsFilename and nothing
+    else. *)
+  WriteDistinctAdditionalADIF( records, myFacts, sentExchanges, dtReportTime );
   (* NO PREVIEW OF A FILE THAT IS NOT THERE (issue 313): CloseExportFile has
     told the operator. *)
   if exportKept then
@@ -3281,6 +3389,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         previousqsonr: integer;
         serialDigitsSent, serialDigitsReceived: integer;
         contacts: integer;
+        (* QSOs the contest sends to its own ADIF file instead (issue 272). *)
+        leftOutOfCabrillo: integer;
         PreviousQTHString: Str10;
         slOperators: TStringList;
 
@@ -3295,6 +3405,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         contest test it carried. *)
       PreviousQTHString := '';
       contacts := 0;
+      leftOutOfCabrillo := 0;
       BeginExchangeFailureReport;
       exportContest := ContestIdentity( Contest );
       stationContest := ActiveContest( Contest );
@@ -3328,6 +3439,18 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         1:
           if LogSourceNext( TempRXData, rowMyFacts ) then
              begin
+             (* A QSO THE CONTEST TAKES IN AN ADIF FILE OF ITS OWN IS NOT A
+               CABRILLO LINE (issue 272: Vermont's FT QSOs). Left out before
+               anything counts it, so the record numbers, the previous
+               exchange and the previous QTH are those of the lines that ARE
+               written. GoodLookingQSO is not changed: the ADIF and the
+               operator list count the same records as ever. *)
+             if GoodLookingQSO and
+                exportContest.GoesToDistinctAdditionalExport( TempRXData ) then
+                begin
+                inc( leftOutOfCabrillo );
+                goto 1;
+                end;
              inc( contacts );
              // slOperators.Add(TempRXData.ceOperator);
 
@@ -3559,6 +3682,17 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
           LogSourceClose;
           Result := true;
+          if leftOutOfCabrillo > 0 then
+             begin
+             (* Said once, after the file: the operator exporting only the
+               Cabrillo must know those QSOs are in the ADIF. Silent in a
+               headless run (MainUnit.ShowMessage), where the log has it. *)
+             logger.Info( 'Cabrillo export: %d QSO(s) left out, the contest ' +
+                'takes them as an ADIF file of their own', [ leftOutOfCabrillo ] );
+             ShowMessage( sysutils.Format( TC_DISTINCTADIFNOTINCABRILLO,
+                [ leftOutOfCabrillo, DistinctADIFModeNames( exportContest ),
+                ExtractFileName( DistinctADIFFileName( exportContest ) ) ] ) );
+             end;
           ReportExchangeFailures( 'Cabrillo',
              'the marker ' + CabrilloExchangeErrorMarker +
              ' is written in their exchange columns, which a robot rejects' );

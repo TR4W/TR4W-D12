@@ -316,7 +316,22 @@ type
 
       (* WHAT THE EXCHANGE CARRIES -- a domestic QTH (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+
+      (* THE FT QSOs GO IN AN ADIF FILE OF THEIR OWN, NEVER IN THE CABRILLO --
+         issue 272 (NY4I, 2026-11-19: "for the FTx contacts, we do NOT send a
+         Cabrillo file for those but an ADIF file"; RTTY goes in the regular
+         Cabrillo). The modes are the WSJT-X ones the class already treats as
+         7B(f)'s "FT8 and other WSJTx modes" (VERMONT_WSJTX_MODES). *)
+      function DistinctAdditionalExportFormat: TDistinctExportFormat; override;
+      function DistinctAdditionalExportModes: TExtendedModes; override;
+      function DistinctAdditionalExportFileTag: string; override;
    end;
+
+const
+   (* THE WSJT-X MODES -- the one list: IsWSJTXQSO and the separate ADIF file
+     (DistinctAdditionalExportModes) both read it. ADIF has no FT2 here
+     because the extended-mode list has none. *)
+   VERMONT_WSJTX_MODES: TExtendedModes = [eFT8, eFT4, eJT65, eFST4, eFST4W];
 
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER, applied to a score -- QRP x2,
    LOW x1.5 (Round, half to even), HIGH and unset x1. Public so the test can
@@ -362,7 +377,22 @@ end;
 function IsWSJTXQSO(const aQso: ContestExchange): boolean;
 begin
    Result := (aQso.Mode = Digital) and
-             (aQso.ExtMode in [eFT8, eFT4, eJT65, eFST4, eFST4W]);
+             (aQso.ExtMode in VERMONT_WSJTX_MODES);
+end;
+
+function TContestVermontQP.DistinctAdditionalExportFormat: TDistinctExportFormat;
+begin
+   Result := defADIF;
+end;
+
+function TContestVermontQP.DistinctAdditionalExportModes: TExtendedModes;
+begin
+   Result := VERMONT_WSJTX_MODES;
+end;
+
+function TContestVermontQP.DistinctAdditionalExportFileTag: string;
+begin
+   Result := 'ft';
 end;
 
 function TContestVermontQP.GetDisplayName: string;

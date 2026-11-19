@@ -846,6 +846,17 @@ type
       IOTA reference (plan F6). *)
    TDomesticQTHAnswer = (dqaDecided, dqaLookUpDomesticFile);
 
+   (* A SET OF EXTENDED MODES -- the modes a contest sends to its own export
+     file (TContestBase.DistinctAdditionalExportModes). *)
+   TExtendedModes = set of ExtendedModeType;
+
+   (* THE FORMAT OF A CONTEST'S SECOND EXPORT FILE (issue 272, NY4I
+     2026-11-19). defNone: the contest has none. defADIF: the QSOs of
+     DistinctAdditionalExportModes are written to an ADIF file of their own
+     and LEFT OUT of the Cabrillo (Vermont: FT8/FT4 go in an ADIF, never in
+     the Cabrillo). *)
+   TDistinctExportFormat = (defNone, defADIF);
+
 const
    (* THE TWO STANDARD ZONE LISTS' SIZES -- the counts LOGDUPE's
       `case ZoneMult of` gave CQZones and ITUZones until M11 S5. Eight and
@@ -3010,6 +3021,26 @@ type
          sponsor in the Cabrillo exchange only. True on
          TContestStateQSOPartyBase; base False. *)
       function WritesADIFCounty: boolean; virtual;
+
+      (* A SECOND EXPORT FILE FOR SOME OF THE CONTEST'S QSOs -- issue 272
+         (NY4I, 2026-11-19: "the answer to which contacts go into a separate
+         file would be something resident in the contest class").
+
+         DistinctAdditionalExportFormat says whether there is one: defNone,
+         the base's answer, leaves every export as it is; defADIF means a
+         sponsor who takes those QSOs as an ADIF file and does NOT take them
+         in the Cabrillo. DistinctAdditionalExportModes names the extended
+         modes (a Digital QSO whose ExtMode is in the set), and
+         DistinctAdditionalExportFileTag the text that goes into the file's
+         name (uLogDatabase.LogExportFileName: "<log>-<tag>.adi").
+
+         GoesToDistinctAdditionalExport is the per-QSO question the writers
+         ask; a contest that needs more than a mode may override it (the
+         seam is the predicate, not the set). *)
+      function DistinctAdditionalExportFormat: TDistinctExportFormat; virtual;
+      function DistinctAdditionalExportModes: TExtendedModes; virtual;
+      function DistinctAdditionalExportFileTag: string; virtual;
+      function GoesToDistinctAdditionalExport(const aQso: ContestExchange): boolean; virtual;
 
       (* THE COUNTY NAME CNTY WRITES after the state and a comma -- PostUnit's
          CNTY block, asked only where WritesADIFCounty is True and the QTH is
@@ -7358,6 +7389,29 @@ function TContestBase.WritesADIFCounty: boolean;
 begin
    (* Not a party with an ADIF county enumeration -- see the declaration. *)
    Result := False;
+end;
+
+function TContestBase.DistinctAdditionalExportFormat: TDistinctExportFormat;
+begin
+   (* No second file -- see the declaration. *)
+   Result := defNone;
+end;
+
+function TContestBase.DistinctAdditionalExportModes: TExtendedModes;
+begin
+   Result := [];
+end;
+
+function TContestBase.DistinctAdditionalExportFileTag: string;
+begin
+   Result := '';
+end;
+
+function TContestBase.GoesToDistinctAdditionalExport(const aQso: ContestExchange): boolean;
+begin
+   Result := (DistinctAdditionalExportFormat <> defNone) and
+             (aQso.Mode = Digital) and
+             (aQso.ExtMode in DistinctAdditionalExportModes);
 end;
 
 function TContestBase.ADIFCountyName(const aQso: ContestExchange;
