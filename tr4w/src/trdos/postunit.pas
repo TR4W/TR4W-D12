@@ -132,6 +132,14 @@ type
     );
   }
 function GetMyExchangeForExport: string;
+
+(* THE ADIF COUNTY A ROVER'S PLACE LIES IN, in the active contest --
+  'HI,Hawaii' for KOH, 'GA,Appling' for APPL -- or '' when the place is no
+  county the contest's ADIF export knows. my_county of a QSO sent while
+  roving (issues 133 and 87): the SAME rule as the worked station's CNTY
+  (ADIFCountyOfQSO, below), so the two cannot disagree. *)
+function RoverPlaceADIFCounty( const aPlace: string ): string;
+
 function EDIContestName(const aSessionName: string; aContest: TContestHandle): string;
 procedure ExportToEDI;
 procedure ExportToEDIByBand( Band: BandType );
@@ -2472,7 +2480,8 @@ end;
   same zone" first means a QSO whose station did not move writes exactly what
   it did. *)
 function CurrentMyStationExchange(aContest: TContestBase;
-                                  const aFacts: TQsoMyFacts): TMyStationExchange; overload;
+                                  const aFacts: TQsoMyFacts;
+                                  const aRoverQTH: string): TMyStationExchange; overload;
 begin
    (* The rule is uContestBase.MyStationExchangeOfQSO, pinned there; this
      hands it the session's values and the two facts only the session knows:
@@ -2483,6 +2492,9 @@ begin
       SentZoneKindOfQSO( aContest, CTY.ctyZoneMode ),
       (* THE YEAR THE ROW SENT, in a contest that sends one (issue 300). *)
       ContestReceivedYearKind( aContest ) );
+   (* AND WHERE A ROVER SENT IT FROM (log schema 12): the record's
+     ceRoverQTH, '' for every QSO not sent while roving. *)
+   Result := MyStationExchangeWithRoverPlace( Result, aRoverQTH );
 end;
 
 (* OUR CALL FOR ONE LOGGED QSO is uLogSource.ExportCallFor (D5, log schema 3,
@@ -2573,7 +2585,7 @@ function ExchangeContest( aStation: TContestBase ): TContestBase;
   than a missing field. TryFormatADIFSentExchange has logged the contest,
   the QSO and the reason; this counts it for the once-per-export warning. *)
 function MyExchangeForExport(aContest: TContestBase; const aMyFacts: TQsoMyFacts;
-   const aSentExchange: AnsiString): string;
+   const aSentExchange: AnsiString; const aRoverQTH: string): string;
   var
     my: TMyStationExchange;
     failure: string;
@@ -2590,7 +2602,7 @@ function MyExchangeForExport(aContest: TContestBase; const aMyFacts: TQsoMyFacts
      Exit;
      end;
 
-  my := CurrentMyStationExchange(aContest, aMyFacts);
+  my := CurrentMyStationExchange(aContest, aMyFacts, aRoverQTH);
 
   Result := '';
   if not GoodLookingQSO then
@@ -2616,15 +2628,67 @@ function MyExchangeForExport(aContest: TContestBase; const aMyFacts: TQsoMyFacts
 // MyPark, mo.DomList, the active contest's zone list, etc.) or are gated on contest-specific
 // reinterpretation of QTHString.  Called once per record.
 // ---------------------------------------------------------------------------
+(* THE ADIF COUNTY OF A QSO'S QTH -- 'HI,Hawaii', 'GA,Appling' -- or '' when
+  the QTH is no county of aContest's (a state, a province, DX, a grid, a
+  party with no ADIF county enumeration). The CNTY the export writes for the
+  worked station, lifted out of it unchanged (issues 133 and 87) so our own
+  my_county while roving is the same rule: the party says whose county
+  (ADIFCountyState) and its name (ADIFCountyName over the multiplier list's
+  display name -- Hawaii's district-to-county crosswalk). aContest is the
+  object that holds the station; nil answers ''. *)
+function ADIFCountyOfQSO( aContest: TContestBase; const aQso: ContestExchange ): string;
+  var
+    cntyIdx: integer;
+    stateCode: string;
+    countyName: string;
+  begin
+  Result := '';
+  if aContest = nil then
+     begin
+     Exit;
+     end;
+  stateCode := aContest.ADIFCountyState( aQso );
+  if ( stateCode <> '' ) and aContest.WritesADIFCounty and
+     ( aQso.QTHString <> '' ) and
+     ( length( aQso.QTHString ) <> 2 ) then
+     begin
+     (* THE COUNTY NAME IS THE PARTY'S (ADIFCountyName, #118): the list's
+       display name for a party whose multipliers are counties, the county a
+       Hawaii district lies in, '' for none. *)
+     if mo.DomList.FindMult( aQso.QTHString, cntyIdx ) then
+        begin
+        countyName := aContest.ADIFCountyName(
+           aQso, string( mo.DomList.AltName[ cntyIdx ] ) );
+        if countyName <> '' then
+           begin
+           Result := stateCode + ',' + countyName;
+           end;
+        end;
+     end;
+  end;
+
+function RoverPlaceADIFCounty( const aPlace: string ): string;
+  var
+    place: ContestExchange;
+  begin
+  Result := '';
+  if Trim( aPlace ) = '' then
+     begin
+     Exit;
+     end;
+  place := Default( ContestExchange );
+  place.QTHString := ShortString( UpperCase( Trim( aPlace ) ) );
+  place.DomesticQTH := place.QTHString;
+  Result := ADIFCountyOfQSO( ActiveContest( Contest ), place );
+  end;
+
 function EmitContestSpecificTailForExport( const rec: ContestExchange;
    const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString ): string;
   var
     (* What the contest is handed for its own MY fields (POTA's park). *)
     myStation: TMyStationExchange;
     stxString: string;
-    cntyIdx: integer;
-    stateCode: string;
-    countyName: string;
+    countyText: string;
     qthForGrid: ShortString;
     (* THE ACTIVE CONTEST, FETCHED ONCE PER RECORD -- M11 S5. The zone sent
       (STX_STRING and the contest's exchange fields) and the CQZ/ITUZ tag ask
@@ -2651,7 +2715,8 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // round-trip tests rely on it being present without a tail emitter.
 
   // ----- STX_STRING (always, from MY side) -----
-  stxString := MyExchangeForExport( contestRules, aMyFacts, aSentExchange );
+  stxString := MyExchangeForExport( contestRules, aMyFacts, aSentExchange,
+                                    string( rec.ceRoverQTH ) );
   Result    := Result + EmitADIFField( 'STX_STRING',
      Trim( DeleteRepeatedSpaces( stxString ) ) );
 
@@ -2678,7 +2743,8 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   // MY_STATE from this park, and every contest's exchange fields from where
   // the station was for THIS QSO. A row that never recorded its station
   // keeps the session's (ruling A).
-  myStation := CurrentMyStationExchange( contestRules, aMyFacts );
+  myStation := CurrentMyStationExchange( contestRules, aMyFacts,
+                                         string( rec.ceRoverQTH ) );
   Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
      myStation, rec, ExchangeInformation.RST );
 
@@ -2690,23 +2756,12 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange;
   (* ASKED OF THE OBJECT THAT HOLDS THE STATION, as STATE is: a county is a
     QTH the station's domestic table knows (issue #134), and only that object
     carries the table. *)
-  stateCode := ContestForRecord( rec, contestRules ).ADIFCountyState( rec );
-  if ( stateCode <> '' ) and ContestForRecord( rec, contestRules ).WritesADIFCounty and
-     ( rec.QTHString <> '' ) and
-     ( length( rec.QTHString ) <> 2 ) then
+  (* ONE RULE FOR THE WORKED STATION'S CNTY AND OUR OWN my_county while
+    roving: ADIFCountyOfQSO (issues 133 and 87). *)
+  countyText := ADIFCountyOfQSO( ContestForRecord( rec, contestRules ), rec );
+  if countyText <> '' then
      begin
-     (* THE COUNTY NAME IS THE PARTY'S (ADIFCountyName, #118): the list's
-       display name for a party whose multipliers are counties, the county a
-       Hawaii district lies in, '' for none. *)
-     if mo.DomList.FindMult( rec.QTHString, cntyIdx ) then
-        begin
-        countyName := ContestForRecord( rec, contestRules ).ADIFCountyName(
-           rec, string( mo.DomList.AltName[ cntyIdx ] ) );
-        if countyName <> '' then
-           begin
-           Result := Result + EmitADIFField( 'CNTY', stateCode + ',' + countyName );
-           end;
-        end;
+     Result := Result + EmitADIFField( 'CNTY', countyText );
      end;
 
   // ----- Contest-specific primary-location field -----
@@ -3574,7 +3629,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
                 (* FROM WHERE THE STATION WAS FOR THIS QSO (stage 4). *)
-                myStationEx := CurrentMyStationExchange( stationContest, rowMyFacts );
+                myStationEx := CurrentMyStationExchange( stationContest, rowMyFacts,
+                                                         string( TempRXData.ceRoverQTH ) );
                 qsoContext.RSTSent                := RSTSent;
                 qsoContext.RSTReceived            := RSTReceived;
                 qsoContext.HisQTH                 := csQTHString;
@@ -4259,7 +4315,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         contest, so the active one is fetched here. See MyExchangeForExport,
         which the ADIF export calls with the contest it already holds. *)
       (* A QSO BEING LOGGED NOW (the external logger's): the session's. *)
-      Result := MyExchangeForExport( ActiveContest( Contest ), NotCapturedMyFacts, '' );
+      (* NO ROVER PLACE: this has no record -- the session's sent state. *)
+      Result := MyExchangeForExport( ActiveContest( Contest ), NotCapturedMyFacts, '', '' );
       end;
   (* ---------------------------------------------------------------------------- *)
     function DeleteRepeatedSpaces( const s: string ): string;

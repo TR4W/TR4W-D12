@@ -28,6 +28,8 @@ type
       procedure Test_TheStateIsOffUntilSet;
       procedure Test_HawaiiRovesItsFourteenDistrictsTwoAtATime;
       procedure Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
+      procedure Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
+      procedure Test_ASchema11LogGainsTheRoverColumnInOneCommit;
    public
       procedure RunAllTests; override;
    end;
@@ -40,6 +42,11 @@ uses
    uRoverForm,           (* TfrmRover *)
    VC,                   (* CQWWCW, TContestHandle *)
    uContestRegistry,     (* FindContestById, ContestIdentity *)
+   uContestBase,         (* TMyStationExchange, MyStationExchangeWithRoverPlace *)
+   uLogDatabase,         (* TLogDatabase *)
+   uLogSchema,           (* LOG_V12_QSO_ROVER_QTH_COLUMN, LOG_SCHEMA_VERSION *)
+   uTestLatestContest,   (* DowngradeTestLog, TestLogHasColumn, ScrubTestLog *)
+   uTestLogDatabase,     (* CommitFramesInWal *)
    uAppPaths,            (* ShippedDomDirOverride *)
    uTestContestObjects,  (* ShippedDomDir -- the tree's target\dom *)
    uNewContestHostArea,  (* THostAreaPlaces *)
@@ -259,6 +266,95 @@ begin
       end;
 end;
 
+(* LOG SCHEMA 12, AS NY4I RULED IT (2026-11-19): a district goes in the SENT
+  EXCHANGE -- the row's ceRoverQTH replaces MY STATE in what the export says
+  was sent, and a QSO not sent while roving is exactly as before -- and
+  my_county is the REAL county the district lies in, by the crosswalk the
+  worked station's CNTY uses (state 'HI', county 'Hawaii' for KOH). *)
+procedure TRoverStateTests.Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
+var
+   my, sent: TMyStationExchange;
+   qso: ContestExchange;
+   handle: TContestHandle;
+   hawaii: TContestBase;
+begin
+   BeginTest('Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty');
+   my := Default(TMyStationExchange);
+   my.MyState := 'KON';
+
+   sent := MyStationExchangeWithRoverPlace(my, 'KOH');
+   CheckEquals('KOH', sent.MyState, 'a rover''s QSO sent its place');
+   sent := MyStationExchangeWithRoverPlace(my, '');
+   CheckEquals('KON', sent.MyState, 'a QSO not sent while roving is unchanged');
+
+   CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+   hawaii := ContestIdentity(handle);
+   qso := Default(ContestExchange);
+   qso.RSTSent := 599;
+   qso.Mode := CW;
+   CheckTrue(Pos('KOH', hawaii.FormatADIFSentExchange(
+                            MyStationExchangeWithRoverPlace(my, 'KOH'), qso)) > 0,
+             'Hawaii''s STX_STRING carries the rover''s district');
+
+   (* THE CROSSWALK, of a record built as PostUnit.RoverPlaceADIFCounty builds
+     it: the place as its QTH, resolved as itself. *)
+   qso.QTHString := 'KOH';
+   qso.DomesticQTH := 'KOH';
+   CheckEquals('HI', hawaii.ADIFCountyState(qso), 'KOH is a Hawaii county place');
+   CheckEquals('Hawaii', hawaii.ADIFCountyName(qso, 'Kohala'),
+               'KOH lies in Hawaii county, not "Kohala"');
+   qso.QTHString := 'HON';
+   qso.DomesticQTH := 'HON';
+   CheckEquals('Honolulu', hawaii.ADIFCountyName(qso, 'Honolulu'), 'HON in Honolulu');
+end;
+
+(* LOG SCHEMA 12 ON A SCHEMA-11 LOG: the column added by ALTER, NULL in every
+  row (no earlier build roved), the version stamped, ONE commit; a second
+  open changes nothing. A new log has it too. *)
+procedure TRoverStateTests.Test_ASchema11LogGainsTheRoverColumnInOneCommit;
+var
+   fn, dir: string;
+   db: TLogDatabase;
+begin
+   BeginTest('Test_ASchema11LogGainsTheRoverColumnInOneCommit');
+   dir := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_rover_' + IntToStr(GetProcessID);
+   ForceDirectories(dir);
+   fn := IncludeTrailingPathDelimiter(dir) + 'rover11.db';
+   ScrubTestLog(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name)),
+                'a new log has my_rover_qth');
+   finally
+      db.Free;
+   end;
+   DowngradeTestLog(fn, 11, Low(LOG_V3_QSO_COLUMNS));
+   CheckFalse(FileExists(fn + '-wal'), 'precondition: no WAL is left by the fixture');
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(1, CommitFramesInWal(fn + '-wal'), 'the column and the stamp: ONE commit');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
+      CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name)),
+                'the column is there');
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(0, CommitFramesInWal(fn + '-wal'), 'a second open commits nothing');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'still current');
+   finally
+      db.Free;
+   end;
+   ScrubTestLog(fn);
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -267,6 +363,8 @@ begin
    Test_TheStateIsOffUntilSet;
    Test_HawaiiRovesItsFourteenDistrictsTwoAtATime;
    Test_TheDialogTicksWhatIsTypedAndRefusesPastTheLimit;
+   Test_TheExportSendsTheRoverPlaceAndMyCountyIsItsCounty;
+   Test_ASchema11LogGainsTheRoverColumnInOneCommit;
 end;
 
 end.

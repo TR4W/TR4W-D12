@@ -242,6 +242,7 @@ function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
 
 uses
+   uRoverState,    // RoverState -- LogContact stamps ceRoverQTH (issues 133, 87)
    uN1MMMode,      // N1MMModeName -- the mode name the UDP broadcast sends
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uPlatformFonts, // UninstallPrivateFont -- the gate lives there, not here
@@ -1779,6 +1780,18 @@ begin
      station). contestRules was refreshed just above (ActiveContest), so the
      object StampOffContest asks holds this session's station. *)
   StampOffContest(RXData);
+
+  (* WHERE A ROVER SENT IT FROM -- log schema 12 (issues 133 and 87). Stamped
+     HERE, with the other facts of a QSO logged now, before the dupe sheet,
+     the multipliers, the packet and the store read the record: only a QSO
+     logged at THIS station (a peer's carries its own), and only when the
+     record has none yet -- a county-line leg of our own (next step) arrives
+     with its place already set. The first place: a boundary operation logs
+     one row per place. Not roving: nothing changes. *)
+  if MyComputer and RoverState.Active and (RXData.ceRoverQTH = '') then
+     begin
+     RXData.ceRoverQTH := ShortString(RoverState.UnitAt(0));
+     end;
 
   // ceClearDupeSheet bypass: county-line / Nfer follow-up records carry
   // this flag so the dupe check below (and the matching one in

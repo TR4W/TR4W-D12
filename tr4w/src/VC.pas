@@ -2168,7 +2168,22 @@ type
    reader of those trusts it anyway: the .TRW reader clears it, and every
    receive path stamps the QSO with THIS station's contest. *)
 {01}  ceOffContest:        Boolean;
-{43} sReserved:               string[42]
+(* WHERE A ROVER SENT THIS QSO FROM -- log schema 12 (issues 133 and 87, NY4I
+   2026-11-19). One of the contest's own places (a county code, a Hawaii
+   district) as its .dom spells the key; EMPTY when the station was not
+   roving, which is every QSO but a rover's. A county-line operation logs one
+   row per place, each with its own. SQLite column my_rover_qth. The export
+   sends it in place of MY STATE (uContestBase.MyStationExchangeWithRoverPlace),
+   the dupe key carries it, and my_county is the ADIF county it lies in.
+
+   TAKEN FROM sReserved LIKE EVERY FIELD BEFORE IT (string[42] -> [31]): THE
+   RECORD STAYS 376 BYTES and nothing before 331 moved. Byte 331 was
+   sReserved's length byte, always zero, so every older record -- a .TRW,
+   SERVERLOG.TRW, a packet from an older station -- reads '' here. A newer
+   peer's packet carries ITS rover place, which is that QSO's own fact, so a
+   receiver keeps it; the .TRW reader clears it. *)
+{11}  ceRoverQTH:          string[10];
+{32} sReserved:               string[31]
    end;
 {*)}
 

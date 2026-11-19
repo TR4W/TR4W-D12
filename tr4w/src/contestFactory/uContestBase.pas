@@ -4945,6 +4945,15 @@ function SentZoneKindOfQSO(aContest: TContestBase;
    TContestBase.MyZoneIsAStationZone. nil answers True. *)
 function ContestMyZoneIsAStationZone(aContest: TContestBase): boolean;
 
+(* WHAT A ROVER'S QSO SENT IN THE STATE SLOT -- issues 133 and 87, log schema
+   12. aRoverQTH is the record's ceRoverQTH: the place the station roved from
+   for THIS QSO. Non-empty, it is the sent location (a Hawaii district, a
+   county), in place of the session's or the row's MY STATE -- the district
+   goes in the sent exchange (NY4I, 2026-11-19), never in my_state. Empty
+   (every QSO not sent while roving) leaves aMy exactly as it was. *)
+function MyStationExchangeWithRoverPlace(const aMy: TMyStationExchange;
+                                         const aRoverQTH: string): TMyStationExchange;
+
 (* aQso EARNS NO MULTIPLIER: its four flags -- domestic, DX, prefix, zone --
    cleared. The one statement of "no multiplier on this record", for the
    three engine sites that said it in four assignments: LOGDUPE.SetMultFlags
@@ -6876,6 +6885,16 @@ begin
    else
       begin
       Result := aContest.MyZoneIsAStationZone;
+      end;
+end;
+
+function MyStationExchangeWithRoverPlace(const aMy: TMyStationExchange;
+                                         const aRoverQTH: string): TMyStationExchange;
+begin
+   Result := aMy;
+   if Trim(aRoverQTH) <> '' then
+      begin
+      Result.MyState := Trim(aRoverQTH);
       end;
 end;
 

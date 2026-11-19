@@ -231,6 +231,8 @@ begin
    (* the contest's rule as stamped, schema 10 -- its own column, never
      folded into the operator's flag above *)
    SameBool('ceOffContest', a.ceOffContest, b.ceOffContest);
+   (* where a rover sent it from, schema 12 *)
+   Same('ceRoverQTH', AnsiString(a.ceRoverQTH), AnsiString(b.ceRoverQTH));
    (* the received year, schema 6 (issue 298) *)
    SameBool('RcvdYearKnown', a.RcvdYearKnown, b.RcvdYearKnown);
    SameInt('RcvdYear', a.RcvdYear, b.RcvdYear);
@@ -1447,6 +1449,16 @@ begin
    (* The stamped rule, schema 10: the OPPOSITE of the operator's flag on
      every seed, so a mapper that crossed the two columns is caught. *)
    aQso.ceOffContest := Odd(aSeed);
+   (* Where a rover sent it from, schema 12: a district on odd seeds, none
+     (a fixed station's QSO) on even. *)
+   if Odd(aSeed) then
+      begin
+      aQso.ceRoverQTH := 'KOH';
+      end
+   else
+      begin
+      aQso.ceRoverQTH := '';
+      end;
    (* The received year: present on odd seeds, absent (and so 0) on even. *)
    aQso.RcvdYearKnown := Odd(aSeed);
    if aQso.RcvdYearKnown then

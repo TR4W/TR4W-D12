@@ -277,7 +277,7 @@ begin
    db := TLogDatabase.Create;
    try
       db.CreateNew(fn);
-      CheckEquals(11, db.SchemaVersion, 'a new log is schema 11');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'a new log is stamped current');
       for i := Low(LOG_V11_DROPPED_QSO_COLUMNS) to High(LOG_V11_DROPPED_QSO_COLUMNS) do
          begin
          CheckFalse(TestLogHasColumn(db, 'qso', string(LOG_V11_DROPPED_QSO_COLUMNS[i].Name)),
@@ -343,12 +343,17 @@ var
    fn, freshFn: string;
    raw: TRawLog;
    db: TLogDatabase;
-   keptColumns, contentBefore, freshMaster: string;
+   keptColumns, contentColumns, contentBefore, freshMaster: string;
    i: integer;
 begin
    BeginTest('a real schema-10 log is rebuilt without the sixteen, in one commit');
    freshFn := TempLogName('fresh.db');
    keptColumns := NewLogQsoColumns(freshFn);
+   (* THE FIXTURE'S OWN COLUMNS: a new log's, less what came after schema 11
+     (schema 12's my_rover_qth, the last) -- the fixture has none of it to
+     compare, and the migration leaves it NULL. *)
+   contentColumns := StringReplace(keptColumns, '|' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name),
+                                   '', []);
    db := TLogDatabase.Create;
    try
       db.OpenReadOnly(freshFn);
@@ -371,7 +376,7 @@ begin
       raw.Exec('UPDATE qso SET rcvd_state = ''FL'', cty_itu_zone = 8 WHERE id = 1');
       raw.Exec('UPDATE sqlite_sequence SET seq = 50 WHERE name = ''qso''');
       raw.Commit;
-      contentBefore := raw.Rows(QsoContentSql(keptColumns));
+      contentBefore := raw.Rows(QsoContentSql(contentColumns));
       CheckEquals('1|1|0|0|0', raw.Rows('SELECT is_off_contest FROM qso ORDER BY id'),
                   'precondition: the schema-10 build stamped the county-line pair');
    finally
@@ -394,7 +399,7 @@ begin
          end;
       CheckEquals(keptColumns, RowsText(db.Connection, QSO_COLUMNS_SQL),
                   'the columns are a new log''s, in its order');
-      CheckEquals(contentBefore, RowsText(db.Connection, QsoContentSql(keptColumns)),
+      CheckEquals(contentBefore, RowsText(db.Connection, QsoContentSql(contentColumns)),
                   'every kept column of every row is as it was');
       CheckEquals('1|1|0|0|0', RowsText(db.Connection, 'SELECT is_off_contest FROM qso ORDER BY id'),
                   'the stored rule, the LAST column, came across');
@@ -418,7 +423,7 @@ begin
       db.Open(fn);
       CheckEquals(0, CommitFramesInWal(fn + '-wal'), 'a second open commits nothing');
       CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'still current');
-      CheckEquals(contentBefore, RowsText(db.Connection, QsoContentSql(keptColumns)),
+      CheckEquals(contentBefore, RowsText(db.Connection, QsoContentSql(contentColumns)),
                   'and the content is untouched');
    finally
       db.Free;

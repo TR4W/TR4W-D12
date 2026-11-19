@@ -179,6 +179,13 @@ begin
    db := TLogDatabase.Create;
    try
       db.Open(aFileName);
+      if aToVersion < 12 then
+         begin
+         (* Schema 12: where a rover sent the QSO from, the table's last
+           column, so it goes first. *)
+         db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name)));
+         end;
       if aToVersion < 10 then
          begin
          (* Schema 10: the contest's rule as stamped, the table's last column,

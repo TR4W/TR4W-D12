@@ -2761,6 +2761,17 @@ end;
 function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
 begin
    Result := LogStoreCurrentMyFacts;
+   (* A ROVER'S QSO KNOWS ITS COUNTY (issues 133 and 87, NY4I 2026-11-19):
+     my_county is ADIF MY_CNTY, the SECONDARY subdivision -- a real county,
+     never a district. The place the record was sent from (ceRoverQTH, the
+     contest's own unit) is turned into the county it lies in by the rule the
+     worked station's CNTY uses (PostUnit.RoverPlaceADIFCounty): KOH ->
+     'HI,Hawaii'. A QSO not sent while roving keeps my_county empty, as
+     before: unknown. *)
+   if aQso.ceRoverQTH <> '' then
+      begin
+      Result.County := AnsiString(RoverPlaceADIFCounty(string(aQso.ceRoverQTH)));
+      end;
    if not QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
       begin
       Result.Source := mfsAssumed;
