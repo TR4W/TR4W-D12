@@ -35,6 +35,7 @@ type
       procedure Test_TheClassesStateTheirRegions;
       procedure Test_EveryStatedRegionHasABox;
       procedure Test_RealCallsAgainstTheShippedCountryFile;
+      procedure Test_TheSendingBoxesNameWhatIsSent;
    public
       procedure RunAllTests; override;
    end;
@@ -43,6 +44,9 @@ implementation
 
 uses
    SysUtils,
+   Controls,            (* TCaption *)
+   uCaptionText,        (* DisplayedText -- the caption as the question quotes it *)
+   uAppStrings,         (* SNewContestBox* -- issue 167 *)
    VC,                  (* ContinentType, QTHRecord, ContestType *)
    uCTYDAT,             (* ctyLoadInCountryFile, ctyLocateCall *)
    uCallSignRoutines,   (* UKEIStation *)
@@ -168,7 +172,9 @@ begin
               'POTA''s box is Activator, not a place');
 end;
 
-(* Does aContest's prompt list offer the "I am in <region>" box? *)
+(* Does aContest's prompt list offer the "I am in" box -- "I am in <region>"
+   or a caption of its own (since issue 167's ruling, 2026-11-19, the boxes
+   that name what is sent are captions, and the check asks about them)? *)
 function OffersIAmInBox(aContest: TContestBase): boolean;
 var
    prompts: TNewContestPrompts;
@@ -180,7 +186,7 @@ begin
       aContest.DescribeNewContestPrompts(prompts);
       for i := 0 to prompts.ChoiceCount - 1 do
          begin
-         if prompts.Choice(i).Kind = npkIAmIn then
+         if prompts.Choice(i).Kind in [npkIAmIn, npkIAmInCaption] then
             begin
             Result := True;
             end;
@@ -206,11 +212,15 @@ end;
                           countries, and no sponsor text is in the tree;
      IRTS, EUDX           the entrant is decided by the four-character code
                           sent (MY STATE), not by a country -- EUDX's box is
-                          any EU country. *)
+                          any EU country;
+     IOTA                 "Island station" (a caption): an island, which DXCC
+                          cannot decide;
+     POTA                 "Activator" (a caption): a role, not a place. *)
 function OffersABoxWithNoRegionOnPurpose(aContest: TContestBase): boolean;
 const
-   EXEMPT: array[0..10] of ContestType = (IARU, BSCI, ARKTIKA_SPRING, PCC, GAGARINCUP,
-                                          WWPMC, REFCW, REFSSB, RSGB18, IRTS, EUDX);
+   EXEMPT: array[0..12] of ContestType = (IARU, BSCI, ARKTIKA_SPRING, PCC, GAGARINCUP,
+                                          WWPMC, REFCW, REFSSB, RSGB18, IRTS, EUDX,
+                                          IOTA, POTA);
 var
    i: integer;
 begin
@@ -303,6 +313,7 @@ begin
    CheckFalse(IsHome('DL1ABC'), 'ARRL 10: DL1ABC is not');
    CheckTrue(IsHome('KH6ABC'), 'ARRL 10: KH6ABC sends a state, though in Oceania (review M16)');
    CheckFalse(IsHome('KP4ABC'), 'ARRL 10: KP4ABC is in North America but sends a serial');
+   CheckTrue(IsHome('XE1ABC'), 'ARRL 10: XE1ABC sends a Mexican state (issue 167)');
 
    ContestIdentity(ContestHandleOf(CQ160CW)).DescribeNewContestHome(home);
    CheckTrue(IsHome('VE3EJ'), 'CQ 160: VE3EJ sends a province');
@@ -335,6 +346,82 @@ begin
                'a replacing load forgets the last located call');
 end;
 
+(* THE BOXES THAT NAME WHAT IS SENT -- issue 167, NY4I 2026-11-19: "I agree
+   a new caption for these contests. A KP4 operator in North America can use
+   their KP4 call ... You could ask to confirm the choice." The six contests
+   whose box is a list of countries sending a state, province or section
+   offer it as a caption naming the exchange, still state their region (so
+   the check at OK still asks), and the question quotes the caption. *)
+procedure TNewContestHomeTests.Test_TheSendingBoxesNameWhatIsSent;
+
+   procedure Box(aContest: ContestType; const aCaption: string);
+   var
+      prompts: TNewContestPrompts;
+      home: TNewContestHome;
+      boxes: integer;
+      i: integer;
+      who: string;
+   begin
+      who := ContestWho(ContestIdentity(ContestHandleOf(aContest)));
+      boxes := 0;
+      prompts := TNewContestPrompts.Create;
+      try
+         ContestIdentity(ContestHandleOf(aContest)).DescribeNewContestPrompts(prompts);
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            if prompts.Choice(i).Kind = npkIAmIn then
+               begin
+               CheckTrue(False, who + ': still offers "I am in ' +
+                         prompts.Choice(i).Text + '"');
+               end;
+            if prompts.Choice(i).Kind = npkIAmInCaption then
+               begin
+               inc(boxes);
+               CheckEquals(aCaption, prompts.Choice(i).Text, who + ': the caption');
+               end;
+            end;
+      finally
+         prompts.Free;
+      end;
+      CheckEquals(1, boxes, who + ': one box');
+      CheckTrue(ContestIdentity(ContestHandleOf(aContest)).DescribeNewContestHome(home),
+                who + ': still states its region, so the check at OK still asks');
+   end;
+
+var
+   body: string;
+begin
+   BeginTest('Test_TheSendingBoxesNameWhatIsSent');
+
+   Box(ARRL10, SNewContestBoxSendsStateOrProvince);
+   Box(ARRL160, SNewContestBoxSendsARRLOrRACSection);
+   Box(ARRL_RTTY_ROUNDUP, SNewContestBoxSendsStateOrProvince);
+   Box(CQ160CW, SNewContestBoxSendsStateOrProvince);
+   Box(CQ160SSB, SNewContestBoxSendsStateOrProvince);
+   Box(CQWWRTTY, SNewContestBoxSendsStateOrProvince);
+
+   (* EVERY CAPTION KEEPS THE BOX'S ACCELERATOR, as TC_IAMIN's '&I am in'. *)
+   CheckTrue(Pos('&', SNewContestBoxSendsStateOrProvince) = 1, 'state caption: &I');
+   CheckTrue(Pos('&', SNewContestBoxSendsARRLOrRACSection) = 1, 'section caption: &I');
+
+   (* THE KP4 CASE NY4I NAMED: ticked in ARRL 10 with a Puerto Rico call is
+      asked, in the caption's words (as the box paints them, through the
+      dialog's own uCaptionText.DisplayedText) and never as "I am in North
+      America". *)
+   body := Format(SNewContestBoxTickedOutside,
+                  [string(DisplayedText(TCaption(SNewContestBoxSendsStateOrProvince))),
+                   'KP4ABC', 'Puerto Rico']);
+   CheckTrue(Pos('"I send a state or province"', body) > 0,
+             'the question quotes the caption without its accelerator: ' + body);
+   CheckTrue(Pos('KP4ABC is in Puerto Rico', body) > 0, 'names the call and its country');
+   CheckTrue(Pos('North America', body) = 0, 'says nothing about North America');
+   body := Format(SNewContestBoxClearedInside,
+                  [string(DisplayedText(TCaption(SNewContestBoxSendsARRLOrRACSection))),
+                   'VE3EJ', 'Canada']);
+   CheckTrue(Pos('"I send an ARRL/RAC section"', body) > 0,
+             'the cleared question quotes the caption: ' + body);
+end;
+
 procedure TNewContestHomeTests.RunAllTests;
 begin
    Test_ARegionHoldsAWholeCountryIDOrAContinent;
@@ -342,6 +429,7 @@ begin
    Test_TheClassesStateTheirRegions;
    Test_EveryStatedRegionHasABox;
    Test_RealCallsAgainstTheShippedCountryFile;
+   Test_TheSendingBoxesNameWhatIsSent;
 end;
 
 end.

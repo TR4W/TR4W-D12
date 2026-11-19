@@ -148,7 +148,10 @@ and the "I am in" box is `uNewContest.RenderPrompt`.
   Yes the default (create as entered), No/Escape back to the dialog; the box
   is never changed. At startup CTY.DAT is not loaded yet, so
   `EnsureCountryTableForIAmIn` loads it as the setup wizard does; an
-  unlocated call is never asked about.
+  unlocated call is never asked about. A CAPTION box (`npkIAmInCaption`)
+  is asked about too when its contest states a region (2026-11-19: the
+  "I send a state or province" boxes), quoting the caption through
+  `uCaptionText.DisplayedText`; `ForgetIAmInBox` clears both descriptions.
 - **Call entry, band stepping, the log columns** ask
   `ShowsContestStatus`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber` and
   `CallEntryFrequencyWarning` (`MainUnit.ShowCallEntryFrequencyWarning`

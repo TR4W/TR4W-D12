@@ -157,6 +157,8 @@ uses
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
+   (* SNewContestBox* -- the box names what is sent (issue 167). *)
+   uAppStrings,
    uTR4WStrings;
 
 procedure TContestCQWWRTTY.CalculateQSOPoints(var aQso: ContestExchange);
@@ -341,11 +343,11 @@ end;
    changing one changes one. *)
 procedure TContestCQWWRTTY.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.OfferIAmInCaption(SNewContestBoxSendsStateOrProvince);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERSTATEFORUSPROVINCEFORCANADA, ncfMyState);
 end;
 
-(* THE "I AM IN NORTH AMERICA" BOX IS W/VE -- issue 167; the continent until
+(* THE "I SEND A STATE OR PROVINCE" BOX IS W/VE -- issue 167; the continent until
    review M16 (2026-11-16). Ticking it asks for "state for US, province for
    Canada", the domestic multiplier of s48p14dc (48 states, DC, the
    provinces: KH6 and KL7 are not in it). STATED, not read from

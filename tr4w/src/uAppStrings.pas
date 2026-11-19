@@ -909,6 +909,37 @@ resourcestring
       'You did not tick "I am in %0:s", but your callsign %1:s is in %2:s.' + #10#10 +
       'Create the contest as entered? Choose No to go back and change it.';
 
+   (* THE BOX THAT NAMES WHAT IS SENT, NOT A PLACE -- issue 167, NY4I
+     2026-11-19: "I agree a new caption for these contests. A KP4 operator
+     in North America can use their KP4 call ... You could ask to confirm
+     the choice." For the contests whose box is a list of countries that
+     send a state or province (ARRL 10, ARRL 160, the RTTY Roundup, CQ 160,
+     CQ WW RTTY), where "I am in North America" told a KP4 or XE entrant the
+     wrong thing. The exchange is what decides (NY4I: "The exchange is what
+     triggers the question"), so the caption names it and no country: which
+     countries send one is each contest's list, and the question at OK names
+     the call's country. SHORT: the box is 180 pixels wide in the designed
+     form. The & is the box's accelerator, as in TC_IAMIN. *)
+   SNewContestBoxSendsStateOrProvince =
+      '&I send a state or province';
+   SNewContestBoxSendsARRLOrRACSection =
+      '&I send an ARRL/RAC section';
+   (* THE QUESTION FOR THAT BOX, asked once at OK. %0:s is the box's caption
+     as shown (without the &), %1:s MY CALL, %2:s the country the country
+     file puts that call in. Yes creates the contest as entered; No goes back
+     to the New Contest window. Nothing is refused: a call can be operated
+     from somewhere its country file does not say. *)
+   SNewContestBoxTickedOutside =
+      'You ticked "%0:s", but your callsign %1:s is in %2:s, and stations ' +
+      'there do not send that in this contest.' + #10#10 +
+      'If you are operating from a place that does, choose Yes. ' +
+      'Choose No to go back and change it.';
+   SNewContestBoxClearedInside =
+      'You did not tick "%0:s", but your callsign %1:s is in %2:s, and ' +
+      'stations there send that in this contest.' + #10#10 +
+      'If you are operating from somewhere else, choose Yes. ' +
+      'Choose No to go back and change it.';
+
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,

@@ -1177,14 +1177,19 @@ the target shape, the M-step migration order and the open questions.
   `OfferIAmIn` box's region in CTY terms -- `Countries`, or `Continent`
   (no class states a continent since review M16, 2026-11-16: the North
   American boxes of ARRL 10, ARRL 160, RTTY Roundup and CQ 160 read their own
-  domestic list, CQ WW RTTY states `K VE`); `HomeIsInside` False for a box
+  domestic list, CQ WW RTTY states `K VE`; since NY4I's ruling of 2026-11-19
+  those six boxes are CAPTIONS naming the exchange -- "I send a state or
+  province", ARRL 160 "I send an ARRL/RAC section" -- not "I am in North
+  America", which told a KP4 or XE entrant the wrong thing; ARRL 10's
+  mexico.dom key for Mexico City is the sponsor's CMX); `HomeIsInside` False for a box
   that is only PART of its countries, New England in K;
   `HomeIsDomesticCountries` reads the class's own `DescribeSession` list on a
   country-less station, so PACC states `PA` itself, JIDX `JA` and UBA `ON`
   (their own station tests); the base states nothing. A box with no region
   is an EXEMPTION with its reason in `uTestNewContestHome.
   OffersABoxWithNoRegionOnPurpose` (IARU/BSCI HQ-or-member, Arktika/PCC
-  clubs, Gagarin, WWPMC, REF, RSGB 1.8, IRTS, EU DX) -- the walk fails a box
+  clubs, Gagarin, WWPMC, REF, RSGB 1.8, IRTS, EU DX, and the caption boxes
+  of the IOTA and POTA since the walk counts captions) -- the walk fails a box
   with no region that is not listed, and a listed contest that states one);
   `TotalsDisplay` (uTotal; the domestic and, since issue 277 2026-11-11, the
   PREFIX row's captions -- the CW Open says `Calls`, its key being the whole

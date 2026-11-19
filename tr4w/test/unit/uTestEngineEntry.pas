@@ -51,7 +51,7 @@ function Enter(const aCall: string; const aExch: string; var aRX: ContestExchang
 
 (* THE SESSION AS FoundContest SETS aContest UP, for what a parse reads: the
    contest, its domestic countries, its domestic file in the table and named
-   in the setting, and a station in the USA. *)
+   in the setting ('' for a contest with none), and a station in the USA. *)
 procedure SetUpSession(aContest: ContestType; const aCountries: array of string;
                        const aDomFile: string);
 
@@ -135,7 +135,12 @@ begin
       begin
       DomesticCountries.Add(CallString(aCountries[i]));
       end;
-   LoadShippedDomFollowingIncludes(DomQTHTable, aDomFile, True, 0);
+   (* '' IS A CONTEST WITH NO DOMESTIC FILE (CQ WW): the table stays empty,
+      as FoundContest leaves it. *)
+   if aDomFile <> '' then
+      begin
+      LoadShippedDomFollowingIncludes(DomQTHTable, aDomFile, True, 0);
+      end;
    Settings.Contest.DomesticFilename := aDomFile;
    Settings.My.DeriveCountry('K');
 

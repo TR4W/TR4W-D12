@@ -167,6 +167,7 @@ uses
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
   Dialogs,             (* QuestionDlg -- a taken log name, asked natively (issue 276) *)
+  uCaptionText,        (* DisplayedText -- a box caption quoted in a question (issue 167) *)
   uLatestContest,     (* TLatestContest -- the last contest, as its log describes it *)
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
@@ -251,6 +252,11 @@ var
     it (npkIAmIn); '' when it offers none -- issue 167. The box's own caption
     carries the accelerator, so the confirmation names the region. *)
   IAmInRegion                           : string = '';
+  (* THE CAPTION OF A BOX THAT NAMES WHAT IS SENT RATHER THAN A PLACE
+    (npkIAmInCaption), without its accelerator; '' otherwise -- issue 167,
+    NY4I 2026-11-19. The check asks about it in its own words. A box of
+    either kind sets one of the two and clears the other. *)
+  IAmInCaption                          : string = '';
 
 (* sfFLAG IS DELETED (2026-09-08), AND WITH IT AN EMPTY `const` BLOCK. It was DDL_ARCHIVE or DDL_READWRITE or
     DDL_DIRECTORY -- the flag set for a Win32 DlgDirList -- and NOTHING
@@ -274,6 +280,14 @@ var
   (2026-10-13, design Q6), RSGB 1.8 MHz's and the UA4W Championship's to
   their classes (2026-10-14, design Q33 and Q28). *)
 
+(* NO "I AM IN" BOX IS SHOWN -- both of its descriptions forgotten, so the
+  check at OK asks about nothing (issue 167). *)
+procedure ForgetIAmInBox;
+begin
+   IAmInRegion := '';
+   IAmInCaption := '';
+end;
+
 (* ONE STEP OF A CONTEST'S PROMPTS, ON THE FORM -- the five presentation
   helpers this unit always had, chosen by the step's kind. *)
 procedure RenderPrompt(const aPrompt: TNewContestPrompt);
@@ -290,10 +304,13 @@ begin
       npkIAmIn:
          begin
          IAmInRegion := aPrompt.Text;
+         IAmInCaption := '';
          DisplayCheckBox(aPrompt.Text);
          end;
       npkIAmInCaption:
          begin
+         IAmInRegion := '';
+         IAmInCaption := string(DisplayedText(TCaption(aPrompt.Text)));
          frmNewContest.ShowIAmIn(aPrompt.Text);
          end;
    end;
@@ -482,7 +499,7 @@ begin
      GetContestFromString -- the caption is the display name since M9b. *)
    SelectedContest := frmNewContest.SelectedContest;
    ForgetHostArea;
-   IAmInRegion := '';
+   ForgetIAmInBox;
    ClearFields;
    frmNewContest.SetComment('');
    NewContestPromptComment := '';
@@ -1057,7 +1074,7 @@ begin
    frmNewContest    := aForm;
    SelectedContest  := NoContest;
    ForgetHostArea;
-   IAmInRegion      := '';
+   ForgetIAmInBox;
    NewContestDisplayedCommands := 0;
    NewContestPromptComment := '';
    OnContestChanged := ApplyContestChoice;
@@ -1071,7 +1088,7 @@ begin
    OnIAmInChanged   := nil;
    OnFieldsChanged  := nil;
    ForgetHostArea;
-   IAmInRegion      := '';
+   ForgetIAmInBox;
    NewContestDomDir := '';
    frmNewContest    := nil;
 end;
@@ -1119,7 +1136,8 @@ var
    body: string;
 begin
    Result := True;
-   if (IAmInRegion = '') or (SelectedContest = NoContest) then
+   if ((IAmInRegion = '') and (IAmInCaption = '')) or
+      (SelectedContest = NoContest) then
       begin
       Exit;
       end;
@@ -1148,7 +1166,21 @@ begin
       begin
       place := string(qth.CountryID);
       end;
-   if verdict = iavTickedOutside then
+   (* A BOX THAT NAMES WHAT IS SENT is asked about in its own words: "I am
+      in North America" told a KP4 entrant in ARRL 10 that the call is in
+      Puerto Rico, which is in North America (issue 167, NY4I 2026-11-19). *)
+   if IAmInCaption <> '' then
+      begin
+      if verdict = iavTickedOutside then
+         begin
+         body := Format(SNewContestBoxTickedOutside, [IAmInCaption, call, place]);
+         end
+      else
+         begin
+         body := Format(SNewContestBoxClearedInside, [IAmInCaption, call, place]);
+         end;
+      end
+   else if verdict = iavTickedOutside then
       begin
       body := Format(SNewContestIAmInTickedOutside, [IAmInRegion, call, place]);
       end
@@ -1156,10 +1188,11 @@ begin
       begin
       body := Format(SNewContestIAmInClearedInside, [IAmInRegion, call, place]);
       end;
-   logger.Info('[NewContest] %s: MY CALL %s is in %s (%s) and the "I am in %s" ' +
-               'box is %s; asking the operator.',
+   logger.Info('[NewContest] %s: MY CALL %s is in %s (%s) and the box "%s%s" ' +
+               'is %s; asking the operator.',
                [ContestId(SelectedContest), call, place, string(qth.CountryID),
-                IAmInRegion, BoolToStr(frmNewContest.IAmIn, 'ticked', 'clear')]);
+                IAmInRegion, IAmInCaption,
+                BoolToStr(frmNewContest.IAmIn, 'ticked', 'clear')]);
    Result := QuestionDlg(LclText(SNewContestIAmInCheckTitle), LclText(body),
                          mtConfirmation,
                          [mrYes, 'IsDefault', mrNo, 'IsCancel'], 0) = mrYes;
