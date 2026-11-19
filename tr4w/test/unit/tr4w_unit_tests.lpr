@@ -706,6 +706,8 @@ uses
    uCallHistory         in '..\..\src\uCallHistory.pas',
    uCallHistoryDownload in '..\..\src\uCallHistoryDownload.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
+   uSelfSpotRule        in '..\..\src\uSelfSpotRule.pas',
+   uTestSelfSpot        in 'uTestSelfSpot.pas',
    uBandMapOrder        in '..\..\src\uBandMapOrder.pas',
    uTestBandMapOrder    in 'uTestBandMapOrder.pas',
    uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
@@ -1420,6 +1422,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TSelfSpotTests.Create('SelfSpot'));
    RegisterSuite(TBandMapOrderTests.Create('BandMapOrder'));
    RegisterSuite(TFunctionKeyBankTests.Create('FunctionKeyBank'));
    RegisterSuite(TCallbookTests.Create('Callbook'));

@@ -101,6 +101,10 @@ type
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
 
+      (* SELF-SPOTTING, issue 188 -- see TContestBase.AllowsSelfSpotting. *)
+      function AllowsSelfSpotting: boolean; override;
+      function SelfSpotMinimumMinutes: integer; override;
+
       (* THE NEED-MULTIPLIER HINT IS THE SECTION, AND ONLY THE SECTION --
          see TContestBase.DomesticMultiplierHint. The text it is handed is
          the exchange the log remembers for a call, which for Sweepstakes is
@@ -443,6 +447,30 @@ end;
 function TContestARRLSSBase.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+(* SWEEPSTAKES, BOTH MODES, IS THE FIRST CONTEST TO ALLOW SELF-SPOTTING
+  (NY4I's ruling on issue 188, 2026-11-19 -- the sponsor text alone does not
+  decide it, and this comment says so rather than dress a ruling as a rule).
+
+  WHAT THE SPONSOR TEXT SAYS (docs/ContestRules/ARRL/ARRL-SS-Rules.txt, the
+  Definitions, "Spotting/QSO Finding Assistance"): "Generating spotting
+  information for use by other stations is not considered to be spotting
+  assistance." That is the only sentence about spotting someone else; it does
+  not name self-spotting and it states NO INTERVAL. PROH.3 forbids arranging or
+  soliciting contacts by NON-amateur means; a spot on a DX cluster is a
+  non-radio channel, and the rules do not say whether it falls under PROH.3.
+  The ten minutes is therefore NOT in the sponsor text: it is the established
+  community minimum, the figure NY4I gave. Review the rules before lowering
+  it. *)
+function TContestARRLSSBase.AllowsSelfSpotting: boolean;
+begin
+   Result := True;
+end;
+
+function TContestARRLSSBase.SelfSpotMinimumMinutes: integer;
+begin
+   Result := 10;
 end;
 
 (* THE SECTION AS THE ENGINE'S OWN WORD READING FINDS IT -- ScanSweepstakesExchange,
