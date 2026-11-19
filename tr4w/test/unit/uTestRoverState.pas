@@ -32,6 +32,7 @@ type
       procedure Test_ASchema11LogGainsTheRoverColumnInOneCommit;
       procedure Test_TheCallOnTheAirAndTheRoverQTHToken;
       procedure Test_ARoverFromANewPlaceIsNoDupe;
+      procedure Test_ABoundaryEntryLogsOneQSOPerPlace;
    public
       procedure RunAllTests; override;
    end;
@@ -483,6 +484,72 @@ begin
    end;
 end;
 
+(* A BOUNDARY ENTRY IS ONE QSO PER PLACE (issue 133): the extra rows are
+  copies of every row the entry logged from the first place, one set per
+  further place, each stamped with its place and keeping the entry's id (the
+  store's qso_set_id link); a received county line is crossed with ours.
+  MainUnit.DrainPendingMultiQSORefs logs them (it cannot run headless, so
+  its call is pinned by reading the source). *)
+procedure TRoverStateTests.Test_ABoundaryEntryLogsOneQSOPerPlace;
+var
+   state: TRoverState;
+   units: TStringList;
+   logged, legs: TRoverLegs;
+   source: TStringList;
+   drain: integer;
+begin
+   BeginTest('Test_ABoundaryEntryLogsOneQSOPerPlace');
+   state := TRoverState.Create;
+   units := TStringList.Create;
+   try
+      SetLength(logged, 1);
+      logged[0] := Default(ContestExchange);
+      logged[0].Callsign := 'W1AW';
+      logged[0].QTHString := 'CT';
+      logged[0].id := 'ENTRY1';
+      logged[0].ceRoverQTH := 'KOH';
+
+      CheckEquals(0, Length(RoverBoundaryLegs(logged, state)), 'not roving: no extra QSO');
+      SplitRoverUnitsText('KOH', units);
+      state.SetUnits(units);
+      CheckEquals(0, Length(RoverBoundaryLegs(logged, state)), 'one place: none');
+
+      SplitRoverUnitsText('KOH KON', units);
+      state.SetUnits(units);
+      legs := RoverBoundaryLegs(logged, state);
+      CheckEquals(1, Length(legs), 'two places: one more QSO');
+      CheckEquals('KON', string(legs[0].ceRoverQTH), 'from the second place');
+      CheckEquals('W1AW', string(legs[0].Callsign), 'with the same station');
+      CheckEquals('ENTRY1', string(legs[0].id), 'and the entry''s id, so one set');
+
+      (* The worked station on a county line too: CT and RI received. *)
+      SetLength(logged, 2);
+      logged[1] := logged[0];
+      logged[1].QTHString := 'RI';
+      legs := RoverBoundaryLegs(logged, state);
+      CheckEquals(2, Length(legs), 'each received leg from the second place');
+      CheckEquals('CT', string(legs[0].QTHString), 'CT from KON');
+      CheckEquals('RI', string(legs[1].QTHString), 'RI from KON');
+      CheckEquals('KON', string(legs[1].ceRoverQTH), 'both from KON');
+   finally
+      units.Free;
+      state.Free;
+      end;
+
+   source := TStringList.Create;
+   try
+      source.LoadFromFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+                          PathDelim + 'src' + PathDelim + 'MainUnit.pas');
+      drain := Pos('function DrainPendingMultiQSORefs: boolean;', source.Text);
+      CheckTrue(drain > 0, 'MainUnit has the drain');
+      CheckTrue(Pos('RoverBoundaryLegs(logged, RoverState)',
+                    Copy(source.Text, drain, 6000)) > 0,
+                'and the drain logs the rover''s boundary legs');
+   finally
+      source.Free;
+   end;
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -495,6 +562,7 @@ begin
    Test_ASchema11LogGainsTheRoverColumnInOneCommit;
    Test_TheCallOnTheAirAndTheRoverQTHToken;
    Test_ARoverFromANewPlaceIsNoDupe;
+   Test_ABoundaryEntryLogsOneQSOPerPlace;
 end;
 
 end.

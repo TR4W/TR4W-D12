@@ -949,13 +949,21 @@ function DrainPendingMultiQSORefs: boolean;
 var
   TempRX : ContestExchange;
   leadsWithSerial: boolean;
+  (* A ROVER AT A BOUNDARY (issue 133): every QSO this entry logged from the
+    first place, and the copies from each further place. *)
+  logged: TRoverLegs;
+  roverLegs: TRoverLegs;
+  i: integer;
 begin
   Result := True;
   if (not HasPendingParks)     and
-     (not HasPendingCounties) then
+     (not HasPendingCounties) and
+     (RoverState.Count < 2)   then
      begin
      Exit;
      end;
+  SetLength(logged, 1);
+  logged[0] := ReceivedData;
   leadsWithSerial := ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest));
   TempRX := ReceivedData;
   while HasPendingParks do
@@ -992,6 +1000,26 @@ begin
      // LOGEDIT.NextSerialToSend, the highest serial sent + 1 (Issue #954),
      // not a count of records.  Pinned by uTestAutomaticXQSO.
      if not LogContact(TempRX, True) then
+        begin
+        Result := False;
+        Exit;
+        end;
+     SetLength(logged, Length(logged) + 1);
+     logged[High(logged)] := TempRX;
+     end;
+
+  (* A ROVER AT A BOUNDARY LOGS ONE QSO PER PLACE (issue 133; NY4I
+    2026-11-18, the HQP rules: "Log such contacts as TWO contacts, one from
+    each location"). Every QSO above went out from the first place
+    (LogContact stamped it); each further place logs a copy of every one of
+    them, its own place stamped, after them and with nothing in between, so
+    the store files them in the entry's qso_set_id. The dupe question is
+    asked of each copy as of any QSO: its key carries its place (D), so a
+    place the station has not worked this call from is no dupe. *)
+  roverLegs := RoverBoundaryLegs(logged, RoverState);
+  for i := 0 to High(roverLegs) do
+     begin
+     if not LogContact(roverLegs[i], True) then
         begin
         Result := False;
         Exit;

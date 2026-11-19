@@ -33,6 +33,7 @@ interface
 
 uses
    Classes,
+   VC,                    (* ContestExchange -- a boundary QSO's legs *)
    uNewContestHostArea;   (* THostAreaPlaces -- the contest's units *)
 
 type
@@ -85,6 +86,22 @@ const
   the rover. Not roving: aCall unchanged; a fixed station never sends a
   /KOH. *)
 function RovingCall(const aCall: string): string;
+
+type
+   TRoverLegs = array of ContestExchange;
+
+(* A BOUNDARY OPERATION'S EXTRA QSOs -- issue 133 (NY4I 2026-11-18, the HQP
+  rules: "Log such contacts as TWO contacts, one from each location"; and
+  2026-11-19: one row per county). aLogged is every QSO the entry has logged
+  already -- the first, and each leg of a county line the WORKED station was
+  on -- each stamped with the rover's FIRST place. The answer is, for each
+  further place in the order chosen, a copy of every one of them stamped with
+  that place: one row per place, the received legs crossed with ours. Every
+  copy keeps the entry's ContestExchange.id, so the store files them in one
+  qso_set_id with the first (SaveQSOGroupingByExchangeId): the common id that
+  links one contact's rows. Not roving, or one place: empty. *)
+function RoverBoundaryLegs(const aLogged: TRoverLegs;
+                           const aState: TRoverState): TRoverLegs;
 
 (* IS THE MACRO TOKEN {ROVERQTH} AT aText[aIndex]? Any case; False past the
   end. The CW sender asks it where '{' would otherwise key the worked call. *)
@@ -225,6 +242,29 @@ begin
    if (RoverState <> nil) and RoverState.Active and (aCall <> '') then
       begin
       Result := aCall + '/' + RoverState.Joined('/');
+      end;
+end;
+
+function RoverBoundaryLegs(const aLogged: TRoverLegs;
+                           const aState: TRoverState): TRoverLegs;
+var
+   place, leg, n: integer;
+begin
+   Result := nil;
+   if (aState = nil) or (aState.Count < 2) then
+      begin
+      Exit;
+      end;
+   SetLength(Result, (aState.Count - 1) * Length(aLogged));
+   n := 0;
+   for place := 1 to aState.Count - 1 do
+      begin
+      for leg := 0 to High(aLogged) do
+         begin
+         Result[n] := aLogged[leg];
+         Result[n].ceRoverQTH := ShortString(aState.UnitAt(place));
+         Inc(n);
+         end;
       end;
 end;
 
